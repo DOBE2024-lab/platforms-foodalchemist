@@ -36,10 +36,19 @@ final class GpLaufFelder
         'sub_category' => 'sub_category',
         'piece_default_g' => null,
         'marke_offen' => null,   // Kurator 14.11.: 0/1 direkt (überschreibt die Ableitung aus Rezepturware + Klammer, die updateGp setzt)
+        // Ernährungs-Merkmale (Georg 14.11.: Gelatine ≠ vegetarisch): true/false oder null = offen, direkt geschrieben, nie im Namen
+        'tag_is_vegan' => null,
+        'tag_is_vegetarian' => null,
+        'tag_is_halal' => null,
+        'tag_contains_pork' => null,
+        'tag_contains_beef' => null,
     ];
 
+    /** Ernährungs-Merkmale: Wahrheitswert oder null (offen). */
+    public const TAGS = ['tag_is_vegan', 'tag_is_vegetarian', 'tag_is_halal', 'tag_contains_pork', 'tag_contains_beef'];
+
     /** Felder mit Wahrheitswert (true/false; bei rezepturware zusätzlich null = nicht entschieden). */
-    private const BOOL = ['bio', 'rezepturware', 'namens_vegan', 'namens_glutenfrei', 'namens_laktosefrei', 'namens_msc', 'namens_asc', 'marke_offen'];
+    private const BOOL = ['bio', 'rezepturware', 'namens_vegan', 'namens_glutenfrei', 'namens_laktosefrei', 'namens_msc', 'namens_asc', 'marke_offen', ...self::TAGS];
 
     /**
      * Zusammengesetzter Zustand „<Behandlung>, TK“ (§9.2 R3: „geräuchert, TK“, „gepökelt, TK“, „luftgetrocknet, TK“) in das Datenmodell des Namensdienstes

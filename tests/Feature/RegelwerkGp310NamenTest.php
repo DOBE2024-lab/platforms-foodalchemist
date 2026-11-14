@@ -154,21 +154,29 @@ it('Kennzeichen angenommen/offen (Regel 91, 820): Anlage, MCP-Pflege, Prüfliste
     }
 });
 
-it('Dubletten-Plan: ein GP mit Kennzeichen „offen“ wird nie mit einem belegten GP zusammengeführt (Regel 91 Nr. 3)', function () {
+it('Dubletten-Plan Regel 91 v3 (14.11.): das offene GP geht in das eine belegte auf, ein belegtes nie in ein offenes', function () {
     $mk = fn (string $name, ?string $status) => FoodAlchemistGp::create(['team_id' => $this->rootTeam->id, 'name' => $name, 'gp_key' => $this->n->slugify($name) . uniqid(),
         'status' => 'approved', 'commodity_group_code' => '05', 'condition' => 'konserviert', 'main_ingredient_slug' => 'sardellenfilet', 'angabe_status' => $status]);
     $belegt = $mk('Sardellenfilet: konserviert, in Öl', null);
     $offen = $mk('Sardellenfilet: konserviert', 'offen');
-    $datei = tempnam(sys_get_temp_dir(), 'gpd') . '.csv';
-    $h = fopen($datei, 'wb');
-    fputcsv($h, ['group_id', 'gp_id', 'name', 'keep_proposal', 'reason'], ';', '"', '');
-    fputcsv($h, ['N0001', $belegt->id, $belegt->name, 'behalten', ''], ';', '"', '');
-    fputcsv($h, ['N0001', $offen->id, $offen->name, 'merge→' . $belegt->id, ''], ';', '"', '');
-    fclose($h);
+    $plane = function (FoodAlchemistGp $sieger, FoodAlchemistGp $verlierer): array {
+        $datei = tempnam(sys_get_temp_dir(), 'gpd') . '.csv';
+        $h = fopen($datei, 'wb');
+        fputcsv($h, ['group_id', 'gp_id', 'name', 'keep_proposal', 'reason'], ';', '"', '');
+        fputcsv($h, ['N0001', $sieger->id, $sieger->name, 'behalten', ''], ';', '"', '');
+        fputcsv($h, ['N0001', $verlierer->id, $verlierer->name, 'merge→' . $sieger->id, ''], ';', '"', '');
+        fclose($h);
+        $plan = app(\Platform\FoodAlchemist\Services\GpBereinigenService::class)->planDubletten($this->rootTeam->id, $datei);
+        @unlink($datei);
 
-    $plan = app(\Platform\FoodAlchemist\Services\GpBereinigenService::class)->planDubletten($this->rootTeam->id, $datei);
-    expect($plan['gruppen'])->toBe([])->and(implode(' ', array_column($plan['konflikte'], 'grund')))->toContain('Kennzeichen „offen“');
-    @unlink($datei);
+        return $plan;
+    };
+
+    $ja = $plane($belegt, $offen);
+    expect($ja['gruppen'])->toHaveCount(1)->and($ja['konflikte'])->toBe([]);
+
+    $nein = $plane($offen, $belegt);
+    expect($nein['gruppen'])->toBe([])->and(implode(' ', array_column($nein['konflikte'], 'grund')))->toContain('Kennzeichen „offen“');
 });
 
 it('Reiner Bio-Händler (Regel 94 Nr. 5): Merkmal per suppliers.PUT, jeder Artikel gilt als Bio, Stammblatt zeigt es', function () {

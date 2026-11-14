@@ -238,8 +238,8 @@ class GpBereinigenService
                         $fehler[] = 'Platzhalter werden nicht gemerged';
                     }
                     if (! \Platform\FoodAlchemist\Support\AngabeKennzeichen::zusammenfuehrbar($gv->angabe_status ?? null, $gw->angabe_status ?? null)) {
-                        // Regel 91 Nr. 3 (v3.10.0): ein GP mit Kennzeichen „offen“ (Pflichtangabe nicht belegt) nie mit einem belegten GP zusammenführen
-                        $fehler[] = "#{$gv->id} Kennzeichen „offen“ ≠ Sieger — offene Angabe nie mit belegtem GP zusammenführen (Regel 91)";
+                        // Regel 91 v3 (14.11.2026): offen → das eine belegte GP derselben Ware ja; ein belegtes GP nie in ein offenes
+                        $fehler[] = "#{$gv->id} belegte Angabe, Sieger hat Kennzeichen „offen“ — belegtes GP nie in ein offenes zusammenführen (Regel 91 v3)";
                     }
                     if (($ab = app(LeadLaService::class)->mergeAbweichungen($gw, $gv)) !== []) {
                         $fehler[] = "#{$gv->id} Allergen-Konflikt mit dem Sieger: " . implode(', ', $ab) . ' — nicht mergen (Guard wie gps.REPLACE)';

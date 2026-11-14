@@ -202,3 +202,22 @@ it('marke_offen ist ein erlaubtes Feld (0/1) und wird nach updateGp gesetzt', fu
 
     expect((bool) $gp->fresh()->marke_offen)->toBeTrue()->and($gp->fresh()->name)->toBe('Banane: ganz, frisch');
 });
+
+it('Ernährungs-Merkmale (Gelatine ≠ vegetarisch, Georg 14.11.): true/false/null geschrieben, Name bleibt, --zurueck stellt her; Text wird abgelehnt', function () {
+    $gp = ($this->gp)(['tag_is_vegetarian' => true, 'tag_is_halal' => true, 'tag_contains_pork' => false]);
+    $plan = ($this->plan)([['gp_id' => $gp->id, 'name_alt' => $gp->name,
+        'felder' => ['tag_is_vegetarian' => false, 'tag_is_halal' => false, 'tag_contains_pork' => null, 'tag_contains_beef' => true]]]);
+
+    ($this->apply)(['--team' => $this->team, '--plan' => $plan])->assertSuccessful();
+    $neu = $gp->fresh();
+    expect($neu->tag_is_vegetarian)->toBeFalse()->and($neu->tag_is_halal)->toBeFalse()
+        ->and($neu->tag_contains_pork)->toBeNull()->and($neu->tag_contains_beef)->toBeTrue()
+        ->and($neu->name)->toBe('Banane: ganz, frisch');
+
+    ($this->lauf)(['--team' => $this->team, '--zurueck' => ($this->datei)('_felder_protokoll.json')])->assertSuccessful();
+    expect($gp->fresh()->tag_is_vegetarian)->toBeTrue()->and($gp->fresh()->tag_contains_pork)->toBeFalse();
+
+    $falsch = ($this->plan)([['gp_id' => $gp->id, 'name_alt' => $gp->name, 'felder' => ['tag_is_vegan' => 'ja']]]);
+    ($this->lauf)(['--team' => $this->team, '--plan' => $falsch])->assertSuccessful();
+    expect(file_get_contents(($this->datei)('_felder_konflikte.csv')))->toContain('true/false erwartet');
+});

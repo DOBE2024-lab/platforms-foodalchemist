@@ -47,12 +47,12 @@ it('Markenprodukt ohne eigenen Gattungsnamen: „Coca-Cola“ bleibt der Name, k
         ->and(($this->name)($f))->toBe('Coca-Cola: Dose 0,33 l');
 });
 
-it('Bier mit vol-%: Vol-% und Gebinde bleiben, die Füllmenge wird nicht doppelt gesetzt; „Fl.“ ohne Material bleibt „Flasche“ (kein Material erfunden)', function () {
+it('Bier mit vol-%: Vol-% und Gebinde bleiben, die Füllmenge wird nicht doppelt gesetzt; „Fl.“ ohne Material: kein Gebindewort (71a v3.10, kein Material erfunden)', function () {
     ($this->ki)(['hauptzutat' => 'Pils', 'commodity_group_code' => '15', 'pflichtangabe' => '4,9 vol-%, Flasche 0,33 l', 'zusatz' => 'Jever']);
     $f = app(LaFelderService::class)->fuer($this->rootTeam, ($this->la)('Jever Pils 4,9% 24x0,33l Fl.', ['brand' => 'Jever']));
 
-    expect([$f['hauptzutat'], $f['pflichtangabe'], $f['zusatz']])->toBe(['Pils', '4,9 vol-%, Flasche 0,33 l', 'Jever'])
-        ->and(($this->name)($f))->toBe('Pils: 4,9 vol-%, Flasche 0,33 l / (Jever)');
+    expect([$f['hauptzutat'], $f['pflichtangabe'], $f['zusatz']])->toBe(['Pils', '4,9 vol-%, 0,33 l', 'Jever'])
+        ->and(($this->name)($f))->toBe('Pils: 4,9 vol-%, 0,33 l / (Jever)');
 });
 
 it('Wasser ohne Marke: Klammer leer, generisch (kein marke_offen), Füllmenge aus dem Artikel; eine erfundene Marke wird verworfen', function () {
@@ -62,7 +62,7 @@ it('Wasser ohne Marke: Klammer leer, generisch (kein marke_offen), Füllmenge au
     expect([$f['hauptzutat'], $f['pflichtangabe'], $f['zusatz'], $f['marke_offen']])->toBe(['Tafelwasser', '0,75 l', '', false]);
 });
 
-it('Gebinde-Art mit Material aus dem Artikel (v3.8.2): MW → Glasflasche, PET → PET-Flasche; Händler-Eigenmarke in die Klammer', function () {
+it('Gebinde-Art mit Material aus dem Artikel (71a v3.10): MW ist kein Material → kein Gebinde, PET → PET-Flasche; Händler-Eigenmarke in die Klammer', function () {
     ($this->ki)(['hauptzutat' => 'Pils', 'commodity_group_code' => '15', 'pflichtangabe' => '4,9 vol-%, Flasche 0,5 l', 'zusatz' => 'Bitburger']);
     $bier = app(LaFelderService::class)->fuer($this->rootTeam, ($this->la)('Bitburger Pils 4,9% 20x0,5l MW', ['brand' => 'Bitburger']));
     ($this->ki)(['hauptzutat' => 'Gerolsteiner Medium', 'commodity_group_code' => '15', 'pflichtangabe' => '', 'zusatz' => '']);
@@ -70,7 +70,7 @@ it('Gebinde-Art mit Material aus dem Artikel (v3.8.2): MW → Glasflasche, PET �
     ($this->ki)(['hauptzutat' => 'Apfelsaft', 'commodity_group_code' => '15', 'pflichtangabe' => '1 l', 'zusatz' => 'Base Culinar']);
     $saft = app(LaFelderService::class)->fuer($this->rootTeam, ($this->la)('Base Culinar Apfelsaft Tetra 1l', ['brand' => 'Base Culinar']));
 
-    expect(($this->name)($bier))->toBe('Pils: 4,9 vol-%, Glasflasche 0,5 l / (Bitburger)')
+    expect(($this->name)($bier))->toBe('Pils: 4,9 vol-%, 0,5 l / (Bitburger)')
         ->and(($this->name)($wasser))->toBe('Gerolsteiner Medium: PET-Flasche 0,5 l')
         ->and(($this->name)($saft))->toBe('Apfelsaft: Tetra Pak 1 l / (Base Culinar)')
         ->and(GpNamingService::gebindeArt('König Ludwig Weißbier 5,5% 20x0,5l Glas'))->toBe('Glasflasche')

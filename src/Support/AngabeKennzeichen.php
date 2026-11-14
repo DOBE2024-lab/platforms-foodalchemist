@@ -11,7 +11,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
  * - `angenommen`: der übliche Wert aus der Startliste wurde angenommen (z. B. TK-Würfel ohne Maß → `Würfel 10 mm`, Honig → `flüssig`).
  *   Nennt ein Artikel/Produktpass später etwas anderes, wird korrigiert.
  * - `offen`: kein üblicher Wert; das GP bleibt ohne die Angabe (z. B. Konservierungsart nicht belegt, Güteklasse Olivenöl). Ein offenes GP wird
- *   nie mit einem GP zusammengeführt, bei dem die Angabe belegt ist ({@see \Platform\FoodAlchemist\Services\GpBereinigenService::planDubletten()}).
+ *   in das EINE belegte GP derselben Ware zusammengeführt (Regel 91 v3, 14.11.2026); bei mehreren belegten Varianten bleibt es getrennt
+ *   ({@see \Platform\FoodAlchemist\Services\GpBereinigenService::planDubletten()}, {@see self::zusammenfuehrbar()}).
  *
  * Grund = Prüflisten-Text, welche Angabe fehlt („Konservierungsart nicht belegt (§8.20)“). Ersetzt die frühere Formulierung
  * `needs_review`/`konservierungsart_pflicht` aus 820 v1 (die es im Code nie gab).
@@ -60,9 +61,13 @@ final class AngabeKennzeichen
         return $w;
     }
 
-    /** Darf ein GP mit diesem Kennzeichen mit einem anderen zusammengeführt werden? Offen ⇄ belegt nie (Regel 91 Nr. 3). */
-    public static function zusammenfuehrbar(?string $a, ?string $b): bool
+    /**
+     * Darf der Verlierer `$verlierer` in den Sieger `$sieger` zusammengeführt werden? Regel 91 v3 (Entscheid Dominique N-G2, 14.11.2026):
+     * Gibt es genau EIN GP derselben Ware mit belegter Angabe, wird das offene dorthin zusammengeführt (Artikel gelten dann als „angenommen“) —
+     * diese 1:1-Lage stellt der Merge-Plan fest (eine Gruppe = eine Ware). Nie umgekehrt: ein belegtes GP geht nicht in ein offenes auf.
+     */
+    public static function zusammenfuehrbar(?string $verlierer, ?string $sieger): bool
     {
-        return ($a === self::OFFEN) === ($b === self::OFFEN);
+        return ! ($sieger === self::OFFEN && $verlierer !== self::OFFEN);
     }
 }

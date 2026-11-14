@@ -55,3 +55,10 @@ it('Portion „300 g pro Stück“ als Eingabe ergibt nur einmal „pro Stück�
         ->toBe('Regenbogenforelle: ganz, frisch, 300 g pro Stück')
         ->and($this->n->normalisierePortion('25 g pro Stueck'))->toBe($this->n->normalisierePortion('25 g'));
 });
+
+it('821 Teil 3: Doppelzustand „gepökelt, geräuchert“ rendert und ist im Lauf erlaubt; andere Doppelzustände nicht', function () {
+    expect($this->n->renderGpName(['hauptzutat' => 'Putenbrust', 'form' => 'Scheiben', 'condition' => 'gepökelt, geräuchert', 'commodity_group_code' => '04']))
+        ->toBe('Putenbrust: Scheiben, gepökelt, geräuchert')
+        ->and(\Platform\FoodAlchemist\Support\GpLaufFelder::pruefe(['condition' => 'gepökelt, geräuchert'], '04', null))->toBe([])
+        ->and(\Platform\FoodAlchemist\Support\GpLaufFelder::pruefe(['condition' => 'luftgetrocknet, frisch'], '04', null))->not->toBe([]);
+});

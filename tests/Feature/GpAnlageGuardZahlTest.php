@@ -32,3 +32,14 @@ it('gleiche Zahl bleibt eine Dublette (jaccard)', function () {
 
     expect($g['blockiert'])->toBeTrue()->and($g['grund'])->toBe('jaccard');
 });
+
+it('Größe ohne Zahl trennt (Non-Food: Größe S gegen Größe M), gleiche Größe bleibt Dublette (GP-Lauf 14.11.)', function () {
+    FoodAlchemistGp::create([
+        'team_id' => $this->team->id, 'gp_key' => 'besucherkittel_pp|weiss|groesse_s', 'name' => 'Besucherkittel: PP, weiß, Größe S', 'status' => 'approved',
+        'commodity_group_code' => '16', 'main_ingredient_slug' => 'besucherkittel',
+    ]);
+    $n = app(GpNamingService::class);
+
+    expect($n->anlageGuard($this->team, 'besucherkittel_pp|weiss|groesse_m', 'Besucherkittel: PP, weiß, Größe M')['blockiert'])->toBeFalse()
+        ->and($n->anlageGuard($this->team, 'besucherkittel_andere', 'Besucherkittel: PP, weiß, Größe S')['blockiert'])->toBeTrue();
+});

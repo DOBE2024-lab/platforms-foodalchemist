@@ -187,9 +187,13 @@ class GpUmhaengenService
 
             $st = DB::table('foodalchemist_supplier_item_structures')->where('supplier_item_id', $si)->whereNull('deleted_at')->first();
             if ($st === null) {
-                $fehler('Artikel hat keine Verknüpfungszeile');
+                // Bestellter, noch nie angebundener Artikel (LA-First, Necta-Bestellliste 14.11.): umhängen/neues_gp legt die Verknüpfung beim Ausführen an
+                if (! in_array($aktion, ['umhaengen', 'neues_gp'], true) || ! DB::table('foodalchemist_supplier_items')->where('id', $si)->whereNull('deleted_at')->exists()) {
+                    $fehler('Artikel hat keine Verknüpfungszeile');
 
-                continue;
+                    continue;
+                }
+                $st = (object) ['id' => 0, 'gp_id' => null];
             }
             if (isset($gesehen[$si])) {
                 $fehler('Artikel steht mehrfach im Plan');
@@ -369,6 +373,25 @@ class GpUmhaengenService
      * @param  array<string,mixed>  $protokoll
      * @return array{betroffen: list<int>, lead_gewechselt: list<int>}
      */
+    /**
+     * Verknüpfungszeile für einen noch nie angebundenen Artikel: Soft-Delete-Leiche reaktivieren (Unique auf supplier_item_id filtert deleted_at
+     * nicht, wie LeadLaService::verknuepfen), sonst neu — ohne GP; die Umhängung setzt gp_id danach, der Rückweg setzt sie wieder auf null.
+     */
+    private function strukturAnlegen(int $teamId, int $supplierItemId): int
+    {
+        $leiche = DB::table('foodalchemist_supplier_item_structures')->where('supplier_item_id', $supplierItemId)->first();
+        if ($leiche !== null) {
+            DB::table('foodalchemist_supplier_item_structures')->where('id', $leiche->id)->update(['deleted_at' => null, 'gp_id' => null, 'updated_at' => now()]);
+
+            return (int) $leiche->id;
+        }
+        $neu = new \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure(['supplier_item_id' => $supplierItemId]);
+        $neu->team_id = $teamId;
+        $neu->save();
+
+        return (int) $neu->id;
+    }
+
     public function fuehreAus(int $teamId, array $plan, array &$protokoll): array
     {
         $team = Team::findOrFail($teamId);
@@ -416,6 +439,9 @@ class GpUmhaengenService
                     'neues_gp' => $neueIds[$a['neu_schluessel']] ?? null,
                     default => null,
                 };
+                if ((int) $a['structure_id'] === 0) {
+                    $a['structure_id'] = $this->strukturAnlegen($teamId, (int) $a['supplier_item_id']);
+                }
                 DB::table('foodalchemist_supplier_item_structures')->where('id', $a['structure_id'])->update(['gp_id' => $ziel, 'updated_at' => now()]);
                 $protokoll['verknuepfungen'][] = ['structure_id' => $a['structure_id'], 'supplier_item_id' => $a['supplier_item_id'], 'gp_alt' => $a['gp_alt'], 'gp_neu' => $ziel];
                 foreach ([$a['gp_alt'], $ziel] as $g) {

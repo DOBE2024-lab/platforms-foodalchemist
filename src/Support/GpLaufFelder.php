@@ -119,7 +119,8 @@ final class GpLaufFelder
         }
         if (array_key_exists('condition', $felder) && trim((string) $felder['condition']) !== '') {
             $z = app(GpNamingService::class)->normalisiereZustand((string) $felder['condition']);
-            if (! in_array($z, GpNamingService::ZUSTAND_VOCAB, true)) {
+            // Regel 821 Teil 3 (14.11.2026): geräucherter Pökel-Aufschnitt trägt den Doppelzustand „gepökelt, geräuchert“
+            if (! in_array($z, GpNamingService::ZUSTAND_VOCAB, true) && $z !== GpNamingService::ZUSTAND_POEKEL_RAUCH) {
                 $fehler[] = "condition »{$felder['condition']}« nicht im §9-Vokabular (" . implode('/', GpNamingService::ZUSTAND_VOCAB) . ')';
             }
         }

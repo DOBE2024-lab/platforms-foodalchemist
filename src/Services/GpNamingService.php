@@ -29,6 +29,9 @@ class GpNamingService
      */
     public const ZUSTAND_VOCAB = ['frisch', 'TK', 'trocken', 'konserviert', 'gepökelt', 'geräuchert', 'luftgetrocknet'];   // Kanon mit echten Umlauten (Dominique 19.10.)
 
+    /** Regel 821 Teil 3 (14.11.2026): einziger erlaubter Doppelzustand ohne TK — geräucherter Pökel-Aufschnitt (`Putenbrust: Scheiben, gepökelt, geräuchert`). */
+    public const ZUSTAND_POEKEL_RAUCH = 'gepökelt, geräuchert';
+
     /** §9 v3.6.0: die drei Behandlungs-Zustände (Fleisch/Wurst/Fisch) — für Matching und Lager wie „haltbar gemacht“. */
     public const BEHANDLUNG = ['gepökelt', 'geräuchert', 'luftgetrocknet'];
 

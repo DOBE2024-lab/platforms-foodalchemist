@@ -62,3 +62,9 @@ it('821 Teil 3: Doppelzustand „gepökelt, geräuchert“ rendert und ist im La
         ->and(\Platform\FoodAlchemist\Support\GpLaufFelder::pruefe(['condition' => 'gepökelt, geräuchert'], '04', null))->toBe([])
         ->and(\Platform\FoodAlchemist\Support\GpLaufFelder::pruefe(['condition' => 'luftgetrocknet, frisch'], '04', null))->not->toBe([]);
 });
+
+it('Portionsbeutel bei Gerichten: „250 g pro Portion“ rendert als „pro Portion“, nicht „pro Stück“ (Entscheid 14.11.)', function () {
+    expect($this->n->renderGpName(['hauptzutat' => 'Coq au Vin', 'condition' => 'TK', 'portion' => '250 g pro Portion', 'zusatz' => 'Block Menü', 'commodity_group_code' => '13']))
+        ->toBe('Coq au Vin: TK, 250 g pro Portion / (Block Menü)')
+        ->and($this->n->renderGpName(['hauptzutat' => 'Berliner', 'condition' => 'TK', 'portion' => '70 g', 'commodity_group_code' => '09']))->toBe('Berliner: TK, 70 g pro Stück');
+});

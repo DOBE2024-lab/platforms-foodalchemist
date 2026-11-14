@@ -720,7 +720,11 @@ class GpNamingService
         }
         if (! empty($in['portion'])) {
             // Stückgewicht exakt wie im Artikel (Regel 75, G14 13.11.2026: keine ±10-%-Toleranz, Spannen bleiben Spannen) — nur die Schreibweise wird vereinheitlicht
-            $parts[] = $this->normalisierePortion((string) $in['portion']) . ' pro Stück';        // „660 g pro Stück" (echter Umlaut im GP-Namen; kein „Portion", Leerzeichen vor der Einheit)
+            // Portionsbeutel bei Gerichten (Entscheid Dominique 14.11.: „Coq au Vin: TK, 250 g pro Portion“) — „pro Portion“ statt „pro Stück“
+            $proPortion = preg_match('/\s*pro\s+Portion\s*$/iu', (string) $in['portion']) === 1;
+            $parts[] = $proPortion
+                ? $this->normalisierePortion((string) preg_replace('/\s*pro\s+Portion\s*$/iu', '', (string) $in['portion'])) . ' pro Portion'
+                : $this->normalisierePortion((string) $in['portion']) . ' pro Stück';        // „660 g pro Stück" (echter Umlaut im GP-Namen; kein „Portion", Leerzeichen vor der Einheit)
         }
         if ($pflicht !== '') {
             $parts[] = self::umlautKanon($pflicht);

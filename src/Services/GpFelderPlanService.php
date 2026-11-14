@@ -165,10 +165,17 @@ class GpFelderPlanService
                     continue;
                 }
             }
+            $keyFrei = null;
             [$keyNeu, $slugNeu, $keyAbleitbar] = $this->neueSchluessel($gp, $this->naming->updateVorschau($modell, $altIn)['in'], $inFertig, $nameNeu);
             if ($keyNeu !== $gp->gp_key) {
                 // gp_key ist je Bereich eindeutig — alle Zeilen (auch merged/soft-gelöscht) zählen mit
                 $kollision = $this->bereich->bereich(DB::table('foodalchemist_gps'), $bereichTeam)->where('gp_key', $keyNeu)->where('id', '!=', $gpId)->first();
+                // Tombstone (merged/rejected/gelöscht) hält nur noch den alten Schlüssel: der Lauf gibt ihn frei (`<key>~<id>`), protokolliert und umkehrbar
+                $tombstone = $kollision !== null && ! isset($neueKeys[$keyNeu]) && ($kollision->deleted_at !== null || in_array($kollision->status, ['merged', 'rejected'], true));
+                if ($tombstone) {
+                    $keyFrei = ['id' => (int) $kollision->id, 'name' => (string) $kollision->name, 'gp_key' => (string) $kollision->gp_key];
+                    $kollision = null;
+                }
                 if ($kollision !== null || isset($neueKeys[$keyNeu])) {
                     $konflikt('Key-Kollision: »' . $keyNeu . '« gehört schon #' . ($kollision->id ?? $neueKeys[$keyNeu]) . ' — Merge-Kandidat?', $nameNeu);
 
@@ -187,7 +194,8 @@ class GpFelderPlanService
             if ($slugNeu !== $gp->main_ingredient_slug) {
                 $geaendert[] = 'main_ingredient_slug';
             }
-            $hinweise = array_values(array_filter([...$pruefung['warnings'], $keyAbleitbar ? null : 'gp_key nicht aus Name/Feldern ableitbar — bleibt']));
+            $hinweise = array_values(array_filter([...$pruefung['warnings'], $keyAbleitbar ? null : 'gp_key nicht aus Name/Feldern ableitbar — bleibt',
+                $keyFrei !== null ? "gp_key von Tombstone #{$keyFrei['id']} freigegeben" : null]));
             if ($geaendert === []) {
                 $ohne++;
                 $bericht[] = [$gpId, $nameAlt, $nameNeu, '', 'ohne_aenderung', implode(' | ', $hinweise)];
@@ -200,6 +208,7 @@ class GpFelderPlanService
             $aenderungen[] = [
                 'gp_id' => $gpId, 'wg' => $gp->commodity_group_code, 'name_alt' => $nameAlt, 'name_neu' => $nameNeu, 'in' => $in, 'felder' => $felder,
                 'gp_key_neu' => $keyNeu, 'slug_neu' => $slugNeu, 'geaendert' => $geaendert, 'hinweise' => $hinweise, 'notiz' => (string) ($z['notiz'] ?? ''),
+                'key_frei' => $keyFrei,
             ];
             $bericht[] = [$gpId, $nameAlt, $nameNeu, implode(',', $geaendert), 'ok', implode(' | ', $hinweise)];
         }
@@ -297,6 +306,16 @@ class GpFelderPlanService
                     if (trim((string) $alt['name']) !== $a['name_alt']) {
                         throw new \RuntimeException('Name seit Planung geändert');
                     }
+                    $tombEintrag = null;
+                    if (($frei = $a['key_frei'] ?? null) !== null) {
+                        $tomb = DB::table('foodalchemist_gps')->where('id', $frei['id'])->lockForUpdate()->first(['id', 'name', 'gp_key', 'status', 'deleted_at']);
+                        if ($tomb === null || $tomb->gp_key !== $frei['gp_key'] || ($tomb->deleted_at === null && ! in_array($tomb->status, ['merged', 'rejected'], true))) {
+                            throw new \RuntimeException("Tombstone #{$frei['id']} seit Planung geändert");
+                        }
+                        $neuerTombKey = $frei['gp_key'] . '~' . $frei['id'];
+                        DB::table('foodalchemist_gps')->where('id', $frei['id'])->update(['gp_key' => $neuerTombKey, 'updated_at' => now()]);
+                        $tombEintrag = ['id' => $frei['id'], 'alt' => ['name' => $tomb->name, 'gp_key' => $frei['gp_key']], 'neu' => ['name' => $tomb->name, 'gp_key' => $neuerTombKey]];
+                    }
                     $modell = FoodAlchemistGp::query()->ohneTeamSicht('master-kuration')->findOrFail($a['gp_id']);
                     FoodAlchemistGp::withoutEvents(fn () => $this->naming->updateGp($team, $modell, $a['in']));
                     $extra = ['gp_key' => $a['gp_key_neu'], 'main_ingredient_slug' => $a['slug_neu']];
@@ -324,6 +343,9 @@ class GpFelderPlanService
                         throw new \RuntimeException("geschriebener Name »{$neu['name']}« ≠ geplant »{$a['name_neu']}«");
                     }
                     $diff = array_values(array_filter($spalten, fn ($s) => ($alt[$s] === null) !== ($neu[$s] === null) || (string) $alt[$s] !== (string) $neu[$s]));
+                    if ($tombEintrag !== null) {
+                        $protokoll['felder'][] = $tombEintrag;   // vor dem GP: der Rückweg (umgekehrte Reihenfolge) gibt erst das GP, dann den Tombstone-Schlüssel zurück
+                    }
                     $protokoll['felder'][] = [
                         'id' => $a['gp_id'],
                         'alt' => array_intersect_key($alt, array_flip([...$diff, 'name', 'gp_key'])),

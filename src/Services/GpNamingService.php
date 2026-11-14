@@ -827,6 +827,10 @@ class GpNamingService
                         if ($this->zahlenTokens((string) $gp->name) !== $zahlen) {
                             continue;
                         }
+                        // Größenangabe ohne Zahl (Non-Food „Größe S/M/L/XL“, Regel 65) trennt ebenfalls: der Tokenizer verwirft Einzelbuchstaben
+                        if ($this->groessenToken((string) $gp->name) !== $this->groessenToken($name)) {
+                            continue;
+                        }
                         $c = $this->engine->tokenize($gp->name);
                         if ($c === []) {
                             continue;
@@ -1134,6 +1138,12 @@ class GpNamingService
      * („2000 g", 19 Namen; nur 1 Name mit „3 kg") und Milliliter („80 ml"), darum kg → g und l → ml. Komma als Dezimaltrenner („62,5 g"),
      * „ca." bleibt erhalten. Nicht Lesbares bleibt unverändert (getrimmt).
      */
+    /** „Größe S“/„Größe XL“ aus einem GP-Namen (Non-Food-Größen), normalisiert; null ohne Größe. */
+    private function groessenToken(string $name): ?string
+    {
+        return preg_match('/Gr(?:ö|oe)(?:ß|ss)e\s+([0-9A-Za-z\/-]+)/u', $name, $m) === 1 ? mb_strtoupper($m[1]) : null;
+    }
+
     public function normalisierePortion(string $portion): string
     {
         // „300 g pro Stück“ als Eingabe: der Renderer hängt „pro Stück“ selbst an (GP-Lauf 14.11.: „… pro Stück pro Stück“)

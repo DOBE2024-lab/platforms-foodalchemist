@@ -242,3 +242,11 @@ it('Key-Kollision mit Tombstone (merged): Schlüssel wird freigegeben (<key>~<id
     ($this->lauf)(['--team' => $this->team, '--plan' => $plan])->assertSuccessful();
     expect(file_get_contents(($this->datei)('_felder_konflikte.csv')))->toContain('Key-Kollision');
 });
+
+it('821 Teil 3: Doppelzustand „gepökelt, geräuchert“ wird im Lauf geschrieben (Validator lässt ihn zu)', function () {
+    $gp = ($this->gp)(['main_ingredient_display' => 'Putenbrust', 'form' => 'Scheiben', 'condition' => 'gepökelt', 'commodity_group_code' => '04']);
+    $plan = ($this->plan)([['gp_id' => $gp->id, 'name_alt' => $gp->name, 'felder' => ['condition' => 'gepökelt, geräuchert']]]);
+
+    ($this->apply)(['--team' => $this->team, '--plan' => $plan])->assertSuccessful();
+    expect($gp->fresh()->name)->toBe('Putenbrust: Scheiben, gepökelt, geräuchert');
+});

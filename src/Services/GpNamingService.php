@@ -761,7 +761,7 @@ class GpNamingService
                 }
             }
         }
-        if ($condition !== null && ! in_array($condition, self::ZUSTAND_VOCAB, true)) {
+        if ($condition !== null && ! in_array($condition, self::ZUSTAND_VOCAB, true) && $condition !== self::ZUSTAND_POEKEL_RAUCH) {
             $errors[] = "§9: Zustand »{$condition}« ist nicht im Pflicht-Vokabular (" . implode('/', self::ZUSTAND_VOCAB) . ').';
         }
         if ($condition !== null && $this->ohneZustandswort($in)) {

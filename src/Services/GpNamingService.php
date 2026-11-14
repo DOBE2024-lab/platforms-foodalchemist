@@ -265,6 +265,9 @@ class GpNamingService
         if ($gebinde !== null && preg_match('/(?<![\p{L}-])Flasche(?![\p{L}])/u', $pflicht) === 1 && str_ends_with($gebinde, 'flasche')) {
             // „Flasche 0,33 l“ aus der KI + Material im Artikel → „Glasflasche 0,33 l“ bzw. „PET-Flasche 0,33 l“
             $pflicht = (string) preg_replace('/(?<![\p{L}-])Flasche(?![\p{L}])/u', $gebinde, $pflicht, 1);
+        } elseif (preg_match('/(?<![\p{L}-])Flasche(?![\p{L}])/u', $pflicht) === 1) {
+            // 71a v3.10: Gebinde nur mit belegtem Material — „Flasche“ ohne Material (auch aus MW/EW) fällt weg, die Füllmenge bleibt
+            $pflicht = trim((string) preg_replace(['/(?<![\p{L}-])Flasche\s*(?![\p{L}])/u', '/\s{2,}/u'], ['', ' '], $pflicht), " \t,");
         }
         $hatGebinde = preg_match('/' . self::GEBINDE_MUSTER . '/u', $pflicht) === 1;
         if (self::fuellmenge($pflicht) === null && ($menge = self::fuellmenge($text)) !== null) {
@@ -280,11 +283,12 @@ class GpNamingService
     }
 
     /** Gebinde-Arten bei Getränken (§7.1a, v3.8.2): mit Material, weil Glas/PET/Tetra fachlich zählt. */
-    private const GEBINDE_MUSTER = '(?:Glasflasche|PET-Flasche|Tetra Pak|Dose|Fass|Bag-in-Box)';
+    private const GEBINDE_MUSTER = '(?:Glasflasche|PET-Flasche|Tetra Pak|Dose|Fass|Bag-in-Box|Beutel|Kanister)';   // 71a v3.10: + Beutel, Kanister
 
     /**
-     * Gebinde-Art mit Material aus dem Artikeltext — nur, was belegt ist, sonst null (kein Material erfinden): PET → PET-Flasche, Glas/MW/EW → Glasflasche,
-     * Pk/Tetra → Tetra Pak, Dose/Ds → Dose, KEG/Fass → Fass, BiB → Bag-in-Box. PET schlägt MW/EW (Mehrweg gibt es auch in PET); „Fl.“ allein ist kein Material.
+     * Gebinde-Art mit Material aus dem Artikeltext — nur, was belegt ist, sonst null (kein Material erfinden): PET → PET-Flasche, Glas → Glasflasche,
+     * Pk/Tetra → Tetra Pak, Dose/Ds → Dose, KEG/Fass → Fass, BiB → Bag-in-Box, Beutel, Kanister. Mehrweg/Einweg (MW/EW) ist kein Material (71a v3.10,
+     * 13.11.2026) → kein Gebinde; „Fl.“ allein ist kein Material.
      */
     public static function gebindeArt(string $text): ?string
     {
@@ -294,10 +298,12 @@ class GpNamingService
         // Reihenfolge und Wörter wie das Vorschlagsskript der GP-Bereinigung (00_INBOX/_GP_Cleanup/io_getraenke_marke, $gebinde) — beide leiten gleich ab
         return match (true) {
             $wort('pet|petfl|kunststoff') || str_contains($t, 'pet-') => 'PET-Flasche',
-            $wort('glas|glasflasche|glasfl|mw|ew|mehrweg|einweg') => 'Glasflasche',
+            $wort('glas|glasflasche|glasfl') => 'Glasflasche',
             $wort('tetra|tetrapak|tetra pak|tp|pk') => 'Tetra Pak',
             $wort('dose|dosen|ds|can') => 'Dose',
             $wort('fass|fässer|faesser|keg') => 'Fass',
+            $wort('beutel|btl') => 'Beutel',
+            $wort('kanister') => 'Kanister',
             $wort('bib|bag in box|bag-in-box') => 'Bag-in-Box',
             default => null,
         };
@@ -351,8 +357,12 @@ class GpNamingService
         foreach (['processing', 'form', 'pflichtangabe'] as $feld) {
             $fett = [...$fett, ...\Platform\FoodAlchemist\Support\FettAngabe::ziehe((string) ($in[$feld] ?? ''))[0]];
         }
+        // 828 R1 (v3.10): ein Getränke-GP = Marke + Produkt + Gebinde + Füllmenge — Gebinde/Füllmenge/vol-% stehen in der Pflichtangabe und trennen am Schlüssel
+        $wg = (string) ($in['warengruppe'] ?? $in['commodity_group_code'] ?? '');
         $merkmale = array_filter([
             trim((string) ($in['portion'] ?? '')) !== '' ? $this->normalisierePortion((string) $in['portion']) : '',
+            $wg === '15' ? trim((string) ($in['pflichtangabe'] ?? '')) : '',
+            $wg === '15' && in_array($this->normalisiereZustand($in['condition'] ?? null), ['TK', 'frisch'], true) ? (string) $this->normalisiereZustand($in['condition']) : '',
             implode(' ', $fett),
             \Platform\FoodAlchemist\Support\GpNamensKlammern::land($in['herkunft_land'] ?? null),
             ! empty($in['msc']) ? 'msc' : (! empty($in['asc']) ? 'asc' : ''),
@@ -602,8 +612,9 @@ class GpNamingService
             return true;
         }
         if ($wg === '15') {
-            // Ausnahme (Kurator/Klaus 26.10.): Kaffee, Tee und Kakaogetränkepulver sind Grundstoffe und behalten „trocken“; trinkfertige Getränke nie
-            return $this->normalisiereZustand($in['condition'] ?? null) !== 'trocken';
+            // Ausnahme (Kurator/Klaus 26.10.): Kaffee, Tee und Kakaogetränkepulver sind Grundstoffe und behalten „trocken“. 829 R6 (v3.10, 13.11.2026):
+            // TK und frisch bleiben sichtbar und trennen (`Eiswürfel: TK`, `Grapefruitsaft: frisch, PET-Flasche 1 l`); sonst trinkfertig ohne Zustand
+            return ! in_array($this->normalisiereZustand($in['condition'] ?? null), ['trocken', 'TK', 'frisch'], true);
         }
         if ($wg === '11') {
             return true;   // ganze WG 11: Öle, feste Fette (11.4 Schmalz, Bratfett, Frittierfett — Regel 830 Teil 2) und Essig (11.3, O1 13.11.2026)
@@ -1125,7 +1136,8 @@ class GpNamingService
      */
     public function normalisierePortion(string $portion): string
     {
-        $p = trim($portion);
+        // „300 g pro Stück“ als Eingabe: der Renderer hängt „pro Stück“ selbst an (GP-Lauf 14.11.: „… pro Stück pro Stück“)
+        $p = trim((string) preg_replace('/\s*pro\s+St(?:ü|ue)ck\s*$/iu', '', trim($portion)));
         if (! preg_match('/^(ca\.?\s*)?(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l)?$/iu', $p, $m)) {
             return $p;
         }

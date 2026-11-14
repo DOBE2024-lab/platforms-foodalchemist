@@ -30,7 +30,7 @@ class GpFelderPlanService
         'name', 'gp_key', 'main_ingredient_slug', 'main_ingredient_display', 'condition', 'condition_source', 'processing', 'form', 'flavor', 'zusatz',
         'pflichtangabe', 'portion', 'bio', 'namens_vegan', 'namens_glutenfrei', 'namens_laktosefrei', 'namens_msc', 'namens_asc', 'herkunft_land',
         'angabe_status', 'angabe_grund', 'commodity_group_code', 'sub_category', 'rezepturware', 'marke_offen', 'piece_default_g', 'is_derivat',
-        'derivat_von_gp_id', 'requires_la', 'alkohol', 'alkohol_source',
+        'derivat_von_gp_id', 'requires_la', 'alkohol', 'alkohol_source', ...GpLaufFelder::TAGS,
     ];
 
     public function __construct(
@@ -237,7 +237,10 @@ class GpFelderPlanService
             $key === $n->slugify((string) $gp->name) => $n->slugify($nameNeu),
             $key === $n->gpKeyAusFeldern($altSlug, $altIn) => $n->gpKeyAusFeldern($neuSlug, $neuIn),
             $key === $n->buildGpKey($altSlug, $altIn['processing'] ?? null, $altIn['form'] ?? null, $altIn['flavor'] ?? null, $altIn['zusatz'] ?? null)
-                => $n->buildGpKey($neuSlug, $neuIn['processing'] ?? null, $neuIn['form'] ?? null, $neuIn['flavor'] ?? null, $neuIn['zusatz'] ?? null),
+                // Getränke (828 R1): Gebinde + Füllmenge trennen am Schlüssel — Alt-Schlüssel in Kurzform wandern in die Feld-Form mit Merkmal-Slot
+                => (string) ($neuIn['warengruppe'] ?? $neuIn['commodity_group_code'] ?? '') === '15'
+                    ? $n->gpKeyAusFeldern($neuSlug, $neuIn)
+                    : $n->buildGpKey($neuSlug, $neuIn['processing'] ?? null, $neuIn['form'] ?? null, $neuIn['flavor'] ?? null, $neuIn['zusatz'] ?? null),
             default => null,
         };
         $slug = $gp->main_ingredient_slug;
@@ -257,7 +260,8 @@ class GpFelderPlanService
             $gleich = match ($feld) {
                 'bio' => (trim((string) $ist) !== '') === (bool) $wert,
                 'namens_vegan', 'namens_glutenfrei', 'namens_laktosefrei', 'namens_msc', 'namens_asc', 'marke_offen' => (bool) $ist === (bool) $wert,
-                'rezepturware' => ($ist === null ? null : (bool) $ist) === ($wert === null ? null : (bool) $wert),
+                'rezepturware', 'tag_is_vegan', 'tag_is_vegetarian', 'tag_is_halal', 'tag_contains_pork', 'tag_contains_beef'
+                    => ($ist === null ? null : (bool) $ist) === ($wert === null ? null : (bool) $wert),
                 'piece_default_g' => ($ist === null ? null : round((float) $ist, 2)) === ($wert === null ? null : round((float) $wert, 2)),
                 'condition' => (string) $this->naming->normalisiereZustand((string) $ist) === (string) $this->naming->normalisiereZustand((string) $wert),
                 default => trim((string) $ist) === trim((string) $wert),
@@ -301,6 +305,11 @@ class GpFelderPlanService
                     }
                     if (array_key_exists('marke_offen', $a['felder'])) {
                         $extra['marke_offen'] = (bool) $a['felder']['marke_offen'];   // ausdrücklich gesetzt: nach updateGp (das leitet es sonst ab)
+                    }
+                    foreach (GpLaufFelder::TAGS as $tag) {
+                        if (array_key_exists($tag, $a['felder'])) {
+                            $extra[$tag] = $a['felder'][$tag] === null ? null : (bool) $a['felder'][$tag];   // null = offen
+                        }
                     }
                     if (array_key_exists('condition', $a['felder']) && trim((string) $a['felder']['condition']) === '') {
                         $extra['condition'] = null;   // updateGp leert den Zustand nie; der Plan darf es (Name wurde ohne Zustand gerendert)

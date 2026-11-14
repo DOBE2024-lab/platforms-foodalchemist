@@ -674,6 +674,17 @@ class GpNamingService
                 $tkHinten = true;
             }
         }
+        // Regel 821 Teil 3: geräucherter Pökel-Aufschnitt = Zustand „gepökelt“ + „geräuchert“ in der Verarbeitung; im Namen „…, gepökelt, geräuchert“
+        // (Datenmodell wie TK: die Zustandsspalte trägt nur ein Wort)
+        $rauchHinten = false;
+        if ($condition === 'gepökelt') {
+            $teileV = \Platform\FoodAlchemist\Support\FettAngabe::teile($verarbeitung);
+            $ohneRauch = array_values(array_filter($teileV, fn ($t) => preg_match('/^ger(?:ä|ae)uchert$/iu', $t) !== 1));
+            if (count($ohneRauch) !== count($teileV)) {
+                $verarbeitung = implode(', ', $ohneRauch);
+                $rauchHinten = true;
+            }
+        }
         // Fettwert (Regel 826/75, M2/M4): exakt, „N % Fett“ bzw. „N % Fett i. Tr.“, immer direkt hinter dem Zustand — auch wenn er im Feld
         // Verarbeitung, Zuschnitt oder Pflichtangabe steht. Felder ohne Fettwert bleiben Zeichen für Zeichen unverändert.
         $fett = [];
@@ -697,6 +708,9 @@ class GpNamingService
         }
         if ($condition !== null) {
             $parts[] = $condition;
+        }
+        if ($rauchHinten) {
+            $parts[] = 'geräuchert';
         }
         if ($tkHinten) {
             $parts[] = 'TK';

@@ -248,5 +248,14 @@ it('821 Teil 3: Doppelzustand „gepökelt, geräuchert“ wird im Lauf geschrie
     $plan = ($this->plan)([['gp_id' => $gp->id, 'name_alt' => $gp->name, 'felder' => ['condition' => 'gepökelt, geräuchert']]]);
 
     ($this->apply)(['--team' => $this->team, '--plan' => $plan])->assertSuccessful();
-    expect($gp->fresh()->name)->toBe('Putenbrust: Scheiben, gepökelt, geräuchert');
+    expect($gp->fresh()->name)->toBe('Putenbrust: Scheiben, gepökelt, geräuchert')
+        ->and($gp->fresh()->condition)->toBe('gepökelt')                       // Zustandsspalte trägt ein Wort (DB-Länge), Räucherung in processing
+        ->and($gp->fresh()->processing)->toContain('geräuchert');
+
+    // mit TK: Behandlungen, dann TK; Gegenprobe ohne Räucherung bleibt „gepökelt“
+    $tk = ($this->gp)(['main_ingredient_display' => 'Putensaftschinken', 'form' => 'Würfel', 'condition' => 'gepökelt', 'commodity_group_code' => '04']);
+    $plan2 = ($this->plan)([['gp_id' => $tk->id, 'name_alt' => $tk->name, 'felder' => ['condition' => 'gepökelt, geräuchert, TK']]]);
+    ($this->apply)(['--team' => $this->team, '--plan' => $plan2])->assertSuccessful();
+    expect($tk->fresh()->name)->toBe('Putensaftschinken: Würfel, gepökelt, geräuchert, TK')
+        ->and(app(GpNamingService::class)->renderGpName(['hauptzutat' => 'Putenbrust', 'form' => 'Scheiben', 'condition' => 'gepökelt']))->toBe('Putenbrust: Scheiben, gepökelt');
 });

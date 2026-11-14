@@ -60,6 +60,16 @@ final class GpLaufFelder
      */
     public static function zustandZerlegen(array $felder, ?string $istProcessing = null): array
     {
+        // Regel 821 Teil 3: „gepökelt, geräuchert[, TK]“ → condition gepökelt, „geräuchert“ (und ggf. TK) vorn in processing; der Renderer stellt beides hinter den Zustand
+        if (is_string($felder['condition'] ?? null)
+            && preg_match('/^\s*gep(?:ö|oe)kelt\s*,\s*ger(?:ä|ae)uchert\s*(,\s*(?:TK|tiefgek(?:ü|ue)hlt))?\s*$/iu', $felder['condition'], $m) === 1) {
+            $felder['condition'] = 'gepökelt';
+            $proc = trim((string) (array_key_exists('processing', $felder) ? $felder['processing'] : $istProcessing));
+            $teile = array_values(array_filter(FettAngabe::teile($proc), fn ($t) => preg_match('/^(?:ger(?:ä|ae)uchert|TK|tiefgek(?:ü|ue)hlt)$/iu', $t) !== 1));
+            $felder['processing'] = implode(', ', [...(! empty($m[1]) || array_filter(FettAngabe::teile($proc), fn ($t) => preg_match('/^(?:TK|tiefgek(?:ü|ue)hlt)$/iu', $t) === 1) ? ['TK'] : []), 'geräuchert', ...$teile]);
+
+            return $felder;
+        }
         if (! is_string($felder['condition'] ?? null)
             || preg_match('/^\s*(gep(?:ö|oe)kelt|ger(?:ä|ae)uchert|luftgetrocknet)\s*,\s*(?:TK|tiefgek(?:ü|ue)hlt)\s*$/iu', $felder['condition'], $m) !== 1) {
             return $felder;

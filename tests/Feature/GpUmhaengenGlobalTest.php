@@ -137,3 +137,27 @@ it('gp_aufloesen global: Rest geht ans Ziel, Quelle merged; team-eigenes Ziel is
         ->and((int) DB::table('foodalchemist_supplier_item_structures')->where('supplier_item_id', $la)->value('gp_id'))->toBe($ziel->id)
         ->and((int) DB::table('foodalchemist_gps')->where('id', $ziel->id)->value('lead_la_supplier_item_id'))->toBe($la);
 });
+
+it('nie angebundener Artikel (keine Verknüpfungszeile): umhängen und neues_gp legen sie an, lösen bleibt Konflikt, --zurueck setzt gp_id wieder auf null', function () {
+    $ziel = ($this->gp)('Honigkresse: frisch');
+    $neuItem = fn (string $bez) => (int) FoodAlchemistSupplierItem::create(['team_id' => null, 'supplier_id' => $this->sup->id, 'designation' => $bez, 'article_number' => uniqid(), 'qty' => 1, 'unit_code' => 'kg'])->id;
+    $a = $neuItem('Honey Cress 100g');
+    $b = $neuItem('Shiso Cress grün');
+    $c = $neuItem('Affilla Cress');
+    $felder = json_encode(['main_ingredient_display' => 'Shisokresse', 'condition' => 'frisch', 'commodity_group_code' => '03'], JSON_UNESCAPED_UNICODE);
+    $plan = ($this->plan)([['umhaengen', $a, '', $ziel->id], ['neues_gp', $b, '', '', 'Shisokresse: frisch', '', '', 'approved', '', $felder]]);
+
+    ($this->apply)(['--global' => true, '--plan' => [$plan]])->assertSuccessful();
+    $neu = DB::table('foodalchemist_gps')->where('name', 'Shisokresse: frisch')->first();
+    expect((int) DB::table('foodalchemist_supplier_item_structures')->where('supplier_item_id', $a)->value('gp_id'))->toBe($ziel->id)
+        ->and($neu)->not->toBeNull()
+        ->and((int) DB::table('foodalchemist_supplier_item_structures')->where('supplier_item_id', $b)->value('gp_id'))->toBe((int) $neu->id);
+
+    ($this->lauf)(['--zurueck' => collect(glob($this->dir . '/*_umhaengen_protokoll.json'))->last()])->assertSuccessful();
+    expect(DB::table('foodalchemist_supplier_item_structures')->where('supplier_item_id', $a)->value('gp_id'))->toBeNull();
+
+    // lösen braucht eine bestehende Verknüpfung
+    $los = ($this->plan)([['loesen', $c, '', '']]);
+    ($this->lauf)(['--global' => true, '--plan' => [$los]])->assertSuccessful();
+    expect(($this->konflikte)())->toContain('keine Verknüpfungszeile');
+});

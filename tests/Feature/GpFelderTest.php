@@ -221,3 +221,24 @@ it('Ernährungs-Merkmale (Gelatine ≠ vegetarisch, Georg 14.11.): true/false/nu
     ($this->lauf)(['--team' => $this->team, '--plan' => $falsch])->assertSuccessful();
     expect(file_get_contents(($this->datei)('_felder_konflikte.csv')))->toContain('true/false erwartet');
 });
+
+it('Key-Kollision mit Tombstone (merged): Schlüssel wird freigegeben (<key>~<id>), --zurueck stellt beide her; aktives GP blockiert weiter', function () {
+    $gp = ($this->gp)();
+    $svc = app(GpNamingService::class);
+    $zielKey = $svc->slugify('Banane: ganz, TK');
+    $tomb = FoodAlchemistGp::create(['team_id' => $this->team, 'name' => 'Banane alt: TK', 'gp_key' => $zielKey, 'status' => 'merged',
+        'main_ingredient_display' => 'Banane alt', 'main_ingredient_slug' => 'banane_alt', 'commodity_group_code' => '02']);
+    $plan = ($this->plan)([['gp_id' => $gp->id, 'name_alt' => $gp->name, 'felder' => ['condition' => 'TK']]]);
+
+    ($this->apply)(['--team' => $this->team, '--plan' => $plan])->assertSuccessful();
+    expect($gp->fresh()->gp_key)->toBe($zielKey)->and($tomb->fresh()->gp_key)->toBe($zielKey . '~' . $tomb->id)
+        ->and($gp->fresh()->name)->toBe('Banane: ganz, TK');
+
+    ($this->lauf)(['--team' => $this->team, '--zurueck' => ($this->datei)('_felder_protokoll.json'), '--ohne-recompute' => true])->assertSuccessful();
+    expect($gp->fresh()->name)->toBe('Banane: ganz, frisch')->and($tomb->fresh()->gp_key)->toBe($zielKey);
+
+    // Gegenprobe: ist der Halter aktiv, bleibt es eine Key-Kollision (kein Freigeben)
+    $tomb->update(['status' => 'approved']);
+    ($this->lauf)(['--team' => $this->team, '--plan' => $plan])->assertSuccessful();
+    expect(file_get_contents(($this->datei)('_felder_konflikte.csv')))->toContain('Key-Kollision');
+});

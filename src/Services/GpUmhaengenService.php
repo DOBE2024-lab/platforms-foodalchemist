@@ -241,6 +241,14 @@ class GpUmhaengenService
 
                     continue;
                 }
+                // Allergen-/Deklarations-Riegel wie beim Einzel-Verknüpfen (LeadLaService::guardAbweichungen): der Massenlauf vom
+                // 15.11.2026 hing ohne diese Prüfung Artikel mit abweichenden Allergenen an (185 Konflikt-GPs, 26 Fehlverknüpfungen).
+                $abweichung = $this->allergenAbweichung($teamId, $zielId, $si);
+                if ($abweichung !== []) {
+                    $fehler('Allergen-/Deklarationsabweichung zum Ziel-GP: ' . implode(', ', $abweichung) . ' — nicht umhängen (Guard wie Verknüpfen)');
+
+                    continue;
+                }
                 $aktionen[] = ['aktion' => 'umhaengen', 'structure_id' => (int) $st->id, 'supplier_item_id' => $si, 'gp_alt' => $aktuell, 'gp_neu' => $zielId];
 
                 continue;
@@ -313,6 +321,26 @@ class GpUmhaengenService
      *
      * @return string|array{name: string, in: array<string,mixed>, neu_wg: string, bio: bool, aus_feldern: bool, extra: array<string,mixed>}  Text = Konflikt
      */
+    /**
+     * Allergen-/Deklarations-Abweichung des Artikels gegen die Bestandsartikel des Ziel-GP (dieselbe Regel wie beim Einzel-Verknüpfen,
+     * {@see \Platform\FoodAlchemist\Services\LeadLaService::guardAbweichungen}). Leer = darf umgehängt werden.
+     *
+     * @return list<string>
+     */
+    private function allergenAbweichung(int $teamId, int $zielId, int $supplierItemId): array
+    {
+        $team = Team::find($teamId);
+        $ziel = \Platform\FoodAlchemist\Models\FoodAlchemistGp::query()->ohneTeamSicht('master-kuration')->find($zielId);
+        if ($team === null || $ziel === null) {
+            return [];
+        }
+        try {
+            return app(LeadLaService::class)->guardAbweichungen($team, $ziel, $supplierItemId);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return [];   // Artikel für das Team nicht sichtbar: die übrigen Plan-Prüfungen greifen
+        }
+    }
+
     private function neuesGpEingabe(array $z, string $quellWg, ?int $bereichTeam, int $teamId): string|array
     {
         $name = trim((string) ($z['neu_name'] ?? ''));

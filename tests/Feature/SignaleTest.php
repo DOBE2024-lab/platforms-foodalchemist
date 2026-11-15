@@ -5,6 +5,7 @@ use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalStatus;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Livewire\ReviewQueue;
+use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
@@ -94,6 +95,20 @@ it('Detektor datenqualitaetGpLa: Summen-Signal mit Anzahl, idempotent, Team-Kett
     $this->detektor->datenqualitaetGpLa($this->rootTeam);
     expect(FoodAlchemistSignal::where('team_id', $this->rootTeam->id)->count())->toBe(1)
         ->and($signal->refresh()->payload['anzahl'])->toBe(3);
+});
+
+it('Detektor datenqualitaetGpLa: zusammengeführte und abgelehnte GPs zählen nicht als „ohne Hauptartikel“', function () {
+    $this->makeGp($this->rootTeam, 'Aktiv ohne LA');
+    $this->makeGp($this->rootTeam, 'Merged ohne LA')->forceFill(['status' => 'merged'])->save();
+    $this->makeGp($this->rootTeam, 'Rejected ohne LA')->forceFill(['status' => 'rejected'])->save();
+
+    expect($this->detektor->datenqualitaetGpLa($this->rootTeam))->toBe(1);
+    expect(FoodAlchemistSignal::where('team_id', $this->rootTeam->id)->firstOrFail()->payload['anzahl'])->toBe(1);
+
+    // Gegenprobe: nur merged/rejected → kein Signal
+    FoodAlchemistGp::where('name', 'Aktiv ohne LA')->update(['status' => 'rejected']);
+    FoodAlchemistSignal::query()->delete();
+    expect($this->detektor->datenqualitaetGpLa($this->rootTeam))->toBe(0);
 });
 
 it('ReviewQueue: Signale in der Inbox, Quick-Actions erledigt/ignoriert/wieder öffnen', function () {

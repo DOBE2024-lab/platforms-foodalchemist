@@ -598,7 +598,10 @@ class SignalDetektorService
     public function datenqualitaetGpLa(Team $team): int
     {
         // Scope = Team-Kette (GPs sind vererbt, wie margeUnterZiel) — vorher ungescoped über ALLE Teams
+        // nur aktive GPs: zusammengeführte (merged) und abgelehnte (rejected) brauchen keinen Hauptartikel
+        // (GP-Lauf 15.11.2026: 273 von 299 gemeldeten waren merged/rejected)
         $q = FoodAlchemistGp::visibleToTeam($team)
+            ->whereIn('status', ['approved', 'tentative'])
             ->where('requires_la', true)
             ->where(fn ($w) => $w->whereNull('lead_la_supplier_item_id')->orWhere('n_las_total', 0));
 

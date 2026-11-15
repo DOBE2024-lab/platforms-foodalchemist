@@ -253,3 +253,27 @@ it('Neues GP, dessen Pipe-Schlüssel an einem BESTEHENDEN GP mit anderem Namen k
     expect($neu)->not->toBeNull()->and($neu->gp_key)->toBe('schokolade_dulcey_blond_trocken_32_kakao')
         ->and(DB::table('foodalchemist_supplier_item_structures')->where('id', $s1->id)->value('gp_id'))->toBe($neu->id);
 });
+
+it('Umhängen: Allergen-Riegel wie beim Verknüpfen — Artikel mit abweichendem Allergen geht nicht an das Ziel-GP (Massenlauf 15.11.2026)', function () {
+    $quelle = ($this->gp)('q|', 'Kresse: frisch');
+    $ziel = ($this->gp)('z|', 'Honigkresse: frisch');
+    $bestand = ($this->la)($ziel, 'Honey Cress');
+    $neu = ($this->la)($quelle, 'Honey Cress Sellerie');
+    $passt = ($this->la)($quelle, 'Honey Cress ohne');
+    \Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::create(['team_id' => $this->team, 'supplier_item_id' => $bestand->supplier_item_id, 'allergen_celery' => 'nicht_enthalten']);
+    \Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::create(['team_id' => $this->team, 'supplier_item_id' => $neu->supplier_item_id, 'allergen_celery' => 'enthalten']);
+    \Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::create(['team_id' => $this->team, 'supplier_item_id' => $passt->supplier_item_id, 'allergen_celery' => 'nicht_enthalten']);
+    $plan = ($this->plan)([
+        ['umhaengen', $neu->supplier_item_id, $quelle->id, $ziel->id, '', '', '', '', ''],
+        ['umhaengen', $passt->supplier_item_id, $quelle->id, $ziel->id, '', '', '', '', ''],
+    ]);
+
+    ($this->lauf)(['--plan' => [$plan]])->assertSuccessful()->expectsOutputToContain('Konflikte: 1');
+    expect(file_get_contents(glob($this->dir . '/*_umhaengen_konflikte.csv')[0]))->toContain('Allergen-/Deklarationsabweichung');
+
+    // Gegenprobe: der passende Artikel läuft, der abweichende bleibt an der Quelle
+    ($this->lauf)(['--plan' => [$plan], '--apply' => true, '--backup-nachweis' => ($this->backup)(), '--ohne-recompute' => true])
+        ->expectsConfirmation('Es gibt Konflikte (sie werden NICHT ausgeführt). Trotzdem die klaren Zeilen ausführen?', 'yes')->assertSuccessful();
+    expect(DB::table('foodalchemist_supplier_item_structures')->where('id', $neu->id)->value('gp_id'))->toBe($quelle->id)
+        ->and(DB::table('foodalchemist_supplier_item_structures')->where('id', $passt->id)->value('gp_id'))->toBe($ziel->id);
+});

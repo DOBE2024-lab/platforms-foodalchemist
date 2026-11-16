@@ -19,6 +19,7 @@ class SteuerklasseBackfillCommand extends Command
         {--apply : wirklich schreiben}
         {--backup-nachweis= : Pfad zum Backup-Dump (Pflicht bei --apply; nicht älter als 24 h)}
         {--bericht= : Ordner für Bericht und Protokoll (Standard: storage/app/fa-steuerklasse)}
+        {--neu-berechnen : auch gesetzte Klassen neu aus der Regel berechnen (nach Regeländerung); nur Abweichungen werden geschrieben}
         {--zurueck= : Protokoll (JSON) eines --apply-Laufs zurücknehmen}';
 
     protected $description = 'Steuerklasse (regulär/ermäßigt) für GPs aus der Regel setzen; Necta-Widersprüche der Artikel berichten';
@@ -35,16 +36,29 @@ class SteuerklasseBackfillCommand extends Command
             foreach (array_chunk($ids, 1000) as $teil) {
                 DB::table('foodalchemist_gps')->whereIn('id', $teil)->update(['vat_profile_key' => null]);
             }
-            $this->info('Zurückgenommen: ' . count($ids) . ' GPs wieder ohne Steuerklasse.');
+            foreach (($p['vorher'] ?? []) as $id => $alt) {   // --neu-berechnen: alte Klasse wiederherstellen
+                DB::table('foodalchemist_gps')->where('id', (int) $id)->update(['vat_profile_key' => $alt]);
+            }
+            $this->info('Zurückgenommen: ' . (count($ids) + count($p['vorher'] ?? [])) . ' GPs.');
 
             return self::SUCCESS;
         }
 
-        $gps = DB::table('foodalchemist_gps')->whereNull('deleted_at')->whereNull('vat_profile_key')
+        $neu = (bool) $this->option('neu-berechnen');
+        $gps = DB::table('foodalchemist_gps')->whereNull('deleted_at')
+            ->when(! $neu, fn ($q) => $q->whereNull('vat_profile_key'))
             ->get(['id', 'name', 'main_ingredient_display', 'commodity_group_code', 'sub_category', 'vat_profile_key']);
         $plan = [];
+        $vorher = [];
         foreach ($gps as $g) {
-            $plan[$svc->regelFuerGp($g)][] = (int) $g->id;
+            $regel = $svc->regelFuerGp($g);
+            if ($g->vat_profile_key !== null && $g->vat_profile_key === $regel) {
+                continue;
+            }
+            if ($g->vat_profile_key !== null) {
+                $vorher[(int) $g->id] = $g->vat_profile_key;
+            }
+            $plan[$regel][] = (int) $g->id;
         }
 
         // Necta-Widersprüche (nur Bericht)
@@ -73,6 +87,9 @@ class SteuerklasseBackfillCommand extends Command
             });
         fclose($h);
 
+        if ($neu) {
+            $this->line('Davon umgestellt (vorher andere Klasse): ' . count($vorher));
+        }
         $this->table(['Klasse', 'GPs'], array_map(fn ($k) => [SteuerklasseService::LABELS[$k] ?? $k, count($plan[$k] ?? [])], SteuerklasseService::KLASSEN));
         $this->line("Artikel, deren Necta-MwSt der GP-Klasse widerspricht: {$wid} → {$bericht}/{$stempel}_necta_widersprueche.csv");
 
@@ -87,12 +104,12 @@ class SteuerklasseBackfillCommand extends Command
         $gesetzt = [];
         foreach ($plan as $klasse => $ids) {
             foreach (array_chunk($ids, 1000) as $teil) {
-                DB::table('foodalchemist_gps')->whereIn('id', $teil)->whereNull('vat_profile_key')->update(['vat_profile_key' => $klasse]);
+                DB::table('foodalchemist_gps')->whereIn('id', $teil)->update(['vat_profile_key' => $klasse]);
             }
-            $gesetzt = array_merge($gesetzt, $ids);
+            $gesetzt = array_merge($gesetzt, array_values(array_filter($ids, fn ($id) => ! isset($vorher[$id]))));
         }
         $protokoll = "{$bericht}/{$stempel}_steuerklasse_protokoll.json";
-        file_put_contents($protokoll, json_encode(['gp_ids' => $gesetzt, 'zeit' => now()->toIso8601String()]));
+        file_put_contents($protokoll, json_encode(['gp_ids' => $gesetzt, 'vorher' => $vorher, 'zeit' => now()->toIso8601String()]));
         $this->info('Gesetzt: ' . count($gesetzt) . " GPs. Protokoll: {$protokoll}");
 
         return self::SUCCESS;

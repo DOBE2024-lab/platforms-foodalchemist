@@ -32,9 +32,11 @@ class SteuerklasseService
     /** Alkohol (auch als Kochzutat, Regel 17) — Erkennung über vol-% oder Gattung. */
     private const ALKOHOL = '/((?<!sch)wein\\b|\\b(weinbrand|cognac|brandy|rum|whisky|whiskey|grappa|likör|sherry|portwein|madeira|marsala|banyuls|sake|calvados|wodka|vodka|gin|kirschwasser|obstbrand|bier)\\b)/iu';
 
-    /** Lebensmittel, die nicht in Anlage 2 stehen (Regel 17): Hummer, Langusten, Austern, Schnecken, Kaviar und Kaviar-Ersatz (Nr. 3, 28),
+    /** Lebensmittel, die nicht in Anlage 2 stehen (Regel 17; ergänzt 16.11.2026 um eindeutige Fälle: Lebensmittelfarben, Xanthan/Gellan/
+     *  Lecithin/Methylcellulose/Maltodextrin (Kap. 29/35/39), Enzyme, Glitzerpuder, Kakaobutter/-bohnen/-nibs — Kap. 18 außer Kakaopulver —, Mirin;
+     *  Mischungen wie Geliermittel/Stabilisatoren (2106) und Agar/Carrageen/Johannisbrot (1302) bleiben bis zur Klärung ermäßigt): Hummer, Langusten, Austern, Schnecken, Kaviar und Kaviar-Ersatz (Nr. 3, 28),
      *  Frucht- und Gemüsesäfte, Nektar, Smoothie (Nr. 32), reine Zusatz-Chemikalien, Pflanzendrinks. */
-    private const REGULAER_WARE = '/(\b(hummer|languste|langusten|auster|austern|schnecke|schnecken|ascorbinsäure|calciumchlorid|calciumlactat|natriumalginat|natriumcitrat|zitronensäure|weinsäure)\b|(?<!frucht|olivenöl|würz)kaviar|rogen\b|(?<!braten|dick)saft\b|nektar\b|\bsmoothie\b(?!-)|(hafer|soja|mandel|reis|erbsen|cashew|dinkel|haselnuss)drink)/iu';
+    private const REGULAER_WARE = '/(\b(hummer|languste|langusten|auster|austern|schnecke|schnecken|ascorbinsäure|calciumchlorid|calciumlactat|natriumalginat|natriumcitrat|zitronensäure|weinsäure)\b|lebensmittelfarbe|gellan|xanthan|agar[- ]?agar|lecithin|methylcellulose|maltodextrin|invertase|glitzer|gummi arabicum|orangenblütenwasser|kakaobutter|kakaobohne|kakaonibs|kakaomasse|\bmirin\b|\bsake\b|shaoxing|johannisbrotkern|guarkern|\beiklar|lavendel|süßholz|verjus|\bkaviar\b(?!-)|(?<!braten|dick)saft\b|nektar\b|\bsmoothie\b(?!-)|(hafer|soja|mandel|reis|erbsen|cashew|dinkel|haselnuss)drink)/iu';
 
     public function __construct(private readonly TeamSettingsService $settings) {}
 
@@ -61,6 +63,16 @@ class SteuerklasseService
             return preg_match(self::GETRAENK_WARE, $kopf) === 1 && preg_match(self::WARE_FORM, $name) === 1 ? 'ermaessigt' : 'regulaer';
         }
         if ($alkohol) {
+            return 'regulaer';
+        }
+        // Regel 17 Teil 2 (Georg 16.11.2026): Süßkartoffel, Maniok, Yams, Taro roh/frisch/TK regulär (0714, Nr. 10 nur Topinambur), zubereitet ermäßigt;
+        // getrocknete Algen regulär (Nr. 22 nimmt Algen aus), Algensalat ermäßigt
+        if ($wg === '01' && preg_match('/(süßkartoffel|suesskartoffel|maniok|\\byams\\b|\\btaro\\b)/iu', $kopf) === 1
+            && preg_match('/(pommes|püree|gegart|frittiert|chips|gebacken)/iu', $name) !== 1) {
+            return 'regulaer';
+        }
+        if (preg_match('/(dulse|kombu|\\bnori\\b|wakame|alge\\b|algen\\b)/iu', $kopf) === 1 && preg_match('/trocken/iu', $name) === 1
+            && preg_match('/salat/iu', $name) !== 1) {
             return 'regulaer';
         }
         // Teigwaren, auch gefüllt (Anlage 2 Nr. 31), bleiben ermäßigt — auch mit Hummer-Füllung

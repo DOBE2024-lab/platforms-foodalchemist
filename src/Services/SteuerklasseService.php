@@ -36,7 +36,7 @@ class SteuerklasseService
      *  Lecithin/Methylcellulose/Maltodextrin (Kap. 29/35/39), Enzyme, Glitzerpuder, Kakaobutter/-bohnen/-nibs — Kap. 18 außer Kakaopulver —, Mirin;
      *  Mischungen wie Geliermittel/Stabilisatoren (2106) und Agar/Carrageen/Johannisbrot (1302) bleiben bis zur Klärung ermäßigt): Hummer, Langusten, Austern, Schnecken, Kaviar und Kaviar-Ersatz (Nr. 3, 28),
      *  Frucht- und Gemüsesäfte, Nektar, Smoothie (Nr. 32), reine Zusatz-Chemikalien, Pflanzendrinks. */
-    private const REGULAER_WARE = '/(\b(hummer|languste|langusten|auster|austern|schnecke|schnecken|ascorbinsäure|calciumchlorid|calciumlactat|natriumalginat|natriumcitrat|zitronensäure|weinsäure)\b|lebensmittelfarbe|gellan|xanthan|agar[- ]?agar|lecithin|methylcellulose|maltodextrin|invertase|glitzer|gummi arabicum|orangenblütenwasser|kakaobutter|kakaobohne|kakaonibs|kakaomasse|\bmirin\b|\bsake\b|shaoxing|johannisbrotkern|guarkern|\beiklar|lavendel|süßholz|verjus|\bkaviar\b(?!-)|(?<!braten|dick)saft\b|nektar\b|\bsmoothie\b(?!-)|(hafer|soja|mandel|reis|erbsen|cashew|dinkel|haselnuss)drink)/iu';
+    private const REGULAER_WARE = '/(\b(hummer|languste|langusten|auster|austern|schnecke|schnecken|ascorbinsäure|calciumchlorid|calciumlactat|natriumalginat|natriumcitrat|zitronensäure|weinsäure)\b|lebensmittelfarbe|gellan|xanthan|agar[- ]?agar|lecithin|methylcellulose|invertase|glitzer|gummi arabicum|orangenblütenwasser|kakaobutter|kakaobohne|kakaonibs|kakaomasse|\bmirin\b|\bsake\b|shaoxing|johannisbrotkern|guarkern|\beiklar|lavendel|süßholz|verjus|zitronengras|tonkabohne|\bmaca\b|holunderblüte|hummerkarkasse|\bnatron\b|zitronenaroma|vanillearoma|\bkaviar\b(?!-)|(?<!braten|dick)saft\b|nektar\b|\bsmoothie\b(?!-)|(hafer|soja|mandel|reis|erbsen|cashew|dinkel|haselnuss)drink)/iu';
 
     public function __construct(private readonly TeamSettingsService $settings) {}
 
@@ -73,6 +73,10 @@ class SteuerklasseService
         }
         if (preg_match('/(dulse|kombu|\\bnori\\b|wakame|alge\\b|algen\\b)/iu', $kopf) === 1 && preg_match('/trocken/iu', $name) === 1
             && preg_match('/salat/iu', $name) !== 1) {
+            return 'regulaer';
+        }
+        // Teil 2 v2 (Georg 16.11.2026): Soja-Kochcreme (Alpro Cuisine) regulär nach Rechnung
+        if (preg_match('/sahne-alternative/iu', $kopf) === 1 && preg_match('/soja/iu', $name) === 1) {
             return 'regulaer';
         }
         // Teigwaren, auch gefüllt (Anlage 2 Nr. 31), bleiben ermäßigt — auch mit Hummer-Füllung

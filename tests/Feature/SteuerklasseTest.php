@@ -64,7 +64,16 @@ it('Regel: Lebensmittel ermäßigt; Getränke, Alkohol, Zusatzstoffe, Non-Food r
         ->and($this->svc->regelFuerGp(($this->gp)('Waldmeistersirup', '10')))->toBe('ermaessigt')
         ->and($this->svc->regelFuerGp(($this->gp)('Pökelsalz: trocken', '10')))->toBe('ermaessigt')
         ->and($this->svc->regelFuerGp(($this->gp)('Kaviar-Alternative: Alge / (Cavi-Art) / (Vegan)', '14')))->toBe('ermaessigt')
-        ->and($this->svc->regelFuerGp(($this->gp)('Johannisbrotkernmehl: trocken', '12')))->toBe('regulaer');
+        ->and($this->svc->regelFuerGp(($this->gp)('Johannisbrotkernmehl: trocken', '12')))->toBe('regulaer')
+        // Teil 2 v2 (Georg 16.11.2026)
+        ->and($this->svc->regelFuerGp(($this->gp)('Zitronengras: frisch', '03')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Tonkabohne: ganz, trocken', '10')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Hummerkarkasse: frisch', '05')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Natron: trocken', '12')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Sahne-Alternative: Soja, konserviert / (Alpro, Cuisine)', '14')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Maltodextrin: trocken', '12')))->toBe('ermaessigt')
+        ->and($this->svc->regelFuerGp(($this->gp)('Pfeilwurzstärke: trocken', '12')))->toBe('ermaessigt')
+        ->and($this->svc->regelFuerGp(($this->gp)('Hefe: trocken', '12')))->toBe('ermaessigt');
 });
 
 it('Artikel: eigene Klasse vor GP-Klasse; Necta-Zahl nur 7/19/0 zuordenbar, Widerspruch erkannt', function () {

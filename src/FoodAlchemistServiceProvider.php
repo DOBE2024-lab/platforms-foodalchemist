@@ -99,6 +99,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
                 \Platform\FoodAlchemist\Console\ImportMasterCommand::class,
                 \Platform\FoodAlchemist\Console\GpBereinigenCommand::class,
                 \Platform\FoodAlchemist\Console\GpUmhaengenCommand::class,
+                \Platform\FoodAlchemist\Console\SteuerklasseBackfillCommand::class,   // MwSt als Klasse statt Zahl (16.11.2026)
                 \Platform\FoodAlchemist\Console\GpFelderCommand::class,
                 \Platform\FoodAlchemist\Console\AbgleichEvalCommand::class,   // Abgleich-Dienst: Eval (schreibt nie, zurückgerollte Transaktion)
                 \Platform\FoodAlchemist\Console\GpPaketImportCommand::class,   // E2: GP-Paket → io (global, stamm_paket)

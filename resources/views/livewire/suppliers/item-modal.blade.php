@@ -530,9 +530,21 @@
                         @endforeach
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                        <x-fa::field label="Mehrwertsteuer in %" for="la-vat">
-                            <x-fa::input id="la-vat" wire:model="eigenschaften.vat" inputmode="decimal" placeholder="7 oder 19" numeric :disabled="! $darfEdit" />
-                        </x-fa::field>
+                        <div class="flex flex-col gap-1.5 min-w-0" data-steuerklasse>
+                            <x-fa::field label="Steuerklasse" for="la-vat-klasse">
+                                <x-fa::select id="la-vat-klasse" wire:model="eigenschaften.vat_profile_key" placeholder="wie Grundprodukt"
+                                    :options="\Platform\FoodAlchemist\Services\SteuerklasseService::LABELS" :disabled="! $darfEdit" />
+                            </x-fa::field>
+                            @if($steuer)
+                                <p class="text-[length:var(--fa-text-xs)] text-[var(--fa-ink-3)]" data-steuer-wirksam>
+                                    Wirksam: {{ $steuer['label'] }} ({{ rtrim(rtrim(number_format($steuer['satz'], 2, ',', ''), '0'), ',') }} %){{ $steuer['quelle'] === 'gp' ? ', vom Grundprodukt' : ($steuer['quelle'] === 'artikel' ? ', am Artikel gesetzt' : '') }}.
+                                    Satz unter Einstellungen → Kalkulation.
+                                    @if($steuer['necta'] !== null)
+                                        <span @class(['text-[var(--fa-warn)]' => $steuer['widerspruch']]) data-steuer-necta>Lieferantenangabe: {{ rtrim(rtrim(number_format((float) $steuer['necta'], 2, ',', ''), '0'), ',') }} %{{ $steuer['widerspruch'] ? ' (weicht ab)' : '' }}</span>
+                                    @endif
+                                </p>
+                            @endif
+                        </div>
                         <x-fa::field label="Ursprungsland" for="la-origin-country">
                             <x-fa::input id="la-origin-country" wire:model="eigenschaften.origin_country" :disabled="! $darfEdit" />
                         </x-fa::field>

@@ -95,7 +95,7 @@ class ItemModal extends Component
         $this->fehler = null;
         $this->stammdaten = $item->only(['designation', 'article_number', 'brand', 'manufacturer', 'origin', 'marketing_name', 'additional_text']);
         $this->verpackung = $item->only(['qty', 'unit_code', 'packaging_unit', 'ordering_unit', 'qty_ordering_per_packaging', 'ean_packaging', 'ean_ordering', 'deposit', 'rental_period', 'fuellgewicht', 'abtropfgewicht']);
-        $this->eigenschaften = $item->only(['is_organic', 'is_vegan', 'is_vegetarian', 'is_alcohol', 'is_halal', 'is_gmo_free', 'is_preorder', 'vat', 'origin_country', 'organic_control_number', 'preorder_days', 'ingredients_supplier']);
+        $this->eigenschaften = $item->only(['is_organic', 'is_vegan', 'is_vegetarian', 'is_alcohol', 'is_halal', 'is_gmo_free', 'is_preorder', 'vat', 'vat_profile_key', 'origin_country', 'organic_control_number', 'preorder_days', 'ingredients_supplier']);
         $this->haltbarkeit = $item->only(['shelf_life_chilled_days', 'shelf_life_frozen_days', 'shelf_life_dry_days']);
         $this->allergene = app(SupplierItemService::class)->getAllergens($item);
         $this->deklarationen = app(SupplierItemService::class)->getDeclarations($item);
@@ -157,7 +157,8 @@ class ItemModal extends Component
                     ->map(fn ($v) => $v === '' || $v === null ? null : (bool) (int) $v)->all(),
                 ...collect($this->eigenschaften)->only(['origin_country', 'organic_control_number', 'ingredients_supplier'])
                     ->map(fn ($v) => $v === '' ? null : $v)->all(),
-                'vat' => ($this->eigenschaften['vat'] ?? '') !== '' ? (float) str_replace(',', '.', (string) $this->eigenschaften['vat']) : null,
+                // 16.11.2026: Steuerklasse statt freier Zahl — der Satz kommt aus den Einstellungen; die Necta-Zahl `vat` bleibt Lieferantenangabe (nicht editierbar)
+                'vat_profile_key' => in_array($this->eigenschaften['vat_profile_key'] ?? '', \Platform\FoodAlchemist\Services\SteuerklasseService::KLASSEN, true) ? $this->eigenschaften['vat_profile_key'] : null,
                 'preorder_days' => ($this->eigenschaften['preorder_days'] ?? '') !== '' ? (int) $this->eigenschaften['preorder_days'] : null,
             ]);
             // Dominique 2026-10-05: EIN Speichern für den ganzen Artikel. Allergene, Zusatzstoffe und
@@ -430,6 +431,7 @@ class ItemModal extends Component
             // Spec 85: Positiv-Lieferant — leere Felder gelten als angenommen nicht enthalten (nur Anzeige; das Formular bleibt roh)
             'allergenAngenommen' => $item !== null ? array_keys(array_filter(\Platform\FoodAlchemist\Support\AllergenAnnahme::zeile(
                 $item->allergens, $item->supplier_id !== null ? (int) $item->supplier_id : null), fn ($f) => $f['angenommen'])) : [],
+            'steuer' => $item !== null && $team !== null ? $this->steuerInfo($item, $team) : null,
             'aktiverPreis' => $aktiv,
             // Rückfall 27.10.: eingestellter Artikel ohne aktiven Preis → letzter bekannter Preis (nur Anzeige, gekennzeichnet)
             'letzterPreis' => $item !== null && $aktiv === null ? $preise->letzterPreisFuer($item->id, $team) : null,
@@ -471,5 +473,23 @@ class ItemModal extends Component
     private function team()
     {
         return Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
+    }
+
+    /** Steuerklasse des Artikels für die Anzeige: wirksame Klasse, Herkunft (Artikel/GP), Satz aus den Einstellungen, Necta-Angabe. */
+    private function steuerInfo(\Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem $item, \Platform\Core\Models\Team $team): array
+    {
+        $svc = app(\Platform\FoodAlchemist\Services\SteuerklasseService::class);
+        $gpId = \Illuminate\Support\Facades\DB::table('foodalchemist_supplier_item_structures')->where('supplier_item_id', $item->id)->whereNull('deleted_at')->value('gp_id');
+        $gp = $gpId !== null ? \Illuminate\Support\Facades\DB::table('foodalchemist_gps')->where('id', $gpId)->first(['name', 'main_ingredient_display', 'commodity_group_code', 'sub_category', 'vat_profile_key']) : null;
+        $klasse = $svc->klasseLa($item, $gp);
+
+        return [
+            'klasse' => $klasse,
+            'label' => \Platform\FoodAlchemist\Services\SteuerklasseService::LABELS[$klasse] ?? $klasse,
+            'satz' => $svc->satz($team, $klasse),
+            'quelle' => in_array($item->vat_profile_key, \Platform\FoodAlchemist\Services\SteuerklasseService::KLASSEN, true) ? 'artikel' : ($gp !== null ? 'gp' : 'lieferant'),
+            'necta' => $item->vat,
+            'widerspruch' => $svc->nectaWiderspruch($item, $gp),
+        ];
     }
 }

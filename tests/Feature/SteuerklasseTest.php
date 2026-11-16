@@ -45,7 +45,12 @@ it('Regel: Lebensmittel ermäßigt; Getränke, Alkohol, Zusatzstoffe, Non-Food r
         ->and($this->svc->regelFuerGp(($this->gp)('Fruchtkaviar: Himbeere, Perle 5 mm, konserviert', '13')))->toBe('ermaessigt')
         ->and($this->svc->regelFuerGp(($this->gp)('Forellenkaviar: frisch', '05')))->toBe('regulaer')
         ->and($this->svc->regelFuerGp(($this->gp)('Ravioli Hummer: TK / (Achenbach)', '08')))->toBe('ermaessigt')
-        ->and($this->svc->regelFuerGp(($this->gp)('Thunfisch: konserviert, in Öl', '05')))->toBe('ermaessigt');
+        ->and($this->svc->regelFuerGp(($this->gp)('Thunfisch: konserviert, in Öl', '05')))->toBe('ermaessigt')
+        // Ergänzung 16.11.2026 (nicht in Anlage 2)
+        ->and($this->svc->regelFuerGp(($this->gp)('Lebensmittelfarbe rot: konserviert, flüssig', '12')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Kakaobutter: trocken', '12')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Kakaopulver: entölt, trocken', '12')))->toBe('ermaessigt')
+        ->and($this->svc->regelFuerGp(($this->gp)('Mirin: konserviert', '10')))->toBe('regulaer');
 });
 
 it('Artikel: eigene Klasse vor GP-Klasse; Necta-Zahl nur 7/19/0 zuordenbar, Widerspruch erkannt', function () {
@@ -115,4 +120,24 @@ it('Artikelmaske: Steuerklasse statt freier Zahl — speichert die Klasse, zeigt
     $c->set('eigenschaften.vat_profile_key', 'regulaer')->call('speichern')->assertSet('fehler', null);
     expect($la->fresh()->vat_profile_key)->toBe('regulaer')
         ->and((float) $la->fresh()->vat)->toBe(19.0);   // Lieferantenangabe bleibt unverändert
+});
+
+it('Backfill --neu-berechnen: stellt nach Regeländerung nur abweichende Klassen um, --zurueck stellt die alte Klasse wieder her', function () {
+    $dir = sys_get_temp_dir() . '/stk2_' . uniqid();
+    File::ensureDirectoryExists($dir);
+    $farbe = $this->makeGp($this->rootTeam, 'Lebensmittelfarbe rot: konserviert, flüssig');
+    $farbe->forceFill(['commodity_group_code' => '12', 'main_ingredient_display' => 'Lebensmittelfarbe rot', 'vat_profile_key' => 'ermaessigt'])->save();   // alte Regel
+    $dinkel = $this->makeGp($this->rootTeam, 'Dinkel: trocken');
+    $dinkel->forceFill(['commodity_group_code' => '07', 'main_ingredient_display' => 'Dinkel', 'vat_profile_key' => 'ermaessigt'])->save();
+    $backup = $dir . '/b.sql';
+    file_put_contents($backup, str_repeat('x', 2048));
+
+    $this->artisan('foodalchemist:steuerklasse-backfill', ['--bericht' => $dir, '--neu-berechnen' => true, '--apply' => true, '--backup-nachweis' => $backup])
+        ->assertSuccessful()->expectsOutputToContain('Davon umgestellt (vorher andere Klasse): 1');
+    expect(DB::table('foodalchemist_gps')->where('id', $farbe->id)->value('vat_profile_key'))->toBe('regulaer')
+        ->and(DB::table('foodalchemist_gps')->where('id', $dinkel->id)->value('vat_profile_key'))->toBe('ermaessigt');
+
+    $this->artisan('foodalchemist:steuerklasse-backfill', ['--zurueck' => glob($dir . '/*_steuerklasse_protokoll.json')[0]])->assertSuccessful();
+    expect(DB::table('foodalchemist_gps')->where('id', $farbe->id)->value('vat_profile_key'))->toBe('ermaessigt');
+    File::deleteDirectory($dir);
 });

@@ -32,9 +32,11 @@ class SteuerklasseService
     /** Alkohol (auch als Kochzutat, Regel 17) — Erkennung über vol-% oder Gattung. */
     private const ALKOHOL = '/((?<!sch)wein\\b|\\b(weinbrand|cognac|brandy|rum|whisky|whiskey|grappa|likör|sherry|portwein|madeira|marsala|banyuls|sake|calvados|wodka|vodka|gin|kirschwasser|obstbrand|bier)\\b)/iu';
 
-    /** Lebensmittel, die nicht in Anlage 2 stehen (Regel 17): Hummer, Langusten, Austern, Schnecken, Kaviar und Kaviar-Ersatz (Nr. 3, 28),
+    /** Lebensmittel, die nicht in Anlage 2 stehen (Regel 17; ergänzt 16.11.2026 um eindeutige Fälle: Lebensmittelfarben, Xanthan/Gellan/
+     *  Lecithin/Methylcellulose/Maltodextrin (Kap. 29/35/39), Enzyme, Glitzerpuder, Kakaobutter/-bohnen/-nibs — Kap. 18 außer Kakaopulver —, Mirin;
+     *  Mischungen wie Geliermittel/Stabilisatoren (2106) und Agar/Carrageen/Johannisbrot (1302) bleiben bis zur Klärung ermäßigt): Hummer, Langusten, Austern, Schnecken, Kaviar und Kaviar-Ersatz (Nr. 3, 28),
      *  Frucht- und Gemüsesäfte, Nektar, Smoothie (Nr. 32), reine Zusatz-Chemikalien, Pflanzendrinks. */
-    private const REGULAER_WARE = '/(\b(hummer|languste|langusten|auster|austern|schnecke|schnecken|ascorbinsäure|calciumchlorid|calciumlactat|natriumalginat|natriumcitrat|zitronensäure|weinsäure)\b|(?<!frucht|olivenöl|würz)kaviar|rogen\b|(?<!braten|dick)saft\b|nektar\b|\bsmoothie\b(?!-)|(hafer|soja|mandel|reis|erbsen|cashew|dinkel|haselnuss)drink)/iu';
+    private const REGULAER_WARE = '/(\b(hummer|languste|langusten|auster|austern|schnecke|schnecken|ascorbinsäure|calciumchlorid|calciumlactat|natriumalginat|natriumcitrat|zitronensäure|weinsäure)\b|lebensmittelfarbe|gellan|xanthan|lecithin|methylcellulose|maltodextrin|invertase|glitzer|kakaobutter|kakaobohne|kakaonibs|\bmirin\b|(?<!frucht|olivenöl|würz)kaviar|rogen\b|(?<!braten|dick)saft\b|nektar\b|\bsmoothie\b(?!-)|(hafer|soja|mandel|reis|erbsen|cashew|dinkel|haselnuss)drink)/iu';
 
     public function __construct(private readonly TeamSettingsService $settings) {}
 

@@ -326,7 +326,7 @@ class SupplierItemService
         'qty', 'unit_code', 'packaging_unit', 'ordering_unit', 'qty_ordering_per_packaging', 'ean_packaging', 'ean_ordering',
         'fuellgewicht', 'abtropfgewicht',   // 12.11.2026: in der Kalkulationseinheit je Bestelleinheit; Abtropfgewicht = Menge für den Preis je kg
         'is_organic', 'is_vegan', 'is_vegetarian', 'is_alcohol', 'is_halal', 'is_gmo_free', 'is_preorder',
-        'vat', 'origin_country', 'organic_control_number', 'preorder_days', 'ingredients_supplier',
+        'vat', 'vat_profile_key', 'origin_country', 'organic_control_number', 'preorder_days', 'ingredients_supplier',
         'shelf_life_chilled_days', 'shelf_life_frozen_days', 'shelf_life_dry_days',
         'deposit', 'rental_period',   // Mietgeschirr: Pfand netto je Stück (nur Beleg) und Mietdauer
     ];

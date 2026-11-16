@@ -43,14 +43,28 @@ it('Regel: Lebensmittel ermäßigt; Getränke, Alkohol, Zusatzstoffe, Non-Food r
         ->and($this->svc->regelFuerGp(($this->gp)('Ananas: Stücke, konserviert, im eigenen Saft', '02')))->toBe('ermaessigt')
         ->and($this->svc->regelFuerGp(($this->gp)('Dip: Barbecue, Bier, frisch / (Starline)', '10', 'Dip')))->toBe('ermaessigt')     // Geschmack entscheidet nicht
         ->and($this->svc->regelFuerGp(($this->gp)('Fruchtkaviar: Himbeere, Perle 5 mm, konserviert', '13')))->toBe('ermaessigt')
-        ->and($this->svc->regelFuerGp(($this->gp)('Forellenkaviar: frisch', '05')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Forellenkaviar: frisch', '05')))->toBe('ermaessigt')        // Regel 17 v2: Ersatz ermäßigt
+        ->and($this->svc->regelFuerGp(($this->gp)('Kaviar: Osietra, frisch', '05')))->toBe('regulaer')
         ->and($this->svc->regelFuerGp(($this->gp)('Ravioli Hummer: TK / (Achenbach)', '08')))->toBe('ermaessigt')
         ->and($this->svc->regelFuerGp(($this->gp)('Thunfisch: konserviert, in Öl', '05')))->toBe('ermaessigt')
         // Ergänzung 16.11.2026 (nicht in Anlage 2)
         ->and($this->svc->regelFuerGp(($this->gp)('Lebensmittelfarbe rot: konserviert, flüssig', '12')))->toBe('regulaer')
         ->and($this->svc->regelFuerGp(($this->gp)('Kakaobutter: trocken', '12')))->toBe('regulaer')
         ->and($this->svc->regelFuerGp(($this->gp)('Kakaopulver: entölt, trocken', '12')))->toBe('ermaessigt')
-        ->and($this->svc->regelFuerGp(($this->gp)('Mirin: konserviert', '10')))->toBe('regulaer');
+        ->and($this->svc->regelFuerGp(($this->gp)('Mirin: konserviert', '10')))->toBe('regulaer')
+        // Regel 17 Teil 2 (Georg 16.11.2026)
+        ->and($this->svc->regelFuerGp(($this->gp)('Süßkartoffel: geschält, Würfel 10 mm, frisch', '01')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Süßkartoffel-Pommes: TK', '01')))->toBe('ermaessigt')
+        ->and($this->svc->regelFuerGp(($this->gp)('Süßkartoffelgratin: frisch / (Peka)', '13')))->toBe('ermaessigt')   // Zubereitung
+        ->and($this->svc->regelFuerGp(($this->gp)('Eiklar: pasteurisiert, frisch / (Bio)', '06')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Eigelb: pasteurisiert, frisch', '06')))->toBe('ermaessigt')
+        ->and($this->svc->regelFuerGp(($this->gp)('Kombualge: trocken', '10')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Algensalat: Wakame, frisch', '13')))->toBe('ermaessigt')
+        ->and($this->svc->regelFuerGp(($this->gp)('Lavendel: trocken', '10')))->toBe('regulaer')
+        ->and($this->svc->regelFuerGp(($this->gp)('Waldmeistersirup', '10')))->toBe('ermaessigt')
+        ->and($this->svc->regelFuerGp(($this->gp)('Pökelsalz: trocken', '10')))->toBe('ermaessigt')
+        ->and($this->svc->regelFuerGp(($this->gp)('Kaviar-Alternative: Alge / (Cavi-Art) / (Vegan)', '14')))->toBe('ermaessigt')
+        ->and($this->svc->regelFuerGp(($this->gp)('Johannisbrotkernmehl: trocken', '12')))->toBe('regulaer');
 });
 
 it('Artikel: eigene Klasse vor GP-Klasse; Necta-Zahl nur 7/19/0 zuordenbar, Widerspruch erkannt', function () {

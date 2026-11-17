@@ -1607,24 +1607,7 @@ class FoodbookService
 
                         continue;
                     }
-                    $editionen = [];
-                    foreach ($format->slots as $fs) {
-                        if ($fs->type === 'concept' && $fs->concept !== null) {
-                            $ed = $fs->concept;
-                            $editionen[] = [
-                                'typ' => 'concept',
-                                'name' => $ed->consumer_name ?: $ed->name,
-                                'claim' => $ed->claim ?: null,
-                                'text' => trim((string) $ed->description) ?: null,
-                                'preis_pp' => $ed->price_per_person_cache !== null ? (float) $ed->price_per_person_cache : null,
-                                'einzelpreise' => $ed->istEinzelpreis(),
-                                'gerichte' => $wording->gerichtZeilen($ed),
-                            ];
-                        } elseif (in_array($fs->type, ['header', 'text', 'spacer'], true)) {
-                            $editionen[] = ['typ' => $fs->type, 'name' => $fs->title, 'text' => $fs->text_content,
-                                'claim' => null, 'preis_pp' => null, 'einzelpreise' => false, 'gerichte' => []];
-                        }
-                    }
+                    $editionen = app(FormatKapitelService::class)->editionen($format);
                     $hero = $format->images->firstWhere('is_hero', true);
                     $rows[] = [
                         'title' => $k->consumer_title ?: ($format->consumer_name ?: $format->name),
@@ -1981,17 +1964,13 @@ class FoodbookService
     }
 
     /**
-     * Format-Umbau F5: ein Format ins Foodbook buchen — WIE EIN CONCEPT, NICHT über den
-     * entfernten Live-Format-Sonderweg (kein `format_id` am Kapitel, kein ist_format-Renderzweig).
-     * Das Format wird eine SEKTION (Struktur-Kapitel, is_struktur — Titel/Kundentitel/Hinführung aus
-     * dem Format, kein eigenes Food); JE KONZEPT entsteht ein Unterkapitel (Dominique 2026-08-27):
-     *  - concept-Slot  → eigenes Unterkapitel (Titel = Konzept-Name) mit einem LIVE concept_ref-Block
-     *  - header-Slot   → header_frei-Block auf der Sektion (Rahmentext)
-     *  - text-Slot     → text-Block auf der Sektion
-     *  - spacer-Slot   → spacer-Block auf der Sektion
-     * „Snapshot" passiert erst beim Kunden-Versand (snapshot_json), nichts wird hier eingefroren.
-     * Kunden-IP-Guard + Status-Guard (versendete/archivierte Bücher sind zu). Kein Recompute nötig
-     * (die Kapitel-Aggregation läuft wie bei jedem anderen Kapitel über die Blöcke).
+     * Ein Format ins Foodbook buchen — als LEBENDES Format-Kapitel (Entscheid B, Dominique 2026-08-31;
+     * löst die Einmal-Expansion C vom 2026-08-27 ab). Angelegt wird EINE Sektion (is_struktur) mit
+     * `format_id` + Kundentitel/Hinführung aus dem Format, ohne Unterkapitel und ohne Blöcke. Die
+     * Editionen (format_slots → Concept) und die Struktur-Slots rendern LIVE aus dem Format
+     * ({@see dokumentDaten}, Zweig `ist_format`; Editor: {@see FormatKapitelService::ansicht}) — Editionen rein/raus
+     * im Format wirken sofort in allen Büchern. Eingefroren wird erst beim Versand (snapshot_json).
+     * Kunden-IP-Guard + Status-Guard (versendete/archivierte Bücher sind zu).
      */
     public function insertFormatAlsKapitel(Team $team, int $foodbookId, int $formatId, ?int $parentId = null): FoodAlchemistFoodbookKapitel
     {

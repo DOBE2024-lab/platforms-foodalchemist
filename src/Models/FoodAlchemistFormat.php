@@ -103,6 +103,15 @@ class FoodAlchemistFormat extends Model
     }
 
     /**
+     * Anzahl Editionen = concept-Slots mit vorhandenem Concept — dieselbe Regel wie
+     * FormatKapitelService::editionen (Foodbook-Format-Kapitel, „fertig" ab einer Edition).
+     */
+    public function editionenAnzahl(): int
+    {
+        return $this->slots->where('type', 'concept')->filter(fn ($s) => $s->concept !== null)->count();
+    }
+
+    /**
      * Read-only Preis-Range (€/Person) über die referenzierten Concepts — reine
      * Reduktion der gespeicherten Caches, KEINE eigene Formel, KEIN Recompute.
      * Editionen (Concept-Referenzen) sind Alternativen (Showcase), daher Range statt Summe.

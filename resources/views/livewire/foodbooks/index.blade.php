@@ -26,6 +26,10 @@
     $haken = 'w-4 h-4 shrink-0 accent-[var(--fa-accent)]';
     $medien = fn ($fileId, $pfad) => app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($fileId, $pfad);
     $euro = fn ($wert) => number_format((float) $wert, 2, ',', '.') . ' €';
+    // Preisspanne eines Formats (priceRange: min/max der Editionen) — „29,00 – 34,00 €" bzw. ein Wert.
+    $spanne = fn (?array $r) => ($r['min'] ?? null) === null ? null
+        : ((($r['max'] ?? null) !== null && (float) $r['max'] !== (float) $r['min'])
+            ? number_format((float) $r['min'], 2, ',', '.') . ' – ' . $euro($r['max']) : $euro($r['min']));
     // Spec 65: Lesemodus = keine eigene Bearbeitungssperre (lesen/fremd) — Editor-Inhalte und Schreib-Knöpfe aus
     $gesperrt = isset($sperr) && in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true);
     $statusTon = fn ($ausgabe) => ['success' => 'ok', 'warning' => 'warn', 'danger' => 'crit', 'info' => 'info', 'primary' => 'accent'][$ausgabe->statusWert()->badgeVariant()] ?? 'neutral';
@@ -122,11 +126,20 @@
                  Gleiche Livewire-Komponente (Index), nur in ein Modal gehüllt — Bus/State/Nested bleiben. --}}
             @php
                 $fbKapitelN = $fb->chapters->count();
-                $fbSpeisenN = collect($menue['kapitel'] ?? [])->sum(fn ($k) => collect($k['bloecke'] ?? [])->sum(fn ($b) => collect($b['gerichte'] ?? [])->reject(fn ($g) => in_array($g['type'] ?? '', ['paket', 'header'], true))->count()));
+                $ohneZwischen = fn ($gerichte) => collect($gerichte ?? [])->reject(fn ($g) => in_array($g['type'] ?? '', ['paket', 'header'], true))->count();
+                // Format-Kapitel tragen ihre Speisen in den Editionen (live aus dem Format), nicht in bloecke.
+                $fbSpeisenN = collect($menue['kapitel'] ?? [])->sum(fn ($k) => collect($k['bloecke'] ?? [])->sum(fn ($b) => $ohneZwischen($b['gerichte'] ?? []))
+                    + collect($k['editionen'] ?? [])->sum(fn ($e) => $ohneZwischen($e['gerichte'] ?? [])));
                 // Ø Wareneinsatz-% (ΣEK/ΣVK) statt Summe aller Kapitel-Preise (Dominique 2026-08-27): Verhältnis = robust.
                 $fbWePct = ($menue['gesamt']['food_cost_percent'] ?? null);
                 // „Fertig X/Y": Kapitel, die per Überblick-Auswahl auf fortschritt=fertig stehen.
                 $fbFertig = collect($kapitelBoard)->where('fortschritt', 'fertig')->count();
+                // Format-Kapitel: Editionen sind Alternativen → kein additiver Preis, sondern die Preisspanne der Formate.
+                $fbFormate = collect($kapitelBoard)->pluck('format')->filter()->values();
+                $fbFormatSpanne = $fbFormate->isEmpty() ? null : $spanne([
+                    'min' => $fbFormate->pluck('preis_range.min')->filter(fn ($v) => $v !== null)->min(),
+                    'max' => $fbFormate->pluck('preis_range.max')->filter(fn ($v) => $v !== null)->max(),
+                ]);
             @endphp
             <x-foodalchemist::modal name="foodbook-editor" fullscreen dark-canvas title="Foodbook" :title-name="$fb->label">
                 <x-slot:titleExtra>
@@ -169,16 +182,19 @@
                 {{-- Spec 29 / S4: Kennzahlen fix im Kopf (scrollen nie weg). Eine Leiste statt Kacheln — spart auf dem
                      Laptop Höhe. Hauptzahl = Ø Wareneinsatz. Alle Werte aus render()-Daten. --}}
                 <x-slot:kpiHeader>
-                    <x-fa::kpis data-fb-kpis :items="[
+                    <x-fa::kpis data-fb-kpis :items="array_values(array_filter([
                         ['kpi' => 'kapitel', 'label' => 'Kapitel', 'value' => (string) $fbKapitelN],
                         ['kpi' => 'speisen', 'label' => 'Speisen', 'value' => (string) $fbSpeisenN],
                         ['kpi' => 'we', 'label' => 'Ø Wareneinsatz', 'primary' => true,
                          'value' => $fbWePct !== null ? number_format((float) $fbWePct, 1, ',', '.') . ' %' : 'Noch offen',
-                         'title' => 'Einkauf durch Verkauf über alle bepreisten Positionen'],
+                         'title' => 'Einkauf durch Verkauf über alle bepreisten Positionen' . ($fbFormate->isNotEmpty() ? '. Format-Kapitel zählen nicht mit, ihre Editionen sind Alternativen.' : '')],
+                        $fbFormate->isNotEmpty() ? ['kpi' => 'format-preis', 'label' => 'Preis Formate',
+                         'value' => $fbFormatSpanne !== null ? $fbFormatSpanne . ' pro Gast' : 'Noch offen',
+                         'title' => 'Preisspanne der Editionen aus den Format-Kapiteln (der Gast wählt eine Edition)'] : null,
                         ['kpi' => 'fertig', 'label' => 'Kapitel fertig',
                          'tone' => ($fbKapitelN > 0 && $fbFertig >= $fbKapitelN) ? 'ok' : null,
                          'value' => $fbFertig . ' von ' . $fbKapitelN],
-                    ]" />
+                    ]))" />
                 </x-slot:kpiHeader>
 
             {{-- Cockpit rendert IMMER, auch mit gewähltem Kapitel (Koexistenz-Bugfix 2026-07-28):
@@ -297,13 +313,24 @@
                                             <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $fortDot[$kap['fortschritt']] ?? $fortDot['offen'] }}" title="Fortschritt: {{ $fortLabel[$kap['fortschritt']] ?? 'Offen' }}"></span>
                                             <span class="min-w-0 break-words text-[length:var(--fa-text-base)] font-medium {{ $kap['is_struktur'] ? 'text-[var(--fa-ink-2)]' : 'text-[var(--fa-ink)]' }}">{{ $kap['titel'] }}</span>
                                             {{-- Textkapitel: Etikett statt Preis-Modus, Speisen-Kennzeichen ausgeblendet. --}}
-                                            @if($kap['is_struktur'])
+                                            @if($kap['format'] ?? null)
+                                                <x-fa::badge tone="accent" class="shrink-0" title="Kommt live aus dem Format, Pflege im Format">Format</x-fa::badge>
+                                            @elseif($kap['is_struktur'])
                                                 <x-fa::badge class="shrink-0">Textkapitel</x-fa::badge>
                                             @elseif($kap['pricing_mode'])
                                                 <span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $preisModus[$kap['pricing_mode']] ?? $kap['pricing_mode'] }}</span>
                                             @endif
                                         </div>
                                         <div class="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5 text-[length:var(--fa-text-md)] tabular-nums" @click.stop>
+                                            @if($kap['format'] ?? null)
+                                                {{-- Lebendes Format-Kapitel: Editionen + Preisspanne aus dem Format statt Positionen/Kapitelpreis. --}}
+                                                <span class="flex flex-wrap items-center gap-1" data-fb-board-format>
+                                                    <x-fa::badge :tone="$kap['format']['editionen_n'] > 0 ? 'info' : 'neutral'">{{ $kap['format']['editionen_n'] }} {{ (int) $kap['format']['editionen_n'] === 1 ? 'Edition' : 'Editionen' }}</x-fa::badge>
+                                                </span>
+                                                @if($spanne($kap['format']['preis_range']))
+                                                    <span class="font-semibold text-[var(--fa-ink)]" title="Preisspanne der Editionen, der Gast wählt eine">{{ $spanne($kap['format']['preis_range']) }}<span class="font-normal text-[var(--fa-ink-3)]"> pro Gast</span></span>
+                                                @endif
+                                            @endif
                                             @unless($kap['is_struktur'])
                                                 <span class="flex flex-wrap items-center gap-1">
                                                     @if($kap['hat_ziele'])<x-fa::badge tone="accent" title="Vorgaben für dieses Kapitel gesetzt">Vorgaben</x-fa::badge>@endif
@@ -326,11 +353,16 @@
                                                 <span class="inline-block h-2 w-2 rounded-full {{ $ampelDot[$we['status']] ?? $ampelDot['unbekannt'] }}"></span>WE {{ $we['ist_pct'] !== null ? $pct($we['ist_pct']) : '–' }}
                                             </span>
                                             {{-- Fortschritt von Hand setzen (offen|in_arbeit|fertig) → treibt Punkt + Kennzahl „Kapitel fertig". --}}
+                                            @if($kap['fortschritt_auto'] ?? false)
+                                                {{-- Format-Kapitel mit Edition: fertig ergibt sich aus dem Format, kein Handwert. --}}
+                                                <span class="text-[var(--fa-ok)]" title="Fertig, weil das Format mindestens eine Edition hat" data-fb-fortschritt-auto>Fertig</span>
+                                            @else
                                             <x-fa::select size="sm" wire:change="kapitelFortschritt({{ $kap['kapitel_id'] }}, $event.target.value)" aria-label="Fortschritt von {{ $kap['titel'] }}" title="Fortschritt setzen" class="w-auto">
                                                 <option value="offen" @selected($kap['fortschritt'] === 'offen')>Offen</option>
                                                 <option value="in_arbeit" @selected($kap['fortschritt'] === 'in_arbeit')>In Arbeit</option>
                                                 <option value="fertig" @selected($kap['fortschritt'] === 'fertig')>Fertig</option>
                                             </x-fa::select>
+                                            @endif
                                             <x-fa::button size="sm" variant="ghost" icon-right="heroicon-m-arrow-right" href="#" x-on:click.prevent="" wire:click="kapitelWaehle({{ $kap['kapitel_id'] }})" title="Kapitel öffnen und Speisen bearbeiten">Kapitel öffnen</x-fa::button>
                                         </div>
                                     </div>
@@ -353,7 +385,9 @@
                                                 </div>
                                             </div>
                                         @empty
-                                            @if(($agg['vk_pro_person'] ?? 0) > 0 || ($agg['pauschal'] ?? 0) > 0)
+                                            @if($kap['format'] ?? null)
+                                                <p class="{{ $hinweis }}">Kommt live aus dem Format „{{ $kap['format']['name'] ?? 'gelöscht' }}“. Editionen und Preise werden im Format gepflegt.</p>
+                                            @elseif(($agg['vk_pro_person'] ?? 0) > 0 || ($agg['pauschal'] ?? 0) > 0)
                                                 <p class="{{ $hinweis }}">Keine eigenen Positionen. Der Preis ist die Summe der Unterkapitel.</p>
                                             @else
                                                 <p class="{{ $hinweis }}">Noch keine bepreisten Positionen. Im Reiter Speisen oder in der Leitstelle anlegen.</p>
@@ -736,7 +770,61 @@
                 </x-fa::section>
 
                 {{-- Inhalt (linke Spalte, unter dem Kapitel-Kopf) --}}
-                <x-fa::section title="Inhalt" icon="heroicon-o-queue-list" :meta="$kapitel->blocks->count() === 1 ? '1 Eintrag' : $kapitel->blocks->count() . ' Einträge'" data-fb-inhalt>
+                <x-fa::section title="Inhalt" icon="heroicon-o-queue-list" data-fb-inhalt
+                    :meta="$formatKapitel !== null
+                        ? ($formatKapitel['editionen_n'] === 1 ? '1 Edition' : $formatKapitel['editionen_n'] . ' Editionen')
+                        : ($kapitel->blocks->count() === 1 ? '1 Eintrag' : $kapitel->blocks->count() . ' Einträge')">
+                    @if($formatKapitel !== null)
+                    {{-- Lebendes Format-Kapitel (Entscheid B 2026-08-31): keine eigenen Blöcke — die Editionen kommen
+                         live aus dem Format (FormatKapitelService::ansicht = dieselbe Quelle wie Dokument/PDF).
+                         Nur lesen; Editionen rein/raus und Preise im Format pflegen. --}}
+                    <div class="flex flex-col gap-3" data-fb-format-kapitel>
+                        <div class="flex flex-wrap items-start justify-between gap-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-accent-soft)] px-3 py-2">
+                            <p class="flex-1 min-w-[14rem] text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" data-fb-format-hinweis>
+                                @if($formatKapitel['fehlt'])
+                                    Das Format dieses Kapitels gibt es nicht mehr. Im Dokument erscheint nur die Überschrift.
+                                @else
+                                    Kommt live aus dem Format „{{ $formatKapitel['name'] }}“. Editionen und Preise werden im Format gepflegt und wirken hier sofort.
+                                    @if($spanne($formatKapitel['preis_range']))<span class="block mt-0.5 text-[var(--fa-ink)] tabular-nums" data-fb-format-spanne>{{ $spanne($formatKapitel['preis_range']) }} pro Gast</span>@endif
+                                @endif
+                            </p>
+                            @unless($formatKapitel['fehlt'])
+                                <x-fa::button size="sm" variant="secondary" icon="heroicon-m-arrow-top-right-on-square" target="_blank"
+                                    :href="route('foodalchemist.formate.index', ['sel' => $formatKapitel['format_id']])" data-fb-format-link>Format öffnen</x-fa::button>
+                            @endunless
+                        </div>
+                        @forelse($formatKapitel['editionen'] as $ed)
+                            @if($ed['typ'] === 'header')
+                                @if(($ed['name'] ?? '') !== '')<p class="mt-1 text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink-2)] break-words">{{ $ed['name'] }}</p>@endif
+                            @elseif($ed['typ'] === 'text')
+                                @if(($ed['text'] ?? '') !== '')<p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] whitespace-pre-line">{{ $ed['text'] }}</p>@endif
+                            @elseif($ed['typ'] === 'concept')
+                                @php
+                                    $edPakete = collect($ed['gerichte'])->where('type', 'paket')->pluck('text')->filter()->values();
+                                    $edSpeisen = collect($ed['gerichte'])->reject(fn ($g) => in_array($g['type'] ?? '', ['paket', 'header'], true))->count();
+                                @endphp
+                                <div class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2" data-fb-format-edition>
+                                    <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                        <span class="min-w-0 break-words text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $ed['name'] }}</span>
+                                        <span class="text-[length:var(--fa-text-md)] tabular-nums text-[var(--fa-ink-2)]">
+                                            @if($ed['einzelpreise'])Preise je Gericht
+                                            @elseif($ed['preis_pp'] !== null){{ $euro($ed['preis_pp']) }} pro Gast
+                                            @else<span class="text-[var(--fa-warn)]">Preis fehlt</span>@endif
+                                        </span>
+                                    </div>
+                                    @if($ed['claim'])<p class="text-[length:var(--fa-text-sm)] italic text-[var(--fa-ink-3)]">{{ $ed['claim'] }}</p>@endif
+                                    <p class="mt-1 {{ $hinweis }}">
+                                        @if($edPakete->isNotEmpty())Pakete: {{ $edPakete->implode(', ') }} · @endif{{ $edSpeisen }} {{ $edSpeisen === 1 ? 'Speise' : 'Speisen' }}
+                                    </p>
+                                </div>
+                            @endif
+                        @empty
+                            <x-fa::empty compact icon="heroicon-o-squares-plus" title="Das Format hat noch keine Editionen">
+                                Editionen im Format ergänzen, sie erscheinen dann hier und im Dokument.
+                            </x-fa::empty>
+                        @endforelse
+                    </div>
+                    @else
                     {{-- Werkzeugleiste: bricht auf schmalen Bildschirmen um (nicht im Kopf, der umbricht nicht). --}}
                     <div class="flex flex-wrap items-center gap-2">
                         @if(count($markiert) >= 2)
@@ -947,6 +1035,7 @@
                             </x-fa::empty>
                         @endforelse
                     </div>
+                    @endif
 
                 </x-fa::section>{{-- /Inhalt --}}
                 </div>{{-- /linke Spalte (Kopf + Inhalt) --}}

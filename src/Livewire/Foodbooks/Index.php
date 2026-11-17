@@ -1093,10 +1093,9 @@ class Index extends Component
     }
 
     /**
-     * Format-Umbau F5: ein Format ins Foodbook buchen — WIE EIN CONCEPT. Legt ein eigenes
-     * Kapitel an, dessen Inhalt die Editionen als live concept_ref-Blöcke + die Struktur-Blöcke
-     * des Formats sind (kein Live-Format-Sonderweg). Fail-soft: Kunden-IP-/Status-Guard meldet
-     * sich als Fehler, kippt den Editor nicht. Braucht das gewählte Foodbook, kein Ziel-Kapitel.
+     * Format ins Foodbook buchen: LEBENDES Format-Kapitel (B 2026-08-31, nur `format_id`, keine Blöcke) —
+     * Editionen live aus dem Format, im Editor schreibgeschützt ({@see \Platform\FoodAlchemist\Services\FormatKapitelService}).
+     * Fail-soft: Kunden-IP-/Status-Guard meldet sich als Fehler. Braucht das Foodbook, kein Ziel-Kapitel.
      */
     public function formatEinfuegen(int $formatId, FoodbookService $svc): void
     {
@@ -1550,6 +1549,7 @@ class Index extends Component
             'kapitelTree' => $fb !== null ? $svc->kapitelTree($team, $fb->id) : [],
             'kapitel' => $kapitel,
             'blockMenus' => $blockMenus,   // #7: Live-Menü-Vorschau je concept_ref-Block
+            'formatKapitel' => $kapitel !== null ? app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->ansicht($kapitel) : null,   // Format-Kapitel: Editionen live, nur lesen
             // E5.3: Portfolio/Kapitel-Aggregat + WE ziehen jetzt in die Leitstelle-Rail (Nested-Livewire) um.
             'headerPresets' => FoodbookService::headerPresets(),
             // UX 2026-07-25 (Dominique): Concept-Picker filtert auf die Concepter-DIMENSIONEN

@@ -29,6 +29,55 @@ final class ProduktpassFelder
     /** Salz (g/100 g) → Natrium (mg/100 g): Salz / 2,5 in g, ×1000 für mg — gleiche Formel wie der Necta-Mapper (Skript 214: ×400). */
     public const SALZ_ZU_NATRIUM_MG = 400.0;
 
+    /** Konfidenz-Deckel für einen Wert, dessen Einheit nicht belegt ist: bleibt unter der Direkt-Schwelle, also Vorschlag mit Klick. */
+    public const KONFIDENZ_EINHEIT_UNKLAR = 0.5;
+
+    /** Mehr Natrium als in reinem Kochsalz (≈ 39 300 mg je 100 g) gibt es nicht — darüber ist die Einheit falsch gelesen. */
+    private const NATRIUM_MAX_MG = 40000.0;
+
+    /**
+     * Natrium aus dem Pass auf die Spalteneinheit bringen: mg je 100 g (GL-08, Salz g = Natrium mg × 0,0025).
+     * Pässe nennen Natrium oft in g („Natrium (g) 0,264"); ohne Umrechnung stand 0,264 statt 264 am Artikel und das
+     * Salz lag um den Faktor 1000 daneben (Befund 16.11.2026, Goedeken-Pässe).
+     *  - Einheit mg → unverändert. Einheit g → × 1000; `im_dokument` behält die Angabe des Passes.
+     *  - Einheit fehlt oder ist unbekannt: der Salzwert desselben Passes entscheidet (Natrium mg ≈ Salz g × 400).
+     *    Ohne passenden Salzwert bleibt die Zahl stehen, aber unter der Direkt-Schwelle (Vorschlag, ein Mensch sieht hin).
+     *  - Einheit bekannt, der Wert widerspricht aber dem Salzwert oder ist unmöglich hoch → ebenfalls nur Vorschlag.
+     *
+     * @param  array<string,mixed>  $eintrag  gelesenes Feld `naehrwerte.sodium` (wert, einheit, konfidenz, …)
+     * @param  float|null  $salzG  Salz in g je 100 g aus demselben Pass, falls gelesen
+     * @return array<string,mixed>
+     */
+    public static function natriumInMg(array $eintrag, ?float $salzG = null): array
+    {
+        $wert = (float) ($eintrag['wert'] ?? 0);
+        $roh = mb_strtolower(trim((string) ($eintrag['einheit'] ?? '')));
+        $einheit = preg_match('/^(mg|milligramm|g|gramm)\b/u', $roh, $m) ? (str_starts_with($m[1], 'm') ? 'mg' : 'g') : null;   // „g", „g/100 g", „mg/100g"
+        $ausSalz = $salzG !== null && $salzG > 0 ? $salzG * self::SALZ_ZU_NATRIUM_MG : null;
+        $passt = static fn (float $mg): bool => $ausSalz !== null && abs($mg - $ausSalz) <= max(0.25 * $ausSalz, 20.0);
+
+        if ($einheit === 'g' && $wert * 1000 > self::NATRIUM_MAX_MG) {
+            $einheit = null;   // „329 g" Natrium je 100 g gibt es nicht: Einheit falsch gelesen, nicht blind umrechnen
+        }
+        if ($einheit === null && $ausSalz !== null) {
+            $einheit = $passt($wert) ? 'mg' : ($passt($wert * 1000) ? 'g' : null);
+        }
+        if ($einheit === null) {
+            return ['konfidenz' => min((float) ($eintrag['konfidenz'] ?? 0.0), self::KONFIDENZ_EINHEIT_UNKLAR)] + $eintrag;
+        }
+
+        $mg = $einheit === 'g' ? round($wert * 1000, 4) : $wert;
+        $aus = ['wert' => $mg, 'einheit' => 'mg'] + $eintrag;
+        if ($einheit === 'g') {
+            $aus['im_dokument'] = rtrim(rtrim(number_format($wert, 4, ',', ''), '0'), ',').' g';
+        }
+        if ($mg > self::NATRIUM_MAX_MG || ($ausSalz !== null && ! $passt($mg))) {
+            $aus['konfidenz'] = min((float) ($eintrag['konfidenz'] ?? 0.0), self::KONFIDENZ_EINHEIT_UNKLAR);
+        }
+
+        return $aus;
+    }
+
     /** Obergrenzen der Textspalten am Artikel (Zeichen). Ein Wert darüber wird verständlich abgewiesen, nie als SQL-Fehler gezeigt. */
     public const MAX_LAENGE = ['origin' => 255, 'brand' => 255, 'packaging_unit' => 32, 'ordering_unit' => 32, 'unit_code' => 32];
 

@@ -303,7 +303,7 @@ it('+ Paket: legt Paket-Position an, öffnet den Paket-Editor und springt zurüc
         ->assertSet('rueckSprungConceptId', null);
 });
 
-it('Einheiten-Fix: Einfügen setzt die Portion-Einheit als Default (Gericht + Basisrezept)', function () {
+it('Einheiten-Fix: Einfügen setzt die Portion-Einheit als Default am Gericht, Basisrezept bleibt Standard (Gramm)', function () {
     $portion = \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::create([
         'team_id' => $this->rootTeam->id, 'slug' => 'portion', 'display_de' => 'Portion', 'dimension' => 'count',
     ]);
@@ -319,7 +319,7 @@ it('Einheiten-Fix: Einfügen setzt die Portion-Einheit als Default (Gericht + Ba
     $slots = $this->concept->slots()->orderBy('position')->get();
     expect($slots[0]->unit_vocab_id)->toBe($portion->id)
         ->and((float) $slots[0]->quantity)->toBe(1.0)
-        ->and($slots[1]->unit_vocab_id)->toBe($portion->id);
+        ->and($slots[1]->unit_vocab_id)->toBeNull();   // 17.11.: Portion rechnete am Basisrezept nicht (Menge = Gramm), SlotEinheitService
 });
 
 it('Reinspringen: paketOeffnen öffnet das Paket und merkt den Rückweg ins Concept', function () {

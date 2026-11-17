@@ -25,7 +25,8 @@ class ConceptSlotsPutTool extends FoodAlchemistTool implements ToolContract, Too
             . 'felder.sales_recipe_id FÜLLT eine leere Position mit einem Gericht (XOR package_id; type=basisrezept optional) — '
             . 'so werden die Positionen eines Gerüsts aus concepts.POST geruest=… belegt. '
             . 'felder.package_id = Concepter-Paket (concepts mit kind=paket, IDs via pakete.LIST) — hängt das Paket als Station ein. '
-            . 'felder.wording setzt den Slot-Text, felder.quantity/unit_vocab_id die Menge. '
+            . 'felder.wording setzt den Slot-Text, felder.quantity/unit_vocab_id die Menge. unit_vocab_id nur, wenn die Einheit rechnet '
+            . '(leer/portion bzw. Einheit der Darreichung; stk nur mit Stück-Ertrag; g/kg nur mit Grammatur; Basisrezept leer/g) — sonst VALIDATION_ERROR mit Grund. '
             . 'felder.dish_brief = Gericht-Vorgabe einer LEEREN Position (gewünschter Gerichtstitel; leer/null löscht sie), felder.dish_brief_note = Notiz dazu — '
             . 'die Erstellung baut dann genau dieses Gericht statt frei zu erfinden.';
     }

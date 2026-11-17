@@ -40,7 +40,7 @@ class PaketGerichteSetTool extends FoodAlchemistTool implements ToolContract, To
                         'properties' => [
                             'sales_recipe_id' => ['type' => 'integer'],
                             'quantity' => ['type' => 'number'],
-                            'unit_vocab_id' => ['type' => 'integer'],
+                            'unit_vocab_id' => ['type' => 'integer', 'description' => 'Nur Einheiten, die rechnen (leer/portion bzw. Einheit der Darreichung; stk nur mit Stück-Ertrag; g/kg nur mit Grammatur; Basisrezept leer/g) — sonst VALIDATION_ERROR.'],
                             'presentation_id' => ['type' => 'integer', 'description' => 'Darreichung des Gerichts (0 = Standard, weglassen = unverändert).'],
                         ],
                         'required' => ['sales_recipe_id'],

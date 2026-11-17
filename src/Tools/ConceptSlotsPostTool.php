@@ -44,7 +44,7 @@ class ConceptSlotsPostTool extends FoodAlchemistTool implements ToolContract, To
                 'sales_recipe_id' => ['type' => 'integer'],
                 'package_id' => ['type' => 'integer', 'description' => 'Concepter-Paket-Id (concept mit kind=paket) — wird als Station eingehängt.'],
                 'quantity' => ['type' => 'number'],
-                'unit' => ['type' => 'string', 'description' => 'Einheiten-Slug, z. B. stk, portion'],
+                'unit' => ['type' => 'string', 'description' => 'Einheiten-Slug. Nur Einheiten, die rechnen: leer/portion (bzw. Einheit der Darreichung), stk nur mit Stück-Ertrag (yield_pieces), g/kg nur mit Grammatur der Darreichung; Basisrezept: leer/g. Andere (ml, l, Karton …) werden abgelehnt.'],
                 'wording' => ['type' => 'string', 'description' => 'Kundenseitiger Anzeigename der Position'],
                 'dish_brief' => ['type' => 'string', 'description' => 'Gericht-Vorgabe für eine leere Position: der gewünschte Gerichtstitel. Die Erstellung baut genau dieses Gericht (Bestand zuerst: ein freigegebenes Gericht gleichen Namens wird vorgeschlagen). Nicht mit sales_recipe_id/package_id.'],
                 'dish_brief_note' => ['type' => 'string', 'description' => 'Notiz zur Gericht-Vorgabe (Zubereitung, Produkte, was nicht hinein soll). Nur mit dish_brief.'],
@@ -89,11 +89,7 @@ class ConceptSlotsPostTool extends FoodAlchemistTool implements ToolContract, To
         $svc = app(ConceptService::class);
 
         try {
-            $slot = $svc->addSlot($team, $concept->id, [
-                'role' => $arguments['role'] ?? null,
-                'title' => $arguments['title'] ?? null,
-                'is_pflicht' => (bool) ($arguments['is_pflicht'] ?? true),
-            ]);
+            $fill = null;
             if (isset($arguments['sales_recipe_id']) || isset($arguments['package_id'])) {
                 $fill = array_intersect_key($arguments, array_flip(['sales_recipe_id', 'quantity']));
                 if ($paketId !== null) {
@@ -106,8 +102,17 @@ class ConceptSlotsPostTool extends FoodAlchemistTool implements ToolContract, To
                     }
                     $fill['unit_vocab_id'] = $unit->id;
                 }
-                $slot = $svc->fillSlot($team, $slot->id, $fill);
             }
+            // 17.11.: Anlegen + Befüllen gemeinsam — lehnt fillSlot eine nicht wirksame Einheit ab, bleibt keine leere Position zurück
+            $slot = \Illuminate\Support\Facades\DB::transaction(function () use ($svc, $team, $concept, $arguments, $fill) {
+                $slot = $svc->addSlot($team, $concept->id, [
+                    'role' => $arguments['role'] ?? null,
+                    'title' => $arguments['title'] ?? null,
+                    'is_pflicht' => (bool) ($arguments['is_pflicht'] ?? true),
+                ]);
+
+                return $fill !== null ? $svc->fillSlot($team, $slot->id, $fill) : $slot;
+            });
             if (($arguments['wording'] ?? '') !== '') {
                 $slot = $svc->setSlotWording($team, $slot->id, (string) $arguments['wording']);
             }

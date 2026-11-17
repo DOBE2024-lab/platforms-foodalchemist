@@ -639,7 +639,7 @@ class Editor extends Component
         $f = $this->slotForm[$slotId] ?? [];
         $quantity = ($f['quantity'] ?? '') !== '' && $f['quantity'] !== null ? (float) $f['quantity'] : null;
         $unit = ($f['unit_vocab_id'] ?? '') !== '' ? (int) $f['unit_vocab_id'] : null;
-        app(ConceptService::class)->setSlotMengeEinheit($this->team(), $slotId, $quantity, $unit);
+        try { app(ConceptService::class)->setSlotMengeEinheit($this->team(), $slotId, $quantity, $unit); } catch (\RuntimeException $e) { $this->reloadSlotForm(); $this->addError('slotForm.' . $slotId . '.unit_vocab_id', $e->getMessage()); return; }   // 17.11.: Einheit rechnet nicht → Meldung am Feld
         $this->dispatch('concepter-gespeichert', id: $this->id);
     }
 
@@ -1014,7 +1014,7 @@ class Editor extends Component
             $svc->fillSlot($this->team(), $slot->id, ['embedded_concept_id' => $id]);
         } else {
             $svc->fillSlot($this->team(), $slot->id, [
-                'sales_recipe_id' => $id, 'quantity' => 1, 'unit_vocab_id' => $this->portionEinheitId(),
+                'sales_recipe_id' => $id, 'quantity' => 1, 'unit_vocab_id' => $typ === 'basisrezept' ? null : $this->portionEinheitId(),   // 17.11.: Basisrezept = Gramm (Standard), Portion rechnete dort nicht
                 'type' => $typ === 'basisrezept' ? 'basisrezept' : 'gericht',
             ]);
         }
@@ -1548,7 +1548,7 @@ class Editor extends Component
                 ? collect($concept->slots)->filter(fn ($s) => $s->sales_recipe_id !== null)
                     ->mapWithKeys(fn ($s) => [$s->id => app(\Platform\FoodAlchemist\Services\WordingResolver::class)->fuerSlot($s)])->all()
                 : [],
-            'einheiten' => $istAufbau ? app(\Platform\FoodAlchemist\Services\VocabularyService::class)->listEinheiten($team) : collect(),
+            'slotEinheiten' => $istAufbau && $concept ? app(\Platform\FoodAlchemist\Services\SlotEinheitService::class)->auswahl($team, $concept) : [],   // 17.11.: nur wirksame Einheiten
             'aggregat' => $aggregat,
             'deklaration' => $deklaration,
             'bewertung' => $bewertet,

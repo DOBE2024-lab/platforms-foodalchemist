@@ -198,7 +198,8 @@ it('Gramm-Einheit ohne Portionsgewicht trägt ehrlich nicht bei', function () {
     $this->concepts->fillSlot($this->rootTeam, $s1->id, ['sales_recipe_id' => $this->a->id, 'quantity' => 1]); // a: ek 0.60
     $s2 = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Beilage']);
     $this->concepts->fillSlot($this->rootTeam, $s2->id, ['sales_recipe_id' => $ohneG->id]);
-    $this->concepts->setSlotMengeEinheit($this->rootTeam, $s2->id, 100, $gramm->id);
+    // Altbestand: g ohne Grammatur lässt sich seit 17.11. nicht mehr wählen (SlotEinheitService) — die Rechnung muss ihn trotzdem ehrlich tragen
+    \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::whereKey($s2->id)->update(['quantity' => 100, 'unit_vocab_id' => $gramm->id]);
 
     $agg = $this->agg->conceptAggregat($c->refresh());
 

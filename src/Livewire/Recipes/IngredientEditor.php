@@ -633,6 +633,9 @@ class IngredientEditor extends Component
                     '_garverlust_ki' => $z->cooking_loss_source === 'ki' && $z->cooking_loss_pct !== null,
                     'trimming_loss_pct' => $z->trimming_loss_pct !== null ? (float) $z->trimming_loss_pct : null,
                     'is_optional' => (bool) $z->is_optional,
+                    // Zeilenart §18.7 (17.11.2026): gesetzt (zutat|medium) oder null = Vorschlag des GP
+                    'zeilenart' => $z->zeilenart,
+                    '_gp_kochmedium' => (bool) ($z->gp?->is_kochmedium ?? false),
                     'note' => $z->note,
                     'role' => $z->role,
                     'is_value_relevant' => (bool) $z->is_value_relevant,

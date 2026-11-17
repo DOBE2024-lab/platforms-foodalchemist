@@ -398,7 +398,7 @@ class RecipeService
             foreach ($original->ingredients as $z) {
                 $kopie->ingredients()->create([
                     ...$z->only(['position', 'gp_id', 'referenced_recipe_id', 'raw_text', 'display_name',
-                        'quantity', 'quantity_max', 'unit_vocab_id', 'trimming_loss_pct', 'cooking_loss_pct',
+                        'quantity', 'quantity_max', 'unit_vocab_id', 'trimming_loss_pct', 'cooking_loss_pct', 'zeilenart',
                         'is_optional', 'klammer_note', 'note', 'match_method', 'match_confidence',
                         'role', 'role_source', 'is_value_relevant', 'calc_mode']),
                     'team_id' => $team->id,
@@ -1259,6 +1259,8 @@ class RecipeService
                     'cooking_loss_source' => ($z['cooking_loss_source'] ?? null) ?: null,   // M4-11: ki|manual (GL-07)
                     'trimming_loss_pct' => ($z['trimming_loss_pct'] ?? '') !== '' && ($z['trimming_loss_pct'] ?? null) !== null ? (float) str_replace(',', '.', (string) $z['trimming_loss_pct']) : null,
                     'is_optional' => (bool) ($z['is_optional'] ?? false),
+                    // Zeilenart (Regelwerk Basisrezepte §18.7): zutat | medium, leer = ungesetzt (Vorschlag des GP, 17.11.2026)
+                    'zeilenart' => FoodAlchemistRecipeIngredient::zeilenartNormieren($z['zeilenart'] ?? null),
                     'note' => ($z['note'] ?? '') ?: null,
                     // Teller-Rolle nur im Gericht, gegen das Vokabular geprüft (Dominique 11.10.); Basisrezept-Zeilen: keine.
                     'role' => $recipe->is_sales_recipe ? \Platform\FoodAlchemist\Support\TellerRolle::kanonisch($z['role'] ?? null) : null,
@@ -1322,7 +1324,7 @@ class RecipeService
                             && (float) $z['cooking_loss_pct'] === (float) $vorhanden[$id]->cooking_loss_pct) {
                             unset($attrs['cooking_loss_source']);
                         }
-                        foreach (['quantity_max', 'trimming_loss_pct', 'cooking_loss_pct', 'cooking_loss_source', 'is_optional', 'note', 'role', 'is_value_relevant'] as $field) {
+                        foreach (['quantity_max', 'trimming_loss_pct', 'cooking_loss_pct', 'cooking_loss_source', 'is_optional', 'zeilenart', 'note', 'role', 'is_value_relevant'] as $field) {
                             if (! array_key_exists($field, $z)) {
                                 unset($attrs[$field]);
                                 if ($field === 'role') {

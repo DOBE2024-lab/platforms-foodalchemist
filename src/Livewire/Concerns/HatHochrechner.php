@@ -214,7 +214,7 @@ trait HatHochrechner
             'quantity_max' => isset($hoch['speichern'][$z->id]) ? $hoch['speichern'][$z->id]['quantity_max'] : $z->quantity_max,
             'unit_vocab_id' => $z->unit_vocab_id, 'cooking_loss_pct' => $z->cooking_loss_pct,
             'cooking_loss_source' => $z->cooking_loss_source, 'trimming_loss_pct' => $z->trimming_loss_pct,
-            'is_optional' => $z->is_optional, 'note' => $z->note, 'role' => $z->role, 'role_source' => $z->role_source,
+            'is_optional' => $z->is_optional, 'zeilenart' => $z->zeilenart, 'note' => $z->note, 'role' => $z->role, 'role_source' => $z->role_source,
             'is_value_relevant' => $z->is_value_relevant,
             'auto_ground' => false,   // nur Mengen ändern — offene Zeilen nicht nebenbei neu zuordnen
         ])->all();

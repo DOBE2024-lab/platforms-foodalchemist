@@ -423,7 +423,13 @@ class RecipeRecomputeService
         )];
     }
 
-    /** Verlust-Kaskade (GL-02): Zutat-Wert → GP-Default → Team-WG-Default → 0. */
+    /**
+     * Verlust-Kaskade (GL-02): Zutat-Wert → GP-Default → Team-WG-Default → 0.
+     * Zeilenart „Medium“ (Regelwerk Basisrezepte §18.7 / §6a, Entscheid Dominique 17.11.2026): ohne Garverlust an Zeile oder GP ist
+     * das Kochmedium ganz verworfen (100 %) — für Ausbeute UND Nährwerte. Den Rest am Produkt trägt der Garverlust (KI-Vorschlag,
+     * cooking_loss_source='ki', z. B. Kochwasser 90 % → aufgenommenes Wasser; Frittieröl 98 % → aufgenommenes Fett). Der WG-Default
+     * gilt für Lebensmittel, nicht für Kochmedien.
+     */
     private function effektiverGarverlust(FoodAlchemistRecipeIngredient $z): float
     {
         if ($z->cooking_loss_pct !== null) {
@@ -431,6 +437,9 @@ class RecipeRecomputeService
         }
         if ($z->gp?->cooking_loss_default_pct !== null) {
             return (float) $z->gp->cooking_loss_default_pct;
+        }
+        if ($z->zeilenart === FoodAlchemistRecipeIngredient::ZEILENART_MEDIUM) {
+            return 100.0;
         }
 
         return $this->teamVerlustDefault('garverlust', $z->gp?->commodity_group_code);
@@ -750,7 +759,51 @@ class RecipeRecomputeService
         }
     }
 
-    // ── 5. Nährwerte (GL-08 — KEIN F7.1-Guard, Rohmasse-Basis) ──────────
+    // ── 5. Nährwerte (GL-08, Bezugsmasse = Ausbeute — Entscheid Dominique 17.11.2026) ──
+    //
+    // Je 100 g AUSBEUTE (Masse nach Putz- und Garverlust, gleiche Verlustkaskade wie yield_kg), nicht mehr je 100 g
+    // Rohmasse (GL-08 §6 „offene Entscheidung“, damit erledigt). Je Zeile:
+    //   masse     = menge_g × (1 − Putz) × (1 − Gar)                 → Nenner (Bezugsmasse)
+    //   nährstoff = menge_g × (1 − Putz) × (1 − Gar, NUR Kochmedium) → Zähler
+    // Garverlust heißt zweierlei: bei Lebensmitteln Verdampfen/Schrumpfen (Nährstoffe bleiben, Dichte steigt), beim
+    // Kochmedium (Zeilenart „Medium“, §18.7: Nudelwasser samt Salz, Frittieröl, Lake) Verwerfen (Nährstoffe gehen mit).
+    // Putzverlust wird immer verworfen (Schale, Parüren) — die Nährstoffe der Putzmasse zählen nicht.
+    // Nenner = dieselben relevanten (gemappten) Zeilen wie bisher, auch ohne Nährwerte („verdünnen“, Invariante 4) —
+    // ungemappte bleiben draußen (GL-08 Invariante 2). Mengen-Faktor weiter NUR g/ml (GL-08 §4.2, kein stk-Fallback).
+    // Sub-Rezepte liefern ihre Werte bereits je 100 g IHRER Ausbeute; die Zeile im Eltern-Rezept misst die Menge des
+    // fertigen Unterrezepts — beides dieselbe Masse, also konsistent.
+
+    /**
+     * Faktoren je Zeile relativ zur Rohmenge: `masse` (Ausbeute-Anteil) und `naehrstoff` (verbleibender Nährstoff-Anteil).
+     *
+     * @return array{masse: float, naehrstoff: float}
+     */
+    private function naehrwertFaktoren(FoodAlchemistRecipeIngredient $z): array
+    {
+        $putz = 1 - $this->effektiverPutzverlust($z) / 100;
+        $gar = 1 - $this->effektiverGarverlust($z) / 100;
+
+        return ['masse' => $putz * $gar, 'naehrstoff' => $putz * ($z->istKochmedium() ? $gar : 1.0)];
+    }
+
+    /**
+     * Nährwert-Faktoren aller Zeilen eines Rezepts (für parallele Rechnungen, z. B. Sensorik-Grenzen) — dieselbe Regel wie
+     * die gespeicherten Rezept-Nährwerte. Lädt Zeilen samt GP selbst, wenn nicht geladen.
+     *
+     * @return array<int, array{masse: float, naehrstoff: float}> [ingredient_id => Faktoren]
+     */
+    public function naehrwertFaktorenFuerRezept(FoodAlchemistRecipe $recipe, ?Team $team = null): array
+    {
+        $this->fuerTeam($team ?? Team::find($recipe->team_id));
+        $this->garverlustWgCache = $this->putzverlustWgCache = [];
+        $recipe->loadMissing(['ingredients.gp']);
+        $out = [];
+        foreach ($recipe->ingredients as $z) {
+            $out[(int) $z->id] = $this->naehrwertFaktoren($z);
+        }
+
+        return $out;
+    }
 
     private function naehrwerte(FoodAlchemistRecipe $recipe, Collection $zutaten): void
     {
@@ -765,6 +818,7 @@ class RecipeRecomputeService
         foreach ($relevant as $z) {
             // GL-08 §4.2 verbatim: NUR g/ml-Faktor — bewusst KEIN stk-Fallback (Lücke dokumentiert)
             $mengeG = $this->mengeAvg($z) * (float) ($z->unit?->default_in_g ?? $z->unit?->default_in_ml ?? 0);
+            $f = $this->naehrwertFaktoren($z);
 
             $werte = null;
             if ($z->referencedRecipe !== null) {                   // Sub-Pfad gewinnt (GL-08 4.1)
@@ -799,11 +853,11 @@ class RecipeRecomputeService
                 }
             }
 
-            $totalG += $mengeG;                                    // auch unmapped „verdünnen" (Invariante 4)
+            $totalG += $mengeG * $f['masse'];                      // Ausbeute; auch ohne Werte „verdünnen" (Invariante 4)
             if ($mengeG > 0 && $werte !== null) {
                 $nMapped++;
                 foreach ($summen as $k => $v) {
-                    $summen[$k] += ($werte[$k] ?? 0.0) * $mengeG / 100;  // fehlender Wert ⇒ 0-Anteil (GT-02)
+                    $summen[$k] += ($werte[$k] ?? 0.0) * $mengeG * $f['naehrstoff'] / 100;  // fehlender Wert ⇒ 0-Anteil (GT-02)
                 }
             }
         }

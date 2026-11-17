@@ -78,6 +78,7 @@ class FoodAlchemistGp extends Model
         'marke_offen' => 'boolean',
         'n_las_total' => 'integer',
         'cooking_loss_default_pct' => 'decimal:2',
+        'is_kochmedium' => 'boolean',   // Vorschlag Zeilenart „Medium“ (Regelwerk Basisrezepte §18.7, 17.11.2026)
         'trimming_loss_default_pct' => 'decimal:2',
         'piece_default_g' => 'decimal:2',
         'ai_confidence' => 'decimal:3',

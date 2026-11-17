@@ -46,7 +46,7 @@ Berechnet pro Rezept die fünf LMIV-Kernwerte **pro 100 g**: Energie (kcal), Eiw
 **Invarianten:**
 1. `nutri_n_ingredients_total` zählt NUR die filter-relevanten Zutaten (nicht-optional, nicht-ignored, nicht-`qs`, gemappt bzw. Sub-Ref) — kann also kleiner sein als `n_zutaten_total` des Rezepts.
 2. **Kein F7.1-Totalreset** (anders als Allergene/Zusatzstoffe): ungemappte Zutaten werden schlicht ausgefiltert; das Rezept bekommt trotzdem Nährwerte, die Unsicherheit steckt allein in `nutri_konfidenz` + `mapped/total`-Zählern.
-3. Bezugsbasis ist die **rohe Einsatzmasse** `total_g = Σ menge_g` aller relevanten Zutaten — OHNE Putz-/Garverlust (bewusste Abweichung von der Yield-Formel, siehe §6).
+3. *(Überholt 17.11.2026, siehe §6 — Bezug ist jetzt die Ausbeute.)* Bezugsbasis ist die **rohe Einsatzmasse** `total_g = Σ menge_g` aller relevanten Zutaten — OHNE Putz-/Garverlust (bewusste Abweichung von der Yield-Formel, siehe §6).
 4. Ungemappte-aber-relevante Zutaten (z. B. `count`-Einheit) gehen mit `menge_g` in die Basis ein, liefern aber 0-Beitrag — sie „verdünnen" das Ergebnis (konservativ Richtung Unterschätzung).
 5. Pro Nährstoff unabhängige LA-Mittelung: AVG nur über LAs, die DIESEN Wert gepflegt haben (NULL-Werte fallen aus dem AVG, nicht auf 0).
 6. Sub-Rezept-Werte müssen vor dem Eltern-Lauf frisch sein (Topo-Sort, GL-02).
@@ -153,6 +153,7 @@ funktion recompute_recipe_nutritional(recipe_id):
 
 **Dokumentierte Ist-Eigenheiten (kein Regelwerk-Konflikt — es existiert kein Nährwert-§ — aber bewusst zu entscheiden):**
 - **Rohmasse statt Yield als 100g-Basis:** Putz-/Garverluste werden ignoriert (`total_g` ≠ `yield_kg×1000`). Bei Reduktionen/Fonds wird die Nährstoffdichte des fertigen Produkts systematisch unterschätzt. Verbesserungs-Kandidat: Basis auf `yield_g` umstellen ODER beide Sichten ausweisen („pro 100 g Einsatz" vs. „pro 100 g Fertigprodukt"). Entscheidung vor Port nötig — Golden-Tests oben fixieren das IST (Rohmasse).
+  **Entschieden 17.11.2026 (Dominique):** Bezug = Ausbeute (Masse nach Putz- und Garverlust, gleiche Kaskade wie `yield_kg`). Garverlust = Verdampfen (Nährstoffe bleiben); bei Zeilenart „Medium“ (Kochmedium, Regelwerk Basisrezepte §18.7) = Verwerfen (Nährstoffe × (1 − Garverlust)). Putzverlust wird immer verworfen. Code: `RecipeRecomputeService::naehrwerte()`. Rezepte ohne Putz-/Garverlust rechnen unverändert; die GT-Zahlen oben gelten nur noch dafür.
 - **Per-Nährstoff-0-Substitution (GT-02):** fehlende Einzelwerte erscheinen als 0.0 statt NULL — für LMIV-Angaben riskant (falsche Sicherheit bei Salz). Verbesserung: per-Nährstoff-Coverage mitführen (z. B. `nutri_salt_coverage_pct`) oder Wert auf NULL lassen, wenn < x % der Masse abgedeckt.
 - **Count-Zutaten nicht abbildbar:** kein Fallback auf `gps.stk_default_g` / `gp_count_unit_defaults` — die Kosten-Logik (GL-02) kann das bereits (Z. 7213–7220). Verbesserung: gleiche Stück→Gramm-Brücke auch hier nutzen; hebt viele `low`-Rezepte auf `high`.
 - **AVG über LAs statt Lead-LA:** Kosten rechnen Lead-LA-first (GL-03/GL-02), Nährwerte mitteln über alle aktiven LAs. Inkonsistenz ist vertretbar (Nährwerte streuen weniger als Preise), aber im Ziel dokumentiert beibehalten oder bewusst auf Lead-LA-first harmonisieren — nicht stillschweigend mischen.

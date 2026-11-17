@@ -261,7 +261,7 @@
                 zeile._peekRez = await this.$wire.rezeptVorschau(zeile.referenced_recipe_id);
             },
             payload() {
-                return this.rows.map(({ _key, ziel_name, ziel_url, lineage, ek_pro_g, ek_pro_g_min, ek_pro_g_avg, ek_pro_stk, g_pro_stueck, stueck_gewicht, formen_g, ersatz, _garverlust_ki, _peek, _peekRez, _flash, ...rest }) => ({ ...rest, cooking_loss_source: _garverlust_ki ? 'ki' : undefined }));
+                return this.rows.map(({ _key, ziel_name, ziel_url, lineage, ek_pro_g, ek_pro_g_min, ek_pro_g_avg, ek_pro_stk, g_pro_stueck, stueck_gewicht, formen_g, ersatz, _garverlust_ki, _gp_kochmedium, _peek, _peekRez, _flash, ...rest }) => ({ ...rest, cooking_loss_source: _garverlust_ki ? 'ki' : undefined }));
             },
             init() {
                 // Window-Event: der Haupt-"Speichern" des Rezept-Modals (UND der Standalone-Modal-Footer)
@@ -358,7 +358,8 @@
                     if (z.is_optional) continue;
                     const f = this.gFaktor(z); const avg = this.mengeAvg(z);
                     if (avg === null || !f) continue;
-                    const garv = (this.zahl(z.cooking_loss_pct) ?? 0) / 100;
+                    // §18.7: eine als „Medium“ gesetzte Zeile ohne Garverlust ist ganz verworfen (Spiegel effektiverGarverlust)
+                    const garv = (this.zahl(z.cooking_loss_pct) ?? (z.zeilenart === 'medium' ? 100 : 0)) / 100;
                     const putz = (this.zahl(z.trimming_loss_pct) ?? 0) / 100;
                     g += avg * f * (1 - putz) * (1 - garv);
                 }
@@ -406,6 +407,7 @@
                     unit_vocab_id: this.neu.unit_vocab_id,
                     cooking_loss_pct: null, trimming_loss_pct: null,
                     is_optional: this.neu.is_optional,
+                    zeilenart: null, _gp_kochmedium: !!ziel.is_kochmedium,
                     note: '', role: null, is_value_relevant: false,
                     lineage: ziel.type === 'sub' ? 'recipe_ref' : 'manual',
                     ek_pro_g: ziel.ek_pro_g,

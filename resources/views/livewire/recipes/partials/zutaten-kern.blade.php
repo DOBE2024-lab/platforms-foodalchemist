@@ -266,6 +266,13 @@
                             <label class="inline-flex items-center gap-1 mr-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Optional: zählt nicht in Ausbeute und Kosten">
                                 <input type="checkbox" x-model="zeile.is_optional" class="w-3.5 h-3.5 accent-[var(--fa-accent)]" aria-label="Optional" /><span class="sr-only">optional</span>
                             </label>
+                            {{-- Zeilenart „Medium“ (Regelwerk Basisrezepte §18.7): Kochmedium, verworfen bis auf 1 − Garverlust; ungesetzt = Vorschlag des GP --}}
+                            <label class="inline-flex items-center gap-1 mr-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]"
+                                   :title="'Medium (Kochmedium wie Nudelwasser, Frittieröl, Lake): wird verworfen, zählt nur zum Anteil (1 − Garverlust) in Ausbeute und Nährwerten, ohne Garverlust gar nicht. Kosten zählen voll.' + (zeile.zeilenart === null || zeile.zeilenart === undefined ? (zeile._gp_kochmedium ? ' Vorschlag vom Grundprodukt.' : '') : '')">
+                                <input type="checkbox" :checked="zeile.zeilenart ? zeile.zeilenart === 'medium' : !!zeile._gp_kochmedium"
+                                       @change="zeile.zeilenart = $event.target.checked ? 'medium' : 'zutat'"
+                                       class="w-3.5 h-3.5 accent-[var(--fa-accent)]" aria-label="Medium" data-zeile-medium /><span>Medium</span>
+                            </label>
                             {{-- Ersatz (Äquivalenz-Katalog): nur sichtbar, wenn hinterlegt; 1 Klick tauscht um, Menge × Faktor --}}
                             <button type="button" x-show="zeile.ersatz" x-cloak class="{{ $ib }} text-[var(--fa-ok)] hover:text-[var(--fa-ok)] hover:bg-[var(--fa-ok-soft)]"
                                     :title="ersatzTitel(zeile)" :aria-label="ersatzTitel(zeile)" @click="ersatzTausch(i)" data-zeile-ersatz>@svg('heroicon-m-arrow-path', 'w-4 h-4')</button>

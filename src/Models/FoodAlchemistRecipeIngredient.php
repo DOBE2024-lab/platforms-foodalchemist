@@ -34,6 +34,34 @@ class FoodAlchemistRecipeIngredient extends Model
         'position' => 'integer',
     ];
 
+    /** Zeilenart (Regelwerk Basisrezepte §18.7): normale Zutat oder Kochmedium (verworfen bis auf 1 − Garverlust). NULL = ungesetzt → Vorschlag des GP. */
+    public const ZEILENART_ZUTAT = 'zutat';
+
+    public const ZEILENART_MEDIUM = 'medium';
+
+    public const ZEILENARTEN = [self::ZEILENART_ZUTAT, self::ZEILENART_MEDIUM];
+
+    /** Eingabe → gültige Zeilenart oder NULL (leer/unbekannt = ungesetzt). */
+    public static function zeilenartNormieren(mixed $wert): ?string
+    {
+        $w = is_string($wert) ? mb_strtolower(trim($wert)) : null;
+
+        return in_array($w, self::ZEILENARTEN, true) ? $w : null;
+    }
+
+    /**
+     * Wirkt die Zeile als Kochmedium? Gesetzte Zeilenart gewinnt; ungesetzt gilt der Vorschlag des GP (`is_kochmedium`).
+     * Ein GP-Vorschlag ohne Garverlust ändert nichts (Faktor 1 − 0) — Salz zum Würzen zählt so voll.
+     */
+    public function istKochmedium(): bool
+    {
+        if ($this->zeilenart !== null) {
+            return $this->zeilenart === self::ZEILENART_MEDIUM;
+        }
+
+        return (bool) ($this->gp?->is_kochmedium ?? false);
+    }
+
     public function recipe(): BelongsTo
     {
         return $this->belongsTo(FoodAlchemistRecipe::class, 'recipe_id')

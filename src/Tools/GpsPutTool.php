@@ -79,6 +79,9 @@ class GpsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
                 'sub_category' => ['type' => 'string', 'description' => 'Sub-Kategorie.'],
                 'is_derivat' => ['type' => 'boolean', 'description' => 'Nebenprodukt-Derivat (§11.2).'],
                 'derivat_von_gp_id' => ['type' => 'integer', 'description' => 'Mutter-GP bei Derivat (team-scoped geprüft).'],
+                'is_kochmedium' => ['type' => 'boolean', 'description' => 'Kochmedium-Vorschlag (Regelwerk Basisrezepte §18.7): Rezeptzeilen ohne eigene Zeilenart gelten als „Medium“ — '
+                    . 'mit Garverlust zählen ihre Nährstoffe nur zum Anteil (1 − Garverlust), z. B. Salz im Nudelwasser, Frittierfett. Ohne Garverlust zählt die Zeile voll (Salz zum Würzen). '
+                    . 'Ohne den Parameter bleibt der Wert stehen; wirkt beim nächsten Recompute.'],
             ],
             'required' => ['id'],
         ];
@@ -116,6 +119,9 @@ class GpsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
             $gp = app(GpNamingService::class)->updateGp($team, $gp, $in);
             // Maße (nur Non-Food, WG 16) in cm/ml; der Name wird dadurch NICHT umgeschrieben — Größe ggf. über pflichtangabe mitgeben
             $gp = app(\Platform\FoodAlchemist\Services\GpMasseService::class)->setze($gp, array_intersect_key($arguments, \Platform\FoodAlchemist\Support\NonFoodMasse::EINGABE));
+            if (array_key_exists('is_kochmedium', $arguments)) {
+                $gp->update(['is_kochmedium' => (bool) $arguments['is_kochmedium']]);
+            }
             if (array_key_exists('serving_vehicle', $arguments)) {
                 $gp = app(\Platform\FoodAlchemist\Services\GpMasseService::class)->setzeServierTyp($gp, $arguments['serving_vehicle']);
             }
@@ -133,6 +139,7 @@ class GpsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
             'alkohol' => $gp->alkohol === null ? 'offen' : ($gp->alkohol ? 'ja' : 'nein'),
             'is_derivat' => (bool) $gp->is_derivat,
             'derivat_von_gp_id' => $gp->derivat_von_gp_id !== null ? (int) $gp->derivat_von_gp_id : null,
+            'is_kochmedium' => (bool) $gp->is_kochmedium,
             'groesse' => $gp->masseText(),
         ]);
     }

@@ -187,6 +187,15 @@ abstract class FoodAlchemistTool
                     'anrichten_wert' => $d->anrichten_wert !== null ? (float) $d->anrichten_wert : null,
                     'anrichten_einheit' => \Platform\FoodAlchemist\Services\ProductionTimeService::anrichteEinheit($d->servingForm?->code),
                     'anrichten_pauschal_min' => $d->anrichten_pauschal_min !== null ? (float) $d->anrichten_pauschal_min : null,
+                    // Gefäß + wirksame Art (17.11.2026): vessel_cost_type = Übersteuerung an der Darreichung, gefaess.kostenart = was gilt
+                    'vessel_gp_id' => $d->vessel_gp_id !== null ? (int) $d->vessel_gp_id : null,
+                    'vessel_cost_type' => $d->vessel_cost_type,
+                    'gefaess' => $d->vessel_gp_id !== null ? (function () use ($d) {
+                        $g = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessKosten($d);
+
+                        return ['name' => $g['gp']?->name, 'kostenart' => $g['kostenart'], 'kostenart_quelle' => $g['kostenart_quelle'], 'kosten_je_einheit' => $g['kosten'],
+                            'preis_fehlt' => $g['preis_fehlt'], 'preis_quelle' => $g['preis_quelle']];
+                    })() : null,
                 ];
             })->all();
     }

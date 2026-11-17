@@ -699,6 +699,23 @@
                     <p class="{{ $leise }}">Lagerartikel gehen nicht mit jedem Rezept in die Bestellung. Unter dem Mindestbestand schlägt die Bestellrunde vor, auf den Sollbestand nachzufüllen.</p>
                 </div>
             @endif
+            {{-- Art + Preis als Gefäß (17.11.2026): je Team; jede Darreichung mit diesem Gefäß rechnet danach --}}
+            @if($gefaessKostenartInfo !== null)
+                <div class="mt-3 flex flex-col gap-1.5" data-gp-gefaess-kostenart>
+                    <x-fa::field label="Art als Gefäß (dieses Team)" for="gp-gef-kostenart">
+                        <span class="inline-flex flex-wrap items-center gap-2">
+                            <x-fa::select id="gp-gef-kostenart" size="sm" wire:model="gefaessKostenart" class="w-60" data-gp-gefaess-kostenart-wahl>
+                                <option value="">{{ $gefaessKostenartInfo['geerbt'] ? 'wie '.$gefaessKostenartInfo['geerbt_von'].': '.$gefaessKostenartInfo['geerbt'] : 'Automatik (Verleih: extern, sonst Einweg)' }}</option>
+                                @foreach(\Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN as $artKey => $artLabel)<option value="{{ $artKey }}">{{ $artLabel }}</option>@endforeach
+                            </x-fa::select>
+                            <span class="inline-flex items-center gap-1"><x-fa::input id="gp-gef-preis" size="sm" wire:model="gefaessPreis" inputmode="decimal" placeholder="Preis" class="w-20" aria-label="Preis je Stück" data-gp-gefaess-preis /><span class="{{ $leise }}">€/Stk</span></span>
+                            <x-fa::button size="sm" wire:click="gefaessKostenartSetzen" data-gp-gefaess-kostenart-speichern>Speichern</x-fa::button>
+                        </span>
+                    </x-fa::field>
+                    @if($gefaessKostenartFehler)<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]">{{ $gefaessKostenartFehler }}</p>@endif
+                    <p class="{{ $leise }}">Einweg: der Preis hier, sonst der Artikelpreis je Stück. Mehrweg (Eigenbestand, z. B. Spülkosten) und Extern (Miete): der Preis hier — ohne Preis gilt die Darreichung als unvollständig. Die Kosten gehen je Stück in den Wareneinsatz.</p>
+                </div>
+            @endif
             @if(\Illuminate\Support\Facades\Route::has('foodalchemist.lager.index'))
                 <a href="{{ route('foodalchemist.lager.index', ['reiter' => 'einrichten']) }}" wire:navigate class="{{ $leise }} hover:underline mt-2 inline-block">Lager einrichten →</a>
             @endif

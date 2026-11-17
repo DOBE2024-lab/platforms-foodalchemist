@@ -42,6 +42,7 @@ trait HatDarreichungsFormular
                 'price_override_reason' => $d->price_override_reason,
                 'price_override_expires_at' => $d->price_override_expires_at?->format('Y-m-d'),
                 'vessel_gp_id' => $d->vessel_gp_id,
+                'vessel_cost_type' => $d->vessel_cost_type,   // Art des Gefäßes übersteuern (einweg|mehrweg|extern), leer = Eintrag des Teams
                 'serving_vehicle_vocab_id' => $d->serving_vehicle_vocab_id,
                 // Spec 83 B3i/B3l: Anrichten je Darreichung (Einheit aus der Form) + Pauschale je Auftragszeile
                 'anrichten_wert' => self::darZahl($d->anrichten_wert),

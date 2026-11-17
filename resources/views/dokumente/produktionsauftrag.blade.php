@@ -70,7 +70,7 @@
         };
     };
     $darreichungLabel = [
-        'vehikel' => 'Vehikel', 'geschirr' => 'Geschirr', 'geraet' => 'Gerät',
+        'vehikel' => 'Vehikel', 'geschirr' => 'Geschirr', 'geschirr_art' => 'Geschirr-Art', 'geraet' => 'Gerät',
         'behaelter_warm' => 'Behälter warm', 'behaelter_kalt' => 'Behälter kalt',
         'arbeitszeit_zuschlag_min' => 'Zuschlag Ausgabe (min)',
     ];

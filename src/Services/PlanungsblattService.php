@@ -1163,6 +1163,8 @@ class PlanungsblattService
             'behaelter_kalt' => $this->vocabName('foodalchemist_vocab_containers', $dar->container_cold_vocab_id),
             'vehikel' => $this->vocabName('foodalchemist_vocab_serving_vehicles', app(DarreichungService::class)->vehikelId($dar)),   // wirksamer Typ: Übersteuerung, sonst Typ des Gefäßes
             'geschirr' => $dar->vessel_gp_id !== null ? DB::table('foodalchemist_gps')->where('id', $dar->vessel_gp_id)->value('name') : null,   // Gefäß der Form
+            // Kostenart des Gefäßes (17.11.2026): was die Logistik damit tut — mitgeben, zurück in die Spülküche, zurück zum Verleiher, nur Empfehlung
+            'geschirr_art' => $dar->vessel_gp_id !== null ? (\Platform\FoodAlchemist\Services\GefaessKostenartService::LOGISTIK[app(DarreichungService::class)->gefaessKosten($dar)['kostenart'] ?? ''] ?? null) : null,
             'arbeitszeit_zuschlag_min' => $dar->work_time_surcharge_min,
         ], fn ($v) => $v !== null && $v !== '');
 

@@ -202,7 +202,9 @@ class FassungService
             ->orderByDesc('is_standard')->orderBy('id')->first();
         $darreichung = $standard === null ? null : [
             $standard->only(['serving_form_id', 'quantity_per_unit_g', 'unit_vocab_id', 'unit_count', 'container_warm_vocab_id',
-                'container_cold_vocab_id', 'serving_vehicle_vocab_id', 'vessel_gp_id']),
+                'container_cold_vocab_id', 'serving_vehicle_vocab_id', 'vessel_gp_id'])
+                // Kostenart des Gefäßes (17.11.2026) nur, wenn gesetzt — sonst änderte sich der Hash jeder bestehenden Fassung
+                + ($standard->vessel_cost_type !== null ? ['vessel_cost_type' => $standard->vessel_cost_type] : []),
             $standard->deltas()->orderBy('recipe_ingredient_id')->get(['recipe_ingredient_id', 'quantity_override_g', 'omitted'])->toArray(),
             // Zubehör & Verpackung wirkt auf den EK der Fassung: eine Änderung ist ein neuer Inhalt
             $standard->zubehoer()->reorder()->orderBy('gp_id')->get(['gp_id', 'quantity'])->toArray(),

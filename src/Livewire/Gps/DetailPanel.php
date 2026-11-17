@@ -44,7 +44,7 @@ class DetailPanel extends Component
     protected function sperrFreiExtra(): array
     {
         // Spec 67: Stammplatz ist Betriebs-, nicht GP-Stammdatum — ohne „Bearbeiten“ setzbar.
-        return ['zeige', 'ankerNetzUmschalten', 'ersatzKiVerwerfen', 'laVorschlaegeVerwerfen', 'kiVerwerfen', 'stammplatzSetzen', 'lagerartikelSetzen'];
+        return ['zeige', 'ankerNetzUmschalten', 'ersatzKiVerwerfen', 'laVorschlaegeVerwerfen', 'kiVerwerfen', 'stammplatzSetzen', 'lagerartikelSetzen', 'gefaessKostenartSetzen'];
     }
 
     public ?int $gpId = null;
@@ -501,6 +501,28 @@ class DetailPanel extends Component
         }
     }
 
+    /** Art + Preis als Gefäß (17.11.2026): Betriebsdatum des Teams wie der Lagerartikel — ohne „Bearbeiten“, nur Non-Food. */
+    public string $gefaessKostenart = '';
+
+    public string $gefaessPreis = '';
+
+    public ?string $gefaessKostenartFehler = null;
+
+    public function gefaessKostenartSetzen(): void
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null || $this->gpId === null) {
+            return;
+        }
+        $this->gefaessKostenartFehler = null;
+        try {
+            $n = app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class)->setzen($team, $this->gpId, $this->gefaessKostenart, $this->gefaessPreis);
+            $this->dispatch('fa-saved', message: 'Gefäß gespeichert'.($n > 0 ? " — {$n} Darreichungen neu gerechnet." : '.'), type: 'success');
+        } catch (\RuntimeException $e) {
+            $this->gefaessKostenartFehler = $e->getMessage();
+        }
+    }
+
     /** Spec 67: Stammplatz dieses Grundprodukts in einem Lagerort setzen ('' = entfernen). */
     public function stammplatzSetzen(int $locationId, $binId): void
     {
@@ -597,6 +619,7 @@ class DetailPanel extends Component
             // Spec 67: das Grundprodukt „trägt sein Lager": Bestand + Stammplatz je Lagerort, letzte Bewegungen
             'lagerOrte' => ($gp !== null && $team !== null && $brauchtLager) ? $this->lagerOrte($team, $gp) : [],
             'lagerartikelInfo' => ($gp !== null && $team !== null && $brauchtLager) ? $this->lagerartikelLaden($team, $gp) : null,
+            'gefaessKostenartInfo' => ($gp !== null && $team !== null && $brauchtLager && $gp->istNonFood()) ? $this->gefaessKostenartLaden($team, $gp) : null,
             'lagerBewegungen' => ($gp !== null && $team !== null && $brauchtLager)
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistInventoryMovement::where('team_id', $team->id)->where('gp_id', $gp->id)
                     ->with('location:id,name')->where('qty_base', '<>', 0)->orderByDesc('moved_at')->orderByDesc('id')->limit(10)->get()
@@ -638,6 +661,25 @@ class DetailPanel extends Component
 
         return ['einheit' => $inv->anzeigeEinheit($base)];
     }
+
+    /** Art + Preis als Gefäß: eigener Eintrag ins Formular (einmal je GP), geerbter Eintrag des Oberteams als Hinweis. */
+    private function gefaessKostenartLaden($team, FoodAlchemistGp $gp): array
+    {
+        $svc = app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class);
+        $vorgabe = $svc->teamVorgabe((int) $gp->id, $team);
+        $eigen = $vorgabe['team_id'] === (int) $team->id;
+        if ($this->gefaessKostenartGp !== $gp->id) {
+            $this->gefaessKostenartGp = $gp->id;
+            $this->gefaessKostenart = $eigen ? (string) $vorgabe['kostenart'] : '';
+            $this->gefaessPreis = $eigen && $vorgabe['preis'] !== null ? str_replace('.', ',', (string) $vorgabe['preis']) : '';
+        }
+
+        return ['geerbt' => ! $eigen && $vorgabe['kostenart'] !== null
+                ? \Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN[$vorgabe['kostenart']].($vorgabe['preis'] !== null ? ', '.number_format($vorgabe['preis'], 2, ',', '.').' €/Stk' : '') : null,
+            'geerbt_von' => ! $eigen && $vorgabe['team_id'] !== null ? (\Platform\Core\Models\Team::find($vorgabe['team_id'])?->name) : null];
+    }
+
+    public ?int $gefaessKostenartGp = null;
 
     private function lagerOrte($team, FoodAlchemistGp $gp): array
     {

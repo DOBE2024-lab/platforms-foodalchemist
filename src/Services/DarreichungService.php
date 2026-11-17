@@ -162,6 +162,7 @@ class DarreichungService
         'work_time_surcharge_min', 'offer_text_override', 'note',
         'anrichten_wert', 'anrichten_pauschal_min',   // Spec 83 B3i/B3l: Anrichte-Zeit je Darreichung (Einheit aus der Form)
         'vessel_gp_id',      // Gefäß der Form: Non-Food-GP (WG 16); der Servier-Typ kommt daraus
+        'vessel_cost_type',  // 17.11.2026: Art des Gefäßes übersteuern (einweg|mehrweg|extern), leer = Eintrag des Teams am GP
     ];
 
     /** Spec 85: Fremdschlüssel der Darreichung → Vokabular (Model-Klasse oder Tabelle ohne Model). Sichtbar heißt erlaubt. */
@@ -246,6 +247,9 @@ class DarreichungService
             }
         }
         $update = [...$update, ...$this->referenzenPruefen($team, $update, $darreichung)];
+        if (array_key_exists('vessel_cost_type', $update)) {
+            $update['vessel_cost_type'] = GefaessKostenartService::pruefe($update['vessel_cost_type']);
+        }
         // Gefäß: nur ein sichtbares Non-Food-GP (WG 16)
         if (array_key_exists('vessel_gp_id', $update) && $update['vessel_gp_id'] !== null) {
             $gefaess = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->find((int) $update['vessel_gp_id']);
@@ -510,24 +514,35 @@ class DarreichungService
     }
 
     /**
-     * Gefäß der Darreichung als Kostenposten: 1 Stück je Einheit zum Lead-Preis je Stück, AUSSER Miete (Lieferant der Gruppe VERLEIH):
-     * dann keine Kosten je Portion, nur der Hinweis.
+     * Gefäß der Darreichung als Kostenposten (1 Stück je Einheit) nach Art und Preis ({@see GefaessKostenartService}):
+     * einweg = Preis des Teams am GP, sonst Lead-Preis je Stück · mehrweg/extern = Preis des Teams am GP. Fehlt der Preis: `preis_fehlt`.
+     * Ausnahme wie bisher: ein Verleih-Gefäß ohne Team-Eintrag (Automatik extern) ist nur Miet-Hinweis, ohne Kosten und vollständig.
      *
-     * @return array{gp:?\Platform\FoodAlchemist\Models\FoodAlchemistGp, kosten:?float, miete:bool, preis_fehlt:bool}
+     * @return array{gp:?\Platform\FoodAlchemist\Models\FoodAlchemistGp, kosten:?float, miete:bool, preis_fehlt:bool, kostenart:?string, kostenart_quelle:?string, kostenart_vorgabe:?string, preis_quelle:?string}
      */
     public function gefaessKosten(FoodAlchemistRecipeDarreichung $d, ?Team $team = null): array
     {
         $gp = $d->vessel_gp_id !== null ? \Platform\FoodAlchemist\Models\FoodAlchemistGp::query()->find($d->vessel_gp_id) : null;
+        $info = ['gp' => $gp, 'kosten' => null, 'miete' => false, 'preis_fehlt' => false, 'kostenart' => null, 'kostenart_quelle' => null,
+            'kostenart_vorgabe' => null, 'preis_quelle' => null];
         if ($gp === null) {
-            return ['gp' => null, 'kosten' => null, 'miete' => false, 'preis_fehlt' => false];
+            return $info;
         }
         $team ??= Team::find($d->team_id);
-        if ($this->istVerleihGp($gp, $team)) {
-            return ['gp' => $gp, 'kosten' => null, 'miete' => true, 'preis_fehlt' => false];
+        $art = app(GefaessKostenartService::class)->wirksam($d, (int) $gp->id, $team, fn () => $this->istVerleihGp($gp, $team));
+        $info = [...$info, 'kostenart' => $art['kostenart'], 'kostenart_quelle' => $art['quelle'], 'kostenart_vorgabe' => $art['vorgabe'],
+            'miete' => $art['kostenart'] === GefaessKostenartService::EXTERN];
+        $preis = $art['preis_gp'];
+        $info['preis_quelle'] = $preis !== null ? 'gp' : null;
+        if ($preis === null && $art['kostenart'] === GefaessKostenartService::EINWEG) {
+            $preis = $this->recompute->preisProStueckPublic($gp, $team);
+            $info['preis_quelle'] = $preis !== null ? 'artikel' : null;
         }
-        $preis = $this->recompute->preisProStueckPublic($gp, $team);
+        if ($preis === null && $art['kostenart'] === GefaessKostenartService::EXTERN && $art['quelle'] === 'automatik') {
+            return $info;   // Verleih ohne Team-Eintrag: Miete je Tag/Veranstaltung, nur Hinweis (wie bisher)
+        }
 
-        return ['gp' => $gp, 'kosten' => $preis !== null ? round($preis, 4) : null, 'miete' => false, 'preis_fehlt' => $preis === null];
+        return [...$info, 'kosten' => $preis !== null ? round($preis, 4) : null, 'preis_fehlt' => $preis === null];
     }
 
     /**
@@ -567,6 +582,8 @@ class DarreichungService
             'gefaess_id' => $gp?->id, 'gefaess_name' => $gp?->name, 'typ_id' => $typId, 'typ_name' => $name($typId),
             'uebersteuert' => $this->uebersteuert($d), 'gefaess_typ_name' => $name($gefaessTypId),
             'warnung' => $warnung, 'miete' => $gef['miete'], 'kosten' => $gef['kosten'], 'preis_fehlt' => $gef['preis_fehlt'],
+            'kostenart' => $gef['kostenart'], 'kostenart_quelle' => $gef['kostenart_quelle'], 'kostenart_vorgabe' => $gef['kostenart_vorgabe'],
+            'preis_quelle' => $gef['preis_quelle'],
         ];
     }
 

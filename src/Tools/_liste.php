@@ -207,6 +207,7 @@ return [
     \Platform\FoodAlchemist\Tools\GpFormsDeleteTool::class,
     \Platform\FoodAlchemist\Tools\GpFormsEstimateTool::class,
     \Platform\FoodAlchemist\Tools\GpFormsPutTool::class,
+    \Platform\FoodAlchemist\Tools\GpGefaessKostenartPutTool::class,
     \Platform\FoodAlchemist\Tools\GpLaPutTool::class,
     \Platform\FoodAlchemist\Tools\GpLeadGetTool::class,
     \Platform\FoodAlchemist\Tools\GpLeadPutTool::class,

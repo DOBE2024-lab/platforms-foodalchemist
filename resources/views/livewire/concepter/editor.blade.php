@@ -1568,7 +1568,7 @@
                                         @if($g['gefaess_name']){{ $g['gefaess_name'] }}
                                             @if($g['kosten'] !== null)<x-fa::badge>{{ $euro($g['kosten']) }} je Einheit</x-fa::badge>@endif
                                             @if($g['miete'])<x-fa::badge tone="info" title="Miete je Tag/Veranstaltung, nicht je Portion gerechnet">Miete</x-fa::badge>@endif
-                                            @if($g['preis_fehlt'])<x-fa::badge tone="warn">Preis fehlt</x-fa::badge>@endif
+                                            @if($g['preis_fehlt'])<x-fa::badge tone="warn">Preis fehlt</x-fa::badge>@endif @if($g['kostenart'] === 'mehrweg')<x-fa::badge tone="info" data-anrichten-mehrweg>Mehrweg</x-fa::badge>@endif
                                         @else<span class="text-[var(--fa-ink-3)]">kein Gefäß</span>@endif
                                     </dd>
                                     <dt class="{{ $feldLabel }}">Servier-Typ</dt>

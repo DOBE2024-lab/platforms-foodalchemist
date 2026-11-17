@@ -1056,7 +1056,7 @@ class Tagesplan extends Component
         // (je Komponente) und wird von wallGerichtRegeneration() gerendert — zwei Quellen
         // nebeneinander waren genau die Drift, die dieser Spec abstellt.
         $labels = [
-            'geschirr' => 'Geschirr',
+            'geschirr' => 'Geschirr', 'geschirr_art' => 'Geschirr-Art',   // Geschirr-Art: Kostenart des Gefäßes (Eigenbestand: zurück in die Spülküche)
             'vehikel' => 'Servierform',
             'behaelter_warm' => 'Behälter warm',
             'behaelter_kalt' => 'Behälter kalt',

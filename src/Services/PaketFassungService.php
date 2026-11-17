@@ -224,7 +224,10 @@ class PaketFassungService
 
         $zubehoer = $d->zubehoer()->reorder()->orderBy('gp_id')->get(['gp_id', 'quantity'])->map(fn ($z) => [(int) $z->gp_id, (float) $z->quantity])->all();
 
-        return [$d->only(self::DARREICHUNG_FELDER), $deltas, (bool) $d->is_standard, $zubehoer];
+        // Kostenart des Gefäßes (17.11.2026) zählt nur, wenn gesetzt — sonst bliebe kein bisheriger Inhalts-Hash gleich
+        $felder = $d->only(self::DARREICHUNG_FELDER) + ($d->vessel_cost_type !== null ? ['vessel_cost_type' => $d->vessel_cost_type] : []);
+
+        return [$felder, $deltas, (bool) $d->is_standard, $zubehoer];
     }
 
     /**

@@ -17,6 +17,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Preis\LetzterPreisService;
 use Platform\FoodAlchemist\Services\Preis\LieferantenAusweich;
 use Platform\FoodAlchemist\Services\Preis\LetzterPreisSpur;
+use Platform\FoodAlchemist\Services\Rezept\NaehrwertAusbeuteRechner;
 use Platform\FoodAlchemist\Services\Rezept\RezeptGraphService;
 
 /**
@@ -25,7 +26,7 @@ use Platform\FoodAlchemist\Services\Rezept\RezeptGraphService;
  *   2. Allergene (GL-01: F7.1-Guard, GP-Auflösung via GpAggregateService = Prio-Kette 4.3)
  *   3. Zusatzstoffe (GL-09: gleicher Guard, MAX über Roh-Domäne)
  *   4. Kosten (GL-02 §3.2, T3-Kaskade; I7: Nenner = GERUNDETES yield)
- *   5. Nährwerte (GL-08: KEIN Guard, Rohmasse-Basis, 0-Substitution GT-02)
+ *   5. Nährwerte (GL-08: KEIN Guard, je 100 g Ausbeute seit 17.11.2026, 0-Substitution GT-02)
  *   6. Spec-Flags: spec_is_gluten_free normativ aus GL-01 (in allergene()); vegan/
  *      vegetarisch/halal/laktosefrei + Schwein/Rind dynamisch aus GP-Tags über alle
  *      Ebenen (specFlags(), 2026-07-06 — löst die statische recipes-Spalte ab).
@@ -423,13 +424,7 @@ class RecipeRecomputeService
         )];
     }
 
-    /**
-     * Verlust-Kaskade (GL-02): Zutat-Wert → GP-Default → Team-WG-Default → 0.
-     * Zeilenart „Medium“ (Regelwerk Basisrezepte §18.7 / §6a, Entscheid Dominique 17.11.2026): ohne Garverlust an Zeile oder GP ist
-     * das Kochmedium ganz verworfen (100 %) — für Ausbeute UND Nährwerte. Den Rest am Produkt trägt der Garverlust (KI-Vorschlag,
-     * cooking_loss_source='ki', z. B. Kochwasser 90 % → aufgenommenes Wasser; Frittieröl 98 % → aufgenommenes Fett). Der WG-Default
-     * gilt für Lebensmittel, nicht für Kochmedien.
-     */
+    /** Verlust-Kaskade (GL-02): Zutat → GP → Team-WG → 0. Medium (§6a/§18.7) ohne Zeilen-/GP-Wert = 100 % verworfen, kein WG-Default. */
     private function effektiverGarverlust(FoodAlchemistRecipeIngredient $z): float
     {
         if ($z->cooking_loss_pct !== null) {
@@ -759,136 +754,32 @@ class RecipeRecomputeService
         }
     }
 
-    // ── 5. Nährwerte (GL-08, Bezugsmasse = Ausbeute — Entscheid Dominique 17.11.2026) ──
-    //
-    // Je 100 g AUSBEUTE (Masse nach Putz- und Garverlust, gleiche Verlustkaskade wie yield_kg), nicht mehr je 100 g
-    // Rohmasse (GL-08 §6 „offene Entscheidung“, damit erledigt). Je Zeile:
-    //   masse     = menge_g × (1 − Putz) × (1 − Gar)                 → Nenner (Bezugsmasse)
-    //   nährstoff = menge_g × (1 − Putz) × (1 − Gar, NUR Kochmedium) → Zähler
-    // Garverlust heißt zweierlei: bei Lebensmitteln Verdampfen/Schrumpfen (Nährstoffe bleiben, Dichte steigt), beim
-    // Kochmedium (Zeilenart „Medium“, §18.7: Nudelwasser samt Salz, Frittieröl, Lake) Verwerfen (Nährstoffe gehen mit).
-    // Putzverlust wird immer verworfen (Schale, Parüren) — die Nährstoffe der Putzmasse zählen nicht.
-    // Nenner = dieselben relevanten (gemappten) Zeilen wie bisher, auch ohne Nährwerte („verdünnen“, Invariante 4) —
-    // ungemappte bleiben draußen (GL-08 Invariante 2). Mengen-Faktor weiter NUR g/ml (GL-08 §4.2, kein stk-Fallback).
-    // Sub-Rezepte liefern ihre Werte bereits je 100 g IHRER Ausbeute; die Zeile im Eltern-Rezept misst die Menge des
-    // fertigen Unterrezepts — beides dieselbe Masse, also konsistent.
-
-    /**
-     * Faktoren je Zeile relativ zur Rohmenge: `masse` (Ausbeute-Anteil) und `naehrstoff` (verbleibender Nährstoff-Anteil).
-     *
-     * @return array{masse: float, naehrstoff: float}
-     */
-    private function naehrwertFaktoren(FoodAlchemistRecipeIngredient $z): array
-    {
-        $putz = 1 - $this->effektiverPutzverlust($z) / 100;
-        $gar = 1 - $this->effektiverGarverlust($z) / 100;
-
-        return ['masse' => $putz * $gar, 'naehrstoff' => $putz * ($z->istKochmedium() ? $gar : 1.0)];
-    }
-
-    /**
-     * Nährwert-Faktoren aller Zeilen eines Rezepts (für parallele Rechnungen, z. B. Sensorik-Grenzen) — dieselbe Regel wie
-     * die gespeicherten Rezept-Nährwerte. Lädt Zeilen samt GP selbst, wenn nicht geladen.
-     *
-     * @return array<int, array{masse: float, naehrstoff: float}> [ingredient_id => Faktoren]
-     */
-    public function naehrwertFaktorenFuerRezept(FoodAlchemistRecipe $recipe, ?Team $team = null): array
-    {
-        $this->fuerTeam($team ?? Team::find($recipe->team_id));
-        $this->garverlustWgCache = $this->putzverlustWgCache = [];
-        $recipe->loadMissing(['ingredients.gp']);
-        $out = [];
-        foreach ($recipe->ingredients as $z) {
-            $out[(int) $z->id] = $this->naehrwertFaktoren($z);
-        }
-
-        return $out;
-    }
+    // ── 5. Nährwerte (GL-08, je 100 g Ausbeute, Kochmedium — Entscheid 17.11.2026) → NaehrwertAusbeuteRechner ──
 
     private function naehrwerte(FoodAlchemistRecipe $recipe, Collection $zutaten): void
     {
-        $relevant = $zutaten->filter(fn ($z) => ! $z->is_optional
-            && $z->unit?->slug !== 'qs'
-            && $this->istGemappt($z));
+        app(NaehrwertAusbeuteRechner::class)->aggregiere($recipe, $zutaten->filter(fn ($z) => ! $z->is_optional
+            && $z->unit?->slug !== 'qs' && $this->istGemappt($z)), fn ($z) => $this->verlustePct($z), $this->recomputeTeam);
+    }
 
-        $totalG = 0.0;
-        $summen = ['kcal' => 0.0, 'protein' => 0.0, 'fat' => 0.0, 'carbs' => 0.0, 'salt' => 0.0, 'sugar' => 0.0, 'satfat' => 0.0];
-        $nMapped = 0;
+    /** @return array{0: float, 1: float} [Putz %, Gar %] — Verlust-Kaskade wie yield */
+    private function verlustePct(FoodAlchemistRecipeIngredient $z): array
+    {
+        return [$this->effektiverPutzverlust($z), $this->effektiverGarverlust($z)];
+    }
 
-        foreach ($relevant as $z) {
-            // GL-08 §4.2 verbatim: NUR g/ml-Faktor — bewusst KEIN stk-Fallback (Lücke dokumentiert)
-            $mengeG = $this->mengeAvg($z) * (float) ($z->unit?->default_in_g ?? $z->unit?->default_in_ml ?? 0);
-            $f = $this->naehrwertFaktoren($z);
+    /**
+     * Nährwert-Faktoren je Zeile (für parallele Rechnungen wie die Sensorik-Grundlage) — dieselbe Regel wie die Rezept-Nährwerte.
+     *
+     * @param  Collection<int, FoodAlchemistRecipeIngredient>  $zeilen  mit geladenem gp
+     * @return array<int, array{masse: float, naehrstoff: float}>
+     */
+    public function naehrwertFaktorenFuerZeilen(Collection $zeilen, ?Team $team): array
+    {
+        $this->fuerTeam($team);
+        $this->garverlustWgCache = $this->putzverlustWgCache = [];
 
-            $werte = null;
-            if ($z->referencedRecipe !== null) {                   // Sub-Pfad gewinnt (GL-08 4.1)
-                $sub = $z->referencedRecipe;
-                if ($sub->nutri_kcal_per_100g !== null) {
-                    $werte = [
-                        'kcal' => (float) $sub->nutri_kcal_per_100g,
-                        'protein' => (float) ($sub->nutri_protein_g_per_100g ?? 0),
-                        'fat' => (float) ($sub->nutri_fat_g_per_100g ?? 0),
-                        'carbs' => (float) ($sub->nutri_carbs_g_per_100g ?? 0),
-                        'salt' => (float) ($sub->nutri_salt_g_per_100g ?? 0),
-                        'sugar' => (float) ($sub->nutri_sugar_g_per_100g ?? 0),
-                        'satfat' => (float) ($sub->nutri_saturated_fat_g_per_100g ?? 0),
-                    ];
-                }
-            } elseif ($z->gp !== null) {
-                // GL-08-Verfeinerung (Salz-Fall): KURATIERTE GP-Werte (nutri_source='manual')
-                // dürfen LA-Lücken füllen — z.B. Speisesalz-LAs mit sodium, aber ohne kcal
-                // (Leit-Indikator schlug fehl → Salz trug 0 bei). KI-Schätzungen bleiben
-                // weiterhin Panel-only und verfälschen keine Rezept-Nährwerte.
-                $n = $this->gpAggregate->naehrwerte($z->gp, mitKiFallback: $z->gp->nutri_source === 'manual', sicht: $this->recomputeTeam);
-                if ($n['energy_kcal']['avg'] !== null) {           // kcal = Leit-Indikator
-                    $werte = [
-                        'kcal' => $n['energy_kcal']['avg'],
-                        'protein' => $n['protein']['avg'] ?? 0.0,
-                        'fat' => $n['fat']['avg'] ?? 0.0,
-                        'carbs' => $n['carbs_absorbable']['avg'] ?? 0.0,
-                        'salt' => $n['salt_g']['avg'] ?? 0.0,      // sodium×0.0025 (GL-08 §4.2)
-                        'sugar' => $n['sugar']['avg'] ?? 0.0,
-                        'satfat' => $n['saturated_fat']['avg'] ?? 0.0,
-                    ];
-                }
-            }
-
-            $totalG += $mengeG * $f['masse'];                      // Ausbeute; auch ohne Werte „verdünnen" (Invariante 4)
-            if ($mengeG > 0 && $werte !== null) {
-                $nMapped++;
-                foreach ($summen as $k => $v) {
-                    $summen[$k] += ($werte[$k] ?? 0.0) * $mengeG * $f['naehrstoff'] / 100;  // fehlender Wert ⇒ 0-Anteil (GT-02)
-                }
-            }
-        }
-
-        $nTotal = $relevant->count();
-        if ($nMapped > 0 && $totalG > 0) {
-            $recipe->nutri_kcal_per_100g = round($summen['kcal'] * 100 / $totalG, 1);
-            $recipe->nutri_protein_g_per_100g = round($summen['protein'] * 100 / $totalG, 2);
-            $recipe->nutri_fat_g_per_100g = round($summen['fat'] * 100 / $totalG, 2);
-            $recipe->nutri_carbs_g_per_100g = round($summen['carbs'] * 100 / $totalG, 2);
-            $recipe->nutri_salt_g_per_100g = round($summen['salt'] * 100 / $totalG, 3);
-            $recipe->nutri_sugar_g_per_100g = round($summen['sugar'] * 100 / $totalG, 2);
-            $recipe->nutri_saturated_fat_g_per_100g = round($summen['satfat'] * 100 / $totalG, 2);
-        } else {
-            $recipe->nutri_kcal_per_100g = null;
-            $recipe->nutri_protein_g_per_100g = null;
-            $recipe->nutri_fat_g_per_100g = null;
-            $recipe->nutri_carbs_g_per_100g = null;
-            $recipe->nutri_salt_g_per_100g = null;
-            $recipe->nutri_sugar_g_per_100g = null;
-            $recipe->nutri_saturated_fat_g_per_100g = null;
-        }
-        $recipe->nutri_n_ingredients_total = $nTotal;
-        $recipe->nutri_n_ingredients_mapped = $nMapped;
-        $recipe->nutri_confidence = match (true) {                  // GL-08 §4.3 (erste zutreffende)
-            $nTotal === 0, $nMapped === 0 => 'unknown',
-            $nMapped === $nTotal => 'high',
-            $nMapped / $nTotal >= 0.8 => 'medium',
-            default => 'low',
-        };
-        $recipe->nutri_aggregated_at = now();
+        return $zeilen->mapWithKeys(fn ($z) => [(int) $z->id => NaehrwertAusbeuteRechner::faktoren(...[...$this->verlustePct($z), $z->istKochmedium()])])->all();
     }
 
     // ── 6. Spec-Flags (Diät/Herkunft, dynamisch über alle Ebenen) ───────

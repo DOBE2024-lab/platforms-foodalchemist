@@ -253,16 +253,20 @@ class SensorikService
         return $out;
     }
 
-    /** @return array<int, array{masse: float, naehrstoff: float}> */
+    /**
+     * Ohne das Rezept-Modell zu laden (V-049 zählt die Pipeline-Ladungen): Zeilen samt GP + Team-ID reichen der Verlust-Kaskade.
+     *
+     * @return array<int, array{masse: float, naehrstoff: float}>
+     */
     private function naehrwertFaktoren(int $recipeId, bool $hatZeilen): array
     {
         if (! $hatZeilen) {
             return [];
         }
-        $recipe = \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)
-            ->ohneTeamSicht('sensorik-naehrwerte')->find($recipeId);   // Zeilen liest die Abfrage oben ebenfalls ohne Sicht
+        $teamId = DB::table('foodalchemist_recipes')->where('id', $recipeId)->value('team_id');
+        $zeilen = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::where('recipe_id', $recipeId)->with('gp')->get();
 
-        return $recipe === null ? [] : app(RecipeRecomputeService::class)->naehrwertFaktorenFuerRezept($recipe);
+        return app(RecipeRecomputeService::class)->naehrwertFaktorenFuerZeilen($zeilen, $teamId !== null ? \Platform\Core\Models\Team::find($teamId) : null);
     }
 
     /** Ab diesem Anteil der Masse mit bekanntem Gehalt gelten die Nährwert-Grenzen auch am Rezept. */

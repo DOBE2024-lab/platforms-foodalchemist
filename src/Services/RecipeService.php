@@ -1258,9 +1258,7 @@ class RecipeService
                     'cooking_loss_pct' => ($z['cooking_loss_pct'] ?? '') !== '' && $z['cooking_loss_pct'] !== null ? (float) str_replace(',', '.', (string) $z['cooking_loss_pct']) : null,
                     'cooking_loss_source' => ($z['cooking_loss_source'] ?? null) ?: null,   // M4-11: ki|manual (GL-07)
                     'trimming_loss_pct' => ($z['trimming_loss_pct'] ?? '') !== '' && ($z['trimming_loss_pct'] ?? null) !== null ? (float) str_replace(',', '.', (string) $z['trimming_loss_pct']) : null,
-                    'is_optional' => (bool) ($z['is_optional'] ?? false),
-                    // Zeilenart (Regelwerk Basisrezepte §18.7): zutat | medium, leer = ungesetzt (Vorschlag des GP, 17.11.2026)
-                    'zeilenart' => FoodAlchemistRecipeIngredient::zeilenartNormieren($z['zeilenart'] ?? null),
+                    'is_optional' => (bool) ($z['is_optional'] ?? false), 'zeilenart' => FoodAlchemistRecipeIngredient::zeilenartNormieren($z['zeilenart'] ?? null),   // §18.7, leer = GP-Vorschlag
                     'note' => ($z['note'] ?? '') ?: null,
                     // Teller-Rolle nur im Gericht, gegen das Vokabular geprüft (Dominique 11.10.); Basisrezept-Zeilen: keine.
                     'role' => $recipe->is_sales_recipe ? \Platform\FoodAlchemist\Support\TellerRolle::kanonisch($z['role'] ?? null) : null,

@@ -39,7 +39,7 @@ beforeEach(function () {
 
 it('★ Präsentations-Daten: Format-Kapitel trägt die Editionen als Blöcke (Überschrift, Edition mit Preis, Gericht-Zeile)', function () {
     $snap = app(PresentationService::class)->previewData($this->rootTeam, 'foodbook', $this->buch->id);
-    $sektion = collect($snap['body']['sections'])->firstWhere('title', 'Taste and Fly');
+    $sektion = collect($snap['content']['sections'])->firstWhere('title', 'Taste and Fly');
 
     expect($sektion)->not->toBeNull();
     $bloecke = collect($sektion['blocks']);

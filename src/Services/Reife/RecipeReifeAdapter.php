@@ -47,6 +47,9 @@ class RecipeReifeAdapter implements ReifeAdapter
         'foodalchemist_recipe_equipment' => ['equipment', 'Kein Equipment hinterlegt', null],
     ];
 
+    /** Umbau-Weg für `gp_im_gericht`: Basisrezept aus der GP-Zeile anlegen und umhängen. */
+    public const TOOL_GP_UMBAU = 'foodalchemist.recipe_gp_zu_basisrezept.POST';
+
     public function __construct(
         private BulkEnrichService $bulk,
         private RecipeOneShotService $oneShot,
@@ -131,6 +134,21 @@ class RecipeReifeAdapter implements ReifeAdapter
                 'foodalchemist.gps.MATCH');
         } else {
             $erfuellt[] = 'zutaten_offen';
+        }
+
+        // Entscheid Dominique 17.11.2026: ein Gericht besteht nur aus Basisrezepten. Altbestand mit GP direkt im Gericht wird
+        // nicht automatisch umgebaut — je Gericht ein Befund mit dem Umbau-Weg (Basisrezept anlegen, Zeile umhängen).
+        if ($istVk) {
+            $direkt = app(\Platform\FoodAlchemist\Services\GerichtGpUmbauService::class)->direkteGpZeilen($r);
+            if ($direkt->isNotEmpty()) {
+                $luecken[] = $this->luecke('gp_im_gericht', 'gericht', 'wichtig',
+                    'GP direkt im Gericht — Basisrezept anlegen: '
+                        . $direkt->map(fn ($z) => (string) ($z->gp?->name ?? $z->display_name ?? $z->raw_text) . ' (Zeile ' . (int) $z->id . ')')->implode(', ')
+                        . '. Ein Gericht enthält nur Basisrezepte (Zukauf oder Garnitur).',
+                    self::TOOL_GP_UMBAU);
+            } else {
+                $erfuellt[] = 'gp_im_gericht';
+            }
         }
 
         // Spec 96: ein Zweck-Derivat (Saft, Abrieb) ohne Ausbeute bleibt unbepreist und unbestellbar — sichtbar statt geraten
@@ -304,6 +322,7 @@ class RecipeReifeAdapter implements ReifeAdapter
         $aus[] = $aspekt('darreichung', 'blockiert', 'foodalchemist.recipe_darreichung.POST', 'gericht');
         $aus[] = $aspekt('aufschlagsklasse', 'wichtig', $vk, 'gericht');
         $aus[] = $aspekt('dichteklasse', 'wichtig', null, 'gericht');
+        $aus[] = $aspekt('gp_im_gericht', 'wichtig', self::TOOL_GP_UMBAU, 'gericht');   // Gericht = nur Basisrezepte (17.11.2026)
 
         // Aus der Datenqualitaets-Ampel gespiegelt — kein eigenes Werkzeug.
         foreach (['br_ek_null', 'br_ek_teil', 'br_anker_fehlt'] as $code) {

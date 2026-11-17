@@ -28,6 +28,8 @@ use Platform\FoodAlchemist\Support\TeamScope;
  */
 class VkModal extends Component
 {
+    use \Platform\FoodAlchemist\Livewire\Concerns\HatGpUmbauImGericht;   // Altbestand GP direkt im Gericht (17.11.2026)
+
     use \Platform\FoodAlchemist\Livewire\Concerns\HatRezeptCopilot;   // Spec 03 L6b
     use \Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast;
     use \Platform\FoodAlchemist\Livewire\Concerns\HatDarreichungsFormular;   // Festpreis + deutsche Zahlen
@@ -1368,6 +1370,7 @@ class VkModal extends Component
         return view('foodalchemist::livewire.verkauf.vk-modal', [
             'sperr' => $this->sperrZustand(),   // Spec 65
             'rezept' => $rezept,
+            'gpDirekt' => $this->gpDirektZeilen($rezept),   // Altbestand GP direkt im Gericht (17.11.2026)
             'dishImageUrl' => ($rezept !== null && ($rezept->image_context_file_id || $rezept->image_path))
                 ? app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($rezept->image_context_file_id, $rezept->image_path)
                 : null,

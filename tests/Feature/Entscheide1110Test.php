@@ -58,10 +58,12 @@ it('Kleinstmenge: Typ-Vorsilbe und Merkmale zählen nicht, Halbfabrikate treffen
     expect($e('Butter'))->toBeNull();   // Regel aus = altes Verhalten
 });
 
-it('Generator (Gericht, from scratch): „Aroma: Butter“ wird GP-Zeile „Butter“, kein Rüst-Basisrezept', function () {
+// Abgelöst durch Entscheid Dominique 17.11.2026 (Gericht = nur Basisrezepte): die Kleinstmengen-Ausnahme gilt im Gericht
+// nicht mehr — auch Butter wird Basisrezept (Garnitur/Zukauf), nie eine GP-Zeile. Siehe GerichtNurBasisrezepteTest.
+it('Generator (Gericht, from scratch): „Aroma: Butter“ wird KEINE GP-Zeile mehr, sondern ein offenes Basisrezept (17.11.2026)', function () {
     config(['foodalchemist.ai.provider' => 'fake']);
     ($this->einheit)('g', 'mass');
-    $butter = ($this->gp)('Butter: frisch', ['commodity_group_code' => '03']);
+    ($this->gp)('Butter: frisch', ['commodity_group_code' => '03']);
 
     $res = app(RecipeGeneratorService::class)->generiere($this->rootTeam, 'Test', ['convenience' => 'from_scratch'], [
         'name' => '[HG] Rinderfilet | Butter',
@@ -69,14 +71,13 @@ it('Generator (Gericht, from scratch): „Aroma: Butter“ wird GP-Zeile „Butt
     ], vkModus: true);
     $z = $res['recipe']->ingredients()->first();
 
-    expect((int) $z->gp_id)->toBe((int) $butter->id)
-        ->and($z->display_name)->toBe('Butter')
-        ->and($z->referenced_recipe_id)->toBeNull()
-        ->and(collect($res['offene'])->where('primaer', 'basisrezept_anlegen'))->toHaveCount(0)
-        ->and($res['statistik']['kleinstmengen'] ?? [])->toBe(['Butter']);
+    expect($z->gp_id)->toBeNull()
+        ->and($z->display_name)->toBe('Aroma: Butter')
+        ->and(collect($res['offene'])->where('primaer', 'basisrezept_anlegen'))->toHaveCount(1)
+        ->and($res['statistik']['kleinstmengen'] ?? [])->toBe([]);
 });
 
-it('planChildren: eine offene Kleinstmengen-Zeile im Gericht bekommt keinen Kind-Step', function () {
+it('planChildren: eine offene Kleinstmengen-Zeile im Gericht bekommt jetzt einen Kind-Step (17.11.2026)', function () {
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'gericht', 'status' => 'running']);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running', 'sort' => 1]);
     $gericht = $this->makeRecipe($this->rootTeam, '[HG] Rinderfilet', ['status' => 'draft', 'is_sales_recipe' => true]);
@@ -86,7 +87,7 @@ it('planChildren: eine offene Kleinstmengen-Zeile im Gericht bekommt keinen Kind
         [['index' => 0, 'text' => 'Aroma: Butter', 'primaer' => 'basisrezept_anlegen']],
         ['auto_dependencies' => true, 'bestand' => 'hybrid']);
 
-    expect(FoodAlchemistCascadeRunStep::where('cascade_run_id', $run->id)->where('depth', 1)->count())->toBe(0);
+    expect(FoodAlchemistCascadeRunStep::where('cascade_run_id', $run->id)->where('depth', 1)->count())->toBe(1);
 });
 
 // ── Hausstandard Fond/Jus ──────────────────────────────────────────────────────────────────────

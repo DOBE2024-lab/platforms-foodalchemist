@@ -99,7 +99,8 @@ it('DoD M4-14: Bestand wird gebunden, fehlende Basisrezepte und GPs bleiben zur 
         ->and($recipe->allergens_confidence)->toBe('low');
 });
 
-it('VK-Generator nutzt vorhandene Grundprodukte fuer Direktartikel wie Fleur de Sel zuerst', function () {
+it('VK-Generator: auch ein vorhandenes Grundprodukt (Fleur de Sel) wird im Gericht keine GP-Zeile, sondern Basisrezept', function () {
+    // Gericht = nur Basisrezepte (Dominique 17.11.2026): im Gericht wird nie ein GP verdrahtet — vorher: GP-Zeile.
     $fleur = ($this->mkGpMitPreis)('Fleur de Sel: trocken', 'fleur_de_sel', 18.00);
 
     $resultat = $this->svc->generiere($this->rootTeam, 'Gericht mit Finish-Salz', [
@@ -112,12 +113,13 @@ it('VK-Generator nutzt vorhandene Grundprodukte fuer Direktartikel wie Fleur de 
     ], vkModus: true);
 
     expect($resultat['recipe']->is_sales_recipe)->toBeTrue()
-        ->and($resultat['statistik']['bestand_gp'])->toBe(1)
-        ->and($resultat['offene'])->toBe([])
-        ->and($resultat['recipe']->ingredients()->first()->gp_id)->toBe($fleur->id);
+        ->and($resultat['statistik']['bestand_gp'])->toBe(0)
+        ->and(array_column($resultat['offene'], 'primaer'))->toBe(['basisrezept_anlegen'])
+        ->and($resultat['recipe']->ingredients()->first()->gp_id)->toBeNull()
+        ->and($fleur->id)->not->toBeNull();
 });
 
-it('VK-Generator routet fehlende Direktartikel nach LA→GP, Subrezept-Komponenten aber als Basisrezept', function () {
+it('VK-Generator routet auch fehlende Direktartikel als Basisrezept (17.11.2026, vorher LA→GP)', function () {
     $resultat = $this->svc->generiere($this->rootTeam, 'Suppe mit Finish und Fond', [
         'convenience' => 'from_scratch', 'frische' => 'frisch',
     ], kiRezeptOverride: [
@@ -132,7 +134,7 @@ it('VK-Generator routet fehlende Direktartikel nach LA→GP, Subrezept-Komponent
         ->and($resultat['offene'][0]['text'])->toBe('Geflügelfond')
         ->and($resultat['offene'][0]['primaer'])->toBe('basisrezept_anlegen')
         ->and($resultat['offene'][1]['text'])->toBe('Fleur de Sel')
-        ->and($resultat['offene'][1]['primaer'])->toBe('lieferantenartikel_waehlen');
+        ->and($resultat['offene'][1]['primaer'])->toBe('basisrezept_anlegen');   // Gericht = nur Basisrezepte (Dominique 17.11.2026): im Gericht wird nie ein GP verdrahtet — vorher: GP-Zeile.
 });
 
 it('§4-Alias greift im Generator: Rinderbrühe nutzt den BESTAND statt einen Stub anzulegen', function () {
@@ -236,7 +238,7 @@ it('LLM-Flag: true erzwingt Sub; ein hartes Halbfabrikat (fond/jus) überstimmt 
 
 // T4 »Gericht = Basisrezepte« rolle-hart: im VK-Gericht wird komponente/beilage IMMER Sub,
 // echte Rohware (direktArtikel) bleibt LA. Im Basisrezept greift die Regel nicht (kein Rekurs).
-it('T4: im Gericht (vkModus) wird komponente/beilage IMMER Basisrezept, Rohware bleibt LA', function () {
+it('T4: im Gericht (vkModus) wird komponente/beilage IMMER Basisrezept, seit 17.11.2026 auch Rohware', function () {
     $resultat = $this->svc->generiere($this->rootTeam, 'Rolle-Teller', [
         'convenience' => 'from_scratch', 'frische' => 'frisch',
     ], kiRezeptOverride: [
@@ -250,7 +252,7 @@ it('T4: im Gericht (vkModus) wird komponente/beilage IMMER Basisrezept, Rohware 
 
     expect($resultat['offene'][0]['primaer'])->toBe('basisrezept_anlegen')
         ->and($resultat['offene'][1]['primaer'])->toBe('basisrezept_anlegen')
-        ->and($resultat['offene'][2]['primaer'])->toBe('lieferantenartikel_waehlen');
+        ->and($resultat['offene'][2]['primaer'])->toBe('basisrezept_anlegen');   // Gericht = nur Basisrezepte (17.11.2026), vorher LA
 });
 
 it('T4: im Basisrezept (kein vkModus) greift die Rolle-Regel NICHT (komponente = rohes Bauteil)', function () {
@@ -303,7 +305,7 @@ it('L2 from_scratch: komponente mit GP-Treffer wird TROTZDEM zerlegt (GP geblock
     expect($resultat['recipe']->ingredients()->first()->gp_id)->toBeNull();
 });
 
-it('L2 voll_convenience: komponente mit GP-Treffer bleibt FLACH (GP gewinnt, Fertigkomponente)', function () {
+it('L2 voll_convenience: komponente mit GP-Treffer wird im Gericht trotzdem Basisrezept (17.11.2026, vorher FLACH)', function () {
     ($this->mkGpMitPreis)('Rotkohl', 'rotkohl', 3.00);
 
     $resultat = $this->svc->generiere($this->rootTeam, 'Teller mit Püree', [
@@ -315,12 +317,13 @@ it('L2 voll_convenience: komponente mit GP-Treffer bleibt FLACH (GP gewinnt, Fer
         ],
     ], vkModus: true);
 
-    expect($resultat['statistik']['bestand_gp'])->toBe(1)          // GP verdrahtet (gekauft)
-        ->and($resultat['statistik']['offen'])->toBe(0);
-    expect($resultat['recipe']->ingredients()->first()->gp_id)->not->toBeNull();
+    // Gericht = nur Basisrezepte (Dominique 17.11.2026): im Gericht wird nie ein GP verdrahtet — vorher: GP-Zeile.
+    expect($resultat['statistik']['bestand_gp'])->toBe(0)
+        ->and($resultat['statistik']['offen'])->toBe(1);
+    expect($resultat['recipe']->ingredients()->first()->gp_id)->toBeNull();
 });
 
-it('L2 egal (kein convenience-Key): komponente mit GP-Treffer bleibt FLACH (Bestand zuerst)', function () {
+it('L2 egal (kein convenience-Key): komponente mit GP-Treffer wird im Gericht Basisrezept (17.11.2026, vorher FLACH)', function () {
     ($this->mkGpMitPreis)('Rotkohl', 'rotkohl', 3.00);
 
     $resultat = $this->svc->generiere($this->rootTeam, 'Teller mit Püree', [
@@ -332,11 +335,12 @@ it('L2 egal (kein convenience-Key): komponente mit GP-Treffer bleibt FLACH (Best
         ],
     ], vkModus: true);
 
-    expect($resultat['statistik']['bestand_gp'])->toBe(1)          // Bestand zuerst → GP gewinnt
-        ->and($resultat['statistik']['offen'])->toBe(0);
+    // Gericht = nur Basisrezepte (Dominique 17.11.2026): im Gericht wird nie ein GP verdrahtet — vorher: GP-Zeile.
+    expect($resultat['statistik']['bestand_gp'])->toBe(0)
+        ->and($resultat['statistik']['offen'])->toBe(1);
 });
 
-it('L2 teil_convenience: Convenience-GP gewinnt, ein Nicht-Convenience-GP wird zerlegt', function () {
+it('L2 teil_convenience: im Gericht werden Convenience- und Nicht-Convenience-GP Basisrezept (17.11.2026)', function () {
     $conv = ($this->mkGpMitPreis)('Rotkohl', 'rotkohl', 3.00);
     $conv->update(['tag_is_convenience' => true]);
     ($this->mkGpMitPreis)('Rahmspinat', 'rahmspinat', 2.50);   // kein Convenience-Tag
@@ -351,12 +355,12 @@ it('L2 teil_convenience: Convenience-GP gewinnt, ein Nicht-Convenience-GP wird z
         ],
     ], vkModus: true);
 
-    // Convenience-GP (Püree) verdrahtet, Nicht-Convenience-GP (Rahmspinat) zerlegt.
-    expect($resultat['statistik']['bestand_gp'])->toBe(1)
-        ->and($resultat['statistik']['offen'])->toBe(1);
+    // Gericht = nur Basisrezepte (Dominique 17.11.2026): im Gericht wird nie ein GP verdrahtet — vorher: GP-Zeile.
+    expect($resultat['statistik']['bestand_gp'])->toBe(0)
+        ->and($resultat['statistik']['offen'])->toBe(2);
     $offeneTexte = array_column($resultat['offene'], 'text');
     expect($offeneTexte)->toContain('Rahmspinat')
-        ->and($offeneTexte)->not->toContain('Rotkohl');
+        ->and($offeneTexte)->toContain('Rotkohl');
 });
 
 // ── L1.5 — Frische-Erlaubnis-Liste (Post-Match-Zustands-Filter) ──────────────────────────────
@@ -864,7 +868,7 @@ it('#102-Nebenbefund: offene Aroma-Treiber-Zeile ohne Bestandstreffer wird zum B
         ->and($kind->status)->toBe('geplant');
 });
 
-it('#102-Nebenbefund: eine Zeile MIT GP-Treffer bleibt GP, egal welche Rolle (garnitur)', function () {
+it('#102-Nebenbefund: eine Zeile MIT GP-Treffer wird im Gericht seit 17.11.2026 Basisrezept (Garnitur), nicht mehr GP', function () {
     $gp = ($this->mkGpMitPreis)('Petersilienöl'   /* 27.10.: ohne ungenannte Verarbeitung (Basisvariante) */, 'petersilienoel', 4.0);
 
     $out = $this->svc->generiere($this->rootTeam, 'Teller', [], kiRezeptOverride: [
@@ -875,7 +879,9 @@ it('#102-Nebenbefund: eine Zeile MIT GP-Treffer bleibt GP, egal welche Rolle (ga
     ], vkModus: true);
 
     $zeile = $out['recipe']->ingredients()->first();
-    expect($zeile->gp_id)->toBe($gp->id)
+    // Gericht = nur Basisrezepte (Dominique 17.11.2026): im Gericht wird nie ein GP verdrahtet — vorher: GP-Zeile.
+    expect($zeile->gp_id)->toBeNull()
         ->and($zeile->referenced_recipe_id)->toBeNull()
-        ->and($out['offene'])->toBeEmpty();
+        ->and(array_column($out['offene'], 'primaer'))->toBe(['basisrezept_anlegen'])
+        ->and($gp->id)->not->toBeNull();
 });

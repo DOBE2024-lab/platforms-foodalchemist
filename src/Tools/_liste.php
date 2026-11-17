@@ -506,6 +506,7 @@ return [
     \Platform\FoodAlchemist\Tools\RecipeFindingsPutTool::class,
     \Platform\FoodAlchemist\Tools\RecipeFindingsRunPostTool::class,
     \Platform\FoodAlchemist\Tools\RecipeFindingsSearchTool::class,
+    \Platform\FoodAlchemist\Tools\RecipeGpZuBasisrezeptPostTool::class,   // Gericht = nur Basisrezepte (17.11.2026): Altbestand umbauen
     \Platform\FoodAlchemist\Tools\RecipeImageGenerateTool::class,   // KI-Bilder als MCP
     \Platform\FoodAlchemist\Tools\RecipeIngredientsPutTool::class,
     \Platform\FoodAlchemist\Tools\RecipeKlassePostTool::class,

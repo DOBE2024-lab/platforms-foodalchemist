@@ -38,7 +38,9 @@
             </x-slot:actions>
         </x-fa::notice>
 
-    <div x-data="{ einfuegenAus: 'gp' }" class="fa-zutaten-layout" data-zutaten-layout>
+    <div x-data="{ einfuegenAus: '{{ $vkKontext ? 'rez' : 'gp' }}' }" class="fa-zutaten-layout" data-zutaten-layout>
+        {{-- Gericht = nur Basisrezepte (Dominique 17.11.2026): im Gericht gibt es weder GP-Spalte noch GP-Umschalter — nichts Gesperrtes, es taucht einfach nicht auf. --}}
+        @unless($vkKontext)
         <aside class="fa-surface p-3 flex flex-col gap-3 min-w-0" :class="einfuegenAus === 'gp' ? '' : 'fa-zutaten-passiv'" data-einfuegen="gp" aria-label="Grundprodukte einfügen">
             {{-- Editor schmaler als 92 rem: EINE Einfüge-Spalte mit Umschalter; breiter stehen beide Spalten nebeneinander --}}
             <div role="group" aria-label="Einfügen aus" class="fa-zutaten-umschalter flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
@@ -104,6 +106,7 @@
                 </div>
             </div>
         </aside>
+        @endunless
 
         <div class="fa-zutaten-mitte flex flex-col gap-3 min-w-0">
     <div class="sticky top-0 z-10 flex flex-col gap-2 p-3 rounded-[var(--fa-radius-surface)] bg-[var(--fa-surface)] border border-[var(--fa-line)] shadow-sm" data-add-zeile>
@@ -121,8 +124,8 @@
         {{-- Park-Zeile: Ziel gewählt → Menge tippen, Enter fügt ein --}}
         <div x-show="geparkt !== null" x-cloak class="flex flex-wrap items-center gap-2" data-park-zeile>
             <span class="shrink-0 inline-flex items-center h-[22px] px-2 rounded-full text-[length:var(--fa-text-sm)] font-medium"
-                  :style="geparkt?.type === 'gp' ? '{{ $typStyle('gp') }}' : '{{ $typStyle('basisrezept') }}'"
-                  x-text="geparkt?.type === 'gp' ? 'Grundprodukt' : 'Basisrezept'"></span>
+                  @if($vkKontext) style="{{ $typStyle('basisrezept') }}" @else :style="geparkt?.type === 'gp' ? '{{ $typStyle('gp') }}' : '{{ $typStyle('basisrezept') }}'" @endif
+                  @if($vkKontext)>Basisrezept</span>@else x-text="geparkt?.type === 'gp' ? 'Grundprodukt' : 'Basisrezept'"></span>@endif
             <span class="min-w-[8rem] flex-1 truncate text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]" x-text="geparkt?.name?.replace('↳ ', '')" data-park-name></span>
             <input type="text" inputmode="decimal" x-model="neu.quantity" @keydown.enter.prevent="einfuegen()" placeholder="Menge" aria-label="Menge"
                    class="{{ $feld }} w-24 text-right tabular-nums" data-park-quantity />
@@ -396,8 +399,9 @@
          über seinen Kopf. So gibt es pro Editor nur EINEN Speichern-Weg. --}}
         </div>
 
-        <aside class="fa-surface p-3 flex flex-col gap-3 min-w-0" :class="einfuegenAus === 'rez' ? '' : 'fa-zutaten-passiv'" data-einfuegen="rez" aria-label="Basisrezepte einfügen">
+        <aside class="fa-surface p-3 flex flex-col gap-3 min-w-0" :class="einfuegenAus === 'rez' ? '' : 'fa-zutaten-passiv'" data-einfuegen="rez" aria-label="Basisrezepte einfügen" @if($vkKontext) style="grid-column: 1" @endif>
             {{-- Editor schmaler als 92 rem: EINE Einfüge-Spalte mit Umschalter; breiter stehen beide Spalten nebeneinander --}}
+            @unless($vkKontext)
             <div role="group" aria-label="Einfügen aus" class="fa-zutaten-umschalter flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
                 <button type="button" @click="einfuegenAus = 'gp'" :aria-pressed="einfuegenAus === 'gp'"
                         class="flex-1 h-8 px-2 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors"
@@ -406,6 +410,7 @@
                         class="flex-1 h-8 px-2 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors"
                         :class="einfuegenAus === 'rez' ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]'">Basisrezepte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="rezTotal"></span></button>
             </div>
+            @endunless
 <fieldset class="flex flex-col gap-2 min-w-0">
                 <legend class="sr-only">Basisrezepte filtern</legend>
                 <div class="grid grid-cols-1 gap-2">

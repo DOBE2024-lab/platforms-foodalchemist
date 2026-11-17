@@ -362,13 +362,12 @@ class RecipeGeneratorService
                 // Kleinstmengen (Regel gericht.kleinstmengen, Dominique 11.10.): Butter, Öl, Salz, Pfeffer, Zitrone, Finish-Kräuter
                 // stehen im Gericht direkt als GP — kein Rüst-Basisrezept, auch nicht, wenn die KI „Aroma: Butter" schreibt
                 // (demo Lauf 98: 1-kg-Block für 2 g, ~30k Tokens). Die Typ-Vorsilbe fällt weg; gebunden wird nur ein GP.
-                $kleinstmenge = $vkModus && ! $brotImGericht ? \Platform\FoodAlchemist\Support\Kleinstmenge::erkenne($text) : null;
-                if ($kleinstmenge !== null) {
-                    $text = $kleinstmenge['text'];
-                    $zeile['raw_text'] = $zeile['display_name'] = $text;
-                    $statistik['kleinstmengen'] = [...($statistik['kleinstmengen'] ?? []), $text];   // für die Prüfung auf demo sichtbar
-                }
-                $direktArtikel = $vkModus && ! $brotImGericht && ($kleinstmenge !== null || $this->heuristik->istDirektArtikelKandidat($text));
+                // ABGELÖST durch Entscheid Dominique 17.11.2026 (Gericht = nur Basisrezepte): im Gericht entfallen Kleinstmengen-
+                // und Direkt-Artikel-Weg — auch Butter, Öl, Salz und Finish-Kräuter werden Basisrezept (Garnitur oder Zukauf,
+                // Regelwerk Basisrezepte §17). Die Variablen bleiben, damit die Weichen unten lesbar bleiben; außerhalb des
+                // Gerichts waren sie schon immer null/false.
+                $kleinstmenge = null;
+                $direktArtikel = false;
                 $zeilenMode = $direktArtikel ? 'gp_first' : $mode;
                 $treffer = $this->matcher->matchIngredient($team, $text, $z['slug'] ?? null, $zeilenMode, $pref, $preferRaw, $bio, convenience: $convenience, einheit: isset($z['unit']) ? (string) $z['unit'] : null, zubereitung: Matching\MatchLeitplanken::zubereitung($parameter), menge: is_numeric($z['quantity'] ?? null) ? (float) $z['quantity'] : null);
 
@@ -423,10 +422,11 @@ class RecipeGeneratorService
                     && ! $this->gpZustandErlaubt((int) ($treffer['gp_id'] ?? 0), $frischeErlaubt);
                 // Ein GP-Treffer wird NUR verdrahtet, wenn die Zeile nicht ohnehin Basisrezept sein muss
                 // UND der Zustand erlaubt ist.
-                $gpBlockiert = $strongSub || $rolleWillSub || $frischeBlockiert;
+                // Gericht = nur Basisrezepte (Dominique 17.11.2026): im Gericht wird nie ein GP verdrahtet.
+                $gpBlockiert = $vkModus || $strongSub || $rolleWillSub || $frischeBlockiert;
                 // Vorentscheidung fürs unmatched-else (unten): Basisrezept vs. Lieferantenartikel. Ein reiner
                 // Frische-Block macht die Zeile NICHT zum Basisrezept (der richtige Weg ist LA/GP im Zustand).
-                $istBasisrezept = $strongSub || $rolleWillSub || (! $direktArtikel && ($llmSub ?? $this->heuristik->istSubRezeptKandidat($text)));
+                $istBasisrezept = $vkModus || $strongSub || $rolleWillSub || (! $direktArtikel && ($llmSub ?? $this->heuristik->istSubRezeptKandidat($text)));
 
                 // ── B0 Grounding-Read-back (2026-08-20) ────────────────────────────────────────
                 // Von der KI vorgeschlagene gp_id/sub_rezept_id GEWINNT vor dem Fuzzy-Text-Match —

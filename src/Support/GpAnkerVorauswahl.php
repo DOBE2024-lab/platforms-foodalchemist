@@ -37,6 +37,12 @@ final class GpAnkerVorauswahl
     /** @var list<array{0: string, 1: list<string>, 2: int}>|null Anker-Wortindex je Prozess */
     private static ?array $index = null;
 
+    /** Wortindex verwerfen (Tests, die das Vokabular nach dem ersten Aufruf ergänzen). */
+    public static function flush(): void
+    {
+        self::$index = null;
+    }
+
     /** @return list<string> Slugs, `neutral` immer zuletzt */
     public function fuer(FoodAlchemistGp $gp, ?Team $team = null): array
     {
@@ -58,10 +64,10 @@ final class GpAnkerVorauswahl
         $ids = app(PairingService::class)->lexicalAnkerKandidaten($frage);
         $slugs = $ids === [] ? [] : DB::table('foodalchemist_vocab_pairing_anchors')->whereIn('id', array_unique($ids))
             ->whereNull('deleted_at')->pluck('slug')->all();
-        // Eigenschaft (§6: Name nach dem Doppelpunkt bis zum ersten Komma) nur über den Wort-Abgleich: bei Fertigware trägt sie die
-        // Zutat („Curry: Brokkoli" → Brokkoli; io 17.11.2026 fehlte jeder Brokkoli-Anker, die KI antwortete neutral). Zustandswörter
-        // stehen hinter dem Komma bzw. in STOPP und erreichen den Wortindex des Pairings nicht.
-        $eigenschaft = self::eigenschaft((string) $gp->name);
+        // Convenience (WG 13): die Eigenschaft (§6, nach dem Doppelpunkt bis zum Komma) trägt die Zutat („Curry: Brokkoli" → Brokkoli;
+        // io 17.11.2026 fehlte jeder Brokkoli-Anker, die KI sagte neutral). Nur dort und nur im Wort-Abgleich: bei Rohware steht hier
+        // oft die Verarbeitung („Mettenden: geräuchert" zöge sonst jeden geräucherten Anker).
+        $eigenschaft = ltrim($wg, '0') === '13' ? self::eigenschaft((string) $gp->name) : '';
         $lexikalisch = $this->passend([...$slugs, ...$this->woerter($frage), ...($eigenschaft !== '' ? $this->woerter($eigenschaft) : [])], $wg);
 
         $semantisch = array_slice($this->passend($this->semantisch($frage, self::SEMANTISCH * 2), $wg, false), 0, self::SEMANTISCH);

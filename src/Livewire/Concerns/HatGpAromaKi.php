@@ -58,9 +58,9 @@ trait HatGpAromaKi
             }
         }
         $rolle = 'kern';
-        if ($pairing->gpAnkerAnzahl($gp->id, 'kern') >= PairingService::CAP_GP_KERN) {
-            if ($pairing->gpAnkerAnzahl($gp->id, 'neben') >= PairingService::CAP_GP_NEBEN) {
-                $this->aromaMeldung('Alle Plätze belegt: '.PairingService::CAP_GP_KERN.' Kern- und '.PairingService::CAP_GP_NEBEN
+        if (\Platform\FoodAlchemist\Support\AnkerGrenze::anzahl($gp->id, 'kern') >= \Platform\FoodAlchemist\Support\AnkerGrenze::KERN) {
+            if (\Platform\FoodAlchemist\Support\AnkerGrenze::anzahl($gp->id, 'neben') >= \Platform\FoodAlchemist\Support\AnkerGrenze::NEBEN) {
+                $this->aromaMeldung('Alle Plätze belegt: '.\Platform\FoodAlchemist\Support\AnkerGrenze::KERN.' Kern- und '.\Platform\FoodAlchemist\Support\AnkerGrenze::NEBEN
                     .' Nebenanker. Erst einen Anker lösen, dann vorschlagen lassen.');
 
                 return;
@@ -85,7 +85,7 @@ trait HatGpAromaKi
             return;
         }
         if ($slug === 'neutral' && $rolle === 'neben') {
-            $this->aromaMeldung(null, 'Kern-Anker sind voll ('.PairingService::CAP_GP_KERN.'); die KI fand keinen weiteren Aroma-Träger als Nebenanker — nichts gesetzt.');
+            $this->aromaMeldung(null, 'Kern-Anker sind voll ('.\Platform\FoodAlchemist\Support\AnkerGrenze::KERN.'); die KI fand keinen weiteren Aroma-Träger als Nebenanker — nichts gesetzt.');
 
             return;
         }

@@ -47,6 +47,13 @@ beforeEach(function () {
         foreach (['boiled_broccoli', 'curry_powder', 'tofu_2485'] as $slug) {
             app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $ids[$slug], 'kern');
         }
+        // Geschwister (gleiche Hauptzutat) tragen alle vier Anker als Kern → alle vier stünden in der Vorauswahl
+        $gp->update(['main_ingredient_slug' => 'curry']);
+        $geschwister = $this->makeGp($this->rootTeam, 'Curry: Kokos, frisch');
+        $geschwister->update(['main_ingredient_slug' => 'curry']);
+        foreach (['boiled_broccoli', 'curry_powder', 'coconut_milk'] as $slug) {
+            app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnker($this->rootTeam, $geschwister->id, $ids[$slug], 'kern');
+        }
 
         return [$gp, $ids];
     };
@@ -119,7 +126,7 @@ it('GP: „Anker vorschlagen" bei voller Kern-Grenze fragt nach einem NEBENANKER
 
     expect($gefragt['gesucht'] ?? '')->toContain('Nebenanker')
         ->and($gefragt['vorhandene_anker'])->toHaveCount(3)
-        ->and($gefragt['vokabular'])->not->toContain('boiled_broccoli')->not->toContain('curry_powder')->not->toContain('tofu_2485');
+        ->and($gefragt['vokabular'])->toContain('coconut_milk')->not->toContain('boiled_broccoli')->not->toContain('curry_powder')->not->toContain('tofu_2485');
     $zeile = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('anchor_id', $ids['coconut_milk'])->whereNull('deleted_at')->first();
     expect($zeile)->not->toBeNull()->and($zeile->role)->toBe('neben')->and($zeile->source)->toBe('ai_inferred');
     // die drei Kern-Anker von Hand bleiben unberührt

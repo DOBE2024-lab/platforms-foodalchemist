@@ -27,48 +27,6 @@ class PairingService
     }
 
     /**
-     * Anker-Grenzen je GP und Rolle (Entscheid Dominique 17.11.2026): höchstens 3 Kern-Anker (Aroma-Identität), daneben getrennt
-     * höchstens 6 Nebenanker. Vorher zählte EIN Deckel (3) alle Rollen zusammen — ein GP mit 3 Kern-Ankern bekam keinen Nebenanker
-     * mehr („Curry: Brokkoli", Kokos als Neben → „Limit erreicht"). Gilt überall gleich: {@see setGpAnker}, {@see setGpAnkerInference},
-     * GP-Paket-Import, MCP gp_anchors.PUT/IMPORT.
-     */
-    public const CAP_GP_KERN = 3;
-
-    public const CAP_GP_NEBEN = 6;
-
-    /** Grenze der Rolle (kern|neben). */
-    public static function ankerGrenze(string $role): int
-    {
-        return $role === 'neben' ? self::CAP_GP_NEBEN : self::CAP_GP_KERN;
-    }
-
-    /** Meldung bei erreichter Grenze — EIN Wortlaut für Dialog, Paket-Import und MCP. */
-    public static function ankerGrenzeMeldung(string $role): string
-    {
-        return $role === 'neben'
-            ? 'Limit erreicht: max ' . self::CAP_GP_NEBEN . ' Nebenanker pro GP.'
-            : 'Limit erreicht: max ' . self::CAP_GP_KERN . ' Kern-Anker pro GP.';
-    }
-
-    /**
-     * Wie viele lebende Anker der Rolle trägt das GP — ohne `$ohneAnkerId` (dieselbe Zeile zählt beim Aktualisieren bzw. beim
-     * Rollenwechsel nicht gegen sich selbst).
-     */
-    public function gpAnkerAnzahl(int $gpId, string $role, ?int $ohneAnkerId = null): int
-    {
-        return DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gpId)->where('role', $role)->whereNull('deleted_at')
-            ->when($ohneAnkerId !== null, fn ($q) => $q->where('anchor_id', '!=', $ohneAnkerId))->count();
-    }
-
-    /** Wirft die Grenz-Meldung, wenn ein weiterer Anker dieser Rolle die Grenze überschreiten würde. */
-    private function pruefeAnkerGrenze(int $gpId, int $ankerId, string $role): void
-    {
-        if ($this->gpAnkerAnzahl($gpId, $role, $ankerId) >= self::ankerGrenze($role)) {
-            throw new \RuntimeException(self::ankerGrenzeMeldung($role));
-        }
-    }
-
-    /**
      * V-045: der `neutral`-Anker wird einmal je Service-Instanz aufgelöst, nicht je
      * Rezept. `resolveRecipeAnchors` läuft im Kandidaten-Pool je Gericht — der Lookup
      * war damit eine Query pro Gericht für einen Wert, der sich nie ändert.
@@ -1088,7 +1046,7 @@ class PairingService
 
     /**
      * GP-Aroma-Anker setzen/aktualisieren (Tabelle gp_anchor_mappings,
-     * je Rolle gedeckelt ({@see CAP_GP_KERN}/{@see CAP_GP_NEBEN}) — mehrere Anker je GP erlaubt, s. Altdaten: 433 GPs mit >1 Anker, z. B. Ratatouille →
+     * je Rolle gedeckelt ({@see \Platform\FoodAlchemist\Support\AnkerGrenze}) — mehrere Anker je GP erlaubt, s. Altdaten: 433 GPs mit >1 Anker, z. B. Ratatouille →
      * eggplant/tomato/zucchini). `role` unterscheidet Haupt- von Nebenträger (kern|neben, Default
      * kern); `source`/`ai_confidence`/`ai_reasoning` sind offen für den MCP-Import (Spec 53 Paket J:
      * `bridge_alt_neu`, `exact_name`, … — nicht nur `manual`).
@@ -1137,8 +1095,7 @@ class PairingService
         }
         $gp = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->findOrFail($gpId);
         $this->pruefeAnkerPflege($gp, $team);   // Spec 84 B2: Mapping hat keinen Team-Schlüssel
-        // je Rolle getrennt; die eigene Zeile zählt nicht — Aktualisieren geht immer, ein Rollenwechsel nur bei Platz in der Zielrolle
-        $this->pruefeAnkerGrenze($gp->id, $ankerId, $role);
+        \Platform\FoodAlchemist\Support\AnkerGrenze::pruefe($gp->id, $ankerId, $role);   // je Rolle; Rollenwechsel nur mit Platz
         DB::table('foodalchemist_gp_anchor_mappings')->updateOrInsert(
             ['gp_id' => $gp->id, 'anchor_id' => $ankerId],
             ['uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(), 'team_id' => $team->id, 'role' => $role,
@@ -1170,37 +1127,29 @@ class PairingService
      * Spec 50 · B-7: KI-Inferenz des GP-Kern-Ankers (Bulk-Schritt `anker`). Manuelle Mappings
      * werden nie ersetzt (Inv. 3); ältere KI-Mappings ({@see AnkerQuelle::KI_QUELLEN}) desselben GPs weichen, damit
      * der Bulk-Lauf EINEN Kern-Anker setzt und die Kern-Grenze nicht mit KI-Resten füllt. Neutral: {@see GpAromaService::merkeAnkerNeutral()}.
-     *
-     * `$role = 'neben'` (Knopf „Anker vorschlagen" bei voller Kern-Grenze, 17.11.2026): ergänzt einen Nebenanker, verdrängt nichts.
-     * Ein schon verknüpfter Anker behält seine Rolle (die KI stuft keinen Anker um). Rückgabe: false = nichts geschrieben (Handarbeit
-     * an diesem Anker). Grenze überschritten → RuntimeException mit {@see ankerGrenzeMeldung}.
+     * `neben` (17.11.2026) ergänzt, verdrängt nichts; Rolle eines verknüpften Ankers bleibt. false = Handarbeit, nichts geschrieben.
      */
     public function setGpAnkerInference(Team $team, int $gpId, int $ankerId, float $confidence, string $reasoning = 'Bulk-Anreicherung', string $quelle = AnkerQuelle::KI, string $role = 'kern'): bool
     {
-        $role = $role === 'neben' ? 'neben' : 'kern';
         $gp = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->findOrFail($gpId);
         $this->pruefeAnkerPflege($gp, $team);
-        $manual = DB::table('foodalchemist_gp_anchor_mappings')
-            ->where('gp_id', $gp->id)->where('anchor_id', $ankerId)->where('source', 'manual')->exists();
+        $manual = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('anchor_id', $ankerId)->where('source', 'manual')->exists();
         if ($manual) {
             return false;
         }
-        $role = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('anchor_id', $ankerId)
-            ->whereNull('deleted_at')->value('role') ?? $role;
+        $role = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('anchor_id', $ankerId)->whereNull('deleted_at')->value('role') ?? ($role === 'neben' ? 'neben' : 'kern');
         DB::transaction(function () use ($gp, $team, $ankerId, $confidence, $reasoning, $quelle, $role) {
-            if ($role === 'kern') {
-                // nur ältere KI-KERN-Anker weichen; KI-Nebenanker sind Ergänzungen und bleiben
+            if ($role === 'kern') {                                   // nur ältere KI-KERN-Anker weichen
                 DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('role', 'kern')
                     ->where('anchor_id', '!=', $ankerId)->whereIn('source', AnkerQuelle::KI_QUELLEN)->whereNull('deleted_at')
                     ->update(['deleted_at' => now(), 'updated_at' => now()]);
             }
-            $this->pruefeAnkerGrenze($gp->id, $ankerId, $role);
+            \Platform\FoodAlchemist\Support\AnkerGrenze::pruefe($gp->id, $ankerId, $role);
             DB::table('foodalchemist_gp_anchor_mappings')->updateOrInsert(
                 ['gp_id' => $gp->id, 'anchor_id' => $ankerId],
                 ['uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(), 'team_id' => $team->id,
                     'role' => $role, 'source' => $quelle === AnkerQuelle::PATE ? $quelle : AnkerQuelle::KI, 'ai_confidence' => max(0, min(1, $confidence)),
-                    'ai_reasoning' => mb_strimwidth($reasoning, 0, 500), 'deleted_at' => null,
-                    'updated_at' => now(), 'created_at' => now()],
+                    'ai_reasoning' => mb_strimwidth($reasoning, 0, 500), 'deleted_at' => null, 'updated_at' => now(), 'created_at' => now()],
             );
         });
 

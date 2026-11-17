@@ -92,12 +92,15 @@ it('Messbefehl: zählt, ob der bekannte Anker in alter und neuer Vorauswahl steh
 it('Eigenschaft nach dem Doppelpunkt geht in den Wort-Abgleich: „Curry: Brokkoli" findet den Brokkoli-Anker (io 17.11.2026: KI sagte neutral)', function () {
     $brokkoli = DB::table('foodalchemist_vocab_pairing_anchors')->insertGetId(['uuid' => (string) Str::uuid7(), 'slug' => 'boiled_broccoli', 'display_de' => 'Brokkoli, gekocht',
         'category' => 'Gemüse', 'subcategory' => 'Gemüse/Blütengemüse', 'created_at' => now(), 'updated_at' => now()]);
+    GpAnkerVorauswahl::flush();                                          // Wortindex je Prozess: der neue Anker muss hinein
     $gp = ($this->gp)('Curry: Brokkoli, frisch / (Planet V) / (Bio)', 'curry', '13');
+    $roh = ($this->gp)('Mettenden: geräuchert, frisch', 'mettenden', '04');
 
     expect(GpAnkerVorauswahl::eigenschaft('Curry: Brokkoli, frisch / (Planet V) / (Bio)'))->toBe('Brokkoli')
         ->and(GpAnkerVorauswahl::eigenschaft('Käse: Gouda (jung), 48 %'))->toBe('Gouda')
         ->and(GpAnkerVorauswahl::eigenschaft('Traubenkernöl'))->toBe('')
         ->and($this->svc->quellen($gp, $this->rootTeam)['lexikalisch'])->toContain('boiled_broccoli')
         ->and($this->svc->fuer($gp, $this->rootTeam))->toContain('boiled_broccoli')
-        ->and($brokkoli)->toBeInt();
+        ->and($brokkoli)->toBeInt()
+        ->and($this->svc->quellen($roh, $this->rootTeam)['lexikalisch'])->not->toContain('smoked_pork');   // nur Convenience, nie die Verarbeitung der Rohware
 });

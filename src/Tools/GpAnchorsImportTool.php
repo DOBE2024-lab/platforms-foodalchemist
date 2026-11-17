@@ -31,7 +31,7 @@ class GpAnchorsImportTool extends FoodAlchemistTool implements ToolContract, Too
         return 'Bulk-Import von GP↔Aroma-Anker-Zuordnungen (bis '.self::MAX_EINTRAEGE.' Einträge). '
             . 'Idempotent je (gp_id, anchor_slug): unveränderte Zuordnung → status=unveraendert, neue → '
             . 'angenommen, unbekannter gp_id/anchor_slug oder Grenze überschritten (je Rolle getrennt: höchstens '
-            . PairingService::CAP_GP_KERN.' kern, '.PairingService::CAP_GP_NEBEN.' neben je GP) → abgelehnt (mit Grund). '
+            . \Platform\FoodAlchemist\Support\AnkerGrenze::KERN.' kern, '.\Platform\FoodAlchemist\Support\AnkerGrenze::NEBEN.' neben je GP) → abgelehnt (mit Grund). '
             . 'ersetze_alle=true je Eintrag löscht vorher ALLE bestehenden Anker dieses GP (einmal pro gp_id '
             . 'im Batch) — die gelieferten Einträge ersetzen den Bestand vollständig. source ist frei '
             . '(z. B. bridge_alt_neu, exact_name, manual).';

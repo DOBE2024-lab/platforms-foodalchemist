@@ -1014,7 +1014,7 @@ class Editor extends Component
             $svc->fillSlot($this->team(), $slot->id, ['embedded_concept_id' => $id]);
         } else {
             $svc->fillSlot($this->team(), $slot->id, [
-                'sales_recipe_id' => $id, 'quantity' => 1, 'unit_vocab_id' => $this->portionEinheitId(),
+                'sales_recipe_id' => $id, 'quantity' => 1, 'unit_vocab_id' => $typ === 'basisrezept' ? null : $this->portionEinheitId(),   // 17.11.: Basisrezept = Gramm (Standard), Portion rechnete dort nicht
                 'type' => $typ === 'basisrezept' ? 'basisrezept' : 'gericht',
             ]);
         }

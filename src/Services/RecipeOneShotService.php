@@ -657,7 +657,8 @@ class RecipeOneShotService
     /** @return array{status: string, n_steps?: int, fehler?: string} */
     private function stepGlied(FoodAlchemistRecipe $recipe): array
     {
-        $bestehend = FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->count();
+        // Nur die Produktions-Ebene zählt: dieses Glied schreibt nur sie (Anrichten = vk.plating, eigene Ebene).
+        $bestehend = FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene(FoodAlchemistRecipeStep::EBENE_PRODUKTION)->count();
 
         // GL-07 / Weg-B-Befund 7 (2026-10-12): handgepflegte Schritte (preparation_source = manual) sind ein
         // Override. Der Coverage-Pass lief trotzdem im Modus „voll überschreiben" und ersetzte sie — entgegen der
@@ -695,7 +696,7 @@ class RecipeOneShotService
                 return ['status' => 'leer', 'n_steps' => 0];
             }
 
-            app(RecipeStepService::class)->sync($recipe, $steps);
+            app(RecipeStepService::class)->ersetze($recipe, $steps, FoodAlchemistRecipeStep::EBENE_PRODUKTION);   // ersetzt, nie anhängen (17.11.)
             $recipe->update([
                 'preparation_source' => 'ki',
                 'preparation_ai_confidence' => max(0.0, min(1.0, $vorschlag->confidence)),
@@ -767,7 +768,9 @@ class RecipeOneShotService
                 'anzahl' => $recipe->sales_unit_count,
                 'portion_g' => $recipe->sales_quantity_per_unit_g,
             ] : null,
-            'schritte_bestand' => FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)
+            // Bestand der Ebene, die dieses Glied ersetzt (wie der Editor: StepEditor::stepKontext). Vorher ohne
+            // Ebenen-Filter: Anrichte-Schritte standen mit im Bestand der Produktion.
+            'schritte_bestand' => FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene(FoodAlchemistRecipeStep::EBENE_PRODUKTION)
                 ->orderBy('position')->orderBy('id')->get(['phase', 'text'])->map(fn ($s) => [
                     'phase' => $s->phase,
                     'text' => $s->text,

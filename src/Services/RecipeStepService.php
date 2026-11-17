@@ -151,6 +151,11 @@ class RecipeStepService
         $ebene = $this->ebene($ebene);
 
         DB::transaction(function () use ($recipe, $rows, $ebene) {
+            // Befund 17.11. (Pilot, 6 statt 3 Schritte): zwei Schreiber derselben Rezept-Anleitung (z. B. zwei
+            // Anreicherungs-Läufe, ein Lauf in langer Sammel-Transaktion) dürfen sich nicht überholen. Die Rezept-Zeile
+            // sperrt bis zum Commit, danach sieht der zweite Schreiber die Schritte des ersten und räumt sie ab.
+            DB::table('foodalchemist_recipes')->where('id', $recipe->id)->lockForUpdate()->value('id');
+
             $behalten = [];
             $pos = 0;
 
@@ -184,13 +189,41 @@ class RecipeStepService
             }
 
             // NUR in dieser Ebene aufräumen: ein Speichern im Anrichten-Tab darf die
-            // Produktions-Schritte nicht wegwerfen (und umgekehrt).
+            // Produktions-Schritte nicht wegwerfen (und umgekehrt). Sperrendes Lesen = aktueller
+            // Stand statt Transaktions-Schnappschuss (MySQL REPEATABLE READ): sonst blieben Schritte
+            // stehen, die ein anderer Schreiber nach Beginn dieser Transaktion committet hat.
             FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene($ebene)
                 ->whereNotIn('id', $behalten !== [] ? $behalten : [0])
-                ->get()->each->delete();
+                ->lockForUpdate()->get()->each->delete();
 
             $this->spiegele($recipe);
         });
+    }
+
+    /**
+     * KI-Übernahme (Entscheid Dominique 17.11.): die vorgeschlagenen Schritte ERSETZEN alle Schritte
+     * dieser Ebene des Rezepts — nie anhängen, nie an bestehende Zeilen andocken (eine `id` aus einer
+     * KI-Antwort wird verworfen). Die andere Ebene bleibt unangetastet. Ein Weg für Editor-Knopf,
+     * Anreicherung (Plattform) und externen KI-Auftrag (MCP), damit beide dasselbe tun.
+     *
+     * @param  list<array{phase?: ?string, text?: ?string}>  $rows
+     * @return int Anzahl übernommener Schritte (0 = leerer Vorschlag, Bestand bleibt)
+     */
+    public function ersetze(FoodAlchemistRecipe $recipe, array $rows, string $ebene = FoodAlchemistRecipeStep::EBENE_PRODUKTION): int
+    {
+        $neu = [];
+        foreach ($rows as $row) {
+            $text = trim((string) ($row['text'] ?? ''));
+            if ($text !== '') {
+                $neu[] = ['phase' => $row['phase'] ?? null, 'text' => $text];
+            }
+        }
+        if ($neu === []) {
+            return 0;                                               // ein leerer Vorschlag löscht keine Anleitung
+        }
+        $this->sync($recipe, $neu, $ebene);
+
+        return count($neu);
     }
 
     /**

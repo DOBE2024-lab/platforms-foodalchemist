@@ -219,8 +219,11 @@ class SensorikService
 
     /**
      * Zutaten eines Rezepts mit Menge in Gramm (Menge × Einheit g bzw. ml; 0 = keine Mengenangabe).
+     * `masse` = Ausbeute-Gramm (nach Putz-/Garverlust), `naehrstoff` = Gramm, deren Nährstoffe im Produkt bleiben (Kochmedium
+     * verworfen bis auf 1 − Garverlust) — dieselbe Regel wie die gespeicherten Rezept-Nährwerte
+     * ({@see RecipeRecomputeService::naehrwertFaktorenFuerRezept}, Entscheid 17.11.2026).
      *
-     * @return list<array{gp_id: ?int, ref: ?int, name: string, gramm: float}>
+     * @return list<array{gp_id: ?int, ref: ?int, name: string, gramm: float, masse: float, naehrstoff: float, medium: bool}>
      */
     private function zutatenMitGramm(int $recipeId): array
     {
@@ -229,27 +232,50 @@ class SensorikService
             ->leftJoin('foodalchemist_recipes AS sr', 'sr.id', '=', 'ri.referenced_recipe_id')
             ->leftJoin('foodalchemist_vocab_units AS e', 'e.id', '=', 'ri.unit_vocab_id')
             ->where('ri.recipe_id', $recipeId)->whereNull('ri.deleted_at')->orderBy('ri.position')
-            ->get(['ri.gp_id', 'ri.referenced_recipe_id', 'ri.quantity', 'e.default_in_g', 'e.default_in_ml',
+            ->get(['ri.id', 'ri.gp_id', 'ri.referenced_recipe_id', 'ri.quantity', 'ri.zeilenart', 'g.is_kochmedium', 'e.default_in_g', 'e.default_in_ml',
                 DB::raw('COALESCE(g.name, sr.name, ri.raw_text) AS name')]);
+        $faktoren = $this->naehrwertFaktoren($recipeId, $rows->isNotEmpty());
         $out = [];
         foreach ($rows as $r) {
+            $gramm = $r->quantity !== null ? (float) $r->quantity * (float) ($r->default_in_g ?? $r->default_in_ml ?? 0) : 0.0;
+            $f = $faktoren[(int) $r->id] ?? ['masse' => 1.0, 'naehrstoff' => 1.0];
             $out[] = [
                 'gp_id' => $r->gp_id !== null ? (int) $r->gp_id : null,
                 'ref' => $r->referenced_recipe_id !== null ? (int) $r->referenced_recipe_id : null,
                 'name' => (string) ($r->name ?? ''),
-                'gramm' => $r->quantity !== null ? (float) $r->quantity * (float) ($r->default_in_g ?? $r->default_in_ml ?? 0) : 0.0,
+                'gramm' => $gramm,
+                'masse' => $gramm * $f['masse'],
+                'naehrstoff' => $gramm * $f['naehrstoff'],
+                'medium' => $r->zeilenart !== null ? $r->zeilenart === 'medium' : (bool) $r->is_kochmedium,
             ];
         }
 
         return $out;
     }
 
+    /**
+     * Ohne das Rezept-Modell zu laden (V-049 zählt die Pipeline-Ladungen): Zeilen samt GP + Team-ID reichen der Verlust-Kaskade.
+     *
+     * @return array<int, array{masse: float, naehrstoff: float}>
+     */
+    private function naehrwertFaktoren(int $recipeId, bool $hatZeilen): array
+    {
+        if (! $hatZeilen) {
+            return [];
+        }
+        $teamId = DB::table('foodalchemist_recipes')->where('id', $recipeId)->value('team_id');
+        $zeilen = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::where('recipe_id', $recipeId)->with('gp')->get();
+
+        return app(RecipeRecomputeService::class)->naehrwertFaktorenFuerZeilen($zeilen, $teamId !== null ? \Platform\Core\Models\Team::find($teamId) : null);
+    }
+
     /** Ab diesem Anteil der Masse mit bekanntem Gehalt gelten die Nährwert-Grenzen auch am Rezept. */
     public const GRENZE_MIN_ABDECKUNG = 0.8;
 
     /**
-     * Nährwerte des Rezepts je 100 g Zutatenmasse (Zucker, Salz, Fett) aus Menge × Gehalt der Zutaten (Sub-Rezepte rekursiv).
-     * `abdeckung[dim]` = Anteil der Masse, für den ein Gehalt bekannt ist; der Wert ist der Schnitt über die bekannte Masse.
+     * Nährwerte des Rezepts je 100 g Ausbeute (Zucker, Salz, Fett) aus Menge × Gehalt der Zutaten (Sub-Rezepte rekursiv) —
+     * Bezugsmasse und Kochmedium wie die gespeicherten Rezept-Nährwerte (Entscheid 17.11.2026).
+     * `abdeckung[dim]` = Anteil der Ausbeute, für den ein Gehalt bekannt ist; der Wert ist der Schnitt über die bekannte Masse.
      *
      * @return array{werte: array<string, ?float>, abdeckung: array<string, float>}
      */
@@ -261,7 +287,10 @@ class SensorikService
             return $leer;
         }
         $erdung = $this->erdungBulk(array_filter(array_column($zeilen, 'gp_id')));
-        $gesamt = array_sum(array_column($zeilen, 'gramm'));
+        $gesamt = array_sum(array_column($zeilen, 'masse'));
+        if ($gesamt <= 0) {
+            return $leer;
+        }
         $subs = [];
         foreach ($zeilen as $z) {
             if ($z['ref'] !== null && $tiefe < 3) {
@@ -274,12 +303,12 @@ class SensorikService
             $bekannt = 0.0;
             foreach ($zeilen as $z) {
                 if ($z['gp_id'] !== null && isset($erdung[$z['gp_id']][$dim])) {
-                    $summe += $z['gramm'] * $erdung[$z['gp_id']][$dim]['gehalt'] / 100;
-                    $bekannt += $z['gramm'];
+                    $summe += $z['naehrstoff'] * $erdung[$z['gp_id']][$dim]['gehalt'] / 100;
+                    $bekannt += $z['masse'];
                 } elseif ($z['ref'] !== null && isset($subs[$z['ref']]) && ($subs[$z['ref']]['werte'][$dim] ?? null) !== null) {
                     $anteil = $subs[$z['ref']]['abdeckung'][$dim];
-                    $summe += $z['gramm'] * $anteil * $subs[$z['ref']]['werte'][$dim] / 100;
-                    $bekannt += $z['gramm'] * $anteil;
+                    $summe += $z['naehrstoff'] * $anteil * $subs[$z['ref']]['werte'][$dim] / 100;
+                    $bekannt += $z['masse'] * $anteil;
                 }
             }
             if ($bekannt > 0) {
@@ -815,7 +844,7 @@ class SensorikService
                     }
                 }
             }
-            $zeile = '- ' . $z['name'] . $mengeTxt;
+            $zeile = '- ' . $z['name'] . $mengeTxt . ($z['medium'] && $z['naehrstoff'] < $z['gramm'] ? ' (Kochmedium, im Produkt bleiben ' . round($z['naehrstoff']) . 'g)' : '');
             if ($dims !== []) {
                 $zeile .= " — {$art}: " . implode(' / ', $dims);
             }
@@ -828,11 +857,11 @@ class SensorikService
         $summe = [];
         foreach ($naehr['werte'] as $d => $w) {
             if ($w !== null) {
-                $summe[] = self::MESSBAR[$d]['label'] . ' ' . $nf($w) . ' g/100 g (für ' . (int) round($naehr['abdeckung'][$d] * 100) . ' % der Masse bekannt)';
+                $summe[] = self::MESSBAR[$d]['label'] . ' ' . $nf($w) . ' g/100 g (für ' . (int) round($naehr['abdeckung'][$d] * 100) . ' % der Ausbeute bekannt)';
             }
         }
         if ($summe !== []) {
-            $lines[] = 'Summe Rezept je 100 g Zutatenmasse [Nährwert]: ' . implode(' · ', $summe);
+            $lines[] = 'Summe Rezept je 100 g Ausbeute [Nährwert]: ' . implode(' · ', $summe);
         }
 
         return implode("\n", $lines);

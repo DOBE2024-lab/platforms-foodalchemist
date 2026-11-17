@@ -701,7 +701,11 @@ class GpService
         return true;
     }
 
-    /** Kalkulations-Defaults (Garverlust, Putzverlust, Stückgewicht). Leer ⇒ NULL, negativ ⇒ 0. */
+    /**
+     * Kalkulations-Defaults (Garverlust, Putzverlust, Stückgewicht). Leer ⇒ NULL, negativ ⇒ 0.
+     * `is_kochmedium` (nur wenn mitgegeben): Vorschlag Zeilenart „Medium“ für ungesetzte Rezeptzeilen (§18.7).
+     * Wie die Verlust-Defaults ohne sofortigen Recompute — wirkt beim nächsten Recompute der Rezepte.
+     */
     public function setzeKalkDefaults(Team $team, int $gpId, array $in): FoodAlchemistGp
     {
         $gp = $this->eigenesGp($team, $gpId);
@@ -710,6 +714,7 @@ class GpService
             'cooking_loss_default_pct' => $num($in['cooking_loss_default_pct'] ?? ''),
             'trimming_loss_default_pct' => $num($in['trimming_loss_default_pct'] ?? ''),
             'piece_default_g' => $num($in['piece_default_g'] ?? ''),
+            ...(array_key_exists('is_kochmedium', $in) ? ['is_kochmedium' => (bool) $in['is_kochmedium']] : []),
         ]);
 
         return $gp->refresh();

@@ -140,13 +140,14 @@ abstract class FoodAlchemistTool
                 'cooking_loss_pct' => $z['cooking_loss_pct'] ?? null,
                 'cooking_loss_source' => isset($z['cooking_loss_pct']) ? 'ki' : null,   // GL-07-Lineage
                 'is_optional' => (bool) ($z['is_optional'] ?? false),
+                'zeilenart' => $z['zeilenart'] ?? null,   // zutat | medium (§18.7); leer = ungesetzt
                 'note' => $z['note'] ?? null,
                 'role' => $z['role'] ?? null,
                 // MCP = Agenten-Weg → ki. „manuell“ nur auf ausdrückliche menschliche Vorgabe (Kuratorin 11.10.); greift nur,
                 // wenn sich die Rolle ändert (s. syncIngredients).
                 'role_source' => ($z['role_source'] ?? null) === 'manuell' ? 'manuell' : 'ki',
             ];
-            foreach (['quantity_max', 'trimming_loss_pct', 'cooking_loss_pct', 'is_optional', 'note', 'role'] as $field) {
+            foreach (['quantity_max', 'trimming_loss_pct', 'cooking_loss_pct', 'is_optional', 'zeilenart', 'note', 'role'] as $field) {
                 if (! array_key_exists($field, $z)) {
                     unset($out[$i][$field]);
                     if ($field === 'cooking_loss_pct') {

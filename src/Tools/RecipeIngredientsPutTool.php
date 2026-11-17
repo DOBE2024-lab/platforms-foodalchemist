@@ -32,7 +32,8 @@ class RecipeIngredientsPutTool extends FoodAlchemistTool implements ToolContract
             . 'Bestehende Zeilen mit id aus recipes.GET senden: ausgelassene optionale Felder (z.B. cooking_loss_pct) bleiben erhalten. '
             . 'Offene Zeilen bleiben offen: eine bestehende Zeile (mit id) ohne gp_id/referenced_recipe_id wird NIE still neu geerdet; '
             . 'eine NEUE Zeile ohne Zuordnung erdet der Resolver automatisch, außer offen_halten = true. '
-            . 'Aggregate (Yield/Allergene/EK) werden automatisch neu gerechnet und in Eltern-Rezepte propagiert.';
+            . 'Kochmedien (Nudelwasser, Frittieröl, Lake) als zeilenart = medium (§18.7). '
+            . 'Aggregate (Yield/Allergene/EK/Nährwerte je 100 g Ausbeute) werden automatisch neu gerechnet und in Eltern-Rezepte propagiert.';
     }
 
     public function getSchema(): array
@@ -57,6 +58,10 @@ class RecipeIngredientsPutTool extends FoodAlchemistTool implements ToolContract
                             'trimming_loss_pct' => ['type' => 'number'],
                             'cooking_loss_pct' => ['minimum' => 0, 'maximum' => 100, 'description' => 'Zahl 0–100 oder null (null hebt auf)'],
                             'is_optional' => ['type' => 'boolean'],
+                            'zeilenart' => ['description' => 'zutat | medium | null. Zeilenart (Regelwerk Basisrezepte §18.7): '
+                                . 'medium = Kochmedium (Frittieröl, Confit-Öl, Lake, Nudelwasser): wird verworfen, Nährstoffe zählen nur zum Anteil (1 − Garverlust), '
+                                . 'ohne Garverlust ganz verworfen (100 %); Kosten zählen voll. Was am Produkt bleibt, ist eine eigene Zeile mit zutat. '
+                                . 'null/weggelassen = ungesetzt (Vorschlag des GP is_kochmedium, wirkt nur bei Garverlust).'],
                             'offen_halten' => ['type' => 'boolean', 'description' => 'Nur für NEUE Zeilen ohne gp_id/referenced_recipe_id: true = '
                                 . 'nicht automatisch erden, die Zeile bleibt offen. Bestehende offene Zeilen bleiben ohnehin offen.'],
                             'note' => ['type' => 'string'],
@@ -118,6 +123,7 @@ class RecipeIngredientsPutTool extends FoodAlchemistTool implements ToolContract
             'zutaten.*.unit' => 'required|string',
             'zutaten.*.cooking_loss_pct' => 'nullable|numeric|between:0,100',
             'zutaten.*.role_source' => 'nullable|in:manuell',
+            'zutaten.*.zeilenart' => 'nullable|in:zutat,medium',
             'garverluste' => 'sometimes|array|min:1',
             'garverluste.*.ingredient_id' => 'required_with:garverluste|integer|min:1|distinct',
             'garverluste.*.cooking_loss_pct' => 'present|nullable|numeric|between:0,100',

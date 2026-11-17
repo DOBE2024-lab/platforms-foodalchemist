@@ -610,6 +610,14 @@
                             <x-fa::input id="gp-stk" numeric inputmode="decimal" wire:model="defaults.piece_default_g" placeholder="–" data-gp-stk />
                         </x-fa::field>
                     </div>
+                    {{-- Regelwerk Basisrezepte §18.7 (17.11.2026): Vorschlag für Zeilen ohne eigene Zeilenart --}}
+                    <label class="inline-flex items-start gap-2 mt-3 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                        <input type="checkbox" wire:model="istKochmedium" class="{{ $haken }} mt-0.5" data-gp-kochmedium />
+                        <span>
+                            Kochmedium (Kochwasser-Salz, Frittierfett, Lake)
+                            <span class="block {{ $leise }}">Mit Garverlust im Rezept wird der verworfene Anteil auch bei den Nährwerten abgezogen. Die Zutatenzeile kann das übersteuern.</span>
+                        </span>
+                    </label>
                 </x-fa::section>
 
                 <x-fa::section title="Gewicht je Form" icon="heroicon-o-scale" :meta="$formen->count() ?: null"

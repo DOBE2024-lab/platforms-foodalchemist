@@ -192,7 +192,7 @@ class RecipeTemplateService
             foreach ($template->ingredients as $ri) {
                 $felder = [
                     ...$ri->only(['position', 'gp_id', 'referenced_recipe_id', 'raw_text', 'display_name',
-                        'quantity', 'quantity_max', 'unit_vocab_id', 'trimming_loss_pct', 'cooking_loss_pct',
+                        'quantity', 'quantity_max', 'unit_vocab_id', 'trimming_loss_pct', 'cooking_loss_pct', 'zeilenart',
                         'is_optional', 'klammer_note', 'note', 'match_method', 'match_confidence',
                         'role', 'role_source', 'is_value_relevant', 'calc_mode']),
                     'team_id' => $team->id,

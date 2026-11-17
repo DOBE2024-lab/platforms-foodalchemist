@@ -90,6 +90,9 @@ class GpModal extends Component
     public string $manuellerName = '';
 
     /** Kalkulations-Defaults (GL-02) — direkt persistiert, nur im Edit-Modus (Phase 2). */
+    /** Vorschlag Zeilenart „Medium“ für ungesetzte Rezeptzeilen (Regelwerk Basisrezepte §18.7, 17.11.2026). */
+    public bool $istKochmedium = false;
+
     public array $defaults = ['cooking_loss_default_pct' => '', 'trimming_loss_default_pct' => '', 'piece_default_g' => '', 'diameter_cm' => '', 'length_cm' => '', 'width_cm' => '', 'height_cm' => '', 'volume_ml' => '', 'serving_vehicle_vocab_id' => ''];
 
     public bool $force = false;
@@ -212,6 +215,7 @@ class GpModal extends Component
             }
             $this->derivat = ['art' => (string) ($gp->derivat_art ?? ''), 'wert' => $gp->derivat_ausbeute_wert !== null ? (string) (float) $gp->derivat_ausbeute_wert : '',
                 'basis' => (string) ($gp->derivat_ausbeute_basis ?: 'g_je_stueck'), 'quelle' => $gp->derivat_ausbeute_quelle];   // Spec 96
+            $this->istKochmedium = (bool) $gp->is_kochmedium;
             $this->defaults = [
                 'cooking_loss_default_pct' => $gp->cooking_loss_default_pct !== null ? (string) (float) $gp->cooking_loss_default_pct : '',
                 'trimming_loss_default_pct' => $gp->trimming_loss_default_pct !== null ? (string) (float) $gp->trimming_loss_default_pct : '',
@@ -253,7 +257,7 @@ class GpModal extends Component
     {
         $this->sperreBeiSchliessen($name);   // Spec 65: eigene Sperre frei — VOR dem Reset (braucht gpId)
         if ($name === 'gp-modal') {
-            $this->reset('gpId', 'builder', 'derivat', 'manuellerName', 'defaults', 'fehler', 'einordnungHinweis', 'force', 'kiVorschlag', 'kiRohtext', 'laSuche', 'supplierItemId', 'autoSuggestPending', 'equivalentSourceKind', 'equivalentSourceId', 'equivalentReason', 'equivalentConfidence');
+            $this->reset('gpId', 'builder', 'derivat', 'manuellerName', 'defaults', 'istKochmedium', 'fehler', 'einordnungHinweis', 'force', 'kiVorschlag', 'kiRohtext', 'laSuche', 'supplierItemId', 'autoSuggestPending', 'equivalentSourceKind', 'equivalentSourceId', 'equivalentReason', 'equivalentConfidence');
         }
     }
 
@@ -319,7 +323,7 @@ class GpModal extends Component
     /** Kalkulations-Defaults direkt persistieren (Phase 2; nur Edit). Leer ⇒ NULL. */
     private function speichereDefaults(FoodAlchemistGp $gp): void
     {
-        app(\Platform\FoodAlchemist\Services\GpService::class)->setzeKalkDefaults($this->teamOderFehler(), (int) $gp->id, $this->defaults);   // Spec 84 C5
+        app(\Platform\FoodAlchemist\Services\GpService::class)->setzeKalkDefaults($this->teamOderFehler(), (int) $gp->id, [...$this->defaults, 'is_kochmedium' => $this->istKochmedium]);   // Spec 84 C5
     }
 
     public function speichern(GpNamingService $naming): void

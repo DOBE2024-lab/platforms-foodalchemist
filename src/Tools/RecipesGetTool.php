@@ -86,6 +86,9 @@ class RecipesGetTool extends FoodAlchemistTool implements ToolContract, ToolMeta
                 'trimming_loss_pct' => $z->trimming_loss_pct,
                 'quantity_max' => $z->quantity_max,
                 'is_optional' => (bool) $z->is_optional,
+                // §18.7: gesetzte Zeilenart (null = ungesetzt) + wirksame (mit GP-Vorschlag)
+                'zeilenart' => $z->zeilenart,
+                'ist_kochmedium' => $z->istKochmedium(),
                 'note' => $z->note, 'role' => $z->role,
                 'referenced_recipe_id' => $z->referenced_recipe_id,
                 'quantity' => $z->quantity, 'unit' => $z->unit?->slug,

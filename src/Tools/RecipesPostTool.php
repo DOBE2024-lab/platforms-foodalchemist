@@ -68,6 +68,10 @@ class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMet
                             'trimming_loss_pct' => ['type' => 'number'],
                             'cooking_loss_pct' => ['type' => 'number'],
                             'is_optional' => ['type' => 'boolean'],
+                            'zeilenart' => ['description' => 'zutat | medium | null. Zeilenart (Regelwerk Basisrezepte §18.7): '
+                                . 'medium = Kochmedium (Frittieröl, Confit-Öl, Lake, Nudelwasser): wird verworfen, Nährstoffe zählen nur zum Anteil (1 − Garverlust), '
+                                . 'ohne Garverlust ganz verworfen (100 %); Kosten zählen voll. Was am Produkt bleibt, ist eine eigene Zeile mit zutat. '
+                                . 'null/weggelassen = ungesetzt (Vorschlag des GP is_kochmedium, wirkt nur bei Garverlust).'],
                             'note' => ['type' => 'string'],
                         ],
                         'required' => ['name', 'quantity', 'unit'],

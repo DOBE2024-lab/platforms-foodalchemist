@@ -552,13 +552,13 @@ it('12 --nur-wg berührt nur diese Warengruppe (GPs, Artikel, Kind-Zeilen, Anker
 });
 
 // ── Anker ──────────────────────────────────────────────────────────────────────────────────────────
-it('Anker-Phase: setzt über den PairingService (CAP 3, ersetze_alle), lehnt unbekannte Slugs/zu lange source ab, ist idempotent; --ohne-anker überspringt; gp_key_zu_id.csv', function () {
+it('Anker-Phase: setzt über den PairingService (Kern-Grenze 3, ersetze_alle), lehnt unbekannte Slugs/zu lange source ab, ist idempotent; --ohne-anker überspringt; gp_key_zu_id.csv', function () {
     ($this->item)(101, 'Zander', null, 8.5);
     $anker = [
         ['gp_key' => 'zanderfilet_frisch', 'anchor_slug' => 'lemon', 'role' => 'kern', 'source' => 'inspire_katalog', 'ai_confidence' => 0.9, 'ai_reasoning' => 'Zitrone'],
-        ['gp_key' => 'zanderfilet_frisch', 'anchor_slug' => 'dill', 'role' => 'neben', 'source' => 'inspire_behelf', 'ai_confidence' => 0.6, 'ai_reasoning' => null],
-        ['gp_key' => 'zanderfilet_frisch', 'anchor_slug' => 'thyme', 'role' => 'neben', 'source' => 'inspire_behelf', 'ai_confidence' => 0.5, 'ai_reasoning' => null],
-        ['gp_key' => 'zanderfilet_frisch', 'anchor_slug' => 'fresh_eel_fillet', 'role' => 'neben', 'source' => 'inspire_behelf', 'ai_confidence' => 0.5, 'ai_reasoning' => null],   // 4. → CAP_GP 3
+        ['gp_key' => 'zanderfilet_frisch', 'anchor_slug' => 'dill', 'role' => 'kern', 'source' => 'inspire_behelf', 'ai_confidence' => 0.6, 'ai_reasoning' => null],
+        ['gp_key' => 'zanderfilet_frisch', 'anchor_slug' => 'thyme', 'role' => 'kern', 'source' => 'inspire_behelf', 'ai_confidence' => 0.5, 'ai_reasoning' => null],
+        ['gp_key' => 'zanderfilet_frisch', 'anchor_slug' => 'fresh_eel_fillet', 'role' => 'kern', 'source' => 'inspire_behelf', 'ai_confidence' => 0.5, 'ai_reasoning' => null],   // 4. Kern → CAP_GP_KERN 3
         ['gp_key' => 'zanderfilet_frisch', 'anchor_slug' => 'gibt_es_nicht', 'role' => 'kern', 'source' => 'x', 'ai_confidence' => 0.5, 'ai_reasoning' => null],
         ['gp_key' => 'lachsfilet_frisch', 'anchor_slug' => 'lemon', 'role' => 'kern', 'source' => str_repeat('s', 40), 'ai_confidence' => 0.5, 'ai_reasoning' => null],
         ['gp_key' => 'gibt_es_nicht_frisch', 'anchor_slug' => 'lemon', 'role' => 'kern', 'source' => 'x', 'ai_confidence' => 0.5, 'ai_reasoning' => null],
@@ -576,7 +576,7 @@ it('Anker-Phase: setzt über den PairingService (CAP 3, ersetze_alle), lehnt unb
     expect(collect(($this->csv)('anker_abgelehnt'))->pluck('grund')->implode(' | '))->toContain('Slug unbekannt')->toContain('source zu lang')->toContain('GP nicht im Paket')->toContain('Limit erreicht');
     $zuId = collect(($this->csv)('gp_key_zu_id'))->pluck('gp_id', 'gp_key');
     expect((int) $zuId['zanderfilet_frisch'])->toBe($zId)->and($zuId)->toHaveCount(2);
-    $reasoning = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $zId)->where('role', 'kern')->value('ai_reasoning');
+    $reasoning = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $zId)->where('source', 'inspire_katalog')->value('ai_reasoning');
     expect($reasoning)->toBe('Zitrone');
 
     ($this->apply)([]);                                                                              // idempotent
@@ -585,6 +585,28 @@ it('Anker-Phase: setzt über den PairingService (CAP 3, ersetze_alle), lehnt unb
 
     // Rückweg stellt den Vorzustand der Anker her (neue GPs sind weg, ihre Mappings auch)
     $this->artisan('foodalchemist:gp-paket-import', ['--zurueck' => ($this->protokoll)(), '--admin' => $this->admin->email, '--bericht' => $this->ber])->assertExitCode(0);
+});
+
+it('Anker-Phase: Kern und Neben getrennt gedeckelt — 3 Kern + 6 Neben angenommen, 4. Kern und 7. Neben abgelehnt (je Rolle gemeldet)', function () {
+    $jetzt = now();
+    foreach (['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'k4'] as $slug) {
+        DB::table('foodalchemist_vocab_pairing_anchors')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'slug' => $slug, 'display_de' => $slug, 'created_at' => $jetzt, 'updated_at' => $jetzt]);
+    }
+    $zeile = fn (string $slug, string $role) => ['gp_key' => 'zanderfilet_frisch', 'anchor_slug' => $slug, 'role' => $role, 'source' => 'inspire_katalog', 'ai_confidence' => 0.7, 'ai_reasoning' => null];
+    $anker = [$zeile('lemon', 'kern'), $zeile('dill', 'kern'), $zeile('thyme', 'kern'), $zeile('k4', 'kern'),
+        ...array_map(fn ($i) => $zeile("n{$i}", 'neben'), range(1, 7))];
+    B::schreibe($this->dir, [B::gp('Zanderfilet: frisch')], [], [], $anker);
+
+    ($this->apply)([]);
+
+    $zId = (int) ($this->gp)('zanderfilet_frisch')->id;
+    $lebend = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $zId)->whereNull('deleted_at');
+    expect((clone $lebend)->where('role', 'kern')->count())->toBe(3)
+        ->and((clone $lebend)->where('role', 'neben')->count())->toBe(6);
+    $gruende = collect(($this->csv)('anker_abgelehnt'))->pluck('grund', 'anchor_slug');
+    expect($gruende)->toHaveCount(2)
+        ->and($gruende['k4'])->toContain('max 3 Kern-Anker')
+        ->and($gruende['n7'])->toContain('max 6 Nebenanker');
 });
 
 it('Anker: manipulierte gp_anker.jsonl (SHA256 ≠ gp_anker_manifest.json) lehnt das Paket ab', function () {

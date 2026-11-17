@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Services\PairingService;
  * Spec 53 Paket J: Bulk-Import von GP↔Anker-Zuordnungen (bis 500 Einträge je Aufruf) — die
  * Brücke für die Vault-Altdaten (alt→neu, Namensabgleich). Idempotent je (gp_id, anchor_slug):
  * existiert die Zuordnung schon aktiv → `unveraendert`; sonst → `angenommen` (respektiert
- * CAP_GP im Service, ein Überschreiten → `abgelehnt` mit Grund). `ersetze_alle=true` löscht
+ * die Grenzen je Rolle im Service — höchstens 3 Kern- und 6 Nebenanker, ein Überschreiten → `abgelehnt` mit Grund). `ersetze_alle=true` löscht
  * VORHER alle bestehenden Anker DIESES GP (einmal je gp_id im Batch, auch wenn mehrere Einträge
  * desselben GP mit ersetze_alle=true kommen) — die gelieferten Einträge ersetzen den Bestand.
  */
@@ -30,7 +30,8 @@ class GpAnchorsImportTool extends FoodAlchemistTool implements ToolContract, Too
     {
         return 'Bulk-Import von GP↔Aroma-Anker-Zuordnungen (bis '.self::MAX_EINTRAEGE.' Einträge). '
             . 'Idempotent je (gp_id, anchor_slug): unveränderte Zuordnung → status=unveraendert, neue → '
-            . 'angenommen, unbekannter gp_id/anchor_slug oder CAP_GP überschritten → abgelehnt (mit Grund). '
+            . 'angenommen, unbekannter gp_id/anchor_slug oder Grenze überschritten (je Rolle getrennt: höchstens '
+            . \Platform\FoodAlchemist\Support\AnkerGrenze::KERN.' kern, '.\Platform\FoodAlchemist\Support\AnkerGrenze::NEBEN.' neben je GP) → abgelehnt (mit Grund). '
             . 'ersetze_alle=true je Eintrag löscht vorher ALLE bestehenden Anker dieses GP (einmal pro gp_id '
             . 'im Batch) — die gelieferten Einträge ersetzen den Bestand vollständig. source ist frei '
             . '(z. B. bridge_alt_neu, exact_name, manual).';

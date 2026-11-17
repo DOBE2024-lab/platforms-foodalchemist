@@ -43,7 +43,7 @@ it('GP-Modal: Suche zeigt Kandidaten, Verknüpfen setzt den Anker mit Rolle, Chi
         ->and($zeile->source)->toBe('manual');
 });
 
-it('GP-Modal: mehrere Anker gleichzeitig erlaubt (bis CAP_GP), Entfernen löst genau einen', function () {
+it('GP-Modal: mehrere Anker gleichzeitig erlaubt (je Rolle gedeckelt), Entfernen löst genau einen', function () {
     $a1 = ($this->neuAnker)('Eggplant');
     $a2 = ($this->neuAnker)('Tomato');
     $a3 = ($this->neuAnker)('Zucchini');
@@ -59,6 +59,29 @@ it('GP-Modal: mehrere Anker gleichzeitig erlaubt (bis CAP_GP), Entfernen löst g
         ->and(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $this->gp->id)->where('anchor_id', $a2)->value('deleted_at'))->not->toBeNull();
 });
 
+it('GP-Modal: bei 3 Kern-Ankern lässt sich ein Nebenanker verknüpfen; 4. Kern und 7. Neben melden die Grenze der Rolle', function () {
+    $svc = app(PairingService::class);
+    foreach (['Brokkoli gekocht', 'Currypulver', 'Tofu'] as $n) {
+        $svc->setGpAnker($this->rootTeam, $this->gp->id, ($this->neuAnker)($n), 'kern');
+    }
+    $kokos = ($this->neuAnker)('Kokos');
+
+    $c = Livewire::test(GpModal::class)->call('oeffnen', $this->gp->id)
+        ->set('gpAnkerRolle', 'neben')->call('gpAnkerVerknuepfen', $kokos)
+        ->assertSet('gpAnkerFehler', null);
+    expect(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $this->gp->id)->where('anchor_id', $kokos)->value('role'))->toBe('neben');
+
+    $c->set('gpAnkerRolle', 'kern')->call('gpAnkerVerknuepfen', ($this->neuAnker)('Vierter Kern'))
+        ->assertSet('gpAnkerFehler', 'Limit erreicht: max 3 Kern-Anker pro GP.');
+
+    foreach (range(2, 6) as $i) {
+        $svc->setGpAnker($this->rootTeam, $this->gp->id, ($this->neuAnker)("Neben {$i}"), 'neben');
+    }
+    $c->set('gpAnkerRolle', 'neben')->call('gpAnkerVerknuepfen', ($this->neuAnker)('Siebter Neben'))
+        ->assertSet('gpAnkerFehler', 'Limit erreicht: max 6 Nebenanker pro GP.');
+    expect(\Platform\FoodAlchemist\Support\AnkerGrenze::anzahl($this->gp->id, 'kern'))->toBe(3)->and(\Platform\FoodAlchemist\Support\AnkerGrenze::anzahl($this->gp->id, 'neben'))->toBe(6);
+});
+
 it('GP-Detail-Panel: Chip zeigt den Anker, Klick zeigt weitere GPs mit demselben Anker (kein Graph)', function () {
     $anker = ($this->neuAnker)('Rosmarin-Test');
     $anderesGp = $this->makeGp($this->rootTeam, 'Rosmarin-Zweitgp');
@@ -70,4 +93,21 @@ it('GP-Detail-Panel: Chip zeigt den Anker, Klick zeigt weitere GPs mit demselben
 
     $c->call('ankerNetzUmschalten', $anker);
     expect($c->html())->toContain('data-gp-anker-netz')->toContain('Rosmarin-Zweitgp');
+});
+
+it('KI-Inferenz hält die Grenzen: kein vierter Kern-Anker neben 3 Katalog-Ankern; neben ergänzt, ohne den KI-Kern zu verdrängen', function () {
+    $svc = app(PairingService::class);
+    foreach (['Katalog 1', 'Katalog 2', 'Katalog 3'] as $n) {
+        $svc->setGpAnker($this->rootTeam, $this->gp->id, ($this->neuAnker)($n), 'kern', 'inspire_katalog');
+    }
+    expect(fn () => $svc->setGpAnkerInference($this->rootTeam, $this->gp->id, ($this->neuAnker)('KI vier'), 0.8))
+        ->toThrow(\RuntimeException::class, 'max 3 Kern-Anker');
+    expect(\Platform\FoodAlchemist\Support\AnkerGrenze::anzahl($this->gp->id, 'kern'))->toBe(3);
+
+    $gp2 = $this->makeGp($this->rootTeam, 'KI-Kern-Test');
+    $kiKern = ($this->neuAnker)('KI Kern');
+    $svc->setGpAnkerInference($this->rootTeam, $gp2->id, $kiKern, 0.8);
+    expect($svc->setGpAnkerInference($this->rootTeam, $gp2->id, ($this->neuAnker)('KI Neben'), 0.7, 'x', \Platform\FoodAlchemist\Support\AnkerQuelle::KI, 'neben'))->toBeTrue();
+    expect(\Platform\FoodAlchemist\Support\AnkerGrenze::anzahl($gp2->id, 'kern'))->toBe(1)->and(\Platform\FoodAlchemist\Support\AnkerGrenze::anzahl($gp2->id, 'neben'))->toBe(1)
+        ->and(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp2->id)->where('anchor_id', $kiKern)->value('deleted_at'))->toBeNull();
 });

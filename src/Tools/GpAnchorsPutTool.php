@@ -13,8 +13,8 @@ use Platform\FoodAlchemist\Services\PairingService;
  * Spec 53 Paket J: Aroma-Anker eines GP verknüpfen/lösen. Adressiert den Anker über den SLUG —
  * stabiler für die Vault-Brücke alt→neu (Legacy-IDs sind hier nicht die Wahrheit). Seit Spec 60 der
  * einzige Weg, Anker zu pflegen: Rezepte erben ihre Anker über das Aromenprofil aus den GPs.
- * Mehrere Anker je GP erlaubt (role kern|neben, CAP_GP im Service — s. Altdaten: zusammengesetzte
- * Produkte wie Ratatouille tragen mehrere Kern-Anker).
+ * Mehrere Anker je GP erlaubt (role kern|neben, je Rolle gedeckelt: höchstens 3 Kern- und 6 Nebenanker,
+ * Support\AnkerGrenze — s. Altdaten: zusammengesetzte Produkte wie Ratatouille tragen mehrere Kern-Anker).
  */
 class GpAnchorsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {
@@ -28,7 +28,9 @@ class GpAnchorsPutTool extends FoodAlchemistTool implements ToolContract, ToolMe
         return 'Verknüpft/löst einen Aroma-Anker mit einem sichtbaren Grundprodukt (team-scoped). '
             . 'anchor_slug ist der Slug aus dem Aroma-Anker-Vokabular (foodalchemist.composer.ANKER_SUCHE), '
             . 'NICHT die gp_id. role=kern (Haupt-Aromaträger, Default) oder neben (Nebenträger) — mehrere '
-            . 'Anker je GP sind erlaubt (CAP im Service, aktuell 3). remove=true löst die Verknüpfung.';
+            . 'Anker je GP sind erlaubt, je Rolle getrennt gedeckelt: höchstens '.\Platform\FoodAlchemist\Support\AnkerGrenze::KERN.' Kern- und '
+            . \Platform\FoodAlchemist\Support\AnkerGrenze::NEBEN.' Nebenanker (darüber VALIDATION_ERROR „Limit erreicht“). Ein vorhandener Anker mit anderer '
+            . 'role wechselt die Rolle, wenn die Zielrolle Platz hat. remove=true löst die Verknüpfung.';
     }
 
     public function getSchema(): array

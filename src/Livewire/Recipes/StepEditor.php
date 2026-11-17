@@ -485,7 +485,7 @@ class StepEditor extends Component
             return;
         }
 
-        $svc->sync($r, $this->kiVorschlag['steps'], $this->ebene);
+        $svc->ersetze($r, $this->kiVorschlag['steps'], $this->ebene);   // KI ersetzt die Ebene (17.11.), gleicher Weg wie die Anreicherung
         $r->update([$quelle => 'ki', $konfidenz => $this->kiVorschlag['confidence']]);
 
         $this->kiVorschlag = null;

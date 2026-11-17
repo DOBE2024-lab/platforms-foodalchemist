@@ -387,10 +387,22 @@ class ProduktpassService
 
     // ── Anzeige / MCP ───────────────────────────────────────────────────────
 
+    /** Die Version, die ohne ausdrückliche Wahl gezeigt wird — dieselbe Regel wie in {@see stand()}; das Panel hält sie als Ziel seiner Knöpfe fest. */
+    public function anzeigeVersion(FoodAlchemistSupplierItem $item): ?FoodAlchemistProduktpass
+    {
+        return self::standardVersion($this->versionen($item));
+    }
+
+    /** Jüngste gelesene Version, sonst die jüngste überhaupt. */
+    private static function standardVersion(\Illuminate\Support\Collection $versionen): ?FoodAlchemistProduktpass
+    {
+        return $versionen->firstWhere('status', 'gelesen') ?? $versionen->first();
+    }
+
     public function stand(FoodAlchemistSupplierItem $item, ?FoodAlchemistProduktpass $pass = null): array
     {
         $versionen = $this->versionen($item);
-        $pass ??= $versionen->firstWhere('status', 'gelesen') ?? $versionen->first();
+        $pass ??= self::standardVersion($versionen);
         $felder = [];
         $zusatzstoffe = [];
         if ($pass !== null) {
@@ -513,6 +525,12 @@ class ProduktpassService
                 unset($aus['gebinde.packaging_unit']);
                 $aus['verpackungshinweis'] ??= ['wert' => $wert] + $felder['gebinde.packaging_unit'];
             }
+        }
+
+        // Direkt gelesenes Natrium steht im Pass oft in g, die Spalte führt mg je 100 g — umrechnen, sonst Faktor 1000 daneben
+        if (isset($felder['naehrwerte.sodium'])) {
+            $aus['naehrwerte.sodium'] = ProduktpassFelder::natriumInMg($felder['naehrwerte.sodium'],
+                isset($felder['naehrwerte.salz']['wert']) ? (float) $felder['naehrwerte.salz']['wert'] : null);
         }
 
         if (isset($felder['naehrwerte.salz'])) {

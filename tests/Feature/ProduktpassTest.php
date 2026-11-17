@@ -483,3 +483,35 @@ it('Haltbarkeit im Artikel-Modal: sichtbar und editierbar, Quelle-Badge „aus d
     $get = $reg->get('foodalchemist.produktpass.GET')->execute(['supplier_item_id' => $this->stamm->id], new ToolContext($this->kurator, $this->rootTeam));
     expect($get->data['haltbarkeit'])->toBe(['gekuehlt_tage' => 5, 'tiefgekuehlt_tage' => null, 'trocken_tage' => 180]);
 });
+
+it('Natrium in g aus dem Pass steht als mg am Artikel (nicht Faktor 1000 daneben); ohne Einheit und ohne Salz bleibt es ein Vorschlag', function () {
+    $pass = ($this->liesPass)(['felder' => ['naehrwerte.sodium' => ['wert' => 0.264, 'einheit' => 'g', 'konfidenz' => 1.0, 'zitat' => 'Natrium (g) 0,264']]]);
+
+    expect((float) $this->stamm->fresh()->nutritionals->sodium)->toBe(264.0);
+    $feld = collect($this->svc->stand($this->stamm->fresh(), $pass)['felder'])->firstWhere('key', 'naehrwerte.sodium');
+    expect((float) $feld['wert'])->toBe(264.0)->and($feld['einheit'])->toBe('mg')->and($feld['im_dokument'])->toBe('0,264 g')
+        ->and($feld['status'])->toBe('uebernommen')->and($feld['abgeleitet'])->toBeFalse();
+
+    // Gegenprobe: Zahl ohne Einheit, kein Salz im Pass → nichts wird direkt geschrieben, der Wert bleibt Vorschlag
+    $zweiter = FoodAlchemistSupplierItem::create(['team_id' => null, 'supplier_id' => $this->stamm->supplier_id, 'designation' => 'Roggenmehl 1150',
+        'unit_code' => null, 'stamm_class' => StammPaket::PAKET]);
+    $ohne = ($this->liesPass)(['felder' => ['naehrwerte.sodium' => ['wert' => 648, 'konfidenz' => 1.0]]], $zweiter);
+    $feldOhne = collect($this->svc->stand($zweiter->fresh(), $ohne)['felder'])->firstWhere('key', 'naehrwerte.sodium');
+    expect($zweiter->fresh()->nutritionals?->sodium)->toBeNull()->and($feldOhne['status'])->toBe('vorschlag');
+});
+
+it('UI: nach dem Öffnen des Artikels wirken die Knöpfe auf die gezeigte Version, auch ohne Klick auf „Anzeigen“', function () {
+    $pass = ($this->liesPass)(['felder' => ['marke' => ['wert' => 'Hausmühle', 'konfidenz' => 0.95]],
+        'allergene' => ['milk' => ['wert' => 'enthalten', 'konfidenz' => 0.95]]]);
+
+    $this->actingAs($this->kurator);
+    // frisch geöffnet: keine Version gewählt, gezeigt wird die jüngste gelesene — genau die muss „Kennzeichnung bestätigen“ treffen
+    Livewire::test(ProduktpassPanel::class, ['itemId' => $this->stamm->id])
+        ->assertSet('angezeigtId', $pass->id)
+        ->assertSeeHtml('data-produktpass-allergene-offen')
+        ->call('kennzeichnungBestaetigen')->assertSet('fehler', null)
+        ->assertSeeHtml('data-produktpass-allergene-bestaetigt')->assertDontSeeHtml('data-produktpass-kennzeichnung-bestaetigen');
+
+    expect($pass->fresh()->allergene_status)->toBe('bestaetigt')
+        ->and(FoodAlchemistItemAllergen::where('supplier_item_id', $this->stamm->id)->value('allergen_milk'))->toBe('enthalten');
+});

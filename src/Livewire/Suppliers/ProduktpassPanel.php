@@ -157,6 +157,11 @@ class ProduktpassPanel extends Component
     {
         $item = $this->item();
         $svc = app(ProduktpassService::class);
+        // Ohne ausdrückliche Wahl zeigt stand() die jüngste gelesene Version. Dieselbe Version muss auch das Ziel der Knöpfe sein:
+        // sonst liefen „Kennzeichnung bestätigen", „Übernehmen" und „Alle übernehmen" nach dem Öffnen des Artikels ins Leere
+        // („Diese Version gibt es nicht mehr."), bis jemand „Anzeigen" geklickt hatte (Befund 16.11.2026). Festgehalten wird,
+        // was zu sehen ist — ein Klick trifft so nie eine Version, die inzwischen im Hintergrund fertig gelesen wurde.
+        $this->angezeigtId ??= $svc->anzeigeVersion($item)?->id;
         $pass = $this->angezeigtId !== null ? FoodAlchemistProduktpass::where('supplier_item_id', $item->id)->find($this->angezeigtId) : null;
         // Web-Recherche im Hintergrund: Ergebnis bzw. Fehlermeldung sichtbar machen, sobald der Job fertig ist
         if ($pass !== null && $pass->quelle === ProduktpassFelder::QUELLE_WEB && $this->hinweis !== null && str_starts_with($this->hinweis, 'Die Web-Recherche läuft')) {

@@ -23,6 +23,9 @@ use Platform\FoodAlchemist\Services\GpAggregateService;
  */
 class NaehrwertAusbeuteRechner
 {
+    /** Ab diesem Salzgehalt (g je 100 g) ist die Ware Salz und kalorienfrei, auch wenn die LAs keine kcal tragen. */
+    public const SALZWARE_AB_G = 50.0;
+
     public function __construct(private GpAggregateService $gpAggregate) {}
 
     /** @return array{masse: float, naehrstoff: float} */
@@ -71,9 +74,12 @@ class NaehrwertAusbeuteRechner
                 // (Leit-Indikator schlug fehl → Salz trug 0 bei). KI-Schätzungen bleiben
                 // weiterhin Panel-only und verfälschen keine Rezept-Nährwerte.
                 $n = $this->gpAggregate->naehrwerte($z->gp, mitKiFallback: $z->gp->nutri_source === 'manual', sicht: $sicht);
-                if ($n['energy_kcal']['avg'] !== null) {           // kcal = Leit-Indikator
+                // Salz-Fall ohne Kuration (17.11.2026, Linguine): Speisesalz-LAs tragen Natrium, aber keine kcal — Salz ist
+                // kalorienfrei. Ab 50 g Salz je 100 g gilt die Ware als Salz: kcal = 0 statt „keine Werte“ (sonst trug sie 0 Salz bei).
+                $salzWare = $n['energy_kcal']['avg'] === null && (float) ($n['salt_g']['avg'] ?? 0) >= self::SALZWARE_AB_G;
+                if ($n['energy_kcal']['avg'] !== null || $salzWare) {   // kcal = Leit-Indikator
                     $werte = [
-                        'kcal' => $n['energy_kcal']['avg'],
+                        'kcal' => $salzWare ? 0.0 : $n['energy_kcal']['avg'],
                         'protein' => $n['protein']['avg'] ?? 0.0,
                         'fat' => $n['fat']['avg'] ?? 0.0,
                         'carbs' => $n['carbs_absorbable']['avg'] ?? 0.0,

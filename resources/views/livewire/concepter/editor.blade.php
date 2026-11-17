@@ -687,11 +687,14 @@
                                                         @if($slot->sales_recipe_id)
                                                             <div class="flex items-center gap-1">
                                                                 <x-fa::input size="sm" numeric wire:model.blur="slotForm.{{ $slot->id }}.quantity" wire:change="mengeSpeichern({{ $slot->id }})" class="w-14" placeholder="1" aria-label="Menge" />
-                                                                <x-fa::select size="sm" wire:model="slotForm.{{ $slot->id }}.unit_vocab_id" wire:change="mengeSpeichern({{ $slot->id }})" class="w-24" aria-label="Einheit">
-                                                                    <option value="">Einheit</option>
-                                                                    @foreach($einheiten as $e)<option value="{{ $e->id }}">{{ $e->slug }}</option>@endforeach
+                                                                @php $se = $slotEinheiten[$slot->id] ?? ['standard' => 'Portion (Standard)', 'optionen' => [], 'unwirksam' => null]; @endphp
+                                                                <x-fa::select size="sm" wire:model="slotForm.{{ $slot->id }}.unit_vocab_id" wire:change="mengeSpeichern({{ $slot->id }})" class="w-28" aria-label="Einheit">
+                                                                    <option value="">{{ $se['standard'] }}</option>
+                                                                    @foreach($se['optionen'] as $e)<option value="{{ $e['id'] }}">{{ $e['label'] }}</option>@endforeach
+                                                                    @if($se['unwirksam'])<option value="{{ $se['unwirksam']['id'] }}" disabled>{{ $se['unwirksam']['label'] }}</option>@endif
                                                                 </x-fa::select>
                                                             </div>
+                                                            @error('slotForm.' . $slot->id . '.unit_vocab_id')<p class="{{ $klein }} text-[var(--fa-crit)]" role="alert">{{ $message }}</p>@enderror
                                                         @endif
                                                     </td>
                                                     <td class="align-top min-w-[16rem]">

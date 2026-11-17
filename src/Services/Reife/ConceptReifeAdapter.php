@@ -141,6 +141,19 @@ class ConceptReifeAdapter extends ContainerReifeAdapter
                 + ['slot_ids' => $headerOhneTitel->pluck('id')->map(fn ($i) => (int) $i)->values()->all()];
         }
 
+        // 17.11. (Dominique): Positionen mit einer Einheit, die nicht rechnet (ging still als Portion ein) — nur melden, nie ändern
+        $c->slots->each(fn ($s) => $s->setRelation('concept', $c));
+        $unwirksam = app(\Platform\FoodAlchemist\Services\SlotEinheitService::class)
+            ->unwirksameSlots($c->slots->filter(fn ($s) => $s->unit_vocab_id !== null && $s->sales_recipe_id !== null));
+        if ($unwirksam !== []) {
+            $luecken[] = $this->luecke('einheit_unwirksam', 'wichtig',
+                count($unwirksam) . ' Positionen tragen eine Einheit, die nicht rechnet (z. B. ml, Karton, g ohne Grammatur, Stück ohne Stück-Ertrag) — sie zählt still als Portion. Einheit wählen oder leeren.',
+                'foodalchemist.concept_slots.PUT', ['concept_id' => (int) $c->id])
+                + ['slot_ids' => $unwirksam];
+        } elseif ($belegt->isNotEmpty()) {
+            $erfuellt[] = 'einheit_unwirksam';
+        }
+
         // ── 3. Gerüst-Coverage ──────────────────────────────────────────────────────
         $g = $this->geruest($team, 'concept', (int) $c->id);
         $luecken = array_merge($luecken, $g['luecken']);
@@ -181,6 +194,7 @@ class ConceptReifeAdapter extends ContainerReifeAdapter
             ['code' => 'header_titel', 'schwere' => 'hinweis', 'wie' => $wording],
             ['code' => 'header_fehlt', 'schwere' => 'hinweis', 'wie' => 'foodalchemist.concept_slots.POST'],
             ['code' => 'header_ohne_titel', 'schwere' => 'wichtig', 'wie' => $slots],
+            ['code' => 'einheit_unwirksam', 'schwere' => 'wichtig', 'wie' => $slots],
             // Aus der Datenqualitaets-Ampel gespiegelt — kein eigenes Werkzeug, die Ursache
             // liegt jeweils bei einem der Codes darueber.
             ['code' => 'konzept_slot_luecke', 'schwere' => 'blockiert', 'wie' => null, 'bedingt' => 'ampel'],

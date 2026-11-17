@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Services;
 
+use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
@@ -60,6 +61,13 @@ class ConceptPaketService
      * @param  list<array{sales_recipe_id:int, quantity?:?float, unit_vocab_id?:?int, presentation_id?:?int}>  $items
      */
     public function syncGerichte(Team $team, int $paketId, array $items): FoodAlchemistConcept
+    {
+        // 17.11.: Vollersatz in EINER Transaktion — lehnt eine Position die Einheit ab (SlotEinheitService), bleibt das Paket unverändert
+        return DB::transaction(fn () => $this->syncGerichteImLauf($team, $paketId, $items));
+    }
+
+    /** @param  list<array{sales_recipe_id:int, quantity?:?float, unit_vocab_id?:?int, presentation_id?:?int}>  $items */
+    private function syncGerichteImLauf(Team $team, int $paketId, array $items): FoodAlchemistConcept
     {
         $paket = $this->sichtbar($team, $paketId) ?? throw new \RuntimeException('Paket nicht sichtbar/vorhanden.');
         $slots = $paket->slots()->orderBy('position')->get();

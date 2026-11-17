@@ -639,7 +639,15 @@ class Editor extends Component
         $f = $this->slotForm[$slotId] ?? [];
         $quantity = ($f['quantity'] ?? '') !== '' && $f['quantity'] !== null ? (float) $f['quantity'] : null;
         $unit = ($f['unit_vocab_id'] ?? '') !== '' ? (int) $f['unit_vocab_id'] : null;
-        app(ConceptService::class)->setSlotMengeEinheit($this->team(), $slotId, $quantity, $unit);
+        try {
+            app(ConceptService::class)->setSlotMengeEinheit($this->team(), $slotId, $quantity, $unit);
+        } catch (\RuntimeException $e) {
+            // 17.11.: nicht wirksame Einheit → verständliche Meldung, Formular zurück auf den gespeicherten Stand
+            $this->reloadSlotForm();
+            $this->addError('slotForm.' . $slotId . '.unit_vocab_id', $e->getMessage());
+
+            return;
+        }
         $this->dispatch('concepter-gespeichert', id: $this->id);
     }
 
@@ -998,6 +1006,35 @@ class Editor extends Component
      * Default-Einheit „portion" (dimension=count) — wird beim Einfügen mitgegeben, damit
      * Menge/EK von Anfang an wohldefiniert sind (vorher „—" → kein Übernehmen der Einheit).
      */
+    /**
+     * Auswahl je Gericht-/Basisrezept-Position: Standard-Beschriftung, wirksame Einheiten und — falls die gespeicherte
+     * Einheit nicht rechnet (Altbestand) — diese als gesperrte Option, damit das Feld nicht still etwas anderes zeigt.
+     *
+     * @return array<int, array{standard: string, optionen: list<array{id: int, label: string}>, unwirksam: ?array{id: int, label: string}}>
+     */
+    private function slotEinheiten(\Platform\Core\Models\Team $team, $concept): array
+    {
+        $svc = app(\Platform\FoodAlchemist\Services\SlotEinheitService::class);
+        $aus = [];
+        foreach ($concept->slots as $slot) {
+            if ($slot->sales_recipe_id === null || $slot->dish === null) {
+                continue;
+            }
+            $slot->setRelation('concept', $concept);
+            $dar = $svc->darreichungFuerSlot($slot);
+            $optionen = $svc->wirksame($team, $slot->dish, $dar)
+                ->map(fn ($e) => ['id' => (int) $e->id, 'label' => (string) $e->slug])->values()->all();
+            $unwirksam = null;
+            if ($slot->unit_vocab_id !== null && ! in_array((int) $slot->unit_vocab_id, array_column($optionen, 'id'), true)) {
+                $unwirksam = ['id' => (int) $slot->unit_vocab_id, 'label' => ($slot->unit?->slug ?? '?') . ' (rechnet nicht)'];
+            }
+            $aus[(int) $slot->id] = ['standard' => \Platform\FoodAlchemist\Services\SlotEinheitService::standardLabel($slot->dish, $dar),
+                'optionen' => $optionen, 'unwirksam' => $unwirksam];
+        }
+
+        return $aus;
+    }
+
     private function portionEinheitId(): ?int
     {
         return \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::visibleToTeam($this->team())
@@ -1548,7 +1585,8 @@ class Editor extends Component
                 ? collect($concept->slots)->filter(fn ($s) => $s->sales_recipe_id !== null)
                     ->mapWithKeys(fn ($s) => [$s->id => app(\Platform\FoodAlchemist\Services\WordingResolver::class)->fuerSlot($s)])->all()
                 : [],
-            'einheiten' => $istAufbau ? app(\Platform\FoodAlchemist\Services\VocabularyService::class)->listEinheiten($team) : collect(),
+            // 17.11. (Dominique): je Position nur die Einheiten, die rechnen (SlotEinheitService, gleiche Logik wie die Kostenrechnung)
+            'slotEinheiten' => $istAufbau && $concept ? $this->slotEinheiten($team, $concept) : [],
             'aggregat' => $aggregat,
             'deklaration' => $deklaration,
             'bewertung' => $bewertet,

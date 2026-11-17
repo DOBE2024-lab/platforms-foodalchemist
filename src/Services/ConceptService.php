@@ -480,6 +480,12 @@ class ConceptService
                 'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null,
             ]);
         } elseif (! empty($in['sales_recipe_id'])) {
+            // 17.11.: nur eine Einheit, die an diesem Gericht rechnet (SlotEinheitService) — geprüft gegen das NEUE Gericht
+            if (($in['unit_vocab_id'] ?? null) !== null) {
+                $probe = (clone $slot)->forceFill(['sales_recipe_id' => (int) $in['sales_recipe_id']])->setRelation('concept', $slot->concept);
+                $probe->unsetRelation('dish');
+                app(SlotEinheitService::class)->pruefe($team, $probe, (int) $in['unit_vocab_id']);
+            }
             $slot->update([
                 // B2: Gericht (VK) ODER Basisrezept — beide referenzieren sales_recipe_id, `type` unterscheidet.
                 'type' => ($in['type'] ?? null) === 'basisrezept' ? 'basisrezept' : 'gericht',
@@ -525,6 +531,11 @@ class ConceptService
     public function setSlotMengeEinheit(Team $team, int $slotId, ?float $quantity, ?int $einheitId = null): FoodAlchemistConceptSlot
     {
         $slot = $this->ownedSlot($team, $slotId);
+        // 17.11.: eine NEU gewählte Einheit muss an dieser Position rechnen; eine unveränderte Alt-Einheit bleibt
+        // speicherbar (Menge ändern), sie meldet der Reife-Befund `einheit_unwirksam`.
+        if ($einheitId && (int) $einheitId !== (int) $slot->unit_vocab_id) {
+            app(SlotEinheitService::class)->pruefe($team, $slot, (int) $einheitId);
+        }
         $slot->update([
             'quantity' => $quantity,
             'unit_vocab_id' => $einheitId ?: null,

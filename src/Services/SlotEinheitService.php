@@ -126,6 +126,43 @@ class SlotEinheitService
         ));
     }
 
+    /** Riegel beim Befüllen: Einheit gegen das NEUE Gericht der Position prüfen (fillSlot), ohne die Position zu ändern. */
+    public function pruefeBelegung(Team $team, FoodAlchemistConceptSlot $slot, int $recipeId, ?int $einheitId): void
+    {
+        if ($einheitId === null) {
+            return;
+        }
+        $probe = (clone $slot)->forceFill(['sales_recipe_id' => $recipeId])->setRelation('concept', $slot->concept);
+        $probe->unsetRelation('dish');
+        $this->pruefe($team, $probe, $einheitId);
+    }
+
+    /**
+     * Auswahl je Gericht-/Basisrezept-Position eines Konzepts/Pakets (Concepter-Editor): Standard-Beschriftung, wirksame
+     * Einheiten und — rechnet die gespeicherte Einheit nicht (Altbestand) — diese als gesperrte Option, damit das Feld
+     * nicht still etwas anderes zeigt.
+     *
+     * @return array<int, array{standard: string, optionen: list<array{id: int, label: string}>, unwirksam: ?array{id: int, label: string}}>
+     */
+    public function auswahl(Team $team, object $concept): array
+    {
+        $aus = [];
+        foreach ($concept->slots as $slot) {
+            if ($slot->sales_recipe_id === null || $slot->dish === null) {
+                continue;
+            }
+            $slot->setRelation('concept', $concept);
+            $dar = $this->darreichungFuerSlot($slot);
+            $optionen = $this->wirksame($team, $slot->dish, $dar)
+                ->map(fn ($e) => ['id' => (int) $e->id, 'label' => (string) $e->slug])->values()->all();
+            $unwirksam = $slot->unit_vocab_id !== null && ! in_array((int) $slot->unit_vocab_id, array_column($optionen, 'id'), true)
+                ? ['id' => (int) $slot->unit_vocab_id, 'label' => ($slot->unit?->slug ?? '?') . ' (rechnet nicht)'] : null;
+            $aus[(int) $slot->id] = ['standard' => self::standardLabel($slot->dish, $dar), 'optionen' => $optionen, 'unwirksam' => $unwirksam];
+        }
+
+        return $aus;
+    }
+
     /**
      * Altbestand: Positionen eines Konzepts/Pakets mit nicht wirksamer Einheit (für den Reife-Befund; ändert nichts).
      *

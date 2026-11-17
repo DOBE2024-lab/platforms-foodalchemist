@@ -58,7 +58,11 @@ final class GpAnkerVorauswahl
         $ids = app(PairingService::class)->lexicalAnkerKandidaten($frage);
         $slugs = $ids === [] ? [] : DB::table('foodalchemist_vocab_pairing_anchors')->whereIn('id', array_unique($ids))
             ->whereNull('deleted_at')->pluck('slug')->all();
-        $lexikalisch = $this->passend([...$slugs, ...$this->woerter($frage)], $wg);
+        // Eigenschaft (§6: Name nach dem Doppelpunkt bis zum ersten Komma) nur über den Wort-Abgleich: bei Fertigware trägt sie die
+        // Zutat („Curry: Brokkoli" → Brokkoli; io 17.11.2026 fehlte jeder Brokkoli-Anker, die KI antwortete neutral). Zustandswörter
+        // stehen hinter dem Komma bzw. in STOPP und erreichen den Wortindex des Pairings nicht.
+        $eigenschaft = self::eigenschaft((string) $gp->name);
+        $lexikalisch = $this->passend([...$slugs, ...$this->woerter($frage), ...($eigenschaft !== '' ? $this->woerter($eigenschaft) : [])], $wg);
 
         $semantisch = array_slice($this->passend($this->semantisch($frage, self::SEMANTISCH * 2), $wg, false), 0, self::SEMANTISCH);
 
@@ -91,6 +95,20 @@ final class GpAnkerVorauswahl
         $kopf = preg_replace('/\([^)]*\)/u', '', $kopf) ?? $kopf;
 
         return trim(preg_replace('/\s+/u', ' ', $kopf) ?? $kopf);
+    }
+
+    /** Eigenschaft: Name nach dem ersten Doppelpunkt bis zum ersten Komma, ohne „/ (Marke)" und Klammern; leer ohne Doppelpunkt. */
+    public static function eigenschaft(string $name): string
+    {
+        $ohneMarke = preg_replace('#\s*/\s*\(.*$#u', '', $name) ?? $name;
+        $teile = explode(':', $ohneMarke, 2);
+        if (count($teile) < 2) {
+            return '';
+        }
+        $e = explode(',', $teile[1], 2)[0];
+        $e = preg_replace('/\([^)]*\)/u', '', $e) ?? $e;
+
+        return trim(preg_replace('/\s+/u', ' ', $e) ?? $e);
     }
 
     /**

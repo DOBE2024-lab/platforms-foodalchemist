@@ -35,6 +35,21 @@ beforeEach(function () {
             }
         });
     };
+    // 17.11.2026 „Curry: Brokkoli": GP mit drei manuellen Kern-Ankern; liefert [GP, Anker-Ids nach Slug]
+    $this->gpMitDreiKernAnkern = function (): array {
+        $gp = $this->makeGp($this->rootTeam, 'Curry: Brokkoli, frisch / (Planet V) / (Bio)');
+        $ids = [];
+        foreach (['boiled_broccoli' => 'Brokkoli, gekocht', 'curry_powder' => 'Currypulver', 'tofu_2485' => 'Tofu', 'coconut_milk' => 'Kokosmilch'] as $slug => $de) {
+            $ids[$slug] = DB::table('foodalchemist_vocab_pairing_anchors')->insertGetId([
+                'uuid' => (string) Str::uuid7(), 'slug' => $slug, 'display_de' => $de, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
+        foreach (['boiled_broccoli', 'curry_powder', 'tofu_2485'] as $slug) {
+            app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $ids[$slug], 'kern');
+        }
+
+        return [$gp, $ids];
+    };
 });
 
 it('GP: „Verluste schätzen" füllt nur leere Vorgaben und schreibt nichts in die DB', function () {
@@ -82,6 +97,66 @@ it('GP: „Anker vorschlagen" — neutral setzt nichts, sagt es aber', function 
         ->call('ankerKiVorschlagen')
         ->assertSet('hinweis', fn ($h) => str_contains((string) $h, 'neutral'));
     expect(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->count())->toBe(0);
+});
+
+// ── 17.11.2026 „Curry: Brokkoli": 3 Kern-Anker gesetzt, „Anker vorschlagen" hat nicht geklappt ──────────────────────────────────
+
+it('GP: „Anker vorschlagen" bei voller Kern-Grenze fragt nach einem NEBENANKER (vorhandene raus aus dem Vokabular) und setzt ihn als neben', function () {
+    [$gp, $ids] = ($this->gpMitDreiKernAnkern)();
+    $gefragt = null;
+    $this->mock(AiGatewayService::class, function ($mock) use (&$gefragt) {
+        $mock->shouldReceive('propose')->andReturnUsing(function (string $key, array $kontext) use (&$gefragt) {
+            $gefragt = $kontext;
+
+            return new AiProposal(['anchor_slug' => 'coconut_milk', 'art' => 'eigen'], 0.8, 'Kokos prägt das Curry', [], $key);
+        });
+    });
+
+    Livewire::test(GpModal::class)->call('oeffnen', $gp->id)
+        ->call('ankerKiVorschlagen')
+        ->assertSet('gpAnkerFehler', null)
+        ->assertSet('hinweis', fn ($h) => str_contains((string) $h, 'Nebenanker') && str_contains((string) $h, 'coconut_milk'));
+
+    expect($gefragt['gesucht'] ?? '')->toContain('Nebenanker')
+        ->and($gefragt['vorhandene_anker'])->toHaveCount(3)
+        ->and($gefragt['vokabular'])->not->toContain('boiled_broccoli')->not->toContain('curry_powder')->not->toContain('tofu_2485');
+    $zeile = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('anchor_id', $ids['coconut_milk'])->whereNull('deleted_at')->first();
+    expect($zeile)->not->toBeNull()->and($zeile->role)->toBe('neben')->and($zeile->source)->toBe('ai_inferred');
+    // die drei Kern-Anker von Hand bleiben unberührt
+    expect(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('role', 'kern')->where('source', 'manual')->whereNull('deleted_at')->count())->toBe(3);
+});
+
+it('GP: „Anker vorschlagen" bei voller Kern-Grenze — neutral bzw. ein schon verknüpfter Anker melden sich, nichts still', function () {
+    [$gp] = ($this->gpMitDreiKernAnkern)();
+    ($this->mockKi)(['gp.anker' => ['anchor_slug' => 'neutral']]);
+    Livewire::test(GpModal::class)->call('oeffnen', $gp->id)->call('ankerKiVorschlagen')
+        ->assertSet('hinweis', fn ($h) => str_contains((string) $h, 'keinen weiteren Aroma-Träger'));
+    expect(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->whereNull('deleted_at')->count())->toBe(3);
+});
+
+it('GP: „Anker vorschlagen" nennt einen von Hand verknüpften Anker — Meldung „schon verknüpft" statt „gesetzt"', function () {
+    $gp = $this->makeGp($this->rootTeam, 'Basilikum: frisch');
+    $ankerId = DB::table('foodalchemist_vocab_pairing_anchors')->insertGetId([
+        'uuid' => (string) Str::uuid7(), 'slug' => 'basilikum', 'display_de' => 'Basilikum', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $ankerId, 'kern');
+    ($this->mockKi)(['gp.anker' => ['anchor_slug' => 'basilikum']]);
+
+    Livewire::test(GpModal::class)->call('oeffnen', $gp->id)->call('ankerKiVorschlagen')
+        ->assertSet('hinweis', fn ($h) => str_contains((string) $h, 'schon verknüpft'));
+    expect(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->value('source'))->toBe('manual');
+});
+
+it('GP: „Anker vorschlagen" bei 3 Kern- und 6 Nebenankern fragt die KI gar nicht und sagt warum', function () {
+    [$gp] = ($this->gpMitDreiKernAnkern)();
+    foreach (range(1, 6) as $i) {
+        $a = DB::table('foodalchemist_vocab_pairing_anchors')->insertGetId(['uuid' => (string) Str::uuid7(), 'slug' => "neben_{$i}", 'display_de' => "Neben {$i}", 'created_at' => now(), 'updated_at' => now()]);
+        app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $a, 'neben');
+    }
+    $this->mock(AiGatewayService::class, fn ($mock) => $mock->shouldNotReceive('propose'));
+
+    Livewire::test(GpModal::class)->call('oeffnen', $gp->id)->call('ankerKiVorschlagen')
+        ->assertSet('gpAnkerFehler', fn ($f) => str_contains((string) $f, 'Alle Plätze belegt'));
 });
 
 it('Basisrezept: „Regeneration vorschlagen" füllt das Formular, gespeichert wird erst mit Speichern', function () {

@@ -434,11 +434,14 @@ class BulkEnrichService
      * KI-Knopf „Anker vorschlagen" im GP-Editor (Dominique 2026-10-12): Kern-Anker aus dem Vokabular
      * (B-7-Vorauswahl), nur Rückgabe — der Editor setzt ihn mit ehrlicher Provenienz (ai_inferred).
      *
+     * `$rolle = 'neben'` (17.11.2026): die Kern-Grenze ist voll — gefragt ist ein WEITERER Aroma-Träger. Die schon verknüpften Anker
+     * gehen als Kontext mit und fallen aus dem Vokabular, sonst nennt die KI nur wieder einen vorhandenen (oder sagt neutral).
+     *
      * @return array{value: ?array{anchor_slug: string}, confidence: float, reasoning: ?string, call_log_id: ?int}
      */
-    public function gpAnkerVorschlag(Team $team, FoodAlchemistGp $gp): array
+    public function gpAnkerVorschlag(Team $team, FoodAlchemistGp $gp, string $rolle = 'kern'): array
     {
-        return $this->proposeGpFeld($team, $gp, 'anker');
+        return $this->proposeGpFeld($team, $gp, 'anker', ankerRolle: $rolle === 'neben' ? 'neben' : 'kern');
     }
 
     private function proposeRegeneration(Team $team, FoodAlchemistRecipe $r): array
@@ -1048,7 +1051,7 @@ class BulkEnrichService
     }
 
     /** @return array{wert: mixed, confidence: ?float, reasoning: ?string, call_log_id: ?int} */
-    private function proposeGpFeld(Team $team, FoodAlchemistGp $gp, string $feld, bool $neuSchaetzen = false): array
+    private function proposeGpFeld(Team $team, FoodAlchemistGp $gp, string $feld, bool $neuSchaetzen = false, string $ankerRolle = 'kern'): array
     {
         $aroma = app(GpAromaService::class);
         if ($feld === 'anker' && ! $aroma->hatAnker($gp->id) && ($g = $aroma->geschwisterAnker($gp))['status'] === 'einig') {
@@ -1069,6 +1072,18 @@ class BulkEnrichService
         }
         $basis = ['name' => $gp->name, 'condition' => $gp->condition, 'commodity_group' => $gp->commodity_group?->name];
         $vokabular = $feld === 'anker' ? app(\Platform\FoodAlchemist\Support\GpAnkerVorauswahl::class)->fuer($gp, $team) : [];
+        $ankerZusatz = [];
+        if ($feld === 'anker' && $ankerRolle === 'neben') {
+            // Nebenanker: vorhandene Anker raus aus dem Vokabular, als Kontext dazu. Nur hier — der Bulk-Lauf fragt unverändert (Fingerabdruck).
+            $vorhanden = app(PairingService::class)->gpAnkerAlle($gp->id);
+            $vokabular = array_values(array_diff($vokabular, $vorhanden->pluck('slug')->all()));
+            $ankerZusatz = [
+                'gesucht' => 'Nebenanker: Die Kern-Anker sind vergeben (vorhandene_anker). Waehle den wichtigsten WEITEREN Aroma-Traeger '
+                    .'des Produkts (praegende Zutat oder Wuerzung, z. B. das Gemuese im Curry) aus dem Vokabular, nie einen vorhandenen. '
+                    .'Traegt das Produkt keinen weiteren: neutral.',
+                'vorhandene_anker' => $vorhanden->map(fn ($a) => $a->display_de.' ('.$a->role.')')->values()->all(),
+            ];
+        }
 
         [$key, $kontext, $extract] = match ($feld) {
             'condition' => ['gp.condition', ['name' => $gp->name, 'condition' => $gp->condition ?: null],
@@ -1082,7 +1097,7 @@ class BulkEnrichService
                 fn (array $w) => array_intersect_key($w, array_flip(['kcal', 'protein_g', 'fat_g', 'carbs_g', 'salt_g'])) ?: null],
             // B-7: die KI wählt aus einer begründeten Vorauswahl (lexikalisch + semantisch + neutral);
             // nur ein Slug aus dem mitgegebenen Vokabular ist ein gültiger Wert.
-            'anker' => ['gp.anker', $basis + ['vokabular' => $vokabular], fn (array $w) => self::ankerWert($w, $vokabular)],
+            'anker' => ['gp.anker', $basis + $ankerZusatz + ['vokabular' => $vokabular], fn (array $w) => self::ankerWert($w, $vokabular)],
             default => throw new \RuntimeException("Unbekannter GP-Bulk-Schritt [{$feld}]."),
         };
 
@@ -1223,13 +1238,19 @@ class BulkEnrichService
                     ->whereNull('deleted_at')->value('id');
                 if (! $manuell && $ankerId !== null) {
                     $pate = ($wert['pate'] ?? false) === true;
-                    app(PairingService::class)->setGpAnkerInference($team, $gp->id, (int) $ankerId,
-                        (float) ($prop->confidence ?? 0.0),
-                        $pate ? '[Pate] '.($wert['pate_begruendung'] ?? '').(($prop->reasoning ?? '') !== '' ? ' — '.$prop->reasoning : '')
-                            : (string) ($prop->reasoning ?: 'Bulk-Anreicherung'),
-                        $pate ? \Platform\FoodAlchemist\Support\AnkerQuelle::PATE : \Platform\FoodAlchemist\Support\AnkerQuelle::KI);
-                    $aroma->vergissAnkerNeutral($gp->id);
-                    $ok = true;
+                    try {
+                        $ok = app(PairingService::class)->setGpAnkerInference($team, $gp->id, (int) $ankerId,
+                            (float) ($prop->confidence ?? 0.0),
+                            $pate ? '[Pate] '.($wert['pate_begruendung'] ?? '').(($prop->reasoning ?? '') !== '' ? ' — '.$prop->reasoning : '')
+                                : (string) ($prop->reasoning ?: 'Bulk-Anreicherung'),
+                            $pate ? \Platform\FoodAlchemist\Support\AnkerQuelle::PATE : \Platform\FoodAlchemist\Support\AnkerQuelle::KI);
+                    } catch (\RuntimeException $e) {
+                        // Kern-Grenze voll (3 Katalog-/Paket-Anker): Vorschlag bleibt offen, statt still einen vierten Kern-Anker zu setzen
+                        $ok = false;
+                    }
+                    if ($ok) {
+                        $aroma->vergissAnkerNeutral($gp->id);
+                    }
                 }
             }
         } elseif ($prop->field === 'naehrwerte' && is_array($wert) && $gp->nutri_source !== 'manual') {

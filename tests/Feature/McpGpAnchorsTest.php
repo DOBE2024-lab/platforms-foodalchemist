@@ -52,19 +52,36 @@ it('gp_anchors.PUT: set (Default kern) + remove; unbekannter gp_id/slug → NOT_
     expect(($this->run)('foodalchemist.gp_anchors.PUT', ['gp_id' => $gpId, 'anchor_slug' => 'quatsch-slug-xyz'])->errorCode)->toBe('NOT_FOUND');
 });
 
-it('gp_anchors.PUT: role=neben setzbar, mehrere Anker gleichzeitig, CAP_GP=3 → VALIDATION_ERROR beim vierten', function () {
+it('gp_anchors.PUT: Kern höchstens 3, Neben getrennt höchstens 6 → VALIDATION_ERROR je Rolle; Rollenwechsel nur mit Platz', function () {
     $gpId = ($this->neuGp)('Ratatouille-Gp');
-    $s1 = ($this->slugFuer)(($this->neuAnker)('Eggplant-Cap'));
-    $s2 = ($this->slugFuer)(($this->neuAnker)('Tomato-Cap'));
-    $s3 = ($this->slugFuer)(($this->neuAnker)('Zucchini-Cap'));
-    $s4 = ($this->slugFuer)(($this->neuAnker)('Paprika-Cap'));
+    $kern = collect(range(1, 4))->map(fn ($i) => ($this->slugFuer)(($this->neuAnker)("Kern-Cap-{$i}")));
+    $neben = collect(range(1, 7))->map(fn ($i) => ($this->slugFuer)(($this->neuAnker)("Neben-Cap-{$i}")));
+    $put = fn (string $slug, string $role) => ($this->run)('foodalchemist.gp_anchors.PUT', ['gp_id' => $gpId, 'anchor_slug' => $slug, 'role' => $role]);
 
-    expect(($this->run)('foodalchemist.gp_anchors.PUT', ['gp_id' => $gpId, 'anchor_slug' => $s1, 'role' => 'kern'])->success)->toBeTrue();
-    expect(($this->run)('foodalchemist.gp_anchors.PUT', ['gp_id' => $gpId, 'anchor_slug' => $s2, 'role' => 'neben'])->success)->toBeTrue();
-    expect(($this->run)('foodalchemist.gp_anchors.PUT', ['gp_id' => $gpId, 'anchor_slug' => $s3, 'role' => 'neben'])->success)->toBeTrue();
+    foreach ($kern->take(3) as $s) {
+        expect($put($s, 'kern')->success)->toBeTrue();
+    }
+    foreach ($neben->take(6) as $s) {
+        expect($put($s, 'neben')->success)->toBeTrue();              // volle Kern-Grenze blockiert Nebenanker nicht mehr (Curry: Brokkoli)
+    }
+    $vierterKern = $put($kern[3], 'kern');
+    expect($vierterKern->success)->toBeFalse()->and($vierterKern->errorCode)->toBe('VALIDATION_ERROR')
+        ->and($vierterKern->error)->toContain('max 3 Kern-Anker');
+    $siebterNeben = $put($neben[6], 'neben');
+    expect($siebterNeben->success)->toBeFalse()->and($siebterNeben->errorCode)->toBe('VALIDATION_ERROR')
+        ->and($siebterNeben->error)->toContain('max 6 Nebenanker');
 
-    $vierter = ($this->run)('foodalchemist.gp_anchors.PUT', ['gp_id' => $gpId, 'anchor_slug' => $s4]);
-    expect($vierter->success)->toBeFalse()->and($vierter->errorCode)->toBe('VALIDATION_ERROR');
+    // Rollenwechsel neben → kern bei voller Kern-Grenze: abgelehnt, die Zeile bleibt Neben
+    $wechsel = $put($neben[0], 'kern');
+    expect($wechsel->success)->toBeFalse()->and($wechsel->error)->toContain('max 3 Kern-Anker');
+    $ankerId = DB::table('foodalchemist_vocab_pairing_anchors')->where('slug', $neben[0])->value('id');
+    expect(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gpId)->where('anchor_id', $ankerId)->value('role'))->toBe('neben');
+
+    // nach dem Lösen eines Kern-Ankers geht der Wechsel; dieselbe Zeile zählt nicht gegen sich selbst
+    expect(($this->run)('foodalchemist.gp_anchors.PUT', ['gp_id' => $gpId, 'anchor_slug' => $kern[0], 'remove' => true])->success)->toBeTrue();
+    expect($put($neben[0], 'kern')->success)->toBeTrue()
+        ->and($put($neben[0], 'kern')->success)->toBeTrue()
+        ->and(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gpId)->where('anchor_id', $ankerId)->value('role'))->toBe('kern');
 });
 
 it('gp_anchors.GET: gp_id liefert kern+neben; anchor_slug liefert Reverse-Lookup', function () {
@@ -137,7 +154,7 @@ it('gp_anchors.IMPORT: ersetze_alle loescht den Bestand einmal je gp_id im Batch
         ->and($slugs)->not->toContain($alt);
 });
 
-it('gp_anchors.IMPORT: CAP_GP respektiert (vierter Eintrag desselben GP → abgelehnt mit Grund)', function () {
+it('gp_anchors.IMPORT: Kern-Grenze respektiert (vierter Kern-Eintrag desselben GP → abgelehnt mit Grund)', function () {
     $gpId = ($this->neuGp)('Cap-Import-Gp');
     $slugs = collect(range(1, 4))->map(fn ($i) => ($this->slugFuer)(($this->neuAnker)("Cap-Import-{$i}")));
 
@@ -148,7 +165,32 @@ it('gp_anchors.IMPORT: CAP_GP respektiert (vierter Eintrag desselben GP → abge
     expect($res->data['angenommen'])->toBe(3)
         ->and($res->data['abgelehnt'])->toBe(1)
         ->and($res->data['eintraege'][3]['status'])->toBe('abgelehnt')
-        ->and($res->data['eintraege'][3]['grund'])->toContain('Limit erreicht');
+        ->and($res->data['eintraege'][3]['grund'])->toContain('Limit erreicht')
+        ->and($res->data['eintraege'][3]['grund'])->toContain('Kern-Anker');
+});
+
+it('gp_anchors.IMPORT: Nebenanker getrennt gezählt — 3 Kern + 6 Neben angenommen, 7. Neben abgelehnt', function () {
+    $gpId = ($this->neuGp)('Cap-Import-Neben-Gp');
+    $eintraege = [];
+    foreach (range(1, 3) as $i) {
+        $eintraege[] = ['gp_id' => $gpId, 'anchor_slug' => ($this->slugFuer)(($this->neuAnker)("Imp-Kern-{$i}")), 'role' => 'kern', 'source' => 'bridge_alt_neu'];
+    }
+    foreach (range(1, 7) as $i) {
+        $eintraege[] = ['gp_id' => $gpId, 'anchor_slug' => ($this->slugFuer)(($this->neuAnker)("Imp-Neben-{$i}")), 'role' => 'neben', 'source' => 'bridge_alt_neu'];
+    }
+
+    $res = ($this->run)('foodalchemist.gp_anchors.IMPORT', ['eintraege' => $eintraege]);
+
+    expect($res->data['angenommen'])->toBe(9)
+        ->and($res->data['abgelehnt'])->toBe(1)
+        ->and($res->data['eintraege'][9]['grund'])->toContain('max 6 Nebenanker');
+});
+
+it('gp_anchors.PUT/IMPORT: Beschreibung nennt beide Grenzen', function () {
+    foreach (['foodalchemist.gp_anchors.PUT', 'foodalchemist.gp_anchors.IMPORT'] as $name) {
+        $d = $this->registry->get($name)->getDescription();
+        expect($d)->toContain('3')->toContain('6')->not->toContain('CAP_GP', $name);
+    }
 });
 
 it('gp_anchors.PUT: Kind-Team sieht das GP des Eltern-Teams (Ancestry-Sichtbarkeit) und kann den Anker setzen', function () {

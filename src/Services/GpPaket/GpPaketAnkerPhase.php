@@ -20,7 +20,8 @@ class GpPaketAnkerPhase
     // ── Anker ──────────────────────────────────────────────────────────────────────────────────────
 
     /**
-     * Gleiche Regeln wie `foodalchemist.gp_anchors.IMPORT`: Slug muss auflösen, source ≤ GP_ANKER_SOURCE_MAX, höchstens CAP_GP je GP,
+     * Gleiche Regeln wie `foodalchemist.gp_anchors.IMPORT`: Slug muss auflösen, source ≤ GP_ANKER_SOURCE_MAX, höchstens CAP_GP_KERN Kern- und
+     * CAP_GP_NEBEN Nebenanker je GP (je Rolle getrennt gezählt),
      * `ersetze_alle` je GP (die Paket-Zeilen ersetzen den Bestand).
      *
      * @param  array<string,array<string,mixed>>  $P
@@ -67,8 +68,10 @@ class GpPaketAnkerPhase
             }
             $role = in_array($r['role'] ?? 'kern', ['kern', 'neben'], true) ? ($r['role'] ?? 'kern') : 'kern';
             $conf = isset($r['ai_confidence']) && is_numeric($r['ai_confidence']) ? max(0.0, min(1.0, (float) $r['ai_confidence'])) : null;
-            if (! isset($je[$k][$slug]) && count($je[$k] ?? []) >= PairingService::CAP_GP) {
-                $ab('Limit erreicht: max ' . PairingService::CAP_GP . ' Anker pro GP');
+            // je Rolle getrennt; eine doppelte Zeile desselben Slugs zählt nicht gegen sich selbst (sie ersetzt die frühere)
+            $gleicheRolle = count(array_filter($je[$k] ?? [], fn ($x, $s) => $s !== $slug && $x['role'] === $role, ARRAY_FILTER_USE_BOTH));
+            if ($gleicheRolle >= PairingService::ankerGrenze($role)) {
+                $ab(PairingService::ankerGrenzeMeldung($role));
 
                 continue;
             }

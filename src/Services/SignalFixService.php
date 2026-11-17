@@ -407,9 +407,11 @@ class SignalFixService
         // schrieb der Fixer `source='manual'` und schützte damit einen lexikalischen Treffer vor jeder
         // späteren KI-Korrektur (Inv. 3: manual gewinnt). Provenienz ehrlich: `ai_inferred` mit
         // Begründung; Konfidenz 0,7 = eindeutige Wortauflösung ohne Kontext (Regel »Etikett lügt«).
-        $this->pairing->setGpAnkerInference($team, $gpId, (int) $ankerId, 0.7, 'SignalFix: lexikalisch aus dem GP-Namen aufgelöst');
-
-        return true;
+        try {
+            return $this->pairing->setGpAnkerInference($team, $gpId, (int) $ankerId, 0.7, 'SignalFix: lexikalisch aus dem GP-Namen aufgelöst');
+        } catch (\RuntimeException) {
+            return false;   // Kern-Grenze voll — der Fixer setzt keinen vierten Kern-Anker
+        }
     }
 
     private function fixRecompute(int $recipeId): bool

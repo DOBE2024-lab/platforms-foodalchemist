@@ -30,6 +30,9 @@ trait HatGpAromaKi
      * KI-Knopf „Anker vorschlagen" (Dominique 2026-10-12, Geschwister-Weg 27.10.): sind sich die Geschwister-GPs derselben
      * Hauptzutat einig, werden ihre Anker übernommen (kostenlos, Quelle `geschwister`). Sonst Kern-Anker per KI aus dem Vokabular,
      * sofort gesetzt mit ehrlicher Provenienz `ai_inferred` + Konfidenz — Handarbeit (manual) bleibt geschützt.
+     *
+     * Volle Kern-Grenze (17.11.2026, „Curry: Brokkoli" mit 3 Kern-Ankern): der Knopf sucht dann einen NEBENANKER (bis zur Neben-Grenze)
+     * und sagt das. Jeder Ausgang meldet sich — nie still nichts (auch nicht, wenn die KI einen schon verknüpften Anker nennt).
      */
     public function ankerKiVorschlagen(BulkEnrichService $bulk, PairingService $pairing): void
     {
@@ -54,8 +57,18 @@ trait HatGpAromaKi
                 return;
             }
         }
+        $rolle = 'kern';
+        if ($pairing->gpAnkerAnzahl($gp->id, 'kern') >= PairingService::CAP_GP_KERN) {
+            if ($pairing->gpAnkerAnzahl($gp->id, 'neben') >= PairingService::CAP_GP_NEBEN) {
+                $this->aromaMeldung('Alle Plätze belegt: '.PairingService::CAP_GP_KERN.' Kern- und '.PairingService::CAP_GP_NEBEN
+                    .' Nebenanker. Erst einen Anker lösen, dann vorschlagen lassen.');
+
+                return;
+            }
+            $rolle = 'neben';
+        }
         try {
-            $v = $bulk->gpAnkerVorschlag($team, $gp);
+            $v = $bulk->gpAnkerVorschlag($team, $gp, $rolle);
         } catch (\Platform\FoodAlchemist\Exceptions\KiNichtVerfuegbarException) {
             $this->aromaMeldung('KI derzeit nicht verfügbar.');
 
@@ -68,6 +81,11 @@ trait HatGpAromaKi
         $slug = $v['value']['anchor_slug'] ?? null;
         if ($slug === null) {
             $this->aromaMeldung('KI fand keinen passenden Anker im Vokabular.');
+
+            return;
+        }
+        if ($slug === 'neutral' && $rolle === 'neben') {
+            $this->aromaMeldung(null, 'Kern-Anker sind voll ('.PairingService::CAP_GP_KERN.'); die KI fand keinen weiteren Aroma-Träger als Nebenanker — nichts gesetzt.');
 
             return;
         }
@@ -86,18 +104,35 @@ trait HatGpAromaKi
 
             return;
         }
+        $vorher = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('anchor_id', $ankerId)->whereNull('deleted_at')->first();
+        if ($vorher !== null && ($rolle === 'neben' || $vorher->source === 'manual')) {
+            // die KI nennt einen schon verknüpften Anker: nichts zu tun — sagen statt „gesetzt" zu melden
+            $this->aromaMeldung(null, "KI schlägt „{$slug}\" vor — der Anker ist schon verknüpft ({$vorher->role}), nichts geändert.");
+
+            return;
+        }
         try {
             $pate = ($v['value']['pate'] ?? false) === true;   // wie der Bulk-Weg: Ersatz-Anker gekennzeichnet, mit Begründung
-            $pairing->setGpAnkerInference($team, $gp->id, (int) $ankerId, (float) ($v['confidence'] ?? 0.5),
-                ($pate ? '[Pate] '.$v['value']['pate_begruendung'].' — ' : '').'GP-Editor: KI-Vorschlag aus dem Anker-Vokabular'.(($v['reasoning'] ?? '') !== '' ? ' — '.$v['reasoning'] : ''),
-                $pate ? \Platform\FoodAlchemist\Support\AnkerQuelle::PATE : \Platform\FoodAlchemist\Support\AnkerQuelle::KI);
-            $aroma->vergissAnkerNeutral($gp->id);
+            $gesetzt = $pairing->setGpAnkerInference($team, $gp->id, (int) $ankerId, (float) ($v['confidence'] ?? 0.5),
+                ($pate ? '[Pate] '.$v['value']['pate_begruendung'].' — ' : '').'GP-Editor: KI-Vorschlag aus dem Anker-Vokabular'
+                    .($rolle === 'neben' ? ' (Nebenanker, Kern-Anker voll)' : '').(($v['reasoning'] ?? '') !== '' ? ' — '.$v['reasoning'] : ''),
+                $pate ? \Platform\FoodAlchemist\Support\AnkerQuelle::PATE : \Platform\FoodAlchemist\Support\AnkerQuelle::KI, $rolle);
+            if ($gesetzt) {
+                $aroma->vergissAnkerNeutral($gp->id);
+            }
         } catch (\RuntimeException $e) {
             $this->aromaMeldung($e->getMessage());
 
             return;
         }
-        $this->aromaMeldung(null, ($pate ? "Pate „{$slug}\" per KI gesetzt (Ersatz, die Zutat hat keinen eigenen Anker; " : "Anker „{$slug}\" per KI gesetzt (")
+        if (! $gesetzt) {
+            $this->aromaMeldung(null, "KI schlägt „{$slug}\" vor — der Anker ist von Hand verknüpft, nichts geändert.");
+
+            return;
+        }
+        $art = $rolle === 'neben' ? 'Nebenanker' : 'Anker';
+        $this->aromaMeldung(null, ($pate ? "Pate „{$slug}\" als {$art} per KI gesetzt (Ersatz, die Zutat hat keinen eigenen Anker; " : "{$art} „{$slug}\" per KI gesetzt (")
+            .($rolle === 'neben' ? 'Kern-Anker sind voll; ' : '')
             .'Konfidenz '.round((float) ($v['confidence'] ?? 0) * 100).' %).');
     }
 

@@ -196,3 +196,24 @@ it('Sensorik-Grundlage rechnet mit derselben Regel: Salz im Kochwasser verworfen
     expect($mitWasser['werte']['salzig'])->toEqualWithDelta(0.5, 0.005)
         ->and($mitWasser['abdeckung']['salzig'])->toBe(1.0);
 });
+
+it('Speisesalz ohne kcal am Artikel (nur Natrium, nicht kuratiert) zählt mit — Salz ist kalorienfrei (io 17.11.: Linguine 0,004 statt 0,5)', function () {
+    $lf = FoodAlchemistSupplier::create(['team_id' => $this->rootTeam->id, 'name' => 'Necta']);
+    $salzRoh = $this->makeGp($this->rootTeam, 'Salz: trocken, unjodiert');   // keine kuratierten GP-Werte
+    $i = FoodAlchemistSupplierItem::create(['team_id' => $this->rootTeam->id, 'supplier_id' => $lf->id, 'designation' => 'Speisesalz 25kg']);
+    FoodAlchemistSupplierItemStructure::create(['team_id' => $this->rootTeam->id, 'supplier_item_id' => $i->id, 'gp_id' => $salzRoh->id]);
+    FoodAlchemistItemNutritional::create(['team_id' => $this->rootTeam->id, 'supplier_item_id' => $i->id, 'sodium' => 39483.2]);   // kcal NULL wie bei Necta
+    $r = $this->svc->create($this->rootTeam, ['name' => 'Pasta: Linguine']);
+    $r = $this->svc->syncIngredients($this->rootTeam, $r->id, [
+        ['gp_id' => $this->linguine->id, 'raw_text' => 'Linguine', 'quantity' => '500', 'unit_vocab_id' => $this->g->id, 'cooking_loss_pct' => 0],
+        ['gp_id' => $this->wasser->id, 'raw_text' => 'Wasser', 'quantity' => '5000', 'unit_vocab_id' => $this->ml->id, 'cooking_loss_pct' => 90, 'zeilenart' => 'medium'],
+        ['gp_id' => $salzRoh->id, 'raw_text' => 'Salz', 'quantity' => '50', 'unit_vocab_id' => $this->g->id, 'cooking_loss_pct' => 90, 'zeilenart' => 'medium'],
+    ]);
+
+    // 5 g Salz-Ware × 98,7 % Salz ≈ 4,93 g / 1005 g ≈ 0,49 g je 100 g; kcal bleibt bei der Pasta
+    expect((float) $r->nutri_salt_g_per_100g)->toEqualWithDelta(0.49, 0.01)
+        ->and((float) $r->nutri_kcal_per_100g)->toEqualWithDelta(174.1, 0.1);
+
+    // Gegenprobe: Ware mit wenig Salz und ohne kcal bleibt „ohne Werte“ (keine erfundene 0-kcal-Zeile)
+    expect(\Platform\FoodAlchemist\Services\Rezept\NaehrwertAusbeuteRechner::SALZWARE_AB_G)->toBe(50.0);
+});

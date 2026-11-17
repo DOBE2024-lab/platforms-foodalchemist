@@ -328,13 +328,29 @@ class LeitstelleService
                 }
             }
             $hatInhalt = $inhalt->count() > 0 || $k->released_at !== null;
+            // Lebendes Format-Kapitel (B 2026-08-31): kein eigener Inhalt, die Editionen kommen live aus
+            // dem Format. Mit mindestens einer Edition gilt es als fertig (Pflege im Format, nicht hier).
+            $format = null;
+            if ($k->format_id !== null) {
+                $f = $k->format;
+                $format = [
+                    'format_id' => (int) $k->format_id,
+                    'name' => $f !== null ? ($f->consumer_name ?: $f->name) : null,
+                    'editionen_n' => $f !== null ? $f->editionenAnzahl() : 0,
+                    'preis_range' => $f !== null ? $f->priceRange() : ['min' => null, 'max' => null],
+                ];
+            }
+            $fortschrittAuto = $format !== null && $format['editionen_n'] > 0;
             $board[] = [
                 'kapitel_id' => (int) $k->id,
                 'titel' => (string) $k->title,
                 'parent_id' => $k->parent_id !== null ? (int) $k->parent_id : null,
                 'depth' => $this->kapitelTiefe($k, $fb->chapters),
                 'released' => $k->released_at !== null,
-                'fortschritt' => in_array((string) $k->fortschritt, FoodAlchemistFoodbookKapitel::FORTSCHRITT_STUFEN, true) ? (string) $k->fortschritt : 'offen',
+                'fortschritt' => $fortschrittAuto ? 'fertig'
+                    : (in_array((string) $k->fortschritt, FoodAlchemistFoodbookKapitel::FORTSCHRITT_STUFEN, true) ? (string) $k->fortschritt : 'offen'),
+                'fortschritt_auto' => $fortschrittAuto,
+                'format' => $format,
                 'is_struktur' => (bool) $k->is_struktur,
                 'pricing_mode' => $k->pricing_mode !== null ? (string) $k->pricing_mode : null,
                 'aggregat' => $agg,
@@ -387,6 +403,8 @@ class LeitstelleService
             'chapters.blocks.dish:id,name,ek_total_eur,sales_unit_count', 'chapters.blocks.dish.standardPresentation',   // Spec 85: EK je Portion (blockPreis)
             'chapters.targetGroups:id',
             'targetGroups:id',
+            // Lebendes Format-Kapitel: Editionen-Zahl + Preisspanne (priceRange) fürs Board.
+            'chapters.format.slots.concept:id,price_per_person_cache',
         ];
         if ($mitSlots) {
             $mit['chapters.blocks.concept'] = fn ($q) => $q->with(['slots' => fn ($s) => $s->orderBy('position'), 'slots.dish:id,name', 'slots.package:id,name']);

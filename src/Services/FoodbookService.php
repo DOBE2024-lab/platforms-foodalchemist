@@ -1137,6 +1137,7 @@ class FoodbookService
     public function addBlock(Team $team, int $kapitelId, array $in): FoodAlchemistFoodbookBlock
     {
         $k = $this->ownedKapitel($team, $kapitelId);
+        app(FormatKapitelService::class)->pruefeBlockErlaubt($k);   // Format-Kapitel: keine eigenen Blöcke, Pflege im Format
         $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
         $daten['type'] = in_array($in['type'] ?? '', self::BLOCK_TYPES, true) ? $in['type'] : 'text';
         if ($daten['type'] === 'recipe_ref') {
@@ -1969,8 +1970,7 @@ class FoodbookService
      * `format_id` + Kundentitel/Hinführung aus dem Format, ohne Unterkapitel und ohne Blöcke. Die
      * Editionen (format_slots → Concept) und die Struktur-Slots rendern LIVE aus dem Format
      * ({@see dokumentDaten}, Zweig `ist_format`; Editor: {@see FormatKapitelService::ansicht}) — Editionen rein/raus
-     * im Format wirken sofort in allen Büchern. Eingefroren wird erst beim Versand (snapshot_json).
-     * Kunden-IP-Guard + Status-Guard (versendete/archivierte Bücher sind zu).
+     * im Format wirken sofort in allen Büchern; eingefroren beim Versand. Kunden-IP- + Status-Guard.
      */
     public function insertFormatAlsKapitel(Team $team, int $foodbookId, int $formatId, ?int $parentId = null): FoodAlchemistFoodbookKapitel
     {

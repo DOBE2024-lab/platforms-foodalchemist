@@ -1042,12 +1042,15 @@
 
                 {{-- #3: Katalog — Concept · Paket · Format. Suche + Filter; „+" bucht Concept/Paket ins gewählte
                      Kapitel, Format als eigenes Kapitel (F5: live concept_ref-Blöcke). Server-Modus. --}}
-                <x-foodalchemist::katalog-picker marker="fb" switch="katalogModus" :modes="[
-                    ['key' => 'concept', 'label' => 'Concepts', 'active' => $pickerModus === 'concept'],
-                    ['key' => 'paket', 'label' => 'Pakete', 'active' => $pickerModus === 'paket'],
-                    ['key' => 'format', 'label' => 'Formate', 'active' => $pickerModus === 'format'],
-                ]">
-                    @if($pickerModus === 'concept')
+                {{-- Format-Kapitel nimmt keine eigenen Blöcke (Service sperrt addBlock): Concept-/Paket-Reiter entfallen,
+                     es bleibt nur „Formate" (legt ein NEUES Kapitel an). --}}
+                @php $katalogModus = $formatKapitel !== null ? 'format' : $pickerModus; @endphp
+                <x-foodalchemist::katalog-picker marker="fb" switch="katalogModus" :modes="array_values(array_filter([
+                    $formatKapitel === null ? ['key' => 'concept', 'label' => 'Concepts', 'active' => $katalogModus === 'concept'] : null,
+                    $formatKapitel === null ? ['key' => 'paket', 'label' => 'Pakete', 'active' => $katalogModus === 'paket'] : null,
+                    ['key' => 'format', 'label' => 'Formate', 'active' => $katalogModus === 'format'],
+                ]))">
+                    @if($katalogModus === 'concept')
                         <x-fa::input type="search" size="sm" wire:model.live.debounce.300ms="conceptSuche" placeholder="Concept suchen" aria-label="Concept suchen" class="w-full mb-2 shrink-0" data-fb-katalog-concept />
                         @php $facettenAktiv = collect($conceptFacetten)->filter(fn ($v) => $v !== null)->isNotEmpty(); @endphp
                         <div class="grid grid-cols-2 gap-1.5 mb-2 shrink-0" data-fb-concept-facetten>
@@ -1075,7 +1078,7 @@
                                 <p class="px-2 py-2 {{ $hinweis }}">{{ $conceptSuche !== '' || $facettenAktiv ? 'Keine Concepts für diese Auswahl.' : 'Noch keine Concepts angelegt.' }}</p>
                             @endforelse
                         </div>
-                    @elseif($pickerModus === 'paket')
+                    @elseif($katalogModus === 'paket')
                         {{-- #3: Paket-Reiter (kind=paket-Concepts) — zeigt den Kundennamen (consumer_name). --}}
                         <x-fa::input type="search" size="sm" wire:model.live.debounce.300ms="paketSuche" placeholder="Paket suchen" aria-label="Paket suchen" class="w-full mb-2 shrink-0" data-fb-katalog-paket />
                         @php $paketFacettenAktiv = collect($paketFacetten)->filter(fn ($v) => $v !== null)->isNotEmpty(); @endphp
@@ -1105,7 +1108,7 @@
                             @endforelse
                         </div>
                     @else
-                        {{-- F5: Format WIE EIN CONCEPT buchen — wird ein eigenes Kapitel (Editionen als live concept_ref-Blöcke). --}}
+                        {{-- Format buchen — wird ein eigenes, lebendes Format-Kapitel (Editionen live aus dem Format). --}}
                         <x-fa::input type="search" size="sm" wire:model.live.debounce.300ms="formatSuche" placeholder="Format suchen" aria-label="Format suchen" class="w-full mb-2 shrink-0" data-fb-katalog-format />
                         @error('formatKapitel')<p class="px-1 mb-1 shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert">{{ $message }}</p>@enderror
                         <p class="mb-1 shrink-0 {{ $hinweis }}">Ein Format wird ein eigenes Kapitel, seine Editionen bleiben aktuell.</p>

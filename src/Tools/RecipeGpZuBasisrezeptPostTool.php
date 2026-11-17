@@ -17,11 +17,11 @@ use Platform\FoodAlchemist\Services\GerichtGpUmbauService;
  * Basisrezepten). Legt aus EINER GP-Zeile eines Gerichts ein Basisrezept (Entwurf) mit genau dieser Zutat und Menge an
  * und hängt die Zeile darauf um. Ohne `name` gilt der Vorschlag (Regelwerk Basisrezepte §1.2/§17).
  */
-class GerichtGpBasisrezeptPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
+class RecipeGpZuBasisrezeptPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {
     public function getName(): string
     {
-        return 'foodalchemist.gericht_gp_basisrezept.POST';
+        return 'foodalchemist.recipe_gp_zu_basisrezept.POST';
     }
 
     public function getDescription(): string

@@ -48,7 +48,7 @@ class RecipeReifeAdapter implements ReifeAdapter
     ];
 
     /** Umbau-Weg für `gp_im_gericht`: Basisrezept aus der GP-Zeile anlegen und umhängen. */
-    public const TOOL_GP_UMBAU = 'foodalchemist.gericht_gp_basisrezept.POST';
+    public const TOOL_GP_UMBAU = 'foodalchemist.recipe_gp_zu_basisrezept.POST';
 
     public function __construct(
         private BulkEnrichService $bulk,

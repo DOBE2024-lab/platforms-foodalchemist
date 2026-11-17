@@ -150,7 +150,7 @@ it('Reife: Befund gp_im_gericht je Gericht mit direkter GP-Zeile; Basisrezept an
     $luecke = collect(app(RecipeReifeAdapter::class)->messe($this->rootTeam, $this->gericht->id)['luecken'])->firstWhere('code', 'gp_im_gericht');
     expect($luecke)->not->toBeNull()
         ->and($luecke['was'])->toContain('GP direkt im Gericht — Basisrezept anlegen')->toContain('Gartenkresse: frisch')
-        ->and($luecke['wie']['tool'])->toBe('foodalchemist.gericht_gp_basisrezept.POST');
+        ->and($luecke['wie']['tool'])->toBe('foodalchemist.recipe_gp_zu_basisrezept.POST');
 
     $r = app(GerichtGpUmbauService::class)->basisrezeptAnlegen($this->rootTeam, $this->alt->id, 'Garnitur-Basis: Gartenkresse');
 
@@ -178,13 +178,13 @@ it('Basisrezept anlegen: Name-Vorschlag mit Typ-Präfix; ohne ableitbaren Typ nu
         ->and($v['typ_sicher'])->toBeFalse();
 });
 
-it('MCP: gericht_gp_basisrezept.POST baut die Zeile um, ein zweiter Aufruf auf dieselbe Zeile wird abgelehnt', function () {
-    $res = ($this->tool)('foodalchemist.gericht_gp_basisrezept.POST', ['ingredient_id' => $this->alt->id, 'name' => 'Topping: Gartenkresse']);
+it('MCP: recipe_gp_zu_basisrezept.POST baut die Zeile um, ein zweiter Aufruf auf dieselbe Zeile wird abgelehnt', function () {
+    $res = ($this->tool)('foodalchemist.recipe_gp_zu_basisrezept.POST', ['ingredient_id' => $this->alt->id, 'name' => 'Topping: Gartenkresse']);
     expect($res->success)->toBeTrue($res->error ?? '')
         ->and($res->data['basisrezept']['name'])->toBe('Topping: Gartenkresse')
         ->and($this->alt->fresh()->referenced_recipe_id)->not->toBeNull();
 
-    $nochmal = ($this->tool)('foodalchemist.gericht_gp_basisrezept.POST', ['ingredient_id' => $this->alt->id]);
+    $nochmal = ($this->tool)('foodalchemist.recipe_gp_zu_basisrezept.POST', ['ingredient_id' => $this->alt->id]);
     expect($nochmal->success)->toBeFalse()->and($nochmal->errorCode)->toBe('VALIDATION_ERROR');
 });
 

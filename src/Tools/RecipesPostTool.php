@@ -111,7 +111,7 @@ class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMet
             $gpIds = array_values(array_unique(array_filter(array_map(
                 static fn ($z) => is_array($z) && ($z['gp_id'] ?? null) !== null && $z['gp_id'] !== '' ? (int) $z['gp_id'] : null, $arguments['zutaten']))));
             if ($gpIds !== []) {
-                $namen = \Platform\FoodAlchemist\Models\FoodAlchemistGp::query()->whereIn('id', $gpIds)->pluck('name', 'id');
+                $namen = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->whereIn('id', $gpIds)->pluck('name', 'id');
 
                 return ToolResult::error(\Platform\FoodAlchemist\Exceptions\GpImGerichtException::meldung(
                     array_map(static fn ($id) => (string) ($namen[$id] ?? "GP #{$id}"), $gpIds)),

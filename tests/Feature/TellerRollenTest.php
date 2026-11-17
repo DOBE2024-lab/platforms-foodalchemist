@@ -163,7 +163,9 @@ it('Speichern: Basisrezept-Zeilen verlieren eine Rolle, Gericht-Zeilen werden ge
         'raw_text' => 'Rinderknochen', 'quantity' => '100', 'unit_vocab_id' => $this->g->id, 'role' => $rolle]];
 
     app(RecipeService::class)->syncIngredients($this->rootTeam, $basis->id, $zeile('sauce'));
-    app(RecipeService::class)->syncIngredients($this->rootTeam, $gericht->id, $zeile('Säure'));
+    // Gericht = nur Basisrezepte (17.11.2026): die Gericht-Zeile zeigt aufs Basisrezept statt auf ein GP
+    app(RecipeService::class)->syncIngredients($this->rootTeam, $gericht->id,
+        [['gp_id' => null, 'referenced_recipe_id' => $basis->id, 'display_name' => 'Jus: Rind'] + $zeile('Säure')[0]]);
 
     expect($basis->ingredients()->first()->role)->toBeNull()
         ->and($gericht->ingredients()->first()->role)->toBe('saeure');

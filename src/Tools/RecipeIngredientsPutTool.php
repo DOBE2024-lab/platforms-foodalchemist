@@ -28,7 +28,7 @@ class RecipeIngredientsPutTool extends FoodAlchemistTool implements ToolContract
             . '(Slug wie g/kg/ml/stk) + gp_id ODER referenced_recipe_id (XOR; via foodalchemist.gps.MATCH erden). '
             . 'GERICHT (is_sales_recipe): nur Basisrezepte — eine neue Zeile mit gp_id (oder ein Wechsel auf ein anderes GP) wird mit '
             . 'Fehlercode GP_IM_GERICHT abgelehnt; Fertigware als Zukauf-Basisrezept, Garnitur als Garnitur-Basisrezept. Bestehende GP-Zeilen '
-            . '(Altbestand, gleiche id + gp_id) bleiben editier- und löschbar; Umbau über foodalchemist.gericht_gp_basisrezept.POST. '
+            . '(Altbestand, gleiche id + gp_id) bleiben editier- und löschbar; Umbau über foodalchemist.recipe_gp_zu_basisrezept.POST. '
             . 'Bestehende Zeilen mit id aus recipes.GET senden: ausgelassene optionale Felder (z.B. cooking_loss_pct) bleiben erhalten. '
             . 'Offene Zeilen bleiben offen: eine bestehende Zeile (mit id) ohne gp_id/referenced_recipe_id wird NIE still neu geerdet; '
             . 'eine NEUE Zeile ohne Zuordnung erdet der Resolver automatisch, außer offen_halten = true. '

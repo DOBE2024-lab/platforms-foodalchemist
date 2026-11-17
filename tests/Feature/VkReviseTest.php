@@ -49,7 +49,7 @@ beforeEach(function () {
     $this->zeileId = (int) DB::getPdo()->lastInsertId();
 });
 
-it('L1a: Revise-Roundtrip am Gericht — Menge geändert, neue Komponente gegroundet, Texte mit Lineage ki', function () {
+it('L1a: Revise-Roundtrip am Gericht — Menge geändert, neue Komponente offen (kein GP im Gericht), Texte mit Lineage ki', function () {
     $gpTofu = $this->makeGp($this->rootTeam, 'Tofu: frisch');
 
     $vorschau = [
@@ -79,8 +79,11 @@ it('L1a: Revise-Roundtrip am Gericht — Menge geändert, neue Komponente gegrou
         ->and((int) $zeilen[0]->id)->toBe($this->zeileId)              // bestehende Zeile bleibt dieselbe
         ->and((float) $zeilen[0]->quantity)->toBe(55.0)
         ->and($zeilen[0]->role)->toBe('protein')                    // Rolle ist Facette → unangetastet
-        ->and((int) $zeilen[1]->gp_id)->toBe((int) $gpTofu->id)        // #508-Grounding der neuen Zeile
-        ->and($zeilen[1]->match_method?->value ?? $zeilen[1]->match_method)->toBe('gp_v2_fk');
+        // Gericht = nur Basisrezepte (17.11.2026): die neue Zeile wird im Gericht NICHT auf das GP geerdet (vorher #508-Grounding
+        // auf Tofu-GP) — sie bleibt offen, bis ein Basisrezept sie trägt.
+        ->and($zeilen[1]->gp_id)->toBeNull()
+        ->and($zeilen[1]->display_name)->toBe('Tofu')
+        ->and($gpTofu->id)->not->toBeNull();
 
     $r = $this->vk->fresh();
     expect($r->description)->toBe('Veganer Slider mit gebratenem Tofu.')

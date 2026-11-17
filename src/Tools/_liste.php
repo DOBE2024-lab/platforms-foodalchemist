@@ -196,7 +196,6 @@ return [
     \Platform\FoodAlchemist\Tools\FundstueckeGetTool::class,
     \Platform\FoodAlchemist\Tools\FundstueckePostTool::class,
     \Platform\FoodAlchemist\Tools\FundstueckePutTool::class,
-    \Platform\FoodAlchemist\Tools\GerichtGpBasisrezeptPostTool::class,   // Gericht = nur Basisrezepte (17.11.2026): Altbestand umbauen
     \Platform\FoodAlchemist\Tools\GpAnchorsGetTool::class,
     \Platform\FoodAlchemist\Tools\GpAnchorsImportTool::class,
     \Platform\FoodAlchemist\Tools\GpAnchorsPutTool::class,
@@ -506,6 +505,7 @@ return [
     \Platform\FoodAlchemist\Tools\RecipeFindingsPutTool::class,
     \Platform\FoodAlchemist\Tools\RecipeFindingsRunPostTool::class,
     \Platform\FoodAlchemist\Tools\RecipeFindingsSearchTool::class,
+    \Platform\FoodAlchemist\Tools\RecipeGpZuBasisrezeptPostTool::class,   // Gericht = nur Basisrezepte (17.11.2026): Altbestand umbauen
     \Platform\FoodAlchemist\Tools\RecipeImageGenerateTool::class,   // KI-Bilder als MCP
     \Platform\FoodAlchemist\Tools\RecipeIngredientsPutTool::class,
     \Platform\FoodAlchemist\Tools\RecipeKlassePostTool::class,

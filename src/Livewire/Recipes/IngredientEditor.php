@@ -283,8 +283,10 @@ class IngredientEditor extends Component
     /** Gericht (Verkaufsrezept)? Dann bietet der Editor nur Basisrezepte an — kein GP-Treffer, kein GP-Bedienelement (Dominique 17.11.2026). */
     private function istGericht(): bool
     {
-        return $this->recipeId !== null
-            && (bool) FoodAlchemistRecipe::query()->whereKey($this->recipeId)->value('is_sales_recipe');
+        $team = Auth::user()?->currentTeamRelation;
+
+        return $team !== null && $this->recipeId !== null
+            && (bool) FoodAlchemistRecipe::visibleToTeam($team)->whereKey($this->recipeId)->value('is_sales_recipe');
     }
 
     /** Ersatz-Hinweis fürs Client-row-Format (inkl. Sprung-URL der Gegenseite). */

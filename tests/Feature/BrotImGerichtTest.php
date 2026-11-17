@@ -68,7 +68,7 @@ it('im Gericht ist eine Brot-Zeile nie ein Grundprodukt, sondern ein Basisrezept
         ->and(collect($res['offene'])->pluck('primaer')->all())->toContain('basisrezept_anlegen');
 });
 
-it('Brot-Angebot (Brotkorb, Brotkonfekt, Brot & Butter): die Brote bleiben Grundprodukte', function () {
+it('Brot-Angebot (Brotkorb, Brotkonfekt, Brot & Butter): seit 17.11.2026 auch dort keine GP-Zeile — die Brote werden Basisrezepte', function () {
     \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::create(['team_id' => $this->rootTeam->id, 'slug' => 'g', 'display_de' => 'Gramm', 'dimension' => 'mass', 'default_in_g' => 1]);
     $baguette = ($this->gp)('Baguette: frisch', '09', '09.1 Brot & Broetchen');
     ($this->gp)('Laugenbrezel: frisch', '09', '09.1 Brot & Broetchen');
@@ -79,7 +79,8 @@ it('Brot-Angebot (Brotkorb, Brotkonfekt, Brot & Butter): die Brote bleiben Grund
             ['text' => 'Baguette: frisch', 'quantity' => 40, 'unit' => 'g'], ['text' => 'Laugenbrezel: frisch', 'quantity' => 40, 'unit' => 'g']],
     ], vkModus: true)['recipe'];
 
-    expect($korb->ingredients()->pluck('gp_id')->filter()->count())->toBe(2)
+    // Gericht = nur Basisrezepte (Dominique 17.11.2026) löst „die Brote bleiben Grundprodukte“ (10.10.) ab: Zukauf-Basisrezept
+    expect($korb->ingredients()->pluck('gp_id')->filter()->count())->toBe(0)
         ->and($this->z->istBrotAngebot($this->rootTeam, 'Brotkonfekt', []))->toBeTrue()
         ->and($this->z->istBrotAngebot($this->rootTeam, '[HG] Rinderfilet | Kürbis', ['Rinderfilet', 'Kürbis', 'Toast']))->toBeFalse()
         ->and($this->z->istBrotAngebot($this->rootTeam, 'Brot & Dips', ['Baguette', 'Hummus', 'Aioli', 'Tapenade']))->toBeTrue()

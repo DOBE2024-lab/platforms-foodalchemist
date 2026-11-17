@@ -84,4 +84,50 @@ class FormatKapitelService
                 ->reject(fn ($g) => in_array($g['type'] ?? '', ['paket', 'header'], true))->count()),
         ];
     }
+
+    /**
+     * Format-Editionen eines lebenden Format-Kapitels → Präsentations-Blöcke (Allowlist, kein EK) für die Foodbook-Präsentation.
+     * Spiegelt den ist_format-Zweig von {@see PresentationService::normalizeAngebot}: header/spacer → Überschrift,
+     * text → Textblock, Edition → concept_ref-Block mit Preis pro Gast (außer Einzelpreis-Concept).
+     */
+    public function praesentationsBloecke(array $editionen, bool $showPrice, \Closure $items): array
+    {
+        $blocks = [];
+        foreach ($editionen as $ed) {
+            $typ = (string) ($ed['typ'] ?? 'concept');
+            if (in_array($typ, ['header', 'spacer'], true) || $typ === 'text') {
+                $label = (string) ($typ === 'text' ? ($ed['text'] ?? '') : ($ed['name'] ?? ''));
+                if ($label !== '') {
+                    $blocks[] = ['kind' => $typ === 'text' ? 'text' : 'header', 'label' => $label, 'subtitle' => null,
+                        'is_header' => $typ !== 'text', 'per_item_price' => false, 'price' => null, 'codes' => [], 'items' => []];
+                }
+
+                continue;
+            }
+            $einzel = (bool) ($ed['einzelpreise'] ?? false);
+            $blocks[] = [
+                'kind' => 'concept_ref', 'label' => (string) ($ed['name'] ?? ''), 'subtitle' => $ed['claim'] ?? null,
+                'is_header' => false, 'per_item_price' => $einzel,
+                'price' => ($showPrice && ! $einzel && ($ed['preis_pp'] ?? null) !== null)
+                    ? ['pp' => (float) $ed['preis_pp'], 'pauschal' => 0.0, 'unit' => 'gast'] : null,
+                'codes' => [], 'items' => $items($ed['gerichte'] ?? []),
+            ];
+        }
+
+        return $blocks;
+    }
+
+    /**
+     * Ein Format-Kapitel trägt keine eigenen Blöcke: sie erschienen weder im Dokument noch in der
+     * Präsentation (beide rendern die Editionen des Formats). Sperre für alle Schreibwege (Editor, MCP,
+     * Leitstelle) mit verständlicher Meldung.
+     */
+    public function pruefeBlockErlaubt(FoodAlchemistFoodbookKapitel $kapitel): void
+    {
+        if ($kapitel->format_id !== null) {
+            $name = $kapitel->format?->name ?? 'einem Format';
+            throw new \RuntimeException('Dieses Kapitel kommt live aus dem Format „' . $name . '“ und nimmt keine eigenen Einträge auf. '
+                . 'Concepts und Pakete im Format pflegen oder für weitere Speisen ein eigenes Kapitel anlegen.');
+        }
+    }
 }

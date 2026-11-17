@@ -632,7 +632,8 @@ class PresentationService
         // Alle Rezept-IDs vorab sammeln → EIN Query → Map id ⇒ {context_file_id, path}.
         $dishIds = [];
         foreach ($dok['kapitel'] ?? [] as $k) {
-            foreach ($k['bloecke'] ?? [] as $b) {
+            // Lebendes Format-Kapitel: Gerichte stecken in den Editionen statt in den Blöcken.
+            foreach (array_merge($k['bloecke'] ?? [], $k['editionen'] ?? []) as $b) {
                 foreach ($b['gerichte'] ?? [] as $g) {
                     if (! empty($g['recipe_id'])) {
                         $dishIds[(int) $g['recipe_id']] = true;
@@ -690,25 +691,33 @@ class PresentationService
             $chapImages[(int) $c->id] = array_slice($liste, 0, 6);   // Band zeigt max. 6
         }
 
+        // Gericht-Zeilen → Kunden-Items (gilt für Kapitel-Blöcke UND Format-Editionen).
+        $items = function (array $gerichte) use ($showPrice, $showDecl, $dishFotos): array {
+            $items = [];
+            foreach ($gerichte as $g) {
+                $rid = ! empty($g['recipe_id']) ? (int) $g['recipe_id'] : null;
+                $items[] = [
+                    'kind' => (string) ($g['type'] ?? 'gericht'),
+                    'label' => (string) ($g['text'] ?? ''),
+                    'indent' => (int) ($g['einrueckung'] ?? 0),
+                    // NUR VK (Kunde) und nur wenn Preisanzeige an; EK/source/slot_id/recipe_id werden NICHT übernommen.
+                    'price' => ($showPrice && ($g['preis'] ?? null) !== null) ? (float) $g['preis'] : null,
+                    'codes' => $showDecl ? array_values((array) ($g['codes'] ?? [])) : [],
+                    // Gericht-Foto als Identifier (recipe_id selbst bleibt draußen); Anzeige per Design-Toggle.
+                    'image' => ($rid !== null && isset($dishFotos[$rid])) ? $dishFotos[$rid] : null,
+                ];
+            }
+
+            return $items;
+        };
+
         $sections = [];
         foreach ($dok['kapitel'] as $k) {
-            $blocks = [];
+            // Lebendes Format-Kapitel: Editionen (FormatKapitelService, via dokumentDaten) als Blöcke —
+            // wie normalizeAngebot. Header/Text-Slots als Struktur, jede Edition ein concept_ref-Block.
+            $blocks = ($k['ist_format'] ?? false) ? app(FormatKapitelService::class)->praesentationsBloecke($k['editionen'] ?? [], $showPrice, $items) : [];
             foreach ($k['bloecke'] as $b) {
                 $perItem = (bool) ($b['einzelpreise'] ?? false);
-                $items = [];
-                foreach ($b['gerichte'] as $g) {
-                    $rid = ! empty($g['recipe_id']) ? (int) $g['recipe_id'] : null;
-                    $items[] = [
-                        'kind' => (string) ($g['type'] ?? 'gericht'),
-                        'label' => (string) ($g['text'] ?? ''),
-                        'indent' => (int) ($g['einrueckung'] ?? 0),
-                        // NUR VK (Kunde) und nur wenn Preisanzeige an; EK/source/slot_id/recipe_id werden NICHT übernommen.
-                        'price' => ($showPrice && ($g['preis'] ?? null) !== null) ? (float) $g['preis'] : null,
-                        'codes' => $showDecl ? array_values((array) ($g['codes'] ?? [])) : [],
-                        // Gericht-Foto als Identifier (recipe_id selbst bleibt draußen); Anzeige per Design-Toggle.
-                        'image' => ($rid !== null && isset($dishFotos[$rid])) ? $dishFotos[$rid] : null,
-                    ];
-                }
                 $blocks[] = [
                     'kind' => (string) ($b['type'] ?? ''),
                     'label' => (string) ($b['label'] ?? ''),
@@ -722,7 +731,7 @@ class PresentationService
                         'unit' => $b['preis_einheit'] ?? null,
                     ] : null,
                     'codes' => $showDecl ? array_values((array) ($b['codes'] ?? [])) : [],
-                    'items' => $items,
+                    'items' => $items($b['gerichte'] ?? []),
                 ];
             }
             $ankerId = (int) str_replace('k', '', (string) ($k['anker'] ?? ''));

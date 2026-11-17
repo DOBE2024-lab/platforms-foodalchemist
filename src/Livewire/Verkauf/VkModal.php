@@ -492,6 +492,51 @@ class VkModal extends Component
     /** Re-Mount-Zähler für den eingebetteten Zutaten-Editor (Client-rows). */
     public int $zutatenVersion = 0;
 
+    /** Altbestand „GP direkt im Gericht" (17.11.2026): editierbarer Name je Zeile (ingredient_id => Name), vorbelegt mit dem Vorschlag. */
+    public array $gpUmbauNamen = [];
+
+    /**
+     * Reife-Befund gp_im_gericht (Entscheid Dominique 17.11.2026: ein Gericht enthält nur Basisrezepte): aus der GP-Zeile ein
+     * Basisrezept (Entwurf) anlegen und die Zeile darauf umhängen — derselbe Service wie foodalchemist.gericht_gp_basisrezept.POST.
+     */
+    public function gpZeileAlsBasisrezept(int $ingredientId): void
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null || $this->recipeId === null) {
+            return;
+        }
+        $this->fehler = null;
+        try {
+            $r = app(\Platform\FoodAlchemist\Services\GerichtGpUmbauService::class)
+                ->basisrezeptAnlegen($team, $ingredientId, $this->gpUmbauNamen[$ingredientId] ?? null);
+        } catch (\RuntimeException $e) {
+            $this->fehler = $e->getMessage();
+
+            return;
+        }
+        unset($this->gpUmbauNamen[$ingredientId]);
+        $this->zutatenVersion++;                                     // Editor-rows neu vom Server
+        $this->dispatch('recipe-gespeichert');
+        $this->dispatch('fa-saved', message: ($r['neu'] ? 'Basisrezept angelegt: ' : 'Basisrezept verknüpft: ') . $r['name']);
+    }
+
+    /** @return list<array{id: int, gp: string, vorschlag: string, typ_sicher: bool}> */
+    private function gpDirektZeilen(?FoodAlchemistRecipe $rezept): array
+    {
+        if ($rezept === null || ! $rezept->is_sales_recipe) {
+            return [];
+        }
+        $umbau = app(\Platform\FoodAlchemist\Services\GerichtGpUmbauService::class);
+
+        return $umbau->direkteGpZeilen($rezept)->map(function ($z) use ($umbau) {
+            $v = $umbau->nameVorschlag($z);
+            $this->gpUmbauNamen[(int) $z->id] ??= $v['name'];
+
+            return ['id' => (int) $z->id, 'gp' => (string) ($z->gp?->name ?? $z->display_name ?? $z->raw_text),
+                'vorschlag' => $v['name'], 'typ_sicher' => $v['typ_sicher']];
+        })->values()->all();
+    }
+
     /** @var ?array{rollen: array<int, string>, confidence: float, reasoning: ?string} */
     public ?array $rollenVorschlag = null;
 
@@ -1368,6 +1413,7 @@ class VkModal extends Component
         return view('foodalchemist::livewire.verkauf.vk-modal', [
             'sperr' => $this->sperrZustand(),   // Spec 65
             'rezept' => $rezept,
+            'gpDirekt' => $this->gpDirektZeilen($rezept),   // Altbestand GP direkt im Gericht (17.11.2026)
             'dishImageUrl' => ($rezept !== null && ($rezept->image_context_file_id || $rezept->image_path))
                 ? app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($rezept->image_context_file_id, $rezept->image_path)
                 : null,

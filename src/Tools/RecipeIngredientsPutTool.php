@@ -26,6 +26,9 @@ class RecipeIngredientsPutTool extends FoodAlchemistTool implements ToolContract
             . 'ersetzt `zutaten` die KOMPLETTE Zutatenliste (Voll-Sync: Reihenfolge = '
             . 'Array-Reihenfolge, fehlende Zeilen werden gelöscht). Pro Zeile: name + quantity + unit '
             . '(Slug wie g/kg/ml/stk) + gp_id ODER referenced_recipe_id (XOR; via foodalchemist.gps.MATCH erden). '
+            . 'GERICHT (is_sales_recipe): nur Basisrezepte — eine neue Zeile mit gp_id (oder ein Wechsel auf ein anderes GP) wird mit '
+            . 'Fehlercode GP_IM_GERICHT abgelehnt; Fertigware als Zukauf-Basisrezept, Garnitur als Garnitur-Basisrezept. Bestehende GP-Zeilen '
+            . '(Altbestand, gleiche id + gp_id) bleiben editier- und löschbar; Umbau über foodalchemist.gericht_gp_basisrezept.POST. '
             . 'Bestehende Zeilen mit id aus recipes.GET senden: ausgelassene optionale Felder (z.B. cooking_loss_pct) bleiben erhalten. '
             . 'Offene Zeilen bleiben offen: eine bestehende Zeile (mit id) ohne gp_id/referenced_recipe_id wird NIE still neu geerdet; '
             . 'eine NEUE Zeile ohne Zuordnung erdet der Resolver automatisch, außer offen_halten = true. '
@@ -129,6 +132,8 @@ class RecipeIngredientsPutTool extends FoodAlchemistTool implements ToolContract
                 : app(RecipeService::class)->syncIngredients(
                     $team, $recipe->id, $this->ohneStilleErdung($arguments['zutaten'], $this->normalisiereZutatZeilen($team, $arguments['zutaten'])), preserveMissing: true,
                 );
+        } catch (\Platform\FoodAlchemist\Exceptions\GpImGerichtException $e) {
+            return ToolResult::error($e->getMessage(), \Platform\FoodAlchemist\Exceptions\GpImGerichtException::CODE);
         } catch (\RuntimeException $e) {
             return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
         }

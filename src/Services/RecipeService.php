@@ -1135,6 +1135,7 @@ class RecipeService
         DB::transaction(function () use ($team, $recipe, $zeilen, $preserveMissing) {
             $vorhanden = $recipe->ingredients()->get()->keyBy('id');
             $behalten = [];
+            $gpImGericht = [];
             // Lauf 92 (demo, 3834 „Beilage: Herbsttrompeten"): die Heilung legte die Zeile „Gemüsebrühe", die die Kaskade als
             // Unterrezept führt (Dependency → Kind „Brühe: Gemüse"), hier auf ein Bio-Brühpulver-GP. Das fertige Kind konnte
             // sich danach nicht mehr binden (bindIngredient bricht bei gesetztem gp_id ab) und blieb verwaist. Solche Zeilen
@@ -1173,7 +1174,9 @@ class RecipeService
                         // „Matte: Petersilie" — Typ aus dem Vokabular oder Zubereitungs-Präfix) blieb beim Bau zu Recht
                         // offen; die Heilung legte sie hier auf rohe Grundprodukte (7 kg Wurzel statt Püree). Wie der
                         // Generator (strongSub): so eine Zeile wird nur ein Unterrezept oder bleibt eine Lücke.
-                        $nurSub = app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class)->istBasisrezeptZeile($groundName);
+                        // Gericht = nur Basisrezepte (Dominique 17.11.2026): auch die Auto-Erdung legt dort kein GP und mintet keins.
+                        $nurSub = $recipe->is_sales_recipe
+                            || app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class)->istBasisrezeptZeile($groundName);
                         $treffer = app(IngredientMatchService::class)->matchIngredient(
                             $team, $groundName, $z['hauptzutat_slug'] ?? ($z['slug'] ?? null), ...Matching\MatchLeitplanken::matcherArgsFuerRezept($recipe),
                         );
@@ -1301,6 +1304,12 @@ class RecipeService
                 }
 
                 $id = ($z['id'] ?? null) !== null && $vorhanden->has((int) $z['id']) ? (int) $z['id'] : null;
+                // Gericht = nur Basisrezepte (Dominique 17.11.2026): ein GP darf im Gericht nicht NEU gesetzt werden. Eine
+                // Bestandszeile, die ihr GP schon trägt (Altbestand), bleibt editier- und löschbar — nur neue Zeilen und ein
+                // Wechsel auf ein anderes GP werden gesammelt abgelehnt.
+                if ($gpId !== null && $recipe->is_sales_recipe && ($id === null || (int) $vorhanden[$id]->gp_id !== $gpId)) {
+                    $gpImGericht[] = $gpId;
+                }
                 // Herkunft der Teller-Rolle (Dominique 11.10.): bleibt die Rolle gleich, bleibt ihre Quelle; ändert sie sich,
                 // gilt die mitgegebene Quelle (Editor: manuell, Generator: ki/kaskade), ohne Angabe ist sie unbekannt (null) —
                 // nie ein erfundenes „manuell“. --alle im Klassifizier-Kommando überschreibt nur migration/ki.
@@ -1361,6 +1370,12 @@ class RecipeService
                     ]);
                     $behalten[] = $neu->id;
                 }
+            }
+
+            if ($gpImGericht !== []) {
+                $namen = FoodAlchemistGp::query()->whereIn('id', array_unique($gpImGericht))->pluck('name', 'id');
+                throw new \Platform\FoodAlchemist\Exceptions\GpImGerichtException(array_values(array_map(
+                    static fn ($gid) => (string) ($namen[$gid] ?? "GP #{$gid}"), array_values(array_unique($gpImGericht)))));
             }
 
             $recipe->ingredients()->whereNotIn('id', $behalten)->delete();
@@ -1430,8 +1445,10 @@ class RecipeService
             return [];
         }
         $recompute = app(RecipeRecomputeService::class);
+        // Gericht = nur Basisrezepte (Dominique 17.11.2026): der Picker eines Gerichts bietet keine Grundprodukte an.
+        $nurBasisrezepte = (bool) FoodAlchemistRecipe::query()->whereKey($ohneRecipeId)->value('is_sales_recipe');
 
-        $gps = \Platform\FoodAlchemist\Support\Suche::like(
+        $gps = $nurBasisrezepte ? collect() : \Platform\FoodAlchemist\Support\Suche::like(
             FoodAlchemistGp::visibleToTeam($team)->lebensmittel(), 'name', $suche)   // Multi-Wort: jedes Token muss treffen; Non-Food ist keine Zutat
             ->orderBy('name')->limit($limit)
             ->get(['id', 'name', 'lead_la_supplier_item_id', 'piece_default_g', 'team_id'])

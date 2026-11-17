@@ -90,6 +90,10 @@ class HardstopResolveService
         if ($gp === null) {
             return ['ok' => false, 'meldung' => 'GP nicht gefunden (oder Platzhalter).'];
         }
+        if ($recipe->is_sales_recipe) {   // Gericht = nur Basisrezepte (Dominique 17.11.2026)
+            return ['ok' => false, 'meldung' => \Platform\FoodAlchemist\Exceptions\GpImGerichtException::meldung([(string) $gp->name]),
+                'code' => \Platform\FoodAlchemist\Exceptions\GpImGerichtException::CODE];
+        }
         $this->binde($zeile, (int) $gp->id, null, MatchMethod::OverrideGp);
 
         return ['ok' => true, 'kind' => 'gp', 'name' => $gp->name,
@@ -146,6 +150,10 @@ class HardstopResolveService
         $zeile = $this->offeneZeile($recipe, $position);
         if ($zeile === null) {
             return ['ok' => false, 'meldung' => 'Zeile ist nicht mehr offen — vermutlich schon verknüpft.'];
+        }
+        if ($recipe->is_sales_recipe) {   // Gericht = nur Basisrezepte (Dominique 17.11.2026) — vor jeder LA-/GP-Anlage prüfen
+            return ['ok' => false, 'meldung' => \Platform\FoodAlchemist\Exceptions\GpImGerichtException::meldung([trim($zutatenText) ?: 'diese Zutat']),
+                'code' => \Platform\FoodAlchemist\Exceptions\GpImGerichtException::CODE];
         }
 
         $la = FoodAlchemistSupplierItem::visibleToTeam($team)->with('structure.gp')->find($laId);

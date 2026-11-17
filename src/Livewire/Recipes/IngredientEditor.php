@@ -276,7 +276,15 @@ class IngredientEditor extends Component
         $treffer = app(ComponentEquivalentService::class)
             ->ersatzHinweise($team, [[$kind, $id]])[$kind.':'.$id] ?? null;
 
-        return $treffer !== null ? $this->ersatzPayload($treffer) : null;
+        // Gericht = nur Basisrezepte (17.11.2026): ein Ersatz auf ein Grundprodukt wird im Gericht nicht angeboten.
+        return $treffer !== null && ! ($treffer->kind === 'gp' && $this->istGericht()) ? $this->ersatzPayload($treffer) : null;
+    }
+
+    /** Gericht (Verkaufsrezept)? Dann bietet der Editor nur Basisrezepte an — kein GP-Treffer, kein GP-Bedienelement (Dominique 17.11.2026). */
+    private function istGericht(): bool
+    {
+        return $this->recipeId !== null
+            && (bool) FoodAlchemistRecipe::query()->whereKey($this->recipeId)->value('is_sales_recipe');
     }
 
     /** Ersatz-Hinweis fürs Client-row-Format (inkl. Sprung-URL der Gegenseite). */
@@ -352,8 +360,10 @@ class IngredientEditor extends Component
         }
         $recompute = app(RecipeRecomputeService::class);
         $suche = mb_strtolower(trim($q));
+        $nurBasisrezepte = $this->istGericht();   // Gericht = nur Basisrezepte (17.11.2026): keine GP-Liste
 
-        $gpQuery = FoodAlchemistGp::visibleToTeam($team)->lebensmittel()   // Non-Food ist keine Zutat (Zubehör & Verpackung)
+        $gpQuery = FoodAlchemistGp::visibleToTeam($team)->lebensmittel()
+            ->when($nurBasisrezepte, fn ($w) => $w->whereRaw('1 = 0'))   // Non-Food ist keine Zutat (Zubehör & Verpackung)
             // #4 (Dominique 2026-08-27): im Zutaten-Picker nur verwendbare GPs — abgelehnte/gemergte raus
             // (GP hat keinen Entwurf-Zustand; vorläufig + freigegeben bleiben). Wie tauschKandidaten.
             ->whereNotIn('status', ['rejected', 'merged'])
@@ -668,7 +678,7 @@ class IngredientEditor extends Component
             foreach ($zeilen as &$z) {
                 $kind = $z['gp_id'] !== null ? 'gp' : ($z['referenced_recipe_id'] !== null ? 'recipe' : null);
                 $treffer = $kind !== null ? ($hinweise[$kind.':'.(int) ($z['gp_id'] ?? $z['referenced_recipe_id'])] ?? null) : null;
-                $z['ersatz'] = $treffer !== null ? $this->ersatzPayload($treffer) : null;
+                $z['ersatz'] = $treffer !== null && ! ($treffer->kind === 'gp' && $rezept->is_sales_recipe) ? $this->ersatzPayload($treffer) : null;
             }
             unset($z);
         }

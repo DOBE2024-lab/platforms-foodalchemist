@@ -29,7 +29,8 @@ class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMet
             . 'gp_id ODER referenced_recipe_id (XOR; vorher via foodalchemist.gps.MATCH erden — ungematcht nur als Ausnahme). '
             . 'Yield/Allergene/EK werden automatisch aggregiert. Freigabe (approved) macht nur ein Mensch im Editor.'
             . ' Ablauf, Soll-Aspekte und geltende Regelwerke vorher: foodalchemist.ablauf.GET(vorgang="basisrezept_anlegen").'
-            . ' Bei is_sales_recipe=true (Gericht, besser verkaufsrezepte.POST): Name = [HG] Leitkomponente | Baustein | Baustein … (VK §1), z. B. „[HG] Rinderfilet | Portwein-Jus | Selleriepüree“. Nicht in den Namen: Gefäß/Darreichung, Deko, Öle, Garnitur, Herkunft, Diät-Tags, Grammatur, Marketingname, Füllwörter (mit, auf).';
+            . ' Bei is_sales_recipe=true (Gericht, besser verkaufsrezepte.POST): Name = [HG] Leitkomponente | Baustein | Baustein … (VK §1), z. B. „[HG] Rinderfilet | Portwein-Jus | Selleriepüree“. Nicht in den Namen: Gefäß/Darreichung, Deko, Öle, Garnitur, Herkunft, Diät-Tags, Grammatur, Marketingname, Füllwörter (mit, auf).'
+            . ' Ein Gericht enthält nur Basisrezepte: Zutaten mit gp_id werden dort mit Fehlercode GP_IM_GERICHT abgelehnt (nichts wird angelegt) — Fertigware als Zukauf-Basisrezept, Garnitur als Garnitur-Basisrezept.';
     }
 
     public function getSchema(): array
@@ -105,6 +106,19 @@ class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMet
         }
         $svc = app(RecipeService::class);
 
+        // Gericht = nur Basisrezepte (Dominique 17.11.2026): VOR der Anlage prüfen, sonst bliebe ein Rumpf-Gericht ohne Zutaten stehen.
+        if ((bool) ($arguments['is_sales_recipe'] ?? false) && is_array($arguments['zutaten'] ?? null)) {
+            $gpIds = array_values(array_unique(array_filter(array_map(
+                static fn ($z) => is_array($z) && ($z['gp_id'] ?? null) !== null && $z['gp_id'] !== '' ? (int) $z['gp_id'] : null, $arguments['zutaten']))));
+            if ($gpIds !== []) {
+                $namen = \Platform\FoodAlchemist\Models\FoodAlchemistGp::query()->whereIn('id', $gpIds)->pluck('name', 'id');
+
+                return ToolResult::error(\Platform\FoodAlchemist\Exceptions\GpImGerichtException::meldung(
+                    array_map(static fn ($id) => (string) ($namen[$id] ?? "GP #{$id}"), $gpIds)),
+                    \Platform\FoodAlchemist\Exceptions\GpImGerichtException::CODE);
+            }
+        }
+
         try {
             $recipe = $svc->create($team, [
                 'name' => (string) $arguments['name'],
@@ -139,6 +153,8 @@ class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMet
                 $standardForm = $standard?->serving_form_id;
                 $recipe = $recipe->refresh();
             }
+        } catch (\Platform\FoodAlchemist\Exceptions\GpImGerichtException $e) {
+            return ToolResult::error($e->getMessage(), \Platform\FoodAlchemist\Exceptions\GpImGerichtException::CODE);
         } catch (\RuntimeException $e) {
             return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
         }

@@ -378,6 +378,25 @@
                     </x-fa::notice>
                 @endif
 
+                {{-- Altbestand (Entscheid Dominique 17.11.2026): ein Gericht enthält nur Basisrezepte. Zeilen mit GP direkt bleiben, bis
+                     sie hier umgebaut werden — Basisrezept (Entwurf) mit genau dieser Zutat und Menge, Zeile hängt danach darauf. --}}
+                @if(($gpDirekt ?? []) !== [] && ! in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true))
+                    <x-fa::notice tone="warn" title="GP direkt im Gericht — Basisrezept anlegen" data-gp-im-gericht>
+                        <p>Ein Gericht enthält nur Basisrezepte: Fertigware als Zukauf-Basisrezept, Garnitur als Garnitur-Basisrezept. Name prüfen, dann anlegen.</p>
+                        <ul class="flex flex-col gap-2 mt-2">
+                            @foreach($gpDirekt as $g)
+                                <li wire:key="gp-direkt-{{ $g['id'] }}" class="flex flex-wrap items-center gap-2" data-gp-im-gericht-zeile="{{ $g['id'] }}">
+                                    <span class="min-w-[10rem] font-medium">{{ $g['gp'] }}</span>
+                                    <input type="text" wire:model="gpUmbauNamen.{{ $g['id'] }}" aria-label="Name des Basisrezepts für {{ $g['gp'] }}"
+                                           class="fa-control h-8 flex-1 min-w-[14rem] text-[length:var(--fa-text-md)]"
+                                           @unless($g['typ_sicher']) title="Typ nur vorgeschlagen — bitte prüfen" @endunless />
+                                    <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="gpZeileAlsBasisrezept({{ $g['id'] }})" data-gp-im-gericht-anlegen>Basisrezept anlegen</x-fa::button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </x-fa::notice>
+                @endif
+
                 <livewire:foodalchemist.recipes.ingredient-editor :recipe-id="$recipeId" :eingebettet="true" wire:key="vk-zutaten-{{ $recipeId }}-v{{ $zutatenVersion }}" />
             </x-fa::section>
         </div>{{-- /Reiter AUFBAU --}}

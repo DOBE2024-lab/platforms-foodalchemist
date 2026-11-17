@@ -672,11 +672,8 @@ class RecipeDependencyWorkflowService
             if ($text === '') {
                 continue;
             }
-            // Kleinstmenge im Gericht (Regel gericht.kleinstmengen, Dominique 11.10.): kein Rüst-Basisrezept, kein Kind-Step —
-            // die Zeile bleibt eine GP-Zeile. Der Generator erdet sie schon als GP; hier fängt es Wege ab, die anders planen.
-            if ($recipe->is_sales_recipe && \Platform\FoodAlchemist\Support\Kleinstmenge::erkenne($text) !== null) {
-                continue;
-            }
+            // Die Kleinstmengen-Ausnahme (11.10., „bleibt GP-Zeile") ist abgelöst: ein Gericht enthält nur Basisrezepte
+            // (Dominique 17.11.2026) — auch Butter, Öl, Salz und Finish-Kräuter bekommen ein Kind (Garnitur oder Zukauf).
             // ── Reuse-Gate (L1, Reuse-Achse aus dem Kreativ-Modus) ────────────────────────────────
             $bestand = (string) ($parameter['bestand'] ?? 'hybrid');
             if ($bestand !== 'komplett_neu') {

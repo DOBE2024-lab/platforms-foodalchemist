@@ -114,9 +114,9 @@ it('Format ohne Edition: kein Auto-fertig, Editor zeigt den Leerzustand des Form
     expect($html)->toContain('Das Format hat noch keine Editionen')->not->toContain('Noch kein Inhalt');
 });
 
-it('Editor und Dokument lesen dieselbe Editionen-Quelle (formatEditionen)', function () {
+it('Editor und Dokument lesen dieselbe Editionen-Quelle (FormatKapitelService)', function () {
     $svc = app(FoodbookService::class);
-    $ansicht = $svc->formatKapitelAnsicht($this->formatKapitel->fresh());
+    $ansicht = app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->ansicht($this->formatKapitel->fresh());
     $dok = collect($svc->dokumentDaten($this->rootTeam, $this->buch->fresh())['kapitel'])->firstWhere('ist_format', true);
 
     expect(collect($ansicht['editionen'])->pluck('name')->all())->toBe(collect($dok['editionen'])->pluck('name')->all())

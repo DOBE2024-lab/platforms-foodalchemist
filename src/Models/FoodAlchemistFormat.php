@@ -104,7 +104,7 @@ class FoodAlchemistFormat extends Model
 
     /**
      * Anzahl Editionen = concept-Slots mit vorhandenem Concept — dieselbe Regel wie
-     * FoodbookService::formatEditionen (Foodbook-Format-Kapitel, „fertig" ab einer Edition).
+     * FormatKapitelService::editionen (Foodbook-Format-Kapitel, „fertig" ab einer Edition).
      */
     public function editionenAnzahl(): int
     {

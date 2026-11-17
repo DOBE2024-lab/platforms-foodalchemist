@@ -1607,7 +1607,7 @@ class FoodbookService
 
                         continue;
                     }
-                    $editionen = $this->formatEditionen($format);
+                    $editionen = app(FormatKapitelService::class)->editionen($format);
                     $hero = $format->images->firstWhere('is_hero', true);
                     $rows[] = [
                         'title' => $k->consumer_title ?: ($format->consumer_name ?: $format->name),
@@ -1839,79 +1839,6 @@ class FoodbookService
         ];
     }
 
-    /**
-     * B (2026-08-31): Editionen eines LEBENDEN Format-Kapitels — format_slots (type=concept) → Concept
-     * mit Wording-Kette; header/text/spacer = Struktur-Editionen. EINE Quelle für Dokument/PDF
-     * ({@see dokumentDaten}) und die Editor-Anzeige ({@see formatKapitelAnsicht}).
-     *
-     * @return list<array{typ:string, name:?string, claim:?string, text:?string, preis_pp:?float, einzelpreise:bool, gerichte:array}>
-     */
-    public function formatEditionen(\Platform\FoodAlchemist\Models\FoodAlchemistFormat $format): array
-    {
-        $wording = app(WordingResolver::class);
-        $editionen = [];
-        foreach ($format->slots as $fs) {
-            if ($fs->type === 'concept' && $fs->concept !== null) {
-                $ed = $fs->concept;
-                $editionen[] = [
-                    'typ' => 'concept',
-                    'name' => $ed->consumer_name ?: $ed->name,
-                    'claim' => $ed->claim ?: null,
-                    'text' => trim((string) $ed->description) ?: null,
-                    'preis_pp' => $ed->price_per_person_cache !== null ? (float) $ed->price_per_person_cache : null,
-                    'einzelpreise' => $ed->istEinzelpreis(),
-                    'gerichte' => $wording->gerichtZeilen($ed),
-                ];
-            } elseif (in_array($fs->type, ['header', 'text', 'spacer'], true)) {
-                $editionen[] = ['typ' => $fs->type, 'name' => $fs->title, 'text' => $fs->text_content,
-                    'claim' => null, 'preis_pp' => null, 'einzelpreise' => false, 'gerichte' => []];
-            }
-        }
-
-        return $editionen;
-    }
-
-    /**
-     * Editor-Anzeige eines LEBENDEN Format-Kapitels (format_id gesetzt): die Editionen kommen live aus
-     * dem Format ({@see formatEditionen}, dieselbe Quelle wie Dokument/PDF), Pflege nur im Format.
-     * Null für normale Kapitel. Format gelöscht → `fehlt` = true, keine Editionen (wie dokumentDaten).
-     *
-     * @return array{format_id:int, name:?string, fehlt:bool, preis_range:array{min:?float,max:?float}, editionen:list<array>, editionen_n:int, speisen_n:int}|null
-     */
-    public function formatKapitelAnsicht(FoodAlchemistFoodbookKapitel $kapitel): ?array
-    {
-        if ($kapitel->format_id === null) {
-            return null;
-        }
-        $kapitel->loadMissing([
-            'format.slots' => fn ($q) => $q->orderBy('position'),
-            'format.slots.concept.slots.dish:id,name,sales_wording_standard',
-            'format.slots.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-            'format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache',
-            'format.slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
-            'format.slots.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
-        ]);
-        $format = $kapitel->format;
-        if ($format === null) {
-            return ['format_id' => (int) $kapitel->format_id, 'name' => null, 'fehlt' => true,
-                'preis_range' => ['min' => null, 'max' => null], 'editionen' => [], 'editionen_n' => 0, 'speisen_n' => 0];
-        }
-        $editionen = $this->formatEditionen($format);
-        $konzepte = array_values(array_filter($editionen, fn ($e) => $e['typ'] === 'concept'));
-
-        return [
-            'format_id' => (int) $format->id,
-            'name' => $format->consumer_name ?: $format->name,
-            'fehlt' => false,
-            'preis_range' => $format->priceRange(),
-            'editionen' => $editionen,
-            'editionen_n' => count($konzepte),
-            // Speisen wie die Kopf-Kennzahl: Gericht-Zeilen ohne Paket-/Zwischenüberschriften.
-            'speisen_n' => (int) collect($konzepte)->sum(fn ($e) => collect($e['gerichte'])
-                ->reject(fn ($g) => in_array($g['type'] ?? '', ['paket', 'header'], true))->count()),
-        ];
-    }
-
     public function vorschauSnapshot(FoodAlchemistFoodbook $fb): ?array
     {
         $snapshot = $fb->preview_snapshot_json;
@@ -2041,7 +1968,7 @@ class FoodbookService
      * löst die Einmal-Expansion C vom 2026-08-27 ab). Angelegt wird EINE Sektion (is_struktur) mit
      * `format_id` + Kundentitel/Hinführung aus dem Format, ohne Unterkapitel und ohne Blöcke. Die
      * Editionen (format_slots → Concept) und die Struktur-Slots rendern LIVE aus dem Format
-     * ({@see dokumentDaten}, Zweig `ist_format`; Editor: {@see formatKapitelAnsicht}) — Editionen rein/raus
+     * ({@see dokumentDaten}, Zweig `ist_format`; Editor: {@see FormatKapitelService::ansicht}) — Editionen rein/raus
      * im Format wirken sofort in allen Büchern. Eingefroren wird erst beim Versand (snapshot_json).
      * Kunden-IP-Guard + Status-Guard (versendete/archivierte Bücher sind zu).
      */

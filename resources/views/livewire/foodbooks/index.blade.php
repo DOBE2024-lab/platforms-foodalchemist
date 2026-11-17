@@ -776,7 +776,7 @@
                         : ($kapitel->blocks->count() === 1 ? '1 Eintrag' : $kapitel->blocks->count() . ' Einträge')">
                     @if($formatKapitel !== null)
                     {{-- Lebendes Format-Kapitel (Entscheid B 2026-08-31): keine eigenen Blöcke — die Editionen kommen
-                         live aus dem Format (FoodbookService::formatKapitelAnsicht = dieselbe Quelle wie Dokument/PDF).
+                         live aus dem Format (FormatKapitelService::ansicht = dieselbe Quelle wie Dokument/PDF).
                          Nur lesen; Editionen rein/raus und Preise im Format pflegen. --}}
                     <div class="flex flex-col gap-3" data-fb-format-kapitel>
                         <div class="flex flex-wrap items-start justify-between gap-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-accent-soft)] px-3 py-2">

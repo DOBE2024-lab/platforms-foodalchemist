@@ -32,6 +32,7 @@ beforeEach(function () {
     $this->kern = fn (int $gpId, string $slug, string $source = 'inspire_katalog') => DB::table('foodalchemist_gp_anchor_mappings')->insert(['uuid' => (string) Str::uuid7(),
         'team_id' => $this->rootTeam->id, 'gp_id' => $gpId, 'anchor_id' => $this->anker[$slug], 'role' => 'kern', 'source' => $source, 'created_at' => now(), 'updated_at' => now()]);
     $this->svc = app(GpAnkerVorauswahl::class);
+    GpAnkerVorauswahl::flush();                                          // Wortindex je Prozess: ein früherer Test im selben Worker darf ihn nicht mitbringen
 });
 
 it('Produktkopf: Name vor dem Doppelpunkt, ohne Marke und Klammern', function () {

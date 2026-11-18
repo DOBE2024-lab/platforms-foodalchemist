@@ -1071,13 +1071,23 @@ class BulkEnrichService
                 'grund' => $v === null ? 'KI lieferte kein vollständiges Geschmacksprofil' : null];
         }
         $basis = ['name' => $gp->name, 'condition' => $gp->condition, 'commodity_group' => $gp->commodity_group?->name];
-        $vokabular = $feld === 'anker' ? app(\Platform\FoodAlchemist\Support\GpAnkerVorauswahl::class)->fuer($gp, $team) : [];
+        $vorauswahl = app(\Platform\FoodAlchemist\Support\GpAnkerVorauswahl::class);
+        $vokabular = $feld === 'anker' ? $vorauswahl->fuer($gp, $team) : [];
         $ankerZusatz = [];
+        // io 18.11.2026 (GP 13361 „Curry: Brokkoli", ai_call_log 18533 → neutral): die KI sah nur den Namen, nicht, was im Artikel steckt.
+        // Dominique: „sie müsste die Stammdaten des Artikels bekommen". Kompakter Block des effektiven Leitartikels (Team-Sicht), für kern UND
+        // neben. Ohne Leitartikel fehlt er — der Prompt (und der Fingerabdruck des externen KI-Auftrags) bleibt dann byte-gleich.
+        $artikel = $feld === 'anker' ? $vorauswahl->artikelStammdaten($gp, $team) : [];
+        if ($artikel !== []) {
+            $ankerZusatz = ['artikel' => $artikel,
+                'artikel_hinweis' => 'Stammdaten des Leitartikels (Lieferant). zutaten = Hauptzutaten laut Lieferant, in Reihenfolge des Anteils '
+                    .'(ohne Wasser, Salz, Oel, Gewuerze, Zusatzstoffe); allergene = enthalten.'];
+        }
         if ($feld === 'anker' && $ankerRolle === 'neben') {
             // Nebenanker: vorhandene Anker raus aus dem Vokabular, als Kontext dazu. Nur hier — der Bulk-Lauf fragt unverändert (Fingerabdruck).
             $vorhanden = app(PairingService::class)->gpAnkerAlle($gp->id);
             $vokabular = array_values(array_diff($vokabular, $vorhanden->pluck('slug')->all()));
-            $ankerZusatz = [
+            $ankerZusatz += [
                 'gesucht' => 'Nebenanker: Die Kern-Anker sind vergeben (vorhandene_anker). Waehle den wichtigsten WEITEREN Aroma-Traeger '
                     .'des Produkts (praegende Zutat oder Wuerzung, z. B. das Gemuese im Curry) aus dem Vokabular, nie einen vorhandenen. '
                     .'Traegt das Produkt keinen weiteren: neutral.',

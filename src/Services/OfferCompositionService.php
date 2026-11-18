@@ -698,7 +698,7 @@ class OfferCompositionService
      * Vollständige Kundensicht-Komposition. `$intern=true` liefert zusätzlich EK/Marge (Editor/Vertrieb),
      * NIE fürs Kundendokument. Gäste-Zeilen kommen aus WordingResolver::gerichtZeilen (geteilte Kette).
      */
-    public function komposition(Team $team, FoodAlchemistAngebot $angebot, ?FoodAlchemistOutlet $outlet = null, bool $intern = false): array
+    public function komposition(Team $team, FoodAlchemistAngebot $angebot, ?FoodAlchemistOutlet $outlet = null, bool $intern = false, bool $mitHandbuchMengen = false): array
     {
         $wording = app(WordingResolver::class);
         $alle = FoodAlchemistOfferChapter::visibleToTeam($team)->where('offer_id', $angebot->id)
@@ -726,7 +726,7 @@ class OfferCompositionService
         $summeAufwand = 0.0;
         $summeEkAufwand = 0.0;
 
-        $walk = function ($parentId, int $depth) use (&$walk, $byParent, &$kapitel, &$summeVk, &$summeEk, &$summePauschal, &$summeGesamtVk, &$summeGesamtEk, &$summeAufwand, &$summeEkAufwand, $team, $outlet, $intern, $wording, $angebotPax) {
+        $walk = function ($parentId, int $depth) use (&$walk, $byParent, &$kapitel, &$summeVk, &$summeEk, &$summePauschal, &$summeGesamtVk, &$summeGesamtEk, &$summeAufwand, &$summeEkAufwand, $team, $outlet, $intern, $wording, $angebotPax, $mitHandbuchMengen) {
             foreach ($byParent[$parentId] ?? [] as $k) {
                 // Der Walk besucht jedes Kapitel selbst. Kindkapitel hier nicht erneut
                 // rekursiv einrechnen: das vermeidet N+1-Queries und doppelte Summen.
@@ -773,7 +773,7 @@ class OfferCompositionService
                             $edZeile = ['typ' => 'concept', 'name' => $ed->consumer_name ?: $ed->name, 'claim' => $ed->claim ?: null,
                                 'text' => trim((string) $ed->description) ?: null,
                                 'preis_pp' => $ed->price_per_person_cache !== null ? (float) $ed->price_per_person_cache : null,
-                                'einzelpreise' => $ed->istEinzelpreis(), 'gerichte' => $wording->gerichtZeilen($ed, null, true)];
+                                'einzelpreise' => $ed->istEinzelpreis(), 'gerichte' => $wording->gerichtZeilen($ed, null, true, $mitHandbuchMengen)];
                             if ($intern) {
                                 $edZeile['ek_pp'] = $ed->ek_per_person_cache !== null ? (float) $ed->ek_per_person_cache : null;
                             }
@@ -804,7 +804,7 @@ class OfferCompositionService
                             'aufwand_betrag' => (float) ($bp['aufwand'] ?? 0),
                             'verbrauch' => $b->istVerbrauch(), 'deckel' => $b->deckel(),   // Spec 94c 8c: „nach Verbrauch“, höchstens Deckel
                             'einzelpreise' => $b->type === 'concept_ref' && $b->concept !== null && $b->concept->istEinzelpreis(),
-                            'gerichte' => ($b->type === 'concept_ref' && $b->concept !== null) ? $wording->gerichtZeilen($b->concept, null, true) : [],   // inkl. Text-Blöcke des Konzepts
+                            'gerichte' => ($b->type === 'concept_ref' && $b->concept !== null) ? $wording->gerichtZeilen($b->concept, null, true, $mitHandbuchMengen) : [],   // inkl. Text-Blöcke des Konzepts
                             'height' => $b->height,
                         ];
                         if ($intern) {

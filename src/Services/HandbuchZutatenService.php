@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Support\Hochrechnung;
  * Lieferanten) und gibt NUR eine Allowlist weiter: Name, Menge, Einheit, Basisrezept-Verweis.
  * EK, Lieferant, Marge, Nährwert-Rohdaten und KI-Lineage bleiben draußen.
  *
- * Mengen am Gericht: je EINE Portion (Hochrechnung „1 × Standard-Darreichung"); fehlt Portionsgewicht
+ * Mengen am Gericht: je EINE Portion (gewählte Darreichung, sonst Standard); fehlt Portionsgewicht
  * oder Ausbeute, steht die Ansatz-Menge mit Hinweis (`basis = ansatz`) — nichts wird geschätzt.
  * Basisrezepte stehen einmal je Snapshot in `basisrezepte` (Schlüssel `b<id>`) in ihrem eigenen Ansatz.
  */
@@ -40,17 +40,18 @@ class HandbuchZutatenService
     /**
      * @return array{basis:string, ansatz_kg:?float, zeilen:list<array{name:string, menge:?float, einheit:?string, sub:?string}>}
      */
-    public function fuerGericht(Team $team, FoodAlchemistRecipe $recipe): array
+    public function fuerGericht(Team $team, FoodAlchemistRecipe $recipe, ?\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung $dar = null): array
     {
         $leer = ['basis' => 'ansatz', 'ansatz_kg' => null, 'zeilen' => []];
         try {
             $data = $this->report->rezeptDaten($team, (int) $recipe->id, $this->optionen(['ziel_menge' => 1]));
             $knoten = $data['recipe'];
-            $portion = (bool) ($data['hochrechnung']['aktiv'] ?? false);
+            $portion = (bool) ($data['hochrechnung']['aktiv'] ?? false)
+                || ($dar !== null && (float) $dar->quantity_per_unit_g > 0 && Hochrechnung::ansatzKg($recipe) !== null);
             if ($portion) {
                 $recipe->load(['ingredients.unit', 'ingredients.gp', 'ingredients.referencedRecipe']);
             }
-            $dar = $recipe->presentations()->orderByDesc('is_standard')->orderBy('id')->first();
+            $dar ??= $recipe->presentations()->orderByDesc('is_standard')->orderBy('id')->first();
             $skalierung = $portion && $dar !== null
                 ? app(DarreichungService::class)->produktionsAnteil($recipe, $dar, 1, $team) : null;
 

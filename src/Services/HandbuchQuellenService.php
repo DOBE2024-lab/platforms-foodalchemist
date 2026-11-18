@@ -30,6 +30,8 @@ class HandbuchQuellenService
     /** @var array<int,FoodAlchemistRecipe> */
     private array $rezepte = [];
 
+    private array $vorkommen = [];
+
     private const WOCHENTAGE = [1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do', 5 => 'Fr', 6 => 'Sa', 7 => 'So'];
 
     public function __construct(private ConcepterAggregateService $agg)
@@ -41,6 +43,8 @@ class HandbuchQuellenService
     {
         $this->usedAlg = [];
         $this->usedZus = [];
+        $this->rezepte = [];
+        $this->vorkommen = [];
 
         return match ($type) {
             HandbuchService::TYPE_FOODBOOK => $this->foodbook($team, $entity),
@@ -53,7 +57,7 @@ class HandbuchQuellenService
 
     private function foodbook(Team $team, FoodAlchemistFoodbook $fb): array
     {
-        $dok = app(FoodbookService::class)->dokumentDaten($team, $fb, false, [], false);
+        $dok = app(FoodbookService::class)->dokumentDaten($team, $fb, false, [], false, null, true);
         $sections = [];
         foreach ($dok['kapitel'] ?? [] as $k) {
             $items = [];
@@ -61,15 +65,10 @@ class HandbuchQuellenService
             // Format-Kapitel (live, Entscheid B 31.08.): Gerichte stehen in den Editionen, nicht in Blöcken — wie beim Angebot lesen (18.11.2026)
             $istFormat = (bool) ($k['ist_format'] ?? false);
             foreach (($istFormat ? ($k['editionen'] ?? []) : ($k['bloecke'] ?? [])) as $b) {
-                $konzeptItems = [];
-                foreach ($b['gerichte'] ?? [] as $g) {
-                    if (! empty($g['recipe_id'])) {
-                        $codes = isset($g['codes']) ? array_values((array) $g['codes']) : $this->codesFuer((int) $g['recipe_id']);
-                        $items[] = $konzeptItems[] = $this->item((int) $g['recipe_id'], (string) ($g['text'] ?? ''), (int) ($g['einrueckung'] ?? 0), $codes);
-                    }
-                }
-                if ($konzeptItems !== []) {
-                    $konzepte[] = ['title' => (string) ($b['name'] ?? $b['label'] ?? 'Konzept'), 'items' => $konzeptItems];
+                $gruppe = $this->konzeptGruppe($b['gerichte'] ?? [], (string) ($b['name'] ?? $b['label'] ?? 'Konzept'));
+                if ($gruppe['items'] !== []) {
+                    array_push($items, ...$gruppe['items']);
+                    $konzepte[] = $gruppe;
                 }
             }
             $sections[] = ['title' => (string) ($k['title'] ?? ''), 'text' => $k['text'] ?? null, 'items' => $items, 'groups' => $konzepte];
@@ -156,21 +155,17 @@ class HandbuchQuellenService
 
     private function angebot(Team $team, FoodAlchemistAngebot $angebot): array
     {
-        $komp = app(OfferCompositionService::class)->komposition($team, $angebot, null, false);
+        $komp = app(OfferCompositionService::class)->komposition($team, $angebot, null, false, true);
         $sections = [];
         foreach ($komp['kapitel'] as $k) {
             $gruppen = $k['ist_format'] ? ($k['editionen'] ?? []) : ($k['bloecke'] ?? []);
             $items = [];
             $konzepte = [];
             foreach ($gruppen as $grp) {
-                $konzeptItems = [];
-                foreach ($grp['gerichte'] ?? [] as $g) {
-                    if (! empty($g['recipe_id'])) {
-                        $items[] = $konzeptItems[] = $this->item((int) $g['recipe_id'], (string) ($g['text'] ?? ''), (int) ($g['einrueckung'] ?? 0), $this->codesFuer((int) $g['recipe_id']));
-                    }
-                }
-                if ($konzeptItems !== []) {
-                    $konzepte[] = ['title' => (string) ($grp['name'] ?? $grp['label'] ?? 'Konzept'), 'items' => $konzeptItems];
+                $gruppe = $this->konzeptGruppe($grp['gerichte'] ?? [], (string) ($grp['name'] ?? $grp['label'] ?? 'Konzept'));
+                if ($gruppe['items'] !== []) {
+                    array_push($items, ...$gruppe['items']);
+                    $konzepte[] = $gruppe;
                 }
             }
             $sections[] = ['title' => (string) ($k['title'] ?? ''), 'text' => $k['text'] ?? null, 'items' => $items, 'groups' => $konzepte];
@@ -188,7 +183,35 @@ class HandbuchQuellenService
     /** @param list<string> $codes */
     private function item(int $recipeId, string $label, int $indent, array $codes): array
     {
-        return ['key' => 'r' . $recipeId, 'recipe_id' => $recipeId, 'label' => $label, 'indent' => $indent, 'codes' => $codes];
+        $n = $this->vorkommen[$recipeId] = ($this->vorkommen[$recipeId] ?? 0) + 1;
+        return ['key' => 'r' . $recipeId . ($n > 1 ? '-p'.$n : ''), 'recipe_id' => $recipeId, 'label' => $label, 'indent' => $indent, 'codes' => $codes];
+    }
+
+    /** Paketzeilen bleiben Knoten; flache Gerichtliste zusätzlich für den Kartenaufbau. */
+    private function konzeptGruppe(array $zeilen, string $titel): array
+    {
+        $items = []; $i = 0;
+        $walk = function (int $elternTiefe) use (&$walk, &$items, &$i, $zeilen): array {
+            $knoten = [];
+            while ($i < count($zeilen)) {
+                $g = $zeilen[$i]; $tiefe = (int) ($g['einrueckung'] ?? 0);
+                if ($tiefe <= $elternTiefe) { break; }
+                $i++;
+                if (($g['type'] ?? '') === 'paket') {
+                    $kinder = $walk($tiefe);
+                    if ($kinder !== []) { $knoten[] = ['kind' => 'paket', 'label' => (string) $g['text'], 'children' => $kinder]; }
+                } elseif (!empty($g['recipe_id'])) {
+                    $it = $this->item((int) $g['recipe_id'], (string) ($g['text'] ?? ''), $tiefe, $this->codesFuer((int) $g['recipe_id'])) + ($g['menge'] ?? []);
+                    $items[] = $it;
+                    $knoten[] = ['kind' => 'gericht', 'key' => $it['key']];
+                } elseif (($g['type'] ?? '') === 'header') {
+                    $knoten[] = ['kind' => 'header', 'label' => (string) $g['text']];
+                }
+            }
+            return $knoten;
+        };
+        $nodes = $walk(-1);
+        return ['title' => $titel, 'items' => $items, 'nodes' => $nodes];
     }
 
     /** @return list<string> */

@@ -74,6 +74,8 @@ Der ergänzte Ergebnisbild-Fall ist ebenfalls grün (1 Test, 6 Assertions).
 
 ## Ergänzende Prüfung vom 18.11.2026: Paketbaum und Standardmengen
 
+Die hier zunächst offene Umsetzung wird durch die Nachbesserung vom 19.11. unten ergänzt.
+
 Prüfauftrag von Dominique, noch **nicht als Produktfunktion umgesetzt**:
 Format → Konzept → Paket (auch verschachtelt) → Gericht → Basisrezept → Zutaten.
 Alle Zweige zunächst geschlossen. Bestätigt: je Gericht Menge pro Gast und
@@ -108,3 +110,46 @@ für diese Dokumentations-/Fixture-Korrekturen behauptet.
 
 Späterer Deploy laut Dominique (18.11.2026) über die Plattform io und deren
 `update.sh`; konkreten Hostpfad/Parameter vor Ausführung prüfen.
+
+## Nachbesserung vom 19.11.2026: Paketbaum und zusätzlicher Mengenrechner
+
+Auftrag nach Live-Abnahme: die tatsächlichen Länderpakete zwischen Konzept und
+Gerichten wiedergeben. Mengen sind **Teile je Gast**, keine Prozentverteilung:
+im aktuellen Bestand 0,33 Vorspeise, 1 Hauptgang, 0,33 Dessert. Nicht auf eine
+Summe von 1 normieren. Angezeigt werden die gespeicherte Menge mit Einheit und,
+nach Eingabe einer Gästezahl, der Gesamtbedarf. Keine Gästezahl erraten.
+
+Im Branch `fix/handbuch-paketbaum-rechner` umgesetzt (noch nicht deployed):
+
+- Paketknoten aus der vorhandenen Dokumentstruktur rekursiv erhalten, zunächst
+  geschlossen. Auch Header wie Vorspeise/Hauptgang/Dessert bleiben sichtbar.
+- Optionale Mengen-Allowlist der Dokumentdienste ausschließlich fürs Handbuch;
+  normale Foodbook-/Angebots-/Präsentations-Aufrufer behalten ihre Ausgabeform.
+  `HandbuchPositionsMenge` verwendet dieselbe Portionsumrechnung und dieselbe
+  Darreichungsauflösung wie die Konzeptkalkulation. Fehlende Mengen bleiben offen.
+- Pro Vorkommen eine eigene Gerichtskarte, einschließlich wirksamer Darreichung.
+  Die Gästezahl liefert den Startbedarf. Manuell angepasste Gerichtsportionen
+  bleiben unabhängig von anderen Positionen und späteren Gästezahländerungen.
+- Im vollständigen Basisrezept bleiben Portionen erhalten. Zusätzlich
+  „Hochrechnen auf … kg/g“ (bei Stückausbeute: Stück). Beide Eingaben steuern
+  denselben Skalierungsfaktor und werden synchron angezeigt; aus einer Zielmenge
+  können daher auch Bruchteile von Gerichtsportionen entstehen. Der Gerichts-
+  Portionsrechner wird dadurch nicht verändert. Originalansatz und Rückweg bleiben.
+- Zielmengenänderungen sind nur eine Lese-/Rechenansicht. Kein Speichern von
+  Rezeptmengen, keine Änderungen an Preisen oder Paketverteilungen. Snapshot-
+  Neuveröffentlichung weiterhin ausdrücklich; alte Snapshots bleiben lesbar.
+
+Nachweise dieses Nachzugs: 211 Handbuch-/Dokument-/Policy-/UI-Regressionstests
+mit 951 Assertions grün; anschließend 13 gezielte Bedarfs-/Darstellungsfälle
+mit 56 Assertions einschließlich Fremdteam und Zyklus grün. Finale View-Abnahme:
+2 Tests, 15 Assertions. Node-Formattertests, CSS-/JS-Build und Composer-Validierung
+grün. Vollständiger Modullauf vor erneutem Ausrollen separat nachweisen.
+
+Die Browser-Abnahme ist unter `tests/Browser/handbuch-mengen.cjs` abgelegt.
+Zuerst `HandbuchDarstellungTest` mit `FA_HANDBUCH_BAUM_PREVIEW_PATH` als absolutem
+Fixture-Pfad auf SQLite im Arbeitsspeicher ausführen. Derselbe Pfad geht an den
+Browserlauf; `FA_PLAYWRIGHT_MODULE` und optional `FA_CHROME_EXECUTABLE` verweisen
+auf vorhandene Prüfwerkzeuge. Keine neue Produktabhängigkeit. Bei 375/390/768/1280 px
+geprüft: geschlossene Pakete, 0,33 × 100 = 33, Bedarf als Startwert, unabhängige
+Gerichtsportionen, beide synchronen Rechner, kg/g-Wechsel, Kommaeingabe, ungültige
+Zielmenge, Originalansatz, Rückweg und freie Zielmenge ohne Gerichtskontext.

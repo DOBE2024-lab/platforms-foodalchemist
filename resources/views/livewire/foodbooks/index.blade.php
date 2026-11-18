@@ -803,19 +803,29 @@
                                     $edPakete = collect($ed['gerichte'])->where('type', 'paket')->pluck('text')->filter()->values();
                                     $edSpeisen = collect($ed['gerichte'])->reject(fn ($g) => in_array($g['type'] ?? '', ['paket', 'header'], true))->count();
                                 @endphp
-                                <div class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2" data-fb-format-edition>
-                                    <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                                        <span class="min-w-0 break-words text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $ed['name'] }}</span>
+                                {{-- Aufklappbar (Alpine, kein Roundtrip): dieselbe Lese-Ansicht wie der concept_ref-Block,
+                                     ohne Stift/Aktionen. Zu bei mehreren Editionen (Überblick), offen bei genau einer. --}}
+                                <div class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2" data-fb-format-edition
+                                     x-data="{ auf: {{ $formatKapitel['editionen_n'] === 1 ? 'true' : 'false' }} }">
+                                    <button type="button" class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-left" x-on:click="auf = ! auf" x-bind:aria-expanded="auf" data-fb-format-edition-toggle>
+                                        <span class="flex min-w-0 items-baseline gap-1.5 break-words text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">
+                                            <span class="inline-flex shrink-0 self-center text-[var(--fa-ink-3)] transition-transform" x-bind:class="{ 'rotate-90': auf }">@svg('heroicon-m-chevron-right', 'w-4 h-4')</span>{{ $ed['name'] }}
+                                        </span>
                                         <span class="text-[length:var(--fa-text-md)] tabular-nums text-[var(--fa-ink-2)]">
                                             @if($ed['einzelpreise'])Preise je Gericht
                                             @elseif($ed['preis_pp'] !== null){{ $euro($ed['preis_pp']) }} pro Gast
                                             @else<span class="text-[var(--fa-warn)]">Preis fehlt</span>@endif
                                         </span>
-                                    </div>
+                                    </button>
                                     @if($ed['claim'])<p class="text-[length:var(--fa-text-sm)] italic text-[var(--fa-ink-3)]">{{ $ed['claim'] }}</p>@endif
                                     <p class="mt-1 {{ $hinweis }}">
                                         @if($edPakete->isNotEmpty())Pakete: {{ $edPakete->implode(', ') }} · @endif{{ $edSpeisen }} {{ $edSpeisen === 1 ? 'Speise' : 'Speisen' }}
                                     </p>
+                                    @if(! empty($ed['gerichte']))
+                                        <div class="mt-2 flex flex-col gap-1 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-ground)] px-3 py-2" x-show="auf" x-cloak data-fb-format-edition-inhalt>
+                                            @include('foodalchemist::livewire.foodbooks.partials.concept-zeilen', ['zeilen' => $ed['gerichte'], 'blockId' => null])
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
                         @empty
@@ -931,40 +941,7 @@
                                      C1: Gericht-Zeilen mit slot_id sind inline editierbar (foodbook-lokaler Gästetext). --}}
                                 @if($block->type === 'concept_ref' && ! empty($blockMenus[$block->id]))
                                     <div class="mt-2 ml-6 flex flex-col gap-1 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-ground)] px-3 py-2" data-fb-block-vorschau>
-                                        @foreach($blockMenus[$block->id] as $g)
-                                            @php
-                                                // editierbar = jede Gericht-Zeile mit slot_id (direkt ODER eingebettetes Paket).
-                                                $istEditierbar = isset($g['slot_id']);
-                                                $slotKey = $istEditierbar ? $block->id . ':' . $g['slot_id'] : null;
-                                            @endphp
-                                            @if(($g['type'] ?? '') === 'header')
-                                                <p class="mt-1.5 first:mt-0 text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-ink-2)]" style="margin-left:{{ ($g['einrueckung'] ?? 0) * 12 }}px">{{ $g['text'] }}</p>
-                                            @elseif(($g['type'] ?? '') === 'paket')
-                                                <div class="mt-1 flex items-center gap-1.5" style="margin-left:{{ ($g['einrueckung'] ?? 0) * 12 }}px">
-                                                    <x-fa::badge tone="info" class="shrink-0">Paket</x-fa::badge>
-                                                    <span class="min-w-0 break-words text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $g['text'] }}</span>
-                                                    @if(($g['preis'] ?? null) !== null)<span class="ml-auto shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] tabular-nums">{{ $euro($g['preis']) }} pro Person</span>@endif
-                                                </div>
-                                            @elseif($slotKey !== null && $editSlotKey === $slotKey)
-                                                <div class="flex items-center gap-1" style="margin-left:{{ 8 + ($g['einrueckung'] ?? 0) * 12 }}px" data-fb-slot-editor>
-                                                    <x-fa::input size="sm" wire:model="editSlotWording" wire:keydown.enter="slotWordingSpeichern" wire:keydown.escape="slotWordingAbbrechen"
-                                                           class="flex-1 min-w-0" placeholder="Name für Gäste, leer lassen für den Standard" aria-label="Name für Gäste" data-fb-slot-input />
-                                                    <x-fa::icon-button icon="heroicon-m-check" label="Name speichern" size="sm" wire:click="slotWordingSpeichern" />
-                                                    <x-fa::icon-button icon="heroicon-m-x-mark" label="Abbrechen" size="sm" wire:click="slotWordingAbbrechen" />
-                                                </div>
-                                            @else
-                                                <div class="group/dish flex items-center gap-1.5 text-[length:var(--fa-text-md)] {{ ($g['source'] ?? null) === 'name' ? 'italic text-[var(--fa-warn)]' : 'text-[var(--fa-ink-2)]' }}" style="margin-left:{{ 8 + ($g['einrueckung'] ?? 0) * 12 }}px">
-                                                    <span class="min-w-0 break-words">{{ $g['text'] }}</span>
-                                                    @if(($g['source'] ?? null) === 'name')<span class="shrink-0 not-italic text-[length:var(--fa-text-sm)]">Gästetext fehlt</span>@endif
-                                                    {{-- Einzelpreis-Concept: VK je direkter Gericht-Zeile auch in der Editor-Vorschau. --}}
-                                                    @if(($g['preis'] ?? null) !== null)<span class="ml-auto shrink-0 not-italic text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] tabular-nums">{{ $euro($g['preis']) }} pro Person</span>@endif
-                                                    @if($istEditierbar)
-                                                        <button type="button" wire:click="slotWordingBearbeiten({{ $block->id }}, {{ $g['slot_id'] }}, @js(($g['source'] ?? null) === 'name' ? '' : $g['text']))"
-                                                                class="shrink-0 inline-flex text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)] opacity-0 group-hover/dish:opacity-100 focus:opacity-100 transition-opacity" title="Namen für Gäste bearbeiten" aria-label="Namen für Gäste bearbeiten" data-fb-slot-edit>@svg('heroicon-m-pencil', 'w-3.5 h-3.5')</button>
-                                                    @endif
-                                                </div>
-                                            @endif
-                                        @endforeach
+                                        @include('foodalchemist::livewire.foodbooks.partials.concept-zeilen', ['zeilen' => $blockMenus[$block->id], 'blockId' => $block->id])
                                     </div>
                                 @endif
 

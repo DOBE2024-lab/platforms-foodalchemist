@@ -212,3 +212,29 @@ it('Ebene 2: die Kostenseite folgt dem Betrieb — EK + Zeit bleiben, Rate/Marge
         // Höherer HK2 UND höhere Marge ⇒ Target klar höher.
         ->and($mit['target_price'])->toBeGreaterThan($ohne['target_price']);
 });
+
+it('rechnet feste Vorbereitung bei doppeltem Gericht einmal je Darreichung für die gemeinsame Produktion', function () {
+    $svc = app(DarreichungService::class);
+    $dar = $this->recipe->standardPresentation()->firstOrFail();
+    $zeiten = [
+        ['use_case' => 'abfuellen', 'basis' => 'einheit', 'ort' => 'kueche', 'wert' => 20],
+        ['use_case' => 'pauschale', 'basis' => 'auftragszeile', 'ort' => 'kueche', 'wert' => 5],
+    ];
+    $svc->aktualisieren($this->rootTeam, $dar->id, ['arbeitszeiten' => $zeiten]);
+    $concepts = app(ConceptService::class);
+    $slot = $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Zusatz']);
+    $slot = $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->recipe->id]);
+    $slot->update(['quantity' => .5, 'unit_vocab_id' => FoodAlchemistVocabEinheit::where('slug', 'portion')->value('id')]);
+    $concepts->recomputeCache($this->concept->refresh());
+    $r = app(OrderCostingService::class)->costConcept($this->rootTeam, $this->concept->fresh(), 100);
+    // 100 + 50 Portionen: 150 × 20 s + einmal 5 min.
+    expect($r['active_person_minutes'])->toBe(55.0);
+
+    $zweite = $svc->anlegen($this->rootTeam, $this->recipe->id, $dar->serving_form_id);
+    $svc->aktualisieren($this->rootTeam, $zweite->id, ['arbeitszeiten' => $zeiten]);
+    $slot->update(['presentation_id' => $zweite->id]);
+    $concepts->recomputeCache($this->concept->refresh());
+    $r = app(OrderCostingService::class)->costConcept($this->rootTeam, $this->concept->fresh(), 100);
+    // Andere Darreichung: eigene Vorbereitung, trotz gleicher Servierform.
+    expect($r['active_person_minutes'])->toBe(60.0);
+});

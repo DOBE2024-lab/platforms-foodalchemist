@@ -92,13 +92,14 @@ Zeitliste. Ihre vollständige Umstellung ist ein Folgepaket.
 3. Vor-Ort-Arbeitszeit erzeugt eigenen Servicelohn in der Auftragskalkulation,
    mit dem allgemeinen Team-/Betriebsstundensatz.
 
-## Offene fachliche Rückfrage
+## Feste Vorbereitung bei mehrfachen Positionen
 
-Die bisherige Pauschale zählt nach dem Zusammenfassen gleicher Gerichte und
-Darreichungen einmal. Die Oberfläche benennt dies ausdrücklich als „Auftrag je
-Darreichung“. Rückfrage am 18.11.2026: Soll sie stattdessen je ursprünglicher
-Auftragszeile zählen? Bis zur Entscheidung bleibt die vorhandene Rechnung bestehen.
-Der technische Basis-Schlüssel `auftragszeile` bleibt kompatibel.
+Entscheid Dominique, 18.11.2026: Gleiche Gerichte in derselben Darreichung werden
+für die gemeinsame Produktion zusammengefasst. Feste Vorbereitung zählt einmal,
+mengenabhängige Tätigkeiten zählen für alle bestellten Portionen. Unterschiedliche
+Darreichungen erhalten jeweils ihre eigene Vorbereitung. Die Oberfläche benennt
+dies als „Auftrag je Darreichung“; der technische Basis-Schlüssel `auftragszeile`
+bleibt kompatibel.
 
 ## Abnahme
 
@@ -117,6 +118,13 @@ Der technische Basis-Schlüssel `auftragszeile` bleibt kompatibel.
   dokumentieren; eine gerenderte View allein ist keine Interaktionsabnahme.
 
 ### Nachweise am 18.11.2026
+
+- Gegen main `7f42e846`: gezielte Abnahmesuite mit 283 Tests und 2.168
+  Assertions grün. Nach der Korrektur beim Abschalten der Vererbung: alle
+  19 Mengen-/Zeitfälle mit 92 Assertions grün. Die bestätigte gemeinsame
+  Vorbereitung ist zusätzlich mit einem Kalkulationstest (2 Assertions) belegt.
+- Vollständige Modulsuite auf dem korrigierten Quellstand separat gestartet;
+  das Ergebnis ist noch offen. MySQL-Smoke lokal weiterhin nicht verfügbar.
 
 - Auf Basis `05e29224`: gezielte Abnahmesuite mit 271 Tests und 2.102 Assertions
   grün (Darreichungen, Zeitrechnung, Auftragskosten, Mengen-/Produktionspfade,

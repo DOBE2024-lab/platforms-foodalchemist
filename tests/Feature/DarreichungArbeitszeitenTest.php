@@ -88,6 +88,11 @@ it('erlaubt mehrere Buffetvarianten und bewahrt genau einen wechselbaren Standar
 it('zeigt die Arbeitsschritte zentral und erhält die drei Prozess-Tabs', function () {
     $lw = Livewire::test(VkModal::class)->call('oeffnen', $this->gericht->id);
     $html = $lw->html();
+    $dom = new DOMDocument();
+    $dom->loadHTML($html, LIBXML_NOERROR | LIBXML_NOWARNING);
+    $xpath = new DOMXPath($dom);
+    expect($xpath->query('//*[@data-dar-zubehoer="'.$this->dar->id.'"]')->length)->toBe(1)
+        ->and($xpath->query('//*[@data-dar-gefaess-info="'.$this->dar->id.'"]')->length)->toBe(1);
     expect($html)->toContain('data-dar-editor', 'Komponenten &amp; Mengen', 'Arbeitsschritte &amp; Zeiten', 'Regeneration', 'Fertigstellen', 'Anrichten')
         ->not->toContain('Fertigstellungszeit (min) · wird nicht gerechnet', 'Batchgrenze kg');
     $lw->set('darZeitForm.'.$this->dar->id, $this->zeiten)->call('darZeitenSpeichern', $this->dar->id)->assertSet('fehler', null);
@@ -173,4 +178,47 @@ it('hält die Referenz einer angepassten Standardportion stabil und gibt sie kor
     expect($this->dar->fresh()->quantity_per_unit_g)->toBe(80.0)->and($erbt->fresh()->quantity_per_unit_g)->toBe(80.0);
     $svc->entferneDelta($this->rootTeam, $this->dar->id, $a->id);
     expect($this->dar->fresh()->quantity_per_unit_g)->toBe(120.0)->and($erbt->fresh()->quantity_per_unit_g)->toBe(120.0);
+});
+
+it('baut das Schema ohne Datenverlust zurück und blockiert den Rückbau bei Mehrfachvarianten', function () {
+    $migration = require dirname(__DIR__, 2).'/database/migrations/2027_01_04_100000_darreichung_zeiten.php';
+    $migration->down();
+    expect(\Illuminate\Support\Facades\Schema::hasColumn('foodalchemist_recipe_presentations', 'arbeitszeiten'))->toBeFalse();
+    $migration->up();
+    app(DarreichungService::class)->anlegen($this->rootTeam, $this->gericht->id, $this->form->id, ['name' => 'Weitere Variante']);
+    expect(fn () => $migration->down())->toThrow(RuntimeException::class, 'mehrere Varianten');
+    expect($this->gericht->presentations()->count())->toBe(2)
+        ->and(\Illuminate\Support\Facades\Schema::hasColumn('foodalchemist_recipe_presentations', 'arbeitszeiten'))->toBeTrue();
+});
+
+it('erhält Zeitentwürfe bei anderen Feldänderungen und übernimmt sie beim allgemeinen Speichern', function () {
+    $lw = Livewire::test(VkModal::class)->call('oeffnen', $this->gericht->id)
+        ->set('darZeitForm.'.$this->dar->id, $this->zeiten)
+        ->set('darForm.'.$this->dar->id.'.name', 'Glas')
+        ->call('darreichungSpeichern', $this->dar->id)->assertSet('fehler', null);
+    expect($this->dar->fresh()->arbeitszeiten)->toBeNull()
+        ->and($lw->get('darZeitForm')[$this->dar->id])->toEqual($this->zeiten);
+    $lw->call('speichern')->assertSet('fehler', null);
+    expect((float) $this->dar->fresh()->arbeitszeiten[0]['wert'])->toBe(20.0);
+});
+
+it('erhält die Zeiteinheit eines expliziten Altwerts beim Wechsel der Servierform', function () {
+    $svc = app(DarreichungService::class);
+    $svc->aktualisieren($this->rootTeam, $this->dar->id, ['anrichten_wert' => 2]);
+    $teller = FoodAlchemistServierform::create(['team_id' => $this->rootTeam->id, 'code' => 'teller', 'label' => 'Teller']);
+    $svc->setzeServierform($this->rootTeam, $this->dar->id, $teller->id);
+    expect($this->dar->fresh()->arbeitszeiten[0])->toMatchArray(['basis' => 'behaelter', 'wert' => 2, 'quelle' => 'bestand']);
+});
+
+it('berechnet Plattenbedarf aus der tatsächlichen Grammatur der Darreichung', function () {
+    $this->gericht->update(['yield_kg' => .2]);
+    $dar = app(DarreichungService::class)->aktualisieren($this->rootTeam, $this->dar->id, ['quantity_per_unit_g' => 80, 'arbeitszeiten' => [
+        ['use_case' => 'portionieren_platte', 'basis' => 'behaelter', 'ort' => 'kueche', 'wert' => 2],
+    ]]);
+    $behaelter = Mockery::mock(\Platform\FoodAlchemist\Services\BehaelterBedarfService::class);
+    $behaelter->shouldReceive('behaelterFuerGericht')->once()->withArgs(fn ($team, $gericht, $ansaetze, $zweck) => abs($ansaetze - 40) < .0001 && $zweck === 'ausgabe')
+        ->andReturn(['anzahl' => 4]);
+    app()->instance(\Platform\FoodAlchemist\Services\BehaelterBedarfService::class, $behaelter);
+    $r = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->berechnen($this->rootTeam, $this->gericht->fresh(), $dar, 100);
+    expect($r['minuten'])->toBe(8.0)->and($r['vollstaendig'])->toBeTrue();
 });

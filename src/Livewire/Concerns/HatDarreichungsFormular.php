@@ -22,6 +22,31 @@ trait HatDarreichungsFormular
 
     public array $darZeitForm = [];
 
+    #[\Livewire\Attributes\Locked]
+    public array $darZeitStart = [];
+
+    private function darZeitEntwuerfe(): array
+    {
+        return array_filter($this->darZeitForm, fn ($zeilen, $id) => isset($this->darForm[$id])
+            && $zeilen != ($this->darZeitStart[$id] ?? []), ARRAY_FILTER_USE_BOTH);
+    }
+
+    private function darZeitEntwuerfeSpeichern(): void
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null) {
+            return;
+        }
+        $svc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+        $normal = [];
+        foreach ($this->darZeitEntwuerfe() as $id => $zeilen) {
+            $normal[$id] = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->normalisieren($zeilen);
+        }
+        foreach ($normal as $id => $zeilen) {
+            $svc->aktualisieren($team, (int) $id, ['arbeitszeiten' => $zeilen]);
+        }
+    }
+
     public function updatedDarZeitForm(mixed $value, string $key): void
     {
         $teile = explode('.', $key);
@@ -91,6 +116,7 @@ trait HatDarreichungsFormular
     {
         $this->darForm = [];
         $this->darZeitForm = [];
+        $this->darZeitStart = [];
         $this->darDeltaOffen = null;
         $this->darNeueForm = '';
         if ($this->recipeId === null) {
@@ -122,6 +148,7 @@ trait HatDarreichungsFormular
                 'anrichten_pauschal_min' => self::darZahl($d->anrichten_pauschal_min),
             ];
             $this->darZeitForm[$d->id] = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->formular($d);
+            $this->darZeitStart[$d->id] = $this->darZeitForm[$d->id];
             if ($d->is_standard && $this->darAktiv === null) {
                 $this->darAktiv = (int) $d->id;
             }

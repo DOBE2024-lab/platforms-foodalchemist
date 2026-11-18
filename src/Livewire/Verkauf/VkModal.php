@@ -257,7 +257,11 @@ class VkModal extends Component
             return;
         }
         $offen = $this->darDeltaOffen;
+        $entwuerfe = $this->darZeitEntwuerfe();
         $this->ladeDarreichungen();
+        foreach ($entwuerfe as $id => $zeilen) {
+            if (isset($this->darForm[$id]) && $zeilen != ($this->darZeitStart[$id] ?? [])) $this->darZeitForm[$id] = $zeilen;
+        }
         $this->darDeltaOffen = $offen;
         $this->dispatch('recipe-gespeichert');
     }
@@ -433,6 +437,7 @@ class VkModal extends Component
             // Preis-Wahrheit liegt an der Darreichung: der angezeigte VK darf beim allgemeinen Speichern keinen Auto-Preis fixieren.
             unset($update['sales_net'], $update['price_override_reason']);
             $update = $this->ohneUnveraenderteSpiegelFelder($update);   // was im Kopf nicht geändert wurde, überschreibt die Darreichung nicht
+            $this->darZeitEntwuerfeSpeichern();
             app(SalesRecipeService::class)->updateVk($team, $this->recipeId, $update, $this->kiLineage);
             $this->kiLineage = [];
 

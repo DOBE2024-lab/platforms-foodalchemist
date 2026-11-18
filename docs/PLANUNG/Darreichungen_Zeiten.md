@@ -3,6 +3,8 @@
 Stand: 18.11.2026. Auftrag: Dominique, Konzept und Mockup in diesem Chat.
 Funktionsbezug: RE-12/13/15/16, PR-01/04/07 der [Funktionsmatrix](25_Business_Case_Funktionsmatrix.md).
 Status: Implementierung im separaten Branch, noch keine Produktionsfreigabe.
+Basis nach Aktualisierung: `main` `05e29224` (einschließlich #847 und #849).
+Die parallelen Änderungen #848/#850 waren bei diesem Abgleich noch nicht in main.
 
 ## Entscheidung
 
@@ -44,11 +46,18 @@ Ownership-/Referenzprüfung. Neue Zeitwerte werden zentral validiert und berechn
 
 `arbeitszeiten = NULL` erhält die bisherige Berechnung vollständig. Beim Lesen
 wird kein Datensatz umgeschrieben. Die bisherige Rechnung wird im Editor als
-Bestand/Vorgabe angezeigt. Erst „Zeiten übernehmen“ speichert die explizite Liste
+Bestand/Vorgabe angezeigt. „Zeiten übernehmen“ oder das allgemeine „Speichern“
+nach einer Zeitänderung speichert die explizite Liste
 und ersetzt die alte Rechnung vollständig. `[]` bedeutet bewusst keine aktive
 Arbeit; Altwerte dürfen dann nicht erneut hinzugezählt werden. Fehlende
 Einheiten-/Plattenmengen bleiben als unvollständig erkennbar; Planung und
 Auftragskalkulation erhalten dieselbe Warnung.
+
+Bei einem Formwechsel werden explizite alte Darreichungszeiten mit ihrer
+bisherigen Bezugsgröße übernommen; sie werden nicht als neue Einheit interpretiert.
+Unveränderte Bestandsmengen werden nicht ungeprüft als geerbt markiert. Für neue
+Varianten gilt die Standardvererbung; bestehende Varianten können bewusst darauf
+umgestellt werden. Mengen ohne eigene Komponentenwerte folgen dann der Quelle.
 
 Der frühere Unique-Index (Rezept, Servierform) wird durch einen normalen Index
 ersetzt; die Ein-Standard-Regel bleibt bestehen. Softgelöschte Varianten werden
@@ -82,7 +91,8 @@ Zeitliste. Ihre vollständige Umstellung ist ein Folgepaket.
 
 - 100 Buffetgläser × 20 s plus 5 min Vorbereitung = 38 min 20 s Küchenarbeit,
   unabhängig von Ausgabeplatten und Gerichts-Altwerten.
-- 2 Einheiten je Portion skalieren die Abfüllzeit, die Pauschale zählt einmal.
+- Eine Portion ist eine Einheit. Abweichend gezählter Altbestand bleibt in der
+  bisherigen Rechnung erhalten; seine Pauschale zählt weiterhin einmal.
 - Vor-Ort-Arbeit zählt separat; passive Standzeit und Regeneration werden nicht
   als manuelle Tätigkeit doppelt berechnet.
 - Standardwechsel erhält genau einen Standard; gleichartige Servierformen sind
@@ -92,3 +102,22 @@ Zeitliste. Ihre vollständige Umstellung ist ein Folgepaket.
 - Nachweise: `DarreichungArbeitszeitenTest`, bestehende Produktions-,
   Kalkulations-, Policy-, UI- und Architekturwächter. Browserprüfung separat
   dokumentieren; eine gerenderte View allein ist keine Interaktionsabnahme.
+
+### Nachweise am 18.11.2026
+
+- Auf Basis `05e29224`: gezielte Abnahmesuite mit 271 Tests und 2.102 Assertions
+  grün (Darreichungen, Zeitrechnung, Auftragskosten, Mengen-/Produktionspfade,
+  Fassungen, MwSt/Nährwerte, Gefäßkosten, Policy, UI- und Architekturwächter).
+- Nachprüfung der Zeitentwürfe und des allgemeinen Speicherns: 21 Tests,
+  102 Assertions grün. Zusätzliche Fälle für Schema-Rückbau, Formwechsel,
+  Plattenbedarf und das gerenderte Zubehör-Markup einzeln grün.
+- PHP-Syntax, `composer validate --strict --no-check-publish`, JS- und CSS-Build
+  bestanden. Zwei bereits bestehende CSS-Warnungen zu dynamischen Token-Strings.
+- Layoutprüfung der gerenderten Blade-Fixture mit Host-CSS bei 1440, 768 und
+  390 px: keine ungeschützten horizontalen Überläufe der Darreichungs-Controls.
+  Tabellen dürfen innerhalb ihrer Scrollfläche breiter sein. Kein Nachweis einer
+  vollständigen Browser-Speicherstrecke; diese Actions sind über Livewire geprüft.
+- Vollständige Modulsuite und produktionsgleicher MySQL-Smoke bleiben Teil der
+  Releaseprüfung. Lokal ist keine MySQL-Testlaufzeit eingerichtet. Vor Merge
+  außerdem gegen den dann aktuellen main einschließlich der parallelen Arbeiten
+  #848/#850 abgleichen. Keine Produktionsfreigabe aus diesem Branch ableiten.

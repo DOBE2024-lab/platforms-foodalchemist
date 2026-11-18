@@ -9,7 +9,7 @@
                     aria-pressed="{{ $darAktiv === $variante->id ? 'true' : 'false' }}"
                     class="w-full text-left p-3 rounded-[var(--fa-radius-control)] border {{ $darAktiv === $variante->id ? 'border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)]' : 'border-[var(--fa-line)] hover:bg-[var(--fa-hover)]' }}">
                     <span class="block font-medium">{{ $variante->name ?: $variante->servingForm?->label }}</span>
-                    <span class="block {{ $hinweis }}">{{ $variante->servingForm?->label }} · {{ $variante->quantity_per_unit_g !== null ? number_format($variante->quantity_per_unit_g, 0, ',', '.').' g je Einheit' : 'Menge fehlt' }}</span>
+                    <span class="block {{ $hinweis }}">{{ $variante->servingForm?->label }} · {{ $variante->quantity_per_unit_g !== null ? number_format($variante->quantity_per_unit_g, 0, ',', '.').(($variante->unit_count ?? 1) > 1 ? ' g je Einheit (Altbestand)' : ' g je Portion') : 'Menge fehlt' }}</span>
                     @if($variante->is_standard)<x-fa::badge tone="info" class="mt-2">Standard · Kennzahlen</x-fa::badge>@endif
                 </button>
             @endforeach

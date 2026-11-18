@@ -1,7 +1,8 @@
 <section class="flex flex-col gap-3" data-dar-anrichten="{{ $d->id }}">
     <div class="flex flex-wrap items-center justify-between gap-2"><h4 class="font-medium">Arbeitsschritte &amp; Zeiten</h4><x-fa::button size="sm" variant="ai" icon="heroicon-o-sparkles" wire:click="darZeitVorschlagen({{ $d->id }})" data-ki-eigenschaften>Zeiten vorschlagen</x-fa::button></div>
     <p class="{{ $hinweis }}">{{ $d->arbeitszeiten !== null ? 'Eigene Werte dieser Darreichung' : 'Bisherige Berechnung · noch nicht übernommen' }}</p>
-    <x-fa::field label="Ausgabe-Posten dieser Darreichung" for="dar-posten-{{ $d->id }}">
+    @if(($darZeitForm[$d->id] ?? []) != ($darZeitStart[$d->id] ?? []))<x-fa::badge tone="warn">Noch nicht gespeichert</x-fa::badge>@endif
+    <x-fa::field label="Ausgabe-Posten dieser Darreichung" for="dar-posten-{{ $d->id }}" hint="Für Küchenarbeit; Service wird separat gerechnet">
         <x-fa::select id="dar-posten-{{ $d->id }}" wire:model="darForm.{{ $d->id }}.ausgabe_station_id" wire:change="darreichungSpeichern({{ $d->id }})" data-vk-default-station>
             <option value="">Aus Komponenten / bisherigem Gerichts-Posten</option>
             @foreach($posten as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach
@@ -10,6 +11,7 @@
     @foreach($darZeitForm[$d->id] ?? [] as $index => $zeit)
         <div wire:key="dar-zeit-{{ $d->id }}-{{ $index }}" class="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
             @if(($zeit['quelle'] ?? null) === 'ki_vorschlag')<span class="sm:col-span-2 xl:col-span-5"><x-fa::badge tone="warn">KI-Vorschlag · ungeprüft</x-fa::badge></span>@endif
+            @if(($zeit['quelle'] ?? null) === 'bestand')<span class="sm:col-span-2 xl:col-span-5"><x-fa::badge tone="info">Aus bisherigen Zeiten übernommen</x-fa::badge></span>@endif
             <x-fa::field label="Tätigkeit" for="dar-zeit-art-{{ $d->id }}-{{ $index }}">
                 <x-fa::select id="dar-zeit-art-{{ $d->id }}-{{ $index }}" wire:model.live="darZeitForm.{{ $d->id }}.{{ $index }}.use_case">
                     @foreach(\Platform\FoodAlchemist\Services\DarreichungsZeitService::TAETIGKEITEN as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach

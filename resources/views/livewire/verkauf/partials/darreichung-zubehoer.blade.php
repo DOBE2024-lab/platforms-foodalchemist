@@ -2,7 +2,7 @@
 <summary class="font-medium cursor-pointer">Gefäß, Zubehör &amp; Verpackung</summary>
 @php $gi = $darGefaess[$d->id] ?? null; @endphp
 @if($gi)
-    <div>id }}" data-dar-gefaess-info="{{ $d->id }}">
+    <div wire:key="dar-gef-{{ $d->id }}" data-dar-gefaess-info="{{ $d->id }}">
         <div>
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
                 <span class="font-medium">Servier-Typ</span>
@@ -32,7 +32,7 @@
 @endif
 {{-- Zubehör & Verpackung dieser Form (Non-Food, Menge je Einheit): wirkt NUR auf den EK, nie auf Allergene, Nährwerte oder Profil --}}
 @php $zub = $darZubehoer[$d->id] ?? ['zeilen' => [], 'summe' => 0.0, 'vollstaendig' => true]; @endphp
-<div>id }}" data-dar-zubehoer="{{ $d->id }}">
+<div wire:key="dar-zub-{{ $d->id }}" data-dar-zubehoer="{{ $d->id }}">
     <div>
         <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
             <span class="font-medium" title="Glas, Box, Deko: kostet mit, hat aber keine Allergene und keine Nährwerte">Zubehör &amp; Verpackung</span>

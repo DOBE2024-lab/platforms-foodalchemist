@@ -56,6 +56,23 @@ beforeEach(function () {
     $this->fassungVon = fn (FoodAlchemistRecipe $r) => FoodAlchemistRecipe::mitFassungen()->where('fassung_von_id', $r->id)->where('ist_fassung', true)->orderBy('fassung_nr')->get();
 });
 
+it('friert Darreichungszeiten ein und erkennt eine Zeitänderung als neue Fassung', function () {
+    $this->jus->update(['is_sales_recipe' => true]);
+    $form = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->master->id, 'code' => 'teller', 'label' => 'Teller']);
+    $dar = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create([
+        'team_id' => $this->master->id, 'recipe_id' => $this->jus->id, 'serving_form_id' => $form->id,
+        'is_standard' => true, 'unit_count' => 1, 'quantity_per_unit_g' => 200,
+        'arbeitszeiten' => [['use_case' => 'anrichten_teller', 'basis' => 'portion', 'ort' => 'kueche', 'wert' => 20]],
+    ]);
+    $erste = $this->fassungen->veroeffentlichen($this->master, $this->jus->id, 'Mit Anrichtezeit', $this->kurator);
+    $dar->update(['arbeitszeiten' => [['use_case' => 'anrichten_teller', 'basis' => 'portion', 'ort' => 'kueche', 'wert' => 30]]]);
+    $zweite = $this->fassungen->veroeffentlichen($this->master, $this->jus->id, 'Anrichten angepasst', $this->kurator);
+    expect($zweite['fassung_id'])->not->toBe($erste['fassung_id']);
+    $alt = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $erste['fassung_id'])->firstOrFail();
+    $neu = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $zweite['fassung_id'])->firstOrFail();
+    expect((float) $alt->arbeitszeiten[0]['wert'])->toBe(20.0)->and((float) $neu->arbeitszeiten[0]['wert'])->toBe(30.0);
+});
+
 it('Veröffentlichen friert Rezept + Unter-Rezept ein; Abonnent sieht nur die Fassungen; Master-Bibliothek zeigt keine Fassung', function () {
     expect(array_intersect(($this->sieht)($this->broich), [$this->jus->id, $this->fond->id]))->toBe([]);   // vor Veröffentlichung: nichts
 

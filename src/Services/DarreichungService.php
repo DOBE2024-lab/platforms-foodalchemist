@@ -48,7 +48,8 @@ class DarreichungService
         }
         // Spec 85: Fremdschlüssel team-autorisieren (Sichtbarkeit, wie TeamScope::referenz) — sonst hängt ein MCP-Aufruf eine
         // fremde Form/Klasse (z. B. die des Masters) an die eigene Darreichung: Etikett leckt, Daten falsch.
-        if (! \Platform\FoodAlchemist\Models\FoodAlchemistServierform::visibleToTeam($team)->where('is_inactive', false)->whereKey($servierformId)->exists()) {
+        $servierform = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::visibleToTeam($team)->where('is_inactive', false)->find($servierformId);
+        if ($servierform === null) {
             throw new \RuntimeException('Unbekannte Servierform.');
         }
         $attrs = [...$attrs, ...$this->referenzenPruefen($team, $attrs)];
@@ -57,6 +58,11 @@ class DarreichungService
         }
 
         $standard = $recipe->standardPresentation;
+        $name = trim((string) ($attrs['name'] ?? ''));
+        if ($name === '' && $standard !== null) {
+            $nummer = $recipe->presentations()->withTrashed()->where('serving_form_id', $servierformId)->count() + 1;
+            $name = mb_substr($servierform->label, 0, 95).' · Variante '.$nummer;
+        }
         $darreichung = FoodAlchemistRecipeDarreichung::create([
             'team_id' => $recipe->team_id,
             'recipe_id' => $recipe->id,
@@ -72,7 +78,7 @@ class DarreichungService
             'price_mode' => $attrs['price_mode'] ?? 'auto',
             'sales_net' => $attrs['sales_net'] ?? null,
             'note' => $attrs['note'] ?? null,
-            'name' => $attrs['name'] ?? null,
+            'name' => $name !== '' ? $name : null,
             'arbeitszeiten' => array_key_exists('arbeitszeiten', $attrs)
                 ? app(DarreichungsZeitService::class)->normalisieren($attrs['arbeitszeiten']) : null,
             // Spec 83 B3i/B3l: NICHT aus der Standard-Form vorbefüllen — die Einheit hängt an der Form (s je Teller ≠ min je Platte)
@@ -342,7 +348,13 @@ class DarreichungService
         if ($form->is_inactive) {
             throw new \RuntimeException('Diese Servierform ist deaktiviert.');
         }
-        $darreichung->update(['serving_form_id' => $servierformId]);
+        $aenderung = ['serving_form_id' => $servierformId];
+        // Explizite Sekunden dürfen beim Formwechsel nicht plötzlich Minuten je Platte bedeuten.
+        if ($darreichung->arbeitszeiten === null && $darreichung->anrichten_wert !== null) {
+            $aenderung['arbeitszeiten'] = array_map(fn ($z) => $z + ['quelle' => 'bestand'],
+                app(DarreichungsZeitService::class)->formular($darreichung));
+        }
+        $darreichung->update($aenderung);
 
         return $darreichung->refresh();
     }

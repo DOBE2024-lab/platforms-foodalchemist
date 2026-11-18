@@ -39,6 +39,11 @@ Eine Leistung ohne Klasse fällt nicht auf den Team-Standard zurück, sondern re
 
 ## Darreichungen pflegen
 
+Ein Gericht und jede seiner Darreichungen beschreiben jeweils eine Portion.
+120 g im Glas sind eine Portion; zwei bestellte Gläser sind zwei Portionen.
+Ein zusätzlicher Anzahl-Zähler wird nicht gepflegt. Abweichender Altbestand wird
+angezeigt und erst nach einer geprüften Umstellung geändert.
+
 Links wählst du eine Darreichung, rechts pflegst du deren Bezeichnung, Servierform,
 Gefäß, Menge, Preisklasse und Preis. Beim Anlegen eines Gerichts entsteht eine
 Standard-Darreichung. Sie kann zum Beispiel auf Buffet im Schraubglas umgestellt
@@ -49,6 +54,11 @@ den Standard, unabhängig von der gerade geöffneten Variante.
 Unter „Komponenten & Mengen“ passt du bestehende Komponenten an oder lässt sie
 weg. Eigene Komponentenmengen ergeben zusammen die Grammatur dieser Darreichung.
 Neue Zutaten gehören in ein eigenes Gericht.
+
+Neue Varianten übernehmen zunächst die Standardmenge. Über „Portionsmenge vom
+Standard übernehmen“ wählst du zwischen geerbter und eigener Grammatur. Geerbte
+Mengen folgen einem Standardwechsel; eigene Mengen und weggelassene Komponenten
+bleiben erhalten. Der Editor nennt die Herkunft je Komponente.
 
 „Arbeitsschritte & Zeiten“ erfasst die konkrete Tätigkeit, Zeitbasis und den
 Arbeitsort. Abfüllen kann auch bei Buffet je Glas in der Küche gerechnet werden.
@@ -63,7 +73,10 @@ Die passive Standzeit steht im gemeinsamen Planungsbereich des Gerichts.
 Bisherige Zeiten bleiben wirksam, bis du die neuen Arbeitsschritte ausdrücklich
 übernimmst. Eine bewusst leere Liste ersetzt die bisherigen Zeiten durch keine
 aktive Arbeit. „Zeiten vorschlagen“ zeigt einen ungeprüften KI-Vorschlag, der erst
-mit „Zeiten übernehmen“ gespeichert wird.
+mit „Zeiten übernehmen“ oder dem allgemeinen „Speichern“ gespeichert wird.
+Zeitentwürfe bleiben auch bei anderen Feldänderungen im Editor erhalten. Beim
+Wechsel der Servierform behalten explizite bisherige Zeiten ihre Bezugsgröße:
+Sekunden je Portion werden dadurch nicht zu Minuten je Platte.
 
 ## Preiszustände
 

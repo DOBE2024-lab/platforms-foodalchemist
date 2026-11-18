@@ -51,6 +51,8 @@ class DarreichungsZeitService
             $out = ['use_case' => $z['use_case'], 'basis' => $z['basis'], 'ort' => $z['ort'], 'wert' => (float) $wert];
             if (($z['quelle'] ?? null) === 'ki_vorschlag') {
                 $out += ['quelle' => 'ki_vorschlag', 'confidence' => max(0, min(1, (float) ($z['confidence'] ?? 0)))];
+            } elseif (($z['quelle'] ?? null) === 'bestand') {
+                $out['quelle'] = 'bestand';
             }
             return $out;
         }, $zeilen);
@@ -105,7 +107,7 @@ class DarreichungsZeitService
                 'portion' => $portionen,
                 'auftragszeile' => $portionen > 0 ? 1.0 : 0.0,
                 'einheit', 'stueck' => $dar->unit_count !== null && $dar->unit_count > 0 ? $portionen * $dar->unit_count : null,
-                'behaelter' => $this->platten($team, $gericht, $portionen),
+                'behaelter' => $this->platten($team, $gericht, $dar, $portionen),
                 'kg' => ($gramm = app(DarreichungService::class)->grammJeEinheit($dar, $gericht)) !== null && $dar->unit_count > 0
                     ? $portionen * $gramm * $dar->unit_count / 1000 : null,
             };
@@ -124,10 +126,10 @@ class DarreichungsZeitService
             'vollstaendig' => $vollstaendig, 'warnungen' => array_values(array_unique($warnungen))];
     }
 
-    private function platten(Team $team, FoodAlchemistRecipe $gericht, float $portionen): ?float
+    private function platten(Team $team, FoodAlchemistRecipe $gericht, FoodAlchemistRecipeDarreichung $dar, float $portionen): ?float
     {
-        $ppb = max(1, (float) ($gericht->sales_unit_count ?? 1));
-        $b = app(BehaelterBedarfService::class)->behaelterFuerGericht($team, $gericht, $portionen / $ppb, 'ausgabe');
+        $anteil = app(DarreichungService::class)->produktionsAnteil($gericht, $dar, $portionen, $team);
+        $b = app(BehaelterBedarfService::class)->behaelterFuerGericht($team, $gericht, $anteil['ansaetze'], 'ausgabe');
         return $b['anzahl'] > 0 ? (float) $b['anzahl'] : null;
     }
 }

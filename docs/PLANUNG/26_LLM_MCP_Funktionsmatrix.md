@@ -115,6 +115,7 @@ Capability. Sie beantwortet:
 | `recipe.preparation` | Produktionszubereitung schreiben | RE-01, RE-17 | direkt genutzt |
 | `recipe.steps` | Zubereitung als Schrittfolge (Step-by-step, Spec 27) | RE-01, RE-17 | direkt genutzt |
 | `recipe.eigenschaften` | Haltbarkeit und Eigenschaften | RE-20 | direkt genutzt |
+| `darreichung.zeiten` | Aktive Arbeitsschritte je Darreichung vorschlagen, erst nach Übernahme speichern | RE-15, PR-07 | im separaten Branch, siehe [Zeitpflege](Darreichungen_Zeiten.md) |
 | `recipe.geschmack` | Geschmacksprofil ableiten | RE-20, PA-01 | direkt genutzt |
 | `recipe.sensorik` | Sensorik messen/ableiten | RE-20, PA-01 | direkt genutzt |
 | `recipe.review` | Rezeptbefunde erzeugen | RE-20, QL-01 | dynamisch genutzt |

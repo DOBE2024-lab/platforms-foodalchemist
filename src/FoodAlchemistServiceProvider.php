@@ -154,6 +154,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
                 \Platform\FoodAlchemist\Console\NonFoodEinrichtenCommand::class,
                 \Platform\FoodAlchemist\Console\NonFoodErkennenCommand::class,
                 \Platform\FoodAlchemist\Console\GeschirrTypUebernehmenCommand::class,
+                \Platform\FoodAlchemist\Console\DarreichungTypUebernehmenCommand::class,   // Servier-Typ an einer Stelle (18.11.2026)
                 \Platform\FoodAlchemist\Console\LieferantenGruppenEinrichtenCommand::class,
                 \Platform\FoodAlchemist\Console\LieferantenGruppenVorschlagenCommand::class,
                 \Platform\FoodAlchemist\Console\MatcherEvalCommand::class,

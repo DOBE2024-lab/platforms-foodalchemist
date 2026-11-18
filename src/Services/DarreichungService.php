@@ -81,6 +81,8 @@ class DarreichungService
             'name' => $name !== '' ? $name : null,
             'arbeitszeiten' => array_key_exists('arbeitszeiten', $attrs)
                 ? app(DarreichungsZeitService::class)->normalisieren($attrs['arbeitszeiten']) : null,
+            // Servier-Typ: Vorgabe aus dem Gericht (= wirksamer Typ der Standard-Darreichung), das konkrete Gefäß wählt man an der Zeile
+            'serving_vehicle_vocab_id' => $attrs['serving_vehicle_vocab_id'] ?? $recipe->serving_vehicle_vocab_id,
             // Spec 83 B3i/B3l: NICHT aus der Standard-Form vorbefüllen — die Einheit hängt an der Form (s je Teller ≠ min je Platte)
             'anrichten_wert' => isset($attrs['anrichten_wert']) && is_numeric(str_replace(',', '.', (string) $attrs['anrichten_wert']))
                 ? (float) str_replace(',', '.', (string) $attrs['anrichten_wert']) : null,
@@ -313,8 +315,15 @@ class DarreichungService
                 'price_override_expires_at' => null,
             ]);
         }
+        // Vererbung abschalten darf die aktuelle Komposition nicht neu aus dem Kernrezept mischen.
+        if ($darreichung->menge_vom_standard && ($update['menge_vom_standard'] ?? true) === false
+            && ($darreichung->deltas()->exists() || $darreichung->recipe->standardPresentation?->deltas()->exists())) {
+            $this->fixiereKomposition($darreichung, $team);
+        }
+        $vorher = [$darreichung->serving_vehicle_vocab_id, $darreichung->vessel_gp_id];
         $darreichung->update($update);
         $darreichung->is_standard ? $this->recomputeFuerRezept($darreichung->recipe_id) : $this->recomputePreise($darreichung);
+        $this->typInsGericht($darreichung, $vorher != [$darreichung->serving_vehicle_vocab_id, $darreichung->vessel_gp_id]);
 
         return $darreichung->refresh();
     }
@@ -385,14 +394,7 @@ class DarreichungService
             }
             // Die gewählte Variante behält ihre wirksame Komposition und wird selbst zur Quelle.
             if ($darreichung->deltas()->exists() || ($darreichung->menge_vom_standard && $darreichung->recipe->standardPresentation?->deltas()->exists())) {
-                $anteil = $this->produktionsAnteil($darreichung->recipe, $darreichung, 1, $team);
-                foreach ($this->recompute->zeilenKostenUndMassen($darreichung->recipe, $team) as $ingId => $z) {
-                    $m = ($anteil['je_zutat'][$ingId] ?? $anteil['ansaetze']) * $z['masse_g'] / max(1, (float) ($darreichung->unit_count ?: 1));
-                    FoodAlchemistRecipeDarreichungDelta::withTrashed()->updateOrCreate(
-                        ['presentation_id' => $darreichung->id, 'recipe_ingredient_id' => $ingId],
-                        ['team_id' => $darreichung->team_id, 'quantity_override_g' => $m, 'omitted' => $m <= 0, 'deleted_at' => null],
-                    );
-                }
+                $this->fixiereKomposition($darreichung, $team);
             }
             // Reihenfolge wichtig: partieller Unique-Index erlaubt nur EIN is_standard=1
             $darreichung->recipe->presentations()
@@ -401,6 +403,64 @@ class DarreichungService
             $darreichung->update(['is_standard' => true, 'menge_vom_standard' => false]);
             $this->recomputeFuerRezept($darreichung->recipe_id);
         });
+        $this->typInsGericht($darreichung->refresh(), false);
+    }
+
+    /** Wirksame Mengen festhalten, bevor eine Darreichung ihre Referenz wechselt. */
+    private function fixiereKomposition(FoodAlchemistRecipeDarreichung $darreichung, Team $team): void
+    {
+        $anteil = $this->produktionsAnteil($darreichung->recipe, $darreichung, 1, $team);
+        foreach ($this->recompute->zeilenKostenUndMassen($darreichung->recipe, $team) as $ingId => $z) {
+            $m = ($anteil['je_zutat'][$ingId] ?? $anteil['ansaetze']) * $z['masse_g'] / max(1, (float) ($darreichung->unit_count ?: 1));
+            FoodAlchemistRecipeDarreichungDelta::withTrashed()->updateOrCreate(
+                ['presentation_id' => $darreichung->id, 'recipe_ingredient_id' => $ingId],
+                ['team_id' => $darreichung->team_id, 'quantity_override_g' => $m, 'omitted' => $m <= 0, 'deleted_at' => null],
+            );
+        }
+    }
+
+    /**
+     * Servier-Typ an EINER Stelle (Entscheid Dominique 18.11.2026): Typ (neutral, Vokabular) und konkretes Gefäß (GP mit Preis) stehen an der
+     * Darreichung. Das Feld am Gericht ist nur noch abgeleitet — der wirksame Typ der Standard-Darreichung ({@see vehikelId}) — und Vorgabe für
+     * neue Darreichungen. Leser am Gericht (KI-Kontext, Abo-Kopie, MCP-GET) sehen so denselben Typ wie Planungsblatt und Handbuch.
+     * Ein leerer Typ geht nur ins Gericht, wenn Typ oder Gefäß an der Darreichung gerade geändert wurden — sonst löschte jede Preis-Änderung den
+     * Altbestand am Gericht, bevor `foodalchemist:darreichung-typ-uebernehmen` ihn an die Darreichung gebracht hat.
+     */
+    public function typInsGericht(FoodAlchemistRecipeDarreichung $d, bool $typGeaendert): void
+    {
+        if (! $d->is_standard) {
+            return;
+        }
+        $typ = $this->vehikelId($d);
+        if ($typ === null && ! $typGeaendert) {
+            return;
+        }
+        $alt = DB::table('foodalchemist_recipes')->where('id', $d->recipe_id)->value('serving_vehicle_vocab_id');
+        if (($alt === null ? null : (int) $alt) === $typ) {
+            return;
+        }
+        DB::table('foodalchemist_recipes')->where('id', $d->recipe_id)->update([
+            'serving_vehicle_vocab_id' => $typ,
+            'serving_vehicle_source' => $typ === null ? null : 'manual',
+            'serving_vehicle_ai_confidence' => null,
+            'updated_at' => now(),
+        ]);
+    }
+
+    /**
+     * KI-Vorschlag „Vehikel“ an die Standard-Darreichung (Gericht-Modal): nur wenn dort kein konkretes Gefäß steht — das Gefäß bestimmt den Typ.
+     * Lineage am Gericht bleibt ehrlich `ki`. Gibt false zurück, wenn ein Gefäß gesetzt ist.
+     */
+    public function typVorschlagUebernehmen(Team $team, int $recipeId, int $typId, float $konfidenz): bool
+    {
+        $standard = $this->ensureStandard($team, $recipeId, 'fa_ui');
+        if ($standard === null || $standard->vessel_gp_id !== null) {
+            return false;
+        }
+        $this->aktualisieren($team, $standard->id, ['serving_vehicle_vocab_id' => $typId]);
+        DB::table('foodalchemist_recipes')->where('id', $recipeId)->update(['serving_vehicle_source' => 'ki', 'serving_vehicle_ai_confidence' => $konfidenz]);
+
+        return true;
     }
 
     /** Delta setzen/ändern — nur Zutatenzeilen des eigenen Rezepts (E5 strukturell). */
@@ -814,7 +874,8 @@ class DarreichungService
             return $standard !== null ? $this->grammJeEinheit($standard, $recipe) : null;
         }
         $grammatur = (float) ($darreichung->quantity_per_unit_g ?? 0);
-        if ($grammatur > 0) {
+        if ($grammatur > 0 || ($darreichung->quantity_per_unit_g !== null && $darreichung->deltas()->exists())) {
+            // Eine auf 0 reduzierte Komponenten-Summe ist bekannt, kein fehlender Altwert.
             return $grammatur;
         }
         if (! $darreichung->is_standard) {

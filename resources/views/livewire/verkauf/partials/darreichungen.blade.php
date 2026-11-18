@@ -63,7 +63,10 @@
                         <x-fa::field label="Gefäß" for="dar-gefaess-{{ $d->id }}">
                             <x-fa::select id="dar-gefaess-{{ $d->id }}" wire:model="darForm.{{ $d->id }}.vessel_gp_id" wire:change="darreichungSpeichern({{ $d->id }})" data-dar-gefaess>
                                 <option value="">kein Gefäß</option>
-                                @foreach($gefaessGps as $gg)<option value="{{ $gg->id }}">{{ $gg->name }}</option>@endforeach
+                                @php $typId = $darGefaess[$d->id]['typ_id'] ?? null; $passend = $typId ? $gefaessGps->where('serving_vehicle_vocab_id', $typId) : collect(); @endphp
+                                @if($passend->isNotEmpty())<optgroup label="passend zum Typ {{ $darGefaess[$d->id]['typ_name'] ?? '' }}" data-dar-gefaess-passend>@foreach($passend as $gg)<option value="{{ $gg->id }}">{{ $gg->name }}</option>@endforeach</optgroup><optgroup label="weitere">@endif
+                                @foreach($gefaessGps->whereNotIn('id', $passend->pluck('id')) as $gg)<option value="{{ $gg->id }}">{{ $gg->name }}</option>@endforeach
+                                @if($passend->isNotEmpty())</optgroup>@endif
                                 @if(($darForm[$d->id]['vessel_gp_id'] ?? null) && ! $gefaessGps->contains('id', $darForm[$d->id]['vessel_gp_id']))
                                     <option value="{{ $darForm[$d->id]['vessel_gp_id'] }}">{{ $darGefaess[$d->id]['gefaess_name'] ?? 'Gefäß' }}</option>
                                 @endif

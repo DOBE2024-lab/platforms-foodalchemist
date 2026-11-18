@@ -224,7 +224,8 @@ it('✨-Fake-Pfade sind ehrlich (kein gültiger Wert ⇒ kiFehler, Form unverän
         ->call('oeffnen', $this->vk->id)
         ->call('ki', 'vehikel')
         ->assertSet('fehler', fn ($f) => str_contains((string) $f, 'echter Provider'))
-        ->assertSet('form.serving_vehicle_vocab_id', null);
+        ->assertSet('form', fn ($f) => ! array_key_exists('serving_vehicle_vocab_id', $f));   // 18.11.2026: Typ nur an der Darreichung
+    expect($this->vk->fresh()->serving_vehicle_vocab_id)->toBeNull();
 });
 
 it('✨ Behälter übernimmt validierte Vokabular-IDs in die Form (Mock-Gateway)', function () {
@@ -319,13 +320,14 @@ it('KI-Übernahme trägt die Lineage bis in den Save: Vehikel + Wording ⇒ `ki`
 
     Livewire::test(VkModal::class)
         ->call('oeffnen', $this->vk->id)
-        ->set('form.serving_vehicle_vocab_id', $vehikelId)
         ->set('form.sales_wording_standard', 'Hot Dog vom Wiener, Brioche-Bun')
-        // Marker NACH den Form-Sets — so wie `uebernehmeVehikel`/`uebernehmeText` sie setzen
-        ->set('kiLineage', ['serving_vehicle' => 0.9, 'sales_wording' => 0.65])
+        // Marker NACH den Form-Sets — so wie `uebernehmeText` ihn setzt
+        ->set('kiLineage', ['sales_wording' => 0.65])
         ->call('speichern')
         ->assertSet('fehler', null)
         ->assertSet('kiLineage', []);
+    // 18.11.2026: der KI-Typ geht über die Standard-Darreichung (eine Stelle), die Lineage am Gericht bleibt `ki`
+    expect(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->typVorschlagUebernehmen($this->rootTeam, $this->vk->id, $vehikelId, 0.9))->toBeTrue();
 
     $r = $this->vk->fresh();
     expect($r->serving_vehicle_vocab_id)->toBe($vehikelId)
@@ -345,13 +347,13 @@ it('Nutzer-Edit nach KI-Übernahme kippt die Lineage zurück auf `manual`', func
         'name' => 'Holzbrett', 'group_name' => 'Platten', 'sort_order' => 2, 'is_inactive' => false, 'created_at' => now(), 'updated_at' => now(),
     ]);
 
+    app(\Platform\FoodAlchemist\Services\DarreichungService::class)->typVorschlagUebernehmen($this->rootTeam, $this->vk->id, $vehikelId, 0.9);
+    expect($this->vk->fresh()->serving_vehicle_source)->toBe('ki');
+    $standardId = (int) FoodAlchemistRecipeDarreichung::where('recipe_id', $this->vk->id)->where('is_standard', true)->value('id');
     Livewire::test(VkModal::class)
         ->call('oeffnen', $this->vk->id)
-        ->set('form.serving_vehicle_vocab_id', $vehikelId)
-        ->set('kiLineage', ['serving_vehicle' => 0.9])
-        ->set('form.serving_vehicle_vocab_id', $zweiteId)      // Nutzer korrigiert den KI-Vorschlag
-        ->assertSet('kiLineage', [])
-        ->call('speichern')
+        ->set("darForm.{$standardId}.serving_vehicle_vocab_id", $zweiteId)      // Nutzer korrigiert den KI-Vorschlag in der Darreichungszeile
+        ->call('darreichungSpeichern', $standardId)
         ->assertSet('fehler', null);
 
     $r = $this->vk->fresh();

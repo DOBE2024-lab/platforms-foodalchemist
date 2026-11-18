@@ -3,8 +3,9 @@
 Stand: 18.11.2026. Auftrag: Dominique, Konzept und Mockup in diesem Chat.
 Funktionsbezug: RE-12/13/15/16, PR-01/04/07 der [Funktionsmatrix](25_Business_Case_Funktionsmatrix.md).
 Status: Implementierung im separaten Branch, noch keine Produktionsfreigabe.
-Basis nach Aktualisierung: `main` `05e29224` (einschließlich #847 und #849).
-Die parallelen Änderungen #848/#850 waren bei diesem Abgleich noch nicht in main.
+Basis nach Aktualisierung: `main` `7f42e846` (einschließlich #843 bis #850).
+Der Servier-Typ bleibt ausschließlich an der Darreichung pflegbar; der Typ des
+Standards wird ins Gericht gespiegelt. Die Gefäßauswahl zeigt passende Typen zuerst.
 
 ## Entscheidung
 
@@ -21,7 +22,7 @@ Darreichung; dies entspricht der bisherigen Auswahl bei eindeutigem Bestand.
 
 Aktive Arbeitszeiten werden an der Darreichung gespeichert. Jede Tätigkeit hat
 eine explizite Basis und einen Arbeitsort. Sekunden: Portion, Glas/Einheit, Stück.
-Minuten: Ausgabeplatte/-behälter, Kilogramm, Auftragszeile. Zeitbasis und Servierform
+Minuten: Ausgabeplatte/-behälter, Kilogramm, einmal je Gericht/Darreichung im Auftrag. Zeitbasis und Servierform
 sind unabhängig. Küche zählt in Personenminuten und Küchenlohn. Vor-Ort-Arbeit wird
 separat ausgewiesen und als Servicekosten mit dem bestehenden allgemeinen
 Team-/Betriebsstundensatz gerechnet (Dominique, 18.11.2026). Lohnnebenkosten und
@@ -58,6 +59,10 @@ bisherigen Bezugsgröße übernommen; sie werden nicht als neue Einheit interpre
 Unveränderte Bestandsmengen werden nicht ungeprüft als geerbt markiert. Für neue
 Varianten gilt die Standardvererbung; bestehende Varianten können bewusst darauf
 umgestellt werden. Mengen ohne eigene Komponentenwerte folgen dann der Quelle.
+Beim Abschalten der Vererbung wird die wirksame Komponentenverteilung festgehalten,
+auch wenn der Standard selbst Komponentenänderungen enthält. Eine vollständig
+weggelassene Komponenten-Summe bleibt bekannte Nullmenge und greift für Zeiten
+je Kilogramm nicht auf den Gerichtsaltwert zurück.
 
 Der frühere Unique-Index (Rezept, Servierform) wird durch einen normalen Index
 ersetzt; die Ein-Standard-Regel bleibt bestehen. Softgelöschte Varianten werden
@@ -86,6 +91,14 @@ Zeitliste. Ihre vollständige Umstellung ist ein Folgepaket.
    Standard beförderte Variante behält ihre wirksame Komposition.
 3. Vor-Ort-Arbeitszeit erzeugt eigenen Servicelohn in der Auftragskalkulation,
    mit dem allgemeinen Team-/Betriebsstundensatz.
+
+## Offene fachliche Rückfrage
+
+Die bisherige Pauschale zählt nach dem Zusammenfassen gleicher Gerichte und
+Darreichungen einmal. Die Oberfläche benennt dies ausdrücklich als „Auftrag je
+Darreichung“. Rückfrage am 18.11.2026: Soll sie stattdessen je ursprünglicher
+Auftragszeile zählen? Bis zur Entscheidung bleibt die vorhandene Rechnung bestehen.
+Der technische Basis-Schlüssel `auftragszeile` bleibt kompatibel.
 
 ## Abnahme
 
@@ -118,6 +131,4 @@ Zeitliste. Ihre vollständige Umstellung ist ein Folgepaket.
   Tabellen dürfen innerhalb ihrer Scrollfläche breiter sein. Kein Nachweis einer
   vollständigen Browser-Speicherstrecke; diese Actions sind über Livewire geprüft.
 - Vollständige Modulsuite und produktionsgleicher MySQL-Smoke bleiben Teil der
-  Releaseprüfung. Lokal ist keine MySQL-Testlaufzeit eingerichtet. Vor Merge
-  außerdem gegen den dann aktuellen main einschließlich der parallelen Arbeiten
-  #848/#850 abgleichen. Keine Produktionsfreigabe aus diesem Branch ableiten.
+  Releaseprüfung. Lokal ist keine MySQL-Testlaufzeit eingerichtet. Der Abgleich gegen main `7f42e846` einschließlich #848/#850 ist erfolgt. Keine Produktionsfreigabe aus diesem Branch ableiten.

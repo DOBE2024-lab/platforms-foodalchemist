@@ -222,3 +222,41 @@ it('berechnet Plattenbedarf aus der tatsächlichen Grammatur der Darreichung', f
     $r = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->berechnen($this->rootTeam, $this->gericht->fresh(), $dar, 100);
     expect($r['minuten'])->toBe(8.0)->and($r['vollstaendig'])->toBeTrue();
 });
+
+it('berechnet bei vollständig weggelassenen Komponenten keine Kilogrammzeit aus dem Gerichtsaltwert', function () {
+    $gp = $this->makeGp($this->rootTeam, 'Salat');
+    $zutat = $this->makeIngredient($this->gericht, 'Salat', $gp, '120');
+    $svc = app(DarreichungService::class);
+    $svc->aktualisieren($this->rootTeam, $this->dar->id, [
+        'quantity_per_unit_g' => 120,
+        'arbeitszeiten' => [['use_case' => 'abfuellen', 'basis' => 'kg', 'ort' => 'kueche', 'wert' => 10]],
+    ]);
+    $svc->setzeDelta($this->rootTeam, $this->dar->id, $zutat->id, null, true);
+    expect($this->dar->fresh()->quantity_per_unit_g)->toBe(0.0)
+        ->and($svc->grammJeEinheit($this->dar->fresh(), $this->gericht->fresh()))->toBe(0.0);
+    $zeit = ($this->rechne)();
+    expect($zeit['variable_minutes'])->toBe(0.0)->and($zeit['time_complete'])->toBeTrue();
+});
+
+it('hält beim Abschalten der Mengenvererbung auch die tatsächliche Komponentenverteilung fest', function () {
+    $this->gericht->update(['yield_kg' => .2]);
+    $a = $this->makeIngredient($this->gericht, 'A', $this->makeGp($this->rootTeam, 'A'), '100', 1);
+    $b = $this->makeIngredient($this->gericht, 'B', $this->makeGp($this->rootTeam, 'B'), '100', 2);
+    $svc = app(DarreichungService::class);
+    $svc->aktualisieren($this->rootTeam, $this->dar->id, ['quantity_per_unit_g' => 120]);
+    $svc->setzeDelta($this->rootTeam, $this->dar->id, $a->id, 30, false);
+    $ganz = $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id);
+    $teil = $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id);
+    $svc->setzeDelta($this->rootTeam, $teil->id, $a->id, 10, false);
+    $svc->aktualisieren($this->rootTeam, $ganz->id, ['menge_vom_standard' => false]);
+    $svc->aktualisieren($this->rootTeam, $teil->id, ['menge_vom_standard' => false]);
+    $svc->setzeDelta($this->rootTeam, $this->dar->id, $b->id, 40, false);
+
+    expect($ganz->fresh()->quantity_per_unit_g)->toBe(90.0)
+        ->and($teil->fresh()->quantity_per_unit_g)->toBe(70.0);
+    foreach ([[$ganz, 30.0], [$teil, 10.0]] as [$dar, $aGramm]) {
+        $anteil = $svc->produktionsAnteil($this->gericht->fresh(), $dar->fresh(), 1, $this->rootTeam);
+        expect($anteil['je_zutat'][$a->id])->toBe($aGramm / 100)
+            ->and($anteil['je_zutat'][$b->id])->toBe(0.6);
+    }
+});

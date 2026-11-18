@@ -171,7 +171,7 @@ class VkModal extends Component
                 'container_warm_count' => $r->container_warm_count,
                 'container_cold_vocab_id' => $r->container_cold_vocab_id,
                 'container_cold_count' => $r->container_cold_count,
-                'serving_vehicle_vocab_id' => $r->serving_vehicle_vocab_id,
+                // serving_vehicle_vocab_id: Typ und Gefäß stehen nur an der Darreichung (18.11.2026), am Gericht abgeleitet
                 // M9-01: Voll-Editor-Parität (Texte/Eigenschaften/Plating/Notizen).
                 // marketing_text ist seit dem UX-Umbau 2026-07-03 raus: der Text lebt
                 // kundenspezifisch am Foodbook-Block (Spalte bleibt als WaWi-Import-Spiegel).
@@ -520,7 +520,6 @@ class VkModal extends Component
     private const KI_LINEAGE_FELDER = [
         'sales_wording_standard' => 'sales_wording',
         'plating_text' => 'plating',
-        'serving_vehicle_vocab_id' => 'serving_vehicle',
     ];
 
     /** Nutzer ändert ein KI-übernommenes Feld selbst → ab jetzt Handarbeit. */
@@ -766,8 +765,11 @@ class VkModal extends Component
         $team = Auth::user()?->currentTeamRelation;
         $id = $v->werte['servier_vehikel_id'] ?? null;
         if ($id !== null && TeamScope::applyVisible(DB::table('foodalchemist_vocab_serving_vehicles')->whereNull('deleted_at')->where('id', (int) $id), 'team_id', $team)->exists()) {
-            $this->form['serving_vehicle_vocab_id'] = (int) $id;
-            $this->kiLineage['serving_vehicle'] = (float) ($v->confidence ?? 0.5);   // Etikett ehrlich: KI, nicht Handarbeit
+            // Eine Stelle (18.11.2026): der Typ geht an die Standard-Darreichung; steht dort ein konkretes Gefäß, bestimmt das den Typ
+            if (! app(\Platform\FoodAlchemist\Services\DarreichungService::class)->typVorschlagUebernehmen($team, $this->recipeId, (int) $id, (float) ($v->confidence ?? 0.5))) {
+                $this->fehler = 'An der Standard-Darreichung steht ein Gefäß — der Typ kommt aus dem Gefäß.';
+            }
+            $this->ladeDarreichungen();
         } else {
             $this->fehler = 'KI lieferte kein gültiges Servier-Vehikel — echter Provider nötig.';
         }
@@ -1437,7 +1439,7 @@ class VkModal extends Component
                 : [],
             'gefaessGps' => $team !== null
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->nonFood()->whereNotIn('status', ['rejected', 'merged'])
-                    ->whereIn('sub_category', \Platform\FoodAlchemist\Support\NonFoodRegeln::mitAlias(\Platform\FoodAlchemist\Support\NonFoodRegeln::SUB_GESCHIRR))->orderBy('name')->limit(300)->get(['id', 'name'])
+                    ->whereIn('sub_category', \Platform\FoodAlchemist\Support\NonFoodRegeln::mitAlias(\Platform\FoodAlchemist\Support\NonFoodRegeln::SUB_GESCHIRR))->orderBy('name')->limit(300)->get(['id', 'name', 'serving_vehicle_vocab_id'])
                 : collect(),
             'behaelterVorschau' => $this->behaelterVorschau(),
             'behaelterVorschauPax' => self::VORSCHAU_PORTIONEN,

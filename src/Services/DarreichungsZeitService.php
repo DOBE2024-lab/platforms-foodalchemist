@@ -30,7 +30,7 @@ class DarreichungsZeitService
         'stueck' => 'Stück (s)',
         'behaelter' => 'Ausgabeplatte / Behälter (min)',
         'kg' => 'Kilogramm (min)',
-        'auftragszeile' => 'Auftragszeile (min)',
+        'auftragszeile' => 'Auftrag je Darreichung (min)',
     ];
 
     public function normalisieren(mixed $zeilen): array

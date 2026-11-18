@@ -54,6 +54,7 @@ class GpMasseService
         }
         if ($idOderName === null || trim((string) $idOderName) === '') {
             $gp->update(['serving_vehicle_vocab_id' => null]);
+            $this->typInGerichte($gp);
 
             return $gp->refresh();
         }
@@ -65,8 +66,17 @@ class GpMasseService
             throw new RuntimeException('Servier-Typ „'.$idOderName.'“ gibt es im Vokabular nicht.');
         }
         $gp->update(['serving_vehicle_vocab_id' => (int) $id]);
+        $this->typInGerichte($gp);
 
         return $gp->refresh();
+    }
+
+    /** Der Typ am Gericht ist aus der Standard-Darreichung abgeleitet (18.11.2026) — ändert sich der Typ des Gefäßes, ziehen deren Gerichte nach. */
+    private function typInGerichte(FoodAlchemistGp $gp): void
+    {
+        $svc = app(DarreichungService::class);
+        \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::query()->where('vessel_gp_id', $gp->id)->where('is_standard', true)
+            ->each(fn ($d) => $svc->typInsGericht($d, true));
     }
 
     /** Die Größe für den Namen aus den gespeicherten Maßen (Ø → L×B×H → Volumen); null ohne Maß. */

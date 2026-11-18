@@ -606,7 +606,9 @@ class BulkEnrichService
             'geschmack' => in_array($wert, \Platform\FoodAlchemist\Services\RecipeService::TASTE_DIRECTIONS, true)
                 ? ['taste_direction' => $wert] : null,             // Auto-Apply-Ausnahme-Feld (GL-07 §4.3), kein Lineage-Trio
             // B-1: nur Gericht, nur sichtbare Typ-Vehikel, manual gewinnt (dieselben Riegel wie VkModal::uebernehmeVehikel)
+            // 18.11.2026: steht an der Standard-Darreichung ein konkretes Gefäß, bestimmt das den Typ — kein KI-Typ darüber
             'servier_vehikel' => $r->serving_vehicle_source === 'manual' || ! $r->is_sales_recipe || ! is_numeric($wert)
+                || $r->standardPresentation()->whereNotNull('vessel_gp_id')->exists()
                 || ! $this->vehikelKatalog($team)->contains(fn ($v) => (int) $v->id === (int) $wert) ? null
                 : ['serving_vehicle_vocab_id' => (int) $wert, 'serving_vehicle_source' => 'ki', 'serving_vehicle_ai_confidence' => $prop->confidence],
             default => null,

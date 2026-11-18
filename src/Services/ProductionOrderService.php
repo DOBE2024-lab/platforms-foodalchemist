@@ -435,12 +435,19 @@ class ProductionOrderService
 
         $rohBatches = (float) ($line->benoetigt_ansaetze ?? $line->ansaetze ?? 0);
         $team = Team::find($line->productionOrder?->team_id);
-        $neu = $team !== null
-            ? app(ProductionTimeService::class)->calculateForBatches($team, $recipe, $rohBatches, $station)['active_person_minutes']
+        $formen = array_map(fn ($f) => ['darreichung_id' => $f['darreichung_id'] ?? null,
+            'portionen' => $f['portionen_roh'] ?? $f['portionen'] ?? 0], $line->darreichung['formen'] ?? []);
+        $zeit = $team !== null
+            ? app(ProductionTimeService::class)->calculateForBatches($team, $recipe, $rohBatches, $station, $formen ?: null)
             : null;
+        $neu = $zeit['active_person_minutes'] ?? null;
+        $blob = $line->darreichung ?? [];
+        if ($zeit !== null) {
+            $blob['zeitplanung'] = $zeit;
+        }
 
-        if ((int) $line->arbeitszeit_min !== (int) $neu) {
-            $line->forceFill(['arbeitszeit_min' => $neu])->save();
+        if ((int) $line->arbeitszeit_min !== (int) $neu || $blob != ($line->darreichung ?? [])) {
+            $line->forceFill(['arbeitszeit_min' => $neu, 'darreichung' => $blob])->save();
         }
     }
 
@@ -1351,6 +1358,9 @@ class ProductionOrderService
     private function darreichungBlob(array $r): ?array
     {
         $blob = (array) ($r['darreichung'] ?? []);
+        if (($r['zeitplanung'] ?? null) !== null) {
+            $blob['zeitplanung'] = $r['zeitplanung'];
+        }
         if (($r['behaelter'] ?? null) !== null) {
             $blob['behaelter_bedarf'] = $r['behaelter'];
         }

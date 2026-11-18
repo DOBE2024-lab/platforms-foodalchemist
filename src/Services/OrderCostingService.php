@@ -33,6 +33,8 @@ class OrderCostingService
         $explodedMek = collect($sheet['gp_bedarf'])->sum(fn (array $gp) => (float) ($gp['ek_eur'] ?? 0));
         $mekComplete = collect($sheet['gp_bedarf'])->every(fn (array $gp) => (bool) ($gp['ek_bekannt'] ?? false));
         $activeMinutes = 0.0;
+        $serviceMinutes = 0.0;
+        $timeQuantitiesComplete = true;
         $fek = 0.0;
         // Spec 83 B3c/B3j: Lohn getrennt — Produktion (Basisrezepte) und je Gerichts-Block (Regenerieren, Anrichten)
         $fekTeile = ['produktion' => 0.0, 'regenerieren' => 0.0, 'anrichten' => 0.0];
@@ -86,7 +88,12 @@ class OrderCostingService
                 $rate['source'] = 'team_pass';
             }
             $minutes = (float) $time['active_person_minutes'];
-            if ($minutes <= 0.0) {
+            $service = app(DarreichungsZeitService::class)->serviceKosten($team, (float) ($time['vor_ort_minutes'] ?? 0), $outlet);
+            $serviceMinutes += $service['minuten'];
+            $timeQuantitiesComplete = $timeQuantitiesComplete && ($time['time_complete'] ?? true);
+            $formen = collect($time['bloecke']['anrichten']['formen'] ?? []);
+            $bewusstGepflegt = $formen->isNotEmpty() && $formen->every(fn ($f) => ($f['einheit'] ?? null) === 'arbeitsschritte' && ($f['vollstaendig'] ?? false));
+            if ($minutes <= 0.0 && $service['minuten'] <= 0.0 && ! $bewusstGepflegt) {
                 $recipesWithoutActiveTime[] = (string) $recipe->name;
             }
             $timeBreakdown[] = [
@@ -98,7 +105,9 @@ class OrderCostingService
                 'batch_minutes' => (float) $time['batch_minutes'],
                 'variable_minutes' => (float) $time['variable_minutes'],
                 'regenerieren_minutes' => (float) ($time['regenerieren_minutes'] ?? 0),
-                'active_person_minutes' => $minutes,
+                'active_person_minutes' => $minutes + $service['minuten'],
+                'kitchen_person_minutes' => $minutes,
+                'vor_ort_minutes' => (float) ($time['vor_ort_minutes'] ?? 0),
                 'batch_limit' => $time['batch_limit'],
                 'batch_limit_source' => $time['batch_limit_source'],
                 'bloecke' => $time['bloecke'] ?? null,
@@ -134,6 +143,10 @@ class OrderCostingService
                 $fekTeile['produktion'] += $minutes / 60 * $rate['hourly_rate'];
             }
             $fek += array_sum(array_map(fn ($l) => $l['minuten'] / 60 * $l['rate']['hourly_rate'], $lastJePosten));
+            if ($service['minuten'] > 0) {
+                $fek += $service['lohn_eur'];
+                $fekTeile['service'] = ($fekTeile['service'] ?? 0) + $service['lohn_eur'];
+            }
             $direct += max(0.0, (float) ($recipe->additional_costs_eur ?? 0)) * max(0.0, $productionBatches);
             $warnings = array_merge($warnings, $time['warnings'], $rate['warnings']);
             foreach ($lastJePosten as $key => $l) {
@@ -158,7 +171,7 @@ class OrderCostingService
         $schema = array_values(array_filter($this->fixkosten->aufgeloestesSchema($team, $outlet), fn ($b) => $b['active']));
         $costBreakdown = [
             ['key' => 'mek', 'label' => 'Wareneinsatz (MEK)', 'amount' => $mek, 'stage' => 'cost'],
-            ['key' => 'fek', 'label' => 'Lohn / Produktion (FEK)', 'amount' => $fek, 'stage' => 'cost'],
+            ['key' => 'fek', 'label' => 'Lohn Küche und Service (FEK)', 'amount' => $fek, 'stage' => 'cost'],
         ];
         // „davon"-Zeilen (stage detail, NICHT aufsummieren): Lohn je Block, Summe = FEK
         foreach (['produktion' => 'davon Produktion (Basisrezepte)', 'regenerieren' => 'davon Regenerieren',
@@ -166,6 +179,9 @@ class OrderCostingService
             if ($fekTeile[$k] > 0.0) {
                 $costBreakdown[] = ['key' => 'fek_'.$k, 'label' => $label, 'amount' => $fekTeile[$k], 'stage' => 'detail', 'parent' => 'fek'];
             }
+        }
+        if (($fekTeile['service'] ?? 0) > 0) {
+            $costBreakdown[] = ['key' => 'fek_service', 'label' => 'davon Service vor Ort', 'amount' => $fekTeile['service'], 'stage' => 'detail', 'parent' => 'fek'];
         }
         if ($direct > 0.0) {
             $costBreakdown[] = ['key' => 'direct', 'label' => 'Weitere direkte Kosten', 'amount' => $direct, 'stage' => 'cost'];
@@ -217,7 +233,7 @@ class OrderCostingService
                 implode(', ', array_slice(array_unique($recipesWithoutActiveTime), 0, 5)),
             );
         }
-        $timeComplete = $sheet['rezepte'] !== [] && $recipesWithoutActiveTime === [];
+        $timeComplete = $sheet['rezepte'] !== [] && $recipesWithoutActiveTime === [] && $timeQuantitiesComplete;
 
         return [
             'pax' => $pax,
@@ -241,7 +257,10 @@ class OrderCostingService
             'contribution_margin_pct' => $catalogTotal > 0 ? round(($catalogTotal - $hk2) / $catalogTotal * 100, 1) : null,
             'target_gap' => round($target - $catalogTotal, 2),
             'unprofitable' => $catalogTotal + 0.005 < $target,
-            'active_person_minutes' => round($activeMinutes, 2),
+            'active_person_minutes' => round($activeMinutes + $serviceMinutes, 2),
+            'kitchen_person_minutes' => round($activeMinutes, 2),
+            'service_person_minutes' => round($serviceMinutes, 2),
+            'service_labor_cost' => round($fekTeile['service'] ?? 0, 4),
             'cost_breakdown' => array_map(function (array $row) {
                 $row['amount'] = round((float) $row['amount'], 4);
 

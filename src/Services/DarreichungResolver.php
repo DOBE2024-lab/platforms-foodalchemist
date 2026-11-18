@@ -39,7 +39,7 @@ class DarreichungResolver
         if ($konzeptServierformId !== null) {
             $passend = $slot->dish->presentations()
                 ->where('serving_form_id', $konzeptServierformId)
-                ->first();
+                ->orderByDesc('is_standard')->orderBy('id')->first();
             if ($passend !== null) {
                 return $passend;
             }
@@ -81,7 +81,7 @@ class DarreichungResolver
         if ($servingFormId !== null) {
             $passend = $block->dish->presentations()
                 ->where('serving_form_id', $servingFormId)
-                ->first();
+                ->orderByDesc('is_standard')->orderBy('id')->first();
             if ($passend !== null) {
                 return $passend;
             }

@@ -18,9 +18,105 @@ use Illuminate\Support\Facades\Auth;
  */
 trait HatDarreichungsFormular
 {
+    public ?int $darAktiv = null;
+
+    public array $darZeitForm = [];
+
+    #[\Livewire\Attributes\Locked]
+    public array $darZeitStart = [];
+
+    private function darZeitEntwuerfe(): array
+    {
+        return array_filter($this->darZeitForm, fn ($zeilen, $id) => isset($this->darForm[$id])
+            && $zeilen != ($this->darZeitStart[$id] ?? []), ARRAY_FILTER_USE_BOTH);
+    }
+
+    private function darZeitEntwuerfeSpeichern(): void
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null) {
+            return;
+        }
+        $svc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+        $normal = [];
+        foreach ($this->darZeitEntwuerfe() as $id => $zeilen) {
+            $normal[$id] = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->normalisieren($zeilen);
+        }
+        foreach ($normal as $id => $zeilen) {
+            $svc->aktualisieren($team, (int) $id, ['arbeitszeiten' => $zeilen]);
+        }
+    }
+
+    public function updatedDarZeitForm(mixed $value, string $key): void
+    {
+        $teile = explode('.', $key);
+        if (count($teile) === 3 && isset($this->darZeitForm[$teile[0]][$teile[1]])) {
+            unset($this->darZeitForm[$teile[0]][$teile[1]]['quelle'], $this->darZeitForm[$teile[0]][$teile[1]]['confidence']);
+            if ($teile[2] === 'use_case') {
+                $basis = ['abfuellen' => 'einheit', 'anrichten_teller' => 'portion', 'portionieren_platte' => 'behaelter', 'stueck' => 'stueck', 'pauschale' => 'auftragszeile'][$value] ?? null;
+                if ($basis !== null && $this->darZeitForm[$teile[0]][$teile[1]]['basis'] !== $basis) {
+                    $this->darZeitForm[$teile[0]][$teile[1]]['basis'] = $basis;
+                    $this->darZeitForm[$teile[0]][$teile[1]]['wert'] = '';
+                }
+            } elseif ($teile[2] === 'basis') {
+                $this->darZeitForm[$teile[0]][$teile[1]]['wert'] = '';
+            }
+        }
+    }
+
+    public function darZeitVorschlagen(int $id): void
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        $dar = $team !== null ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::visibleToTeam($team)
+            ->where('recipe_id', $this->recipeId)->find($id) : null;
+        if ($dar === null || ! $dar->recipe->isOwnedBy($team)) {
+            $this->fehler = 'Zeiten können nur für eine eigene Darreichung vorgeschlagen werden.';
+            return;
+        }
+        try {
+            $v = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('darreichung.zeiten', [
+                'gericht' => $dar->recipe->name, 'darreichung' => $dar->name,
+                'servierform' => $dar->servingForm?->label, 'gefaess' => $dar->vessel?->name,
+                'gramm_je_einheit' => $dar->quantity_per_unit_g, 'einheiten_je_portion' => $dar->unit_count,
+                'komponenten' => $dar->recipe->ingredients->map(fn ($z) => $z->referencedRecipe?->name ?? $z->display_name)->all(),
+            ], ['target_table' => $dar->getTable(), 'target_id' => $dar->id]);
+            $zeilen = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->normalisieren($v->werte['arbeitszeiten'] ?? null);
+            $this->darZeitForm[$id] = array_map(fn ($z) => $z + ['quelle' => 'ki_vorschlag', 'confidence' => $v->confidence], $zeilen);
+            $this->fehler = null;
+        } catch (\RuntimeException $e) {
+            $this->fehler = $e->getMessage();
+        }
+    }
+
+    public function darZeitHinzu(int $id): void
+    {
+        if (isset($this->darForm[$id])) {
+            $this->darZeitForm[$id][] = ['use_case' => 'abfuellen', 'basis' => 'einheit', 'ort' => 'kueche', 'wert' => ''];
+        }
+    }
+
+    public function darZeitenSpeichern(int $id): void
+    {
+        if (isset($this->darForm[$id])) {
+            $this->darServiceCall(fn ($svc, $team) => $svc->aktualisieren($team, $id, ['arbeitszeiten' => $this->darZeitForm[$id] ?? []]));
+        }
+    }
+
+    public function darZeitEntfernen(int $id, int $index): void
+    {
+        if (! isset($this->darZeitForm[$id][$index])) {
+            return;
+        }
+        unset($this->darZeitForm[$id][$index]);
+        $this->darZeitForm[$id] = array_values($this->darZeitForm[$id]);
+        $this->darZeitenSpeichern($id);
+    }
+
     private function ladeDarreichungen(): void
     {
         $this->darForm = [];
+        $this->darZeitForm = [];
+        $this->darZeitStart = [];
         $this->darDeltaOffen = null;
         $this->darNeueForm = '';
         if ($this->recipeId === null) {
@@ -32,6 +128,9 @@ trait HatDarreichungsFormular
             : null;
         foreach (\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::with('recipe')->where('recipe_id', $this->recipeId)->get() as $d) {
             $this->darForm[$d->id] = [
+                'name' => $d->name,
+                'ausgabe_station_id' => $d->ausgabe_station_id,
+                'menge_vom_standard' => $d->menge_vom_standard,
                 'quantity_per_unit_g' => self::darZahl($d->quantity_per_unit_g),
                 'unit_count' => self::darZahl($d->unit_count),
                 'unit_vocab_id' => $d->unit_vocab_id,
@@ -48,6 +147,14 @@ trait HatDarreichungsFormular
                 'anrichten_wert' => self::darZahl($d->anrichten_wert),
                 'anrichten_pauschal_min' => self::darZahl($d->anrichten_pauschal_min),
             ];
+            $this->darZeitForm[$d->id] = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->formular($d);
+            $this->darZeitStart[$d->id] = $this->darZeitForm[$d->id];
+            if ($d->is_standard && $this->darAktiv === null) {
+                $this->darAktiv = (int) $d->id;
+            }
+        }
+        if (! isset($this->darForm[$this->darAktiv])) {
+            $this->darAktiv = array_key_first($this->darForm);
         }
     }
 

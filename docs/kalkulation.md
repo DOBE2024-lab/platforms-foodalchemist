@@ -37,6 +37,47 @@ derselben Formel (`CatalogPricingService::klassenVk`), mischen sich aber nie in 
 Eine Leistung ohne Klasse fällt nicht auf den Team-Standard zurück, sondern rechnet neutral mit
 100 % und zeigt eine Warnung.
 
+## Darreichungen pflegen
+
+Ein Gericht und jede seiner Darreichungen beschreiben jeweils eine Portion.
+120 g im Glas sind eine Portion; zwei bestellte Gläser sind zwei Portionen.
+Ein zusätzlicher Anzahl-Zähler wird nicht gepflegt. Abweichender Altbestand wird
+angezeigt und erst nach einer geprüften Umstellung geändert.
+
+Links wählst du eine Darreichung, rechts pflegst du deren Bezeichnung, Servierform,
+Gefäß, Menge, Preisklasse und Preis. Beim Anlegen eines Gerichts entsteht eine
+Standard-Darreichung. Sie kann zum Beispiel auf Buffet im Schraubglas umgestellt
+werden. Über „Darreichung hinzufügen“ entstehen weitere Varianten, auch mit
+derselben Servierform. Die Verkaufs-Kennzahlen im Kopf beziehen sich immer auf
+den Standard, unabhängig von der gerade geöffneten Variante.
+
+Unter „Komponenten & Mengen“ passt du bestehende Komponenten an oder lässt sie
+weg. Eigene Komponentenmengen ergeben zusammen die Grammatur dieser Darreichung.
+Neue Zutaten gehören in ein eigenes Gericht.
+
+Neue Varianten übernehmen zunächst die Standardmenge. Über „Portionsmenge vom
+Standard übernehmen“ wählst du zwischen geerbter und eigener Grammatur. Geerbte
+Mengen folgen einem Standardwechsel; eigene Mengen und weggelassene Komponenten
+bleiben erhalten. Der Editor nennt die Herkunft je Komponente.
+
+„Arbeitsschritte & Zeiten“ erfasst die konkrete Tätigkeit, Zeitbasis und den
+Arbeitsort. Abfüllen kann auch bei Buffet je Glas in der Küche gerechnet werden.
+Die Vorschau zeigt den gespeicherten Stand für 100 Portionen. Fehlende Mengen
+werden als unvollständige Berechnung angezeigt. Vor-Ort-Zeit und Service-Grundlohn
+werden separat gezeigt. Der Auftrag rechnet den Service mit dem allgemeinen
+Team-Stundensatz und ergänzt die geltenden Lohnnebenkosten und Aufschläge.
+Ein expliziter Ausgabe-Posten gilt
+nur für die Küchenarbeit dieser Variante. Regeneration wird weiterhin berechnet.
+Die passive Standzeit steht im gemeinsamen Planungsbereich des Gerichts.
+
+Bisherige Zeiten bleiben wirksam, bis du die neuen Arbeitsschritte ausdrücklich
+übernimmst. Eine bewusst leere Liste ersetzt die bisherigen Zeiten durch keine
+aktive Arbeit. „Zeiten vorschlagen“ zeigt einen ungeprüften KI-Vorschlag, der erst
+mit „Zeiten übernehmen“ oder dem allgemeinen „Speichern“ gespeichert wird.
+Zeitentwürfe bleiben auch bei anderen Feldänderungen im Editor erhalten. Beim
+Wechsel der Servierform behalten explizite bisherige Zeiten ihre Bezugsgröße:
+Sekunden je Portion werden dadurch nicht zu Minuten je Platte.
+
 ## Preiszustände
 
 - `auto`: Vergleichspreis und gültiger VK werden neu berechnet.

@@ -123,7 +123,7 @@ class ConceptSlotsPostTool extends FoodAlchemistTool implements ToolContract, To
             if (($arguments['presentation'] ?? '') !== '' && $slot->sales_recipe_id !== null) {
                 $formId = $this->resolveServierformId($team, (string) $arguments['presentation']);
                 $darreichung = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $slot->sales_recipe_id)
-                    ->where('serving_form_id', $formId)->first();
+                    ->where('serving_form_id', $formId)->orderByDesc('is_standard')->orderBy('id')->first();
                 if ($darreichung === null) {
                     $formen = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $slot->sales_recipe_id)
                         ->with('servingForm')->get()->map(fn ($d) => $d->servingForm?->code)->filter()->implode(', ');

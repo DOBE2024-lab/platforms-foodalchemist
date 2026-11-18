@@ -112,3 +112,28 @@ it('Befehl darreichung-typ-uebernehmen: Trockenlauf, --apply mit Backup, --zurue
     expect($this->std->fresh()->serving_vehicle_vocab_id)->toBeNull()
         ->and($zwei->fresh()->serving_vehicle_vocab_id)->toBeNull();
 });
+
+it('Standardwechsel zwischen gleichartigen Glasvarianten übernimmt Typ und vererbte Menge, aber keine fremden Zeiten', function () {
+    $this->svc->aktualisieren($this->rootTeam, $this->std->id, [
+        'quantity_per_unit_g' => 120, 'serving_vehicle_vocab_id' => $this->tellerTyp,
+        'arbeitszeiten' => [['use_case' => 'abfuellen', 'basis' => 'einheit', 'ort' => 'kueche', 'wert' => 20]],
+    ]);
+    $klein = $this->svc->anlegen($this->rootTeam, $this->gericht->id, $this->buffet->id, ['quantity_per_unit_g' => 80]);
+    $erbt = $this->svc->anlegen($this->rootTeam, $this->gericht->id, $this->buffet->id);
+    $this->svc->aktualisieren($this->rootTeam, $klein->id, [
+        'vessel_gp_id' => $this->glas->id, 'serving_vehicle_vocab_id' => null,
+        'arbeitszeiten' => [['use_case' => 'abfuellen', 'basis' => 'einheit', 'ort' => 'vor_ort', 'wert' => 30]],
+    ]);
+    $this->svc->setzeStandard($this->rootTeam, $klein->id);
+
+    expect($this->gericht->fresh()->serving_vehicle_vocab_id)->toBe($this->glasTyp)
+        ->and($erbt->fresh()->quantity_per_unit_g)->toBe(80.0)
+        ->and($erbt->fresh()->arbeitszeiten)->toBeNull()
+        ->and($this->std->fresh()->quantity_per_unit_g)->toBe(120.0);
+    $time = app(\Platform\FoodAlchemist\Services\ProductionTimeService::class)
+        ->calculateForBatches($this->rootTeam, $this->gericht->fresh(), 100, null, [
+            ['darreichung_id' => $klein->id, 'portionen' => 100],
+        ]);
+    expect($time['active_person_minutes'])->toBe(0.0)->and($time['vor_ort_minutes'])->toBe(50.0)
+        ->and($this->std->fresh()->arbeitszeiten[0]['ort'])->toBe('kueche');
+});

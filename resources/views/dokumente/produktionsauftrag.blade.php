@@ -264,6 +264,9 @@
             @endif
 
             {{-- §3.3 Anrichten: eingefrorene Schritte samt Fotos (Adressat ist der Pass). --}}
+            @if(($z['darreichung']['zeitplanung']['vor_ort_minutes'] ?? 0) > 0)
+                <p><strong>Service vor Ort:</strong> {{ $z['darreichung']['zeitplanung']['vor_ort_minutes'] }} Personenminuten, separat von der Küchenarbeit.</p>
+            @endif
             @if(($opt['anrichten'] ?? false) && count($z['anrichte_schritte'] ?? []))
                 <h3>Anrichten</h3>
                 @include('foodalchemist::dokumente.partials.schritt-karten', [

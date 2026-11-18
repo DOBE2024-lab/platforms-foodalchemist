@@ -57,17 +57,22 @@ class HandbuchQuellenService
         $sections = [];
         foreach ($dok['kapitel'] ?? [] as $k) {
             $items = [];
+            $konzepte = [];
             // Format-Kapitel (live, Entscheid B 31.08.): Gerichte stehen in den Editionen, nicht in Blöcken — wie beim Angebot lesen (18.11.2026)
             $istFormat = (bool) ($k['ist_format'] ?? false);
             foreach (($istFormat ? ($k['editionen'] ?? []) : ($k['bloecke'] ?? [])) as $b) {
+                $konzeptItems = [];
                 foreach ($b['gerichte'] ?? [] as $g) {
                     if (! empty($g['recipe_id'])) {
                         $codes = isset($g['codes']) ? array_values((array) $g['codes']) : $this->codesFuer((int) $g['recipe_id']);
-                        $items[] = $this->item((int) $g['recipe_id'], (string) ($g['text'] ?? ''), (int) ($g['einrueckung'] ?? 0), $codes);
+                        $items[] = $konzeptItems[] = $this->item((int) $g['recipe_id'], (string) ($g['text'] ?? ''), (int) ($g['einrueckung'] ?? 0), $codes);
                     }
                 }
+                if ($konzeptItems !== []) {
+                    $konzepte[] = ['title' => (string) ($b['name'] ?? $b['label'] ?? 'Konzept'), 'items' => $konzeptItems];
+                }
             }
-            $sections[] = ['title' => (string) ($k['title'] ?? ''), 'text' => $k['text'] ?? null, 'items' => $items];
+            $sections[] = ['title' => (string) ($k['title'] ?? ''), 'text' => $k['text'] ?? null, 'items' => $items, 'groups' => $konzepte];
         }
 
         return [
@@ -156,14 +161,19 @@ class HandbuchQuellenService
         foreach ($komp['kapitel'] as $k) {
             $gruppen = $k['ist_format'] ? ($k['editionen'] ?? []) : ($k['bloecke'] ?? []);
             $items = [];
+            $konzepte = [];
             foreach ($gruppen as $grp) {
+                $konzeptItems = [];
                 foreach ($grp['gerichte'] ?? [] as $g) {
                     if (! empty($g['recipe_id'])) {
-                        $items[] = $this->item((int) $g['recipe_id'], (string) ($g['text'] ?? ''), (int) ($g['einrueckung'] ?? 0), $this->codesFuer((int) $g['recipe_id']));
+                        $items[] = $konzeptItems[] = $this->item((int) $g['recipe_id'], (string) ($g['text'] ?? ''), (int) ($g['einrueckung'] ?? 0), $this->codesFuer((int) $g['recipe_id']));
                     }
                 }
+                if ($konzeptItems !== []) {
+                    $konzepte[] = ['title' => (string) ($grp['name'] ?? $grp['label'] ?? 'Konzept'), 'items' => $konzeptItems];
+                }
             }
-            $sections[] = ['title' => (string) ($k['title'] ?? ''), 'text' => $k['text'] ?? null, 'items' => $items];
+            $sections[] = ['title' => (string) ($k['title'] ?? ''), 'text' => $k['text'] ?? null, 'items' => $items, 'groups' => $konzepte];
         }
 
         return [

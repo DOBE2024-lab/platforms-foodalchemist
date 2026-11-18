@@ -2,7 +2,7 @@
     description="Eine Darreichung entsteht automatisch. Der Standard bestimmt die Verkaufs-Kennzahlen des Gerichts. Weitere Varianten haben eigene Mengen, Preise und Arbeitszeiten."
     data-vk-darreichungen>
     @php $belegte = $darreichungen->pluck('serving_form_id')->all(); @endphp
-    <div class="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
+    <div class="grid gap-5 lg:grid-cols-[13rem_minmax(0,1fr)]">
         <aside class="flex flex-col gap-2" aria-label="Darreichung auswählen">
             @foreach($darreichungen as $variante)
                 <button type="button" wire:key="dar-auswahl-{{ $variante->id }}" wire:click="$set('darAktiv', {{ $variante->id }})"
@@ -36,16 +36,18 @@
                     $darFestFehlt = $fixiert ? \Platform\FoodAlchemist\Livewire\Verkauf\VkModal::darFestpreisFehlt($darForm[$d->id] ?? []) : null;
                     $av = $anrichtenVorschau[$d->id] ?? [];
                 @endphp
-                <div wire:key="dar-{{ $d->id }}" class="fa-surface p-4 flex flex-col gap-5" data-dar-editor="{{ $d->id }}">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <h3 class="font-medium">{{ $d->name ?: $d->servingForm?->label }}</h3>
+                <div wire:key="dar-{{ $d->id }}" class="fa-surface overflow-hidden flex flex-col" data-dar-editor="{{ $d->id }}">
+                    <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                        <div><span class="{{ $hinweis }}">{{ $d->servingForm?->label }}</span><h3 class="font-medium text-[length:var(--fa-text-lg)]">{{ $d->name ?: $d->servingForm?->label }}</h3></div>
                         @if($d->is_standard)
                             <x-fa::badge tone="info">Standard-Darreichung</x-fa::badge>
                         @else
                             <x-fa::button size="sm" variant="secondary" wire:click="darreichungStandard({{ $d->id }})">Als Standard festlegen</x-fa::button>
                         @endif
                     </div>
-                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <section class="border-t border-[var(--fa-line)] p-5 flex flex-col gap-4" aria-label="Portion und Verkauf">
+                    <h4 class="font-medium">Portion &amp; Verkauf</h4>
+                    <div class="grid gap-4 sm:grid-cols-2">
                         <x-fa::field label="Bezeichnung" for="dar-name-{{ $d->id }}">
                             <x-fa::input id="dar-name-{{ $d->id }}" wire:model.blur="darForm.{{ $d->id }}.name" wire:change="darreichungSpeichern({{ $d->id }})" maxlength="120" placeholder="{{ $d->servingForm?->label }}" />
                         </x-fa::field>
@@ -83,7 +85,7 @@
                         <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]"><input type="checkbox" wire:model="darForm.{{ $d->id }}.menge_vom_standard" wire:change="darreichungSpeichern({{ $d->id }})" class="accent-[var(--fa-accent)]" /> Portionsmenge vom Standard übernehmen</label>
                     @endunless
                     @if(($d->unit_count ?? 1) > 1 || ($rezept->sales_unit_count ?? 1) > 1)<x-fa::notice tone="warn">Altbestand mit abweichender Zählweise. Mengen und Zeiten bleiben bis zu einer geprüften Umstellung erhalten.</x-fa::notice>@endif
-                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <div class="grid gap-4 sm:grid-cols-2">
                         <x-fa::field label="Preis">
                             <div class="flex flex-wrap gap-2">
                                 <x-fa::button size="sm" :variant="!$fixiert ? 'primary' : 'secondary'" wire:click="darreichungPreisModusGeaendert({{ $d->id }}, 'auto')" aria-pressed="{{ $fixiert ? 'false' : 'true' }}">automatisch</x-fa::button>
@@ -110,11 +112,14 @@
                         <span>VK netto <x-fa::money :value="$d->sales_net" /></span>
                         <span>VK brutto <x-fa::money :value="$d->sales_gross" /></span>
                     </div>
+                    </section>
                     @include('foodalchemist::livewire.verkauf.partials.darreichung-komponenten')
                     @include('foodalchemist::livewire.verkauf.partials.darreichung-zeiten')
+                    <div class="px-5 py-4">
                     @include('foodalchemist::livewire.verkauf.partials.darreichung-zubehoer')
+                    </div>
                     @unless($d->is_standard)
-                        <div class="border-t border-[var(--fa-line)] pt-3"><x-fa::button size="sm" variant="danger" icon="heroicon-o-trash" wire:click="darreichungLoeschen({{ $d->id }})" wire:confirm="Diese Darreichung löschen?">Darreichung löschen</x-fa::button></div>
+                        <div class="border-t border-[var(--fa-line)] p-5"><x-fa::button size="sm" variant="danger" icon="heroicon-o-trash" wire:click="darreichungLoeschen({{ $d->id }})" wire:confirm="Diese Darreichung löschen?">Darreichung löschen</x-fa::button></div>
                     @endunless
                 </div>
             @else

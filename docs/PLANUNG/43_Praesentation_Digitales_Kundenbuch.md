@@ -60,6 +60,37 @@ Stabilität, isOwnedBy) · `PresentationPublicTest` (ohne Login, 404-Matrix, Sna
   `adaptLayoutForType` (Grid in die 3 Vorlagen) + `grid`-Block (Raster + Kostformen + DGE-Ø) + Route +
   3 MCP-Tools. LMIV-Kennzeichnung customer-pflichtig, GV-Aushang preislos.
 
+## Gestaltungsprüfung Dominique, 18.11.2026 (Vorschlag, nicht umgesetzt)
+
+- Bestehender Aufbau: Designs und Blockpalette links, Vorschau in der Mitte,
+  Struktur, ausgewählter Block, Farben/Schriften und CSS rechts. Vorgeschlagen:
+  links die Dokumentstruktur, eine größere zentrale Vorschau mit Handy-/Desktop-
+  Umschaltung, rechts ausschließlich die Optionen des ausgewählten Bausteins;
+  Markenfarben/Schriften in einen eigenen Bereich. Bestehende Branding-Werte und
+  Veröffentlichungsregeln erhalten.
+- Preise je Konzept sind bereits in den Präsentationsblöcken vorhanden.
+  `preis_aufschluesselung` enthält bei Angeboten bereits Kapitel, Gäste,
+  €/Person, Zwischensummen und Gesamtpreis. Es fehlt vor allem eine verständliche
+  Auswahl dieser Darstellung und eine feinere Konzept-Aufschlüsselung innerhalb
+  der Kapitel. Keine zweite Preisberechnung in der View ergänzen.
+- Vorgeschlagene Darstellung: Konzeptpreis am Konzept, Kapitelzwischensumme im
+  Kapitel und Gesamtübersicht am Ende. Alternative Konzepte eines Foodbooks als
+  Einzelpreise/Preisspanne zeigen; nur ausgewählte additive Leistungen summieren.
+  Paket-Festpreise dürfen nicht zusätzlich mit ihren enthaltenen Einzelpreisen
+  addiert werden. Netto-/Brutto-Basis und Bezugsmenge ausdrücklich anzeigen.
+- Für die mobile Kundenausgabe Preiszeilen untereinander statt vier starrer
+  Spalten; aktuelle `preis_aufschluesselung` reserviert bereits 18,5 rem für drei
+  Zahlenspalten plus Abstände. Sichtbare Quelle/Leerzustand in der Designvorschau,
+  wenn ein Block für die gewählte Ausgabe keine Daten hat.
+- Der Design-Baukasten steuert Kundenpräsentationen, nicht die eigene
+  Küchenhandbuch-View. Gemeinsame Markenfarben sind möglich; das Handbuch behält
+  seine auf Nachkochen, Bedarf und Navigation ausgerichtete Darstellung.
+
+Die Beispiele wurden als separater anklickbarer Gestaltungsvorschlag mit
+synthetischen Daten bei 375 und 1024 px geprüft (Baum, Mengen, Preis-Kontext,
+Vorschau-Umschaltung, kein horizontaler Seitenüberlauf). Kein Nachweis einer
+bereits ausgelieferten Produktfunktion.
+
 ## Offen (Nachzug)
 
 - Cleanup: alte Livewire-Komponenten `Foodbooks/Praesentation` + `Speisekarte/Praesentation`

@@ -127,8 +127,24 @@ bleibt kompatibel.
   Fremdschlüsseln geprüft (12 Checks): Up/Down/Up, unveränderter Bestand,
   JSON NULL/[]/Werte, Mehrfachvarianten, geschützter Rückbau und wiederhergestellter
   Unique-Index grün. Testserver ohne TCP betrieben und anschließend beendet.
-- Vollständige Modulsuite nach der Handbucherweiterung auf dem gemeinsamen
-  Quellstand neu ausführen; das Ergebnis ist noch offen.
+- Vollständige Modulsuite auf `56a1eb6c` gegen main `7f42e846`: 8.956 Tests,
+  49.887 Assertions; 8.940 bestanden, 13 übersprungen, 3 fehlgeschlagen.
+  Zwei Fehler: fehlender Eintrag für den neuen Zeit-KI-Prompt in der Pflichtliste.
+  Dritter Fehler: historischer Untergruppen-Migrationstest, auf unverändertem
+  Main mit identischem Diff reproduziert. Pflichtliste ergänzt und Test-Fixture
+  explizit aufgebaut (unbeteiligte Gruppen bleiben Teil der exakten Erwartung).
+  Anschließend alle 10 betroffenen Tests mit 50 Assertions grün.
+- Zusätzliche Darreichungs-/Reiter-/Policy-/UI-Wächter: 95 Tests und 339 Assertions
+  grün. Gerenderte Darreichung nach dem Mockup-Abgleich erneut geprüft: Varianten
+  links, zweispaltige Portionseingaben, getrennte Abschnitte, Küchen-/Servicezeit
+  hervorgehoben und Zeiteinheit direkt am Eingabefeld. Keine neue Handy-Editor-
+  Navigation; bestehende mobile Darstellung erhalten. Aktuelle Desktop-Aufnahme
+  mit bepreister isolierter Fixture, zusätzliche Überlaufprüfung bei 1440/768/390 px.
+  Dies ist eine SSR-Layoutprüfung; Livewire-Schreibaktionen sind separat getestet.
+- Nach dem letzten visuellen Abgleich: alle 33 unmittelbar betroffenen
+  Darreichungs-, Kopf-/Reiter- und UI-/Dateigrößenprüfungen mit 150 Assertions
+  grün. Zahlenformatter (2 Node-Tests), CSS-/JS-Build und Composer-Validierung
+  ebenfalls grün; die zwei bestehenden dynamischen CSS-Token-Warnungen bleiben.
 
 - Auf Basis `05e29224`: gezielte Abnahmesuite mit 271 Tests und 2.102 Assertions
   grün (Darreichungen, Zeitrechnung, Auftragskosten, Mengen-/Produktionspfade,
@@ -142,9 +158,10 @@ bleibt kompatibel.
   390 px: keine ungeschützten horizontalen Überläufe der Darreichungs-Controls.
   Tabellen dürfen innerhalb ihrer Scrollfläche breiter sein. Kein Nachweis einer
   vollständigen Browser-Speicherstrecke; diese Actions sind über Livewire geprüft.
-- Der Abgleich gegen main `7f42e846` einschließlich #848/#850 ist erfolgt.
-  Die vollständige Modulsuite bleibt bis zu ihrem Abschluss eine offene
-  Releaseprüfung. Keine Produktionsfreigabe aus diesem Branch ableiten.
+- Der erneute Abgleich gegen main `7f42e846` einschließlich #848/#850 ist erfolgt.
+  Der vollständige Lauf wurde nach den genannten Dokumentations-/Fixture- und
+  Layoutkorrekturen nicht nochmals wiederholt; gezielte Nachprüfungen separat
+  ausgewiesen. Keine Produktionsfreigabe aus diesem Branch ableiten.
 
 ## Späterer Deploy
 

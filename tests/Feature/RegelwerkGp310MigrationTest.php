@@ -25,8 +25,13 @@ beforeEach(function () {
 
 it('Untergruppen: 06.9 + 10.8 neu, 06.8 + 15.9 + Aperitifs aufgelöst, WG 05 neu gegliedert, 04.7 umbenannt — GP-Werte unberührt, 2× up gleich', function () {
     $t = 'foodalchemist_commodity_group_subcategories';
+    // Historischen Eingangsstand explizit aufbauen. Spätere Seed-Migrationen
+    // dürfen die exakte Erwartung dieses Migrationstests nicht verändern.
+    DB::table($t)->delete();
     $neu = fn (?int $team, string $wg, string $name) => DB::table($t)->insert(['uuid' => (string) Str::uuid(), 'team_id' => $team, 'commodity_group_code' => $wg,
         'name' => $name, 'position' => 0, 'created_at' => now(), 'updated_at' => now()]);
+    $neu(null, '02', '02.8 Obstsortiment'); // nicht betroffene Untergruppen bleiben erhalten
+    $neu(null, '11', '11.4 Schmalz & feste Fette');
     $neu(null, '04', '04.7 Wurstwaren');
     $neu(null, '04', '04.1 Rind');
     $neu(null, '05', '05.2 Fisch Filet');
@@ -50,11 +55,12 @@ it('Untergruppen: 06.9 + 10.8 neu, 06.8 + 15.9 + Aperitifs aufgelöst, WG 05 neu
 
     expect($stand())->toBe($erst)
         ->and($erst)->toBe([
+            '02 02.8 Obstsortiment',
             '04 04.1 Rind', '04 04.7 Wurst, Schinken, Pökelware, Aufschnitt',
             '05 05.1 Fisch', '05 05.2 Geräuchert und gebeizt', '05 05.3 Konserven und Kaviar', '05 05.4 Meeresfrüchte',
             '06 06.5 Käse', '06 06.9 Portionsware',
             '10 10.8 Portionsware',
-            '11 11.4 Schmalz & feste Fette',   // spätere Migration 2026_12_29_100000 (Regel 830 Teil 2) läuft in der Test-DB mit
+            '11 11.4 Schmalz & feste Fette',
             '15 15.1 Wein',
         ])
         ->and(DB::table('foodalchemist_gps')->where('gp_key', 'milch||')->value('sub_category'))->toBe('06.8 Laktosefreie Produkte');   // der GP-Lauf hängt um

@@ -111,6 +111,8 @@ Status: `angeschlossen` · `offen` · `Ausnahme (Vorschlag)`. Ausnahmen gelten e
 | 90 | `src/Jobs/MarktEinordnungJob.php::arbeite` | markt.einordnung | 1 | a | P2 | marktdaten.ABRUF (apply, Job-Weg), marktdaten.EINORDNEN, Knopf „Einordnung erzeugen“ | angeschlossen | Markt in Zahlen (05.11.): `KiExternWiederholbar` (`markt-einordnung:{team}:{einordnung}`), Extern-Flag aus dem MCP-Aufruf (`KiExternModus::fuerDispatch`, Dispatch nach dem Commit). Kontext nur aus gespeicherten Werten (kein Netz beim Neustart). Zahlen- und Prognose-Riegel in der Übernahme; je Team und Werte-Stand eine Einordnung (werte_hash). MarktEinordnungTest |
 | 91 | `src/Services/DerivatAusbeuteService.php::schaetzeKi` | gp.derivat_ausbeute | 1 | a | P2 | GpDerivatEstimateTool, DerivatAusbeuteNachholenJob (nach Rezept-Import) | angeschlossen | Spec 96 (06.11.): Ausbeute eines Derivats aus der Mutter, Herkunft ki, manuell gewinnt. MCP-Umleitung gp_derivat.ESTIMATE (Tabelle D); der Job ist `KiExternWiederholbar` (`derivat-ausbeute:{team}:{rezept}`), Extern-Flag aus dem MCP-Aufruf (`KiExternModus::fuerDispatch`), Dispatch nach dem Commit. Spec96DerivatAusbeuteTest |
 
+| 92 | `src/Livewire/Concerns/HatDarreichungsFormular.php::darZeitVorschlagen` | darreichung.zeiten | 1 | a | P2 | kein Tool (nur UI) | offen | Darreichungs-Zeitposten (18.11.): Plattform-KI erzeugt einen Vorschlag; Übernahme erst durch den Nutzer. Externe KI-Umleitung noch offen, bestehende MCP-Schreibwege nutzen die deterministische Zeitpflege. |
+
 ## B · Zusatzwege
 
 | Nr | Stelle | Weg | Einst. | Phase | MCP-Einstieg | Status | Hinweis |

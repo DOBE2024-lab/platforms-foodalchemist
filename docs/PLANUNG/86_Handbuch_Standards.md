@@ -72,5 +72,39 @@ Zahlenformatter ab. MySQL-8.4.2-Migrations-Smoke mit 12 Checks grün (siehe Darr
 Vollständige Modulsuite auf dem gemeinsamen Stand separat dokumentieren.
 Der ergänzte Ergebnisbild-Fall ist ebenfalls grün (1 Test, 6 Assertions).
 
+## Ergänzende Prüfung vom 18.11.2026: Paketbaum und Standardmengen
+
+Prüfauftrag von Dominique, noch **nicht als Produktfunktion umgesetzt**:
+Format → Konzept → Paket (auch verschachtelt) → Gericht → Basisrezept → Zutaten.
+Alle Zweige zunächst geschlossen. Bestätigt: je Gericht Menge pro Gast und
+Gesamtbedarf zeigen, zum Beispiel 0,5 Portionen/Gast × 100 Gäste = 50 Portionen.
+Der eigene Portionsrechner jedes Gerichts bleibt erhalten; die Basisrezept-Vorschau
+folgt weiterhin der dort eingestellten Menge. Handbuch und Kundenansicht sind für
+Tablet und Handy vorgesehen. Bestehende mobile Funktionen bleiben erhalten;
+der Pflege-Editor wird hierdurch nicht neu für Handy gestaltet.
+
+Code-Befund: `HandbuchQuellenService` übernimmt bislang nur Gerichtzeilen mit
+`recipe_id`; Paketüberschriften und Mengen gehen dabei verloren. `WordingResolver`
+liefert zwar eingerückte Paketzeilen, aber keine vollständige Mengenstruktur.
+`ConceptService::mengenHochrechnung` löst alte Pakete und direkte Gerichte auf,
+noch nicht rekursiv die eingebetteten Konzepte. Eine reine Baumansicht aus der
+aktuellen flachen Gerichtsliste reicht deshalb fachlich nicht.
+
+Für die Erweiterung erforderlich: eindeutiger Positionspfad samt gewählter
+Darreichung (dasselbe Gericht darf mit verschiedenen Mengen mehrfach vorkommen),
+rekursiv aufgelöste Mengen aus einem zentralen Fachservice, getrennte Zustände für
+Gästezahl und Gerichtsportionen sowie Snapshot-Übernahme ohne Preisfelder.
+Alternative Konzepte eines Formats bleiben getrennt. Fehlende Mengen werden
+als fehlend gezeigt, nicht als null oder automatisch gleichverteilt geraten.
+Die Mengenregel ist abgestimmt; die zusätzliche Baum-Implementierung ist offen.
+
+Gesamtabnahme auf Commit `56a1eb6c`, Basis main `7f42e846`: 8.956 Tests,
+49.887 Assertions; 8.940 bestanden, 13 übersprungen, 3 fehlgeschlagen. Zwei
+KI-Pflichtlisteneinträge fehlten; der dritte Fehler (historischer
+Untergruppen-Migrationstest) wurde auf unverändertem Main reproduziert.
+Nach Korrektur der Dokumentation und des expliziten Test-Ausgangsbestands:
+10 betroffene Tests mit 50 Assertions grün. Kein erneuter vollständiger Lauf
+für diese Dokumentations-/Fixture-Korrekturen behauptet.
+
 Späterer Deploy laut Dominique (18.11.2026) über die Plattform io und deren
 `update.sh`; konkreten Hostpfad/Parameter vor Ausführung prüfen.

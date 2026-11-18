@@ -328,18 +328,21 @@ class FileArticleImportService
 
         $bewegteItems = [];   // Artikel mit tatsächlich geändertem Preis → Kette (E4)
 
-        foreach ($datei['zeilen'] as $zeile) {
-            $bericht['befunde'][] = $befund = $this->verarbeiteZeile($team, $supplierId, $zeile, $apply, $bewegteItems);
-            $bericht[$befund['status']]++;
-            if (isset($befund['preis']['status'])) {
-                $bericht['preise'][$befund['preis']['status']]++;
-            }
-            foreach (array_keys($bericht['details']) as $block) {
-                if (($befund['details'][$block] ?? []) !== []) {
-                    $bericht['details'][$block]++;
+        // Sammellauf: Kosten-Folge einmal am Ende statt je Zeile (Rezepte rechnet postImportKette)
+        KostenCacheService::gesammelt(function () use ($datei, $team, $supplierId, $apply, &$bewegteItems, &$bericht) {
+            foreach ($datei['zeilen'] as $zeile) {
+                $bericht['befunde'][] = $befund = $this->verarbeiteZeile($team, $supplierId, $zeile, $apply, $bewegteItems);
+                $bericht[$befund['status']]++;
+                if (isset($befund['preis']['status'])) {
+                    $bericht['preise'][$befund['preis']['status']]++;
+                }
+                foreach (array_keys($bericht['details']) as $block) {
+                    if (($befund['details'][$block] ?? []) !== []) {
+                        $bericht['details'][$block]++;
+                    }
                 }
             }
-        }
+        });
 
         $bericht['konditionen'] = $this->verarbeiteKonditionen($team, $supplier, $datei['zeilen'], $apply);
         $bericht['kette'] = $this->postImportKette($team, $bewegteItems, $apply);

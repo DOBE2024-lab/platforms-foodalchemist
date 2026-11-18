@@ -713,7 +713,7 @@
                         </span>
                     </x-fa::field>
                     @if($gefaessKostenartFehler)<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]">{{ $gefaessKostenartFehler }}</p>@endif
-                    <p class="{{ $leise }}">Einweg: der Preis hier, sonst der Artikelpreis je Stück. Mehrweg (Eigenbestand, z. B. Spülkosten) und Extern (Miete): der Preis hier — ohne Preis gilt die Darreichung als unvollständig. Die Kosten gehen je Stück in den Wareneinsatz.</p>
+                    <p class="{{ $leise }}">Einweg und Extern (Miete): der Preis hier, sonst der Artikelpreis je Stück. Mehrweg (Eigenbestand, z. B. Spülkosten): nur der Preis hier. Ohne Preis gilt die Darreichung als unvollständig. Die Kosten gehen je Stück in den Wareneinsatz.</p>
                 </div>
             @endif
             @if(\Illuminate\Support\Facades\Route::has('foodalchemist.lager.index'))

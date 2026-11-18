@@ -28,7 +28,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 /**
  * Art + Preis des Gefäßes (Entscheid Dominique 17.11.2026, Pilot TASTE & FLY): einweg | mehrweg | extern, Preis je Stück je Team am GP
  * (Standorte erben vom Hauptteam, eigener Eintrag gewinnt), Art je Darreichung übersteuerbar; ohne Eintrag das bisherige Verhalten.
- * einweg: Preis am GP, sonst Artikelpreis · mehrweg/extern: Preis am GP, fehlt er: Hinweis + unvollständig.
+ * einweg/extern: Preis am GP, sonst Artikelpreis (extern seit 18.11.2026) · mehrweg: Preis am GP · fehlt der Preis: Hinweis + unvollständig.
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
@@ -104,19 +104,25 @@ it('Mehrweg: kein Einkaufspreis, sondern der Preis am GP (z. B. Spülkosten) im 
     expect(($this->ek)($d2))->toBe(4.24);   // 2 × 2,00 + 2 × 0,12, nicht der Artikelpreis 2,00 je Teller
 });
 
-it('Mehrweg oder extern ohne Preis: „Gefäß-Preis fehlt“, Kosten 0 im EK, Darreichung unvollständig — nie still 0', function () {
-    foreach (['mehrweg', 'extern'] as $art) {
-        $this->arten->setzen($this->rootTeam, $this->glas->id, $art);
-        $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['vessel_gp_id' => $this->glas->id]);
-        $info = $this->svc->gefaessInfo($this->dar->fresh(), $this->rootTeam);
-        expect(($this->ek)())->toBe(2.0)->and($info['preis_fehlt'])->toBeTrue($art)->and($info['kosten'])->toBeNull()
-            ->and($this->svc->beigabenKosten($this->dar->fresh(), $this->rootTeam)['vollstaendig'])->toBeFalse();
-    }
+it('Mehrweg ohne Preis am GP: „Gefäß-Preis fehlt“, Kosten 0 im EK, unvollständig — extern ohne Preis am GP nimmt den Artikelpreis', function () {
+    $this->arten->setzen($this->rootTeam, $this->glas->id, 'mehrweg');
+    $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['vessel_gp_id' => $this->glas->id]);
+    $info = $this->svc->gefaessInfo($this->dar->fresh(), $this->rootTeam);
+    expect(($this->ek)())->toBe(2.0)->and($info['preis_fehlt'])->toBeTrue()->and($info['kosten'])->toBeNull()
+        ->and($this->svc->beigabenKosten($this->dar->fresh(), $this->rootTeam)['vollstaendig'])->toBeFalse();
+
+    // extern ohne Preis am GP: Lead-Artikelpreis je Stück wie einweg (Entscheid 17.11.2026, Befund Achenbachglas 18.11.)
+    $this->arten->setzen($this->rootTeam, $this->glas->id, 'extern');
+    $info = $this->svc->gefaessInfo($this->dar->fresh(), $this->rootTeam);
+    expect(($this->ek)())->toBe(2.5)->and($info['preis_quelle'])->toBe('artikel')->and($info['preis_fehlt'])->toBeFalse()->and($info['miete'])->toBeTrue();
+
     $this->arten->setzen($this->rootTeam, $this->glas->id, 'extern', '0,55');
     expect(($this->ek)())->toBe(2.55)->and($this->svc->gefaessInfo($this->dar->fresh(), $this->rootTeam)['miete'])->toBeTrue();
 });
 
-it('Verleih-Automatik bleibt Vorbelegung: ohne Eintrag Miet-Hinweis ohne Kosten (vollständig), mit Preis am GP zählt er', function () {
+// Bewusst umgestellt 18.11.2026 (vorher: „Verleih ohne Eintrag = Miet-Hinweis ohne Kosten, vollständig“): extern rechnet mit dem Preis —
+// Team-Preis am GP, sonst Lead-Artikelpreis je Stück; fehlt beides, „Gefäß-Preis fehlt“ und unvollständig (nie mehr still „nicht je Portion“).
+it('Verleih-Automatik extern: ohne Eintrag zählt der Artikelpreis je Stück, der Preis am GP geht vor, ohne jeden Preis „Gefäß-Preis fehlt“', function () {
     app(\Platform\FoodAlchemist\Services\SupplierGroupService::class)->einrichten(true);
     $verleih = \Platform\FoodAlchemist\Models\FoodAlchemistSupplierGroup::whereNull('team_id')->where('code', 'VERLEIH')->firstOrFail();
     $miet = ($this->gefaess)('Speiseteller Miete', 0.55, $this->tellerTyp);
@@ -125,11 +131,23 @@ it('Verleih-Automatik bleibt Vorbelegung: ohne Eintrag Miet-Hinweis ohne Kosten 
     $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['vessel_gp_id' => $miet->id]);
 
     $info = $this->svc->gefaessInfo($this->dar->fresh(), $this->rootTeam);
-    expect(($this->ek)())->toBe(2.0)->and($info['kostenart'])->toBe('extern')->and($info['kostenart_quelle'])->toBe('automatik')
-        ->and($info['miete'])->toBeTrue()->and($info['preis_fehlt'])->toBeFalse();
+    // Artikel: 0,55 € je Gebinde à 12 Stk ⇒ 0,0458 € je Stück
+    expect(($this->ek)())->toBe(2.0458)->and($info['kostenart'])->toBe('extern')->and($info['kostenart_quelle'])->toBe('automatik')
+        ->and($info['miete'])->toBeTrue()->and($info['kosten'])->toBe(0.0458)->and($info['preis_quelle'])->toBe('artikel')->and($info['preis_fehlt'])->toBeFalse()
+        ->and($this->svc->beigabenKosten($this->dar->fresh(), $this->rootTeam)['vollstaendig'])->toBeTrue();
 
-    $this->arten->setzen($this->rootTeam, $miet->id, 'extern', 0.4);
-    expect(($this->ek)())->toBe(2.4);
+    $this->arten->setzen($this->rootTeam, $miet->id, 'extern', 0.4);   // Team-Preis am GP geht vor
+    expect(($this->ek)())->toBe(2.4)->and($this->svc->gefaessKosten($this->dar->fresh(), $this->rootTeam)['preis_quelle'])->toBe('gp');
+
+    // ohne jeden Preis (kein Team-Preis, Artikel unbepreist): Hinweis + unvollständig, kein stiller Miet-Hinweis
+    $this->arten->setzen($this->rootTeam, $miet->id, null);
+    \Platform\FoodAlchemist\Models\FoodAlchemistPrice::where('supplier_item_id', $miet->lead_la_supplier_item_id)->delete();
+    $this->svc->recomputePreise($this->dar->fresh());
+    $info = $this->svc->gefaessInfo($this->dar->fresh(), $this->rootTeam);
+    expect(($this->ek)())->toBe(2.0)->and($info['kostenart_quelle'])->toBe('automatik')->and($info['kosten'])->toBeNull()->and($info['preis_fehlt'])->toBeTrue()
+        ->and($this->svc->beigabenKosten($this->dar->fresh(), $this->rootTeam)['vollstaendig'])->toBeFalse();
+    $html = \Livewire\Livewire::test(VkModal::class)->call('oeffnen', $this->dar->recipe_id)->html();
+    expect($html)->toContain('data-dar-gefaess-preis-fehlt')->not->toContain('nicht je Portion gerechnet');
 });
 
 it('Übersteuerung der Art je Darreichung schlägt den Team-Eintrag; leer kehrt zurück; unbekannter Wert wird abgewiesen', function () {

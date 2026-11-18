@@ -15,12 +15,12 @@ use Platform\FoodAlchemist\Models\Scopes\TeamSicht;
  *
  *  - einweg   wird mitgegeben: Preis am GP, sonst Lead-Artikelpreis je Stück (Verhalten bis heute)
  *  - mehrweg  Eigenbestand: der Preis am GP (z. B. Spülkosten), kein Einkaufspreis
- *  - extern   Miete/Fremdartikel: der Preis am GP
+ *  - extern   Miete/Fremdartikel: Preis am GP, sonst Lead-Artikelpreis je Stück (wie einweg; seit 18.11.2026)
  * Fehlt der Preis: „Gefäß-Preis fehlt“, Darreichung unvollständig — nie still 0. Die Kosten gehen in den Wareneinsatz (ek_portion).
  *
  * Wirksam: Art an der Darreichung (Übersteuerung) › Eintrag des Teams am GP (eigenes Team, dann Oberteams bis zur Kundengrenze) ›
- * Automatik (Lieferant der Gruppe VERLEIH → extern, sonst einweg). Ohne jeden Eintrag rechnet alles wie bisher; ein VERLEIH-Gefäß
- * ohne Eintrag bleibt beim heutigen Miet-Hinweis ohne Kosten (nicht unvollständig).
+ * Automatik (Lieferant der Gruppe VERLEIH → extern, sonst einweg). Ein VERLEIH-Gefäß ohne Eintrag rechnet mit dem Preis seines Lead-Artikels;
+ * fehlt auch der, meldet die Darreichung „Gefäß-Preis fehlt“ (früher stiller Miet-Hinweis ohne Kosten, Befund Achenbachglas 18.11.2026).
  */
 class GefaessKostenartService
 {

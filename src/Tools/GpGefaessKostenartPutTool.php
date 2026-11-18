@@ -20,7 +20,7 @@ class GpGefaessKostenartPutTool extends FoodAlchemistTool implements ToolContrac
     {
         return 'Setzt Art und Preis von Gefäß-Grundprodukten (Non-Food, Warengruppe 16) für das eigene Team: '
             . 'kostenart einweg (Kosten = preis_stk, ohne Preis der Lead-Artikelpreis je Stück) | mehrweg (Eigenbestand, Kosten = preis_stk, '
-            . 'z. B. Spülkosten) | extern (Miete/Fremdartikel, Kosten = preis_stk). Fehlt bei mehrweg/extern der Preis, meldet die Darreichung '
+            . 'z. B. Spülkosten) | extern (Miete/Fremdartikel, Kosten = preis_stk, ohne Preis der Lead-Artikelpreis je Stück). Fehlt der Preis, meldet die Darreichung '
             . '„Gefäß-Preis fehlt“ und gilt als unvollständig. preis_stk in € netto je Stück (leer = kein Preis). kostenart null/leer entfernt den '
             . 'Eintrag des Teams (dann gilt das Oberteam bzw. die Automatik: Verleih-Lieferant → extern, sonst einweg). Die Kosten gehen je Stück '
             . 'in den Wareneinsatz der Darreichung; recipe_darreichung.PUT attrs.vessel_cost_type kann die Art je Darreichung übersteuern. '

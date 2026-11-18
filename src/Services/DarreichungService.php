@@ -515,8 +515,9 @@ class DarreichungService
 
     /**
      * Gefäß der Darreichung als Kostenposten (1 Stück je Einheit) nach Art und Preis ({@see GefaessKostenartService}):
-     * einweg = Preis des Teams am GP, sonst Lead-Preis je Stück · mehrweg/extern = Preis des Teams am GP. Fehlt der Preis: `preis_fehlt`.
-     * Ausnahme wie bisher: ein Verleih-Gefäß ohne Team-Eintrag (Automatik extern) ist nur Miet-Hinweis, ohne Kosten und vollständig.
+     * einweg/extern = Preis des Teams am GP, sonst Lead-Preis je Stück · mehrweg = nur der Preis des Teams am GP. Fehlt der Preis: `preis_fehlt`,
+     * die Darreichung gilt als unvollständig — auch beim Verleih-Gefäß ohne Team-Eintrag (Entscheid Dominique 17.11.2026: „einfach einen Preis an
+     * den Artikel setzen“; der frühere stille Miet-Hinweis „nicht je Portion gerechnet“ entfällt, Befund Achenbachglas 18.11.).
      *
      * @return array{gp:?\Platform\FoodAlchemist\Models\FoodAlchemistGp, kosten:?float, miete:bool, preis_fehlt:bool, kostenart:?string, kostenart_quelle:?string, kostenart_vorgabe:?string, preis_quelle:?string}
      */
@@ -534,12 +535,9 @@ class DarreichungService
             'miete' => $art['kostenart'] === GefaessKostenartService::EXTERN];
         $preis = $art['preis_gp'];
         $info['preis_quelle'] = $preis !== null ? 'gp' : null;
-        if ($preis === null && $art['kostenart'] === GefaessKostenartService::EINWEG) {
-            $preis = $this->recompute->preisProStueckPublic($gp, $team);
+        if ($preis === null && $art['kostenart'] !== GefaessKostenartService::MEHRWEG) {
+            $preis = $this->recompute->preisProStueckPublic($gp, $team);   // einweg UND extern: Lead-Artikelpreis je Stück (Mehrweg kauft nichts ein)
             $info['preis_quelle'] = $preis !== null ? 'artikel' : null;
-        }
-        if ($preis === null && $art['kostenart'] === GefaessKostenartService::EXTERN && $art['quelle'] === 'automatik') {
-            return $info;   // Verleih ohne Team-Eintrag: Miete je Tag/Veranstaltung, nur Hinweis (wie bisher)
         }
 
         return [...$info, 'kosten' => $preis !== null ? round($preis, 4) : null, 'preis_fehlt' => $preis === null];
@@ -685,27 +683,53 @@ class DarreichungService
     }
 
     /**
-     * Preis-Anstoß fürs Zubehör: ändert sich der (Lead-)Preis eines Non-Food-GP, rechnen NUR die Darreichungen neu, die es als Zubehör
-     * führen — gezielt über den Index auf gp_id, kein Massen-Recompute. Ohne Zubehör-Zeile kostet der Aufruf eine Abfrage.
+     * Preis-Anstoß für Gefäß und Zubehör: ändert sich der (Lead-)Preis eines Non-Food-GP, rechnen NUR die Darreichungen neu, die es als Gefäß oder
+     * Zubehör führen — gezielt über die Indizes auf gp_id/vessel_gp_id, kein Massen-Recompute — und danach Pakete, Konzepte und offene Auto-Angebote
+     * mit diesen Gerichten (Paket-EK liest ek_portion; vorher blieb er nach einer Gefäß-Preisänderung stehen, Befund 18.11.2026).
      *
      * @param  list<int>  $gpIds
+     * @param  list<int>|null  $teamIds  nur Darreichungen dieser Teams (null = alle)
+     * @param  list<int>  $ohneRezepte  Gerichte, deren Darreichungen schon frisch gerechnet sind (Rezept-Recompute lief davor)
      * @return int Anzahl neu gerechneter Darreichungen
      */
-    public function recomputeFuerZubehoerGps(array $gpIds): int
+    public function recomputeFuerZubehoerGps(array $gpIds, ?array $teamIds = null, array $ohneRezepte = []): int
     {
         $gpIds = array_values(array_unique(array_map('intval', $gpIds)));
         if ($gpIds === []) {
             return 0;
         }
-        $ids = DB::table('foodalchemist_recipe_presentation_zubehoer')->whereIn('gp_id', $gpIds)->whereNull('deleted_at')->distinct()->pluck('presentation_id')
-            ->merge(DB::table('foodalchemist_recipe_presentations')->whereIn('vessel_gp_id', $gpIds)->whereNull('deleted_at')->pluck('id'))->unique()->values();
+        $ids = collect();
+        foreach (array_chunk($gpIds, 500) as $teil) {
+            $ids = $ids->merge(DB::table('foodalchemist_recipe_presentation_zubehoer')->whereIn('gp_id', $teil)->whereNull('deleted_at')->distinct()->pluck('presentation_id'))
+                ->merge(DB::table('foodalchemist_recipe_presentations')->whereIn('vessel_gp_id', $teil)->whereNull('deleted_at')->pluck('id'));
+        }
+        $ids = $ids->unique()->values();
         if ($ids->isEmpty()) {
             return 0;
         }
+        $ohne = array_flip(array_map('intval', $ohneRezepte));
         $n = 0;
-        foreach (FoodAlchemistRecipeDarreichung::whereIn('id', $ids)->get() as $d) {
-            $this->recomputePreise($d);
-            $n++;
+        $rezepte = [];
+        foreach ($ids->chunk(500) as $teil) {
+            $q = FoodAlchemistRecipeDarreichung::whereIn('id', $teil->all());
+            if ($teamIds !== null) {
+                $q->whereIn('team_id', $teamIds);
+            }
+            foreach ($q->get() as $d) {
+                if (isset($ohne[(int) $d->recipe_id])) {
+                    continue;
+                }
+                \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm((int) $d->team_id, fn () => $this->recomputePreise($d));   // in der Sicht des Darreichungs-Teams wie die Rezept-Pipeline
+                $rezepte[(int) $d->recipe_id] = true;
+                $n++;
+            }
+        }
+        if ($rezepte !== []) {
+            try {
+                app(PricingCascadeService::class)->recomputeRecipes(array_keys($rezepte));   // Paket-/Konzept-EK + offene Auto-Angebote über diesen Gerichten
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Preis-Kaskade nach Gefäß/Zubehör-Recompute fehlgeschlagen: '.$e->getMessage());
+            }
         }
 
         return $n;

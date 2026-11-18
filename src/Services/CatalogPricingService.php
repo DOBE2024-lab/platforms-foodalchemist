@@ -79,6 +79,26 @@ class CatalogPricingService
         ];
     }
 
+    /**
+     * MwSt-Klasse „aus Preisklasse“ einer Darreichung — ohne ihre eigene Wahl: Preisklasse der Darreichung (sichtbar, sonst Team-Standard)
+     * → Team-Vorgabe. Die Darreichung speichert in `vat_profile_key` NUR eine ausdrückliche Wahl; leer heißt „aus Preisklasse“ (18.11.2026).
+     */
+    public function vatKeyAusPreisklasse(Team $team, FoodAlchemistRecipeDarreichung $presentation): string
+    {
+        $presentation->loadMissing('markupClass');
+        $class = $this->klassenVk($team, null, $presentation->markupClass, ['factor' => null, 'warnings' => []])['class'];
+
+        return $this->vatKeyVonKlasse($team, $class);
+    }
+
+    private function vatKeyVonKlasse(Team $team, ?FoodAlchemistMarkupClass $class): string
+    {
+        $default = $this->settings->mwst($team)['default_satz'] ?? 'ermaessigt';
+        $key = $class?->vat_profile_key ?: $default;
+
+        return in_array($key, ['regulaer', 'ermaessigt'], true) ? $key : (in_array($default, ['regulaer', 'ermaessigt'], true) ? $default : 'ermaessigt');
+    }
+
     /** @return array<string,mixed> */
     public function catalogPrice(Team $team, FoodAlchemistRecipeDarreichung $presentation, ?FoodAlchemistOutlet $outlet = null, ?array $preBase = null): array
     {
@@ -104,10 +124,9 @@ class CatalogPricingService
         $effective = $fixed ? ($presentation->sales_net !== null ? (float) $presentation->sales_net : null) : $calculated;
 
         $vatDefaults = $this->settings->mwst($team);
-        $vatKey = $presentation->vat_profile_key ?: ($class?->vat_profile_key ?: $vatDefaults['default_satz']);
-        if (! in_array($vatKey, ['regulaer', 'ermaessigt'], true)) {
-            $vatKey = $vatDefaults['default_satz'];
-        }
+        $vatKey = in_array($presentation->vat_profile_key, ['regulaer', 'ermaessigt'], true)
+            ? $presentation->vat_profile_key
+            : $this->vatKeyVonKlasse($team, $class);
         $vatRate = (float) ($vatDefaults[$vatKey] ?? 0);
 
         return [

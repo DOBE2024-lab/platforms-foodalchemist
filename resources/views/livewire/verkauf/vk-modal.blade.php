@@ -533,7 +533,7 @@
                                 <td>
                                     <select wire:model="darForm.{{ $d->id }}.vat_profile_key" aria-label="MwSt"
                                             wire:change="darreichungSpeichern({{ $d->id }})" class="{{ $feldKlein }} fa-select pr-8 w-32">
-                                        <option value="">aus Preisklasse</option>
+                                        <option value="">aus Preisklasse{{ isset($darMwstVorgabe[$d->id]) ? ' (' . (['regulaer' => 'regulär', 'ermaessigt' => 'ermäßigt'][$darMwstVorgabe[$d->id]] ?? $darMwstVorgabe[$d->id]) . ')' : '' }}</option>
                                         <option value="ermaessigt">ermäßigt</option>
                                         <option value="regulaer">regulär</option>
                                     </select>
@@ -1121,7 +1121,7 @@
                         <div class="flex flex-col gap-1">
                             <x-fa::signal :tone="$nutriTon">Nährwerte {{ $nutriText }}: {{ $rezept->nutri_n_ingredients_mapped ?? 0 }} von {{ $rezept->nutri_n_ingredients_total ?? 0 }} Komponenten mit Nährwert-Daten</x-fa::signal>
                             <p class="{{ $hinweis }}">
-                                Rohwerte ohne Gar- und Putzverlust. Stück-Zutaten ohne Gramm- oder Milliliter-Angabe tragen nichts bei.@if($rezept->nutri_aggregated_at !== null)<span> Berechnet am {{ $rezept->nutri_aggregated_at->format('d.m.Y, H:i') }} Uhr.</span>@endif
+                                Je 100 g Ausbeute (nach Gar- und Putzverlust), Kochmedium nur anteilig. „Je Einheit“ nach der Grammatur der Standard-Darreichung. Stück-Zutaten ohne Gramm- oder Milliliter-Angabe tragen nichts bei.@if($rezept->nutri_aggregated_at !== null)<span> Berechnet am {{ $rezept->nutri_aggregated_at->format('d.m.Y, H:i') }} Uhr.</span>@endif
                             </p>
                         </div>
                     @endif

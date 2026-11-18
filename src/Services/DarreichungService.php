@@ -650,7 +650,8 @@ class DarreichungService
             'calculated_sales_net' => $price['calculated_sales_net'],
             'sales_net' => $price['sales_net'],
             'sales_gross' => $price['sales_gross'],
-            'vat_profile_key' => $price['vat_profile_key'],
+            // vat_profile_key bleibt die ausdrückliche Wahl (leer = aus Preisklasse) — der aufgelöste Schlüssel steckt nur in sales_gross.
+            // Vorher schrieb der Recompute den aufgelösten Schlüssel zurück: „aus Preisklasse“ sprang nach dem Speichern auf „ermäßigt“ (18.11.2026).
             'price_calculation_source' => $price['base_source'],
             'price_calculation_version' => $price['calculation_version'],
             'price_calculated_at' => now(),

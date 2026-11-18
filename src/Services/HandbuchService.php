@@ -209,7 +209,14 @@ class HandbuchService
                 $items[] = ['key' => $it['key'], 'label' => $it['label'], 'indent' => $it['indent'] ?? 0];
             }
             if ($items !== []) {
-                $sections[] = ['title' => $sec['title'], 'text' => $sec['text'] ?? null, 'items' => $items];
+                $gruppen = [];
+                foreach ($sec['groups'] ?? [] as $gruppe) {
+                    $gueltig = array_values(array_filter($gruppe['items'], fn ($it) => isset($gerichte[$it['key']])));
+                    if ($gueltig !== []) {
+                        $gruppen[] = ['title' => $gruppe['title'], 'items' => $gueltig];
+                    }
+                }
+                $sections[] = ['title' => $sec['title'], 'text' => $sec['text'] ?? null, 'items' => $items, 'groups' => $gruppen];
             }
         }
 
@@ -270,8 +277,7 @@ class HandbuchService
 
         return [
             'name' => $label !== '' ? $label : (string) $recipe->name,
-            'foto' => ($recipe->image_context_file_id || $recipe->image_path)
-                ? ['context_file_id' => $recipe->image_context_file_id, 'path' => $recipe->image_path] : null,
+            'foto' => self::rezeptFotoSnapshot($recipe),
             'portion' => [
                 'gramm' => $dar?->quantity_per_unit_g !== null ? (float) $dar->quantity_per_unit_g : null,
                 'form' => $dar?->bezeichnung(),
@@ -280,11 +286,12 @@ class HandbuchService
                     ? \Illuminate\Support\Facades\DB::table('foodalchemist_vocab_serving_vehicles')->where('id', $dar->serving_vehicle_vocab_id)->value('name')
                     : null,
             ],
+            'bilder' => self::rezeptBilderSnapshot($recipe),
             'behaelter' => $this->behaelter($recipe),
             // #1003 Handy-Detail: zeigt die Zutaten selbst (aus dem Rezept) und spart den Report-Lauf
             'zutaten' => $mitZutaten ? $this->zutaten->fuerGericht($team, $recipe) : null,
-            'zubereitung' => $this->schritte($recipe->steps),
-            'anrichten' => $this->schritte($recipe->platingSteps),
+            'zubereitung' => self::schritteSnapshot($recipe->steps),
+            'anrichten' => self::schritteSnapshot($recipe->platingSteps),
             'regeneration' => $regenZeilen,
             'bestandteile' => $bestandteile,
             'codes' => [],
@@ -306,7 +313,7 @@ class HandbuchService
     }
 
     /** @return list<array{nr:int, text:string, fotos:list<array{context_file_id:?int, path:?string, caption:?string}>}> */
-    private function schritte(iterable $steps): array
+    public static function schritteSnapshot(iterable $steps): array
     {
         $out = [];
         $nr = 0;
@@ -320,6 +327,32 @@ class HandbuchService
         }
 
         return $out;
+    }
+
+    /** Allgemeine Bilder einschließlich des Ergebnisbilds; Schrittfotos bleiben beim jeweiligen Schritt. */
+    private static function allgemeineBilder(FoodAlchemistRecipe $recipe): \Illuminate\Support\Collection
+    {
+        $recipe->loadMissing('stepPhotos.steps');
+        return $recipe->stepPhotos->filter(fn ($p) => $p->is_result || $p->steps->isEmpty())->sortByDesc('is_result')->values();
+    }
+
+    public static function rezeptFotoSnapshot(FoodAlchemistRecipe $recipe): ?array
+    {
+        if ($recipe->image_context_file_id || $recipe->image_path) {
+            return ['context_file_id' => $recipe->image_context_file_id, 'path' => $recipe->image_path];
+        }
+        $p = self::allgemeineBilder($recipe)->first();
+        return $p ? ['context_file_id' => $p->context_file_id, 'path' => $p->pfad, 'caption' => $p->caption] : null;
+    }
+
+    public static function rezeptBilderSnapshot(FoodAlchemistRecipe $recipe): array
+    {
+        $hero = self::rezeptFotoSnapshot($recipe);
+        return self::allgemeineBilder($recipe)
+            ->reject(fn ($p) => ($p->context_file_id && $p->context_file_id == ($hero['context_file_id'] ?? null))
+                || ($p->pfad && $p->pfad === ($hero['path'] ?? null)))
+            ->map(fn ($p) => ['context_file_id' => $p->context_file_id, 'path' => $p->pfad, 'caption' => $p->caption])
+            ->values()->all();
     }
 
     /** @return list<string> */
@@ -344,6 +377,10 @@ class HandbuchService
             $snapshot['gerichte'][$key] = $this->hydrateKarte($g);
         }
 
+        foreach ($snapshot['basisrezepte'] ?? [] as $key => $b) {
+            $snapshot['basisrezepte'][$key] = $this->hydrateKarte($b);
+        }
+
         return $snapshot;
     }
 
@@ -353,6 +390,9 @@ class HandbuchService
         $url = fn (?array $img) => (is_array($img) && (($img['context_file_id'] ?? null) || ($img['path'] ?? null)))
             ? $this->media->url($img['context_file_id'] ?? null, $img['path'] ?? null) : null;
         $g['foto_url'] = $url($g['foto'] ?? null);
+        foreach ($g['bilder'] ?? [] as $i => $bild) {
+            $g['bilder'][$i]['url'] = $url($bild);
+        }
         foreach (['zubereitung', 'anrichten'] as $abschnitt) {
             foreach ($g[$abschnitt] ?? [] as $i => $s) {
                 foreach ($s['fotos'] ?? [] as $j => $f) {

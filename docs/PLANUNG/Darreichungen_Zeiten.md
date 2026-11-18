@@ -123,8 +123,12 @@ bleibt kompatibel.
   Assertions grün. Nach der Korrektur beim Abschalten der Vererbung: alle
   19 Mengen-/Zeitfälle mit 92 Assertions grün. Die bestätigte gemeinsame
   Vorbereitung ist zusätzlich mit einem Kalkulationstest (2 Assertions) belegt.
-- Vollständige Modulsuite auf dem korrigierten Quellstand separat gestartet;
-  das Ergebnis ist noch offen. MySQL-Smoke lokal weiterhin nicht verfügbar.
+- MySQL 8.4.2: Migration in einer leeren privaten Testdatenbank mit echten
+  Fremdschlüsseln geprüft (12 Checks): Up/Down/Up, unveränderter Bestand,
+  JSON NULL/[]/Werte, Mehrfachvarianten, geschützter Rückbau und wiederhergestellter
+  Unique-Index grün. Testserver ohne TCP betrieben und anschließend beendet.
+- Vollständige Modulsuite nach der Handbucherweiterung auf dem gemeinsamen
+  Quellstand neu ausführen; das Ergebnis ist noch offen.
 
 - Auf Basis `05e29224`: gezielte Abnahmesuite mit 271 Tests und 2.102 Assertions
   grün (Darreichungen, Zeitrechnung, Auftragskosten, Mengen-/Produktionspfade,
@@ -138,5 +142,12 @@ bleibt kompatibel.
   390 px: keine ungeschützten horizontalen Überläufe der Darreichungs-Controls.
   Tabellen dürfen innerhalb ihrer Scrollfläche breiter sein. Kein Nachweis einer
   vollständigen Browser-Speicherstrecke; diese Actions sind über Livewire geprüft.
-- Vollständige Modulsuite und produktionsgleicher MySQL-Smoke bleiben Teil der
-  Releaseprüfung. Lokal ist keine MySQL-Testlaufzeit eingerichtet. Der Abgleich gegen main `7f42e846` einschließlich #848/#850 ist erfolgt. Keine Produktionsfreigabe aus diesem Branch ableiten.
+- Der Abgleich gegen main `7f42e846` einschließlich #848/#850 ist erfolgt.
+  Die vollständige Modulsuite bleibt bis zu ihrem Abschluss eine offene
+  Releaseprüfung. Keine Produktionsfreigabe aus diesem Branch ableiten.
+
+## Späterer Deploy
+
+Dominique, 18.11.2026: Deployment über die Plattform **io** mit deren `update.sh`.
+Vor der Ausführung den konkreten Hostpfad und die Skriptparameter prüfen.
+Merge/Deploy erst nach dem vereinbarten Go; bisher wurde nichts produktiv ausgerollt.

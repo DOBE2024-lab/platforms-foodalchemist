@@ -76,7 +76,8 @@ class NaehrwertAusbeuteRechner
                 $n = $this->gpAggregate->naehrwerte($z->gp, mitKiFallback: $z->gp->nutri_source === 'manual', sicht: $sicht);
                 // Salz-Fall ohne Kuration (17.11.2026, Linguine): Speisesalz-LAs tragen Natrium, aber keine kcal — Salz ist
                 // kalorienfrei. Ab 50 g Salz je 100 g gilt die Ware als Salz: kcal = 0 statt „keine Werte“ (sonst trug sie 0 Salz bei).
-                $salzWare = $n['energy_kcal']['avg'] === null && (float) ($n['salt_g']['avg'] ?? 0) >= self::SALZWARE_AB_G;
+                $salzWare = $n['energy_kcal']['avg'] === null && (int) ($n['salt_g']['n'] ?? 0) > 0   // nur Natrium aus Artikeln, nie Fallback-Werte
+                    && (float) ($n['salt_g']['avg'] ?? 0) >= self::SALZWARE_AB_G;
                 if ($n['energy_kcal']['avg'] !== null || $salzWare) {   // kcal = Leit-Indikator
                     $werte = [
                         'kcal' => $salzWare ? 0.0 : $n['energy_kcal']['avg'],

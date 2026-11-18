@@ -93,10 +93,12 @@ it('Salz-Fix: manual-kuratierte GP-Werte fließen in die Rezept-Aggregation, KI-
     expect((float) $rezept->nutri_salt_g_per_100g)->toBe(1.0)
         ->and((float) $rezept->nutri_kcal_per_100g)->toBe(0.0);
 
-    // Gegenprobe: gleiche Lage mit quelle=ki → Aggregation ignoriert den Fallback weiter
+    // Gegenprobe: quelle=ki → die KI-Werte am GP (100 g Salz) zählen weiter NICHT. Seit #842 zählt aber das Natrium des Artikels:
+    // Salz-Ware (≥ 50 g Salz/100 g) ist kalorienfrei, auch ohne kcal am Artikel → 39 480 mg × 0,0025 = 98,7 g Salz/100 g, kcal 0
     $salz->update(['nutri_source' => 'ki']);
     $rezept = $svc->syncIngredients($this->rootTeam, $rezept->id, [
         ['gp_id' => $salz->id, 'raw_text' => '10 g Salz', 'quantity' => '10', 'unit_vocab_id' => $g->id],
     ]);
-    expect($rezept->nutri_kcal_per_100g)->toBeNull();
+    expect((float) $rezept->nutri_kcal_per_100g)->toBe(0.0)
+        ->and((float) $rezept->nutri_salt_g_per_100g)->toEqualWithDelta(98.7, 0.01);
 });

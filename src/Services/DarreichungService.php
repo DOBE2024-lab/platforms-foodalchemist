@@ -78,6 +78,8 @@ class DarreichungService
             'price_mode' => $attrs['price_mode'] ?? 'auto',
             'sales_net' => $attrs['sales_net'] ?? null,
             'note' => $attrs['note'] ?? null,
+            // Servier-Typ: Vorgabe aus dem Gericht (= wirksamer Typ der Standard-Darreichung), das konkrete Gefäß wählt man an der Zeile
+            'serving_vehicle_vocab_id' => $attrs['serving_vehicle_vocab_id'] ?? $recipe->serving_vehicle_vocab_id,
             // Spec 83 B3i/B3l: NICHT aus der Standard-Form vorbefüllen — die Einheit hängt an der Form (s je Teller ≠ min je Platte)
             'anrichten_wert' => isset($attrs['anrichten_wert']) && is_numeric(str_replace(',', '.', (string) $attrs['anrichten_wert']))
                 ? (float) str_replace(',', '.', (string) $attrs['anrichten_wert']) : null,
@@ -294,8 +296,10 @@ class DarreichungService
                 'price_override_expires_at' => null,
             ]);
         }
+        $vorher = [$darreichung->serving_vehicle_vocab_id, $darreichung->vessel_gp_id];
         $darreichung->update($update);
         $this->recomputePreise($darreichung);
+        $this->typInsGericht($darreichung, $vorher != [$darreichung->serving_vehicle_vocab_id, $darreichung->vessel_gp_id]);
 
         return $darreichung->refresh();
     }
@@ -371,6 +375,51 @@ class DarreichungService
                 ->update(['is_standard' => false]);
             $darreichung->update(['is_standard' => true]);
         });
+        $this->typInsGericht($darreichung->refresh(), false);
+    }
+
+    /**
+     * Servier-Typ an EINER Stelle (Entscheid Dominique 18.11.2026): Typ (neutral, Vokabular) und konkretes Gefäß (GP mit Preis) stehen an der
+     * Darreichung. Das Feld am Gericht ist nur noch abgeleitet — der wirksame Typ der Standard-Darreichung ({@see vehikelId}) — und Vorgabe für
+     * neue Darreichungen. Leser am Gericht (KI-Kontext, Abo-Kopie, MCP-GET) sehen so denselben Typ wie Planungsblatt und Handbuch.
+     * Ein leerer Typ geht nur ins Gericht, wenn Typ oder Gefäß an der Darreichung gerade geändert wurden — sonst löschte jede Preis-Änderung den
+     * Altbestand am Gericht, bevor `foodalchemist:darreichung-typ-uebernehmen` ihn an die Darreichung gebracht hat.
+     */
+    public function typInsGericht(FoodAlchemistRecipeDarreichung $d, bool $typGeaendert): void
+    {
+        if (! $d->is_standard) {
+            return;
+        }
+        $typ = $this->vehikelId($d);
+        if ($typ === null && ! $typGeaendert) {
+            return;
+        }
+        $alt = DB::table('foodalchemist_recipes')->where('id', $d->recipe_id)->value('serving_vehicle_vocab_id');
+        if (($alt === null ? null : (int) $alt) === $typ) {
+            return;
+        }
+        DB::table('foodalchemist_recipes')->where('id', $d->recipe_id)->update([
+            'serving_vehicle_vocab_id' => $typ,
+            'serving_vehicle_source' => $typ === null ? null : 'manual',
+            'serving_vehicle_ai_confidence' => null,
+            'updated_at' => now(),
+        ]);
+    }
+
+    /**
+     * KI-Vorschlag „Vehikel“ an die Standard-Darreichung (Gericht-Modal): nur wenn dort kein konkretes Gefäß steht — das Gefäß bestimmt den Typ.
+     * Lineage am Gericht bleibt ehrlich `ki`. Gibt false zurück, wenn ein Gefäß gesetzt ist.
+     */
+    public function typVorschlagUebernehmen(Team $team, int $recipeId, int $typId, float $konfidenz): bool
+    {
+        $standard = $this->ensureStandard($team, $recipeId, 'fa_ui');
+        if ($standard === null || $standard->vessel_gp_id !== null) {
+            return false;
+        }
+        $this->aktualisieren($team, $standard->id, ['serving_vehicle_vocab_id' => $typId]);
+        DB::table('foodalchemist_recipes')->where('id', $recipeId)->update(['serving_vehicle_source' => 'ki', 'serving_vehicle_ai_confidence' => $konfidenz]);
+
+        return true;
     }
 
     /** Delta setzen/ändern — nur Zutatenzeilen des eigenen Rezepts (E5 strukturell). */

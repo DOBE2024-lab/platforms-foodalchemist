@@ -87,7 +87,7 @@ trait HatDarreichungsFormular
      * stünde im Kopf ein alter Stand. `sales_unit_count` gehört dazu: geht es mit, rechnet der Sync die Grammatur der
      * Standard-Darreichung aus Ertrag und Anzahl neu.
      */
-    private const KOPF_SPIEGEL = ['sales_quantity_per_unit_g', 'sales_unit_count', 'sales_unit_vocab_id', 'container_warm_vocab_id', 'container_cold_vocab_id', 'serving_vehicle_vocab_id'];
+    private const KOPF_SPIEGEL = ['sales_quantity_per_unit_g', 'sales_unit_count', 'sales_unit_vocab_id', 'container_warm_vocab_id', 'container_cold_vocab_id'];
 
     /**
      * Speichern im Kopf (13.11.2026): ein gespiegeltes Feld geht nur mit, wenn es im Kopf wirklich geändert wurde.

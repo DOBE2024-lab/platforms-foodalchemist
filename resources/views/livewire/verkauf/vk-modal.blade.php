@@ -543,7 +543,10 @@
                                             wire:change="darreichungSpeichern({{ $d->id }})" class="{{ $feldKlein }} fa-select pr-8 w-40" data-dar-gefaess
                                             title="Gefäß dieser Form: bestimmt Servier-Typ und Gefäß-Kosten je Einheit">
                                         <option value="">kein Gefäß</option>
-                                        @foreach($gefaessGps as $gg)<option value="{{ $gg->id }}">{{ $gg->name }}</option>@endforeach
+                                        @php $typId = $darGefaess[$d->id]['typ_id'] ?? null; $passend = $typId ? $gefaessGps->where('serving_vehicle_vocab_id', $typId) : collect(); @endphp
+                                        @if($passend->isNotEmpty())<optgroup label="passend zum Typ {{ $darGefaess[$d->id]['typ_name'] ?? '' }}" data-dar-gefaess-passend>@foreach($passend as $gg)<option value="{{ $gg->id }}">{{ $gg->name }}</option>@endforeach</optgroup><optgroup label="weitere">@endif
+                                        @foreach($gefaessGps->whereNotIn('id', $passend->pluck('id')) as $gg)<option value="{{ $gg->id }}">{{ $gg->name }}</option>@endforeach
+                                        @if($passend->isNotEmpty())</optgroup>@endif
                                         @if(($darForm[$d->id]['vessel_gp_id'] ?? null) && ! $gefaessGps->contains('id', $darForm[$d->id]['vessel_gp_id']))
                                             <option value="{{ $darForm[$d->id]['vessel_gp_id'] }}">{{ $darGefaess[$d->id]['gefaess_name'] ?? 'Gefäß' }}</option>
                                         @endif
@@ -1068,13 +1071,13 @@
                     <x-fa::button size="sm" variant="ai" icon="heroicon-o-sparkles" wire:click="ki('vehikel')"
                         title="Die KI schlägt vor, worauf angerichtet wird" data-ki-vehikel>Vehikel vorschlagen</x-fa::button>
                 </x-slot:actions>
-                <x-fa::field label="Servier-Vehikel" for="vk-vehikel" class="sm:max-w-md">
-                    <x-fa::select id="vk-vehikel" wire:model="form.serving_vehicle_vocab_id" placeholder="nicht gesetzt">
-                        @foreach($vehikel as $v)
-                            <option value="{{ $v->id }}" @if($v->is_inactive && $form['serving_vehicle_vocab_id'] != $v->id) hidden @endif>{{ $v->name }}{{ $v->group_name ? ' · ' . $v->group_name : '' }}{{ $v->is_inactive ? ' (inaktiv)' : '' }}</option>
-                        @endforeach
-                    </x-fa::select>
-                </x-fa::field>
+                {{-- Eine Stelle (Entscheid Dominique 18.11.2026): Typ (neutral) und konkretes Gefäß stehen je Darreichung im Reiter Kalkulation.
+                     Hier nur der wirksame Typ der Standard-Darreichung; „Vehikel vorschlagen“ schreibt dorthin. --}}
+                @php $stdGi = ($std = $darreichungen->firstWhere('is_standard', true)) ? ($darGefaess[$std->id] ?? null) : null; @endphp
+                <p class="text-[length:var(--fa-text-sm)]" data-vk-vehikel-standard>
+                    <span class="font-medium">{{ $stdGi['typ_name'] ?? 'kein Typ gesetzt' }}</span>@if($stdGi['gefaess_name'] ?? null)<span class="text-[var(--fa-ink-2)]"> · Gefäß {{ $stdGi['gefaess_name'] }}</span>@endif
+                    <span class="{{ $hinweis }} block">Typ und Gefäß stellst du je Darreichung im Reiter Kalkulation ein (Standard-Darreichung).</span>
+                </p>
             </x-fa::section>
         </div>{{-- /Reiter ANRICHTEN --}}
 

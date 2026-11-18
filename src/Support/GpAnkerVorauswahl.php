@@ -5,8 +5,11 @@ namespace Platform\FoodAlchemist\Support;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
+use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeEmbeddingService;
 use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\TerminologyService;
 
 /**
  * Anker-Vorauswahl für `gp.anker`: aus welchen Slugs die KI den Kern-Anker eines GPs wählen darf.
@@ -19,6 +22,10 @@ use Platform\FoodAlchemist\Services\PairingService;
  *  (c) semantischer Recall nur mit dem Produktkopf (Name vor dem Doppelpunkt, ohne Marke);
  *  (b) und (c) nur aus den Anker-Kategorien, die zur Warengruppe passen (Fisch-Anker nur bei Fisch), Liste in
  *  `foodalchemist.gp_anker_vorauswahl.kategorien_je_wg`; eine Warengruppe ohne Eintrag filtert nicht.
+ *  (d) Stammdaten des effektiven Leitartikels ({@see leadArtikel()}): Wort-Treffer in der Bezeichnung (ohne Marke/Hersteller/Gebinde) und
+ *      Treffer aus den Hauptzutaten der Zutatenliste, je Zutat höchstens {@see JE_ZUTAT}. io 18.11.2026 (GP 13361 „Curry: Brokkoli"): Name und
+ *      Eigenschaft trugen nach Abzug der vorhandenen Anker nur noch Currypasten, Möhre/Linse/Mandel/Zwiebel fehlten. Gilt für alle
+ *      Warengruppen; die Eigenschaft nach dem Doppelpunkt bleibt WG 13 vorbehalten (Mettenden-Fall).
  * Trägt keine Quelle: die häufigsten Kern-Anker der Warengruppe (bisher die alphabetisch ersten 120 des ganzen Vokabulars).
  * Jede Quelle nach Slug sortiert: der Fingerabdruck des externen KI-Auftrags hängt an der Liste im Prompt (#1002).
  * Messen: `foodalchemist:gp-anker-vorauswahl-messen` (alt gegen neu an GPs mit bekanntem Anker).
@@ -30,6 +37,18 @@ final class GpAnkerVorauswahl
     public const GESCHWISTER = 10;
 
     public const MAX = 120;
+
+    /** Höchstens so viele Anker je Hauptzutat (Zwiebel hat > 20 Anker-Varianten, sie sollen die anderen Zutaten nicht verdrängen). */
+    public const JE_ZUTAT = 4;
+
+    /** Semantischer Rückfall je Hauptzutat ohne Wort-Treffer. */
+    public const SEMANTISCH_JE_ZUTAT = 3;
+
+    /** Höchstens so viele Wort-Treffer aus der Artikel-Bezeichnung. */
+    public const BEZEICHNUNG = 8;
+
+    /** @var array<string, ?FoodAlchemistSupplierItem> effektiver Leitartikel je GP und Team (Vorauswahl und Prompt fragen beide) */
+    private array $leadMemo = [];
 
     /** Wörter im Produktkopf, die nichts über die Zutat sagen (Zustand, Verarbeitung, Füllwörter) */
     private const STOPP = ['frisch', 'trocken', 'ganz', 'gegart', 'konserviert', 'geschnitten', 'vegan', 'veganem', 'vegane', 'veganer', 'classic', 'premium', 'gefuellt', 'gemischt'];
@@ -52,7 +71,7 @@ final class GpAnkerVorauswahl
     /**
      * Die drei Quellen einzeln (für die Messung).
      *
-     * @return array{geschwister: list<string>, lexikalisch: list<string>, semantisch: list<string>}
+     * @return array{geschwister: list<string>, lexikalisch: list<string>, artikel: list<string>, semantisch: list<string>}
      */
     public function quellen(FoodAlchemistGp $gp, ?Team $team = null): array
     {
@@ -72,7 +91,85 @@ final class GpAnkerVorauswahl
 
         $semantisch = array_slice($this->passend($this->semantisch($frage, self::SEMANTISCH * 2), $wg, false), 0, self::SEMANTISCH);
 
-        return ['geschwister' => $this->geschwister($gp, $team), 'lexikalisch' => $lexikalisch, 'semantisch' => self::sortiert($semantisch)];
+        $artikel = [];
+        if (($la = $this->leadArtikel($gp, $team)) !== null) {
+            $artikel = array_slice($this->woerter(self::bezeichnungOhneMarke($la)), 0, self::BEZEICHNUNG);
+            foreach (HauptzutatenAusListe::liste($la->ingredients_supplier) as $z) {
+                $artikel = [...$artikel, ...$this->zutatTreffer($z)];
+            }
+        }
+
+        return ['geschwister' => $this->geschwister($gp, $team), 'lexikalisch' => $lexikalisch, 'artikel' => $this->passend($artikel, $wg),
+            'semantisch' => self::sortiert($semantisch)];
+    }
+
+    /**
+     * Effektiver Leitartikel des Teams (gleiche Präzedenz wie das EK: Team-Pin → globaler Lead → Ausweich), nur wenn das Team ihn sieht;
+     * Rückfall auf den globalen Lead. Null = GP ohne Leitartikel (Vorauswahl und Prompt bleiben dann wie bisher).
+     */
+    public function leadArtikel(FoodAlchemistGp $gp, ?Team $team = null): ?FoodAlchemistSupplierItem
+    {
+        if ($gp->id === null) {
+            return null;
+        }
+        $key = $gp->id.':'.($team?->id ?? 0);
+        if (array_key_exists($key, $this->leadMemo)) {
+            return $this->leadMemo[$key];
+        }
+        $global = $gp->lead_la_supplier_item_id !== null ? (int) $gp->lead_la_supplier_item_id : null;
+        $effektiv = $global === null && $team === null ? null : app(RecipeRecomputeService::class)->effektiverLeadFuer($gp, $team);
+        $la = null;
+        foreach (array_values(array_unique(array_filter([$effektiv, $global]))) as $laId) {
+            $la = ($team !== null ? FoodAlchemistSupplierItem::visibleToTeam($team) : FoodAlchemistSupplierItem::query())->whereKey($laId)->first();
+            if ($la !== null) {
+                break;
+            }
+        }
+
+        return $this->leadMemo[$key] = $la;
+    }
+
+    /**
+     * Kompakte Artikel-Stammdaten des Leitartikels für den Prompt `gp.anker` (Dominique 18.11.2026: „sie müsste die Stammdaten des Artikels
+     * bekommen, um das überhaupt zu bewerten"). Baustein: {@see \Platform\FoodAlchemist\Services\GpAbgleich\LaFelderService::artikelKontext()}
+     * (derselbe Auszug wie gp.suggest/Abgleich), hier gekürzt auf wenige hundert Zeichen: Bezeichnung, Marke, Hersteller, Kurzbeschreibung
+     * (Verkehrsbezeichnung bzw. Marketing-Name), Hauptzutaten in Reihenfolge des Anteils, Allergene „enthalten". Leere Werte fallen weg;
+     * ohne Leitartikel leer.
+     *
+     * @return array<string, string|list<string>>
+     */
+    public function artikelStammdaten(FoodAlchemistGp $gp, ?Team $team = null): array
+    {
+        $la = $this->leadArtikel($gp, $team);
+        if ($la === null) {
+            return [];
+        }
+        $k = app(\Platform\FoodAlchemist\Services\GpAbgleich\LaFelderService::class)->artikelKontext($la);
+        $kurz = fn ($v, int $n) => ($t = trim((string) preg_replace('/\s+/u', ' ', (string) $v))) === '' ? null : mb_strimwidth($t, 0, $n, '…');
+        $beschreibung = $kurz($k['regulierter_name'] ?? null, 120) ?? $kurz($k['marketing_name'] ?? null, 120);
+        $allergene = array_values(array_map(fn ($a) => trim(str_replace('(enthalten)', '', $a)),
+            array_filter((array) ($k['allergene'] ?? []), fn ($a) => str_ends_with((string) $a, '(enthalten)'))));
+
+        return array_filter([
+            'bezeichnung' => $kurz($k['bezeichnung'] ?? null, 100),
+            'marke' => $kurz($k['marke'] ?? null, 40),
+            'hersteller' => $kurz($k['hersteller'] ?? null, 40),
+            'beschreibung' => $beschreibung !== null && $beschreibung !== $kurz($k['bezeichnung'] ?? null, 100) ? $beschreibung : null,
+            'zutaten' => HauptzutatenAusListe::liste($la->ingredients_supplier),
+            'allergene' => $allergene,
+        ], fn ($v) => $v !== null && $v !== []);
+    }
+
+    /** Bezeichnung ohne Marke, Hersteller, Zahlen und Gebinde („Planet V BIO Brokkoli-Curry 3,5kg" → „BIO Brokkoli-Curry"). */
+    private static function bezeichnungOhneMarke(FoodAlchemistSupplierItem $la): string
+    {
+        $t = (string) $la->designation;
+        foreach (array_filter([(string) $la->brand, (string) $la->manufacturer]) as $m) {
+            $t = str_ireplace($m, ' ', $t);
+        }
+        $t = (string) preg_replace('/\S*\d\S*/u', ' ', $t);
+
+        return trim((string) preg_replace('/\s+/u', ' ', $t));
     }
 
     /**
@@ -118,12 +215,13 @@ final class GpAnkerVorauswahl
     }
 
     /**
-     * @param  array{geschwister: list<string>, lexikalisch: list<string>, semantisch: list<string>}  $q
+     * @param  array{geschwister: list<string>, lexikalisch: list<string>, artikel?: list<string>, semantisch: list<string>}  $q
      * @return list<string>
      */
     private function liste(array $q, string $wg): array
     {
-        $vereint = array_values(array_unique([...$q['geschwister'], ...$q['lexikalisch'], ...$q['semantisch']]));
+        // Reihenfolge = Vorrang beim Kürzen auf MAX: Geschwister, Name, Leitartikel (Bezeichnung + Hauptzutaten), Semantik
+        $vereint = array_values(array_unique([...$q['geschwister'], ...$q['lexikalisch'], ...($q['artikel'] ?? []), ...$q['semantisch']]));
         $vereint = array_values(array_diff($vereint, ['neutral']));
         if ($vereint === []) {
             // keine Quelle trägt: die häufigsten Kern-Anker der Warengruppe (bisher: die alphabetisch ersten 120 des ganzen Vokabulars)
@@ -184,12 +282,8 @@ final class GpAnkerVorauswahl
         if ($gpWoerter === []) {
             return [];
         }
-        self::$index ??= DB::table('foodalchemist_vocab_pairing_anchors')->whereNull('deleted_at')->where('slug', '!=', 'neutral')
-            ->orderBy('slug')->get(['slug', 'display_de'])
-            ->map(fn ($a) => [(string) $a->slug, array_values(array_filter(explode(' ', trim($pairing->fold((string) $a->display_de))), fn ($w) => mb_strlen($w) >= 4)), mb_strlen((string) $a->display_de)])
-            ->all();
         $treffer = [];                                               // slug => [-Länge des Treffers, Art (0 gleich, 1 Kompositum), Namenslänge]
-        foreach (self::$index as [$slug, $ankerWoerter, $laenge]) {
+        foreach (self::index() as [$slug, $ankerWoerter, $laenge]) {
             foreach ($gpWoerter as $w) {
                 foreach ($ankerWoerter as $d) {
                     $art = $w === $d ? 0 : (mb_strlen($d) >= 5 && (str_starts_with($w, $d) || str_ends_with($w, $d)) ? 1 : null);
@@ -203,6 +297,64 @@ final class GpAnkerVorauswahl
         uksort($treffer, fn ($a, $b) => [...$treffer[$a], $a] <=> [...$treffer[$b], $b]);
 
         return array_slice(array_keys($treffer), 0, self::SEMANTISCH);
+    }
+
+    /**
+     * Anker zu EINER Hauptzutat: Wort-Treffer wie {@see woerter()} (gleich, Plural/Kompositum: Zwiebeln → Zwiebel, Gemüsebrühe → Brühe), aber
+     * mehr getroffene Wörter zuerst („Rote Linsen" → „Rote Linse, gekocht" vor „Puy-Linse"), dann das längere Wort, dann der kürzere Name.
+     * Synonyme aus der Terminologie (Möhre ↔ Karotte, auch für den Plural „Möhren") erst nach dem Wort selbst und in der Reihenfolge der
+     * Alias-Gruppe (io 18.11.: „Mandeln" zog über einen Alias Haselnuss vor Mandel, „Möhren" die Gelbe Rübe vor die Karotte). Ohne Wort-Treffer: semantisch, höchstens
+     * {@see SEMANTISCH_JE_ZUTAT}. Höchstens {@see JE_ZUTAT}.
+     *
+     * @return list<string>
+     */
+    private function zutatTreffer(string $zutat): array
+    {
+        $pairing = app(PairingService::class);
+        $terminologie = app(TerminologyService::class);
+        $varianten = [$zutat];
+        foreach (['', 'n', 'en', 's'] as $endung) {                   // Plural der Liste: Möhren → Möhre, Linsen → Linse
+            $einzahl = $endung === '' ? trim($zutat) : (string) preg_replace('/(?<=\p{L}{3})'.$endung.'$/u', '', trim($zutat));
+            $varianten = [...$varianten, ...$terminologie->aliasPhrasesFor($einzahl)];
+        }
+        $varianten = array_values(array_unique($varianten));
+        $treffer = [];                                               // slug => [Variante, -getroffene Wörter, -längstes Wort, Namenslänge]
+        foreach ($varianten as $vi => $v) {
+            $w = array_values(array_filter(explode(' ', trim($pairing->fold($v))), fn ($x) => mb_strlen($x) >= 4 && ! in_array($x, self::STOPP, true)));
+            foreach ($w === [] ? [] : self::index() as [$slug, $ankerWoerter, $laenge]) {
+                [$n, $lang] = [0, 0];
+                foreach ($w as $gw) {
+                    foreach ($ankerWoerter as $d) {
+                        if ($gw === $d || (mb_strlen($d) >= 5 && (str_starts_with($gw, $d) || str_ends_with($gw, $d)))) {
+                            $n++;
+                            $lang = max($lang, mb_strlen($d));
+                            break;
+                        }
+                    }
+                }
+                $rang = [$vi, -$n, -$lang, $laenge];
+                if ($n > 0 && (! isset($treffer[$slug]) || $treffer[$slug] > $rang)) {
+                    $treffer[$slug] = $rang;
+                }
+            }
+        }
+        if ($treffer === []) {
+            return $this->semantisch($zutat, self::SEMANTISCH_JE_ZUTAT);
+        }
+        uksort($treffer, fn ($a, $b) => [...$treffer[$a], $a] <=> [...$treffer[$b], $b]);
+
+        return array_slice(array_keys($treffer), 0, self::JE_ZUTAT);
+    }
+
+    /** @return list<array{0: string, 1: list<string>, 2: int}> Anker-Wortindex: Slug, Wörter des Anzeigenamens (≥ 4 Zeichen), Namenslänge */
+    private static function index(): array
+    {
+        $pairing = app(PairingService::class);
+
+        return self::$index ??= DB::table('foodalchemist_vocab_pairing_anchors')->whereNull('deleted_at')->where('slug', '!=', 'neutral')
+            ->orderBy('slug')->get(['slug', 'display_de'])
+            ->map(fn ($a) => [(string) $a->slug, array_values(array_filter(explode(' ', trim($pairing->fold((string) $a->display_de))), fn ($w) => mb_strlen($w) >= 4)), mb_strlen((string) $a->display_de)])
+            ->all();
     }
 
     /** @return list<string> Score-Reihenfolge; leer ohne Provider */

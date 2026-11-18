@@ -75,6 +75,13 @@ assert.ok(fs.existsSync(fixture),'Zuerst HandbuchDarstellungTest mit FA_HANDBUCH
   await page.locator('nav a[data-key="r1"]').click();
   assert.equal(await dish.locator('.px').inputValue(),'10');
   assert.equal(await other.locator('.px').inputValue(),'2');
+  await dish.evaluate(el=>{el.querySelector('#sb-r1-b2-1 .basis-link').dataset.faktor='0';});
+  if(width<=800)await page.locator('#zurueck').click();
+  await page.locator('nav a[data-key="r1"]').click();
+  await dish.locator('#sb-r1-b2-1 .vorschau-titel').click();
+  await base.locator('.basis-ziel').fill('1');
+  assert.equal(await base.locator('.basis-rechner').isVisible(),false,'Ohne Bedarfsanteil keine erfundene Portionsumrechnung');
+  assert.equal(await base.locator('[data-rezeptmodus]').textContent(),'Gewünschte Rezeptmenge');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.goto('http://handbuch.test/p/handbuch/test#basis-b1');
   const standalone=page.locator('#g-basis-b1');

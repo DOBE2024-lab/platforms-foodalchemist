@@ -280,7 +280,7 @@
         });
     }
     function basisRechnen(a, merken, zielNeu) {
-        var q = a._bedarf, bedarf = !!q && !a._original;
+        var q = a._bedarf, bedarf = !!q && !a._original && !(a._zielFaktor != null && q.faktor === 0);
         var n = aktuell(a), f = a._original ? 1 : (a._zielFaktor != null ? a._zielFaktor : (bedarf ? q.faktor * n : 1));
         a.querySelector('.basis-rechner').hidden = !bedarf;
         a.querySelector('[data-rezeptmodus]').textContent = bedarf ? 'Bedarf für ' + eingabe(n) + ' ' + q.einheit : (a._zielFaktor != null && !a._original ? 'Gewünschte Rezeptmenge' : 'Originalansatz');

@@ -42,6 +42,25 @@ class KostenFolgeJob implements ShouldQueue
         public bool $kostenVeraltet = false,
     ) {}
 
+    /**
+     * Versand nach dem Commit. Mit echter Queue (io: database) als Job; mit dem Sync-Treiber (Sandbox/Tests) direkt im Auftragsteam statt über
+     * die Sync-Queue — die hydratisiert den Log-Kontext neu und vergisst scoped Instanzen, mitten im Request ginge danach Team/Nutzer verloren.
+     *
+     * @param  list<int>  $gpIds
+     * @param  list<int>  $supplierIds
+     */
+    public static function versenden(int $teamId, array $gpIds = [], array $supplierIds = [], bool $nurTeamKette = true, bool $mitRezepten = true, bool $kostenVeraltet = false): void
+    {
+        $job = new self($teamId, array_values(array_unique(array_map('intval', $gpIds))), array_values(array_unique(array_map('intval', $supplierIds))),
+            $nurTeamKette, $mitRezepten, $kostenVeraltet);
+        if (app('queue') instanceof \Illuminate\Support\Testing\Fakes\QueueFake || config('queue.connections.'.config('queue.default').'.driver') !== 'sync') {
+            dispatch($job)->afterCommit();
+
+            return;
+        }
+        DB::afterCommit(fn () => \Platform\FoodAlchemist\Support\FaTeam::imTeam($teamId, fn () => app()->call([$job, 'handle'])));
+    }
+
     public function handle(RecipeRecomputeService $recompute, KostenCacheService $kosten, DarreichungService $darreichungen): void
     {
         $gpIds = self::gpIds($this->gpIds, $this->supplierIds);

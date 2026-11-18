@@ -197,3 +197,19 @@ it('Gezielt: der Job rechnet nur Rezepte und Darreichungen der Team-Kette, fremd
     expect(($this->stand)($kA))->toMatchArray(['gericht' => 8.0, 'dar' => 0.8, 'paket' => 0.8])
         ->and(($this->stand)($kB))->toMatchArray(['gericht' => 4.0, 'dar' => 0.4, 'paket' => 0.4]);
 });
+
+it('Sammellauf (Preisliste/Datei-Import): ein Job je Team und Reichweite am Ende, ohne Rezepte (die rechnet die Import-Kette)', function () {
+    [, $la1] = ($this->artikel)($this->rootTeam, 'Vanillemilch', 4.0);
+    [, $la2] = ($this->artikel)($this->rootTeam, 'Kokosmilch', 3.0);
+    Queue::fake();
+    \Platform\FoodAlchemist\Services\KostenCacheService::gesammelt(function () use ($la1, $la2) {
+        app(PriceService::class)->createFor($this->rootTeam, $la1, 5.0);
+        app(PriceService::class)->createFor($this->rootTeam, $la2, 3.5);
+        Queue::assertNothingPushed();
+    });
+    Queue::assertPushed(KostenFolgeJob::class, 1);
+    Queue::assertPushed(KostenFolgeJob::class, fn (KostenFolgeJob $j) => count($j->gpIds) === 2 && ! $j->mitRezepten && $j->teamId === (int) $this->rootTeam->id);
+
+    app(PriceService::class)->createFor($this->rootTeam, $la1, 5.5);   // außerhalb: sofort, mit Rezepten
+    Queue::assertPushed(KostenFolgeJob::class, fn (KostenFolgeJob $j) => $j->mitRezepten && count($j->gpIds) === 1);
+});

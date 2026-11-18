@@ -268,7 +268,9 @@ class PreislistenImportService
         $bilanz = ['angewendet' => 0, 'unveraendert' => 0, 'zukuenftig' => 0, 'fehler' => 0];
         $bewegt = [];
 
-        Zeile::where('run_id', $run->id)->where('team_id', $team->id)
+        // Sammellauf: die Kosten-Folge (Gefäß/Zubehör, Paket/Konzept) geht einmal am Ende, nicht je Zeile; Rezepte rechnet die Kette unten
+        KostenCacheService::gesammelt(function () use ($run, $team, $stati, $heute, &$bilanz, &$bewegt) {
+            Zeile::where('run_id', $run->id)->where('team_id', $team->id)
             ->whereIn('status', $stati)->orderBy('id')
             ->chunkById(500, function ($zeilen) use ($team, $heute, &$bilanz, &$bewegt) {
                 foreach ($zeilen as $z) {
@@ -279,6 +281,7 @@ class PreislistenImportService
                     }
                 }
             });
+        });
 
         $offen = Zeile::where('run_id', $run->id)->whereIn('status', [Zeile::STATUS_TREFFER, Zeile::STATUS_ZUKUENFTIG])->exists();
         $counts = (array) $run->counts;

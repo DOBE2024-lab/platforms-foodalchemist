@@ -232,7 +232,7 @@ class StammPaketService
     private function kostenFolge(Team $mandant, array $supplierIds): void
     {
         if ($supplierIds !== []) {
-            \Platform\FoodAlchemist\Jobs\KostenFolgeJob::dispatch((int) $mandant->id, [], array_values(array_unique($supplierIds)), true, true, true)->afterCommit();
+            \Platform\FoodAlchemist\Jobs\KostenFolgeJob::versenden((int) $mandant->id, [], $supplierIds, true, true, true);
         }
     }
 

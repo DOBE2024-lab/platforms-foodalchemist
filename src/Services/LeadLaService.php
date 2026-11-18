@@ -300,7 +300,7 @@ class LeadLaService
         // Spec 82 3b: der globale Lead gilt für alle Teams ohne eigenen Pin → Team-Kosten aller Teams veraltet
         app(KostenCacheService::class)->markiereVeraltet(app(KostenCacheService::class)->rezepteMitGps([(int) $gp->id]), null);
         // Gefäß/Zubehör-Darreichungen + Paket/Konzept darüber; die Rezepte rechnet der Aufrufer ($recompute bzw. sein Bulk-Recompute)
-        \Platform\FoodAlchemist\Jobs\KostenFolgeJob::dispatch((int) $team->id, [(int) $gp->id], [], false, false)->afterCommit();
+        \Platform\FoodAlchemist\Jobs\KostenFolgeJob::versenden((int) $team->id, [(int) $gp->id], [], false, false);
 
         // Jeder Aufruf hier IST ein manueller Override — auch ohne Begründung. Die Zeile ist das
         // Merkmal, an dem repickVorschau() den Lead vor einer Neuwahl schützt.

@@ -78,6 +78,34 @@ beforeEach(function () {
     $concepts->recomputeCache($this->concept->refresh());
 });
 
+it('kalkuliert Vor-Ort-Arbeit mit dem Team-Satz als eigenen Serviceblock ohne Küchenlast', function () {
+    app(TeamSettingsService::class)->update($this->rootTeam, ['labor_overhead_pct' => 20]);
+    $dar = $this->recipe->standardPresentation()->firstOrFail();
+    app(DarreichungService::class)->aktualisieren($this->rootTeam, $dar->id, ['arbeitszeiten' => [
+        ['use_case' => 'anrichten_teller', 'basis' => 'portion', 'ort' => 'vor_ort', 'wert' => 30],
+    ]]);
+    $r = app(OrderCostingService::class)->costConcept($this->rootTeam, $this->concept->refresh(), 100);
+    expect($r['service_person_minutes'])->toBe(50.0)
+        ->and($r['kitchen_person_minutes'])->toBe(0.0)
+        ->and($r['active_person_minutes'])->toBe(50.0)
+        ->and($r['service_labor_cost'])->toBe(60.0)
+        ->and($r['fek'])->toBe(60.0)
+        ->and($r['station_load'])->toBe([])
+        ->and($r['complete'])->toBeTrue()
+        ->and(collect($r['cost_breakdown'])->firstWhere('key', 'fek_service')['amount'])->toBe(60.0);
+});
+
+it('markiert eine teilweise berechnete Zeit trotz positiver Minuten als unvollständig', function () {
+    $dar = $this->recipe->standardPresentation()->firstOrFail();
+    app(DarreichungService::class)->aktualisieren($this->rootTeam, $dar->id, ['arbeitszeiten' => [
+        ['use_case' => 'anrichten_teller', 'basis' => 'portion', 'ort' => 'vor_ort', 'wert' => 30],
+        ['use_case' => 'portionieren_platte', 'basis' => 'behaelter', 'ort' => 'kueche', 'wert' => 2],
+    ]]);
+    $r = app(OrderCostingService::class)->costConcept($this->rootTeam, $this->concept->refresh(), 100);
+    expect($r['active_person_minutes'])->toBeGreaterThan(0)->and($r['complete'])->toBeFalse()
+        ->and(implode(' ', $r['warnings']))->toContain('Menge');
+});
+
 it('hält den Katalogpreis pax-unabhängig und skaliert den realen Auftrags-HK2', function () {
     $service = app(OrderCostingService::class);
 

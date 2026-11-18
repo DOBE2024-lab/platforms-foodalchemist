@@ -311,7 +311,7 @@ class Editor extends Component
             ->where('recipe_id', $recipe->id)->orderByDesc('is_standard')->orderBy('id')->get()
             ->map(fn ($d) => [
                 'id' => (int) $d->id,
-                'label' => $d->servingForm?->label ?? '—',
+                'label' => $d->bezeichnung() ?? '—',
                 'gramm' => ($g = $svc->grammJeEinheit($d, $recipe)) !== null ? round($g * (float) ($d->unit_count ?: 1)) : null,
                 'standard' => (bool) $d->is_standard,
             ])->values()->all();

@@ -161,6 +161,7 @@
                         <strong class="gross">{{ $r['portionen'] }} Portionen</strong>@if($r['produzierte_menge_kg']) · gesamt <strong class="gross">{{ number_format($r['produzierte_menge_kg'], 1, ',', '.') }} kg</strong>@endif
                     @endif
                     @if($r['arbeitszeit_min']) · Arbeitszeit ca. {{ $r['arbeitszeit_min'] }} min @endif
+                    @if(($r['vor_ort_min'] ?? 0) > 0) · Vor Ort {{ $r['vor_ort_min'] }} min (separat) @endif
                 </div>
                 <table class="liste">
                     <thead><tr><th>Zutat</th><th class="right c-menge">Menge</th></tr></thead>

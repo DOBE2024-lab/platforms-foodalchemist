@@ -25,6 +25,10 @@ class FoodAlchemistRecipeDarreichung extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
+        'arbeitszeiten' => 'array',
+        'menge_vom_standard' => 'bool',
+        'komponenten_referenz_g' => 'float',
+        'ausgabe_station_id' => 'integer',
         'is_standard' => 'bool',
         'quantity_per_unit_g' => 'float',
         'unit_count' => 'float',
@@ -43,6 +47,18 @@ class FoodAlchemistRecipeDarreichung extends Model
     {
         return $this->belongsTo(FoodAlchemistRecipe::class, 'recipe_id')
             ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis');   // Spec 82: Verweis löst auch Fassungen auf
+    }
+
+    public function bezeichnung(): string
+    {
+        return $this->name ?: ($this->servingForm?->label ?? 'Standard');
+    }
+
+    /** Neue Inhalte verändern Fassungen; unveränderter Bestand behält seinen bisherigen Hash. */
+    public function inhaltErgaenzung(): array
+    {
+        return array_filter($this->only(['name', 'arbeitszeiten', 'ausgabe_station_id', 'menge_vom_standard', 'komponenten_referenz_g']),
+            fn ($v, $k) => $v !== null && ($k !== 'menge_vom_standard' || $v === true), ARRAY_FILTER_USE_BOTH);
     }
 
     public function servingForm()

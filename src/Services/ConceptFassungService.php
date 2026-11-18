@@ -212,7 +212,7 @@ class ConceptFassungService
                 $s->package_id !== null ? (int) ($ziele['paket'][(int) $s->package_id]->id ?? 0) : null,
                 $s->embedded_concept_id !== null ? (int) ($ziele['concept'][(int) $s->embedded_concept_id]->id ?? 0) : null,
                 $s->sales_recipe_id !== null ? (int) ($ziele['recipe'][(int) $s->sales_recipe_id]->id ?? 0) : null,
-                $quelle === null ? null : [$quelle->only(['serving_form_id', 'quantity_per_unit_g', 'unit_vocab_id', 'unit_count']), (bool) $quelle->is_standard],
+                $quelle === null ? null : [$quelle->only(['serving_form_id', 'quantity_per_unit_g', 'unit_vocab_id', 'unit_count']) + $quelle->inhaltErgaenzung(), (bool) $quelle->is_standard],
             ];
         })->values()->all();
         $pivots = [

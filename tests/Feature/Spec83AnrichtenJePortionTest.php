@@ -163,19 +163,20 @@ it('B3i Kalkulation/Planungsblatt: bestellte Darreichungen kommen aus den Zielen
         ->and($zeile['arbeitszeit_min'])->toBe(45.0);
 });
 
-it('B3i/B3l VK-Modal: je Darreichung Pauschale + Wert mit Einheit der Form, Startwert-Platzhalter und Hochrechnung für 100', function () {
+it('VK-Modal zeigt die bisherige Berechnung und ersetzt sie durch explizite Arbeitsschritte je Darreichung', function () {
     $d = spec83Formen($this->rootTeam, $this->gericht);
     $this->actingAs($this->makeUser($this->rootTeam, 'Koch Anrichten'));
     $lw = \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Verkauf\VkModal::class)->call('oeffnen', $this->gericht->id);
     $html = preg_replace('/<!--.*?-->/s', '', $lw->html());   // Livewire-Blockkommentare zwischen den Textteilen
-    expect($html)->toContain('data-dar-anrichten="'.$d['teller']->id.'"')->toContain('je Teller (s)')->toContain('35 Startwert')
-        ->toContain('je Stück (s)')->toContain('je Platte (min)')->toContain('vor Ort an der Station')
-        ->toMatch('/data-dar-anrichten-hochrechnung="'.$d['teller']->id.'">100 Portionen\s*≈ 58 min · Startwert, ungeprüft/u');
+    expect($html)->toContain('data-dar-anrichten="'.$d['teller']->id.'"', 'Bisherige Berechnung', '58,3 min', 'Arbeitsschritte &amp; Zeiten');
 
-    $lw->call('bearbeitenStarten')->set('darForm.'.$d['teller']->id.'.anrichten_wert', '30')->set('darForm.'.$d['teller']->id.'.anrichten_pauschal_min', '5')
-        ->call('darreichungSpeichern', $d['teller']->id);
-    expect((float) $d['teller']->fresh()->anrichten_wert)->toBe(30.0)->and((float) $d['teller']->fresh()->anrichten_pauschal_min)->toBe(5.0)
-        ->and(preg_replace('/<!--.*?-->/s', '', $lw->html()))->toMatch('/data-dar-anrichten-hochrechnung="'.$d['teller']->id.'">100 Portionen\s*≈ 55 min</u');   // 5 + 100 × 30 s
+    $lw->call('bearbeitenStarten')->set('darZeitForm.'.$d['teller']->id, [
+        ['use_case' => 'anrichten_teller', 'basis' => 'portion', 'ort' => 'kueche', 'wert' => 30],
+        ['use_case' => 'pauschale', 'basis' => 'auftragszeile', 'ort' => 'kueche', 'wert' => 5],
+    ])->call('darZeitenSpeichern', $d['teller']->id);
+    expect((float) $d['teller']->fresh()->arbeitszeiten[0]['wert'])->toBe(30.0)
+        ->and((float) $d['teller']->fresh()->arbeitszeiten[1]['wert'])->toBe(5.0)
+        ->and(preg_replace('/<!--.*?-->/s', '', $lw->html()))->toContain('55,0 min');
 });
 
 it('B3i MCP im Lockstep: recipe_darreichung.PUT setzt die Anrichte-Felder, verkaufsrezepte.GET zeigt Wert und Einheit', function () {

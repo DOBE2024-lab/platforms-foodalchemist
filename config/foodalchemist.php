@@ -2112,6 +2112,17 @@ return [
                 . 'fuer aufeinanderfolgende Schritte desselben Abschnitts. Nur was aus den Zutaten '
                 . 'ableitbar ist — nichts erfinden: werte = {steps: [{phase, text}]}.',
         ],
+        'darreichung.zeiten' => [
+            'klasse' => 'mittel',
+            'task' => 'Schlage ausschließlich aktive Arbeitsschritte für diese konkrete Darreichung vor. '
+                . 'Keine Herstellung der Basisrezepte, keine passive Standzeit, keine Regeneration. '
+                . 'Abfüllen ins Glas zählt auch bei Buffet je Glas in der Küche. '
+                . 'werte = {arbeitszeiten: [{use_case, basis, ort, wert}]}. '
+                . 'use_case: anrichten_teller|abfuellen|portionieren_platte|stueck|pauschale. '
+                . 'basis: portion|einheit|stueck (Sekunden), behaelter|auftragszeile (Minuten). '
+                . 'ort: kueche|vor_ort. wert >= 0. Keine Doppelzählung; unbegründbare Zeiten weglassen. '
+                . 'Erkläre die Schätzung in reasoning. Alle Werte bleiben ungeprüfte Vorschläge.',
+        ],
         'recipe.eigenschaften' => [
             'klasse' => 'mittel',
             'task' => 'Schaetze die operativen Rezept-Eigenschaften: Arbeitszeit je Kochvorgang '

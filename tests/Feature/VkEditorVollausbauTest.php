@@ -98,7 +98,7 @@ it('VK-Editor rendert die neuen Sektionen (Deklaration, Nährwerte, Spezifikatio
         ->and($html)->toContain('Rohertragsquote = (VK netto − MEK) ÷ VK netto')
         // 13.11.2026: der Kasten «Preis und Rohertrag» ist entfallen — Preisklasse, Preis und MwSt stehen nur noch an der
         // Darreichung (das zweite Preisklassen-Feld im Kopf überschrieb beim Speichern die Zeile). Übrig: ein Kasten Verkaufseinheit.
-        ->and($html)->toContain('data-vk-unit-block')->toContain('data-vk-nebenkosten')->toContain('data-vk-preis-hinweis')
+        ->and($html)->toContain('data-vk-darreichungen')->toContain('data-vk-nebenkosten')
         ->and($html)->not->toContain('Preis und Rohertrag')->not->toContain('data-vk-ak')->not->toContain('vk-preisklasse');
 });
 
@@ -279,15 +279,15 @@ it('rendert die abgeleiteten Marken: Fertigstellungszeit, Servierform-Select, Po
     // Spec 83 B3j: am Gericht zählt keine Fertigstellungszeit mehr (Feld nur noch als Altwert sichtbar);
     // B3i/B3l: Anrichten wird je Darreichung gepflegt
     expect($html)->not->toContain('data-vk-fertigstellungszeit-alt')
-        ->and($html)->toContain('data-dar-anrichten-wert')->and($html)->toContain('data-dar-anrichten-pauschale')
+        ->and($html)->toContain('data-dar-anrichten')->and($html)->toContain('data-dar-zeitvorschau')
         ->and($html)->toContain('data-dar-form')                // Servierform je Zeile wählbar (Review-Ausgang)
         // Das Posten-Feld ist optional benannt: am Pass arbeitet das Team, ein einzelner
         // „Posten des Gerichts" existiert fachlich nicht (Entscheid 2026-09-04).
         ->and($html)->toContain('Ausgabe-Posten')
-        ->and($html)->toContain('Team am Pass');
+        ->and($html)->toContain('Aus Komponenten / bisherigem Gerichts-Posten');
 });
 
-it('bietet als Verkaufseinheit nur die vier zulaessigen Einheiten an', function () {
+it('führt das Gericht als eine Portion und bietet keinen zweiten Einheitenzähler an', function () {
     foreach ([['portion', 'Portion'], ['stk', 'Stück'], ['kg', 'Kilogramm'], ['l', 'Liter']] as [$slug, $label]) {
         \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::firstOrCreate(
             ['team_id' => $this->rootTeam->id, 'slug' => $slug],
@@ -304,7 +304,7 @@ it('bietet als Verkaufseinheit nur die vier zulaessigen Einheiten an', function 
 
     // Das VK-Select steht im Kalkulations-Tab; der Zutaten-Editor ist eine eigene Komponente,
     // deshalb darf „Prise" im HTML dieses Modals gar nicht vorkommen.
-    expect($html)->toContain('data-vk-unit-select')
+    expect($html)->not->toContain('data-vk-unit-select', 'data-vk-anzahl')
         ->and($html)->toContain('Portion')
         ->and($html)->not->toContain('Prise');
 });

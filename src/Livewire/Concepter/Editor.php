@@ -1284,7 +1284,7 @@ class Editor extends Component
         $dar = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
         $zeilen = [];
         $nimm = function (int|string $key, string $name, ?\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung $d) use (&$zeilen, $dar, $team) {
-            $zeilen[] = ['key' => $key, 'name' => $name, 'darreichung' => $d?->servingForm?->label,
+            $zeilen[] = ['key' => $key, 'name' => $name, 'darreichung' => $d?->bezeichnung(),
                 'gefaess' => $d !== null ? $dar->gefaessInfo($d, $team) : null, 'beigaben' => $d !== null ? $dar->beigabenKosten($d, $team) : null];
         };
         if ($concept !== null) {
@@ -1383,7 +1383,7 @@ class Editor extends Component
                             if ($formen->count() > 1) {
                                 // A1: Form-Picker je Position (nur sinnvoll bei mehreren Formen)
                                 $darreichungOptionen[$slot->id] = $formen
-                                    ->map(fn ($f) => ['id' => $f->id, 'label' => $f->servingForm?->label ?? '—'])->all();
+                                    ->map(fn ($f) => ['id' => $f->id, 'label' => $f->bezeichnung() ?? '—'])->all();
                             }
                         }
                         $dar = $resolver->fuerSlot($slot);
@@ -1391,8 +1391,8 @@ class Editor extends Component
                             $passtZurKonzeptForm = $concept->serving_form_id !== null
                                 && (int) $dar->serving_form_id === (int) $concept->serving_form_id;
                             $darreichungInfo[$slot->id] = ($passtZurKonzeptForm || $concept->serving_form_id === null)
-                                ? ($dar->servingForm?->label ?? '—')
-                                : 'Standard: ' . ($dar->servingForm?->label ?? '—');
+                                ? ($dar->bezeichnung() ?? '—')
+                                : 'Standard: ' . ($dar->bezeichnung() ?? '—');
                             $zub = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->zubehoerKosten($dar, $team);
                             if ($zub['zeilen'] !== []) {
                                 $zubehoerInfo[$slot->id] = $zub;
@@ -1459,11 +1459,11 @@ class Editor extends Component
                         $formen = $alleFormen->get($pg->sales_recipe_id, collect());
                         $gramm = fn ($f) => ($g = $darSvc->grammJeEinheit($f, $pg->dish)) !== null ? (int) round($g * (float) ($f->unit_count ?: 1)) : null;
                         if ($formen->count() > 1) {
-                            $paketFormen[$pg->id] = $formen->map(fn ($f) => ['id' => (int) $f->id, 'label' => $f->servingForm?->label ?? '—', 'gramm' => $gramm($f), 'standard' => (bool) $f->is_standard])->all();
+                            $paketFormen[$pg->id] = $formen->map(fn ($f) => ['id' => (int) $f->id, 'label' => $f->bezeichnung() ?? '—', 'gramm' => $gramm($f), 'standard' => (bool) $f->is_standard])->all();
                         }
                         $dar = $resolver->fuerPaketGericht($pg);
                         if ($dar !== null) {
-                            $paketPosten[$pg->id] = ['label' => $dar->servingForm?->label, 'gramm' => $gramm($dar), 'vk' => $dar->sales_net !== null ? (float) $dar->sales_net : null];
+                            $paketPosten[$pg->id] = ['label' => $dar->bezeichnung(), 'gramm' => $gramm($dar), 'vk' => $dar->sales_net !== null ? (float) $dar->sales_net : null];
                         }
                     }
                 }

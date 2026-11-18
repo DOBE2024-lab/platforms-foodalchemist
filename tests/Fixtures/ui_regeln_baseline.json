@@ -13,11 +13,11 @@
         "emoji": 3
     },
     "dokumente/angebot-karte.blade.php": {
-        "hex_farbe": 22,
+        "hex_farbe": 21,
         "style_block": 1
     },
     "dokumente/angebot.blade.php": {
-        "hex_farbe": 16,
+        "hex_farbe": 12,
         "style_block": 1,
         "style_statisch": 2
     },
@@ -163,9 +163,6 @@
     "partials/editor-dark.blade.php": {
         "important": 7,
         "style_block": 1
-    },
-    "presentation/blocks/_block_body.blade.php": {
-        "style_statisch": 1
     },
     "presentation/blocks/_speiseplan_meta.blade.php": {
         "emoji": 1,

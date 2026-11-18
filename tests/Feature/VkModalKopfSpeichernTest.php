@@ -117,11 +117,10 @@ it('Gegenrichtung: nach einer Kopf-Änderung schreibt die nächste Zeilen-Änder
         ->and((int) ($this->zeile)()->markup_class_id)->toBe((int) $this->alc->id);
 });
 
-it('Maske: ein Kasten Verkaufseinheit mit Nebenkosten, keine Preisklasse im Kopf, Hinweis auf die Darreichung', function () {
+it('Maske: eine Portion je Darreichung, keine zweite Mengenpflege im Kopf', function () {
     $html = Livewire::test(VkModal::class)->call('oeffnen', $this->gericht->id)->html();
 
-    expect($html)->toContain('data-vk-unit-block')->toContain('data-vk-unit-select')->toContain('data-vk-anzahl')
-        ->toContain('data-vk-g-unit')->toContain('data-vk-nebenkosten')->toContain('data-vk-preis-hinweis')
-        ->toContain('Preisklasse, Preis und MwSt stellst du je Darreichung ein.')
+    expect($html)->toContain('data-vk-darreichungen', 'data-vk-nebenkosten')
+        ->not->toContain('data-vk-unit-block', 'data-vk-unit-select', 'data-vk-anzahl', 'data-vk-g-unit')
         ->not->toContain('Preis und Rohertrag')->not->toContain('vk-preisklasse')->not->toContain('data-vk-netto-manuell')->not->toContain('data-vk-mwst');
 });

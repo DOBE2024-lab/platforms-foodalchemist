@@ -157,11 +157,13 @@ class ProductionTimeService
         // Spec 83 B3c/B3j: am Gericht zwei getrennte Blöcke — Regenerieren und Anrichten (Pass einrichten entfällt).
         $bloecke = null;
         $regen = 0.0;
+        $vorOrt = 0.0;
         $quelle = $zeitJeMenge['quelle'];
         if ($recipe->is_sales_recipe) {
             // B3i/B3l: Anrichten je Darreichungsform (Pauschale + Zeit je Einheit × Menge) ersetzt die Rechnung pro Menge
             $a = $this->anrichten($team, $recipe, $formen, $rawBatches, $zeitJeMenge);
             $variable = $a['minuten'];
+            $vorOrt = (float) ($a['vor_ort_minuten'] ?? 0);
             $quelle = $a['quelle'];
             $warnings = array_merge($warnings, $a['warnungen']);
             unset($a['warnungen'], $a['minuten'], $a['quelle']);
@@ -196,6 +198,8 @@ class ProductionTimeService
             'variable_time_source' => $quelle,                         // gepflegt | komponenten | darreichung | startwert | vor_ort | gemischt | null
             'anrichten_komponenten' => $zeitJeMenge['komponenten'],    // nur bei abgeleiteter Anrichte-Zeit
             'active_person_minutes' => round($active, 3),
+            'vor_ort_minutes' => round($vorOrt, 3),
+            'time_complete' => ! collect($bloecke['anrichten']['formen'] ?? [])->contains(fn ($f) => ($f['vollstaendig'] ?? true) === false),
             'passive_minutes' => round($passive, 3),
             'elapsed_minutes' => round($active + $passive, 3),
             'regenerieren_minutes' => round($regen, 3),
@@ -228,11 +232,25 @@ class ProductionTimeService
         }
         $komponenten = $this->tellerKomponenten($gericht);
         $summe = 0.0;
+        $vorOrt = 0.0;
         $raus = [];
         foreach ($formen as $f) {
             $dar = $f['dar'] ?? (isset($f['darreichung_id']) && $f['darreichung_id'] !== null ? $alle->firstWhere('id', (int) $f['darreichung_id']) : null);
             $portionen = max(0.0, (float) ($f['portionen'] ?? 0));
             if ($portionen <= 0) {
+                continue;
+            }
+            if ($dar !== null && $dar->arbeitszeiten !== null) {
+                $neu = app(DarreichungsZeitService::class)->berechnen($team, $gericht, $dar, $portionen);
+                $summe += $neu['minuten'];
+                $vorOrt += $neu['vor_ort_minuten'];
+                $warnungen = array_merge($warnungen, $neu['warnungen']);
+                $raus[] = ['darreichung_id' => $dar->id, 'form' => $dar->servingForm?->code,
+                    'einheit' => 'arbeitsschritte', 'masseinheit' => 'min', 'portionen' => $portionen,
+                    'menge' => $portionen, 'je_einheit' => null, 'pauschal_min' => 0.0,
+                    'quelle' => 'darreichung', 'minuten' => round($neu['minuten'], 3),
+                    'vor_ort_minuten' => round($neu['vor_ort_minuten'], 3),
+                    'posten' => $neu['posten'], 'vollstaendig' => $neu['vollstaendig']];
                 continue;
             }
             $code = $dar?->servingForm?->code;
@@ -286,12 +304,33 @@ class ProductionTimeService
             $summe += $minuten;
             $raus[] = ['darreichung_id' => $dar?->id, 'form' => $code, 'einheit' => $einheit['einheit'], 'masseinheit' => $einheit['masseinheit'],
                 'portionen' => round($portionen, 3), 'menge' => round($menge, 3), 'je_einheit' => $wert !== null ? round($wert, 3) : null,
-                'pauschal_min' => round($pauschale, 3), 'quelle' => $quelle, 'minuten' => round($minuten, 3)];
+                'pauschal_min' => round($pauschale, 3), 'quelle' => $quelle, 'minuten' => round($minuten, 3),
+                'vollstaendig' => ! ($einheit['einheit'] === 'behaelter' && $menge <= 0)];
         }
         $quellen = array_values(array_unique(array_filter(array_column($raus, 'quelle'))));
 
-        return ['minuten' => $summe, 'quelle' => count($quellen) > 1 ? 'gemischt' : ($quellen[0] ?? null),
-            'formen' => $raus, 'warnungen' => $warnungen];
+        return ['minuten' => $summe, 'vor_ort_minuten' => round($vorOrt, 3), 'quelle' => count($quellen) > 1 ? 'gemischt' : ($quellen[0] ?? null),
+            'formen' => $raus, 'warnungen' => $warnungen]
+            + $this->anrichteAufteilung($team, $gericht, $raus, $alle);
+    }
+
+    /** Ein expliziter Ausgabe-Posten ersetzt nur die Anrichte-Verteilung dieser Variante. */
+    private function anrichteAufteilung(Team $team, FoodAlchemistRecipe $gericht, array $formen, $darreichungen): array
+    {
+        $overrides = $darreichungen->filter(fn ($d) => $d->ausgabe_station_id !== null)->pluck('ausgabe_station_id', 'id');
+        if ($overrides->isEmpty()) {
+            return [];
+        }
+        $sichtbar = FoodAlchemistProductionStation::visibleToTeam($team)->whereIn('id', $overrides->values())->pluck('id');
+        $aufteilung = [];
+        foreach ($formen as $form) {
+            $id = $overrides->get($form['darreichung_id']);
+            $anteile = $id !== null && $sichtbar->contains($id)
+                ? [['station_id' => (int) $id, 'komponenten' => 0, 'anteil' => 1.0]]
+                : $this->postenAnteile($gericht, $team);
+            array_push($aufteilung, ...$this->verteile($anteile, (float) $form['minuten']));
+        }
+        return ['aufteilung' => $aufteilung];
     }
 
     /**

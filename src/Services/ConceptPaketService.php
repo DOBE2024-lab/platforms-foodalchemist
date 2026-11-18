@@ -158,7 +158,7 @@ class ConceptPaketService
                     'quantity' => $s->quantity !== null ? (float) $s->quantity : null,
                     'unit' => $s->unit?->slug,
                     'presentation_id' => $s->presentation_id !== null ? (int) $s->presentation_id : null,
-                    'darreichung' => $s->presentation_id !== null ? $s->presentation?->servingForm?->label : null,
+                    'darreichung' => $s->presentation_id !== null ? $s->presentation?->bezeichnung() : null,
                 ])->values()->all();
         }
 

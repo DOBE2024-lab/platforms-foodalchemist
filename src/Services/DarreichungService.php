@@ -16,7 +16,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichungZubehoer;
  *
  * Invarianten:
  *  - genau EINE Standard-Darreichung pro Gericht (setzeStandard swappt transaktional)
- *  - eine Servierform höchstens einmal pro Gericht (DB-Unique)
+ *  - mehrere Varianten derselben Servierform möglich (z. B. kleines und großes Glas)
  *  - Deltas nur auf Zutatenzeilen des Kernrezepts (FK) — Grenzregel E5:
  *    weglassen/umgewichten ja, neue Zutaten strukturell unmöglich
  *  - FA-native Anlagen tragen created_via (F12; WaWi-Importe haben legacy_id)
@@ -48,19 +48,12 @@ class DarreichungService
         }
         // Spec 85: Fremdschlüssel team-autorisieren (Sichtbarkeit, wie TeamScope::referenz) — sonst hängt ein MCP-Aufruf eine
         // fremde Form/Klasse (z. B. die des Masters) an die eigene Darreichung: Etikett leckt, Daten falsch.
-        if (! \Platform\FoodAlchemist\Models\FoodAlchemistServierform::visibleToTeam($team)->whereKey($servierformId)->exists()) {
+        if (! \Platform\FoodAlchemist\Models\FoodAlchemistServierform::visibleToTeam($team)->where('is_inactive', false)->whereKey($servierformId)->exists()) {
             throw new \RuntimeException('Unbekannte Servierform.');
         }
         $attrs = [...$attrs, ...$this->referenzenPruefen($team, $attrs)];
-        if ($recipe->presentations()->where('serving_form_id', $servierformId)->exists()) {
-            throw new \RuntimeException('Diese Servierform existiert schon an diesem Gericht.');
-        }
-
-        // Soft-gelöschte Zeile derselben Form blockiert den DB-Unique → reaktivieren statt einfügen
-        $trashed = FoodAlchemistRecipeDarreichung::onlyTrashed()
-            ->where('recipe_id', $recipe->id)->where('serving_form_id', $servierformId)->first();
-        if ($trashed !== null) {
-            $trashed->forceDelete();
+        if (mb_strlen((string) ($attrs['name'] ?? '')) > 120) {
+            throw new \RuntimeException('Die Bezeichnung darf höchstens 120 Zeichen haben.');
         }
 
         $standard = $recipe->standardPresentation;
@@ -69,15 +62,19 @@ class DarreichungService
             'recipe_id' => $recipe->id,
             'serving_form_id' => $servierformId,
             'is_standard' => $standard === null,               // erste Form = Standard
+            'menge_vom_standard' => $standard !== null && ! isset($attrs['quantity_per_unit_g']),
             // Vorbefüllung aus der Standard-Form (F2: KEIN Pauschal-Faktor — User passt an)
             'quantity_per_unit_g' => $attrs['quantity_per_unit_g'] ?? $standard?->quantity_per_unit_g,
             'unit_vocab_id' => $attrs['unit_vocab_id'] ?? $standard?->unit_vocab_id,
-            'unit_count' => $attrs['unit_count'] ?? $standard?->unit_count,
+            'unit_count' => $attrs['unit_count'] ?? 1,
             'markup_class_id' => $attrs['markup_class_id'] ?? $standard?->markup_class_id
                 ?? $this->vorbelegteKlasseId($team, $recipe),
             'price_mode' => $attrs['price_mode'] ?? 'auto',
             'sales_net' => $attrs['sales_net'] ?? null,
             'note' => $attrs['note'] ?? null,
+            'name' => $attrs['name'] ?? null,
+            'arbeitszeiten' => array_key_exists('arbeitszeiten', $attrs)
+                ? app(DarreichungsZeitService::class)->normalisieren($attrs['arbeitszeiten']) : null,
             // Spec 83 B3i/B3l: NICHT aus der Standard-Form vorbefüllen — die Einheit hängt an der Form (s je Teller ≠ min je Platte)
             'anrichten_wert' => isset($attrs['anrichten_wert']) && is_numeric(str_replace(',', '.', (string) $attrs['anrichten_wert']))
                 ? (float) str_replace(',', '.', (string) $attrs['anrichten_wert']) : null,
@@ -151,6 +148,7 @@ class DarreichungService
     }
 
     private const FELDER = [
+        'name', 'arbeitszeiten', 'ausgabe_station_id', 'menge_vom_standard',
         'quantity_per_unit_g', 'unit_vocab_id', 'unit_count',
         'markup_class_id', 'price_mode', 'sales_net',
         'vat_profile_key', 'price_override_reason', 'price_override_expires_at',
@@ -167,6 +165,7 @@ class DarreichungService
 
     /** Spec 85: Fremdschlüssel der Darreichung → Vokabular (Model-Klasse oder Tabelle ohne Model). Sichtbar heißt erlaubt. */
     private const REFERENZEN = [
+        'ausgabe_station_id' => [\Platform\FoodAlchemist\Models\FoodAlchemistProductionStation::class, 'Ausgabe-Posten'],
         'markup_class_id' => [\Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass::class, 'Aufschlagsklasse'],
         'unit_vocab_id' => [\Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::class, 'Einheit'],
         'container_warm_vocab_id' => [\Platform\FoodAlchemist\Models\FoodAlchemistVocabContainer::class, 'Behälter warm'],
@@ -220,6 +219,20 @@ class DarreichungService
     {
         $darreichung = $this->find($team, $darreichungId);
         $update = array_intersect_key($attrs, array_flip(self::FELDER));
+        if (array_key_exists('menge_vom_standard', $update)) {
+            if (! in_array($update['menge_vom_standard'], [true, false, 0, 1, '0', '1'], true)) {
+                throw new \RuntimeException('Mengenherkunft muss Standard oder eigene Menge sein.');
+            }
+            $update['menge_vom_standard'] = ! $darreichung->is_standard && (bool) $update['menge_vom_standard'];
+        } elseif (array_key_exists('quantity_per_unit_g', $update)) {
+            $update['menge_vom_standard'] = false;
+        }
+        if (array_key_exists('arbeitszeiten', $update)) {
+            $update['arbeitszeiten'] = app(DarreichungsZeitService::class)->normalisieren($update['arbeitszeiten']);
+        }
+        if (array_key_exists('name', $update) && mb_strlen((string) $update['name']) > 120) {
+            throw new \RuntimeException('Die Bezeichnung darf höchstens 120 Zeichen haben.');
+        }
         foreach ($update as $k => $v) {
             if ($v === '') {
                 $update[$k] = null;
@@ -295,7 +308,7 @@ class DarreichungService
             ]);
         }
         $darreichung->update($update);
-        $this->recomputePreise($darreichung);
+        $darreichung->is_standard ? $this->recomputeFuerRezept($darreichung->recipe_id) : $this->recomputePreise($darreichung);
 
         return $darreichung->refresh();
     }
@@ -329,18 +342,6 @@ class DarreichungService
         if ($form->is_inactive) {
             throw new \RuntimeException('Diese Servierform ist deaktiviert.');
         }
-        if ($darreichung->recipe->presentations()
-            ->where('serving_form_id', $servierformId)
-            ->whereKeyNot($darreichung->id)->exists()) {
-            throw new \RuntimeException('Diese Servierform existiert schon an diesem Gericht.');
-        }
-
-        // Soft-gelöschte Zeile derselben Form blockiert den DB-Unique (wie in anlegen()).
-        FoodAlchemistRecipeDarreichung::onlyTrashed()
-            ->where('recipe_id', $darreichung->recipe_id)
-            ->where('serving_form_id', $servierformId)
-            ->get()->each->forceDelete();
-
         $darreichung->update(['serving_form_id' => $servierformId]);
 
         return $darreichung->refresh();
@@ -364,12 +365,29 @@ class DarreichungService
     public function setzeStandard(Team $team, int $darreichungId): void
     {
         $darreichung = $this->find($team, $darreichungId);
-        DB::transaction(function () use ($darreichung) {
+        DB::transaction(function () use ($darreichung, $team) {
+            $darreichung->recipe()->lockForUpdate()->first();
+            $darreichung->refresh();
+            if ($darreichung->is_standard) {
+                return;
+            }
+            // Die gewählte Variante behält ihre wirksame Komposition und wird selbst zur Quelle.
+            if ($darreichung->deltas()->exists() || ($darreichung->menge_vom_standard && $darreichung->recipe->standardPresentation?->deltas()->exists())) {
+                $anteil = $this->produktionsAnteil($darreichung->recipe, $darreichung, 1, $team);
+                foreach ($this->recompute->zeilenKostenUndMassen($darreichung->recipe, $team) as $ingId => $z) {
+                    $m = ($anteil['je_zutat'][$ingId] ?? $anteil['ansaetze']) * $z['masse_g'] / max(1, (float) ($darreichung->unit_count ?: 1));
+                    FoodAlchemistRecipeDarreichungDelta::withTrashed()->updateOrCreate(
+                        ['presentation_id' => $darreichung->id, 'recipe_ingredient_id' => $ingId],
+                        ['team_id' => $darreichung->team_id, 'quantity_override_g' => $m, 'omitted' => $m <= 0, 'deleted_at' => null],
+                    );
+                }
+            }
             // Reihenfolge wichtig: partieller Unique-Index erlaubt nur EIN is_standard=1
             $darreichung->recipe->presentations()
                 ->where('id', '!=', $darreichung->id)
                 ->update(['is_standard' => false]);
-            $darreichung->update(['is_standard' => true]);
+            $darreichung->update(['is_standard' => true, 'menge_vom_standard' => false]);
+            $this->recomputeFuerRezept($darreichung->recipe_id);
         });
     }
 
@@ -387,19 +405,28 @@ class DarreichungService
 
             return;
         }
+        if ($mengeOverrideG !== null && (! is_finite($mengeOverrideG) || $mengeOverrideG < 0)) {
+            throw new \RuntimeException('Die Komponentenmenge muss eine gültige positive Grammzahl oder 0 sein.');
+        }
+        if (! $darreichung->menge_vom_standard && ! $darreichung->deltas()->exists()) {
+            $darreichung->update(['komponenten_referenz_g' => $this->grammJeEinheit($darreichung, $darreichung->recipe)]);
+        }
         FoodAlchemistRecipeDarreichungDelta::withTrashed()->updateOrCreate(
             ['presentation_id' => $darreichung->id, 'recipe_ingredient_id' => $recipeIngredientId],
             ['team_id' => $darreichung->team_id, 'quantity_override_g' => $mengeOverrideG,
                 'omitted' => $omitted, 'deleted_at' => null],
         );
-        $this->recomputePreise($darreichung);
+        $darreichung->is_standard ? $this->recomputeFuerRezept($darreichung->recipe_id) : $this->recomputePreise($darreichung);
     }
 
     public function entferneDelta(Team $team, int $darreichungId, int $recipeIngredientId): void
     {
         $darreichung = $this->find($team, $darreichungId);
         $darreichung->deltas()->where('recipe_ingredient_id', $recipeIngredientId)->forceDelete();
-        $this->recomputePreise($darreichung);
+        if (! $darreichung->menge_vom_standard && ! $darreichung->deltas()->exists() && $darreichung->komponenten_referenz_g !== null) {
+            $darreichung->update(['quantity_per_unit_g' => $darreichung->komponenten_referenz_g, 'komponenten_referenz_g' => null]);
+        }
+        $darreichung->is_standard ? $this->recomputeFuerRezept($darreichung->recipe_id) : $this->recomputePreise($darreichung);
     }
 
     /**
@@ -592,7 +619,7 @@ class DarreichungService
         $team = Team::findOrFail($darreichung->team_id);
         $deltas = $darreichung->deltas()->get();
 
-        if ($deltas->isEmpty()) {
+        if ($deltas->isEmpty() && ! $darreichung->menge_vom_standard) {
             // Stufe 1: proportional — EK/g des Rezepts × Grammatur × Anzahl
             $ekProG = $recipe->ek_per_kg_eur !== null ? (float) $recipe->ek_per_kg_eur / 1000.0 : null;
             $grammatur = $this->grammJeEinheit($darreichung, $recipe) ?? 0.0;
@@ -604,7 +631,7 @@ class DarreichungService
             // Stufe 2: Overrides sind ECHTE Gramm je Einheit dieser Form (User-Entscheid
             // 2026-07-03) — die Grammatur der Form ergibt sich aus der Komponenten-Summe,
             // der EK direkt aus Σ (Preis/g × Gramm). Kein Verhältnis-Umweg mehr.
-            $proEinheit = $this->standardProEinheit($recipe, $team);
+            $proEinheit = $this->standardProEinheit($recipe, $team, (int) $darreichung->id);
             $deltaMap = $deltas->keyBy('recipe_ingredient_id');
             $kosten = 0.0;
             $masse = 0.0;
@@ -621,8 +648,11 @@ class DarreichungService
                 }
                 $masse += $m;
             }
+            if ($proEinheit === [] && $deltas->isEmpty() && $darreichung->menge_vom_standard) {
+                $masse = $this->grammJeEinheit($darreichung, $recipe) ?? 0;
+            }
             // Auto-Grammatur: g/Einheit = Summe der Komponenten dieser Form
-            $darreichung->quantity_per_unit_g = $masse > 0 ? round($masse, 1) : $darreichung->quantity_per_unit_g;
+            $darreichung->quantity_per_unit_g = round($masse, 1);
             $ekPortion = $nBepreist > 0
                 ? round($kosten * (float) ($darreichung->unit_count ?: 1), 4)
                 : ($recipe->ek_per_kg_eur !== null && $masse > 0
@@ -748,7 +778,7 @@ class DarreichungService
     /** Alle Darreichungen eines Gerichts neu rechnen (nach Zutaten-/EK-Änderung). */
     public function recomputeFuerRezept(int $recipeId): void
     {
-        $darreichungen = FoodAlchemistRecipeDarreichung::where('recipe_id', $recipeId)->get();
+        $darreichungen = FoodAlchemistRecipeDarreichung::where('recipe_id', $recipeId)->orderByDesc('is_standard')->orderBy('id')->get();
         if ($darreichungen->isEmpty()) {
             return;
         }
@@ -767,6 +797,10 @@ class DarreichungService
      */
     public function grammJeEinheit(FoodAlchemistRecipeDarreichung $darreichung, FoodAlchemistRecipe $recipe): ?float
     {
+        if (! $darreichung->is_standard && $darreichung->menge_vom_standard && ! $darreichung->deltas()->exists()) {
+            $standard = $recipe->standardPresentation()->first();
+            return $standard !== null ? $this->grammJeEinheit($standard, $recipe) : null;
+        }
         $grammatur = (float) ($darreichung->quantity_per_unit_g ?? 0);
         if ($grammatur > 0) {
             return $grammatur;
@@ -805,9 +839,10 @@ class DarreichungService
         $yieldKg = $recipe->yield_kg_manual !== null ? (float) $recipe->yield_kg_manual : (float) ($recipe->yield_kg ?? 0);
         $ansatzG = $yieldKg > 0 ? $yieldKg * 1000 : 0.0;
 
-        if ($darreichung !== null && $darreichung->deltas()->exists()) {
-            $proEinheit = $this->standardProEinheit($recipe, $team);
-            $batchMasse = array_sum(array_map(fn ($z) => $z['masse_g'], $this->recompute->zeilenKostenUndMassen($recipe, $team)));
+        if ($darreichung !== null && ($darreichung->deltas()->exists() || $darreichung->menge_vom_standard)) {
+            $proEinheit = $this->standardProEinheit($recipe, $team, (int) $darreichung->id);
+            $batchZeilen = $this->recompute->zeilenKostenUndMassen($recipe, $team);
+            $batchMasse = array_sum(array_map(fn ($z) => $z['masse_g'], $batchZeilen));
             $faktorStd = ($batchMasse > 0 && array_sum(array_column($proEinheit, 'masse_g')) > 0)
                 ? array_sum(array_column($proEinheit, 'masse_g')) / $batchMasse : null;
             $deltaMap = $darreichung->deltas()->get()->keyBy('recipe_ingredient_id');
@@ -818,7 +853,7 @@ class DarreichungService
                 $g = $delta?->omitted ? 0.0 : ($delta?->quantity_override_g !== null ? (float) $delta->quantity_override_g : $zeile['masse_g']);
                 $summeG += $g;
                 // Ansätze dieser Zutat = gebrauchte Gramm ÷ Gramm je Ansatz (Standard-Komposition ist bereits je Einheit skaliert).
-                $jeAnsatz = $faktorStd !== null && $faktorStd > 0 ? $zeile['masse_g'] / $faktorStd : 0.0;
+                $jeAnsatz = (float) ($batchZeilen[$ingId]['masse_g'] ?? 0);
                 $jeZutat[(int) $ingId] = $jeAnsatz > 0 ? $einheiten * $g / $jeAnsatz : 0.0;
             }
             $basis = $ansatzG > 0 ? $ansatzG : $batchMasse;
@@ -865,14 +900,22 @@ class DarreichungService
      *
      * @return array<int, array{masse_g: float, kosten_pro_g: ?float}>
      */
-    public function standardProEinheit(FoodAlchemistRecipe $recipe, ?Team $team = null): array
+    public function standardProEinheit(FoodAlchemistRecipe $recipe, ?Team $team = null, ?int $fuerDarreichung = null): array
     {
         $zeilen = $this->recompute->zeilenKostenUndMassen($recipe, $team);
         $batchG = array_sum(array_map(fn ($z) => $z['masse_g'], $zeilen));
         // Referenz = Grammatur der Standard-Form — aber nur, wenn diese selbst delta-frei
         // ist (sonst wäre die Referenz zirkulär, weil ihre Grammatur aus Deltas entsteht).
         $standard = $recipe->standardPresentation()->first();
-        $stdG = ($standard !== null && ! $standard->deltas()->exists()) ? $standard->quantity_per_unit_g : null;
+        $stdG = $standard !== null && $standard->deltas()->exists() ? $standard->komponenten_referenz_g : $standard?->quantity_per_unit_g;
+        $eigeneReferenz = false;
+        if ($fuerDarreichung !== null && $standard?->id !== $fuerDarreichung) {
+            $ziel = $recipe->presentations()->find($fuerDarreichung);
+            if ($ziel !== null && ! $ziel->menge_vom_standard && ($ziel->komponenten_referenz_g !== null || ! $ziel->deltas()->exists())) {
+                $stdG = $ziel->komponenten_referenz_g ?? $ziel->quantity_per_unit_g;
+                $eigeneReferenz = true;
+            }
+        }
         $faktor = ($batchG > 0 && $stdG !== null && (float) $stdG > 0) ? (float) $stdG / $batchG : 1.0;
 
         $out = [];
@@ -881,6 +924,14 @@ class DarreichungService
                 'masse_g' => $z['masse_g'] * $faktor,
                 'kosten_pro_g' => ($z['kosten'] !== null && $z['masse_g'] > 0) ? $z['kosten'] / $z['masse_g'] : null,
             ];
+        }
+        if (! $eigeneReferenz && $standard !== null && $standard->id !== $fuerDarreichung) {
+            foreach ($standard->deltas()->get() as $delta) {
+                if (isset($out[$delta->recipe_ingredient_id])) {
+                    $out[$delta->recipe_ingredient_id]['masse_g'] = $delta->omitted ? 0.0
+                        : ($delta->quantity_override_g ?? $out[$delta->recipe_ingredient_id]['masse_g']);
+                }
+            }
         }
 
         return $out;

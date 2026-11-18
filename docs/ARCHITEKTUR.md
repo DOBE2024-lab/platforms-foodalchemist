@@ -303,6 +303,14 @@ Contracts.
 
 ## 11. Architekturentscheidungen und Änderungen
 
+### Darreichungen und Zeitpflege
+
+Die [Entscheidung zur zentralen Zeitpflege](PLANUNG/Darreichungen_Zeiten.md)
+führt aktive Arbeitsschritte direkt an der teamgebundenen Darreichung. Explizite
+Zeitlisten ersetzen die Legacy-Anrichteberechnung, sie werden nicht addiert.
+Küchen- und Vor-Ort-Arbeit bleiben getrennt. Mehrere Varianten derselben
+Servierform sind möglich; explizite Darreichungs-IDs unterscheiden sie.
+
 Eine Änderung benötigt eine dokumentierte Architekturentscheidung, wenn sie:
 
 - Datenbesitz oder Tenantvererbung verändert,

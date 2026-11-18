@@ -1123,13 +1123,13 @@
                                     <select wire:key="sp-form-{{ $detailEintrag->id }}" wire:change="eintragDarreichungSetzen({{ $detailEintrag->id }}, $event.target.value)"
                                             class="fa-control fa-select pr-8 h-8 w-full" aria-label="Darreichung dieses Eintrags"
                                             title="Form des Gerichts für diesen Eintrag. Standard folgt der Standard-Darreichung des Gerichts.">
-                                        <option value="" @selected($detailEintrag->presentation_id === null)>Standard ({{ $detailFormen->first()?->servingForm?->label ?? '—' }}{{ $gramm($detailFormen->first()) }})</option>
+                                        <option value="" @selected($detailEintrag->presentation_id === null)>Standard ({{ $detailFormen->first()?->bezeichnung() ?? '—' }}{{ $gramm($detailFormen->first()) }})</option>
                                         @foreach($detailFormen as $f)
-                                            <option value="{{ $f->id }}" @selected((int) $detailEintrag->presentation_id === (int) $f->id)>{{ $f->servingForm?->label ?? '—' }}{{ $gramm($f) }}</option>
+                                            <option value="{{ $f->id }}" @selected((int) $detailEintrag->presentation_id === (int) $f->id)>{{ $f->bezeichnung() ?? '—' }}{{ $gramm($f) }}</option>
                                         @endforeach
                                     </select>
                                 @elseif($detailFormen->count() === 1)
-                                    <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" data-sp-darreichung-einzig>{{ $detailFormen->first()->servingForm?->label ?? '—' }}{{ $gramm($detailFormen->first()) }}</span>
+                                    <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" data-sp-darreichung-einzig>{{ $detailFormen->first()->bezeichnung() ?? '—' }}{{ $gramm($detailFormen->first()) }}</span>
                                 @else
                                     <x-fa::signal tone="warn">Keine Darreichung am Gericht</x-fa::signal>
                                 @endif

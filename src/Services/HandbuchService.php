@@ -274,7 +274,7 @@ class HandbuchService
                 ? ['context_file_id' => $recipe->image_context_file_id, 'path' => $recipe->image_path] : null,
             'portion' => [
                 'gramm' => $dar?->quantity_per_unit_g !== null ? (float) $dar->quantity_per_unit_g : null,
-                'form' => $dar?->servingForm?->label,
+                'form' => $dar?->bezeichnung(),
                 'geschirr' => $dar?->vessel?->name,
                 'vehikel' => $dar?->serving_vehicle_vocab_id !== null
                     ? \Illuminate\Support\Facades\DB::table('foodalchemist_vocab_serving_vehicles')->where('id', $dar->serving_vehicle_vocab_id)->value('name')

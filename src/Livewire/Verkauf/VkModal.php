@@ -139,6 +139,7 @@ class VkModal extends Component
     {
         $this->formZuruecksetzen();
         $this->recipeId = $id;
+        $this->darAktiv = null;
         $this->fehler = null;
         $this->behaelterLaden();
         if ($id === null && $ausBasis !== null) {
@@ -230,7 +231,7 @@ class VkModal extends Component
         $raus = [];
         foreach ($rezept->presentations()->with('servingForm')->get() as $d) {
             $a = $zeit->anrichten($team, $rezept, [['dar' => $d, 'portionen' => 100.0]], null, $zjm);
-            $raus[(int) $d->id] = ($a['formen'][0] ?? []) + ['minuten_gesamt' => round($a['minuten'], 1), 'startwert' => match ($a['formen'][0]['einheit'] ?? 'portion') {
+            $raus[(int) $d->id] = ($a['formen'][0] ?? []) + ['service_kosten' => app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->serviceKosten($team, (float) ($a['vor_ort_minuten'] ?? 0)), 'minuten_gesamt' => round($a['minuten'], 1), 'startwert' => match ($a['formen'][0]['einheit'] ?? 'portion') {
                 'stueck' => \Platform\FoodAlchemist\Services\ProductionTimeService::ANRICHTEN_SEKUNDEN_JE_STUECK,
                 'behaelter' => \Platform\FoodAlchemist\Services\ProductionTimeService::ANRICHTEN_MINUTEN_JE_PLATTE,
                 'vor_ort' => null,
@@ -287,7 +288,9 @@ class VkModal extends Component
             return;
         }
         $formId = (int) $this->darNeueForm;
-        $this->darServiceCall(fn ($svc, $team) => $svc->anlegen($team, $this->recipeId, $formId, [], 'fa_ui'));
+        $this->darServiceCall(function ($svc, $team) use ($formId) {
+            $this->darAktiv = (int) $svc->anlegen($team, $this->recipeId, $formId, [], 'fa_ui')->id;
+        });
     }
 
     public function darreichungLoeschen(int $id): void
@@ -1455,7 +1458,7 @@ class VkModal extends Component
                     $q->orWhereIn('id', \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::query()
                         ->where('recipe_id', $this->recipeId)->pluck('serving_form_id'));
                 }
-            })->orderBy('sort_order')->get(['id', 'code', 'label']),
+            })->orderBy('sort_order')->get(['id', 'code', 'label', 'is_inactive']),
             // Zubehör & Verpackung je Form (interne Sicht: Zeile mit Menge und EK) + Trefferliste für die Suche (nur Non-Food-GPs)
             'darZubehoer' => $this->recipeId !== null && $team !== null
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $this->recipeId)->pluck('id')
@@ -1468,8 +1471,8 @@ class VkModal extends Component
                         \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->nonFood()->whereNotIn('status', ['rejected', 'merged']), 'name', $t)
                         ->orderBy('name')->limit(6)->get(['id', 'name']))->all()
                 : [],
-            'darZeilen' => ($rezept !== null && $this->darDeltaOffen !== null)
-                ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->standardProEinheit($rezept, $team)
+            'darZeilen' => $rezept !== null
+                ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->standardProEinheit($rezept, $team, $this->darAktiv)
                 : [],
             'sensorik' => $rezept !== null ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerRezept($rezept->id, true) : null,
             'komposition' => $rezept !== null ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->gerichtKomposition($rezept->id) : null,

@@ -846,6 +846,9 @@ class PlanungsblattService
             $anzahlProBatch = ($recipe->yield_pieces !== null && (float) $recipe->yield_pieces > 0)
                 ? (float) $recipe->yield_pieces
                 : max(1, (int) ($recipe->sales_unit_count ?? 1));
+            $zeitplanung = $this->productionTimes->calculateForBatches($team, $recipe, $roh, null,
+                $istVk && ($formenTop[$rid] ?? []) !== [] ? array_values($formenTop[$rid]) : null);
+            $warnings = array_merge($warnings, $zeitplanung['warnings']);
             $produktion[] = [
                 'recipe_id' => $rid,
                 'name' => $recipe->name,
@@ -861,8 +864,9 @@ class PlanungsblattService
                 // Stufe 3 P3.2: nicht-lineare Zeit (Rüst + Marginal je Koch-Batch unter Topf-Deckel).
                 // Posten unbekannt bei der Explosion → nur Rezept-Deckel; Defaults = heutiges Verhalten.
                 // Spec 83 B3i: am Gericht rechnet das Anrichten je bestellter Darreichung (formenTop, #175)
-                'arbeitszeit_min' => $this->productionTimes->calculateForBatches($team, $recipe, $roh, null,
-                    $istVk && ($formenTop[$rid] ?? []) !== [] ? array_values($formenTop[$rid]) : null)['active_person_minutes'],
+                'arbeitszeit_min' => $zeitplanung['active_person_minutes'],
+                'vor_ort_min' => $zeitplanung['vor_ort_minutes'],
+                'zeitplanung' => $zeitplanung,
                 'standzeit_min' => $recipe->standzeitMin(),   // passive Gar-/Standzeit (Durchlaufzeit, kein Posten)
                 'zubereitung' => $recipe->preparation ?: null,        // Spiegel-Freitext (Fallback für Rezepte ohne Schritte)
                 'schritte' => $this->schritteFuer($recipe),           // Spec 27: die eigentliche Anleitung (Nummer + Text + Fotos)
@@ -1165,7 +1169,7 @@ class PlanungsblattService
             'geschirr' => $dar->vessel_gp_id !== null ? DB::table('foodalchemist_gps')->where('id', $dar->vessel_gp_id)->value('name') : null,   // Gefäß der Form
             // Kostenart des Gefäßes (17.11.2026): was die Logistik damit tut — mitgeben, zurück in die Spülküche, zurück zum Verleiher, nur Empfehlung
             'geschirr_art' => $dar->vessel_gp_id !== null ? (\Platform\FoodAlchemist\Services\GefaessKostenartService::LOGISTIK[app(DarreichungService::class)->gefaessKosten($dar)['kostenart'] ?? ''] ?? null) : null,
-            'arbeitszeit_zuschlag_min' => $dar->work_time_surcharge_min,
+            'arbeitszeit_zuschlag_min' => $dar->arbeitszeiten === null ? $dar->work_time_surcharge_min : null,
         ], fn ($v) => $v !== null && $v !== '');
 
         return $info !== [] ? $info : null;
@@ -1197,7 +1201,7 @@ class PlanungsblattService
             $out[] = [
                 'darreichung_id' => $dar?->id,                       // Spec 83 B3i: Kalkulation rechnet Anrichten je Form
                 'portionen_roh' => (float) $f['portionen'],
-                'label' => $dar?->servingForm?->label ?? 'Standard',
+                'label' => $dar?->bezeichnung() ?? 'Standard',
                 'portionen' => (int) round($f['portionen']),
                 'gramm' => $gramm !== null ? round($gramm * (float) ($dar?->unit_count ?: 1), 1) : null,
                 'standard' => (bool) ($dar?->is_standard ?? true),

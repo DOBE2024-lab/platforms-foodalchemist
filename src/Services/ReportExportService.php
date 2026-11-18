@@ -178,7 +178,7 @@ class ReportExportService
             ? $recipe->darreichungen()->with('servingForm')->get()
                 ->map(fn ($d) => [
                     'id' => (int) $d->id,
-                    'label' => $d->servingForm?->label ?? 'Darreichung #'.$d->id,
+                    'label' => $d->bezeichnung() ?? 'Darreichung #'.$d->id,
                     // Weg-B (2026-10-12): dieselbe Grammatur wie Editor und Produktion — ohne gepflegte
                     // Grammatur fällt die Standard-Darreichung auf Ertrag ÷ Anzahl zurück (grammJeEinheit).
                     // Vorher las der Report die rohe Spalte und meldete „kein Portionsgewicht",

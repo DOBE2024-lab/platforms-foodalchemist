@@ -213,7 +213,7 @@
             @foreach($formen as $d)
                 <div wire:key="hf-{{ $d->id }}" class="flex items-center gap-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2.5">
                     <div class="min-w-0 flex-1">
-                        <p class="font-medium text-[var(--fa-ink)]">{{ $d->servingForm?->label ?? 'Ohne Form' }}</p>
+                        <p class="font-medium text-[var(--fa-ink)]">{{ $d->bezeichnung() ?? 'Ohne Form' }}</p>
                         <p class="{{ $leise }}">{{ implode(' · ', array_filter([$d->is_standard ? 'Standard' : null, $d->quantity_per_unit_g !== null ? $menge($d->quantity_per_unit_g) . ' g' : null, $d->unit_count !== null && (float) $d->unit_count !== 1.0 ? $menge($d->unit_count) . ' Stück' : null])) }}</p>
                     </div>
                     <div class="shrink-0 text-right">

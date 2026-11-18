@@ -12,7 +12,7 @@
 @php($rollenText = \Platform\FoodAlchemist\Support\TellerRolle::labels())
 @php($ib = 'inline-flex items-center justify-center shrink-0 w-7 h-7 rounded-[var(--fa-radius-control)] text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] transition-colors duration-150 disabled:opacity-30 disabled:pointer-events-none')
 @php($feld = 'fa-control h-8 text-[length:var(--fa-text-md)]')
-@php($spalten = $vkKontext ? 11 : 10)
+@php($spalten = 10)   {{-- Gericht: Rolle statt Garverlust (Garverlust/Medium gehören ins Basisrezept, 18.11.2026) --}}
 
 @if($fehler !== null)
     <x-fa::notice tone="crit" class="mb-3" data-editor-fehler>{{ $fehler }}</x-fa::notice>
@@ -153,7 +153,7 @@
             {{-- R5: BIS-Spalte raus (quantity_max bleibt in den Daten); drei EK-Sichten --}}
             @php($koepfe = ['Pos.' => null, 'Menge' => null, 'Einheit' => null, 'Zutat' => 'Klick auf den Namen öffnet Grundprodukt oder Basisrezept als Fenster über dem Editor']
                 + ($vkKontext ? ['Rolle' => 'Rolle im Gericht: Aromaträger, Komponente, Beilage oder Garnitur'] : [])
-                + ['Garverlust %' => 'Gewichtsverlust beim Garen', 'Anteil %' => 'Anteil am Gesamtgewicht des Rezepts (Summe 100 %). Optionale Zutaten und Zutaten ohne Gramm-Umrechnung zählen nicht. Bäckerprozent rechnet der Grammaturen-Rechner.', 'EK' => 'Einkaufspreis mit dem Hauptartikel. Damit rechnet das Rezept.', 'Günstigster' => 'Einkaufspreis mit dem günstigsten Artikel hinter dem Grundprodukt', 'Ø' => 'Einkaufspreis im Durchschnitt aller Artikel hinter dem Grundprodukt', '' => null])
+                + ($vkKontext ? [] : ['Garverlust %' => 'Gewichtsverlust beim Garen']) + ['Anteil %' => 'Anteil am Gesamtgewicht des Rezepts (Summe 100 %). Optionale Zutaten und Zutaten ohne Gramm-Umrechnung zählen nicht. Bäckerprozent rechnet der Grammaturen-Rechner.', 'EK' => 'Einkaufspreis mit dem Hauptartikel. Damit rechnet das Rezept.', 'Günstigster' => 'Einkaufspreis mit dem günstigsten Artikel hinter dem Grundprodukt', 'Ø' => 'Einkaufspreis im Durchschnitt aller Artikel hinter dem Grundprodukt', '' => null])
             <thead><tr>
                 @foreach($koepfe as $head => $tip)
                     <th class="{{ $head === 'Zutat' ? 'w-full' : 'w-px' }} {{ in_array($head, ['Garverlust %', 'Anteil %', 'EK', 'Günstigster', 'Ø'], true) ? 'text-right' : '' }}" @if($tip) title="{{ $tip }}" @endif>
@@ -234,7 +234,8 @@
                             </select>
                         </td>
                     @endif
-                    {{-- Garverlust: KI-Schätzung in Akzent markiert; Tippen macht den Wert manuell --}}
+                    {{-- Garverlust: KI-Schätzung in Akzent markiert; Tippen macht den Wert manuell. Im Gericht ausgeblendet (nur Basisrezepte, Verluste dort) --}}
+                    @unless($vkKontext)
                     <td class="num">
                         <div class="inline-flex items-center gap-1">
                             <span x-show="zeile._garverlust_ki" x-cloak class="inline-flex text-[var(--fa-accent)]" title="Von der KI geschätzt">@svg('heroicon-m-sparkles', 'w-3.5 h-3.5')</span>
@@ -245,6 +246,7 @@
                                    @input="zeile._garverlust_ki = false" data-garverlust-input />
                         </div>
                     </td>
+                    @endunless
                     {{-- Gewichtsanteil — % vom Gesamtgewicht (Summe 100 %), reine Anzeige --}}
                     <td class="num">
                         <span class="text-[var(--fa-ink-2)]" x-text="anteilPctFmt(zeile)"
@@ -267,15 +269,17 @@
                     <td class="whitespace-nowrap">
                         <div class="flex items-center justify-end gap-0.5">
                             <label class="inline-flex items-center gap-1 mr-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Optional: zählt nicht in Ausbeute und Kosten">
-                                <input type="checkbox" x-model="zeile.is_optional" class="w-3.5 h-3.5 accent-[var(--fa-accent)]" aria-label="Optional" /><span class="sr-only">optional</span>
+                                <input type="checkbox" x-model="zeile.is_optional" class="w-3.5 h-3.5 accent-[var(--fa-accent)]" aria-label="Optional" /><span>optional</span>
                             </label>
-                            {{-- Zeilenart „Medium“ (Regelwerk Basisrezepte §18.7): Kochmedium, verworfen bis auf 1 − Garverlust; ungesetzt = Vorschlag des GP --}}
+                            {{-- Zeilenart „Medium“ (Regelwerk Basisrezepte §18.7): Kochmedium, verworfen bis auf 1 − Garverlust; ungesetzt = Vorschlag des GP. Nur im Basisrezept --}}
+                            @unless($vkKontext)
                             <label class="inline-flex items-center gap-1 mr-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]"
                                    :title="'Medium (Kochmedium wie Nudelwasser, Frittieröl, Lake): wird verworfen, zählt nur zum Anteil (1 − Garverlust) in Ausbeute und Nährwerten, ohne Garverlust gar nicht. Kosten zählen voll.' + (zeile.zeilenart === null || zeile.zeilenart === undefined ? (zeile._gp_kochmedium ? ' Vorschlag vom Grundprodukt.' : '') : '')">
                                 <input type="checkbox" :checked="zeile.zeilenart ? zeile.zeilenart === 'medium' : !!zeile._gp_kochmedium"
                                        @change="zeile.zeilenart = $event.target.checked ? 'medium' : 'zutat'"
                                        class="w-3.5 h-3.5 accent-[var(--fa-accent)]" aria-label="Medium" data-zeile-medium /><span>Medium</span>
                             </label>
+                            @endunless
                             {{-- Ersatz (Äquivalenz-Katalog): nur sichtbar, wenn hinterlegt; 1 Klick tauscht um, Menge × Faktor --}}
                             <button type="button" x-show="zeile.ersatz" x-cloak class="{{ $ib }} text-[var(--fa-ok)] hover:text-[var(--fa-ok)] hover:bg-[var(--fa-ok-soft)]"
                                     :title="ersatzTitel(zeile)" :aria-label="ersatzTitel(zeile)" @click="ersatzTausch(i)" data-zeile-ersatz>@svg('heroicon-m-arrow-path', 'w-4 h-4')</button>
@@ -370,7 +374,7 @@
             </tbody>
             <tfoot>
                 <tr class="border-t border-[var(--fa-line-strong)]">
-                    <td colspan="{{ $vkKontext ? 7 : 6 }}" class="text-right text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Summe</td>
+                    <td colspan="6" class="text-right text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Summe</td>
                     <td class="num font-semibold text-[var(--fa-ink)]" data-summe-live>
                         <span x-text="summeAnzeige()"></span>
                     </td>

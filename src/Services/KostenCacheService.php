@@ -108,16 +108,52 @@ class KostenCacheService
         // Listenpreis gibt es nur am team-eigenen Artikel durch seinen Besitzer; an einem globalen Stamm-Artikel ist jeder
         // Preis ein Teampreis (der Stamm trägt keine Preise, Entscheidung 13.10.)
         $listenpreis = $item->team_id !== null && (int) $item->team_id === (int) $team->id;
-        app(DarreichungService::class)->recomputeFuerZubehoerGps($gpIds);   // Zubehör (Non-Food) an Darreichungen: gezielt neu rechnen
+        $n = $this->markiereVeraltet($this->rezepteMitGps($gpIds), $listenpreis ? null : RecomputeTeamRecipesJob::teamUndNachfahren((int) $team->id));
+        // Gespeicherte Kaskade (Rezept-EK samt Eltern → Darreichungen inkl. Gefäß/Zubehör → Paket/Konzept/Angebot) gezielt über die Queue (18.11.2026);
+        // in einem Sammellauf (Preisliste/Datei-Import) einmal am Ende statt je Zeile
+        if (self::$sammel !== null) {
+            $key = $team->id.'|'.($listenpreis ? 'alle' : 'kette');
+            self::$sammel[$key] = array_merge(self::$sammel[$key] ?? [], $gpIds);
+        } else {
+            \Platform\FoodAlchemist\Jobs\KostenFolgeJob::versenden((int) $team->id, $gpIds, [], ! $listenpreis);
+        }
 
-        return $this->markiereVeraltet($this->rezepteMitGps($gpIds), $listenpreis ? null : RecomputeTeamRecipesJob::teamUndNachfahren((int) $team->id));
+        return $n;
+    }
+
+    /** @var array<string, list<int>>|null  Sammellauf: "teamId|alle|kette" => GP-IDs */
+    private static ?array $sammel = null;
+
+    /**
+     * Sammellauf für Massen-Preisänderungen (Preisliste anwenden, Datei-Import): die Preis-Auslöser in $fn sammeln ihre GPs, am Ende geht EIN
+     * KostenFolgeJob je Team und Reichweite. Die Rezepte rechnet der Aufrufer selbst (postImportKette) — der Job übernimmt Gefäß/Zubehör-Darreichungen
+     * und Paket/Konzept/Angebot darüber. Verschachtelt: nur der äußere Lauf versendet.
+     */
+    public static function gesammelt(callable $fn): mixed
+    {
+        if (self::$sammel !== null) {
+            return $fn();
+        }
+        self::$sammel = [];
+        try {
+            return $fn();
+        } finally {
+            $gesammelt = self::$sammel;
+            self::$sammel = null;
+            foreach ($gesammelt as $key => $gpIds) {
+                [$teamId, $reichweite] = explode('|', $key);
+                \Platform\FoodAlchemist\Jobs\KostenFolgeJob::versenden((int) $teamId, $gpIds, [], $reichweite === 'kette', false);
+            }
+        }
     }
 
     /** Pin/Lock eines Teams an einem GP (Lead-Overlay) → nur dieses Team und seine Unter-Teams. */
     public function nachPinAenderung(int $gpId, Team $team): int
     {
-        app(DarreichungService::class)->recomputeFuerZubehoerGps([$gpId]);
-        return $this->markiereVeraltet($this->rezepteMitGps([$gpId]), RecomputeTeamRecipesJob::teamUndNachfahren((int) $team->id));
+        $n = $this->markiereVeraltet($this->rezepteMitGps([$gpId]), RecomputeTeamRecipesJob::teamUndNachfahren((int) $team->id));
+        \Platform\FoodAlchemist\Jobs\KostenFolgeJob::versenden((int) $team->id, [$gpId]);   // Kaskade des Teams (18.11.2026)
+
+        return $n;
     }
 
     /**

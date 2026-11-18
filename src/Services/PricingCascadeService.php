@@ -93,8 +93,9 @@ class PricingCascadeService
                 $packageIds = DB::table('foodalchemist_package_dishes')
                     ->whereIn('sales_recipe_id', $recipeIds)->whereNull('deleted_at')
                     ->distinct()->pluck('package_id');
+                // auch manuell bepreiste Pakete: recomputePrice lässt deren Preis stehen, frischt aber EK und W% (18.11.2026: Paket-EK blieb sonst alt)
                 FoodAlchemistPaket::where('team_id', $team->id)->whereIn('id', $packageIds)
-                    ->where('price_mode', 'auto')->get()->each(function ($package) use (&$stats) {
+                    ->get()->each(function ($package) use (&$stats) {
                         $this->packages->recomputePrice($package);
                         $stats['packages']++;
                     });

@@ -131,3 +131,14 @@ it('Vorbelegung: Trockenlauf ändert nichts, --apply setzt Speisesalz, Frittierf
     expect($wert($salz))->toBeFalse()->and($wert($this->oel))->toBeFalse();
     File::deleteDirectory($dir);
 });
+
+it('Zutaten-Editor: im Gericht keine Spalte Garverlust und kein „Medium“ (gehören ins Basisrezept); „optional“ ist sichtbar beschriftet', function () {
+    $gericht = $this->makeRecipe($this->rootTeam, '[HG] Pommes-Teller', ['status' => 'draft', 'is_sales_recipe' => true]);
+    $html = Livewire::test(IngredientEditor::class, ['recipeId' => $gericht->id, 'eingebettet' => true])->html();
+    expect($html)->not->toContain('data-zeile-medium')->not->toContain('data-garverlust-input')->not->toContain('Garverlust %')
+        ->and($html)->toContain('<span>optional</span>');
+
+    // Gegenprobe Basisrezept: beides da
+    $basis = Livewire::test(IngredientEditor::class, ['recipeId' => $this->rezept->id, 'eingebettet' => true])->html();
+    expect($basis)->toContain('data-zeile-medium')->toContain('data-garverlust-input')->toContain('<span>optional</span>');
+});

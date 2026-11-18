@@ -1343,7 +1343,11 @@ class VkModal extends Component
         $anteile = ['bio' => null, 'regional' => null];
         if ($rezept !== null) {
             $cockpitTmp = $verkauf->cockpit($rezept, $team, $outlet);
-            $gProStueck = $cockpitTmp['verkauft_als']['g_pro_einheit'] ?? null;
+            // „je Einheit“ = Grammatur der Standard-Darreichung (Preis-Wahrheit, gleiche Rückfall-Kette wie ihr EK: Darreichung → Gericht → Ertrag ÷ Anzahl),
+            // sonst die Vorgabe am Gericht. Vorher nur das Gericht: ohne Verkaufseinheit am Gericht blieb die Spalte leer (18.11.2026).
+            $standardDar = $rezept->standardPresentation()->first();
+            $gProStueck = ($standardDar !== null ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->grammJeEinheit($standardDar, $rezept) : null)
+                ?? ($cockpitTmp['verkauft_als']['g_pro_einheit'] ?? null);
             $totalG = 0.0;
             $summen = ['bio' => 0.0, 'regional' => 0.0];
             foreach ($rezept->ingredients as $z) {
@@ -1419,6 +1423,11 @@ class VkModal extends Component
             'darGefaess' => $this->recipeId !== null && $team !== null
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $this->recipeId)->get()
                     ->mapWithKeys(fn ($d) => [(int) $d->id => app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessInfo($d, $team)])->all()
+                : [],
+            // MwSt „aus Preisklasse“: was die leere Wahl je Darreichung ergibt (Anzeige im Select)
+            'darMwstVorgabe' => $this->recipeId !== null && $team !== null
+                ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $this->recipeId)->get()
+                    ->mapWithKeys(fn ($d) => [(int) $d->id => app(\Platform\FoodAlchemist\Services\CatalogPricingService::class)->vatKeyAusPreisklasse($team, $d)])->all()
                 : [],
             'gefaessGps' => $team !== null
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->nonFood()->whereNotIn('status', ['rejected', 'merged'])

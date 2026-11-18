@@ -37,6 +37,14 @@ beforeEach(function () {
 
     $this->buch = $this->makeFoodbook($this->rootTeam, 'Kundenbuch');
     $this->formatKapitel = app(FoodbookService::class)->insertFormatAlsKapitel($this->rootTeam, $this->buch->id, $this->format->id);
+    // Edition mit eingebettetem Paket (Preis pro Person), Gang-Überschrift und Gericht-Wording.
+    $this->editionMitPaket = function (\Platform\FoodAlchemist\Models\FoodAlchemistConcept $edition): void {
+        $paket = $this->makeConcept($this->rootTeam, 'Paket Italien', ['consumer_name' => 'ITALIEN', 'price_per_person_cache' => 28.5]);
+        $this->makeConceptSlot($paket, ['position' => 1, 'type' => 'header', 'title' => 'Vorspeise', 'wording' => null, 'is_pflicht' => false]);
+        $recipe = $this->makeRecipe($this->rootTeam, 'Vitello', ['is_sales_recipe' => true, 'status' => 'approved']);
+        $this->makeConceptSlot($paket, ['position' => 2, 'sales_recipe_id' => $recipe->id, 'wording' => 'Vitello tonnato mit Kapernäpfeln']);
+        $this->makeConceptSlot($edition, ['position' => 2, 'embedded_concept_id' => $paket->id, 'wording' => null, 'is_pflicht' => false]);
+    };
 });
 
 it('★ Editor: Format-Kapitel zeigt die Editionen aus dem Format, Hinweis und Link statt „Noch kein Inhalt"', function () {
@@ -129,4 +137,69 @@ it('Dokument (Druck-HTML) zeigt die Editionen des Format-Kapitels', function () 
         ->assertOk()
         ->assertSee('Lissabon Edition')
         ->assertSee('Kyoto Edition');
+});
+
+/**
+ * Jede Edition ist aufklappbar und zeigt dann dieselbe Lese-Ansicht wie ein direkt eingefügter
+ * Concept-Block: Paket mit Preis pro Person, Gang-Überschrift, Gericht-Wording. Schreibgeschützt.
+ */
+
+it('★ Edition aufklappbar: Paket mit Preis, Gang und Gericht-Wording wie im Concept-Block, ohne Bearbeiten', function () {
+    ($this->editionMitPaket)(\Platform\FoodAlchemist\Models\FoodAlchemistConcept::where('name', 'Lissabon')->firstOrFail());
+
+    $html = Livewire::test(Index::class)
+        ->call('waehle', $this->buch->id)
+        ->call('kapitelWaehle', $this->formatKapitel->id)
+        ->html();
+
+    $inhalt = \Illuminate\Support\Str::after($html, 'data-fb-format-kapitel');
+    expect($inhalt)->toContain('data-fb-format-edition-toggle')
+        ->toContain('data-fb-format-edition-inhalt')
+        ->toContain('data-fb-zeile-paket')
+        ->toContain('ITALIEN')
+        ->toContain('28,50 € pro Person')
+        ->toContain('data-fb-zeile-gang')
+        ->toContain('Vorspeise')
+        ->toContain('Vitello tonnato mit Kapernäpfeln')
+        ->toContain('Lissabon Bowl mit Kräutern')
+        // Mehrere Editionen: zugeklappt (Überblick), aufklappen per Alpine.
+        ->toContain('x-data="{ auf: false }"')
+        ->not->toContain('x-data="{ auf: true }"')
+        // Schreibgeschützt: kein Stift, kein Inline-Editor.
+        ->not->toContain('data-fb-slot-edit')
+        ->not->toContain('Namen für Gäste bearbeiten')
+        ->not->toContain('slotWordingBearbeiten');
+});
+
+it('Edition: bei genau einer Edition startet sie aufgeklappt', function () {
+    $edition = app(ConceptService::class)->create($this->rootTeam, ['name' => 'Solo']);
+    $edition->update(['status' => 'active', 'consumer_name' => 'Solo Edition', 'price_per_person_cache' => 30.0]);
+    ($this->editionMitPaket)($edition);
+    $format = app(FormatService::class)->create($this->rootTeam, ['name' => 'Solo-Format']);
+    app(FormatService::class)->slotConceptEinfuegen($this->rootTeam, $format->id, $edition->id);
+    $kap = app(FoodbookService::class)->insertFormatAlsKapitel($this->rootTeam, $this->buch->id, $format->id);
+
+    $html = Livewire::test(Index::class)
+        ->call('waehle', $this->buch->id)
+        ->call('kapitelWaehle', $kap->id)
+        ->html();
+
+    expect($html)->toContain('x-data="{ auf: true }"')
+        ->toContain('ITALIEN')
+        ->toContain('Vitello tonnato mit Kapernäpfeln');
+});
+
+it('Gegenprobe: direkter Concept-Block behält den Bearbeiten-Stift je Gericht-Zeile', function () {
+    $c = \Platform\FoodAlchemist\Models\FoodAlchemistConcept::where('name', 'Kyoto')->firstOrFail();
+    $normal = $this->makeChapter($this->buch, ['title' => 'Mittag']);
+    app(FoodbookService::class)->addBlock($this->rootTeam, $normal->id, ['type' => 'concept_ref', 'concept_id' => $c->id]);
+
+    $html = Livewire::test(Index::class)
+        ->call('waehle', $this->buch->id)
+        ->call('kapitelWaehle', $normal->id)
+        ->html();
+
+    expect($html)->toContain('data-fb-block-vorschau')
+        ->toContain('Kyoto Bowl mit Kräutern')
+        ->toContain('data-fb-slot-edit');
 });

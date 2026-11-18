@@ -57,10 +57,13 @@ class HandbuchQuellenService
         $sections = [];
         foreach ($dok['kapitel'] ?? [] as $k) {
             $items = [];
-            foreach ($k['bloecke'] ?? [] as $b) {
+            // Format-Kapitel (live, Entscheid B 31.08.): Gerichte stehen in den Editionen, nicht in Blöcken — wie beim Angebot lesen (18.11.2026)
+            $istFormat = (bool) ($k['ist_format'] ?? false);
+            foreach (($istFormat ? ($k['editionen'] ?? []) : ($k['bloecke'] ?? [])) as $b) {
                 foreach ($b['gerichte'] ?? [] as $g) {
                     if (! empty($g['recipe_id'])) {
-                        $items[] = $this->item((int) $g['recipe_id'], (string) ($g['text'] ?? ''), (int) ($g['einrueckung'] ?? 0), array_values((array) ($g['codes'] ?? [])));
+                        $codes = isset($g['codes']) ? array_values((array) $g['codes']) : $this->codesFuer((int) $g['recipe_id']);
+                        $items[] = $this->item((int) $g['recipe_id'], (string) ($g['text'] ?? ''), (int) ($g['einrueckung'] ?? 0), $codes);
                     }
                 }
             }

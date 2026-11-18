@@ -159,6 +159,7 @@ class StammPaketService
             }
         });
         StammPaket::flush();
+        $this->kostenFolge($mandant, array_merge($hinzu, $weg));   // Sicht geändert ⇒ Preise/Leads der Artikel dieser Lieferanten neu
         $optin = FoodAlchemistTeamStammOptin::where('team_id', $mandant->id)->first();
         if ($hinzu !== [] || $weg !== []) {
             $namen = fn (array $ids) => array_values(array_map(fn ($i) => (string) ($stamm[$i] ?? $i), array_slice($ids, 0, 15)));
@@ -210,6 +211,7 @@ class StammPaketService
             }
         });
         StammPaket::flush();
+        $this->kostenFolge($mandant, array_merge($hinzu, $weg));   // Preis-Sicht geändert
         if ($hinzu !== [] || $weg !== []) {
             $namen = DB::table('foodalchemist_suppliers')->whereIn('id', array_merge($hinzu, $weg))->pluck('name', 'id');
             $liste = fn (array $ids) => array_values(array_map(fn ($i) => (string) ($namen[$i] ?? $i), array_slice($ids, 0, 15)));
@@ -218,6 +220,20 @@ class StammPaketService
         }
 
         return ['team_id' => (int) $mandant->id, 'freigeschaltet' => count($frei), 'preise_freigegeben' => count($soll), 'hinzu' => count($hinzu), 'entfernt' => count($weg)];
+    }
+
+    /**
+     * Freigabe oder Preis-Sicht eines Mandanten für Lieferanten geändert (Befund 18.11.2026: Rezept-EK blieb NULL, bis jemand von Hand neu rechnete):
+     * Team-Kosten veraltet, eigene Rezepte mit Artikeln dieser Lieferanten topologisch samt Eltern, Darreichungen (auch Gefäß/Zubehör) und
+     * Paket/Konzept/Angebot darüber neu — gezielt, über die Queue, nur für den Mandanten und seine Unter-Teams.
+     *
+     * @param  list<int>  $supplierIds
+     */
+    private function kostenFolge(Team $mandant, array $supplierIds): void
+    {
+        if ($supplierIds !== []) {
+            \Platform\FoodAlchemist\Jobs\KostenFolgeJob::versenden((int) $mandant->id, [], $supplierIds, true, true, true);
+        }
     }
 
     /** @return array<int, true> supplier_id => true mit „Preise mitgeben“ (nur dieses Haupt-Team) */

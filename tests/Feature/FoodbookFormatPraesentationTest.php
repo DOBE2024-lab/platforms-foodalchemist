@@ -91,3 +91,12 @@ it('★ Editor: bei Format-Kapitel fehlen Concept- und Paket-Katalog, „Formate
         ->toContain('data-fb-kat="paket"')
         ->toContain('data-fb-katalog-concept');
 });
+
+it('★ Handbuch eines Foodbooks: Format-Kapitel liefert die Gerichte der Editionen (io 18.11.: Handbuch zeigte 0 Kapitel, 0 Speisen)', function () {
+    $quelle = app(\Platform\FoodAlchemist\Services\HandbuchQuellenService::class)
+        ->lies($this->rootTeam, \Platform\FoodAlchemist\Services\HandbuchService::TYPE_FOODBOOK, $this->buch->fresh());
+    $items = collect($quelle['sections'])->flatMap(fn ($s) => $s['items']);
+
+    expect($items)->not->toBeEmpty()
+        ->and($items->pluck('label')->all())->toContain('Bacalhau mit Kichererbsen');
+});

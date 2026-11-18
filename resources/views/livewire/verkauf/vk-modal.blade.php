@@ -632,9 +632,8 @@
                                                     </select>
                                                 </label>
                                             @endif
-                                            @if($gi['kosten'] !== null)<span class="tabular-nums" data-dar-gefaess-kosten>Gefäß {{ $euro($gi['kosten']) }} je Einheit{{ $gi['preis_quelle'] === 'gp' ? ' (Preis am Grundprodukt)' : '' }}</span>@endif
-                                            @if($gi['miete'] && $gi['kosten'] === null && ! $gi['preis_fehlt'])<x-fa::badge tone="info" data-dar-miete title="Das Gefäß kommt von einem Verleiher: Miete je Tag/Veranstaltung, nicht je Portion gerechnet">Miete, nicht je Portion gerechnet</x-fa::badge>@endif
-                                            @if($gi['preis_fehlt'])<x-fa::badge tone="warn" title="Kein Preis je Stück: bei Einweg am Hauptartikel, bei Mehrweg/Extern am Grundprodukt (Lager › Art als Gefäß) eintragen" data-dar-gefaess-preis-fehlt>Gefäß-Preis fehlt</x-fa::badge>@endif
+                                            @if($gi['kosten'] !== null)<span class="tabular-nums" data-dar-gefaess-kosten>Gefäß {{ $euro($gi['kosten']) }} je Einheit{{ $gi['preis_quelle'] === 'gp' ? ' (Preis am Grundprodukt)' : ($gi['miete'] ? ' (Mietpreis des Artikels)' : '') }}</span>@endif
+                                            @if($gi['preis_fehlt'])<x-fa::badge tone="warn" title="Kein Preis je Stück: bei Einweg und Extern am Grundprodukt (Lager › Art als Gefäß) oder am Hauptartikel, bei Mehrweg am Grundprodukt eintragen" data-dar-gefaess-preis-fehlt>Gefäß-Preis fehlt</x-fa::badge>@endif
                                             @if($gi['warnung'])<x-fa::badge tone="warn" data-dar-fuellmenge-warnung>{{ $gi['warnung'] }}</x-fa::badge>@endif
                                         </div>
                                     </td>

@@ -108,16 +108,20 @@ class KostenCacheService
         // Listenpreis gibt es nur am team-eigenen Artikel durch seinen Besitzer; an einem globalen Stamm-Artikel ist jeder
         // Preis ein Teampreis (der Stamm trägt keine Preise, Entscheidung 13.10.)
         $listenpreis = $item->team_id !== null && (int) $item->team_id === (int) $team->id;
-        app(DarreichungService::class)->recomputeFuerZubehoerGps($gpIds);   // Zubehör (Non-Food) an Darreichungen: gezielt neu rechnen
+        $n = $this->markiereVeraltet($this->rezepteMitGps($gpIds), $listenpreis ? null : RecomputeTeamRecipesJob::teamUndNachfahren((int) $team->id));
+        // Gespeicherte Kaskade (Rezept-EK samt Eltern → Darreichungen inkl. Gefäß/Zubehör → Paket/Konzept/Angebot) gezielt über die Queue (18.11.2026)
+        \Platform\FoodAlchemist\Jobs\KostenFolgeJob::dispatch((int) $team->id, $gpIds, [], ! $listenpreis)->afterCommit();
 
-        return $this->markiereVeraltet($this->rezepteMitGps($gpIds), $listenpreis ? null : RecomputeTeamRecipesJob::teamUndNachfahren((int) $team->id));
+        return $n;
     }
 
     /** Pin/Lock eines Teams an einem GP (Lead-Overlay) → nur dieses Team und seine Unter-Teams. */
     public function nachPinAenderung(int $gpId, Team $team): int
     {
-        app(DarreichungService::class)->recomputeFuerZubehoerGps([$gpId]);
-        return $this->markiereVeraltet($this->rezepteMitGps([$gpId]), RecomputeTeamRecipesJob::teamUndNachfahren((int) $team->id));
+        $n = $this->markiereVeraltet($this->rezepteMitGps([$gpId]), RecomputeTeamRecipesJob::teamUndNachfahren((int) $team->id));
+        \Platform\FoodAlchemist\Jobs\KostenFolgeJob::dispatch((int) $team->id, [$gpId])->afterCommit();   // Kaskade des Teams (18.11.2026)
+
+        return $n;
     }
 
     /**

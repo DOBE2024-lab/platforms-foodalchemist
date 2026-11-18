@@ -145,7 +145,7 @@ it('Kosten: Einweg-Gefäß zählt 1 Stück je Einheit × Anzahl auf den EK; ohne
     expect(($this->ek)($d))->toBe(2.0)->and($this->svc->gefaessInfo($d->fresh())['preis_fehlt'])->toBeTrue();   // zählt nicht mit, wird aber ausgewiesen
 });
 
-it('Miete: ein Gefäß vom Lieferanten der Gruppe VERLEIH zählt NICHT je Portion, nur als Hinweis; dasselbe gilt für Zubehör', function () {
+it('Miete: ein Gefäß vom Lieferanten der Gruppe VERLEIH rechnet mit dem Artikelpreis je Stück (seit 18.11.2026); Zubehör vom Verleih bleibt Hinweis', function () {
     app(SupplierGroupService::class)->einrichten(true);
     $verleih = \Platform\FoodAlchemist\Models\FoodAlchemistSupplierGroup::whereNull('team_id')->where('code', 'VERLEIH')->firstOrFail();
     $miet = gefaessGp($this->rootTeam, 'Speiseteller: Porzellan, Ø 27 cm', 0.55, 1.0);
@@ -154,7 +154,7 @@ it('Miete: ein Gefäß vom Lieferanten der Gruppe VERLEIH zählt NICHT je Portio
 
     $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['vessel_gp_id' => $miet->id]);
     $info = $this->svc->gefaessInfo($this->dar->fresh());
-    expect(($this->ek)())->toBe(2.0)->and($info['miete'])->toBeTrue()->and($info['kosten'])->toBeNull()->and($info['preis_fehlt'])->toBeFalse();
+    expect(($this->ek)())->toBe(2.55)->and($info['miete'])->toBeTrue()->and($info['kosten'])->toBe(0.55)->and($info['preis_fehlt'])->toBeFalse();
 
     // Zubehör vom Verleih: ebenfalls nur Hinweis, nie je Portion, und es macht die Kalkulation nicht „unvollständig“
     $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['vessel_gp_id' => '']);

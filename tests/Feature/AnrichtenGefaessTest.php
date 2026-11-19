@@ -61,8 +61,8 @@ beforeEach(function () {
     $this->gericht = function (string $key = 'salat') {
         $g = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => $key, 'name' => 'Salat '.$key, 'status' => 'approved', 'is_sales_recipe' => true, 'ek_per_kg_eur' => 10.0, 'yield_kg' => 1.0]);
         $d = $this->svc->ensureStandard($this->rootTeam, $g->id);
-        $d->update(['quantity_per_unit_g' => 200, 'unit_count' => 1]);
-        $this->svc->recomputePreise($d->fresh());
+        // Explizite Bestandsgrammatur: derselbe Servicepfad wie eine Mengenübersteuerung.
+        $d = $this->svc->aktualisieren($this->rootTeam, $d->id, ['quantity_per_unit_g' => 200, 'unit_count' => 1]);
 
         return $d->fresh();
     };

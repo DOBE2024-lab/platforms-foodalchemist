@@ -77,26 +77,74 @@ final class Hochrechnung
             . ($unit ? ' ' . ($unit->display_de ?? $unit->slug) : '');
     }
 
+    /** Masse/Volumen je Einheit (Kurz- und Langform, wie display_de): [Basis-Einheit, Faktor auf die Basis]. */
+    private const MASSE_VOLUMEN = [
+        'g' => ['g', 1.0], 'gramm' => ['g', 1.0], 'kg' => ['g', 1000.0], 'kilogramm' => ['g', 1000.0],
+        'ml' => ['ml', 1.0], 'milliliter' => ['ml', 1.0], 'l' => ['ml', 1000.0], 'liter' => ['ml', 1000.0],
+    ];
+
+    /** true für g/kg/ml/l — als Kürzel oder ausgeschrieben („Gramm", „Liter"). */
+    public static function istMasseOderVolumen(?string $einheit): bool
+    {
+        return isset(self::MASSE_VOLUMEN[mb_strtolower(trim((string) $einheit))]);
+    }
+
+    /** „Gramm" → „g", „Liter" → „l" (Masse/Volumen als Kürzel); andere Einheiten unverändert, null bleibt null. */
+    public static function einheitKurz(?string $einheit): ?string
+    {
+        if ($einheit === null || ! self::istMasseOderVolumen($einheit)) {
+            return $einheit;
+        }
+
+        return ['gramm' => 'g', 'kilogramm' => 'kg', 'milliliter' => 'ml', 'liter' => 'l'][mb_strtolower(trim($einheit))] ?? mb_strtolower(trim($einheit));
+    }
+
     /**
-     * Kompakte Mengen (Dominique 2026-10-05): „0,015 Kilogramm" → „15 g", „0,25 Liter" → „250 ml".
-     * Greift NUR bei eindeutig deutsch formatierten Zahlen (1.234,5) mit genau dieser Einheit —
-     * alles andere (Stück, Bund, „1.5 Kilogramm", Freitext) bleibt unverändert. Reine Anzeige.
+     * DIE Anzeige-Regel für Mengen (Dominique 2026-11-19), gleich im Handbuch-JS (handbuch/show, masse()):
+     * Masse unter 1000 g in „g" (ganz, unter 10 g eine Stelle), ab 1000 g in „kg" (unter 10 kg zwei Stellen,
+     * sonst eine); Volumen analog ml/l. Immer Kurzeinheit, deutsches Komma, Tausenderpunkt, ohne Null-Schwanz.
+     * 80000 g → „80 kg", 1234 g → „1,23 kg", 12345 g → „12,3 kg", 0,4 g → „0,4 g", 2500 ml → „2,5 l".
+     * Andere Einheiten (Stück, Bund, EL …) bleiben, wie sie sind: Zahl bis 3 Stellen + Einheit. Reine Anzeige.
+     */
+    public static function menge(float $wert, ?string $einheit): string
+    {
+        $basis = self::MASSE_VOLUMEN[mb_strtolower(trim((string) $einheit))] ?? null;
+        if ($basis === null) {
+            return trim(self::zahlText($wert) . ' ' . (string) $einheit);
+        }
+        [$klein, $je] = $basis;
+        $v = $wert * $je;
+        $stellen = abs($v) < 10 ? 1 : 0;
+        $gerundet = round($v, $stellen);
+        if (abs($gerundet) < 1000) {
+            return self::nummer($gerundet, $stellen) . ' ' . $klein;
+        }
+        $gross = $v / 1000;
+        $stellen = abs($gross) < 10 ? 2 : 1;
+
+        return self::nummer(round($gross, $stellen), $stellen) . ' ' . ($klein === 'g' ? 'kg' : 'l');
+    }
+
+    private static function nummer(float $wert, int $stellen): string
+    {
+        $t = number_format($wert, $stellen, ',', '.');
+
+        return $stellen > 0 ? rtrim(rtrim($t, '0'), ',') : $t;
+    }
+
+    /**
+     * Kompakte Mengen aus Text (Dominique 2026-10-05, 2026-11-19): „0,015 Kilogramm" → „15 g", „80.000 Gramm" → „80 kg",
+     * „0,25 Liter" → „250 ml" — nach menge(). Greift NUR bei eindeutig deutsch formatierten Zahlen (1.234,5) mit
+     * g/kg/ml/l (Kürzel oder ausgeschrieben); alles andere (Stück, Bund, „1.5 Kilogramm", Freitext) bleibt unverändert.
      */
     public static function kurz(mixed $text): string
     {
         $m = (string) $text;
-        if (! preg_match('/^\s*(\d{1,3}(?:\.\d{3})*(?:,\d+)?)\s*(Kilogramm|Gramm|Liter|Milliliter)\s*$/u', $m, $t)) {
+        if (! preg_match('/^\s*(\d{1,3}(?:\.\d{3})*(?:,\d+)?|\d+(?:,\d+)?)\s*(Kilogramm|Gramm|Liter|Milliliter|kg|g|ml|l)\s*$/u', $m, $t)) {
             return $m;
         }
-        $wert = (float) str_replace(['.', ','], ['', '.'], $t[1]);
-        $fmt = fn ($v) => rtrim(rtrim(number_format($v, 3, ',', '.'), '0'), ',');
 
-        return match ($t[2]) {
-            'Kilogramm' => $wert < 1 ? $fmt($wert * 1000) . ' g' : $fmt($wert) . ' kg',
-            'Liter' => $wert < 1 ? $fmt($wert * 1000) . ' ml' : $fmt($wert) . ' l',
-            'Gramm' => $fmt($wert) . ' g',
-            'Milliliter' => $fmt($wert) . ' ml',
-        };
+        return self::menge((float) str_replace(['.', ','], ['', '.'], $t[1]), $t[2]);
     }
 
     /** Hochgerechnete Menge als kurzer Text, wie im Dokument („520 g", „1,04 kg", „3 Stück"). */
@@ -127,6 +175,8 @@ final class Hochrechnung
      * Menge für die Ansicht in der Einheit, die der Koch liest (Dominique 30.10.): kg/l unter 1 als g/ml, sonst wie
      * gespeichert; gerundet wie beim Speichern (g/ml ganz, unter 10 eine Stelle; kg/l 3 Stellen; Rest 3 Stellen).
      * „je" = wie viel gespeicherte Einheit eine Anzeige-Einheit ist (750 g bei Zeile in kg: je 0,001) — der Rückweg.
+     * Das ist die Einheit des Eingabefelds (g-Zeile bleibt g, auch über 1000); den Anzeigetext baut menge()
+     * (ab 1000 g → kg, Dominique 19.11.).
      *
      * @return array{wert: float, einheit: string, je: float}
      */

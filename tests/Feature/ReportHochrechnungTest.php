@@ -161,3 +161,17 @@ it('erfindet kein Portionsgewicht für eine Nicht-Standard-Darreichung ohne Gram
         ->and($hoch['hochrechnung']['hinweis'])->toContain('Portionsgewicht')
         ->and((float) $hoch['recipe']['yield_kg'])->toBe(2.0);      // Ansatz bleibt stehen
 });
+
+it('Druck-Dokument zeigt hochgerechnete Mengen ab 1000 g in kg (50 kg Ziel: 50 kg statt 50.000 g)', function () {
+    $daten = $this->report->rezeptDaten($this->rootTeam, $this->rezept->id,
+        $this->report->optionen(['ziel_kg' => '50'], 'recipe'));
+    $html = view('foodalchemist::dokumente.report', $daten + ['istPdf' => false])->render();
+
+    expect($html)->toContain('50 kg')
+        ->and($html)->not->toContain('50.000 g')
+        ->and($html)->not->toContain('50.000 Gramm');
+
+    $ansatz = $this->report->rezeptDaten($this->rootTeam, $this->rezept->id, $this->report->optionen([], 'recipe'));
+    expect(view('foodalchemist::dokumente.report', $ansatz + ['istPdf' => false])->render())
+        ->toContain('2 kg')->not->toContain('2.000 g');   // auch der Ansatz: 2000 g → 2 kg
+});

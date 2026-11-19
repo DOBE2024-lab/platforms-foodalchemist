@@ -124,7 +124,7 @@ trait HatHochrechner
         $f = $basis['faktor'];
         $aktiv = $f !== null && abs($f - 1) >= 0.0005;
         $ansatz = $basis['ansatz'];
-        $text = fn (array $a) => Hochrechnung::zahlText($a['wert']) . ' ' . $a['einheit'];
+        $text = fn (array $a) => Hochrechnung::menge($a['wert'], $a['einheit']);   // eine Anzeige-Regel (ab 1000 g → kg)
 
         $mengen = $felder = $speichern = $aenderungen = $namen = $ohneMenge = [];
         foreach ($rezept->ingredients as $z) {

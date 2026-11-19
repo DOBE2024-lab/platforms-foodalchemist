@@ -3,7 +3,7 @@
     @if(!empty($b['foto_url']))<a class="foto-link" href="{{ $b['foto_url'] }}" data-bild data-caption="{{ $b['name'] }}" aria-label="Rezeptbild vergrößern"><img class="foto" src="{{ $b['foto_url'] }}" alt="{{ $b['name'] }}" loading="lazy"></a>@endif
     <div><div class="meta">Basisrezept · <span data-rezeptmodus>Originalansatz</span></div>
     <h2>{{ $b['name'] }}</h2>
-    @if(!empty($b['ansatz_kg']))<p class="meta">Ausbeute des vollständigen Originalansatzes: {{ $fmtMenge($b['ansatz_kg']) }} kg</p>@endif</div>
+    @if(!empty($b['ansatz_kg']))<p class="meta">Ausbeute des vollständigen Originalansatzes: {{ $fmtMit($b['ansatz_kg'], 'kg') }}</p>@endif</div>
 </div>
 @include('foodalchemist::handbuch._allergene', ['kennzeichnung' => $b['kennzeichnung'] ?? null])
 @if(!empty($b['bilder']))<div class="allgemein-fotos">@include('foodalchemist::handbuch._bilder', ['bilder' => $b['bilder']])</div>@endif
@@ -18,7 +18,7 @@
         <p class="hint" data-basis-ziel-fehler hidden>Bitte eine gültige Menge zwischen 0 und 1.000.000 eingeben.</p>
     </div>
 @endif
-@if(!empty($b['ansatz_kg']))<p>Rezeptmenge: <b data-bedarf-menge data-ansatz="{{ $b['ansatz_kg'] * 1000 }}" data-einheit="g">{{ $fmtMenge($b['ansatz_kg'] * 1000) }} g</b></p>@elseif(!empty($b['ansatz_stueck']))<p>Rezeptmenge: <b data-bedarf-menge data-ansatz="{{ $b['ansatz_stueck'] }}" data-einheit="Stück">{{ $fmtMenge($b['ansatz_stueck']) }} Stück</b></p>@endif
+@if(!empty($b['ansatz_kg']))<p>Rezeptmenge: <b data-bedarf-menge data-ansatz="{{ $b['ansatz_kg'] * 1000 }}" data-einheit="g">{{ $fmtMit($b['ansatz_kg'] * 1000, 'g') }}</b></p>@elseif(!empty($b['ansatz_stueck']))<p>Rezeptmenge: <b data-bedarf-menge data-ansatz="{{ $b['ansatz_stueck'] }}" data-einheit="Stück">{{ $fmtMenge($b['ansatz_stueck']) }} Stück</b></p>@endif
 <button type="button" class="original-umschalter" hidden>Originalansatz anzeigen</button>
 <p class="hint" data-schritt-mengen hidden>Zutaten gemäß Bedarfsliste abwiegen. Zubereitung laut Originalrezept.</p>
 <h3>Zutaten</h3>
@@ -33,7 +33,7 @@
                         <a class="sub basis-link" data-faktor="{{ $zi['sub_faktor'] ?? '' }}" href="#basis-{{ $zi['sub'] }}">{{ $zi['name'] }}</a> <span class="meta">(Basisrezept)</span>
                     @else {{ $zi['name'] }} @endif
                 </td>
-                <td class="r" @if($zi['menge'] !== null) data-original="{{ $zi['menge'] }}" data-u="{{ $zi['einheit'] }}" @endif>{{ $zi['menge'] !== null ? $fmtMenge($zi['menge']) . ' ' . $zi['einheit'] : '–' }}</td>
+                <td class="r" @if($zi['menge'] !== null) data-original="{{ $zi['menge'] }}" data-u="{{ $zi['einheit'] }}" @endif>{{ $fmtMit($zi['menge'], $zi['einheit']) }}</td>
             </tr>
         @endforeach
         </tbody>

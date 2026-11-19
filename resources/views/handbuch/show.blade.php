@@ -22,6 +22,9 @@
     $hatVerteilung = false;
     foreach ($snapshot['sections'] ?? [] as $s) { foreach ($s['items'] ?? [] as $it) { if (array_key_exists('menge_pro_gast', $it)) { $hatVerteilung = true; } } }
     $fmtMenge = fn ($v) => $v === null ? '–' : rtrim(rtrim(number_format((float) $v, $v < 10 ? 3 : 1, ',', ''), '0'), ',');
+    // Menge mit Einheit: g/kg/ml/l nach der einen Regel (ab 1000 g → kg, Kurzeinheiten), Rest wie gehabt.
+    $fmtMit = fn ($v, $u) => $v === null ? '–' : (\Platform\FoodAlchemist\Support\Hochrechnung::istMasseOderVolumen($u)
+        ? \Platform\FoodAlchemist\Support\Hochrechnung::menge((float) $v, $u) : trim($fmtMenge($v) . ' ' . $u));
 @endphp
 <html lang="de">
 <head>
@@ -113,7 +116,7 @@
                     $portion = $g['portion'] ?? [];
                     $teile = array_filter([
                         $portion['form'] ?? null,
-                        ($portion['gramm'] ?? null) ? $fmtMenge($portion['gramm']) . ' g' : null,
+                        ($portion['gramm'] ?? null) ? $fmtMit($portion['gramm'], 'g') : null,
                         $portion['geschirr'] ?? null,
                         $portion['vehikel'] ?? null,
                     ]);
@@ -166,7 +169,7 @@
                                                 {{ $zi['name'] }}
                                             @endif
                                         </td>
-                                        <td class="r" @if($skaliert && $zi['menge'] !== null) data-b="{{ $zi['menge'] }}" data-u="{{ $zi['einheit'] }}" @endif>{{ $zi['menge'] !== null ? $fmtMenge($zi['menge']) . ' ' . $zi['einheit'] : '–' }}</td>
+                                        <td class="r" @if($skaliert && $zi['menge'] !== null) data-b="{{ $zi['menge'] }}" data-u="{{ $zi['einheit'] }}" @endif>{{ $fmtMit($zi['menge'], $zi['einheit']) }}</td>
                                     </tr>
                                     @if(!empty($zi['sub']) && isset($basis[$zi['sub']]))
                                         <tr class="subrow"><td colspan="2">
@@ -179,7 +182,7 @@
                             </table>
                             <div class="hint">
                                 @if($skaliert) Mengen für <b class="pxs">{{ $personen }}</b> Portionen · Basisrezepte antippen zeigt die Kurzvorschau; dort das vollständige Rezept öffnen.
-                                @else Mengen im Ansatz{{ !empty($z['ansatz_kg']) ? ' (' . $fmtMenge($z['ansatz_kg']) . ' kg)' : '' }}; für dieses Gericht ist kein Portionsgewicht hinterlegt.
+                                @else Mengen im Ansatz{{ !empty($z['ansatz_kg']) ? ' (' . $fmtMit($z['ansatz_kg'], 'kg') . ')' : '' }}; für dieses Gericht ist kein Portionsgewicht hinterlegt.
                                 @endif
                             </div>
                         @else
@@ -241,7 +244,7 @@
             @foreach($basis as $basisKey => $b)
                 <article class="gericht basiskarte" id="g-basis-{{ $basisKey }}" data-key="basis-{{ $basisKey }}" data-name="{{ $b['name'] }}" data-suche="{{ \Platform\FoodAlchemist\Support\HandbuchSuchindex::fuerBasis((string) $basisKey, $basis) }}">
                     <button type="button" class="basis-zurueck" data-basis-zurueck>‹ Zurück</button>
-                    @include('foodalchemist::handbuch._basisrezept', ['b' => $b, 'fmtMenge' => $fmtMenge, 'basis' => $basis])
+                    @include('foodalchemist::handbuch._basisrezept', ['b' => $b, 'fmtMenge' => $fmtMenge, 'fmtMit' => $fmtMit, 'basis' => $basis])
                 </article>
             @endforeach
 
@@ -271,9 +274,23 @@
     function aktuell(a) { var p = a.querySelector('.px, .basis-px'); return anzahl(a, p && p.value); }
     function eingabe(v) { return String(Number(v.toFixed(6))).replace('.', ','); }
     function fmt(v, u) {
+        // Masse/Volumen: dieselbe Regel wie Support\Hochrechnung::menge — unter 1000 g „g" (ganz, unter 10 eine Stelle),
+        // ab 1000 g „kg" (unter 10 kg zwei Stellen, sonst eine), ml/l analog; immer Kurzeinheit, auch bei „Gramm" im Snapshot.
+        var basis = {g:['g', 1], gramm:['g', 1], kg:['g', 1000], kilogramm:['g', 1000], ml:['ml', 1], milliliter:['ml', 1], l:['ml', 1000], liter:['ml', 1000]}[String(u == null ? '' : u).trim().toLowerCase()];
+        if (basis) {
+            var zahlDe = function (w, stellen) {
+                var t = w.toFixed(stellen);
+                if (stellen > 0) { t = t.replace(/0+$/, '').replace(/\.$/, ''); }
+                t = t.split('.');
+                t[0] = t[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                return t.join(',');
+            };
+            var x = v * basis[1], st = Math.abs(x) < 10 ? 1 : 0, r = Number(x.toFixed(st));
+            if (Math.abs(r) < 1000) { return zahlDe(r, st) + ' ' + basis[0]; }
+            st = Math.abs(x / 1000) < 10 ? 2 : 1;
+            return zahlDe(Number((x / 1000).toFixed(st)), st) + ' ' + (basis[0] === 'g' ? 'kg' : 'l');
+        }
         if (u === 'Teile' && v === 1) { u = 'Teil'; }
-        if (u === 'g' && v >= 1000) { v /= 1000; u = 'kg'; }
-        else if (u === 'ml' && v >= 1000) { v /= 1000; u = 'l'; }
         var s = v >= 100 ? v.toFixed(0) : (v >= 10 ? v.toFixed(1) : v.toFixed(2));
         // Ganze Zahlen behalten ihre Nullen: 120 g bleiben 120 g.
         if (s.indexOf('.') !== -1) { s = s.replace(/0+$/, '').replace(/\.$/, ''); }

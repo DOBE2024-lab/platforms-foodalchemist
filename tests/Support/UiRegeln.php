@@ -28,6 +28,25 @@ final class UiRegeln
         'style_statisch' => '/(?<![:\w-])style="(?![^"]*\{\{)(?!\s*(?:grid-(?:column|row|area)\s*:\s*[^;"]+;?\s*)+")[^"]+"/',
     ];
 
+    /**
+     * Welle 1, Paket 1.4d (Plan 98): Regeln für die Tailwind-Umstellung. Gelten NICHT unter components/ —
+     * die Bausteine sind die eine Stelle, an der diese Literale/Elemente stehen dürfen.
+     */
+    public const REGELN_AUSSER_BAUSTEINE = [
+        // Schriftgröße als Literal statt Text-Rolle (.fa-t-*, kommt mit 1.4a). Responsive Varianten zählen mit.
+        'typo_groesse' => '/(?<![\w-])text-\[length:var\(--fa-text-[a-z0-9-]+\)\]/',
+        // Textfarbe der Tinte-Skala als Literal (ink/ink-2/ink-3 = Rollen strong/body/muted). Status-Farben (crit/warn/ok) nicht.
+        'typo_tinte' => '/(?<![\w-])text-\[var\(--fa-ink(?:-[23])?\)\]/',
+        // Lokale Kurz-Definition der „leisen“ Schrift je View — gehört in eine Klasse.
+        'leise_definition' => '/\$leise\s*=(?!=)/',
+        // Rohe Knöpfe statt x-fa::button.
+        'roher_button' => '/<button\b/',
+        // Rohe Checkboxen statt x-fa::checkbox (kommt mit 1.4c). Attribute in Anführungszeichen und -> / => überspringen.
+        'rohe_checkbox' => '/<input\b(?:->|=>|"[^"]*"|\'[^\']*\'|[^>"\'])*?\btype\s*=\s*["\']checkbox["\']/',
+        // Alte Tailwind-Palette statt Tokens (--fa-*).
+        'alte_palette' => '/(?<![\w-])(?:text|bg|border(?:-[xytrbl])?|ring|ring-offset|divide|outline|from|via|to|placeholder|fill|stroke|decoration|accent|caret|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)(?![\w-])/',
+    ];
+
     public static function zaehlen(): array
     {
         $basis = realpath(__DIR__ . '/../../resources/views');
@@ -41,7 +60,8 @@ final class UiRegeln
             $inhalt = file_get_contents($datei->getPathname());
             // Blade-Kommentare zählen nicht (Doku darf Beispiele zeigen).
             $inhalt = preg_replace('/\{\{--.*?--\}\}/s', '', $inhalt);
-            foreach (self::REGELN as $regel => $muster) {
+            $regeln = str_starts_with($pfad, 'components/') ? self::REGELN : self::REGELN + self::REGELN_AUSSER_BAUSTEINE;
+            foreach ($regeln as $regel => $muster) {
                 $anzahl = preg_match_all($muster, $inhalt);
                 if ($anzahl > 0) {
                     $ergebnis[$pfad][$regel] = $anzahl;

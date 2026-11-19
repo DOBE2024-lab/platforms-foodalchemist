@@ -35,7 +35,7 @@
         return $html === '' ? '' : '<div class="grid meta">' . $html . '</div>';
     };
 
-    /* Kompakte Mengen im Druck („0,015 Kilogramm" → „15 g"): eine Regel mit der Ansicht, Support\Hochrechnung::kurz. */
+    /* Kompakte Mengen im Druck („0,015 Kilogramm" → „15 g", „80.000 Gramm" → „80 kg"): eine Regel mit der Ansicht, Support\Hochrechnung::kurz. */
     $kurzMenge = fn ($m) => \Platform\FoodAlchemist\Support\Hochrechnung::kurz($m);
     $preiseAn = ($opt['preise'] ?? false) && ($opt['ek'] ?? true);
     $ekSumme = collect($node['ingredients'] ?? [])->sum(fn ($z) => (float) ($z['ek_anteil_eur'] ?? 0));
@@ -250,7 +250,9 @@
                             <td>{{ $z['name'] ?? '—' }}</td>
                             <td>
                                 @if($simulatedIngredient)
-                                    <strong>{{ $num($simulatedIngredient['menge'] ?? null, 3, ($simulatedIngredient['einheit'] ?? null) ? ' ' . $simulatedIngredient['einheit'] : '') }}</strong>
+                                    <strong>{{ ($simulatedIngredient['menge'] ?? null) !== null && \Platform\FoodAlchemist\Support\Hochrechnung::istMasseOderVolumen($simulatedIngredient['einheit'] ?? null)
+                                        ? \Platform\FoodAlchemist\Support\Hochrechnung::menge((float) $simulatedIngredient['menge'], $simulatedIngredient['einheit'])
+                                        : $num($simulatedIngredient['menge'] ?? null, 3, ($simulatedIngredient['einheit'] ?? null) ? ' ' . $simulatedIngredient['einheit'] : '') }}</strong>
                                     <span class="muted">für Auftrag</span>
                                 @else
                                     {{ ($z['menge'] ?? null) !== null ? $kurzMenge($z['menge']) : '—' }}

@@ -178,7 +178,9 @@ it('Unterrezept-Zeile und Spanne änderbar: Menge zurückgerechnet, Spanne im se
 
     Livewire::withCookie(HandyLesemodus::COOKIE, '0')
         ->test(RezeptDetail::class, ['recipeId' => $this->reis->id])
-        ->set('hochZielKg', '100')->call('bearbeitenStarten')       // ×2
+        ->set('hochZielKg', '100')                                   // ×2
+        ->assertSee('1 kg')->assertDontSee('1.000 g')               // Fond 500 g × 2: Anzeige ab 1000 g in kg (Feld beim Bearbeiten bleibt g)
+        ->call('bearbeitenStarten')
         ->assertSee('bis 500 g')
         ->set('hochNeu.z' . $fond->id, '1500')
         ->set('hochNeu.z' . $salz->id, '600')

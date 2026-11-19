@@ -102,7 +102,7 @@ class HandbuchZutatenService
             $out[] = [
                 'name' => (string) ($z['name'] ?? ''),
                 'menge' => isset($z['quantity']) ? (float) $z['quantity'] : null,
-                'einheit' => $z['unit'] ?? null,
+                'einheit' => Hochrechnung::einheitKurz($z['unit'] ?? null),   // „g" statt „Gramm" — Anzeige-Regel Hochrechnung::menge
                 'sub' => $sub,
                 'sub_faktor' => $subFaktor,
             ];

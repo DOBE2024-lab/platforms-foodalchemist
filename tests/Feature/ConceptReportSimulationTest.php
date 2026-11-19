@@ -51,7 +51,8 @@ it('rendert Wasserfall vor Zeitschlüssel im druckbaren Concept-Report', functio
         ->assertSee('Aktive Produktionszeit je Rezept')
         ->assertSee('Auftragsbedarf')
         ->assertSee('Produktion')
-        ->assertSee('2.500 g')
+        ->assertSeeHtml('<strong>2,5 kg</strong>')   // Auftragsmenge ab 1000 g in kg (Hochrechnung::menge)
+        ->assertDontSee('2.500 g')
         ->assertSee('für Auftrag')
         ->getContent();
 

@@ -95,7 +95,7 @@ class PresentationDesignService
             . 'typography{heading:display-serif|serif|sans|mono ODER ein Google-Font-Name aus der Whitelist, body:sans|serif|mono ODER Google-Font, scale:0.7–2.0} '
             . '— Google-Fonts-Whitelist: ' . implode(', ', array_keys(self::GOOGLE_FONTS)) . ' (z. B. heading:"Cormorant Garamond", body:"Manrope") '
             . 'ODER eigene Team-Schrift als "team:<Familie>" (hochladen via foodalchemist.presentation_fonts.UPLOAD), '
-            . 'heading_size:zurueckhaltend|normal|gross, heading_weight:leicht|normal|kraeftig, heading_tracking:eng|normal|weit (Überschriften unabhängig vom Fließtext); '
+            . 'heading_size:zurueckhaltend|normal|gross, heading_weight:leicht|normal|kraeftig, heading_tracking:eng|normal|weit (Überschriften unabhängig vom Fließtext), konzept_text:normal|kursiv|kursiv_leise (Hinweistexte zwischen den Gerichten eines Konzepts/Pakets, z. B. „serviert im Schraubglas“); '
             . 'page_width:schmal|normal|breit (980/1180/1440 px, eine gemeinsame Kante für alle Blöcke); text_width:schmal|normal|breit (Lesebreite 58/68/80 Zeichen); text_align:links|zentriert; '
             . 'spacing:compact|comfortable|roomy; '
             . 'nav:none|anchor|sidebar (Sprungmenü/Sidebar); '
@@ -109,13 +109,17 @@ class PresentationDesignService
     public static function layoutVocabDoc(): string
     {
         return 'Geordnete Blockliste: [{block_type, style{}}]. block_type ∈ '
-            . 'cover|chapter_loop|dish_list|price_summary|legend|grid|text|heading|image|spacer|cta|konfig_konzepte|konfig_tageszeit|konfig_getraenke|konfig_addons|konfig_zusammenfassung|konfig_anfrage. '
+            . 'cover|chapter_loop|dish_list|price_summary|preis_aufschluesselung|legend|grid|text|heading|image|spacer|cta|konfig_konzepte|konfig_tageszeit|konfig_getraenke|konfig_addons|konfig_zusammenfassung|konfig_anfrage. '
             . 'style je Typ: '
             . 'cover{align, show_cover_image:bool, show_logo:bool, kicker_text:string (Zeile über dem Titel, leer = „Kulinarisches Angebot“), overlay:0-60 (% Abdunkelung des Titelbilds), cover_fit:cover|contain, cover_height:10-100 (% der Fensterhöhe; Altwerte klein|mittel|gross werden weiter verstanden), cover_height_max_px:int|null, compact:bool}; '
-            . 'chapter_loop/dish_list{show_price:bool, show_codes:bool, show_dish_photos:bool, show_chapter_image:bool, dish_columns:1|2, show_kicker:bool, show_rules:bool (Trennlinien), show_block_header:bool (Konzeptname über der Liste)}; '
+            . 'chapter_loop/dish_list{show_price:bool, show_codes:bool, show_dish_photos:bool, show_chapter_image:bool, dish_columns:1|2, show_kicker:bool, show_rules:bool (Trennlinien), show_block_header:bool (Konzeptname über der Liste), konzept_preis:zeile|betont|ende (Preis am Konzept/Paket: rechts in der Zeile, groß unter dem Namen oder groß nach den Gerichten), konzept_preis_label:string (leer = „pro Person“)}; '
+            . 'chapter_loop Kapitel-Auswahl{kapitel_auswahl:alle|bereich|rest, kapitel_von:1-99, kapitel_bis:1-99|leer (= bis zum letzten) — gezählt werden Hauptkapitel ab 1 samt Unterkapiteln; rest = alle Kapitel, die kein Bereichs-Block zeigt; so lassen sich einzelne Kapitel zwischen andere Blöcke setzen, für Foodbook, Angebot und Speisekarte}; '
+            . 'chapter_loop Preis je Kapitel{show_kapitel_preis:bool (VK netto pro Person im Kapitelkopf, Format mit Alternativen = Spanne; Foodbook und Angebot), kapitel_preis_label:string (leer = „pro Person“)}; '
+            . 'chapter_loop Kicker{kicker_haupt:string (leer = „Kapitel“), kicker_unter:string (leer = „Abschnitt“)}; '
             . 'chapter_loop zusätzlich{chapter_image_fit:auto|fotoband|ganz (Kapitelbild: fotoband = Bildband 16:7 beschnitten, ganz = ganzes Bild in begrenzter Höhe an der linken Textkante, auto = ganz bei transparenten PNG/WebP, sonst Fotoband), show_chapter_logo:bool (Logo je Kapitel, hochladen per bilder.UPLOAD ziel=kapitel_logo), chapter_logo_position:oben|unten}; '
             . 'image{quelle:design|angebot_1|angebot_2|angebot_3 (angebot_N = Präsentationsbild N des Angebots, via bilder.UPLOAD ziel=angebot_bild), context_file_id, path, img_fit:cover|contain|auto, img_height:klein|mittel|gross, img_width:voll|schmal|bleed}; '
-            . 'text/heading{text}; spacer{height}; cta{text, link}; price_summary{mode:pro_person}; legend/grid{}; '
+            . 'text/heading{text}; spacer{height}; cta{} (Text und Link kommen aus der Veröffentlichung, Parameter cta_text/cta_link); '
+            . 'price_summary{mode:pro_person, preis_anzeige:netto|brutto|beide}; preis_aufschluesselung{preis_anzeige:netto|brutto|beide (Summenzeilen), titel:string (leer = „Preis-Übersicht“)} — beide für Angebot und Foodbook; legend/grid{}; '
             . 'konfig_konzepte{ansicht:raster|liste, show_bild:bool, show_ab_preis:bool}; konfig_tageszeit/konfig_getraenke/konfig_addons/konfig_anfrage{titel}; konfig_zusammenfassung{show_gesamt:bool} '
             . '(Spec 94: nur Ausgabeform konfigurator, je genau einmal; fehlende werden beim Rendern ergänzt). '
             . 'Datengebunden & interna-frei — es gibt keinen EK-/Marge-Block.';
@@ -141,7 +145,8 @@ class PresentationDesignService
             . 'Text-Blöcke: pt-text-block (--angebot = Freitext im Angebot, --konzept = Text-Block aus dem Konzept), pt-text-block-title, pt-text-block-body · '
             . 'Zeilen: pt-line, pt-line--concept (Konzept mit Preis), pt-line--paket (Paket/Station, Label .pt-paket-name), pt-line--dish (Gericht, Label .pt-dish-name), '
             . 'pt-item, pt-indent-0|1|2, pt-line-label, pt-line-dots, pt-line-price, pt-item-sub, pt-subheader (Gang-Überschrift im Konzept), pt-codes, pt-item-foto · '
-            . 'Preis: pt-price-summary, pt-price-big, pt-price-label · Sonstiges: pt-legend, pt-cta-btn, pt-grid, pt-cover-img, pt-logo.';
+            . 'Preis: pt-price-summary, pt-price-big, pt-price-label, pt-section-price (-wert|-label = Preis je Kapitel), '
+            . 'pt-concept-price (--oben|--ende, -wert|-label = hervorgehobener Konzeptpreis), pt-preis-tabelle (--ohne-summe), pt-preis-tabelle-titel, pt-preis-zeile, pt-preis-kopf, pt-preis-titel, pt-preis-pax, pt-preis-pp, pt-preis-summe, pt-preis-gesamt, pt-preis-mwst, pt-preis-brutto · Sonstiges: pt-legend, pt-cta-btn, pt-grid, pt-cover-img, pt-logo.';
     }
 
     /**

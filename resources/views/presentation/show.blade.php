@@ -14,6 +14,8 @@
         $meta = $snapshot['meta'] ?? [];
         $settings = $snapshot['settings'] ?? [];
         $tokens = $snapshot['resolved_design']['tokens'] ?? [];
+        // Kapitel-Auswahl: welche Kapitel ein Bereichs-Block zeigt — „übrige Kapitel“ lassen sie aus.
+        $kapitelVergeben = \Platform\FoodAlchemist\Support\KapitelAuswahl::vergeben($layout, $content['sections'] ?? []);
     @endphp
 
     @php $istKonfigurator = ($snapshot['type'] ?? null) === 'konfigurator'; $konfigChrome = false; @endphp
@@ -57,6 +59,7 @@
                 'meta' => $meta,
                 'settings' => $settings,
                 'tokens' => $tokens,
+                'kapitelVergeben' => $kapitelVergeben,
             ])
         @endif
     @endforeach

@@ -11,6 +11,20 @@
     if ($showPrice && ! empty($b['price']) && ((float) ($b['price']['pp'] ?? 0) > 0 || (float) ($b['price']['pauschal'] ?? 0) > 0)) {
         $blockPrice = number_format((float) ($b['price']['pp'] ?? 0), 2, ',', '.') . ' €' . (($b['price']['unit'] ?? null) === 'gast' ? ' /Pers.' : '');
     }
+    // Konzeptpreis-Darstellung (2026-11-19): zeile = rechts in der Zeile (bisher) · betont = groß unter dem Namen ·
+    // ende = groß nach der Gerichtsliste des Konzepts. Nur Konzepte/Pakete mit eigenem Preis, nie Einzelgericht-Zeilen.
+    $preisStil = in_array($style['konzept_preis'] ?? 'zeile', ['betont', 'ende'], true) ? (string) $style['konzept_preis'] : 'zeile';
+    $preisBetont = $blockPrice !== null && $preisStil !== 'zeile';
+    $preisWert = $preisBetont ? number_format((float) ($b['price']['pp'] ?? 0), 2, ',', '.') . ' €' : null;
+    $preisEinheit = ($b['price']['unit'] ?? null) === 'gast' ? (trim((string) ($style['konzept_preis_label'] ?? '')) ?: 'pro Person') : '';
+    // EK-Schalter der INTERNEN Vorschau (2026-11-19): EK steht nur im Snapshot, wenn die interne Vorschau ihn anfordert.
+    $zeigeEk = ! empty($snap['ansicht']['ek']);
+    $ekText = function ($ek, $vk = null) {
+        if ($ek === null || (float) $ek <= 0) { return ''; }
+        $we = ($vk !== null && (float) $vk > 0) ? ' · ' . number_format((float) $ek / (float) $vk * 100, 0, ',', '.') . ' %' : '';
+        return 'EK ' . number_format((float) $ek, 2, ',', '.') . ' €' . $we;
+    };
+    $blockEk = ($zeigeEk && $blockPrice !== null) ? $ekText($b['ek']['pp'] ?? null, $b['price']['pp'] ?? null) : '';
 @endphp
 {{--
   Semantische Klassen (für Design-CSS, Liste in presentation_designs.POST/PUT):
@@ -25,11 +39,16 @@
     @elseif($bKind === 'text')
         {{-- Freitext-Block des Angebots: kein Überschriften-Look mehr (vorher h3.pt-block-header). --}}
         @if(!empty($b['label']))<div class="pt-text-block pt-text-block--angebot"><p class="pt-text-block-body">{{ $b['label'] }}</p></div>@endif
+    @elseif(!empty($b['label']) && $preisBetont)
+        <h3 class="pt-block-header{{ $bKind !== '' ? ' pt-block-header--' . $bKind : '' }}">{{ $b['label'] }}@if($showCodes && !empty($b['codes']))<span class="pt-codes">{{ implode(' ', array_map('strval', $b['codes'])) }}</span>@endif</h3>
+        @if($preisStil === 'betont')
+            <p class="pt-concept-price pt-concept-price--oben" data-pt-konzept-preis><span class="pt-concept-price-wert">{{ $preisWert }}</span>@if($preisEinheit !== '') <span class="pt-concept-price-label">{{ $preisEinheit }}</span>@endif @if($blockEk !== '')<span class="pt-ek" data-pt-ek>{{ $blockEk }}</span>@endif</p>
+        @endif
     @elseif(!empty($b['label']) && $blockPrice !== null)
         <div class="pt-line pt-line--concept">
             <span class="pt-line-label">{{ $b['label'] }}@if($showCodes && !empty($b['codes']))<span class="pt-codes">{{ implode(' ', array_map('strval', $b['codes'])) }}</span>@endif</span>
             <span class="pt-line-dots" aria-hidden="true"></span>
-            <span class="pt-line-price">{{ $blockPrice }}</span>
+            <span class="pt-line-price">{{ $blockPrice }}@if($blockEk !== '')<span class="pt-ek" data-pt-ek>{{ $blockEk }}</span>@endif</span>
         </div>
     @elseif(!empty($b['label']) && $showKonzeptName)
         <h3 class="pt-block-header{{ $bKind !== '' ? ' pt-block-header--' . $bKind : '' }}">{{ $b['label'] }}@if($showCodes && !empty($b['codes']))<span class="pt-codes">{{ implode(' ', array_map('strval', $b['codes'])) }}</span>@endif</h3>
@@ -62,9 +81,12 @@
                 <span class="pt-line-label {{ $lineKind === 'paket' ? 'pt-paket-name' : 'pt-dish-name' }}">{{ $it['label'] }}@if($showCodes && !empty($it['codes']))<span class="pt-codes">{{ implode(' ', array_map('strval', $it['codes'])) }}</span>@endif@if(!empty($it['subtitle']))<span class="pt-item-sub"> — {{ $it['subtitle'] }}</span>@endif</span>
                 @if($showPrice && ($it['price'] ?? null) !== null)
                     <span class="pt-line-dots" aria-hidden="true"></span>
-                    <span class="pt-line-price">{{ number_format((float) $it['price'], 2, ',', '.') }} €</span>
+                    <span class="pt-line-price">{{ number_format((float) $it['price'], 2, ',', '.') }} €@if($zeigeEk && ($ek = $ekText($it['ek'] ?? null, $it['price'])) !== '')<span class="pt-ek" data-pt-ek>{{ $ek }}</span>@endif</span>
                 @endif
             </div>
         @endif
     @endforeach
+    @if($preisBetont && $preisStil === 'ende')
+        <p class="pt-concept-price pt-concept-price--ende" data-pt-konzept-preis><span class="pt-concept-price-wert">{{ $preisWert }}</span>@if($preisEinheit !== '') <span class="pt-concept-price-label">{{ $preisEinheit }}</span>@endif @if($blockEk !== '')<span class="pt-ek" data-pt-ek>{{ $blockEk }}</span>@endif</p>
+    @endif
 </div>

@@ -126,6 +126,9 @@
 
             <div class="flex flex-wrap items-end gap-3">
                 <x-fa::choice name="previewType" label="Vorschau als" :options="$formen" />
+                @if(in_array($previewType, ['foodbook', 'angebot'], true))
+                    <label class="{{ $hakenZeile }} pb-2" title="Zeigt den EK hinter jedem VK, nur hier in der Vorschau. Im Kundenlink erscheint er nie."><input type="checkbox" wire:model.live="vorschauEk" class="{{ $haken }}" data-fa-vorschau-ek> EK einblenden (nur intern)</label>
+                @endif
                 <x-fa::field label="Quelle" for="design-vorschau-quelle" class="flex-1 min-w-[12rem]">
                     <x-fa::select id="design-vorschau-quelle" wire:model.live="previewSourceId" placeholder="Quelle wählen">
                         @foreach($quellenOptionen as $opt)
@@ -164,7 +167,7 @@
                              class="flex items-center gap-1 min-w-0 pl-1.5 pr-1 py-0.5 rounded-[var(--fa-radius-control)] border cursor-move {{ $selectedBlockIndex === $i ? 'border-[var(--fa-accent)] bg-[var(--fa-accent-soft)]' : 'border-[var(--fa-line)] hover:bg-[var(--fa-hover)]' }}">
                             @svg('heroicon-m-bars-3', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                             <a href="#" role="button" wire:click.prevent="blockWaehlen({{ $i }})" class="flex-1 min-w-0 truncate text-left text-[length:var(--fa-text-md)] py-1 {{ $selectedBlockIndex === $i ? 'font-medium text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}" data-fa-block="{{ $b['block_type'] }}">
-                                {{ $blockLabels[$b['block_type']] ?? $b['block_type'] }}
+                                {{ $aufbauTitel[$i] ?? ($blockLabels[$b['block_type']] ?? $b['block_type']) }}
                             </a>
                             <x-fa::icon-button icon="heroicon-m-chevron-up" label="Block nach oben" size="sm" wire:click="blockVerschieben({{ $i }}, -1)" :disabled="$i === 0" class="disabled:opacity-40" />
                             <x-fa::icon-button icon="heroicon-m-chevron-down" label="Block nach unten" size="sm" wire:click="blockVerschieben({{ $i }}, 1)" :disabled="$i === count($layout) - 1" class="disabled:opacity-40" />
@@ -186,19 +189,51 @@
                     $bt = $sb['block_type'];
                     $i = $selectedBlockIndex;
                 @endphp
-                <x-fa::section :title="'Block: ' . ($blockLabels[$bt] ?? $bt)" icon="heroicon-o-adjustments-horizontal" data-fa-style-panel>
+                <x-fa::section :title="'Block: ' . ($aufbauTitel[$i] ?? ($blockLabels[$bt] ?? $bt))" icon="heroicon-o-adjustments-horizontal" data-fa-style-panel>
                     @if(in_array($bt, ['chapter_loop', 'dish_list'], true))
+                        @if($bt === 'chapter_loop')
+                            {{-- Kapitel-Auswahl (2026-11-19): alle, ein Bereich oder die übrigen. Gilt für Foodbook, Angebot und Speisekarte. --}}
+                            @php $auswahl = $sb['style']['kapitel_auswahl'] ?? 'alle'; @endphp
+                            <x-fa::choice name="layout.{{ $i }}.style.kapitel_auswahl" label="Welche Kapitel" :options="['alle' => 'Alle', 'bereich' => 'Bestimmte', 'rest' => 'Übrige']" />
+                            @if($auswahl === 'bereich')
+                                <div class="flex items-end gap-2" data-fa-kapitel-bereich>
+                                    <x-fa::field label="Von Kapitel" for="design-kapitel-von">
+                                        <x-fa::input id="design-kapitel-von" type="number" min="1" max="99" wire:model.blur="layout.{{ $i }}.style.kapitel_von" numeric class="max-w-[6rem]" />
+                                    </x-fa::field>
+                                    <x-fa::field label="Bis Kapitel" for="design-kapitel-bis">
+                                        <x-fa::input id="design-kapitel-bis" type="number" min="1" max="99" wire:model.blur="layout.{{ $i }}.style.kapitel_bis" numeric placeholder="Ende" class="max-w-[6rem]" />
+                                    </x-fa::field>
+                                </div>
+                                <p class="{{ $hilfe }}">Gezählt werden die Hauptkapitel ab 1, Unterkapitel gehören dazu. Für ein einzelnes Kapitel „von“ und „bis“ gleich setzen, „bis“ leer heißt bis zum letzten Kapitel. Das Design gilt für viele Dokumente, deshalb zählt die Position, nicht der Name.</p>
+                            @elseif($auswahl === 'rest')
+                                <p class="{{ $hilfe }}">Zeigt alle Kapitel, die kein anderer Kapitel-Block mit „Bestimmte“ zeigt.</p>
+                            @endif
+                        @endif
                         <div class="flex flex-col gap-2">
                             <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_price" class="{{ $haken }}"> Preise zeigen</label>
                             <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_codes" class="{{ $haken }}"> Allergen-Kennzeichen zeigen</label>
                             <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_dish_photos" class="{{ $haken }}"> Gericht-Fotos zeigen</label>
-                            <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_chapter_image" class="{{ $haken }}"> Kapitel-Bilder zeigen</label>
+                            @if($bt === 'chapter_loop')
+                                <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_chapter_image" class="{{ $haken }}"> Kapitel-Bilder zeigen</label>
+                                <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_kapitel_preis" class="{{ $haken }}" data-fa-kapitel-preis> Preis je Kapitel im Kapitelkopf</label>
+                            @endif
                             <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_rules" class="{{ $haken }}"> Trennlinien zwischen den Gerichten</label>
                             <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_block_header" class="{{ $haken }}"> Konzeptname über der Gerichtsliste</label>
                             @if($bt === 'chapter_loop')
                                 <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_kicker" class="{{ $haken }}"> Kleine Zeile über dem Kapiteltitel</label>
                             @endif
+                            @if($bt === 'chapter_loop' && ($sb['style']['show_kapitel_preis'] ?? false))
+                                <x-fa::field label="Text hinter dem Kapitelpreis" for="design-kapitel-preis-label" hint="Leer heißt „pro Person“. Der Preis ist netto, bei Formaten mit Alternativen die Spanne von bis. Er erscheint nur, wenn das Dokument mit Preisen veröffentlicht wird.">
+                                    <x-fa::input id="design-kapitel-preis-label" wire:model.live.debounce.400ms="layout.{{ $i }}.style.kapitel_preis_label" placeholder="pro Person" />
+                                </x-fa::field>
+                            @endif
                         </div>
+                        <x-fa::choice name="layout.{{ $i }}.style.konzept_preis" label="Preis am Konzept oder Paket" :options="['zeile' => 'In der Zeile (Standard)', 'betont' => 'Groß unter dem Namen', 'ende' => 'Groß nach den Gerichten']" />
+                        @if(in_array($sb['style']['konzept_preis'] ?? 'zeile', ['betont', 'ende'], true))
+                            <x-fa::field label="Text hinter dem Konzeptpreis" for="design-konzept-preis-label" hint="Leer heißt „pro Person“. Gilt nur für Preise pro Gast.">
+                                <x-fa::input id="design-konzept-preis-label" wire:model.live.debounce.400ms="layout.{{ $i }}.style.konzept_preis_label" placeholder="pro Person" />
+                            </x-fa::field>
+                        @endif
                         <x-fa::choice name="layout.{{ $i }}.style.dish_columns" label="Gerichte nebeneinander" :options="['1' => '1 Spalte (Standard)', '2' => '2 Spalten']" />
                         @if($bt === 'chapter_loop')
                             <x-fa::field label="Bezeichnung Kapitel" for="design-kicker-haupt">
@@ -293,10 +328,15 @@
                         </x-fa::field>
                     @elseif($bt === 'price_summary')
                         <x-fa::choice name="layout.{{ $i }}.style.preis_anzeige" label="Preis pro Person" :options="['netto' => 'Nur netto', 'brutto' => 'Nur brutto', 'beide' => 'Netto und brutto']" />
-                        <p class="{{ $hilfe }}">Brutto (inkl. MwSt.) erscheint nur, wenn Preise vorhanden sind, also beim Angebot. Ein Foodbook ohne MwSt. bleibt netto.</p>
+                        <p class="{{ $hilfe }}">Gilt für Foodbook und Angebot, sobald das Dokument mit Preisen veröffentlicht wird. Brutto rechnet mit dem MwSt.-Standardsatz des Teams.</p>
                     @elseif($bt === 'preis_aufschluesselung')
+                        <x-fa::field label="Überschrift" for="design-preis-titel">
+                            <x-fa::input id="design-preis-titel" wire:model.live.debounce.400ms="layout.{{ $i }}.style.titel" placeholder="Preis-Übersicht" />
+                        </x-fa::field>
                         <x-fa::choice name="layout.{{ $i }}.style.preis_anzeige" label="Summen" :options="['netto' => 'Nur netto', 'brutto' => 'Nur brutto', 'beide' => 'Netto, MwSt. und brutto']" />
-                        <p class="{{ $hilfe }}">Die Zeilen je Leistung sind immer netto. Diese Wahl steuert die Summenzeilen darunter.</p>
+                        <p class="{{ $hilfe }}">Eine Zeile je Hauptkapitel mit Preis pro Person, immer netto. Diese Wahl steuert die Summenzeilen darunter. Gilt für Angebot und Foodbook. Hat das Foodbook keine Gästezahl, zeigt der Block nur die Preise pro Person.</p>
+                    @elseif($bt === 'cta')
+                        <p class="{{ $hilfe }}">Text und Link des Kontakt-Aufrufs trägst du beim Veröffentlichen des Dokuments ein, nicht im Design. Ohne Text bleibt der Block leer.</p>
                     @else
                         <p class="{{ $hilfe }}">Für diesen Block gibt es keine Einstellungen.</p>
                     @endif
@@ -339,6 +379,8 @@
                 <x-fa::choice name="tokens.typography.heading_size" label="Größe der Überschriften" :options="['zurueckhaltend' => 'Zurückhaltend', 'normal' => 'Normal', 'gross' => 'Groß']" />
                 <x-fa::choice name="tokens.typography.heading_weight" label="Schnitt der Überschriften" :options="['leicht' => 'Leicht', 'normal' => 'Normal', 'kraeftig' => 'Kräftig']" />
                 <x-fa::choice name="tokens.typography.heading_tracking" label="Laufweite der Überschriften" :options="['eng' => 'Eng', 'normal' => 'Normal', 'weit' => 'Weit']" />
+                <x-fa::choice name="tokens.typography.konzept_text" label="Hinweistexte im Konzept" :options="['normal' => 'Normal', 'kursiv' => 'Kursiv', 'kursiv_leise' => 'Kursiv und leiser']" />
+                <p class="{{ $hilfe }}">Texte zwischen den Gerichten eines Konzepts oder Pakets, zum Beispiel „serviert im Schraubglas“ unter „Vorspeise“.</p>
                 <x-fa::choice name="tokens.spacing" label="Abstände" :options="['compact' => 'Kompakt', 'comfortable' => 'Normal', 'roomy' => 'Großzügig']" />
                 <div class="flex flex-col gap-1">
                     <x-fa::choice name="tokens.page_width" label="Seitenbreite" :options="['schmal' => 'Schmal', 'normal' => 'Normal', 'breit' => 'Breit']" />

@@ -35,15 +35,24 @@
     $extraFontFamilies = array_values(array_unique(array_filter([$gfHeading[2] ?? null, $gfBody[2] ?? null])));
     $scale = (float) ($typo['scale'] ?? 1.0);
     $gap = match ($tokens['spacing'] ?? 'comfortable') { 'compact' => '18px', 'roomy' => '56px', default => '34px' };
+    // Fix 2026-11-19: Abstand zwischen den Kapiteln war fest 84 px — jetzt je Stufe (großzügig = wie bisher).
+    $kapitelAbstand = match ($tokens['spacing'] ?? 'comfortable') { 'compact' => '40px', 'roomy' => '84px', default => '64px' };
     $auto = ! empty($tokens['auto_advance']);
     // Breiten-Raster (2026-11-13): eine Seitenbreite für alle Blöcke, Text darin links (Editorial) oder zentriert (Buch).
     $seitenBreite = match ($tokens['page_width'] ?? 'normal') { 'schmal' => '980px', 'breit' => '1440px', default => '1180px' };
     $textRaster = ($tokens['text_align'] ?? 'links') === 'zentriert' ? 'zentriert' : 'links';
     $leseBreite = match ($tokens['text_width'] ?? 'normal') { 'schmal' => '58ch', 'breit' => '80ch', default => '68ch' };
+    // Fix 2026-11-19: Lesebreite wirkte nicht auf Gerichtslisten (fest mind. 760 px) und Kapiteltext (fest höchstens 60 Zeichen).
+    // Jetzt drei Stufen für beide; „normal“ bleibt pixelgleich zum bisherigen Look.
+    $zeilenBreite = match ($tokens['text_width'] ?? 'normal') { 'schmal' => '640px', 'breit' => '920px', default => '760px' };
     // Überschriften-Hierarchie (Größe/Schnitt/Laufweite) unabhängig vom Fließtext. „normal“ = bisheriger Look.
     $hFaktor = match ($typo['heading_size'] ?? 'normal') { 'zurueckhaltend' => '0.78', 'gross' => '1.18', default => '1' };
     $hGewicht = match ($typo['heading_weight'] ?? 'normal') { 'leicht' => 400, 'kraeftig' => 800, default => null };
+    // Titelseite ist von Haus aus 900 — „leicht“ muss sie sichtbar zurücknehmen, „kräftig“ bleibt beim kräftigsten Schnitt.
+    $heroGewicht = match ($typo['heading_weight'] ?? 'normal') { 'leicht' => 500, 'kraeftig' => 900, default => null };
     $hLaufweite = match ($typo['heading_tracking'] ?? 'normal') { 'eng' => '-0.035em', 'weit' => '0.02em', default => null };
+    // Hinweistexte im Konzept (2026-11-19): „serviert im Schraubglas“ unter einer Gang-Überschrift kursiv bzw. kursiv und leiser.
+    $konzeptText = in_array($typo['konzept_text'] ?? 'normal', ['kursiv', 'kursiv_leise'], true) ? $typo['konzept_text'] : null;
 
     // Punkt 3 (Spec 43): Navigation + Lightbox. nav ∈ none|anchor|sidebar; lohnt erst ab 2 Kapiteln.
     $nav = $tokens['nav'] ?? 'none';
@@ -141,12 +150,15 @@
             --pt-body-font: {!! $bodyFont !!};
             --pt-base: {{ round(16.5 * $scale, 2) }}px;
             --pt-gap: {{ $gap }};
+            --pt-kapitel-abstand: {{ $kapitelAbstand }};
             --pt-measure: 720px;   /* nur noch Konfigurator-Formulare */
             --pt-wide: {{ $seitenBreite }};
             --pt-lese: {{ $leseBreite }};       /* Lesebreite in Zeichen: bleibt bei jeder Schriftgröße gleich lang */
+            --pt-zeilen: {{ $zeilenBreite }};   /* Breite der Gerichtslisten (Punkte-Zeilen brauchen etwas mehr als Fließtext) */
             --pt-h-faktor: {{ $hFaktor }};
             --pt-rand: clamp(18px, 5vw, 48px);   /* EIN Seitenrand für alle Container (Handy 18 px) */
             --pt-seite: 100vw;
+            --pt-intern: rgb(180 83 9);   /* interne Sicht (EK-Leiste/-Marken), nie im Kundenlink */
         }
         @if($druckFarben !== [])
         @media print {
@@ -177,6 +189,16 @@
         .pt-text-zentriert .pt-section-head,
         .pt-text-zentriert .pt-blocks:not(.pt-cols-2) { margin-inline: auto; }
         .pt-text-zentriert .pt-section-grid--split .pt-section-head { margin-inline: 0; }
+        /* Fix 2026-11-19: „Zentriert“ hat nur die Kästen verschoben, der Text blieb linksbündig (sichtbar kein Unterschied).
+           Jetzt stehen Köpfe, Überschriften und Texte mittig; Gericht-Zeilen mit Punkten und Preisen bleiben ausgerichtet. */
+        .pt-text-zentriert .pt-section-head { max-width: var(--pt-lese); text-align: center; }
+        .pt-text-zentriert .pt-section-text { margin-inline: auto; }
+        .pt-text-zentriert .pt-section-grid--split .pt-section-head { text-align: left; }
+        .pt-text-zentriert .pt-section-grid--split .pt-section-text { margin-inline: 0; }
+        .pt-text-zentriert .pt-block-header, .pt-text-zentriert .pt-block-sub, .pt-text-zentriert .pt-subheader,
+        .pt-text-zentriert .pt-text-block, .pt-text-zentriert .pt-heading, .pt-text-zentriert .pt-text,
+        .pt-text-zentriert .pt-section-price, .pt-text-zentriert .pt-preis-tabelle-titel { text-align: center; }
+        .pt-text-zentriert .pt-block-sub, .pt-text-zentriert .pt-text-block-body { margin-inline: auto; }
         /* Spec 94 · Konfigurator-Link (Stufe 5: PRO.KOPF-Aufbau). Nur Design-Tokens (--pt-*), keine festen Farben. */
         .pt-wrap { counter-reset: konfig-schritt; }
         .pt-konfig-seite { --pt-konfig-leiste: color-mix(in srgb, var(--pt-bg) 92%, var(--pt-text)); }
@@ -342,6 +364,10 @@
         @if($hGewicht !== null || $hLaufweite !== null)
         h1,h2,h3,h4, .pt-hero-title, .pt-section-title, .pt-heading { @if($hGewicht !== null)font-weight: {{ $hGewicht }};@endif @if($hLaufweite !== null)letter-spacing: {{ $hLaufweite }};@endif }
         @endif
+        {{-- Fix 2026-11-19: die Titelseite setzt später font-weight 900 und hat den Schnitt überstimmt → höhere Spezifität. --}}
+        @if($heroGewicht !== null)
+        .pt-hero .pt-hero-title { font-weight: {{ $heroGewicht }}; }
+        @endif
         /* Gerichtsliste ohne Trennlinien (Design-Schalter „Trennlinien“) */
         .pt-ohne-linien .pt-line, .pt-ohne-linien .pt-subheader { border-bottom: 0; border-top: 0; }
 
@@ -377,13 +403,14 @@
         .pt-hero.no-media .pt-hero-sub { color: var(--pt-muted); }
 
         /* Sections — breites Raster statt einer zentrierten Spalte */
-        .pt-section { padding: clamp(40px, 8vw, 84px) 0 0; }
+        /* Fix 2026-11-19: Abstand zwischen Kapiteln folgt jetzt der Einstellung „Abstände“ (vorher fest 84 px). Großzügig = bisher. */
+        .pt-section { padding: clamp(min(40px, var(--pt-kapitel-abstand)), 8vw, var(--pt-kapitel-abstand)) 0 0; }
         .pt-section-grid { display: block; }
         .pt-section-head { margin-bottom: var(--pt-gap); }
         .pt-section-title { font-size: calc(clamp(1.7rem, 4.4vw, 2.7rem) * var(--pt-h-faktor)); margin-top: 10px; }
         .pt-depth-1 .pt-section-title { font-size: calc(clamp(1.4rem, 3.4vw, 2rem) * var(--pt-h-faktor)); }
         .pt-depth-2 .pt-section-title { font-size: calc(clamp(1.2rem, 2.8vw, 1.5rem) * var(--pt-h-faktor)); }
-        .pt-section-text { color: var(--pt-muted); font-size: 1.06rem; margin: 14px 0 0; max-width: min(60ch, var(--pt-lese)); }
+        .pt-section-text { color: var(--pt-muted); font-size: 1.06rem; margin: 14px 0 0; max-width: calc(var(--pt-lese) - 8ch); }
         .pt-section-img { width: 100%; border-radius: 6px; margin: var(--pt-gap) 0 0; aspect-ratio: 16/7; object-fit: cover; }
         .pt-section-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--pt-gap); margin: var(--pt-gap) 0 0; }
         .pt-section-img--multi { margin: 0; aspect-ratio: 4/3; }
@@ -414,7 +441,7 @@
         }
         /* Gericht-Zeilen mehrspaltig (Masonry via CSS-columns) */
         /* Standard: eine ruhige Lesespalte (nicht über die ganze Breite gezogen). */
-        .pt-blocks { max-width: max(760px, var(--pt-lese)); }
+        .pt-blocks { max-width: var(--pt-zeilen); }
         .pt-text-block-body, .pt-block-sub { max-width: var(--pt-lese); }
         /* Opt-in-Variante: sauberes 2-Spalten-Raster (echtes Grid, keine Masonry). */
         .pt-blocks.pt-cols-2 { max-width: none; display: grid; grid-template-columns: 1fr 1fr; column-gap: clamp(28px, 5vw, 52px); align-items: start; }
@@ -426,7 +453,7 @@
         .pt-block-header { font-family: var(--pt-heading-font); font-size: 1.18rem; margin: calc(var(--pt-gap) * .8) 0 6px; }
         .pt-block-sub { color: var(--pt-muted); font-size: .96rem; margin: 2px 0 10px; }
         /* Konzept-interne Gang-Überschrift (type=header) — fett abgesetzt (wie im PDF). */
-        .pt-subheader { font-family: var(--pt-heading-font); font-weight: 700; font-size: 1.02rem; letter-spacing: .01em; margin: calc(var(--pt-gap) * .7) 0 4px; padding-top: 9px; border-top: 1px solid var(--pt-line); }
+        .pt-subheader { font-family: var(--pt-heading-font); font-weight: 700; font-size: 1.02rem; letter-spacing: .01em; margin: clamp(12px, calc(var(--pt-gap) * .4), 24px) 0 2px; padding-top: 9px; border-top: 1px solid var(--pt-line); }
         .pt-block > .pt-subheader:first-child { border-top: 0; padding-top: 0; margin-top: 6px; }
         .pt-line { display: flex; align-items: baseline; gap: 2px; padding: 9px 0; border-bottom: 1px solid var(--pt-line); }
         .pt-line:last-child { border-bottom: 0; }
@@ -443,18 +470,64 @@
         .pt-item.pt-indent-2 { padding-left: 36px; }
         /* Semantische Zeilen (Angebot/Konzept): Paket = Stationszeile, Gericht = Unterzeile, Text-Block. */
         .pt-line--paket .pt-line-label { font-family: var(--pt-heading-font); font-weight: 600; }
+        /* Fix 2026-11-19: Abstands-Hierarchie im Konzept. Vorher bekam die Gang-Überschrift viel Luft (70 % des Grundabstands)
+           und die Paketzeile fast keine — „Deutschland“ klebte am Dessert davor. Jetzt: Paket = großer Absatz, Gang = kleiner,
+           und die erste Gang-Überschrift hängt direkt am Paketnamen. */
+        .pt-block > .pt-line--paket:not(:first-child) { margin-top: calc(var(--pt-gap) * .75); }
+        .pt-block > .pt-line--concept + .pt-line--paket { margin-top: calc(var(--pt-gap) * .2); }
+        .pt-line--paket + .pt-subheader, .pt-line--paket + .pt-text-block { margin-top: 4px; }
+        /* Hinweistext im Konzept („serviert im Schraubglas“) gehört zur Überschrift darüber: eng daran, kleiner Abstand zum Gericht. */
+        .pt-text-block.pt-text-block--konzept { margin: calc(var(--pt-gap) * .25) 0 calc(var(--pt-gap) * .1); }
+        .pt-subheader + .pt-text-block.pt-text-block--konzept { margin-top: 0; }
         .pt-item-sub { color: var(--pt-muted); font-weight: 400; }
         .pt-text-block { margin: calc(var(--pt-gap) * .6) 0 calc(var(--pt-gap) * .4); }
         .pt-text-block.pt-indent-1 { padding-left: 18px; }
         .pt-text-block.pt-indent-2 { padding-left: 36px; }
         .pt-text-block-title { font-size: 1.08rem; margin: 0 0 4px; }
         .pt-text-block-body { margin: 0; color: var(--pt-text); line-height: 1.6; white-space: pre-line; }
+        @if($konzeptText !== null)
+        .pt-text-block--konzept .pt-text-block-body { font-style: italic;@if($konzeptText === 'kursiv_leise') color: var(--pt-muted); font-size: .94em;@endif }
+        @endif
         .pt-codes { color: var(--pt-muted); font-size: .62em; font-weight: 600; letter-spacing: .06em; vertical-align: super; margin-left: 4px; }
 
         /* Preis-Summe */
         .pt-price-summary { text-align: center; margin-top: calc(var(--pt-gap) * 1.4); padding: clamp(26px,5vw,42px); background: var(--pt-surface); border-radius: 6px; }
         .pt-price-big { display: block; font-family: var(--pt-heading-font); font-weight: 900; font-size: clamp(2.4rem,7vw,3.4rem); color: var(--pt-primary); line-height: 1; }
         .pt-price-label { display: block; margin-top: 8px; text-transform: uppercase; letter-spacing: .16em; font-size: .74rem; color: var(--pt-muted); }
+        /* EK-Schalter der internen Vorschau (2026-11-19) — dezent hinter dem VK, nie im Kundenlink */
+        .pt-ek { display: inline-block; margin-left: .6em; padding: 0 .45em; border-radius: 4px; background: color-mix(in srgb, var(--pt-intern) 12%, transparent); color: var(--pt-intern); font-family: var(--pt-body-font); font-size: .74rem; font-weight: 600; letter-spacing: 0; text-transform: none; white-space: nowrap; vertical-align: middle; }
+        .pt-intern-leiste { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .4rem 1rem; padding: 7px 16px; background: var(--pt-intern); color: white; font-family: system-ui, sans-serif; font-size: .8rem; font-weight: 600; letter-spacing: .02em; }
+        .pt-intern-leiste a { color: white; text-decoration: underline; }
+        .pt-ek-schalter { position: fixed; left: 16px; bottom: 16px; z-index: 60; padding: 8px 14px; border-radius: 999px; background: var(--pt-text); color: var(--pt-bg); font-family: system-ui, sans-serif; font-size: .8rem; font-weight: 600; text-decoration: none; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+        @media print { .pt-ek-schalter { display: none; } }
+        /* Konzeptpreis hervorgehoben (2026-11-19): unter dem Namen oder nach der Gerichtsliste */
+        .pt-concept-price { margin: 6px 0 0; font-variant-numeric: tabular-nums; }
+        .pt-concept-price--ende { margin: 14px 0 4px; padding-top: 10px; border-top: 1px solid var(--pt-line); }
+        .pt-ohne-linien .pt-concept-price--ende { border-top: 0; padding-top: 0; }
+        .pt-concept-price-wert { font-family: var(--pt-heading-font); font-weight: 700; font-size: calc(1.45rem * var(--pt-h-faktor, 1)); color: var(--pt-primary); }
+        .pt-concept-price-label { margin-left: .35em; text-transform: uppercase; letter-spacing: .14em; font-size: .7rem; color: var(--pt-muted); }
+        .pt-text-zentriert .pt-concept-price { text-align: center; }
+        /* Preis je Kapitel im Kapitelkopf (2026-11-19) */
+        .pt-section-price { margin: 12px 0 0; font-variant-numeric: tabular-nums; }
+        .pt-section-price-wert { font-family: var(--pt-heading-font); font-weight: 600; font-size: 1.25rem; color: var(--pt-primary); }
+        .pt-section-price-label { text-transform: uppercase; letter-spacing: .14em; font-size: .7rem; color: var(--pt-muted); }
+        /* Preis-Aufschlüsselung (2026-11-19: Klassen statt Inline-Styles, damit Design und eigenes CSS greifen) */
+        .pt-preis-tabelle { margin: calc(var(--pt-gap) * 1.2) 0; font-variant-numeric: tabular-nums; }
+        .pt-preis-tabelle-titel { font-size: calc(1.15rem * var(--pt-h-faktor, 1)); margin: 0 0 .5rem; }
+        .pt-preis-zeile { display: flex; gap: .75rem; align-items: baseline; padding: .4rem 0; border-top: 1px solid var(--pt-line); font-size: .92rem; color: var(--pt-text); }
+        .pt-preis-kopf { border-top: 2px solid var(--pt-accent); padding: .35rem 0; font-family: var(--pt-body-font); font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--pt-muted); }
+        .pt-preis-titel { flex: 1; min-width: 0; }
+        .pt-preis-pax { width: 4.5rem; text-align: right; color: var(--pt-muted); }
+        .pt-preis-pp { width: 7.5rem; text-align: right; color: var(--pt-muted); white-space: nowrap; }
+        .pt-preis-summe { width: 7rem; text-align: right; font-weight: 600; white-space: nowrap; }
+        .pt-preis-tabelle--ohne-summe .pt-preis-pp { width: auto; min-width: 7.5rem; color: var(--pt-text); }
+        .pt-preis-gesamt { border-top: 2px solid var(--pt-accent); margin-top: .25rem; font-weight: 700; font-size: 1rem; }
+        .pt-preis-gesamt .pt-preis-pp, .pt-preis-gesamt .pt-preis-summe { color: var(--pt-text); font-weight: 700; }
+        .pt-preis-pax--schwach { font-weight: 400; }
+        .pt-preis-mwst { border-top: 0; padding: .2rem 0; font-size: .85rem; color: var(--pt-muted); }
+        .pt-preis-brutto { font-weight: 700; font-size: 1.02rem; }
+        .pt-preis-brutto .pt-preis-pp, .pt-preis-brutto .pt-preis-summe { color: var(--pt-text); font-weight: 700; }
+        @media (max-width: 560px) { .pt-preis-pax { display: none; } .pt-preis-pp { width: 6rem; } .pt-preis-summe { width: 6rem; } }
 
         /* Legende / Fußzeile */
         .pt-legend { margin-top: calc(var(--pt-gap) * 1.2); padding-top: 16px; border-top: 1px solid var(--pt-line); color: var(--pt-muted); font-size: .82rem; line-height: 1.9; }
@@ -595,6 +668,16 @@
     @endif
 </head>
 <body data-foodalchemist-presentation="{{ $snapshot['type'] ?? '' }}" class="pt-nav-{{ $nav }} pt-text-{{ $textRaster }}"@if($auto) data-kiosk-auto="1"@endif>
+    {{-- EK-Schalter (2026-11-19): nur in der angemeldeten internen Vorschau von Foodbook und Angebot; der Kundenlink kennt ihn nicht. --}}
+    @php
+        $ekAn = ! empty($snapshot['ansicht']['ek']);
+        $ekSchalter = ($preview ?? false) && in_array($snapshot['type'] ?? '', ['foodbook', 'angebot'], true);
+    @endphp
+    @if($ekAn)
+        <div class="pt-intern-leiste" data-pt-intern>INTERN · mit EK und Wareneinsatz · nicht an Gäste weitergeben @if($ekSchalter)<a href="{{ request()->fullUrlWithQuery(['ek' => null]) }}">EK ausblenden</a>@endif</div>
+    @elseif($ekSchalter)
+        <a class="pt-ek-schalter" href="{{ request()->fullUrlWithQuery(['ek' => 1]) }}" data-pt-ek-schalter>EK einblenden</a>
+    @endif
     @if($nav === 'sidebar')
         <button type="button" class="pt-burger" data-pt-drawer aria-label="Navigation">☰</button>
         <button type="button" class="pt-scrim" data-pt-drawer aria-label="Schließen"></button>

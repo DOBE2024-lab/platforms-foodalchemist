@@ -158,7 +158,8 @@ class PresentationController extends Controller
     private function doPreview(string $type, int $id, PresentationService $svc): View
     {
         $team = auth()->user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
-        $snapshot = $svc->previewData($team, $type, $id, request()->query('design'));
+        // EK-Schalter (?ek=1): nur hier in der angemeldeten, team-gescopten Vorschau; previewData lässt ihn nur für Foodbook/Angebot zu.
+        $snapshot = $svc->previewData($team, $type, $id, request()->query('design'), request()->boolean('ek'));
 
         return view('foodalchemist::presentation.show', ['snapshot' => $snapshot, 'preview' => true]);
     }

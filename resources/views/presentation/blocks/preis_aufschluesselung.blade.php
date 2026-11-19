@@ -1,49 +1,77 @@
 {{-- #380 Q2 — Kundensichere Preis-Aufschlüsselung: Kapitel · Pax · €/Person · Zwischensumme + netto/MwSt/brutto.
-     KEIN EK/Marge (interna-frei). Datenquelle: content.preis_aufschluesselung (normalizeAngebot). --}}
-@php($pa = $content['preis_aufschluesselung'] ?? null)
-@php($nf = fn ($v) => number_format((float) $v, 2, ',', '.'))
-@php($modus = $style['preis_anzeige'] ?? 'beide')
+     KEIN EK/Marge (interna-frei). Datenquelle: content.preis_aufschluesselung (Angebot und Foodbook).
+     2026-11-19: pt-Klassen statt Inline-Styles (Design-Schrift, Farben und eigenes CSS greifen), Titel einstellbar;
+     ohne Gästezahl (Foodbook ohne Personen) nur €/Person je Kapitel und Gesamt pro Person. --}}
+@php
+    $pa = $content['preis_aufschluesselung'] ?? null;
+    $nf = fn ($v) => number_format((float) $v, 2, ',', '.');
+    $modus = (string) ($style['preis_anzeige'] ?? 'beide');
+    $modus = in_array($modus, ['netto', 'brutto', 'beide'], true) ? $modus : 'beide';
+    $titel = trim((string) ($style['titel'] ?? '')) ?: 'Preis-Übersicht';
+    $mitSumme = $pa !== null && ($pa['netto'] ?? null) !== null;
+    $satzTxt = ($pa['mwst_satz'] ?? null) !== null ? rtrim(rtrim(number_format((float) $pa['mwst_satz'], 1, ',', '.'), '0'), ',') : '';
+    $hatMwst = $satzTxt !== '';
+@endphp
 @if($pa && count($pa['zeilen'] ?? []))
-    <div class="pt-measure pt-reveal" style="margin:1.5rem auto;">
-        <h3 style="font-size:1.05rem;font-weight:700;color:var(--pt-text,#111827);margin:0 0 .5rem;">Preis-Übersicht</h3>
-        <div style="border-top:2px solid var(--pt-accent,#6d28d9);">
-            <div style="display:flex;gap:.75rem;padding:.35rem 0;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--pt-muted,#9ca3af);">
-                <span style="flex:1;">Leistung</span><span style="width:5rem;text-align:right;">Gäste</span><span style="width:6.5rem;text-align:right;">€/Person</span><span style="width:7rem;text-align:right;">Summe</span>
+    <div class="pt-measure pt-reveal">
+        <div class="pt-preis-tabelle{{ $mitSumme ? '' : ' pt-preis-tabelle--ohne-summe' }}" data-pt-preis-aufschluesselung>
+            <h3 class="pt-preis-tabelle-titel">{{ $titel }}</h3>
+            <div class="pt-preis-zeile pt-preis-kopf">
+                <span class="pt-preis-titel">Leistung</span>
+                @if($mitSumme)<span class="pt-preis-pax">Gäste</span>@endif
+                <span class="pt-preis-pp">€/Person</span>
+                @if($mitSumme)<span class="pt-preis-summe">Summe</span>@endif
             </div>
             @foreach($pa['zeilen'] as $z)
-                <div style="display:flex;gap:.75rem;padding:.4rem 0;border-top:1px solid rgba(0,0,0,.06);font-size:.9rem;">
-                    <span style="flex:1;color:var(--pt-text,#374151);">{{ $z['titel'] }}</span>
-                    <span style="width:5rem;text-align:right;color:var(--pt-muted,#6b7280);">{{ $z['pax'] ?: '—' }}</span>
-                    <span style="width:6.5rem;text-align:right;color:var(--pt-muted,#6b7280);">
+                <div class="pt-preis-zeile">
+                    <span class="pt-preis-titel">{{ $z['titel'] }}</span>
+                    @if($mitSumme)<span class="pt-preis-pax">{{ $z['pax'] ?: '—' }}</span>@endif
+                    <span class="pt-preis-pp">
                         @if(($z['alternativen'] ?? false) && ($z['preis_range'] ?? null))
                             {{ $z['preis_range']['min'] !== null ? $nf($z['preis_range']['min']) : '—' }}–{{ $z['preis_range']['max'] !== null ? $nf($z['preis_range']['max']) : '—' }} €
                         @elseif(($z['vk_pro_person'] ?? null) !== null)
                             {{ $nf($z['vk_pro_person']) }} €
                         @else — @endif
                     </span>
-                    <span style="width:7rem;text-align:right;font-weight:600;color:var(--pt-text,#374151);">{{ ($z['gesamt'] ?? null) !== null ? $nf($z['gesamt']) . ' €' : '—' }}</span>
+                    @if($mitSumme)<span class="pt-preis-summe">{{ ($z['gesamt'] ?? null) !== null ? $nf($z['gesamt']) . ' €' : '—' }}</span>@endif
                 </div>
             @endforeach
-            @if($modus !== 'brutto')
-                <div style="display:flex;gap:.75rem;padding:.5rem 0 .25rem;margin-top:.25rem;border-top:2px solid var(--pt-accent,#6d28d9);font-size:.95rem;font-weight:700;color:var(--pt-text,#111827);">
-                    <span style="flex:1;">Gesamt (netto)</span><span style="width:5rem;text-align:right;color:var(--pt-muted,#9ca3af);font-weight:400;">Ø {{ $pa['pax'] ?: '—' }}</span><span style="width:6.5rem;"></span><span style="width:7rem;text-align:right;">{{ $nf($pa['netto']) }} €</span>
-                </div>
-            @endif
-            @if($modus === 'beide')
-                <div style="display:flex;gap:.75rem;padding:.2rem 0;font-size:.85rem;color:var(--pt-muted,#6b7280);">
-                    <span style="flex:1;">zzgl. MwSt ({{ rtrim(rtrim(number_format((float) $pa['mwst_satz'], 1, ',', '.'), '0'), ',') }} %)</span><span style="width:5rem;"></span><span style="width:6.5rem;"></span><span style="width:7rem;text-align:right;">{{ $nf($pa['mwst_betrag']) }} €</span>
-                </div>
-            @endif
-            @if($modus !== 'netto')
-                <div style="display:flex;gap:.75rem;padding:.35rem 0;{{ $modus === 'brutto' ? 'margin-top:.25rem;border-top:2px solid var(--pt-accent,#6d28d9);' : 'border-top:1px solid rgba(0,0,0,.06);' }}font-size:1.05rem;font-weight:700;color:var(--pt-text,#111827);">
-                    <span style="flex:1;">Gesamt (brutto)</span><span style="width:5rem;text-align:right;color:var(--pt-muted,#9ca3af);font-weight:400;">@if($modus === 'brutto')Ø {{ $pa['pax'] ?: '—' }}@endif</span><span style="width:6.5rem;"></span><span style="width:7rem;text-align:right;">{{ $nf($pa['brutto']) }} €</span>
-                </div>
-                @if($modus === 'brutto')
-                    <div style="display:flex;gap:.75rem;padding:.2rem 0;font-size:.8rem;color:var(--pt-muted,#9ca3af);">
-                        <span style="flex:1;">inkl. {{ rtrim(rtrim(number_format((float) $pa['mwst_satz'], 1, ',', '.'), '0'), ',') }} % MwSt ({{ $nf($pa['mwst_betrag']) }} €)</span>
+
+            @if(! $mitSumme)
+                {{-- Ohne Gästezahl: Gesamt pro Person (netto, auf Wunsch brutto) statt Summen. --}}
+                @if(($pa['pro_person'] ?? null) !== null && (float) $pa['pro_person'] > 0)
+                    @if($modus !== 'brutto' || ! $hatMwst)
+                        <div class="pt-preis-zeile pt-preis-gesamt">
+                            <span class="pt-preis-titel">Gesamt pro Person{{ $hatMwst ? ' (netto)' : '' }}</span><span class="pt-preis-pp">{{ $nf($pa['pro_person']) }} €</span>
+                        </div>
+                    @endif
+                    @if($hatMwst && $modus !== 'netto')
+                        <div class="pt-preis-zeile {{ $modus === 'brutto' ? 'pt-preis-gesamt' : 'pt-preis-brutto' }}">
+                            <span class="pt-preis-titel">Gesamt pro Person (brutto, inkl. {{ $satzTxt }} % MwSt)</span><span class="pt-preis-pp">{{ $nf(round((float) $pa['pro_person'] * (1 + (float) $pa['mwst_satz'] / 100), 2)) }} €</span>
+                        </div>
+                    @endif
+                @endif
+            @else
+                @if($modus !== 'brutto')
+                    <div class="pt-preis-zeile pt-preis-gesamt">
+                        <span class="pt-preis-titel">Gesamt (netto)</span><span class="pt-preis-pax pt-preis-pax--schwach">Ø {{ $pa['pax'] ?: '—' }}</span><span class="pt-preis-pp"></span><span class="pt-preis-summe">{{ $nf($pa['netto']) }} €</span>
                     </div>
                 @endif
-                        @endif
+                @if($modus === 'beide' && $hatMwst)
+                    <div class="pt-preis-zeile pt-preis-mwst">
+                        <span class="pt-preis-titel">zzgl. MwSt ({{ $satzTxt }} %)</span><span class="pt-preis-pax"></span><span class="pt-preis-pp"></span><span class="pt-preis-summe">{{ $nf($pa['mwst_betrag']) }} €</span>
+                    </div>
+                @endif
+                @if($modus !== 'netto' && $hatMwst)
+                    <div class="pt-preis-zeile {{ $modus === 'brutto' ? 'pt-preis-gesamt' : 'pt-preis-brutto' }}">
+                        <span class="pt-preis-titel">Gesamt (brutto)</span><span class="pt-preis-pax pt-preis-pax--schwach">@if($modus === 'brutto')Ø {{ $pa['pax'] ?: '—' }}@endif</span><span class="pt-preis-pp"></span><span class="pt-preis-summe">{{ $nf($pa['brutto']) }} €</span>
+                    </div>
+                    @if($modus === 'brutto')
+                        <div class="pt-preis-zeile pt-preis-mwst"><span class="pt-preis-titel">inkl. {{ $satzTxt }} % MwSt ({{ $nf($pa['mwst_betrag']) }} €)</span></div>
+                    @endif
+                @endif
+            @endif
+
             @if(! empty($pa['zzgl']))
                 {{-- Spec 94b: zzgl. nach Aufwand (geschätzt, nicht im Gesamt) und voraussichtliche Gesamtsumme --}}
                 <div class="pt-zzgl" data-pt-zzgl>

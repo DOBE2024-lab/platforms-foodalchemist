@@ -151,3 +151,29 @@ it('Alt-Paket: syncGerichte lehnt ein fremdes Gericht ab, eigenes und Bestand ge
         ->toThrow(\RuntimeException::class, 'nicht sichtbar');
     expect($p->fresh()->dishes()->pluck('sales_recipe_id')->all())->toBe([$this->eigen->id]);
 });
+
+// ── 5. Concepter-Editor: Ablehnung als Hinweis ───────────────────────────
+
+it('Editor: ein Basisrezept als „gericht“ eingefügt zeigt einen Hinweis und hinterlässt keine leere Position', function () {
+    $basis = ($this->mk)($this->childA, 'basis', 'Grundsauce', false);
+    $c = $this->concepts->create($this->childA, ['name' => 'Menü']);
+
+    \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\Editor::class)
+        ->call('oeffnen', 'concepts', $c->id)
+        ->call('positionEinfuegen', 'gericht', $basis->id)
+        ->assertSet('fehler', fn ($f) => is_string($f) && str_contains($f, 'basisrezept'));
+
+    expect($c->slots()->count())->toBe(0);
+});
+
+it('Editor: fuelleGericht mit fremdem Gericht zeigt einen Hinweis, der Slot bleibt leer', function () {
+    $c = $this->concepts->create($this->childA, ['name' => 'Menü']);
+    $slot = $this->concepts->addSlot($this->childA, $c->id, ['role' => 'x']);
+
+    \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\Editor::class)
+        ->call('oeffnen', 'concepts', $c->id)
+        ->call('fuelleGericht', $slot->id, $this->fremd->id)
+        ->assertSet('fehler', fn ($f) => is_string($f) && $f !== '');
+
+    expect($slot->fresh()->sales_recipe_id)->toBeNull();
+});

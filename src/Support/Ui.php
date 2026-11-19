@@ -48,7 +48,8 @@ final class Ui
             // ── Typo
             'label' => 'text-[12px] font-medium text-gray-600',
             // Text-Rollen (Welle 1, 1.4a): EINZIGE Quelle der Rollen-Namen. Größe, Gewicht und Tinte stehen
-            // in foodalchemist-pass.css (@layer components → eine Utility übersteuert im Einzelfall).
+            // in resources/css/foodalchemist-text.css (@layer components → eine Utility übersteuert im Einzelfall;
+            // eigene Datei über _platform/fa-assets, damit io ohne Host-Build mitzieht).
             // Klassennamen immer voll ausgeschrieben, der Scanner in build-css.mjs erkennt keine zusammengesetzten.
             // Baustein: <x-fa::text rolle="muted">…</x-fa::text>
             'textRolle' => [

@@ -18,6 +18,7 @@
         @endif
     @endunless
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-foodalchemist::shell.text-css />
     @livewireStyles
 </head>
 <body class="h-full bg-slate-950 text-white overflow-hidden" data-foodalchemist-kiosk-layout>

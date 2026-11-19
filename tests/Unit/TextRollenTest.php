@@ -7,9 +7,13 @@ use Platform\FoodAlchemist\Support\Ui;
  *
  * Warum: ~4.800 Stellen schreiben Größe und Tinte einzeln aus
  * (`text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]`), dazu 58 lokale `$leise`-Kürzel.
- * Die Rollen bündeln das an EINER Stelle: Klassen in foodalchemist-pass.css (@layer components,
+ * Die Rollen bündeln das an EINER Stelle: Klassen in resources/css/foodalchemist-text.css (@layer components,
  * damit eine Utility wie `text-[var(--fa-crit)]` die Rolle im Einzelfall noch übersteuert),
  * Namen nur über Ui::maps()['textRolle'], Baustein x-fa::text.
+ *
+ * Eigene Datei statt foodalchemist-pass.css: io (eigenständige Hülle) baut sein CSS bei Modul-Deploys nicht
+ * neu. Die Datei geht unverändert nach resources/dist und wird über _platform/fa-assets in BEIDEN Hüllen
+ * geladen (Muster foodalchemist-observatorium.css) — der Codemod 1.4b hängt so nicht am Host-Build.
  */
 $basis = dirname(__DIR__, 2);
 
@@ -25,8 +29,8 @@ it('kennt genau die sieben Rollen, Klassennamen voll ausgeschrieben (Scanner in 
     ]);
 });
 
-it('definiert jede Rolle in foodalchemist-pass.css innerhalb von @layer components, nur mit Tokens', function () use ($basis) {
-    $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents($basis.'/resources/css/foodalchemist-pass.css'));
+it('definiert jede Rolle in foodalchemist-text.css innerhalb von @layer components, nur mit Tokens', function () use ($basis) {
+    $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents($basis.'/resources/css/foodalchemist-text.css'));
     preg_match('/@layer components\s*\{(.*)\}/s', $css, $m);
     $komponenten = $m[1] ?? '';
 
@@ -39,7 +43,7 @@ it('definiert jede Rolle in foodalchemist-pass.css innerhalb von @layer componen
 });
 
 it('trifft die Werte der bestehenden Bausteine, damit der Codemod (1.4b) nichts verschiebt', function () use ($basis) {
-    $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents($basis.'/resources/css/foodalchemist-pass.css'));
+    $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents($basis.'/resources/css/foodalchemist-text.css'));
     $regel = function (string $klasse) use ($css) {
         preg_match('/\.'.preg_quote($klasse, '/').'\s*\{([^}]*)\}/', $css, $m);
 
@@ -56,12 +60,15 @@ it('trifft die Werte der bestehenden Bausteine, damit der Codemod (1.4b) nichts 
         ->and($regel('fa-t-muted'))->toContain('var(--fa-text-sm)')->toContain('var(--fa-ink-3)')->not->toContain('font-weight');
 });
 
-it('liefert die Rollen im gebauten Modul-CSS aus (Plattform-Modus; npm run build:css nicht vergessen)', function () use ($basis) {
-    $dist = file_get_contents($basis.'/resources/dist/foodalchemist.css');
+it('liefert die dist-Kopie identisch zur Quelle aus (npm run build:css nicht vergessen)', function () use ($basis) {
+    $dist = $basis.'/resources/dist/foodalchemist-text.css';
 
-    foreach (Ui::maps()['textRolle'] as $klasse) {
-        expect($dist)->toContain('.'.$klasse.'{');
-    }
+    expect(is_file($dist))->toBeTrue()
+        ->and(file_get_contents($dist))->toBe(file_get_contents($basis.'/resources/css/foodalchemist-text.css'));
+});
+
+it('definiert die Rollen nur an einer Stelle (nicht zusätzlich in foodalchemist-pass.css)', function () use ($basis) {
+    expect(file_get_contents($basis.'/resources/css/foodalchemist-pass.css'))->not->toContain('.fa-t-');
 });
 
 it('zeigt jede Rolle auf der Designsystem-Seite', function () use ($basis) {

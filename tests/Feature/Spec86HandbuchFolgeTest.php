@@ -76,3 +76,10 @@ it('MCP PUBLISH nimmt freie Kapitel entgegen', function () {
     expect($pub->success)->toBeTrue();
     $this->get('/p/handbuch/' . $pub->data['token'])->assertOk()->assertSee('Hände waschen.');
 });
+
+it('Panel: „Gültig bis“ ist live gebunden — der Knopf wird freigegeben, sobald ein Datum gewählt ist (io 19.11.: Knopf blieb gesperrt)', function () {
+    $c = Livewire::test(Panel::class, ['type' => 'foodbook', 'quelleId' => $this->fb->id]);
+    expect($c->html())->toContain('wire:model.live="gueltigBis"');
+    $c->set('gueltigBis', now()->addDays(10)->toDateString());
+    expect($c->html())->not->toContain('Zum Veröffentlichen ein Datum');
+});

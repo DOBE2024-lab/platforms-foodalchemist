@@ -27,7 +27,7 @@
 
     <div class="flex flex-wrap items-end gap-3">
         <x-fa::field label="Gültig bis" for="hb-gueltig-{{ $type }}-{{ $quelleId }}">
-            <x-fa::input type="date" id="hb-gueltig-{{ $type }}-{{ $quelleId }}" wire:model="gueltigBis" />
+            <x-fa::input type="date" id="hb-gueltig-{{ $type }}-{{ $quelleId }}" wire:model.live="gueltigBis" />
         </x-fa::field>
         @if($status['live'] ?? false)
             <x-fa::button variant="danger" wire:click="zurueckziehen" wire:confirm="Handbuch zurückziehen? Der Link ist dann nicht mehr erreichbar." data-handbuch-withdraw>Zurückziehen</x-fa::button>

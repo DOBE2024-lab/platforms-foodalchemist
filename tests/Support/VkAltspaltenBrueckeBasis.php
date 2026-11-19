@@ -39,7 +39,6 @@ return [
     'tests/Feature/ConcepterWordingTest.php',
     'tests/Feature/CoverageTest.php',
     'tests/Feature/DarreichungServiceTest.php',
-    'tests/Feature/DynamicPricingMigrationServiceTest.php',
     'tests/Feature/FeedbackTest.php',
     'tests/Feature/FoodbookBrilleVkTest.php',
     'tests/Feature/FoodbookFormatBookingTest.php',

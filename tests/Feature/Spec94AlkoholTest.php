@@ -22,7 +22,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 /**
  * Spec 94c · Alkohol (Kita): fester Wert am GP (`gps.alkohol` ja / nein / NULL + Herkunft, alle Warengruppen; Kurator 03.11.2026) mit Vorrang
  * vor den Artikeln (is_alcohol = 1 ja, 0 = keine Angabe) → Rezept (spec_contains_alcohol, Warn-Regel: nein nur, wenn alle Zutaten nein sind)
- * → Codes und Legende („Alk.“). Vorbelegung der Getränke (WG 15) über foodalchemist:alkohol-vorbelegen, Probelauf als Standard.
+ * → Codes und Legende („Alk.“). Vorbelegung der Getränke (WG 15) über foodalchemist:alkohol-vorbelegen, Probelauf als Standard. (gelöscht 98 · 1.2b, siehe Git-Historie)
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
@@ -107,40 +107,6 @@ it('Vorbelegungs-Regeln (WG 15): vol-% vor Unterkategorie, Wein/Spirituosen ja, 
         ->and($r('Rum: 40 Vol%, Flasche 0,7 l', '15'))->toBeTrue()
         ->and($r('Rum-Rosinen: 3 vol-%', '07', null, '07.2 Trockenfrüchte'))->toBeNull()
         ->and(AlkoholAngabe::volProzent('Volumen 2 l'))->toBeNull();
-});
-
-it('Vorbelegen: Probelauf zählt nur, --apply schreibt abgeleitet nur in WG 15, manuell bleibt; Koch-Alkoholika nur als Vorschlag', function () {
-    $cola = ($this->gp)('Coca-Cola: Dose 0,33 l', '15', null, '15.7 Erfrischungsgetränke');
-    $wein = ($this->gp)('Weißwein: trocken, zum Kochen', '15', null, '15.1 Wein');
-    $bier = ($this->gp)('Weißbier: Glasflasche 0,5 l', '15', null, '15.2 Bier & Cidre');
-    $manuell = tap(($this->gp)('Sekt: trocken', '15', null, '15.1 Wein'))->update(['alkohol' => false, 'alkohol_source' => 'manuell']);
-    $kochwein = ($this->gp)('Rotwein: konserviert, zum Kochen', '10');
-    $mirin = ($this->gp)('Mirin', '10');
-    ($this->gp)('Schweinebauch: frisch', '04');
-    ($this->gp)('Rotweinessig', '11');
-    ($this->gp)('Rumpsteak: frisch', '04');
-    $r = $this->makeRecipe($this->rootTeam, 'Teriyaki');
-    $this->makeIngredient($r, 'Mirin', $mirin);
-
-    $this->artisan('foodalchemist:alkohol-vorbelegen')
-        ->expectsOutputToContain('Probelauf · ja: 1 · nein: 1 · offen: 1 · manuell (bleibt): 1 · würde ändern: 2')
-        ->expectsOutputToContain('Vorschläge außerhalb WG 15 (nur Liste, nicht geschrieben): 2')->assertExitCode(0);
-    expect($cola->fresh()->alkohol)->toBeNull();
-
-    $this->artisan('foodalchemist:alkohol-vorbelegen --vorschlaege')
-        ->expectsOutputToContain('Rotwein: konserviert, zum Kochen')->expectsOutputToContain('Mirin')
-        ->doesntExpectOutputToContain('Schweinebauch')->doesntExpectOutputToContain('Rotweinessig')->doesntExpectOutputToContain('Rumpsteak')
-        ->assertExitCode(0);
-
-    $this->artisan('foodalchemist:alkohol-vorbelegen --apply --offen')
-        ->expectsOutputToContain('Weißbier')->expectsOutputToContain('Geschrieben · ja: 1 · nein: 1 · offen: 1')->assertExitCode(0);
-    expect($cola->fresh()->alkohol)->toBeFalse()->and($cola->fresh()->alkohol_source)->toBe('abgeleitet')
-        ->and($wein->fresh()->alkohol)->toBeTrue()
-        ->and($bier->fresh()->alkohol)->toBeNull()->and($bier->fresh()->alkohol_source)->toBeNull()
-        ->and($manuell->fresh()->alkohol)->toBeFalse()->and($manuell->fresh()->alkohol_source)->toBe('manuell')
-        ->and($kochwein->fresh()->alkohol)->toBeNull()->and($mirin->fresh()->alkohol)->toBeNull();
-
-    $this->artisan('foodalchemist:alkohol-vorbelegen')->expectsOutputToContain('würde ändern: 0')->assertExitCode(0);
 });
 
 it('MCP gps.PUT/GET: ja | nein | offen für jede Warengruppe, gilt als manuell', function () {

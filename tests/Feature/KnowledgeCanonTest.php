@@ -221,7 +221,7 @@ it('knowledge-oversized listet zu große Dossiers mit ##-Struktur und Fenster-Ma
 
     // Artisan::call statt $this->artisan(): die JSON-Ausgabe ist EIN writeln — der Mock von
     // expectsOutputToContain verbraucht pro Write nur die erste Erwartung.
-    Artisan::call('foodalchemist:knowledge-oversized', ['--json' => true, '--kategorie' => 'test_kanon']);
+    Artisan::call('foodalchemist:diagnose:knowledge-oversized', ['--json' => true, '--kategorie' => 'test_kanon']);
     $json = json_decode(Artisan::output(), true);
     expect($json['total'])->toBe(1)
         ->and($json['dossiers'][0]['slug'])->toBe('rw_gross')
@@ -229,7 +229,7 @@ it('knowledge-oversized listet zu große Dossiers mit ##-Struktur und Fenster-Ma
         ->and($json['dossiers'][0]['abschnitte'][1]['jenseits_fenster'])->toBeTrue()
         ->and($json['dossiers'][0]['abschnitte'][0]['jenseits_fenster'])->toBeFalse();
 
-    Artisan::call('foodalchemist:knowledge-oversized', ['--struktur' => true, '--kategorie' => 'test_kanon']);
+    Artisan::call('foodalchemist:diagnose:knowledge-oversized', ['--struktur' => true, '--kategorie' => 'test_kanon']);
     $text = Artisan::output();
     expect($text)->toContain('rw_gross')->toContain('Zweites Thema')->not->toContain('rw_klein');
 });

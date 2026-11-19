@@ -195,7 +195,7 @@ class AiGatewayService
             //
             // Bewusst NUR eine Log-Zeile, kein Abbruch: ein Wissensproblem darf keine
             // Generierung zerreissen. Der laute Kanal ist der Waechter
-            // (`foodalchemist:wissen-profil --pruefen`, woechentlich als Signal) — diese Zeile
+            // (`foodalchemist:diagnose:wissen-profil --pruefen`, woechentlich als Signal) — diese Zeile
             // ist der Beleg, der EINEN konkreten Lauf erklaerbar macht.
             //
             // Der schwerste Fall steht dabei nicht in dieser Liste: wird ein Dossier HART

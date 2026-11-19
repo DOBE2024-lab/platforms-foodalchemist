@@ -490,10 +490,10 @@ it('Rezept-Grenze: ist der Gehalt für die ganze Masse bekannt, gilt die Untergr
 it('Referenz-Befehl (nur lesend): Amerikaner im Rahmen → Erfolg; Gegenprobe außerhalb der Spanne → Fehlschlag; nichts gespeichert', function () {
     $gp = ($this->gp)('Amerikaner mit Zuckerguss: TK', 'amerikaner');
     ($this->ki)(['gp.sensorik' => ['geschmack' => ['suess' => 0.7, 'salzig' => 0.1, 'sauer' => 0, 'bitter' => 0, 'umami' => 0, 'fettig' => 0.3, 'scharf' => 0], 'texturen' => []]]);
-    $this->artisan('foodalchemist:gp-sensorik-referenz', ['--admin' => $this->user->email, '--gp' => ["amerikaner:{$gp->id}"]])->assertExitCode(0);
+    $this->artisan('foodalchemist:diagnose:gp-sensorik-referenz', ['--admin' => $this->user->email, '--gp' => ["amerikaner:{$gp->id}"]])->assertExitCode(0);
 
     ($this->ki)(['gp.sensorik' => ['geschmack' => ['suess' => 0.7, 'salzig' => 0.54, 'sauer' => 0, 'bitter' => 0, 'umami' => 0, 'fettig' => 0.3, 'scharf' => 0], 'texturen' => []]]);
-    $this->artisan('foodalchemist:gp-sensorik-referenz', ['--admin' => $this->user->email, '--gp' => ["amerikaner:{$gp->id}"]])->assertExitCode(1);
+    $this->artisan('foodalchemist:diagnose:gp-sensorik-referenz', ['--admin' => $this->user->email, '--gp' => ["amerikaner:{$gp->id}"]])->assertExitCode(1);
 
     expect(DB::table('foodalchemist_gp_taste_vectors')->where('gp_id', $gp->id)->where('source', 'ai')->exists())->toBeFalse();
 });

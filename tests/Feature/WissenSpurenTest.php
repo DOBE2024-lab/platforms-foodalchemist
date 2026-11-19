@@ -26,13 +26,13 @@ beforeEach(function () {
 });
 
 it('meldet nichts, solange nichts eingeordnet ist', function () {
-    $this->artisan('foodalchemist:wissen-spuren')->assertExitCode(0);
+    $this->artisan('foodalchemist:diagnose:wissen-spuren')->assertExitCode(0);
 });
 
 it('★ meldet eine Art, die Dossiers traegt, aber von keinem Schritt geroutet wird', function () {
     ($this->dossier)('f1', 'fachwissen');
 
-    $this->artisan('foodalchemist:wissen-spuren')
+    $this->artisan('foodalchemist:diagnose:wissen-spuren')
         ->expectsOutputToContain('KEINE SPUR')
         ->assertExitCode(1);
 });
@@ -41,7 +41,7 @@ it('schweigt, sobald die Spur existiert', function () {
     ($this->dossier)('f2', 'fachwissen');
     app(KnowledgeRoutingService::class)->setArt('recipe.generator', 'fachwissen', 'discovery', 5);
 
-    $this->artisan('foodalchemist:wissen-spuren')
+    $this->artisan('foodalchemist:diagnose:wissen-spuren')
         ->expectsOutputToContain('recipe.generator')
         ->assertExitCode(0);
 });
@@ -50,14 +50,14 @@ it('★ eine Spur auf `none` zaehlt NICHT als Spur — das ist ausdrueckliches A
     ($this->dossier)('f3', 'referenz');
     app(KnowledgeRoutingService::class)->setArt('recipe.generator', 'referenz', 'none');
 
-    $this->artisan('foodalchemist:wissen-spuren')->assertExitCode(1);
+    $this->artisan('foodalchemist:diagnose:wissen-spuren')->assertExitCode(1);
 });
 
 it('verlangt fuer regel und ablauf KEINE Spur — die laufen anders', function () {
     ($this->dossier)('r1', 'regel');       // ueber den Kanon
     ($this->dossier)('a1', 'ablauf');      // ueber ablauf.GET, nie im Prompt
 
-    $this->artisan('foodalchemist:wissen-spuren')
+    $this->artisan('foodalchemist:diagnose:wissen-spuren')
         ->expectsOutputToContain('Kanon')
         ->assertExitCode(0);
 });
@@ -66,5 +66,5 @@ it('zaehlt nur AKTIVE Dossiers — ein stillgelegtes erreicht ohnehin nichts', f
     ($this->dossier)('f4', 'fachwissen');
     DB::table('foodalchemist_knowledge_documents')->where('slug', 'f4')->update(['active' => 0]);
 
-    $this->artisan('foodalchemist:wissen-spuren')->assertExitCode(0);
+    $this->artisan('foodalchemist:diagnose:wissen-spuren')->assertExitCode(0);
 });

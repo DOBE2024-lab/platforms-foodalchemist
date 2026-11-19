@@ -117,7 +117,7 @@ kein Fehler). Deshalb off-peak. Reihenfolge:
    - `php8.4 artisan foodalchemist:knowledge-embed`      (Wissenskorpus + Anker, team_id=0)
    - `php8.4 artisan foodalchemist:embed --pool=all`      (gps/recipes/suppliers/concepts/foodbooks/lab_notes)
    - `php8.4 artisan foodalchemist:embed --pool=la`       (**LA-Pool ~264k** — bewusst SEPARAT, nicht in `--pool=all`; längster Lauf, strikt off-peak; braucht `scalar`-Quantisierung wegen RAM)
-4. **Recall verifizieren:** `php8.4 artisan foodalchemist:embed-eval --team=<id>` — Recall@K + Anti-Marker gegen die MySQL-Baseline. **Quantisierung darf den Floor nicht unter ~66 % drücken.** Sinkt Recall → `QDRANT_QUANTIZATION` lockern (`scalar`→unset) oder CAX21-RAM nutzen, dann `--pool=all` erneut (Collection neu füllen). **+ Foodbook-Leak-Check** (tenant-privat): Tenant-Query darf nur eigene Ahnenkette + Global sehen, nie fremde Foodbooks.
+4. **Recall verifizieren:** `php8.4 artisan foodalchemist:diagnose:embed-eval --team=<id>` — Recall@K + Anti-Marker gegen die MySQL-Baseline. **Quantisierung darf den Floor nicht unter ~66 % drücken.** Sinkt Recall → `QDRANT_QUANTIZATION` lockern (`scalar`→unset) oder CAX21-RAM nutzen, dann `--pool=all` erneut (Collection neu füllen). **+ Foodbook-Leak-Check** (tenant-privat): Tenant-Query darf nur eigene Ahnenkette + Global sehen, nie fremde Foodbooks.
 5. **Stabil?** Wenn Recall + Leak-Check ok → fertig, Qdrant ist live. Falls nicht: `FOODALCHEMIST_EMBEDDING_STORE=mysql` + `config:clear` = Sofort-Rollback (MySQL trägt noch).
 6. **Altpfad abräumen** (erst nach stabiler Verifikation): `core_embeddings`-Zeilen der 8 Typen entfernen. Erst wenn Qdrant nachweislich trägt — vorher ist es der Rollback-Anker.
 

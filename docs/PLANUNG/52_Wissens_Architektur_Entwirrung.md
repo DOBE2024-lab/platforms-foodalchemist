@@ -941,7 +941,7 @@ vorhandene Nummer ist 51). Tracking wie üblich: Office Dev-Package 23, Features
 | ID | Arbeitspaket | Definition of Done |
 |---|---|---|
 | **A1** | Referenzfälle festlegen: je 3 gute + 3 problematische Basisrezepte, heutigen Ablauf **vollständig** erfassen (Generator, Anreicherung, `conformance.check`, Selbstheilung, Review) | Ein Baseline-Dokument nennt je Fall und je Modellaufruf: `feature`, `prompt_chars`, `prompt_parts` (kanon/bound/retrieval/task/kontext/huelle/dropped), `knowledge_used`, `knowledge_channels`, Befunde. Reproduzierbar aus `foodalchemist_ai_call_log`. |
-| **A2** | Kommando `foodalchemist:wissen-deckung` (read-only) über **`config('foodalchemist.prompts')`**, nicht über die Doku | Eine Zeile je Registry-Key mit: Kanon-Zeilen · Routing-Zeilen · Bindungen · effektiver Routing-Schlüssel · Σ Zeichen · Rechner. Keys **ohne jede** Steuerung erscheinen als **Befund**. Läuft grün auf demo und in der Suite. |
+| **A2** | Kommando `foodalchemist:diagnose:wissen-deckung` (read-only) über **`config('foodalchemist.prompts')`**, nicht über die Doku | Eine Zeile je Registry-Key mit: Kanon-Zeilen · Routing-Zeilen · Bindungen · effektiver Routing-Schlüssel · Σ Zeichen · Rechner. Keys **ohne jede** Steuerung erscheinen als **Befund**. Läuft grün auf demo und in der Suite. |
 | **A3** | MCP-Lesetool `knowledge_bindings.GET` | Liefert je Bindung: `target_key`, Dossier-Slug, `mode`, `weight`, `active`, **und ob das Dossier noch aktiv ist**. Damit ist der Bestand erstmals messbar (Voraussetzung für F1). |
 | **A4** | **Diagnose-Texte ehrlich machen** — `regelwerk.GET` / `ablauf.GET` **und** die Kurations-UI (Befund J) | (a) Bei ungesteuerten Keys `quelle: "ungesteuert"` + Liste dessen, was per Routing käme; der Verweis auf ein Tool, das dieselbe Quelle liest, ist weg. (b) Die `cross_cutting`-Warnung in `browser.blade.php:130-136` ist entfernt oder sagt die Wahrheit: sie behauptet heute bei **158 von 165** Dossiers eine 7er-Liste, die deaktiviert ist, einen `always`-Mechanismus, der nicht mehr greift, und empfiehlt eine Bindung, die an den Generatoren stumm ist. Test pinnt die Zustände. |
 | **A5** | Bindungs-Bestand messen und protokollieren | Zahl der Bindungen, Verteilung über `target_key`, **Zahl der Bindungen auf inaktive Dossiers**. Ergebnis steht im Spec-Dokument — F1 wird ohne diese Zahl nicht geplant. |
@@ -951,7 +951,7 @@ B–G startet auf einer Schätzung.
 
 #### ✅ A2 erledigt 2026-09-07 — und korrigiert zwei meiner Zahlen
 
-`foodalchemist:wissen-versorgung` gebaut (`src/Console/WissenVersorgungCommand.php`, 7 Tests).
+`foodalchemist:diagnose:wissen-versorgung` gebaut (`src/Console/WissenVersorgungCommand.php`, 7 Tests).
 Erste Messung, **auf der Dev-MySQL** — und die ist der interessantere Fall, siehe unten:
 
 | Kennzahl | Wert |
@@ -1053,7 +1053,7 @@ einer Variablen rufen (`contextFor($team, $promptKey, …)` in `ConceptGenerator
 braucht kein Wissen"), hinterlegt unter einem Namen, den niemand ruft — der eigentliche Key
 heißt `recipe.extract` und hat keine Zeile. Die Entscheidung existiert und wirkt nicht.
 
-**Abgrenzung, die ich erst beim Bauen gefunden habe:** `foodalchemist:wissen-deckung` (W2-4)
+**Abgrenzung, die ich erst beim Bauen gefunden habe:** `foodalchemist:diagnose:wissen-deckung` (W2-4)
 existiert schon und prüft die **Korpus**-Richtung des §-Problems — „nennt ein Prompt einen §,
 den kein Dossier hat" (der §12-Fall). Mein Bericht heisst deshalb `wissen-versorgung` und
 prüft die **Versorgungs**-Richtung. Für `H7` (hängende §-Verweise im zusammengesetzten Prompt)
@@ -1253,7 +1253,7 @@ und `B7`.
 | **H3** | Bestand markieren: 1.105 Dossiers mit `art` + Achsenwerten versehen — **KI-Vorschlag, menschliche Freigabe** | Muster existiert im Vault: `110_destillate_aktivieren.py` hat 73 Destillate per Gemini mit Frontmatter-Feldern angereichert. Kein Dossier wird ohne Freigabe scharf. Fortschritt ist zählbar (markiert / offen). |
 | **H4** | Dossiers aufteilen, **nicht Kategorien nach Art trennen** — erst nach H1 | ⚠ **Korrektur meiner ersten Fassung:** gemischte Arten in einer Kategorie sind **erlaubt und richtig**. Eine Kategorie „Saucen" enthält legitim eine Regel (Anforderungen an eine Saucenrezeptur), ein Datenwerk (Dosiertabelle Bindemittel), Fachwissen (warum eine Emulsion bricht) und eine Referenz (Beispielrezept). Was aufgeteilt wird, ist ein **einzelnes Dokument**, das Inhalte verschiedener Arten mischt und getrennt benutzt werden muss. **Keine Obergrenze pro Kategorie** — die Dokumentzahl sagt nichts über die Auswahlqualität (Grundsatz C). DoD: jedes Dossier mit gemischten Arten ist geteilt, jedes Teil trägt eine Art. |
 | **H6** | **Typisierte Querverbindungen** zwischen Dossiers — die dritte Dimension neben Art und Achse. Achsen beantworten *„welches Dossier gilt hier"*, Links beantworten *„ohne welches ist es unvollständig"* | Drei Typen: **`ergaenzt`** (A ist ohne B unvollständig — maschinell nutzbar, Hüllenbildung) · **`ersetzt`** (Nachfolger; hätte die stille Regression beim 155-Cutover verhindert, wo Slugs auf deaktivierte Dossiers zeigten) · **`siehe_auch`** (Nachbarschaft, nur UI-Navigation). **Ernten statt kuratieren:** der Vault hat die Kanten schon als `[[Wikilinks]]` + `referenzen:`-Frontmatter, `broken_link_check.py` validiert sie wöchentlich — `knowledge-import` liest sie mit. ⚠ **Harte Regel: Links sind KEIN Retrieval-Mechanismus.** Folgt die Suche Kanten, zieht ein Treffer die Nachbarschaft mit und das Budget explodiert — dasselbe Muster wie die Präfix-Bindungen (16.952 Z. Blindleistung), nur über eine andere Straße. `ergaenzt` gilt **nur für `art=regel`**, typisiert und gedeckelt; `siehe_auch` wirkt **nur** in der UI. |
-| **H7** | **Hüllen-Prüfung: kein hängender §-Verweis im zusammengesetzten Prompt** — der Defekt, den der Split erzeugt hat. ⚠ **Erweitert `foodalchemist:wissen-deckung` (W2-4)**, baut kein drittes Kommando: das prüft schon „Prompt nennt § → Korpus hat Dossier"; hier fehlt „Dossier verweist auf § → § steht im selben Prompt" | Vorher war `Regelwerk_Basisrezepte` **ein** Dokument, §2 konnte inline auf §4 und §11 verweisen. Nach dem Split ist der Verweis ein Textstring ohne Ziel. Belegbar: der Kanon von `recipe.generator` trägt §1.0–1.5, §2, §3, §4, §6 — **nicht** §11 (Derivate), **nicht** §1.10/§1.11 (Anti-Patterns), auf die §2 verweist. DoD: ein Prüfer meldet jeden §-Verweis in einem übermittelten Dossier, dessen Ziel nicht im selben Prompt steht. Auflösung je Fall: Ziel mitliefern (`ergaenzt`), Verweis auflösen, oder Verweis entfernen — **nie** hängen lassen. |
+| **H7** | **Hüllen-Prüfung: kein hängender §-Verweis im zusammengesetzten Prompt** — der Defekt, den der Split erzeugt hat. ⚠ **Erweitert `foodalchemist:diagnose:wissen-deckung` (W2-4)**, baut kein drittes Kommando: das prüft schon „Prompt nennt § → Korpus hat Dossier"; hier fehlt „Dossier verweist auf § → § steht im selben Prompt" | Vorher war `Regelwerk_Basisrezepte` **ein** Dokument, §2 konnte inline auf §4 und §11 verweisen. Nach dem Split ist der Verweis ein Textstring ohne Ziel. Belegbar: der Kanon von `recipe.generator` trägt §1.0–1.5, §2, §3, §4, §6 — **nicht** §11 (Derivate), **nicht** §1.10/§1.11 (Anti-Patterns), auf die §2 verweist. DoD: ein Prüfer meldet jeden §-Verweis in einem übermittelten Dossier, dessen Ziel nicht im selben Prompt steht. Auflösung je Fall: Ziel mitliefern (`ergaenzt`), Verweis auflösen, oder Verweis entfernen — **nie** hängen lassen. |
 | **H5** | Kategorie-Vokabular aufräumen | `pairing` (3 Routing-Zeilen, keine Kategorie) und `trend` (2 Seed-Zeilen, keine Kategorie) sind weg (→ D2). Die sechs nur-Team-Kategorien sind global (→ D8). Vokabular und Routing-Kategorien sind deckungsgleich — der A2-Bericht beweist es. |
 
 **DoD Etappe H:** Jedes Dossier trägt eine Art. Verbindliche Zahlen und Vokabulare erreichen
@@ -1327,7 +1327,7 @@ stillen Rückfall gibt.
 | Vier Zustände (D6) | `gesteuert` · `bewusst_leer` · `ungesteuert` · **`fehlerhaft`** — der neue: hinterlegt, aber löst nicht auf. Sah vorher wie `gesteuert` aus und lieferte weniger. |
 | Befund `bindung_wuerde_scharf` | warnt genau vor dem `cascade`-Fall, **bevor** er eintritt |
 | Laufzeit (`AiGatewayService`) | eine `Log::warning`-Zeile je Call mit unauflösbarer Kanon-Zeile — bewusst **kein Abbruch**: ein Wissensproblem darf keine Generierung zerreissen. Der laute Kanal ist der Wächter. |
-| `foodalchemist:wissen-profil` + `knowledge_profil.GET` | beide Flächen (Grundsatz E), Exit 1 bei blockierendem Befund |
+| `foodalchemist:diagnose:wissen-profil` + `knowledge_profil.GET` | beide Flächen (Grundsatz E), Exit 1 bei blockierendem Befund |
 | **UI-Sektion „Wissens-Steuerung"** | Überblick + Profile + Befunde **und** der Routing-Editor. Damit hat die neue Ebene erstmals eine Oberfläche — vorher hatte nur die Alt-Struktur eine. |
 
 **Nur `blockiert` kippt den Zustand**, ein `hinweis` nicht — sonst stünden die drei gesunden
@@ -2319,9 +2319,9 @@ behauptete eine Deckungslücke, die es nicht gibt (die Beinahe-Fehldiagnose aus 
 Semantik-Messung).
 
 ```bash
-php artisan foodalchemist:wissen-versorgung --team=6 --json > /tmp/versorgung_demo.json
-php artisan foodalchemist:wissen-versorgung --team=6 --nur-befunde
-php artisan foodalchemist:wissen-grundlinie --team=6 --limit=6
+php artisan foodalchemist:diagnose:wissen-versorgung --team=6 --json > /tmp/versorgung_demo.json
+php artisan foodalchemist:diagnose:wissen-versorgung --team=6 --nur-befunde
+php artisan foodalchemist:diagnose:wissen-grundlinie --team=6 --limit=6
 php artisan foodalchemist:wissen-steuerdaten-w0 --verify --team=6
 php artisan foodalchemist:wissen-deckel-check
 ```

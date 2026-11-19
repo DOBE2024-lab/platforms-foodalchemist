@@ -40,6 +40,7 @@ final class Labels
         'medium' => 'Mittel',
         'low' => 'Niedrig',
         'unknown' => 'Unbekannt',
+        'none' => 'Unbekannt',   // 98 · 1.1d (U1): GP-Konfidenz ohne belegte Allergene, nie roh „none“ (liest sich wie allergenfrei)
     ];
 
     public static function fertigung(?string $wert): string

@@ -15,7 +15,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
  * Rückbau der Geschirr-DB: der Riegel der Migration prüft GELESENE Daten (Zeilen und Spaltenwerte), nicht nur ob die Tabelle existiert. Er bricht mit klarer Meldung
- * ab, solange die alte Welt Daten trägt; `foodalchemist:geschirr-typ-uebernehmen --apply --leeren` übernimmt den Typ und räumt ab, danach läuft der Drop.
+ * ab, solange die alte Welt Daten trägt; `foodalchemist:geschirr-typ-uebernehmen --apply --leeren` übernimmt den Typ und räumt ab, danach läuft der Drop. (gelöscht 98 · 1.2b, siehe Git-Historie)
  * (Auf SQLite — der Testbasis — bleiben Spalten und leere Tabellen stehen; die Prüfung und das Abräumen sind dort dieselben wie auf MySQL.)
  */
 beforeEach(function () {
@@ -60,29 +60,6 @@ it('Riegel prüft die gelesenen WERTE, nicht nur die Tabelle: ein Slot mit Gesch
     // gelöschte Zeilen zählen nicht (gewollt weg), ein Wert in einer sichtbaren Zeile schon
     DB::table('foodalchemist_concept_slots')->where('id', $slot->id)->update(['deleted_at' => now()]);
     expect(GeschirrRueckbau::offeneDaten())->toBe([]);
-});
-
-it('--leeren übernimmt den Typ, räumt die alten Zuordnungen und Tabellen ab, danach läuft der Rückbau; ohne --apply nichts, --leeren allein ist ein Fehler', function () {
-    FoodAlchemistServierform::firstOrCreate(['code' => 'unbestimmt', 'team_id' => $this->rootTeam->id], ['label' => 'Unbestimmt']);
-    $gericht = \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'rb', 'name' => 'Suppe', 'status' => 'approved', 'is_sales_recipe' => true, 'ek_per_kg_eur' => 10.0]);
-    $dar = app(DarreichungService::class)->ensureStandard($this->rootTeam, $gericht->id);
-    $artikel = ($this->artikel)($this->typ);
-    $dar->update(['tableware_item_id' => $artikel]);
-
-    $this->artisan('foodalchemist:geschirr-typ-uebernehmen', ['--leeren' => true])->assertFailed();             // ohne --apply
-    $this->artisan('foodalchemist:geschirr-typ-uebernehmen')->assertSuccessful();                              // Dry-Run schreibt nichts
-    expect($dar->fresh()->serving_vehicle_vocab_id)->toBeNull()->and(GeschirrRueckbau::offeneDaten())->not->toBe([]);
-    expect(fn () => ($this->migration)()->up())->toThrow(\RuntimeException::class);
-
-    $this->artisan('foodalchemist:geschirr-typ-uebernehmen', ['--apply' => true, '--leeren' => true])->assertSuccessful();
-
-    $dar->refresh();
-    expect($dar->serving_vehicle_vocab_id)->toBe($this->typ)                                                   // Typ übernommen
-        ->and($dar->tableware_item_id)->toBeNull()                                                              // Zuordnung abgeräumt
-        ->and(DB::table('foodalchemist_tableware_items')->count())->toBe(0)
-        ->and(GeschirrRueckbau::offeneDaten())->toBe([]);
-    ($this->migration)()->up();                                                                                 // der Riegel lässt jetzt durch
-    expect(true)->toBeTrue();
 });
 
 it('Weg: Route, Navigationspunkt, MCP-Tools und Modelle der alten Welt gibt es nicht mehr', function () {

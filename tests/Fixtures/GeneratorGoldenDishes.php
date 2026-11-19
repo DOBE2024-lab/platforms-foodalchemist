@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Phase 4 (Kohärenz-Gate): Golden-Gerichte für {@see \Platform\FoodAlchemist\Console\GeneratorEvalCommand}.
+ * Phase 4 (Kohärenz-Gate): Golden-Gerichte für {@see \Platform\FoodAlchemist\Console\Diagnose\GeneratorEvalCommand}.
  *
  * ZWECK: die Gate-Wirkung END-TO-END gegen den ECHTEN Provider messen, statt sie
  * anekdotisch am Rahmeis-Fall zu behaupten (Memory-Regel: verify before claiming).

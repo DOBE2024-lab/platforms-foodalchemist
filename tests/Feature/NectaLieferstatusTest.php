@@ -99,25 +99,6 @@ it('Handpflege gewinnt: ein von Hand gesetzter Lieferstatus wird nie überschrie
     expect($this->artikel->fresh()->lieferstatus)->toBe('auslaufend')->and($this->artikel->fresh()->lieferstatus_quelle)->toBe('hand');
 });
 
-it('Befehl: Bestand ableiten, Probe schreibt nichts, zweiter Lauf ändert nichts', function () {
-    ($this->preis)(900, 5.69, '0', '2026-04-14 22:00:00');
-    ($this->preis)(901, null, '2', '2026-10-13 22:00:00');
-    $h = ($this->historie)(5.69, '2026-04-14 22:00:00');
-
-    $this->artisan('foodalchemist:necta-lieferstatus', ['--probe' => true])->expectsOutputToContain('PROBELAUF')->assertSuccessful();
-    expect($this->artikel->fresh()->lieferstatus)->toBeNull()->and(DB::table('foodalchemist_price_history')->where('id', $h)->value('valid_to'))->toBeNull();
-
-    $this->artisan('foodalchemist:necta-lieferstatus')->assertSuccessful();
-    expect($this->artikel->fresh()->lieferstatus)->toBe('eingestellt')
-        ->and(DB::table('foodalchemist_price_history')->where('id', $h)->value('valid_to'))->toBe('2026-10-13 22:00:00')
-        ->and(DB::table('foodalchemist_prices')->where('legacy_id', 900)->value('valid_to'))->toBe('2026-10-13 22:00:00');
-
-    $this->artisan('foodalchemist:necta-lieferstatus')
-        ->expectsTable(['Zähler', 'Wert'], [['geprueft', 1], ['auslaufend', 0], ['eingestellt', 1], ['aufgehoben', 0], ['geaendert', 0],
-            ['preise_begrenzt', 0], ['eingestellt_widerspruch', 0]])
-        ->assertSuccessful();
-});
-
 it('Artikelliste: Filter „nur lieferbare“ blendet eingestellte aus', function () {
     DB::table('foodalchemist_supplier_items')->where('id', $this->artikel->id)->update(['lieferstatus' => 'eingestellt', 'lieferstatus_seit' => '2026-10-13 22:00:00', 'lieferstatus_quelle' => 'necta']);
     $svc = app(\Platform\FoodAlchemist\Services\SupplierItemService::class);

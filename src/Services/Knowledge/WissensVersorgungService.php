@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
  * Spec 52 · A2 — WAS erreicht diesen Prompt-Key an Wissen? Eine Antwort, zwei Flächen.
  *
  * Die Rechnung lebt hier und nicht im Kommando, weil sie zwei Abnehmer hat: das Kommando
- * `foodalchemist:wissen-versorgung` (Mensch am Terminal) und das Tool
+ * `foodalchemist:diagnose:wissen-versorgung` (Mensch am Terminal) und das Tool
  * `foodalchemist.knowledge_versorgung.GET` (Agent, und der einzige Weg auf demo — dort gibt es
  * keine Shell). Zwei Implementierungen derselben Frage wären genau die Doppelung, die diese
  * Spec abbaut.

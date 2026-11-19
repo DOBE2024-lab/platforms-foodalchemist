@@ -259,13 +259,13 @@ it('Kommando läuft und liefert JSON mit allen drei Blöcken', function () {
     ($this->mkGericht)('[FIX] Praline | Nougat', ['sales_unit_count' => 10, 'ek_total_eur' => 24.0],
         ['sales_net' => 96.00, 'ek_portion' => 24.0, 'quantity_per_unit_g' => 20, 'unit_count' => 10]);
 
-    $this->artisan('foodalchemist:money-truth-report', ['--team' => $this->rootTeam->id, '--json' => true])
+    $this->artisan('foodalchemist:diagnose:money-truth-report', ['--team' => $this->rootTeam->id, '--json' => true])
         ->assertExitCode(0);
 
     // Zweiter Lauf ohne --json rendert die Tabellen (Blade-freie Console-Ausgabe).
-    $this->artisan('foodalchemist:money-truth-report', ['--team' => $this->rootTeam->id])
+    $this->artisan('foodalchemist:diagnose:money-truth-report', ['--team' => $this->rootTeam->id])
         ->assertExitCode(0);
 
-    $this->artisan('foodalchemist:money-truth-report', ['--team' => 999999])
+    $this->artisan('foodalchemist:diagnose:money-truth-report', ['--team' => 999999])
         ->assertExitCode(1);
 });

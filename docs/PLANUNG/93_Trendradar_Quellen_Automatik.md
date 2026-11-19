@@ -181,7 +181,7 @@ Schreibweise: klein, Umlaute ausgeschrieben, Satzzeichen weg). Zuordnung eines e
    Themennamen und übernimmt deren Schreibweise, wenn es dasselbe ist);
 2. sonst Ähnlichkeit über die vorhandene Vektorsuche gegen Themen der letzten 12 Monate, ab Schwelle
    `buendel_aehnlichkeit` → dieselbe Inspiration. **Stand B: aus** (`trends.quellen.buendel_aehnlichkeit = null`).
-   **Wert wird auf demo gemessen, dann gesetzt** — mit `foodalchemist:trend-themen-aehnlichkeit --team=<ID>`
+   **Wert wird auf demo gemessen, dann gesetzt** — mit `foodalchemist:diagnose:trend-themen-aehnlichkeit --team=<ID>`
    (zeigt die ähnlichsten Themenpaare eines Teams mit Score, nur dieses Team, schreibt nichts, auch nicht in den
    Vektor-Index);
 3. sonst neue Inspiration (herkunft automatisch).

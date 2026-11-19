@@ -213,22 +213,6 @@ it('Kommando klassifizieren: schätzt ohne --apply nichts, schreibt mit --apply 
     expect($leer->fresh()->role)->toBe('protein')->and($voll->fresh()->role)->toBe('garnitur');
 });
 
-it('Kommando vorschlagen: aus Nutzung und Typ, Quelle vorschlag; manuelle Rollen bleiben', function () {
-    $jus = $this->makeRecipe($this->rootTeam, 'Jus: Rind');
-    $pueree = $this->makeRecipe($this->rootTeam, 'Püree: Sellerie');
-    $hand = $this->makeRecipe($this->rootTeam, 'Jus: Kalb');
-    app(RecipeRollenService::class)->setze($hand->id, ['crunch'], 'manuell');
-    $g = $this->makeRecipe($this->rootTeam, '[HG] Filet', ['status' => 'draft', 'is_sales_recipe' => true]);
-    $this->makeIngredient($g, 'Jus: Rind')->update(['referenced_recipe_id' => $jus->id, 'role' => 'aroma']);
-
-    $this->artisan('foodalchemist:basisrezept-rollen-vorschlagen', ['--team' => $this->rootTeam->id, '--apply' => true])->assertSuccessful();
-    $rollen = fn ($r) => FoodAlchemistRecipeRolle::where('recipe_id', $r->id)->orderBy('position')->get()->map(fn ($x) => "{$x->rolle}:{$x->source}")->all();
-
-    expect($rollen($jus))->toBe(['aroma:vorschlag', 'sauce:vorschlag'])      // Nutzung zuerst, dann Typ (Jus → sauce, aroma)
-        ->and($rollen($pueree))->toBe(['beilage:vorschlag', 'basis:vorschlag'])
-        ->and($rollen($hand))->toBe(['crunch:manuell']);
-});
-
 it('MCP: recipes.PUT setzt Rollen (manuell), recipes.GET liefert sie, recipes.LIST filtert nach Rolle', function () {
     $jus = $this->makeRecipe($this->rootTeam, 'Jus: Rind', ['status' => 'draft']);
     $this->makeRecipe($this->rootTeam, 'Crunch: Haselnuss', ['status' => 'draft']);

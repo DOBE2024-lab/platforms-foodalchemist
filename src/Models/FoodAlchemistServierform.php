@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
  * @ai.description Servierform-Vokabular (Umbau-Spec Darreichungen, Phase 3) —
  * Scharnier zwischen Gericht-Darreichung und (Phase 4) Konzept-Dimension:
  * teller/buffet/flying/fingerfood/station/… + 'unbestimmt' als Review-Queue.
- * WaWi-Master, Spiegel via ImportSliceCommand.
+ * WaWi-Master, Spiegel via ImportSliceCommand. (gelöscht 98 · 1.2b, siehe Git-Historie)
  */
 class FoodAlchemistServierform extends Model
 {

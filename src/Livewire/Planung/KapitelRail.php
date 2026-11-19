@@ -21,7 +21,7 @@ use Platform\FoodAlchemist\Services\TeamSettingsService;
  * Foodbook-`LeitstelleRail`: listet die Kapitel des Owner-Foodbooks, editiert je Kapitel die M3-Ziele
  * (reine Setter {@see FoodbookService::updateKapitel}/`setKapitelZielgruppen`) und startet je Kapitel einen
  * gezielten Kaskaden-Teil-Lauf ({@see PlanningCascadeService::starteKapitelKaskade}) — statt des alten
- * kaskaden-fremden `kapitelFreigeben`-Bypass. Nested-Livewire (Muster {@see \Platform\FoodAlchemist\Livewire\Foodbooks\LeitstelleRail}).
+ * kaskaden-fremden `kapitelFreigeben`-Bypass. Nested-Livewire (Muster: ehem. Foodbooks-`LeitstelleRail`, gelöscht 98 · 1.2a, siehe Git-Historie).
  */
 class KapitelRail extends Component
 {

@@ -65,7 +65,7 @@ class KnowledgeEmbeddingService
      *
      * W1-1 WURDE GEMESSEN UND VERWORFEN (2026-09-03). Der Plan wollte 2000 → 8000 heben
      * („nur 52 % des Korpus semantisch findbar"). Diese Zahl war eine ZEICHEN-Rechnung.
-     * Gemessen mit `foodalchemist:wissen-recall-probe --team=6` (dieselben Fragen, nur der
+     * Gemessen mit `foodalchemist:diagnose:wissen-recall-probe --team=6` (dieselben Fragen, nur der
      * Index dazwischen neu):
      *
      *                                   Fenster 2000    Fenster 8000

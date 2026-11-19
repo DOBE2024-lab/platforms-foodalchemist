@@ -52,27 +52,6 @@ it('rohe Abfrage-Zeile: mengeSql und mengeVon nehmen die korrigierte Menge', fun
         ->and(FoodAlchemistSupplierItem::mengeVon((object) ['qty' => '1.5']))->toBe(1.5);
 });
 
-it('Befehl: Probe schreibt nichts, echter Lauf setzt und entfernt, zweiter Lauf ändert nichts', function () {
-    $saft = DB::table('foodalchemist_supplier_items')->insertGetId(['uuid' => (string) UuidV7::generate(), 'team_id' => null,
-        'supplier_id' => $this->lieferant->id, 'designation' => '0,2 APFELSAFT KLAR MW', 'qty' => 0.008, 'qty_ordering_per_packaging' => 24,
-        'unit_code' => 'l', 'stamm_class' => StammPaket::PAKET, 'created_at' => now(), 'updated_at' => now()]);
-    $alt = DB::table('foodalchemist_supplier_items')->insertGetId(['uuid' => (string) UuidV7::generate(), 'team_id' => null,
-        'supplier_id' => $this->lieferant->id, 'designation' => '40G GEWUERZ', 'qty' => 0.04, 'qty_ordering_per_packaging' => 10,
-        'unit_code' => 'kg', 'qty_korrigiert' => 0.4, 'qty_korrektur_quelle' => 'bezeichnung_edi', 'stamm_class' => StammPaket::PAKET,
-        'created_at' => now(), 'updated_at' => now()]);   // veraltete Korrektur: Regel greift nicht → entfernen
-
-    $this->artisan('foodalchemist:menge-korrigieren', ['--probe' => true])->expectsOutputToContain('PROBELAUF')->assertSuccessful();
-    expect(DB::table('foodalchemist_supplier_items')->where('id', $saft)->value('qty_korrigiert'))->toBeNull();
-
-    $this->artisan('foodalchemist:menge-korrigieren')->assertSuccessful();
-    expect((float) DB::table('foodalchemist_supplier_items')->where('id', $saft)->value('qty_korrigiert'))->toBe(0.2)
-        ->and(DB::table('foodalchemist_supplier_items')->where('id', $alt)->value('qty_korrigiert'))->toBeNull();
-
-    $this->artisan('foodalchemist:menge-korrigieren')
-        ->expectsTable(['Zähler', 'Wert'], [['geprueft', 2], ['korrigiert', 1], ['geaendert', 0], ['korrektur_entfernt', 0]])
-        ->assertSuccessful();
-});
-
 it('Necta: Nachholer korrigiert neue Artikel; Vollvergleich leitet bei Änderung neu ab, ohne Prüffall und ohne Stand-Feld', function () {
     $bestand = ($this->artikel)('0,5 BOLTEN URWEIZEN MW', 0.025, 20, 'l', 36360416);
     $attrappe = new NectaAttrappe([

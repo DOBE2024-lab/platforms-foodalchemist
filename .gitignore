@@ -28,3 +28,15 @@ Thumbs.db
 
 # Lokale Migrations-Sicherungsdumps (PRE_*.sql/.json) — nie versionieren
 database/backups/
+
+# 98 · 1.2c: lokale Import-/Pilot-Artefakte im Modul-Root (gehören Dominique, nicht versionieren)
+/KOCHBUCH_IMPORT.json
+/pilot_rohtexte.json
+/PILOT_*.csv
+/FEHLZUORDNUNGEN.csv
+/KATEGORIE_MAPPING.csv
+/wawi_diffs.csv
+/IMPORT_PLAN_*.md
+/ROUTINE_AUFTRAG_*.md
+/kochbuch_rohtexte_bauen.py
+/.playwright-mcp/

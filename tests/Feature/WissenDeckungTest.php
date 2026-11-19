@@ -40,7 +40,7 @@ it('meldet den §12-Fall: ein Prompt verspricht einen §, den kein Dossier hat',
         'test.generator' => ['tier' => 'B', 'task' => 'Beachte §2, §5 und §12 (Komponenten-Reihenfolge).'],
     ]]);
 
-    $this->artisan('foodalchemist:wissen-deckung')
+    $this->artisan('foodalchemist:diagnose:wissen-deckung')
         ->expectsOutputToContain('LÜCKE')
         ->expectsOutputToContain('§12')
         ->assertSuccessful();
@@ -50,7 +50,7 @@ it('mit --fail-on-gap wird die Lücke zum Fehler-Exit (für Runbooks/CI)', funct
     deckDoc('regelwerk-x-1', "## §1 Naming\nText.");
     config(['foodalchemist.prompts' => ['test.k' => ['tier' => 'B', 'task' => 'Beachte §1 und §99.']]]);
 
-    $this->artisan('foodalchemist:wissen-deckung', ['--fail-on-gap' => true])->assertFailed();
+    $this->artisan('foodalchemist:diagnose:wissen-deckung', ['--fail-on-gap' => true])->assertFailed();
 });
 
 it('keine Lücke: alle genannten § kommen vor — auch über den Slug erkannt', function () {
@@ -60,7 +60,7 @@ it('keine Lücke: alle genannten § kommen vor — auch über den Slug erkannt',
 
     config(['foodalchemist.prompts' => ['test.k' => ['tier' => 'B', 'task' => 'Beachte §6 und §9.']]]);
 
-    $this->artisan('foodalchemist:wissen-deckung')
+    $this->artisan('foodalchemist:diagnose:wissen-deckung')
         ->expectsOutputToContain('Jeder genannte § kommt im aktiven Regelwerk-Korpus vor')
         ->assertSuccessful();
 });
@@ -77,7 +77,7 @@ it('inaktive Dossiers decken nicht — Quarantäne ist keine Deckung', function 
 
     config(['foodalchemist.prompts' => ['test.k' => ['tier' => 'B', 'task' => 'Beachte §1 und §7.']]]);
 
-    $this->artisan('foodalchemist:wissen-deckung')
+    $this->artisan('foodalchemist:diagnose:wissen-deckung')
         ->expectsOutputToContain('§7')
         ->expectsOutputToContain('LÜCKE')
         ->assertSuccessful();
@@ -87,7 +87,7 @@ it('ohne §-Nennung im Prompt gibt es nichts zu prüfen', function () {
     deckDoc('regelwerk-x-1', '## §1 Naming');
     config(['foodalchemist.prompts' => ['test.k' => ['tier' => 'B', 'task' => 'Schreibe einen Text.']]]);
 
-    $this->artisan('foodalchemist:wissen-deckung')
+    $this->artisan('foodalchemist:diagnose:wissen-deckung')
         ->expectsOutputToContain('Kein Prompt nennt einen §')
         ->assertSuccessful();
 });

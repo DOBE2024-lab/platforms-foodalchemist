@@ -248,24 +248,3 @@ it('Concepter-Reiter „Anrichten“: nur lesend — Darreichung, Gefäß, Typ, 
         ->not->toContain('Haupt-Geschirr')->not->toContain('Geschirr wählen');
 });
 
-it('Kommando geschirr-typ-uebernehmen: Dry-Run zählt, --apply setzt den Typ nur wo kein Typ und kein Gefäß da ist, Bestand bleibt', function () {
-    $sup = FoodAlchemistSupplier::create(['team_id' => $this->rootTeam->id, 'name' => 'Eventausstatter']);
-    $mk = fn (string $label, ?int $typ) => DB::table('foodalchemist_tableware_items')->insertGetId(['uuid' => (string) UuidV7::generate(), 'team_id' => $this->rootTeam->id,
-        'tableware_supplier_id' => null, 'label' => $label, 'unit' => 'Stk', 'vehicle_vocab_id' => $typ, 'is_inactive' => 0, 'created_at' => now(), 'updated_at' => now()]);
-    $altMitTyp = $mk('Suppenteller', $this->tellerTyp);
-
-    $frei = $this->dar;                                                                        // alter Geschirr-Artikel mit Typ, Darreichung ohne Typ/Gefäß → übernehmen
-    $frei->update(['tableware_item_id' => $altMitTyp]);
-    $schonTyp = ($this->gericht)('schontyp');                                                  // hat schon einen Typ → bleibt
-    $schonTyp->update(['tableware_item_id' => $altMitTyp, 'serving_vehicle_vocab_id' => $this->glasTyp]);
-    $mitGefaess = ($this->gericht)('mitgefaess');                                              // hat ein Gefäß → bleibt
-    $mitGefaess->update(['tableware_item_id' => $altMitTyp, 'vessel_gp_id' => $this->glas->id]);
-
-    $this->artisan('foodalchemist:geschirr-typ-uebernehmen')->assertSuccessful();
-    expect($frei->fresh()->serving_vehicle_vocab_id)->toBeNull();                              // Dry-Run schreibt nichts
-
-    $this->artisan('foodalchemist:geschirr-typ-uebernehmen', ['--apply' => true])->assertSuccessful();
-    expect($frei->fresh()->serving_vehicle_vocab_id)->toBe($this->tellerTyp)
-        ->and($schonTyp->fresh()->serving_vehicle_vocab_id)->toBe($this->glasTyp)
-        ->and($mitGefaess->fresh()->serving_vehicle_vocab_id)->toBeNull();
-});

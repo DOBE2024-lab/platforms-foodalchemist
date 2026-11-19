@@ -94,7 +94,7 @@ it('Bericht: findet uneinheitliche GPs, zählt unbekannte Artikel und ändert ke
 it('Befehl gp-homogenitaet-bericht läuft und nennt die Zahl unbekannter Artikel', function () {
     ($this->link)(($this->la)('Sahne A', false));
 
-    $this->artisan('foodalchemist:gp-homogenitaet-bericht')
+    $this->artisan('foodalchemist:diagnose:gp-homogenitaet-bericht')
         ->expectsOutputToContain('artikel_unbekannt_gesamt')
         ->assertSuccessful();
 });
@@ -148,7 +148,7 @@ it('Befehl schreibt mit --detail-csv die Detail-Zeilen und ändert keine Verknü
     $vorher = DB::table('foodalchemist_supplier_item_structures')->orderBy('id')->get(['id', 'gp_id'])->toArray();
     $datei = sys_get_temp_dir() . '/gp_homogenitaet_detail_' . uniqid() . '.csv';
 
-    $this->artisan('foodalchemist:gp-homogenitaet-bericht', ['--detail-csv' => $datei])->expectsOutputToContain('Detail-CSV')->assertSuccessful();
+    $this->artisan('foodalchemist:diagnose:gp-homogenitaet-bericht', ['--detail-csv' => $datei])->expectsOutputToContain('Detail-CSV')->assertSuccessful();
 
     $zeilen = array_map(fn ($l) => str_getcsv($l, ';'), file($datei, FILE_IGNORE_NEW_LINES));
     @unlink($datei);

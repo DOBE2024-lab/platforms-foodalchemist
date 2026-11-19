@@ -242,7 +242,6 @@ it('Einstellungen: jeder Bereich zeigt ohne Sperre den Lesemodus und nach „Bea
     [\Platform\FoodAlchemist\Livewire\Settings\Herstellkosten::class, 'herstellkosten'],
     [\Platform\FoodAlchemist\Livewire\Settings\Kalkulation::class, 'kalkulation'],
     [\Platform\FoodAlchemist\Livewire\Settings\Ki::class, 'ki'],
-    [\Platform\FoodAlchemist\Livewire\Settings\KonzeptTaxonomie::class, 'konzept_taxonomie'],
     [\Platform\FoodAlchemist\Livewire\Settings\Kueche::class, 'kueche'],
     [\Platform\FoodAlchemist\Livewire\Settings\Leistungskategorien::class, 'leistungskategorien'],
     [\Platform\FoodAlchemist\Livewire\Settings\Posten::class, 'posten'],

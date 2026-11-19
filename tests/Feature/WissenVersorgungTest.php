@@ -71,7 +71,7 @@ beforeEach(function () {
 it('meldet einen Prompt-Key ohne Kanon, Routing und Bindung als Befund', function () {
     config(['foodalchemist.prompts' => ['test.nackt' => ['tier' => 'B', 'task' => 'Tu etwas.']]]);
 
-    $this->artisan('foodalchemist:wissen-versorgung', ['--team' => $this->rootTeam->id])
+    $this->artisan('foodalchemist:diagnose:wissen-versorgung', ['--team' => $this->rootTeam->id])
         ->expectsOutputToContain('UNGESTEUERT')
         ->expectsOutputToContain('test.nackt')
         ->assertExitCode(1);
@@ -81,7 +81,7 @@ it('zaehlt eine Kanon-Zeile als Versorgung', function () {
     config(['foodalchemist.prompts' => ['test.mit_kanon' => ['tier' => 'B', 'task' => 'Tu etwas.']]]);
     ($this->mkKanon)(($this->mkDoc)('kanon-doc'), 'test.mit_kanon');
 
-    $this->artisan('foodalchemist:wissen-versorgung', ['--team' => $this->rootTeam->id])
+    $this->artisan('foodalchemist:diagnose:wissen-versorgung', ['--team' => $this->rootTeam->id])
         ->expectsOutputToContain('UNGESTEUERT 0')
         ->assertExitCode(0);
 });
@@ -92,7 +92,7 @@ it('behandelt mode=none als bewusste Entscheidung, nicht als Luecke', function (
     config(['foodalchemist.prompts' => ['test.leer' => ['tier' => 'B', 'task' => 'Tu etwas.']]]);
     ($this->mkRouting)('test.leer', 'cross_cutting', 'none');
 
-    $this->artisan('foodalchemist:wissen-versorgung', ['--team' => $this->rootTeam->id])
+    $this->artisan('foodalchemist:diagnose:wissen-versorgung', ['--team' => $this->rootTeam->id])
         ->expectsOutputToContain('bewusst none 1')
         ->assertExitCode(0);
 });
@@ -108,7 +108,7 @@ it('nennt einen Key mit NUR Alt-Bindungen ehrlich UNGESTEUERT', function () {
     config(['foodalchemist.prompts' => ['recipe.irgendwas' => ['tier' => 'B', 'task' => 'Tu etwas.']]]);
     ($this->mkBindung)(($this->mkDoc)('praefix-doc'), 'recipe');
 
-    $this->artisan('foodalchemist:wissen-versorgung', ['--team' => $this->rootTeam->id])
+    $this->artisan('foodalchemist:diagnose:wissen-versorgung', ['--team' => $this->rootTeam->id])
         ->expectsOutputToContain('UNGESTEUERT')
         ->expectsOutputToContain('ALT-BINDUNGEN, die niemand mehr liest')
         ->assertExitCode(1);   // ungesteuerte Keys sind ein Befund, kein Erfolg
@@ -126,7 +126,7 @@ it('loest den Alt-Schluessel auf: ein Routing auf ai_generate_recipe versorgt re
     config(['foodalchemist.prompts' => ['recipe.generator' => ['tier' => 'B', 'task' => 'Tu etwas.']]]);
     ($this->mkRouting)('ai_generate_recipe', 'domain', 'discovery');
 
-    $this->artisan('foodalchemist:wissen-versorgung', ['--team' => $this->rootTeam->id])
+    $this->artisan('foodalchemist:diagnose:wissen-versorgung', ['--team' => $this->rootTeam->id])
         ->expectsOutputToContain('ai_generate_recipe (alt)')
         ->expectsOutputToContain('UNGESTEUERT 0')
         ->assertExitCode(0);
@@ -139,7 +139,7 @@ it('zaehlt eine Bindung auf ein INAKTIVES Dossier nicht als Versorgung', functio
     config(['foodalchemist.prompts' => ['recipe.totgebunden' => ['tier' => 'B', 'task' => 'Tu etwas.']]]);
     ($this->mkBindung)(($this->mkDoc)('totes-doc', aktiv: false), 'recipe.totgebunden');
 
-    $this->artisan('foodalchemist:wissen-versorgung', ['--team' => $this->rootTeam->id])
+    $this->artisan('foodalchemist:diagnose:wissen-versorgung', ['--team' => $this->rootTeam->id])
         ->expectsOutputToContain('UNGESTEUERT')
         ->expectsOutputToContain('1 tot')
         ->assertExitCode(1);
@@ -151,7 +151,7 @@ it('bricht ohne gueltigen Team-Kontext ab statt eine falsche Deckungsluecke zu b
     // --team-Schalter).
     config(['foodalchemist.prompts' => ['test.x' => ['tier' => 'B', 'task' => 'Tu etwas.']]]);
 
-    $this->artisan('foodalchemist:wissen-versorgung', ['--team' => 999999])
+    $this->artisan('foodalchemist:diagnose:wissen-versorgung', ['--team' => 999999])
         ->expectsOutputToContain('nicht aussagekräftig')
         ->assertExitCode(1);
 });

@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Console\MatcherEvalCommand;
+use Platform\FoodAlchemist\Console\Diagnose\MatcherEvalCommand;
 
 /**
  * #507 Weg-2: reine Auswertungslogik des Matcher-Eval-Harness (Recall je Klasse +

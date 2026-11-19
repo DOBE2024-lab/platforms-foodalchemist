@@ -24,7 +24,7 @@ use Platform\FoodAlchemist\Support\MasterTeam;
  * - Schreibt per Query-Builder (keine Modell-Ereignisse): kein Aktivitäts-Rauschen, kein Eintrag im fa-fremdschreiben-Log.
  *
  * Ablauf auf io: mysqldump der drei Tabellen → Trockenlauf (Default) → --apply → --verify. Rückweg: --zurueck=<Protokoll>.
- * Hinweis: das Alt-Werkzeug `foodalchemist:import-slice` legt noch team-eigene Einheiten/WG an — nicht auf io benutzen.
+ * Hinweis: das Alt-Werkzeug `foodalchemist:import-slice` legt noch team-eigene Einheiten/WG an — nicht auf io benutzen. (gelöscht 98 · 1.2b, siehe Git-Historie)
  */
 class PlattformBasisHebenCommand extends Command
 {

@@ -103,4 +103,4 @@ it('F6: ein Paket ist als Format-Slot buchbar (kind=paket-Concept über concept_
 
 // F2e: der Test der Alt-Editionen→Slots-Datenmigration ist entfernt — `concepts.format_id`
 // ist gedroppt, die Test-DB kann den Pre-Drop-Zustand nicht mehr herstellen. Das Command
-// (foodalchemist:format-editions-to-slots) bleibt als Escape-Hatch für den Migrations-Guard.
+// (foodalchemist:format-editions-to-slots) bleibt als Escape-Hatch für den Migrations-Guard. (gelöscht 98 · 1.2b, siehe Git-Historie)

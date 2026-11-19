@@ -88,16 +88,3 @@ it('lässt bereits gesetzte Kapitel-Ziele unangetastet (nur NULL-Felder)', funct
         ->and((float) $kapitel->price_anchor)->toBe(6.50);
 });
 
-it('Command-Roundtrip: Dry-Run + --apply', function () {
-    [$fb, $kapitel] = ($this->legacyKapitelOhneZiele)();
-
-    $this->artisan('foodalchemist:backfill-kapitel-ziele', ['--team' => $this->rootTeam->id, '--foodbook' => $fb->id])
-        ->assertSuccessful();
-    $kapitel->refresh();
-    expect($kapitel->target_count)->toBeNull(); // Dry-Run schreibt nicht
-
-    $this->artisan('foodalchemist:backfill-kapitel-ziele', ['--team' => $this->rootTeam->id, '--foodbook' => $fb->id, '--apply' => true])
-        ->assertSuccessful();
-    $kapitel->refresh();
-    expect((int) $kapitel->target_count)->toBe(4);
-});

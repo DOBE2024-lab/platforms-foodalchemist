@@ -17,7 +17,7 @@
 
 | Etappe | Stand |
 |---|---|
-| **0 · Messung** | ✅ `foodalchemist:vollstaendigkeit-report` + Baseline Team 6 (§9) |
+| **0 · Messung** | ✅ `foodalchemist:diagnose:vollstaendigkeit-report` + Baseline Team 6 (§9) |
 | **1 · Paket A** | ✅ A1 · A3 · A4 · A5 (Datenhälfte) · A6 · A7 · A8 — **A2 zurückgestellt** (EK-Stück-Blast-Radius) |
 | **2 · T2** | ✅ `RecipeOneShotService::vkVorbedingungen()` read-only herausgezogen |
 | **3 · Paket D (Rezept + Gericht)** | ✅ `ReifeService` + `RecipeReifeAdapter` + `recipes.REIFE` + `reife` an fünf Schreib-Tools + D-2 |
@@ -1131,7 +1131,7 @@ mit.
 
 ## §9 Etappe 0 — die Baseline (gemessen 2026-09-05, Dev-DB Team 6 „Demo")
 
-Erhoben mit `php artisan foodalchemist:vollstaendigkeit-report --team=6 --json`
+Erhoben mit `php artisan foodalchemist:diagnose:vollstaendigkeit-report --team=6 --json`
 (read-only). Diese Zahlen sind der Vergleichsmaßstab für Etappe 5 und 6 — ohne sie ist
 „vollständiger angereichert" hinterher eine Behauptung.
 

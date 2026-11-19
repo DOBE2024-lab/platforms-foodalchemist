@@ -338,7 +338,7 @@ it('Eval-Befehl: schreibt nie (keine Verknüpfung, kein Log), ignoriert die best
     $out = sys_get_temp_dir() . '/evalout_' . uniqid();
     $vorher = [DB::table('foodalchemist_abgleich_log')->count(), DB::table('foodalchemist_supplier_item_structures')->count(), DB::table('foodalchemist_gps')->count()];
 
-    $this->artisan('foodalchemist:abgleich-eval', ['--csv' => $csv, '--team' => $this->rootTeam->id, '--out' => $out])->assertSuccessful();
+    $this->artisan('foodalchemist:diagnose:abgleich-eval', ['--csv' => $csv, '--team' => $this->rootTeam->id, '--out' => $out])->assertSuccessful();
 
     expect([DB::table('foodalchemist_abgleich_log')->count(), DB::table('foodalchemist_supplier_item_structures')->count(), DB::table('foodalchemist_gps')->count()])->toBe($vorher);
     $z = array_map(fn ($l) => str_getcsv($l, ';', '"', ''), file($out . '/abgleich_eval.csv', FILE_IGNORE_NEW_LINES));
@@ -383,7 +383,7 @@ it('Eval: jeder KI-Aufruf steht danach im ai_call_log (genau die erwartete Zahl)
     $vorher = ['log' => DB::table('foodalchemist_ai_call_log')->count(), 'abgleich' => DB::table('foodalchemist_abgleich_log')->count(),
         'struktur' => DB::table('foodalchemist_supplier_item_structures')->count(), 'gps' => DB::table('foodalchemist_gps')->count()];
 
-    $this->artisan('foodalchemist:abgleich-eval', ['--ids' => (string) $la->id, '--team' => $this->rootTeam->id, '--out' => sys_get_temp_dir() . '/evalkosten_' . uniqid()])->assertSuccessful();
+    $this->artisan('foodalchemist:diagnose:abgleich-eval', ['--ids' => (string) $la->id, '--team' => $this->rootTeam->id, '--out' => sys_get_temp_dir() . '/evalkosten_' . uniqid()])->assertSuccessful();
 
     expect(DB::table('foodalchemist_ai_call_log')->count())->toBe($vorher['log'] + 2)   // gp.suggest + gp.la_abgleich
         ->and(DB::table('foodalchemist_ai_call_log')->whereIn('feature', ['gp.suggest', 'gp.la_abgleich'])->count())->toBe($vorher['log'] + 2)

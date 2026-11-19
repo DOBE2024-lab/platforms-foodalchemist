@@ -84,7 +84,7 @@ it('Messbefehl: zählt, ob der bekannte Anker in alter und neuer Vorauswahl steh
     ($this->kern)($gp->id, 'bratwurst');
     $vorher = DB::table('foodalchemist_gp_anchor_mappings')->count();
 
-    $this->artisan('foodalchemist:gp-anker-vorauswahl-messen', ['--stichprobe' => 5])
+    $this->artisan('foodalchemist:diagnose:gp-anker-vorauswahl-messen', ['--stichprobe' => 5])
         ->expectsOutputToContain('Treffer alt 0/1, neu 1/1')
         ->assertSuccessful();
     expect(DB::table('foodalchemist_gp_anchor_mappings')->count())->toBe($vorher);

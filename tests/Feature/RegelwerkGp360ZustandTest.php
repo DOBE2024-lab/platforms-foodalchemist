@@ -99,22 +99,6 @@ it('Planung: eine Auswahl „behandelt" erlaubt die drei Zustände und kommt aus
     expect($rp->regler['rezept']['frische'] ?? null)->toBe(['behandelt']);
 });
 
-it('Backfill: Behandlung im Namen wird gesetzt, bei zweien gilt der Vorrang, TK ist Zusatz; Widerspruch bleibt offen', function () {
-    $this->seedTeamHierarchy();
-    $eins = $this->makeGp($this->rootTeam, 'Kochschinken: gepökelt, Scheiben');
-    $zwei = $this->makeGp($this->rootTeam, 'Rohschinken: luftgetrocknet, geräuchert');
-    $tk = $this->makeGp($this->rootTeam, 'Räucherlachs: geräuchert, TK, geschnitten');
-    $widerspruch = $this->makeGp($this->rootTeam, 'Erbsen: TK, trocken');
-    DB::table('foodalchemist_gps')->whereIn('id', [$eins->id, $zwei->id, $tk->id, $widerspruch->id])->update(['condition' => null]);
-
-    $this->artisan('foodalchemist:gp-zustand-backfill', ['--apply' => true, '--team' => $this->rootTeam->id])->assertSuccessful();
-
-    expect(DB::table('foodalchemist_gps')->where('id', $eins->id)->value('condition'))->toBe('gepökelt')
-        ->and(DB::table('foodalchemist_gps')->where('id', $zwei->id)->value('condition'))->toBe('luftgetrocknet')
-        ->and(DB::table('foodalchemist_gps')->where('id', $tk->id)->value('condition'))->toBe('geräuchert')
-        ->and(DB::table('foodalchemist_gps')->where('id', $widerspruch->id)->value('condition'))->toBeNull();
-});
-
 it('TK als Zusatz: Name ⇄ Felder runden sauber; TK wird aus Name/Verarbeitung gelesen (Lager, Filter, Ranking)', function () {
     $n = app(GpNamingService::class);
     $f = $n->felderAusName('Räucherlachs: geschnitten, geräuchert, TK');   // Stufe 2: TK hinter der Behandlung

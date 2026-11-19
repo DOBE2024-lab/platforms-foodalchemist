@@ -169,7 +169,7 @@ class LeadLaService
      *
      * Kein Wechsel, wenn
      *  - der neue Rang-1 schon der Lead ist,
-     *  - der neue Rang-1 keinen aktiven Preis hat (Regel aus LeadLaRepickCommand),
+     *  - der neue Rang-1 keinen aktiven Preis hat (Regel aus LeadLaRepickCommand), (gelöscht 98 · 1.2b, siehe Git-Historie)
      *  - der aktuelle Lead manuell gesetzt wurde (Begründung auf gp_la_preferences, s. setLeadLa).
      * Team-Pins/-Sperren leben im Overlay und bleiben unberührt.
      *

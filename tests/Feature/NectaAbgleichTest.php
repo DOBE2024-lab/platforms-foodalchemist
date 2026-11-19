@@ -118,7 +118,7 @@ it('wöchentlich, erster Abgleich: Nicht-Kennzeichnung übernehmen, strengeres A
 });
 
 it('wöchentlich: Deklaration wie der Bestand gemappt → keine Abweichung; geänderter Stoff → Prüffall statt Übernahme', function () {
-    // Bestandszeile so, wie ImportSliceCommand sie aus der WaWi-Kopie gebaut hat (rohe Integer, Süßungsbasis in details)
+    // Bestandszeile so, wie ImportSliceCommand sie aus der WaWi-Kopie gebaut hat (rohe Integer, Süßungsbasis in details) (gelöscht 98 · 1.2b, siehe Git-Historie)
     DB::table('foodalchemist_item_declarations')->insert(['uuid' => (string) Symfony\Component\Uid\UuidV7::generate(), 'team_id' => null,
         'legacy_id' => 36674788, 'supplier_item_id' => $this->a->id, 'with_dye' => 1, 'with_preservative' => 3, 'with_sweetener' => 3,
         'excessive_consumption_laxative' => 0, 'iodized' => 1,   // Jod: Stand nach necta-deklaration-nachfuellen

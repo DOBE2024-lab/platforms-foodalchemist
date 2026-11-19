@@ -176,7 +176,7 @@ final class RezeptProfil
     }
 
     /**
-     * Profil frisch rechnen, OHNE zu speichern oder zu cachen (Messung vorher/nachher, {@see \Platform\FoodAlchemist\Console\RezeptLueckenVergleichCommand}).
+     * Profil frisch rechnen, OHNE zu speichern oder zu cachen (Messung vorher/nachher, {@see \Platform\FoodAlchemist\Console\Diagnose\RezeptLueckenVergleichCommand}).
      *
      * @return array<string, mixed>
      */

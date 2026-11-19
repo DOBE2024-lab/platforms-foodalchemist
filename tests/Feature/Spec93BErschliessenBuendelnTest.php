@@ -8,7 +8,7 @@ use Livewire\Livewire;
 use Platform\Core\Contracts\LLMProviderContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
-use Platform\FoodAlchemist\Console\TrendThemenAehnlichkeitCommand;
+use Platform\FoodAlchemist\Console\Diagnose\TrendThemenAehnlichkeitCommand;
 use Platform\FoodAlchemist\Jobs\TrendEingangErschliessenJob;
 use Platform\FoodAlchemist\Livewire\Trendradar\Eingang as EingangReiter;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
@@ -224,8 +224,8 @@ it('Mess-Befehl: --team ist Pflicht, ohne Provider nur Hinweis, schreibt nichts;
     ($this->rein)('b', 'TEST-93 B');
     $vorher = [FoodAlchemistTrendInspiration::count(), FoodAlchemistTrendBeleg::count(), FoodAlchemistTrendEingang::count()];
 
-    expect(Artisan::call('foodalchemist:trend-themen-aehnlichkeit'))->toBe(1);
-    expect(Artisan::call('foodalchemist:trend-themen-aehnlichkeit', ['--team' => $this->rootTeam->id]))->toBe(0);
+    expect(Artisan::call('foodalchemist:diagnose:trend-themen-aehnlichkeit'))->toBe(1);
+    expect(Artisan::call('foodalchemist:diagnose:trend-themen-aehnlichkeit', ['--team' => $this->rootTeam->id]))->toBe(0);
     expect([FoodAlchemistTrendInspiration::count(), FoodAlchemistTrendBeleg::count(), FoodAlchemistTrendEingang::count()])->toBe($vorher)
         ->and(config('foodalchemist.trends.quellen.buendel_aehnlichkeit'))->toBeNull()
         ->and(round(TrendThemenAehnlichkeitCommand::kosinus([1.0, 0.0], [1.0, 0.0]), 3))->toBe(1.0)

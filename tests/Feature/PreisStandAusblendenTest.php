@@ -8,10 +8,9 @@ use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Livewire\Preise\Fruehere;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\Necta\NectaQuelle;
+use Platform\FoodAlchemist\Services\Necta\NectaMapper;
 use Platform\FoodAlchemist\Services\PreisVerlaufService;
 use Platform\FoodAlchemist\Support\StammPaket;
-use Platform\FoodAlchemist\Tests\Support\NectaAttrappe;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -42,9 +41,20 @@ beforeEach(function () {
         $h(2, 'N', 63.82, '2026-10-06T00:00:00', '2026-10-06T23:59:59'),
         $h(3, 'N', 1.82, '2026-10-07T00:00:00', '3000-12-31T23:59:59'),
     ];
+    // Preis-Stände so, wie der (seit 98 · 1.2b gelöschte, siehe Git-Historie) Necta-Preishistorie-Nachholer sie schrieb:
+    // quelle necta_historie, Typ N → status '0', 3000-12-31 = offen. Idempotent über necta_historie_id.
     $this->importiere = function (?array $zeilen = null) {
-        $this->app->instance(NectaQuelle::class, new NectaAttrappe(['supplier-item-price-historys' => $zeilen ?? $this->historie], [36674788 => 19491]));
-        $this->artisan('foodalchemist:necta-preishistorie-nachholen', ['--pause-ms' => 0])->assertSuccessful();
+        foreach ($zeilen ?? $this->historie as $r) {
+            if (DB::table('foodalchemist_price_history')->where('necta_historie_id', $r['id'])->exists()) {
+                continue;
+            }
+            DB::table('foodalchemist_price_history')->insert(['uuid' => (string) Symfony\Component\Uid\UuidV7::generate(), 'necta_historie_id' => $r['id'],
+                'supplier_item_id' => $this->la->id, 'team_id' => \Platform\FoodAlchemist\Support\MasterTeam::id(), 'status' => '0',
+                'price' => $r['price'], 'price_partial' => $r['priceOrderingUnit'], 'status_valid_from' => NectaMapper::zeit($r['validFrom']),
+                'valid_to' => str_starts_with($r['validTo'], '3000-') ? null : NectaMapper::zeit($r['validTo']), 'is_blocked' => false,
+                'quelle' => 'necta_historie', 'details' => json_encode(['source' => $r['source'], 'amount_from' => $r['amountFrom'], 'type' => $r['type']]),
+                'created_at' => now(), 'updated_at' => now()]);
+        }
     };
     $this->svc = app(PreisVerlaufService::class);
     $this->verlauf = function () {
@@ -142,20 +152,6 @@ it('Rechte wie beim Pflegen: Master am Stamm-Artikel ja, Mandant am Stamm-Artike
         ->and(DB::table('foodalchemist_price_history')->find($id)->ausgeblendet_at)->toBeNull();
     $this->svc->ausblenden($this->rootTeam, $this->la, 'historie', $id, 'Fehler', $this->kurator->id);
     expect(DB::table('foodalchemist_price_history')->find($id)->ausgeblendet_at)->not->toBeNull();
-});
-
-it('Der Necta-Import blendet eine ausgeblendete Zeile NICHT wieder ein und legt sie nicht doppelt an (idempotent über necta_historie_id)', function () {
-    ($this->importiere)();
-    $id = ($this->zeile)(63.82)->id;
-    $this->svc->ausblenden($this->rootTeam, $this->la, 'historie', $id, 'Erfassungsfehler', $this->kurator->id);
-    $anzahl = DB::table('foodalchemist_price_history')->count();
-
-    ($this->importiere)();                                             // nächster Lauf, gleiche Necta-Historie
-
-    $zeile = DB::table('foodalchemist_price_history')->find($id);
-    expect(DB::table('foodalchemist_price_history')->count())->toBe($anzahl)
-        ->and($zeile->ausgeblendet_at)->not->toBeNull()->and($zeile->ausgeblendet_grund)->toBe('Erfassungsfehler')
-        ->and(collect(($this->verlauf)()['linien'][0]['segmente'])->pluck('preis_gebinde')->map(fn ($p) => round($p, 2))->all())->not->toContain(63.82);
 });
 
 it('Preiszeile: ein ausgeblendeter Wert fällt aus der Linie; korrigiert Necta den Preis der Zeile, gilt der neue Wert wieder (Flag hängt am Fehlerwert)', function () {

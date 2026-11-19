@@ -123,7 +123,7 @@
                     [
                         'kpi' => 'allergen', 'label' => 'Allergenangaben',
                         'value' => \Platform\FoodAlchemist\Support\Labels::konfidenz($konfidenz),
-                        'tone' => ['high' => 'ok', 'medium' => 'warn', 'low' => 'crit'][$konfidenz ?? ''] ?? null,
+                        'tone' => ['high' => 'ok', 'medium' => 'warn', 'low' => 'crit', 'none' => 'warn', 'unknown' => 'warn'][$konfidenz ?? ''] ?? null,   // 98 · 1.1d: unbekannt nie neutral
                         'title' => ($allergenKonfidenz['quelle'] ?? null) === 'manuell'
                             ? 'Platzhalter: Allergene von Hand gepflegt'
                             : 'Aus ' . ($allergenKonfidenz['n_las_mit_daten'] ?? 0) . ' von ' . $nLas . ' Artikeln mit Allergenangaben zusammengeführt',

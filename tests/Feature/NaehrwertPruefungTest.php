@@ -165,12 +165,12 @@ it('naehrwert_pruefung.GET: nur Kuratieren; der Betrachter bekommt FORBIDDEN', f
     expect((new NaehrwertPruefungGetTool)->execute([], new ToolContext($viewer, $this->rootTeam))->errorCode)->toBe('FORBIDDEN');
 });
 
-it('Befehl foodalchemist:naehrwerte-pruefen schreibt die Meldeliste als CSV', function () {
+it('Befehl foodalchemist:diagnose:naehrwerte-pruefen schreibt die Meldeliste als CSV', function () {
     $ei = $this->makeGp($this->rootTeam, 'Eieromelett: TK, 80 g pro Stück');
     ($this->mkLa)($ei->id, $this->omelett, $this->elbfrost);
     $datei = sys_get_temp_dir() . '/nw_' . uniqid() . '.csv';
 
-    $this->artisan('foodalchemist:naehrwerte-pruefen', ['--team' => $this->rootTeam->id, '--csv' => $datei])->assertSuccessful();
+    $this->artisan('foodalchemist:diagnose:naehrwerte-pruefen', ['--team' => $this->rootTeam->id, '--csv' => $datei])->assertSuccessful();
 
     $zeilen = array_map(fn ($l) => str_getcsv($l, ';'), array_filter(explode("\n", file_get_contents($datei))));
     @unlink($datei);

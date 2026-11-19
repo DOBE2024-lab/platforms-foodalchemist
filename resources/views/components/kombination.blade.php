@@ -66,7 +66,12 @@
         'hinweis' => ['Hinweis aus Dossier', false, null],   // grau, keine Ampel (Kurator 15.10.)
         'unbekannt' => ['Ohne Aroma-Zuordnung', false, null],
     ];
-    $leise = $liste('passt')->concat($liste('neutral'));
+    // Ton → [Fläche, Kopfzeile], voll ausgeschrieben: der CSS-Scanner sieht nur ganze Klassennamen (KlassenAusgeschriebenTest).
+    $tonKlassen = [
+        'crit' => ['bg-[var(--fa-crit-soft)]', 'text-[var(--fa-crit)]'],
+        'warn' => ['bg-[var(--fa-warn-soft)]', 'text-[var(--fa-warn)]'],
+    ];
+    $leise =$liste('passt')->concat($liste('neutral'));
     $hatUngeprueft = collect($a)->flatten(1)->contains(fn ($x) => is_array($x) && in_array($x['grundlage'] ?? null, ['dossier_entwurf', 'ki_einschaetzung'], true));
 @endphp
 <div class="flex flex-col gap-2.5 text-[length:var(--fa-text-md)]" data-kombination data-art="{{ $daten['art'] ?? '' }}">
@@ -109,8 +114,8 @@
     @foreach($gruppen as $typ => [$titel, $offen, $ton])
         @php $eintraege = $liste($typ); @endphp
         @if($eintraege->isNotEmpty())
-            <details @if($offen) open @endif class="group rounded-[var(--fa-radius-control)] {{ $ton ? 'bg-[var(--fa-'.$ton.'-soft)] px-2.5 py-1.5' : '' }}" data-gruppe="{{ $typ }}">
-                <summary class="flex cursor-pointer list-none items-center gap-1.5 text-[length:var(--fa-text-sm)] font-medium {{ $ton ? 'text-[var(--fa-'.$ton.')]' : 'text-[var(--fa-ink-3)] hover:text-[var(--fa-ink-2)]' }}">
+            <details @if($offen) open @endif class="group rounded-[var(--fa-radius-control)] {{ isset($tonKlassen[$ton]) ? $tonKlassen[$ton][0].' px-2.5 py-1.5' : '' }}" data-gruppe="{{ $typ }}">
+                <summary class="flex cursor-pointer list-none items-center gap-1.5 text-[length:var(--fa-text-sm)] font-medium {{ isset($tonKlassen[$ton]) ? $tonKlassen[$ton][1] : 'text-[var(--fa-ink-3)] hover:text-[var(--fa-ink-2)]' }}">
                     @svg('heroicon-m-chevron-right', 'w-3.5 h-3.5 shrink-0 transition-transform group-open:rotate-90')
                     {{ $titel }} <span class="tabular-nums opacity-70">{{ $eintraege->count() }}</span>
                 </summary>

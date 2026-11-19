@@ -12,6 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPresentationDesign;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Support\KapitelPreis;
+use Platform\FoodAlchemist\Support\PraesentationsPreise;
 use Platform\FoodAlchemist\Support\PraesentationsBilder;
 
 /**
@@ -377,26 +378,10 @@ class PresentationService
         if ($vorher) {
             $snap['ansicht'] = ['ek' => true];   // Kennzeichen für Renderer (EK-Werte, Hinweis „intern“)
         } else {
-            $snap['content']['sections'] = self::ohneEk($snap['content']['sections'] ?? []);   // Gurt + Hosenträger: nie EK im Kundenlink
+            $snap['content']['sections'] = PraesentationsPreise::ohneEk($snap['content']['sections'] ?? []);   // Gurt + Hosenträger: nie EK im Kundenlink
         }
 
         return $snap;
-    }
-
-    /** Entfernt alle EK-Angaben aus Abschnitten, Bausteinen und Zeilen. */
-    public static function ohneEk(array $sections): array
-    {
-        foreach ($sections as $si => $sec) {
-            unset($sections[$si]['ek']);
-            foreach ($sec['blocks'] ?? [] as $bi => $blk) {
-                unset($sections[$si]['blocks'][$bi]['ek']);
-                foreach ($blk['items'] ?? [] as $ii => $it) {
-                    unset($sections[$si]['blocks'][$bi]['items'][$ii]['ek']);
-                }
-            }
-        }
-
-        return $sections;
     }
 
     private function baueSnapshot(Team $team, Model $entity, string $type, array $settings): array
@@ -486,7 +471,7 @@ class PresentationService
         foreach ($c['sections'] ?? [] as $si => $sec) {
             foreach ($sec['blocks'] ?? [] as $bi => $blk) {
                 foreach ($blk['items'] ?? [] as $ii => $it) {
-                    $p = $this->parsePreis($it['price'] ?? null);
+                    $p = PraesentationsPreise::parsePreis($it['price'] ?? null);
                     if ($p !== null && $p > 0) {
                         $out["s{$si}.b{$bi}.i{$ii}"] = ['net' => $p, 'label' => (string) ($it['label'] ?? '')];
                     }
@@ -494,7 +479,7 @@ class PresentationService
                 $bp = $blk['price'] ?? null;
                 if (is_array($bp)) {
                     foreach (['pp', 'pauschal'] as $k) {
-                        $p = $this->parsePreis($bp[$k] ?? null);
+                        $p = PraesentationsPreise::parsePreis($bp[$k] ?? null);
                         if ($p !== null && $p > 0) {
                             $out["s{$si}.b{$bi}.{$k}"] = ['net' => $p, 'label' => (string) ($blk['label'] ?? '') . ' (' . $k . ')'];
                         }
@@ -502,7 +487,7 @@ class PresentationService
                 }
             }
             // Preis je Kapitel (2026-11-19): eingefroren wie die Bausteinpreise, damit Kapitel und Bausteine zusammenpassen.
-            $p = $this->parsePreis($sec['preis']['pp'] ?? null);
+            $p = PraesentationsPreise::parsePreis($sec['preis']['pp'] ?? null);
             if ($p !== null && $p > 0) {
                 $out["s{$si}.pp"] = ['net' => $p, 'label' => 'Kapitel ' . (string) ($sec['title'] ?? '') . ' (pp)'];
             }
@@ -510,7 +495,7 @@ class PresentationService
         $t = $c['total'] ?? null;
         if (is_array($t)) {
             foreach (['vk_pro_person', 'pauschal', 'gesamt_vk'] as $k) {
-                $p = $this->parsePreis($t[$k] ?? null);
+                $p = PraesentationsPreise::parsePreis($t[$k] ?? null);
                 if ($p !== null && $p > 0) {
                     $out["total.{$k}"] = ['net' => $p, 'label' => 'Gesamt: ' . $k];
                 }
@@ -521,7 +506,7 @@ class PresentationService
         foreach (($c['grid']['lines'] ?? []) as $li => $line) {
             foreach ($line['cells'] ?? [] as $ymd => $cells) {
                 foreach ((array) $cells as $ci => $cell) {
-                    $p = $this->parsePreis($cell['price'] ?? null);
+                    $p = PraesentationsPreise::parsePreis($cell['price'] ?? null);
                     if ($p !== null && $p > 0) {
                         $out["g{$li}.{$ymd}.{$ci}"] = ['net' => $p, 'label' => (string) ($line['name'] ?? '') . ' · ' . (string) ($cell['label'] ?? '')];
                     }
@@ -530,21 +515,6 @@ class PresentationService
         }
 
         return $out;
-    }
-
-    /** Preis aus dem Snapshot lesen: Zahl → float; deutscher Format-String „1.234,56 €" → float. */
-    private function parsePreis(mixed $v): ?float
-    {
-        if (is_int($v) || is_float($v)) {
-            return (float) $v;
-        }
-        if (! is_string($v) || trim($v) === '') {
-            return null;
-        }
-        $s = str_replace(['€', ' ', "\u{00a0}"], '', $v);
-        $s = str_replace('.', '', $s);       // Tausenderpunkt
-        $s = str_replace(',', '.', $s);      // Dezimalkomma
-        return is_numeric($s) ? (float) $s : null;
     }
 
     /**
@@ -800,21 +770,17 @@ class PresentationService
                 'images' => $chapImages[$ankerId] ?? [],
                 'blocks' => $blocks,
                 // Preis je Kapitel (VK netto pro Person, Format = Spanne der Alternativen); nur bei Preisanzeige.
-                'preis' => $showPrice ? KapitelPreis::bauen(
-                    isset($k['vk_pro_person']) ? (float) $k['vk_pro_person'] : null,
-                    $k['preis_range'] ?? null,
-                    (bool) ($k['ist_format'] ?? false),
-                ) : null,
+                'preis' => $showPrice ? KapitelPreis::ausKapitel($k, (bool) ($k['ist_format'] ?? false)) : null,
             ] + ($this->mitEk && $showPrice && isset($k['ek_pro_person']) ? ['ek' => ['pp' => (float) $k['ek_pro_person']]] : []);
         }
 
         $g = $dok['gesamt'] ?? [];
         // MwSt wie beim Angebot (Team-Standardsatz), damit „Preis je Person“ und die Aufschlüsselung auch im Foodbook brutto können.
-        $satz = $showPrice ? $this->mwstSatz($team) : null;
+        $satz = $showPrice ? PraesentationsPreise::mwstSatz($team) : null;
         $ppNetto = isset($g['vk_pro_person']) ? (float) $g['vk_pro_person'] : null;
         $total = $showPrice ? [
             'vk_pro_person' => $ppNetto,
-            'vk_pro_person_brutto' => ($ppNetto !== null && $satz !== null) ? round($ppNetto * (1 + $satz / 100), 2) : null,
+            'vk_pro_person_brutto' => PraesentationsPreise::brutto($ppNetto, $satz),
             'mwst_satz' => $satz,
             'pauschal' => isset($g['pauschal']) ? (float) $g['pauschal'] : null,
             'personen' => $g['personen'] ?? null,
@@ -822,39 +788,10 @@ class PresentationService
         ] : null;
 
         // Preis-Aufschlüsselung (2026-11-19) auch fürs Foodbook: je Hauptkapitel €/Person, mit Gästezahl auch Summen.
-        $breakdown = null;
-        if ($showPrice) {
-            $pax = isset($g['personen']) ? (int) $g['personen'] : null;
-            $zeilen = [];
-            foreach ($sections as $s) {
-                if ((int) ($s['depth'] ?? 0) !== 0 || ! is_array($s['preis'] ?? null)) {
-                    continue;
-                }
-                $alt = ($s['preis']['pp'] ?? null) === null;
-                $zeilen[] = [
-                    'titel' => (string) $s['title'],
-                    'pax' => $pax,
-                    'vk_pro_person' => $s['preis']['pp'],
-                    'gesamt' => (! $alt && $pax) ? round((float) $s['preis']['pp'] * $pax, 2) : null,
-                    'alternativen' => $alt,
-                    'preis_range' => $alt ? ['min' => $s['preis']['min'], 'max' => $s['preis']['max']] : null,
-                ];
-            }
-            $netto = isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null;
-            if ($zeilen !== []) {
-                $breakdown = [
-                    'zeilen' => $zeilen,
-                    'pax' => $pax,
-                    'pro_person' => $ppNetto,
-                    // Ohne Gästezahl gibt es keine Gesamtsumme: der Block zeigt dann nur den Preis pro Person.
-                    'netto' => $netto !== null ? round($netto, 2) : null,
-                    'mwst_satz' => $satz,
-                    'mwst_betrag' => ($netto !== null && $satz !== null) ? round($netto * $satz / 100, 2) : null,
-                    'brutto' => ($netto !== null && $satz !== null) ? round($netto * (1 + $satz / 100), 2) : null,
-                    'zzgl' => [],
-                ];
-            }
-        }
+        $pax = isset($g['personen']) ? (int) $g['personen'] : null;
+        $zeilen = $showPrice ? PraesentationsPreise::foodbookZeilen($sections, $pax) : [];
+        $breakdown = $zeilen !== []
+            ? PraesentationsPreise::aufschluesselung($zeilen, $pax, $ppNetto, isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null, $satz) : null;
 
         return [
             'title' => (string) ($fb->label ?: $fb->code ?: 'Foodbook'),
@@ -874,15 +811,6 @@ class PresentationService
                 'preis_aufschluesselung' => $breakdown,
             ],
         ];
-    }
-
-    /** MwSt-Satz des Teams für Kundenpreise (Standardsatz ermäßigt oder regulär). */
-    private function mwstSatz(Team $team): float
-    {
-        $mwst = app(TeamSettingsService::class)->mwst($team);
-
-        return ($mwst['default_satz'] ?? 'ermaessigt') === 'regulaer'
-            ? (float) ($mwst['regulaer'] ?? 19.0) : (float) ($mwst['ermaessigt'] ?? 7.0);
     }
 
     /**
@@ -991,22 +919,18 @@ class PresentationService
                 'images' => $k['bilder'] ?? [],
                 'blocks' => $blocks,
                 // Preis je Kapitel (VK netto pro Person; Format mit Alternativen = Spanne); nur bei Preisanzeige.
-                'preis' => $showPrice ? KapitelPreis::bauen(
-                    isset($k['vk_pro_person']) ? (float) $k['vk_pro_person'] : null,
-                    $k['preis_range'] ?? null,
-                    (bool) ($k['ist_format'] ?? false) && ($k['format_price_mode'] ?? null) === 'alternativen',
-                ) : null,
+                'preis' => $showPrice ? KapitelPreis::ausKapitel($k, (bool) ($k['ist_format'] ?? false) && ($k['format_price_mode'] ?? null) === 'alternativen') : null,
             ] + ($this->mitEk && $showPrice && isset($k['ek_pro_person']) ? ['ek' => ['pp' => (float) $k['ek_pro_person']]] : []);
         }
         $zzglSumme = round(array_sum(array_column($zzgl, 'betrag')), 2);
 
         // MwSt-Satz einmal auflösen — für das Pro-Person-Brutto UND die Aufschlüsselung.
-        $satz = $showPrice ? $this->mwstSatz($team) : null;
+        $satz = $showPrice ? PraesentationsPreise::mwstSatz($team) : null;
 
         $ppNetto = isset($kalk['vk_pro_person']) ? (float) $kalk['vk_pro_person'] : null;
         $total = $showPrice ? [
             'vk_pro_person' => $ppNetto,
-            'vk_pro_person_brutto' => ($ppNetto !== null && $satz !== null) ? round($ppNetto * (1 + $satz / 100), 2) : null,
+            'vk_pro_person_brutto' => PraesentationsPreise::brutto($ppNetto, $satz),
             'mwst_satz' => $satz,
             'pauschal' => null,
             'personen' => $kalk['pax'] ?? null,
@@ -1018,32 +942,9 @@ class PresentationService
         // KEIN EK) für den Präsentations-Block „preis_aufschluesselung". Nur bei Preisanzeige.
         $breakdown = null;
         if ($showPrice) {
-            $zeilen = [];
-            foreach ($komp['kapitel'] as $kap) {
-                $isAlt = $kap['ist_format'] && ($kap['format_price_mode'] ?? null) === 'alternativen';
-                $hasRange = $isAlt && ! empty($kap['preis_range']) && ($kap['preis_range']['max'] ?? null) !== null;
-                // Leere Kapitel (Header/Text ohne bepreiste Bausteine) nicht als 0,00-€-Zeile listen.
-                if (! $hasRange && (float) ($kap['gesamt'] ?? 0) <= 0.0) {
-                    continue;
-                }
-                $zeilen[] = [
-                    'titel' => (string) $kap['title'],
-                    'pax' => $kap['pax'] ?? null,
-                    'vk_pro_person' => $kap['vk_pro_person'],
-                    'gesamt' => $kap['gesamt'] ?? null,
-                    'alternativen' => $isAlt,
-                    'preis_range' => $kap['preis_range'] ?? null,
-                ];
-            }
             $netto = (float) ($kalk['gesamt_vk'] ?? 0);
             $breakdown = [
-                'zeilen' => $zeilen,
-                'pax' => $kalk['pax'] ?? null,
-                'pro_person' => $ppNetto,
-                'netto' => round($netto, 2),
-                'mwst_satz' => $satz,
-                'mwst_betrag' => round($netto * $satz / 100, 2),
-                'brutto' => round($netto * (1 + $satz / 100), 2),
+                ...PraesentationsPreise::aufschluesselung(PraesentationsPreise::angebotZeilen($komp['kapitel']), $kalk['pax'] ?? null, $ppNetto, $netto, $satz),
                 // Spec 94b: zzgl. nach Aufwand (geschätzt) und die voraussichtliche Gesamtsumme für den Kunden
                 'zzgl' => $zzgl,
                 'zzgl_summe' => $zzglSumme,

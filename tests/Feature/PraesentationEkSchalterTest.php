@@ -50,7 +50,7 @@ it('mit Schalter: EK und Wareneinsatz hinter dem VK, deutlich als intern markier
 
 it('Schalter wirkt nur für Foodbook und Angebot; ohneEk entfernt jede EK-Angabe', function () {
     $sections = [['ek' => ['pp' => 1.0], 'blocks' => [['ek' => ['pp' => 2.0], 'items' => [['label' => 'x', 'ek' => 3.0]]]]]];
-    expect(json_encode(PresentationService::ohneEk($sections)))->not->toContain('"ek"');
+    expect(json_encode(\Platform\FoodAlchemist\Support\PraesentationsPreise::ohneEk($sections)))->not->toContain('"ek"');
 });
 
 it('interne Vorschau: ?ek=1 blendet EK ein, ohne zeigt sie den Schalter; nur angemeldet', function () {

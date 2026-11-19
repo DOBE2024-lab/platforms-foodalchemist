@@ -158,6 +158,7 @@
             --pt-h-faktor: {{ $hFaktor }};
             --pt-rand: clamp(18px, 5vw, 48px);   /* EIN Seitenrand für alle Container (Handy 18 px) */
             --pt-seite: 100vw;
+            --pt-intern: rgb(180 83 9);   /* interne Sicht (EK-Leiste/-Marken), nie im Kundenlink */
         }
         @if($druckFarben !== [])
         @media print {
@@ -494,9 +495,9 @@
         .pt-price-big { display: block; font-family: var(--pt-heading-font); font-weight: 900; font-size: clamp(2.4rem,7vw,3.4rem); color: var(--pt-primary); line-height: 1; }
         .pt-price-label { display: block; margin-top: 8px; text-transform: uppercase; letter-spacing: .16em; font-size: .74rem; color: var(--pt-muted); }
         /* EK-Schalter der internen Vorschau (2026-11-19) — dezent hinter dem VK, nie im Kundenlink */
-        .pt-ek { display: inline-block; margin-left: .6em; padding: 0 .45em; border-radius: 4px; background: color-mix(in srgb, #b45309 12%, transparent); color: #b45309; font-family: var(--pt-body-font); font-size: .74rem; font-weight: 600; letter-spacing: 0; text-transform: none; white-space: nowrap; vertical-align: middle; }
-        .pt-intern-leiste { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .4rem 1rem; padding: 7px 16px; background: #b45309; color: #fff; font-family: system-ui, sans-serif; font-size: .8rem; font-weight: 600; letter-spacing: .02em; }
-        .pt-intern-leiste a { color: #fff; text-decoration: underline; }
+        .pt-ek { display: inline-block; margin-left: .6em; padding: 0 .45em; border-radius: 4px; background: color-mix(in srgb, var(--pt-intern) 12%, transparent); color: var(--pt-intern); font-family: var(--pt-body-font); font-size: .74rem; font-weight: 600; letter-spacing: 0; text-transform: none; white-space: nowrap; vertical-align: middle; }
+        .pt-intern-leiste { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .4rem 1rem; padding: 7px 16px; background: var(--pt-intern); color: white; font-family: system-ui, sans-serif; font-size: .8rem; font-weight: 600; letter-spacing: .02em; }
+        .pt-intern-leiste a { color: white; text-decoration: underline; }
         .pt-ek-schalter { position: fixed; left: 16px; bottom: 16px; z-index: 60; padding: 8px 14px; border-radius: 999px; background: var(--pt-text); color: var(--pt-bg); font-family: system-ui, sans-serif; font-size: .8rem; font-weight: 600; text-decoration: none; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
         @media print { .pt-ek-schalter { display: none; } }
         /* Konzeptpreis hervorgehoben (2026-11-19): unter dem Namen oder nach der Gerichtsliste */

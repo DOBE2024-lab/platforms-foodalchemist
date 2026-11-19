@@ -10,6 +10,12 @@ namespace Platform\FoodAlchemist\Support;
  */
 final class KapitelPreis
 {
+    /** Kapitelpreis aus einem Kapitel der Dokument-/Kompositionsdaten (vk_pro_person, preis_range). */
+    public static function ausKapitel(array $k, bool $alternativen): ?array
+    {
+        return self::bauen(isset($k['vk_pro_person']) ? (float) $k['vk_pro_person'] : null, $k['preis_range'] ?? null, $alternativen);
+    }
+
     /**
      * @param  array{min?:?float, max?:?float}|null  $spanne
      * @return array{pp:?float, min:?float, max:?float}|null  null = kein zeigbarer Preis

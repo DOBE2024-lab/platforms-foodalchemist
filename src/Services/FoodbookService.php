@@ -1659,9 +1659,7 @@ class FoodbookService
                         'einzelpreise' => $b->type === 'concept_ref' && $b->concept !== null && $b->concept->istEinzelpreis(),
                         // #5b: Einzelgericht-Block trägt seine Rezept-ID → per-Gericht-Codes am Block-Label.
                         'recipe_id' => $b->type === 'recipe_ref' ? ($b->sales_recipe_id !== null ? (int) $b->sales_recipe_id : null) : null,
-                        'codes' => []]
-                        // EK je Baustein NUR in der internen Projektion (interne Vorschau mit EK-Schalter, Kalkulations-Print).
-                        + ($intern ? ['ek_pp' => (float) $bp['ek_pp']] : []);
+                        'codes' => []] + ($intern ? ['ek_pp' => (float) $bp['ek_pp']] : []);   // EK je Baustein NUR intern (EK-Schalter, Kalkulations-Print)
                 }
                 $agg = $this->kapitelAggregat($team, $k, $pax, $outlet);
                 $row = [

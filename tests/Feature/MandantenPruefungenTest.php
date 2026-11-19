@@ -139,3 +139,15 @@ it('Angebot: presentation_id muss zum Gericht des Blocks gehören', function () 
     expect(fn () => $svc->updateBlock($this->childA, $b->id, ['presentation_id' => $fremdeForm->id]))->toThrow(\RuntimeException::class, 'Darreichung');
     expect($svc->updateBlock($this->childA, $b->id, ['presentation_id' => $eigeneForm->id])->presentation_id)->toBe($eigeneForm->id);
 });
+
+// ── 3. Alt-Paket ─────────────────────────────────────────────────────────
+
+it('Alt-Paket: syncGerichte lehnt ein fremdes Gericht ab, eigenes und Bestand gehen', function () {
+    $svc = app(\Platform\FoodAlchemist\Services\PaketService::class);
+    $p = $svc->create($this->childA, ['name' => 'Alt', 'role' => 'Hauptgang', 'price_mode' => 'auto']);
+    $svc->syncGerichte($this->childA, $p->id, [['sales_recipe_id' => $this->eigen->id]]);
+
+    expect(fn () => $svc->syncGerichte($this->childA, $p->id, [['sales_recipe_id' => $this->eigen->id], ['sales_recipe_id' => $this->fremd->id]]))
+        ->toThrow(\RuntimeException::class, 'nicht sichtbar');
+    expect($p->fresh()->dishes()->pluck('sales_recipe_id')->all())->toBe([$this->eigen->id]);
+});

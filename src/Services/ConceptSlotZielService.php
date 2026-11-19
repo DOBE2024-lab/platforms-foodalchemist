@@ -2,7 +2,6 @@
 
 namespace Platform\FoodAlchemist\Services;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -10,30 +9,23 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Support\Verweisziel;
 
 /**
  * Code-Qualität 1.1c (K3): Ziele eines Concept-Slots — eingebettetes Paket (kind=paket-Concept),
- * Alt-Paket oder Rezept — gegen die Teamsicht prüfen.
+ * Alt-Paket oder Rezept — beim SCHREIBEN prüfen. {@see ConceptService::fillSlot} nimmt nur Ziele an,
+ * die das Team sehen darf (bestehende Sicht-Regel inkl. Abo-Fassungen, {@see Verweisziel}), ein Paket
+ * nicht in sich selbst (auch nicht über Umwege) und einen zum Rezept passenden Typ.
  *
- * Schreiben: {@see ConceptService::fillSlot} nimmt nur sichtbare Ziele an, ein Paket nicht in
- * sich selbst (auch nicht über Umwege) und einen zum Rezept passenden Typ.
- *
- * Lesen: Die Slot-Beziehungen lösen bewusst ohne Teamsicht auf (Spec 82 „verweis“). Damit ein
- * fremdes Ziel, das an der Prüfung vorbei in der DB steht, nicht in Detail, Kalkulation oder Export
- * erscheint, blendet {@see fremdeAusblenden} es an den Lese-Einstiegen aus. Maßstab ist das
- * Besitzer-Team des Concepts (eigene Kette oder sichtbar), nicht der Betrachter.
+ * Lesen bleibt unverändert: die Slot-Beziehungen lösen bewusst ohne Teamsicht auf (Spec 82 „verweis“,
+ * auch Fassungen). Ein fremdes Ziel kommt nur über ungeprüftes Schreiben hinein — das schließt diese Prüfung.
  */
 class ConceptSlotZielService
 {
-    /** @var array<string, bool> */
-    private array $sichtCache = [];
-
-    // ── Schreiben ────────────────────────────────────────────────────────
-
     /**
      * Prüft das Ziel, das fillSlot setzen will (genau eines: embedded_concept_id, package_id,
-     * sales_recipe_id). Liefert für ein Rezept den Slot-Typ, sonst null. Wirft bei fremdem Ziel,
-     * Kreis oder widersprechendem Typ.
+     * sales_recipe_id). Liefert für ein Rezept den Slot-Typ, sonst null. Wirft bei nicht sichtbarem
+     * Ziel, Kreis oder widersprechendem Typ.
      */
     public function pruefe(Team $team, FoodAlchemistConceptSlot $slot, array $in): ?string
     {
@@ -53,7 +45,7 @@ class ConceptSlotZielService
         if ($paketId === (int) $slot->concept_id) {
             throw new \RuntimeException('Ein Paket kann sich nicht selbst einbetten.');
         }
-        if (! FoodAlchemistConcept::visibleToTeam($team)->pakete()->whereKey($paketId)->exists()) {
+        if (! Verweisziel::sichtbar(FoodAlchemistConcept::class, $team)->pakete()->whereKey($paketId)->exists()) {
             throw new ModelNotFoundException("Paket #{$paketId} nicht sichtbar oder kein Paket.");
         }
         if ($this->enthaelt($paketId, (int) $slot->concept_id)) {
@@ -63,7 +55,7 @@ class ConceptSlotZielService
 
     public function pruefeAltPaket(Team $team, int $paketId): void
     {
-        if (! FoodAlchemistPaket::visibleToTeam($team)->whereKey($paketId)->exists()) {
+        if (! Verweisziel::sichtbar(FoodAlchemistPaket::class, $team)->whereKey($paketId)->exists()) {
             throw new ModelNotFoundException("Paket #{$paketId} nicht sichtbar/vorhanden.");
         }
     }
@@ -74,7 +66,7 @@ class ConceptSlotZielService
      */
     public function rezeptTyp(Team $team, int $recipeId, ?string $typ): string
     {
-        $rezept = FoodAlchemistRecipe::visibleToTeam($team)->whereKey($recipeId)->first(['id', 'is_sales_recipe'])
+        $rezept = Verweisziel::sichtbar(FoodAlchemistRecipe::class, $team)->whereKey($recipeId)->first(['foodalchemist_recipes.id', 'foodalchemist_recipes.is_sales_recipe'])
             ?? throw new ModelNotFoundException("Rezept #{$recipeId} nicht sichtbar/vorhanden.");
         $soll = (bool) $rezept->is_sales_recipe ? 'gericht' : 'basisrezept';
         if ($typ !== null && $typ !== '' && $typ !== $soll) {
@@ -107,55 +99,5 @@ class ConceptSlotZielService
         }
 
         return false;
-    }
-
-    // ── Lesen ────────────────────────────────────────────────────────────
-
-    /**
-     * Setzt geladene Slot-Ziele, die das Besitzer-Team des Concepts nicht sehen darf, auf null —
-     * rekursiv für geladene eingebettete Pakete. Fassungen (Spec 82) sind Systemkopien und bleiben.
-     *
-     * @param  array<int, true>  $pfad  intern: Zyklus-Sperre
-     */
-    public function fremdeAusblenden(FoodAlchemistConcept $concept, array $pfad = []): FoodAlchemistConcept
-    {
-        if ((bool) ($concept->ist_fassung ?? false) || ! $concept->relationLoaded('slots') || isset($pfad[(int) $concept->id])) {
-            return $concept;
-        }
-        $pfad[(int) $concept->id] = true;
-        $team = $concept->team_id !== null ? Team::find($concept->team_id) : null;
-        if ($team === null) {
-            return $concept;
-        }
-        $kette = FoodAlchemistConcept::teamAncestryIds($team);
-        foreach ($concept->slots as $slot) {
-            foreach (['package' => FoodAlchemistPaket::class, 'embeddedConcept' => FoodAlchemistConcept::class, 'dish' => FoodAlchemistRecipe::class] as $rel => $klasse) {
-                $ziel = $slot->relationLoaded($rel) ? $slot->getRelation($rel) : null;
-                if ($ziel !== null && ! $this->erlaubt($team, $kette, $klasse, $ziel)) {
-                    $slot->setRelation($rel, null);
-                }
-            }
-            if ($slot->relationLoaded('embeddedConcept') && $slot->embeddedConcept !== null) {
-                $this->fremdeAusblenden($slot->embeddedConcept, $pfad);
-            }
-        }
-
-        return $concept;
-    }
-
-    /** @param  list<int>  $kette  Team-Kette des Besitzers */
-    private function erlaubt(Team $team, array $kette, string $klasse, Model $ziel): bool
-    {
-        $teamId = $ziel->getAttribute('team_id');
-        if ($teamId === null && ! array_key_exists('team_id', $ziel->getAttributes())) {
-            // Spalte nicht mitgeladen (reduziertes Select) → einmal nachsehen statt blind durchlassen
-            $teamId = DB::table($ziel->getTable())->where('id', $ziel->getKey())->value('team_id');
-        }
-        if ($teamId === null || in_array((int) $teamId, $kette, true)) {
-            return true;
-        }
-        $key = $klasse . ':' . $team->id . ':' . $ziel->getKey();
-
-        return $this->sichtCache[$key] ??= $klasse::visibleToTeam($team)->whereKey($ziel->getKey())->exists();
     }
 }

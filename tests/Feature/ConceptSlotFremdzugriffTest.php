@@ -6,8 +6,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\KalkulationService;
-use Platform\FoodAlchemist\Services\ReportExportService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -15,9 +13,9 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
  * Code-Qualität 1.1c (K3): fillSlot prüft Sichtbarkeit fürs Team für alle drei Zielarten
- * (eingebettetes Paket, Alt-Paket, Rezept) und den Typ (Gericht vs. Basisrezept). Dazu das
- * Lese-Leck: Slot-Beziehungen lösen ohne Teamsicht auf — fremde Ziele, die schon in der DB
- * stehen, dürfen in Detail, Kalkulation und Export nicht erscheinen.
+ * (eingebettetes Paket, Alt-Paket, Rezept) und den Typ (Gericht vs. Basisrezept). Sicht heißt
+ * die bestehende Regel inkl. Abo-Fassungen (Mandanten abonnieren Inhalte) — nie „eigenes Team“.
+ * Lesen bleibt unverändert (Slot-Beziehungen lösen absichtlich auch Fassungen auf, Spec 82).
  *
  * Teams: childA und childB sind Geschwister unter root — B ist für A fremd, root ist geerbt.
  */
@@ -107,46 +105,29 @@ it('fillSlot: ein Typ, der nicht zum Rezept passt, wird abgelehnt', function () 
         ->toThrow(\RuntimeException::class, 'gericht');
 });
 
-// ── Lesen: fremde Ziele, die schon in der DB stehen ───────────────────────
+// ── Abo: Verweis auf eine abonnierte Fassung ist gewollte Fachlogik ─────────
 
-function cqFremdeSlotsEinschleusen($test): void
-{
-    // An der Service-Prüfung vorbei (Altbestand / anderer Schreibweg).
-    FoodAlchemistConceptSlot::whereKey($test->slot->id)->update(['type' => 'gericht', 'sales_recipe_id' => $test->fremd->id]);
-    FoodAlchemistConceptSlot::create(['team_id' => $test->childA->id, 'concept_id' => $test->concept->id, 'role' => 'Station',
-        'position' => 1, 'type' => 'paket', 'embedded_concept_id' => $test->fremdPaket->id]);
-    FoodAlchemistConceptSlot::create(['team_id' => $test->childA->id, 'concept_id' => $test->concept->id, 'role' => 'Alt',
-        'position' => 2, 'type' => 'paket', 'package_id' => $test->fremdAltPaket->id]);
-}
+it('Abo: der Mandant setzt eine abonnierte Fassung ein; ein Master-Rezept ohne Abo wird abgelehnt', function () {
+    $master = \Platform\Core\Models\Team::create(['name' => 'Master', 'user_id' => 1, 'personal_team' => false]);
+    config(['foodalchemist.master_team_id' => $master->id]);
+    $mandant = \Platform\Core\Models\Team::create(['name' => 'Mandant', 'user_id' => 1, 'personal_team' => false]);
+    \Platform\FoodAlchemist\Support\TeamAncestryRegistry::flushAll();
+    \Platform\FoodAlchemist\Support\StammPaket::freischalten($mandant);   // Abo setzt ein gebuchtes Stamm-Paket voraus
+    $kurator = $this->makeUser($master, 'Kurator', 'owner');
+    $this->actingAs($this->makeUser($mandant, 'Mandant Chef', 'owner'));
 
-it('Detail zeigt keine fremden Slot-Ziele', function () {
-    cqFremdeSlotsEinschleusen($this);
+    $jus = $this->makeRecipe($master, 'Kalbsjus', ['is_sales_recipe' => true]);
+    $jusF = $this->makeRecipe($master, 'Kalbsjus', ['is_sales_recipe' => true, 'ist_fassung' => true, 'fassung_von_id' => $jus->id]);
+    $geheim = $this->makeRecipe($master, 'Master-Geheimrezept', ['is_sales_recipe' => true]);
+    $inhalte = app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class);
+    $sammlung = $inhalte->sammlungAnlegen($master, 'Basis', null, $kurator);
+    $inhalte->sammlungHinzu($master, $sammlung, 'recipe', [$jus->id], $kurator);
+    app(\Platform\FoodAlchemist\Services\AboService::class)->abonnieren($master, $mandant, $sammlung, $kurator);
 
-    $c = $this->concepts->detail($this->childA, $this->concept->id);
+    $c = $this->concepts->create($mandant, ['name' => 'Mandanten-Menü']);
+    $slot = $this->concepts->addSlot($mandant, $c->id, ['role' => 'Hauptgang']);
 
-    expect($c->slots->pluck('dish')->filter())->toBeEmpty()
-        ->and($c->slots->pluck('embeddedConcept')->filter())->toBeEmpty()
-        ->and($c->slots->pluck('package')->filter())->toBeEmpty();
-});
-
-it('Kalkulation (Preis-Cockpit, Aggregat, Diät-Rollup) zählt keine fremden Slot-Ziele', function () {
-    cqFremdeSlotsEinschleusen($this);
-    $c = FoodAlchemistConcept::find($this->concept->id);
-
-    $hk = app(KalkulationService::class)->conceptHk($this->childA, $c);
-    $cockpit = $this->concepts->preisCockpit($c->fresh());
-    $rollup = $this->concepts->allergenRollup($c->fresh());
-
-    expect(json_encode($hk))->not->toContain('Fremdes')
-        ->and(json_encode($cockpit))->not->toContain('Fremdes')
-        ->and((float) ($hk['hk1_pro_person'] ?? 0))->toBe(0.0)
-        ->and($rollup['n_gerichte'])->toBe(0);
-});
-
-it('Export (Konzept-Report) zeigt keine fremden Slot-Ziele', function () {
-    cqFremdeSlotsEinschleusen($this);
-
-    $daten = app(ReportExportService::class)->conceptDaten($this->childA, $this->concept->id, []);
-
-    expect(json_encode($daten, JSON_UNESCAPED_UNICODE))->not->toContain('Fremdes');
+    expect($this->concepts->fillSlot($mandant, $slot->id, ['sales_recipe_id' => $jusF->id])->sales_recipe_id)->toBe($jusF->id);
+    expect(fn () => $this->concepts->fillSlot($mandant, $slot->id, ['sales_recipe_id' => $geheim->id]))
+        ->toThrow(ModelNotFoundException::class);
 });

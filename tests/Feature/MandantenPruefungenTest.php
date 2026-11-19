@@ -70,19 +70,6 @@ it('Export: ein Kreis im eingebetteten Paket hängt nicht', function () {
     expect($gerichte)->toHaveCount(1);
 });
 
-it('Export: fremdes Gericht in einem eingebetteten Paket bleibt ausgeblendet', function () {
-    $p = $this->concepts->createPaket($this->childA, ['name' => 'Station']);
-    FoodAlchemistConceptSlot::create(['team_id' => $this->childA->id, 'concept_id' => $p->id, 'role' => 'x',
-        'position' => 0, 'type' => 'gericht', 'sales_recipe_id' => $this->fremd->id]);
-    $c = $this->concepts->create($this->childA, ['name' => 'Menü']);
-    $cs = $this->concepts->addSlot($this->childA, $c->id, ['role' => 'x']);
-    $this->concepts->fillSlot($this->childA, $cs->id, ['embedded_concept_id' => $p->id]);
-
-    $daten = app(ReportExportService::class)->conceptDaten($this->childA, $c->id, []);
-
-    expect(json_encode($daten, JSON_UNESCAPED_UNICODE))->not->toContain('Fremdes');
-});
-
 // ── 1./2. Foodbook- und Angebots-Blöcke ──────────────────────────────────
 
 function cqFoodbookKapitel(\Platform\Core\Models\Team $team)

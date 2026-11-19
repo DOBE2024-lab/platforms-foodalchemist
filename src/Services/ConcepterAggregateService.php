@@ -180,7 +180,6 @@ class ConcepterAggregateService
             'slots.dish' => fn ($q) => $q->select($this->recipeCols()),
             'slots.embeddedConcept',
         ]);
-        app(ConceptSlotZielService::class)->fremdeAusblenden($concept);   // 1.1c: fremde Slot-Ziele zählen nicht mit
 
         $mitMenge = collect();
         foreach ($concept->slots as $slot) {

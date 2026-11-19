@@ -250,7 +250,6 @@ class ReportExportService
                 'slots.embeddedConcept',   // 1.1j: eingebettete Pakete (kind=paket-Concept) gehören in den Export
             ])
             ->findOrFail($id);
-        app(ConceptSlotZielService::class)->fremdeAusblenden($concept);   // 1.1c: kein fremdes Slot-Ziel im Export
 
         $this->behaelterAusConcept($team, $concept, $optionen);
 
@@ -346,7 +345,7 @@ class ReportExportService
 
     /**
      * 1.1j: Gericht-Positionen eines eingebetteten Pakets (kind=paket-Concept) — rekursiv durch
-     * weitere eingebettete Pakete, `$pfad` schneidet Kreise ab, fremde Ziele bleiben ausgeblendet.
+     * weitere eingebettete Pakete, `$pfad` schneidet Kreise ab.
      *
      * @param  array<int, true>  $pfad
      * @return list<array{0: string, 1: \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot}>
@@ -359,7 +358,6 @@ class ReportExportService
         $pfad[(int) $paket->id] = true;
         $paket->loadMissing(['slots' => fn ($q) => $q->orderBy('position'), 'slots.unit:id,slug,display_de',
             'slots.dish' => fn ($q) => $q->with($this->recipeRelations()), 'slots.embeddedConcept']);
-        app(ConceptSlotZielService::class)->fremdeAusblenden($paket);
         $out = [];
         foreach ($paket->slots as $s) {
             if ($s->dish !== null) {

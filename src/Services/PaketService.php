@@ -270,7 +270,7 @@ class PaketService
     /** null/0 ⇒ null (Standard). Sonst muss die Darreichung zum Gericht gehören. */
     /**
      * CQ 1.1j (Alt-Modell, fällt mit 2.6): NEU hinzukommende Gerichte und gesetzte Einheiten müssen
-     * fürs Team sichtbar sein. Bestehende Zeilen bleiben unangetastet (Wieder-Speichern bricht nicht).
+     * fürs Team sichtbar sein (Sicht-Regel inkl. Abo-Fassungen, Support\Verweisziel). Bestehende Zeilen bleiben unangetastet (Wieder-Speichern bricht nicht).
      * Kein Typ-Filter: Alt-Pakete führen auch Basisrezept-Posten (g/Person, siehe ConcepterAggregateService).
      *
      * @param  array<int, array<string, mixed>>  $items
@@ -279,11 +279,11 @@ class PaketService
     {
         $bestand = $paket->dishes()->pluck('sales_recipe_id')->map(fn ($v) => (int) $v)->all();
         $neu = array_values(array_unique(array_diff(array_map(fn ($r) => (int) ($r['sales_recipe_id'] ?? 0), $items), $bestand, [0])));
-        if ($neu !== [] && FoodAlchemistRecipe::visibleToTeam($team)->whereKey($neu)->count() !== count($neu)) {
+        if ($neu !== [] && \Platform\FoodAlchemist\Support\Verweisziel::sichtbar(FoodAlchemistRecipe::class, $team)->whereKey($neu)->count() !== count($neu)) {
             throw new \RuntimeException('Gericht nicht sichtbar/vorhanden.');
         }
         $einheiten = array_values(array_unique(array_filter(array_map(fn ($r) => (int) ($r['unit_vocab_id'] ?? 0), $items))));
-        if ($einheiten !== [] && \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::visibleToTeam($team)->whereKey($einheiten)->count() !== count($einheiten)) {
+        if ($einheiten !== [] && \Platform\FoodAlchemist\Support\Verweisziel::sichtbar(\Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::class, $team)->whereKey($einheiten)->count() !== count($einheiten)) {
             throw new \RuntimeException('Einheit nicht sichtbar/vorhanden.');
         }
     }

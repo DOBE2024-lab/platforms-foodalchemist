@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 
 /**
  * Code-Qualität 1.1j: EINE Schreibpfad-Prüfung für Inhalts-Blöcke in Foodbook und Angebot.
- * Was ein Block referenziert, muss das schreibende Team sehen dürfen:
+ * Was ein Block referenziert, muss das schreibende Team sehen dürfen (Sicht-Regel inkl. Abo-Fassungen, {@see Verweisziel}):
  * - recipe_ref: sichtbares VK-Gericht, keine konzept-lokale Slot-Variante (Spec 19 E1.1)
  * - concept_ref: sichtbares Concept oder Paket (kind=paket) — concept_id trägt beide
  * - presentation_id: Darreichung gehört zum Gericht des Blocks
@@ -42,7 +42,7 @@ final class BlockReferenz
             }
         }
         if (($daten['unit_vocab_id'] ?? null) !== null && $daten['unit_vocab_id'] !== ''
-            && ! FoodAlchemistVocabEinheit::visibleToTeam($team)->whereKey((int) $daten['unit_vocab_id'])->exists()) {
+            && ! Verweisziel::sichtbar(FoodAlchemistVocabEinheit::class, $team)->whereKey((int) $daten['unit_vocab_id'])->exists()) {
             throw new \RuntimeException("Einheit {$daten['unit_vocab_id']} ist nicht sichtbar/vorhanden.");
         }
     }
@@ -52,7 +52,7 @@ final class BlockReferenz
         if ($id === null || $id === '') {
             throw new \RuntimeException('recipe_ref-Block braucht ein sales_recipe_id (VK-Gericht).');
         }
-        $ok = FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
+        $ok = Verweisziel::sichtbar(FoodAlchemistRecipe::class, $team)->verkauf()
             ->whereNull('variant_source_recipe_id')->whereKey((int) $id)->exists();
         if (! $ok) {
             throw new \RuntimeException("sales_recipe_id {$id} ist kein gültiges, sichtbares VK-Gericht (keine Slot-Variante).");
@@ -61,7 +61,7 @@ final class BlockReferenz
 
     private static function concept(Team $team, mixed $id): void
     {
-        if ($id === null || $id === '' || ! FoodAlchemistConcept::visibleToTeam($team)->whereKey((int) $id)->exists()) {
+        if ($id === null || $id === '' || ! Verweisziel::sichtbar(FoodAlchemistConcept::class, $team)->whereKey((int) $id)->exists()) {
             throw new \RuntimeException('concept_ref-Block braucht ein sichtbares Concept oder Paket.');
         }
     }

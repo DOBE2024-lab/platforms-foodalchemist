@@ -772,7 +772,7 @@ class FoodbookService
         }
 
         $cslot = $this->concepts->addSlot($team, $zielConceptId, ['role' => $rolle]);
-        $this->concepts->fillSlot($team, $cslot->id, ['sales_recipe_id' => $recipeId, 'type' => 'gericht']);
+        $this->concepts->fillSlot($team, $cslot->id, ['sales_recipe_id' => $recipeId]);
 
         return ['concept_id' => $zielConceptId, 'chapter_id' => $chapterId, 'schon_drin' => false];
     }
@@ -1120,7 +1120,7 @@ class FoodbookService
      * direkte Einzel-Gerichte als `recipe_ref`-Block (€/Position). Damit ist „Weg B
      * exklusiv" nicht mehr gültig. `recipe_ref` referenziert per `sales_recipe_id` ein
      * echtes VK-Gericht (`verkauf()`-Scope, KEINE konzept-lokale Slot-Variante) — Validierung
-     * siehe `pruefeRecipeRef()`. Lesepfade (blockPreis/kapitelAggregat/dokBlockLabel) kannten
+     * siehe `Support\BlockReferenz`. Lesepfade (blockPreis/kapitelAggregat/dokBlockLabel) kannten
      * recipe_ref bereits; hier wird nur der Schreibpfad freigeschaltet. Wahl-Gruppen A|B|C
      * bleiben (zwischen Concepts wie zwischen Gerichten).
      */
@@ -1140,9 +1140,7 @@ class FoodbookService
         app(FormatKapitelService::class)->pruefeBlockErlaubt($k);   // Format-Kapitel: keine eigenen Blöcke, Pflege im Format
         $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
         $daten['type'] = in_array($in['type'] ?? '', self::BLOCK_TYPES, true) ? $in['type'] : 'text';
-        if ($daten['type'] === 'recipe_ref') {
-            $this->pruefeRecipeRef($team, $daten['sales_recipe_id'] ?? null);
-        }
+        \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten);   // 1.1j: Gericht/Concept/Einheit sichtbar
         $daten['team_id'] = $k->team_id;
         $daten['position'] = (int) $k->blocks()->max('position') + 1;
 
@@ -1153,34 +1151,10 @@ class FoodbookService
     {
         $block = $this->ownedBlock($team, $blockId);
         $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
-        // recipe_ref-Guard: greift, wenn der Block (neu oder bereits) recipe_ref ist und ein
-        // sales_recipe_id gesetzt/geändert wird — validiert das effektive Gericht.
-        $effTyp = array_key_exists('type', $daten) ? $daten['type'] : $block->type;
-        if ($effTyp === 'recipe_ref' && array_key_exists('sales_recipe_id', $daten)) {
-            $this->pruefeRecipeRef($team, $daten['sales_recipe_id']);
-        }
+        \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten, $block);   // 1.1j: auch concept_ref (vorher ungeprüft)
         $block->update($daten);
 
         return $block->refresh();
-    }
-
-    /**
-     * Schreibpfad-Validierung für `recipe_ref`-Blöcke (Spec 19 E1.1). Spiegelt den
-     * Picker-Scope `gerichtKandidaten`: das referenzierte Gericht muss dem Team sichtbar
-     * sein, ein echtes VK-Gericht (`verkauf()`) und darf KEINE konzept-lokale Slot-Variante
-     * (`variant_source_recipe_id`) sein.
-     */
-    private function pruefeRecipeRef(Team $team, ?int $salesRecipeId): void
-    {
-        if ($salesRecipeId === null) {
-            throw new \RuntimeException('recipe_ref-Block braucht ein sales_recipe_id (VK-Gericht).');
-        }
-        $ok = FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
-            ->whereNull('variant_source_recipe_id')
-            ->whereKey($salesRecipeId)->exists();
-        if (! $ok) {
-            throw new \RuntimeException("sales_recipe_id {$salesRecipeId} ist kein gültiges, sichtbares VK-Gericht (keine Slot-Variante).");
-        }
     }
 
     /**

@@ -247,13 +247,14 @@ class ReportExportService
                 'slots.dish' => fn ($q) => $q->with($this->recipeRelations()),
                 'slots.package.dishes.unit:id,slug,display_de',
                 'slots.package.dishes.dish' => fn ($q) => $q->with($this->recipeRelations()),
+                'slots.embeddedConcept',   // 1.1j: eingebettete Pakete (kind=paket-Concept) gehören in den Export
             ])
             ->findOrFail($id);
 
         $this->behaelterAusConcept($team, $concept, $optionen);
 
         app(ConceptPreisService::class)->anwenden($concept, $team);   // Abo-Fassung: Team-Preis statt leerer Master-Caches (Spec 82)
-        $slots = $concept->slots->map(function ($slot) use ($optionen, $team) {
+        $slots = $concept->slots->map(function ($slot) use ($optionen, $team, $concept) {
             if ($slot->package !== null) {
                 app(PaketPreisService::class)->anwenden($slot->package, $team);   // Abo-Paket: Team-Preis
             }
@@ -278,20 +279,30 @@ class ReportExportService
                     ]);
                 }
             }
+            $ep = $slot->embeddedConcept;
+            foreach ($ep !== null ? $this->eingebetteteGerichte($ep, [(int) $concept->id => true]) : [] as [$paketName, $ps]) {
+                $gerichte->push([
+                    'quelle' => 'paket',
+                    'paket' => $paketName,
+                    'menge' => $this->mengeText($ps->quantity, $ps->unit),
+                    'recipe' => $this->recipeNode($ps->dish, $optionen, 0, []),
+                ]);
+            }
 
             return [
                 'id' => (int) $slot->id,
                 'position' => (int) $slot->position,
                 'role' => $slot->role,
                 'title' => $slot->title,
-                'type' => $slot->package_id !== null ? 'paket' : ($slot->sales_recipe_id !== null ? 'gericht' : 'leer'),
+                'type' => ($slot->package_id !== null || $ep !== null) ? 'paket' : ($slot->sales_recipe_id !== null ? 'gericht' : 'leer'),
                 'package' => $slot->package ? [
                     'id' => (int) $slot->package->id,
                     'name' => $slot->package->name,
                     'price_per_person' => $slot->package->price_per_person,
                     'ek_per_person' => $slot->package->ek_per_person,
                     'food_cost_percent' => $slot->package->food_cost_percent,
-                ] : null,
+                ] : ($ep !== null ? ['id' => (int) $ep->id, 'name' => $ep->name, 'price_per_person' => $ep->price_per_person_cache,
+                    'ek_per_person' => $ep->ek_per_person_cache, 'food_cost_percent' => null] : null),
                 'gerichte' => $gerichte->values()->all(),
             ];
         })->values();
@@ -330,6 +341,33 @@ class ReportExportService
                 'order_simulation' => $auftragsSimulation,
             ],
         ];
+    }
+
+    /**
+     * 1.1j: Gericht-Positionen eines eingebetteten Pakets (kind=paket-Concept) — rekursiv durch
+     * weitere eingebettete Pakete, `$pfad` schneidet Kreise ab.
+     *
+     * @param  array<int, true>  $pfad
+     * @return list<array{0: string, 1: \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot}>
+     */
+    private function eingebetteteGerichte(FoodAlchemistConcept $paket, array $pfad): array
+    {
+        if (isset($pfad[(int) $paket->id])) {
+            return [];
+        }
+        $pfad[(int) $paket->id] = true;
+        $paket->loadMissing(['slots' => fn ($q) => $q->orderBy('position'), 'slots.unit:id,slug,display_de',
+            'slots.dish' => fn ($q) => $q->with($this->recipeRelations()), 'slots.embeddedConcept']);
+        $out = [];
+        foreach ($paket->slots as $s) {
+            if ($s->dish !== null) {
+                $out[] = [$paket->name, $s];
+            } elseif ($s->embeddedConcept !== null) {
+                array_push($out, ...$this->eingebetteteGerichte($s->embeddedConcept, $pfad));
+            }
+        }
+
+        return $out;
     }
 
     /**

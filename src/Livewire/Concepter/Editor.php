@@ -35,6 +35,7 @@ class Editor extends Component
 {
     use ManagesCanvas, ManagesPlanningFrame, ManagesPhase, InteractsWithSavedToast, WithFileUploads, \Platform\FoodAlchemist\Livewire\Concerns\ManagesSlotVorgabe;
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
+    use \Platform\FoodAlchemist\Livewire\Concerns\FuelltConceptPositionen;   // CQ 1.1c: Positionen anlegen, Ablehnung als Hinweis
 
     /**
      * Spec 65: Sperre gilt dem geöffneten Datensatz. Konzept UND kind=paket-Concept (Kaskade) sind Concepts → Typ
@@ -759,10 +760,12 @@ class Editor extends Component
 
     public function fuelleGericht(int $slotId, int $vkRecipeId, string $typ = 'gericht'): void
     {
-        app(ConceptService::class)->fillSlot($this->team(), $slotId, [
+        if (! $this->positionFuellen($slotId, [
             'sales_recipe_id' => $vkRecipeId, 'quantity' => 1, 'unit_vocab_id' => $this->portionEinheitId(),
             'type' => $typ === 'basisrezept' ? 'basisrezept' : 'gericht',
-        ]);
+        ])) {
+            return;
+        }
         $this->fillSlotId = null;
         $this->gerichtSuche = '';
         $this->dispatch('concepter-gespeichert', id: $this->id);
@@ -1002,43 +1005,6 @@ class Editor extends Component
     {
         return \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::visibleToTeam($this->team())
             ->where('slug', 'portion')->value('id');
-    }
-
-    /** Legt eine gefüllte Position (Paket/Gericht/Basisrezept) an und sortiert sie ggf. hinter $afterId ein. */
-    private function neuePosition(string $typ, int $id, ?int $afterId): ?int
-    {
-        $svc = app(ConceptService::class);
-        $slot = $svc->addSlot($this->team(), $this->id, []);
-        if ($typ === 'paket') {
-            // Kaskade: $id ist ein kind=paket-Concept → einbetten via embedded_concept_id.
-            $svc->fillSlot($this->team(), $slot->id, ['embedded_concept_id' => $id]);
-        } else {
-            $svc->fillSlot($this->team(), $slot->id, [
-                'sales_recipe_id' => $id, 'quantity' => 1, 'unit_vocab_id' => $typ === 'basisrezept' ? null : $this->portionEinheitId(),   // 17.11.: Basisrezept = Gramm (Standard), Portion rechnete dort nicht
-                'type' => $typ === 'basisrezept' ? 'basisrezept' : 'gericht',
-            ]);
-        }
-        if ($afterId !== null) {
-            $this->positionNach($svc, $slot->id, $afterId);
-        }
-        $this->reloadSlotForm();
-        $this->dispatch('concepter-gespeichert', id: $this->id);
-
-        return $slot->id;
-    }
-
-    /** Sortiert $slotId direkt hinter $afterId ein (über reorderSlots mit neu gebauter Reihenfolge). */
-    private function positionNach(ConceptService $svc, int $slotId, int $afterId): void
-    {
-        $ids = $svc->detail($this->team(), $this->id)->slots->pluck('id')->map(fn ($x) => (int) $x)->all();
-        $ids = array_values(array_filter($ids, fn ($x) => $x !== $slotId));
-        $pos = array_search($afterId, $ids, true);
-        if ($pos === false) {
-            $ids[] = $slotId;
-        } else {
-            array_splice($ids, $pos + 1, 0, [$slotId]);
-        }
-        $svc->reorderSlots($this->team(), $this->id, $ids);
     }
 
     /**

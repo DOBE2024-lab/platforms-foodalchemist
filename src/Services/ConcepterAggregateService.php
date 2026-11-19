@@ -153,13 +153,22 @@ class ConcepterAggregateService
     }
 
     /**
-     * Die (gericht, quantity, unit, darreichung)-Liste eines Konzepts — über Pakete und
-     * feste Gerichte hinweg. Eine Quelle für Aggregat UND Deklarationsblatt.
+     * Die (gericht, quantity, unit, darreichung)-Liste eines Konzepts — über Pakete,
+     * eingebettete Pakete (kind=paket-Concept, rekursiv) und feste Gerichte hinweg.
+     * Eine Quelle für Aggregat, Diät-Rollup UND Deklarationsblatt.
      *
+     * Eingebettetes Paket (1.1h): seine Positionen zählen wie eigene (Menge je Person, Faktor 1 —
+     * wie der Preis, der den Paketpreis je Person einmal ansetzt). `$pfad` hält die Concepts
+     * auf dem Weg von oben; ein Zyklus (Concept bettet sich selbst/einen Vorfahren ein) wird
+     * dort abgeschnitten statt endlos zu rekursieren. Pfad-, nicht global: dasselbe Paket in
+     * zwei Slots zählt zweimal, wie beim Preis.
+     *
+     * @param  array<int, true>  $pfad  intern: Concept-IDs der Vorfahren
      * @return Collection<int, array{gericht: object, quantity: ?float, unit: ?object, darreichung: mixed}>
      */
-    public function conceptPositionen(FoodAlchemistConcept $concept): Collection
+    public function conceptPositionen(FoodAlchemistConcept $concept, array $pfad = []): Collection
     {
+        $pfad[(int) $concept->id] = true;
         // load() statt loadMissing(): erzwingt den vollen Recipe-Spalten-Satz, auch wenn
         // der Aufrufer Slots/Gerichte schon mit reduzierten Spalten geladen hat (detail()).
         $concept->load([
@@ -169,6 +178,7 @@ class ConcepterAggregateService
             'slots.package.dishes.unit' => fn ($q) => $q->select($this->einheitCols()),
             'slots.package.dishes.dish' => fn ($q) => $q->select($this->recipeCols()),
             'slots.dish' => fn ($q) => $q->select($this->recipeCols()),
+            'slots.embeddedConcept',
         ]);
 
         $mitMenge = collect();
@@ -181,13 +191,17 @@ class ConcepterAggregateService
                             'darreichung' => $this->darreichungen->fuerPaketGericht($pg)]);
                     }
                 }
+            } elseif ($slot->embedded_concept_id !== null && $slot->embeddedConcept) {
+                if (! isset($pfad[(int) $slot->embedded_concept_id])) {
+                    $mitMenge = $mitMenge->merge($this->conceptPositionen($slot->embeddedConcept, $pfad));
+                }
             } elseif ($slot->dish) {
                 $mitMenge->push(['gericht' => $slot->dish, 'quantity' => $slot->quantity, 'unit' => $slot->unit,
                     'darreichung' => $this->darreichungen->fuerSlot($slot)]);
             }
         }
 
-        return $mitMenge;
+        return $mitMenge->values();
     }
 
     // ── Kern: Aggregat über eine (gericht, quantity)-Liste ─────────────────────

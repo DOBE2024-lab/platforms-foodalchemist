@@ -72,12 +72,33 @@ class AngebotService
         ]);
     }
 
+    /**
+     * Kopf-/Briefing-Felder speichern. CQ 1.1j: der Status läuft NIE an setStatus vorbei (Rolle Kuratieren,
+     * Einfrieren/Snapshot) — ein geänderter Status im Formular wird dorthin weitergereicht, ein unveränderter
+     * ignoriert. Geänderte CRM-Verknüpfungen prüft CrmKunden::pruefe (wie verknuepfeKunde).
+     */
     public function update(Team $team, int $id, array $in): FoodAlchemistAngebot
+    {
+        $text = fn ($s) => $s instanceof \BackedEnum ? (string) $s->value : (string) $s;   // Formular/Model liefern AngebotStatus
+        $status = array_key_exists('status', $in) ? $text($in['status']) : '';
+        unset($in['status']);
+        if ($status !== '' && $status !== $text(FoodAlchemistAngebot::visibleToTeam($team)->whereKey($id)->value('status'))) {
+            $this->setStatus($team, $id, $status);
+        }
+
+        return $this->speichere($team, $id, $in);
+    }
+
+    private function speichere(Team $team, int $id, array $in): FoodAlchemistAngebot
     {
         $angebot = FoodAlchemistAngebot::visibleToTeam($team)->findOrFail($id);
         $this->guardOwner($angebot, $team);
 
         $update = array_intersect_key($in, array_flip(self::FELDER));
+        $crm = fn (string $f) => array_key_exists($f, $update) && (int) ($update[$f] ?: 0) !== (int) ($angebot->{$f} ?? 0);
+        if ($crm('crm_company_id') || $crm('crm_contact_id')) {
+            \Platform\FoodAlchemist\Support\CrmKunden::pruefe($team, ($update['crm_company_id'] ?? null) ?: null, ($update['crm_contact_id'] ?? null) ?: null);
+        }
         foreach (self::FELDER_NULLBAR as $feld) {
             if (array_key_exists($feld, $update) && ($update[$feld] === '' || $update[$feld] === null)) {
                 $update[$feld] = null;
@@ -128,7 +149,7 @@ class AngebotService
 
         return \Illuminate\Support\Facades\DB::transaction(function () use ($team, $id, $neu, $status, $einfrieren, $angebot, $verwerfen) {
             $user = \Illuminate\Support\Facades\Auth::user();
-            $ergebnis = $this->update($team, $id, ['status' => $status]);
+            $ergebnis = $this->speichere($team, $id, ['status' => $status]);   // einziger Schreibweg für den Status
             app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorAnfrageService::class)->angebotWeiter($team, $ergebnis);   // Spec 94: Anfrage-Signal schließen
             if ($verwerfen) {
                 $einfrieren->verwerfen($team, $user, $angebot);

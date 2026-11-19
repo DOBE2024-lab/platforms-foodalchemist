@@ -463,6 +463,7 @@ class ConceptService
     public function fillSlot(Team $team, int $slotId, array $in): FoodAlchemistConceptSlot
     {
         $slot = $this->ownedSlot($team, $slotId);
+        $typ = app(ConceptSlotZielService::class)->pruefe($team, $slot, $in);   // 1.1c: Sicht (inkl. Abo-Fassungen), Kreis, Typ (ohne Typ: aus dem Rezept)
 
         if (! empty($in['embedded_concept_id'])) {
             // Kaskade: eingebettetes Paket = kind=paket-Concept (neuer Pfad, ersetzt package_id).
@@ -483,7 +484,7 @@ class ConceptService
             app(SlotEinheitService::class)->pruefeBelegung($team, $slot, (int) $in['sales_recipe_id'], isset($in['unit_vocab_id']) ? (int) $in['unit_vocab_id'] : null);   // 17.11.: nur wirksame Einheit
             $slot->update([
                 // B2: Gericht (VK) ODER Basisrezept — beide referenzieren sales_recipe_id, `type` unterscheidet.
-                'type' => ($in['type'] ?? null) === 'basisrezept' ? 'basisrezept' : 'gericht',
+                'type' => $typ,
                 'sales_recipe_id' => (int) $in['sales_recipe_id'],
                 'quantity' => $in['quantity'] ?? null, 'unit_vocab_id' => $in['unit_vocab_id'] ?? null,
                 'package_id' => null, 'embedded_concept_id' => null,
@@ -864,23 +865,10 @@ class ConceptService
      */
     public function allergenRollup(FoodAlchemistConcept $concept): array
     {
-        $concept->loadMissing([
-            'slots.package.dishes.dish:id,spec_is_vegan,spec_is_vegetarian,spec_is_halal,spec_is_gluten_free,spec_is_lactose_free,spec_contains_pork,spec_contains_beef,allergens_confidence',
-            'slots.dish:id,spec_is_vegan,spec_is_vegetarian,spec_is_halal,spec_is_gluten_free,spec_is_lactose_free,spec_contains_pork,spec_contains_beef,allergens_confidence',
-        ]);
+        // 1.1h: dieselbe Positionsliste wie Aggregat/Deklaration, inkl. eingebetteter Pakete (rekursiv); M10R-1: eine Regel-Stelle
+        $agg = app(ConcepterAggregateService::class);
 
-        $gerichte = collect();
-        foreach ($concept->slots as $slot) {
-            if ($slot->package) {
-                $gerichte = $gerichte->merge($slot->package->dishes->pluck('gericht')->filter());
-            }
-            if ($slot->dish) {
-                $gerichte->push($slot->dish);
-            }
-        }
-
-        // M10R-1: kanonische Rollup-Stelle (eine Regel) — Output-Form unverändert.
-        return app(ConcepterAggregateService::class)->allergenRollupFromGerichte($gerichte);
+        return $agg->allergenRollupFromGerichte($agg->conceptPositionen($concept)->pluck('gericht'));
     }
 
     private function refreshCache(FoodAlchemistConcept $concept): void

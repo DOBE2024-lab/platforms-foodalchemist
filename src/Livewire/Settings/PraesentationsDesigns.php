@@ -12,6 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\PresentationDesignService;
 use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Support\KapitelAuswahl;
 
 /**
  * Spec 43 — Visueller Struktur-Builder: der Nutzer gestaltet Präsentations-Designs
@@ -195,6 +196,9 @@ class PraesentationsDesigns extends Component
 
     public ?int $previewSourceId = null;
 
+    /** EK-Schalter (2026-11-19): EK hinter dem VK nur in DIESER Vorschau (Ansichts-Zustand, wird nie gespeichert). */
+    public bool $vorschauEk = false;
+
     public ?string $status = null;
 
     public ?string $fehler = null;
@@ -209,7 +213,7 @@ class PraesentationsDesigns extends Component
     /** Jede Änderung an Design-Daten (nicht an Ansichts-Zustand) macht den Editor „schmutzig". */
     public function updated($property, $value = null): void
     {
-        $ansicht = ['previewType', 'previewSourceId', 'selectedBlockIndex', 'blockImageUpload', 'cssBrief', 'status', 'fehler', 'ungespeichert'];
+        $ansicht = ['previewType', 'previewSourceId', 'vorschauEk', 'selectedBlockIndex', 'blockImageUpload', 'cssBrief', 'status', 'fehler', 'ungespeichert'];
         foreach ($ansicht as $p) {
             if ($property === $p || str_starts_with((string) $property, $p . '.')) {
                 return;
@@ -226,8 +230,8 @@ class PraesentationsDesigns extends Component
     /** Standard-Style je Block-Typ beim Hinzufügen. */
     private const BLOCK_DEFAULTS = [
         'cover' => ['align' => 'center', 'show_cover_image' => true, 'show_logo' => true],
-        'chapter_loop' => ['show_price' => true, 'show_codes' => true, 'dish_columns' => 1, 'show_chapter_image' => true, 'show_dish_photos' => false, 'show_rules' => true, 'show_block_header' => true, 'show_kicker' => true, 'kicker_haupt' => '', 'kicker_unter' => '', 'chapter_image_fit' => 'auto', 'show_chapter_logo' => true, 'chapter_logo_position' => 'unten'],
-        'dish_list' => ['show_price' => true, 'show_codes' => true, 'show_rules' => true, 'show_block_header' => true],
+        'chapter_loop' => ['show_price' => true, 'show_codes' => true, 'dish_columns' => 1, 'show_chapter_image' => true, 'show_dish_photos' => false, 'show_rules' => true, 'show_block_header' => true, 'show_kicker' => true, 'kicker_haupt' => '', 'kicker_unter' => '', 'chapter_image_fit' => 'auto', 'show_chapter_logo' => true, 'chapter_logo_position' => 'unten', 'kapitel_auswahl' => 'alle', 'show_kapitel_preis' => false],
+        'dish_list' => ['show_price' => true, 'show_codes' => true, 'show_rules' => true, 'show_block_header' => true, 'dish_columns' => 1],
         'price_summary' => ['mode' => 'pro_person', 'preis_anzeige' => 'beide'],
         'preis_aufschluesselung' => ['preis_anzeige' => 'beide'],
         'legend' => [],
@@ -241,6 +245,7 @@ class PraesentationsDesigns extends Component
         'konfig_konzepte' => ['ansicht' => 'raster', 'show_bild' => true, 'show_ab_preis' => true],
         'konfig_tageszeit' => [],
         'konfig_addons' => [],
+        'konfig_getraenke' => [],
         'konfig_zusammenfassung' => ['show_gesamt' => true],
         'konfig_anfrage' => [],
     ];
@@ -249,7 +254,7 @@ class PraesentationsDesigns extends Component
         'cover' => 'Titelseite', 'chapter_loop' => 'Alle Kapitel', 'dish_list' => 'Gerichteliste',
         'price_summary' => 'Preis je Person', 'preis_aufschluesselung' => 'Preis-Aufschlüsselung (Angebot)', 'legend' => 'Legende (LMIV)', 'grid' => 'Wochenraster',
         'text' => 'Text', 'heading' => 'Überschrift', 'image' => 'Bild', 'spacer' => 'Abstand', 'cta' => 'Kontakt-Aufruf',
-        'konfig_konzepte' => 'Konfigurator: Konzepte', 'konfig_tageszeit' => 'Konfigurator: Tageszeit', 'konfig_addons' => 'Konfigurator: Add-ons',
+        'konfig_konzepte' => 'Konfigurator: Konzepte', 'konfig_tageszeit' => 'Konfigurator: Tageszeit', 'konfig_addons' => 'Konfigurator: Add-ons', 'konfig_getraenke' => 'Konfigurator: Getränke',
         'konfig_zusammenfassung' => 'Konfigurator: Preis und Gäste', 'konfig_anfrage' => 'Konfigurator: Anfrage',
     ];
 
@@ -276,7 +281,7 @@ class PraesentationsDesigns extends Component
      * ergänzen, damit der Haken in den Einstellungen dem tatsächlichen Aussehen entspricht.
      */
     private const STIL_STANDARDS = [
-        'chapter_loop' => ['show_rules' => true, 'show_block_header' => true, 'show_kicker' => true, 'chapter_image_fit' => 'auto', 'show_chapter_logo' => true, 'chapter_logo_position' => 'unten'],
+        'chapter_loop' => ['show_rules' => true, 'show_block_header' => true, 'show_kicker' => true, 'chapter_image_fit' => 'auto', 'show_chapter_logo' => true, 'chapter_logo_position' => 'unten', 'kapitel_auswahl' => 'alle'],
         'dish_list' => ['show_rules' => true, 'show_block_header' => true],
     ];
 
@@ -292,7 +297,7 @@ class PraesentationsDesigns extends Component
     {
         $tokens += ['page_width' => 'normal', 'text_align' => 'links', 'text_width' => 'normal'];
         $tokens['typography'] = (is_array($tokens['typography'] ?? null) ? $tokens['typography'] : [])
-            + ['heading_size' => 'normal', 'heading_weight' => 'normal', 'heading_tracking' => 'normal'];
+            + ['heading_size' => 'normal', 'heading_weight' => 'normal', 'heading_tracking' => 'normal', 'konzept_text' => 'normal'];
 
         return $tokens;
     }
@@ -380,8 +385,29 @@ class PraesentationsDesigns extends Component
 
     // ── Block-Bearbeitung ──────────────────────────────────────────────────
 
+    /** Baustein „Einzelnes Kapitel“: ein Kapitel-Block mit Bereich, vorbelegt mit dem nächsten noch nicht gezeigten Kapitel. */
+    public const EINZELNES_KAPITEL = 'kapitel_einzeln';
+
     public function blockHinzufuegen(string $type): void
     {
+        if ($type === self::EINZELNES_KAPITEL) {
+            $naechstes = 1;
+            foreach ($this->layout as $b) {
+                $st = is_array($b['style'] ?? null) ? $b['style'] : [];
+                if (($b['block_type'] ?? '') === 'chapter_loop' && KapitelAuswahl::modus($st) === 'bereich') {
+                    [, $bis] = KapitelAuswahl::bereich($st);
+                    if ($bis < KapitelAuswahl::MAX_NR) {
+                        $naechstes = max($naechstes, $bis + 1);
+                    }
+                }
+            }
+            $this->layout[] = ['block_type' => 'chapter_loop', 'style' => ['kapitel_auswahl' => 'bereich', 'kapitel_von' => $naechstes, 'kapitel_bis' => $naechstes] + self::BLOCK_DEFAULTS['chapter_loop']];
+            $this->selectedBlockIndex = count($this->layout) - 1;
+            $this->markiereGeaendert();
+            $this->resetFeedback();
+
+            return;
+        }
         if (! in_array($type, PresentationDesignService::BLOCK_TYPES, true)) {
             return;
         }
@@ -529,7 +555,7 @@ class PraesentationsDesigns extends Component
             return null;
         }
         try {
-            $snap = app(PresentationService::class)->designPreview($team, $this->previewType, $this->previewSourceId, $this->layout, $this->tokens, $this->customCss);
+            $snap = app(PresentationService::class)->designPreview($team, $this->previewType, $this->previewSourceId, $this->layout, $this->tokens, $this->customCss, $this->vorschauEk);
 
             return view('foodalchemist::presentation.show', ['snapshot' => $snap])->render();
         } catch (\Throwable) {
@@ -552,6 +578,20 @@ class PraesentationsDesigns extends Component
         return app(FoodAlchemistMediaService::class)->url($st['context_file_id'] ?? null, $st['path'] ?? null);
     }
 
+    /** Block-Palette ohne Konfigurator: „Einzelnes Kapitel“ direkt hinter „Alle Kapitel“. */
+    private function bausteine(): array
+    {
+        $out = [];
+        foreach (array_diff(PresentationDesignService::BLOCK_TYPES, PresentationDesignService::KONFIG_BLOCKS) as $t) {
+            $out[] = $t;
+            if ($t === 'chapter_loop') {
+                $out[] = self::EINZELNES_KAPITEL;
+            }
+        }
+
+        return $out;
+    }
+
     public function render()
     {
         return view('foodalchemist::livewire.settings.praesentations-designs', [
@@ -559,8 +599,12 @@ class PraesentationsDesigns extends Component
             'designs' => $this->designListe(),
             'quellenOptionen' => $this->quellenOptionen(),
             'blockTypen' => $this->konfiguratorDesign() ? PresentationDesignService::BLOCK_TYPES
-                : array_values(array_diff(PresentationDesignService::BLOCK_TYPES, PresentationDesignService::KONFIG_BLOCKS)),
-            'blockLabels' => self::BLOCK_LABELS,
+                : $this->bausteine(),
+            'blockLabels' => self::BLOCK_LABELS + [self::EINZELNES_KAPITEL => 'Einzelnes Kapitel'],
+            // Aufbau-Liste: Kapitel-Blöcke mit ihrer Auswahl benennen („Kapitel 2“), damit mehrere unterscheidbar sind.
+            'aufbauTitel' => array_map(fn ($b) => ($b['block_type'] ?? '') === 'chapter_loop'
+                ? KapitelAuswahl::titel(is_array($b['style'] ?? null) ? $b['style'] : [])
+                : (self::BLOCK_LABELS[$b['block_type'] ?? ''] ?? (string) ($b['block_type'] ?? '')), $this->layout),
             'blockImageUrl' => $this->blockImageUrl(),
             'vorschauHtml' => $this->vorschauHtml(),
             'schriftOptionen' => $this->schriftOptionen(),

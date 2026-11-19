@@ -2,7 +2,10 @@
      nebeneinander), danach die Menü-Zeilen ein- oder zweispaltig. Bricht die zentrierte
      Ein-Spalten-Optik auf. --}}
 @php
-    $sections = $content['sections'] ?? [];
+    // Kapitel-Auswahl (2026-11-19): alle, ein Bereich (Kapitel X bis Y) oder die übrigen. Schlüssel = Original-Index (eindeutige Anker).
+    $sections = \Platform\FoodAlchemist\Support\KapitelAuswahl::filtern($content['sections'] ?? [], $style, $kapitelVergeben ?? []);
+    $zeigeKapitelPreis = (bool) ($style['show_kapitel_preis'] ?? false);
+    $kapitelPreisLabel = trim((string) ($style['kapitel_preis_label'] ?? '')) ?: 'pro Person';
     // Kapitelbild-Darstellung (2026-11-13): fotoband = Bildband 16:7 beschnitten (bisher), ganz = ganzes Bild in
     // begrenzter Höhe an der linken Textkante, auto (Default) = ganz bei transparenten Bildern (Logos), sonst Fotoband.
     $bildArt = in_array($style['chapter_image_fit'] ?? 'auto', ['fotoband', 'ganz'], true) ? $style['chapter_image_fit'] : 'auto';
@@ -10,10 +13,11 @@
     $zeigeLogo = (bool) ($style['show_chapter_logo'] ?? true);
     $logoOben = ($style['chapter_logo_position'] ?? 'unten') === 'oben';
 @endphp
-@foreach($sections as $s)
+@foreach($sections as $si => $s)
     @php
         $depth = (int) ($s['depth'] ?? 0);
-        $secId = ! empty($s['anker']) ? $s['anker'] : 'pt-sec-' . $loop->index;
+        $secId = ! empty($s['anker']) ? $s['anker'] : 'pt-sec-' . $si;
+        $kapitelPreis = $zeigeKapitelPreis ? \Platform\FoodAlchemist\Support\KapitelPreis::text($s['preis'] ?? null) : '';
         $bandImgs = array_values(array_filter($s['images'] ?? [], fn ($gi) => ! empty($gi['url'])));
         if ($bandImgs === [] && ! empty($s['image']['url'])) { $bandImgs = [$s['image']]; }
         // Kapitel-Band-Bilder abschaltbar (volle Kontrolle im Builder) — Default an.
@@ -39,6 +43,13 @@
                     @if($showKicker)<div class="pt-kicker">{{ $kicker }}</div>@endif
                     <h2 class="pt-section-title">{{ $s['title'] ?? '' }}</h2>
                     @if(!empty($s['text']))<p class="pt-section-text">{{ $s['text'] }}</p>@endif
+                    @if($kapitelPreis !== '')
+                        @php
+                            $kapEk = (! empty($snap['ansicht']['ek']) && ($s['ek']['pp'] ?? 0) > 0) ? (float) $s['ek']['pp'] : null;
+                            $kapVk = $s['preis']['pp'] ?? null;
+                        @endphp
+                        <p class="pt-section-price" data-pt-kapitel-preis><span class="pt-section-price-wert">{{ $kapitelPreis }}</span> <span class="pt-section-price-label">{{ $kapitelPreisLabel }}</span>@if($kapEk !== null)<span class="pt-ek" data-pt-ek>EK {{ number_format($kapEk, 2, ',', '.') }} €{{ $kapVk ? ' · ' . number_format($kapEk / $kapVk * 100, 0, ',', '.') . ' %' : '' }}</span>@endif</p>
+                    @endif
                 </div>
                 @if($split)
                     <figure class="pt-section-aside"><img class="pt-section-img pt-zoomable {{ $ganz($bandImgs[0]) ? 'pt-section-img--ganz' : '' }}" src="{{ $bandImgs[0]['url'] }}" alt=""></figure>

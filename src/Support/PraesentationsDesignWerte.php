@@ -23,11 +23,12 @@ final class PraesentationsDesignWerte
         'heading_size' => ['zurueckhaltend', 'normal', 'gross'],
         'heading_weight' => ['leicht', 'normal', 'kraeftig'],
         'heading_tracking' => ['eng', 'normal', 'weit'],
+        'konzept_text' => ['normal', 'kursiv', 'kursiv_leise'],   // 2026-11-19: Hinweistexte im Konzept („serviert im Schraubglas“)
     ];
 
     /** Schalter (bool) je Block-Typ. */
     public const SCHALTER = [
-        'chapter_loop' => ['show_rules', 'show_block_header', 'show_kicker', 'show_chapter_logo'],
+        'chapter_loop' => ['show_rules', 'show_block_header', 'show_kicker', 'show_chapter_logo', 'show_kapitel_preis'],
         'dish_list' => ['show_rules', 'show_block_header'],
     ];
 
@@ -38,7 +39,19 @@ final class PraesentationsDesignWerte
         'chapter_loop' => [
             'chapter_image_fit' => ['auto', 'fotoband', 'ganz'],
             'chapter_logo_position' => ['oben', 'unten'],
+            'kapitel_auswahl' => KapitelAuswahl::MODI,   // 2026-11-19: alle | bereich (kapitel_von/kapitel_bis) | rest
+            'konzept_preis' => ['zeile', 'betont', 'ende'],
         ],
+        'dish_list' => ['konzept_preis' => ['zeile', 'betont', 'ende']],
+        'price_summary' => ['preis_anzeige' => ['netto', 'brutto', 'beide']],
+        'preis_aufschluesselung' => ['preis_anzeige' => ['netto', 'brutto', 'beide']],
+    ];
+
+    /** Freitexte je Block-Typ (höchstens KICKER_MAX Zeichen). */
+    public const TEXTE = [
+        'chapter_loop' => ['kicker_haupt', 'kicker_unter', 'kapitel_preis_label', 'konzept_preis_label'],
+        'dish_list' => ['konzept_preis_label'],
+        'preis_aufschluesselung' => ['titel'],
     ];
 
     /**
@@ -73,6 +86,22 @@ final class PraesentationsDesignWerte
             }
             foreach (self::BLOCK_WAHL[$typ] ?? [] as $key => $erlaubt) {
                 self::wahl($stil[$key] ?? null, $erlaubt, $pfad . $key, $fehler);
+            }
+            if ($typ === 'chapter_loop') {
+                foreach (['kapitel_von', 'kapitel_bis'] as $key) {
+                    $v = $stil[$key] ?? null;
+                    if ($v !== null && $v !== '' && ! (is_int($v) || (is_string($v) && ctype_digit($v)) || (is_float($v) && floor($v) === $v))) {
+                        $fehler[] = $pfad . $key . ' muss eine ganze Zahl 1–' . KapitelAuswahl::MAX_NR . ' sein';
+                    } elseif ($v !== null && $v !== '' && ((int) $v < 1 || (int) $v > KapitelAuswahl::MAX_NR)) {
+                        $fehler[] = $pfad . $key . ' muss zwischen 1 und ' . KapitelAuswahl::MAX_NR . ' liegen';
+                    }
+                }
+            }
+            foreach (self::TEXTE[$typ] ?? [] as $key) {
+                $t = $stil[$key] ?? null;
+                if ($t !== null && (! is_string($t) || mb_strlen($t) > self::KICKER_MAX)) {
+                    $fehler[] = $pfad . $key . ' muss Text mit höchstens ' . self::KICKER_MAX . ' Zeichen sein';
+                }
             }
             foreach (self::SCHALTER[$typ] ?? [] as $key) {
                 if (array_key_exists($key, $stil) && $stil[$key] !== null && ! is_bool($stil[$key]) && ! in_array($stil[$key], [0, 1], true)) {

@@ -11,6 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPresentation;
 use Platform\FoodAlchemist\Models\FoodAlchemistPresentationDesign;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
+use Platform\FoodAlchemist\Support\KapitelPreis;
 use Platform\FoodAlchemist\Support\PraesentationsBilder;
 
 /**
@@ -335,7 +336,7 @@ class PresentationService
     /**
      * @return array<string,mixed>
      */
-    public function previewData(Team $team, string $type, int $id, ?string $designOverride = null): array
+    public function previewData(Team $team, string $type, int $id, ?string $designOverride = null, bool $mitEk = false): array
     {
         $entity = $this->resolveEntity($team, $type, $id, forWrite: false);
         $settings = $entity->presentationSettings();
@@ -347,7 +348,7 @@ class PresentationService
             'freigabe' => ['at' => now()->toIso8601String(), 'by' => auth()->id(), 'datum' => now()->format('d.m.Y')],
         ];
 
-        return $this->hydrateImages($this->buildSnapshot($team, $entity, $type, $settings));
+        return $this->hydrateImages($this->buildSnapshot($team, $entity, $type, $settings, $mitEk));
     }
 
     // ── Snapshot-Aufbau + Sanitizer ────────────────────────────────────────
@@ -358,7 +359,47 @@ class PresentationService
      * @param  array<string,mixed>  $settings
      * @return array<string,mixed>
      */
-    public function buildSnapshot(Team $team, Model $entity, string $type, array $settings): array
+    /**
+     * EK-Schalter der INTERNEN Vorschau (2026-11-19): nur previewData/designPreview setzen ihn, nie publish.
+     * Während des Normalisierens gesetzt, danach zurück — und ohne ihn wird jeder `ek`-Schlüssel entfernt.
+     */
+    private bool $mitEk = false;
+
+    public function buildSnapshot(Team $team, Model $entity, string $type, array $settings, bool $mitEk = false): array
+    {
+        $this->mitEk = $mitEk && in_array($type, [self::TYPE_FOODBOOK, self::TYPE_ANGEBOT], true);
+        try {
+            $snap = $this->baueSnapshot($team, $entity, $type, $settings);
+        } finally {
+            $vorher = $this->mitEk;
+            $this->mitEk = false;
+        }
+        if ($vorher) {
+            $snap['ansicht'] = ['ek' => true];   // Kennzeichen für Renderer (EK-Werte, Hinweis „intern“)
+        } else {
+            $snap['content']['sections'] = self::ohneEk($snap['content']['sections'] ?? []);   // Gurt + Hosenträger: nie EK im Kundenlink
+        }
+
+        return $snap;
+    }
+
+    /** Entfernt alle EK-Angaben aus Abschnitten, Bausteinen und Zeilen. */
+    public static function ohneEk(array $sections): array
+    {
+        foreach ($sections as $si => $sec) {
+            unset($sections[$si]['ek']);
+            foreach ($sec['blocks'] ?? [] as $bi => $blk) {
+                unset($sections[$si]['blocks'][$bi]['ek']);
+                foreach ($blk['items'] ?? [] as $ii => $it) {
+                    unset($sections[$si]['blocks'][$bi]['items'][$ii]['ek']);
+                }
+            }
+        }
+
+        return $sections;
+    }
+
+    private function baueSnapshot(Team $team, Model $entity, string $type, array $settings): array
     {
         $clean = $this->mergeSettings($settings, $type);
         if (isset($settings['tokens']) && is_array($settings['tokens'])) {
@@ -460,6 +501,11 @@ class PresentationService
                     }
                 }
             }
+            // Preis je Kapitel (2026-11-19): eingefroren wie die Bausteinpreise, damit Kapitel und Bausteine zusammenpassen.
+            $p = $this->parsePreis($sec['preis']['pp'] ?? null);
+            if ($p !== null && $p > 0) {
+                $out["s{$si}.pp"] = ['net' => $p, 'label' => 'Kapitel ' . (string) ($sec['title'] ?? '') . ' (pp)'];
+            }
         }
         $t = $c['total'] ?? null;
         if (is_array($t)) {
@@ -549,6 +595,9 @@ class PresentationService
                     }
                 }
             }
+            if (array_key_exists("s{$si}.pp", $overrides) && is_array($sec['preis'] ?? null)) {
+                $c['sections'][$si]['preis']['pp'] = (float) $overrides["s{$si}.pp"];
+            }
         }
         if (is_array($c['total'] ?? null)) {
             foreach (['vk_pro_person', 'pauschal', 'gesamt_vk'] as $k) {
@@ -623,7 +672,8 @@ class PresentationService
     private function normalizeFoodbook(Team $team, FoodAlchemistFoodbook $fb, array $settings, ?FoodAlchemistOutlet $outlet = null): array
     {
         // mitKaskade=false → Kaskaden-Leak (EK/Lieferant) entsteht gar nicht erst.
-        $dok = app(FoodbookService::class)->dokumentDaten($team, $fb, false, [], false, $outlet);
+        // mitTexten (2026-11-19): Text-Bausteine des Konzepts („serviert im Schraubglas“) kamen im Foodbook-Link nie an — im Angebot schon.
+        $dok = app(FoodbookService::class)->dokumentDaten($team, $fb, $this->mitEk, [], false, $outlet, false, true);
 
         $showPrice = (bool) $settings['price_display'];
         $showDecl = (bool) $settings['declaration'];
@@ -692,7 +742,8 @@ class PresentationService
         }
 
         // Gericht-Zeilen → Kunden-Items (gilt für Kapitel-Blöcke UND Format-Editionen).
-        $items = function (array $gerichte) use ($showPrice, $showDecl, $dishFotos): array {
+        $mitEk = $this->mitEk;
+        $items = function (array $gerichte) use ($showPrice, $showDecl, $dishFotos, $mitEk): array {
             $items = [];
             foreach ($gerichte as $g) {
                 $rid = ! empty($g['recipe_id']) ? (int) $g['recipe_id'] : null;
@@ -705,7 +756,10 @@ class PresentationService
                     'codes' => $showDecl ? array_values((array) ($g['codes'] ?? [])) : [],
                     // Gericht-Foto als Identifier (recipe_id selbst bleibt draußen); Anzeige per Design-Toggle.
                     'image' => ($rid !== null && isset($dishFotos[$rid])) ? $dishFotos[$rid] : null,
-                ];
+                ]
+                    // Text-Baustein: Titel + Fließtext (Schlüssel nur bei Text, Gericht-Items behalten die Allowlist)
+                    + (($g['type'] ?? null) === 'text' ? ['title' => $g['titel'] ?? null] : [])
+                    + ($mitEk && $showPrice && ($g['ek'] ?? null) !== null ? ['ek' => (float) $g['ek']] : []);
             }
 
             return $items;
@@ -732,7 +786,7 @@ class PresentationService
                     ] : null,
                     'codes' => $showDecl ? array_values((array) ($b['codes'] ?? [])) : [],
                     'items' => $items($b['gerichte'] ?? []),
-                ];
+                ] + ($this->mitEk && $showPrice && ! $perItem && isset($b['ek_pp']) ? ['ek' => ['pp' => (float) $b['ek_pp']]] : []);
             }
             $ankerId = (int) str_replace('k', '', (string) ($k['anker'] ?? ''));
             $sections[] = [
@@ -745,16 +799,62 @@ class PresentationService
                 'image' => $chapImg[$ankerId] ?? null,
                 'images' => $chapImages[$ankerId] ?? [],
                 'blocks' => $blocks,
-            ];
+                // Preis je Kapitel (VK netto pro Person, Format = Spanne der Alternativen); nur bei Preisanzeige.
+                'preis' => $showPrice ? KapitelPreis::bauen(
+                    isset($k['vk_pro_person']) ? (float) $k['vk_pro_person'] : null,
+                    $k['preis_range'] ?? null,
+                    (bool) ($k['ist_format'] ?? false),
+                ) : null,
+            ] + ($this->mitEk && $showPrice && isset($k['ek_pro_person']) ? ['ek' => ['pp' => (float) $k['ek_pro_person']]] : []);
         }
 
         $g = $dok['gesamt'] ?? [];
+        // MwSt wie beim Angebot (Team-Standardsatz), damit „Preis je Person“ und die Aufschlüsselung auch im Foodbook brutto können.
+        $satz = $showPrice ? $this->mwstSatz($team) : null;
+        $ppNetto = isset($g['vk_pro_person']) ? (float) $g['vk_pro_person'] : null;
         $total = $showPrice ? [
-            'vk_pro_person' => isset($g['vk_pro_person']) ? (float) $g['vk_pro_person'] : null,
+            'vk_pro_person' => $ppNetto,
+            'vk_pro_person_brutto' => ($ppNetto !== null && $satz !== null) ? round($ppNetto * (1 + $satz / 100), 2) : null,
+            'mwst_satz' => $satz,
             'pauschal' => isset($g['pauschal']) ? (float) $g['pauschal'] : null,
             'personen' => $g['personen'] ?? null,
             'gesamt_vk' => isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null,
         ] : null;
+
+        // Preis-Aufschlüsselung (2026-11-19) auch fürs Foodbook: je Hauptkapitel €/Person, mit Gästezahl auch Summen.
+        $breakdown = null;
+        if ($showPrice) {
+            $pax = isset($g['personen']) ? (int) $g['personen'] : null;
+            $zeilen = [];
+            foreach ($sections as $s) {
+                if ((int) ($s['depth'] ?? 0) !== 0 || ! is_array($s['preis'] ?? null)) {
+                    continue;
+                }
+                $alt = ($s['preis']['pp'] ?? null) === null;
+                $zeilen[] = [
+                    'titel' => (string) $s['title'],
+                    'pax' => $pax,
+                    'vk_pro_person' => $s['preis']['pp'],
+                    'gesamt' => (! $alt && $pax) ? round((float) $s['preis']['pp'] * $pax, 2) : null,
+                    'alternativen' => $alt,
+                    'preis_range' => $alt ? ['min' => $s['preis']['min'], 'max' => $s['preis']['max']] : null,
+                ];
+            }
+            $netto = isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null;
+            if ($zeilen !== []) {
+                $breakdown = [
+                    'zeilen' => $zeilen,
+                    'pax' => $pax,
+                    'pro_person' => $ppNetto,
+                    // Ohne Gästezahl gibt es keine Gesamtsumme: der Block zeigt dann nur den Preis pro Person.
+                    'netto' => $netto !== null ? round($netto, 2) : null,
+                    'mwst_satz' => $satz,
+                    'mwst_betrag' => ($netto !== null && $satz !== null) ? round($netto * $satz / 100, 2) : null,
+                    'brutto' => ($netto !== null && $satz !== null) ? round($netto * (1 + $satz / 100), 2) : null,
+                    'zzgl' => [],
+                ];
+            }
+        }
 
         return [
             'title' => (string) ($fb->label ?: $fb->code ?: 'Foodbook'),
@@ -771,8 +871,18 @@ class PresentationService
                 'sections' => $sections,
                 'legend' => $showDecl ? ($dok['legende'] ?? null) : null,
                 'total' => $total,
+                'preis_aufschluesselung' => $breakdown,
             ],
         ];
+    }
+
+    /** MwSt-Satz des Teams für Kundenpreise (Standardsatz ermäßigt oder regulär). */
+    private function mwstSatz(Team $team): float
+    {
+        $mwst = app(TeamSettingsService::class)->mwst($team);
+
+        return ($mwst['default_satz'] ?? 'ermaessigt') === 'regulaer'
+            ? (float) ($mwst['regulaer'] ?? 19.0) : (float) ($mwst['ermaessigt'] ?? 7.0);
     }
 
     /**
@@ -788,7 +898,8 @@ class PresentationService
     {
         $showPrice = (bool) $settings['price_display'];
 
-        $komp = app(OfferCompositionService::class)->komposition($team, $angebot, $outlet, false);
+        // intern=true nur für die interne Vorschau mit EK-Schalter (liefert ek_pp je Baustein); der Kundenlink bleibt intern=false.
+        $komp = app(OfferCompositionService::class)->komposition($team, $angebot, $outlet, $this->mitEk);
         $kalk = app(AngebotService::class)->kalkulation($team, $angebot, $outlet);
 
         $zzgl = [];   // Spec 94b: Positionen nach Aufwand (unter der Summe)
@@ -824,7 +935,7 @@ class PresentationService
                         'price' => ($showPrice && ! $einzel && ($ed['preis_pp'] ?? null) !== null)
                             ? ['pp' => (float) $ed['preis_pp'], 'pauschal' => 0.0, 'unit' => 'gast'] : null,
                         'codes' => [], 'items' => $this->angebotItems($ed['gerichte'] ?? [], $showPrice),
-                    ];
+                    ] + ($this->mitEk && $showPrice && ! $einzel && ($ed['ek_pp'] ?? null) !== null ? ['ek' => ['pp' => (float) $ed['ek_pp']]] : []);
                 }
             } else {
                 foreach ($k['bloecke'] as $b) {
@@ -864,7 +975,7 @@ class PresentationService
                         'price' => ($showPrice && ! $einzel)
                             ? ['pp' => (float) ($b['preis_pp'] ?? 0), 'pauschal' => (float) ($b['pauschal'] ?? 0), 'unit' => $b['preis_einheit'] ?? null] : null,
                         'codes' => [], 'items' => $this->angebotItems($b['gerichte'] ?? [], $showPrice),
-                    ];
+                    ] + ($this->mitEk && $showPrice && ! $einzel && isset($b['ek_pp']) && ($b['ek_vollstaendig'] ?? false) ? ['ek' => ['pp' => (float) $b['ek_pp']]] : []);
                 }
             }
             if ($blocks === [] && collect($k['bloecke'] ?? [])->contains(fn ($b) => $b['aufwand'] ?? false)) {
@@ -879,17 +990,18 @@ class PresentationService
                 'image' => $k['bild'] ?? null,
                 'images' => $k['bilder'] ?? [],
                 'blocks' => $blocks,
-            ];
+                // Preis je Kapitel (VK netto pro Person; Format mit Alternativen = Spanne); nur bei Preisanzeige.
+                'preis' => $showPrice ? KapitelPreis::bauen(
+                    isset($k['vk_pro_person']) ? (float) $k['vk_pro_person'] : null,
+                    $k['preis_range'] ?? null,
+                    (bool) ($k['ist_format'] ?? false) && ($k['format_price_mode'] ?? null) === 'alternativen',
+                ) : null,
+            ] + ($this->mitEk && $showPrice && isset($k['ek_pro_person']) ? ['ek' => ['pp' => (float) $k['ek_pro_person']]] : []);
         }
         $zzglSumme = round(array_sum(array_column($zzgl, 'betrag')), 2);
 
         // MwSt-Satz einmal auflösen — für das Pro-Person-Brutto UND die Aufschlüsselung.
-        $satz = null;
-        if ($showPrice) {
-            $mwst = app(TeamSettingsService::class)->mwst($team);
-            $satz = ($mwst['default_satz'] ?? 'ermaessigt') === 'regulaer'
-                ? (float) ($mwst['regulaer'] ?? 19.0) : (float) ($mwst['ermaessigt'] ?? 7.0);
-        }
+        $satz = $showPrice ? $this->mwstSatz($team) : null;
 
         $ppNetto = isset($kalk['vk_pro_person']) ? (float) $kalk['vk_pro_person'] : null;
         $total = $showPrice ? [
@@ -976,7 +1088,7 @@ class PresentationService
                 'price' => ($showPrice && ($g['preis'] ?? null) !== null) ? (float) $g['preis'] : null,
                 'codes' => [],
                 'image' => ! empty($g['recipe_id']) ? ($this->angebotFotos[(int) $g['recipe_id']] ?? null) : null,
-            ];
+            ] + ($this->mitEk && $showPrice && ($g['ek'] ?? null) !== null ? ['ek' => (float) $g['ek']] : []);
         }
 
         return $items;
@@ -994,12 +1106,12 @@ class PresentationService
      * @param  array<string,mixed>  $tokens
      * @return array<string,mixed>
      */
-    public function designPreview(Team $team, string $type, int $id, array $layout, array $tokens, ?string $customCss = null): array
+    public function designPreview(Team $team, string $type, int $id, array $layout, array $tokens, ?string $customCss = null, bool $mitEk = false): array
     {
         $entity = $this->resolveEntity($team, $type, $id, forWrite: false);
         // Content + Branding regulär bauen (typ-korrekte Normalisierung), dann das aufgelöste
         // Design durch die LIVE-Builder-Werte ersetzen (Layout/Tokens/CSS aus der Bearbeitung).
-        $snapshot = $this->buildSnapshot($team, $entity, $type, ['design' => 'editorial']);
+        $snapshot = $this->buildSnapshot($team, $entity, $type, ['design' => 'editorial'], $mitEk);
         $spMode = ($tokens['speiseplan_layout'] ?? 'grid') === 'liste' ? 'liste' : 'grid';
         $snapshot['resolved_design'] = [
             'source' => '(builder)',
@@ -1200,7 +1312,9 @@ class PresentationService
             $bt = $block['block_type'] ?? '';
             if (in_array($bt, ['chapter_loop', 'dish_list', 'price_summary', 'grid'], true)) {
                 if (! $gesetzt) {
-                    $out[] = ['block_type' => $contentBlock, 'style' => $block['style'] ?? []];
+                    // Der Speiseplan hat genau einen Inhaltsblock: eine Kapitel-Auswahl aus dem Design gilt hier nicht.
+                    $stil = array_diff_key((array) ($block['style'] ?? []), array_flip(['kapitel_auswahl', 'kapitel_von', 'kapitel_bis']));
+                    $out[] = ['block_type' => $contentBlock, 'style' => $stil];
                     $gesetzt = true;
                 }
 

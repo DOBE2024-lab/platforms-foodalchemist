@@ -1551,7 +1551,7 @@ class FoodbookService
      *                                     wird auf die oberste Ebene gehoben (sonst nie erreicht).
      * @param  bool  $mitKaskade  #3: zusätzlich den Produktions-Baum je Gericht anhängen (EK nur intern).
      */
-    public function dokumentDaten(Team $team, FoodAlchemistFoodbook $fb, bool $intern = false, array $kapitelFilter = [], bool $mitKaskade = false, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, bool $mitHandbuchMengen = false): array
+    public function dokumentDaten(Team $team, FoodAlchemistFoodbook $fb, bool $intern = false, array $kapitelFilter = [], bool $mitKaskade = false, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, bool $mitHandbuchMengen = false, bool $mitTexten = false): array
     {
         $fb->loadMissing([
             'chapters' => fn ($q) => $q->orderBy('position'),
@@ -1591,7 +1591,7 @@ class FoodbookService
         $wording = app(WordingResolver::class);
 
         $rows = [];
-        $walk = function ($parentId, int $depth) use (&$walk, $byParent, &$rows, $team, $pax, $wording, $intern, $outlet, $mitHandbuchMengen) {
+        $walk = function ($parentId, int $depth) use (&$walk, $byParent, &$rows, $team, $pax, $wording, $intern, $outlet, $mitHandbuchMengen, $mitTexten) {
             foreach ($byParent[$parentId] ?? [] as $k) {
                 // B (2026-08-31): LEBENDES Format-Kapitel — Identität + Editionen LIVE aus dem Format
                 // rendern (statt der Kapitel-Blöcke). Editionen = format_slots (type=concept) → Concept
@@ -1639,7 +1639,7 @@ class FoodbookService
                     $untertitel = ($untertitel !== '' && $untertitel !== $label) ? $untertitel : null;
                     // concept_ref: Gerichte des Concepts mit aufgelöster Wording-Kette als Kundenzeilen
                     $gerichte = ($b->type === 'concept_ref' && $b->concept !== null)
-                        ? $wording->gerichtZeilen($b->concept, $b, false, $mitHandbuchMengen)
+                        ? $wording->gerichtZeilen($b->concept, $b, $mitTexten, $mitHandbuchMengen)   // $mitTexten: Präsentation zeigt Text-Bausteine des Konzepts (wie das Angebot)
                         : [];
                     // Block-Preis für die Preis-links-Spalte (Referenz-Layout „x € pro Person").
                     $bp = $this->blockPreis($b, $pax, $outlet);
@@ -1659,7 +1659,9 @@ class FoodbookService
                         'einzelpreise' => $b->type === 'concept_ref' && $b->concept !== null && $b->concept->istEinzelpreis(),
                         // #5b: Einzelgericht-Block trägt seine Rezept-ID → per-Gericht-Codes am Block-Label.
                         'recipe_id' => $b->type === 'recipe_ref' ? ($b->sales_recipe_id !== null ? (int) $b->sales_recipe_id : null) : null,
-                        'codes' => []];
+                        'codes' => []]
+                        // EK je Baustein NUR in der internen Projektion (interne Vorschau mit EK-Schalter, Kalkulations-Print).
+                        + ($intern ? ['ek_pp' => (float) $bp['ek_pp']] : []);
                 }
                 $agg = $this->kapitelAggregat($team, $k, $pax, $outlet);
                 $row = [

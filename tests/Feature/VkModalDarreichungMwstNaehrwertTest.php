@@ -23,7 +23,8 @@ beforeEach(function () {
     $this->g = $this->unitG($this->rootTeam);
     $this->gericht = $this->makeRecipe($this->rootTeam, '[VOR] Perlcouscous-Salat', ['is_sales_recipe' => true, 'status' => 'draft']);
     $this->standard = app(DarreichungService::class)->ensureStandard($this->rootTeam, $this->gericht->id, 'generator');
-    $this->standard->forceFill(['quantity_per_unit_g' => 120, 'unit_count' => 1, 'vat_profile_key' => null])->save();
+    // #853: die Standard-Darreichung folgt sonst der Komponentensumme — hier eine eigene Portionsmenge (120 g)
+    $this->standard->forceFill(['quantity_per_unit_g' => 120, 'unit_count' => 1, 'vat_profile_key' => null, 'menge_vom_standard' => false])->save();
     $this->zeile = fn () => FoodAlchemistRecipeDarreichung::findOrFail($this->standard->id);
     $this->modal = fn () => Livewire::test(VkModal::class)->call('oeffnen', $this->gericht->id)->call('bearbeitenStarten');
 });

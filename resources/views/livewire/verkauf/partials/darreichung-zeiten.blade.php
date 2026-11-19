@@ -35,17 +35,36 @@
         <x-fa::button size="sm" variant="ghost" icon="heroicon-m-plus" wire:click="darZeitHinzu({{ $d->id }})">Arbeitsschritt hinzufügen</x-fa::button>
         <x-fa::button size="sm" wire:click="darZeitenSpeichern({{ $d->id }})">Zeiten übernehmen</x-fa::button>
     </div>
+    @php
+        $vn = (float) ($av['portionen'] ?? 100);
+        $vnText = number_format($vn, floor($vn) == $vn ? 0 : 1, ',', '.') . ($vn == 1 ? ' Portion' : ' Portionen');
+        $vMin = fn ($m) => number_format((float) $m, 1, ',', '.') . ' min';
+        $vHerst = (float) ($av['herstellung_minuten'] ?? 0);
+        $vFertig = (float) ($av['minuten_gesamt'] ?? 0);
+    @endphp
     <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] border border-[var(--fa-line)] p-3 flex flex-col gap-2" aria-live="polite" data-dar-zeitvorschau>
-        <span class="font-semibold text-[length:var(--fa-text-lg)]">Gespeicherte Zeitvorschau · 100 Portionen</span>
-        <div class="grid gap-4 sm:grid-cols-2 py-2">
-            <div><span class="{{ $hinweis }}">Küchenarbeit</span><strong class="block text-[length:var(--fa-text-2xl)] font-medium tabular-nums">{{ number_format((float) ($av['minuten_gesamt'] ?? 0), 1, ',', '.') }} min</strong><span class="{{ $hinweis }}">Produktionsplanung &amp; Küchenlohn</span></div>
-            <div><span class="{{ $hinweis }}">Arbeit vor Ort</span><strong class="block text-[length:var(--fa-text-2xl)] font-medium tabular-nums">{{ number_format((float) ($av['vor_ort_minuten'] ?? 0), 1, ',', '.') }} min</strong><span class="{{ $hinweis }}">Serviceplanung &amp; Servicelohn</span></div>
+        <div class="flex flex-wrap items-end justify-between gap-3">
+            <span class="font-semibold text-[length:var(--fa-text-lg)]">Zeitvorschau</span>
+            <x-fa::field label="Portionen" for="dar-vorschau-portionen-{{ $d->id }}" hint="Nur Vorschau, wird nicht gespeichert">
+                <x-fa::input id="dar-vorschau-portionen-{{ $d->id }}" inputmode="decimal" size="sm" wire:model.blur="darVorschauPortionen" numeric data-dar-vorschau-portionen />
+            </x-fa::field>
         </div>
+        @if(($darZeitForm[$d->id] ?? []) != ($darZeitStart[$d->id] ?? []))<span class="{{ $hinweis }}">Noch nicht gespeichert · Vorschau rechnet mit den übernommenen Zeiten</span>@endif
+        <div class="grid gap-4 sm:grid-cols-3 py-2">
+            <div data-zeit="herstellung"><span class="{{ $hinweis }}">Herstellung (Basisrezepte)</span><strong class="block text-[length:var(--fa-text-2xl)] font-medium tabular-nums">{{ $vMin($vHerst) }}</strong><span class="{{ $hinweis }}">Gepflegt am Basisrezept</span></div>
+            <div data-zeit="fertigstellen"><span class="{{ $hinweis }}">Fertigstellen in der Küche</span><strong class="block text-[length:var(--fa-text-2xl)] font-medium tabular-nums">{{ $vMin($vFertig) }}</strong><span class="{{ $hinweis }}">Arbeitsschritte dieser Darreichung</span></div>
+            <div data-zeit="vor-ort"><span class="{{ $hinweis }}">Service vor Ort</span><strong class="block text-[length:var(--fa-text-2xl)] font-medium tabular-nums">{{ $vMin($av['vor_ort_minuten'] ?? 0) }}</strong><span class="{{ $hinweis }}">Serviceplanung &amp; Servicelohn</span></div>
+        </div>
+        <div class="flex flex-wrap items-baseline justify-between gap-2 border-t border-[var(--fa-line)] pt-2" data-zeit="kueche-gesamt"><span class="font-semibold">Küche gesamt · {{ $vnText }}</span><strong class="tabular-nums">{{ $vMin($vHerst + $vFertig) }}</strong></div>
+        @if(($av['passiv_minuten'] ?? 0) > 0)<div class="flex flex-wrap items-baseline justify-between gap-2" data-zeit="passiv"><span class="{{ $hinweis }}">Passiv (Stand- und Gerätezeit) · nicht in den Personenminuten</span><span class="tabular-nums">{{ $vMin($av['passiv_minuten']) }}</span></div>@endif
+        @foreach($av['herstellung_rezepte'] ?? [] as $hr)
+            <span class="{{ $hinweis }}">{{ $hr['name'] }} (Basisrezept) · {{ $vMin($hr['minuten']) }}</span>
+        @endforeach
         @if(($av['vollstaendig'] ?? true) === false)<x-fa::signal tone="warn">Menge fehlt. Zeit nicht vollständig berechnet.</x-fa::signal>@endif
         @foreach($av['posten'] ?? [] as $zp)
             <span class="{{ $hinweis }}">{{ \Platform\FoodAlchemist\Services\DarreichungsZeitService::TAETIGKEITEN[$zp['use_case']] }} · {{ $zp['menge'] ?? 'Menge fehlt' }} × {{ $zp['wert'] }} {{ in_array($zp['basis'], ['portion', 'einheit', 'stueck']) ? 's' : 'min' }} · {{ $zp['ort'] === 'kueche' ? 'Küche' : 'Vor Ort' }}</span>
         @endforeach
-        @if(($av['vor_ort_minuten'] ?? 0) > 0)<span>Service-Grundlohn für 100 Portionen: <x-fa::money :value="$av['service_kosten']['lohn_eur'] ?? null" /> bei <x-fa::money :value="$av['service_kosten']['stundensatz'] ?? null" /> / h</span>@endif
+        @if(($av['vor_ort_minuten'] ?? 0) > 0)<span>Service-Grundlohn für {{ $vnText }}: <x-fa::money :value="$av['service_kosten']['lohn_eur'] ?? null" /> bei <x-fa::money :value="$av['service_kosten']['stundensatz'] ?? null" /> / h</span>@endif
         <span class="{{ $hinweis }}">Service rechnet im Auftrag mit dem allgemeinen Team-Stundensatz. Lohnnebenkosten und Aufschläge ergänzt die Auftragskalkulation. Regeneration wird zusätzlich berechnet.</span>
     </div>
 </section>

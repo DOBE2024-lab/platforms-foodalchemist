@@ -25,6 +25,17 @@ trait HatDarreichungsFormular
     #[\Livewire\Attributes\Locked]
     public array $darZeitStart = [];
 
+    /** Portionen der Zeitvorschau (Entscheid 19.11.2026): nur Vorschau, wird nie gespeichert. Freitext aus dem Feld. */
+    public $darVorschauPortionen = 100;
+
+    /** Vorschau-Portionen als Zahl: Komma erlaubt, leer/ungültig = 100, begrenzt auf 1–100.000. */
+    private function vorschauPortionen(): float
+    {
+        $wert = str_replace(',', '.', trim((string) $this->darVorschauPortionen));
+
+        return is_numeric($wert) && is_finite((float) $wert) ? max(1.0, min(100000.0, (float) $wert)) : 100.0;
+    }
+
     private function darZeitEntwuerfe(): array
     {
         return array_filter($this->darZeitForm, fn ($zeilen, $id) => isset($this->darForm[$id])

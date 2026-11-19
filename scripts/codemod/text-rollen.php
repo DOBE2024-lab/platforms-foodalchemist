@@ -21,38 +21,73 @@ foreach ($argv as $arg) {
 }
 
 $basis = realpath(__DIR__.'/../../resources/views');
-$codemod = new TextRollenCodemod();
-$summe = ['umgestellt' => [], 'ohne_rolle' => [], 'leise' => [], 'pruefen' => []];
-$jeDatei = [];
 
 $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($basis, FilesystemIterator::SKIP_DOTS));
-$dateien = [];
+$original = [];
 foreach ($it as $f) {
     if (str_ends_with($f->getFilename(), '.blade.php')) {
-        $dateien[] = $f->getPathname();
+        $original[substr($f->getPathname(), strlen($basis) + 1)] = file_get_contents($f->getPathname());
     }
 }
-sort($dateien);
+ksort($original);
+$stand = $original; // Arbeitsstand im Speicher: Includes sehen immer den aktuellen Stand, nicht die Platte
 
-foreach ($dateien as $voll) {
-    $pfad = substr($voll, strlen($basis) + 1);
-    if (str_starts_with($pfad, 'components/')) {
-        continue; // Bausteine sind die Quelle, nicht das Ziel (wie UiRegeln::REGELN_AUSSER_BAUSTEINE)
+// @include('foodalchemist::a.b') → a/b.blade.php; fremde Namensräume gelten als nicht prüfbar.
+$includeLeser = function (string $view) use (&$stand): ?string {
+    if (! str_starts_with($view, 'foodalchemist::')) {
+        return null;
     }
-    $alt = file_get_contents($voll);
-    $r = $codemod->umwandeln($alt, $pfad);
-    foreach (['umgestellt', 'ohne_rolle', 'leise'] as $k) {
-        foreach ($r[$k] as $schluessel => $n) {
-            $summe[$k][$schluessel] = ($summe[$k][$schluessel] ?? 0) + $n;
+
+    return $stand[str_replace('.', '/', substr($view, strlen('foodalchemist::'))).'.blade.php'] ?? null;
+};
+$codemod = new TextRollenCodemod(includeLeser: $includeLeser);
+$summe = ['umgestellt' => [], 'ohne_rolle' => [], 'leise' => [], 'pruefen' => [], 'leise_aufgeloest' => 0];
+
+// Durchläufe bis zum Fixpunkt: löst ein Partial sein eigenes $leise auf, darf im nächsten Durchlauf das
+// Elternteil folgen (vorher erbte das Partial die Definition). Zählungen summieren, Prüfliste/ohne Rolle/
+// $leise-Werte gelten aus dem letzten bzw. ersten Durchlauf.
+for ($durchlauf = 1; $durchlauf <= 5; $durchlauf++) {
+    $geaendert = false;
+    $pruefen = [];
+    $ohneRolle = [];
+    foreach ($stand as $pfad => $alt) {
+        if (str_starts_with($pfad, 'components/')) {
+            continue; // Bausteine sind die Quelle, nicht das Ziel (wie UiRegeln::REGELN_AUSSER_BAUSTEINE)
+        }
+        $r = $codemod->umwandeln($alt, $pfad);
+        foreach ($r['umgestellt'] as $rolle => $n) {
+            $summe['umgestellt'][$rolle] = ($summe['umgestellt'][$rolle] ?? 0) + $n;
+        }
+        foreach ($r['ohne_rolle'] as $k => $n) {
+            $ohneRolle[$k] = ($ohneRolle[$k] ?? 0) + $n;
+        }
+        if ($durchlauf === 1) {
+            foreach ($r['leise'] as $k => $n) {
+                $summe['leise'][$k] = ($summe['leise'][$k] ?? 0) + $n;
+            }
+        }
+        array_push($pruefen, ...$r['pruefen']);
+        $summe['leise_aufgeloest'] += $r['leise_aufgeloest'];
+        if ($r['html'] !== $alt) {
+            $stand[$pfad] = $r['html'];
+            $geaendert = true;
         }
     }
-    array_push($summe['pruefen'], ...$r['pruefen']);
-    $n = array_sum($r['umgestellt']);
-    if ($n > 0 || $r['html'] !== $alt) {
-        $jeDatei[$pfad] = $n;
-        if ($schreiben && $r['html'] !== $alt) {
-            file_put_contents($voll, $r['html']);
-        }
+    $summe['pruefen'] = $pruefen;
+    $summe['ohne_rolle'] = $ohneRolle;
+    if (! $geaendert) {
+        break;
+    }
+}
+
+$jeDatei = [];
+foreach ($stand as $pfad => $neu) {
+    if ($neu === $original[$pfad]) {
+        continue;
+    }
+    $jeDatei[$pfad] = count(array_diff(explode("\n", $original[$pfad]), explode("\n", $neu)));
+    if ($schreiben) {
+        file_put_contents($basis.'/'.$pfad, $neu);
     }
 }
 
@@ -64,8 +99,8 @@ arsort($jeDatei);
 $z = [];
 $z[] = '# Codemod Text-Rollen — '.($schreiben ? 'GESCHRIEBEN' : 'Trockenlauf').' ('.date('Y-m-d H:i').')';
 $z[] = '';
-$z[] = sprintf('Umgestellt: **%d Stellen** in **%d Dateien** (Views ohne components/). Prüfliste: %d. Ohne Rollen-Treffer: %d.',
-    array_sum($summe['umgestellt']), count($jeDatei), count($summe['pruefen']), array_sum($summe['ohne_rolle']));
+$z[] = sprintf('Umgestellt: **%d Stellen** in **%d Dateien** (Views ohne components/), %d Durchläufe bis zum Fixpunkt. Prüfliste: %d. Ohne Rollen-Treffer: %d.',
+    array_sum($summe['umgestellt']), count($jeDatei), min($durchlauf, 5), count($summe['pruefen']), array_sum($summe['ohne_rolle']));
 $z[] = '';
 $z[] = '## Je Rolle';
 foreach ($summe['umgestellt'] as $rolle => $n) {
@@ -73,6 +108,7 @@ foreach ($summe['umgestellt'] as $rolle => $n) {
 }
 $z[] = '';
 $z[] = '## $leise-Definitionen';
+$z[] = "- aufgelöst (Definition entfernt, Wert in class eingesetzt): {$summe['leise_aufgeloest']}";
 foreach ($summe['leise'] as $wert => $n) {
     $z[] = "- {$wert}: {$n}";
 }
@@ -87,7 +123,7 @@ foreach ($summe['pruefen'] as $p) {
     $z[] = "- {$p}";
 }
 $z[] = '';
-$z[] = '## Je Datei (Top 30)';
+$z[] = '## Je Datei: geänderte Zeilen (Top 30)';
 foreach (array_slice($jeDatei, 0, 30, true) as $pfad => $n) {
     $z[] = "- {$pfad}: {$n}";
 }

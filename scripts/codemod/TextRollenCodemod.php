@@ -36,12 +36,24 @@ final class TextRollenCodemod
 
     private const KOLLISION_KLASSEN = ['fa-control', 'fa-titel-name', 'kpi-label', 'kpi-value', 'kpi-hint'];
 
+    /** @var (callable(string): ?string)|null liefert den Quelltext einer eingebundenen View oder null */
+    private $includeLeser;
+
     /**
-     * @return array{html: string, umgestellt: array<string,int>, pruefen: list<string>, ohne_rolle: array<string,int>, leise: array<string,int>}
+     * @param  bool  $leiseAufloesen  Schritt 2: $leise-Definition entfernen und Nutzungen einsetzen (sonst nur Wert umstellen)
+     * @param  (callable(string): ?string)|null  $includeLeser  View-Name (z. B. 'foodalchemist::livewire.x') → Quelltext; null = unbekannt
+     */
+    public function __construct(private bool $leiseAufloesen = true, ?callable $includeLeser = null)
+    {
+        $this->includeLeser = $includeLeser;
+    }
+
+    /**
+     * @return array{html: string, umgestellt: array<string,int>, pruefen: list<string>, ohne_rolle: array<string,int>, leise: array<string,int>, leise_aufgeloest: int}
      */
     public function umwandeln(string $html, string $pfad): array
     {
-        $bericht = ['umgestellt' => [], 'pruefen' => [], 'ohne_rolle' => [], 'leise' => []];
+        $bericht = ['umgestellt' => [], 'pruefen' => [], 'ohne_rolle' => [], 'leise' => [], 'leise_aufgeloest' => 0];
         $hatChip = str_contains($html, 'fa-chip');
 
         // 1) statische class-Attribute (nicht :class, x-bind:class, wire:… usw.)
@@ -83,14 +95,105 @@ final class TextRollenCodemod
             '/(\$leise\s*=\s*)([\'"])(.*?)\2/s',
             function (array $m) use (&$bericht) {
                 [$neu, $rolle] = $this->klassenUmstellen($m[3]);
-                $bericht['leise'][$rolle ?? ('ohne Rolle: '.$m[3])] = ($bericht['leise'][$rolle ?? ('ohne Rolle: '.$m[3])] ?? 0) + 1;
+                $schluessel = $rolle ?? ($this->rolleIn($m[3]) ?? ('ohne Rolle: '.$m[3]));
+                $bericht['leise'][$schluessel] = ($bericht['leise'][$schluessel] ?? 0) + 1;
 
                 return $rolle === null ? $m[0] : $m[1].$m[2].$neu.$m[2];
             },
             $html
         );
 
+        // 3) $leise auflösen (Kurator 19.11.): Wert in die class-Attribute einsetzen, Definition entfernen
+        if ($this->leiseAufloesen) {
+            $html = $this->leiseAufloesen($html, $pfad, $bericht);
+        }
+
         return ['html' => $html] + $bericht;
+    }
+
+    /**
+     * Nur wenn: genau eine Definition, Wert enthält eine Rolle und ist rein statisch, JEDE weitere Nennung ist
+     * `{{ $leise }}` innerhalb eines statischen class="…", und keine eingebundene View (@include*, @each,
+     * @extends — die erben lokale Variablen) nutzt $leise oder ist unauflösbar. Sonst: Prüfliste, nichts geändert.
+     */
+    private function leiseAufloesen(string $html, string $pfad, array &$bericht): string
+    {
+        $definitionen = preg_match_all('/\$leise\b\s*=(?!=)/', $html);
+        if ($definitionen === 0) {
+            return $html;
+        }
+        $nein = function (string $grund) use (&$bericht, $pfad, $html) {
+            $bericht['pruefen'][] = "{$pfad}: \$leise bleibt — {$grund}";
+
+            return $html;
+        };
+        if ($definitionen > 1) {
+            return $nein('mehrfach zugewiesen');
+        }
+        if (! preg_match('/\$leise\s*=\s*([\'"])([^\'"{}$]*)\1/', $html, $d) || $this->rolleIn($d[2]) === null) {
+            return $nein('Wert ist keine Text-Rolle oder nicht statisch');
+        }
+        $wert = trim(preg_replace('/\s+/', ' ', $d[2]));
+
+        // Jede Nennung außer der Definition muss {{ $leise }} in einem statischen class-Attribut sein.
+        $erlaubt = [];
+        preg_match_all('/(?<![\w:.-])class="([^"]*)"/', $html, $attr, PREG_OFFSET_CAPTURE);
+        foreach ($attr[1] as [$inhalt, $pos]) {
+            preg_match_all('/\{\{\s*\$leise\s*\}\}/', $inhalt, $e, PREG_OFFSET_CAPTURE);
+            foreach ($e[0] as [, $ep]) {
+                $erlaubt[] = $pos + $ep + strpos(substr($inhalt, $ep), '$leise');
+            }
+        }
+        preg_match_all('/\$leise\b/', $html, $alle, PREG_OFFSET_CAPTURE);
+        $definitionPos = strpos($html, $d[0]);
+        foreach ($alle[0] as [, $pos]) {
+            if ($pos !== $definitionPos && ! in_array($pos, $erlaubt, true)) {
+                $zeile = substr_count(substr($html, 0, $pos), "\n") + 1;
+
+                return $nein("Nutzung außerhalb von class=\"{{ \$leise }}\" (Zeile {$zeile})");
+            }
+        }
+
+        // Eingebundene Views erben lokale Variablen.
+        preg_match_all('/@(?:include\w*|each|extends)\s*\((?:[^\'")]*?,\s*)?([\'"])([^\'"]+)\1/', $html, $inc);
+        foreach ($inc[2] as $view) {
+            $quelle = $this->includeLeser !== null ? ($this->includeLeser)($view) : null;
+            if ($quelle === null) {
+                return $nein("eingebundene View {$view} nicht prüfbar");
+            }
+            if (preg_match('/\$leise\b/', $quelle)) {
+                return $nein("eingebundene View {$view} nutzt \$leise");
+            }
+        }
+
+        // Umsetzen: Definition entfernen (eigene @php(...)-Zeile, Zeile im @php-Block oder Anweisung), dann Nutzungen ersetzen.
+        $q = '([\'"])[^\'"]*\g{-1}';
+        $neu = preg_replace('/^[ \t]*@php\(\s*\$leise\s*=\s*'.$q.'\s*\)[ \t]*\R/m', '', $html, 1, $n);
+        if ($n === 0) {
+            $neu = preg_replace('/^[ \t]*\$leise\s*=\s*'.$q.'\s*;[ \t]*\R/m', '', $html, 1, $n);
+        }
+        if ($n === 0) {
+            $neu = preg_replace('/@php\(\s*\$leise\s*=\s*'.$q.'\s*\)|\$leise\s*=\s*'.$q.'\s*;\s*/', '', $html, 1, $n);
+        }
+        if ($n === 0 || preg_match('/\$leise\s*=(?!=)/', $neu)) {
+            return $nein('Definition nicht entfernbar (unbekannte Form)');
+        }
+        $html = preg_replace_callback('/(?<![\w:.-])class="([^"]*)"/', fn ($m) => 'class="'.preg_replace('/\{\{\s*\$leise\s*\}\}/', $wert, $m[1]).'"', $neu);
+        if (preg_match('/\$leise\b/', $html)) {
+            return $nein('nach dem Einsetzen noch eine Nennung übrig');
+        }
+        // Leer gewordene @php-Blöcke entfernen (samt Zeilenumbruch).
+        $html = preg_replace('/^[ \t]*@php\s*@endphp[ \t]*\R?/m', '', $html);
+        $html = preg_replace('/@php\s*@endphp/', '', $html);
+
+        $bericht['leise_aufgeloest']++;
+
+        return $html;
+    }
+
+    private function rolleIn(string $wert): ?string
+    {
+        return preg_match('/(?<![\w-])(fa-t-[a-z0-9]+)(?![\w-])/', $wert, $r) ? $r[1] : null;
     }
 
     /**

@@ -6,10 +6,10 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
+use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
 
 /**
  * MCP-Einstieg „Speiseplan aus Brief" — spiegelt {@see \Platform\FoodAlchemist\Livewire\Planung\Index::speiseplanAusBrief}.
@@ -59,57 +59,31 @@ class SpeiseplanPlanFromBriefTool extends FoodAlchemistTool implements ToolContr
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
         }
-        $brief = trim((string) ($arguments['brief'] ?? ''));
-        if ($brief === '') {
-            return ToolResult::error('brief ist Pflicht.', 'VALIDATION_ERROR');
-        }
-        $speiseplaene = app(SpeiseplanService::class);
-
-        // 1. Speiseplan: bestehender (team-EIGEN) ODER neue Hülle (GV-Standard-Linien + Zyklus via create()).
-        if (! empty($arguments['speiseplan_id'])) {
-            $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->find((int) $arguments['speiseplan_id']);
-            if ($plan === null) {
-                return ToolResult::error('Speiseplan nicht gefunden oder nicht team-sichtbar.', 'NOT_FOUND');
-            }
-            if (! $plan->isOwnedBy($team)) {
-                return ToolResult::error('Geerbter Speiseplan — nur das Besitzer-Team darf planen.', 'INHERITED');
-            }
-        } else {
-            $in = ['name' => trim((string) ($arguments['label'] ?? '')) ?: 'Speiseplan aus Brief'];
-            // Zyklus aus dem Brief ableiten (z.B. „4 Wochen"); sonst GV-Default aus create().
-            if (preg_match('/(\d+)\s*[- ]?woche/iu', $brief, $m)) {
-                $in['cycle_weeks'] = max(1, (int) $m[1]);
-            }
-            $plan = $speiseplaene->create($team, $in);
-        }
-
-        $mode = in_array($arguments['creative_mode'] ?? '', ['voll_kreativ', 'hybrid', 'datenbank'], true)
-            ? (string) $arguments['creative_mode'] : 'voll_kreativ';
-
+        // 98 · 1.3d: derselbe Use-Case wie die Leitstelle (PlanungsEinstiegService) — Besitz, Gerüst, Session, Kaskade.
         try {
-            $sessions = app(PlanningSessionService::class);
-            $session = $sessions->create($team, [
-                'title' => 'Speiseplan aus Brief: ' . ($plan->name ?? ('#' . $plan->id)),
-                'brief' => $brief,
-                'creative_mode' => $mode,
+            $r = app(PlanungsEinstiegService::class)->speiseplanAusBrief($team, (string) ($arguments['brief'] ?? ''), [
+                'owner_id' => $arguments['speiseplan_id'] ?? null,
+                'titel' => $arguments['label'] ?? null,
+                'creative_mode' => $arguments['creative_mode'] ?? null,
+                'leitplanken' => $arguments['leitplanken'] ?? null,
                 'created_via' => 'mcp_speiseplan_brief',
             ]);
-            if (! empty($arguments['leitplanken']) && is_array($arguments['leitplanken'])) {
-                $sessions->setGenerationParams($team, (int) $session->id, $arguments['leitplanken']);
-            }
-            $run = app(PlanningCascadeService::class)->starteKaskade($team, 'vollkaskade', $session, $mode, [
-                'owner_type' => 'speiseplan', 'owner_id' => (int) $plan->id, 'created_via' => 'mcp_speiseplan_brief',
-            ]);
+        } catch (\InvalidArgumentException $e) {
+            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
+        } catch (NichtGefundenException $e) {
+            return ToolResult::error($e->getMessage(), 'NOT_FOUND');
+        } catch (GeerbtNurLesenException $e) {
+            return ToolResult::error($e->getMessage(), 'INHERITED');
         } catch (\Throwable $e) {
             return ToolResult::error($e->getMessage(), 'PLAN_FAILED');
         }
 
-        $status = app(PlanningCascadeService::class)->laufStatus($team, (int) $run->id);
+        $status = app(PlanningCascadeService::class)->laufStatus($team, (int) $r['run']->id);
 
         return ToolResult::success([
-            'speiseplan_id' => (int) $plan->id,
-            'session_id' => (int) $session->id,
-            'run' => $status ?? ['run_id' => (int) $run->id, 'status' => (string) $run->status],
+            'speiseplan_id' => (int) $r['owner']->id,
+            'session_id' => (int) $r['session']->id,
+            'run' => $status ?? ['run_id' => (int) $r['run']->id, 'status' => (string) $r['run']->status],
         ]);
     }
 

@@ -6,13 +6,10 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotService;
-use Platform\FoodAlchemist\Services\CanvasService;
-use Platform\FoodAlchemist\Services\ConceptGeneratorService;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
+use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
-use Platform\FoodAlchemist\Services\TeamSettingsService;
+use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
 
 /**
  * MCP-Einstieg „Angebot aus Brief" — spiegelt {@see \Platform\FoodAlchemist\Livewire\Planung\Index::angebotAusBrief}.
@@ -62,59 +59,31 @@ class AngebotPlanFromBriefTool extends FoodAlchemistTool implements ToolContract
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
         }
-        $brief = trim((string) ($arguments['brief'] ?? ''));
-        if ($brief === '') {
-            return ToolResult::error('brief ist Pflicht.', 'VALIDATION_ERROR');
-        }
-        $angebote = app(AngebotService::class);
-
-        // 1. Angebot: bestehendes (team-EIGEN) ODER neue Hülle.
-        if (! empty($arguments['angebot_id'])) {
-            $angebot = FoodAlchemistAngebot::visibleToTeam($team)->find((int) $arguments['angebot_id']);
-            if ($angebot === null) {
-                return ToolResult::error('Angebot nicht gefunden oder nicht team-sichtbar.', 'NOT_FOUND');
-            }
-            if (! $angebot->isOwnedBy($team)) {
-                return ToolResult::error('Geerbtes Angebot — nur das Besitzer-Team darf planen.', 'INHERITED');
-            }
-        } else {
-            $name = trim((string) ($arguments['label'] ?? '')) ?: 'Angebot aus Brief';
-            $angebot = $angebote->create($team, ['name' => $name]);
-        }
-
-        $mode = in_array($arguments['creative_mode'] ?? '', ['voll_kreativ', 'hybrid', 'datenbank'], true)
-            ? (string) $arguments['creative_mode'] : 'voll_kreativ';
-
+        // 98 · 1.3d: derselbe Use-Case wie die Leitstelle (PlanungsEinstiegService) — Besitz, Gerüst, Session, Kaskade.
         try {
-            // 2. Gerüst aus dem Brief (owner-neutral). marken_kontext aus dem CRM-Kunden, falls verknüpft.
-            app(ConceptGeneratorService::class)->geruestAusBriefFuerOwner($team, 'offer', (int) $angebot->id, $brief, [
-                'segment' => app(TeamSettingsService::class)->segment($team),
-                'marken_kontext' => app(CanvasService::class)->cascadeKontext($team, null, null, (int) $angebot->id, $angebot->crm_company_id ?? null)['marken_kontext'] ?? null,
-            ]);
-            // 3. Review-Session + Leitplanken + Voll-Kaskade (1 Concept je Slot → ans Angebot referenziert).
-            $sessions = app(PlanningSessionService::class);
-            $session = $sessions->create($team, [
-                'title' => 'Angebot aus Brief: ' . ($angebot->name ?? ('#' . $angebot->id)),
-                'brief' => $brief,
-                'creative_mode' => $mode,
+            $r = app(PlanungsEinstiegService::class)->angebotAusBrief($team, (string) ($arguments['brief'] ?? ''), [
+                'owner_id' => $arguments['angebot_id'] ?? null,
+                'titel' => $arguments['label'] ?? null,
+                'creative_mode' => $arguments['creative_mode'] ?? null,
+                'leitplanken' => $arguments['leitplanken'] ?? null,
                 'created_via' => 'mcp_offer_brief',
             ]);
-            if (! empty($arguments['leitplanken']) && is_array($arguments['leitplanken'])) {
-                $sessions->setGenerationParams($team, (int) $session->id, $arguments['leitplanken']);
-            }
-            $run = app(PlanningCascadeService::class)->starteKaskade($team, 'vollkaskade', $session, $mode, [
-                'owner_type' => 'offer', 'owner_id' => (int) $angebot->id, 'created_via' => 'mcp_offer_brief',
-            ]);
+        } catch (\InvalidArgumentException $e) {
+            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
+        } catch (NichtGefundenException $e) {
+            return ToolResult::error($e->getMessage(), 'NOT_FOUND');
+        } catch (GeerbtNurLesenException $e) {
+            return ToolResult::error($e->getMessage(), 'INHERITED');
         } catch (\Throwable $e) {
             return ToolResult::error($e->getMessage(), 'PLAN_FAILED');
         }
 
-        $status = app(PlanningCascadeService::class)->laufStatus($team, (int) $run->id);
+        $status = app(PlanningCascadeService::class)->laufStatus($team, (int) $r['run']->id);
 
         return ToolResult::success([
-            'angebot_id' => (int) $angebot->id,
-            'session_id' => (int) $session->id,
-            'run' => $status ?? ['run_id' => (int) $run->id, 'status' => (string) $run->status],
+            'angebot_id' => (int) $r['owner']->id,
+            'session_id' => (int) $r['session']->id,
+            'run' => $status ?? ['run_id' => (int) $r['run']->id, 'status' => (string) $r['run']->status],
         ]);
     }
 

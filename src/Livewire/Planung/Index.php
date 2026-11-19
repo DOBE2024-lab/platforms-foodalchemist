@@ -21,15 +21,13 @@ use Platform\FoodAlchemist\Support\Planung\KaskadenAnsicht;
 use Platform\FoodAlchemist\Support\Planung\LaufCockpit;
 use Platform\FoodAlchemist\Support\Planung\ReglerParams;
 use Platform\FoodAlchemist\Services\CanvasService;
-use Platform\FoodAlchemist\Services\AngebotService;
 use Platform\FoodAlchemist\Services\BriefingLeitplankenService;
 use Platform\FoodAlchemist\Services\ConceptGeneratorService;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\FormatService;
 use Platform\FoodAlchemist\Services\PairingService;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
 use Platform\FoodAlchemist\Services\RecipeImageService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
 use Platform\FoodAlchemist\Services\SpeisekarteService;
@@ -784,14 +782,8 @@ class Index extends Component
      * Ausgabe. Ergebnis dockt via `attachToOutput` automatisch ins Foodbook zurück; der Owner-Banner
      * (Spec 40 E1b) leuchtet, sobald der Lauf `source_owner_type='foodbook'` trägt.
      */
-    public function foodbookAusBrief(
-        FoodbookService $foodbooks,
-        ConceptGeneratorService $concepts,
-        PlanningCascadeService $cascade,
-        PlanningSessionService $sessions,
-        TeamSettingsService $settings,
-        CanvasService $canvas,
-    ): void {
+    public function foodbookAusBrief(PlanungsEinstiegService $einstieg): void
+    {
         $this->fbMeldung = null;
         $team = $this->team();
         if ($team === null) {
@@ -799,60 +791,29 @@ class Index extends Component
 
             return;
         }
-        $brief = trim($this->fbBrief);
-        if ($brief === '') {
+        if (trim($this->fbBrief) === '') {
             $this->fbMeldung = 'Bitte einen Brief eingeben (Anlass, Gäste, Saison, Niveau, Budget …).';
 
             return;
         }
 
         try {
-            // 1. Foodbook: bestehendes (Handoff aus dem Modul, $fbOwnerId) ODER neue Hülle (Direktstart
-            //    in der Leitstelle). Reine Ausgabe — alles Weitere plant die Leitstelle.
-            if ($this->fbOwnerId !== null) {
-                $fb = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbook::visibleToTeam($team)->find($this->fbOwnerId);
-                if ($fb === null) {
-                    $this->fbMeldung = 'Foodbook nicht gefunden oder kein Zugriff.';
-
-                    return;
-                }
-            } else {
-                $label = trim($this->fbTitel) !== '' ? trim($this->fbTitel) : 'Foodbook aus Brief';
-                $fb = $foodbooks->create($team, ['label' => $label]);
-            }
-
-            // 2. Gerüst aus dem Brief (owner-neutral, wie der bisherige Foodbook-Kickoff).
-            $concepts->geruestAusBriefFuerOwner($team, 'foodbook', $fb->id, $brief, [
-                'segment' => $settings->segment($team),
-                'leitplanken' => $foodbooks->leitplanken($team, $fb),
-                'marken_kontext' => $canvas->cascadeKontext($team, null, $fb->id, null, $fb->crm_company_id)['marken_kontext'] ?? null,
-            ]);
-
-            // 3. Struktur anwenden: Gerüst-Slots → Kapitel (idempotent).
-            $foodbooks->strukturAusGeruest($team, $fb->id);
-
-            // 4. Review-Session + Voll-Kaskade (Inhalte je Slot, gestufte Freigabe).
-            $session = $sessions->create($team, [
-                'title' => 'Foodbook aus Brief: ' . $fb->label,
-                'brief' => $brief,
-                'created_via' => 'leitstelle_foodbook_brief',
-            ]);
-            $cascade->starteKaskade($team, 'vollkaskade', $session, 'voll_kreativ', [
-                'owner_type' => 'foodbook',
-                'owner_id' => $fb->id,
+            // 98 · 1.3d: derselbe Use-Case wie das MCP-Tool — Hülle (bestehend+eigen oder neu), Gerüst, Session, Voll-Kaskade.
+            $r = $einstieg->foodbookAusBrief($team, $this->fbBrief, [
+                'owner_id' => $this->fbOwnerId,
+                'titel' => $this->fbTitel,
                 'created_via' => 'leitstelle_foodbook_brief',
             ]);
 
-            // 5. Eingabe leeren + Worker-Cockpit öffnen (Owner-Banner + Round-Trip greifen automatisch).
+            // Eingabe leeren + Worker-Cockpit öffnen (Owner-Banner + Round-Trip greifen automatisch).
             $this->fbTitel = '';
             $this->fbBrief = '';
             $this->fbOwnerId = null;
             $this->fbPanelAuf = false;
-            $this->oeffne($session->id, 'worker');
+            $this->oeffne($r['session']->id, 'worker');
         } catch (\Throwable $e) {
-            // LLM nicht verfügbar/deaktiviert, leerer Brief o.ä. → Meldung statt 500. Eine ggf. schon
-            // angelegte leere Foodbook-Hülle bleibt in der Liste (verwerfbar) — bewusst kein Rollback,
-            // da die Kaskaden-Jobs nicht transaktional sind.
+            // LLM nicht verfügbar/deaktiviert, geerbte Hülle o.ä. → Meldung statt 500. Eine ggf. schon angelegte leere
+            // Hülle bleibt in der Liste (verwerfbar) — bewusst kein Rollback, die Kaskaden-Jobs sind nicht transaktional.
             $this->fbMeldung = $e->getMessage();
         }
     }
@@ -864,14 +825,8 @@ class Index extends Component
      * `PlanningCascadeService::vollkaskadeSlots` ruft `SpeisekarteService::rubrikFuerSlot` inline im Fan-out.
      * Ergebnis dockt via `GenerateConceptJob::attachEinmal` (speisekarte→`addPosition(menue_ref)`) zurück.
      */
-    public function speisekarteAusBrief(
-        SpeisekarteService $speisekarten,
-        ConceptGeneratorService $concepts,
-        PlanningCascadeService $cascade,
-        PlanningSessionService $sessions,
-        TeamSettingsService $settings,
-        CanvasService $canvas,
-    ): void {
+    public function speisekarteAusBrief(PlanungsEinstiegService $einstieg): void
+    {
         $this->skMeldung = null;
         $team = $this->team();
         if ($team === null) {
@@ -879,56 +834,29 @@ class Index extends Component
 
             return;
         }
-        $brief = trim($this->skBrief);
-        if ($brief === '') {
+        if (trim($this->skBrief) === '') {
             $this->skMeldung = 'Bitte einen Brief eingeben (Anlass, Gäste, Saison, Niveau, Budget …).';
 
             return;
         }
 
         try {
-            // 1. Speisekarte: bestehende (Handoff, $skOwnerId) ODER neue Hülle (Direktstart in der Leitstelle).
-            if ($this->skOwnerId !== null) {
-                $karte = \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte::visibleToTeam($team)->find($this->skOwnerId);
-                if ($karte === null) {
-                    $this->skMeldung = 'Speisekarte nicht gefunden oder kein Zugriff.';
-
-                    return;
-                }
-            } else {
-                $name = trim($this->skTitel) !== '' ? trim($this->skTitel) : 'Speisekarte aus Brief';
-                $karte = $speisekarten->create($team, ['name' => $name]);
-            }
-
-            // 2. Gerüst aus dem Brief (owner-neutral, wie Foodbook). marken_kontext aus dem CRM-Kunden.
-            $concepts->geruestAusBriefFuerOwner($team, 'speisekarte', $karte->id, $brief, [
-                'segment' => $settings->segment($team),
-                'marken_kontext' => $canvas->cascadeKontext($team, null, null, null, $karte->crm_company_id)['marken_kontext'] ?? null,
-            ]);
-
-            // 3. KEIN strukturAusGeruest — die Rubriken entstehen pro Slot im Fan-out (rubrikFuerSlot).
-
-            // 4. Review-Session + Voll-Kaskade (1 Concept je Slot → Rubrik, gestufte Freigabe).
-            $session = $sessions->create($team, [
-                'title' => 'Speisekarte aus Brief: ' . $karte->name,
-                'brief' => $brief,
-                'created_via' => 'leitstelle_speisekarte_brief',
-            ]);
-            $cascade->starteKaskade($team, 'vollkaskade', $session, 'voll_kreativ', [
-                'owner_type' => 'speisekarte',
-                'owner_id' => $karte->id,
+            // 98 · 1.3d: derselbe Use-Case wie das MCP-Tool — Hülle (bestehend+eigen oder neu), Gerüst, Session, Voll-Kaskade.
+            $r = $einstieg->speisekarteAusBrief($team, $this->skBrief, [
+                'owner_id' => $this->skOwnerId,
+                'titel' => $this->skTitel,
                 'created_via' => 'leitstelle_speisekarte_brief',
             ]);
 
-            // 5. Eingabe leeren + Worker-Cockpit öffnen (Owner-Banner + Round-Trip greifen automatisch).
+            // Eingabe leeren + Worker-Cockpit öffnen (Owner-Banner + Round-Trip greifen automatisch).
             $this->skTitel = '';
             $this->skBrief = '';
             $this->skOwnerId = null;
             $this->skPanelAuf = false;
-            $this->oeffne($session->id, 'worker');
+            $this->oeffne($r['session']->id, 'worker');
         } catch (\Throwable $e) {
-            // LLM nicht verfügbar/deaktiviert, leerer Brief o.ä. → Meldung statt 500. Eine ggf. schon
-            // angelegte leere Karten-Hülle bleibt in der Liste (verwerfbar) — bewusst kein Rollback.
+            // LLM nicht verfügbar/deaktiviert, geerbte Hülle o.ä. → Meldung statt 500. Eine ggf. schon angelegte leere
+            // Hülle bleibt in der Liste (verwerfbar) — bewusst kein Rollback, die Kaskaden-Jobs sind nicht transaktional.
             $this->skMeldung = $e->getMessage();
         }
     }
@@ -941,11 +869,8 @@ class Index extends Component
      * ({@see PlanningCascadeService::starteSpeiseplanVollkaskade}): je leerer Zelle (Tag × Mahlzeit × Linie)
      * ein Gericht, das den Brief-Kontext der Session erbt. Linien bleiben im Speiseplan-Editor frei änderbar.
      */
-    public function speiseplanAusBrief(
-        SpeiseplanService $speiseplaene,
-        PlanningCascadeService $cascade,
-        PlanningSessionService $sessions,
-    ): void {
+    public function speiseplanAusBrief(PlanungsEinstiegService $einstieg): void
+    {
         $this->spMeldung = null;
         $team = $this->team();
         if ($team === null) {
@@ -953,50 +878,29 @@ class Index extends Component
 
             return;
         }
-        $brief = trim($this->spBrief);
-        if ($brief === '') {
+        if (trim($this->spBrief) === '') {
             $this->spMeldung = 'Bitte einen Brief eingeben (Anlass, Saison, Linien, Zyklus …).';
 
             return;
         }
 
         try {
-            // 1. Speiseplan: bestehender (Handoff) ODER neue Hülle (Direktstart). create() legt GV-Standard-
-            //    Linien + Zyklus + Start-Montag an — Speiseplan braucht kein Gänge-Gerüst.
-            if ($this->spOwnerId !== null) {
-                $plan = \Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan::visibleToTeam($team)->find($this->spOwnerId);
-                if ($plan === null) {
-                    $this->spMeldung = 'Speiseplan nicht gefunden oder kein Zugriff.';
-
-                    return;
-                }
-            } else {
-                $in = ['name' => trim($this->spTitel) !== '' ? trim($this->spTitel) : 'Speiseplan aus Brief'];
-                // Zyklus aus dem Brief ableiten (z. B. „4 Wochen"); sonst GV-Default aus create().
-                if (preg_match('/(\d+)\s*[- ]?woche/iu', $brief, $m)) {
-                    $in['cycle_weeks'] = max(1, (int) $m[1]);
-                }
-                $plan = $speiseplaene->create($team, $in);
-            }
-
-            // 2. Review-Session (trägt den Brief → fließt als Kontext in jede Zell-Generierung) + Grid-Kaskade.
-            $session = $sessions->create($team, [
-                'title' => 'Speiseplan aus Brief: ' . $plan->name,
-                'brief' => $brief,
-                'created_via' => 'leitstelle_speiseplan_brief',
-            ]);
-            $cascade->starteKaskade($team, 'vollkaskade', $session, 'voll_kreativ', [
-                'owner_type' => 'speiseplan',
-                'owner_id' => $plan->id,
+            // 98 · 1.3d: derselbe Use-Case wie das MCP-Tool — Hülle (bestehend+eigen oder neu), Gerüst, Session, Voll-Kaskade.
+            $r = $einstieg->speiseplanAusBrief($team, $this->spBrief, [
+                'owner_id' => $this->spOwnerId,
+                'titel' => $this->spTitel,
                 'created_via' => 'leitstelle_speiseplan_brief',
             ]);
 
+            // Eingabe leeren + Worker-Cockpit öffnen (Owner-Banner + Round-Trip greifen automatisch).
             $this->spTitel = '';
             $this->spBrief = '';
             $this->spOwnerId = null;
             $this->spPanelAuf = false;
-            $this->oeffne($session->id, 'worker');
+            $this->oeffne($r['session']->id, 'worker');
         } catch (\Throwable $e) {
+            // LLM nicht verfügbar/deaktiviert, geerbte Hülle o.ä. → Meldung statt 500. Eine ggf. schon angelegte leere
+            // Hülle bleibt in der Liste (verwerfbar) — bewusst kein Rollback, die Kaskaden-Jobs sind nicht transaktional.
             $this->spMeldung = $e->getMessage();
         }
     }
@@ -1008,14 +912,8 @@ class Index extends Component
      * KEIN Zwischen-Container wie Kapitel/Rubrik — containerId = Angebots-ID). Andock + Kaskade existieren bereits;
      * hier fehlte nur der Leitstellen-Einstieg.
      */
-    public function angebotAusBrief(
-        AngebotService $angebote,
-        ConceptGeneratorService $concepts,
-        PlanningCascadeService $cascade,
-        PlanningSessionService $sessions,
-        TeamSettingsService $settings,
-        CanvasService $canvas,
-    ): void {
+    public function angebotAusBrief(PlanungsEinstiegService $einstieg): void
+    {
         $this->offerMeldung = null;
         $team = $this->team();
         if ($team === null) {
@@ -1023,53 +921,29 @@ class Index extends Component
 
             return;
         }
-        $brief = trim($this->offerBrief);
-        if ($brief === '') {
+        if (trim($this->offerBrief) === '') {
             $this->offerMeldung = 'Bitte einen Brief eingeben (Anlass, Gäste, Saison, Niveau, Budget …).';
 
             return;
         }
 
         try {
-            // 1. Angebot: bestehendes (Handoff, $offerOwnerId) ODER neue Hülle (Direktstart in der Leitstelle).
-            if ($this->offerOwnerId !== null) {
-                $angebot = FoodAlchemistAngebot::visibleToTeam($team)->find($this->offerOwnerId);
-                if ($angebot === null) {
-                    $this->offerMeldung = 'Angebot nicht gefunden oder kein Zugriff.';
-
-                    return;
-                }
-            } else {
-                $name = trim($this->offerTitel) !== '' ? trim($this->offerTitel) : 'Angebot aus Brief';
-                $angebot = $angebote->create($team, ['name' => $name]);
-            }
-
-            // 2. Gerüst aus dem Brief (owner-neutral). marken_kontext aus dem CRM-Kunden, falls verknüpft.
-            $concepts->geruestAusBriefFuerOwner($team, 'offer', $angebot->id, $brief, [
-                'segment' => $settings->segment($team),
-                'marken_kontext' => $canvas->cascadeKontext($team, null, null, (int) $angebot->id, $angebot->crm_company_id ?? null)['marken_kontext'] ?? null,
-            ]);
-
-            // 3. Review-Session + Voll-Kaskade (1 Concept je Slot → ans Angebot referenziert).
-            $session = $sessions->create($team, [
-                'title' => 'Angebot aus Brief: ' . $angebot->name,
-                'brief' => $brief,
-                'created_via' => 'leitstelle_offer_brief',
-            ]);
-            $cascade->starteKaskade($team, 'vollkaskade', $session, 'voll_kreativ', [
-                'owner_type' => 'offer',
-                'owner_id' => $angebot->id,
+            // 98 · 1.3d: derselbe Use-Case wie das MCP-Tool — Hülle (bestehend+eigen oder neu), Gerüst, Session, Voll-Kaskade.
+            $r = $einstieg->angebotAusBrief($team, $this->offerBrief, [
+                'owner_id' => $this->offerOwnerId,
+                'titel' => $this->offerTitel,
                 'created_via' => 'leitstelle_offer_brief',
             ]);
 
+            // Eingabe leeren + Worker-Cockpit öffnen (Owner-Banner + Round-Trip greifen automatisch).
             $this->offerTitel = '';
             $this->offerBrief = '';
             $this->offerOwnerId = null;
             $this->offerPanelAuf = false;
-            $this->oeffne($session->id, 'worker');
+            $this->oeffne($r['session']->id, 'worker');
         } catch (\Throwable $e) {
-            // LLM nicht verfügbar/deaktiviert, leerer Brief o.ä. → Meldung statt 500. Eine ggf. schon
-            // angelegte leere Angebots-Hülle bleibt in der Liste (verwerfbar) — bewusst kein Rollback.
+            // LLM nicht verfügbar/deaktiviert, geerbte Hülle o.ä. → Meldung statt 500. Eine ggf. schon angelegte leere
+            // Hülle bleibt in der Liste (verwerfbar) — bewusst kein Rollback, die Kaskaden-Jobs sind nicht transaktional.
             $this->offerMeldung = $e->getMessage();
         }
     }
@@ -1079,13 +953,8 @@ class Index extends Component
      * (FormatPlanFromBriefTool). owner_type=format: Marken-Identität + eigenständige Concepte je Slot,
      * die automatisch ans Format docken (Kaskade/Gerüst/Dock kennen 'format' bereits).
      */
-    public function formatAusBrief(
-        FormatService $formate,
-        ConceptGeneratorService $concepts,
-        PlanningCascadeService $cascade,
-        PlanningSessionService $sessions,
-        TeamSettingsService $settings,
-    ): void {
+    public function formatAusBrief(PlanungsEinstiegService $einstieg): void
+    {
         $this->fmtMeldung = null;
         $team = $this->team();
         if ($team === null) {
@@ -1093,69 +962,29 @@ class Index extends Component
 
             return;
         }
-        $brief = trim($this->fmtBrief);
-        if ($brief === '') {
+        if (trim($this->fmtBrief) === '') {
             $this->fmtMeldung = 'Bitte einen Brief eingeben (Marke, Anlass, Ausrichtung, Niveau …).';
 
             return;
         }
 
         try {
-            // 1. Format: bestehendes (Handoff, $fmtOwnerId) ODER neue Hülle.
-            $neu = false;
-            if ($this->fmtOwnerId !== null) {
-                $format = FoodAlchemistFormat::visibleToTeam($team)->find($this->fmtOwnerId);
-                if ($format === null) {
-                    $this->fmtMeldung = 'Format nicht gefunden oder kein Zugriff.';
-
-                    return;
-                }
-            } else {
-                $name = trim($this->fmtTitel) !== '' ? trim($this->fmtTitel) : 'Format aus Brief';
-                $format = $formate->create($team, ['name' => $name, 'origin' => 'eigen']);
-                $neu = true;
-            }
-
-            // 2. Gerüst aus dem Brief (owner=format): Marken-Identität + eigenständige Concepte.
-            $geruest = $concepts->geruestAusBriefFuerOwner($team, 'format', $format->id, $brief, [
-                'segment' => $settings->segment($team),
-            ]);
-
-            // Nur bei NEUEM Format: Name + Branding (consumer_name/claim/story) aus dem Gerüst übernehmen.
-            if ($neu) {
-                $upd = [];
-                if (is_string($geruest['name'] ?? null) && trim((string) $geruest['name']) !== '') {
-                    $upd['name'] = trim((string) $geruest['name']);
-                }
-                foreach (['consumer_name', 'claim', 'story'] as $feld) {
-                    $wert = $geruest['branding'][$feld] ?? null;
-                    if (is_string($wert) && trim($wert) !== '') {
-                        $upd[$feld] = trim($wert);
-                    }
-                }
-                if ($upd !== []) {
-                    $formate->update($team, (int) $format->id, $upd);
-                }
-            }
-
-            // 3. Review-Session + Voll-Kaskade (1 Concept je Slot → ans Format referenziert).
-            $session = $sessions->create($team, [
-                'title' => 'Format aus Brief: ' . $format->name,
-                'brief' => $brief,
-                'created_via' => 'leitstelle_format_brief',
-            ]);
-            $cascade->starteKaskade($team, 'vollkaskade', $session, 'voll_kreativ', [
-                'owner_type' => 'format',
-                'owner_id' => $format->id,
+            // 98 · 1.3d: derselbe Use-Case wie das MCP-Tool — Hülle (bestehend+eigen oder neu), Gerüst, Session, Voll-Kaskade.
+            $r = $einstieg->formatAusBrief($team, $this->fmtBrief, [
+                'owner_id' => $this->fmtOwnerId,
+                'titel' => $this->fmtTitel,
                 'created_via' => 'leitstelle_format_brief',
             ]);
 
+            // Eingabe leeren + Worker-Cockpit öffnen (Owner-Banner + Round-Trip greifen automatisch).
             $this->fmtTitel = '';
             $this->fmtBrief = '';
             $this->fmtOwnerId = null;
             $this->fmtPanelAuf = false;
-            $this->oeffne($session->id, 'worker');
+            $this->oeffne($r['session']->id, 'worker');
         } catch (\Throwable $e) {
+            // LLM nicht verfügbar/deaktiviert, geerbte Hülle o.ä. → Meldung statt 500. Eine ggf. schon angelegte leere
+            // Hülle bleibt in der Liste (verwerfbar) — bewusst kein Rollback, die Kaskaden-Jobs sind nicht transaktional.
             $this->fmtMeldung = $e->getMessage();
         }
     }

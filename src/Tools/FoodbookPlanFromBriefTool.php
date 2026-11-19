@@ -6,13 +6,10 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
-use Platform\FoodAlchemist\Services\CanvasService;
-use Platform\FoodAlchemist\Services\ConceptGeneratorService;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
+use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
-use Platform\FoodAlchemist\Services\TeamSettingsService;
+use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
 
 /**
  * Spec 42 (F5) — MCP-Einstieg „Foodbook aus Brief". Plant ein ganzes Foodbook aus einem Brief in der
@@ -68,65 +65,32 @@ class FoodbookPlanFromBriefTool extends FoodAlchemistTool implements ToolContrac
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
         }
-        $brief = trim((string) ($arguments['brief'] ?? ''));
-        if ($brief === '') {
-            return ToolResult::error('brief ist Pflicht.', 'VALIDATION_ERROR');
-        }
-
-        $foodbooks = app(FoodbookService::class);
-
-        // 1. Foodbook: bestehendes (team-EIGEN) ODER neue Hülle.
-        if (! empty($arguments['foodbook_id'])) {
-            $fb = FoodAlchemistFoodbook::visibleToTeam($team)->find((int) $arguments['foodbook_id']);
-            if ($fb === null) {
-                return ToolResult::error('Foodbook nicht gefunden oder nicht team-sichtbar.', 'NOT_FOUND');
-            }
-            if (! $fb->isOwnedBy($team)) {
-                return ToolResult::error('Geerbtes Foodbook — nur das Besitzer-Team darf planen.', 'INHERITED');
-            }
-        } else {
-            $label = trim((string) ($arguments['label'] ?? '')) ?: 'Foodbook aus Brief';
-            $fb = $foodbooks->create($team, ['label' => $label]);
-        }
-
+        // 98 · 1.3d: derselbe Use-Case wie die Leitstelle (PlanungsEinstiegService) — Besitz, Gerüst, Session, Kaskade.
         try {
-            // 2. Gerüst aus dem Brief (owner-neutral, wie der Foodbook-Kickoff).
-            app(ConceptGeneratorService::class)->geruestAusBriefFuerOwner($team, 'foodbook', (int) $fb->id, $brief, [
-                'segment' => app(TeamSettingsService::class)->segment($team),
-                'leitplanken' => $foodbooks->leitplanken($team, $fb),
-                'marken_kontext' => app(CanvasService::class)->cascadeKontext($team, null, (int) $fb->id, null, $fb->crm_company_id)['marken_kontext'] ?? null,
-            ]);
-            // 3. Struktur anwenden (Slots → Kapitel).
-            $foodbooks->strukturAusGeruest($team, (int) $fb->id);
-            // 4. Review-Session + Voll-Kaskade.
-            $mode = in_array($arguments['creative_mode'] ?? '', ['voll_kreativ', 'hybrid', 'datenbank'], true)
-                ? (string) $arguments['creative_mode'] : 'voll_kreativ';
-            $sessions = app(PlanningSessionService::class);
-            $session = $sessions->create($team, [
-                'title' => 'Foodbook aus Brief: ' . $fb->label,
-                'brief' => $brief,
-                'creative_mode' => $mode,
+            $r = app(PlanungsEinstiegService::class)->foodbookAusBrief($team, (string) ($arguments['brief'] ?? ''), [
+                'owner_id' => $arguments['foodbook_id'] ?? null,
+                'titel' => $arguments['label'] ?? null,
+                'creative_mode' => $arguments['creative_mode'] ?? null,
+                'leitplanken' => $arguments['leitplanken'] ?? null,
                 'created_via' => 'mcp_foodbook_brief',
             ]);
-            // Leitplanken der Kaskade setzen (whitelist-gefiltert) — sie steuern Komposition (menue_*) +
-            // erben in Gerichte/Basisrezepte; ohne dies liefe die Kaskade mit leeren Reglern.
-            if (! empty($arguments['leitplanken']) && is_array($arguments['leitplanken'])) {
-                $sessions->setGenerationParams($team, (int) $session->id, $arguments['leitplanken']);
-            }
-            $run = app(PlanningCascadeService::class)->starteKaskade($team, 'vollkaskade', $session, $mode, [
-                'owner_type' => 'foodbook', 'owner_id' => (int) $fb->id, 'created_via' => 'mcp_foodbook_brief',
-            ]);
+        } catch (\InvalidArgumentException $e) {
+            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
+        } catch (NichtGefundenException $e) {
+            return ToolResult::error($e->getMessage(), 'NOT_FOUND');
+        } catch (GeerbtNurLesenException $e) {
+            return ToolResult::error($e->getMessage(), 'INHERITED');
         } catch (\Throwable $e) {
             return ToolResult::error($e->getMessage(), 'PLAN_FAILED');
         }
 
-        $status = app(PlanningCascadeService::class)->laufStatus($team, (int) $run->id);
+        $status = app(PlanningCascadeService::class)->laufStatus($team, (int) $r['run']->id);
 
         return ToolResult::success([
-            'foodbook_id' => (int) $fb->id,
-            'foodbook_label' => (string) $fb->label,
-            'session_id' => (int) $session->id,
-            'run' => $status ?? ['run_id' => (int) $run->id, 'status' => (string) $run->status],
+            'foodbook_id' => (int) $r['owner']->id,
+            'foodbook_label' => (string) $r['owner']->label,
+            'session_id' => (int) $r['session']->id,
+            'run' => $status ?? ['run_id' => (int) $r['run']->id, 'status' => (string) $r['run']->status],
         ]);
     }
 

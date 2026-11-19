@@ -28,7 +28,7 @@ use Platform\FoodAlchemist\Services\TerminologyService;
  *      Warengruppen; die Eigenschaft nach dem Doppelpunkt bleibt WG 13 vorbehalten (Mettenden-Fall).
  * Trägt keine Quelle: die häufigsten Kern-Anker der Warengruppe (bisher die alphabetisch ersten 120 des ganzen Vokabulars).
  * Jede Quelle nach Slug sortiert: der Fingerabdruck des externen KI-Auftrags hängt an der Liste im Prompt (#1002).
- * Messen: `foodalchemist:gp-anker-vorauswahl-messen` (alt gegen neu an GPs mit bekanntem Anker).
+ * Messen: `foodalchemist:diagnose:gp-anker-vorauswahl-messen` (alt gegen neu an GPs mit bekanntem Anker).
  */
 final class GpAnkerVorauswahl
 {

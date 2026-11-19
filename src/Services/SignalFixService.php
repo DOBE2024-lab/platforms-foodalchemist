@@ -356,7 +356,7 @@ class SignalFixService
         return $gp !== null && $this->gpAgg->backfillAllergenKonfidenz($gp, true)['written'];
     }
 
-    /** Lead-LA-Repick chirurgisch (wie LeadLaRepickCommand): nur setzen, wenn neu auf Preis auflöst; + Recompute. */
+    /** Lead-LA-Repick chirurgisch (wie LeadLaRepickCommand): nur setzen, wenn neu auf Preis auflöst; + Recompute.  (gelöscht 98 · 1.2b, siehe Git-Historie) */
     private function fixLeadLa(Team $team, int $gpId): bool
     {
         $gp = FoodAlchemistGp::visibleToTeam($team)->find($gpId);

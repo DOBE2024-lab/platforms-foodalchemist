@@ -258,7 +258,7 @@ dass man dort einzeln und gemessen vorgeht, nicht in einem Zug.
 | W3-4 | **Tier/Modell** | **0 von 4 Tier-Variablen auf demo gesetzt** ⇒ alle 72 Prompt-Keys auf dem teuersten Modell. **Zuerst Re-Tierung, dann ENV** — siehe Abschnitt »W3-4 ist eine Falle«: Tier B heisst »Mechanik-Labels« und trägt den ganzen Erzeugungs-Kern. |
 | W1-3 | `$params['_prompt_key']`-Durchstich | Ohne ihn hat `vk.generator` kein eigenes Budget (VK läuft über `contextFor('ai_generate_recipe')`). |
 | — | `conformance_findings.paragraph` normalisieren | 5 Varianten für §11 ⇒ Befunde sind nicht sauber aggregierbar. |
-| — | `foodalchemist:generator-eval` | Existiert, **nie gelaufen**. Ohne es wird ein Budget-Schnitt als Erfolg abgehakt, während die Rezepte schlechter werden. |
+| — | `foodalchemist:diagnose:generator-eval` | Existiert, **nie gelaufen**. Ohne es wird ein Budget-Schnitt als Erfolg abgehakt, während die Rezepte schlechter werden. |
 | — | `ai_plan_dishes` | 8 Routing-Zeilen ohne jeden Aufrufer. Reine Konfig-Schuld. |
 
 

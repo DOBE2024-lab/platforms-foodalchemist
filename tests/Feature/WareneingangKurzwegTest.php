@@ -130,26 +130,6 @@ it('Freigabe-Box: Mitglied fragt an, nur Freigeben gibt frei; „Freigeben & sen
     expect($draft->refresh()->approval_status)->toBe('approved')->and($draft->status)->toBe(OrderStatus::Sent);
 });
 
-it('Bestand übernehmen: Altbestand-Belege für alte Zeilenwerte, idempotent, ohne neue Lagerbuchung', function () {
-    // Alter Stand: Werte direkt an der Zeile, ohne Belege (wie vor Spec 75)
-    $this->mehlLine->forceFill(['received_qty_packs' => 9, 'received_at' => now()->subDays(3), 'invoice_qty_packs' => 9, 'invoice_pack_price' => 2.0])->save();
-    $this->order1->forceFill(['invoice_number' => 'ALT-1', 'invoice_date' => now()->subDays(2)->toDateString(), 'payment_status' => 'paid', 'invoice_paid_at' => now()->toDateString()])->save();
-    $bewegungen = FoodAlchemistInventoryMovement::count();
-
-    Artisan::call('foodalchemist:wareneingang-altbestand');
-    expect(FoodAlchemistDeliveryNote::where('source', 'altbestand')->count())->toBe(0);   // Trockenlauf
-
-    Artisan::call('foodalchemist:wareneingang-altbestand', ['--apply' => true]);
-    Artisan::call('foodalchemist:wareneingang-altbestand', ['--apply' => true]);       // zweiter Lauf: nichts mehr offen
-    $ls = FoodAlchemistDeliveryNote::where('source', 'altbestand')->get();
-    $inv = FoodAlchemistSupplierInvoice::where('source', 'altbestand')->get();
-    expect($ls)->toHaveCount(1)->and($inv)->toHaveCount(1)
-        ->and(($this->summeLs)($this->mehlLine->id))->toBe(9.0)
-        ->and($inv->first()->status)->toBe('bezahlt')->and($inv->first()->invoice_number)->toBe('ALT-1')
-        ->and(FoodAlchemistInventoryMovement::count())->toBe($bewegungen)
-        ->and((float) $this->mehlLine->refresh()->received_qty_packs)->toBe(9.0);
-});
-
 it('Team-Hierarchie: Inhaber und Mitglied des Haupt-Teams buchen im Betriebs-Team (Kind), ohne dort Mitglied zu sein', function () {
     // Bestellung des Kind-Teams (Betrieb); Inhaber/Koch sind nur im Root-Team Mitglied
     $kindLine = $this->orders->addManualLine($this->childA, $this->la['Mehl']->id, 4, null, null, now()->addDays(5)->toDateString());

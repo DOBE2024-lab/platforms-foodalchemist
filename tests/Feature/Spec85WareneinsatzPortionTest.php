@@ -113,7 +113,7 @@ it('Wochenauswertung: nachgeladene Spalten erscheinen als eigener Block mit Aufr
             app(SpeisekarteService::class)->positionEkVk($pos);   // Aufrufer aus src/ → SpeisekarteService
         }
 
-        \Illuminate\Support\Facades\Artisan::call('foodalchemist:langsame-abfragen', ['--tage' => 1]);
+        \Illuminate\Support\Facades\Artisan::call('foodalchemist:diagnose:langsame-abfragen', ['--tage' => 1]);
         $out = \Illuminate\Support\Facades\Artisan::output();
 
         expect($out)->toContain('0 langsame Abfragen')

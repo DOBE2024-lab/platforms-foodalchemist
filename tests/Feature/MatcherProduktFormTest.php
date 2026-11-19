@@ -35,7 +35,7 @@ it('produktForm() trennt §9-Zustand von reiner Geometrie/Verarbeitung', functio
 ]);
 
 it('mehrdeutiger §9-Zustand im Namen bleibt unentschieden statt geraten', function () {
-    // Wie GpZustandBackfillCommand::MUSTER: „TK, getrocknet" nennt zwei Zustände — konservativ
+    // Wie GpZustandBackfillCommand::MUSTER: „TK, getrocknet" nennt zwei Zustände — konservativ (gelöscht 98 · 1.2b, siehe Git-Historie)
     // NULL statt eine Willkür-Entscheidung (Anlass GP 13757).
     expect(app(TokenEngine::class)->produktForm('Tomate: TK, getrocknet')['zustand'])->toBeNull();
 });

@@ -104,7 +104,7 @@ class GpPaketImportCommand extends Command
             $p = $r['protokoll'];
             $this->info(sprintf('Ausgeführt: %d GPs neu, %d geändert, %d Verknüpfungen, %d Struktur-Zeilen neu, %d Leads gesetzt/geändert, %d Rezepte neu gerechnet. Protokoll: %s',
                 count($p['gps_neu']), count($p['gps_geaendert']), count($p['verknuepfungen']), count($p['struktur_neu']), count($p['lead']), $p['recompute'], $pfad));
-            $this->warn('Danach: queue:restart · foodalchemist:gp-allergen-backfill · Embeddings off-peak (foodalchemist:embed) · Allergen-Konsistenzlauf (foodalchemist:gp-homogenitaet-bericht) · Anker-Check · --verify.');
+            $this->warn('Danach: queue:restart · foodalchemist:gp-allergen-backfill · Embeddings off-peak (foodalchemist:embed) · Allergen-Konsistenzlauf (foodalchemist:diagnose:gp-homogenitaet-bericht) · Anker-Check · --verify.');
             $this->comment("Zurück mit: --zurueck={$pfad}");
         } else {
             $this->comment('Trockenlauf — nichts geändert.');

@@ -942,7 +942,7 @@ class IngredientMatchService
         }
         // condition-Feld leer ⇒ Namens-Token-Fallback: der GP-NAME muss den verlangten
         // Zustand tragen — ein Name ohne eindeutiges §9-Wort lehnt ab (konservativ, wie
-        // GpZustandBackfillCommand: Lücke lassen ist besser als raten).
+        // GpZustandBackfillCommand: Lücke lassen ist besser als raten). (gelöscht 98 · 1.2b, siehe Git-Historie)
         $gpZustand = $this->engine->produktForm($name)['zustand'];
 
         return $gpZustand !== null && mb_strtolower($gpZustand) === mb_strtolower($zustand);

@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Services\Necta;
 use Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration;
 
 /**
- * Necta Raw-API (camelCase, Stichprobe 15.10.2026) → FA-Spalten. Konventionen wie der bestehende Stamm (ImportSliceCommand und
+ * Necta Raw-API (camelCase, Stichprobe 15.10.2026) → FA-Spalten. Konventionen wie der bestehende Stamm (ImportSliceCommand und (gelöscht 98 · 1.2b, siehe Git-Historie)
  * die Nachpflege-Skripte), damit neue Zeilen nicht anders aussehen als die 264.516 vorhandenen:
  *  - Allergene: Necta 3/2/1/0 → enthalten / spuren / nicht_enthalten / NULL (unbekannt), Unterarten als JSON in `details`.
  *  - Deklaration: rohe Necta-Integer {0,1,3,NULL} (GL-09), Feldnamen wie der Alt-Import (DEKLARATIONEN).
@@ -54,7 +54,7 @@ class NectaMapper
         'declarationCanImpairActivityAttentionChildren' => 'can_impair_attention_children',
         'declarationWithTypeSugarSweetener' => 'with_type_sugar_sweetener', 'declarationIodhTlig' => 'iodized'];
 
-    /** Necta-Deklarationsfeld → Schlüssel in `details`, wie der Bestand (ImportSliceCommand: Integer bzw. Text). */
+    /** Necta-Deklarationsfeld → Schlüssel in `details`, wie der Bestand (ImportSliceCommand: Integer bzw. Text).  (gelöscht 98 · 1.2b, siehe Git-Historie) */
     public const DEKLARATION_DETAILS = ['declarationTableSweetenerBasedOn' => 'table_sweetener_basis',
         'declarationBasisTafeSweetness' => 'basis_tafe_sweetness'];
 
@@ -255,7 +255,7 @@ class NectaMapper
         return $v === null ? null : (bool) $v;
     }
 
-    /** Necta-Zeitstempel ohne Zone = Europe/Berlin → UTC, wie der Bestand (ImportSliceCommand::utcOrNull). */
+    /** Necta-Zeitstempel ohne Zone = Europe/Berlin → UTC, wie der Bestand (ImportSliceCommand::utcOrNull).  (gelöscht 98 · 1.2b, siehe Git-Historie) */
     public static function zeit(mixed $v): ?string
     {
         if ($v === null || trim((string) $v) === '') {

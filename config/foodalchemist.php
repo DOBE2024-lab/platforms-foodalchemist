@@ -462,7 +462,7 @@ return [
             // Erschließen-Call (Kurator 02.11., Startwert).
             'max_signale_je_beitrag' => 12,
             // Spec 93 B: Ähnlichkeit für das Bündeln über die Vektorsuche (Schritt 2). null = aus. Wert wird auf demo gemessen
-            // (`foodalchemist:trend-themen-aehnlichkeit --team=…`), dann gesetzt — nicht raten.
+            // (`foodalchemist:diagnose:trend-themen-aehnlichkeit --team=…`), dann gesetzt — nicht raten.
             'buendel_aehnlichkeit' => env('FOODALCHEMIST_TREND_BUENDEL_AEHNLICHKEIT') !== null ? (float) env('FOODALCHEMIST_TREND_BUENDEL_AEHNLICHKEIT') : null,
         ],
         // Spec 93 C · Startwerte der Regel-Einordnung. Annahmen des Kurators, KEINE belegten Zahlen (Sarah Spork nennt keine
@@ -1011,7 +1011,7 @@ return [
      * `langsam_ms` = null schaltet die ganze Messung aus (Standard). Gesetzt: jede Abfrage ab dieser Dauer landet im
      * Log-Kanal `fa-langsam` (täglich, 14 Tage, JSON), dazu je Request/Job eine Zusammenfassung, wenn er mehr als
      * `zusammenfassung_anzahl` Abfragen oder mehr als `zusammenfassung_ms` Summe hatte (mit N+1-Mustern ab `n_plus_1`).
-     * Auswertung: `php artisan foodalchemist:langsame-abfragen --tage=7`.
+     * Auswertung: `php artisan foodalchemist:diagnose:langsame-abfragen --tage=7`.
      */
     'leistung' => [
         'langsam_ms' => env('FOODALCHEMIST_LANGSAME_ABFRAGEN_MS'),
@@ -1023,7 +1023,7 @@ return [
     /*
      * Spec 84 B4: Schreiben auf fremde Zeilen (Modell-Ereignis saving/deleting). `modus` = aus | log | werfen; „werfen“ verhält sich in
      * diesem Ausbau wie „log“ (Werfen erst nach einer sauberen io-Woche, eigener PR). Kanal `fa-fremdschreiben` (täglich, 14 Tage, JSON),
-     * Auswertung `php artisan foodalchemist:fremd-schreiben --tage=7`. Auf io: log.
+     * Auswertung `php artisan foodalchemist:diagnose:fremd-schreiben --tage=7`. Auf io: log.
      */
     'fremd_schreiben' => [
         'modus' => env('FOODALCHEMIST_FREMD_SCHREIBEN', 'aus'),

@@ -28,51 +28,6 @@ $gp = fn ($team, string $name, string $status, bool $platzhalter = false) => Foo
     'is_platzhalter' => $platzhalter,
 ]);
 
-it('Backfill: stößt je approved-GP (ohne Platzhalter) einen ConformanceCheckJob an', function () use ($gp) {
-    Queue::fake();
-    $gp($this->rootTeam, 'Alpha', 'approved');
-    $gp($this->rootTeam, 'Beta', 'approved');
-    $gp($this->rootTeam, 'Gamma', 'tentative');            // nicht approved → nicht getroffen
-    $gp($this->rootTeam, 'Platz', 'approved', true);        // Platzhalter → §-exempt
-
-    $this->artisan('foodalchemist:conformance-backfill', ['--team' => $this->rootTeam->id, '--user' => $this->user->id])
-        ->assertExitCode(0);
-
-    Queue::assertPushed(ConformanceCheckJob::class, 2);
-    Queue::assertPushed(ConformanceCheckJob::class, fn ($j) => $j->artifactTyp === 'gp');
-});
-
-it('Backfill --dry-run: stößt nichts an', function () use ($gp) {
-    Queue::fake();
-    $gp($this->rootTeam, 'Alpha', 'approved');
-
-    $this->artisan('foodalchemist:conformance-backfill', ['--team' => $this->rootTeam->id, '--dry-run' => true])
-        ->assertExitCode(0);
-
-    // Der Backfill selbst stößt keinen Critic an. Das GP-Anlegen in der Fixture löst seit #606 den verzögerten
-    // GpAromaNachholenJob aus (GpAromaObserver) — das gehört nicht zum Backfill und wird hier nicht geprüft.
-    Queue::assertNotPushed(ConformanceCheckJob::class);
-});
-
-it('Backfill --limit: chunkt über alle Teams', function () use ($gp) {
-    Queue::fake();
-    $gp($this->rootTeam, 'Alpha', 'approved');
-    $gp($this->rootTeam, 'Beta', 'approved');
-    $gp($this->rootTeam, 'Gamma', 'approved');
-
-    $this->artisan('foodalchemist:conformance-backfill', ['--team' => $this->rootTeam->id, '--user' => $this->user->id, '--limit' => 2])
-        ->assertExitCode(0);
-
-    Queue::assertPushed(ConformanceCheckJob::class, 2);
-});
-
-it('Backfill: --user Pflicht ausser --dry-run', function () use ($gp) {
-    $gp($this->rootTeam, 'Alpha', 'approved');
-
-    $this->artisan('foodalchemist:conformance-backfill', ['--team' => $this->rootTeam->id])
-        ->assertExitCode(1);   // FAILURE ohne --user + ohne --dry-run
-});
-
 it('Freigabe-Trigger: GP auf approved setzen stößt den Critic an (detect)', function () use ($gp) {
     Queue::fake();
     $g = $gp($this->rootTeam, 'Xi', 'tentative');

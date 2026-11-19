@@ -205,7 +205,7 @@ class RegelwerkGetTool extends FoodAlchemistTool implements ToolContract, ToolMe
             'dokumente' => [],
             'alt_bindungen' => $altBindungen,
             'hinweis' => 'Diesen Prompt-Key erreicht KEIN Regelwerk: kein Kanon, kein Routing. Das ist '
-                . 'ein Befund, kein Normalzustand — `foodalchemist:wissen-versorgung` listet alle solchen '
+                . 'ein Befund, kein Normalzustand — `foodalchemist:diagnose:wissen-versorgung` listet alle solchen '
                 . 'Keys.'
                 . ($altBindungen !== []
                     ? ' Es hängen zwar noch ' . count($altBindungen) . ' Alt-Bindung(en) daran ('

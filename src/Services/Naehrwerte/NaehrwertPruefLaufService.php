@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Services\NaehrwertAggregatService;
 /**
  * Trockenlauf der Nährwert-Prüfung über den Bestand, den ein Team sieht: wie viele Artikel würden markiert, je Regel und Lieferant,
  * wie viele würden umgerechnet (je Faktor und Lieferant), mit Beispielen. Nur lesend, unabhängig vom Modus — Grundlage für das Go
- * zum Scharfschalten (MCP `naehrwert_pruefung.GET`, Befehl `foodalchemist:naehrwerte-pruefen`).
+ * zum Scharfschalten (MCP `naehrwert_pruefung.GET`, Befehl `foodalchemist:diagnose:naehrwerte-pruefen`).
  */
 class NaehrwertPruefLaufService
 {

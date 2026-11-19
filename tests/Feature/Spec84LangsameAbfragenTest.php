@@ -116,7 +116,7 @@ it('Spec 84 E-1 · Kommando aggregiert nach Muster und Eingang', function () {
     LangsameAbfragen::abschliessen();
     config(['foodalchemist.leistung.langsam_ms' => null]);   // die Auswertung selbst nicht messen
 
-    Artisan::call('foodalchemist:langsame-abfragen', ['--tage' => 1]);
+    Artisan::call('foodalchemist:diagnose:langsame-abfragen', ['--tage' => 1]);
     $out = Artisan::output();
 
     expect($out)->toContain('Top 20 nach Summe')

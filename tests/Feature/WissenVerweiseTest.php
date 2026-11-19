@@ -40,7 +40,7 @@ it('H7: meldet einen Verweis, dessen Ziel nicht im selben Prompt steht', functio
         'Bei Derivaten gilt zusätzlich §11. Grundform siehe §2.');
     ($this->dossier)('rw-4', 'Regelwerk Basisrezepte §4 — Sub-Rezept-Hierarchie', 'Stubs nach §4.');
 
-    $this->artisan('foodalchemist:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator'], '--json' => true])
+    $this->artisan('foodalchemist:diagnose:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator'], '--json' => true])
         ->assertExitCode(1);   // hängender Verweis ⇒ Befund, nicht Erfolg
 });
 
@@ -48,7 +48,7 @@ it('H7: ein Verweis auf ein mitgeliefertes § ist KEIN Befund', function () {
     ($this->dossier)('rw-2b', 'Regelwerk Basisrezepte §2 — Verarbeitungs-Reduktion', 'Grundform siehe §4.');
     ($this->dossier)('rw-4b', 'Regelwerk Basisrezepte §4 — Sub-Rezept-Hierarchie', 'Stubs nach §2.');
 
-    $this->artisan('foodalchemist:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator']])
+    $this->artisan('foodalchemist:diagnose:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator']])
         ->expectsOutputToContain('kein hängender Verweis')
         ->assertExitCode(0);
 });
@@ -57,7 +57,7 @@ it('H7: ein Verweis auf die §-FAMILIE ist gedeckt, sobald ein Unter-§ mitkommt
     // „siehe §1" meint die Familie — §1.2 im Prompt erfüllt das.
     ($this->dossier)('rw-12', 'Regelwerk Basisrezepte §1.2 — Typ-Vokabular', 'Naming nach §1.');
 
-    $this->artisan('foodalchemist:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator']])
+    $this->artisan('foodalchemist:diagnose:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator']])
         ->assertExitCode(0);
 });
 
@@ -65,13 +65,13 @@ it('H7: die Gegenrichtung ist NICHT gedeckt — §1.0 deckt keinen Verweis auf �
     // Genau der Anlass-Fall: der Kanon trägt §1.0, §2 verweist auf die Anti-Patterns §1.10.
     ($this->dossier)('rw-10', 'Regelwerk Basisrezepte §1.0 — Naming-Syntax', 'Ausnahmen siehe §1.10.');
 
-    $this->artisan('foodalchemist:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator']])
+    $this->artisan('foodalchemist:diagnose:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator']])
         ->expectsOutputToContain('HÄNGEND')
         ->assertExitCode(1);
 });
 
 it('H7: ohne --team bricht der Wächter ab statt gegen die falsche Partition zu prüfen', function () {
-    $this->artisan('foodalchemist:wissen-verweise')->assertExitCode(2);
+    $this->artisan('foodalchemist:diagnose:wissen-verweise')->assertExitCode(2);
 });
 
 /**
@@ -84,7 +84,7 @@ it('H7: §§ aus den ÜBERSCHRIFTEN des Dossiers zählen als geliefert, nicht nu
     ($this->dossier)('rw-monolith', 'Regelwerk Foodbook-Grundgerüst',
         "# Regelwerk Foodbook-Grundgerüst\n## §1 Grundgerüst\nSiehe §2.\n## §2 Kapitel-Typen\nSiehe §1.");
 
-    $this->artisan('foodalchemist:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator']])
+    $this->artisan('foodalchemist:diagnose:wissen-verweise', ['--team' => $this->rootTeam->id, '--prompt-key' => ['recipe.generator']])
         ->expectsOutputToContain('kein hängender Verweis')
         ->assertExitCode(0);
 });

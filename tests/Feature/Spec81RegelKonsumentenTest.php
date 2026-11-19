@@ -36,7 +36,7 @@ it('meldet einen Kanon-Leser einer aktiven Regel, der den Regel-Block nicht beko
     expect(app(RegelKonsumentenPruefung::class)->befunde())->toBe([
         ['prompt_key' => 'recipe.equipment', 'schluessel' => 'basisrezept.1.2.typ', 'dossier' => $this->regel->dossier_slug],
     ]);
-    $this->artisan('foodalchemist:regeln-konsumenten')->assertExitCode(1);
+    $this->artisan('foodalchemist:diagnose:regeln-konsumenten')->assertExitCode(1);
 });
 
 it('eine ausgeschaltete Regel ist kein Befund (das Dossier trägt sie weiter)', function () {
@@ -44,5 +44,5 @@ it('eine ausgeschaltete Regel ist kein Befund (das Dossier trägt sie weiter)', 
     app(RegelService::class)->setzeAktiv($this->regel->id, false);
 
     expect(app(RegelKonsumentenPruefung::class)->befunde())->toBe([]);
-    $this->artisan('foodalchemist:regeln-konsumenten')->assertExitCode(0);
+    $this->artisan('foodalchemist:diagnose:regeln-konsumenten')->assertExitCode(0);
 });

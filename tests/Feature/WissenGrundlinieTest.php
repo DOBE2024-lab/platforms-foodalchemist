@@ -80,7 +80,7 @@ it('meldet einen Aufruf ohne Kanon und ohne Bound als "KEIN verbindliches Wissen
     $r = ($this->mkRezept)('Ohne Regelwerk');
     ($this->mkCall)($r->id, 'recipe.geschmack', ['kanon' => 0, 'bound' => 0, 'retrieval' => 0, 'task' => 400]);
 
-    $this->artisan('foodalchemist:wissen-grundlinie', [
+    $this->artisan('foodalchemist:diagnose:wissen-grundlinie', [
         '--team' => $this->rootTeam->id, '--recipes' => (string) $r->id,
     ])
         ->expectsOutputToContain('KEIN verbindliches Wissen')
@@ -95,7 +95,7 @@ it('unterscheidet "nichts gekappt" von "Kappung nicht gemessen"', function () {
     ($this->mkCall)($r->id, 'recipe.generator', ['kanon' => 30000, 'retrieval' => 5000, 'task' => 500, 'dropped' => 0]);
     ($this->mkCall)($r->id, 'recipe.review', ['kanon' => 0, 'bound' => 0, 'retrieval' => 9000, 'task' => 500, 'dropped' => 0]);
 
-    $this->artisan('foodalchemist:wissen-grundlinie', [
+    $this->artisan('foodalchemist:diagnose:wissen-grundlinie', [
         '--team' => $this->rootTeam->id, '--recipes' => (string) $r->id,
     ])
         ->expectsOutputToContain('dropped nicht gemessen')
@@ -105,7 +105,7 @@ it('unterscheidet "nichts gekappt" von "Kappung nicht gemessen"', function () {
 it('sagt bei fehlenden Aufrufen, dass das kein Beweis fuer "kein Aufruf" ist', function () {
     $r = ($this->mkRezept)('Ohne jeden Log');
 
-    $this->artisan('foodalchemist:wissen-grundlinie', [
+    $this->artisan('foodalchemist:diagnose:wissen-grundlinie', [
         '--team' => $this->rootTeam->id, '--recipes' => (string) $r->id,
     ])
         ->expectsOutputToContain('heisst NICHT, dass keiner lief')
@@ -116,7 +116,7 @@ it('meldet eine echte Kappung als GEKAPPT', function () {
     $r = ($this->mkRezept)('Mit Kappung');
     ($this->mkCall)($r->id, 'recipe.generator', ['kanon' => 30000, 'retrieval' => 12000, 'task' => 500, 'dropped' => 4200]);
 
-    $this->artisan('foodalchemist:wissen-grundlinie', [
+    $this->artisan('foodalchemist:diagnose:wissen-grundlinie', [
         '--team' => $this->rootTeam->id, '--recipes' => (string) $r->id,
     ])
         ->expectsOutputToContain('GEKAPPT')

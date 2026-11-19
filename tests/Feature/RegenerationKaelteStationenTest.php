@@ -18,7 +18,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  * ohne Gerät, weil es keins gab. Mein erster Reflex war ein Riegel „kein Gerät ⇒ keine Zahlen";
  * der hätte genau diese Arbeit gelöscht. Fachlich ist Auftauen Teil der Regeneration.
  *
- * ⚠ Das Vokabular wird NICHT per Seeder gefüllt, sondern pro Team über ImportSliceCommand — in
+ * ⚠ Das Vokabular wird NICHT per Seeder gefüllt, sondern pro Team über ImportSliceCommand — in (gelöscht 98 · 1.2b, siehe Git-Historie)
  * der Test-Fixture ist die Tabelle deshalb leer. Ein Test, der nur global nach den Slugs sucht,
  * prüft hier nichts. Darum wird die Migrations-Logik gegen ein Team MIT Geräten gefahren.
  */

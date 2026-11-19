@@ -201,7 +201,7 @@ it('Kommando faellt mit Exit 1 durch, sobald Pflichtwissen nicht ankommt', funct
     config(['foodalchemist.prompts' => ['test.key' => ['tier' => 'B', 'task' => 'x']]]);
     ($this->mkKanon)(($this->mkDoc)('deaktiviert', aktiv: false), 'test.key');
 
-    $this->artisan('foodalchemist:wissen-profil', ['--team' => $this->rootTeam->id, '--pruefen' => true])
+    $this->artisan('foodalchemist:diagnose:wissen-profil', ['--team' => $this->rootTeam->id, '--pruefen' => true])
         ->expectsOutputToContain('dossier_inaktiv')
         ->assertExitCode(1);
 });

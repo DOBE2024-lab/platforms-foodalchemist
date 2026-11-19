@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Console\EmbedEvalCommand;
+use Platform\FoodAlchemist\Console\Diagnose\EmbedEvalCommand;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class);

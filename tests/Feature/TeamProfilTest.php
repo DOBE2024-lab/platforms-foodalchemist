@@ -145,7 +145,7 @@ it('Validierung: Convenience nur die DNA-Werte, Pax ab 1, Flächen mit Name und 
 it('Vokabular-Import (delete) löscht kein Profil: kein Fremdschlüssel auf equipment_id', function () {
     $this->svc->setzeEquipment($this->childA, $this->admin, $this->kombi->id, 'vorhanden');
 
-    DB::table('foodalchemist_vocab_kitchen_equipment')->delete();   // wie ImportSliceCommand
+    DB::table('foodalchemist_vocab_kitchen_equipment')->delete();   // wie ImportSliceCommand (gelöscht 98 · 1.2b, siehe Git-Historie)
 
     expect(DB::table('foodalchemist_team_profile_equipment')->count())->toBe(1);
 });

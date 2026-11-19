@@ -186,7 +186,7 @@ it("Ausnahme 'abo-pflege': Kündigung durch den Master kopiert in den Mandanten,
     expect($fremd)->toBe([]);
 });
 
-it('Auswertung: foodalchemist:fremd-schreiben gruppiert die Tages-Dateien', function () {
+it('Auswertung: foodalchemist:diagnose:fremd-schreiben gruppiert die Tages-Dateien', function () {
     $pfad = storage_path('logs/fa-fremdschreiben-auswertung-'.getmypid().'.log');
     config(['logging.channels.'.FremdSchreiben::KANAL.'.path' => $pfad]);
     $tagesDatei = storage_path('logs/fa-fremdschreiben-auswertung-'.getmypid().'-'.now()->format('Y-m-d').'.log');
@@ -195,7 +195,7 @@ it('Auswertung: foodalchemist:fremd-schreiben gruppiert die Tages-Dateien', func
         .$zeile(['art' => 'fremd', 'modell' => 'FoodAlchemistRecipe', 'eingang' => 'seite', 'aufrufer' => 'Services/X.php:1', 'zeilen_team' => 4, 'kontext_team' => 3])
         .$zeile(['art' => 'unterdrueckt', 'anzahl' => 7, 'eingang' => 'job:Y']));
     try {
-        $this->artisan('foodalchemist:fremd-schreiben', ['--tage' => 1])
+        $this->artisan('foodalchemist:diagnose:fremd-schreiben', ['--tage' => 1])
             ->expectsOutputToContain('davon fremd: 1')
             ->assertSuccessful();
     } finally {

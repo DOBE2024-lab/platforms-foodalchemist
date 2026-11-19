@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Services\Ai\SupplierItemEmbedBackfill;
  * Wissen (bestehend), GPs + Rezepte (neu). Idempotent über Cores source_hash:
  * unveränderte Einträge werden übersprungen (kein API-Call), Re-Run ist sicher.
  *
- * NACH foodalchemist:import-master laufen lassen (der Import berührt keine
+ * NACH foodalchemist:import-master laufen lassen (der Import berührt keine (gelöscht 98 · 1.2b, siehe Git-Historie)
  * core_embeddings, aber neue/geänderte Entitäten müssen nach-embeddet werden).
  */
 class EmbedCommand extends Command

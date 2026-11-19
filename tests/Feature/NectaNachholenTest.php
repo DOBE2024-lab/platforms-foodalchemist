@@ -173,12 +173,6 @@ it('Details gezielt je Artikel und seitenweise je Lieferant führen zum selben E
         ->and($this->attrappe->aufrufe['supplier-items'])->toBeGreaterThan(2);                      // Seitengröße 1 → mehrere Seiten gelesen
 });
 
-it('Befehl: --probe läuft durch und meldet PROBELAUF', function () {
-    $this->artisan('foodalchemist:necta-nachholen', ['--probe' => true, '--pause-ms' => 0])
-        ->expectsOutputToContain('PROBELAUF')->expectsOutputToContain('edelrausch')->assertExitCode(0);
-    expect(DB::table('foodalchemist_supplier_items')->count())->toBe(1);
-});
-
 it('Mapper: Allergen-Kodierung, Zeitzone und Raw-API-Antwortform', function () {
     expect(NectaMapper::allergenWert(3))->toBe('enthalten')->and(NectaMapper::allergenWert(1))->toBe('nicht_enthalten')
         ->and(NectaMapper::allergenWert(0))->toBeNull()->and(NectaMapper::allergenWert(null))->toBeNull()
@@ -200,10 +194,3 @@ it('Ausnahmen: bei uns inaktiver Lieferant und --ohne-lieferant werden überspru
         ->and($this->attrappe->aufrufe['supplier-items'] ?? 0)->toBe(0);                        // nicht einmal gelesen
 });
 
-it('Befehl: --ohne-lieferant und inaktive Lieferanten stehen in der Probe-Ausgabe', function () {
-    $this->lieferant->update(['is_inactive' => true]);
-    $this->artisan('foodalchemist:necta-nachholen', ['--probe' => true, '--pause-ms' => 0, '--ohne-lieferant' => [25345]])
-        ->expectsOutputToContain('übersprungen: Bäckerei Bestand (Necta 19491) — bei uns inaktiv')
-        ->expectsOutputToContain('(Necta 25345) — ausgenommen (--ohne-lieferant)')
-        ->assertExitCode(0);
-});

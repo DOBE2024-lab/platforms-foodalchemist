@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Services\Knowledge\WissensVersorgungService;
 /**
  * Spec 52 · A2 (MCP-Fläche) — welches Wissen erreicht welchen Prompt-Key.
  *
- * Warum dieses Tool existiert, obwohl es das Kommando `foodalchemist:wissen-versorgung` gibt:
+ * Warum dieses Tool existiert, obwohl es das Kommando `foodalchemist:diagnose:wissen-versorgung` gibt:
  * **auf demo gibt es keine Shell.** Ein Bericht, den man nur am Terminal einer lokalen Sandbox
  * fahren kann, misst die falsche Umgebung — und genau das ist mir beim Bau passiert: die
  * ersten Zahlen (42 von 71 ungesteuert) kamen aus der Dev-MySQL, die dem Frisch-DB-Zustand
@@ -100,7 +100,7 @@ class KnowledgeVersorgungGetTool extends FoodAlchemistTool implements ToolContra
         $bericht['hinweis'] = $bericht['ungesteuert'] > 0
             ? $bericht['ungesteuert'].' von '.$bericht['keys'].' Prompt-Keys erreicht KEIN Dossier aus dem '
                 .'Wissens-Korpus (kein Kanon, kein Routing, keine Bindung). Regeln im Prompt-TEXT sind '
-                .'davon unberührt — die prüft `foodalchemist:wissen-deckung`. Jede Zeile braucht eine '
+                .'davon unberührt — die prüft `foodalchemist:diagnose:wissen-deckung`. Jede Zeile braucht eine '
                 .'Entscheidung: Kanon-Zeile, Routing-Zeile oder ausdrücklich `none`.'
             : null;
 

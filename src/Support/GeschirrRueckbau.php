@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Riegel für den Rückbau der Geschirr-DB (Dominique 2026-10-16): vor dem Drop wird GELESEN, ob die alten Tabellen noch Zeilen und die alten Spalten noch Werte
  * tragen — nicht nur, ob die Tabelle existiert. Ohne diese Prüfung ginge eine Zuordnung still verloren. Die Migration bricht mit klarer Meldung ab;
- * `foodalchemist:geschirr-typ-uebernehmen --apply --leeren` übernimmt vorher den Servier-Typ und räumt die alten Daten bewusst ab.
+ * `foodalchemist:geschirr-typ-uebernehmen --apply --leeren` übernimmt vorher den Servier-Typ und räumt die alten Daten bewusst ab. (gelöscht 98 · 1.2b, siehe Git-Historie)
  */
 final class GeschirrRueckbau
 {
@@ -74,6 +74,7 @@ final class GeschirrRueckbau
 
         throw new \RuntimeException(
             'Rückbau der Geschirr-DB gestoppt: es sind noch Daten da ('.$zeilen.'). '
+            // Der genannte Command ist seit 98 · 1.2b gelöscht; er liegt bis Commit 51252301 in der Git-Historie (auf io ist der Drop gelaufen).
             .'Erst „php artisan foodalchemist:geschirr-typ-uebernehmen --apply --leeren“ ausführen (übernimmt den Servier-Typ und räumt die alten Zuordnungen ab), danach erneut migrieren.'
         );
     }

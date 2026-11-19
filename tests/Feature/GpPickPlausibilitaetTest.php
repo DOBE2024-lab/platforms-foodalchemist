@@ -136,21 +136,3 @@ it('D2: die Kandidatenliste an das Modell traegt zustand/verarbeitung/form — a
     }
 });
 
-it('D1: der condition-Backfill traegt eindeutige Faelle nach und laesst mehrdeutige NULL', function () {
-    // Eindeutig: genau EIN §9-Token im Namen.
-    $tk = $this->makeGp($this->rootTeam, 'Tomaten: TK, getrocknet');
-    // Mehrdeutig: zwei Zustaende im Namen — raten waere schlimmer als Luecke lassen
-    // (dieselbe Vorsicht wie Vault-Skript 208).
-    $doppel = $this->makeGp($this->rootTeam, 'Suesskartoffeln: frisch / TK, Wuerfel');
-    // Kein §9-Token: „getrocknet" allein ist Verarbeitung, kein Zustand.
-    $keiner = $this->makeGp($this->rootTeam, 'Tomaten: getrocknet in Oel');
-
-    $this->artisan('foodalchemist:gp-zustand-backfill', ['--apply' => true])->assertExitCode(0);
-
-    expect(DB::table('foodalchemist_gps')->where('id', $tk->id)->value('condition'))->toBe('TK')
-        ->and(DB::table('foodalchemist_gps')->where('id', $doppel->id)->value('condition'))->toBeNull()
-        ->and(DB::table('foodalchemist_gps')->where('id', $keiner->id)->value('condition'))->toBeNull();
-
-    // Danach ist kein eindeutiger Fall mehr offen.
-    $this->artisan('foodalchemist:gp-zustand-backfill', ['--verify' => true])->assertExitCode(0);
-});

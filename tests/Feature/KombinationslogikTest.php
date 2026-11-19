@@ -265,7 +265,7 @@ it('Messbefehl rezept-luecken-vergleich zählt Änderungen und schreibt nichts',
         'umami' => 0, 'fettig' => 0, 'scharf' => 0, 'source' => 'ai', 'created_at' => now(), 'updated_at' => now()]);
     $vorher = DB::table('foodalchemist_recipe_profile')->where('recipe_id', $natur->id)->value('eigenschaften');
 
-    $this->artisan('foodalchemist:rezept-luecken-vergleich', ['--rezept' => [$natur->id]])
+    $this->artisan('foodalchemist:diagnose:rezept-luecken-vergleich', ['--rezept' => [$natur->id]])
         ->expectsOutputToContain('Liefert neu: Säure 1')
         ->assertExitCode(0);
 

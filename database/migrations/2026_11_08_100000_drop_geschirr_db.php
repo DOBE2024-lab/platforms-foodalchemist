@@ -14,6 +14,8 @@ use Platform\FoodAlchemist\Support\GeschirrRueckbau;
  * Auf SQLite (nur die Testbasis) bleiben die Spalten und die beiden leeren Tabellen stehen (nichts liest sie): ein Spalten-Drop dort baut die Tabelle neu und
  * zerstört den partiellen Ein-Standard-Index, und die Tabellen können nicht fallen, solange die Darreichungs-Spalte ihre FK-Definition trägt — dieselbe bewusste
  * Asymmetrie wie in 2026_09_04_000014.
+ * Der in der Riegel-Meldung genannte Command `foodalchemist:geschirr-typ-uebernehmen` ist seit 98 · 1.2b gelöscht (auf io lief die
+ * Migration in Batch 14); er liegt bis Commit 51252301 in der Git-Historie.
  */
 return new class extends Migration
 {

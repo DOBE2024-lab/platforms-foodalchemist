@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Console\GeneratorEvalCommand;
+use Platform\FoodAlchemist\Console\Diagnose\GeneratorEvalCommand;
 
 /**
  * Phase 4 (Kohärenz-Gate): reine Auswertungslogik des Golden-Gerichte-Harness —

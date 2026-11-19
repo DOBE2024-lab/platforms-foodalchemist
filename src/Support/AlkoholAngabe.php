@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Support;
 /**
  * Spec 94c · Fester Alkohol-Wert am GP (`gps.alkohol` ja / nein / offen, alle Warengruppen), gepflegt im Modal und über gps.POST/PUT; er hat
  * Vorrang vor den Artikeldaten (GpAggregateService::enthaeltAlkohol). Die Regeln unten dienen NUR der einmaligen Vorbelegung der Getränke
- * (foodalchemist:alkohol-vorbelegen, WG 15), aus Struktur, nie aus Namensraterei — das Erste, was zutrifft (Kurator 03.11.2026):
+ * (foodalchemist:alkohol-vorbelegen, WG 15), aus Struktur, nie aus Namensraterei — das Erste, was zutrifft (Kurator 03.11.2026): (gelöscht 98 · 1.2b, siehe Git-Historie)
  *  1. vol-% in Pflichtangabe bzw. Name (GP-Regelwerk §7.1a/§8: „Pils: 4,9 vol-%“; tolerant gegen „Vol%“, „vol.-%“; „vol“ nur mit Zahl)
  *     oder „alkoholfrei“: ≥ 0,5 = ja, sonst nein. Die Pflichtangabe schlägt die Unterkategorie (alkoholfreies Bier in 15.2 = nein).
  *  2. Unterkategorie 15.5 Wasser, 15.6 Säfte, 15.7 Erfrischungsgetränke, 15.8 Heißgetränke, 15.9 Sirupe = nein (Coca-Cola ohne vol-%).

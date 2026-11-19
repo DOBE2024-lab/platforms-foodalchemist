@@ -70,33 +70,20 @@ class FoodAlchemistServiceProvider extends ServiceProvider
          */
         if ($this->app->runningInConsole()) {
             $this->commands([
-                \Platform\FoodAlchemist\Console\LangsameAbfragenCommand::class,   // Spec 84 E-1: Auswertung fa-langsam
-                \Platform\FoodAlchemist\Console\FremdSchreibenCommand::class,   // Spec 84 B4: Auswertung fa-fremdschreiben
-                \Platform\FoodAlchemist\Console\NectaNachholenCommand::class,   // Necta-Abgleich: Einmal-Nachholer (Bauauftrag 15.10.2026)
-                \Platform\FoodAlchemist\Console\KonfiguratorBeispielDoecCommand::class,   // Spec 94: DOEC-Beispiel-Datensatz (Vorschau ohne --anlegen)
+                \Platform\FoodAlchemist\Console\Diagnose\LangsameAbfragenCommand::class,   // Spec 84 E-1: Auswertung fa-langsam
+                \Platform\FoodAlchemist\Console\Diagnose\FremdSchreibenCommand::class,   // Spec 84 B4: Auswertung fa-fremdschreiben
                 \Platform\FoodAlchemist\Console\NectaAbgleichCommand::class,    // Necta-Abgleich: nächtlich + wöchentlich (PR 2)
-                \Platform\FoodAlchemist\Console\NectaDeklarationReparierenCommand::class,   // Einmal-Reparatur Deklarationen (Lauf 3, 15.10.2026)
-                \Platform\FoodAlchemist\Console\NectaDeklarationNachfuellenCommand::class,  // neue Deklarations-Spalte nachfüllen (Jod, 15.10.2026)
-                \Platform\FoodAlchemist\Console\JodAbleitenCommand::class,                  // Jod aus der Zutatenliste ableiten (15.10.2026)
-                \Platform\FoodAlchemist\Console\AlkoholVorbelegenCommand::class,           // Spec 94c: Alkohol an Getränke-GPs vorbelegen (Probelauf)
-                \Platform\FoodAlchemist\Console\MengeKorrigierenCommand::class,              // Menge aus der Bezeichnung (EDI, 16.10.2026)
                 \Platform\FoodAlchemist\Console\AbtropfBackfillCommand::class,               // Abtropfgewicht aus dem Artikeltext (12.11.2026, Standard Trockenlauf)
-                \Platform\FoodAlchemist\Console\NectaLieferstatusCommand::class,             // Lieferstatus aus dem Preis-Lebenszyklus (16.10.2026)
-                \Platform\FoodAlchemist\Console\NectaPreishistorieNachholenCommand::class,  // Necta PR 2b: Preis-Historie (Stufe 1: Analyse)
                 \Platform\FoodAlchemist\Console\PlanNutzungZaehlenCommand::class,   // Spec 82 §13 D (täglich, Tageswerte → team_billable_usages)
                 \Platform\FoodAlchemist\Console\PlanPreiseStartwerteCommand::class,   // Spec 82 §13 D (Platzhalter-Startpreise)
                 \Platform\FoodAlchemist\Console\EquipmentStandardSetzenCommand::class,   // Spec 82 §6 (Daten per Befehl, nicht per Migration)
                 \Platform\FoodAlchemist\Console\PreislisteImportCommand::class,   // Spec 82 §3 (Abgleich, schreibt keine Preise)
                 \Platform\FoodAlchemist\Console\FaelligePreiseCommand::class,   // täglich: vorgemerkte Preise (Gültig ab erreicht) aus Preislisten-/Stammdaten-Läufen
-                \Platform\FoodAlchemist\Console\GpHomogenitaetBerichtCommand::class,   // Spec 82 §2 (nur lesend)
-                \Platform\FoodAlchemist\Console\NaehrwertePruefenCommand::class,   // Nährwert-Prüfung: Trockenlauf + Meldeliste (nur lesend)
-                \Platform\FoodAlchemist\Console\WareneingangAltbestandCommand::class,   // Spec 75c
-                \Platform\FoodAlchemist\Console\RegelnKonsumentenCommand::class,   // Spec 81: Schutz vor Paket 5
+                \Platform\FoodAlchemist\Console\Diagnose\GpHomogenitaetBerichtCommand::class,   // Spec 82 §2 (nur lesend)
+                \Platform\FoodAlchemist\Console\Diagnose\NaehrwertePruefenCommand::class,   // Nährwert-Prüfung: Trockenlauf + Meldeliste (nur lesend)
+                \Platform\FoodAlchemist\Console\Diagnose\RegelnKonsumentenCommand::class,   // Spec 81: Schutz vor Paket 5
                 \Platform\FoodAlchemist\Console\GpFelderBackfillCommand::class,   // Spec 80 Paket 11
                 \Platform\FoodAlchemist\Console\BehaelterKatalogCommand::class,
-                \Platform\FoodAlchemist\Console\ImportSliceCommand::class,
-                \Platform\FoodAlchemist\Console\RegenerationHochziehenCommand::class,
-                \Platform\FoodAlchemist\Console\ImportMasterCommand::class,
                 \Platform\FoodAlchemist\Console\GpBereinigenCommand::class,
                 \Platform\FoodAlchemist\Console\GpUmhaengenCommand::class,
                 \Platform\FoodAlchemist\Console\SteuerklasseBackfillCommand::class,   // MwSt als Klasse statt Zahl (16.11.2026)
@@ -104,10 +91,10 @@ class FoodAlchemistServiceProvider extends ServiceProvider
                 \Platform\FoodAlchemist\Console\KochmediumVorbelegenCommand::class,   // §18.7 Kochmedium-Vorschlag am GP (17.11.2026)
                 \Platform\FoodAlchemist\Console\PlatzhalterDeklarationVorbelegenCommand::class,   // Platzhalter: Allergene/Zusatzstoffe/Nährwerte von Hand vorbelegen (19.11.2026)
                 \Platform\FoodAlchemist\Console\GpFelderCommand::class,
-                \Platform\FoodAlchemist\Console\AbgleichEvalCommand::class,   // Abgleich-Dienst: Eval (schreibt nie, zurückgerollte Transaktion)
+                \Platform\FoodAlchemist\Console\Diagnose\AbgleichEvalCommand::class,   // Abgleich-Dienst: Eval (schreibt nie, zurückgerollte Transaktion)
                 \Platform\FoodAlchemist\Console\GpPaketImportCommand::class,   // E2: GP-Paket → io (global, stamm_paket)
                 \Platform\FoodAlchemist\Console\GpAromaBackfillCommand::class,   // 27.10.2026: Anker + Geschmacksprofil für Lücken (Geschwister, dann KI)
-                \Platform\FoodAlchemist\Console\GpSensorikReferenzCommand::class,   // 29.10.2026: Live-Abnahme Wahrnehmung (nur lesend)
+                \Platform\FoodAlchemist\Console\Diagnose\GpSensorikReferenzCommand::class,   // 29.10.2026: Live-Abnahme Wahrnehmung (nur lesend)
                 \Platform\FoodAlchemist\Console\GpStammPurgeCommand::class,   // Neu-Import: globalen GP-Stamm hart löschen (Trockenlauf, Riegel, Backup-Nachweis)
                 \Platform\FoodAlchemist\Console\KnowledgeImportCommand::class,
                 // 2026-09-03: die Routing-Politik hat den Import VERLASSEN. Sie lag dort und wurde
@@ -117,13 +104,9 @@ class FoodAlchemistServiceProvider extends ServiceProvider
                 // W2-5: der Rückweg — bis hierher gab es nur Import (Modul = SSOT ohne Backup-Pfad).
                 \Platform\FoodAlchemist\Console\KnowledgeExportCommand::class,
                 // W2-4: §-Deckung — hätte den verlorenen §12 gefunden.
-                \Platform\FoodAlchemist\Console\WissenDeckungCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\WissenDeckungCommand::class,
                 // W1-1: misst Findbarkeit jenseits des Embedding-Fensters (vor/nach).
-                \Platform\FoodAlchemist\Console\WissenRecallProbeCommand::class,
-                // One-Shot: condition (§9) nachtragen, wo der Name ihn nennt und das Feld leer ist.
-                \Platform\FoodAlchemist\Console\GpZustandBackfillCommand::class,
-                // One-Shot: Reifegrad an bestehenden Uebernahme-Schritten nachtragen.
-                \Platform\FoodAlchemist\Console\ReuseReifeBackfillCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\WissenRecallProbeCommand::class,
                 \Platform\FoodAlchemist\Console\WissenSteuerdatenW0Command::class,
                 \Platform\FoodAlchemist\Console\WissenDeckelCheckCommand::class,
                 // Spec 52/A2: welcher Prompt-Key bekommt welches Wissen — Kanon, Routing,
@@ -131,10 +114,10 @@ class FoodAlchemistServiceProvider extends ServiceProvider
                 // Abgrenzung zu `wissen-deckung` (W2-4): das prüft die KORPUS-Richtung
                 // („nennt ein Prompt einen §, den kein Dossier hat"), das hier die
                 // VERSORGUNGS-Richtung („welches Wissen erreicht diesen Prompt überhaupt").
-                \Platform\FoodAlchemist\Console\WissenVersorgungCommand::class,
-                \Platform\FoodAlchemist\Console\WissenProfilCommand::class,
-                \Platform\FoodAlchemist\Console\WissenVerweiseCommand::class,
-                \Platform\FoodAlchemist\Console\WissenSpurenCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\WissenVersorgungCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\WissenProfilCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\WissenVerweiseCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\WissenSpurenCommand::class,
                 \Platform\FoodAlchemist\Console\WissenGlobalHebenCommand::class,
                 \Platform\FoodAlchemist\Console\WechselkursHolenCommand::class,
                 \Platform\FoodAlchemist\Console\PlattformBasisHebenCommand::class,
@@ -143,68 +126,53 @@ class FoodAlchemistServiceProvider extends ServiceProvider
                 \Platform\FoodAlchemist\Console\WissenSteuerungSicherungCommand::class,
                 // Spec 52/A1: Grundlinie am tatsächlich versendeten Aufruf — inkl. der drei
                 // Folge-Calls, die der Kontext-Inspektor ausblendet.
-                \Platform\FoodAlchemist\Console\WissenGrundlinieCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\WissenGrundlinieCommand::class,
                 \Platform\FoodAlchemist\Console\KnowledgeEmbedCommand::class,
                 // Spec 50 Strang III: Arbeitsliste zu großer Dossiers (ein Thema pro Dossier ≤ Deckel).
-                \Platform\FoodAlchemist\Console\KnowledgeOversizedCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\KnowledgeOversizedCommand::class,
                 \Platform\FoodAlchemist\Console\EmbedCommand::class,
                 \Platform\FoodAlchemist\Console\EmbeddingsMigrateStoreCommand::class,
                 // Bereitschafts-Prüfung für den Cutover (lesend) — GO/NO-GO je Pool.
-                \Platform\FoodAlchemist\Console\EmbeddingCutoverCheckCommand::class,
-                \Platform\FoodAlchemist\Console\EmbedEvalCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\EmbeddingCutoverCheckCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\EmbedEvalCommand::class,
                 \Platform\FoodAlchemist\Console\NonFoodEinrichtenCommand::class,
                 \Platform\FoodAlchemist\Console\NonFoodErkennenCommand::class,
-                \Platform\FoodAlchemist\Console\GeschirrTypUebernehmenCommand::class,
                 \Platform\FoodAlchemist\Console\DarreichungTypUebernehmenCommand::class,   // Servier-Typ an einer Stelle (18.11.2026)
                 \Platform\FoodAlchemist\Console\LieferantenGruppenEinrichtenCommand::class,
                 \Platform\FoodAlchemist\Console\LieferantenGruppenVorschlagenCommand::class,
-                \Platform\FoodAlchemist\Console\MatcherEvalCommand::class,
-                \Platform\FoodAlchemist\Console\GeneratorEvalCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\MatcherEvalCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\GeneratorEvalCommand::class,
                 \Platform\FoodAlchemist\Console\TerminologyImportCommand::class,
                 \Platform\FoodAlchemist\Console\TeamOnboardingCommand::class,
                 \Platform\FoodAlchemist\Console\SignaleDetektorCommand::class,
                 \Platform\FoodAlchemist\Console\SpeiseplanAushangRollierenCommand::class,
                 \Platform\FoodAlchemist\Console\AboHuelleNachfuehrenCommand::class,
-                \Platform\FoodAlchemist\Console\InspireImportCommand::class,
                 \Platform\FoodAlchemist\Console\AnkerWissenCommand::class,
                 \Platform\FoodAlchemist\Console\RezeptProfileCommand::class,
-                \Platform\FoodAlchemist\Console\RezeptLueckenVergleichCommand::class,   // 29.10.2026: Messung K1/K4a vorher/nachher (nur lesend)
+                \Platform\FoodAlchemist\Console\Diagnose\RezeptLueckenVergleichCommand::class,   // 29.10.2026: Messung K1/K4a vorher/nachher (nur lesend)
                 \Platform\FoodAlchemist\Console\DataQualityCommand::class,
-                \Platform\FoodAlchemist\Console\LeadLaRepickCommand::class,
-                \Platform\FoodAlchemist\Console\LeadLaInaktiveCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\LeadLaInaktiveCommand::class,
                 \Platform\FoodAlchemist\Console\LeadSichtNachlaufCommand::class,
                 \Platform\FoodAlchemist\Console\RecomputeCommand::class,
                 \Platform\FoodAlchemist\Console\GpAllergenBackfillCommand::class,
                 \Platform\FoodAlchemist\Console\GpFormsEstimateCommand::class,
                 \Platform\FoodAlchemist\Console\TellerRollenKlassifizierenCommand::class,
-                \Platform\FoodAlchemist\Console\BasisrezeptRollenVorschlagenCommand::class,
-                \Platform\FoodAlchemist\Console\RecipePackagingUnitsCommand::class,
-                \Platform\FoodAlchemist\Console\VocabUnitsDedupeCommand::class,
                 \Platform\FoodAlchemist\Console\FavoriteGpsCommand::class,
-                \Platform\FoodAlchemist\Console\BackfillKapitelZieleCommand::class,
                 \Platform\FoodAlchemist\Console\RecipeFindingsCommand::class,
                 \Platform\FoodAlchemist\Console\ImportArticlesCommand::class,
-                \Platform\FoodAlchemist\Console\MoneyTruthReportCommand::class,
-                \Platform\FoodAlchemist\Console\VollstaendigkeitReportCommand::class,
-                \Platform\FoodAlchemist\Console\GpAnkerVorauswahlMessenCommand::class,
-                \Platform\FoodAlchemist\Console\AllergenLaVorrangCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\MoneyTruthReportCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\VollstaendigkeitReportCommand::class,
+                \Platform\FoodAlchemist\Console\Diagnose\GpAnkerVorauswahlMessenCommand::class,
                 \Platform\FoodAlchemist\Console\AllergeneNurPositivCommand::class,   // Spec 85
                 \Platform\FoodAlchemist\Console\MarkenEinspielenCommand::class,   // GP-Regelwerk v3.7.1 §5 Ausnahme 3
-                \Platform\FoodAlchemist\Console\SeedRebateTiersCommand::class,
-                \Platform\FoodAlchemist\Console\StepsBackfillCommand::class,
                 \Platform\FoodAlchemist\Console\TrendsMessenCommand::class,      // Spec 79
                 \Platform\FoodAlchemist\Console\MarktdatenAbrufenCommand::class, // Markt in Zahlen monatlich (07.11.2026)
                 \Platform\FoodAlchemist\Console\TrendsStartbestandCommand::class, // Spec 79
                 \Platform\FoodAlchemist\Console\TrendQuellenAbrufenCommand::class, // Spec 93 A
-                \Platform\FoodAlchemist\Console\TrendEingangTitelNachziehenCommand::class, // Einmal-Reparatur Übersichts-Titel (BZfE)
                 \Platform\FoodAlchemist\Console\TrendEingangVertiefenCommand::class, // Vertiefung: Tageslauf
-                \Platform\FoodAlchemist\Console\TrendThemenAehnlichkeitCommand::class, // Spec 93 B (Messung, schreibt nichts)
+                \Platform\FoodAlchemist\Console\Diagnose\TrendThemenAehnlichkeitCommand::class, // Spec 93 B (Messung, schreibt nichts)
                 \Platform\FoodAlchemist\Console\TrendAutomatikCommand::class, // Spec 93 C
-                \Platform\FoodAlchemist\Console\AnchorsTranslateCsvCommand::class,
                 \Platform\FoodAlchemist\Console\PaketeToConceptsCommand::class,
-                \Platform\FoodAlchemist\Console\FormatEditionsToSlotsCommand::class,
-                \Platform\FoodAlchemist\Console\DynamicPricingMigrationCommand::class,
-                \Platform\FoodAlchemist\Console\ConformanceBackfillCommand::class,
             ]);
 
             $this->planeLaeufe();

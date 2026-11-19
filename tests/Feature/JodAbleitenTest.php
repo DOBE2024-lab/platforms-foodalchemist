@@ -63,27 +63,6 @@ it('Aggregation: max(Necta-Flag, abgeleitet), auch ohne Deklarationszeile; Necta
     expect($agg->freiwillig($this->gp))->toBe(['iodized' => 1]);                       // nur noch „unjodiert“ (1) > k.A. (0)
 });
 
-it('Befehl: Probe schreibt nichts, echter Lauf setzt, zweiter Lauf ändert nichts', function () {
-    // Bestand ohne Modell-Hook (wie Import): Ableitung fehlt
-    $id = DB::table('foodalchemist_supplier_items')->insertGetId(['uuid' => (string) UuidV7::generate(), 'team_id' => null,
-        'supplier_id' => $this->lieferant->id, 'designation' => 'Laugenbrezel', 'ingredients_supplier' => 'Mehl, Kaliumjodat',
-        'stamm_class' => StammPaket::PAKET, 'created_at' => now(), 'updated_at' => now()]);
-    $nein = DB::table('foodalchemist_supplier_items')->insertGetId(['uuid' => (string) UuidV7::generate(), 'team_id' => null,
-        'supplier_id' => $this->lieferant->id, 'designation' => 'Bauernbrot', 'ingredients_supplier' => 'Mehl, Salz (unjodiert)',
-        'stamm_class' => StammPaket::PAKET, 'created_at' => now(), 'updated_at' => now()]);
-
-    $this->artisan('foodalchemist:jod-ableiten', ['--probe' => true])->expectsOutputToContain('PROBELAUF')->assertSuccessful();
-    expect(DB::table('foodalchemist_supplier_items')->where('id', $id)->value('iodized_abgeleitet'))->toBeNull();
-
-    $this->artisan('foodalchemist:jod-ableiten')->assertSuccessful();
-    expect(DB::table('foodalchemist_supplier_items')->where('id', $id)->value('iodized_abgeleitet'))->toBe(3)
-        ->and(DB::table('foodalchemist_supplier_items')->where('id', $nein)->value('iodized_abgeleitet'))->toBe(1);
-
-    $this->artisan('foodalchemist:jod-ableiten')
-        ->expectsTable(['Zähler', 'Wert'], [['geprueft', 2], ['ja', 1], ['nein', 1], ['keine_aussage', 0], ['geaendert', 0]])
-        ->assertSuccessful();
-});
-
 it('Necta: neuer Artikel bekommt die Ableitung; geänderte Zutatenliste leitet neu ab, ohne Prüffall und ohne Stand-Feld', function () {
     $alt = ($this->la)('Mehl, Salz', 0, legacy: 36674788);
     $attrappe = new NectaAttrappe([

@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Console\WissenRecallProbeCommand;
+use Platform\FoodAlchemist\Console\Diagnose\WissenRecallProbeCommand;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class);

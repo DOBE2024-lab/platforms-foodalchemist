@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Schema;
  * SICHERHEIT: Der Drop bricht ab, falls noch eine `format_id`-Zuordnung existiert, die
  * NICHT als format_slot gespiegelt ist — dann erst `foodalchemist:format-editions-to-slots
  * --apply` laufen lassen. So geht keine Edition verloren.
+ * Der im Riegel genannte Command `foodalchemist:format-editions-to-slots` ist seit 98 · 1.2b gelöscht (auf io lief diese
+ * Migration in Batch 1); er liegt bis Commit 51252301 in der Git-Historie.
  */
 return new class extends Migration
 {

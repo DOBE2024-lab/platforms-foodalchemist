@@ -17,7 +17,7 @@ uses(TestCase::class);
  * überhaupt im Vektor. Entschieden: BEHALTEN.
  *
  * Diese Tests pinnen den Wert samt Begründung, damit ihn niemand „naheliegend" wieder
- * verstellt, ohne vorher `foodalchemist:wissen-recall-probe --team=<id> --limit=120` zu
+ * verstellt, ohne vorher `foodalchemist:diagnose:wissen-recall-probe --team=<id> --limit=120` zu
  * fahren. Jede Änderung verlangt ausserdem einen Re-Embed.
  */
 function embedText(object $doc): string

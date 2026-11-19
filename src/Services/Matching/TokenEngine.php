@@ -79,7 +79,7 @@ class TokenEngine
     }
 
     /**
-     * §9-Zustandswörter aus freiem Text — Wort-Boundary wie GpZustandBackfillCommand::MUSTER
+     * §9-Zustandswörter aus freiem Text — Wort-Boundary wie GpZustandBackfillCommand::MUSTER (gelöscht 98 · 1.2b, siehe Git-Historie)
      * (dieselbe Quelle: Regelwerk_Grundprodukte.md §9 = GpNamingService::ZUSTAND_VOCAB, seit v3.6.0 mit
      * gepökelt/geräuchert/luftgetrocknet). Mehrdeutigkeit (mehr als ein Zustand im selben Text) bleibt KONSERVATIV
      * unentschieden statt geraten — dieselbe Politik wie der Backfill.
@@ -145,7 +145,7 @@ class TokenEngine
             $zustandTreffer = array_values(array_unique([...array_diff($zustandTreffer, ['trocken']), 'konserviert']));
         }
         // Widersprüchlich (z. B. „TK, getrocknet") ⇒ kein Zustand gesetzt — Raten wäre hier
-        // schlimmer als ungeprüft lassen (identische Politik zu GpZustandBackfillCommand).
+        // schlimmer als ungeprüft lassen (identische Politik zu GpZustandBackfillCommand). (gelöscht 98 · 1.2b, siehe Git-Historie)
         // v3.6.0 (Dominique 19.10.): mehrere Behandlungen ⇒ Vorrang, TK + Behandlung ⇒ Behandlung; echt widersprüchlich ⇒ null
         $zustand = \Platform\FoodAlchemist\Services\GpNamingService::zustandAusTreffern($zustandTreffer);
 

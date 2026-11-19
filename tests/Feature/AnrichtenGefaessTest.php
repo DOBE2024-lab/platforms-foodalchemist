@@ -214,6 +214,10 @@ it('VK-Modal: Spalte Gefäß, wirksamer Typ aus dem Gefäß, Übersteuerung sich
     expect($this->dar->fresh()->vessel_gp_id)->toBe($this->glas->id)->and($this->dar->fresh()->serving_vehicle_vocab_id)->toBeNull();
     $html = Livewire::test(VkModal::class)->call('oeffnen', $this->dar->recipe_id)->html();
     expect($html)->toContain('data-dar-typ-aus-gefaess')->toContain('Glas')->not->toContain('data-dar-uebersteuert')->toContain('data-dar-gefaess-kosten');
+    if ($path = getenv('FA_DAR_GEFAESS_PREVIEW_PATH')) {
+        file_put_contents($path, $html);
+        file_put_contents($path.'.state.json', json_encode(['darForm' => $c->get('darForm'), 'darZeitForm' => $c->get('darZeitForm')]));
+    }
 
     $this->dar->update(['serving_vehicle_vocab_id' => $this->tellerTyp, 'quantity_per_unit_g' => 300]);
     $html = Livewire::test(VkModal::class)->call('oeffnen', $this->dar->recipe_id)->html();

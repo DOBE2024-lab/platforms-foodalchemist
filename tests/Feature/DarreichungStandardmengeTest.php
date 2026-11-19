@@ -99,7 +99,9 @@ it('zeigt ein kompaktes Formular ohne zweite KPI-Leiste und ohne freie Gesamtgra
         ->and($xp->query('//*[@data-dar-portionsmenge]//input[not(@type="checkbox")]')->length)->toBe(0)
         ->and($xp->query('//*[@data-dar-standardmenge and @checked]')->length)->toBe(1)
         ->and($xp->query('//details[@data-vk-eigenschaften and not(@open)]')->length)->toBe(1)
-        ->and($xp->query('//*[@data-dar-delta]//input')->length)->toBe(0);
+        ->and($xp->query('//*[@data-dar-delta]//input')->length)->toBe(0)
+        ->and($xp->query('//section[@aria-label="Portion und Verkauf"]//*[@data-dar-gefaess-info]')->length)->toBe(1)
+        ->and($xp->query('//details//*[@data-dar-gefaess-info]')->length)->toBe(0);
     if ($path = getenv('FA_DAR_KOMPAKT_PREVIEW_PATH')) file_put_contents($path, $html);
     $lw->call('darStandardmenge', $this->dar->id, false)->assertSet('fehler', null);
     if ($path = getenv('FA_DAR_KOMPAKT_EIGEN_PREVIEW_PATH')) file_put_contents($path, $lw->html());

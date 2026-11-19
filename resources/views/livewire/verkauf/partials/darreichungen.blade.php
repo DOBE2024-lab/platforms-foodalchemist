@@ -107,6 +107,7 @@
                         @endif
                     </div>
                     @if(($d->unit_count ?? 1) > 1 || ($rezept->sales_unit_count ?? 1) > 1)<x-fa::notice tone="warn">Altbestand mit abweichender Zählweise. Mengen und Zeiten bleiben bis zu einer geprüften Umstellung erhalten.</x-fa::notice>@endif
+                    @include('foodalchemist::livewire.verkauf.partials.darreichung-gefaess')
                     <div class="flex flex-wrap gap-x-6 gap-y-2 border-y border-[var(--fa-line)] py-3" aria-label="Kennzahlen dieser Darreichung">
                         <span>EK je Portion <x-fa::money :value="$d->ek_portion" /></span>
                         <span>VK netto <x-fa::money :value="$d->sales_net" /></span>

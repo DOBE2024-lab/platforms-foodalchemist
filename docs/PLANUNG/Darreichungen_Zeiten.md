@@ -208,3 +208,18 @@ gezielte Produktions-/MwSt-/Policy-/UI-Suite umfasste 30 Tests mit 140 Assertion
 der abschließende Mengen-/Darstellungslauf 6 Tests mit 37 Assertions.
 JS-/CSS-Build, PHP-Syntax, Diff-Prüfung und Composer-Validierung grün.
 Eine vollständige Modulsuite und ein Deploy wurden für diese Korrektur nicht ausgeführt.
+
+### Gefäßangaben zusammenführen · 19.11.2026, Nachtrag während der Releaseprüfung
+
+Dominique meldete die doppelt wirkende Gefäßpflege. Gefäßauswahl, Servier-Typ,
+Kostenart und berechneter Gefäßpreis stehen deshalb gemeinsam unter „Portion &
+Verkauf“. Der untere aufklappbare Bereich enthält ausschließlich „Zubehör &
+Verpackung“. Unveränderte Livewire-Bindings und Fachservices, keine zweite
+Kostenberechnung. Diese reine View-Umordnung wird zusätzlich gezielt geprüft;
+der funktionale Release-Stand bleibt der bereits laufenden Gesamtsuite zugrunde.
+
+Nachtrag geprüft: 62 Gefäß-/Kosten-/Mengen-/UI-Tests mit 387 Assertions grün;
+abschließende Livewire-Interaktion mit bepreistem Gefäß 1 Test/11 Assertions grün.
+Die gerenderte View wird mit den tatsächlichen Formularwerten der Fixture bei
+390/768/1440/1920 px geprüft. Die doppelte Textanzeige des geerbten Servier-Typs
+entfällt; die Herkunft bleibt direkt in der Auswahl sichtbar.

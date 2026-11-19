@@ -50,7 +50,7 @@
                 'value' => \Platform\FoodAlchemist\Support\Labels::konfidenz($allergenKonfidenz['confidence'] ?? null),
                 'tone' => $konfTon[$allergenKonfidenz['confidence'] ?? ''] ?? null,
                 'kpi' => 'allergen-konfidenz',
-                'title' => 'Wie gut die Allergene durch Lieferantenartikel belegt sind',
+                'title' => ($allergenKonfidenz['quelle'] ?? null) === 'manuell' ? 'Platzhalter: Allergene von Hand gepflegt' : 'Wie gut die Allergene durch Lieferantenartikel belegt sind',
             ];
         }
 
@@ -174,12 +174,74 @@
         @endif
 
         <div class="flex flex-col">
+        {{-- PLATZHALTER: Allergene, Zusatzstoffe & Nährwerte von Hand (Entscheid Dominique 19.11.2026, nur Platzhalter; Dienst lehnt alle anderen ab) --}}
+        @if($platzhalterStand !== null)
+        <x-fa::section variant="plain" title="Allergene, Zusatzstoffe & Nährwerte (manuell, Platzhalter)" icon="heroicon-o-pencil-square" data-sektion="platzhalter-deklaration">
+            <p class="{{ $leise }}">Platzhalter haben keine Lieferantenartikel, Werte werden hier gepflegt. Sie gelten in Rezepten wie Artikelwerte.</p>
+            @if($kannKuratieren)
+                <x-slot:actions>
+                    <x-fa::button size="sm" variant="ghost" wire:click="platzhalterAllesFreiVorbelegen" data-platzhalter-alles-frei
+                        title="Alle 14 Allergene „nicht enthalten“, keine Zusatzstoffe — z. B. Wasser. Erst Speichern schreibt.">Alles frei vorbelegen</x-fa::button>
+                </x-slot:actions>
+                @php
+                    $phLabels = \Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::ALLERGENE;
+                    $phStoffe = \Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration::STOFFE + \Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration::FREIWILLIG;
+                @endphp
+                <details class="flex flex-col gap-2" @if(! $platzhalterStand['allergene_vollstaendig']) open @endif data-platzhalter-allergene>
+                    <summary class="cursor-pointer {{ $titelKlein }}">Allergene ({{ collect($platzhalterStand['allergene'])->filter()->count() }} von 14 gesetzt)</summary>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 pt-1">
+                        @foreach(\Platform\FoodAlchemist\Models\FoodAlchemistGp::ALLERGEN_FIELDS as $feld)
+                            <label class="flex items-center justify-between gap-2 text-[length:var(--fa-text-sm)]" wire:key="ph-a-{{ $feld }}">
+                                <span class="min-w-0 truncate">{{ $phLabels[$feld] ?? $feld }}</span>
+                                <x-fa::select size="sm" wire:model="platzhalterForm.allergene.{{ $feld }}" class="w-40" data-platzhalter-allergen="{{ $feld }}">
+                                    <option value="">ohne Angabe</option>
+                                    <option value="nicht_enthalten">nicht enthalten</option>
+                                    <option value="spuren">Spuren</option>
+                                    <option value="enthalten">enthalten</option>
+                                </x-fa::select>
+                            </label>
+                        @endforeach
+                    </div>
+                </details>
+                <details class="flex flex-col gap-2" @if(! $platzhalterStand['zusatzstoffe_vollstaendig']) open @endif data-platzhalter-zusatzstoffe>
+                    <summary class="cursor-pointer {{ $titelKlein }}">Zusatzstoffe ({{ collect($platzhalterStand['zusatzstoffe'])->filter()->count() }} von {{ count($phStoffe) }} gesetzt)</summary>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 pt-1">
+                        @foreach($phStoffe as $stoff => $stoffLabel)
+                            <label class="flex items-center justify-between gap-2 text-[length:var(--fa-text-sm)]" wire:key="ph-z-{{ $stoff }}">
+                                <span class="min-w-0 truncate" title="{{ $stoffLabel }}">{{ $stoffLabel }}</span>
+                                <x-fa::select size="sm" wire:model="platzhalterForm.zusatzstoffe.{{ $stoff }}" class="w-32" data-platzhalter-zusatz="{{ $stoff }}">
+                                    <option value="">ohne Angabe</option>
+                                    <option value="nein">nein</option>
+                                    <option value="ja">ja</option>
+                                </x-fa::select>
+                            </label>
+                        @endforeach
+                    </div>
+                </details>
+                <div class="flex flex-col gap-1" data-platzhalter-naehrwerte>
+                    <p class="{{ $titelKlein }}">Nährwerte je 100 g</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1">
+                        @foreach(\Platform\FoodAlchemist\Services\PlatzhalterDeklarationService::NAEHRWERT_LABELS as $key => $naehrLabel)
+                            <label class="flex items-center justify-between gap-2 text-[length:var(--fa-text-sm)]" wire:key="ph-n-{{ $key }}">
+                                <span class="min-w-0 truncate">{{ $naehrLabel }}</span>
+                                <x-fa::input size="sm" inputmode="decimal" wire:model="platzhalterForm.naehrwerte.{{ $key }}" class="w-24" placeholder="–" data-platzhalter-naehrwert="{{ $key }}" />
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                @if($platzhalterFehler)<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" data-platzhalter-fehler>{{ $platzhalterFehler }}</p>@endif
+                <div><x-fa::button size="sm" variant="primary" wire:click="platzhalterDeklarationSpeichern" data-platzhalter-speichern>Speichern</x-fa::button></div>
+            @endif
+        </x-fa::section>
+        @endif
+
         {{-- Deklaration --}}
         {{-- ALLERGENE (effektiv) --}}
         @if($section === null || $section === 'allergene')
         @php
             $allergKiConf = $gp->allergens_confidence;
-            $nurKiOverride = $allergene !== null && ($allergenKonfidenz['n_las_mit_daten'] ?? 0) === 0 && ($gp->allergens_source === 'ki' || $gp->allergens_confidence !== null) && collect($allergene)->contains(fn ($a) => $a['source'] === 'override');
+            $platzhalterManuell = ($allergenKonfidenz['quelle'] ?? null) === 'manuell';   // Platzhalter, 14 Allergene von Hand (19.11.2026)
+            $nurKiOverride = ! $platzhalterManuell && $allergene !== null && ($allergenKonfidenz['n_las_mit_daten'] ?? 0) === 0 && ($gp->allergens_source === 'ki' || $gp->allergens_confidence !== null) && collect($allergene)->contains(fn ($a) => $a['source'] === 'override');
         @endphp
         <x-fa::section variant="plain" title="Allergene" icon="heroicon-o-shield-exclamation" data-sektion="allergene">
             {{-- Dominique 2026-10-13: kein KI-Schätzknopf für Allergene — sie kommen ausschließlich aus den Lieferantenartikeln
@@ -188,6 +250,8 @@
                 @if($nurKiOverride)
                     <x-fa::badge tone="accent" icon="heroicon-m-sparkles" title="Von der KI geschätzt, keine Artikeldaten{{ $allergKiConf !== null ? ' · ' . round($allergKiConf * 100) . ' %' : '' }}" data-allergene-ki-marker>KI</x-fa::badge>
                     <span class="text-[var(--fa-ink-3)]">aus 0/{{ $gp->n_las_total }} Artikeln</span>
+                @elseif($platzhalterManuell)
+                    <x-fa::signal tone="ok" data-allergen-konfidenz="high" data-allergene-platzhalter-manuell>Allergene von Hand gepflegt (Platzhalter)</x-fa::signal>
                 @elseif($allergenKonfidenz !== null)
                     <x-fa::signal :tone="$konfTon[$allergenKonfidenz['confidence']] ?? 'warn'" data-allergen-konfidenz="{{ $allergenKonfidenz['confidence'] }}">{{ $konfSatz[$allergenKonfidenz['confidence']] ?? $konfSatz['none'] }}</x-fa::signal>
                     <span class="text-[var(--fa-ink-3)]">Belegt: {{ \Platform\FoodAlchemist\Support\Labels::konfidenz($allergenKonfidenz['confidence']) }}, aus {{ $allergenKonfidenz['n_las_mit_daten'] }}/{{ $gp->n_las_total }} Artikeln</span>
@@ -237,7 +301,7 @@
 
         {{-- ZUSATZSTOFFE --}}
         @if($section === null || $section === 'zusatzstoffe')
-        <x-fa::section variant="plain" title="Zusatzstoffe" icon="heroicon-o-beaker" meta="aus den Artikeln" data-sektion="zusatzstoffe">
+        <x-fa::section variant="plain" title="Zusatzstoffe" icon="heroicon-o-beaker" :meta="$gp->is_platzhalter ? 'von Hand (Platzhalter)' : 'aus den Artikeln'" data-sektion="zusatzstoffe">
             @if($zusatzstoffe !== null)
                 @php
                     $stoffLabels = \Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration::STOFFE;
@@ -481,7 +545,7 @@
         {{-- NÄHRWERTE --}}
         @if($section === null || $section === 'naehrwerte')
         <x-fa::section variant="plain" title="Nährwerte" icon="heroicon-o-chart-bar"
-            :meta="($naehrwerte['source'] ?? 'la') === 'la' ? 'je 100 g, Mittel der Artikel' : (($naehrwerte['source'] ?? '') === 'ki' ? 'je 100 g, KI-Schätzung' : 'je 100 g')" data-sektion="naehrwerte">
+            :meta="($naehrwerte['source'] ?? 'la') === 'la' ? 'je 100 g, Mittel der Artikel' : (($naehrwerte['source'] ?? '') === 'ki' ? 'je 100 g, KI-Schätzung' : (($naehrwerte['source'] ?? '') === 'manual' ? 'je 100 g, von Hand' : 'je 100 g'))" data-sektion="naehrwerte">
             @if($kannKuratieren && $naehrwerte !== null && $naehrwerte['energy_kcal']['avg'] === null)
                 <x-slot:actions>
                     <x-foodalchemist::ki-action action="kiNaehrwerte" variant="ai" icon="heroicon-o-sparkles" label="Mit KI schätzen"

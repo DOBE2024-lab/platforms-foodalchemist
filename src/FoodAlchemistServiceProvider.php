@@ -102,6 +102,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
                 \Platform\FoodAlchemist\Console\SteuerklasseBackfillCommand::class,   // MwSt als Klasse statt Zahl (16.11.2026)
                 \Platform\FoodAlchemist\Console\DarreichungMwstLeerenCommand::class,   // MwSt „aus Preisklasse“ wieder leer (18.11.2026)
                 \Platform\FoodAlchemist\Console\KochmediumVorbelegenCommand::class,   // §18.7 Kochmedium-Vorschlag am GP (17.11.2026)
+                \Platform\FoodAlchemist\Console\PlatzhalterDeklarationVorbelegenCommand::class,   // Platzhalter: Allergene/Zusatzstoffe/Nährwerte von Hand vorbelegen (19.11.2026)
                 \Platform\FoodAlchemist\Console\GpFelderCommand::class,
                 \Platform\FoodAlchemist\Console\AbgleichEvalCommand::class,   // Abgleich-Dienst: Eval (schreibt nie, zurückgerollte Transaktion)
                 \Platform\FoodAlchemist\Console\GpPaketImportCommand::class,   // E2: GP-Paket → io (global, stamm_paket)

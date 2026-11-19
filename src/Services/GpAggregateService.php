@@ -93,6 +93,12 @@ class GpAggregateService
                 : ['confidence' => 'none', 'needs_review' => false, 'konflikt_felder' => [], 'n_las_mit_daten' => 0];
         }
 
+        // Platzhalter (Dominique 19.11.2026): keine Lieferantenartikel, die 14 Allergene von Hand gepflegt ⇒ belegt (HIGH), Quelle `manuell`.
+        // Nur vollständig: ein teilweise gepflegter Platzhalter bleibt beim Artikel-Weg (NONE ⇒ Rezept LOW, §7 F7.4).
+        if (PlatzhalterDeklarationService::allergeneVollstaendig($gp)) {
+            return ['confidence' => 'high', 'needs_review' => false, 'konflikt_felder' => [], 'n_las_mit_daten' => 0, 'quelle' => 'manuell'];
+        }
+
         return $this->laKonfidenz($gp);
     }
 
@@ -263,8 +269,21 @@ class GpAggregateService
         return $this->deklarationMax($gp, [...array_keys(FoodAlchemistItemDeclaration::STOFFE), ...array_keys(FoodAlchemistItemDeclaration::FREIWILLIG)]);
     }
 
-    /** @param list<string> $stoffe @return array<string,?int> */
+    /**
+     * Platzhalter: von Hand gepflegte Stoffe ({@see PlatzhalterDeklarationService}) liegen vor dem Artikel-MAX — wie der Allergen-Override
+     * (GL-01 Prio 1). Nicht-Platzhalter haben keine Hand-Ebene, dort bleibt es beim MAX über die Artikel.
+     *
+     * @param list<string> $stoffe @return array<string,?int>
+     */
     private function deklarationMax(FoodAlchemistGp $gp, array $stoffe): array
+    {
+        $manuell = PlatzhalterDeklarationService::zusatzstoffeManuell($gp);
+
+        return array_replace($this->deklarationArtikelMax($gp, $stoffe), array_intersect_key($manuell, array_flip($stoffe)));
+    }
+
+    /** @param list<string> $stoffe @return array<string,?int> */
+    private function deklarationArtikelMax(FoodAlchemistGp $gp, array $stoffe): array
     {
         $abgeleitet = array_intersect_key(FoodAlchemistItemDeclaration::FREIWILLIG_ABGELEITET, array_flip($stoffe));
         if ($abgeleitet === []) {
@@ -334,8 +353,12 @@ class GpAggregateService
                 'energy_kcal' => 'nutri_kcal_per_100g', 'protein' => 'nutri_protein_g_per_100g',
                 'fat' => 'nutri_fat_g_per_100g', 'carbs_absorbable' => 'nutri_carbs_g_per_100g',
                 'salt_g' => 'nutri_salt_g_per_100g',
+                'sugar' => 'nutri_sugar_g_per_100g', 'saturated_fat' => 'nutri_saturated_fat_g_per_100g',   // Platzhalter von Hand (19.11.2026)
             ];
             foreach ($map as $key => $feld) {
+                if ($gp->{$feld} === null && in_array($key, ['sugar', 'saturated_fat'], true)) {
+                    continue;   // neue Spalten: ohne Wert bleibt das Artikel-Ergebnis stehen (Verhalten wie vor 19.11.2026)
+                }
                 $out[$key] = ['avg' => $gp->{$feld} !== null ? (float) $gp->{$feld} : null, 'n' => 0];
             }
             $out['source'] = $gp->nutri_source;                   // 'ki' | 'manual'

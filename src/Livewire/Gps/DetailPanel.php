@@ -105,6 +105,7 @@ class DetailPanel extends Component
         $this->hinweis = null;
         $this->kiVorschlag = null;
         $this->laKandidaten = null;
+        $this->platzhalterFehler = null;
     }
 
     // ── Ersatz-Logik (make-or-buy + Artikel-Ersatz): Katalog am GP pflegen ──
@@ -523,6 +524,69 @@ class DetailPanel extends Component
         }
     }
 
+    /**
+     * Platzhalter (19.11.2026): Allergene, Zusatzstoffe, Nährwerte von Hand — Formular je GP.
+     *
+     * @var array{gp?: int, allergene?: array<string,string>, zusatzstoffe?: array<string,string>, naehrwerte?: array<string,string>}
+     */
+    public array $platzhalterForm = [];
+
+    public ?string $platzhalterFehler = null;
+
+    /** Formular wie Leitungswasser vorbelegen: alle Allergene nicht enthalten, keine Zusatzstoffe (schreibt nichts, erst „Speichern“). */
+    public function platzhalterAllesFreiVorbelegen(): void
+    {
+        foreach (FoodAlchemistGp::ALLERGEN_FIELDS as $feld) {
+            $this->platzhalterForm['allergene'][$feld] = 'nicht_enthalten';
+        }
+        foreach (array_keys(\Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration::STOFFE) as $stoff) {
+            $this->platzhalterForm['zusatzstoffe'][$stoff] = 'nein';
+        }
+    }
+
+    /** Werte von Hand speichern — der Dienst lehnt Nicht-Platzhalter ab (KeinPlatzhalterException), nicht nur die Anzeige. */
+    public function platzhalterDeklarationSpeichern(): void
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null || $this->gpId === null) {
+            return;
+        }
+        $this->platzhalterFehler = null;
+        try {
+            $eingabe = [
+                'allergene' => (array) ($this->platzhalterForm['allergene'] ?? []),
+                'zusatzstoffe' => (array) ($this->platzhalterForm['zusatzstoffe'] ?? []),
+            ];
+            // Nährwerte nur mitschicken, wenn etwas eingetragen ist oder sie schon von Hand stehen — leere Felder löschen sonst eine KI-Schätzung
+            $naehr = (array) ($this->platzhalterForm['naehrwerte'] ?? []);
+            if (collect($naehr)->contains(fn ($v) => trim((string) $v) !== '')
+                || FoodAlchemistGp::visibleToTeam($team)->whereKey($this->gpId)->value('nutri_source') === 'manual') {
+                $eingabe['naehrwerte'] = $naehr;
+            }
+            $r = app(\Platform\FoodAlchemist\Services\PlatzhalterDeklarationService::class)->setzen($team, $this->gpId, $eingabe);
+            $this->platzhalterForm = [];   // beim nächsten Rendern aus dem gespeicherten Stand neu
+            $this->dispatch('fa-saved', message: 'Platzhalter gespeichert' . ($r['rezepte_neu_gerechnet'] > 0 ? " — {$r['rezepte_neu_gerechnet']} Rezepte neu gerechnet." : '.'), type: 'success');
+        } catch (\RuntimeException $e) {
+            $this->platzhalterFehler = $e->getMessage();
+        }
+    }
+
+    /** Formular einmal je GP aus dem gespeicherten Stand füllen. */
+    private function platzhalterFormLaden(FoodAlchemistGp $gp): array
+    {
+        $stand = app(\Platform\FoodAlchemist\Services\PlatzhalterDeklarationService::class)->lesen($gp);
+        if (($this->platzhalterForm['gp'] ?? null) !== $gp->id) {
+            $this->platzhalterForm = [
+                'gp' => $gp->id,
+                'allergene' => array_map(fn ($v) => (string) $v, $stand['allergene']),
+                'zusatzstoffe' => array_map(fn ($v) => (string) $v, $stand['zusatzstoffe']),
+                'naehrwerte' => array_map(fn ($v) => $v === null ? '' : str_replace('.', ',', (string) $v), $stand['naehrwerte']),
+            ];
+        }
+
+        return $stand;
+    }
+
     /** Spec 67: Stammplatz dieses Grundprodukts in einem Lagerort setzen ('' = entfernen). */
     public function stammplatzSetzen(int $locationId, $binId): void
     {
@@ -578,6 +642,8 @@ class DetailPanel extends Component
             'allergenKonfidenz' => ($gp !== null && $brauchtAllergene) ? $aggregate->allergenKonfidenz($gp) : null,
             'zusatzstoffe' => ($gp !== null && $brauchtZusatz) ? $aggregate->zusatzstoffe($gp) : null,
             'naehrwerte' => ($gp !== null && $brauchtNaehr) ? $aggregate->naehrwerte($gp, mitKiFallback: true, sicht: $team) : null,
+            // Platzhalter (19.11.2026): Werte von Hand — Formular nur dort, wo die Allergene stehen
+            'platzhalterStand' => ($gp !== null && $gp->is_platzhalter && $brauchtAllergene) ? $this->platzhalterFormLaden($gp) : null,
             'kette' => $kette,
             'effektiverLeadId' => $effektiverLeadId,
             'leadSteuerung' => $leadSteuerung,

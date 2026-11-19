@@ -69,6 +69,7 @@ class FoodAlchemistGp extends Model
         'derivat_ausbeute_wert' => 'decimal:2',   // Spec 96
         'requires_la' => 'boolean',
         'is_platzhalter' => 'boolean',
+        'deklaration_manuell' => 'array',   // nur Platzhalter: Zusatzstoffe von Hand {stoff: 1|3} (PlatzhalterDeklarationService)
         'namens_vegan' => 'boolean',
         'namens_glutenfrei' => 'boolean',
         'namens_laktosefrei' => 'boolean',

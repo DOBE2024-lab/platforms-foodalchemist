@@ -22,7 +22,8 @@ class GpsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
     {
         return 'Liefert ein Grundprodukt im Detail: Stammdaten, Status, Taxonomie (Warengruppe/Sub-Kategorie), '
             . 'Zustand/Bio, Namens-Klammern (Land, MSC/ASC, Vegan …) und Kennzeichen angenommen/offen (Regel 91), Derivat-Herkunft (§11.2: is_derivat/derivat_von_gp_id/requires_la), Tags (tri-state), '
-            . 'Lead-LA-Referenz und das ALL-MAXIMAL-Allergen-Aggregat (GL-01).';
+            . 'Lead-LA-Referenz und das ALL-MAXIMAL-Allergen-Aggregat (GL-01) mit Konfidenz. Bei Platzhaltern zusätzlich `platzhalter_deklaration` '
+            . '(Allergene, Zusatzstoffe, Nährwerte von Hand; setzen über foodalchemist.platzhalter_deklaration.PUT).';
     }
 
     public function getSchema(): array
@@ -65,6 +66,8 @@ class GpsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
             'requires_la' => (bool) $gp->requires_la,
             'is_kochmedium' => (bool) $gp->is_kochmedium,   // Vorschlag Zeilenart „Medium“ (§18.7)
             'is_platzhalter' => (bool) $gp->is_platzhalter,
+            // Platzhalter (19.11.2026): Allergene, Zusatzstoffe, Nährwerte von Hand; schreiben über foodalchemist.platzhalter_deklaration.PUT. Sonst null.
+            'platzhalter_deklaration' => $gp->is_platzhalter ? app(\Platform\FoodAlchemist\Services\PlatzhalterDeklarationService::class)->lesen($gp) : null,
             'zusatz' => $gp->zusatz,
             'rezepturware' => $gp->rezepturware,   // §5 Ausnahme 3: null = nicht entschieden
             'marke_offen' => (bool) $gp->marke_offen,
@@ -77,6 +80,7 @@ class GpsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
             // Non-Food (WG 16): Maße in mm/ml wie gespeichert, dazu die Größe in Betriebs-Einheiten (Ø 27 cm); sonst null
             'masse' => $gp->istNonFood() ? array_merge(array_map(fn ($v) => $v !== null ? (float) $v : null, $gp->only(\Platform\FoodAlchemist\Support\NonFoodMasse::FELDER)), ['groesse' => $gp->masseText(), 'serving_vehicle_vocab_id' => $gp->serving_vehicle_vocab_id !== null ? (int) $gp->serving_vehicle_vocab_id : null]) : null,
             'allergene' => app(GpAggregateService::class)->allergene($gp),
+            'allergen_konfidenz' => app(GpAggregateService::class)->allergenKonfidenz($gp)['confidence'],   // high|medium|low|none; Platzhalter von Hand vollständig = high
             // Freiwillige Angaben (Jod), getrennt von der Pflicht-Kennzeichnung; MAX über die Artikel des GP
             'freiwillig' => \Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration::freiwilligFuerMcp(fn ($f) => $freiwillig[$f] ?? null),
         ]);

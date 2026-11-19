@@ -429,6 +429,7 @@ return [
     \Platform\FoodAlchemist\Tools\PlanungSessionPostTool::class,
     \Platform\FoodAlchemist\Tools\PlanungSessionPutTool::class,
     \Platform\FoodAlchemist\Tools\PlanungVorschlagPostTool::class,
+    \Platform\FoodAlchemist\Tools\PlatzhalterDeklarationPutTool::class,   // Platzhalter: Allergene, Zusatzstoffe, Nährwerte von Hand (19.11.2026)
     \Platform\FoodAlchemist\Tools\PlatzhalterDeleteTool::class,
     \Platform\FoodAlchemist\Tools\PlatzhalterPostTool::class,
     \Platform\FoodAlchemist\Tools\PlatzhalterPutTool::class,

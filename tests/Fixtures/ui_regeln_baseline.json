@@ -119,7 +119,7 @@
         "roher_button": 3
     },
     "handbuch/show.blade.php": {
-        "roher_button": 13
+        "roher_button": 12
     },
     "layouts/kiosk.blade.php": {
         "typo_groesse": 1,

@@ -24,7 +24,7 @@ it('zeigt ein Suchfeld mit Label, Leeren-Knopf und aria-live-Trefferzahl, ohne J
         ->and($x->query('//label[@for="handbuch-suche"]')->item(0)?->textContent)->toBe('Im Handbuch suchen')
         ->and($x->query('//input[@id="handbuch-suche"][@type="search"][@aria-describedby="handbuch-suche-status"]')->length)->toBe(1)
         ->and($x->query('//*[@id="handbuch-suche-status"][@aria-live="polite"][@role="status"]')->length)->toBe(1)
-        ->and($x->query('//button[@id="handbuch-suche-leeren"][@aria-label="Suche leeren"]')->length)->toBe(1)
+        ->and($x->query('//button[@id="handbuch-suche-leeren"][@aria-label="Suche schließen"]')->length)->toBe(1)
         // Basisrezepte als eigene, nur bei Suche sichtbare Gruppe
         ->and($x->query('//nav//details[@data-nur-suche][@hidden]//a[@data-key="basis-b2"]')->length)->toBe(1);
 });
@@ -80,4 +80,29 @@ it('bringt das Such-Script mit Normalisierung, Escape-Leeren und Hervorhebung mi
         $snapshot['freie_kapitel'] = [['title' => 'Hygiene', 'text' => 'Hände waschen vor Schichtbeginn.']];
         file_put_contents($pfad, view('foodalchemist::handbuch.show', compact('snapshot'))->render());
     }
+});
+
+it('blendet die Suche standardmäßig aus und öffnet sie über einen Lupen-Knopf im Kopf', function () {
+    $snapshot = require __DIR__ . '/../Fixtures/handbuch_ansicht.php';
+    $x = handbuchSucheDom($snapshot);
+
+    $knopf = $x->query('//div[contains(@class,"top")]//button[@id="handbuch-suche-knopf"]');
+    expect($knopf->length)->toBe(1)
+        ->and($knopf->item(0)->getAttribute('aria-label'))->toBe('Suche')
+        ->and($knopf->item(0)->getAttribute('aria-expanded'))->toBe('false')
+        ->and($knopf->item(0)->getAttribute('aria-controls'))->toBe('handbuch-suche-block')
+        ->and($knopf->item(0)->hasAttribute('hidden'))->toBeTrue()          // ohne JS verborgen
+        ->and(str_contains($knopf->item(0)->getAttribute('class'), 'ico'))->toBeTrue() // Optik wie der Kontrast-Knopf
+        ->and($x->query('//div[@id="handbuch-suche-block"]')->item(0)->hasAttribute('hidden'))->toBeTrue();
+});
+
+it('sucht Kapitel-, Paket- und Abschnittstitel mit und markiert sie', function () {
+    $snapshot = require __DIR__ . '/../Fixtures/handbuch_ansicht.php';
+    $html = view('foodalchemist::handbuch.show', compact('snapshot'))->render();
+    expect($html)->toContain(
+        "details > summary > span:first-of-type, .kap-text, .nav-abschnitt",   // Titel werden markiert
+        "e.tagName === 'DETAILS'",                                              // Titel der Vorfahren zählen für jedes Gericht darunter
+        "v.classList.contains('nav-abschnitt')",                                // Abschnitts-Überschrift im Paket
+        "function sucheSchliessen()",
+    );
 });

@@ -888,9 +888,9 @@ class AboKuendigungService
             }
             $n += DB::table($tab)->whereIn('id', $q->pluck('x.id')->all() ?: [0])->update(['sales_recipe_id' => $neu]);
         }
-        $n += DB::table('foodalchemist_recipe_ingredients AS z')
+        $n += app(Rezept\RezeptGraphService::class)->haengeUm(DB::table('foodalchemist_recipe_ingredients AS z')   // 1.1e: Graph-Schreibweg
             ->whereIn('z.recipe_id', DB::table('foodalchemist_recipes')->whereIn('team_id', $teams)->where('ist_fassung', false)->whereNull('deleted_at')->select('id'))
-            ->where('z.referenced_recipe_id', $alt)->whereNull('z.deleted_at')->update(['referenced_recipe_id' => $neu]);
+            ->where('z.referenced_recipe_id', $alt)->whereNull('z.deleted_at'), $neu, [], 'z.recipe_id');
 
         return $n;
     }

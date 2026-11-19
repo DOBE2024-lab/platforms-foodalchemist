@@ -716,6 +716,12 @@ class PlanungsblattService
             }
         }
 
+        // 1.1e: ein eingeschleuster Zyklus liefert sonst still falschen Bedarf (Relaxation bricht an der Pass-Grenze ab) — melden.
+        if (($zyklus = Rezept\RezeptGraphService::findeZyklus(array_map(fn ($subs) => array_column($subs, 'sub'), $kanten))) !== null) {
+            $namen = array_map(fn ($id) => $this->ladeRezept($id)?->name ?? "#{$id}", [...$zyklus, $zyklus[0]]);
+            throw new \Platform\FoodAlchemist\Exceptions\RezeptZyklusException($zyklus, 'Zyklus im Rezeptgraph: ' . implode(' → ', $namen) . ' — Bedarf nicht berechenbar.');
+        }
+
         // 2. Longest-Path-Tiefe von den Tops.
         $tiefe = [];
         foreach ($tops as $t) {

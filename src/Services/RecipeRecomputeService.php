@@ -174,13 +174,22 @@ class RecipeRecomputeService
         //    nicht neu berechnetes Geschwister-Sub und bliebe dauerhaft stale (I8-Härtung).
         //    Über mehrere Starts hinweg ist genau das der Gewinn: die gemeinsamen Eltern
         //    stehen EINMAL in der Ordnung, nicht einmal je Start.
-        foreach ($this->topoOrder($betroffen) as $id) {
+        // 1.1e: ein eingeschleuster Zyklus wird nicht mehr still in Eingabereihenfolge gerechnet — seine Rezepte (und was auf ihnen
+        // aufbaut) bleiben ungerechnet und stehen als Fehler im Ergebnis (KostenFolgeJob schlägt damit fehl).
+        foreach ($this->topoOrder($betroffen, $zyklus) as $id) {
             try {
                 $this->recomputePipeline($id, false);
             } catch (\Throwable $e) {
                 $fehler[$id] = $e->getMessage();
                 Log::warning("Recompute-Propagation: Rezept {$id} fehlgeschlagen — {$e->getMessage()} (I8: Edit nicht geblockt)");
             }
+        }
+        if ($zyklus !== []) {
+            $meldung = 'Zyklus im Rezeptgraph (betroffen: Rezepte ' . implode(', ', $zyklus) . ') — nicht neu berechnet.';
+            foreach ($zyklus as $id) {
+                $fehler[$id] = $meldung;
+            }
+            Log::error("Recompute-Propagation: {$meldung}");
         }
 
         // K-07 / Doc 15 §M12: Auto-Pakete, die ein neu berechnetes Gericht enthalten,
@@ -329,12 +338,14 @@ class RecipeRecomputeService
      * Kahn-Topo (Kinder vor Eltern) über eine TEILMENGE der Rezepte — nur Kanten
      * innerhalb der Menge zählen. Für den Inkrement-Propagations-Pfad, damit auch
      * Diamond-Abhängigkeiten korrekt geordnet neu berechnet werden. Bei (eigentlich
-     * durch pruefeVerknuepfung ausgeschlossenem) Zyklus: Rest in Eingabereihenfolge anhängen.
+     * durch den Graph-Schreibweg ausgeschlossenem, per DB eingeschleustem) Zyklus: 1.1e — der Rest
+     * (Zyklus + alles, was darauf aufbaut) fehlt in der Ordnung und steht in `$zyklus`.
      *
      * @param  list<int>  $ids
+     * @param  list<int>|null  $zyklus  out: nicht ordenbare Rezepte (leer = zyklenfrei)
      * @return list<int>
      */
-    private function topoOrder(array $ids): array
+    private function topoOrder(array $ids, ?array &$zyklus = null): array
     {
         $set = array_flip($ids);
         $kanten = FoodAlchemistRecipeIngredient::whereIn('recipe_id', $ids)
@@ -361,13 +372,7 @@ class RecipeRecomputeService
                 }
             }
         }
-        if (count($order) < count($ids)) {                          // Zyklus-Fallback: Rest anhängen
-            foreach ($ids as $id) {
-                if (! in_array($id, $order, true)) {
-                    $order[] = $id;
-                }
-            }
-        }
+        $zyklus = array_values(array_diff($ids, $order));         // 1.1e: kein stilles Anhängen mehr
 
         return $order;
     }

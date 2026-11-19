@@ -118,11 +118,8 @@ final class GerichtGpUmbauService
                 ]]);
             } else {
                 $basis = $bestehend;
-                $pruefung = $recompute->pruefeVerknuepfung((int) $gericht->id, (int) $basis->id);
-                if (! $pruefung['erlaubt']) {
-                    throw new \RuntimeException("Verknüpfung abgelehnt: {$pruefung['grund']}.");
-                }
             }
+            app(Rezept\RezeptGraphService::class)->sichereKante((int) $gericht->id, (int) $basis->id);   // 1.1e: Sperre + Zyklusprüfung in dieser Transaktion
 
             // Umhängen wie HardstopResolveService::binde — gezielter Row-Update, Menge/Einheit/Rolle/Notiz bleiben.
             $zeile->update([

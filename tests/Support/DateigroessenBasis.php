@@ -19,7 +19,6 @@ return [
     'src/Livewire/Foodbooks/Index.php' => [1625, 'C4 Komposition (Spec 85 §8); +1 Handy-Weiche #1003 PR6'],
     'resources/views/livewire/concepter/editor.blade.php' => [1605, 'C6 mit Concepter/Editor (Spec 85 §9)'],
     'src/Services/ConceptService.php' => [1523, 'Nicht-Kernlogik auslagern (Spec 85 §9)'],
-    'src/Services/RecipeService.php' => [1509, 'Nicht-Kernlogik auslagern (Spec 85 §9)'],
     'src/Services/RecipeGeneratorService.php' => [1528, 'Nicht-Kernlogik auslagern (Spec 85 §9)'],
     'src/Livewire/Produktion/Tagesplan.php' => [1528, 'C6 Feedback / Anleitung (Spec 85 §9)'],
 ];

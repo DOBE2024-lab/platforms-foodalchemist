@@ -22,6 +22,7 @@
   <x-foodalchemist::shell.fa-menu-script />
   <x-ui-styles />
   @vite(['resources/css/app.css', 'resources/js/app.js'])
+  <x-foodalchemist::shell.text-css />
   @livewireStyles
   <script src="https://unpkg.com/@wotz/livewire-sortablejs@1.0.0/dist/livewire-sortable.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>

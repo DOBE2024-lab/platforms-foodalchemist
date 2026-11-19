@@ -30,6 +30,7 @@
     @if($faCss)
         <link rel="stylesheet" href="{{ $faCss }}" data-fa-modul-css>
     @endif
+    <x-foodalchemist::shell.text-css />
     <x-foodalchemist::shell.fa-menu-script />
     {{-- data-fa-core: Grenze des FA-Designs — die Core-Kopfzeile behält Host-Farben, -Schrift und -Regeln (build-css.mjs) --}}
     <div data-fa-core class="contents">

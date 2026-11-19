@@ -1,0 +1,22 @@
+/*
+ * Text-Rollen des Food Alchemist (Welle 1, Paket 1.4a). Statt Größe und Tinte einzeln auszuschreiben
+ * (text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]) eine Rolle: <x-fa::text rolle="muted"> oder die
+ * Klasse aus Ui::maps()['textRolle'] — die Namen stehen NUR dort, die Werte NUR hier.
+ *
+ * Eigene Datei, unverändert nach resources/dist kopiert (build-css.mjs) und über _platform/fa-assets in
+ * BEIDEN Hüllen geladen (x-foodalchemist::shell.text-css): io (eigenständig) baut bei Modul-Deploys kein CSS.
+ * @layer components: eine Utility wie text-[var(--fa-crit)] übersteuert die Rolle im Einzelfall weiterhin.
+ *
+ * Werte = die der Bausteine (x-fa::page-header, x-fa::section) und der häufigsten Literal-Kombinationen
+ * in den Views (Stand 19.11.: sm+ink-3 386×, sm+ink-2+500 99×, md+ink 149×, md+ink+500 65×).
+ * Kein line-height (wie die Literale), außer beim Seitentitel.
+ */
+@layer components {
+  .fa-t-h1 { font-size: var(--fa-text-3xl); font-weight: 600; letter-spacing: -0.025em; line-height: 1.25; color: var(--fa-ink); }
+  .fa-t-h2 { font-size: var(--fa-text-lg); font-weight: 600; color: var(--fa-ink); }
+  .fa-t-h3 { font-size: var(--fa-text-base); font-weight: 600; color: var(--fa-ink); }
+  .fa-t-strong { font-size: var(--fa-text-md); font-weight: 500; color: var(--fa-ink); }
+  .fa-t-body { font-size: var(--fa-text-md); color: var(--fa-ink); }
+  .fa-t-label { font-size: var(--fa-text-sm); font-weight: 500; color: var(--fa-ink-2); }
+  .fa-t-muted { font-size: var(--fa-text-sm); color: var(--fa-ink-3); }
+}

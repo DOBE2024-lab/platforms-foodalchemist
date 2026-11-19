@@ -1088,7 +1088,7 @@
         "typo_groesse": 26,
         "typo_tinte": 23,
         "roher_button": 3,
-        "rohe_checkbox": 11
+        "rohe_checkbox": 13
     },
     "livewire/settings/regeln.blade.php": {
         "typo_groesse": 4,
@@ -1448,10 +1448,6 @@
     },
     "presentation/blocks/konfig_zusammenfassung.blade.php": {
         "roher_button": 2
-    },
-    "presentation/blocks/preis_aufschluesselung.blade.php": {
-        "hex_farbe": 15,
-        "style_statisch": 29
     },
     "presentation/blocks/price_summary.blade.php": {
         "hex_farbe": 1,

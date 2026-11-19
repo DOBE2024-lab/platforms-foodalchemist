@@ -1126,7 +1126,7 @@ class RecipeService
                 throw new \Platform\FoodAlchemist\Exceptions\NonFoodAlsZutatException($nonFood);
             }
         }
-
+        app(Rezept\ZutatenVerweise::class)->pruefeSicht($team, $recipe, $zeilen);   // 1.1j-1: Verweise nur auf Sichtbares (Abo/Stamm-Paket inklusive)
         DB::transaction(function () use ($team, $recipe, $zeilen, $preserveMissing) {
             $vorhanden = $recipe->ingredients()->get()->keyBy('id');
             $behalten = [];

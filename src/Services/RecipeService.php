@@ -886,20 +886,15 @@ class RecipeService
         $recompute = app(RecipeRecomputeService::class);
         $erlaubt = [];
         $zyklus = [];
-        foreach ($elternIds as $pid) {
-            $pruefung = $recompute->pruefeVerknuepfung($pid, (int) $nach->id);
-            if ($pruefung['erlaubt']) {
-                $erlaubt[] = $pid;
-            } else {
-                $zyklus[] = ($namen[$pid] ?? "#{$pid}") . " ({$pruefung['grund']})";
+        $anzahl = app(Rezept\RezeptGraphService::class)->schreibeKanten([], function () use ($elternIds, $namen, $nach, $zeilen, $recompute, &$erlaubt, &$zyklus) {
+            foreach ($elternIds as $pid) {   // 1.1e: unter der Graph-Sperre geprüft und geschrieben
+                $pruefung = $recompute->pruefeVerknuepfung($pid, (int) $nach->id);
+                $pruefung['erlaubt'] ? ($erlaubt[] = $pid) : ($zyklus[] = ($namen[$pid] ?? "#{$pid}") . " ({$pruefung['grund']})");
             }
-        }
-        if ($erlaubt === []) {
-            throw new \RuntimeException('Tausch abgelehnt — würde einen Zyklus erzeugen: ' . implode(', ', $zyklus) . '.');
-        }
-
-        $zeilenIds = $zeilen->whereIn('recipe_id', $erlaubt)->pluck('id')->all();
-        $anzahl = DB::transaction(function () use ($zeilenIds, $nach) {
+            if ($erlaubt === []) {
+                throw new \Platform\FoodAlchemist\Exceptions\RezeptZyklusException([(int) $nach->id], 'Tausch abgelehnt — würde einen Zyklus erzeugen: ' . implode(', ', $zyklus) . '.');
+            }
+            $zeilenIds = $zeilen->whereIn('recipe_id', $erlaubt)->pluck('id')->all();
             $n = FoodAlchemistRecipeIngredient::whereIn('id', $zeilenIds)
                 ->update(['referenced_recipe_id' => $nach->id, 'match_method' => MatchMethod::OverrideSubrecipe->value]);
             $this->loeseRegenerationsOverrides($zeilenIds);
@@ -1235,14 +1230,10 @@ class RecipeService
                     }
                 }
 
-                if ($subId !== null) {
-                    if ($subId === $recipe->id) {
-                        throw new \RuntimeException('Selbstreferenz — ein Rezept kann sich nicht selbst enthalten (GL-02 §3.5).');
-                    }
-                    $pruefung = app(RecipeRecomputeService::class)->pruefeVerknuepfung($recipe->id, $subId);
-                    if (! $pruefung['erlaubt']) {
-                        throw new \RuntimeException("Sub-Rezept-Verknüpfung abgelehnt: {$pruefung['grund']}.");
-                    }
+                if ($subId === $recipe->id) {
+                    throw new \Platform\FoodAlchemist\Exceptions\RezeptZyklusException([$subId, $subId], 'Selbstreferenz — ein Rezept kann sich nicht selbst enthalten (GL-02 §3.5).', 'Selbstreferenz');
+                } elseif ($subId !== null) {   // 1.1e: Graph-Sperre + Zyklusprüfung in DIESER Transaktion (Prüfen und Schreiben atomar)
+                    app(Rezept\RezeptGraphService::class)->sichereKante($recipe->id, $subId, ! $vorhanden->contains(fn ($alt) => (int) $alt->referenced_recipe_id === $subId));
                 }
                 $quantity = (float) str_replace(',', '.', (string) ($z['quantity'] ?? 0));
                 if ($quantity <= 0) {

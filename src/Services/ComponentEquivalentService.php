@@ -207,11 +207,15 @@ class ComponentEquivalentService
         $gegen = $e->counterpartOf($kind, $id);
         $neueMenge = $e->convertMenge($zutat->quantity !== null ? (float) $zutat->quantity : 0.0, $gegen['von']);
 
-        $zutat->update([
-            'gp_id' => $gegen['kind'] === Equiv::KIND_GP ? $gegen['id'] : null,
-            'referenced_recipe_id' => $gegen['kind'] === Equiv::KIND_RECIPE ? $gegen['id'] : null,
-            'quantity' => $neueMenge,
-        ]);
+        // 1.1e: Tausch auf ein Unterrezept läuft über den Graph-Schreibweg (Sperre + Zyklusprüfung); auf ein GP entsteht keine Kante.
+        app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->schreibeKanten(
+            $gegen['kind'] === Equiv::KIND_RECIPE ? [[(int) $zutat->recipe_id, (int) $gegen['id']]] : [],
+            fn () => $zutat->update([
+                'gp_id' => $gegen['kind'] === Equiv::KIND_GP ? $gegen['id'] : null,
+                'referenced_recipe_id' => $gegen['kind'] === Equiv::KIND_RECIPE ? $gegen['id'] : null,
+                'quantity' => $neueMenge,
+            ]),
+        );
 
         $this->recompute->recomputeAndPropagate((int) $zutat->recipe_id);
 

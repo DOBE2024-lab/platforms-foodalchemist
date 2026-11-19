@@ -899,14 +899,15 @@ class RecipeDependencyWorkflowService
         if ($ingredient === null || $ingredient->gp_id !== null || $ingredient->referenced_recipe_id !== null) {
             return;
         }
-        if (! app(RecipeRecomputeService::class)->pruefeVerknuepfung((int) $ingredient->recipe_id, $recipeId)['erlaubt']) {
+        try {   // 1.1e: Graph-Schreibweg; ein Zyklus bindet nicht (wie bisher still, die Zeile bleibt offen)
+            app(Rezept\RezeptGraphService::class)->schreibeKanten([[(int) $ingredient->recipe_id, $recipeId]], fn () => $ingredient->update([
+                'referenced_recipe_id' => $recipeId,
+                'match_method' => 'recipe_ref',
+                'match_confidence' => null,
+            ]));
+        } catch (\Platform\FoodAlchemist\Exceptions\RezeptZyklusException) {
             return;
         }
-        $ingredient->update([
-            'referenced_recipe_id' => $recipeId,
-            'match_method' => 'recipe_ref',
-            'match_confidence' => null,
-        ]);
         app(RecipeRecomputeService::class)->recomputeAndPropagate((int) $ingredient->recipe_id);
     }
 }

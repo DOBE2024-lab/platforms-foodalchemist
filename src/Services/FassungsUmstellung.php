@@ -38,9 +38,15 @@ class FassungsUmstellung
         return $geaendert;
     }
 
-    /** Nur dieses Rezept: seine Zutatenzeilen auf `$alt` zeigen danach auf `$neu`. @return int Anzahl umgehängter Zeilen */
+    /**
+     * Nur dieses Rezept: seine Zutatenzeilen auf `$alt` zeigen danach auf `$neu`. Über den Graph-Schreibweg (1.1e): ein Zyklus lehnt ab.
+     *
+     * @return int Anzahl umgehängter Zeilen
+     *
+     * @throws \Platform\FoodAlchemist\Exceptions\RezeptZyklusException
+     */
     public function einRezept(FoodAlchemistRecipe $rezept, int $alt, int $neu): int
     {
-        return $rezept->ingredients()->where('referenced_recipe_id', $alt)->update(['referenced_recipe_id' => $neu]);
+        return app(Rezept\RezeptGraphService::class)->haengeUm($rezept->ingredients()->where('referenced_recipe_id', $alt), $neu);
     }
 }

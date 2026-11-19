@@ -288,7 +288,7 @@ class HardstopResolveService
 
     private function binde(FoodAlchemistRecipeIngredient $zeile, ?int $gpId, ?int $subId, MatchMethod $methode): void
     {
-        DB::transaction(function () use ($zeile, $gpId, $subId, $methode) {
+        app(Rezept\RezeptGraphService::class)->schreibeKanten($subId !== null ? [[(int) $zeile->recipe_id, $subId]] : [], function () use ($zeile, $gpId, $subId, $methode) {   // 1.1e
             $zeile->update([
                 'gp_id' => $gpId,
                 'referenced_recipe_id' => $subId,

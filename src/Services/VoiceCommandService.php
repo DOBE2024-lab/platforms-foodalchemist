@@ -333,7 +333,7 @@ class VoiceCommandService
     private function formularstandHinweis(?array $formularStand): string
     {
         $scope = $formularStand['scope'] ?? null;
-        if ($scope === null || ! isset(\Platform\FoodAlchemist\Livewire\Planung\Index::MANDATORY_LEITPLANKEN[$scope])) {
+        if ($scope === null || ! isset(\Platform\FoodAlchemist\Support\Planung\PlanungOptionen::MANDATORY_LEITPLANKEN[$scope])) {
             return '';
         }
         $regler = is_array($formularStand['regler'] ?? null) ? $formularStand['regler'] : [];
@@ -341,7 +341,7 @@ class VoiceCommandService
 
         $gesetzt = [];
         $fehlend = [];
-        foreach (\Platform\FoodAlchemist\Livewire\Planung\Index::MANDATORY_LEITPLANKEN[$scope] as $feld) {
+        foreach (\Platform\FoodAlchemist\Support\Planung\PlanungOptionen::MANDATORY_LEITPLANKEN[$scope] as $feld) {
             $wert = $regler[$feld] ?? null;
             if ($wert === null || $wert === '') {
                 $fehlend[] = $feld;
@@ -373,10 +373,10 @@ class VoiceCommandService
     public static function regelVokabular(string $feld): ?array
     {
         return match ($feld) {
-            'sektor' => \Platform\FoodAlchemist\Livewire\Planung\Index::SEKTOR_OPTIONEN,
-            'occasion' => \Platform\FoodAlchemist\Livewire\Planung\Index::OCCASION_OPTIONEN,
-            'serviceform' => \Platform\FoodAlchemist\Livewire\Planung\Index::SERVICEFORM_OPTIONEN,
-            'ziel_einheit' => \Platform\FoodAlchemist\Livewire\Planung\Index::MENGE_EINHEITEN,
+            'sektor' => \Platform\FoodAlchemist\Support\Planung\PlanungOptionen::SEKTOR_OPTIONEN,
+            'occasion' => \Platform\FoodAlchemist\Support\Planung\PlanungOptionen::OCCASION_OPTIONEN,
+            'serviceform' => \Platform\FoodAlchemist\Support\Planung\PlanungOptionen::SERVICEFORM_OPTIONEN,
+            'ziel_einheit' => \Platform\FoodAlchemist\Support\Planung\PlanungOptionen::MENGE_EINHEITEN,
             'level' => ['' => '(egal)', 'haute_cuisine' => 'Haute Cuisine', 'gehoben' => 'Gehoben', 'klassisch' => 'Klassisch'],
             default => null,                                          // pax/ziel_menge/ziel_portion_g/ziel_vk: Zahl, kein Enum
         };
@@ -648,7 +648,7 @@ class VoiceCommandService
         if (is_array($struktur) && in_array($struktur['scope'] ?? null, ['rezept', 'gericht', 'concept'], true)) {
             $rohFelder = array_intersect_key(
                 is_array($struktur['felder'] ?? null) ? $struktur['felder'] : [],
-                array_flip(\Platform\FoodAlchemist\Livewire\Planung\Index::AGENT_SCHREIBBARE_REGLER),
+                array_flip(\Platform\FoodAlchemist\Support\Planung\PlanungOptionen::AGENT_SCHREIBBARE_REGLER),
             );
             $direkt = ($struktur['direkt'] ?? false) === true;
             $felder = $direkt
@@ -674,7 +674,7 @@ class VoiceCommandService
         if (is_array($rueckfrage)
             && in_array($rueckfrage['scope'] ?? null, ['rezept', 'gericht', 'concept'], true)
             && is_string($rueckfrage['feld'] ?? null)
-            && in_array($rueckfrage['feld'], \Platform\FoodAlchemist\Livewire\Planung\Index::AGENT_SCHREIBBARE_REGLER, true)
+            && in_array($rueckfrage['feld'], \Platform\FoodAlchemist\Support\Planung\PlanungOptionen::AGENT_SCHREIBBARE_REGLER, true)
         ) {
             $proposals[] = [
                 'type' => 'rueckfrage',

@@ -2,12 +2,12 @@
 
 namespace Platform\FoodAlchemist\Tools;
 
-use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
+use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Livewire\Settings\Wissenssteuerung;
 use Platform\FoodAlchemist\Services\Ai\KiKlassenEinstellung;
+use Platform\FoodAlchemist\Support\KiSchrittLabels;
 
 /** Spec 85: KI-Klasse je Arbeitsschritt lesen — wirksam, aus dem Code und ob eingestellt. Read-only, jedes Team. */
 class KiKlassenGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
@@ -41,7 +41,7 @@ class KiKlassenGetTool extends FoodAlchemistTool implements ToolContract, ToolMe
         $eingestellt = $e->eingestellt();
 
         return ToolResult::success(['items' => array_map(fn ($k) => [
-            'prompt_key' => $k, 'label' => Wissenssteuerung::schrittLabel($k),
+            'prompt_key' => $k, 'label' => KiSchrittLabels::schrittLabel($k),
             'klasse' => $e->klasseFuer($k), 'standard' => $e->standard($k), 'eingestellt' => isset($eingestellt[$k]),
         ], $schritte)]);
     }

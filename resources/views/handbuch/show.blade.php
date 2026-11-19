@@ -43,18 +43,19 @@
         <span class="sp"></span>
         <span class="logo">Food<span>.Alchemist</span></span>
         <span class="sp"></span>
+        <x-fa::icon-button icon="heroicon-o-magnifying-glass" label="Suche" class="ico" id="handbuch-suche-knopf" aria-expanded="false" aria-controls="handbuch-suche-block" hidden />
         <button type="button" class="ico" id="dk" aria-label="Zwischen dunkel und hell umschalten" title="Dunkel / Hell"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></button>
     </div>
 
     <div class="body">
         <nav aria-label="Gerichte">
-            {{-- Suche: läuft rein im Browser über data-suche; ohne JS bleibt der Block verborgen. --}}
+            {{-- Suche: läuft rein im Browser über data-suche. Standardmäßig zu, der Lupen-Knopf im Kopf blendet sie ein; ohne JS bleibt alles verborgen. --}}
             <div class="suche" id="handbuch-suche-block" role="search" hidden>
                 <label class="sr-only" for="handbuch-suche">Im Handbuch suchen</label>
                 <div class="suche-feld">
                     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m10.5 10.5 3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     <input type="search" id="handbuch-suche" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="Gericht, Zutat, Allergen …" aria-describedby="handbuch-suche-status">
-                    <button type="button" class="suche-leeren" id="handbuch-suche-leeren" aria-label="Suche leeren" hidden><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="m3 3 8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+                    <x-fa::icon-button icon="heroicon-o-x-mark" label="Suche schließen" class="suche-leeren" id="handbuch-suche-leeren" />
                 </div>
                 <p class="suche-status" id="handbuch-suche-status" role="status" aria-live="polite"></p>
             </div>
@@ -448,6 +449,8 @@
     function passt(text, terms) { return terms.every(function (t) { return fundstellen(text, t).length > 0; }); }
     function navTexte(l) {
         var teile = [l.textContent];
+        // Abschnitts-Überschrift im Paket (z. B. „Vorspeise“) gehört zu den Gerichten darunter.
+        for (var v = l.previousElementSibling; v; v = v.previousElementSibling) { if (v.classList.contains('nav-abschnitt')) { teile.push(v.textContent); break; } }
         for (var e = l.parentElement; e && e !== nav; e = e.parentElement) {
             if (e.tagName === 'DETAILS') {
                 var s = e.querySelector(':scope > summary > span'); if (s) { teile.push(s.textContent); }
@@ -496,7 +499,6 @@
     }
     function filtern() {
         var q = suche.value, terms = begriffeAus(q), alle = Array.from(nav.querySelectorAll('details'));
-        sucheLeeren.hidden = q === '';
         if (terms.length && !sucheAktiv) { alle.forEach(function (d) { d._vorSuche = d.open; }); }
         if (!terms.length && sucheAktiv) {
             alle.forEach(function (d) { d.open = !!d._vorSuche; });
@@ -511,6 +513,8 @@
             l.hidden = !an; if (an && sucheAktiv) { keys[l.dataset.key] = true; }
             var label = l.querySelector('span') || l; markieren(label, terms);
         });
+        // Titel markieren: Kapitel, Konzepte, Pakete, Kapiteltexte, Abschnitts-Überschriften.
+        nav.querySelectorAll('details > summary > span:first-of-type, .kap-text, .nav-abschnitt').forEach(function (t) { markieren(t, terms); });
         nav.querySelectorAll('.nav-abschnitt').forEach(function (h) {
             var sichtbar = false;
             for (var e = h.nextElementSibling; e && !e.classList.contains('nav-abschnitt'); e = e.nextElementSibling) { if (!e.hidden && (e.tagName === 'A' || e.querySelector('.liste a:not([hidden])'))) { sichtbar = true; break; } }
@@ -527,16 +531,26 @@
         sucheStatus.classList.toggle('leer-treffer', sucheAktiv && n === 0);
         entmarken(main); karteMarkieren(document.getElementById('g-' + aktiv), false);
     }
-    function leeren() { suche.value = ''; filtern(); suche.focus(); }
-    if (sucheBlock && suche) {
-        sucheBlock.hidden = false;
+    var sucheKnopf = document.getElementById('handbuch-suche-knopf');
+    function sucheOeffnen() {
+        // Am Handy liegt die Suche in der Liste: aus einer geöffneten Karte zurück zur Liste.
+        if (aktiv !== '' && !window.matchMedia('(min-width: 801px)').matches) { zurueck(); }
+        sucheBlock.hidden = false; sucheKnopf.setAttribute('aria-expanded', 'true'); suche.focus();
+    }
+    function sucheSchliessen() {
+        suche.value = ''; filtern();
+        sucheBlock.hidden = true; sucheKnopf.setAttribute('aria-expanded', 'false'); sucheKnopf.focus();
+    }
+    if (sucheBlock && suche && sucheKnopf) {
+        sucheKnopf.hidden = false;
+        sucheKnopf.addEventListener('click', function () { if (sucheBlock.hidden) { sucheOeffnen(); } else { sucheSchliessen(); } });
         suche.addEventListener('input', filtern);
         suche.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') { if (suche.value !== '') { e.preventDefault(); leeren(); } }
+            if (e.key === 'Escape') { e.preventDefault(); sucheSchliessen(); }
             else if (e.key === 'Enter') { var erster = links.find(function (l) { return !l.hidden && !l.closest('[hidden]'); }); if (erster && sucheAktiv) { e.preventDefault(); erster.click(); } }
         });
-        sucheLeeren.addEventListener('click', leeren);
-        if (suche.value !== '') { filtern(); }
+        sucheLeeren.addEventListener('click', sucheSchliessen);
+        if (suche.value !== '') { sucheBlock.hidden = false; sucheKnopf.setAttribute('aria-expanded', 'true'); filtern(); }
     }
     var dk = document.getElementById('dk');
     function dunkel(an) { body.classList.toggle('dunkel', an); try { localStorage.setItem('fa-handbuch-dunkel', an ? '1' : '0'); } catch (e) {} }

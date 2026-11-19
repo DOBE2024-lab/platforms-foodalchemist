@@ -128,7 +128,8 @@ summary.kap > span:first-of-type { flex: 1; }
 /* Suche in der Navigation: klebt oben, Feld fingergroß (16 px verhindert Zoom auf iOS). */
 [hidden] { display: none !important; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-.suche { position: sticky; top: 0; z-index: 2; background: var(--surface); border-bottom: 1px solid var(--line); margin-top: -6px; padding: 10px 12px 6px; }
+/* nav hat 6 px Innenabstand oben; sticky rechnet ab der Inhaltskante, daher top/margin -6 px: das Feld klebt bündig unter dem Kopf, darüber scheint nichts durch. */
+.suche { position: sticky; top: -6px; z-index: 3; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 4px 6px -4px rgba(0, 0, 0, .25); margin-top: -6px; padding: 10px 12px 6px; }
 .suche-feld { display: flex; align-items: center; gap: 6px; background: var(--ground); border: 1px solid var(--line2); border-radius: var(--r); padding: 0 4px 0 10px; color: var(--ink3); }
 .suche-feld:focus-within { border-color: var(--ac); box-shadow: 0 0 0 2px var(--acs); }
 .suche-feld svg { flex: none; }
@@ -137,6 +138,9 @@ summary.kap > span:first-of-type { flex: 1; }
 .suche-feld input::placeholder { color: var(--ink3); }
 .suche-leeren { flex: none; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: var(--ink2); border-radius: var(--r); cursor: pointer; padding: 0; }
 .suche-leeren:hover { background: var(--surface); color: var(--ink); }
+.ico svg { width: 16px; height: 16px; }
+.suche-leeren svg { width: 16px; height: 16px; }
+.ico[aria-expanded="true"] { background: var(--acs); border-color: var(--ac); color: var(--ac); }
 .suche-status { margin: 6px 2px 0; min-height: 16px; font-size: 12px; color: var(--ink3); }
 .suche-status.leer-treffer { color: var(--warnt); }
 mark.treffer { background: var(--warn); color: var(--warnt); border-radius: 3px; padding: 0 1px; }

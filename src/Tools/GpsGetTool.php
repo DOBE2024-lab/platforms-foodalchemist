@@ -22,8 +22,8 @@ class GpsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
     {
         return 'Liefert ein Grundprodukt im Detail: Stammdaten, Status, Taxonomie (Warengruppe/Sub-Kategorie), '
             . 'Zustand/Bio, Namens-Klammern (Land, MSC/ASC, Vegan …) und Kennzeichen angenommen/offen (Regel 91), Derivat-Herkunft (§11.2: is_derivat/derivat_von_gp_id/requires_la), Tags (tri-state), '
-            . 'Lead-LA-Referenz und das ALL-MAXIMAL-Allergen-Aggregat (GL-01) mit Konfidenz. Bei Platzhaltern zusätzlich `platzhalter_deklaration` '
-            . '(Allergene, Zusatzstoffe, Nährwerte von Hand; setzen über foodalchemist.platzhalter_deklaration.PUT).';
+            . 'Lead-LA-Referenz und das ALL-MAXIMAL-Allergen-Aggregat (GL-01) mit Konfidenz. Platzhalter: `platzhalter_deklaration` (von Hand, '
+            . 'Setzen: foodalchemist.platzhalter_deklaration.PUT).';
     }
 
     public function getSchema(): array

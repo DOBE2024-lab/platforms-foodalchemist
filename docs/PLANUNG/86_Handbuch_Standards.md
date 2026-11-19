@@ -153,3 +153,22 @@ auf vorhandene Prüfwerkzeuge. Keine neue Produktabhängigkeit. Bei 375/390/768/
 geprüft: geschlossene Pakete, 0,33 × 100 = 33, Bedarf als Startwert, unabhängige
 Gerichtsportionen, beide synchronen Rechner, kg/g-Wechsel, Kommaeingabe, ungültige
 Zielmenge, Originalansatz, Rückweg und freie Zielmenge ohne Gerichtskontext.
+
+Abschließender Gesamtlauf auf `75dec6e4`: **8.961 Tests, 49.912 Assertions,
+8.948 bestanden und 13 übersprungen, kein Fehler** (SQLite im Arbeitsspeicher).
+Der zuvor aufgefallene Angebots-Testdouble übernimmt nun die optionale
+Mengenprojektion in seiner Signatur; die bestehenden Zähl-/Performance-Assertions
+bleiben unverändert.
+
+Zusatzwunsch vom 19.11.: Kurzvorschau und vollständiges Basisrezept zeigen die
+**eigenen** Allergene des Basisrezepts. Enthaltene Allergene direkt, Spuren
+geschlossen aufklappbar. Die zentrale Kennzeichnungsaggregation liefert die Werte;
+keine Übernahme der Allergene des übergeordneten Gerichts. Unbekannte Angaben
+werden als unvollständig gekennzeichnet, nicht als „frei“ ausgegeben. Dafür wird
+ein zusätzliches Kennzeichnungsfeld im Snapshot eingefroren; keine Rezeptdaten
+werden verändert. Diese reine Anzeige-Ergänzung erfolgte nach dem Gesamtlauf.
+Ihre Kennzeichnungs-/Handbuchsuite bestand mit 204 von 205 Fällen; der verbleibende
+alte DOM-Selektor erfasste nun auch die neue Basisvorschau und wurde gezielt auf
+den Gerichtskopf eingeschränkt. Anschließend alle 19 betroffenen Fälle mit
+84 Assertions grün. Browser-Abnahme einschließlich eigener Allergene/Spuren
+erneut bei 375/390/768/1280 px.

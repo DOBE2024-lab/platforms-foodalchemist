@@ -5,6 +5,7 @@
     <h2>{{ $b['name'] }}</h2>
     @if(!empty($b['ansatz_kg']))<p class="meta">Ausbeute des vollständigen Originalansatzes: {{ $fmtMenge($b['ansatz_kg']) }} kg</p>@endif</div>
 </div>
+@include('foodalchemist::handbuch._allergene', ['kennzeichnung' => $b['kennzeichnung'] ?? null])
 @if(!empty($b['bilder']))<div class="allgemein-fotos">@include('foodalchemist::handbuch._bilder', ['bilder' => $b['bilder']])</div>@endif
 <div class="basis-rechner" hidden>
     <div class="stepper"> <span data-basis-einheit>Portionen</span> <button type="button" data-basis-step="-1" aria-label="eine weniger">−</button><input class="basis-px" type="number" min="0" max="1000000" step="any" value="1" aria-label="Portionen für dieses Basisrezept"><button type="button" data-basis-step="1" aria-label="eine mehr">+</button></div>

@@ -128,6 +128,7 @@ class HandbuchZutatenService
             $knoten = $this->report->rezeptDaten($team, $id, $this->optionen([]))['recipe'];
             $this->basis[$key] = [
                 'name' => (string) $recipe->name,
+                'kennzeichnung' => HandbuchService::kennzeichnungSnapshot($recipe),
                 'ansatz_kg' => Hochrechnung::ansatzKg($recipe),
                 'ansatz_stueck' => $recipe->yield_pieces !== null ? (float) $recipe->yield_pieces : null,
                 'zeilen' => $this->zeilen($team, $recipe, $knoten['ingredients'] ?? []),

@@ -14,8 +14,11 @@ it('rendert die eingeklappte Format-Konzept-Hierarchie und eine eigene Basisreze
         ->and($x->query('//nav//details[contains(@class,"konzept")]')->length)->toBe(2)
         ->and($x->query('//tr[contains(@class,"subrow")]/td[@colspan="2"]')->length)->toBe(2)
         ->and($x->query('//article[@data-key="basis-b2"]//img')->length)->toBe(1)
-        ->and($x->query('//article[@data-key="r1"]//details[contains(@class,"spuren")]')->length)->toBe(1)
-        ->and($x->query('//article[@data-key="r1"]//div[contains(@class,"allergene")]//span')->length)->toBe(2);
+        ->and($x->query('//article[@data-key="basis-b2"]//div[@aria-label="Enthaltene Allergene"]/span')->length)->toBe(1)
+        ->and($x->query('//article[@data-key="basis-b2"]//details[contains(@class,"spuren")][not(@open)]')->length)->toBe(1)
+        ->and($x->query('//div[contains(@class,"subbox")]//div[@aria-label="Allergene dieses Basisrezepts"]')->length)->toBe(1)
+        ->and($x->query('//article[@data-key="r1"]/div[contains(@class,"head")]//details[contains(@class,"spuren")]')->length)->toBe(1)
+        ->and($x->query('//article[@data-key="r1"]/div[contains(@class,"head")]//div[@aria-label="Enthaltene Allergene und Zusatzstoffe"]/span')->length)->toBe(2);
     expect($html)->toContain('data-b="120"', 'data-b="100"', 'data-faktor="0.08"');
     if ($pfad = getenv('FA_HANDBUCH_PREVIEW_PATH')) {
         file_put_contents($pfad, $html);

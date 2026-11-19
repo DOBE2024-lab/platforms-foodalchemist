@@ -41,6 +41,20 @@ it('trägt den Basisrezeptfaktor je Gerichtsportion aus der zentralen Hochrechnu
     expect($b['zeilen'][0]['menge'] * $r['zeilen'][0]['sub_faktor'] * 10)->toBe(640.0);
 });
 
+it('friert die eigenen Basisrezept-Allergene getrennt von Gericht und Spuren ein und kennzeichnet Unbekanntes', function () {
+    $this->gericht->update(['allergen_gluten' => 'enthalten']);
+    $this->sauce->update(['allergen_milk' => 'enthalten', 'allergen_soy' => 'spuren', 'allergen_tree_nuts' => 'unbekannt']);
+    $this->svc->fuerGericht($this->rootTeam, $this->gericht->fresh());
+    $k = $this->svc->basisrezepte()['b'.$this->sauce->id]['kennzeichnung'];
+    expect(array_column($k['enthalten'], 'code'))->toBe(['G'])
+        ->and(array_column($k['spuren'], 'code'))->toBe(['F'])
+        ->and($k['enthalten'][0]['label'])->toBe('Milch')
+        ->and($k['offen'])->toBeTrue()
+        ->and(json_encode($k))->not->toContain('Gluten');
+    $this->sauce->update(['allergen_tree_nuts' => 'nicht_enthalten']);
+    expect(HandbuchService::kennzeichnungSnapshot($this->sauce->fresh())['offen'])->toBeFalse();
+});
+
 it('berücksichtigt eigene Komponentenmengen der Standard-Darreichung statt proportional alles zu verkleinern', function () {
     app(DarreichungService::class)->setzeDelta($this->rootTeam, $this->dar->id, $this->sauceZeile->id, 40, false);
     $r = $this->svc->fuerGericht($this->rootTeam, $this->gericht->fresh());

@@ -301,6 +301,21 @@ class HandbuchService
         ];
     }
 
+    /** Kennzeichnung genau dieses Rezepts; niemals die Angaben des übergeordneten Gerichts übernehmen. */
+    public static function kennzeichnungSnapshot(FoodAlchemistRecipe $recipe): array
+    {
+        $agg = app(ConcepterAggregateService::class);
+        $daten = $agg->kennzeichnungFromGerichte(collect([$recipe]));
+        $katalog = $agg->kennzeichnungKatalog()['allergene'];
+        $out = ['enthalten' => [], 'spuren' => [], 'offen' => false];
+        foreach ($daten['allergene'] as $a) {
+            if (in_array($a['status'], ['enthalten', 'spuren'], true)) {
+                $out[$a['status']][] = ['code' => $katalog[$a['slug']]['code'], 'label' => $a['label']];
+            } elseif ($a['status'] === 'unbekannt') { $out['offen'] = true; }
+        }
+        return $out;
+    }
+
     /** Nur bekannte Karten und öffentliche Mengenangaben in den Navigationsbaum übernehmen. */
     private function navigationsKnoten(array $nodes, array $index): array
     {

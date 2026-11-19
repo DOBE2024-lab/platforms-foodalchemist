@@ -34,6 +34,11 @@ assert.ok(fs.existsSync(fixture),'Zuerst HandbuchDarstellungTest mit FA_HANDBUCH
   await dish.locator('[data-sub="r1-b2-1"]').click();
   await dish.locator('#sb-r1-b2-1 .vorschau-titel').click();
   const base=page.locator('#g-basis-b2');
+  assert.equal((await base.locator('.basis-allergene [aria-label="Enthaltene Allergene"]').textContent()).trim(),'G · Milch');
+  assert.equal(await base.locator('.basis-allergene details.spuren').getAttribute('open'),null);
+  await base.locator('.basis-allergene details.spuren summary').click();
+  assert.match(await base.locator('.basis-allergene details.spuren').textContent(),/F · Soja/);
+  await base.locator('.basis-allergene details.spuren summary').click();
   assert.equal(await base.locator('.basis-px').inputValue(),'10');
   assert.equal(await base.locator('.basis-ziel').inputValue(),'0,8');
   await base.locator('.basis-ziel').fill('0,5');

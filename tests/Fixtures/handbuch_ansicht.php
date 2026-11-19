@@ -2,6 +2,7 @@
 
 $soße = [
     'name' => 'Sauce: Tomate-Mascarpone', 'ansatz_kg' => 1.0,
+    'kennzeichnung' => ['enthalten' => [['code' => 'G', 'label' => 'Milch']], 'spuren' => [['code' => 'F', 'label' => 'Soja']], 'offen' => false],
     'zeilen' => [
         ['name' => 'Tomaten', 'menge' => 800, 'einheit' => 'Gramm', 'sub' => null],
         ['name' => 'Mascarpone', 'menge' => 200, 'einheit' => 'Gramm', 'sub' => null],

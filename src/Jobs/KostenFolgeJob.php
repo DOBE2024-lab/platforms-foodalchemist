@@ -3,6 +3,7 @@
 namespace Platform\FoodAlchemist\Jobs;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -22,12 +23,24 @@ use Platform\FoodAlchemist\Services\RecipeRecomputeService;
  *
  * GPs kommen direkt oder über Lieferanten (alle Artikel dieser Lieferanten, Freigabe im Stamm-Paket). `$nurTeamKette`: nur Rezepte/Darreichungen des
  * Auftragsteams und seiner Unter-Teams (Teampreis, Pin, Freigabe) — sonst alle (Listenpreis, globaler Lead). Versand-Snapshots bleiben unberührt.
+ *
+ * Code-Qualität 1.1b (19.11.2026): Scheitert ein Rezept in `recomputeMany` (je Rezept abgefangen, I8), endet der Job NICHT mehr still „erfolgreich“,
+ * sondern wirft am Ende {@see \Platform\FoodAlchemist\Exceptions\KostenFolgeFehlgeschlagenException} → die Queue wiederholt ($tries/$backoff), danach
+ * failed_jobs. Gleiche Aufträge (Team + GP-/Lieferanten-Satz + Schalter) liegen höchstens einmal in der Warteschlange (ShouldBeUniqueUntilProcessing:
+ * die Sperre fällt mit Laufbeginn — eine Preisänderung WÄHREND eines Laufs stellt einen neuen Lauf ein, statt verloren zu gehen).
  */
-class KostenFolgeJob implements ShouldQueue
+class KostenFolgeJob implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, \Platform\FoodAlchemist\Support\MitKiVerursacher;   // reine Berechnung, läuft im Auftragsteam
 
     public int $timeout = 1800;
+
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [60, 300];
+
+    public int $uniqueFor = 3600;
 
     /**
      * @param  list<int>  $gpIds
@@ -41,6 +54,17 @@ class KostenFolgeJob implements ShouldQueue
         public bool $mitRezepten = true,
         public bool $kostenVeraltet = false,
     ) {}
+
+    /** Eindeutig je Team, GP-/Lieferanten-Satz (Reihenfolge egal) und Schaltern. */
+    public function uniqueId(): string
+    {
+        $gp = $this->gpIds;
+        $lief = $this->supplierIds;
+        sort($gp);
+        sort($lief);
+
+        return $this->teamId . ':' . md5(json_encode([$gp, $lief, $this->nurTeamKette, $this->mitRezepten, $this->kostenVeraltet]));
+    }
 
     /**
      * Versand nach dem Commit. Mit echter Queue (io: database) als Job; mit dem Sync-Treiber (Sandbox/Tests) direkt im Auftragsteam statt über
@@ -58,7 +82,14 @@ class KostenFolgeJob implements ShouldQueue
 
             return;
         }
-        DB::afterCommit(fn () => \Platform\FoodAlchemist\Support\FaTeam::imTeam($teamId, fn () => app()->call([$job, 'handle'])));
+        // Ohne Queue gibt es keine Wiederholung: ein Fehlschlag (1.1b) wird gemeldet, bricht aber den schon committeten Request nicht ab.
+        DB::afterCommit(fn () => \Platform\FoodAlchemist\Support\FaTeam::imTeam($teamId, function () use ($job) {
+            try {
+                app()->call([$job, 'handle']);
+            } catch (\Platform\FoodAlchemist\Exceptions\KostenFolgeFehlgeschlagenException $e) {
+                report($e);
+            }
+        }));
     }
 
     public function handle(RecipeRecomputeService $recompute, KostenCacheService $kosten, DarreichungService $darreichungen): void
@@ -83,9 +114,13 @@ class KostenFolgeJob implements ShouldQueue
                 $start = array_merge($start, $q->distinct()->pluck('ri.recipe_id')->map(fn ($v) => (int) $v)->all());
             }
             $start = array_values(array_unique($start));
-            $erledigt = $start !== [] ? $recompute->recomputeMany($start) : [];
+            $fehler = [];
+            $erledigt = $start !== [] ? $recompute->recomputeMany($start, $fehler) : [];
         }
         $darreichungen->recomputeFuerZubehoerGps($gpIds, $teamIds, $erledigt);
+        if (($fehler ?? []) !== []) {                              // 1.1b: erst nach dem Rest (Zubehör), dann fehlschlagen → Wiederholung
+            throw new \Platform\FoodAlchemist\Exceptions\KostenFolgeFehlgeschlagenException($this->teamId, $fehler);
+        }
     }
 
     /**

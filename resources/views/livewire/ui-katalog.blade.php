@@ -55,6 +55,17 @@
             </div>
         </x-fa::section>
 
+        <x-fa::section title="Text-Rollen" icon="heroicon-o-bars-3-bottom-left" description="Größe, Gewicht und Tinte als eine Rolle. Statt Einzelwerten: x-fa::text oder die Klasse aus Ui::maps.">
+            <div class="flex flex-col divide-y divide-[var(--fa-line)]">
+                @foreach(\Platform\FoodAlchemist\Support\Ui::maps()['textRolle'] as $rolle => $klasse)
+                    <div class="flex items-baseline justify-between gap-4 py-2.5">
+                        <x-fa::text :rolle="$rolle" class="truncate">{{ ['h1' => 'Basisrezepte', 'h2' => 'Allergene und Diät', 'h3' => 'Zutaten der Variante', 'strong' => 'Tomatenketchup: konserviert, Bio', 'body' => 'Herzhafter Hülsenfruchtsalat auf Basis von Berglinsen.', 'label' => 'EK je kg', 'muted' => '3 Befunde · 2 direkt übernehmbar'][$rolle] }}</x-fa::text>
+                        <x-fa::text rolle="muted" class="shrink-0 font-mono">rolle="{{ $rolle }}" · .{{ $klasse }}</x-fa::text>
+                    </div>
+                @endforeach
+            </div>
+        </x-fa::section>
+
         <div class="grid gap-8 lg:grid-cols-2">
             <x-fa::section title="Knöpfe" icon="heroicon-o-cursor-arrow-rays" description="Eine Hauptaktion je Fläche, rechts außen. Löschen liegt nie neben Speichern.">
                 <div class="flex flex-wrap gap-2">

@@ -47,6 +47,19 @@ final class Ui
 
             // ── Typo
             'label' => 'text-[12px] font-medium text-gray-600',
+            // Text-Rollen (Welle 1, 1.4a): EINZIGE Quelle der Rollen-Namen. Größe, Gewicht und Tinte stehen
+            // in foodalchemist-pass.css (@layer components → eine Utility übersteuert im Einzelfall).
+            // Klassennamen immer voll ausgeschrieben, der Scanner in build-css.mjs erkennt keine zusammengesetzten.
+            // Baustein: <x-fa::text rolle="muted">…</x-fa::text>
+            'textRolle' => [
+                'h1' => 'fa-t-h1',          // Seitentitel 28 px, halbfett
+                'h2' => 'fa-t-h2',          // Abschnittstitel 16 px, halbfett
+                'h3' => 'fa-t-h3',          // Untertitel 14 px, halbfett
+                'strong' => 'fa-t-strong',  // betonter Werkzeugtext 13 px, mittel
+                'body' => 'fa-t-body',      // Werkzeugtext 13 px (Tabellen, Formulare, Listen)
+                'label' => 'fa-t-label',    // Feldbeschriftung 12 px, mittel, Tinte 2
+                'muted' => 'fa-t-muted',    // Hilfetext, Zähler, Nebeninfo 12 px, Tinte 3 (das frühere $leise)
+            ],
 
             // ── Tabelle (R14 Jarvis-Skala: 12px wie .data-table, Header 11px, py-1/px-3)
             'table' => 'w-full text-[13px]',

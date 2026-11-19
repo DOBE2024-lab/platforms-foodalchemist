@@ -361,6 +361,17 @@ button { transition: transform 120ms ease-out, background-color 120ms ease, box-
 
 /* ═══ Basis der x-fa-Bausteine ═════════════════════════════════════════════════════════════ */
 @layer components {
+  /* Text-Rollen (Welle 1, 1.4a). Namen nur aus Ui::maps()['textRolle'], Baustein x-fa::text.
+     Werte = die der Bausteine (page-header, section) und der häufigsten Literal-Kombinationen in den Views.
+     Kein line-height (wie die Literale), außer beim Seitentitel. */
+  .fa-t-h1 { font-size: var(--fa-text-3xl); font-weight: 600; letter-spacing: -0.025em; line-height: 1.25; color: var(--fa-ink); }
+  .fa-t-h2 { font-size: var(--fa-text-lg); font-weight: 600; color: var(--fa-ink); }
+  .fa-t-h3 { font-size: var(--fa-text-base); font-weight: 600; color: var(--fa-ink); }
+  .fa-t-strong { font-size: var(--fa-text-md); font-weight: 500; color: var(--fa-ink); }
+  .fa-t-body { font-size: var(--fa-text-md); color: var(--fa-ink); }
+  .fa-t-label { font-size: var(--fa-text-sm); font-weight: 500; color: var(--fa-ink-2); }
+  .fa-t-muted { font-size: var(--fa-text-sm); color: var(--fa-ink-3); }
+
   .fa-surface {
     background: var(--fa-surface);
     border: 1px solid var(--fa-line);

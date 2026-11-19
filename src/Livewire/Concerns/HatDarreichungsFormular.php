@@ -102,6 +102,11 @@ trait HatDarreichungsFormular
         }
     }
 
+    public function darStandardmenge(int $id, bool $verwenden): void
+    {
+        $this->darServiceCall(fn ($svc, $team) => $svc->setzeStandardmenge($team, $id, $verwenden));
+    }
+
     public function darZeitEntfernen(int $id, int $index): void
     {
         if (! isset($this->darZeitForm[$id][$index])) {

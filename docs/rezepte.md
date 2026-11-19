@@ -166,3 +166,17 @@ Beispiel für ein Produktions-PDF mit Schritten, ohne Preise und Lieferanten:
 ```json
 {"id": 3780, "profil": "produktion", "steps": true, "preise": false, "lieferanten": false}
 ```
+
+### Portionsmengen je Darreichung
+
+In der Kalkulation zeigt **Portionsmenge** die Summe der Komponenten; die Summe
+lässt sich nicht direkt überschreiben. Mit **Standardmenge verwenden** übernimmt
+die Standard-Darreichung die Rezepturmengen und eine weitere Variante die Mengen
+des aktuellen Standards. Schalte den Haken aus, um Komponenten darunter einzeln
+anzupassen oder wegzulassen. Beim Ausschalten bleiben die bisherigen Mengen
+zunächst erhalten. Einschalten setzt eigene Komponentenabweichungen dieser
+Darreichung zurück. Eigene Varianten bleiben bei einem Standardwechsel erhalten.
+
+Die Kennzahlen im Kopf beziehen sich auf den Standard, die kompakte Preiszeile
+auf die ausgewählte Variante. Passive Wartezeit und gemeinsame Nebenkosten findest
+du unter den aufklappbaren **Übergreifenden Angaben**.

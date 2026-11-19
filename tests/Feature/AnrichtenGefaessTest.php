@@ -61,8 +61,8 @@ beforeEach(function () {
     $this->gericht = function (string $key = 'salat') {
         $g = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => $key, 'name' => 'Salat '.$key, 'status' => 'approved', 'is_sales_recipe' => true, 'ek_per_kg_eur' => 10.0, 'yield_kg' => 1.0]);
         $d = $this->svc->ensureStandard($this->rootTeam, $g->id);
-        $d->update(['quantity_per_unit_g' => 200, 'unit_count' => 1]);
-        $this->svc->recomputePreise($d->fresh());
+        // Explizite Bestandsgrammatur: derselbe Servicepfad wie eine Mengenübersteuerung.
+        $d = $this->svc->aktualisieren($this->rootTeam, $d->id, ['quantity_per_unit_g' => 200, 'unit_count' => 1]);
 
         return $d->fresh();
     };
@@ -214,6 +214,10 @@ it('VK-Modal: Spalte Gefäß, wirksamer Typ aus dem Gefäß, Übersteuerung sich
     expect($this->dar->fresh()->vessel_gp_id)->toBe($this->glas->id)->and($this->dar->fresh()->serving_vehicle_vocab_id)->toBeNull();
     $html = Livewire::test(VkModal::class)->call('oeffnen', $this->dar->recipe_id)->html();
     expect($html)->toContain('data-dar-typ-aus-gefaess')->toContain('Glas')->not->toContain('data-dar-uebersteuert')->toContain('data-dar-gefaess-kosten');
+    if ($path = getenv('FA_DAR_GEFAESS_PREVIEW_PATH')) {
+        file_put_contents($path, $html);
+        file_put_contents($path.'.state.json', json_encode(['darForm' => $c->get('darForm'), 'darZeitForm' => $c->get('darZeitForm')]));
+    }
 
     $this->dar->update(['serving_vehicle_vocab_id' => $this->tellerTyp, 'quantity_per_unit_g' => 300]);
     $html = Livewire::test(VkModal::class)->call('oeffnen', $this->dar->recipe_id)->html();

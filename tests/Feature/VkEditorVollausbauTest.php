@@ -94,8 +94,8 @@ it('VK-Editor rendert die neuen Sektionen (Deklaration, Nährwerte, Spezifikatio
     foreach (['data-deklaration', 'data-vk-naehrwerte-leer', 'data-vk-spezifikation', 'data-vk-plating', 'data-vk-editor-kpis', 'data-ki-wording', 'data-ki-regeneration'] as $marker) {
         expect($html)->toContain($marker);
     }
-    expect($html)->toContain('Rohertragsquote')
-        ->and($html)->toContain('Rohertragsquote = (VK netto − MEK) ÷ VK netto')
+    // 19.11.2026 (#853): die zusätzliche KPI-Leiste mit „Rohertragsquote“ entfällt — der Kopf zeigt die Kennzahlen des Standards
+    expect($html)->not->toContain('Rohertragsquote')
         // 13.11.2026: der Kasten «Preis und Rohertrag» ist entfallen — Preisklasse, Preis und MwSt stehen nur noch an der
         // Darreichung (das zweite Preisklassen-Feld im Kopf überschrieb beim Speichern die Zeile). Übrig: ein Kasten Verkaufseinheit.
         ->and($html)->toContain('data-vk-darreichungen')->toContain('data-vk-nebenkosten')

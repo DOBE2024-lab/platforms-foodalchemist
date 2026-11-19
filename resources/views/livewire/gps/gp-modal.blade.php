@@ -26,7 +26,7 @@
     $haken = 'w-4 h-4 shrink-0 rounded accent-[var(--fa-accent)]';
 @endphp
 
-<x-foodalchemist::modal name="gp-modal" :title="$neu ? 'Grundprodukt anlegen' : 'Grundprodukt bearbeiten'"
+<x-foodalchemist::modal name="gp-modal" :title="$neu ? 'Grundprodukt anlegen' : ($kannKuratieren ? 'Grundprodukt bearbeiten' : 'Grundprodukt ansehen')"
     :title-name="$neu ? null : $gp?->name" :size="$neu ? 'max-w-3xl' : 'max-w-4xl'"
     :fullscreen="! $neu && $gp !== null" :dark-canvas="true">
 
@@ -77,11 +77,15 @@
         {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung,
              der Editor bleibt im Lesemodus offen. Neuanlage: nur der Knopf (keine Sperre nötig). --}}
         <div class="ml-auto">
+            @if($neu || $kannKuratieren)
             <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
                 <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern"
                     :disabled="$autoSuggestPending" wire:loading.attr="disabled" wire:target="autoSuggestFromSupplierItem"
                     data-gp-speichern data-gp-speichern-kopf>{{ $neu ? ($autoSuggestPending ? 'KI analysiert …' : 'Grundprodukt anlegen') : 'Speichern' }}</x-fa::button>
             </x-foodalchemist::bearbeiten-leiste>
+            @else
+                <x-fa::badge>Schreibgeschützt</x-fa::badge>
+            @endif
         </div>
     </x-slot:actions>
 
@@ -174,7 +178,7 @@
         <livewire:foodalchemist.gps.zukauf-rezept :gp-id="$gp->id" :key="'gp-zukauf-modal-'.$gp->id" />
     @endif
 
-    <x-foodalchemist::editor-tabs marker="gp" wire-key="gp-tabs-{{ $gp?->id ?? 'neu' }}" :init="$neu ? 'allgemein' : 'price'" :gesperrt="in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
+    <x-foodalchemist::editor-tabs marker="gp" wire-key="gp-tabs-{{ $gp?->id ?? 'neu' }}" :init="$neu ? 'allgemein' : 'price'" :gesperrt="(! $neu && ! $kannKuratieren) || in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
         :tabs="[
             'price' => $neu ? null : 'Lieferantenartikel',
             'allergene' => $neu ? null : 'Allergene und Zusatzstoffe',
@@ -743,15 +747,16 @@
                     description="Hängt jede Rezept-Zeile mit diesem Grundprodukt auf ein anderes um und rechnet die Rezepte neu. Danach lässt es sich gefahrlos aussortieren.">
                     @if($hinweis)<x-fa::notice tone="ok" data-gp-tausch-hinweis>{{ $hinweis }}</x-fa::notice>@endif
                     <x-fa::field label="Ersetzen durch" for="gp-tausch" error="tauschSuche">
-                        <x-fa::input id="gp-tausch" type="search" wire:model.live.debounce.300ms="tauschSuche" placeholder="Grundprodukt suchen …" data-gp-tausch-suche />
+                        <x-fa::input id="gp-tausch" type="search" wire:model.live.debounce.300ms="tauschSuche" placeholder="Grundprodukt oder Platzhalter suchen …" data-gp-tausch-suche />
                     </x-fa::field>
                     @if($tauschKandidaten->isNotEmpty())
                         <div class="flex flex-col">
                             @foreach($tauschKandidaten as $k)
                                 <button type="button" wire:key="tausch-{{ $k->id }}" wire:click="gpErsetzen({{ $k->id }})"
-                                        wire:confirm="Dieses Grundprodukt in ALLEN Rezepten durch „{{ $k->name }}“ ersetzen?"
+                                        wire:confirm="Dieses Grundprodukt in ALLEN Rezepten durch „{{ $k->name }}“ ersetzen?{{ $k->is_platzhalter ? ' Lieferantenartikel bleiben am bisherigen Grundprodukt.' : '' }}"
                                         class="{{ $listenKnopf }}" data-gp-tausch-kandidat>
                                     <span class="min-w-0 truncate">{{ $k->name }}</span>
+                                    @if($k->is_platzhalter)<x-fa::badge>Platzhalter</x-fa::badge>@endif
                                     <x-fa::status :value="$k->status" class="shrink-0" />
                                 </button>
                             @endforeach

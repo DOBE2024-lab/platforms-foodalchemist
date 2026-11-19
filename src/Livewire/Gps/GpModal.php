@@ -1357,11 +1357,11 @@ class GpModal extends Component
                 ? \Platform\FoodAlchemist\Support\Suche::like(FoodAlchemistGp::visibleToTeam($team), 'name', $this->derivatSuche)->orderBy('name')->limit(6)->get()
                 : collect(),
             'derivatMutterName' => $derivatMutterName,
-            // #8: Tausch-Ziele („GP in allen Rezepten tauschen") — Namensfilter, keine merged/rejected/Platzhalter, nicht der GP selbst.
+            // #8: Tausch-Ziele („GP in allen Rezepten tauschen") — Namensfilter, keine merged/rejected/Non-Food, Platzhalter sind gültige Ziele, nicht der GP selbst.
             'tauschKandidaten' => $gp !== null && $team !== null && $this->tauschSuche !== ''
-                ? \Platform\FoodAlchemist\Support\Suche::like(FoodAlchemistGp::visibleToTeam($team), 'name', $this->tauschSuche)
-                    ->whereNotIn('status', ['merged', 'rejected'])->where('id', '!=', $gp->id)->where('is_platzhalter', false)
-                    ->orderBy('name')->limit(8)->get(['id', 'name', 'status'])
+                ? \Platform\FoodAlchemist\Support\Suche::like(FoodAlchemistGp::visibleToTeam($team)->lebensmittel(), 'name', $this->tauschSuche)
+                    ->whereNotIn('status', ['merged', 'rejected'])->where('id', '!=', $gp->id)
+                    ->orderBy('name')->limit(8)->get(['id', 'name', 'status', 'is_platzhalter'])
                 : collect(),
             // #9: Naturaleinheit-Formen (Gramm je Form) + wählbare Form-Slugs für „Form hinzufügen".
             'formen' => $gp !== null ? app(\Platform\FoodAlchemist\Services\GpFormService::class)->list($gp->id) : collect(),

@@ -61,8 +61,7 @@ beforeEach(function () {
     $this->gericht = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'zub-salat', 'name' => 'Salat im Schraubglas', 'status' => 'approved',
         'is_sales_recipe' => true, 'ek_per_kg_eur' => 10.0, 'yield_kg' => 1.0, 'allergens_confidence' => 'high', 'allergen_milk' => 'enthalten', 'energy_kcal_100g' => 120]);
     $this->dar = $this->svc->ensureStandard($this->rootTeam, $this->gericht->id);
-    $this->dar->update(['quantity_per_unit_g' => 200, 'unit_count' => 1]);
-    $this->svc->recomputePreise($this->dar->fresh());
+    $this->dar = $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['quantity_per_unit_g' => 200, 'unit_count' => 1]);
     $this->glas = zubehoerGp($this->rootTeam, 'Schraubglas: Glas, 212 ml', '16', 6.00);   // 6,00 € je 12 Stk = 0,50 €/Stk
     $this->ek = fn () => (float) $this->dar->fresh()->ek_portion;
 

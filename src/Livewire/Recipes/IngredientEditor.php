@@ -379,7 +379,7 @@ class IngredientEditor extends Component
             ->when((bool) ($gpFilter['nur_favoriten'] ?? false), fn ($w) => $w->whereIn('id', \Platform\FoodAlchemist\Support\FavoritenOverlay::gpIds($team) ?: [0]));   // Spec 85 FAV-1
         $gpTotal = (clone $gpQuery)->count();
         $gpModels = $gpQuery->orderBy('name')->limit(200)
-            ->get(['id', 'name', 'condition', 'lead_la_supplier_item_id', 'piece_default_g', 'team_id']);
+            ->get(['id', 'name', 'condition', 'lead_la_supplier_item_id', 'piece_default_g', 'team_id', 'is_platzhalter']);
         // Performance: 30× preisProGrammPublic wären ~60 Queries je Tipper — stattdessen EINE
         // Bulk-Query (Ø €/g über aktive kg/l-LAs). Der präzise Lead-Wert kommt beim Parken nach.
         $aktiverPreis = app(PriceService::class)->activePriceSubquery('foodalchemist_supplier_items.id', $team)->toBase(); // Spec 82 3a
@@ -450,6 +450,7 @@ class IngredientEditor extends Component
 
                 return [
                     'type' => 'gp', 'id' => $gp->id, 'name' => $gp->name,
+                    'is_platzhalter' => (bool) $gp->is_platzhalter,
                     'ek_pro_g' => $ek,
                     'preis_label' => $ek !== null ? number_format($ek * 1000, 2, ',', '.').' €/kg' : null,
                     // Spec: Einheit hängt am Produkt (Chilipulver→g, Bier→ml) — Override im Dropdown

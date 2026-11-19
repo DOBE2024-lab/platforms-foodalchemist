@@ -43,3 +43,16 @@ Wenn die KI Werte vorschlägt (Allergene, Nährwerte, Zuordnungen) oder Daten un
 ---
 
 > **Tipp:** Pflege zuerst die Grundprodukte und ihre Lead-LAs sauber. Jede Stunde hier spart später ein Vielfaches in der Kalkulation, weil die Zahlen dann von selbst stimmen.
+
+### Platzhalter und Editor-Zugriff
+
+Sichtbare Katalog-Grundprodukte lassen sich über **Im Editor ansehen** vollständig
+öffnen. Gehören sie einem anderen Besitzer-Team oder zum globalen Katalog, bleiben
+sie schreibgeschützt. Eigene Grundprodukte haben weiterhin die Bearbeitungsaktion.
+
+Unter **Verwaltung → Ersetzen durch** sind auch sichtbare Platzhalter auswählbar.
+Beim Tausch auf einen Platzhalter wechseln die Rezept-Zuordnungen; Lieferantenartikel
+bleiben am bisherigen Grundprodukt. Die vorhandenen Besitzerrechte gelten weiter.
+Im Zutatenkatalog eines Basisrezepts kannst du auch neu angelegte Platzhalter
+manuell auswählen. Sie sind als **Platzhalter** markiert. Ein fehlender Preis wird
+durch die Auswahl eines Platzhalters nicht automatisch zu einem Nullpreis.

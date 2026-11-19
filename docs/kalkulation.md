@@ -55,10 +55,14 @@ Unter „Komponenten & Mengen“ passt du bestehende Komponenten an oder lässt 
 weg. Eigene Komponentenmengen ergeben zusammen die Grammatur dieser Darreichung.
 Neue Zutaten gehören in ein eigenes Gericht.
 
-Neue Varianten übernehmen zunächst die Standardmenge. Über „Portionsmenge vom
-Standard übernehmen“ wählst du zwischen geerbter und eigener Grammatur. Geerbte
-Mengen folgen einem Standardwechsel; eigene Mengen und weggelassene Komponenten
-bleiben erhalten. Der Editor nennt die Herkunft je Komponente.
+Neue Varianten übernehmen zunächst die Standardmenge. Mit „Standardmenge verwenden“
+folgt die Standard-Darreichung der Rezeptur und eine weitere Variante dem aktuellen
+Standard. Die Gesamtgrammatur ist nur eine Anzeige der Komponentensumme. Schalte
+den Haken aus, um die Mengen unten einzeln zu bearbeiten; die bisherigen Werte
+bleiben zunächst erhalten. Einschalten setzt eigene Komponentenabweichungen dieser
+Darreichung bewusst zurück. Geerbte Mengen folgen einem Standardwechsel; eigene
+Mengen und weggelassene Komponenten bleiben erhalten. Der Editor nennt die Herkunft
+je Komponente.
 
 „Arbeitsschritte & Zeiten“ erfasst die konkrete Tätigkeit, Zeitbasis und den
 Arbeitsort. Abfüllen kann auch bei Buffet je Glas in der Küche gerechnet werden.
@@ -68,7 +72,8 @@ werden separat gezeigt. Der Auftrag rechnet den Service mit dem allgemeinen
 Team-Stundensatz und ergänzt die geltenden Lohnnebenkosten und Aufschläge.
 Ein expliziter Ausgabe-Posten gilt
 nur für die Küchenarbeit dieser Variante. Regeneration wird weiterhin berechnet.
-Die passive Standzeit steht im gemeinsamen Planungsbereich des Gerichts.
+Die passive Standzeit und gemeinsame Nebenkosten stehen unter den eingeklappten
+„Übergreifenden Angaben“ des Gerichts.
 
 Bisherige Zeiten bleiben wirksam, bis du die neuen Arbeitsschritte ausdrücklich
 übernimmst. Eine bewusst leere Liste ersetzt die bisherigen Zeiten durch keine

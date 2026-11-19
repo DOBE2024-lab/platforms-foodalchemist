@@ -91,6 +91,7 @@
                     <template x-for="ziel in gpListe" :key="'bg' + ziel.id">
                         <div class="flex items-center gap-1.5 px-2 py-1 border-b border-[var(--fa-line)] last:border-b-0 hover:bg-[var(--fa-hover)]">
                             <button type="button" @click="parke(ziel)" class="min-w-0 flex-1 text-left leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words" x-text="ziel.name" :title="'Übernehmen: ' + ziel.name"></button>
+                            <x-fa::badge x-show="ziel.is_platzhalter" x-cloak>Platzhalter</x-fa::badge>
                             <span class="shrink-0 tabular-nums text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-text="ziel.preis_label ?? 'Preis fehlt'"></span>
                             <button type="button" x-show="ziel.id" @click="Livewire.dispatch('gp-modal.oeffnen', { id: ziel.id })"
                                     class="{{ $ib }}" title="Grundprodukt ansehen" aria-label="Grundprodukt ansehen">@svg('heroicon-o-cube', 'w-4 h-4')</button>

@@ -41,6 +41,7 @@ class KpiService
                     ? DB::table('foodalchemist_recipes')
                         ->whereIn('team_id', FoodAlchemistGp::teamAncestryIds($team))
                         ->whereNull('deleted_at')
+                        ->where('ist_fassung', false)   // 1.1g: Fassungen nicht mitzählen (OhneFassungenScope)
                         ->count()
                     : null,
             ],

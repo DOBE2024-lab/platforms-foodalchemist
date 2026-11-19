@@ -52,7 +52,8 @@ class Dashboard extends Component
         $team = Auth::user()?->currentTeamRelation;
         $kette = $team !== null ? FoodAlchemistGp::teamAncestryIds($team) : [];
 
-        $rezept = fn () => DB::table('foodalchemist_recipes')->whereIn('team_id', $kette)->whereNull('deleted_at');
+        // 1.1g: Fassungen (Spec 82, eingefrorene Stände) sind keine eigenen Rezepte — wie OhneFassungenScope am Model.
+        $rezept = fn () => DB::table('foodalchemist_recipes')->whereIn('team_id', $kette)->whereNull('deleted_at')->where('ist_fassung', false);
 
         $workflow = $team === null ? [] : [
             'basis' => (clone $rezept())->where('is_sales_recipe', false)->count(),

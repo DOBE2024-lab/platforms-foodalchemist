@@ -2,15 +2,16 @@
 
 namespace Platform\FoodAlchemist\Support;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 
 /**
  * Auswahl für „Zubehör & Verpackung“ an der Darreichung (19.11.2026, Dominique: „ich kann da nichts suchen, ich weiß nicht, was man eingeben muss“).
  *
  * Nur Non-Food, das an ein Gericht gehört: Einweg & Verpackung, Deko & Tischkultur, Geschirr & Ausstattung. Reinigung, Arbeitskleidung,
- * Küchenbedarf und Büro tauchen nie auf. Ohne Suchtext liefert sie eine Liste zum Durchblättern (beim Klick ins Feld), mit Suchtext die Treffer.
+ * Küchenbedarf und Büro tauchen nie auf; Non-Food ohne Unterkategorie steht am Ende („ohne Unterkategorie“), damit Neues nicht verschwindet.
+ * Ohne Suchtext liefert sie eine Liste zum Durchblättern (beim Klick ins Feld), mit Suchtext die Treffer.
+ * Der Aufrufer übergibt die SICHTBARE Abfrage (`FoodAlchemistGp::visibleToTeam($team)`) — die Sichtprüfung bleibt an der Aufrufstelle.
  */
 final class ZubehoerAuswahl
 {
@@ -21,10 +22,12 @@ final class ZubehoerAuswahl
 
     public const LIMIT_SUCHE = 12;
 
+    public const OHNE = 'ohne Unterkategorie';
+
     /**
      * @return Collection<int, object{id:int, name:string, gruppe:string}>
      */
-    public static function treffer(Team $team, ?string $suche): Collection
+    public static function treffer(Builder $sichtbar, ?string $suche): Collection
     {
         $text = trim((string) $suche);
         $subs = [];
@@ -33,14 +36,15 @@ final class ZubehoerAuswahl
                 $subs[$variante] = $sub;
             }
         }
-        $q = FoodAlchemistGp::visibleToTeam($team)->nonFood()->whereNotIn('status', ['rejected', 'merged'])->whereIn('sub_category', array_keys($subs));
+        $q = $sichtbar->nonFood()->whereNotIn('status', ['rejected', 'merged'])
+            ->where(fn ($w) => $w->whereIn('sub_category', array_keys($subs))->orWhereNull('sub_category')->orWhere('sub_category', ''));
         if ($text !== '') {
             $q = Suche::like($q, 'name', $text);
         }
         $reihe = array_flip(self::UNTERKATEGORIEN);
 
         return $q->orderBy('name')->limit($text !== '' ? self::LIMIT_SUCHE : self::LIMIT_LISTE)->get(['id', 'name', 'sub_category'])
-            ->map(fn ($gp) => (object) ['id' => (int) $gp->id, 'name' => (string) $gp->name, 'gruppe' => $subs[$gp->sub_category] ?? (string) $gp->sub_category])
+            ->map(fn ($gp) => (object) ['id' => (int) $gp->id, 'name' => (string) $gp->name, 'gruppe' => $subs[(string) $gp->sub_category] ?? self::OHNE])
             ->sortBy(fn ($t) => sprintf('%02d %s', $reihe[$t->gruppe] ?? 99, mb_strtolower($t->name)))->values();
     }
 

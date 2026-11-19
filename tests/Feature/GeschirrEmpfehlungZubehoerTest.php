@@ -64,12 +64,16 @@ it('ohne Servier-Typen im Team zeigt das Feld, wo die Liste gepflegt wird', func
 });
 
 it('★ Zubehör: ohne Suchtext eine Liste nur aus Einweg, Deko und Geschirr, gruppiert; Reinigung und Kleidung nie', function () {
-    $liste = ZubehoerAuswahl::treffer($this->rootTeam, '');
+    $liste = ZubehoerAuswahl::treffer(FoodAlchemistGp::visibleToTeam($this->rootTeam), '');
     expect($liste->pluck('id')->all())->toBe([$this->becher->id, $this->serviette->id, $this->schale->id])   // Reihenfolge = Gruppen-Reihenfolge
         ->and($liste->pluck('gruppe')->unique()->values()->all())->toBe(ZubehoerAuswahl::UNTERKATEGORIEN)
-        ->and(ZubehoerAuswahl::treffer($this->rootTeam, 'Desinfektion'))->toHaveCount(0)
-        ->and(ZubehoerAuswahl::treffer($this->rootTeam, 'becher')->pluck('id')->all())->toBe([$this->becher->id])
+        ->and(ZubehoerAuswahl::treffer(FoodAlchemistGp::visibleToTeam($this->rootTeam), 'Desinfektion'))->toHaveCount(0)
+        ->and(ZubehoerAuswahl::treffer(FoodAlchemistGp::visibleToTeam($this->rootTeam), 'becher')->pluck('id')->all())->toBe([$this->becher->id])
         ->and(ZubehoerAuswahl::gruppenName(NonFoodRegeln::SUB_EINWEG))->toBe('Einweg & Verpackung');
+
+    $neu = FoodAlchemistGp::create(['team_id' => $this->rootTeam->id, 'gp_key' => 'nf|neu', 'name' => 'Holzspieß: 15 cm', 'status' => 'approved', 'commodity_group_code' => NonFoodRegeln::WG_CODE]);
+    $liste = ZubehoerAuswahl::treffer(FoodAlchemistGp::visibleToTeam($this->rootTeam), '');
+    expect($liste->last()->id)->toBe($neu->id)->and($liste->last()->gruppe)->toBe(ZubehoerAuswahl::OHNE);   // Neues ohne Unterkategorie verschwindet nicht
 });
 
 it('Zubehör im Modal: zu bis zum Klick, Klick öffnet die Liste, Auswahl hängt an und schließt', function () {

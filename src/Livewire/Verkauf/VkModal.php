@@ -1477,7 +1477,7 @@ class VkModal extends Component
                 : [],
             'darZubehoerTreffer' => $team !== null   // Liste beim Klick ins Feld, sonst Treffer zum Suchtext (ZubehoerAuswahl, 19.11.2026)
                 ? collect($this->darZubehoerSuche)->filter(fn ($t) => trim((string) $t) !== '')->union($this->darZubehoerOffen !== null ? [$this->darZubehoerOffen => ''] : [])
-                    ->map(fn ($t) => \Platform\FoodAlchemist\Support\ZubehoerAuswahl::treffer($team, $t))->all()
+                    ->map(fn ($t) => \Platform\FoodAlchemist\Support\ZubehoerAuswahl::treffer(\Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team), $t))->all()
                 : [],
             'darZeilen' => $rezept !== null
                 ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->standardProEinheit($rezept, $team, $this->darAktiv)

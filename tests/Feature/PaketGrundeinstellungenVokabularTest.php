@@ -39,6 +39,7 @@ beforeEach(function () {
     $ins('vocab_containers', ['slug' => 'gn11', 'name' => 'GN 1/1']);
     $ins('vocab_kitchen_equipment', ['slug' => 'thermomix', 'name' => 'Thermomix']);
     $ins('vocab_regeneration_devices', ['slug' => 'kombi', 'name' => 'Kombidämpfer']);
+    $ins('vocab_serving_vehicles', ['slug' => 'bowl', 'name' => 'Bowl', 'legacy_id' => 990001]);   // 19.11.2026: Geschirr-Empfehlung
     $ins('event_types', ['name' => 'Hochzeit']);
     $ins('service_moments', ['name' => 'Mittag']);
     $ins('seasons', ['name' => 'Herbst']);
@@ -65,7 +66,7 @@ it('★ buchen kopiert das Vokabular: Aufschlagsklasse neutral ohne BHG-Werte, V
         ->and(DB::table('foodalchemist_serving_forms')->where('team_id', $this->mandant->id)->where('code', 'teller')->value('legacy_id'))->toBeNull()
         ->and(DB::table('foodalchemist_markup_classes')->where('team_id', $this->mandant->id)->where('code', 'G')->exists())->toBeFalse()
         ->and(DB::table('foodalchemist_team_settings')->where('team_id', $this->mandant->id)->value('default_markup_class_id'))->toBe((int) $klasse->id);
-    foreach (['vocab_containers' => 'gn11', 'vocab_kitchen_equipment' => 'thermomix', 'vocab_regeneration_devices' => 'kombi'] as $t => $slug) {
+    foreach (['vocab_containers' => 'gn11', 'vocab_kitchen_equipment' => 'thermomix', 'vocab_regeneration_devices' => 'kombi', 'vocab_serving_vehicles' => 'bowl'] as $t => $slug) {
         expect(DB::table('foodalchemist_'.$t)->where('team_id', $this->mandant->id)->where('slug', $slug)->exists())->toBeTrue($t);
     }
     foreach (['event_types' => 'Hochzeit', 'service_moments' => 'Mittag', 'seasons' => 'Herbst'] as $t => $name) {

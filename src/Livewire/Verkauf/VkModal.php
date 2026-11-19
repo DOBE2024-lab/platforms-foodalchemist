@@ -128,6 +128,8 @@ class VkModal extends Component
     /** @var array<int, string> Darreichungs-Id → Suchtext für Zubehör & Verpackung (Non-Food-GP) */
     public array $darZubehoerSuche = [];
 
+    public ?int $darZubehoerOffen = null;                            // Darreichung, deren Zubehör-Liste offen ist (Klick ins Feld)
+
     public string $darNeueForm = '';                                 // serving_form_id für Anlage
 
     /**
@@ -329,6 +331,7 @@ class VkModal extends Component
         $this->darServiceCall(fn ($svc, $team) => $svc->setzeZubehoer($team, $darId, $gpId, 1.0));
         if ($this->fehler === null) {
             unset($this->darZubehoerSuche[$darId]);
+            $this->darZubehoerOffen = null;
         }
     }
 
@@ -1476,11 +1479,9 @@ class VkModal extends Component
                     ->mapWithKeys(fn ($id) => [(int) $id => app(\Platform\FoodAlchemist\Services\DarreichungService::class)
                         ->zubehoerKosten(\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::find($id), $team)])->all()
                 : [],
-            'darZubehoerTreffer' => $team !== null
-                ? collect($this->darZubehoerSuche)->filter(fn ($t) => trim((string) $t) !== '')
-                    ->map(fn ($t) => \Platform\FoodAlchemist\Support\Suche::like(
-                        \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->nonFood()->whereNotIn('status', ['rejected', 'merged']), 'name', $t)
-                        ->orderBy('name')->limit(6)->get(['id', 'name']))->all()
+            'darZubehoerTreffer' => $team !== null   // Liste beim Klick ins Feld, sonst Treffer zum Suchtext (ZubehoerAuswahl, 19.11.2026)
+                ? collect($this->darZubehoerSuche)->filter(fn ($t) => trim((string) $t) !== '')->union($this->darZubehoerOffen !== null ? [$this->darZubehoerOffen => ''] : [])
+                    ->map(fn ($t) => \Platform\FoodAlchemist\Support\ZubehoerAuswahl::treffer(\Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team), $t))->all()
                 : [],
             'darZeilen' => $rezept !== null
                 ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->standardProEinheit($rezept, $team, $this->darAktiv)

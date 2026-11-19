@@ -221,7 +221,7 @@ it('VK-Modal: Spalte Gefäß, wirksamer Typ aus dem Gefäß, Übersteuerung sich
 
     $this->dar->update(['serving_vehicle_vocab_id' => $this->tellerTyp, 'quantity_per_unit_g' => 300]);
     $html = Livewire::test(VkModal::class)->call('oeffnen', $this->dar->recipe_id)->html();
-    expect($html)->toContain('data-dar-uebersteuert')->toContain('Gefäß sagt Glas')->toContain('data-dar-fuellmenge-warnung');
+    expect($html)->toContain('data-dar-uebersteuert')->toContain('Empfehlung weicht ab (Gefäß: Glas)')->toContain('data-dar-fuellmenge-warnung');
 });
 
 it('VK-Modal: Gefäß-Auswahl findet Geschirr-GPs auch unter dem alten Unterkategorie-Namen (Übergang bis zum Datenlauf, 27.10.)', function () {

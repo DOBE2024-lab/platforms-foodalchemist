@@ -61,12 +61,6 @@
                             </x-fa::select>
                             @if($d->servingForm?->code === 'unbestimmt')<span class="text-[var(--fa-warn)] {{ $hinweis }}" data-dar-form-waehlen>Servierform wählen</span>@endif
                         </x-fa::field>
-                        <x-fa::field label="Portionsmenge" :hint="$standardmenge ? ($d->is_standard ? 'Aus der Rezeptur' : 'Aus der Standard-Darreichung') : 'Summe der Komponenten unten'">
-                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 min-h-9" data-dar-portionsmenge>
-                                <strong class="tabular-nums">{{ $d->quantity_per_unit_g !== null ? number_format($d->quantity_per_unit_g * ($d->unit_count ?: 1), 1, ',', '.') . ' g' : 'Menge fehlt' }}</strong>
-                                <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]"><input type="checkbox" @checked($standardmenge) wire:change="darStandardmenge({{ $d->id }}, $event.target.checked)" class="accent-[var(--fa-accent)]" data-dar-standardmenge /> Standardmenge verwenden</label>
-                            </div>
-                        </x-fa::field>
                         <x-fa::field label="Gefäß" for="dar-gefaess-{{ $d->id }}">
                             <x-fa::select id="dar-gefaess-{{ $d->id }}" wire:model="darForm.{{ $d->id }}.vessel_gp_id" wire:change="darreichungSpeichern({{ $d->id }})" data-dar-gefaess>
                                 <option value="">kein Gefäß</option>
@@ -78,6 +72,22 @@
                                     <option value="{{ $darForm[$d->id]['vessel_gp_id'] }}">{{ $darGefaess[$d->id]['gefaess_name'] ?? 'Gefäß' }}</option>
                                 @endif
                             </x-fa::select>
+                        </x-fa::field>
+                        {{-- Geschirr-Empfehlung (19.11.2026, Dominique): neben dem Gefäß, kostet nichts. Gefäß = Ware mit Lieferant und Preis (EK),
+                             Empfehlung = Typ aus Einstellungen › Behälter › Servier-Vehikel. Leer = Typ des Gefäßes, sonst keiner. --}}
+                        @php $gi = $darGefaess[$d->id] ?? null; @endphp
+                        <x-fa::field label="Geschirr-Empfehlung" for="dar-typ-{{ $d->id }}" hint="Kostet nichts, nur Empfehlung">
+                            <x-fa::select id="dar-typ-{{ $d->id }}" wire:model="darForm.{{ $d->id }}.serving_vehicle_vocab_id" wire:change="darreichungSpeichern({{ $d->id }})" aria-label="Geschirr-Empfehlung" data-dar-typ :data-dar-typ-aus-gefaess="($gi && ! $gi['uebersteuert'] && $gi['typ_name'] && $gi['gefaess_id']) ? true : null">
+                                <option value="">{{ ($gi['gefaess_typ_name'] ?? null) ? 'wie Gefäß: '.$gi['gefaess_typ_name'] : 'keine' }}</option>
+                                @foreach($vehikel as $v)<option value="{{ $v->id }}" @if($v->is_inactive && ($darForm[$d->id]['serving_vehicle_vocab_id'] ?? null) != $v->id) hidden @endif>{{ $v->name }}</option>@endforeach
+                            </x-fa::select>
+                            @if($vehikel->isEmpty())<span class="{{ $hinweis }}" data-dar-typ-leer>Keine Liste: Einstellungen › Behälter › Servier-Vehikel</span>@endif
+                        </x-fa::field>
+                        <x-fa::field label="Portionsmenge" :hint="$standardmenge ? ($d->is_standard ? 'Aus der Rezeptur' : 'Aus der Standard-Darreichung') : 'Summe der Komponenten unten'">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 min-h-9" data-dar-portionsmenge>
+                                <strong class="tabular-nums">{{ $d->quantity_per_unit_g !== null ? number_format($d->quantity_per_unit_g * ($d->unit_count ?: 1), 1, ',', '.') . ' g' : 'Menge fehlt' }}</strong>
+                                <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]"><input type="checkbox" @checked($standardmenge) wire:change="darStandardmenge({{ $d->id }}, $event.target.checked)" class="accent-[var(--fa-accent)]" data-dar-standardmenge /> Standardmenge verwenden</label>
+                            </div>
                         </x-fa::field>
                         <x-fa::field label="Preisklasse" for="dar-klasse-{{ $d->id }}">
                             <x-fa::select id="dar-klasse-{{ $d->id }}" wire:model="darForm.{{ $d->id }}.markup_class_id" wire:change="darreichungSpeichern({{ $d->id }})">

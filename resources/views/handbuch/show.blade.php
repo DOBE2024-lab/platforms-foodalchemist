@@ -48,6 +48,16 @@
 
     <div class="body">
         <nav aria-label="Gerichte">
+            {{-- Suche: läuft rein im Browser über data-suche; ohne JS bleibt der Block verborgen. --}}
+            <div class="suche" id="handbuch-suche-block" role="search" hidden>
+                <label class="sr-only" for="handbuch-suche">Im Handbuch suchen</label>
+                <div class="suche-feld">
+                    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m10.5 10.5 3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <input type="search" id="handbuch-suche" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" placeholder="Gericht, Zutat, Allergen …" aria-describedby="handbuch-suche-status">
+                    <button type="button" class="suche-leeren" id="handbuch-suche-leeren" aria-label="Suche leeren" hidden><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="m3 3 8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+                </div>
+                <p class="suche-status" id="handbuch-suche-status" role="status" aria-live="polite"></p>
+            </div>
             @if($hatVerteilung)<label class="gaeste-rechner">Gesamtbedarf für <input type="number" id="handbuch-gaeste" min="1" max="1000000" step="1" placeholder="Anzahl" value="{{ $snapshot['personen'] ?? '' }}"> Gäste</label>@endif
             @foreach($snapshot['sections'] ?? [] as $sec)
                 <details class="kapw">
@@ -73,6 +83,15 @@
                     </div>
                 </details>
             @endforeach
+            @if($basis !== [])
+                {{-- Basisrezepte sind sonst nur über ein Gericht erreichbar; bei aktiver Suche als eigene Gruppe. --}}
+                <details class="kapw" data-nur-suche hidden>
+                    <summary class="kap"><span>Basisrezepte</span><span class="n">{{ count($basis) }}</span></summary>
+                    <div class="liste">
+                        @foreach($basis as $basisKey => $b)<a href="#basis-{{ $basisKey }}" data-key="basis-{{ $basisKey }}"><span>{{ $b['name'] }}</span></a>@endforeach
+                    </div>
+                </details>
+            @endif
             @if($freie !== [])
                 <details class="kapw">
                     <summary class="kap"><span>Allgemein</span><span class="n">{{ count($freie) }}</span></summary>
@@ -100,7 +119,7 @@
                     $z = $g['zutaten'] ?? ['basis' => 'ansatz', 'zeilen' => []];
                     $skaliert = ($z['basis'] ?? '') === 'portion';
                 @endphp
-                <article class="gericht" id="g-{{ $key }}" data-key="{{ $key }}" data-name="{{ $g['name'] }}">
+                <article class="gericht" id="g-{{ $key }}" data-key="{{ $key }}" data-name="{{ $g['name'] }}" data-suche="{{ \Platform\FoodAlchemist\Support\HandbuchSuchindex::fuerGericht($g, $basis, $codeLabel) }}">
                     <div class="head">
                         @if(!empty($g['foto_url']))<a class="foto-link" href="{{ $g['foto_url'] }}" data-bild data-caption="{{ $g['name'] }}" aria-label="Gerichtsbild vergrößern"><img class="foto" src="{{ $g['foto_url'] }}" alt="{{ $g['name'] }}" loading="lazy"></a>@endif
                         <div>
@@ -219,14 +238,14 @@
             @endforeach
 
             @foreach($basis as $basisKey => $b)
-                <article class="gericht basiskarte" id="g-basis-{{ $basisKey }}" data-key="basis-{{ $basisKey }}" data-name="{{ $b['name'] }}">
+                <article class="gericht basiskarte" id="g-basis-{{ $basisKey }}" data-key="basis-{{ $basisKey }}" data-name="{{ $b['name'] }}" data-suche="{{ \Platform\FoodAlchemist\Support\HandbuchSuchindex::fuerBasis((string) $basisKey, $basis) }}">
                     <button type="button" class="basis-zurueck" data-basis-zurueck>‹ Zurück</button>
                     @include('foodalchemist::handbuch._basisrezept', ['b' => $b, 'fmtMenge' => $fmtMenge, 'basis' => $basis])
                 </article>
             @endforeach
 
             @foreach($freie as $i => $fk)
-                <article class="gericht" id="g-k{{ $i }}" data-key="k{{ $i }}">
+                <article class="gericht" id="g-k{{ $i }}" data-key="k{{ $i }}" data-suche="{{ \Platform\FoodAlchemist\Support\HandbuchSuchindex::fuerKapitel($fk) }}">
                     <h2>{{ $fk['title'] }}</h2>
                     <div class="freitext">{!! nl2br(e($fk['text'])) !!}</div>
                 </article>
@@ -326,6 +345,7 @@
         var state = history.state;
         main.scrollTop = state && state.handbuchKey === key ? state.handbuchScroll || 0 : 0;
         document.getElementById('zurueck').textContent = key.indexOf('basis-') === 0 && state && state.handbuchVon ? '‹ Zurück zum Rezept' : '‹ Alle Speisen';
+        if (sucheAktiv) { karteMarkieren(a, true); }
     }
     function fromHash() { var key = location.hash.slice(1); show(document.getElementById('g-' + key) ? key : ''); }
     links.forEach(function (l, index) { l.addEventListener('click', function (e) {
@@ -409,6 +429,115 @@
     }); });
     bilddialog.querySelector('button').addEventListener('click', function () { bilddialog.close(); });
     bilddialog.addEventListener('click', function (e) { if (e.target === bilddialog) { bilddialog.close(); } });
+    // Suche (rein im Browser): data-suche der Karten + Kapitel-Titel der Navigation, normalisiert wie HandbuchSuchindex.
+    var sucheBlock = document.getElementById('handbuch-suche-block'), suche = document.getElementById('handbuch-suche');
+    var sucheLeeren = document.getElementById('handbuch-suche-leeren'), sucheStatus = document.getElementById('handbuch-suche-status');
+    var nav = document.querySelector('nav'), begriffe = [], sucheAktiv = false;
+    function norm(s) { return String(s == null ? '' : s).toLowerCase().replace(/ß/g, 'ss').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' '); }
+    function begriffeAus(q) { return norm(q).split(' ').filter(function (t) { return t !== ''; }); }
+    // Kurze Begriffe (Allergen-Codes, „Ei“) nur am Wortanfang, ein Zeichen nur als ganzes Wort.
+    function fundstellen(text, t) {
+        var out = [], i = text.indexOf(t);
+        while (i !== -1) {
+            var vorn = i === 0 || text.charAt(i - 1) === ' ', hinten = i + t.length >= text.length || text.charAt(i + t.length) === ' ';
+            if (t.length > 2 || (vorn && (t.length > 1 || hinten))) { out.push(i); }
+            i = text.indexOf(t, i + 1);
+        }
+        return out;
+    }
+    function passt(text, terms) { return terms.every(function (t) { return fundstellen(text, t).length > 0; }); }
+    function navTexte(l) {
+        var teile = [l.textContent];
+        for (var e = l.parentElement; e && e !== nav; e = e.parentElement) {
+            if (e.tagName === 'DETAILS') {
+                var s = e.querySelector(':scope > summary > span'); if (s) { teile.push(s.textContent); }
+                var k = e.querySelector(':scope > .kap-text'); if (k) { teile.push(k.textContent); }
+            }
+        }
+        var a = document.getElementById('g-' + l.dataset.key);
+        if (a) { teile.push(a.dataset.suche || ''); }
+        return ' ' + norm(teile.join(' ')).replace(/ +/g, ' ').trim() + ' ';
+    }
+    function entmarken(root) {
+        root.querySelectorAll('mark.treffer').forEach(function (m) { var p = m.parentNode; p.replaceChild(document.createTextNode(m.textContent), m); p.normalize(); });
+    }
+    function markieren(root, terms) {
+        entmarken(root);
+        if (!terms.length) { return; }
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: function (n) {
+            return n.parentElement.closest('script, style, textarea, select, option, mark') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+        } }), knoten = [];
+        while (walker.nextNode()) { knoten.push(walker.currentNode); }
+        knoten.forEach(function (n) {
+            var roh = n.nodeValue, text = '', pos = [];
+            for (var i = 0; i < roh.length; i++) { var c = norm(roh.charAt(i)); for (var j = 0; j < c.length; j++) { text += c.charAt(j); pos.push(i); } }
+            var bereiche = [];
+            terms.forEach(function (t) { fundstellen(text, t).forEach(function (s) { bereiche.push([pos[s], pos[s + t.length - 1] + 1]); }); });
+            if (!bereiche.length) { return; }
+            bereiche.sort(function (x, y) { return x[0] - y[0]; });
+            var frag = document.createDocumentFragment(), bis = 0;
+            bereiche.forEach(function (b) {
+                if (b[1] <= bis) { return; }
+                var von = Math.max(b[0], bis);
+                if (von > bis) { frag.appendChild(document.createTextNode(roh.slice(bis, von))); }
+                var m = document.createElement('mark'); m.className = 'treffer'; m.textContent = roh.slice(von, b[1]); frag.appendChild(m); bis = b[1];
+            });
+            if (bis < roh.length) { frag.appendChild(document.createTextNode(roh.slice(bis))); }
+            n.parentNode.replaceChild(frag, n);
+        });
+    }
+    function karteMarkieren(a, tabWaehlen) {
+        if (!a) { return; }
+        markieren(a, begriffe);
+        if (!tabWaehlen || !begriffe.length || a.querySelector('.pane.on mark.treffer')) { return; }
+        var pane = Array.from(a.querySelectorAll('.pane')).find(function (p) { return p.querySelector('mark.treffer'); });
+        var tab = pane && a.querySelector('.tab[data-pane="' + pane.dataset.pane + '"]');
+        if (tab) { tab.click(); }
+    }
+    function filtern() {
+        var q = suche.value, terms = begriffeAus(q), alle = Array.from(nav.querySelectorAll('details'));
+        sucheLeeren.hidden = q === '';
+        if (terms.length && !sucheAktiv) { alle.forEach(function (d) { d._vorSuche = d.open; }); }
+        if (!terms.length && sucheAktiv) {
+            alle.forEach(function (d) { d.open = !!d._vorSuche; });
+            links.forEach(function (l) { if (l.classList.contains('on')) { for (var e = l.parentElement; e && e !== nav; e = e.parentElement) { if (e.tagName === 'DETAILS') { e.open = true; } } } });
+        }
+        sucheAktiv = terms.length > 0; begriffe = terms;
+        nav.classList.toggle('sucht', sucheAktiv);
+        var keys = {};
+        links.forEach(function (l) {
+            if (l._suche == null) { l._suche = navTexte(l); }
+            var an = !sucheAktiv || passt(l._suche, terms);
+            l.hidden = !an; if (an && sucheAktiv) { keys[l.dataset.key] = true; }
+            var label = l.querySelector('span') || l; markieren(label, terms);
+        });
+        nav.querySelectorAll('.nav-abschnitt').forEach(function (h) {
+            var sichtbar = false;
+            for (var e = h.nextElementSibling; e && !e.classList.contains('nav-abschnitt'); e = e.nextElementSibling) { if (!e.hidden && (e.tagName === 'A' || e.querySelector('.liste a:not([hidden])'))) { sichtbar = true; break; } }
+            h.hidden = sucheAktiv && !sichtbar;
+        });
+        alle.reverse().forEach(function (d) {
+            if (d.hasAttribute('data-nur-suche') && !sucheAktiv) { d.hidden = true; return; }
+            var treffer = !sucheAktiv || !!d.querySelector('.liste a:not([hidden])');
+            d.hidden = !treffer;
+            if (sucheAktiv && treffer) { d.open = true; }
+        });
+        var n = Object.keys(keys).length;
+        sucheStatus.textContent = !sucheAktiv ? '' : (n === 0 ? 'Keine Treffer für „' + q.trim() + '“' : (n === 1 ? '1 Treffer' : n + ' Treffer'));
+        sucheStatus.classList.toggle('leer-treffer', sucheAktiv && n === 0);
+        entmarken(main); karteMarkieren(document.getElementById('g-' + aktiv), false);
+    }
+    function leeren() { suche.value = ''; filtern(); suche.focus(); }
+    if (sucheBlock && suche) {
+        sucheBlock.hidden = false;
+        suche.addEventListener('input', filtern);
+        suche.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { if (suche.value !== '') { e.preventDefault(); leeren(); } }
+            else if (e.key === 'Enter') { var erster = links.find(function (l) { return !l.hidden && !l.closest('[hidden]'); }); if (erster && sucheAktiv) { e.preventDefault(); erster.click(); } }
+        });
+        sucheLeeren.addEventListener('click', leeren);
+        if (suche.value !== '') { filtern(); }
+    }
     var dk = document.getElementById('dk');
     function dunkel(an) { body.classList.toggle('dunkel', an); try { localStorage.setItem('fa-handbuch-dunkel', an ? '1' : '0'); } catch (e) {} }
     try { if (localStorage.getItem('fa-handbuch-dunkel') === '0') { dunkel(false); } } catch (e) {}

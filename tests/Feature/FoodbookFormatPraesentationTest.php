@@ -53,6 +53,18 @@ it('★ Präsentations-Daten: Format-Kapitel trägt die Editionen als Blöcke (�
     expect(array_keys($ed['items'][0]))->toBe(['kind', 'label', 'indent', 'price', 'codes', 'image']);
 });
 
+it('Präsentation: Hinweistexte der Edition („serviert im Schraubglas“) kommen auch im Format-Kapitel an (Fix 2026-11-19)', function () {
+    $this->makeConceptSlot($this->edition, ['type' => 'text', 'title' => null, 'text_content' => 'serviert im Schraubglas', 'position' => 0]);
+
+    $snap = app(PresentationService::class)->previewData($this->rootTeam, 'foodbook', $this->buch->id);
+    $ed = collect(collect($snap['content']['sections'])->firstWhere('title', 'Taste and Fly')['blocks'])->firstWhere('kind', 'concept_ref');
+    $text = collect($ed['items'])->firstWhere('kind', 'text');
+
+    expect($text)->not->toBeNull()->and($text['label'])->toBe('serviert im Schraubglas');
+    // Editor-Ansicht des Formats bleibt ohne Texte (nur die Präsentation fragt sie an).
+    expect(collect(app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->editionen($this->format->fresh())[0]['gerichte'] ?? [])->pluck('type')->all())->not->toContain('text');
+});
+
 it('★ Präsentation im Editor (Vorschau-Route) und öffentlicher Link zeigen die Edition', function () {
     $this->get(route('foodalchemist.foodbooks.praesentation', $this->buch->id))
         ->assertOk()->assertSee('Lissabon Edition')->assertSee('Bacalhau mit Kichererbsen');

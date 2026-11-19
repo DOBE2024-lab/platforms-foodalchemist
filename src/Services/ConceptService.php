@@ -864,23 +864,13 @@ class ConceptService
      */
     public function allergenRollup(FoodAlchemistConcept $concept): array
     {
-        $concept->loadMissing([
-            'slots.package.dishes.dish:id,spec_is_vegan,spec_is_vegetarian,spec_is_halal,spec_is_gluten_free,spec_is_lactose_free,spec_contains_pork,spec_contains_beef,allergens_confidence',
-            'slots.dish:id,spec_is_vegan,spec_is_vegetarian,spec_is_halal,spec_is_gluten_free,spec_is_lactose_free,spec_contains_pork,spec_contains_beef,allergens_confidence',
-        ]);
-
-        $gerichte = collect();
-        foreach ($concept->slots as $slot) {
-            if ($slot->package) {
-                $gerichte = $gerichte->merge($slot->package->dishes->pluck('gericht')->filter());
-            }
-            if ($slot->dish) {
-                $gerichte->push($slot->dish);
-            }
-        }
+        // 1.1h: dieselbe Positionsliste wie Aggregat/Deklaration — inkl. eingebetteter Pakete
+        // (kind=paket-Concept, rekursiv). Vorher fehlten deren Gerichte hier ganz.
+        $agg = app(ConcepterAggregateService::class);
+        $gerichte = $agg->conceptPositionen($concept)->pluck('gericht');
 
         // M10R-1: kanonische Rollup-Stelle (eine Regel) — Output-Form unverändert.
-        return app(ConcepterAggregateService::class)->allergenRollupFromGerichte($gerichte);
+        return $agg->allergenRollupFromGerichte($gerichte);
     }
 
     private function refreshCache(FoodAlchemistConcept $concept): void

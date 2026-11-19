@@ -935,7 +935,7 @@ class SpeisekarteService
             return null;
         }
         if (! array_key_exists($conceptId, $this->speisekarteConceptCache)) {
-            $this->speisekarteConceptCache[$conceptId] = FoodAlchemistConcept::with(['slots.package.dishes.gericht', 'slots.dish'])->find($conceptId);
+            $this->speisekarteConceptCache[$conceptId] = FoodAlchemistConcept::with(['slots.package.dishes.gericht', 'slots.dish', 'slots.embeddedConcept'])->find($conceptId);
         }
 
         return $this->speisekarteConceptCache[$conceptId];
@@ -957,20 +957,37 @@ class SpeisekarteService
             if ($concept === null) {
                 return collect();
             }
-            $gerichte = collect();
-            foreach ($concept->slots as $slot) {
-                if ($slot->package) {
-                    $gerichte = $gerichte->merge($slot->package->dishes->pluck('gericht')->filter());
-                }
-                if ($slot->dish) {
-                    $gerichte->push($slot->dish);
-                }
-            }
-
-            return $gerichte->filter()->unique('id')->values();
+            return $this->conceptGerichte($concept)->filter()->unique('id')->values();
         }
 
         return collect();
+    }
+
+    /**
+     * Alle Gerichte eines Concepts für die Kennzeichnung — feste Gerichte, alte Pakete UND
+     * eingebettete Pakete (kind=paket-Concept, rekursiv; 1.1h). Ohne die eingebetteten fehlten
+     * deren Allergen-Codes auf der Karte. `$pfad` schneidet Zyklen (Concept bettet sich selbst ein) ab.
+     *
+     * @param  array<int, true>  $pfad
+     */
+    private function conceptGerichte(FoodAlchemistConcept $concept, array $pfad = []): Collection
+    {
+        $pfad[(int) $concept->id] = true;
+        $concept->loadMissing(['slots.package.dishes.gericht', 'slots.dish', 'slots.embeddedConcept']);
+        $gerichte = collect();
+        foreach ($concept->slots as $slot) {
+            if ($slot->package) {
+                $gerichte = $gerichte->merge($slot->package->dishes->pluck('gericht')->filter());
+            }
+            if ($slot->dish) {
+                $gerichte->push($slot->dish);
+            }
+            if ($slot->embeddedConcept && ! isset($pfad[(int) $slot->embedded_concept_id])) {
+                $gerichte = $gerichte->merge($this->conceptGerichte($slot->embeddedConcept, $pfad));
+            }
+        }
+
+        return $gerichte;
     }
 
     /**

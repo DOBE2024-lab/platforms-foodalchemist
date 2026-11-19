@@ -82,6 +82,7 @@ class FormatService
 
     public function create(Team $team, array $in): FoodAlchemistFormat
     {
+        $this->pruefeFacettenIds($team, $in);   // CQ 1.1j
         $format = FoodAlchemistFormat::create([
             'team_id' => $team->id,
             'name' => trim((string) ($in['name'] ?? 'Neues Format')) ?: 'Neues Format',
@@ -100,10 +101,20 @@ class FormatService
         return $format;
     }
 
+    /**
+     * CQ 1.1j: der Status läuft NIE an setStatus vorbei (Rolle Kuratieren) — ein geänderter Status wird
+     * dorthin weitergereicht, ein unveränderter ignoriert. Facetten-IDs müssen fürs Team sichtbar sein.
+     */
     public function update(Team $team, int $id, array $in): FoodAlchemistFormat
     {
         $format = FoodAlchemistFormat::visibleToTeam($team)->findOrFail($id);
         $this->guardOwner($format, $team);
+        $this->pruefeFacettenIds($team, $in);
+        $status = array_key_exists('status', $in) ? ($in['status'] instanceof \BackedEnum ? (string) $in['status']->value : (string) $in['status']) : '';
+        unset($in['status']);
+        if ($status !== '' && $status !== (string) $format->status) {
+            $this->setStatus($team, $id, $status);
+        }
 
         $update = array_intersect_key($in, array_flip(self::FELDER));
         foreach (['consumer_name', 'claim', 'story', 'customer', 'note'] as $feld) {
@@ -147,6 +158,18 @@ class FormatService
             $ids = array_values(array_unique(array_map('intval', (array) $in[$key])));
             $sichtbar = $ids === [] ? [] : $modell::visibleToTeam($team)->whereIn('id', $ids)->pluck('id')->all();
             $format->{$relation}()->sync($sichtbar);
+        }
+    }
+
+    /** CQ 1.1j: Servierform/Eventtyp nur aus der Team-Sicht (bestehende Regel, Support\Verweisziel). */
+    private function pruefeFacettenIds(Team $team, array $in): void
+    {
+        foreach (['serving_form_id' => \Platform\FoodAlchemist\Models\FoodAlchemistServierform::class,
+            'event_type_id' => \Platform\FoodAlchemist\Models\FoodAlchemistEventtyp::class] as $feld => $modell) {
+            $id = $this->nullbareId($in[$feld] ?? null);
+            if ($id !== null && ! \Platform\FoodAlchemist\Support\Verweisziel::sichtbar($modell, $team)->whereKey($id)->exists()) {
+                throw new \RuntimeException("{$feld} {$id} ist nicht sichtbar/vorhanden.");
+            }
         }
     }
 

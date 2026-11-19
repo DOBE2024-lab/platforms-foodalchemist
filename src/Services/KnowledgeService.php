@@ -478,6 +478,24 @@ class KnowledgeService
         return $n > 0;
     }
 
+    /**
+     * 98 · 1.3e · Alt-Bindung per ID lösen (Aufräumweg im Wissens-Browser). Soft-Delete wie {@see unbindExisting}:
+     * alle Leser filtern `deleted_at`. Nur wer das Eltern-Dokument schreiben darf (MVP-037). Gibt zurück, ob gelöst wurde.
+     */
+    public function loeseBindung(Team $team, int $bindingId): bool
+    {
+        $row = DB::table('foodalchemist_knowledge_bindings as b')
+            ->join('foodalchemist_knowledge_documents as d', 'd.id', '=', 'b.knowledge_document_id')
+            ->where('b.id', $bindingId)->whereNull('b.deleted_at')
+            ->first(['d.team_id']);
+        if ($row === null || ! \Platform\FoodAlchemist\Services\Knowledge\WissensSichtbarkeit::mayWrite($row->team_id, $team)) {
+            return false;
+        }
+
+        return DB::table('foodalchemist_knowledge_bindings')->where('id', $bindingId)->whereNull('deleted_at')
+            ->update(['active' => false, 'deleted_at' => now(), 'updated_at' => now()]) > 0;
+    }
+
     /** Doc per Slug, sichtbarkeits-gescoped (globaler Seed + eigene Ancestry); sonst NOT_FOUND. */
     private function findSichtbar(Team $team, string $slug): object
     {

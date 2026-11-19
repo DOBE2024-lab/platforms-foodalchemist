@@ -13,7 +13,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
-use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\RezeptFotoService;
 use Platform\FoodAlchemist\Services\RecipeImageService;
 use Platform\FoodAlchemist\Services\RecipeStepService;
@@ -152,15 +151,7 @@ class StepEditor extends Component
             return;
         }
 
-        $letzte = FoodAlchemistRecipeStep::where('recipe_id', $r->id)->ebene($this->ebene)->orderByDesc('position')->first();
-        FoodAlchemistRecipeStep::create([
-            'team_id' => $r->team_id,
-            'recipe_id' => $r->id,
-            'ebene' => $this->ebene,
-            'position' => (int) ($letzte?->position ?? 0) + 1,
-            'phase' => $letzte?->phase,                 // neue Zeile bleibt im laufenden Abschnitt
-            'text' => '',
-        ]);
+        app(RecipeStepService::class)->schrittAnlegen($r, $this->ebene);   // 98 · 1.3e
 
         $this->hydrierePuffer();
     }
@@ -172,14 +163,9 @@ class StepEditor extends Component
             return;
         }
 
-        $step = FoodAlchemistRecipeStep::where('recipe_id', $r->id)->ebene($this->ebene)->whereKey($stepId)->first();
-        if ($step === null) {
+        if (! app(RecipeStepService::class)->schrittLoeschen($r, $this->ebene, $stepId)) {   // 98 · 1.3e
             return;
         }
-        $step->photos()->detach();                      // Pivot hart lösen — das Foto bleibt im Pool
-        $step->delete();
-
-        app(RecipeStepService::class)->renumber($r, $this->ebene);
         $this->hydrierePuffer();
     }
 
@@ -209,15 +195,7 @@ class StepEditor extends Component
         if ($r === null || $stepId <= 0) {
             return;
         }
-        $step = FoodAlchemistRecipeStep::where('recipe_id', $r->id)->ebene($this->ebene)->whereKey($stepId)->first();
-        if ($step === null) {
-            return;
-        }
-
-        $wert = trim($wert);
-        $step->update([$feld => $feld === 'phase' ? ($wert !== '' ? mb_substr($wert, 0, 120) : null) : $wert]);
-
-        app(RecipeStepService::class)->spiegele($r);
+        app(RecipeStepService::class)->schrittFeldSetzen($r, $this->ebene, $stepId, $feld, $wert);   // 98 · 1.3e
     }
 
     // ── Reihenfolge (gleiche Helfer wie die Settings-Listen) ──────────────
@@ -253,11 +231,7 @@ class StepEditor extends Component
             return;
         }
 
-        foreach ($neu as $i => $id) {
-            FoodAlchemistRecipeStep::where('recipe_id', $r->id)->ebene($this->ebene)->whereKey($id)->update(['position' => $i + 1]);
-        }
-
-        app(RecipeStepService::class)->spiegele($r);
+        app(RecipeStepService::class)->reihenfolgeSetzen($r, $this->ebene, $neu);   // 98 · 1.3e
         $this->hydrierePuffer();
     }
 
@@ -276,20 +250,7 @@ class StepEditor extends Component
             return;
         }
 
-        $step = FoodAlchemistRecipeStep::where('recipe_id', $r->id)->ebene($this->ebene)->whereKey($stepId)->first();
-        $foto = FoodAlchemistRecipeStepPhoto::where('recipe_id', $r->id)->whereKey($photoId)->first();
-        if ($step === null || $foto === null) {
-            return;
-        }
-
-        if ($step->photos()->whereKey($foto->id)->exists()) {
-            $step->photos()->detach($foto->id);
-
-            return;
-        }
-
-        $naechste = (int) ($step->photos()->max('foodalchemist_recipe_step_photo_links.position') ?? 0) + 1;
-        $step->photos()->attach($foto->id, ['position' => $naechste]);
+        app(RecipeStepService::class)->fotoUmschalten($r, $this->ebene, $stepId, $photoId);   // 98 · 1.3e
     }
 
     public function fotoEntkoppeln(int $stepId, int $photoId): void
@@ -298,8 +259,7 @@ class StepEditor extends Component
         if ($r === null) {
             return;
         }
-        FoodAlchemistRecipeStep::where('recipe_id', $r->id)->ebene($this->ebene)->whereKey($stepId)->first()
-            ?->photos()->detach($photoId);
+        app(RecipeStepService::class)->fotoEntkoppeln($r, $this->ebene, $stepId, $photoId);   // 98 · 1.3e
     }
 
     /** Upload in den Pool; ist ein Schritt aktiv, wird das Foto direkt dort verlinkt. */
@@ -338,13 +298,7 @@ class StepEditor extends Component
             return;
         }
 
-        $foto = FoodAlchemistRecipeStepPhoto::where('recipe_id', $r->id)->whereKey($photoId)->first();
-        if ($foto === null) {
-            return;
-        }
-        $foto->steps()->detach();
-        app(FoodAlchemistMediaService::class)->delete($foto->context_file_id, $foto->pfad, $this->team());
-        $foto->delete();
+        app(RecipeStepService::class)->fotoLoeschen($r, $photoId, $this->team());   // 98 · 1.3e
     }
 
     public function kiFotos(): void
@@ -485,8 +439,8 @@ class StepEditor extends Component
             return;
         }
 
-        $svc->ersetze($r, $this->kiVorschlag['steps'], $this->ebene);   // KI ersetzt die Ebene (17.11.), gleicher Weg wie die Anreicherung
-        $r->update([$quelle => 'ki', $konfidenz => $this->kiVorschlag['confidence']]);
+        // KI ersetzt die Ebene (17.11.), gleicher Weg wie die Anreicherung; Quelle je Ebene setzt der Service (98 · 1.3e).
+        $svc->kiUebernehmen($r, $this->kiVorschlag['steps'], $this->ebene, $this->kiVorschlag['confidence']);
 
         $this->kiVorschlag = null;
         // Der Auftrag ist erledigt. Bliebe das Briefing stehen, würde es beim nächsten

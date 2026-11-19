@@ -95,6 +95,22 @@ it('löscht keine Bindung eines fremden Dokuments (MVP-037)', function () {
     expect(DB::table('foodalchemist_knowledge_bindings')->where('id', $bindingId)->whereNull('deleted_at')->exists())->toBeTrue();
 });
 
+it('löst eine Bindung am EIGENEN Dokument als Soft-Delete (98 · 1.3e)', function () {
+    $bindingId = DB::table('foodalchemist_knowledge_bindings')->insertGetId([
+        'uuid' => (string) UuidV7::generate(), 'team_id' => $this->childA->id,
+        'knowledge_document_id' => $this->eigenId, 'binding_type' => 'layer', 'target_key' => 'x',
+        'mode' => 'discovery', 'weight' => 0, 'active' => 1, 'source' => 'ui',
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    Livewire::test(Browser::class)->call('removeBinding', $bindingId);
+
+    $zeile = DB::table('foodalchemist_knowledge_bindings')->where('id', $bindingId)->first();
+    expect($zeile)->not->toBeNull()
+        ->and($zeile->deleted_at)->not->toBeNull()
+        ->and((bool) $zeile->active)->toBeFalse();
+});
+
 it('setzt und entfernt Alias am EIGENEN Dokument weiterhin', function () {
     $c = Livewire::test(Browser::class)
         ->call('select', $this->eigenId)

@@ -481,4 +481,113 @@ class RecipeStepService
 
         return trim($t) !== '' ? mb_substr(trim($t), 0, 120) : null;
     }
+
+    // ── 98 · 1.3e · Einzel-Schreibwege des Schritt-Editors (vorher direkt in Livewire\Recipes\StepEditor) ──
+
+    /** Leere Zeile am Ende der Ebene anlegen; sie bleibt im laufenden Abschnitt (Phase der letzten Zeile). */
+    public function schrittAnlegen(FoodAlchemistRecipe $recipe, string $ebene): FoodAlchemistRecipeStep
+    {
+        $letzte = FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene($ebene)->orderByDesc('position')->first();
+
+        return FoodAlchemistRecipeStep::create([
+            'team_id' => $recipe->team_id,
+            'recipe_id' => $recipe->id,
+            'ebene' => $ebene,
+            'position' => (int) ($letzte?->position ?? 0) + 1,
+            'phase' => $letzte?->phase,
+            'text' => '',
+        ]);
+    }
+
+    /** Schritt löschen: Foto-Pivot hart lösen (das Foto bleibt im Pool), dann lückenlos neu nummerieren. */
+    public function schrittLoeschen(FoodAlchemistRecipe $recipe, string $ebene, int $stepId): bool
+    {
+        $step = FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene($ebene)->whereKey($stepId)->first();
+        if ($step === null) {
+            return false;
+        }
+        $step->photos()->detach();
+        $step->delete();
+        $this->renumber($recipe, $ebene);
+
+        return true;
+    }
+
+    /** Ein Feld (`text` oder `phase`) eines Schritts setzen; Phase leer → NULL, max. 120 Zeichen. */
+    public function schrittFeldSetzen(FoodAlchemistRecipe $recipe, string $ebene, int $stepId, string $feld, string $wert): bool
+    {
+        if (! in_array($feld, ['text', 'phase'], true)) {
+            throw new \InvalidArgumentException("Unbekanntes Schritt-Feld {$feld}.");
+        }
+        $step = FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene($ebene)->whereKey($stepId)->first();
+        if ($step === null) {
+            return false;
+        }
+        $wert = trim($wert);
+        $step->update([$feld => $feld === 'phase' ? ($wert !== '' ? mb_substr($wert, 0, 120) : null) : $wert]);
+        $this->spiegele($recipe);
+
+        return true;
+    }
+
+    /** Neue Reihenfolge einer Ebene setzen (Liste der Schritt-IDs, erste = Position 1). */
+    public function reihenfolgeSetzen(FoodAlchemistRecipe $recipe, string $ebene, array $ids): void
+    {
+        foreach (array_values($ids) as $i => $id) {
+            FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene($ebene)->whereKey((int) $id)->update(['position' => $i + 1]);
+        }
+        $this->spiegele($recipe);
+    }
+
+    /** Foto an einem Schritt an- oder abhängen (M:N — ein Foto darf an mehreren Schritten hängen). */
+    public function fotoUmschalten(FoodAlchemistRecipe $recipe, string $ebene, int $stepId, int $photoId): void
+    {
+        $step = FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene($ebene)->whereKey($stepId)->first();
+        $foto = FoodAlchemistRecipeStepPhoto::where('recipe_id', $recipe->id)->whereKey($photoId)->first();
+        if ($step === null || $foto === null) {
+            return;
+        }
+        if ($step->photos()->whereKey($foto->id)->exists()) {
+            $step->photos()->detach($foto->id);
+
+            return;
+        }
+        $naechste = (int) ($step->photos()->max('foodalchemist_recipe_step_photo_links.position') ?? 0) + 1;
+        $step->photos()->attach($foto->id, ['position' => $naechste]);
+    }
+
+    public function fotoEntkoppeln(FoodAlchemistRecipe $recipe, string $ebene, int $stepId, int $photoId): void
+    {
+        FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene($ebene)->whereKey($stepId)->first()
+            ?->photos()->detach($photoId);
+    }
+
+    /** Foto endgültig aus dem Pool entfernen (inkl. Datei + aller Verknüpfungen). */
+    public function fotoLoeschen(FoodAlchemistRecipe $recipe, int $photoId, ?Team $team): bool
+    {
+        $foto = FoodAlchemistRecipeStepPhoto::where('recipe_id', $recipe->id)->whereKey($photoId)->first();
+        if ($foto === null) {
+            return false;
+        }
+        $foto->steps()->detach();
+        app(FoodAlchemistMediaService::class)->delete($foto->context_file_id, $foto->pfad, $team);
+        $foto->delete();
+
+        return true;
+    }
+
+    /**
+     * KI-Vorschlag übernehmen: Schritte der Ebene ersetzen ({@see ersetze}) und das Quellen-Trio DIESER Ebene auf „ki"
+     * setzen — die Anrichte-Instanz schreibt nie die Produktions-Herkunft um (und umgekehrt).
+     */
+    public function kiUebernehmen(FoodAlchemistRecipe $recipe, array $rows, string $ebene, mixed $konfidenz): int
+    {
+        $n = $this->ersetze($recipe, $rows, $ebene);
+        [$quelle, $konfidenzFeld] = $ebene === FoodAlchemistRecipeStep::EBENE_ANRICHTEN
+            ? ['plating_source', 'plating_ai_confidence']
+            : ['preparation_source', 'preparation_ai_confidence'];
+        $recipe->update([$quelle => 'ki', $konfidenzFeld => $konfidenz]);
+
+        return $n;
+    }
 }

@@ -129,3 +129,31 @@ it('GpAbgleichService::markiereAusgefuehrt hält Aktion und GP am Protokoll fest
         ->and($log->ausgefuehrt_aktion)->toBe('verknuepft')
         ->and((int) $log->ausgefuehrt_gp_id)->toBe($gp->id);
 });
+
+it('RecipeStepService (98 · 1.3e): Schritte headless anlegen, füllen, umsortieren, löschen; KI-Quelle je Ebene', function () {
+    $svc = app(\Platform\FoodAlchemist\Services\RecipeStepService::class);
+    $r = $this->makeRecipe($this->rootTeam, 'Rinderfond');
+    $p = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep::EBENE_PRODUKTION;
+
+    $a = $svc->schrittAnlegen($r, $p);
+    $b = $svc->schrittAnlegen($r, $p);
+    expect([(int) $a->position, (int) $b->position])->toBe([1, 2]);
+
+    expect($svc->schrittFeldSetzen($r, $p, $a->id, 'text', '  Knochen rösten. '))->toBeTrue();
+    $svc->schrittFeldSetzen($r, $p, $b->id, 'text', 'Ansetzen.');
+    $svc->schrittFeldSetzen($r, $p, $a->id, 'phase', '   ');
+    expect($a->refresh()->text)->toBe('Knochen rösten.')->and($a->phase)->toBeNull();
+    expect(fn () => $svc->schrittFeldSetzen($r, $p, $a->id, 'ebene', 'x'))->toThrow(InvalidArgumentException::class);
+
+    $svc->reihenfolgeSetzen($r, $p, [$b->id, $a->id]);
+    expect([(int) $b->refresh()->position, (int) $a->refresh()->position])->toBe([1, 2]);
+
+    expect($svc->schrittLoeschen($r, $p, $b->id))->toBeTrue()
+        ->and((int) $a->refresh()->position)->toBe(1)
+        ->and($svc->schrittLoeschen($r, $p, $b->id))->toBeFalse();
+
+    $svc->kiUebernehmen($r, [['text' => 'Neu.']], \Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep::EBENE_ANRICHTEN, 0.7);
+    $r->refresh();
+    expect($r->plating_source)->toBe('ki')
+        ->and($r->preparation_source)->not->toBe('ki');
+});

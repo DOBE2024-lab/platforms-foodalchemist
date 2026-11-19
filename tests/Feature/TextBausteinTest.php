@@ -31,8 +31,8 @@ it('übernimmt ein anderes Element und eigene Klassen/Attribute', function () {
 });
 
 it('lehnt unbekannte Rollen und Elemente laut ab statt still ungestylt zu rendern', function () {
-    expect(fn () => Blade::render('<x-fa::text rolle="klein">x</x-fa::text>'))->toThrow(\Throwable::class, 'rolle')
-        ->and(fn () => Blade::render('<x-fa::text rolle="body" as="script">x</x-fa::text>'))->toThrow(\Throwable::class, 'as=');
+    expect(fn () => Blade::render('<x-fa::text rolle="klein">x</x-fa::text>'))->toThrow(\Exception::class, 'rolle')
+        ->and(fn () => Blade::render('<x-fa::text rolle="body" as="script">x</x-fa::text>'))->toThrow(\Exception::class, 'as=');
 });
 
 it('Plattform-Hülle: jede FA-Seite lädt die Text-Rollen genau einmal über die Kopfzeile, mit Cache-Schlüssel', function () {

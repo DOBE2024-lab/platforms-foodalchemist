@@ -14,7 +14,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapterImage;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\FoodbookService;
 use Platform\FoodAlchemist\Services\PlanningFrameService;
 
@@ -358,12 +357,7 @@ class OfferCompositionService
         if ($daten['type'] !== 'position') {
             $this->pruefePreisBasis($daten['price_basis'] ?? null);
         }
-        if ($daten['type'] === 'concept_ref') {
-            $this->pruefeConceptRef($team, $daten['concept_id'] ?? null);
-        }
-        if ($daten['type'] === 'recipe_ref') {
-            $this->pruefeRecipeRef($team, $daten['sales_recipe_id'] ?? null);
-        }
+        \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten);   // 1.1j: Gericht/Concept/Darreichung/Einheit
         if ($daten['type'] === 'position') {   // Spec 94b: Menge × Satz, pauschal (in der Summe) oder aufwand (zzgl., nicht in der Summe)
             $daten['price_basis'] = in_array($daten['price_basis'] ?? null, FoodAlchemistOfferBlock::POSITION_BASES, true) ? $daten['price_basis'] : 'pauschal';
             $daten['quantity'] ??= 1;
@@ -390,9 +384,7 @@ class OfferCompositionService
         if ($effTyp === 'position' && array_key_exists('price_basis', $daten)) {
             $daten['price_basis'] = in_array($daten['price_basis'], FoodAlchemistOfferBlock::POSITION_BASES, true) ? $daten['price_basis'] : 'pauschal';
         }
-        if ($effTyp === 'recipe_ref' && array_key_exists('sales_recipe_id', $daten)) {
-            $this->pruefeRecipeRef($team, $daten['sales_recipe_id']);
-        }
+        \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten, $block);   // 1.1j: auch concept_ref, Darreichung, Einheit
         $block->update($daten);
 
         return $block->refresh();
@@ -1073,25 +1065,6 @@ class OfferCompositionService
             'text' => (string) ($block->customer_text ?? $block->label ?? ''),
             default => $block->label,
         };
-    }
-
-    private function pruefeConceptRef(Team $team, ?int $conceptId): void
-    {
-        if ($conceptId === null || ! FoodAlchemistConcept::visibleToTeam($team)->whereKey($conceptId)->exists()) {
-            throw new \RuntimeException('concept_ref-Block braucht ein sichtbares Concept.');
-        }
-    }
-
-    private function pruefeRecipeRef(Team $team, ?int $salesRecipeId): void
-    {
-        if ($salesRecipeId === null) {
-            throw new \RuntimeException('recipe_ref-Block braucht ein sales_recipe_id (VK-Gericht).');
-        }
-        $ok = FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
-            ->whereNull('variant_source_recipe_id')->whereKey($salesRecipeId)->exists();
-        if (! $ok) {
-            throw new \RuntimeException("sales_recipe_id {$salesRecipeId} ist kein gültiges, sichtbares VK-Gericht.");
-        }
     }
 
     private function ownedOffer(Team $team, int $id): FoodAlchemistAngebot

@@ -82,3 +82,60 @@ it('Export: fremdes Gericht in einem eingebetteten Paket bleibt ausgeblendet', f
 
     expect(json_encode($daten, JSON_UNESCAPED_UNICODE))->not->toContain('Fremdes');
 });
+
+// ── 1./2. Foodbook- und Angebots-Blöcke ──────────────────────────────────
+
+function cqFoodbookKapitel(\Platform\Core\Models\Team $team)
+{
+    $fb = app(\Platform\FoodAlchemist\Services\FoodbookService::class)->create($team, ['label' => 'FB A']);
+
+    return app(\Platform\FoodAlchemist\Services\FoodbookService::class)->addKapitel($team, $fb->id, ['title' => 'Menü']);
+}
+
+function cqAngebotKapitel(\Platform\Core\Models\Team $team)
+{
+    $a = \Platform\FoodAlchemist\Models\FoodAlchemistAngebot::create(['team_id' => $team->id, 'name' => 'Sommerfest', 'status' => 'anfrage', 'personen' => 50]);
+
+    return app(\Platform\FoodAlchemist\Services\OfferCompositionService::class)->addKapitel($team, $a->id, ['title' => 'Menü']);
+}
+
+it('Foodbook: concept_ref mit fremdem Concept wird beim Anlegen und Ändern abgelehnt, eigenes Paket geht', function () {
+    $svc = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $k = cqFoodbookKapitel($this->childA);
+    $fremdC = FoodAlchemistConcept::create(['team_id' => $this->childB->id, 'name' => 'Fremd', 'kind' => 'concept', 'status' => 'active']);
+    $paket = $this->concepts->createPaket($this->childA, ['name' => 'Eigenes Paket']);
+
+    expect(fn () => $svc->addBlock($this->childA, $k->id, ['type' => 'concept_ref', 'concept_id' => $fremdC->id]))->toThrow(\RuntimeException::class);
+    $b = $svc->addBlock($this->childA, $k->id, ['type' => 'concept_ref', 'concept_id' => $paket->id]);
+    expect(fn () => $svc->updateBlock($this->childA, $b->id, ['concept_id' => $fremdC->id]))->toThrow(\RuntimeException::class);
+    expect($b->fresh()->concept_id)->toBe($paket->id);
+});
+
+it('Foodbook: Typwechsel auf concept_ref ohne sichtbares Concept wird abgelehnt', function () {
+    $svc = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $b = $svc->addBlock($this->childA, cqFoodbookKapitel($this->childA)->id, ['type' => 'text', 'label' => 'x']);
+
+    expect(fn () => $svc->updateBlock($this->childA, $b->id, ['type' => 'concept_ref']))->toThrow(\RuntimeException::class);
+});
+
+it('Angebot: updateBlock prüft concept_id wie addBlock', function () {
+    $svc = app(\Platform\FoodAlchemist\Services\OfferCompositionService::class);
+    $eigenC = $this->concepts->create($this->childA, ['name' => 'Eigen']);
+    $fremdC = FoodAlchemistConcept::create(['team_id' => $this->childB->id, 'name' => 'Fremd', 'kind' => 'concept', 'status' => 'active']);
+    $b = $svc->addBlock($this->childA, cqAngebotKapitel($this->childA)->id, ['type' => 'concept_ref', 'concept_id' => $eigenC->id]);
+
+    expect(fn () => $svc->updateBlock($this->childA, $b->id, ['concept_id' => $fremdC->id]))->toThrow(\RuntimeException::class);
+    expect($b->fresh()->concept_id)->toBe($eigenC->id);
+});
+
+it('Angebot: presentation_id muss zum Gericht des Blocks gehören', function () {
+    $svc = app(\Platform\FoodAlchemist\Services\OfferCompositionService::class);
+    $anderes = ($this->mk)($this->childA, 'anderes', 'Anderes Gericht');
+    $sf = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->childA->id, 'code' => 'kantine', 'label' => 'Kantine']);
+    $fremdeForm = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create(['team_id' => $this->childA->id, 'recipe_id' => $anderes->id, 'serving_form_id' => $sf->id, 'is_standard' => false, 'quantity_per_unit_g' => 200, 'unit_count' => 1]);
+    $eigeneForm = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create(['team_id' => $this->childA->id, 'recipe_id' => $this->eigen->id, 'serving_form_id' => $sf->id, 'is_standard' => false, 'quantity_per_unit_g' => 200, 'unit_count' => 1]);
+    $b = $svc->addBlock($this->childA, cqAngebotKapitel($this->childA)->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->eigen->id]);
+
+    expect(fn () => $svc->updateBlock($this->childA, $b->id, ['presentation_id' => $fremdeForm->id]))->toThrow(\RuntimeException::class, 'Darreichung');
+    expect($svc->updateBlock($this->childA, $b->id, ['presentation_id' => $eigeneForm->id])->presentation_id)->toBe($eigeneForm->id);
+});

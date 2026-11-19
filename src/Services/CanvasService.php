@@ -233,6 +233,12 @@ class CanvasService
         }
     }
 
+    /** 98 · 1.3c: Verbindlich-Flag an einem schon gefüllten Skalar-Feld setzen, ohne den Wert anzufassen. */
+    public function setzeVerbindlich(FoodAlchemistCanvas $canvas, string $key, bool $verbindlich): void
+    {
+        $canvas->entries()->where('field_key', $key)->where('position', 0)->update(['is_binding' => $verbindlich]);
+    }
+
     public function saveSkalare(FoodAlchemistCanvas $canvas, array $form, ?Team $team = null): void
     {
         $team ??= $canvas->team_id !== null ? Team::find($canvas->team_id) : null;

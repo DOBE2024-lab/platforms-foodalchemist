@@ -120,7 +120,7 @@ class GpsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
             // Maße (nur Non-Food, WG 16) in cm/ml; der Name wird dadurch NICHT umgeschrieben — Größe ggf. über pflichtangabe mitgeben
             $gp = app(\Platform\FoodAlchemist\Services\GpMasseService::class)->setze($gp, array_intersect_key($arguments, \Platform\FoodAlchemist\Support\NonFoodMasse::EINGABE));
             if (array_key_exists('is_kochmedium', $arguments)) {
-                $gp->update(['is_kochmedium' => (bool) $arguments['is_kochmedium']]);
+                $gp = app(\Platform\FoodAlchemist\Services\GpService::class)->setzeKochmedium($team, (int) $gp->id, (bool) $arguments['is_kochmedium']);
             }
             if (array_key_exists('serving_vehicle', $arguments)) {
                 $gp = app(\Platform\FoodAlchemist\Services\GpMasseService::class)->setzeServierTyp($gp, $arguments['serving_vehicle']);

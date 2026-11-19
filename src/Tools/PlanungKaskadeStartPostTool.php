@@ -89,9 +89,8 @@ class PlanungKaskadeStartPostTool extends FoodAlchemistTool implements ToolContr
                 try {
                     $chips = (array) (app(\Platform\FoodAlchemist\Services\BriefingLeitplankenService::class)
                         ->ausBriefing($team, $laufBrief, null, $scope)['suchbegriffe'] ?? []);
-                    $alle = is_array($session->suchbegriffe) ? $session->suchbegriffe : [];
-                    $alle[$scope] = array_values($chips);
-                    $session->update(['suchbegriffe' => $alle]);
+                    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+                        ->setzeSuchbegriffe($team, (int) $session->id, $scope, $chips);
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::warning('[Planung/MCP] Suchbegriffe nicht ableitbar', ['error' => $e->getMessage()]);
                 }

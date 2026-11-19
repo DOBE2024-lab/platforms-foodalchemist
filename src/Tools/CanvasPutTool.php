@@ -121,7 +121,7 @@ class CanvasPutTool extends FoodAlchemistTool implements ToolContract, ToolMetad
         }
         foreach ($verbindlich as $key => $flag) {   // Flag an einem schon gefüllten Feld, das nicht in felder steht
             if (! array_key_exists($key, $felder)) {
-                $canvas->entries()->where('field_key', $key)->where('position', 0)->update(['is_binding' => (bool) $flag]);
+                $svc->setzeVerbindlich($canvas, (string) $key, (bool) $flag);
             }
         }
 

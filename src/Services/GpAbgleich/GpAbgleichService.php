@@ -224,6 +224,18 @@ class GpAbgleichService
     }
 
     /**
+     * 98 · 1.3c: eine nachträglich ausgeführte Entscheidung am Protokoll festhalten (MCP `apply`).
+     *
+     * @param  array{ausgefuehrt: string, gp: FoodAlchemistGp}  $ausfuehrung  Rückgabe von {@see fuehreAus}
+     */
+    public function markiereAusgefuehrt(FoodAlchemistAbgleichLog $log, array $ausfuehrung): FoodAlchemistAbgleichLog
+    {
+        $log->update(['ausgefuehrt' => true, 'ausgefuehrt_aktion' => $ausfuehrung['ausgefuehrt'], 'ausgefuehrt_gp_id' => (int) $ausfuehrung['gp']->id]);
+
+        return $log;
+    }
+
+    /**
      * Rücknahme einer ausgeführten Entscheidung: Verknüpfung lösen (Lead-Neuwahl, Zähler); ein dabei neu angelegtes GP wird gelöscht, wenn nichts mehr daran hängt.
      *
      * @return array{zurueckgenommen: bool, hinweis: string}

@@ -716,6 +716,15 @@ class GpService
      * `is_kochmedium` (nur wenn mitgegeben): Vorschlag Zeilenart „Medium“ für ungesetzte Rezeptzeilen (§18.7).
      * Wie die Verlust-Defaults ohne sofortigen Recompute — wirkt beim nächsten Recompute der Rezepte.
      */
+    /** 98 · 1.3c: nur das Kochmedium-Flag (§18.7) setzen — die Kalkulations-Defaults bleiben unberührt. */
+    public function setzeKochmedium(Team $team, int $gpId, bool $istKochmedium): FoodAlchemistGp
+    {
+        $gp = $this->eigenesGp($team, $gpId);
+        $gp->update(['is_kochmedium' => $istKochmedium]);
+
+        return $gp->refresh();
+    }
+
     public function setzeKalkDefaults(Team $team, int $gpId, array $in): FoodAlchemistGp
     {
         $gp = $this->eigenesGp($team, $gpId);

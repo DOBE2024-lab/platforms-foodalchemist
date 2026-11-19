@@ -9,6 +9,7 @@ use Livewire\WithFileUploads;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
+use Platform\FoodAlchemist\Services\OutletService;
 
 /**
  * Spec 33 · P2 — Pflege der Betriebe/Standorte (Outlets).
@@ -67,18 +68,13 @@ class Betriebe extends Component
             return;
         }
 
-        // Unique ist (team_id, name) — ohne Vorprüfung liefe der Nutzer in einen SQL-Fehler.
-        if (FoodAlchemistOutlet::where('team_id', $team->id)->where('name', $name)->exists()) {
-            $this->fehler = 'Es gibt bereits ein Kalkulationsprofil mit diesem Namen.';
+        try {
+            app(OutletService::class)->anlegen($team, $name);
+        } catch (\RuntimeException $e) {
+            $this->fehler = $e->getMessage();
 
             return;
         }
-
-        FoodAlchemistOutlet::create([
-            'team_id' => $team->id,
-            'name' => $name,
-            'sort_order' => (int) (FoodAlchemistOutlet::where('team_id', $team->id)->max('sort_order') ?? 0) + 10,
-        ]);
         $this->neuName = '';
     }
 

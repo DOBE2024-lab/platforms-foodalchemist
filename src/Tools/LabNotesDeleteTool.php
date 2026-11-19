@@ -40,7 +40,7 @@ class LabNotesDeleteTool extends FoodAlchemistTool implements ToolContract, Tool
         if ($note === null) {
             return ToolResult::error('Lab-Notiz nicht gefunden (oder gehört einem anderen Team).', 'NOT_FOUND');
         }
-        $note->delete();
+        app(\Platform\FoodAlchemist\Services\LabNoteService::class)->loeschen($note);
 
         return ToolResult::success(['id' => (int) $arguments['id'], 'deleted' => true]);
     }

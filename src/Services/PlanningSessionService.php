@@ -489,6 +489,20 @@ class PlanningSessionService
         return $kopie->refresh();
     }
 
+    /**
+     * 98 · 1.3c: Suchbegriff-Chips EINES Scopes an der Session sichern (die anderen Scopes bleiben).
+     * Gemeinsamer Weg für den Go der Oberfläche und den MCP-Kaskadenstart (Spec 80 A4).
+     */
+    public function setzeSuchbegriffe(Team $team, int $id, string $scope, array $chips): FoodAlchemistPlanningSession
+    {
+        $session = $this->ownedSession($team, $id);
+        $alle = is_array($session->suchbegriffe) ? $session->suchbegriffe : [];
+        $alle[$scope] = array_values($chips);
+        $session->update(['suchbegriffe' => $alle]);
+
+        return $session;
+    }
+
     private function ownedSession(Team $team, int $id): FoodAlchemistPlanningSession
     {
         $session = FoodAlchemistPlanningSession::visibleToTeam($team)->findOrFail($id);

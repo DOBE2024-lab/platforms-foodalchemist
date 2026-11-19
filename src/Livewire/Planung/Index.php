@@ -2214,9 +2214,8 @@ class Index extends Component
         }
         $suchbegriffe = $this->suchbegriffeFuerLauf($scope);
         try {
-            $alle = is_array($session->suchbegriffe) ? $session->suchbegriffe : [];
-            $alle[$scope] = array_values((array) ($this->eingabe[$scope]['suchbegriffe'] ?? []));
-            $session->update(['suchbegriffe' => $alle]);
+            $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+                ->setzeSuchbegriffe($team, (int) $session->id, $scope, (array) ($this->eingabe[$scope]['suchbegriffe'] ?? []));
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('[Planung] Suchbegriffe nicht gespeichert — evtl. Migration fehlt', ['error' => $e->getMessage()]);
         }

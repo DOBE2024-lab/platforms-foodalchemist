@@ -404,19 +404,6 @@
 
         {{-- ── Reiter: KALKULATION (Überblick · Verkaufseinheit · Preis · Darreichungen) ───────── --}}
         <div x-show="tab === 'kalkulation'" x-cloak class="pt-4 flex flex-col gap-4">
-            @php
-                $ueberblick = [
-                    ['kpi' => 'yield', 'label' => 'Ertrag', 'value' => $rezept->yield_kg !== null ? rtrim(rtrim(number_format((float) $rezept->yield_kg, 3, ',', '.'), '0'), ',') . ' kg' : 'fehlt', 'tone' => $rezept->yield_kg === null ? 'warn' : null],
-                    ['kpi' => 'ekkg', 'label' => 'EK je kg', 'value' => $euro($rezept->ek_per_kg_eur) ?? 'Preis fehlt', 'tone' => $rezept->ek_per_kg_eur === null ? 'crit' : null],
-                    ['kpi' => 'vk-portion', 'label' => 'VK netto je Einheit', 'value' => $euro($cockpit['pro_einheit']['vk_netto_pro_einheit'] ?? null) ?? 'Preis fehlt'],
-                    ['kpi' => 'vk-brutto', 'label' => 'VK brutto', 'value' => $euro($cockpit['sales_gross'] ?? null) ?? 'Preis fehlt',
-                     'title' => ($cockpit['vat_rate'] ?? null) !== null ? 'inklusive ' . number_format((float) $cockpit['vat_rate'], 0, ',', '.') . ' % MwSt' : null],
-                    ['kpi' => 'marge', 'label' => 'Rohertragsquote', 'value' => $prozent($cockpit['marge']['marge_pct'] ?? null) ?? 'ohne VK',
-                     'title' => 'Rohertragsquote = (VK netto − MEK) ÷ VK netto. Sie berücksichtigt noch keine auftragsspezifischen Lohn- und Gemeinkosten.'],
-                ];
-            @endphp
-            <x-fa::kpis :items="$ueberblick" data-vk-kalkulation-kpis />
-
             {{-- Verkaufseinheit des Gerichts. Preisklasse, Preis und MwSt stehen NUR an der Darreichung darunter (13.11.2026):
                  das frühere zweite Preisklassen-Feld hier überschrieb beim Speichern, was in der Zeile gewählt war. --}}
             @include('foodalchemist::livewire.verkauf.partials.darreichungen')

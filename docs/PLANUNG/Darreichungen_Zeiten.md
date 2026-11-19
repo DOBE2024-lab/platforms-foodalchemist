@@ -168,3 +168,43 @@ bleibt kompatibel.
 Dominique, 18.11.2026: Deployment über die Plattform **io** mit deren `update.sh`.
 Vor der Ausführung den konkreten Hostpfad und die Skriptparameter prüfen.
 Merge/Deploy erst nach dem vereinbarten Go; bisher wurde nichts produktiv ausgerollt.
+
+## Nachbesserung Mengen und Darstellung · 19.11.2026
+
+Auftrag Dominique nach Abnahme der veröffentlichten Ansicht, Funktionsbezug RE-13/15/16:
+
+- Nur die Kopf-Kennzahlen des Standards und eine kompakte Kennzahlenzeile der
+  gewählten Darreichung bleiben. Die weitere KPI-Leiste unter den Tabs entfällt.
+- Portion und Verkauf nutzen auf großen Bildschirmen vier Spalten, auf kleineren
+  zwei bzw. eine. Doppelte Formbezeichnungen entfallen; Abschnittstitel nutzen
+  Schriftgröße und Gewicht des Designsystems.
+- „Standardmenge verwenden“ schaltet zwischen Quelle und eigenen Komponenten.
+  Beim Standard ist die Quelle die Rezeptur (eine Portion), bei Varianten der
+  jeweils aktuelle Standard. Die Gesamtgrammatur ist ausschließlich Anzeige.
+- Ausschalten hält alle wirksamen Komponentenmengen fest; Anpassen und Weglassen
+  geschieht darunter. Einschalten verwirft bewusst die Komponentenabweichungen
+  dieser Darreichung und übernimmt wieder die Quelle. Bestehende eigene Mengen
+  werden beim Lesen nicht umgestellt. Standardwechsel erhält eigene Mengen.
+- Neue Standard-Darreichungen ohne explizite Bestandsgrammatur/Mehrportionenansatz
+  folgen der Rezeptur. Mengenänderungen laufen über den bisherigen Recompute.
+  `menge_vom_standard=true` bedeutet beim Standard nun „aus der Rezeptur“.
+  Eigene Deltas bleiben im allgemeinen MCP-Attributupdate weiterhin erhalten;
+  der explizite UI-Wechsel „Standardmenge verwenden“ setzt sie bewusst zurück.
+- „Gemeinsame Planung“ heißt „Übergreifende Angaben“ und startet eingeklappt.
+  Dort bleiben passive Wartezeit, gemeinsame Nebenkosten, Rezeptur-EK je kg
+  und beteiligte Produktionsposten. Aktive Arbeit steht weiter je Darreichung.
+
+Gezielte Abnahme: `DarreichungStandardmengeTest` (Livewire-Umschaltung, erneute
+Rezepturmengen, Standardwechsel, Bestand, unbekannte Mengen und Team-Schutz),
+bestehende Darreichungs-/Produktions-/MwSt-/Kopf-/Policy- und UI-Prüfungen.
+Browsernachweis getrennt: Screenshots der gerenderten Blade-Testfixture bei
+390/768/1440/1920 px; keine horizontale Seitenüberbreite. Die Schreibaktionen
+werden durch Livewire-Tests geprüft, nicht durch die statische Browserfixture.
+Keine Bestandsmigration und kein Deploy Bestandteil dieses Korrekturauftrags.
+
+Nachweise dieser Korrektur: 43 Mengen-/Darreichungs-/Kopf-Tests mit 188 Assertions
+grün; 17 MCP-/Fassungs-/Größenprüfungen mit 108 Assertions grün. Die vorherige
+gezielte Produktions-/MwSt-/Policy-/UI-Suite umfasste 30 Tests mit 140 Assertions;
+der abschließende Mengen-/Darstellungslauf 6 Tests mit 37 Assertions.
+JS-/CSS-Build, PHP-Syntax, Diff-Prüfung und Composer-Validierung grün.
+Eine vollständige Modulsuite und ein Deploy wurden für diese Korrektur nicht ausgeführt.

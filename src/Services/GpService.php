@@ -539,6 +539,16 @@ class GpService
         if (! $von->isOwnedBy($team)) {
             throw new \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException('das GP', self::GEERBT);
         }
+        // Ein neutraler Rezept-Platzhalter ist kein Lieferantenartikel-Sammelpunkt.
+        // Der bewusste Tausch betrifft hier ausschließlich die Rezept-Zuordnungen.
+        if ($nach->is_platzhalter) {
+            if (! FoodAlchemistGp::visibleToTeam($team)->whereKey($nach->id)->exists()) {
+                throw new \RuntimeException('Ziel-Platzhalter nicht sichtbar.');
+            }
+            return $this->ersetzeInRezepten($von, $nach) + [
+                'artikel_umgehaengt' => 0, 'artikel_abgelehnt' => [],
+            ];
+        }
         $artikel = \Illuminate\Support\Facades\DB::table('foodalchemist_supplier_item_structures')
             ->where('gp_id', $von->id)->whereNull('deleted_at')->orderBy('id')->pluck('supplier_item_id')->map(fn ($v) => (int) $v)->all();
         if ($artikel !== [] && ! $nach->isOwnedBy($team)) {

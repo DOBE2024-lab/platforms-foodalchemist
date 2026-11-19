@@ -111,16 +111,13 @@
                             wire:click="$dispatch('gp-modal.oeffnen', { id: {{ $gp->id }} })" data-gp-bearbeiten>Im Editor öffnen</x-fa::button>
                     </div>
                 @else
-                    {{-- Ohne Kurationsrecht kein Editor: Drucken ist dann die wichtigste Aktion --}}
-                    <x-fa::button variant="primary" size="sm" icon="heroicon-m-printer" :href="route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation'])" target="_blank"
-                        title="Blatt zum Grundprodukt im neuen Fenster" data-gp-panel-druck>Blatt drucken</x-fa::button>
+                    <x-fa::button variant="primary" size="sm" icon="heroicon-m-arrow-top-right-on-square"
+                        wire:click="$dispatch('gp-modal.oeffnen', { id: {{ $gp->id }} })" data-gp-ansehen>Im Editor ansehen</x-fa::button>
                 @endif
             </x-slot:aktion>
             <x-slot:menue>
-                @if($kannKuratieren)
                     <x-fa::menu-item icon="heroicon-m-printer" :href="route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation'])" target="_blank"
                         title="Blatt zum Grundprodukt im neuen Fenster" data-gp-panel-druck>Blatt drucken</x-fa::menu-item>
-                @endif
                 <x-fa::menu-item icon="heroicon-m-arrow-down-tray" :href="route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation', 'pdf' => 1])"
                     title="Blatt als PDF herunterladen" data-gp-panel-pdf>PDF herunterladen</x-fa::menu-item>
                 @if($darfLoeschen)
@@ -128,6 +125,9 @@
                 @endif
             </x-slot:menue>
         </x-fa::detail-kopf>
+        @unless($kannKuratieren)
+            <p class="{{ $leise }}" data-gp-geerbt>Schreibgeschütztes Katalog-Grundprodukt. Stammdaten pflegt das Besitzer-Team.</p>
+        @endunless
         @endif
 
         {{-- Spec 65: Sidebar — Änderungen erst nach „Bearbeiten". Eingebettet im GP-Dialog sperrt dessen
@@ -824,13 +824,14 @@
                 @if($referenzen['rezept_zeilen'] > 0 || $referenzen['las'] > 0)
                     <div class="flex flex-col gap-1 pt-1" data-gp-tausch>
                         <x-fa::field label="Ersetzen durch (Artikel und Rezepte)" for="gp-tausch-suche">
-                            <x-fa::input id="gp-tausch-suche" size="sm" type="search" wire:model.live.debounce.300ms="tauschSuche" placeholder="Ersatz-Grundprodukt suchen" data-tausch-suche />
+                            <x-fa::input id="gp-tausch-suche" size="sm" type="search" wire:model.live.debounce.300ms="tauschSuche" placeholder="Grundprodukt oder Platzhalter suchen" data-tausch-suche />
                         </x-fa::field>
                         @foreach($tauschKandidaten as $k)
                             <button type="button" wire:key="tausch-{{ $k->id }}" wire:click="gpErsetzen({{ $k->id }})"
-                                wire:confirm="„{{ $gp->name }}“ durch „{{ $k->name }}“ ersetzen? {{ $referenzen['las'] > 0 ? $referenzen['las'] . ' Artikel werden umgehängt (Allergen-Prüfung je Artikel, abgelehnte bleiben stehen). ' : '' }}{{ $referenzen['rezept_zeilen'] > 0 ? 'Die Zeilen in ' . $referenzen['rezepte'] . ' Rezept(en) werden umgehängt und neu berechnet.' : '' }}" class="{{ $listenKnopf }}">
+                                wire:confirm="„{{ $gp->name }}“ durch „{{ $k->name }}“ ersetzen? {{ $k->is_platzhalter ? 'Lieferantenartikel bleiben am bisherigen Grundprodukt. ' : ($referenzen['las'] > 0 ? $referenzen['las'] . ' Artikel werden umgehängt (Allergen-Prüfung je Artikel, abgelehnte bleiben stehen). ' : '') }}{{ $referenzen['rezept_zeilen'] > 0 ? 'Die Zeilen in ' . $referenzen['rezepte'] . ' Rezept(en) werden umgehängt und neu berechnet.' : '' }}" class="{{ $listenKnopf }}">
                                 <x-fa::status :value="$k->status" class="shrink-0" />
                                 <span class="min-w-0 flex-1">{{ $k->name }}</span>
+                                @if($k->is_platzhalter)<x-fa::badge>Platzhalter</x-fa::badge>@endif
                             </button>
                         @endforeach
                     </div>

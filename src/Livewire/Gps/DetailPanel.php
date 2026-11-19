@@ -600,11 +600,10 @@ class DetailPanel extends Component
             'referenzen' => ($gp !== null && $vollmodus) ? app(\Platform\FoodAlchemist\Services\GpService::class)->referenzen($gp) : null,
             'tauschKandidaten' => $gp !== null && $team !== null && $this->tauschSuche !== ''
                 ? \Platform\FoodAlchemist\Support\Suche::like(
-                    FoodAlchemistGp::visibleToTeam($team), 'name', $this->tauschSuche)
+                    FoodAlchemistGp::visibleToTeam($team)->lebensmittel(), 'name', $this->tauschSuche)
                     ->whereNotIn('status', ['merged', 'rejected'])
                     ->where('id', '!=', $gp->id)
-                    ->where('is_platzhalter', false)
-                    ->orderBy('name')->limit(8)->get(['id', 'name', 'status'])
+                    ->orderBy('name')->limit(8)->get(['id', 'name', 'status', 'is_platzhalter'])
                 : collect(),
             // Spec 66 §4: was wurde von diesem GP eingekauft (Monate, Lieferanten) + was liegt am Lager
             'einkauf' => ($gp !== null && $team !== null && $brauchtEinkauf)

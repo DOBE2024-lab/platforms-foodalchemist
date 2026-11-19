@@ -216,8 +216,9 @@ class VkModal extends Component
     // ── Darreichungen (Umbau-Spec Phase 5) ──────────────────────────────
 
     /**
-     * Spec 83 B3i/B3l: je Darreichung die Anrichte-Rechnung für eine Beispielmenge (100 Portionen) — dieselbe Rechnung wie Auftrag
-     * und Kalkulation ({@see \Platform\FoodAlchemist\Services\ProductionTimeService::anrichten}).
+     * Spec 83 B3i/B3l: je Darreichung die Anrichte-Rechnung für die Vorschau-Portionen (Vorbelegung 100) — dieselbe Rechnung wie
+     * Auftrag und Kalkulation ({@see \Platform\FoodAlchemist\Services\ProductionTimeService::anrichten}). Herstellung der
+     * Basisrezepte nur für die offene Darreichung (Rechnung des Planungsblatts, DarreichungsZeitService::herstellung).
      *
      * @return array<int, array<string,mixed>>
      */
@@ -229,9 +230,12 @@ class VkModal extends Component
         $zeit = app(\Platform\FoodAlchemist\Services\ProductionTimeService::class);
         $zjm = $zeit->zeitJeMenge($rezept, 'kg');
         $raus = [];
+        $n = $this->vorschauPortionen();
+        $dzs = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class);
         foreach ($rezept->presentations()->with('servingForm')->get() as $d) {
-            $a = $zeit->anrichten($team, $rezept, [['dar' => $d, 'portionen' => 100.0]], null, $zjm);
-            $raus[(int) $d->id] = ($a['formen'][0] ?? []) + ['service_kosten' => app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->serviceKosten($team, (float) ($a['vor_ort_minuten'] ?? 0)), 'minuten_gesamt' => round($a['minuten'], 1), 'startwert' => match ($a['formen'][0]['einheit'] ?? 'portion') {
+            $a = $zeit->anrichten($team, $rezept, [['dar' => $d, 'portionen' => $n]], null, $zjm);
+            $raus[(int) $d->id] = ($a['formen'][0] ?? []) + ($this->darAktiv === null || $this->darAktiv === (int) $d->id ? $dzs->herstellung($team, $rezept, $d, $n) : [])
+                + ['portionen' => $n, 'service_kosten' => $dzs->serviceKosten($team, (float) ($a['vor_ort_minuten'] ?? 0)), 'minuten_gesamt' => round($a['minuten'], 1), 'startwert' => match ($a['formen'][0]['einheit'] ?? 'portion') {
                 'stueck' => \Platform\FoodAlchemist\Services\ProductionTimeService::ANRICHTEN_SEKUNDEN_JE_STUECK,
                 'behaelter' => \Platform\FoodAlchemist\Services\ProductionTimeService::ANRICHTEN_MINUTEN_JE_PLATTE,
                 'vor_ort' => null,
@@ -1394,7 +1398,7 @@ class VkModal extends Component
             'cockpit' => $rezept !== null ? ($cockpitTmp ?? $verkauf->cockpit($rezept, $team, $outlet)) : null,
             'gProStueck' => $gProStueck,
             'anteile' => $anteile,
-            // Spec 83 B3: Teller-Komponenten (Startwert Anrichten) + B3i/B3l: Hochrechnung je Darreichung für 100 Portionen
+            // Spec 83 B3: Teller-Komponenten (Startwert Anrichten) + B3i/B3l: Hochrechnung je Darreichung für die Vorschau-Portionen
             'anrichteKomponenten' => $rezept !== null ? app(\Platform\FoodAlchemist\Services\ProductionTimeService::class)->tellerKomponenten($rezept) : 0,
             'anrichtenVorschau' => $this->anrichtenVorschau($team, $rezept),
             'hauptgruppen' => $team !== null ? $verkauf->dishMainGroups($team) : collect(),

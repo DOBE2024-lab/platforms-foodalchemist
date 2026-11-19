@@ -974,6 +974,7 @@ class SpeisekarteService
     {
         $pfad[(int) $concept->id] = true;
         $concept->loadMissing(['slots.package.dishes.gericht', 'slots.dish', 'slots.embeddedConcept']);
+        app(ConceptSlotZielService::class)->fremdeAusblenden($concept);   // 1.1c: keine fremden Gerichte auf der Karte
         $gerichte = collect();
         foreach ($concept->slots as $slot) {
             if ($slot->package) {

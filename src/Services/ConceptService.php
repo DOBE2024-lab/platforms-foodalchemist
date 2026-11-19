@@ -64,20 +64,20 @@ class ConceptService
         $concept = FoodAlchemistConcept::visibleToTeam($team)
             ->with([
                 'slots' => fn ($q) => $q->orderBy('position'),
-                'slots.package:id,name,role,class,price_per_person,ek_per_person,food_cost_percent,price_mode,price_stale',
+                'slots.package:id,team_id,name,role,class,price_per_person,ek_per_person,food_cost_percent,price_mode,price_stale',
                 // Menü-Ansicht: Paket-Gerichte mit Wording-Feldern (Wording-Kette)
                 'slots.package.dishes.dish:id,name,sales_wording_standard',
                 // Kaskade: eingebettetes Paket = kind=paket-Concept (Preis + Posten für Anzeige)
-                'slots.embeddedConcept:id,name,kind,class,price_per_person_cache,ek_per_person_cache',
-                'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard,ek_total_eur,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.embeddedConcept.slots.dish.standardPresentation',
-                'slots.dish:id,name,sales_wording_standard,ek_total_eur,dish_class_id,spec_is_vegan,spec_is_vegetarian,spec_is_gluten_free,spec_is_lactose_free,spec_is_halal,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.dish.standardPresentation',
+                'slots.embeddedConcept:id,team_id,name,kind,class,price_per_person_cache,ek_per_person_cache',
+                'slots.embeddedConcept.slots.dish:id,team_id,name,sales_wording_standard,ek_total_eur,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.embeddedConcept.slots.dish.standardPresentation',
+                'slots.dish:id,team_id,name,sales_wording_standard,ek_total_eur,dish_class_id,spec_is_vegan,spec_is_vegetarian,spec_is_gluten_free,spec_is_lactose_free,spec_is_halal,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.dish.standardPresentation',
                 'slots.dish.dishClass:id,label',
                 'slots.unit:id,slug,display_de',
                 'vorlageQuelle:id,name',
             ])
             ->find($id);
 
-        return $concept === null ? null : app(ConceptPreisService::class)->anwenden($concept, $team);
+        return $concept === null ? null : app(ConceptPreisService::class)->anwenden(app(ConceptSlotZielService::class)->fremdeAusblenden($concept), $team);
     }
 
     public function create(Team $team, array $in): FoodAlchemistConcept
@@ -463,6 +463,7 @@ class ConceptService
     public function fillSlot(Team $team, int $slotId, array $in): FoodAlchemistConceptSlot
     {
         $slot = $this->ownedSlot($team, $slotId);
+        $typ = app(ConceptSlotZielService::class)->pruefe($team, $slot, $in);   // 1.1c: Teamsicht, Kreis, Typ (ohne Typ: aus dem Rezept)
 
         if (! empty($in['embedded_concept_id'])) {
             // Kaskade: eingebettetes Paket = kind=paket-Concept (neuer Pfad, ersetzt package_id).
@@ -483,7 +484,7 @@ class ConceptService
             app(SlotEinheitService::class)->pruefeBelegung($team, $slot, (int) $in['sales_recipe_id'], isset($in['unit_vocab_id']) ? (int) $in['unit_vocab_id'] : null);   // 17.11.: nur wirksame Einheit
             $slot->update([
                 // B2: Gericht (VK) ODER Basisrezept — beide referenzieren sales_recipe_id, `type` unterscheidet.
-                'type' => ($in['type'] ?? null) === 'basisrezept' ? 'basisrezept' : 'gericht',
+                'type' => $typ,
                 'sales_recipe_id' => (int) $in['sales_recipe_id'],
                 'quantity' => $in['quantity'] ?? null, 'unit_vocab_id' => $in['unit_vocab_id'] ?? null,
                 'package_id' => null, 'embedded_concept_id' => null,
@@ -679,9 +680,9 @@ class ConceptService
         $geladen = FoodAlchemistConcept::whereIn('id', $concepts->pluck('id')->all())
             ->with(['slots' => fn ($q) => $q->orderBy('position'),
                 'slots.unit:id,slug,dimension,default_in_g',
-                'slots.package:id,name,price_per_person,ek_per_person,price_stale',
-                'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache',
-                'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation'])
+                'slots.package:id,team_id,name,price_per_person,ek_per_person,price_stale',
+                'slots.embeddedConcept:id,team_id,name,price_per_person_cache,ek_per_person_cache',
+                'slots.dish:id,team_id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation'])
             ->get();
 
         $map = [];
@@ -717,9 +718,10 @@ class ConceptService
 
         $concept->loadMissing(['slots' => fn ($q) => $q->orderBy('position'),
             'slots.unit:id,slug,dimension,default_in_g',
-            'slots.package:id,name,price_per_person,ek_per_person,price_stale',
-            'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache',   // Kaskade: eingebettetes Paket
-            'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation']);
+            'slots.package:id,team_id,name,price_per_person,ek_per_person,price_stale',
+            'slots.embeddedConcept:id,team_id,name,price_per_person_cache,ek_per_person_cache',   // Kaskade: eingebettetes Paket
+            'slots.dish:id,team_id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation']);
+        app(ConceptSlotZielService::class)->fremdeAusblenden($concept);   // 1.1c: kein fremdes Ziel im Preis
 
         $zeilen = [];
         $vkTotal = 0.0;
@@ -864,13 +866,10 @@ class ConceptService
      */
     public function allergenRollup(FoodAlchemistConcept $concept): array
     {
-        // 1.1h: dieselbe Positionsliste wie Aggregat/Deklaration — inkl. eingebetteter Pakete
-        // (kind=paket-Concept, rekursiv). Vorher fehlten deren Gerichte hier ganz.
+        // 1.1h: dieselbe Positionsliste wie Aggregat/Deklaration, inkl. eingebetteter Pakete (rekursiv); M10R-1: eine Regel-Stelle
         $agg = app(ConcepterAggregateService::class);
-        $gerichte = $agg->conceptPositionen($concept)->pluck('gericht');
 
-        // M10R-1: kanonische Rollup-Stelle (eine Regel) — Output-Form unverändert.
-        return $agg->allergenRollupFromGerichte($gerichte);
+        return $agg->allergenRollupFromGerichte($agg->conceptPositionen($concept)->pluck('gericht'));
     }
 
     private function refreshCache(FoodAlchemistConcept $concept): void

@@ -153,7 +153,7 @@ class ConceptGeneratorService
             }
             foreach ($zeile['gerichte'] as $gericht) {
                 $slot = $this->concepts->addSlot($team, $concept->id, ['role' => $zeile['label']]);
-                $this->concepts->fillSlot($team, $slot->id, ['sales_recipe_id' => $gericht['id'], 'type' => 'gericht']);
+                $this->concepts->fillSlot($team, $slot->id, ['sales_recipe_id' => $gericht['id']]);
                 $recipeIds[$gericht['id']] = true;
             }
             $protokoll[] = [
@@ -1148,7 +1148,7 @@ class ConceptGeneratorService
             }
             foreach ($slotWahl as $wahl) {
                 $slot = $this->concepts->addSlot($team, $concept->id, ['role' => $frameSlot->label]);
-                $this->concepts->fillSlot($team, $slot->id, ['sales_recipe_id' => $wahl['id'], 'type' => 'gericht']);
+                $this->concepts->fillSlot($team, $slot->id, ['sales_recipe_id' => $wahl['id']]);
             }
             // put() statt merge(): merge renummeriert Integer-Keys — die Gericht-IDs sind die Keys!
             foreach ($slotWahl as $id => $wahl) {

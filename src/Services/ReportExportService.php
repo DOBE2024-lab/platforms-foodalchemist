@@ -249,6 +249,7 @@ class ReportExportService
                 'slots.package.dishes.dish' => fn ($q) => $q->with($this->recipeRelations()),
             ])
             ->findOrFail($id);
+        app(ConceptSlotZielService::class)->fremdeAusblenden($concept);   // 1.1c: kein fremdes Slot-Ziel im Export
 
         $this->behaelterAusConcept($team, $concept, $optionen);
 

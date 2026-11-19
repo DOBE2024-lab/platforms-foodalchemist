@@ -772,7 +772,7 @@ class FoodbookService
         }
 
         $cslot = $this->concepts->addSlot($team, $zielConceptId, ['role' => $rolle]);
-        $this->concepts->fillSlot($team, $cslot->id, ['sales_recipe_id' => $recipeId, 'type' => 'gericht']);
+        $this->concepts->fillSlot($team, $cslot->id, ['sales_recipe_id' => $recipeId]);
 
         return ['concept_id' => $zielConceptId, 'chapter_id' => $chapterId, 'schon_drin' => false];
     }

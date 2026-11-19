@@ -151,7 +151,7 @@ final class ConceptVorgabenService
         if ((int) FoodAlchemistConceptSlot::whereKey($slotId)->value('sales_recipe_id') === $recipeId) {
             return;   // Gericht-Hülle: steht schon in der Position — nicht neu füllen (Menge und Einheit bleiben)
         }
-        $slot = $concepts->fillSlot($team, $slotId, ['sales_recipe_id' => $recipeId, 'type' => 'gericht']);
+        $slot = $concepts->fillSlot($team, $slotId, ['sales_recipe_id' => $recipeId]);
         if ((($idee?->source_meta ?? [])['quelle'] ?? null) !== self::QUELLE) {
             return;
         }

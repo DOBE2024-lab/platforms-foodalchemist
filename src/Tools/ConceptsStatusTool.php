@@ -52,6 +52,8 @@ class ConceptsStatusTool extends FoodAlchemistTool implements ToolContract, Tool
 
         try {
             app(ConceptService::class)->setStatus($team, $id, $status);
+        } catch (\Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException $e) {   // 1.1f: Freigabe-Sperre — offene Komponenten mitgeben (Folge-Tool: foodalchemist.freigabe.MITFREIGEBEN)
+            return ToolResult::error($e->getMessage(), 'FREIGABE_GESPERRT', ['offen' => $e->offen]);
         } catch (\RuntimeException | \ValueError $e) {
             return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
         }

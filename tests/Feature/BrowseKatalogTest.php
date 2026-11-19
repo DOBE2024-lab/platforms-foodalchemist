@@ -73,11 +73,11 @@ it('q wirkt als Textfilter auf BEIDE Listen gleichzeitig', function () {
         ->and($r['rezepte']['items'][0]['name'])->toBe('↳ Fond: Tomate');
 });
 
-it('#4: Picker zeigt nur reife GPs + Basisrezepte — Entwurf/Stub/Veraltet + abgelehnt/merged raus', function () {
+it('#4 / 1.1f (E1 19.11.): Picker — Entwurf wählbar mit Kennzeichnung; Stub/Veraltet + abgelehnt/merged raus', function () {
     // Nicht-verwendbare GPs (abgelehnt/merged) — dürfen NICHT im Picker erscheinen.
     $this->makeGp($this->rootTeam, 'Abgelehnt-GP')->update(['status' => 'rejected']);
     $this->makeGp($this->rootTeam, 'Merged-GP')->update(['status' => 'merged']);
-    // Nicht-reife Rezepte — Entwurf/Stub/Veraltet raus, Freigegeben bleibt.
+    // 1.1f: Entwurf wählbar (gekennzeichnet), Stub/Veraltet raus, Freigegeben bleibt.
     FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'draft_r', 'name' => 'Fond: Entwurf', 'status' => 'draft']);
     FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'stub_r', 'name' => 'Fond: Stub', 'status' => 'stub']);
     FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'depr_r', 'name' => 'Fond: Alt', 'status' => 'deprecated']);
@@ -93,9 +93,12 @@ it('#4: Picker zeigt nur reife GPs + Basisrezepte — Entwurf/Stub/Veraltet + ab
     $rezNamen = collect($alle['rezepte']['items'])->pluck('name')->map(fn ($n) => ltrim($n, '↳ '));
     expect($rezNamen)->toContain('Fond: Tomate')          // review
         ->toContain('Fond: Freigegeben')                  // approved
-        ->not->toContain('Fond: Entwurf')                 // draft
+        ->toContain('Fond: Entwurf')                      // draft — 1.1f wählbar
         ->not->toContain('Fond: Stub')                    // stub
         ->not->toContain('Fond: Alt');                    // deprecated
+    $label = collect($alle['rezepte']['items'])->mapWithKeys(fn ($i) => [ltrim($i['name'], '↳ ') => $i['status_label']]);
+    expect($label['Fond: Entwurf'])->toBe('Entwurf')->and($label['Fond: Tomate'])->toBe('Prüfen')->and($label['Fond: Freigegeben'])->toBeNull();
+    expect($alle['rezepte']['total'])->toBe(count($alle['rezepte']['items']));   // Zähler = Listenlänge
 });
 
 it('#9c: browseKatalog liefert je GP nur Basis + hinterlegte Formen als erlaubte Einheiten', function () {

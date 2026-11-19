@@ -466,9 +466,9 @@ class IngredientEditor extends Component
             })->values()->all();
 
         $rezQuery = FoodAlchemistRecipe::visibleToTeam($team)->basis()
-            // #4 (Dominique 2026-08-27): im Sub-Rezept-Picker nur reife/freigegebene Basisrezepte —
-            // Entwurf/Stub (in Arbeit) + Veraltet raus. Review + Freigegeben bleiben.
-            ->whereNotIn('status', ['draft', 'stub', 'deprecated'])
+            // 1.1f (E1, Dominique 19.11.2026): Entwürfe sind wählbar und tragen die Kennzeichnung (status_label); Platzhalter und
+            // Veraltet bleiben draußen. Die Freigabe-Sperre verhindert später, dass ein Gericht mit Entwurfs-Komponente freigegeben wird.
+            ->waehlbar()
             ->where('id', '!=', (int) $this->recipeId)
             ->when($suche !== '', fn ($w) => Suche::like($w, 'foodalchemist_recipes.name', $suche))
             ->when(($rezFilter['hg'] ?? '') !== '', fn ($w) => $w->whereHas('category', fn ($k) => $k->where('main_group_id', (int) $rezFilter['hg'])))
@@ -476,7 +476,7 @@ class IngredientEditor extends Component
             ->when(($rezFilter['level'] ?? '') !== '', fn ($w) => $w->whereHas('levelSuitabilities', fn ($n) => $n->where('level_slug', $rezFilter['level'])));
         $rezTotal = (clone $rezQuery)->count();
         $rezepte = $rezQuery->with('levelSuitabilities:id,recipe_id,level_slug')->orderBy('name')->limit(200)
-            ->get(['id', 'name', 'ek_per_kg_eur', 'yield_kg', 'yield_pieces'])
+            ->get(['id', 'name', 'status', 'ek_per_kg_eur', 'yield_kg', 'yield_pieces'])
             ->map(function ($r) {
                 $hatStueck = $r->yield_pieces !== null && (float) $r->yield_pieces > 0 && $r->yield_kg !== null;
 
@@ -490,6 +490,7 @@ class IngredientEditor extends Component
                     'einheiten' => array_values(array_filter(['g', 'kg', $hatStueck ? 'stk' : null])),
                     'g_pro_stueck' => $hatStueck ? (float) $r->yield_kg * 1000 / (float) $r->yield_pieces : null,
                     'niveaus' => $r->levelSuitabilities->pluck('level_slug')->values()->all(),
+                    'status_label' => $r->status === \Platform\FoodAlchemist\Enums\RecipeStatus::Approved ? null : $r->status?->label(),   // 1.1f
                 ];
             })->values()->all();
 

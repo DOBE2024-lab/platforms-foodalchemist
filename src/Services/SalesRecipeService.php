@@ -106,7 +106,10 @@ class SalesRecipeService
             ->when($filters['hauptgruppe'] ?? null, fn ($q, $hg) => $q->where('dish_main_group_id', $hg))
             ->when($filters['class'] ?? null, fn ($q, $k) => $q->where('dish_class_id', $k))
             ->when(($filters['status'] ?? '') !== '', fn ($q) => $q->where('status', $filters['status']))
-            ->when(($filters['geschmack'] ?? '') !== '', fn ($q) => $q->where('taste_direction', $filters['geschmack']));
+            ->when(($filters['geschmack'] ?? '') !== '', fn ($q) => $q->where('taste_direction', $filters['geschmack']))
+            // 1.1f: Picker-Sicht (Concepter-Aufbau) — dieselbe Status- und Diät-Regel wie PaketService::gerichtKandidaten (Chip = Listenlänge)
+            ->when($filters['waehlbar'] ?? false, fn ($q) => $q->waehlbar())
+            ->when(($filters['diet_form'] ?? '') !== '', fn ($q) => $q->whereIn('dish_class_id', FoodAlchemistDishClass::where('diet_form', $filters['diet_form'])->pluck('id')));
     }
 
     /** 16 VK-Hauptgruppen mit Codes (aktive zuerst nach sort_order, dann Code). */

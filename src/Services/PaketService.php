@@ -551,7 +551,7 @@ class PaketService
     {
         return FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
             ->whereNull('variant_source_recipe_id') // R4.4: Slot-Varianten sind konzept-lokal, nicht pickbar
-            ->whereNotIn('status', ['stub', 'draft', 'deprecated', 'archived']) // Picker zeigt keine Entwürfe/Stubs/verworfenen (Status berücksichtigt)
+            ->waehlbar()   // 1.1f (E1): Entwürfe wählbar (gekennzeichnet), Platzhalter/Veraltet nicht — gleiche Regel wie der Chip-Zähler
             ->when($suche !== '', fn ($q) => \Platform\FoodAlchemist\Support\Suche::like($q, 'name', $suche))
             // Modell A: HG = eigene Achse (recipes.dish_main_group_id) — DIREKT filtern, exakt wie
             // SalesRecipeService::browserQuery/hauptgruppenCounts (Count-Quelle des Chips). Vorher lief
@@ -565,7 +565,7 @@ class PaketService
             ->when(($filter['diet_form'] ?? '') !== '', fn ($q) => $q
                 ->whereIn('dish_class_id', FoodAlchemistDishClass::where('diet_form', $filter['diet_form'])->pluck('id')))
             ->orderBy('name')->limit($limit)
-            ->select(['id', 'name'])->mitStandardVk()->get();   // Spec 85 D-1: VK als vk_netto aus der Standard-Darreichung
+            ->select(['id', 'name', 'status'])->mitStandardVk()->get();   // Spec 85 D-1: VK als vk_netto aus der Standard-Darreichung
     }
 
     /** Pakete als Concept-Position (linke Liste, Umschalter) — Suche über Name/Rolle + Klasse-Filter. */
@@ -587,13 +587,13 @@ class PaketService
     public function basisKandidaten(Team $team, string $suche, array $filter = [], int $limit = 60): Collection
     {
         return FoodAlchemistRecipe::visibleToTeam($team)->basis()
-            ->whereNotIn('status', ['stub', 'draft', 'deprecated', 'archived']) // Picker zeigt keine Entwürfe/Stubs/verworfenen (Status berücksichtigt)
+            ->waehlbar()   // 1.1f (E1): Entwürfe wählbar (gekennzeichnet), Platzhalter/Veraltet nicht
             ->when($suche !== '', fn ($q) => \Platform\FoodAlchemist\Support\Suche::like($q, 'name', $suche))
             ->when(($filter['hauptgruppe'] ?? null), fn ($q, $hg) => $q->whereHas('category', fn ($k) => $k->where('main_group_id', (int) $hg)))
             ->when(($filter['category'] ?? null), fn ($q, $kat) => $q->where('category_id', (int) $kat))
             ->when(($filter['level'] ?? '') !== '', fn ($q) => $q->whereHas('levelSuitabilities', fn ($n) => $n->where('level_slug', $filter['level'])))
             ->orderBy('name')->limit($limit)
-            ->get(['id', 'name', 'ek_total_eur']);
+            ->get(['id', 'name', 'status', 'ek_total_eur']);
     }
 
     private function normalizeRolle(?string $role): ?string

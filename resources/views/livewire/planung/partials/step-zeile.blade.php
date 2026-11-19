@@ -459,6 +459,11 @@
         {{-- #124: Fan-out crashte, aber das Concept ist freigegeben — Teil-Problem (warn), nicht rot. --}}
         <x-fa::signal tone="warn">Die Gerichte konnten nicht automatisch erfunden werden: {{ \Illuminate\Support\Str::limit($fanoutErr, 140) }}. Das Concept selbst ist freigegeben.</x-fa::signal>
     @endif
+    @php $gesperrt = is_array($st->deferred) ? ($st->deferred['freigabe_gesperrt'] ?? null) : null; @endphp
+    @if(is_array($gesperrt) && $gesperrt !== [])
+        {{-- 1.1f: Freigabe-Sperre — Komponenten noch nicht freigegeben; das Gericht steht auf „Prüfen“ (Concept bleibt Entwurf). --}}
+        <x-fa::signal tone="warn">Noch nicht freigegeben, weil Komponenten offen sind: {{ \Illuminate\Support\Str::limit(implode(', ', $gesperrt), 160) }}.</x-fa::signal>
+    @endif
     @php $attachErr = is_array($st->deferred) ? ($st->deferred['attach_error'] ?? null) : null; @endphp
     @if($attachErr)
         {{-- E-P0 (Spec 40): Einhängen ins Ausgabe-Kapitel/die Rubrik schlug fehl — das Konzept ist erzeugt,

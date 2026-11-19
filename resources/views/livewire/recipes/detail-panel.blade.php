@@ -106,6 +106,7 @@
             <x-fa::button size="sm" variant="ghost" :icon="$rezept->is_template ? 'heroicon-s-star' : 'heroicon-o-star'" wire:click="templateToggle"
                 class="{{ $rezept->is_template ? 'text-[var(--fa-accent)]' : '' }}" title="{{ $rezept->is_template ? 'Ist Vorlage. Klick nimmt die Markierung zurück' : 'Als Vorlage für neue Rezepte markieren' }}" data-template-btn>{{ $rezept->is_template ? 'Vorlage' : 'Als Vorlage markieren' }}</x-fa::button>
         </div>
+        <x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
 
     {{-- ── STANDALONE-Detail rechts im Basisrezepte-Browser (Anatomie Detail-Panels) ── --}}
     @else
@@ -198,6 +199,7 @@
                     title="{{ $rezept->is_template ? 'Ist Vorlage. Klick nimmt die Markierung zurück' : 'Als Vorlage für neue Rezepte markieren' }}" data-template-btn>{{ $rezept->is_template ? 'Vorlage-Markierung entfernen' : 'Als Vorlage markieren' }}</x-fa::menu-item>
             </x-slot:menue>
         </x-fa::detail-kopf>
+        <x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
 
         {{-- Spec 65: Detailspalte — Änderungen erst nach „Bearbeiten" (gleiche Sperre wie der Editor), „Fertig" gibt frei --}}
         <fieldset @disabled(in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)) class="contents" data-fa-lesemodus="{{ in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true) ? '1' : '0' }}">

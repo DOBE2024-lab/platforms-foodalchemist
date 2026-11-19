@@ -1,9 +1,12 @@
 <?php
 
 use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
+use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Support\StammPaket;
@@ -16,6 +19,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 /**
  * Code-Qualität 1.1j (Mandanten-Prüfungen) · 1: syncIngredients nimmt als Unterrezept, Grundprodukt und Einheit nur, was das Team SIEHT
  * (visibleToTeam: Master-Kette, Abo-Fassungen, Stamm-Paket-Opt-in) — fremde IDs werden abgelehnt (Kosten/Allergene, Gästesicherheit).
+ * 2: Concept-Status über das generische Update läuft durch setStatus (Rolle Kuratieren, Freigabe-Sperre).
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
@@ -87,4 +91,16 @@ it('Abo: die abonnierte Fassung ist als Unterrezept einsetzbar, die Master-Arbei
 
     $this->svc->setStatus($mandant, $gericht->id, 'approved');
     expect($gericht->refresh()->status->value)->toBe('approved');
+});
+
+it('1.1j-2: Concept-Status über update braucht die Rolle Kuratieren und durchläuft die Freigabe-Sperre', function () {
+    $c = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Buffet', 'status' => 'draft']);
+    $this->actingAs($this->makeUser($this->rootTeam, 'Gast', 'gast'));
+    expect(fn () => app(ConceptService::class)->update($this->rootTeam, $c->id, ['status' => 'active', 'name' => 'Buffet 2']))
+        ->toThrow(FaRechtFehltException::class);
+    expect($c->refresh()->status)->toBe('draft')->and($c->name)->toBe('Buffet');
+
+    // unveränderter Status im Formular: kein Rechte-Check, Rest wird gespeichert
+    app(ConceptService::class)->update($this->rootTeam, $c->id, ['status' => 'draft', 'name' => 'Buffet 3']);
+    expect($c->refresh()->name)->toBe('Buffet 3');
 });

@@ -154,7 +154,7 @@ class ConceptService
         }
         $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
         \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($concept, $team, 'den Konzept-Status');   // Spec 84 §4.0
-        $concept->update(['status' => $status]);
+        $concept->update(['status' => app(Rezept\FreigabeSperre::class)->wechsel($team, $concept, $status)]);   // 1.1f: Freigabe-Sperre
     }
 
     // M10R-1/3: VK-Parität-Metadaten + Konsumenten-Felder + KI-Brief am Concept editierbar.
@@ -221,11 +221,11 @@ class ConceptService
             $update += ['price_per_person_manual' => null, 'price_override_reason' => null,
                 'price_override_user_id' => null, 'price_override_at' => null, 'price_override_expires_at' => null];
         }
-        $concept->update($update);
-
-        // Preis-Änderung (Modus/manueller VK) muss den Cache nachziehen — sonst zeigen Browser-
-        // Liste, Einbettungen und Foodbook einen veralteten Preis (galt für Concepts UND Pakete).
-        if (array_intersect(['price_mode', 'price_per_person_manual'], array_keys($update)) !== []) {
+        if (isset($update['status']) && $update['status'] !== $concept->status) {   // 1.1j-2: Status nur über setStatus (Rolle Kuratieren, Freigabe-Sperre 1.1f)
+            $this->setStatus($team, $id, (string) $update['status']);
+        }
+        $concept->update(array_diff_key($update, ['status' => 1]));
+        if (array_intersect(['price_mode', 'price_per_person_manual'], array_keys($update)) !== []) {   // Preis-Änderung zieht den Cache nach (Browser, Einbettungen, Foodbook)
             $this->refreshCache($concept);
         }
 

@@ -20,6 +20,7 @@ use Platform\FoodAlchemist\Support\TeamScope;
  */
 class DetailPanel extends Component
 {
+    use \Platform\FoodAlchemist\Livewire\Concerns\HatFreigabeSperre;   // 1.1f: Freigabe-Meldung + „Alles mitfreigeben“
     use TauschtRezept;   // Verwaltungs-Block: tauschen + löschen — identisch im Editor (RecipeModal)
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
     use \Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich, \Platform\FoodAlchemist\Livewire\Concerns\HandyRezeptFotos;   // #1003: am Handy nur lesen, Fotos aufnehmen
@@ -199,7 +200,14 @@ class DetailPanel extends Component
         if ($team === null || $this->recipeId === null) {
             return;
         }
-        app(RecipeService::class)->setStatus($team, $this->recipeId, $status);
+        try {
+            app(RecipeService::class)->setStatus($team, $this->recipeId, $status);
+        } catch (\Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException $e) {
+            $this->freigabeGesperrt($e, 'rezept', $this->recipeId);
+
+            return;
+        }
+        $this->freigabeSperre = null;
         $this->dispatch('recipe-gespeichert');
     }
 

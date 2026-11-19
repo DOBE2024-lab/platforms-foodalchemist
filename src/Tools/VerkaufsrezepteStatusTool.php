@@ -58,7 +58,11 @@ class VerkaufsrezepteStatusTool extends FoodAlchemistTool implements ToolContrac
             return ToolResult::error('Geerbtes Gericht — Status nur durchs Besitzer-Team.', 'ACCESS_DENIED');
         }
 
-        app(RecipeService::class)->setStatus($team, $id, $status);
+        try {
+            app(RecipeService::class)->setStatus($team, $id, $status);
+        } catch (\Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException $e) {   // 1.1f: Freigabe-Sperre — offene Komponenten mitgeben (Folge-Tool: foodalchemist.freigabe.MITFREIGEBEN)
+            return ToolResult::error($e->getMessage(), 'FREIGABE_GESPERRT', ['offen' => $e->offen]);
+        }
 
         return ToolResult::success(['id' => $id, 'status' => $status]);
     }

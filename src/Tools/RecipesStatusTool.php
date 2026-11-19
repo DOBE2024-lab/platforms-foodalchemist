@@ -64,7 +64,11 @@ class RecipesStatusTool extends FoodAlchemistTool implements ToolContract, ToolM
             if ($eligible === []) {
                 return ToolResult::error('Keine eigenen Basisrezepte in ids gefunden.', 'NOT_FOUND');
             }
-            $n = $svc->bulkStatus($team, $eligible, $status);
+            try {
+                $n = $svc->bulkStatus($team, $eligible, $status);
+            } catch (\Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException $e) {   // 1.1f
+                return ToolResult::error($e->getMessage(), 'FREIGABE_GESPERRT', ['offen' => $e->offen]);
+            }
 
             return ToolResult::success(['status' => $status, 'aktualisiert' => (int) $n, 'ids' => $eligible]);
         }
@@ -78,7 +82,11 @@ class RecipesStatusTool extends FoodAlchemistTool implements ToolContract, ToolM
         if (! $recipe->isOwnedBy($team)) {
             return ToolResult::error('Geerbtes Rezept — Status nur durchs Besitzer-Team.', 'ACCESS_DENIED');
         }
-        $svc->setStatus($team, $id, $status);
+        try {
+            $svc->setStatus($team, $id, $status);
+        } catch (\Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException $e) {   // 1.1f: Freigabe-Sperre — offene Komponenten mitgeben (Folge-Tool: foodalchemist.freigabe.MITFREIGEBEN)
+            return ToolResult::error($e->getMessage(), 'FREIGABE_GESPERRT', ['offen' => $e->offen]);
+        }
 
         return ToolResult::success(['id' => $id, 'status' => $status]);
     }

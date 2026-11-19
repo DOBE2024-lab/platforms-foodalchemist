@@ -168,6 +168,7 @@
         </div>
 
         <div class="fa-surface overflow-hidden">
+            <x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
             {{-- Spec 28: eigener Scroll-Kasten, damit der Tabellenkopf kleben kann --}}
             <div class="max-h-[70vh] overflow-auto">
                 <table class="fa-table">

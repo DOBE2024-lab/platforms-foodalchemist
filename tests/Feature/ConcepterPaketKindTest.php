@@ -121,7 +121,7 @@ it('F7b: paketKandidaten filtert nach Servierform (geteilter Facetten-Filter wie
         ->and($namen)->not->toContain('Ohne-Form');
 });
 
-it('Picker (gerichtKandidaten) zeigt keine Entwurf-Gerichte, aber review/approved', function () {
+it('Picker (gerichtKandidaten) zeigt Entwurf- und review-Gerichte (1.1f: Entwürfe wählbar, gekennzeichnet)', function () {
     FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'dd', 'name' => 'Entwurf-Gericht',
         'status' => 'draft', 'is_sales_recipe' => true, 'sales_net' => 3.00,
@@ -133,7 +133,7 @@ it('Picker (gerichtKandidaten) zeigt keine Entwurf-Gerichte, aber review/approve
     $namen = app(\Platform\FoodAlchemist\Services\PaketService::class)
         ->gerichtKandidaten($this->rootTeam, '')->pluck('name')->all();
     expect($namen)->toContain('Review-Gericht')
-        ->and($namen)->not->toContain('Entwurf-Gericht');
+        ->and($namen)->toContain('Entwurf-Gericht');
 });
 
 it('Browser-Status-Filter grenzt die Pakete-Liste auf einen Status ein', function () {

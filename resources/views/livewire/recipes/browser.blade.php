@@ -202,6 +202,7 @@
             @if($statusFehler !== null)
                 <x-fa::notice tone="crit" class="m-3" data-status-fehler>{{ $statusFehler }}</x-fa::notice>
             @endif
+            <x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
             <div class="max-h-[70vh] overflow-auto">
                 <table class="fa-table">
                     <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">

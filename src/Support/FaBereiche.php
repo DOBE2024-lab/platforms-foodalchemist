@@ -144,7 +144,7 @@ final class FaBereiche
         // Rezepte (inkl. Gerichte, Kalkulation/VK)
         ['recipe', 'rezepte'], ['verkaufsrezepte', 'rezepte'], ['dish', 'rezepte'], ['kalkulation', 'rezepte'],
         ['lab_notes', 'rezepte'], ['reife', 'rezepte'], ['surplus', 'rezepte'], ['quality_run', 'rezepte'], ['anreicherung_vorschlag', 'rezepte'],
-        ['datenwerk', 'rezepte'], ['substitution', 'rezepte'], ['machbarkeit', 'rezepte'],
+        ['datenwerk', 'rezepte'], ['substitution', 'rezepte'], ['machbarkeit', 'rezepte'], ['freigabe', 'rezepte'],   // 1.1f „Alles mitfreigeben“
         // Wissen & Trendradar
         // Dominique 07.11.2026: das Wissens-Modul (Dossiers, Kanon, Regeln, Anker-Freigaben) gibt es nur im Master — Mandanten nutzen es über den Prompt und die Lese-Tools (TOOLS_WISSEN_LESEN)
         ['knowledge', 'wissensbasis'], ['rules', 'wissensbasis'], ['anker_wissen', 'wissensbasis'],

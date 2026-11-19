@@ -115,3 +115,13 @@ summary.kap > span:first-of-type { flex: 1; }
 .bild-dialog::backdrop { background: var(--ground); opacity: .85; }
 .bild-dialog img { display: block; max-width: 100%; max-height: 75dvh; object-fit: contain; margin-top: 8px; }
 .bild-schliessen, .original-umschalter { background: var(--surface); color: var(--ac); border: 1px solid var(--line2); border-radius: var(--r); font: inherit; padding: 8px 12px; cursor: pointer; min-height: 44px; }
+.paket { margin-left: 10px; border-left: 1px solid var(--line); }
+.nav-abschnitt { color: var(--ink3); padding: 12px 14px 0; font-weight: 500; }
+.liste a { display: flex; flex-direction: column; gap: 4px; }
+.nav-mengen { color: var(--ink3); font-size: 12px; }
+.gaeste-rechner, .menge-rechner { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px; }
+.menge-rechner { border: 1px solid var(--line); border-radius: var(--rs); margin: 12px 0; background: var(--surface); }
+.menge-rechner label { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.menge-rechner input, .menge-rechner select, .gaeste-rechner input { background: var(--ground); color: var(--ink); border: 1px solid var(--line2); border-radius: var(--r); font: inherit; padding: 8px; min-height: 44px; }
+.menge-rechner input, .gaeste-rechner input { width: 110px; text-align: right; font-variant-numeric: tabular-nums; }
+.menge-rechner .hint { flex-basis: 100%; margin: 0; }

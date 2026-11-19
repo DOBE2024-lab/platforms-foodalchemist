@@ -1,5 +1,6 @@
 <div class="meta">Kurzvorschau · <span data-vorschau-modus>Originalansatz</span></div>
 <h4><a class="basis-link vorschau-titel" data-faktor="{{ $bedarfFaktor ?? '' }}" href="#basis-{{ $basisKey }}">{{ $b['name'] }}</a></h4>
+@include('foodalchemist::handbuch._allergene', ['kennzeichnung' => $b['kennzeichnung'] ?? null])
 @if(!empty($b['ansatz_kg']))<p class="meta">Originalansatz: {{ $fmtMenge($b['ansatz_kg']) }} kg</p>@endif
 <p class="hint" data-bedarf-fehlt hidden>Bedarf nicht berechenbar; angezeigt wird der Originalansatz.</p>
 @if(!empty($b['ansatz_kg']))<p>Rezeptmenge: <b data-bedarf-menge data-ansatz="{{ $b['ansatz_kg'] * 1000 }}" data-einheit="g">{{ $fmtMenge($b['ansatz_kg'] * 1000) }} g</b></p>@elseif(!empty($b['ansatz_stueck']))<p>Rezeptmenge: <b data-bedarf-menge data-ansatz="{{ $b['ansatz_stueck'] }}" data-einheit="Stück">{{ $fmtMenge($b['ansatz_stueck']) }} Stück</b></p>@endif

@@ -19,6 +19,8 @@
     $freie = $snapshot['freie_kapitel'] ?? [];
     $nKapitel = count($snapshot['sections'] ?? []);
     $nSpeisen = count($gerichte);
+    $hatVerteilung = false;
+    foreach ($snapshot['sections'] ?? [] as $s) { foreach ($s['items'] ?? [] as $it) { if (array_key_exists('menge_pro_gast', $it)) { $hatVerteilung = true; } } }
     $fmtMenge = fn ($v) => $v === null ? '–' : rtrim(rtrim(number_format((float) $v, $v < 10 ? 3 : 1, ',', ''), '0'), ',');
 @endphp
 <html lang="de">
@@ -46,6 +48,7 @@
 
     <div class="body">
         <nav aria-label="Gerichte">
+            @if($hatVerteilung)<label class="gaeste-rechner">Gesamtbedarf für <input type="number" id="handbuch-gaeste" min="1" max="1000000" step="1" placeholder="Anzahl" value="{{ $snapshot['personen'] ?? '' }}"> Gäste</label>@endif
             @foreach($snapshot['sections'] ?? [] as $sec)
                 <details class="kapw">
                     <summary class="kap"><span>{{ $sec['title'] !== '' ? $sec['title'] : 'Speisen' }}</span><span class="n">{{ count($sec['items']) }}</span></summary>
@@ -55,7 +58,13 @@
                             @foreach($sec['groups'] as $gruppe)
                                 <details class="konzept">
                                     <summary class="kap"><span>{{ $gruppe['title'] }}</span><span class="n">{{ count($gruppe['items']) }}</span></summary>
-                                    <div class="liste">@include('foodalchemist::handbuch._navigation-items', ['items' => $gruppe['items']])</div>
+                                    <div class="liste">
+                                        @if(!empty($gruppe['nodes']))
+                                            @include('foodalchemist::handbuch._navigation-baum', ['nodes' => $gruppe['nodes']])
+                                        @else
+                                            @include('foodalchemist::handbuch._navigation-items', ['items' => $gruppe['items']])
+                                        @endif
+                                    </div>
                                 </details>
                             @endforeach
                         @else
@@ -235,9 +244,14 @@
     var app = document.getElementById('app'), body = document.body, main = document.querySelector('main');
     var links = Array.from(document.querySelectorAll('nav .liste a'));
     var arts = Array.from(document.querySelectorAll('.gericht')), aktiv = '';
+    var gaesteFeld = document.getElementById('handbuch-gaeste');
     function zahl(v) { return Math.min(1000000, Math.max(1, parseInt(v, 10) || 1)); }
-    function aktuell(a) { var p = a.querySelector('.px, .basis-px'); return zahl(p && p.value); }
+    function dezimal(v) { var s = String(v == null ? '' : v).trim().replace(',', '.'); return s === '' ? NaN : Number(s); }
+    function anzahl(a, v) { return a.classList.contains('basiskarte') || a._ausVerteilung ? Math.min(1000000, Math.max(0, dezimal(v) || 0)) : zahl(v); }
+    function aktuell(a) { var p = a.querySelector('.px, .basis-px'); return anzahl(a, p && p.value); }
+    function eingabe(v) { return String(Number(v.toFixed(6))).replace('.', ','); }
     function fmt(v, u) {
+        if (u === 'Teile' && v === 1) { u = 'Teil'; }
         if (u === 'g' && v >= 1000) { v /= 1000; u = 'kg'; }
         else if (u === 'ml' && v >= 1000) { v /= 1000; u = 'l'; }
         var s = v >= 100 ? v.toFixed(0) : (v >= 10 ? v.toFixed(1) : v.toFixed(2));
@@ -251,6 +265,8 @@
         root.querySelectorAll(':scope > p [data-bedarf-menge]').forEach(function (e) { e.textContent = fmt(parseFloat(e.dataset.ansatz) * faktor, e.dataset.einheit); });
     }
     function bezug(a) {
+        if (a._zielFaktor != null && !a._original && a._bedarf && a._bedarf.faktor > 0) { return {faktor:a._bedarf.faktor, n:a._zielFaktor / a._bedarf.faktor, name:a._bedarf.name, einheit:a._bedarf.einheit}; }
+        if (a._zielFaktor != null && !a._original) { return {faktor:a._zielFaktor, n:1, name:a.dataset.name, einheit:'Ansätze'}; }
         if (a._bedarf && !a._original) { return {faktor:a._bedarf.faktor, n:aktuell(a), name:a._bedarf.name, einheit:a._bedarf.einheit}; }
         return {faktor:1, n:a.classList.contains('basiskarte') ? 1 : aktuell(a), name:a.dataset.name, einheit:a.querySelector('.px') ? 'Portionen' : 'Ansätze'};
     }
@@ -259,24 +275,31 @@
         a.querySelectorAll('.subbox').forEach(function (box) {
             var f = parseFloat(box.dataset.faktor), klar = Number.isFinite(f) && f >= 0;
             mengen(box, klar ? f * q.faktor * q.n : 1);
-            box.querySelector('[data-vorschau-modus]').textContent = klar ? 'Bedarf für ' + q.n + ' ' + q.einheit : 'Originalansatz';
+            box.querySelector('[data-vorschau-modus]').textContent = klar ? 'Bedarf für ' + eingabe(q.n) + ' ' + q.einheit : 'Originalansatz';
             box.querySelector('[data-bedarf-fehlt]').hidden = klar;
         });
     }
-    function basisRechnen(a, merken) {
-        var q = a._bedarf, bedarf = !!q && !a._original;
-        var n = aktuell(a), f = bedarf ? q.faktor * n : 1;
+    function basisRechnen(a, merken, zielNeu) {
+        var q = a._bedarf, bedarf = !!q && !a._original && !(a._zielFaktor != null && q.faktor === 0);
+        var n = aktuell(a), f = a._original ? 1 : (a._zielFaktor != null ? a._zielFaktor : (bedarf ? q.faktor * n : 1));
         a.querySelector('.basis-rechner').hidden = !bedarf;
-        a.querySelector('[data-rezeptmodus]').textContent = bedarf ? 'Bedarf für ' + n + ' ' + q.einheit : 'Originalansatz';
+        a.querySelector('[data-rezeptmodus]').textContent = bedarf ? 'Bedarf für ' + eingabe(n) + ' ' + q.einheit : (a._zielFaktor != null && !a._original ? 'Gewünschte Rezeptmenge' : 'Originalansatz');
         a.querySelector('[data-basis-quelle]').textContent = q ? 'Bezug: ' + q.name : '';
         a.querySelector('[data-basis-einheit]').textContent = q ? q.einheit : 'Portionen';
-        a.querySelector('[data-schritt-mengen]').hidden = !bedarf;
-        var b = a.querySelector('.original-umschalter'); b.hidden = !q;
+        a.querySelector('[data-schritt-mengen]').hidden = !(bedarf || (a._zielFaktor != null && !a._original));
+        var b = a.querySelector('.original-umschalter'); b.hidden = !q && a._zielFaktor == null;
         b.textContent = a._original ? 'Zur benötigten Menge' : 'Originalansatz anzeigen';
         mengen(a, f); vorschauen(a);
+        var ziel = a.querySelector('.menge-rechner');
+        if (ziel) {
+            var u = ziel.querySelector('.basis-ziel-einheit').value;
+            var feld = ziel.querySelector('.basis-ziel');
+            if (zielNeu || document.activeElement !== feld) { feld.value = eingabe(parseFloat(ziel.dataset.basisAnsatz) * f * (u === 'g' ? 1000 : 1)); }
+            ziel.querySelector('[data-basis-ziel-fehler]').hidden = true;
+        }
         if (merken && aktiv === a.dataset.key) {
             if (q) { q.n = n; }
-            history.replaceState(Object.assign({}, history.state, {handbuchBasis:q, handbuchOriginal:a._original}), '', location.href);
+            history.replaceState(Object.assign({}, history.state, {handbuchBasis:q, handbuchOriginal:a._original, handbuchZielFaktor:a._zielFaktor}), '', location.href);
         }
     }
     function show(key) {
@@ -294,7 +317,10 @@
             var q = history.state && history.state.handbuchBasis;
             a._bedarf = q && Number.isFinite(q.faktor) && q.faktor >= 0 ? Object.assign({}, q) : null;
             a._original = !a._bedarf || !!(history.state && history.state.handbuchOriginal);
-            a.querySelector('.basis-px').value = a._bedarf ? zahl(a._bedarf.n) : 1;
+            var zf = history.state && history.state.handbuchZielFaktor;
+            a._zielFaktor = Number.isFinite(zf) && zf >= 0 ? zf : null;
+            if (a._zielFaktor != null) { a._original = false; }
+            a.querySelector('.basis-px').value = a._bedarf ? anzahl(a, a._bedarf.n) : 1;
             basisRechnen(a, false);
         }
         var state = history.state;
@@ -303,8 +329,17 @@
     }
     function fromHash() { var key = location.hash.slice(1); show(document.getElementById('g-' + key) ? key : ''); }
     links.forEach(function (l, index) { l.addEventListener('click', function (e) {
+        var a = document.getElementById('g-' + l.dataset.key), gaeste = dezimal(gaesteFeld && gaesteFeld.value), rate = dezimal(l.dataset.portionenProGast);
+        if (a && a.querySelector('.px') && !a._portionenEigen && Number.isFinite(rate) && rate >= 0 && Number.isInteger(gaeste) && gaeste >= 1 && gaeste <= 1000000) {
+            a._ausVerteilung = true; var p = a.querySelector('.px'); p.min = '0'; p.step = 'any'; p.value = Math.min(1000000, gaeste * rate); rechne(a);
+        }
         e.preventDefault(); history.pushState({handbuchNav:index}, '', l.getAttribute('href')); fromHash();
     }); });
+    function verteilung() {
+        var n = dezimal(gaesteFeld && gaesteFeld.value), ok = Number.isInteger(n) && n >= 1 && n <= 1000000;
+        document.querySelectorAll('[data-menge-pro-gast]').forEach(function (e) { e.textContent = ok ? ' · gesamt ' + fmt(parseFloat(e.dataset.mengeProGast) * n, e.dataset.u) : ''; });
+    }
+    if (gaesteFeld) { gaesteFeld.addEventListener('input', verteilung); verteilung(); }
     window.addEventListener('hashchange', fromHash); window.addEventListener('popstate', fromHash);
     function zurueck() {
         if (aktiv.indexOf('basis-') === 0 && history.state && history.state.handbuchVon) { history.back(); return; }
@@ -329,10 +364,24 @@
         }); });
         if (a.classList.contains('basiskarte')) {
             var bp = a.querySelector('.basis-px');
-            a.querySelectorAll('[data-basis-step]').forEach(function (b) { b.addEventListener('click', function () { bp.value = zahl(aktuell(a) + parseInt(b.dataset.basisStep, 10)); basisRechnen(a, true); }); });
-            bp.addEventListener('input', function () { basisRechnen(a, true); });
+            function portionenRechnen() { a._zielFaktor = null; a._original = false; basisRechnen(a, true); }
+            a.querySelectorAll('[data-basis-step]').forEach(function (b) { b.addEventListener('click', function () { bp.value = anzahl(a, aktuell(a) + parseInt(b.dataset.basisStep, 10)); portionenRechnen(); }); });
+            bp.addEventListener('input', portionenRechnen);
             bp.addEventListener('change', function () { bp.value = aktuell(a); basisRechnen(a, true); });
-            a.querySelector('.original-umschalter').addEventListener('click', function () { a._original = !a._original; basisRechnen(a, true); });
+            a.querySelector('.original-umschalter').addEventListener('click', function () { a._zielFaktor = null; a._original = !a._original; basisRechnen(a, true); });
+            var ziel = a.querySelector('.menge-rechner');
+            if (ziel) {
+                ziel.querySelector('.basis-ziel-einheit').addEventListener('change', function () { basisRechnen(a, false, true); });
+                ziel.querySelector('.basis-ziel').addEventListener('blur', function () { basisRechnen(a, false); });
+                ziel.querySelector('.basis-ziel').addEventListener('input', function () {
+                    var wert = dezimal(this.value), u = ziel.querySelector('.basis-ziel-einheit').value;
+                    var f = wert / ((u === 'g' ? 1000 : 1) * parseFloat(ziel.dataset.basisAnsatz));
+                    if (!Number.isFinite(wert) || wert < 0 || wert > 1000000 || (a._bedarf && a._bedarf.faktor > 0 && f / a._bedarf.faktor > 1000000)) { ziel.querySelector('[data-basis-ziel-fehler]').hidden = false; return; }
+                    a._zielFaktor = f; a._original = false;
+                    if (a._bedarf && a._bedarf.faktor > 0) { bp.value = Number((f / a._bedarf.faktor).toFixed(6)); }
+                    basisRechnen(a, true);
+                });
+            }
         }
     });
     document.querySelectorAll('[data-sub]').forEach(function (b) { b.addEventListener('click', function () {
@@ -347,8 +396,8 @@
     }
     arts.forEach(function (a) {
         var p = a.querySelector('.px'); if (!p) { return; }
-        a.querySelectorAll('[data-step]').forEach(function (b) { b.addEventListener('click', function () { p.value = zahl(aktuell(a) + parseInt(b.dataset.step, 10)); rechne(a); }); });
-        p.addEventListener('input', function () { rechne(a); });
+        a.querySelectorAll('[data-step]').forEach(function (b) { b.addEventListener('click', function () { a._portionenEigen = true; p.value = anzahl(a, aktuell(a) + parseInt(b.dataset.step, 10)); rechne(a); }); });
+        p.addEventListener('input', function () { a._portionenEigen = true; rechne(a); });
         p.addEventListener('change', function () { p.value = aktuell(a); rechne(a); }); rechne(a);
     });
     var bilddialog = document.getElementById('bilddialog');

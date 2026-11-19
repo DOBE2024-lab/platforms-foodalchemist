@@ -20,7 +20,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
  * Kundenlink der Präsentation (Spec 43).
  *
  * Aufbau des Snapshots: `sections` spiegeln die Struktur des Quelldokuments (Kapitel/Rubriken/Tage),
- * jedes Item verweist per `key` auf eine Karte in `gerichte` (Gericht einmal, auch wenn es mehrfach vorkommt).
+ * jedes Item verweist per `key` auf eine eigene Positionskarte in `gerichte` (Mengen und Darreichung bleiben getrennt).
  */
 class HandbuchService
 {
@@ -178,7 +178,7 @@ class HandbuchService
                 $refs[$it['key']] = $it['recipe_id'];
             }
         }
-        $recipes = $refs === [] ? collect() : FoodAlchemistRecipe::query()
+        $recipes = $refs === [] ? collect() : FoodAlchemistRecipe::visibleToTeam($team)
             ->whereIn('id', array_values(array_unique($refs)))
             ->with([
                 'steps.photos', 'platingSteps.photos',
@@ -198,7 +198,8 @@ class HandbuchService
                     continue;
                 }
                 if (! isset($gerichte[$it['key']])) {
-                    $karte = $this->gerichtKarte($team, $recipe, $it['label']);
+                    $dar = !empty($it['presentation_id']) ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::visibleToTeam($team)->where('recipe_id', $recipe->id)->find($it['presentation_id']) : null;
+                    $karte = $this->gerichtKarte($team, $recipe, $it['label'], true, $dar);
                     $karte['codes'] = $it['codes'];
                     $gerichte[$it['key']] = $karte;
                     $fehlt = $this->fehlendeAbschnitte($karte);
@@ -206,14 +207,16 @@ class HandbuchService
                         $luecken[] = ['gericht' => $karte['name'], 'fehlt' => $fehlt];
                     }
                 }
-                $items[] = ['key' => $it['key'], 'label' => $it['label'], 'indent' => $it['indent'] ?? 0];
+                $items[] = ['key' => $it['key'], 'label' => $it['label'], 'indent' => $it['indent'] ?? 0]
+                    + array_intersect_key($it, array_flip(['menge_pro_gast', 'einheit', 'portionen_pro_gast']));
             }
             if ($items !== []) {
                 $gruppen = [];
                 foreach ($sec['groups'] ?? [] as $gruppe) {
-                    $gueltig = array_values(array_filter($gruppe['items'], fn ($it) => isset($gerichte[$it['key']])));
+                    $index = array_column($items, null, 'key');
+                    $gueltig = array_values(array_filter(array_map(fn ($it) => $index[$it['key']] ?? null, $gruppe['items'])));
                     if ($gueltig !== []) {
-                        $gruppen[] = ['title' => $gruppe['title'], 'items' => $gueltig];
+                        $gruppen[] = ['title' => $gruppe['title'], 'items' => $gueltig, 'nodes' => $this->navigationsKnoten($gruppe['nodes'] ?? [], $index)];
                     }
                 }
                 $sections[] = ['title' => $sec['title'], 'text' => $sec['text'] ?? null, 'items' => $items, 'groups' => $gruppen];
@@ -242,9 +245,9 @@ class HandbuchService
      *
      * @return array<string,mixed>
      */
-    public function gerichtKarte(Team $team, FoodAlchemistRecipe $recipe, string $label, bool $mitZutaten = true): array
+    public function gerichtKarte(Team $team, FoodAlchemistRecipe $recipe, string $label, bool $mitZutaten = true, ?\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung $dar = null): array
     {
-        $dar = $recipe->standardPresentation;
+        $dar ??= $recipe->standardPresentation;
         $regen = $this->regeneration->fuerRezept($recipe);
         $regenZeilen = [];
         foreach ([...$regen['gesamt'], ...$regen['komponenten']] as $z) {
@@ -289,13 +292,45 @@ class HandbuchService
             'bilder' => self::rezeptBilderSnapshot($recipe),
             'behaelter' => $this->behaelter($recipe),
             // #1003 Handy-Detail: zeigt die Zutaten selbst (aus dem Rezept) und spart den Report-Lauf
-            'zutaten' => $mitZutaten ? $this->zutaten->fuerGericht($team, $recipe) : null,
+            'zutaten' => $mitZutaten ? $this->zutaten->fuerGericht($team, $recipe, $dar) : null,
             'zubereitung' => self::schritteSnapshot($recipe->steps),
             'anrichten' => self::schritteSnapshot($recipe->platingSteps),
             'regeneration' => $regenZeilen,
             'bestandteile' => $bestandteile,
             'codes' => [],
         ];
+    }
+
+    /** Kennzeichnung genau dieses Rezepts; niemals die Angaben des übergeordneten Gerichts übernehmen. */
+    public static function kennzeichnungSnapshot(FoodAlchemistRecipe $recipe): array
+    {
+        $agg = app(ConcepterAggregateService::class);
+        $daten = $agg->kennzeichnungFromGerichte(collect([$recipe]));
+        $katalog = $agg->kennzeichnungKatalog()['allergene'];
+        $out = ['enthalten' => [], 'spuren' => [], 'offen' => false];
+        foreach ($daten['allergene'] as $a) {
+            if (in_array($a['status'], ['enthalten', 'spuren'], true)) {
+                $out[$a['status']][] = ['code' => $katalog[$a['slug']]['code'], 'label' => $a['label']];
+            } elseif ($a['status'] === 'unbekannt') { $out['offen'] = true; }
+        }
+        return $out;
+    }
+
+    /** Nur bekannte Karten und öffentliche Mengenangaben in den Navigationsbaum übernehmen. */
+    private function navigationsKnoten(array $nodes, array $index): array
+    {
+        $out = [];
+        foreach ($nodes as $node) {
+            if (($node['kind'] ?? '') === 'gericht' && isset($index[$node['key']])) {
+                $out[] = ['kind' => 'gericht'] + $index[$node['key']];
+            } elseif (($node['kind'] ?? '') === 'paket') {
+                $children = $this->navigationsKnoten($node['children'], $index);
+                if (array_filter($children, fn ($child) => $child['kind'] !== 'header') !== []) { $out[] = ['kind' => 'paket', 'label' => $node['label'], 'children' => $children]; }
+            } elseif (($node['kind'] ?? '') === 'header') {
+                $out[] = ['kind' => 'header', 'label' => $node['label']];
+            }
+        }
+        return $out;
     }
 
     /** @return list<array{zweck:string, name:string}> Behälter zum Regenerieren und zur Ausgabe (Eigene Zeilen des Gerichts). */

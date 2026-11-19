@@ -41,6 +41,20 @@ it('trägt den Basisrezeptfaktor je Gerichtsportion aus der zentralen Hochrechnu
     expect($b['zeilen'][0]['menge'] * $r['zeilen'][0]['sub_faktor'] * 10)->toBe(640.0);
 });
 
+it('friert die eigenen Basisrezept-Allergene getrennt von Gericht und Spuren ein und kennzeichnet Unbekanntes', function () {
+    $this->gericht->update(['allergen_gluten' => 'enthalten']);
+    $this->sauce->update(['allergen_milk' => 'enthalten', 'allergen_soy' => 'spuren', 'allergen_tree_nuts' => 'unbekannt']);
+    $this->svc->fuerGericht($this->rootTeam, $this->gericht->fresh());
+    $k = $this->svc->basisrezepte()['b'.$this->sauce->id]['kennzeichnung'];
+    expect(array_column($k['enthalten'], 'code'))->toBe(['G'])
+        ->and(array_column($k['spuren'], 'code'))->toBe(['F'])
+        ->and($k['enthalten'][0]['label'])->toBe('Milch')
+        ->and($k['offen'])->toBeTrue()
+        ->and(json_encode($k))->not->toContain('Gluten');
+    $this->sauce->update(['allergen_tree_nuts' => 'nicht_enthalten']);
+    expect(HandbuchService::kennzeichnungSnapshot($this->sauce->fresh())['offen'])->toBeFalse();
+});
+
 it('berücksichtigt eigene Komponentenmengen der Standard-Darreichung statt proportional alles zu verkleinern', function () {
     app(DarreichungService::class)->setzeDelta($this->rootTeam, $this->dar->id, $this->sauceZeile->id, 40, false);
     $r = $this->svc->fuerGericht($this->rootTeam, $this->gericht->fresh());
@@ -105,6 +119,65 @@ it('liest vollständige Basisrezepte auch über mehrere weitere Ebenen ohne fest
     }
     $this->svc->fuerGericht($this->rootTeam, $this->gericht->fresh());
     expect(array_column($this->svc->basisrezepte(), 'name'))->toContain('Gewürzansatz');
+});
+
+it('erhält verschachtelte Pakete, echte Verteilung und getrennte Gerichtskarten je Position ohne Preisfelder', function () {
+    $paket = $this->makeConcept($this->rootTeam, 'Deutschland');
+    foreach ([.33, 1, .33] as $i => $menge) {
+        $this->makeConceptSlot($paket, ['sales_recipe_id' => $this->gericht->id, 'quantity' => $menge, 'position' => $i, 'wording' => 'Gang '.$i]);
+    }
+    $innen = $this->makeConcept($this->rootTeam, 'Länderauswahl');
+    $this->makeConceptSlot($innen, ['type' => 'paket', 'embedded_concept_id' => $paket->id]);
+    $concept = $this->makeConcept($this->rootTeam, 'Taste & Fly');
+    $this->makeConceptSlot($concept, ['type' => 'paket', 'embedded_concept_id' => $innen->id]);
+    $format = app(FormatService::class)->create($this->rootTeam, ['name' => 'Flugmenü']);
+    app(FormatService::class)->slotConceptEinfuegen($this->rootTeam, $format->id, $concept->id);
+    $fb = $this->makeFoodbook($this->rootTeam, 'Baumbuch');
+    app(FoodbookService::class)->insertFormatAlsKapitel($this->rootTeam, $fb->id, $format->id);
+    $snap = app(HandbuchService::class)->buildSnapshot($this->rootTeam, $fb->fresh(), 'foodbook');
+    $gruppe = $snap['sections'][0]['groups'][0];
+    expect($gruppe['nodes'][0]['label'])->toBe('Länderauswahl')
+        ->and($gruppe['nodes'][0]['children'][0]['label'])->toBe('Deutschland')
+        ->and(array_column($gruppe['items'], 'menge_pro_gast'))->toBe([.33, 1.0, .33])
+        ->and(array_column($gruppe['items'], 'portionen_pro_gast'))->toBe([.33, 1.0, .33])
+        ->and(count(array_unique(array_column($gruppe['items'], 'key'))))->toBe(3)
+        ->and(count($snap['gerichte']))->toBe(3)
+        ->and(json_encode($snap))->not->toContain('sales_net', 'ek_', 'price', 'presentation_id', 'recipe_id');
+});
+
+it('verwendet die gewählte Darreichung für Mengenanzeige und Rezeptbedarf einer Position', function () {
+    $dar = app(DarreichungService::class)->anlegen($this->rootTeam, $this->gericht->id, $this->dar->serving_form_id, ['quantity_per_unit_g' => 100]);
+    $concept = $this->makeConcept($this->rootTeam, 'Kleines Glas');
+    $slot = $this->makeConceptSlot($concept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 50, 'unit_vocab_id' => $this->unitG($this->rootTeam)->id, 'presentation_id' => $dar->id]);
+    $menge = app(\Platform\FoodAlchemist\Services\HandbuchPositionsMenge::class)->fuer($slot);
+    expect($menge['portionen_pro_gast'])->toBe(.5);
+    $karte = app(HandbuchService::class)->gerichtKarte($this->rootTeam, $this->gericht->fresh(), 'Kleines Glas', true, $dar);
+    expect((float) $karte['portion']['gramm'])->toBe(100.0)
+        ->and($karte['zutaten']['zeilen'][0]['menge'])->toBe(40.0)
+        ->and($karte['zutaten']['zeilen'][0]['sub_faktor'])->toBe(.04);
+    $slot->update(['quantity' => null]);
+    expect(app(\Platform\FoodAlchemist\Services\HandbuchPositionsMenge::class)->fuer($slot->fresh())['portionen_pro_gast'])->toBeNull();
+});
+
+it('übernimmt aus einer fehlerhaften Verknüpfung keine Gerichtskarte eines nicht sichtbaren Teams', function () {
+    $fremd = $this->makeRecipe($this->childA, 'NICHT SICHTBARES GERICHT', ['is_sales_recipe' => true]);
+    $concept = $this->makeConcept($this->rootTeam, 'Sichtbares Konzept');
+    $this->makeConceptSlot($concept, ['sales_recipe_id' => $fremd->id, 'quantity' => .33]);
+    $format = app(FormatService::class)->create($this->rootTeam, ['name' => 'Sichtbares Format']);
+    app(FormatService::class)->slotConceptEinfuegen($this->rootTeam, $format->id, $concept->id);
+    $fb = $this->makeFoodbook($this->rootTeam, 'Buch');
+    app(FoodbookService::class)->insertFormatAlsKapitel($this->rootTeam, $fb->id, $format->id);
+    $snap = app(HandbuchService::class)->buildSnapshot($this->rootTeam, $fb->fresh(), 'foodbook');
+    expect($snap['gerichte'])->toBe([])->and($snap['sections'])->toBe([])
+        ->and(json_encode($snap))->not->toContain('NICHT SICHTBARES GERICHT');
+});
+
+it('beendet einen zyklischen Paketverweis im Handbuch-Mengenpfad', function () {
+    $a = $this->makeConcept($this->rootTeam, 'A'); $b = $this->makeConcept($this->rootTeam, 'B');
+    $this->makeConceptSlot($a, ['type' => 'paket', 'embedded_concept_id' => $b->id]);
+    $this->makeConceptSlot($b, ['type' => 'paket', 'embedded_concept_id' => $a->id]);
+    $rows = app(\Platform\FoodAlchemist\Services\WordingResolver::class)->gerichtZeilen($a, null, false, true);
+    expect(count($rows))->toBe(2);
 });
 
 it('rechnet ein stückbezogenes Basisrezept über dessen Stückausbeute', function () {

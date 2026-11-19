@@ -5,11 +5,19 @@
     <h2>{{ $b['name'] }}</h2>
     @if(!empty($b['ansatz_kg']))<p class="meta">Ausbeute des vollständigen Originalansatzes: {{ $fmtMenge($b['ansatz_kg']) }} kg</p>@endif</div>
 </div>
+@include('foodalchemist::handbuch._allergene', ['kennzeichnung' => $b['kennzeichnung'] ?? null])
 @if(!empty($b['bilder']))<div class="allgemein-fotos">@include('foodalchemist::handbuch._bilder', ['bilder' => $b['bilder']])</div>@endif
 <div class="basis-rechner" hidden>
-    <div class="stepper"> <span data-basis-einheit>Portionen</span> <button type="button" data-basis-step="-1" aria-label="eine weniger">−</button><input class="basis-px" type="number" min="1" max="1000000" step="1" value="1" aria-label="Portionen für dieses Basisrezept"><button type="button" data-basis-step="1" aria-label="eine mehr">+</button></div>
+    <div class="stepper"> <span data-basis-einheit>Portionen</span> <button type="button" data-basis-step="-1" aria-label="eine weniger">−</button><input class="basis-px" type="number" min="0" max="1000000" step="any" value="1" aria-label="Portionen für dieses Basisrezept"><button type="button" data-basis-step="1" aria-label="eine mehr">+</button></div>
     <p class="hint" data-basis-quelle></p>
 </div>
+@if(!empty($b['ansatz_kg']) || !empty($b['ansatz_stueck']))
+    <div class="menge-rechner" data-basis-ansatz="{{ !empty($b['ansatz_kg']) ? $b['ansatz_kg'] : $b['ansatz_stueck'] }}">
+        <label>Hochrechnen auf <input class="basis-ziel" type="text" inputmode="decimal" autocomplete="off" aria-label="Gewünschte Rezeptmenge" value="{{ $fmtMenge(!empty($b['ansatz_kg']) ? $b['ansatz_kg'] : $b['ansatz_stueck']) }}"></label>
+        <select class="basis-ziel-einheit" aria-label="Einheit der gewünschten Rezeptmenge">@if(!empty($b['ansatz_kg']))<option value="kg">kg</option><option value="g">g</option>@else<option value="stueck">Stück</option>@endif</select>
+        <p class="hint" data-basis-ziel-fehler hidden>Bitte eine gültige Menge zwischen 0 und 1.000.000 eingeben.</p>
+    </div>
+@endif
 @if(!empty($b['ansatz_kg']))<p>Rezeptmenge: <b data-bedarf-menge data-ansatz="{{ $b['ansatz_kg'] * 1000 }}" data-einheit="g">{{ $fmtMenge($b['ansatz_kg'] * 1000) }} g</b></p>@elseif(!empty($b['ansatz_stueck']))<p>Rezeptmenge: <b data-bedarf-menge data-ansatz="{{ $b['ansatz_stueck'] }}" data-einheit="Stück">{{ $fmtMenge($b['ansatz_stueck']) }} Stück</b></p>@endif
 <button type="button" class="original-umschalter" hidden>Originalansatz anzeigen</button>
 <p class="hint" data-schritt-mengen hidden>Zutaten gemäß Bedarfsliste abwiegen. Zubereitung laut Originalrezept.</p>

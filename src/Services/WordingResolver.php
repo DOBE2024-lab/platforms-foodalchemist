@@ -139,8 +139,10 @@ class WordingResolver
      * @param  bool  $mitTexten  Angebot: Text-Blöcke des Konzepts (type=text, title + text_content) als Zeilen `type=text`
      *                           mitliefern. Default aus, damit Foodbook/Speisekarte/Konfigurator unverändert bleiben.
      */
-    public function gerichtZeilen(FoodAlchemistConcept $concept, FoodAlchemistFoodbookBlock|FoodAlchemistFormatSlot|FoodAlchemistOfferBlock|FoodAlchemistKonfiguratorKonzept|null $block = null, bool $mitTexten = false): array
+    public function gerichtZeilen(FoodAlchemistConcept $concept, FoodAlchemistFoodbookBlock|FoodAlchemistFormatSlot|FoodAlchemistOfferBlock|FoodAlchemistKonfiguratorKonzept|null $block = null, bool $mitTexten = false, bool $mitMengen = false, array $pfad = []): array
     {
+        if ($mitMengen && in_array($concept->id, $pfad, true)) { return []; }
+        $pfad[] = $concept->id;
         // Preisdarstellung (2026-08-25): bei `einzel` trägt jede DIREKTE Gericht-/Package-Zeile ihren
         // eigenen VK (kein Concept-Summenpreis). Die Preise kommen aus der EINEN Preis-Stelle
         // (ConceptService::preisCockpit) — keine Dublette der Darreichungs-/Portions-Mathematik hier.
@@ -173,9 +175,9 @@ class WordingResolver
                 // Wording-Kette gilt AUCH für die Gerichte des eingebetteten Pakets: der Block wird in die
                 // Rekursion durchgereicht, damit foodbook-lokale Overrides (payload_json['wording_overrides']
                 // je Paket-Slot-ID) greifen — sonst blieben Paket-Gerichte beim Kapitel-Wording „Wording fehlt".
-                foreach ($this->gerichtZeilen($paket, $block, $mitTexten) as $z) {
+                foreach ($this->gerichtZeilen($paket, $block, $mitTexten, $mitMengen, $pfad) as $z) {
                     $zeilen[] = ['type' => $z['type'], 'text' => $z['text'], 'source' => $z['source'] ?? null,
-                        'einrueckung' => ($z['einrueckung'] ?? 0) + 1] + array_intersect_key($z, ['recipe_id' => true, 'slot_id' => true, 'titel' => true]);
+                        'einrueckung' => ($z['einrueckung'] ?? 0) + 1] + array_intersect_key($z, ['recipe_id' => true, 'slot_id' => true, 'titel' => true, 'menge' => true]);
                 }
 
                 continue;
@@ -186,7 +188,7 @@ class WordingResolver
                     'ek' => $einzel ? ($preisMap[$slot->id]['ek'] ?? null) : null];
                 foreach ($slot->package->dishes as $pg) {
                     $r = $this->fuerGericht($pg->dish);
-                    $zeilen[] = ['type' => 'gericht', 'text' => $r['text'], 'source' => $r['source'], 'einrueckung' => 1, 'recipe_id' => $pg->dish?->id];
+                    $zeilen[] = ['type' => 'gericht', 'text' => $r['text'], 'source' => $r['source'], 'einrueckung' => 1, 'recipe_id' => $pg->dish?->id] + ($mitMengen ? ['menge' => app(HandbuchPositionsMenge::class)->fuer($pg)] : []);
                 }
 
                 continue;
@@ -211,7 +213,7 @@ class WordingResolver
             $r = $block !== null ? $this->fuerBlockSlot($block, $slot) : $this->fuerSlot($slot);
             $zeilen[] = ['type' => 'gericht', 'text' => $r['text'], 'source' => $r['source'], 'einrueckung' => 0, 'slot_id' => $slot->id, 'recipe_id' => $slot->sales_recipe_id,
                 'preis' => $einzel ? ($preisMap[$slot->id]['vk'] ?? null) : null,
-                'ek' => $einzel ? ($preisMap[$slot->id]['ek'] ?? null) : null];
+                'ek' => $einzel ? ($preisMap[$slot->id]['ek'] ?? null) : null] + ($mitMengen ? ['menge' => app(HandbuchPositionsMenge::class)->fuer($slot)] : []);
         }
 
         return $zeilen;

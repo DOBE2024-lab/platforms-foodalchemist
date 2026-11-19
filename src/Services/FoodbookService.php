@@ -1551,7 +1551,7 @@ class FoodbookService
      *                                     wird auf die oberste Ebene gehoben (sonst nie erreicht).
      * @param  bool  $mitKaskade  #3: zusätzlich den Produktions-Baum je Gericht anhängen (EK nur intern).
      */
-    public function dokumentDaten(Team $team, FoodAlchemistFoodbook $fb, bool $intern = false, array $kapitelFilter = [], bool $mitKaskade = false, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
+    public function dokumentDaten(Team $team, FoodAlchemistFoodbook $fb, bool $intern = false, array $kapitelFilter = [], bool $mitKaskade = false, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, bool $mitHandbuchMengen = false): array
     {
         $fb->loadMissing([
             'chapters' => fn ($q) => $q->orderBy('position'),
@@ -1591,7 +1591,7 @@ class FoodbookService
         $wording = app(WordingResolver::class);
 
         $rows = [];
-        $walk = function ($parentId, int $depth) use (&$walk, $byParent, &$rows, $team, $pax, $wording, $intern, $outlet) {
+        $walk = function ($parentId, int $depth) use (&$walk, $byParent, &$rows, $team, $pax, $wording, $intern, $outlet, $mitHandbuchMengen) {
             foreach ($byParent[$parentId] ?? [] as $k) {
                 // B (2026-08-31): LEBENDES Format-Kapitel — Identität + Editionen LIVE aus dem Format
                 // rendern (statt der Kapitel-Blöcke). Editionen = format_slots (type=concept) → Concept
@@ -1608,7 +1608,7 @@ class FoodbookService
 
                         continue;
                     }
-                    $editionen = app(FormatKapitelService::class)->editionen($format);
+                    $editionen = app(FormatKapitelService::class)->editionen($format, $mitHandbuchMengen);
                     $hero = $format->images->firstWhere('is_hero', true);
                     $rows[] = [
                         'title' => $k->consumer_title ?: ($format->consumer_name ?: $format->name),
@@ -1639,7 +1639,7 @@ class FoodbookService
                     $untertitel = ($untertitel !== '' && $untertitel !== $label) ? $untertitel : null;
                     // concept_ref: Gerichte des Concepts mit aufgelöster Wording-Kette als Kundenzeilen
                     $gerichte = ($b->type === 'concept_ref' && $b->concept !== null)
-                        ? $wording->gerichtZeilen($b->concept, $b)
+                        ? $wording->gerichtZeilen($b->concept, $b, false, $mitHandbuchMengen)
                         : [];
                     // Block-Preis für die Preis-links-Spalte (Referenz-Layout „x € pro Person").
                     $bp = $this->blockPreis($b, $pax, $outlet);

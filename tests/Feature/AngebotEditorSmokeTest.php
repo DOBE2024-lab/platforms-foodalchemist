@@ -81,10 +81,11 @@ it('Editor berechnet Komposition und Preiseinheiten beim Öffnen jeweils nur ein
             \Platform\FoodAlchemist\Models\FoodAlchemistAngebot $angebot,
             ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null,
             bool $intern = false,
+            bool $mitHandbuchMengen = false,
         ): array {
             $this->kompositionen++;
 
-            return parent::komposition($team, $angebot, $outlet, $intern);
+            return parent::komposition($team, $angebot, $outlet, $intern, $mitHandbuchMengen);
         }
 
         public function preisEinheiten(

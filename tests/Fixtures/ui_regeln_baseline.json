@@ -49,7 +49,9 @@
     "dokumente/foodbook.blade.php": {
         "hex_farbe": 51,
         "style_block": 1,
-        "style_statisch": 21
+        "style_statisch": 21,
+        "roher_button": 1,
+        "rohe_checkbox": 1
     },
     "dokumente/format.blade.php": {
         "hex_farbe": 23,
@@ -79,12 +81,15 @@
         "hex_farbe": 15,
         "important": 1,
         "style_block": 1,
-        "style_statisch": 3
+        "style_statisch": 3,
+        "roher_button": 2
     },
     "dokumente/speisekarte.blade.php": {
         "hex_farbe": 30,
         "style_block": 1,
-        "style_statisch": 7
+        "style_statisch": 7,
+        "roher_button": 1,
+        "rohe_checkbox": 1
     },
     "dokumente/speiseplan-buffet.blade.php": {
         "hex_farbe": 11,
@@ -110,6 +115,16 @@
         "hex_farbe": 7,
         "style_block": 1
     },
+    "handbuch/_basisrezept.blade.php": {
+        "roher_button": 3
+    },
+    "handbuch/show.blade.php": {
+        "roher_button": 13
+    },
+    "layouts/kiosk.blade.php": {
+        "typo_groesse": 1,
+        "alte_palette": 2
+    },
     "layouts/partials/standalone-nav.blade.php": {
         "hex_farbe": 4,
         "mini_schrift": 1
@@ -118,62 +133,1321 @@
         "hex_farbe": 7,
         "important": 6,
         "emoji": 2,
-        "style_block": 2
+        "style_block": 2,
+        "roher_button": 3
+    },
+    "layouts/standalone.blade.php": {
+        "typo_tinte": 1
+    },
+    "lieferanten-portal/show.blade.php": {
+        "roher_button": 3,
+        "rohe_checkbox": 1
+    },
+    "livewire/abos/index.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 1,
+        "leise_definition": 1,
+        "rohe_checkbox": 1
+    },
+    "livewire/active-outlet-bar.blade.php": {
+        "alte_palette": 11
+    },
+    "livewire/angebote/editor.blade.php": {
+        "typo_groesse": 54,
+        "typo_tinte": 84,
+        "roher_button": 25,
+        "rohe_checkbox": 7
+    },
+    "livewire/angebote/index.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 7,
+        "roher_button": 2
+    },
+    "livewire/angebote/konfigurator-editor.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 3,
+        "leise_definition": 1,
+        "roher_button": 1
+    },
+    "livewire/angebote/konfigurator-praesentation.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 6
+    },
+    "livewire/angebote/konfiguratoren.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 6,
+        "roher_button": 2
+    },
+    "livewire/angebote/leistung-vorlagen.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 2,
+        "leise_definition": 1
+    },
+    "livewire/angebote/partials/konfigurator/getraenke.blade.php": {
+        "rohe_checkbox": 1
+    },
+    "livewire/angebote/partials/konfigurator/kalkulation.blade.php": {
+        "rohe_checkbox": 1
+    },
+    "livewire/angebote/partials/konfigurator/konzepte.blade.php": {
+        "rohe_checkbox": 2
+    },
+    "livewire/angebote/partials/konfigurator/leistungen.blade.php": {
+        "rohe_checkbox": 1
+    },
+    "livewire/angebote/partials/konfigurator/pakete.blade.php": {
+        "typo_groesse": 1,
+        "roher_button": 1
+    },
+    "livewire/angebote/partials/konfigurator/wording.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1,
+        "leise_definition": 1
+    },
+    "livewire/angebote/partials/leistung-regel.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1,
+        "leise_definition": 1
+    },
+    "livewire/angebote/partials/planung-bedarf.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1,
+        "leise_definition": 1
+    },
+    "livewire/angebote/partials/zuschlagskalkulation.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 9
+    },
+    "livewire/bestellvorlagen/editor.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 4,
+        "leise_definition": 1,
+        "roher_button": 2
+    },
+    "livewire/bestellvorlagen/index.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 2,
+        "leise_definition": 1
+    },
+    "livewire/canvas/partials/board.blade.php": {
+        "typo_groesse": 15,
+        "typo_tinte": 17,
+        "roher_button": 2,
+        "rohe_checkbox": 2
+    },
+    "livewire/canvas/partials/feld-vererbung.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1,
+        "rohe_checkbox": 1
+    },
+    "livewire/concepter/browser.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 22,
+        "roher_button": 4
+    },
+    "livewire/concepter/detail-panel.blade.php": {
+        "typo_groesse": 15,
+        "typo_tinte": 18
+    },
+    "livewire/concepter/editor.blade.php": {
+        "typo_groesse": 47,
+        "typo_tinte": 126,
+        "roher_button": 20,
+        "rohe_checkbox": 2
+    },
+    "livewire/concepter/partials/gericht-baum.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 5,
+        "roher_button": 4
+    },
+    "livewire/concepter/partials/geschmack-radar.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 5
     },
     "livewire/concepter/partials/pairing-empfehlungen.blade.php": {
         "hex_farbe": 2,
         "emoji": 3,
         "mini_schrift": 6,
-        "style_statisch": 2
+        "style_statisch": 2,
+        "alte_palette": 6
     },
     "livewire/concepter/partials/pairing.blade.php": {
         "hex_farbe": 1,
         "emoji": 6,
         "mini_schrift": 4,
-        "style_statisch": 1
+        "style_statisch": 1,
+        "alte_palette": 13
+    },
+    "livewire/concepter/partials/sensorik.blade.php": {
+        "typo_groesse": 13,
+        "typo_tinte": 13
+    },
+    "livewire/concepter/partials/sensorik_komposition.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 6
+    },
+    "livewire/concepter/partials/slot-vorgabe.blade.php": {
+        "typo_tinte": 2
+    },
+    "livewire/concepts/index.blade.php": {
+        "typo_groesse": 13,
+        "typo_tinte": 24,
+        "roher_button": 2,
+        "rohe_checkbox": 2
+    },
+    "livewire/controlling/cockpit.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 4,
+        "roher_button": 1
+    },
+    "livewire/controlling/panels/abweichung.blade.php": {
+        "typo_groesse": 26,
+        "typo_tinte": 27
+    },
+    "livewire/controlling/panels/ausreisser.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 8
+    },
+    "livewire/controlling/panels/erfolg.blade.php": {
+        "typo_groesse": 9,
+        "typo_tinte": 12
+    },
+    "livewire/controlling/panels/kennzahlen.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 4
+    },
+    "livewire/controlling/panels/link-preise.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 2
+    },
+    "livewire/controlling/panels/portfolio.blade.php": {
+        "typo_groesse": 9,
+        "typo_tinte": 19,
+        "roher_button": 1
+    },
+    "livewire/controlling/panels/preisvergleich.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 8,
+        "rohe_checkbox": 1
+    },
+    "livewire/controlling/panels/promotion.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 6
+    },
+    "livewire/controlling/panels/standort-inhalte.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 1,
+        "leise_definition": 1,
+        "rohe_checkbox": 3
+    },
+    "livewire/controlling/panels/wareneinsatz.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 11,
+        "rohe_checkbox": 2
+    },
+    "livewire/controlling/partials/_benchmark.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 3
+    },
+    "livewire/controlling/partials/_geld-signale.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 3
+    },
+    "livewire/controlling/partials/_verlauf.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 7
+    },
+    "livewire/dashboard.blade.php": {
+        "typo_groesse": 19,
+        "typo_tinte": 24
+    },
+    "livewire/demnaechst.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 4
+    },
+    "livewire/etiketten/index.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 8,
+        "leise_definition": 1,
+        "roher_button": 3
+    },
+    "livewire/favorites/index.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 5,
+        "rohe_checkbox": 1
+    },
+    "livewire/food-dna/index.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 2
+    },
+    "livewire/foodbooks/index.blade.php": {
+        "typo_groesse": 43,
+        "typo_tinte": 72,
+        "roher_button": 24,
+        "rohe_checkbox": 5
+    },
+    "livewire/foodbooks/kunde-dna-panel.blade.php": {
+        "alte_palette": 1
+    },
+    "livewire/foodbooks/leitstelle-rail.blade.php": {
+        "typo_groesse": 14,
+        "typo_tinte": 25,
+        "roher_button": 3
+    },
+    "livewire/foodbooks/partials/concept-zeilen.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 7,
+        "roher_button": 1
+    },
+    "livewire/foodbooks/partials/detail.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 9
+    },
+    "livewire/foodbooks/partials/ki-text-vorschau.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 2
+    },
+    "livewire/foodbooks/partials/leitstelle-checkliste.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 4,
+        "roher_button": 1
+    },
+    "livewire/foodbooks/partials/menue-vorschau.blade.php": {
+        "typo_groesse": 23,
+        "typo_tinte": 20
     },
     "livewire/foodbooks/praesentation.blade.php": {
         "mini_schrift": 5,
-        "style_statisch": 2
+        "style_statisch": 2,
+        "alte_palette": 31
+    },
+    "livewire/formate/browser.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 15,
+        "roher_button": 3
+    },
+    "livewire/formate/detail-panel.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 5
+    },
+    "livewire/formate/editor.blade.php": {
+        "typo_groesse": 32,
+        "typo_tinte": 37,
+        "roher_button": 4
+    },
+    "livewire/gps/browser.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 17,
+        "roher_button": 4
+    },
+    "livewire/gps/detail-panel.blade.php": {
+        "typo_groesse": 35,
+        "typo_tinte": 44,
+        "leise_definition": 1,
+        "roher_button": 6,
+        "rohe_checkbox": 1
+    },
+    "livewire/gps/gp-modal.blade.php": {
+        "typo_groesse": 16,
+        "typo_tinte": 21,
+        "leise_definition": 1,
+        "roher_button": 7,
+        "rohe_checkbox": 4
+    },
+    "livewire/gps/partials/aroma-vorschau.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 3
+    },
+    "livewire/gps/platzhalter-modal.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1
+    },
+    "livewire/gps/zukauf-rezept.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1
+    },
+    "livewire/handbuch/panel.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 5
+    },
+    "livewire/handy/angebote.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 5,
+        "leise_definition": 1,
+        "roher_button": 4
+    },
+    "livewire/handy/artikel-karte.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 10,
+        "leise_definition": 1
+    },
+    "livewire/handy/ausgaben.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 4,
+        "leise_definition": 1,
+        "roher_button": 2
+    },
+    "livewire/handy/bestellungen.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 7,
+        "leise_definition": 1,
+        "roher_button": 2
+    },
+    "livewire/handy/gp-ansicht.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 11,
+        "leise_definition": 1
+    },
+    "livewire/handy/karten-liste.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 8,
+        "roher_button": 2
+    },
+    "livewire/handy/konfiguratoren.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 6,
+        "leise_definition": 1,
+        "roher_button": 2
+    },
+    "livewire/handy/lieferanten.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 10,
+        "leise_definition": 1,
+        "roher_button": 3
+    },
+    "livewire/handy/rezept-handbuch.blade.php": {
+        "typo_groesse": 11,
+        "typo_tinte": 17,
+        "leise_definition": 1,
+        "roher_button": 2
+    },
+    "livewire/handy/suche.blade.php": {
+        "typo_groesse": 10,
+        "typo_tinte": 17
+    },
+    "livewire/handy/trend-pinnwand.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 8,
+        "leise_definition": 1,
+        "roher_button": 5
+    },
+    "livewire/handy/trends.blade.php": {
+        "typo_groesse": 14,
+        "typo_tinte": 22,
+        "leise_definition": 1,
+        "roher_button": 5
+    },
+    "livewire/handy/wissen.blade.php": {
+        "typo_groesse": 12,
+        "typo_tinte": 8,
+        "leise_definition": 1,
+        "roher_button": 2
+    },
+    "livewire/kalkulation/simulation.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 8,
+        "leise_definition": 1,
+        "roher_button": 1
+    },
+    "livewire/kalkulator/index.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 11,
+        "leise_definition": 1,
+        "roher_button": 2
+    },
+    "livewire/knowledge/browser.blade.php": {
+        "typo_groesse": 21,
+        "typo_tinte": 37,
+        "leise_definition": 1,
+        "roher_button": 8,
+        "rohe_checkbox": 2
+    },
+    "livewire/knowledge/einordnung.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 4
+    },
+    "livewire/lager/index.blade.php": {
+        "typo_groesse": 20,
+        "typo_tinte": 10,
+        "leise_definition": 1,
+        "roher_button": 7,
+        "rohe_checkbox": 3
+    },
+    "livewire/lager/partials/filter.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 2,
+        "rohe_checkbox": 2
+    },
+    "livewire/observatorium/briefing-profil.blade.php": {
+        "roher_button": 5,
+        "rohe_checkbox": 1
+    },
+    "livewire/observatorium/detail.blade.php": {
+        "roher_button": 6
+    },
+    "livewire/observatorium/handy-navigation.blade.php": {
+        "roher_button": 2
+    },
+    "livewire/observatorium/index.blade.php": {
+        "roher_button": 13,
+        "rohe_checkbox": 1
+    },
+    "livewire/observatorium/karte.blade.php": {
+        "roher_button": 3
+    },
+    "livewire/observatorium/lagebild-teaser.blade.php": {
+        "roher_button": 1
+    },
+    "livewire/observatorium/marktdaten.blade.php": {
+        "roher_button": 1
+    },
+    "livewire/observatorium/pinnwand.blade.php": {
+        "roher_button": 5
+    },
+    "livewire/observatorium/radar-filter.blade.php": {
+        "roher_button": 1,
+        "rohe_checkbox": 1
+    },
+    "livewire/observatorium/radar-trend.blade.php": {
+        "roher_button": 1
+    },
+    "livewire/observatorium/radar.blade.php": {
+        "roher_button": 4
+    },
+    "livewire/observatorium/wettbewerb-karte.blade.php": {
+        "roher_button": 3
+    },
+    "livewire/orders/detail-panel.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 9
+    },
+    "livewire/orders/editor.blade.php": {
+        "typo_groesse": 56,
+        "typo_tinte": 73,
+        "leise_definition": 1,
+        "roher_button": 25
+    },
+    "livewire/orders/index.blade.php": {
+        "typo_groesse": 27,
+        "typo_tinte": 32,
+        "leise_definition": 1,
+        "roher_button": 7,
+        "rohe_checkbox": 6
+    },
+    "livewire/pakete/index.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 17,
+        "roher_button": 1
+    },
+    "livewire/partials/_leer-zustand.blade.php": {
+        "alte_palette": 3
+    },
+    "livewire/partials/_signal-row.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 10,
+        "leise_definition": 1
+    },
+    "livewire/planning/partials/coverage-panel.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 7,
+        "roher_button": 1
+    },
+    "livewire/planning/partials/frame-board.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 3,
+        "roher_button": 2,
+        "rohe_checkbox": 1
+    },
+    "livewire/planning/partials/kohaesion-panel.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 8
+    },
+    "livewire/planning/partials/phase-stepper.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 5,
+        "roher_button": 1
+    },
+    "livewire/planung/foodbook-kontext-rail.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 5
     },
     "livewire/planung/index.blade.php": {
         "hex_farbe": 13,
         "important": 1,
         "emoji": 18,
         "mini_schrift": 5,
-        "style_statisch": 7
+        "style_statisch": 7,
+        "typo_groesse": 23,
+        "typo_tinte": 43,
+        "roher_button": 24,
+        "rohe_checkbox": 2,
+        "alte_palette": 11
+    },
+    "livewire/planung/kapitel-rail.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 5,
+        "roher_button": 2
+    },
+    "livewire/planung/partials/board-karte.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 3
+    },
+    "livewire/planung/partials/board-worker-kopf.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 4,
+        "roher_button": 1
+    },
+    "livewire/planung/partials/concept-plan-positionen.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 5
+    },
+    "livewire/planung/partials/concept-plan.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 2
+    },
+    "livewire/planung/partials/detail-inhalt.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 3
+    },
+    "livewire/planung/partials/diktat.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 3,
+        "roher_button": 2
+    },
+    "livewire/planung/partials/erstellen-tab.blade.php": {
+        "typo_groesse": 15,
+        "typo_tinte": 20,
+        "roher_button": 1
+    },
+    "livewire/planung/partials/fortschritt.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 17,
+        "roher_button": 5
+    },
+    "livewire/planung/partials/fortschritt/knoten.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 4,
+        "roher_button": 1
+    },
+    "livewire/planung/partials/fortschritt/rezept.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 18
+    },
+    "livewire/planung/partials/ki-status-leiste.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 3
+    },
+    "livewire/planung/partials/leitplanken.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 14,
+        "roher_button": 6,
+        "rohe_checkbox": 4
+    },
+    "livewire/planung/partials/schnellstart-chips.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 6,
+        "roher_button": 2
+    },
+    "livewire/planung/partials/schnellstart-speichern.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1
+    },
+    "livewire/planung/partials/step-zeile.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 46,
+        "roher_button": 7
+    },
+    "livewire/planung/rezept-import.blade.php": {
+        "typo_groesse": 9,
+        "typo_tinte": 15
+    },
+    "livewire/planung/zukauf-ware.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 3,
+        "leise_definition": 1,
+        "roher_button": 1
+    },
+    "livewire/praesentation/kapitel-logo.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 2
+    },
+    "livewire/preise/fruehere.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 9,
+        "roher_button": 1
+    },
+    "livewire/preise/verlauf.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 18,
+        "roher_button": 5,
+        "rohe_checkbox": 1
+    },
+    "livewire/preislisten/index.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 3,
+        "leise_definition": 1,
+        "rohe_checkbox": 1
+    },
+    "livewire/preislisten/stammdaten-import.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 4,
+        "leise_definition": 1,
+        "roher_button": 1,
+        "rohe_checkbox": 2
+    },
+    "livewire/produktion/browser.blade.php": {
+        "typo_groesse": 13,
+        "typo_tinte": 21,
+        "roher_button": 4
+    },
+    "livewire/produktion/detail-panel.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 13,
+        "leise_definition": 1
+    },
+    "livewire/produktion/editor.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 5,
+        "leise_definition": 1,
+        "roher_button": 2,
+        "rohe_checkbox": 1
+    },
+    "livewire/produktion/partials/editor-einkauf.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 5
+    },
+    "livewire/produktion/partials/editor-vorschau.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 3
+    },
+    "livewire/produktion/partials/editor-zeilen.blade.php": {
+        "typo_groesse": 10,
+        "typo_tinte": 13,
+        "roher_button": 1
+    },
+    "livewire/produktion/partials/editor-ziele.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 11,
+        "roher_button": 4
+    },
+    "livewire/produktion/partials/wall-verknuepfung.blade.php": {
+        "typo_tinte": 3
+    },
+    "livewire/produktion/tagesplan.blade.php": {
+        "typo_groesse": 35,
+        "typo_tinte": 117,
+        "roher_button": 37
+    },
+    "livewire/projekte/detail.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 8,
+        "roher_button": 3
+    },
+    "livewire/projekte/index.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 4,
+        "roher_button": 1
+    },
+    "livewire/projekte/kunde-dna-phase.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1
+    },
+    "livewire/recipes/browser.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 15,
+        "roher_button": 5,
+        "rohe_checkbox": 1
+    },
+    "livewire/recipes/detail-panel.blade.php": {
+        "typo_groesse": 19,
+        "typo_tinte": 27,
+        "leise_definition": 1,
+        "roher_button": 6
+    },
+    "livewire/recipes/fassung-modal.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1,
+        "leise_definition": 1
+    },
+    "livewire/recipes/feedback-panel.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 3,
+        "leise_definition": 1
+    },
+    "livewire/recipes/generator-modal.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 10,
+        "leise_definition": 1,
+        "roher_button": 2,
+        "rohe_checkbox": 2
     },
     "livewire/recipes/pairing-netz-modal.blade.php": {
         "hex_farbe": 10,
-        "emoji": 10
+        "emoji": 10,
+        "typo_groesse": 2,
+        "typo_tinte": 6,
+        "roher_button": 1
+    },
+    "livewire/recipes/partials/deklaration-summary.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1
+    },
+    "livewire/recipes/partials/diktat-knopf.blade.php": {
+        "typo_groesse": 1,
+        "roher_button": 1
+    },
+    "livewire/recipes/partials/hochrechner.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 6,
+        "leise_definition": 1,
+        "roher_button": 2
+    },
+    "livewire/recipes/partials/ki-kontext.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 5,
+        "leise_definition": 1
+    },
+    "livewire/recipes/partials/md-toolbar.blade.php": {
+        "typo_tinte": 2,
+        "roher_button": 1
+    },
+    "livewire/recipes/partials/step-photo-pool.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 5,
+        "roher_button": 3
+    },
+    "livewire/recipes/partials/verwaltung.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 9,
+        "leise_definition": 1,
+        "roher_button": 1
+    },
+    "livewire/recipes/partials/zutaten-kern.blade.php": {
+        "typo_groesse": 33,
+        "typo_tinte": 78,
+        "roher_button": 17,
+        "rohe_checkbox": 6
+    },
+    "livewire/recipes/recipe-modal.blade.php": {
+        "typo_groesse": 24,
+        "typo_tinte": 32,
+        "roher_button": 10,
+        "rohe_checkbox": 2
+    },
+    "livewire/recipes/step-editor.blade.php": {
+        "typo_groesse": 16,
+        "typo_tinte": 18,
+        "roher_button": 4
+    },
+    "livewire/recipes/template-instantiate-modal.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 5,
+        "leise_definition": 1
+    },
+    "livewire/review-queue.blade.php": {
+        "typo_groesse": 42,
+        "typo_tinte": 54,
+        "roher_button": 7
+    },
+    "livewire/settings/aufschlagsklassen.blade.php": {
+        "typo_groesse": 12,
+        "typo_tinte": 14,
+        "roher_button": 2
+    },
+    "livewire/settings/behaelter.blade.php": {
+        "typo_groesse": 10,
+        "typo_tinte": 10,
+        "roher_button": 4
+    },
+    "livewire/settings/betriebe.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 9,
+        "roher_button": 1
+    },
+    "livewire/settings/brief-vorlagen.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 5,
+        "roher_button": 2
+    },
+    "livewire/settings/concepter-dimensionen.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 4,
+        "roher_button": 2
+    },
+    "livewire/settings/dna-felder.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 2
+    },
+    "livewire/settings/einheiten.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 10,
+        "roher_button": 2,
+        "rohe_checkbox": 1
+    },
+    "livewire/settings/einkauf.blade.php": {
+        "typo_groesse": 26,
+        "typo_tinte": 32,
+        "roher_button": 3,
+        "rohe_checkbox": 5
+    },
+    "livewire/settings/einsatzorte.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 4
+    },
+    "livewire/settings/etiketten.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 5,
+        "leise_definition": 1,
+        "roher_button": 2,
+        "rohe_checkbox": 7
+    },
+    "livewire/settings/hausstandards.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 8
+    },
+    "livewire/settings/herstellkosten.blade.php": {
+        "typo_groesse": 20,
+        "typo_tinte": 30,
+        "rohe_checkbox": 1
+    },
+    "livewire/settings/index.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 5,
+        "roher_button": 1
+    },
+    "livewire/settings/kalkulation.blade.php": {
+        "typo_groesse": 14,
+        "typo_tinte": 14
+    },
+    "livewire/settings/ki.blade.php": {
+        "typo_groesse": 14,
+        "typo_tinte": 32
+    },
+    "livewire/settings/konzept-taxonomie.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 10,
+        "roher_button": 2
+    },
+    "livewire/settings/kueche.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 4
+    },
+    "livewire/settings/kunde-dna.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 4,
+        "roher_button": 1
+    },
+    "livewire/settings/leistungskategorien.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 4
+    },
+    "livewire/settings/mandanten.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 12,
+        "rohe_checkbox": 1
+    },
+    "livewire/settings/partials/behaelter-felder.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 4,
+        "rohe_checkbox": 1
+    },
+    "livewire/settings/partials/bereich.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 2
+    },
+    "livewire/settings/partials/info.blade.php": {
+        "typo_tinte": 1
+    },
+    "livewire/settings/partials/ki-klassen-pflege.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 2
+    },
+    "livewire/settings/partials/reorder-cell.blade.php": {
+        "typo_tinte": 3,
+        "roher_button": 2
+    },
+    "livewire/settings/partials/sperr-leiste.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1
+    },
+    "livewire/settings/partials/teamprofil-body.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 2
+    },
+    "livewire/settings/plan-nutzung.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1
+    },
+    "livewire/settings/posten.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 9,
+        "roher_button": 1,
+        "rohe_checkbox": 1
+    },
+    "livewire/settings/praesentations-designs.blade.php": {
+        "typo_groesse": 26,
+        "typo_tinte": 23,
+        "roher_button": 3,
+        "rohe_checkbox": 13
+    },
+    "livewire/settings/regeln.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 21,
+        "roher_button": 3
+    },
+    "livewire/settings/rollen.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 4
+    },
+    "livewire/settings/schreibstile.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 6,
+        "roher_button": 2
     },
     "livewire/settings/speiseplan-chips.blade.php": {
         "important": 6,
-        "mini_schrift": 6
+        "mini_schrift": 6,
+        "roher_button": 6,
+        "rohe_checkbox": 2,
+        "alte_palette": 7
+    },
+    "livewire/settings/start.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 8
+    },
+    "livewire/settings/taxonomie.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 6,
+        "roher_button": 1
+    },
+    "livewire/settings/trendradar.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 4,
+        "rohe_checkbox": 2
+    },
+    "livewire/settings/vk-taxonomie.blade.php": {
+        "typo_groesse": 8,
+        "typo_tinte": 10,
+        "roher_button": 1
+    },
+    "livewire/settings/warengruppen.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 10,
+        "roher_button": 3
+    },
+    "livewire/settings/wissenskategorien.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 7,
+        "roher_button": 2
+    },
+    "livewire/settings/wissenssteuerung.blade.php": {
+        "typo_groesse": 30,
+        "typo_tinte": 56,
+        "roher_button": 4,
+        "rohe_checkbox": 1
+    },
+    "livewire/settings/zugriffsrechte.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 3,
+        "leise_definition": 1,
+        "rohe_checkbox": 2
+    },
+    "livewire/signale/detail-panel.blade.php": {
+        "typo_groesse": 36,
+        "typo_tinte": 39,
+        "roher_button": 3,
+        "rohe_checkbox": 3
+    },
+    "livewire/speisekarte/index.blade.php": {
+        "typo_groesse": 24,
+        "typo_tinte": 24,
+        "roher_button": 3,
+        "rohe_checkbox": 3
+    },
+    "livewire/speisekarte/leitstelle-rail.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 3
+    },
+    "livewire/speisekarte/partials/detail.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 4
     },
     "livewire/speisekarte/partials/praesentation-rubrik.blade.php": {
-        "mini_schrift": 1
+        "mini_schrift": 1,
+        "alte_palette": 8
     },
     "livewire/speisekarte/partials/rubrik.blade.php": {
-        "important": 2
+        "important": 2,
+        "typo_groesse": 10,
+        "typo_tinte": 28,
+        "roher_button": 13
+    },
+    "livewire/speisekarte/partials/vorschau.blade.php": {
+        "typo_groesse": 13,
+        "typo_tinte": 16
     },
     "livewire/speisekarte/praesentation.blade.php": {
-        "hex_farbe": 2
+        "hex_farbe": 2,
+        "alte_palette": 1
+    },
+    "livewire/speiseplan/editor.blade.php": {
+        "typo_groesse": 50,
+        "typo_tinte": 77,
+        "leise_definition": 1,
+        "roher_button": 17,
+        "rohe_checkbox": 11
+    },
+    "livewire/speiseplan/index.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 3,
+        "roher_button": 1
+    },
+    "livewire/speiseplan/partials/abwechslung.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 3,
+        "roher_button": 4
+    },
+    "livewire/speiseplan/partials/detail.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 7
+    },
+    "livewire/speiseplan/partials/vorschau.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 10
+    },
+    "livewire/speiseplan/partials/zelle.blade.php": {
+        "typo_groesse": 10,
+        "typo_tinte": 16,
+        "roher_button": 2
+    },
+    "livewire/suppliers/index.blade.php": {
+        "typo_groesse": 14,
+        "typo_tinte": 37,
+        "roher_button": 5,
+        "rohe_checkbox": 4
+    },
+    "livewire/suppliers/item-modal.blade.php": {
+        "typo_groesse": 15,
+        "typo_tinte": 28,
+        "leise_definition": 1,
+        "roher_button": 4
+    },
+    "livewire/suppliers/lieferant-marken.blade.php": {
+        "typo_groesse": 9,
+        "typo_tinte": 11
+    },
+    "livewire/suppliers/lieferanten-link.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 3,
+        "leise_definition": 1,
+        "rohe_checkbox": 1
+    },
+    "livewire/suppliers/marke-offen.blade.php": {
+        "typo_groesse": 3,
+        "typo_tinte": 4
+    },
+    "livewire/suppliers/marken.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 9,
+        "rohe_checkbox": 1
+    },
+    "livewire/suppliers/necta-pruefaelle.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 7,
+        "roher_button": 1
+    },
+    "livewire/suppliers/produktpass-panel.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 1,
+        "leise_definition": 1
+    },
+    "livewire/suppliers/supplier-detail.blade.php": {
+        "typo_groesse": 27,
+        "typo_tinte": 36,
+        "roher_button": 1,
+        "rohe_checkbox": 3
+    },
+    "livewire/team-brille-bar.blade.php": {
+        "alte_palette": 5
+    },
+    "livewire/trendradar/ableitung.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 3
+    },
+    "livewire/trendradar/automatik.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 3
+    },
+    "livewire/trendradar/beobachten.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 1,
+        "leise_definition": 1
+    },
+    "livewire/trendradar/eingang.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 4,
+        "roher_button": 2
+    },
+    "livewire/trendradar/index.blade.php": {
+        "typo_groesse": 11,
+        "typo_tinte": 18,
+        "leise_definition": 1,
+        "roher_button": 11,
+        "rohe_checkbox": 2
+    },
+    "livewire/trendradar/quellen.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 4
+    },
+    "livewire/trendradar/wettbewerber.blade.php": {
+        "roher_button": 12,
+        "rohe_checkbox": 2
+    },
+    "livewire/ui-katalog.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 5
+    },
+    "livewire/verkauf/browser.blade.php": {
+        "typo_groesse": 6,
+        "typo_tinte": 18,
+        "roher_button": 5
+    },
+    "livewire/verkauf/detail-panel.blade.php": {
+        "typo_groesse": 21,
+        "typo_tinte": 37,
+        "leise_definition": 1,
+        "roher_button": 1
+    },
+    "livewire/verkauf/partials/darreichung-gefaess.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 1
+    },
+    "livewire/verkauf/partials/darreichung-komponenten.blade.php": {
+        "typo_groesse": 1,
+        "rohe_checkbox": 1
+    },
+    "livewire/verkauf/partials/darreichung-zeiten.blade.php": {
+        "typo_groesse": 5
+    },
+    "livewire/verkauf/partials/darreichung-zubehoer.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 4,
+        "roher_button": 1
+    },
+    "livewire/verkauf/partials/darreichungen.blade.php": {
+        "typo_groesse": 3,
+        "roher_button": 1,
+        "rohe_checkbox": 1
+    },
+    "livewire/verkauf/partials/gemeinsame-zeiten.blade.php": {
+        "typo_groesse": 1
+    },
+    "livewire/verkauf/rezeptur-erstellen.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 3,
+        "roher_button": 1
+    },
+    "livewire/verkauf/vk-generator-modal.blade.php": {
+        "typo_groesse": 10,
+        "typo_tinte": 11,
+        "roher_button": 2,
+        "rohe_checkbox": 2
+    },
+    "livewire/verkauf/vk-modal.blade.php": {
+        "typo_groesse": 28,
+        "typo_tinte": 32,
+        "roher_button": 8
+    },
+    "livewire/verwaltung/grundeinstellungen.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 2
+    },
+    "livewire/verwaltung/mandant-beenden.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 5,
+        "rohe_checkbox": 1
+    },
+    "livewire/verwaltung/master-team.blade.php": {
+        "typo_groesse": 4,
+        "typo_tinte": 4
+    },
+    "livewire/verwaltung/plan-preise.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 1
+    },
+    "livewire/verwaltung/stamm-paket.blade.php": {
+        "typo_groesse": 7,
+        "typo_tinte": 9,
+        "rohe_checkbox": 4
+    },
+    "livewire/voice-modal.blade.php": {
+        "typo_groesse": 20,
+        "typo_tinte": 22,
+        "leise_definition": 1,
+        "roher_button": 14
+    },
+    "livewire/wareneingang/abgleich.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 1,
+        "leise_definition": 1,
+        "rohe_checkbox": 1
+    },
+    "livewire/wareneingang/index.blade.php": {
+        "typo_groesse": 5,
+        "typo_tinte": 6,
+        "leise_definition": 1,
+        "roher_button": 4,
+        "rohe_checkbox": 3
+    },
+    "livewire/wareneingang/rechnungen.blade.php": {
+        "typo_groesse": 2,
+        "typo_tinte": 4,
+        "leise_definition": 1,
+        "rohe_checkbox": 1
     },
     "partials/editor-dark.blade.php": {
         "important": 7,
         "style_block": 1
     },
+    "presentation/blocks/_konfigurator_chrome.blade.php": {
+        "roher_button": 1
+    },
+    "presentation/blocks/_konfigurator_detail.blade.php": {
+        "roher_button": 4
+    },
+    "presentation/blocks/_konfigurator_preisleiste.blade.php": {
+        "roher_button": 2
+    },
     "presentation/blocks/_speiseplan_meta.blade.php": {
         "emoji": 1,
         "style_statisch": 7
     },
+    "presentation/blocks/chapter_loop.blade.php": {
+        "roher_button": 2
+    },
     "presentation/blocks/grid.blade.php": {
         "style_statisch": 4
     },
-    "presentation/blocks/preis_aufschluesselung.blade.php": {
-        "hex_farbe": 15,
-        "style_statisch": 29
+    "presentation/blocks/konfig_addons.blade.php": {
+        "roher_button": 1,
+        "rohe_checkbox": 1
+    },
+    "presentation/blocks/konfig_anfrage.blade.php": {
+        "roher_button": 1,
+        "rohe_checkbox": 1
+    },
+    "presentation/blocks/konfig_getraenke.blade.php": {
+        "roher_button": 1,
+        "rohe_checkbox": 1
+    },
+    "presentation/blocks/konfig_konzepte.blade.php": {
+        "roher_button": 2
+    },
+    "presentation/blocks/konfig_tageszeit.blade.php": {
+        "roher_button": 1
+    },
+    "presentation/blocks/konfig_zusammenfassung.blade.php": {
+        "roher_button": 2
     },
     "presentation/blocks/price_summary.blade.php": {
         "hex_farbe": 1,

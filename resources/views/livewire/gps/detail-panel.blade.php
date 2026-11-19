@@ -14,7 +14,7 @@
         'is_organic' => 'Bio', 'is_regional' => 'regional', 'is_staple_food' => 'Grundnahrungsmittel',
         'is_convenience' => 'Convenience', 'is_lactose_free' => 'laktosefrei', 'is_gluten_free' => 'glutenfrei',
     ];
-    $konfTon = ['high' => 'ok', 'medium' => 'warn', 'low' => 'crit'];
+    $konfTon = ['high' => 'ok', 'medium' => 'warn', 'low' => 'crit', 'none' => 'warn', 'unknown' => 'warn'];   // 98 · 1.1d: unbekannt nie neutral (liest sich sonst wie allergenfrei)
     $konfSatz = [
         'high' => 'Allergene vollständig durch Artikel belegt',
         'medium' => 'Allergene teilweise belegt, stichprobenartig prüfen',

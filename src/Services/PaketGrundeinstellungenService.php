@@ -27,7 +27,7 @@ use Symfony\Component\Uid\UuidV7;
  * (je Konzept), Standorte (mandanteneigen, Plan B F4). Stundensätze der Rollen werden NICHT mitkopiert (BHG-intern, das Team setzt eigene).
  *
  * Plan B (Kurator 18.10.2026): dazu das Vokabular des Masters — Rezept-Hauptgruppen/-Kategorien, Aufschlagsklassen, Speisen-Hauptgruppen/-Klassen,
- * Servierformen, Behälter, Koch-Equipment, Regenerationsgeräte, Anlässe, Einsatzmomente, Saisons (Einheiten und Warengruppen sind globale
+ * Servierformen, Behälter, Koch-Equipment, Regenerationsgeräte, Servier-Typen, Anlässe, Einsatzmomente, Saisons (Einheiten und Warengruppen sind globale
  * Plattform-Basis und werden nie kopiert). EINMALIGE Befüllung: die Kopien gehören danach dem Mandanten, ohne Rückverbindung.
  *  - Aufschlagsklassen OHNE BHG-Faktoren: class_factor_pct = 100 (neutral), raw_markup/service/profit = NULL. Der Preis entsteht aus dem Basissatz des
  *    Mandanten (seine Fixkosten, CatalogPricingService::enterpriseBaseRate) × Klassenfaktor — der Mandant staffelt seine Klassen danach selbst.
@@ -69,6 +69,8 @@ class PaketGrundeinstellungenService
         ['tabelle' => 'vocab_containers', 'label' => 'Behälter', 'schluessel' => ['slug'], 'nur_master' => true],
         ['tabelle' => 'vocab_kitchen_equipment', 'label' => 'Koch-Equipment', 'schluessel' => ['slug'], 'nur_master' => true],
         ['tabelle' => 'vocab_regeneration_devices', 'label' => 'Regenerationsgeräte', 'schluessel' => ['slug'], 'nur_master' => true],
+        // 19.11.2026: Servier-Typen = Liste der Geschirr-Empfehlung an der Darreichung. Fehlten bisher → Mandanten hatten keine Auswahl.
+        ['tabelle' => 'vocab_serving_vehicles', 'label' => 'Servier-Typen (Geschirr-Empfehlung)', 'schluessel' => ['slug'], 'nur_master' => true],
         ['tabelle' => 'event_types', 'label' => 'Anlässe', 'schluessel' => ['name'], 'nur_master' => true],
         ['tabelle' => 'service_moments', 'label' => 'Einsatzmomente', 'schluessel' => ['name'], 'nur_master' => true],
         ['tabelle' => 'seasons', 'label' => 'Saisons', 'schluessel' => ['name'], 'nur_master' => true],

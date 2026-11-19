@@ -3,14 +3,8 @@
     <div wire:key="dar-gef-{{ $d->id }}" data-dar-gefaess-info="{{ $d->id }}">
         <div>
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
-                <span class="font-medium">Servier-Typ</span>
-                <label class="inline-flex items-center gap-1">
-                    <select wire:model="darForm.{{ $d->id }}.serving_vehicle_vocab_id" wire:change="darreichungSpeichern({{ $d->id }})" aria-label="Servier-Typ" class="{{ $feldKlein }} fa-select pr-8 w-44" data-dar-typ @if(! $gi['uebersteuert'] && $gi['typ_name'] && $gi['gefaess_id']) data-dar-typ-aus-gefaess @endif>
-                        <option value="">{{ $gi['gefaess_typ_name'] ? 'aus Gefäß: '.$gi['gefaess_typ_name'] : 'nicht gesetzt' }}</option>
-                        @foreach($vehikel as $v)<option value="{{ $v->id }}" @if($v->is_inactive && ($darForm[$d->id]['serving_vehicle_vocab_id'] ?? null) != $v->id) hidden @endif>{{ $v->name }}</option>@endforeach
-                    </select>
-                </label>
-                @if($gi['uebersteuert'])<x-fa::badge tone="warn" data-dar-uebersteuert title="Der Typ wurde ausdrücklich gesetzt und weicht vom Typ des Gefäßes ab">übersteuert (Gefäß sagt {{ $gi['gefaess_typ_name'] }})</x-fa::badge>
+                {{-- Geschirr-Empfehlung steht seit 19.11.2026 als Feld neben dem Gefäß; hier nur der Hinweis, wenn sie vom Typ des Gefäßes abweicht --}}
+                @if($gi['uebersteuert'])<x-fa::badge tone="info" data-dar-uebersteuert title="Die Geschirr-Empfehlung weicht vom Typ des Gefäßes ab">Empfehlung weicht ab (Gefäß: {{ $gi['gefaess_typ_name'] }})</x-fa::badge>
                 @endif
                 @if($gi['gefaess_id'])
                     {{-- Art des Gefäßes (17.11.2026): leer = Eintrag des Teams am Grundprodukt (Art + Preis), sonst Automatik (Verleih → extern, sonst Einweg) --}}

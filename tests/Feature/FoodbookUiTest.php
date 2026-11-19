@@ -2,7 +2,6 @@
 
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Foodbooks\Index as FoodbooksIndex;
-use Platform\FoodAlchemist\Livewire\Foodbooks\LeitstelleRail;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
@@ -102,27 +101,7 @@ it('Foodbook-Editor: Header-Preis-Block (person) erscheint mit €/Person im Coc
 // Spec-42-Vollzug S3b: die 7-Schritt-Planungs-Checkliste ist entfallen (Planung → Leitstelle); der
 // Phasen-Stepper (Versand-Status) bleibt. Der frühere Checklisten-Render-Test ist damit gegenstandslos.
 
-// ── Spec 19 E5.3 / S3b: Leitstelle-Rail (Nested-Livewire) — Kopf-Modus (nur Kuration) ──
-
-it('Leitstelle-Rail Kopf-Modus: 3-Panel-Umschalter + Kapitel-Matrix', function () {
-    $svc = app(FoodbookService::class);
-    $fb = $svc->create($this->rootTeam, ['label' => 'Rail-FB']);
-    $svc->addKapitel($this->rootTeam, $fb->id, ['title' => 'Vorspeisen']);
-
-    $html = Livewire::test(LeitstelleRail::class, ['foodbookId' => $fb->id, 'kapitelId' => null])
-        ->assertOk()
-        ->assertSee('data-rail-kopf', false)
-        ->assertSee('data-rail-panel-btn="fortschritt"', false)
-        ->assertSee('data-rail-panel-btn="speisen"', false)
-        ->assertSee('data-rail-panel-btn="kalkulation"', false)
-        ->assertSee('data-rail-matrix', false)
-        ->assertSee('fb-cockpit-tab', false)                 // Auto-Default-Event-Listener verdrahtet
-        ->assertSee('Vorspeisen')
-        ->html();
-
-    // Kapitel-Planung darf im Kopf-Modus NICHT auftauchen.
-    expect($html)->not->toContain('data-rail-kapitel');
-});
+// Spec 19 E5.3 / S3b: die Foodbook-Leitstelle-Rail ist entfallen (98 · 1.2a, toter Code); ihr Render-Test mit.
 
 // S3b: Die Rail-Kapitel-Planung (M3-Ziele-Editor + Kapitel-Go „Anlegen"/Undo) ist in die Leitstelle
 // gewandert und dort abgedeckt (LeitstelleKapitelKaskadeTest: starteKapitelKaskade + KapitelRail-Setter).

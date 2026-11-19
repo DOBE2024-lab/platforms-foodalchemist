@@ -12,7 +12,6 @@ return [
     'Livewire/Concerns/TauschtRezept.php' => 1,
     'Livewire/Etiketten/Index.php' => 1,
     'Livewire/Foodbooks/Index.php' => 15,
-    'Livewire/Foodbooks/LeitstelleRail.php' => 1,
     'Livewire/Formate/Editor.php' => 1,
     'Livewire/Gps/GpModal.php' => 3,
     'Livewire/Lager/Index.php' => 2,

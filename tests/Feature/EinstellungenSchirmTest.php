@@ -131,8 +131,8 @@ it('markiert die aktive Sektion und zeigt ihren Kopf genau einmal', function () 
 });
 
 it('eine unbekannte Sektion endet in 404, nicht in einem leeren Schirm', function () {
-    // `konzept-taxonomie` ist genau dieser Fall: das Blade liegt noch da, die Sektion ist aber
-    // aus der Navigation genommen — der Aufruf muss sauber 404en statt halb zu rendern.
+    // `konzept-taxonomie` ist genau dieser Fall: die Sektion gab es einmal (Schirm und Blade sind
+    // seit 98 · 1.2a gelöscht) — ein alter Link muss sauber 404en statt halb zu rendern.
     expect(Einstellungen::SEKTIONEN)->not->toHaveKey('konzept-taxonomie');
 
     // Über die Route, nicht über Livewire::test — der Test-Harness fängt das abort() aus mount()

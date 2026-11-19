@@ -1,7 +1,4 @@
 {
-    "components/chips.blade.php": {
-        "emoji": 1
-    },
     "components/detail-sidebar.blade.php": {
         "mini_schrift": 1,
         "style_statisch": 1
@@ -386,14 +383,6 @@
         "roher_button": 24,
         "rohe_checkbox": 5
     },
-    "livewire/foodbooks/kunde-dna-panel.blade.php": {
-        "alte_palette": 1
-    },
-    "livewire/foodbooks/leitstelle-rail.blade.php": {
-        "typo_groesse": 14,
-        "typo_tinte": 25,
-        "roher_button": 3
-    },
     "livewire/foodbooks/partials/concept-zeilen.blade.php": {
         "typo_groesse": 6,
         "typo_tinte": 7,
@@ -406,11 +395,6 @@
     "livewire/foodbooks/partials/ki-text-vorschau.blade.php": {
         "typo_groesse": 2,
         "typo_tinte": 2
-    },
-    "livewire/foodbooks/partials/leitstelle-checkliste.blade.php": {
-        "typo_groesse": 2,
-        "typo_tinte": 4,
-        "roher_button": 1
     },
     "livewire/foodbooks/partials/menue-vorschau.blade.php": {
         "typo_groesse": 23,
@@ -549,12 +533,6 @@
         "leise_definition": 1,
         "roher_button": 1
     },
-    "livewire/kalkulator/index.blade.php": {
-        "typo_groesse": 7,
-        "typo_tinte": 11,
-        "leise_definition": 1,
-        "roher_button": 2
-    },
     "livewire/knowledge/browser.blade.php": {
         "typo_groesse": 21,
         "typo_tinte": 37,
@@ -639,14 +617,6 @@
         "typo_tinte": 17,
         "roher_button": 1
     },
-    "livewire/partials/_leer-zustand.blade.php": {
-        "alte_palette": 3
-    },
-    "livewire/partials/_signal-row.blade.php": {
-        "typo_groesse": 8,
-        "typo_tinte": 10,
-        "leise_definition": 1
-    },
     "livewire/planning/partials/coverage-panel.blade.php": {
         "typo_groesse": 5,
         "typo_tinte": 7,
@@ -657,10 +627,6 @@
         "typo_tinte": 3,
         "roher_button": 2,
         "rohe_checkbox": 1
-    },
-    "livewire/planning/partials/kohaesion-panel.blade.php": {
-        "typo_groesse": 7,
-        "typo_tinte": 8
     },
     "livewire/planning/partials/phase-stepper.blade.php": {
         "typo_groesse": 2,
@@ -888,10 +854,6 @@
         "typo_tinte": 6,
         "roher_button": 1
     },
-    "livewire/recipes/partials/deklaration-summary.blade.php": {
-        "typo_groesse": 1,
-        "typo_tinte": 1
-    },
     "livewire/recipes/partials/diktat-knopf.blade.php": {
         "typo_groesse": 1,
         "roher_button": 1
@@ -906,10 +868,6 @@
         "typo_groesse": 5,
         "typo_tinte": 5,
         "leise_definition": 1
-    },
-    "livewire/recipes/partials/md-toolbar.blade.php": {
-        "typo_tinte": 2,
-        "roher_button": 1
     },
     "livewire/recipes/partials/step-photo-pool.blade.php": {
         "typo_groesse": 5,
@@ -1022,11 +980,6 @@
     "livewire/settings/ki.blade.php": {
         "typo_groesse": 14,
         "typo_tinte": 32
-    },
-    "livewire/settings/konzept-taxonomie.blade.php": {
-        "typo_groesse": 7,
-        "typo_tinte": 10,
-        "roher_button": 2
     },
     "livewire/settings/kueche.blade.php": {
         "typo_groesse": 4,
@@ -1404,10 +1357,6 @@
         "typo_tinte": 4,
         "leise_definition": 1,
         "rohe_checkbox": 1
-    },
-    "partials/editor-dark.blade.php": {
-        "important": 7,
-        "style_block": 1
     },
     "presentation/blocks/_konfigurator_chrome.blade.php": {
         "roher_button": 1

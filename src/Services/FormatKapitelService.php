@@ -19,7 +19,7 @@ class FormatKapitelService
      *
      * @return list<array{typ:string, name:?string, claim:?string, text:?string, preis_pp:?float, einzelpreise:bool, gerichte:array}>
      */
-    public function editionen(FoodAlchemistFormat $format, bool $mitHandbuchMengen = false): array
+    public function editionen(FoodAlchemistFormat $format, bool $mitHandbuchMengen = false, bool $mitTexten = false): array
     {
         $wording = app(WordingResolver::class);
         $editionen = [];
@@ -33,7 +33,7 @@ class FormatKapitelService
                     'text' => trim((string) $ed->description) ?: null,
                     'preis_pp' => $ed->price_per_person_cache !== null ? (float) $ed->price_per_person_cache : null,
                     'einzelpreise' => $ed->istEinzelpreis(),
-                    'gerichte' => $wording->gerichtZeilen($ed, null, false, $mitHandbuchMengen),
+                    'gerichte' => $wording->gerichtZeilen($ed, null, $mitTexten, $mitHandbuchMengen),   // $mitTexten: Hinweistexte der Pakete in der Präsentation
                 ];
             } elseif (in_array($fs->type, ['header', 'text', 'spacer'], true)) {
                 $editionen[] = ['typ' => $fs->type, 'name' => $fs->title, 'text' => $fs->text_content,

@@ -56,6 +56,14 @@ it('GET-Modernisierung: price_display/price_mode im Payload', function () {
     expect($get->success)->toBeTrue()->and($get->data['concept'])->toHaveKeys(['price_display', 'price_mode']);
 });
 
+it('GET zeigt den Inhalt von Text-Bausteinen (Hinweistexte wie „serviert im Schraubglas“)', function () {
+    $blk = ($this->run)('foodalchemist.concept_blocks.POST', ['concept_id' => $this->conceptId, 'type' => 'text', 'felder' => ['text_content' => 'serviert im Schraubglas']]);
+    expect($blk->success)->toBeTrue('block: ' . ($blk->error ?? ''));
+
+    $slot = collect(($this->run)('foodalchemist.concepts.GET', ['concept_id' => $this->conceptId])->data['slots'])->firstWhere('id', $blk->data['slot_id']);
+    expect($slot['type'])->toBe('text')->and($slot['text_content'])->toBe('serviert im Schraubglas');
+});
+
 it('Guards: unbekannt → NOT_FOUND; fremd → ACCESS_DENIED; leere felder → VALIDATION_ERROR', function () {
     expect(($this->run)('foodalchemist.concepts.PUT', ['id' => 999999, 'felder' => ['occasion' => 'X']])->errorCode)->toBe('NOT_FOUND');
     expect(($this->run)('foodalchemist.concepts.PUT', ['id' => $this->conceptId, 'felder' => ['occasion' => 'X']], $this->childKontext)->errorCode)->toBe('ACCESS_DENIED');

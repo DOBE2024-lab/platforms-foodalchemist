@@ -33,7 +33,7 @@ class GefaessKostenartService
     public const ARTEN = [
         self::EINWEG => 'Einweg',
         self::MEHRWEG => 'Mehrweg (Eigenbestand)',
-        self::EXTERN => 'Extern (Miete)',
+        self::EXTERN => 'Extern (Miete / Spülservice)',   // 20.11.2026: Schlüssel bleibt „extern“, nur die Beschriftung (Kundenglas, Dienstleister spült, Preis je Einsatz)
     ];
 
     /** Kurztext für Planungsblatt/Produktionsschein: was die Logistik mit dem Gefäß tut. */
@@ -98,9 +98,20 @@ class GefaessKostenartService
      */
     public function wirksam(FoodAlchemistRecipeDarreichung $d, int $gpId, ?Team $team, callable $istVerleih): array
     {
+        return $this->wirksamArt($d->vessel_cost_type, $gpId, $team, $istVerleih);
+    }
+
+    /**
+     * Wie {@see wirksam}, mit der Übersteuerung als Wert statt aus der Darreichung — für das Zubehör am Gefäß (20.11.2026: kein Übersteuern,
+     * also null): jedes Teil rechnet nach dem Eintrag des Teams an SEINEM GP, sonst Automatik.
+     *
+     * @return array{kostenart: string, quelle: string, vorgabe: string, preis_gp: ?float}
+     */
+    public function wirksamArt(?string $uebersteuerung, int $gpId, ?Team $team, callable $istVerleih): array
+    {
         $eintrag = $team !== null ? $this->teamVorgabe($gpId, $team) : ['kostenart' => null, 'preis' => null];
         $vorgabe = $eintrag['kostenart'] ?? ($istVerleih() ? self::EXTERN : self::EINWEG);
-        $eigene = is_string($d->vessel_cost_type) && array_key_exists($d->vessel_cost_type, self::ARTEN) ? $d->vessel_cost_type : null;
+        $eigene = is_string($uebersteuerung) && array_key_exists($uebersteuerung, self::ARTEN) ? $uebersteuerung : null;
 
         return ['kostenart' => $eigene ?? $vorgabe, 'quelle' => $eigene !== null ? 'darreichung' : ($eintrag['kostenart'] !== null ? 'team' : 'automatik'),
             'vorgabe' => $vorgabe, 'preis_gp' => $eintrag['preis']];

@@ -30,7 +30,7 @@ it('BehaelterService: anlegen, aktualisieren, umschalten, löschen — mit Pflic
     $svc = app(BehaelterService::class);
 
     expect($svc->anlegen($this->rootTeam, 'behaelter', ['name' => 'GN 1/1 65', 'laenge_mm' => '530', 'nutzfaktor' => '']))->toBe('GN 1/1 65');
-    $zeile = DB::table('foodalchemist_vocab_containers')->where('team_id', $this->rootTeam->id)->where('slug', 'gn_1_1_65')->first();
+    $zeile = DB::table('foodalchemist_vocab_containers')->where('team_id', $this->rootTeam->id)->where('slug', Str::slug('GN 1/1 65', '_'))->first();
     expect((float) $zeile->laenge_mm)->toBe(530.0)->and((float) $zeile->nutzfaktor)->toBe(0.85);
 
     expect(fn () => $svc->anlegen($this->rootTeam, 'behaelter', ['name' => ' ']))->toThrow(\InvalidArgumentException::class, 'Name ist Pflicht.');

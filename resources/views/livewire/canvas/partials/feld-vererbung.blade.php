@@ -12,11 +12,9 @@
             <span>Ein eigener Wert überschreibt ihn.</span>
         @endif
         @if($verbMoeglich)
-            <label class="inline-flex items-center gap-1.5 cursor-pointer" data-canvas-verbindlich-schalter="{{ $f['key'] }}">
-                <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" @checked(! empty($canvasVerbindlich[$f['key']]))
-                       wire:click="verbindlichSchalten('{{ $f['key'] }}')" />
+            <x-fa::checkbox class="inline-flex items-center gap-1.5 cursor-pointer" :checked="! empty($canvasVerbindlich[$f['key']])" wire:click="verbindlichSchalten('{{ $f['key'] }}')" data-canvas-verbindlich-schalter="{{ $f['key'] }}">
                 {{ $canvasType === 'kunde_dna' ? 'Bleibt – unverhandelbar' : 'Für Unter-Teams verbindlich' }}
-            </label>
+            </x-fa::checkbox>
         @endif
     </div>
 @endif

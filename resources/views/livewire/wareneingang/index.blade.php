@@ -87,10 +87,9 @@
                                 <span class="font-semibold">{{ $erste['nummer'] }}</span>
                                 @if($erste['reference'])<span class="fa-t-muted">{{ $erste['reference'] }}</span>@endif
                                 <span class="flex-1"></span>
-                                <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]">
-                                    <input type="checkbox" wire:model.live="abschliessen.{{ $orderId }}" data-we-abschliessen="{{ $orderId }}">
+                                <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]" wire:model.live="abschliessen.{{ $orderId }}" data-we-abschliessen="{{ $orderId }}">
                                     Bestellung damit abgeschlossen
-                                </label>
+                                </x-fa::checkbox>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="fa-table fa-table--compact min-w-[760px]">
@@ -99,7 +98,7 @@
                                         @foreach($rows as $z)
                                             @php($id = $z['order_line_id'])
                                             <tr wire:key="we-z-{{ $id }}" class="{{ empty($z['an']) ? 'opacity-50' : '' }}" data-we-zeile="{{ $id }}">
-                                                <td><input type="checkbox" wire:model.live="zeilen.{{ $id }}.an" aria-label="auf Lieferschein"></td>
+                                                <td><x-fa::checkbox wire:model.live="zeilen.{{ $id }}.an" aria-label="auf Lieferschein" /></td>
                                                 <td>
                                                     <span class="font-medium">{{ $z['designation'] }}</span>
                                                     <span class="fa-t-muted">{{ trim(($z['article_number'] ? 'Art. ' . $z['article_number'] : '') . ($z['packaging_unit'] ? ' · ' . $z['packaging_unit'] : ''), ' ·') }}</span>
@@ -222,7 +221,7 @@
                     <x-fa::field label="Suche" for="we-f-suche" class="w-56">
                         <x-fa::input id="we-f-suche" wire:model.live.debounce.300ms="fSuche" placeholder="Nummer oder Artikel" />
                     </x-fa::field>
-                    <label class="inline-flex items-center gap-2 pb-2 text-[length:var(--fa-text-sm)]"><input type="checkbox" wire:model.live="fAbweichung"> nur mit Abweichung</label>
+                    <x-fa::checkbox class="inline-flex items-center gap-2 pb-2 text-[length:var(--fa-text-sm)]" wire:model.live="fAbweichung">nur mit Abweichung</x-fa::checkbox>
                 </div>
                 @if($liste === [])
                     <x-fa::empty compact icon="heroicon-o-clipboard-document-list" title="Keine Lieferscheine">Erfasste Lieferscheine stehen hier — mit Abweichungen, Beleg und Status.</x-fa::empty>

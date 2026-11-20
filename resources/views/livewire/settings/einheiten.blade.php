@@ -19,10 +19,9 @@
     <x-fa::section title="Einheiten" :meta="$einheiten->count() . ' Einheiten'"
         description="Gramm und Milliliter je Einheit machen Rezeptmengen in Gewicht und Volumen umrechenbar, zum Beispiel ein Esslöffel oder ein Stück.">
         <x-slot:actions>
-            <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer">
-                <input type="checkbox" wire:model.live="includeInactive" class="rounded accent-[var(--fa-accent)]" />
+            <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer" wire:model.live="includeInactive">
                 Inaktive zeigen
-            </label>
+            </x-fa::checkbox>
         </x-slot:actions>
         <fieldset @disabled($sperrLesen) class="contents" data-fa-lesemodus="{{ $sperrLesen ? '1' : '0' }}">
 

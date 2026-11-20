@@ -22,7 +22,6 @@
     $titelKlein = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
     $listenKnopf = 'flex w-full items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $haken = 'w-4 h-4 shrink-0 rounded accent-[var(--fa-accent)]';
 @endphp
 
 <x-foodalchemist::modal name="gp-modal" :title="$neu ? 'Grundprodukt anlegen' : ($kannKuratieren ? 'Grundprodukt bearbeiten' : 'Grundprodukt ansehen')"
@@ -391,10 +390,9 @@
                 @endif
 
                 @if($neu)
-                    <label class="inline-flex items-center gap-2 fa-t-muted" title="Legt das Grundprodukt auch an, wenn es schon ein sehr ähnliches gibt">
-                        <input type="checkbox" wire:model.live="force" class="{{ $haken }}" data-force-flag />
+                    <x-fa::checkbox class="inline-flex items-center gap-2 fa-t-muted" title="Legt das Grundprodukt auch an, wenn es schon ein sehr ähnliches gibt" wire:model.live="force" data-force-flag>
                         Auch anlegen, wenn es schon ein sehr ähnliches Grundprodukt gibt
-                    </label>
+                    </x-fa::checkbox>
                 @endif
             </x-fa::section>
 
@@ -470,13 +468,12 @@
 
             {{-- Nebenprodukt (Derivat) --}}
             <x-fa::section title="Nebenprodukt" icon="heroicon-o-arrow-turn-down-right">
-                <label class="inline-flex items-start gap-2 fa-t-body">
-                    <input type="checkbox" wire:model.live="builder.is_derivat" class="{{ $haken }} mt-0.5" data-derivat-toggle />
+                <x-fa::checkbox class="inline-flex items-start gap-2 fa-t-body" wire:model.live="builder.is_derivat" data-derivat-toggle>
                     <span>
                         Küchen-Nebenprodukt (Schale, Saft, Parüren, Karkasse …)
                         <span class="block fa-t-muted">Braucht keinen Lieferantenartikel und übernimmt die Allergene laufend vom Ausgangsprodukt.</span>
                     </span>
-                </label>
+                </x-fa::checkbox>
                 @if($builder['is_derivat'])
                     <div class="flex flex-col gap-1.5" data-derivat-mutter>
                         <p class="{{ $titelKlein }}">Ausgangsprodukt</p>
@@ -616,13 +613,12 @@
                         </x-fa::field>
                     </div>
                     {{-- Regelwerk Basisrezepte §18.7 (17.11.2026): Vorschlag für Zeilen ohne eigene Zeilenart --}}
-                    <label class="inline-flex items-start gap-2 mt-3 fa-t-body">
-                        <input type="checkbox" wire:model="istKochmedium" class="{{ $haken }} mt-0.5" data-gp-kochmedium />
+                    <x-fa::checkbox class="inline-flex items-start gap-2 mt-3 fa-t-body" wire:model="istKochmedium" data-gp-kochmedium>
                         <span>
                             Kochmedium (Kochwasser-Salz, Frittierfett, Lake)
                             <span class="block fa-t-muted">Mit Garverlust im Rezept wird der verworfene Anteil auch bei den Nährwerten abgezogen. Die Zutatenzeile kann das übersteuern.</span>
                         </span>
-                    </label>
+                    </x-fa::checkbox>
                 </x-fa::section>
 
                 <x-fa::section title="Gewicht je Form" icon="heroicon-o-scale" :meta="$formen->count() ?: null"

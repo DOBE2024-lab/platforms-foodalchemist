@@ -121,8 +121,8 @@
                         @endif
                         @if($bu['grund'] === 'eingefroren')<p class="text-[length:var(--fa-text-sm)]">Dieses Angebot ist eingefroren. Mit der Übernahme zeigt es danach auf die neue Fassung; der eingefrorene Stand bleibt als Historie.</p>@endif
                         @if($bu['braucht_bestaetigung'])
-                            <label class="inline-flex items-center gap-2"><input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="bausteinBestaetigt" data-signal-baustein-bestaetigung />
-                                Ich habe die Allergen-Änderung geprüft (nur Rolle Freigeben).</label>
+                            <x-fa::checkbox class="inline-flex items-center gap-2" wire:model.live="bausteinBestaetigt" data-signal-baustein-bestaetigung>
+                                Ich habe die Allergen-Änderung geprüft (nur Rolle Freigeben).</x-fa::checkbox>
                         @endif
                         <div class="flex gap-2">
                             <x-fa::button variant="primary" wire:click="bausteinUebernahmeAusfuehren" :disabled="$bu['braucht_bestaetigung'] && ! $bausteinBestaetigt" data-signal-baustein-ausfuehren>Fassung übernehmen</x-fa::button>
@@ -142,8 +142,8 @@
                         @endif
                         @if($ru['in_eingefrorenem_angebot'])<p class="text-[length:var(--fa-text-sm)]">Dieses Rezept steckt in einem eingefrorenen Angebot; dessen Stand bleibt unverändert.</p>@endif
                         @if($ru['braucht_bestaetigung'])
-                            <label class="inline-flex items-center gap-2"><input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="rezeptBestaetigt" data-signal-rezept-bestaetigung />
-                                Ich habe die Allergen-Änderung geprüft (nur Rolle Freigeben).</label>
+                            <x-fa::checkbox class="inline-flex items-center gap-2" wire:model.live="rezeptBestaetigt" data-signal-rezept-bestaetigung>
+                                Ich habe die Allergen-Änderung geprüft (nur Rolle Freigeben).</x-fa::checkbox>
                         @endif
                         <div class="flex gap-2">
                             <x-fa::button variant="primary" wire:click="rezeptUebernahmeAusfuehren" :disabled="$ru['braucht_bestaetigung'] && ! $rezeptBestaetigt" data-signal-rezept-ausfuehren>Fassung übernehmen</x-fa::button>
@@ -351,10 +351,9 @@
                     <x-fa::field label="Begründung" for="sig-pol-notiz" hint="Wird bei der Lage angezeigt." optional>
                         <x-fa::input id="sig-pol-notiz" wire:model="pNote" maxlength="255" placeholder="z. B. Einkauf klärt neue Bezugsquelle bis Monatsende" data-signal-policy-note />
                     </x-fa::field>
-                    <label class="flex items-center gap-2 fa-t-body">
-                        <input type="checkbox" wire:model="pMuted" class="w-4 h-4 rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-signal-policy-muted>
+                    <x-fa::checkbox class="flex items-center gap-2 fa-t-body" wire:model="pMuted" data-signal-policy-muted>
                         Stumm schalten <span class="text-[var(--fa-ink-3)]">(interessiert nicht, auch keine Meldung über Verschlechterungen)</span>
-                    </label>
+                    </x-fa::checkbox>
                     {{-- Entfernen links, Speichern rechts: Löschen nie direkt neben Speichern. --}}
                     <div class="flex items-center justify-between gap-2 pt-1">
                         <div>

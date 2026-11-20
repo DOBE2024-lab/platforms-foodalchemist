@@ -17,11 +17,9 @@
                                 <span class="font-semibold">{{ $st['name'] }}</span>
                                 <x-fa::badge data-inhalte-kalkprofil="{{ $st['id'] }}" title="Kalkulationsprofil — Zuordnung unter Einstellungen → Kalkulationsprofile">{{ $st['betrieb'] ? 'Kalkulationsprofil: '.$st['betrieb'] : 'Kalkulationsprofil: Standard' }}</x-fa::badge>
                             </span>
-                            <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]">
-                                <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" data-inhalte-erbt="{{ $st['id'] }}"
-                                    @checked($st['erbt_alles']) wire:change="erbtAllesSetzen({{ $st['id'] }}, $event.target.checked)" />
+                            <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]" data-inhalte-erbt="{{ $st['id'] }}" :checked="$st['erbt_alles']" wire:change="erbtAllesSetzen({{ $st['id'] }}, $event.target.checked)">
                                 übernimmt alles vom Oberteam
-                            </label>
+                            </x-fa::checkbox>
                         </div>
                         @unless($st['erbt_alles'])
                             @php($fs = $freigaben->get($st['id'], collect()))
@@ -100,9 +98,7 @@
                                 @if($statusOptionen !== [])
                                     <x-fa::select size="sm" class="w-40" wire:model.live="filterStatus" :options="$statusOptionen" placeholder="Jeder Status" aria-label="Status" data-picker-status />
                                 @endif
-                                <label class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)]">
-                                    <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="nurNeue" data-picker-nur-neue /> nur noch nicht enthaltene
-                                </label>
+                                <x-fa::checkbox class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)]" wire:model.live="nurNeue" data-picker-nur-neue>nur noch nicht enthaltene</x-fa::checkbox>
                             </div>
                             @if($treffer === [])
                                 <p class="fa-t-muted">Keine {{ $ebenen[$ebene] }} gefunden.</p>
@@ -110,8 +106,7 @@
                                 <ul class="flex flex-col gap-1 max-h-80 overflow-y-auto">
                                     @foreach($treffer as $t)
                                         <li class="flex items-center gap-2" wire:key="tr-{{ $ebene }}-{{ $t['id'] }}">
-                                            <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="pickerAuswahl.{{ $t['id'] }}"
-                                                @disabled($t['drin']) aria-label="{{ $t['name'] }} auswählen" data-picker-eintrag="{{ $t['id'] }}" />
+                                            <x-fa::checkbox wire:model.live="pickerAuswahl.{{ $t['id'] }}" :disabled="$t['drin']" aria-label="{{ $t['name'] }} auswählen" data-picker-eintrag="{{ $t['id'] }}" />
                                             <span class="{{ $t['drin'] ? 'fa-t-muted' : '' }}">{{ $t['name'] }}@if($t['drin']) · schon in der Sammlung @endif</span>
                                         </li>
                                     @endforeach

@@ -98,7 +98,7 @@
                 @if($hatFilter)<button class="fa-obs-filter-reset" type="button" wire:click="filterZuruecksetzen">Filter zurücksetzen</button>@endif
             </div>
             @if($ansicht === 'markt')<div class="fa-obs-filters"><label class="fa-obs-field small"><select wire:model.live="markt" aria-label="Marktansicht"><option value="">Alle Marktbewegungen</option><option value="chance">Chancen prüfen</option></select></label><span class="fa-obs-subtitle">Hinweise aus Quellen – noch keine bestätigten Geschäftschancen.</span></div>@endif
-            @if($ansicht === 'merkliste')<label class="fa-obs-subtitle fa-obs-pruefen-filter"><input type="checkbox" wire:model.live="pruefen">Nur für die Trendprüfung vorgemerkte Beiträge</label>@endif
+            @if($ansicht === 'merkliste')<x-fa::checkbox class="fa-obs-subtitle fa-obs-pruefen-filter" wire:model.live="pruefen">Nur für die Trendprüfung vorgemerkte Beiträge</x-fa::checkbox>@endif
 
             @if($istHandy)<button type="button" class="fa-obs-button primary" x-on:click="filterOffen = false">Ergebnisse ansehen</button>@endif
             </div>

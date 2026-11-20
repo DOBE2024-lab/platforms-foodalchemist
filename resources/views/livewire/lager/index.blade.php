@@ -313,10 +313,9 @@
                             @if($summen['offen'] > 0)
                                 <p class="fa-t-muted">{{ $summen['offen'] }} Position(en) noch nicht gezählt.</p>
                             @endif
-                            <label class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" data-lager-null-buchen>
-                                <input type="checkbox" wire:model.live="nichtGezaehltNull" class="w-4 h-4 rounded accent-[var(--fa-accent)]" />
+                            <x-fa::checkbox class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" wire:model.live="nichtGezaehltNull" data-lager-null-buchen>
                                 Nicht Gezähltes beim Buchen als 0 übernehmen
-                            </label>
+                            </x-fa::checkbox>
                         </div>
                     @endif
 
@@ -444,7 +443,7 @@
             <x-fa::section title="Chargen im Lager" icon="heroicon-o-archive-box" :meta="$chargen->count()" data-lager-chargen>
                 <div class="flex flex-wrap items-center gap-3">
                     <x-fa::select wire:model.live="lagerortId" size="sm" placeholder="Alle Lagerorte" :options="$orte->pluck('name', 'id')" class="w-48" aria-label="Lagerort" />
-                    <label class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]"><input type="checkbox" wire:model.live="nurAblaufend" class="w-4 h-4 rounded accent-[var(--fa-accent)]" /> Nur bald ablaufend (≤ 3 Tage)</label>
+                    <x-fa::checkbox class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" wire:model.live="nurAblaufend">Nur bald ablaufend (≤ 3 Tage)</x-fa::checkbox>
                     @if($ablaufendAnzahl > 0)<x-fa::badge tone="warn">{{ $ablaufendAnzahl }} bald ablaufend</x-fa::badge>@endif
                 </div>
                 @if($chargen->isEmpty())
@@ -558,7 +557,7 @@
                                         @foreach($einrichten as $r)
                                             @php $vorschlag = $r['bin_id'] === null && $r['bin_vorschlag'] !== null ? $plaetze->firstWhere('id', $r['bin_vorschlag']) : null; @endphp
                                             <tr wire:key="e-{{ $r['gp_id'] }}">
-                                                <td><input type="checkbox" value="{{ $r['gp_id'] }}" wire:model.live="auswahl" class="w-4 h-4 rounded accent-[var(--fa-accent)]" aria-label="{{ $r['name'] }} markieren" /></td>
+                                                <td><x-fa::checkbox value="{{ $r['gp_id'] }}" wire:model.live="auswahl" aria-label="{{ $r['name'] }} markieren" /></td>
                                                 <td class="font-medium">{{ $r['name'] }}</td>
                                                 <td>{{ $r['zustand'] ?? '–' }}@if($r['warengruppe'])<span class="fa-t-muted"> · WG {{ $r['warengruppe'] }}</span>@endif</td>
                                                 <td>

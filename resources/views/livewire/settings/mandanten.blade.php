@@ -54,9 +54,7 @@
                                             <span class="text-[var(--fa-ink-3)]">KI-Deckel € / Monat</span>
                                             <x-fa::input numeric size="sm" inputmode="decimal" class="w-32" placeholder="Standard" wire:model="kiDeckel.{{ $b['team_id'] }}" :disabled="$kiUnbegrenzt[$b['team_id']] ?? false" data-mandant-ki-deckel-eur />
                                         </label>
-                                        <label class="flex items-center gap-2 text-[length:var(--fa-text-sm)]">
-                                            <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="kiUnbegrenzt.{{ $b['team_id'] }}" data-mandant-ki-unbegrenzt> unbegrenzt
-                                        </label>
+                                        <x-fa::checkbox class="flex items-center gap-2 text-[length:var(--fa-text-sm)]" wire:model.live="kiUnbegrenzt.{{ $b['team_id'] }}" data-mandant-ki-unbegrenzt>unbegrenzt</x-fa::checkbox>
                                         <x-fa::button size="sm" variant="secondary" wire:click="kiDeckelSpeichern({{ $b['team_id'] }})" data-mandant-ki-speichern>Speichern</x-fa::button>
                                         <span class="fa-t-muted max-w-[60ch]">Leer = Standard: Projektphase und Teams ohne Mandanten-Status {{ $euro(config('foodalchemist.ai.projekt_deckel_eur', 20)) }}, aktive Mandanten ohne Deckel. Darüber ist KI gesperrt bis zum Monatsersten oder zur Lizenz.</span>
                                     </div>

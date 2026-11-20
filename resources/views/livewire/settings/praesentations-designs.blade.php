@@ -4,7 +4,6 @@
      Farben und Schriften sind KUNDEN-BRANDING (Daten): Farbwähler + gespeicherte Werte bleiben unverändert, nur ihre Darstellung ist neu.
      Spalten richten sich nach der verfügbaren Breite (Container-Abfragen), nicht nach dem Fenster. --}}
 @php
-    $haken = 'w-4 h-4 shrink-0 rounded accent-[var(--fa-accent)]';
     $hakenZeile = 'flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] cursor-pointer';
     $hilfe = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $menuPunkt = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
@@ -127,7 +126,7 @@
             <div class="flex flex-wrap items-end gap-3">
                 <x-fa::choice name="previewType" label="Vorschau als" :options="$formen" />
                 @if(in_array($previewType, ['foodbook', 'angebot'], true))
-                    <label class="{{ $hakenZeile }} pb-2" title="Gespeichert im Design: Foodbook und Angebot bekommen im veröffentlichten Link den Knopf „EK einblenden“. Jeder mit dem Link kann umschalten. Ohne Haken kein Knopf. Wirkt nach dem nächsten Veröffentlichen."><input type="checkbox" wire:model.live="tokens.ek_im_link" class="{{ $haken }}" data-fa-vorschau-ek> EK-Ansicht im Link</label>
+                    <x-fa::checkbox class="{{ $hakenZeile }} pb-2" title="Gespeichert im Design: Foodbook und Angebot bekommen im veröffentlichten Link den Knopf „EK einblenden“. Jeder mit dem Link kann umschalten. Ohne Haken kein Knopf. Wirkt nach dem nächsten Veröffentlichen." wire:model.live="tokens.ek_im_link" data-fa-vorschau-ek>EK-Ansicht im Link</x-fa::checkbox>
                 @endif
                 <x-fa::field label="Quelle" for="design-vorschau-quelle" class="flex-1 min-w-[12rem]">
                     <x-fa::select id="design-vorschau-quelle" wire:model.live="previewSourceId" placeholder="Quelle wählen">
@@ -210,17 +209,17 @@
                             @endif
                         @endif
                         <div class="flex flex-col gap-2">
-                            <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_price" class="{{ $haken }}"> Preise zeigen</label>
-                            <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_codes" class="{{ $haken }}"> Allergen-Kennzeichen zeigen</label>
-                            <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_dish_photos" class="{{ $haken }}"> Gericht-Fotos zeigen</label>
+                            <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_price">Preise zeigen</x-fa::checkbox>
+                            <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_codes">Allergen-Kennzeichen zeigen</x-fa::checkbox>
+                            <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_dish_photos">Gericht-Fotos zeigen</x-fa::checkbox>
                             @if($bt === 'chapter_loop')
-                                <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_chapter_image" class="{{ $haken }}"> Kapitel-Bilder zeigen</label>
-                                <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_kapitel_preis" class="{{ $haken }}" data-fa-kapitel-preis> Preis je Kapitel im Kapitelkopf</label>
+                                <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_chapter_image">Kapitel-Bilder zeigen</x-fa::checkbox>
+                                <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_kapitel_preis" data-fa-kapitel-preis>Preis je Kapitel im Kapitelkopf</x-fa::checkbox>
                             @endif
-                            <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_rules" class="{{ $haken }}"> Trennlinien zwischen den Gerichten</label>
-                            <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_block_header" class="{{ $haken }}"> Konzeptname über der Gerichtsliste</label>
+                            <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_rules">Trennlinien zwischen den Gerichten</x-fa::checkbox>
+                            <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_block_header">Konzeptname über der Gerichtsliste</x-fa::checkbox>
                             @if($bt === 'chapter_loop')
-                                <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_kicker" class="{{ $haken }}"> Kleine Zeile über dem Kapiteltitel</label>
+                                <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_kicker">Kleine Zeile über dem Kapiteltitel</x-fa::checkbox>
                             @endif
                             @if($bt === 'chapter_loop' && ($sb['style']['show_kapitel_preis'] ?? false))
                                 <x-fa::field label="Text hinter dem Kapitelpreis" for="design-kapitel-preis-label" hint="Leer heißt „pro Person“. Der Preis ist netto, bei Formaten mit Alternativen die Spanne von bis. Er erscheint nur, wenn das Dokument mit Preisen veröffentlicht wird.">
@@ -245,15 +244,15 @@
                             <x-fa::choice name="layout.{{ $i }}.style.chapter_image_fit" label="Kapitelbild"
                                 :options="['auto' => 'Automatisch', 'fotoband' => 'Fotoband', 'ganz' => 'Ganz zeigen']" />
                             <p class="fa-t-muted">Fotoband füllt die Breite und schneidet zu. Ganz zeigen lässt das Bild unbeschnitten an der linken Textkante, gut für Logos und Grafiken. Automatisch zeigt transparente Bilder ganz, Fotos als Fotoband.</p>
-                            <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_chapter_logo" class="{{ $haken }}"> Logo je Kapitel zeigen</label>
+                            <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_chapter_logo">Logo je Kapitel zeigen</x-fa::checkbox>
                             <x-fa::choice name="layout.{{ $i }}.style.chapter_logo_position" label="Kapitel-Logo"
                                 :options="['unten' => 'Unten im Kapitel', 'oben' => 'Über dem Kapiteltitel']" />
                             <p class="fa-t-muted">Das Logo lädst du im Kapitel selbst hoch: im Foodbook, im Angebot oder in der Speisekarten-Rubrik.</p>
                         @endif
                     @elseif($bt === 'cover')
                         <div class="flex flex-col gap-2">
-                            <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_cover_image" class="{{ $haken }}"> Titelbild zeigen</label>
-                            <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_logo" class="{{ $haken }}"> Logo zeigen</label>
+                            <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_cover_image">Titelbild zeigen</x-fa::checkbox>
+                            <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="layout.{{ $i }}.style.show_logo">Logo zeigen</x-fa::checkbox>
                         </div>
                         <x-fa::field label="Zeile über dem Titel" for="design-cover-kicker" hint="Zum Beispiel Anlass, Datum oder Gästezahl. Leer heißt „Kulinarisches Angebot“.">
                             <x-fa::input id="design-cover-kicker" wire:model.live.debounce.400ms="layout.{{ $i }}.style.kicker_text" placeholder="Kulinarisches Angebot" />
@@ -393,10 +392,9 @@
                     <x-fa::choice name="tokens.nav_umfang" label="Im Menü" :options="['kapitel' => 'Nur Kapitel', 'pakete' => 'Kapitel und Pakete']" />
                     <p class="{{ $hilfe }}">Mit Paketen springt das Menü auch zu „Italien“, „Deutschland“ usw. innerhalb eines Kapitels.</p>
                 </div>
-                <label class="{{ $hakenZeile }}">
-                    <input type="checkbox" wire:model.live="tokens.lightbox" class="{{ $haken }}">
+                <x-fa::checkbox class="{{ $hakenZeile }}" wire:model.live="tokens.lightbox">
                     Bilder per Klick vergrößern
-                </label>
+                </x-fa::checkbox>
                 <x-fa::choice name="tokens.band_style" label="Bild-Band" :options="['grid' => 'Raster (Standard)', 'rondell' => 'Karussell']" />
                 <div class="flex flex-col gap-1">
                     <x-fa::choice name="tokens.speiseplan_layout" label="Speiseplan-Ausgabe" :options="['grid' => 'Wochen-Tabelle (Standard)', 'liste' => 'Liste, Tag für Tag']" />

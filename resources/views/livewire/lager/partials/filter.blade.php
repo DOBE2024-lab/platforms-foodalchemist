@@ -2,7 +2,6 @@
      optional: $lieferanten, $mitLagerort (+ $orte), $mitStatus, $mitLadenhueter, $mitOhnePreis, $mitPlatzOrt (Platzname mit Lagerort). --}}
 @php
     $aktiv = collect($filter)->filter(fn ($v) => $v !== '' && $v !== false && $v !== null)->count();
-    $haken = 'w-4 h-4 rounded accent-[var(--fa-accent)]';
 @endphp
 <div class="flex flex-wrap items-center gap-2" data-lager-filter>
     @if(! empty($mitLagerort))
@@ -25,10 +24,10 @@
         <x-fa::select wire:model.live="filter.status" size="sm" class="w-44" placeholder="Alle Positionen" :options="['offen' => 'Noch nicht gezählt', 'gezaehlt' => 'Gezählt', 'differenz' => 'Differenz über 10 %']" aria-label="Status" data-filter-status />
     @endif
     @if(! empty($mitOhnePreis))
-        <label class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]"><input type="checkbox" wire:model.live="filter.ohne_preis" class="{{ $haken }}" /> Ohne Preis</label>
+        <x-fa::checkbox class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" wire:model.live="filter.ohne_preis">Ohne Preis</x-fa::checkbox>
     @endif
     @if(! empty($mitLadenhueter))
-        <label class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Seit 90 Tagen keine Lagerbewegung"><input type="checkbox" wire:model.live="filter.ladenhueter" class="{{ $haken }}" /> Ladenhüter</label>
+        <x-fa::checkbox class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Seit 90 Tagen keine Lagerbewegung" wire:model.live="filter.ladenhueter">Ladenhüter</x-fa::checkbox>
     @endif
     @if($aktiv > 0)
         <x-fa::button size="sm" variant="ghost" icon="heroicon-m-x-mark" wire:click="filterZuruecksetzen">Filter zurücksetzen</x-fa::button>

@@ -243,36 +243,31 @@
                     </x-slot:actions>
                     <div class="flex flex-col gap-4">
                         <div data-richtung="voll-anreichern">
-                            <label class="flex items-start gap-2.5 cursor-pointer">
-                                <input type="checkbox" wire:model="regler.{{ $scope }}.voll_anreichern" class="mt-0.5 h-4 w-4 shrink-0 accent-[var(--fa-accent)]" data-planung-voll-anreichern />
+                            <x-fa::checkbox class="flex items-start gap-2.5 cursor-pointer" wire:model="regler.{{ $scope }}.voll_anreichern" data-planung-voll-anreichern>
                                 <span class="flex flex-col gap-0.5">
                                     <span class="fa-t-strong">Vollständig anreichern</span>
                                     <span class="{{ $hinweisKlasse }}">An (Voreinstellung): Bei der Freigabe entstehen auch Arbeitsschritte, Sensorik, Zeiten, Equipment, Posten und Pairings. Aus: nur die Kernangaben.</span>
                                 </span>
-                            </label>
+                            </x-fa::checkbox>
                         </div>
 
                         <div data-richtung="ki-bilder">
-                            <label class="flex items-start gap-2.5 cursor-pointer">
-                                <input type="checkbox" wire:model="regler.{{ $scope }}.ki_bilder" class="mt-0.5 h-4 w-4 shrink-0 accent-[var(--fa-accent)]" data-planung-ki-bilder />
+                            <x-fa::checkbox class="flex items-start gap-2.5 cursor-pointer" wire:model="regler.{{ $scope }}.ki_bilder" data-planung-ki-bilder>
                                 <span class="flex flex-col gap-0.5">
                                     <span class="flex items-center gap-1.5 fa-t-strong">@svg('heroicon-o-camera', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Fotos per KI erstellen</span>
                                     <span class="{{ $hinweisKlasse }}">Schrittfotos und Produktfoto bei der Anreicherung. Jedes Bild ist ein eigener KI-Aufruf und kostet. Aus: keine Bilder.</span>
                                 </span>
-                            </label>
+                            </x-fa::checkbox>
                         </div>
 
                         <div class="border-t border-[var(--fa-line)] pt-4" data-richtung="favoriten">
-                            <label class="flex items-start gap-2.5 cursor-pointer">
-                                <input type="checkbox" wire:model.live="regler.{{ $scope }}.favoriten" class="mt-0.5 h-4 w-4 shrink-0 accent-[var(--fa-accent)]" data-planung-favoriten />
+                            <x-fa::checkbox class="flex items-start gap-2.5 cursor-pointer" wire:model.live="regler.{{ $scope }}.favoriten" data-planung-favoriten>
                                 <span class="flex flex-col gap-0.5">
                                     <span class="flex items-center gap-1.5 fa-t-strong">@svg('heroicon-o-star', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Auf meinen Favoriten aufbauen</span>
                                     <span class="{{ $hinweisKlasse }}">Bevorzugt deine gemerkten Grundprodukte. Aus: freie Auswahl.</span>
                                 </span>
-                            </label>
-                            <label x-show="$wire.get('regler.{{ $scope }}.favoriten')" class="flex items-center gap-2 mt-2 ml-6.5 cursor-pointer text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">
-                                <input type="checkbox" wire:model="regler.{{ $scope }}.favoriten_conv_only" class="h-4 w-4 shrink-0 accent-[var(--fa-accent)]" /> Nur Convenience-Favoriten
-                            </label>
+                            </x-fa::checkbox>
+                            <x-fa::checkbox x-show="$wire.get('regler.{{ $scope }}.favoriten')" class="flex items-center gap-2 mt-2 ml-6.5 cursor-pointer text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" wire:model="regler.{{ $scope }}.favoriten_conv_only">Nur Convenience-Favoriten</x-fa::checkbox>
                         </div>
                     </div>
                 </x-foodalchemist::modal-section>

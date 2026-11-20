@@ -18,7 +18,7 @@
                         @unless($standardmenge)
                         <td class="num"><input type="text" inputmode="decimal" value="{{ $delta?->quantity_override_g }}" aria-label="Gramm in dieser Form"
                             wire:change="darDeltaMenge({{ $d->id }}, {{ $z->id }}, $event.target.value)" class="{{ $feldKlein }} w-24 text-right tabular-nums" placeholder="Referenz" @disabled($delta?->omitted) /></td>
-                        <td class="text-center"><input type="checkbox" @checked($delta?->omitted) class="accent-[var(--fa-accent)]" aria-label="Weglassen" wire:click="darDeltaWeg({{ $d->id }}, {{ $z->id }})" /></td>
+                        <td class="text-center"><x-fa::checkbox :checked="$delta?->omitted" aria-label="Weglassen" wire:click="darDeltaWeg({{ $d->id }}, {{ $z->id }})" /></td>
                         @endunless
                     </tr>
                 @endforeach

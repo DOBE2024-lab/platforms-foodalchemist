@@ -33,7 +33,6 @@
         ['buendelung', 'Bündelung', null, 0],
     ];
     $eff = (float) ($stufenInfo['prozent'] ?? 0);
-    $haken = 'rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)] disabled:opacity-50';
 @endphp
 
 <x-foodalchemist::modal name="supplier-detail" :title="$stammblatt['name'] ?? 'Lieferant'" size="max-w-4xl">
@@ -277,9 +276,7 @@
                             </div>
 
                             <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[var(--fa-line)]">
-                                <label class="col-span-2 inline-flex items-center gap-2 fa-t-body">
-                                    <input type="checkbox" wire:model="rebateConfig.active" class="{{ $haken }}" /> Rückvergütung im Preis anrechnen
-                                </label>
+                                <x-fa::checkbox class="col-span-2 inline-flex items-center gap-2 fa-t-body" wire:model="rebateConfig.active">Rückvergütung im Preis anrechnen</x-fa::checkbox>
                                 <x-fa::field label="Erwarteter Jahresumsatz in €" for="staffel-umsatz" hint="Daraus ergibt sich die Stufe von selbst.">
                                     <x-fa::input id="staffel-umsatz" numeric wire:model="rebateConfig.assumed_annual_revenue" data-staffel-revenue />
                                 </x-fa::field>
@@ -295,16 +292,13 @@
                                 </x-fa::field>
                                 <fieldset class="col-span-2 flex flex-col gap-2">
                                     <legend class="mb-1.5 fa-t-label">Gilt für</legend>
-                                    <label class="inline-flex items-center gap-2 fa-t-body">
-                                        <input type="checkbox" wire:model.live="rebateConfig.applies_to_all" class="{{ $haken }}" data-staffel-vollsortiment /> Alle Warengruppen
-                                    </label>
+                                    <x-fa::checkbox class="inline-flex items-center gap-2 fa-t-body" wire:model.live="rebateConfig.applies_to_all" data-staffel-vollsortiment>Alle Warengruppen</x-fa::checkbox>
                                     @unless($rebateConfig['applies_to_all'] ?? true)
                                         <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 pl-6" data-staffel-wg>
                                             @foreach($warengruppen as $wg)
-                                                <label class="inline-flex items-center gap-2 min-w-0 fa-t-body">
-                                                    <input type="checkbox" wire:model="rebateConfig.commodity_groups" value="{{ $wg->code }}" class="{{ $haken }}" />
+                                                <x-fa::checkbox class="inline-flex items-center gap-2 min-w-0 fa-t-body" wire:model="rebateConfig.commodity_groups" value="{{ $wg->code }}">
                                                     <span class="min-w-0">{{ $wg->name }}</span>
-                                                </label>
+                                                </x-fa::checkbox>
                                             @endforeach
                                         </div>
                                         <p class="pl-6 fa-t-muted">Nur in den gewählten Warengruppen wird die Rückvergütung angerechnet, sonst gilt der Originalpreis.</p>

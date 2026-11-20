@@ -58,10 +58,7 @@
                     @svg('heroicon-m-magnifying-glass', 'w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fa-ink-3)] pointer-events-none')
                     <x-fa::input id="favoriten-suche" type="search" wire:model.live.debounce.300ms="q" placeholder="Grundprodukt suchen" class="pl-8" />
                 </div>
-                <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer">
-                    <input type="checkbox" wire:model.live="nurGepinnt"
-                           class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" /> Nur angepinnte zeigen
-                </label>
+                <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer" wire:model.live="nurGepinnt">Nur angepinnte zeigen</x-fa::checkbox>
             </div>
 
             @foreach($gruppen as $schluessel => $gruppe)

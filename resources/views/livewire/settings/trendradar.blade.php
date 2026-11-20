@@ -1,6 +1,5 @@
 {{-- Einstellungen → Trendradar: Google Trends über DataForSEO (Spec 79, pro Team). --}}
 @php
-    $haken = 'mt-0.5 w-4 h-4 shrink-0 rounded accent-[var(--fa-accent)]';
     $zeige = fn (string $a) => $abschnitt === null || $abschnitt === $a;   // eigener Reiter (03.11.): der Unter-Reiter zeigt nur seinen Abschnitt, null = alles
 @endphp
 
@@ -36,13 +35,12 @@
             @unless($anbindung)
                 <x-fa::notice tone="warn">Die DataForSEO-Anbindung (Integrations-Modul) ist auf dieser Plattform nicht installiert.</x-fa::notice>
             @endunless
-            <label class="flex items-start gap-2.5 cursor-pointer">
-                <input type="checkbox" wire:model="dfsAktiv" class="{{ $haken }}" />
+            <x-fa::checkbox class="flex items-start gap-2.5 cursor-pointer" wire:model="dfsAktiv">
                 <span>
                     <span class="block fa-t-strong">Wöchentlich messen</span>
                     <span class="block fa-t-muted">Dienstags um {{ $messZeit }} Uhr alle offenen Trends. Ohne Haken nur per Knopf „Jetzt messen“ im Trend.</span>
                 </span>
-            </label>
+            </x-fa::checkbox>
             <x-fa::field label="Monatsbudget in $" for="dfs-budget" hint="Ist es erreicht, stoppt jede weitere Abfrage bis zum Monatswechsel.">
                 <x-fa::input id="dfs-budget" type="number" min="0" max="500" step="0.5" wire:model="dfsBudget" numeric class="max-w-[8rem]" />
             </x-fa::field>
@@ -94,13 +92,12 @@
             <x-fa::field label="Stufe" for="ta-stufe">
                 <x-fa::select id="ta-stufe" wire:model="automatikStufe" :options="$stufen" class="max-w-[28rem]" />
             </x-fa::field>
-            <label class="flex items-start gap-2.5 cursor-pointer">
-                <input type="checkbox" wire:model="automatikSchatten" class="{{ $haken }}" />
+            <x-fa::checkbox class="flex items-start gap-2.5 cursor-pointer" wire:model="automatikSchatten">
                 <span>
                     <span class="block fa-t-strong">Schatten-Modus</span>
                     <span class="block fa-t-muted">Rechnet alles, schreibt aber keine Trends — zum Kalibrieren der Schwellen.</span>
                 </span>
-            </label>
+            </x-fa::checkbox>
             <x-fa::notice tone="info">Die vorgegebenen Schwellen sind Startwerte, nicht belegt (Annahmen, Sarah Spork nennt keine Zahlen). Leer = Startwert.</x-fa::notice>
             <div class="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,16rem),1fr))]">
                 @foreach($regelSchluessel as $schluessel => [$label])

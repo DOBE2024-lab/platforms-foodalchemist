@@ -83,29 +83,26 @@
             </div>
         </div>
 
-        <label class="flex items-start gap-2 pt-3 border-t border-[var(--fa-line)] cursor-pointer">
-            <input type="checkbox" wire:model="ausweichKette" class="mt-0.5 w-4 h-4 accent-[var(--fa-accent)]" />
+        <x-fa::checkbox class="flex items-start gap-2 pt-3 border-t border-[var(--fa-line)] cursor-pointer" wire:model="ausweichKette">
             <span class="min-w-0">
                 <span class="block fa-t-body">Ausweich-Reihenfolge anzeigen</span>
                 <span class="block fa-t-muted">Im Grundprodukt sichtbar: welcher Artikel übernimmt, wenn der aktuelle ausfällt.</span>
             </span>
-        </label>
+        </x-fa::checkbox>
         {{-- Spec 85 PR-B (Dominique 19.10.): nur am Kunden-Hauptteam --}}
         @if($istHauptteam)
-            <label class="flex items-start gap-2 pt-3 cursor-pointer" data-standorte-uebernehmen>
-                <input type="checkbox" wire:model="standorteUebernehmen" class="mt-0.5 w-4 h-4 accent-[var(--fa-accent)]" />
+            <x-fa::checkbox class="flex items-start gap-2 pt-3 cursor-pointer" wire:model="standorteUebernehmen" data-standorte-uebernehmen>
                 <span class="min-w-0">
                     <span class="block fa-t-body">Standorte übernehmen unsere Leitartikel</span>
                     <span class="block fa-t-muted">Eure bevorzugten Artikel und Sperren gelten auch an den Standorten — außer ein Standort legt selbst einen fest.</span>
                 </span>
-            </label>
-            <label class="flex items-start gap-2 pt-3 cursor-pointer" data-standorte-uebernehmen-favoriten>
-                <input type="checkbox" wire:model="standorteUebernehmenFavoriten" class="mt-0.5 w-4 h-4 accent-[var(--fa-accent)]" />
+            </x-fa::checkbox>
+            <x-fa::checkbox class="flex items-start gap-2 pt-3 cursor-pointer" wire:model="standorteUebernehmenFavoriten" data-standorte-uebernehmen-favoriten>
                 <span class="min-w-0">
                     <span class="block fa-t-body">Standorte übernehmen unsere Favoriten</span>
                     <span class="block fa-t-muted">Eure Favoriten gelten auch an den Standorten — eigene Favoriten und Ausschlüsse eines Standorts gehen vor.</span>
                 </span>
-            </label>
+            </x-fa::checkbox>
         @endif
     </x-fa::section>
 
@@ -222,7 +219,7 @@
                                 <td class="min-w-28"><x-fa::input wire:model="lagerEdit.{{ $lager->id }}.code" size="sm" aria-label="Kürzel" class="font-mono" /></td>
                                 <td class="min-w-36"><x-fa::select wire:model="lagerEdit.{{ $lager->id }}.type" size="sm" aria-label="Art" :options="$lagerTypen" /></td>
                                 <td class="min-w-56"><x-fa::input wire:model="lagerEdit.{{ $lager->id }}.note" size="sm" aria-label="Notiz" /></td>
-                                <td class="text-center"><input type="checkbox" wire:model="lagerEdit.{{ $lager->id }}.is_active" aria-label="Aktiv" class="w-4 h-4 accent-[var(--fa-accent)]" /></td>
+                                <td class="text-center"><x-fa::checkbox wire:model="lagerEdit.{{ $lager->id }}.is_active" aria-label="Aktiv" /></td>
                                 <td class="num text-[var(--fa-ink-2)]">{{ $lager->stocks_count }}</td>
                                 <td class="whitespace-nowrap text-right">
                                     <div class="inline-flex items-center gap-1">
@@ -311,7 +308,7 @@
                                 <tbody>
                                     @foreach($repick['wechsel'] as $w)
                                         <tr wire:key="repick-{{ $w['gp_id'] }}" class="border-t border-[var(--fa-line)]">
-                                            <td class="px-3 py-1.5"><input type="checkbox" wire:model="repickAuswahl" value="{{ $w['gp_id'] }}" class="accent-[var(--fa-accent)]" /></td>
+                                            <td class="px-3 py-1.5"><x-fa::checkbox wire:model="repickAuswahl" value="{{ $w['gp_id'] }}" aria-label="{{ $w['gp'] }} umstellen" /></td>
                                             <td class="px-3 py-1.5 text-[var(--fa-ink)]">{{ $w['gp'] }}</td>
                                             <td class="px-3 py-1.5 text-[var(--fa-ink-3)]">{{ ($w['alt_lieferant'] ?? '—') . ($w['alt_vergleichspreis'] !== null ? ' · ' . number_format((float) $w['alt_vergleichspreis'], 2, ',', '.') . ' €' : '') }}</td>
                                             <td class="px-3 py-1.5">

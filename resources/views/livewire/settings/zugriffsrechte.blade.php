@@ -57,8 +57,7 @@
                             <td><x-fa::badge :tone="$m['rolle'] === 'admin' ? 'accent' : 'neutral'">{{ $m['rolle_label'] }}</x-fa::badge></td>
                             <td>
                                 @if($m['haken_moeglich'] && $istAdmin)
-                                    <input type="checkbox" @checked($m['darf_freigeben']) wire:change="freigabeSetzen({{ $m['user_id'] }}, $event.target.checked)"
-                                        aria-label="{{ $m['name'] }} darf Rechnungen freigeben" data-recht-haken="{{ $m['user_id'] }}">
+                                    <x-fa::checkbox :checked="$m['darf_freigeben']" wire:change="freigabeSetzen({{ $m['user_id'] }}, $event.target.checked)" aria-label="{{ $m['name'] }} darf Rechnungen freigeben" data-recht-haken="{{ $m['user_id'] }}" />
                                 @else
                                     <span class="fa-t-muted">{{ $m['darf_freigeben'] ? 'ja' : 'nein' }}</span>
                                 @endif
@@ -78,11 +77,9 @@
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 pb-2">
                                         @foreach($katalog as $b => $label)
                                             @continue(! ($teamBereiche[$b] ?? true))
-                                            <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]">
-                                                <input type="checkbox" @checked(! in_array($b, $userSperren, true))
-                                                    wire:change="userBereichSetzen({{ $m['user_id'] }}, '{{ $b }}', $event.target.checked)" data-user-bereich="{{ $b }}">
+                                            <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]" :checked="! in_array($b, $userSperren, true)" wire:change="userBereichSetzen({{ $m['user_id'] }}, '{{ $b }}', $event.target.checked)" data-user-bereich="{{ $b }}">
                                                 {{ $label }}
-                                            </label>
+                                            </x-fa::checkbox>
                                         @endforeach
                                     </div>
                                 </td>

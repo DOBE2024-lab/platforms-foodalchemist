@@ -72,7 +72,7 @@
                     </div>
                 @endforeach
             </div>
-            <label class="mt-3 flex items-center gap-2 text-[length:var(--fa-text-md)]"><input type="checkbox" wire:model="merken" data-stammdaten-merken /> Zuordnung für diesen Lieferanten merken und beim nächsten Upload anwenden</label>
+            <x-fa::checkbox class="mt-3 flex items-center gap-2 text-[length:var(--fa-text-md)]" wire:model="merken" data-stammdaten-merken>Zuordnung für diesen Lieferanten merken und beim nächsten Upload anwenden</x-fa::checkbox>
             <div class="pt-3"><x-fa::button variant="primary" icon="heroicon-m-arrows-right-left" wire:click="zuordnen" wire:loading.attr="disabled" data-stammdaten-zuordnen>Zuordnen und prüfen</x-fa::button></div>
         </x-fa::section>
     @elseif($lauf)
@@ -113,7 +113,7 @@
                                         <x-fa::button size="sm" variant="primary" wire:click="entscheiden({{ $z->id }}, 'uebernehmen')" data-stammdaten-zeile-uebernehmen>Übernehmen</x-fa::button>
                                         <x-fa::button size="sm" variant="ghost" wire:click="entscheiden({{ $z->id }}, 'verwerfen')" data-stammdaten-zeile-verwerfen>Verwerfen</x-fa::button>
                                         @if(! empty($z->diff['allergene']))
-                                            <label class="flex items-center gap-1.5 text-[length:var(--fa-text-md)]"><input type="checkbox" wire:click="allergeneBestaetigen({{ $z->id }}, {{ $z->allergene_bestaetigt ? 'false' : 'true' }})" @checked($z->allergene_bestaetigt) data-stammdaten-allergene-bestaetigt /> Allergene bestätigen (sonst werden sie nicht geschrieben)</label>
+                                            <x-fa::checkbox class="flex items-center gap-1.5 text-[length:var(--fa-text-md)]" wire:click="allergeneBestaetigen({{ $z->id }}, {{ $z->allergene_bestaetigt ? 'false' : 'true' }})" :checked="$z->allergene_bestaetigt" data-stammdaten-allergene-bestaetigt>Allergene bestätigen (sonst werden sie nicht geschrieben)</x-fa::checkbox>
                                         @endif
                                     </div>
                                 @endif

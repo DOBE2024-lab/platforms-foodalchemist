@@ -962,8 +962,7 @@
                                 <p class="fa-t-label">Trends und Hypes</p>
                                 <div class="flex flex-col max-h-[40vh] overflow-y-auto -mx-1 px-1" data-trend-kandidaten>
                                     @forelse($trendKandidaten as $t)
-                                        <label class="{{ $trZeile }}" wire:key="ptk-{{ $t->id }}">
-                                            <input type="checkbox" value="{{ $t->id }}" wire:model.live="trendWahl.trends" class="mt-1 accent-[var(--fa-accent)]" data-trend-wahl="{{ $t->id }}" />
+                                        <x-fa::checkbox class="{{ $trZeile }}" wire:key="ptk-{{ $t->id }}" value="{{ $t->id }}" wire:model.live="trendWahl.trends" data-trend-wahl="{{ $t->id }}">
                                             <span class="min-w-0 flex-1">
                                                 <span class="flex flex-wrap items-center gap-1.5">
                                                     <span class="font-medium text-[var(--fa-ink)]">{{ $t->name }}</span>
@@ -973,7 +972,7 @@
                                                 </span>
                                                 @if($t->definition)<span class="block {{ $hinweisText }} line-clamp-1">{{ $t->definition }}</span>@endif
                                             </span>
-                                        </label>
+                                        </x-fa::checkbox>
                                     @empty
                                         <p class="{{ $hinweisText }}">Keine Trends gefunden.</p>
                                     @endforelse
@@ -982,14 +981,13 @@
                                 <div class="grid gap-2 grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] max-h-[40vh] overflow-y-auto" data-fund-kandidaten>
                                     @forelse($fundKandidaten as $eintrag)
                                         @php $insp = $eintrag['i']; @endphp
-                                        <label class="fa-surface p-2 flex gap-2 cursor-pointer min-w-0" wire:key="pik-{{ $insp->id }}">
-                                            <input type="checkbox" value="{{ $insp->id }}" wire:model.live="trendWahl.inspirationen" class="mt-1 accent-[var(--fa-accent)]" data-inspiration-wahl="{{ $insp->id }}" />
+                                        <x-fa::checkbox class="fa-surface p-2 flex gap-2 cursor-pointer min-w-0" wire:key="pik-{{ $insp->id }}" value="{{ $insp->id }}" wire:model.live="trendWahl.inspirationen" data-inspiration-wahl="{{ $insp->id }}">
                                             @if($eintrag['url'])<img src="{{ $eintrag['url'] }}" alt="" class="w-12 h-12 object-cover rounded-[var(--fa-radius-control)] shrink-0" loading="lazy" />@endif
                                             <span class="min-w-0">
                                                 <span class="block text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink)] line-clamp-2">{{ $insp->titel }}</span>
                                                 <span class="block {{ $hinweisText }}">{{ $insp->quellen->count() }} {{ $insp->quellen->count() === 1 ? 'Quelle' : 'Quellen' }}@if($insp->trend) · {{ $insp->trend->name }}@endif</span>
                                             </span>
-                                        </label>
+                                        </x-fa::checkbox>
                                     @empty
                                         <p class="{{ $hinweisText }}">Die Inspirations-Pinnwand ist leer.</p>
                                     @endforelse

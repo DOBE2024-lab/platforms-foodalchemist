@@ -1,7 +1,4 @@
 {{-- Spec 70 · Einstellungen → Etiketten: Vorlagen gestalten. --}}
-@php
-    $haken = 'w-4 h-4 rounded accent-[var(--fa-accent)]';
-@endphp
 <div class="flex flex-col gap-4" data-settings-etiketten>
     @if($fehler)<x-fa::notice tone="crit">{{ $fehler }}</x-fa::notice>@endif
     @if($hinweis)<x-fa::notice tone="info">{{ $hinweis }}</x-fa::notice>@endif
@@ -10,10 +7,9 @@
          freiwillige Angabe, keine ZZulV-Pflicht (bestätigt Dominique 16.10.2026). --}}
     <x-fa::section title="Freiwillige Hinweise" icon="heroicon-o-information-circle" data-etiketten-jod
         description="Gilt für Speisekarte und Etikett dieses Teams. Unter-Teams übernehmen die Einstellung, solange sie keine eigene haben.">
-        <label class="inline-flex items-center gap-2 cursor-pointer fa-t-body">
-            <input type="checkbox" class="{{ $haken }}" @checked($jodHinweis) wire:click="jodHinweisUmschalten" data-jod-schalter />
+        <x-fa::checkbox class="inline-flex items-center gap-2 cursor-pointer fa-t-body" :checked="$jodHinweis" wire:click="jodHinweisUmschalten" data-jod-schalter>
             „mit Jodsalz hergestellt“ bei Gerichten mit jodiertem Salz zeigen
-        </label>
+        </x-fa::checkbox>
         <p class="fa-t-muted">Freiwillige Angabe, keine Zusatzstoff-Nummer und kein Eintrag in der Legende.</p>
     </x-fa::section>
 
@@ -73,7 +69,7 @@
                             <x-fa::field label="Arbeitsplatz" for="dr-ap"><x-fa::select id="dr-ap" wire:model="drucker.arbeitsplatz" :options="$arbeitsplaetze" placeholder="–" /></x-fa::field>
                             <x-fa::field label="Kalkulationsprofil" for="dr-betrieb"><x-fa::select id="dr-betrieb" wire:model="drucker.outlet_id" :options="$betriebe" placeholder="alle" /></x-fa::field>
                         </div>
-                        <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)]"><input type="checkbox" wire:model="drucker.is_default" class="{{ $haken }}" /> Standard für diesen Arbeitsplatz</label>
+                        <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)]" wire:model="drucker.is_default">Standard für diesen Arbeitsplatz</x-fa::checkbox>
                         <div class="flex gap-2">
                             <x-fa::button size="sm" variant="primary" wire:click="druckerSpeichern" data-etiketten-drucker-speichern>Speichern</x-fa::button>
                             @if($druckerId)<x-fa::button size="sm" variant="danger" wire:click="druckerLoeschen" wire:confirm="Drucker löschen? Vorlagen mit diesem Drucker nutzen dann wieder ihr eigenes Format.">Löschen</x-fa::button>@endif
@@ -106,10 +102,10 @@
                 </div>
                 <x-fa::field label="Fußtext" for="ef-fuss"><x-fa::input id="ef-fuss" wire:model="form.fusstext" placeholder="z. B. Hergestellt in unserer Küche" /></x-fa::field>
                 <div class="flex flex-col gap-1.5 text-[length:var(--fa-text-md)]">
-                    <label class="inline-flex items-center gap-2"><input type="checkbox" wire:model="form.datum_gross" class="{{ $haken }}" /> „Verbrauchen bis" groß und umrahmt</label>
-                    <label class="inline-flex items-center gap-2"><input type="checkbox" wire:model="form.zeige_logo" class="{{ $haken }}" /> Logo drucken</label>
-                    <label class="inline-flex items-center gap-2"><input type="checkbox" wire:model="form.is_default" class="{{ $haken }}" /> Standard-Vorlage</label>
-                    <label class="inline-flex items-center gap-2" data-etikett-kueche-standard><input type="checkbox" wire:model="form.is_kitchen_default" class="{{ $haken }}" /> Standard für den Wandmonitor (Küche)</label>
+                    <x-fa::checkbox class="inline-flex items-center gap-2" wire:model="form.datum_gross">„Verbrauchen bis" groß und umrahmt</x-fa::checkbox>
+                    <x-fa::checkbox class="inline-flex items-center gap-2" wire:model="form.zeige_logo">Logo drucken</x-fa::checkbox>
+                    <x-fa::checkbox class="inline-flex items-center gap-2" wire:model="form.is_default">Standard-Vorlage</x-fa::checkbox>
+                    <x-fa::checkbox class="inline-flex items-center gap-2" wire:model="form.is_kitchen_default" data-etikett-kueche-standard>Standard für den Wandmonitor (Küche)</x-fa::checkbox>
                 </div>
             </x-fa::section>
         </div>
@@ -123,11 +119,10 @@
                                 <x-fa::icon-button size="sm" icon="heroicon-m-chevron-up" label="nach oben" wire:click="feldVerschieben({{ $i }}, -1)" :disabled="$loop->first" />
                                 <x-fa::icon-button size="sm" icon="heroicon-m-chevron-down" label="nach unten" wire:click="feldVerschieben({{ $i }}, 1)" :disabled="$loop->last" />
                             </div>
-                            <label class="flex-1 inline-flex items-center gap-2 text-[length:var(--fa-text-md)]">
-                                <input type="checkbox" wire:model.live="form.felder.{{ $i }}.an" class="{{ $haken }}" @disabled($f['pflicht']) />
+                            <x-fa::checkbox class="flex-1 inline-flex items-center gap-2 text-[length:var(--fa-text-md)]" wire:model.live="form.felder.{{ $i }}.an" :disabled="$f['pflicht']">
                                 {{ $feldKatalog[$f['key']]['label'] ?? $f['key'] }}
                                 @if($f['pflicht'])<x-fa::badge tone="neutral">Pflicht</x-fa::badge>@endif
-                            </label>
+                            </x-fa::checkbox>
                             @if(($feldKatalog[$f['key']]['art'] ?? '') === 'datum')
                                 <select wire:model.live="form.felder.{{ $i }}.modus" class="fa-control fa-select h-7 pr-8 text-[length:var(--fa-text-sm)]" aria-label="Datums-Modus">
                                     <option value="vorbelegt">vorbelegt</option>

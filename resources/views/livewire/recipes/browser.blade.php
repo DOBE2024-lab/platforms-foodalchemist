@@ -220,7 +220,7 @@
                                 x-data x-on:click="$store.ui?.mSet('activity_recipes', 'open', true)"
                                 data-rezept-zeile="{{ $r->id }}">
                                 <td wire:click.stop>
-                                    <input type="checkbox" wire:model.live="auswahl.{{ $r->id }}" aria-label="{{ $r->name }} auswählen" class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-rezept-checkbox="{{ $r->id }}" />
+                                    <x-fa::checkbox wire:model.live="auswahl.{{ $r->id }}" aria-label="{{ $r->name }} auswählen" data-rezept-checkbox="{{ $r->id }}" />
                                 </td>
                                 {{-- R6: Namens-Klick öffnet direkt den Voll-Editor (Zeilen-Klick bleibt Panel-Auswahl) --}}
                                 <td class="min-w-[8rem]" x-on:click.stop title="{{ $r->name }} — Klick: bearbeiten">

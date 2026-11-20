@@ -29,7 +29,7 @@
                 <div>
                     <p class="fa-t-muted mb-1">Freigegebene Bereiche</p>
                     @foreach($alleBereiche as $key => $label)
-                        <label class="flex items-center gap-2 text-[length:var(--fa-text-md)]"><input type="checkbox" value="{{ $key }}" wire:model="bereiche" /> {{ $label }}</label>
+                        <x-fa::checkbox class="flex items-center gap-2 text-[length:var(--fa-text-md)]" value="{{ $key }}" wire:model="bereiche">{{ $label }}</x-fa::checkbox>
                     @endforeach
                 </div>
             </div>

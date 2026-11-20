@@ -17,7 +17,7 @@
     <div class="flex flex-wrap items-end gap-3">
         <x-fa::field label="Concept suchen" for="kf-gsuche" class="w-80 max-w-full"><x-fa::input id="kf-gsuche" type="search" wire:model.live.debounce.300ms="getraenkSuche" placeholder="z. B. Softdrinks, Wein" data-kf-getraenk-suche /></x-fa::field>
         <x-fa::choice name="getraenkZiel" label="Für" :options="['dinner' => 'Abend (Dinner)', 'lunch' => 'Tag (Lunch)']" />
-        <label class="inline-flex items-center gap-2 pb-2"><input type="checkbox" wire:model="form.getraenke_pflicht" class="accent-[var(--fa-accent)]" data-kf-getraenke-pflicht /> Getränke Pflicht im Link (sonst „ohne Getränke“ möglich, wirkt nach „Speichern“)</label>
+        <x-fa::checkbox class="inline-flex items-center gap-2 pb-2" wire:model="form.getraenke_pflicht" data-kf-getraenke-pflicht>Getränke Pflicht im Link (sonst „ohne Getränke“ möglich, wirkt nach „Speichern“)</x-fa::checkbox>
     </div>
     @if($getraenkTreffer->isNotEmpty())
         <ul class="flex flex-col divide-y divide-[var(--fa-line)]" data-kf-getraenk-treffer>

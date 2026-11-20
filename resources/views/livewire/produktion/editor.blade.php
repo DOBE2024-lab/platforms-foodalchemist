@@ -117,7 +117,7 @@
             <tbody>
                 @foreach($etikettenVorschlag as $ev)
                     <tr wire:key="pe-{{ $ev['line_id'] }}">
-                        <td><input type="checkbox" name="zeilen[{{ $ev['line_id'] }}][an]" value="1" checked class="w-4 h-4 rounded accent-[var(--fa-accent)]" aria-label="{{ $ev['name'] }} drucken" /></td>
+                        <td><x-fa::checkbox name="zeilen[{{ $ev['line_id'] }}][an]" value="1" checked aria-label="{{ $ev['name'] }} drucken" /></td>
                         <td class="font-medium">{{ $ev['name'] }}</td>
                         <td class="text-right"><input type="number" min="1" max="200" name="zeilen[{{ $ev['line_id'] }}][anzahl]" value="{{ $ev['vorschlag']['anzahl'] }}" class="fa-control h-7 w-16 text-right tabular-nums text-[length:var(--fa-text-sm)]" aria-label="Anzahl" /></td>
                         <td><input type="text" name="zeilen[{{ $ev['line_id'] }}][menge]" value="{{ $ev['vorschlag']['menge'] }}" placeholder="leer = Schreiblinie" class="fa-control h-7 w-32 text-[length:var(--fa-text-sm)]" aria-label="Menge je Etikett" /></td>

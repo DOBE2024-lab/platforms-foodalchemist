@@ -126,17 +126,13 @@
             <span class="{{ $label }}">Kriterien (mind. eins, ODER-verknüpft)</span>
             <div class="flex flex-wrap gap-1.5 mt-1" data-neu-kriterien>
                 @foreach($diaeten as $key => $dl)
-                    <label class="inline-flex items-center gap-1 text-[11px] text-gray-700">
-                        <input type="checkbox" value="diaet:{{ $key }}" wire:model="neu.kriterien" /> {{ $dl }}
-                    </label>
+                    <x-fa::checkbox class="inline-flex items-center gap-1 text-[11px] text-gray-700" value="diaet:{{ $key }}" wire:model="neu.kriterien">{{ $dl }}</x-fa::checkbox>
                 @endforeach
             </div>
             @if($hauptgruppen->isNotEmpty())
                 <div class="flex flex-wrap gap-1.5 mt-1.5">
                     @foreach($hauptgruppen as $hg)
-                        <label class="inline-flex items-center gap-1 text-[11px] text-gray-500">
-                            <input type="checkbox" value="hauptgruppe:{{ $hg->id }}" wire:model="neu.kriterien" /> {{ $hg->label }}
-                        </label>
+                        <x-fa::checkbox class="inline-flex items-center gap-1 text-[11px] text-gray-500" value="hauptgruppe:{{ $hg->id }}" wire:model="neu.kriterien">{{ $hg->label }}</x-fa::checkbox>
                     @endforeach
                 </div>
             @endif

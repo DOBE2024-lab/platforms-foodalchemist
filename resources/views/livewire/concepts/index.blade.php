@@ -246,13 +246,10 @@
                 </x-fa::field>
                 {{-- 06·H4: opt-in Favoriten-Modus (Default aus) --}}
                 <div class="flex flex-col gap-1.5">
-                    <label class="flex items-start gap-2 fa-t-body">
-                        <input type="checkbox" wire:model.live="generatorFavorites" class="mt-0.5 rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-generator-favoriten />
+                    <x-fa::checkbox class="flex items-start gap-2 fa-t-body" wire:model.live="generatorFavorites" data-generator-favoriten>
                         <span class="inline-flex items-center gap-1.5">@svg('heroicon-m-star', 'w-4 h-4 text-[var(--fa-warn)]') Auf Basis meiner Favoriten bauen <span class="text-[var(--fa-ink-3)]">(bevorzugt, nicht ausschließlich)</span></span>
-                    </label>
-                    <label x-show="$wire.generatorFavorites" class="flex items-center gap-2 ml-6 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">
-                        <input type="checkbox" wire:model="generatorFavoritesConvenienceOnly" class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-generator-favoriten-conv /> nur Convenience-Favoriten
-                    </label>
+                    </x-fa::checkbox>
+                    <x-fa::checkbox x-show="$wire.generatorFavorites" class="flex items-center gap-2 ml-6 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" wire:model="generatorFavoritesConvenienceOnly" data-generator-favoriten-conv>nur Convenience-Favoriten</x-fa::checkbox>
                 </div>
                 <div class="flex justify-end">
                     <x-foodalchemist::ki-action action="generatorStart" variant="primary" label="Concept erstellen"

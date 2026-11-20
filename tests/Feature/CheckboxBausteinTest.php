@@ -23,7 +23,7 @@ it('rendert Label mit Haken in der einen Optik und gibt die Bindung an das input
 
     expect($html)->toContain('<label class="inline-flex gap-2 items-center cursor-pointer">')
         ->and($html)->toContain('<input type="checkbox" class="'.Ui::maps()['haken'].'" wire:model.live="nurAktive" data-filter-aktiv')
-        ->and($html)->toContain('<span>Nur aktive</span>');
+        ->and($html)->toMatch('/data-filter-aktiv(="data-filter-aktiv")?> Nur aktive <\/label>/');
 });
 
 it('legt class, wire:key, x-show, x-cloak und title an das label, den Rest an das input', function () {
@@ -37,6 +37,13 @@ it('setzt Layout-Standard nur, wo das label keine eigenen Layout-Klassen mitbrin
     $html = checkboxHtml('<x-fa::checkbox class="flex items-start gap-1.5 h-9">Zeile</x-fa::checkbox>');
 
     expect($html)->toContain('<label class="cursor-pointer flex items-start gap-1.5 h-9">')
+        ->and($html)->toContain(Ui::maps()['haken'].' mt-0.5');
+});
+
+it('lässt ein eigenes Display ohne items-* stehen und setzt den Haken oben an', function () {
+    $html = checkboxHtml('<x-fa::checkbox class="fa-surface p-2 flex gap-2 min-w-0" value="4">Karte</x-fa::checkbox>');
+
+    expect($html)->toContain('<label class="cursor-pointer fa-surface p-2 flex gap-2 min-w-0">')
         ->and($html)->toContain(Ui::maps()['haken'].' mt-0.5');
 });
 

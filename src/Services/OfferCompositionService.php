@@ -700,7 +700,7 @@ class OfferCompositionService
                 'blocks' => fn ($q) => $q->where('visible', true)->orderBy('position'),
                 'blocks.concept.slots.dish:id,name,sales_wording_standard,ek_total_eur,dish_class_id,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'blocks.concept.slots.dish.standardPresentation',
                 'blocks.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-                'blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache',
+                'blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
                 'blocks.concept.images',
                 'blocks.dish:id,name,sales_wording_standard,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
                 'format.slots' => fn ($q) => $q->orderBy('position'),

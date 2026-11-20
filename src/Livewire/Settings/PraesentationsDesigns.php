@@ -295,7 +295,7 @@ class PraesentationsDesigns extends Component
     /** Breite/Text/Überschriften: fehlende Werte = bisheriger Look („normal“, Text links). */
     private function tokensMitStandards(array $tokens): array
     {
-        $tokens += ['page_width' => 'normal', 'text_align' => 'links', 'text_width' => 'normal'];
+        $tokens += ['page_width' => 'normal', 'text_align' => 'links', 'text_width' => 'normal', 'nav_umfang' => 'kapitel'];
         $tokens['typography'] = (is_array($tokens['typography'] ?? null) ? $tokens['typography'] : [])
             + ['heading_size' => 'normal', 'heading_weight' => 'normal', 'heading_tracking' => 'normal', 'konzept_text' => 'normal'];
 

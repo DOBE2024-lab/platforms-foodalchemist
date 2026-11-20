@@ -1543,7 +1543,7 @@ class Editor extends Component
                         'concept.slots' => fn ($q) => $q->orderBy('position'),
                         'concept.slots.dish:id,name,sales_wording_standard',
                         'concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-                        'concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache',
+                        'concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
                         'concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
                         'concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
                     ])->get();

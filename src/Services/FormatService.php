@@ -564,7 +564,7 @@ class FormatService
                 'slots.concept.slots' => fn ($q) => $q->orderBy('position'),
                 'slots.concept.slots.dish:id,name,sales_wording_standard',
                 'slots.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-                'slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache',
+                'slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
                 'slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
                 'heroImage',
             ])

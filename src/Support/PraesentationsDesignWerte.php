@@ -16,6 +16,7 @@ final class PraesentationsDesignWerte
         'page_width' => ['schmal', 'normal', 'breit'],
         'text_width' => ['schmal', 'normal', 'breit'],
         'text_align' => ['links', 'zentriert'],
+        'nav_umfang' => ['kapitel', 'pakete'],   // Sprungmenü: nur Kapitel oder Kapitel mit ihren Paketen (2026-11-20)
     ];
 
     /** tokens_json.typography-Keys → erlaubte Werte. */

@@ -23,6 +23,7 @@ use Platform\FoodAlchemist\Support\Curate;
 class Browser extends Component
 {
     use WithPagination;
+    use \Platform\FoodAlchemist\Livewire\Concerns\HatFreigabeSperre;   // 1.1f
     use \Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich;   // #1003: am Handy nur suchen, filtern, öffnen
 
     /** #1003: am Handy laufen Reiter, Auswahl, Filter und Blättern; Anlegen, Status und Editor bleiben am Computer. */
@@ -142,8 +143,11 @@ class Browser extends Component
         if ($concept === null || ! Curate::canCurate(Auth::user(), $concept)) {
             return;
         }
+        $this->freigabeSperre = null;
         try {
             $concepts->setStatus($team, $id, $status);
+        } catch (\Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException $e) {
+            $this->freigabeGesperrt($e, 'concept', $id);
         } catch (\RuntimeException $e) {
             $this->dispatch('toast', text: $e->getMessage());   // vorher still verschluckt
         }

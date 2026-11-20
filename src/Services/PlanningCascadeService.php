@@ -2295,18 +2295,18 @@ class PlanningCascadeService
         if ($step->status !== 'done') {
             return 'no_op_status_' . $step->status;
         }
-        // Spec 80 H3: im gestuften Lauf IST die Freigabe die Anreicherung — grün (approved) wird das Rezept erst,
-        // wenn sie geklappt hat (EnrichRecipeJob). Bis dahin `review` + Marker. Vorher stand sofort approved,
-        // und eine gescheiterte Anreicherung hinterließ ein „freigegebenes" Halb-Rezept.
+        // Spec 80 H3: im gestuften Lauf IST die Freigabe die Anreicherung — grün (approved) erst, wenn sie geklappt hat (EnrichRecipeJob);
+        // bis dahin `review` + Marker. 1.1f (Kurator 19.11.): offene Komponenten → Gericht nur `review`, Concept bleibt; Hinweis am Step.
+        $sperre = app(Rezept\FreigabeSperre::class);
+        $offen = match ($step->ref_id !== null ? $step->ref_type : null) { 'recipe' => $sperre->offenFuerRezept((int) $step->ref_id), 'concept' => $sperre->offenFuerConcept((int) $step->ref_id), default => [] };
         $nachAnreicherung = (bool) ($step->run?->staged) && $step->ref_type === 'recipe' && $step->ref_id !== null;
-        if ($step->ref_id !== null) {
-            if ($step->ref_type === 'recipe') {
-                app(RecipeService::class)->setStatus($team, (int) $step->ref_id, $nachAnreicherung ? 'review' : 'approved');
-            } elseif ($step->ref_type === 'concept') {
-                app(ConceptService::class)->setStatus($team, (int) $step->ref_id, 'active');
-            }
+        if ($step->ref_id !== null && $step->ref_type === 'recipe') {
+            app(RecipeService::class)->setStatus($team, (int) $step->ref_id, $nachAnreicherung || $offen !== [] ? 'review' : 'approved');
+        } elseif ($step->ref_id !== null && $step->ref_type === 'concept' && $offen === []) {
+            app(ConceptService::class)->setStatus($team, (int) $step->ref_id, 'active');
         }
-        $deferred = is_array($step->deferred) ? $step->deferred : [];
+        $deferred = array_diff_key(is_array($step->deferred) ? $step->deferred : [], ['freigabe_gesperrt' => 1])
+            + ($offen !== [] ? ['freigabe_gesperrt' => array_map(fn ($k) => $k['name'] . ' (' . \Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException::statusLabel($k) . ')', $offen)] : []);
         if ($nachAnreicherung) {
             $deferred['freigabe_nach_anreicherung'] = true;
         }

@@ -1495,12 +1495,12 @@ class Editor extends Component
             'slotZutaten' => $slotZutaten,
             'coverage' => $coverage,
             'pickHauptgruppen' => $istAufbau ? $sales->dishMainGroups($team) : collect(),
-            'pickHgCounts' => $istAufbau ? $sales->hauptgruppenCounts($team) : [],
+            'pickHgCounts' => $istAufbau ? $sales->hauptgruppenCounts($team, ['waehlbar' => true] + $pickFilter) : [],   // 1.1f: Chip = Listenlänge
             'pickKlassen' => $istAufbau && $this->pickHg !== null
                 ? FoodAlchemistDishClass::where('dish_main_group_id', $this->pickHg)->orderBy('label')->get(['id', 'label'])
                 : collect(),
             // Die Hauptgruppe reist jetzt im Filtersatz statt als eigener Parameter (MVP-048).
-            'pickKlassenCounts' => $istAufbau && $this->pickHg !== null ? $sales->klassenCounts($team, ['hauptgruppe' => $this->pickHg]) : [],
+            'pickKlassenCounts' => $istAufbau && $this->pickHg !== null ? $sales->klassenCounts($team, ['waehlbar' => true] + $pickFilter) : [],
             'concept' => $concept,
             'paket' => $paket,
             'paketFormen' => $paketFormen,

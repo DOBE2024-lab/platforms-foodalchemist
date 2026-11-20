@@ -341,7 +341,7 @@
                                 <div class="{{ $liste }}" data-konzept-gerichtliste>
                                     @forelse($gerichtListe as $gr)
                                         <div wire:key="kgr-{{ $gr->id }}" draggable="true" @dragstart="dragTyp = 'gericht'; dragId = {{ $gr->id }}; $event.dataTransfer.effectAllowed = 'copy'" @dragend="dragTyp = null; dragId = null" class="{{ $listeZeile }}">
-                                            <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $gr->name }}">{{ $gr->name }}</span>
+                                            <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $gr->name }}">{{ $gr->name }}</span>@if($gr->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $gr->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $gr->status->label() }}</x-fa::badge>@endif
                                             <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-3)] tabular-nums">{{ $euro($gr->vk_netto) ?? 'kein Preis' }}</span>
                                             <x-fa::icon-button href="#" icon="heroicon-o-eye" label="Gericht ansehen" size="sm" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $gr->id }} })" />
                                             <x-fa::icon-button icon="heroicon-m-plus" label="Als Position einfügen" size="sm" wire:click="positionEinfuegen('gericht', {{ $gr->id }})" />
@@ -407,7 +407,7 @@
                                 <div class="{{ $liste }}">
                                     @forelse($basisListe as $br)
                                         <div wire:key="kbr-{{ $br->id }}" draggable="true" @dragstart="dragTyp = 'basisrezept'; dragId = {{ $br->id }}; $event.dataTransfer.effectAllowed = 'copy'" @dragend="dragTyp = null; dragId = null" class="{{ $listeZeile }}">
-                                            <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $br->name }}">{{ $br->name }}</span>
+                                            <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $br->name }}">{{ $br->name }}</span>@if($br->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $br->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $br->status->label() }}</x-fa::badge>@endif
                                             <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-3)] tabular-nums">{{ $br->ek_total_eur !== null ? 'EK ' . $euro($br->ek_total_eur) : 'kein EK' }}</span>
                                             <x-fa::icon-button href="#" icon="heroicon-o-book-open" label="Rezept ansehen" size="sm" x-on:click.prevent="Livewire.dispatch('recipe-modal.oeffnen', { id: {{ $br->id }} })" />
                                             <x-fa::icon-button icon="heroicon-m-plus" label="Als Position einfügen" size="sm" wire:click="positionEinfuegen('basisrezept', {{ $br->id }})" />
@@ -965,7 +965,7 @@
                                         <div class="flex flex-col gap-px -mx-1 px-1">
                                             @foreach($paketKandidaten as $kand)
                                                 <div wire:key="epk-{{ $paketQuelle }}-{{ $kand->id }}" class="flex items-center gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] hover:bg-[var(--fa-hover)]">
-                                                    <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $kand->name }}">{{ $kand->name }}</span>
+                                                    <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $kand->name }}">{{ $kand->name }}</span>@if($kand->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $kand->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $kand->status->label() }}</x-fa::badge>@endif
                                                     <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-3)] tabular-nums">@if($paketQuelle === 'basisrezept'){{ $kand->ek_total_eur !== null ? 'EK ' . $euro($kand->ek_total_eur) : 'kein EK' }}@else{{ $euro($kand->vk_netto) ?? 'kein Preis' }}@endif</span>
                                                     <x-fa::icon-button icon="heroicon-m-plus" label="Vormerken" size="sm" x-on:click="park({{ $kand->id }}, {{ \Illuminate\Support\Js::from($kand->name) }})" />
                                                 </div>

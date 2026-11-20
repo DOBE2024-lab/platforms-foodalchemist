@@ -333,7 +333,7 @@ class RecipeService
             'preparation' => array_key_exists('preparation', $in) ? (($in['preparation'] ?? '') ?: null) : $recipe->preparation,
             'notes_manual' => array_key_exists('notes_manual', $in) ? (($in['notes_manual'] ?? '') ?: null) : $recipe->notes_manual,
             'status' => array_key_exists('status', $in) && in_array($in['status'], ['stub', 'draft', 'review', 'approved', 'archived'], true)
-                ? $in['status'] : $recipe->status,
+                ? app(Rezept\FreigabeSperre::class)->wechsel($team, $recipe, $in['status']) : $recipe->status,   // 1.1f: Freigabe-Sperre
             'version' => $recipe->version + 1,
             'last_modified_by' => 'editor',
         ]);
@@ -471,17 +471,17 @@ class RecipeService
         return $recipe->refresh();
     }
 
-    /** M4-12: Bulk-Status (Browser-Leiste). @param array<int> $ids */
+    /** M4-12: Bulk-Status (Browser, MCP). 1.1f: Rolle Kuratieren wie setStatus; Freigabe-Sperre, Komponenten in der Auswahl zählen mit; alles oder nichts. @param array<int> $ids */
     public function bulkStatus(Team $team, array $ids, string $status): int
     {
+        app(\Platform\FoodAlchemist\Services\FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Rezept-Status setzen');
         if (\Platform\FoodAlchemist\Enums\RecipeStatus::tryFrom($status) === null) {
             throw new \RuntimeException("Unbekannter Status [{$status}].");
         }
+        $eigene = FoodAlchemistRecipe::visibleToTeam($team)->where('team_id', $team->id)->whereIn('id', $ids)->pluck('id')->map(fn ($id) => (int) $id)->all();   // D1
+        app(Rezept\FreigabeSperre::class)->pruefeAuswahl($eigene, $status);   // 1.1f
 
-        return FoodAlchemistRecipe::visibleToTeam($team)
-            ->where('team_id', $team->id)                          // D1: nur eigene
-            ->whereIn('id', $ids)
-            ->update(['status' => $status, 'last_modified_by' => 'editor']);
+        return FoodAlchemistRecipe::query()->whereIn('id', $eigene)->update(['status' => $status, 'last_modified_by' => 'editor']);
     }
 
     public function setStatus(Team $team, int $id, string $status): FoodAlchemistRecipe
@@ -495,7 +495,7 @@ class RecipeService
         if (\Platform\FoodAlchemist\Enums\RecipeStatus::tryFrom($status) === null) {
             throw new \RuntimeException("Unbekannter Status [{$status}].");
         }
-        $recipe->update(['status' => $status, 'last_modified_by' => 'editor']);
+        $recipe->update(['status' => app(Rezept\FreigabeSperre::class)->wechsel($team, $recipe, $status), 'last_modified_by' => 'editor']);   // 1.1f: Freigabe-Sperre
 
         return $recipe->refresh();
     }
@@ -1126,7 +1126,7 @@ class RecipeService
                 throw new \Platform\FoodAlchemist\Exceptions\NonFoodAlsZutatException($nonFood);
             }
         }
-
+        app(Rezept\ZutatenVerweise::class)->pruefeSicht($team, $recipe, $zeilen);   // 1.1j-1: Verweise nur auf Sichtbares (Abo/Stamm-Paket inklusive)
         DB::transaction(function () use ($team, $recipe, $zeilen, $preserveMissing) {
             $vorhanden = $recipe->ingredients()->get()->keyBy('id');
             $behalten = [];

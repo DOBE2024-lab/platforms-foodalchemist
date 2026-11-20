@@ -108,6 +108,15 @@ class FoodAlchemistRecipe extends Model
         return $q->where('is_sales_recipe', true);
     }
 
+    /** In Auswahllisten ausgeblendet (1.1f, E1 19.11.2026): Platzhalter und Veraltet. Entwurf/Prüfen sind wählbar und werden gekennzeichnet. */
+    public const PICKER_AUSGEBLENDET = ['stub', 'deprecated', 'archived'];
+
+    /** Picker-Regel (1.1f): eine Stelle für Liste UND Chip-Zähler, damit sie nicht auseinanderlaufen. */
+    public function scopeWaehlbar(Builder $q): Builder
+    {
+        return $q->whereNotIn($q->qualifyColumn('status'), self::PICKER_AUSGEBLENDET);
+    }
+
     /**
      * Spec 85 D-1: VK netto der Standard-Darreichung als Spalte `vk_netto` mitselektieren (eine Unterabfrage,
      * kein N+1) — für Listen und Picker, die früher `recipes.sales_net` lasen. Vorher die gewünschten

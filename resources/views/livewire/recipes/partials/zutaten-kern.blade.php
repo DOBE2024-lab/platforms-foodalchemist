@@ -458,6 +458,7 @@
                                 <span x-text="ziel.name.replace('↳ ', '')"></span>
                                 <span x-show="(ziel.niveaus ?? []).length > 0" class="ml-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-text="niveauText(ziel)"></span>
                             </button>
+                            <x-fa::badge tone="warn" x-show="ziel.status_label" x-cloak x-text="ziel.status_label" data-entwurf-badge></x-fa::badge>{{-- 1.1f: Entwurf/Prüfen wählbar, gekennzeichnet --}}
                             <span class="shrink-0 tabular-nums text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-text="ziel.preis_label ?? 'Preis fehlt'"></span>
                             <button type="button" x-show="ziel.id" @click="Livewire.dispatch('recipe-modal.oeffnen', { id: ziel.id })"
                                     class="{{ $ib }}" title="Basisrezept ansehen" aria-label="Basisrezept ansehen">@svg('heroicon-o-book-open', 'w-4 h-4')</button>

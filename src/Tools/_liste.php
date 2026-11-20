@@ -193,6 +193,7 @@ return [
     \Platform\FoodAlchemist\Tools\FormatsPutTool::class,
     \Platform\FoodAlchemist\Tools\FormatsSearchTool::class,
     \Platform\FoodAlchemist\Tools\FormatsStatusTool::class,
+    \Platform\FoodAlchemist\Tools\FreigabeMitfreigebenTool::class,
     \Platform\FoodAlchemist\Tools\FundstueckeGetTool::class,
     \Platform\FoodAlchemist\Tools\FundstueckePostTool::class,
     \Platform\FoodAlchemist\Tools\FundstueckePutTool::class,

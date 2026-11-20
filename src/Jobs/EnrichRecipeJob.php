@@ -376,8 +376,14 @@ class EnrichRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services\A
             if ($step === null || empty($deferred['freigabe_nach_anreicherung'])) {
                 return;
             }
-            \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::query()->whereKey($this->recipeId)
-                ->where('status', 'review')->update(['status' => 'approved']);
+            // 1.1f (Kurator 19.11.): grün nur, wenn alle Komponenten freigegeben sind — sonst bleibt es still bei `review` (Log).
+            $offen = app(\Platform\FoodAlchemist\Services\Rezept\FreigabeSperre::class)->offenFuerRezept((int) $this->recipeId);
+            if ($offen === []) {
+                \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::query()->whereKey($this->recipeId)
+                    ->where('status', 'review')->update(['status' => 'approved']);
+            } else {
+                Log::info('[EnrichRecipeJob] Freigabe gesperrt, Rezept bleibt review', ['recipe' => $this->recipeId, 'offen' => array_column($offen, 'id')]);
+            }
             unset($deferred['freigabe_nach_anreicherung']);
             $step->update(['deferred' => $deferred ?: null]);
         } catch (\Throwable $e) {

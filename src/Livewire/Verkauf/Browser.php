@@ -23,6 +23,7 @@ use Platform\FoodAlchemist\Support\Curate;
 class Browser extends Component
 {
     use WithPagination;
+    use \Platform\FoodAlchemist\Livewire\Concerns\HatFreigabeSperre;   // 1.1f
     use \Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich;   // #1003: am Handy nur suchen, filtern, öffnen
 
     /** #1003: am Handy laufen Auswahl, Filter und Blättern; Anlegen, Status und Sammel-Aktionen bleiben am Computer. */
@@ -142,8 +143,11 @@ class Browser extends Component
 
             return;
         }
+        $this->freigabeSperre = null;
         try {
             $svc->setStatus($team, $id, $status);
+        } catch (\Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException $e) {
+            $this->freigabeGesperrt($e, 'rezept', $id);
         } catch (\RuntimeException $e) {
             $this->statusFehler = $e->getMessage();
         }

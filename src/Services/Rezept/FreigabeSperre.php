@@ -78,6 +78,10 @@ class FreigabeSperre
     public function wechsel(Team $team, \Illuminate\Database\Eloquent\Model $ziel, string $neu): string
     {
         $alt = $ziel->status instanceof \BackedEnum ? $ziel->status->value : (string) $ziel->status;
+        if ($ziel instanceof \Platform\FoodAlchemist\Models\FoodAlchemistRecipe && $alt !== $neu) {
+            // 1.1i: jeder Statuswechsel am Rezept braucht Kuratieren — auch über das generische Update (wie setStatus/bulkStatus)
+            app(\Platform\FoodAlchemist\Services\FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Rezept-Status setzen');
+        }
         if ($ziel instanceof \Platform\FoodAlchemist\Models\FoodAlchemistRecipe && $neu === RecipeStatus::Approved->value && $alt !== $neu) {
             $this->pruefeRezept($team, (int) $ziel->id);
         } elseif ($ziel instanceof \Platform\FoodAlchemist\Models\FoodAlchemistConcept && $neu === 'active' && $alt !== $neu) {

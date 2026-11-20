@@ -142,7 +142,6 @@ class PlanningFrameService
             && ! in_array($frame->owner_type ?? null, FoodAlchemistPlanningFrameSlot::STRUKTUR_OWNER, true)) {
             throw new RuntimeException('Titel, Freitext und Leerzeile gibt es nur im Rahmen von Foodbook, Speisekarte und Format.');
         }
-        $this->pruefeKapitel($frame, $attrs['chapter_id'] ?? null);
         $pos = (int) ($frame->slots()->max('position') ?? -1) + 1;
 
         return $frame->slots()->create([
@@ -180,19 +179,9 @@ class PlanningFrameService
             && ! in_array($slot->frame?->owner_type, FoodAlchemistPlanningFrameSlot::STRUKTUR_OWNER, true)) {
             throw new RuntimeException('Titel, Freitext und Leerzeile gibt es nur im Rahmen von Foodbook, Speisekarte und Format.');
         }
-        $this->pruefeKapitel($slot->frame, $daten['chapter_id'] ?? null);
         $slot->update($daten);
 
         return $slot->refresh();
-    }
-
-    /** CQ 2.3f: chapter_id ist ein Kapitel DES Foodbooks, dem das Gerüst gehört — nie ein fremdes. */
-    private function pruefeKapitel(FoodAlchemistPlanningFrame $frame, mixed $chapterId): void
-    {
-        if ((int) ($chapterId ?: 0) > 0 && ($frame->owner_type !== 'foodbook'
-            || ! \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::whereKey((int) $chapterId)->where('foodbook_id', $frame->owner_id)->exists())) {
-            throw new RuntimeException('Kapitel gehört nicht zum Foodbook dieses Planungs-Gerüsts.');
-        }
     }
 
     public function removeSlot(Team $team, int $slotId): void

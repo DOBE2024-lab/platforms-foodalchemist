@@ -83,10 +83,6 @@ class EigenproduktionService
         $ort = ! empty($in['location_id'])
             ? FoodAlchemistInventoryLocation::where('team_id', $team->id)->findOrFail((int) $in['location_id'])
             : $this->standardLager($team);
-        if (! empty($in['production_order_line_id']) && ! \Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine::whereKey((int) $in['production_order_line_id'])
-            ->whereIn('production_order_id', \Platform\FoodAlchemist\Support\Verweisziel::sichtbar(\Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder::class, $team)->select('id'))->exists()) {
-            throw new \RuntimeException('Produktionsauftrags-Zeile ist nicht sichtbar/vorhanden.');   // CQ 2.3f
-        }
         $base = $this->einheit($r);
         $menge = $this->zahl($in['menge'] ?? null, 'Menge');
         if ($menge === null || $menge <= 0) {

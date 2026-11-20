@@ -83,10 +83,6 @@ class FormatService
     public function create(Team $team, array $in): FoodAlchemistFormat
     {
         $this->pruefeFacettenIds($team, $in);   // CQ 1.1j
-        $status = $in['status'] ?? 'draft';
-        if ($status !== 'draft') {
-            $this->pruefeStatus($team, (string) ($status instanceof \BackedEnum ? $status->value : $status));   // CQ 2.3f: wie setStatus (Rolle Kuratieren)
-        }
         $format = FoodAlchemistFormat::create([
             'team_id' => $team->id,
             'name' => trim((string) ($in['name'] ?? 'Neues Format')) ?: 'Neues Format',
@@ -95,7 +91,7 @@ class FormatService
             'story' => $this->norm($in['story'] ?? null),
             'origin' => $this->normOrigin($in['origin'] ?? null),
             'customer' => $this->norm($in['customer'] ?? null),
-            'status' => $status instanceof \BackedEnum ? $status->value : $status,
+            'status' => $in['status'] ?? 'draft',
             'note' => $this->norm($in['note'] ?? null),
             'serving_form_id' => $this->nullbareId($in['serving_form_id'] ?? null),
             'event_type_id' => $this->nullbareId($in['event_type_id'] ?? null),
@@ -186,19 +182,15 @@ class FormatService
     /** Status setzen (draft|active|archiviert) — Inline-Pflege aus dem Browser. */
     public function setStatus(Team $team, int $id, string $status): void
     {
-        $this->pruefeStatus($team, $status);
-        $format = FoodAlchemistFormat::visibleToTeam($team)->findOrFail($id);
-        $this->guardOwner($format, $team);
-        $format->update(['status' => $status]);
-    }
-
-    /** Spec 77a: Status setzen ab Kuratieren (Mitglied); ohne angemeldeten Benutzer (System) keine Prüfung. Nur bekannte Werte. */
-    private function pruefeStatus(Team $team, string $status): void
-    {
+        // Spec 77a: ab Kuratieren (Mitglied); ohne angemeldeten Benutzer (System) keine Prüfung
         app(\Platform\FoodAlchemist\Services\FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Format-Status setzen');
+
         if (! in_array($status, ['draft', 'active', 'archiviert'], true)) {
             throw new \RuntimeException("Unbekannter Format-Status [{$status}].");
         }
+        $format = FoodAlchemistFormat::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwner($format, $team);
+        $format->update(['status' => $status]);
     }
 
     /**

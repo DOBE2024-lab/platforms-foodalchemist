@@ -40,7 +40,8 @@ class FoodbookService
 
     public function paginateBrowser(array $filters, Team $team, int $perPage = 100): LengthAwarePaginator
     {
-        // Große JSON-Spalten NICHT in die sortierte Listen-Query — sonst „Out of sort memory" im filesort (Spec 43-Regression).
+        // Große JSON-Spalten (Snapshots/Settings) NICHT in die sortierte Listen-Query ziehen —
+        // sonst puffert MySQLs filesort die Blobs mit → „Out of sort memory" (Spec 43-Regression).
         return FoodAlchemistFoodbook::visibleToTeam($team)
             ->select($this->browserSpalten('foodalchemist_foodbooks'))
             ->with('crmCompany')
@@ -59,7 +60,8 @@ class FoodbookService
     }
 
     /**
-     * Spalten für sortierte Listen-Queries OHNE die großen JSON-Blobs (gegen MySQL-„Out of sort memory"). Statisch gecacht je Tabelle.
+     * Spalten für sortierte Listen-Queries OHNE die großen JSON-Blobs (Snapshots/Settings) —
+     * verhindert MySQL-„Out of sort memory" beim filesort. Statisch gecacht je Tabelle.
      *
      * @return list<string>
      */
@@ -94,9 +96,9 @@ class FoodbookService
 
     public function create(Team $team, array $in): FoodAlchemistFoodbook
     {
-        // Spec 33 P2: fremde Betriebe fallen hier raus — `outlet_id` (Team-Vokabular) erfasst der Datensatz-Guard nicht.
+        // Spec 33 P2: fremde Betriebe fallen hier raus — `outlet_id` zeigt auf ein Team-Vokabular
+        // und wird vom Datensatz-Guard nicht mit erfasst.
         $in = $this->pruefeOutlet($team, $in);
-        \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, $in);   // CQ 2.3f: Vokabular + CRM
 
         return FoodAlchemistFoodbook::create([
             'team_id' => $team->id,
@@ -106,7 +108,8 @@ class FoodbookService
             'crm_company_id' => $in['crm_company_id'] ?? null,
             'crm_contact_id' => $in['crm_contact_id'] ?? null,
             'projekt_id' => $in['projekt_id'] ?? null,   // Spec 82 §9: nur über ProjektService (Gate am Modell)
-            // Spec 33 P1: Fenster schon beim Anlegen — sonst verliert ein Import/MCP-Aufruf die Angabe stillschweigend.
+            // Spec 33 P1: Fenster schon beim Anlegen — sonst muss man jede Ausgabe zweimal
+            // anfassen, und ein Import/MCP-Aufruf verliert die Angabe stillschweigend.
             'gueltig_von' => ($in['gueltig_von'] ?? '') !== '' ? $in['gueltig_von'] : null,
             'gueltig_bis' => ($in['gueltig_bis'] ?? '') !== '' ? $in['gueltig_bis'] : null,
             'jahr' => $in['jahr'] ?? null,
@@ -145,7 +148,6 @@ class FoodbookService
     {
         $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($id);
         $this->guard($fb, $team);
-        \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, $in, $fb);
         $fb->update($this->normalisiereFelder(
             $this->pruefeOutlet($team, array_intersect_key($in, array_flip(self::FELDER))),
         ));
@@ -218,7 +220,6 @@ class FoodbookService
     {
         $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($fbId);
         $this->guard($fb, $team);
-        $fb->serviceMoments()->allRelatedIds()->contains($momentId) || \Platform\FoodAlchemist\Support\Verweisziel::pruefe(\Platform\FoodAlchemist\Models\FoodAlchemistEinsatzmoment::class, $team, $momentId, 'Einsatzmoment');
         $fb->serviceMoments()->toggle([$momentId]);
     }
 
@@ -227,21 +228,21 @@ class FoodbookService
     {
         $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($fbId);
         $this->guard($fb, $team);
-        $fb->targetGroups()->allRelatedIds()->contains($targetGroupId) || \Platform\FoodAlchemist\Support\Verweisziel::pruefe(FoodAlchemistTargetGroup::class, $team, $targetGroupId, 'Zielgruppe');
         $fb->targetGroups()->toggle([$targetGroupId]);
     }
 
     /**
-     * Spec 19 E4.6: Zielgruppen eines Kapitels setzen (PUT-Semantik — `sync` auf die genaue Liste; leeres Array = alle entfernen).
-     * Kapitel-Zielgruppen überschreiben den Foodbook-Default in der Kaskade (leitplanken()/zielgruppenKaskade). Neue IDs
-     * müssen team-sichtbares Vokabular sein (Entscheidung 6; CQ 2.3f: hier geprüft, nicht nur im MCP-Guard).
+     * Spec 19 E4.6: Zielgruppen eines Kapitels setzen (PUT-Semantik — `sync` auf die
+     * genaue Liste; leeres Array = alle entfernen). Kapitel-Zielgruppen überschreiben
+     * den Foodbook-Default in der Kaskade (leitplanken()/zielgruppenKaskade). Die IDs
+     * müssen team-sichtbares Vokabular sein (Vokabular-Pflicht, Entscheidung 6) — der
+     * MCP-Guard prüft das VOR dem Aufruf; hier nur Ownership übers Kapitel.
      *
      * @param  list<int>  $ids
      */
     public function setKapitelZielgruppen(Team $team, int $kapitelId, array $ids): void
     {
         $k = $this->ownedKapitel($team, $kapitelId);
-        \Platform\FoodAlchemist\Support\Verweisziel::pruefeIds(FoodAlchemistTargetGroup::class, $team, array_diff($ids, $k->targetGroups()->allRelatedIds()->all()), 'Zielgruppe');
         $k->targetGroups()->sync(array_values(array_unique(array_map('intval', $ids))));
     }
 
@@ -707,7 +708,7 @@ class FoodbookService
         $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($foodbookId);
         $this->guard($fb, $team);
         $slot = \Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrameSlot::findOrFail($slotId);
-        if ($slot->chapter_id === null || (int) $this->ownedKapitel($team, (int) $slot->chapter_id)->foodbook_id !== $foodbookId) {   // CQ 2.3f
+        if ($slot->chapter_id === null) {
             throw new \RuntimeException('Dieser Platz ist noch kein Kapitel. Zuerst „Struktur anwenden“.');
         }
 
@@ -737,7 +738,6 @@ class FoodbookService
         $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($foodbookId);
         $this->guard($fb, $team);
         $kapitel = $this->ownedKapitel($team, $chapterId);
-        throw_if((int) $kapitel->foodbook_id !== $foodbookId, \RuntimeException::class, 'Kapitel gehört nicht zu diesem Foodbook.');   // CQ 2.3f
 
         // Spec 19 E1.5: kapitelweite Dedup VOR jeder Anlage. Das Gericht gilt als „schon drin",
         // wenn es Slot IRGENDEINES Konzepts (concept_ref) ODER ein direkter recipe_ref-Block im
@@ -916,9 +916,10 @@ class FoodbookService
     {
         $k = $this->ownedKapitel($team, $id);
         $felder = array_intersect_key($in, array_flip(self::KAPITEL_FELDER));
-        \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, $felder, $k);   // CQ 2.3f
-        if (array_key_exists('writing_style_id', $felder)) {   // #2: '' aus dem Dropdown = kein Override → NULL (FK-safe)
-            $felder['writing_style_id'] = $felder['writing_style_id'] ? (int) $felder['writing_style_id'] : null;
+        // #2: leere Dropdown-Auswahl ('' aus dem Blade) = kein Override → NULL (FK-safe).
+        if (array_key_exists('writing_style_id', $felder)) {
+            $felder['writing_style_id'] = ($felder['writing_style_id'] === '' || $felder['writing_style_id'] === null)
+                ? null : (int) $felder['writing_style_id'];
         }
         $k->update($felder);
 
@@ -1050,7 +1051,6 @@ class FoodbookService
     {
         $k = $this->ownedKapitel($team, $id);
         if ($newParentId !== null) {
-            throw_unless(FoodAlchemistFoodbookKapitel::whereKey($newParentId)->where('foodbook_id', $k->foodbook_id)->exists(), \RuntimeException::class, 'Ziel-Kapitel gehört nicht zu diesem Foodbook.');
             if ($newParentId === $id || in_array($newParentId, $this->descendantKapitelIds($team, $k->foodbook_id, $id), true)) {
                 throw new \RuntimeException('Zyklus: Kapitel kann nicht unter einen eigenen Nachfahren.');
             }

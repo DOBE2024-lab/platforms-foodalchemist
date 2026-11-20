@@ -590,10 +590,6 @@ class WareneingangService
             if ($gp === null) {
                 throw new \RuntimeException('Ware ohne Bestellung braucht ein Grundprodukt.');
             }
-            if (! empty($z['supplier_item_id']) && ! \Platform\FoodAlchemist\Support\Verweisziel::sichtbar(\Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::class, $team)
-                ->whereKey((int) $z['supplier_item_id'])->where('supplier_id', $supplierId)->exists()) {   // CQ 2.3f
-                throw new \RuntimeException('Lieferantenartikel #'.(int) $z['supplier_item_id'].' ist nicht sichtbar oder gehört zu einem anderen Lieferanten.');
-            }
             $menge = $this->zahl($z['menge'] ?? null);
             if ($menge === null || $menge <= 0) {
                 throw new \RuntimeException('Bitte für „'.$gp->name.'" eine Menge in kg / l / Stk angeben.');

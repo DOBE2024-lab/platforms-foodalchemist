@@ -76,6 +76,28 @@ it('★ Zubehör, das der Master am Gefäß pflegt, gilt für Mandanten mit Pake
         ->and($sicht($this->childB))->toBe([$deckel->id, $schwarz->id]);   // Unter-Team erbt zuerst vom eigenen Haupt-Team
 });
 
+it('★ Kostenart am Gefäß: Mandant ohne eigenen Eintrag erbt die des Masters; ein eigener Eintrag schlägt sie (Deckel 20.11.2026)', function () {
+    $deckel = ($this->nonFood)(null, 'Deckel: für Achenbachglas');
+    $svc = app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class);
+    $svc->setzen($this->master, $deckel->id, 'mehrweg', '0,12');
+
+    // ohne eigenen Eintrag: geerbt vom Master (vorher sah der Mandant nichts → Automatik „einweg“)
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'mehrweg', 'preis' => 0.12, 'team_id' => $this->master->id])
+        ->and($svc->teamVorgabe($deckel->id, $this->childA)['kostenart'])->toBe('mehrweg')
+        ->and($svc->teamVorgabe($deckel->id, $this->ohnePaket)['kostenart'])->toBeNull();   // ohne Stamm-Paket kein Master
+
+    // eigener Eintrag des Mandanten schlägt den Master; Unter-Team erbt zuerst vom eigenen Haupt-Team
+    $svc->setzen($this->rootTeam, $deckel->id, 'einweg', '0,30');
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'einweg', 'preis' => 0.3, 'team_id' => $this->rootTeam->id])
+        ->and($svc->teamVorgabe($deckel->id, $this->childA)['team_id'])->toBe($this->rootTeam->id);
+
+    // Master ändert: die Kundenzeile bleibt; Kunde entfernt seine: wieder der Master
+    $svc->setzen($this->master, $deckel->id, 'extern');
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam)['kostenart'])->toBe('einweg');
+    $svc->setzen($this->rootTeam, $deckel->id, null);
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'extern', 'preis' => null, 'team_id' => $this->master->id]);
+});
+
 it('★ Kommando hebt Master-GPs: Trockenlauf schreibt nichts, --apply macht sie global, --zurueck holt sie zurück', function () {
     $a = FoodAlchemistGp::create(['team_id' => $this->master->id, 'gp_key' => 'limette||saft', 'name' => 'Limette: Saft', 'status' => 'tentative']);
     $b = FoodAlchemistGp::create(['team_id' => $this->master->id, 'gp_key' => 'deckel||achenbach', 'name' => 'Deckel: für Achenbachglas', 'status' => 'tentative']);

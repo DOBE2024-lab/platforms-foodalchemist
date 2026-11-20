@@ -18,7 +18,8 @@ use Platform\FoodAlchemist\Models\Scopes\TeamSicht;
  *  - extern   Miete/Fremdartikel: Preis am GP, sonst Lead-Artikelpreis je Stück (wie einweg; seit 18.11.2026)
  * Fehlt der Preis: „Gefäß-Preis fehlt“, Darreichung unvollständig — nie still 0. Die Kosten gehen in den Wareneinsatz (ek_portion).
  *
- * Wirksam: Art an der Darreichung (Übersteuerung) › Eintrag des Teams am GP (eigenes Team, dann Oberteams bis zur Kundengrenze) ›
+ * Wirksam: Art an der Darreichung (Übersteuerung) › Eintrag des Teams am GP (eigenes Team, dann Oberteams bis zur Kundengrenze, danach der
+ * Master, wenn das Team das Stamm-Paket hat — gleiche Kette wie das Zubehör, {@see GefaessZubehoerService::kette}, Kurator 20.11.2026) ›
  * Automatik (Lieferant der Gruppe VERLEIH → extern, sonst einweg). Ein VERLEIH-Gefäß ohne Eintrag rechnet mit dem Preis seines Lead-Artikels;
  * fehlt auch der, meldet die Darreichung „Gefäß-Preis fehlt“ (früher stiller Miet-Hinweis ohne Kosten, Befund Achenbachglas 18.11.2026).
  */
@@ -72,13 +73,15 @@ class GefaessKostenartService
     }
 
     /**
-     * Eintrag des Teams am GP: eigener, sonst der des nächsten Oberteams bis zur Kundengrenze (nie der des Masters).
+     * Eintrag des Teams am GP: eigener, sonst der des nächsten Oberteams bis zur Kundengrenze, zuletzt der des Masters (nur mit Stamm-Paket).
+     * Ein eigener Eintrag des Mandanten schlägt den Master; ohne eigenen erbt er ihn (Befund Deckel Achenbachglas 20.11.2026: Master „mehrweg“,
+     * Mandant sah „einweg“).
      *
      * @return array{kostenart: ?string, preis: ?float, team_id: ?int}
      */
     public function teamVorgabe(int $gpId, Team $team): array
     {
-        $kette = TeamSicht::gekappt(FoodAlchemistGp::teamAncestryIds($team));
+        $kette = GefaessZubehoerService::kette($team);
         $zeilen = DB::table('foodalchemist_gp_gefaess_kostenarten')->where('gp_id', $gpId)->whereIn('team_id', $kette)->whereNull('deleted_at')
             ->get(['team_id', 'kostenart', 'preis_stk'])->keyBy('team_id');
         foreach ($kette as $tid) {

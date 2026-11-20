@@ -841,6 +841,12 @@ class AiGatewayService
         return mb_substr($json, 0, $max) . '…[gekürzt, ' . mb_strlen($json) . ' Zeichen gesamt]';
     }
 
+    /** 98 · 2.3e: eine fertige Audit-Zeile ins ai_call_log schreiben (z. B. Voice: TTS, ausgeführte Schreibvorschläge). */
+    public function protokolliereZeile(array $zeile): void
+    {
+        DB::table('foodalchemist_ai_call_log')->insert($zeile);
+    }
+
     /** 06_KI §5 Pflicht 3: generischer Accept-Stempel (Reject analog). */
     public function stempleAccepted(?int $callLogId): void
     {

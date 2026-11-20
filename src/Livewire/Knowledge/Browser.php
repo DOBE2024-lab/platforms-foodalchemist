@@ -319,19 +319,19 @@ class Browser extends Component
 
     public function toggleActive(int $id): void
     {
-        $doc = DB::table('foodalchemist_knowledge_documents')->where('id', $id)->first(['active', 'team_id']);
-        if ($doc === null) {
-            return;
-        }
-        if (! \Platform\FoodAlchemist\Services\Knowledge\WissensSichtbarkeit::mayWrite($doc->team_id, Auth::user()?->currentTeamRelation)) {
-            $this->fehler = 'Dieses Wissen gehört einem anderen Team. Aktivieren und Deaktivieren kann nur das besitzende Team bzw. das Master-Team.';
+        $team = Auth::user()?->currentTeamRelation;
+        try {
+            $neu = $team !== null ? app(\Platform\FoodAlchemist\Services\KnowledgeService::class)->aktivUmschalten($team, $id) : null;
+        } catch (\Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException $e) {
+            $this->fehler = $e->getMessage();
 
             return;
         }
-        DB::table('foodalchemist_knowledge_documents')->where('id', $id)
-            ->update(['active' => ! $doc->active, 'updated_at' => now()]);
+        if ($neu === null) {
+            return;
+        }
         if ($this->selectedId === $id) {
-            $this->form['active'] = ! $doc->active;
+            $this->form['active'] = $neu;
         }
         // Aktivieren → embedden, Deaktivieren → purgen (queueDocument gated intern auf active).
         $this->reembed($id);

@@ -594,7 +594,7 @@ class VoiceModal extends Component
     private function protokolliereTts(string $provider, int $elapsedMs, bool $erfolg, ?string $fehlerText = null): void
     {
         try {
-            DB::table('foodalchemist_ai_call_log')->insert(self::mitVerursacher([
+            app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->protokolliereZeile(self::mitVerursacher([
                 'uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(),
                 'team_id' => Auth::user()?->currentTeamRelation?->id,
                 'user_id' => Auth::id(),
@@ -877,7 +877,7 @@ class VoiceModal extends Component
     private function protokolliereSchreibaktion(string $tool, int $elapsedMs, bool $erfolg): void
     {
         try {
-            DB::table('foodalchemist_ai_call_log')->insert(self::mitVerursacher([
+            app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->protokolliereZeile(self::mitVerursacher([
                 'uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(),
                 'team_id' => Auth::user()?->currentTeamRelation?->id,
                 'user_id' => Auth::id(),

@@ -503,6 +503,15 @@ class PlanningSessionService
         return $session;
     }
 
+    /** 98 · 2.3e: geprüften KI-Kopf-Plan (Draft-Concept) an die Session hängen bzw. lösen (null) — #53, übersteht den Reload. */
+    public function setzePlanConcept(Team $team, int $id, ?int $conceptId): FoodAlchemistPlanningSession
+    {
+        $session = $this->ownedSession($team, $id);
+        $session->update(['plan_concept_id' => $conceptId]);
+
+        return $session;
+    }
+
     private function ownedSession(Team $team, int $id): FoodAlchemistPlanningSession
     {
         $session = FoodAlchemistPlanningSession::visibleToTeam($team)->findOrFail($id);

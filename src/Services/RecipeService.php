@@ -347,7 +347,7 @@ class RecipeService
         }
         $this->schritteAusMarkdown($recipe, $in);
         if (array_key_exists('yield_kg_manual', $in) && $in['yield_kg_manual'] !== $altManual) {
-            app(RecipeRecomputeService::class)->recomputeAndPropagate($recipe->id); // ek/kg-Nenner (A-3)
+            app(RecipeRecomputeService::class)->recomputeNachSpeichern($recipe->id); // ek/kg-Nenner (A-3); 2.1b: Eltern per Queue
         }
 
         \Platform\FoodAlchemist\Support\SensorikNachholen::ausloesen($team, (int) $recipe->id);
@@ -1372,7 +1372,7 @@ class RecipeService
             $recipe->ingredients()->whereNotIn('id', $behalten)->delete();
         });
 
-        app(RecipeRecomputeService::class)->recomputeAndPropagate($recipe->id);
+        app(RecipeRecomputeService::class)->recomputeNachSpeichern($recipe->id);   // 2.1b: Eltern per Queue
 
         $recipe = $recipe->refresh();
         // A4: Recall-Index nachziehen — die Top-Zutaten-Namen sind Teil des Rezept-Embed-Texts
@@ -1421,7 +1421,7 @@ class RecipeService
             }
         });
 
-        app(RecipeRecomputeService::class)->recomputeAndPropagate($recipe->id);
+        app(RecipeRecomputeService::class)->recomputeNachSpeichern($recipe->id);   // 2.1b: Eltern per Queue
 
         return $recipe->refresh();
     }

@@ -1272,8 +1272,7 @@ class ConceptService
     }
 
     /**
-     * Aroma-Kohäsion der Gerichte eines Concepts (Slots + eingebettete Pakete/Packages).
-     * Geteilte Web-/MCP-Wahrheit (Concepter-Editor::kohaesionPruefen + MCP concepts.COHESION).
+     * Aroma-Kohäsion der Gerichte eines Concepts (Slots + eingebettete Pakete) — geteilte Web-/MCP-Wahrheit (Editor + concepts.COHESION).
      * Read-only; kein Owner-Gate nötig (nur sichtbar). Weniger als 2 Gerichte ⇒ `zu_wenig`.
      */
     public function menueKohaesion(Team $team, int $conceptId): array
@@ -1312,6 +1311,7 @@ class ConceptService
     public function createCategory(Team $team, string $name, ?int $parentId = null): FoodAlchemistConceptCategory
     {
         $name = trim($name);
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefe(FoodAlchemistConceptCategory::class, $team, $parentId, 'Ober-Kategorie');   // CQ 2.3f
         $maxPos = FoodAlchemistConceptCategory::where('team_id', $team->id)
             ->when($parentId, fn ($q, $p) => $q->where('parent_id', $p), fn ($q) => $q->whereNull('parent_id'))
             ->max('position');
@@ -1349,8 +1349,7 @@ class ConceptService
     // ── Klassen (Baum, §10.3) ──────────────────────────────────────────────
 
     /**
-     * Flache, vorsortierte Klasse-Liste (Baum) — wie categoriesFlat, über das
-     * Klasse-Vokabular. `concepts.class` referenziert per Name-String (frei wählbar).
+     * Flache, vorsortierte Klasse-Liste (Baum) — wie categoriesFlat; `concepts.class` referenziert per Name-String (frei wählbar).
      *
      * @return list<array{id:int, name:string, parent_id:?int, depth:int, label:string, ancestors:list<int>, has_children:bool}>
      */
@@ -1367,6 +1366,7 @@ class ConceptService
     {
         $name = trim($name);
         $name = $name !== '' ? $name : 'Neue Klasse';
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefe(FoodAlchemistVocabKlasse::class, $team, $parentId, 'Ober-Klasse');   // CQ 2.3f
 
         // Slug team-eindeutig (vocab_klassen.unique[team_id, slug]) — bei Kollision suffixen.
         $basis = \Illuminate\Support\Str::slug($name) ?: 'class';

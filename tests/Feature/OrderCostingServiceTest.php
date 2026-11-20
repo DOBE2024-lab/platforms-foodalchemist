@@ -256,3 +256,26 @@ it('rechnet feste Vorbereitung bei doppeltem Gericht einmal je Darreichung für 
     // Andere Darreichung: eigene Vorbereitung, trotz gleicher Servierform.
     expect($r['active_person_minutes'])->toBe(60.0);
 });
+
+it('CQ 2.3f: eingebettetes Paket (kind=paket-Concept) kostet wie dasselbe Gericht direkt im Concept', function () {
+    $concepts = app(ConceptService::class);
+    $direkt = app(OrderCostingService::class)->costConcept($this->rootTeam, $this->concept->refresh(), 100);
+
+    $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Kartoffel-Station']);
+    $ps = $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Hauptgang']);
+    $concepts->fillSlot($this->rootTeam, $ps->id, ['sales_recipe_id' => $this->recipe->id])
+        ->update(['quantity' => 1, 'unit_vocab_id' => $this->concept->slots()->first()->unit_vocab_id]);
+    $mitPaket = $concepts->create($this->rootTeam, ['name' => 'Menü mit Paket']);
+    $s = $concepts->addSlot($this->rootTeam, $mitPaket->id, ['role' => 'Hauptgang']);
+    $concepts->fillSlot($this->rootTeam, $s->id, ['embedded_concept_id' => $paket->id]);
+    $concepts->recomputeCache($paket->refresh());
+    $concepts->recomputeCache($mitPaket->refresh());
+
+    $r = app(OrderCostingService::class)->costConcept($this->rootTeam, $mitPaket->refresh(), 100);
+
+    expect($direkt['exploded_mek'])->toBeGreaterThan(0)
+        ->and($r['exploded_mek'])->toBe($direkt['exploded_mek'])
+        ->and($r['catalog_mek_total'])->toBe($direkt['catalog_mek_total'])
+        ->and($r['kitchen_person_minutes'])->toBe($direkt['kitchen_person_minutes'])
+        ->and(collect($r['requirements'])->pluck('recipe_id')->all())->toBe(collect($direkt['requirements'])->pluck('recipe_id')->all());
+});

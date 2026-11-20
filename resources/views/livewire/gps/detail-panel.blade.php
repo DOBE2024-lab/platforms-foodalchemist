@@ -777,7 +777,40 @@
                         </span>
                     </x-fa::field>
                     @if($gefaessKostenartFehler)<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]">{{ $gefaessKostenartFehler }}</p>@endif
-                    <p class="{{ $leise }}">Einweg und Extern (Miete): der Preis hier, sonst der Artikelpreis je Stück. Mehrweg (Eigenbestand, z. B. Spülkosten): nur der Preis hier. Ohne Preis gilt die Darreichung als unvollständig. Die Kosten gehen je Stück in den Wareneinsatz.</p>
+                    <p class="{{ $leise }}">Einweg und Extern (Miete / Spülservice): der Preis hier, sonst der Artikelpreis je Stück. Mehrweg (Eigenbestand, z. B. Spülkosten): nur der Preis hier. Ohne Preis gilt die Darreichung als unvollständig. Die Kosten gehen je Stück in den Wareneinsatz.</p>
+                </div>
+            @endif
+            {{-- Zubehör am Gefäß (20.11.2026, „Weg 2“): gehört immer dazu (Deckel, Etikett, Löffel) — jede Darreichung mit diesem Gefäß rechnet es mit,
+                 jedes Teil zu seinem Preis und seiner Art. Eine Ebene: Zubehör hat kein eigenes Zubehör. --}}
+            @if($gefaessZubehoerInfo !== null)
+                @php $gz = $gefaessZubehoerInfo; @endphp
+                <div class="mt-3 flex flex-col gap-1.5" data-gp-gefaess-zubehoer>
+                    <span class="fa-t-label">Gehört dazu (Zubehör je Gefäß, dieses Team)</span>
+                    @if($gz['geerbt_von'])<p class="{{ $leise }}" data-gp-gefaess-zubehoer-geerbt>Liste von {{ $gz['geerbt_von'] }} — eine Änderung übernimmt sie für dieses Team.</p>@endif
+                    @forelse($gz['zeilen'] as $z)
+                        <div class="flex flex-wrap items-center gap-2" wire:key="gp-gef-zub-{{ $z['gp_id'] }}" data-gp-gefaess-zubehoer-zeile="{{ $z['gp_id'] }}">
+                            <x-fa::input size="sm" inputmode="decimal" value="{{ rtrim(rtrim(number_format($z['menge'], 3, ',', ''), '0'), ',') }}" aria-label="Stück je Gefäß"
+                                wire:change="gefaessZubehoerMengeSetzen({{ $z['gp_id'] }}, $event.target.value)" class="w-16 text-right tabular-nums" />
+                            <span class="fa-t-body">× {{ $z['name'] }}</span>
+                            <span class="{{ $leise }}">{{ \Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN[$z['kostenart']] ?? '' }}</span>
+                            @if($z['kosten'] !== null)<span class="tabular-nums" data-gp-gefaess-zubehoer-kosten>{{ number_format($z['kosten'], 2, ',', '.') }} €</span>
+                            @else<x-fa::badge tone="warn" title="Kein Preis: am Zubehör-Grundprodukt Art und Preis eintragen oder einen bepreisten Hauptartikel wählen" data-gp-gefaess-zubehoer-preis-fehlt>kein Preis</x-fa::badge>@endif
+                            <x-fa::icon-button icon="heroicon-o-x-mark" label="Zubehör entfernen" size="sm" wire:click="gefaessZubehoerWeg({{ $z['gp_id'] }})" />
+                        </div>
+                    @empty
+                        <p class="{{ $leise }}">Kein Zubehör — das Gefäß kostet allein.</p>
+                    @endforelse
+                    @if($gz['zeilen'] !== [])<p class="fa-t-label" data-gp-gefaess-zubehoer-summe>Zubehör je Gefäß {{ number_format($gz['summe'], 2, ',', '.') }} €{{ $gz['preis_fehlt'] ? ' (ohne Teile ohne Preis)' : '' }}</p>@endif
+                    <span class="inline-flex flex-wrap items-center gap-2">
+                        <x-fa::input size="sm" inputmode="decimal" wire:model="gefaessZubehoerMenge" class="w-16 text-right" aria-label="Stück je Gefäß für das neue Zubehör" />
+                        <x-fa::input size="sm" type="search" wire:model.live.debounce.300ms="gefaessZubehoerSuche" placeholder="+ Zubehör suchen (z. B. Deckel)" class="w-64" aria-label="Zubehör suchen" data-gp-gefaess-zubehoer-suche />
+                    </span>
+                    @if($gz['treffer']->isNotEmpty())
+                        <div class="flex flex-wrap gap-1.5" data-gp-gefaess-zubehoer-treffer>
+                            @foreach($gz['treffer'] as $t)<x-fa::button size="sm" variant="ghost" wire:click="gefaessZubehoerHinzu({{ $t->id }})" wire:key="gp-gef-zub-t-{{ $t->id }}">{{ $t->name }}</x-fa::button>@endforeach
+                        </div>
+                    @elseif(trim($gefaessZubehoerSuche) !== '')<p class="{{ $leise }}">Nichts gefunden. Zubehör als Non-Food-Grundprodukt (Warengruppe 16) anlegen.</p>@endif
+                    @if($gefaessZubehoerFehler)<p class="fa-t-muted text-[var(--fa-crit)]" data-gp-gefaess-zubehoer-fehler>{{ $gefaessZubehoerFehler }}</p>@endif
                 </div>
             @endif
             @if(\Illuminate\Support\Facades\Route::has('foodalchemist.lager.index'))

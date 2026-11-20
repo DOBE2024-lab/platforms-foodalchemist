@@ -72,6 +72,7 @@
                                     <option value="{{ $darForm[$d->id]['vessel_gp_id'] }}">{{ $darGefaess[$d->id]['gefaess_name'] ?? 'Gefäß' }}</option>
                                 @endif
                             </x-fa::select>
+                            @include('foodalchemist::livewire.verkauf.partials.darreichung-gefaess-preis')
                         </x-fa::field>
                         {{-- Geschirr-Empfehlung (19.11.2026, Dominique): neben dem Gefäß, kostet nichts. Gefäß = Ware mit Lieferant und Preis (EK),
                              Empfehlung = Typ aus Einstellungen › Behälter › Servier-Vehikel. Leer = Typ des Gefäßes, sonst keiner. --}}
@@ -118,12 +119,15 @@
                     </div>
                     @if(($d->unit_count ?? 1) > 1 || ($rezept->sales_unit_count ?? 1) > 1)<x-fa::notice tone="warn">Altbestand mit abweichender Zählweise. Mengen und Zeiten bleiben bis zu einer geprüften Umstellung erhalten.</x-fa::notice>@endif
                     @include('foodalchemist::livewire.verkauf.partials.darreichung-gefaess')
-                    <div class="flex flex-wrap gap-x-6 gap-y-2 border-y border-[var(--fa-line)] py-3" aria-label="Kennzahlen dieser Darreichung">
-                        <span>EK je Portion <x-fa::money :value="$d->ek_portion" /></span>
-                        <span>VK netto <x-fa::money :value="$d->sales_net" /></span>
-                        <span>VK brutto <x-fa::money :value="$d->sales_gross" /></span>
-                        <span>Wareneinsatz {{ isset($darMarge['wareneinsatz_pct']) ? number_format($darMarge['wareneinsatz_pct'], 1, ',', '.') . ' %' : 'fehlt' }}</span>
-                    </div>
+                    {{-- 20.11.2026 (Dominique): die Kennzahlen der Standard-Darreichung stehen schon oben im Kopf — hier nur bei einer anderen
+                         Darreichung, deren Werte davon abweichen, und kompakt in einer Zeile --}}
+                    @unless($d->is_standard)
+                        <p class="flex flex-wrap gap-x-4 gap-y-1 border-y border-[var(--fa-line)] py-2 fa-t-muted tabular-nums" aria-label="Kennzahlen dieser Darreichung" data-dar-kennzahlen>
+                            <span>Diese Darreichung: EK <x-fa::money :value="$d->ek_portion" /></span>
+                            <span>VK netto <x-fa::money :value="$d->sales_net" /></span>
+                            <span>Wareneinsatz {{ isset($darMarge['wareneinsatz_pct']) ? number_format($darMarge['wareneinsatz_pct'], 1, ',', '.') . ' %' : 'fehlt' }}</span>
+                        </p>
+                    @endunless
                     </section>
                     @include('foodalchemist::livewire.verkauf.partials.darreichung-komponenten')
                     @include('foodalchemist::livewire.verkauf.partials.darreichung-zeiten')

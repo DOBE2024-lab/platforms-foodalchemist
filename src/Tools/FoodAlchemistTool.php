@@ -199,7 +199,11 @@ abstract class FoodAlchemistTool
                         $g = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessKosten($d);
 
                         return ['name' => $g['gp']?->name, 'kostenart' => $g['kostenart'], 'kostenart_quelle' => $g['kostenart_quelle'], 'kosten_je_einheit' => $g['kosten'],
-                            'preis_fehlt' => $g['preis_fehlt'], 'preis_quelle' => $g['preis_quelle']];
+                            'preis_fehlt' => $g['preis_fehlt'], 'preis_quelle' => $g['preis_quelle'],
+                            // Zubehör am Gefäß-GP (20.11.2026, gp_gefaess_zubehoer.PUT): je Teil Menge, Art, Preis je Stück und Kosten (null = Preis fehlt)
+                            'zubehoer' => array_map(fn ($z) => ['gp_id' => $z['gp_id'], 'name' => $z['name'], 'menge' => $z['menge'], 'kostenart' => $z['kostenart'],
+                                'preis_stk' => $z['preis_stk'], 'kosten_je_einheit' => $z['kosten'], 'preis_fehlt' => $z['kosten'] === null], $g['zubehoer']),
+                            'zubehoer_preis_fehlt' => $g['zubehoer_preis_fehlt'], 'kosten_gesamt_je_einheit' => $g['gesamt']];
                     })() : null,
                 ];
             })->all();

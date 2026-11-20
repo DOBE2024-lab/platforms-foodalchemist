@@ -11,7 +11,9 @@
                     <span class="text-[var(--fa-ink)]">{{ $z['name'] }}</span>
                     ×<input type="text" inputmode="decimal" value="{{ rtrim(rtrim(number_format($z['menge'], 3, ',', ''), '0'), ',') }}" aria-label="Menge je Einheit"
                             wire:change="darZubehoerMenge({{ $d->id }}, {{ $z['gp_id'] }}, $event.target.value)" class="{{ $feldKlein }} w-14 text-right tabular-nums" />
-                    @if($z['kosten'] !== null)<span class="tabular-nums" data-zubehoer-kosten>{{ $euro($z['kosten']) }}</span>@else<x-fa::badge tone="warn" title="Kein Preis je Stück am Hauptartikel">Preis fehlt</x-fa::badge>@endif
+                    @if($z['kosten'] !== null)<span class="tabular-nums" data-zubehoer-kosten>{{ $euro($z['kosten']) }}</span>
+                    @elseif($z['doppelt'] ?? false)<x-fa::badge tone="info" title="Dieses Teil gehört schon zum Gefäß (als Gefäß oder als Zubehör am Gefäß) und wird dort gerechnet" data-zubehoer-doppelt>zählt beim Gefäß</x-fa::badge>
+                    @else<x-fa::badge tone="warn" title="Kein Preis je Stück am Hauptartikel">Preis fehlt</x-fa::badge>@endif
                     <x-fa::icon-button icon="heroicon-o-x-mark" label="Zubehör entfernen" size="sm" wire:click="darZubehoerWeg({{ $d->id }}, {{ $z['gp_id'] }})" />
                 </span>
             @endforeach

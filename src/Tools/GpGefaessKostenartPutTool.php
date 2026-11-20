@@ -24,7 +24,8 @@ class GpGefaessKostenartPutTool extends FoodAlchemistTool implements ToolContrac
             . '„Gefäß-Preis fehlt“ und gilt als unvollständig. preis_stk in € netto je Stück (leer = kein Preis). kostenart null/leer entfernt den '
             . 'Eintrag des Teams (dann gilt das Oberteam bzw. die Automatik: Verleih-Lieferant → extern, sonst einweg). Die Kosten gehen je Stück '
             . 'in den Wareneinsatz der Darreichung; recipe_darreichung.PUT attrs.vessel_cost_type kann die Art je Darreichung übersteuern. '
-            . 'Rechnet die Darreichungen mit diesem Gefäß neu.';
+            . 'Gilt genauso für Zubehör am Gefäß (gp_gefaess_zubehoer.PUT, z. B. Deckel): jedes Teil rechnet mit seiner eigenen Art und seinem Preis. '
+            . 'Rechnet die Darreichungen mit diesem Gefäß (bzw. mit Gefäßen, an denen das GP als Zubehör hängt) neu.';
     }
 
     public function getSchema(): array
@@ -67,7 +68,7 @@ class GpGefaessKostenartPutTool extends FoodAlchemistTool implements ToolContrac
             'category' => 'action', 'tags' => ['foodalchemist', 'gefaess', 'darreichung', 'kosten', 'write'],
             'read_only' => false, 'idempotent' => true, 'risk_level' => 'write',
             'requires_auth' => true, 'requires_team' => true, 'cost_class' => 'local_db', 'side_effects' => ['updates', 'creates'],
-            'related_tools' => ['foodalchemist.recipe_darreichung.PUT'],
+            'related_tools' => ['foodalchemist.recipe_darreichung.PUT', 'foodalchemist.gp_gefaess_zubehoer.PUT'],
             'examples' => ['Das Schraubglas 212 ml ist bei uns Mehrweg, 0,08 € je Stück fürs Spülen.', 'Speiseteller vom Verleiher: extern, 0,55 € je Stück.'],
         ];
     }

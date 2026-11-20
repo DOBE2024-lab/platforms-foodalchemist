@@ -22,7 +22,7 @@ $gericht = [
         ['name' => 'Rucola', 'menge' => 1, 'einheit' => 'Gramm', 'sub' => null],
     ]],
     'zubereitung' => [], 'anrichten' => [['nr' => 1, 'text' => 'Linguine als Nest anrichten.', 'fotos' => [['url' => 'http://handbuch.test/bild.png', 'caption' => 'Fertiger Teller']]]],
-    'regeneration' => [], 'bestandteile' => [],
+    'regeneration' => [], 'gefaess' => [],
 ];
 $pudding = $gericht;
 $pudding['name'] = 'Nuss-Nougat-Pudding';

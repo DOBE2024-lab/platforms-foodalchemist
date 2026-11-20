@@ -24,6 +24,7 @@ class DetailPanel extends Component
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
     use \Platform\FoodAlchemist\Livewire\Concerns\HatGpAromaKi;            // Aroma: Anker + Profil per KI (ein Weg mit dem GP-Dialog)
     use \Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich;        // #1003: am Handy nur lesen
+    use \Platform\FoodAlchemist\Livewire\Concerns\HatGefaessZubehoerPflege; // 20.11.2026: Zubehör am Gefäß (Deckel am Glas)
 
     /** #1003: am Handy laufen Auswahl und Aufklappen; Verknüpfen, Lead, KI und Löschen bleiben am Computer. */
     public function handyLeseMethoden(): array
@@ -44,7 +45,8 @@ class DetailPanel extends Component
     protected function sperrFreiExtra(): array
     {
         // Spec 67: Stammplatz ist Betriebs-, nicht GP-Stammdatum — ohne „Bearbeiten“ setzbar.
-        return ['zeige', 'ankerNetzUmschalten', 'ersatzKiVerwerfen', 'laVorschlaegeVerwerfen', 'kiVerwerfen', 'stammplatzSetzen', 'lagerartikelSetzen', 'gefaessKostenartSetzen'];
+        return ['zeige', 'ankerNetzUmschalten', 'ersatzKiVerwerfen', 'laVorschlaegeVerwerfen', 'kiVerwerfen', 'stammplatzSetzen', 'lagerartikelSetzen', 'gefaessKostenartSetzen',
+            'gefaessZubehoerHinzu', 'gefaessZubehoerMengeSetzen', 'gefaessZubehoerWeg'];
     }
 
     public ?int $gpId = null;
@@ -659,6 +661,7 @@ class DetailPanel extends Component
             'lagerOrte' => ($gp !== null && $team !== null && $brauchtLager) ? $this->lagerOrte($team, $gp) : [],
             'lagerartikelInfo' => ($gp !== null && $team !== null && $brauchtLager) ? $this->lagerartikelLaden($team, $gp) : null,
             'gefaessKostenartInfo' => ($gp !== null && $team !== null && $brauchtLager && $gp->istNonFood()) ? $this->gefaessKostenartLaden($team, $gp) : null,
+            'gefaessZubehoerInfo' => ($gp !== null && $team !== null && $brauchtLager && $gp->istNonFood()) ? $this->gefaessZubehoerLaden($team, $gp) : null,
             'lagerBewegungen' => ($gp !== null && $team !== null && $brauchtLager)
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistInventoryMovement::where('team_id', $team->id)->where('gp_id', $gp->id)
                     ->with('location:id,name')->where('qty_base', '<>', 0)->orderByDesc('moved_at')->orderByDesc('id')->limit(10)->get()

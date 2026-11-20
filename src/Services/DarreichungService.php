@@ -569,9 +569,12 @@ class DarreichungService
         $summe = 0.0;
         $vollstaendig = true;
         $zeilen = [];
+        // Zubehör am Gefäß-GP (20.11.2026) zählt beim Gefäß — steht dasselbe Teil zusätzlich hier, nicht doppelt rechnen
+        $amGefaess = $darreichung->vessel_gp_id !== null
+            ? array_flip(array_column(app(GefaessZubehoerService::class)->liste((int) $darreichung->vessel_gp_id, $team)['zeilen'], 'gp_id')) : [];
         foreach ($darreichung->zubehoer()->with('gp:id,name,team_id,commodity_group_code,lead_la_supplier_item_id,piece_default_g')->get() as $z) {
-            // Doppelzählung vermeiden: dasselbe GP als Gefäß zählt dort (Gefäß gewinnt). Miete (Lieferant der Gruppe VERLEIH): nur Hinweis, nie je Portion.
-            $doppelt = $darreichung->vessel_gp_id !== null && (int) $darreichung->vessel_gp_id === (int) $z->gp_id;
+            // Doppelzählung vermeiden: dasselbe GP als Gefäß oder als Zubehör am Gefäß zählt dort (Gefäß gewinnt). Miete (Lieferant der Gruppe VERLEIH): nur Hinweis, nie je Portion.
+            $doppelt = ($darreichung->vessel_gp_id !== null && (int) $darreichung->vessel_gp_id === (int) $z->gp_id) || isset($amGefaess[(int) $z->gp_id]);
             $miete = ! $doppelt && $z->gp !== null && $this->istVerleihGp($z->gp, $team);
             if ($doppelt || $miete) {
                 $zeilen[] = ['gp_id' => (int) $z->gp_id, 'name' => (string) $z->gp?->name, 'menge' => (float) $z->quantity, 'preis_stk' => null, 'kosten' => null, 'note' => $z->note, 'doppelt' => $doppelt, 'miete' => $miete];
@@ -639,32 +642,127 @@ class DarreichungService
      * die Darreichung gilt als unvollständig — auch beim Verleih-Gefäß ohne Team-Eintrag (Entscheid Dominique 17.11.2026: „einfach einen Preis an
      * den Artikel setzen“; der frühere stille Miet-Hinweis „nicht je Portion gerechnet“ entfällt, Befund Achenbachglas 18.11.).
      *
-     * @return array{gp:?\Platform\FoodAlchemist\Models\FoodAlchemistGp, kosten:?float, miete:bool, preis_fehlt:bool, kostenart:?string, kostenart_quelle:?string, kostenart_vorgabe:?string, preis_quelle:?string}
+     * Seit 20.11.2026 kommt das Zubehör am Gefäß-GP dazu (`zubehoer`, je Teil mit eigener Art und eigenem Preis); `kosten`/`preis_fehlt` bleiben
+     * das Gefäß allein, `gesamt` = Gefäß + Zubehör je Einheit.
+     *
+     * @return array{gp:?\Platform\FoodAlchemist\Models\FoodAlchemistGp, kosten:?float, miete:bool, preis_fehlt:bool, kostenart:?string, kostenart_quelle:?string, kostenart_vorgabe:?string, preis_quelle:?string, zubehoer:list<array<string,mixed>>, zubehoer_summe:float, zubehoer_preis_fehlt:bool, gesamt:?float}
      */
     public function gefaessKosten(FoodAlchemistRecipeDarreichung $d, ?Team $team = null): array
     {
         $gp = $d->vessel_gp_id !== null ? \Platform\FoodAlchemist\Models\FoodAlchemistGp::query()->find($d->vessel_gp_id) : null;
         $info = ['gp' => $gp, 'kosten' => null, 'miete' => false, 'preis_fehlt' => false, 'kostenart' => null, 'kostenart_quelle' => null,
-            'kostenart_vorgabe' => null, 'preis_quelle' => null];
+            'kostenart_vorgabe' => null, 'preis_quelle' => null, 'zubehoer' => [], 'zubehoer_summe' => 0.0, 'zubehoer_preis_fehlt' => false, 'gesamt' => null];
         if ($gp === null) {
             return $info;
         }
         $team ??= Team::find($d->team_id);
-        $art = app(GefaessKostenartService::class)->wirksam($d, (int) $gp->id, $team, fn () => $this->istVerleihGp($gp, $team));
-        $info = [...$info, 'kostenart' => $art['kostenart'], 'kostenart_quelle' => $art['quelle'], 'kostenart_vorgabe' => $art['vorgabe'],
-            'miete' => $art['kostenart'] === GefaessKostenartService::EXTERN];
-        $preis = $art['preis_gp'];
-        $info['preis_quelle'] = $preis !== null ? 'gp' : null;
-        if ($preis === null && $art['kostenart'] !== GefaessKostenartService::MEHRWEG) {
-            $preis = $this->recompute->preisProStueckPublic($gp, $team);   // einweg UND extern: Lead-Artikelpreis je Stück (Mehrweg kauft nichts ein)
-            $info['preis_quelle'] = $preis !== null ? 'artikel' : null;
-        }
+        $st = $this->stueckKosten($gp, $team, $d->vessel_cost_type);
+        $zub = $this->gefaessZubehoerKosten($gp, $team);
 
-        return [...$info, 'kosten' => $preis !== null ? round($preis, 4) : null, 'preis_fehlt' => $preis === null];
+        return [...$info, 'kostenart' => $st['kostenart'], 'kostenart_quelle' => $st['kostenart_quelle'], 'kostenart_vorgabe' => $st['kostenart_vorgabe'],
+            'miete' => $st['kostenart'] === GefaessKostenartService::EXTERN, 'preis_quelle' => $st['preis_quelle'],
+            'kosten' => $st['preis'], 'preis_fehlt' => $st['preis'] === null,
+            'zubehoer' => $zub['zeilen'], 'zubehoer_summe' => $zub['summe'], 'zubehoer_preis_fehlt' => $zub['preis_fehlt'],
+            // Gefäß + Zubehör je Einheit (nur bekannte Preise; fehlt einer, sagen es preis_fehlt / zubehoer_preis_fehlt)
+            'gesamt' => round(($st['preis'] ?? 0.0) + $zub['summe'], 4)];
     }
 
     /**
-     * Alles, was auf den EK der Darreichung kommt, ohne die Zutaten: Zubehör & Verpackung plus Gefäß (je Einheit).
+     * Preis je Stück eines Non-Food-GP nach seiner wirksamen Art ({@see GefaessKostenartService}) — für das Gefäß und sein Zubehör gleich:
+     * einweg/extern = Preis des Teams am GP, sonst Lead-Preis je Stück · mehrweg = nur der Preis des Teams am GP. null = Preis fehlt.
+     *
+     * @return array{kostenart: string, kostenart_quelle: string, kostenart_vorgabe: string, preis: ?float, preis_quelle: ?string}
+     */
+    public function stueckKosten(\Platform\FoodAlchemist\Models\FoodAlchemistGp $gp, ?Team $team, ?string $uebersteuerung = null): array
+    {
+        $art = app(GefaessKostenartService::class)->wirksamArt($uebersteuerung, (int) $gp->id, $team, fn () => $this->istVerleihGp($gp, $team));
+        $preis = $art['preis_gp'];
+        $quelle = $preis !== null ? 'gp' : null;
+        if ($preis === null && $art['kostenart'] !== GefaessKostenartService::MEHRWEG) {
+            $preis = $this->recompute->preisProStueckPublic($gp, $team);   // einweg UND extern: Lead-Artikelpreis je Stück (Mehrweg kauft nichts ein)
+            $quelle = $preis !== null ? 'artikel' : null;
+        }
+
+        return ['kostenart' => $art['kostenart'], 'kostenart_quelle' => $art['quelle'], 'kostenart_vorgabe' => $art['vorgabe'],
+            'preis' => $preis !== null ? round($preis, 4) : null, 'preis_quelle' => $quelle];
+    }
+
+    /**
+     * Zubehör am Gefäß-GP (20.11.2026, {@see GefaessZubehoerService}) je Gefäß: jedes Teil × Menge zu seinem Preis und seiner Kostenart.
+     * Eine Ebene (Zubehör des Zubehörs zählt nie). Fehlt ein Preis: Zeile mit kosten null, `preis_fehlt` — nie still 0.
+     *
+     * @return array{summe: float, preis_fehlt: bool, zeilen: list<array{gp_id:int, name:string, menge:float, kostenart:string, preis_stk:?float, preis_quelle:?string, kosten:?float}>}
+     */
+    public function gefaessZubehoerKosten(\Platform\FoodAlchemist\Models\FoodAlchemistGp $gefaess, ?Team $team): array
+    {
+        $liste = app(GefaessZubehoerService::class)->liste((int) $gefaess->id, $team);
+        if ($liste['zeilen'] === []) {
+            return ['summe' => 0.0, 'preis_fehlt' => false, 'zeilen' => []];
+        }
+        $gps = \Platform\FoodAlchemist\Models\FoodAlchemistGp::query()->whereIn('id', array_column($liste['zeilen'], 'gp_id'))->get()->keyBy('id');
+        $summe = 0.0;
+        $fehlt = false;
+        $zeilen = [];
+        foreach ($liste['zeilen'] as $z) {
+            $gp = $gps->get($z['gp_id']);
+            $st = $gp !== null ? $this->stueckKosten($gp, $team) : ['kostenart' => null, 'preis' => null, 'preis_quelle' => null];
+            $kosten = $st['preis'] !== null ? round($st['preis'] * $z['menge'], 4) : null;
+            if ($kosten === null) {
+                $fehlt = true;
+            } else {
+                $summe += $kosten;
+            }
+            $zeilen[] = ['gp_id' => $z['gp_id'], 'name' => $gp?->name ?? $z['name'], 'menge' => $z['menge'], 'kostenart' => $st['kostenart'],
+                'preis_stk' => $st['preis'], 'preis_quelle' => $st['preis_quelle'], 'kosten' => $kosten];
+        }
+
+        return ['summe' => round($summe, 4), 'preis_fehlt' => $fehlt, 'zeilen' => $zeilen];
+    }
+
+    /**
+     * Logistik (20.11.2026): was zur Darreichung mitgeht — das Gefäß (1 je Einheit) und sein Zubehör (Menge je Gefäß), hochgerechnet auf
+     * `$portionen`. Gleiche Quelle wie die Kosten ({@see GefaessZubehoerService::liste}, wirksam fürs Team), keine zweite Logik.
+     *
+     * @return list<array{gp_id:int, name:string, menge:float, rolle:string}>  rolle = gefaess | zubehoer
+     */
+    public function gefaessMitgeben(FoodAlchemistRecipeDarreichung $d, float $portionen, ?Team $team = null): array
+    {
+        if ($d->vessel_gp_id === null || $portionen <= 0) {
+            return [];
+        }
+        $team ??= Team::find($d->team_id);
+        $einheiten = $portionen * (float) ($d->unit_count ?: 1);
+        $name = (string) DB::table('foodalchemist_gps')->where('id', $d->vessel_gp_id)->value('name');
+        $out = [['gp_id' => (int) $d->vessel_gp_id, 'name' => $name, 'menge' => round($einheiten, 3), 'rolle' => 'gefaess']];
+        foreach (app(GefaessZubehoerService::class)->liste((int) $d->vessel_gp_id, $team)['zeilen'] as $z) {
+            $out[] = ['gp_id' => $z['gp_id'], 'name' => $z['name'], 'menge' => round($einheiten * $z['menge'], 3), 'rolle' => 'zubehoer'];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Zubehör je Portion für Küche/Service (Handbuch, ohne Preise): Gefäß + Zubehör einer Darreichung als Text-Zeilen „1 × Schraubglas …“.
+     *
+     * @return list<string>
+     */
+    public function gefaessZeilenJePortion(FoodAlchemistRecipeDarreichung $d, ?Team $team = null): array
+    {
+        return array_map(fn ($t) => self::stueckText($t['menge']).' × '.$t['name'], $this->gefaessMitgeben($d, 1.0, $team));
+    }
+
+    /** Stückzahl für Logistik-Texte: ganze Stück aufgerundet (nie 119,5 Deckel), Bruchteile je Portion mit Komma. */
+    public static function stueckText(float $menge, bool $aufrunden = false): string
+    {
+        if ($aufrunden) {
+            return number_format((float) ceil(round($menge, 3)), 0, ',', '.');
+        }
+
+        return rtrim(rtrim(number_format($menge, 3, ',', '.'), '0'), ',');
+    }
+
+    /**
+     * Alles, was auf den EK der Darreichung kommt, ohne die Zutaten: Zubehör & Verpackung plus Gefäß samt seinem Zubehör (je Einheit).
      *
      * @return array{summe: float, vollstaendig: bool, zubehoer: array<string,mixed>, gefaess: array<string,mixed>}
      */
@@ -673,7 +771,8 @@ class DarreichungService
         $zub = $this->zubehoerKosten($d, $team);
         $gef = $this->gefaessKosten($d, $team);
 
-        return ['summe' => round($zub['summe'] + ($gef['kosten'] ?? 0.0), 4), 'vollstaendig' => $zub['vollstaendig'] && ! $gef['preis_fehlt'], 'zubehoer' => $zub, 'gefaess' => $gef];
+        return ['summe' => round($zub['summe'] + ($gef['kosten'] ?? 0.0) + $gef['zubehoer_summe'], 4),
+            'vollstaendig' => $zub['vollstaendig'] && ! $gef['preis_fehlt'] && ! $gef['zubehoer_preis_fehlt'], 'zubehoer' => $zub, 'gefaess' => $gef];
     }
 
     /**
@@ -702,6 +801,7 @@ class DarreichungService
             'warnung' => $warnung, 'miete' => $gef['miete'], 'kosten' => $gef['kosten'], 'preis_fehlt' => $gef['preis_fehlt'],
             'kostenart' => $gef['kostenart'], 'kostenart_quelle' => $gef['kostenart_quelle'], 'kostenart_vorgabe' => $gef['kostenart_vorgabe'],
             'preis_quelle' => $gef['preis_quelle'],
+            'zubehoer' => $gef['zubehoer'], 'zubehoer_summe' => $gef['zubehoer_summe'], 'zubehoer_preis_fehlt' => $gef['zubehoer_preis_fehlt'], 'gesamt' => $gef['gesamt'],
         ];
     }
 
@@ -825,6 +925,8 @@ class DarreichungService
         if ($gpIds === []) {
             return 0;
         }
+        // Zubehör am Gefäß (20.11.2026): ändert sich Preis oder Art des Deckels, rechnen die Darreichungen mit dem Glas neu
+        $gpIds = array_values(array_unique([...$gpIds, ...app(GefaessZubehoerService::class)->gefaesseMitZubehoer($gpIds)]));
         $ids = collect();
         foreach (array_chunk($gpIds, 500) as $teil) {
             $ids = $ids->merge(DB::table('foodalchemist_recipe_presentation_zubehoer')->whereIn('gp_id', $teil)->whereNull('deleted_at')->distinct()->pluck('presentation_id'))

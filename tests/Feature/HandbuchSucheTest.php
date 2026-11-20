@@ -33,7 +33,7 @@ it('hängt an jede Karte einen normalisierten Suchindex mit Zutaten, Schritten, 
     $snapshot = require __DIR__ . '/../Fixtures/handbuch_ansicht.php';
     $snapshot['gerichte']['r1']['zubereitung'] = [['nr' => 1, 'text' => 'Zucchini in Würfel schneiden.', 'fotos' => []]];
     $snapshot['gerichte']['r1']['regeneration'] = [['komponente' => 'Soße', 'kalt' => false, 'geraet' => 'Kombidämpfer', 'temp_c' => 90, 'dauer_min' => 8, 'kern_c' => 72, 'hinweis' => 'abgedeckt']];
-    $snapshot['gerichte']['r1']['bestandteile'] = [['name' => 'Basilikum', 'garnitur' => true]];
+    $snapshot['gerichte']['r1']['gefaess'] = ['1 × Schraubglas: Glas, 212 ml', '1 × Deckel: Twist-off, 82 mm'];   // 20.11.2026 statt Bestandteile
     $snapshot['freie_kapitel'] = [['title' => 'Hygiene', 'text' => 'Hände waschen vor Schichtbeginn.']];
     $x = handbuchSucheDom($snapshot);
 
@@ -45,7 +45,7 @@ it('hängt an jede Karte einen normalisierten Suchindex mit Zutaten, Schritten, 
         'zucchini in wurfel schneiden',                       // Zubereitung
         'linguine als nest anrichten',                        // Anrichten
         'kombidampfer', 'abgedeckt',                          // Regeneration
-        'basilikum',                                          // Bestandteile
+        'schraubglas glas 212 ml', 'deckel twist off 82 mm',  // Gefäß + Zubehör (ohne Stückzahl)
         'gluten', 'milch', 'krebstiere',                      // Allergen-Namen aus der Legende
     )->and($r1)->toBe(mb_strtolower($r1));
 

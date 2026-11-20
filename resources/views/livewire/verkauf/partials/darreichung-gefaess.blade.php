@@ -15,8 +15,7 @@
                         </select>
                     </label>
                 @endif
-                @if($gi['kosten'] !== null)<span class="tabular-nums" data-dar-gefaess-kosten>Gefäß {{ $euro($gi['kosten']) }} je Einheit{{ $gi['preis_quelle'] === 'gp' ? ' (Preis am Grundprodukt)' : ($gi['miete'] ? ' (Mietpreis des Artikels)' : '') }}</span>@endif
-                @if($gi['preis_fehlt'])<x-fa::badge tone="warn" title="Kein Preis je Stück: bei Einweg und Extern am Grundprodukt (Lager › Art als Gefäß) oder am Hauptartikel, bei Mehrweg am Grundprodukt eintragen" data-dar-gefaess-preis-fehlt>Gefäß-Preis fehlt</x-fa::badge>@endif
+                {{-- Preis des Gefäßes und seines Zubehörs steht seit 20.11.2026 direkt unter dem Feld „Gefäß“ (Partial darreichung-gefaess-preis) --}}
                 @if($gi['warnung'])<x-fa::badge tone="warn" data-dar-fuellmenge-warnung>{{ $gi['warnung'] }}</x-fa::badge>@endif
             </div>
         </div>

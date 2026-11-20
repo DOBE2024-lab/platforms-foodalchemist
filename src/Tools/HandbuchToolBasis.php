@@ -30,7 +30,7 @@ abstract class HandbuchToolBasis extends FoodAlchemistTool
         $dok = ['foodbook' => 'Foodbook', 'speisekarte' => 'Speisekarte', 'speiseplan' => 'Speiseplan', 'angebot' => 'Angebot'][$this->typ()];
 
         return match ($this->verb()) {
-            'PUBLISH' => "Veröffentlicht das Handbuch (Standards zum Nachschlagen: Zubereitung, Anrichten, Regeneration, Bestandteile, Allergene je Gericht) zu einer {$dok} als eigenen Lese-Link ohne Login, "
+            'PUBLISH' => "Veröffentlicht das Handbuch (Standards zum Nachschlagen: Zubereitung, Anrichten, Regeneration, Gefäß mit Zubehör, Allergene je Gericht) zu einer {$dok} als eigenen Lese-Link ohne Login, "
                 . 'getrennt vom Kundenlink. Eingefroren, ohne Preise. expires_at (gültig bis) ist Pflicht. Antwort enthält die Lücken (Gerichte ohne Zubereitung/Anrichten/Regeneration).',
             'WITHDRAW' => "Zieht das Handbuch einer {$dok} zurück (Link → 404). Snapshot und Token bleiben erhalten, erneutes Veröffentlichen behält den Link.",
             default => "Liefert den Handbuch-Status einer {$dok}: veröffentlicht/erreichbar, Link, Ablauf; mit luecken=true zusätzlich die Gerichte mit fehlenden Abschnitten.",

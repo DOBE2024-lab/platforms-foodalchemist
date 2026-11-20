@@ -872,6 +872,17 @@ class GpNamingService
     }
 
     /**
+     * Wem gehört ein neu angelegtes GP? Das Master-Team pflegt den globalen Bestand (Einstellung „Master-Team“): legt es ein GP an, ist das GP
+     * global und Teil des Stamm-Pakets, damit es bei allen Mandanten mit gebuchtem Paket ankommt (Dominique 20.11.2026: „wenn ein Grundprodukt
+     * neu angelegt wird, durch die Vererbung, durch das Abo-Paket, sollte es automatisch mit reingehen“; Entscheid: alle, kein Schalter).
+     * Jedes andere Team legt team-eigen an (D1). Vorher landeten Master-Anlagen mit team_id = Master und blieben für Mandanten unsichtbar.
+     */
+    public static function anlageTeamId(Team $team): ?int
+    {
+        return \Platform\FoodAlchemist\Support\MasterTeam::istMaster($team) ? null : (int) $team->id;
+    }
+
+    /**
      * GP-Anlage (Render-First, I4): rendert + validiert + Guard, dann Insert.
      * Status neuer GPs = tentative (Kuration hebt auf approved).
      *
@@ -895,6 +906,7 @@ class GpNamingService
         }
         $gpKey = $this->gpKeyAusFeldern($hauptzutatSlug, $in);   // v3.10.0: Stückgewicht/Fett/Land/Siegel trennen
 
+        $ziel = self::anlageTeamId($team);
         $guard = $this->anlageGuard($team, $gpKey, $name);
         if ($guard['blockiert']) {
             if (! $force) {
@@ -906,7 +918,8 @@ class GpNamingService
             // force: DB-UNIQUE (team_id, gp_key) ist absolut — bewusste Duplikate bekommen
             // einen ~n-Suffix (klar als Force-Anlage erkennbar, Dubletten-Guard bleibt scharf)
             $n = 2;
-            while (FoodAlchemistGp::where('team_id', $team->id)->where('gp_key', "{$gpKey}~{$n}")->exists()) {
+            while (FoodAlchemistGp::query()->ohneTeamSicht('eindeutigkeit')->where(fn ($q) => $ziel === null ? $q->whereNull('team_id') : $q->where('team_id', $ziel))
+                ->where('gp_key', "{$gpKey}~{$n}")->exists()) {
                 $n++;
             }
             $gpKey = "{$gpKey}~{$n}";
@@ -919,7 +932,8 @@ class GpNamingService
         $alkohol = \Platform\FoodAlchemist\Support\AlkoholAngabe::eingabe($in['alkohol'] ?? null);
 
         return FoodAlchemistGp::create([
-            'team_id' => $team->id,                                          // D1: Kind-eigene GPs möglich
+            'team_id' => $ziel,                                              // D1: Kind-eigene GPs möglich; Master → global (anlageTeamId)
+            'stamm_class' => $ziel === null ? \Platform\FoodAlchemist\Support\StammPaket::PAKET : \Platform\FoodAlchemist\Support\StammPaket::BASIS,
             'gp_key' => $gpKey,
             'name' => $name,
             'main_ingredient_slug' => $hauptzutatSlug,

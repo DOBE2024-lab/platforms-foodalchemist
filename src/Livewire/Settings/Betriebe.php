@@ -2,11 +2,14 @@
 
 namespace Platform\FoodAlchemist\Livewire\Settings;
 
+use Platform\FoodAlchemist\Exceptions\NochVerwendetException;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\OutletService;
@@ -130,10 +133,7 @@ class Betriebe extends Component
         }
         \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'logoUpload');
 
-        $media = app(FoodAlchemistMediaService::class);
-        $media->delete($o->logo_context_file_id, (string) $o->logo_path, $team);   // altes Logo weg
-        $res = $media->storeImage($this->logoUpload, $team, 'foodalchemist.outlet', $o->id, "foodalchemist/outlet-logo/{$o->id}");
-        $o->update(['logo_path' => $res['path'], 'logo_context_file_id' => $res['context_file_id']]);
+        app(OutletService::class)->logoErsetzen($team, $o->id, $this->logoUpload);   // 98 · 2.3a: altes Logo weg, neues rein
         $this->logoUpload = null;
     }
 
@@ -145,8 +145,7 @@ class Betriebe extends Component
         if ($o === null || $team === null) {
             return;
         }
-        app(FoodAlchemistMediaService::class)->delete($o->logo_context_file_id, (string) $o->logo_path, $team);
-        $o->update(['logo_path' => null, 'logo_context_file_id' => null]);
+        app(OutletService::class)->logoEntfernen($team, $o->id);
     }
 
     public function speichern(): void
@@ -158,23 +157,14 @@ class Betriebe extends Component
             return;
         }
 
-        $team = $this->team();
-        if (FoodAlchemistOutlet::where('team_id', $team->id)->where('name', $name)
-            ->where('id', '!=', $o->id)->exists()) {
-            $this->fehler = 'Es gibt bereits ein Kalkulationsprofil mit diesem Namen.';
+        // 98 · 2.3a: Eindeutigkeit, Farb-/Vorlagen-Regeln und der Write liegen im OutletService.
+        try {
+            app(OutletService::class)->aktualisieren($this->team(), $o->id, $this->form);
+        } catch (NichtGefundenException|GeerbtNurLesenException|NochVerwendetException|\InvalidArgumentException $e) {
+            $this->fehler = $e->getMessage();
 
             return;
         }
-
-        $farbe = trim((string) ($this->form['color'] ?? ''));
-        $o->update([
-            'name' => $name,
-            // Nur echtes Hex durchlassen — die Farbe landet direkt im Style-Attribut.
-            'color' => preg_match('/^#[0-9a-fA-F]{6}$/', $farbe) === 1 ? $farbe : null,
-            'sort_order' => max(0, (int) ($this->form['sort_order'] ?? 100)),
-            // Slice F: Präsentations-Vorlage je Betrieb (leer = Dokument-Vorlage beim Betriebs-Link).
-            'presentation_design' => ($v = trim((string) ($this->form['vorlage'] ?? ''))) !== '' ? $v : null,
-        ]);
 
         // Ebene 2: Kosten-Overrides je Betrieb wohnen jetzt in „Herstellkosten & Zuschläge"
         // (Team/Betrieb-Wähler) — hier nur noch Identität, Farbe, Reihenfolge, Präsentations-Vorlage.
@@ -184,16 +174,21 @@ class Betriebe extends Component
     /** Aktiv/inaktiv statt löschen — an einem Outlet hängen Ausgaben und Kapitel. */
     public function aktivUmschalten(int $id): void
     {
-        $o = $this->eigenes($id);
-        $o?->update(['is_inactive' => ! $o->is_inactive]);
+        $team = $this->team();
+        if ($team !== null && $this->eigenes($id) !== null) {
+            app(OutletService::class)->aktivUmschalten($team, $id);
+        }
     }
 
     /** Nur team-EIGENE Outlets sind änderbar (Vokabular gehört dem Team, das es pflegt). */
     private function eigenes(int $id): ?FoodAlchemistOutlet
     {
         $team = $this->team();
-
-        return $team === null ? null : FoodAlchemistOutlet::where('team_id', $team->id)->find($id);
+        try {
+            return $team === null ? null : app(OutletService::class)->eigenes($team, $id);
+        } catch (NichtGefundenException) {
+            return null;
+        }
     }
 
     public function render()

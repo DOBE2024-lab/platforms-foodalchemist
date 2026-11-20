@@ -2,10 +2,13 @@
 
 namespace Platform\FoodAlchemist\Livewire\Settings;
 
+use Platform\FoodAlchemist\Exceptions\NochVerwendetException;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
+use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Livewire\Component;
+use Platform\FoodAlchemist\Services\Einstellungen\ConcepterDimensionenService;
 use Platform\FoodAlchemist\Support\TeamScope;
 
 /**
@@ -24,19 +27,8 @@ class ConcepterDimensionen extends Component
         return 'concepter_dimensionen';
     }
 
-    /** Whitelist: key => [tabelle, label, hint] */
-    public const VOKABULARE = [
-        'einsatzmomente' => ['tabelle' => 'foodalchemist_service_moments', 'label' => 'Einsatzmomente', 'hint' => 'Mehrere je Konzept möglich, zum Beispiel Frühstück, Lunch, Apéro.'],
-        'eventtypen' => ['tabelle' => 'foodalchemist_event_types', 'label' => 'Eventtypen', 'hint' => 'Einer je Konzept, zum Beispiel Konferenz, Gala, Sommerfest.'],
-        'saisons' => ['tabelle' => 'foodalchemist_seasons', 'label' => 'Saisons', 'hint' => 'Mehrere je Konzept möglich.'],
-        'servierformen' => ['tabelle' => 'foodalchemist_serving_forms', 'label' => 'Servierformen', 'hint' => 'Verbindet Konzept und Darreichung am Gericht. Der Grundbestand kommt aus der Warenwirtschaft, eigene Einträge lassen sich ergänzen.'],
-        // Spec 19 „Foodbook-Leitstelle" (E3.3): Zielgruppen-Vokabular (FA-nativ). Default am Foodbook,
-        // Auswahl pro Kapitel, Stempel aufs Konzept beim Kapitel-Go (Pivots aus M1).
-        'zielgruppen' => ['tabelle' => 'foodalchemist_target_groups', 'label' => 'Zielgruppen', 'hint' => 'Vorgabe am Foodbook, Auswahl je Kapitel, zum Beispiel Tagungsgast, Bankettgast, VIP-Gala.'],
-        // Spec 19 „Foodbook-Leitstelle" (E3.6): Outlet-Vokabular (FA-nativ). NUR optionaler Kapitel-Tag
-        // (Ausgabestelle) — KEINE Planungs-Ebene, NICHT in leitplanken(). Keine Seeds — rein team-definiert.
-        'outlets' => ['tabelle' => 'foodalchemist_outlets', 'label' => 'Ausgabestellen', 'hint' => 'Freiwillige Markierung am Kapitel, zum Beispiel Restaurant, Bankett, Bar. Keine eigene Planungsebene.'],
-    ];
+    /** Whitelist: key => [tabelle, label, hint] — Quelle ist der Service (98 · 2.3a), hier für die Blade gespiegelt. */
+    public const VOKABULARE = ConcepterDimensionenService::VOKABULARE;
 
     /** @var array<string, string> Add-Form (Name) je Vokabular */
     public array $neu = [];
@@ -52,38 +44,28 @@ class ConcepterDimensionen extends Component
         }
     }
 
+    /** Führt eine Service-Aktion aus; Ablehnungen landen als Meldung in $fehler. null = abgelehnt/kein Team. */
+    private function versuche(callable $aktion): mixed
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null) {
+            return null;
+        }
+        try {
+            return $aktion(app(ConcepterDimensionenService::class), $team);
+        } catch (NichtGefundenException|GeerbtNurLesenException|NochVerwendetException|\InvalidArgumentException $e) {
+            $this->fehler = $e->getMessage();
+
+            return null;
+        }
+    }
+
     public function create(string $vokabular): void
     {
-        $meta = self::VOKABULARE[$vokabular] ?? null;
-        $name = trim($this->neu[$vokabular] ?? '');
-        if ($meta === null || $name === '') {
-            $this->fehler = 'Name ist Pflicht.';
-
+        $name = $this->versuche(fn ($svc, $team) => $svc->anlegen($team, $vokabular, (string) ($this->neu[$vokabular] ?? '')));
+        if ($name === null) {
             return;
         }
-        $teamId = Auth::user()?->currentTeamRelation?->id;
-        $nameSpalte = $vokabular === 'servierformen' ? 'label' : 'name';
-        // F2 (unique je Team): Kollision nur in der eigenen Sicht — ein ungescopter Check blockierte Mandanten, sobald IRGENDEIN Team den
-        // Namen hat, und verriet dessen Existenz (wie Behaelter::create, E2)
-        if (TeamScope::applyVisible(DB::table($meta['tabelle'])->where($nameSpalte, $name)->whereNull('deleted_at'), 'team_id',
-            Auth::user()?->currentTeamRelation)->exists()) {
-            $this->fehler = "«{$name}» existiert schon in {$meta['label']}.";
-
-            return;
-        }
-
-        $zeile = [
-            'uuid' => (string) Str::uuid7(),
-            'team_id' => $teamId,
-            $nameSpalte => $name,
-            'sort_order' => 100,
-            'created_at' => now(), 'updated_at' => now(),
-        ];
-        if ($vokabular === 'servierformen') {
-            $zeile['code'] = Str::slug($name, '_'); // FA-nativ, ohne legacy_id — Import fasst sie nicht an
-        }
-        DB::table($meta['tabelle'])->insert($zeile);
-
         $this->neu[$vokabular] = '';
         $this->fehler = null;
         $this->meldung = "«{$name}» angelegt.";
@@ -92,80 +74,20 @@ class ConcepterDimensionen extends Component
     /** V-06: nur deaktivieren — inaktive bleiben an bestehenden Concepts sichtbar. */
     public function toggleInactive(string $vokabular, int $id): void
     {
-        $meta = self::VOKABULARE[$vokabular] ?? null;
-        if ($meta === null) {
-            return;
+        if ($this->versuche(fn ($svc, $team) => $svc->aktivUmschalten($team, $vokabular, $id)) === true) {
+            $this->meldung = 'Aktualisiert.';
         }
-        $zeile = DB::table($meta['tabelle'])->where('id', $id)->first(['is_inactive', 'team_id']);
-        if ($zeile === null) {
-            return;
-        }
-        // Servierformen sind Basis-Katalog (Master pflegt global); die übrigen Vokabulare bleiben Team-Sache (Paket/Team).
-        $darf = $vokabular === 'servierformen'
-            ? \Platform\FoodAlchemist\Support\BasisKatalog::mayWrite($zeile->team_id, Auth::user()?->currentTeamRelation)
-            : TeamScope::owns($zeile->team_id, Auth::user()?->currentTeamRelation);
-        if (! $darf) {
-            $this->fehler = 'Geerbter/Master-Eintrag — nur das Besitzer-Team kann ändern.';
-
-            return;
-        }
-        DB::table($meta['tabelle'])->where('id', $id)
-            ->update(['is_inactive' => ! $zeile->is_inactive, 'updated_at' => now()]);
-        $this->meldung = 'Aktualisiert.';
     }
 
     /** Hart löschen nur wenn ungenutzt; Servierform-Import-Einträge (legacy_id) nie löschen. */
     public function delete(string $vokabular, int $id): void
     {
-        $meta = self::VOKABULARE[$vokabular] ?? null;
-        if ($meta === null) {
+        $name = $this->versuche(fn ($svc, $team) => $svc->loeschen($team, $vokabular, $id));
+        if ($name === null) {
             return;
         }
-        $zeile = DB::table($meta['tabelle'])->where('id', $id)->first();
-        if ($zeile === null) {
-            return;
-        }
-        $name = $zeile->label ?? $zeile->name;
-        $darf = $vokabular === 'servierformen'
-            ? \Platform\FoodAlchemist\Support\BasisKatalog::mayWrite($zeile->team_id, Auth::user()?->currentTeamRelation)
-            : TeamScope::owns($zeile->team_id, Auth::user()?->currentTeamRelation);
-        if (! $darf) {
-            $this->fehler = "«{$name}» ist geerbt/Master — nur das Besitzer-Team kann löschen.";
-
-            return;
-        }
-        if ($vokabular === 'servierformen' && $zeile->legacy_id !== null) {
-            $this->fehler = "«{$name}» kommt aus der WaWi (Master) — nur deaktivieren.";
-
-            return;
-        }
-        $n = $this->referenzen($vokabular, $id);
-        if ($n > 0) {
-            $this->fehler = "«{$name}» wird {$n}× genutzt — erst umhängen oder deaktivieren.";
-
-            return;
-        }
-        DB::table($meta['tabelle'])->where('id', $id)->delete();
         $this->fehler = null;
         $this->meldung = "«{$name}» gelöscht.";
-    }
-
-    private function referenzen(string $vokabular, int $id): int
-    {
-        return match ($vokabular) {
-            'einsatzmomente' => DB::table('foodalchemist_concept_service_moments')->where('service_moment_id', $id)->count(),
-            'eventtypen' => DB::table('foodalchemist_concepts')->where('event_type_id', $id)->whereNull('deleted_at')->count(),
-            'saisons' => DB::table('foodalchemist_concept_seasons')->where('season_id', $id)->count(),
-            'servierformen' => DB::table('foodalchemist_concepts')->where('serving_form_id', $id)->whereNull('deleted_at')->count()
-                + DB::table('foodalchemist_recipe_presentations')->where('serving_form_id', $id)->whereNull('deleted_at')->count(),
-            // Spec 19 (E3.3): Nutzung über alle 3 M1-Pivots (Foodbook-Default ∪ Kapitel-Auswahl ∪ Konzept-Stempel).
-            'zielgruppen' => DB::table('foodalchemist_foodbook_target_groups')->where('target_group_id', $id)->count()
-                + DB::table('foodalchemist_chapter_target_groups')->where('target_group_id', $id)->count()
-                + DB::table('foodalchemist_concept_target_groups')->where('target_group_id', $id)->count(),
-            // Spec 19 (E3.6): Outlet-Tag am Kapitel (lose Spalte, keine Pivot/FK).
-            'outlets' => DB::table('foodalchemist_foodbook_chapters')->where('outlet_id', $id)->whereNull('deleted_at')->count(),
-            default => 0,
-        };
     }
 
     public function render()

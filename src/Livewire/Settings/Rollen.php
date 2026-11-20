@@ -3,10 +3,11 @@
 namespace Platform\FoodAlchemist\Livewire\Settings;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Livewire\Component;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Platform\FoodAlchemist\Models\FoodAlchemistKitchenRole;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
+use Platform\FoodAlchemist\Services\Einstellungen\KuechenRollenService;
 use Platform\FoodAlchemist\Services\OutletSettingsService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
@@ -59,28 +60,10 @@ class Rollen extends Component
         $this->fehler = null;
         $this->meldung = null;
 
-        $team = Auth::user()?->currentTeamRelation;
         $name = trim($this->neu['name']);
-        if ($team === null || $name === '') {
-            $this->fehler = 'Name ist Pflicht.';
-
+        if ($this->versuche(fn ($svc, $team) => $svc->anlegen($team, $this->neu), 'Name ist Pflicht.') === null) {
             return;
         }
-
-        $slug = Str::slug($name, '_');
-        if (FoodAlchemistKitchenRole::where('team_id', $team->id)->where('slug', $slug)->exists()) {
-            $this->fehler = "«{$name}» gibt es schon.";
-
-            return;
-        }
-
-        FoodAlchemistKitchenRole::create([
-            'team_id' => $team->id,
-            'slug' => $slug,
-            'name' => $name,
-            'stundensatz_eur' => $this->satz($this->neu['satz']),
-            'sort_order' => (int) FoodAlchemistKitchenRole::where('team_id', $team->id)->max('sort_order') + 10,
-        ]);
 
         $this->neu = ['name' => '', 'satz' => ''];
         $this->meldung = "«{$name}» angelegt.";
@@ -110,19 +93,7 @@ class Rollen extends Component
             return;
         }
 
-        $rolle = $this->eigene($id);
-        if ($rolle === null) {
-            return;
-        }
-
-        match ($feld) {
-            'name' => trim($wert) !== '' ? $rolle->name = trim($wert) : $this->fehler = 'Name darf nicht leer sein.',
-            'satz' => $rolle->stundensatz_eur = $this->satz($wert),
-            default => null,
-        };
-
-        if ($this->fehler === null) {
-            $rolle->save();
+        if ($this->versuche(fn ($svc, $team) => $svc->feldSetzen($team, $id, $feld, $wert)) !== null) {
             $this->meldung = 'Gespeichert.';
         }
     }
@@ -132,36 +103,37 @@ class Rollen extends Component
         if ($this->outletId !== null) {
             return;  // Bestand ist Team-Sache; Betrieb überschreibt nur Sätze
         }
-        $rolle = $this->eigene($id);
-        if ($rolle === null) {
-            return;
+        $rolle = $this->versuche(fn ($svc, $team) => $svc->aktivUmschalten($team, $id));
+        if ($rolle !== null) {
+            $this->meldung = $rolle->is_inactive ? "«{$rolle->name}» stillgelegt." : "«{$rolle->name}» wieder aktiv.";
         }
-        $rolle->is_inactive = ! $rolle->is_inactive;
-        $rolle->save();
-        $this->meldung = $rolle->is_inactive ? "«{$rolle->name}» stillgelegt." : "«{$rolle->name}» wieder aktiv.";
     }
 
-    /** Nur Rollen des EIGENEN Teams sind editierbar — geerbte sind Vorlagen. */
-    private function eigene(int $id): ?FoodAlchemistKitchenRole
+    /**
+     * Führt eine Schreib-Aktion des KuechenRollenService aus (98 · 2.3a). Nur Rollen des EIGENEN Teams sind editierbar —
+     * die Regel liegt im Service; Ablehnungen landen als Meldung in $fehler, Ergebnis null.
+     */
+    private function versuche(callable $aktion, string $ohneTeam = 'Rolle nicht im Schreibzugriff.'): ?FoodAlchemistKitchenRole
     {
         $team = Auth::user()?->currentTeamRelation;
-        $rolle = $team !== null
-            ? FoodAlchemistKitchenRole::where('team_id', $team->id)->find($id)
-            : null;
+        if ($team === null) {
+            $this->fehler = $ohneTeam;
 
-        if ($rolle === null) {
-            $this->fehler = 'Rolle nicht im Schreibzugriff.';
+            return null;
         }
+        try {
+            return $aktion(app(KuechenRollenService::class), $team);
+        } catch (GeerbtNurLesenException|\InvalidArgumentException $e) {
+            $this->fehler = $e->getMessage();
 
-        return $rolle;
+            return null;
+        }
     }
 
     /** €/Std robust lesen: leer ⇒ null (= flacher Team-Satz greift), sonst ≥ 0, Komma erlaubt. */
     private function satz(string $roh): ?float
     {
-        $roh = trim(str_replace(',', '.', $roh));
-
-        return $roh === '' ? null : max(0.0, (float) $roh);
+        return KuechenRollenService::satz($roh);
     }
 
     public function render()

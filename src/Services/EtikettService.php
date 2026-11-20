@@ -129,6 +129,11 @@ class EtikettService
         if ($outletId !== null && ! FoodAlchemistOutlet::where('team_id', $team->id)->whereKey($outletId)->exists()) {
             throw new \RuntimeException('Kalkulationsprofil nicht gefunden.');
         }
+        $design = (string) ($daten['presentation_design'] ?? '');
+        if (str_starts_with($design, 'design:')) {   // CQ 2.3f: eigenes oder sichtbares Design, sonst tote Referenz
+            throw_if((int) substr($design, 7) <= 0, \RuntimeException::class, 'Design-Verweis ungültig.');
+            \Platform\FoodAlchemist\Support\Verweisziel::pruefe(\Platform\FoodAlchemist\Models\FoodAlchemistPresentationDesign::class, $team, (int) substr($design, 7), 'Design');
+        }
         $typWechsel = $v->exists && $v->typ !== $typ;
         $felder = $this->normalisiereFelder($typ, array_key_exists('felder', $daten) ? (array) $daten['felder'] : ($typWechsel || ! $v->exists ? null : $v->felder));
 

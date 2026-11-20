@@ -491,7 +491,7 @@ class SpeisekarteService
     }
 
     /**
-     * gericht_ref-Guard: das referenzierte Gericht/Getränk muss dem Team sichtbar sein,
+     * gericht_ref-Guard: das referenzierte Gericht/Getränk muss dem Team sichtbar sein (Sicht-Regel inkl. Abo-Fassungen),
      * ein echtes VK-Gericht (`verkauf()`) und keine konzept-lokale Slot-Variante.
      */
     private function pruefeGerichtRef(Team $team, ?int $salesRecipeId): void
@@ -499,7 +499,7 @@ class SpeisekarteService
         if ($salesRecipeId === null) {
             throw new \RuntimeException('gericht_ref-Position braucht ein sales_recipe_id (VK-Gericht).');
         }
-        $ok = FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
+        $ok = \Platform\FoodAlchemist\Support\Verweisziel::sichtbar(FoodAlchemistRecipe::class, $team)->verkauf()   // CQ 2.3f: inkl. Abo-Fassungen
             ->whereNull('variant_source_recipe_id')
             ->whereKey($salesRecipeId)->exists();
         if (! $ok) {
@@ -513,7 +513,7 @@ class SpeisekarteService
         if ($conceptId === null) {
             throw new \RuntimeException('menue_ref-Position braucht ein concept_id (Fix-Menü).');
         }
-        $ok = FoodAlchemistConcept::visibleToTeam($team)->echte()->whereKey($conceptId)->exists();
+        $ok = \Platform\FoodAlchemist\Support\Verweisziel::sichtbar(FoodAlchemistConcept::class, $team)->echte()->whereKey($conceptId)->exists();
         if (! $ok) {
             throw new \RuntimeException("concept_id {$conceptId} ist kein gültiges, sichtbares Concept.");
         }

@@ -720,6 +720,48 @@ class DarreichungService
     }
 
     /**
+     * Logistik (20.11.2026): was zur Darreichung mitgeht — das Gefäß (1 je Einheit) und sein Zubehör (Menge je Gefäß), hochgerechnet auf
+     * `$portionen`. Gleiche Quelle wie die Kosten ({@see GefaessZubehoerService::liste}, wirksam fürs Team), keine zweite Logik.
+     *
+     * @return list<array{gp_id:int, name:string, menge:float, rolle:string}>  rolle = gefaess | zubehoer
+     */
+    public function gefaessMitgeben(FoodAlchemistRecipeDarreichung $d, float $portionen, ?Team $team = null): array
+    {
+        if ($d->vessel_gp_id === null || $portionen <= 0) {
+            return [];
+        }
+        $team ??= Team::find($d->team_id);
+        $einheiten = $portionen * (float) ($d->unit_count ?: 1);
+        $name = (string) DB::table('foodalchemist_gps')->where('id', $d->vessel_gp_id)->value('name');
+        $out = [['gp_id' => (int) $d->vessel_gp_id, 'name' => $name, 'menge' => round($einheiten, 3), 'rolle' => 'gefaess']];
+        foreach (app(GefaessZubehoerService::class)->liste((int) $d->vessel_gp_id, $team)['zeilen'] as $z) {
+            $out[] = ['gp_id' => $z['gp_id'], 'name' => $z['name'], 'menge' => round($einheiten * $z['menge'], 3), 'rolle' => 'zubehoer'];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Zubehör je Portion für Küche/Service (Handbuch, ohne Preise): Gefäß + Zubehör einer Darreichung als Text-Zeilen „1 × Schraubglas …“.
+     *
+     * @return list<string>
+     */
+    public function gefaessZeilenJePortion(FoodAlchemistRecipeDarreichung $d, ?Team $team = null): array
+    {
+        return array_map(fn ($t) => self::stueckText($t['menge']).' × '.$t['name'], $this->gefaessMitgeben($d, 1.0, $team));
+    }
+
+    /** Stückzahl für Logistik-Texte: ganze Stück aufgerundet (nie 119,5 Deckel), Bruchteile je Portion mit Komma. */
+    public static function stueckText(float $menge, bool $aufrunden = false): string
+    {
+        if ($aufrunden) {
+            return number_format((float) ceil(round($menge, 3)), 0, ',', '.');
+        }
+
+        return rtrim(rtrim(number_format($menge, 3, ',', '.'), '0'), ',');
+    }
+
+    /**
      * Alles, was auf den EK der Darreichung kommt, ohne die Zutaten: Zubehör & Verpackung plus Gefäß samt seinem Zubehör (je Einheit).
      *
      * @return array{summe: float, vollstaendig: bool, zubehoer: array<string,mixed>, gefaess: array<string,mixed>}

@@ -63,8 +63,8 @@ final class HandbuchSuchindex
             $teile[] = $bh['zweck'] ?? null;
             $teile[] = $bh['name'] ?? null;
         }
-        foreach ($g['bestandteile'] ?? [] as $b) {
-            $teile[] = $b['name'] ?? null;
+        foreach ($g['gefaess'] ?? [] as $zeile) {   // 20.11.2026: Gefäß + Zubehör statt Bestandteile
+            $teile[] = is_string($zeile) ? preg_replace('/^[\d.,]+\s*×\s*/u', '', $zeile) : null;
         }
         foreach ($g['codes'] ?? [] as $c) {
             $code = rtrim((string) $c, '*');

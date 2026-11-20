@@ -72,7 +72,7 @@
     $darreichungLabel = [
         'vehikel' => 'Vehikel', 'geschirr' => 'Geschirr', 'geschirr_art' => 'Geschirr-Art', 'geraet' => 'Gerät',
         'behaelter_warm' => 'Behälter warm', 'behaelter_kalt' => 'Behälter kalt',
-        'arbeitszeit_zuschlag_min' => 'Zuschlag Ausgabe (min)',
+        'arbeitszeit_zuschlag_min' => 'Zuschlag Ausgabe (min)', 'mitgeben' => 'Mitgeben',   // 20.11.2026: Gefäß + Zubehör auf die Portionen hochgerechnet
     ];
 @endphp
 <!DOCTYPE html>

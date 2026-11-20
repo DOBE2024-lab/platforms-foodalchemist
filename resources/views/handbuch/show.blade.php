@@ -150,7 +150,8 @@
                         <button type="button" class="tab" data-pane="zubereitung">Zubereitung</button>
                         <button type="button" class="tab" data-pane="anrichten">Anrichten</button>
                         <button type="button" class="tab" data-pane="regeneration">Regeneration</button>
-                        <button type="button" class="tab" data-pane="bestandteile">Bestandteile</button>
+                        {{-- 20.11.2026: „Gefäß“ statt „Bestandteile“. Alte Fassungen ohne das Feld zeigen den Reiter nicht. --}}
+                        @if(array_key_exists('gefaess', $g))<button type="button" class="tab" data-pane="gefaess">Gefäß</button>@endif
                     </div>
 
                     <div class="pane on" data-pane="zutaten">
@@ -231,13 +232,16 @@
                         @endif
                     </div>
 
-                    <div class="pane" data-pane="bestandteile">
-                        @forelse($g['bestandteile'] as $b)
-                            <table><tr><td>{{ $b['name'] }}</td><td class="r">{{ $b['garnitur'] ? 'Garnitur' : '' }}</td></tr></table>
-                        @empty
-                            <div class="leer">Keine Bestandteile hinterlegt.</div>
-                        @endforelse
-                    </div>
+                    @if(array_key_exists('gefaess', $g))
+                        <div class="pane" data-pane="gefaess">
+                            @if(!empty($g['gefaess']))
+                                <table>@foreach($g['gefaess'] as $zeile)<tr><td>{{ $zeile }}</td></tr>@endforeach</table>
+                                <div class="hint">Je Portion{{ ($portion['form'] ?? null) ? ' · '.$portion['form'] : '' }}</div>
+                            @else
+                                <div class="leer">Kein Gefäß hinterlegt.</div>
+                            @endif
+                        </div>
+                    @endif
                 </article>
             @endforeach
 

@@ -213,6 +213,8 @@
                         @if(($d['behaelter_kalt'] ?? null)) · Behälter kalt {{ $d['behaelter_kalt'] }} @endif
                         @if(($d['vehikel'] ?? null)) · Vehikel {{ $d['vehikel'] }} @endif
                         @if(($d['arbeitszeit_zuschlag_min'] ?? null) !== null) · +{{ $d['arbeitszeit_zuschlag_min'] }} min Ausgabe @endif
+                        @if(($d['geschirr'] ?? null)) · Geschirr {{ $d['geschirr'] }}@if(($d['geschirr_art'] ?? null)) ({{ $d['geschirr_art'] }})@endif @endif
+                        @if(($d['mitgeben'] ?? null)) · <span class="mitgeben">Mitgeben: {{ $d['mitgeben'] }}</span> @endif
                     </p>
                 @endif
                 @if(!empty($r['schritte']) || !empty($r['zubereitung']))<h3>Anleitung</h3>@endif

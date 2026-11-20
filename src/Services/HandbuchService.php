@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 
 /**
  * Spec 86 — Handbuch (Standards zum Nachschlagen). Friert zu einem Ausgabe-Dokument einen
- * kundentauglichen Snapshot ein: je Gericht Zubereitung, Anrichten, Regeneration, Bestandteile,
+ * kundentauglichen Snapshot ein: je Gericht Zubereitung, Anrichten, Regeneration, Gefäß (mit Zubehör),
  * Portion/Geschirr, Allergene. ALLOWLIST-Aufbau — Preise, EK, Lieferant, KI-Lineage und
  * interne Notizen gelangen nie in den Snapshot. Eigener Token/Ablauf/Widerruf, unabhängig vom
  * Kundenlink der Präsentation (Spec 43).
@@ -269,15 +269,6 @@ class HandbuchService
             ];
         }
 
-        $bestandteile = [];
-        foreach ($recipe->ingredients as $zl) {
-            $name = $zl->display_name ?: ($zl->referencedRecipe?->name ?? $zl->gp?->name);
-            if ($name === null || $name === '') {
-                continue;
-            }
-            $bestandteile[] = ['name' => (string) $name, 'garnitur' => ($zl->funktion ?? null) === 'garnitur' || ($zl->role ?? null) === 'garnitur'];
-        }
-
         return [
             'name' => $label !== '' ? $label : (string) $recipe->name,
             'foto' => self::rezeptFotoSnapshot($recipe),
@@ -296,7 +287,9 @@ class HandbuchService
             'zubereitung' => self::schritteSnapshot($recipe->steps),
             'anrichten' => self::schritteSnapshot($recipe->platingSteps),
             'regeneration' => $regenZeilen,
-            'bestandteile' => $bestandteile,
+            // 20.11.2026 (Dominique): Reiter „Gefäß“ statt „Bestandteile“ — Gefäß + Zubehör je Portion dieser Darreichung, ohne Preise
+            // (gleiche Quelle wie Kosten und Logistik). Leere Liste = kein Gefäß hinterlegt.
+            'gefaess' => $dar !== null ? app(DarreichungService::class)->gefaessZeilenJePortion($dar, $team) : [],
             'codes' => [],
         ];
     }

@@ -239,3 +239,57 @@ it('MCP: gp_gefaess_zubehoer.PUT setzt, liefert Liste mit Preisen, entfernt; Dar
     $r = $tool->execute(['gefaess_gp_id' => $this->glas->id, 'entfernen' => [$this->deckel->id]], $ctx);
     expect($r->success)->toBeTrue()->and($r->data['zubehoer'])->toBe([])->and(($this->ek)())->toBe(2.28);
 });
+
+it('Planungsblatt + Produktionsschein: Gefäß und Zubehör auf die Portionen hochgerechnet („Mitgeben“), Menge je Gefäß zählt', function () {
+    $this->zub->setzen($this->rootTeam, $this->glas->id, $this->deckel->id, 1);
+    $blatt = app(\Platform\FoodAlchemist\Services\PlanungsblattService::class)->produktionsblatt($this->rootTeam, ['recipe_id' => $this->dar->recipe_id, 'portions' => 120]);
+    $top = collect($blatt['rezepte'])->firstWhere('recipe_id', $this->dar->recipe_id);
+    expect(data_get($top, 'darreichung.mitgeben'))->toBe('120 × Achenbachglas: Glas, 212 ml · 120 × Deckel: Twist-off, 82 mm');
+
+    $html = view('foodalchemist::dokumente.blatt', ['blatt' => $blatt, 'typ' => 'produktion', 'titel' => 'Produktionsblatt', 'untertitel' => 'x', 'mitFotos' => false, 'istPdf' => true])->render();
+    expect($html)->toContain('Mitgeben: 120 × Achenbachglas: Glas, 212 ml · 120 × Deckel: Twist-off, 82 mm');
+
+    // 2 Deckel je Glas, 45 Portionen: 45 Gläser, 90 Deckel
+    $this->zub->setzen($this->rootTeam, $this->glas->id, $this->deckel->id, 2);
+    $orders = app(\Platform\FoodAlchemist\Services\ProductionOrderService::class);
+    $order = $orders->draftForDate($this->rootTeam, '2026-12-01');
+    $orders->addTarget($this->rootTeam, $order->id, ['recipe_id' => $this->dar->recipe_id, 'portions' => 45], 'a');
+    $dok = $orders->dokument($this->rootTeam, $order->id);
+    $zeile = collect($dok['zeilen'])->firstWhere('name', 'Dessert dessert');
+    expect(data_get($zeile, 'darreichung.mitgeben'))->toBe('45 × Achenbachglas: Glas, 212 ml · 90 × Deckel: Twist-off, 82 mm');
+    $html = view('foodalchemist::dokumente.produktionsauftrag', ['dok' => $dok, 'istPdf' => true, 'optionen' => $orders->dokumentOptionen([]), 'mitFotos' => false])->render();
+    expect($html)->toContain('Mitgeben: 45 × Achenbachglas: Glas, 212 ml · 90 × Deckel: Twist-off, 82 mm');
+});
+
+it('Handbuch: Reiter „Gefäß“ statt „Bestandteile“ — Gefäß + Zubehör je Portion, ohne Preise; ohne Gefäß ehrlich leer', function () {
+    $this->zub->setzen($this->rootTeam, $this->glas->id, $this->deckel->id, 1);
+    $handbuch = app(\Platform\FoodAlchemist\Services\HandbuchService::class);
+    $karte = $handbuch->gerichtKarte($this->rootTeam, FoodAlchemistRecipe::find($this->dar->recipe_id), 'Dessert', false, $this->dar->fresh());
+    expect($karte['gefaess'])->toBe(['1 × Achenbachglas: Glas, 212 ml', '1 × Deckel: Twist-off, 82 mm'])
+        ->and($karte)->not->toHaveKey('bestandteile')
+        ->and(json_encode($karte, JSON_UNESCAPED_UNICODE))->not->toContain('€')->not->toContain('0,28')->not->toContain('0.28');
+
+    $ohne = ($this->gericht)('ohne-glas');
+    expect($handbuch->gerichtKarte($this->rootTeam, FoodAlchemistRecipe::find($ohne->recipe_id), 'Ohne', false, $ohne)['gefaess'])->toBe([]);
+
+    $snapshot = require dirname(__DIR__) . '/Fixtures/handbuch_ansicht.php';
+    $snapshot['gerichte']['r1']['gefaess'] = $karte['gefaess'];
+    unset($snapshot['gerichte']['r2']['gefaess']);   // alte Fassung ohne das Feld: kein Reiter
+    $html = view('foodalchemist::handbuch.show', compact('snapshot'))->render();
+    expect($html)->toContain('data-pane="gefaess">Gefäß</button>')->toContain('1 × Deckel: Twist-off, 82 mm')
+        ->not->toContain('data-pane="bestandteile"')->not->toContain('Bestandteile')
+        ->and(substr_count($html, 'data-pane="gefaess">Gefäß</button>'))->toBe(1);
+});
+
+it('Fassungs-Hash: Zubehör am Gefäß ist neuer Inhalt; ohne Zubehör bleibt der Hash wie bisher', function () {
+    $fassungen = app(\Platform\FoodAlchemist\Services\FassungService::class);
+    $hash = fn () => (new ReflectionMethod($fassungen, 'inhaltHash'))->invoke($fassungen, FoodAlchemistRecipe::find($this->dar->recipe_id), []);
+    $vorher = $hash();
+    $this->zub->setzen($this->rootTeam, $this->glas->id, $this->deckel->id, 1);
+    $mit = $hash();
+    expect($mit)->not->toBe($vorher);
+    $this->zub->setzen($this->rootTeam, $this->glas->id, $this->deckel->id, 2);
+    expect($hash())->not->toBe($mit);
+    $this->zub->entfernen($this->rootTeam, $this->glas->id, $this->deckel->id);
+    expect($hash())->toBe($vorher);
+});

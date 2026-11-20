@@ -204,13 +204,28 @@ class FassungService
             $standard->only(['serving_form_id', 'quantity_per_unit_g', 'unit_vocab_id', 'unit_count', 'container_warm_vocab_id',
                 'container_cold_vocab_id', 'serving_vehicle_vocab_id', 'vessel_gp_id'])
                 // Kostenart des Gefäßes (17.11.2026) nur, wenn gesetzt — sonst änderte sich der Hash jeder bestehenden Fassung
-                + ($standard->vessel_cost_type !== null ? ['vessel_cost_type' => $standard->vessel_cost_type] : []) + $standard->inhaltErgaenzung(),
+                + ($standard->vessel_cost_type !== null ? ['vessel_cost_type' => $standard->vessel_cost_type] : []) + $standard->inhaltErgaenzung()
+                // Zubehör am Gefäß-GP (20.11.2026, Deckel am Glas): geht in EK, Logistik und Handbuch — nur wenn vorhanden, sonst bleibt jeder alte Hash
+                + (($zubGef = $this->gefaessZubehoerFuerHash($standard)) !== [] ? ['gefaess_zubehoer' => $zubGef] : []),
             $standard->deltas()->orderBy('recipe_ingredient_id')->get(['recipe_ingredient_id', 'quantity_override_g', 'omitted'])->toArray(),
             // Zubehör & Verpackung wirkt auf den EK der Fassung: eine Änderung ist ein neuer Inhalt
             $standard->zubehoer()->reorder()->orderBy('gp_id')->get(['gp_id', 'quantity'])->toArray(),
         ];
 
         return hash('sha256', json_encode([$kopf, $zutaten, $schritte, $darreichung], JSON_UNESCAPED_UNICODE));
+    }
+
+    /** @return list<array{0:int, 1:float}> Zubehör am Gefäß der Darreichung (wirksam fürs Team des Gerichts), sortiert — für den Inhalts-Hash */
+    private function gefaessZubehoerFuerHash(\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung $d): array
+    {
+        if ($d->vessel_gp_id === null) {
+            return [];
+        }
+        $zeilen = array_map(fn ($z) => [$z['gp_id'], $z['menge']],
+            app(GefaessZubehoerService::class)->liste((int) $d->vessel_gp_id, \Platform\Core\Models\Team::find($d->team_id))['zeilen']);
+        sort($zeilen);
+
+        return $zeilen;
     }
 
     /** @param array<int,int> $map */

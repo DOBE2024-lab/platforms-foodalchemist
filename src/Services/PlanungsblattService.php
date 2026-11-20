@@ -877,7 +877,8 @@ class PlanungsblattService
                 'zubereitung' => $recipe->preparation ?: null,        // Spiegel-Freitext (Fallback für Rezepte ohne Schritte)
                 'schritte' => $this->schritteFuer($recipe),           // Spec 27: die eigentliche Anleitung (Nummer + Text + Fotos)
                 // Vehikel/Geschirr der meistproduzierten Form (ohne Ziel-Formen: Standard-Form).
-                'darreichung' => $istVk ? $this->darreichungsInfo($recipe, $this->hauptForm($formenTop[$rid] ?? [])) : null,
+                'darreichung' => $istVk ? $this->darreichungsInfo($recipe, $this->hauptForm($formenTop[$rid] ?? []), $formenTop[$rid] ?? [],
+                    (float) ($portionenTop[$rid] ?? $batches * $anzahlProBatch), $team) : null,
                 'regenerationen' => $this->regenerationenFuer($recipe),   // §3.2: Programm je Komponente (V-19)
                 // Spec 51: Abfuellen an JEDER Zeile (was produziert wird, muss irgendwo hinein);
                 // Regenerieren/Ausgabe nur, wo auch serviert wird — und dort je Komponente.
@@ -1157,7 +1158,8 @@ class PlanungsblattService
         ];
     }
 
-    private function darreichungsInfo(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $dar = null): ?array
+    /** @param array<int|string, array{dar: ?FoodAlchemistRecipeDarreichung, portionen: float}> $formen */
+    private function darreichungsInfo(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $dar = null, array $formen = [], float $portionen = 0.0, ?Team $team = null): ?array
     {
         $dar ??= $this->darreichungen->standardFuer($recipe);
         if ($dar === null) {
@@ -1176,9 +1178,32 @@ class PlanungsblattService
             // Kostenart des Gefäßes (17.11.2026): was die Logistik damit tut — mitgeben, zurück in die Spülküche, zurück zum Verleiher, nur Empfehlung
             'geschirr_art' => $dar->vessel_gp_id !== null ? (\Platform\FoodAlchemist\Services\GefaessKostenartService::LOGISTIK[app(DarreichungService::class)->gefaessKosten($dar)['kostenart'] ?? ''] ?? null) : null,
             'arbeitszeit_zuschlag_min' => $dar->arbeitszeiten === null ? $dar->work_time_surcharge_min : null,
+            'mitgeben' => $this->mitgebenText($formen !== [] ? $formen : [['dar' => $dar, 'portionen' => $portionen]], $team),
         ], fn ($v) => $v !== null && $v !== '');
 
         return $info !== [] ? $info : null;
+    }
+
+    /**
+     * Logistik-Zeile (20.11.2026): Gefäß + Zubehör aller bestellten Formen, hochgerechnet auf deren Portionen und je Teil zusammengezählt —
+     * „120 × Schraubglas 212 ml · 120 × Deckel 82 mm“. Quelle wie die Kosten ({@see DarreichungService::gefaessMitgeben}).
+     *
+     * @param  array<int|string, array{dar: ?FoodAlchemistRecipeDarreichung, portionen: float}>  $formen
+     */
+    private function mitgebenText(array $formen, ?Team $team): ?string
+    {
+        $summe = [];
+        foreach ($formen as $f) {
+            if (($f['dar'] ?? null) === null) {
+                continue;
+            }
+            foreach (app(DarreichungService::class)->gefaessMitgeben($f['dar'], (float) $f['portionen'], $team) as $t) {
+                $summe[$t['gp_id']] ??= ['name' => $t['name'], 'menge' => 0.0];
+                $summe[$t['gp_id']]['menge'] += $t['menge'];
+            }
+        }
+
+        return $summe !== [] ? implode(' · ', array_map(fn ($t) => DarreichungService::stueckText($t['menge'], true).' × '.$t['name'], $summe)) : null;
     }
 
     /** @param array<int|string, array{dar: ?FoodAlchemistRecipeDarreichung, portionen: float}> $formen */

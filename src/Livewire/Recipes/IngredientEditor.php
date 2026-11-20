@@ -135,8 +135,8 @@ class IngredientEditor extends Component
             $this->dispatch('recipe-gespeichert');
             $this->dispatch('recipe-selected', id: $this->recipeId);
             $this->savedToast('Gespeichert');   // #1b: neutral — der Save deckt jetzt je Host Stammdaten+Zutaten ab
-            // #511: das fehlende Glied im Live-Refresh. syncIngredients hat Kind +
-            // transitive Eltern server-seitig bereits neu gerechnet (recomputeAndPropagate);
+            // #511: das fehlende Glied im Live-Refresh. syncIngredients hat das Kind neu gerechnet,
+            // die transitiven Eltern folgen per entprelltem Queue-Job (2.1b, ElternNeuberechnenJob);
             // dieses Signal zieht die kosten-abhängigen Panels (Kalkulation, Eltern-Cockpits)
             // gezielt nach — statt sich allein aufs generische Re-Render zu verlassen.
             $betroffen = app(RecipeRecomputeService::class)->betroffeneRezepte($this->recipeId);

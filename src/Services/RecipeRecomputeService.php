@@ -146,6 +146,20 @@ class RecipeRecomputeService
     }
 
     /**
+     * Code-Qualität 2.1b · nach dem Speichern: das Rezept selbst synchron (Pipeline, Paket-Marker, Preis-Kaskade, Aromenprofil — wie
+     * recomputeMany), die Eltern über den entprellten {@see \Platform\FoodAlchemist\Jobs\ElternNeuberechnenJob}.
+     *
+     * @return array<int> neu gerechnete recipe_ids (nur das Rezept selbst)
+     */
+    public function recomputeNachSpeichern(int $recipeId): array
+    {
+        $erledigt = $this->recomputeMany([$recipeId], $fehler, mitEltern: false);
+        \Platform\FoodAlchemist\Jobs\ElternNeuberechnenJob::versenden($recipeId);
+
+        return $erledigt;
+    }
+
+    /**
      * V-049 · §3.3 für eine MENGE Rezepte: betroffene Vereinigung einmal, Topo einmal,
      * jedes Rezept **genau einmal** gerechnet.
      *
@@ -164,11 +178,11 @@ class RecipeRecomputeService
      * @param  array<int|string>  $recipeIds
      * @return array<int> betroffene recipe_ids (Start-Menge zuerst, dann transitive Eltern)
      */
-    public function recomputeMany(array $recipeIds, ?array &$fehler = null): array
+    public function recomputeMany(array $recipeIds, ?array &$fehler = null, bool $mitEltern = true): array
     {
         $fehler = [];   // recipe_id => erste Fehlermeldung (Necta-Lauf meldet sie als Signal, Kurator 18.10.)
-        // 1. Betroffene Menge sammeln (Starts + alle transitiven Eltern), NOCH nicht rechnen.
-        $betroffen = $this->betroffeneRezepteMany($recipeIds);
+        // 1. Betroffene Menge sammeln (Starts + alle transitiven Eltern), NOCH nicht rechnen. 2.1b: ohne Eltern nur die Starts.
+        $betroffen = $mitEltern ? $this->betroffeneRezepteMany($recipeIds) : array_values(array_unique(array_map('intval', $recipeIds)));
         if ($betroffen === []) {
             return [];
         }

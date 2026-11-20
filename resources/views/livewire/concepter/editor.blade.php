@@ -472,8 +472,7 @@
                                 @forelse($menueGruppen as $g)
                                     @php
                                         $slotEks = collect($g['slots'])->map(fn ($sx) => $cockpitZeilen[$sx->id]['ek'] ?? null)->filter();
-                                        $slotVks = collect($g['slots'])->map(fn ($sx) => $cockpitZeilen[$sx->id]['price'] ?? null)->filter();
-                                        $slotVkLuecke = collect($g['slots'])->contains(fn ($sx) => (bool) ($cockpitZeilen[$sx->id]['vk_fehlt'] ?? false));   // CQ 2.6: Summe ohne Lücke nicht als vollständig zeigen
+                                        $slotVks = collect($g['slots'])->map(fn ($sx) => $cockpitZeilen[$sx->id]['price'] ?? null)->filter(); $slotVkLuecke = collect($g['slots'])->contains(fn ($sx) => (bool) ($cockpitZeilen[$sx->id]['vk_fehlt'] ?? false));   // CQ 2.6
                                         $anzahl = $g['type'] === 'paket' ? $g['dishes']->count() : count($g['slots']);
                                     @endphp
                                     <section wire:key="menue-{{ $loop->index }}" class="flex flex-col gap-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-ground)] p-3">

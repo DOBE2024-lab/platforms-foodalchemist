@@ -97,6 +97,7 @@ class SpeisekarteService
         // Spec 33 P2: fremde Betriebe fallen hier raus — `outlet_id` zeigt auf ein Team-Vokabular
         // und wird vom Datensatz-Guard nicht mit erfasst.
         $in = $this->pruefeOutlet($team, $in);
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, $in);   // CQ 2.3f: Vokabular + CRM
 
         return FoodAlchemistSpeisekarte::create([
             'team_id' => $team->id,
@@ -166,6 +167,7 @@ class SpeisekarteService
     {
         $karte = FoodAlchemistSpeisekarte::visibleToTeam($team)->findOrFail($id);
         $this->guard($karte, $team);
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, $in, $karte);
         $karte->update($this->normalisiereFelder(
             $this->pruefeOutlet($team, array_intersect_key($in, array_flip(self::FELDER))),
         ));
@@ -451,12 +453,7 @@ class SpeisekarteService
         $rubrik = $this->ownedRubrik($team, $rubrikId);
         $daten = array_intersect_key($in, array_flip(self::POSITION_FELDER));
         $daten['type'] = in_array($in['type'] ?? '', FoodAlchemistSpeisekartePosition::TYPES, true) ? $in['type'] : 'text';
-        if ($daten['type'] === 'gericht_ref') {
-            $this->pruefeGerichtRef($team, $daten['sales_recipe_id'] ?? null);
-        }
-        if ($daten['type'] === 'menue_ref') {
-            $this->pruefeMenueRef($team, $daten['concept_id'] ?? null);
-        }
+        $this->pruefeReferenzen($team, $daten);
         $daten['team_id'] = $rubrik->team_id;
         $daten['position'] = (int) $rubrik->items()->max('position') + 1;
 
@@ -467,16 +464,30 @@ class SpeisekarteService
     {
         $pos = $this->ownedPosition($team, $positionId);
         $daten = array_intersect_key($in, array_flip(self::POSITION_FELDER));
-        $effTyp = array_key_exists('type', $daten) ? $daten['type'] : $pos->type;
-        if ($effTyp === 'gericht_ref' && array_key_exists('sales_recipe_id', $daten)) {
-            $this->pruefeGerichtRef($team, $daten['sales_recipe_id']);
-        }
-        if ($effTyp === 'menue_ref' && array_key_exists('concept_id', $daten)) {
-            $this->pruefeMenueRef($team, $daten['concept_id']);
-        }
+        $this->pruefeReferenzen($team, $daten, $pos);
         $pos->update($daten);
 
         return $pos->refresh();
+    }
+
+    /**
+     * Verweise einer Position: beim passenden Typ Pflicht, bei jedem anderen Typ (text, header …) wenigstens sichtbar —
+     * vorher wurden sie dort ungeprüft gespeichert (CQ 2.3f). Eine Darreichung muss zum Gericht der Position gehören.
+     */
+    private function pruefeReferenzen(Team $team, array $daten, ?FoodAlchemistSpeisekartePosition $pos = null): void
+    {
+        $typ = array_key_exists('type', $daten) ? $daten['type'] : $pos?->type;
+        $wert = fn (string $f) => array_key_exists($f, $daten) ? $daten[$f] : $pos?->{$f};
+        foreach (['sales_recipe_id' => ['gericht_ref', 'pruefeGerichtRef'], 'concept_id' => ['menue_ref', 'pruefeMenueRef']] as $feld => [$refTyp, $pruefe]) {
+            $neu = $pos === null || array_key_exists($feld, $daten);
+            if ($neu && ($typ === $refTyp || ($daten[$feld] ?? null) !== null)) {
+                $this->{$pruefe}($team, $wert($feld) !== null ? (int) $wert($feld) : null);
+            }
+        }
+        $darreichung = (int) ($daten['presentation_id'] ?? 0);
+        if ($darreichung > 0 && ! \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::whereKey($darreichung)->where('recipe_id', (int) $wert('sales_recipe_id'))->exists()) {
+            throw new \RuntimeException('Darreichung gehört nicht zum Gericht dieser Position.');
+        }
     }
 
     /**

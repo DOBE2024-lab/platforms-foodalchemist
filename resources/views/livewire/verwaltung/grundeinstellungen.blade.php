@@ -7,7 +7,7 @@
         @if($meldung)<x-fa::notice tone="ok" data-grundeinstellungen-meldung>{{ $meldung }}</x-fa::notice>@endif
 
         <x-fa::section variant="plain">
-            <p class="fa-t-muted max-w-[65ch]">Startbestand für reine Team-Arbeit: Konzept-Kategorien, Zielgruppen, Schreibstile, Rollen, Posten, Speiseplan-Chips, Präsentations-Designs, Trend-Startbestand, dazu der Posten „Pass“ als Team-Vorgabe für Gerichte. Wird als Kopie ins Haupt-Team gelegt, Unter-Teams erben. Danach gehört es dem Team. Mehrfach buchen kopiert nichts doppelt.</p>
+            <p class="fa-t-muted max-w-[65ch]">Startbestand für reine Team-Arbeit: Konzept-Kategorien, Zielgruppen, Schreibstile, Rollen, Posten, Speiseplan-Chips, Präsentations-Designs, Trend-Startbestand, dazu der Posten „Pass“ als Team-Vorgabe für Gerichte. Wird als Kopie ins Haupt-Team gelegt, Unter-Teams erben. Danach gehört es dem Team. Was im Master neu dazukommt, wird stündlich automatisch nachgezogen; Geändertes und Gelöschtes beim Team bleibt, wie es ist.</p>
             @if($mandanten === [])
                 <x-fa::empty compact icon="heroicon-o-clipboard-document-list" title="Keine Mandanten">Es gibt noch kein Haupt-Team neben dem Master-Team.</x-fa::empty>
             @else

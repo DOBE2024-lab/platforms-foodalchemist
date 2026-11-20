@@ -34,6 +34,12 @@ return static function (Schedule $schedule): void {
         \Platform\FoodAlchemist\Console\NectaAbgleichCommand::planen($schedule);
     }
 
+    // Paket „Grundeinstellungen“ (Dominique 20.11.2026): was der Master neu anlegt, kommt stündlich bei den Mandanten mit gebuchtem Paket an.
+    // Nur neue Zeilen, nie überschreiben; abschaltbar.
+    if (config('foodalchemist.scheduler.grundeinstellungen_aktiv', true)) {
+        \Platform\FoodAlchemist\Console\GrundeinstellungenNachziehenCommand::planen($schedule);
+    }
+
     // KI-Kosten (Dominique 18.10.2026): EZB-Tageskurs EUR/USD, 16:30 Europe/Berlin — fern vom Necta-/Gebühren-Fenster (nachts)
     if (config('foodalchemist.scheduler.wechselkurs_aktiv', true)) {
         \Platform\FoodAlchemist\Console\WechselkursHolenCommand::planen($schedule);

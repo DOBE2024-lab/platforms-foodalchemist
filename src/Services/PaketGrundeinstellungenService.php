@@ -20,7 +20,7 @@ use Symfony\Component\Uid\UuidV7;
  * Basis-Katalog (global) und wird NICHT kopiert. Quelle sind die Zeilen des Master-Teams (bzw. globale Zeilen nach dem Stamm-Umzug).
  *
  * Idempotent: `paket_kopien` merkt je Mandant und Tabelle die Zuordnung Quelle → Kopie; ein zweites Buchen kopiert nichts doppelt, holt aber
- * neu hinzugekommene Master-Zeilen nach. Eine gleichnamige Team-Zeile wird NIE überschrieben (sie gilt als vorhanden und wird zugeordnet).
+ * neu hinzugekommene Master-Zeilen nach. Seit 20.11.2026 läuft dieses Nachholen stündlich von selbst ({@see nachziehen}). Eine gleichnamige Team-Zeile wird NIE überschrieben (sie gilt als vorhanden und wird zugeordnet).
  * Unter-Teams erben über die Team-Kette, es wird nur am Haupt-Team kopiert.
  *
  * Bewusst NICHT im Paket (siehe PR): Fixkosten (Beträge sind kundenspezifisch), Planungsrahmen (hängen an Foodbook/Konzept), Konzept-Sektor-Eignung
@@ -160,6 +160,75 @@ class PaketGrundeinstellungenService
             throw new \RuntimeException('Es ist kein Master-Team festgelegt (master_team.PUT) — ohne Master gibt es keine Vorlage zum Kopieren.');
         }
 
+        ['ergebnis' => $ergebnis, 'pass' => $pass, 'standard' => $standard] = $this->kopiereAlles($mandant, $master);
+
+        $trends = $this->trendsStartbestand($mandant);
+        $war = FoodAlchemistTeamPaket::where('team_id', $mandant->id)->where('paket', self::PAKET)->exists();
+        $paket = FoodAlchemistTeamPaket::updateOrCreate(
+            ['team_id' => $mandant->id, 'paket' => self::PAKET],
+            ['gebucht_von' => $war ? null : $admin->id, 'gebucht_am' => now()]
+        );
+        $this->protokoll->schreibe($war ? 'paket_grundeinstellungen_nachgezogen' : 'paket_grundeinstellungen_gebucht',
+            ['team_id' => $mandant->id, 'team' => $mandant->name, 'ergebnis' => $ergebnis, 'pass' => $pass, 'standard_aufschlagsklasse' => $standard, 'trends' => $trends], $admin, $paket);
+
+        return $this->status($mandant) + ['ergebnis' => $ergebnis, 'pass' => $pass, 'standard_aufschlagsklasse' => $standard, 'trends' => $trends];
+    }
+
+    /**
+     * Automatisch nachziehen (Dominique 20.11.2026: „wir erweitern ja ständig und die haben ja dieses Paket gebucht“). Was der Master neu anlegt,
+     * kommt bei jedem Mandanten mit gebuchtem Paket an — derselbe idempotente Weg wie „Nachziehen“, nur ohne Admin und ohne das Buchungsdatum zu
+     * ändern. Es gilt alles, was {@see buchen} zusichert: nur NEUE Master-Zeilen, nie überschreiben, bewusst Gelöschtes bleibt gelöscht.
+     * Der Trend-Startbestand ist ein Repo-Seed und kommt nur beim Buchen. Nicht gebucht oder Master: nichts.
+     *
+     * @return array{team_id:int, neu:int, ergebnis:list<array{tabelle:string, neu:int, vorhanden:int, bereits:int}>}
+     */
+    public function nachziehen(Team $mandant): array
+    {
+        $master = MasterTeam::id();
+        if ($master === null || MasterTeam::istMaster($mandant)
+            || ! FoodAlchemistTeamPaket::where('team_id', $mandant->id)->where('paket', self::PAKET)->exists()) {
+            return ['team_id' => (int) $mandant->id, 'neu' => 0, 'ergebnis' => []];
+        }
+        $this->pruefeMandant($mandant);
+        ['ergebnis' => $ergebnis, 'pass' => $pass, 'standard' => $standard] = $this->kopiereAlles($mandant, $master);
+        $neu = array_sum(array_column($ergebnis, 'neu'));
+        if ($neu > 0) {
+            $this->protokoll->schreibe('paket_grundeinstellungen_auto_nachgezogen',
+                ['team_id' => $mandant->id, 'team' => $mandant->name, 'ergebnis' => array_values(array_filter($ergebnis, fn ($e) => $e['neu'] > 0)),
+                    'pass' => $pass, 'standard_aufschlagsklasse' => $standard], null,
+                FoodAlchemistTeamPaket::where('team_id', $mandant->id)->where('paket', self::PAKET)->first());
+        }
+
+        return ['team_id' => (int) $mandant->id, 'neu' => $neu, 'ergebnis' => $ergebnis];
+    }
+
+    /**
+     * Alle Mandanten mit gebuchtem Paket nachziehen (Zeitplan). Ein Fehler bei einem Mandanten hält die anderen nicht auf.
+     *
+     * @return list<array{team_id:int, neu:int, fehler?:string}>
+     */
+    public function nachziehenAlle(): array
+    {
+        $ergebnis = [];
+        foreach (FoodAlchemistTeamPaket::where('paket', self::PAKET)->orderBy('team_id')->pluck('team_id') as $teamId) {
+            $team = Team::find($teamId);
+            if ($team === null) {
+                continue;
+            }
+            try {
+                $r = $this->nachziehen($team);
+                $ergebnis[] = ['team_id' => (int) $teamId, 'neu' => $r['neu']];
+            } catch (\Throwable $e) {
+                $ergebnis[] = ['team_id' => (int) $teamId, 'neu' => 0, 'fehler' => $e->getMessage()];
+            }
+        }
+
+        return $ergebnis;
+    }
+
+    /** @return array{ergebnis: list<array{tabelle:string, neu:int, vorhanden:int, bereits:int}>, pass: array{posten:string, vorgabe:string}, standard: mixed} */
+    private function kopiereAlles(Team $mandant, int $master): array
+    {
         $pass = [];
         $standard = null;
         $ergebnis = DB::transaction(function () use ($mandant, $master, &$pass, &$standard) {
@@ -173,16 +242,7 @@ class PaketGrundeinstellungenService
             return $ergebnis;
         });
 
-        $trends = $this->trendsStartbestand($mandant);
-        $war = FoodAlchemistTeamPaket::where('team_id', $mandant->id)->where('paket', self::PAKET)->exists();
-        $paket = FoodAlchemistTeamPaket::updateOrCreate(
-            ['team_id' => $mandant->id, 'paket' => self::PAKET],
-            ['gebucht_von' => $war ? null : $admin->id, 'gebucht_am' => now()]
-        );
-        $this->protokoll->schreibe($war ? 'paket_grundeinstellungen_nachgezogen' : 'paket_grundeinstellungen_gebucht',
-            ['team_id' => $mandant->id, 'team' => $mandant->name, 'ergebnis' => $ergebnis, 'pass' => $pass, 'standard_aufschlagsklasse' => $standard, 'trends' => $trends], $admin, $paket);
-
-        return $this->status($mandant) + ['ergebnis' => $ergebnis, 'pass' => $pass, 'standard_aufschlagsklasse' => $standard, 'trends' => $trends];
+        return ['ergebnis' => $ergebnis, 'pass' => $pass, 'standard' => $standard];
     }
 
     /**

@@ -496,6 +496,26 @@ class KnowledgeService
             ->update(['active' => false, 'deleted_at' => now(), 'updated_at' => now()]) > 0;
     }
 
+    /**
+     * 98 · 2.3e · Wissens-Dokument aktivieren/deaktivieren (Wissens-Browser). Nur das besitzende Team bzw. das
+     * Master-Team (WissensSichtbarkeit::mayWrite). Gibt den neuen Zustand zurück, null wenn es das Dokument nicht gibt.
+     * Recall-Index nachziehen bleibt beim Aufrufer (KnowledgeEmbeddingService::queueDocument).
+     */
+    public function aktivUmschalten(Team $team, int $docId): ?bool
+    {
+        $doc = DB::table('foodalchemist_knowledge_documents')->where('id', $docId)->first(['active', 'team_id']);
+        if ($doc === null) {
+            return null;
+        }
+        if (! \Platform\FoodAlchemist\Services\Knowledge\WissensSichtbarkeit::mayWrite($doc->team_id, $team)) {
+            throw new \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException('Wissen', 'Dieses Wissen gehört einem anderen Team. Aktivieren und Deaktivieren kann nur das besitzende Team bzw. das Master-Team.');
+        }
+        $neu = ! $doc->active;
+        DB::table('foodalchemist_knowledge_documents')->where('id', $docId)->update(['active' => $neu, 'updated_at' => now()]);
+
+        return $neu;
+    }
+
     /** Doc per Slug, sichtbarkeits-gescoped (globaler Seed + eigene Ancestry); sonst NOT_FOUND. */
     private function findSichtbar(Team $team, string $slug): object
     {

@@ -1843,7 +1843,7 @@ class Index extends Component
         // (rehydriert in ladeForm). Fail-soft: kippt die Persistenz, bleibt der Plan wenigstens in der
         // laufenden Session (transiente Prop) nutzbar — ein Speicher-Fehler darf den KI-Kopf nicht kippen.
         try {
-            $session->update(['plan_concept_id' => $this->planConceptId]);
+            app(PlanningSessionService::class)->setzePlanConcept($team, (int) $session->id, $this->planConceptId);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('[Planung] plan_concept_id-Persistenz übersprungen (KI-Kopf bleibt für diese Session nutzbar) — evtl. Migration fehlt', ['error' => $e->getMessage()]);
         }
@@ -1969,9 +1969,9 @@ class Index extends Component
         // #53 persistent: auch den gespeicherten Zeiger lösen, sonst holt der Reload den verworfenen
         // Plan wieder (rehydrate in ladeForm). Das Draft-Concept selbst bleibt bestehen (löscht nichts).
         $session = $this->aktiveSession();
-        if ($session !== null && $session->plan_concept_id !== null) {
+        if ($session !== null && $session->plan_concept_id !== null && ($team = Auth::user()?->currentTeamRelation) !== null) {
             try {
-                $session->update(['plan_concept_id' => null]);
+                app(PlanningSessionService::class)->setzePlanConcept($team, (int) $session->id, null);
             } catch (\Throwable) {
                 // Persistenz-Fehler darf das Verwerfen nicht kippen — die Prop ist bereits null.
             }
@@ -2113,7 +2113,7 @@ class Index extends Component
                 // Reload nach dem Go den bereits verbrauchten Plan wieder an. Fail-soft.
                 if ($session->plan_concept_id !== null) {
                     try {
-                        $session->update(['plan_concept_id' => null]);
+                        app(PlanningSessionService::class)->setzePlanConcept($team, (int) $session->id, null);
                     } catch (\Throwable) {
                         // Persistenz-Fehler darf den bereits gestarteten Lauf nicht kippen.
                     }
@@ -2919,10 +2919,7 @@ class Index extends Component
             return;
         }
         // Eine ausdrücklich neu gestartete Prüfung verwendet den heutigen Kanon.
-        if (! $recipe->is_sales_recipe && (int) $recipe->team_id === (int) $team->id) {
-            $run = app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeRunService::class)->start($team);
-            $recipe->forceFill(['knowledge_run_id' => $run->id])->save();
-        }
+        app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeRunService::class)->starteFuerRezept($team, $recipe);
         // Synchron VOR dem Dispatch setzen (nicht erst im Job) — sonst öffnet ein zweiter Klick,
         // solange der Job noch in der Queue wartet (noch nicht angelaufen), dieselbe Lücke, die der
         // Guard oben eigentlich schließen soll (der Job braucht Zeit, bis er die Phase selbst setzt).

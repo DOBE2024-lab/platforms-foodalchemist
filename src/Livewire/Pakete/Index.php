@@ -165,7 +165,7 @@ class Index extends Component
             return;
         }
         $b = $svc->detail($this->team(), $this->selectedId);
-        $ids = $b->dishes->pluck('sales_recipe_id')->push($vkRecipeId)->unique()->values();
+        $ids = $b->dishes->pluck('sales_recipe_id')->concat([$vkRecipeId])->unique()->values();   // concat statt push: reine Collection, kein Model-Write
         $svc->syncGerichte($this->team(), $this->selectedId, $ids->map(fn ($id) => ['sales_recipe_id' => (int) $id])->all());
         $this->gerichtSuche = '';
         $this->waehle($this->selectedId, $svc);

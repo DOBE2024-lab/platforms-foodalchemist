@@ -23,6 +23,21 @@ final class KnowledgeRunService
         return new RecipeKnowledgeRun($id, (int) $team->id, $hash, $snapshot);
     }
 
+    /**
+     * 98 · 2.3e: neuen Wissenslauf mit dem heutigen Kanon starten und an ein EIGENES Basisrezept binden
+     * (ausdrücklich neu gestartete Konformitätsprüfung). Verkaufsrezepte und fremde Rezepte bleiben unberührt (null).
+     */
+    public function starteFuerRezept(Team $team, \Platform\FoodAlchemist\Models\FoodAlchemistRecipe $recipe): ?RecipeKnowledgeRun
+    {
+        if ($recipe->is_sales_recipe || (int) $recipe->team_id !== (int) $team->id) {
+            return null;
+        }
+        $run = $this->start($team);
+        $recipe->forceFill(['knowledge_run_id' => $run->id])->save();
+
+        return $run;
+    }
+
     public function load(Team $team, string $id): RecipeKnowledgeRun
     {
         $row = DB::table('foodalchemist_knowledge_runs')->where('team_id', $team->id)->where('id', $id)->first();

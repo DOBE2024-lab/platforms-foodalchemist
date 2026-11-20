@@ -26,8 +26,9 @@ it('828 R1: Füllmenge und Gebinde trennen Getränke am Schlüssel, andere WG un
         ->and($ohne)->toBe('coca_cola||')
         // gleiche Pflichtangabe = gleicher Schlüssel (Zusammenführen bleibt möglich)
         ->and($this->n->gpKeyAusFeldern('coca_cola', $basis + ['pflichtangabe' => '0,2 l']))->toBe($klein)
-        // außerhalb WG 15 trennt die Pflichtangabe nicht (Gegenprobe)
-        ->and($this->n->gpKeyAusFeldern('reis', ['hauptzutat' => 'Reis', 'commodity_group_code' => '07', 'pflichtangabe' => 'Langkorn']))->toBe('reis||');
+        // außerhalb WG 15 trennt die Pflichtangabe nur einen degenerierten Schlüssel (20.11.2026, gp-key-merkmale); mit Verarbeitung bleibt er unverändert
+        ->and($this->n->gpKeyAusFeldern('reis', ['hauptzutat' => 'Reis', 'commodity_group_code' => '07', 'pflichtangabe' => 'Langkorn']))->toBe('reis|||m-langkorn')
+        ->and($this->n->gpKeyAusFeldern('reis', ['hauptzutat' => 'Reis', 'commodity_group_code' => '07', 'processing' => 'gekocht', 'pflichtangabe' => 'Langkorn']))->toBe('reis|gekocht|');
 });
 
 it('829 R6: TK und frisch bleiben bei Getränken im Namen und trennen am Schlüssel, konserviert nicht', function () {

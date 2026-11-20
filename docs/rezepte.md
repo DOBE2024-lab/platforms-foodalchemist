@@ -11,7 +11,7 @@ Rezepte gibt es in zwei Sorten: **Basisrezepte** sind das, was in der Küche pro
 
 ## 🍲 Basisrezepte
 
-Ein Basisrezept ist ein **Produktionsrezept** — eine Sauce, ein Fond, eine Beilage, eine Komponente. Es besteht aus Grundprodukten und kann andere Basisrezepte als Bausteine enthalten (verschachtelt bis zu drei Ebenen tief). So baust du einmal eine „Demi-Glace" und verwendest sie in zehn anderen Rezepten weiter.
+Ein Basisrezept ist ein **Produktionsrezept** — eine Sauce, ein Fond, eine Beilage, eine Komponente. Es besteht aus Grundprodukten und kann andere Basisrezepte als Bausteine enthalten, beliebig tief verschachtelt (A-5; als Faustregel bleiben drei Ebenen je Basisrezept übersichtlich). So baust du einmal eine „Demi-Glace" und verwendest sie in zehn anderen Rezepten weiter.
 
 Pro Rezept werden u. a. gepflegt:
 

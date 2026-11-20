@@ -54,17 +54,8 @@ class MenuCandidatePoolService
             // Convenience-Ranking (Leitplanke) braucht das GP-Tag tag_is_convenience je Zutat.
             $gpSel = 'id,name' . ($mitConvenience ? ',tag_is_convenience' : '');
             $query->with(["ingredients.gp:{$gpSel}"]);
-            if ($mitConvenience) {
-                // Bis ins Basisrezept: GPs der referenzierten Sub-Rezepte (2 Ebenen tief = 3 Rezept-
-                // Ebenen mit dem Gericht) für die rekursive Convenience-Quote. referencedRecipe
-                // unrestricted → name bleibt für die Begriffe-Suche verfügbar.
-                $query->with([
-                    "ingredients.referencedRecipe.ingredients.gp:{$gpSel}",
-                    "ingredients.referencedRecipe.ingredients.referencedRecipe.ingredients.gp:{$gpSel}",
-                ]);
-            } elseif ($brauchtBegriffe) {
-                $query->with(['ingredients.referencedRecipe:id,name']);
-            }
+            // Unterrezepte für die Convenience-Quote lädt {@see unterrezeptZeilen} über alle Ebenen (2.1c); hier nur der Name für die Begriffe-Suche.
+            $query->with(['ingredients.referencedRecipe:id,name']);
         }
         // V-046: die Standard-Darreichung ist IMMER eager — nicht nur im Wirtschafts-Modus.
         // Sie ist die Preis-Wahrheit (M2), und der Preis wird im billigen Pfad als HARTER
@@ -82,7 +73,9 @@ class MenuCandidatePoolService
         // (eine Auflösungs-Wahrheit), abgeflacht wird über dessen `flacheAnker`.
         $ankerJeGericht = $this->pairing->resolveRecipeAnchorsMany($kandidaten);
 
-        return $kandidaten->map(function (FoodAlchemistRecipe $r) use ($brauchtBegriffe, $mitConvenience, $mitWirtschaft, $ankerJeGericht) {
+        $unterrezepte = $mitConvenience ? $this->unterrezeptZeilen($kandidaten) : [];
+
+        return $kandidaten->map(function (FoodAlchemistRecipe $r) use ($brauchtBegriffe, $mitConvenience, $mitWirtschaft, $ankerJeGericht, $unterrezepte) {
             $allergene = [];
             foreach (FoodAlchemistGp::ALLERGEN_FIELDS as $key) {
                 $allergene[$key] = $r->{'allergen_' . $key} ?? null;
@@ -116,7 +109,7 @@ class MenuCandidatePoolService
                     : mb_strtolower($r->name),
                 'niveaus' => $r->levelSuitabilities->pluck('level_slug')->filter()->values()->all(),
                 // Convenience-Anteil = Quote convenience-getaggter GPs unter den Zutaten (null = nicht geladen / keine GP-Zutat)
-                'convenience_ratio' => $this->convenienceRatio($r, $mitConvenience),
+                'convenience_ratio' => $this->convenienceRatio($r, $mitConvenience, $unterrezepte),
                 'anker' => $this->pairing->flacheAnker($ankerJeGericht[$r->id] ?? []),
                 'wirtschaft' => $mitWirtschaft ? $this->wirtschaft($r, $preis['vk']) : null,
             ];
@@ -180,44 +173,65 @@ class MenuCandidatePoolService
 
     /**
      * Convenience-Anteil eines Gerichts: Quote der GPs mit tag_is_convenience (0..1) über die
-     * GANZE Komposition — direkte GP-Zutaten UND die GPs in den referenzierten Basisrezepten
-     * (rekursiv bis Tiefe 3, Regelwerk-Basisrezepte §4). So wirkt die Convenience-Leitplanke bis
+     * GANZE Komposition — direkte GP-Zutaten UND die GPs in den referenzierten Basisrezepten,
+     * über alle Ebenen (A-5; 2.1c: vorher bis Tiefe 3). So wirkt die Convenience-Leitplanke bis
      * ins Basisrezept: ein Gericht, das über ein Convenience-Basisrezept convenience ist, wird
      * erkannt. null = GP-Tags nicht geladen ($mitConvenience=false) oder keine GP im Baum → neutral.
+     *
+     * @param  array<int, Collection>  $unterrezepte  Zeilen je Unterrezept ({@see unterrezeptZeilen})
      */
-    private function convenienceRatio(FoodAlchemistRecipe $r, bool $mitConvenience): ?float
+    private function convenienceRatio(FoodAlchemistRecipe $r, bool $mitConvenience, array $unterrezepte): ?float
     {
         if (! $mitConvenience || ! $r->relationLoaded('ingredients')) {
             return null;
         }
-        $gps = $this->alleGpsImBaum($r);
-        if ($gps->isEmpty()) {
+        $tags = $this->tagsImBaum($r->ingredients, $unterrezepte, [(int) $r->id => true]);
+        if ($tags === []) {
             return null;
         }
 
-        return round($gps->filter(fn ($g) => (bool) $g->tag_is_convenience)->count() / $gps->count(), 3);
+        return round(count(array_filter($tags)) / count($tags), 3);
     }
 
     /**
-     * Alle GPs der Kompositions-Tiefe sammeln: direkte GP-Zutaten + GPs referenzierter
-     * Basisrezepte (rekursiv). Nur GELADENE Relationen (kein Lazy-Load → kein N+1); Tiefe
-     * durch das Eager-Loading in fuerFrame begrenzt (max. 3 Rezept-Ebenen).
+     * tag_is_convenience je GP-Zeile, Unterrezepte rekursiv (je Verwendung gezählt), Pfad-Liste gegen eingeschleuste Zyklen.
      *
-     * @return \Illuminate\Support\Collection<int, \Platform\FoodAlchemist\Models\FoodAlchemistGp>
+     * @param  iterable<\Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient>  $zeilen
+     * @param  array<int, Collection>  $unterrezepte
+     * @param  array<int, true>  $pfad
+     * @return list<bool>
      */
-    private function alleGpsImBaum(FoodAlchemistRecipe $r, int $tiefe = 0): Collection
+    private function tagsImBaum(iterable $zeilen, array $unterrezepte, array $pfad): array
     {
-        if ($tiefe > 3 || ! $r->relationLoaded('ingredients')) {
-            return collect();
-        }
-        $gps = $r->ingredients->map(fn ($z) => $z->gp)->filter();
-        foreach ($r->ingredients as $z) {
-            if ($z->relationLoaded('referencedRecipe') && $z->referencedRecipe !== null) {
-                $gps = $gps->merge($this->alleGpsImBaum($z->referencedRecipe, $tiefe + 1));
+        $tags = [];
+        foreach ($zeilen as $z) {
+            if ($z->gp !== null) {
+                $tags[] = (bool) $z->gp->tag_is_convenience;
+            }
+            $sub = $z->referenced_recipe_id !== null ? (int) $z->referenced_recipe_id : null;
+            if ($sub !== null && isset($unterrezepte[$sub]) && ! isset($pfad[$sub])) {
+                array_push($tags, ...$this->tagsImBaum($unterrezepte[$sub], $unterrezepte, $pfad + [$sub => true]));
             }
         }
 
-        return $gps;
+        return $tags;
+    }
+
+    /**
+     * Zeilen (mit GP-Tag) aller Unterrezepte der Kandidaten über alle Ebenen: eine Abfrage je Ebene für den Graph, eine für die Zeilen.
+     *
+     * @return array<int, Collection> recipe_id => Zutatenzeilen
+     */
+    private function unterrezeptZeilen(Collection $kandidaten): array
+    {
+        $start = $kandidaten->flatMap(fn ($r) => $r->ingredients->pluck('referenced_recipe_id'))->filter()->map(fn ($id) => (int) $id)->unique()->values()->all();
+        if ($start === []) {
+            return [];
+        }
+        $ids = array_values(array_unique([...$start, ...app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->nachfahren($start)]));
+
+        return \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::query()->whereIn('recipe_id', $ids)
+            ->with('gp:id,name,tag_is_convenience')->get()->groupBy(fn ($z) => (int) $z->recipe_id)->all();
     }
 
     /**

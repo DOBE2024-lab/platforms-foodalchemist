@@ -21,7 +21,7 @@ class MachbarkeitCheckTool extends WareneingangTool implements ToolContract, Too
 
     public function getDescription(): string
     {
-        return 'Prüft Rezepte (inkl. Unter-Rezepte, bis 3 Ebenen) gegen das Teamprofil eines Teams, ohne KI. Je Rezept: status warnung '
+        return 'Prüft Rezepte (inkl. Unter-Rezepte über alle Ebenen) gegen das Teamprofil eines Teams, ohne KI. Je Rezept: status warnung '
             .'(Equipment ausdrücklich nicht_vorhanden) | hinweis (Zustand unbekannt: „Profil unvollständig") | ok | ohne_angabe (am Rezept steht kein Equipment, '
             .'das ist NICHT „machbar") | nicht_sichtbar. Warnung nur bei ausdrücklich nicht_vorhanden; Standardausstattung zählt als vorhanden. '
             .'Ohne team_id das eigene Team; mit team_id ein Unter-Team (Oberteam-Brille). gaeste/termin werden mitgeführt, noch nicht ausgewertet.';

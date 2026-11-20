@@ -277,10 +277,14 @@ class SensorikService
      * Bezugsmasse und Kochmedium wie die gespeicherten Rezept-Nährwerte (Entscheid 17.11.2026).
      * `abdeckung[dim]` = Anteil der Ausbeute, für den ein Gehalt bekannt ist; der Wert ist der Schnitt über die bekannte Masse.
      *
+     * Unterrezepte über alle Ebenen (A-5; 2.1c: vorher bis Tiefe 3), `$pfad` fängt eingeschleuste Zyklen.
+     *
+     * @param  array<int, true>  $pfad  Rezepte auf dem Weg hierher (intern)
      * @return array{werte: array<string, ?float>, abdeckung: array<string, float>}
      */
-    public function rezeptNaehrwerte(int $recipeId, int $tiefe = 0): array
+    public function rezeptNaehrwerte(int $recipeId, array $pfad = []): array
     {
+        $pfad[$recipeId] = true;
         $zeilen = array_values(array_filter($this->zutatenMitGramm($recipeId), fn ($z) => $z['gramm'] > 0));
         $leer = ['werte' => array_fill_keys(array_keys(self::MESSBAR), null), 'abdeckung' => array_fill_keys(array_keys(self::MESSBAR), 0.0)];
         if ($zeilen === []) {
@@ -293,8 +297,8 @@ class SensorikService
         }
         $subs = [];
         foreach ($zeilen as $z) {
-            if ($z['ref'] !== null && $tiefe < 3) {
-                $subs[$z['ref']] ??= $this->rezeptNaehrwerte($z['ref'], $tiefe + 1);
+            if ($z['ref'] !== null && ! isset($pfad[$z['ref']])) {
+                $subs[$z['ref']] ??= $this->rezeptNaehrwerte($z['ref'], $pfad);
             }
         }
         $out = $leer;

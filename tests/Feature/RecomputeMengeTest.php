@@ -64,9 +64,7 @@ beforeEach(function () {
 
 /**
  * Nachbau der Einzel-BFS, wie sie vor V-049 in `betroffeneRezepte()` stand — das Orakel
- * für die Mengengleichheit. `PROPAGATION_LIMIT` ist im Service privat und hier bewusst
- * als Literal gespiegelt: wandert die Grenze, muss dieser Riegel bewusst nachgezogen
- * werden statt still mitzuwandern.
+ * für die Mengengleichheit. Seit 2.1c ohne Tiefen-Deckel (vorher `PROPAGATION_LIMIT` = 10).
  *
  * @return list<int>
  */
@@ -74,7 +72,7 @@ function einzelBfsAlt(int $recipeId): array
 {
     $besucht = [$recipeId => true];
     $ebene = [$recipeId];
-    for ($tiefe = 0; $tiefe < 10 && $ebene !== []; $tiefe++) {
+    while ($ebene !== []) {
         $eltern = FoodAlchemistRecipeIngredient::whereIn('referenced_recipe_id', $ebene)
             ->whereNull('deleted_at')->distinct()->pluck('recipe_id')
             ->reject(fn ($id) => isset($besucht[$id]))->values()->all();
@@ -110,11 +108,9 @@ function pipelineLaeufe(array $recipeIds, callable $arbeit): array
     return ['treffer' => $treffer, 'reihenfolge' => $reihenfolge];
 }
 
-it('V-049: die Batch-BFS ist mengengleich mit der Vereinigung der Einzel-BFS — auch an der Tiefen-Grenze', function () {
-    // Kette r0 ← r1 ← … ← r12 (r1 hat r0 als Sub usw.) — 12 Ebenen, also zwei mehr als
-    // PROPAGATION_LIMIT. Genau dort trennt sich die Batch- von der Einzel-Sicht, wenn die
-    // Distanz-Rechnung nicht stimmt: die gemeinsame BFS vergibt die KLEINSTE Distanz zu
-    // irgendeinem Start, die Einzel-BFS die zum jeweiligen Start.
+it('V-049: die Batch-BFS ist mengengleich mit der Vereinigung der Einzel-BFS — auch über 10 Ebenen (2.1c: kein Deckel)', function () {
+    // Kette r0 ← r1 ← … ← r12 (r1 hat r0 als Sub usw.) — 12 Ebenen, zwei mehr als der frühere
+    // PROPAGATION_LIMIT. Seit 2.1c erreicht jeder Start die ganze Kette nach oben.
     $kette = [];
     for ($i = 0; $i <= 12; $i++) {
         $kette[$i] = $this->makeRecipe($this->rootTeam, "Kette {$i}");
@@ -122,9 +118,7 @@ it('V-049: die Batch-BFS ist mengengleich mit der Vereinigung der Einzel-BFS —
             ($this->mkSubZutat)($kette[$i], $kette[$i - 1]);
         }
     }
-    // Diamant unten: r0 hat zwei Wege in dieselbe Kette (r1 und diamant → r2). Bewusst
-    // KEINE Abkürzung nach oben — die würde den Tiefen-Deckel entschärfen, und genau der
-    // ist hier der interessante Fall.
+    // Diamant unten: r0 hat zwei Wege in dieselbe Kette (r1 und diamant → r2).
     $diamant = $this->makeRecipe($this->rootTeam, 'Diamant');
     ($this->mkSubZutat)($diamant, $kette[0]);
     ($this->mkSubZutat)($kette[2], $diamant, 2);
@@ -144,13 +138,12 @@ it('V-049: die Batch-BFS ist mengengleich mit der Vereinigung der Einzel-BFS —
         return [$erwartet, $ist];
     };
 
-    // Ein Start (der Ein-Element-Fall MUSS identisch bleiben — daran hängen alle Bestands-Aufrufer).
-    // Der Deckel muss dabei WIRKLICH greifen, sonst prüft der Riegel den langweiligen Fall.
+    // Ein Start (der Ein-Element-Fall MUSS identisch bleiben — daran hängen alle Bestands-Aufrufer); oben angekommen
     [$erwartet, $ist] = $vergleiche([$kette[0]->id]);
     expect($ist)->toBe($erwartet)
-        ->and($ist)->not->toContain($kette[11]->id)
-        ->and($ist)->not->toContain($kette[12]->id)
-        ->and($ist)->toContain($kette[10]->id);
+        ->and($ist)->toContain($kette[11]->id)
+        ->and($ist)->toContain($kette[12]->id)
+        ->and($ist)->toContain($diamant->id);
 
     // Zwei Starts auf verschiedenen Höhen derselben Kette
     [$erwartet, $ist] = $vergleiche([$kette[0]->id, $kette[5]->id]);

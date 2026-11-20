@@ -230,7 +230,7 @@ class RezeptImport extends Component
     }
 
     /**
-     * Komponenten des Extrakts für die Vorschau — verschachtelt bis §4 (3 Ebenen unter dem Rezept; Kurator 27.10.: vorher nur eine Ebene,
+     * Komponenten des Extrakts für die Vorschau — verschachtelt bis §4 (3 Ebenen unter dem Rezept = Import-Tiefe von RecipeExtractService, nicht das Lesen des Graphen; Kurator 27.10.: vorher nur eine Ebene,
      * K1.1/K1.2.1/K2.7 gingen verloren und wurden später als Rohware gematcht). Mengen bleiben Text (die Vorschau zeigt, was die Quelle sagt).
      */
     private function vorschauKomponenten(array $liste, int $ebene = 1): array

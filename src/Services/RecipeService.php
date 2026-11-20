@@ -1232,8 +1232,8 @@ class RecipeService
 
                 if ($subId === $recipe->id) {
                     throw new \Platform\FoodAlchemist\Exceptions\RezeptZyklusException([$subId, $subId], 'Selbstreferenz — ein Rezept kann sich nicht selbst enthalten (GL-02 §3.5).', 'Selbstreferenz');
-                } elseif ($subId !== null) {   // 1.1e: Graph-Sperre + Zyklusprüfung in DIESER Transaktion (Prüfen und Schreiben atomar)
-                    app(Rezept\RezeptGraphService::class)->sichereKante($recipe->id, $subId, ! $vorhanden->contains(fn ($alt) => (int) $alt->referenced_recipe_id === $subId));
+                } elseif ($subId !== null && ! $vorhanden->contains(fn ($alt) => (int) $alt->referenced_recipe_id === $subId)) {   // 1.1e Sperre + Zyklusprüfung atomar; 2.1c nur neue Kanten
+                    app(Rezept\RezeptGraphService::class)->sichereKante($recipe->id, $subId);
                 }
                 $quantity = (float) str_replace(',', '.', (string) ($z['quantity'] ?? 0));
                 if ($quantity <= 0) {

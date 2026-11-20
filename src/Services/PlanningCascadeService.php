@@ -2608,13 +2608,11 @@ class PlanningCascadeService
         EnrichRecipeJob::dispatch($team->id, (int) (Auth::id() ?? 0), (int) $recipe->id, null, $kiBilder && ! $extern, (int) $step->id, false, false, $completeCoverage, false, $leitplanken, $extern);
 
         // Sub-Rezepte im Hintergrund mit-anreichern (nicht am Worker-Step sichtbar, wie allesAnreichern).
-        foreach (app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)->subRezeptIds((int) $recipe->id) as $subId) {
-            // Schleife über alle Sub-Rezepte eines Gerichts — viele kleine Läufe hinter EINEM
-            // Klick. Eigene Schlange, damit sie den interaktiven Einzel-Anreicherungs-Klick
-            // (Rezept-/VK-Modal) nicht blockieren.
-            EnrichRecipeJob::dispatch($team->id, (int) (Auth::id() ?? 0), (int) $subId, null, false, null, false, true, $completeCoverage, false, $leitplanken, $extern)
-                ->onQueue(Warteschlange::anreichern());
-        }
+        // Alle Sub-Rezepte eines Gerichts (2.1c: alle Ebenen, jedes einmal, wartende übersprungen) — viele kleine Läufe hinter EINEM
+        // Klick. Eigene Schlange, damit sie den interaktiven Einzel-Anreicherungs-Klick (Rezept-/VK-Modal) nicht blockieren.
+        EnrichRecipeJob::komponentenEinreihen((int) $team->id, app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)->subRezeptIds((int) $recipe->id), true,
+            fn (int $subId) => EnrichRecipeJob::dispatch($team->id, (int) (Auth::id() ?? 0), $subId, null, false, null, false, true, $completeCoverage, false, $leitplanken, $extern)
+                ->onQueue(Warteschlange::anreichern()));
 
         return $run;
     }

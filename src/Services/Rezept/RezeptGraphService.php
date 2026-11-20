@@ -47,8 +47,8 @@ class RezeptGraphService
 
     /**
      * Innerhalb einer laufenden Transaktion: Graph-Sperre holen (einmal je Transaktion genügt, doppelt schadet nicht) und die Kante prüfen.
-     * `$sperren = false` nur für eine Kante, die es schon gibt (Speichern ohne neues Unterrezept): sie schließt keinen neuen Zyklus,
-     * wird aber weiter geprüft (Altbestand) — ohne das ganze Speichern hinter die globale Sperre zu stellen.
+     * `$sperren = false` nur für eine Kante, die es schon gibt: sie schließt keinen neuen Zyklus. `syncIngredients` prüft bestehende Kanten seit
+     * 2.1c gar nicht mehr (nur geänderte Zeilen); ein per DB eingeschleuster Altbestands-Zyklus fällt in `topoOrder`/`explodiere` auf (1.1e).
      *
      * @throws RezeptZyklusException
      */
@@ -139,85 +139,76 @@ class RezeptGraphService
     }
 
     /**
-     * §3.5: Verknüpfungs-Guards parent→sub — Selbstreferenz und Zyklus blocken; die Tiefe ist seit A-5 (03.08.) nur informativ.
+     * §3.5: Verknüpfungs-Guards parent→sub — Selbstreferenz und Zyklus blocken. Seit A-5 (03.08.) gibt es kein Tiefenlimit; Code-Qualität 2.1c:
+     * keine (nie gelesene) Tiefen-Rechnung mehr, die Suche endet beim ersten Treffer.
      *
-     * @return array{erlaubt: bool, grund: ?string, projizierte_tiefe: int}
+     * @return array{erlaubt: bool, grund: ?string}
      */
     public function pruefeVerknuepfung(int $parentId, int $subId): array
     {
         if ($parentId === $subId) {
-            return ['erlaubt' => false, 'grund' => 'Selbstreferenz', 'projizierte_tiefe' => 0];
+            return ['erlaubt' => false, 'grund' => 'Selbstreferenz'];
         }
-        // BFS von sub abwärts: wird parent erreicht ⇒ Zyklus
-        $ebene = [$subId];
-        $besucht = [$subId => true];
+        // von sub abwärts: wird parent erreicht ⇒ Zyklus
+        $zyklus = false;
+        $this->ebenen([$subId], 'recipe_id', 'referenced_recipe_id', function (array $kinder) use ($parentId, &$zyklus) {
+            return ! ($zyklus = in_array($parentId, $kinder, true));
+        });
+
+        return $zyklus ? ['erlaubt' => false, 'grund' => 'Zyklus'] : ['erlaubt' => true, 'grund' => null];
+    }
+
+    /**
+     * Code-Qualität 2.1c · alle Rezepte, die die Starts (transitiv) als Unterrezept verwenden — Starts zuerst (Eingabe-Reihenfolge, ohne Dubletten),
+     * dann Ebene für Ebene. Kein Tiefen-Deckel (A-5); die Besucht-Liste trägt die Terminierung, auch bei eingeschleusten Zyklen.
+     *
+     * @param  array<int|string>  $start
+     * @return list<int>
+     */
+    public function vorfahren(array $start): array
+    {
+        return $this->ebenen($start, 'referenced_recipe_id', 'recipe_id');
+    }
+
+    /**
+     * Code-Qualität 2.1c · alle Unterrezepte der Starts (transitiv), ohne die Starts selbst. Kein Tiefen-Deckel (A-5), Besucht-Liste.
+     *
+     * @param  array<int|string>  $start
+     * @return list<int>
+     */
+    public function nachfahren(array $start): array
+    {
+        $start = array_values(array_unique(array_map('intval', $start)));
+
+        return array_values(array_diff($this->ebenen($start, 'recipe_id', 'referenced_recipe_id'), $start));
+    }
+
+    /**
+     * Breitensuche über die Zutat→Unterrezept-Kanten, eine Abfrage je Ebene. `$weiter` (optional) sieht die neuen Knoten jeder Ebene und bricht
+     * mit `false` ab.
+     *
+     * @param  array<int|string>  $start
+     * @return list<int> Starts + alle erreichten Knoten
+     */
+    private function ebenen(array $start, string $von, string $nach, ?\Closure $weiter = null): array
+    {
+        $besucht = [];
+        foreach ($start as $id) {
+            $besucht[(int) $id] = true;
+        }
+        $ebene = array_keys($besucht);
         while ($ebene !== []) {
-            $kinder = FoodAlchemistRecipeIngredient::whereIn('recipe_id', $ebene)
-                ->whereNotNull('referenced_recipe_id')->whereNull('deleted_at')
-                ->distinct()->pluck('referenced_recipe_id')->reject(fn ($id) => isset($besucht[$id]))->values()->all();
-            if (in_array($parentId, $kinder, true)) {
-                return ['erlaubt' => false, 'grund' => 'Zyklus', 'projizierte_tiefe' => 0];
-            }
-            foreach ($kinder as $k) {
-                $besucht[$k] = true;
-            }
-            $ebene = $kinder;
-        }
-
-        // Projizierte Tiefe bleibt informativ (Ahnen des Parents + Sub-Baum), aber sie
-        // BLOCKT nicht mehr (A-5 2026-08-03 gelockert): tiefe Menü-/Komposit-Ketten sind
-        // legitim. Verworfen wird nur bei Selbstreferenz/Zyklus (oben geprüft).
-        $tiefe = max(
-            $this->ahnenHoehe($parentId) + $this->subtreeTiefe($subId),
-            $this->subtreeTiefe($parentId),
-        );
-
-        return ['erlaubt' => true, 'grund' => null, 'projizierte_tiefe' => $tiefe];
-    }
-
-    /** Längster Aufwärts-Pfad bis zur Wurzel, inkl. Start-Rezept (A→B→C: C ⇒ 3). */
-    private function ahnenHoehe(int $recipeId): int
-    {
-        $hoehe = 1;
-        $ebene = [$recipeId];
-        $besucht = [$recipeId => true];
-        while ($ebene !== []) {                                    // Visited-Set garantiert Terminierung (kein Tiefen-Cap)
-            $eltern = FoodAlchemistRecipeIngredient::whereIn('referenced_recipe_id', $ebene)
-                ->whereNull('deleted_at')->distinct()->pluck('recipe_id')
-                ->reject(fn ($id) => isset($besucht[$id]))->values()->all();
-            if ($eltern === []) {
+            $neu = FoodAlchemistRecipeIngredient::whereIn($von, $ebene)->whereNotNull($nach)->whereNull('deleted_at')
+                ->distinct()->pluck($nach)->map(fn ($id) => (int) $id)->reject(fn ($id) => isset($besucht[$id]))->values()->all();
+            if ($weiter !== null && ! $weiter($neu)) {
                 break;
             }
-            foreach ($eltern as $e) {
-                $besucht[$e] = true;
+            foreach ($neu as $id) {
+                $besucht[$id] = true;
             }
-            $ebene = $eltern;
-            $hoehe++;
+            $ebene = $neu;
         }
 
-        return $hoehe;
-    }
-
-    /** Tiefe des Sub-Baums ab Rezept (Blatt = 1). */
-    public function subtreeTiefe(int $recipeId): int
-    {
-        $tiefe = 1;
-        $ebene = [$recipeId];
-        $besucht = [$recipeId => true];
-        while ($ebene !== []) {                                    // Visited-Set garantiert Terminierung (kein Tiefen-Cap)
-            $kinder = FoodAlchemistRecipeIngredient::whereIn('recipe_id', $ebene)
-                ->whereNotNull('referenced_recipe_id')->whereNull('deleted_at')
-                ->distinct()->pluck('referenced_recipe_id')->reject(fn ($id) => isset($besucht[$id]))->values()->all();
-            if ($kinder === []) {
-                break;
-            }
-            foreach ($kinder as $k) {
-                $besucht[$k] = true;
-            }
-            $ebene = $kinder;
-            $tiefe++;
-        }
-
-        return $tiefe;
+        return array_keys($besucht);
     }
 }

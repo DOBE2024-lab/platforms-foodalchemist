@@ -52,8 +52,6 @@ final class RezeptProfil
     /** Würz-Achsen: schon eine kleine Menge eines deutlichen Lieferanten deckt den Bedarf ({@see abgeschmeckt}). */
     public const ABGESCHMECKT = ['salz', 'saeure'];
 
-    private const REKURSION_MAX = 3;
-
     /**
      * Wirk-Dosis je Anker-Kategorie (längstes Präfix gewinnt), in % der Rezeptmasse: der Median der
      * tatsächlichen Dosierung über 2.336 Basisrezepte (gemessen 2026-10-07, T1-Gramm, Kern-Anker).
@@ -122,26 +120,15 @@ final class RezeptProfil
 
     /**
      * Profil eines Rezepts und aller Rezepte, die es (transitiv) verwenden, neu rechnen — z. B. nach
-     * der KI-Sensorik (neue Texturen), ohne Preis-Recompute. Höchstens REKURSION_MAX Ebenen nach oben
-     * (Regelwerk Basisrezepte §4), Zyklen werden übersprungen. Kinder vor Eltern (Eltern-Hash enthält sie).
+     * der KI-Sensorik (neue Texturen), ohne Preis-Recompute. Alle Ebenen nach oben (A-5, 2.1c: ein Graph-Dienst mit Besucht-Liste),
+     * Zyklen werden übersprungen. Kinder vor Eltern (Eltern-Hash enthält sie).
      *
      * @return list<int> neu gerechnete recipe_ids
      */
     public function nachziehen(int $recipeId): array
     {
         $this->cache = [];
-        $gesehen = [$recipeId => true];
-        $ebene = [$recipeId];
-        $reihenfolge = [$recipeId];
-        for ($tiefe = 0; $tiefe < self::REKURSION_MAX && $ebene !== []; $tiefe++) {
-            $eltern = DB::table('foodalchemist_recipe_ingredients')->whereIn('referenced_recipe_id', $ebene)
-                ->whereNull('deleted_at')->distinct()->pluck('recipe_id')->map(fn ($i) => (int) $i)->all();
-            $ebene = array_values(array_filter($eltern, fn ($i) => ! isset($gesehen[$i])));
-            foreach ($ebene as $i) {
-                $gesehen[$i] = true;
-                $reihenfolge[] = $i;
-            }
-        }
+        $reihenfolge = app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->vorfahren([$recipeId]);
         foreach ($reihenfolge as $id) {
             $this->fuer($id);
         }
@@ -196,7 +183,7 @@ final class RezeptProfil
     private function rechne(int $recipeId, int $tiefe, array $besucht): array
     {
         $leer = ['recipe_id' => $recipeId, 'anker' => [], 'abdeckung' => 0.0, 'eigenschaften' => [], 'offene_bedarfe' => [], 'roh' => [], 'masse' => 0.0, 'hash_teile' => [], 'vollstaendig' => false];
-        if ($tiefe > self::REKURSION_MAX || isset($besucht[$recipeId])) {
+        if (isset($besucht[$recipeId])) {                          // 2.1c: kein Tiefen-Deckel (A-5), die Besucht-Liste fängt Zyklen
             return $leer;
         }
         $besucht[$recipeId] = true;

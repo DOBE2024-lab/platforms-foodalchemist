@@ -134,6 +134,32 @@ class EnrichRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services\A
         return "fa:enrich-alles:{$teamId}:{$recipeId}:" . ($refresh ? 'refresh' : 'luecken');
     }
 
+    /**
+     * Code-Qualität 2.1c · Komponenten (Unterrezepte über alle Ebenen) zur Anreicherung einreihen: jedes Rezept höchstens einmal — die Liste
+     * kommt dedupliziert aus dem Graph-Dienst (Besucht-Liste, ein Fond in zwei Zweigen = ein Eintrag), und ein Rezept, dessen Lauf im selben
+     * Modus schon wartet oder läuft (Cache-Sperre wie beim Klick auf Ebene 1), wird übersprungen. `$dispatch` reiht genau einen Job ein.
+     *
+     * @param  list<int>  $recipeIds
+     * @param  \Closure(int): mixed  $dispatch
+     * @return list<int> tatsächlich eingereihte Rezepte
+     */
+    public static function komponentenEinreihen(int $teamId, array $recipeIds, bool $refresh, \Closure $dispatch): array
+    {
+        $eingereiht = [];
+        foreach (array_values(array_unique(array_map('intval', $recipeIds))) as $id) {
+            $key = self::anreicherungCacheKey($teamId, $id, $refresh);
+            $stand = Cache::get($key);
+            if (is_array($stand) && in_array($stand['status'] ?? null, ['queued', 'running'], true)) {
+                continue;
+            }
+            Cache::put($key, ['status' => 'queued', 'at' => now()->toIso8601String()], now()->addMinutes(30));
+            $dispatch($id);
+            $eingereiht[] = $id;
+        }
+
+        return $eingereiht;
+    }
+
     /** @var array<string, mixed>|null volles Ergebnis des One-Shot-Passes (nur für den Modal-Cache) */
     private ?array $volltext = null;
 

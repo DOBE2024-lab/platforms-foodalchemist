@@ -29,7 +29,7 @@ use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
  */
 class RecipeExtractService
 {
-    /** §4: Komponenten-Ebenen unter dem Rezept (K1 → K1.2 → K1.2.1); darunter nur noch Stub-Zeilen. */
+    /** §4: Komponenten-Ebenen unter dem Rezept (K1 → K1.2 → K1.2.1); darunter nur noch Stub-Zeilen. Import-Tiefe (was aus einer Quelle als eigenes Rezept angelegt wird), kein Lese-Limit des Graphen (A-5/2.1c). */
     public const MAX_TIEFE = 3;
 
     public function __construct(

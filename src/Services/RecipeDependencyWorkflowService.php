@@ -16,6 +16,7 @@ use Platform\FoodAlchemist\Support\Warteschlange;
 /** Persistenter, begrenzter DAG für ineinander verschachtelte Basisrezepte. */
 class RecipeDependencyWorkflowService
 {
+    /** Erzeugungs-Tiefe: so tief legt die KI Kind-Rezepte an (Kosten und Laufzeit je Klick begrenzen). Kein Lese-Limit des Graphen — das gibt es seit A-5/2.1c nicht mehr. */
     public const MAX_DEPTH = 3;
 
     /**

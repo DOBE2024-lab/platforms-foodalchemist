@@ -17,8 +17,6 @@ use Illuminate\Support\Str;
  */
 final class HandbuchSuchindex
 {
-    private const MAX_TIEFE = 3;
-
     public static function normalisiere(?string $text): string
     {
         $t = mb_strtolower((string) $text, 'UTF-8');
@@ -90,7 +88,7 @@ final class HandbuchSuchindex
     }
 
     /**
-     * Name, Zutaten, Schritte und Allergene eines Basisrezepts, Unterrezepte bis MAX_TIEFE.
+     * Name, Zutaten, Schritte und Allergene eines Basisrezepts, Unterrezepte über alle Ebenen (A-5; 2.1c: vorher bis Tiefe 3), `$gesehen` bricht Zyklen.
      *
      * @param  array<string,array<string,mixed>>  $basis
      * @param  array<string,bool>  $gesehen
@@ -99,7 +97,7 @@ final class HandbuchSuchindex
     private static function basisTeile(string $key, array $basis, array &$gesehen, int $tiefe): array
     {
         $b = $basis[$key] ?? null;
-        if (! is_array($b) || isset($gesehen[$key]) || $tiefe > self::MAX_TIEFE) {
+        if (! is_array($b) || isset($gesehen[$key])) {
             return [];
         }
         $gesehen[$key] = true;

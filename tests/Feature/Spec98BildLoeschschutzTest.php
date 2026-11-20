@@ -76,6 +76,36 @@ it('gelöschte Kopie zählt mit: Wiederherstellen braucht die Datei', function (
     expect(Storage::disk('public')->exists('foodalchemist/branding/3/logo.webp'))->toBeTrue();
 });
 
+it('veröffentlichter Snapshot hält die Datei, bis der Link neu veröffentlicht wird', function () {
+    $datei = bldDatei($this->rootTeam->id, 'foodalchemist/branding/6/logo.webp');
+    $fb = $this->makeFoodbook($this->rootTeam, 'Katalog', ['logo_context_file_id' => $datei->id, 'logo_path' => $datei->path]);
+    // Snapshot wie beim Publish: nur Identifier, tief verschachtelt; Laravel-Cast schreibt escapte Slashes.
+    $fb->forceFill(['presentation_snapshot_json' => ['branding' => ['logo' => ['context_file_id' => $datei->id, 'path' => $datei->path]]]])->save();
+
+    $this->fbs->clearLogo($this->rootTeam, $fb->id);
+    expect($fb->refresh()->logo_context_file_id)->toBeNull()
+        ->and(Storage::disk('public')->exists($datei->path))->toBeTrue()
+        ->and(ContextFile::find($datei->id))->not->toBeNull();
+
+    // Republish ohne das Logo → die letzte Nutzung ist weg, das nächste Löschen räumt die Datei ab.
+    $fb->forceFill(['presentation_snapshot_json' => ['branding' => ['logo' => null]]])->save();
+    app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($datei->id, $datei->path, $this->rootTeam);
+    expect(Storage::disk('public')->exists($datei->path))->toBeFalse();
+});
+
+it('Snapshot-Vorfilter trifft beide JSON-Schreibweisen (MySQL mit Leerzeichen, Pfad allein) und nicht Nachbar-IDs', function () {
+    $media = app(FoodAlchemistMediaService::class);
+    $fb = $this->makeFoodbook($this->rootTeam, 'Katalog');
+    DB::table('foodalchemist_foodbooks')->where('id', $fb->id)
+        ->update(['presentation_snapshot_json' => '{"cover": {"context_file_id": 4711, "path": "foodalchemist/branding/7/cover.webp"}}']);
+
+    expect($media->wirdGenutzt(4711, ''))->toBeTrue()
+        ->and($media->wirdGenutzt(null, 'foodalchemist/branding/7/cover.webp'))->toBeTrue()
+        ->and($media->wirdGenutzt(471, ''))->toBeFalse()
+        ->and($media->wirdGenutzt(47110, ''))->toBeFalse()
+        ->and($media->wirdGenutzt(null, 'foodalchemist/branding/8/cover.webp'))->toBeFalse();
+});
+
 it('Fassung in einem anderen Team: Master entfernt bzw. ersetzt sein Bild, die Datei der Fassung bleibt', function () {
     Storage::disk('public')->put('foodalchemist/concept/9/titel.webp', 'bild');
     $master = $this->makeConcept($this->rootTeam, 'Menü', ['image_path' => 'foodalchemist/concept/9/titel.webp']);

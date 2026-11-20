@@ -13,7 +13,8 @@ use Illuminate\Database\Eloquent\Model;
  * mehr nutzt — über alle Teams, gelöschte Zeilen eingeschlossen (Wiederherstellen braucht die Datei).
  *
  * REGISTER: Tabelle → Liste von Verweisen. Ein Verweis ist entweder ein Spaltenpaar [context_file_id-Spalte, Pfad-Spalte] oder
- * ['json' => Spalte] für JSON mit Einträgen {context_file_id, path} (beliebig tief verschachtelt).
+ * ['json' => Spalte] für JSON mit Einträgen {context_file_id, path} (beliebig tief verschachtelt) — dazu gehören die Snapshots
+ * veröffentlichter Links (Entscheid Kurator 2026-11-20: veröffentlichte Links dürfen nicht brechen).
  * AUSNAHMEN: Bild-/Datei-ähnliche Spalten, die bewusst NICHT im Register stehen, mit Grund.
  * Wächter: Spec98BildLoeschschutzTest (jede passende Spalte steht in genau einer der beiden Listen).
  */
@@ -21,18 +22,28 @@ final class BildVerweise
 {
     /** @var array<string, list<array{0:string,1:string}|array{json:string}>> */
     public const REGISTER = [
-        'foodalchemist_foodbooks' => [['logo_context_file_id', 'logo_path'], ['cover_context_file_id', 'cover_image_path']],
-        'foodalchemist_foodbook_chapters' => [['image_context_file_id', 'image_path'], ['logo_context_file_id', 'logo_path']],
+        'foodalchemist_foodbooks' => [
+            ['logo_context_file_id', 'logo_path'], ['cover_context_file_id', 'cover_image_path'],
+            ['json' => 'presentation_snapshot_json'], ['json' => 'preview_snapshot_json'],
+        ],
+        'foodalchemist_foodbook_chapters' => [
+            ['image_context_file_id', 'image_path'], ['logo_context_file_id', 'logo_path'], ['json' => 'snapshot_json'],
+        ],
         'foodalchemist_foodbook_chapter_images' => [['context_file_id', 'path']],
-        'foodalchemist_menu_cards' => [['logo_context_file_id', 'logo_path'], ['cover_context_file_id', 'cover_image_path']],
-        'foodalchemist_menu_card_sections' => [['logo_context_file_id', 'logo_path']],
-        'foodalchemist_menu_plans' => [['logo_context_file_id', 'logo_path'], ['cover_context_file_id', 'cover_image_path']],
+        'foodalchemist_menu_cards' => [
+            ['logo_context_file_id', 'logo_path'], ['cover_context_file_id', 'cover_image_path'], ['json' => 'presentation_snapshot_json'],
+        ],
+        'foodalchemist_menu_card_sections' => [['logo_context_file_id', 'logo_path'], ['json' => 'snapshot_json']],
+        'foodalchemist_menu_plans' => [
+            ['logo_context_file_id', 'logo_path'], ['cover_context_file_id', 'cover_image_path'], ['json' => 'presentation_snapshot_json'],
+        ],
         'foodalchemist_concepts' => [['image_context_file_id', 'image_path']],   // kein Logo am Concept (Schema geprüft)
         'foodalchemist_concept_images' => [['context_file_id', 'path']],
         'foodalchemist_format_images' => [['context_file_id', 'path']],
         'foodalchemist_recipes' => [['image_context_file_id', 'image_path']],
         'foodalchemist_offers' => [
             ['logo_context_file_id', 'logo_path'], ['cover_context_file_id', 'cover_image_path'], ['json' => 'presentation_images_json'],
+            ['json' => 'presentation_snapshot_json'],
         ],
         'foodalchemist_offer_chapters' => [['image_context_file_id', 'image_path'], ['logo_context_file_id', 'logo_path']],
         'foodalchemist_offer_chapter_images' => [['context_file_id', 'path']],
@@ -40,12 +51,16 @@ final class BildVerweise
             ['logo_context_file_id', 'logo_path'], ['cover_context_file_id', 'cover_image_path'],
             ['bild_lunch_context_file_id', 'bild_lunch_path'], ['bild_dinner_context_file_id', 'bild_dinner_path'],
             ['bild_day_night_context_file_id', 'bild_day_night_path'],   // Spec 94 Zeitfenster-Bilder
+            ['json' => 'presentation_snapshot_json'],
         ],
         'foodalchemist_konfigurator_konzepte' => [['bild_context_file_id', 'bild_path']],
         'foodalchemist_outlets' => [['logo_context_file_id', 'logo_path']],
         'foodalchemist_recipe_step_photos' => [['context_file_id', 'pfad']],
         // Bild-Blöcke im Struktur-Builder (storeBlockImage): {context_file_id, path} in der Block-style; Design-Kopien teilen sie.
         'foodalchemist_presentation_designs' => [['json' => 'layout_json']],
+        // Veröffentlichte Links (Kunden-Links dürfen nicht brechen): Snapshots halten die Datei bis zum nächsten Republish.
+        'foodalchemist_presentations' => [['json' => 'snapshot_json']],
+        'foodalchemist_handbuecher' => [['json' => 'snapshot_json']],
     ];
 
     /** Spalte (tabelle.spalte) → Grund, warum sie nicht im Register steht. */

@@ -212,11 +212,36 @@ class FoodAlchemistMediaService
         return false;
     }
 
-    /** JSON-Spalte: Einträge {context_file_id, path} in beliebiger Tiefe; die Prüfung läuft in PHP (JSON-Text je DB verschieden). */
+    /**
+     * JSON-Spalte: Einträge {context_file_id, path} in beliebiger Tiefe. Erst grob per LIKE vorfiltern (keine Volltabellen-Decodierung
+     * je Löschung), dann exakt in PHP prüfen (JSON-Text je DB verschieden: Leerzeichen, escapte Slashes, Zahl oder String).
+     */
     private function jsonNutzt(string $tabelle, string $spalte, ?int $contextFileId, string $pfad, array $ausser): bool
     {
+        $muster = [];
+        if ($contextFileId !== null) {
+            foreach ([':', ': '] as $trenner) {
+                foreach (["{$contextFileId},", "{$contextFileId}}", "\"{$contextFileId}\""] as $wert) {
+                    $muster[] = '%"context_file_id"'.$trenner.$wert.'%';
+                }
+            }
+        }
+        $dateiname = $pfad !== '' ? basename($pfad) : '';
+        if ($dateiname !== '') {
+            $muster[] = '%'.$dateiname.'%';   // Dateiname enthält keinen Slash → trifft escapte wie unescapte Pfade
+        }
+        if ($muster === []) {
+            return false;
+        }
         $eigene = array_values(array_filter($ausser, fn ($a) => $a['tabelle'] === $tabelle && in_array($a['spalte'] ?? null, [null, $spalte], true)));
-        foreach (DB::table($tabelle)->whereNotNull($spalte)->select(['id', $spalte])->lazyById(200) as $zeile) {
+        $kandidaten = DB::table($tabelle)->whereNotNull($spalte)
+            ->where(function ($w) use ($spalte, $muster) {
+                foreach ($muster as $m) {
+                    $w->orWhere($spalte, 'like', $m);
+                }
+            })
+            ->select(['id', $spalte]);
+        foreach ($kandidaten->lazyById(200) as $zeile) {
             $daten = json_decode((string) $zeile->{$spalte}, true);
             foreach (is_array($daten) ? $daten : [] as $schluessel => $eintrag) {
                 foreach ($eigene as $a) {

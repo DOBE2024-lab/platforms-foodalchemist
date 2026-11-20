@@ -1582,7 +1582,7 @@ class FoodbookService
 
                         continue;
                     }
-                    $editionen = app(FormatKapitelService::class)->editionen($format, $mitHandbuchMengen, $mitTexten);
+                    $editionen = app(FormatKapitelService::class)->editionen($format, $mitHandbuchMengen, $mitTexten, $intern);
                     $hero = $format->images->firstWhere('is_hero', true);
                     $rows[] = [
                         'title' => $k->consumer_title ?: ($format->consumer_name ?: $format->name),

@@ -19,7 +19,7 @@ class FormatKapitelService
      *
      * @return list<array{typ:string, name:?string, claim:?string, text:?string, preis_pp:?float, einzelpreise:bool, gerichte:array}>
      */
-    public function editionen(FoodAlchemistFormat $format, bool $mitHandbuchMengen = false, bool $mitTexten = false): array
+    public function editionen(FoodAlchemistFormat $format, bool $mitHandbuchMengen = false, bool $mitTexten = false, bool $intern = false): array
     {
         $wording = app(WordingResolver::class);
         $editionen = [];
@@ -34,7 +34,7 @@ class FormatKapitelService
                     'preis_pp' => $ed->price_per_person_cache !== null ? (float) $ed->price_per_person_cache : null,
                     'einzelpreise' => $ed->istEinzelpreis(),
                     'gerichte' => $wording->gerichtZeilen($ed, null, $mitTexten, $mitHandbuchMengen),   // $mitTexten: Hinweistexte der Pakete in der Präsentation
-                ];
+                ] + ($intern ? ['ek_pp' => $ed->ek_per_person_cache !== null ? (float) $ed->ek_per_person_cache : null] : []);   // EK je Edition NUR intern (wie Angebot)
             } elseif (in_array($fs->type, ['header', 'text', 'spacer'], true)) {
                 $editionen[] = ['typ' => $fs->type, 'name' => $fs->title, 'text' => $fs->text_content,
                     'claim' => null, 'preis_pp' => null, 'einzelpreise' => false, 'gerichte' => []];
@@ -90,7 +90,7 @@ class FormatKapitelService
      * Spiegelt den ist_format-Zweig von {@see PresentationService::normalizeAngebot}: header/spacer → Überschrift,
      * text → Textblock, Edition → concept_ref-Block mit Preis pro Gast (außer Einzelpreis-Concept).
      */
-    public function praesentationsBloecke(array $editionen, bool $showPrice, \Closure $items): array
+    public function praesentationsBloecke(array $editionen, bool $showPrice, \Closure $items, bool $mitEk = false): array
     {
         $blocks = [];
         foreach ($editionen as $ed) {
@@ -111,7 +111,7 @@ class FormatKapitelService
                 'price' => ($showPrice && ! $einzel && ($ed['preis_pp'] ?? null) !== null)
                     ? ['pp' => (float) $ed['preis_pp'], 'pauschal' => 0.0, 'unit' => 'gast'] : null,
                 'codes' => [], 'items' => $items($ed['gerichte'] ?? []),
-            ];
+            ] + ($mitEk && $showPrice && ! $einzel && ($ed['ek_pp'] ?? null) !== null ? ['ek' => ['pp' => (float) $ed['ek_pp']]] : []);
         }
 
         return $blocks;

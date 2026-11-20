@@ -2,12 +2,15 @@
 
 namespace Platform\FoodAlchemist\Livewire\Settings;
 
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Livewire\Settings\Concerns\ReordersLists;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
+use Platform\FoodAlchemist\Services\Einstellungen\VkTaxonomieService;
 use Platform\FoodAlchemist\Services\VocabularyService;
 use RuntimeException;
 
@@ -181,10 +184,14 @@ class VkTaxonomie extends Component
         if (! in_array($tabelle, $erlaubt, true)) {
             return;
         }
-        $zeile = DB::table($tabelle)->where('id', $id)->first(['is_inactive']);
-        if ($zeile !== null) {
-            DB::table($tabelle)->where('id', $id)->update(['is_inactive' => ! $zeile->is_inactive, 'updated_at' => now()]);
+        // 98 · 2.3a: Sichtbarkeit + Eigentum + Write im VkTaxonomieService; »gibt es nicht« bleibt still wie bisher.
+        try {
+            app(VkTaxonomieService::class)->hauptgruppeAktivUmschalten($this->team(), $id);
             $this->meldung = 'Aktualisiert — inaktive Einträge bleiben an Rezepten sichtbar, solange sie zugewiesen sind (V-06).';
+        } catch (NichtGefundenException) {
+            return;
+        } catch (GeerbtNurLesenException $e) {
+            $this->fehler = $e->getMessage();
         }
     }
 

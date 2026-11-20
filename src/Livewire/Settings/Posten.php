@@ -3,10 +3,11 @@
 namespace Platform\FoodAlchemist\Livewire\Settings;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Livewire\Component;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Platform\FoodAlchemist\Models\FoodAlchemistKitchenRole;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
+use Platform\FoodAlchemist\Services\ProductionStationService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**
@@ -110,29 +111,10 @@ class Posten extends Component
         $this->fehler = null;
         $this->meldung = null;
 
-        $team = Auth::user()?->currentTeamRelation;
         $name = trim($this->neu['name']);
-        if ($team === null || $name === '') {
-            $this->fehler = 'Name ist Pflicht.';
-
+        if ($this->versuche(fn ($svc, $team) => $svc->anlegen($team, $this->neu), 'Name ist Pflicht.') === null) {
             return;
         }
-
-        $slug = Str::slug($name, '_');
-        if (FoodAlchemistProductionStation::where('team_id', $team->id)->where('slug', $slug)->exists()) {
-            $this->fehler = "«{$name}» gibt es schon.";
-
-            return;
-        }
-
-        FoodAlchemistProductionStation::create([
-            'team_id' => $team->id,
-            'slug' => $slug,
-            'name' => $name,
-            'group_name' => trim($this->neu['group_name']) ?: null,
-            'kapazitaet_min_pro_tag' => $this->minuten($this->neu['kapazitaet']),
-            'sort_order' => (int) FoodAlchemistProductionStation::where('team_id', $team->id)->max('sort_order') + 10,
-        ]);
 
         $this->reset('neu');
         $this->neu = ['name' => '', 'group_name' => '', 'kapazitaet' => ''];
@@ -144,23 +126,7 @@ class Posten extends Component
         $this->fehler = null;
         $this->meldung = null;
 
-        $posten = $this->eigener($id);
-        if ($posten === null) {
-            return;
-        }
-
-        match ($feld) {
-            'name' => trim($wert) !== '' ? $posten->name = trim($wert) : $this->fehler = 'Name darf nicht leer sein.',
-            'group_name' => $posten->group_name = trim($wert) ?: null,
-            'kapazitaet' => $posten->kapazitaet_min_pro_tag = $this->minuten($wert),
-            'schicht' => $posten->schicht_minuten = $this->minuten($wert),                 // Stufe 3
-            'batch_max_kg' => $posten->batch_max_kg = $this->zahl($wert),                    // Stufe 3 (Topf)
-            'ist_sammelposten' => $posten->ist_sammelposten = in_array($wert, ['1', 'true', 'on'], true),   // Spec 83 B3g: Pass = Sammelposten
-            default => null,
-        };
-
-        if ($this->fehler === null) {
-            $posten->save();
+        if ($this->versuche(fn ($svc, $team) => $svc->feldSetzen($team, $id, $feld, $wert)) !== null) {
             $this->meldung = 'Gespeichert.';
         }
     }
@@ -172,85 +138,52 @@ class Posten extends Component
      */
     public function wochentagSetzen(int $id, int $iso, string $wert): void
     {
-        $posten = $this->eigener($id);
-        if ($posten === null) {
-            return;
+        if ($this->versuche(fn ($svc, $team) => $svc->wochentagSetzen($team, $id, $iso, $wert)) !== null) {
+            $this->meldung = 'Gespeichert.';
         }
-
-        $tage = $posten->kapazitaet_wochentag ?? [];
-        $minuten = $this->minuten($wert);
-        if ($minuten === null && trim($wert) === '') {
-            unset($tage[(string) $iso]);
-        } else {
-            $tage[(string) $iso] = $minuten ?? 0;
-        }
-
-        $posten->kapazitaet_wochentag = $tage === [] ? null : $tage;
-        $posten->save();
-        $this->meldung = 'Gespeichert.';
     }
 
     /** Stufe 3 — Anzahl einer Rolle am Posten setzen (0/leer = Rolle raus). Leitet Kapazität + Kosten ab. */
     public function besetzungSetzen(int $id, int $roleId, string $wert): void
     {
-        $posten = $this->eigener($id);
-        if ($posten === null) {
-            return;
+        if ($this->versuche(fn ($svc, $team) => $svc->besetzungSetzen($team, $id, $roleId, $wert)) !== null) {
+            $this->meldung = 'Besetzung gespeichert.';
         }
-
-        $besetzung = $posten->besetzung ?? [];
-        $anzahl = max(0, (int) trim($wert));
-        if ($anzahl === 0) {
-            unset($besetzung[(string) $roleId]);
-        } else {
-            $besetzung[(string) $roleId] = $anzahl;
-        }
-
-        $posten->besetzung = $besetzung === [] ? null : $besetzung;
-        $posten->save();
-        $this->meldung = 'Besetzung gespeichert.';
     }
 
     public function aktivToggle(int $id): void
     {
-        $posten = $this->eigener($id);
-        if ($posten === null) {
-            return;
+        $posten = $this->versuche(fn ($svc, $team) => $svc->aktivUmschalten($team, $id));
+        if ($posten !== null) {
+            $this->meldung = $posten->is_inactive ? "«{$posten->name}» stillgelegt." : "«{$posten->name}» wieder aktiv.";
         }
-        $posten->is_inactive = ! $posten->is_inactive;
-        $posten->save();
-        $this->meldung = $posten->is_inactive ? "«{$posten->name}» stillgelegt." : "«{$posten->name}» wieder aktiv.";
     }
 
-    /** Nur Posten des EIGENEN Teams sind editierbar (D1) — geerbte sind Vorlagen. */
-    private function eigener(int $id): ?FoodAlchemistProductionStation
+    /**
+     * Führt eine Schreib-Aktion des ProductionStationService aus (98 · 2.3a). Nur Posten des EIGENEN Teams sind
+     * editierbar (D1) — die Regel liegt im Service; Ablehnungen landen als Meldung in $fehler, Ergebnis null.
+     */
+    private function versuche(callable $aktion, string $ohneTeam = 'Posten nicht im Schreibzugriff (D1).'): ?FoodAlchemistProductionStation
     {
         $team = Auth::user()?->currentTeamRelation;
-        $posten = $team !== null
-            ? FoodAlchemistProductionStation::where('team_id', $team->id)->find($id)
-            : null;
+        if ($team === null) {
+            $this->fehler = $ohneTeam;
 
-        if ($posten === null) {
-            $this->fehler = 'Posten nicht im Schreibzugriff (D1).';
+            return null;
         }
+        try {
+            return $aktion(app(ProductionStationService::class), $team);
+        } catch (GeerbtNurLesenException|\InvalidArgumentException $e) {
+            $this->fehler = $e->getMessage();
 
-        return $posten;
-    }
-
-    /** Minuten-Eingabe robust lesen: leer ⇒ null (= kein Kapazitätsposten), sonst ≥ 0. */
-    private function minuten(string $roh): ?int
-    {
-        $roh = trim($roh);
-
-        return $roh === '' ? null : max(0, (int) $roh);
+            return null;
+        }
     }
 
     /** Dezimal-Eingabe (Topf-Deckel): leer ⇒ null, Komma erlaubt, ≥ 0. */
     private function zahl(string $roh): ?float
     {
-        $roh = trim(str_replace(',', '.', $roh));
-
-        return $roh === '' ? null : max(0.0, (float) $roh);
+        return ProductionStationService::zahl($roh);
     }
 
     public function render()

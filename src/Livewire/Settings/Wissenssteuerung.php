@@ -2,11 +2,15 @@
 
 namespace Platform\FoodAlchemist\Livewire\Settings;
 
+use Platform\FoodAlchemist\Exceptions\NochVerwendetException;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
+use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeBudget;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
+use Platform\FoodAlchemist\Services\Einstellungen\WissenssteuerungService;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService;
 use Platform\FoodAlchemist\Services\Knowledge\WissensProfilService;
 use Platform\FoodAlchemist\Support\KiSchrittLabels;
@@ -241,51 +245,13 @@ class Wissenssteuerung extends Component
         $this->form = ['feature' => '', 'category' => '', 'mode' => 'discovery', 'max_docs' => '', 'max_chars_per_doc' => ''];
     }
 
+    /** Regeln (nur Master-Team, Modus-Whitelist, Art-Routings nicht hier) im WissenssteuerungService (98 · 2.3a). */
     public function save(): void
     {
         $this->fehler = $this->hinweis = null;
-        if (! $this->darfGlobalSchreiben()) {
-            $this->fehler = 'Diese Einstellung gilt für alle Teams. Ändern darf sie nur das Master-Team.';
-
+        if (! $this->routingVersuch(fn (WissenssteuerungService $svc, $team) => $svc->speichern($team, $this->editId, $this->form))) {
             return;
         }
-        if (! in_array($this->form['mode'], ['always', 'discovery', 'grounding', 'none'], true)) {
-            $this->fehler = 'Bitte eine Verwendung wählen: „Immer vollständig", „Passendes suchen", „Je Hauptzutat" oder „Bewusst nicht".';
-
-            return;
-        }
-
-        $daten = [
-            'mode' => $this->form['mode'],
-            'max_docs' => $this->form['max_docs'] === '' ? null : max(0, (int) $this->form['max_docs']),
-            'max_chars_per_doc' => $this->form['max_chars_per_doc'] === '' ? null : max(0, (int) $this->form['max_chars_per_doc']),
-            'updated_at' => now(),
-        ];
-
-        if ($this->editId !== null) {
-            if (DB::table('foodalchemist_knowledge_routings')->where('id', $this->editId)->whereNotNull('art')->exists()) {
-                $this->fehler = 'Diese Einstellung gehört zu einer Wissensart. Bitte unter „Wissen nach Art" bearbeiten.';
-                return;
-            }
-            DB::table('foodalchemist_knowledge_routings')->where('id', $this->editId)->update($daten);
-            $this->hinweis = 'Gespeichert. Gilt ab dem nächsten KI-Aufruf.';
-            $this->cancel();
-
-            return;
-        }
-
-        $feature = trim($this->form['feature']);
-        $category = trim($this->form['category']);
-        if ($feature === '' || $category === '') {
-            $this->fehler = 'Bitte Arbeitsschritt und Kategorie angeben.';
-
-            return;
-        }
-        // (feature, category) ist unique — updateOrInsert, sonst stirbt das Anlegen am Bestand.
-        DB::table('foodalchemist_knowledge_routings')->updateOrInsert(
-            ['feature' => $feature, 'category' => $category],
-            $daten + ['created_at' => now()],
-        );
         $this->hinweis = 'Gespeichert. Gilt ab dem nächsten KI-Aufruf.';
         $this->cancel();
     }
@@ -293,15 +259,30 @@ class Wissenssteuerung extends Component
     public function delete(int $id): void
     {
         $this->fehler = $this->hinweis = null;
-        if (! $this->darfGlobalSchreiben()) {
-            $this->fehler = 'Diese Einstellung gilt für alle Teams. Ändern darf sie nur das Master-Team.';
-
+        if (! $this->routingVersuch(fn (WissenssteuerungService $svc, $team) => $svc->entfernen($team, $id))) {
             return;
         }
-        DB::table('foodalchemist_knowledge_routings')->where('id', $id)->delete();
         // Ohne Zeile ist die Kategorie search-only — das ist etwas ANDERES als `none`
         // (bewusst leer). Deshalb sagen, was passiert ist, statt nur „gelöscht".
         $this->hinweis = 'Entfernt. Diese Kategorie wird für den Arbeitsschritt nicht mehr automatisch mitgegeben, nur noch bei Bedarf durchsucht.';
+    }
+
+    /** Führt eine Routing-Aktion des Service aus; Ablehnungen landen als Meldung in $fehler. */
+    private function routingVersuch(callable $aktion): bool
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null) {
+            return false;
+        }
+        try {
+            $aktion(app(WissenssteuerungService::class), $team);
+        } catch (NichtGefundenException|GeerbtNurLesenException|NochVerwendetException|\InvalidArgumentException $e) {
+            $this->fehler = $e->getMessage();
+
+            return false;
+        }
+
+        return true;
     }
 
     public function toggleOffen(string $key): void

@@ -2,9 +2,13 @@
 
 namespace Platform\FoodAlchemist\Livewire\Settings;
 
+use Platform\FoodAlchemist\Exceptions\NochVerwendetException;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
+use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Platform\FoodAlchemist\Services\Einstellungen\EinsatzorteService;
 use Platform\FoodAlchemist\Support\TeamScope;
 
 /**
@@ -77,31 +81,33 @@ class Einsatzorte extends Component
             return;
         }
         // Erneut prüfen statt auf edit() zu vertrauen: editId ist eine Livewire-Property
-        // und damit vom Client setzbar — ein Guard nur beim Laden wäre keiner.
-        $z = DB::table('foodalchemist_knowledge_layers')->where('id', $this->editId)->first(['team_id']);
-        if ($z === null || ! $this->darfAendern($z->team_id)) {
-            $this->fehler = 'Geerbter/globaler Einsatzort — umbenennen kann nur das Besitzer-Team.';
-
-            return;
+        // und damit vom Client setzbar — der Guard sitzt am Write im EinsatzorteService (98 · 2.3a).
+        if ($this->versuche(fn ($svc, $team) => $svc->aktualisieren($team, (int) $this->editId, $this->form))) {
+            $this->cancel();
         }
-        DB::table('foodalchemist_knowledge_layers')->where('id', $this->editId)->update([
-            'label' => trim($this->form['label']),
-            'description' => ($this->form['description'] ?? '') !== '' ? trim($this->form['description']) : null,
-            'updated_at' => now(),
-        ]);
-        $this->cancel();
     }
 
     public function toggleActive(int $id): void
     {
-        $z = DB::table('foodalchemist_knowledge_layers')->where('id', $id)->first(['active', 'team_id']);
-        if ($z === null || ! $this->darfAendern($z->team_id)) {
-            $this->fehler = 'Geerbter/globaler Einsatzort — aktiv/inaktiv setzt nur das Besitzer-Team.';
+        $this->versuche(fn ($svc, $team) => $svc->aktivUmschalten($team, $id));
+    }
 
-            return;
+    /** Führt eine Service-Aktion aus; Ablehnungen landen als Meldung in $fehler (Erfolg lässt $fehler stehen). */
+    private function versuche(callable $aktion): bool
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null) {
+            return false;
         }
-        DB::table('foodalchemist_knowledge_layers')->where('id', $id)
-            ->update(['active' => ! $z->active, 'updated_at' => now()]);
+        try {
+            $aktion(app(EinsatzorteService::class), $team);
+        } catch (NichtGefundenException|GeerbtNurLesenException|NochVerwendetException|\InvalidArgumentException $e) {
+            $this->fehler = $e->getMessage();
+
+            return false;
+        }
+
+        return true;
     }
 
     public function render()

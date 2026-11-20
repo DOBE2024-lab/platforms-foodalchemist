@@ -127,7 +127,7 @@
             <div class="flex flex-wrap items-end gap-3">
                 <x-fa::choice name="previewType" label="Vorschau als" :options="$formen" />
                 @if(in_array($previewType, ['foodbook', 'angebot'], true))
-                    <label class="{{ $hakenZeile }} pb-2" title="Zeigt den EK hinter jedem VK, nur hier in der Vorschau. Im Kundenlink erscheint er nie."><input type="checkbox" wire:model.live="vorschauEk" class="{{ $haken }}" data-fa-vorschau-ek> EK einblenden (nur intern)</label>
+                    <label class="{{ $hakenZeile }} pb-2" title="Gespeichert im Design: Foodbook und Angebot bekommen im veröffentlichten Link den Knopf „EK einblenden“. Jeder mit dem Link kann umschalten. Ohne Haken kein Knopf. Wirkt nach dem nächsten Veröffentlichen."><input type="checkbox" wire:model.live="tokens.ek_im_link" class="{{ $haken }}" data-fa-vorschau-ek> EK-Ansicht im Link</label>
                 @endif
                 <x-fa::field label="Quelle" for="design-vorschau-quelle" class="flex-1 min-w-[12rem]">
                     <x-fa::select id="design-vorschau-quelle" wire:model.live="previewSourceId" placeholder="Quelle wählen">

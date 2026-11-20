@@ -668,10 +668,10 @@
     @endif
 </head>
 <body data-foodalchemist-presentation="{{ $snapshot['type'] ?? '' }}" class="pt-nav-{{ $nav }} pt-text-{{ $textRaster }}"@if($auto) data-kiosk-auto="1"@endif>
-    {{-- EK-Schalter (2026-11-19): nur in der angemeldeten internen Vorschau von Foodbook und Angebot; der Kundenlink kennt ihn nicht. --}}
+    {{-- EK-Schalter (2026-11-19): interne Vorschau von Foodbook und Angebot; im Link nur mit Design-Haken ek_im_link (2026-11-20). --}}
     @php
         $ekAn = ! empty($snapshot['ansicht']['ek']);
-        $ekSchalter = ($preview ?? false) && in_array($snapshot['type'] ?? '', ['foodbook', 'angebot'], true);
+        $ekSchalter = (($preview ?? false) || ! empty($snapshot['ek_schalter'])) && in_array($snapshot['type'] ?? '', ['foodbook', 'angebot'], true);
     @endphp
     @if($ekAn)
         <div class="pt-intern-leiste" data-pt-intern>INTERN · mit EK und Wareneinsatz · nicht an Gäste weitergeben @if($ekSchalter)<a href="{{ request()->fullUrlWithQuery(['ek' => null]) }}">EK ausblenden</a>@endif</div>

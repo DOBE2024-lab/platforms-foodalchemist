@@ -555,7 +555,7 @@ class PraesentationsDesigns extends Component
             return null;
         }
         try {
-            $snap = app(PresentationService::class)->designPreview($team, $this->previewType, $this->previewSourceId, $this->layout, $this->tokens, $this->customCss, $this->vorschauEk);
+            $snap = app(PresentationService::class)->designPreview($team, $this->previewType, $this->previewSourceId, $this->layout, $this->tokens, $this->customCss, $this->vorschauEk || ! empty($this->tokens['ek_im_link']));   // Haken „EK-Ansicht im Link“ zeigt den EK auch hier
 
             return view('foodalchemist::presentation.show', ['snapshot' => $snap])->render();
         } catch (\Throwable) {

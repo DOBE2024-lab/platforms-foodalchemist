@@ -1221,7 +1221,7 @@ class Editor extends Component
         if ($this->selectedKapitelId === null || $this->kapitelImageUpload === null) {
             return;
         }
-        $this->validate(['kapitelImageUpload' => 'image|max:8192'], [], ['kapitelImageUpload' => 'Kapitel-Bild']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'kapitelImageUpload');
         try {
             app(OfferCompositionService::class)->setKapitelImage($this->team(), $this->selectedKapitelId, $this->kapitelImageUpload);
         } catch (\RuntimeException $e) {
@@ -1248,7 +1248,7 @@ class Editor extends Component
         if ($this->selectedKapitelId === null || $dateien === []) {
             return;
         }
-        $this->validate(['kapitelGalleryUpload.*' => 'image|max:8192'], [], ['kapitelGalleryUpload.*' => 'Bild']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'kapitelGalleryUpload.*');
         try {
             foreach ($dateien as $datei) {
                 app(OfferCompositionService::class)->addKapitelGalleryImage($this->team(), $this->selectedKapitelId, $datei);

@@ -134,7 +134,7 @@ class Editor extends Component
 
             return;
         }
-        $this->validate(['conceptImageUpload' => 'image|max:8192'], [], ['conceptImageUpload' => 'Bild']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'conceptImageUpload');
         try {
             app(ConceptService::class)->storeImage($this->team(), $this->id, $this->conceptImageUpload);
         } catch (\RuntimeException $e) {
@@ -167,7 +167,7 @@ class Editor extends Component
 
             return;
         }
-        $this->validate(['conceptGalleryUpload.*' => 'image|max:8192'], [], ['conceptGalleryUpload.*' => 'Bild']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'conceptGalleryUpload.*');
         try {
             foreach ($dateien as $datei) {
                 app(ConceptService::class)->addGalleryImage($this->team(), $this->id, $datei);

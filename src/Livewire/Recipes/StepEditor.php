@@ -271,7 +271,7 @@ class StepEditor extends Component
             return;
         }
 
-        $this->validate(['fotoUpload' => 'image|max:' . RezeptFotoService::MAX_KB], [], ['fotoUpload' => 'Foto']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'fotoUpload');
 
         // Ein Weg mit dem Handy-Detail (#1003): speichern, ins Pool, beim aktiven Schritt anhängen (0 = schritt-freier Pool).
         app(RezeptFotoService::class)->schrittFoto($this->team(), $r, $this->fotoUpload, $this->fotoCaption, $this->aktiverSchritt, $this->ebene);

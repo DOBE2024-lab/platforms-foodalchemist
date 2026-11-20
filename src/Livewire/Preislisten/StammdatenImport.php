@@ -71,7 +71,7 @@ class StammdatenImport extends Component
             return;
         }
         try {
-            $this->validate(['datei' => 'required|file|max:10240']);
+            $this->validate(['datei' => 'required|file|max:10240'], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('datei', 10240));
             $lauf = app(StammdatenImportService::class)->stage($team, $this->datei->getRealPath(), $this->lieferantId ?: null, Auth::id(), $this->endung(), $this->anzeigename());
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->fehler = $e->validator->errors()->first('datei');

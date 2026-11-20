@@ -53,7 +53,7 @@ trait HandyRezeptFotos
         if (! HandyLesemodus::frei('handyFotoSpeichern')) {
             return;
         }
-        $this->validate(['handyFoto' => 'required|image|max:' . RezeptFotoService::MAX_KB], [], ['handyFoto' => 'Foto']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'handyFoto', pflicht: true);
 
         $team = Auth::user()?->currentTeamRelation;
         $rezept = $team !== null && $this->recipeId !== null ? FoodAlchemistRecipe::visibleToTeam($team)->find($this->recipeId) : null;

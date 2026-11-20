@@ -316,7 +316,7 @@ class Index extends Component
         if ($this->selectedId === null || $this->{$prop} === null) {
             return;
         }
-        $this->validate([$prop => 'image|max:8192'], [], [$prop => $prop === 'logoUpload' ? 'Logo' : 'Cover-Bild']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, $prop);
         try {
             app(FoodbookService::class)->{$serviceMethod}($this->team(), $this->selectedId, $this->{$prop});
         } catch (\RuntimeException $e) {
@@ -353,7 +353,7 @@ class Index extends Component
         if ($this->selectedKapitelId === null || $this->kapitelImageUpload === null) {
             return;
         }
-        $this->validate(['kapitelImageUpload' => 'image|max:8192'], [], ['kapitelImageUpload' => 'Kapitel-Bild']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'kapitelImageUpload');
         try {
             app(FoodbookService::class)->setKapitelImage($this->team(), $this->selectedKapitelId, $this->kapitelImageUpload);
         } catch (\RuntimeException $e) {
@@ -383,7 +383,7 @@ class Index extends Component
         if ($this->selectedKapitelId === null || $dateien === []) {
             return;
         }
-        $this->validate(['kapitelGalleryUpload.*' => 'image|max:8192'], [], ['kapitelGalleryUpload.*' => 'Bild']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'kapitelGalleryUpload.*');
         try {
             foreach ($dateien as $datei) {
                 app(FoodbookService::class)->addKapitelGalleryImage($this->team(), $this->selectedKapitelId, $datei);

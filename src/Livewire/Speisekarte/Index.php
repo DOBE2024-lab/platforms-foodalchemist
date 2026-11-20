@@ -485,7 +485,7 @@ class Index extends Component
         if (! $this->karteId || ! $this->logoUpload) {
             return;
         }
-        $this->validate(['logoUpload' => 'image|max:4096']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'logoUpload');
         $this->logoPath = $svc->storeLogo($this->team(), $this->karteId, $this->logoUpload);
         $this->logoUpload = null;
     }
@@ -498,7 +498,7 @@ class Index extends Component
         if (! $this->karteId || ! $this->coverUpload) {
             return;
         }
-        $this->validate(['coverUpload' => 'image|max:8192']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'coverUpload');
         $this->coverPath = $svc->storeCover($this->team(), $this->karteId, $this->coverUpload);
         $this->coverUpload = null;
     }

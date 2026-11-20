@@ -128,7 +128,7 @@ class Betriebe extends Component
         if ($o === null || $team === null || $this->logoUpload === null) {
             return;
         }
-        $this->validate(['logoUpload' => 'image|max:4096'], ['logoUpload.image' => 'Bitte eine Bilddatei wählen.', 'logoUpload.max' => 'Max. 4 MB.']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'logoUpload');
 
         $media = app(FoodAlchemistMediaService::class);
         $media->delete($o->logo_context_file_id, (string) $o->logo_path, $team);   // altes Logo weg

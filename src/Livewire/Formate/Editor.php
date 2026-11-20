@@ -472,7 +472,7 @@ class Editor extends Component
         }
         $this->fehler = null;
         try {
-            $this->validate(['bildUpload' => 'image|max:8192']);
+            \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'bildUpload');
             $formats->storeImage($this->team(), $this->id, $this->bildUpload);
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->reset('bildUpload');

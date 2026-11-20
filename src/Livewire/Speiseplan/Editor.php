@@ -166,7 +166,7 @@ class Editor extends Component
         if ($this->planId === null || $this->logoUpload === null) {
             return;
         }
-        $this->validate(['logoUpload' => 'image|max:8192']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'logoUpload');
         try {
             app(SpeiseplanService::class)->storeLogo($this->team(), $this->planId, $this->logoUpload);
         } catch (\RuntimeException $e) {
@@ -183,7 +183,7 @@ class Editor extends Component
         if ($this->planId === null || $this->coverUpload === null) {
             return;
         }
-        $this->validate(['coverUpload' => 'image|max:8192']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'coverUpload');
         try {
             app(SpeiseplanService::class)->storeCover($this->team(), $this->planId, $this->coverUpload);
         } catch (\RuntimeException $e) {

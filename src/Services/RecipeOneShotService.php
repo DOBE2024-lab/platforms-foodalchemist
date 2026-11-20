@@ -266,38 +266,16 @@ class RecipeOneShotService
     }
 
     /**
-     * #4 (Kaskaden-Anreicherung): alle Sub-Basisrezepte UNTERHALB eines Rezepts, transitiv.
-     * Kanten sind `referenced_recipe_id`-Zutaten; ein Visited-Set bricht Zyklen, `$maxTiefe`
-     * deckelt (Regelwerk §4: Sub-Rezepte max. 3 Ebenen). Der „Alles anreichern"-Klick reichert das
+     * #4 (Kaskaden-Anreicherung): alle Sub-Basisrezepte UNTERHALB eines Rezepts, transitiv über alle Ebenen (A-5; 2.1c: vorher
+     * max. 3) — ein Graph-Dienst mit Besucht-Liste, die auch Zyklen bricht. Der „Alles anreichern"-Klick reichert das
      * Top-Rezept synchron an und schiebt diese Nachkommen als Hintergrund-Jobs nach (sonst würde die
      * Voll-Anreicherung eines mehrgliedrigen Gerichts synchron in einen Timeout laufen).
      *
      * @return list<int> Rezept-IDs der Nachkommen (ohne die Wurzel), deduped
      */
-    public function subRezeptIds(int $recipeId, int $maxTiefe = 3): array
+    public function subRezeptIds(int $recipeId): array
     {
-        $besucht = [$recipeId => true];
-        $ergebnis = [];
-        $ebene = [$recipeId];
-
-        for ($tiefe = 0; $tiefe < $maxTiefe && $ebene !== []; $tiefe++) {
-            $kinder = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::query()
-                ->whereIn('recipe_id', $ebene)
-                ->whereNotNull('referenced_recipe_id')
-                ->whereNull('deleted_at')
-                ->distinct()->pluck('referenced_recipe_id')
-                ->map(fn ($v) => (int) $v)
-                ->reject(fn ($id) => isset($besucht[$id]))
-                ->values()->all();
-
-            foreach ($kinder as $id) {
-                $besucht[$id] = true;
-                $ergebnis[] = $id;
-            }
-            $ebene = $kinder;
-        }
-
-        return $ergebnis;
+        return app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->nachfahren([$recipeId]);
     }
 
     /**

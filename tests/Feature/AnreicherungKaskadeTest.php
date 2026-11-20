@@ -66,7 +66,7 @@ it('#4: subRezeptIds dedupt den Diamant (A→B, A→C, B→D, C→D)', function 
     expect($this->svc->subRezeptIds($a->id))->toEqualCanonicalizing([$b->id, $c->id, $d->id]);
 });
 
-it('#4: subRezeptIds respektiert das Tiefenlimit', function () {
+it('#4: subRezeptIds geht über alle Ebenen (2.1c, A-5: kein Tiefenlimit)', function () {
     $a = $this->makeRecipe($this->rootTeam, 'A', ['status' => 'draft']);
     $b = $this->makeRecipe($this->rootTeam, 'B', ['status' => 'draft']);
     $c = $this->makeRecipe($this->rootTeam, 'C', ['status' => 'draft']);
@@ -75,7 +75,7 @@ it('#4: subRezeptIds respektiert das Tiefenlimit', function () {
     ($this->link)($b, $c);
     ($this->link)($c, $d);
 
-    expect($this->svc->subRezeptIds($a->id, maxTiefe: 2))->toEqualCanonicalizing([$b->id, $c->id]);
+    expect($this->svc->subRezeptIds($a->id))->toEqualCanonicalizing([$b->id, $c->id, $d->id]);
 });
 
 it('#4: allesAnreichern dispatcht je Sub-Basisrezept einen EnrichRecipeJob mit refresh=true', function () {
@@ -94,6 +94,28 @@ it('#4: allesAnreichern dispatcht je Sub-Basisrezept einen EnrichRecipeJob mit r
     Queue::assertPushed(EnrichRecipeJob::class, 2);
     Queue::assertPushed(EnrichRecipeJob::class, fn ($job) => $job->recipeId === $parent->id && $job->refresh === true && $job->completeCoverage === true && $job->stepId === null);
     Queue::assertPushed(EnrichRecipeJob::class, fn ($job) => $job->recipeId === $komp->id && $job->refresh === true);
+});
+
+it('2.1c Raute: Fond in zwei Zweigen ergibt EINEN Job; Ebene 3 ist dabei; wartende Komponenten beim zweiten Klick übersprungen', function () {
+    Queue::fake();
+    // Wurzel → A, Wurzel → B, A → Fond, B → Fond, Fond → Brühe (Ebene 3 unter der Wurzel)
+    [$wurzel, $a, $b, $fond, $bruehe] = array_map(fn ($n) => $this->makeRecipe($this->rootTeam, $n, ['status' => 'draft', 'is_sales_recipe' => false]),
+        ['Wurzel', 'Zweig A', 'Zweig B', 'Fond', 'Brühe']);
+    ($this->link)($wurzel, $a, 1);
+    ($this->link)($wurzel, $b, 2);
+    ($this->link)($a, $fond);
+    ($this->link)($b, $fond);
+    ($this->link)($fond, $bruehe);
+
+    $c = Livewire::test(RecipeModal::class)->call('oeffnen', $wurzel->id)->call('allesAnreichern')->assertSet('fehler', null);
+    Queue::assertPushed(EnrichRecipeJob::class, 5);   // Wurzel + A + B + Fond + Brühe
+    Queue::assertPushed(EnrichRecipeJob::class, fn ($job) => $job->recipeId === $fond->id);
+    expect(Queue::pushed(EnrichRecipeJob::class, fn ($job) => $job->recipeId === $fond->id))->toHaveCount(1);
+
+    // Wurzel fertig, Komponenten warten noch: ein neuer Klick reiht nur die Wurzel erneut ein
+    \Illuminate\Support\Facades\Cache::put(EnrichRecipeJob::anreicherungCacheKey((int) $this->rootTeam->id, (int) $wurzel->id), ['status' => 'done'], now()->addMinutes(5));
+    $c->call('allesAnreichern');
+    Queue::assertPushed(EnrichRecipeJob::class, 6);
 });
 
 it('Alles anreichern läuft im Hintergrund: Modal pollt, zweiter Klick dispatcht nicht doppelt', function () {

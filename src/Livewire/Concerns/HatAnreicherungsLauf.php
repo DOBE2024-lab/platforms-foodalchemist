@@ -44,12 +44,9 @@ trait HatAnreicherungsLauf
             completeCoverage: true,
         );
         // #4 Kaskade: die Basisrezept-Komponenten im Hintergrund mit-anreichern (refresh=true).
-        $subIds = app(RecipeOneShotService::class)->subRezeptIds((int) $this->recipeId);
-        foreach ($subIds as $subId) {
-            EnrichRecipeJob::dispatch(
-                teamId: (int) $team->id, userId: (int) (Auth::id() ?? 0), recipeId: (int) $subId, refresh: true,
-            );
-        }
+        // 2.1c: alle Ebenen, jedes Rezept einmal; wartende/laufende werden übersprungen
+        $subIds = EnrichRecipeJob::komponentenEinreihen((int) $team->id, app(RecipeOneShotService::class)->subRezeptIds((int) $this->recipeId), true,
+            fn (int $subId) => EnrichRecipeJob::dispatch(teamId: (int) $team->id, userId: (int) (Auth::id() ?? 0), recipeId: $subId, refresh: true));
         $this->anreicherungLaeuft = true;
         $this->savedToast('Anreicherung läuft im Hintergrund …' . ($subIds !== [] ? ' (' . count($subIds) . ' Komponente(n) folgen)' : ''));
     }

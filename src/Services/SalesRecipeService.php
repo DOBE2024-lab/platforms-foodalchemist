@@ -170,35 +170,13 @@ class SalesRecipeService
 
     /** Detail STRIKT im verkauf()-Scope (Basisrezepte liefern null — §7.8). */
     /**
-     * Ids aller Komponenten-Rezepte im Sub-Rezept-Baum (Regelwerk Basisrezepte §4:
-     * max. 3 Ebenen), zyklensicher über die Besucht-Liste.
+     * Ids aller Komponenten-Rezepte im Sub-Rezept-Baum über alle Ebenen (A-5; 2.1c: vorher max. 3), ein Graph-Dienst mit Besucht-Liste.
      *
      * @return list<int>
      */
-    private function komponentenIds(FoodAlchemistRecipe $recipe, int $maxTiefe = 3): array
+    private function komponentenIds(FoodAlchemistRecipe $recipe): array
     {
-        $besucht = [(int) $recipe->id => true];
-        $ebene = [(int) $recipe->id];
-        $ids = [];
-
-        for ($tiefe = 0; $tiefe < $maxTiefe && $ebene !== []; $tiefe++) {
-            $kinder = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::query()
-                ->whereIn('recipe_id', $ebene)
-                ->whereNotNull('referenced_recipe_id')
-                ->whereNull('deleted_at')
-                ->distinct()->pluck('referenced_recipe_id')
-                ->map(fn ($v) => (int) $v)
-                ->reject(fn ($id) => isset($besucht[$id]))
-                ->values()->all();
-
-            foreach ($kinder as $id) {
-                $besucht[$id] = true;
-                $ids[] = $id;
-            }
-            $ebene = $kinder;
-        }
-
-        return $ids;
+        return app(Rezept\RezeptGraphService::class)->nachfahren([(int) $recipe->id]);
     }
 
     /**
@@ -215,9 +193,9 @@ class SalesRecipeService
      *
      * @return Collection<int, array{id:int,name:string,anzahl:int}>
      */
-    public function beteiligtePosten(FoodAlchemistRecipe $recipe, int $maxTiefe = 3): Collection
+    public function beteiligtePosten(FoodAlchemistRecipe $recipe): Collection
     {
-        $rezeptIds = $this->komponentenIds($recipe, $maxTiefe);
+        $rezeptIds = $this->komponentenIds($recipe);
         if ($rezeptIds === []) {
             return collect();
         }
@@ -255,9 +233,9 @@ class SalesRecipeService
      *
      * @return array{work_time_min: int, setup_time_min: int, standzeit_min: int, anzahl: int, ohne_zeit: int}
      */
-    public function komponentenZeiten(FoodAlchemistRecipe $recipe, int $maxTiefe = 3): array
+    public function komponentenZeiten(FoodAlchemistRecipe $recipe): array
     {
-        $ids = $this->komponentenIds($recipe, $maxTiefe);
+        $ids = $this->komponentenIds($recipe);
         $leer = ['work_time_min' => 0, 'setup_time_min' => 0, 'standzeit_min' => 0, 'anzahl' => 0, 'ohne_zeit' => 0];
         if ($ids === []) {
             return $leer;

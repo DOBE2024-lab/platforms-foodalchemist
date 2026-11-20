@@ -174,18 +174,16 @@ it('GT-6: Zyklen-Schutz — Bulk bricht mit beteiligten IDs ab, Inspector lehnt 
         ->toMatchArray(['erlaubt' => false, 'grund' => 'Zyklus']);
 });
 
-it('GT-7 (A-5 2026-08-03 gelockert): tiefe Kette erlaubt — projizierte Tiefe bleibt nur informativ', function () {
+it('GT-7 (A-5 2026-08-03 gelockert): tiefe Kette erlaubt — keine Tiefen-Rechnung mehr (2.1c)', function () {
     [$a, $b, $c, $d] = [($this->mkRecipe)('A'), ($this->mkRecipe)('B'), ($this->mkRecipe)('C'), ($this->mkRecipe)('D')];
     $g = $this->einheiten['g']->id;
     ($this->mkZutat)($a, ['quantity' => 1, 'unit_vocab_id' => $g, 'referenced_recipe_id' => $b->id, 'match_method' => 'recipe_ref']);
     ($this->mkZutat)($b, ['quantity' => 1, 'unit_vocab_id' => $g, 'referenced_recipe_id' => $c->id, 'match_method' => 'recipe_ref']);
 
-    // Kette A→B→C: Link C→D projiziert Tiefe 4 — früher geblockt, jetzt ERLAUBT
+    // Kette A→B→C: Link C→D ergäbe Tiefe 4 — früher geblockt, jetzt ERLAUBT
     // (kein hartes Tiefenlimit mehr; Menü-/Komposit-Stapelung ist legitim tief).
     $pruefung = $this->svc->pruefeVerknuepfung($c->id, $d->id);
-    expect($pruefung['erlaubt'])->toBeTrue()
-        ->and($pruefung['grund'])->toBeNull()
-        ->and($pruefung['projizierte_tiefe'])->toBe(4);
+    expect($pruefung)->toBe(['erlaubt' => true, 'grund' => null]);
 
     // Selbstreferenz bleibt hart verboten (Invariante unangetastet).
     expect($this->svc->pruefeVerknuepfung($a->id, $a->id))

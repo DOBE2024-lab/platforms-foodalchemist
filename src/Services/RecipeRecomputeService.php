@@ -42,10 +42,8 @@ use Platform\FoodAlchemist\Services\Rezept\RezeptGraphService;
  */
 class RecipeRecomputeService
 {
-    // A-5 (2026-08-03): Kein hartes Sub-Rezept-Tiefenlimit mehr (Regelwerk BR §4.3 gelockert).
-    // Die Tiefen-BFS terminiert allein über das Visited-Set; Zyklen fängt pruefeVerknuepfung.
-
-    private const PROPAGATION_LIMIT = 10;
+    // A-5 (2026-08-03): Kein Sub-Rezept-Tiefenlimit (Regelwerk BR §4.3 gelockert). Code-Qualität 2.1c: auch die Eltern-Suche hat keinen
+    // Deckel mehr (früher PROPAGATION_LIMIT = 10) — ein Graph-Dienst mit Besucht-Liste ({@see RezeptGraphService::vorfahren}).
 
     /** Team + WG-Default-Memo des aktuell laufenden Rezepts (Verlust-Kaskade, GL-02). */
     private ?Team $recomputeTeam = null;
@@ -245,8 +243,7 @@ class RecipeRecomputeService
     }
 
     /**
-     * #511: die vom Recompute betroffene Menge (Start-Rezept + alle transitiven
-     * Eltern per BFS, PROPAGATION_LIMIT-begrenzt) — OHNE zu rechnen. Der Editor
+     * #511: die vom Recompute betroffene Menge (Start-Rezept + alle transitiven Eltern) — OHNE zu rechnen. Der Editor
      * trägt damit das kosten-aktualisiert-Signal gezielt an die Eltern-Cockpits.
      *
      * @return array<int> recipe_ids (Start zuerst)
@@ -257,44 +254,15 @@ class RecipeRecomputeService
     }
 
     /**
-     * V-049: dieselbe BFS für eine **Menge** Start-Rezepte — eine Query je Ebene statt
-     * einer je Ebene UND Start.
-     *
-     * Das Ergebnis ist mengengleich mit der Vereinigung der Einzel-BFS, nicht nur
-     * ähnlich: die gemeinsame BFS vergibt je Knoten die *kleinste* Distanz zu irgendeinem
-     * Start. Ist sie ≤ PROPAGATION_LIMIT, hätte auch die Einzel-BFS von genau diesem Start
-     * den Knoten erreicht; ist sie größer, erreicht ihn keine. Der Äquivalenz-Riegel dazu
-     * steht in `tests/Feature/RecomputeMengeTest.php` (inkl. Kette über die Grenze hinaus).
+     * V-049: dieselbe Suche für eine **Menge** Start-Rezepte — eine Query je Ebene statt einer je Ebene UND Start. Seit 2.1c ohne Tiefen-Deckel,
+     * damit ist das Ergebnis schlicht die Vereinigung der Einzel-Suchen (Riegel: `tests/Feature/RecomputeMengeTest.php`).
      *
      * @param  array<int|string>  $recipeIds
      * @return array<int> recipe_ids (Start-Menge zuerst, in Eingabe-Reihenfolge)
      */
     public function betroffeneRezepteMany(array $recipeIds): array
     {
-        $besucht = [];
-        $ebene = [];
-        foreach ($recipeIds as $id) {
-            $id = (int) $id;
-            if (! isset($besucht[$id])) {
-                $besucht[$id] = true;
-                $ebene[] = $id;
-            }
-        }
-        if ($ebene === []) {
-            return [];
-        }
-
-        for ($tiefe = 0; $tiefe < self::PROPAGATION_LIMIT && $ebene !== []; $tiefe++) {
-            $eltern = FoodAlchemistRecipeIngredient::whereIn('referenced_recipe_id', $ebene)
-                ->whereNull('deleted_at')->distinct()->pluck('recipe_id')
-                ->reject(fn ($id) => isset($besucht[$id]))->values()->all();
-            foreach ($eltern as $parentId) {
-                $besucht[$parentId] = true;
-            }
-            $ebene = $eltern;
-        }
-
-        return array_map('intval', array_keys($besucht));
+        return app(RezeptGraphService::class)->vorfahren($recipeIds);
     }
 
     /**
@@ -400,9 +368,9 @@ class RecipeRecomputeService
     }
 
     /**
-     * §3.5: Verknüpfungs-Guards parent→sub — Selbstreferenz und Zyklus blocken, Tiefe nur informativ. Logik in {@see RezeptGraphService} (ausgelagert 27.10.).
+     * §3.5: Verknüpfungs-Guards parent→sub — Selbstreferenz und Zyklus blocken (kein Tiefenlimit, A-5). Logik in {@see RezeptGraphService} (ausgelagert 27.10.).
      *
-     * @return array{erlaubt: bool, grund: ?string, projizierte_tiefe: int}
+     * @return array{erlaubt: bool, grund: ?string}
      */
     public function pruefeVerknuepfung(int $parentId, int $subId): array
     {

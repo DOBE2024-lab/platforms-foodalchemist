@@ -1567,7 +1567,7 @@ class Editor extends Component
      * Header gehören zu keiner Sektion (globaler Streifen oben zeigt das Gesamt).
      *
      * @param  array  $zeilen  preisCockpit-Zeilen (mit slot_id, preis, ek)
-     * @return array<string, array{ek: float, vk: float, n: int}>
+     * @return array<string, array{ek: float, vk: float, n: int, luecke: bool}>  luecke = eine Position ohne VK (CQ 2.6)
      */
     private function sektionsSummen(FoodAlchemistConcept $concept, array $zeilen): array
     {
@@ -1577,8 +1577,7 @@ class Editor extends Component
         foreach ($concept->slots as $slot) {
             if (in_array($slot->type, ['header', 'header_preis'], true)) {
                 $key = 'h'.$slot->id;
-                $summen[$key] ??= ['ek' => 0.0, 'vk' => 0.0, 'n' => 0];
-
+                $summen[$key] ??= ['ek' => 0.0, 'vk' => 0.0, 'n' => 0, 'luecke' => false];
                 continue;
             }
             if ($key === null || in_array($slot->type, ['text', 'spacer'], true)) {
@@ -1590,6 +1589,7 @@ class Editor extends Component
             }
             $summen[$key]['ek'] += (float) ($row['ek'] ?? 0);
             $summen[$key]['vk'] += (float) ($row['price'] ?? 0);
+            $summen[$key]['luecke'] = $summen[$key]['luecke'] || ! empty($row['vk_fehlt']);
             $summen[$key]['n']++;
         }
 

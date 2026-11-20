@@ -716,79 +716,8 @@ class ConceptService
             return $preis->cockpit($concept, $team, $outlet);
         }
 
-        $concept->loadMissing(['slots' => fn ($q) => $q->orderBy('position'),
-            'slots.unit:id,slug,dimension,default_in_g',
-            'slots.package:id,name,price_per_person,ek_per_person,price_stale',
-            'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache',   // Kaskade: eingebettetes Paket
-            'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation']);
-
-        $zeilen = [];
-        $vkTotal = 0.0;
-        $ekTotal = 0.0;
-        $hatStale = false;
-        $hatLeer = false;
-        $hatEkLuecke = false;
-
-        foreach ($concept->slots as $slot) {
-            if (in_array($slot->type, self::STRUKTUR_TYPEN, true)) {
-                continue; // Struktur-Blöcke (Text/Leerzeile/Header) sind keine Preis-Positionen
-            }
-            if ($slot->embedded_concept_id !== null && $slot->embeddedConcept) {
-                // Kaskade: eingebettetes Paket = kind=paket-Concept → lebender Preis/EK (spiegelt Edits).
-                $ep = $slot->embeddedConcept;
-                $vk = (float) ($ep->price_per_person_cache ?? 0);
-                $ek = (float) ($ep->ek_per_person_cache ?? 0);
-                $zeilen[] = ['slot_id' => $slot->id, 'type' => 'paket', 'role' => $slot->role, 'wording' => $slot->wording,
-                    'label' => $ep->name, 'price' => $vk, 'ek' => round($ek, 2), 'ek_fehlt' => false, 'stale' => false];
-            } elseif ($slot->package_id !== null && $slot->package) {
-                $vk = (float) ($slot->package->price_per_person ?? 0);
-                $ek = (float) ($slot->package->ek_per_person ?? 0);
-                $hatStale = $hatStale || (bool) $slot->package->price_stale;
-                $zeilen[] = ['slot_id' => $slot->id, 'type' => 'paket', 'role' => $slot->role, 'wording' => $slot->wording,
-                    'label' => $slot->package->name, 'price' => $vk, 'ek' => round($ek, 2), 'ek_fehlt' => false, 'stale' => (bool) $slot->package->price_stale];
-            } elseif ($slot->sales_recipe_id !== null && $slot->dish) {
-                // Umbau-Spec Phase 5: geltende Darreichung auflösen (explizit → Konzept-Form → Standard)
-                $slot->setRelation('concept', $concept);
-                $dar = app(DarreichungResolver::class)->fuerSlot($slot);
-                $darPortionG = $dar?->quantity_per_unit_g !== null ? (float) $dar->quantity_per_unit_g : null;
-                // Einheit-abhängige Mengen-Umrechnung — EINE Stelle (Konsistenz zu ConcepterAggregate/Paket).
-                $pae = ConcepterAggregateService::portionsAequivalent(
-                    $slot->quantity !== null ? (float) $slot->quantity : null,
-                    $slot->unit,
-                    $slot->dish,
-                    $darPortionG,
-                );
-                $ekFehlt = $pae === null;       // Gramm-Position ohne Portionsgewicht → ehrlich „unbekannt"
-                // Teiler von ek_total: Stück-Modus (kg↔Stück) → yield_pieces, sonst Portionszahl.
-                $stueck = ConcepterAggregateService::stueckModus($slot->unit, $slot->dish);
-                $anzahl = $stueck
-                    ? (float) $slot->dish->yield_pieces
-                    : max(1, (int) ($slot->dish->sales_unit_count ?? 1));
-                // Ebene 2: Gericht-Slot im Betriebs-Kontext on-the-fly; Paket-/Embedded-Caches bleiben Team-Baseline (kein Fan-out). outlet=null ⇒ wie heute.
-                $vkStd = $dar !== null && $outlet !== null
-                    ? app(CatalogPricingService::class)->salesNetFor(\Platform\Core\Models\Team::find($outlet->team_id), $dar, $outlet)
-                    : ($dar?->sales_net !== null ? (float) $dar->sales_net : null);
-                $vkStd ??= (float) (app(DarreichungResolver::class)->vkNetto($slot->dish) ?? 0.0);   // Spec 85 D-1
-                if (($fp = app(\Platform\FoodAlchemist\Support\AngebotFestpreise::class)->gericht((int) $slot->dish->id, $dar?->id)) !== null) { $vkStd = $fp['vk'] ?? 0.0; $ekFehlt = $ekFehlt || $fp['vk'] === null; }   // eingefrorenes Angebot: fester VK je Form, ohne VK = Lücke
-                $vk = $ekFehlt ? 0.0 : $vkStd * $pae;
-                $ek = $ekFehlt ? 0.0
-                    : (($dar?->ek_portion !== null && ! $stueck)
-                        ? (float) $dar->ek_portion * $pae
-                        : (float) ($slot->dish->ek_total_eur ?? 0) / $anzahl * $pae);
-                $hatEkLuecke = $hatEkLuecke || $ekFehlt;
-                $zeilen[] = ['slot_id' => $slot->id, 'type' => 'gericht', 'role' => $slot->role, 'wording' => $slot->wording,
-                    'label' => $slot->dish->name, 'price' => round($vk, 2),
-                    'ek' => $ekFehlt ? null : round($ek, 2), 'ek_fehlt' => $ekFehlt, 'stale' => false];
-            } else {
-                $vk = 0.0;
-                $ek = 0.0;
-                $hatLeer = true;
-                $zeilen[] = ['slot_id' => $slot->id, 'type' => 'leer', 'role' => $slot->role,
-                    'label' => $slot->title ?? '(leer)', 'price' => null, 'ek' => null, 'ek_fehlt' => false, 'stale' => false];
-            }
-            $vkTotal += $vk;
-            $ekTotal += $ek;
-        }
+        $z = app(\Platform\FoodAlchemist\Services\Concept\CockpitZeilen::class)->rechne($concept, $outlet);   // CQ 2.6: Zeilen + VK-Lücke
+        [$zeilen, $vkTotal, $ekTotal] = [$z['zeilen'], $z['vk'], $z['ek']];
 
         $summe = round($vkTotal, 2);
         // Manueller Concept-VK (z. B. Lunchbuffet, Preis auf EK-Basis) überschreibt die Summe; EK bleibt aus den Positionen.
@@ -803,9 +732,10 @@ class ConceptService
             'summe_pro_person' => $summe,        // berechnete Summe der Positionen (auch im manuellen Modus, zur Anzeige)
             'price_mode' => $manuell ? ($concept->price_mode === 'fixed' ? 'fixed' : 'manuell') : 'auto',
             'ek_per_person' => round($ekTotal, 2),
-            'hat_stale' => $hatStale,
-            'hat_leer' => $hatLeer,
-            'hat_ek_luecke' => $hatEkLuecke,   // ≥1 Gramm-Position ohne Portionsgewicht → EK unvollständig
+            'hat_stale' => $z['hat_stale'],
+            'hat_leer' => $z['hat_leer'],
+            'hat_ek_luecke' => $z['hat_ek_luecke'],   // ≥1 Gramm-Position ohne Portionsgewicht → EK unvollständig
+            'hat_vk_luecke' => $z['hat_vk_luecke'],   // ≥1 Position ohne berechenbaren VK → Summe zu niedrig, Zeile price=null
         ];
     }
 

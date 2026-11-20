@@ -472,7 +472,7 @@
                                 @forelse($menueGruppen as $g)
                                     @php
                                         $slotEks = collect($g['slots'])->map(fn ($sx) => $cockpitZeilen[$sx->id]['ek'] ?? null)->filter();
-                                        $slotVks = collect($g['slots'])->map(fn ($sx) => $cockpitZeilen[$sx->id]['price'] ?? null)->filter();
+                                        $slotVks = collect($g['slots'])->map(fn ($sx) => $cockpitZeilen[$sx->id]['price'] ?? null)->filter(); $slotVkLuecke = collect($g['slots'])->contains(fn ($sx) => (bool) ($cockpitZeilen[$sx->id]['vk_fehlt'] ?? false));   // CQ 2.6
                                         $anzahl = $g['type'] === 'paket' ? $g['dishes']->count() : count($g['slots']);
                                     @endphp
                                     <section wire:key="menue-{{ $loop->index }}" class="flex flex-col gap-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-ground)] p-3">
@@ -483,10 +483,10 @@
                                                 <span class="ml-auto {{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $anzahl }} Posten{{ $g['price'] !== null ? ', ' . $euro($g['price']) . ' je Person' : '' }}</span>
                                             @elseif($g['title'])
                                                 <h4 class="fa-t-h3">{{ $g['title'] }}</h4>
-                                                <span class="ml-auto {{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $anzahl }} {{ $anzahl === 1 ? 'Position' : 'Positionen' }}{{ (! $istPaket && $slotVks->isNotEmpty()) ? ', ' . $euro($slotVks->sum()) . ' je Person' : '' }}{{ $slotEks->isNotEmpty() ? ', EK ' . $euro($slotEks->sum()) : '' }}</span>
+                                                <span class="ml-auto {{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $anzahl }} {{ $anzahl === 1 ? 'Position' : 'Positionen' }}{{ (! $istPaket && $slotVks->isNotEmpty()) ? ', ' . $euro($slotVks->sum()) . ' je Person' . ($slotVkLuecke ? ' (VK unvollständig)' : '') : '' }}{{ $slotEks->isNotEmpty() ? ', EK ' . $euro($slotEks->sum()) : '' }}</span>
                                             @else
                                                 <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink-2)]">Gerichte</h4>
-                                                <span class="ml-auto {{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $anzahl }} {{ $anzahl === 1 ? 'Position' : 'Positionen' }}{{ (! $istPaket && $slotVks->isNotEmpty()) ? ', ' . $euro($slotVks->sum()) . ' je Person' : '' }}</span>
+                                                <span class="ml-auto {{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $anzahl }} {{ $anzahl === 1 ? 'Position' : 'Positionen' }}{{ (! $istPaket && $slotVks->isNotEmpty()) ? ', ' . $euro($slotVks->sum()) . ' je Person' . ($slotVkLuecke ? ' (VK unvollständig)' : '') : '' }}</span>
                                             @endif
                                         </header>
                                         @if(! empty($g['texte'] ?? []))
@@ -669,7 +669,7 @@
                                                                 <x-fa::badge tone="info" class="self-start">{{ $slot->type === 'header_preis' ? 'Überschrift mit Preis' : 'Überschrift' }}</x-fa::badge>
                                                                 <x-fa::input size="sm" wire:model.blur="blockForm.{{ $slot->id }}.title" wire:change="blockSpeichern({{ $slot->id }})" class="font-medium" placeholder="Überschrift …" aria-label="Überschrift" />
                                                                 @if($ss && $ss['n'] > 0)
-                                                                    <span class="{{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $ss['n'] }} {{ $ss['n'] === 1 ? 'Position' : 'Positionen' }}, EK {{ $euro($ss['ek']) }}{{ $istPaket ? '' : ', ' . $euro($ss['vk']) . ' je Person' }}</span>
+                                                                    <span class="{{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $ss['n'] }} {{ $ss['n'] === 1 ? 'Position' : 'Positionen' }}, EK {{ $euro($ss['ek']) }}{{ $istPaket ? '' : ', ' . $euro($ss['vk']) . ' je Person' . (($ss['luecke'] ?? false) ? ' (VK unvollständig)' : '') }}</span>
                                                                 @endif
                                                                 @if($slot->type === 'header_preis')
                                                                     <span class="inline-flex items-center gap-1.5">

@@ -4,7 +4,6 @@
     $segment = 'h-8 px-3 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-md)] font-medium transition-colors duration-150';
     $segmentAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
     $segmentAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $quellen = ['' => 'Alle Quellen', 'wareneingang' => 'Wareneingang', 'inventur' => 'Inventur'];
     $quelleText = ['wareneingang' => 'Wareneingang', 'inventur' => 'Inventur', 'produktion' => 'Produktion'];
     $zahl = fn ($v) => $v === null ? '' : (rtrim(rtrim(number_format((float) $v, 3, ',', '.'), '0'), ',') ?: '0');
@@ -48,7 +47,7 @@
                     <span class="text-[length:var(--fa-text-md)] font-semibold tabular-nums">Wert <x-fa::money :value="$bestandWert" /></span>
                 </x-slot:actions>
                 @include('foodalchemist::livewire.lager.partials.filter', ['mitLagerort' => true, 'mitLadenhueter' => true, 'mitOhnePreis' => true, 'mitPlatzOrt' => $lagerortId === null || $lagerortId === ''])
-                <p class="{{ $leise }}">{{ count($bestand) }} von {{ $bestandGesamt }} Positionen{{ $ohnePreis > 0 ? " · {$ohnePreis} ohne Preis, nicht im Wert enthalten" : "" }}</p>
+                <p class="fa-t-muted">{{ count($bestand) }} von {{ $bestandGesamt }} Positionen{{ $ohnePreis > 0 ? " · {$ohnePreis} ohne Preis, nicht im Wert enthalten" : "" }}</p>
                 @if($bestand === [])
                     <x-fa::empty compact icon="heroicon-o-archive-box" :title="$bestandGesamt > 0 ? 'Nichts gefunden' : 'Kein Bestand'">{{ $bestandGesamt > 0 ? 'Kein Bestand passt zu den Filtern.' : 'Bestand entsteht durch Wareneingang oder Inventur.' }}</x-fa::empty>
                 @else
@@ -62,11 +61,11 @@
                                         <td class="font-medium">{{ $r['name'] }}</td>
                                         <td>{{ $r['lieferant'] ?? '–' }}</td>
                                         <td>{{ $r['lagerort'] }}</td>
-                                        <td>{{ $r['stellplatz'] ?? '' }}@if($r['stellplatz'] === null)<span class="{{ $leise }}">–</span>@endif</td>
+                                        <td>{{ $r['stellplatz'] ?? '' }}@if($r['stellplatz'] === null)<span class="fa-t-muted">–</span>@endif</td>
                                         <td class="text-right tabular-nums {{ $r['menge'] < 0 ? 'text-[var(--fa-crit)]' : '' }}">{{ $r['anzeige'] }}</td>
-                                        <td class="text-right tabular-nums">@if($r['preis'] !== null){{ number_format($r['preis'] * ($r['base_unit'] === 'Stk' ? 1 : 1000), 2, ',', '.') }} €@else<span class="{{ $leise }}">–</span>@endif</td>
+                                        <td class="text-right tabular-nums">@if($r['preis'] !== null){{ number_format($r['preis'] * ($r['base_unit'] === 'Stk' ? 1 : 1000), 2, ',', '.') }} €@else<span class="fa-t-muted">–</span>@endif</td>
                                         <td class="text-right"><x-fa::money :value="$r['wert']" missing="ohne Preis" />@if($r['preis_letzter'] ?? false)<x-fa::badge tone="warn" class="ml-1" title="Bewertet mit dem letzten bekannten Preis, der Artikel ist eingestellt" data-letzter-preis>letzter Preis</x-fa::badge>@endif</td>
-                                        <td class="{{ $leise }}">{{ $r['zuletzt'] ?? '–' }}</td>
+                                        <td class="fa-t-muted">{{ $r['zuletzt'] ?? '–' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -90,8 +89,8 @@
                                     <tr wire:key="la-{{ $la['gp_id'] }}" data-lagerartikel="{{ $la['gp_id'] }}">
                                         <td class="font-medium">{{ $la['name'] }}</td>
                                         <td class="text-right tabular-nums">{{ $zahl($la['bestand']) }} {{ $la['einheit'] }}</td>
-                                        <td class="text-right"><span class="inline-flex items-center gap-1"><input type="text" inputmode="decimal" wire:model="vorrat.{{ $la['gp_id'] }}.min" class="{{ $feld }} w-20" aria-label="Mindestbestand" /><span class="{{ $leise }} w-6 text-left">{{ $la['einheit'] }}</span></span></td>
-                                        <td class="text-right"><span class="inline-flex items-center gap-1"><input type="text" inputmode="decimal" wire:model="vorrat.{{ $la['gp_id'] }}.soll" class="{{ $feld }} w-20" aria-label="Sollbestand" /><span class="{{ $leise }} w-6 text-left">{{ $la['einheit'] }}</span></span></td>
+                                        <td class="text-right"><span class="inline-flex items-center gap-1"><input type="text" inputmode="decimal" wire:model="vorrat.{{ $la['gp_id'] }}.min" class="{{ $feld }} w-20" aria-label="Mindestbestand" /><span class="fa-t-muted w-6 text-left">{{ $la['einheit'] }}</span></span></td>
+                                        <td class="text-right"><span class="inline-flex items-center gap-1"><input type="text" inputmode="decimal" wire:model="vorrat.{{ $la['gp_id'] }}.soll" class="{{ $feld }} w-20" aria-label="Sollbestand" /><span class="fa-t-muted w-6 text-left">{{ $la['einheit'] }}</span></span></td>
                                         <td>
                                             @switch($la['status'])
                                                 @case('leer')<x-fa::badge tone="crit">leer</x-fa::badge>@break
@@ -114,7 +113,7 @@
                     {{-- Spec 74: Vorschlag nach Warengruppe — typische Vorrats-Gruppen (Gewürze, Öle, Essig …) zuerst --}}
                     <div class="flex flex-col gap-1.5 pt-2" data-lager-wg-vorschlag>
                         <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Vorschlag nach Warengruppe</p>
-                        <p class="{{ $leise }}">Grundprodukte, die dieses Team nutzt (Bestand oder im letzten Jahr bestellt) und die noch kein Lagerartikel sind.</p>
+                        <p class="fa-t-muted">Grundprodukte, die dieses Team nutzt (Bestand oder im letzten Jahr bestellt) und die noch kein Lagerartikel sind.</p>
                         <div class="flex flex-wrap gap-2">
                             @foreach(array_slice($warengruppenVorschlag, 0, 12) as $wg)
                                 <x-fa::button size="sm" :variant="$wg['typisch'] ? 'primary' : 'ghost'" wire:click="warengruppeAlsLagerartikel('{{ $wg['code'] }}')" wire:confirm="{{ $wg['anzahl'] }} Grundprodukt(e) aus „{{ $wg['name'] }}“ als Lagerartikel markieren?" wire:key="wg-{{ $wg['code'] }}">{{ $wg['name'] }} ({{ $wg['anzahl'] }})</x-fa::button>
@@ -175,15 +174,15 @@
                             <div class="flex flex-wrap items-center gap-1.5">
                                 @if($bg)
                                     @if($bg['pack_units'])
-                                        <x-fa::input wire:model="buchung.kartons" inputmode="decimal" class="w-16 text-right" aria-label="{{ $bg['pack_label'] }}" /> <span class="{{ $leise }}">{{ $bg['pack_label'] }}</span>
+                                        <x-fa::input wire:model="buchung.kartons" inputmode="decimal" class="w-16 text-right" aria-label="{{ $bg['pack_label'] }}" /> <span class="fa-t-muted">{{ $bg['pack_label'] }}</span>
                                     @endif
-                                    <x-fa::input wire:model="buchung.einheiten" inputmode="decimal" class="w-16 text-right" aria-label="{{ $bg['unit_label'] }}" /> <span class="{{ $leise }}">{{ $bg['unit_label'] }}</span>
-                                    <x-fa::input wire:model="buchung.lose" inputmode="decimal" class="w-20 text-right" aria-label="lose in {{ $be }}" /> <span class="{{ $leise }}">{{ $be }} lose</span>
+                                    <x-fa::input wire:model="buchung.einheiten" inputmode="decimal" class="w-16 text-right" aria-label="{{ $bg['unit_label'] }}" /> <span class="fa-t-muted">{{ $bg['unit_label'] }}</span>
+                                    <x-fa::input wire:model="buchung.lose" inputmode="decimal" class="w-20 text-right" aria-label="lose in {{ $be }}" /> <span class="fa-t-muted">{{ $be }} lose</span>
                                 @else
-                                    <x-fa::input id="b-menge" wire:model="buchung.menge" inputmode="decimal" class="w-24 text-right" data-lager-buchung-menge /> <span class="{{ $leise }}">{{ $be }}</span>
+                                    <x-fa::input id="b-menge" wire:model="buchung.menge" inputmode="decimal" class="w-24 text-right" data-lager-buchung-menge /> <span class="fa-t-muted">{{ $be }}</span>
                                 @endif
                             </div>
-                            @if($bg)<p class="{{ $leise }}">@if($bg['pack_units'])1 {{ $bg['pack_label'] }} = {{ $zahl($bg['pack_units']) }} {{ $bg['unit_label'] }} · @endif 1 {{ $bg['unit_label'] }} = {{ $zahl($svc->anzeigeMenge($bg['unit_base'], $buchungGebinde['base_unit'])) }} {{ $be }}</p>@endif
+                            @if($bg)<p class="fa-t-muted">@if($bg['pack_units'])1 {{ $bg['pack_label'] }} = {{ $zahl($bg['pack_units']) }} {{ $bg['unit_label'] }} · @endif 1 {{ $bg['unit_label'] }} = {{ $zahl($svc->anzeigeMenge($bg['unit_base'], $buchungGebinde['base_unit'])) }} {{ $be }}</p>@endif
                         </x-fa::field>
                         @if($buchung['art'] !== 'umlagerung')
                             <x-fa::field label="Grund" for="b-grund">
@@ -230,11 +229,11 @@
                                         <td class="tabular-nums">{{ $m->moved_at?->format('d.m.Y') ?? '–' }}</td>
                                         <td class="font-medium">{{ $m->gp?->name ?? $m->supplierItem?->designation ?? $m->recipe?->name ?? '—' }}</td>
                                         <td>{{ $m->location?->name ?? '—' }}</td>
-                                        <td>{{ $quelleText[$m->source] ?? $m->source }}@if($m->order?->supplier) <span class="{{ $leise }}">· {{ $m->order->supplier->name }}</span>@endif</td>
+                                        <td>{{ $quelleText[$m->source] ?? $m->source }}@if($m->order?->supplier) <span class="fa-t-muted">· {{ $m->order->supplier->name }}</span>@endif</td>
                                         <td>{{ $m->reason ? ($alleGruende[$m->reason] ?? $m->reason) : '' }}</td>
                                         <td class="text-right tabular-nums {{ $m->direction === 'out' ? 'text-[var(--fa-crit)]' : 'text-[var(--fa-ok)]' }}">{{ $m->direction === 'out' ? '−' : '+' }}{{ $zahl($svc->anzeigeMenge((float) $m->qty_base, $m->base_unit)) }} {{ $svc->anzeigeEinheit($m->base_unit) }}</td>
                                         <td class="text-right tabular-nums">@if($m->value_eur !== null)<x-fa::money :value="$m->value_eur" />@endif</td>
-                                        <td class="{{ $leise }}">{{ $m->note }}{{ isset($storniert[$m->id]) ? " · storniert" : "" }}</td>
+                                        <td class="fa-t-muted">{{ $m->note }}{{ isset($storniert[$m->id]) ? " · storniert" : "" }}</td>
                                         <td class="text-right">
                                             @if((int) $m->team_id === $teamId && $m->istHandbuchung() && ! isset($storniert[$m->id]) && ($m->direction === 'out' || $m->source !== 'umlagerung'))
                                                 <x-fa::button size="sm" variant="ghost" wire:click="stornieren({{ $m->id }})" wire:confirm="Buchung stornieren? Es wird eine Gegenbuchung angelegt." data-lager-storno="{{ $m->id }}">Storno</x-fa::button>
@@ -274,7 +273,7 @@
                                         <td>{{ $c->location?->name ?? '—' }}</td>
                                         <td class="text-right tabular-nums">{{ $c->lines_count }}</td>
                                         <td>@if($c->istGebucht())<x-fa::badge tone="ok">gebucht</x-fa::badge>@else<x-fa::badge tone="warn">offen</x-fa::badge>@endif</td>
-                                        <td class="text-right">@if($c->istGebucht())<x-fa::money :value="$c->value_total" />@else<span class="{{ $leise }}">–</span>@endif</td>
+                                        <td class="text-right">@if($c->istGebucht())<x-fa::money :value="$c->value_total" />@else<span class="fa-t-muted">–</span>@endif</td>
                                         <td class="text-right"><x-fa::button size="sm" wire:click="inventurOeffnen({{ $c->id }})">{{ $c->istGebucht() || (int) $c->team_id !== $teamId ? 'Ansehen' : 'Zählen' }}</x-fa::button></td>
                                     </tr>
                                 @endforeach
@@ -306,13 +305,13 @@
                         ['label' => 'Differenz zum Soll', 'value' => number_format($summen['differenz_wert'], 2, ',', '.') . ' €', 'tone' => $summen['differenz_wert'] < 0 ? 'crit' : null],
                     ]" />
                     @if($gebucht && ! $inventur->istGebucht())
-                        <p class="{{ $leise }}" data-lager-inventur-fremd>Inventur des Standorts {{ $standortNamen[$inventur->team_id] ?? '—' }} — hier nur lesend, gezählt wird im Standort.</p>
+                        <p class="fa-t-muted" data-lager-inventur-fremd>Inventur des Standorts {{ $standortNamen[$inventur->team_id] ?? '—' }} — hier nur lesend, gezählt wird im Standort.</p>
                     @elseif($gebucht)
-                        <p class="{{ $leise }}">Gebucht am {{ $inventur->booked_at?->format('d.m.Y H:i') }} — Bestandswert {{ number_format((float) $inventur->value_total, 2, ',', '.') }} €.@if($inventur->uncounted_zeroed) Nicht gezählte Positionen wurden als 0 gebucht.@endif</p>
+                        <p class="fa-t-muted">Gebucht am {{ $inventur->booked_at?->format('d.m.Y H:i') }} — Bestandswert {{ number_format((float) $inventur->value_total, 2, ',', '.') }} €.@if($inventur->uncounted_zeroed) Nicht gezählte Positionen wurden als 0 gebucht.@endif</p>
                     @else
                         <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
                             @if($summen['offen'] > 0)
-                                <p class="{{ $leise }}">{{ $summen['offen'] }} Position(en) noch nicht gezählt.</p>
+                                <p class="fa-t-muted">{{ $summen['offen'] }} Position(en) noch nicht gezählt.</p>
                             @endif
                             <label class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" data-lager-null-buchen>
                                 <input type="checkbox" wire:model.live="nichtGezaehltNull" class="w-4 h-4 rounded accent-[var(--fa-accent)]" />
@@ -353,7 +352,7 @@
                                         <td>
                                             <div class="font-medium">{{ $l->gp?->name ?? $l->supplierItem?->designation ?? $l->recipe?->name ?? '—' }}</div>
                                             @if($l->hatGebinde())
-                                                <div class="{{ $leise }}">@if($l->pack_units)1 {{ $l->pack_label }} = {{ $zahl($l->pack_units) }} {{ $l->unit_label }} · @endif 1 {{ $l->unit_label }} = {{ $zahl($einheitInhalt) }} {{ $einheit }}</div>
+                                                <div class="fa-t-muted">@if($l->pack_units)1 {{ $l->pack_label }} = {{ $zahl($l->pack_units) }} {{ $l->unit_label }} · @endif 1 {{ $l->unit_label }} = {{ $zahl($einheitInhalt) }} {{ $einheit }}</div>
                                             @endif
                                         </td>
                                         <td class="text-right align-top"><x-fa::menge :value="$soll" :unit="$einheit" /></td>
@@ -361,7 +360,7 @@
                                             @if($gebucht)
                                                 <x-fa::menge :value="$ist" :unit="$einheit" />
                                                 @if($l->counted_packs !== null || $l->counted_units !== null)
-                                                    <div class="{{ $leise }}">@if($l->counted_packs !== null){{ $zahl($l->counted_packs) }} {{ $l->pack_label }} @endif @if($l->counted_units !== null){{ $zahl($l->counted_units) }} {{ $l->unit_label }} @endif @if($l->counted_loose !== null)+ {{ $zahl($l->counted_loose) }} {{ $einheit }}@endif</div>
+                                                    <div class="fa-t-muted">@if($l->counted_packs !== null){{ $zahl($l->counted_packs) }} {{ $l->pack_label }} @endif @if($l->counted_units !== null){{ $zahl($l->counted_units) }} {{ $l->unit_label }} @endif @if($l->counted_loose !== null)+ {{ $zahl($l->counted_loose) }} {{ $einheit }}@endif</div>
                                                 @endif
                                             @elseif($l->hatGebinde())
                                                 {{-- Zählen wie im Regal: Karton · Einheit · lose; jede Änderung schickt alle drei Felder --}}
@@ -369,27 +368,27 @@
                                                     @if($l->pack_units)
                                                         <input type="text" inputmode="decimal" value="{{ $eingabe($l->counted_packs) }}" data-g="k" class="{{ $feld }} w-14" aria-label="{{ $l->pack_label }}"
                                                                wire:change="zaehlenGebinde({{ $l->id }}, $event.target.closest('[data-lager-gebinde]').querySelector('[data-g=k]').value, $event.target.closest('[data-lager-gebinde]').querySelector('[data-g=e]').value, $event.target.closest('[data-lager-gebinde]').querySelector('[data-g=l]').value)" />
-                                                        <span class="{{ $leise }}">{{ $l->pack_label }}</span>
+                                                        <span class="fa-t-muted">{{ $l->pack_label }}</span>
                                                     @endif
                                                     <input type="text" inputmode="decimal" value="{{ $eingabe($l->counted_units) }}" data-g="e" class="{{ $feld }} w-14" aria-label="{{ $l->unit_label }}"
                                                            wire:change="zaehlenGebinde({{ $l->id }}, ($event.target.closest('[data-lager-gebinde]').querySelector('[data-g=k]') || {}).value, $event.target.value, $event.target.closest('[data-lager-gebinde]').querySelector('[data-g=l]').value)" />
-                                                    <span class="{{ $leise }}">{{ $l->unit_label }}</span>
+                                                    <span class="fa-t-muted">{{ $l->unit_label }}</span>
                                                     <input type="text" inputmode="decimal" value="{{ $eingabe($l->counted_loose ?? ($l->qty_counted !== null && $l->counted_packs === null && $l->counted_units === null ? $ist : null)) }}" data-g="l" class="{{ $feld }} w-16" aria-label="lose in {{ $einheit }}"
                                                            wire:change="zaehlenGebinde({{ $l->id }}, ($event.target.closest('[data-lager-gebinde]').querySelector('[data-g=k]') || {}).value, $event.target.closest('[data-lager-gebinde]').querySelector('[data-g=e]').value, $event.target.value)" />
-                                                    <span class="{{ $leise }} w-6 text-left">{{ $einheit }}</span>
+                                                    <span class="fa-t-muted w-6 text-left">{{ $einheit }}</span>
                                                 </span>
-                                                @if($ist !== null)<div class="{{ $leise }} tabular-nums">= {{ $zahl($ist) }} {{ $einheit }}</div>@endif
+                                                @if($ist !== null)<div class="fa-t-muted tabular-nums">= {{ $zahl($ist) }} {{ $einheit }}</div>@endif
                                             @else
                                                 <span class="inline-flex items-center gap-1">
                                                     <input type="text" inputmode="decimal" value="{{ $ist !== null ? str_replace('.', ',', (string) $ist) : '' }}" wire:change="zaehlen({{ $l->id }}, $event.target.value)"
                                                            class="{{ $feld }} w-24" aria-label="Gezählt in {{ $einheit }}" data-lager-zaehlen="{{ $l->id }}" />
-                                                    <span class="{{ $leise }} w-6 text-left">{{ $einheit }}</span>
+                                                    <span class="fa-t-muted w-6 text-left">{{ $einheit }}</span>
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class="text-right align-top tabular-nums {{ $diff !== null && $diff < 0 ? 'text-[var(--fa-crit)]' : '' }}">@if($diff !== null){{ $diff > 0 ? '+' : '' }}{{ $zahl($diff) }} {{ $einheit }}@else<span class="{{ $leise }}">–</span>@endif</td>
-                                        <td class="text-right align-top tabular-nums">@if($l->price_per_base !== null){{ number_format((float) $l->price_per_base * ($l->base_unit === 'Stk' ? 1 : 1000), 2, ',', '.') }} €<span class="{{ $leise }}">/{{ $einheit }}</span>@else<span class="{{ $leise }}">kein Preis</span>@endif</td>
-                                        <td class="text-right align-top">@if($l->qty_counted !== null)<x-fa::money :value="$l->wert()" missing="ohne Preis" />@else<span class="{{ $leise }}">–</span>@endif</td>
+                                        <td class="text-right align-top tabular-nums {{ $diff !== null && $diff < 0 ? 'text-[var(--fa-crit)]' : '' }}">@if($diff !== null){{ $diff > 0 ? '+' : '' }}{{ $zahl($diff) }} {{ $einheit }}@else<span class="fa-t-muted">–</span>@endif</td>
+                                        <td class="text-right align-top tabular-nums">@if($l->price_per_base !== null){{ number_format((float) $l->price_per_base * ($l->base_unit === 'Stk' ? 1 : 1000), 2, ',', '.') }} €<span class="fa-t-muted">/{{ $einheit }}</span>@else<span class="fa-t-muted">kein Preis</span>@endif</td>
+                                        <td class="text-right align-top">@if($l->qty_counted !== null)<x-fa::money :value="$l->wert()" missing="ohne Preis" />@else<span class="fa-t-muted">–</span>@endif</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -434,7 +433,7 @@
                 @else
                     <x-fa::input type="search" size="sm" wire:model.live.debounce.300ms="einlagernSuche" placeholder="Basisrezept oder Gericht suchen …" class="w-80" aria-label="Rezept suchen" data-lager-einlagern-suche />
                     @foreach($einlagernTreffer as $r)
-                        <button type="button" wire:key="ept-{{ $r->id }}" wire:click="einlagernRezept({{ $r->id }})" class="self-start text-left text-[length:var(--fa-text-md)] text-[var(--fa-accent)] hover:underline">{{ $r->name }}<span class="{{ $leise }}"> · {{ $r->is_sales_recipe ? 'Gericht' : 'Basisrezept' }}</span></button>
+                        <button type="button" wire:key="ept-{{ $r->id }}" wire:click="einlagernRezept({{ $r->id }})" class="self-start text-left text-[length:var(--fa-text-md)] text-[var(--fa-accent)] hover:underline">{{ $r->name }}<span class="fa-t-muted"> · {{ $r->is_sales_recipe ? 'Gericht' : 'Basisrezept' }}</span></button>
                     @endforeach
                     @if(! empty($einlagern['letzte_charge']))
                         <a href="{{ route('foodalchemist.etiketten.index', ['quelle' => 'charge', 'id' => $einlagern['letzte_charge']]) }}" target="_blank" class="self-start inline-flex items-center gap-1 text-[length:var(--fa-text-md)] text-[var(--fa-accent)] hover:underline" data-lager-etikett-charge>@svg('heroicon-m-tag', 'w-4 h-4') Etiketten für die neue Charge drucken</a>
@@ -488,16 +487,16 @@
         @if($reiter === 'einrichten')
             @if($orte->isNotEmpty())
                 <div class="flex flex-wrap items-center gap-2" data-lager-einrichten-ort>
-                    <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Lagerort</span>
+                    <span class="fa-t-label">Lagerort</span>
                     <x-fa::select wire:model.live="lagerortId" size="sm" :options="$orte->pluck('name', 'id')" class="w-56" aria-label="Lagerort" />
-                    <span class="{{ $leise }}">Weitere Lagerorte unter Einstellungen → Einkauf.</span>
+                    <span class="fa-t-muted">Weitere Lagerorte unter Einstellungen → Einkauf.</span>
                 </div>
 
                 <div class="grid gap-4 lg:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)] items-start">
                     {{-- Stellplätze --}}
                     <x-fa::section title="Stellplätze" icon="heroicon-o-map-pin" description="In der Reihenfolge deines Laufwegs. Die Zone steuert den Vorschlag." data-lager-plaetze>
                         @if($plaetze->isEmpty())
-                            <p class="{{ $leise }}">Noch keine Stellplätze. Zum Beispiel: Kühlhaus, TK-Raum, Trockenlager Regal 1.</p>
+                            <p class="fa-t-muted">Noch keine Stellplätze. Zum Beispiel: Kühlhaus, TK-Raum, Trockenlager Regal 1.</p>
                         @else
                             <ul class="flex flex-col divide-y divide-[var(--fa-line)]">
                                 @foreach($plaetze as $p)
@@ -513,7 +512,7 @@
                                                     <option value="">ohne Zone</option>
                                                     @foreach($zonen as $z => $zl)<option value="{{ $z }}" @selected($p->zone === $z)>{{ $zl }}</option>@endforeach
                                                 </select>
-                                                <span class="{{ $leise }}">{{ $p->zuordnungen_count }} GP</span>
+                                                <span class="fa-t-muted">{{ $p->zuordnungen_count }} GP</span>
                                             </div>
                                         </div>
                                         <x-fa::icon-button size="sm" icon="heroicon-m-tag" label="Regal-Etikett drucken" :href="route('foodalchemist.etiketten.index', ['quelle' => 'stellplatz', 'id' => $p->id])" target="_blank" />
@@ -534,10 +533,10 @@
                         <x-slot:actions>
                             <x-fa::button size="sm" icon="heroicon-m-sparkles" wire:click="vorschlagUebernehmen" :disabled="$plaetze->whereNotNull('zone')->isEmpty()" data-lager-vorschlag>Automatisch einsortieren</x-fa::button>
                         </x-slot:actions>
-                        <p class="{{ $leise }}">„Automatisch einsortieren" legt alles ohne Stellplatz nach Zustand und Warengruppe ab: TK → Tiefkühlung, frisches Fleisch, Fisch, Molkerei, Obst und Gemüse → Kühlung, Getränke → Getränke, Rest → Trocken. Vorhandene Zuordnungen bleiben.</p>
+                        <p class="fa-t-muted">„Automatisch einsortieren" legt alles ohne Stellplatz nach Zustand und Warengruppe ab: TK → Tiefkühlung, frisches Fleisch, Fisch, Molkerei, Obst und Gemüse → Kühlung, Getränke → Getränke, Rest → Trocken. Vorhandene Zuordnungen bleiben.</p>
                         @include('foodalchemist::livewire.lager.partials.filter', [])
                         <div class="flex flex-wrap items-center gap-2" data-lager-masse>
-                            <span class="{{ $leise }}">{{ count($einrichten) }} von {{ $einrichtenGesamt }} · {{ count($auswahl) }} markiert</span>
+                            <span class="fa-t-muted">{{ count($einrichten) }} von {{ $einrichtenGesamt }} · {{ count($auswahl) }} markiert</span>
                             <x-fa::button size="sm" variant="ghost" wire:click="alleMarkieren">Alle sichtbaren markieren</x-fa::button>
                             @if($auswahl !== [])
                                 <x-fa::button size="sm" variant="ghost" wire:click="$set('auswahl', [])">Markierung aufheben</x-fa::button>
@@ -561,7 +560,7 @@
                                             <tr wire:key="e-{{ $r['gp_id'] }}">
                                                 <td><input type="checkbox" value="{{ $r['gp_id'] }}" wire:model.live="auswahl" class="w-4 h-4 rounded accent-[var(--fa-accent)]" aria-label="{{ $r['name'] }} markieren" /></td>
                                                 <td class="font-medium">{{ $r['name'] }}</td>
-                                                <td>{{ $r['zustand'] ?? '–' }}@if($r['warengruppe'])<span class="{{ $leise }}"> · WG {{ $r['warengruppe'] }}</span>@endif</td>
+                                                <td>{{ $r['zustand'] ?? '–' }}@if($r['warengruppe'])<span class="fa-t-muted"> · WG {{ $r['warengruppe'] }}</span>@endif</td>
                                                 <td>
                                                     <span class="inline-flex items-center gap-2">
                                                         <select wire:change="stammplatz({{ $r['gp_id'] }}, $event.target.value)" class="fa-control fa-select h-7 pr-8 text-[length:var(--fa-text-sm)] w-48" aria-label="Stellplatz für {{ $r['name'] }}">

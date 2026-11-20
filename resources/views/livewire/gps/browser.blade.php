@@ -172,7 +172,7 @@
                                     @elseif($gp->lead_preis !== null)
                                         <span class="inline-flex items-center gap-1.5" title="Gebindepreis: ohne Menge kein Preis je Kilo oder Liter">
                                             <x-fa::money :value="$gp->lead_preis" class="text-[var(--fa-ink-2)]" />
-                                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Gebinde</span>
+                                            <span class="fa-t-muted">Gebinde</span>
                                         </span>
                                     @elseif(! $gp->requires_la)
                                         <span class="text-[var(--fa-ink-3)]" title="Braucht keinen Lieferantenartikel">–</span>

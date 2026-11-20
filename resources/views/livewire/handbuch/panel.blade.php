@@ -1,7 +1,7 @@
 @php $hinweisKlasse = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]'; @endphp
 <div class="flex flex-col gap-3 pt-3 border-t border-[var(--fa-line)]" data-handbuch-panel>
     <div>
-        <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">Handbuch (Standards zum Nachschlagen)</h4>
+        <h4 class="fa-t-h3">Handbuch (Standards zum Nachschlagen)</h4>
         <p class="{{ $hinweisKlasse }}">Eigener Link mit Zubereitung, Anrichten, Regeneration, Bestandteilen und Allergenen je Gericht, für Tablet und Handy. Eingefroren, ohne Preise. Der Kundenlink bleibt davon unberührt.</p>
     </div>
 

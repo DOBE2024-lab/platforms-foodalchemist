@@ -67,7 +67,7 @@
                     @endforeach
                 </div>
             @elseif($status === 'offen')
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Für eine Sammel-Entscheidung eine Art wählen (Lieferant und Suche schränken optional ein).</p>
+                <p class="fa-t-muted">Für eine Sammel-Entscheidung eine Art wählen (Lieferant und Suche schränken optional ein).</p>
             @endif
 
             @if($sammelAktion !== null)
@@ -78,7 +78,7 @@
                         {{ collect($jeLief)->take(8)->map(fn ($n, $l) => $l.' '.number_format($n, 0, ',', '.'))->implode(' · ') }}{{ count($jeLief) > 8 ? ' · …' : '' }}
                     </p>
                     @if(($sammelVorschau['anzahl'] ?? 0) > \Platform\FoodAlchemist\Services\Necta\NectaPruefallService::SAMMEL_SOFORT_MAX)
-                        <p class="mt-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Läuft im Hintergrund in Teilmengen; der Fortschritt erscheint hier.</p>
+                        <p class="mt-1 fa-t-muted">Läuft im Hintergrund in Teilmengen; der Fortschritt erscheint hier.</p>
                     @endif
                     @if(($sammelVorschau['allergene'] ?? []) !== [] && $sammelAktion === 'necta_uebernehmen')
                         <p class="mt-2">Betroffene Allergene und Deklarationen (wird gelockert):</p>
@@ -128,7 +128,7 @@
                                             @else
                                                 <div class="font-medium">{{ $f['artikel'] ?? 'Necta-ID '.$f['legacy_id'] }}</div>
                                             @endif
-                                            <div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $f['lieferant'] ?? '—' }} · {{ $arten[$f['art']] ?? $f['art'] }}</div>
+                                            <div class="fa-t-muted">{{ $f['lieferant'] ?? '—' }} · {{ $arten[$f['art']] ?? $f['art'] }}</div>
                                         </td>
                                         <td>
                                             {{ $f['feld_label'] }}

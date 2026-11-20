@@ -88,7 +88,7 @@
                     </div>
                 </div>
                 <div class="flex flex-col gap-1.5">
-                    <div class="flex items-center gap-2 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+                    <div class="flex items-center gap-2 fa-t-label">
                         <span class="w-20 shrink-0">Menge</span><span class="w-24 shrink-0">Einheit</span><span>Zutat</span>
                     </div>
                     @foreach(($importVorschau['zutaten'] ?? []) as $zi => $z)
@@ -102,12 +102,12 @@
                 </div>
                 @if(!empty($importVorschau['komponenten']))
                     <div class="flex flex-col gap-1.5">
-                        <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Erkannte Komponenten <span class="font-normal text-[var(--fa-ink-3)]">· werden als Unterrezepte angelegt</span></p>
+                        <p class="fa-t-label">Erkannte Komponenten <span class="font-normal text-[var(--fa-ink-3)]">· werden als Unterrezepte angelegt</span></p>
                         <ul class="flex flex-col divide-y divide-[var(--fa-line)] rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                             @foreach($komponentenFlach as $ki => $k)
                                 <li class="flex items-center justify-between gap-2 py-1.5 pr-3 text-[length:var(--fa-text-md)] {{ [1 => 'pl-3', 2 => 'pl-7', 3 => 'pl-11'][$k['ebene']] ?? 'pl-11' }}" wire:key="ikomp-{{ $ki }}" data-import-komponente="{{ $k['ebene'] }}">
                                     <span class="font-medium text-[var(--fa-ink)]">@if($k['ebene'] > 1)<span class="text-[var(--fa-ink-3)]">↳ </span>@endif{{ $k['name'] !== '' ? $k['name'] : 'Komponente ohne Namen' }}</span>
-                                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $k['zutaten'] }} Zutaten</span>
+                                    <span class="fa-t-muted tabular-nums">{{ $k['zutaten'] }} Zutaten</span>
                                 </li>
                             @endforeach
                         </ul>
@@ -121,7 +121,7 @@
 
         <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] px-4 py-3 shadow-lg shadow-black/20">
             <div class="flex-1 min-w-[16rem] flex flex-col gap-1">
-                <p class="flex flex-wrap items-center gap-2 text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">
+                <p class="flex flex-wrap items-center gap-2 fa-t-h3">
                     @svg('heroicon-o-check-circle', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Rezept anlegen
                     @if(trim((string) ($importVorschau['name'] ?? '')) !== '')
                         <x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit(trim($importVorschau['name']), 32) }}</x-fa::badge>
@@ -144,7 +144,7 @@
                 <x-fa::badge>Schritt 3 von 3</x-fa::badge>
             </x-slot:actions>
             <div class="flex flex-col gap-3">
-                <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                <p class="fa-t-body">
                     „{{ $importErgebnis['name'] }}" ist als Entwurf angelegt
                     @if(!empty($importErgebnis['sub_recipes']))
                         , dazu {{ count($importErgebnis['sub_recipes']) }} {{ count($importErgebnis['sub_recipes']) === 1 ? 'Unterrezept' : 'Unterrezepte' }}

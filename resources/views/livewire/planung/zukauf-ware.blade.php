@@ -1,10 +1,9 @@
 {{-- Reiter Basisrezept: Zukauf-Ware der Planung (Herkunfts-GP + Typ) oder „Zukauf-Ware wählen“. --}}
-@php($leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]')
 <div class="mb-3" data-planung-zukauf>
     @if($gp !== null)
         <x-fa::section variant="plain" title="Zukauf-Basisrezept" icon="heroicon-o-shopping-bag" data-planung-zukauf-ware>
-            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">Ware: <span class="font-medium" data-planung-zukauf-gp>{{ $gp->name }}</span></p>
-            <p class="{{ $leise }}">Die Ware wird nicht nachgekocht. Das Basisrezept führt genau diese Ware und beschreibt die Handgriffe (Rüsten, Regenerieren, Portionieren). Rüst- und Regenerationszeit danach im Basisrezept-Editor pflegen.</p>
+            <p class="fa-t-body">Ware: <span class="font-medium" data-planung-zukauf-gp>{{ $gp->name }}</span></p>
+            <p class="fa-t-muted">Die Ware wird nicht nachgekocht. Das Basisrezept führt genau diese Ware und beschreibt die Handgriffe (Rüsten, Regenerieren, Portionieren). Rüst- und Regenerationszeit danach im Basisrezept-Editor pflegen.</p>
             @if($rezept !== null)
                 <x-fa::notice tone="info" data-planung-zukauf-vorhanden>Schon angelegt:
                     <a href="#" wire:click.prevent="$dispatch('recipe-modal.oeffnen', { id: {{ $rezept->id }} })" class="text-[var(--fa-accent)] hover:underline">{{ $rezept->name }}</a></x-fa::notice>
@@ -29,7 +28,7 @@
                     <x-fa::input size="sm" wire:model.live.debounce.300ms="suche" placeholder="Grundprodukt suchen …" data-planung-zukauf-suche />
                     @foreach($treffer as $t)
                         <button type="button" wire:key="zk-{{ $t->id }}" wire:click="waehle({{ $t->id }})"
-                                class="text-left px-2 py-1 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]" data-planung-zukauf-treffer>{{ $t->name }}</button>
+                                class="text-left px-2 py-1 rounded-[var(--fa-radius-control)] fa-t-body hover:bg-[var(--fa-hover)]" data-planung-zukauf-treffer>{{ $t->name }}</button>
                     @endforeach
                 </div>
             @endif

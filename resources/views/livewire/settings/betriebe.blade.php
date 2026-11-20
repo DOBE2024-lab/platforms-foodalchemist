@@ -130,7 +130,7 @@
                                                             <img src="{{ $logoUrls[$b->id] }}" alt="Logo {{ $b->name }}" class="h-10 max-w-[140px] object-contain rounded-[var(--fa-radius-control)] bg-[var(--fa-surface)] border border-[var(--fa-line)] px-1" />
                                                         @endif
                                                         <input id="betrieb-logo-{{ $b->id }}" type="file" wire:model="logoUpload" accept="image/*" class="min-w-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
-                                                        <span wire:loading wire:target="logoUpload" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">wird hochgeladen</span>
+                                                        <span wire:loading wire:target="logoUpload" class="fa-t-muted">wird hochgeladen</span>
                                                         @if(($logoUrls[$b->id] ?? null))
                                                             <x-fa::button size="sm" variant="danger" icon="heroicon-o-trash" wire:click="logoLoeschen">Logo entfernen</x-fa::button>
                                                         @endif
@@ -146,7 +146,7 @@
                 </table>
             </div>
 
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+            <p class="fa-t-muted">
                 Kalkulationsprofile werden nicht gelöscht, sondern deaktiviert. An ihnen hängen Ausgaben und Kapitel, eine Löschung würde diese Zuordnungen stillschweigend kappen.
             </p>
         @endif

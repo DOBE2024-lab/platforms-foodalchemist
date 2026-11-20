@@ -5,7 +5,6 @@
     $chip = 'inline-flex items-center gap-1 h-[30px] px-3 rounded-full border text-[length:var(--fa-text-md)] transition-colors';
     $chipAn = 'border-[var(--fa-accent)] bg-[var(--fa-accent-soft)] text-[var(--fa-accent)] font-medium';
     $chipAus = 'border-[var(--fa-line-strong)] bg-[var(--fa-surface)] text-[var(--fa-ink-2)] hover:border-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $feldTitel = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
 @endphp
 
@@ -51,7 +50,7 @@
                             @endforeach
                         </div>
                         @if(($g['hint'][$parameter[$g['field']]] ?? '') !== '')
-                            <p class="{{ $leise }}">{{ $g['hint'][$parameter[$g['field']]] }}</p>
+                            <p class="fa-t-muted">{{ $g['hint'][$parameter[$g['field']]] }}</p>
                         @endif
                     </div>
                 @endforeach
@@ -75,11 +74,11 @@
 
                 {{-- 06·H4: Favoriten-Modus nur auf Wunsch (aus = keine Einengung) --}}
                 <div class="flex flex-col gap-1.5 min-w-0" data-richtung="favoriten">
-                    <label class="flex items-start gap-2 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] cursor-pointer">
+                    <label class="flex items-start gap-2 fa-t-strong cursor-pointer">
                         <input type="checkbox" wire:model.live="useFavoritesList" class="mt-0.5 accent-[var(--fa-accent)]" data-generator-favoriten />
                         <span class="inline-flex items-center gap-1.5">@svg('heroicon-o-star', 'w-4 h-4 text-[var(--fa-ink-3)]') Auf Basis meiner Favoriten bauen</span>
                     </label>
-                    <p class="{{ $leise }}">Bevorzugt deine Lieblings-Grundprodukte, schließt andere aber nicht aus. Aus heißt freie Auswahl.</p>
+                    <p class="fa-t-muted">Bevorzugt deine Lieblings-Grundprodukte, schließt andere aber nicht aus. Aus heißt freie Auswahl.</p>
                     <label x-show="$wire.useFavoritesList" class="flex items-center gap-2 ml-6 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer">
                         <input type="checkbox" wire:model="favoritesConvenienceOnly" class="accent-[var(--fa-accent)]" data-generator-favoriten-conv /> Nur Convenience-Favoriten
                     </label>
@@ -107,7 +106,7 @@
             $koh = $stat['kohaerenz'] ?? null;
         @endphp
         <x-foodalchemist::modal-section title="Ergebnis">
-            <p class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]" data-generator-ergebnis>{{ $ergebnis['name'] }}</p>
+            <p class="fa-t-h3" data-generator-ergebnis>{{ $ergebnis['name'] }}</p>
             <div class="flex flex-wrap gap-1.5 mt-2">
                 <x-fa::badge tone="ok">{{ $stat['bestand_gp'] }} {{ (int) $stat['bestand_gp'] === 1 ? 'Grundprodukt' : 'Grundprodukte' }} aus dem Bestand</x-fa::badge>
                 <x-fa::badge tone="info">{{ $stat['bestand_sub'] }} {{ (int) $stat['bestand_sub'] === 1 ? 'Unterrezept' : 'Unterrezepte' }}</x-fa::badge>

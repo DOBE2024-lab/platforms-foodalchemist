@@ -55,7 +55,7 @@
         {{-- Spec 53/F: Agenten-Modus des Sprachbefehls — Claude-Code-Mode-Switcher-Vorbild.
              Radio-Gruppen-Muster übernommen aus settings/einkauf.blade.php (Lead-LA-Strategie). --}}
         <fieldset class="flex flex-col gap-2" data-settings-sprachagent>
-            <legend class="mb-1.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Was darf der Agent?</legend>
+            <legend class="mb-1.5 fa-t-label">Was darf der Agent?</legend>
             <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))]">
                 @foreach(\Platform\FoodAlchemist\Services\TeamSettingsService::VOICE_AGENT_MODES as $m)
                     @php
@@ -132,9 +132,9 @@
                         <x-fa::badge :tone="$stufenTon[$klasse] ?? 'neutral'">{{ KiKlassen::label($klasse) }}</x-fa::badge>
                         <span class="font-mono text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $klassen[$klasse]['model'] ?? 'Standardmodell der Plattform' }}</span>
                         @if(! empty($klassen[$klasse]['reasoning']))
-                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Reasoning: {{ $klassen[$klasse]['reasoning'] }}</span>
+                            <span class="fa-t-muted">Reasoning: {{ $klassen[$klasse]['reasoning'] }}</span>
                         @endif
-                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $schritte->count() }} {{ $schritte->count() === 1 ? 'Arbeitsschritt' : 'Arbeitsschritte' }}</span>
+                        <span class="fa-t-muted">{{ $schritte->count() }} {{ $schritte->count() === 1 ? 'Arbeitsschritt' : 'Arbeitsschritte' }}</span>
                     </p>
                     <p class="{{ $zeileHilfe }}">{{ KiKlassen::beschreibung($klasse) }}</p>
                     <div class="flex flex-wrap gap-1">
@@ -154,7 +154,7 @@
                 (FOODALCHEMIST_AI_KLASSE_STARK / _MITTEL / _LEICHT, optional je Klasse _REASONING).
             </x-fa::notice>
         @endif
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <p class="fa-t-muted">
             Im gewählten Zeitraum tatsächlich genutzt:
             <span class="font-mono text-[var(--fa-ink-2)]">{{ $aktiveModelle->isEmpty() ? 'keine Aufrufe' : $aktiveModelle->implode(', ') }}</span>
         </p>
@@ -300,7 +300,7 @@
                     </tfoot>
                 </table>
             </div>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+            <p class="fa-t-muted">
                 Mengen in Texteinheiten der KI. Bei älteren Aufrufen ohne gespeicherten Zwischenspeicher-Anteil wird vorsichtig der volle Eingabepreis angesetzt.
                 Fehlgeschlagene Aufrufe stehen unter „Fehler“ (ohne Modell, daher ohne Preis). <strong>Embeddings</strong> (Suche, Ähnlichkeit) laufen über den Plattform-Kern und sind hier <strong>nicht enthalten</strong>.
             </p>

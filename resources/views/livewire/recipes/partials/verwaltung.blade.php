@@ -9,7 +9,6 @@
      fa-pass: nur Tokens und x-fa-Bausteine (hell + Werkbank-Modus). --}}
 @php
     $tt = $kompakt ? 'text-[length:var(--fa-text-sm)]' : 'text-[length:var(--fa-text-md)]';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $mehrzahl = fn (int $n, string $eins, string $mehr) => $n . ' ' . ($n === 1 ? $eins : $mehr);
     $statusTon = ['approved' => 'ok', 'review' => 'warn', 'tentative' => 'warn', 'rejected' => 'crit', 'deprecated' => 'crit', 'archived' => 'neutral'];
 @endphp
@@ -41,7 +40,7 @@
                 </ul>
             @endif
             @if(($tauschBilanz['fremd_namen'] ?? []) !== [])
-                <p class="{{ $leise }}" data-rezept-tausch-fremd>Geerbt und unberührt: {{ implode(' · ', array_column($tauschBilanz['fremd_namen'], 'name')) }}</p>
+                <p class="fa-t-muted" data-rezept-tausch-fremd>Geerbt und unberührt: {{ implode(' · ', array_column($tauschBilanz['fremd_namen'], 'name')) }}</p>
             @endif
         </div>
     @endif
@@ -49,7 +48,7 @@
     {{-- 2. Tauschen — der Ausweg aus einer blockierten Löschung --}}
     @if($tauschBilanz !== null && $tauschBilanz['zeilen'] > 0)
         <div class="flex flex-col gap-1.5" data-rezept-tausch>
-            <label for="rezept-tausch-suche-{{ $kompakt ? 'panel' : 'editor' }}" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+            <label for="rezept-tausch-suche-{{ $kompakt ? 'panel' : 'editor' }}" class="fa-t-label">
                 In allen Verwendungen ersetzen durch <span class="font-normal text-[var(--fa-ink-3)]">(Menge und Einheit bleiben)</span>
             </label>
             <x-fa::input type="search" id="rezept-tausch-suche-{{ $kompakt ? 'panel' : 'editor' }}" wire:model.live.debounce.300ms="tauschSuche"
@@ -68,7 +67,7 @@
                     @endforeach
                 </div>
             @elseif(trim($tauschSuche) !== '')
-                <p class="{{ $leise }}">Kein passendes Rezept gefunden.</p>
+                <p class="fa-t-muted">Kein passendes Rezept gefunden.</p>
             @endif
         </div>
     @endif
@@ -81,7 +80,7 @@
                     <x-fa::button :size="$kompakt ? 'sm' : 'md'" variant="danger" icon="heroicon-m-trash" wire:click="rezeptLoeschen"
                         wire:confirm="„{{ $rezeptName }}“ löschen? Nichts verweist darauf, das Rezept verschwindet aus den Listen." data-rezept-loeschen>Rezept löschen</x-fa::button>
                 </div>
-                <p class="{{ $leise }}">Nichts verweist auf dieses Rezept. Gelöschte Rezepte lassen sich wiederherstellen.</p>
+                <p class="fa-t-muted">Nichts verweist auf dieses Rezept. Gelöschte Rezepte lassen sich wiederherstellen.</p>
             @else
                 <p class="{{ $tt }} text-[var(--fa-ink)]" data-rezept-ref-zusammenfassung>
                     <x-fa::signal tone="warn">Löschen nicht möglich</x-fa::signal>
@@ -91,7 +90,7 @@
                     {{-- Adresse statt Menge: die Eltern-Rezepte, die das Löschen blockieren.
                          Hier stehen ALLE (auch geerbte) — sie blockieren ebenfalls, tauchen aber
                          in der Tausch-Bilanz oben bewusst nur als „unberührt" auf. --}}
-                    <p class="{{ $leise }}" data-rezept-ref-eltern>Verwendet in: {{ implode(' · ', array_column($tauschReferenzen['eltern_namen'], 'name')) }}</p>
+                    <p class="fa-t-muted" data-rezept-ref-eltern>Verwendet in: {{ implode(' · ', array_column($tauschReferenzen['eltern_namen'], 'name')) }}</p>
                 @endif
             @endif
             @php
@@ -101,7 +100,7 @@
                 ]);
             @endphp
             @if($refInfo !== [])
-                <p class="{{ $leise }}" data-rezept-ref-info>Nur zur Info, blockiert nicht: {{ implode(' · ', $refInfo) }}</p>
+                <p class="fa-t-muted" data-rezept-ref-info>Nur zur Info, blockiert nicht: {{ implode(' · ', $refInfo) }}</p>
             @endif
         </div>
     @endif

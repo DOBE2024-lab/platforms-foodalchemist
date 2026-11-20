@@ -103,7 +103,7 @@
         {{-- Cockpit (Menü-Ökonomie): €/Person ist die Hauptzahl, Score für echte Concepts --}}
         <div class="flex flex-col gap-3" data-concepter-cockpit>
             <x-fa::kpis :items="$kpis" />
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">
+            <p class="fa-t-muted tabular-nums">
                 {{ $aggregat['n_gerichte'] ?? 0 }} {{ ($aggregat['n_gerichte'] ?? 0) === 1 ? 'Gericht' : 'Gerichte' }} in {{ $aggregat['n_slots'] ?? 0 }} {{ ($aggregat['n_slots'] ?? 0) === 1 ? 'Position' : 'Positionen' }}
             </p>
             @if($offen !== [])
@@ -148,8 +148,8 @@
                             @foreach($cockpit['zeilen'] as $z)
                                 <li class="flex items-center justify-between gap-3 py-1.5 border-b border-[var(--fa-line)] last:border-0">
                                     <span class="min-w-0">
-                                        <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $z['role'] ?: 'Ohne Rolle' }}</span>
-                                        <span class="flex flex-wrap items-center gap-1.5 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                                        <span class="block fa-t-muted">{{ $z['role'] ?: 'Ohne Rolle' }}</span>
+                                        <span class="flex flex-wrap items-center gap-1.5 fa-t-body">
                                             <span class="min-w-0 break-words">{{ $z['label'] }}</span>
                                             @if($z['type'] === 'paket')<x-fa::badge tone="info">Paket</x-fa::badge>@elseif($z['type'] === 'leer')<x-fa::badge tone="crit">leer</x-fa::badge>@endif
                                         </span>
@@ -214,15 +214,15 @@
             {{-- Menü-Karte (Konsumenten-Sicht · C-10) --}}
             <x-fa::section variant="plain" title="{{ $istPaket ? 'Paket-Inhalt' : 'Menü-Karte' }}" icon="heroicon-o-document-text" meta="So sieht es der Gast">
                 <div class="fa-surface px-3 py-2.5 flex flex-col gap-1.5">
-                    <p class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $concept->consumer_name ?: $concept->name }}</p>
+                    <p class="fa-t-h3">{{ $concept->consumer_name ?: $concept->name }}</p>
                     @if($concept->additional_text)<p class="text-[length:var(--fa-text-sm)] italic text-[var(--fa-ink-2)]">{{ $concept->additional_text }}</p>@endif
                     @forelse($concept->slots as $slot)
                         <div>
-                            <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $slot->role ?: 'Ohne Rolle' }}{{ $slot->is_pflicht ? '' : ' · optional' }}</span>
-                            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $slot->title ?: ($slot->embeddedConcept?->name ?? $slot->package?->name ?? $slot->dish?->name ?? 'noch leer') }}</p>
+                            <span class="block fa-t-muted">{{ $slot->role ?: 'Ohne Rolle' }}{{ $slot->is_pflicht ? '' : ' · optional' }}</span>
+                            <p class="fa-t-body">{{ $slot->title ?: ($slot->embeddedConcept?->name ?? $slot->package?->name ?? $slot->dish?->name ?? 'noch leer') }}</p>
                         </div>
                     @empty
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Positionen.</p>
+                        <p class="fa-t-muted">Noch keine Positionen.</p>
                     @endforelse
                 </div>
             </x-fa::section>
@@ -232,10 +232,10 @@
                 @forelse($verwendung as $v)
                     <div class="flex items-center justify-between gap-3 py-1 text-[length:var(--fa-text-md)]">
                         <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $istPaket ? $v->name : ($v->label ?? '–') }}</span>
-                        <span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $istPaket ? 'Concept' : ('Foodbook' . ($v->jahr ? ' ' . $v->jahr : '') . ($v->customer ? ' · ' . $v->customer : '')) }}</span>
+                        <span class="shrink-0 fa-t-muted">{{ $istPaket ? 'Concept' : ('Foodbook' . ($v->jahr ? ' ' . $v->jahr : '') . ($v->customer ? ' · ' . $v->customer : '')) }}</span>
                     </div>
                 @empty
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $istPaket ? 'In keinem Concept eingesetzt.' : 'In keinem Foodbook verwendet.' }}</p>
+                    <p class="fa-t-muted">{{ $istPaket ? 'In keinem Concept eingesetzt.' : 'In keinem Foodbook verwendet.' }}</p>
                 @endforelse
             </x-fa::section>
 

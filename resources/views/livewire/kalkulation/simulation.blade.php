@@ -7,7 +7,6 @@
      #502: KEIN overflow-hidden um die Grundprodukt-Suche, sonst schneidet es die Trefferliste ab. --}}
 @php
     $ebenen = ['warengruppe' => 'Warengruppe', 'gp' => 'Grundprodukt', 'artikel' => 'Lieferantenartikel', 'lieferant' => 'Lieferant (ganzes Sortiment)'];
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
 @endphp
 
 <div class="flex flex-col gap-4 min-w-0" wire:key="sim-panel" data-simulation-panel>
@@ -48,7 +47,7 @@
                                 <div class="absolute z-20 mt-1 w-full fa-surface shadow-lg max-h-64 overflow-auto py-1" role="listbox">
                                     @foreach($gpTreffer as $t)
                                         <button type="button" role="option" wire:click="waehleGp({{ $t['id'] }}, @js($t['name']))"
-                                                class="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
+                                                class="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
                                             <span class="min-w-0 break-words">{{ $t['name'] }}</span>
                                             @unless($t['hat_lead'])
                                                 <x-fa::badge tone="warn" title="Ohne bevorzugten Lieferantenartikel: kein Preis, der sich ändern könnte">ohne Artikel</x-fa::badge>
@@ -152,7 +151,7 @@
 
             @if(count($result['substitutions'] ?? []))
                 <div class="flex flex-col gap-2">
-                    <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Mögliche Ausweichprodukte</p>
+                    <p class="fa-t-label">Mögliche Ausweichprodukte</p>
                     <div class="flex flex-wrap gap-1.5">
                         @foreach($result['substitutions'] as $s)
                             <x-fa::badge icon="heroicon-m-arrows-right-left">{{ $s['alt_name'] }}</x-fa::badge>

@@ -12,7 +12,7 @@
 @endphp
 
 <div class="flex flex-col gap-4" data-ctrl-wareneinsatz>
-    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+    <p class="fa-t-muted max-w-[75ch]">
         Was tatsächlich bezahlt wurde, gegen den günstigsten Lieferanten je Grundprodukt, mit und ohne Rückvergütung.
         Markierte Positionen lassen sich dauerhaft auf den günstigsten Bezug umstellen.
     </p>
@@ -38,7 +38,7 @@
             ['label' => 'Ersparnis mit Rückvergütung', 'tone' => 'ok',
              'value' => '−' . $eur($r['saving_rebate']) . ($r['saving_rebate_pct'] !== null ? ' (' . number_format($r['saving_rebate_pct'], 1, ',', '.') . ' %)' : '')],
         ]" />
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <p class="fa-t-muted">
             Grundlage: {{ number_format($r['n_articles'], 0, ',', '.') }} Artikel im Einkaufsjournal.
         </p>
         @if(! empty($jeStandort))
@@ -88,7 +88,7 @@
 
             @if($vorschau)
                 <div class="flex flex-col gap-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)] px-4 py-3" data-ctrl-batch-vorschau-box>
-                    <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                    <p class="fa-t-body">
                         <strong class="font-semibold">{{ $vorschau['n_gps'] }} {{ $vorschau['n_gps'] === 1 ? 'Bezugsquelle' : 'Bezugsquellen' }}</strong> umstellen.
                         Betrifft <strong class="font-semibold">{{ number_format($vorschau['n_rezepte'], 0, ',', '.') }} {{ $vorschau['n_rezepte'] === 1 ? 'Rezept' : 'Rezepte' }}</strong>,
                         davon <strong class="font-semibold">{{ number_format($vorschau['n_gerichte'], 0, ',', '.') }} {{ $vorschau['n_gerichte'] === 1 ? 'Verkaufsgericht' : 'Verkaufsgerichte' }}</strong>.
@@ -102,11 +102,11 @@
                             </li>
                         @endforeach
                         @if($vorschau['gekuerzt'] > 0)
-                            <li class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">und {{ $vorschau['gekuerzt'] }} weitere</li>
+                            <li class="fa-t-muted">und {{ $vorschau['gekuerzt'] }} weitere</li>
                         @endif
                     </ul>
                     <div class="flex flex-wrap items-end justify-between gap-3">
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[60ch]">
+                        <p class="fa-t-muted max-w-[60ch]">
                             Die Ersparnis ist eine Rückrechnung auf die bereits eingekaufte Menge. Sie sagt, was der Bezug
                             gekostet hätte, nicht was künftig sicher gespart wird.
                         </p>
@@ -165,7 +165,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Günstigster Bezug inklusive Rückvergütung.</p>
+            <p class="fa-t-muted">Günstigster Bezug inklusive Rückvergütung.</p>
         </x-fa::section>
     @endif
 </div>

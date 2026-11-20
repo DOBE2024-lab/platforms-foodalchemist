@@ -1,6 +1,5 @@
 {{-- Spec 70 · Einstellungen → Etiketten: Vorlagen gestalten. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $haken = 'w-4 h-4 rounded accent-[var(--fa-accent)]';
 @endphp
 <div class="flex flex-col gap-4" data-settings-etiketten>
@@ -11,15 +10,15 @@
          freiwillige Angabe, keine ZZulV-Pflicht (bestätigt Dominique 16.10.2026). --}}
     <x-fa::section title="Freiwillige Hinweise" icon="heroicon-o-information-circle" data-etiketten-jod
         description="Gilt für Speisekarte und Etikett dieses Teams. Unter-Teams übernehmen die Einstellung, solange sie keine eigene haben.">
-        <label class="inline-flex items-center gap-2 cursor-pointer text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+        <label class="inline-flex items-center gap-2 cursor-pointer fa-t-body">
             <input type="checkbox" class="{{ $haken }}" @checked($jodHinweis) wire:click="jodHinweisUmschalten" data-jod-schalter />
             „mit Jodsalz hergestellt“ bei Gerichten mit jodiertem Salz zeigen
         </label>
-        <p class="{{ $leise }}">Freiwillige Angabe, keine Zusatzstoff-Nummer und kein Eintrag in der Legende.</p>
+        <p class="fa-t-muted">Freiwillige Angabe, keine Zusatzstoff-Nummer und kein Eintrag in der Legende.</p>
     </x-fa::section>
 
     <div class="flex flex-wrap items-center justify-between gap-2" data-etiketten-aktionen>
-        <span class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $form['name'] ?? '' }}</span>
+        <span class="fa-t-strong">{{ $form['name'] ?? '' }}</span>
         <div class="flex flex-wrap gap-2">
             <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="neu" data-etiketten-neu>Neue Vorlage</x-fa::button>
             <x-fa::button size="sm" variant="ghost" wire:click="duplizieren">Duplizieren</x-fa::button>
@@ -36,7 +35,7 @@
                         <li wire:key="lv-{{ $v->id }}">
                             <button type="button" wire:click="waehlen({{ $v->id }})" class="w-full text-left py-2 px-2 rounded-[var(--fa-radius-control)] hover:bg-[var(--fa-hover)] {{ $vorlageId === $v->id ? 'bg-[var(--fa-ground)]' : '' }}">
                                 <div class="font-medium text-[var(--fa-ink)]">{{ $v->name }}{{ $v->is_default ? ' · Standard' : '' }}{{ $v->is_kitchen_default ? ' · Wandmonitor' : '' }}</div>
-                                <div class="{{ $leise }}">{{ $formate[$v->format] ?? $v->format }} · {{ $v->typ === 'verkauf' ? 'Verkauf' : 'intern' }}</div>
+                                <div class="fa-t-muted">{{ $formate[$v->format] ?? $v->format }} · {{ $v->typ === 'verkauf' ? 'Verkauf' : 'intern' }}</div>
                             </button>
                         </li>
                     @endforeach
@@ -49,10 +48,10 @@
                 @forelse($druckerListe as $p)
                     <button type="button" wire:click="druckerWaehlen({{ $p->id }})" wire:key="dr-{{ $p->id }}" class="w-full text-left px-2 py-1.5 rounded-[var(--fa-radius-control)] hover:bg-[var(--fa-hover)] {{ $druckerId === $p->id ? 'bg-[var(--fa-ground)]' : '' }}">
                         <div class="font-medium text-[var(--fa-ink)]">{{ $p->name }}{{ $p->is_default ? ' · Standard' : '' }}</div>
-                        <div class="{{ $leise }}">{{ $modelle[$p->modell] ?? $p->modell }}{{ $p->arbeitsplatz ? ' · ' . ($arbeitsplaetze[$p->arbeitsplatz] ?? $p->arbeitsplatz) : '' }}</div>
+                        <div class="fa-t-muted">{{ $modelle[$p->modell] ?? $p->modell }}{{ $p->arbeitsplatz ? ' · ' . ($arbeitsplaetze[$p->arbeitsplatz] ?? $p->arbeitsplatz) : '' }}</div>
                     </button>
                 @empty
-                    <p class="{{ $leise }}">Noch kein Drucker. Ohne Drucker wählt jede Vorlage ihr Format selbst.</p>
+                    <p class="fa-t-muted">Noch kein Drucker. Ohne Drucker wählt jede Vorlage ihr Format selbst.</p>
                 @endforelse
                 @if($druckerId !== null)
                     <div class="flex flex-col gap-2 border-t border-[var(--fa-line)] pt-2" data-etiketten-drucker-form>
@@ -147,7 +146,7 @@
         @if($vorschauUrl)
             <iframe src="{{ $vorschauUrl }}" wire:key="ev-{{ md5($vorschauUrl) }}" class="w-full h-[640px] rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" title="Etikett-Vorschau" data-etiketten-vorschau></iframe>
         @else
-            <p class="{{ $leise }}">Für die Vorschau braucht es ein Rezept mit Zutaten.</p>
+            <p class="fa-t-muted">Für die Vorschau braucht es ein Rezept mit Zutaten.</p>
         @endif
     </x-fa::section>
 </div>

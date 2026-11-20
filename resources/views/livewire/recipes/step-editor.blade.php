@@ -85,7 +85,7 @@
         @if($briefingOffen && $schreibbar)
             <div class="{{ $kasten }}" data-ki-briefing>
                 <div class="flex flex-wrap items-center gap-2">
-                    <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Vorgabe für «{{ $kiKnopf }}»</p>
+                    <p class="fa-t-label">Vorgabe für «{{ $kiKnopf }}»</p>
                     <span class="ml-auto flex items-center gap-1.5">
                         @include('foodalchemist::livewire.recipes.partials.diktat-knopf', [
                             'audio' => 'briefingAudio', 'marker' => 'briefing', 'label' => 'Sprechen',
@@ -106,7 +106,7 @@
         {{-- ── Markdown-Import ─────────────────────────────────────────── --}}
         @if($importOffen && $schreibbar)
             <div class="{{ $kasten }}" data-markdown-import>
-                <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Markdown in Schritte umwandeln</p>
+                <p class="fa-t-label">Markdown in Schritte umwandeln</p>
                 <textarea wire:model="markdownImport" rows="6" aria-label="Markdown"
                           class="fa-control py-2 font-mono text-[length:var(--fa-text-md)] leading-relaxed"
                           placeholder="## Mise en Place&#10;1. Zwiebeln schneiden.&#10;2. Fond erhitzen.&#10;&#10;## Finish&#10;3. Montieren."></textarea>
@@ -122,7 +122,7 @@
         @if($kiVorschlag !== null)
             <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-accent-soft)] border border-[var(--fa-accent-line)] px-3 py-2.5 flex flex-col gap-2 max-h-64 overflow-y-auto" data-ki-vorschlag>
                 <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-accent)]">KI-Vorschlag: {{ $anzahl(count($kiVorschlag['steps']), 'Schritt', 'Schritte') }} ({{ round($kiVorschlag['confidence'] * 100) }} % sicher)</p>
-                <ol class="flex flex-col gap-1 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] list-decimal list-inside">
+                <ol class="flex flex-col gap-1 fa-t-body list-decimal list-inside">
                     @foreach($kiVorschlag['steps'] as $i => $s)
                         <li wire:key="kis-{{ $i }}">
                             @if($s['phase'])<span class="mr-1 font-semibold text-[var(--fa-accent)]">{{ $s['phase'] }}</span>@endif
@@ -251,7 +251,7 @@
                     <div class="min-w-0">
                         <p class="text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-warn)]">So soll es fertig aussehen</p>
                         @if($endprodukt->caption)
-                            <p class="mt-0.5 text-[length:var(--fa-text-md)] leading-snug text-[var(--fa-ink)]">{{ $endprodukt->caption }}</p>
+                            <p class="mt-0.5 fa-t-body leading-snug">{{ $endprodukt->caption }}</p>
                         @endif
                     </div>
                 </div>
@@ -267,7 +267,7 @@
                 <div class="flex items-start gap-2.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] border border-[var(--fa-line)] px-3 py-2.5" wire:key="card-{{ $s->id }}">
                     <span class="{{ $nummer }} mt-px">{{ $s->position }}</span>
                     <div class="flex-1 min-w-0">
-                        <div class="text-[length:var(--fa-text-md)] leading-snug text-[var(--fa-ink)]">{!! \Illuminate\Support\Str::inlineMarkdown((string) $s->text) !!}</div>
+                        <div class="fa-t-body leading-snug">{!! \Illuminate\Support\Str::inlineMarkdown((string) $s->text) !!}</div>
                         @if($s->photos->isNotEmpty())
                             <div class="flex flex-wrap gap-2 mt-2">
                                 @foreach($s->photos as $foto)

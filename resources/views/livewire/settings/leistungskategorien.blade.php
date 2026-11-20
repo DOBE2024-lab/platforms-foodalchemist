@@ -59,7 +59,7 @@
                 </tbody>
             </table>
         </div>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Ausgeschaltete Kategorien bleiben an bestehenden Leistungen stehen, für neue sind sie nicht wählbar. Geerbte schaltest du nur für euer Team und eure Unter-Teams aus.</p>
+        <p class="fa-t-muted">Ausgeschaltete Kategorien bleiben an bestehenden Leistungen stehen, für neue sind sie nicht wählbar. Geerbte schaltest du nur für euer Team und eure Unter-Teams aus.</p>
         </fieldset>
     </x-fa::section>
 

@@ -12,7 +12,7 @@
         <x-fa::field label="Rundung" for="kf-rund"><x-fa::select id="kf-rund" wire:model="form.rundung" :options="['0.01' => '0,01 €', '0.10' => '0,10 €', '0.50' => '0,50 €', '1.00' => '1,00 €']" /></x-fa::field>
     </div>
     <label class="inline-flex items-center gap-2"><input type="checkbox" wire:model="form.tageszeit_aktiv" class="accent-[var(--fa-accent)]" /> Kunde wählt im Link die Tageszeit (Lunch, Dinner, Day-into-Night)</label>
-    <p class="{{ $leise }}">Regeln wirken nach „Speichern“ auf die Preisvorschau.</p>
+    <p class="fa-t-muted">Regeln wirken nach „Speichern“ auf die Preisvorschau.</p>
 </x-fa::section>
 
 @if($matrix['warnungen'] !== [])
@@ -42,7 +42,7 @@
                                 @php $r = $f['rand'][$seite]; @endphp
                                 <td class="num">
                                     <span title="Genauer Preis bei {{ $r['pax'] }} Gästen">{{ $euro($r['genau']) }}</span>
-                                    <div class="{{ $leise }}">{{ $prozent($r['abweichung_pct']) }} · DB <span class="{{ $r['db'] < 0 ? 'text-[var(--fa-crit)]' : '' }}">{{ $euro($r['db']) }}</span></div>
+                                    <div class="fa-t-muted">{{ $prozent($r['abweichung_pct']) }} · DB <span class="{{ $r['db'] < 0 ? 'text-[var(--fa-crit)]' : '' }}">{{ $euro($r['db']) }}</span></div>
                                 </td>
                             @endforeach
                         </tr>
@@ -50,11 +50,11 @@
                             {{-- Spec 94b §4: Einzelabrechnung nach Aufwand, getrennt vom All-in --}}
                             <tr wire:key="kfmx-{{ $p['paket_id'] }}-{{ $i }}-einzel" data-kf-einzel="{{ $p['paket_id'] }}-{{ $i }}">
                                 <td colspan="8">
-                                    <p class="{{ $leise }}">Zzgl. nach Aufwand bzw. Verbrauch, geschätzt bei {{ $p['referenz_pax'] }} Gästen, nicht im Preis pro Person:</p>
+                                    <p class="fa-t-muted">Zzgl. nach Aufwand bzw. Verbrauch, geschätzt bei {{ $p['referenz_pax'] }} Gästen, nicht im Preis pro Person:</p>
                                     <ul class="flex flex-col gap-0.5">
                                         @foreach($f['einzel'] as $e)
                                             <li>ca. {{ rtrim(rtrim(number_format($e['menge'], 2, ',', '.'), '0'), ',') }} {{ $e['einheit'] }} {{ $e['bezeichnung'] }}@if(($e['art'] ?? '') === 'verbrauch') nach Verbrauch @endif à {{ $euro($e['satz']) }}@if(! empty($e['deckel'])) · höchstens {{ $euro($e['deckel']) }}@endif
-                                                ≈ {{ $euro($e['betrag']) }} <span class="{{ $leise }}">· EK {{ $euro($e['ek_betrag']) }} · DB {{ $euro($e['betrag'] - $e['ek_betrag']) }}</span></li>
+                                                ≈ {{ $euro($e['betrag']) }} <span class="fa-t-muted">· EK {{ $euro($e['ek_betrag']) }} · DB {{ $euro($e['betrag'] - $e['ek_betrag']) }}</span></li>
                                         @endforeach
                                     </ul>
                                 </td>
@@ -65,7 +65,7 @@
                             <tr wire:key="kfmx-{{ $p['paket_id'] }}-{{ $i }}-gruppen">
                                 <td colspan="8">
                                     <details data-kf-zusammenfassung="{{ $p['paket_id'] }}-{{ $i }}">
-                                        <summary class="cursor-pointer {{ $leise }}">Zusammenfassung nach Gruppen</summary>
+                                        <summary class="cursor-pointer fa-t-muted">Zusammenfassung nach Gruppen</summary>
                                         <table class="fa-table fa-table--compact mt-1">
                                             <thead><tr><th>Gruppe</th><th class="num">VK / Person</th><th class="num">EK / Person</th><th class="num">DB / Person</th><th class="num">VK gesamt</th><th class="num">DB gesamt</th></tr></thead>
                                             <tbody>

@@ -13,7 +13,6 @@
     // Gemeinsame Helfer für die Reiter-Partials (werden per @include vererbt).
     $statusTon = ['secondary' => 'neutral', 'info' => 'info', 'success' => 'ok', 'danger' => 'crit', 'warning' => 'warn', 'primary' => 'accent'];
     $menge = fn ($wert, int $stellen = 2) => rtrim(rtrim(number_format((float) $wert, $stellen, ',', '.'), '0'), ',') ?: '0';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $opsStatus = $ops !== null ? \Platform\FoodAlchemist\Enums\ProductionOrderStatus::from($ops['status']) : null;
     $darfLoeschen = $ops !== null && $ops['is_owned'] && in_array($ops['status'], ['planned', 'cancelled'], true);
@@ -112,7 +111,7 @@
 @if($etikettenVorschlag !== [])
 <x-foodalchemist::modal name="produktion-etiketten" title="Etiketten für diesen Auftrag" size="max-w-3xl">
     <form method="GET" action="{{ route('foodalchemist.etiketten.produktion', ['order' => $ops['id']]) }}" target="_blank" class="flex flex-col gap-3" data-produktion-etiketten-form>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Alle Basisrezepte des Auftrags, je Ansatz ein Etikett mit der Menge eines Ansatzes. Hergestellt am = Produktionstag, Lagerart = Standard des Rezepts. Haken raus oder Anzahl ändern, dann drucken.</p>
+        <p class="fa-t-muted">Alle Basisrezepte des Auftrags, je Ansatz ein Etikett mit der Menge eines Ansatzes. Hergestellt am = Produktionstag, Lagerart = Standard des Rezepts. Haken raus oder Anzahl ändern, dann drucken.</p>
         <table class="fa-table fa-table--compact">
             <thead><tr><th></th><th>Basisrezept</th><th class="text-right">Anzahl</th><th>Menge je Etikett</th></tr></thead>
             <tbody>

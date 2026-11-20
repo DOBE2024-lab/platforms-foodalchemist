@@ -150,7 +150,7 @@
                 @else
                     <div class="fa-kpi" wire:key="pkpi-{{ $loop->index }}" title="{{ $k['titel'] }}">
                 @endif
-                        <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)] truncate">{{ $k['label'] }}</span>
+                        <span class="fa-t-label truncate">{{ $k['label'] }}</span>
                         <span class="tabular-nums truncate {{ $k['haupt'] ? 'text-[length:var(--fa-text-2xl)] font-semibold tracking-tight leading-tight text-[var(--fa-accent)]' : 'text-[length:var(--fa-text-lg)] font-semibold leading-snug text-[var(--fa-ink)]' }}">
                             {{ number_format($k['wert'], 0, ',', '.') }}<span class="ml-1 text-[length:var(--fa-text-sm)] font-normal text-[var(--fa-ink-3)]">{{ $k['einheit'] }}</span>
                         </span>
@@ -164,7 +164,7 @@
 
         <div class="fa-surface overflow-hidden" data-produktion-tabelle>
             <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--fa-line)]">
-                <h2 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">Produktionsaufträge</h2>
+                <h2 class="fa-t-h2">Produktionsaufträge</h2>
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="inline-flex items-center gap-0.5 p-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)]" role="group" aria-label="Ansicht" data-produktion-ansichten>
                         @foreach($ansichten as $key => $def)
@@ -209,7 +209,7 @@
                                     <button type="button" wire:click.stop="$dispatch('produktion-editor.bearbeiten', { id: {{ $a->id }} })"
                                             title="{{ $a->name ?: $a->reference ?: 'Auftrag' }} bearbeiten"
                                             class="text-left font-medium text-[var(--fa-ink)] hover:text-[var(--fa-accent)] hover:underline" data-produktion-bearbeiten>{{ $a->name ?: $a->reference ?: 'Ohne Namen' }}</button>
-                                    @if($a->reference && $a->name && $a->reference !== $a->name)<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $a->reference }}</p>@endif
+                                    @if($a->reference && $a->name && $a->reference !== $a->name)<p class="fa-t-muted">{{ $a->reference }}</p>@endif
                                 </td>
 
                                 @foreach($spalten as $sp)
@@ -220,7 +220,7 @@
                                             @if($ziele->isEmpty())
                                                 <x-fa::signal tone="warn">Keine Ziele</x-fa::signal>
                                             @else
-                                                <span class="text-[length:var(--fa-text-sm)]">{{ $ziele->take(2)->implode(' · ') }}</span>@if($ziele->count() > 2)<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]"> und {{ $ziele->count() - 2 }} weitere</span>@endif
+                                                <span class="text-[length:var(--fa-text-sm)]">{{ $ziele->take(2)->implode(' · ') }}</span>@if($ziele->count() > 2)<span class="fa-t-muted"> und {{ $ziele->count() - 2 }} weitere</span>@endif
                                             @endif
                                         </td>
                                     @elseif($sp === 'ansaetze')

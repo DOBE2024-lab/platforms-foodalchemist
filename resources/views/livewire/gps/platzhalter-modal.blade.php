@@ -23,7 +23,7 @@
                         <x-fa::button size="sm" wire:click="abbrechenEdit">Abbrechen</x-fa::button>
                         <x-fa::button size="sm" variant="primary" wire:click="speichernEdit">Namen speichern</x-fa::button>
                     @else
-                        <span class="flex-1 min-w-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $ph->name }}</span>
+                        <span class="flex-1 min-w-0 fa-t-body">{{ $ph->name }}</span>
                         <x-fa::badge :tone="$ph->in_zeilen > 0 ? 'info' : 'neutral'" class="shrink-0">{{ $ph->in_zeilen }}× genutzt</x-fa::badge>
                         <x-fa::icon-button size="sm" icon="heroicon-o-pencil" label="Umbenennen" wire:click="startEdit({{ $ph->id }}, {{ \Illuminate\Support\Js::from($ph->name) }})" />
                         <x-fa::icon-button size="sm" tone="danger" icon="heroicon-o-trash"

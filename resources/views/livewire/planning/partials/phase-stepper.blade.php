@@ -7,7 +7,7 @@
 @endphp
 
 <div class="flex flex-col gap-2" data-phase-stepper data-phase-aktuell="{{ $phaseAktuell }}">
-    <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Phase</span>
+    <span class="fa-t-label">Phase</span>
     <ol class="flex flex-wrap items-center gap-x-1.5 gap-y-2">
         @foreach($phasen as $key => $lbl)
             @php

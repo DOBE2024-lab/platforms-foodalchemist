@@ -7,7 +7,7 @@
         @if($meldung)<x-fa::notice tone="ok" data-grundeinstellungen-meldung>{{ $meldung }}</x-fa::notice>@endif
 
         <x-fa::section variant="plain">
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[65ch]">Startbestand für reine Team-Arbeit: Konzept-Kategorien, Zielgruppen, Schreibstile, Rollen, Posten, Speiseplan-Chips, Präsentations-Designs, Trend-Startbestand, dazu der Posten „Pass“ als Team-Vorgabe für Gerichte. Wird als Kopie ins Haupt-Team gelegt, Unter-Teams erben. Danach gehört es dem Team. Mehrfach buchen kopiert nichts doppelt.</p>
+            <p class="fa-t-muted max-w-[65ch]">Startbestand für reine Team-Arbeit: Konzept-Kategorien, Zielgruppen, Schreibstile, Rollen, Posten, Speiseplan-Chips, Präsentations-Designs, Trend-Startbestand, dazu der Posten „Pass“ als Team-Vorgabe für Gerichte. Wird als Kopie ins Haupt-Team gelegt, Unter-Teams erben. Danach gehört es dem Team. Mehrfach buchen kopiert nichts doppelt.</p>
             @if($mandanten === [])
                 <x-fa::empty compact icon="heroicon-o-clipboard-document-list" title="Keine Mandanten">Es gibt noch kein Haupt-Team neben dem Master-Team.</x-fa::empty>
             @else
@@ -48,7 +48,7 @@
                             @endforeach
                         </tbody>
                     </table>
-                    <p class="pt-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Gleichnamige Zeilen des Teams werden nicht überschrieben. Rollen kommen ohne Stundensätze.</p>
+                    <p class="pt-2 fa-t-muted">Gleichnamige Zeilen des Teams werden nicht überschrieben. Rollen kommen ohne Stundensätze.</p>
                 @endif
                 <div class="flex gap-2 pt-3">
                     <x-fa::button variant="ghost" wire:click="abbrechen">Abbrechen</x-fa::button>

@@ -26,8 +26,8 @@
     <button type="button" x-on:click="covAuf = !covAuf" x-bind:aria-expanded="covAuf"
             class="w-full flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left hover:bg-[var(--fa-hover)]">
         <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $ampelPunkt[$coverage['ampel_gesamt']] ?? 'bg-[var(--fa-ink-3)]' }}"></span>
-        <span class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">Soll-Ist-Abgleich</span>
-        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">gegen das Planungs-Gerüst</span>
+        <span class="fa-t-h3">Soll-Ist-Abgleich</span>
+        <span class="fa-t-muted">gegen das Planungs-Gerüst</span>
         <span class="ml-auto flex flex-wrap items-center gap-1.5">
             @if(($z['erfuellt'] ?? 0) > 0)<x-fa::badge tone="ok">{{ $z['erfuellt'] }} erfüllt</x-fa::badge>@endif
             @if(($z['teilerfuellt'] ?? 0) > 0)<x-fa::badge tone="warn">{{ $z['teilerfuellt'] }} teilweise</x-fa::badge>@endif
@@ -43,7 +43,7 @@
                 <div class="flex-1 min-w-[12rem] text-[length:var(--fa-text-md)]">
                     <span class="font-medium text-[var(--fa-ink)]">{{ $b['label'] }}</span>
                     <span class="text-[var(--fa-ink-2)] tabular-nums">, Soll {{ $b['soll'] }}, Ist {{ $b['ist'] }}</span>
-                    @if($b['hinweis'])<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $b['hinweis'] }}</p>@endif
+                    @if($b['hinweis'])<p class="fa-t-muted">{{ $b['hinweis'] }}</p>@endif
                 </div>
                 @if($b['fill_filter'] !== null && $coverageFillAction !== null)
                     <x-fa::button size="sm" icon="heroicon-m-funnel" wire:click="{{ $coverageFillAction }}('{{ $b['fill_filter']['diet_form'] ?? '' }}')"
@@ -55,7 +55,7 @@
                 @endif
             </div>
         @empty
-            <p class="px-4 py-3 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Das Gerüst hat noch keine prüfbaren Vorgaben. Im Planungs-Gerüst Soll-Werte setzen.</p>
+            <p class="px-4 py-3 fa-t-muted">Das Gerüst hat noch keine prüfbaren Vorgaben. Im Planungs-Gerüst Soll-Werte setzen.</p>
         @endforelse
     </div>
 </div>

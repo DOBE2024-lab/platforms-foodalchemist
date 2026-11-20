@@ -162,7 +162,7 @@
                             class="h-8 px-4 rounded-[5px] text-[length:var(--fa-text-md)] font-medium transition-colors {{ $tab === $tk ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}">{{ $tl }}</button>
                 @endforeach
             </div>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[60ch]">
+            <p class="fa-t-muted max-w-[60ch]">
                 {{ $istPakete ? 'Ein Paket bündelt mehrere Gerichte zu einem Preis je Person und lässt sich in Concepts einsetzen.' : 'Ein Concept ist ein ganzes Menü oder Buffet aus Positionen. Klick auf den Namen öffnet den Editor.' }}
             </p>
         </div>

@@ -16,7 +16,7 @@
                         @foreach($firmen as $f)
                             <button type="button" wire:key="pf-{{ $f->id }}" wire:click="firmaWaehlen({{ $f->id }})" class="text-left px-3 py-2 rounded border border-[var(--fa-line)] hover:bg-[var(--fa-hover)]" data-projekt-firma-treffer="{{ $f->id }}">{{ $f->display_name }}</button>
                         @endforeach
-                        @if($firmaSuche !== '' && $firmen->isEmpty())<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Keine Firma gefunden. Die Firma zuerst im CRM anlegen.</p>@endif
+                        @if($firmaSuche !== '' && $firmen->isEmpty())<p class="fa-t-muted">Keine Firma gefunden. Die Firma zuerst im CRM anlegen.</p>@endif
                     </div>
                 @else
                     <div class="flex flex-wrap items-center gap-2"><x-fa::badge tone="accent" icon="heroicon-m-building-office-2">{{ $firmaName }}</x-fa::badge><x-fa::button size="sm" variant="ghost" wire:click="firmaLoesen">Andere Firma</x-fa::button></div>
@@ -42,7 +42,7 @@
                             <a href="{{ route('foodalchemist.projekte.show', $p->id) }}" wire:navigate class="flex items-center gap-3 px-4 py-3 min-h-[60px]" data-fa-handy-karte="{{ $p->id }}">
                                 <span class="min-w-0 flex-1">
                                     <span class="block font-medium leading-snug text-[var(--fa-ink)] wrap-anywhere">{{ $p->name }}</span>
-                                    <span class="block truncate text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ implode(' · ', array_filter([$firmenNamen[$p->crm_company_id] ?? null, $phasen[$p->phase] ?? $p->phase])) }}</span>
+                                    <span class="block truncate fa-t-muted">{{ implode(' · ', array_filter([$firmenNamen[$p->crm_company_id] ?? null, $phasen[$p->phase] ?? $p->phase])) }}</span>
                                 </span>
                                 <x-fa::badge tone="{{ $p->status === 'aktiv' ? 'ok' : ($p->status === 'pausiert' ? 'warn' : 'neutral') }}">{{ ucfirst($p->status) }}</x-fa::badge>
                                 @svg('heroicon-m-chevron-right', 'w-5 h-5 shrink-0 text-[var(--fa-ink-3)]')

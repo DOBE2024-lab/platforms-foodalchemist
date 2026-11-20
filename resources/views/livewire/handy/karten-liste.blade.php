@@ -12,7 +12,7 @@
 <div class="flex-1 min-w-0 h-full overflow-y-auto px-4 py-4 space-y-3" data-fa-handy-liste>
     <div class="flex items-baseline justify-between gap-3">
         <h1 class="text-[length:var(--fa-text-2xl)] font-semibold text-[var(--fa-ink)]">{{ $titel }}</h1>
-        <span class="text-[length:var(--fa-text-sm)] tabular-nums text-[var(--fa-ink-3)]">{{ number_format($eintraege->total(), 0, ',', '.') }} Treffer</span>
+        <span class="fa-t-muted tabular-nums">{{ number_format($eintraege->total(), 0, ',', '.') }} Treffer</span>
     </div>
     @if(($reiter ?? []) !== [])
         <div role="group" aria-label="Ansicht" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]" data-fa-handy-reiter>
@@ -32,7 +32,7 @@
                         class="flex w-full items-center gap-3 px-4 py-3 min-h-[60px] text-left {{ $aktivId === $r->id ? 'bg-[var(--fa-accent-soft)]' : '' }}" data-fa-handy-karte="{{ $r->id }}">
                     <span class="min-w-0 flex-1">
                         <span class="block font-medium leading-snug text-[var(--fa-ink)] wrap-anywhere">{{ $titelVon($r) }}</span>
-                        <span class="block truncate text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $unterzeile($r) }}</span>
+                        <span class="block truncate fa-t-muted">{{ $unterzeile($r) }}</span>
                     </span>
                     @if(($w = $wert($r)) !== null)
                         <span class="shrink-0 text-[length:var(--fa-text-md)] font-medium tabular-nums text-[var(--fa-ink-2)]">{{ $w }}</span>

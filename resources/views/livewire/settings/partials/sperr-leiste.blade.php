@@ -13,7 +13,7 @@
     <div class="sticky top-0 z-20 -mx-1 px-1 py-2 bg-[var(--fa-surface)] border-b border-[var(--fa-line)] flex flex-wrap items-center gap-3" data-settings-sperrleiste>
         <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" :sofort="$sperrSofort" />
         @if(! empty($hint))
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] truncate">{{ $hint }}</p>
+            <p class="fa-t-muted truncate">{{ $hint }}</p>
         @endif
     </div>
 @elseif($sperrModus === 'bearbeiten')

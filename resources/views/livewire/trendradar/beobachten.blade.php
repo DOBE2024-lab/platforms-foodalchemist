@@ -1,13 +1,12 @@
 @php
     use Platform\FoodAlchemist\Support\GoogleNewsSuche;
     use Platform\FoodAlchemist\Support\TrendVokabular;
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
 @endphp
 <div class="flex flex-col gap-4" data-themen-beobachten>
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h2 class="font-semibold">Deine Suchthemen <span class="{{ $leise }}">· {{ $auftraege->count() }}</span></h2>
-            <p class="{{ $leise }}">Google News nach Themen beobachten und passende Artikel im Eingang prüfen.</p>
+            <h2 class="font-semibold">Deine Suchthemen <span class="fa-t-muted">· {{ $auftraege->count() }}</span></h2>
+            <p class="fa-t-muted">Google News nach Themen beobachten und passende Artikel im Eingang prüfen.</p>
         </div>
         @if($darf)<x-fa::button variant="primary" size="sm" icon="heroicon-m-plus" wire:click="neu">Thema hinzufügen</x-fa::button>@endif
     </div>
@@ -31,10 +30,10 @@
             <div class="flex flex-wrap gap-1.5" aria-label="Suchbegriffe">
                 @forelse($anzeige['begriffe'] as $begriff)
                     <x-fa::badge umbruch class="max-w-full break-words">{{ $begriff }}</x-fa::badge>
-                @empty<span class="{{ $leise }}">Individuelle Suche · Ausdruck unter Details</span>@endforelse
+                @empty<span class="fa-t-muted">Individuelle Suche · Ausdruck unter Details</span>@endforelse
             </div>
-            @if($anzeige['kontext'] !== [])<p class="{{ $leise }}">Im Kontext: {{ implode(' · ', $anzeige['kontext']) }}</p>@endif
-            <div class="flex flex-wrap gap-x-3 gap-y-1 {{ $leise }}">
+            @if($anzeige['kontext'] !== [])<p class="fa-t-muted">Im Kontext: {{ implode(' · ', $anzeige['kontext']) }}</p>@endif
+            <div class="flex flex-wrap gap-x-3 gap-y-1 fa-t-muted">
                 <span>{{ ['DE' => 'Deutschland', 'AT' => 'Österreich', 'CH' => 'Schweiz'][$suche['markt']] }}</span>
                 <span>{{ TrendVokabular::RHYTHMEN[$q->rhythmus] }}</span>
                 <span>{{ $q->letzter_abruf_at ? 'Abgerufen '.$q->letzter_abruf_at->format('d.m. H:i') : 'Erster Abruf steht aus' }}</span>
@@ -44,8 +43,8 @@
                 @if($darf && (int) $q->team_id === (int) $teamId)
                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="bearbeiten({{ $q->id }})">Bearbeiten</x-fa::button>
                     @if($q->rhythmus !== 'aus')<x-fa::button size="sm" variant="ghost" wire:click="pausieren({{ $q->id }})" wire:loading.attr="disabled">{{ $q->aktiv ? 'Pausieren' : 'Fortsetzen' }}</x-fa::button>@endif
-                @else<span class="{{ $leise }}">Vom übergeordneten Team</span>@endif
-                <details class="{{ $leise }} min-w-0 w-full">
+                @else<span class="fa-t-muted">Vom übergeordneten Team</span>@endif
+                <details class="fa-t-muted min-w-0 w-full">
                     <summary class="cursor-pointer">Details zur Suche</summary>
                     <div class="pt-2 flex flex-col gap-2">
                         <p>{{ GoogleNewsSuche::MAERKTE[$suche['markt']] }} · {{ GoogleNewsSuche::ZEITRAEUME[$suche['zeitraum']] }}</p>
@@ -59,7 +58,7 @@
         <x-fa::empty title="Welches Thema interessiert dich?" icon="heroicon-o-magnifying-glass">Füge dein erstes Thema hinzu, zum Beispiel Fermentation oder alkoholfreie Getränke.</x-fa::empty>
     @endforelse
     </div>
-    <p class="{{ $leise }}">RSS und Vorschau ohne API-Gebühren. Die anschließende KI-Auswertung im Eingang kann Kosten verursachen. Google-Trends-Suchspitzen werden separat unter „Quellen“ verwaltet.</p>
+    <p class="fa-t-muted">RSS und Vorschau ohne API-Gebühren. Die anschließende KI-Auswertung im Eingang kann Kosten verursachen. Google-Trends-Suchspitzen werden separat unter „Quellen“ verwaltet.</p>
 
     @if($darf)
     <x-foodalchemist::modal name="suchthema-editor" :title="$quelleId ? 'Suchthema bearbeiten' : 'Neues Suchthema'" size="max-w-2xl">
@@ -74,8 +73,8 @@
                 <div class="flex flex-col gap-2">
                     <p class="text-[length:var(--fa-text-sm)] font-medium">Diese Suche beobachtet</p>
                     <div class="flex flex-wrap gap-1.5">@foreach($bestehend['begriffe'] as $wort)<x-fa::badge>{{ $wort }}</x-fa::badge>@endforeach</div>
-                    @if($bestehend['kontext'])<p class="{{ $leise }}">Im Kontext: {{ implode(' · ', $bestehend['kontext']) }}</p>@endif
-                    <p class="{{ $leise }}">Die bestehende Suche enthält zusätzliche Bedingungen. Du kannst sie unter „Suchlogik anpassen“ bearbeiten.</p>
+                    @if($bestehend['kontext'])<p class="fa-t-muted">Im Kontext: {{ implode(' · ', $bestehend['kontext']) }}</p>@endif
+                    <p class="fa-t-muted">Die bestehende Suche enthält zusätzliche Bedingungen. Du kannst sie unter „Suchlogik anpassen“ bearbeiten.</p>
                 </div>
             @endif
             <x-fa::field label="Begriffe ausschließen" for="beob-aus" optional><x-fa::input id="beob-aus" wire:model="form.ausschliessen" placeholder="z. B. Stellenangebote, Gewinnspiel" /></x-fa::field>
@@ -84,7 +83,7 @@
                 <x-fa::field label="Artikelzeitraum" for="beob-zeit"><x-fa::select id="beob-zeit" wire:model="form.zeitraum" :options="GoogleNewsSuche::ZEITRAEUME" /></x-fa::field>
                 <x-fa::field label="Wie oft prüfen?" for="beob-rhythmus"><x-fa::select id="beob-rhythmus" wire:model="form.rhythmus" :options="TrendVokabular::RHYTHMEN" /></x-fa::field>
             </div>
-            <details class="{{ $leise }}" wire:key="suchlogik-{{ $quelleId ?? 'neu' }}">
+            <details class="fa-t-muted" wire:key="suchlogik-{{ $quelleId ?? 'neu' }}">
                 <summary class="cursor-pointer">Suchlogik anpassen</summary>
                 <div class="pt-2 flex flex-col gap-2">
                     <p>Ein erweiterter Ausdruck ersetzt die einfache Begriffsliste. Bestehende Bedingungen bleiben beim Speichern erhalten.</p>
@@ -100,7 +99,7 @@
             @if($fehler)<x-fa::notice tone="crit">{{ $fehler }}</x-fa::notice>@endif
             @if($vorschau !== null)
                 <x-fa::section title="Treffer-Vorschau">
-                    <p class="{{ $leise }}">{{ $vorschau['anzahl'] }} gefunden · {{ $vorschau['gefiltert'] }} herausgefiltert · bis zu 10 Treffer. Es wird noch nichts übernommen.</p>
+                    <p class="fa-t-muted">{{ $vorschau['anzahl'] }} gefunden · {{ $vorschau['gefiltert'] }} herausgefiltert · bis zu 10 Treffer. Es wird noch nichts übernommen.</p>
                     <ul class="flex flex-col gap-2 mt-3">@forelse($vorschau['treffer'] as $treffer)
                         <li><a href="{{ $treffer['url'] }}" target="_blank" rel="noopener noreferrer" class="underline">{{ $treffer['titel'] }}</a></li>
                     @empty<li>Keine passenden Treffer. Versuche breitere Begriffe oder einen längeren Zeitraum.</li>@endforelse</ul>
@@ -108,7 +107,7 @@
             @endif
         </form>
         <x-slot:footer>
-            <span wire:loading role="status" class="{{ $leise }}">Wird verarbeitet …</span>
+            <span wire:loading role="status" class="fa-t-muted">Wird verarbeitet …</span>
             <x-fa::button variant="ghost" @click="$dispatch('modal.close', { name: 'suchthema-editor' })">Abbrechen</x-fa::button>
             <x-fa::button wire:click="trefferAnsehen" wire:loading.attr="disabled">Treffer ansehen</x-fa::button>
             <x-fa::button type="submit" form="suchthema-form" variant="primary" wire:loading.attr="disabled">{{ $quelleId ? 'Änderungen speichern' : 'Beobachtung starten' }}</x-fa::button>

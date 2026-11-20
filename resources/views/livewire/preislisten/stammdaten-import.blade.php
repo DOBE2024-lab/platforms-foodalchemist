@@ -2,7 +2,6 @@
      Handy: Zeilen als Karten, Tabelle erst ab md (#1003). --}}
 @php
     $Z = \Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine::class;
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $ton = ['neu' => 'info', 'aendert' => 'accent', 'unveraendert' => 'neutral', 'konflikt' => 'warn', 'fehler' => 'crit'];
     $ton['verworfen'] = 'neutral';
     $text = ['neu' => 'Neu', 'aendert' => 'Ändert', 'unveraendert' => 'Unverändert', 'konflikt' => 'Konflikt', 'fehler' => 'Fehler'];
@@ -10,16 +9,16 @@
 
 <div class="space-y-4" data-stammdaten-import>
     <x-fa::section title="Artikel-Stammdaten" icon="heroicon-o-clipboard-document-list" data-stammdaten-vorlage>
-        <p class="{{ $leise }} mb-2">Alle Stammdaten in einer Datei: Gebinde, Preis, Allergene, Zusatzstoffe, Nährwerte, Zutaten, Herkunft, Haltbarkeit, Bio. Neue Artikel und Änderungen landen als Vorschlag in der Prüfliste; nichts geht ungeprüft in den Bestand.</p>
+        <p class="fa-t-muted mb-2">Alle Stammdaten in einer Datei: Gebinde, Preis, Allergene, Zusatzstoffe, Nährwerte, Zutaten, Herkunft, Haltbarkeit, Bio. Neue Artikel und Änderungen landen als Vorschlag in der Prüfliste; nichts geht ungeprüft in den Bestand.</p>
         <div class="flex flex-wrap items-center gap-2">
             <x-fa::button size="sm" variant="ghost" icon="heroicon-o-document-text" wire:click="vorlageCsv" data-stammdaten-vorlage-csv>Vorlage (CSV)</x-fa::button>
             @if($xlsxVorlage)
                 <x-fa::button size="sm" variant="ghost" icon="heroicon-o-table-cells" wire:click="vorlageXlsx" data-stammdaten-vorlage-xlsx>Vorlage (Excel)</x-fa::button>
             @else
-                <span class="{{ $leise }}" data-stammdaten-vorlage-nur-csv>Die Excel-Vorlage ist auf diesem Server nicht verfügbar, bitte die CSV-Vorlage nehmen.</span>
+                <span class="fa-t-muted" data-stammdaten-vorlage-nur-csv>Die Excel-Vorlage ist auf diesem Server nicht verfügbar, bitte die CSV-Vorlage nehmen.</span>
             @endif
         </div>
-        <p class="{{ $leise }} pt-2" data-stammdaten-hinweis>{{ $hinweis }}</p>
+        <p class="fa-t-muted pt-2" data-stammdaten-hinweis>{{ $hinweis }}</p>
     </x-fa::section>
 
     @if($fehler)<x-fa::notice tone="crit" data-stammdaten-fehler>{{ $fehler }}</x-fa::notice>@endif
@@ -38,7 +37,7 @@
                 </x-fa::field>
                 <x-fa::button variant="primary" icon="heroicon-m-magnifying-glass" wire:click="pruefen" wire:loading.attr="disabled" wire:target="datei,pruefen" :disabled="$datei === null" data-stammdaten-pruefen>Prüfen</x-fa::button>
             </div>
-            <div wire:loading wire:target="datei" class="{{ $leise }} pt-2">Datei wird hochgeladen …</div>
+            <div wire:loading wire:target="datei" class="fa-t-muted pt-2">Datei wird hochgeladen …</div>
         </x-fa::section>
     @else
         <x-fa::notice tone="info" data-stammdaten-nur-lesen>Stammdaten importieren darf nur das Haupt-Team des Kunden mit der Rolle Kuratieren. Du siehst die bisherigen Läufe.</x-fa::notice>
@@ -52,7 +51,7 @@
                     <button type="button" wire:key="sd-lauf-{{ $l->id }}" wire:click="laufWaehlen({{ $l->id }})" data-stammdaten-lauf="{{ $l->id }}"
                             class="flex flex-wrap items-center justify-between gap-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] px-3 py-2 text-left hover:bg-[var(--fa-hover)]">
                         <span class="min-w-0 truncate font-medium text-[var(--fa-ink)]">{{ $l->filename }}@if($l->herkunft === \Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun::HERKUNFT_LIEFERANTEN_LINK) <x-fa::badge tone="info" data-lauf-vom-lieferanten>vom Lieferanten</x-fa::badge>@endif</span>
-                        <span class="{{ $leise }} tabular-nums">{{ $l->created_at?->format('d.m.Y H:i') }} · {{ $c['zeilen'] ?? 0 }} Zeilen · {{ $c['neu'] ?? 0 }} neu · {{ $c['aendert'] ?? 0 }} ändern · {{ $c['konflikt'] ?? 0 }} Konflikte · {{ $c['fehler'] ?? 0 }} Fehler</span>
+                        <span class="fa-t-muted tabular-nums">{{ $l->created_at?->format('d.m.Y H:i') }} · {{ $c['zeilen'] ?? 0 }} Zeilen · {{ $c['neu'] ?? 0 }} neu · {{ $c['aendert'] ?? 0 }} ändern · {{ $c['konflikt'] ?? 0 }} Konflikte · {{ $c['fehler'] ?? 0 }} Fehler</span>
                     </button>
                 @endforeach
             </div>
@@ -61,12 +60,12 @@
 
     @if($lauf && $lauf->status === \Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun::STATUS_ZUORDNUNG_NOETIG)
         <x-fa::section title="Zuordnung nötig: {{ $lauf->filename }}" icon="heroicon-o-arrows-right-left" data-stammdaten-zuordnung>
-            <p class="{{ $leise }} mb-3">{{ $lauf->mapping['grund'] ?? 'Die Spalten wurden nicht erkannt.' }} Ordne die Spalten deiner Datei den Feldern zu; nicht benötigte Spalten bleiben auf „nicht verwenden“.</p>
+            <p class="fa-t-muted mb-3">{{ $lauf->mapping['grund'] ?? 'Die Spalten wurden nicht erkannt.' }} Ordne die Spalten deiner Datei den Feldern zu; nicht benötigte Spalten bleiben auf „nicht verwenden“.</p>
             <div class="grid gap-2 grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]">
                 @foreach(($lauf->mapping['kopf'] ?? []) as $i => $kopf)
                     <div wire:key="sd-zu-{{ $i }}" class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-2" data-stammdaten-zuordnung-spalte="{{ $i }}">
                         <p class="font-medium text-[var(--fa-ink)]">{{ $kopf !== '' ? $kopf : 'Spalte ' . ($i + 1) }}</p>
-                        <p class="{{ $leise }} mb-1.5 truncate">{{ collect($lauf->mapping['vorschau'] ?? [])->map(fn ($z) => $z[$i] ?? '')->filter()->take(3)->implode(' · ') }}</p>
+                        <p class="fa-t-muted mb-1.5 truncate">{{ collect($lauf->mapping['vorschau'] ?? [])->map(fn ($z) => $z[$i] ?? '')->filter()->take(3)->implode(' · ') }}</p>
                         <x-fa::select size="sm" wire:model="zuordnung.{{ $i }}" placeholder="– nicht verwenden –">
                             @foreach($ziele as $ziel)<option value="{{ $ziel }}">{{ $ziel }}</option>@endforeach
                         </x-fa::select>
@@ -100,9 +99,9 @@
                             <summary class="flex cursor-pointer flex-wrap items-center gap-2">
                                 <x-fa::badge :tone="$ton[$z->status === $Z::STATUS_VERWORFEN ? 'verworfen' : $z->aktion] ?? 'neutral'">{{ $z->status === $Z::STATUS_ZUKUENFTIG ? 'Übernommen, Preis vorgemerkt' : ($z->status === $Z::STATUS_ANGEWENDET ? 'Übernommen' : ($z->status === $Z::STATUS_VERWORFEN ? 'Verworfen' : ($text[$z->aktion] ?? $z->aktion))) }}</x-fa::badge>
                                 @if($z->entscheidung === 'uebernehmen' && $z->status === $Z::STATUS_GEPRUEFT)<x-fa::badge tone="ok" data-stammdaten-vorgemerkt>vorgemerkt</x-fa::badge>@endif
-                                <span class="tabular-nums {{ $leise }}">Zeile {{ $z->row_nr }}</span>
+                                <span class="tabular-nums fa-t-muted">Zeile {{ $z->row_nr }}</span>
                                 <span class="min-w-0 flex-1 truncate font-medium text-[var(--fa-ink)]">{{ $z->designation ?? '–' }}</span>
-                                <span class="{{ $leise }}">{{ $z->supplier_name }} · {{ $z->article_number ?? $z->ean ?? 'ohne Nr.' }}</span>
+                                <span class="fa-t-muted">{{ $z->supplier_name }} · {{ $z->article_number ?? $z->ean ?? 'ohne Nr.' }}</span>
                             </summary>
                             <div class="space-y-2 pt-2 text-[length:var(--fa-text-md)]">
                                 @if($z->reason)<p class="text-[var(--fa-crit)]">{{ $z->reason }}</p>@endif
@@ -120,9 +119,9 @@
                                 @endif
                                 @foreach((array) $z->diff as $block => $felder)
                                     <div data-stammdaten-diff="{{ $block }}">
-                                        <p class="{{ $leise }} font-medium">{{ ['felder' => 'Artikelfelder', 'preis' => 'Preis', 'naehrwerte' => 'Nährwerte', 'allergene' => 'Allergene', 'zusatzstoffe' => 'Zusatzstoffe'][$block] ?? $block }}</p>
+                                        <p class="fa-t-muted font-medium">{{ ['felder' => 'Artikelfelder', 'preis' => 'Preis', 'naehrwerte' => 'Nährwerte', 'allergene' => 'Allergene', 'zusatzstoffe' => 'Zusatzstoffe'][$block] ?? $block }}</p>
                                         @foreach($block === 'preis' ? ['Preis' => $felder] : $felder as $feld => $werte)
-                                            <p class="tabular-nums">{{ $feld }}: <span class="{{ $leise }}">{{ $werte['alt'] ?? '–' }}</span> → <span class="font-medium">{{ $werte['neu'] ?? '–' }}</span></p>
+                                            <p class="tabular-nums">{{ $feld }}: <span class="fa-t-muted">{{ $werte['alt'] ?? '–' }}</span> → <span class="font-medium">{{ $werte['neu'] ?? '–' }}</span></p>
                                         @endforeach
                                     </div>
                                 @endforeach

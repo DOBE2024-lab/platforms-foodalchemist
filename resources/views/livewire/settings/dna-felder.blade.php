@@ -12,7 +12,7 @@
                 </x-fa::select>
             </x-fa::field>
         </div>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Kern-Felder ({{ count($kernFelder) }}, nicht änderbar): {{ collect($kernFelder)->pluck('label')->implode(' · ') }}</p>
+        <p class="fa-t-muted">Kern-Felder ({{ count($kernFelder) }}, nicht änderbar): {{ collect($kernFelder)->pluck('label')->implode(' · ') }}</p>
 
         @if($fehler)<x-fa::notice tone="crit" data-dnaf-fehler>{{ $fehler }}</x-fa::notice>@endif
 

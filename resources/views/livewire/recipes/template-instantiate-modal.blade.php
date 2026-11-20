@@ -1,7 +1,6 @@
 {{-- D-5: Rezept aus Vorlage anlegen — Variante → Vorschläge → Platzhalter zuordnen → anlegen.
      fa-pass (2026-10-05): Bausteine + Tokens, Zuordnungsstand je Platzhalter als Signal. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $menge = fn ($wert) => rtrim(rtrim(number_format((float) $wert, 2, ',', '.'), '0'), ',');
 @endphp
 
@@ -14,8 +13,8 @@
         <x-fa::empty icon="heroicon-o-document-duplicate" title="Keine Vorlage gewählt">Im Basisrezepte-Browser ein Rezept als Vorlage markieren und von dort aus anlegen.</x-fa::empty>
     @else
         <x-foodalchemist::modal-section title="Vorlage">
-            <p class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]" data-template-name>{{ $templateName }}</p>
-            <p class="mt-0.5 {{ $leise }}">{{ $slotAnzahl }} Platzhalter. Bindemittel-Verhältnis und Zubereitung bleiben wie in der Vorlage.</p>
+            <p class="fa-t-h3" data-template-name>{{ $templateName }}</p>
+            <p class="mt-0.5 fa-t-muted">{{ $slotAnzahl }} Platzhalter. Bindemittel-Verhältnis und Zubereitung bleiben wie in der Vorlage.</p>
         </x-foodalchemist::modal-section>
 
         {{-- Variante + Vorschläge --}}
@@ -64,7 +63,7 @@
                                 @elseif(trim($b['query']) !== '')
                                     <x-fa::signal tone="warn">Kein Treffer, bleibt Platzhalter</x-fa::signal>
                                 @else
-                                    <span class="{{ $leise }}">Noch nicht zugeordnet</span>
+                                    <span class="fa-t-muted">Noch nicht zugeordnet</span>
                                 @endif
                             </div>
                         </div>

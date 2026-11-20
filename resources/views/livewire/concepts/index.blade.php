@@ -48,7 +48,7 @@
                         <div wire:key="c-{{ $c->id }}" class="group flex items-center gap-1 rounded-[var(--fa-radius-control)] {{ $aktiv ? 'bg-[var(--fa-accent-soft)]' : 'hover:bg-[var(--fa-hover)]' }}">
                             <button type="button" wire:click="waehle({{ $c->id }})" class="min-w-0 flex-1 px-2.5 py-1.5 text-left" @if($aktiv) aria-current="true" @endif>
                                 <span class="block truncate text-[length:var(--fa-text-md)] {{ $aktiv ? 'font-medium text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}" title="{{ $c->name }}">{{ $c->name }}</span>
-                                <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">
+                                <span class="block fa-t-muted tabular-nums">
                                     {{ $c->slots_count }} {{ $c->slots_count === 1 ? 'Position' : 'Positionen' }}
                                     @if($preisListe !== null)
                                         · <span class="{{ isset($vkDisplay[$c->id]) ? 'font-medium text-[var(--fa-ink-2)]' : '' }}" @if(isset($vkDisplay[$c->id])) title="€/Gast für {{ $aktiverBetrieb }}" @endif>{{ $geld($preisListe) }}</span>
@@ -163,7 +163,7 @@
                     {{-- Kennzahlen: €/Person ist die Hauptzahl, Gesamtpreis erst mit Gästezahl --}}
                     <div class="flex flex-col gap-3">
                         <x-fa::kpis :items="$kennzahlen" />
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Gästezahl und Gesamtpreis erst im Foodbook oder Angebot.</p>
+                        <p class="fa-t-muted">Gästezahl und Gesamtpreis erst im Foodbook oder Angebot.</p>
                         @if($offen !== [])
                             <div class="flex flex-col gap-1">
                                 @foreach($offen as [$ton, $text])
@@ -200,8 +200,8 @@
                                     @foreach($cockpit['zeilen'] as $z)
                                         <li class="flex items-center justify-between gap-3 py-1.5 border-b border-[var(--fa-line)] last:border-0">
                                             <span class="min-w-0">
-                                                <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $z['role'] ?: 'Ohne Rolle' }}</span>
-                                                <span class="flex flex-wrap items-center gap-1.5 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                                                <span class="block fa-t-muted">{{ $z['role'] ?: 'Ohne Rolle' }}</span>
+                                                <span class="flex flex-wrap items-center gap-1.5 fa-t-body">
                                                     <span class="min-w-0 break-words">{{ $z['label'] }}</span>
                                                     @if($z['type'] === 'paket')<x-fa::badge tone="info">Paket</x-fa::badge>@elseif($z['type'] === 'leer')<x-fa::badge tone="crit">leer</x-fa::badge>@endif
                                                 </span>
@@ -246,7 +246,7 @@
                 </x-fa::field>
                 {{-- 06·H4: opt-in Favoriten-Modus (Default aus) --}}
                 <div class="flex flex-col gap-1.5">
-                    <label class="flex items-start gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                    <label class="flex items-start gap-2 fa-t-body">
                         <input type="checkbox" wire:model.live="generatorFavorites" class="mt-0.5 rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-generator-favoriten />
                         <span class="inline-flex items-center gap-1.5">@svg('heroicon-m-star', 'w-4 h-4 text-[var(--fa-warn)]') Auf Basis meiner Favoriten bauen <span class="text-[var(--fa-ink-3)]">(bevorzugt, nicht ausschließlich)</span></span>
                     </label>
@@ -411,14 +411,14 @@
                                         <div class="flex flex-col max-h-48 overflow-y-auto">
                                             @foreach($kandidaten as $k)
                                                 <button type="button" wire:key="k-{{ $slot->id }}-{{ $k->id }}" wire:click="fuelleGericht({{ $slot->id }}, {{ $k->id }})"
-                                                        class="flex w-full items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
+                                                        class="flex w-full items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left fa-t-body hover:bg-[var(--fa-hover)]">
                                                     <span class="min-w-0 truncate" title="{{ $k->name }}">{{ $k->name }}</span>
                                                     <x-fa::money :value="$k->vk_netto" class="shrink-0 text-[var(--fa-ink-2)]" />
                                                 </button>
                                             @endforeach
                                         </div>
                                     @elseif($gerichtSuche !== '')
-                                        <p class="px-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Kein Gericht gefunden.</p>
+                                        <p class="px-2 fa-t-muted">Kein Gericht gefunden.</p>
                                     @endif
                                 </div>
                             @endif

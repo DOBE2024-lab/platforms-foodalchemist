@@ -13,7 +13,7 @@
     </x-fa::empty>
 @else
     <div data-ctrl-benchmark class="flex flex-col gap-3">
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <p class="fa-t-muted">
             {{ $benchmark['n_peers'] > 0
                 ? 'Eigene Werte gegen den Median von ' . $benchmark['n_peers'] . ' ' . ($benchmark['n_peers'] === 1 ? 'anderen Team' : 'anderen Teams') . ' derselben Gruppe. Namen und Gerichte der anderen bleiben verborgen.'
                 : 'Noch kein anderes Team der Gruppe mit Portfolio. Der Vergleich greift ab zwei Teams mit Gerichten.' }}
@@ -43,7 +43,7 @@
                             <td class="num text-[var(--fa-ink-2)]">{{ $peer !== null ? number_format((float) $peer, $nk, ',', '.') . ($meta['unit'] !== '' ? ' ' . $meta['unit'] : '') : '–' }}</td>
                             <td>
                                 @if($vgl === null)
-                                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Kein Vergleich möglich</span>
+                                    <span class="fa-t-muted">Kein Vergleich möglich</span>
                                 @elseif($vgl > 0)
                                     <x-fa::badge tone="ok">Besser als die Gruppe</x-fa::badge>
                                 @elseif($vgl < 0)

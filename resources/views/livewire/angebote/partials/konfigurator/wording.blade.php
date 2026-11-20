@@ -1,9 +1,9 @@
 {{-- Spec 94 · Gerichte eines Konfigurator-Konzepts (Haupt oder Add-on) mit Wording-Überschreibung je Gericht und KI-Wording
      im gewählten Schreibstil (wie „Speisen neu betexten“ im Foodbook-Kapitel). Erwartet $kz, $gerichtZeilen, $schreibstile. --}}
-@php $zeiten = $gerichtZeilen[$kz->id] ?? []; $ovr = $kz->payload_json['wording_overrides'] ?? []; $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]'; @endphp
+@php $zeiten = $gerichtZeilen[$kz->id] ?? []; $ovr = $kz->payload_json['wording_overrides'] ?? []; @endphp
 @if($zeiten !== [])
     <details class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-2" data-kf-wording="{{ $kz->id }}">
-        <summary class="cursor-pointer {{ $leise }}">Gerichte und Wording im Kundenlink (nur für diesen Konfigurator überschreiben)</summary>
+        <summary class="cursor-pointer fa-t-muted">Gerichte und Wording im Kundenlink (nur für diesen Konfigurator überschreiben)</summary>
         @foreach($zeiten as $t => $zeilen)
             @if(count($zeiten) > 1)<p class="mt-2 font-medium">{{ $t === 'lunch' ? 'Tag' : 'Abend' }}</p>@endif
             <ul class="mt-1 flex flex-col gap-1">
@@ -17,7 +17,7 @@
                             @if($eigen)<x-fa::button size="sm" variant="ghost" wire:click="wordingZuruecksetzen({{ $kz->id }}, {{ $z['slot_id'] }})" data-kf-wording-reset="{{ $z['slot_id'] }}">Zurücksetzen</x-fa::button>@endif
                         </li>
                     @elseif(in_array($z['type'] ?? '', ['header', 'paket'], true))
-                        <li class="{{ $leise }} uppercase tracking-wide mt-1">{{ $z['text'] }}</li>
+                        <li class="fa-t-muted uppercase tracking-wide mt-1">{{ $z['text'] }}</li>
                     @endif
                 @endforeach
             </ul>
@@ -30,6 +30,6 @@
             :disabled="$wordingStil === ''" busy="Betextet …" class="shrink-0 mb-0.5"
             title="Schreibt die Gästetexte dieses Konzepts im gewählten Schreibstil neu. Gilt nur in diesem Konfigurator, das Concept bleibt unverändert." />
     </div>
-    <p class="mt-2 {{ $leise }}">Bilder und Standard-Wording pflegst du im Concepter. Leeres Feld = zurück auf das Concept-Wording.</p>
+    <p class="mt-2 fa-t-muted">Bilder und Standard-Wording pflegst du im Concepter. Leeres Feld = zurück auf das Concept-Wording.</p>
     </details>
 @endif

@@ -2,7 +2,6 @@
      Parameter: $a (FoodAlchemistSupplierItem aus HandyDetailService::artikel, mit aktiver_preis, vergleichspreis,
      allergen_werte). Allergene im 4-Wert-Modell: enthalten · Spuren · nicht enthalten · unbekannt (nie als „frei“ werten). --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $namen = \Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::ALLERGENE;
     $werte = collect($a->allergen_werte);
     $enthalten = $werte->filter(fn ($w) => $w === 'enthalten')->keys()->map(fn ($k) => $namen[$k] ?? $k);
@@ -29,12 +28,12 @@
 
     <dl class="grid grid-cols-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-x divide-[var(--fa-line)]" data-fa-artikel-preis>
         <div class="flex flex-col gap-0.5 px-3 py-2.5 min-w-0">
-            <dt class="{{ $leise }}">Preis netto</dt>
+            <dt class="fa-t-muted">Preis netto</dt>
             <dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums {{ $a->aktiver_preis !== null ? 'text-[var(--fa-ink)]' : 'text-[var(--fa-warn)]' }}">{{ $a->aktiver_preis !== null ? number_format((float) $a->aktiver_preis, 2, ',', '.') . ' €' : 'fehlt' }}</dd>
         </div>
         <div class="flex flex-col gap-0.5 px-3 py-2.5 min-w-0">
-            <dt class="{{ $leise }}">Vergleichspreis</dt>
-            <dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ $a->vergleichspreis !== null ? number_format($a->vergleichspreis['value'], 2, ',', '.') . ' ' . $a->vergleichspreis['unit'] : '–' }}</dd>
+            <dt class="fa-t-muted">Vergleichspreis</dt>
+            <dd class="fa-t-h2 tabular-nums">{{ $a->vergleichspreis !== null ? number_format($a->vergleichspreis['value'], 2, ',', '.') . ' ' . $a->vergleichspreis['unit'] : '–' }}</dd>
         </div>
     </dl>
 
@@ -60,7 +59,7 @@
                 {{ $a->structure->gp->name }} @svg('heroicon-m-chevron-right', 'w-4 h-4 shrink-0')
             </a>
         @else
-            <p class="{{ $leise }}">Keinem Grundprodukt zugeordnet.</p>
+            <p class="fa-t-muted">Keinem Grundprodukt zugeordnet.</p>
         @endif
     </section>
 
@@ -68,7 +67,7 @@
         <dl class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-4 py-2">
             @foreach($stamm as $label => $wert)
                 <div class="flex items-baseline justify-between gap-3 py-1.5">
-                    <dt class="{{ $leise }}">{{ $label }}</dt>
+                    <dt class="fa-t-muted">{{ $label }}</dt>
                     <dd class="min-w-0 text-right tabular-nums text-[var(--fa-ink)] wrap-anywhere">{{ $wert }}</dd>
                 </div>
             @endforeach

@@ -61,7 +61,7 @@
                      class="group w-full text-left cursor-pointer rounded-[var(--fa-radius-control)] px-2 py-1.5 -mx-2 hover:bg-[var(--fa-hover)]"
                      data-planung-worker-lauf="{{ $s->id }}" title="Planung öffnen">
                     <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                        <span class="min-w-0 flex-1 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] break-words group-hover:text-[var(--fa-accent)]">{{ $anzeigeTitel($s) }}</span>
+                        <span class="min-w-0 flex-1 fa-t-strong break-words group-hover:text-[var(--fa-accent)]">{{ $anzeigeTitel($s) }}</span>
                         <span class="shrink-0 inline-flex items-center gap-3">
                             <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] tabular-nums">{{ $fertig }} von {{ $total }} fertig</span>
                             <button type="button" wire:click.stop="laufAbbrechen({{ (int) ($kaskaden[(int) $s->id]['run_id'] ?? 0) }})"
@@ -75,7 +75,7 @@
                     <div class="mt-1.5 h-1.5 rounded-full bg-[var(--fa-neutral-soft)] overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $prozent }}">
                         <div class="h-full rounded-full bg-[var(--fa-info)] transition-all" style="width: {{ $prozent }}%"></div>
                     </div>
-                    @if($fort !== '')<p class="mt-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] break-words">{{ $fort }}</p>@endif
+                    @if($fort !== '')<p class="mt-1 fa-t-muted break-words">{{ $fort }}</p>@endif
                     @if($phaseAktuell)<p class="mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-info)] break-words" data-planung-worker-phase="{{ $s->id }}">{{ $phaseAktuell }}</p>@endif
                 </div>
             @endforeach

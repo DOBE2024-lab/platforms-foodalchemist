@@ -1,6 +1,6 @@
 {{-- Spec 82 §9 · Projekt-Detail (Agentur-Akte im Master-Team): Kopf, Phasen-Reiter, Seitenleiste „Verknüpft“. --}}
 <div class="flex flex-col gap-4 {{ $handy ? 'px-4 py-4' : '' }}" data-fa-projekt="{{ $p->id }}">{{-- #1003: am Handy 16 px Rand --}}
-    <nav class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" aria-label="Brotkrumen" data-projekt-brotkrumen>
+    <nav class="fa-t-muted" aria-label="Brotkrumen" data-projekt-brotkrumen>
         <a href="{{ route('foodalchemist.projekte.index') }}" wire:navigate class="hover:underline">Projekte</a>
         <span aria-hidden="true">/</span> <span>{{ $firma?->display_name ?? 'Kunde' }}</span>
         <span aria-hidden="true">/</span> <span class="text-[var(--fa-ink)]">{{ $p->name }}</span>

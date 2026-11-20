@@ -74,7 +74,7 @@
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <p class="{{ $klein }} text-[var(--fa-ink-3)]">{{ \Platform\FoodAlchemist\Livewire\Settings\Regeln::REGELWERKE[$offen->regelwerk] ?? $offen->regelwerk }} {{ $offen->paragraph }} · {{ \Platform\FoodAlchemist\Livewire\Settings\Regeln::ARTEN[$offen->art] ?? $offen->art }} · wirkt auf <span class="font-mono">{{ $offen->ziel }}</span></p>
-                            <h3 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $offen->titel }}</h3>
+                            <h3 class="fa-t-h3">{{ $offen->titel }}</h3>
                         </div>
                         <x-fa::icon-button size="sm" icon="heroicon-o-x-mark" label="Schließen" wire:click="schliesse" />
                     </div>

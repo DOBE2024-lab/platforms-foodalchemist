@@ -54,7 +54,7 @@
             <svg viewBox="0 0 1200 980" preserveAspectRatio="xMidYMid meet" class="w-full h-[calc(85vh-13rem)] min-h-[280px] rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)]" data-fa-netz-mount></svg>
 
             {{-- Legende --}}
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-netz-legende>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 fa-t-muted" data-netz-legende>
                 <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-[var(--fa-accent)]"></span> Gericht</span>
                 @if($istGericht)
                     <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-[var(--fa-ok)] bg-[var(--fa-ok-soft)]"></span> Bestandteil (Basisrezept des Gerichts)</span>

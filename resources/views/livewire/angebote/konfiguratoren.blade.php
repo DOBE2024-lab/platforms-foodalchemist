@@ -39,7 +39,7 @@
                 <tbody>
                     @forelse($liste as $k)
                         <x-foodalchemist::table-row :active="$selectedId === $k->id" wire:key="kf-{{ $k->id }}" wire:click="waehle({{ $k->id }})" data-konfigurator-zeile="{{ $k->id }}">
-                            <td class="font-medium">{{ $k->name }}@if($k->kunden_titel && $k->kunden_titel !== $k->name)<div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $k->kunden_titel }}</div>@endif</td>
+                            <td class="font-medium">{{ $k->name }}@if($k->kunden_titel && $k->kunden_titel !== $k->name)<div class="fa-t-muted">{{ $k->kunden_titel }}</div>@endif</td>
                             <td><x-fa::badge :tone="$statusTon[$k->status] ?? 'neutral'">{{ $statusWerte[$k->status] ?? $k->status }}</x-fa::badge></td>
                             <td class="text-[var(--fa-ink-2)]">{{ $k->ort ?: '–' }}</td>
                             <td class="num">{{ $k->haupt_count }}</td>

@@ -58,7 +58,7 @@
                                             <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="kiUnbegrenzt.{{ $b['team_id'] }}" data-mandant-ki-unbegrenzt> unbegrenzt
                                         </label>
                                         <x-fa::button size="sm" variant="secondary" wire:click="kiDeckelSpeichern({{ $b['team_id'] }})" data-mandant-ki-speichern>Speichern</x-fa::button>
-                                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[60ch]">Leer = Standard: Projektphase und Teams ohne Mandanten-Status {{ $euro(config('foodalchemist.ai.projekt_deckel_eur', 20)) }}, aktive Mandanten ohne Deckel. Darüber ist KI gesperrt bis zum Monatsersten oder zur Lizenz.</span>
+                                        <span class="fa-t-muted max-w-[60ch]">Leer = Standard: Projektphase und Teams ohne Mandanten-Status {{ $euro(config('foodalchemist.ai.projekt_deckel_eur', 20)) }}, aktive Mandanten ohne Deckel. Darüber ist KI gesperrt bis zum Monatsersten oder zur Lizenz.</span>
                                     </div>
                                     @if($kiFehler)<x-fa::notice tone="crit">{{ $kiFehler }}</x-fa::notice>@endif
                                     @if($hinweis)<x-fa::notice tone="ok">{{ $hinweis }}</x-fa::notice>@endif

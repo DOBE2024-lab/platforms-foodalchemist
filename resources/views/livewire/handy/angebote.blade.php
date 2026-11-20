@@ -2,7 +2,6 @@
      Antippen öffnet die Live-Vorschau (Kundensicht) im selben Tab, „Dokument“ das Angebots-Dokument mit Preisen.
      Nur lesen: kein Anlegen, kein Editor, kein Status-Wechsel. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $chip = 'inline-flex items-center h-9 px-3 rounded-full text-[length:var(--fa-text-sm)] font-medium border whitespace-nowrap';
     $chipAn = 'border-[var(--fa-accent)] bg-[var(--fa-accent)] text-[var(--fa-on-accent)]';
     $chipAus = 'border-[var(--fa-line)] bg-[var(--fa-surface)] text-[var(--fa-ink-2)]';
@@ -15,7 +14,7 @@
     <div class="flex-1 min-w-0 h-full overflow-y-auto px-4 py-4 space-y-3" data-fa-handy-angebote>
         <div class="flex items-baseline justify-between gap-3">
             <h1 class="text-[length:var(--fa-text-2xl)] font-semibold text-[var(--fa-ink)]">Angebote</h1>
-            <span class="{{ $leise }} tabular-nums">{{ number_format($eintraege->total(), 0, ',', '.') }} Treffer</span>
+            <span class="fa-t-muted tabular-nums">{{ number_format($eintraege->total(), 0, ',', '.') }} Treffer</span>
         </div>
         <input type="search" wire:model.live.debounce.300ms="search" placeholder="Angebot oder Anlass suchen" aria-label="Angebote durchsuchen"
                class="fa-control h-12 text-[length:var(--fa-text-base)]" data-fa-handy-suche>
@@ -34,7 +33,7 @@
                     <a href="{{ $k['href'] }}" class="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 min-h-[60px] text-left" data-fa-handy-angebot="{{ $k['id'] }}">
                         <span class="min-w-0 flex-1">
                             <span class="block font-medium leading-snug text-[var(--fa-ink)] wrap-anywhere">{{ $k['name'] }}</span>
-                            @if($k['zeile'] !== '')<span class="block truncate {{ $leise }}">{{ $k['zeile'] }}</span>@endif
+                            @if($k['zeile'] !== '')<span class="block truncate fa-t-muted">{{ $k['zeile'] }}</span>@endif
                             <span class="mt-1 flex items-center gap-2">
                                 <x-fa::badge :tone="$k['ton']">{{ $k['status'] }}</x-fa::badge>
                                 <span class="text-[length:var(--fa-text-sm)] tabular-nums text-[var(--fa-ink-2)]"><x-fa::money :value="$k['preis']" missing="Noch kein Preis" /></span>
@@ -59,9 +58,9 @@
 
         @if($eintraege->hasPages())
             <div class="flex items-center justify-between gap-3" data-fa-handy-blaettern>
-                <button type="button" wire:click="previousPage" @disabled($eintraege->onFirstPage()) class="min-h-11 px-3 {{ $leise }} underline disabled:opacity-40 disabled:no-underline">Zurück</button>
-                <span class="{{ $leise }} tabular-nums">Seite {{ $eintraege->currentPage() }} von {{ $eintraege->lastPage() }}</span>
-                <button type="button" wire:click="nextPage" @disabled(! $eintraege->hasMorePages()) class="min-h-11 px-3 {{ $leise }} underline disabled:opacity-40 disabled:no-underline">Weiter</button>
+                <button type="button" wire:click="previousPage" @disabled($eintraege->onFirstPage()) class="min-h-11 px-3 fa-t-muted underline disabled:opacity-40 disabled:no-underline">Zurück</button>
+                <span class="fa-t-muted tabular-nums">Seite {{ $eintraege->currentPage() }} von {{ $eintraege->lastPage() }}</span>
+                <button type="button" wire:click="nextPage" @disabled(! $eintraege->hasMorePages()) class="min-h-11 px-3 fa-t-muted underline disabled:opacity-40 disabled:no-underline">Weiter</button>
             </div>
         @endif
     </div>

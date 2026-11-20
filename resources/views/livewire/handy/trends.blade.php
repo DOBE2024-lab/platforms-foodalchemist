@@ -4,7 +4,6 @@
 @php
     use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $statusTon = ['gesichtet' => 'warn', 'geprueft' => 'info', 'auf_radar' => 'accent', 'in_umsetzung' => 'ok', 'archiviert' => 'neutral', 'verworfen' => 'neutral'];
     $konfTon = ['hoch' => 'ok', 'mittel' => 'info', 'niedrig' => 'warn'];
     $liste = 'flex flex-col rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-y divide-[var(--fa-line)]';
@@ -26,7 +25,7 @@
             <article class="space-y-4 min-w-0 wrap-anywhere" data-fa-handy-trend="{{ $gewaehlt->id }}">
                 <div>
                     <h1 class="text-[length:var(--fa-text-2xl)] font-semibold leading-tight text-[var(--fa-ink)]">{{ $gewaehlt->name }}</h1>
-                    <p class="{{ $leise }}">{{ $gewaehlt->kategorie ? V::KATEGORIEN[$gewaehlt->kategorie] . ($gewaehlt->food_cluster ? ' · ' . V::FOOD_CLUSTER[$gewaehlt->food_cluster] : '') : 'Noch nicht eingeordnet' }}</p>
+                    <p class="fa-t-muted">{{ $gewaehlt->kategorie ? V::KATEGORIEN[$gewaehlt->kategorie] . ($gewaehlt->food_cluster ? ' · ' . V::FOOD_CLUSTER[$gewaehlt->food_cluster] : '') : 'Noch nicht eingeordnet' }}</p>
                     <div class="mt-1.5 flex flex-wrap gap-1.5">
                         @if($gewaehlt->typ)<x-fa::badge :tone="in_array($gewaehlt->typ, ['hype'], true) ? 'warn' : 'accent'">{{ V::TYPEN[$gewaehlt->typ] }}</x-fa::badge>@endif
                         <x-fa::badge :tone="$statusTon[$gewaehlt->status] ?? 'neutral'">{{ V::STATUS[$gewaehlt->status] ?? $gewaehlt->status }}</x-fa::badge>
@@ -36,11 +35,11 @@
 
                 <dl class="grid grid-cols-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-x divide-[var(--fa-line)]">
                     <div class="flex flex-col gap-0.5 px-3 py-2.5 min-w-0">
-                        <dt class="{{ $leise }}">Ebene</dt>
+                        <dt class="fa-t-muted">Ebene</dt>
                         <dd class="font-semibold text-[var(--fa-ink)]">{{ $gewaehlt->ebene ? V::EBENEN[$gewaehlt->ebene] : 'nicht eingeordnet' }}</dd>
                     </div>
                     <div class="flex flex-col gap-0.5 px-3 py-2.5 min-w-0">
-                        <dt class="{{ $leise }}">Konfidenz</dt>
+                        <dt class="fa-t-muted">Konfidenz</dt>
                         <dd><x-fa::badge :tone="$konfTon[$kf] ?? 'neutral'">{{ V::KONFIDENZ[$kf] ?? $kf }}</x-fa::badge></dd>
                     </div>
                 </dl>
@@ -52,36 +51,36 @@
                     </section>
                 @endif
                 @if(($bewertung['begruendung'] ?? '') !== '' || $gewaehlt->befragung_anteil !== null)
-                    <p class="{{ $leise }}">{{ $bewertung['begruendung'] ?? '' }}@if($gewaehlt->befragung_anteil !== null) Befragung: {{ number_format($gewaehlt->befragung_anteil, 0, ',', '.') }} % der Nennungen.@endif</p>
+                    <p class="fa-t-muted">{{ $bewertung['begruendung'] ?? '' }}@if($gewaehlt->befragung_anteil !== null) Befragung: {{ number_format($gewaehlt->befragung_anteil, 0, ',', '.') }} % der Nennungen.@endif</p>
                 @endif
                 @if($gewaehlt->historische_einordnung || $gewaehlt->gartner_phase || $gewaehlt->einordnung_begruendung)
                     <section class="space-y-1">
                         <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Einordnung</h2>
                         @if($gewaehlt->historische_einordnung)<p class="text-[var(--fa-ink)]">{{ $gewaehlt->historische_einordnung }}</p>@endif
-                        @if($gewaehlt->gartner_phase)<p class="{{ $leise }}">Gartner Hype Cycle: {{ V::GARTNER_PHASEN[$gewaehlt->gartner_phase] }}</p>@endif
-                        @if($gewaehlt->einordnung_begruendung)<p class="{{ $leise }}">{{ $gewaehlt->einordnung_begruendung }}@if(in_array($gewaehlt->einordnung_quelle, ['ki'], true)) (KI-Vorschlag)@endif</p>@endif
+                        @if($gewaehlt->gartner_phase)<p class="fa-t-muted">Gartner Hype Cycle: {{ V::GARTNER_PHASEN[$gewaehlt->gartner_phase] }}</p>@endif
+                        @if($gewaehlt->einordnung_begruendung)<p class="fa-t-muted">{{ $gewaehlt->einordnung_begruendung }}@if(in_array($gewaehlt->einordnung_quelle, ['ki'], true)) (KI-Vorschlag)@endif</p>@endif
                     </section>
                 @endif
 
                 <section class="space-y-2" data-fa-handy-trend-belege>
-                    <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Belege <span class="font-normal {{ $leise }}">{{ $belege->count() }}</span></h2>
+                    <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Belege <span class="font-normal fa-t-muted">{{ $belege->count() }}</span></h2>
                     <ul class="{{ $liste }}">
                         @forelse($belege as $eintrag)
                             @php $b = $eintrag['b']; @endphp
                             <li class="px-4 py-3 space-y-1" wire:key="hb-{{ $b->id }}">
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     <x-fa::badge>{{ V::QUELLEN[$b->quelle] ?? $b->quelle }}</x-fa::badge>
-                                    @if($b->beobachtet_am)<span class="{{ $leise }}">{{ $b->beobachtet_am->format('d.m.Y') }}</span>@endif
+                                    @if($b->beobachtet_am)<span class="fa-t-muted">{{ $b->beobachtet_am->format('d.m.Y') }}</span>@endif
                                 </div>
                                 @if($b->titel)<p class="text-[var(--fa-ink)]">{{ $b->titel }}</p>@endif
-                                @if($b->notiz)<p class="{{ $leise }}">{{ $b->notiz }}</p>@endif
+                                @if($b->notiz)<p class="fa-t-muted">{{ $b->notiz }}</p>@endif
                                 <div class="flex flex-wrap gap-x-4">
                                     @if($b->url)<a href="{{ $b->url }}" target="_blank" rel="noopener" class="inline-flex items-center min-h-11 text-[var(--fa-accent)] underline">Link öffnen</a>@endif
                                     @if($eintrag['url'])<a href="{{ $eintrag['url'] }}" target="_blank" rel="noopener" class="inline-flex items-center min-h-11 text-[var(--fa-accent)] underline">{{ $b->datei_name ?: 'Datei öffnen' }}</a>@endif
                                 </div>
                             </li>
                         @empty
-                            <li class="px-4 py-3 {{ $leise }}">Noch kein Beleg.</li>
+                            <li class="px-4 py-3 fa-t-muted">Noch kein Beleg.</li>
                         @endforelse
                     </ul>
                 </section>
@@ -90,7 +89,7 @@
                     <section class="space-y-1">
                         <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Google Trends</h2>
                         @foreach($messungen as $m)
-                            <p class="{{ $leise }}" wire:key="hm-{{ $m->id }}"><span class="text-[var(--fa-ink)]">„{{ $m->suchbegriff }}“</span> · {{ ucfirst((string) $m->richtung ?: 'keine Daten') }} · Ø {{ $m->durchschnitt ?? '–' }} · {{ $m->created_at?->format('d.m.Y') }}</p>
+                            <p class="fa-t-muted" wire:key="hm-{{ $m->id }}"><span class="text-[var(--fa-ink)]">„{{ $m->suchbegriff }}“</span> · {{ ucfirst((string) $m->richtung ?: 'keine Daten') }} · Ø {{ $m->durchschnitt ?? '–' }} · {{ $m->created_at?->format('d.m.Y') }}</p>
                         @endforeach
                     </section>
                 @endif
@@ -106,28 +105,28 @@
                 <article class="space-y-4 min-w-0 wrap-anywhere" data-fa-handy-thema="{{ $thema->id }}">
                     <div>
                         <h1 class="text-[length:var(--fa-text-2xl)] font-semibold leading-tight text-[var(--fa-ink)]">{{ $thema->titel }}</h1>
-                        <p class="{{ $leise }}">{{ $thema->herkunft === 'automatisch' ? 'Automatisches Thema aus dem Eingang' : 'Pinnwand' }}@if($thema->trend) · Trend: {{ $thema->trend->name }}@endif</p>
+                        <p class="fa-t-muted">{{ $thema->herkunft === 'automatisch' ? 'Automatisches Thema aus dem Eingang' : 'Pinnwand' }}@if($thema->trend) · Trend: {{ $thema->trend->name }}@endif</p>
                     </div>
                     <section class="space-y-2" data-fa-handy-thema-belege>
-                        <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Belege <span class="font-normal {{ $leise }}">{{ $themaBelege->count() }}</span></h2>
+                        <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Belege <span class="font-normal fa-t-muted">{{ $themaBelege->count() }}</span></h2>
                         <ul class="{{ $liste }}">
                             @forelse($themaBelege as $eintrag)
                                 @php $b = $eintrag['b']; @endphp
                                 <li class="px-4 py-3 space-y-1" wire:key="htb-{{ $b->id }}">
                                     <div class="flex flex-wrap items-center gap-1.5">
                                         <x-fa::badge>{{ V::QUELLEN[$b->quelle] ?? $b->quelle }}</x-fa::badge>
-                                        @if($b->fundort)<span class="{{ $leise }}">{{ $b->fundort }}</span>@endif
-                                        @if($b->beobachtet_am)<span class="{{ $leise }}">{{ $b->beobachtet_am->format('d.m.Y') }}</span>@endif
+                                        @if($b->fundort)<span class="fa-t-muted">{{ $b->fundort }}</span>@endif
+                                        @if($b->beobachtet_am)<span class="fa-t-muted">{{ $b->beobachtet_am->format('d.m.Y') }}</span>@endif
                                     </div>
                                     @if($b->titel)<p class="text-[var(--fa-ink)]">{{ $b->titel }}</p>@endif
-                                    @if($b->notiz)<p class="{{ $leise }}">{{ $b->notiz }}</p>@endif
+                                    @if($b->notiz)<p class="fa-t-muted">{{ $b->notiz }}</p>@endif
                                     <div class="flex flex-wrap gap-x-4">
                                         @if($eintrag['link'])<a href="{{ $eintrag['link'] }}" target="_blank" rel="noopener" class="inline-flex items-center min-h-11 text-[var(--fa-accent)] underline">Link öffnen</a>@endif
                                         @if($eintrag['url'])<a href="{{ $eintrag['url'] }}" target="_blank" rel="noopener" class="inline-flex items-center min-h-11 text-[var(--fa-accent)] underline">{{ $b->datei_name ?: 'Datei öffnen' }}</a>@endif
                                     </div>
                                 </li>
                             @empty
-                                <li class="px-4 py-3 {{ $leise }}">Noch kein Beleg.</li>
+                                <li class="px-4 py-3 fa-t-muted">Noch kein Beleg.</li>
                             @endforelse
                         </ul>
                     </section>
@@ -162,7 +161,7 @@
                             <button type="button" wire:click="$set('handyThemaId', {{ $i->id }})" class="flex w-full items-center gap-3 px-4 py-3 min-h-[60px] text-left" data-fa-handy-thema-karte="{{ $i->id }}">
                                 <span class="min-w-0 flex-1 space-y-1">
                                     <span class="block font-medium leading-snug text-[var(--fa-ink)] wrap-anywhere">{{ $i->titel }}</span>
-                                    <span class="block {{ $leise }}">{{ $z['belege'] }} {{ $z['belege'] === 1 ? 'Beleg' : 'Belege' }}@if($z['beitraege'] !== $z['belege']) · {{ $z['beitraege'] }} {{ $z['beitraege'] === 1 ? 'Beitrag' : 'Beiträge' }}@endif{{ $i->herkunft === 'manuell' ? ' · Pinnwand' : '' }}</span>
+                                    <span class="block fa-t-muted">{{ $z['belege'] }} {{ $z['belege'] === 1 ? 'Beleg' : 'Belege' }}@if($z['beitraege'] !== $z['belege']) · {{ $z['beitraege'] }} {{ $z['beitraege'] === 1 ? 'Beitrag' : 'Beiträge' }}@endif{{ $i->herkunft === 'manuell' ? ' · Pinnwand' : '' }}</span>
                                     @if($z['arten'] !== [])
                                         <span class="flex flex-wrap gap-1">@foreach($z['arten'] as $art)<x-fa::badge>{{ V::QUELLEN[$art] ?? $art }}</x-fa::badge>@endforeach</span>
                                     @endif
@@ -171,7 +170,7 @@
                             </button>
                         </li>
                     @empty
-                        <li class="px-4 py-3 {{ $leise }}">Noch keine Themen.</li>
+                        <li class="px-4 py-3 fa-t-muted">Noch keine Themen.</li>
                     @endforelse
                 </ul>
             @else
@@ -187,14 +186,14 @@
                 </div>
                 @forelse($gruppen as $gk => $g)
                     <section class="space-y-1.5" wire:key="hg-{{ $gruppe }}-{{ $gk }}" data-fa-handy-trend-gruppe="{{ $gk }}">
-                        <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink-2)]">{{ $g['label'] }} <span class="font-normal {{ $leise }}">{{ $g['trends']->count() }}</span></h2>
+                        <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink-2)]">{{ $g['label'] }} <span class="font-normal fa-t-muted">{{ $g['trends']->count() }}</span></h2>
                         <ul class="{{ $liste }}">
                             @foreach($g['trends'] as $t)
                                 <li wire:key="ht-{{ $t->id }}">
                                     <button type="button" wire:click="select({{ $t->id }})" class="flex w-full items-center gap-3 px-4 py-3 min-h-[60px] text-left" data-fa-handy-karte="{{ $t->id }}">
                                         <span class="min-w-0 flex-1">
                                             <span class="block font-medium leading-snug text-[var(--fa-ink)] wrap-anywhere">{{ $t->name }}</span>
-                                            <span class="block truncate {{ $leise }}">{{ implode(' · ', array_filter([
+                                            <span class="block truncate fa-t-muted">{{ implode(' · ', array_filter([
                                                 $gruppe === 'ebene' ? ($t->kategorie ? V::KATEGORIEN[$t->kategorie] : null) : ($t->ebene ? V::EBENEN[$t->ebene] : null),
                                                 V::STATUS[$t->status] ?? $t->status,
                                             ])) }}</span>

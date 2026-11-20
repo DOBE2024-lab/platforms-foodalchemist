@@ -3,7 +3,6 @@
      Geschmacksprofil (7 Achsen, 0–1). Kein Desktop-Link (Dominique 02.11.: Antippen springt nur hierher). Allergene im 4-Wert-Modell: unbekannt nie als „frei“ werten.
      Fremd oder unsichtbar: nur „nicht verfügbar“. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $karte = 'rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)]';
     $h2 = 'text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]';
     $zahl = fn ($wert) => number_format((float) $wert, 2, ',', '.');
@@ -40,15 +39,15 @@
                     <div class="{{ $karte }} flex items-start gap-3 px-3 py-2.5">
                         <a href="{{ route('foodalchemist.suppliers.index', ['artikel' => $lead->id]) }}" wire:navigate class="min-w-0 flex-1">
                             <p class="font-medium text-[var(--fa-ink)] wrap-anywhere">{{ $lead->designation }}</p>
-                            <p class="{{ $leise }}">{{ $lead->supplier_name ?? 'Lieferant unbekannt' }}</p>
+                            <p class="fa-t-muted">{{ $lead->supplier_name ?? 'Lieferant unbekannt' }}</p>
                         </a>
                         <div class="shrink-0 text-right">
                             @if($preisJe($lead) !== null)
-                                <p class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]" data-fa-handy-gp-preis>{{ $preisJe($lead) }}</p>
-                                @if($gebindePreis($lead) !== null)<p class="{{ $leise }} tabular-nums">{{ $gebindePreis($lead) }} je Gebinde</p>@endif
+                                <p class="fa-t-h2 tabular-nums" data-fa-handy-gp-preis>{{ $preisJe($lead) }}</p>
+                                @if($gebindePreis($lead) !== null)<p class="fa-t-muted tabular-nums">{{ $gebindePreis($lead) }} je Gebinde</p>@endif
                             @elseif($gebindePreis($lead) !== null)
-                                <p class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]" data-fa-handy-gp-preis>{{ $gebindePreis($lead) }}</p>
-                                <p class="{{ $leise }}">ohne Preis je kg</p>
+                                <p class="fa-t-h2 tabular-nums" data-fa-handy-gp-preis>{{ $gebindePreis($lead) }}</p>
+                                <p class="fa-t-muted">ohne Preis je kg</p>
                             @else
                                 <p class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-warn)]" data-fa-handy-gp-preis-fehlt>Preis fehlt</p>
                             @endif
@@ -57,7 +56,7 @@
                 @elseif($gp->requires_la)
                     <p class="text-[var(--fa-warn)]" data-fa-handy-gp-preis-fehlt>Kein Artikel verknüpft. Preis fehlt.</p>
                 @else
-                    <p class="{{ $leise }}">Braucht keinen Lieferantenartikel.</p>
+                    <p class="fa-t-muted">Braucht keinen Lieferantenartikel.</p>
                 @endif
             </section>
 
@@ -71,7 +70,7 @@
                                 <a href="{{ route('foodalchemist.suppliers.index', ['artikel' => $la->id]) }}" wire:navigate class="flex items-center gap-3 px-4 min-h-[52px] py-2 {{ $la->locked ? 'opacity-60' : '' }}">
                                     <span class="min-w-0 flex-1">
                                         <span class="block text-[length:var(--fa-text-base)] text-[var(--fa-ink)] break-words">{{ $la->designation }}</span>
-                                        <span class="block {{ $leise }} truncate">{{ $la->supplier_name ?? 'Lieferant unbekannt' }}{{ $la->locked ? ' · gesperrt' : '' }}</span>
+                                        <span class="block fa-t-muted truncate">{{ $la->supplier_name ?? 'Lieferant unbekannt' }}{{ $la->locked ? ' · gesperrt' : '' }}</span>
                                     </span>
                                     <span class="shrink-0 text-right tabular-nums {{ ($preisJe($la) ?? $gebindePreis($la)) !== null ? 'text-[var(--fa-ink-2)]' : 'text-[var(--fa-warn)]' }}">{{ $preisJe($la) ?? $gebindePreis($la) ?? 'Preis fehlt' }}</span>
                                 </a>
@@ -79,7 +78,7 @@
                         @endforeach
                     </ul>
                     @if($kette->count() > \Platform\FoodAlchemist\Livewire\Handy\GpAnsicht::ARTIKEL_MAX)
-                        <p class="{{ $leise }}">und {{ $kette->count() - \Platform\FoodAlchemist\Livewire\Handy\GpAnsicht::ARTIKEL_MAX }} weitere</p>
+                        <p class="fa-t-muted">und {{ $kette->count() - \Platform\FoodAlchemist\Livewire\Handy\GpAnsicht::ARTIKEL_MAX }} weitere</p>
                     @endif
                 </section>
             @endif
@@ -102,7 +101,7 @@
             <section class="space-y-1.5" data-fa-handy-gp-anker>
                 <h2 class="{{ $h2 }}">Kern-Anker</h2>
                 @if($kernAnker->isEmpty())
-                    <p class="{{ $leise }}">Noch kein Aroma-Anker.</p>
+                    <p class="fa-t-muted">Noch kein Aroma-Anker.</p>
                 @else
                     <div class="flex flex-wrap gap-1.5">
                         @foreach($kernAnker as $a)
@@ -118,9 +117,9 @@
                     <div class="{{ $karte }} flex flex-col gap-2 px-3 py-2.5">
                         @foreach($geschmack as $achse => $wert)
                             <div class="flex items-center gap-3" wire:key="hgp-g-{{ $achse }}" data-fa-handy-gp-achse="{{ $achse }}">
-                                <span class="w-16 shrink-0 {{ $leise }}">{{ \Platform\FoodAlchemist\Services\SensorikService::DIM_LABEL[$achse] ?? $achse }}</span>
+                                <span class="w-16 shrink-0 fa-t-muted">{{ \Platform\FoodAlchemist\Services\SensorikService::DIM_LABEL[$achse] ?? $achse }}</span>
                                 <div class="flex-1 h-2 rounded-full bg-[var(--fa-line)] overflow-hidden"><div class="h-full rounded-full bg-[var(--fa-accent)]" style="width: {{ (int) round($wert * 100) }}%"></div></div>
-                                <span class="w-10 shrink-0 text-right tabular-nums {{ $leise }}">{{ number_format($wert, 2, ',', '') }}</span>
+                                <span class="w-10 shrink-0 text-right tabular-nums fa-t-muted">{{ number_format($wert, 2, ',', '') }}</span>
                             </div>
                         @endforeach
                     </div>

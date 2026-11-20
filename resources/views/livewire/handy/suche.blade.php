@@ -39,7 +39,7 @@
                                    class="flex items-center gap-3 px-4 min-h-[52px] py-2">
                                     <span class="min-w-0 flex-1">
                                         <span class="block text-[length:var(--fa-text-base)] text-[var(--fa-ink)] break-words">{{ $t['titel'] }}</span>
-                                        @if($t['zusatz'])<span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] truncate">{{ $t['zusatz'] }}</span>@endif
+                                        @if($t['zusatz'])<span class="block fa-t-muted truncate">{{ $t['zusatz'] }}</span>@endif
                                     </span>
                                     @svg('heroicon-m-chevron-right', 'w-5 h-5 shrink-0 text-[var(--fa-ink-3)]')
                                 </a>

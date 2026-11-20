@@ -33,7 +33,7 @@
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <a href="{{ $q->url }}" target="_blank" rel="noopener nofollow" class="font-medium hover:underline break-words">{{ $q->name }}</a>
-                            <div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] flex flex-wrap gap-x-2">
+                            <div class="fa-t-muted flex flex-wrap gap-x-2">
                                 <span>{{ V::label(V::QUELLEN, $q->art) }}</span>
                                 <span>{{ V::label(V::ABRUF_WEGE, $q->abruf_weg) }} · {{ V::label(V::FEED_TYPEN, $q->feed_typ) }}</span>
                                 <span>Rhythmus: {{ V::label(V::RHYTHMEN, $q->rhythmus) }}</span>
@@ -48,8 +48,8 @@
                     @if($q->letzter_fehler)
                         <x-fa::notice tone="warn" data-quelle-fehler>{{ $q->letzter_fehler }} @if($q->fehler_in_folge > 1)({{ $q->fehler_in_folge }}× in Folge)@endif</x-fa::notice>
                     @endif
-                    @if($q->pruef_hinweis)<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $q->pruef_hinweis }}</p>@endif
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+                    @if($q->pruef_hinweis)<p class="fa-t-muted">{{ $q->pruef_hinweis }}</p>@endif
+                    <p class="fa-t-muted">
                         Stichworte ein: {{ $w['ein'] === [] ? 'alles' : implode(', ', $w['ein']) }}@if($w['ein_quelle'] === 'team' && $w['ein'] !== []) (Team-Standard)@endif
                         · aus: {{ $w['aus'] === [] ? '–' : implode(', ', $w['aus']) }}@if($w['aus_quelle'] === 'team' && $w['aus'] !== []) (Team-Standard)@endif
                     </p>

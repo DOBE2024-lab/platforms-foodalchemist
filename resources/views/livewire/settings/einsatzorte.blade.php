@@ -30,7 +30,7 @@
                                 @if($editId === $l->id)
                                     <td>
                                         <x-fa::input size="sm" wire:model="form.label" aria-label="Name" class="w-full min-w-40" />
-                                        <span class="block mt-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $l->slug }}</span>
+                                        <span class="block mt-1 fa-t-muted">{{ $l->slug }}</span>
                                     </td>
                                     <td colspan="2"><x-fa::input size="sm" wire:model="form.description" aria-label="Beschreibung" class="w-full" placeholder="Beschreibung (optional)" /></td>
                                     <td class="whitespace-nowrap">
@@ -42,7 +42,7 @@
                                 @else
                                     <td>
                                         <span class="flex flex-wrap items-center gap-1.5 font-medium">{{ $l->label }}@unless($l->active)<x-fa::badge>inaktiv</x-fa::badge>@endunless</span>
-                                        <span class="block mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $l->slug }}</span>
+                                        <span class="block mt-0.5 fa-t-muted">{{ $l->slug }}</span>
                                     </td>
                                     <td class="text-[var(--fa-ink-2)]">{{ $l->description ?? '' }}</td>
                                     <td class="num text-[var(--fa-ink-2)]">{{ $bindCounts[$l->slug] ?? 0 }}</td>

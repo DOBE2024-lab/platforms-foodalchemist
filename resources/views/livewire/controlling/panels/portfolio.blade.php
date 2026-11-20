@@ -15,7 +15,7 @@
 @endphp
 
 <div class="flex flex-col gap-4" data-ctrl-portfolio>
-    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+    <p class="fa-t-muted max-w-[75ch]">
         Welche Speisekarten, Speisepläne und Angebote an einem Tag laufen, je Kalkulationsprofil oder je Kunde.
         Ein Klick auf eine Ausgabe öffnet sie zum Bearbeiten.
     </p>
@@ -23,7 +23,7 @@
     {{-- Brille + Stichtag --}}
     <div class="flex flex-wrap items-end justify-between gap-3">
         <div class="min-w-0">
-            <p class="mb-1.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Sicht</p>
+            <p class="mb-1.5 fa-t-label">Sicht</p>
             <div class="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Sicht" data-ctrl-brille>
                 @foreach(['betrieb' => 'Je Kalkulationsprofil', 'kunde' => 'Je Kunde'] as $key => $lbl)
                     <button type="button" wire:click="brilleSetzen('{{ $key }}')"
@@ -49,7 +49,7 @@
             Ohne Team gibt es keine Ausgaben. Wähle oben ein Team aus.
         </x-fa::empty>
     @else
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <p class="fa-t-muted">
             Stand {{ $stichtagAnzeige }}. Eine Zelle zeigt, was an diesem Tag <strong class="font-semibold text-[var(--fa-ink-2)]">läuft</strong>:
             aktiv und im Gültigkeitszeitraum. Ein Strich heißt, hier läuft nichts.
         </p>
@@ -100,7 +100,7 @@
                                                     <div class="min-w-0">
                                                         <a href="{{ $z['route'] }}" wire:navigate
                                                            class="text-[var(--fa-accent)] hover:underline">{{ $z['name'] }}</a>
-                                                        <div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $zeitraum($z['von'], $z['bis']) }}</div>
+                                                        <div class="fa-t-muted tabular-nums">{{ $zeitraum($z['von'], $z['bis']) }}</div>
                                                     </div>
                                                 @endforeach
                                                 @if(count($zellen) > 1)
@@ -155,7 +155,7 @@
                                     <td class="text-[var(--fa-ink-2)]">{{ $z['art_label'] }}</td>
                                     <td>
                                         <x-fa::badge :tone="$zustandTon[$z['zustand']] ?? 'neutral'">{{ $z['status_label'] }}</x-fa::badge>
-                                        @if($z['grund'])<span class="ml-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $z['grund'] }}</span>@endif
+                                        @if($z['grund'])<span class="ml-1 fa-t-muted">{{ $z['grund'] }}</span>@endif
                                     </td>
                                     <td class="num text-[var(--fa-ink-2)]">{{ $z['n_positionen'] }}</td>
                                 </tr>
@@ -190,11 +190,11 @@
                                      statt eines grauen Punkts. --}}
                                 <td>
                                     <x-fa::badge :tone="$zustandTon[$z['zustand']] ?? 'neutral'">{{ $z['status_label'] }}</x-fa::badge>
-                                    @if($z['grund'])<div class="mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $z['grund'] }}</div>@endif
+                                    @if($z['grund'])<div class="mt-0.5 fa-t-muted">{{ $z['grund'] }}</div>@endif
                                 </td>
                                 <td class="text-[var(--fa-ink-2)]">{{ $z['outlet_name'] ?? '–' }}</td>
                                 <td class="text-[var(--fa-ink-2)]">{{ $z['kunde'] ?? '–' }}</td>
-                                <td class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums whitespace-nowrap">{{ $zeitraum($z['von'], $z['bis']) }}</td>
+                                <td class="fa-t-muted tabular-nums whitespace-nowrap">{{ $zeitraum($z['von'], $z['bis']) }}</td>
                             </tr>
                         @endforeach
                     </tbody>

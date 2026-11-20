@@ -9,7 +9,7 @@
 
 <div class="flex flex-col gap-3" data-ctrl-promotion>
     <div class="flex flex-wrap items-end justify-between gap-3">
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+        <p class="fa-t-muted max-w-[75ch]">
             Umsatz je laufender Speisekarte, Speiseplan oder Angebot, jeweils im eigenen Gültigkeitszeitraum.
             Grundlage sind die eingelesenen Verkaufszahlen.
         </p>

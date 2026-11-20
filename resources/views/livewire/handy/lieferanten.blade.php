@@ -4,7 +4,6 @@
      3 Artikel-Karte (handy/artikel-karte)
      Nur lesen: kein Anlegen, kein Lead, kein Zuordnen, kein Stammblatt. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $euro = fn ($v) => number_format((float) $v, 2, ',', '.') . ' €';
     $liste = 'flex flex-col rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-y divide-[var(--fa-line)]';
     $zeile = 'flex w-full items-center gap-3 px-4 py-3 min-h-[60px] text-left';
@@ -30,7 +29,7 @@
                 {{-- Stufe 2: Kopf + Kontakt-Karte --}}
                 <div>
                     <h1 class="text-[length:var(--fa-text-2xl)] font-semibold leading-tight text-[var(--fa-ink)] wrap-anywhere">{{ $lieferant['name'] }}</h1>
-                    <p class="{{ $leise }}">
+                    <p class="fa-t-muted">
                         {{ $lieferant['ort'] ?? '' }}
                         @if($lieferant['inaktiv'])<x-fa::badge data-fa-lieferant-inaktiv>inaktiv</x-fa::badge>@endif
                     </p>
@@ -39,7 +38,7 @@
                 <section class="{{ $liste }}" data-fa-lieferant-kontakt>
                     @foreach($lieferant['kontakte'] as $k)
                         <div class="px-4 py-3">
-                            <p class="font-medium text-[var(--fa-ink)]">{{ $k->name }}@if($k->role)<span class="font-normal {{ $leise }}"> · {{ $k->role }}</span>@endif</p>
+                            <p class="font-medium text-[var(--fa-ink)]">{{ $k->name }}@if($k->role)<span class="font-normal fa-t-muted"> · {{ $k->role }}</span>@endif</p>
                             <div class="flex flex-wrap gap-x-4">
                                 @if($k->phone)
                                     <a href="tel:{{ preg_replace('/[^\d+]/', '', $k->phone) }}" class="inline-flex items-center gap-1.5 min-h-11 text-[var(--fa-accent)]" data-fa-kontakt-tel>@svg('heroicon-m-phone', 'w-4 h-4') {{ $k->phone }}</a>
@@ -63,7 +62,7 @@
                         <dl class="px-4 py-2">
                             @foreach($bestellen as $label => $wert)
                                 <div class="flex items-baseline justify-between gap-3 py-1.5">
-                                    <dt class="{{ $leise }}">{{ $label }}</dt>
+                                    <dt class="fa-t-muted">{{ $label }}</dt>
                                     <dd class="min-w-0 text-right text-[var(--fa-ink)] wrap-anywhere">
                                         @if($label === 'Bestellen per Mail')
                                             <a href="mailto:{{ $wert }}" class="inline-flex items-center min-h-11 text-[var(--fa-accent)]">{{ $wert }}</a>
@@ -76,7 +75,7 @@
                         </dl>
                     @endif
                     @if($lieferant['kontakte'] === [] && $bestellen === [])
-                        <p class="px-4 py-3 {{ $leise }}">Keine Ansprechpartner und Bestelldaten hinterlegt.</p>
+                        <p class="px-4 py-3 fa-t-muted">Keine Ansprechpartner und Bestelldaten hinterlegt.</p>
                     @endif
                 </section>
 
@@ -97,10 +96,10 @@
                                     <span class="min-w-0 flex-1">
                                         <span class="block font-medium leading-snug text-[var(--fa-ink)] wrap-anywhere">{{ $l->name }}</span>
                                         @if(trim(($l->postal_code ?? '') . ' ' . ($l->city ?? '')) !== '')
-                                            <span class="block truncate {{ $leise }}">{{ trim(($l->postal_code ?? '') . ' ' . ($l->city ?? '')) }}</span>
+                                            <span class="block truncate fa-t-muted">{{ trim(($l->postal_code ?? '') . ' ' . ($l->city ?? '')) }}</span>
                                         @endif
                                     </span>
-                                    <span class="shrink-0 {{ $leise }} tabular-nums">{{ number_format($l->item_count, 0, ',', '.') }} Artikel</span>
+                                    <span class="shrink-0 fa-t-muted tabular-nums">{{ number_format($l->item_count, 0, ',', '.') }} Artikel</span>
                                     @svg('heroicon-m-chevron-right', 'w-5 h-5 shrink-0 text-[var(--fa-ink-3)]')
                                 </button>
                             </li>
@@ -113,14 +112,14 @@
 
             {{-- Artikel als Karten (Stufe 2: des Lieferanten · Stufe 1 mit Suche: aller Lieferanten) --}}
             @if($artikel !== null)
-                <p class="{{ $leise }} tabular-nums">{{ number_format($artikel->total(), 0, ',', '.') }} lieferbare Artikel</p>
+                <p class="fa-t-muted tabular-nums">{{ number_format($artikel->total(), 0, ',', '.') }} lieferbare Artikel</p>
                 <ul class="{{ $liste }}">
                     @forelse($artikel as $item)
                         <li wire:key="ha-{{ $item->id }}">
                             <button type="button" wire:click="handyArtikel({{ $item->id }})" class="{{ $zeile }}" data-fa-handy-artikel="{{ $item->id }}">
                                 <span class="min-w-0 flex-1">
                                     <span class="block font-medium leading-snug text-[var(--fa-ink)] wrap-anywhere">{{ $item->designation }}</span>
-                                    <span class="block truncate {{ $leise }}">{{ implode(' · ', array_filter([
+                                    <span class="block truncate fa-t-muted">{{ implode(' · ', array_filter([
                                         $lieferant === null ? $item->supplier?->name : null,
                                         $item->article_number ? 'Art.-Nr. ' . $item->article_number : null,
                                         $item->qty !== null ? rtrim(rtrim(number_format((float) $item->qty, 3, ',', '.'), '0'), ',') . ' ' . ($item->unit_code ?? $item->ordering_unit ?? '') : null,
@@ -129,7 +128,7 @@
                                 <span class="shrink-0 text-right tabular-nums">
                                     <span class="block text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink-2)]">{{ $item->aktiver_preis !== null ? $euro($item->aktiver_preis) : '–' }}</span>
                                     @if($item->vergleichspreis !== null)
-                                        <span class="block {{ $leise }}">{{ number_format($item->vergleichspreis['value'], 2, ',', '.') }} {{ $item->vergleichspreis['unit'] }}</span>
+                                        <span class="block fa-t-muted">{{ number_format($item->vergleichspreis['value'], 2, ',', '.') }} {{ $item->vergleichspreis['unit'] }}</span>
                                     @endif
                                 </span>
                                 @svg('heroicon-m-chevron-right', 'w-5 h-5 shrink-0 text-[var(--fa-ink-3)]')

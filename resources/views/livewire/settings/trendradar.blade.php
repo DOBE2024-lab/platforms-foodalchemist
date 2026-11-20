@@ -39,8 +39,8 @@
             <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" wire:model="dfsAktiv" class="{{ $haken }}" />
                 <span>
-                    <span class="block text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Wöchentlich messen</span>
-                    <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Dienstags um {{ $messZeit }} Uhr alle offenen Trends. Ohne Haken nur per Knopf „Jetzt messen“ im Trend.</span>
+                    <span class="block fa-t-strong">Wöchentlich messen</span>
+                    <span class="block fa-t-muted">Dienstags um {{ $messZeit }} Uhr alle offenen Trends. Ohne Haken nur per Knopf „Jetzt messen“ im Trend.</span>
                 </span>
             </label>
             <x-fa::field label="Monatsbudget in $" for="dfs-budget" hint="Ist es erreicht, stoppt jede weitere Abfrage bis zum Monatswechsel.">
@@ -97,8 +97,8 @@
             <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" wire:model="automatikSchatten" class="{{ $haken }}" />
                 <span>
-                    <span class="block text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Schatten-Modus</span>
-                    <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Rechnet alles, schreibt aber keine Trends — zum Kalibrieren der Schwellen.</span>
+                    <span class="block fa-t-strong">Schatten-Modus</span>
+                    <span class="block fa-t-muted">Rechnet alles, schreibt aber keine Trends — zum Kalibrieren der Schwellen.</span>
                 </span>
             </label>
             <x-fa::notice tone="info">Die vorgegebenen Schwellen sind Startwerte, nicht belegt (Annahmen, Sarah Spork nennt keine Zahlen). Leer = Startwert.</x-fa::notice>

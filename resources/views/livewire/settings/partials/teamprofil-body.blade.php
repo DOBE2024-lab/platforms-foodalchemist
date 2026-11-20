@@ -38,7 +38,7 @@
                 <ul class="divide-y divide-[var(--fa-line)] border-y border-[var(--fa-line)]">
                     @foreach($eintraege as $e)
                         <li class="flex flex-wrap items-center gap-x-3 gap-y-1 py-1.5" wire:key="tp-eq-{{ $e['equipment_id'] }}" data-teamprofil-equipment="{{ $e['equipment_id'] }}">
-                            <span class="min-w-0 flex-1 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $e['name'] }}
+                            <span class="min-w-0 flex-1 fa-t-body">{{ $e['name'] }}
                                 @if($e['standard'])<x-fa::badge tone="neutral" class="ml-1" title="Standardausstattung: gilt ohne Angabe als vorhanden">Standard</x-fa::badge>@endif
                             </span>
                             <x-fa::select size="sm" class="w-44" aria-label="{{ $e['name'] }}"

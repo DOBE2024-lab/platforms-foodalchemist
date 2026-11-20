@@ -139,7 +139,7 @@
                         ] as [$facetteLabel, $facetteFeld, $facetteWerte])
                             @if($facetteWerte->isNotEmpty())
                                 <div class="flex flex-col gap-1.5" role="group" aria-label="{{ $facetteLabel }}">
-                                    <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ $facetteLabel }}</span>
+                                    <span class="fa-t-label">{{ $facetteLabel }}</span>
                                     <div class="flex flex-wrap gap-1.5">
                                         @foreach($facetteWerte as $wert)
                                             @php
@@ -174,13 +174,13 @@
                     <div class="flex-1 min-w-0 w-full flex flex-col gap-3">
                         {{-- Kartenkopf: kommt automatisch aus der Identität --}}
                         <div class="fa-surface px-4 py-3 flex flex-col gap-0.5">
-                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Kartenkopf, automatisch aus der Identität</span>
-                            <p class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">{{ $format->consumer_name ?: $format->name }}</p>
+                            <span class="fa-t-muted">Kartenkopf, automatisch aus der Identität</span>
+                            <p class="fa-t-h2">{{ $format->consumer_name ?: $format->name }}</p>
                             @if($format->claim)<p class="text-[length:var(--fa-text-md)] italic text-[var(--fa-ink-2)]">„{{ $format->claim }}“</p>@endif
                         </div>
 
                         <div class="flex flex-wrap items-center justify-between gap-2">
-                            <h3 class="flex items-baseline gap-2 text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">
+                            <h3 class="flex items-baseline gap-2 fa-t-h2">
                                 Aufbau
                                 <span class="text-[length:var(--fa-text-sm)] font-normal text-[var(--fa-ink-3)] tabular-nums">{{ $nEditionen }} {{ $nEditionen === 1 ? 'Edition' : 'Editionen' }} · {{ $nPositionen }} {{ $nPositionen === 1 ? 'Position' : 'Positionen' }}</span>
                             </h3>
@@ -205,9 +205,9 @@
                                 <div wire:key="slot-{{ $s->id }}" class="fa-surface p-4 flex flex-col gap-3 {{ $rahmen }}">
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="min-w-0 flex flex-wrap items-center gap-2">
-                                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">Position {{ $loop->iteration }}</span>
+                                            <span class="fa-t-muted tabular-nums">Position {{ $loop->iteration }}</span>
                                             @if($istPaketSlot)<x-fa::badge tone="info" icon="heroicon-m-archive-box">Paket</x-fa::badge>@else<x-fa::badge tone="accent">Edition</x-fa::badge>@endif
-                                            <span class="min-w-0 break-words text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $c?->name ?? 'Konzept nicht mehr verfügbar' }}</span>
+                                            <span class="min-w-0 break-words fa-t-h3">{{ $c?->name ?? 'Konzept nicht mehr verfügbar' }}</span>
                                         </div>
                                         <div class="flex items-center gap-0.5 shrink-0">
                                             @if($c)
@@ -242,7 +242,7 @@
                                         {{-- Vorschau der Karte: Abschnitte und Gerichte, aufgelöst wie im Foodbook --}}
                                         <div class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-ground)] px-3 py-2.5">
                                             <div class="flex items-center justify-between gap-2 mb-1.5">
-                                                <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">So steht es auf der Karte</span>
+                                                <span class="fa-t-label">So steht es auf der Karte</span>
                                                 <x-fa::money :value="$c->price_per_person_cache" per="Person" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
                                             </div>
                                             <div class="flex flex-col gap-0.5">
@@ -250,7 +250,7 @@
                                                     @if($g['type'] === 'header')
                                                         <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)] mt-1.5 first:mt-0" style="margin-left:{{ ($g['einrueckung'] ?? 0) * 14 }}px">{{ $g['text'] }}</p>
                                                     @elseif($g['type'] === 'paket')
-                                                        <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] mt-1 flex items-center gap-1.5" style="margin-left:{{ ($g['einrueckung'] ?? 0) * 14 }}px">
+                                                        <p class="fa-t-strong mt-1 flex items-center gap-1.5" style="margin-left:{{ ($g['einrueckung'] ?? 0) * 14 }}px">
                                                             <x-fa::badge tone="info">Paket</x-fa::badge>
                                                             <span class="min-w-0 break-words">{{ $g['text'] }}</span>
                                                             @if(($g['preis'] ?? null) !== null)<x-fa::money :value="$g['preis']" class="ml-auto text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />@endif
@@ -280,7 +280,7 @@
                                                         @endif
                                                     @endif
                                                 @empty
-                                                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Gerichte. Das Konzept im Concepter füllen.</p>
+                                                    <p class="fa-t-muted">Noch keine Gerichte. Das Konzept im Concepter füllen.</p>
                                                 @endforelse
                                             </div>
                                         </div>
@@ -332,7 +332,7 @@
                     <aside class="w-full lg:w-80 xl:w-96 shrink-0 fa-surface p-4 flex flex-col gap-4 lg:sticky lg:top-14 self-start">
                         {{-- Picker: Konzept ODER Paket einfügen — das Häufigste zuerst --}}
                         <div class="flex flex-col gap-2">
-                            <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">Einfügen</h4>
+                            <h4 class="fa-t-h3">Einfügen</h4>
                             <div class="flex gap-1 p-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] border border-[var(--fa-line)]" role="tablist" data-formate-picker-tabs>
                                 <button type="button" role="tab" aria-selected="{{ $pickerTab === 'concept' ? 'true' : 'false' }}" wire:click="setPickerTab('concept')" class="{{ $segment }} {{ $pickerTab === 'concept' ? $segmentAn : $segmentAus }}">Konzepte</button>
                                 <button type="button" role="tab" aria-selected="{{ $pickerTab === 'paket' ? 'true' : 'false' }}" wire:click="setPickerTab('paket')" class="{{ $segment }} {{ $pickerTab === 'paket' ? $segmentAn : $segmentAus }}">Pakete</button>
@@ -353,7 +353,7 @@
                             {{-- Merkmal-Filter: eingeklappt, öffnet von selbst, wenn einer gesetzt ist --}}
                             @if($servierformen->isNotEmpty() || $eventtypen->isNotEmpty() || $einsatzmomente->isNotEmpty() || $saisons->isNotEmpty())
                                 <details class="group" wire:ignore.self @if($facettenAktiv > 0) open @endif>
-                                    <summary class="inline-flex items-center gap-1 cursor-pointer select-none text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]">
+                                    <summary class="inline-flex items-center gap-1 cursor-pointer select-none fa-t-label hover:text-[var(--fa-ink)]">
                                         @svg('heroicon-m-chevron-right', 'w-4 h-4 transition-transform group-open:rotate-90')
                                         Nach Merkmalen filtern
                                         @if($facettenAktiv > 0)<x-fa::badge tone="accent">{{ $facettenAktiv }}</x-fa::badge>@endif
@@ -388,7 +388,7 @@
                                 <ul class="flex flex-col max-h-[46vh] overflow-auto -mx-1 px-1" data-formate-paket-liste>
                                     @forelse($paketKandidaten as $k)
                                         <li wire:key="pkand-{{ $k->id }}" class="flex items-center gap-2 py-1.5 border-t border-[var(--fa-line)] first:border-t-0">
-                                            <span class="min-w-0 flex-1 break-words text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $k->name }}">{{ $k->consumer_name ?: $k->name }}</span>
+                                            <span class="min-w-0 flex-1 break-words fa-t-body" title="{{ $k->name }}">{{ $k->consumer_name ?: $k->name }}</span>
                                             <x-fa::money :value="$k->price_per_person_cache" class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
                                             <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="conceptEinfuegen({{ $k->id }})" class="shrink-0">Einfügen</x-fa::button>
                                         </li>
@@ -400,7 +400,7 @@
                                 <ul class="flex flex-col max-h-[46vh] overflow-auto -mx-1 px-1" data-formate-concept-liste>
                                     @forelse($kandidaten as $k)
                                         <li wire:key="kand-{{ $k->id }}" class="flex items-center gap-2 py-1.5 border-t border-[var(--fa-line)] first:border-t-0">
-                                            <span class="min-w-0 flex-1 break-words text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $k->name }}">{{ $k->consumer_name ?: $k->name }}</span>
+                                            <span class="min-w-0 flex-1 break-words fa-t-body" title="{{ $k->name }}">{{ $k->consumer_name ?: $k->name }}</span>
                                             <x-fa::money :value="$k->price_per_person_cache" class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
                                             <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="conceptEinfuegen({{ $k->id }})" class="shrink-0">Einfügen</x-fa::button>
                                         </li>
@@ -413,7 +413,7 @@
 
                         {{-- Neue Edition mit Abschnitts-Gerüst --}}
                         <div class="flex flex-col gap-2 pt-4 border-t border-[var(--fa-line)]">
-                            <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">Neue Edition</h4>
+                            <h4 class="fa-t-h3">Neue Edition</h4>
                             <x-fa::field for="fmt-neue-edition" hint="Legt die Abschnitte {{ implode(', ', \Platform\FoodAlchemist\Services\FormatService::SEKTIONS_GERUEST) }} gleich mit an.">
                                 <div class="flex items-center gap-2">
                                     <x-fa::input id="fmt-neue-edition" wire:model="neueEditionName" wire:keydown.enter="neueEdition" placeholder="Name, z. B. FUTURE FLAVORS" class="flex-1 min-w-0" />
@@ -424,7 +424,7 @@
 
                         {{-- Gliederung der Karte --}}
                         <div class="flex flex-col gap-2 pt-4 border-t border-[var(--fa-line)]">
-                            <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">Gliederung</h4>
+                            <h4 class="fa-t-h3">Gliederung</h4>
                             <div class="flex flex-wrap items-center gap-1.5">
                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-plus" wire:click="blockHinzu('header')">Überschrift</x-fa::button>
                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-plus" wire:click="blockHinzu('text')">Freitext</x-fa::button>
@@ -515,7 +515,7 @@
                                             @unless($img->is_hero)
                                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-star" wire:click="heroSetzen({{ $img->id }})">Als Titelbild setzen</x-fa::button>
                                             @else
-                                                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Titelbild der Marke</span>
+                                                <span class="fa-t-muted">Titelbild der Marke</span>
                                             @endunless
                                             <x-fa::icon-button size="sm" icon="heroicon-m-trash" tone="danger" label="Bild löschen" wire:click="bildLoeschen({{ $img->id }})" wire:confirm="Bild löschen?" />
                                         </div>

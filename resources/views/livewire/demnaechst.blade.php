@@ -45,7 +45,7 @@
                     @svg($symbol[$d['name']] ?? 'heroicon-o-light-bulb', 'w-5 h-5 shrink-0 mt-0.5 text-[var(--fa-ink-3)]')
                     <div class="min-w-0 flex flex-col gap-1.5">
                         <div class="flex flex-wrap items-center gap-2">
-                            <p class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $d['name'] }}</p>
+                            <p class="fa-t-h3">{{ $d['name'] }}</p>
                             @if(isset($teilweise[$d['name']]))
                                 <x-fa::badge tone="info">Teilweise verfügbar</x-fa::badge>
                             @else
@@ -53,7 +53,7 @@
                             @endif
                         </div>
                         <p class="text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink-2)]">{{ $sauber($d['idee']) }}</p>
-                        @if(isset($teilweise[$d['name']]))<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $teilweise[$d['name']] }}</p>@endif
+                        @if(isset($teilweise[$d['name']]))<p class="fa-t-muted">{{ $teilweise[$d['name']] }}</p>@endif
                     </div>
                 </div>
             @endforeach

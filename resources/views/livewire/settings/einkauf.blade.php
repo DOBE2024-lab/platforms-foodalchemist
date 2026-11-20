@@ -35,7 +35,7 @@
                     <input type="radio" wire:model.live="strategie" value="{{ $s->value }}" class="mt-0.5 w-4 h-4 accent-[var(--fa-accent)]" />
                     <span class="min-w-0">
                         <span class="block text-[length:var(--fa-text-md)] font-medium {{ $gewaehlt ? 'text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">{{ $s->label() }}</span>
-                        <span class="block mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $strategieText[$s->value] ?? $s->description() }}</span>
+                        <span class="block mt-0.5 fa-t-muted">{{ $strategieText[$s->value] ?? $s->description() }}</span>
                     </span>
                 </label>
             @endforeach
@@ -43,11 +43,11 @@
 
         @if($strategie === 'prioritaets_kette')
             <div class="pt-3 border-t border-[var(--fa-line)] flex flex-col gap-2" data-prio-kette>
-                <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Reihenfolge der Lieferanten <span class="font-normal text-[var(--fa-ink-3)]">(oben hat Vorrang)</span></p>
+                <p class="fa-t-strong">Reihenfolge der Lieferanten <span class="font-normal text-[var(--fa-ink-3)]">(oben hat Vorrang)</span></p>
                 @forelse($prioritaeten as $i => $supplierId)
                     <div class="flex items-center gap-2 py-1 border-b border-[var(--fa-line)]" wire:key="prio-{{ $supplierId }}">
-                        <span class="w-6 text-right tabular-nums text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $i + 1 }}.</span>
-                        <span class="flex-1 min-w-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $lieferantenNamen[$supplierId] ?? 'Lieferant nicht mehr verfügbar' }}</span>
+                        <span class="w-6 text-right tabular-nums fa-t-muted">{{ $i + 1 }}.</span>
+                        <span class="flex-1 min-w-0 fa-t-body">{{ $lieferantenNamen[$supplierId] ?? 'Lieferant nicht mehr verfügbar' }}</span>
                         <x-fa::icon-button icon="heroicon-m-chevron-up" size="sm" label="Nach oben" wire:click="prioHoch({{ $i }})" :disabled="$i === 0" class="disabled:opacity-40 disabled:pointer-events-none" />
                         <x-fa::icon-button icon="heroicon-m-x-mark" size="sm" tone="danger" label="Aus der Reihenfolge entfernen" wire:click="prioEntfernen({{ $i }})" />
                     </div>
@@ -68,8 +68,8 @@
         {{-- Phase 3: Strategie je Warengruppe (überschreibt die globale oben) --}}
         <div class="pt-3 border-t border-[var(--fa-line)] flex flex-col gap-2" data-strategie-per-wg>
             <div>
-                <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Abweichend je Warengruppe <span class="font-normal text-[var(--fa-ink-3)]">(optional)</span></p>
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Ohne Auswahl gilt die Strategie oben.</p>
+                <p class="fa-t-strong">Abweichend je Warengruppe <span class="font-normal text-[var(--fa-ink-3)]">(optional)</span></p>
+                <p class="fa-t-muted">Ohne Auswahl gilt die Strategie oben.</p>
             </div>
             <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))] gap-x-8">
                 @foreach($warengruppen as $wg)
@@ -86,8 +86,8 @@
         <label class="flex items-start gap-2 pt-3 border-t border-[var(--fa-line)] cursor-pointer">
             <input type="checkbox" wire:model="ausweichKette" class="mt-0.5 w-4 h-4 accent-[var(--fa-accent)]" />
             <span class="min-w-0">
-                <span class="block text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">Ausweich-Reihenfolge anzeigen</span>
-                <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Im Grundprodukt sichtbar: welcher Artikel übernimmt, wenn der aktuelle ausfällt.</span>
+                <span class="block fa-t-body">Ausweich-Reihenfolge anzeigen</span>
+                <span class="block fa-t-muted">Im Grundprodukt sichtbar: welcher Artikel übernimmt, wenn der aktuelle ausfällt.</span>
             </span>
         </label>
         {{-- Spec 85 PR-B (Dominique 19.10.): nur am Kunden-Hauptteam --}}
@@ -95,15 +95,15 @@
             <label class="flex items-start gap-2 pt-3 cursor-pointer" data-standorte-uebernehmen>
                 <input type="checkbox" wire:model="standorteUebernehmen" class="mt-0.5 w-4 h-4 accent-[var(--fa-accent)]" />
                 <span class="min-w-0">
-                    <span class="block text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">Standorte übernehmen unsere Leitartikel</span>
-                    <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Eure bevorzugten Artikel und Sperren gelten auch an den Standorten — außer ein Standort legt selbst einen fest.</span>
+                    <span class="block fa-t-body">Standorte übernehmen unsere Leitartikel</span>
+                    <span class="block fa-t-muted">Eure bevorzugten Artikel und Sperren gelten auch an den Standorten — außer ein Standort legt selbst einen fest.</span>
                 </span>
             </label>
             <label class="flex items-start gap-2 pt-3 cursor-pointer" data-standorte-uebernehmen-favoriten>
                 <input type="checkbox" wire:model="standorteUebernehmenFavoriten" class="mt-0.5 w-4 h-4 accent-[var(--fa-accent)]" />
                 <span class="min-w-0">
-                    <span class="block text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">Standorte übernehmen unsere Favoriten</span>
-                    <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Eure Favoriten gelten auch an den Standorten — eigene Favoriten und Ausschlüsse eines Standorts gehen vor.</span>
+                    <span class="block fa-t-body">Standorte übernehmen unsere Favoriten</span>
+                    <span class="block fa-t-muted">Eure Favoriten gelten auch an den Standorten — eigene Favoriten und Ausschlüsse eines Standorts gehen vor.</span>
                 </span>
             </label>
         @endif
@@ -127,7 +127,7 @@
                     <input type="radio" wire:model.live="versand.art" value="{{ $wert }}" class="mt-0.5 w-4 h-4 accent-[var(--fa-accent)]" />
                     <span class="min-w-0">
                         <span class="block text-[length:var(--fa-text-md)] font-medium {{ $gewaehlt ? 'text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">{{ $label }}</span>
-                        <span class="block mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $text }}</span>
+                        <span class="block mt-0.5 fa-t-muted">{{ $text }}</span>
                     </span>
                 </label>
             @endforeach
@@ -148,7 +148,7 @@
                     <x-fa::textarea id="versand-signatur" wire:model="versand.signatur" placeholder="Mit freundlichen Grüßen" />
                 </x-fa::field>
             </div>
-            <p class="mt-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Die Bestell-E-Mail steht beim Lieferanten. Fehlt sie, lässt sich die Bestellung nicht absenden.</p>
+            <p class="mt-2 fa-t-muted">Die Bestell-E-Mail steht beim Lieferanten. Fehlt sie, lässt sich die Bestellung nicht absenden.</p>
 
             <div class="mt-5 grid gap-4 lg:grid-cols-2" data-bestellversand-vorlagen>
                 @foreach(['bestellung' => 'Vorlage Bestellung', 'storno' => 'Vorlage Storno'] as $typ => $titel)
@@ -161,7 +161,7 @@
                         <x-fa::textarea rows="8" wire:model="versand.text_{{ $typ }}" placeholder="Text — leer = Standard" aria-label="{{ $titel }}: Text" class="font-mono" />
                     </div>
                 @endforeach
-                <p class="lg:col-span-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+                <p class="lg:col-span-2 fa-t-muted">
                     Platzhalter: @foreach(\Platform\FoodAlchemist\Services\OrderMailService::PLATZHALTER as $ph)<code class="font-mono">{{ $ph }}</code>@if(! $loop->last) · @endif @endforeach.
                     Die Signatur wird angehängt.
                 </p>
@@ -232,7 +232,7 @@
                                             <div class="hidden w-56 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
                                                 @unless($lager->is_default)
                                                     <button type="button" role="menuitem" x-on:click="offen = false" wire:click="lagerStandardSetzen({{ $lager->id }})"
-                                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
+                                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
                                                         @svg('heroicon-o-star', 'w-4 h-4 text-[var(--fa-ink-3)]')Als Standardlager setzen
                                                     </button>
                                                 @endunless
@@ -326,7 +326,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Der Lead gilt je Grundprodukt für alle Teams, die es nutzen. Team-Pins und -Sperren bleiben.</p>
+                        <p class="fa-t-muted">Der Lead gilt je Grundprodukt für alle Teams, die es nutzen. Team-Pins und -Sperren bleiben.</p>
                     @endif
                     <div class="flex gap-2">
                         @if($repick['wechsel'] !== [])

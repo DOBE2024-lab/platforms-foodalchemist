@@ -39,12 +39,12 @@
                         {{-- Spec 82 §9 · Listen-Feld mit Zusatzfeldern (Projekt-Akte: Rollen, Checklisten, Termine …) --}}
                         @php $eintraege = $canvasListen[$f['key']] ?? []; $subs = (array) ($f['sub'] ?? []); @endphp
                         <div class="flex flex-col gap-2 min-w-0" data-canvas-liste="{{ $f['key'] }}">
-                            <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ $f['label'] }}</p>
+                            <p class="fa-t-label">{{ $f['label'] }}</p>
                             <div class="flex flex-col gap-1.5">
                                 @forelse($eintraege as $e)
                                     <div wire:key="liste-{{ $f['key'] }}-{{ $e['id'] }}" class="flex items-start gap-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] px-3 py-2" data-canvas-liste-eintrag="{{ $e['id'] }}">
                                         <div class="flex-1 min-w-0 flex flex-col gap-1">
-                                            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words font-medium">{{ $e['value'] }}</p>
+                                            <p class="fa-t-strong break-words">{{ $e['value'] }}</p>
                                             @foreach($subs as $sk => $sd)
                                                 @php $st = is_array($sd) ? ($sd['type'] ?? 'text') : 'text'; $sl = is_array($sd) ? ($sd['label'] ?? $sk) : $sd; $sv = $e['meta'][$sk] ?? null; @endphp
                                                 @if($st === 'check')
@@ -52,16 +52,16 @@
                                                         <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" @checked(! empty($sv)) wire:click="listeUmschalten({{ $e['id'] }}, '{{ $sk }}')" data-canvas-liste-check="{{ $sk }}" /> {{ $sl }}
                                                     </label>
                                                 @elseif($st === 'kontakt')
-                                                    @if($sv)<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">CRM-Kontakt verknüpft</span>@endif
+                                                    @if($sv)<span class="fa-t-muted">CRM-Kontakt verknüpft</span>@endif
                                                 @elseif($sv !== null && $sv !== '')
-                                                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $sl }}: {{ $sv }}</span>
+                                                    <span class="fa-t-muted">{{ $sl }}: {{ $sv }}</span>
                                                 @endif
                                             @endforeach
                                         </div>
                                         <x-fa::icon-button size="sm" tone="danger" icon="heroicon-o-trash" label="{{ $e['value'] }} entfernen" wire:click="listeLoeschen({{ $e['id'] }})" />
                                     </div>
                                 @empty
-                                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Einträge.</p>
+                                    <p class="fa-t-muted">Noch keine Einträge.</p>
                                 @endforelse
                             </div>
                             <div class="grid gap-2 items-end grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))]">
@@ -96,13 +96,13 @@
                     @elseif(($f['type'] ?? 'text') === 'repeatable')
                         {{-- Wiederholbar (Geschmackswelten): Liste + Hinzufügen --}}
                         <div class="flex flex-col gap-2 min-w-0">
-                            <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ $f['label'] }}</p>
+                            <p class="fa-t-label">{{ $f['label'] }}</p>
                             <div class="flex flex-col gap-1.5">
                                 {{-- geerbt vom Oberteam: nur lesbar, verbindliche Einträge bleiben immer --}}
                                 @foreach(collect($verer[$f['key']]['wert'] ?? [])->filter(fn ($i) => (int) $i['quelle_team_id'] !== (int) ($canvasOwnerId ?? 0)) as $g)
                                     <div wire:key="welt-geerbt-{{ $g['id'] }}" class="flex items-start gap-2 rounded-[var(--fa-radius-control)] border border-dashed border-[var(--fa-line)] px-3 py-2" data-canvas-geerbt>
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words"><span class="font-medium">{{ $g['value'] }}</span>@if(!empty($g['meta']['claim']))<span class="text-[var(--fa-ink-2)]"> · {{ $g['meta']['claim'] }}</span>@endif</p>
+                                            <p class="fa-t-body break-words"><span class="font-medium">{{ $g['value'] }}</span>@if(!empty($g['meta']['claim']))<span class="text-[var(--fa-ink-2)]"> · {{ $g['meta']['claim'] }}</span>@endif</p>
                                         </div>
                                         <x-fa::badge tone="{{ $g['verbindlich'] ? 'accent' : 'neutral' }}">{{ $g['verbindlich'] ? 'Verbindlich' : 'Geerbt' }}</x-fa::badge>
                                     </div>
@@ -110,11 +110,11 @@
                                 @forelse($canvasWelten as $w)
                                     <div wire:key="welt-{{ $w['id'] }}" class="flex items-start gap-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] px-3 py-2">
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words">
+                                            <p class="fa-t-body break-words">
                                                 <span class="font-medium">{{ $w['value'] }}</span>
                                                 @if($w['claim'])<span class="text-[var(--fa-ink-2)]"> · {{ $w['claim'] }}</span>@endif
                                             </p>
-                                            @if($w['description'])<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] break-words">{{ $w['description'] }}</p>@endif
+                                            @if($w['description'])<p class="fa-t-muted break-words">{{ $w['description'] }}</p>@endif
                                         </div>
                                         @if($verbMoeglich)
                                             <x-fa::button size="sm" variant="{{ !empty($w['verbindlich']) ? 'primary' : 'ghost' }}" wire:click="weltVerbindlichSchalten({{ $w['id'] }})" data-canvas-eintrag-verbindlich="{{ $w['id'] }}">{{ !empty($w['verbindlich']) ? 'Verbindlich' : 'Verbindlich machen' }}</x-fa::button>
@@ -124,7 +124,7 @@
                                         <x-fa::icon-button size="sm" tone="danger" icon="heroicon-o-trash" label="{{ $w['value'] }} entfernen" wire:click="weltLoeschen({{ $w['id'] }})" />
                                     </div>
                                 @empty
-                                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Einträge. Unten den ersten anlegen.</p>
+                                    <p class="fa-t-muted">Noch keine Einträge. Unten den ersten anlegen.</p>
                                 @endforelse
                             </div>
                             <div class="grid gap-2 items-end grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))]">
@@ -192,7 +192,7 @@
          (konzeptSpeichern). Alle anderen Einbindungen zeigen es weiter. --}}
     @unless($hideSave ?? false)
         <div class="flex items-center justify-end gap-3">
-            <span wire:loading wire:target="canvasSpeichern" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Wird gespeichert …</span>
+            <span wire:loading wire:target="canvasSpeichern" class="fa-t-muted">Wird gespeichert …</span>
             <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="canvasSpeichern" data-canvas-speichern>Speichern</x-fa::button>
         </div>
     @endunless

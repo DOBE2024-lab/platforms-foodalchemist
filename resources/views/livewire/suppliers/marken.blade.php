@@ -104,7 +104,7 @@
                             <div class="flex flex-wrap items-center gap-3">
                                 <span class="font-medium">{{ $d['marke'] }}</span>
                                 <span class="font-mono text-[var(--fa-ink-2)]">{{ $d['kuerzel'] }}</span>
-                                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $d['position'] === 'ende' ? 'am Ende' : 'am Anfang' }} · {{ implode(', ', $d['lieferanten']) }}</span>
+                                <span class="fa-t-muted">{{ $d['position'] === 'ende' ? 'am Ende' : 'am Anfang' }} · {{ implode(', ', $d['lieferanten']) }}</span>
                                 @if($d['vorrang_abweichend'])<x-fa::badge tone="warn">Vorrang abweichend, nimmt {{ $d['vorrang'] }}</x-fa::badge>@endif
                                 @if($d['global_konflikt'])<x-fa::badge tone="crit" title="{{ $d['global_konflikt'] }}">globaler Konflikt</x-fa::badge>@endif
                                 @if($darfPflegen && ! $d['global_konflikt'])

@@ -23,11 +23,11 @@
         <div wire:key="kfa-{{ $a->id }}" class="flex flex-wrap items-center justify-between gap-2 py-1.5 border-b border-[var(--fa-line)] last:border-0">
             <div>
                 <span class="font-medium">{{ $a->name }}</span>
-                <span class="{{ $leise }}">· {{ $a->created_at?->format('d.m.Y H:i') }} · {{ $a->personen ?? '–' }} Gäste · {{ $a->status->label() }}</span>
+                <span class="fa-t-muted">· {{ $a->created_at?->format('d.m.Y H:i') }} · {{ $a->personen ?? '–' }} Gäste · {{ $a->status->label() }}</span>
             </div>
             <x-fa::button size="sm" variant="ghost" icon-right="heroicon-m-arrow-right" :href="route('foodalchemist.angebote.index', ['sel' => $a->id])">Angebot öffnen</x-fa::button>
         </div>
     @empty
-        <p class="{{ $leise }}">Noch keine Anfragen. Sobald der Link veröffentlicht ist, wird jede Anfrage ein Angebot mit Status Anfrage.</p>
+        <p class="fa-t-muted">Noch keine Anfragen. Sobald der Link veröffentlicht ist, wird jede Anfrage ein Angebot mit Status Anfrage.</p>
     @endforelse
 </x-fa::section>

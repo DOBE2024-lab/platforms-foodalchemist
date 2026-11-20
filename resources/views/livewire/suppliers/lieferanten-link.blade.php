@@ -1,6 +1,5 @@
 {{-- Lieferanten-Link (Stufe 2a): persönlicher Zugang ohne Login — erzeugen, kopieren (einmalig), widerrufen, Protokoll. Nur Haupt-Team + Kuratieren. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $ton = ['aktiv' => 'ok', 'abgelaufen' => 'warn', 'widerrufen' => 'neutral'];
     $text = ['aktiv' => 'aktiv', 'abgelaufen' => 'abgelaufen', 'widerrufen' => 'widerrufen'];
     $artText = ['erzeugt' => 'Link erzeugt', 'geoeffnet' => 'Erstmals geöffnet', 'upload' => 'Upload', 'abgelehnt' => 'Abgelehnt', 'widerrufen' => 'Widerrufen'];
@@ -18,8 +17,8 @@
                         <input type="text" readonly value="{{ $neueUrl }}" class="fa-control h-9 w-full text-[length:var(--fa-text-md)]" x-ref="url" data-lieferanten-link-url />
                         <x-fa::button size="sm" variant="primary" icon="heroicon-o-clipboard" x-on:click="navigator.clipboard.writeText($refs.url.value); kopiert = true" data-lieferanten-link-kopieren>Kopieren</x-fa::button>
                     </div>
-                    <p class="{{ $leise }} pt-1" x-show="kopiert" x-cloak>Kopiert.</p>
-                    <p class="{{ $leise }} pt-1">Gib den Link nur an die Person weiter, für die er gedacht ist. Du kannst ihn jederzeit widerrufen.</p>
+                    <p class="fa-t-muted pt-1" x-show="kopiert" x-cloak>Kopiert.</p>
+                    <p class="fa-t-muted pt-1">Gib den Link nur an die Person weiter, für die er gedacht ist. Du kannst ihn jederzeit widerrufen.</p>
                 </div>
             @endif
 
@@ -28,7 +27,7 @@
                 <x-fa::field label="Kontakt (E-Mail, optional)" for="ll-mail"><x-fa::input id="ll-mail" wire:model="kontaktEmail" /></x-fa::field>
                 <x-fa::field label="Gültig (Tage, höchstens {{ $maxTage }})" for="ll-tage"><x-fa::input id="ll-tage" numeric wire:model="tage" data-lieferanten-link-tage /></x-fa::field>
                 <div>
-                    <p class="{{ $leise }} mb-1">Freigegebene Bereiche</p>
+                    <p class="fa-t-muted mb-1">Freigegebene Bereiche</p>
                     @foreach($alleBereiche as $key => $label)
                         <label class="flex items-center gap-2 text-[length:var(--fa-text-md)]"><input type="checkbox" value="{{ $key }}" wire:model="bereiche" /> {{ $label }}</label>
                     @endforeach
@@ -44,7 +43,7 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <x-fa::badge :tone="$ton[$z]">{{ $text[$z] }}</x-fa::badge>
                                 <span class="font-medium text-[var(--fa-ink)]">{{ $l->kontakt_name ?: 'Link ' . $l->token_hinweis . '…' }}</span>
-                                <span class="{{ $leise }}">gültig bis {{ $l->expires_at->timezone('Europe/Berlin')->format('d.m.Y') }} · {{ $l->upload_count }} Uploads · zuletzt {{ $l->last_used_at?->timezone('Europe/Berlin')->format('d.m.Y H:i') ?? 'nie' }}</span>
+                                <span class="fa-t-muted">gültig bis {{ $l->expires_at->timezone('Europe/Berlin')->format('d.m.Y') }} · {{ $l->upload_count }} Uploads · zuletzt {{ $l->last_used_at?->timezone('Europe/Berlin')->format('d.m.Y H:i') ?? 'nie' }}</span>
                             </div>
                             <div class="flex flex-wrap gap-2 pt-2">
                                 <x-fa::button size="sm" variant="ghost" wire:click="protokoll({{ $l->id }})" data-lieferanten-link-protokoll>Protokoll</x-fa::button>
@@ -53,7 +52,7 @@
                                 @endif
                             </div>
                             @if($protokollLinkId === $l->id)
-                                <ul class="{{ $leise }} pt-2" data-lieferanten-link-ereignisse>
+                                <ul class="fa-t-muted pt-2" data-lieferanten-link-ereignisse>
                                     @forelse($protokoll as $e)<li>{{ $e->created_at->timezone('Europe/Berlin')->format('d.m.Y H:i') }} · {{ $artText[$e->art] ?? $e->art }}</li>@empty<li>Noch keine Ereignisse.</li>@endforelse
                                 </ul>
                             @endif

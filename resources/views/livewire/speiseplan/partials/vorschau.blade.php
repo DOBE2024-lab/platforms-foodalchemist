@@ -6,7 +6,7 @@
 
 <section class="fa-surface p-6 flex flex-col gap-4 min-w-0" wire:key="sp-vorschau-{{ $vorschau['plan']->id }}" aria-label="Aushang-Vorschau">
     <header class="text-center">
-        <h2 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">{{ $vorschau['plan']->name }}</h2>
+        <h2 class="fa-t-h2">{{ $vorschau['plan']->name }}</h2>
         <p class="mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $vorschau['mahlzeitLabel'] ?? '' }} · {{ $vorschau['kwLabel'] ?? '' }}</p>
     </header>
 
@@ -33,7 +33,7 @@
                             <td class="align-top min-w-[9rem] text-[var(--fa-ink)]">
                                 @forelse($zeile['zellen'][$t['ymd']] ?? [] as $e)
                                     <div class="py-0.5">
-                                        <span>{{ $e['name'] }}</span>@if(!empty($e['codes']))<sup class="ml-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ implode(',', $e['codes']) }}</sup>@endif
+                                        <span>{{ $e['name'] }}</span>@if(!empty($e['codes']))<sup class="ml-0.5 fa-t-muted">{{ implode(',', $e['codes']) }}</sup>@endif
                                     </div>
                                 @empty
                                     <span class="text-[var(--fa-ink-3)]">–</span>

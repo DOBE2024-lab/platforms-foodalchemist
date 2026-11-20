@@ -1,6 +1,5 @@
 {{-- Spec 73 · Bestellvorlage im Editor: Lesen → Bearbeiten → Speichern (Spec 65), Bestellen auch im Lesemodus. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $typText = ['gp' => 'Grundprodukt', 'recipe' => 'Rezept', 'supplier_item' => 'Artikel', 'concept' => 'Konzept', 'paket' => 'Paket'];
     $typTon = ['gp' => 'neutral', 'recipe' => 'info', 'supplier_item' => 'warn', 'concept' => 'accent', 'paket' => 'accent'];
     $zahl = fn ($v) => rtrim(rtrim(number_format((float) $v, 3, ',', '.'), '0'), ',') ?: '0';
@@ -42,7 +41,7 @@
 
         <x-fa::section title="Positionen" icon="heroicon-o-queue-list" :meta="$vorlage->lines->count()">
             @if($vorlage->lines->isEmpty())
-                <p class="{{ $leise }}">Noch keine Positionen — unten hinzufügen.</p>
+                <p class="fa-t-muted">Noch keine Positionen — unten hinzufügen.</p>
             @else
                 <div class="overflow-x-auto">
                     <table class="fa-table fa-table--compact min-w-[640px]" data-vorlage-positionen>
@@ -53,9 +52,9 @@
                                     <td><x-fa::badge :tone="$typTon[$l->type] ?? 'neutral'">{{ $typText[$l->type] ?? $l->type }}</x-fa::badge></td>
                                     <td>
                                         <div class="font-medium">{{ $l->bezeichnung() }}</div>
-                                        @if($l->type === 'supplier_item' && $l->supplierItem?->supplier)<div class="{{ $leise }}">{{ $l->supplierItem->supplier->name }}</div>@endif
-                                        @if($l->type === 'recipe')<div class="{{ $leise }}">{{ $l->recipe?->is_sales_recipe ? 'Gericht' : 'Basisrezept' }} — Bedarf aus der Rezeptur</div>@endif
-                                        @if(in_array($l->type, ['concept', 'paket'], true))<div class="{{ $leise }}">alle Gerichte × Personen, Bedarf aus den Rezepturen</div>@endif
+                                        @if($l->type === 'supplier_item' && $l->supplierItem?->supplier)<div class="fa-t-muted">{{ $l->supplierItem->supplier->name }}</div>@endif
+                                        @if($l->type === 'recipe')<div class="fa-t-muted">{{ $l->recipe?->is_sales_recipe ? 'Gericht' : 'Basisrezept' }} — Bedarf aus der Rezeptur</div>@endif
+                                        @if(in_array($l->type, ['concept', 'paket'], true))<div class="fa-t-muted">alle Gerichte × Personen, Bedarf aus den Rezepturen</div>@endif
                                     </td>
                                     <td class="text-right"><input type="text" inputmode="decimal" value="{{ str_replace('.', ',', $zahl($l->qty)) }}" wire:change="positionMenge({{ $l->id }}, $event.target.value)" class="fa-control h-7 w-20 text-right tabular-nums text-[length:var(--fa-text-sm)]" aria-label="Menge" /></td>
                                     <td>
@@ -80,11 +79,11 @@
                     </div>
                     <x-fa::input type="search" size="sm" wire:model.live.debounce.300ms="suche" :placeholder="['gp' => 'Grundprodukt suchen …', 'recipe' => 'Gericht oder Basisrezept suchen …', 'concept' => 'Konzept suchen …', 'paket' => 'Paket suchen …', 'supplier_item' => 'Artikel oder Artikelnummer …'][$suchArt]" class="w-80" aria-label="Position suchen" data-vorlage-suche />
                     @foreach($treffer as $t)
-                        <button type="button" wire:key="t-{{ $suchArt }}-{{ $t['id'] }}" wire:click="positionHinzu({{ $t['id'] }})" class="self-start inline-flex items-center gap-1 text-[length:var(--fa-text-md)] text-[var(--fa-accent)] hover:underline">@svg('heroicon-m-plus', 'w-3.5 h-3.5') {{ $t['name'] }}@if($t['zusatz'])<span class="{{ $leise }}">· {{ $t['zusatz'] }}</span>@endif</button>
+                        <button type="button" wire:key="t-{{ $suchArt }}-{{ $t['id'] }}" wire:click="positionHinzu({{ $t['id'] }})" class="self-start inline-flex items-center gap-1 text-[length:var(--fa-text-md)] text-[var(--fa-accent)] hover:underline">@svg('heroicon-m-plus', 'w-3.5 h-3.5') {{ $t['name'] }}@if($t['zusatz'])<span class="fa-t-muted">· {{ $t['zusatz'] }}</span>@endif</button>
                     @endforeach
                 </div>
             @else
-                <p class="{{ $leise }}">Zum Ändern oben „Bearbeiten" wählen.</p>
+                <p class="fa-t-muted">Zum Ändern oben „Bearbeiten" wählen.</p>
             @endif
         </x-fa::section>
         </fieldset>
@@ -108,7 +107,7 @@
                             <tbody>
                                 @foreach($g['positionen'] as $i => $p)
                                     <tr wire:key="vp-{{ $g['supplier_id'] }}-{{ $i }}">
-                                        <td>{{ $p['designation'] ?? '–' }}@if(! empty($p['source_label']) && ($p['source_label'] !== ($p['designation'] ?? null)))<div class="{{ $leise }}">aus {{ $p['source_label'] }}</div>@endif</td>
+                                        <td>{{ $p['designation'] ?? '–' }}@if(! empty($p['source_label']) && ($p['source_label'] !== ($p['designation'] ?? null)))<div class="fa-t-muted">aus {{ $p['source_label'] }}</div>@endif</td>
                                         <td class="text-right tabular-nums">{{ $zahl($p['qty_packs'] ?? 0) }} Gebinde</td>
                                         <td class="text-right"><x-fa::money :value="$p['line_total'] ?? null" missing="kein Preis" /></td>
                                     </tr>
@@ -121,7 +120,7 @@
                     <x-fa::notice tone="warn">{{ $u['label'] }}: {{ $u['message'] }}</x-fa::notice>
                 @endforeach
                 @if($vorschau['orders_preview'] === [] && $vorschau['unresolved'] === [])
-                    <p class="{{ $leise }}">Nichts zu bestellen.</p>
+                    <p class="fa-t-muted">Nichts zu bestellen.</p>
                 @endif
             @endif
         </x-fa::section>

@@ -248,7 +248,7 @@
                             <p class="font-medium text-[var(--fa-ink)]">{{ $ueberarbeitung['werte']['aenderungs_notiz'] }}</p>
                         @endif
                         @if(!empty($ueberarbeitung['werte']['zutaten']))
-                            <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Komponenten nach der Überarbeitung</p>
+                            <p class="fa-t-label">Komponenten nach der Überarbeitung</p>
                             <ul class="flex flex-col gap-1">
                                 @foreach($ueberarbeitung['werte']['zutaten'] as $z)
                                     @if(is_array($z))
@@ -279,7 +279,7 @@
                         @endif
                         @foreach(['sales_wording_standard' => 'Neuer Verkaufstext', 'description' => 'Neue Beschreibung', 'plating_text' => 'Neues Anrichten'] as $feldName => $titel)
                             @if(is_string($ueberarbeitung['werte'][$feldName] ?? null) && trim($ueberarbeitung['werte'][$feldName]) !== '')
-                                <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ $titel }}</p>
+                                <p class="fa-t-label">{{ $titel }}</p>
                                 <p class="text-[var(--fa-ink)] whitespace-pre-line" wire:key="vkut-{{ $feldName }}">{{ \Illuminate\Support\Str::limit($ueberarbeitung['werte'][$feldName], 400) }}</p>
                             @endif
                         @endforeach
@@ -569,7 +569,7 @@
                     @endforeach
 
                     <div class="mt-3 pt-3 border-t border-[var(--fa-line)] flex flex-col gap-2" data-regen-form>
-                        <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ $regenEditId !== null ? 'Programm bearbeiten' : 'Programm hinzufügen' }}</p>
+                        <p class="fa-t-label">{{ $regenEditId !== null ? 'Programm bearbeiten' : 'Programm hinzufügen' }}</p>
                         <div class="grid gap-2 grid-cols-2 sm:grid-cols-6">
                             <input type="text" wire:model="regenForm.component_label" class="{{ $feld }} col-span-2" placeholder="Komponente (z. B. Gesamt)" aria-label="Komponente" />
                             <select wire:model="regenForm.device_vocab_id" class="{{ $feld }} fa-select pr-8 col-span-2 sm:col-span-1" aria-label="Gerät">
@@ -601,7 +601,7 @@
                     @foreach(\Platform\FoodAlchemist\Models\FoodAlchemistVocabContainer::ZWECKE as $zweck)
                         @php $lagen = ($behaelterForm[$zweck]['skalierung'] ?? '') === 'lagenware'; @endphp
                         <div class="flex flex-wrap items-center gap-2" wire:key="vkbh-{{ $zweck }}" data-behaelter-zweck="{{ $zweck }}">
-                            <span class="w-24 shrink-0 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ $zweckText[$zweck] ?? ucfirst($zweck) }}</span>
+                            <span class="w-24 shrink-0 fa-t-label">{{ $zweckText[$zweck] ?? ucfirst($zweck) }}</span>
                             <select wire:model="behaelterForm.{{ $zweck }}.container_vocab_id" class="{{ $feldKlein }} fa-select pr-8 w-48" aria-label="Behälter für {{ $zweckText[$zweck] ?? $zweck }}">
                                 <option value="">wie Komponente</option>
                                 @foreach($behaelter as $b)
@@ -755,12 +755,12 @@
                 <x-fa::section title="Anteile" icon="heroicon-o-globe-europe-africa" description="Nach Gewicht der Komponenten.">
                     <dl class="grid grid-cols-2 gap-3" data-vk-spezifikation>
                         <div>
-                            <dt class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Bio</dt>
-                            <dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ $prozent($anteile['bio']) ?? '–' }}</dd>
+                            <dt class="fa-t-label">Bio</dt>
+                            <dd class="fa-t-h2 tabular-nums">{{ $prozent($anteile['bio']) ?? '–' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Regional (DE)</dt>
-                            <dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ $anteile['regional'] !== null && $anteile['regional'] > 0 ? $prozent($anteile['regional']) : '–' }}</dd>
+                            <dt class="fa-t-label">Regional (DE)</dt>
+                            <dd class="fa-t-h2 tabular-nums">{{ $anteile['regional'] !== null && $anteile['regional'] > 0 ? $prozent($anteile['regional']) : '–' }}</dd>
                         </div>
                     </dl>
                 </x-fa::section>
@@ -785,7 +785,7 @@
                 @if($pairingGeladen)
                     @include('foodalchemist::livewire.concepter.partials.pairing')
                 @else
-                    <p class="py-6 text-center text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-vk-pairing-laedt>Pairing wird geladen …</p>
+                    <p class="py-6 text-center fa-t-muted" data-vk-pairing-laedt>Pairing wird geladen …</p>
                 @endif
             </x-fa::section>
         </div>

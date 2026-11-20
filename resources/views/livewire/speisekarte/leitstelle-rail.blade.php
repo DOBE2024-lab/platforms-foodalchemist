@@ -29,7 +29,7 @@
                 @endphp
                 <li wire:key="sk-ls-{{ $punkt['key'] }}" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5 min-w-0">
                     <span class="inline-flex shrink-0 {{ $symbolFarbe[$ton] }}">@svg($symbol, 'w-[18px] h-[18px]')</span>
-                    <span class="min-w-0 flex-1 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $punkt['label'] }}</span>
+                    <span class="min-w-0 flex-1 fa-t-strong">{{ $punkt['label'] }}</span>
                     @if(($punkt['hinweis'] ?? '') !== '')
                         <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $punkt['hinweis'] }}</span>
                     @endif

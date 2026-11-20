@@ -1,7 +1,6 @@
 {{-- Reiter „Produktpass" am Lieferantenartikel: Datei hochladen, Versionen, gelesene Felder, Übernahme, Allergen-Bestätigung.
      Allergene werden NIE direkt geschrieben — erst die Bestätigung trägt sie ein; bis dahin gilt der bisherige Stand. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $statusText = ['hochgeladen' => 'wartet', 'liest' => 'wird gelesen', 'gelesen' => 'gelesen', 'fehler' => 'Fehler', 'verworfen' => 'verworfen'];
     $statusTon = ['gelesen' => 'ok', 'fehler' => 'crit', 'liest' => 'info', 'hochgeladen' => 'info'];
     $quelleText = ['produktpass' => 'Produktpass', 'websuche' => 'Websuche'];
@@ -68,7 +67,7 @@
                         </td>
                         <td>
                             <x-fa::badge :tone="$statusTon[$v['status']] ?? 'neutral'">{{ $statusText[$v['status']] ?? $v['status'] }}</x-fa::badge>
-                            @if($v['status'] === 'fehler' && $v['fehler'])<span class="{{ $leise }} block max-w-xs">{{ Str::limit($v['fehler'], 120) }}</span>@endif
+                            @if($v['status'] === 'fehler' && $v['fehler'])<span class="fa-t-muted block max-w-xs">{{ Str::limit($v['fehler'], 120) }}</span>@endif
                         </td>
                         <td class="text-right whitespace-nowrap">
                             <x-fa::button size="sm" variant="ghost" wire:click="anzeigen({{ $v['id'] }})">Anzeigen</x-fa::button>
@@ -96,7 +95,7 @@
                     <tr wire:key="pp-abw-{{ $a['id'] }}" data-produktpass-abweichung="{{ $a['id'] }}">
                         <td>{{ $a['label'] }}@if($a['kritisch']) <x-fa::badge tone="crit">Kennzeichnung</x-fa::badge>@endif</td>
                         <td>{{ $abweichungText($a, $a['pass']) }}</td>
-                        <td class="{{ $leise }}">{{ $abweichungText($a, $a['necta']) }}</td>
+                        <td class="fa-t-muted">{{ $abweichungText($a, $a['necta']) }}</td>
                         <td class="text-right whitespace-nowrap">
                             @if($darfEdit)
                                 <x-fa::button size="sm" variant="ghost" wire:click="passBehalten({{ $a['id'] }})" data-produktpass-pass-behalten>Pass behalten</x-fa::button>
@@ -146,12 +145,12 @@
                         <tr wire:key="pp-f-{{ $f['key'] }}" data-produktpass-feld="{{ $f['key'] }}">
                             <td>{{ $f['label'] }}</td>
                             <td class="max-w-sm">
-                                {{ $wertText($f['wert'], $f['einheit']) }}@if($f['abgeleitet']) <span class="{{ $leise }}">(abgeleitet)</span>@endif
-                                @if($f['im_dokument'] ?? null)<span class="block {{ $leise }}">im Dokument: {{ $f['im_dokument'] }}</span>@endif
-                                @if($f['url'])<a href="{{ $f['url'] }}" target="_blank" rel="noopener nofollow" class="block underline text-[var(--fa-accent)] {{ $leise }} truncate">{{ Str::limit($f['url'], 48) }}</a>@endif
+                                {{ $wertText($f['wert'], $f['einheit']) }}@if($f['abgeleitet']) <span class="fa-t-muted">(abgeleitet)</span>@endif
+                                @if($f['im_dokument'] ?? null)<span class="block fa-t-muted">im Dokument: {{ $f['im_dokument'] }}</span>@endif
+                                @if($f['url'])<a href="{{ $f['url'] }}" target="_blank" rel="noopener nofollow" class="block underline text-[var(--fa-accent)] fa-t-muted truncate">{{ Str::limit($f['url'], 48) }}</a>@endif
                             </td>
                             <td><x-fa::badge :tone="$f['konfidenz'] >= $schwelle ? 'ok' : 'warn'" class="tabular-nums">{{ number_format($f['konfidenz'] * 100, 0) }} %</x-fa::badge></td>
-                            <td class="{{ $leise }}">{{ $aktuellText($f['aktuell']) }}</td>
+                            <td class="fa-t-muted">{{ $aktuellText($f['aktuell']) }}</td>
                             <td>
                                 @if($f['status'] === 'uebernommen')
                                     <x-fa::badge tone="ok">übernommen</x-fa::badge>
@@ -172,7 +171,7 @@
                 </table>
             @endif
             @if(($angezeigt['verworfen_felder'] ?? []) !== [])
-                <p class="{{ $leise }}" data-produktpass-verworfen>Nicht verwertbar und ausgelassen: {{ implode(' · ', array_slice($angezeigt['verworfen_felder'], 0, 6)) }}{{ count($angezeigt['verworfen_felder']) > 6 ? ' …' : '' }}</p>
+                <p class="fa-t-muted" data-produktpass-verworfen>Nicht verwertbar und ausgelassen: {{ implode(' · ', array_slice($angezeigt['verworfen_felder'], 0, 6)) }}{{ count($angezeigt['verworfen_felder']) > 6 ? ' …' : '' }}</p>
             @endif
         </x-fa::section>
 
@@ -194,17 +193,17 @@
                             <tr wire:key="pp-a-{{ $a['key'] }}" data-produktpass-allergen="{{ $a['key'] }}">
                                 <td>{{ $a['label'] }}</td>
                                 <td><x-fa::badge :tone="$a['vorschlag'] === 'enthalten' ? 'crit' : ($a['vorschlag'] === 'spuren' ? 'warn' : 'neutral')">{{ $allergenText[$a['vorschlag']] ?? $a['vorschlag'] }}</x-fa::badge>
-                                    @if($a['zitat'] ?? null)<span class="block {{ $leise }}">„{{ Str::limit($a['zitat'], 120) }}“</span>@endif
-                                    @if($a['url'])<a href="{{ $a['url'] }}" target="_blank" rel="noopener nofollow" class="block underline text-[var(--fa-accent)] {{ $leise }} truncate">{{ Str::limit($a['url'], 48) }}</a>@endif</td>
+                                    @if($a['zitat'] ?? null)<span class="block fa-t-muted">„{{ Str::limit($a['zitat'], 120) }}“</span>@endif
+                                    @if($a['url'])<a href="{{ $a['url'] }}" target="_blank" rel="noopener nofollow" class="block underline text-[var(--fa-accent)] fa-t-muted truncate">{{ Str::limit($a['url'], 48) }}</a>@endif</td>
                                 <td><x-fa::badge :tone="$a['konfidenz'] >= $schwelle ? 'ok' : 'warn'" class="tabular-nums">{{ number_format($a['konfidenz'] * 100, 0) }} %</x-fa::badge></td>
-                                <td class="{{ $leise }}" @if(! empty($a['aktuell_angenommen'])) title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}" data-pass-angenommen @endif>{{ ! empty($a['aktuell_angenommen']) ? \Platform\FoodAlchemist\Support\AllergenAnnahme::ANZEIGE : ($allergenText[$a['aktuell']] ?? $a['aktuell']) }}</td>
+                                <td class="fa-t-muted" @if(! empty($a['aktuell_angenommen'])) title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}" data-pass-angenommen @endif>{{ ! empty($a['aktuell_angenommen']) ? \Platform\FoodAlchemist\Support\AllergenAnnahme::ANZEIGE : ($allergenText[$a['aktuell']] ?? $a['aktuell']) }}</td>
                             </tr>
                         @endforeach
                         </tbody>
                     </table>
                 @endif
                 @if($stand['allergene_details'] !== [])
-                    <p class="{{ $leise }}" data-produktpass-unterarten>Unterarten: {{ collect($stand['allergene_details'])->map(fn ($d, $k) => $k.' ('.($allergenText[$d['wert']] ?? $d['wert']).')')->implode(', ') }}</p>
+                    <p class="fa-t-muted" data-produktpass-unterarten>Unterarten: {{ collect($stand['allergene_details'])->map(fn ($d, $k) => $k.' ('.($allergenText[$d['wert']] ?? $d['wert']).')')->implode(', ') }}</p>
                 @endif
                 @if($stand['zusatzstoffe'] !== [])
                     <table class="fa-table" data-produktpass-zusatzstoffe>
@@ -214,10 +213,10 @@
                             <tr wire:key="pp-z-{{ $zs['key'] }}" data-produktpass-zusatzstoff="{{ $zs['key'] }}">
                                 <td>{{ $zs['label'] }}</td>
                                 <td>{{ $zs['vorschlag'] === 'ja' ? 'ja' : 'nein' }}
-                                    @if($zs['zitat'] ?? null)<span class="block {{ $leise }}">„{{ Str::limit($zs['zitat'], 120) }}“</span>@endif
-                                    @if($zs['url'])<a href="{{ $zs['url'] }}" target="_blank" rel="noopener nofollow" class="block underline text-[var(--fa-accent)] {{ $leise }} truncate">{{ Str::limit($zs['url'], 48) }}</a>@endif</td>
+                                    @if($zs['zitat'] ?? null)<span class="block fa-t-muted">„{{ Str::limit($zs['zitat'], 120) }}“</span>@endif
+                                    @if($zs['url'])<a href="{{ $zs['url'] }}" target="_blank" rel="noopener nofollow" class="block underline text-[var(--fa-accent)] fa-t-muted truncate">{{ Str::limit($zs['url'], 48) }}</a>@endif</td>
                                 <td><x-fa::badge :tone="$zs['konfidenz'] >= $schwelle ? 'ok' : 'warn'" class="tabular-nums">{{ number_format($zs['konfidenz'] * 100, 0) }} %</x-fa::badge></td>
-                                <td class="{{ $leise }}">{{ $zs['aktuell'] ?? 'unbekannt' }}</td>
+                                <td class="fa-t-muted">{{ $zs['aktuell'] ?? 'unbekannt' }}</td>
                                 <td>@if($zs['status'] === 'uebernommen')<x-fa::badge tone="ok">schon übernommen</x-fa::badge>@endif</td>
                             </tr>
                         @endforeach

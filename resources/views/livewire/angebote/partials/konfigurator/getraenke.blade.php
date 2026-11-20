@@ -23,7 +23,7 @@
         <ul class="flex flex-col divide-y divide-[var(--fa-line)]" data-kf-getraenk-treffer>
             @foreach($getraenkTreffer as $c)
                 <li wire:key="kfgt-{{ $c->id }}" class="flex items-center justify-between gap-2 py-1.5">
-                    <span>{{ $conceptName($c) }} <span class="{{ $leise }}">· {{ $euro($c->price_per_person_cache) }} je Person</span></span>
+                    <span>{{ $conceptName($c) }} <span class="fa-t-muted">· {{ $euro($c->price_per_person_cache) }} je Person</span></span>
                     <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="getraenkHinzu({{ $c->id }})" data-kf-getraenk-hinzu="{{ $c->id }}">Als Getränkepaket</x-fa::button>
                 </li>
             @endforeach
@@ -53,7 +53,7 @@
                         <x-fa::select id="kfg-bind" wire:model="konzeptForm.gebunden_an_id" :options="$haupt->mapWithKeys(fn ($h) => [$h->id => $h->kunden_titel ?: 'Konzept ' . $h->id])->all()" placeholder="Bei allen" />
                     </x-fa::field>
                 </div>
-                <p class="{{ $leise }}">Staffel: Grundstunden und Folgestunden-Satz zusammen setzen (z. B. 4 Std. zum Concept-Preis, jede weitere 3,50 €), sonst gilt die Pauschale oben.</p>
+                <p class="fa-t-muted">Staffel: Grundstunden und Folgestunden-Satz zusammen setzen (z. B. 4 Std. zum Concept-Preis, jede weitere 3,50 €), sonst gilt die Pauschale oben.</p>
                 <div class="flex justify-end gap-2">
                     <x-fa::button size="sm" variant="ghost" wire:click="konzeptBearbeitenAbbrechen">Abbrechen</x-fa::button>
                     <x-fa::button size="sm" variant="primary" wire:click="konzeptSpeichern" data-kfg-speichern>Übernehmen</x-fa::button>
@@ -61,10 +61,10 @@
             @else
                 <div class="flex flex-wrap items-start justify-between gap-2">
                     <div class="flex flex-col gap-0.5">
-                        <span class="font-medium">{{ $g->kunden_titel ?: $conceptName($g->dinnerConcept ?? $g->lunchConcept) }}@if($g->claim)<span class="{{ $leise }}"> · {{ $g->claim }}</span>@endif</span>
-                        <span class="{{ $leise }}" data-kfg-abrechnung-text="{{ $g->id }}">{{ $g->getraenk_abrechnung === 'verbrauch' ? 'Nach Verbrauch' . ($g->verbrauch_deckel !== null ? ', höchstens ' . $euro($g->verbrauch_deckel) : '') . ', Satz' : 'Pauschale' }} {{ $dauer($g) }}@if($g->gebunden_an_id) · nur bei {{ optional($haupt->firstWhere('id', $g->gebunden_an_id))->kunden_titel }}@endif</span>
-                        <span class="{{ $leise }}">Tag: {{ $conceptName($g->lunchConcept) ?? '—' }} · Abend: {{ $conceptName($g->dinnerConcept) ?? '—' }}</span>
-                        <span class="{{ $leise }}" data-kfg-preise="{{ $g->id }}">
+                        <span class="font-medium">{{ $g->kunden_titel ?: $conceptName($g->dinnerConcept ?? $g->lunchConcept) }}@if($g->claim)<span class="fa-t-muted"> · {{ $g->claim }}</span>@endif</span>
+                        <span class="fa-t-muted" data-kfg-abrechnung-text="{{ $g->id }}">{{ $g->getraenk_abrechnung === 'verbrauch' ? 'Nach Verbrauch' . ($g->verbrauch_deckel !== null ? ', höchstens ' . $euro($g->verbrauch_deckel) : '') . ', Satz' : 'Pauschale' }} {{ $dauer($g) }}@if($g->gebunden_an_id) · nur bei {{ optional($haupt->firstWhere('id', $g->gebunden_an_id))->kunden_titel }}@endif</span>
+                        <span class="fa-t-muted">Tag: {{ $conceptName($g->lunchConcept) ?? '—' }} · Abend: {{ $conceptName($g->dinnerConcept) ?? '—' }}</span>
+                        <span class="fa-t-muted" data-kfg-preise="{{ $g->id }}">
                             @foreach($vorschau($g) as $f)
                                 @if($f['fall']['typ'] === 'getraenk' && $f['fall']['g'] === $g->id)
                                     @php($vz = collect($f['einzel'])->firstWhere('art', 'verbrauch'))
@@ -84,6 +84,6 @@
             @endif
         </div>
     @empty
-        <p class="{{ $leise }}">Noch kein Getränkepaket. Oben ein Concept suchen und als Getränkepaket hinzufügen. Leistungen zum Getränk (Barkeeper, Gläser) im Reiter Leistungen an das Paket hängen.</p>
+        <p class="fa-t-muted">Noch kein Getränkepaket. Oben ein Concept suchen und als Getränkepaket hinzufügen. Leistungen zum Getränk (Barkeeper, Gläser) im Reiter Leistungen an das Paket hängen.</p>
     @endforelse
 </x-fa::section>

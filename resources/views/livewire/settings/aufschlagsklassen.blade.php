@@ -28,7 +28,7 @@
                     @endforeach
                 </x-fa::select>
             </x-fa::field>
-            <p class="flex-1 min-w-[16rem] pb-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+            <p class="flex-1 min-w-[16rem] pb-2 fa-t-muted">
                 @if($scopeOutletName)
                     Basissatz und Gesamtfaktor gelten für {{ $scopeOutletName }}. Klassenfaktoren, Steuer und Rundung gelten teamweit.
                 @else
@@ -53,9 +53,9 @@
             ]" />
         @endif
         <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] border border-[var(--fa-line)] px-3 py-2.5 flex flex-col gap-1">
-            <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">So entsteht der Verkaufspreis</p>
-            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">VK netto = Wareneinsatz je Portion × Basissatz × Klassenfaktor</p>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+            <p class="fa-t-label">So entsteht der Verkaufspreis</p>
+            <p class="fa-t-body">VK netto = Wareneinsatz je Portion × Basissatz × Klassenfaktor</p>
+            <p class="fa-t-muted">
                 Danach wird gerundet und die Mehrwertsteuer aufgeschlagen. Der Gesamtfaktor in der Tabelle ist Basissatz × Klassenfaktor.
                 @if($basisFaktor !== null)
                     Beispiel Klassenfaktor 100 %: 3,00 € Wareneinsatz ergeben {{ number_format(3 * $basisFaktor, 2, ',', '.') }} € netto vor Rundung.
@@ -99,7 +99,7 @@
                                         <x-fa::field label="Klassenfaktor" for="ak-form-faktor" hint="100 % = Basissatz unverändert.">
                                             <div class="flex items-center gap-1.5">
                                                 <x-fa::input id="ak-form-faktor" wire:model="form.class_factor_pct" numeric class="w-24" />
-                                                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">%</span>
+                                                <span class="fa-t-muted">%</span>
                                             </div>
                                         </x-fa::field>
                                         <x-fa::field label="Nachkommastellen" for="ak-form-stellen" hint="Leer lassen = wie Team.">
@@ -111,7 +111,7 @@
                                         <x-fa::choice name="form.rounding_mode" :live="false" label="Art der Rundung" :options="$rundungsWahl" />
                                     </div>
                                     <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-                                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Gesamtfaktor wird nach dem Speichern berechnet. {{ $anzahl }} {{ $anzahl === 1 ? 'Rezept nutzt' : 'Rezepte nutzen' }} diese Klasse.</span>
+                                        <span class="fa-t-muted">Gesamtfaktor wird nach dem Speichern berechnet. {{ $anzahl }} {{ $anzahl === 1 ? 'Rezept nutzt' : 'Rezepte nutzen' }} diese Klasse.</span>
                                         <div class="flex items-center gap-2">
                                             <x-fa::button variant="ghost" size="sm" wire:click="cancel">Abbrechen</x-fa::button>
                                             <x-fa::button variant="primary" size="sm" icon="heroicon-m-check" wire:click="save">Preisklasse speichern</x-fa::button>
@@ -154,7 +154,7 @@
                                                 <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" size="sm" label="Weitere Aktionen für {{ $ak->label }}" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
                                                 <div class="hidden w-52 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
                                                     <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleInactive({{ $ak->id }})"
-                                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
+                                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
                                                         @svg($ak->is_inactive ? 'heroicon-o-play' : 'heroicon-o-pause', 'w-4 h-4 text-[var(--fa-ink-3)]'){{ $ak->is_inactive ? 'Preisklasse aktivieren' : 'Preisklasse deaktivieren' }}
                                                     </button>
                                                     <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $ak->id }})" wire:confirm="Diese Preisklasse löschen?" @disabled($anzahl > 0)
@@ -194,7 +194,7 @@
             <x-fa::field label="Klassenfaktor" for="ak-neu-faktor" hint="100 % = Basissatz unverändert, 120 % = 20 % teurer.">
                 <div class="flex items-center gap-1.5">
                     <x-fa::input id="ak-neu-faktor" wire:model="neu.class_factor_pct" numeric class="w-24" />
-                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">%</span>
+                    <span class="fa-t-muted">%</span>
                 </div>
             </x-fa::field>
         </div>

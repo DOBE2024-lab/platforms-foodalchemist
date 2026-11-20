@@ -1,6 +1,5 @@
 {{-- Spec 70 · Etikett drucken: Formular + Live-Vorschau. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $segment = 'h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium transition-colors duration-150';
     $auto = fn ($c) => $c?->format('d.m.Y');
     $hatFeld = fn (string $k) => in_array($k, $felder, true);
@@ -26,7 +25,7 @@
                         <div class="flex items-center justify-between gap-2">
                             <div>
                                 <div class="font-medium text-[var(--fa-ink)]">{{ $daten['bezeichnung'] }}</div>
-                                <div class="{{ $leise }}">{{ $quelleText[$quelle] ?? $quelle }}</div>
+                                <div class="fa-t-muted">{{ $quelleText[$quelle] ?? $quelle }}</div>
                             </div>
                             <x-fa::button size="sm" variant="ghost" wire:click="$set('bezugId', null)">ändern</x-fa::button>
                         </div>
@@ -47,7 +46,7 @@
                     {{-- Vorlage + Anzahl --}}
                     <x-fa::section title="Vorlage" icon="heroicon-o-swatch" data-etikett-vorlage>
                         <x-fa::select wire:model.live="vorlageId" size="sm" :options="$vorlagen->pluck('name', 'id')" aria-label="Etikett-Vorlage" />
-                        <p class="{{ $leise }}">{{ $format['label'] }} · {{ $vorlage->typ === 'verkauf' ? 'Verkauf (LMIV-Pflichtangaben)' : 'intern' }}</p>
+                        <p class="fa-t-muted">{{ $format['label'] }} · {{ $vorlage->typ === 'verkauf' ? 'Verkauf (LMIV-Pflichtangaben)' : 'intern' }}</p>
                         <div class="flex flex-wrap items-end gap-2">
                             <x-fa::field label="Anzahl" for="et-anzahl"><x-fa::input id="et-anzahl" type="number" min="1" max="500" wire:model.live.debounce.400ms="anzahl" class="w-20" /></x-fa::field>
                             @if($format['bogen'])
@@ -55,7 +54,7 @@
                             @endif
                         </div>
                         @if(\Illuminate\Support\Facades\Route::has('foodalchemist.einstellungen'))
-                            <a href="{{ route('foodalchemist.einstellungen', ['sektion' => 'etiketten']) }}" class="{{ $leise }} hover:underline">Vorlagen gestalten →</a>
+                            <a href="{{ route('foodalchemist.einstellungen', ['sektion' => 'etiketten']) }}" class="fa-t-muted hover:underline">Vorlagen gestalten →</a>
                         @endif
                     </x-fa::section>
 
@@ -75,13 +74,13 @@
                                     <div class="inline-flex items-center gap-0.5 p-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] self-start" role="group" aria-label="Lagerung" data-etikett-lagerung>
                                         @foreach($arten as $art)
                                             <button type="button" wire:click="$set('e.lagerung', '{{ $art }}')" class="{{ $segment }} {{ $aktiv === $art ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}" data-etikett-lagerart="{{ $art }}">
-                                                {{ $kurz[$art] ?? $art }} @if($quelle === 'recipe' && ($daten['haltbar'][$art] ?? null) !== null) <span class="{{ $leise }}">· {{ $daten['haltbar'][$art] }} T.</span>@endif
+                                                {{ $kurz[$art] ?? $art }} @if($quelle === 'recipe' && ($daten['haltbar'][$art] ?? null) !== null) <span class="fa-t-muted">· {{ $daten['haltbar'][$art] }} T.</span>@endif
                                             </button>
                                         @endforeach
                                     </div>
                                 </x-fa::field>
                                 @if($quelle === 'recipe')
-                                    <p class="{{ $leise }}">Lagerarten und Haltbarkeit pflegst du am Rezept (Stammdaten → Lagerung & Haltbarkeit). <a href="{{ \Platform\FoodAlchemist\Support\Sprungziel::rezept($bezugId) }}" class="text-[var(--fa-accent)] hover:underline" data-etikett-zum-rezept>Zum Rezept →</a></p>
+                                    <p class="fa-t-muted">Lagerarten und Haltbarkeit pflegst du am Rezept (Stammdaten → Lagerung & Haltbarkeit). <a href="{{ \Platform\FoodAlchemist\Support\Sprungziel::rezept($bezugId) }}" class="text-[var(--fa-accent)] hover:underline" data-etikett-zum-rezept>Zum Rezept →</a></p>
                                 @endif
                             @endif
                             <div class="grid grid-cols-2 gap-2">
@@ -132,7 +131,7 @@
         {{-- Spec 76: Druckprotokoll — wer hat wann was gedruckt; „nochmal drucken" mit denselben Angaben --}}
         <x-fa::section title="Zuletzt gedruckt" icon="heroicon-o-clock" description="Druckprotokoll für Rückverfolgung. Sammeldrucke aus der Produktion stehen als eine Zeile." data-etikett-verlauf>
             @if($verlauf === [])
-                <p class="{{ $leise }}">Noch nichts gedruckt.</p>
+                <p class="fa-t-muted">Noch nichts gedruckt.</p>
             @else
                 <div class="overflow-x-auto">
                     <table class="fa-table fa-table--compact">
@@ -142,7 +141,7 @@
                                 <tr wire:key="druck-{{ $vz['id'] }}">
                                     <td class="tabular-nums whitespace-nowrap">{{ $vz['wann'] }}</td>
                                     <td>{{ $vz['wer'] ?? '–' }}</td>
-                                    <td><div class="font-medium">{{ $vz['titel'] }}</div>@if($vz['details'] !== '')<div class="{{ $leise }}">{{ $vz['details'] }}</div>@endif</td>
+                                    <td><div class="font-medium">{{ $vz['titel'] }}</div>@if($vz['details'] !== '')<div class="fa-t-muted">{{ $vz['details'] }}</div>@endif</td>
                                     <td class="text-right tabular-nums">{{ $vz['anzahl'] }}</td>
                                     <td class="text-right"><x-fa::button size="sm" variant="ghost" icon="heroicon-m-printer" :href="$vz['url']" target="_blank">Nochmal drucken</x-fa::button></td>
                                 </tr>

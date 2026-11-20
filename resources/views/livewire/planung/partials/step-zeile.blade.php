@@ -66,7 +66,7 @@
             <span class="inline-flex items-center gap-1.5 {{ $textKlein }} text-[var(--fa-ink-3)]">
                 @svg($indent ? 'heroicon-m-arrow-turn-down-right' : $kindIcon, 'w-3.5 h-3.5 shrink-0') {{ $kindName }}
             </span>
-            <h5 class="text-[length:var(--fa-text-base)] font-semibold leading-snug text-[var(--fa-ink)] break-words">{{ $name }}</h5>
+            <h5 class="fa-t-h3 leading-snug break-words">{{ $name }}</h5>
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                 @if($hardstop)
                     <x-fa::signal tone="warn"
@@ -324,7 +324,7 @@
 
     @if($istIdee)
         <div class="flex flex-col gap-1.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] p-2.5" data-gericht-bauplan="{{ $st->id }}">
-            @if(!empty($snap['beschreibung']))<p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $snap['beschreibung'] }}</p>@endif
+            @if(!empty($snap['beschreibung']))<p class="fa-t-body">{{ $snap['beschreibung'] }}</p>@endif
             @if(!empty($snap['komponenten']))
                 <p class="{{ $textKlein }} font-medium text-[var(--fa-ink-2)]">Geplante Komponenten</p>
                 <ul class="flex flex-col gap-1">
@@ -383,7 +383,7 @@
                 <p class="{{ $textKlein }} font-medium text-[var(--fa-ink-2)]">Menü-Aufbau mit {{ count($speisen) === 1 ? '1 Position' : count($speisen) . ' Positionen' }}. Die Gerichte entstehen mit der Freigabe.</p>
                 <ol class="flex flex-col gap-1">
                     @foreach($speisen as $sp)
-                        <li class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                        <li class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 fa-t-body">
                             <span class="w-5 shrink-0 text-right {{ $textKlein }} text-[var(--fa-ink-3)] tabular-nums">{{ $loop->iteration }}.</span>
                             <span class="min-w-0 break-words">{{ $sp['titel'] !== '' ? $sp['titel'] : ($sp['rolle'] !== '' ? $lesbar($sp['rolle']) : 'Position') }}</span>
                             @if($sp['titel'] !== '' && $sp['rolle'] !== '')<span class="{{ $textKlein }} text-[var(--fa-ink-3)]">{{ $lesbar($sp['rolle']) }}</span>@endif

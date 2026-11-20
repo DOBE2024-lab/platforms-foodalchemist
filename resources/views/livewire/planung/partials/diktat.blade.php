@@ -41,8 +41,8 @@
                 <span x-show="! laeuft">@svg('heroicon-o-microphone', 'w-3.5 h-3.5')</span>
                 <span x-text="laeuft ? 'Stoppen und übernehmen' : 'Briefing diktieren'"></span>
             </button>
-            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums" x-show="laeuft" x-cloak data-planung-diktat-status><span x-text="sekunden"></span> von 20 Sekunden</span>
-            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-show="hochladenLaeuft" x-cloak>wird hochgeladen …</span>
+            <span class="fa-t-muted tabular-nums" x-show="laeuft" x-cloak data-planung-diktat-status><span x-text="sekunden"></span> von 20 Sekunden</span>
+            <span class="fa-t-muted" x-show="hochladenLaeuft" x-cloak>wird hochgeladen …</span>
             <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" x-show="fehler" x-cloak x-text="fehler" data-planung-diktat-fehler></span>
         </div>
     @endif

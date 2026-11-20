@@ -50,7 +50,7 @@
                     <div class="border-b border-[var(--fa-line)] {{ $p->is_inactive ? 'opacity-60' : '' }}" role="listitem" x-data="{ offen: false }"
                          wire:key="posten-{{ $p->id }}" data-posten="{{ $p->id }}">
                         <button type="button" x-on:click="offen = ! offen" x-bind:aria-expanded="offen"
-                                class="{{ $zeileGrid }} w-full px-1 py-2.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] rounded-[var(--fa-radius-control)]"
+                                class="{{ $zeileGrid }} w-full px-1 py-2.5 text-left fa-t-body hover:bg-[var(--fa-hover)] rounded-[var(--fa-radius-control)]"
                                 data-posten-zeile>
                             <span class="text-[var(--fa-ink-3)] transition-transform duration-150" x-bind:class="offen ? 'rotate-90' : ''">@svg('heroicon-m-chevron-right', 'w-4 h-4')</span>
                             <span class="min-w-0 flex flex-wrap items-center gap-1.5 font-medium">{{ $p->name }}
@@ -135,7 +135,7 @@
     <x-fa::section title="Vorgaben">
         <div class="grid gap-4 md:grid-cols-2">
             <div class="flex flex-col gap-2" data-posten-standarddeckel>
-                <div class="flex items-center gap-2 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Standard-Topf-Deckel
+                <div class="flex items-center gap-2 fa-t-strong">Standard-Topf-Deckel
                     @include('foodalchemist::livewire.settings.partials.info', ['text' => 'Größte Charge je Koch-Vorgang, solange ein Rezept oder Posten keinen eigenen Deckel hat. So zählt ein Kessel Sauce als ein Vorgang und nicht als zehn kleine Töpfe. Leer gilt der Standard von 20 kg bzw. 200 Stück. Rezept- und Posten-Deckel gehen immer vor, der kleinere gilt.'])</div>
                 <div class="flex flex-wrap items-end gap-2">
                     <x-fa::field label="kg je Vorgang" for="posten-standard-kg" class="w-32">
@@ -148,7 +148,7 @@
                 </div>
             </div>
             <div class="flex flex-col gap-2" data-posten-gerichte>
-                <div class="flex items-center gap-2 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Posten für Gerichte
+                <div class="flex items-center gap-2 fa-t-strong">Posten für Gerichte
                     @include('foodalchemist::livewire.settings.partials.info', ['text' => 'Gerichte gehen an den Pass. Hier legst du fest, an welchen Posten die Zeile eines Gerichts im Auftrag geht, wenn das Rezept keinen eigenen Standard-Posten trägt. Ein Posten am Rezept geht immer vor, eine Zuteilung von Hand ebenso. Unter-Teams erben die Vorgabe.'])
                     @if($gerichteVorgabeGeerbt)<x-fa::badge title="Die Vorgabe kommt vom Oberteam. Speicherst du hier, gilt für dieses Team eine eigene.">geerbt</x-fa::badge>@endif</div>
                 <div class="flex flex-wrap items-end gap-2">

@@ -83,7 +83,7 @@
                                                     x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
                                                 <div class="hidden w-48 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
                                                     <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleInactive({{ $unit->id }}, {{ $unit->is_inactive ? 'false' : 'true' }})"
-                                                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
+                                                            class="flex w-full items-center gap-2 px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)]">
                                                         @svg($unit->is_inactive ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-eye-slash', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                                                         {{ $unit->is_inactive ? 'Aktivieren' : 'Deaktivieren' }}
                                                     </button>

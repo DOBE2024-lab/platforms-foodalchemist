@@ -16,7 +16,6 @@
     $heberJson = $urteil?->heber_json;
     $heberIdeen = $heberJson['vorschlaege'] ?? [];
     $kleinLabel = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $listenKnopf = 'flex w-full items-center gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $rollenText = \Platform\FoodAlchemist\Support\TellerRolle::labels();
     $geld = fn ($wert) => number_format((float) $wert, 2, ',', '.') . ' €';
@@ -150,7 +149,7 @@
             @php $vkKlasse = $rezept->vk_klasse; @endphp {{-- Spec 85 D-1 PR-B: Klasse der Standard-Darreichung --}}
             {{-- Formel-Klartext: wie der VK zustande kommt --}}
             @if($vkKlasse !== null && ! $cockpit['formel_fehlt'] && $cockpit['vk']['vorschlag'] !== null)
-                <p class="{{ $leise }}" data-formel-klartext><span class="font-mono">{{ $vkKlasse->code }}</span> · {{ $cockpit['vk']['vorschlag']['formel'] }}</p>
+                <p class="fa-t-muted" data-formel-klartext><span class="font-mono">{{ $vkKlasse->code }}</span> · {{ $cockpit['vk']['vorschlag']['formel'] }}</p>
             @endif
         </div>
 
@@ -265,7 +264,7 @@
                     <x-foodalchemist::pairing-netz :recipe-id="$rezept->id" :netz="$netz" />
                 @elseif($pairingErlaubt)
                     <div wire:key="pairing-laden-{{ $rezept->id }}" x-init="$wire.pairingLaden()"
-                         class="flex items-center gap-2 py-6 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-pairing-laedt>
+                         class="flex items-center gap-2 py-6 fa-t-muted" data-pairing-laedt>
                         @svg('heroicon-o-arrow-path', 'w-4 h-4 animate-spin') Pairing wird geladen …
                     </div>
                 @endif
@@ -289,7 +288,7 @@
                                 data-vk-kohaerenz-pruefen busy="Wird geprüft …" flash="Geprüft" />
                         </div>
                         @if($urteil?->reasoning !== null)<p class="text-[length:var(--fa-text-sm)] leading-relaxed text-[var(--fa-ink-2)]">{{ $urteil->reasoning }}</p>@endif
-                        @if($urteil?->score !== null)<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $urteil->judged_at?->format('d.m.Y') }} · {{ $urteil->judge_model }}</p>@endif
+                        @if($urteil?->score !== null)<p class="fa-t-muted tabular-nums">{{ $urteil->judged_at?->format('d.m.Y') }} · {{ $urteil->judge_model }}</p>@endif
                     </div>
                     <div class="flex flex-col gap-1 pt-3 border-t border-[var(--fa-line)]">
                         <div class="flex items-center gap-2 flex-wrap" data-vk-heber>
@@ -305,7 +304,7 @@
                         </div>
                         @if(($heberJson['einschaetzung'] ?? null) !== null)<p class="text-[length:var(--fa-text-sm)] leading-relaxed text-[var(--fa-ink-2)]">{{ $heberJson['einschaetzung'] }}</p>@endif
                     </div>
-                    <p class="pt-3 border-t border-[var(--fa-line)] text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-vk-nachbarn>Aroma-Nachbarn: aromaverwandte Zutaten zeigt das Pairing-Netz oben.</p>
+                    <p class="pt-3 border-t border-[var(--fa-line)] fa-t-muted" data-vk-nachbarn>Aroma-Nachbarn: aromaverwandte Zutaten zeigt das Pairing-Netz oben.</p>
                 </div>
             </x-fa::section>
 
@@ -339,7 +338,7 @@
                                     <button type="button" wire:click="eignungEntfernen('{{ $typ }}', '{{ $e->{$slugSpalte} }}')" class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-[var(--fa-surface)]" aria-label="{{ $lbl }} {{ $e->{$slugSpalte} }} entfernen" title="Entfernen">@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                 </x-fa::badge>
                             @empty
-                                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">noch keine</span>
+                                <span class="fa-t-muted">noch keine</span>
                             @endforelse
                             <x-fa::select size="sm" wire:change="eignungSetzen('{{ $typ }}', $event.target.value)" aria-label="{{ $lbl }} hinzufügen" class="w-36 ml-auto" data-eignung-select="{{ $typ }}">
                                 <option value="">{{ $lbl }} hinzufügen</option>
@@ -375,7 +374,7 @@
                         @endforeach
                     </dl>
                 @else
-                    <p class="{{ $leise }}">Nährwerte fehlen noch.</p>
+                    <p class="fa-t-muted">Nährwerte fehlen noch.</p>
                 @endif
             </x-fa::section>
 
@@ -385,13 +384,13 @@
             {{-- 7 · Verwendung: Concepts und Pakete mit einer Position auf dem Gericht, Rezepte mit dem Gericht als Komponente --}}
             <x-fa::section variant="plain" title="Wo verwendet?" icon="heroicon-o-link" :meta="$inConcepts->count() + $eltern->count()" data-vk-verwendung>
                 @if($inConcepts->isEmpty() && $eltern->isEmpty())
-                    <p class="{{ $leise }}">In keinem Concept, Paket oder Rezept verwendet.</p>
+                    <p class="fa-t-muted">In keinem Concept, Paket oder Rezept verwendet.</p>
                 @else
                     <div class="flex flex-col gap-0.5">
                         @foreach($inConcepts as $c)
                             <div class="flex items-center justify-between gap-3 px-2 py-1 text-[length:var(--fa-text-md)]" wire:key="vkc-{{ $c->id }}">
                                 <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $c->name }}</span>
-                                <span class="shrink-0 {{ $leise }}">{{ $c->kind === 'paket' ? 'Paket' : 'Concept' }}</span>
+                                <span class="shrink-0 fa-t-muted">{{ $c->kind === 'paket' ? 'Paket' : 'Concept' }}</span>
                             </div>
                         @endforeach
                         @foreach($eltern as $parent)
@@ -400,7 +399,7 @@
                                     class="{{ $listenKnopf }}" title="{{ $parent->is_sales_recipe ? 'Gericht anzeigen' : 'Rezept öffnen' }}">
                                 @svg($parent->is_sales_recipe ? 'heroicon-o-banknotes' : 'heroicon-o-arrow-up', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                                 <span class="min-w-0 flex-1 truncate">{{ $parent->name }}</span>
-                                <span class="shrink-0 {{ $leise }}">{{ $parent->is_sales_recipe ? 'Gericht' : 'Rezept' }}</span>
+                                <span class="shrink-0 fa-t-muted">{{ $parent->is_sales_recipe ? 'Gericht' : 'Rezept' }}</span>
                             </a>{{-- Spec 65: <a> statt <button> — bleibt im gesperrten Lesemodus (fieldset) bedienbar --}}
                         @endforeach
                     </div>

@@ -13,7 +13,7 @@
     @endif
 
     <div class="flex items-center gap-2">
-        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <span class="fa-t-muted">
             {{ count($plan['liste'] ?? []) }} Themen · {{ $plan['neue_trends'] ?? 0 }} neue Trends geplant
             @if(($plan['gestaut'] ?? 0) > 0) · {{ $plan['gestaut'] }} warten (Grenze je Lauf) @endif
         </span>
@@ -42,7 +42,7 @@
                             <x-fa::badge data-automatik-aktion="{{ $z['aktion'] }}">{{ $z['aktion'] }}</x-fa::badge>
                         </div>
                     </div>
-                    <div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] flex flex-wrap gap-x-3">
+                    <div class="fa-t-muted flex flex-wrap gap-x-3">
                         <span>{{ $k['sichtungen'] }} Sichtungen @if($k['davon_pinnwand'] > 0)(davon {{ $k['davon_pinnwand'] }} Pinnwand)@endif</span>
                         <span>{{ $k['sichtungen_30t'] }} in 30 Tagen</span>
                         <span>{{ $k['quellen_fenster'] }} Quellen im Zeitraum</span>
@@ -51,7 +51,7 @@
                         <span>Bedürfnis {{ number_format($k['anteil_beduerfnis'] * 100, 0) }} %</span>
                     </div>
                     <p class="text-[length:var(--fa-text-sm)]">{{ $z['hinweis'] }}</p>
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ implode(' ', $e['begruendung']) }}</p>
+                    <p class="fa-t-muted">{{ implode(' ', $e['begruendung']) }}</p>
                 </article>
             @endforeach
         </div>

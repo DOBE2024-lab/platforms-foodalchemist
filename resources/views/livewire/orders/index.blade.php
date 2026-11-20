@@ -9,7 +9,6 @@
     $statusTon = ['secondary' => 'neutral', 'info' => 'info', 'success' => 'ok', 'danger' => 'crit', 'warning' => 'warn', 'primary' => 'accent'];
     $datum = fn ($wert) => $wert ? \Carbon\Carbon::parse($wert)->format('d.m.Y') : null;
     $zahl = fn ($wert) => number_format((float) $wert, 0, ',', '.');
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $checkbox = 'rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]';
     $segment = 'h-7 px-3 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors';
     $segmentAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
@@ -84,7 +83,7 @@
 
                 @if($sicht !== 'bedarfe')
                     <div class="flex flex-col gap-1.5">
-                        <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Datum bezieht sich auf</span>
+                        <span class="fa-t-label">Datum bezieht sich auf</span>
                         <div role="group" aria-label="Datumsbasis" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
                             <button type="button" wire:click="$set('datumsbasis','liefertag')" aria-pressed="{{ $datumsbasis === 'liefertag' ? 'true' : 'false' }}" class="flex-1 {{ $segment }} {{ $datumsbasis === 'liefertag' ? $segmentAn : $segmentAus }}">Liefertag</button>
                             <button type="button" wire:click="$set('datumsbasis','bestelldatum')" aria-pressed="{{ $datumsbasis === 'bestelldatum' ? 'true' : 'false' }}" class="flex-1 {{ $segment }} {{ $datumsbasis === 'bestelldatum' ? $segmentAn : $segmentAus }}">Bestelldatum</button>
@@ -93,7 +92,7 @@
                 @endif
 
                 <div class="flex flex-col gap-1.5">
-                    <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Zeitraum</span>
+                    <span class="fa-t-label">Zeitraum</span>
                     <div class="flex flex-wrap gap-1">
                         @foreach($zeitraeume as $key => $lbl)
                             <button type="button" wire:click="waehleZeitraum('{{ $key }}')" aria-pressed="{{ $zeitraum === $key ? 'true' : 'false' }}"
@@ -108,7 +107,7 @@
 
                 @if($sicht !== 'bedarfe')
                     <div class="flex flex-col gap-0.5">
-                        <span class="mb-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Status</span>
+                        <span class="mb-1 fa-t-label">Status</span>
                         <x-foodalchemist::filter-row wire:click="$set('statusFilter','')" :active="$statusFilter === ''"><span>Alle Status</span></x-foodalchemist::filter-row>
                         @foreach(['draft','sent','confirmed','delivered','cancelled'] as $s)
                             <x-foodalchemist::filter-row wire:key="order-status-{{ $s }}" wire:click="$set('statusFilter','{{ $s }}')" :active="$statusFilter === $s">{{ $statusLabels[$s] }}</x-foodalchemist::filter-row>
@@ -183,8 +182,8 @@
                                        @checked(in_array((int) $order['id'], array_map('intval', $selectedOrderIds), true))
                                        aria-label="Bestellung ord-{{ $order['id'] }} von {{ $order['supplier'] }} auswählen" />
                                 <div class="min-w-0">
-                                    <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $order['supplier'] }} <span class="font-normal text-[var(--fa-ink-3)]">· ord-{{ $order['id'] }}</span></p>
-                                    <p class="{{ $leise }} flex flex-wrap gap-x-3 tabular-nums">
+                                    <p class="fa-t-strong">{{ $order['supplier'] }} <span class="font-normal text-[var(--fa-ink-3)]">· ord-{{ $order['id'] }}</span></p>
+                                    <p class="fa-t-muted flex flex-wrap gap-x-3 tabular-nums">
                                         <span>{{ $order['positions'] }} Positionen</span>
                                         <span>Bestelldatum: {{ $datum($order['created_at']) ?? '–' }}</span>
                                         <span>Liefertag: {{ $datum($order['desired_delivery_date']) ?? '–' }}</span>
@@ -247,7 +246,7 @@
                                 @endforeach
                             </x-fa::select>
                         </x-fa::field>
-                        <p class="{{ $leise }}">Beim Speichern entsteht je Lieferant und Liefertag eine eigene Bestellung.</p>
+                        <p class="fa-t-muted">Beim Speichern entsteht je Lieferant und Liefertag eine eigene Bestellung.</p>
                         <x-fa::button variant="primary" x-on:click="offen = false" wire:click="neueBestellung" data-orders-neu>Bestellrunde öffnen</x-fa::button>
                         </div>
                     </div>
@@ -295,9 +294,9 @@
         <div class="fa-surface overflow-hidden" data-orders-tabelle>
             <div class="px-4 pt-4 pb-3 flex items-start justify-between gap-3 border-b border-[var(--fa-line)]">
                 <div class="min-w-0">
-                    <h2 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">{{ $sichtTitel[$sicht] ?? 'Bestellungen' }}</h2>
+                    <h2 class="fa-t-h2">{{ $sichtTitel[$sicht] ?? 'Bestellungen' }}</h2>
                     @if($sicht === 'bestellungen')
-                        <p class="mt-0.5 {{ $leise }}">Jede Zeile ist eine Bestellung bei einem Lieferanten. Die Suche findet Beleg, Anlass, Artikel, Produktion und Lieferant.</p>
+                        <p class="mt-0.5 fa-t-muted">Jede Zeile ist eine Bestellung bei einem Lieferanten. Die Suche findet Beleg, Anlass, Artikel, Produktion und Lieferant.</p>
                     @endif
                 </div>
             </div>
@@ -313,7 +312,7 @@
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="min-w-0">
                                             <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)] truncate">{{ $runde['label'] }}</p>
-                                            <p class="mt-0.5 {{ $leise }} tabular-nums">{{ $runde['supplier_count'] }} Lieferanten · {{ $runde['order_count'] }} Bestellungen · {{ $runde['position_count'] }} Positionen</p>
+                                            <p class="mt-0.5 fa-t-muted tabular-nums">{{ $runde['supplier_count'] }} Lieferanten · {{ $runde['order_count'] }} Bestellungen · {{ $runde['position_count'] }} Positionen</p>
                                         </div>
                                         <div class="flex flex-col items-end gap-1 shrink-0">
                                             <x-fa::money :value="$runde['total_net']" class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]" />
@@ -329,16 +328,16 @@
                             @if($selectedRound)
                                 <div class="flex items-start justify-between gap-2 mb-3">
                                     <div class="min-w-0">
-                                        <h3 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $selectedRound['label'] }}</h3>
-                                        <p class="{{ $leise }} tabular-nums">{{ $selectedRound['supplier_count'] }} Lieferanten · {{ $selectedRound['position_count'] }} Positionen</p>
+                                        <h3 class="fa-t-h3">{{ $selectedRound['label'] }}</h3>
+                                        <p class="fa-t-muted tabular-nums">{{ $selectedRound['supplier_count'] }} Lieferanten · {{ $selectedRound['position_count'] }} Positionen</p>
                                     </div>
                                     <x-fa::money :value="$selectedRound['total_net']" class="text-[length:var(--fa-text-md)] font-semibold" />
                                 </div>
                                 <div class="fa-surface divide-y divide-[var(--fa-line)]">
                                     @foreach($selectedRound['orders'] as $order)
                                         <button type="button" wire:click="oeffnen({{ $order['id'] }})" wire:key="round-order-{{ $order['id'] }}" class="w-full px-3 py-2 text-left flex items-center justify-between gap-2 hover:bg-[var(--fa-hover)]">
-                                            <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] truncate">{{ $order['supplier'] }}</span>
-                                            <span class="shrink-0 {{ $leise }} tabular-nums">{{ $order['positions'] }} Pos. · {{ number_format($order['total_net'], 2, ',', '.') }} €</span>
+                                            <span class="fa-t-body truncate">{{ $order['supplier'] }}</span>
+                                            <span class="shrink-0 fa-t-muted tabular-nums">{{ $order['positions'] }} Pos. · {{ number_format($order['total_net'], 2, ',', '.') }} €</span>
                                         </button>
                                     @endforeach
                                 </div>
@@ -351,7 +350,7 @@
                                     <x-fa::button variant="primary" icon="heroicon-m-paper-airplane" wire:click="rundeVersenden" :disabled="!$selectedRound['sendable']">Runde versenden</x-fa::button>
                                 </div>
                                 @if(!$selectedRound['editable'])
-                                    <p class="mt-2 {{ $leise }}">Ausgelöste Runden sind eingefroren. Korrekturen laufen über die einzelnen Bestellungen.</p>
+                                    <p class="mt-2 fa-t-muted">Ausgelöste Runden sind eingefroren. Korrekturen laufen über die einzelnen Bestellungen.</p>
                                 @endif
                             @else
                                 <x-fa::empty compact icon="heroicon-o-cursor-arrow-rays" title="Bestellrunde auswählen">Links eine Runde anklicken, dann erscheinen hier ihre Bestellungen.</x-fa::empty>
@@ -372,7 +371,7 @@
                                     <input type="checkbox" wire:model.live="selectedDemandIds" value="{{ $bedarf['id'] }}" class="mt-1 {{ $checkbox }}" @disabled($bedarf['stale'] || $bedarf['triggered']) aria-label="{{ $bedarf['name'] }} auswählen" />
                                     <div class="min-w-0">
                                         <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)] truncate">{{ $bedarf['name'] }}</p>
-                                        <p class="mt-0.5 {{ $leise }} tabular-nums">{{ $datum($bedarf['production_date']) ?? 'ohne Datum' }} · {{ $bedarf['targets'] }} Ziele · {{ $bedarf['orders'] }} Bestellungen</p>
+                                        <p class="mt-0.5 fa-t-muted tabular-nums">{{ $datum($bedarf['production_date']) ?? 'ohne Datum' }} · {{ $bedarf['targets'] }} Ziele · {{ $bedarf['orders'] }} Bestellungen</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2 shrink-0">
@@ -418,7 +417,7 @@
                                         <tr class="bg-[var(--fa-ground)]">
                                             <td colspan="{{ $spaltenZahl }}" class="py-2">
                                                 <div class="flex flex-wrap items-baseline justify-between gap-2">
-                                                    <span class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">{{ $gruppe['label'] }} <span class="ml-1 font-normal {{ $leise }} tabular-nums">{{ $gruppe['meta'] }}</span></span>
+                                                    <span class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">{{ $gruppe['label'] }} <span class="ml-1 font-normal fa-t-muted tabular-nums">{{ $gruppe['meta'] }}</span></span>
                                                     @if($gruppe['total'] !== null)<x-fa::money :value="$gruppe['total']" class="text-[length:var(--fa-text-md)] font-semibold" />@endif
                                                 </div>
                                             </td>
@@ -434,8 +433,8 @@
                                             @if($standortSpalte)<td class="whitespace-nowrap" data-standort>{{ $standortNamen[$o['team_id'] ?? 0] ?? '—' }}</td>@endif
                                             <td class="whitespace-nowrap">
                                                 <div class="font-medium text-[var(--fa-ink)]">{{ $o['order_label'] }}</div>
-                                                @if($o['supplier_order_number'])<div class="{{ $leise }}" title="Auftragsbestätigung des Lieferanten">Bestätigung {{ $o['supplier_order_number'] }}</div>@endif
-                                                @if($o['invoice_number'])<div class="{{ $leise }}">Rechnung {{ $o['invoice_number'] }}</div>@endif
+                                                @if($o['supplier_order_number'])<div class="fa-t-muted" title="Auftragsbestätigung des Lieferanten">Bestätigung {{ $o['supplier_order_number'] }}</div>@endif
+                                                @if($o['invoice_number'])<div class="fa-t-muted">Rechnung {{ $o['invoice_number'] }}</div>@endif
                                                 @if($o['invoice_due_date'])<div class="text-[length:var(--fa-text-sm)] text-[var(--fa-warn)]">fällig {{ $datum($o['invoice_due_date']) }}</div>@endif
                                                 @if(($o['payment']['status'] ?? null))<div class="text-[length:var(--fa-text-sm)] {{ ($o['payment']['state'] ?? '') === 'paid' ? 'text-[var(--fa-ok)]' : ((($o['payment']['state'] ?? '') === 'overdue') ? 'text-[var(--fa-warn)]' : 'text-[var(--fa-ink-3)]') }}">Zahlung {{ $o['payment']['label'] }}</div>@endif
                                                 @if(($o['approval']['status'] ?? null))<div class="text-[length:var(--fa-text-sm)] {{ ($o['approval']['state'] ?? '') === 'approved' ? 'text-[var(--fa-ok)]' : ((($o['approval']['state'] ?? '') === 'rejected') ? 'text-[var(--fa-crit)]' : 'text-[var(--fa-warn)]') }}">Freigabe {{ $o['approval']['label'] }}</div>@endif
@@ -458,7 +457,7 @@
                                                             @endif
                                                         @endforeach
                                                     </div>
-                                                    @if($o['reference'])<div class="mt-1 {{ $leise }}">{{ $o['reference'] }}</div>@endif
+                                                    @if($o['reference'])<div class="mt-1 fa-t-muted">{{ $o['reference'] }}</div>@endif
                                                 @else
                                                     {{ $o['reference'] ?: '–' }}
                                                 @endif

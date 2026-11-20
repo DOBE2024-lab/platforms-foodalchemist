@@ -16,7 +16,6 @@
 
     // Seitenlokale Klassen — nur Tokens, damit hell und Werkbank stimmen.
     $etikett = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $seg = 'inline-flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]';
     $segKnopf = 'h-7 px-3 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors';
     $segAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
@@ -189,13 +188,13 @@
                                 @if($ansicht === 'woche')
                                     @php $letzterTag = $wochenTage !== [] ? end($wochenTage) : $montagDt->copy()->addDays(4); @endphp
                                     <x-fa::icon-button icon="heroicon-m-chevron-left" label="Vorherige Woche" size="sm" wire:click="wocheVerschieben(-1)" />
-                                    <span class="px-1 text-[length:var(--fa-text-base)] font-semibold tabular-nums text-[var(--fa-ink)] whitespace-nowrap">KW {{ (int) $montagDt->format('W') }}
+                                    <span class="px-1 fa-t-h3 tabular-nums whitespace-nowrap">KW {{ (int) $montagDt->format('W') }}
                                         <span class="font-normal text-[var(--fa-ink-2)]">{{ ($wochenTage[0] ?? $montagDt)->format('d.m.') }} bis {{ $letzterTag->format('d.m.Y') }}</span></span>
                                     <x-fa::icon-button icon="heroicon-m-chevron-right" label="Nächste Woche" size="sm" wire:click="wocheVerschieben(1)" />
                                     <x-fa::button variant="ghost" size="sm" wire:click="heute">Heute</x-fa::button>
                                 @else
                                     <x-fa::icon-button icon="heroicon-m-chevron-left" label="Vorheriger Monat" size="sm" wire:click="monatVerschieben(-1)" />
-                                    <span class="px-1 text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)] whitespace-nowrap">{{ $monatNamen[(int) $monatStart->month] }} {{ $monatStart->year }}</span>
+                                    <span class="px-1 fa-t-h3 whitespace-nowrap">{{ $monatNamen[(int) $monatStart->month] }} {{ $monatStart->year }}</span>
                                     <x-fa::icon-button icon="heroicon-m-chevron-right" label="Nächster Monat" size="sm" wire:click="monatVerschieben(1)" />
                                 @endif
                             </div>
@@ -217,14 +216,14 @@
                                                 @endforeach
                                             </x-fa::select>
                                         </x-fa::field>
-                                        <label class="flex items-center gap-2 h-9 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]"><input type="checkbox" wire:model="wocheKopierenMerge" class="{{ $haken }}" /> Mit vorhandenen Einträgen zusammenführen</label>
-                                        <label class="flex items-center gap-2 h-9 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]"><input type="checkbox" wire:model="wocheKopierenPax" class="{{ $haken }}" /> Essen-Zahlen mitnehmen</label>
+                                        <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model="wocheKopierenMerge" class="{{ $haken }}" /> Mit vorhandenen Einträgen zusammenführen</label>
+                                        <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model="wocheKopierenPax" class="{{ $haken }}" /> Essen-Zahlen mitnehmen</label>
                                         <div class="ml-auto flex items-center gap-2">
                                             <x-fa::button variant="ghost" wire:click="$set('wocheKopierenOffen', false)">Abbrechen</x-fa::button>
                                             <x-fa::button icon="heroicon-m-document-duplicate" wire:click="wocheKopieren">Woche kopieren</x-fa::button>
                                         </div>
                                     </div>
-                                    <p class="{{ $leise }}">Ohne Zusammenführen werden belegte Zellen der Zielwoche ersetzt. Einzelne Einträge kopierst du über ihr Detail.</p>
+                                    <p class="fa-t-muted">Ohne Zusammenführen werden belegte Zellen der Zielwoche ersetzt. Einzelne Einträge kopierst du über ihr Detail.</p>
                                 </x-fa::section>
                                 </fieldset>
                             @endif
@@ -261,7 +260,7 @@
                                                             <span class="mt-1 w-2.5 h-2.5 rounded-full shrink-0 {{ $zl['color'] ? '' : 'bg-[var(--fa-ink-3)]' }}" @if($zl['color']) style="background: {{ $zl['color'] }}" @endif></span>
                                                             <span class="min-w-0 font-semibold break-words {{ $zl['id'] === 0 ? 'text-[var(--fa-warn)]' : 'text-[var(--fa-ink)]' }}">{{ $zl['name'] }}</span>
                                                         </span>
-                                                        <span class="mt-1 flex flex-col gap-0.5 {{ $leise }}">
+                                                        <span class="mt-1 flex flex-col gap-0.5 fa-t-muted">
                                                             @if($zl['id'] === 0)
                                                                 <span>Keiner Linie zugeordnet</span>
                                                             @else
@@ -331,7 +330,7 @@
                                     </table>
                                 </div>
                             </section>
-                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 {{ $leise }}" data-sp-legende>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 fa-t-muted" data-sp-legende>
                                 <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[var(--fa-ok)]"></span>Wareneinsatz im Zielband</span>
                                 <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[var(--fa-warn)]"></span>darüber</span>
                                 <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[var(--fa-crit)]"></span>weit darüber</span>
@@ -382,8 +381,8 @@
                                             @foreach($kandidaten as $k)
                                                 <button type="button" wire:key="kand-{{ $pickerTyp }}-{{ $k->id }}" wire:click="inhaltHinzu('{{ $pickerTyp }}', {{ $k->id }})"
                                                         class="group flex items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left hover:bg-[var(--fa-hover)]">
-                                                    <span class="min-w-0 truncate text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $k->name }}">{{ $k->name }}</span>
-                                                    <span class="flex items-center gap-2 shrink-0 {{ $leise }} tabular-nums">
+                                                    <span class="min-w-0 truncate fa-t-body" title="{{ $k->name }}">{{ $k->name }}</span>
+                                                    <span class="flex items-center gap-2 shrink-0 fa-t-muted tabular-nums">
                                                         @if($pickerTyp === 'gericht' && ($k->dishClass?->diet_form))<span>{{ ucfirst($k->dishClass->diet_form) }}</span>@endif
                                                         @if($pickerTyp === 'gericht' && $k->vk_netto)
                                                             <span>{{ $zahl($k->vk_netto, 2) }} €</span>
@@ -429,7 +428,7 @@
                                         </button>
                                     @endfor
                                 </div>
-                                <p class="{{ $leise }}">Tag anklicken, um ihn in der Wochenansicht zu öffnen. Gezeigt wird die Belegung der Mahlzeit „{{ $mahlzeiten[$mahlzeit] ?? '' }}".</p>
+                                <p class="fa-t-muted">Tag anklicken, um ihn in der Wochenansicht zu öffnen. Gezeigt wird die Belegung der Mahlzeit „{{ $mahlzeiten[$mahlzeit] ?? '' }}".</p>
                             </x-fa::section>
                         @endif
                     </div>
@@ -504,7 +503,7 @@
                                         </tfoot>
                                     </table>
                                 </div>
-                                <p class="{{ $leise }}">„Vorwoche" und „Ø 4 Wochen" sind Planwerte. Echte Verkaufszahlen stehen im Reiter „Plan/Ist".</p>
+                                <p class="fa-t-muted">„Vorwoche" und „Ø 4 Wochen" sind Planwerte. Echte Verkaufszahlen stehen im Reiter „Plan/Ist".</p>
                             @else
                                 <x-fa::empty compact icon="heroicon-o-queue-list" title="Für diese Mahlzeit gibt es keine Linien" />
                             @endif
@@ -568,7 +567,7 @@
                                             @foreach(array_slice($bedarf['liste']['warnungen'], 0, 5) as $w)<p>{{ $w }}</p>@endforeach
                                         </x-fa::notice>
                                     @endif
-                                    <p class="{{ $leise }}">An den Einkauf geht der Bedarf über die Produktion: im Menü „Weitere Aktionen" die Woche an die Produktion übergeben, dann im Produktionsauftrag den Bedarf freigeben. So wird nichts doppelt bestellt.</p>
+                                    <p class="fa-t-muted">An den Einkauf geht der Bedarf über die Produktion: im Menü „Weitere Aktionen" die Woche an die Produktion übergeben, dann im Produktionsauftrag den Bedarf freigeben. So wird nichts doppelt bestellt.</p>
                                 @endif
                             @endif
                         </x-fa::section>
@@ -611,9 +610,9 @@
                                     </div>
                                 @endif
                                 @if($planIst['nicht_vergleichbar'] !== [])
-                                    <p class="{{ $leise }}">Nicht vergleichbar (Konzept oder Paket, in der Kasse kein einzelnes Gericht): {{ implode(', ', $planIst['nicht_vergleichbar']) }}.</p>
+                                    <p class="fa-t-muted">Nicht vergleichbar (Konzept oder Paket, in der Kasse kein einzelnes Gericht): {{ implode(', ', $planIst['nicht_vergleichbar']) }}.</p>
                                 @endif
-                                <p class="{{ $leise }}">{{ $planIst['hinweis'] }}</p>
+                                <p class="fa-t-muted">{{ $planIst['hinweis'] }}</p>
                             @endif
                         </x-fa::section>
                     </div>
@@ -702,8 +701,8 @@
                                     <x-fa::field label="Wareneinsatz von (%)" for="sp-linie-wesmin"><x-fa::input id="sp-linie-wesmin" inputmode="decimal" wire:model="linieForm.target_wes_min_pct" numeric placeholder="leer = keine Grenze" /></x-fa::field>
                                     <x-fa::field label="Wareneinsatz bis (%)" for="sp-linie-wesmax"><x-fa::input id="sp-linie-wesmax" inputmode="decimal" wire:model="linieForm.target_wes_max_pct" numeric placeholder="leer = Ziel des Kalkulationsprofils" /></x-fa::field>
                                     <x-fa::field label="Essen je Tag" for="sp-linie-pax"><x-fa::input id="sp-linie-pax" type="number" min="0" wire:model="linieForm.default_pax" numeric placeholder="Standard des Plans" /></x-fa::field>
-                                    <label class="flex items-center gap-2 h-9 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]"><input type="checkbox" wire:model="linieForm.is_vegetarian" class="{{ $haken }}" /> Nur vegetarisch</label>
-                                    <label class="flex items-center gap-2 h-9 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="Dauerangebote (Salatbar …) zählen nicht für die Wiederholungsregel"><input type="checkbox" wire:model="linieForm.is_standing" class="{{ $haken }}" /> Dauerangebot</label>
+                                    <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model="linieForm.is_vegetarian" class="{{ $haken }}" /> Nur vegetarisch</label>
+                                    <label class="flex items-center gap-2 h-9 fa-t-body" title="Dauerangebote (Salatbar …) zählen nicht für die Wiederholungsregel"><input type="checkbox" wire:model="linieForm.is_standing" class="{{ $haken }}" /> Dauerangebot</label>
                                 </div>
                             </x-fa::section>
                         @endif
@@ -734,7 +733,7 @@
                                                 class="{{ $chip }} min-w-11 justify-center {{ $offen ? $chipAn : $chipAus }}">{{ $kurz }}</button>
                                     @endforeach
                                 </div>
-                                <p class="{{ $leise }}">Steuern die Spalten im Kalender, den Aushang, die Produktion und den KI-Lauf.</p>
+                                <p class="fa-t-muted">Steuern die Spalten im Kalender, den Aushang, die Produktion und den KI-Lauf.</p>
                             </div>
 
                             {{-- Spec 33 P5: Status und Zuordnung aus dem geteilten Bauteil. Ein Gültigkeitsfenster
@@ -768,7 +767,7 @@
                                             busy="Wird betextet …" class="shrink-0" data-sp-wording-generieren />
                                 </div>
                             </x-fa::field>
-                            @if($wordingHinweis && $detailEintragId === null)<p class="{{ $leise }}" role="status" data-sp-wording-hinweis>{{ $wordingHinweis }}</p>@endif
+                            @if($wordingHinweis && $detailEintragId === null)<p class="fa-t-muted" role="status" data-sp-wording-hinweis>{{ $wordingHinweis }}</p>@endif
                         </x-fa::section>
 
                         <x-fa::section title="Teilnehmer und Budget" icon="heroicon-o-banknotes" description="Standard-Kopfzahl für die Übergabe an die Produktion (je Zelle überschreibbar) und das Wareneinsatz-Ziel je Person für die Budget-Anzeige.">
@@ -826,7 +825,7 @@
                                     @endif
                                 </div>
                             @else
-                                <label class="flex items-start gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" data-sp-vorlage-schalter>
+                                <label class="flex items-start gap-2 fa-t-body" data-sp-vorlage-schalter>
                                     <input type="checkbox" @checked($sp->is_template) wire:click="vorlageUmschalten" class="{{ $haken }} mt-0.5" />
                                     <span>Als Vorlage freigeben. Kalkulationsprofile bekommen eine verknüpfte Kopie und übernehmen Änderungen per Abgleich.</span>
                                 </label>
@@ -834,7 +833,7 @@
                                     <div class="flex flex-col gap-2" data-sp-betriebskopien>
                                         @forelse($betriebsKopien as $bk)
                                             <div class="flex flex-wrap items-center justify-between gap-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] px-3 py-2" wire:key="bk-{{ $bk['id'] }}">
-                                                <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $bk['outlet'] ?? $bk['name'] }} <span class="text-[var(--fa-ink-3)]">· {{ $bk['status'] }}</span></span>
+                                                <span class="fa-t-body">{{ $bk['outlet'] ?? $bk['name'] }} <span class="text-[var(--fa-ink-3)]">· {{ $bk['status'] }}</span></span>
                                                 <span class="flex items-center gap-2">
                                                     @if($bk['aus_vorlage'] > 0)<x-fa::badge tone="warn">{{ $mehrzahl((int) $bk['aus_vorlage'], 'Änderung offen', 'Änderungen offen') }}</x-fa::badge>@else<x-fa::badge tone="ok">Aktuell</x-fa::badge>@endif
                                                     @if($bk['lokal'] > 0)<x-fa::badge>{{ $mehrzahl((int) $bk['lokal'], 'lokale Änderung', 'lokale Änderungen') }}</x-fa::badge>@endif
@@ -842,7 +841,7 @@
                                                 </span>
                                             </div>
                                         @empty
-                                            <p class="{{ $leise }}">Noch keine Kopie für ein Kalkulationsprofil.</p>
+                                            <p class="fa-t-muted">Noch keine Kopie für ein Kalkulationsprofil.</p>
                                         @endforelse
                                         @if($betriebe->isNotEmpty())
                                             <div class="flex flex-wrap items-center gap-2">
@@ -860,7 +859,7 @@
                         <x-fa::section title="Zyklus ausrollen" icon="heroicon-o-arrow-path" description="Den {{ $sp->cycle_weeks }}-Wochen-Block ab Start auf alle Folgewochen bis zum Zieldatum kopieren. Belegte Zellen bleiben unberührt, außer du wählst „Belegte Zellen ersetzen“. Die Essen-Zahlen wandern mit.">
                             <div class="flex flex-wrap items-end gap-3">
                                 <x-fa::field label="Ausrollen bis" for="sp-ausrollen-bis" class="w-48"><x-fa::input id="sp-ausrollen-bis" type="date" wire:model="ausrollenBis" title="Zyklus bis zu diesem Datum ausrollen" /></x-fa::field>
-                                <label class="flex items-center gap-2 h-9 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]"><input type="checkbox" wire:model.live="ausrollenErsetzen" class="{{ $haken }}" /> Belegte Zellen ersetzen</label>
+                                <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model.live="ausrollenErsetzen" class="{{ $haken }}" /> Belegte Zellen ersetzen</label>
                                 <x-fa::button icon="heroicon-m-arrow-path" wire:click="ausrollen" :wire:confirm="$ausrollenErsetzen ? 'Belegte Zellen in den Folgewochen werden durch die Vorlage ersetzt. Fortfahren?' : null" data-sp-ausrollen>Zyklus ausrollen</x-fa::button>
                                 @if($ausrollenInfo)<x-fa::signal tone="info" class="self-center">{{ $ausrollenInfo }}</x-fa::signal>@endif
                             </div>
@@ -885,7 +884,7 @@
                                 <x-fa::field label="Linie (Linien- und Buffetschild)" for="sp-ausgabe-linie" class="w-64">
                                     <x-fa::select id="sp-ausgabe-linie" wire:model.live="ausgabeLinie" placeholder="Alle Linien" :options="$matrixLinien->pluck('name', 'id')" />
                                 </x-fa::field>
-                                <label class="flex items-center gap-2 h-9 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]"><input type="checkbox" wire:model.live="ausgabePreise" class="{{ $haken }}" /> Preise zeigen</label>
+                                <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model.live="ausgabePreise" class="{{ $haken }}" /> Preise zeigen</label>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2" data-sp-ausgabe-formate>
                                 @foreach([
@@ -901,8 +900,8 @@
                                        class="flex items-start gap-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] hover:bg-[var(--fa-hover)] hover:border-[var(--fa-accent-line)] px-3 py-2.5 transition-colors" data-sp-format="{{ $fk }}">
                                         @svg($fi, 'w-5 h-5 shrink-0 mt-0.5 text-[var(--fa-ink-3)]')
                                         <span class="min-w-0">
-                                            <span class="block text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $fl }}</span>
-                                            <span class="block {{ $leise }}">{{ $fs }}</span>
+                                            <span class="block fa-t-strong">{{ $fl }}</span>
+                                            <span class="block fa-t-muted">{{ $fs }}</span>
                                         </span>
                                     </a>
                                 @endforeach
@@ -958,14 +957,14 @@
                                 </x-fa::field>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <label class="flex items-start gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" data-sp-praes-laufend>
+                                <label class="flex items-start gap-2 fa-t-body" data-sp-praes-laufend>
                                     <input type="checkbox" wire:model="presentationLaufendeWoche" class="{{ $haken }} mt-0.5">
                                     <span>Immer die laufende Woche zeigen (jeden Montag neu eingefroren). Sonst {{ $kwText }}.</span>
                                 </label>
-                                <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]"><input type="checkbox" wire:model="presentationPreisAnzeige" class="{{ $haken }}" data-sp-praes-preis> Preise anzeigen</label>
+                                <label class="flex items-center gap-2 fa-t-body"><input type="checkbox" wire:model="presentationPreisAnzeige" class="{{ $haken }}" data-sp-praes-preis> Preise anzeigen</label>
                                 {{-- Ebene 2 · Republish-Preis-Schutz (nur relevant mit Preisen) --}}
-                                <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen. An: aktuelle Verkaufspreise übernehmen. Nur mit Preisen relevant; die erste Veröffentlichung ist immer aktuell."><input type="checkbox" wire:model="presentationPreiseAktualisieren" class="{{ $haken }}"> Preise beim erneuten Veröffentlichen aktualisieren</label>
-                                <p class="{{ $leise }}">Der Aushang in der Gemeinschaftsverpflegung ist ohne Preise üblich; die Kennzeichnung der Allergene und Zusatzstoffe ist immer sichtbar. Preise z. B. für Café- oder Bistro-Pläne, sie folgen dem aktiven Kalkulationsprofil.</p>
+                                <label class="flex items-center gap-2 fa-t-body" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen. An: aktuelle Verkaufspreise übernehmen. Nur mit Preisen relevant; die erste Veröffentlichung ist immer aktuell."><input type="checkbox" wire:model="presentationPreiseAktualisieren" class="{{ $haken }}"> Preise beim erneuten Veröffentlichen aktualisieren</label>
+                                <p class="fa-t-muted">Der Aushang in der Gemeinschaftsverpflegung ist ohne Preise üblich; die Kennzeichnung der Allergene und Zusatzstoffe ist immer sichtbar. Preise z. B. für Café- oder Bistro-Pläne, sie folgen dem aktiven Kalkulationsprofil.</p>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -999,7 +998,7 @@
                                         <div class="flex-1 min-w-0 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-2 py-1.5 font-mono text-[length:var(--fa-text-sm)] break-all select-all text-[var(--fa-ink)]" data-sp-praes-link>{{ $presentationLink }}</div>
                                         <x-fa::button size="sm" icon="heroicon-m-clipboard-document" href="#" x-on:click.prevent="navigator.clipboard.writeText('{{ $presentationLink }}'); $el.lastChild.textContent = ' Kopiert'">Link kopieren</x-fa::button>
                                     </div>
-                                    <p class="{{ $leise }}">Freigegeben am {{ $presentationInfo['published_at'] ?? 'unbekannt' }} · gültig bis {{ $presentationInfo['expires_at'] ?? 'offen' }} · {{ ($presentationInfo['live'] ?? false) ? 'aktiv' : 'inaktiv oder abgelaufen' }}</p>
+                                    <p class="fa-t-muted">Freigegeben am {{ $presentationInfo['published_at'] ?? 'unbekannt' }} · gültig bis {{ $presentationInfo['expires_at'] ?? 'offen' }} · {{ ($presentationInfo['live'] ?? false) ? 'aktiv' : 'inaktiv oder abgelaufen' }}</p>
                                 </div>
                             @endif
                         </x-fa::section>
@@ -1012,9 +1011,9 @@
                             @forelse($betriebsLinks as $bl)
                                 <div class="flex flex-col gap-1.5 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3" x-data>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $bl['outlet_name'] }}</span>
+                                        <span class="fa-t-strong">{{ $bl['outlet_name'] }}</span>
                                         <x-fa::badge :tone="$bl['enabled'] ? 'ok' : 'neutral'">{{ $bl['enabled'] ? 'Aktiv' : 'Inaktiv' }}</x-fa::badge>
-                                        <span class="ml-auto {{ $leise }}">Vorlage: {{ $bl['design'] }}</span>
+                                        <span class="ml-auto fa-t-muted">Vorlage: {{ $bl['design'] }}</span>
                                     </div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <div class="flex-1 min-w-0 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-ground)] px-2 py-1.5 font-mono text-[length:var(--fa-text-sm)] break-all select-all text-[var(--fa-ink)]">{{ $bl['url'] }}</div>
@@ -1027,7 +1026,7 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="{{ $leise }}">Noch kein Kalkulationsprofil-Link angelegt.</p>
+                                <p class="fa-t-muted">Noch kein Kalkulationsprofil-Link angelegt.</p>
                             @endforelse
 
                             @if(count($betriebsOptionen) > 0)
@@ -1048,7 +1047,7 @@
                                         <x-fa::field label="Name im Link" for="sp-outlet-slug" optional><x-fa::input id="sp-outlet-slug" wire:model="outletPublishSlug" placeholder="z. B. broich-nord-2027" /></x-fa::field>
                                     </div>
                                     <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <p class="{{ $leise }}">Beliebig viele Kalkulationsprofile möglich, je Kalkulationsprofil ein eigener Link. Ohne eigenes Datum gilt „Gültig bis" des Standard-Links.</p>
+                                        <p class="fa-t-muted">Beliebig viele Kalkulationsprofile möglich, je Kalkulationsprofil ein eigener Link. Ohne eigenes Datum gilt „Gültig bis" des Standard-Links.</p>
                                         <x-fa::button icon="heroicon-m-plus" wire:click="betriebVeroeffentlichen">Kalkulationsprofil hinzufügen</x-fa::button>
                                     </div>
                                 </div>
@@ -1073,8 +1072,8 @@
                         <header class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
                                 <p class="{{ $etikett }}">{{ $linien->firstWhere('id', $detailEintrag->line_id)?->name ?? 'Ohne Linie' }} · {{ $tagKurz[$detailEintrag->entry_date->isoWeekday()] ?? '' }} {{ $detailEintrag->entry_date->format('d.m.') }} · {{ $mahlzeiten[$detailEintrag->meal] ?? $detailEintrag->meal }}</p>
-                                <p class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)] break-words">{{ $dk['titel'] ?? $detailEintrag->inhaltName() }}</p>
-                                @if(! empty($dk['untertitel']))<p class="{{ $leise }}">{{ $dk['untertitel'] }}</p>@endif
+                                <p class="fa-t-h3 break-words">{{ $dk['titel'] ?? $detailEintrag->inhaltName() }}</p>
+                                @if(! empty($dk['untertitel']))<p class="fa-t-muted">{{ $dk['untertitel'] }}</p>@endif
                                 @php
                                     // Im Vordergrund öffnen (Modal über dem Speiseplan), nicht in einem neuen Tab.
                                     $inhaltOeffnen = $detailEintrag->sales_recipe_id !== null
@@ -1095,9 +1094,9 @@
                         </header>
                         @if($dk !== [])
                             <dl class="grid grid-cols-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] divide-x divide-[var(--fa-line)] text-center">
-                                <div class="px-2 py-1.5"><dt class="{{ $leise }}">Verkauf netto</dt><dd class="text-[length:var(--fa-text-md)] font-semibold"><x-fa::money :value="((float) ($dk['vk'] ?? 0)) > 0 ? $dk['vk'] : null" /></dd></div>
-                                <div class="px-2 py-1.5"><dt class="{{ $leise }}">EK</dt><dd class="text-[length:var(--fa-text-md)] font-semibold"><x-fa::money :value="$dk['ek'] ?? null" /></dd></div>
-                                <div class="px-2 py-1.5"><dt class="{{ $leise }}">Wareneinsatz</dt><dd class="text-[length:var(--fa-text-md)] font-semibold tabular-nums {{ $wesText[$dk['status'] ?? 'unbekannt'] ?? '' }}">{{ ($dk['wes'] ?? null) !== null ? $zahl($dk['wes'], 1) . ' %' : '–' }}</dd></div>
+                                <div class="px-2 py-1.5"><dt class="fa-t-muted">Verkauf netto</dt><dd class="text-[length:var(--fa-text-md)] font-semibold"><x-fa::money :value="((float) ($dk['vk'] ?? 0)) > 0 ? $dk['vk'] : null" /></dd></div>
+                                <div class="px-2 py-1.5"><dt class="fa-t-muted">EK</dt><dd class="text-[length:var(--fa-text-md)] font-semibold"><x-fa::money :value="$dk['ek'] ?? null" /></dd></div>
+                                <div class="px-2 py-1.5"><dt class="fa-t-muted">Wareneinsatz</dt><dd class="text-[length:var(--fa-text-md)] font-semibold tabular-nums {{ $wesText[$dk['status'] ?? 'unbekannt'] ?? '' }}">{{ ($dk['wes'] ?? null) !== null ? $zahl($dk['wes'], 1) . ' %' : '–' }}</dd></div>
                             </dl>
                         @endif
 
@@ -1111,7 +1110,7 @@
                                         title="Namensvorschlag im Schreibstil des Plans (wird erst mit Übernehmen gespeichert)" busy="…" class="shrink-0" />
                             </div>
                             <x-fa::button size="sm" icon="heroicon-m-check" wire:click="eintragWordingSpeichern" class="self-start" data-sp-eintrag-wording-speichern>Übernehmen</x-fa::button>
-                            @if($wordingHinweis)<p class="{{ $leise }}" role="status">{{ $wordingHinweis }}</p>@endif
+                            @if($wordingHinweis)<p class="fa-t-muted" role="status">{{ $wordingHinweis }}</p>@endif
                         </div>
 
                         @if($detailEintrag->sales_recipe_id !== null)
@@ -1129,7 +1128,7 @@
                                         @endforeach
                                     </select>
                                 @elseif($detailFormen->count() === 1)
-                                    <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" data-sp-darreichung-einzig>{{ $detailFormen->first()->bezeichnung() ?? '—' }}{{ $gramm($detailFormen->first()) }}</span>
+                                    <span class="fa-t-body" data-sp-darreichung-einzig>{{ $detailFormen->first()->bezeichnung() ?? '—' }}{{ $gramm($detailFormen->first()) }}</span>
                                 @else
                                     <x-fa::signal tone="warn">Keine Darreichung am Gericht</x-fa::signal>
                                 @endif
@@ -1196,7 +1195,7 @@
                         <div class="{{ $karte }} text-center">
                             <p class="text-[length:var(--fa-text-2xl)] font-semibold tabular-nums text-[var(--fa-ink)] leading-tight">{{ $zahl($kosten['woche']['vk'], 2) }} €</p>
                             <p class="{{ $etikett }}">Verkaufspreis je Person · {{ $mahlzeiten[$mahlzeit] ?? '' }}</p>
-                            <p class="{{ $leise }} tabular-nums">EK {{ $zahl($kosten['woche']['ek'], 2) }} € · Standard {{ $sp->default_pax }} Teilnehmer</p>
+                            <p class="fa-t-muted tabular-nums">EK {{ $zahl($kosten['woche']['ek'], 2) }} € · Standard {{ $sp->default_pax }} Teilnehmer</p>
                         </div>
                     @endif
 
@@ -1230,7 +1229,7 @@
                                     </div>
                                 </div>
                             @endforeach
-                            <p class="{{ $leise }}">Hell hinterlegt: Zielband (Skala 0 bis 100 %). Ohne eigenes Band gilt das Ziel des Kalkulationsprofils von {{ number_format($zk['team_ziel'] ?? 0, 0) }} %.</p>
+                            <p class="fa-t-muted">Hell hinterlegt: Zielband (Skala 0 bis 100 %). Ohne eigenes Band gilt das Ziel des Kalkulationsprofils von {{ number_format($zk['team_ziel'] ?? 0, 0) }} %.</p>
                         </div>
                     @endif
 
@@ -1249,7 +1248,7 @@
                                 @endif
                             </div>
                         @empty
-                            <p class="{{ $leise }}">Keine Kostformen hinterlegt.</p>
+                            <p class="fa-t-muted">Keine Kostformen hinterlegt.</p>
                         @endforelse
                     </div>
 
@@ -1262,7 +1261,7 @@
                         <div class="{{ $karte }}" data-sp-kennzeichnung>
                             <span class="{{ $etikett }}">Kennzeichnung der Woche</span>
                             @if($algEnth->isEmpty())
-                                <p class="{{ $leise }}">Keine Allergene deklariert oder noch unbekannt.</p>
+                                <p class="fa-t-muted">Keine Allergene deklariert oder noch unbekannt.</p>
                             @else
                                 <div class="flex flex-wrap gap-1">
                                     @foreach($algEnth as $a)
@@ -1277,7 +1276,7 @@
                                     @endforeach
                                 </div>
                             @endif
-                            <p class="{{ $leise }}">Die vollständige Kennzeichnung je Tag steht im Aushang.</p>
+                            <p class="fa-t-muted">Die vollständige Kennzeichnung je Tag steht im Aushang.</p>
                         </div>
                     @endif
 

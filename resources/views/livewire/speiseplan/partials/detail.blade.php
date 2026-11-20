@@ -75,19 +75,19 @@
                         @endphp
                         <li wire:key="sp-detail-linie-{{ $linie->id }}" class="flex items-center justify-between gap-3 py-1.5 border-b border-[var(--fa-line)] last:border-0">
                             <span class="min-w-0">
-                                <span class="block text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words">{{ $linie->name }}</span>
+                                <span class="block fa-t-body break-words">{{ $linie->name }}</span>
                                 <span class="mt-0.5 flex flex-wrap items-center gap-1.5">
                                     @if($linie->role)<x-fa::badge title="Rolle an der Ausgabe">{{ $rollen[$linie->role] ?? $linie->role }}</x-fa::badge>@endif
                                     @if($linie->is_vegetarian)<x-fa::badge tone="ok" icon="heroicon-m-check">vegetarisch</x-fa::badge>@endif
                                 </span>
                             </span>
-                            <span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ number_format($n, 0, ',', '.') }} {{ $n === 1 ? 'Eintrag' : 'Einträge' }}</span>
+                            <span class="shrink-0 fa-t-muted tabular-nums">{{ number_format($n, 0, ',', '.') }} {{ $n === 1 ? 'Eintrag' : 'Einträge' }}</span>
                         </li>
                     @endforeach
                     @if($ohneLinie > 0)
                         <li class="flex items-center justify-between gap-3 py-1.5 border-b border-[var(--fa-line)] last:border-0">
                             <span class="min-w-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink-3)]">Ohne Linie</span>
-                            <span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ number_format($ohneLinie, 0, ',', '.') }} {{ $ohneLinie === 1 ? 'Eintrag' : 'Einträge' }}</span>
+                            <span class="shrink-0 fa-t-muted tabular-nums">{{ number_format($ohneLinie, 0, ',', '.') }} {{ $ohneLinie === 1 ? 'Eintrag' : 'Einträge' }}</span>
                         </li>
                     @endif
                 </ul>

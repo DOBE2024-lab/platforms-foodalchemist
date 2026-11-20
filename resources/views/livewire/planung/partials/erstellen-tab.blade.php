@@ -51,14 +51,14 @@
             </x-fa::field>
 
             <div class="flex flex-col gap-1.5">
-                <label for="planung-brief-{{ $scope }}" class="flex items-center gap-2 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+                <label for="planung-brief-{{ $scope }}" class="flex items-center gap-2 fa-t-label">
                     Briefing
                     @if($reglerVonAgent[$scope]['brief'] ?? false)
                         <x-fa::badge tone="info" data-regler-von-agent="brief" title="Vom Sprachassistenten vorgeschlagen. Verschwindet, sobald du selbst etwas änderst.">vom Assistenten</x-fa::badge>
                     @endif
                 </label>
                 <x-fa::textarea id="planung-brief-{{ $scope }}" wire:model="eingabe.{{ $scope }}.brief" rows="3" placeholder="Anlass, Richtung, Vorgaben, was auf keinen Fall hinein soll …" />
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Geht wörtlich in die Erstellung.</p>
+                <p class="fa-t-muted">Geht wörtlich in die Erstellung.</p>
 
                 {{-- Kurskorrektur „pro Reiter genau EINE Diktierfunktion" (2026-09-19): der Recorder
                      dieses Bausteins ist hier AUS. Das Agent-Panel darunter ist die einzige
@@ -97,18 +97,18 @@
             @endphp
             <div class="flex flex-col gap-2" data-planung-suchbegriffe="{{ $scope }}">
                 <div class="flex items-baseline gap-2">
-                    <span class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Suchbegriffe</span>
-                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Damit werden Wissen, Bestand und Pairing gesucht.</span>
+                    <span class="fa-t-strong">Suchbegriffe</span>
+                    <span class="fa-t-muted">Damit werden Wissen, Bestand und Pairing gesucht.</span>
                 </div>
                 @if($sbListe === [])
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine. „Leitplanken aus Briefing ableiten" schlägt welche vor, sonst entstehen sie beim Start.</p>
+                    <p class="fa-t-muted">Noch keine. „Leitplanken aus Briefing ableiten" schlägt welche vor, sonst entstehen sie beim Start.</p>
                 @else
                     <div class="flex flex-col gap-1.5">
                         @foreach($sbGruppen as $gKey => $gLabel)
                             @php $inGruppe = collect($sbListe)->filter(fn ($b) => ($b['g'] ?? 'eigene') === $gKey); @endphp
                             @if($inGruppe->isNotEmpty())
                                 <div class="flex flex-wrap items-center gap-1.5">
-                                    <span class="w-24 shrink-0 text-[length:var(--fa-text-sm)] uppercase tracking-wide text-[var(--fa-ink-3)]">{{ $gLabel }}</span>
+                                    <span class="w-24 shrink-0 fa-t-muted uppercase tracking-wide">{{ $gLabel }}</span>
                                     @foreach($inGruppe as $i => $b)
                                         <span wire:key="sb-{{ $scope }}-{{ $i }}-{{ md5($b['t']) }}" class="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[length:var(--fa-text-sm)] {{ ($b['q'] ?? 'ki') === 'mensch' ? 'border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)] text-[var(--fa-accent)]' : 'border-[var(--fa-line)] bg-[var(--fa-ground)] text-[var(--fa-ink-2)]' }}" title="{{ ($b['q'] ?? 'ki') === 'mensch' ? 'Von dir ergänzt' : 'Von der KI abgeleitet' }}">
                                             {{ $b['t'] }}
@@ -133,7 +133,7 @@
                         <p class="text-[var(--fa-ink)]">
                             <x-fa::signal tone="ok">Gesetzt</x-fa::signal>
                             <span class="font-medium">{{ collect($befund['gesetzt'])->map($feldName)->implode(', ') }}</span>
-                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">· Sicherheit {{ round(($befund['confidence'] ?? 0) * 100) }} %</span>
+                            <span class="fa-t-muted">· Sicherheit {{ round(($befund['confidence'] ?? 0) * 100) }} %</span>
                         </p>
                     @endif
                     @if(!empty($befund['unklar']))
@@ -160,7 +160,7 @@
                      sie verdeckt fest auf »Gemischt«; ein »nur Bestand« aus dem Briefing ging still verloren. --}}
                 <div class="flex flex-col gap-1.5" data-planung-bestand>
                     <x-fa::choice name="regler.rezept.bestand" :options="['hybrid' => 'Gemischt', 'nur_bestand' => 'Nur Bestand', 'komplett_neu' => 'Komplett neu']" label="Bestand nutzen" id-prefix="planung-rezept-bestand" />
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-2xl">{{ match ($regler['rezept']['bestand'] ?? 'hybrid') {
+                    <p class="fa-t-muted max-w-2xl">{{ match ($regler['rezept']['bestand'] ?? 'hybrid') {
                         'nur_bestand' => 'Ausschließlich vorhandene Grundprodukte und Basisrezepte.',
                         'komplett_neu' => 'Bestand wird nicht berücksichtigt.',
                         default => 'Vorhandene Basisrezepte und Grundprodukte werden zuerst geprüft, neu entsteht nur eine echte Lücke.',
@@ -169,7 +169,7 @@
             @else
                 <div class="flex flex-col gap-1.5">
                     <x-fa::choice name="eingabe.{{ $scope }}.creative_mode" :options="$modeLabel" label="Kreativ-Modus" :id-prefix="'planung-' . $scope" />
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-2xl">{{ ($modeHint ?? [])[$eingabe[$scope]['creative_mode'] ?? 'voll_kreativ'] ?? '' }}</p>
+                    <p class="fa-t-muted max-w-2xl">{{ ($modeHint ?? [])[$eingabe[$scope]['creative_mode'] ?? 'voll_kreativ'] ?? '' }}</p>
                 </div>
             @endif
         </div>
@@ -191,7 +191,7 @@
 
     @if($wissenVorschau !== null)
         <x-foodalchemist::modal-section icon="heroicon-o-book-open" title="Wissen, das die KI nutzen würde" data-planung-wissen-vorschau>
-            <p class="mb-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Vorschau, es wurde noch nichts erstellt.</p>
+            <p class="mb-2 fa-t-muted">Vorschau, es wurde noch nichts erstellt.</p>
             <x-foodalchemist::kontext-inspektor :kontext="$wissenVorschau" />
         </x-foodalchemist::modal-section>
     @endif
@@ -204,12 +204,12 @@
     @endif
     <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] px-4 py-3 shadow-lg shadow-black/20" data-planung-erstellen-leiste>
         <div class="flex-1 min-w-[16rem] flex flex-col gap-1">
-            <p class="flex flex-wrap items-center gap-2 text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">
+            <p class="flex flex-wrap items-center gap-2 fa-t-h3">
                 @svg($goIcon, 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') {{ $goTitel }}
                 @if($titelEcho !== '')<x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit($titelEcho, 32) }}</x-fa::badge>@endif
             </p>
             @unless($handy ?? false)
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+            <p class="fa-t-muted">
                 @if($scope === 'gericht')
                     Zuerst entsteht nur ein Bauplan mit Komponenten. Erst wenn du ihn annimmst, wird daraus ein Rezept und die Erstellung läuft weiter.
                 @else

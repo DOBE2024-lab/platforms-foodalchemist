@@ -19,7 +19,7 @@
 @endphp
 
 <div class="flex flex-col gap-4" data-ctrl-erfolg>
-    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+    <p class="fa-t-muted max-w-[75ch]">
         Verkaufszahlen aus der Kasse einlesen, offene Zeilen einem Gericht zuordnen und dann sehen,
         welche Gerichte sich lohnen.
     </p>
@@ -71,7 +71,7 @@
                 </div>
 
                 @if(count($kopf['beispiel']))
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] break-words">
+                    <p class="fa-t-muted break-words">
                         Erste Zeile der Datei: {{ implode(' · ', array_map(fn ($v) => (string) $v, $kopf['beispiel'][0])) }}
                     </p>
                 @endif
@@ -87,7 +87,7 @@
 
         @if($bericht)
             <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)] px-3 py-2.5" data-ctrl-sales-bericht>
-                <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                <p class="fa-t-body">
                     <span class="font-semibold">{{ $bericht['apply'] ? 'Übernommen' : 'Probelauf' }}:</span>
                     {{ number_format($bericht['gelesen'], 0, ',', '.') }} Zeilen gelesen, {{ $bericht['neu'] }} neu,
                     {{ $bericht['aktualisiert'] }} aktualisiert, {{ $bericht['uebersprungen'] }} übersprungen.
@@ -195,10 +195,10 @@
                 'tone' => $quadTon[$key] === 'info' ? null : $quadTon[$key],
             ])->values()->all()" />
 
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+            <p class="fa-t-muted">
                 {{ collect($quadLabel)->map(fn ($lab, $key) => $lab . ': ' . $quadSatz[$key])->implode(' · ') }}
             </p>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">
+            <p class="fa-t-muted tabular-nums">
                 {{ $matrix['n'] }} Gerichte · Ø Deckungsbeitrag {{ $eur($matrix['avg_db']) }} ·
                 Ø Beliebtheit {{ number_format((float) $matrix['avg_pop'], 2, ',', '.') }}
                 @if($matrix['quelle'] === 'sales') · Umsatz im Zeitraum {{ $eur($matrix['umsatz']) }} @endif

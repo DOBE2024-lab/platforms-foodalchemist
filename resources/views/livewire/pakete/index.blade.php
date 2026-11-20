@@ -121,7 +121,7 @@
                                             <x-fa::icon-button size="sm" icon="heroicon-m-chevron-up" label="Gericht nach oben" wire:click="gerichtHoch({{ $g->id }})" />
                                             <x-fa::icon-button size="sm" icon="heroicon-m-chevron-down" label="Gericht nach unten" wire:click="gerichtRunter({{ $g->id }})" />
                                         </span>
-                                        <span class="flex-1 min-w-0 break-words text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $g->dish?->name ?? 'Gericht fehlt' }}</span>
+                                        <span class="flex-1 min-w-0 break-words fa-t-body">{{ $g->dish?->name ?? 'Gericht fehlt' }}</span>
                                         <x-fa::input size="sm" numeric type="number" step="1" min="0" wire:model.blur="mengeForm.{{ $g->id }}" wire:change="gerichtMengeSpeichern({{ $g->id }})"
                                             class="w-20" placeholder="g/P" title="Menge pro Person in Gramm" aria-label="Menge pro Person" />
                                         @if($g->dish)
@@ -141,14 +141,14 @@
                                 <div class="flex flex-col max-h-48 overflow-y-auto">
                                     @foreach($kandidaten as $k)
                                         <button type="button" wire:key="kand-{{ $k->id }}" wire:click="gerichtHinzu({{ $k->id }})"
-                                                class="flex w-full items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
+                                                class="flex w-full items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left fa-t-body hover:bg-[var(--fa-hover)]">
                                             <span class="inline-flex min-w-0 items-center gap-1.5">@svg('heroicon-m-plus', 'w-4 h-4 shrink-0 text-[var(--fa-accent)]')<span class="truncate" title="{{ $k->name }}">{{ $k->name }}</span></span>
                                             <x-fa::money :value="$k->vk_netto" class="shrink-0 text-[var(--fa-ink-2)]" />
                                         </button>
                                     @endforeach
                                 </div>
                             @elseif($gerichtSuche !== '')
-                                <p class="px-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Kein passendes Gericht gefunden.</p>
+                                <p class="px-2 fa-t-muted">Kein passendes Gericht gefunden.</p>
                             @endif
                         </x-fa::section>
 
@@ -168,7 +168,7 @@
                             </div>
                             @if($istAuto)
                                 <div class="flex items-center justify-between gap-2">
-                                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Der Preis wird aus den Gerichten berechnet.</p>
+                                    <p class="fa-t-muted">Der Preis wird aus den Gerichten berechnet.</p>
                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-path" wire:click="neuBerechnen">Preis neu berechnen</x-fa::button>
                                 </div>
                             @endif
@@ -207,7 +207,7 @@
                 <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="neu">Neues Paket</x-fa::button>
             </x-slot:actions>
         </x-fa::page-header>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[70ch]">Ein Paket ist ein bepreistes Bündel mehrerer Gerichte für eine Rolle. Im Concept lässt es sich gegen Pakete derselben Rolle tauschen.</p>
+        <p class="fa-t-muted max-w-[70ch]">Ein Paket ist ein bepreistes Bündel mehrerer Gerichte für eine Rolle. Im Concept lässt es sich gegen Pakete derselben Rolle tauschen.</p>
 
         <div class="fa-surface overflow-hidden">
             <div class="max-h-[70vh] overflow-auto">

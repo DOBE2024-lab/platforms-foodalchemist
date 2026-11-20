@@ -20,7 +20,7 @@
                     @if($allergenRollup['contains_pork'])<x-fa::badge tone="warn">enthält Schwein</x-fa::badge>@endif
                     @if($allergenRollup['contains_beef'])<x-fa::badge tone="warn">enthält Rind</x-fa::badge>@endif
                 </div>
-                <p class="{{ $leise }}">Sicherheit der Angaben: {{ \Platform\FoodAlchemist\Support\Labels::konfidenz($allergenRollup['confidence'] ?? null) }}. Die schwächste Angabe eines Rezepts zählt.</p>
+                <p class="fa-t-muted">Sicherheit der Angaben: {{ \Platform\FoodAlchemist\Support\Labels::konfidenz($allergenRollup['confidence'] ?? null) }}. Die schwächste Angabe eines Rezepts zählt.</p>
             </x-fa::section>
         @endif
 
@@ -32,7 +32,7 @@
                     @forelse($behaelterRollup['summe'] as $name => $anzahl)
                         <x-fa::badge>{{ $anzahl }} × {{ $name }}</x-fa::badge>
                     @empty
-                        <span class="{{ $leise }}">Kein Behälter-Bedarf gerechnet.</span>
+                        <span class="fa-t-muted">Kein Behälter-Bedarf gerechnet.</span>
                     @endforelse
                 </div>
                 @if($behaelterRollup['ohne'] > 0)

@@ -52,7 +52,7 @@
                     Passe an, was abweicht. Beim Speichern werden alle Werte als eigene Werte des Kalkulationsprofils gesichert, die Team-Fixkosten inklusive. Es wird nichts vererbt.
                 </p>
             @else
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Der Team-Standard ist die Vorlage für neue Kalkulationsprofile. Wähle ein Kalkulationsprofil, um dessen eigene Kalkulation zu pflegen.</p>
+                <p class="fa-t-muted">Der Team-Standard ist die Vorlage für neue Kalkulationsprofile. Wähle ein Kalkulationsprofil, um dessen eigene Kalkulation zu pflegen.</p>
             @endif
         </div>
     @endif
@@ -69,22 +69,22 @@
 
         {{-- Rechenweg als abgesetzte Vorschau --}}
         <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] border border-[var(--fa-line)] px-3 py-2.5 flex flex-col gap-1.5">
-            <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">So entsteht der Preis je Portion</p>
-            <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+            <p class="fa-t-label">So entsteht der Preis je Portion</p>
+            <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 fa-t-body">
                 <li>Wareneinsatz (MEK)</li><li class="text-[var(--fa-ink-3)]">+</li>
                 <li>Material-Gemeinkosten</li><li class="text-[var(--fa-ink-3)]">+</li>
                 <li>Lohn (FEK)</li><li class="text-[var(--fa-ink-3)]">+</li>
                 <li>Lohn-Gemeinkosten</li><li class="text-[var(--fa-ink-3)]">=</li>
                 <li class="font-medium">Herstellkosten (HK)</li>
             </ol>
-            <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+            <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 fa-t-body">
                 <li>Herstellkosten</li><li class="text-[var(--fa-ink-3)]">+</li>
                 <li>Verwaltung und Logistik</li><li class="text-[var(--fa-ink-3)]">=</li>
                 <li class="font-medium">Selbstkosten (HK2)</li><li class="text-[var(--fa-ink-3)]">×</li>
                 <li>Marge</li><li class="text-[var(--fa-ink-3)]">=</li>
                 <li class="font-medium text-[var(--fa-accent)]">Preisvorschlag</li>
             </ol>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Jeder Block unten ist ein Zuschlag je Portion: Prozent auf seine Basis oder ein fester Betrag.</p>
+            <p class="fa-t-muted">Jeder Block unten ist ein Zuschlag je Portion: Prozent auf seine Basis oder ein fester Betrag.</p>
         </div>
 
         <div class="overflow-x-auto -mx-4 px-4">
@@ -111,7 +111,7 @@
                                 @if($istGk)
                                     <x-fa::choice name="schema.{{ $i }}.mode" :options="['abgeleitet' => 'Automatisch', 'manuell' => 'Manuell']" />
                                 @else
-                                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Fester Wert</span>
+                                    <span class="fa-t-muted">Fester Wert</span>
                                 @endif
                             </td>
                             <td class="num">
@@ -124,11 +124,11 @@
                                     @endphp
                                     <span class="font-medium text-[var(--fa-accent)]" title="Automatisch: Fixkosten je Monat geteilt durch die Bezugsbasis">{{ number_format((float) ($abgeleitet[$b['key']] ?? 0), 2, ',', '.') }}&nbsp;%</span>
                                     @if($blockSumme > 0 && $blockBasis > 0)
-                                        <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ number_format($blockSumme, 0, ',', '.') }}&nbsp;€ ÷ {{ number_format($blockBasis, 0, ',', '.') }}&nbsp;€</span>
+                                        <span class="block fa-t-muted">{{ number_format($blockSumme, 0, ',', '.') }}&nbsp;€ ÷ {{ number_format($blockBasis, 0, ',', '.') }}&nbsp;€</span>
                                     @elseif($basisFehlt)
                                         <span class="block" title="Fixkosten erfasst, aber die Bezugsbasis ist 0. Der Satz bleibt 0 %, bis du unten die Bezugsbasis einträgst."><x-fa::signal tone="warn">Bezugsbasis fehlt</x-fa::signal></span>
                                     @else
-                                        <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Fixkosten</span>
+                                        <span class="block fa-t-muted">Noch keine Fixkosten</span>
                                     @endif
                                 @else
                                     @php
@@ -136,7 +136,7 @@
                                     @endphp
                                     <div class="inline-flex items-center gap-1.5">
                                         <x-fa::input wire:model="schema.{{ $i }}.value" placeholder="0" numeric size="sm" aria-label="Satz {{ $b['label'] }}" class="w-24 {{ $istLohnFallback ? 'opacity-60' : '' }}" />
-                                        <span class="w-7 text-left text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $einheit[$b['type']] ?? '%' }}</span>
+                                        <span class="w-7 text-left fa-t-muted">{{ $einheit[$b['type']] ?? '%' }}</span>
                                     </div>
                                     @if($istLohnFallback)
                                         <span class="block mt-0.5" title="Lohnquelle ist „Rollen des Postens“: Der Lohn kommt aus den Rollen-Sätzen. Dieser Satz greift nur, wenn ein Posten keine Rollendaten hat."><x-fa::signal tone="info">Nur Rückfallwert</x-fa::signal></span>
@@ -167,19 +167,19 @@
             <x-fa::field label="Marge" for="hk-marge" hint="Aufschlag auf die Selbstkosten (HK2), ergibt den Preisvorschlag.">
                 <div class="flex items-center gap-1.5">
                     <x-fa::input id="hk-marge" wire:model="marge" placeholder="15" numeric class="w-24" />
-                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">%</span>
+                    <span class="fa-t-muted">%</span>
                 </div>
             </x-fa::field>
             <x-fa::field label="Ziel-Wareneinsatzquote" for="hk-ziel-we" hint="Food-Cost-Ziel, üblich sind 28 bis 35 %. Treibt Break-even und den Hinweis „Wareneinsatz über Ziel“.">
                 <div class="flex items-center gap-1.5">
                     <x-fa::input id="hk-ziel-we" wire:model="zielWe" placeholder="30" numeric class="w-24" />
-                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">%</span>
+                    <span class="fa-t-muted">%</span>
                 </div>
             </x-fa::field>
             <x-fa::field label="Lohnnebenkosten" for="hk-lnk" hint="Arbeitgeber- und Sozialabgaben auf den Produktionslohn. So rechnen die Selbstkosten mit dem echten Personalkostensatz.">
                 <div class="flex items-center gap-1.5">
                     <x-fa::input id="hk-lnk" wire:model="lnk" placeholder="0" numeric class="w-24" />
-                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">%</span>
+                    <span class="fa-t-muted">%</span>
                 </div>
             </x-fa::field>
             <x-fa::field :hint="$scopeOutletName ? 'Je Kalkulationsprofil wählbar. Die Rollen-Sätze selbst gelten teamweit.' : 'Fehlen Posten- oder Rollendaten, gilt sichtbar der Stundensatz des Teams.'">
@@ -216,8 +216,8 @@
         {{-- Bezugsbasen (monatlich) --}}
         <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] border border-[var(--fa-line)] p-3 flex flex-col gap-3">
             <div>
-                <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Bezugsbasen je Monat</p>
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Durch diese Monatswerte werden die Fixkosten geteilt. Faustregel: Durchschnitt der letzten drei Monate oder Planwert. Steht eine Basis auf 0, bleibt ihr Zuschlag 0 %.</p>
+                <p class="fa-t-strong">Bezugsbasen je Monat</p>
+                <p class="fa-t-muted">Durch diese Monatswerte werden die Fixkosten geteilt. Faustregel: Durchschnitt der letzten drei Monate oder Planwert. Steht eine Basis auf 0, bleibt ihr Zuschlag 0 %.</p>
             </div>
             <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-3">
                 @foreach([
@@ -228,7 +228,7 @@
                     <x-fa::field :label="$lbl" for="hk-basis-{{ $k }}" :hint="$hilfe">
                         <div class="flex items-center gap-1.5">
                             <x-fa::input id="hk-basis-{{ $k }}" wire:model.live.debounce.600ms="bezugsbasen.{{ $k }}" placeholder="0" numeric />
-                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">€</span>
+                            <span class="fa-t-muted">€</span>
                         </div>
                     </x-fa::field>
                 @endforeach
@@ -254,7 +254,7 @@
                             <td class="text-[var(--fa-ink-2)] whitespace-nowrap">
                                 {{ $f['periode'] === 'jaehrlich' ? 'jährlich' : 'monatlich' }}
                                 @if($f['periode'] === 'jaehrlich')
-                                    <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">= {{ number_format((float) ($f['monatsbetrag'] ?? 0), 2, ',', '.') }}&nbsp;€ je Monat</span>
+                                    <span class="block fa-t-muted tabular-nums">= {{ number_format((float) ($f['monatsbetrag'] ?? 0), 2, ',', '.') }}&nbsp;€ je Monat</span>
                                 @endif
                             </td>
                             <td class="text-right">
@@ -289,7 +289,7 @@
             <x-fa::field label="Betrag" for="hk-neu-fix-betrag" class="w-36">
                 <div class="flex items-center gap-1.5">
                     <x-fa::input id="hk-neu-fix-betrag" wire:model="neuFix.amount" wire:keydown.enter="fixHinzu" placeholder="0" numeric />
-                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">€</span>
+                    <span class="fa-t-muted">€</span>
                 </div>
             </x-fa::field>
             <x-fa::choice name="neuFix.periode" :live="false" label="Zeitraum" :options="['monatlich' => 'Monatlich', 'jaehrlich' => 'Jährlich']" />
@@ -312,7 +312,7 @@
                         @endif
                     @endforeach
                 </div>
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Je Block geteilt durch die Bezugsbasis ergibt das den automatischen Zuschlag.</p>
+                <p class="fa-t-muted">Je Block geteilt durch die Bezugsbasis ergibt das den automatischen Zuschlag.</p>
             @endif
         </div>
     </x-fa::section>

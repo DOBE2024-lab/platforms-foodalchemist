@@ -2,7 +2,6 @@
      Nur aktive Dossiers in der Sicht des Teams; keine Pflege (Rohtext, Aliase, Kanon, Aktivieren, Löschen). Tabellen im
      eigenen Scroll-Rahmen (data-fa-tabelle-rahmen), langer Text bricht um — die Seite scrollt nie seitlich. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     // Markdown-Typografie wie in der Lese-Ansicht am Computer (knowledge/browser), dazu Umbruch und Bilder in Seitenbreite
     $prose = 'min-w-0 wrap-anywhere text-[length:var(--fa-text-base)] leading-relaxed text-[var(--fa-ink)]'
         . ' [&_h1]:text-[length:var(--fa-text-2xl)] [&_h1]:font-semibold [&_h1]:mt-5 [&_h1]:mb-2'
@@ -33,10 +32,10 @@
             <article class="space-y-3 min-w-0" data-fa-handy-dossier="{{ $dossier->id }}">
                 <div>
                     <h1 class="text-[length:var(--fa-text-2xl)] font-semibold leading-tight text-[var(--fa-ink)] wrap-anywhere">{{ $dossier->title }}</h1>
-                    <p class="{{ $leise }}">{{ implode(' · ', array_filter([$kategorien[$dossier->category] ?? $dossier->category, $dossier->art ?? null])) }}</p>
+                    <p class="fa-t-muted">{{ implode(' · ', array_filter([$kategorien[$dossier->category] ?? $dossier->category, $dossier->art ?? null])) }}</p>
                 </div>
                 @if(trim($html) === '')
-                    <p class="{{ $leise }}">Dieses Dossier hat noch keinen Text.</p>
+                    <p class="fa-t-muted">Dieses Dossier hat noch keinen Text.</p>
                 @else
                     <div class="{{ $prose }}" data-fa-handy-dossier-text>{!! $html !!}</div>
                 @endif
@@ -47,7 +46,7 @@
             <div class="flex items-baseline justify-between gap-3">
                 <h1 class="text-[length:var(--fa-text-2xl)] font-semibold text-[var(--fa-ink)]">Wissen</h1>
                 @if(method_exists($treffer, 'total'))
-                    <span class="{{ $leise }} tabular-nums">{{ number_format($treffer->total(), 0, ',', '.') }} Dossiers</span>
+                    <span class="fa-t-muted tabular-nums">{{ number_format($treffer->total(), 0, ',', '.') }} Dossiers</span>
                 @endif
             </div>
             <input type="search" wire:model.live.debounce.300ms="search" placeholder="Dossier suchen" aria-label="Wissen durchsuchen"
@@ -64,7 +63,7 @@
                         <button type="button" wire:click="select({{ $d->id }})" class="flex w-full items-center gap-3 px-4 py-3 min-h-[60px] text-left" data-fa-handy-karte="{{ $d->id }}">
                             <span class="min-w-0 flex-1">
                                 <span class="block font-medium leading-snug text-[var(--fa-ink)] wrap-anywhere">{{ $d->title }}</span>
-                                <span class="block truncate {{ $leise }}">{{ $kategorien[$d->category] ?? $d->category }}</span>
+                                <span class="block truncate fa-t-muted">{{ $kategorien[$d->category] ?? $d->category }}</span>
                             </span>
                             @svg('heroicon-m-chevron-right', 'w-5 h-5 shrink-0 text-[var(--fa-ink-3)]')
                         </button>

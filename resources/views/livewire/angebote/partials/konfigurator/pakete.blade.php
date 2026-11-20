@@ -18,9 +18,9 @@
                         <td class="num"><x-fa::input size="sm" type="number" min="1" class="w-24" value="{{ $p->bis_pax }}" wire:change="paketAendern({{ $p->id }}, 'bis_pax', $event.target.value)" aria-label="Bis" /></td>
                         <td class="num">
                             <x-fa::input size="sm" type="number" min="1" class="w-24" value="{{ $p->referenz_pax }}" wire:change="paketAendern({{ $p->id }}, 'referenz_pax', $event.target.value)" aria-label="Referenz-Pax" />
-                            @if($p->referenz_manuell)<button type="button" class="{{ $leise }} underline" wire:click="paketAendern({{ $p->id }}, 'referenz_pax', '')">zurück auf Mitte</button>@endif
+                            @if($p->referenz_manuell)<button type="button" class="fa-t-muted underline" wire:click="paketAendern({{ $p->id }}, 'referenz_pax', '')">zurück auf Mitte</button>@endif
                         </td>
-                        <td class="{{ $leise }}">{{ $p->geschnuert_at?->format('d.m. H:i') ?? 'noch nicht' }}</td>
+                        <td class="fa-t-muted">{{ $p->geschnuert_at?->format('d.m. H:i') ?? 'noch nicht' }}</td>
                         <td class="text-right"><x-fa::button size="sm" variant="danger" wire:click="paketEntfernen({{ $p->id }})" wire:confirm="Paket {{ $p->anzeigeName() }} entfernen?">Entfernen</x-fa::button></td>
                     </tr>
                 @endforeach
@@ -66,7 +66,7 @@
     <x-fa::section title="Mengen je Paket" icon="heroicon-o-table-cells" description="Feld ändern = Handwert (bleibt beim Schnüren erhalten), leeren = zurück auf die Regel. Grau: Wert nach Regel." data-kf-matrix>
         <div class="overflow-x-auto">
             <table class="fa-table fa-table--compact">
-                <thead><tr><th>Leistung</th>@foreach($pakete as $p)<th class="num">{{ $p->anzeigeName() }}<div class="{{ $leise }} font-normal">r = {{ $p->referenz_pax }}</div></th>@endforeach</tr></thead>
+                <thead><tr><th>Leistung</th>@foreach($pakete as $p)<th class="num">{{ $p->anzeigeName() }}<div class="fa-t-muted font-normal">r = {{ $p->referenz_pax }}</div></th>@endforeach</tr></thead>
                 <tbody>
                     @foreach($k->leistungen->whereNull('konfigurator_konzept_id') as $l)
                         <tr wire:key="kfm-{{ $l->id }}">
@@ -85,6 +85,6 @@
                 </tbody>
             </table>
         </div>
-        <p class="{{ $leise }}">Zusatz-Leistungen der Konzepte und Ersetzungen rechnet das System je Konzept; ihre Kosten stehen in der Kalkulation.</p>
+        <p class="fa-t-muted">Zusatz-Leistungen der Konzepte und Ersetzungen rechnet das System je Konzept; ihre Kosten stehen in der Kalkulation.</p>
     </x-fa::section>
 @endif

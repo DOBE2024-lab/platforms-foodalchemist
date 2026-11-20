@@ -87,7 +87,7 @@
                 @foreach($kacheln as $k)
                     <button type="button" wire:click="oeffnen('{{ $k['tab'] }}')" title="{{ $k['satz'] }}"
                             class="fa-kpi text-left transition-colors duration-150 hover:bg-[var(--fa-hover)] focus-visible:outline-2 focus-visible:outline-[color:var(--fa-accent)]">
-                        <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)] truncate">{{ $k['label'] }}</span>
+                        <span class="fa-t-label truncate">{{ $k['label'] }}</span>
                         @if($k['wert'] === null)
                             <span class="mt-1"><x-fa::badge tone="warn">{{ $k['fehlt'] }}</x-fa::badge></span>
                         @elseif(!empty($k['primary']))
@@ -98,12 +98,12 @@
                         @else
                             <span class="text-[length:var(--fa-text-lg)] font-semibold leading-snug tabular-nums {{ ($k['ton'] ?? null) === 'warn' ? 'text-[var(--fa-warn)]' : 'text-[var(--fa-ink)]' }}">{{ $k['wert'] }}</span>
                         @endif
-                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] line-clamp-2">{{ $k['satz'] }}</span>
+                        <span class="fa-t-muted line-clamp-2">{{ $k['satz'] }}</span>
                     </button>
                 @endforeach
             </div>
 
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+            <p class="fa-t-muted max-w-[75ch]">
                 Ein Klick auf eine Kennzahl öffnet die Werkbank im passenden Bereich. Dort liegen Portfolio, Preise,
                 Wareneinsatz, Simulation, Erfolg, Geld-Signale, Kennzahlen und Verlauf nebeneinander, jeweils mit den Hebeln dazu.
             </p>

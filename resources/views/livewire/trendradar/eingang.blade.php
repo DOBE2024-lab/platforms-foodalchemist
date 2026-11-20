@@ -46,7 +46,7 @@
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <a href="{{ $e->link() }}" target="_blank" rel="noopener nofollow" class="font-medium hover:underline break-words">{{ $e->titel }}</a>
-                            <div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] flex flex-wrap gap-x-2">
+                            <div class="fa-t-muted flex flex-wrap gap-x-2">
                                 <span>{{ $e->quelle?->name ?? V::label(V::EINGEREICHT_VON, $e->eingereicht_von) }}</span>
                                 @if($e->veroeffentlicht_am)<span>{{ $e->veroeffentlicht_am->format('d.m.Y') }}</span>@endif
                                 @if($e->thema)<span>Thema: {{ $e->thema }}@if($e->thema_quelle === 'manuell') (von Hand)@endif</span>@endif
@@ -58,10 +58,10 @@
                         <x-fa::badge :tone="$e->status === 'verworfen' ? 'neutral' : 'accent'">{{ V::label(V::EINGANG_STATUS, $e->status) }}</x-fa::badge>
                     </div>
                     @if($e->zusammenfassung || $e->teaser)
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] line-clamp-3">{{ $e->zusammenfassung ?? $e->teaser }}</p>
+                        <p class="fa-t-muted line-clamp-3">{{ $e->zusammenfassung ?? $e->teaser }}</p>
                     @endif
                     @if($e->begruendung && in_array($e->status, ['verworfen', 'fehler'], true))
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-eingang-begruendung>Grund: {{ $e->begruendung }}</p>
+                        <p class="fa-t-muted" data-eingang-begruendung>Grund: {{ $e->begruendung }}</p>
                     @endif
                     @if($darfKuratieren && $eigen)
                         <div class="flex flex-wrap items-center gap-1.5">
@@ -73,7 +73,7 @@
                             @if($e->inspiration_id === null)
                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-light-bulb" wire:click="entscheiden({{ $e->id }}, 'pinnwand')" data-eingang-pinnwand>Auf die Pinnwand</x-fa::button>
                             @else
-                                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">liegt auf der Pinnwand</span>
+                                <span class="fa-t-muted">liegt auf der Pinnwand</span>
                             @endif
                             <x-fa::input size="sm" wire:model="thema.{{ $e->id }}" placeholder="Thema ändern…" class="w-44" aria-label="Thema für {{ $e->titel }}" />
                             <x-fa::button size="sm" variant="ghost" wire:click="entscheiden({{ $e->id }}, 'thema')">Setzen</x-fa::button>

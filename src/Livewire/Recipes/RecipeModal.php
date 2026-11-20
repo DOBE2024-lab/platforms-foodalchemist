@@ -102,7 +102,7 @@ class RecipeModal extends Component
             return;
         }
         $team = Auth::user()?->currentTeamRelation;
-        $this->validate(['dishImageUpload' => 'image|max:' . \Platform\FoodAlchemist\Services\RezeptFotoService::MAX_KB], [], ['dishImageUpload' => 'Gericht-Foto']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'dishImageUpload');
         try {
             app(RecipeService::class)->storeDishImage($team, $this->recipeId, $this->dishImageUpload);
         } catch (\Throwable $e) {

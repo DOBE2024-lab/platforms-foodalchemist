@@ -52,7 +52,7 @@ class KapitelLogo extends Component
         if ($this->logoUpload === null) {
             return;
         }
-        $this->validate(['logoUpload' => 'image|max:8192'], [], ['logoUpload' => 'Kapitel-Logo']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'logoUpload');
         try {
             app(KapitelLogoService::class)->setzen($this->team(), $this->art, $this->kapitelId, $this->logoUpload);
         } catch (\RuntimeException $e) {

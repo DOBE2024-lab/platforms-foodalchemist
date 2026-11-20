@@ -16,8 +16,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
  */
 class RezeptFotoService
 {
-    /** Gleiche Grenze überall (Handyfotos 10–12 MB; Livewire-Upload-Grenze 15 MB). */
-    public const MAX_KB = 15360;
+    /** Gleiche Grenze wie jeder Bild-Upload (14 MB, Handyfotos 10–12 MB) — Quelle ist BildUpload. */
+    public const MAX_KB = \Platform\FoodAlchemist\Support\BildUpload::MAX_KB;
 
     public function schrittFoto(Team $team, FoodAlchemistRecipe $rezept, UploadedFile $datei, ?string $caption = null,
         ?int $stepId = null, string $ebene = FoodAlchemistRecipeStep::EBENE_PRODUKTION): FoodAlchemistRecipeStepPhoto

@@ -127,7 +127,7 @@ class Index extends Component
             return;
         }
         try {
-            $this->validate(['datei' => 'required|file|max:10240']);
+            $this->validate(['datei' => 'required|file|max:10240'], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('datei', 10240));
             $endung = $this->endung();
             $v = app(PreislistenImportService::class)->vorschau($this->datei->getRealPath(), $endung);
         } catch (\Illuminate\Validation\ValidationException $e) {

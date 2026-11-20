@@ -44,7 +44,7 @@ class ProduktpassPanel extends Component
     {
         $this->reset(['fehler', 'hinweis']);
         try {
-            $this->validate(['datei' => 'required|file|max:'.FoodAlchemistProduktpass::MAX_KB], ['datei.required' => 'Bitte zuerst eine Datei wählen.']);
+            $this->validate(['datei' => 'required|file|max:'.FoodAlchemistProduktpass::MAX_KB], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('datei', FoodAlchemistProduktpass::MAX_KB));
             $pass = app(ProduktpassService::class)->hochladen($this->team(), $this->item(), $this->datei, Auth::id());
             $this->angezeigtId = $pass->id;
             $this->datei = null;

@@ -73,7 +73,7 @@ class PraesentationsDesigns extends Component
             return;
         }
         $this->resetFeedback();
-        $this->validate(['fontUpload' => 'required|file|max:' . \Platform\FoodAlchemist\Services\PresentationFontService::MAX_KB], [], ['fontUpload' => 'Schriftdatei']);
+        $this->validate(['fontUpload' => 'required|file|max:' . \Platform\FoodAlchemist\Services\PresentationFontService::MAX_KB], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('fontUpload', \Platform\FoodAlchemist\Services\PresentationFontService::MAX_KB));
         try {
             $font = app(\Platform\FoodAlchemist\Services\PresentationFontService::class)
                 ->upload($this->team(), $this->fontUpload, $this->fontFamilie, (int) $this->fontWeight, $this->fontStyle);
@@ -138,7 +138,7 @@ class PraesentationsDesigns extends Component
         if ($i === null || ! isset($this->layout[$i]) || ($this->layout[$i]['block_type'] ?? '') !== 'image' || $this->blockImageUpload === null) {
             return;
         }
-        $this->validate(['blockImageUpload' => 'image|max:8192'], [], ['blockImageUpload' => 'Bild']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'blockImageUpload');
         try {
             $media = app(PresentationDesignService::class)->storeBlockImage($this->team(), $this->blockImageUpload);
             $this->layout[$i]['style']['context_file_id'] = $media['context_file_id'];

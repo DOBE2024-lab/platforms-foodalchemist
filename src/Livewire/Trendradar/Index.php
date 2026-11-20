@@ -161,7 +161,7 @@ class Index extends Component
     public function fundstueckAblegen(TrendService $svc): void
     {
         if ($this->fundDatei !== null) {
-            $this->validate(['fundDatei' => 'file|max:'.V::DATEI_MAX_KB]);
+            $this->validate(['fundDatei' => 'file|max:'.V::DATEI_MAX_KB], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('fundDatei', V::DATEI_MAX_KB));
         }
         $this->aktion(function () use ($svc) {
             $daten = $this->fund;
@@ -273,7 +273,7 @@ class Index extends Component
     {
         $this->fehler = null;
         if ($this->neuDatei !== null) {
-            $this->validate(['neuDatei' => 'file|max:'.V::DATEI_MAX_KB]);
+            $this->validate(['neuDatei' => 'file|max:'.V::DATEI_MAX_KB], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('neuDatei', V::DATEI_MAX_KB));
         }
         $this->aktion(function () use ($svc) {
             $n = $this->neu;
@@ -306,7 +306,7 @@ class Index extends Component
             return;
         }
         if ($this->belegDatei !== null) {
-            $this->validate(['belegDatei' => 'file|max:'.V::DATEI_MAX_KB]);
+            $this->validate(['belegDatei' => 'file|max:'.V::DATEI_MAX_KB], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('belegDatei', V::DATEI_MAX_KB));
         }
         $this->aktion(function () use ($svc) {
             $svc->belegAnhaengen($this->team(), $this->selectedId, $this->beleg, $this->belegDatei, Auth::id());

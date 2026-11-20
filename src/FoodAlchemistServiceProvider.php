@@ -198,6 +198,9 @@ class FoodAlchemistServiceProvider extends ServiceProvider
             $returnEarly(null);
         });
 
+        // Upload-Fehler, die keine FA-Regel erreicht (Livewires Vorab-Prüfung), deutsch statt »validation.max.file« (Host ohne lang/de).
+        \Livewire\before('exception', fn ($component, $fehler) => \Platform\FoodAlchemist\Support\DateiUpload::rohschluesselUebersetzen($component, $fehler));
+
         // GP-Regelwerk v3.7.1 §5 Ausnahme 3: Marken-Kürzel einmal je Anfrage laden (Karte im Dienst)
         $this->app->scoped(\Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel::class);
 

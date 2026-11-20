@@ -48,7 +48,7 @@ trait AngebotBrandingBilder
         if ($this->selectedId === null || $this->{$prop} === null) {
             return;
         }
-        $this->validate([$prop => 'image|max:8192'], [], [$prop => $prop === 'logoUpload' ? 'Logo' : 'Cover-Bild']);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, $prop);
         try {
             app(AngebotService::class)->{$serviceMethod}($this->team(), $this->selectedId, $this->{$prop});
         } catch (\RuntimeException $e) {
@@ -70,7 +70,7 @@ trait AngebotBrandingBilder
         if ($this->selectedId === null || $nr < 1 || $nr > 3 || ($this->praesBildUpload[$nr] ?? null) === null) {
             return;
         }
-        $this->validate(["praesBildUpload.{$nr}" => 'image|max:8192'], [], ["praesBildUpload.{$nr}" => "Präsentationsbild {$nr}"]);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, "praesBildUpload.{$nr}");
         try {
             app(AngebotService::class)->storePraesentationsBild($this->team(), $this->selectedId, $nr, $this->praesBildUpload[$nr]);
         } catch (\RuntimeException $e) {

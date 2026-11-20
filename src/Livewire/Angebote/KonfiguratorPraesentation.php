@@ -154,7 +154,7 @@ class KonfiguratorPraesentation extends Component
         if ($this->uploadGesperrt($prop) || $this->{$prop} === null) {
             return;
         }
-        $this->validate([$prop => 'image|max:8192'], [], [$prop => $label]);
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, $prop);
         $this->tue(fn () => $svc->bildSpeichern($this->team(), $this->konfiguratorId, $art, $this->{$prop}), $label . ' gespeichert.');
         $this->reset($prop);
     }

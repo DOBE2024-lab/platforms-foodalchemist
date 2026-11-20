@@ -77,7 +77,7 @@ class Erfolg extends Component
             return;
         }
 
-        $this->validate(['datei' => 'required|file|mimes:csv,txt,tsv|max:20480'], [], ['datei' => 'Datei']);
+        $this->validate(['datei' => 'required|file|mimes:csv,txt,tsv|max:20480'], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('datei', 20480, 'CSV, TXT oder TSV'));
 
         // Team-eigene Ablage: ein geteilter Ordner hiesse, dass ein Betrieb die Datei eines
         // anderen überschreiben und dessen Umsätze einlesen könnte.

@@ -23,7 +23,6 @@ Status: `angeschlossen` · `offen` · `Ausnahme (Vorschlag)`. Ausnahmen gelten e
 
 | Nr | Datei::Methode | Prompt-Key(s) | Anz. | Einst. | Phase | MCP-Einstieg | Status | Hinweis |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `src/Console/RecipePackagingUnitsCommand.php::beurteile` | recipe.verpackungsmasse | 1 | a | P2 | Artisan-Befehl | offen | Massenbefehl: --anbieter=extern wie Backfill |
 | 2 | `src/Jobs/ClassifyLaJob.php::arbeite` | gp.suggest | 1 | a | P2 | Job nach LA-Import | angeschlossen | `KiExternWiederholbar` (`classify-la:{team}:{la}`); Extern-Flag erbt der Job aus dem MCP-Aufruf (`KiExternModus::fuerDispatch`). KiExternLaJobTest |
 | 3 | `src/Jobs/NonFoodKiBatchJob.php::arbeite` | la.nonfood | 1 | a | P2 | Job | angeschlossen | `KiExternWiederholbar` je Stapel (`nonfood-ki:{hash}`); Start `foodalchemist:nonfood-erkennen --ki --anbieter=extern`. KiExternLaJobTest |
 | 4 | `src/Jobs/ReviseDishProposalJob.php::arbeite` | planning.dish_proposal_revise | 1 | b | P2 | planung_kaskade.* | angeschlossen | Job-Weg Kaskade (KiExternWiederholbar, `dish-revise:{team}:{step}`), Step bleibt `running` bis zur Antwort, Rollback-Rumpf; KiExternKaskadeTest. |
@@ -119,14 +118,14 @@ Status: `angeschlossen` · `offen` · `Ausnahme (Vorschlag)`. Ausnahmen gelten e
 |---|---|---|---|---|---|---|---|
 | 83 | `src/Services/VoiceCommandService.php` → `AiGatewayService::callWithTools` | Voice-Agent (Tier-D-Tool-Loop) | c | P2 | — | Ausnahme (Vorschlag) | AGENTISCHER LOOP: Claude ist selbst der Loop, ruft MCP-Tools direkt. Ausnahme-Vorschlag. Dominique 29.10.: der Voice-Agent ist nur ein Gadget, Ausnahme unkritisch |
 | 84 | `src/Services/RecipeImageService.php::generateAndStore` | Bildgenerierung (Core ImageGenerationService) | c | P2 | RecipeImageGenerateTool | Ausnahme | ABGENOMMEN (Dominique 03.11.: „Bilder bleiben so“): Claude erzeugt keine Bilder, bleibt Plattform. `recipe_images.GENERATE` steht in `KiUmleitung::KI_AUSNAHMEN` |
-| 85 | `src/Services/Ai/SemanticRetrievalService.php`, `PoolEmbeddingService.php`, `KnowledgeEmbeddingService.php`, `src/Console/TrendThemenAehnlichkeitCommand.php` (Spec 93 B, Messung der Themen-Ähnlichkeit eines Teams, schreibt nichts) | Embeddings (text-embedding-3-large) | — | — | — | Ausnahme (Vorschlag) | AUSNAHME (Entscheidung Dominique): bleibt OpenAI |
+| 85 | `src/Services/Ai/SemanticRetrievalService.php`, `PoolEmbeddingService.php`, `KnowledgeEmbeddingService.php`, `src/Console/Diagnose/TrendThemenAehnlichkeitCommand.php` (Spec 93 B, Messung der Themen-Ähnlichkeit eines Teams, schreibt nichts) | Embeddings (text-embedding-3-large) | — | — | — | Ausnahme (Vorschlag) | AUSNAHME (Entscheidung Dominique): bleibt OpenAI |
 | 86 | `src/Services/Websuche/CoreWebSucheTransport.php` (`include_web_search`, Eintrag auch in Tabelle A; die externe Seite: `KiAuftragService` prüft die Quellen beim Beantworten, `KiAuftraegeGetTool` kennzeichnet den Auftrag) | Websuche über den Plattform-Provider | b | P2 | — | angeschlossen | Entscheidung Punkt 5 umgesetzt (2d-2): extern sucht der MCP-Client selbst, Quellenpflicht beim Beantworten; UI bleibt Plattform |
 | 87 | `src/Services/KonfiguratorService.php::wordingGenerieren` | concept.wording | 1 | a | P2 | KonfiguratorKonzepteWordingGenerateTool | angeschlossen | Tool-Umleitung konfigurator_konzepte.WORDING_GENERATE (Tabelle D, KiUmleitungTest). Muster wie Nr. 46 (Foodbook-Kapitel): je Concept ein `propose()`, Ergebnis nur als Überschreibung am Konfigurator, Concept unberührt. |
 
 ## Summen
 
-- Methoden nach Einstufung: a = 53, b = 20, c = 9.
-- Phase P1 (gp.sensorik, gp.anker, BulkEnrich-GP-Schritte, Anker-Auslese): 6 Methoden. Phase P2: 76.
+- Methoden nach Einstufung: a = 52, b = 20, c = 9 (RecipePackagingUnitsCommand gelöscht, Plan 98 · 1.2b).
+- Phase P1 (gp.sensorik, gp.anker, BulkEnrich-GP-Schritte, Anker-Auslese): 6 Methoden. Phase P2: 75.
 - Angeschlossen: Stand je Zeile in Tabelle A, Spalte Status (die frühere Angabe „1 Methode, alle anderen offen“ war der Stand vom 29.10.). Welche MCP-Tools wie extern laufen, steht in Tabelle D und im Code (`KiUmleitung::TOOLS`, `LAUF_FLAG`, `KI_AUSNAHMEN`), gehalten vom Wächter `KiWegVollstaendigWaechterTest`.
 - Methoden ohne MCP-Einstieg (12): per MCP nicht erreichbar. Entweder wird ein Einstieg gebaut (Tool oder Artisan) oder Dominique erklärt die Zeile zur Ausnahme (UI-Knopf ohne Gegenstück).
 
@@ -368,7 +367,7 @@ Summe lokal: 2.612 Aufrufe. 28.218.296 Token. Top-3 lokal: `recipe.generator` 30
 | `QualityRunJob` | `QualityRunService` (Ampel-Lauf) | – (`SignalDetektorService::laufen`, deterministisch) | keine KI | – |
 | `RezeptFolgeJob`, `BausteinFolgeJob` | Folge-Services (afterCommit) | – (kein KI-Dienst gefunden) | prüfen | – |
 | `ProduktpassLesenJob`, `ProduktpassRechercheJob` | Produktpass (UI) | produktpass.extract, Web | Plattform | ausgenommen |
-| `AnkerWissenCommand`, `RecipePackagingUnitsCommand`, `GeneratorEvalCommand`, `GpSensorikReferenzCommand` | manuell (Artisan) | anker.wissen_auslese, recipe.verpackungsmasse; Eval-/Referenz-Werkzeuge | Plattform | 2d (Befehle `--anbieter=extern`) |
+| `AnkerWissenCommand`, `GeneratorEvalCommand`, `GpSensorikReferenzCommand` (`RecipePackagingUnitsCommand` gelöscht, Plan 98 · 1.2b) | manuell (Artisan) | anker.wissen_auslese; Eval-/Referenz-Werkzeuge | Plattform | 2d (Befehle `--anbieter=extern`) |
 | Zeitplan sonst: `NectaAbgleichCommand`, `WechselkursHolenCommand`, `PlanNutzungZaehlenCommand`, `WissenSteuerdatenW0Command`, `WissenDeckelCheckCommand`, `WissenKanonSicherungCommand`, `AboHuelleNachfuehrenCommand`, `SpeiseplanAushangRollierenCommand` | Zeitplan (nachts/wöchentlich) | – | keine KI-Token (kein propose/Gateway im Befehl) | – |
 
 ### F5 · Nebenbefund `ki_verbrauch.GET` zeigt für das Master-Team 0

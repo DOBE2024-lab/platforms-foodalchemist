@@ -15,6 +15,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistKonfiguratorPaketMenge;
 use Platform\FoodAlchemist\Models\FoodAlchemistLeistungVorlage;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorMengenRechner;
 use Platform\FoodAlchemist\Services\Konfigurator\LeistungsRegelPruefung;
+use Platform\FoodAlchemist\Support\BildVerweise;
 
 /**
  * Spec 94 · Konfiguratoren pflegen: Kopf und Regeln, Konzepte (Haupt/Add-on), Leistungen (frei oder als Kopie aus
@@ -159,39 +160,12 @@ class KonfiguratorService
 
     /**
      * Altes Bild löschen — aber nur, wenn es niemand sonst nutzt: „Branding übernehmen“ kopiert den Verweis auf die Datei
-     * eines Foodbooks, Angebots oder Betriebs, die darf beim Ersetzen am Konfigurator nicht mit verschwinden.
+     * eines Foodbooks, Angebots oder Betriebs, die darf beim Ersetzen am Konfigurator nicht mit verschwinden. Die Nutzungsprüfung
+     * (alle Bild-Felder aller Tabellen, auch die anderen Felder dieses Konfigurators) liegt zentral im Media-Service (BildVerweise).
      */
     private function bildFreigeben(Team $team, FoodAlchemistKonfigurator $k, string $spalte, string $contextSpalte): void
     {
-        $pfad = (string) $k->{$spalte};
-        if ($pfad === '') {
-            return;
-        }
-        foreach (array_map(fn ($a) => $this->bildSpalten($a)[0], self::BILD_ARTEN) as $eigene) {   // dieselbe Datei in einem anderen Bild-Feld dieses Konfigurators
-            if ($eigene !== $spalte && (string) $k->{$eigene} === $pfad) {
-                return;
-            }
-        }
-        $nutzer = [
-            [FoodAlchemistKonfigurator::class, ['logo_path', 'cover_image_path', 'bild_lunch_path', 'bild_dinner_path', 'bild_day_night_path']],
-            [\Platform\FoodAlchemist\Models\FoodAlchemistFoodbook::class, ['logo_path', 'cover_image_path']],
-            [\Platform\FoodAlchemist\Models\FoodAlchemistAngebot::class, ['logo_path', 'cover_image_path']],
-            [\Platform\FoodAlchemist\Models\FoodAlchemistOutlet::class, ['logo_path']],
-        ];
-        foreach ($nutzer as [$klasse, $spalten]) {
-            $q = $klasse::withTrashed()->where(function ($w) use ($spalten, $pfad) {
-                foreach ($spalten as $sp) {
-                    $w->orWhere($sp, $pfad);
-                }
-            });
-            if ($klasse === FoodAlchemistKonfigurator::class) {
-                $q->whereKeyNot($k->id);
-            }
-            if ($q->exists()) {
-                return;
-            }
-        }
-        app(FoodAlchemistMediaService::class)->delete($k->{$contextSpalte}, $pfad, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->{$contextSpalte}, (string) $k->{$spalte}, $team, [BildVerweise::eigen($k, $spalte)]);
     }
 
     /**

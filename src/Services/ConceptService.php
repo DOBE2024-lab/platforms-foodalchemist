@@ -238,7 +238,7 @@ class ConceptService
     {
         $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
         $this->guardOwner($concept, $team);
-        app(FoodAlchemistMediaService::class)->delete($concept->image_context_file_id, (string) $concept->image_path, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($concept->image_context_file_id, (string) $concept->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($concept, 'image_path')]);
         $media = app(FoodAlchemistMediaService::class)->storeImage(
             $file, $team, 'foodalchemist.concept', $id, "foodalchemist/concept/{$id}",
         );
@@ -251,7 +251,7 @@ class ConceptService
     {
         $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
         $this->guardOwner($concept, $team);
-        app(FoodAlchemistMediaService::class)->delete($concept->image_context_file_id, (string) $concept->image_path, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($concept->image_context_file_id, (string) $concept->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($concept, 'image_path')]);
         $concept->update(['image_context_file_id' => null, 'image_path' => null]);
 
         return $concept->refresh();
@@ -280,7 +280,7 @@ class ConceptService
         $img = FoodAlchemistConceptImage::findOrFail($imageId);
         $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($img->concept_id);
         $this->guardOwner($concept, $team);
-        app(FoodAlchemistMediaService::class)->delete($img->context_file_id, (string) $img->path, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($img->context_file_id, (string) $img->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($img)]);
         $img->delete();
     }
 

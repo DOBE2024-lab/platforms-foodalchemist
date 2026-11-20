@@ -1108,7 +1108,7 @@ class SpeisekarteService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $karte->{$spalte};
-        app(FoodAlchemistMediaService::class)->delete($karte->{$contextSpalte}, $alt, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
 
         $media = app(FoodAlchemistMediaService::class)->storeImage(
             $file,
@@ -1133,7 +1133,7 @@ class SpeisekarteService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $karte->{$spalte};
-        app(FoodAlchemistMediaService::class)->delete($karte->{$contextSpalte}, $alt, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
         $karte->update([
             $spalte => null,
             $contextSpalte => null,

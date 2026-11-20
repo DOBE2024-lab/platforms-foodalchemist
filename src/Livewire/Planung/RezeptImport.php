@@ -70,7 +70,7 @@ class RezeptImport extends Component
             // Foto/Scan (Dominique 2026-10-12): JPG/PNG/WebP gehen als Bild an die KI, PDFs zuerst als Text,
             // bei Scans als Datei — s. RecipeExtractService::ausBild/ausPdf. Text-Weg unverändert.
             if ($this->importPdf !== null) {
-                $this->validate(['importPdf' => 'file|mimes:pdf,jpg,jpeg,png,webp,gif|max:20480'], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('importPdf', 20480, 'PDF, JPG, PNG, WebP oder GIF'));
+                $this->validate(['importPdf' => 'file|mimes:pdf,jpg,jpeg,png,webp,gif|max:15360'], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('importPdf', 15360, 'PDF, JPG, PNG, WebP oder GIF'));
                 $mime = (string) $this->importPdf->getMimeType();
                 if (str_starts_with($mime, 'image/')) {
                     $this->importQuelle = 'bild';

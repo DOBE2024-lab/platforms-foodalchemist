@@ -165,3 +165,30 @@ it('Format anlegen: Status ≠ Entwurf nur mit Rolle Kuratieren', function () {
     expect(app(FormatService::class)->create($this->childA, ['name' => 'G', 'status' => 'active'])->status)->toBe('active')
         ->and(fn () => app(FormatService::class)->create($this->childA, ['name' => 'H', 'status' => 'quatsch']))->toThrow(RuntimeException::class, 'Unbekannter Format-Status');
 });
+
+it('Speisekarte gericht_ref: abonnierte Fassung erlaubt, Master ohne Abo und fremdes Team abgelehnt (Sicht-Regel inkl. Abo)', function () {
+    $master = \Platform\Core\Models\Team::create(['name' => 'Master', 'user_id' => 1, 'personal_team' => false]);
+    config(['foodalchemist.master_team_id' => $master->id]);
+    $mandant = \Platform\Core\Models\Team::create(['name' => 'Mandant', 'user_id' => 1, 'personal_team' => false]);
+    \Platform\FoodAlchemist\Support\TeamAncestryRegistry::flushAll();
+    \Platform\FoodAlchemist\Support\StammPaket::freischalten($mandant);
+    $kurator = $this->makeUser($master, 'Kurator', 'owner');
+    $this->actingAs($this->makeUser($mandant, 'Mandant Chef', 'owner'));
+
+    $jus = $this->makeRecipe($master, 'Kalbsjus', ['is_sales_recipe' => true]);
+    $jusF = $this->makeRecipe($master, 'Kalbsjus', ['is_sales_recipe' => true, 'ist_fassung' => true, 'fassung_von_id' => $jus->id]);
+    $geheim = $this->makeRecipe($master, 'Master-Geheimrezept', ['is_sales_recipe' => true]);
+    $fremd = $this->makeRecipe($this->childB, 'Fremd', ['is_sales_recipe' => true]);
+    $inhalte = app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class);
+    $sammlung = $inhalte->sammlungAnlegen($master, 'Basis', null, $kurator);
+    $inhalte->sammlungHinzu($master, $sammlung, 'recipe', [$jus->id], $kurator);
+    app(\Platform\FoodAlchemist\Services\AboService::class)->abonnieren($master, $mandant, $sammlung, $kurator);
+
+    $svc = app(SpeisekarteService::class);
+    $karte = $svc->create($mandant, ['name' => 'Mandanten-Karte']);
+    $rubrik = $svc->addRubrik($mandant, $karte->id, ['title' => 'Hauptgänge']);
+
+    expect($svc->addPosition($mandant, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $jusF->id])->sales_recipe_id)->toBe($jusF->id)
+        ->and(fn () => $svc->addPosition($mandant, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $geheim->id]))->toThrow(RuntimeException::class, 'sichtbares VK-Gericht')
+        ->and(fn () => $svc->addPosition($mandant, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $fremd->id]))->toThrow(RuntimeException::class, 'sichtbares VK-Gericht');
+});

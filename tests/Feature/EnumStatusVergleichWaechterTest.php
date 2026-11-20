@@ -33,6 +33,8 @@ const ENUM_STATUS_GEPRUEFT = [
     'src/Services/GpBereinigenService.php', 'src/Services/GpUmhaengenService.php', 'src/Services/GpPaket/GpPaketVerknuepfer.php',
     // Freigabe-Sperre (98 · 1.1f): Rohzeilen aus DB::table, Rezept vergleicht RecipeStatus::…->value, Concept.status ist eine String-Spalte
     'src/Services/Rezept/FreigabeSperre.php',
+    // Paket-Umzug (98 · 2.6a): Paritäts-Report liest Concept.status (String-Spalte) für das Rechte-Feld
+    'src/Services/PaketUmzug/PaketParitaet.php',
 ];
 
 function enumStatusTreffer(): array

@@ -102,6 +102,7 @@ return [
     \Platform\FoodAlchemist\Tools\ConceptsEnrichTool::class,
     \Platform\FoodAlchemist\Tools\ConceptsGenerateTool::class,   // R6.1
     \Platform\FoodAlchemist\Tools\ConceptsGetTool::class,
+    \Platform\FoodAlchemist\Tools\ConceptsKalkulationTool::class,   // 98 · 2.3c
     \Platform\FoodAlchemist\Tools\ConceptsListTool::class,
     \Platform\FoodAlchemist\Tools\ConceptSlotsDarreichungTool::class,
     \Platform\FoodAlchemist\Tools\ConceptSlotsDeleteTool::class,
@@ -166,7 +167,9 @@ return [
     \Platform\FoodAlchemist\Tools\FoodbookPresentationWithdrawTool::class,
     \Platform\FoodAlchemist\Tools\FoodbooksBrandingTool::class,
     \Platform\FoodAlchemist\Tools\FoodbooksCustomerLinkTool::class,
+    \Platform\FoodAlchemist\Tools\FoodbooksDuplicateTool::class,   // 98 · 2.3c
     \Platform\FoodAlchemist\Tools\FoodbooksGetTool::class,
+    \Platform\FoodAlchemist\Tools\FoodbooksImageTool::class,   // 98 · 2.3c
     \Platform\FoodAlchemist\Tools\FoodbooksListTool::class,
     \Platform\FoodAlchemist\Tools\FoodbooksPostTool::class,
     \Platform\FoodAlchemist\Tools\FoodbooksPutTool::class,
@@ -458,9 +461,11 @@ return [
     \Platform\FoodAlchemist\Tools\ProductionOrdersDeleteTool::class,
     \Platform\FoodAlchemist\Tools\ProductionOrdersFinishTool::class,
     \Platform\FoodAlchemist\Tools\ProductionOrdersGetTool::class,
+    \Platform\FoodAlchemist\Tools\ProductionOrdersLineAddTool::class,   // 98 · 2.3c
     \Platform\FoodAlchemist\Tools\ProductionOrdersLineAssignTool::class,
     \Platform\FoodAlchemist\Tools\ProductionOrdersLineBlockTool::class,
     \Platform\FoodAlchemist\Tools\ProductionOrdersLineOverrideTool::class,
+    \Platform\FoodAlchemist\Tools\ProductionOrdersLineRemoveTool::class,   // 98 · 2.3c
     \Platform\FoodAlchemist\Tools\ProductionOrdersLineStatusTool::class,
     \Platform\FoodAlchemist\Tools\ProductionOrdersLineUnblockTool::class,
     \Platform\FoodAlchemist\Tools\ProductionOrdersReleaseDemandTool::class,
@@ -520,6 +525,7 @@ return [
     \Platform\FoodAlchemist\Tools\RecipeReifeGetTool::class,
     \Platform\FoodAlchemist\Tools\RecipeRollenPostTool::class,
     \Platform\FoodAlchemist\Tools\RecipesDeleteTool::class,
+    \Platform\FoodAlchemist\Tools\RecipesDichteklasseTool::class,   // 98 · 2.3c
     \Platform\FoodAlchemist\Tools\RecipesDuplicateTool::class,
     \Platform\FoodAlchemist\Tools\RecipesEnrichTool::class,
     \Platform\FoodAlchemist\Tools\RecipeSensorikPostTool::class,
@@ -539,6 +545,11 @@ return [
     \Platform\FoodAlchemist\Tools\RecipesStatusTool::class,
     \Platform\FoodAlchemist\Tools\RecipesTemplateToggleTool::class,
     \Platform\FoodAlchemist\Tools\RecipeStepsGetTool::class,   // Spec 27
+    \Platform\FoodAlchemist\Tools\RecipeStepsPhotoDeleteTool::class,   // 98 · 2.3c
+    \Platform\FoodAlchemist\Tools\RecipeStepsPhotoLinkTool::class,   // 98 · 2.3c
+    \Platform\FoodAlchemist\Tools\RecipeStepsPhotoResultTool::class,   // 98 · 2.3c
+    \Platform\FoodAlchemist\Tools\RecipeStepsPhotoUnlinkTool::class,   // 98 · 2.3c
+    \Platform\FoodAlchemist\Tools\RecipeStepsPhotoUploadTool::class,   // 98 · 2.3c
     \Platform\FoodAlchemist\Tools\RecipeStepsPutTool::class,   // Spec 27
     \Platform\FoodAlchemist\Tools\RecipeTypenGetTool::class,   // Weg-B-Befund 4: Typ-Vokabular fürs Team lesbar
     \Platform\FoodAlchemist\Tools\ReferenceGetTool::class,

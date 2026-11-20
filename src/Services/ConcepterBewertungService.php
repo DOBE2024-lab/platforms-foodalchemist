@@ -73,7 +73,9 @@ class ConcepterBewertungService
         // 4 — Preis im Zielkorridor
         $ziel = $concept->target_price_per_person !== null ? (float) $concept->target_price_per_person : null;
         $ist = (float) ($cockpit['price_per_person'] ?? 0);
-        if ($ziel === null || $ziel <= 0) {
+        if (! empty($cockpit['hat_vk_luecke'])) {   // CQ 2.6: Ist zählt nur bekannte Preise — kein Korridor-Urteil auf einer Lücke
+            $checks[] = $this->check('price', 'Preis-Korridor', 'warn', 'Ist unvollständig: mindestens einer Position fehlt der VK.');
+        } elseif ($ziel === null || $ziel <= 0) {
             $checks[] = $this->check('price', 'Preis-Korridor', 'info', 'Kein Zielpreis gesetzt.');
         } else {
             $abw = abs($ist - $ziel) / $ziel;

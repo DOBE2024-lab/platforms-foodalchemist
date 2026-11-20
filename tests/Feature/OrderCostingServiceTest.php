@@ -78,6 +78,24 @@ beforeEach(function () {
     $concepts->recomputeCache($this->concept->refresh());
 });
 
+it('CQ 2.6: Cockpit — Gericht ohne VK ist eine Lücke (Zeile offen, hat_vk_luecke), Summe zählt nur bekannte Preise', function () {
+    $concepts = app(ConceptService::class);
+    $mitVk = $concepts->preisCockpit($this->concept->refresh());
+    expect($mitVk['hat_vk_luecke'])->toBeFalse()->and($mitVk['price_per_person'])->toBeGreaterThan(0);
+
+    $ohneVk = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'ohne-vk', 'name' => 'Ohne VK',
+        'status' => 'approved', 'is_sales_recipe' => true, 'sales_unit_count' => 1]);
+    $slot = $concepts->fillSlot($this->rootTeam, $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Dessert'])->id, ['sales_recipe_id' => $ohneVk->id]);
+    $c = $concepts->preisCockpit($this->concept->refresh());
+    $zeile = collect($c['zeilen'])->firstWhere('slot_id', $slot->id);
+
+    expect($zeile['price'])->toBeNull()
+        ->and($zeile['vk_fehlt'])->toBeTrue()
+        ->and($c['hat_vk_luecke'])->toBeTrue()
+        ->and($c['summe_pro_person'])->toBe($mitVk['summe_pro_person'])
+        ->and(app(\Platform\FoodAlchemist\Services\KalkulationService::class)->conceptHk($this->rootTeam, $this->concept->refresh())['vk_luecke'])->toBeTrue();
+});
+
 it('kalkuliert Vor-Ort-Arbeit mit dem Team-Satz als eigenen Serviceblock ohne Küchenlast', function () {
     app(TeamSettingsService::class)->update($this->rootTeam, ['labor_overhead_pct' => 20]);
     $dar = $this->recipe->standardPresentation()->firstOrFail();

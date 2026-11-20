@@ -186,6 +186,7 @@ class KalkulationService
             'hk1_pro_person' => round($hk1, 4),
             'hk2_pro_person' => $r['hk2'],
             'vk_pro_person' => $vk,
+            'vk_luecke' => (bool) ($cockpit['hat_vk_luecke'] ?? false),   // CQ 2.6: VK zählt nur bekannte Positionen → DB zu niedrig
             'db_eur' => $vk > 0 ? round($vk - $r['hk2'], 2) : null,
             'db_pct' => $vk > 0 ? round(($vk - $r['hk2']) / $vk * 100, 1) : null,
             'bloecke' => $r['bloecke'],

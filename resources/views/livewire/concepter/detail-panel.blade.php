@@ -40,6 +40,9 @@
         if (! empty($cockpit['hat_stale'])) {
             $offen[] = ['warn', 'Ein Paketpreis ist veraltet, im Editor neu berechnen.'];
         }
+        if (! empty($cockpit['hat_vk_luecke'])) {
+            $offen[] = ['crit', 'Verkaufspreis unvollständig: mindestens einer Position fehlt der VK. €/Person zählt nur die bekannten Preise.'];
+        }
         if (! empty($cockpit['hat_ek_luecke'])) {
             $offen[] = ['warn', 'Einkauf unvollständig: einem Gericht fehlt das Portionsgewicht.'];
         }

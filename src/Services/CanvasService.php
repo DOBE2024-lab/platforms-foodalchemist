@@ -262,6 +262,53 @@ class CanvasService
         FoodAlchemistCanvasEntry::where('id', $entryId)->delete();
     }
 
+    /** 98 · 2.3b: ein Eintrag NUR dieses Canvas — ein Unter-Team erreicht so nie einen Eintrag des Oberteams (Spec 82 §7). */
+    public function eintragDesCanvas(FoodAlchemistCanvas $canvas, int $entryId): ?FoodAlchemistCanvasEntry
+    {
+        return $canvas->entries()->whereKey($entryId)->first();
+    }
+
+    /** 98 · 2.3b: Eintrag dieses Canvas löschen; false, wenn er nicht zu diesem Canvas gehört. */
+    public function eintragLoeschen(FoodAlchemistCanvas $canvas, int $entryId): bool
+    {
+        $eintrag = $this->eintragDesCanvas($canvas, $entryId);
+        $eintrag?->delete();
+
+        return $eintrag !== null;
+    }
+
+    /** 98 · 2.3b: ein Häkchen (Zusatzfeld-Unterwert) eines Listen-Eintrags dieses Canvas umschalten. */
+    public function eintragMetaUmschalten(FoodAlchemistCanvas $canvas, int $entryId, string $subKey): bool
+    {
+        $eintrag = $this->eintragDesCanvas($canvas, $entryId);
+        if ($eintrag === null) {
+            return false;
+        }
+        $meta = $eintrag->meta ?? [];
+        $meta[$subKey] = ! ($meta[$subKey] ?? false);
+        $eintrag->update(['meta' => $meta]);
+
+        return true;
+    }
+
+    /** 98 · 2.3b: Verbindlich eines gefüllten Skalar-Feldes umschalten; false, wenn das Feld noch leer ist. */
+    public function skalarVerbindlichUmschalten(FoodAlchemistCanvas $canvas, string $key): bool
+    {
+        $eintrag = $canvas->entries()->where('field_key', $key)->where('position', 0)->first();
+        $eintrag?->update(['is_binding' => ! $eintrag->is_binding]);
+
+        return $eintrag !== null;
+    }
+
+    /** 98 · 2.3b: Verbindlich eines Repeatable-Eintrags dieses Canvas umschalten; false, wenn es ihn hier nicht gibt. */
+    public function eintragVerbindlichUmschalten(FoodAlchemistCanvas $canvas, int $entryId): bool
+    {
+        $eintrag = $this->eintragDesCanvas($canvas, $entryId);
+        $eintrag?->update(['is_binding' => ! $eintrag->is_binding]);
+
+        return $eintrag !== null;
+    }
+
     /** KI-Kontext-Block eines Canvas (gefüllte Felder, gelabelt). NULL wenn leer. */
     public function promptKontext(FoodAlchemistCanvas $canvas): ?string
     {

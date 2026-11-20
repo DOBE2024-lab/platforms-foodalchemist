@@ -69,8 +69,8 @@ return [
     \Platform\FoodAlchemist\Console\GpFormsEstimateCommand::class,
     \Platform\FoodAlchemist\Console\GpPaketImportCommand::class,   // E2: GP-Paket → io (global, stamm_paket)
     \Platform\FoodAlchemist\Console\GpStammPurgeCommand::class,   // Neu-Import: globalen GP-Stamm hart löschen (Trockenlauf, Riegel, Backup-Nachweis)
-    \Platform\FoodAlchemist\Console\GrundeinstellungenNachziehenCommand::class,   // Paket Grundeinstellungen stündlich nachziehen (20.11.2026)
     \Platform\FoodAlchemist\Console\GpUmhaengenCommand::class,
+    \Platform\FoodAlchemist\Console\GrundeinstellungenNachziehenCommand::class,   // Paket Grundeinstellungen stündlich nachziehen (20.11.2026)
     \Platform\FoodAlchemist\Console\ImportArticlesCommand::class,
     \Platform\FoodAlchemist\Console\KnowledgeEmbedCommand::class,
     // W2-5: der Rückweg — bis hierher gab es nur Import (Modul = SSOT ohne Backup-Pfad).

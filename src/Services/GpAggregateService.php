@@ -38,6 +38,64 @@ class GpAggregateService
     public const ALLERGEN_KONF_RANG = ['high' => 3, 'medium' => 2, 'low' => 1, 'none' => 1];
 
     /**
+     * Code-Qualität 2.1a · Lauf-Memo: nur innerhalb von {@see imLauf} (ein Recompute-Lauf); danach leer. Statisch, weil Recompute und
+     * Nährwert-Rechner je eine eigene Instanz halten. Schlüssel GP-ID — Allergen-Profil, Deklarationen und Alkohol lesen in der Sicht des
+     * Besitzer-Teams des GP, nicht des Rechen-Teams; Nährwerte mit Schlüssel Sicht + GP.
+     *
+     * @var array{profil?: array<int, \Illuminate\Support\Collection>, dekl?: array<string, array<string, ?int>>, alkohol?: array<int, bool>, naehr?: array<string, array>}
+     */
+    private static array $lauf = [];
+
+    private static int $laufTiefe = 0;
+
+    /** Code-Qualität 2.1a: `$fn` als ein Lauf — Lese-Ergebnisse je GP werden gemerkt und am Ende verworfen (Preise/Artikel ändern sich im Lauf nicht). */
+    public static function imLauf(callable $fn): mixed
+    {
+        self::$laufTiefe++;
+        try {
+            return $fn();
+        } finally {
+            if (--self::$laufTiefe === 0) {
+                self::$lauf = [];
+            }
+        }
+    }
+
+    /**
+     * Code-Qualität 2.1a: alles, was der Recompute je GP liest, für viele GPs in je einer Abfrage (je Sicht) vorladen. Außerhalb eines Laufs wirkungslos.
+     *
+     * @param  iterable<FoodAlchemistGp>  $gps
+     */
+    public function vorladen(iterable $gps, ?Team $naehrwertSicht): void
+    {
+        if (self::$laufTiefe === 0) {
+            return;
+        }
+        $gps = collect($gps)->filter()->unique('id');
+        $stoffe = [...array_keys(FoodAlchemistItemDeclaration::STOFFE), ...array_keys(FoodAlchemistItemDeclaration::FREIWILLIG)];
+        $this->laProfileBulk($gps->reject(fn ($gp) => isset(self::$lauf['profil'][$gp->id])));
+        $this->deklarationBulk($gps->reject(fn ($gp) => isset(self::$lauf['dekl'][implode(',', $stoffe) . ':' . $gp->id])), $stoffe);
+        $this->alkoholBulk($gps->filter(fn ($gp) => $gp->alkohol === null && ! isset(self::$lauf['alkohol'][$gp->id])));
+        $nachSicht = $gps->groupBy(fn ($gp) => $this->naehrSicht($gp, $naehrwertSicht)?->id ?? 0);
+        foreach ($nachSicht as $gruppe) {
+            $sicht = $this->naehrSicht($gruppe->first(), $naehrwertSicht);
+            $ids = $gruppe->reject(fn ($gp) => isset(self::$lauf['naehr'][($sicht?->id ?? 0) . ':' . $gp->id]))->pluck('id')->map(fn ($id) => (int) $id)->all();
+            if ($ids !== []) {
+                $kennwerte = app(NaehrwertAggregatService::class)->kennwerte($ids, FoodAlchemistItemNutritional::KERNWERTE, $sicht);
+                foreach ($ids as $id) {
+                    self::$lauf['naehr'][($sicht?->id ?? 0) . ':' . $id] = $kennwerte[$id] ?? [];
+                }
+            }
+        }
+    }
+
+    /** Sicht der Nährwerte eines GP (Lead-Sicht 29.10.): rechnet ein Mandant, seine; sonst die des Besitzers. */
+    private function naehrSicht(FoodAlchemistGp $gp, ?Team $sicht): ?Team
+    {
+        return $this->mandantSicht($sicht) ?? $this->besitzerSicht($gp);
+    }
+
+    /**
      * Effektive Allergen-Auflösung je GP:
      * [feld => ['value' => AllergenValue, 'source' => override|mutter|la|keine]].
      */
@@ -285,36 +343,61 @@ class GpAggregateService
     /** @param list<string> $stoffe @return array<string,?int> */
     private function deklarationArtikelMax(FoodAlchemistGp $gp, array $stoffe): array
     {
-        $abgeleitet = array_intersect_key(FoodAlchemistItemDeclaration::FREIWILLIG_ABGELEITET, array_flip($stoffe));
-        if ($abgeleitet === []) {
-            $row = DB::table('foodalchemist_item_declarations AS d')
-                ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'd.supplier_item_id')
-                ->where('s.gp_id', $gp->id)
-                ->whereNull('d.deleted_at')->whereNull('s.deleted_at')
-                ->tap(fn ($q) => $this->nurSichtbare($q, 's.supplier_item_id', $this->besitzerSicht($gp)))
-                ->selectRaw(implode(', ', array_map(fn ($f) => "MAX(d.{$f}) AS {$f}", $stoffe)))
-                ->first();
-        } else {
-            // Jod: je Artikel max(Necta-Flag, aus der Zutatenliste abgeleitet), auch für Artikel ohne Deklarationszeile.
-            // Für die Pflicht-Stoffe ändert der LEFT JOIN nichts (NULL fällt aus dem MAX).
-            $spalte = fn (string $f) => isset($abgeleitet[$f])
-                ? "MAX(CASE WHEN si.{$abgeleitet[$f]} IS NULL THEN d.{$f} WHEN d.{$f} IS NULL OR si.{$abgeleitet[$f]} > d.{$f} THEN si.{$abgeleitet[$f]} ELSE d.{$f} END) AS {$f}"
-                : "MAX(d.{$f}) AS {$f}";
-            $row = DB::table('foodalchemist_supplier_item_structures AS s')
-                ->join('foodalchemist_supplier_items AS si', 'si.id', '=', 's.supplier_item_id')
-                ->leftJoin('foodalchemist_item_declarations AS d', function ($j) {
-                    $j->on('d.supplier_item_id', '=', 's.supplier_item_id')->whereNull('d.deleted_at');
-                })
-                ->where('s.gp_id', $gp->id)->whereNull('s.deleted_at')
-                ->tap(fn ($q) => $this->nurSichtbare($q, 's.supplier_item_id', $this->besitzerSicht($gp)))
-                ->selectRaw(implode(', ', array_map($spalte, $stoffe)))
-                ->first();
-        }
+        return self::$lauf['dekl'][implode(',', $stoffe) . ':' . $gp->id] ?? $this->deklarationBulk(collect([$gp]), $stoffe)[$gp->id];   // 2.1a
+    }
 
+    /**
+     * MAX je Stoff über die Artikel-Deklarationen vieler GPs, eine Abfrage je Besitzer-Sicht (2.1a). Ohne Zeilen: alle Stoffe NULL.
+     *
+     * @param  \Illuminate\Support\Collection<int, FoodAlchemistGp>  $gps
+     * @param  list<string>  $stoffe
+     * @return array<int, array<string, ?int>>
+     */
+    private function deklarationBulk(\Illuminate\Support\Collection $gps, array $stoffe): array
+    {
+        $abgeleitet = array_intersect_key(FoodAlchemistItemDeclaration::FREIWILLIG_ABGELEITET, array_flip($stoffe));
         $out = [];
-        foreach ($stoffe as $stoff) {
-            $wert = $row?->{$stoff};
-            $out[$stoff] = $wert === null ? null : (int) $wert;
+        foreach ($gps->groupBy(fn ($gp) => $this->besitzerSicht($gp)?->id ?? 0) as $gruppe) {
+            $sicht = $this->besitzerSicht($gruppe->first());
+            $ids = $gruppe->pluck('id')->map(fn ($id) => (int) $id)->all();
+            if ($abgeleitet === []) {
+                $rows = DB::table('foodalchemist_item_declarations AS d')
+                    ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'd.supplier_item_id')
+                    ->whereIn('s.gp_id', $ids)
+                    ->whereNull('d.deleted_at')->whereNull('s.deleted_at')
+                    ->tap(fn ($q) => $this->nurSichtbare($q, 's.supplier_item_id', $sicht))
+                    ->groupBy('s.gp_id')
+                    ->selectRaw('s.gp_id AS _gp_id, ' . implode(', ', array_map(fn ($f) => "MAX(d.{$f}) AS {$f}", $stoffe)))
+                    ->get()->keyBy(fn ($r) => (int) $r->_gp_id);
+            } else {
+                // Jod: je Artikel max(Necta-Flag, aus der Zutatenliste abgeleitet), auch für Artikel ohne Deklarationszeile.
+                // Für die Pflicht-Stoffe ändert der LEFT JOIN nichts (NULL fällt aus dem MAX).
+                $spalte = fn (string $f) => isset($abgeleitet[$f])
+                    ? "MAX(CASE WHEN si.{$abgeleitet[$f]} IS NULL THEN d.{$f} WHEN d.{$f} IS NULL OR si.{$abgeleitet[$f]} > d.{$f} THEN si.{$abgeleitet[$f]} ELSE d.{$f} END) AS {$f}"
+                    : "MAX(d.{$f}) AS {$f}";
+                $rows = DB::table('foodalchemist_supplier_item_structures AS s')
+                    ->join('foodalchemist_supplier_items AS si', 'si.id', '=', 's.supplier_item_id')
+                    ->leftJoin('foodalchemist_item_declarations AS d', function ($j) {
+                        $j->on('d.supplier_item_id', '=', 's.supplier_item_id')->whereNull('d.deleted_at');
+                    })
+                    ->whereIn('s.gp_id', $ids)->whereNull('s.deleted_at')
+                    ->tap(fn ($q) => $this->nurSichtbare($q, 's.supplier_item_id', $sicht))
+                    ->groupBy('s.gp_id')
+                    ->selectRaw('s.gp_id AS _gp_id, ' . implode(', ', array_map($spalte, $stoffe)))
+                    ->get()->keyBy(fn ($r) => (int) $r->_gp_id);
+            }
+            foreach ($ids as $id) {
+                $row = $rows->get($id);
+                foreach ($stoffe as $stoff) {
+                    $wert = $row?->{$stoff};
+                    $out[$id][$stoff] = $wert === null ? null : (int) $wert;
+                }
+            }
+        }
+        if (self::$laufTiefe > 0) {
+            foreach ($out as $id => $werte) {
+                self::$lauf['dekl'][implode(',', $stoffe) . ':' . $id] = $werte;
+            }
         }
 
         return $out;
@@ -334,7 +417,9 @@ class GpAggregateService
     public function naehrwerte(FoodAlchemistGp $gp, bool $mitKiFallback = false, ?Team $sicht = null): array
     {
         $kerne = FoodAlchemistItemNutritional::KERNWERTE;
-        $kennwerte = app(NaehrwertAggregatService::class)->kennwerte([$gp->id], $kerne, $this->mandantSicht($sicht) ?? $this->besitzerSicht($gp))[$gp->id] ?? [];
+        $s = $this->naehrSicht($gp, $sicht);
+        $kennwerte = self::$lauf['naehr'][($s?->id ?? 0) . ':' . $gp->id]
+            ?? app(NaehrwertAggregatService::class)->kennwerte([$gp->id], $kerne, $s)[$gp->id] ?? [];   // 2.1a: im Lauf vorgeladen
 
         $out = [];
         foreach ($kerne as $k) {
@@ -498,14 +583,38 @@ class GpAggregateService
 
     private function laProfile(FoodAlchemistGp $gp): \Illuminate\Support\Collection
     {
-        return FoodAlchemistItemAllergen::query()
-            ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'foodalchemist_item_allergens.supplier_item_id')
-            ->leftJoin('foodalchemist_supplier_items AS i', 'i.id', '=', 'foodalchemist_item_allergens.supplier_item_id')
-            ->where('s.gp_id', $gp->id)
-            ->whereNull('s.deleted_at')
-            ->tap(fn ($q) => $this->nurSichtbare($q, 'foodalchemist_item_allergens.supplier_item_id', $this->besitzerSicht($gp)))
-            ->select('foodalchemist_item_allergens.*', 'i.supplier_id AS lieferant_id')   // Spec 85: Lieferant für AllergenAnnahme
-            ->get();
+        return self::$lauf['profil'][$gp->id] ?? $this->laProfileBulk(collect([$gp]))[$gp->id];   // 2.1a: im Lauf einmal je GP
+    }
+
+    /**
+     * LA-Allergen-Zeilen vieler GPs, eine Abfrage je Besitzer-Sicht (2.1a).
+     *
+     * @param  \Illuminate\Support\Collection<int, FoodAlchemistGp>  $gps
+     * @return array<int, \Illuminate\Support\Collection>
+     */
+    private function laProfileBulk(\Illuminate\Support\Collection $gps): array
+    {
+        $out = [];
+        foreach ($gps->groupBy(fn ($gp) => $this->besitzerSicht($gp)?->id ?? 0) as $gruppe) {
+            $sicht = $this->besitzerSicht($gruppe->first());
+            $ids = $gruppe->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $rows = FoodAlchemistItemAllergen::query()
+                ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'foodalchemist_item_allergens.supplier_item_id')
+                ->leftJoin('foodalchemist_supplier_items AS i', 'i.id', '=', 'foodalchemist_item_allergens.supplier_item_id')
+                ->whereIn('s.gp_id', $ids)
+                ->whereNull('s.deleted_at')
+                ->tap(fn ($q) => $this->nurSichtbare($q, 'foodalchemist_item_allergens.supplier_item_id', $sicht))
+                ->select('foodalchemist_item_allergens.*', 'i.supplier_id AS lieferant_id', 's.gp_id AS _profil_gp_id')   // Spec 85: Lieferant für AllergenAnnahme
+                ->get()->groupBy(fn ($r) => (int) $r->_profil_gp_id);
+            foreach ($ids as $id) {
+                $out[$id] = $rows->get($id, collect())->values();
+            }
+        }
+        if (self::$laufTiefe > 0) {
+            self::$lauf['profil'] = ($out + (self::$lauf['profil'] ?? []));
+        }
+
+        return $out;
     }
 
     /**
@@ -518,13 +627,36 @@ class GpAggregateService
         if ($gp->alkohol !== null) {
             return (bool) $gp->alkohol;
         }
-        $ja = DB::table('foodalchemist_supplier_item_structures AS s')
-            ->join('foodalchemist_supplier_items AS si', 'si.id', '=', 's.supplier_item_id')
-            ->where('s.gp_id', $gp->id)->whereNull('s.deleted_at')->where('si.is_alcohol', 1)
-            ->tap(fn ($q) => $this->nurSichtbare($q, 's.supplier_item_id', $this->besitzerSicht($gp)))
-            ->exists();
+        $ja = self::$lauf['alkohol'][$gp->id] ?? $this->alkoholBulk(collect([$gp]))[$gp->id];   // 2.1a
 
         return $ja ? true : null;
+    }
+
+    /**
+     * Hat der GP einen sichtbaren Artikel mit is_alcohol = 1? Viele GPs, eine Abfrage je Besitzer-Sicht (2.1a).
+     *
+     * @param  \Illuminate\Support\Collection<int, FoodAlchemistGp>  $gps
+     * @return array<int, bool>
+     */
+    private function alkoholBulk(\Illuminate\Support\Collection $gps): array
+    {
+        $out = [];
+        foreach ($gps->groupBy(fn ($gp) => $this->besitzerSicht($gp)?->id ?? 0) as $gruppe) {
+            $ids = $gruppe->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $ja = array_flip(DB::table('foodalchemist_supplier_item_structures AS s')
+                ->join('foodalchemist_supplier_items AS si', 'si.id', '=', 's.supplier_item_id')
+                ->whereIn('s.gp_id', $ids)->whereNull('s.deleted_at')->where('si.is_alcohol', 1)
+                ->tap(fn ($q) => $this->nurSichtbare($q, 's.supplier_item_id', $this->besitzerSicht($gruppe->first())))
+                ->distinct()->pluck('s.gp_id')->map(fn ($id) => (int) $id)->all());
+            foreach ($ids as $id) {
+                $out[$id] = isset($ja[$id]);
+            }
+        }
+        if (self::$laufTiefe > 0) {
+            self::$lauf['alkohol'] = ($out + (self::$lauf['alkohol'] ?? []));
+        }
+
+        return $out;
     }
 
     /**

@@ -65,23 +65,26 @@ class RecipeRecomputeService
     /** @var array<string, float> */
     private array $putzverlustWgCache = [];
 
+    /** Code-Qualität 2.1a: Lese-Vorrat je Lauf (Artikel/Preise, Pins je Team + GP, Formen) */
+    private Rezept\RecomputeVorrat $vorrat;
+
     public function __construct(
         private GpAggregateService $gpAggregate,
         private PriceService $preise,
-    ) {}
+    ) {
+        $this->vorrat = new Rezept\RecomputeVorrat($preise);
+    }
 
     /** Pipeline für EIN Rezept — idempotent (I4), eine Transaktion (V-07). */
     public function recomputePipeline(int $recipeId, bool $cascadePrices = true): void
     {
         // Spec 84 B4: Recompute schreibt Kosten-Cache auch auf Master-, Fassungs- und Unter-Team-Zeilen — bewusst fremd
-        \Platform\FoodAlchemist\Support\FremdSchreiben::erlaubt('recompute', fn () => $this->recomputePipelineRoh($recipeId, $cascadePrices));
+        \Platform\FoodAlchemist\Support\FremdSchreiben::erlaubt('recompute', fn () => $this->vorrat->lauf(fn () => $this->recomputePipelineRoh($recipeId, $cascadePrices)));
     }
 
     private function recomputePipelineRoh(int $recipeId, bool $cascadePrices = true): void
     {
-        $this->laCache = [];                                       // Preis-Memo nie über Edits hinweg tragen
-        $this->leadPrefCache = [];
-        $teamId = null;
+        $teamId = null;                                            // Preis-Memo: Vorrat des Laufs (2.1a), nie über Läufe hinweg
         DB::transaction(function () use ($recipeId, &$teamId) {
             // Spec 82: auch Fassungen (ohne Kosten). Spec 84 B3: Recompute rechnet auch Master-, Fassungs- und Unter-Team-Zeilen
             // (Kosten-Cache) — das Rezept wird über die Teamgrenze geladen, ohne Zusatzabfrage (V-049 zählt die Läufe)
@@ -98,6 +101,7 @@ class RecipeRecomputeService
             $this->recomputeTeam = Team::find($recipe->team_id);
             $this->garverlustWgCache = $this->putzverlustWgCache = [];
             $zutaten = $recipe->ingredients->filter(fn ($z) => $z->match_method !== MatchMethod::Ignored);
+            $this->vorrat->vorladen($zutaten, $this->recomputeTeam, $this->gpAggregate);   // 2.1a: je GP-Art eine Abfrage für das ganze Rezept
 
             $this->yieldUndZaehler($recipe, $zutaten);
             $this->allergene($recipe, $zutaten);
@@ -176,14 +180,16 @@ class RecipeRecomputeService
         //    stehen EINMAL in der Ordnung, nicht einmal je Start.
         // 1.1e: ein eingeschleuster Zyklus wird nicht mehr still in Eingabereihenfolge gerechnet — seine Rezepte (und was auf ihnen
         // aufbaut) bleiben ungerechnet und stehen als Fehler im Ergebnis (KostenFolgeJob schlägt damit fehl).
-        foreach ($this->topoOrder($betroffen, $zyklus) as $id) {
-            try {
-                $this->recomputePipeline($id, false);
-            } catch (\Throwable $e) {
-                $fehler[$id] = $e->getMessage();
-                Log::warning("Recompute-Propagation: Rezept {$id} fehlgeschlagen — {$e->getMessage()} (I8: Edit nicht geblockt)");
+        $this->vorrat->lauf(function () use ($betroffen, &$zyklus, &$fehler) {   // 2.1a: ein Vorrat für alle Rezepte der Menge
+            foreach ($this->topoOrder($betroffen, $zyklus) as $id) {
+                try {
+                    $this->recomputePipeline($id, false);
+                } catch (\Throwable $e) {
+                    $fehler[$id] = $e->getMessage();
+                    Log::warning("Recompute-Propagation: Rezept {$id} fehlgeschlagen — {$e->getMessage()} (I8: Edit nicht geblockt)");
+                }
             }
-        }
+        });
         if ($zyklus !== []) {
             $meldung = 'Zyklus im Rezeptgraph (betroffen: Rezepte ' . implode(', ', $zyklus) . ') — nicht neu berechnet.';
             foreach ($zyklus as $id) {
@@ -319,9 +325,11 @@ class RecipeRecomputeService
             throw new \RuntimeException('Zyklus im Sub-Rezept-Graph — beteiligte recipe_ids: '.implode(', ', $zyklus));
         }
 
-        foreach ($order as $id) {
-            $this->recomputePipeline($id, false);
-        }
+        $this->vorrat->lauf(function () use ($order) {             // 2.1a
+            foreach ($order as $id) {
+                $this->recomputePipeline($id, false);
+            }
+        });
 
         FoodAlchemistRecipe::whereIn('id', $order)->pluck('team_id')->filter()->unique()
             ->each(function ($teamId) {
@@ -1101,15 +1109,11 @@ class RecipeRecomputeService
             // Faktor 0 in Yield UND EK: die Zutat verschwand still aus beidem.
             // Vorrang vor der Alt-Tabelle: die trägt 19 Import-Zeilen aus der WaWi und ist im UI
             // nicht editierbar — wer im Editor ein Gewicht setzt, muss es wirken sehen.
-            $form = DB::table('foodalchemist_gp_forms')
-                ->where('gp_id', $z->gp_id)->where('form_slug', $unit->slug)
-                ->whereNull('deleted_at')->value('gramm');
+            $form = $this->vorrat->formGramm((int) $z->gp_id, (string) $unit->slug);   // 2.1a: im Lauf vorgeladen
             if ($form !== null) {
                 return (float) $form;                              // T1 Zeile 3a (Formen-Editor/KI)
             }
-            $eintrag = DB::table('foodalchemist_gp_count_unit_defaults')
-                ->where('gp_id', $z->gp_id)->where('unit_vocab_id', $z->unit_vocab_id)
-                ->whereNull('deleted_at')->value('default_g');
+            $eintrag = $this->vorrat->zaehlGramm((int) $z->gp_id, $z->unit_vocab_id !== null ? (int) $z->unit_vocab_id : null);
             if ($eintrag !== null) {
                 return (float) $eintrag;                           // T1 Zeile 3b (Zehe 5 g / Knolle 40 g)
             }
@@ -1188,19 +1192,19 @@ class RecipeRecomputeService
             ->groupBy(fn ($la) => (int) $la->_preis_gp_id);
 
         foreach ($gpIds as $gpId) {
-            $this->laCache[$gpId] = $las->get($gpId, collect())->values();
+            $this->vorrat->setzeLas($gpId, $team, $las->get($gpId, collect())->values());
         }
 
         if ($team !== null) {
             $prefs = \Platform\FoodAlchemist\Support\LeadOverlay::fuer($team, $gpIds);   // Spec 85 PR-B: dieselbe Kette wie der Einzelpfad
             foreach ($gpIds as $gpId) {
-                $this->leadPrefCache[$team->id.':'.$gpId] = $prefs[(int) $gpId] ?? [];
+                $this->vorrat->setzePrefs($gpId, $team, $prefs[(int) $gpId] ?? []);
             }
         }
 
         $result = [];
         foreach ($gps as $gp) {
-            $werte = $this->laCache[(int) $gp->id]
+            $werte = $this->laMitPreis($gp)
                 ->filter(fn ($la) => in_array($la->unit_code, ['kg', 'l'], true) && $la->aktiver_preis !== null)
                 ->map(fn ($la) => $this->preise->preisProGramm($la, (float) $la->aktiver_preis))
                 ->filter(fn ($wert) => $wert !== null)->values();
@@ -1210,7 +1214,7 @@ class RecipeRecomputeService
             // gefüllten Lead-EK leer und lasen sich wie „kein Vergleich möglich".
             $stueckG = $gp->piece_default_g !== null ? (float) $gp->piece_default_g : null;
             if ($werte->isEmpty() && $stueckG !== null && $stueckG > 0) {
-                $werte = $this->laCache[(int) $gp->id]
+                $werte = $this->laMitPreis($gp)
                     ->filter(fn ($la) => $la->unit_code === 'Stk' && FoodAlchemistSupplierItem::mengeVon($la) > 0 && $la->aktiver_preis !== null)
                     ->map(fn ($la) => ((float) $la->aktiver_preis) / FoodAlchemistSupplierItem::mengeVon($la) / $stueckG)
                     ->values();
@@ -1403,10 +1407,13 @@ class RecipeRecomputeService
         return $this->effektiverLeadId($gp);
     }
 
-    /** Rechen-Team setzen und die Memos des Laufs leeren (Preise, Pins). */
+    /** Rechen-Team setzen; außerhalb eines Laufs die Memos leeren (Preise, Pins). Im Lauf trägt der Vorrat den Schlüssel Team + GP (2.1a). */
     private function fuerTeam(?Team $team): void
     {
-        [$this->recomputeTeam, $this->laCache, $this->leadPrefCache] = [$team, [], []];
+        $this->recomputeTeam = $team;
+        if (! $this->vorrat->imLauf()) {
+            $this->vorrat->leeren();
+        }
     }
 
     /**
@@ -1419,10 +1426,9 @@ class RecipeRecomputeService
         if ($this->recomputeTeam === null) {
             return [];
         }
-        $key = $this->recomputeTeam->id.':'.$gp->id;
 
         // Spec 85 PR-B: Pin/Sperre inkl. Übernahme vom Kunden-Hauptteam („Standorte übernehmen unsere Leitartikel“)
-        return $this->leadPrefCache[$key] ??= \Platform\FoodAlchemist\Support\LeadOverlay::fuer($this->recomputeTeam, [(int) $gp->id])[(int) $gp->id] ?? [];
+        return $this->vorrat->prefs((int) $gp->id, $this->recomputeTeam);
     }
 
     /** Merker: hat im laufenden Preis-Pfad ein letzter Preis eines eingestellten Artikels beigetragen? (Rückfall 27.10.) */
@@ -1442,23 +1448,10 @@ class RecipeRecomputeService
         ));
     }
 
-    /** LAs des GP inkl. Aktiv-Preis (memoisiert pro Pipeline-Lauf). */
-    private array $laCache = [];
-
-    /** V-27-Lead-Overlay je (Team,GP), memoisiert pro Lauf (Key "teamId:gpId"). */
-    private array $leadPrefCache = [];
-
+    /** LAs des GP inkl. Aktiv-Preis in der Sicht des Rechen-Teams (Vorrat je Team + GP, 2.1a). */
     private function laMitPreis(FoodAlchemistGp $gp): Collection
     {
-        return $this->laCache[$gp->id] ??= FoodAlchemistSupplierItem::query()
-            ->when($this->recomputeTeam, fn ($q) => $q->visibleToTeam($this->recomputeTeam))
-            ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'foodalchemist_supplier_items.id')
-            ->leftJoin('foodalchemist_suppliers AS sup', 'sup.id', '=', 'foodalchemist_supplier_items.supplier_id')
-            ->where('s.gp_id', $gp->id)->whereNull('s.deleted_at')
-            ->select('foodalchemist_supplier_items.*', \Illuminate\Support\Facades\DB::raw(\Platform\FoodAlchemist\Models\FoodAlchemistSupplier::nichtBestellbarSql() . ' AS lieferant_inaktiv'))
-            // Spec 82 3a: Preise des Rechen-Teams (Team → Vorfahren → global); ohne Team nur Listenpreis.
-            ->selectSub($this->preise->activePriceSubquery('foodalchemist_supplier_items.id', $this->recomputeTeam)->toBase(), 'aktiver_preis')
-            ->pipe(fn ($q) => app(LetzterPreisService::class)->laden($q, $this->recomputeTeam));   // Rückfall eingestellter Artikel (27.10.)
+        return $this->vorrat->las((int) $gp->id, $this->recomputeTeam);
     }
 
     private function rangZuText(?int $rang): string

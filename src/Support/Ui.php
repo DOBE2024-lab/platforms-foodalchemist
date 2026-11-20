@@ -62,6 +62,9 @@ final class Ui
                 'muted' => 'fa-t-muted',    // Hilfetext, Zähler, Nebeninfo 12 px, Tinte 3 (das frühere $leise)
             ],
 
+            // Haken (Welle 1, 1.4c): eine Optik für alle Checkboxen, Baustein <x-fa::checkbox wire:model="…">Text</x-fa::checkbox>
+            'haken' => 'w-4 h-4 shrink-0 rounded accent-[var(--fa-accent)]',
+
             // ── Tabelle (R14 Jarvis-Skala: 12px wie .data-table, Header 11px, py-1/px-3)
             'table' => 'w-full text-[13px]',
             'th' => 'px-3 py-2 text-[12px] font-medium text-gray-600 whitespace-nowrap',

@@ -17,6 +17,8 @@ class UiKatalog extends Component
     /** @var array<int, string> */
     public array $diaeten = ['vegan', 'glutenfrei'];
 
+    public bool $nurAktive = true;
+
     public string $menge = '3,5';
 
     public function render()

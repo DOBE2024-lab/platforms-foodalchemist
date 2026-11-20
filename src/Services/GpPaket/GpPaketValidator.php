@@ -284,13 +284,14 @@ class GpPaketValidator
         if (in_array($key, $ctx['doppelt'], true)) {
             return ['code' => 'io_doppelt', 'text' => 'gp_key existiert auf io mehrfach (team_id NULL) — erst bereinigen'];
         }
+        $eigene = array_values(array_unique([$key, (string) ($ctx['bestand'][$key]['gp_key'] ?? $key)]));   // Alias: io-Schlüssel des Paket-GPs (20.11.2026)
         $uuid = strtolower(trim((string) ($p['uuid'] ?? '')));
-        if ($uuid !== '' && isset($ctx['uuids'][$uuid]) && $ctx['uuids'][$uuid] !== $key) {
+        if ($uuid !== '' && isset($ctx['uuids'][$uuid]) && ! in_array($ctx['uuids'][$uuid], $eigene, true)) {
             return ['code' => 'uuid_vergeben', 'text' => "uuid gehört auf io dem GP {$ctx['uuids'][$uuid]}"];
         }
         $n = $this->normName($name);
-        if (isset($ctx['namen'][$n]) && array_diff($ctx['namen'][$n], [$key]) !== []) {
-            return ['code' => 'name_vergeben', 'text' => 'Name gehört auf io dem GP ' . implode(', ', array_diff($ctx['namen'][$n], [$key]))];
+        if (isset($ctx['namen'][$n]) && array_diff($ctx['namen'][$n], $eigene) !== []) {
+            return ['code' => 'name_vergeben', 'text' => 'Name gehört auf io dem GP ' . implode(', ', array_diff($ctx['namen'][$n], $eigene))];
         }
 
         return null;
@@ -344,6 +345,21 @@ class GpPaketValidator
         $n = mb_strtolower(preg_replace('/\s+/u', ' ', trim($n)));
 
         return strtr($n, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+    }
+
+    /**
+     * Mehrdeutiger Alias (mehrere io-GPs tragen „<alter Schlüssel>|m-…“): das io-GP mit gleichem Namen. Trägt den Treffer in `bestand` ein,
+     * damit alle späteren Schritte (Abgleich, Derivat-Mutter, Kinder, Verknüpfen) ihn unter dem Paket-Schlüssel finden.
+     */
+    public function bestandFuerAlias(array &$ctx, string $key, string $name): void
+    {
+        if (isset($ctx['bestand'][$key]) || ! isset($ctx['aliase'][$key])) {
+            return;
+        }
+        $treffer = array_values(array_filter($ctx['aliase'][$key], fn ($r) => $this->normName((string) $r['name']) === $this->normName($name)));
+        if (count($treffer) === 1) {
+            $ctx['bestand'][$key] = $treffer[0];
+        }
     }
 
     private function keyStabil(string $key, string $name, bool $platzhalter): bool
@@ -461,7 +477,27 @@ class GpPaketValidator
             $uuids[strtolower((string) $r['uuid'])] = $r['gp_key'];
         }
 
-        return ['hinweise' => $hinweise, 'gpSpalten' => $gpSpalten, 'wg' => $wg, 'subTabelle' => $subTabelle, 'subBestand' => $subBestand,
+        // 20.11.2026: degenerierte Schlüssel („tomate||“) wurden auf io um einen Merkmal-Slot ergänzt („tomate|||m-trocken-geschwefelt“,
+        // foodalchemist:gp-key-merkmale). Das Paket (Skript 300) trägt weiter den alten Schlüssel — er bleibt als Alias auffindbar: eindeutig direkt,
+        // mehrdeutig über den Namen ({@see bestandFuerAlias}). Ein echter Bestandsschlüssel gewinnt immer.
+        $aliase = [];
+        foreach ($bestand as $key => $r) {
+            $pos = strpos((string) $key, '|m-');
+            if ($pos === false) {
+                continue;
+            }
+            $basis = substr((string) $key, 0, $pos);
+            if (\Platform\FoodAlchemist\Services\GpNamingService::istDegeneriert($basis) && ! isset($bestand[$basis])) {
+                $aliase[$basis][] = $r;
+            }
+        }
+        foreach ($aliase as $basis => $rows) {
+            if (count($rows) === 1) {
+                $bestand[$basis] = $rows[0];
+            }
+        }
+
+        return ['hinweise' => $hinweise, 'gpSpalten' => $gpSpalten, 'wg' => $wg, 'subTabelle' => $subTabelle, 'subBestand' => $subBestand, 'aliase' => $aliase,
             'einheiten' => $this->weich('foodalchemist_vocab_units')->whereNull('team_id')->pluck('id', 'slug')->all(),
             'texturen' => DB::table('foodalchemist_vocab_textures')->pluck('id', 'slug')->all(),
             'fahrzeuge' => $this->weich('foodalchemist_vocab_serving_vehicles')->whereNull('team_id')->pluck('id', 'slug')->all(),

@@ -656,3 +656,26 @@ it('Warengruppe als Zahl (4 oder "4") im Paket wird wie "04" gegen die io-Codes 
     }
     expect(($this->csv)('gp_abgelehnt'))->toBe([]);
 });
+
+// ── Alias: degenerierter Paket-Schlüssel nach foodalchemist:gp-key-merkmale (20.11.2026) ─────────────
+it('★ nach dem Nachziehen der Schlüssel findet der Import die GPs unter dem alten Paket-Schlüssel wieder — kein Doppel, kein name_vergeben', function () {
+    $tomate = B::gp('Tomate: trocken, geschwefelt', ['gp_key' => 'tomate||', 'main_ingredient_slug' => 'tomate', 'condition' => 'trocken', 'requires_la' => 0]);
+    $mais = B::gp('Mais: TK', ['gp_key' => 'mais||', 'main_ingredient_slug' => 'mais', 'condition' => 'TK', 'requires_la' => 0]);
+    B::schreibe($this->dir, [$tomate, $mais], []);
+    ($this->apply)();
+    $idTomate = ($this->gp)('tomate||')->id;
+    $idMais = ($this->gp)('mais||')->id;
+
+    // io: Schlüssel nachgezogen; dazu ein zweites Tomaten-GP mit eigenem Merkmal-Slot (mehrdeutiger Alias → Auflösung über den Namen)
+    DB::table('foodalchemist_gps')->where('id', $idTomate)->update(['gp_key' => 'tomate|||m-trocken_geschwefelt']);
+    DB::table('foodalchemist_gps')->where('id', $idMais)->update(['gp_key' => 'mais|||m-tk']);
+    FoodAlchemistGp::create(['team_id' => null, 'stamm_class' => 'stamm_paket', 'gp_key' => 'tomate|||m-tk', 'name' => 'Tomate: TK', 'status' => 'approved', 'commodity_group_code' => '04']);
+    $vorher = DB::table('foodalchemist_gps')->count();
+
+    ($this->apply)();
+    $k = ($this->kennzahlen)();
+    expect($k['gp_neu'] ?? 0)->toBe(0)
+        ->and(DB::table('foodalchemist_gps')->count())->toBe($vorher)
+        ->and(collect(($this->csv)('gp_abgelehnt'))->pluck('gp_key')->all())->not->toContain('tomate||')->not->toContain('mais||')
+        ->and(DB::table('foodalchemist_gps')->where('id', $idTomate)->value('gp_key'))->toBe('tomate|||m-trocken_geschwefelt');
+});

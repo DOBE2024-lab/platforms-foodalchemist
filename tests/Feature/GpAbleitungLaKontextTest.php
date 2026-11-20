@@ -59,8 +59,9 @@ it('★ „unbekannt" & Co. werden zu leer — nie im Namen, nie in der Kennung'
 });
 
 it('★ createGp: Platzhalter-Eingaben landen weder im Namen noch im gp_key; ein Name mit „unbekannt" wird abgewiesen', function () {
+    // 20.11.2026: der degenerierte Schlüssel trägt den Zustand (m-tk), nie „unbekannt“
     $gp = ($this->naming)()->createGp($this->rootTeam, ['hauptzutat' => 'Salatmischung', 'condition' => 'TK', 'processing' => 'unbekannt', 'form' => 'unbekannt']);
-    expect($gp->name)->toBe('Salatmischung: TK')->and($gp->gp_key)->toBe('salatmischung||')->and($gp->processing)->toBeNull()->and($gp->form)->toBeNull();
+    expect($gp->name)->toBe('Salatmischung: TK')->and($gp->gp_key)->toBe('salatmischung|||m-tk')->and($gp->processing)->toBeNull()->and($gp->form)->toBeNull();
 
     expect(fn () => ($this->naming)()->createGp($this->rootTeam, ['hauptzutat' => 'Salat', 'condition' => 'TK', 'name' => 'Salat: TK, unbekannt']))
         ->toThrow(RuntimeException::class, 'unbekannt');

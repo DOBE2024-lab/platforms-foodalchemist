@@ -236,6 +236,7 @@ class GpPaketImportService
                 continue;                                                // Teillauf: andere Warengruppen bleiben unberührt
             }
             $name = trim((string) ($p['name'] ?? ''));
+            $this->v->bestandFuerAlias($ctx, $key, $name);   // alter degenerierter Schlüssel → io-GP mit Merkmal-Slot (20.11.2026)
             $wgAnzeige = $wg ?? '--';
             $z->inc($wgAnzeige, 'gp_paket');
             $g = ['key' => $key, 'name' => $name, 'wg' => $wgAnzeige, 'p' => $p, 'derivat' => (bool) ($p['is_derivat'] ?? false)];
@@ -330,7 +331,9 @@ class GpPaketImportService
             }
             $mutterIo = ($b['derivat_von_gp_id'] ?? null) !== null ? ($ctx['idZuKey'][(int) $b['derivat_von_gp_id']] ?? '?') : null;
             $mutterPaket = $g['derivat'] ? trim((string) ($g['p']['derivat_von_gp_key'] ?? '')) : null;
-            if ($mutterIo !== $mutterPaket) {
+            $gleicheMutter = $mutterPaket !== null && ($ctx['bestand'][$mutterPaket]['id'] ?? null) !== null
+                && (int) $ctx['bestand'][$mutterPaket]['id'] === (int) ($b['derivat_von_gp_id'] ?? 0);   // Alias-Schlüssel der Mutter (20.11.2026)
+            if ($mutterIo !== $mutterPaket && ! $gleicheMutter) {
                 $diff['derivat_von_gp_key'] = [$mutterIo, $mutterPaket];
             }
             $g['diff'] = $diff;

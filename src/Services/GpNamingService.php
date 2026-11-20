@@ -356,23 +356,53 @@ class GpNamingService
     public function gpKeyAusFeldern(string $hauptzutatSlug, array $in): string
     {
         $key = $this->buildGpKey($hauptzutatSlug, $in['processing'] ?? null, $in['form'] ?? null, $in['flavor'] ?? null, $in['zusatz'] ?? null);
+        $slot = $this->merkmalSlot($in, self::istDegeneriert($key));
+
+        return $slot === '' ? $key : $key . '|m-' . $slot;
+    }
+
+    /**
+     * Inhalt des Merkmal-Slots `|m-…` (ohne Präfix; leer = kein Slot).
+     *
+     * 20.11.2026 (Kurator/Dominique, Fall „Tomate: trocken, geschwefelt“ ⇄ „Tomate: konserviert, Pulpe / (Bio)“, beide „tomate||“): ist der
+     * Schlüssel degeneriert (ohne Verarbeitung, Form, Geschmack und Zusatz nur die Hauptzutat), trennen zusätzlich Zustand (§9), Pflichtangabe (§8)
+     * und Bio — sonst blockiert „Tomate: frisch“ die Anlage von „Tomate: TK“. NUR in diesem Fall: jeder andere Schlüssel bleibt exakt wie bisher
+     * (Paket-Import, Umhängen und Felder-Plan erkennen ihn weiter). Bestand: foodalchemist:gp-key-merkmale hängt denselben Slot an den alten Schlüssel.
+     */
+    public function merkmalSlot(array $in, bool $degeneriert): string
+    {
         $fett = [];
         foreach (['processing', 'form', 'pflichtangabe'] as $feld) {
             $fett = [...$fett, ...\Platform\FoodAlchemist\Support\FettAngabe::ziehe((string) ($in[$feld] ?? ''))[0]];
         }
         // 828 R1 (v3.10): ein Getränke-GP = Marke + Produkt + Gebinde + Füllmenge — Gebinde/Füllmenge/vol-% stehen in der Pflichtangabe und trennen am Schlüssel
         $wg = (string) ($in['warengruppe'] ?? $in['commodity_group_code'] ?? '');
-        $merkmale = array_filter([
+        $merkmale = array_values(array_filter([
             trim((string) ($in['portion'] ?? '')) !== '' ? $this->normalisierePortion((string) $in['portion']) : '',
             $wg === '15' ? trim((string) ($in['pflichtangabe'] ?? '')) : '',
             $wg === '15' && in_array($this->normalisiereZustand($in['condition'] ?? null), ['TK', 'frisch'], true) ? (string) $this->normalisiereZustand($in['condition']) : '',
             implode(' ', $fett),
             \Platform\FoodAlchemist\Support\GpNamensKlammern::land($in['herkunft_land'] ?? null),
             ! empty($in['msc']) ? 'msc' : (! empty($in['asc']) ? 'asc' : ''),
-        ], fn ($m) => $m !== '');
-        $slot = $this->slugify(implode(' ', $merkmale));
+        ], fn ($m) => $m !== ''));
+        if ($degeneriert) {
+            $zustand = (string) $this->normalisiereZustand($in['condition'] ?? null);
+            $pflicht = $wg === '15' ? '' : trim((string) (\Platform\FoodAlchemist\Support\FettAngabe::ziehe((string) ($in['pflichtangabe'] ?? ''))[1] ?? ($in['pflichtangabe'] ?? '')));
+            $merkmale = array_values(array_filter([
+                in_array($zustand, $merkmale, true) ? '' : $zustand,
+                $pflicht,
+                ! empty($in['bio']) ? 'bio' : '',
+                ...$merkmale,
+            ], fn ($m) => $m !== ''));
+        }
 
-        return $slot === '' ? $key : $key . '|m-' . $slot;
+        return $this->slugify(implode(' ', $merkmale));
+    }
+
+    /** Degenerierter Schlüssel: nur Hauptzutat, alle weiteren Segmente leer („tomate||“). */
+    public static function istDegeneriert(string $key): bool
+    {
+        return preg_match('/^[^|]+\|+$/', $key) === 1;
     }
 
     /** A2/A7: Eingangs-Normalisierung — Langform → kanonisch TK; sonst unverändert. */

@@ -28,7 +28,9 @@ it('kommt ohne !important aus und trägt die Regeln der früheren style-Blöcke'
     $css = preg_replace('#/\*.*?\*/#s', '', file_get_contents($basis.'/resources/css/foodalchemist-observatorium.css'));
     expect($css)->not->toContain('!important')
         ->and($css)->toContain('.fa-obs{')->and($css)->toContain('.fa-research-nav{')->and($css)->toContain('.fa-wett{')
-        ->and($css)->toContain('.fa-obs.fa-obs-is-handy{padding:16px}')->and($css)->toContain('.fa-obs .fa-obs-link{color:var(--obs-accent)}');
+        ->and($css)->toContain('.fa-obs.fa-obs-is-handy{padding:16px}')
+        // Markt-Diagramme (Warengruppen, Schere) skalieren mit der Breite: ohne Höchstbreite wird die SVG-Schrift auf dem Laptop riesig (20.11.2026)
+        ->and($css)->toContain('.fa-obs-markt-schere{display:block;width:100%;max-width:760px;')->and($css)->toContain('.fa-obs .fa-obs-link{color:var(--obs-accent)}');
 });
 
 it('bindet die Datei auf der Seite einmal per Link mit Cache-Schlüssel ein', function () {

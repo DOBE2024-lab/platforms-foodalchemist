@@ -14,6 +14,10 @@
         $meta = $snapshot['meta'] ?? [];
         $settings = $snapshot['settings'] ?? [];
         $tokens = $snapshot['resolved_design']['tokens'] ?? [];
+        // Pakete im Sprungmenü: Paket-Zeilen bekommen Anker (dieselbe Funktion wie die Navigation im Layout).
+        if (($tokens['nav_umfang'] ?? 'kapitel') === 'pakete') {
+            $content['sections'] = \Platform\FoodAlchemist\Support\PraesentationsPaketAnker::ankern($content['sections'] ?? []);
+        }
         // Kapitel-Auswahl: welche Kapitel ein Bereichs-Block zeigt — „übrige Kapitel“ lassen sie aus.
         $kapitelVergeben = \Platform\FoodAlchemist\Support\KapitelAuswahl::vergeben($layout, $content['sections'] ?? []);
     @endphp

@@ -74,7 +74,7 @@
             </div>
         @else
             @php($lineKind = $iKind === 'paket' ? 'paket' : 'dish')
-            <div class="pt-line pt-item pt-line--{{ $lineKind }} pt-indent-{{ $ind }} @if($showFotos && !empty($it['image']['url'])) pt-item--foto @endif">
+            <div @if(!empty($it['anker']))id="{{ $it['anker'] }}" @endif class="pt-line pt-item pt-line--{{ $lineKind }} pt-indent-{{ $ind }} @if($showFotos && !empty($it['image']['url'])) pt-item--foto @endif">
                 @if($showFotos && !empty($it['image']['url']))
                     <img class="pt-item-foto pt-zoomable" src="{{ $it['image']['url'] }}" alt="" loading="lazy">
                 @endif

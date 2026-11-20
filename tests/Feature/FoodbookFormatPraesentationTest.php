@@ -78,6 +78,45 @@ it('Interne Vorschau mit EK: die Edition im Format-Kapitel trägt ihren EK pro P
     expect(app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->editionen($this->format->fresh())[0])->not->toHaveKey('ek_pp');
 });
 
+it('Interne Vorschau mit EK: eingebettetes Paket zeigt seinen EK je Person, der Kundenlink nicht (2026-11-20)', function () {
+    $paket = \Platform\FoodAlchemist\Models\FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Italien', 'kind' => 'paket', 'status' => 'active',
+        'price_per_person_cache' => 7.0, 'ek_per_person_cache' => 2.1]);
+    $this->makeConceptSlot($this->edition, ['position' => 2, 'embedded_concept_id' => $paket->id]);
+    // Caches direkt setzen (ein leeres Paket rechnet beim Speichern seinen EK neu)
+    \Illuminate\Support\Facades\DB::table('foodalchemist_concepts')->where('id', $paket->id)->update(['price_per_person_cache' => 7.0, 'ek_per_person_cache' => 2.1]);
+
+    $zeile = fn (array $snap) => collect(collect(collect($snap['content']['sections'])->firstWhere('title', 'Taste and Fly')['blocks'])
+        ->firstWhere('kind', 'concept_ref')['items'])->firstWhere('kind', 'paket');
+    $intern = $zeile(app(PresentationService::class)->previewData($this->rootTeam, 'foodbook', $this->buch->id, null, true));
+    $kunde = $zeile(app(PresentationService::class)->previewData($this->rootTeam, 'foodbook', $this->buch->id));
+
+    expect($intern['label'])->toBe('Italien')->and($intern['price'])->toBe(7.0)->and($intern['ek'] ?? null)->toBe(2.1)
+        ->and($kunde)->not->toHaveKey('ek');
+    $html = view('foodalchemist::presentation.show', ['snapshot' => app(PresentationService::class)->previewData($this->rootTeam, 'foodbook', $this->buch->id, null, true)])->render();
+    expect($html)->toContain('EK 2,10 € · 30 %');
+});
+
+it('Sprungmenü: mit „Kapitel und Pakete“ führt es die Pakete als Unterpunkte mit Anker, ohne Option nicht (2026-11-20)', function () {
+    $paket = \Platform\FoodAlchemist\Models\FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Italien', 'kind' => 'paket', 'status' => 'active']);
+    $this->makeConceptSlot($this->edition, ['position' => 2, 'embedded_concept_id' => $paket->id]);
+    $snap = app(PresentationService::class)->previewData($this->rootTeam, 'foodbook', $this->buch->id);
+    $snap['resolved_design']['layout'] = [['block_type' => 'chapter_loop', 'style' => []]];
+    $anker = 'k' . $this->formatKapitel->id . '-p1';
+
+    $render = function (array $tokens) use ($snap) {
+        $snap['resolved_design']['tokens'] = $tokens + ($snap['resolved_design']['tokens'] ?? []);
+
+        return view('foodalchemist::presentation.show', ['snapshot' => $snap])->render();
+    };
+    $mit = $render(['nav' => 'anchor', 'nav_umfang' => 'pakete']);
+    expect($mit)->toContain('id="' . $anker . '"')
+        ->toMatch('/data-pt-navlink="' . $anker . '" class="pt-d1">Italien</');
+
+    $ohne = $render(['nav' => 'anchor', 'nav_umfang' => 'kapitel']);
+    expect($ohne)->not->toContain($anker);
+    expect(fn () => \Platform\FoodAlchemist\Support\PraesentationsDesignWerte::pruefe(['nav_umfang' => 'alles'], []))->toThrow('nav_umfang muss kapitel|pakete sein');
+});
+
 it('★ Präsentation im Editor (Vorschau-Route) und öffentlicher Link zeigen die Edition', function () {
     $this->get(route('foodalchemist.foodbooks.praesentation', $this->buch->id))
         ->assertOk()->assertSee('Lissabon Edition')->assertSee('Bacalhau mit Kichererbsen');

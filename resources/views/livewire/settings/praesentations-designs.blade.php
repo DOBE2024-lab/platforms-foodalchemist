@@ -389,6 +389,10 @@
                     <p class="{{ $hilfe }}">Alle Blöcke stehen auf einer gemeinsamen Kante. Am Handy nutzt die Seite automatisch die volle Breite.</p>
                 </div>
                 <x-fa::choice name="tokens.nav" label="Navigation" :options="['none' => 'Keine', 'anchor' => 'Sprungmenü (schwebend)', 'sidebar' => 'Seitenleiste links']" />
+                <div class="flex flex-col gap-1">
+                    <x-fa::choice name="tokens.nav_umfang" label="Im Menü" :options="['kapitel' => 'Nur Kapitel', 'pakete' => 'Kapitel und Pakete']" />
+                    <p class="{{ $hilfe }}">Mit Paketen springt das Menü auch zu „Italien“, „Deutschland“ usw. innerhalb eines Kapitels.</p>
+                </div>
                 <label class="{{ $hakenZeile }}">
                     <input type="checkbox" wire:model.live="tokens.lightbox" class="{{ $haken }}">
                     Bilder per Klick vergrößern

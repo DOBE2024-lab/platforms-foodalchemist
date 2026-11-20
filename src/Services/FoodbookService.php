@@ -1534,7 +1534,7 @@ class FoodbookService
             'chapters.blocks.concept.slots.dish:id,name,sales_wording_standard',
             'chapters.blocks.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
             // eingebettetes Paket (kind=paket-Concept) + dessen Gerichte für die Menü-Auflösung
-            'chapters.blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache',
+            'chapters.blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
             'chapters.blocks.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
             'chapters.blocks.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
             // E8.3: recipe_ref braucht sales_net/ek_total_eur für die €/Position-Preisspalte (blockPreis) — sonst rendert der Preis leer.
@@ -1545,7 +1545,7 @@ class FoodbookService
             'chapters.format.slots' => fn ($q) => $q->orderBy('position'),
             'chapters.format.slots.concept.slots.dish:id,name,sales_wording_standard',
             'chapters.format.slots.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-            'chapters.format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache',
+            'chapters.format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
             'chapters.format.slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
             'chapters.format.slots.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
             'crmCompany', 'crmContact',
@@ -1785,7 +1785,7 @@ class FoodbookService
                 'slots' => fn ($q) => $q->orderBy('position'),
                 'slots.dish:id,name,sales_wording_standard',
                 'slots.package.dishes.dish:id,name,sales_wording_standard',
-                'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache',
+                'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
                 'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
                 'slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
             ])

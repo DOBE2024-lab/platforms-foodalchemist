@@ -58,15 +58,18 @@
     $nav = $tokens['nav'] ?? 'none';
     $lightbox = ! empty($tokens['lightbox']);
     $navItems = [];
+    // Design-Wahl „Kapitel mit Paketen“ (nav_umfang=pakete, 2026-11-20): Pakete eines Kapitels als Unterpunkte.
+    $navPakete = ($tokens['nav_umfang'] ?? 'kapitel') === 'pakete';
     if ($nav !== 'none') {
-        foreach (($snapshot['content']['sections'] ?? []) as $i => $sec) {
+        $navSecs = $snapshot['content']['sections'] ?? [];
+        foreach (($navPakete ? \Platform\FoodAlchemist\Support\PraesentationsPaketAnker::ankern($navSecs) : $navSecs) as $i => $sec) {
             $t = trim((string) ($sec['title'] ?? ''));
             if ($t === '') { continue; }
-            $navItems[] = [
-                'id' => ! empty($sec['anker']) ? $sec['anker'] : 'pt-sec-' . $i,
-                'title' => $t,
-                'depth' => min((int) ($sec['depth'] ?? 0), 2),
-            ];
+            $tiefe = min((int) ($sec['depth'] ?? 0), 2);
+            $navItems[] = ['id' => ! empty($sec['anker']) ? $sec['anker'] : 'pt-sec-' . $i, 'title' => $t, 'depth' => $tiefe];
+            foreach ($navPakete ? \Platform\FoodAlchemist\Support\PraesentationsPaketAnker::unterpunkte($sec) : [] as $p) {
+                $navItems[] = $p + ['depth' => min($tiefe + 1, 2)];
+            }
         }
     }
     if (count($navItems) < 2) { $nav = 'none'; }
@@ -470,6 +473,7 @@
         .pt-item.pt-indent-2 { padding-left: 36px; }
         /* Semantische Zeilen (Angebot/Konzept): Paket = Stationszeile, Gericht = Unterzeile, Text-Block. */
         .pt-line--paket .pt-line-label { font-family: var(--pt-heading-font); font-weight: 600; }
+        .pt-line--paket[id] { scroll-margin-top: 28px; }   /* Sprung aus dem Menü landet nicht an der Kante */
         /* Fix 2026-11-19: Abstands-Hierarchie im Konzept. Vorher bekam die Gang-Überschrift viel Luft (70 % des Grundabstands)
            und die Paketzeile fast keine — „Deutschland“ klebte am Dessert davor. Jetzt: Paket = großer Absatz, Gang = kleiner,
            und die erste Gang-Überschrift hängt direkt am Paketnamen. */

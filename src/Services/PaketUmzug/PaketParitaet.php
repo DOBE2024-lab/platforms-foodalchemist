@@ -44,9 +44,12 @@ final class PaketParitaet
                 ['vk' => $this->zahl($alt->price_per_person), 'ek' => $this->zahl($alt->ek_per_person), 'modus' => $alt->price_mode],
                 ['vk' => $this->zahl($neu->price_per_person_manual ?? $neu->price_per_person_cache), 'ek' => $this->zahl($neu->ek_per_person_cache),
                     'modus' => $neu->price_mode]),
+            // Vollständigkeit mit ausweisen: das alte Paket meldet ein Gericht ohne VK als Lücke (vk null), das Concept rechnet es mit 0 €
             'preis_gerechnet' => $this->feld(
-                ['vk' => $this->zahl($vkAlt['vk_pro_person'] ?? null), 'ek' => $this->zahl($vkAlt['ek_pro_person'] ?? null)] + $this->fehler($vkAlt),
-                ['vk' => $this->zahl($vkNeu['summe_pro_person'] ?? null), 'ek' => $this->zahl($vkNeu['ek_per_person'] ?? null)] + $this->fehler($vkNeu)),
+                ['vk' => $this->zahl($vkAlt['vk_pro_person'] ?? null), 'ek' => $this->zahl($vkAlt['ek_pro_person'] ?? null),
+                    'vollstaendig' => (bool) ($vkAlt['vollstaendig'] ?? false)] + $this->fehler($vkAlt),
+                ['vk' => $this->zahl($vkNeu['summe_pro_person'] ?? null), 'ek' => $this->zahl($vkNeu['ek_per_person'] ?? null),
+                    'vollstaendig' => $this->cockpitVollstaendig($vkNeu)] + $this->fehler($vkNeu)),
             'allergene_diaet' => $this->feld($aAlt['allergene'] ?? $this->fehler($aAlt), $aNeu['allergene'] ?? $this->fehler($aNeu)),
             'naehrwerte' => $this->feld($aAlt['naehrwerte'] ?? $this->fehler($aAlt), $aNeu['naehrwerte'] ?? $this->fehler($aNeu)),
             'ek_arbeitszeit' => $this->feld(
@@ -65,6 +68,13 @@ final class PaketParitaet
                 ['ist_fassung' => (bool) $neu->ist_fassung, 'fassung_von_id' => $neu->fassung_von_id, 'kopie_von_id' => $neu->kopie_von_id ?? null]),
             'historische_referenzen' => $this->referenzen($alt, $neu),
         ];
+    }
+
+    /** Concept-Cockpit vollständig: kein leerer Slot, keine EK-Lücke, kein Gericht mit 0 € VK. */
+    private function cockpitVollstaendig(array $c): bool
+    {
+        return isset($c['zeilen']) && ! ($c['hat_leer'] ?? false) && ! ($c['hat_ek_luecke'] ?? false)
+            && collect($c['zeilen'])->every(fn ($z) => ($z['type'] ?? '') !== 'gericht' || (float) ($z['price'] ?? 0) > 0);
     }
 
     /** Alle Felder ok? */

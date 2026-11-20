@@ -14,7 +14,8 @@ use Platform\FoodAlchemist\Models\Scopes\TeamSicht;
  * diesem Gefäß rechnet das Zubehör mit, jedes Teil mit SEINEM Preis und SEINER Kostenart ({@see GefaessKostenartService}, gleiche Logik wie das Gefäß;
  * die Kosten rechnet {@see DarreichungService::gefaessZubehoerKosten}). Kein Zubehör = Verhalten exakt wie bisher.
  *
- *  - Team-Scope wie die Kostenart: es gilt die Liste des eigenen Teams, sonst die des nächsten Oberteams bis zur Kundengrenze. Ändert ein
+ *  - Team-Scope wie die Kostenart: es gilt die Liste des eigenen Teams, sonst die des nächsten Oberteams bis zur Kundengrenze, danach die des
+ *    Master-Teams für Mandanten mit Stamm-Paket ({@see kette}, 20.11.2026). Ändert ein
  *    Unter-Team eine geerbte Liste, wird sie zuerst ins eigene Team übernommen (Kopie), dann geändert. Gelöschte Zeilen bleiben als Markierung:
  *    wer alles entfernt, hat eine eigene leere Liste und erbt nicht wieder. {@see zuruecksetzen} holt die Vorgabe des Oberteams zurück.
  *  - Eine Ebene: Zubehör hat kein eigenes Zubehör und ein Gefäß mit Zubehör ist nicht selbst Zubehör (keine Zyklen, kein Selbstbezug).
@@ -51,7 +52,7 @@ class GefaessZubehoerService
         if ($gefaessGpIds === []) {
             return [];
         }
-        $kette = TeamSicht::gekappt(FoodAlchemistGp::teamAncestryIds($team));
+        $kette = self::kette($team);
         $zeilen = DB::table(self::TABELLE.' as z')->leftJoin('foodalchemist_gps as g', 'g.id', '=', 'z.zubehoer_gp_id')
             ->whereIn('z.gefaess_gp_id', $gefaessGpIds)->whereIn('z.team_id', $kette)
             ->orderBy('z.position')->orderBy('z.id')
@@ -151,6 +152,24 @@ class GefaessZubehoerService
         return array_keys($gefaesse);
     }
 
+    /**
+     * Teams, deren Liste für dieses Team gilt — in Vorrang-Reihenfolge: eigene Kette bis zur Kundengrenze, danach das Master-Team, wenn der
+     * Mandant das Stamm-Paket gebucht hat (Dominique 20.11.2026: was der Master am Gefäß pflegt, gilt für alle Kunden mit Paket; jeder Kunde
+     * kann für sich überschreiben). Der Master steht HINTER der eigenen Kette, damit eine Kundenliste die Vorgabe des Masters immer schlägt.
+     *
+     * @return list<int>
+     */
+    public static function kette(Team $team): array
+    {
+        $kette = TeamSicht::gekappt(FoodAlchemistGp::teamAncestryIds($team));
+        $master = \Platform\FoodAlchemist\Support\MasterTeam::id();
+        if ($master !== null && ! in_array($master, $kette, true) && \Platform\FoodAlchemist\Support\StammPaket::istFreigeschaltet($team)) {
+            $kette[] = $master;
+        }
+
+        return array_values(array_map('intval', $kette));
+    }
+
     /** Menge normalisieren: Zahl (Komma erlaubt) > 0, sonst Fehler. */
     public static function pruefeMenge(mixed $menge): float
     {
@@ -180,7 +199,7 @@ class GefaessZubehoerService
         if ($this->liste((int) $zubehoer->id, $team)['zeilen'] !== []) {
             throw new \RuntimeException('„'.$zubehoer->name.'“ hat selbst Zubehör und kann deshalb kein Zubehör sein (nur eine Ebene).');
         }
-        $kette = TeamSicht::gekappt(FoodAlchemistGp::teamAncestryIds($team));
+        $kette = self::kette($team);
         if (DB::table(self::TABELLE)->where('zubehoer_gp_id', $gefaess->id)->whereIn('team_id', $kette)->whereNull('deleted_at')->exists()) {
             throw new \RuntimeException('„'.$gefaess->name.'“ ist selbst Zubehör eines anderen Gefäßes und bekommt kein eigenes Zubehör (nur eine Ebene).');
         }

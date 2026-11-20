@@ -85,6 +85,7 @@ return [
     \Platform\FoodAlchemist\Console\LieferantenGruppenVorschlagenCommand::class,
     \Platform\FoodAlchemist\Console\MarkenEinspielenCommand::class,   // GP-Regelwerk v3.7.1 §5 Ausnahme 3
     \Platform\FoodAlchemist\Console\MarktdatenAbrufenCommand::class,   // Markt in Zahlen monatlich (07.11.2026)
+    \Platform\FoodAlchemist\Console\MasterGpsStammHebenCommand::class,   // Master-GPs in den Stamm (20.11.2026)
     \Platform\FoodAlchemist\Console\NectaAbgleichCommand::class,   // Necta-Abgleich: nächtlich + wöchentlich (PR 2)
     \Platform\FoodAlchemist\Console\NonFoodEinrichtenCommand::class,
     \Platform\FoodAlchemist\Console\NonFoodErkennenCommand::class,

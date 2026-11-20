@@ -24,10 +24,13 @@ it('★ Plattform-Modus: das Kiosk-Layout enthält den fa-assets-Link auf das Mo
         ->toContain('data-foodalchemist-kiosk-layout');
 });
 
-it('eigenständig: kein Modul-CSS-Link (der Host baut das CSS selbst über @vite)', function () {
+it('eigenständig: kein Modul-CSS-Link (der Host baut das CSS selbst über @vite), nur die Text-Rollen (1.4a)', function () {
     config(['foodalchemist.shell' => 'eigenstaendig']);
 
-    expect(($this->kiosk)())->not->toContain('data-fa-modul-css')->not->toContain('/_platform/fa-assets/');
+    $html = ($this->kiosk)();
+
+    expect($html)->not->toContain('data-fa-modul-css')->not->toContain('/_platform/fa-assets/foodalchemist.css')
+        ->toContain('/_platform/fa-assets/foodalchemist-text.css');
 });
 
 it('die fa-assets-Route liefert das CSS aus', function () {

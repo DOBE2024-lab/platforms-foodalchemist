@@ -21,7 +21,7 @@
 @endphp
 
 <div data-ctrl-geld-signale class="flex flex-col gap-3">
-    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+    <p class="fa-t-muted max-w-[75ch]">
         Offene Befunde, die Geld kosten: Preissprünge, veraltete Preise, Marge und Wareneinsatz über Ziel.
         Ein Klick öffnet die Signale, dort werden sie erledigt oder verworfen.
     </p>
@@ -46,7 +46,7 @@
                wire:navigate
                class="flex items-center justify-between gap-3 min-w-0 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2.5 transition-colors duration-150 hover:bg-[var(--fa-hover)]"
                data-ctrl-geld-signal="{{ $z['typ'] }}">
-                <span class="min-w-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $z['label'] }}</span>
+                <span class="min-w-0 fa-t-body">{{ $z['label'] }}</span>
                 <span class="flex items-center gap-2 shrink-0">
                     @if($z['anzahl'] > 0)
                         <x-fa::badge tone="warn">{{ number_format($z['anzahl'], 0, ',', '.') }} offen</x-fa::badge>

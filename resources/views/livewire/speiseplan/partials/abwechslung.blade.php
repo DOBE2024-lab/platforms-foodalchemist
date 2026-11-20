@@ -1,6 +1,6 @@
 {{-- Spec 59: Karte „Abwechslung der Woche“ in der rechten Spalte: Vorgaben des Plans (ist/mind./höchstens + Status)
      über den Ist-Zahlen (Diät je Gericht, Hauptgruppen). Erwartet: $ab (SpeiseplanService::wochenAbwechslung),
-     $mahlzeiten und die Seitenklassen des Editors ($karte, $etikett, $leise). Rechnet NICHTS.
+     $mahlzeiten und die Seitenklassen des Editors ($karte, $etikett). Rechnet NICHTS.
      Hervorheben: jeder Eintrag ist ein Knopf und setzt den Alpine-Zustand `markiert` (Eintrag-Ids) im
      Eltern-Scope des Editors; die Zellen im Wochen-Raster reagieren per :class (Akzent-Ring). Zweiter Klick
      hebt auf. Rein clientseitig, kein Server-Roundtrip. --}}
@@ -25,7 +25,7 @@
 
     @if(! empty($ab['vorgaben']))
         <div class="flex flex-col gap-0.5 pb-2 border-b border-[var(--fa-line)]" data-sp-abwechslung-vorgaben>
-            <span class="{{ $leise }}">Vorgaben</span>
+            <span class="fa-t-muted">Vorgaben</span>
             @foreach($ab['vorgaben'] as $v)
                 @php
                     $key = 'v:' . $v['chip_id'] . ':' . ($v['mahlzeit'] ?? 'alle');
@@ -89,5 +89,5 @@
         </div>
     @endif
     @if($ab['hinweis'])<x-fa::signal tone="warn">{{ $ab['hinweis'] }}</x-fa::signal>@endif
-    <p class="{{ $leise }}">Klick auf einen Eintrag hebt die Gerichte im Kalender hervor.</p>
+    <p class="fa-t-muted">Klick auf einen Eintrag hebt die Gerichte im Kalender hervor.</p>
 </div>

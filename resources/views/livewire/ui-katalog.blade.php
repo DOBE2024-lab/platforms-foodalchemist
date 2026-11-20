@@ -38,7 +38,7 @@
                     <div class="flex flex-col gap-1.5">
                         <div class="h-14 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)]" style="background: var({{ $token }})"></div>
                         <span class="text-[length:var(--fa-text-md)] font-medium">{{ $name }}</span>
-                        <code class="font-mono text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $token }}</code>
+                        <code class="font-mono fa-t-muted">{{ $token }}</code>
                     </div>
                 @endforeach
             </div>
@@ -49,7 +49,7 @@
                 @foreach($schrift as [$token, $info, $beispiel])
                     <div class="flex items-baseline justify-between gap-4 py-2.5">
                         <span style="font-size: var({{ $token }})" class="{{ in_array($token, ['--fa-text-3xl', '--fa-text-2xl', '--fa-text-lg']) ? 'font-semibold tracking-tight' : '' }} truncate">{{ $beispiel }}</span>
-                        <span class="shrink-0 font-mono text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $info }}</span>
+                        <span class="shrink-0 font-mono fa-t-muted">{{ $info }}</span>
                     </div>
                 @endforeach
             </div>
@@ -107,7 +107,7 @@
                 <x-fa::choice name="kreativModus" label="Kreativ-Modus (Einfachauswahl)" :options="['frei' => 'Frei', 'voll' => 'Voll kreativ', 'nah' => 'Nah am Bestand', 'nur_bestand' => 'Nur Bestand']" />
                 <x-fa::choice name="diaeten" multiple label="Diät (Mehrfachauswahl)" :options="['vegan' => 'Vegan', 'vegetarisch' => 'Vegetarisch', 'glutenfrei' => 'Glutenfrei', 'laktosefrei' => 'Laktosefrei', 'halal' => 'Halal']" />
             </div>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Gewählt: {{ $kreativModus }} · {{ implode(', ', $diaeten) ?: 'keine Diät' }}</p>
+            <p class="fa-t-muted">Gewählt: {{ $kreativModus }} · {{ implode(', ', $diaeten) ?: 'keine Diät' }}</p>
         </x-fa::section>
 
         <div class="grid gap-8 lg:grid-cols-2">

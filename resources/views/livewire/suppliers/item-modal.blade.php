@@ -43,7 +43,6 @@
     $datum = fn ($wert) => $wert ? \Illuminate\Support\Carbon::parse($wert)->format('d.m.Y') : null;
     $proEinheitOk = $item !== null && (float) $item->qty > 0 && in_array($item->unit_code, ['kg', 'l', 'Stk'], true);
 
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $zeilenLabel = 'text-[length:var(--fa-text-md)] text-[var(--fa-ink)] min-w-0';
     $segment = 'h-7 px-2.5 text-[length:var(--fa-text-sm)] font-medium transition-colors duration-150 disabled:cursor-not-allowed';
     $segmentAus = 'text-[var(--fa-ink-3)]' . ($darfEdit ? ' hover:bg-[var(--fa-hover)] hover:text-[var(--fa-ink)]' : '');
@@ -64,7 +63,7 @@
             <x-slot:actions>
                 <div class="flex w-full flex-wrap items-center gap-2 min-w-0">
                     @if($darfEdit)
-                        <p class="{{ $leise }} min-w-0">Speichern sichert Stammdaten, Verpackung und Eigenschaften.</p>
+                        <p class="fa-t-muted min-w-0">Speichern sichert Stammdaten, Verpackung und Eigenschaften.</p>
                         {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung --}}
                         <div class="ml-auto">
                             <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
@@ -164,14 +163,14 @@
 
                     @if($gpVorschlaege !== [])
                         <div class="flex flex-col gap-1" data-gp-vorschlaege>
-                            <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Vorschläge, Klick ordnet zu</p>
+                            <p class="fa-t-label">Vorschläge, Klick ordnet zu</p>
                             <div class="flex flex-col divide-y divide-[var(--fa-line)] rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                                 @foreach($gpVorschlaege as $v)
                                     <button type="button" wire:key="gpv-{{ $v['gp_id'] }}" wire:click="gpZuweisen({{ $v['gp_id'] }})"
                                             class="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-[var(--fa-hover)] transition-colors duration-150" data-gp-vorschlag>
                                         <x-fa::badge :tone="$v['score'] >= 90 ? 'ok' : 'warn'" class="shrink-0 tabular-nums">{{ $v['score'] }} %</x-fa::badge>
-                                        <span class="min-w-0 flex-1 break-words text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $v['name'] }}</span>
-                                        @if($v['grund'] !== '')<span class="shrink-0 {{ $leise }}">{{ $grundText($v['grund']) }}</span>@endif
+                                        <span class="min-w-0 flex-1 break-words fa-t-body">{{ $v['name'] }}</span>
+                                        @if($v['grund'] !== '')<span class="shrink-0 fa-t-muted">{{ $grundText($v['grund']) }}</span>@endif
                                     </button>
                                 @endforeach
                             </div>
@@ -179,7 +178,7 @@
                     @endif
 
                     <div class="flex flex-col gap-1.5" data-gp-zuweisen>
-                        <label for="la-gp-suche" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+                        <label for="la-gp-suche" class="fa-t-label">
                             {{ $item->structure?->gp ? 'Anderem Grundprodukt zuordnen' : 'Grundprodukt suchen und zuordnen' }}
                         </label>
                         <div class="relative">
@@ -191,14 +190,14 @@
                             <div class="flex flex-col divide-y divide-[var(--fa-line)] rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                                 @foreach($gpKandidaten as $kandidat)
                                     <button type="button" wire:key="gpk-{{ $kandidat->id }}" wire:click="gpZuweisen({{ $kandidat->id }})"
-                                            class="flex items-center gap-2 w-full px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] transition-colors duration-150">
+                                            class="flex items-center gap-2 w-full px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)] transition-colors duration-150">
                                         @svg('heroicon-o-cube', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                                         <span class="min-w-0 break-words">{{ $kandidat->name }}</span>
                                     </button>
                                 @endforeach
                             </div>
                         @elseif(trim($gpSuche) !== '')
-                            <p class="{{ $leise }}">Kein Grundprodukt mit diesem Namen gefunden.</p>
+                            <p class="fa-t-muted">Kein Grundprodukt mit diesem Namen gefunden.</p>
                         @endif
                     </div>
                 </x-fa::section>
@@ -217,11 +216,11 @@
                     </x-slot:actions>
 
                     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)] px-3 py-2.5" data-ek-aktuell>
-                        <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Gültiger Einkaufspreis</span>
-                        <span class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]"><x-fa::money :value="$aktivPreis" /></span>
-                        <span class="{{ $leise }}">je {{ $bestellEinheit }}</span>
+                        <span class="fa-t-label">Gültiger Einkaufspreis</span>
+                        <span class="fa-t-h2"><x-fa::money :value="$aktivPreis" /></span>
+                        <span class="fa-t-muted">je {{ $bestellEinheit }}</span>
                         @if($vergleichspreis !== null)
-                            <span class="{{ $leise }}">entspricht <x-fa::money :value="$vergleichspreis['value']" :per="$einheitKurz($vergleichspreis['unit'])" /></span>
+                            <span class="fa-t-muted">entspricht <x-fa::money :value="$vergleichspreis['value']" :per="$einheitKurz($vergleichspreis['unit'])" /></span>
                         @elseif($aktivPreis !== null)
                             <x-fa::signal tone="warn" title="Ohne Inhalt und Kalkulationseinheit kein Preis je kg, l oder Stück">Menge fehlt für den Preis je kg</x-fa::signal>
                         @endif
@@ -249,7 +248,7 @@
                             <div class="flex flex-col gap-1">
                                 <x-fa::button wire:click="preisAnlegen" icon="heroicon-m-plus">Preis anlegen</x-fa::button>
                             </div>
-                            <p class="basis-full {{ $leise }}">Der bisher gültige Preis endet mit dem neuen Eintrag.</p>
+                            <p class="basis-full fa-t-muted">Der bisher gültige Preis endet mit dem neuen Eintrag.</p>
                         </div>
                         <div x-show="neuOffen" x-cloak class="flex flex-wrap items-end gap-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3" data-aktion-neu>
                             <x-fa::field label="Aktionspreis (€, netto)" for="la-aktion-preis" class="w-40">
@@ -264,7 +263,7 @@
                             <div class="flex flex-col gap-1">
                                 <x-fa::button wire:click="aktionAnlegen" icon="heroicon-m-plus" data-aktion-anlegen>Aktion anlegen</x-fa::button>
                             </div>
-                            <p class="basis-full {{ $leise }}">Eine Aktion ist ein Hinweis; die Kalkulation rechnet weiter mit dem Einkaufspreis. Entfernen über „Frühere Preise“ (ausblenden).</p>
+                            <p class="basis-full fa-t-muted">Eine Aktion ist ein Hinweis; die Kalkulation rechnet weiter mit dem Einkaufspreis. Entfernen über „Frühere Preise“ (ausblenden).</p>
                         </div>
                     @endif
 
@@ -366,16 +365,16 @@
                         <div class="flex flex-wrap items-center gap-2" data-allergen-kopf>
                             <x-fa::badge :tone="$allergenQuelle === 'manual' ? 'ok' : 'neutral'">{{ $quelleText($allergenQuelle) }}</x-fa::badge>
                             @if(($allergenAngenommen ?? []) !== [])
-                                <span class="{{ $leise }}" data-allergen-annahme>Lieferant liefert nur Positivangaben: ohne Angabe gilt {{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ANZEIGE }}.</span>
+                                <span class="fa-t-muted" data-allergen-annahme>Lieferant liefert nur Positivangaben: ohne Angabe gilt {{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ANZEIGE }}.</span>
                             @else
-                                <span class="{{ $leise }}">Ohne Angabe heißt unbekannt, nicht frei von.</span>
+                                <span class="fa-t-muted">Ohne Angabe heißt unbekannt, nicht frei von.</span>
                             @endif
                         </div>
                         <div class="flex flex-col divide-y divide-[var(--fa-line)]" x-data="{ werte: $wire.entangle('allergene') }" data-tri-state>
                             @foreach($allergenLabels as $key => $lbl)
                                 <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-1.5" data-tri-row="{{ $key }}">
                                     <span class="{{ $zeilenLabel }}">{{ $lbl }}@if(in_array($key, $allergenAngenommen ?? [], true))
-                                        <span class="{{ $leise }}" x-show="(werte['{{ $key }}'] ?? 'unbekannt') === 'unbekannt'" data-angenommen="{{ $key }}" title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}">· {{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ANZEIGE }}</span>@endif</span>
+                                        <span class="fa-t-muted" x-show="(werte['{{ $key }}'] ?? 'unbekannt') === 'unbekannt'" data-angenommen="{{ $key }}" title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}">· {{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ANZEIGE }}</span>@endif</span>
                                     <div class="inline-flex shrink-0 overflow-hidden rounded-[var(--fa-radius-control)] border border-[var(--fa-line-strong)] divide-x divide-[var(--fa-line-strong)]" role="group" aria-label="{{ $lbl }}">
                                         @foreach($allergenKnoepfe as $wert => [$text, $titel, $an])
                                             <button type="button" title="{{ $titel }}" @disabled(! $darfEdit)
@@ -394,7 +393,7 @@
                     <x-fa::section title="Zusatzstoffe" icon="heroicon-o-beaker" :meta="count($deklarationLabels) . ' kennzeichnungspflichtige Stoffe'">
                         <div class="flex flex-wrap items-center gap-2" data-deklaration-kopf>
                             <x-fa::badge :tone="$deklarationQuelle === 'manual' ? 'ok' : 'neutral'">{{ $quelleText($deklarationQuelle) }}</x-fa::badge>
-                            <span class="{{ $leise }}">Ohne Angabe heißt unbekannt.</span>
+                            <span class="fa-t-muted">Ohne Angabe heißt unbekannt.</span>
                         </div>
                         <div class="flex flex-col divide-y divide-[var(--fa-line)]" x-data="{ dekl: $wire.entangle('deklarationen') }" data-deklarationen>
                             @foreach($deklarationLabels as $stoff => $lbl)
@@ -438,7 +437,7 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3" data-naehrwerte>
                         @foreach($naehrwertFelder as $feld => $meta)
                             <div class="flex flex-col gap-1.5 min-w-0">
-                                <label for="la-naehr-{{ $feld }}" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ $meta[0] }} <span class="font-normal text-[var(--fa-ink-3)]">in {{ $meta[1] }}</span></label>
+                                <label for="la-naehr-{{ $feld }}" class="fa-t-label">{{ $meta[0] }} <span class="font-normal text-[var(--fa-ink-3)]">in {{ $meta[1] }}</span></label>
                                 <input id="la-naehr-{{ $feld }}" type="text" inputmode="decimal" wire:model="naehrwerte.{{ $feld }}" placeholder="keine Angabe"
                                        @disabled(! $darfEdit) class="fa-control h-9 text-[length:var(--fa-text-md)] text-right tabular-nums" data-naehr-{{ $feld }} />
                             </div>
@@ -513,7 +512,7 @@
                                         :options="['tag' => 'je Tag', 'veranstaltung' => 'je Veranstaltung']" :disabled="! $darfEdit" data-la-mietdauer />
                                 </x-fa::field>
                                 @if($item->structure?->gp?->masseText())
-                                    <p class="{{ $leise }} sm:col-span-2" data-la-masse>Maße vom Grundprodukt: <span class="text-[var(--fa-ink)]">{{ $item->structure->gp->masseText() }}</span></p>
+                                    <p class="fa-t-muted sm:col-span-2" data-la-masse>Maße vom Grundprodukt: <span class="text-[var(--fa-ink)]">{{ $item->structure->gp->masseText() }}</span></p>
                                 @endif
                             </div>
                         @endif
@@ -552,7 +551,7 @@
                             <x-fa::input id="la-organic-control" wire:model="eigenschaften.organic_control_number" :disabled="! $darfEdit" />
                         </x-fa::field>
                         <div class="flex flex-col gap-1.5 min-w-0" data-vorbestellung>
-                            <label for="la-is-preorder" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Vorbestellung</label>
+                            <label for="la-is-preorder" class="fa-t-label">Vorbestellung</label>
                             <div class="flex gap-2">
                                 <x-fa::select id="la-is-preorder" wire:model="eigenschaften.is_preorder" placeholder="keine Angabe"
                                     :options="['1' => 'nötig', '0' => 'nicht nötig']" :disabled="! $darfEdit" class="flex-1 min-w-0" />
@@ -573,7 +572,7 @@
                             </x-fa::field>
                         @endif
                         @if($item?->nonfood)
-                            <div class="{{ $leise }} self-end pb-2" data-nonfood-herkunft>
+                            <div class="fa-t-muted self-end pb-2" data-nonfood-herkunft>
                                 @if($item->nonfood->pruefung_offen)<x-fa::badge tone="warn">Bitte prüfen</x-fa::badge>@endif
                                 {{ match($item->nonfood->quelle) { 'manuell' => 'von Hand', 'ki' => 'von der KI erkannt', default => 'nach Regel erkannt' } }}@if($item->nonfood->begruendung): {{ $item->nonfood->begruendung }}@endif
                             </div>

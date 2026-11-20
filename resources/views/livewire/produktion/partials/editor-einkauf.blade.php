@@ -12,7 +12,7 @@
                 @endphp
                 <x-fa::section title="Status" icon="heroicon-o-arrow-path">
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="{{ $leise }}">Aktuell</span>
+                        <span class="fa-t-muted">Aktuell</span>
                         <x-fa::badge :tone="$statusTon[$aktuellerStatus->badgeVariant()] ?? 'neutral'" class="mr-2">{{ ucfirst($ops['status_label']) }}</x-fa::badge>
                         @foreach($erlaubteStatus as $z)
                             <x-fa::button wire:click="setStatus('{{ $z->value }}')" wire:key="estatus-{{ $z->value }}"
@@ -50,7 +50,7 @@
                             @if($linkedOrder['cancellation_mailto'])
                                 <x-fa::button size="sm" variant="danger" icon="heroicon-o-envelope" :href="$linkedOrder['cancellation_mailto']">{{ $linkedOrder['cancellation_kind'] === 'partial' ? 'Änderung' : 'Storno' }} an {{ $linkedOrder['supplier'] }}</x-fa::button>
                             @else
-                                <span class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] cursor-not-allowed" title="Beim Lieferanten fehlt die Bestell-E-Mail">@svg('heroicon-o-envelope', 'w-3.5 h-3.5') {{ $linkedOrder['supplier'] }}: E-Mail fehlt</span>
+                                <span class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--fa-radius-control)] fa-t-muted cursor-not-allowed" title="Beim Lieferanten fehlt die Bestell-E-Mail">@svg('heroicon-o-envelope', 'w-3.5 h-3.5') {{ $linkedOrder['supplier'] }}: E-Mail fehlt</span>
                             @endif
                         @endforeach
                     </div>
@@ -58,7 +58,7 @@
 
                 @if($verknuepfteOrders->isNotEmpty())
                     <div class="flex flex-col gap-1.5">
-                        <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Bestellungen aus diesem Auftrag</p>
+                        <p class="fa-t-label">Bestellungen aus diesem Auftrag</p>
                         <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-1.5">
                             @foreach($verknuepfteOrders as $o)
                                 <a href="{{ route('foodalchemist.orders.index', ['o' => $o->id]) }}" wire:key="pbest-{{ $o->id }}"
@@ -73,7 +73,7 @@
                         </div>
                     </div>
                 @elseif($ops['procurement_released_at'])
-                    <p class="{{ $leise }}">Im Bestellwesen noch nicht verplant.</p>
+                    <p class="fa-t-muted">Im Bestellwesen noch nicht verplant.</p>
                 @endif
             </x-fa::section>
         @endif

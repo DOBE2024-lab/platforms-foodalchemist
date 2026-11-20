@@ -56,19 +56,19 @@
                 title="Früher von Hand gepflegt. Dient nur noch als letzte Rückfalllösung." />
         </x-fa::field>
     </div>
-    <p class="-mt-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Volumen geht vor den Maßen, weil GN-Behälter konisch sind. Der Nutzfaktor ist der Anteil, der real befüllt wird.</p>
+    <p class="-mt-2 fa-t-muted">Volumen geht vor den Maßen, weil GN-Behälter konisch sind. Der Nutzfaktor ist der Anteil, der real befüllt wird.</p>
 
     <div class="flex flex-wrap items-start gap-x-8 gap-y-3">
         <div class="flex flex-col gap-1.5">
             <x-fa::choice :name="$praefix . '.eignung'" label="Freigegeben für" :multiple="true" :live="false" :options="$zweckOptionen" />
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Nichts gewählt heißt: nicht gepflegt, keine Einschränkung.</p>
+            <p class="fa-t-muted">Nichts gewählt heißt: nicht gepflegt, keine Einschränkung.</p>
         </div>
 
         <div class="flex flex-col gap-1.5">
-            <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] cursor-pointer">
+            <label class="inline-flex items-center gap-2 fa-t-body cursor-pointer">
                 <input type="checkbox" wire:model.live="{{ $praefix }}.ist_traeger" class="rounded accent-[var(--fa-accent)]" />Träger
             </label>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Nimmt Füllbehälter auf und wird selbst nicht befüllt.</p>
+            <p class="fa-t-muted">Nimmt Füllbehälter auf und wird selbst nicht befüllt.</p>
             @if(! empty($f['ist_traeger']))
                 <div class="flex flex-wrap items-end gap-3">
                     <x-fa::field label="Plätze" for="{{ $fid }}-plaetze" class="w-24">

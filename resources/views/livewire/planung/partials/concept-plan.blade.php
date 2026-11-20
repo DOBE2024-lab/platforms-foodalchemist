@@ -13,7 +13,7 @@
                 wire:click="$dispatch('concepter-editor.oeffnen', { type: 'concepts', id: {{ (int) $planConceptId }}, startTab: 'konzept' })">Im Conceptor bearbeiten</x-fa::button>
         </x-slot:actions>
 
-        <p class="mb-3 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-2xl">Leitidee, Vorteil und Inszenierung fließen als Vorgabe in die Erstellung. Was du hier änderst, steuert das Ergebnis.</p>
+        <p class="mb-3 fa-t-muted max-w-2xl">Leitidee, Vorteil und Inszenierung fließen als Vorgabe in die Erstellung. Was du hier änderst, steuert das Ergebnis.</p>
 
         {{-- Semantik-Felder, bearbeitbar. „Plan-Text speichern" schreibt in die concept.plan-Canvas
              (= der Kontext, der beim Erstellen in die Gerichte fließt). --}}
@@ -38,7 +38,7 @@
         {{-- Geschmackswelten (nur Anzeige; fein eingestellt wird im Conceptor). --}}
         @if($pv['geschmackswelten'] !== [])
             <div class="mt-4 flex flex-col gap-1.5">
-                <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Geschmackswelten</p>
+                <p class="fa-t-label">Geschmackswelten</p>
                 <div class="flex flex-wrap gap-1.5">
                     @foreach($pv['geschmackswelten'] as $welt)
                         <x-fa::badge title="{{ $welt['meta']['description'] ?? '' }}">{{ $welt['value'] }}</x-fa::badge>

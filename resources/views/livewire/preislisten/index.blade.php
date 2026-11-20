@@ -1,7 +1,6 @@
 {{-- Spec 82 §3 / Schritt 4d, Stufe 2 — Preislisten: hochladen, Spalten zuordnen, abgleichen, Prüfliste.
      Dieser Schirm gleicht nur ab. Preise werden erst von der Schreib-Schicht (Teampreis) geschrieben. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $ton = ['treffer' => 'ok', 'ohne_treffer' => 'warn', 'mehrdeutig' => 'warn', 'lieferant_unbekannt' => 'warn', 'fehler' => 'crit', 'doppelt' => 'neutral'];
     $text = ['treffer' => 'Treffer', 'ohne_treffer' => 'Kein Treffer', 'mehrdeutig' => 'Mehrdeutig', 'lieferant_unbekannt' => 'Lieferant unbekannt', 'fehler' => 'Fehler', 'doppelt' => 'Doppelt'];
 @endphp
@@ -21,10 +20,10 @@
                 @if($xlsxVorlage)
                     <x-fa::button size="sm" variant="ghost" icon="heroicon-o-table-cells" wire:click="vorlageXlsx" data-preisliste-vorlage-xlsx>Vorlage (Excel)</x-fa::button>
                 @else
-                    <span class="{{ $leise }}" data-preisliste-vorlage-nur-csv>Die Excel-Vorlage ist auf diesem Server nicht verfügbar, bitte die CSV-Vorlage nehmen.</span>
+                    <span class="fa-t-muted" data-preisliste-vorlage-nur-csv>Die Excel-Vorlage ist auf diesem Server nicht verfügbar, bitte die CSV-Vorlage nehmen.</span>
                 @endif
             </div>
-            <p class="{{ $leise }} pt-2" data-preisliste-vorlage-hinweis>{{ $vorlageHinweis }}</p>
+            <p class="fa-t-muted pt-2" data-preisliste-vorlage-hinweis>{{ $vorlageHinweis }}</p>
             {{-- Meine Artikel als Liste (08.11.2026): alle sichtbaren Artikel mit Artikelnummer und EAN, Preis = eigener Preis oder leer — ausfüllen und oben wieder hochladen --}}
             <div class="flex flex-wrap items-center gap-2 pt-4 border-t border-[var(--fa-line)] mt-3" data-preisliste-artikelliste>
                 <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink)]">Meine Artikel als Liste</span>
@@ -38,7 +37,7 @@
                 <x-fa::button size="sm" variant="ghost" icon="heroicon-o-document-text" wire:click="artikelListeCsv" data-preisliste-artikelliste-csv>CSV</x-fa::button>
                 @if($xlsxVorlage)<x-fa::button size="sm" variant="ghost" icon="heroicon-o-table-cells" wire:click="artikelListeXlsx" data-preisliste-artikelliste-xlsx>Excel</x-fa::button>@endif
             </div>
-            <p class="{{ $leise }} pt-1">Alle Artikel, die du siehst, mit Artikelnummer und EAN. Trag deine Preise ein und lade die Datei oben wieder hoch: leere Preise werden übersprungen, unveränderte nicht doppelt gespeichert.</p>
+            <p class="fa-t-muted pt-1">Alle Artikel, die du siehst, mit Artikelnummer und EAN. Trag deine Preise ein und lade die Datei oben wieder hoch: leere Preise werden übersprungen, unveränderte nicht doppelt gespeichert.</p>
         </x-fa::section>
 
         <livewire:foodalchemist.preislisten.stammdaten-import />
@@ -60,12 +59,12 @@
                         </x-fa::select>
                     </x-fa::field>
                 </div>
-                <div wire:loading wire:target="datei" class="{{ $leise }} pt-2">Datei wird gelesen …</div>
+                <div wire:loading wire:target="datei" class="fa-t-muted pt-2">Datei wird gelesen …</div>
 
                 @if($vorschau)
                     <div class="pt-4" data-preisliste-zuordnung>
-                        <h4 class="mb-1 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Spalten zuordnen</h4>
-                        <p class="{{ $leise }} mb-2">{{ $vorschau['zeilen'] }} Zeilen erkannt. Pflicht sind der Preis und die Artikelnummer oder die EAN.</p>
+                        <h4 class="mb-1 fa-t-strong">Spalten zuordnen</h4>
+                        <p class="fa-t-muted mb-2">{{ $vorschau['zeilen'] }} Zeilen erkannt. Pflicht sind der Preis und die Artikelnummer oder die EAN.</p>
                         <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(16rem,1fr))]">
                             @foreach($felder as $feld => $label)
                                 <x-fa::field :label="$label" for="pl-z-{{ $feld }}" wire:key="pl-z-{{ $feld }}">
@@ -121,7 +120,7 @@
         @if($lauf && $lauf->status === \Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun::STATUS_ZUORDNUNG_NOETIG)
             {{-- 1c: eigene Datei ohne erkannte Pflichtspalten — dieselbe Zuordnung wie beim Stammdaten-Import, hier für die Preisliste (UI-/MCP-Gleichstand). --}}
             <x-fa::section title="Zuordnung nötig: {{ $lauf->filename }}" icon="heroicon-o-arrows-right-left" data-preisliste-zuordnung-noetig>
-                <p class="{{ $leise }} mb-3">{{ $lauf->mapping['grund'] ?? 'Die Spalten wurden nicht erkannt.' }} Ordne die Felder den Spalten deiner Datei zu; Pflicht sind der Preis und die Artikelnummer oder die EAN.</p>
+                <p class="fa-t-muted mb-3">{{ $lauf->mapping['grund'] ?? 'Die Spalten wurden nicht erkannt.' }} Ordne die Felder den Spalten deiner Datei zu; Pflicht sind der Preis und die Artikelnummer oder die EAN.</p>
                 <div class="grid gap-2 grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(16rem,1fr))]">
                     @foreach($felder as $feld => $label)
                         <x-fa::field :label="$label" for="pl-zn-{{ $feld }}" wire:key="pl-zn-{{ $feld }}">
@@ -170,13 +169,13 @@
                                         <td>{{ $z->article_number ?? $z->ean }}</td>
                                         <td>{{ $z->designation }}</td>
                                         <td class="text-right tabular-nums">{{ $z->price !== null ? number_format((float) $z->price, 2, ',', '.') : '' }}</td>
-                                        <td class="{{ $leise }}">{{ $z->reason }}</td>
+                                        <td class="fa-t-muted">{{ $z->reason }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-                    @if($pruefliste->count() >= 500)<p class="{{ $leise }} pt-2">Gezeigt werden die ersten 500 Zeilen. Die CSV enthält alle.</p>@endif
+                    @if($pruefliste->count() >= 500)<p class="fa-t-muted pt-2">Gezeigt werden die ersten 500 Zeilen. Die CSV enthält alle.</p>@endif
                 @endif
             </x-fa::section>
         @endif

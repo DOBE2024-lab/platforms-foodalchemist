@@ -14,17 +14,17 @@
 
 <div class="mt-1 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] border border-[var(--fa-line)] px-3 py-2.5 flex flex-col gap-2.5" wire:key="pool-{{ $stepId }}" data-foto-pool>
     <div class="flex items-center gap-2">
-        <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+        <p class="fa-t-label">
             {{ $stepId === 0 ? 'Rezept-Fotos' : 'Foto für diesen Schritt wählen' }}
         </p>
         <x-fa::button size="sm" variant="ghost" class="ml-auto" wire:click="poolOeffnen({{ $stepId }})">Schließen</x-fa::button>
     </div>
 
     @if($pool->isEmpty())
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Fotos. Unten hochladen.</p>
+        <p class="fa-t-muted">Noch keine Fotos. Unten hochladen.</p>
     @else
         @if($stepId !== 0)
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Klick auf ein Foto hängt es an diesen Schritt oder löst es wieder.</p>
+            <p class="fa-t-muted">Klick auf ein Foto hängt es an diesen Schritt oder löst es wieder.</p>
         @endif
         <div class="flex flex-wrap gap-2.5">
             @foreach($pool as $foto)

@@ -12,10 +12,10 @@
         @forelse($vorlagen as $v)
             <label wire:key="kfv-{{ $v->id }}" class="inline-flex items-start gap-2 py-0.5">
                 <input type="checkbox" value="{{ $v->id }}" wire:model="vorlageAuswahl" class="mt-1 accent-[var(--fa-accent)]" data-kf-vorlage="{{ $v->id }}" />
-                <span>{{ $v->bezeichnung }} <span class="{{ $leise }}">· {{ $kategorieNamen[$v->kategorie] ?? $v->kategorie }} · EK {{ $euro($v->ek_satz) }}</span></span>
+                <span>{{ $v->bezeichnung }} <span class="fa-t-muted">· {{ $kategorieNamen[$v->kategorie] ?? $v->kategorie }} · EK {{ $euro($v->ek_satz) }}</span></span>
             </label>
         @empty
-            <p class="{{ $leise }}">Noch keine Vorlagen. Unter Konfiguratoren → Leistungs-Vorlagen anlegen.</p>
+            <p class="fa-t-muted">Noch keine Vorlagen. Unter Konfiguratoren → Leistungs-Vorlagen anlegen.</p>
         @endforelse
     </div>
     <div class="flex flex-wrap items-end gap-2">
@@ -56,7 +56,7 @@
     @if($kid === 0 || $zeilen->isNotEmpty())
         <x-fa::section :title="$kid === 0 ? 'Grundausstattung' : 'Zusatz: ' . ($konzeptOptionen[$kid] ?? $kid)" icon="heroicon-o-wrench-screwdriver" :meta="$zeilen->count()" wire:key="kflg-{{ $kid }}">
             @if($zeilen->isEmpty())
-                <p class="{{ $leise }}">Noch keine Leistungen. Oben aus Vorlagen übernehmen oder frei anlegen.</p>
+                <p class="fa-t-muted">Noch keine Leistungen. Oben aus Vorlagen übernehmen oder frei anlegen.</p>
             @else
                 <table class="fa-table fa-table--compact">
                     <thead><tr><th>Leistung</th><th>Menge</th><th>Preis je</th><th class="num">EK</th><th class="num">VK</th><th></th></tr></thead>
@@ -65,9 +65,9 @@
                             <tr wire:key="kfl-{{ $l->id }}" data-kf-leistung="{{ $l->id }}">
                                 <td>
                                     <span class="font-medium">{{ $l->bezeichnung }}</span>
-                                    <span class="{{ $leise }}">· {{ $kategorieNamen[$l->kategorie] ?? $l->kategorie }}</span>
+                                    <span class="fa-t-muted">· {{ $kategorieNamen[$l->kategorie] ?? $l->kategorie }}</span>
                                     @if($l->gilt_fuer && $l->gilt_fuer !== 'beide')<x-fa::badge class="ml-1">{{ $l->gilt_fuer === 'lunch' ? 'Lunch' : 'Dinner' }}</x-fa::badge>@endif
-                                    @if($l->ersetzt_leistung_id)<div class="{{ $leise }}">ersetzt {{ optional($grund->firstWhere('id', $l->ersetzt_leistung_id))->bezeichnung }}</div>@endif
+                                    @if($l->ersetzt_leistung_id)<div class="fa-t-muted">ersetzt {{ optional($grund->firstWhere('id', $l->ersetzt_leistung_id))->bezeichnung }}</div>@endif
                                     @if(in_array($l->id, $geaendert, true))
                                         <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-path" wire:click="vorlageAbgleich({{ $l->id }})">Vorlage geändert, übernehmen</x-fa::button>
                                     @endif

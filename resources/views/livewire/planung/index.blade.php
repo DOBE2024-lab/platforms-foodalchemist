@@ -384,7 +384,7 @@
                                     @forelse($spaltenSessions as $s)
                                         @include('foodalchemist::livewire.planung.partials.board-karte', ['s' => $s])
                                     @empty
-                                        <p class="px-1 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Keine Planung</p>
+                                        <p class="px-1 py-2 fa-t-muted">Keine Planung</p>
                                     @endforelse
                                 </div>
                             </section>
@@ -860,7 +860,7 @@
                 @if($handy)@include('foodalchemist::livewire.planung.partials.worker-praesenz')@endif
                 <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] px-4 py-3 shadow-lg shadow-black/20" data-planung-erstellen-leiste>
                     <div class="flex-1 min-w-[16rem] flex flex-col gap-1">
-                        <p class="flex flex-wrap items-center gap-2 text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">
+                        <p class="flex flex-wrap items-center gap-2 fa-t-h3">
                             @svg('heroicon-o-squares-2x2', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Concept erstellen
                             @if($conceptTitel !== '')<x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit($conceptTitel, 32) }}</x-fa::badge>@endif
                         </p>
@@ -870,7 +870,7 @@
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-1" data-planung-plan-bereit>
                                 <x-fa::signal tone="ok" icon="heroicon-m-check-badge">Geprüfter Plan liegt vor, die Erstellung verwendet ihn.</x-fa::signal>
                                 <button type="button" wire:click="planVerwerfen" @disabled($laeuft)
-                                        class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)] underline underline-offset-2 hover:text-[var(--fa-ink)] disabled:opacity-50">Plan verwerfen</button>
+                                        class="fa-t-label underline underline-offset-2 hover:text-[var(--fa-ink)] disabled:opacity-50">Plan verwerfen</button>
                             </div>
                         @else
                             {{-- DF-2: direkter Weg (sekundär), ohne vorab ausgearbeiteten Plan. --}}
@@ -959,7 +959,7 @@
                             <div class="flex flex-col gap-3">
                                 <p class="{{ $hinweisText }} max-w-2xl">Einen oder mehrere Impulse wählen, zum Beispiel einen Trend mit einem Hype und zwei Fundstücken. Daraus entsteht ein Briefing für Basisrezept, Gericht oder Concept.</p>
                                 <x-fa::input type="search" wire:model.live.debounce.300ms="trendSuche" placeholder="Trends und Fundstücke durchsuchen" aria-label="Trendradar durchsuchen" />
-                                <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Trends und Hypes</p>
+                                <p class="fa-t-label">Trends und Hypes</p>
                                 <div class="flex flex-col max-h-[40vh] overflow-y-auto -mx-1 px-1" data-trend-kandidaten>
                                     @forelse($trendKandidaten as $t)
                                         <label class="{{ $trZeile }}" wire:key="ptk-{{ $t->id }}">
@@ -978,7 +978,7 @@
                                         <p class="{{ $hinweisText }}">Keine Trends gefunden.</p>
                                     @endforelse
                                 </div>
-                                <p class="pt-2 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Inspirationen</p>
+                                <p class="pt-2 fa-t-label">Inspirationen</p>
                                 <div class="grid gap-2 grid-cols-[repeat(auto-fill,minmax(min(100%,12rem),1fr))] max-h-[40vh] overflow-y-auto" data-fund-kandidaten>
                                     @forelse($fundKandidaten as $eintrag)
                                         @php $insp = $eintrag['i']; @endphp
@@ -1002,7 +1002,7 @@
                             <div class="flex flex-col gap-3">
                                 @if($trendMeldung)<x-fa::signal tone="crit" data-trend-meldung>{{ $trendMeldung }}</x-fa::signal>@endif
                                 @if($trendVorschau)
-                                    <div class="whitespace-pre-line text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink)] fa-surface p-3" data-trend-vorschau>{{ $trendVorschau }}</div>
+                                    <div class="whitespace-pre-line fa-t-body leading-relaxed fa-surface p-3" data-trend-vorschau>{{ $trendVorschau }}</div>
                                     <p class="{{ $hinweisText }}">Übernehmen schreibt das Briefing in den gewählten Reiter. Dort Leitplanken setzen und wie gewohnt starten.</p>
                                     <div class="flex flex-wrap gap-2">
                                         <x-fa::button variant="primary" icon="heroicon-m-arrow-right" wire:click="trendradarUebernehmen('gericht')" data-trend-uebernehmen="gericht">Als Gericht</x-fa::button>
@@ -1066,7 +1066,7 @@
                             <div class="max-h-64 overflow-y-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] divide-y divide-[var(--fa-line)]">
                                 @forelse($composerBrowse['items'] as $it)
                                     <button type="button" wire:key="cbrowse-{{ $it['id'] }}" wire:click="composerAdd({{ $it['id'] }})"
-                                            class="w-full flex items-center gap-2 px-2.5 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
+                                            class="w-full flex items-center gap-2 px-2.5 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
                                         @php
                                             // Spec 60: ★★★ harmoniert · Kontrast deckt einen offenen Bedarf · Konflikt stört sich
                                             $punkt = ['stern3' => ['#fcd34d', '★★★ harmoniert'], 'kontrast' => ['#22d3ee', 'Kontrast: deckt einen offenen Bedarf'],
@@ -1078,7 +1078,7 @@
                                               title="{{ ($punkt[1] ?? 'kein Bezug zur Auswahl').$auch }}"></span>
                                         <span class="flex-1 truncate">{{ $it['label'] }}</span>
                                         @if($it['category'])
-                                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] shrink-0">{{ $it['category'] }}</span>
+                                            <span class="fa-t-muted shrink-0">{{ $it['category'] }}</span>
                                         @endif
                                         @svg('heroicon-m-plus', 'w-4 h-4 shrink-0 text-[var(--fa-accent)]')
                                     </button>

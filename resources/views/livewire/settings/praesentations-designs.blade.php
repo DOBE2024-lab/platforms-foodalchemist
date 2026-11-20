@@ -62,7 +62,7 @@
                     @endforelse
                 </div>
                 <div class="flex flex-col gap-1.5 pt-3 border-t border-[var(--fa-line)]">
-                    <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Neu aus Vorlage</p>
+                    <p class="fa-t-label">Neu aus Vorlage</p>
                     <div class="flex flex-wrap gap-1.5">
                         <x-fa::button size="sm" href="#" x-on:click.prevent="" wire:click="neuAusBuiltin('editorial')">Editorial</x-fa::button>
                         <x-fa::button size="sm" href="#" x-on:click.prevent="" wire:click="neuAusBuiltin('angebot')">Angebot</x-fa::button>
@@ -244,11 +244,11 @@
                             </x-fa::field>
                             <x-fa::choice name="layout.{{ $i }}.style.chapter_image_fit" label="Kapitelbild"
                                 :options="['auto' => 'Automatisch', 'fotoband' => 'Fotoband', 'ganz' => 'Ganz zeigen']" />
-                            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Fotoband füllt die Breite und schneidet zu. Ganz zeigen lässt das Bild unbeschnitten an der linken Textkante, gut für Logos und Grafiken. Automatisch zeigt transparente Bilder ganz, Fotos als Fotoband.</p>
+                            <p class="fa-t-muted">Fotoband füllt die Breite und schneidet zu. Ganz zeigen lässt das Bild unbeschnitten an der linken Textkante, gut für Logos und Grafiken. Automatisch zeigt transparente Bilder ganz, Fotos als Fotoband.</p>
                             <label class="{{ $hakenZeile }}"><input type="checkbox" wire:model.live="layout.{{ $i }}.style.show_chapter_logo" class="{{ $haken }}"> Logo je Kapitel zeigen</label>
                             <x-fa::choice name="layout.{{ $i }}.style.chapter_logo_position" label="Kapitel-Logo"
                                 :options="['unten' => 'Unten im Kapitel', 'oben' => 'Über dem Kapiteltitel']" />
-                            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Das Logo lädst du im Kapitel selbst hoch: im Foodbook, im Angebot oder in der Speisekarten-Rubrik.</p>
+                            <p class="fa-t-muted">Das Logo lädst du im Kapitel selbst hoch: im Foodbook, im Angebot oder in der Speisekarten-Rubrik.</p>
                         @endif
                     @elseif($bt === 'cover')
                         <div class="flex flex-col gap-2">
@@ -261,8 +261,8 @@
                         @php $ovVal = isset($sb['style']['overlay']) && is_numeric($sb['style']['overlay']) ? (int) $sb['style']['overlay'] : null; @endphp
                         <div class="flex flex-col gap-1.5">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Titelbild abdunkeln</span>
-                                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $ovVal === null ? 'Standard' : $ovVal . ' %' }}</span>
+                                <span class="fa-t-label">Titelbild abdunkeln</span>
+                                <span class="fa-t-muted tabular-nums">{{ $ovVal === null ? 'Standard' : $ovVal . ' %' }}</span>
                             </div>
                             <input type="range" min="0" max="60" step="5" value="{{ $ovVal ?? 35 }}"
                                    @change="$wire.stilSetzen({{ $i }}, 'overlay', parseInt($event.target.value))"
@@ -279,8 +279,8 @@
                         @endphp
                         <div class="flex flex-col gap-1.5">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Titelbild-Höhe</span>
-                                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $chVh }} % der Bildschirmhöhe</span>
+                                <span class="fa-t-label">Titelbild-Höhe</span>
+                                <span class="fa-t-muted tabular-nums">{{ $chVh }} % der Bildschirmhöhe</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <input type="range" min="10" max="100" step="1" value="{{ $chVh }}"
@@ -291,7 +291,7 @@
                                        class="fa-control h-9 w-20 text-right tabular-nums text-[length:var(--fa-text-md)]" aria-label="Titelbild-Höhe in Prozent" data-fa-cover-height-num>
                             </div>
                             <div class="flex flex-wrap items-center gap-2 mt-1">
-                                <label for="design-cover-max" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Höchstens</label>
+                                <label for="design-cover-max" class="fa-t-label">Höchstens</label>
                                 <input id="design-cover-max" type="number" min="120" max="2000" step="10" placeholder="ohne Grenze"
                                        value="{{ $sb['style']['cover_height_max_px'] ?? '' }}"
                                        @change="$wire.stilSetzen({{ $i }}, 'cover_height_max_px', $event.target.value === '' ? null : parseInt($event.target.value))"
@@ -305,7 +305,7 @@
                         </x-fa::field>
                     @elseif($bt === 'image')
                         <div class="flex flex-col gap-1.5">
-                            <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Bild</span>
+                            <span class="fa-t-label">Bild</span>
                             <div class="flex items-center gap-3 flex-wrap">
                                 @if($blockImageUrl)
                                     <img src="{{ $blockImageUrl }}" alt="" class="h-12 w-20 object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">

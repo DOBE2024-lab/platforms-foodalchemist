@@ -1,6 +1,5 @@
 {{-- Spec 75b · Reiter Abgleich: Triple Match je Bestellzeile, schwerste und teuerste Fälle oben. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $zahl = fn ($v) => $v === null ? '–' : (rtrim(rtrim(number_format((float) $v, 2, ',', '.'), '0'), ',') ?: '0');
     $ton = ['ok' => 'ok', 'offen' => 'neutral', 'menge' => 'crit', 'preis' => 'warn', 'nicht_geliefert' => 'crit', 'nicht_berechnet' => 'warn', 'zu_wenig' => 'warn', 'zu_viel' => 'info'];
 @endphp
@@ -37,7 +36,7 @@
                         @foreach($zeilen as $z)
                             <tr wire:key="ab-{{ $z['order_line_id'] }}" data-ab-zeile="{{ $z['order_line_id'] }}" data-ab-status="{{ $z['status'] }}">
                                 <td><x-fa::badge :tone="$ton[$z['status']] ?? 'neutral'">{{ $z['label'] }}</x-fa::badge></td>
-                                <td>{{ $z['lieferant'] }}<span class="{{ $leise }}"> · {{ $z['nummer'] }}@if($z['rechnungen'] !== []) · RE {{ implode(', ', $z['rechnungen']) }}@endif</span></td>
+                                <td>{{ $z['lieferant'] }}<span class="fa-t-muted"> · {{ $z['nummer'] }}@if($z['rechnungen'] !== []) · RE {{ implode(', ', $z['rechnungen']) }}@endif</span></td>
                                 <td class="font-medium">{{ $z['designation'] }}</td>
                                 <td class="text-right tabular-nums">{{ $zahl($z['bestellt']) }}</td>
                                 <td class="text-right tabular-nums {{ $z['ls'] !== 'ok' && $z['ls'] !== 'offen' ? 'text-[var(--fa-warn)]' : '' }}">{{ $zahl($z['geliefert']) }}</td>

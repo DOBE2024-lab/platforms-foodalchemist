@@ -16,7 +16,7 @@
         <div class="flex flex-wrap items-center gap-2">
             @if($sQuelle === 'ki')
                 <x-fa::badge tone="ok" icon="heroicon-m-sparkles">Von der KI bewertet, gegart</x-fa::badge>
-                @if(($sensorik['confidence'] ?? null) !== null)<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">Sicherheit {{ number_format((float) $sensorik['confidence'] * 100, 0, ',', '.') }} %</span>@endif
+                @if(($sensorik['confidence'] ?? null) !== null)<span class="fa-t-muted tabular-nums">Sicherheit {{ number_format((float) $sensorik['confidence'] * 100, 0, ',', '.') }} %</span>@endif
             @elseif($sQuelle === 'manual')
                 <x-fa::badge tone="info" icon="heroicon-m-pencil">Von Hand gesetzt, gegart</x-fa::badge>
             @elseif($sQuelle === 'gp')
@@ -34,11 +34,11 @@
                             $gpQuelleText .= ', Sicherheit ' . number_format($gpProfil['confidence'] * 100, 0, ',', '.') . ' %';
                         }
                     @endphp
-                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-gp-profil-quelle="{{ $gpProfil['quelle'] }}">{{ $gpQuelleText }}</span>
+                    <span class="fa-t-muted" data-gp-profil-quelle="{{ $gpProfil['quelle'] }}">{{ $gpQuelleText }}</span>
                 @endif
             @else
                 <x-fa::badge tone="warn">Aus den Rohzutaten geschätzt</x-fa::badge>
-                @if(isset($sensorik['abdeckung']))<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $sensorik['abdeckung']['mit'] }} von {{ $sensorik['abdeckung']['gesamt'] }} Grundprodukten mit Daten, noch nicht von der KI bewertet</span>@endif
+                @if(isset($sensorik['abdeckung']))<span class="fa-t-muted tabular-nums">{{ $sensorik['abdeckung']['mit'] }} von {{ $sensorik['abdeckung']['gesamt'] }} Grundprodukten mit Daten, noch nicht von der KI bewertet</span>@endif
             @endif
         </div>
         @if(($sensorik['reasoning'] ?? null) !== null && $sQuelle === 'ki')
@@ -83,12 +83,12 @@
                 <div class="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4 content-start">
                     <div class="flex flex-col gap-3">
                         @if($sQuelle === 'gp')
-                            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Die Fläche zeigt den Geschmack des Grundprodukts, wie es eingekauft wird, je Achse von 0 bis 1.</p>
+                            <p class="fa-t-muted">Die Fläche zeigt den Geschmack des Grundprodukts, wie es eingekauft wird, je Achse von 0 bis 1.</p>
                             @if($gpProfil['fehlt'])
                                 <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" data-gp-profil-fehlt-text>Das Profil ist noch nicht bewertet. Süß, salzig und fettig zeigen vorläufig den Wert aus den Nährwerten, die übrigen Achsen stehen auf 0.</p>
                             @endif
                         @else
-                            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Die Fläche zeigt den Geschmack nach dem Garen je Achse von 0 bis 1. Zeigen auf eine Achse nennt zusätzlich den Wert der Aroma-Anker.</p>
+                            <p class="fa-t-muted">Die Fläche zeigt den Geschmack nach dem Garen je Achse von 0 bis 1. Zeigen auf eine Achse nennt zusätzlich den Wert der Aroma-Anker.</p>
                         @endif
                         {{-- Grundlage (29.10.2026): die Achsenwerte zeigen die WAHRNEHMUNG; die Nährwerte stehen als Fakt daneben. --}}
                         @if(count($sensorik['erdung'] ?? []))
@@ -106,11 +106,11 @@
                                         </li>
                                     @endforeach
                                 </ul>
-                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Die Werte beschreiben, wie es schmeckt, nicht wie viel drin ist: Zucker überdeckt zum Beispiel Salz.</p>
+                                <p class="fa-t-muted">Die Werte beschreiben, wie es schmeckt, nicht wie viel drin ist: Zucker überdeckt zum Beispiel Salz.</p>
                             </div>
                         @endif
                         @if($sensorik['hinweis'] ?? null)
-                            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-sensorik-hinweis>Vorläufig, {{ $sensorik['hinweis'] }}: noch keine KI-Bewertung des gegarten Rezepts.</p>
+                            <p class="fa-t-muted" data-sensorik-hinweis>Vorläufig, {{ $sensorik['hinweis'] }}: noch keine KI-Bewertung des gegarten Rezepts.</p>
                         @endif
                         @if(count($sensorik['dominant']) || count($sensorik['luecken']))
                             <div class="flex flex-wrap gap-1.5">
@@ -120,13 +120,13 @@
                             </div>
                         @endif
                         <div class="flex flex-col gap-1.5 pt-3 border-t border-[var(--fa-line)]">
-                            <h4 class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Textur</h4>
+                            <h4 class="fa-t-label">Textur</h4>
                             @if(count($sensorik['textur']))
                                 <div class="flex flex-wrap gap-1.5">
                                     @foreach($sensorik['textur'] as $t)<x-fa::badge>{{ $t['label'] }}</x-fa::badge>@endforeach
                                 </div>
                             @else
-                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Keine Textur-Daten.</p>
+                                <p class="fa-t-muted">Keine Textur-Daten.</p>
                             @endif
                             @if($sensorik['monotonie'])
                                 <x-fa::signal tone="warn">{{ $sensorik['monotonie'] }}</x-fa::signal>

@@ -58,7 +58,7 @@
                             <div wire:key="vkhg-{{ $hg->id }}">
                                 <x-foodalchemist::filter-row wire:click="waehleHauptgruppe({{ $hg->id }})"
                                     :active="$hauptgruppe === $hg->id" :child-active="$klasse !== null"
-                                    :count="$hgCounts[$hg->id] ?? 0" title="{{ $hg->code }} · {{ $hg->label }}"><span class="inline-block w-9 font-mono text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $hg->code }}</span>{{ $hg->label }}</x-foodalchemist::filter-row>
+                                    :count="$hgCounts[$hg->id] ?? 0" title="{{ $hg->code }} · {{ $hg->label }}"><span class="inline-block w-9 font-mono fa-t-muted">{{ $hg->code }}</span>{{ $hg->label }}</x-foodalchemist::filter-row>
                                 @if($hauptgruppe === $hg->id)
                                     <x-foodalchemist::filter-ast data-vk-klassen-ast>
                                         @foreach($klassen as $k)
@@ -119,7 +119,7 @@
             </x-slot:actions>
         </x-fa::page-header>
 
-        <p class="-mt-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[80ch]">
+        <p class="-mt-2 fa-t-muted max-w-[80ch]">
             Der Verkaufspreis ergibt sich aus dem Materialeinsatz der Darreichung, dem Grundaufschlag des Unternehmens und dem Faktor der Speisen-Klasse.
         </p>
 

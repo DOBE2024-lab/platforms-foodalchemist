@@ -93,7 +93,7 @@
     {{-- Kennzahlen: VK/Person ist die Hauptzahl --}}
     <div class="flex flex-col gap-3" data-fb-detail-kpis>
         <x-fa::kpis :items="$kpis" />
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">
+        <p class="fa-t-muted tabular-nums">
             {{ $kapitelN }} Kapitel, davon {{ $fertigN }} fertig
         </p>
         @if($offen !== [])
@@ -120,7 +120,7 @@
                         @endphp
                         <li wire:key="fb-detail-kap-{{ $k['kapitel_id'] }}" class="flex items-center justify-between gap-3 py-1.5 border-b border-[var(--fa-line)] last:border-0" style="padding-left: {{ ($k['depth'] ?? 0) * 12 }}px">
                             <span class="min-w-0">
-                                <span class="block text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words">{{ $k['titel'] }}</span>
+                                <span class="block fa-t-body break-words">{{ $k['titel'] }}</span>
                                 <span class="mt-0.5 flex flex-wrap items-center gap-1.5">
                                     <x-fa::badge :tone="$fortTon[$k['fortschritt']] ?? 'neutral'" title="Fortschritt">{{ $fortLabel[$k['fortschritt']] ?? 'Offen' }}</x-fa::badge>
                                     @if(! empty($k['is_struktur']))
@@ -128,15 +128,15 @@
                                     @elseif(empty($k['hat_inhalt']))
                                         <x-fa::badge tone="warn">leer</x-fa::badge>
                                     @else
-                                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $k['positionen_count'] }} {{ $k['positionen_count'] === 1 ? 'Position' : 'Positionen' }}</span>
+                                        <span class="fa-t-muted tabular-nums">{{ $k['positionen_count'] }} {{ $k['positionen_count'] === 1 ? 'Position' : 'Positionen' }}</span>
                                     @endif
                                 </span>
                             </span>
                             @if(empty($k['is_struktur']) && ! empty($k['hat_inhalt']))
                                 @if($kVk > 0)
-                                    <x-fa::money :value="$kVk" per="Person" class="shrink-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" />
+                                    <x-fa::money :value="$kVk" per="Person" class="shrink-0 fa-t-body" />
                                 @elseif($kPauschal > 0)
-                                    <span class="shrink-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] tabular-nums" title="Pauschalpreis">{{ $euro($kPauschal) }} <span class="text-[var(--fa-ink-3)]">pauschal</span></span>
+                                    <span class="shrink-0 fa-t-body tabular-nums" title="Pauschalpreis">{{ $euro($kPauschal) }} <span class="text-[var(--fa-ink-3)]">pauschal</span></span>
                                 @else
                                     <x-fa::money :value="null" class="shrink-0" />
                                 @endif

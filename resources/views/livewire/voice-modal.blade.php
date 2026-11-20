@@ -25,7 +25,6 @@
     $knopfKlein = $knopfBasis . ' h-7 px-2.5 text-[length:var(--fa-text-sm)] bg-[var(--fa-surface)] text-[var(--fa-ink)] border border-[var(--fa-line-strong)] hover:bg-[var(--fa-hover)]';
     $knopfLeise = $knopfBasis . ' h-7 px-2.5 text-[length:var(--fa-text-sm)] bg-transparent text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)] hover:text-[var(--fa-ink)]';
     $chip = 'inline-flex items-center h-7 px-2.5 rounded-full border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] hover:border-[var(--fa-accent)] hover:text-[var(--fa-accent)] transition-colors';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $status = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]';
     $statusAktiv = 'inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-accent)]';
     $vorschlag = 'flex flex-col gap-1.5 rounded-[var(--fa-radius-control)] border border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)] px-3 py-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]';
@@ -48,7 +47,7 @@
         <span class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">
             @svg('heroicon-o-microphone', 'w-[18px] h-[18px] text-[var(--fa-ink-3)]')
             Sprachbefehl
-            <span class="font-normal {{ $leise }}">sprechen oder tippen</span>
+            <span class="font-normal fa-t-muted">sprechen oder tippen</span>
         </span>
         <span class="text-[var(--fa-ink-3)] transition-transform" x-bind:class="aufgeklappt ? 'rotate-180' : ''">@svg('heroicon-m-chevron-down', 'w-4 h-4')</span>
     </button>
@@ -61,7 +60,7 @@
                 Spracherkennung: {{ ['openai' => 'OpenAI', 'assemblyai' => 'AssemblyAI', 'fake' => 'Testtext', 'none' => 'nicht eingerichtet'][$provider] ?? $provider }}
             </x-fa::badge>
             <a href="{{ route('foodalchemist.einstellungen') }}" wire:navigate
-               class="inline-flex items-center gap-1 h-[22px] px-2 rounded-full bg-[var(--fa-neutral-soft)] text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)] hover:text-[var(--fa-accent)]"
+               class="inline-flex items-center gap-1 h-[22px] px-2 rounded-full bg-[var(--fa-neutral-soft)] fa-t-label hover:text-[var(--fa-accent)]"
                data-voice-modus title="In den Einstellungen ändern">
                 Modus: {{ \Platform\FoodAlchemist\Livewire\Settings\Ki::MODUS_LABEL[$agentModus] ?? $agentModus }}
                 @svg('heroicon-m-cog-6-tooth', 'w-3.5 h-3.5')
@@ -198,7 +197,7 @@
                         <span x-show="! (laeuft || hochladenLaeuft || fallbackAktiv || $wire.sprichtGerade)">@svg('heroicon-m-microphone', 'w-4 h-4')</span>
                         <span x-text="(laeuft || hochladenLaeuft || fallbackAktiv || $wire.sprichtGerade) ? 'Stopp' : 'Aufnahme starten'"></span>
                     </button>
-                    <span class="min-w-0 flex-1 {{ $leise }}">Kurz sprechen, z. B. »Suche BBQ-Sauce«, »Öffne Rezept …« oder »Öffne die Planung«.</span>
+                    <span class="min-w-0 flex-1 fa-t-muted">Kurz sprechen, z. B. »Suche BBQ-Sauce«, »Öffne Rezept …« oder »Öffne die Planung«.</span>
                 </div>
                 <x-fa::signal tone="warn" x-show="! unterstuetzt" x-cloak data-voice-nicht-unterstuetzt>
                     Dieser Browser kann keine Sprache aufnehmen. Befehl bitte tippen.
@@ -273,9 +272,9 @@
         @if($ergebnis !== null)
             <div class="flex flex-col gap-2 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] border border-[var(--fa-line)] px-3 py-2.5" data-voice-ergebnis>
                 @if($ergebnis['text'] !== null)
-                    <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $ergebnis['text'] }}</p>
+                    <p class="fa-t-body">{{ $ergebnis['text'] }}</p>
                 @endif
-                <p class="{{ $leise }} tabular-nums" title="{{ $ergebnis['runden'] }} Durchläufe, {{ count($ergebnis['tool_laeufe']) }} Abfragen">Antwort in {{ number_format($ergebnis['elapsed_ms'] / 1000, 1, ',', '.') }} s</p>
+                <p class="fa-t-muted tabular-nums" title="{{ $ergebnis['runden'] }} Durchläufe, {{ count($ergebnis['tool_laeufe']) }} Abfragen">Antwort in {{ number_format($ergebnis['elapsed_ms'] / 1000, 1, ',', '.') }} s</p>
 
                 {{-- Aufgabe 6: mehrere Öffnen-Treffer — nur der erste navigiert,
                      der Rest bekommt hier einen Link (aktionZiel() in VoiceModal befüllt ihn). --}}
@@ -298,7 +297,7 @@
                         <div class="{{ $vorschlag }}" wire:key="vp-{{ $i }}" data-voice-proposal>
                             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
                                 <span>Speisen-Klasse: <span class="font-semibold">{{ $p['klasse_name'] ?? 'kein Treffer' }}</span></span>
-                                <span class="{{ $leise }} tabular-nums">{{ round(($p['confidence'] ?? 0) * 100) }} % sicher</span>
+                                <span class="fa-t-muted tabular-nums">{{ round(($p['confidence'] ?? 0) * 100) }} % sicher</span>
                                 @if($p['accepted'] ?? false)
                                     <x-fa::badge tone="ok" icon="heroicon-m-check" data-voice-proposal-auto="{{ $agentModus === 'auto_sicher' ? '1' : '0' }}">{{ $agentModus === 'auto_sicher' ? $autoBadge : 'Übernommen' }}</x-fa::badge>
                                 @elseif(($p['klasse_id'] ?? null) !== null)
@@ -378,7 +377,7 @@
                          Agenten — schon serverseitig angewendet (VoiceModal::verstehen()), hier NUR
                          noch die „gesetzt"-Zeile + Rückgängig (die Antwort IST die Bestätigung). --}}
                     @elseif($p['type'] === 'komponenten_direkt')
-                        <div class="flex flex-col gap-1.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ok-soft)] px-3 py-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" wire:key="vp-{{ $i }}" data-voice-proposal-komponenten-direkt>
+                        <div class="flex flex-col gap-1.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ok-soft)] px-3 py-2 fa-t-body" wire:key="vp-{{ $i }}" data-voice-proposal-komponenten-direkt>
                             @if($p['rueckgaengig_gemacht'] ?? false)
                                 <p class="text-[var(--fa-ink-3)]">Zurückgenommen.</p>
                             @else

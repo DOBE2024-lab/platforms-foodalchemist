@@ -4,7 +4,6 @@
 @php
     use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
 @endphp
 <div class="space-y-3" data-fa-handy-pinnwand>
     @if($meldung)<x-fa::notice tone="ok" data-fa-handy-ablegen-ok>{{ $meldung }}</x-fa::notice>@endif
@@ -15,7 +14,7 @@
         <section class="space-y-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-4" data-fa-handy-ablegen>
             <div class="flex items-center justify-between gap-2">
                 <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Fundstück ablegen</h2>
-                <button type="button" wire:click="$set('handyAblegenOffen', false)" class="min-h-11 px-2 {{ $leise }} underline">Schließen</button>
+                <button type="button" wire:click="$set('handyAblegenOffen', false)" class="min-h-11 px-2 fa-t-muted underline">Schließen</button>
             </div>
             @if($fehler)<x-fa::notice tone="crit" data-fa-handy-ablegen-fehler>{{ $fehler }}</x-fa::notice>@endif
             @error('fundDatei')<x-fa::notice tone="crit">{{ $message }}</x-fa::notice>@enderror
@@ -23,7 +22,7 @@
             <label class="flex flex-col gap-1.5">
                 <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">Foto (Kamera oder Galerie)</span>
                 <input type="file" wire:model="fundDatei" accept="image/*" class="block w-full min-h-11 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" data-fa-handy-ablegen-foto>
-                <span wire:loading wire:target="fundDatei" class="{{ $leise }}">lädt hoch …</span>
+                <span wire:loading wire:target="fundDatei" class="fa-t-muted">lädt hoch …</span>
             </label>
             @if($eigeneInspirationen !== [])
                 <label class="flex flex-col gap-1.5">
@@ -71,7 +70,7 @@
                     @if($insp->schlagworte)
                         <span class="flex flex-wrap gap-x-2">
                             @foreach($insp->schlagworte as $w)
-                                <button type="button" class="min-h-11 {{ $leise }} underline" wire:click="$set('pinnSchlagwort', @js(mb_strtolower($w)))">#{{ $w }}</button>
+                                <button type="button" class="min-h-11 fa-t-muted underline" wire:click="$set('pinnSchlagwort', @js(mb_strtolower($w)))">#{{ $w }}</button>
                             @endforeach
                         </span>
                     @endif
@@ -81,11 +80,11 @@
                             <li class="min-w-0" wire:key="hiq-{{ $f->id }}">
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     <x-fa::badge>{{ V::QUELLEN[$f->quelle] ?? $f->quelle }}</x-fa::badge>
-                                    @if($f->beobachtet_am)<span class="{{ $leise }}">{{ $f->beobachtet_am->format('d.m.Y') }}</span>@endif
+                                    @if($f->beobachtet_am)<span class="fa-t-muted">{{ $f->beobachtet_am->format('d.m.Y') }}</span>@endif
                                 </div>
                                 @if($f->titel && $f->titel !== $insp->titel)<p class="mt-0.5 text-[var(--fa-ink)] wrap-anywhere">{{ $f->titel }}</p>@endif
-                                @if($f->notiz)<p class="mt-0.5 {{ $leise }} wrap-anywhere">{{ $f->notiz }}</p>@endif
-                                <p class="flex flex-wrap gap-x-4 {{ $leise }}">
+                                @if($f->notiz)<p class="mt-0.5 fa-t-muted wrap-anywhere">{{ $f->notiz }}</p>@endif
+                                <p class="flex flex-wrap gap-x-4 fa-t-muted">
                                     @if($f->fundort)<span class="py-1">Gesehen: {{ $f->fundort }}</span>@endif
                                     @if($f->url)<a href="{{ $f->url }}" target="_blank" rel="noopener" class="inline-flex items-center min-h-11 text-[var(--fa-accent)] underline">Link öffnen</a>@endif
                                 </p>

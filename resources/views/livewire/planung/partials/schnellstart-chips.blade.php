@@ -5,7 +5,7 @@
 @php($vorlagen = $this->vorlagenFuer($scope))
 @if(count($vorlagen))
     <div class="flex flex-col gap-1.5" data-brief-vorlagen>
-        <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Schnellstart mit Vorlage <span class="font-normal text-[var(--fa-ink-3)]">(optional)</span></p>
+        <p class="fa-t-label">Schnellstart mit Vorlage <span class="font-normal text-[var(--fa-ink-3)]">(optional)</span></p>
         <div class="flex flex-wrap gap-1.5">
             @foreach($vorlagen as $vid => $v)
                 @php($istAktiv = ($aktiveVorlage[$scope] ?? null) === (string) $vid)
@@ -28,6 +28,6 @@
                 </span>
             @endforeach
         </div>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Füllt Briefing, Kreativ-Modus und Leitplanken als Startpunkt, alles bleibt frei änderbar. @svg('heroicon-m-star', 'w-3.5 h-3.5 inline -mt-0.5 text-[var(--fa-warn)]') eigene Vorlage</p>
+        <p class="fa-t-muted">Füllt Briefing, Kreativ-Modus und Leitplanken als Startpunkt, alles bleibt frei änderbar. @svg('heroicon-m-star', 'w-3.5 h-3.5 inline -mt-0.5 text-[var(--fa-warn)]') eigene Vorlage</p>
     </div>
 @endif

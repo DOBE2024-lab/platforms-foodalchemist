@@ -77,16 +77,16 @@
                             <div wire:change="statusSetzen" data-status-select>
                                 @if($darfEdit)
                                     <x-fa::choice name="status" :options="$statusOptionen" :live="false" label="Status" id-prefix="lief-status" />
-                                    <p class="mt-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Wird sofort gespeichert. Gesperrte Lieferanten werden nicht mehr bevorzugt.</p>
+                                    <p class="mt-1.5 fa-t-muted">Wird sofort gespeichert. Gesperrte Lieferanten werden nicht mehr bevorzugt.</p>
                                 @else
-                                    <p class="mb-1.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Status</p>
+                                    <p class="mb-1.5 fa-t-label">Status</p>
                                     <x-fa::badge :tone="$statusTon[$stammblatt['status']] ?? 'neutral'">{{ $statusOptionen[$stammblatt['status']] ?? $stammblatt['status'] }}</x-fa::badge>
                                 @endif
                             </div>
                             <div>
-                                <p class="mb-1.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Verwendung in Rezepten</p>
-                                <p class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)] tabular-nums" data-volumen-proxy>{{ $stammblatt['volumen_proxy']['n_usages'] }} {{ (int) $stammblatt['volumen_proxy']['n_usages'] === 1 ? 'Verwendung' : 'Verwendungen' }}</p>
-                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Zählt Rezept-Zutaten, deren bevorzugter Artikel von diesem Lieferanten kommt. Kein Umsatz.</p>
+                                <p class="mb-1.5 fa-t-label">Verwendung in Rezepten</p>
+                                <p class="fa-t-h2 tabular-nums" data-volumen-proxy>{{ $stammblatt['volumen_proxy']['n_usages'] }} {{ (int) $stammblatt['volumen_proxy']['n_usages'] === 1 ? 'Verwendung' : 'Verwendungen' }}</p>
+                                <p class="fa-t-muted">Zählt Rezept-Zutaten, deren bevorzugter Artikel von diesem Lieferanten kommt. Kein Umsatz.</p>
                             </div>
                         </div>
                     </x-fa::section>
@@ -176,7 +176,7 @@
                                     ['Homepage', $stammblatt['stammdaten']['homepage']],
                                 ] as [$lbl, $wert])
                                     <div class="min-w-0">
-                                        <dt class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ $lbl }}</dt>
+                                        <dt class="fa-t-label">{{ $lbl }}</dt>
                                         <dd class="text-[length:var(--fa-text-md)] break-words {{ $wert ? 'text-[var(--fa-ink)]' : 'text-[var(--fa-ink-3)]' }}">{{ $wert ?: 'nicht hinterlegt' }}</dd>
                                     </div>
                                 @endforeach
@@ -254,7 +254,7 @@
 
                         <div class="flex flex-col gap-1.5" data-staffel-zeilen>
                             @if(count($staffel) > 0)
-                                <div class="grid grid-cols-[1fr_1fr_2.25rem] gap-2 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+                                <div class="grid grid-cols-[1fr_1fr_2.25rem] gap-2 fa-t-label">
                                     <span>Ab Jahresumsatz in €</span><span>Rabatt in %</span><span></span>
                                 </div>
                             @endif
@@ -277,7 +277,7 @@
                             </div>
 
                             <div class="grid grid-cols-2 gap-3 pt-3 border-t border-[var(--fa-line)]">
-                                <label class="col-span-2 inline-flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                                <label class="col-span-2 inline-flex items-center gap-2 fa-t-body">
                                     <input type="checkbox" wire:model="rebateConfig.active" class="{{ $haken }}" /> Rückvergütung im Preis anrechnen
                                 </label>
                                 <x-fa::field label="Erwarteter Jahresumsatz in €" for="staffel-umsatz" hint="Daraus ergibt sich die Stufe von selbst.">
@@ -294,20 +294,20 @@
                                     </x-fa::select>
                                 </x-fa::field>
                                 <fieldset class="col-span-2 flex flex-col gap-2">
-                                    <legend class="mb-1.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Gilt für</legend>
-                                    <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                                    <legend class="mb-1.5 fa-t-label">Gilt für</legend>
+                                    <label class="inline-flex items-center gap-2 fa-t-body">
                                         <input type="checkbox" wire:model.live="rebateConfig.applies_to_all" class="{{ $haken }}" data-staffel-vollsortiment /> Alle Warengruppen
                                     </label>
                                     @unless($rebateConfig['applies_to_all'] ?? true)
                                         <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 pl-6" data-staffel-wg>
                                             @foreach($warengruppen as $wg)
-                                                <label class="inline-flex items-center gap-2 min-w-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                                                <label class="inline-flex items-center gap-2 min-w-0 fa-t-body">
                                                     <input type="checkbox" wire:model="rebateConfig.commodity_groups" value="{{ $wg->code }}" class="{{ $haken }}" />
                                                     <span class="min-w-0">{{ $wg->name }}</span>
                                                 </label>
                                             @endforeach
                                         </div>
-                                        <p class="pl-6 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Nur in den gewählten Warengruppen wird die Rückvergütung angerechnet, sonst gilt der Originalpreis.</p>
+                                        <p class="pl-6 fa-t-muted">Nur in den gewählten Warengruppen wird die Rückvergütung angerechnet, sonst gilt der Originalpreis.</p>
                                     @endunless
                                 </fieldset>
                             </div>
@@ -324,7 +324,7 @@
                             <x-fa::choice name="liefertage" :options="$wochentage" multiple :live="false" label="Liefertage" id-prefix="lief-tage" />
                         @else
                             <div>
-                                <p class="mb-1.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Liefertage</p>
+                                <p class="mb-1.5 fa-t-label">Liefertage</p>
                                 @php
                                     $tageText = collect($liefertage)->map(fn ($t) => $wochentage[(string) $t] ?? null)->filter()->implode(', ');
                                 @endphp
@@ -358,10 +358,10 @@
                                 <div wire:key="absprache-{{ $a['id'] }}" class="flex flex-col gap-1 py-2.5 border-b border-[var(--fa-line)] last:border-0">
                                     <div class="flex items-start gap-2">
                                         <x-fa::badge class="shrink-0">{{ $abspracheTypen[$a['type']] ?? ucfirst((string) $a['type']) }}</x-fa::badge>
-                                        <span class="flex-1 min-w-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $a['note'] }}</span>
+                                        <span class="flex-1 min-w-0 fa-t-body">{{ $a['note'] }}</span>
                                     </div>
                                     @if($a['valid_from'] || $a['valid_to'] || $a['follow_up_at'])
-                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 fa-t-muted tabular-nums">
                                             @if($a['valid_from'] || $a['valid_to'])
                                                 <span>Gültig{{ $a['valid_from'] ? ' ab ' . $datum($a['valid_from']) : '' }}{{ $a['valid_to'] ? ' bis ' . $datum($a['valid_to']) : '' }}</span>
                                             @endif
@@ -423,7 +423,7 @@
                                         <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] break-all">@svg('heroicon-m-paper-clip', 'w-3.5 h-3.5 inline-block align-text-bottom text-[var(--fa-ink-3)]') {{ $d['file_ref'] }}</p>
                                     @endif
                                     @if($d['term_start'] || $d['term_end'] || $d['notice_period_days'] !== null || $d['notice_deadline'])
-                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 fa-t-muted tabular-nums">
                                             @if($d['term_start'] || $d['term_end'])
                                                 <span>Laufzeit{{ $d['term_start'] ? ' ab ' . $datum($d['term_start']) : '' }}{{ $d['term_end'] ? ' bis ' . $datum($d['term_end']) : '' }}</span>
                                             @endif
@@ -508,7 +508,7 @@
                                                 </td>
                                                 <td>
                                                     @if($hinweisTon === 'neutral')
-                                                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ ucfirst((string) $b['bundling_hint']) }}</span>
+                                                        <span class="fa-t-muted">{{ ucfirst((string) $b['bundling_hint']) }}</span>
                                                     @else
                                                         <x-fa::signal :tone="$hinweisTon">{{ ucfirst((string) $b['bundling_hint']) }}</x-fa::signal>
                                                     @endif

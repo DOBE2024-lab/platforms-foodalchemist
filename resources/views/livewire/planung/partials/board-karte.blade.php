@@ -21,7 +21,7 @@
             {!! $ausgabeChip($s->id) !!}
             @if($s->category) {!! $chip($s->category, 'info') !!} @endif
         </div>
-        @if($fort !== '')<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums break-words" data-planung-fortschritt>{{ $fort }}</p>@endif
+        @if($fort !== '')<p class="fa-t-muted tabular-nums break-words" data-planung-fortschritt>{{ $fort }}</p>@endif
     </div>
     <div class="flex items-center gap-0.5 border-t border-[var(--fa-line)] px-1.5 py-1" data-planung-karten-aktionen>
         <x-fa::button variant="ghost" size="sm" icon="heroicon-o-pencil-square" wire:click="oeffne({{ $s->id }})" title="Im Editor öffnen" data-planung-karte-oeffnen>Öffnen</x-fa::button>

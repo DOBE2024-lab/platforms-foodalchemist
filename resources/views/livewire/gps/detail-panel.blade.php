@@ -24,7 +24,6 @@
     $zahl = fn ($wert, $stellen = 2) => number_format((float) $wert, $stellen, ',', '.');
     $proEinheit = fn (?string $unit) => $unit !== null ? \Illuminate\Support\Str::after($unit, '€/') : null;
     $titelKlein = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $listenKnopf = 'flex w-full items-center gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
 
     if ($gp !== null && $section === null) {
@@ -126,7 +125,7 @@
             </x-slot:menue>
         </x-fa::detail-kopf>
         @unless($kannKuratieren)
-            <p class="{{ $leise }}" data-gp-geerbt>Schreibgeschütztes Katalog-Grundprodukt. Stammdaten pflegt das Besitzer-Team.</p>
+            <p class="fa-t-muted" data-gp-geerbt>Schreibgeschütztes Katalog-Grundprodukt. Stammdaten pflegt das Besitzer-Team.</p>
         @endunless
         @endif
 
@@ -156,10 +155,10 @@
         {{-- KI-Schätzung (Allergene/Nährwerte) zur Prüfung --}}
         @if($kiVorschlag !== null && ($section === null || $section === $kiVorschlag['type']))
             <div class="flex flex-col gap-2 p-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)]" data-gp-ki-vorschlag>
-                <p class="flex flex-wrap items-center gap-1.5 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">
+                <p class="flex flex-wrap items-center gap-1.5 fa-t-strong">
                     @svg('heroicon-m-sparkles', 'w-4 h-4 text-[var(--fa-accent)]')
                     {{ $kiVorschlag['type'] === 'allergene' ? 'Allergen-Schätzung' : 'Nährwert-Schätzung' }}
-                    <span class="font-normal {{ $leise }}">{{ round($kiVorschlag['confidence'] * 100) }} % sicher · Übernehmen überschreibt die Werte von Hand</span>
+                    <span class="font-normal fa-t-muted">{{ round($kiVorschlag['confidence'] * 100) }} % sicher · Übernehmen überschreibt die Werte von Hand</span>
                 </p>
                 <div class="flex flex-wrap gap-1">
                     @foreach($kiVorschlag['werte'] as $feld => $wert)
@@ -177,7 +176,7 @@
         {{-- PLATZHALTER: Allergene, Zusatzstoffe & Nährwerte von Hand (Entscheid Dominique 19.11.2026, nur Platzhalter; Dienst lehnt alle anderen ab) --}}
         @if($platzhalterStand !== null)
         <x-fa::section variant="plain" title="Allergene, Zusatzstoffe & Nährwerte (manuell, Platzhalter)" icon="heroicon-o-pencil-square" data-sektion="platzhalter-deklaration">
-            <p class="{{ $leise }}">Platzhalter haben keine Lieferantenartikel, Werte werden hier gepflegt. Sie gelten in Rezepten wie Artikelwerte.</p>
+            <p class="fa-t-muted">Platzhalter haben keine Lieferantenartikel, Werte werden hier gepflegt. Sie gelten in Rezepten wie Artikelwerte.</p>
             @if($kannKuratieren)
                 <x-slot:actions>
                     <x-fa::button size="sm" variant="ghost" wire:click="platzhalterAllesFreiVorbelegen" data-platzhalter-alles-frei
@@ -274,7 +273,7 @@
                 @if($enthalten->isEmpty() && $spuren->isEmpty() && $unbekannt->isEmpty())
                     <p class="flex flex-wrap items-center gap-2" data-allergene-frei>
                         <x-fa::signal tone="ok">Keines der 14 Hauptallergene deklariert</x-fa::signal>
-                        @if($angenommenSatz !== null)<span class="{{ $leise }}" data-allergene-angenommen title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}">{{ $angenommenSatz }}</span>@endif
+                        @if($angenommenSatz !== null)<span class="fa-t-muted" data-allergene-angenommen title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}">{{ $angenommenSatz }}</span>@endif
                         @if($nurKiOverride)<x-fa::signal tone="info" icon="heroicon-m-sparkles" title="Schätzung ohne Beleg durch Lieferantenartikel. Für die Deklaration Artikeldaten ergänzen.">KI-geschätzt, nicht belegt</x-fa::signal>@endif
                     </p>
                 @else
@@ -292,7 +291,7 @@
                         @if($unbekannt->isNotEmpty())
                             <x-fa::signal tone="warn" data-allergene-unbekannt title="Ohne Angabe im Artikel. Unbekannt heißt nicht frei von.">{{ $unbekannt->count() }} von 14 ohne Angabe (unbekannt)</x-fa::signal>
                         @endif
-                        @if($freiAnzahl > 0)<p class="{{ $leise }}">Frei von den übrigen {{ $freiAnzahl }} {{ $freiAnzahl === 1 ? 'Hauptallergen' : 'Hauptallergenen' }}@if($angenommenSatz !== null)<span data-allergene-angenommen title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}">, {{ $angenommenSatz }}</span>@endif</p>@endif
+                        @if($freiAnzahl > 0)<p class="fa-t-muted">Frei von den übrigen {{ $freiAnzahl }} {{ $freiAnzahl === 1 ? 'Hauptallergen' : 'Hauptallergenen' }}@if($angenommenSatz !== null)<span data-allergene-angenommen title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}">, {{ $angenommenSatz }}</span>@endif</p>@endif
                     </div>
                 @endif
             @endif
@@ -319,7 +318,7 @@
                             </div>
                         @endif
                         @if($zsUnbekannt->isNotEmpty())<x-fa::signal tone="warn" data-zusatz-unbekannt title="Ohne Angabe im Artikel. Nicht als frei werten.">{{ $zsUnbekannt->count() }} ohne Angabe</x-fa::signal>@endif
-                        @if($zsFrei > 0)<p class="{{ $leise }}">Frei von {{ $zsFrei }} weiteren</p>@endif
+                        @if($zsFrei > 0)<p class="fa-t-muted">Frei von {{ $zsFrei }} weiteren</p>@endif
                     </div>
                 @endif
             @endif
@@ -342,8 +341,8 @@
                     @foreach($tagJa as $tag => $text)<x-fa::badge tone="ok" icon="heroicon-m-check" title="trifft zu">{{ $text }}</x-fa::badge>@endforeach
                 </div>
             @endif
-            @if($tagNein !== [])<p class="{{ $leise }}"><span class="font-medium text-[var(--fa-ink-2)]">Nicht:</span> {{ implode(' · ', $tagNein) }}</p>@endif
-            @if($tagOffen !== [])<p class="{{ $leise }}" data-tags-offen><span class="font-medium text-[var(--fa-ink-2)]">Noch nicht bewertet ({{ count($tagOffen) }} von {{ count(\Platform\FoodAlchemist\Models\FoodAlchemistGp::TAG_FIELDS) }}):</span> {{ implode(' · ', $tagOffen) }}</p>@endif
+            @if($tagNein !== [])<p class="fa-t-muted"><span class="font-medium text-[var(--fa-ink-2)]">Nicht:</span> {{ implode(' · ', $tagNein) }}</p>@endif
+            @if($tagOffen !== [])<p class="fa-t-muted" data-tags-offen><span class="font-medium text-[var(--fa-ink-2)]">Noch nicht bewertet ({{ count($tagOffen) }} von {{ count(\Platform\FoodAlchemist\Models\FoodAlchemistGp::TAG_FIELDS) }}):</span> {{ implode(' · ', $tagOffen) }}</p>@endif
         </x-fa::section>
         @endif
 
@@ -411,8 +410,8 @@
                                 @svg($istLead ? 'heroicon-s-star' : 'heroicon-o-star', 'w-[18px] h-[18px]')
                             </button>
                             <div class="min-w-0 flex-1 cursor-pointer" @if($handyArtikelLink) x-on:click="Livewire.navigate('{{ route('foodalchemist.suppliers.index', ['artikel' => $la->id]) }}')" title="Artikel ansehen" @else wire:click="$dispatch('item-modal.oeffnen', { id: {{ $la->id }} })" title="Artikel öffnen, Allergene und Preise dort pflegen" @endif data-la-oeffnen>
-                                <p class="text-[length:var(--fa-text-md)] font-medium leading-snug text-[var(--fa-ink)] hover:text-[var(--fa-accent)] hover:underline">{{ $la->designation }}</p>
-                                <p class="mt-0.5 {{ $leise }}">{{ $la->supplier_name ?? 'Lieferant unbekannt' }}@if($la->qty !== null && $la->unit_code !== null) · <x-fa::menge :value="$la->qty" :unit="$la->unit_code" />@endif @if(filled($la->article_number)) · <span data-la-artnr>Art.-Nr. {{ $la->article_number }}</span>@endif</p>
+                                <p class="fa-t-strong leading-snug hover:text-[var(--fa-accent)] hover:underline">{{ $la->designation }}</p>
+                                <p class="mt-0.5 fa-t-muted">{{ $la->supplier_name ?? 'Lieferant unbekannt' }}@if($la->qty !== null && $la->unit_code !== null) · <x-fa::menge :value="$la->qty" :unit="$la->unit_code" />@endif @if(filled($la->article_number)) · <span data-la-artnr>Art.-Nr. {{ $la->article_number }}</span>@endif</p>
                                 @if($gp->lead_la_supplier_item_id === $la->id || $la->ist_stamm || $la->is_discontinued || $la->gepinnt || $la->locked || ($la->lieferant_inaktiv ?? false))
                                     <div class="mt-1 flex flex-wrap gap-1">
                                         @if($gp->lead_la_supplier_item_id === $la->id)<x-fa::badge tone="accent" title="Lead für alle Teams">Lead global</x-fa::badge>@endif
@@ -445,7 +444,7 @@
                                         @endisset
                                     </p>
                                     @if($la->vergleichspreis !== null)
-                                        <p class="{{ $leise }}"><x-fa::money :value="$la->vergleichspreis['value']" :per="$proEinheit($la->vergleichspreis['unit'])" /></p>
+                                        <p class="fa-t-muted"><x-fa::money :value="$la->vergleichspreis['value']" :per="$proEinheit($la->vergleichspreis['unit'])" /></p>
                                     @else
                                         <x-fa::signal tone="warn" title="Ohne Menge kein Preis je Kilo oder Liter">ohne Preis je kg</x-fa::signal>
                                     @endif
@@ -464,7 +463,7 @@
                     </div>
                 @empty
                     @if(! $gp->requires_la)
-                        <p class="{{ $leise }}">Braucht keinen Lieferantenartikel.</p>
+                        <p class="fa-t-muted">Braucht keinen Lieferantenartikel.</p>
                     @else
                         <x-fa::empty compact icon="heroicon-o-building-storefront" title="Noch kein Lieferantenartikel verknüpft">Ohne Artikel fehlen Preis und Allergene. Unten nach der Bezeichnung suchen oder Artikel vorschlagen lassen.</x-fa::empty>
                     @endif
@@ -492,9 +491,9 @@
                         @foreach($verknuepfSuche['treffer'] as $kandidat)
                             <button type="button" wire:key="vk-{{ $kandidat->id }}" wire:click="verknuepfe({{ $kandidat->id }})" class="{{ $listenKnopf }}" data-la-treffer="{{ $kandidat->id }}">{{ $kandidat->designation }} <span class="text-[var(--fa-ink-3)]">· {{ $kandidat->supplier_name ?? 'Lieferant unbekannt' }}@if($kandidat->gebinde_text) · {{ $kandidat->gebinde_text }}@endif · {{ $kandidat->aktiver_preis !== null ? $zahl($kandidat->aktiver_preis) . ' €' : 'kein Preis' }}</span></button>
                         @endforeach
-                        @include('foodalchemist::livewire.gps.partials.verknuepf-suche-hinweis', ['suche' => $verknuepfSuche, 'leise' => $leise])
+                        @include('foodalchemist::livewire.gps.partials.verknuepf-suche-hinweis', ['suche' => $verknuepfSuche])
                         @if($laSuche !== '' && $verknuepfSuche['treffer']->isEmpty())
-                            <p class="px-2 py-1 {{ $leise }}" data-la-suche-leer>Kein freier Artikel zu „{{ $laSuche }}". Ein Artikel gehört zu genau einem Grundprodukt, vielleicht ist er schon zugeordnet.</p>
+                            <p class="px-2 py-1 fa-t-muted" data-la-suche-leer>Kein freier Artikel zu „{{ $laSuche }}". Ein Artikel gehört zu genau einem Grundprodukt, vielleicht ist er schon zugeordnet.</p>
                         @endif
                     </div>
                 @endif
@@ -532,7 +531,7 @@
         @if($section === null || $section === 'naehrwerte')
         <x-fa::section variant="plain" title="Natürliche Einheit und Gewicht" icon="heroicon-o-cube" data-unit-gewicht>
             @if($gp->preferredCountUnit !== null || $gp->piece_default_g !== null)
-                <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">1 {{ $gp->preferredCountUnit?->name ?? 'Stück' }}
+                <p class="fa-t-body">1 {{ $gp->preferredCountUnit?->name ?? 'Stück' }}
                     @if($gp->piece_default_g !== null)≈ <span class="font-semibold tabular-nums">{{ $zahl($gp->piece_default_g, 0) }} g</span>
                     @else<span class="text-[var(--fa-warn)]">, Gewicht fehlt</span>@endif
                 </p>
@@ -569,7 +568,7 @@
                                 <td class="{{ $eingerueckt ? 'pl-6 text-[var(--fa-ink-2)]' : '' }}">{{ $label }}</td>
                                 <td class="num">
                                     @if($naehrwerte[$key]['avg'] !== null)<x-fa::menge :value="$naehrwerte[$key]['avg']" :unit="$unit" :decimals="$stellen" />
-                                        <span class="ml-1 {{ $leise }}" title="Median aus {{ $naehrwerte[$key]['n'] }} {{ $naehrwerte[$key]['n'] === 1 ? 'Artikel' : 'Artikeln' }}">({{ $naehrwerte[$key]['n'] }} Artikel)</span>
+                                        <span class="ml-1 fa-t-muted" title="Median aus {{ $naehrwerte[$key]['n'] }} {{ $naehrwerte[$key]['n'] === 1 ? 'Artikel' : 'Artikeln' }}">({{ $naehrwerte[$key]['n'] }} Artikel)</span>
                                     @else<span class="text-[var(--fa-ink-3)]">–</span>@endif
                                 </td>
                             </tr>
@@ -577,7 +576,7 @@
                     </tbody>
                 </table>
             @else
-                <p class="{{ $leise }}" data-naehrwerte-leer>Keine Nährwerte in den Artikeln.</p>
+                <p class="fa-t-muted" data-naehrwerte-leer>Keine Nährwerte in den Artikeln.</p>
             @endif
         </x-fa::section>
         @endif
@@ -608,7 +607,7 @@
                     data-gp-anker-ki busy="Wird bestimmt …" flash="Anker gesetzt" />
             </x-slot:actions>
             @if($gpAnker->isEmpty())
-                <p class="{{ $leise }}" data-gp-anker-leer>Noch kein Aroma-Anker.</p>
+                <p class="fa-t-muted" data-gp-anker-leer>Noch kein Aroma-Anker.</p>
             @endif
             <div class="flex flex-wrap gap-1.5">
                 @foreach($gpAnker as $a)
@@ -623,7 +622,7 @@
             @if($ankerNetzOffenId !== null)
                 <div class="fa-surface flex flex-col gap-1.5 px-3 py-2.5" data-gp-anker-netz>
                     @if($ankerNetz->isEmpty())
-                        <p class="{{ $leise }}">Kein weiteres Grundprodukt trägt diesen Anker als Kern.</p>
+                        <p class="fa-t-muted">Kein weiteres Grundprodukt trägt diesen Anker als Kern.</p>
                     @else
                         <p class="{{ $titelKlein }}">Weitere Grundprodukte mit diesem Anker</p>
                         <div class="flex flex-wrap gap-1.5">
@@ -652,11 +651,11 @@
                     <div class="flex items-center gap-2 py-0.5 text-[length:var(--fa-text-md)]" wire:key="equiv-{{ $e->id }}">
                         <x-fa::badge :tone="$e->gegen_kind === 'recipe' ? 'info' : 'neutral'" class="shrink-0">{{ $e->gegen_kind === 'recipe' ? 'Rezept' : 'Grundprodukt' }}</x-fa::badge>
                         <span class="min-w-0 flex-1 text-[var(--fa-ink)]">{{ $e->gegen_name }}</span>
-                        @if((float) $e->umrechnungsfaktor !== 1.0)<span class="shrink-0 tabular-nums {{ $leise }}" title="Umrechnungsfaktor">×{{ rtrim(rtrim(number_format($e->umrechnungsfaktor, 4, ',', '.'), '0'), ',') }}</span>@endif
+                        @if((float) $e->umrechnungsfaktor !== 1.0)<span class="shrink-0 tabular-nums fa-t-muted" title="Umrechnungsfaktor">×{{ rtrim(rtrim(number_format($e->umrechnungsfaktor, 4, ',', '.'), '0'), ',') }}</span>@endif
                         @if($kannKuratieren)<x-fa::icon-button size="sm" tone="danger" icon="heroicon-m-x-mark" label="Ersatz-Verknüpfung lösen" wire:click="ersatzLoesen({{ $e->id }})" />@endif
                     </div>
                 @empty
-                    <p class="{{ $leise }}" data-ersatz-leer>Kein Ersatz hinterlegt. Unten suchen oder vorschlagen lassen.</p>
+                    <p class="fa-t-muted" data-ersatz-leer>Kein Ersatz hinterlegt. Unten suchen oder vorschlagen lassen.</p>
                 @endforelse
                 @if($ersatzKiVorschlaege !== null)
                     <div class="flex flex-col gap-1.5 p-2.5 rounded-[var(--fa-radius-control)] border border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)]" data-ersatz-ki-vorschlaege>
@@ -670,8 +669,8 @@
                                     {{ $k['kind'] === 'recipe' ? 'Rezept' : ($k['kind'] === 'supplier_item' ? 'Artikel ohne Grundprodukt' : 'Grundprodukt') }}
                                 </x-fa::badge>
                                 <div class="min-w-0 flex-1">
-                                    <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $k['name'] }}</p>
-                                    <p class="{{ $leise }}">{{ $k['reason'] }}@if($k['supplier']) · {{ $k['supplier'] }}@endif · {{ round($k['score'] * 100) }} %</p>
+                                    <p class="fa-t-strong">{{ $k['name'] }}</p>
+                                    <p class="fa-t-muted">{{ $k['reason'] }}@if($k['supplier']) · {{ $k['supplier'] }}@endif · {{ round($k['score'] * 100) }} %</p>
                                 </div>
                                 @if($k['kind'] === 'supplier_item')
                                     <x-fa::button size="sm" class="shrink-0" wire:click="ersatzLaAlsGpAnlegen({{ $k['id'] }})">Als Grundprodukt anlegen</x-fa::button>
@@ -704,20 +703,20 @@
         @if($section === 'lager')
         <x-fa::section variant="plain" title="Lager" icon="heroicon-o-archive-box" data-sektion="lager">
             @if($lagerOrte === [])
-                <p class="{{ $leise }}">Noch kein Lagerort angelegt (Einstellungen → Einkauf).</p>
+                <p class="fa-t-muted">Noch kein Lagerort angelegt (Einstellungen → Einkauf).</p>
             @else
-                <p class="{{ $leise }}">Der Stellplatz gilt für dieses Team. Der Wareneingang bucht in den Lagerort mit Stellplatz; ohne Stellplatz ins Standardlager und schlägt beim ersten Eingang einen Platz vor.</p>
+                <p class="fa-t-muted">Der Stellplatz gilt für dieses Team. Der Wareneingang bucht in den Lagerort mit Stellplatz; ohne Stellplatz ins Standardlager und schlägt beim ersten Eingang einen Platz vor.</p>
                 <table class="fa-table fa-table--compact mt-2" data-gp-lager>
                     <thead><tr><th>Lagerort</th><th class="text-right">Bestand</th><th>Stellplatz</th></tr></thead>
                     <tbody>
                         @foreach($lagerOrte as $o)
                             @php $vorschlag = $o['bin_id'] === null && $o['vorschlag'] !== null ? $o['stellplaetze']->firstWhere('id', $o['vorschlag']) : null; @endphp
                             <tr wire:key="gpl-{{ $o['id'] }}">
-                                <td class="font-medium">{{ $o['name'] }}@if($o['standard']) <span class="{{ $leise }}">· Standard</span>@endif</td>
+                                <td class="font-medium">{{ $o['name'] }}@if($o['standard']) <span class="fa-t-muted">· Standard</span>@endif</td>
                                 <td class="text-right tabular-nums">{{ $o['bestand'] ?? '–' }}</td>
                                 <td>
                                     @if($o['stellplaetze']->isEmpty())
-                                        <span class="{{ $leise }}">keine Stellplätze</span>
+                                        <span class="fa-t-muted">keine Stellplätze</span>
                                     @else
                                         <span class="inline-flex items-center gap-2">
                                             <select wire:change="stammplatzSetzen({{ $o['id'] }}, $event.target.value)" class="fa-control fa-select h-7 pr-8 text-[length:var(--fa-text-sm)] w-48" aria-label="Stellplatz in {{ $o['name'] }}" data-gp-stammplatz="{{ $o['id'] }}">
@@ -749,18 +748,18 @@
             {{-- Spec 74: Lagerartikel (Grundvorrat) — nicht über den Rezeptbedarf bestellen, sondern nachfüllen --}}
             @if($lagerartikelInfo !== null)
                 <div class="mt-3 flex flex-col gap-1.5" data-gp-lagerartikel>
-                    <label class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                    <label class="inline-flex items-center gap-1.5 fa-t-body">
                         <input type="checkbox" wire:model.live="lagerartikelForm.ist" class="w-4 h-4 rounded accent-[var(--fa-accent)]" /> Lagerartikel (Grundvorrat, z. B. Gewürze, Öle)
                     </label>
                     @if($lagerartikelForm['ist'])
                         <div class="flex flex-wrap items-end gap-2">
-                            <x-fa::field label="Mindestbestand" for="gpla-min"><span class="inline-flex items-center gap-1"><x-fa::input id="gpla-min" size="sm" wire:model="lagerartikelForm.min" inputmode="decimal" class="w-20" /><span class="{{ $leise }}">{{ $lagerartikelInfo['einheit'] }}</span></span></x-fa::field>
-                            <x-fa::field label="Auffüllen auf" for="gpla-soll"><span class="inline-flex items-center gap-1"><x-fa::input id="gpla-soll" size="sm" wire:model="lagerartikelForm.soll" inputmode="decimal" class="w-20" /><span class="{{ $leise }}">{{ $lagerartikelInfo['einheit'] }}</span></span></x-fa::field>
+                            <x-fa::field label="Mindestbestand" for="gpla-min"><span class="inline-flex items-center gap-1"><x-fa::input id="gpla-min" size="sm" wire:model="lagerartikelForm.min" inputmode="decimal" class="w-20" /><span class="fa-t-muted">{{ $lagerartikelInfo['einheit'] }}</span></span></x-fa::field>
+                            <x-fa::field label="Auffüllen auf" for="gpla-soll"><span class="inline-flex items-center gap-1"><x-fa::input id="gpla-soll" size="sm" wire:model="lagerartikelForm.soll" inputmode="decimal" class="w-20" /><span class="fa-t-muted">{{ $lagerartikelInfo['einheit'] }}</span></span></x-fa::field>
                         </div>
                     @endif
                     <div><x-fa::button size="sm" wire:click="lagerartikelSetzen" data-gp-lagerartikel-speichern>Speichern</x-fa::button></div>
                     @if($lagerartikelFehler)<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]">{{ $lagerartikelFehler }}</p>@endif
-                    <p class="{{ $leise }}">Lagerartikel gehen nicht mit jedem Rezept in die Bestellung. Unter dem Mindestbestand schlägt die Bestellrunde vor, auf den Sollbestand nachzufüllen.</p>
+                    <p class="fa-t-muted">Lagerartikel gehen nicht mit jedem Rezept in die Bestellung. Unter dem Mindestbestand schlägt die Bestellrunde vor, auf den Sollbestand nachzufüllen.</p>
                 </div>
             @endif
             {{-- Art + Preis als Gefäß (17.11.2026): je Team; jede Darreichung mit diesem Gefäß rechnet danach --}}
@@ -772,12 +771,12 @@
                                 <option value="">{{ $gefaessKostenartInfo['geerbt'] ? 'wie '.$gefaessKostenartInfo['geerbt_von'].': '.$gefaessKostenartInfo['geerbt'] : 'Automatik (Verleih: extern, sonst Einweg)' }}</option>
                                 @foreach(\Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN as $artKey => $artLabel)<option value="{{ $artKey }}">{{ $artLabel }}</option>@endforeach
                             </x-fa::select>
-                            <span class="inline-flex items-center gap-1"><x-fa::input id="gp-gef-preis" size="sm" wire:model="gefaessPreis" inputmode="decimal" placeholder="Preis" class="w-20" aria-label="Preis je Stück" data-gp-gefaess-preis /><span class="{{ $leise }}">€/Stk</span></span>
+                            <span class="inline-flex items-center gap-1"><x-fa::input id="gp-gef-preis" size="sm" wire:model="gefaessPreis" inputmode="decimal" placeholder="Preis" class="w-20" aria-label="Preis je Stück" data-gp-gefaess-preis /><span class="fa-t-muted">€/Stk</span></span>
                             <x-fa::button size="sm" wire:click="gefaessKostenartSetzen" data-gp-gefaess-kostenart-speichern>Speichern</x-fa::button>
                         </span>
                     </x-fa::field>
                     @if($gefaessKostenartFehler)<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]">{{ $gefaessKostenartFehler }}</p>@endif
-                    <p class="{{ $leise }}">Einweg und Extern (Miete / Spülservice): der Preis hier, sonst der Artikelpreis je Stück. Mehrweg (Eigenbestand, z. B. Spülkosten): nur der Preis hier. Ohne Preis gilt die Darreichung als unvollständig. Die Kosten gehen je Stück in den Wareneinsatz.</p>
+                    <p class="fa-t-muted">Einweg und Extern (Miete / Spülservice): der Preis hier, sonst der Artikelpreis je Stück. Mehrweg (Eigenbestand, z. B. Spülkosten): nur der Preis hier. Ohne Preis gilt die Darreichung als unvollständig. Die Kosten gehen je Stück in den Wareneinsatz.</p>
                 </div>
             @endif
             {{-- Zubehör am Gefäß (20.11.2026, „Weg 2“): gehört immer dazu (Deckel, Etikett, Löffel) — jede Darreichung mit diesem Gefäß rechnet es mit,
@@ -786,19 +785,19 @@
                 @php $gz = $gefaessZubehoerInfo; @endphp
                 <div class="mt-3 flex flex-col gap-1.5" data-gp-gefaess-zubehoer>
                     <span class="fa-t-label">Gehört dazu (Zubehör je Gefäß, dieses Team)</span>
-                    @if($gz['geerbt_von'])<p class="{{ $leise }}" data-gp-gefaess-zubehoer-geerbt>Liste von {{ $gz['geerbt_von'] }} — eine Änderung übernimmt sie für dieses Team.</p>@endif
+                    @if($gz['geerbt_von'])<p class="fa-t-muted" data-gp-gefaess-zubehoer-geerbt>Liste von {{ $gz['geerbt_von'] }} — eine Änderung übernimmt sie für dieses Team.</p>@endif
                     @forelse($gz['zeilen'] as $z)
                         <div class="flex flex-wrap items-center gap-2" wire:key="gp-gef-zub-{{ $z['gp_id'] }}" data-gp-gefaess-zubehoer-zeile="{{ $z['gp_id'] }}">
                             <x-fa::input size="sm" inputmode="decimal" value="{{ rtrim(rtrim(number_format($z['menge'], 3, ',', ''), '0'), ',') }}" aria-label="Stück je Gefäß"
                                 wire:change="gefaessZubehoerMengeSetzen({{ $z['gp_id'] }}, $event.target.value)" class="w-16 text-right tabular-nums" />
                             <span class="fa-t-body">× {{ $z['name'] }}</span>
-                            <span class="{{ $leise }}">{{ \Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN[$z['kostenart']] ?? '' }}</span>
+                            <span class="fa-t-muted">{{ \Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN[$z['kostenart']] ?? '' }}</span>
                             @if($z['kosten'] !== null)<span class="tabular-nums" data-gp-gefaess-zubehoer-kosten>{{ number_format($z['kosten'], 2, ',', '.') }} €</span>
                             @else<x-fa::badge tone="warn" title="Kein Preis: am Zubehör-Grundprodukt Art und Preis eintragen oder einen bepreisten Hauptartikel wählen" data-gp-gefaess-zubehoer-preis-fehlt>kein Preis</x-fa::badge>@endif
                             <x-fa::icon-button icon="heroicon-o-x-mark" label="Zubehör entfernen" size="sm" wire:click="gefaessZubehoerWeg({{ $z['gp_id'] }})" />
                         </div>
                     @empty
-                        <p class="{{ $leise }}">Kein Zubehör — das Gefäß kostet allein.</p>
+                        <p class="fa-t-muted">Kein Zubehör — das Gefäß kostet allein.</p>
                     @endforelse
                     @if($gz['zeilen'] !== [])<p class="fa-t-label" data-gp-gefaess-zubehoer-summe>Zubehör je Gefäß {{ number_format($gz['summe'], 2, ',', '.') }} €{{ $gz['preis_fehlt'] ? ' (ohne Teile ohne Preis)' : '' }}</p>@endif
                     <span class="inline-flex flex-wrap items-center gap-2">
@@ -809,12 +808,12 @@
                         <div class="flex flex-wrap gap-1.5" data-gp-gefaess-zubehoer-treffer>
                             @foreach($gz['treffer'] as $t)<x-fa::button size="sm" variant="ghost" wire:click="gefaessZubehoerHinzu({{ $t->id }})" wire:key="gp-gef-zub-t-{{ $t->id }}">{{ $t->name }}</x-fa::button>@endforeach
                         </div>
-                    @elseif(trim($gefaessZubehoerSuche) !== '')<p class="{{ $leise }}">Nichts gefunden. Zubehör als Non-Food-Grundprodukt (Warengruppe 16) anlegen.</p>@endif
+                    @elseif(trim($gefaessZubehoerSuche) !== '')<p class="fa-t-muted">Nichts gefunden. Zubehör als Non-Food-Grundprodukt (Warengruppe 16) anlegen.</p>@endif
                     @if($gefaessZubehoerFehler)<p class="fa-t-muted text-[var(--fa-crit)]" data-gp-gefaess-zubehoer-fehler>{{ $gefaessZubehoerFehler }}</p>@endif
                 </div>
             @endif
             @if(\Illuminate\Support\Facades\Route::has('foodalchemist.lager.index'))
-                <a href="{{ route('foodalchemist.lager.index', ['reiter' => 'einrichten']) }}" wire:navigate class="{{ $leise }} hover:underline mt-2 inline-block">Lager einrichten →</a>
+                <a href="{{ route('foodalchemist.lager.index', ['reiter' => 'einrichten']) }}" wire:navigate class="fa-t-muted hover:underline mt-2 inline-block">Lager einrichten →</a>
             @endif
         </x-fa::section>
         @endif
@@ -828,7 +827,7 @@
         @endphp
         <x-fa::section variant="plain" title="Einkauf (12 Monate)" icon="heroicon-o-shopping-cart" data-sektion="einkauf">
             @if($einkauf['positionen'] === 0)
-                <p class="{{ $leise }}" data-einkauf-leer>In den letzten 12 Monaten nicht eingekauft.@if($bestandJetzt !== []) Am Lager: @foreach($bestandJetzt as $b){{ $mengeTxt($b['menge']) }} {{ $b['einheit'] }}@if(! $loop->last), @endif @endforeach.@endif</p>
+                <p class="fa-t-muted" data-einkauf-leer>In den letzten 12 Monaten nicht eingekauft.@if($bestandJetzt !== []) Am Lager: @foreach($bestandJetzt as $b){{ $mengeTxt($b['menge']) }} {{ $b['einheit'] }}@if(! $loop->last), @endif @endforeach.@endif</p>
             @else
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3" data-einkauf-kpis>
                     @foreach([
@@ -838,8 +837,8 @@
                         ['Am Lager', $bestandJetzt === [] ? '—' : collect($bestandJetzt)->map(fn ($b) => $mengeTxt($b['menge']) . ' ' . $b['einheit'])->implode(', ')],
                     ] as [$lbl, $wert])
                         <div class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] px-2.5 py-1.5">
-                            <div class="{{ $leise }}">{{ $lbl }}</div>
-                            <div class="text-[length:var(--fa-text-md)] font-medium tabular-nums text-[var(--fa-ink)]">{{ $wert }}</div>
+                            <div class="fa-t-muted">{{ $lbl }}</div>
+                            <div class="fa-t-strong tabular-nums">{{ $wert }}</div>
                         </div>
                     @endforeach
                 </div>
@@ -851,12 +850,12 @@
                         <div class="flex-1 min-w-0 flex flex-col items-center justify-end h-full" wire:key="ek-m-{{ $m['monat'] }}"
                              title="{{ $m['label'] }}: {{ $mengeTxt($m['menge']) }} {{ $eEinheit }} · {{ $zahl($m['eur']) }} €">
                             <div class="w-full rounded-t {{ $v > 0 ? 'bg-[var(--fa-accent)]' : 'bg-[var(--fa-line)]' }}" style="height: {{ $v > 0 ? max(4, round($v / $eMax * 100)) : 2 }}%"></div>
-                            <div class="mt-1 text-[length:var(--fa-text-sm)] leading-none text-[var(--fa-ink-3)] truncate w-full text-center">{{ $m['label'] }}</div>
+                            <div class="mt-1 fa-t-muted leading-none truncate w-full text-center">{{ $m['label'] }}</div>
                         </div>
                     @endforeach
                 </div>
                 @if($einkauf['gemischte_einheiten'])
-                    <p class="{{ $leise }} mt-1">Gemischte Einheiten im Einkauf — Mengen zeigen nur {{ $eEinheit }}, € enthält alles.</p>
+                    <p class="fa-t-muted mt-1">Gemischte Einheiten im Einkauf — Mengen zeigen nur {{ $eEinheit }}, € enthält alles.</p>
                 @endif
 
                 <table class="fa-table fa-table--compact mt-3" data-einkauf-lieferanten>
@@ -875,7 +874,7 @@
                 </table>
             @endif
             @if(\Illuminate\Support\Facades\Route::has('foodalchemist.lager.index'))
-                <a href="{{ route('foodalchemist.lager.index', ['reiter' => 'bestand']) }}" wire:navigate class="{{ $leise }} hover:underline mt-2 inline-block">Zum Lager →</a>
+                <a href="{{ route('foodalchemist.lager.index', ['reiter' => 'bestand']) }}" wire:navigate class="fa-t-muted hover:underline mt-2 inline-block">Zum Lager →</a>
             @endif
         </x-fa::section>
         @endif
@@ -897,7 +896,7 @@
                         <span class="min-w-0 flex-1 hover:underline">{{ $v->name }}</span>
                     </a>
                 @empty
-                    <p class="{{ $leise }}" data-verwendungen-leer>In keinem Rezept eingesetzt.</p>
+                    <p class="fa-t-muted" data-verwendungen-leer>In keinem Rezept eingesetzt.</p>
                 @endforelse
             </div>
         </x-fa::section>
@@ -907,7 +906,7 @@
         @if($section === null && $kannKuratieren && ! $gp->is_platzhalter && $referenzen !== null)
         <x-fa::section variant="plain" title="Verwaltung" icon="heroicon-o-cog-6-tooth" data-sektion="verwaltung">
             @if($referenzen['summe'] === 0)
-                <p class="{{ $leise }}">Nirgends verwendet, Löschen ist möglich.</p>
+                <p class="fa-t-muted">Nirgends verwendet, Löschen ist möglich.</p>
             @else
                 <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" data-ref-zusammenfassung>Löschen nicht möglich, noch verwendet in:
                     {{ implode(' · ', array_filter([
@@ -947,7 +946,7 @@
                     <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="gpLoeschen" wire:confirm="„{{ $gp->name }}“ löschen? Es gibt keine Verweise darauf." data-gp-loeschen-knopf>Grundprodukt löschen</x-fa::button>
                 @else
                     <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" disabled title="Löschen blockiert: {{ $loeschGrund }}" data-gp-loeschen-gesperrt>Grundprodukt löschen</x-fa::button>
-                    <p class="{{ $leise }} pt-1" data-gp-loeschen-grund>Gesperrt: {{ $loeschGrund }}</p>
+                    <p class="fa-t-muted pt-1" data-gp-loeschen-grund>Gesperrt: {{ $loeschGrund }}</p>
                 @endif
             </div>
         </x-fa::section>
@@ -955,7 +954,7 @@
         </div>
 
         @if($section === null)
-        <p class="pt-3 border-t border-[var(--fa-line)] {{ $leise }}"><span class="font-mono">{{ $gp->uuid }}</span>@if($gp->team_id === null)<span> · zentral gepflegt, für alle Teams</span>@endif</p>
+        <p class="pt-3 border-t border-[var(--fa-line)] fa-t-muted"><span class="font-mono">{{ $gp->uuid }}</span>@if($gp->team_id === null)<span> · zentral gepflegt, für alle Teams</span>@endif</p>
         @endif
         </fieldset>
     @endif

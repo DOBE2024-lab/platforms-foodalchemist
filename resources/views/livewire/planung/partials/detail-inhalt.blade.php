@@ -9,7 +9,7 @@
         <x-fa::detail-kopf :title="$anzeigeTitel($active)"
             :subtitle="! empty($active->source_trend_refs) ? 'Herkunft: Trendradar (' . (count($active->source_trend_refs['trend_ids'] ?? []) + count($active->source_trend_refs['inspiration_ids'] ?? []) + count($active->source_trend_refs['fundstueck_ids'] ?? [])) . ' Impulse)' : 'Herkunft: Freier Brief'">
             @if(filled($active->title) && trim((string) $active->title) !== $anzeigeTitel($active))
-                <p class="mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] break-words">Planung: {{ $active->title }}</p>
+                <p class="mt-0.5 fa-t-muted break-words">Planung: {{ $active->title }}</p>
             @endif
             <x-slot:badges>
                 <x-fa::badge :tone="$kaskadeStatusTon[$aktKaskade] ?? 'neutral'">{{ \Illuminate\Support\Str::ucfirst($aktKaskade) }}</x-fa::badge>

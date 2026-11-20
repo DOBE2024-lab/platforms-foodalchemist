@@ -30,10 +30,10 @@
                         @endforeach
                     </ul>
                 @endif
-                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $trend->ableitung_quelle === 'manuell' ? 'Von Hand bearbeitet' : 'KI-Vorschlag' }} · {{ $trend->ableitung_at?->format('d.m.Y') }}</span>
+                <span class="fa-t-muted">{{ $trend->ableitung_quelle === 'manuell' ? 'Von Hand bearbeitet' : 'KI-Vorschlag' }} · {{ $trend->ableitung_at?->format('d.m.Y') }}</span>
             </div>
         @else
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Ableitung. Sie entsteht automatisch, wenn die Automatik einen eigenen Trend prüft, oder per Knopf.</p>
+            <p class="fa-t-muted">Noch keine Ableitung. Sie entsteht automatisch, wenn die Automatik einen eigenen Trend prüft, oder per Knopf.</p>
         @endif
 
         @if($darf && ! $bearbeiten)

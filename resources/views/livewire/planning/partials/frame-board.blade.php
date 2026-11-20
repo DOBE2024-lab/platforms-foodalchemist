@@ -124,7 +124,7 @@
                 @endforeach
             </div>
         @else
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Regeln. Unten hinzufügen.</p>
+            <p class="fa-t-muted">Noch keine Regeln. Unten hinzufügen.</p>
         @endif
 
         <div class="grid grid-cols-2 md:grid-cols-6 xl:grid-cols-12 gap-2 items-end pt-3 border-t border-[var(--fa-line)]">

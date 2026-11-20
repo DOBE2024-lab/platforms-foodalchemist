@@ -15,7 +15,7 @@
 <div class="flex flex-col gap-4" data-ctrl-kennzahlen>
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0 flex flex-col gap-2">
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+            <p class="fa-t-muted max-w-[75ch]">
                 Die geltenden Kosten-Regeln, Grundlage jeder Kalkulation und der Simulation.
                 Das volle Zuschlagsschema wird in den Einstellungen unter Herstellkosten gepflegt.
             </p>
@@ -63,7 +63,7 @@
          'title' => 'Fixkosten je Monat geteilt durch die Deckungsbeitragsquote (1 minus Ziel-Wareneinsatz). Monatsumsatz, ab dem die Fixkosten gedeckt sind.'],
     ]" />
 
-    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 fa-t-muted">
         <span>
             <span class="font-medium text-[var(--fa-ink-2)]">Mehrwertsteuer</span>
             regulär {{ $zahl($mwst['regulaer']) }} % · ermäßigt {{ $zahl($mwst['ermaessigt']) }} % · Standard {{ $mwst['default_satz'] === 'regulaer' ? 'regulär' : 'ermäßigt' }}
@@ -82,7 +82,7 @@
         </div>
     @endif
 
-    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch] pt-1">
+    <p class="fa-t-muted max-w-[75ch] pt-1">
         Die Kalkulation je Gericht und Menge (Herstellkosten, Verkaufspreis-Vorschlag, Deckungsbeitrag) läuft im
         <a href="{{ route('foodalchemist.concepter.index') }}" class="text-[var(--fa-accent)] hover:underline" wire:navigate>Concepter</a>
         und je Einzelgericht unter

@@ -1,6 +1,5 @@
 {{-- Spec 94 · Leistungs-Vorlagen: Personal, Equipment, Logistik, Sonstiges mit Mengenregel, EK und VK. Konfiguratoren kopieren sie. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $f = $form;
     $euro = fn ($w) => $w !== null && $w !== '' ? number_format((float) $w, 2, ',', '.') . ' €' : '–';
 @endphp
@@ -55,7 +54,7 @@
                     <thead><tr><th>Leistung</th><th>Menge</th><th>Preis je</th><th class="num">EK</th><th class="num">VK</th><th class="num">Aufschlag</th><th></th></tr></thead>
                     <tbody>
                         @foreach($gruppen as $kategorie => $vorlagen)
-                            <tr wire:key="lvk-{{ $kategorie }}" class="bg-[var(--fa-ground)]"><td colspan="7" class="font-semibold text-[var(--fa-ink-2)]">{{ $kategorieNamen[$kategorie] ?? $kategorie }} <span class="{{ $leise }} font-normal">· {{ $vorlagen->count() }}</span></td></tr>
+                            <tr wire:key="lvk-{{ $kategorie }}" class="bg-[var(--fa-ground)]"><td colspan="7" class="font-semibold text-[var(--fa-ink-2)]">{{ $kategorieNamen[$kategorie] ?? $kategorie }} <span class="fa-t-muted font-normal">· {{ $vorlagen->count() }}</span></td></tr>
                             @foreach($vorlagen as $v)
                                 @php
                                     $eigen = $v->isOwnedBy($team);
@@ -66,18 +65,18 @@
                                         <span class="font-medium">{{ $v->bezeichnung }}</span>
                                         @if(! $eigen)<x-fa::badge class="ml-1.5" title="Vom Oberteam geerbt, nur lesbar">Geerbt</x-fa::badge>@endif
                                         @if(! $v->aktiv)<x-fa::badge class="ml-1.5">Inaktiv</x-fa::badge>@endif
-                                        @if($v->notiz)<div class="{{ $leise }}">{{ $v->notiz }}</div>@endif
+                                        @if($v->notiz)<div class="fa-t-muted">{{ $v->notiz }}</div>@endif
                                     </td>
                                     <td>{{ \Platform\FoodAlchemist\Livewire\Angebote\LeistungVorlagen::regelText($v) }}</td>
                                     <td>
                                         {{ $v->preis_je === 'stunde' ? 'Stunde' : 'Stück' }}
-                                        @if($v->preis_je === 'stunde')<div class="{{ $leise }}">{{ $v->stunden_quelle === 'fest' ? number_format((float) $v->stunden, 1, ',', '.') . ' h fest' : 'Einsatzzeit' . ($v->stunden_zuschlag ? ' + ' . number_format((float) $v->stunden_zuschlag, 1, ',', '.') . ' h' : '') }}</div>@endif
-                                        @if($v->haeufigkeit === 'je_tageszeit')<div class="{{ $leise }}">je Tageszeit</div>@endif
+                                        @if($v->preis_je === 'stunde')<div class="fa-t-muted">{{ $v->stunden_quelle === 'fest' ? number_format((float) $v->stunden, 1, ',', '.') . ' h fest' : 'Einsatzzeit' . ($v->stunden_zuschlag ? ' + ' . number_format((float) $v->stunden_zuschlag, 1, ',', '.') . ' h' : '') }}</div>@endif
+                                        @if($v->haeufigkeit === 'je_tageszeit')<div class="fa-t-muted">je Tageszeit</div>@endif
                                     </td>
                                     <td class="num">{{ $euro($v->ek_satz) }}</td>
                                     <td class="num">
                                         {{ $euro($v->vk_satz) }}
-                                        <div class="{{ $leise }}">{{ $v->vk_modus === 'fixed' ? 'fest' : ($v->markupClass?->code ?? 'ohne Klasse') }}</div>
+                                        <div class="fa-t-muted">{{ $v->vk_modus === 'fixed' ? 'fest' : ($v->markupClass?->code ?? 'ohne Klasse') }}</div>
                                     </td>
                                     <td class="num">{{ $aufschlag !== null ? number_format($aufschlag, 0, ',', '.') . ' %' : '–' }}</td>
                                     <td class="text-right whitespace-nowrap">

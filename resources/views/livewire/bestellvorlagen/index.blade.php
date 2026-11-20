@@ -1,7 +1,4 @@
 {{-- Spec 68/73 · Bestellvorlagen: vorne die Liste (nach Kategorien), Vorlage im Editor. --}}
-@php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
-@endphp
 
 <x-ui-page>
     <x-slot name="navbar">
@@ -39,10 +36,10 @@
                     <thead><tr><th>Vorlage</th><th class="text-right">Positionen</th><th>Bestelltag</th><th>Zuletzt bestellt</th><th></th></tr></thead>
                     <tbody>
                         @foreach($gruppen as $kategorie => $vorlagen)
-                            <tr wire:key="kat-{{ md5($kategorie) }}" class="bg-[var(--fa-ground)]"><td colspan="5" class="font-semibold text-[var(--fa-ink-2)]">{{ $kategorie }} <span class="{{ $leise }} font-normal">· {{ $vorlagen->count() }}</span></td></tr>
+                            <tr wire:key="kat-{{ md5($kategorie) }}" class="bg-[var(--fa-ground)]"><td colspan="5" class="font-semibold text-[var(--fa-ink-2)]">{{ $kategorie }} <span class="fa-t-muted font-normal">· {{ $vorlagen->count() }}</span></td></tr>
                             @foreach($vorlagen as $v)
                                 <tr wire:key="v-{{ $v->id }}" class="cursor-pointer hover:bg-[var(--fa-hover)]" wire:click="oeffnen({{ $v->id }})" data-vorlage-zeile="{{ $v->id }}">
-                                    <td class="font-medium">{{ $v->name }}@if($v->note)<div class="{{ $leise }}">{{ $v->note }}</div>@endif</td>
+                                    <td class="font-medium">{{ $v->name }}@if($v->note)<div class="fa-t-muted">{{ $v->note }}</div>@endif</td>
                                     <td class="text-right tabular-nums">{{ $v->lines_count }}</td>
                                     <td>{{ $v->weekday ? $wochentage[$v->weekday] : '–' }}</td>
                                     <td class="tabular-nums">{{ $v->last_used_at?->format('d.m.Y') ?? '–' }}</td>

@@ -4,7 +4,6 @@
 @php
     $quelleTon = ['kueche' => 'accent', 'kunde' => 'info', 'event' => 'neutral'];
     $quelleLabels = ['kueche' => 'Küche', 'kunde' => 'Kunde', 'event' => 'Event'];
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $gruendeVokabular = (array) config('foodalchemist.feedback_gruende', []);
     $kennzahlen = [
         [
@@ -42,7 +41,7 @@
                     <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                         <x-fa::badge :tone="$quelleTon[$f->quelle->value] ?? 'neutral'">{{ $f->quelle->label() }}</x-fa::badge>
                         @if($f->score !== null)<span class="text-[length:var(--fa-text-md)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ $f->score }} von 5</span>@endif
-                        @if($f->created_at)<span class="{{ $leise }} tabular-nums">{{ $f->created_at->format('d.m.Y') }}</span>@endif
+                        @if($f->created_at)<span class="fa-t-muted tabular-nums">{{ $f->created_at->format('d.m.Y') }}</span>@endif
                         @if($f->created_via === 'mcp')<x-fa::badge tone="accent" icon="heroicon-m-sparkles" title="Von der KI angelegt">KI</x-fa::badge>@endif
                         {{-- Stempel: am Posten erfasst, während gekocht wurde. Belastbarer als „später in den
                              Editor getippt": der Eintrag entstand an der Charge, nicht aus Erinnerung. --}}
@@ -73,7 +72,7 @@
                     </div>
                 @endif
                 @if($f->comment)<p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">{{ $f->comment }}</p>@endif
-                @if($f->kontext_label)<p class="{{ $leise }}">Anlass: {{ $f->kontext_label }}@if($f->kontext_datum) · {{ $f->kontext_datum->format('d.m.Y') }}@endif</p>@endif
+                @if($f->kontext_label)<p class="fa-t-muted">Anlass: {{ $f->kontext_label }}@if($f->kontext_datum) · {{ $f->kontext_datum->format('d.m.Y') }}@endif</p>@endif
                 @if($f->spawned_recipe_id)<x-fa::signal tone="info" icon="heroicon-m-arrow-trending-up">Weiterentwicklung als Entwurf angelegt (Rezept {{ $f->spawned_recipe_id }})</x-fa::signal>@endif
             </article>
         @empty
@@ -104,7 +103,7 @@
                 <x-fa::field label="Geschmack" for="fb-geschmack-{{ $recipeId }}"><x-fa::input numeric type="number" min="1" max="5" id="fb-geschmack-{{ $recipeId }}" wire:model="geschmack" /></x-fa::field>
                 <x-fa::field label="Gäste-Reaktion" for="fb-gaeste-{{ $recipeId }}"><x-fa::input numeric type="number" min="1" max="5" id="fb-gaeste-{{ $recipeId }}" wire:model="gaeste_reaktion" /></x-fa::field>
             </div>
-            <p class="{{ $leise }} -mt-1">Küchen-Feedback treibt die Weiterentwicklung. Ohne Bewertung zählt der Mittelwert aus Machbarkeit, Geschmack und Gäste-Reaktion.</p>
+            <p class="fa-t-muted -mt-1">Küchen-Feedback treibt die Weiterentwicklung. Ohne Bewertung zählt der Mittelwert aus Machbarkeit, Geschmack und Gäste-Reaktion.</p>
         @endif
 
         <x-fa::field label="Kommentar" for="fb-kommentar-{{ $recipeId }}" error="comment">

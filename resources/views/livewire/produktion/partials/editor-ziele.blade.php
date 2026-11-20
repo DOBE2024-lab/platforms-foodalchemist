@@ -22,7 +22,7 @@
         <div class="flex flex-col lg:flex-row gap-3 items-start">
             <aside class="w-full lg:w-72 xl:w-80 shrink-0 flex flex-col rounded-[var(--fa-radius-surface)] bg-[var(--fa-ground)] border border-[var(--fa-line)] p-2.5 lg:sticky lg:top-14 self-start max-h-[65vh]" data-produktion-katalog>
                 <div x-show="zielTyp !== 'kapitel'" class="min-h-0 flex flex-col gap-2">
-                    <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]"><span x-text="typLabel()"></span> <span class="font-normal text-[var(--fa-ink-3)] tabular-nums" x-text="total > 0 ? '· ' + total + ' Treffer' : ''"></span></p>
+                    <p class="fa-t-label"><span x-text="typLabel()"></span> <span class="font-normal text-[var(--fa-ink-3)] tabular-nums" x-text="total > 0 ? '· ' + total + ' Treffer' : ''"></span></p>
 
                     <div x-show="zielTyp === 'recipe' || zielTyp === 'basisrezept'" x-cloak class="flex flex-col gap-1.5">
                         <x-fa::select size="sm" x-model="filter.hg" x-on:change="filter.kat = ''; browse()" aria-label="Hauptgruppe" data-ziel-filter-hg>
@@ -47,11 +47,11 @@
                                    class="pl-8" data-produktion-gericht-suche />
                         </div>
                         <div x-show="geparkt !== null" x-cloak class="flex flex-col gap-2" data-produktion-park-zeile>
-                            <p class="min-w-0 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] break-words" x-text="geparkt?.name"></p>
+                            <p class="min-w-0 fa-t-strong break-words" x-text="geparkt?.name"></p>
                             <div class="flex flex-wrap items-center gap-1.5">
                                 <x-fa::input size="sm" numeric x-model="neu.menge" x-on:keydown.enter.prevent="einfuegen()" placeholder="Menge" aria-label="Menge"
                                        class="w-20" data-produktion-menge />
-                                <span x-show="zielTyp !== 'basisrezept'" class="{{ $leise }}" x-text="zielTyp === 'concept' ? 'Personen' : 'Portionen'"></span>
+                                <span x-show="zielTyp !== 'basisrezept'" class="fa-t-muted" x-text="zielTyp === 'concept' ? 'Personen' : 'Portionen'"></span>
                                 <div x-show="zielTyp === 'basisrezept'" x-cloak class="inline-flex items-center gap-0.5 p-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] shrink-0" role="group" aria-label="Einheit" data-produktion-basis-einheit>
                                     <button type="button" @click="neu.einheit = 'ansaetze'" class="{{ $segment }}" :class="neu.einheit === 'ansaetze' ? '{{ $segmentAn }}' : '{{ $segmentAus }}'">Ansätze</button>
                                     <button type="button" @click="neu.einheit = 'kg'" class="{{ $segment }}" :class="neu.einheit === 'kg' ? '{{ $segmentAn }}' : '{{ $segmentAus }}'">kg</button>
@@ -63,29 +63,29 @@
                                         <option :value="f.standard ? '' : String(f.id)" :selected="(f.standard ? '' : String(f.id)) === neu.form" x-text="f.label + (f.gramm ? ' · ' + f.gramm + ' g' : '') + (f.standard ? ' (Standard)' : '')"></option>
                                     </template>
                                 </select>
-                                <span x-show="zielTyp === 'recipe' && formen.length === 1" x-cloak class="{{ $leise }}" x-text="formen[0] ? formen[0].label + (formen[0].gramm ? ' · ' + formen[0].gramm + ' g' : '') : ''"></span>
+                                <span x-show="zielTyp === 'recipe' && formen.length === 1" x-cloak class="fa-t-muted" x-text="formen[0] ? formen[0].label + (formen[0].gramm ? ' · ' + formen[0].gramm + ' g' : '') : ''"></span>
                                 <span class="ml-auto inline-flex items-center gap-1">
                                     <x-fa::icon-button icon="heroicon-m-x-mark" label="Auswahl verwerfen" size="sm" x-on:click="verwerfen()" />
                                     <x-fa::button variant="secondary" size="sm" icon="heroicon-m-plus" x-on:click="einfuegen()" data-produktion-ziel-einfuegen>Einfügen</x-fa::button>
                                 </span>
                             </div>
                         </div>
-                        <p class="mt-1.5 {{ $leise }}" x-text="zielTyp === 'angebot' ? 'Angebote werden mit ihrer eigenen Personenzahl übernommen.' : 'Mit Plus wählen, Menge eingeben, mit Enter einfügen.'"></p>
+                        <p class="mt-1.5 fa-t-muted" x-text="zielTyp === 'angebot' ? 'Angebote werden mit ihrer eigenen Personenzahl übernommen.' : 'Mit Plus wählen, Menge eingeben, mit Enter einfügen.'"></p>
                     </div>
 
                     <div class="flex flex-col gap-px flex-1 min-h-0 overflow-y-auto -mx-1 px-1" data-produktion-kandidaten>
                         <template x-for="ziel in liste" :key="ziel.type + '-' + ziel.id">
                             <div class="group flex items-center gap-1.5 px-1.5 py-1 rounded-[var(--fa-radius-control)] hover:bg-[var(--fa-hover)] text-[length:var(--fa-text-md)]" :data-produktion-kandidat="ziel.id">
                                 <span class="min-w-0 flex-1 break-words leading-snug text-[var(--fa-ink)]" x-text="ziel.name" :title="ziel.name"></span>
-                                <span x-show="zielTyp === 'angebot' && ziel.meta?.personen" class="shrink-0 {{ $leise }} tabular-nums" x-text="ziel.meta.personen + ' Personen'"></span>
-                                <span x-show="(ziel.meta?.niveaus ?? []).length > 0" class="shrink-0 {{ $leise }}" x-text="niveauText(ziel.meta?.niveaus)"></span>
+                                <span x-show="zielTyp === 'angebot' && ziel.meta?.personen" class="shrink-0 fa-t-muted tabular-nums" x-text="ziel.meta.personen + ' Personen'"></span>
+                                <span x-show="(ziel.meta?.niveaus ?? []).length > 0" class="shrink-0 fa-t-muted" x-text="niveauText(ziel.meta?.niveaus)"></span>
                                 <button type="button" @click="parke(ziel)" data-parke
                                         class="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-[var(--fa-radius-control)] text-[var(--fa-accent)] hover:bg-[var(--fa-accent-soft)]"
                                         :aria-label="ziel.name + ' übernehmen'" title="Übernehmen, dann Menge eingeben">@svg('heroicon-m-plus', 'w-4 h-4')</button>
                             </div>
                         </template>
-                        <p x-show="liste.length === 0" class="px-1.5 py-2 {{ $leise }}" x-text="browserGeladen ? 'Keine Treffer. Suche oder Filter ändern.' : 'Ins Suchfeld klicken, dann erscheint der Katalog.'"></p>
-                        <p x-show="total > 200" x-cloak class="px-1.5 py-1 {{ $leise }}" x-text="'Weitere ' + (total - 200) + ' Treffer. Suche oder Filter eingrenzen.'"></p>
+                        <p x-show="liste.length === 0" class="px-1.5 py-2 fa-t-muted" x-text="browserGeladen ? 'Keine Treffer. Suche oder Filter ändern.' : 'Ins Suchfeld klicken, dann erscheint der Katalog.'"></p>
+                        <p x-show="total > 200" x-cloak class="px-1.5 py-1 fa-t-muted" x-text="'Weitere ' + (total - 200) + ' Treffer. Suche oder Filter eingrenzen.'"></p>
                     </div>
                 </div>
 
@@ -109,7 +109,7 @@
                     </x-fa::field>
                     @if(! empty($variantGroups))
                         <div class="flex flex-col gap-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-2.5" data-produktion-varianten>
-                            <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Varianten wählen</p>
+                            <p class="fa-t-label">Varianten wählen</p>
                             @foreach($variantGroups as $g)
                                 <x-fa::select size="sm" wire:model="variantChoices.{{ $g['group_id'] }}" wire:key="vg-{{ $g['group_id'] }}" aria-label="Variante" data-produktion-variante="{{ $g['group_id'] }}">
                                     @foreach($g['options'] as $opt)
@@ -126,7 +126,7 @@
             <aside class="w-full flex-1 min-w-0 rounded-[var(--fa-radius-surface)] bg-[var(--fa-ground)] border border-[var(--fa-line)] p-2.5" data-produktion-zielkorb>
                 <div class="flex items-center justify-between gap-2 mb-2 px-1">
                     <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Ziel-Korb</p>
-                    <span class="{{ $leise }} tabular-nums">{{ count($targets) }} {{ count($targets) === 1 ? 'Ziel' : 'Ziele' }}</span>
+                    <span class="fa-t-muted tabular-nums">{{ count($targets) }} {{ count($targets) === 1 ? 'Ziel' : 'Ziele' }}</span>
                 </div>
                 <div class="flex flex-col gap-1">
                     @forelse($targets as $t)

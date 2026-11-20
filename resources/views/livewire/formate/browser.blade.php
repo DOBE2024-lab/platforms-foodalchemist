@@ -136,7 +136,7 @@
                                     <button type="button" wire:click.stop="bearbeite({{ $it->id }})" title="{{ $it->name }} bearbeiten"
                                             class="text-left font-medium text-[var(--fa-ink)] hover:text-[var(--fa-accent)] hover:underline">{{ $it->name }}</button>
                                     @if($it->consumer_name && $it->consumer_name !== $it->name)
-                                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Für Gäste: {{ $it->consumer_name }}</p>
+                                        <p class="fa-t-muted">Für Gäste: {{ $it->consumer_name }}</p>
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ collect([$it->eventType?->name, $it->servingForm?->label])->filter()->join(' · ') ?: '–' }}</td>

@@ -7,7 +7,7 @@
         @if($meldung)<x-fa::notice tone="ok" data-stamm-paket-meldung>{{ $meldung }}</x-fa::notice>@endif
 
         <x-fa::section variant="plain">
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[65ch]">Grundprodukte, Lieferanten, Artikel und ihre Verknüpfung, ohne Preise. Das Paket gehört dem Mandanten (Haupt-Team), Unter-Teams erben es. Das Master-Team hat es immer. Ein Abo setzt ein gebuchtes Paket voraus.</p>
+            <p class="fa-t-muted max-w-[65ch]">Grundprodukte, Lieferanten, Artikel und ihre Verknüpfung, ohne Preise. Das Paket gehört dem Mandanten (Haupt-Team), Unter-Teams erben es. Das Master-Team hat es immer. Ein Abo setzt ein gebuchtes Paket voraus.</p>
             @if($mandanten === [])
                 <x-fa::empty compact icon="heroicon-o-archive-box" title="Keine Mandanten">Es gibt noch kein Haupt-Team neben dem Master-Team.</x-fa::empty>
             @else
@@ -47,7 +47,7 @@
                     <x-fa::notice tone="info">Erst das Stamm-Paket buchen, dann Lieferanten freischalten.</x-fa::notice>
                 @else
                     <div class="max-w-3xl" data-stamm-paket-lieferanten-wrap>
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[65ch] pb-3">Nur freigeschaltete Lieferanten (und ihre Artikel, auch künftige) sehen Mandant und Unter-Teams. Neue Lieferanten erscheinen hier automatisch, unfreigeschaltet. Grundprodukte bleiben für alle sichtbar. „Preise“ gibt die Preise des Master-Teams für diesen Lieferanten laufend mit (eigene Preise des Mandanten gewinnen immer).</p>
+                    <p class="fa-t-muted max-w-[65ch] pb-3">Nur freigeschaltete Lieferanten (und ihre Artikel, auch künftige) sehen Mandant und Unter-Teams. Neue Lieferanten erscheinen hier automatisch, unfreigeschaltet. Grundprodukte bleiben für alle sichtbar. „Preise“ gibt die Preise des Master-Teams für diesen Lieferanten laufend mit (eigene Preise des Mandanten gewinnen immer).</p>
                     <div class="flex flex-wrap items-center gap-2 pb-2">
                         <div class="relative flex-1 min-w-[12rem]">
                             <label for="lieferanten-suche" class="sr-only">Lieferant suchen</label>
@@ -56,7 +56,7 @@
                         </div>
                         <x-fa::button size="sm" variant="ghost" wire:click="alleWaehlen" data-stamm-paket-lieferanten-alle>Alle</x-fa::button>
                         <x-fa::button size="sm" variant="ghost" wire:click="keineWaehlen" data-stamm-paket-lieferanten-keine>Keine</x-fa::button>
-                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums whitespace-nowrap" data-stamm-paket-lieferanten-zaehler>{{ count($auswahl) }} von {{ $ld['gesamt'] }} gewählt</span>
+                        <span class="fa-t-muted tabular-nums whitespace-nowrap" data-stamm-paket-lieferanten-zaehler>{{ count($auswahl) }} von {{ $ld['gesamt'] }} gewählt</span>
                     </div>
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
                         <label class="inline-flex items-center gap-2 cursor-pointer">

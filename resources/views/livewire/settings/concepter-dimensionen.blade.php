@@ -17,13 +17,13 @@
     @foreach($listen as $key => $vokabular)
         <x-fa::section :title="$vokabular['label']" :meta="$vokabular['zeilen']->count()" :description="$vokabular['hint']" data-dimension="{{ $key }}">
             @if($vokabular['zeilen']->isEmpty())
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Einträge. Unten den ersten anlegen.</p>
+                <p class="fa-t-muted">Noch keine Einträge. Unten den ersten anlegen.</p>
             @else
                 <div class="flex flex-wrap gap-1.5">
                     @foreach($vokabular['zeilen'] as $zeile)
                         @php($ausWawi = $key === 'servierformen' && $zeile->legacy_id !== null)
                         <span wire:key="dim-{{ $key }}-{{ $zeile->id }}" tabindex="0"
-                              class="group inline-flex items-center gap-1 h-7 pl-2.5 pr-1.5 rounded-[var(--fa-radius-pill)] border border-[var(--fa-line)] bg-[var(--fa-surface)] text-[length:var(--fa-text-md)] text-[var(--fa-ink)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fa-accent)] {{ $zeile->is_inactive ? 'opacity-60 line-through' : '' }}"
+                              class="group inline-flex items-center gap-1 h-7 pl-2.5 pr-1.5 rounded-[var(--fa-radius-pill)] border border-[var(--fa-line)] bg-[var(--fa-surface)] fa-t-body focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fa-accent)] {{ $zeile->is_inactive ? 'opacity-60 line-through' : '' }}"
                               @if($key === 'servierformen') title="{{ $ausWawi ? 'Aus der Warenwirtschaft' : 'Eigener Eintrag' }}" @endif>
                             {{ $zeile->label ?? $zeile->name }}
                             <span class="hidden group-hover:inline-flex group-focus-within:inline-flex group-focus:inline-flex items-center">

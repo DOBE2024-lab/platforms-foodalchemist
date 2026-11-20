@@ -1,6 +1,5 @@
 {{-- Spec 82 §8 / §13 B6 — Abos: Master vergibt/kündigt/zieht zurück, Mandant sieht „Meine Abos". Kündigen/Zurückziehen nur mit Vorschau + Bestätigung. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $datum = fn ($d) => $d ? \Illuminate\Support\Carbon::parse($d)->format('d.m.Y') : '—';
 @endphp
 
@@ -26,13 +25,13 @@
                     <div class="flex flex-col gap-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] px-3 py-2" data-abos-vorschau-mandant>
                         <div class="font-medium">{{ $m['name'] }}</div>
                         @if($v['genutzt'] === [] && $v['mitkopiert'] === [] && $v['verschwindet'] === [] && empty($v['bleibt']))
-                            <p class="{{ $leise }}">Keine Wirkung: Die Rezepte bleiben über ein anderes Abo verfügbar.</p>
+                            <p class="fa-t-muted">Keine Wirkung: Die Rezepte bleiben über ein anderes Abo verfügbar.</p>
                         @endif
                         @if($v['genutzt'] !== [])
                             <div data-abos-vorschau-genutzt>
                                 <x-fa::badge tone="warn">Genutzt, wird eigene Kopie</x-fa::badge>
                                 <ul class="mt-1 text-[length:var(--fa-text-sm)]">
-                                    @foreach($v['genutzt'] as $r)<li>{{ $artLabel[$r['typ'] ?? 'recipe'] ?? 'Rezept' }}: {{ $r['name'] }} <span class="{{ $leise }}">({{ implode(', ', $r['wo']) }})</span></li>@endforeach
+                                    @foreach($v['genutzt'] as $r)<li>{{ $artLabel[$r['typ'] ?? 'recipe'] ?? 'Rezept' }}: {{ $r['name'] }} <span class="fa-t-muted">({{ implode(', ', $r['wo']) }})</span></li>@endforeach
                                 </ul>
                             </div>
                         @endif
@@ -45,7 +44,7 @@
                         @if(! empty($v['bleibt']))
                             <div data-abos-vorschau-bleibt>
                                 <x-fa::badge tone="ok">Bleibt über ein anderes Abo, keine Kopie</x-fa::badge>
-                                <ul class="mt-1 text-[length:var(--fa-text-sm)]">@foreach($v['bleibt'] as $r)<li>{{ $artLabel[$r['typ'] ?? 'recipe'] ?? 'Rezept' }}: {{ $r['name'] }} <span class="{{ $leise }}">(über {{ implode(', ', $r['via'] ?: ['ein anderes Abo']) }})</span></li>@endforeach</ul>
+                                <ul class="mt-1 text-[length:var(--fa-text-sm)]">@foreach($v['bleibt'] as $r)<li>{{ $artLabel[$r['typ'] ?? 'recipe'] ?? 'Rezept' }}: {{ $r['name'] }} <span class="fa-t-muted">(über {{ implode(', ', $r['via'] ?: ['ein anderes Abo']) }})</span></li>@endforeach</ul>
                             </div>
                         @endif
                         @if($v['verschwindet'] !== [])
@@ -56,9 +55,9 @@
                         @endif
                     </div>
                 @empty
-                    <p class="{{ $leise }}">Kein Mandant hat diese Sammlung abonniert. Das Rezept verlässt nur die Sammlung.</p>
+                    <p class="fa-t-muted">Kein Mandant hat diese Sammlung abonniert. Das Rezept verlässt nur die Sammlung.</p>
                 @endforelse
-                <p class="{{ $leise }} mt-2">Archivierte Ausgaben und angenommene oder abgelehnte Angebote behalten ihre Fassung.</p>
+                <p class="fa-t-muted mt-2">Archivierte Ausgaben und angenommene oder abgelehnte Angebote behalten ihre Fassung.</p>
                 <label class="mt-2 inline-flex items-center gap-2 text-[length:var(--fa-text-md)] cursor-pointer">
                     <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="bestaetigt" data-abos-bestaetigung />
                     Ich habe die Vorschau gelesen.
@@ -129,7 +128,7 @@
                             <x-fa::badge tone="neutral">{{ $s['abonnenten'] }} Abo(s)</x-fa::badge>
                         </div>
                         @if($s['objekte'] === [])
-                            <p class="{{ $leise }}">Keine Objekte in dieser Sammlung.</p>
+                            <p class="fa-t-muted">Keine Objekte in dieser Sammlung.</p>
                         @else
                             <div class="overflow-x-auto -mx-4">
                             <table class="fa-table fa-table--compact">
@@ -146,7 +145,7 @@
                                                     <x-fa::badge tone="warn" data-abos-unveroeffentlicht>Nicht veröffentlicht</x-fa::badge>
                                                 @endif
                                             </td>
-                                            <td class="{{ $leise }}">{{ $o['fassung']?->aenderungsnotiz }}</td>
+                                            <td class="fa-t-muted">{{ $o['fassung']?->aenderungsnotiz }}</td>
                                             <td class="text-right whitespace-nowrap">
                                                 @if($darfSchreiben)
                                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-o-arrow-uturn-left" wire:click="zurueckziehenVorschau({{ $s['id'] }}, {{ $o['id'] }}, '{{ $o['typ'] }}')" data-abos-zurueckziehen="{{ $o['typ'] }}-{{ $o['id'] }}">Zurückziehen …</x-fa::button>
@@ -171,7 +170,7 @@
             @forelse($abos as $a)
                 <x-fa::section title="{{ $a['sammlung'] }}" icon="heroicon-o-arrow-path-rounded-square" description="Abonniert seit {{ $datum($a['seit']) }}" data-abos-mein-abo="{{ $a['id'] }}">
                     @if(($objekte[$a['id']] ?? []) === [])
-                        <p class="{{ $leise }}">Noch nichts veröffentlicht.</p>
+                        <p class="fa-t-muted">Noch nichts veröffentlicht.</p>
                     @else
                         <div class="overflow-x-auto -mx-4">
                         <table class="fa-table fa-table--compact">
@@ -183,7 +182,7 @@
                                         <td>{{ $f->name }}</td>
                                         <td class="whitespace-nowrap">Fassung {{ $f->fassung_nr }} · {{ $datum($f->veroeffentlicht_at) }}</td>
                                         <td>
-                                            <span class="{{ $leise }}">{{ $f->aenderungsnotiz }}</span>
+                                            <span class="fa-t-muted">{{ $f->aenderungsnotiz }}</span>
                                             @if($f->fassung_allergen_geaendert)<x-fa::badge tone="warn" data-abos-allergen-hinweis>Allergene geändert</x-fa::badge>@endif
                                         </td>
                                     </tr>

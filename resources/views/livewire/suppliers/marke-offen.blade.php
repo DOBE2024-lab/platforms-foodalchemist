@@ -73,7 +73,7 @@
                                     <tr wire:key="mo-{{ $g['schluessel'] }}" data-marke-offen-gruppe="{{ $g['schluessel'] }}">
                                         <td class="whitespace-nowrap">
                                             <span class="font-mono font-medium">{{ $g['roh'] }}</span>@if($g['erledigt'] ?? false) <x-fa::badge tone="ok" data-gruppe-erledigt>zugeordnet</x-fa::badge>@endif
-                                            <div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $g['position'] === 'ende' ? 'am Ende' : 'am Anfang' }}</div>
+                                            <div class="fa-t-muted">{{ $g['position'] === 'ende' ? 'am Ende' : 'am Anfang' }}</div>
                                         </td>
                                         <td>{{ $g['lieferant'] }}</td>
                                         <td class="text-right tabular-nums">{{ $fmt($g['gps']) }}</td>

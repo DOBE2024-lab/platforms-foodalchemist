@@ -40,16 +40,16 @@
                 @if(! $sig->status->istOffen())
                     <x-fa::badge :tone="$sig->status->value === 'erledigt' ? 'ok' : 'neutral'">{{ $sig->status->label() }}</x-fa::badge>
                 @endif
-                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $bereich }}</span>
+                <span class="fa-t-muted">{{ $bereich }}</span>
             </div>
-            <h3 class="text-[length:var(--fa-text-lg)] font-semibold leading-snug text-[var(--fa-ink)]">{{ $sig->title }}</h3>
+            <h3 class="fa-t-h2 leading-snug">{{ $sig->title }}</h3>
             <p class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
                 @svg($sig->type->icon(), 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') {{ $sig->type->label() }}
             </p>
             @if($sig->description)
                 <p class="text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink-2)] max-w-[70ch]">{{ $sig->description }}</p>
             @endif
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" title="Quelle: {{ $sig->source }}">
+            <p class="fa-t-muted" title="Quelle: {{ $sig->source }}">
                 Erkannt am {{ $sig->created_at?->format('d.m.Y') }} um {{ $sig->created_at?->format('H:i') }} Uhr
             </p>
         </header>
@@ -60,7 +60,7 @@
             <x-fa::notice tone="info" :title="$istWeg ? 'So beheben' : $plan['flavorLabel']">
                 {{ $plan['plan'] }}
                 @unless($istWeg)
-                    <span class="block mt-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Starten über „KI erledigen lassen“ in der Liste.</span>
+                    <span class="block mt-1 fa-t-muted">Starten über „KI erledigen lassen“ in der Liste.</span>
                 @endunless
             </x-fa::notice>
         @elseif($plan === null && $ohneWeg !== null && $sig->status->istOffen())
@@ -102,7 +102,7 @@
                     @php $bu = $bausteinUebernahme; @endphp
                     <div class="mt-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3 flex flex-col gap-2" data-signal-baustein-vorschau>
                         <p class="font-medium">{{ $bu['wo'] }} „{{ $bu['name'] }}“: Fassung #{{ $bu['von_nr'] }} → #{{ $bu['nach_nr'] }}</p>
-                        @if($bu['aenderungsnotiz'])<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Änderungsnotiz: {{ $bu['aenderungsnotiz'] }}</p>@endif
+                        @if($bu['aenderungsnotiz'])<p class="fa-t-muted">Änderungsnotiz: {{ $bu['aenderungsnotiz'] }}</p>@endif
                         @if($bu['allergen_diff'] !== [])
                             <ul class="text-[length:var(--fa-text-sm)]">@foreach($bu['allergen_diff'] as $feld => $d)<li wire:key="sigbu-d-{{ $feld }}">{{ str_replace(['allergen_', 'additive_'], ['Allergen ', 'Zusatzstoff '], $feld) }}: {{ $d['von'] ?? '—' }} → {{ $d['nach'] ?? '—' }}</li>@endforeach</ul>
                         @endif
@@ -121,7 +121,7 @@
                     @php $ru = $rezeptUebernahme; @endphp
                     <div class="mt-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3 flex flex-col gap-2" data-signal-rezept-vorschau>
                         <p class="font-medium">{{ $ru['name'] }}: Fassung #{{ $ru['von_nr'] }} → #{{ $ru['nach_nr'] }}</p>
-                        @if($ru['aenderungsnotiz'])<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Änderungsnotiz: {{ $ru['aenderungsnotiz'] }}</p>@endif
+                        @if($ru['aenderungsnotiz'])<p class="fa-t-muted">Änderungsnotiz: {{ $ru['aenderungsnotiz'] }}</p>@endif
                         @if($ru['allergen_diff'] !== [])
                             <ul class="text-[length:var(--fa-text-sm)]">@foreach($ru['allergen_diff'] as $feld => $d)<li>{{ str_replace(['allergen_', 'additive_'], ['Allergen ', 'Zusatzstoff '], $feld) }}: {{ $d['von'] ?? '—' }} → {{ $d['nach'] ?? '—' }}</li>@endforeach</ul>
                         @elseif($ru['allergen_geaendert'])
@@ -197,10 +197,10 @@
                                         <span class="truncate">{{ $it['name'] }}</span>
                                     </a>
                                 @else
-                                    <span class="min-w-0 flex-1 truncate text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $it['name'] }}">{{ $it['name'] }}</span>
+                                    <span class="min-w-0 flex-1 truncate fa-t-body" title="{{ $it['name'] }}">{{ $it['name'] }}</span>
                                 @endif
 
-                                @if($art)<span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $art }}</span>@endif
+                                @if($art)<span class="shrink-0 fa-t-muted">{{ $art }}</span>@endif
 
                                 {{-- „Was noch?" gilt für jedes auflösbare Objekt (SignalObjectService::KINDS). --}}
                                 @if(in_array($it['kind'], \Platform\FoodAlchemist\Services\SignalObjectService::KINDS, true))
@@ -213,9 +213,9 @@
                             {{-- Objekt-zentrische Sicht: alle offenen Signale am selben Objekt --}}
                             @if($istGewaehlt)
                                 <div class="mx-1 mb-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2.5" data-signal-objekt-sicht>
-                                    <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)] mb-1.5">Offene Signale an diesem Objekt</p>
+                                    <p class="fa-t-label mb-1.5">Offene Signale an diesem Objekt</p>
                                     @if(count($objektSignale) <= 1)
-                                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Nur dieses Signal. Einmal beheben genügt.</p>
+                                        <p class="fa-t-muted">Nur dieses Signal. Einmal beheben genügt.</p>
                                     @else
                                         <div class="flex flex-col gap-0.5">
                                             @foreach($objektSignale as $os)
@@ -224,11 +224,11 @@
                                                     <x-fa::badge :tone="$schwereTon[$os['severity']] ?? 'info'" class="shrink-0" :icon="$os['icon']" title="{{ ucfirst($os['severity']) }}"></x-fa::badge>
                                                     <span class="min-w-0 flex-1 truncate text-[length:var(--fa-text-md)] {{ $os['id'] === $sig->id ? 'font-medium text-[var(--fa-ink)]' : 'text-[var(--fa-ink-2)]' }}" title="{{ $os['label'] }}">{{ $os['label'] }}</span>
                                                     @if($os['hat_ki'])<span class="shrink-0 text-[var(--fa-accent)]" title="KI-Schritt vorhanden">@svg('heroicon-m-sparkles', 'w-4 h-4')</span>@endif
-                                                    @if($os['id'] === $sig->id)<span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">dieses</span>@endif
+                                                    @if($os['id'] === $sig->id)<span class="shrink-0 fa-t-muted">dieses</span>@endif
                                                 </button>
                                             @endforeach
                                         </div>
-                                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] mt-1.5">
+                                        <p class="fa-t-muted mt-1.5">
                                             {{ count($objektSignale) }} Befunde am selben Objekt. In einem Durchgang beheben statt {{ count($objektSignale) }}-mal öffnen.
                                         </p>
                                     @endif
@@ -239,7 +239,7 @@
                 </div>
 
                 @if($betroffen['total'] > $betroffen['gezeigt'])
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+                    <p class="fa-t-muted">
                         Zeigt {{ number_format($betroffen['gezeigt'], 0, ',', '.') }} von {{ number_format($betroffen['total'], 0, ',', '.') }}
                         (höchstens {{ $panelLimit }}). Die übrigen erscheinen, sobald diese behoben sind.
                     </p>
@@ -263,13 +263,13 @@
                                   vector-effect="non-scaling-stroke" class="{{ $sparkTon }}" />
                     </svg>
                     <div class="shrink-0 text-right">
-                        <div class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)] leading-none">{{ $spark['letzter'] }}</div>
+                        <div class="fa-t-h2 tabular-nums leading-none">{{ $spark['letzter'] }}</div>
                         @if($delta !== null && $delta !== 0)
                             <div class="text-[length:var(--fa-text-sm)] tabular-nums {{ $delta > 0 ? 'text-[var(--fa-crit)]' : 'text-[var(--fa-ok)]' }}">{{ $delta > 0 ? '+' : '' }}{{ $delta }} seit letzter Prüfung</div>
                         @endif
                     </div>
                 </div>
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">
+                <p class="fa-t-muted tabular-nums">
                     {{ $spark['punkte'] }} Messungen · niedrigster Stand {{ $spark['min'] }}, höchster {{ $spark['max'] }} ·
                     seit {{ \Illuminate\Support\Carbon::parse($spark['von'])->format('d.m.Y H:i') }}
                 </p>
@@ -296,9 +296,9 @@
                     <x-fa::badge :tone="$polBadge[1]" class="shrink-0">{{ $polBadge[0] }}</x-fa::badge>
                     <div class="min-w-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">
                         <p>{{ $policy['hinweis'] }}</p>
-                        @if($policy['note'])<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] italic">{{ $policy['note'] }}</p>@endif
+                        @if($policy['note'])<p class="fa-t-muted italic">{{ $policy['note'] }}</p>@endif
                         @if($policy['geerbt'])
-                            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Vom übergeordneten Team übernommen. Speichern legt eine eigene Einstellung an, die sie überstimmt.</p>
+                            <p class="fa-t-muted">Vom übergeordneten Team übernommen. Speichern legt eine eigene Einstellung an, die sie überstimmt.</p>
                         @endif
                     </div>
                 </div>
@@ -322,7 +322,7 @@
                     <x-fa::field label="Begründung" for="sig-pol-notiz" hint="Wird bei der Lage angezeigt." optional>
                         <x-fa::input id="sig-pol-notiz" wire:model="pNote" maxlength="255" placeholder="z. B. Einkauf klärt neue Bezugsquelle bis Monatsende" data-signal-policy-note />
                     </x-fa::field>
-                    <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                    <label class="flex items-center gap-2 fa-t-body">
                         <input type="checkbox" wire:model="pMuted" class="w-4 h-4 rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-signal-policy-muted>
                         Stumm schalten <span class="text-[var(--fa-ink-3)]">(interessiert nicht, auch keine Meldung über Verschlechterungen)</span>
                     </label>

@@ -173,7 +173,7 @@
         </ul>
         </div>
         @if($daten['weggelassen'] > 0)
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-preisverlauf-weggelassen>
+            <p class="fa-t-muted" data-preisverlauf-weggelassen>
                 {{ $daten['weggelassen'] }} Artikel nicht gezeigt: andere Basiseinheit als {{ $diagramm['einheit'] }} (nicht mischbar) oder ohne Mengenangabe.
             </p>
         @endif

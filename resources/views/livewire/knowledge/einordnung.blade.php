@@ -21,8 +21,8 @@
 </x-fa::field>
 
 <fieldset class="flex flex-col gap-2 min-w-0" data-wissen-geltung>
-    <legend class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Gilt unter diesen Bedingungen</legend>
-    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Leer heißt: keine Einschränkung. Mehrere Werte mit Komma trennen. Alle ausgefüllten Bedingungen müssen passen.</p>
+    <legend class="fa-t-label">Gilt unter diesen Bedingungen</legend>
+    <p class="fa-t-muted">Leer heißt: keine Einschränkung. Mehrere Werte mit Komma trennen. Alle ausgefüllten Bedingungen müssen passen.</p>
     <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))]">
         @foreach(\Platform\FoodAlchemist\Services\Knowledge\WissensGeltung::ACHSEN as $axis => $axisLabel)
             <x-fa::field :label="$axisLabel" for="wissen-geltung-{{ $selectedId ?? 'neu' }}-{{ $axis }}">
@@ -34,8 +34,8 @@
 
 @if(($form['art'] ?? '') === 'datenwerk')
     <fieldset class="flex flex-col gap-3 min-w-0" data-wissen-datenwerte>
-        <legend class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Strukturierte Datenwerte</legend>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Einzelwert: Minimum und Maximum gleich setzen. Bezugsgröße genau angeben, etwa „Rohgewicht pro Portion“. Ohne passende Werte bleibt eine sichtbare Datenlücke.</p>
+        <legend class="fa-t-label">Strukturierte Datenwerte</legend>
+        <p class="fa-t-muted">Einzelwert: Minimum und Maximum gleich setzen. Bezugsgröße genau angeben, etwa „Rohgewicht pro Portion“. Ohne passende Werte bleibt eine sichtbare Datenlücke.</p>
         @foreach(($form['datenwerte'] ?? []) as $index => $row)
             <div wire:key="datenwert-{{ $selectedId }}-{{ $index }}" class="fa-surface p-3 flex flex-col gap-2">
                 <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))]">

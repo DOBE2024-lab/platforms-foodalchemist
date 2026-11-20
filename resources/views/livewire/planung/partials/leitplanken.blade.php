@@ -246,7 +246,7 @@
                             <label class="flex items-start gap-2.5 cursor-pointer">
                                 <input type="checkbox" wire:model="regler.{{ $scope }}.voll_anreichern" class="mt-0.5 h-4 w-4 shrink-0 accent-[var(--fa-accent)]" data-planung-voll-anreichern />
                                 <span class="flex flex-col gap-0.5">
-                                    <span class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Vollständig anreichern</span>
+                                    <span class="fa-t-strong">Vollständig anreichern</span>
                                     <span class="{{ $hinweisKlasse }}">An (Voreinstellung): Bei der Freigabe entstehen auch Arbeitsschritte, Sensorik, Zeiten, Equipment, Posten und Pairings. Aus: nur die Kernangaben.</span>
                                 </span>
                             </label>
@@ -256,7 +256,7 @@
                             <label class="flex items-start gap-2.5 cursor-pointer">
                                 <input type="checkbox" wire:model="regler.{{ $scope }}.ki_bilder" class="mt-0.5 h-4 w-4 shrink-0 accent-[var(--fa-accent)]" data-planung-ki-bilder />
                                 <span class="flex flex-col gap-0.5">
-                                    <span class="flex items-center gap-1.5 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">@svg('heroicon-o-camera', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Fotos per KI erstellen</span>
+                                    <span class="flex items-center gap-1.5 fa-t-strong">@svg('heroicon-o-camera', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Fotos per KI erstellen</span>
                                     <span class="{{ $hinweisKlasse }}">Schrittfotos und Produktfoto bei der Anreicherung. Jedes Bild ist ein eigener KI-Aufruf und kostet. Aus: keine Bilder.</span>
                                 </span>
                             </label>
@@ -266,7 +266,7 @@
                             <label class="flex items-start gap-2.5 cursor-pointer">
                                 <input type="checkbox" wire:model.live="regler.{{ $scope }}.favoriten" class="mt-0.5 h-4 w-4 shrink-0 accent-[var(--fa-accent)]" data-planung-favoriten />
                                 <span class="flex flex-col gap-0.5">
-                                    <span class="flex items-center gap-1.5 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">@svg('heroicon-o-star', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Auf meinen Favoriten aufbauen</span>
+                                    <span class="flex items-center gap-1.5 fa-t-strong">@svg('heroicon-o-star', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Auf meinen Favoriten aufbauen</span>
                                     <span class="{{ $hinweisKlasse }}">Bevorzugt deine gemerkten Grundprodukte. Aus: freie Auswahl.</span>
                                 </span>
                             </label>

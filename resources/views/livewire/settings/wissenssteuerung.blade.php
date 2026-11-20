@@ -41,7 +41,7 @@
             ['label' => 'Ohne Wissen', 'value' => $zahl($bericht['ungesteuert']), 'tone' => $bericht['ungesteuert'] > 0 ? 'warn' : null],
             ['label' => 'Fehlerhaft', 'value' => $zahl($bericht['fehlerhaft']), 'tone' => $bericht['fehlerhaft'] > 0 ? 'crit' : null],
         ]" />
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[90ch]">
+        <p class="fa-t-muted max-w-[90ch]">
             <span class="font-medium text-[var(--fa-ink-2)]">Ohne Wissen</span> heißt: aus der Wissensbasis erreicht diesen Arbeitsschritt nichts.
             Regeln im KI-Auftrag selbst gelten trotzdem.
             <span class="font-medium text-[var(--fa-ink-2)]">Fehlerhaft</span> heißt: es ist Wissen hinterlegt, es kommt aber nicht an.
@@ -162,7 +162,7 @@
                                             <div class="flex items-center justify-between gap-3">
                                                 <div>
                                                     <p class="{{ $kleinTitel }}">Verbindliches Wissen</p>
-                                                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Kommt immer vollständig mit und wird nie gekürzt.</p>
+                                                    <p class="fa-t-muted">Kommt immer vollständig mit und wird nie gekürzt.</p>
                                                 </div>
                                                 @if($darfSchreiben)
                                                     <x-fa::button size="sm" :variant="$kanonKey === $p['prompt_key'] ? 'ghost' : 'secondary'"
@@ -176,14 +176,14 @@
                                                 <div class="flex items-center gap-2 text-[length:var(--fa-text-md)]" wire:key="kp-{{ $p['prompt_key'] }}-{{ $d['slug'] }}">
                                                     @svg('heroicon-m-document-text', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                                                     <span class="font-mono text-[var(--fa-ink)] break-all">{{ $d['slug'] }}</span>
-                                                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] whitespace-nowrap">Version {{ $d['version'] }} · {{ $zahl($d['zeichen']) }} Zeichen</span>
+                                                    <span class="fa-t-muted whitespace-nowrap">Version {{ $d['version'] }} · {{ $zahl($d['zeichen']) }} Zeichen</span>
                                                     @if($darfSchreiben && $kanonKey === $p['prompt_key'])
                                                         <x-fa::icon-button icon="heroicon-m-x-mark" label="Nicht mehr verbindlich" size="sm" tone="danger"
                                                                            wire:click="kanonRemove('{{ $p['prompt_key'] }}', '{{ $d['slug'] }}')" />
                                                     @endif
                                                 </div>
                                             @empty
-                                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Kein verbindliches Wissen.</p>
+                                                <p class="fa-t-muted">Kein verbindliches Wissen.</p>
                                             @endforelse
                                         </div>
 
@@ -191,13 +191,13 @@
                                             <div class="flex flex-col gap-1.5">
                                                 <div>
                                                     <p class="{{ $kleinTitel }}">Wenn Platz ist</p>
-                                                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Fällt bei Platzmangel als Ganzes weg, wird nie angeschnitten.</p>
+                                                    <p class="fa-t-muted">Fällt bei Platzmangel als Ganzes weg, wird nie angeschnitten.</p>
                                                 </div>
                                                 @foreach($p['wenn_platz'] as $d)
                                                     <div class="flex items-center gap-2 text-[length:var(--fa-text-md)]" wire:key="kw-{{ $p['prompt_key'] }}-{{ $d['slug'] }}">
                                                         @svg('heroicon-m-document', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                                                         <span class="font-mono text-[var(--fa-ink)] break-all">{{ $d['slug'] }}</span>
-                                                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] whitespace-nowrap">Version {{ $d['version'] }}</span>
+                                                        <span class="fa-t-muted whitespace-nowrap">Version {{ $d['version'] }}</span>
                                                         @if($darfSchreiben && $kanonKey === $p['prompt_key'])
                                                             <x-fa::icon-button icon="heroicon-m-x-mark" label="Nicht mehr verbindlich" size="sm" tone="danger"
                                                                                wire:click="kanonRemove('{{ $p['prompt_key'] }}', '{{ $d['slug'] }}')" />
@@ -228,7 +228,7 @@
                                                                     aria-selected="{{ $kanonForm['slug'] === $t->slug ? 'true' : 'false' }}"
                                                                     class="flex flex-wrap items-center gap-x-2 gap-y-0.5 w-full text-left px-2.5 py-1.5 text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $kanonForm['slug'] === $t->slug ? 'bg-[var(--fa-accent-soft)]' : '' }}">
                                                                 <span class="font-mono text-[var(--fa-ink)] break-all">{{ $t->slug }}</span>
-                                                                <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $katName($t->category) }} · {{ $zahl($t->char_count) }} Zeichen</span>
+                                                                <span class="fa-t-muted">{{ $katName($t->category) }} · {{ $zahl($t->char_count) }} Zeichen</span>
                                                                 @unless($t->active)<x-fa::badge tone="warn">inaktiv</x-fa::badge>@endunless
                                                             </button>
                                                         @endforeach
@@ -247,7 +247,7 @@
                                                                   :disabled="$kanonForm['slug'] === ''">Dossier aufnehmen</x-fa::button>
                                                 </div>
 
-                                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+                                                <p class="fa-t-muted">
                                                     <strong class="font-medium text-[var(--fa-ink-2)]">Verbindlich</strong> kommt immer vollständig. Ist der Wissensumfang dafür zu klein, wird der Aufruf gestoppt.
                                                     <strong class="font-medium text-[var(--fa-ink-2)]">Wenn Platz ist</strong> fällt bei Platzmangel als ganzes Dossier weg, nie als Anschnitt.
                                                     Ein inaktives Dossier lässt sich vorbereitend aufnehmen, liefert aber erst nach dem Aktivieren.
@@ -258,7 +258,7 @@
                                         <div class="flex flex-col gap-1.5">
                                             <div>
                                                 <p class="{{ $kleinTitel }}">Gesuchtes Wissen</p>
-                                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+                                                <p class="fa-t-muted">
                                                     Sucht als <span class="font-mono">{{ $p['routing_key'] }}</span>, gemeinsamer Wissensumfang {{ $zahl($p['budget_total']) }} Zeichen.
                                                 </p>
                                             </div>
@@ -267,10 +267,10 @@
                                                     <span class="text-[var(--fa-ink)]">{{ isset($r['art']) && $r['art'] ? (WS::ART_LABEL[$r['art']] ?? WS::lesbar($r['art'])) : $katName($r['category']) }}</span>
                                                     @svg('heroicon-m-arrow-long-right', 'w-4 h-4 text-[var(--fa-ink-3)]')
                                                     <x-fa::badge :tone="$r['mode'] === 'none' ? 'neutral' : 'info'">{{ WS::modusLabel($r['mode']) }}</x-fa::badge>
-                                                    @if($r['max_docs'])<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">höchstens {{ $r['max_docs'] }} {{ (int) $r['max_docs'] === 1 ? 'Quelle' : 'Quellen' }}</span>@endif
+                                                    @if($r['max_docs'])<span class="fa-t-muted">höchstens {{ $r['max_docs'] }} {{ (int) $r['max_docs'] === 1 ? 'Quelle' : 'Quellen' }}</span>@endif
                                                 </div>
                                             @empty
-                                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Keine Suche eingestellt.</p>
+                                                <p class="fa-t-muted">Keine Suche eingestellt.</p>
                                             @endforelse
                                         </div>
                                     </div>
@@ -323,7 +323,7 @@
                                     @if($gepflegt !== null)
                                         <span class="font-mono text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] break-all">{{ implode(', ', $gepflegt) }}</span>
                                     @elseif(($werteConfig[$wert] ?? []) !== [])
-                                        <span class="font-mono text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] break-all">{{ implode(', ', $werteConfig[$wert]) }}</span>
+                                        <span class="font-mono fa-t-muted break-all">{{ implode(', ', $werteConfig[$wert]) }}</span>
                                     @endif
                                 </li>
                             @endforeach
@@ -348,7 +348,7 @@
     <x-fa::section title="Wissen nach Art" icon="heroicon-o-squares-2x2" data-ws-arten
                    description="Welche Art von Wissen darf ein Arbeitsschritt benutzen? Regeln kommen aus dem verbindlichen Wissen, Datenwerke werden über Leitplanken aufgelöst, Fachwissen und Referenzen werden gesucht. Sobald ein Schritt eine Art-Steuerung hat, gilt die Kategorie-Steuerung nur noch für Dossiers ohne Art.">
         @if($artRoutings->isEmpty())
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Art-Steuerung gesetzt.</p>
+            <p class="fa-t-muted">Noch keine Art-Steuerung gesetzt.</p>
         @else
             <ul class="flex flex-col divide-y divide-[var(--fa-line)] border-y border-[var(--fa-line)]">
                 @foreach($artRoutings as $r)
@@ -410,7 +410,7 @@
     {{-- ── Routing-Editor ── --}}
     <x-fa::section title="Wissen nach Kategorie" icon="heroicon-o-folder-open" data-ws-routings
                    description="Welcher Arbeitsschritt bekommt Wissen aus welcher Kategorie. Diese Einstellungen gelten für alle Teams.">
-        <ul class="grid gap-x-6 gap-y-1 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))] text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <ul class="grid gap-x-6 gap-y-1 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))] fa-t-muted">
             <li><span class="font-medium text-[var(--fa-ink-2)]">Passendes suchen</span>: für wachsende Kategorien, gedeckelt.</li>
             <li><span class="font-medium text-[var(--fa-ink-2)]">Immer vollständig</span>: nur für kleine, feste Mengen.</li>
             <li><span class="font-medium text-[var(--fa-ink-2)]">Je Hauptzutat</span>: Auszüge passend zur Hauptzutat.</li>
@@ -494,7 +494,7 @@
                                                 </div>
                                             </div>
                                         @else
-                                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] whitespace-nowrap">Nur Master-Team</span>
+                                            <span class="fa-t-muted whitespace-nowrap">Nur Master-Team</span>
                                         @endif
                                     </td>
                                 @endif

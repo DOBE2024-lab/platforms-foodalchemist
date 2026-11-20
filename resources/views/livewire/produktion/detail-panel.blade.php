@@ -7,7 +7,6 @@
 @php
     $statusTon = ['secondary' => 'neutral', 'info' => 'info', 'success' => 'ok', 'danger' => 'crit', 'warning' => 'warn', 'primary' => 'accent'];
     $menge = fn ($wert) => rtrim(rtrim(number_format((float) $wert, 2, ',', '.'), '0'), ',') ?: '0';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $zeileLabel = 'inline-flex items-center gap-1.5 text-[var(--fa-ink-2)]';
     $statusAktion = ['in_progress' => 'Produktion starten', 'done' => 'Fertig melden', 'cancelled' => 'Auftrag stornieren'];
     $statusIcon = ['in_progress' => 'heroicon-m-play', 'done' => 'heroicon-m-check', 'cancelled' => 'heroicon-m-x-circle'];
@@ -144,7 +143,7 @@
                 @foreach(array_slice($kapazitaetsWarnungen, 0, 2) as $w)
                     <x-fa::signal tone="warn" data-panel-kapazitaet>{{ $w }}</x-fa::signal>
                 @endforeach
-                @if($warnCount > 4)<p class="{{ $leise }}">Alle Warnungen im Editor unter Positionen.</p>@endif
+                @if($warnCount > 4)<p class="fa-t-muted">Alle Warnungen im Editor unter Positionen.</p>@endif
             </div>
         @endif
 
@@ -156,7 +155,7 @@
                         @if($linkedOrder['cancellation_mailto'])
                             <x-fa::button size="sm" variant="danger" icon="heroicon-o-envelope" :href="$linkedOrder['cancellation_mailto']">{{ $linkedOrder['cancellation_kind'] === 'partial' ? 'Änderung' : 'Storno' }} an {{ $linkedOrder['supplier'] }}</x-fa::button>
                         @else
-                            <span class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] cursor-not-allowed" title="Beim Lieferanten fehlt die Bestell-E-Mail">@svg('heroicon-o-envelope', 'w-3.5 h-3.5') {{ $linkedOrder['supplier'] }}: E-Mail fehlt</span>
+                            <span class="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[var(--fa-radius-control)] fa-t-muted cursor-not-allowed" title="Beim Lieferanten fehlt die Bestell-E-Mail">@svg('heroicon-o-envelope', 'w-3.5 h-3.5') {{ $linkedOrder['supplier'] }}: E-Mail fehlt</span>
                         @endif
                     @endforeach
                 </div>
@@ -177,7 +176,7 @@
                                         <span class="min-w-0 break-words">{{ $z['name'] }}</span>
                                         @if($z['ist_gestrichen'])<x-fa::badge title="{{ $z['struck_reason'] }}">gestrichen</x-fa::badge>@endif
                                     </span>
-                                    <span class="block {{ $leise }} tabular-nums">
+                                    <span class="block fa-t-muted tabular-nums">
                                         {{ $menge($z['ansaetze']) }} {{ (float) $z['ansaetze'] === 1.0 ? 'Ansatz' : 'Ansätze' }}@if($z['portionen']) · {{ number_format((int) $z['portionen'], 0, ',', '.') }} Portionen @endif
                                         · {{ $z['station'] ?: 'ohne Posten' }}
                                     </span>

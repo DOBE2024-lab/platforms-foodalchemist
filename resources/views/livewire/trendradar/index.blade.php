@@ -4,7 +4,6 @@
 @php
     use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $konfTon = ['hoch' => 'ok', 'mittel' => 'info', 'niedrig' => 'warn'];
     $konfWert = ['hoch' => 1, 'mittel' => 0.62, 'niedrig' => 0.3];
     $statusTon = ['gesichtet' => 'warn', 'geprueft' => 'info', 'auf_radar' => 'accent', 'in_umsetzung' => 'ok', 'archiviert' => 'neutral', 'verworfen' => 'neutral'];
@@ -73,7 +72,7 @@
                 @endif
 
                 @endif
-                <div class="pt-3 border-t border-[var(--fa-line)] flex flex-col gap-1.5 {{ $leise }}">
+                <div class="pt-3 border-t border-[var(--fa-line)] flex flex-col gap-1.5 fa-t-muted">
                     <p class="font-medium text-[var(--fa-ink-2)]">Von der Recherche zur Veröffentlichung</p>
                     <p>Die Pinnwand sammelt Fundstücke des Teams. Der Eingang enthält abgerufene Meldungen. In der Trendverwaltung prüfst du Einordnung und Belege und gibst Entwicklungen fürs Radar frei.</p>
                     <p>Die Merkliste im Observatorium bleibt deine persönliche Auswahl. Sie ist von der gemeinsamen Pinnwand getrennt.</p>
@@ -162,7 +161,7 @@
                     @endforeach
                 </svg>
                 {{-- Legende --}}
-                <div class="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 {{ $leise }}">
+                <div class="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 fa-t-muted">
                     <span class="inline-flex items-center gap-1.5"><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="var(--fa-warn)" /></svg> Food</span>
                     <span class="inline-flex items-center gap-1.5"><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="var(--fa-ok)" /></svg> Non-Food</span>
                     <span class="inline-flex items-center gap-1.5"><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="var(--fa-surface)" stroke="var(--fa-ink-2)" stroke-width="1.6" stroke-dasharray="2.5,2" /></svg> Hype</span>
@@ -254,7 +253,7 @@
                                 @if($insp->schlagworte)
                                     <span class="flex flex-wrap gap-1">
                                         @foreach($insp->schlagworte as $w)
-                                            <button type="button" class="{{ $leise }} underline" wire:click="$set('pinnSchlagwort', @js(mb_strtolower($w)))">#{{ $w }}</button>
+                                            <button type="button" class="fa-t-muted underline" wire:click="$set('pinnSchlagwort', @js(mb_strtolower($w)))">#{{ $w }}</button>
                                         @endforeach
                                     </span>
                                 @endif
@@ -265,11 +264,11 @@
                                         <li class="min-w-0" wire:key="iq-{{ $f->id }}">
                                             <div class="flex flex-wrap items-center gap-1.5">
                                                 <x-fa::badge>{{ V::QUELLEN[$f->quelle] ?? $f->quelle }}</x-fa::badge>
-                                                @if($f->beobachtet_am)<span class="{{ $leise }}">{{ $f->beobachtet_am->format('d.m.Y') }}</span>@endif
+                                                @if($f->beobachtet_am)<span class="fa-t-muted">{{ $f->beobachtet_am->format('d.m.Y') }}</span>@endif
                                             </div>
-                                            @if($f->titel && $f->titel !== $insp->titel)<p class="mt-0.5 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words">{{ $f->titel }}</p>@endif
-                                            @if($f->notiz)<p class="mt-0.5 {{ $leise }} break-words line-clamp-3">{{ $f->notiz }}</p>@endif
-                                            <p class="mt-0.5 flex flex-wrap gap-3 {{ $leise }}">
+                                            @if($f->titel && $f->titel !== $insp->titel)<p class="mt-0.5 fa-t-body break-words">{{ $f->titel }}</p>@endif
+                                            @if($f->notiz)<p class="mt-0.5 fa-t-muted break-words line-clamp-3">{{ $f->notiz }}</p>@endif
+                                            <p class="mt-0.5 flex flex-wrap gap-3 fa-t-muted">
                                                 @if($f->fundort)<span>Gesehen: {{ $f->fundort }}</span>@endif
                                                 @if($f->url)<a href="{{ $f->url }}" target="_blank" rel="noopener" class="text-[var(--fa-accent)] underline">Link öffnen</a>@endif
                                                 @if($q['url'] && ! str_starts_with((string) $f->datei_mime, 'image/'))<a href="{{ $q['url'] }}" target="_blank" rel="noopener" class="text-[var(--fa-accent)] underline">{{ $f->datei_name }}</a>@endif
@@ -281,7 +280,7 @@
                                     @endforeach
                                 </ul>
                                 @if($eigenesTeam)
-                                    <button type="button" class="self-start {{ $leise }} underline" wire:click="fundstueckOeffnen({{ $insp->id }})" data-quelle-hinzufuegen>+ Quelle hinzufügen</button>
+                                    <button type="button" class="self-start fa-t-muted underline" wire:click="fundstueckOeffnen({{ $insp->id }})" data-quelle-hinzufuegen>+ Quelle hinzufügen</button>
                                 @endif
                                 @if($insp->trend)
                                     <p class="text-[length:var(--fa-text-sm)]">Gehört zu <button type="button" class="text-[var(--fa-accent)] underline" wire:click="select({{ $insp->trend->id }})"
@@ -301,7 +300,7 @@
                                     @endif
                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-light-bulb" wire:click="inPlanungOeffnen(null, {{ $insp->id }})" data-fundstueck-planung>In Planung öffnen</x-fa::button>
                                     @if(($darfKuratieren && $eigenesTeam) || in_array((int) $insp->team_id, $adminTeams, true))
-                                        <button type="button" class="self-start {{ $leise }} underline" wire:click="inspirationLoeschen({{ $insp->id }})" wire:confirm="Inspiration mit allen Quellen löschen?" data-fundstueck-loeschen>Inspiration löschen</button>
+                                        <button type="button" class="self-start fa-t-muted underline" wire:click="inspirationLoeschen({{ $insp->id }})" wire:confirm="Inspiration mit allen Quellen löschen?" data-fundstueck-loeschen>Inspiration löschen</button>
                                     @endif
                                 </div>
                             </div>
@@ -329,7 +328,7 @@
                                     x-data x-on:click="$store.ui?.mSet('activity_trendradar', 'open', true)">
                                     <td class="min-w-[14rem]">
                                         <span class="block font-medium text-[var(--fa-ink)] break-words">{{ $t->name }}</span>
-                                        @if($t->definition)<span class="block {{ $leise }} line-clamp-1">{{ $t->definition }}</span>@endif
+                                        @if($t->definition)<span class="block fa-t-muted line-clamp-1">{{ $t->definition }}</span>@endif
                                     </td>
                                     <td class="whitespace-nowrap">
                                         @if($t->typ || $t->ebene || $t->kategorie)
@@ -442,7 +441,7 @@
                     <div class="flex flex-col">
                         @if($gewaehlt->definition)
                             <x-fa::section variant="plain" title="Definition" icon="heroicon-o-document-text">
-                                <p class="text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink)]">{{ $gewaehlt->definition }}</p>
+                                <p class="fa-t-body leading-relaxed">{{ $gewaehlt->definition }}</p>
                             </x-fa::section>
                         @endif
                         <livewire:foodalchemist.trendradar.ableitung :trend-id="$gewaehlt->id" :key="'ableitung-'.$gewaehlt->id" />{{-- Spec 93 D --}}
@@ -454,7 +453,7 @@
                                         <span class="w-3 h-3 rounded-full border border-[var(--fa-accent)] {{ $i <= $ebIdx ? 'bg-[var(--fa-accent)]' : '' }}" title="{{ V::EBENEN[$eb] }}"></span>
                                     @endforeach
                                 </span>
-                                <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $gewaehlt->ebene ? V::EBENEN[$gewaehlt->ebene] : 'nicht eingeordnet' }}</span>
+                                <span class="fa-t-body">{{ $gewaehlt->ebene ? V::EBENEN[$gewaehlt->ebene] : 'nicht eingeordnet' }}</span>
                             </div>
                         </x-fa::section>
 
@@ -465,7 +464,7 @@
                                 </span>
                                 <x-fa::badge :tone="$konfTon[$kf] ?? 'neutral'">{{ V::KONFIDENZ[$kf] }}</x-fa::badge>
                             </div>
-                            <p class="{{ $leise }}">{{ $bewertung['begruendung'] ?? '' }}@if($gewaehlt->befragung_anteil !== null) Befragung: {{ number_format($gewaehlt->befragung_anteil, 0, ',', '.') }} % der Nennungen.@endif</p>
+                            <p class="fa-t-muted">{{ $bewertung['begruendung'] ?? '' }}@if($gewaehlt->befragung_anteil !== null) Befragung: {{ number_format($gewaehlt->befragung_anteil, 0, ',', '.') }} % der Nennungen.@endif</p>
                         </x-fa::section>
 
                         <x-fa::section variant="plain" title="Belege" icon="heroicon-o-paper-clip" :meta="$belege->count()">
@@ -481,13 +480,13 @@
                                         <div class="min-w-0 flex-1">
                                             <div class="flex flex-wrap items-center gap-1.5">
                                                 <x-fa::badge :tone="in_array($b->quelle, V::HARTE_QUELLEN, true) ? 'ok' : (in_array($b->quelle, V::SOZIALE_QUELLEN, true) ? 'neutral' : 'info')">{{ V::QUELLEN[$b->quelle] ?? $b->quelle }}</x-fa::badge>
-                                                @if($b->beobachtet_am)<span class="{{ $leise }}">{{ $b->beobachtet_am->format('d.m.Y') }}</span>@endif
-                                                @if($b->anteil !== null)<span class="{{ $leise }}">{{ number_format($b->anteil, 0, ',', '.') }} %</span>@endif
+                                                @if($b->beobachtet_am)<span class="fa-t-muted">{{ $b->beobachtet_am->format('d.m.Y') }}</span>@endif
+                                                @if($b->anteil !== null)<span class="fa-t-muted">{{ number_format($b->anteil, 0, ',', '.') }} %</span>@endif
                                             </div>
-                                            @if($b->titel)<p class="mt-1 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words">{{ $b->titel }}</p>@endif
-                                            @if($b->notiz)<p class="mt-0.5 {{ $leise }} break-words">{{ $b->notiz }}</p>@endif
-                                            @if($b->fundort)<p class="mt-0.5 {{ $leise }}">Gesehen: {{ $b->fundort }}</p>@endif
-                                            <p class="mt-0.5 flex flex-wrap gap-3 {{ $leise }}">
+                                            @if($b->titel)<p class="mt-1 fa-t-body break-words">{{ $b->titel }}</p>@endif
+                                            @if($b->notiz)<p class="mt-0.5 fa-t-muted break-words">{{ $b->notiz }}</p>@endif
+                                            @if($b->fundort)<p class="mt-0.5 fa-t-muted">Gesehen: {{ $b->fundort }}</p>@endif
+                                            <p class="mt-0.5 flex flex-wrap gap-3 fa-t-muted">
                                                 @if($b->url)<a href="{{ $b->url }}" target="_blank" rel="noopener" class="text-[var(--fa-accent)] underline break-all">Link öffnen</a>@endif
                                                 @if($eintrag['url'] && ! str_starts_with((string) $b->datei_mime, 'image/'))<a href="{{ $eintrag['url'] }}" target="_blank" rel="noopener" class="text-[var(--fa-accent)] underline">{{ $b->datei_name }}</a>@endif
                                                 @if($eigen && ($darfKuratieren || (int) $b->created_by === (int) auth()->id()))
@@ -497,7 +496,7 @@
                                         </div>
                                     </li>
                                 @empty
-                                    <li class="{{ $leise }}">Noch kein Beleg.</li>
+                                    <li class="fa-t-muted">Noch kein Beleg.</li>
                                 @endforelse
                             </ul>
                         </x-fa::section>
@@ -518,7 +517,7 @@
                                     @endif
                                     <x-fa::field label="Screenshot, Foto oder PDF" for="tb-datei" optional hint="max. 15 MB" class="col-span-2">
                                         <input id="tb-datei" type="file" wire:model="belegDatei" accept="image/*,application/pdf" class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
-                                        <div wire:loading wire:target="belegDatei" class="{{ $leise }}">lädt hoch …</div>
+                                        <div wire:loading wire:target="belegDatei" class="fa-t-muted">lädt hoch …</div>
                                     </x-fa::field>
                                 </div>
                                 <div class="flex justify-end"><x-fa::button size="sm" variant="secondary" icon="heroicon-m-paper-clip" wire:click="belegHinzufuegen" wire:loading.attr="disabled" data-trend-beleg-speichern>Beleg anhängen</x-fa::button></div>
@@ -534,20 +533,20 @@
                                 @endphp
                                 <div class="flex items-center gap-3" wire:key="tm-{{ $m->id }}">
                                     <svg viewBox="0 0 200 42" class="w-40 h-9 shrink-0" aria-hidden="true"><polyline points="{{ $linie }}" fill="none" stroke="var(--fa-accent)" stroke-width="1.6" /></svg>
-                                    <div class="min-w-0 {{ $leise }}">
+                                    <div class="min-w-0 fa-t-muted">
                                         <p class="text-[var(--fa-ink)]">„{{ $m->suchbegriff }}“ · {{ ucfirst((string) $m->richtung ?: 'keine Daten') }}</p>
                                         <p>Ø {{ $m->durchschnitt ?? '–' }} · Spitze {{ $m->spitze ?? '–' }} · {{ $m->created_at?->format('d.m.Y') }}@if($m->spitze_ohne_sockel) · <span class="text-[var(--fa-warn)]">Spitze ohne Sockel</span>@endif</p>
                                     </div>
                                 </div>
                             @empty
-                                <p class="{{ $leise }}">Noch nicht gemessen. Gemessen werden die Suchbegriffe, sonst der Name.</p>
+                                <p class="fa-t-muted">Noch nicht gemessen. Gemessen werden die Suchbegriffe, sonst der Name.</p>
                             @endforelse
                             @if($eigen && $darfKuratieren)
                                 <div>
                                     @if($messenMoeglich)
                                         <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-path" wire:click="messen" wire:confirm="Google Trends über DataForSEO abfragen? Kostet etwa 0,01 $ je Suchbegriff." data-trend-messen>Jetzt messen</x-fa::button>
                                     @else
-                                        <p class="{{ $leise }}">Die DataForSEO-Anbindung ist auf dieser Plattform nicht installiert.</p>
+                                        <p class="fa-t-muted">Die DataForSEO-Anbindung ist auf dieser Plattform nicht installiert.</p>
                                     @endif
                                 </div>
                             @endif
@@ -555,9 +554,9 @@
 
                         @if($gewaehlt->historische_einordnung || $gewaehlt->gartner_phase || $gewaehlt->einordnung_begruendung)
                             <x-fa::section variant="plain" title="Einordnung" icon="heroicon-o-book-open">
-                                @if($gewaehlt->historische_einordnung)<p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $gewaehlt->historische_einordnung }}</p>@endif
-                                @if($gewaehlt->gartner_phase)<p class="{{ $leise }}">Gartner Hype Cycle: {{ V::GARTNER_PHASEN[$gewaehlt->gartner_phase] }}</p>@endif
-                                @if($gewaehlt->einordnung_begruendung)<p class="{{ $leise }}">{{ $gewaehlt->einordnung_begruendung }}@if($gewaehlt->einordnung_quelle === 'ki') (KI-Vorschlag)@endif</p>@endif
+                                @if($gewaehlt->historische_einordnung)<p class="fa-t-body">{{ $gewaehlt->historische_einordnung }}</p>@endif
+                                @if($gewaehlt->gartner_phase)<p class="fa-t-muted">Gartner Hype Cycle: {{ V::GARTNER_PHASEN[$gewaehlt->gartner_phase] }}</p>@endif
+                                @if($gewaehlt->einordnung_begruendung)<p class="fa-t-muted">{{ $gewaehlt->einordnung_begruendung }}@if($gewaehlt->einordnung_quelle === 'ki') (KI-Vorschlag)@endif</p>@endif
                             </x-fa::section>
                         @endif
                     </div>
@@ -578,7 +577,7 @@
             <div class="grid grid-cols-2 gap-3" data-fundstueck-form>
                 <x-fa::field label="Screenshot oder Foto" for="fs-datei" hint="Bild oder PDF, max. 15 MB" class="col-span-2">
                     <input id="fs-datei" type="file" wire:model="fundDatei" accept="image/*,application/pdf" capture="environment" class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
-                    <div wire:loading wire:target="fundDatei" class="{{ $leise }}">lädt hoch …</div>
+                    <div wire:loading wire:target="fundDatei" class="fa-t-muted">lädt hoch …</div>
                 </x-fa::field>
                 <x-fa::field label="Gehört zu" for="fs-inspiration" hint="Gibt es das Thema schon, die Quelle dort hinzufügen statt eine neue Karte anzulegen." class="col-span-2">
                     <x-fa::select id="fs-inspiration" wire:model.live="fund.inspiration_id" placeholder="Neue Inspiration" :options="$eigeneInspirationen" data-fundstueck-inspiration />
@@ -590,7 +589,7 @@
                 <x-fa::field label="Notiz" for="fs-notiz" optional class="col-span-2"><x-fa::textarea id="fs-notiz" rows="2" wire:model="fund.notiz" placeholder="Was fällt auf? Für welchen Anlass könnte es passen?" /></x-fa::field>
                 <x-fa::field label="Schlagworte" for="fs-tags" optional hint="Kommagetrennt. Gleiche Schlagworte bündeln Fundstücke zu Häufungen." class="col-span-2"><x-fa::input id="fs-tags" wire:model="fund.schlagworte" placeholder="z. B. kartoffel, comfort food" /></x-fa::field>
             </div>
-            <p class="{{ $leise }}">Ein Fundstück ist noch kein Trend. Es landet als Inspiration in der Pinnwand des Teams; weitere Quellen zum selben Thema kommen auf dieselbe Karte. Wer kuratiert, macht daraus einen Hype oder Trend.</p>
+            <p class="fa-t-muted">Ein Fundstück ist noch kein Trend. Es landet als Inspiration in der Pinnwand des Teams; weitere Quellen zum selben Thema kommen auf dieselbe Karte. Wer kuratiert, macht daraus einen Hype oder Trend.</p>
         </x-foodalchemist::modal-section>
         <x-slot:footer>
             <x-fa::button variant="ghost" @click="$dispatch('modal.close', { name: 'fundstueck-ablegen' })">Abbrechen</x-fa::button>
@@ -612,7 +611,7 @@
                 <x-fa::field label="Kategorie" for="tn-kat"><x-fa::select id="tn-kat" wire:model="neu.kategorie" placeholder="noch offen" :options="V::KATEGORIEN" /></x-fa::field>
                 <x-fa::field label="Kurzbeschreibung" for="tn-def" optional class="col-span-3"><x-fa::textarea id="tn-def" rows="2" wire:model="neu.definition" /></x-fa::field>
             </div>
-            <p class="{{ $leise }}">Der Trend landet als „gesichtet“ in der Liste. Aufs Radar kommt er, sobald er eingeordnet ist und einen bestätigenden Beleg hat.</p>
+            <p class="fa-t-muted">Der Trend landet als „gesichtet“ in der Liste. Aufs Radar kommt er, sobald er eingeordnet ist und einen bestätigenden Beleg hat.</p>
         </x-foodalchemist::modal-section>
         @if($ausInspirationen === [])
             <x-foodalchemist::modal-section title="Erster Beleg (optional)">
@@ -622,7 +621,7 @@
                     <x-fa::field label="Link" for="tn-url" optional class="col-span-2"><x-fa::input id="tn-url" wire:model="neu.url" placeholder="https://…" /></x-fa::field>
                     <x-fa::field label="Datei" for="tn-datei" optional hint="Bild oder PDF, max. 15 MB" class="col-span-2">
                         <input id="tn-datei" type="file" wire:model="neuDatei" accept="image/*,application/pdf" class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
-                        <div wire:loading wire:target="neuDatei" class="{{ $leise }}">lädt hoch …</div>
+                        <div wire:loading wire:target="neuDatei" class="fa-t-muted">lädt hoch …</div>
                     </x-fa::field>
                     <x-fa::field label="Notiz" for="tn-notiz" optional class="col-span-2"><x-fa::textarea id="tn-notiz" rows="2" wire:model="neu.notiz" /></x-fa::field>
                 </div>

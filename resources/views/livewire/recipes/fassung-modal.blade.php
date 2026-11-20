@@ -1,5 +1,4 @@
 {{-- Spec 82 §12 B / §13 B6 — Rezept veröffentlichen (nur Master): Stand, Abweichung, Allergen-Hinweis, Pflicht-Notiz. --}}
-@php $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]'; @endphp
 
 <x-foodalchemist::modal name="fassung-modal" :title="$artLabel.' veröffentlichen'" :title-name="$rezept?->name" size="max-w-xl">
     <div class="flex flex-col gap-3" data-fassung-modal>
@@ -7,16 +6,16 @@
         @if($meldung)<x-fa::notice tone="ok" data-fassung-meldung>{{ $meldung }}</x-fa::notice>@endif
 
         @if($rezept === null || $status === null)
-            <p class="{{ $leise }}">Veröffentlichen gibt es nur für {{ $artLabel === 'Rezept' ? 'Rezepte' : ($artLabel === 'Paket' ? 'Pakete' : ($artLabel === 'Konzept' ? 'Konzepte' : 'Formate')) }} des Master-Teams.</p>
+            <p class="fa-t-muted">Veröffentlichen gibt es nur für {{ $artLabel === 'Rezept' ? 'Rezepte' : ($artLabel === 'Paket' ? 'Pakete' : ($artLabel === 'Konzept' ? 'Konzepte' : 'Formate')) }} des Master-Teams.</p>
         @else
             <div data-fassung-stand>
                 @if($status['letzte'])
                     <span class="font-medium">Fassung {{ $status['letzte']['nr'] }}</span>
-                    <span class="{{ $leise }}">veröffentlicht am {{ $status['letzte']['veroeffentlicht_at'] ?? '—' }}</span>
-                    @if($status['letzte']['notiz'])<div class="{{ $leise }}">„{{ $status['letzte']['notiz'] }}“</div>@endif
+                    <span class="fa-t-muted">veröffentlicht am {{ $status['letzte']['veroeffentlicht_at'] ?? '—' }}</span>
+                    @if($status['letzte']['notiz'])<div class="fa-t-muted">„{{ $status['letzte']['notiz'] }}“</div>@endif
                 @else
                     <span class="font-medium">Noch nie veröffentlicht.</span>
-                    <span class="{{ $leise }}">Abonnenten sehen {{ $art === 'recipe' ? 'das Rezept' : 'das '.$artLabel }} erst ab der ersten Fassung.</span>
+                    <span class="fa-t-muted">Abonnenten sehen {{ $art === 'recipe' ? 'das Rezept' : 'das '.$artLabel }} erst ab der ersten Fassung.</span>
                 @endif
             </div>
 

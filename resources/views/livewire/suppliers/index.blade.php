@@ -101,12 +101,12 @@
                         <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
                         <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-56 fa-surface shadow-lg py-1">
                             <button type="button" role="menuitem" wire:click="anomalienAnzeigen" wire:loading.attr="disabled" x-on:click="offen = false"
-                                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]" data-anomalien-btn>
+                                    class="flex w-full items-center gap-2 px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)]" data-anomalien-btn>
                                 @svg('heroicon-o-chart-bar', 'w-4 h-4 text-[var(--fa-ink-3)]') Preisausreißer anzeigen
                             </button>
                             {{-- Marken dieses Lieferanten (27.10.): Lesen für alle Teams wie die Seite, darum außerhalb des Bearbeiten-Rechts --}}
                             <a role="menuitem" href="{{ route('foodalchemist.suppliers.marken', ['lieferant' => $aktiverLieferant->id]) }}" wire:navigate x-on:click="offen = false"
-                               class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]" data-link-marken-lieferant>
+                               class="flex w-full items-center gap-2 px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)]" data-link-marken-lieferant>
                                 @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Marken
                             </a>
                             @if($darfLieferantEdit)
@@ -268,9 +268,9 @@
                         <div class="absolute left-0 top-full mt-1 z-20 w-80 fa-surface shadow-xl py-1">
                             @foreach($bulkGpKandidaten as $kandidat)
                                 <button type="button" wire:key="bgk-{{ $kandidat->id }}" wire:click="bulkGpZuweisen({{ $kandidat->id }})"
-                                        class="block w-full text-left px-3 py-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">{{ $kandidat->name }}</button>
+                                        class="block w-full text-left px-3 py-2 fa-t-body hover:bg-[var(--fa-hover)]">{{ $kandidat->name }}</button>
                             @endforeach
-                            <p class="px-3 pt-1 pb-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Bereits zugeordnete Artikel bleiben unverändert.</p>
+                            <p class="px-3 pt-1 pb-1.5 fa-t-muted">Bereits zugeordnete Artikel bleiben unverändert.</p>
                         </div>
                     @endif
                 </div>
@@ -480,7 +480,7 @@
                     description="Artikel, deren Preis je kg, l oder Stück mindestens das Vierfache oder ein Viertel des mittleren Preises (Median) ihrer Warengruppe beträgt. Häufige Ursache: falsche Gebindemenge.">
                     @if(count($anomalien['ausreisser']) > 0)
                         @if(($anomalien['ausreisser_gesamt'] ?? 0) > count($anomalien['ausreisser']))
-                            <p class="mb-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-ausreisser-hinweis>Mehr als {{ count($anomalien['ausreisser']) }} Ausreißer ({{ number_format($anomalien['ausreisser_gesamt'], 0, ',', '.') }} insgesamt) – angezeigt werden die größten.</p>
+                            <p class="mb-2 fa-t-muted" data-ausreisser-hinweis>Mehr als {{ count($anomalien['ausreisser']) }} Ausreißer ({{ number_format($anomalien['ausreisser_gesamt'], 0, ',', '.') }} insgesamt) – angezeigt werden die größten.</p>
                         @endif
                         <div class="-mx-4 -mb-4 border-t border-[var(--fa-line)] overflow-x-auto">
                             <table class="fa-table fa-table--compact" data-ausreisser>
@@ -514,10 +514,10 @@
                 </x-fa::section>
                 <x-fa::section title="Preissprünge über 30 %" icon="heroicon-o-arrow-trending-up" description="Vergleicht den aktuellen mit dem vorherigen Preis desselben Artikels.">
                     @if(($anomalien['spruenge_gesamt'] ?? 0) > count($anomalien['spruenge']))
-                        <p class="mb-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-spruenge-hinweis>Mehr als {{ count($anomalien['spruenge']) }} Preissprünge ({{ number_format($anomalien['spruenge_gesamt'], 0, ',', '.') }} insgesamt) – angezeigt werden die größten.</p>
+                        <p class="mb-2 fa-t-muted" data-spruenge-hinweis>Mehr als {{ count($anomalien['spruenge']) }} Preissprünge ({{ number_format($anomalien['spruenge_gesamt'], 0, ',', '.') }} insgesamt) – angezeigt werden die größten.</p>
                     @endif
                     @forelse($anomalien['spruenge'] as $sp)
-                        <p class="flex flex-wrap items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                        <p class="flex flex-wrap items-center gap-2 fa-t-body">
                             <span class="text-[var(--fa-ink-2)]">Artikel {{ $sp->supplier_item_id }}:</span>
                             <x-fa::money :value="$sp->von" /> @svg('heroicon-m-arrow-right', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]') <x-fa::money :value="$sp->nach" />
                             <x-fa::badge tone="warn">{{ $sp->sprung_pct }} %</x-fa::badge>

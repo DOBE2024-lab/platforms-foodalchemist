@@ -23,8 +23,8 @@
                        wire:key="kt-{{ $slug === '' ? 'kein' : $slug }}">
                     <input type="radio" wire:model="kuechenTyp" value="{{ $slug }}" class="mt-0.5 accent-[var(--fa-accent)]" />
                     <span class="min-w-0">
-                        <span class="block text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $teile[0] }}</span>
-                        @if(isset($teile[1]))<span class="block mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ rtrim($teile[1], ')') }}</span>@endif
+                        <span class="block fa-t-strong">{{ $teile[0] }}</span>
+                        @if(isset($teile[1]))<span class="block mt-0.5 fa-t-muted">{{ rtrim($teile[1], ')') }}</span>@endif
                     </span>
                 </label>
             @endforeach
@@ -39,7 +39,7 @@
         </x-slot:actions>
         <div class="flex flex-wrap gap-3">
             @foreach($farbTypen as $key => $label)
-                <label class="inline-flex items-center gap-2.5 h-11 pl-1.5 pr-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] text-[length:var(--fa-text-md)] text-[var(--fa-ink)] cursor-pointer hover:bg-[var(--fa-hover)]" wire:key="tf-{{ $key }}">
+                <label class="inline-flex items-center gap-2.5 h-11 pl-1.5 pr-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] fa-t-body cursor-pointer hover:bg-[var(--fa-hover)]" wire:key="tf-{{ $key }}">
                     <input type="color" wire:model="typFarben.{{ $key }}" aria-label="Farbe für {{ $label }}"
                            class="h-8 w-9 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-transparent cursor-pointer p-0.5" />
                     <span class="inline-flex items-center gap-1.5">
@@ -49,7 +49,7 @@
                 </label>
             @endforeach
         </div>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Neue Farben gelten nach dem Speichern oben.</p>
+        <p class="fa-t-muted">Neue Farben gelten nach dem Speichern oben.</p>
     </x-fa::section>
     </fieldset>
 

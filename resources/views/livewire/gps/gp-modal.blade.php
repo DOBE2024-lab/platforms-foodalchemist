@@ -19,7 +19,6 @@
         'ai_pate' => 'Pate (KI): Ersatz, die Zutat hat keinen eigenen Anker', 'inspire_behelf' => 'Pate (Behelf): Ersatz aus der Stamm-Pflege'];
     $patenQuellen = \Platform\FoodAlchemist\Support\AnkerQuelle::PATEN_QUELLEN;
     $formLabel = fn (?string $slug) => ['stk' => 'Stück'][$slug] ?? ucfirst((string) $slug);
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $titelKlein = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
     $listenKnopf = 'flex w-full items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
@@ -203,8 +202,8 @@
                     @if($supplierItem !== null)
                         <div class="flex items-center justify-between gap-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)] px-3 py-2" data-gp-la-selected>
                             <div class="min-w-0">
-                                <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $supplierItem->designation }}</p>
-                                <p class="{{ $leise }}">{{ $supplierItem->supplier?->name ?? 'Lieferant unbekannt' }} · {{ $supplierItem->article_number ? 'Art.-Nr. ' . $supplierItem->article_number : 'ohne Artikelnummer' }}</p>
+                                <p class="fa-t-strong">{{ $supplierItem->designation }}</p>
+                                <p class="fa-t-muted">{{ $supplierItem->supplier?->name ?? 'Lieferant unbekannt' }} · {{ $supplierItem->article_number ? 'Art.-Nr. ' . $supplierItem->article_number : 'ohne Artikelnummer' }}</p>
                             </div>
                             <x-fa::button size="sm" variant="ghost" wire:click="supplierItemLoesen">Verknüpfung lösen</x-fa::button>
                         </div>
@@ -216,15 +215,15 @@
                                     <button type="button" wire:key="la-k-{{ $la->id }}" wire:click="supplierItemWaehlen({{ $la->id }})" class="{{ $listenKnopf }}">
                                         <span class="min-w-0">
                                             <span class="block font-medium">{{ $la->designation }}</span>
-                                            <span class="block {{ $leise }}">{{ $la->supplier_name ?? 'Lieferant unbekannt' }} · {{ $la->article_number ? 'Art.-Nr. ' . $la->article_number : 'ohne Artikelnummer' }}@if($la->gebinde_text) · {{ $la->gebinde_text }}@endif · {{ $la->aktiver_preis !== null ? number_format((float) $la->aktiver_preis, 2, ',', '.') . ' €' : 'kein Preis' }}</span>
+                                            <span class="block fa-t-muted">{{ $la->supplier_name ?? 'Lieferant unbekannt' }} · {{ $la->article_number ? 'Art.-Nr. ' . $la->article_number : 'ohne Artikelnummer' }}@if($la->gebinde_text) · {{ $la->gebinde_text }}@endif · {{ $la->aktiver_preis !== null ? number_format((float) $la->aktiver_preis, 2, ',', '.') . ' €' : 'kein Preis' }}</span>
                                         </span>
                                         @svg('heroicon-m-plus', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                                     </button>
                                 @endforeach
-                                @include('foodalchemist::livewire.gps.partials.verknuepf-suche-hinweis', ['suche' => $supplierItemSuche, 'leise' => $leise])
+                                @include('foodalchemist::livewire.gps.partials.verknuepf-suche-hinweis', ['suche' => $supplierItemSuche])
                             </div>
                         @elseif(trim($laSuche) !== '')
-                            <p class="{{ $leise }}">Kein freier Lieferantenartikel gefunden.</p>
+                            <p class="fa-t-muted">Kein freier Lieferantenartikel gefunden.</p>
                         @endif
                     @endif
                 </x-fa::section>
@@ -343,9 +342,9 @@
 
                 {{-- Vorschau: so heißt das Grundprodukt nach dem Speichern --}}
                 <div class="flex flex-col gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] px-3 py-2" data-naming-vorschau>
-                    <p class="{{ $leise }}">So heißt es nach dem Speichern</p>
-                    <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]" data-vorschau-name>{{ $vorschauName !== '' ? $vorschauName : '–' }}</p>
-                    <p class="{{ $leise }}" title="Hauptzutat und Kennung, über die doppelte Grundprodukte erkannt werden">
+                    <p class="fa-t-muted">So heißt es nach dem Speichern</p>
+                    <p class="fa-t-strong" data-vorschau-name>{{ $vorschauName !== '' ? $vorschauName : '–' }}</p>
+                    <p class="fa-t-muted" title="Hauptzutat und Kennung, über die doppelte Grundprodukte erkannt werden">
                         Hauptzutat <span class="font-mono">{{ $vorschauSlug !== '' ? $vorschauSlug : '–' }}</span> · Kennung <span class="font-mono" data-vorschau-key>{{ $vorschauKey !== '' && $vorschauKey !== '||' ? $vorschauKey : '–' }}</span>
                         @if($gespeicherterKey !== null)
                             <span title="Beim Bearbeiten bleibt die gespeicherte Kennung stehen (Seed-Stabilität); die Kennung oben ist die aus den aktuellen Feldern">· gespeichert <span class="font-mono" data-gespeicherter-key>{{ $gespeicherterKey }}</span></span>
@@ -373,7 +372,7 @@
                         @if($nameVorschlag !== null)
                             <div class="flex flex-wrap items-center justify-between gap-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)] px-3 py-2" data-name-vorschlag>
                                 <div class="flex flex-col gap-1 min-w-0">
-                                    <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">Vorschlag: <span class="font-medium">{{ $nameVorschlag }}</span></p>
+                                    <p class="fa-t-body">Vorschlag: <span class="font-medium">{{ $nameVorschlag }}</span></p>
                                     @if($nameVorschlagAenderungen !== [])
                                         <ul class="flex flex-wrap gap-x-4 gap-y-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" data-name-vorschlag-aenderungen>
                                             @foreach($nameVorschlagAenderungen as [$label, $alt, $neu])
@@ -392,7 +391,7 @@
                 @endif
 
                 @if($neu)
-                    <label class="inline-flex items-center gap-2 {{ $leise }}" title="Legt das Grundprodukt auch an, wenn es schon ein sehr ähnliches gibt">
+                    <label class="inline-flex items-center gap-2 fa-t-muted" title="Legt das Grundprodukt auch an, wenn es schon ein sehr ähnliches gibt">
                         <input type="checkbox" wire:model.live="force" class="{{ $haken }}" data-force-flag />
                         Auch anlegen, wenn es schon ein sehr ähnliches Grundprodukt gibt
                     </label>
@@ -433,7 +432,7 @@
                 {{-- Non-Food (Warengruppe 16): Maße in cm bzw. ml wie im Betrieb gesagt (gespeichert in mm); die Größe geht in den Namen (Regelwerk §6.5) --}}
                 @if(($builder['commodity_group_code'] ?? '') === '16')
                     <div class="pt-3 border-t border-[var(--fa-line)] flex flex-col gap-2" data-gp-masse>
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Maße, falls das Produkt eine Größe hat. Die Größe im Namen kommt aus Ø, sonst Länge x Breite x Höhe, sonst Volumen.</p>
+                        <p class="fa-t-muted">Maße, falls das Produkt eine Größe hat. Die Größe im Namen kommt aus Ø, sonst Länge x Breite x Höhe, sonst Volumen.</p>
                         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                             <x-fa::field label="Ø in cm" for="gp-m-d"><x-fa::input id="gp-m-d" numeric inputmode="decimal" wire:model="defaults.diameter_cm" placeholder="–" data-gp-masse-d /></x-fa::field>
                             <x-fa::field label="Länge in cm" for="gp-m-l"><x-fa::input id="gp-m-l" numeric inputmode="decimal" wire:model="defaults.length_cm" placeholder="–" data-gp-masse-l /></x-fa::field>
@@ -471,11 +470,11 @@
 
             {{-- Nebenprodukt (Derivat) --}}
             <x-fa::section title="Nebenprodukt" icon="heroicon-o-arrow-turn-down-right">
-                <label class="inline-flex items-start gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                <label class="inline-flex items-start gap-2 fa-t-body">
                     <input type="checkbox" wire:model.live="builder.is_derivat" class="{{ $haken }} mt-0.5" data-derivat-toggle />
                     <span>
                         Küchen-Nebenprodukt (Schale, Saft, Parüren, Karkasse …)
-                        <span class="block {{ $leise }}">Braucht keinen Lieferantenartikel und übernimmt die Allergene laufend vom Ausgangsprodukt.</span>
+                        <span class="block fa-t-muted">Braucht keinen Lieferantenartikel und übernimmt die Allergene laufend vom Ausgangsprodukt.</span>
                     </span>
                 </label>
                 @if($builder['is_derivat'])
@@ -483,7 +482,7 @@
                         <p class="{{ $titelKlein }}">Ausgangsprodukt</p>
                         @if($builder['derivat_von_gp_id'])
                             <div class="flex items-center gap-2">
-                                <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $derivatMutterName ?? '–' }}</span>
+                                <span class="fa-t-body">{{ $derivatMutterName ?? '–' }}</span>
                                 <x-fa::button size="sm" variant="ghost" wire:click="$set('builder.derivat_von_gp_id', null)">Ausgangsprodukt ändern</x-fa::button>
                             </div>
                         @else
@@ -519,7 +518,7 @@
                                 </x-fa::select>
                                 <x-fa::button size="sm" variant="ghost" wire:click="ausbeuteSchaetzen" wire:loading.attr="disabled">Ausbeute schätzen</x-fa::button>
                             </div>
-                            <span class="{{ $leise }}">
+                            <span class="fa-t-muted">
                                 @if($derivat['quelle'] === 'ki') KI-Schätzung — überschreibbar.
                                 @elseif($derivat['quelle'] === 'manual') Von Hand gepflegt.
                                 @elseif(\Platform\FoodAlchemist\Support\Derivat\DerivatAusbeute::fehlt($gp)) Ausbeute fehlt — ohne sie bleibt die Zeile im Rezept ohne Preis.
@@ -560,7 +559,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2" data-tags-grid>
                             @foreach(\Platform\FoodAlchemist\Models\FoodAlchemistGp::TAG_FIELDS as $tag)
                                 <div class="flex items-center justify-between gap-2 min-w-0" wire:key="gp-tag-{{ $tag }}">
-                                    <label for="gp-tag-{{ $tag }}" class="min-w-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $tagLabels[$tag] ?? $tag }}</label>
+                                    <label for="gp-tag-{{ $tag }}" class="min-w-0 fa-t-body">{{ $tagLabels[$tag] ?? $tag }}</label>
                                     <x-fa::select id="gp-tag-{{ $tag }}" size="sm" wire:model.live="tags.{{ $tag }}" class="w-32 shrink-0">
                                         <option value="">offen</option>
                                         <option value="1">ja</option>
@@ -574,7 +573,7 @@
 
                 <x-fa::section title="Favorit" icon="heroicon-o-star">
                     <div class="flex flex-wrap items-center justify-between gap-3">
-                        <p class="{{ $leise }} min-w-0">
+                        <p class="fa-t-muted min-w-0">
                             @if($favorit !== null)
                                 In euren Favoriten{{ $favorit['rang'] !== null ? ', Rang ' . $favorit['rang'] : '' }}{{ $favorit['eigen'] ? '' : ' (vom Hauptteam übernommen)' }}.
                             @else
@@ -617,11 +616,11 @@
                         </x-fa::field>
                     </div>
                     {{-- Regelwerk Basisrezepte §18.7 (17.11.2026): Vorschlag für Zeilen ohne eigene Zeilenart --}}
-                    <label class="inline-flex items-start gap-2 mt-3 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                    <label class="inline-flex items-start gap-2 mt-3 fa-t-body">
                         <input type="checkbox" wire:model="istKochmedium" class="{{ $haken }} mt-0.5" data-gp-kochmedium />
                         <span>
                             Kochmedium (Kochwasser-Salz, Frittierfett, Lake)
-                            <span class="block {{ $leise }}">Mit Garverlust im Rezept wird der verworfene Anteil auch bei den Nährwerten abgezogen. Die Zutatenzeile kann das übersteuern.</span>
+                            <span class="block fa-t-muted">Mit Garverlust im Rezept wird der verworfene Anteil auch bei den Nährwerten abgezogen. Die Zutatenzeile kann das übersteuern.</span>
                         </span>
                     </label>
                 </x-fa::section>
@@ -653,7 +652,7 @@
                             </table>
                         </div>
                     @else
-                        <p class="{{ $leise }}" data-gp-formen-leer>Noch keine Gewichte je Form. Schätzen lassen oder unten eintragen.</p>
+                        <p class="fa-t-muted" data-gp-formen-leer>Noch keine Gewichte je Form. Schätzen lassen oder unten eintragen.</p>
                     @endif
                     <div class="flex flex-wrap items-end gap-2">
                         <x-fa::field label="Form" for="gp-form-neu">
@@ -702,7 +701,7 @@
                                     </button>
                                 </x-fa::badge>
                             @empty
-                                <p class="{{ $leise }}" @if($gpAnkerNeutral ?? false) data-gp-anker-neutral @endif>{{ ($gpAnkerNeutral ?? false) ? 'Geprüft: kein Aroma-Träger (neutral), kein Anker.' : 'Noch kein Aroma-Anker gesetzt.' }}</p>
+                                <p class="fa-t-muted" @if($gpAnkerNeutral ?? false) data-gp-anker-neutral @endif>{{ ($gpAnkerNeutral ?? false) ? 'Geprüft: kein Aroma-Träger (neutral), kein Anker.' : 'Noch kein Aroma-Anker gesetzt.' }}</p>
                             @endforelse
                         </div>
                         @if($gpAnkerFehler !== null)<x-fa::signal tone="crit" data-gp-anker-fehler>{{ $gpAnkerFehler }}</x-fa::signal>@endif
@@ -716,7 +715,7 @@
                                 @foreach($gpAnkerKandidaten as $kandidat)
                                     <button type="button" wire:key="gak-{{ $kandidat->id }}" wire:click="gpAnkerVerknuepfen({{ $kandidat->id }})" class="{{ $listenKnopf }}" data-gp-anker-kandidat>
                                         <span class="min-w-0 truncate">{{ $kandidat->display_de }}</span>
-                                        <span class="shrink-0 {{ $leise }}">{{ $kandidat->category ?: $kandidat->slug }}</span>
+                                        <span class="shrink-0 fa-t-muted">{{ $kandidat->category ?: $kandidat->slug }}</span>
                                     </button>
                                 @endforeach
                             </div>
@@ -764,7 +763,7 @@
                             @endforeach
                         </div>
                     @elseif(trim($tauschSuche) !== '')
-                        <p class="{{ $leise }}">Kein passendes Grundprodukt gefunden.</p>
+                        <p class="fa-t-muted">Kein passendes Grundprodukt gefunden.</p>
                     @endif
                 </x-fa::section>
             </div>

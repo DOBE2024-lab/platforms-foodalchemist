@@ -35,7 +35,7 @@
             @forelse($menue['kapitel'] ?? [] as $k)
                 <section class="min-w-0" style="margin-left: {{ $k['depth'] * 16 }}px">
                     {{-- #8: ein Kapitel hat KEINEN eigenen Preis — nur die Concepts/Pakete darin (Block-Ebene). --}}
-                    <h3 class="pb-1.5 mb-2 border-b border-[var(--fa-line)] text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)] break-words">{{ $k['title'] }}</h3>
+                    <h3 class="pb-1.5 mb-2 border-b border-[var(--fa-line)] fa-t-h2 break-words">{{ $k['title'] }}</h3>
                     @if(! empty($k['text']))<p class="mb-2 text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink-2)] whitespace-pre-line">{{ $k['text'] }}</p>@endif
 
                     @if($k['ist_format'] ?? false)
@@ -43,18 +43,18 @@
                         @if($k['claim'] ?? null)<p class="mb-2 text-[length:var(--fa-text-md)] italic text-[var(--fa-ink-2)]">{{ $k['claim'] }}</p>@endif
                         @forelse($k['editionen'] ?? [] as $ed)
                             @if(($ed['typ'] ?? '') === 'header')
-                                <p class="mt-3 text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $ed['name'] }}</p>
+                                <p class="mt-3 fa-t-h3">{{ $ed['name'] }}</p>
                             @elseif(($ed['typ'] ?? '') === 'text')
                                 <p class="mt-1 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] whitespace-pre-line">{{ $ed['text'] }}</p>
                             @elseif(($ed['typ'] ?? '') === 'spacer')
                                 <div class="h-2"></div>
                             @else
                                 <div class="mt-2 flex flex-col gap-0.5">
-                                    <p class="flex flex-wrap items-baseline gap-x-2 text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">
+                                    <p class="flex flex-wrap items-baseline gap-x-2 fa-t-h3">
                                         <span class="break-words">{{ $ed['name'] }}</span>
                                         @if($ed['preis_pp'] ?? null)<span class="text-[length:var(--fa-text-md)] font-normal text-[var(--fa-ink-2)] tabular-nums">{{ number_format((float) $ed['preis_pp'], 2, ',', '.') }} € pro Person</span>@endif
                                     </p>
-                                    @if($ed['claim'] ?? null)<p class="text-[length:var(--fa-text-sm)] italic text-[var(--fa-ink-3)]">{{ $ed['claim'] }}</p>@endif
+                                    @if($ed['claim'] ?? null)<p class="fa-t-muted italic">{{ $ed['claim'] }}</p>@endif
                                     @foreach($ed['gerichte'] ?? [] as $g)
                                         @if(($g['type'] ?? '') === 'paket' || ($g['type'] ?? '') === 'header')
                                             <p class="{{ $zwischen }} ml-3">{{ $g['text'] }}</p>
@@ -72,7 +72,7 @@
                             @php $istKonzept = in_array($b['type'], ['concept_ref', 'recipe_ref'], true); @endphp
                             <div class="flex flex-col gap-0.5 {{ ($b['ist_header'] || $istKonzept) ? 'mt-2.5 first:mt-0' : '' }}">
                                 <p class="break-words {{ $b['ist_header'] ? 'text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink-2)]' : ($istKonzept ? 'text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]' : 'text-[length:var(--fa-text-md)] text-[var(--fa-ink)]') }}">{{ $b['label'] }}</p>
-                                @if($b['untertitel'] ?? null)<p class="text-[length:var(--fa-text-sm)] italic text-[var(--fa-ink-3)]">{{ $b['untertitel'] }}</p>@endif
+                                @if($b['untertitel'] ?? null)<p class="fa-t-muted italic">{{ $b['untertitel'] }}</p>@endif
                                 @foreach($b['gerichte'] ?? [] as $g)
                                     @if($g['type'] === 'paket' || $g['type'] === 'header')
                                         <p class="{{ $zwischen }} ml-3">{{ $g['text'] }}</p>
@@ -101,7 +101,7 @@
         </div>
     @endif
 
-    <p class="pt-3 border-t border-[var(--fa-line)] text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+    <p class="pt-3 border-t border-[var(--fa-line)] fa-t-muted">
         Die Gerichtnamen kommen aus dem Gästetext: zuerst der Text im Foodbook, dann der des Konzepts, dann der Standard im Verkauf, zuletzt der interne Name.
         <span class="italic text-[var(--fa-warn)]">Kursiv markiert</span> heißt: kein Gästetext gepflegt.
     </p>

@@ -28,21 +28,21 @@
                 <span class="inline-flex items-center px-2 h-5 rounded-full bg-[var(--fa-accent-soft)] text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-accent)] tabular-nums">{{ $vokabular['zeilen']->count() }}</span>
             </h3>
             @if($vokabular['zeilen']->isEmpty())
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Einträge, mit „Neu“ den ersten anlegen.</p>
+                <p class="fa-t-muted">Noch keine Einträge, mit „Neu“ den ersten anlegen.</p>
             @else
                 @php($nr = 0)
                 <div class="flex flex-col gap-2">
                     @foreach($vokabular['zeilen']->groupBy(fn ($z) => $z->group_name ?? 'sonstig') as $gruppe => $zeilen)
                         <div class="flex flex-col sm:flex-row sm:items-start gap-1.5 sm:gap-3">
                             @if($mitGruppen)
-                                <span class="shrink-0 sm:w-36 pt-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ $gruppe === 'sonstig' ? 'Ohne Gruppe' : $gruppe }}</span>
+                                <span class="shrink-0 sm:w-36 pt-1 fa-t-label">{{ $gruppe === 'sonstig' ? 'Ohne Gruppe' : $gruppe }}</span>
                             @endif
                             <div class="flex flex-wrap gap-1.5 min-w-0">
                                 @foreach($zeilen as $zeile)
                                     @php($nr++)
                                     @php($masse = $vokabular['kapazitaet'] ? \Illuminate\Support\Str::after(\Platform\FoodAlchemist\Livewire\Settings\Behaelter::titel($zeile), ' · ') : ($zeile->is_inactive ? 'deaktiviert' : ''))
                                     <span wire:key="vk-{{ $key }}-{{ $zeile->id }}" tabindex="0" @if($nr > $sichtbar) x-show="alle" x-cloak @endif
-                                          class="group inline-flex items-center gap-1 h-7 pl-2.5 pr-1.5 rounded-[var(--fa-radius-pill)] border border-[var(--fa-line)] bg-[var(--fa-surface)] text-[length:var(--fa-text-md)] text-[var(--fa-ink)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fa-accent)] {{ $zeile->is_inactive ? 'opacity-60 line-through' : '' }}"
+                                          class="group inline-flex items-center gap-1 h-7 pl-2.5 pr-1.5 rounded-[var(--fa-radius-pill)] border border-[var(--fa-line)] bg-[var(--fa-surface)] fa-t-body focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fa-accent)] {{ $zeile->is_inactive ? 'opacity-60 line-through' : '' }}"
                                           @if($masse !== '') title="{{ $masse }}" @endif>
                                         {{ $zeile->name }}
                                         <span class="hidden group-hover:inline-flex group-focus-within:inline-flex group-focus:inline-flex items-center">
@@ -80,7 +80,7 @@
          x-on:click.self="neu = false" data-behaelter-dialog>
         <div role="dialog" aria-modal="true" aria-label="Neuer Eintrag" class="w-full max-w-lg max-h-[80vh] overflow-y-auto fa-surface p-5 flex flex-col gap-4 shadow-xl">
             <div class="flex items-center justify-between gap-3">
-                <h3 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">Neu in Behälter & Geräte</h3>
+                <h3 class="fa-t-h2">Neu in Behälter & Geräte</h3>
                 <x-fa::icon-button icon="heroicon-m-x-mark" label="Schließen" size="sm" x-on:click="neu = false" />
             </div>
             <x-fa::field label="Art" for="behaelter-neu-art">
@@ -116,8 +116,8 @@
         <div class="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] bg-[rgba(19,26,38,0.28)]" wire:click.self="zeileAbbrechen" data-behaelter-editform>
             <div role="dialog" aria-modal="true" aria-label="Behälter bearbeiten" class="w-full max-w-lg max-h-[80vh] overflow-y-auto fa-surface p-5 flex flex-col gap-4 shadow-xl">
                 <div class="flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">Behälter bearbeiten</h3>
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Die interne Kennung bleibt gleich, Rezepte hängen daran.</p>
+                    <h3 class="fa-t-h2">Behälter bearbeiten</h3>
+                    <p class="fa-t-muted">Die interne Kennung bleibt gleich, Rezepte hängen daran.</p>
                 </div>
                 @include('foodalchemist::livewire.settings.partials.behaelter-felder', ['praefix' => 'edit', 'f' => $edit])
                 <div class="flex justify-end gap-2">

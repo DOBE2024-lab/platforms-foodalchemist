@@ -5,7 +5,6 @@
      am eigenen Rezept „Foto aufnehmen“ als Hauptbild, zu einem Arbeits- oder Anrichte-Schritt (Kamera oder Galerie). --}}
 @php
     $menge = fn ($wert) => rtrim(rtrim(number_format((float) $wert, 2, ',', '.'), '0'), ',');
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $reiter = array_filter([
         'zutaten' => 'Zutaten',
         'zubereitung' => 'Zubereitung',
@@ -46,7 +45,7 @@
             @if($art === 'rezept')
                 <x-fa::badge tone="info">{{ $rezept->category?->label ?? 'Ohne Kategorie' }}</x-fa::badge>
             @elseif($teile)
-                <span class="{{ $leise }}">{{ implode(' · ', $teile) }}</span>
+                <span class="fa-t-muted">{{ implode(' · ', $teile) }}</span>
             @endif
         </div>
         @if($fotoFrei)
@@ -55,7 +54,7 @@
                 <input type="file" accept="image/*" wire:model="handyFoto" class="sr-only">
             </label>
         @endif
-        <p class="flex items-center gap-1.5 {{ $leise }}" data-fa-handy-hinweis>
+        <p class="flex items-center gap-1.5 fa-t-muted" data-fa-handy-hinweis>
             @svg('heroicon-m-computer-desktop', 'w-4 h-4 shrink-0') Am Computer bearbeiten
         </p>
     </header>
@@ -64,7 +63,7 @@
         <section class="mx-4 flex flex-col gap-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-4" data-fa-handy-foto-bestaetigen>
             @error('handyFoto')<x-fa::notice tone="crit">{{ $message }}</x-fa::notice>@enderror
             @if($handyFotoMeldung)<x-fa::notice :tone="$handyFotoMeldung === 'Foto gespeichert.' ? 'ok' : 'warn'" data-fa-handy-foto-meldung>{{ $handyFotoMeldung }}</x-fa::notice>@endif
-            <span wire:loading wire:target="handyFoto" class="{{ $leise }}">lädt hoch …</span>
+            <span wire:loading wire:target="handyFoto" class="fa-t-muted">lädt hoch …</span>
             @if($handyFoto && ! $errors->has('handyFoto'))
                 <p class="font-medium text-[var(--fa-ink)]">Foto {{ $zielText($handyFotoZiel) }}</p>
                 @if(method_exists($handyFoto, 'isPreviewable') && $handyFoto->isPreviewable())<img src="{{ $handyFoto->temporaryUrl() }}" alt="" class="w-full max-h-64 object-contain rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">@endif
@@ -83,7 +82,7 @@
     <dl class="mx-4 grid grid-cols-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-x divide-[var(--fa-line)]" data-fa-kernwerte>
         @foreach($kennzahlen as $kz)
             <div class="flex flex-col gap-0.5 px-3 py-2.5 min-w-0">
-                <dt class="{{ $leise }} truncate">{{ $kz['label'] }}</dt>
+                <dt class="fa-t-muted truncate">{{ $kz['label'] }}</dt>
                 <dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums leading-tight {{ ($kz['fehlt'] ?? false) ? 'text-[var(--fa-warn)]' : 'text-[var(--fa-ink)]' }}">{{ $kz['value'] }}</dd>
             </div>
         @endforeach
@@ -106,7 +105,7 @@
 
     <section class="px-4" x-show="reiter === 'zutaten'" data-fa-reiter-inhalt="zutaten">
         @if($rezept->ingredients->isEmpty())
-            <p class="{{ $leise }}">Keine Zutaten hinterlegt.</p>
+            <p class="fa-t-muted">Keine Zutaten hinterlegt.</p>
         @else
             @if(($hoch ?? null) !== null)
                 @include('foodalchemist::livewire.recipes.partials.hochrechner', ['hoch' => $hoch, 'handy' => true, 'uebernehmbar' => false])
@@ -121,14 +120,14 @@
                                 @else
                                     <a href="{{ route('foodalchemist.recipes.index', ['rezept' => $z->referenced_recipe_id]) }}" class="text-[var(--fa-info)] underline underline-offset-2">{{ $z->referencedRecipe->name }}</a>
                                 @endif
-                                <span class="{{ $leise }}">(Rezept)</span>
+                                <span class="fa-t-muted">(Rezept)</span>
                             @elseif($z->gp !== null)
                                 {{-- GP antippen = Handy-Ansicht des Grundprodukts (Rezept und Gericht gleich) --}}
                                 <a href="{{ \Platform\FoodAlchemist\Support\Sprungziel::gpHandy($z->gp->id) }}" wire:navigate class="text-[var(--fa-info)] underline underline-offset-2" data-fa-handbuch-gp="{{ $z->gp->id }}">{{ $z->gp->name }}</a>
                             @else
                                 {{ $z->display_name ?? $z->raw_text }}
                             @endif
-                            @if($z->is_optional)<span class="{{ $leise }}"> (optional)</span>@endif
+                            @if($z->is_optional)<span class="fa-t-muted"> (optional)</span>@endif
                         </span>
                         @php $mengeText = $menge($z->quantity) . ($z->quantity_max !== null ? '–' . $menge($z->quantity_max) : '') . ' ' . $z->unit?->slug; @endphp
                         @if(($hoch ?? null) !== null && (float) $z->quantity > 0)
@@ -136,7 +135,7 @@
                             <button type="button" wire:click="hochNachZutat({{ $z->id }})" class="shrink-0 min-h-11 -my-2 pl-2 text-right tabular-nums {{ ($hoch['zutat']?->id ?? null) === $z->id ? 'text-[var(--fa-accent)]' : 'text-[var(--fa-ink-2)]' }}" data-fa-hoch-menge="{{ $z->id }}">
                                 @if(isset($hoch['mengen'][$z->id]))
                                     <span class="block font-semibold text-[var(--fa-accent)]" data-fa-hoch-neu>{{ $hoch['mengen'][$z->id] }}</span>
-                                    <span class="block {{ $leise }}">statt {{ $mengeText }}</span>
+                                    <span class="block fa-t-muted">statt {{ $mengeText }}</span>
                                 @else
                                     <span class="underline decoration-dotted underline-offset-4">{{ $mengeText }}</span>
                                 @endif
@@ -153,7 +152,7 @@
                 // Gerichte sind oft genau eine Portion: dann „je Portion“, sonst die Ansatz-Menge (nichts wird umgerechnet)
                 $jePortion = $ausbeuteKg !== null && $portionG !== null && $portionG > 0 && abs($ausbeuteKg * 1000 - $portionG) <= 0.05 * $portionG;
             @endphp
-            <p class="mt-2 {{ $leise }}" data-fa-mengen-basis="{{ $jePortion ? 'portion' : 'ansatz' }}">{{ $jePortion ? 'Mengen für eine Portion.' : 'Mengen für den ganzen Ansatz' . ($ausbeuteKg !== null ? ' (' . $menge($ausbeuteKg) . ' kg)' : '') . '.' }}</p>
+            <p class="mt-2 fa-t-muted" data-fa-mengen-basis="{{ $jePortion ? 'portion' : 'ansatz' }}">{{ $jePortion ? 'Mengen für eine Portion.' : 'Mengen für den ganzen Ansatz' . ($ausbeuteKg !== null ? ' (' . $menge($ausbeuteKg) . ' kg)' : '') . '.' }}</p>
         @endif
     </section>
 
@@ -165,7 +164,7 @@
                     <li class="flex items-start gap-3" wire:key="hs-{{ $abschnitt }}-{{ $s['nr'] }}">
                         <span class="shrink-0 grid place-items-center w-7 h-7 rounded-full bg-[var(--fa-accent-soft)] text-[length:var(--fa-text-sm)] font-semibold tabular-nums text-[var(--fa-accent)]">{{ $s['nr'] }}</span>
                         <div class="min-w-0 flex-1 flex flex-col gap-2">
-                            <div class="text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink)]">{!! \Illuminate\Support\Str::inlineMarkdown($s['text']) !!}</div>
+                            <div class="fa-t-body leading-relaxed">{!! \Illuminate\Support\Str::inlineMarkdown($s['text']) !!}</div>
                             @foreach($s['fotos'] as $f)
                                 @if(!empty($f['url']))
                                     <img src="{{ $f['url'] }}" alt="{{ $f['caption'] ?? '' }}" class="w-full rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)]" loading="lazy">
@@ -181,7 +180,7 @@
                         </div>
                     </li>
                 @empty
-                    <li class="{{ $leise }}">{{ $leer }}</li>
+                    <li class="fa-t-muted">{{ $leer }}</li>
                 @endforelse
             </ol>
         </section>
@@ -199,7 +198,7 @@
                             {{ implode(' · ', array_filter([$r['geraet'], $r['temp_c'] !== null ? $r['temp_c'] . ' °C' : null, $r['dauer_min'] !== null ? $r['dauer_min'] . ' min' : null, $r['kern_c'] !== null ? 'Kern ' . $r['kern_c'] . ' °C' : null])) }}
                         @endif
                     </p>
-                    @if(!empty($r['hinweis']) && ! ($r['kalt'] && mb_strtolower(trim($r['hinweis'])) === 'kalt servieren'))<p class="{{ $leise }}">{{ $r['hinweis'] }}</p>@endif
+                    @if(!empty($r['hinweis']) && ! ($r['kalt'] && mb_strtolower(trim($r['hinweis'])) === 'kalt servieren'))<p class="fa-t-muted">{{ $r['hinweis'] }}</p>@endif
                 </div>
             @endforeach
             @foreach($karte['behaelter'] as $bh)
@@ -214,15 +213,15 @@
                 <div wire:key="hf-{{ $d->id }}" class="flex items-center gap-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2.5">
                     <div class="min-w-0 flex-1">
                         <p class="font-medium text-[var(--fa-ink)]">{{ $d->bezeichnung() ?? 'Ohne Form' }}</p>
-                        <p class="{{ $leise }}">{{ implode(' · ', array_filter([$d->is_standard ? 'Standard' : null, $d->quantity_per_unit_g !== null ? $menge($d->quantity_per_unit_g) . ' g' : null, $d->unit_count !== null && (float) $d->unit_count !== 1.0 ? $menge($d->unit_count) . ' Stück' : null])) }}</p>
+                        <p class="fa-t-muted">{{ implode(' · ', array_filter([$d->is_standard ? 'Standard' : null, $d->quantity_per_unit_g !== null ? $menge($d->quantity_per_unit_g) . ' g' : null, $d->unit_count !== null && (float) $d->unit_count !== 1.0 ? $menge($d->unit_count) . ' Stück' : null])) }}</p>
                     </div>
                     <div class="shrink-0 text-right">
                         <p class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums {{ $d->sales_gross === null ? 'text-[var(--fa-warn)]' : 'text-[var(--fa-ink)]' }}">{{ $d->sales_gross !== null ? number_format($d->sales_gross, 2, ',', '.') . ' €' : 'VK fehlt' }}</p>
-                        @if($d->sales_net !== null)<p class="{{ $leise }} tabular-nums">netto {{ number_format($d->sales_net, 2, ',', '.') }} €</p>@endif
+                        @if($d->sales_net !== null)<p class="fa-t-muted tabular-nums">netto {{ number_format($d->sales_net, 2, ',', '.') }} €</p>@endif
                     </div>
                 </div>
             @endforeach
-            @if($standort ?? false)<p class="{{ $leise }}">Grundpreise der Darreichungen. Der Preis für deinen Standort steht oben bei VK brutto.</p>@endif
+            @if($standort ?? false)<p class="fa-t-muted">Grundpreise der Darreichungen. Der Preis für deinen Standort steht oben bei VK brutto.</p>@endif
         </section>
     @endisset
 </div>

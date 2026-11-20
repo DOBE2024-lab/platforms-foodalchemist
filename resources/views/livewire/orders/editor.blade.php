@@ -11,7 +11,6 @@
     $menge = fn ($wert, $stellen = 2) => rtrim(rtrim(number_format((float) $wert, $stellen, ',', '.'), '0'), ',');
     $euro = fn ($wert) => number_format((float) $wert, 2, ',', '.') . ' €';
     $datum = fn ($wert) => $wert ? \Carbon\Carbon::parse($wert)->format('d.m.Y') : null;
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $mittel = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]';
     $menuePunkt = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $menueAus = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink-3)] cursor-not-allowed';
@@ -261,12 +260,12 @@
             @if($roundDetail && ! empty($roundDetail['orders']))
                 <x-fa::section title="Bestellungen dieser Runde" icon="heroicon-o-truck" :meta="count($roundDetail['orders'])" data-orders-runde-bestellungen>
                     @if(empty($roundDetail['sources']) && empty($roundDetail['production_ids']))
-                        <p class="{{ $leise }}">Diese Runde wurde vor dem 08.10.2026 gespeichert und kennt ihre Quellen nicht. Ihre Bestellungen lassen sich einzeln bearbeiten; neue Runden öffnen vollständig mit Quellen.</p>
+                        <p class="fa-t-muted">Diese Runde wurde vor dem 08.10.2026 gespeichert und kennt ihre Quellen nicht. Ihre Bestellungen lassen sich einzeln bearbeiten; neue Runden öffnen vollständig mit Quellen.</p>
                     @endif
                     <div class="flex flex-col divide-y divide-[var(--fa-line)]">
                         @foreach($roundDetail['orders'] as $ro)
                             <div class="flex flex-wrap items-center justify-between gap-2 py-1.5" wire:key="runde-bestellung-{{ $ro['id'] }}">
-                                <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $ro['supplier'] }} <span class="{{ $leise }}">· {{ $ro['status_label'] }} · {{ $ro['positions'] }} Pos.@if($ro['desired_delivery_date']) · {{ \Illuminate\Support\Carbon::parse($ro['desired_delivery_date'])->format('d.m.Y') }}@endif</span></span>
+                                <span class="fa-t-body">{{ $ro['supplier'] }} <span class="fa-t-muted">· {{ $ro['status_label'] }} · {{ $ro['positions'] }} Pos.@if($ro['desired_delivery_date']) · {{ \Illuminate\Support\Carbon::parse($ro['desired_delivery_date'])->format('d.m.Y') }}@endif</span></span>
                                 <span class="inline-flex items-center gap-2"><x-fa::money :value="$ro['total_net']" /><x-fa::button size="sm" wire:click="oeffnenBearbeiten({{ $ro['id'] }})" data-orders-runde-bestellung-oeffnen>Öffnen</x-fa::button></span>
                             </div>
                         @endforeach
@@ -325,8 +324,8 @@
                                     <div class="{{ $trefferListe }}">
                                         @foreach($artikelTreffer as $a)
                                             <button type="button" wire:click="cockpitArtikelEinfuegen({{ $a['id'] }})" wire:key="cockpit-art-{{ $a['id'] }}" class="{{ $trefferKnopf }}">
-                                                <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $a['designation'] ?: '–' }}</span>
-                                                <span class="{{ $leise }}">{{ $a['supplier'] }}@if($a['gp']) · {{ $a['gp'] }}@endif @if($a['article_number']) · Art. {{ $a['article_number'] }}@endif</span>
+                                                <span class="fa-t-body">{{ $a['designation'] ?: '–' }}</span>
+                                                <span class="fa-t-muted">{{ $a['supplier'] }}@if($a['gp']) · {{ $a['gp'] }}@endif @if($a['article_number']) · Art. {{ $a['article_number'] }}@endif</span>
                                             </button>
                                         @endforeach
                                     </div>
@@ -341,7 +340,7 @@
                                     <div class="{{ $trefferListe }}">
                                         @foreach($gpTreffer as $gp)
                                             <button type="button" wire:click="cockpitGpEinfuegen({{ $gp['id'] }})" wire:key="cockpit-gp-{{ $gp['id'] }}" class="{{ $trefferKnopf }}">
-                                                <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $gp['name'] }}</span>
+                                                <span class="fa-t-body">{{ $gp['name'] }}</span>
                                             </button>
                                         @endforeach
                                     </div>
@@ -356,7 +355,7 @@
                                     <div class="{{ $trefferListe }}">
                                         @foreach($bedarfTreffer as $r)
                                             <button type="button" wire:click="cockpitRezeptEinfuegen({{ $r['id'] }})" wire:key="cockpit-recipe-{{ $r['id'] }}" class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[var(--fa-hover)]">
-                                                <span class="min-w-0 truncate text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $r['name'] }}</span>
+                                                <span class="min-w-0 truncate fa-t-body">{{ $r['name'] }}</span>
                                                 <x-fa::badge :tone="$r['is_sales_recipe'] ? 'info' : 'neutral'" class="shrink-0">{{ $r['is_sales_recipe'] ? 'Gericht' : 'Basisrezept' }}</x-fa::badge>
                                             </button>
                                         @endforeach
@@ -373,7 +372,7 @@
                                     <div class="{{ $trefferListe }}">
                                         @foreach($konzeptTreffer as $k)
                                             <button type="button" wire:click="cockpitKonzeptEinfuegen('{{ $k['typ'] }}', {{ $k['id'] }})" wire:key="cockpit-konzept-{{ $k['typ'] }}-{{ $k['id'] }}" class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[var(--fa-hover)]">
-                                                <span class="min-w-0 truncate text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $k['name'] }}</span>
+                                                <span class="min-w-0 truncate fa-t-body">{{ $k['name'] }}</span>
                                                 <x-fa::badge tone="info" class="shrink-0">{{ $k['typ'] === 'paket' ? 'Paket' : 'Konzept' }}</x-fa::badge>
                                             </button>
                                         @endforeach
@@ -403,13 +402,13 @@
                                     <div class="{{ $trefferListe }}">
                                         @foreach($produktionTreffer as $p)
                                             <button type="button" wire:click="cockpitProduktionEinfuegen({{ $p['id'] }})" wire:key="cockpit-prod-{{ $p['id'] }}" class="{{ $trefferKnopf }}">
-                                                <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $p['name'] }}</span>
-                                                @if($p['date'])<span class="{{ $leise }} tabular-nums">{{ $p['date'] }}</span>@endif
+                                                <span class="fa-t-body">{{ $p['name'] }}</span>
+                                                @if($p['date'])<span class="fa-t-muted tabular-nums">{{ $p['date'] }}</span>@endif
                                             </button>
                                         @endforeach
                                     </div>
                                 @else
-                                    <p class="mt-1 {{ $leise }}">Keine freigegebene Produktion offen.</p>
+                                    <p class="mt-1 fa-t-muted">Keine freigegebene Produktion offen.</p>
                                 @endif
                             </div>
                         </div>
@@ -422,7 +421,7 @@
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="min-w-0 flex flex-col items-start gap-1">
                                             <x-fa::badge :tone="$quellenTon[$s['type']] ?? 'neutral'">{{ $quellenTyp[$s['type']] ?? ucfirst((string) $s['type']) }}</x-fa::badge>
-                                            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] truncate max-w-full">{{ $s['label'] ?? ($s['id'] ?? 'Quelle') }}</p>
+                                            <p class="fa-t-body truncate max-w-full">{{ $s['label'] ?? ($s['id'] ?? 'Quelle') }}</p>
                                         </div>
                                         <x-fa::icon-button size="sm" tone="danger" icon="heroicon-o-trash" label="Quelle entfernen" wire:click="cockpitQuelleEntfernen('{{ $s['uid'] }}')" />
                                     </div>
@@ -472,7 +471,7 @@
                                     <x-fa::button size="sm" icon="heroicon-m-archive-box" wire:click="lagerAlleAbziehen(true)" data-orders-lager-abgleich>Lagerbestand abziehen ({{ $mitLager }} Artikel im Lager)</x-fa::button>
                                 @endif
                             @else
-                                <span class="{{ $leise }}">Nichts davon im Lager</span>
+                                <span class="fa-t-muted">Nichts davon im Lager</span>
                             @endif
                             <span class="inline-flex gap-3 text-[length:var(--fa-text-sm)]">
                                 <span role="button" tabindex="0" class="text-[var(--fa-accent)] hover:underline cursor-pointer" x-on:click="$dispatch('runde-gruppen', { offen: true })">Alle auf</span>
@@ -488,7 +487,7 @@
                                             <span x-show="! offen" x-cloak>@svg('heroicon-m-chevron-right', 'w-4 h-4 text-[var(--fa-ink-3)]')</span>
                                             <div class="min-w-0">
                                                 <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">{{ $g['supplier'] }}</p>
-                                                <p class="{{ $leise }} tabular-nums">Liefertag {{ $datum($g['delivery_date']) ?? 'offen' }} · {{ count($g['positionen']) }} {{ count($g['positionen']) === 1 ? 'Position' : 'Positionen' }}</p>
+                                                <p class="fa-t-muted tabular-nums">Liefertag {{ $datum($g['delivery_date']) ?? 'offen' }} · {{ count($g['positionen']) }} {{ count($g['positionen']) === 1 ? 'Position' : 'Positionen' }}</p>
                                             </div>
                                         </div>
                                         <div class="flex flex-col items-end gap-0.5">
@@ -515,14 +514,14 @@
                                             @endphp
                                             <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-3 px-3 py-2">
                                                 <div class="min-w-0">
-                                                    <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $p['designation'] ?: ($p['gp'] ?: 'Position') }}</p>
-                                                    <p class="{{ $leise }}">
+                                                    <p class="fa-t-body">{{ $p['designation'] ?: ($p['gp'] ?: 'Position') }}</p>
+                                                    <p class="fa-t-muted">
                                                         @if($p['article_number'])Art. {{ $p['article_number'] }} · @endif
                                                         Bedarf {{ $p['needed_display'] !== null ? $menge($p['needed_display'], 3) . ' ' . $p['needed_unit'] : 'direkt' }}
                                                         @if($p['source_label']) · {{ $p['source_label'] }}@endif
                                                     </p>
                                                     @if(($p['lager_reserviert_g'] ?? 0) > 0)
-                                                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums" data-orders-lager-reserviert>{{ $menge($p['lager_reserviert_g'] / 1000, 3) }} kg im Lager schon reserviert für {{ implode(', ', $p['lager_reserviert_fuer'] ?? []) }}</p>
+                                                        <p class="fa-t-muted tabular-nums" data-orders-lager-reserviert>{{ $menge($p['lager_reserviert_g'] / 1000, 3) }} kg im Lager schon reserviert für {{ implode(', ', $p['lager_reserviert_fuer'] ?? []) }}</p>
                                                     @endif
                                                     @if(($p['lager_verfuegbar_g'] ?? 0) > 0)
                                                         {{-- Spec 71: Lager je Artikel immer sichtbar, abziehen auf Knopfdruck --}}
@@ -564,15 +563,15 @@
                                                                         @disabled($alt['gesperrt'])
                                                                         class="flex w-full flex-col items-start px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left bg-[var(--fa-surface)] hover:bg-[var(--fa-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
                                                                         wire:key="preview-alt-{{ md5($previewAltKey) }}-{{ $alt['la_id'] }}">
-                                                                        <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $alt['designation'] ?: '–' }}</span>
-                                                                        <span class="{{ $leise }}">
+                                                                        <span class="fa-t-body">{{ $alt['designation'] ?: '–' }}</span>
+                                                                        <span class="fa-t-muted">
                                                                             {{ $alt['supplier'] ?? '–' }}@if($alt['schiene_wechsel']) · anderer Lieferant @endif
                                                                             @if($alt['ist_stamm']) · Stammlieferant @endif
                                                                             @if($alt['vergleichspreis'] !== null) · {{ number_format($alt['vergleichspreis'], 2, ',', '.') }} {{ $alt['vergleichspreis_einheit'] ?? '' }} @endif
                                                                         </span>
                                                                     </button>
                                                                 @empty
-                                                                    <p class="px-2 py-1 {{ $leise }}">Keine Alternative gefunden.</p>
+                                                                    <p class="px-2 py-1 fa-t-muted">Keine Alternative gefunden.</p>
                                                                 @endforelse
                                                             </div>
                                                         @endif
@@ -585,7 +584,7 @@
                                                         <x-fa::icon-button size="sm" icon="heroicon-m-minus" label="Ein Gebinde weniger" wire:click="positionMenge('{{ $pk }}', {{ max(0, $q - 1) }})" />
                                                         <input type="text" inputmode="decimal" value="{{ $menge($q) }}" wire:change="positionMenge('{{ $pk }}', $event.target.value)" class="fa-control h-7 w-14 text-right tabular-nums text-[length:var(--fa-text-sm)]" aria-label="Gebinde" data-orders-menge />
                                                         <x-fa::icon-button size="sm" icon="heroicon-m-plus" label="Ein Gebinde mehr" wire:click="positionMenge('{{ $pk }}', {{ $q + 1 }})" />
-                                                        <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $p['packaging_unit'] }}</span>
+                                                        <span class="fa-t-body">{{ $p['packaging_unit'] }}</span>
                                                         <x-fa::icon-button size="sm" tone="danger" icon="heroicon-m-x-mark" label="Position aus der Runde nehmen" wire:click="positionAuslassen('{{ $pk }}')" data-orders-auslassen />
                                                     </span>
                                                     @if(! empty($p['menge_von_hand']))
@@ -593,7 +592,7 @@
                                                             @svg('heroicon-m-arrow-uturn-left', 'w-3.5 h-3.5') Von Hand ({{ $menge($p['qty_packs_berechnet'] ?? 0) }} gerechnet)
                                                         </button>
                                                     @endif
-                                                    <x-fa::money :value="$p['bestellbar'] ? $p['line_total'] : null" missing="Gebindepreis fehlt" class="{{ $leise }}" />
+                                                    <x-fa::money :value="$p['bestellbar'] ? $p['line_total'] : null" missing="Gebindepreis fehlt" class="fa-t-muted" />
                                                 </div>
                                             </div>
                                         @endforeach
@@ -633,7 +632,7 @@
                             </div>
                             @foreach($cockpitPreview['vorrat'] ?? [] as $p)
                                 <div class="flex items-center justify-between gap-2" wire:key="vorrat-{{ md5($p['position_key'] ?? $loop->index) }}">
-                                    <span class="{{ $leise }}">{{ $p['gp'] ?: ($p['designation'] ?: 'Position') }} · Bedarf {{ $p['needed_display'] !== null ? $menge($p['needed_display'], 3) . ' ' . $p['needed_unit'] : '–' }}</span>
+                                    <span class="fa-t-muted">{{ $p['gp'] ?: ($p['designation'] ?: 'Position') }} · Bedarf {{ $p['needed_display'] !== null ? $menge($p['needed_display'], 3) . ' ' . $p['needed_unit'] : '–' }}</span>
                                     <button type="button" wire:click="vorratBestellen('{{ $p['position_key'] }}', true)" class="text-[length:var(--fa-text-sm)] text-[var(--fa-accent)] hover:underline">trotzdem bestellen</button>
                                 </div>
                             @endforeach
@@ -645,7 +644,7 @@
                             <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ok)]">Aus dem Lager gedeckt ({{ count($cockpitPreview['aus_lager']) }})</p>
                             @foreach($cockpitPreview['aus_lager'] as $p)
                                 <div class="flex items-center justify-between gap-2" wire:key="auslager-{{ md5($p['position_key'] ?? $loop->index) }}">
-                                    <span class="{{ $leise }}">{{ $p['designation'] ?: ($p['gp'] ?: 'Position') }} · Bedarf {{ $menge(($p['bedarf_g'] ?? 0) / 1000, 3) }} kg, im Lager {{ $menge(($p['lager_verfuegbar_g'] ?? 0) / 1000, 3) }} kg</span>
+                                    <span class="fa-t-muted">{{ $p['designation'] ?: ($p['gp'] ?: 'Position') }} · Bedarf {{ $menge(($p['bedarf_g'] ?? 0) / 1000, 3) }} kg, im Lager {{ $menge(($p['lager_verfuegbar_g'] ?? 0) / 1000, 3) }} kg</span>
                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-uturn-left" wire:click="lagerPosition('{{ $p['position_key'] }}', false)">doch bestellen</x-fa::button>
                                 </div>
                             @endforeach
@@ -656,7 +655,7 @@
                             <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink-2)]">Aus der Runde genommen ({{ count($cockpitPreview['ausgelassen']) }})</p>
                             @foreach($cockpitPreview['ausgelassen'] as $p)
                                 <div class="flex items-center justify-between gap-2" wire:key="ausgelassen-{{ md5($p['position_key'] ?? $loop->index) }}">
-                                    <span class="{{ $leise }}">{{ $p['designation'] ?: ($p['gp'] ?: 'Position') }} · {{ $p['supplier'] ?? '' }}</span>
+                                    <span class="fa-t-muted">{{ $p['designation'] ?: ($p['gp'] ?: 'Position') }} · {{ $p['supplier'] ?? '' }}</span>
                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-uturn-left" wire:click="positionWiederherstellen('{{ $p['position_key'] }}')">Wiederherstellen</x-fa::button>
                                 </div>
                             @endforeach
@@ -673,7 +672,7 @@
                         <div class="flex flex-col gap-2">
                             @foreach($cockpitPreview['unresolved'] as $u)
                                 <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-warn-soft)] px-3 py-2" wire:key="unresolved-{{ $loop->index }}" data-orders-klaerpunkt="{{ $u['code'] }}">
-                                    <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $u['label'] }}</p>
+                                    <p class="fa-t-strong">{{ $u['label'] }}</p>
                                     <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-warn)]">{{ $u['message'] }}</p>
                                 </div>
                             @endforeach
@@ -715,7 +714,7 @@
                                 <tr class="align-top" wire:key="line-{{ $z['id'] }}">
                                     <td class="min-w-[16rem]">
                                         <p class="font-medium text-[var(--fa-ink)]">{{ $z['designation'] ?: '–' }}</p>
-                                        @if($z['article_number'])<p class="{{ $leise }}">Art. {{ $z['article_number'] }}@if($z['packaging_unit']) · {{ $z['packaging_unit'] }}@endif</p>@endif
+                                        @if($z['article_number'])<p class="fa-t-muted">Art. {{ $z['article_number'] }}@if($z['packaging_unit']) · {{ $z['packaging_unit'] }}@endif</p>@endif
                                         @unless($z['bestellbar'])<x-fa::signal tone="warn" class="mt-1">Gebindepreis fehlt, nicht in Gebinden bestellbar</x-fa::signal>@endunless
                                         @if($z['quota'])
                                             <div class="mt-1">
@@ -764,15 +763,15 @@
                                                             @if($alt['schiene_wechsel']) wire:confirm="Anderer Lieferant ({{ $alt['supplier'] }}): Die Position wandert in dessen Bestellung. Fortfahren?" @endif
                                                             @disabled($alt['gesperrt'])
                                                             class="flex w-full flex-col items-start px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left bg-[var(--fa-surface)] hover:bg-[var(--fa-hover)] disabled:opacity-50 disabled:cursor-not-allowed">
-                                                            <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $alt['designation'] ?: '–' }}</span>
-                                                            <span class="{{ $leise }}">
+                                                            <span class="fa-t-body">{{ $alt['designation'] ?: '–' }}</span>
+                                                            <span class="fa-t-muted">
                                                                 {{ $alt['supplier'] ?? '–' }}@if($alt['schiene_wechsel']) · anderer Lieferant @endif
                                                                 @if($alt['ist_stamm']) · Stammlieferant @endif
                                                                 @if($alt['vergleichspreis'] !== null) · {{ number_format($alt['vergleichspreis'], 2, ',', '.') }} {{ $alt['vergleichspreis_einheit'] ?? '' }} @endif
                                                             </span>
                                                         </button>
                                                     @empty
-                                                        <p class="px-2 py-1 {{ $leise }}">Keine Ausweichquelle für dieses Grundprodukt.</p>
+                                                        <p class="px-2 py-1 fa-t-muted">Keine Ausweichquelle für dieses Grundprodukt.</p>
                                                     @endforelse
                                                 </div>
                                             @endif
@@ -792,7 +791,7 @@
                                             @else
                                                 <span class="tabular-nums">{{ $menge($z['qty_packs']) }}</span>
                                             @endif
-                                            @if($z['packaging_unit'])<span class="{{ $leise }}">{{ $z['packaging_unit'] }}</span>@endif
+                                            @if($z['packaging_unit'])<span class="fa-t-muted">{{ $z['packaging_unit'] }}</span>@endif
                                         </div>
                                     </td>
                                     <td class="num text-[var(--fa-ink-2)]"><x-fa::money :value="$z['pack_price']" /></td>
@@ -863,13 +862,13 @@
                                 <tr class="align-top" wire:key="receipt-line-{{ $z['id'] }}">
                                     <td class="min-w-[14rem]">
                                         <p class="font-medium text-[var(--fa-ink)]">{{ $z['designation'] ?: '–' }}</p>
-                                        @if($z['article_number'])<p class="{{ $leise }}">Art. {{ $z['article_number'] }}</p>@endif
-                                        @if($z['received_at'])<p class="{{ $leise }} tabular-nums">gebucht {{ \Carbon\Carbon::parse($z['received_at'])->format('d.m.Y H:i') }}</p>@endif
+                                        @if($z['article_number'])<p class="fa-t-muted">Art. {{ $z['article_number'] }}</p>@endif
+                                        @if($z['received_at'])<p class="fa-t-muted tabular-nums">gebucht {{ \Carbon\Carbon::parse($z['received_at'])->format('d.m.Y H:i') }}</p>@endif
                                         @if(!empty($z['inventory']))
                                             <x-fa::signal tone="info" icon="heroicon-m-archive-box" class="mt-1">Lager danach: {{ $z['inventory']['display'] }}, Rest {{ $z['inventory']['shortage_display'] }}</x-fa::signal>
                                         @endif
                                     </td>
-                                    <td class="num">{{ $menge($z['qty_packs']) }} <span class="{{ $leise }}">{{ $z['packaging_unit'] }}</span></td>
+                                    <td class="num">{{ $menge($z['qty_packs']) }} <span class="fa-t-muted">{{ $z['packaging_unit'] }}</span></td>
                                     <td class="num">
                                         <div class="inline-flex items-center justify-end gap-1">
                                             @if($detail['wareneingang_editierbar'])
@@ -878,7 +877,7 @@
                                             @else
                                                 <span>{{ $z['received_qty_packs'] !== null ? $menge($z['received_qty_packs']) : '–' }}</span>
                                             @endif
-                                            @if($z['packaging_unit'])<span class="{{ $leise }}">{{ $z['packaging_unit'] }}</span>@endif
+                                            @if($z['packaging_unit'])<span class="fa-t-muted">{{ $z['packaging_unit'] }}</span>@endif
                                         </div>
                                     </td>
                                     <td class="num">
@@ -928,24 +927,24 @@
                         @if($detail['rechnung_editierbar'])
                             <x-fa::input id="orders-re-nummer" wire:model="formInvoiceNumber" />
                         @else
-                            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $detail['invoice_number'] ?: '–' }}</p>
+                            <p class="fa-t-body">{{ $detail['invoice_number'] ?: '–' }}</p>
                         @endif
                     </x-fa::field>
                     <x-fa::field label="Rechnungsdatum" for="orders-re-datum">
                         @if($detail['rechnung_editierbar'])
                             <x-fa::input id="orders-re-datum" type="date" wire:model="formInvoiceDate" />
                         @else
-                            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] tabular-nums">{{ $datum($detail['invoice_date']) ?? '–' }}</p>
+                            <p class="fa-t-body tabular-nums">{{ $datum($detail['invoice_date']) ?? '–' }}</p>
                         @endif
                     </x-fa::field>
                     <x-fa::field label="Fällig am" :hint="$detail['payment_term_days'] !== null ? $detail['payment_term_days'] . ' Tage Zahlungsziel' : null">
-                        <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] tabular-nums">{{ $datum($detail['invoice_due_date']) ?? '–' }}</p>
+                        <p class="fa-t-body tabular-nums">{{ $datum($detail['invoice_due_date']) ?? '–' }}</p>
                     </x-fa::field>
                     <x-fa::field label="Rechnungsnotiz" for="orders-re-notiz" class="md:col-span-3">
                         @if($detail['rechnung_editierbar'])
                             <x-fa::textarea id="orders-re-notiz" wire:model="formInvoiceNote" rows="2" />
                         @else
-                            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $detail['invoice_note'] ?: '–' }}</p>
+                            <p class="fa-t-body">{{ $detail['invoice_note'] ?: '–' }}</p>
                         @endif
                     </x-fa::field>
                 </div>
@@ -968,14 +967,14 @@
                                     <option value="paid">bezahlt</option>
                                 </x-fa::select>
                             @else
-                                <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $detail['payment']['label'] ?? '–' }}</p>
+                                <p class="fa-t-body">{{ $detail['payment']['label'] ?? '–' }}</p>
                             @endif
                         </x-fa::field>
                         <x-fa::field label="Bezahlt am" for="orders-zahlung-datum">
                             @if($detail['rechnung_editierbar'])
                                 <x-fa::input id="orders-zahlung-datum" type="date" wire:model="formInvoicePaidAt" />
                             @else
-                                <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] tabular-nums">{{ $datum($detail['invoice_paid_at']) ?? '–' }}</p>
+                                <p class="fa-t-body tabular-nums">{{ $datum($detail['invoice_paid_at']) ?? '–' }}</p>
                             @endif
                         </x-fa::field>
                         <x-fa::field label="Stand">
@@ -988,7 +987,7 @@
                             @if($detail['rechnung_editierbar'])
                                 <x-fa::textarea id="orders-zahlung-notiz" wire:model="formPaymentNote" rows="2" />
                             @else
-                                <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $detail['payment_note'] ?: '–' }}</p>
+                                <p class="fa-t-body">{{ $detail['payment_note'] ?: '–' }}</p>
                             @endif
                         </x-fa::field>
                     </div>
@@ -1032,12 +1031,12 @@
                                 <tr class="align-top" wire:key="invoice-line-{{ $z['id'] }}">
                                     <td class="min-w-[14rem]">
                                         <p class="font-medium text-[var(--fa-ink)]">{{ $z['designation'] ?: '–' }}</p>
-                                        @if($z['article_number'])<p class="{{ $leise }}">Art. {{ $z['article_number'] }}</p>@endif
-                                        @if($z['invoice_checked_at'])<p class="{{ $leise }} tabular-nums">geprüft {{ \Carbon\Carbon::parse($z['invoice_checked_at'])->format('d.m.Y H:i') }}</p>@endif
+                                        @if($z['article_number'])<p class="fa-t-muted">Art. {{ $z['article_number'] }}</p>@endif
+                                        @if($z['invoice_checked_at'])<p class="fa-t-muted tabular-nums">geprüft {{ \Carbon\Carbon::parse($z['invoice_checked_at'])->format('d.m.Y H:i') }}</p>@endif
                                     </td>
                                     <td class="num">
-                                        {{ $menge($z['received_qty_packs'] ?? $z['qty_packs']) }} <span class="{{ $leise }}">{{ $z['packaging_unit'] }}</span>
-                                        <div class="{{ $leise }}"><x-fa::money :value="$z['pack_price']" /></div>
+                                        {{ $menge($z['received_qty_packs'] ?? $z['qty_packs']) }} <span class="fa-t-muted">{{ $z['packaging_unit'] }}</span>
+                                        <div class="fa-t-muted"><x-fa::money :value="$z['pack_price']" /></div>
                                     </td>
                                     <td class="num">
                                         @if($detail['rechnung_editierbar'])
@@ -1095,8 +1094,8 @@
                                             </div>
                                         @else
                                             <span class="{{ $mittel }}">{{ $z['claim_status_label'] ?? '–' }}</span>
-                                            @if($z['credit_expected_net'] !== null)<p class="{{ $leise }}">{{ $euro($z['credit_expected_net']) }}</p>@endif
-                                            @if($z['claim_note'])<p class="{{ $leise }}">{{ $z['claim_note'] }}</p>@endif
+                                            @if($z['credit_expected_net'] !== null)<p class="fa-t-muted">{{ $euro($z['credit_expected_net']) }}</p>@endif
+                                            @if($z['claim_note'])<p class="fa-t-muted">{{ $z['claim_note'] }}</p>@endif
                                         @endif
                                     </td>
                                 </tr>
@@ -1118,13 +1117,13 @@
                         <div class="{{ $trefferListe }}">
                             @foreach($artikelTreffer as $a)
                                 <button type="button" wire:click="artikelHinzufuegen({{ $a['id'] }})" wire:key="art-{{ $a['id'] }}" class="{{ $trefferKnopf }}">
-                                    <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $a['designation'] ?: '–' }}</span>
-                                    <span class="{{ $leise }}">{{ $a['supplier'] }}@if($a['gp']) · {{ $a['gp'] }}@endif @if($a['article_number']) · Art. {{ $a['article_number'] }}@endif</span>
+                                    <span class="fa-t-body">{{ $a['designation'] ?: '–' }}</span>
+                                    <span class="fa-t-muted">{{ $a['supplier'] }}@if($a['gp']) · {{ $a['gp'] }}@endif @if($a['article_number']) · Art. {{ $a['article_number'] }}@endif</span>
                                 </button>
                             @endforeach
                         </div>
                     @elseif(mb_strlen(trim($artikelSuche)) >= 2)
-                        <p class="{{ $leise }}">Kein Artikel gefunden.</p>
+                        <p class="fa-t-muted">Kein Artikel gefunden.</p>
                     @endif
                 </x-fa::section>
 
@@ -1138,19 +1137,19 @@
                             <div class="{{ $trefferListe }}">
                                 @foreach($bedarfTreffer as $r)
                                     <button type="button" wire:click="bedarfRezeptWaehlen({{ $r['id'] }})" wire:key="brz-{{ $r['id'] }}" class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[var(--fa-hover)]">
-                                        <span class="min-w-0 truncate text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $r['name'] }}</span>
+                                        <span class="min-w-0 truncate fa-t-body">{{ $r['name'] }}</span>
                                         <x-fa::badge :tone="$r['is_sales_recipe'] ? 'info' : 'neutral'" class="shrink-0">{{ $r['is_sales_recipe'] ? 'Gericht' : 'Basisrezept' }}</x-fa::badge>
                                     </button>
                                 @endforeach
                             </div>
                         @elseif(mb_strlen(trim($bedarfSuche)) >= 2)
-                            <p class="{{ $leise }}">Kein Rezept gefunden.</p>
+                            <p class="fa-t-muted">Kein Rezept gefunden.</p>
                         @endif
                     @else
                         <div class="flex flex-col gap-2">
                             <div class="flex items-center justify-between gap-2">
                                 <span class="min-w-0 flex items-center gap-2">
-                                    <span class="truncate text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $bedarfRecipeName }}</span>
+                                    <span class="truncate fa-t-strong">{{ $bedarfRecipeName }}</span>
                                     <x-fa::badge :tone="$bedarfRecipeVk ? 'info' : 'neutral'" class="shrink-0">{{ $bedarfRecipeVk ? 'Gericht' : 'Basisrezept' }}</x-fa::badge>
                                 </span>
                                 <x-fa::button size="sm" variant="ghost" wire:click="bedarfRezeptZuruecksetzen">Rezept ändern</x-fa::button>
@@ -1201,7 +1200,7 @@
                         <x-fa::signal tone="crit">Absenden ist gesperrt, bis die roten Punkte geklärt sind.</x-fa::signal>
                     @endif
                     @if(!empty($detail['logistik']['deadline']))
-                        <p class="{{ $leise }} tabular-nums">Bestellschluss: {{ \Carbon\Carbon::parse($detail['logistik']['deadline'])->format('d.m.Y H:i') }}</p>
+                        <p class="fa-t-muted tabular-nums">Bestellschluss: {{ \Carbon\Carbon::parse($detail['logistik']['deadline'])->format('d.m.Y H:i') }}</p>
                     @endif
                 </x-fa::section>
             @endif
@@ -1235,7 +1234,7 @@
                                 @endforeach
                             </x-fa::select>
                         </x-fa::field>
-                        <span class="pb-2 {{ $leise }}" data-kpi="strategie">Aktuell: {{ $strategieLabel($detail['sourcing_strategy']) }}</span>
+                        <span class="pb-2 fa-t-muted" data-kpi="strategie">Aktuell: {{ $strategieLabel($detail['sourcing_strategy']) }}</span>
                     </div>
                     @if($resourceVorschau === null)
                         <div><x-fa::button wire:click="neuQuellenVorschau" data-neu-quellen-vorschau>Lieferantenwechsel prüfen</x-fa::button></div>
@@ -1244,7 +1243,7 @@
                             @if(empty($resourceVorschau['wechsel']))
                                 <p class="{{ $mittel }}">Unter dieser Strategie wechselt keine Position.</p>
                             @else
-                                <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ count($resourceVorschau['wechsel']) }} {{ count($resourceVorschau['wechsel']) === 1 ? 'Position wechselt' : 'Positionen wechseln' }}:</p>
+                                <p class="fa-t-strong">{{ count($resourceVorschau['wechsel']) }} {{ count($resourceVorschau['wechsel']) === 1 ? 'Position wechselt' : 'Positionen wechseln' }}:</p>
                                 <ul class="flex flex-col gap-0.5">
                                     @foreach($resourceVorschau['wechsel'] as $w)
                                         <li class="flex flex-wrap items-center gap-1 {{ $mittel }}">
@@ -1311,10 +1310,10 @@
                 @endif
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <x-fa::field label="Status">
-                        <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" data-freigabe-status="{{ $frStatus ?? 'keine' }}">{{ $detail['approval']['label'] ?? '–' }}</p>
+                        <p class="fa-t-body" data-freigabe-status="{{ $frStatus ?? 'keine' }}">{{ $detail['approval']['label'] ?? '–' }}</p>
                     </x-fa::field>
                     <x-fa::field label="Zeitpunkt">
-                        <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] tabular-nums">{{ ($detail['approval']['approved_at'] ?? null) ?: (($detail['approval']['requested_at'] ?? null) ?: '–') }}</p>
+                        <p class="fa-t-body tabular-nums">{{ ($detail['approval']['approved_at'] ?? null) ?: (($detail['approval']['requested_at'] ?? null) ?: '–') }}</p>
                     </x-fa::field>
                     <x-fa::field label="Wer gibt frei">
                         <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $darfFreigeben ? 'Du darfst freigeben.' : 'Inhaber, Admins und Mitglieder mit Freigabe-Häkchen.' }}</p>
@@ -1323,7 +1322,7 @@
                         @if($detail['is_owned'])
                             <x-fa::textarea id="orders-freigabe-notiz" wire:model="formApprovalNote" rows="2" />
                         @else
-                            <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $detail['approval_note'] ?: '–' }}</p>
+                            <p class="fa-t-body">{{ $detail['approval_note'] ?: '–' }}</p>
                         @endif
                     </x-fa::field>
                 </div>

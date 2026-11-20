@@ -61,7 +61,7 @@
                                 class="w-full text-left px-2.5 py-2 rounded-[var(--fa-radius-control)] transition-colors duration-150 {{ $selectedId === $f->id ? $aktiv : $hover }}"
                                 @if($selectedId === $f->id) aria-current="true" @endif>
                             <span class="block text-[length:var(--fa-text-md)] leading-snug break-words">{{ $f->label }}</span>
-                            <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $f->crmCompany?->display_name ?? 'Kein Kunde' }} · {{ $f->chapters_count }} Kapitel</span>
+                            <span class="block fa-t-muted">{{ $f->crmCompany?->display_name ?? 'Kein Kunde' }} · {{ $f->chapters_count }} Kapitel</span>
                         </button>
                     @empty
                         <x-fa::empty icon="heroicon-o-book-open" title="{{ $search !== '' ? 'Kein Treffer' : 'Noch keine Foodbooks' }}" compact>
@@ -318,7 +318,7 @@
                                             @elseif($kap['is_struktur'])
                                                 <x-fa::badge class="shrink-0">Textkapitel</x-fa::badge>
                                             @elseif($kap['pricing_mode'])
-                                                <span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $preisModus[$kap['pricing_mode']] ?? $kap['pricing_mode'] }}</span>
+                                                <span class="shrink-0 fa-t-muted">{{ $preisModus[$kap['pricing_mode']] ?? $kap['pricing_mode'] }}</span>
                                             @endif
                                         </div>
                                         <div class="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5 text-[length:var(--fa-text-md)] tabular-nums" @click.stop>
@@ -437,7 +437,7 @@
 
                         {{-- Phase 5: Segment (aus Küchen-Typ) = Achse für Portionen/Preis/Komplexität/Ton. --}}
                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1 pt-3 border-t border-[var(--fa-line)]" data-segment>
-                            <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Segment</span>
+                            <span class="fa-t-label">Segment</span>
                             @if($segment ?? null)
                                 <x-fa::badge tone="accent">{{ $segment['label'] }}</x-fa::badge>
                                 <span class="{{ $hinweis }}">Niveau {{ \Platform\FoodAlchemist\Services\TeamSettingsService::NIVEAU_LABEL[$segment['niveau']] ?? $segment['niveau'] }} · {{ \Platform\FoodAlchemist\Services\TeamSettingsService::CONVENIENCE_LABEL[$segment['convenience']] ?? $segment['convenience'] }}</span>
@@ -469,7 +469,7 @@
 
                         {{-- Live-Vorschau: Kopf-Band (Bandfarbe + Logo) · Fuß-Linie (Marken-Farbe). Kundenfarben nur zur Laufzeit. --}}
                         <div class="flex flex-col gap-1.5">
-                            <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Vorschau</span>
+                            <span class="fa-t-label">Vorschau</span>
                             <div class="overflow-hidden rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)]">
                                 <div class="flex items-center justify-between gap-2 px-3 h-10 text-[var(--fa-on-accent)] text-[length:var(--fa-text-sm)] font-semibold" x-bind:style="`background:${band || brand}`">
                                     <span class="truncate">{{ $fb->label }}</span>
@@ -536,10 +536,10 @@
 
                         <fieldset class="flex flex-wrap gap-x-5 gap-y-2">
                             <legend class="sr-only">Anzeige</legend>
-                            <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]"><input type="checkbox" wire:model="presentationPreisAnzeige" class="{{ $haken }}"> Preise pro Person zeigen</label>
-                            <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]"><input type="checkbox" wire:model="presentationDeklaration" class="{{ $haken }}"> Allergen-Legende zeigen</label>
+                            <label class="inline-flex items-center gap-2 fa-t-body"><input type="checkbox" wire:model="presentationPreisAnzeige" class="{{ $haken }}"> Preise pro Person zeigen</label>
+                            <label class="inline-flex items-center gap-2 fa-t-body"><input type="checkbox" wire:model="presentationDeklaration" class="{{ $haken }}"> Allergen-Legende zeigen</label>
                             {{-- Ebene 2 · Republish-Preis-Schutz: aus = eingefrorene Preise behalten (neue Speisen kommen live rein), an = aktuelle VK ziehen. --}}
-                            <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]"
+                            <label class="inline-flex items-center gap-2 fa-t-body"
                                    title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen, neue Speisen kommen mit aktuellem Preis dazu. An: alle aktuellen Verkaufspreise übernehmen. Die erste Veröffentlichung ist immer aktuell."><input type="checkbox" wire:model="presentationPreiseAktualisieren" class="{{ $haken }}"> Preise beim Neu-Veröffentlichen aktualisieren</label>
                         </fieldset>
 
@@ -602,7 +602,7 @@
                         {{-- ── Slice F: Betriebs-Links — pro Betrieb ein eigener Link ── --}}
                         <div class="flex flex-col gap-3 pt-3 border-t border-[var(--fa-line)]">
                             <div>
-                                <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">Eigener Link je Kalkulationsprofil</h4>
+                                <h4 class="fa-t-h3">Eigener Link je Kalkulationsprofil</h4>
                                 <p class="{{ $hinweis }}">Zusätzlicher Kundenlink pro Kalkulationsprofil, eingefroren mit den Preisen und der Vorlage dieses Kalkulationsprofils, mit eigener Freigabe. Der Standard-Link oben bleibt bestehen.</p>
                             </div>
 
@@ -694,7 +694,7 @@
                     {{-- Textkapitel/Sektion (Dominique 2026-08-27): reine Überschrift/Text ohne eigenes Food. --}}
                     <label class="flex items-start gap-2 cursor-pointer">
                         <input type="checkbox" wire:model.live="kapitelForm.is_struktur" wire:change="kapitelSpeichern" class="{{ $haken }} mt-0.5" />
-                        <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">Textkapitel ohne eigene Speisen
+                        <span class="fa-t-body">Textkapitel ohne eigene Speisen
                             <span class="block {{ $hinweis }}">Für Einleitung, Überschrift oder Format-Abschnitt. Kennzahlen kommen dann nur aus den Unterkapiteln.</span>
                         </span>
                     </label>
@@ -738,7 +738,7 @@
                     {{-- Spec 03 · L2b: der Kapitel-Kundentext (foodbook_chapters.description), auch im Dokument. --}}
                     <div class="flex flex-col gap-1.5 pt-3 border-t border-[var(--fa-line)]">
                         <div class="flex flex-wrap items-center justify-between gap-2">
-                            <label for="kap-description" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Einleitung für Gäste</label>
+                            <label for="kap-description" class="fa-t-label">Einleitung für Gäste</label>
                             <x-foodalchemist::ki-action action="kiKapitelText" variant="ai" icon="heroicon-o-sparkles" label="Text vorschlagen"
                                     title="Die KI schreibt eine Einleitung aus dem Inhalt des Kapitels, der Einleitung des Foodbooks und der Markenstimme"
                                     busy="Schreibt …" data-fb-ki-kapiteltext />
@@ -808,7 +808,7 @@
                                 <div class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2" data-fb-format-edition
                                      x-data="{ auf: {{ $formatKapitel['editionen_n'] === 1 ? 'true' : 'false' }} }">
                                     <button type="button" class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-left" x-on:click="auf = ! auf" x-bind:aria-expanded="auf" data-fb-format-edition-toggle>
-                                        <span class="flex min-w-0 items-baseline gap-1.5 break-words text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">
+                                        <span class="flex min-w-0 items-baseline gap-1.5 break-words fa-t-h3">
                                             <span class="inline-flex shrink-0 self-center text-[var(--fa-ink-3)] transition-transform" x-bind:class="{ 'rotate-90': auf }">@svg('heroicon-m-chevron-right', 'w-4 h-4')</span>{{ $ed['name'] }}
                                         </span>
                                         <span class="text-[length:var(--fa-text-md)] tabular-nums text-[var(--fa-ink-2)]">
@@ -817,7 +817,7 @@
                                             @else<span class="text-[var(--fa-warn)]">Preis fehlt</span>@endif
                                         </span>
                                     </button>
-                                    @if($ed['claim'])<p class="text-[length:var(--fa-text-sm)] italic text-[var(--fa-ink-3)]">{{ $ed['claim'] }}</p>@endif
+                                    @if($ed['claim'])<p class="fa-t-muted italic">{{ $ed['claim'] }}</p>@endif
                                     <p class="mt-1 {{ $hinweis }}">
                                         @if($edPakete->isNotEmpty())Pakete: {{ $edPakete->implode(', ') }} · @endif{{ $edSpeisen }} {{ $edSpeisen === 1 ? 'Speise' : 'Speisen' }}
                                     </p>
@@ -885,7 +885,7 @@
                                     @else
                                         <span class="w-4 shrink-0"></span>
                                     @endif
-                                    <div class="flex-1 min-w-0 pt-0.5 text-[length:var(--fa-text-md)] leading-snug break-words text-[var(--fa-ink)]">
+                                    <div class="flex-1 min-w-0 pt-0.5 fa-t-body leading-snug break-words">
                                         @switch($block->type)
                                             @case('concept_ref')
                                                 <x-fa::badge tone="info" class="mr-1 align-middle">Concept</x-fa::badge><span class="font-medium">{{ $block->concept?->name ?? 'Concept fehlt' }}</span>

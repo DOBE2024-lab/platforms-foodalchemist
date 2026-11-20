@@ -42,7 +42,7 @@
                 <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] leading-snug line-clamp-2">{{ $k['untertitel'] }}</span>
             @endif
             @if(! empty($k['darreichung']) || ($k['portion_g'] ?? null) !== null)
-                <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] leading-snug tabular-nums" data-sp-zelle-form
+                <span class="block fa-t-muted leading-snug tabular-nums" data-sp-zelle-form
                       title="Darreichung und Grammatur je Portion">{{ implode(' · ', array_filter([
                     $k['darreichung'] ?? null,
                     ($k['portion_g'] ?? null) !== null ? number_format((float) $k['portion_g'], 0, ',', '.') . ' g' : null,
@@ -95,7 +95,7 @@
             @forelse($k['komponenten'] ?? [] as $komp)
                 <li class="flex justify-between gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]"><span class="min-w-0 break-words">{{ $komp['name'] }}</span><span class="tabular-nums shrink-0">{{ $komp['menge'] ?? '' }}</span></li>
             @empty
-                <li class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Keine Komponenten gepflegt.</li>
+                <li class="fa-t-muted">Keine Komponenten gepflegt.</li>
             @endforelse
             @if(($k['kcal'] ?? null) !== null || ($k['portion_g'] ?? null) !== null)
                 <li class="flex justify-between gap-2 pt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink)]">

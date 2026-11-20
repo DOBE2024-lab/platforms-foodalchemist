@@ -341,7 +341,7 @@
                                 <div class="{{ $liste }}" data-konzept-gerichtliste>
                                     @forelse($gerichtListe as $gr)
                                         <div wire:key="kgr-{{ $gr->id }}" draggable="true" @dragstart="dragTyp = 'gericht'; dragId = {{ $gr->id }}; $event.dataTransfer.effectAllowed = 'copy'" @dragend="dragTyp = null; dragId = null" class="{{ $listeZeile }}">
-                                            <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $gr->name }}">{{ $gr->name }}</span>@if($gr->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $gr->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $gr->status->label() }}</x-fa::badge>@endif
+                                            <span class="min-w-0 flex-1 break-words leading-snug fa-t-body" title="{{ $gr->name }}">{{ $gr->name }}</span>@if($gr->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $gr->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $gr->status->label() }}</x-fa::badge>@endif
                                             <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-3)] tabular-nums">{{ $euro($gr->vk_netto) ?? 'kein Preis' }}</span>
                                             <x-fa::icon-button href="#" icon="heroicon-o-eye" label="Gericht ansehen" size="sm" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $gr->id }} })" />
                                             <x-fa::icon-button icon="heroicon-m-plus" label="Als Position einfügen" size="sm" wire:click="positionEinfuegen('gericht', {{ $gr->id }})" />
@@ -379,7 +379,7 @@
                                 <div class="{{ $liste }}" data-konzept-paketliste>
                                     @forelse($paketListe as $pk)
                                         <div wire:key="kpk-{{ $pk->id }}" draggable="true" @dragstart="dragTyp = 'paket'; dragId = {{ $pk->id }}; $event.dataTransfer.effectAllowed = 'copy'" @dragend="dragTyp = null; dragId = null" class="{{ $listeZeile }}">
-                                            <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $pk->name }}">{{ $pk->name }}</span>
+                                            <span class="min-w-0 flex-1 break-words leading-snug fa-t-body" title="{{ $pk->name }}">{{ $pk->name }}</span>
                                             <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-3)] tabular-nums">{{ $euro($pk->price_per_person_cache) ?? 'kein Preis' }}</span>
                                             <x-fa::icon-button icon="heroicon-m-plus" label="Als Position einfügen" size="sm" wire:click="positionEinfuegen('paket', {{ $pk->id }})" />
                                         </div>
@@ -407,7 +407,7 @@
                                 <div class="{{ $liste }}">
                                     @forelse($basisListe as $br)
                                         <div wire:key="kbr-{{ $br->id }}" draggable="true" @dragstart="dragTyp = 'basisrezept'; dragId = {{ $br->id }}; $event.dataTransfer.effectAllowed = 'copy'" @dragend="dragTyp = null; dragId = null" class="{{ $listeZeile }}">
-                                            <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $br->name }}">{{ $br->name }}</span>@if($br->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $br->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $br->status->label() }}</x-fa::badge>@endif
+                                            <span class="min-w-0 flex-1 break-words leading-snug fa-t-body" title="{{ $br->name }}">{{ $br->name }}</span>@if($br->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $br->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $br->status->label() }}</x-fa::badge>@endif
                                             <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-3)] tabular-nums">{{ $br->ek_total_eur !== null ? 'EK ' . $euro($br->ek_total_eur) : 'kein EK' }}</span>
                                             <x-fa::icon-button href="#" icon="heroicon-o-book-open" label="Rezept ansehen" size="sm" x-on:click.prevent="Livewire.dispatch('recipe-modal.oeffnen', { id: {{ $br->id }} })" />
                                             <x-fa::icon-button icon="heroicon-m-plus" label="Als Position einfügen" size="sm" wire:click="positionEinfuegen('basisrezept', {{ $br->id }})" />
@@ -421,7 +421,7 @@
 
                         <div class="flex-1 min-w-0 flex flex-col gap-4">
                             <div class="flex flex-wrap items-center justify-between gap-3">
-                                <h3 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]" x-text="bauModus ? 'Positionen bearbeiten' : 'So sieht der Gast das Menü'">Positionen bearbeiten</h3>
+                                <h3 class="fa-t-h2" x-text="bauModus ? 'Positionen bearbeiten' : 'So sieht der Gast das Menü'">Positionen bearbeiten</h3>
                                 <div class="flex flex-wrap items-center gap-3">
                                     @if($einfuegenNachId !== null)
                                         <span x-show="bauModus" class="inline-flex items-center gap-1.5 {{ $klein }} text-[var(--fa-accent)]" data-einfuege-ziel>
@@ -479,10 +479,10 @@
                                         <header class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                                             @if($g['type'] === 'paket')
                                                 <x-fa::badge tone="info" icon="heroicon-m-archive-box">Paket</x-fa::badge>
-                                                <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $g['title'] }}</h4>
+                                                <h4 class="fa-t-h3">{{ $g['title'] }}</h4>
                                                 <span class="ml-auto {{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $anzahl }} Posten{{ $g['price'] !== null ? ', ' . $euro($g['price']) . ' je Person' : '' }}</span>
                                             @elseif($g['title'])
-                                                <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">{{ $g['title'] }}</h4>
+                                                <h4 class="fa-t-h3">{{ $g['title'] }}</h4>
                                                 <span class="ml-auto {{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $anzahl }} {{ $anzahl === 1 ? 'Position' : 'Positionen' }}{{ (! $istPaket && $slotVks->isNotEmpty()) ? ', ' . $euro($slotVks->sum()) . ' je Person' : '' }}{{ $slotEks->isNotEmpty() ? ', EK ' . $euro($slotEks->sum()) : '' }}</span>
                                             @else
                                                 <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink-2)]">Gerichte</h4>
@@ -704,7 +704,7 @@
                                                             {{-- Paket = Abschnitt (kind=paket-Concept oder Alt-Package; Gerichte eingerückt darunter) --}}
                                                             <div class="flex flex-wrap items-center gap-1.5">
                                                                 <x-fa::badge tone="info" icon="heroicon-m-archive-box">Paket</x-fa::badge>
-                                                                <span class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)] break-words">{{ $epk->name }}</span>
+                                                                <span class="fa-t-h3 break-words">{{ $epk->name }}</span>
                                                                 @if($epk->class ?? null)<x-fa::badge>{{ $epk->class }}</x-fa::badge>@endif
                                                                 @if($epkPreis !== null)<span class="{{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $euro($epkPreis) }} je Person</span>@endif
                                                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-top-right-on-square" href="#" x-on:click.prevent="" wire:click="paketOeffnen({{ $epkOpenId }})">Paket öffnen</x-fa::button>
@@ -718,7 +718,7 @@
                                                             <div class="flex flex-col gap-1.5">
                                                                 <div class="flex flex-wrap items-center gap-1.5">
                                                                     <span class="inline-flex items-center h-[22px] px-2 rounded-full {{ $klein }} font-medium bg-[var(--fa-neutral-soft)] text-[var(--fa-ink-2)]" style="{{ $typStyle($istBasisPos ? 'basisrezept' : 'gericht') }}">{{ $istBasisPos ? 'Basisrezept' : 'Gericht' }}</span>
-                                                                    <span class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] break-words">{{ $g->name }}</span>
+                                                                    <span class="fa-t-strong break-words">{{ $g->name }}</span>
                                                                     {{-- Phase 6: ansehen — Basisrezept → Rezept-Fenster, VK-Gericht → Gericht-Fenster (über dem Editor) --}}
                                                                     <x-fa::icon-button href="#" :icon="$istBasisPos ? 'heroicon-o-book-open' : 'heroicon-o-eye'" :label="$istBasisPos ? 'Rezept ansehen' : 'Gericht ansehen'" size="sm"
                                                                         x-on:click.prevent="Livewire.dispatch('{{ $istBasisPos ? 'recipe-modal' : 'vk-modal' }}.oeffnen', { id: {{ $slot->sales_recipe_id }} })" />
@@ -880,7 +880,7 @@
                                                                 @foreach($vs['kandidaten'] as $v)
                                                                     <div wire:key="ev-{{ $slot->id }}-{{ $v['id'] }}" class="fa-surface flex flex-wrap items-start justify-between gap-2 px-3 py-2">
                                                                         <div class="min-w-0 flex-1">
-                                                                            <p class="flex flex-wrap items-center gap-1.5 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">
+                                                                            <p class="flex flex-wrap items-center gap-1.5 fa-t-strong">
                                                                                 <span class="break-words">{{ $v['name'] }}</span>
                                                                                 @if($v['diet_form'])<x-fa::badge tone="ok">{{ $v['diet_form'] }}</x-fa::badge>@endif
                                                                             </p>
@@ -912,7 +912,7 @@
                                                                 @if($kandidaten->isNotEmpty())
                                                                     <div class="flex flex-col gap-px max-h-56 overflow-y-auto fa-surface p-1">
                                                                         @foreach($kandidaten as $kand)
-                                                                            <button type="button" wire:key="ek-{{ $slot->id }}-{{ $kand->id }}" wire:click="fuelleGericht({{ $slot->id }}, {{ $kand->id }}, '{{ $pickTyp }}')" class="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
+                                                                            <button type="button" wire:key="ek-{{ $slot->id }}-{{ $kand->id }}" wire:click="fuelleGericht({{ $slot->id }}, {{ $kand->id }}, '{{ $pickTyp }}')" class="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left fa-t-body hover:bg-[var(--fa-hover)]">
                                                                                 <span class="min-w-0 break-words">{{ $kand->name }}</span>
                                                                                 <span class="{{ $klein }} text-[var(--fa-ink-2)] tabular-nums shrink-0">@if($pickTyp === 'gericht'){{ $euro($kand->vk_netto) ?? 'kein Preis' }}@else{{ $kand->ek_total_eur !== null ? 'EK ' . $euro($kand->ek_total_eur) : 'kein EK' }}@endif</span>
                                                                             </button>
@@ -965,7 +965,7 @@
                                         <div class="flex flex-col gap-px -mx-1 px-1">
                                             @foreach($paketKandidaten as $kand)
                                                 <div wire:key="epk-{{ $paketQuelle }}-{{ $kand->id }}" class="flex items-center gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] hover:bg-[var(--fa-hover)]">
-                                                    <span class="min-w-0 flex-1 break-words leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $kand->name }}">{{ $kand->name }}</span>@if($kand->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $kand->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $kand->status->label() }}</x-fa::badge>@endif
+                                                    <span class="min-w-0 flex-1 break-words leading-snug fa-t-body" title="{{ $kand->name }}">{{ $kand->name }}</span>@if($kand->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $kand->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $kand->status->label() }}</x-fa::badge>@endif
                                                     <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-3)] tabular-nums">@if($paketQuelle === 'basisrezept'){{ $kand->ek_total_eur !== null ? 'EK ' . $euro($kand->ek_total_eur) : 'kein EK' }}@else{{ $euro($kand->vk_netto) ?? 'kein Preis' }}@endif</span>
                                                     <x-fa::icon-button icon="heroicon-m-plus" label="Vormerken" size="sm" x-on:click="park({{ $kand->id }}, {{ \Illuminate\Support\Js::from($kand->name) }})" />
                                                 </div>
@@ -978,7 +978,7 @@
                                 <div x-show="geparkt !== null" x-cloak class="flex flex-col gap-2" data-park-zeile>
                                     <div class="flex items-center gap-2">
                                         <x-fa::badge tone="info">{{ $paketQuelle === 'basisrezept' ? 'Basisrezept' : 'Gericht' }}</x-fa::badge>
-                                        <span class="flex-1 min-w-0 break-words text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]" x-text="geparkt?.name"></span>
+                                        <span class="flex-1 min-w-0 break-words fa-t-strong" x-text="geparkt?.name"></span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
                                         <input type="number" step="0.01" min="0" x-ref="quantity" x-model="quantity" @keydown.enter.prevent="einfuegen()" placeholder="{{ $paketQuelle === 'basisrezept' ? 'Gramm je Person' : 'Menge je Person' }}" aria-label="{{ $paketQuelle === 'basisrezept' ? 'Gramm je Person' : 'Menge je Person' }}" class="fa-control h-7 flex-1 min-w-0 text-right tabular-nums {{ $klein }}" />
@@ -991,7 +991,7 @@
                         </aside>
                         <div class="flex-1 min-w-0 flex flex-col gap-3">
                             <div class="flex flex-wrap items-baseline justify-between gap-2">
-                                <h3 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">Posten im Paket</h3>
+                                <h3 class="fa-t-h2">Posten im Paket</h3>
                                 <span class="{{ $hinweis }}">Gerichte mit Menge je Person, Basisrezepte mit Gramm je Person</span>
                             </div>
                             <div class="flex flex-col gap-1.5">
@@ -1003,7 +1003,7 @@
                                             <button type="button" wire:click="gerichtRunter({{ $pg->id }})" class="text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]" title="Nach unten" aria-label="Nach unten">@svg('heroicon-m-chevron-down', 'w-4 h-4')</button>
                                         </span>
                                         <span class="inline-flex items-center h-[22px] px-2 rounded-full {{ $klein }} font-medium bg-[var(--fa-neutral-soft)] text-[var(--fa-ink-2)] shrink-0" style="{{ $typStyle($istBasis ? 'basisrezept' : 'gericht') }}">{{ $istBasis ? 'Basisrezept' : 'Gericht' }}</span>
-                                        <span class="flex-1 min-w-[10rem] break-words text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $pg->dish?->name ?? 'Gericht fehlt' }}</span>
+                                        <span class="flex-1 min-w-[10rem] break-words fa-t-strong">{{ $pg->dish?->name ?? 'Gericht fehlt' }}</span>
                                         @if($pg->sales_recipe_id)
                                             <x-fa::icon-button href="#" :icon="$istBasis ? 'heroicon-o-book-open' : 'heroicon-o-eye'" :label="$istBasis ? 'Basisrezept ansehen' : 'Gericht ansehen'" size="sm"
                                                 x-on:click.prevent="Livewire.dispatch('{{ $istBasis ? 'recipe-modal.oeffnen' : 'vk-modal.oeffnen' }}', { id: {{ $pg->sales_recipe_id }} })" />
@@ -1178,8 +1178,8 @@
                                 </x-fa::field>
                             @endunless
                             <dl class="flex flex-wrap gap-x-8 gap-y-2">
-                                <div><dt class="{{ $kopfzelle }}">Berechnete Summe</dt><dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ $euro($cockpit['summe_pro_person'] ?? 0) }}</dd></div>
-                                <div><dt class="{{ $kopfzelle }}">Wareneinsatz</dt><dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ $euro($cockpit['ek_per_person'] ?? 0) }}</dd></div>
+                                <div><dt class="{{ $kopfzelle }}">Berechnete Summe</dt><dd class="fa-t-h2 tabular-nums">{{ $euro($cockpit['summe_pro_person'] ?? 0) }}</dd></div>
+                                <div><dt class="{{ $kopfzelle }}">Wareneinsatz</dt><dd class="fa-t-h2 tabular-nums">{{ $euro($cockpit['ek_per_person'] ?? 0) }}</dd></div>
                             </dl>
                             @if($preisModus === 'auto')
                                 <p class="{{ $hinweis }}">Automatisch addiert die gültigen Katalogpreise der Positionen. Je Gericht gilt die Preisklasse der Darreichung, sonst die des Gerichts, dann die Standardklasse des Teams. Pakete bringen ihren eigenen Katalogpreis mit.</p>
@@ -1524,7 +1524,7 @@
                             <div x-show="!offen" @if($hatGeruest) x-cloak @endif
                                  class="flex flex-wrap items-center justify-between gap-3 rounded-[var(--fa-radius-surface)] border border-dashed border-[var(--fa-line-strong)] px-4 py-3">
                                 <div class="min-w-0 max-w-[70ch]">
-                                    <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Noch kein Planungs-Gerüst</p>
+                                    <p class="fa-t-strong">Noch kein Planungs-Gerüst</p>
                                     <p class="{{ $hinweis }}">Messbare Vorgaben für Mengen, Preis, Ernährungsformen, Saison und Gangfolge. Nur nötig, wenn gegen Vorgaben geplant oder mit KI erstellt wird. Die Planung-Leitstelle füllt es aus einem Auftrag.</p>
                                 </div>
                                 <x-fa::button size="sm" icon="heroicon-m-plus" x-on:click="offen = true" class="shrink-0">Gerüst anlegen</x-fa::button>
@@ -1533,7 +1533,7 @@
                             {{-- Offen (Gerüst vorhanden ODER von Hand aufgeklappt): volle Vorgaben + Abgleich --}}
                             <div x-show="offen" @unless($hatGeruest) x-cloak @endunless class="flex flex-col gap-3">
                                 <div>
-                                    <h3 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">Planungs-Gerüst</h3>
+                                    <h3 class="fa-t-h2">Planungs-Gerüst</h3>
                                     <p class="{{ $hinweis }}">Die messbaren Vorgaben: Mengen, Preisrahmen, Ernährungsformen, Saison, Ausschlüsse und Gangfolge. Daran misst sich der Abgleich unten und jede KI-Erstellung.</p>
                                 </div>
                                 @include('foodalchemist::livewire.planning.partials.frame-board', ['hideSave' => true])

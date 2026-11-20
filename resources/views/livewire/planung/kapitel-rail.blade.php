@@ -22,7 +22,7 @@
                 <div wire:key="fb-kap-{{ $k['id'] }}" class="rounded-[var(--fa-radius-control)] border {{ $offen ? 'border-[var(--fa-accent-line)] bg-[var(--fa-surface)]' : 'border-[var(--fa-line)] bg-[var(--fa-surface)]' }}" data-kapitel="{{ $k['id'] }}" style="margin-left: {{ min((int) $k['depth'], 3) * 16 }}px">
                     <div class="flex items-center gap-2 px-2 py-1.5">
                         <button type="button" wire:click="oeffne({{ $k['id'] }})" aria-expanded="{{ $offen ? 'true' : 'false' }}"
-                                class="flex-1 min-w-0 flex items-center gap-1.5 text-left text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] hover:text-[var(--fa-accent)]" data-kapitel-toggle="{{ $k['id'] }}">
+                                class="flex-1 min-w-0 flex items-center gap-1.5 text-left fa-t-strong hover:text-[var(--fa-accent)]" data-kapitel-toggle="{{ $k['id'] }}">
                             @svg('heroicon-m-chevron-right', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)] transition-transform ' . ($offen ? 'rotate-90' : ''))
                             <span class="min-w-0 break-words">{{ $k['title'] ?: 'Kapitel ohne Titel' }}</span>
                         </button>
@@ -36,7 +36,7 @@
                         <div class="border-t border-[var(--fa-line)] px-3 py-3 flex flex-col gap-3" data-kapitel-ziele="{{ $k['id'] }}">
                             {{-- Zielgruppen-Chips (Stempel; Kapitel schlägt Foodbook-Vorgabe) --}}
                             <div class="flex flex-col gap-1.5">
-                                <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Zielgruppen</span>
+                                <span class="fa-t-label">Zielgruppen</span>
                                 <div class="flex flex-wrap gap-1.5" data-kapitel-zielgruppen>
                                     @forelse($zielgruppenVokab as $z)
                                         @php $zAn = in_array($z->id, $zielgruppenIds, true); @endphp
@@ -44,7 +44,7 @@
                                                 class="inline-flex items-center gap-1 h-7 px-2.5 rounded-full border text-[length:var(--fa-text-sm)] transition-colors {{ $zAn ? 'border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)] text-[var(--fa-accent)] font-medium' : 'border-[var(--fa-line-strong)] bg-[var(--fa-surface)] text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)]' }}"
                                                 data-an="{{ $zAn ? '1' : '0' }}">@if($zAn)@svg('heroicon-m-check', 'w-3.5 h-3.5')@endif{{ $z->name }}</button>
                                     @empty
-                                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch keine Zielgruppen angelegt. Pflegen in den Einstellungen.</span>
+                                        <span class="fa-t-muted">Noch keine Zielgruppen angelegt. Pflegen in den Einstellungen.</span>
                                     @endforelse
                                 </div>
                             </div>

@@ -10,7 +10,7 @@
 @endphp
 
 <div class="flex flex-col gap-4" data-ctrl-preisvergleich>
-    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+    <p class="fa-t-muted max-w-[75ch]">
         Je Grundprodukt der günstigste und der teuerste Lieferant, dazu woher heute bezogen wird.
         Von hier aus lässt sich der günstigste Artikel bestellen oder dauerhaft als Bezugsquelle setzen.
     </p>
@@ -42,7 +42,7 @@
         </div>
     </div>
     @if($mitRabatt)
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <p class="fa-t-muted">
             Preise als effektiver Nettopreis nach Rückvergütung (rückwirkender Jahresbonus), nicht der gebuchte Bestellpreis.
         </p>
     @endif
@@ -95,7 +95,7 @@
                                  Preisvergleich eine Marktbeobachtung ohne Bezug zur eigenen Kalkulation. --}}
                             <td>
                                 @if($z['lead_supplier'] === null)
-                                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Kein Bezug gesetzt</span>
+                                    <span class="fa-t-muted">Kein Bezug gesetzt</span>
                                 @elseif($z['lead_ist_guenstigster'])
                                     <x-fa::badge tone="ok" icon="heroicon-m-check" title="Bezugsquelle ist bereits die günstigste">{{ $z['lead_supplier'] }}</x-fa::badge>
                                 @else
@@ -103,7 +103,7 @@
                                 @endif
                                 {{-- Spec 85 PR-B: euer Leitartikel (Pin) oder der Plattform-Lead --}}
                                 @if($z['lead_supplier'] !== null)
-                                    <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-leitartikel="{{ ($z['lead_eigen'] ?? false) ? 'eigen' : 'plattform' }}">{{ ($z['lead_eigen'] ?? false) ? 'euer Leitartikel' : 'Plattform-Lead' }}</span>
+                                    <span class="block fa-t-muted" data-leitartikel="{{ ($z['lead_eigen'] ?? false) ? 'eigen' : 'plattform' }}">{{ ($z['lead_eigen'] ?? false) ? 'euer Leitartikel' : 'Plattform-Lead' }}</span>
                                 @endif
                             </td>
                             @if($supplierId)

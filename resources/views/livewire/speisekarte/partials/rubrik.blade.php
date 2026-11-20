@@ -31,10 +31,10 @@
         </a>
         <span class="inline-flex shrink-0 cursor-move select-none text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]" title="Ziehen, um die Rubrik umzusortieren"
               draggable="{{ ($gesperrt ?? false) ? 'false' : 'true' }}" x-on:dragstart="dragRubrikId = {{ $rubrik->id }}" x-on:dragend="dragRubrikId = null">@svg('heroicon-m-bars-2', 'w-4 h-4')</span>
-        <span class="min-w-0 break-words font-semibold text-[length:var(--fa-text-base)] text-[var(--fa-ink)]">{{ $rubrikTitel }}</span>
+        <span class="min-w-0 break-words fa-t-h3">{{ $rubrikTitel }}</span>
         <x-fa::badge>{{ $artLabel[$rubrik->art] ?? ucfirst((string) $rubrik->art) }}</x-fa::badge>
         @if($agg && $agg['n'] > 0)
-            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums whitespace-nowrap" title="Summe Verkaufspreis, Summe Einkauf und mittlerer Wareneinsatz, inklusive Unter-Rubriken" data-sk-rubrik-agg>
+            <span class="fa-t-muted tabular-nums whitespace-nowrap" title="Summe Verkaufspreis, Summe Einkauf und mittlerer Wareneinsatz, inklusive Unter-Rubriken" data-sk-rubrik-agg>
                 VK {{ $geld($agg['vk']) }} · EK {{ $geld($agg['ek']) }} · <span class="font-medium {{ $weTon($agg['we']) }}">Wareneinsatz {{ $agg['we'] !== null ? number_format($agg['we'], 0, ',', '.') . ' %' : 'offen' }}</span>
             </span>
         @endif
@@ -153,7 +153,7 @@
             @if($mitPreis)
                 @if($p)
                     <span class="hidden sm:inline tabular-nums text-[length:var(--fa-text-sm)] font-medium {{ $weTon($p['we'] ?? null) }} w-10 text-right shrink-0" title="Wareneinsatz">{{ ($p['we'] ?? null) !== null ? number_format($p['we'], 0, ',', '.') . ' %' : 'offen' }}</span>
-                    <span class="hidden md:inline tabular-nums text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] w-20 text-right shrink-0" title="Einkauf netto">{{ ($p['ek'] ?? null) !== null ? 'EK ' . $geld($p['ek']) : 'EK offen' }}</span>
+                    <span class="hidden md:inline tabular-nums fa-t-muted w-20 text-right shrink-0" title="Einkauf netto">{{ ($p['ek'] ?? null) !== null ? 'EK ' . $geld($p['ek']) : 'EK offen' }}</span>
                 @endif
                 <span class="inline-flex items-center justify-end gap-1 w-24 shrink-0 text-right text-[var(--fa-ink)]">
                     <x-fa::money :value="$p['vk'] ?? null" />
@@ -247,12 +247,12 @@
                 </div>
                 @if($editVariantGroupId)
                     {{-- Werkstrang M Phase D: Wahl-Gruppe wird im Druck und in der Vorschau als „A oder B“ gezeigt. --}}
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Wahl-Gruppe {{ $editVariantGroupId }}: Positionen mit derselben Nummer erscheinen als „… oder …“. Im Aufbau direkt untereinander platzieren.</p>
+                    <p class="fa-t-muted">Wahl-Gruppe {{ $editVariantGroupId }}: Positionen mit derselben Nummer erscheinen als „… oder …“. Im Aufbau direkt untereinander platzieren.</p>
                 @endif
             </div>
         @endif
     @empty
-        <p class="px-2 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch leer. Über „Hinzufügen“ ein Gericht, Konzept oder Paket einsetzen.</p>
+        <p class="px-2 py-2 fa-t-muted">Noch leer. Über „Hinzufügen“ ein Gericht, Konzept oder Paket einsetzen.</p>
     @endforelse
 
     {{-- Unter-Rubriken (rekursiv) --}}

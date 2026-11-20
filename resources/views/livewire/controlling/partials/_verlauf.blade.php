@@ -15,7 +15,7 @@
     </x-fa::empty>
 @else
     <div data-ctrl-verlauf class="flex flex-col gap-3">
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <p class="fa-t-muted">
             Offene Befunde je Art, Stand {{ \Illuminate\Support\Carbon::parse($verlauf['measured_at'])->format('d.m.Y H:i') }}@if($verlauf['previous_at']) gegen {{ \Illuminate\Support\Carbon::parse($verlauf['previous_at'])->format('d.m.Y H:i') }}@endif.
             Weniger ist besser.
             @if(! $verlauf['previous_at'])
@@ -59,7 +59,7 @@
                                 <td class="min-w-[16rem]">
                                     {{ $m['label'] }}
                                     @if(in_array($m['label'], $mehrfach, true))
-                                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">({{ \Illuminate\Support\Str::ucfirst(trim(str_replace(['_', '.', ':'], ' ', $m['metric_key']))) }})</span>
+                                        <span class="fa-t-muted">({{ \Illuminate\Support\Str::ucfirst(trim(str_replace(['_', '.', ':'], ' ', $m['metric_key']))) }})</span>
                                     @endif
                                 </td>
                                 <td class="num font-semibold">{{ number_format($m['count'], 0, ',', '.') }}</td>
@@ -85,7 +85,7 @@
 
         <div class="flex flex-wrap items-center justify-between gap-2">
             @if($ruhig > 0)
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $ruhig }} weitere Befund-Arten stehen auf null.</p>
+                <p class="fa-t-muted">{{ $ruhig }} weitere Befund-Arten stehen auf null.</p>
             @else
                 <span></span>
             @endif

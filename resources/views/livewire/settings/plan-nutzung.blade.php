@@ -33,7 +33,7 @@
                 </table>
                 </div>
             @endif
-            <p class="pt-3 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+            <p class="pt-3 fa-t-muted">
                 {{ $daten['user_gesamt'] }} User im Haupt-Team und seinen Unter-Teams, {{ $daten['inklusive_user'] }} sind in der Basis enthalten. {{ $daten['hinweis'] }}
             </p>
         </x-fa::section>

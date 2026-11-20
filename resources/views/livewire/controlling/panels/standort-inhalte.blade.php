@@ -1,6 +1,5 @@
 {{-- Spec 77d · Einstellungen → Unter-Teams & Freigaben (Spec 82 §5, vorher Controlling): je Unter-Team „übernimmt alles vom Oberteam" oder nur Freigegebenes
      (Sammlungen + fertige Ausgaben). Freigegebenes ist im Standort lesend; anpassen = eigene Kopie dort. --}}
-@php($leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]')
 <div class="flex flex-col gap-4" data-settings-standort-inhalte>
     @if($fehler)<x-fa::notice tone="crit" data-inhalte-fehler>{{ $fehler }}</x-fa::notice>@endif
     @if($meldung)<x-fa::notice tone="ok" data-inhalte-meldung>{{ $meldung }}</x-fa::notice>@endif
@@ -27,7 +26,7 @@
                         @unless($st['erbt_alles'])
                             @php($fs = $freigaben->get($st['id'], collect()))
                             @if($fs->isEmpty())
-                                <p class="{{ $leise }}">Noch nichts freigegeben — der Standort sieht nur seine eigenen Rezepturen.</p>
+                                <p class="fa-t-muted">Noch nichts freigegeben — der Standort sieht nur seine eigenen Rezepturen.</p>
                             @else
                                 <ul class="flex flex-wrap gap-2">
                                     @foreach($fs as $f)
@@ -69,7 +68,7 @@
             @foreach($sammlungen as $s)
                 <div class="rounded-[var(--fa-radius-card)] border border-[var(--fa-line)] p-3 flex flex-col gap-2" wire:key="sam-{{ $s['id'] }}" data-sammlung="{{ $s['id'] }}">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="font-semibold">{{ $s['name'] }} <span class="{{ $leise }} font-normal">{{ count($s['objekte']) }} Einträge</span></span>
+                        <span class="font-semibold">{{ $s['name'] }} <span class="fa-t-muted font-normal">{{ count($s['objekte']) }} Einträge</span></span>
                         <div class="flex gap-1">
                             <x-fa::button size="sm" wire:click="sammlungOeffnen({{ $s['id'] }})">{{ $sammlungOffen === $s['id'] ? 'Schließen' : 'Befüllen' }}</x-fa::button>
                             <x-fa::button size="sm" variant="ghost" icon="heroicon-o-trash" wire:click="sammlungLoeschen({{ $s['id'] }})" wire:confirm="Sammlung löschen? Freigaben dieser Sammlung entfallen." aria-label="Sammlung löschen" />
@@ -106,21 +105,21 @@
                                 </label>
                             </div>
                             @if($treffer === [])
-                                <p class="{{ $leise }}">Keine {{ $ebenen[$ebene] }} gefunden.</p>
+                                <p class="fa-t-muted">Keine {{ $ebenen[$ebene] }} gefunden.</p>
                             @else
                                 <ul class="flex flex-col gap-1 max-h-80 overflow-y-auto">
                                     @foreach($treffer as $t)
                                         <li class="flex items-center gap-2" wire:key="tr-{{ $ebene }}-{{ $t['id'] }}">
                                             <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="pickerAuswahl.{{ $t['id'] }}"
                                                 @disabled($t['drin']) aria-label="{{ $t['name'] }} auswählen" data-picker-eintrag="{{ $t['id'] }}" />
-                                            <span class="{{ $t['drin'] ? $leise : '' }}">{{ $t['name'] }}@if($t['drin']) · schon in der Sammlung @endif</span>
+                                            <span class="{{ $t['drin'] ? 'fa-t-muted' : '' }}">{{ $t['name'] }}@if($t['drin']) · schon in der Sammlung @endif</span>
                                         </li>
                                     @endforeach
                                 </ul>
                                 <div class="flex items-center gap-2">
                                     <x-fa::button size="sm" variant="ghost" wire:click="alleAnhaken({{ json_encode(array_values(array_map(fn ($t) => $t['id'], array_filter($treffer, fn ($t) => ! $t['drin'])))) }})" data-picker-alle>Alle anhaken</x-fa::button>
                                     <x-fa::button size="sm" variant="primary" icon="heroicon-m-plus" wire:click="auswahlHinzu" data-picker-hinzu>{{ count(array_filter($pickerAuswahl)) }} hinzufügen</x-fa::button>
-                                    <span class="{{ $leise }}">Höchstens 60 Einträge je Ansicht — mit dem Filter eingrenzen.</span>
+                                    <span class="fa-t-muted">Höchstens 60 Einträge je Ansicht — mit dem Filter eingrenzen.</span>
                                 </div>
                             @endif
                         </div>

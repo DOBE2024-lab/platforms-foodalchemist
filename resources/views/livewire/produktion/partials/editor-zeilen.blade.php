@@ -45,7 +45,7 @@
                         @foreach($postenSummen as $ps)
                             <div class="flex flex-col gap-0.5 min-w-[9rem] px-3 py-2 rounded-[var(--fa-radius-control)] border {{ $ps['station_id'] === null ? 'border-dashed border-[var(--fa-line-strong)]' : 'border-[var(--fa-line)] bg-[var(--fa-ground)]' }}" wire:key="ps-{{ $ps['station_id'] ?? 0 }}">
                                 <span class="text-[length:var(--fa-text-md)] font-medium {{ $ps['station_id'] === null ? 'text-[var(--fa-ink-2)]' : 'text-[var(--fa-ink)]' }}">{{ $ps['station_id'] === null ? 'Ohne Posten' : $ps['station'] }}</span>
-                                <span class="{{ $leise }} tabular-nums">{{ $ps['zeilen'] }} {{ $ps['zeilen'] === 1 ? 'Position' : 'Positionen' }} · {{ number_format((int) $ps['arbeitszeit_min'], 0, ',', '.') }} min</span>
+                                <span class="fa-t-muted tabular-nums">{{ $ps['zeilen'] }} {{ $ps['zeilen'] === 1 ? 'Position' : 'Positionen' }} · {{ number_format((int) $ps['arbeitszeit_min'], 0, ',', '.') }} min</span>
                                 @if($ps['ohne_zeit'] > 0)<x-fa::signal tone="warn" title="Ohne hinterlegte Arbeitszeit, die Summe ist unvollständig.">{{ $ps['ohne_zeit'] }} ohne Zeit</x-fa::signal>@endif
                             </div>
                         @endforeach
@@ -55,7 +55,7 @@
 
             <x-fa::section title="Positionen" icon="heroicon-o-queue-list" :meta="$zeilen->count()">
                 <x-slot:actions>
-                    <span class="flex flex-wrap items-center justify-end gap-x-2 gap-y-1 {{ $leise }} tabular-nums">
+                    <span class="flex flex-wrap items-center justify-end gap-x-2 gap-y-1 fa-t-muted tabular-nums">
                         <span>{{ $menge($ops['ansaetze_gesamt']) }} Ansätze</span>
                         @if($ops['arbeitszeit_gesamt_min'] > 0)<span>· {{ number_format((int) $ops['arbeitszeit_gesamt_min'], 0, ',', '.') }} min</span>@endif
                         @if($ohneZeit > 0)<x-fa::signal tone="warn" title="Diese Positionen haben keine Arbeitszeit am Rezept, die Summe ist unvollständig.">{{ $ohneZeit }} ohne Zeit</x-fa::signal>@endif
@@ -110,7 +110,7 @@
                                                class="block text-[length:var(--fa-text-sm)] text-[var(--fa-accent)] hover:underline" data-produktion-einlagern>Rest ins Lager / einfrieren →</a>
                                         @endif
                                         @if(! empty($z['darreichung']['formen']))
-                                            <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums" data-produktion-formen>{{ collect($z['darreichung']['formen'])->map(fn ($f) => $f['portionen'] . ' × ' . $f['label'] . (($f['gramm'] ?? null) !== null ? ' · ' . number_format((float) $f['gramm'], 0, ',', '.') . ' g' : ''))->implode(', ') }}</span>
+                                            <span class="block fa-t-muted tabular-nums" data-produktion-formen>{{ collect($z['darreichung']['formen'])->map(fn ($f) => $f['portionen'] . ' × ' . $f['label'] . (($f['gramm'] ?? null) !== null ? ' · ' . number_format((float) $f['gramm'], 0, ',', '.') . ' g' : ''))->implode(', ') }}</span>
                                         @endif
                                         <span class="inline-flex flex-wrap items-center gap-1 ml-1 align-middle">
                                             @if($z['ist_freie_position'])
@@ -127,7 +127,7 @@
                                                 <x-fa::badge tone="crit">gestrichen</x-fa::badge>
                                             @endif
                                         </span>
-                                        @if($z['ist_gestrichen'] && $z['struck_reason'])<p class="{{ $leise }}">Grund: {{ $z['struck_reason'] }}</p>@endif
+                                        @if($z['ist_gestrichen'] && $z['struck_reason'])<p class="fa-t-muted">Grund: {{ $z['struck_reason'] }}</p>@endif
                                     </td>
                                     <td class="num">
                                         @if($darfEditieren)
@@ -215,7 +215,7 @@
                                             <span>{{ $z['vorlauf_tage'] }}</span>
                                         @endif
                                         @if(($z['vorlauf_tage'] ?? 0) > 0)
-                                            <div class="mt-0.5 {{ $leise }}">am {{ $z['plan_date'] }}</div>
+                                            <div class="mt-0.5 fa-t-muted">am {{ $z['plan_date'] }}</div>
                                         @endif
                                     </td>
                                     <td>
@@ -268,7 +268,7 @@
                             </x-fa::field>
                             <x-fa::button variant="secondary" icon="heroicon-m-plus" wire:click="freiePositionAnlegen" data-frei-anlegen>Position hinzufügen</x-fa::button>
                         </div>
-                        <p class="{{ $leise }}">Etwas, das kein Rezept ist. Erscheint nicht im Einkauf.</p>
+                        <p class="fa-t-muted">Etwas, das kein Rezept ist. Erscheint nicht im Einkauf.</p>
                     </div>
                 @endif
             </x-fa::section>

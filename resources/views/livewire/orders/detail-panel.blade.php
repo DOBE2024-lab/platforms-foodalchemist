@@ -65,12 +65,12 @@
                         @foreach($zeilen as $z)
                             <li class="flex items-start justify-between gap-3 py-1.5 border-b border-[var(--fa-line)] last:border-0" wire:key="orders-detail-zeile-{{ $z['id'] }}">
                                 <span class="min-w-0">
-                                    <span class="block text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words">{{ $z['designation'] ?: 'Ohne Bezeichnung' }}</span>
-                                    <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">
+                                    <span class="block fa-t-body break-words">{{ $z['designation'] ?: 'Ohne Bezeichnung' }}</span>
+                                    <span class="block fa-t-muted tabular-nums">
                                         <x-fa::menge :value="$z['qty_packs']" :decimals="2" />{{ $z['packaging_unit'] ? ' × ' . $z['packaging_unit'] : ' Gebinde' }}@if($z['article_number']) · {{ $z['article_number'] }}@endif
                                     </span>
                                 </span>
-                                <x-fa::money :value="$z['pack_price'] !== null ? $z['line_total'] : null" class="shrink-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" />
+                                <x-fa::money :value="$z['pack_price'] !== null ? $z['line_total'] : null" class="shrink-0 fa-t-body" />
                             </li>
                         @endforeach
                     </ul>

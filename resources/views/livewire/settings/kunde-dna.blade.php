@@ -22,13 +22,13 @@
                         <div class="flex flex-col rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] divide-y divide-[var(--fa-line)] overflow-hidden">
                             @foreach($firmen as $f)
                                 <button type="button" wire:key="kdna-fi-{{ $f->id }}" wire:click="firmaWaehlen({{ $f->id }})"
-                                        class="w-full text-left px-3 py-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">{{ $f->display_name }}</button>
+                                        class="w-full text-left px-3 py-2 fa-t-body hover:bg-[var(--fa-hover)]">{{ $f->display_name }}</button>
                             @endforeach
                         </div>
                     @elseif(trim($firmaSuche) !== '')
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Keine Firma gefunden. Schreibweise prüfen oder die Firma zuerst in der Kundenverwaltung anlegen.</p>
+                        <p class="fa-t-muted">Keine Firma gefunden. Schreibweise prüfen oder die Firma zuerst in der Kundenverwaltung anlegen.</p>
                     @else
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Namen eintippen, dann den Kunden aus der Liste wählen.</p>
+                        <p class="fa-t-muted">Namen eintippen, dann den Kunden aus der Liste wählen.</p>
                     @endif
                 </div>
             @else

@@ -18,7 +18,7 @@
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         @foreach($kacheln as $key => $k)
             <div class="rounded-[var(--fa-radius-card)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-4 flex flex-col gap-2" data-start-kachel="{{ $key }}">
-                <h3 class="flex items-center gap-2 text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]"><span class="w-2 h-2 rounded-full bg-[var(--fa-accent)]"></span>{{ $k['label'] }}</h3>
+                <h3 class="flex items-center gap-2 fa-t-h2"><span class="w-2 h-2 rounded-full bg-[var(--fa-accent)]"></span>{{ $k['label'] }}</h3>
                 <ul class="flex flex-col gap-1.5">
                     @foreach($k['zeilen'] as $z)
                         <li>
@@ -29,8 +29,8 @@
                                     <span class="mt-0.5 shrink-0 text-[var(--fa-ink-3)]">@svg('heroicon-m-chevron-right', 'w-4 h-4')</span>
                                 @endif
                                 <span class="min-w-0">
-                                    <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $z['label'] }}</span>
-                                    @if($z['status'] !== null)<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]"> · {{ $z['status']['text'] }}</span>@endif
+                                    <span class="fa-t-body">{{ $z['label'] }}</span>
+                                    @if($z['status'] !== null)<span class="fa-t-muted"> · {{ $z['status']['text'] }}</span>@endif
                                 </span>
                             </a>
                         </li>
@@ -41,7 +41,7 @@
 
         @if($seiten !== [])
             <div class="rounded-[var(--fa-radius-card)] border border-dashed border-[var(--fa-line-strong)] p-4 flex flex-col gap-2" data-start-kachel="seiten">
-                <h3 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">Eigene Seiten</h3>
+                <h3 class="fa-t-h2">Eigene Seiten</h3>
                 @foreach($seiten as $key => $s)
                     <a href="{{ $s['url'] }}" wire:navigate class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-accent)] hover:underline" data-start-seite="{{ $key }}">
                         @svg('heroicon-m-arrow-top-right-on-square', 'w-4 h-4'){{ $s['label'] }}</a>

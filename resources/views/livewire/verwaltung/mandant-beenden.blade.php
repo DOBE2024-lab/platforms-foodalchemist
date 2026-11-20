@@ -7,7 +7,7 @@
         @if($meldung)<x-fa::notice tone="ok" data-mandant-beenden-meldung>{{ $meldung }}</x-fa::notice>@endif
 
         <x-fa::section variant="plain">
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[65ch]">Reihenfolge: Abos kündigen, Stamm-Paket abbestellen, Datenexport, Bereiche ausschalten, Team sperren. Gesperrt heißt: kein Zugriff mehr außer dem Export-Download. Rückgängig machbar. Die Daten werden nicht gelöscht.</p>
+            <p class="fa-t-muted max-w-[65ch]">Reihenfolge: Abos kündigen, Stamm-Paket abbestellen, Datenexport, Bereiche ausschalten, Team sperren. Gesperrt heißt: kein Zugriff mehr außer dem Export-Download. Rückgängig machbar. Die Daten werden nicht gelöscht.</p>
             @if($mandanten === [])
                 <x-fa::empty compact icon="heroicon-o-building-office" title="Keine Mandanten">Es gibt noch kein Haupt-Team neben dem Master-Team.</x-fa::empty>
             @else
@@ -38,7 +38,7 @@
 
         @if($vorschau)
             <x-fa::section title="Beenden: {{ $vorschau['name'] }}" icon="heroicon-o-exclamation-triangle" data-mandant-beenden-vorschau-box>
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $vorschau['unter_teams'] }} Unter-Team(s), {{ $vorschau['mitglieder'] }} Mitglied(er). Nur Verwaltungsdaten und Zählungen, keine Inhalte.</p>
+                <p class="fa-t-muted">{{ $vorschau['unter_teams'] }} Unter-Team(s), {{ $vorschau['mitglieder'] }} Mitglied(er). Nur Verwaltungsdaten und Zählungen, keine Inhalte.</p>
                 <ol class="flex flex-col gap-2 mt-2">
                     @foreach($vorschau['schritte'] as $s)
                         <li class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] px-3 py-2" data-mandant-beenden-schritt="{{ $s['schritt'] }}">
@@ -48,7 +48,7 @@
                             </div>
                             <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $s['wirkung'] }}</p>
                             @if($s['schritt'] === 'export' && ! empty($s['details']['manifest']))
-                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Zählung: @foreach($s['details']['manifest'] as $k => $n){{ $k }} {{ $n }}@if(! $loop->last) · @endif @endforeach</p>
+                                <p class="fa-t-muted">Zählung: @foreach($s['details']['manifest'] as $k => $n){{ $k }} {{ $n }}@if(! $loop->last) · @endif @endforeach</p>
                             @endif
                         </li>
                     @endforeach

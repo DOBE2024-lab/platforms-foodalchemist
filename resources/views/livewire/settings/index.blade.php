@@ -49,13 +49,13 @@
                 @foreach($treffer as $key => $t)
                     <li x-show="@js($suchtext($t)).includes(q.toLowerCase())">
                         <a href="{{ $link($key, $t) }}" wire:navigate class="block px-3 py-2 hover:bg-[var(--fa-hover)]" data-settings-link="{{ $key }}">
-                            <span class="block text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $t['label'] }}
+                            <span class="block fa-t-strong">{{ $t['label'] }}
                                 <span class="font-normal text-[var(--fa-ink-3)]"> · {{ $gruppen[$t['tab']]['label'] ?? '' }}@if($t['abschnitt'] !== null) · {{ $sektionen[$t['sektion']]['label'] }}@endif</span></span>
-                            <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $t['hint'] }}</span>
+                            <span class="block fa-t-muted">{{ $t['hint'] }}</span>
                         </a>
                     </li>
                 @endforeach
-                <li class="px-3 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-settings-filter-leer
+                <li class="px-3 py-2 fa-t-muted" data-settings-filter-leer
                     x-show="! @js(collect($treffer)->map($suchtext)->values()).some(s => s.includes(q.toLowerCase()))">
                     Nichts gefunden zu „<span x-text="q"></span>“.
                 </li>

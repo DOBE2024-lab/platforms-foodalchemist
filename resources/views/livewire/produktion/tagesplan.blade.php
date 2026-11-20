@@ -1154,7 +1154,7 @@
                         <x-fa::button variant="secondary" icon="heroicon-o-arrows-right-left" wire:click="vorschlagen" class="w-full" data-tagesplan-vorschlagen>
                             Verteilung vorschlagen
                         </x-fa::button>
-                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Rechnet Vorlauftage so, dass kein Posten über Last läuft. Übernommen wird erst nach Bestätigung.</p>
+                        <p class="fa-t-muted">Rechnet Vorlauftage so, dass kein Posten über Last läuft. Übernommen wird erst nach Bestätigung.</p>
                     </div>
                 </div>
             </x-foodalchemist::page-sidebar>
@@ -1239,8 +1239,8 @@
                                         <ul class="flex flex-col">
                                             @foreach($postenZeilen as $z)
                                                 <li class="py-1.5 border-b border-[var(--fa-line)] last:border-0">
-                                                    <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] break-words">{{ $z->name }}</p>
-                                                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] break-words">{{ $z->auftrag }} · {{ $z->arbeitszeit_min !== null ? $z->arbeitszeit_min . ' min' : 'keine Zeit' }} · für {{ \Illuminate\Support\Carbon::parse($z->liefertag)->format('d.m.') }}</p>
+                                                    <p class="fa-t-strong break-words">{{ $z->name }}</p>
+                                                    <p class="fa-t-muted break-words">{{ $z->auftrag }} · {{ $z->arbeitszeit_min !== null ? $z->arbeitszeit_min . ' min' : 'keine Zeit' }} · für {{ \Illuminate\Support\Carbon::parse($z->liefertag)->format('d.m.') }}</p>
                                                 </li>
                                             @endforeach
                                         </ul>
@@ -1257,8 +1257,8 @@
                                     <ul class="flex flex-col">
                                         @foreach($dashboard['naechstes'] as $z)
                                             <li class="py-1.5 border-b border-[var(--fa-line)] last:border-0">
-                                                <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] break-words">{{ $z->name }}</p>
-                                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] break-words">{{ \Illuminate\Support\Carbon::parse($z->plan_date)->format('d.m.') }} · {{ $z->station ?: 'ohne Posten' }} · {{ $z->auftrag }}</p>
+                                                <p class="fa-t-strong break-words">{{ $z->name }}</p>
+                                                <p class="fa-t-muted break-words">{{ \Illuminate\Support\Carbon::parse($z->plan_date)->format('d.m.') }} · {{ $z->station ?: 'ohne Posten' }} · {{ $z->auftrag }}</p>
                                             </li>
                                         @endforeach
                                     </ul>
@@ -1377,9 +1377,9 @@
                             @endphp
                             <section data-modal-zone="section" class="fa-surface overflow-hidden" data-tagesplan-tag="{{ $tag }}">
                                 <div class="flex flex-wrap items-baseline gap-2 border-b border-[var(--fa-line)] px-4 py-3">
-                                    <h3 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">{{ $tagC->locale('de')->isoFormat('dd, DD.MM.') }}</h3>
+                                    <h3 class="fa-t-h2">{{ $tagC->locale('de')->isoFormat('dd, DD.MM.') }}</h3>
                                     @if($tagC->isToday())<x-fa::badge tone="accent">Heute</x-fa::badge>@endif
-                                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $zeilen->count() }} {{ $zeilen->count() === 1 ? 'Position' : 'Positionen' }}</span>
+                                    <span class="fa-t-muted tabular-nums">{{ $zeilen->count() }} {{ $zeilen->count() === 1 ? 'Position' : 'Positionen' }}</span>
                                 </div>
                                 @foreach($auslastung[$tag] ?? [] as $b)
                                     @php
@@ -1394,7 +1394,7 @@
                                         {{-- Kopfzeile je Posten bricht um statt feste Breiten zu erzwingen (Laptop) --}}
                                         <div class="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                                             <span class="min-w-0 text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">{{ $b['station'] }}</span>
-                                            <span class="text-[length:var(--fa-text-sm)] tabular-nums text-[var(--fa-ink-3)]">{{ $b['geplant_min'] }}@if($b['kapazitaet_min'] !== null) von {{ $b['kapazitaet_min'] }}@endif min</span>
+                                            <span class="fa-t-muted tabular-nums">{{ $b['geplant_min'] }}@if($b['kapazitaet_min'] !== null) von {{ $b['kapazitaet_min'] }}@endif min</span>
                                             <span class="h-1.5 min-w-16 flex-1 overflow-hidden rounded-full bg-[var(--fa-neutral-soft)]">
                                                 @if($b['kapazitaet_min'] !== null)
                                                     <span class="block h-full {{ $tonBalken[$ton] }}" style="width: {{ min(100, (int) ($b['prozent'] ?? 0)) }}%"></span>
@@ -1437,13 +1437,13 @@
                                                                 @endif
                                                             </td>
                                                             <td class="min-w-48 {{ $erledigt ? 'line-through' : '' }}">
-                                                                <span class="font-medium text-[var(--fa-ink)] break-words">{{ $z->name }}</span>@if($z->assignee)<span class="ml-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">· {{ $z->assignee }}</span>@endif
+                                                                <span class="font-medium text-[var(--fa-ink)] break-words">{{ $z->name }}</span>@if($z->assignee)<span class="ml-1 fa-t-muted">· {{ $z->assignee }}</span>@endif
                                                             </td>
                                                             <td class="num">{{ rtrim(rtrim(number_format($z->ansaetze_effektiv, 2, ',', '.'), '0'), ',') }}</td>
                                                             <td class="num">@if($z->arbeitszeit_min !== null){{ $z->arbeitszeit_min }} min @else<x-fa::signal tone="warn">fehlt</x-fa::signal>@endif</td>
                                                             <td class="whitespace-nowrap">
                                                                 <button type="button" wire:click="$dispatch('produktion-editor.bearbeiten', { id: {{ $z->order_id }} })" class="text-[var(--fa-accent)] hover:underline" title="Auftrag öffnen" data-tagesplan-auftrag>{{ $z->auftrag }}</button>
-                                                                <span class="ml-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">für {{ \Illuminate\Support\Carbon::parse($z->liefertag)->format('d.m.') }}</span>
+                                                                <span class="ml-1 fa-t-muted">für {{ \Illuminate\Support\Carbon::parse($z->liefertag)->format('d.m.') }}</span>
                                                             </td>
                                                             <td class="num w-px">
                                                                 <x-fa::input size="sm" numeric inputmode="numeric" value="{{ $z->vorlauf_tage }}" wire:change="vorlaufSetzen({{ $z->id }}, $event.target.value)"
@@ -1474,8 +1474,8 @@
                             <ul class="mt-2 divide-y divide-[var(--fa-line)]">
                                 @foreach($dashboard['naechstes'] as $z)
                                     <li data-modal-zone="section" class="py-2">
-                                        <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] break-words">{{ $z->name }}</p>
-                                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ \Illuminate\Support\Carbon::parse($z->plan_date)->format('d.m.') }} · {{ $z->station ?: 'ohne Posten' }}</p>
+                                        <p class="fa-t-strong break-words">{{ $z->name }}</p>
+                                        <p class="fa-t-muted">{{ \Illuminate\Support\Carbon::parse($z->plan_date)->format('d.m.') }} · {{ $z->station ?: 'ohne Posten' }}</p>
                                     </li>
                                 @endforeach
                             </ul>
@@ -1530,7 +1530,7 @@
                                     <div class="min-w-9 flex-1 text-center" title="{{ \Illuminate\Support\Carbon::parse($tag['tag'])->locale('de')->isoFormat('dddd, DD.MM.') }}: {{ number_format($tag['wert'], 1, ',', '.') }} Manntage">
                                         <p class="text-[length:var(--fa-text-sm)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ number_format($tag['wert'], 1, ',', '.') }}</p>
                                         <div class="mx-auto mt-1 rounded-t-[var(--fa-radius-control)] bg-[var(--fa-info)]" style="height: {{ $hoehe }}px"></div>
-                                        <p class="mt-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ \Illuminate\Support\Carbon::parse($tag['tag'])->format('d.m.') }}</p>
+                                        <p class="mt-1 fa-t-muted tabular-nums">{{ \Illuminate\Support\Carbon::parse($tag['tag'])->format('d.m.') }}</p>
                                     </div>
                                 @endforeach
                             </div>
@@ -1571,24 +1571,24 @@
                                          data-tagesplanung-dashboard-tag="{{ $tag }}" data-tagesplanung-dashboard-tag-klickbar>
                                     <div class="flex items-start justify-between gap-2">
                                         <div>
-                                            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $tagCarbon->isoFormat('dddd') }}</p>
+                                            <p class="fa-t-muted">{{ $tagCarbon->isoFormat('dddd') }}</p>
                                             <h4 class="text-[length:var(--fa-text-2xl)] font-semibold leading-tight tracking-tight text-[var(--fa-ink)] tabular-nums">{{ $tagCarbon->format('d.m.') }}</h4>
                                         </div>
                                         <x-fa::badge :tone="$tagTon">{{ $tagText }}</x-fa::badge>
                                     </div>
                                     <dl class="grid grid-cols-3 gap-1.5 text-center">
-                                        <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] px-1 py-1.5"><dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ $tagZeilen->count() }}</dd><dt class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Positionen</dt></div>
-                                        <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] px-1 py-1.5"><dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ (int) $tagZeilen->sum('arbeitszeit_min') }}</dd><dt class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Minuten</dt></div>
-                                        <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] px-1 py-1.5"><dd class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ $tagBuckets->count() }}</dd><dt class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Posten</dt></div>
+                                        <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] px-1 py-1.5"><dd class="fa-t-h2 tabular-nums">{{ $tagZeilen->count() }}</dd><dt class="fa-t-muted">Positionen</dt></div>
+                                        <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] px-1 py-1.5"><dd class="fa-t-h2 tabular-nums">{{ (int) $tagZeilen->sum('arbeitszeit_min') }}</dd><dt class="fa-t-muted">Minuten</dt></div>
+                                        <div class="rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] px-1 py-1.5"><dd class="fa-t-h2 tabular-nums">{{ $tagBuckets->count() }}</dd><dt class="fa-t-muted">Posten</dt></div>
                                     </dl>
                                     <ul class="space-y-0.5">
                                         @foreach($tagZeilen->take(4) as $z)
                                             <li class="truncate text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="{{ $z->name }} · {{ $z->station ?: 'ohne Posten' }}">{{ $z->name }} <span class="text-[var(--fa-ink-3)]">· {{ $z->station ?: 'ohne Posten' }}</span></li>
                                         @endforeach
                                         @if($tagZeilen->count() > 4)
-                                            <li class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">und {{ $tagZeilen->count() - 4 }} weitere</li>
+                                            <li class="fa-t-muted">und {{ $tagZeilen->count() - 4 }} weitere</li>
                                         @elseif($tagZeilen->isEmpty())
-                                            <li class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Keine Produktion geplant.</li>
+                                            <li class="fa-t-muted">Keine Produktion geplant.</li>
                                         @endif
                                     </ul>
                                 </article>

@@ -95,11 +95,11 @@
                         <x-foodalchemist::ki-action action="befundeLaufen" variant="ai" icon="heroicon-o-sparkles" label="KI-Befunde sammeln"
                                 title="Rezept-Copilot über die fälligen Rezepte laufen lassen. Ruft das Modell für jedes Rezept einzeln, darum die Obergrenze rechts."
                                 busy="Wird eingereiht …" flash="Lauf gestartet" data-rq-befunde />
-                        <label for="rq-befunde-limit" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">höchstens</label>
+                        <label for="rq-befunde-limit" class="fa-t-muted">höchstens</label>
                         <x-fa::input id="rq-befunde-limit" type="number" size="sm" numeric wire:model="befundeLimit" min="1"
                                      max="{{ \Platform\FoodAlchemist\Services\RecipeFindingsBatchService::MAX_LIMIT }}"
                                      class="w-16" title="Höchstens so viele Rezepte je Lauf" data-rq-befunde-limit />
-                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Rezepte</span>
+                        <span class="fa-t-muted">Rezepte</span>
                     </div>
                     <x-fa::button variant="primary" wire:click="detektorLaufen" wire:target="detektorLaufen" wire:loading.attr="disabled" data-rq-ampel
                                   title="Alle Prüfungen, die Ampel und den Verlauf neu rechnen. Kostet nichts und läuft im Hintergrund.">
@@ -133,7 +133,7 @@
                     </button>
                 @endforeach
             </div>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-rq-tab-satz>{{ $reiter[$tab]['satz'] ?? '' }}</p>
+            <p class="fa-t-muted" data-rq-tab-satz>{{ $reiter[$tab]['satz'] ?? '' }}</p>
         </div>
 
         {{-- ════════════════════════ ÜBERBLICK ════════════════════════ --}}
@@ -142,7 +142,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" data-rq-kpi>
                 <button type="button" wire:key="lage-0" wire:click="setTab('signale')"
                         class="fa-surface group flex flex-col gap-1 p-4 text-left hover:bg-[var(--fa-hover)] transition-colors">
-                    <span class="flex items-center justify-between text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+                    <span class="flex items-center justify-between fa-t-label">
                         Auffälligkeiten offen
                         @svg('heroicon-m-arrow-right', 'w-4 h-4 text-[var(--fa-ink-3)] group-hover:text-[var(--fa-accent)]')
                     </span>
@@ -156,12 +156,12 @@
                 </button>
                 <button type="button" wire:key="lage-1" wire:click="setTab('vorschlaege')"
                         class="fa-surface group flex flex-col gap-1 p-4 text-left hover:bg-[var(--fa-hover)] transition-colors">
-                    <span class="flex items-center justify-between text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+                    <span class="flex items-center justify-between fa-t-label">
                         Zum Bestätigen
                         @svg('heroicon-m-arrow-right', 'w-4 h-4 text-[var(--fa-ink-3)] group-hover:text-[var(--fa-accent)]')
                     </span>
                     <span class="text-[length:var(--fa-text-2xl)] font-semibold tabular-nums leading-tight text-[var(--fa-ink)]">{{ number_format($vorschlaegeZahl, 0, ',', '.') }}</span>
-                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ number_format($bulkZahl, 0, ',', '.') }} KI-Werte · {{ number_format($matchZahl, 0, ',', '.') }} Zuordnungen</span>
+                    <span class="fa-t-muted tabular-nums">{{ number_format($bulkZahl, 0, ',', '.') }} KI-Werte · {{ number_format($matchZahl, 0, ',', '.') }} Zuordnungen</span>
                 </button>
             </div>
 
@@ -217,8 +217,8 @@
                         <div class="flex items-center gap-3 py-2.5" wire:key="krit-{{ $sig->id }}">
                             <x-fa::badge :tone="$schwereTon[$sig->severity->value] ?? 'info'" class="shrink-0 w-[76px] justify-center">{{ $sig->severity->label() }}</x-fa::badge>
                             <div class="min-w-0 flex-1">
-                                <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] truncate" title="{{ $sig->title }}">{{ $sig->title }}</p>
-                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] truncate">{{ \Platform\FoodAlchemist\Livewire\ReviewQueue::bereichLabel($sig->type) }} · {{ $sig->type->label() }}</p>
+                                <p class="fa-t-strong truncate" title="{{ $sig->title }}">{{ $sig->title }}</p>
+                                <p class="fa-t-muted truncate">{{ \Platform\FoodAlchemist\Livewire\ReviewQueue::bereichLabel($sig->type) }} · {{ $sig->type->label() }}</p>
                             </div>
                             <x-fa::button size="sm" wire:click="$dispatch('signal-selected', { id: {{ $sig->id }} })" data-signal-reinschauen="{{ $sig->id }}">Befund ansehen</x-fa::button>
                         </div>
@@ -241,7 +241,7 @@
                         @endforeach
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <label for="rq-typ-wahl" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Art</label>
+                        <label for="rq-typ-wahl" class="fa-t-label">Art</label>
                         <x-fa::select id="rq-typ-wahl" size="sm" class="w-72 max-w-full" wire:key="sigtyp-wahl-{{ $signalTyp ?: 'alle' }}"
                                       wire:change="setSignalTyp($event.target.value)" data-rq-typ-wahl>
                             <option value="" @selected($signalTyp === '')>Alle Arten</option>
@@ -307,7 +307,7 @@
                                                 @endif
                                             </p>
                                             @if($sig->description)
-                                                <p class="mt-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] line-clamp-2 max-w-[80ch]" title="{{ $sig->description }}">{{ $sig->description }}</p>
+                                                <p class="mt-1 fa-t-muted line-clamp-2 max-w-[80ch]" title="{{ $sig->description }}">{{ $sig->description }}</p>
                                             @endif
 
                                             @if($sig->type->value === 'preis_sprung_marge_impact' && $pl)
@@ -368,7 +368,7 @@
                                         <div class="mb-3 sm:ml-[88px] rounded-[var(--fa-radius-surface)] border border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)] px-4 py-3 flex flex-col gap-2" wire:key="kpanel-{{ $sig->id }}">
                                             <div class="flex items-center gap-2">
                                                 <x-fa::badge :tone="$istFix ? 'ok' : 'info'" :icon="$istFix ? 'heroicon-m-bolt' : 'heroicon-m-sparkles'">{{ $ki['flavorLabel'] }}</x-fa::badge>
-                                                <span class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">So würde die KI vorgehen</span>
+                                                <span class="fa-t-strong">So würde die KI vorgehen</span>
                                             </div>
                                             <p class="text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink-2)]">{{ $ki['plan'] }}</p>
 
@@ -376,11 +376,11 @@
                                                 <div class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2" wire:key="kidraft-{{ $sig->id }}">
                                                     <div class="flex items-center justify-between mb-1">
                                                         <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-info)]">Entwurf der KI</span>
-                                                        <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">Sicherheit {{ round(((float) ($kiDraft['confidence'] ?? 0)) * 100) }} %</span>
+                                                        <span class="fa-t-muted tabular-nums">Sicherheit {{ round(((float) ($kiDraft['confidence'] ?? 0)) * 100) }} %</span>
                                                     </div>
                                                     <textarea readonly rows="6" onclick="this.select()" aria-label="Entwurf der KI"
-                                                              class="w-full text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink)] bg-transparent border-0 resize-y focus:ring-0 p-0">{{ $kiDraft['draft'] }}</textarea>
-                                                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] mt-1">Klicken markiert den Text. Der Entwurf wird nicht automatisch verschickt.</p>
+                                                              class="w-full fa-t-body leading-relaxed bg-transparent border-0 resize-y focus:ring-0 p-0">{{ $kiDraft['draft'] }}</textarea>
+                                                    <p class="fa-t-muted mt-1">Klicken markiert den Text. Der Entwurf wird nicht automatisch verschickt.</p>
                                                 </div>
                                             @endif
 
@@ -419,7 +419,7 @@
                 {{-- Gedämpfte Lagen (Rausch-Guard): bekannt, bewusst zusammengefasst, Nebensache → eingeklappt. --}}
                 @if($gedaempft !== [])
                     <details class="group fa-surface p-4" @if($signalSektionen === []) open @endif data-rq-gedaempft>
-                        <summary class="flex items-center gap-2 cursor-pointer select-none text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">
+                        <summary class="flex items-center gap-2 cursor-pointer select-none fa-t-strong">
                             @svg('heroicon-m-chevron-right', 'w-4 h-4 text-[var(--fa-ink-3)] transition-transform group-open:rotate-90')
                             Bekannte Lagen
                             <span class="text-[length:var(--fa-text-sm)] font-normal text-[var(--fa-ink-3)] tabular-nums">{{ count($gedaempft) }}</span>
@@ -430,8 +430,8 @@
                                 <div wire:key="sigzustand-{{ $z['type'] }}" class="flex items-center gap-3 py-2.5">
                                     @svg($z['icon'], 'w-5 h-5 shrink-0 text-[var(--fa-ink-3)]')
                                     <div class="min-w-0 flex-1">
-                                        <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $z['label'] }}</p>
-                                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $z['hinweis'] }}@if($z['note']). {{ $z['note'] }}@endif</p>
+                                        <p class="fa-t-strong">{{ $z['label'] }}</p>
+                                        <p class="fa-t-muted">{{ $z['hinweis'] }}@if($z['note']). {{ $z['note'] }}@endif</p>
                                     </div>
                                     @if($z['state'] === 'stumm')
                                         <x-fa::badge>Stumm</x-fa::badge>
@@ -478,11 +478,11 @@
                             <div class="flex flex-col gap-2 px-4 py-3" wire:key="rqb-{{ $b->id }}" data-rq-bulk-karte="{{ $b->id }}">
                                 <div class="flex items-start justify-between gap-2">
                                     <p class="min-w-0 font-medium text-[var(--fa-ink)] wrap-anywhere">{{ $b->rezept_name }}</p>
-                                    @if($b->confidence !== null)<span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ round($b->confidence * 100) }} %</span>@endif
+                                    @if($b->confidence !== null)<span class="shrink-0 fa-t-muted tabular-nums">{{ round($b->confidence * 100) }} %</span>@endif
                                 </div>
                                 <x-fa::badge tone="info" class="self-start">{{ $feldLabel }}</x-fa::badge>
-                                @if(filled($alt))<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] wrap-anywhere"><span class="font-medium">Bisher:</span> {{ \Illuminate\Support\Str::limit((string) $alt, 240) }}</p>@endif
-                                <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] wrap-anywhere"><span class="font-medium">Neu:</span> {{ $neu }}</p>
+                                @if(filled($alt))<p class="fa-t-muted wrap-anywhere"><span class="font-medium">Bisher:</span> {{ \Illuminate\Support\Str::limit((string) $alt, 240) }}</p>@endif
+                                <p class="fa-t-body wrap-anywhere"><span class="font-medium">Neu:</span> {{ $neu }}</p>
                                 @if(filled($b->reasoning))<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] wrap-anywhere"><span class="font-medium">Begründung:</span> {{ \Illuminate\Support\Str::limit((string) $b->reasoning, 300) }}</p>@endif
                                 @if($zeigen('bulkUebernehmen') || $zeigen('bulkVerwerfen'))
                                     <div class="flex gap-2">
@@ -527,7 +527,7 @@
                                 <span class="min-w-0 truncate text-[var(--fa-ink-2)]" title="{{ $m->la_name }}">{{ $m->la_name }}</span>
                                 @svg('heroicon-m-arrow-right', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                                 <span class="min-w-0 truncate font-medium text-[var(--fa-ink)]" title="{{ $m->gp_name }}">{{ $m->gp_name }}</span>
-                                <span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" title="Wie die Zuordnung gefunden wurde">{{ $m->methode }}</span>
+                                <span class="shrink-0 fa-t-muted" title="Wie die Zuordnung gefunden wurde">{{ $m->methode }}</span>
                             </div>
                             <div class="shrink-0 flex items-center gap-1.5 ml-auto">
                                 @if($zeigen('signale.vorschlag'))
@@ -556,7 +556,7 @@
                                 <button type="button" wire:key="rqp-{{ $sp['marker'] }}-{{ $r->id }}"
                                         wire:click="$dispatch('{{ ($r->is_sales_recipe ?? true) ? 'vk-modal.oeffnen' : 'recipe-modal.oeffnen' }}', { id: {{ $r->id }} })"
                                         class="flex w-full items-center justify-between gap-2 text-left rounded-[var(--fa-radius-control)] px-2 py-1.5 hover:bg-[var(--fa-hover)] transition-colors">
-                                    <span class="min-w-0 truncate text-[length:var(--fa-text-md)] text-[var(--fa-ink)]" title="{{ $r->name }}">{{ $r->name }}</span>
+                                    <span class="min-w-0 truncate fa-t-body" title="{{ $r->name }}">{{ $r->name }}</span>
                                     @if($sp['suffix'])<span class="shrink-0 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-crit)] tabular-nums" title="Zutaten ohne Grundprodukt">{{ $r->n_ingredients_unmapped }}</span>@endif
                                 </button>
                             @empty
@@ -582,7 +582,7 @@
                     <x-fa::field label="Verwechslung sperren" hint="Wenn der Suchbegriff vorkommt, nie den gesperrten Begriff zuordnen. Ausnahme optional.">
                         <div class="flex flex-wrap items-center gap-2">
                             <x-fa::input wire:model="termTrigger" placeholder="Brie" class="w-24" aria-label="Suchbegriff" title="Suchbegriff" />
-                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">nie</span>
+                            <span class="fa-t-muted">nie</span>
                             <x-fa::input wire:model="termForbid" placeholder="Bries" class="w-24" aria-label="Gesperrter Begriff" title="Gesperrter Begriff" />
                             <x-fa::input wire:model="termUnless" placeholder="außer bei …" class="min-w-0 flex-1" aria-label="Ausnahme (optional)" title="Ausnahme (optional)" />
                             <x-fa::button variant="danger" icon="heroicon-m-no-symbol" wire:click="terminologieAntiMarker" wire:loading.attr="disabled" wire:target="terminologieAntiMarker" data-rq-term-anti-save>Sperre anlegen</x-fa::button>

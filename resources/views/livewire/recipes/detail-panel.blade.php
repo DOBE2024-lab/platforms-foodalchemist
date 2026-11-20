@@ -12,7 +12,6 @@
 
     $zahl = fn ($wert, $stellen = 2) => number_format((float) $wert, $stellen, ',', '.');
     $menge = fn ($wert) => rtrim(rtrim(number_format((float) $wert, 2, ',', '.'), '0'), ',');
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $titelKlein = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
     $listenKnopf = 'flex w-full items-center gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $chip = 'inline-flex items-center gap-1 h-7 px-2.5 rounded-full border text-[length:var(--fa-text-sm)] transition-colors';
@@ -63,11 +62,11 @@
                 <div class="flex items-center gap-2 text-[length:var(--fa-text-md)]" wire:key="rq-equiv-{{ $e->id }}">
                     <x-fa::badge :tone="$e->gegen_kind === 'recipe' ? 'info' : 'neutral'" class="shrink-0">{{ $e->gegen_kind === 'recipe' ? 'Rezept' : 'Grundprodukt' }}</x-fa::badge>
                     <span class="min-w-0 flex-1 truncate text-[var(--fa-ink)]" title="{{ $e->gegen_name }}">{{ $e->gegen_name }}</span>
-                    @if((float) $e->umrechnungsfaktor !== 1.0)<span class="shrink-0 tabular-nums {{ $leise }}" title="Umrechnungsfaktor">× {{ rtrim(rtrim(number_format($e->umrechnungsfaktor, 4, ',', '.'), '0'), ',') }}</span>@endif
+                    @if((float) $e->umrechnungsfaktor !== 1.0)<span class="shrink-0 tabular-nums fa-t-muted" title="Umrechnungsfaktor">× {{ rtrim(rtrim(number_format($e->umrechnungsfaktor, 4, ',', '.'), '0'), ',') }}</span>@endif
                     <x-fa::icon-button size="sm" tone="danger" icon="heroicon-m-x-mark" label="Ersatz lösen" wire:click="ersatzLoesen({{ $e->id }})" />
                 </div>
             @empty
-                <p class="{{ $leise }}" data-ersatz-leer>Kein Ersatz hinterlegt.</p>
+                <p class="fa-t-muted" data-ersatz-leer>Kein Ersatz hinterlegt.</p>
             @endforelse
             @if($fehlerAnker !== null)<x-fa::signal tone="crit" data-ersatz-fehler>{{ $fehlerAnker }}</x-fa::signal>@endif
             <div class="flex flex-col gap-1 pt-1" data-ersatz-verknuepfen>
@@ -218,14 +217,14 @@
                     @else
                         <x-fa::signal tone="warn" data-kpi="bepreist" title="Zutaten mit Preis">{{ $priced ?? 0 }} von {{ $ptotal }} Zutaten mit Preis, der EK ist nur vorläufig</x-fa::signal>
                         @if(($k['quelle'] ?? null) === 'team_cache' && $k['anteil_fehlend_masse'] !== null)
-                            <p class="{{ $leise }}" data-kosten-unvollstaendig>Ohne Preis: {{ $zahl($k['anteil_fehlend_masse'] * 100, 0) }} % der Menge</p>
-                            <ul class="{{ $leise }}" data-kosten-fehlende>
+                            <p class="fa-t-muted" data-kosten-unvollstaendig>Ohne Preis: {{ $zahl($k['anteil_fehlend_masse'] * 100, 0) }} % der Menge</p>
+                            <ul class="fa-t-muted" data-kosten-fehlende>
                                 @foreach(array_slice($k['fehlende'], 0, 5) as $f)
                                     <li>{{ $f['pfad'] }}</li>
                                 @endforeach
                             </ul>
                         @else
-                            <p class="{{ $leise }}">Fehlende Preise stehen unten an der Zutat.</p>
+                            <p class="fa-t-muted">Fehlende Preise stehen unten an der Zutat.</p>
                         @endif
                     @endif
                 @endif
@@ -275,12 +274,12 @@
                                             <span class="min-w-8 text-[var(--fa-ink-3)]">{{ $hoch['felder'][$z->id]['einheit'] }}</span>
                                         </span>
                                         @if($hoch['felder'][$z->id]['max'] !== null)
-                                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">bis {{ $hoch['felder'][$z->id]['max'] }}</span>
+                                            <span class="fa-t-muted">bis {{ $hoch['felder'][$z->id]['max'] }}</span>
                                         @endif
                                         @if($geaendert !== null)
                                             <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-accent)]" data-fa-hoch-geaendert>im Rezept {{ $geaendert }}</span>
                                         @else
-                                            <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">statt {{ $mengeText }} {{ $z->unit?->slug }}</span>
+                                            <span class="fa-t-muted">statt {{ $mengeText }} {{ $z->unit?->slug }}</span>
                                         @endif
                                     </span>
                                 @elseif($hoch !== null && (float) $z->quantity > 0)
@@ -289,7 +288,7 @@
                                             class="w-20 shrink-0 text-right tabular-nums hover:underline {{ ($hoch['zutat']?->id ?? null) === $z->id ? 'text-[var(--fa-accent)]' : 'text-[var(--fa-ink-2)]' }}" data-fa-hoch-menge="{{ $z->id }}">
                                         @if(isset($hoch['mengen'][$z->id]))
                                             <span class="block font-medium text-[var(--fa-accent)]" data-fa-hoch-neu>{{ $hoch['mengen'][$z->id] }}</span>
-                                            <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">statt {{ $mengeText }} {{ $z->unit?->slug }}</span>
+                                            <span class="block fa-t-muted">statt {{ $mengeText }} {{ $z->unit?->slug }}</span>
                                         @else
                                             {{ $mengeText }} <span class="text-[var(--fa-ink-3)]">{{ $z->unit?->slug }}</span>
                                         @endif
@@ -308,9 +307,9 @@
                                         <span class="text-[var(--fa-ink-2)]">{{ $z->display_name ?? $z->raw_text }}</span>
                                         <x-fa::signal tone="warn" class="ml-1" title="Keinem Grundprodukt oder Rezept zugeordnet">nicht zugeordnet</x-fa::signal>
                                     @endif
-                                    @if($z->is_optional)<span class="{{ $leise }}"> (optional)</span>@endif
+                                    @if($z->is_optional)<span class="fa-t-muted"> (optional)</span>@endif
                                     @if(filled($z->raw_text) && $z->raw_text !== ($z->gp?->name ?? $z->referencedRecipe?->name ?? $z->display_name))
-                                        <span class="block truncate italic {{ $leise }}" title="{{ $z->raw_text }}">{{ $z->raw_text }}</span>
+                                        <span class="block truncate italic fa-t-muted" title="{{ $z->raw_text }}">{{ $z->raw_text }}</span>
                                     @endif
                                 </span>
                                 <span class="shrink-0 tabular-nums {{ isset($zeilenEk[$z->id]) ? 'text-[var(--fa-ink)]' : 'text-[length:var(--fa-text-sm)] text-[var(--fa-warn)]' }}" data-zeilen-ek>{{ isset($zeilenEk[$z->id]) ? $zahl($zeilenEk[$z->id]) . ' €' : 'Preis fehlt' }}</span>
@@ -329,7 +328,7 @@
                         <img src="{{ $endprodukt->url() }}" alt="{{ $endprodukt->caption ?? 'Endprodukt' }}"
                              class="w-full max-h-48 object-cover rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)]" loading="lazy" />
                         @if($endprodukt->caption)
-                            <figcaption class="{{ $leise }}">{{ $endprodukt->caption }}</figcaption>
+                            <figcaption class="fa-t-muted">{{ $endprodukt->caption }}</figcaption>
                         @endif
                     </figure>
                 </x-fa::section>
@@ -348,9 +347,9 @@
                                 @endif
                             @endif
                             <li class="flex items-start gap-2.5" wire:key="pstep-{{ $s->id }}">
-                                <span class="shrink-0 grid place-items-center w-6 h-6 rounded-full bg-[var(--fa-neutral-soft)] text-[length:var(--fa-text-sm)] font-medium tabular-nums text-[var(--fa-ink-2)]">{{ $s->position }}</span>
+                                <span class="shrink-0 grid place-items-center w-6 h-6 rounded-full bg-[var(--fa-neutral-soft)] fa-t-label tabular-nums">{{ $s->position }}</span>
                                 <div class="min-w-0 flex-1 pt-0.5">
-                                    <div class="text-[length:var(--fa-text-md)] leading-snug text-[var(--fa-ink)]">{!! \Illuminate\Support\Str::inlineMarkdown((string) $s->text) !!}</div>
+                                    <div class="fa-t-body leading-snug">{!! \Illuminate\Support\Str::inlineMarkdown((string) $s->text) !!}</div>
                                     @if($s->photos->isNotEmpty())
                                         <div class="flex flex-wrap gap-1.5 mt-1.5">
                                             @foreach($s->photos as $foto)
@@ -392,7 +391,7 @@
                     <x-foodalchemist::pairing-netz :recipe-id="$rezept->id" :netz="$netz" />
                 @elseif($pairingErlaubt)
                     <div wire:key="pairing-laden-{{ $rezept->id }}" x-init="$wire.pairingLaden()"
-                         class="flex items-center gap-2 py-6 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-pairing-laedt>
+                         class="flex items-center gap-2 py-6 fa-t-muted" data-pairing-laedt>
                         @svg('heroicon-o-arrow-path', 'w-4 h-4 animate-spin') Pairing wird geladen …
                     </div>
                 @endif
@@ -448,7 +447,7 @@
                         @endforeach
                     </dl>
                 @else
-                    <p class="{{ $leise }}">Nährwerte fehlen noch.</p>
+                    <p class="fa-t-muted">Nährwerte fehlen noch.</p>
                 @endif
             </x-fa::section>
 
@@ -459,11 +458,11 @@
                         <div class="flex items-center gap-2 text-[length:var(--fa-text-md)]" wire:key="rq-equiv-{{ $e->id }}">
                             <x-fa::badge :tone="$e->gegen_kind === 'recipe' ? 'info' : 'neutral'" class="shrink-0">{{ $e->gegen_kind === 'recipe' ? 'Rezept' : 'Grundprodukt' }}</x-fa::badge>
                             <span class="min-w-0 flex-1 truncate text-[var(--fa-ink)]" title="{{ $e->gegen_name }}">{{ $e->gegen_name }}</span>
-                            @if((float) $e->umrechnungsfaktor !== 1.0)<span class="shrink-0 tabular-nums {{ $leise }}" title="Umrechnungsfaktor">× {{ rtrim(rtrim(number_format($e->umrechnungsfaktor, 4, ',', '.'), '0'), ',') }}</span>@endif
+                            @if((float) $e->umrechnungsfaktor !== 1.0)<span class="shrink-0 tabular-nums fa-t-muted" title="Umrechnungsfaktor">× {{ rtrim(rtrim(number_format($e->umrechnungsfaktor, 4, ',', '.'), '0'), ',') }}</span>@endif
                             <x-fa::icon-button size="sm" tone="danger" icon="heroicon-m-x-mark" label="Ersatz lösen" wire:click="ersatzLoesen({{ $e->id }})" />
                         </div>
                     @empty
-                        <p class="{{ $leise }}" data-ersatz-leer>Kein Ersatz hinterlegt.</p>
+                        <p class="fa-t-muted" data-ersatz-leer>Kein Ersatz hinterlegt.</p>
                     @endforelse
                     @if($fehlerAnker !== null)<x-fa::signal tone="crit" data-ersatz-fehler>{{ $fehlerAnker }}</x-fa::signal>@endif
                     <div class="flex flex-col gap-1 pt-1" data-ersatz-verknuepfen>
@@ -493,7 +492,7 @@
                             Nicht machbar ohne: {{ collect($machbarkeit['warnungen'])->pluck('equipment')->unique()->implode(', ') }}. Laut Teamprofil fehlt das in eurer Küche.
                         </x-fa::signal>
                     @elseif(($machbarkeit['status'] ?? null) === 'hinweis')
-                        <p class="mt-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-machbarkeit-hinweis>
+                        <p class="mt-2 fa-t-muted" data-machbarkeit-hinweis>
                             Profil unvollständig: {{ collect($machbarkeit['hinweise'])->pluck('equipment')->unique()->implode(', ') }} {{ count($machbarkeit['hinweise']) === 1 ? 'ist' : 'sind' }} im
                             <a href="{{ route('foodalchemist.einstellungen', ['tab' => 'kueche', 'bereich' => 'ausstattung']) }}" class="underline">Teamprofil</a> noch unbekannt.
                         </p>
@@ -514,12 +513,12 @@
                                     class="{{ $listenKnopf }}" title="{{ $parent->is_sales_recipe ? 'Gericht öffnen' : 'Rezept anzeigen' }}" data-eltern-link>
                                 @svg($parent->is_sales_recipe ? 'heroicon-o-banknotes' : 'heroicon-o-arrow-up', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                                 <span class="min-w-0 flex-1 truncate">{{ $parent->name }}</span>
-                                <span class="shrink-0 {{ $leise }}">{{ $parent->is_sales_recipe ? 'Gericht' : 'Rezept' }}</span>
+                                <span class="shrink-0 fa-t-muted">{{ $parent->is_sales_recipe ? 'Gericht' : 'Rezept' }}</span>
                             </a>
                         @endforeach
                     </div>
                 @else
-                    <p class="{{ $leise }}">In keinem Rezept und keinem Gericht verwendet.</p>
+                    <p class="fa-t-muted">In keinem Rezept und keinem Gericht verwendet.</p>
                 @endif
             </x-fa::section>
 

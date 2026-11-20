@@ -14,7 +14,7 @@
     @elseif(($g['type'] ?? '') === 'paket')
         <div class="mt-1 flex items-center gap-1.5" style="margin-left:{{ ($g['einrueckung'] ?? 0) * 12 }}px" data-fb-zeile-paket>
             <x-fa::badge tone="info" class="shrink-0">Paket</x-fa::badge>
-            <span class="min-w-0 break-words text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">{{ $g['text'] }}</span>
+            <span class="min-w-0 break-words fa-t-strong">{{ $g['text'] }}</span>
             @if(($g['preis'] ?? null) !== null)<span class="ml-auto shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] tabular-nums">{{ $euro($g['preis']) }} pro Person</span>@endif
         </div>
     @elseif($slotKey !== null && ($editSlotKey ?? null) === $slotKey)

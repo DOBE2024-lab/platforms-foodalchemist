@@ -125,8 +125,8 @@
                             @forelse($templateListe as $template)
                                 <button type="button" wire:key="tpl-{{ $template->id }}" wire:click="ausTemplate({{ $template->id }})"
                                         class="flex w-full flex-col items-start px-3 py-2 text-left hover:bg-[var(--fa-hover)]">
-                                    <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $template->name }}</span>
-                                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $template->n_ingredients_total }} Zutaten{{ $template->yield_kg !== null ? ' · ' . number_format((float) $template->yield_kg, 2, ',', '.') . ' kg' : '' }}</span>
+                                    <span class="fa-t-body">{{ $template->name }}</span>
+                                    <span class="fa-t-muted tabular-nums">{{ $template->n_ingredients_total }} Zutaten{{ $template->yield_kg !== null ? ' · ' . number_format((float) $template->yield_kg, 2, ',', '.') . ' kg' : '' }}</span>
                                 </button>
                             @empty
                                 <x-fa::empty compact icon="heroicon-o-square-2-stack" title="Noch keine Vorlagen">Im Rezept-Editor „Als Vorlage" markieren.</x-fa::empty>

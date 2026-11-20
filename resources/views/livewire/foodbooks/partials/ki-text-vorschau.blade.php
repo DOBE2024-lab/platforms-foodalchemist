@@ -17,7 +17,7 @@
                     <span class="font-normal text-[var(--fa-ink-2)] tabular-nums">Sicherheit {{ number_format($kiTextConfidence * 100, 0) }} %</span>
                 @endif
             </p>
-            <p class="text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink)] whitespace-pre-line">{{ $kiTextVorschau }}</p>
+            <p class="fa-t-body leading-relaxed whitespace-pre-line">{{ $kiTextVorschau }}</p>
             @if($vorhanden)
                 <x-fa::signal tone="warn">Im Feld steht schon ein Text. Ersetzen überschreibt ihn, endgültig erst beim Speichern.</x-fa::signal>
             @endif

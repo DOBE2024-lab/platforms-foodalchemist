@@ -101,11 +101,11 @@
 
                 {{-- 06·H4: opt-in Favoriten-Modus (Default aus → keine Versteifung) --}}
                 <div class="md:col-span-2 flex flex-col gap-1.5" data-richtung="favoriten">
-                    <label class="flex items-start gap-2 text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)] cursor-pointer">
+                    <label class="flex items-start gap-2 fa-t-strong cursor-pointer">
                         <input type="checkbox" wire:model.live="useFavoritesList" class="mt-0.5 accent-[var(--fa-accent)]" data-vk-favoriten />
                         <span class="inline-flex items-center gap-1.5">@svg('heroicon-o-star', 'w-4 h-4 text-[var(--fa-ink-3)]') Auf Basis meiner Favoriten bauen</span>
                     </label>
-                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] ml-6">Bevorzugt die gepflegten Lieblings-Grundprodukte, schließt andere aber nicht aus. Aus heißt: freie Auswahl.</p>
+                    <p class="fa-t-muted ml-6">Bevorzugt die gepflegten Lieblings-Grundprodukte, schließt andere aber nicht aus. Aus heißt: freie Auswahl.</p>
                     <label x-show="$wire.useFavoritesList" class="flex items-center gap-2 ml-6 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] cursor-pointer">
                         <input type="checkbox" wire:model="favoritesConvenienceOnly" class="accent-[var(--fa-accent)]" data-vk-favoriten-conv /> nur Convenience-Favoriten
                     </label>
@@ -119,7 +119,7 @@
         </x-fa::section>
     @else
         <x-fa::section title="Ergebnis" icon="heroicon-o-check-circle">
-            <p class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]" data-vk-generator-ergebnis>{{ $ergebnis['name'] }}</p>
+            <p class="fa-t-h2" data-vk-generator-ergebnis>{{ $ergebnis['name'] }}</p>
             <div class="flex flex-wrap gap-1.5">
                 <x-fa::badge tone="info">{{ $ergebnis['statistik']['bestand_sub'] }} {{ (int) $ergebnis['statistik']['bestand_sub'] === 1 ? 'Basisrezept' : 'Basisrezepte' }} als Komponente</x-fa::badge>
                 <x-fa::badge tone="ok">{{ $ergebnis['statistik']['bestand_gp'] }} {{ (int) $ergebnis['statistik']['bestand_gp'] === 1 ? 'Grundprodukt' : 'Grundprodukte' }} aus dem Bestand</x-fa::badge>
@@ -130,7 +130,7 @@
                                              :aufgeklappt="$hardstopOffenIndex" :meldung="$hardstopMeldung" />
             <x-foodalchemist::stub-offen :stubs="$ergebnis['statistik']['stubs'] ?? []" />
             <x-foodalchemist::kontext-inspektor :kontext="$ergebnis['kontext'] ?? null" />
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Speisen-Klasse und Preisklasse sind aus dem Vorschlag übernommen, soweit sie gültig waren. Den Rest im Gericht-Editor pflegen.</p>
+            <p class="fa-t-muted">Speisen-Klasse und Preisklasse sind aus dem Vorschlag übernommen, soweit sie gültig waren. Den Rest im Gericht-Editor pflegen.</p>
             @if($laeuft)
                 <p wire:poll.2s="pruefeErgebnis" class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-accent)]" data-vk-generator-anreicherung-laeuft>
                     @svg('heroicon-o-arrow-path', 'w-4 h-4 animate-spin') Gericht gespeichert. Vollanreicherung läuft separat …

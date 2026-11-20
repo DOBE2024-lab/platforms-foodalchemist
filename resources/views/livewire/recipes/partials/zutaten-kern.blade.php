@@ -83,16 +83,16 @@
                 </div>
             </fieldset>
             <div class="flex flex-col min-w-0" data-browser-gps>
-                <p class="mb-1.5 flex items-center gap-2 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+                <p class="mb-1.5 flex items-center gap-2 fa-t-label">
                     <span class="inline-flex items-center h-[22px] px-2 rounded-full" style="{{ $typStyle('gp') }}">Grundprodukte</span>
                     <span class="tabular-nums" x-text="gpTotal"></span>
                 </p>
                 <div class="flex flex-col max-h-[28rem] overflow-y-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" data-gp-liste>
                     <template x-for="ziel in gpListe" :key="'bg' + ziel.id">
                         <div class="flex items-center gap-1.5 px-2 py-1 border-b border-[var(--fa-line)] last:border-b-0 hover:bg-[var(--fa-hover)]">
-                            <button type="button" @click="parke(ziel)" class="min-w-0 flex-1 text-left leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words" x-text="ziel.name" :title="'Übernehmen: ' + ziel.name"></button>
+                            <button type="button" @click="parke(ziel)" class="min-w-0 flex-1 text-left leading-snug fa-t-body break-words" x-text="ziel.name" :title="'Übernehmen: ' + ziel.name"></button>
                             <x-fa::badge x-show="ziel.is_platzhalter" x-cloak>Platzhalter</x-fa::badge>
-                            <span class="shrink-0 tabular-nums text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-text="ziel.preis_label ?? 'Preis fehlt'"></span>
+                            <span class="shrink-0 tabular-nums fa-t-muted" x-text="ziel.preis_label ?? 'Preis fehlt'"></span>
                             <button type="button" x-show="ziel.id" @click="Livewire.dispatch('gp-modal.oeffnen', { id: ziel.id })"
                                     class="{{ $ib }}" title="Grundprodukt ansehen" aria-label="Grundprodukt ansehen">@svg('heroicon-o-cube', 'w-4 h-4')</button>
                             <button type="button" @click="parke(ziel)" data-parke
@@ -101,9 +101,9 @@
                         </div>
                     </template>
                     {{-- Erst wenn wirklich gesucht wurde „keine Treffer" (2026-08-20). --}}
-                    <p x-show="!browserGeladen" class="px-2 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Suchbegriff eingeben oder Filter wählen.</p>
-                    <p x-show="browserGeladen && gpListe.length === 0" class="px-2 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Keine Grundprodukte gefunden.</p>
-                    <p x-show="gpTotal > 200" x-cloak class="px-2 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-text="(gpTotal - 200) + ' weitere, bitte Suche oder Filter verfeinern'"></p>
+                    <p x-show="!browserGeladen" class="px-2 py-2 fa-t-muted">Suchbegriff eingeben oder Filter wählen.</p>
+                    <p x-show="browserGeladen && gpListe.length === 0" class="px-2 py-2 fa-t-muted">Keine Grundprodukte gefunden.</p>
+                    <p x-show="gpTotal > 200" x-cloak class="px-2 py-2 fa-t-muted" x-text="(gpTotal - 200) + ' weitere, bitte Suche oder Filter verfeinern'"></p>
                 </div>
             </div>
         </aside>
@@ -127,7 +127,7 @@
             <span class="shrink-0 inline-flex items-center h-[22px] px-2 rounded-full text-[length:var(--fa-text-sm)] font-medium"
                   @if($vkKontext) style="{{ $typStyle('basisrezept') }}" @else :style="geparkt?.type === 'gp' ? '{{ $typStyle('gp') }}' : '{{ $typStyle('basisrezept') }}'" @endif
                   @if($vkKontext)>Basisrezept</span>@else x-text="geparkt?.type === 'gp' ? 'Grundprodukt' : 'Basisrezept'"></span>@endif
-            <span class="min-w-[8rem] flex-1 truncate text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]" x-text="geparkt?.name?.replace('↳ ', '')" data-park-name></span>
+            <span class="min-w-[8rem] flex-1 truncate fa-t-strong" x-text="geparkt?.name?.replace('↳ ', '')" data-park-name></span>
             <input type="text" inputmode="decimal" x-model="neu.quantity" @keydown.enter.prevent="einfuegen()" placeholder="Menge" aria-label="Menge"
                    class="{{ $feld }} w-24 text-right tabular-nums" data-park-quantity />
             {{-- #9c: nur die für das geparkte Produkt hinterlegten/umrechenbaren Einheiten --}}
@@ -141,7 +141,7 @@
             <button type="button" @click="verwerfen()" class="{{ $ib }}" title="Auswahl verwerfen" aria-label="Auswahl verwerfen" data-park-verwerfen>@svg('heroicon-m-x-mark', 'w-4 h-4')</button>
         </div>
 
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Treffer mit Plus übernehmen, Menge eingeben, Enter fügt die Zutat ein. Die Einheit kommt vom Produkt.</p>
+        <p class="fa-t-muted">Treffer mit Plus übernehmen, Menge eingeben, Enter fügt die Zutat ein. Die Einheit kommt vom Produkt.</p>
 
             <div x-show="aktiveFilter() > 0" x-cloak>
                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-x-mark" x-on:click="filterZuruecksetzen()">Filter zurücksetzen</x-fa::button>
@@ -181,7 +181,7 @@
                                 <button type="button" class="inline-flex text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)] disabled:opacity-30"
                                         :disabled="i === rows.length - 1" @click="verschiebe(i, 1)" title="Nach unten" aria-label="Nach unten" data-zeile-runter>@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5')</button>
                             </span>
-                            <span class="ml-0.5 tabular-nums text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-text="i + 1"></span>
+                            <span class="ml-0.5 tabular-nums fa-t-muted" x-text="i + 1"></span>
                         </div>
                     </td>
                     <td><input type="text" inputmode="decimal" x-model="zeile.quantity" aria-label="Menge" class="{{ $feld }} w-[4.5rem] text-right tabular-nums" data-quantity /></td>
@@ -295,7 +295,7 @@
                 <tr x-show="zeile._peek" x-cloak>
                     <td colspan="{{ $spalten }}" class="bg-[var(--fa-ground)]">
                         <div class="flex flex-col gap-1.5 py-1" data-gp-peek-tabelle>
-                            <p class="flex items-center gap-1.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+                            <p class="flex items-center gap-1.5 fa-t-label">
                                 @svg('heroicon-o-cube', 'w-4 h-4 text-[var(--fa-ink-3)]')
                                 <span class="tabular-nums" x-text="(zeile._peek?.length ?? 0) + ' Artikel für'"></span><span class="font-semibold text-[var(--fa-ink)]" x-text="zeile.ziel_name"></span>
                             </p>
@@ -375,7 +375,7 @@
             </tbody>
             <tfoot>
                 <tr class="border-t border-[var(--fa-line-strong)]">
-                    <td colspan="6" class="text-right text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Summe</td>
+                    <td colspan="6" class="text-right fa-t-label">Summe</td>
                     <td class="num font-semibold text-[var(--fa-ink)]" data-summe-live>
                         <span x-text="summeAnzeige()"></span>
                     </td>
@@ -398,7 +398,7 @@
             Ausbeute ca. <span class="font-semibold tabular-nums text-[var(--fa-ink)]" x-text="yieldLive()"></span>
             @svg('heroicon-m-information-circle', 'w-4 h-4 text-[var(--fa-ink-3)]')
         </p>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Werte rechnen beim Tippen mit, verbindlich nach dem Speichern.</p>
+        <p class="fa-t-muted">Werte rechnen beim Tippen mit, verbindlich nach dem Speichern.</p>
     </div>
     {{-- F2 (#511a): EK-Vollständigkeit, sobald wert-relevante Zutaten ohne Preis dabei sind --}}
     <x-fa::notice tone="warn" x-show="bepreistInfo().total > bepreistInfo().priced" x-cloak data-ek-unvollstaendig>
@@ -447,19 +447,19 @@
                 </div>
             </fieldset>
             <div class="flex flex-col min-w-0" data-browser-rezepte>
-                <p class="mb-1.5 flex items-center gap-2 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">
+                <p class="mb-1.5 flex items-center gap-2 fa-t-label">
                     <span class="inline-flex items-center h-[22px] px-2 rounded-full" style="{{ $typStyle('basisrezept') }}">Basisrezepte</span>
                     <span class="tabular-nums" x-text="rezTotal"></span>
                 </p>
                 <div class="flex flex-col max-h-[28rem] overflow-y-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" data-rez-liste>
                     <template x-for="ziel in rezListe" :key="'br' + ziel.id">
                         <div class="flex items-center gap-1.5 px-2 py-1 border-b border-[var(--fa-line)] last:border-b-0 hover:bg-[var(--fa-hover)]">
-                            <button type="button" @click="parke(ziel)" class="min-w-0 flex-1 text-left leading-snug text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words" :title="'Übernehmen: ' + ziel.name.replace('↳ ', '')">
+                            <button type="button" @click="parke(ziel)" class="min-w-0 flex-1 text-left leading-snug fa-t-body break-words" :title="'Übernehmen: ' + ziel.name.replace('↳ ', '')">
                                 <span x-text="ziel.name.replace('↳ ', '')"></span>
-                                <span x-show="(ziel.niveaus ?? []).length > 0" class="ml-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-text="niveauText(ziel)"></span>
+                                <span x-show="(ziel.niveaus ?? []).length > 0" class="ml-1 fa-t-muted" x-text="niveauText(ziel)"></span>
                             </button>
                             <x-fa::badge tone="warn" x-show="ziel.status_label" x-cloak x-text="ziel.status_label" data-entwurf-badge></x-fa::badge>{{-- 1.1f: Entwurf/Prüfen wählbar, gekennzeichnet --}}
-                            <span class="shrink-0 tabular-nums text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-text="ziel.preis_label ?? 'Preis fehlt'"></span>
+                            <span class="shrink-0 tabular-nums fa-t-muted" x-text="ziel.preis_label ?? 'Preis fehlt'"></span>
                             <button type="button" x-show="ziel.id" @click="Livewire.dispatch('recipe-modal.oeffnen', { id: ziel.id })"
                                     class="{{ $ib }}" title="Basisrezept ansehen" aria-label="Basisrezept ansehen">@svg('heroicon-o-book-open', 'w-4 h-4')</button>
                             <button type="button" @click="parke(ziel)" data-parke
@@ -467,9 +467,9 @@
                                     title="Übernehmen, dann Menge eingeben" aria-label="Übernehmen">@svg('heroicon-m-plus', 'w-4 h-4')</button>
                         </div>
                     </template>
-                    <p x-show="!browserGeladen" class="px-2 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Suchbegriff eingeben oder Filter wählen.</p>
-                    <p x-show="browserGeladen && rezListe.length === 0" class="px-2 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Keine Basisrezepte gefunden.</p>
-                    <p x-show="rezTotal > 200" x-cloak class="px-2 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-text="(rezTotal - 200) + ' weitere, bitte Suche oder Filter verfeinern'"></p>
+                    <p x-show="!browserGeladen" class="px-2 py-2 fa-t-muted">Suchbegriff eingeben oder Filter wählen.</p>
+                    <p x-show="browserGeladen && rezListe.length === 0" class="px-2 py-2 fa-t-muted">Keine Basisrezepte gefunden.</p>
+                    <p x-show="rezTotal > 200" x-cloak class="px-2 py-2 fa-t-muted" x-text="(rezTotal - 200) + ' weitere, bitte Suche oder Filter verfeinern'"></p>
                 </div>
             </div>
         </aside>

@@ -34,11 +34,11 @@
                             <span class="shrink-0 pl-0.5">@include('foodalchemist::livewire.settings.partials.reorder-cell', ['id' => $hg->id, 'upMethod' => 'hgHoch', 'downMethod' => 'hgRunter', 'first' => $loop->first, 'last' => $loop->last])</span>
                             <a href="#" role="button" wire:click.prevent="waehleHg({{ $hg->id }})" @if($aktiv) aria-current="true" @endif
                                     class="flex-1 min-w-0 flex items-center gap-1.5 text-left px-1.5 py-1.5 text-[length:var(--fa-text-md)] {{ $aktiv ? 'font-medium' : '' }}">
-                                <span class="shrink-0 text-[length:var(--fa-text-sm)] tabular-nums text-[var(--fa-ink-3)]">{{ $hg->code }}</span>
+                                <span class="shrink-0 fa-t-muted tabular-nums">{{ $hg->code }}</span>
                                 <span class="min-w-0 break-words leading-snug" title="{{ $hg->label }}">{{ $hg->label }}</span>
                                 @if($hg->is_inactive)<x-fa::badge class="shrink-0">inaktiv</x-fa::badge>@endif
                             </a>
-                            <span class="shrink-0 text-[length:var(--fa-text-sm)] tabular-nums text-[var(--fa-ink-3)]" title="Gerichte in dieser Hauptgruppe">{{ number_format($nKl, 0, ',', '.') }}</span>
+                            <span class="shrink-0 fa-t-muted tabular-nums" title="Gerichte in dieser Hauptgruppe">{{ number_format($nKl, 0, ',', '.') }}</span>
                             @if($darfEditHg)
                                 {{-- Dominique 2026-10-12: Aktionen legen sich beim Darüberfahren ÜBER die Zeile statt unsichtbar Platz zu reservieren — vorher blieben vom Namen nur wenige Zeichen („01 G…"). --}}
                                 <span class="fa-zeilen-aktionen rounded-[var(--fa-radius-control)] bg-[var(--fa-surface)] shadow-sm">
@@ -60,7 +60,7 @@
                 <x-fa::input id="vk-hg-neu" size="sm" wire:model="neuHg" wire:keydown.enter="createHg" placeholder="Neue Hauptgruppe" class="flex-1 min-w-0" />
                 <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="createHg">Anlegen</x-fa::button>
             </div>
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+            <p class="fa-t-muted">
                 Die Zahl rechts zählt die Gerichte je Hauptgruppe. Preisklassen, Schreibstile und Behälter haben eigene Seiten.
             </p>
         </x-fa::section>
@@ -97,7 +97,7 @@
                                     @else
                                         <td>
                                             <span class="font-medium">{{ $k->label }}</span>
-                                            <span class="ml-1 text-[length:var(--fa-text-sm)] tabular-nums text-[var(--fa-ink-3)]">{{ $k->code }}</span>
+                                            <span class="ml-1 fa-t-muted tabular-nums">{{ $k->code }}</span>
                                         </td>
                                         <td><x-fa::badge>{{ ucfirst((string) $k->diet_form) }}</x-fa::badge></td>
                                         <td class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] whitespace-nowrap">
@@ -114,7 +114,7 @@
                                                             x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
                                                         <div class="hidden w-64 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
                                                             @if($nRez > 0)
-                                                                <p class="flex items-start gap-2 px-3 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+                                                                <p class="flex items-start gap-2 px-3 py-2 fa-t-muted">
                                                                     @svg('heroicon-o-lock-closed', 'w-4 h-4 shrink-0 mt-px') Löschen gesperrt: Gerichte nutzen diese Klasse.
                                                                 </p>
                                                             @else

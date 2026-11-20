@@ -19,7 +19,7 @@
         <ul class="flex flex-col divide-y divide-[var(--fa-line)]" data-kf-concept-treffer>
             @foreach($conceptTreffer as $c)
                 <li wire:key="kfct-{{ $c->id }}" class="flex items-center justify-between gap-2 py-1.5">
-                    <span>{{ $conceptName($c) }} <span class="{{ $leise }}">· {{ $euro($c->price_per_person_cache) }} je Person</span></span>
+                    <span>{{ $conceptName($c) }} <span class="fa-t-muted">· {{ $euro($c->price_per_person_cache) }} je Person</span></span>
                     <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="conceptHinzu({{ $c->id }})" data-kf-concept-hinzu="{{ $c->id }}">Hinzufügen</x-fa::button>
                 </li>
             @endforeach
@@ -48,9 +48,9 @@
             @else
                 <div class="flex flex-wrap items-start justify-between gap-2">
                     <div class="flex flex-col gap-0.5">
-                        <span class="font-medium">{{ $kz->kunden_titel ?: 'Konzept ' . $kz->id }}@if($kz->claim)<span class="{{ $leise }}"> · {{ $kz->claim }}</span>@endif</span>
-                        <span class="{{ $leise }}">Lunch: {{ $conceptName($kz->lunchConcept) ?? '—' }}@if($kz->lunchConcept) ({{ $preis($kz->lunchConcept) }})@endif{{ $kz->indikativ_lunch ? ' · indikativ' : '' }}</span>
-                        <span class="{{ $leise }}">Dinner: {{ $conceptName($kz->dinnerConcept) ?? '—' }}@if($kz->dinnerConcept) ({{ $preis($kz->dinnerConcept) }})@endif{{ $kz->indikativ_dinner ? ' · indikativ' : '' }}</span>
+                        <span class="font-medium">{{ $kz->kunden_titel ?: 'Konzept ' . $kz->id }}@if($kz->claim)<span class="fa-t-muted"> · {{ $kz->claim }}</span>@endif</span>
+                        <span class="fa-t-muted">Lunch: {{ $conceptName($kz->lunchConcept) ?? '—' }}@if($kz->lunchConcept) ({{ $preis($kz->lunchConcept) }})@endif{{ $kz->indikativ_lunch ? ' · indikativ' : '' }}</span>
+                        <span class="fa-t-muted">Dinner: {{ $conceptName($kz->dinnerConcept) ?? '—' }}@if($kz->dinnerConcept) ({{ $preis($kz->dinnerConcept) }})@endif{{ $kz->indikativ_dinner ? ' · indikativ' : '' }}</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <x-fa::icon-button icon="heroicon-m-chevron-up" label="Nach oben" size="sm" wire:click="konzeptVerschieben({{ $kz->id }}, -1)" />
@@ -63,7 +63,7 @@
             @endif
         </div>
     @empty
-        <p class="{{ $leise }}">Noch kein Hauptkonzept. Oben ein Concept suchen und als Hauptkonzept hinzufügen.</p>
+        <p class="fa-t-muted">Noch kein Hauptkonzept. Oben ein Concept suchen und als Hauptkonzept hinzufügen.</p>
     @endforelse
 </x-fa::section>
 
@@ -86,7 +86,7 @@
             @else
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <span><span class="font-medium">{{ $a->kunden_titel ?: $conceptName($a->dinnerConcept) }}</span>
-                        <span class="{{ $leise }}">· {{ $a->abschnitt ?: 'ohne Abschnitt' }} · {{ ['beide' => 'Lunch und Dinner', 'lunch' => 'Lunch', 'dinner' => 'Dinner'][$a->addon_tageszeit ?? 'beide'] ?? '' }}
+                        <span class="fa-t-muted">· {{ $a->abschnitt ?: 'ohne Abschnitt' }} · {{ ['beide' => 'Lunch und Dinner', 'lunch' => 'Lunch', 'dinner' => 'Dinner'][$a->addon_tageszeit ?? 'beide'] ?? '' }}
                             @if($a->gebunden_an_id) · nur bei {{ optional($haupt->firstWhere('id', $a->gebunden_an_id))->kunden_titel }}@endif
                             · {{ $preis($a->dinnerConcept) }}</span></span>
                     <span class="flex gap-1">
@@ -98,6 +98,6 @@
             @endif
         </div>
     @empty
-        <p class="{{ $leise }}">Keine Add-ons. Oben ein Concept suchen und „Add-on“ wählen.</p>
+        <p class="fa-t-muted">Keine Add-ons. Oben ein Concept suchen und „Add-on“ wählen.</p>
     @endforelse
 </x-fa::section>

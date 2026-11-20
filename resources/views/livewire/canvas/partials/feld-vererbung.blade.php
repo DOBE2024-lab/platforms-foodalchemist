@@ -1,7 +1,7 @@
 {{-- Spec 82 §7 · Statuszeile unter einem Skalar-Feld der Team-DNA: Herkunft („geerbt von …“), „verbindlich“ und im
      Oberteam der Verbindlich-Schalter. Leer, wenn das Board nicht die Team-DNA zeigt ($v === null und kein Schalter). --}}
 @if($v || $verbMoeglich)
-    <div class="-mt-1 flex flex-wrap items-center gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-canvas-vererbung="{{ $f['key'] }}">
+    <div class="-mt-1 flex flex-wrap items-center gap-2 fa-t-muted" data-canvas-vererbung="{{ $f['key'] }}">
         @if($v && $v['gesperrt'])
             <x-fa::badge tone="accent" icon="heroicon-m-lock-closed">Verbindlich vom Oberteam {{ $v['quelle'] }}</x-fa::badge>
             <span>Dieses Feld gilt unverändert und lässt sich hier nicht ändern.</span>

@@ -19,21 +19,21 @@
             </div>
         @else
             <dl class="grid grid-cols-2 gap-x-4 gap-y-3" data-marken-rolle-lesen>
-                <div><dt class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Rolle</dt>
-                    <dd class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $rollen[$rolle] ?? $rolle }}</dd></div>
-                <div><dt class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Kurzname</dt>
+                <div><dt class="fa-t-label">Rolle</dt>
+                    <dd class="fa-t-body">{{ $rollen[$rolle] ?? $rolle }}</dd></div>
+                <div><dt class="fa-t-label">Kurzname</dt>
                     <dd class="text-[length:var(--fa-text-md)] {{ $kurzname !== '' ? 'text-[var(--fa-ink)]' : 'text-[var(--fa-ink-3)]' }}">{{ $kurzname !== '' ? $kurzname : 'nicht hinterlegt' }}</dd></div>
             </dl>
         @endif
 
         <div class="flex flex-col gap-2 mt-2">
-            <h4 class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Marken-Kürzel in Bezeichnungen</h4>
+            <h4 class="fa-t-strong">Marken-Kürzel in Bezeichnungen</h4>
             @forelse($marken as $m)
                 <div class="flex items-center gap-3 py-1.5 border-b border-[var(--fa-line)] last:border-b-0" wire:key="lm-marke-{{ $m->id }}" data-lm-marke="{{ $m->kuerzel }}">
                     <span class="w-24 font-mono text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $m->kuerzel }}</span>
                     <span class="flex-1 text-[length:var(--fa-text-md)] {{ $m->typ === 'sperre' ? 'text-[var(--fa-ink-3)]' : 'text-[var(--fa-ink)]' }}">{{ $m->typ === 'sperre' ? 'nie eine Marke' : $m->marke }}</span>
                     <x-fa::badge :tone="match ($m->typ) { 'eigenmarke' => 'info', 'sperre' => 'warn', default => 'neutral' }">{{ match ($m->typ) { 'eigenmarke' => 'Eigenmarke', 'sperre' => 'Kein Kürzel', default => 'Herstellermarke' } }}</x-fa::badge>
-                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $m->position === 'ende' ? 'am Ende' : 'am Anfang' }}@if($m->vorrang > 0) · Vorrang {{ $m->vorrang }}@endif</span>
+                    <span class="fa-t-muted">{{ $m->position === 'ende' ? 'am Ende' : 'am Anfang' }}@if($m->vorrang > 0) · Vorrang {{ $m->vorrang }}@endif</span>
                     @if($darf)
                         <x-fa::button size="sm" variant="ghost" icon="heroicon-m-trash" wire:click="markeLoeschen({{ \Illuminate\Support\Js::from($m->kuerzel) }})"
                             wire:confirm="Kürzel „{{ $m->kuerzel }}“ entfernen?" aria-label="Kürzel {{ $m->kuerzel }} entfernen" data-lm-marke-loeschen />

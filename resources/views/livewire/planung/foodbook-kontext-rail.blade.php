@@ -41,18 +41,18 @@
         {{-- Einleitung (Kundentext): wird beim Verlassen des Feldes gespeichert; der KI-Vorschlag landet in der Vorschau. --}}
         <div class="flex flex-col gap-1.5" data-fbkontext-briefing>
             <div class="flex flex-wrap items-center justify-between gap-2">
-                <label for="fbkontext-einleitung-{{ $fb->id }}" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Einleitung für den Kunden</label>
+                <label for="fbkontext-einleitung-{{ $fb->id }}" class="fa-t-label">Einleitung für den Kunden</label>
                 <x-foodalchemist::ki-action action="kiEinleitung" variant="ai" icon="heroicon-o-sparkles" label="Einleitung vorschlagen"
                         busy="Text wird geschrieben …" data-fbkontext-ki />
             </div>
             <x-fa::textarea id="fbkontext-einleitung-{{ $fb->id }}" wire:model.blur="beschreibung" rows="3" class="min-h-[4.5rem]"
                       placeholder="Begrüßung und Einleitung, wie sie der Kunde im Foodbook liest" />
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Wird beim Verlassen des Feldes gespeichert.</p>
+            <p class="fa-t-muted">Wird beim Verlassen des Feldes gespeichert.</p>
 
             @if($kiVorschau !== null)
                 <div class="mt-1 flex flex-col gap-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-accent-line)] bg-[var(--fa-accent-soft)] px-3 py-2.5" data-fbkontext-ki-vorschau>
                     <p class="text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-accent)]">Vorschlag der KI, noch nicht übernommen{{ $kiConfidence !== null ? ' · Sicherheit '.number_format($kiConfidence * 100, 0).' %' : '' }}</p>
-                    <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink)] whitespace-pre-line">{{ $kiVorschau }}</p>
+                    <p class="fa-t-body whitespace-pre-line">{{ $kiVorschau }}</p>
                     <div class="flex items-center gap-2">
                         <x-fa::button variant="primary" size="sm" wire:click="kiUebernehmen" data-fbkontext-ki-uebernehmen>{{ trim($beschreibung) !== '' ? 'Text ersetzen' : 'Text übernehmen' }}</x-fa::button>
                         <x-fa::button variant="ghost" size="sm" wire:click="kiVerwerfen">Vorschlag verwerfen</x-fa::button>
@@ -64,8 +64,8 @@
 
         {{-- Foodbook-Leitidee (Canvas), inline, owner=foodbook (ManagesCanvas). --}}
         <div class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-ground)] p-4" wire:key="fbcanvas-{{ $fb->id }}" data-fbkontext-canvas>
-            <p class="mb-1 text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">Leitidee</p>
-            <p class="mb-3 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Was muss hinein, welche Konzepte gehören dazu, was muss das Foodbook leisten.</p>
+            <p class="mb-1 fa-t-h3">Leitidee</p>
+            <p class="mb-3 fa-t-muted">Was muss hinein, welche Konzepte gehören dazu, was muss das Foodbook leisten.</p>
             @include('foodalchemist::livewire.canvas.partials.board')
         </div>
     @endif

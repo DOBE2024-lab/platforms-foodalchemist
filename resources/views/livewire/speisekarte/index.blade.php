@@ -327,7 +327,7 @@
                                         </div>
                                     @endif
                                     <input type="file" wire:model="logoUpload" accept="image/*" aria-label="Logo hochladen" class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" />
-                                    <div wire:loading wire:target="logoUpload" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Wird hochgeladen …</div>
+                                    <div wire:loading wire:target="logoUpload" class="fa-t-muted">Wird hochgeladen …</div>
                                 </x-fa::field>
                                 <x-fa::field label="Titelbild">
                                     @if($coverPath)
@@ -337,7 +337,7 @@
                                         </div>
                                     @endif
                                     <input type="file" wire:model="coverUpload" accept="image/*" aria-label="Titelbild hochladen" class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" />
-                                    <div wire:loading wire:target="coverUpload" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Wird hochgeladen …</div>
+                                    <div wire:loading wire:target="coverUpload" class="fa-t-muted">Wird hochgeladen …</div>
                                 </x-fa::field>
                             </div>
                         </div>
@@ -426,16 +426,16 @@
                         {{-- ── Slice F: eigener Link je Betrieb ── --}}
                         <div class="pt-4 border-t border-[var(--fa-line)] flex flex-col gap-3">
                             <div>
-                                <h4 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink)]">Links je Kalkulationsprofil</h4>
-                                <p class="mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[70ch]">Ein zusätzlicher Kundenlink pro Kalkulationsprofil, eingefroren mit den Preisen und der Vorlage dieses Kalkulationsprofils und mit eigener Freigabe. Der Standard-Link oben bleibt bestehen.</p>
+                                <h4 class="fa-t-h3">Links je Kalkulationsprofil</h4>
+                                <p class="mt-0.5 fa-t-muted max-w-[70ch]">Ein zusätzlicher Kundenlink pro Kalkulationsprofil, eingefroren mit den Preisen und der Vorlage dieses Kalkulationsprofils und mit eigener Freigabe. Der Standard-Link oben bleibt bestehen.</p>
                             </div>
 
                             @forelse($betriebsLinks as $bl)
                                 <div class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3 flex flex-col gap-2" x-data="{ kopiert: false }">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="font-medium text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $bl['outlet_name'] }}</span>
+                                        <span class="fa-t-strong">{{ $bl['outlet_name'] }}</span>
                                         <x-fa::badge :tone="$bl['enabled'] ? 'ok' : 'neutral'">{{ $bl['enabled'] ? 'Freigegeben' : 'Zurückgezogen' }}</x-fa::badge>
-                                        <span class="ml-auto text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Vorlage: {{ $bl['design'] }}</span>
+                                        <span class="ml-auto fa-t-muted">Vorlage: {{ $bl['design'] }}</span>
                                     </div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <div class="{{ $linkFeld }}">{{ $bl['url'] }}</div>
@@ -450,12 +450,12 @@
                                     </div>
                                 </div>
                             @empty
-                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Noch kein Link für ein Kalkulationsprofil angelegt.</p>
+                                <p class="fa-t-muted">Noch kein Link für ein Kalkulationsprofil angelegt.</p>
                             @endforelse
 
                             @if(count($betriebsOptionen) > 0)
                                 <div class="rounded-[var(--fa-radius-control)] border border-dashed border-[var(--fa-line-strong)] p-3 flex flex-col gap-3">
-                                    <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Link für ein weiteres Kalkulationsprofil</p>
+                                    <p class="fa-t-strong">Link für ein weiteres Kalkulationsprofil</p>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 items-end">
                                         <x-fa::field label="Kalkulationsprofil" for="sk-bl-betrieb">
                                             <x-fa::select id="sk-bl-betrieb" wire:model="outletPublishId">
@@ -481,7 +481,7 @@
                                         </x-fa::field>
                                     </div>
                                     <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Beliebig viele Kalkulationsprofile möglich. Ohne eigenes Datum gilt das „Gültig bis“ des Standard-Links.</p>
+                                        <p class="fa-t-muted">Beliebig viele Kalkulationsprofile möglich. Ohne eigenes Datum gilt das „Gültig bis“ des Standard-Links.</p>
                                         <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="betriebVeroeffentlichen">Kalkulationsprofil hinzufügen</x-fa::button>
                                     </div>
                                 </div>
@@ -550,7 +550,7 @@
                                 @if($pickerModus === 'format')
                                     <x-fa::input type="search" size="sm" wire:model.live.debounce.300ms="formatSuche" placeholder="Format suchen" aria-label="Format suchen" class="w-full mb-2 shrink-0" data-sk-format-suche />
                                     @error('formatRubrik')<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)] px-1 mb-1 shrink-0">{{ $message }}</p>@enderror
-                                    <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] px-1 mb-1 shrink-0">Setzt ein Format als eigene Rubrik ein. Seine Editionen bleiben verknüpft.</p>
+                                    <p class="fa-t-muted px-1 mb-1 shrink-0">Setzt ein Format als eigene Rubrik ein. Seine Editionen bleiben verknüpft.</p>
                                     <div class="flex-1 overflow-y-auto flex flex-col gap-0.5">
                                         @forelse($formatKandidaten as $fk)
                                             <x-foodalchemist::katalog-row wire:key="skfmt-{{ $fk->id }}" wire:click="formatEinfuegen({{ $fk->id }})" data-sk-format-kand :title="$fk->consumer_name ?: $fk->name">{{ $fk->consumer_name ?: $fk->name }}</x-foodalchemist::katalog-row>

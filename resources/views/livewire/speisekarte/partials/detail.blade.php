@@ -117,11 +117,11 @@
                             $rVerkauf = $r->items->whereIn('type', ['gericht_ref', 'menue_ref'])->count();
                         @endphp
                         <li wire:key="sk-detail-rubrik-{{ $r->id }}" class="flex items-center justify-between gap-3 py-1.5 border-b border-[var(--fa-line)] last:border-0" style="padding-left: {{ $tiefe * 12 }}px">
-                            <span class="min-w-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] break-words">{{ $r->title ?: 'Ohne Titel' }}</span>
+                            <span class="min-w-0 fa-t-body break-words">{{ $r->title ?: 'Ohne Titel' }}</span>
                             @if($r->items->isEmpty() && $karte->sections->where('parent_id', $r->id)->isEmpty())
                                 <x-fa::badge tone="warn" class="shrink-0">leer</x-fa::badge>
                             @else
-                                <span class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $rVerkauf }} {{ $rVerkauf === 1 ? 'Position' : 'Positionen' }}</span>
+                                <span class="shrink-0 fa-t-muted tabular-nums">{{ $rVerkauf }} {{ $rVerkauf === 1 ? 'Position' : 'Positionen' }}</span>
                             @endif
                         </li>
                     @endforeach

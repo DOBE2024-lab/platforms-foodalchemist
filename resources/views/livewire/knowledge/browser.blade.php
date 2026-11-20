@@ -51,7 +51,6 @@
     $untertitel = number_format($docZahl, 0, ',', '.') . ' ' . ($docZahl === 1 ? 'Dokument' : 'Dokumente')
         . (trim($search) !== '' ? ' · nach Relevanz sortiert' : '');
 
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $titelKlein = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
     $chip = 'inline-flex items-center gap-1 min-h-[24px] pl-2 pr-1 py-0.5 rounded-full bg-[var(--fa-neutral-soft)] text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] break-all';
 
@@ -108,7 +107,7 @@
                 <x-fa::choice name="filterStatus" label="Status" idPrefix="wissen"
                     :options="['all' => 'Alle', 'active' => 'Aktiv', 'inactive' => 'Inaktiv']" data-wissen-filter-status />
 
-                <p class="pt-2 border-t border-[var(--fa-line)] {{ $leise }} tabular-nums" data-wissen-anzahl>{{ $untertitel }}</p>
+                <p class="pt-2 border-t border-[var(--fa-line)] fa-t-muted tabular-nums" data-wissen-anzahl>{{ $untertitel }}</p>
 
                 <div class="fa-liste flex flex-col gap-0.5 max-h-[58vh] overflow-y-auto -mx-1 px-1">
                     @forelse($docs as $doc)
@@ -121,8 +120,8 @@
                                 data-wissen-doc="{{ $doc->id }}">
                             <span class="block text-[length:var(--fa-text-md)] font-medium break-words {{ $aktivDoc ? 'text-[var(--fa-accent)]' : ($doc->active ? 'text-[var(--fa-ink)]' : 'text-[var(--fa-ink-2)]') }}">{{ $doc->title }}</span>
                             <span class="mt-1 flex flex-wrap items-center gap-1.5">
-                                <span class="{{ $leise }}">{{ $katLabel[$doc->category] ?? $lesbar((string) $doc->category) }}</span>
-                                <span class="{{ $leise }} tabular-nums">· {{ number_format($doc->char_count, 0, ',', '.') }} Zeichen</span>
+                                <span class="fa-t-muted">{{ $katLabel[$doc->category] ?? $lesbar((string) $doc->category) }}</span>
+                                <span class="fa-t-muted tabular-nums">· {{ number_format($doc->char_count, 0, ',', '.') }} Zeichen</span>
                                 @unless($doc->active)<x-fa::badge tone="warn">Inaktiv</x-fa::badge>@endunless
                             </span>
                         </button>
@@ -200,10 +199,10 @@
                             <div class="flex flex-col gap-3">
                                 @include('foodalchemist::livewire.knowledge.einordnung')
                             </div>
-                            <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] font-medium cursor-pointer">
+                            <label class="flex items-center gap-2 fa-t-strong cursor-pointer">
                                 <input type="checkbox" wire:model="form.active" class="accent-[var(--fa-accent)]" /> Aktiv (wird mit „Speichern“ übernommen)
                             </label>
-                            <p class="{{ $leise }} break-all">Kennung <span class="font-mono text-[var(--fa-ink-2)]">{{ $selected->slug }}</span></p>
+                            <p class="fa-t-muted break-all">Kennung <span class="font-mono text-[var(--fa-ink-2)]">{{ $selected->slug }}</span></p>
                         </x-fa::section>
 
                         <x-fa::section variant="plain" title="Suchbegriffe" icon="heroicon-o-magnifying-glass" :meta="$aliases->count()" description="Begriffe, unter denen die KI dieses Wissen findet." data-wissen-aliases>
@@ -215,7 +214,7 @@
                                                 aria-label="Suchbegriff {{ $a->alias_slug }} entfernen" title="Entfernen">@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                     </span>
                                 @empty
-                                    <span class="{{ $leise }}">Noch keine Suchbegriffe.</span>
+                                    <span class="fa-t-muted">Noch keine Suchbegriffe.</span>
                                 @endforelse
                             </div>
                             <div class="flex gap-2">
@@ -244,11 +243,11 @@
                                         @forelse($routings as $r)
                                             <x-fa::badge wire:key="rt-{{ $r->id }}">{{ $arbeitsschritt((string) $r->feature) }} · {{ $routingModusLabel[$r->mode] ?? $lesbar((string) $r->mode) }}</x-fa::badge>
                                         @empty
-                                            <span class="{{ $leise }}">Kein Arbeitsschritt lädt diese Kategorie.</span>
+                                            <span class="fa-t-muted">Kein Arbeitsschritt lädt diese Kategorie.</span>
                                         @endforelse
                                     </div>
                                     @if(in_array($selected->category, ['domain', 'pairing'], true) && $routings->isNotEmpty())
-                                        <p class="{{ $leise }}">Kommt nur mit, wenn das Rezept thematisch passt. Nicht garantiert.</p>
+                                        <p class="fa-t-muted">Kommt nur mit, wenn das Rezept thematisch passt. Nicht garantiert.</p>
                                     @endif
                                 @endif
                             </div>
@@ -268,7 +267,7 @@
                                             @endif
                                         </span>
                                     @empty
-                                        <span class="{{ $leise }}">In keinem Kanon. Dieses Dossier ist nur über die Suche erreichbar.</span>
+                                        <span class="fa-t-muted">In keinem Kanon. Dieses Dossier ist nur über die Suche erreichbar.</span>
                                     @endforelse
                                 </div>
                                 @if($darfKanon)
@@ -298,7 +297,7 @@
                             {{-- Spec 52/F2+F3: Alt-Bindungen wirken nicht mehr; nur noch lösbar, damit Alt-Zeilen wegkönnen.
                                  Ohne Alt-Bindungen nur ein kurzer Satz. --}}
                             @if($bindings->isEmpty())
-                                <p class="{{ $leise }}">Alte Bindungen: keine. So soll es sein.</p>
+                                <p class="fa-t-muted">Alte Bindungen: keine. So soll es sein.</p>
                             @else
                                 <div class="flex flex-col gap-2">
                                     <p class="{{ $titelKlein }}">Alte Bindungen</p>
@@ -337,12 +336,12 @@
                                 <div class="flex flex-col gap-0.5">
                                     @forelse($traceResults as $t)
                                         <button type="button" wire:click="select({{ $t->id }})" wire:key="tr-{{ $t->id }}"
-                                                class="w-full text-left px-2 py-1.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
+                                                class="w-full text-left px-2 py-1.5 rounded-[var(--fa-radius-control)] fa-t-body hover:bg-[var(--fa-hover)]">
                                             {{ $t->title }}
-                                            <span class="{{ $leise }}">· {{ $katLabel[$t->category] ?? $lesbar((string) $t->category) }}@if($t->mode) · {{ $kanonModusLabel[$t->mode] ?? $lesbar((string) $t->mode) }}@endif</span>
+                                            <span class="fa-t-muted">· {{ $katLabel[$t->category] ?? $lesbar((string) $t->category) }}@if($t->mode) · {{ $kanonModusLabel[$t->mode] ?? $lesbar((string) $t->mode) }}@endif</span>
                                         </button>
                                     @empty
-                                        <p class="{{ $leise }}">Dieser Schritt hat keinen Kanon. Er bekommt nichts Verbindliches.</p>
+                                        <p class="fa-t-muted">Dieser Schritt hat keinen Kanon. Er bekommt nichts Verbindliches.</p>
                                     @endforelse
                                 </div>
                             @endif
@@ -351,12 +350,12 @@
 
                     <x-fa::section variant="plain" title="Wissensauswahl testen" icon="heroicon-o-beaker">
                         <details class="fa-surface group" data-wissen-vorschau>
-                            <summary class="flex items-center justify-between gap-2 px-3.5 py-2.5 cursor-pointer select-none text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">
+                            <summary class="flex items-center justify-between gap-2 px-3.5 py-2.5 cursor-pointer select-none fa-t-strong">
                                 <span class="flex items-center gap-2">@svg('heroicon-o-beaker', 'w-4 h-4 text-[var(--fa-ink-3)]') Auftrag eingeben und prüfen</span>
                                 @svg('heroicon-m-chevron-down', 'w-4 h-4 text-[var(--fa-ink-3)] transition-transform group-open:rotate-180')
                             </summary>
                             <div class="px-3.5 pb-3.5 pt-1 flex flex-col gap-3">
-                                <p class="{{ $leise }}">Zeigt, welches Wissen ein Arbeitsschritt für diesen Auftrag bekäme. Es wird nichts erstellt.</p>
+                                <p class="fa-t-muted">Zeigt, welches Wissen ein Arbeitsschritt für diesen Auftrag bekäme. Es wird nichts erstellt.</p>
                                 <x-fa::field label="Arbeitsschritt" for="wissen-vorschau-schritt">
                                     <x-fa::select id="wissen-vorschau-schritt" wire:model="previewPromptKey">
                                         @foreach($promptKeys as $key)<option value="{{ $key }}">{{ $arbeitsschritt($key) }}</option>@endforeach
@@ -425,7 +424,7 @@
                                                 <p class="{{ $titelKlein }}">{{ $labelText }}</p>
                                                 @forelse($knowledgePreview[$group] as $file)
                                                     <p class="break-words text-[var(--fa-ink-2)]">{{ $file }}</p>
-                                                @empty<p class="{{ $leise }}">Keine Quellen</p>@endforelse
+                                                @empty<p class="fa-t-muted">Keine Quellen</p>@endforelse
                                             </div>
                                         @endforeach
                                     </div>
@@ -467,7 +466,7 @@
                                     @else
                                         <x-fa::badge tone="warn" icon="heroicon-m-pause-circle" data-wissen-aktiv-status="inaktiv">Inaktiv, wird nicht genutzt</x-fa::badge>
                                     @endif
-                                    <span class="{{ $leise }}">{{ $katLabel[$selected->category] ?? $lesbar((string) $selected->category) }}</span>
+                                    <span class="fa-t-muted">{{ $katLabel[$selected->category] ?? $lesbar((string) $selected->category) }}</span>
                                 </div>
                             @endif
                         @else

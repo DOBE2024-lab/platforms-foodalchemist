@@ -2,7 +2,6 @@
      Faktor sichtbar, Zurücksetzen. Rechnung = Support\Hochrechnung (dieselbe wie das Dokument). Ansicht speichert nichts;
      Mengen korrigieren + „Ins Rezept übernehmen" nur am Computer ($uebernehmbar). Parameter: $hoch, $handy, $uebernehmbar. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $feld = $handy ? 'h-11 w-28 text-[length:var(--fa-text-base)]' : 'h-8 w-24';
     $zutat = $hoch['zutat'];
 @endphp
@@ -16,7 +15,7 @@
         </span>
         @if($hoch['aktiv'])
             <x-fa::badge tone="info" data-fa-hoch-faktor>{{ $hoch['faktor_text'] }}</x-fa::badge>
-            <button type="button" wire:click="hochZuruecksetzen" class="{{ $handy ? 'min-h-11 px-2' : '' }} underline underline-offset-2 {{ $leise }}" data-fa-hoch-zuruecksetzen>Zurücksetzen</button>
+            <button type="button" wire:click="hochZuruecksetzen" class="{{ $handy ? 'min-h-11 px-2' : '' }} underline underline-offset-2 fa-t-muted" data-fa-hoch-zuruecksetzen>Zurücksetzen</button>
         @endif
     </div>
 
@@ -29,7 +28,7 @@
                 <span class="text-[var(--fa-ink-2)]">{{ $zutat->unit?->slug }}</span>
             </span>
             @if($hoch['ziel_kg'] !== null)
-                <span class="{{ $leise }}">reicht für {{ \Platform\FoodAlchemist\Support\Hochrechnung::zahlText($hoch['ziel_kg']) }} kg</span>
+                <span class="fa-t-muted">reicht für {{ \Platform\FoodAlchemist\Support\Hochrechnung::zahlText($hoch['ziel_kg']) }} kg</span>
             @endif
         </div>
     @endif
@@ -37,22 +36,22 @@
     @if($hoch['hinweis'])
         <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-warn)]" data-fa-hoch-hinweis>{{ $hoch['hinweis'] }}</p>
     @elseif(! $hoch['aktiv'])
-        <p class="{{ $leise }}">Oder Menge einer Zutat antippen: „davon habe ich …“.</p>
+        <p class="fa-t-muted">Oder Menge einer Zutat antippen: „davon habe ich …“.</p>
     @endif
 
     @if($hoch['aktiv'] && $uebernehmbar)
         @if($hoch['aenderungen'] === [])
-            <p class="{{ $leise }}">Stimmt eine Menge in diesem Maßstab nicht, direkt in der Liste ändern — „Ins Rezept übernehmen" rechnet sie auf den Ansatz zurück.</p>
+            <p class="fa-t-muted">Stimmt eine Menge in diesem Maßstab nicht, direkt in der Liste ändern — „Ins Rezept übernehmen" rechnet sie auf den Ansatz zurück.</p>
         @else
             <div class="flex flex-wrap items-center gap-2">
                 @if($hoch['ohne_menge'] === [])
                     <x-fa::button size="sm" variant="secondary" wire:click="hochUebernehmen" wire:confirm="{{ $hoch['bestaetigung'] }}" data-fa-hoch-uebernehmen>Ins Rezept übernehmen</x-fa::button>
                 @endif
-                <button type="button" wire:click="hochAenderungenZuruecknehmen" class="underline underline-offset-2 {{ $leise }}" data-fa-hoch-zuruecknehmen>Änderungen zurücknehmen</button>
+                <button type="button" wire:click="hochAenderungenZuruecknehmen" class="underline underline-offset-2 fa-t-muted" data-fa-hoch-zuruecknehmen>Änderungen zurücknehmen</button>
             </div>
         @endif
         @if($hoch['ohne_menge'] !== [])
-            <p class="{{ $leise }}" data-fa-hoch-ohne-menge>Übernehmen geht erst, wenn alle Zeilen eine Menge haben (fehlt bei {{ implode(', ', $hoch['ohne_menge']) }}) — hier eintragen oder im Zutaten-Editor.</p>
+            <p class="fa-t-muted" data-fa-hoch-ohne-menge>Übernehmen geht erst, wenn alle Zeilen eine Menge haben (fehlt bei {{ implode(', ', $hoch['ohne_menge']) }}) — hier eintragen oder im Zutaten-Editor.</p>
         @endif
     @endif
 </div>

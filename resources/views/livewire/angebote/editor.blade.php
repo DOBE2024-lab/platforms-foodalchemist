@@ -174,7 +174,7 @@
                 @php $uv = $uebernahmeVorschau; @endphp
                 <div class="mt-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3 flex flex-col gap-2" data-angebot-uebernahme-vorschau>
                     <p class="font-medium">{{ $uv['gericht'] }}: Fassung #{{ $uv['von_nr'] }} → #{{ $uv['nach_nr'] }}</p>
-                    @if($uv['aenderungsnotiz'])<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Änderungsnotiz: {{ $uv['aenderungsnotiz'] }}</p>@endif
+                    @if($uv['aenderungsnotiz'])<p class="fa-t-muted">Änderungsnotiz: {{ $uv['aenderungsnotiz'] }}</p>@endif
                     @if($uv['allergen_diff'] !== [])
                         <ul class="text-[length:var(--fa-text-sm)]" data-angebot-allergen-diff>
                             @foreach($uv['allergen_diff'] as $feld => $d)<li>{{ str_replace(['allergen_', 'additive_'], ['Allergen ', 'Zusatzstoff '], $feld) }}: {{ $d['von'] ?? '—' }} → {{ $d['nach'] ?? '—' }}</li>@endforeach
@@ -346,7 +346,7 @@
                                                     @endif
                                                 @endunless
                                                 @if(($agg['ek_per_person'] ?? 0) > 0)
-                                                    <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" title="Wareneinsatz je Gast">EK {{ $euro($agg['ek_per_person']) }}</span>
+                                                    <span class="fa-t-muted" title="Wareneinsatz je Gast">EK {{ $euro($agg['ek_per_person']) }}</span>
                                                 @endif
                                                 @if(($agg['vk_pro_person'] ?? 0) > 0)
                                                     <span class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]" title="{{ $istRollup ? 'Summe der Unterkapitel' : 'Verkaufspreis je Gast' }}">@if($istRollup)<span class="font-normal text-[var(--fa-ink-3)]">Summe&nbsp;</span>@endif{{ $euro($agg['vk_pro_person']) }}<span class="font-normal text-[var(--fa-ink-3)]">/Gast</span></span>
@@ -376,9 +376,9 @@
                                                     <x-fa::badge :tone="$p['art'] === 'paket' ? 'accent' : 'info'">{{ $p['art'] === 'paket' ? 'Paket' : 'Einzeln' }}</x-fa::badge>
                                                     <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $p['label'] }}</span>
                                                     <div class="ml-auto flex items-center gap-3 tabular-nums shrink-0">
-                                                        @if(($p['ek'] ?? 0) > 0)<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">EK {{ $euro($p['ek']) }}</span>@endif
+                                                        @if(($p['ek'] ?? 0) > 0)<span class="fa-t-muted">EK {{ $euro($p['ek']) }}</span>@endif
                                                         <x-fa::money :value="($p['vk'] ?? 0) > 0 ? $p['vk'] : null" :per="($p['preis_einheit'] ?? 'gast') === 'gast' ? 'Gast' : 'Position'" class="font-semibold text-[var(--fa-ink)]" />
-                                                        @if(($p['we_pct'] ?? null) !== null)<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" title="Wareneinsatz dieser Position">{{ $prozent($p['we_pct']) }}</span>@endif
+                                                        @if(($p['we_pct'] ?? null) !== null)<span class="fa-t-muted" title="Wareneinsatz dieser Position">{{ $prozent($p['we_pct']) }}</span>@endif
                                                     </div>
                                                 </div>
                                             @empty
@@ -432,7 +432,7 @@
                                     placeholder="{{ $angebot->personen ?: '–' }}" />
                             </x-fa::field>
                         </div>
-                        <label class="flex items-start gap-2 cursor-pointer text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                        <label class="flex items-start gap-2 cursor-pointer fa-t-body">
                             <input type="checkbox" wire:model.live="kapitelForm.is_struktur" wire:change="kapitelSpeichern" class="mt-0.5 {{ $haken }}" />
                             <span>Textkapitel <span class="{{ $hinweis }}">ohne eigenes Essen, etwa Einleitung oder Überschrift. Kennzahlen kommen dann nur aus den Unterkapiteln.</span></span>
                         </label>
@@ -472,7 +472,7 @@
                                         @foreach($items as $p)
                                             <button type="button" role="menuitem" x-on:click="offen = false"
                                                     wire:click="presetHinzu(@js($p['type']), @js($p['slug']), @js($p['label']), @js($p['price_basis'] ?? null), {{ ($p['visible'] ?? true) ? 'true' : 'false' }})"
-                                                    class="block w-full truncate px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">{{ $p['label'] }}</button>
+                                                    class="block w-full truncate px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">{{ $p['label'] }}</button>
                                         @endforeach
                                     @endforeach
                                 </div>
@@ -583,7 +583,7 @@
                                                     <div class="flex items-center gap-1.5 mt-1" style="margin-left:{{ ($g['einrueckung'] ?? 0) * 12 }}px">
                                                         <x-fa::badge tone="info">Paket</x-fa::badge>
                                                         <span class="min-w-0 break-words text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink)]">{{ $g['text'] }}</span>
-                                                        @if(($g['preis'] ?? null) !== null)<span class="ml-auto shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] tabular-nums">{{ $euro($g['preis']) }}/Gast</span>@endif
+                                                        @if(($g['preis'] ?? null) !== null)<span class="ml-auto shrink-0 fa-t-muted tabular-nums">{{ $euro($g['preis']) }}/Gast</span>@endif
                                                     </div>
                                                 @elseif($slotKey !== null && ($editSlotKey ?? null) === $slotKey)
                                                     <div class="flex items-center gap-1" style="margin-left:{{ 8 + ($g['einrueckung'] ?? 0) * 12 }}px" data-angebot-slot-editor>
@@ -911,7 +911,7 @@
                                     <tfoot>
                                         <tr class="[&>td]:border-t-2 [&>td]:border-[var(--fa-accent-line)]">
                                             <td class="font-semibold text-[var(--fa-ink)]">Angebotssumme</td>
-                                            <td class="num text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" title="Durchschnitt der Gäste">Ø {{ $kalkulation['pax'] ?: '–' }}</td>
+                                            <td class="num fa-t-muted" title="Durchschnitt der Gäste">Ø {{ $kalkulation['pax'] ?: '–' }}</td>
                                             <td class="num text-[var(--fa-ink-2)]">{{ $euro($kalkulation['vk_pro_person']) }}</td>
                                             <td class="num text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-accent)]" data-angebot-summe>{{ $euro($kalkulation['gesamt_vk']) }}</td>
                                         </tr>
@@ -1071,7 +1071,7 @@
                         </div>
                         {{-- Freie Präsentationsbilder: erscheinen dort, wo das Design einen Bild-Block mit „Angebot: Bild N“ hat. --}}
                         <div class="mt-4 flex flex-col gap-2" data-angebot-praes-bilder>
-                            <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Präsentationsbilder <span class="font-normal text-[var(--fa-ink-3)]">(optional)</span></p>
+                            <p class="fa-t-label">Präsentationsbilder <span class="font-normal text-[var(--fa-ink-3)]">(optional)</span></p>
                             <p class="{{ $hinweis }}">Erscheinen in der Kundenpräsentation dort, wo das Design einen Bild-Block mit „Angebot: Bild 1–3“ vorsieht.</p>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 @foreach([1, 2, 3] as $nr)
@@ -1114,10 +1114,10 @@
                         </div>
 
                         <div class="flex flex-wrap gap-x-5 gap-y-2">
-                            <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] cursor-pointer"><input type="checkbox" wire:model="presentationPreisAnzeige" class="{{ $haken }}"> Preise je Gast zeigen</label>
-                            <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] cursor-pointer" title="Aus: das Cover zeigt nur das Logo, dafür größer – z. B. solange kein Kunde feststeht."><input type="checkbox" wire:model="presentationTitelZeigen" class="{{ $haken }}" data-angebot-praes-titel> Angebotsnamen im Cover zeigen</label>
-                            <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] cursor-pointer"><input type="checkbox" wire:model="presentationDeklaration" class="{{ $haken }}"> Allergen-Legende zeigen</label>
-                            <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] cursor-pointer" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen, neue Speisen kommen mit aktuellem Preis dazu. An: alle aktuellen Verkaufspreise übernehmen. Die erste Veröffentlichung ist immer aktuell."><input type="checkbox" wire:model="presentationPreiseAktualisieren" class="{{ $haken }}"> Preise aktualisieren</label>
+                            <label class="flex items-center gap-2 fa-t-body cursor-pointer"><input type="checkbox" wire:model="presentationPreisAnzeige" class="{{ $haken }}"> Preise je Gast zeigen</label>
+                            <label class="flex items-center gap-2 fa-t-body cursor-pointer" title="Aus: das Cover zeigt nur das Logo, dafür größer – z. B. solange kein Kunde feststeht."><input type="checkbox" wire:model="presentationTitelZeigen" class="{{ $haken }}" data-angebot-praes-titel> Angebotsnamen im Cover zeigen</label>
+                            <label class="flex items-center gap-2 fa-t-body cursor-pointer"><input type="checkbox" wire:model="presentationDeklaration" class="{{ $haken }}"> Allergen-Legende zeigen</label>
+                            <label class="flex items-center gap-2 fa-t-body cursor-pointer" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen, neue Speisen kommen mit aktuellem Preis dazu. An: alle aktuellen Verkaufspreise übernehmen. Die erste Veröffentlichung ist immer aktuell."><input type="checkbox" wire:model="presentationPreiseAktualisieren" class="{{ $haken }}"> Preise aktualisieren</label>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1187,7 +1187,7 @@
                             @forelse($betriebsLinks ?? [] as $bl)
                                 <div class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-2.5 flex flex-col gap-1.5" x-data>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="font-medium text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">{{ $bl['outlet_name'] }}</span>
+                                        <span class="fa-t-strong">{{ $bl['outlet_name'] }}</span>
                                         <x-fa::badge :tone="$bl['enabled'] ? 'ok' : 'neutral'">{{ $bl['enabled'] ? 'aktiv' : 'inaktiv' }}</x-fa::badge>
                                         <span class="ml-auto {{ $hinweis }}">Vorlage: {{ $bl['design'] }}</span>
                                     </div>
@@ -1207,7 +1207,7 @@
 
                             @if(count($betriebsOptionen ?? []) > 0)
                                 <div class="rounded-[var(--fa-radius-control)] border border-dashed border-[var(--fa-line-strong)] p-3 flex flex-col gap-2">
-                                    <p class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink)]">Weiteres Kalkulationsprofil hinzufügen</p>
+                                    <p class="fa-t-strong">Weiteres Kalkulationsprofil hinzufügen</p>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 items-end">
                                         <x-fa::field label="Kalkulationsprofil" for="ang-betrieb">
                                             <x-fa::select id="ang-betrieb" wire:model="outletPublishId" placeholder="Kalkulationsprofil wählen">

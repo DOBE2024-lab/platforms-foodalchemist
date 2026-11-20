@@ -64,7 +64,7 @@
                                 </span>
                                 <span class="min-w-0 flex-1">
                                     <span data-fa-aufgabe-titel class="block text-[length:var(--fa-text-base)] font-medium text-[var(--fa-ink)] group-hover:text-[var(--fa-accent)]">{{ $aufgabe['titel'] }}</span>
-                                    <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $aufgabe['text'] }}</span>
+                                    <span class="block fa-t-muted">{{ $aufgabe['text'] }}</span>
                                 </span>
                                 <span class="shrink-0 tabular-nums text-[length:var(--fa-text-lg)] font-semibold {{ $tonText[$aufgabe['ton']] ?? 'text-[var(--fa-ink)]' }}">{{ $zahl($aufgabe['zahl']) }}</span>
                                 @svg('heroicon-m-chevron-right', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)] group-hover:text-[var(--fa-accent)]')
@@ -76,7 +76,7 @@
 
             @if($erledigteAufgaben !== [])
                 <details class="group">
-                    <summary class="inline-flex items-center gap-1 cursor-pointer select-none text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]">
+                    <summary class="inline-flex items-center gap-1 cursor-pointer select-none fa-t-label hover:text-[var(--fa-ink)]">
                         @svg('heroicon-m-chevron-right', 'w-4 h-4 transition-transform group-open:rotate-90')
                         {{ count($erledigteAufgaben) }} {{ count($erledigteAufgaben) === 1 ? 'Punkt' : 'Punkte' }} ohne offene Aufgabe
                     </summary>
@@ -93,20 +93,20 @@
 
         {{-- 2. Bestand: die vier Kataloge, jede Zahl führt in ihre Liste. --}}
         <section class="flex flex-col gap-3" data-dashboard-bestand>
-            <h2 class="text-[length:var(--fa-text-lg)] font-semibold text-[var(--fa-ink)]">Bestand</h2>
+            <h2 class="fa-t-h2">Bestand</h2>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 @foreach($bestand as [$icon, $titel, $wert, $url, $hint])
                     <a href="{{ $url }}" class="{{ $kachel }}" wire:key="kachel-{{ $titel }}">
-                        <span class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">@svg($icon, 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') {{ $titel }}</span>
+                        <span class="inline-flex items-center gap-1.5 fa-t-label">@svg($icon, 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') {{ $titel }}</span>
                         <span class="text-[length:var(--fa-text-2xl)] font-semibold tracking-tight tabular-nums leading-tight text-[var(--fa-ink)] group-hover:text-[var(--fa-accent)]">{{ $wert }}</span>
-                        @if($hint)<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $hint }}</span>@endif
+                        @if($hint)<span class="fa-t-muted">{{ $hint }}</span>@endif
                     </a>
                 @endforeach
             </div>
 
             {{-- Rezepte nach Status + Vorlagen: führt direkt in den gefilterten Rezept-Browser. --}}
             <div class="fa-surface flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3" data-dashboard-rezeptstatus>
-                <span class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Rezepte nach Status</span>
+                <span class="fa-t-label">Rezepte nach Status</span>
                 @foreach($rezeptStatus as [$wert, $text, $anzahl, $url])
                     <a href="{{ $url }}" class="inline-flex items-center gap-2 group" wire:key="status-{{ $wert }}">
                         <x-fa::status :value="$wert" />
@@ -129,7 +129,7 @@
                         <x-fa::button size="sm" :icon="$icon" :href="$url" wire:key="schnell-{{ $text }}">{{ $text }}</x-fa::button>
                     @endforeach
                 </div>
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">In den Listen öffnet ein Klick auf den Namen den Editor, ein Klick auf die Zeile das Detail rechts.</p>
+                <p class="fa-t-muted">In den Listen öffnet ein Klick auf den Namen den Editor, ein Klick auf die Zeile das Detail rechts.</p>
             </x-fa::section>
 
             <x-fa::section title="KI-Nutzung" icon="heroicon-o-sparkles" meta="dieses Team" data-dashboard-ki>
@@ -137,7 +137,7 @@
                     <span class="text-[length:var(--fa-text-2xl)] font-semibold tracking-tight tabular-nums text-[var(--fa-ink)]">{{ $zahl($ki['calls']) }}</span>
                     <span class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">KI-Anfragen</span>
                 </p>
-                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $zahl($ki['accepted']) }} übernommene Vorschläge</p>
+                <p class="fa-t-muted">{{ $zahl($ki['accepted']) }} übernommene Vorschläge</p>
                 <a href="{{ route('foodalchemist.einstellungen', ['sektion' => 'ki']) }}" class="inline-flex items-center gap-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-accent)] hover:text-[var(--fa-accent-hover)]">
                     KI-Einstellungen öffnen @svg('heroicon-m-arrow-right', 'w-3.5 h-3.5')
                 </a>
@@ -154,7 +154,7 @@
             @svg('heroicon-o-presentation-chart-line', 'w-5 h-5 shrink-0 text-[var(--fa-ink-3)]')
             <span class="min-w-0 flex-1">
                 <span class="block text-[length:var(--fa-text-base)] font-medium text-[var(--fa-ink)] group-hover:text-[var(--fa-accent)]">Controlling</span>
-                <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Wareneinsatz, Preise, Simulation, Portfolio-Vergleich und Geld-Signale, jeweils mit den Hebeln daneben.</span>
+                <span class="block fa-t-muted">Wareneinsatz, Preise, Simulation, Portfolio-Vergleich und Geld-Signale, jeweils mit den Hebeln daneben.</span>
             </span>
             @svg('heroicon-m-chevron-right', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)] group-hover:text-[var(--fa-accent)]')
         </a>

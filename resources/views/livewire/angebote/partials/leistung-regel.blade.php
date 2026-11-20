@@ -3,7 +3,6 @@
      $kategorien, $klassen (Leistungsklassen), $bezugOptionen (id → Bezeichnung), $vorschau (VK-Vorschlag oder null),
      $einheiten (id → Anzeige, für die Einzelabrechnung), $pm Pfad der Planungstexte (komponenten, attribute, notiz). --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $euro = fn ($w) => $w !== null && $w !== '' ? number_format((float) $w, 2, ',', '.') . ' €' : '–';
 @endphp
 <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-3">
@@ -66,8 +65,8 @@
     @elseif($vorschau !== null)
         <div class="flex flex-col gap-1 pt-6" data-regel-vorschau>
             <span class="font-medium">VK-Vorschlag {{ $euro($vorschau['vorschlag']) }}</span>
-            @if($vorschau['aufschlag_pct'] !== null)<span class="{{ $leise }}">Aufschlag {{ number_format($vorschau['aufschlag_pct'], 1, ',', '.') }} % auf den EK</span>@endif
-            @foreach($vorschau['warnungen'] as $w)<span class="{{ $leise }}">{{ $w }}</span>@endforeach
+            @if($vorschau['aufschlag_pct'] !== null)<span class="fa-t-muted">Aufschlag {{ number_format($vorschau['aufschlag_pct'], 1, ',', '.') }} % auf den EK</span>@endif
+            @foreach($vorschau['warnungen'] as $w)<span class="fa-t-muted">{{ $w }}</span>@endforeach
         </div>
     @endif
 </div>
@@ -80,7 +79,7 @@
             <x-fa::field label="Einheit" for="{{ $px }}-abr-einheit" optional hint="Leer heißt: je Stunde bzw. je Stück wie unter „Preis je“.">
                 <x-fa::select id="{{ $px }}-abr-einheit" wire:model="{{ $m }}.abrechnung_einheit_vocab_id" :options="$einheiten ?? []" placeholder="wie „Preis je“" />
             </x-fa::field>
-            <p class="{{ $leise }} pt-6">Zählt nicht in den Preis pro Person. Der Kunde sieht „zzgl. nach Aufwand“ mit Satz und einer geschätzten Menge aus der Mengenregel.</p>
+            <p class="fa-t-muted pt-6">Zählt nicht in den Preis pro Person. Der Kunde sieht „zzgl. nach Aufwand“ mit Satz und einer geschätzten Menge aus der Mengenregel.</p>
         </div>
     @endif
 </div>
@@ -88,7 +87,7 @@
 {{-- Spec 94b §3 · Planungsdetails: Übergabe-Struktur für die Event-Planung (OLIVIA), nie im Kundenlink. Als Text wie die Stufen. --}}
 @isset($pm)
     <div class="flex flex-col gap-3 pt-3 border-t border-[var(--fa-line)]" data-regel-planung>
-        <p class="font-medium">Planung <span class="{{ $leise }}">· intern, für die Event-Planung, nie beim Kunden</span></p>
+        <p class="font-medium">Planung <span class="fa-t-muted">· intern, für die Event-Planung, nie beim Kunden</span></p>
         <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-3 items-start">
             <x-fa::field label="Komponenten" for="{{ $px }}-pl-komp" optional hint="Je Zeile „Menge; je Einheit | Gast | Stunde; Bezeichnung; GP 812 oder Behälter 14“ (Bezug optional).">
                 <x-fa::textarea id="{{ $px }}-pl-komp" wire:model="{{ $pm }}.komponenten" rows="4" placeholder="1; Einheit; Stehtisch; GP 812&#10;1; Einheit; Hussen weiß&#10;2; Einheit; GN 1/1 65 mm; Behälter 14" data-regel-planung-komponenten />

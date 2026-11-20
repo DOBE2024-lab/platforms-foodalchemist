@@ -2,7 +2,7 @@
      hier steht, wo die Kalkulation inzwischen davon abweicht. Abhilfe ist neu veröffentlichen, eine eigene Freigabe gibt es nicht. --}}
 <div class="flex flex-col gap-4" data-ctrl-link-preise>
     <div class="flex flex-wrap items-start justify-between gap-3">
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+        <p class="fa-t-muted max-w-[75ch]">
             Ein veröffentlichter Link zeigt die Preise vom Zeitpunkt der Veröffentlichung. Hier stehen die Links, deren Preise
             inzwischen von der Kalkulation abweichen. Neu veröffentlichen mit „Preise aktualisieren“ übernimmt die aktuellen Preise.
             @if($schwelle !== null)

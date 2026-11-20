@@ -1,7 +1,6 @@
 {{-- Spec 75b · Reiter Rechnungen: erfassen (aus Lieferscheinen vorbelegt), prüfen (Triple Match je Position),
      begründen, freigeben (Rolle Freigeben), bezahlt. Rechte prüft der Service. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $zahl = fn ($v, $d = 2) => $v === null ? '–' : (rtrim(rtrim(number_format((float) $v, $d, ',', '.'), '0'), ',') ?: '0');
     $datum = fn ($d) => $d ? \Carbon\Carbon::parse($d)->format('d.m.Y') : '–';
     $statusTon = ['erfasst' => 'warn', 'freigegeben' => 'info', 'bezahlt' => 'ok', 'storniert' => 'crit'];
@@ -38,7 +37,7 @@
                                 @foreach($zeilen as $i => $z)
                                     <tr wire:key="re-z-{{ $i }}-{{ $z['delivery_note_line_id'] ?? 'x' }}" class="{{ empty($z['an']) ? 'opacity-50' : '' }}" data-re-zeile>
                                         <td><input type="checkbox" wire:model.live="zeilen.{{ $i }}.an" aria-label="auf Rechnung"></td>
-                                        <td>{{ $z['lieferschein'] ?? '–' }}<span class="{{ $leise }}">{{ $z['nummer'] ? ' · ' . $z['nummer'] : ' · ohne Bestellung' }}</span></td>
+                                        <td>{{ $z['lieferschein'] ?? '–' }}<span class="fa-t-muted">{{ $z['nummer'] ? ' · ' . $z['nummer'] : ' · ohne Bestellung' }}</span></td>
                                         <td class="font-medium">{{ $z['designation'] }}</td>
                                         <td class="text-right"><x-fa::input size="sm" numeric class="w-20" wire:model.live.blur="zeilen.{{ $i }}.qty" aria-label="Menge" /></td>
                                         <td class="text-right tabular-nums">{{ $z['preis_bestellt'] !== null ? number_format((float) $z['preis_bestellt'], 2, ',', '.') . ' €' : '–' }}</td>
@@ -116,7 +115,7 @@
                                 </td>
                                 <td class="text-right whitespace-nowrap" onclick="event.stopPropagation()">
                                     @if((int) ($r['team_id'] ?? $teamId) !== $teamId)
-                                        <span class="{{ $leise }}">nur lesend</span>
+                                        <span class="fa-t-muted">nur lesend</span>
                                     @elseif($r['status'] === 'erfasst' && $darfErfassen)
                                         <x-fa::button size="sm" wire:click="bearbeiten({{ $r['id'] }})">Bearbeiten</x-fa::button>
                                     @endif
@@ -129,7 +128,7 @@
                                 <tr wire:key="re-d-{{ $r['id'] }}" data-re-detail="{{ $r['id'] }}">
                                     <td colspan="{{ $standortSpalte ? 8 : 7 }}" class="bg-[var(--fa-ground)]">
                                         <div class="flex flex-col gap-3 py-2">
-                                            <div class="flex flex-wrap items-center gap-3 {{ $leise }}">
+                                            <div class="flex flex-wrap items-center gap-3 fa-t-muted">
                                                 <span>Summe Positionen <strong class="text-[var(--fa-ink)]">{{ number_format($detail['summe_positionen'], 2, ',', '.') }} €</strong>@if($detail['total_net'] !== null) · laut Beleg {{ number_format($detail['total_net'], 2, ',', '.') }} €@endif</span>
                                                 @unless($detail['summen_passen'])<x-fa::badge tone="crit">Summe ≠ Beleg</x-fa::badge>@endunless
                                                 <span>Toleranz Preis ±{{ $zahl($detail['toleranz']['pct']) }} % oder ±{{ number_format($detail['toleranz']['eur'], 2, ',', '.') }} € je Gebinde</span>
@@ -141,7 +140,7 @@
                                                     @foreach($detail['zeilen'] as $z)
                                                         <tr wire:key="re-dz-{{ $z['id'] }}" data-re-befund="{{ $z['befund']['re'] ?? $z['art'] }}">
                                                             <td class="font-medium">{{ $z['designation'] }}@if($z['art'] !== 'ware') <x-fa::badge>{{ $z['art_label'] }}</x-fa::badge>@endif</td>
-                                                            <td>{{ $z['nummer'] ?? '–' }}<span class="{{ $leise }}">{{ $z['lieferschein'] ? ' · LS ' . $z['lieferschein'] : '' }}</span></td>
+                                                            <td>{{ $z['nummer'] ?? '–' }}<span class="fa-t-muted">{{ $z['lieferschein'] ? ' · LS ' . $z['lieferschein'] : '' }}</span></td>
                                                             <td class="text-right tabular-nums">{{ $zahl($z['bestellt']) }}</td>
                                                             <td class="text-right tabular-nums">{{ $zahl($z['geliefert']) }}</td>
                                                             <td class="text-right tabular-nums">{{ $zahl($z['qty_packs']) }}</td>
@@ -151,9 +150,9 @@
                                                             <td>
                                                                 @if($z['befund'])
                                                                     <x-fa::badge :tone="$befundTon[$z['befund']['re']] ?? 'neutral'">{{ \Platform\FoodAlchemist\Services\TripleMatchService::LABELS[$z['befund']['re']] ?? $z['befund']['re'] }}</x-fa::badge>
-                                                                    @if(abs($z['befund']['delta_eur']) >= 0.01)<span class="{{ $leise }}">{{ $z['befund']['delta_eur'] > 0 ? '+' : '' }}{{ number_format($z['befund']['delta_eur'], 2, ',', '.') }} €</span>@endif
+                                                                    @if(abs($z['befund']['delta_eur']) >= 0.01)<span class="fa-t-muted">{{ $z['befund']['delta_eur'] > 0 ? '+' : '' }}{{ number_format($z['befund']['delta_eur'], 2, ',', '.') }} €</span>@endif
                                                                 @else
-                                                                    <span class="{{ $leise }}">–</span>
+                                                                    <span class="fa-t-muted">–</span>
                                                                 @endif
                                                             </td>
                                                             <td>
@@ -163,7 +162,7 @@
                                                                         <x-fa::button size="sm" wire:click="begruenden({{ $z['id'] }})">OK</x-fa::button>
                                                                     </div>
                                                                 @else
-                                                                    <span class="{{ $leise }}">{{ $z['begruendung'] ?? '' }}</span>
+                                                                    <span class="fa-t-muted">{{ $z['begruendung'] ?? '' }}</span>
                                                                 @endif
                                                             </td>
                                                         </tr>
@@ -175,9 +174,9 @@
                                                     @if($dF)
                                                         <x-fa::button variant="primary" size="sm" icon="heroicon-o-check-badge" wire:click="freigeben({{ $detail['id'] }})" :disabled="! $detail['freigebbar']" data-re-freigeben>Freigeben</x-fa::button>
                                                     @else
-                                                        <span class="{{ $leise }}">Freigeben dürfen Inhaber, Admins und Mitglieder mit Freigabe-Häkchen.</span>
+                                                        <span class="fa-t-muted">Freigeben dürfen Inhaber, Admins und Mitglieder mit Freigabe-Häkchen.</span>
                                                     @endif
-                                                    @unless($detail['freigebbar'])<span class="{{ $leise }}">{{ $detail['unbegruendet'] > 0 ? $detail['unbegruendet'] . ' Abweichung(en) begründen oder reklamieren (Reiter Abgleich).' : 'Summe der Positionen stimmt nicht mit dem Beleg.' }}</span>@endunless
+                                                    @unless($detail['freigebbar'])<span class="fa-t-muted">{{ $detail['unbegruendet'] > 0 ? $detail['unbegruendet'] . ' Abweichung(en) begründen oder reklamieren (Reiter Abgleich).' : 'Summe der Positionen stimmt nicht mit dem Beleg.' }}</span>@endunless
                                                 @endif
                                                 @if($detail['status'] === 'freigegeben' && $dF)
                                                     <x-fa::button size="sm" icon="heroicon-o-banknotes" wire:click="bezahlt({{ $detail['id'] }})" data-re-bezahlt>Als bezahlt markieren</x-fa::button>

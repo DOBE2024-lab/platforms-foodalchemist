@@ -10,7 +10,7 @@
 
 <div class="flex flex-col gap-3" data-ctrl-ausreisser>
     <div class="flex flex-wrap items-end justify-between gap-3">
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] max-w-[75ch]">
+        <p class="fa-t-muted max-w-[75ch]">
             Buchungen, deren Preis um mindestens den Faktor vom eigenen Preisverlauf abweicht, nach oben wie nach unten.
             Fehlbuchungen verzerren Wareneinsatz und Einsparpotenzial, deshalb stehen sie neben den Zahlen, die sie verfälschen.
         </p>
@@ -59,7 +59,7 @@
                             <td class="num"><x-fa::badge tone="warn">{{ number_format((float) $t['factor'], 1, ',', '.') }}×</x-fa::badge></td>
                             {{-- Ehrlichkeit über die Methode: bei wenigen Datenpunkten fällt der Dienst
                                  auf den flachen Median zurück; das ist eine schwächere Aussage. --}}
-                            <td class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] whitespace-nowrap">
+                            <td class="fa-t-muted whitespace-nowrap">
                                 {{ $t['method'] === 'theil_sen' ? 'Preisverlauf' : 'Median aller Preise (wenige Daten)' }} · {{ $t['n_points'] }} Buchungen
                             </td>
                         </tr>
@@ -67,7 +67,7 @@
                 </tbody>
             </table>
         </div>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <p class="fa-t-muted">
             Korrigiert wird an der Quelle, in der Bestellung oder im Import. Hier wird nur markiert.
         </p>
     @endif

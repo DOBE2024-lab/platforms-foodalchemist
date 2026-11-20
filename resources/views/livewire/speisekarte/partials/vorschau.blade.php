@@ -30,7 +30,7 @@
                 @foreach($rubrik['positionen'] as $pos)
                     {{-- Werkstrang M Phase D: Wahl-Gruppe „A oder B“ zwischen aufeinanderfolgenden Positionen derselben Gruppe. --}}
                     @if(($pos['variant_group_id'] ?? null) !== null && ($pos['variant_group_id'] ?? null) === $prevVg)
-                        <div class="text-[length:var(--fa-text-sm)] italic text-[var(--fa-ink-3)] text-center py-0.5">oder</div>
+                        <div class="fa-t-muted italic text-center py-0.5">oder</div>
                     @endif
                     @if($pos['typ'] === 'header')
                         <div class="font-semibold text-[length:var(--fa-text-sm)] uppercase tracking-wide text-[var(--fa-ink-2)] mt-3">{{ $pos['name'] }}</div>
@@ -44,14 +44,14 @@
                         @endphp
                         <div class="flex items-baseline gap-2 py-1 text-[length:var(--fa-text-base)]">
                             <span class="min-w-0 break-words text-[var(--fa-ink)]">
-                                {{ $pos['name'] }}@if(!empty($pos['codes']))<sup class="ml-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ implode(',', $pos['codes']) }}</sup>@endif
+                                {{ $pos['name'] }}@if(!empty($pos['codes']))<sup class="ml-0.5 fa-t-muted">{{ implode(',', $pos['codes']) }}</sup>@endif
                             </span>
                             <span class="flex-1 min-w-4 border-b border-dotted border-[var(--fa-line-strong)] -translate-y-0.5"></span>
                             <span class="tabular-nums text-[var(--fa-ink)] whitespace-nowrap">
                                 @if($w !== null){{ number_format((float) $w, 2, ',', '.') }} €@else<x-fa::money :value="null" />@endif
                             </span>
                         </div>
-                        @if(!empty($pos['wein']))<div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] -mt-0.5 mb-1">{{ implode(' · ', array_map('ucfirst', array_values($pos['wein']))) }}</div>@endif
+                        @if(!empty($pos['wein']))<div class="fa-t-muted -mt-0.5 mb-1">{{ implode(' · ', array_map('ucfirst', array_values($pos['wein']))) }}</div>@endif
                         @if($pos['consumer_text'])<div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] -mt-0.5 mb-1">{{ $pos['consumer_text'] }}</div>@endif
                         @foreach(($pos['gaenge'] ?? []) as $gang)
                             <div class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] {{ $gang['type'] === 'header' ? 'font-semibold uppercase tracking-wide mt-1' : '' }}" style="padding-left: {{ (($gang['einrueckung'] ?? 0) + 1) * 0.5 }}rem">{{ $gang['text'] }}</div>
@@ -68,7 +68,7 @@
             </x-fa::empty>
         @endforelse
 
-        <div class="mt-6 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+        <div class="mt-6 fa-t-muted">
             Alle Preise in Euro{{ $brutto ? ', inkl. ' . rtrim(rtrim(number_format($vorschau['mwstSatz'], 1, ',', '.'), '0'), ',') . ' % MwSt.' : ' (netto)' }}
         </div>
 

@@ -32,7 +32,7 @@
                             <span class="shrink-0 pl-0.5">@include('foodalchemist::livewire.settings.partials.reorder-cell', ['id' => $hg->id, 'upMethod' => 'hgHoch', 'downMethod' => 'hgRunter', 'first' => $loop->first, 'last' => $loop->last])</span>
                             <a href="#" role="button" wire:click.prevent="waehleHg({{ $hg->id }})" @if($aktiv) aria-current="true" @endif
                                     class="flex-1 min-w-0 break-words leading-snug text-left px-1.5 py-1.5 text-[length:var(--fa-text-md)] {{ $aktiv ? 'font-medium' : '' }}" title="{{ $hg->label }}">{{ $hg->label }}</a>
-                            <span class="shrink-0 text-[length:var(--fa-text-sm)] tabular-nums text-[var(--fa-ink-3)]" title="Kategorien">{{ $hg->kategorie_count }}</span>
+                            <span class="shrink-0 fa-t-muted tabular-nums" title="Kategorien">{{ $hg->kategorie_count }}</span>
                             @if($darfEditHg)
                                 {{-- Dominique 2026-10-12: Aktionen legen sich beim Darüberfahren ÜBER die Zeile statt unsichtbar Platz zu reservieren — vorher blieben vom Namen nur wenige Zeichen („01 G…"). --}}
                                 <span class="fa-zeilen-aktionen rounded-[var(--fa-radius-control)] bg-[var(--fa-surface)] shadow-sm">
@@ -104,7 +104,7 @@
                                                             x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
                                                         <div class="hidden w-64 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
                                                             @if($kat->recipe_count > 0)
-                                                                <p class="flex items-start gap-2 px-3 py-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">
+                                                                <p class="flex items-start gap-2 px-3 py-2 fa-t-muted">
                                                                     @svg('heroicon-o-lock-closed', 'w-4 h-4 shrink-0 mt-px') Löschen gesperrt: {{ $kat->recipe_count }} Rezepte hängen daran. Erst zusammenführen oder umhängen.
                                                                 </p>
                                                             @else

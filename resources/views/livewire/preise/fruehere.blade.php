@@ -61,7 +61,7 @@
             </table>
         </div>
         @if($daten['gekappt'])
-            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" x-show="offen" x-cloak data-fruehere-gekappt>Die neuesten {{ count($daten['zeilen']) }} von {{ $daten['gesamt'] }} Ständen. Den ganzen Verlauf zeigt die Linie.</p>
+            <p class="fa-t-muted" x-show="offen" x-cloak data-fruehere-gekappt>Die neuesten {{ count($daten['zeilen']) }} von {{ $daten['gesamt'] }} Ständen. Den ganzen Verlauf zeigt die Linie.</p>
         @endif
     </div>
 @endif

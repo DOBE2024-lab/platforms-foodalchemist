@@ -219,7 +219,7 @@
                         <p class="font-medium text-[var(--fa-ink)]">{{ $ueberarbeitung['werte']['aenderungs_notiz'] }}</p>
                     @endif
                     @if(!empty($ueberarbeitung['werte']['zutaten']))
-                        <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Zutaten nach der Überarbeitung</p>
+                        <p class="fa-t-label">Zutaten nach der Überarbeitung</p>
                         <ul class="flex flex-col gap-1">
                             @foreach($ueberarbeitung['werte']['zutaten'] as $z)
                                 @if(is_array($z))
@@ -249,11 +249,11 @@
                         @endif
                     @endif
                     @if(is_string($ueberarbeitung['werte']['description'] ?? null))
-                        <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Neue Beschreibung</p>
+                        <p class="fa-t-label">Neue Beschreibung</p>
                         <p class="text-[var(--fa-ink)]">{{ \Illuminate\Support\Str::limit($ueberarbeitung['werte']['description'], 280) }}</p>
                     @endif
                     @if(is_string($ueberarbeitung['werte']['preparation'] ?? null))
-                        <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Neue Zubereitung</p>
+                        <p class="fa-t-label">Neue Zubereitung</p>
                         <p class="text-[var(--fa-ink)] whitespace-pre-line">{{ \Illuminate\Support\Str::limit($ueberarbeitung['werte']['preparation'], 400) }}</p>
                     @endif
                 </div>
@@ -404,7 +404,7 @@
         @endif
         <div class="flex flex-col gap-3" data-rezept-equipment>
             <div class="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 pb-3 border-b border-[var(--fa-line)]" data-equipment-gewaehlt>
-                <span class="sm:w-32 shrink-0 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Gewählt</span>
+                <span class="sm:w-32 shrink-0 fa-t-label">Gewählt</span>
                 @if($eqGewaehlt->isNotEmpty())
                     <span class="text-[length:var(--fa-text-md)] font-medium text-[var(--fa-accent)] leading-snug">{{ $eqGewaehlt->pluck('name')->join(' · ') }}</span>
                 @else
@@ -413,7 +413,7 @@
             </div>
             @foreach($equipmentListe->groupBy(fn ($g) => $g->group_name ?? 'sonstig') as $gruppe => $geraete)
                 <div class="flex flex-col sm:flex-row sm:items-start gap-1.5 sm:gap-3">
-                    <span class="sm:w-32 shrink-0 sm:pt-1.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">{{ ucfirst($gruppe) }}</span>
+                    <span class="sm:w-32 shrink-0 sm:pt-1.5 fa-t-label">{{ ucfirst($gruppe) }}</span>
                     <div class="flex flex-wrap gap-1.5 min-w-0">
                         @foreach($geraete as $geraet)
                             @php $eqOn = in_array((string) $geraet->id, $form['equipment_ids'], true); @endphp
@@ -440,7 +440,7 @@
             {{-- Name: volle Breite, KI-Hilfe direkt am Feld --}}
             <div class="sm:col-span-2 flex flex-col gap-1.5">
                 <div class="flex items-center justify-between gap-2">
-                    <label for="rezept-name" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Name<span class="text-[var(--fa-crit)]" aria-hidden="true"> *</span></label>
+                    <label for="rezept-name" class="fa-t-label">Name<span class="text-[var(--fa-crit)]" aria-hidden="true"> *</span></label>
                     <x-foodalchemist::ki-action action="namePutzen" variant="ai" icon="heroicon-o-sparkles" label="Namen glätten"
                         title="Schreibweise nach dem Rezept-Regelwerk vereinheitlichen" busy="Wird geglättet …" flash="Name geglättet" />
                 </div>
@@ -456,7 +456,7 @@
 
             <div class="flex flex-col gap-1.5 min-w-0">
                 <div class="flex items-center justify-between gap-2">
-                    <label for="rezept-kategorie" class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]">Kategorie<span class="text-[var(--fa-crit)]" aria-hidden="true"> *</span></label>
+                    <label for="rezept-kategorie" class="fa-t-label">Kategorie<span class="text-[var(--fa-crit)]" aria-hidden="true"> *</span></label>
                     @if(!$neu)
                         <x-foodalchemist::ki-action action="ai_kategorie" variant="ai" icon="heroicon-o-sparkles" label="Kategorie vorschlagen"
                             title="Vorschlag erscheint unter dem Feld, übernommen wird erst per Klick" busy="Wird ermittelt …" flash="Kategorie ermittelt" />
@@ -690,9 +690,9 @@
                         ] as [$lbl, $wert, $unit, $dez, $subLbl, $subWert])
                             <div class="flex flex-col gap-0.5 min-w-0" wire:key="rn-{{ $lbl }}">
                                 <dt class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $lbl }}</dt>
-                                <dd class="text-[length:var(--fa-text-base)] font-semibold tabular-nums text-[var(--fa-ink)]">{{ $wert !== null ? number_format((float) $wert, $dez, ',', '.') . ' ' . $unit : 'fehlt' }}</dd>
+                                <dd class="fa-t-h3 tabular-nums">{{ $wert !== null ? number_format((float) $wert, $dez, ',', '.') . ' ' . $unit : 'fehlt' }}</dd>
                                 @if($subLbl !== null)
-                                    <dd class="text-[length:var(--fa-text-sm)] tabular-nums text-[var(--fa-ink-3)]" data-naehrwert-sub="{{ $subLbl }}">{{ $subLbl }} {{ $subWert !== null ? number_format((float) $subWert, 1, ',', '.') . ' g' : 'fehlt' }}</dd>
+                                    <dd class="fa-t-muted tabular-nums" data-naehrwert-sub="{{ $subLbl }}">{{ $subLbl }} {{ $subWert !== null ? number_format((float) $subWert, 1, ',', '.') . ' g' : 'fehlt' }}</dd>
                                 @endif
                             </div>
                         @endforeach

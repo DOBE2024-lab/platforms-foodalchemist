@@ -10,7 +10,6 @@
         'recipe.steps' => 'Zubereitungs-Schritte',
         'vk.plating' => 'Anrichte-Schritte',
     ][$f ?? ''] ?? (string) $f;
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
 @endphp
 @if(($kiKontext ?? null) !== null)
     @php
@@ -23,7 +22,7 @@
         if ($km['tokens_in'] > 0) { $kmTeile[] = number_format($km['tokens_in'], 0, ',', '.') . ' Token gelesen, ' . number_format($km['tokens_out'], 0, ',', '.') . ' geschrieben'; }
     @endphp
     <x-fa::section variant="plain" title="KI-Kontext" icon="heroicon-o-cpu-chip" :meta="$kmMeta" data-sektion="ki-kontext">
-        <p class="{{ $leise }}" data-ki-kontext-meta>{{ implode(' · ', $kmTeile) }}</p>
+        <p class="fa-t-muted" data-ki-kontext-meta>{{ implode(' · ', $kmTeile) }}</p>
         <x-foodalchemist::kontext-inspektor :kontext="$kiKontext['kontext']" />
     </x-fa::section>
 @endif
@@ -43,10 +42,10 @@
         <div class="mt-2 flex flex-col gap-2">
             @foreach($kiHistorie as $call)
                 <details class="group/call rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2" data-ki-call="{{ $call['call_log_id'] }}" wire:key="ki-call-{{ $call['call_log_id'] }}">
-                    <summary class="cursor-pointer flex flex-wrap items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]">
+                    <summary class="cursor-pointer flex flex-wrap items-center gap-2 fa-t-body">
                         @svg('heroicon-m-chevron-right', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)] transition-transform group-open/call:rotate-90')
                         <span class="font-medium">{{ $kmFunktion($call['feature']) }}</span>
-                        <span class="{{ $leise }} tabular-nums">{{ $call['erstellt_am'] }}</span>
+                        <span class="fa-t-muted tabular-nums">{{ $call['erstellt_am'] }}</span>
                         @if($call['fehler'])<x-fa::badge tone="crit">Fehler</x-fa::badge>@endif
                     </summary>
                     <div class="mt-2 flex flex-col gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">

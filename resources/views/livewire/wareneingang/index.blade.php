@@ -5,7 +5,6 @@
     $segment = 'h-8 px-3 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-md)] font-medium transition-colors duration-150';
     $segmentAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
     $segmentAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $zahl = fn ($v) => $v === null ? '–' : (rtrim(rtrim(number_format((float) $v, 2, ',', '.'), '0'), ',') ?: '0');
     $datum = fn ($d) => $d ? \Carbon\Carbon::parse($d)->locale('de')->isoFormat('dd, D.M.') : 'ohne Liefertag';
     $statusTon = ['entwurf' => 'neutral', 'gebucht' => 'ok', 'storniert' => 'crit'];
@@ -61,8 +60,8 @@
                     <x-fa::field label="Beleg (Foto oder PDF)" for="we-anhang" hint="max. 15 MB">
                         <input id="we-anhang" type="file" wire:model="anhang" accept="image/*,application/pdf" capture="environment"
                             class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" data-we-anhang />
-                        @if($anhang)<span class="{{ $leise }}">{{ $anhang->getClientOriginalName() }} · <button type="button" class="underline" wire:click="anhangVerwerfen">verwerfen</button></span>@endif
-                        <div wire:loading wire:target="anhang" class="{{ $leise }}">lädt hoch …</div>
+                        @if($anhang)<span class="fa-t-muted">{{ $anhang->getClientOriginalName() }} · <button type="button" class="underline" wire:click="anhangVerwerfen">verwerfen</button></span>@endif
+                        <div wire:loading wire:target="anhang" class="fa-t-muted">lädt hoch …</div>
                     </x-fa::field>
                 </div>
                 <x-fa::field label="Notiz" for="we-notiz">
@@ -73,7 +72,7 @@
                     <x-fa::empty compact icon="heroicon-o-truck" title="Lieferant wählen">Dann stehen alle offenen Positionen dieses Lieferanten hier, über alle gesendeten und bestätigten Bestellungen.</x-fa::empty>
                 @else
                     <div class="flex flex-wrap items-center gap-2">
-                        <p class="{{ $leise }} flex-1">Geliefert in Gebinden. Häkchen weg = Position steht nicht auf diesem Lieferschein.</p>
+                        <p class="fa-t-muted flex-1">Geliefert in Gebinden. Häkchen weg = Position steht nicht auf diesem Lieferschein.</p>
                         @if(count($zeilen) > 0)
                             <x-fa::button size="sm" icon="heroicon-o-check" wire:click="allesWieBestellt" data-we-alles>Alles wie bestellt</x-fa::button>
                         @endif
@@ -86,7 +85,7 @@
                         <div class="flex flex-col gap-2" wire:key="we-gruppe-{{ $orderId }}" data-we-bestellung="{{ $orderId }}">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="font-semibold">{{ $erste['nummer'] }}</span>
-                                @if($erste['reference'])<span class="{{ $leise }}">{{ $erste['reference'] }}</span>@endif
+                                @if($erste['reference'])<span class="fa-t-muted">{{ $erste['reference'] }}</span>@endif
                                 <span class="flex-1"></span>
                                 <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]">
                                     <input type="checkbox" wire:model.live="abschliessen.{{ $orderId }}" data-we-abschliessen="{{ $orderId }}">
@@ -103,7 +102,7 @@
                                                 <td><input type="checkbox" wire:model.live="zeilen.{{ $id }}.an" aria-label="auf Lieferschein"></td>
                                                 <td>
                                                     <span class="font-medium">{{ $z['designation'] }}</span>
-                                                    <span class="{{ $leise }}">{{ trim(($z['article_number'] ? 'Art. ' . $z['article_number'] : '') . ($z['packaging_unit'] ? ' · ' . $z['packaging_unit'] : ''), ' ·') }}</span>
+                                                    <span class="fa-t-muted">{{ trim(($z['article_number'] ? 'Art. ' . $z['article_number'] : '') . ($z['packaging_unit'] ? ' · ' . $z['packaging_unit'] : ''), ' ·') }}</span>
                                                 </td>
                                                 <td class="text-right tabular-nums">{{ $zahl($z['bestellt']) }}</td>
                                                 <td class="text-right tabular-nums">{{ $zahl($z['bisher']) }}</td>
@@ -158,7 +157,7 @@
                     <x-fa::button variant="primary" icon="heroicon-o-check-circle" wire:click="buchen" :disabled="$form['supplier_id'] === null" data-we-buchen>Buchen</x-fa::button>
                     <x-fa::button wire:click="speichern" :disabled="$form['supplier_id'] === null" data-we-speichern>Als Entwurf speichern</x-fa::button>
                     <x-fa::button variant="ghost" wire:click="abbrechen">Abbrechen</x-fa::button>
-                    <span class="{{ $leise }}">Buchen schreibt den Wareneingang an die Bestellungen und bucht ins Lager.</span>
+                    <span class="fa-t-muted">Buchen schreibt den Wareneingang an die Bestellungen und bucht ins Lager.</span>
                 </div>
             </x-fa::section>
         @endif
@@ -183,7 +182,7 @@
                                                 @if($r['ueberfaellig'])<x-fa::badge tone="warn">überfällig</x-fa::badge>@endif
                                             </td>
                                             <td class="font-medium">{{ $r['lieferant'] }}</td>
-                                            <td>{{ $r['nummer'] }}@if($r['reference'])<span class="{{ $leise }}"> · {{ $r['reference'] }}</span>@endif</td>
+                                            <td>{{ $r['nummer'] }}@if($r['reference'])<span class="fa-t-muted"> · {{ $r['reference'] }}</span>@endif</td>
                                             <td class="text-right tabular-nums">{{ $r['offene_positionen'] }} / {{ $r['positionen'] }}</td>
                                             <td class="text-right"><x-fa::money :value="$r['total_net']" /></td>
                                             <td>
@@ -238,14 +237,14 @@
                                         <td>{{ $datum($n['delivered_on']) }}</td>
                                         <td class="font-medium">{{ $n['delivery_note_number'] ?? 'ohne Nr.' }}@if($n['source'] === 'editor') <x-fa::badge>aus Bestell-Editor</x-fa::badge>@elseif($n['source'] === 'altbestand') <x-fa::badge>Altbestand</x-fa::badge>@endif @if($n['anhang']) @svg('heroicon-o-paper-clip', 'inline w-3.5 h-3.5 text-[var(--fa-ink-3)]')@endif</td>
                                         <td>{{ $n['lieferant'] }}</td>
-                                        <td class="text-right tabular-nums">{{ $n['positionen'] }}@if($n['ohne_bestellung'] > 0)<span class="{{ $leise }}"> ({{ $n['ohne_bestellung'] }} ohne Best.)</span>@endif</td>
-                                        <td class="text-right">@if($n['abweichungen'] > 0)<x-fa::badge tone="warn">{{ $n['abweichungen'] }}</x-fa::badge>@else<span class="{{ $leise }}">–</span>@endif</td>
+                                        <td class="text-right tabular-nums">{{ $n['positionen'] }}@if($n['ohne_bestellung'] > 0)<span class="fa-t-muted"> ({{ $n['ohne_bestellung'] }} ohne Best.)</span>@endif</td>
+                                        <td class="text-right">@if($n['abweichungen'] > 0)<x-fa::badge tone="warn">{{ $n['abweichungen'] }}</x-fa::badge>@else<span class="fa-t-muted">–</span>@endif</td>
                                         <td class="text-right"><x-fa::money :value="$n['wert_net']" /></td>
                                         <td><x-fa::badge :tone="$statusTon[$n['status']] ?? 'neutral'">{{ $n['status_label'] }}</x-fa::badge></td>
                                         <td class="text-right whitespace-nowrap" onclick="event.stopPropagation()">
                                             @php($eigenerBeleg = (int) ($n['team_id'] ?? $teamId) === $teamId)
                                             @if(! $eigenerBeleg)
-                                                <span class="{{ $leise }}">nur lesend</span>
+                                                <span class="fa-t-muted">nur lesend</span>
                                             @elseif($darf && $n['status'] === 'entwurf')
                                                 <x-fa::button size="sm" wire:click="bearbeiten({{ $n['id'] }})">Bearbeiten</x-fa::button>
                                                 <x-fa::button size="sm" variant="ghost" wire:click="loeschen({{ $n['id'] }})" wire:confirm="Entwurf löschen?">Löschen</x-fa::button>
@@ -258,7 +257,7 @@
                                         <tr wire:key="we-d-{{ $n['id'] }}" data-we-detail="{{ $n['id'] }}">
                                             <td colspan="{{ $standortSpalte ? 9 : 8 }}" class="bg-[var(--fa-ground)]">
                                                 <div class="flex flex-col gap-2 py-2">
-                                                    <div class="flex flex-wrap items-center gap-3 {{ $leise }}">
+                                                    <div class="flex flex-wrap items-center gap-3 fa-t-muted">
                                                         @if($detail['bestellungen'] !== [])<span>Bestellungen: {{ collect($detail['bestellungen'])->map(fn ($b) => $b['nummer'] . ' (' . $b['status_label'] . ')')->implode(', ') }}</span>@endif
                                                         @if($detail['booked_at'])<span>gebucht {{ \Carbon\Carbon::parse($detail['booked_at'])->format('d.m.Y H:i') }}</span>@endif
                                                         @if($detail['note'])<span>{{ $detail['note'] }}</span>@endif
@@ -279,9 +278,9 @@
                                                                     <td class="text-right tabular-nums">{{ $z['qty_packs'] !== null ? $zahl($z['qty_packs']) . ' Geb.' : $zahl($z['menge']) . ' kg/l/Stk' }}</td>
                                                                     <td>
                                                                         <x-fa::badge :tone="$abwTon[$z['abweichung']] ?? 'neutral'">{{ $abwText[$z['abweichung']] ?? $z['abweichung'] }}</x-fa::badge>
-                                                                        @if($z['abweichung_grund_label'])<span class="{{ $leise }}">{{ $z['abweichung_grund_label'] }}</span>@endif
+                                                                        @if($z['abweichung_grund_label'])<span class="fa-t-muted">{{ $z['abweichung_grund_label'] }}</span>@endif
                                                                     </td>
-                                                                    <td class="{{ $leise }}">{{ $z['note'] }}</td>
+                                                                    <td class="fa-t-muted">{{ $z['note'] }}</td>
                                                                 </tr>
                                                             @endforeach
                                                         </tbody>

@@ -2,7 +2,6 @@
      Antippen öffnet das vorhandene Detail (Orders\DetailPanel) über die ganze Breite. Nur lesen: keine Runden, kein Versand,
      kein Auslösen, kein Stornieren, kein Editor. --}}
 @php
-    $leise = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $zeitraeume = ['' => 'Alle', 'heute' => 'Heute', 'woche' => 'Diese Woche', 'naechste' => 'Nächste Woche'];
     $statusTon = ['draft' => 'neutral', 'sent' => 'info', 'confirmed' => 'accent', 'delivered' => 'ok', 'cancelled' => 'neutral'];
     $liste = 'flex flex-col rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-y divide-[var(--fa-line)]';
@@ -21,7 +20,7 @@
     <div class="flex-1 min-w-0 h-full overflow-y-auto px-4 py-4 space-y-3" data-fa-handy-bestellungen>
         <div class="flex items-baseline justify-between gap-3">
             <h1 class="text-[length:var(--fa-text-2xl)] font-semibold text-[var(--fa-ink)]">Bestellungen</h1>
-            <span class="{{ $leise }} tabular-nums">{{ $anzahl }} · {{ number_format($summe, 2, ',', '.') }} € netto</span>
+            <span class="fa-t-muted tabular-nums">{{ $anzahl }} · {{ number_format($summe, 2, ',', '.') }} € netto</span>
         </div>
         <input type="search" wire:model.live.debounce.300ms="suche" placeholder="Bestellung oder Lieferant suchen" aria-label="Bestellungen durchsuchen"
                class="fa-control h-12 text-[length:var(--fa-text-base)]" data-fa-handy-suche>
@@ -43,7 +42,7 @@
                                     class="flex w-full items-center gap-3 px-4 py-3 min-h-[60px] text-left {{ $selectedOrderId === $o->id ? 'bg-[var(--fa-accent-soft)]' : '' }}" data-fa-handy-karte="{{ $o->id }}">
                                 <span class="min-w-0 flex-1">
                                     <span class="block font-medium leading-snug text-[var(--fa-ink)] wrap-anywhere">{{ $o->supplier?->name ?? 'Ohne Lieferant' }}</span>
-                                    <span class="block truncate {{ $leise }}">ord-{{ $o->id }} · {{ $o->lines->count() }} {{ $o->lines->count() === 1 ? 'Position' : 'Positionen' }}</span>
+                                    <span class="block truncate fa-t-muted">ord-{{ $o->id }} · {{ $o->lines->count() }} {{ $o->lines->count() === 1 ? 'Position' : 'Positionen' }}</span>
                                 </span>
                                 <span class="shrink-0 flex flex-col items-end gap-1">
                                     <span class="text-[length:var(--fa-text-md)] font-medium tabular-nums text-[var(--fa-ink-2)]">{{ number_format((float) $o->total_net, 2, ',', '.') }} €</span>

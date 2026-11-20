@@ -113,6 +113,7 @@ class OfferCompositionService
     {
         $k = $this->ownedKapitel($team, $id);
         $daten = array_intersect_key($in, array_flip(self::KAPITEL_FELDER));
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, $daten, $k);   // CQ 2.3f
         if (isset($daten['price_mode']) && ! in_array($daten['price_mode'], FoodAlchemistOfferChapter::PRICE_MODES, true)) {
             unset($daten['price_mode']);
         }
@@ -211,6 +212,7 @@ class OfferCompositionService
     {
         $k = $this->ownedKapitel($team, $id);
         if ($newParentId !== null) {
+            throw_unless(FoodAlchemistOfferChapter::whereKey($newParentId)->where('offer_id', $k->offer_id)->exists(), \RuntimeException::class, 'Ziel-Kapitel gehört nicht zu diesem Angebot.');   // CQ 2.3f
             if ($newParentId === $id || in_array($newParentId, $this->descendantChapterIds($team, (int) $k->offer_id, $id), true)) {
                 throw new \RuntimeException('Zyklus: Kapitel kann nicht unter einen eigenen Nachfahren.');
             }

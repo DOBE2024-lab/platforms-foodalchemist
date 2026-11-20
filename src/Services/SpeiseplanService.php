@@ -113,9 +113,9 @@ class SpeiseplanService
 
     public function create(Team $team, array $in): FoodAlchemistSpeiseplan
     {
-        // Spec 33 P2: fremde Betriebe fallen hier raus — `outlet_id` (Team-Vokabular) erfasst der Datensatz-Guard nicht.
+        // Spec 33 P2: fremde Betriebe fallen hier raus — `outlet_id` zeigt auf ein Team-Vokabular
+        // und wird vom Datensatz-Guard nicht mit erfasst.
         $in = $this->pruefeOutlet($team, $in);
-        \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, $in);   // CQ 2.3f: CRM
 
         $plan = FoodAlchemistSpeiseplan::create([
             'team_id' => $team->id,
@@ -212,8 +212,8 @@ class SpeiseplanService
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($id);
         $this->guard($plan, $team);
         $update = $this->pruefeOutlet($team, array_intersect_key($in, array_flip(self::FELDER)));
-        \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, $update, $plan);
-        // Spec 33 P0: Status IMMER durch den Enum schleusen — `status` steht in FELDER (Service UND MCP).
+        // Spec 33 P0: Status IMMER durch den Enum schleusen — `status` steht in FELDER und ist
+        // damit über Service UND MCP frei beschreibbar.
         if (array_key_exists('status', $update)) {
             $update['status'] = AusgabeStatus::normalisiere((string) $update['status'])->value;
         }

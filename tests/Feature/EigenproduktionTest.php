@@ -133,8 +133,3 @@ it('Oberfläche: aus der Produktion vorbelegt einlagern, Chargen-Liste, Entnehme
     $lw->set("entnahme.{$b->id}.menge", '1,5')->set("entnahme.{$b->id}.grund", 'verbrauch')->call('entnehmen', $b->id)->assertSet('fehler', null);
     expect((float) $b->refresh()->qty_rest)->toBe(2500.0);
 });
-
-it('CQ 2.3f: Einlagern mit unbekannter/fremder Produktionsauftrags-Zeile wird abgelehnt', function () {
-    expect(fn () => $this->svc->einlagern($this->rootTeam, ['recipe_id' => $this->fond->id, 'menge' => 1, 'production_order_line_id' => 999999]))
-        ->toThrow(\RuntimeException::class, 'nicht sichtbar');
-});

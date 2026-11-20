@@ -748,10 +748,6 @@ class TrendService
         } else {
             $anteil = null;
         }
-        if (! empty($d['inspiration_id'])) {
-            $this->eigeneInspiration($team, (int) $d['inspiration_id']);   // CQ 2.3f: nie an die Inspiration eines anderen Teams
-        }
-        \Platform\FoodAlchemist\Support\Verweisziel::pruefe(\Platform\FoodAlchemist\Models\FoodAlchemistTrendSignal::class, $team, $d['signal_id'] ?? null, 'Signal');
         $beleg = FoodAlchemistTrendBeleg::create([
             'team_id' => $team->id,
             'trend_id' => $trend?->id,

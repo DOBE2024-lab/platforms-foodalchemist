@@ -67,9 +67,9 @@ it('Anwenden: kind=paket-Concept mit gleicher uuid, Positionen 1:1, Typ aus dem 
         ->and(FoodAlchemistConceptSlot::where('concept_id', $neu->id)->orderBy('position')->pluck('type')->all())->toBe(['gericht', 'basisrezept']);
 
     $report = app(PaketParitaet::class)->vergleiche($this->alt->fresh(), $neu->fresh());
-    expect(collect($report)->reject(fn ($f) => $f['ok'])->keys()->all())->toBe(['preis_gerechnet']);
+    expect(collect($report)->reject(fn ($f) => $f['ok'])->keys()->all())->toBe([]);
 
-    // Bekannter Modellunterschied für 2.6b: Gerichte ohne VK — alt eine Lücke (null), neu 0 €. Beide als unvollständig ausgewiesen.
+    // Gerichte ohne VK: alt eine Lücke (vk null), neu die Summe der bekannten Preise — beide unvollständig = gleiche Aussage.
     expect($report['preis_gerechnet']['alt'])->toMatchArray(['vk' => null, 'vollstaendig' => false])
         ->and($report['preis_gerechnet']['neu'])->toMatchArray(['vk' => 0.0, 'vollstaendig' => false]);
 });

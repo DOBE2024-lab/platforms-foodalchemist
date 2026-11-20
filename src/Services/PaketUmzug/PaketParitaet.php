@@ -44,8 +44,8 @@ final class PaketParitaet
                 ['vk' => $this->zahl($alt->price_per_person), 'ek' => $this->zahl($alt->ek_per_person), 'modus' => $alt->price_mode],
                 ['vk' => $this->zahl($neu->price_per_person_manual ?? $neu->price_per_person_cache), 'ek' => $this->zahl($neu->ek_per_person_cache),
                     'modus' => $neu->price_mode]),
-            // Vollständigkeit mit ausweisen: das alte Paket meldet ein Gericht ohne VK als Lücke (vk null), das Concept rechnet es mit 0 €
-            'preis_gerechnet' => $this->feld(
+            // Beide unvollständig = gleiche Aussage (alt: vk null, neu: Summe der bekannten Preise + hat_vk_luecke) → ok, Werte bleiben sichtbar
+            'preis_gerechnet' => $this->preisFeld(
                 ['vk' => $this->zahl($vkAlt['vk_pro_person'] ?? null), 'ek' => $this->zahl($vkAlt['ek_pro_person'] ?? null),
                     'vollstaendig' => (bool) ($vkAlt['vollstaendig'] ?? false)] + $this->fehler($vkAlt),
                 ['vk' => $this->zahl($vkNeu['summe_pro_person'] ?? null), 'ek' => $this->zahl($vkNeu['ek_per_person'] ?? null),
@@ -70,11 +70,19 @@ final class PaketParitaet
         ];
     }
 
-    /** Concept-Cockpit vollständig: kein leerer Slot, keine EK-Lücke, kein Gericht mit 0 € VK. */
+    /** Concept-Cockpit vollständig: kein leerer Slot, keine EK- und keine VK-Lücke (hat_vk_luecke, CQ 2.6; Zeilen ohne VK als Rückfall). */
     private function cockpitVollstaendig(array $c): bool
     {
-        return isset($c['zeilen']) && ! ($c['hat_leer'] ?? false) && ! ($c['hat_ek_luecke'] ?? false)
+        return isset($c['zeilen']) && ! ($c['hat_leer'] ?? false) && ! ($c['hat_ek_luecke'] ?? false) && ! ($c['hat_vk_luecke'] ?? false)
             && collect($c['zeilen'])->every(fn ($z) => ($z['type'] ?? '') !== 'gericht' || (float) ($z['price'] ?? 0) > 0);
+    }
+
+    private function preisFeld(array $alt, array $neu): array
+    {
+        $f = $this->feld($alt, $neu);
+        $f['ok'] = $f['ok'] || (($alt['vollstaendig'] ?? true) === false && ($neu['vollstaendig'] ?? true) === false);
+
+        return $f;
     }
 
     /** Alle Felder ok? */

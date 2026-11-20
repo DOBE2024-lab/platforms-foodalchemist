@@ -65,6 +65,19 @@ it('Präsentation: Hinweistexte der Edition („serviert im Schraubglas“) komm
     expect(collect(app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->editionen($this->format->fresh())[0]['gerichte'] ?? [])->pluck('type')->all())->not->toContain('text');
 });
 
+it('Interne Vorschau mit EK: die Edition im Format-Kapitel trägt ihren EK pro Person, der Kundenlink nicht (Fix 2026-11-20)', function () {
+    $this->edition->update(['ek_per_person_cache' => 8.4]);
+
+    $ed = fn (array $snap) => collect(collect($snap['content']['sections'])->firstWhere('title', 'Taste and Fly')['blocks'])->firstWhere('kind', 'concept_ref');
+    $intern = $ed(app(PresentationService::class)->previewData($this->rootTeam, 'foodbook', $this->buch->id, null, true));
+    $kunde = $ed(app(PresentationService::class)->previewData($this->rootTeam, 'foodbook', $this->buch->id));
+
+    expect($intern['ek'] ?? null)->toBe(['pp' => 8.4])
+        ->and($kunde)->not->toHaveKey('ek');
+    // Editionen ohne intern-Flag tragen gar kein EK-Feld (Dokument/PDF für Kunden).
+    expect(app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->editionen($this->format->fresh())[0])->not->toHaveKey('ek_pp');
+});
+
 it('★ Präsentation im Editor (Vorschau-Route) und öffentlicher Link zeigen die Edition', function () {
     $this->get(route('foodalchemist.foodbooks.praesentation', $this->buch->id))
         ->assertOk()->assertSee('Lissabon Edition')->assertSee('Bacalhau mit Kichererbsen');

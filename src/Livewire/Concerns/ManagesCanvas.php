@@ -171,16 +171,15 @@ trait ManagesCanvas
     /** Häkchen (Zusatzfeld Typ „check“) eines Listen-Eintrags umschalten — nur Einträge des EIGENEN Canvas. */
     public function listeUmschalten(int $entryId, string $subKey): void
     {
-        $canvas = app(CanvasService::class)->canvasFor($this->canvasTeam(), $this->canvasType, $this->canvasOwnerType, $this->canvasOwnerId);
-        $eintrag = $canvas->entries()->whereKey($entryId)->first();
+        $svc = app(CanvasService::class);
+        $canvas = $svc->canvasFor($this->canvasTeam(), $this->canvasType, $this->canvasOwnerType, $this->canvasOwnerId);
+        $eintrag = $svc->eintragDesCanvas($canvas, $entryId);
         $feld = $eintrag === null ? null : $this->canvasListenFeld((string) $eintrag->field_key);
         $def = $feld['sub'][$subKey] ?? null;
         if ($eintrag === null || ! is_array($def) || ($def['type'] ?? '') !== 'check') {
             return;
         }
-        $meta = $eintrag->meta ?? [];
-        $meta[$subKey] = ! ($meta[$subKey] ?? false);
-        $eintrag->update(['meta' => $meta]);
+        $svc->eintragMetaUmschalten($canvas, $entryId, $subKey);
         $this->canvasLaden();
     }
 
@@ -220,8 +219,8 @@ trait ManagesCanvas
     public function weltLoeschen(int $entryId): void
     {
         // nur Einträge des EIGENEN Canvas: ein Unter-Team entfernt nie etwas vom Oberteam (Spec 82 §7)
-        $canvas = app(CanvasService::class)->canvasFor($this->canvasTeam(), $this->canvasType, $this->canvasOwnerType, $this->canvasOwnerId);
-        $canvas->entries()->whereKey($entryId)->first()?->delete();
+        $svc = app(CanvasService::class);
+        $svc->eintragLoeschen($svc->canvasFor($this->canvasTeam(), $this->canvasType, $this->canvasOwnerType, $this->canvasOwnerId), $entryId);
         $this->canvasLaden();
     }
 
@@ -274,29 +273,15 @@ trait ManagesCanvas
     /** Skalar-Feld verbindlich/nicht verbindlich schalten (Wert muss gefüllt sein). */
     public function verbindlichSchalten(string $key): void
     {
-        $this->canvasVerbindlichSetzen(function (FoodAlchemistCanvas $canvas) use ($key) {
-            $eintrag = $canvas->entries()->where('field_key', $key)->where('position', 0)->first();
-            if ($eintrag === null) {
-                return 'Zuerst einen Wert eintragen und speichern, dann verbindlich machen.';
-            }
-            $eintrag->update(['is_binding' => ! $eintrag->is_binding]);
-
-            return null;
-        });
+        $this->canvasVerbindlichSetzen(fn (FoodAlchemistCanvas $canvas) => app(CanvasService::class)->skalarVerbindlichUmschalten($canvas, $key)
+            ? null : 'Zuerst einen Wert eintragen und speichern, dann verbindlich machen.');
     }
 
     /** Eintrag eines Repeatable-Feldes verbindlich/nicht verbindlich schalten. */
     public function weltVerbindlichSchalten(int $entryId): void
     {
-        $this->canvasVerbindlichSetzen(function (FoodAlchemistCanvas $canvas) use ($entryId) {
-            $eintrag = $canvas->entries()->whereKey($entryId)->first();
-            if ($eintrag === null) {
-                return 'Eintrag nicht gefunden.';
-            }
-            $eintrag->update(['is_binding' => ! $eintrag->is_binding]);
-
-            return null;
-        });
+        $this->canvasVerbindlichSetzen(fn (FoodAlchemistCanvas $canvas) => app(CanvasService::class)->eintragVerbindlichUmschalten($canvas, $entryId)
+            ? null : 'Eintrag nicht gefunden.');
     }
 
     private function canvasVerbindlichSetzen(callable $fn): void

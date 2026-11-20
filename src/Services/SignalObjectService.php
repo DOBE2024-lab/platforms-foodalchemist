@@ -6,6 +6,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
+use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Support\SignalCockpit;
 
 /**
@@ -49,7 +50,11 @@ class SignalObjectService
      * Reihenfolge: Lücken-Metrik (Live-Query, damit die Liste NIE veraltet), Payload-
      * Beispiele der Detektoren, Einzelobjekt-Referenz (`ref_type`/`ref_id`).
      *
-     * @return array{items:list<array{kind:string,id:int,name:string,is_sales_recipe:bool}>,total:int,gezeigt:int}
+     * `live`: true nur bei Lücken-Metriken (Liste aus der Live-Query, rückt nach einem Fix nach).
+     * Payload-Beispiele sind ein fester Auszug vom Detektor-Lauf — dort darf das Panel kein Nachrücken versprechen.
+     * `la` (Lieferantenartikel, `ref_type = supplier_item`) ist bewusst NICHT in KINDS: die objekt-zentrische Sicht kennt keine Artikel.
+     *
+     * @return array{items:list<array{kind:string,id:int,name:string,is_sales_recipe:bool,hinweis?:string}>,total:int,gezeigt:int,live:bool}
      */
     public function betroffene(Team $team, FoodAlchemistSignal $sig, int $limit = self::PANEL_LIMIT): array
     {
@@ -62,7 +67,7 @@ class SignalObjectService
             // und Panel-Öffnung soll die Zahl senken, nicht den alten Stand zeigen.
             $total = count($items) < $limit ? count($items) : $this->dq->countFor($team, (string) $pl['metrik']);
 
-            return ['items' => $items, 'total' => $total, 'gezeigt' => count($items)];
+            return ['items' => $items, 'total' => $total, 'gezeigt' => count($items), 'live' => true];
         }
 
         // Detektor-Signale mit Beispielen im Payload (Struktur variiert je Detektor — best effort).
@@ -70,19 +75,24 @@ class SignalObjectService
             $items = [];
             foreach (array_slice($pl['beispiele'], 0, $limit) as $b) {
                 if (is_array($b)) {
-                    $id = (int) ($b['recipe_id'] ?? $b['id'] ?? 0);
-                    $items[] = [
-                        'kind' => isset($b['recipe_id']) ? 'recipe' : ($b['kind'] ?? 'text'),
+                    $id = (int) ($b['recipe_id'] ?? $b['gp_id'] ?? $b['id'] ?? 0);
+                    $item = [
+                        'kind' => isset($b['recipe_id']) ? 'recipe' : (isset($b['gp_id']) ? 'gp' : ($b['kind'] ?? 'text')),
                         'id' => $id,
                         'name' => (string) ($b['name'] ?? $b['label'] ?? ('#' . $id)),
                         'is_sales_recipe' => (bool) ($b['is_sales_recipe'] ?? true),
                     ];
+                    // GpAllergenWiderspruch: je GP der Beleg — welche Artikel sich bei welchem Allergen widersprechen.
+                    if (! empty($b['allergene']) && is_array($b['allergene'])) {
+                        $item['hinweis'] = self::widerspruchHinweis($b['allergene']);
+                    }
+                    $items[] = $item;
                 } else {
                     $items[] = ['kind' => 'text', 'id' => 0, 'name' => (string) $b, 'is_sales_recipe' => false];
                 }
             }
 
-            return ['items' => $items, 'total' => (int) ($pl['anzahl'] ?? count($pl['beispiele'])), 'gezeigt' => count($items)];
+            return ['items' => $items, 'total' => (int) ($pl['anzahl'] ?? count($pl['beispiele'])), 'gezeigt' => count($items), 'live' => false];
         }
 
         // Einzelobjekt-Signal (ref_type/ref_id).
@@ -90,18 +100,27 @@ class SignalObjectService
             $r = FoodAlchemistRecipe::visibleToTeam($team)->find($sig->ref_id);
             if ($r !== null) {
                 return ['items' => [['kind' => 'recipe', 'id' => (int) $r->id, 'name' => (string) $r->name,
-                    'is_sales_recipe' => (bool) $r->is_sales_recipe]], 'total' => 1, 'gezeigt' => 1];
+                    'is_sales_recipe' => (bool) $r->is_sales_recipe]], 'total' => 1, 'gezeigt' => 1, 'live' => false];
             }
         }
         if ($sig->ref_type === 'gp' && $sig->ref_id) {
             $g = FoodAlchemistGp::visibleToTeam($team)->find($sig->ref_id);
             if ($g !== null) {
                 return ['items' => [['kind' => 'gp', 'id' => (int) $g->id, 'name' => (string) $g->name,
-                    'is_sales_recipe' => false]], 'total' => 1, 'gezeigt' => 1];
+                    'is_sales_recipe' => false]], 'total' => 1, 'gezeigt' => 1, 'live' => false];
+            }
+        }
+        // Nährwert-Prüfung u. a.: Signal an genau einem Lieferantenartikel.
+        if ($sig->ref_type === 'supplier_item' && $sig->ref_id) {
+            $la = FoodAlchemistSupplierItem::visibleToTeam($team)->with('supplier:id,name')->find($sig->ref_id);
+            if ($la !== null) {
+                return ['items' => [['kind' => 'la', 'id' => (int) $la->id,
+                    'name' => trim(($la->article_number ?? '') . ' ' . ($la->designation ?? '')),
+                    'is_sales_recipe' => false, 'hinweis' => (string) ($la->supplier?->name ?? '')]], 'total' => 1, 'gezeigt' => 1, 'live' => false];
             }
         }
 
-        return ['items' => [], 'total' => (int) ($pl['anzahl'] ?? 0), 'gezeigt' => 0];
+        return ['items' => [], 'total' => (int) ($pl['anzahl'] ?? 0), 'gezeigt' => 0, 'live' => false];
     }
 
     /**
@@ -133,7 +152,7 @@ class SignalObjectService
                 $w->where(fn ($r) => $r->where('ref_type', $kind)->where('ref_id', $id))
                     ->orWhere('payload', 'like', '%"metrik"%')
                     ->orWhere('dedup_key', 'datenqualitaet-gp-ohne-la');
-                if ($kind === 'recipe') {
+                if ($kind === 'recipe' || $kind === 'gp') {
                     $w->orWhere('payload', 'like', '%"beispiele"%');
                 }
             })
@@ -190,16 +209,40 @@ class SignalObjectService
             }
         }
 
-        // 3) Detektor-Beispiele (nur Rezepte — die Detektoren führen keine GP-Beispiele).
-        if ($kind === 'recipe' && ! empty($pl['beispiele']) && is_array($pl['beispiele'])) {
+        // 3) Detektor-Beispiele: Rezepte (`recipe_id`) und GPs (`gp_id`, z. B. GpAllergenWiderspruch).
+        if (in_array($kind, ['recipe', 'gp'], true) && ! empty($pl['beispiele']) && is_array($pl['beispiele'])) {
             foreach ($pl['beispiele'] as $b) {
-                if (is_array($b) && (int) ($b['recipe_id'] ?? $b['id'] ?? 0) === $id) {
+                $bid = ! is_array($b) ? 0 : ($kind === 'recipe' ? ($b['recipe_id'] ?? $b['id'] ?? 0) : ($b['gp_id'] ?? 0));
+                if ((int) $bid === $id) {
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+    /**
+     * Kurzbeleg für eine GP-Zeile: „Sellerie: enthalten laut Hanos 4711, nicht enthalten laut Chefs 0815".
+     *
+     * @param  list<array{allergen?:string,enthalten?:list<array>,nicht_enthalten?:list<array>}>  $allergene
+     */
+    private static function widerspruchHinweis(array $allergene): string
+    {
+        $wer = fn (array $zeilen) => implode(', ', array_map(
+            fn ($z) => trim(($z['lieferant'] ?? '') . ' ' . ($z['artikel'] ?? '')),
+            array_slice($zeilen, 0, 2)
+        ));
+        $teile = [];
+        foreach (array_slice($allergene, 0, 3) as $a) {
+            if (! is_array($a)) {
+                continue;
+            }
+            $teile[] = ($a['allergen'] ?? '?') . ': enthalten laut ' . ($wer($a['enthalten'] ?? []) ?: '–')
+                . ', nicht enthalten laut ' . ($wer($a['nicht_enthalten'] ?? []) ?: '–');
+        }
+
+        return implode(' · ', $teile);
     }
 
     private static function rang(string $severity): int

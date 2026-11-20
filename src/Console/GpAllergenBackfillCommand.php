@@ -4,7 +4,6 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\GpAggregateService;
@@ -57,7 +56,6 @@ class GpAllergenBackfillCommand extends Command
             $stats = ['high' => 0, 'medium' => 0, 'low' => 0, 'none' => 0];
             $derivate = 0;
             $konflikt = 0;
-            $beispiele = [];
 
             // menschlich/KI kuratierte Quellen bleiben unangetastet (Provenienz-Schutz)
             $manuellUebersprungen = FoodAlchemistGp::visibleToTeam($team)->lebensmittel()
@@ -67,7 +65,7 @@ class GpAllergenBackfillCommand extends Command
                 ->where('status', 'approved')
                 ->where(fn ($w) => $w->whereNull('allergens_source')->orWhereNotIn('allergens_source', ['manual', 'ki']))
                 ->orderBy('id')
-                ->chunkById($chunk, function ($gps) use (&$stats, &$derivate, &$konflikt, &$beispiele, $agg, $apply) {
+                ->chunkById($chunk, function ($gps) use (&$stats, &$derivate, &$konflikt, $agg, $apply) {
                     foreach ($gps as $gp) {
                         // Single source: Write-/Derivat-/Provenienz-Logik lebt im Service (auch SignalFixService nutzt sie).
                         $r = $agg->backfillAllergenKonfidenz($gp, $apply);
@@ -77,9 +75,6 @@ class GpAllergenBackfillCommand extends Command
                         $stats[$r['confidence']] = ($stats[$r['confidence']] ?? 0) + 1;
                         if ($r['needs_review']) {
                             $konflikt++;
-                            if (count($beispiele) < 10) {
-                                $beispiele[$gp->id] = $gp->name;
-                            }
                         }
                     }
                 }, 'id');
@@ -99,20 +94,15 @@ class GpAllergenBackfillCommand extends Command
                 ]
             );
 
-            if ($apply && $konflikt > 0) {
-                $signals->erzeuge(
-                    $team,
-                    SignalTyp::DatenqualitaetGpLa,
-                    $konflikt > 100 ? SignalSeverity::Kritisch : SignalSeverity::Warnung,
-                    "{$konflikt} GPs mit Allergen-Konflikt (enthalten ↔ nicht_enthalten)",
-                    [
-                        'dedup_key' => 'dq-gp-allergen-konflikt',
-                        'description' => 'LAs desselben GP widersprechen sich beim Allergen (enthalten vs. nicht_enthalten, kein spuren-Mittelweg) → Konfidenz LOW, menschliche Prüfung nötig.',
-                        'payload' => ['anzahl' => $konflikt, 'beispiele' => $beispiele],
-                        'source' => 'data-quality',
-                    ]
-                );
-                $this->line("  → Konflikt-Signal geschrieben ({$konflikt} GPs).");
+            // Konflikte meldet seit dem Detektor `gp_allergen_widerspruch` (SignalDetektorService) EIN Signal mit Beleg
+            // je GP. Das frühere Summen-Signal von hier (`dq-gp-allergen-konflikt`) war eine Dublette ohne auflösbare
+            // Objekte — ein noch offenes wird beim nächsten --apply geschlossen.
+            if ($apply) {
+                $signals->schliesseGemessen($team, SignalTyp::DatenqualitaetGpLa, 'dq-gp-allergen-konflikt', 'data-quality',
+                    'Ersetzt durch „Grundprodukte mit Allergen-Widerspruch“ (Detektor, mit Beleg je Grundprodukt)');
+            }
+            if ($konflikt > 0) {
+                $this->line("  → {$konflikt} GPs mit Konflikt; gemeldet werden sie vom Detektor (gp_allergen_widerspruch).");
             }
         }
 

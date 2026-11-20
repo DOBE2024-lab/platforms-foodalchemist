@@ -12,7 +12,9 @@
     $ton = $sig !== null ? ($schwereTon[$sig->severity->value] ?? 'info') : 'info';
     $istWeg = $plan !== null && $plan['kind'] === 'navigate';
     $metaZahl = $betroffen ? number_format($betroffen['total'], 0, ',', '.') : null;
-    $verlaufMeta = $policy !== null ? $policy['count'] . ' offen' : null;
+    // Zählt offene SIGNALE dieser Art, nicht die Objekte im Titel (ein Summen-Signal „147 GPs …" ist hier eins).
+    $verlaufMeta = $policy !== null ? $policy['count'] . ($policy['count'] === 1 ? ' Signal offen' : ' Signale offen') : null;
+    $naehrwertLa = $sig !== null && $sig->type->value === 'naehrwert_pruefen' && $sig->ref_type === 'supplier_item' && $sig->ref_id ? (int) $sig->ref_id : null;
     $bereich = $sig !== null ? \Platform\FoodAlchemist\Livewire\ReviewQueue::bereichLabel($sig->type) : null;
     $polBadge = match ($policy['state'] ?? 'alarm') {
         'stumm' => ['Stumm', 'neutral'],
@@ -24,7 +26,7 @@
     $sparkTon = ($delta ?? 0) > 0 ? 'text-[var(--fa-crit)]' : (($delta ?? 0) < 0 ? 'text-[var(--fa-ok)]' : 'text-[var(--fa-ink-3)]');
     $kiUrteil = $sig !== null && $sig->type->istKiUrteil();
     $linkKlasse = 'min-w-0 flex-1 flex items-center gap-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-accent)] hover:text-[var(--fa-accent-hover)] hover:underline';
-    $artLabel = ['recipe' => null, 'gp' => 'Grundprodukt', 'concept' => 'Konzept', 'foodbook' => 'Foodbook'];
+    $artLabel = ['recipe' => null, 'gp' => 'Grundprodukt', 'concept' => 'Konzept', 'foodbook' => 'Foodbook', 'la' => 'Lieferantenartikel'];
     $handy = \Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy();   // #1003 PR5: am Handy nur lesen (Übernehmen, Einstellen am Computer)
 @endphp
 
@@ -70,6 +72,17 @@
                     <p class="font-semibold text-[var(--fa-ink)]">Im System nicht automatisch lösbar</p>
                     <p class="text-[var(--fa-ink-2)]">{{ $ohneWeg }}</p>
                 </div>
+            </div>
+        @endif
+
+        {{-- Nährwerte am Artikel prüfen: die Entscheidung direkt hier — Freigeben im Signal, Korrigieren im Artikel-Fenster (dort steht das Werte-Formular). --}}
+        @if($naehrwertLa !== null && $sig->status->istOffen() && ! $handy)
+            <div class="flex flex-wrap items-center gap-2" data-signal-naehrwert-aktionen>
+                <x-fa::button variant="primary" size="sm" icon="heroicon-m-check" wire:click="naehrwertFreigeben"
+                              wire:confirm="Werte stimmen mit Etikett oder Produktpass überein? Der Artikel zählt danach wieder in den Nährwerten des Grundprodukts."
+                              data-signal-naehrwert-freigeben>Werte stimmen, freigeben</x-fa::button>
+                <x-fa::button variant="ghost" size="sm" icon="heroicon-m-pencil-square" wire:click="$dispatch('item-modal.oeffnen', { id: {{ $naehrwertLa }} })"
+                              data-signal-naehrwert-korrigieren>Artikel öffnen und korrigieren</x-fa::button>
             </div>
         @endif
 
@@ -155,6 +168,7 @@
         {{-- ── Betroffene Objekte: volle Liste + Sortierung ── --}}
         <x-fa::section variant="plain" title="Betroffen" icon="heroicon-o-queue-list" :meta="$metaZahl">
             <x-slot:actions>
+                @if($betroffen && count($betroffen['items']) > 1)
                 <div role="group" aria-label="Sortierung" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
                     @foreach(['name' => 'A bis Z', 'name_desc' => 'Z bis A', 'art' => 'Nach Art'] as $wert => $lbl)
                         <button type="button" wire:key="sigsort-{{ $wert }}" wire:click="setSort('{{ $wert }}')" aria-pressed="{{ $sort === $wert ? 'true' : 'false' }}"
@@ -162,6 +176,7 @@
                                 data-signal-sort="{{ $wert }}">{{ $lbl }}</button>
                     @endforeach
                 </div>
+                @endif
             </x-slot:actions>
 
             @if($betroffen && count($betroffen['items']))
@@ -191,6 +206,12 @@
                                     <a href="{{ route('foodalchemist.concepter.index', ['tab' => 'concepts', 'sel' => $it['id']]) }}" wire:navigate class="{{ $linkKlasse }}" title="Konzept im Concepter öffnen">
                                         <span class="truncate">{{ $it['name'] }}</span>
                                     </a>
+                                @elseif($it['kind'] === 'la')
+                                    {{-- Lieferantenartikel (z. B. Nährwert-Prüfung): Artikel-Fenster öffnen; der Link ist der Rückfall ohne JS. --}}
+                                    <a href="{{ route('foodalchemist.suppliers.index', ['artikel' => $it['id']]) }}" wire:click.prevent="$dispatch('item-modal.oeffnen', { id: {{ $it['id'] }} })"
+                                       class="{{ $linkKlasse }}" title="Lieferantenartikel öffnen" data-signal-la="{{ $it['id'] }}">
+                                        <span class="truncate">{{ $it['name'] }}</span>
+                                    </a>
                                 @elseif($it['kind'] === 'foodbook')
                                     {{-- Tranche D: die Leitstelle wählt über ?fb= vor (Foodbooks\Index::$selectedId) --}}
                                     <a href="{{ route('foodalchemist.foodbooks.index', ['fb' => $it['id']]) }}" wire:navigate class="{{ $linkKlasse }}" title="Foodbook in der Leitstelle öffnen">
@@ -209,6 +230,10 @@
                                                   data-signal-objekt="{{ $it['kind'] }}-{{ $it['id'] }}">Weitere Befunde</x-fa::button>
                                 @endif
                             </div>
+
+                            @if(! empty($it['hinweis']))
+                                <p class="fa-t-muted px-1 pb-2 -mt-1" data-signal-objekt-hinweis>{{ $it['hinweis'] }}</p>
+                            @endif
 
                             {{-- Objekt-zentrische Sicht: alle offenen Signale am selben Objekt --}}
                             @if($istGewaehlt)
@@ -240,8 +265,12 @@
 
                 @if($betroffen['total'] > $betroffen['gezeigt'])
                     <p class="fa-t-muted">
-                        Zeigt {{ number_format($betroffen['gezeigt'], 0, ',', '.') }} von {{ number_format($betroffen['total'], 0, ',', '.') }}
-                        (höchstens {{ $panelLimit }}). Die übrigen erscheinen, sobald diese behoben sind.
+                        Zeigt {{ number_format($betroffen['gezeigt'], 0, ',', '.') }} von {{ number_format($betroffen['total'], 0, ',', '.') }}.
+                        @if($betroffen['live'] ?? false)
+                            Höchstens {{ $panelLimit }} auf einmal, die übrigen erscheinen, sobald diese behoben sind.
+                        @else
+                            Das Signal führt nur diese Beispiele; die vollständige Liste entsteht beim nächsten Prüflauf neu.
+                        @endif
                     </p>
                 @endif
             @elseif($betroffen)

@@ -218,6 +218,28 @@ class DetailPanel extends Component
         $this->dispatch('signal-geaendert');
     }
 
+    /**
+     * Nährwerte am Artikel freigeben (Signal „Nährwerte am Artikel prüfen"): derselbe Weg wie im Artikel-Fenster
+     * ({@see \Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertEntscheidService::freigeben}). Der Artikel kommt
+     * aus dem Signal selbst, nicht vom Client. Korrigieren läuft über das Artikel-Fenster (Werte-Formular dort).
+     */
+    public function naehrwertFreigeben(): void
+    {
+        [$team, $sig] = $this->kontext();
+        if ($sig === null || $sig->type !== \Platform\FoodAlchemist\Enums\SignalTyp::NaehrwertPruefen || $sig->ref_type !== 'supplier_item' || ! $sig->ref_id) {
+            return;
+        }
+        try {
+            app(\Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertEntscheidService::class)->freigeben($team, Auth::user(), (int) $sig->ref_id, 'Freigabe im Signal');
+        } catch (\Platform\FoodAlchemist\Exceptions\FaRechtFehltException|\RuntimeException $e) {
+            $this->fehler = $e->getMessage();
+
+            return;
+        }
+        $this->meldung = 'Werte freigegeben. Der Artikel zählt wieder in den Nährwerten des Grundprodukts, das Signal ist geschlossen.';
+        $this->dispatch('signal-geaendert');
+    }
+
     /** Objekt auf-/zuklappen — „was hat dieses Rezept noch?" (Punkt 2). */
     public function objektWaehlen(string $kind, int $id): void
     {

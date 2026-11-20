@@ -180,3 +180,33 @@ it('Artikel-Ansicht zeigt den Befund mit Wirkung: würde nicht zählen (aus) bzw
     $elbfrost = ($this->mkLa)($ei->id, ['energy_kcal' => 164, 'fat' => 0.0109, 'protein' => 0.0113, 'carbs_absorbable' => 0.0051]);
     Livewire::test(ItemModal::class)->call('oeffnen', $elbfrost->id)->assertSeeHtml('data-naehrwert-befund="H6"')->assertSee('umgerechnet × 1000');
 });
+
+// ── Signal-Panel ─────────────────────────────────────────────────────────────────────
+
+it('Signal-Panel: zeigt den Artikel als Betroffenen, Freigeben direkt im Signal schließt es; der So-beheben-Text nennt keine Tool-Namen', function () {
+    config(['foodalchemist.naehrwert_pruefung.modus' => 'scharf']);
+    app(NaehrwertSignalService::class)->laufen($this->rootTeam);
+    $sig = FoodAlchemistSignal::where('dedup_key', 'nw-la-' . $this->mazola->id)->firstOrFail();
+
+    $res = app(\Platform\FoodAlchemist\Services\SignalObjectService::class)->betroffene($this->rootTeam, $sig);
+    expect($res['items'])->toHaveCount(1)->and($res['items'][0])->toMatchArray(['kind' => 'la', 'id' => $this->mazola->id, 'hinweis' => 'Hanos']);
+
+    Livewire::test(\Platform\FoodAlchemist\Livewire\Signale\DetailPanel::class)->call('zeige', $sig->id)
+        ->assertSeeHtml('data-signal-la="' . $this->mazola->id . '"')->assertSeeHtml('data-signal-naehrwert-freigeben')
+        ->assertDontSee('naehrwert_pruefung.ENTSCHEIDEN')->assertDontSee('aktion=freigeben')
+        ->call('naehrwertFreigeben')->assertHasNoErrors()->assertSee('Werte freigegeben');
+
+    expect($sig->fresh()->status)->toBe(SignalStatus::Erledigt)
+        ->and(app(GpAggregateService::class)->naehrwerte($this->oel)['fat']['n'])->toBe(2);
+});
+
+it('Signal-Panel: Freigeben ohne Recht (Betrachter) schreibt nichts und meldet den Grund', function () {
+    config(['foodalchemist.naehrwert_pruefung.modus' => 'scharf']);
+    app(NaehrwertSignalService::class)->laufen($this->rootTeam);
+    $sig = FoodAlchemistSignal::where('dedup_key', 'nw-la-' . $this->mazola->id)->firstOrFail();
+    $this->actingAs($this->makeUser($this->rootTeam, 'Gast', 'viewer'));
+
+    Livewire::test(\Platform\FoodAlchemist\Livewire\Signale\DetailPanel::class)->call('zeige', $sig->id)->call('naehrwertFreigeben');
+
+    expect($sig->fresh()->status)->toBe(SignalStatus::Offen);
+});

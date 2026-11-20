@@ -33,7 +33,7 @@ beforeEach(function () {
     $this->seedTeamHierarchy();
     $this->actingAs($this->makeUser($this->childA, 'Koch A', 'member'));
     $this->fb = app(FoodbookService::class);
-    $this->stil = fn ($team, $slug) => FoodAlchemistWritingStyle::create(['team_id' => $team->id, 'slug' => $slug, 'name' => $slug, 'is_inactive' => false, 'sort_order' => 0]);
+    $this->stil = fn ($team, $slug) => FoodAlchemistWritingStyle::create(['team_id' => $team->id, 'slug' => $slug, 'name' => $slug, 'sprach_duktus' => 'Kurz.', 'is_inactive' => false, 'sort_order' => 0]);
     $this->foodbookA = $this->fb->create($this->childA, ['label' => 'Gala A']);
     $this->kapitel = fn ($fbId, $titel = 'Vorspeisen') => FoodAlchemistFoodbookKapitel::create(['team_id' => $this->childA->id, 'foodbook_id' => $fbId, 'position' => 1, 'title' => $titel]);
 });
@@ -70,7 +70,7 @@ it('Foodbook: Kapitel-Zielgruppen nur sichtbares Vokabular', function () {
 
     expect(fn () => $this->fb->setKapitelZielgruppen($this->childA, $k->id, [$eigen->id, $fremd->id]))->toThrow(RuntimeException::class, 'nicht sichtbar');
     $this->fb->setKapitelZielgruppen($this->childA, $k->id, [$eigen->id]);
-    expect($k->targetGroups()->pluck('id')->all())->toBe([$eigen->id]);
+    expect($k->targetGroups()->allRelatedIds()->all())->toBe([$eigen->id]);
 });
 
 it('Foodbook-Kapitel: fremdes Einsatzmoment-/Servierform-Vokabular abgelehnt', function () {

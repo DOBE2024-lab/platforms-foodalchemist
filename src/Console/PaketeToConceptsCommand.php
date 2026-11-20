@@ -4,107 +4,105 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
+use Platform\FoodAlchemist\Services\PaketUmzug\PaketParitaet;
+use Platform\FoodAlchemist\Services\PaketUmzug\PaketUmzugService;
 
 /**
- * Conceptor-Kaskade Phase 1 (2026-08-24): migriert Pakete → kind=paket-Concepts +
- * package_dishes → concept_slots. Idempotent (Mapping via uuid-Reuse Paket↔Concept).
+ * Alt-Pakete → kind=paket-Concepts (Conceptor-Kaskade Phase 1, 2026-08-24; Code-Qualität 2.6a).
  *
- * SHADOW: die packages/package_dishes-Tabellen bleiben unangetastet, bis der Paket-Pfad
- * (Browser/Editor/Service/MCP) auf kind=paket umgestellt + verifiziert ist. Caches
- * (Nährwerte/Arbeitszeit) werden bewusst NICHT kopiert — sie werden nach dem Umstieg
- * über den Paket-Recompute neu gerechnet. Preis/EK werden gespiegelt, damit die Anzeige
- * schon vor dem Recompute stimmt.
+ * Ohne Flag: Trockenlauf — schreibt nichts, zeigt je Paket Ziel, Aktion, ob die vorhandene Kopie veraltet ist, Verweise,
+ * Blocker und den Paritäts-Report. `--apply` schreibt in einer Transaktion und legt ein Journal ab, `--rueckweg=<journal>`
+ * stellt daraus den Zustand davor wieder her. Die Alt-Tabellen bleiben unangetastet (Shadow). Logik: {@see PaketUmzugService}.
  */
 class PaketeToConceptsCommand extends Command
 {
-    protected $signature = 'foodalchemist:pakete-to-concepts {--apply : schreiben (ohne Flag nur Dry-Run)} {--id=* : nur diese Alt-Paket-Ids migrieren (z. B. --id=1 --id=2); ohne = alle}';
+    protected $signature = 'foodalchemist:pakete-to-concepts
+        {--apply : schreiben (ohne Flag nur Trockenlauf)}
+        {--id=* : nur diese Alt-Paket-Ids (z. B. --id=1 --id=2); ohne = alle}
+        {--rueckweg= : Journal-Datei eines --apply-Laufs zurückspielen}
+        {--json= : Plan + Parität zusätzlich als JSON in diese Datei schreiben}';
 
-    protected $description = 'Migriert Pakete → kind=paket-Concepts + package_dishes → concept_slots (idempotent, Shadow).';
+    protected $description = 'Migriert Alt-Pakete → kind=paket-Concepts (Trockenlauf, Journal, Rückweg, Paritäts-Report).';
 
-    public function handle(): int
+    public function handle(PaketUmzugService $umzug, PaketParitaet $paritaet): int
     {
-        $apply = (bool) $this->option('apply');
-        $this->info(($apply ? 'APPLY' : 'DRY-RUN').' — Pakete → kind=paket-Concepts');
+        if (($datei = $this->option('rueckweg')) !== null) {
+            $journal = json_decode((string) @file_get_contents($datei), true);
+            if (! is_array($journal)) {
+                $this->error("Journal nicht lesbar: {$datei}");
+
+                return self::FAILURE;
+            }
+            $this->info('Rückweg: '.$umzug->rueckweg($journal).' Pakete zurückgesetzt.');
+
+            return self::SUCCESS;
+        }
 
         $ids = array_values(array_filter(array_map('intval', (array) $this->option('id'))));
-        $pakete = FoodAlchemistPaket::with(['dishes.dish:id,is_sales_recipe'])
-            ->when($ids !== [], fn ($q) => $q->whereIn('id', $ids))
-            ->orderBy('id')->get();
-        $neu = 0;
-        $aktualisiert = 0;
-        $slots = 0;
-        $embeds = 0;
-
-        foreach ($pakete as $pkg) {
-            $concept = FoodAlchemistConcept::withoutGlobalScope('kind_concept')
-                ->where('uuid', $pkg->uuid)->first();
-
-            $attr = [
-                'kind' => 'paket',
-                'team_id' => $pkg->team_id,
-                'name' => $pkg->name,
-                'consumer_name' => $pkg->consumer_name,
-                'class' => $pkg->class,
-                'level' => $pkg->level,
-                'status' => $pkg->is_inactive ? 'archiviert' : 'active',
-                'price_mode' => in_array($pkg->price_mode, ['auto', 'manuell'], true) ? $pkg->price_mode : 'manuell',
-                'price_per_person_manual' => $pkg->price_per_person,
-                'price_per_person_cache' => $pkg->price_per_person,   // Anzeige vor Recompute
-                'ek_per_person_cache' => $pkg->ek_per_person,
-                'offer_id' => $pkg->offer_id,
-                'description' => $pkg->description,
-                'note' => $pkg->note,
-                'created_via' => 'paket_merge',
-            ];
-
-            if (! $apply) {
-                $eingehaengt = FoodAlchemistConceptSlot::where('package_id', $pkg->id)->pluck('id')->implode(', ');
-                $this->line(($concept ? '  ~ update ' : '  + neu    ').'#'.$pkg->id.' '.$pkg->name.' ('.$pkg->dishes->count().' Posten'
-                    .($eingehaengt !== '' ? ', eingehängt in Slots '.$eingehaengt : '').')');
-
-                continue;
-            }
-
-            if ($concept) {
-                $concept->update($attr);
-                $aktualisiert++;
-            } else {
-                $attr['uuid'] = $pkg->uuid;   // bootHasUuidV7 respektiert vorgegebene uuid → stabiles Mapping
-                $concept = FoodAlchemistConcept::create($attr);
-                $neu++;
-            }
-
-            // Slots idempotent neu aus package_dishes aufbauen.
-            FoodAlchemistConceptSlot::where('concept_id', $concept->id)->forceDelete();
-            foreach ($pkg->dishes->sortBy('position')->values() as $i => $pd) {
-                $istBasis = ! ($pd->dish?->is_sales_recipe ?? true);
-                FoodAlchemistConceptSlot::create([
-                    'team_id' => $pkg->team_id,
-                    'concept_id' => $concept->id,
-                    'type' => $istBasis ? 'basisrezept' : 'gericht',
-                    'sales_recipe_id' => $pd->sales_recipe_id,
-                    'quantity' => $pd->quantity,
-                    'unit_vocab_id' => $pd->unit_vocab_id,
-                    'position' => $pd->position ?? $i,
-                    'presentation_id' => $pd->presentation_id,
-                    'is_pflicht' => true,
-                ]);
-                $slots++;
-            }
-
-            // Embed-Rewire: Concept-Slots, die dieses Paket einbetten (package_id) → embedded_concept_id.
-            $embeds += FoodAlchemistConceptSlot::where('package_id', $pkg->id)
-                ->update(['embedded_concept_id' => $concept->id]);
-        }
+        $apply = (bool) $this->option('apply');
+        $this->info(($apply ? 'APPLY' : 'TROCKENLAUF').' — Alt-Pakete → kind=paket-Concepts');
 
         if ($apply) {
-            $this->info("Fertig: {$neu} neu, {$aktualisiert} aktualisiert, {$slots} Slots, {$embeds} Einbettungen umgehängt.");
-        } else {
-            $this->info('Dry-Run: '.$pakete->count().' Pakete würden migriert. Mit --apply ausführen.');
+            try {
+                $r = $umzug->anwenden($ids);
+            } catch (\RuntimeException $e) {
+                $this->error($e->getMessage());
+
+                return self::FAILURE;
+            }
+            $pfad = storage_path('app/foodalchemist/paket-umzug/journal-'.now()->format('Ymd-His').'.json');
+            @mkdir(dirname($pfad), 0775, true);
+            file_put_contents($pfad, json_encode($r['journal'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $this->info('Journal: '.$pfad.' (Rückweg: --rueckweg='.$pfad.')');
         }
 
-        return self::SUCCESS;
+        $report = $this->bericht($umzug, $paritaet, $ids);
+        if (($json = $this->option('json')) !== null) {
+            file_put_contents($json, json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $this->info("JSON: {$json}");
+        }
+
+        $blockiert = collect($report)->filter(fn ($z) => $z['blocker'] !== [])->count();
+        $abweichend = collect($report)->filter(fn ($z) => $z['paritaet_ok'] === false)->count();
+        $this->info(count($report).' Pakete, '.$blockiert.' blockiert, '.$abweichend.' mit Paritätsabweichung'
+            .($apply ? '.' : '. Mit --apply ausführen.'));
+
+        return $blockiert > 0 ? self::FAILURE : self::SUCCESS;
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function bericht(PaketUmzugService $umzug, PaketParitaet $paritaet, array $ids): array
+    {
+        $out = [];
+        foreach ($umzug->plan($ids) as $z) {
+            $this->line('');
+            $this->line("#{$z['paket_id']} {$z['name']} (Team {$z['team_id']}) → ".strtoupper($z['aktion'])
+                .($z['concept_id'] ? " Concept #{$z['concept_id']}" : '')
+                ." · Positionen alt {$z['positionen_alt']}".($z['positionen_kopie'] !== null ? ", Kopie {$z['positionen_kopie']} (Stand {$z['kopie_stand']})" : ''));
+            if ($z['veraltet']) {
+                $this->warn('  Kopie veraltet: '.implode('; ', $z['veraltet_gruende']));
+            }
+            $verweise = collect($z['verweise'])->filter()->map(fn ($n, $k) => "{$k} {$n}")->implode(', ');
+            $this->line('  Verweise: '.($verweise !== '' ? $verweise : 'keine'));
+            foreach ($z['blocker'] as $b) {
+                $this->error('  BLOCKER: '.$b);
+            }
+
+            $z['paritaet'] = null;
+            $z['paritaet_ok'] = null;
+            $concept = $z['concept_id'] ? FoodAlchemistConcept::withoutGlobalScopes()->find($z['concept_id']) : null;
+            if ($concept !== null) {
+                $z['paritaet'] = $paritaet->vergleiche(FoodAlchemistPaket::withoutGlobalScopes()->findOrFail($z['paket_id']), $concept);
+                $z['paritaet_ok'] = PaketParitaet::gleich($z['paritaet']);
+                foreach ($z['paritaet'] as $feld => $f) {
+                    $this->line(sprintf('  %-4s %-24s alt %s | neu %s', $f['ok'] ? 'ok' : 'DIFF', $feld,
+                        json_encode($f['alt'], JSON_UNESCAPED_UNICODE), json_encode($f['neu'], JSON_UNESCAPED_UNICODE)));
+                }
+            }
+            $out[] = $z;
+        }
+
+        return $out;
     }
 }

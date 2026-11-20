@@ -99,7 +99,7 @@ class PresentationDesignService
             . 'page_width:schmal|normal|breit (980/1180/1440 px, eine gemeinsame Kante für alle Blöcke); text_width:schmal|normal|breit (Lesebreite 58/68/80 Zeichen); text_align:links|zentriert; '
             . 'spacing:compact|comfortable|roomy; '
             . 'nav:none|anchor|sidebar (Sprungmenü/Sidebar); '
-            . 'lightbox:bool (Bilder klickbar vergrößern); '
+            . 'lightbox:bool (Bilder klickbar vergrößern); ek_im_link:bool (Foodbook/Angebot: Knopf „EK einblenden“ im veröffentlichten Link, jeder mit Link kann umschalten); '
             . 'band_style:grid|rondell (Kapitel-Bild-Band als Raster oder Karussell); '
             . 'speiseplan_layout:grid|liste (nur Speiseplan: Wochen-Tabelle oder Tag-Liste); '
             . 'auto_advance:bool (Kiosk-Autoplay).';

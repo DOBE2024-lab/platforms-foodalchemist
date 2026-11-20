@@ -22,6 +22,8 @@ class PresentationController extends Controller
     {
         $snapshot = $svc->resolveByToken($type, $token);
         abort_if($snapshot === null, 404);
+        // Design-Haken „EK-Ansicht im Link“: Knopf zeigen, EK nur mit ?ek=1 (sonst vor dem Rendern entfernt).
+        $snapshot = \Platform\FoodAlchemist\Support\PraesentationsEkLink::ansicht($snapshot, request()->boolean('ek'));
 
         // Additiv (mobil): kanonische URL + Web-App-Manifest an die View — nur der öffentliche
         // Token-Pfad kennt sie; die interne Vorschau (doPreview) lässt sie leer (kein Install/Unfurl).

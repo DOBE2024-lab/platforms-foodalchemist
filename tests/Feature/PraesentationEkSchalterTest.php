@@ -76,3 +76,14 @@ it('Design-Builder: „EK einblenden (nur intern)“ zeigt EK nur in der Vorscha
     expect($c->html())->toContain('EK 9,00')->toContain('data-fa-vorschau-ek');
     $c->assertSet('ungespeichert', false);
 });
+
+it('Design-Builder: Haken „EK-Ansicht im Link“ ist eine Design-Einstellung, zeigt EK in der Vorschau und muss gespeichert werden', function () {
+    $c = Livewire::test(PraesentationsDesigns::class)
+        ->set('previewType', 'angebot')
+        ->set('previewSourceId', $this->angebot->id);
+    expect($c->html())->toContain('EK-Ansicht im Link')->not->toContain('EK 9,00');
+
+    $c->set('tokens.ek_im_link', true);
+    expect($c->html())->toContain('EK 9,00');
+    $c->assertSet('ungespeichert', true);
+});

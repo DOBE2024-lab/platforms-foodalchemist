@@ -12,6 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPresentationDesign;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Support\KapitelPreis;
+use Platform\FoodAlchemist\Support\PraesentationsEkLink;
 use Platform\FoodAlchemist\Support\PraesentationsPreise;
 use Platform\FoodAlchemist\Support\PraesentationsBilder;
 
@@ -75,7 +76,7 @@ class PresentationService
         $snapshot = $this->buildSnapshot($team, $entity, $type, $settings + [
             'design' => $design,
             'freigabe' => ['at' => now()->toIso8601String(), 'by' => $userId, 'datum' => now()->format('d.m.Y')],
-        ]);
+        ], PraesentationsEkLink::imDesign($design));   // Design-Haken „EK-Ansicht im Link“ (2026-11-20), sonst nie EK
         // Republish-Preis-Schutz: ohne „Preise aktualisieren" (price_mode=auto) die eingefrorenen
         // Preise des Alt-Snapshots bewahren (neue Speisen bleiben live). Erstpublish = live (Alt=null).
         $snapshot = $this->bewahreWennNoetig($settings, $snapshot, $entity->presentation_snapshot_json);
@@ -361,7 +362,7 @@ class PresentationService
      * @return array<string,mixed>
      */
     /**
-     * EK-Schalter der INTERNEN Vorschau (2026-11-19): nur previewData/designPreview setzen ihn, nie publish.
+     * EK-Schalter der INTERNEN Vorschau (2026-11-19): previewData/designPreview, publish nur mit Design-Haken ek_im_link.
      * Während des Normalisierens gesetzt, danach zurück — und ohne ihn wird jeder `ek`-Schlüssel entfernt.
      */
     private bool $mitEk = false;

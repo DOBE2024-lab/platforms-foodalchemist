@@ -476,7 +476,7 @@
                 {{-- ── Reiter: Bündelung (R9.2 E6 — Volumen-Proxy × Konditionen) ── --}}
                 <div x-show="tab === 'buendelung'" x-cloak>
                     <x-fa::section title="Wo lohnt Bündeln oder Nachverhandeln?" icon="heroicon-o-arrows-pointing-in"
-                        description="Zählt, wie oft Rezepte über ihren bevorzugten Artikel bei einem Lieferanten einkaufen, und stellt es den Konditionen gegenüber. Das ist kein echter Umsatz.">
+                        description="Zählt, wie oft Rezepte über ihren bevorzugten Artikel bei einem Lieferanten einkaufen (Anteil an allen Verwendungen), und stellt es den Konditionen gegenüber. Das ist kein echter Umsatz.">
                         @if(count($buendelung) > 0)
                             <div class="-mx-4 -mb-4 border-t border-[var(--fa-line)] overflow-x-auto">
                                 <table class="fa-table" data-buendelung-tabelle>
@@ -493,13 +493,13 @@
                                         @foreach($buendelung as $b)
                                             @php
                                                 $istDieser = $b['supplier_id'] === $stammblatt['id'];
-                                                $hinweisTon = str_contains((string) $b['bundling_hint'], 'Nachverhandlung') ? 'warn' : (str_contains((string) $b['bundling_hint'], 'hohes Volumen') ? 'info' : 'neutral');
+                                                $hinweisTon = str_contains((string) $b['bundling_hint'], 'Nachverhandlung') ? 'warn' : (str_contains((string) $b['bundling_hint'], 'großer Anteil') ? 'info' : 'neutral');
                                             @endphp
                                             <tr wire:key="buendel-{{ $b['supplier_id'] }}" aria-selected="{{ $istDieser ? 'true' : 'false' }}">
                                                 <td class="whitespace-nowrap font-medium text-[var(--fa-ink)]">{{ $b['name'] }}</td>
-                                                <td class="num">{{ $b['n_usages'] }}</td>
+                                                <td class="num">{{ $b['n_usages'] }} <span class="fa-t-muted">· {{ number_format($b['anteil_pct'] ?? 0, 0, ',', '.') }} %</span></td>
                                                 <td class="num">
-                                                    @if($b['rebate_pct'] !== null){{ number_format($b['rebate_pct'], 1, ',', '.') }} %
+                                                    @if($b['rebate_pct'] !== null){{ number_format($b['rebate_pct'], 1, ',', '.') }} % @if(($b['rebate_quelle'] ?? null) === 'staffel') <span class="fa-t-muted" title="Aus der Rückvergütungs-Staffel (Reiter Konditionen)">Staffel</span>@endif
                                                     @else<span class="text-[var(--fa-ink-3)]">nicht hinterlegt</span>@endif
                                                 </td>
                                                 <td class="num">

@@ -1159,6 +1159,9 @@ class SignalDetektorService
      */
     public function gpAllergenWiderspruch(Team $team): int
     {
+        // Altlast: das Summen-Signal des Backfill-Kommandos (`dq-gp-allergen-konflikt`) meldete dasselbe ohne Beleg — hier mitschließen.
+        $this->signals->schliesseGemessen($team, SignalTyp::DatenqualitaetGpLa, 'dq-gp-allergen-konflikt', 'data-quality',
+            'Ersetzt durch „Grundprodukte mit Allergen-Widerspruch“ (Detektor, mit Beleg je Grundprodukt)');
         $agg = app(GpAggregateService::class);
         // Vorauswahl in SQL: nur GPs, bei denen irgendein Allergen-Feld beide Werte trägt; die Entscheidung trifft danach der Service.
         $bedingungen = [];

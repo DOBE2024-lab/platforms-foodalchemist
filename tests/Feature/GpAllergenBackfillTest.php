@@ -29,13 +29,16 @@ function laMitGluten(int $teamId, int $supplierId, int $gpId, string $gluten): v
     FoodAlchemistItemAllergen::create(['team_id' => $teamId, 'supplier_item_id' => $la->id, 'allergen_gluten' => $gluten]);
 }
 
-it('Konflikt (enthalten↔nicht) → LOW, Signal, und die Wert-Spalten bleiben unberührt', function () {
+it('Konflikt (enthalten↔nicht) → LOW, kein eigenes Signal mehr (meldet der Detektor), altes Summen-Signal wird geschlossen; Wert-Spalten unberührt', function () {
     $gp = $this->makeGp($this->rootTeam, 'Brotmix');
     $gp->update(['status' => 'approved']);
     laMitGluten($this->rootTeam->id, $this->sup->id, $gp->id, 'enthalten');
     laMitGluten($this->rootTeam->id, $this->sup->id, $gp->id, 'nicht_enthalten');
 
     $glutenVorher = $gp->fresh()->allergen_gluten;   // Default 'unbekannt'
+    // Altbestand: das frühere Summen-Signal des Kommandos (Dublette zu gp_allergen_widerspruch, ohne auflösbare Objekte)
+    $alt = app(\Platform\FoodAlchemist\Services\SignalService::class)->erzeuge($this->rootTeam, \Platform\FoodAlchemist\Enums\SignalTyp::DatenqualitaetGpLa,
+        \Platform\FoodAlchemist\Enums\SignalSeverity::Kritisch, '1 GPs mit Allergen-Konflikt', ['dedup_key' => 'dq-gp-allergen-konflikt', 'source' => 'data-quality', 'payload' => ['anzahl' => 1]]);
 
     $this->artisan('foodalchemist:gp-allergen-backfill', ['--team' => $this->rootTeam->id, '--apply' => true])->assertSuccessful();
 
@@ -45,8 +48,8 @@ it('Konflikt (enthalten↔nicht) → LOW, Signal, und die Wert-Spalten bleiben u
         ->and($gp->allergens_aggregated_at)->not->toBeNull()
         ->and($gp->allergen_gluten)->toBe($glutenVorher);               // ⬅ Wert-Spalte NICHT geschrieben (Korrektur #1)
 
-    expect(FoodAlchemistSignal::where('team_id', $this->rootTeam->id)
-        ->where('dedup_key', 'dq-gp-allergen-konflikt')->exists())->toBeTrue();
+    expect(FoodAlchemistSignal::where('team_id', $this->rootTeam->id)->where('dedup_key', 'dq-gp-allergen-konflikt')->count())->toBe(1)
+        ->and($alt->fresh()->status->istOffen())->toBeFalse();
 });
 
 it('konsistente LA-Daten → HIGH (1.0)', function () {

@@ -376,6 +376,9 @@ class SupplierService
             ->map(fn ($n) => (int) $n)->all();
     }
 
+    /** Ab diesem Anteil an allen Rezept-Verwendungen gilt ein Lieferant in der Bündelung als „großer Anteil". */
+    private const BUENDEL_ANTEIL_HOCH = 10.0;
+
     /** R9.2: Volumen-Proxy für EINEN Lieferanten (fürs Stammblatt). */
     public function volumenProxy(Team $team, int $supplierId): array
     {
@@ -397,19 +400,30 @@ class SupplierService
             return [];
         }
         $suppliers = FoodAlchemistSupplier::visibleToTeam($team)->whereIn('id', array_keys($proxy))->get();
+        $rabatt = app(RebateService::class);
+        $summe = max(1, array_sum($proxy));
         $out = [];
         foreach ($suppliers as $s) {
             $n = $proxy[$s->id] ?? 0;
-            $rebate = $s->rebate_pct !== null ? (float) $s->rebate_pct : null;
+            // Rückvergütung wie überall sonst (Einkauf E1): Team-Staffel schlägt das alte Pauschalfeld. Vorher las die Bündelung
+            // nur suppliers.rebate_pct und meldete „nicht hinterlegt", obwohl eine Staffel gepflegt war.
+            $cfg = $rabatt->configFor($team, (int) $s->id);
+            $hatStaffel = $cfg !== null && $cfg->active && $rabatt->tiersFor($team, (int) $s->id)->isNotEmpty();
+            $rebate = $hatStaffel ? $rabatt->effektiverProzent($team, (int) $s->id) : ($s->rebate_pct !== null ? (float) $s->rebate_pct : null);
+            // Relativ statt absolut: „ab 5 Verwendungen" traf fast jeden Lieferanten und sagte damit nichts mehr.
+            $anteil = $n / $summe * 100;
+            $hoch = $anteil >= self::BUENDEL_ANTEIL_HOCH;
             $out[] = [
                 'supplier_id' => (int) $s->id,
                 'name' => $s->name,
                 'n_usages' => $n,
+                'anteil_pct' => round($anteil, 1),
                 'rebate_pct' => $rebate,
+                'rebate_quelle' => $hatStaffel ? 'staffel' : ($s->rebate_pct !== null ? 'pauschal' : null),
                 'payment_term_days' => $s->payment_term_days,
-                'bundling_hint' => $n >= 5 && ($rebate === null || $rebate <= 0)
-                    ? 'hohes Volumen, keine Rückvergütung hinterlegt → Nachverhandlung prüfen'
-                    : ($n >= 5 ? 'hohes Volumen → Bündelungs-/Konditionshebel' : 'geringes Volumen'),
+                'bundling_hint' => $hoch && ($rebate === null || $rebate <= 0)
+                    ? 'großer Anteil, keine Rückvergütung hinterlegt → Nachverhandlung prüfen'
+                    : ($hoch ? 'großer Anteil → Bündelungs-/Konditionshebel' : 'kleiner Anteil'),
                 'ist_proxy' => true,
             ];
         }

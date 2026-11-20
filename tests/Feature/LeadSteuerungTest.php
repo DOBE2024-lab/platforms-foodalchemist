@@ -87,3 +87,18 @@ it('Volumen-Proxy zählt Nutzung je Lieferant über die Lead-LA', function () {
         ->and($aldi['n_usages'])->toBeGreaterThanOrEqual(1)
         ->and($aldi['ist_proxy'])->toBeTrue();
 });
+
+it('Bündelung: Rückvergütung aus der Team-Staffel statt „nicht hinterlegt“, Anteil relativ statt „ab 5 Verwendungen“', function () {
+    $sid = $this->laA->supplier_id;
+    $vorher = collect(app(SupplierService::class)->volumenProxyRanking($this->rootTeam))->firstWhere('supplier_id', $sid);
+    expect($vorher['rebate_quelle'])->toBeNull()->and($vorher['anteil_pct'])->toBeGreaterThan(0.0)
+        ->and($vorher['bundling_hint'])->toContain('keine Rückvergütung hinterlegt');
+
+    $rabatt = app(\Platform\FoodAlchemist\Services\RebateService::class);
+    $rabatt->saveTiers($this->rootTeam, $sid, [['threshold_eur' => 0, 'percent' => 2.5]]);
+    $rabatt->saveConfig($this->rootTeam, $sid, ['active' => true, 'assumed_annual_revenue' => 10000]);
+
+    $nachher = collect(app(SupplierService::class)->volumenProxyRanking($this->rootTeam))->firstWhere('supplier_id', $sid);
+    expect($nachher['rebate_pct'])->toBe(2.5)->and($nachher['rebate_quelle'])->toBe('staffel')
+        ->and($nachher['bundling_hint'])->not->toContain('keine Rückvergütung');
+});

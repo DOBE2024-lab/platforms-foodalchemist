@@ -97,11 +97,29 @@ it('★ Kommando hebt Master-GPs: Trockenlauf schreibt nichts, --apply macht sie
     @unlink($protokoll);
 });
 
-it('Kommando bricht ab, wenn schon ein globales GP mit gleichem gp_key existiert — nichts wird geschrieben', function () {
-    $m = FoodAlchemistGp::create(['team_id' => $this->master->id, 'gp_key' => 'zitrone||abrieb', 'name' => 'Zitrone: Abrieb', 'status' => 'tentative']);
-    FoodAlchemistGp::create(['team_id' => null, 'gp_key' => 'zitrone||abrieb', 'name' => 'Zitrone: Abrieb', 'status' => 'approved']);
+it('★ degenerierter Key („tomate||“) kollidiert mit globalem GP: Key wird neu gebildet, beide bleiben getrennt (Fall 14051 ⇄ 14493)', function () {
+    $m = FoodAlchemistGp::create(['team_id' => $this->master->id, 'gp_key' => 'tomate||', 'name' => 'Tomate: trocken, geschwefelt', 'status' => 'approved',
+        'main_ingredient_slug' => 'tomate', 'condition' => 'trocken', 'pflichtangabe' => 'geschwefelt', 'commodity_group_code' => '01']);
+    $g = FoodAlchemistGp::create(['team_id' => null, 'gp_key' => 'tomate||', 'name' => 'Tomate: konserviert, Pulpe / (Bio)', 'status' => 'approved']);
+
+    $this->artisan('foodalchemist:master-gps-stamm-heben')->expectsOutputToContain('tomate|| →')->assertSuccessful();
+    expect($m->fresh()->gp_key)->toBe('tomate||');   // Trockenlauf schreibt nichts
+
+    $this->artisan('foodalchemist:master-gps-stamm-heben', ['--apply' => true])->assertSuccessful();
+    expect($m->fresh()->team_id)->toBeNull()->and($m->fresh()->gp_key)->not->toBe('tomate||')
+        ->and($g->fresh()->gp_key)->toBe('tomate||')
+        ->and(DB::table('foodalchemist_gps')->whereNull('team_id')->where('gp_key', $m->fresh()->gp_key)->count())->toBe(1);
+
+    $protokoll = collect(glob(storage_path('logs/master-gps-stamm-heben-*.json')))->sort()->last();
+    $this->artisan('foodalchemist:master-gps-stamm-heben', ['--zurueck' => $protokoll])->assertSuccessful();
+    expect($m->fresh()->gp_key)->toBe('tomate||')->and((int) $m->fresh()->team_id)->toBe($this->master->id);
+    @unlink($protokoll);
+});
+
+it('echte Dublette (vollständiger Key) bricht ab — nichts wird geschrieben', function () {
+    $m = FoodAlchemistGp::create(['team_id' => $this->master->id, 'gp_key' => 'zitrone|abrieb|', 'name' => 'Zitrone: Abrieb', 'status' => 'tentative']);
+    FoodAlchemistGp::create(['team_id' => null, 'gp_key' => 'zitrone|abrieb|', 'name' => 'Zitrone: Abrieb', 'status' => 'approved']);
 
     $this->artisan('foodalchemist:master-gps-stamm-heben', ['--apply' => true])->assertFailed();
-    expect((int) $m->fresh()->team_id)->toBe($this->master->id)
-        ->and(DB::table('foodalchemist_gps')->whereNull('team_id')->where('gp_key', 'zitrone||abrieb')->count())->toBe(1);
+    expect((int) $m->fresh()->team_id)->toBe($this->master->id);
 });

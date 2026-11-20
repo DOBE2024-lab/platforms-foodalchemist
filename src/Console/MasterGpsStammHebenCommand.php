@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Platform\FoodAlchemist\Services\GpNamingService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\StammPaket;
 
@@ -16,8 +17,9 @@ use Platform\FoodAlchemist\Support\StammPaket;
  * BESTAND: GPs mit team_id = Master werden global (team_id NULL) und Stamm-Paket (stamm_class = stamm_paket), damit Mandanten mit Paket sie sehen.
  *
  * - IDs bleiben: Rezept-Zeilen, Darreichungen (Gefäß), Zubehör-Zeilen, LA-Strukturen und Lead-Artikel zeigen unverändert auf dieselben GPs.
- * - Der Unique-Schlüssel (team_id, gp_key) greift bei team_id NULL in MySQL NICHT: gibt es schon ein globales GP mit gleichem gp_key, bricht der
- *   Lauf ab, bevor etwas geschrieben wird (erst zusammenführen). Mandanten-eigene GPs mit gleichem gp_key sind nur eine Warnung (Doppel beim Kunden).
+ * - Der Unique-Schlüssel (team_id, gp_key) greift bei team_id NULL in MySQL NICHT: gibt es schon ein globales GP mit gleichem gp_key, wird ein
+ *   degenerierter Key („tomate||“) neu gebildet ({@see schluesselKlaeren}, im Trockenlauf ausgewiesen); sonst bricht der Lauf ab, bevor etwas
+ *   geschrieben wird (echte Dublette: erst zusammenführen). Mandanten-eigene GPs mit gleichem gp_key sind nur eine Warnung (Doppel beim Kunden).
  * - Soft-gelöschte Master-GPs gehen mit (sonst bliebe Schrott im Master hängen).
  * - Schreibt per Query-Builder (keine Modell-Ereignisse, kein fa-fremdschreiben-Log).
  *
@@ -65,7 +67,9 @@ class MasterGpsStammHebenCommand extends Command
     private function heben(int $master, bool $apply): int
     {
         $gps = DB::table(self::TABELLE)->where('team_id', $master)->orderBy('name')
-            ->get(['id', 'name', 'gp_key', 'status', 'stamm_class', ...(Schema::hasColumn(self::TABELLE, 'deleted_at') ? ['deleted_at'] : [])]);
+            ->get(['id', 'name', 'gp_key', 'status', 'stamm_class', 'main_ingredient_slug', 'processing', 'form', 'flavor', 'zusatz', 'pflichtangabe',
+                'portion', 'condition', 'commodity_group_code', 'herkunft_land', 'namens_msc', 'namens_asc',
+                ...(Schema::hasColumn(self::TABELLE, 'deleted_at') ? ['deleted_at'] : [])]);
         if ($gps->isEmpty()) {
             $this->info("Team {$master} trägt keine GPs — nichts zu tun.");
 
@@ -90,11 +94,11 @@ class MasterGpsStammHebenCommand extends Command
             ...array_map(fn ($t) => $bezuege[(int) $g->id][$t] ?? 0, array_keys(self::BEZUEGE)),
         ])->all());
 
-        $kollisionen = DB::table(self::TABELLE.' as m')
-            ->join(self::TABELLE.' as g', fn ($j) => $j->on('g.gp_key', '=', 'm.gp_key')->whereNull('g.team_id'))
-            ->where('m.team_id', $master)->whereNotIn('g.status', ['rejected', 'merged'])
-            ->when(Schema::hasColumn(self::TABELLE, 'deleted_at'), fn ($q) => $q->whereNull('g.deleted_at'))
-            ->get(['m.id as master_id', 'm.name as master_name', 'g.id as global_id', 'g.name as global_name']);
+        [$neueKeys, $kollisionen] = $this->schluesselKlaeren($master, $gps);
+        foreach ($neueKeys as $id => $k) {
+            $g = $gps->firstWhere('id', $id);
+            $this->line("  neuer gp_key für GP {$id} „{$g->name}“: {$g->gp_key} → {$k}");
+        }
         $warnungen = DB::table(self::TABELLE.' as m')
             ->join(self::TABELLE.' as k', fn ($j) => $j->on('k.gp_key', '=', 'm.gp_key')->whereNotNull('k.team_id')->whereColumn('k.team_id', '!=', 'm.team_id'))
             ->where('m.team_id', $master)->whereNotIn('k.status', ['rejected', 'merged'])
@@ -103,10 +107,10 @@ class MasterGpsStammHebenCommand extends Command
         foreach ($warnungen as $w) {
             $this->warn("  Doppel beim Kunden: GP {$w->master_id} „{$w->name}“ ⇄ GP {$w->kunden_id} in Team {$w->team_id} (nach dem Heben zusammenführen)");
         }
-        if ($kollisionen->isNotEmpty()) {
+        if ($kollisionen !== []) {
             $this->error('Globales GP mit gleichem gp_key vorhanden — nichts geschrieben. Erst zusammenführen:');
             foreach ($kollisionen as $k) {
-                $this->line("  Master {$k->master_id} „{$k->master_name}“ ⇄ global {$k->global_id} „{$k->global_name}“");
+                $this->line('  '.$k);
             }
 
             return self::FAILURE;
@@ -121,15 +125,91 @@ class MasterGpsStammHebenCommand extends Command
         file_put_contents($protokoll, (string) json_encode([
             'team_id' => $master,
             'zeitpunkt' => now()->toIso8601String(),
-            'gps' => $gps->map(fn ($g) => ['id' => (int) $g->id, 'stamm_class' => $g->stamm_class])->all(),
+            'gps' => $gps->map(fn ($g) => ['id' => (int) $g->id, 'stamm_class' => $g->stamm_class, 'gp_key' => $g->gp_key])->all(),
             'zurueck' => "php artisan foodalchemist:master-gps-stamm-heben --zurueck={$protokoll}",
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        $n = DB::transaction(fn () => DB::table(self::TABELLE)->where('team_id', $master)->whereIn('id', $ids)
-            ->update(['team_id' => null, 'stamm_class' => StammPaket::PAKET, 'updated_at' => now()]));
+        $n = DB::transaction(function () use ($master, $ids, $neueKeys) {
+            foreach ($neueKeys as $id => $key) {
+                DB::table(self::TABELLE)->where('team_id', $master)->where('id', $id)->update(['gp_key' => $key]);
+            }
+
+            return DB::table(self::TABELLE)->where('team_id', $master)->whereIn('id', $ids)
+                ->update(['team_id' => null, 'stamm_class' => StammPaket::PAKET, 'updated_at' => now()]);
+        });
         StammPaket::flush();
         $this->info("✓ {$n} GPs global gehoben (Stamm-Paket). Protokoll/Rückweg: {$protokoll}");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * gp_key-Kollisionen mit dem globalen Bestand (und unter den zu hebenden GPs selbst) klären (Kurator 20.11.2026, Fall 14051 ⇄ 14493: beide
+     * „tomate||“, verschiedene Produkte — nicht zusammenführen). Ein degenerierter Key (nur Hauptzutat + leere Segmente) wird neu gebildet:
+     * zuerst aus den Feldern wie bei der Neuanlage ({@see GpNamingService::gpKeyAusFeldern}), kollidiert der auch, aus dem Namens-Slug
+     * (Bestandsformat älterer GPs, gleiche Ausweichregel wie {@see \Platform\FoodAlchemist\Services\GpUmhaengenService}). Abbruch nur, wenn danach
+     * immer noch kollidiert oder der Key nicht degeneriert ist (dann ist es eine echte Dublette: zusammenführen).
+     *
+     * @return array{0: array<int, string>, 1: list<string>}  [gp_id => neuer gp_key], Kollisionen
+     */
+    private function schluesselKlaeren(int $master, \Illuminate\Support\Collection $gps): array
+    {
+        $naming = app(GpNamingService::class);
+        $global = DB::table(self::TABELLE)->whereNull('team_id')->whereNotIn('status', ['rejected', 'merged'])
+            ->when(Schema::hasColumn(self::TABELLE, 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'))
+            ->whereIn('gp_key', $gps->pluck('gp_key')->all())->get(['id', 'name', 'gp_key'])->groupBy('gp_key');
+        $belegt = fn (string $key) => DB::table(self::TABELLE)->whereNull('team_id')->where('gp_key', $key)->whereNotIn('status', ['rejected', 'merged'])
+            ->when(Schema::hasColumn(self::TABELLE, 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'))->exists();
+        $neu = [];
+        $kollisionen = [];
+        $vergeben = [];   // Keys, die dieser Lauf schon vergibt (zwei Master-GPs dürfen nicht auf denselben Key fallen)
+        foreach ($gps as $g) {
+            $aktiv = ! in_array($g->status, ['rejected', 'merged'], true) && ($g->deleted_at ?? null) === null;
+            $konflikt = $aktiv && ($global->has($g->gp_key) || isset($vergeben[$g->gp_key]));
+            if (! $konflikt) {
+                $aktiv && $vergeben[$g->gp_key] = true;
+
+                continue;
+            }
+            $gegen = $global->get($g->gp_key)?->first();
+            $gegenText = $gegen !== null ? "global {$gegen->id} „{$gegen->name}“" : 'ein anderes Master-GP';
+            if (! self::istDegeneriert((string) $g->gp_key)) {
+                $kollisionen[] = "Master {$g->id} „{$g->name}“ ⇄ {$gegenText} (gp_key {$g->gp_key})";
+
+                continue;
+            }
+            $in = array_map(fn ($v) => $v === '' ? null : $v, [
+                'processing' => $g->processing, 'form' => $g->form, 'flavor' => $g->flavor, 'zusatz' => $g->zusatz, 'pflichtangabe' => $g->pflichtangabe,
+                'portion' => $g->portion, 'condition' => $g->condition, 'commodity_group_code' => $g->commodity_group_code,
+                'herkunft_land' => $g->herkunft_land, 'msc' => (bool) $g->namens_msc, 'asc' => (bool) $g->namens_asc,
+            ]);
+            $kandidaten = array_values(array_unique(array_filter([
+                $naming->gpKeyAusFeldern((string) ($g->main_ingredient_slug ?: $naming->slugify((string) $g->name)), $in),
+                $naming->slugify((string) $g->name),
+            ])));
+            $treffer = null;
+            foreach ($kandidaten as $k) {
+                if ($k !== $g->gp_key && ! isset($vergeben[$k]) && ! $belegt($k)) {
+                    $treffer = $k;
+
+                    break;
+                }
+            }
+            if ($treffer === null) {
+                $kollisionen[] = "Master {$g->id} „{$g->name}“ ⇄ {$gegenText} (gp_key {$g->gp_key}, kein freier Ersatz-Key)";
+
+                continue;
+            }
+            $neu[(int) $g->id] = $treffer;
+            $vergeben[$treffer] = true;
+        }
+
+        return [$neu, $kollisionen];
+    }
+
+    /** Degeneriert = nur Hauptzutat und leere Segmente („tomate||“). */
+    public static function istDegeneriert(string $key): bool
+    {
+        return preg_match('/^[^|]+\|+$/', $key) === 1;
     }
 
     private function verify(int $master): int
@@ -158,7 +238,8 @@ class MasterGpsStammHebenCommand extends Command
         DB::transaction(function () use ($daten, &$n) {
             foreach ($daten['gps'] as $g) {
                 $n += DB::table(self::TABELLE)->where('id', (int) $g['id'])->whereNull('team_id')
-                    ->update(['team_id' => (int) $daten['team_id'], 'stamm_class' => $g['stamm_class'] ?? StammPaket::BASIS, 'updated_at' => now()]);
+                    ->update(['team_id' => (int) $daten['team_id'], 'stamm_class' => $g['stamm_class'] ?? StammPaket::BASIS,
+                        ...(isset($g['gp_key']) ? ['gp_key' => $g['gp_key']] : []), 'updated_at' => now()]);
             }
         });
         StammPaket::flush();

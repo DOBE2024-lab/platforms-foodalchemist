@@ -35,7 +35,7 @@ it('BehaelterService: anlegen, aktualisieren, umschalten, löschen — mit Pflic
 
     expect(fn () => $svc->anlegen($this->rootTeam, 'behaelter', ['name' => ' ']))->toThrow(\InvalidArgumentException::class, 'Name ist Pflicht.');
     expect(fn () => $svc->anlegen($this->rootTeam, 'behaelter', ['name' => 'GN 1/1 65']))
-        ->toThrow(\InvalidArgumentException::class, '«GN 1/1 65» existiert schon in Behälter (GN & Co.) (gn_1_1_65).');
+        ->toThrow(\InvalidArgumentException::class, '«GN 1/1 65» existiert schon in Behälter (GN & Co.) (gn_11_65).');
 
     expect($svc->aktualisieren($this->rootTeam, $zeile->id, ['name' => 'GN 1/1 tief', 'tiefe_mm' => '65,5']))->toBe('GN 1/1 tief');
     expect(DB::table('foodalchemist_vocab_containers')->find($zeile->id))

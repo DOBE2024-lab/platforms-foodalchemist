@@ -6,12 +6,10 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Services\ConceptGeneratorService;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
+use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
-use Platform\FoodAlchemist\Services\TeamSettingsService;
+use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
 
 /**
  * MCP-Einstieg „Format aus Brief" — ein gebrandetes FOODKONZEPT (Chefs Corner / Taste & Fly / Lunchbuffet /
@@ -66,83 +64,34 @@ class FormatPlanFromBriefTool extends FoodAlchemistTool implements ToolContract,
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
         }
-        $brief = trim((string) ($arguments['brief'] ?? ''));
-        if ($brief === '') {
-            return ToolResult::error('brief ist Pflicht.', 'VALIDATION_ERROR');
-        }
-        $formate = app(FormatService::class);
-
-        // 1. Format: bestehendes (team-EIGEN) ODER neue Hülle.
-        $neu = false;
-        if (! empty($arguments['format_id'])) {
-            $format = FoodAlchemistFormat::visibleToTeam($team)->find((int) $arguments['format_id']);
-            if ($format === null) {
-                return ToolResult::error('Format nicht gefunden oder nicht team-sichtbar.', 'NOT_FOUND');
-            }
-            if (! $format->isOwnedBy($team)) {
-                return ToolResult::error('Geerbtes Format — nur das Besitzer-Team darf planen.', 'INHERITED');
-            }
-        } else {
-            $origin = in_array($arguments['origin'] ?? '', ['eigen', 'gruppe', 'kunde'], true) ? (string) $arguments['origin'] : 'eigen';
-            $format = $formate->create($team, [
-                'name' => trim((string) ($arguments['label'] ?? '')) ?: 'Format aus Brief',
-                'origin' => $origin,
-            ]);
-            $neu = true;
-        }
-
-        $mode = in_array($arguments['creative_mode'] ?? '', ['voll_kreativ', 'hybrid', 'datenbank'], true)
-            ? (string) $arguments['creative_mode'] : 'voll_kreativ';
-
+        // 98 · 1.3d: derselbe Use-Case wie die Leitstelle (PlanungsEinstiegService) — Besitz, Gerüst, Session, Kaskade.
         try {
-            // 2. Gerüst aus dem Brief (owner=format): Marken-Identität + eigenständige Concepte (Veranstaltungen).
-            $geruest = app(ConceptGeneratorService::class)->geruestAusBriefFuerOwner($team, 'format', (int) $format->id, $brief, [
-                'segment' => app(TeamSettingsService::class)->segment($team),
-            ]);
-            // Override-First (Spec 50 GL-07, C-5): Name nur bei NEU angelegtem Format; Branding-Felder füllen
-            // ausschließlich LÜCKEN — eine gesetzte Identität (Mensch/Vorlauf) bleibt, auch am bestehenden Format.
-            $brandingApplied = [];
-            $upd = [];
-            if ($neu && is_string($geruest['name'] ?? null) && trim((string) $geruest['name']) !== '') {
-                $upd['name'] = trim((string) $geruest['name']);
-            }
-            foreach (['consumer_name', 'claim', 'story'] as $feld) {
-                $wert = $geruest['branding'][$feld] ?? null;
-                if (is_string($wert) && trim($wert) !== '' && trim((string) $format->{$feld}) === '') {
-                    $upd[$feld] = trim($wert);
-                }
-            }
-            if ($upd !== []) {
-                $formate->update($team, (int) $format->id, $upd);
-                $brandingApplied = array_keys($upd);
-            }
-
-            // 3. Review-Session + Leitplanken + Voll-Kaskade (je Slot ein ganzes Concept/Veranstaltung → ins Format referenziert).
-            $sessions = app(PlanningSessionService::class);
-            $session = $sessions->create($team, [
-                'title' => 'Format aus Brief: ' . ($format->name ?? ('#' . $format->id)),
-                'brief' => $brief,
-                'creative_mode' => $mode,
+            $r = app(PlanungsEinstiegService::class)->formatAusBrief($team, (string) ($arguments['brief'] ?? ''), [
+                'owner_id' => $arguments['format_id'] ?? null,
+                'titel' => $arguments['label'] ?? null,
+                'creative_mode' => $arguments['creative_mode'] ?? null,
+                'leitplanken' => $arguments['leitplanken'] ?? null,
+                'origin' => $arguments['origin'] ?? null,
                 'created_via' => 'mcp_format_brief',
             ]);
-            if (! empty($arguments['leitplanken']) && is_array($arguments['leitplanken'])) {
-                $sessions->setGenerationParams($team, (int) $session->id, $arguments['leitplanken']);
-            }
-            $run = app(PlanningCascadeService::class)->starteKaskade($team, 'vollkaskade', $session, $mode, [
-                'owner_type' => 'format', 'owner_id' => (int) $format->id, 'created_via' => 'mcp_format_brief',
-            ]);
+        } catch (\InvalidArgumentException $e) {
+            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
+        } catch (NichtGefundenException $e) {
+            return ToolResult::error($e->getMessage(), 'NOT_FOUND');
+        } catch (GeerbtNurLesenException $e) {
+            return ToolResult::error($e->getMessage(), 'INHERITED');
         } catch (\Throwable $e) {
             return ToolResult::error($e->getMessage(), 'PLAN_FAILED');
         }
 
-        $status = app(PlanningCascadeService::class)->laufStatus($team, (int) $run->id);
+        $status = app(PlanningCascadeService::class)->laufStatus($team, (int) $r['run']->id);
 
         return ToolResult::success([
-            'format_id' => (int) $format->id,
-            'neu_angelegt' => $neu,
-            'branding_gesetzt' => $brandingApplied,
-            'session_id' => (int) $session->id,
-            'run' => $status ?? ['run_id' => (int) $run->id, 'status' => (string) $run->status],
+            'format_id' => (int) $r['owner']->id,
+            'neu_angelegt' => $r['neu'],
+            'branding_gesetzt' => $r['branding_gesetzt'],
+            'session_id' => (int) $r['session']->id,
+            'run' => $status ?? ['run_id' => (int) $r['run']->id, 'status' => (string) $r['run']->status],
         ]);
     }
 

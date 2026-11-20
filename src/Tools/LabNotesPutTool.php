@@ -49,26 +49,12 @@ class LabNotesPutTool extends FoodAlchemistTool implements ToolContract, ToolMet
         if ($note === null) {
             return ToolResult::error('Lab-Notiz nicht gefunden (oder gehört einem anderen Team).', 'NOT_FOUND');
         }
-        if (array_key_exists('title', $arguments)) {
-            $title = trim((string) $arguments['title']);
-            if ($title === '') {
-                return ToolResult::error('Lab-Notiz braucht einen Titel.', 'BAD_INPUT');
-            }
-            $note->title = $title;
+        try {
+            $note = app(\Platform\FoodAlchemist\Services\LabNoteService::class)->aktualisieren(
+                $note, array_intersect_key($arguments, array_flip(['title', 'body', 'source_ref', 'evidence_tier'])));
+        } catch (\RuntimeException $e) {
+            return ToolResult::error($e->getMessage(), 'BAD_INPUT');
         }
-        if (array_key_exists('body', $arguments)) {
-            $note->body = ((string) $arguments['body']) ?: null;
-        }
-        if (array_key_exists('source_ref', $arguments)) {
-            $note->source_ref = ((string) $arguments['source_ref']) ?: null;
-        }
-        if (array_key_exists('evidence_tier', $arguments)) {
-            if (! in_array($arguments['evidence_tier'], self::TIERS, true)) {
-                return ToolResult::error('evidence_tier muss T0..T3 sein.', 'BAD_INPUT');
-            }
-            $note->evidence_tier = $arguments['evidence_tier'];
-        }
-        $note->save();
 
         return ToolResult::success([
             'id' => (int) $note->id, 'title' => $note->title,

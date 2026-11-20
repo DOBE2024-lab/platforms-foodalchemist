@@ -35,6 +35,43 @@ class LabNoteService
         ]);
     }
 
+    /**
+     * 98 · 1.3c: Felder einer Notiz ändern — nur die mitgegebenen Schlüssel. Leerer Titel oder unbekannte
+     * Evidenz-Stufe → RuntimeException, die Notiz bleibt dann unverändert.
+     */
+    public function aktualisieren(FoodAlchemistLabNote $note, array $input): FoodAlchemistLabNote
+    {
+        if (array_key_exists('title', $input)) {
+            $title = trim((string) $input['title']);
+            if ($title === '') {
+                throw new \RuntimeException('Lab-Notiz braucht einen Titel.');
+            }
+            $note->title = $title;
+        }
+        if (array_key_exists('body', $input)) {
+            $note->body = ((string) $input['body']) ?: null;
+        }
+        if (array_key_exists('source_ref', $input)) {
+            $note->source_ref = ((string) $input['source_ref']) ?: null;
+        }
+        if (array_key_exists('evidence_tier', $input)) {
+            if (! in_array($input['evidence_tier'], self::TIERS, true)) {
+                $note->refresh();
+                throw new \RuntimeException('evidence_tier muss T0..T3 sein.');
+            }
+            $note->evidence_tier = $input['evidence_tier'];
+        }
+        $note->save();
+
+        return $note;
+    }
+
+    /** 98 · 1.3c: Notiz löschen (Besitz prüft der Aufrufer). */
+    public function loeschen(FoodAlchemistLabNote $note): void
+    {
+        $note->delete();
+    }
+
     /** @return Collection<int, FoodAlchemistLabNote> team-sichtbare Notizen, neueste zuerst. */
     public function forTeam(Team $team, int $limit = 100): Collection
     {

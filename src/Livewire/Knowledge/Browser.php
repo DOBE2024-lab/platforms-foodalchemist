@@ -451,7 +451,7 @@ class Browser extends Component
         if ($docId === null || $this->eigenesDoc((int) $docId) === null) {
             return;
         }
-        DB::table('foodalchemist_knowledge_bindings')->where('id', $bindingId)->delete();
+        app(\Platform\FoodAlchemist\Services\KnowledgeService::class)->loeseBindung(Auth::user()->currentTeamRelation, $bindingId);   // 98 · 1.3e: Soft-Delete
     }
 
     /**

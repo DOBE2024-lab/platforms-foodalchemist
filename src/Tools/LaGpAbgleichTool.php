@@ -88,7 +88,7 @@ class LaGpAbgleichTool extends FoodAlchemistTool implements ToolContract, ToolMe
             } catch (\RuntimeException $x) {
                 return ToolResult::error($x->getMessage(), 'ACCESS_DENIED');
             }
-            $r['log']->update(['ausgefuehrt' => true, 'ausgefuehrt_aktion' => $a['ausgefuehrt'], 'ausgefuehrt_gp_id' => (int) $a['gp']->id]);
+            $svc->markiereAusgefuehrt($r['log'], $a);
             $daten['ausgefuehrt'] = ['aktion' => $a['ausgefuehrt'], 'gp_id' => (int) $a['gp']->id, 'gp_name' => (string) $a['gp']->name];
         }
 

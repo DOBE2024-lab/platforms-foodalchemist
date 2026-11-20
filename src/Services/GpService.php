@@ -716,6 +716,55 @@ class GpService
      * `is_kochmedium` (nur wenn mitgegeben): Vorschlag Zeilenart „Medium“ für ungesetzte Rezeptzeilen (§18.7).
      * Wie die Verlust-Defaults ohne sofortigen Recompute — wirkt beim nächsten Recompute der Rezepte.
      */
+    /**
+     * 98 · 1.3e · KI-Vorschlag (Allergene oder Nährwerte) an einem GP übernehmen — vorher direkt im GP-Detailpanel.
+     * Spec 50 · A8: kein KI-Override über eine LA-Messung. Die KI-Allergene sind der Fallback für GPs OHNE LA-Daten;
+     * über einem LA-Profil würden sie die GL-01-Kette umkehren (Schätzung Prio 1 vor Messung) und
+     * `allergens_source='ki'` schirmte den GP zusätzlich dauerhaft von `backfillAllergenKonfidenz` ab.
+     *
+     * @param  array{type: string, werte: array<string, mixed>, confidence: mixed}  $vorschlag
+     *
+     * @throws \RuntimeException wenn KI-Allergene ein LA-Allergenprofil übersteuern würden
+     */
+    public function kiVorschlagUebernehmen(FoodAlchemistGp $gp, array $vorschlag): FoodAlchemistGp
+    {
+        if ($vorschlag['type'] === 'allergene') {
+            if (app(GpAggregateService::class)->hatLaAllergenProfil($gp)) {
+                throw new \RuntimeException('Dieser GP hat ein LA-Allergenprofil — die Lieferantendaten gelten (GL-01 §4.3). '
+                    .'KI-Allergene sind nur der Fallback ohne LA-Daten; zum bewussten Übersteuern die Werte manuell setzen.');
+            }
+            $update = [];
+            foreach ($vorschlag['werte'] as $feld => $wert) {
+                $update["allergen_{$feld}"] = $wert;             // GL-01 Prio 1: Override
+            }
+            $update['allergens_source'] = 'ki';                  // Quelle sichtbar machen (✨-Marker, 2026-07-02)
+            $update['allergens_confidence'] = $vorschlag['confidence'];
+            $gp->update($update);
+        } else {
+            $w = $vorschlag['werte'];
+            $gp->update([
+                'nutri_kcal_per_100g' => $w['kcal'] ?? null,
+                'nutri_protein_g_per_100g' => $w['protein_g'] ?? null,
+                'nutri_fat_g_per_100g' => $w['fat_g'] ?? null,
+                'nutri_carbs_g_per_100g' => $w['carbs_g'] ?? null,
+                'nutri_salt_g_per_100g' => $w['salt_g'] ?? null,
+                'nutri_source' => 'ki',
+                'nutri_ai_confidence' => $vorschlag['confidence'],
+            ]);
+        }
+
+        return $gp;
+    }
+
+    /** 98 · 1.3c: nur das Kochmedium-Flag (§18.7) setzen — die Kalkulations-Defaults bleiben unberührt. */
+    public function setzeKochmedium(Team $team, int $gpId, bool $istKochmedium): FoodAlchemistGp
+    {
+        $gp = $this->eigenesGp($team, $gpId);
+        $gp->update(['is_kochmedium' => $istKochmedium]);
+
+        return $gp->refresh();
+    }
+
     public function setzeKalkDefaults(Team $team, int $gpId, array $in): FoodAlchemistGp
     {
         $gp = $this->eigenesGp($team, $gpId);

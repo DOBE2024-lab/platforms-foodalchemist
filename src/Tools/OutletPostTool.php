@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
+use Platform\FoodAlchemist\Services\OutletService;
 
 /**
  * Ebene 2: Betrieb/Standort (Outlet) im eigenen Team anlegen. Kalkulations-Overrides
@@ -42,15 +42,11 @@ class OutletPostTool extends FoodAlchemistTool implements ToolContract, ToolMeta
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
         }
-        $name = trim((string) ($arguments['name'] ?? ''));
-        if ($name === '') {
-            return ToolResult::error('name darf nicht leer sein.', 'VALIDATION_ERROR');
+        try {
+            $outlet = app(OutletService::class)->anlegen($team, (string) ($arguments['name'] ?? ''));
+        } catch (\RuntimeException $e) {
+            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
         }
-        if (FoodAlchemistOutlet::where('team_id', $team->id)->where('name', $name)->exists()) {
-            return ToolResult::error('Ein Kalkulationsprofil mit diesem Namen existiert bereits.', 'VALIDATION_ERROR');
-        }
-
-        $outlet = FoodAlchemistOutlet::create(['team_id' => $team->id, 'name' => $name]);
 
         return ToolResult::success(['id' => (int) $outlet->id, 'name' => $outlet->name]);
     }

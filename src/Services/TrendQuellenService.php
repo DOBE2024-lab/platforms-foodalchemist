@@ -187,6 +187,15 @@ class TrendQuellenService
         return ['quelle' => $quelle->refresh(), 'pruefung' => $pruefung];
     }
 
+    /** 98 · 1.3c: die tatsächlich abgerufene Feed-URL setzen (Suchthema-Beobachtung: Feed = Such-URL). */
+    public function setzeFeedUrl(Team $team, int $id, string $feedUrl): FoodAlchemistTrendQuelle
+    {
+        $quelle = $this->eigene($team, $id);
+        $quelle->update(['feed_url' => $feedUrl]);
+
+        return $quelle;
+    }
+
     public function loeschen(Team $team, int $id, ?int $userId = null): void
     {
         $this->pruefe($userId, $team, 'Trend-Quelle löschen');

@@ -155,7 +155,7 @@ final class ReglerParams
         unset($p['ziel_menge'], $p['ziel_einheit']);
         $mengeRaw = str_replace(',', '.', trim((string) ($r['ziel_menge'] ?? '')));
         if ($mengeRaw !== '' && is_numeric($mengeRaw) && (float) $mengeRaw > 0
-            && ($r['ziel_einheit'] ?? '') !== '' && isset(Index::MENGE_EINHEITEN[$r['ziel_einheit']])) {
+            && ($r['ziel_einheit'] ?? '') !== '' && isset(PlanungOptionen::MENGE_EINHEITEN[$r['ziel_einheit']])) {
             $p['ziel_menge'] = (float) $mengeRaw;
             $p['ziel_einheit'] = (string) $r['ziel_einheit'];
         }

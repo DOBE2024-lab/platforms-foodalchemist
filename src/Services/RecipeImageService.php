@@ -12,8 +12,6 @@ use Platform\Core\Models\ContextFile;
 use Platform\Core\Models\Team;
 use Platform\Core\Services\ImageGenerationService;
 use Platform\FoodAlchemist\Jobs\EnrichRecipeJob;
-use Platform\FoodAlchemist\Livewire\Planung\Index;
-use Platform\FoodAlchemist\Livewire\Recipes\StepEditor;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
@@ -22,7 +20,7 @@ use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
 /**
  * KI-Fotos für ein Rezept (Preisfrage-Feature): ein Produktfoto (Endergebnis) + je Zubereitungsschritt
  * ein Foto. Nutzt den Core-{@see ImageGenerationService} (gpt-image-1.5); jeder Call wird zur Kosten-
- * Transparenz in `foodalchemist_ai_call_log` protokolliert (Muster aus {@see StepEditor}).
+ * Transparenz in `foodalchemist_ai_call_log` protokolliert (Muster aus {@see \Platform\FoodAlchemist\Livewire\Recipes\StepEditor}).
  * Ausgelöst bei der Freigabe eines gestuften Drafts über {@see EnrichRecipeJob},
  * wenn der KI-Bilder-Toggle am Go gesetzt war. Jedes Bild ist einzeln fail-soft.
  */
@@ -150,7 +148,7 @@ class RecipeImageService
      * Teller-Foto ersetzt (Teil 2). Die max.-1-Invariante wird hier gewahrt: vor dem Anlegen werden alle
      * bestehenden `is_result`-Fotos des Rezepts zurückgesetzt (in einer Transaktion), sodass genau EIN
      * Ergebnis-Foto existiert — dieselbe Semantik wie {@see RecipeStepService::endproduktSetzen},
-     * aber ohne Cross-Service-Kopplung. Consumer: der Cockpit-Upload-Knopf am Bild-Status ({@see Index::fotoHochladen}).
+     * aber ohne Cross-Service-Kopplung. Consumer: der Cockpit-Upload-Knopf am Bild-Status ({@see \Platform\FoodAlchemist\Livewire\Planung\Index::fotoHochladen}).
      */
     public function uebernimmManuellesFoto(Team $team, FoodAlchemistRecipe $recipe, UploadedFile $datei, ?string $caption = null, bool $istErgebnis = false): FoodAlchemistRecipeStepPhoto
     {

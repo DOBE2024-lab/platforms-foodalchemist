@@ -104,7 +104,7 @@ class Beobachten extends Component
                     $q = $svc->anlegen($team, $data + ['art' => 'presse', 'aktiv' => true], Auth::id())['quelle'];
                 }
                 // Bei URL-Änderung auch die tatsächlich abgerufene Feed-URL erneuern.
-                $q->update(['feed_url' => $url]);
+                $q = $svc->setzeFeedUrl($team, (int) $q->id, $url);
                 $this->quelleId = $q->id;
             });
             $this->dispatch('modal.close', name: 'suchthema-editor');

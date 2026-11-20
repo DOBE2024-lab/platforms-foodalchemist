@@ -88,13 +88,13 @@ class ConceptsPostTool extends FoodAlchemistTool implements ToolContract, ToolMe
                 'status' => 'draft',
             ];
             $c = $kind === 'paket' ? $svc->createPaket($team, $basis) : $svc->create($team, $basis);
-            if ($kind === 'paket' && ($arguments['occasion'] ?? null) !== null) {
-                $c->update(['occasion' => $arguments['occasion']]);
-            }
             $extras = array_intersect_key($arguments, array_flip([
                 'description', 'brief', 'target_price_per_person', 'season', 'target_group', 'diet_requirement',
                 'price_display',
             ]));
+            if ($kind === 'paket' && ($arguments['occasion'] ?? null) !== null) {
+                $extras['occasion'] = $arguments['occasion'];   // createPaket kennt keinen Anlass → über ConceptService::update
+            }
             // Facetten (Phase 4): Slug/Name → id.
             if (($arguments['serving_form'] ?? '') !== '') {
                 $extras['serving_form_id'] = $this->resolveServierformId($team, (string) $arguments['serving_form']);

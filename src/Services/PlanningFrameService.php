@@ -180,18 +180,27 @@ class PlanningFrameService
             && ! in_array($slot->frame?->owner_type, FoodAlchemistPlanningFrameSlot::STRUKTUR_OWNER, true)) {
             throw new RuntimeException('Titel, Freitext und Leerzeile gibt es nur im Rahmen von Foodbook, Speisekarte und Format.');
         }
-        $this->pruefeKapitel($slot->frame, $daten['chapter_id'] ?? null);
+        if (array_key_exists('chapter_id', $daten) && (int) ($daten['chapter_id'] ?? 0) !== (int) ($slot->chapter_id ?? 0)) {
+            $this->pruefeKapitel($slot->frame, $daten['chapter_id']);   // nur bei Änderung — ein Altverweis blockiert andere Felder nicht
+        }
         $slot->update($daten);
 
         return $slot->refresh();
     }
 
-    /** CQ 2.3f: chapter_id ist ein Kapitel DES Foodbooks, dem das Gerüst gehört — nie ein fremdes. */
+    /**
+     * CQ 2.3f: chapter_id ist ein Kapitel DES Dokuments, dem das Gerüst gehört — je owner_type: Foodbook-Kapitel des
+     * Foodbooks, Angebots-Kapitel des Angebots (STRUKTUR_AUS_GERUEST). Andere Owner haben keine Kapitel. Leer = lösen.
+     */
     private function pruefeKapitel(FoodAlchemistPlanningFrame $frame, mixed $chapterId): void
     {
-        if ((int) ($chapterId ?: 0) > 0 && ($frame->owner_type !== 'foodbook'
-            || ! \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::whereKey((int) $chapterId)->where('foodbook_id', $frame->owner_id)->exists())) {
-            throw new RuntimeException('Kapitel gehört nicht zum Foodbook dieses Planungs-Gerüsts.');
+        $ziel = match ($frame->owner_type) {
+            'foodbook' => [\Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::class, 'foodbook_id'],
+            'offer' => [\Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter::class, 'offer_id'],
+            default => null,
+        };
+        if ((int) ($chapterId ?: 0) > 0 && ($ziel === null || ! $ziel[0]::whereKey((int) $chapterId)->where($ziel[1], $frame->owner_id)->exists())) {
+            throw new RuntimeException('Kapitel gehört nicht zum Dokument dieses Planungs-Gerüsts.');
         }
     }
 

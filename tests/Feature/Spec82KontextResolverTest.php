@@ -134,15 +134,17 @@ it('Budget: reicht das Kürzen eines Blocks nicht, entfällt er ganz und steht u
 });
 
 it('Kunden-Ebene nur mit CRM-Firma: Foodbook ohne Firma bekommt sie nicht, mit Firma ja; Angebot über sein Kundenfeld', function () {
-    $this->svc->setSkalar($this->svc->canvasFor($this->rootTeam, 'kunde_dna', 'crm_company', 4711), 'kommunikation_ton', 'KUNDE-MARKER');
+    // CQ 2.3f: foodbook.create prüft die CRM-Firma (eigenes Haupt-Team) — also eine echte Firma statt einer erfundenen ID.
+    $firma = (int) \Platform\Crm\Models\CrmCompany::create(['team_id' => $this->rootTeam->id, 'name' => 'Hotel Adler', 'is_active' => true])->id;
+    $this->svc->setSkalar($this->svc->canvasFor($this->rootTeam, 'kunde_dna', 'crm_company', $firma), 'kommunikation_ton', 'KUNDE-MARKER');
     $fbSvc = app(FoodbookService::class);
     $ohne = $fbSvc->create($this->rootTeam, ['label' => 'Ohne']);
-    $mit = $fbSvc->create($this->rootTeam, ['label' => 'Mit', 'crm_company_id' => 4711]);
+    $mit = $fbSvc->create($this->rootTeam, ['label' => 'Mit', 'crm_company_id' => $firma]);
 
     expect($this->res->fuerObjekt($this->rootTeam, $ohne)['marken_kontext'])->toBeNull()
         ->and($this->res->fuerObjekt($this->rootTeam, $mit)['marken_kontext'])->toContain('KUNDE-MARKER');
 
-    $angebot = FoodAlchemistAngebot::create(['team_id' => $this->rootTeam->id, 'name' => 'A', 'status' => 'anfrage', 'personen' => 10, 'crm_company_id' => 4711]);
+    $angebot = FoodAlchemistAngebot::create(['team_id' => $this->rootTeam->id, 'name' => 'A', 'status' => 'anfrage', 'personen' => 10, 'crm_company_id' => $firma]);
     expect($this->res->fuerObjekt($this->rootTeam, $angebot)['marken_kontext'])->toContain('KUNDE-MARKER');
 });
 

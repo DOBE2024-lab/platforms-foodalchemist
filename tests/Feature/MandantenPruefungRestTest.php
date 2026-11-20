@@ -121,6 +121,30 @@ it('Planungs-Gerüst: chapter_id nur aus dem Foodbook des Gerüsts', function ()
     expect(fn () => $svc->addSlot($this->childA, $frame, ['label' => 'Vorspeisen', 'chapter_id' => $fremd->id]))->toThrow(RuntimeException::class, 'Kapitel gehört nicht');
     $slot = $svc->addSlot($this->childA, $frame, ['label' => 'Vorspeisen', 'chapter_id' => ($this->kapitel)($this->foodbookA->id)->id]);
     expect(fn () => $svc->updateSlot($this->childA, $slot->id, ['chapter_id' => $fremd->id]))->toThrow(RuntimeException::class, 'Kapitel gehört nicht');
+
+    // Ein schon gespeicherter, inzwischen ungültiger Verweis blockiert das Speichern anderer Felder nicht (Livewire schickt chapter_id immer mit).
+    $slot->forceFill(['chapter_id' => $fremd->id])->saveQuietly();
+    $svc->updateSlot($this->childA, $slot->id, ['chapter_id' => $fremd->id, 'label' => 'Kalte Vorspeisen']);
+    expect($slot->fresh()->label)->toBe('Kalte Vorspeisen');
+});
+
+it('Planungs-Gerüst am Angebot: chapter_id ist ein Kapitel DIESES Angebots — Foodbook-Kapitel und fremde Angebote abgelehnt', function () {
+    $svc = app(PlanningFrameService::class);
+    $a1 = FoodAlchemistAngebot::create(['team_id' => $this->childA->id, 'name' => 'A1', 'status' => 'anfrage', 'personen' => 10]);
+    $a2 = FoodAlchemistAngebot::create(['team_id' => $this->childA->id, 'name' => 'A2', 'status' => 'anfrage', 'personen' => 10]);
+    $eigen = FoodAlchemistOfferChapter::create(['team_id' => $this->childA->id, 'offer_id' => $a1->id, 'title' => 'Menü', 'position' => 0]);
+    $fremd = FoodAlchemistOfferChapter::create(['team_id' => $this->childA->id, 'offer_id' => $a2->id, 'title' => 'Menü', 'position' => 0]);
+    $frame = $svc->frameFor($this->childA, 'offer', $a1->id);
+    // Foodbook- und Angebots-Kapitel sind getrennte Tabellen: eine Foodbook-Kapitel-ID, die NICHT zufällig gleich der eigenen Angebots-Kapitel-ID ist
+    do {
+        $fbKapitel = ($this->kapitel)($this->foodbookA->id);
+    } while ($fbKapitel->id === $eigen->id);
+
+    $slot =$svc->addSlot($this->childA, $frame, ['label' => 'Menü', 'chapter_id' => $eigen->id]);
+    expect((int) $slot->chapter_id)->toBe($eigen->id)
+        ->and(fn () => $svc->updateSlot($this->childA, $slot->id, ['chapter_id' => $fremd->id]))->toThrow(RuntimeException::class, 'Kapitel gehört nicht')
+        ->and(fn () => $svc->addSlot($this->childA, $frame, ['label' => 'X', 'chapter_id' => $fbKapitel->id]))
+        ->toThrow(RuntimeException::class, 'Kapitel gehört nicht');
 });
 
 it('Speisekarte: Verweise auch bei Text-Positionen geprüft, Darreichung muss zum Gericht gehören', function () {

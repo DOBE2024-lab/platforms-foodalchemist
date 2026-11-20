@@ -37,6 +37,13 @@ final class Verweisziel
         'device_vocab_id' => \Platform\FoodAlchemist\Models\FoodAlchemistVocabRegenerationDevice::class,
     ];
 
+    /** Fachliche Bezeichnung je Feld für die Fehlermeldung — nie der rohe Spaltenname. */
+    private const BEZEICHNUNG = [
+        'writing_style_id' => 'Schreibstil', 'serving_form_id' => 'Servierform', 'default_serving_form_id' => 'Servierform',
+        'event_type_id' => 'Eventtyp', 'default_event_type_id' => 'Eventtyp', 'service_moment_id' => 'Einsatzmoment',
+        'unit_vocab_id' => 'Einheit', 'device_vocab_id' => 'Regenerationsgerät',
+    ];
+
     /**
      * Wirft, wenn eine gesetzte ID für das Team nicht sichtbar ist. Leer/null = Verknüpfung lösen (erlaubt).
      *
@@ -70,7 +77,7 @@ final class Verweisziel
         $neu = fn (string $f) => array_key_exists($f, $in) && (int) ($in[$f] ?: 0) !== (int) ($bisher?->{$f} ?? 0);
         foreach (self::VOKABULAR as $feld => $klasse) {
             if ($neu($feld)) {
-                self::pruefe($klasse, $team, $in[$feld], $feld);
+                self::pruefe($klasse, $team, $in[$feld], self::BEZEICHNUNG[$feld] ?? $feld);
             }
         }
         if ($neu('crm_company_id') || $neu('crm_contact_id')) {

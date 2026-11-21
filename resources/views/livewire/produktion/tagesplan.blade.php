@@ -187,7 +187,7 @@
                 @if($fehler)<x-fa::notice tone="crit" class="mb-3" data-tagesplan-fehler>{{ $fehler }}</x-fa::notice>@endif
 
                 @if($wallAnsicht === 'mise')
-                    <x-fa::card as="section" class="h-full min-h-0 overflow-y-auto p-3" data-tagesplan-mise="">
+                    <x-fa::card as="section" class="h-full min-h-0 overflow-y-auto rounded-2xl p-3" data-tagesplan-mise="">
                         {{-- Füllt nach Breite: auf dem Laptop zwei bis drei Karten je Reihe, am großen Monitor mehr --}}
                         <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-3">
                             @forelse($miseEnPlace as $m)
@@ -251,7 +251,7 @@
                         $einzelLane = $sichtbareBuckets->count() <= 1;
                     @endphp
                     @if($wallZeilen->isEmpty() || $sichtbareBuckets->isEmpty())
-                        <x-fa::card class="grid h-full place-items-center text-center" data-tagesplan-leer="">
+                        <x-fa::card class="grid h-full place-items-center rounded-2xl text-center" data-tagesplan-leer="">
                             <div>
                                 @svg('heroicon-o-check-badge', 'mx-auto w-14 h-14 text-[var(--fa-ink-3)]')
                                 <p class="mt-3 text-3xl font-bold md:text-4xl">{{ $wallGruppenFilter === 'gerichte' ? 'Keine Gerichte an diesem Tag.' : ($wallGruppenFilter === 'basis' ? 'Keine Basisrezepte ohne Gericht.' : 'Heute steht nichts an.') }}</p>
@@ -276,7 +276,7 @@
                                     $istPassLane = $wallIstPass($schluessel, $b['station'] ?? null);
                                     $passAuftraege = $istPassLane ? $wallPassAuftraege($laneGruppen) : collect();
                                 @endphp
-                                <x-fa::card as="section" class="flex h-full min-h-0 flex-col overflow-hidden border-t-4 {{ $tonRand[$laneTon] }}" data-tagesplan-lane="{{ $schluessel }}">
+                                <x-fa::card as="section" class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border-t-4 {{ $tonRand[$laneTon] }}" data-tagesplan-lane="{{ $schluessel }}">
                                     <div class="shrink-0 border-b border-[var(--fa-line)] px-4 py-3">
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="min-w-0">
@@ -397,7 +397,7 @@
                                                             $rezeptTitel = $z->rezept_label ?: $z->name;
                                                             $hakenText = $erledigt ? 'Haken zurücknehmen' : ($laeuft ? 'Als erledigt abhaken' : 'Auftrag starten und als erledigt abhaken');
                                                         @endphp
-                                                        <x-fa::card class="flex gap-3 p-3 {{ $erledigt ? 'opacity-55' : '' }}" wire:key="wk-{{ $z->id }}" data-tagesplan-zeile="{{ $z->id }}" data-tagesplan-wall-rezept="">
+                                                        <x-fa::card class="flex gap-3 rounded-xl p-3 {{ $erledigt ? 'opacity-55' : '' }}" wire:key="wk-{{ $z->id }}" data-tagesplan-zeile="{{ $z->id }}" data-tagesplan-wall-rezept="">
                                                             <button type="button" wire:click="abhaken({{ $z->id }})"
                                                                     class="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border-2 {{ $erledigt ? $wHakenFertig : ($laeuft ? $wHakenLaeuft : $wHakenOffen) }}"
                                                                     title="{{ $hakenText }}" aria-label="{{ $hakenText }}"
@@ -769,7 +769,7 @@
                             {{-- Spec 76b: Etikett direkt aus der Küche — Anzahl + Menge wählt die Küche; Druckdialog im Monitor (kein neuer Tab) --}}
                             @if(! empty($anleitung['etikett']))
                                 @php $et = $anleitung['etikett']; @endphp
-                                <x-fa::card class="mt-2 border-[var(--fa-line-strong)] p-2.5" data-tagesplan-wall-etikett="" x-data="{ anzahl: {{ (int) $et['anzahl'] }}, gesamt: {{ $et['gesamt_kg'] !== null ? (float) $et['gesamt_kg'] : 'null' }}, menge: '', hand: false, druckt: false,
+                                <x-fa::card class="mt-2 rounded-xl border-[var(--fa-line-strong)] p-2.5" data-tagesplan-wall-etikett="" x-data="{ anzahl: {{ (int) $et['anzahl'] }}, gesamt: {{ $et['gesamt_kg'] !== null ? (float) $et['gesamt_kg'] : 'null' }}, menge: '', hand: false, druckt: false,
                                         init() { this.rechne() },
                                         rechne() { if (! this.hand) { this.menge = this.gesamt ? (Math.round(this.gesamt / this.anzahl * 1000) / 1000).toString().replace('.', ',') : '' } },
                                         plus(d) { this.anzahl = Math.max(1, Math.min(200, this.anzahl + d)); this.rechne() },

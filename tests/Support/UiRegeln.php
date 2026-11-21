@@ -27,7 +27,7 @@ final class UiRegeln
         // steht (Farbe, Breite, Abstand …), zählt er wieder.
         'style_statisch' => '/(?<![:\w-])style="(?![^"]*\{\{)(?!\s*(?:grid-(?:column|row|area)\s*:\s*[^;"]+;?\s*)+")[^"]+"/',
         // Alter Komponenten-Namensraum (2.4a): Bausteine heißen x-fa::…; die alten Dateien unter components/ sind nur noch
-        // Weiterleitungen für fremde Aufrufe. Benannte Ausnahme: x-foodalchemist::shell.* (page-navbar, text-css, fa-menu-script),
+        // Weiterleitungen für fremde Aufrufe (Bestand 0 seit 2.4a PR A). Benannte Ausnahme: x-foodalchemist::shell.* (page-navbar, text-css, fa-menu-script),
         // weil der Host food-alchemist.de components/shell/page-navbar überschreibt und ein x-fa-Name den Override still umginge.
         'alter_namensraum' => '/<\/?x-foodalchemist::(?!shell\.)/',
     ];

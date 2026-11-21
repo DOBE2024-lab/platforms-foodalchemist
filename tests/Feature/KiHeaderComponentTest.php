@@ -11,7 +11,7 @@ uses(TestCase::class);
  */
 it('rendert Zustand unbefüllt: kein Reset, keine Konfidenz, Autopilot verdrahtet', function () {
     // „Manuell"-Button entfernt (Dominique 2026-07-01): redundant — Editieren+Speichern setzt source=manual ohnehin
-    $html = Blade::render('<x-foodalchemist::ki-header label="Tags" field="tags" />');
+    $html = Blade::render('<x-fa::ki-header label="Tags" field="tags" />');
 
     expect($html)->toContain('data-source="leer"')
         ->and($html)->toContain('>leer<')   // fa-pass: „leer“ statt „unbefüllt“
@@ -22,7 +22,7 @@ it('rendert Zustand unbefüllt: kein Reset, keine Konfidenz, Autopilot verdrahte
 });
 
 it('rendert Zustand ki: KI-Badge, Konfidenz %, Begründung als Tooltip, Reset verdrahtet', function () {
-    $html = Blade::render('<x-foodalchemist::ki-header label="Tags" field="tags" source="ki" :confidence="0.92" reasoning="Aggregiert aus LAs" />');
+    $html = Blade::render('<x-fa::ki-header label="Tags" field="tags" source="ki" :confidence="0.92" reasoning="Aggregiert aus LAs" />');
 
     expect($html)->toContain('data-source="ki"')
         ->and($html)->toContain('>KI</span>')
@@ -32,7 +32,7 @@ it('rendert Zustand ki: KI-Badge, Konfidenz %, Begründung als Tooltip, Reset ve
 });
 
 it('rendert Zustand manual: Manuell-Badge ohne Konfidenz, Reset bleibt möglich', function () {
-    $html = Blade::render('<x-foodalchemist::ki-header label="Tags" field="tags" source="manual" />');
+    $html = Blade::render('<x-fa::ki-header label="Tags" field="tags" source="manual" />');
 
     expect($html)->toContain('data-source="manual"')
         ->and($html)->toContain('>Manuell</span>')
@@ -41,8 +41,8 @@ it('rendert Zustand manual: Manuell-Badge ohne Konfidenz, Reset bleibt möglich'
 });
 
 it('zeigt Übernehmen nur bei anstehendem Vorschlag (accept_-Vertrag)', function () {
-    $ohne = Blade::render('<x-foodalchemist::ki-header label="Tags" field="tags" />');
-    $mit = Blade::render('<x-foodalchemist::ki-header label="Tags" field="tags" :has-proposal="true" />');
+    $ohne = Blade::render('<x-fa::ki-header label="Tags" field="tags" />');
+    $mit = Blade::render('<x-fa::ki-header label="Tags" field="tags" :has-proposal="true" />');
 
     expect($ohne)->not->toContain('wire:click="accept_tags"')
         ->and($mit)->toContain('wire:click="accept_tags"')

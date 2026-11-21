@@ -36,6 +36,18 @@ it('jede Weiterleitung bindet nur die gleichnamige x-fa-Datei ein, und die gibt 
     }
 });
 
+it('ein Namensraum: unter components/ außer fa/ und shell/ liegen nur noch Weiterleitungen', function () {
+    $keine = array_keys(array_filter(weiterleitungen(), fn ($inhalt) => ! str_contains($inhalt, 'Weiterleitung (2.4a)')));
+
+    expect($keine)->toBe([]);
+});
+
+it('alter und neuer Name rendern gleich: handy.nav mit benanntem Slot und handy.kopf', function () {
+    foreach (['<x-NS::handy.nav><x-slot:konto><span>KONTO-MARKER</span></x-slot:konto></x-NS::handy.nav>', '<x-NS::handy.kopf />'] as $markup) {
+        expect(Blade::render(str_replace('NS', 'foodalchemist', $markup)))->toBe(Blade::render(str_replace('NS', 'fa', $markup)));
+    }
+});
+
 it('alter und neuer Name rendern gleich: modal mit Slots und Sektion', function () {
     $markup = <<<'BLADE'
         <x-NS::modal name="gp-edit" title="GP bearbeiten" :z-fest="true" :close-via="'schliessenOderZurueck'" data-test-modal="">

@@ -70,7 +70,7 @@
             @if($detail['editierbar'] || $hauptSchritt !== null || $hatSchreibAktion)
                 <x-slot:aktion>
                     @if($hatSchreibAktion)
-                        <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort />
+                        <x-fa::bearbeiten-leiste :zustand="$sperr" sofort />
                     @endif
                     @if($hauptSchritt === null && $detail['editierbar'])
                         <x-fa::button size="sm" :variant="$sperrLesen ? 'ghost' : 'primary'" icon="heroicon-m-pencil-square" wire:click="$dispatch('produktion-editor.bearbeiten', { id: {{ $detail['id'] }} })" data-produktion-bearbeiten>Auftrag bearbeiten</x-fa::button>

@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Services\Rezept\FreigabeSperre;
 /**
  * Code-Qualität 1.1f · Freigabe-Meldung mit Knopf „Alles mitfreigeben“ für Rezept-, Gericht- und Concept-Flächen. Die Fläche fängt die
  * {@see FreigabeGesperrtException} aus ihrem Status-Aufruf mit {@see freigabeGesperrt()} ab und bindet die Meldung per
- * `<x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />` ein. Logik und Rechte prüft {@see FreigabeSperre} (Service).
+ * `<x-fa::freigabe-sperre :sperre="$freigabeSperre" />` ein. Logik und Rechte prüft {@see FreigabeSperre} (Service).
  */
 trait HatFreigabeSperre
 {

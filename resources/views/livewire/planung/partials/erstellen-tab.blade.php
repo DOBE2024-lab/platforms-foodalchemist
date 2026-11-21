@@ -192,7 +192,7 @@
     @if($wissenVorschau !== null)
         <x-fa::modal-section icon="heroicon-o-book-open" title="Wissen, das die KI nutzen würde" data-planung-wissen-vorschau>
             <p class="mb-2 fa-t-muted">Vorschau, es wurde noch nichts erstellt.</p>
-            <x-foodalchemist::kontext-inspektor :kontext="$wissenVorschau" />
+            <x-fa::kontext-inspektor :kontext="$wissenVorschau" />
         </x-fa::modal-section>
     @endif
 

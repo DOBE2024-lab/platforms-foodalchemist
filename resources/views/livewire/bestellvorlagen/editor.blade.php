@@ -15,9 +15,9 @@
                 @if($vorlage && $darf)
                     <x-fa::button variant="danger" icon="heroicon-m-trash" wire:click="loeschen" wire:confirm="Vorlage löschen?">Löschen</x-fa::button>
                 @endif
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                <x-fa::bearbeiten-leiste :zustand="$sperr">
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" data-vorlage-speichern>Speichern</x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             </div>
         </div>
     </x-slot:actions>

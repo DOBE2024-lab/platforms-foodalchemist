@@ -89,11 +89,11 @@
                     <x-fa::badge tone="warn" icon="heroicon-m-pencil" class="mb-2">Ungespeichert</x-fa::badge>
                 @endif
                 {{-- Spec 65: erst „Bearbeiten", dann Abbrechen/Speichern; Speichern gibt den Bereich frei --}}
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                <x-fa::bearbeiten-leiste :zustand="$sperr">
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" data-fa-design-save>
                         {{ $selectedId ? 'Design speichern' : 'Design anlegen' }}
                     </x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             </div>
 
             {{-- Bug-Runde 2026-09-17 #2: Die Vorschau zeigt den Editor-Zustand, der Kundenlink den

@@ -121,7 +121,7 @@
                 <x-slot:kpiHeader>
                     {{-- Leitwert ist der Ø Wareneinsatz, die eine Zahl, an der in diesem Modul Geld
                          hängt. Ampel nur dort; nie zwei Alarmfarben nebeneinander. --}}
-                    <x-foodalchemist::kpi-tiles :cols="6" marker="controlling-kpis" :tiles="[
+                    <x-fa::kpi-tiles :cols="6" marker="controlling-kpis" :tiles="[
                         ['kpi' => 'we-pct', 'label' => 'Ø Wareneinsatz', 'tone' => $ampelTone[$kpi['we_ampel']] ?? 'neutral',
                          'value' => $pct($kpi['avg_w_pct']) ?? '–',
                          'title' => 'Einkaufspreis gegen Verkaufspreis über die bepreisten Gerichte'],
@@ -155,7 +155,7 @@
                 </x-slot:kpiHeader>
             @endunless
 
-            <x-foodalchemist::editor-tabs marker="ctrl" action="setTab" :active="$tab"
+            <x-fa::editor-tabs marker="ctrl" action="setTab" :active="$tab"
                 :tabs="\Platform\FoodAlchemist\Livewire\Controlling\Cockpit::TABS" />
 
             @if($tab === 'lage')

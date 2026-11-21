@@ -23,7 +23,7 @@
     </x-slot>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Concepts" width="w-80">
+        <x-fa::page-sidebar title="Concepts" width="w-80">
             <div class="p-3 flex flex-col gap-3">
                 <div class="relative">
                     <label for="concepts-suche" class="sr-only">Concepts durchsuchen</label>
@@ -34,9 +34,9 @@
                 <x-fa::select wire:model.live="phaseFilter" aria-label="Phase" size="sm" placeholder="Alle Phasen" data-phase-filter>
                     @foreach($phasen as $pk => $pl)<option value="{{ $pk }}">{{ $pl }}</option>@endforeach
                 </x-fa::select>
-                <x-foodalchemist::filter-row wire:click="$set('showVorlagen', {{ $showVorlagen ? 'false' : 'true' }})" :active="$showVorlagen">
+                <x-fa::filter-row wire:click="$set('showVorlagen', {{ $showVorlagen ? 'false' : 'true' }})" :active="$showVorlagen">
                     <span class="inline-flex items-center gap-2">@svg('heroicon-o-square-2-stack', 'w-4 h-4 shrink-0') Nur Vorlagen</span>
-                </x-foodalchemist::filter-row>
+                </x-fa::filter-row>
 
                 {{-- Concept-Liste: die eigentliche Navigation dieser Seite --}}
                 <div class="fa-liste flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]">
@@ -78,15 +78,15 @@
                         <span class="{{ $categoryFilter !== '' ? 'font-semibold text-[var(--fa-ink)]' : '' }}">Kategorien</span>
                     </summary>
                     <div class="mt-1 flex flex-col gap-0.5">
-                        <x-foodalchemist::filter-row wire:click="kategorieWaehlen('')" :active="$categoryFilter === ''">Alle Kategorien</x-foodalchemist::filter-row>
-                        <x-foodalchemist::filter-row wire:click="kategorieWaehlen('none')" :active="$categoryFilter === 'none'"><span class="italic">Ohne Kategorie</span></x-foodalchemist::filter-row>
+                        <x-fa::filter-row wire:click="kategorieWaehlen('')" :active="$categoryFilter === ''">Alle Kategorien</x-fa::filter-row>
+                        <x-fa::filter-row wire:click="kategorieWaehlen('none')" :active="$categoryFilter === 'none'"><span class="italic">Ohne Kategorie</span></x-fa::filter-row>
                         @foreach($kategorienFlat as $kat)
                             <div wire:key="kat-{{ $kat['id'] }}" class="group/kat flex items-center gap-0.5" style="padding-left: {{ $kat['depth'] * 12 }}px">
                                 @if($editKatId === $kat['id'])
                                     <x-fa::input size="sm" wire:model="editKatName" wire:keydown.enter="kategorieRename" wire:blur="kategorieRename" aria-label="Kategorie umbenennen" class="flex-1" autofocus />
                                 @else
                                     <div class="min-w-0 flex-1">
-                                        <x-foodalchemist::filter-row wire:click="kategorieWaehlen('{{ $kat['id'] }}')" :active="$categoryFilter === (string) $kat['id']">{{ $kat['name'] }}</x-foodalchemist::filter-row>
+                                        <x-fa::filter-row wire:click="kategorieWaehlen('{{ $kat['id'] }}')" :active="$categoryFilter === (string) $kat['id']">{{ $kat['name'] }}</x-fa::filter-row>
                                     </div>
                                     <x-fa::icon-button size="sm" icon="heroicon-m-pencil" label="Kategorie umbenennen"
                                         wire:click="kategorieEditStart({{ $kat['id'] }}, {{ \Illuminate\Support\Js::from($kat['name']) }})" class="opacity-0 group-hover/kat:opacity-100 focus:opacity-100" />
@@ -104,11 +104,11 @@
                     </div>
                 </details>
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Detail" width="w-80" :maxWidth="520" scope="activity_concepts" side="right">
+        <x-fa::detail-sidebar title="Detail" width="w-80" :maxWidth="520" scope="activity_concepts" side="right">
             @if($selected && $cockpit)
                 @php
                     // Anatomie Detail-Panels (DESIGN.md): Kopf, Kennzahlen, offene Punkte, Deklaration, Aufbau.
@@ -219,7 +219,7 @@
                     <x-fa::empty icon="heroicon-o-banknotes" title="Kein Concept gewählt">Links ein Concept wählen, dann stehen hier Preis je Person, Allergene und Aufbau.</x-fa::empty>
                 </div>
             @endif
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
@@ -310,9 +310,9 @@
                             title="Druck- und PDF-Report mit allen Gerichten, Basisrezepten und Produkten" data-concept-druck>Report drucken</x-fa::button>
                         <x-fa::button :variant="$zielModus ? 'ai' : 'secondary'" icon="heroicon-m-flag" wire:click="zielpreisToggle" aria-pressed="{{ $zielModus ? 'true' : 'false' }}">Zielpreis planen</x-fa::button>
                         {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung --}}
-                        <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                        <x-fa::bearbeiten-leiste :zustand="$sperr">
                             <x-fa::button variant="primary" wire:click="speichern" data-concept-speichern>Speichern</x-fa::button>
-                        </x-foodalchemist::bearbeiten-leiste>
+                        </x-fa::bearbeiten-leiste>
                     </div>
                 </div>
 

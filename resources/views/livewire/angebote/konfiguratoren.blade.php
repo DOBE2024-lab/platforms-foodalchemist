@@ -38,7 +38,7 @@
                 <thead><tr><th class="w-full">Name</th><th>Status</th><th>Ort</th><th class="num">Konzepte</th><th class="num">Pakete</th><th>Gültig bis</th><th>Link</th></tr></thead>
                 <tbody>
                     @forelse($liste as $k)
-                        <x-foodalchemist::table-row :active="$selectedId === $k->id" wire:key="kf-{{ $k->id }}" wire:click="waehle({{ $k->id }})" data-konfigurator-zeile="{{ $k->id }}">
+                        <x-fa::table-row :active="$selectedId === $k->id" wire:key="kf-{{ $k->id }}" wire:click="waehle({{ $k->id }})" data-konfigurator-zeile="{{ $k->id }}">
                             <td class="font-medium">{{ $k->name }}@if($k->kunden_titel && $k->kunden_titel !== $k->name)<div class="fa-t-muted">{{ $k->kunden_titel }}</div>@endif</td>
                             <td><x-fa::badge :tone="$statusTon[$k->status] ?? 'neutral'">{{ $statusWerte[$k->status] ?? $k->status }}</x-fa::badge></td>
                             <td class="text-[var(--fa-ink-2)]">{{ $k->ort ?: '–' }}</td>
@@ -46,7 +46,7 @@
                             <td class="num">{{ $k->pakete_count }}</td>
                             <td class="tabular-nums text-[var(--fa-ink-2)]">{{ $k->gueltig_bis?->format('d.m.Y') ?? '–' }}</td>
                             <td>@if($k->presentation_enabled)<x-fa::badge tone="ok">Live</x-fa::badge>@else<span class="text-[var(--fa-ink-3)]">–</span>@endif</td>
-                        </x-foodalchemist::table-row>
+                        </x-fa::table-row>
                     @empty
                         <tr><td colspan="7"><x-fa::empty icon="heroicon-o-adjustments-horizontal" title="Noch kein Konfigurator">Lege einen Konfigurator an, verknüpfe Concepts und übernimm Leistungen aus den Vorlagen.</x-fa::empty></td></tr>
                     @endforelse

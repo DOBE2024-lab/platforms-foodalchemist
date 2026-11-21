@@ -46,7 +46,7 @@ it('Untere Leiste: abgeschalteter Bereich erscheint auch am Handy nicht', functi
 });
 
 it('Untere Leiste rendert Suche, Reiter, Mehr und den Konto-Platz; am Computer per CSS aus', function () {
-    $html = Blade::render('<x-foodalchemist::handy.nav><x-slot:konto><span>KONTO-MARKER</span></x-slot:konto></x-foodalchemist::handy.nav>');
+    $html = Blade::render('<x-fa::handy.nav><x-slot:konto><span>KONTO-MARKER</span></x-slot:konto></x-fa::handy.nav>');
 
     expect($html)->toContain('data-fa-handy-nav')
         ->toContain(route('foodalchemist.suche'))
@@ -64,7 +64,7 @@ it('Hotfix 31.10.: Namen in Listen-Zeilen am Handy zentral eine Stufe kleiner (1
 });
 
 it('Kopf-Baustein: Manifest, iOS-Vollbild und Handy-Entscheidung vor dem ersten Zeichnen', function () {
-    $html = Blade::render('<x-foodalchemist::handy.kopf />');
+    $html = Blade::render('<x-fa::handy.kopf />');
 
     expect($html)->toContain(route('foodalchemist.handy_app.manifest'))
         ->toContain('apple-mobile-web-app-capable')

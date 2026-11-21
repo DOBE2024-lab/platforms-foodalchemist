@@ -17,9 +17,9 @@
                         <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="Konfigurator „{{ $k->name }}“ löschen? Konzepte, Leistungen und Pakete gehen mit." data-konfigurator-loeschen>Konfigurator löschen</x-fa::menu-item>
                     </fieldset>
                 </x-fa::menu>
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                <x-fa::bearbeiten-leiste :zustand="$sperr">
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" data-konfigurator-speichern>Speichern</x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             </div>
         @endif
     </x-slot:actions>
@@ -27,7 +27,7 @@
     @if($k)
         <x-slot:kpiHeader>
             @php $kz = $kennzahlen; @endphp
-            <x-foodalchemist::kpi-tiles marker="konfigurator-kpis" :tiles="[
+            <x-fa::kpi-tiles marker="konfigurator-kpis" :tiles="[
                 ['kpi' => 'ab', 'label' => 'All-in ab', 'tone' => 'accent', 'value' => $kz['ab'] !== null ? $euro($kz['ab']) : 'Noch kein Preis',
                  'title' => 'Günstigstes Konzept im größten Paket, pro Person'],
                 ['kpi' => 'konzepte', 'label' => 'Konzepte', 'value' => $kz['haupt'] . ($kz['addons'] ? ' + ' . $kz['addons'] . ' Add-ons' : '') . ($kz['getraenke'] ? ' + ' . $kz['getraenke'] . ' Getränke' : '')],
@@ -48,7 +48,7 @@
         @if($hinweis)<x-fa::notice tone="info" data-konfigurator-hinweis>{{ $hinweis }}</x-fa::notice>@endif
 
         <div wire:key="kfcockpit-{{ $k->id }}" class="space-y-4">
-            <x-foodalchemist::editor-tabs marker="konfigurator" wire-key="konfigurator-tabs-{{ $k->id }}" :init="$k->konzepte->isEmpty() ? 'uebersicht' : 'kalkulation'" :gesperrt="$gesperrt"
+            <x-fa::editor-tabs marker="konfigurator" wire-key="konfigurator-tabs-{{ $k->id }}" :init="$k->konzepte->isEmpty() ? 'uebersicht' : 'kalkulation'" :gesperrt="$gesperrt"
                 :tabs="[
                     'uebersicht' => 'Übersicht',
                     'konzepte' => 'Konzepte',
@@ -79,7 +79,7 @@
                 <div x-show="tab === 'praesentation'" x-cloak class="pt-4 flex flex-col gap-4" data-konfigurator-panel="praesentation">
                     <livewire:foodalchemist.angebote.konfigurator-praesentation :konfigurator-id="$k->id" :wire:key="'kfpraes-' . $k->id" />
                 </div>
-            </x-foodalchemist::editor-tabs>
+            </x-fa::editor-tabs>
         </div>
     @endif
 </x-fa::modal>

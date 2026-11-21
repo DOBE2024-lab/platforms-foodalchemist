@@ -14,7 +14,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
  * Spec 94 · Reiter Branding und Präsentation wie im Foodbook: „Gültig bis“ ist Pflicht zum Veröffentlichen, Logo und Titelbild
- * über dieselbe Upload-Mechanik (x-foodalchemist::branding-bilder), der Snapshot trägt das Branding des Konfigurators.
+ * über dieselbe Upload-Mechanik (x-fa::branding-bilder), der Snapshot trägt das Branding des Konfigurators.
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();

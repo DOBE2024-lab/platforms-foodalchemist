@@ -82,7 +82,7 @@
                 </div>
 
                 {{-- Spec 03 L7b: Erstellen und Anreichern in einem Durchlauf (auf Wunsch) --}}
-                <x-foodalchemist::oneshot-toggle marker="generator" schritte="Beschreibung, Kategorie, Geschmacksrichtung" />
+                <x-fa::oneshot-toggle marker="generator" schritte="Beschreibung, Kategorie, Geschmacksrichtung" />
 
                 <div class="col-span-full flex flex-col gap-1.5" data-richtung="diaet">
                     <p class="{{ $feldTitel }}">Ernährungsform <span class="font-normal text-[var(--fa-ink-3)]">(Mehrfachauswahl, wird streng eingehalten)</span></p>
@@ -121,16 +121,16 @@
                     <x-fa::badge data-generator-kombination>{{ $komb['zusammenfassung'] }}</x-fa::badge>
                 @endif
             </div>
-            <x-foodalchemist::hardstop-zeilen :offene="$ergebnis['offene']" prefix=""
+            <x-fa::hardstop-zeilen :offene="$ergebnis['offene']" prefix=""
                                              :aufgeklappt="$hardstopOffenIndex" :meldung="$hardstopMeldung" />
-            <x-foodalchemist::stub-offen :stubs="$stat['stubs'] ?? []" />
-            <x-foodalchemist::kontext-inspektor :kontext="$ergebnis['kontext'] ?? null" />
+            <x-fa::stub-offen :stubs="$stat['stubs'] ?? []" />
+            <x-fa::kontext-inspektor :kontext="$ergebnis['kontext'] ?? null" />
             @if($laeuft)
                 <p wire:poll.2s="pruefeErgebnis" class="mt-3 inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-accent)]" data-generator-anreicherung-laeuft>
                     @svg('heroicon-m-arrow-path', 'w-4 h-4 animate-spin') Rezept gespeichert. Vollanreicherung läuft separat …
                 </p>
             @endif
-            <x-foodalchemist::oneshot-ergebnis :anreicherung="$anreicherung" />
+            <x-fa::oneshot-ergebnis :anreicherung="$anreicherung" />
         </x-fa::modal-section>
     @endif
 

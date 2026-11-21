@@ -21,7 +21,7 @@
     </x-slot:navbar>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Hauptgruppen" width="w-80">
+        <x-fa::page-sidebar title="Hauptgruppen" width="w-80">
             <div class="p-3 flex flex-col gap-3" data-vk-baum>
                 <div class="relative">
                     <label for="vk-suche" class="sr-only">Gerichte durchsuchen</label>
@@ -40,51 +40,51 @@
                 {{-- Baum: Diät-Klassen sind die aufklappbare Ebene unter dem AKTIVEN Knoten.
                      „Alle Hauptgruppen" offen → globale Klassen-Zähler; Hauptgruppe offen → auf sie begrenzt. --}}
                 <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]">
-                    <x-foodalchemist::filter-row wire:click="waehleHauptgruppe(null)" :active="$hauptgruppe === null"
-                        :child-active="$klasse !== null" :count="$gesamtCount" data-gesamt-count>Alle Hauptgruppen</x-foodalchemist::filter-row>
+                    <x-fa::filter-row wire:click="waehleHauptgruppe(null)" :active="$hauptgruppe === null"
+                        :child-active="$klasse !== null" :count="$gesamtCount" data-gesamt-count>Alle Hauptgruppen</x-fa::filter-row>
                     @if($hauptgruppe === null)
-                        <x-foodalchemist::filter-ast data-vk-klassen-ast>
+                        <x-fa::filter-ast data-vk-klassen-ast>
                             @foreach($klassen as $k)
-                                <x-foodalchemist::filter-row level="child" wire:key="vkk-alle-{{ $k->id }}"
+                                <x-fa::filter-row level="child" wire:key="vkk-alle-{{ $k->id }}"
                                     wire:click="waehleKlasse({{ $k->id }})"
                                     :active="$klasse === $k->id"
-                                    :count="$klassenCounts[$k->id] ?? 0">{{ $k->label }}</x-foodalchemist::filter-row>
+                                    :count="$klassenCounts[$k->id] ?? 0">{{ $k->label }}</x-fa::filter-row>
                             @endforeach
-                        </x-foodalchemist::filter-ast>
+                        </x-fa::filter-ast>
                     @endif
 
                     <div class="flex flex-col gap-0.5" data-vk-hg-liste>
                         @foreach($hauptgruppen as $hg)
                             <div wire:key="vkhg-{{ $hg->id }}">
-                                <x-foodalchemist::filter-row wire:click="waehleHauptgruppe({{ $hg->id }})"
+                                <x-fa::filter-row wire:click="waehleHauptgruppe({{ $hg->id }})"
                                     :active="$hauptgruppe === $hg->id" :child-active="$klasse !== null"
-                                    :count="$hgCounts[$hg->id] ?? 0" title="{{ $hg->code }} · {{ $hg->label }}"><span class="inline-block w-9 font-mono fa-t-muted">{{ $hg->code }}</span>{{ $hg->label }}</x-foodalchemist::filter-row>
+                                    :count="$hgCounts[$hg->id] ?? 0" title="{{ $hg->code }} · {{ $hg->label }}"><span class="inline-block w-9 font-mono fa-t-muted">{{ $hg->code }}</span>{{ $hg->label }}</x-fa::filter-row>
                                 @if($hauptgruppe === $hg->id)
-                                    <x-foodalchemist::filter-ast data-vk-klassen-ast>
+                                    <x-fa::filter-ast data-vk-klassen-ast>
                                         @foreach($klassen as $k)
                                             @if(($klassenCounts[$k->id] ?? 0) > 0 || $klasse === $k->id)
-                                                <x-foodalchemist::filter-row level="child" wire:key="vkk-{{ $hg->id }}-{{ $k->id }}"
+                                                <x-fa::filter-row level="child" wire:key="vkk-{{ $hg->id }}-{{ $k->id }}"
                                                     wire:click="waehleKlasse({{ $k->id }})"
                                                     :active="$klasse === $k->id"
-                                                    :count="$klassenCounts[$k->id] ?? 0">{{ $k->label }}</x-foodalchemist::filter-row>
+                                                    :count="$klassenCounts[$k->id] ?? 0">{{ $k->label }}</x-fa::filter-row>
                                             @endif
                                         @endforeach
-                                    </x-foodalchemist::filter-ast>
+                                    </x-fa::filter-ast>
                                 @endif
                             </div>
                         @endforeach
                     </div>
                 </div>
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- Detail-Spalte erst, wenn ein Gericht gewählt ist — vorher nahm der leere Hinweis Platz der Tabelle weg. --}}
     @if($recipeId !== null)
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_verkauf" side="right" :auswahl="(string) $recipeId" :aufziehen="$sprungDetail">
+        <x-fa::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_verkauf" side="right" :auswahl="(string) $recipeId" :aufziehen="$sprungDetail">
             <livewire:foodalchemist.verkauf.detail-panel :recipe-id="$recipeId" key="verkauf-browser--verkauf.detail-panel" />
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
     @endif
 
@@ -151,7 +151,7 @@
             @if($statusFehler !== null)
                 <x-fa::notice tone="crit" class="m-3" data-status-fehler>{{ $statusFehler }}</x-fa::notice>
             @endif
-            <x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
+            <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
             <div class="max-h-[70vh] overflow-auto">{{-- R13: schmaler Mittelteil scrollt statt abzuschneiden --}}
                 <table class="fa-table">
                     <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">
@@ -172,7 +172,7 @@
                                 $weR = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($r->ek_pro_portion, $vkR, null);   // Spec 85: EK je Portion
                                 $weFarbe = $weR === null ? 'text-[var(--fa-ink-3)]' : ($weR > 35 ? 'text-[var(--fa-crit)] font-semibold' : ($weR > 30 ? 'text-[var(--fa-warn)] font-medium' : 'text-[var(--fa-ink)]'));
                             @endphp
-                            <x-foodalchemist::table-row :active="$recipeId === $r->id" wire:key="vk-{{ $r->id }}" wire:click="waehleRezept({{ $r->id }})"
+                            <x-fa::table-row :active="$recipeId === $r->id" wire:key="vk-{{ $r->id }}" wire:click="waehleRezept({{ $r->id }})"
                                 x-data x-on:click="$store.ui?.mSet('activity_verkauf', 'open', true)"
                                 data-vk-zeile="{{ $r->id }}">
                                 {{-- R6: Namens-Klick öffnet direkt den VK-Editor (Zeilen-Klick bleibt Panel-Auswahl) --}}
@@ -212,7 +212,7 @@
                                         <x-fa::status :value="$r->status" />
                                     @endif
                                 </td>@endif
-                            </x-foodalchemist::table-row>
+                            </x-fa::table-row>
                         @empty
                             <tr>
                                 <td colspan="{{ count($spalten) + 1 }}">

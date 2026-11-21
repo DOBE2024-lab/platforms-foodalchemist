@@ -123,7 +123,7 @@
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="cockpitSpeichern" wire:loading.attr="disabled" wire:target="cockpitSpeichern" :disabled="count($cockpitSources) === 0" data-orders-cockpit-save>Bestellungen speichern</x-fa::button>
                 @else
                     {{-- Spec 65: Beleg-Aktionen schreiben sofort — „Bearbeiten" sperrt die Schiene, „Fertig" gibt frei --}}
-                    <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort />
+                    <x-fa::bearbeiten-leiste :zustand="$sperr" sofort />
                     {{-- Weitere Aktionen: Belege, E-Mails, Storno (ganz unten, rot) --}}
                     <x-fa::menu class="inline-block" breite="64">
                         <x-slot:ausloeser>
@@ -671,7 +671,7 @@
             </fieldset>
         </div>
     @else
-    <x-foodalchemist::editor-tabs marker="orders" wire-key="orders-tabs-{{ $detail['id'] }}-{{ $detail['status'] }}" :init="$startTab" :tabs="$reiter" :gesperrt="$sperrLesen">
+    <x-fa::editor-tabs marker="orders" wire-key="orders-tabs-{{ $detail['id'] }}-{{ $detail['status'] }}" :init="$startTab" :tabs="$reiter" :gesperrt="$sperrLesen">
 
         {{-- ═══ Reiter: POSITIONEN ═══ --}}
         <div x-show="tab === 'positionen'" x-cloak class="pt-4 flex flex-col gap-4">
@@ -1335,6 +1335,6 @@
             </x-fa::section>
             </div>
         </x-slot:frei>
-    </x-foodalchemist::editor-tabs>
+    </x-fa::editor-tabs>
     @endif
 </x-fa::modal>

@@ -31,7 +31,7 @@
 
     {{-- LINKS: Erfassen, Filter --}}
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Trend Research" width="w-72" :minWidth="240" :maxWidth="360">
+        <x-fa::page-sidebar title="Trend Research" width="w-72" :minWidth="240" :maxWidth="360">
             <nav class="fa-research-nav" aria-label="Research-Bereiche" data-research-navigation>
                 <div class="fa-research-label">Recherche &amp; Redaktion</div>
                 @foreach($researchBereiche as $key => [$name, $icon, $beschreibung])
@@ -76,7 +76,7 @@
                     <p>Die Merkliste im Observatorium bleibt deine persönliche Auswahl. Sie ist von der gemeinsamen Pinnwand getrennt.</p>
                 </div>
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- MITTE --}}
@@ -322,7 +322,7 @@
                         </thead>
                         <tbody>
                             @forelse($trends as $t)
-                                <x-foodalchemist::table-row :active="$gewaehlt && $gewaehlt->id === $t->id" wire:key="tl-{{ $t->id }}" wire:click="select({{ $t->id }})"
+                                <x-fa::table-row :active="$gewaehlt && $gewaehlt->id === $t->id" wire:key="tl-{{ $t->id }}" wire:click="select({{ $t->id }})"
                                     x-data x-on:click="$store.ui?.mSet('activity_trendradar', 'open', true)">
                                     <td class="min-w-[14rem]">
                                         <span class="block font-medium text-[var(--fa-ink)] break-words">{{ $t->name }}</span>
@@ -343,7 +343,7 @@
                                     <td class="whitespace-nowrap"><x-fa::badge :tone="$konfTon[$t->wirksameKonfidenz()] ?? 'neutral'">{{ V::KONFIDENZ[$t->wirksameKonfidenz()] }}</x-fa::badge></td>
                                     <td class="whitespace-nowrap"><x-fa::badge :tone="$statusTon[$t->status] ?? 'neutral'">{{ V::STATUS[$t->status] ?? $t->status }}</x-fa::badge></td>
                                     <td class="num">{{ $t->belege_count }}</td>
-                                </x-foodalchemist::table-row>
+                                </x-fa::table-row>
                             @empty
                                 <tr><td colspan="5">
                                     <x-fa::empty icon="heroicon-o-sparkles" title="Keine Trends">
@@ -361,7 +361,7 @@
     {{-- RECHTS: Detail --}}
     <x-slot name="activity">
         @if($gewaehlt)
-        <x-foodalchemist::detail-sidebar title="Trend" width="w-96" :maxWidth="760" scope="activity_trendradar" side="right" :aufziehen="$gewaehlt !== null">
+        <x-fa::detail-sidebar title="Trend" width="w-96" :maxWidth="760" scope="activity_trendradar" side="right" :aufziehen="$gewaehlt !== null">
             @if($gewaehlt)
                 @php
                     $kf = $gewaehlt->wirksameKonfidenz();
@@ -564,7 +564,7 @@
                     <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Trend gewählt">Einen Punkt im Radar oder eine Zeile in der Liste anklicken.</x-fa::empty>
                 </div>
             @endif
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
         @endif
     </x-slot>
 

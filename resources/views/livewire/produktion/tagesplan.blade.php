@@ -1101,7 +1101,7 @@
 
     @if(! $istWall)
         <x-slot name="sidebar">
-            <x-foodalchemist::page-sidebar title="Zeitraum und Posten" width="w-72">
+            <x-fa::page-sidebar title="Zeitraum und Posten" width="w-72">
                 <div class="p-3 space-y-5" data-tagesplanung-sidebar>
                     <div class="space-y-2" data-tagesplan-steuerung>
                         <p class="{{ $eyebrow }}">Zeitraum</p>
@@ -1129,16 +1129,16 @@
                     <div class="space-y-2" data-tagesplan-postenfilter>
                         <p class="{{ $eyebrow }}">Posten</p>
                         <div class="space-y-1">
-                            <x-foodalchemist::filter-row wire:click="postenWaehlen(null)" :active="$postenFilter === null">
+                            <x-fa::filter-row wire:click="postenWaehlen(null)" :active="$postenFilter === null">
                                 <span class="font-medium">Alle Posten</span>
-                            </x-foodalchemist::filter-row>
-                            <x-foodalchemist::filter-ast>
+                            </x-fa::filter-row>
+                            <x-fa::filter-ast>
                                 @foreach($postenListe as $p)
-                                    <x-foodalchemist::filter-row level="child" wire:key="tps-{{ $p->id }}"
+                                    <x-fa::filter-row level="child" wire:key="tps-{{ $p->id }}"
                                         wire:click="postenWaehlen({{ $p->id }})"
-                                        :active="$postenFilter === $p->id">{{ $p->name }}</x-foodalchemist::filter-row>
+                                        :active="$postenFilter === $p->id">{{ $p->name }}</x-fa::filter-row>
                                 @endforeach
-                            </x-foodalchemist::filter-ast>
+                            </x-fa::filter-ast>
                         </div>
                     </div>
 
@@ -1149,11 +1149,11 @@
                         <p class="fa-t-muted">Rechnet Vorlauftage so, dass kein Posten über Last läuft. Übernommen wird erst nach Bestätigung.</p>
                     </div>
                 </div>
-            </x-foodalchemist::page-sidebar>
+            </x-fa::page-sidebar>
         </x-slot>
 
         <x-slot name="activity">
-            <x-foodalchemist::detail-sidebar title="Tagesdetail" width="w-80" :maxWidth="760"
+            <x-fa::detail-sidebar title="Tagesdetail" width="w-80" :maxWidth="760"
                                              scope="activity_tagesplan" side="right">
                 {{-- Anatomie Detail-Panels (DESIGN.md): Kopf (Tag, Last, „Im Editor öffnen") · Kennzahlen · offene Punkte
                      (Posten über Last) · Inhalt (Posten mit ihren Positionen). Ohne gewählten Tag: Übersicht des Zeitraums. --}}
@@ -1283,7 +1283,7 @@
                         </div>
                     @endif
                 </div>
-            </x-foodalchemist::detail-sidebar>
+            </x-fa::detail-sidebar>
         </x-slot>
 
         <livewire:foodalchemist.produktion.editor key="produktion-tagesplan--produktion.editor" />
@@ -1302,7 +1302,7 @@
             </x-slot:actions>
 
             <x-slot:kpiHeader>
-                <x-foodalchemist::kpi-tiles marker="tagesplan-editor" :tiles="[
+                <x-fa::kpi-tiles marker="tagesplan-editor" :tiles="[
                     ['kpi' => 'offen', 'label' => 'Offen', 'tone' => 'accent', 'value' => (string) $dashboard['kpis']['offen']],
                     ['kpi' => 'zeit', 'label' => 'Arbeitszeit', 'value' => $dashboard['kpis']['minuten'] . ' min'],
                     ['kpi' => 'manntage', 'label' => 'Manntage', 'value' => number_format($dashboard['kpis']['minuten'] / 480, 1, ',', '.'), 'title' => '1 Manntag = 480 Minuten'],

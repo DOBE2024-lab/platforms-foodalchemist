@@ -129,10 +129,10 @@ it('KI-Knopf meldet sich als Ändern-Aktion mit seinem Methodennamen', function 
 });
 
 it('Detail-Leiste: meldet Auswahl und ist Lese-Bereich, Planung ohne Lesemodus', function () {
-    $mit = Blade::render('<x-foodalchemist::detail-sidebar title="Detail" scope="activity_test" :auswahl="42">x</x-foodalchemist::detail-sidebar>');
-    $ohne = Blade::render('<x-foodalchemist::detail-sidebar title="Detail" scope="activity_test" :auswahl="\'\'">x</x-foodalchemist::detail-sidebar>');
-    $unbekannt = Blade::render('<x-foodalchemist::detail-sidebar title="Detail" scope="activity_test">x</x-foodalchemist::detail-sidebar>');
-    $planung = Blade::render('<x-foodalchemist::detail-sidebar title="Detail" scope="activity_test" :lesemodus="false">x</x-foodalchemist::detail-sidebar>');
+    $mit = Blade::render('<x-fa::detail-sidebar title="Detail" scope="activity_test" :auswahl="42">x</x-fa::detail-sidebar>');
+    $ohne = Blade::render('<x-fa::detail-sidebar title="Detail" scope="activity_test" :auswahl="\'\'">x</x-fa::detail-sidebar>');
+    $unbekannt = Blade::render('<x-fa::detail-sidebar title="Detail" scope="activity_test">x</x-fa::detail-sidebar>');
+    $planung = Blade::render('<x-fa::detail-sidebar title="Detail" scope="activity_test" :lesemodus="false">x</x-fa::detail-sidebar>');
 
     expect($mit)->toContain('data-fa-auswahl="42"')->toContain('data-fa-handy-lesen')
         ->and($ohne)->toContain('data-fa-auswahl=""')
@@ -153,7 +153,7 @@ it('Linke Leiste: FA-Hülle ersetzt x-ui-page-sidebar in allen FA-Ansichten auß
 });
 
 it('Linke Leiste rendert mit Handy-Schublade und Öffnen-Leiste', function () {
-    $html = Blade::render('<x-foodalchemist::page-sidebar title="Hauptgruppen">Baum</x-foodalchemist::page-sidebar>');
+    $html = Blade::render('<x-fa::page-sidebar title="Hauptgruppen">Baum</x-fa::page-sidebar>');
 
     expect($html)->toContain('data-fa-page-sidebar')
         ->toContain('data-fa-page-sidebar-oeffnen')

@@ -18,7 +18,7 @@
     @php $sperrLesen = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true); @endphp
     @include('foodalchemist::livewire.settings.partials.sperr-leiste', ['sofort' => true, 'hint' => 'Zuschläge, Fixkosten und Marge wirken erst nach dem Speichern auf Selbstkosten und Verkaufspreise.'])
     @unless($sperrLesen)
-    <x-foodalchemist::save-bar :meldung="$meldung"
+    <x-fa::save-bar :meldung="$meldung"
         hint="Zuschläge, Fixkosten und Marge wirken erst nach dem Speichern auf Selbstkosten und Verkaufspreise." />
     @endunless
     @if($sperrLesen && $meldung)<x-fa::notice tone="ok" data-save-bar-meldung>{{ $meldung }}</x-fa::notice>@endif

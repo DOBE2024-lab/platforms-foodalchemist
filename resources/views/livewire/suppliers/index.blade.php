@@ -69,11 +69,11 @@
 
                 <div class="flex flex-col gap-0.5">
                     @forelse($lieferanten as $l)
-                        <x-foodalchemist::filter-row wire:key="sup-{{ $l->id }}" wire:click="waehleLieferant({{ $l->id }})"
+                        <x-fa::filter-row wire:key="sup-{{ $l->id }}" wire:click="waehleLieferant({{ $l->id }})"
                             :active="! $globaleSuche && $supplierId === $l->id" :count="$l->item_count"
                             title="{{ $l->name }}: {{ $fmt($l->item_count) }} Artikel, {{ $fmt($l->mapped_count) }} einem Grundprodukt zugeordnet{{ $l->is_inactive ? ' (inaktiv)' : '' }}">
                             <span class="{{ $l->is_inactive ? 'line-through text-[var(--fa-ink-3)]' : '' }}">{{ $l->name }}</span>
-                        </x-foodalchemist::filter-row>
+                        </x-fa::filter-row>
                     @empty
                         <x-fa::empty compact icon="heroicon-o-truck" title="Kein Lieferant gefunden">Filter leeren oder einen Lieferanten anlegen.</x-fa::empty>
                     @endforelse

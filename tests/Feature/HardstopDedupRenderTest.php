@@ -28,7 +28,7 @@ it('rendert die Dedup-Kollision als Info-Karte ohne Hard-Stop-Buttons', function
         ],
     ]];
 
-    $view = $this->blade('<x-foodalchemist::hardstop-zeilen :offene="$offene" prefix="" />', ['offene' => $offene]);
+    $view = $this->blade('<x-fa::hardstop-zeilen :offene="$offene" prefix="" />', ['offene' => $offene]);
 
     $view->assertSee('existiert bereits als', false)
         ->assertSee('Kürbispüree', false)
@@ -50,7 +50,7 @@ it('rendert die Garnitur-Namens-Warnung additiv auf einer offenen Zeile', functi
         'namens_warnung' => true,
     ]];
 
-    $view = $this->blade('<x-foodalchemist::hardstop-zeilen :offene="$offene" prefix="" />', ['offene' => $offene]);
+    $view = $this->blade('<x-fa::hardstop-zeilen :offene="$offene" prefix="" />', ['offene' => $offene]);
 
     $view->assertSee('Name nicht im Grundprodukt-Katalog', false)  // fa-pass: Klartext statt Kürzel GP
         ->assertSee('data-namenswarnung="3"', false);

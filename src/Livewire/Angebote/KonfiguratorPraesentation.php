@@ -20,7 +20,7 @@ use Platform\FoodAlchemist\Services\PresentationService;
  * Spec 94 · Reiter „Branding und Präsentation“ des Konfigurator-Editors: Design aus den Präsentations-Designs (Ausgabeform
  * konfigurator), Branding wie beim Angebot, „Branding übernehmen von …“ (Foodbook, Angebot, Betrieb — einmalige Kopie),
  * Vorschau, Link veröffentlichen (Ablauf = Gültigkeit) und zurückziehen. Veröffentlichen über PresentationService.
- * Aufbau wie im Foodbook (Präsentation für den Kunden, Logo/Titelbild über x-foodalchemist::branding-bilder); „Gültig bis“ ist
+ * Aufbau wie im Foodbook (Präsentation für den Kunden, Logo/Titelbild über x-fa::branding-bilder); „Gültig bis“ ist
  * im Editor Pflicht. Ohne Kontakt-Knopf (die Anfrage ersetzt ihn) und ohne Preis-Schutz (der Snapshot rechnet stets neu).
  */
 class KonfiguratorPraesentation extends Component

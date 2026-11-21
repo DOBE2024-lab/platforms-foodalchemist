@@ -36,10 +36,10 @@ beforeEach(function () {
 
 it('editor-tabs rendert Leiste, Marker und die drei Morph-Sicherungen', function () {
     $html = Blade::render(
-        '<x-foodalchemist::editor-tabs marker="test" wire-key="t-7" :init="\'zwei\'"
+        '<x-fa::editor-tabs marker="test" wire-key="t-7" :init="\'zwei\'"
             :tabs="[\'eins\' => \'Eins\', \'zwei\' => \'Zwei\', \'weg\' => null]">
             <div x-show="tab === \'eins\'">A</div>
-         </x-foodalchemist::editor-tabs>'
+         </x-fa::editor-tabs>'
     );
 
     // Marker: Root + je Tab-Knopf, unter dem Legacy-Namen UND dem generischen
@@ -74,9 +74,9 @@ it('editor-tabs rendert Leiste, Marker und die drei Morph-Sicherungen', function
 
 it('editor-tabs kann schwere Alpine-Reiter beim ersten Besuch freischalten', function () {
     $html = Blade::render(
-        '<x-foodalchemist::editor-tabs visit-action="tabLaden" :tabs="[\'aufbau\' => \'Aufbau\', \'details\' => \'Details\']">
+        '<x-fa::editor-tabs visit-action="tabLaden" :tabs="[\'aufbau\' => \'Aufbau\', \'details\' => \'Details\']">
             <div>Inhalt</div>
-         </x-foodalchemist::editor-tabs>'
+         </x-fa::editor-tabs>'
     );
 
     expect($html)->toContain("visited.includes('details')")
@@ -85,7 +85,7 @@ it('editor-tabs kann schwere Alpine-Reiter beim ersten Besuch freischalten', fun
 
 it('editor-tabs: x-data bleibt nach dem ersten Reiter-Besuch wortgleich — sonst baut Alpine den Scope neu und springt auf den Start-Reiter (09.11.2026)', function () {
     $render = fn (array $besucht) => Blade::render(
-        '<x-foodalchemist::editor-tabs visit-action="tabLaden" :visited="$v" :tabs="[\'aufbau\' => \'Aufbau\', \'details\' => \'Details\']"><div>Inhalt</div></x-foodalchemist::editor-tabs>',
+        '<x-fa::editor-tabs visit-action="tabLaden" :visited="$v" :tabs="[\'aufbau\' => \'Aufbau\', \'details\' => \'Details\']"><div>Inhalt</div></x-fa::editor-tabs>',
         ['v' => $besucht]
     );
     $xData = fn (string $html) => preg_match('/x-data="([^"]*)"/', $html, $m) ? $m[1] : null;
@@ -99,7 +99,7 @@ it('editor-tabs: x-data bleibt nach dem ersten Reiter-Besuch wortgleich — sons
 
 it('kpi-tiles bildet Tones auf die Palette ab und hält die Marker', function () {
     $html = Blade::render(
-        '<x-foodalchemist::kpi-tiles marker="editor-kpis" :tiles="[
+        '<x-fa::kpi-tiles marker="editor-kpis" :tiles="[
             [\'kpi\' => \'ekkg\', \'label\' => \'EK / kg\', \'value\' => \'4,20 €/kg\', \'tone\' => \'accent\'],
             [\'kpi\' => \'priced\', \'label\' => \'Mit Preis\', \'value\' => \'9/9\', \'tone\' => \'good\'],
             [\'kpi\' => \'yield\', \'label\' => \'Yield\', \'value\' => \'2,400 kg\'],

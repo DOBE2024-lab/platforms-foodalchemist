@@ -72,7 +72,7 @@
     $zustandTon = ['läuft' => 'info', 'prüfen' => 'warn', 'geplant' => 'neutral', 'erledigt' => 'ok', 'fehlgeschlagen' => 'crit'];
     $menueGruppe = 'px-3 pt-2 pb-1 text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-ink-3)]';
     $verwerfenFrage = 'Diese Planung verwerfen? Laufende Erstellungen dieser Planung werden ebenfalls gestoppt. Sie wird archiviert, nicht endgültig gelöscht.';
-    // Editor-Reiter: Erstellen · Ausgaben · Fortschritt. Optik wie x-foodalchemist::editor-tabs; der Baustein selbst
+    // Editor-Reiter: Erstellen · Ausgaben · Fortschritt. Optik wie x-fa::editor-tabs; der Baustein selbst
     // passt hier nicht (der Reiter-Zustand `tab` lebt am Modal, tab-init + modal.open-Detail, die Panels liegen im Body).
     // #1003 PR7: am Handy drei Schritte (Auftrag → Ergebnis → Kontext) statt der Reiterleiste; Auftrag nur diese Arten.
     $handy = \Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy();
@@ -107,7 +107,7 @@
 
     {{-- LINKS: Neue Planung, Suche, Filter, Liste nach Kategorie --}}
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Planungen" width="w-80">
+        <x-fa::page-sidebar title="Planungen" width="w-80">
             <div class="p-3 flex flex-col gap-3">
                 <div class="flex items-center gap-2">
                     <x-fa::input wire:model="neuTitel" wire:keydown.enter="neuePlanung" placeholder="Neue Planung benennen" aria-label="Name der neuen Planung" class="flex-1 min-w-0" />
@@ -185,7 +185,7 @@
                     @endforelse
                 </div>
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- MITTE: Erstellen + Board --}}
@@ -396,11 +396,11 @@
 
     {{-- RECHTS: Details --}}
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Detail" width="w-80" :maxWidth="560" scope="activity_planung" side="right" :auswahl="(string) $active?->id" :lesemodus="false">
+        <x-fa::detail-sidebar title="Detail" width="w-80" :maxWidth="560" scope="activity_planung" side="right" :auswahl="(string) $active?->id" :lesemodus="false">
             {{-- Anatomie Detail-Panels (DESIGN.md): Kopf (Ergebnis-Name, Stand, „Im Editor öffnen", Verwerfen im Menü)
                  · offene Punkte · Fortschritt je Stufe. --}}
             @include('foodalchemist::livewire.planung.partials.detail-inhalt')
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     {{-- VOLLBILD-EDITOR (Werkbank-Modus) --}}
@@ -1118,7 +1118,7 @@
                             @endforeach
                         </div>
                         <div wire:key="composer-kombination-{{ $composerModus }}">
-                            <x-foodalchemist::kombination :daten="$composerKombination" />
+                            <x-fa::kombination :daten="$composerKombination" />
                         </div>
                     </x-fa::modal-section>
                 @endif

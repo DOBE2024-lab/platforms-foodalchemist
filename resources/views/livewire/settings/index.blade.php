@@ -75,7 +75,7 @@
             </x-fa::notice>
         @endif
 
-        <x-foodalchemist::editor-tabs marker="settings" action="tabWaehlen" :active="$tab" :tabs="$tabLabels" scroll stark />
+        <x-fa::editor-tabs marker="settings" action="tabWaehlen" :active="$tab" :tabs="$tabLabels" scroll stark />
 
         <div class="flex flex-col gap-8" data-settings-reiter="{{ $tab }}">
             {{-- E-4: Unter-Reiter (je Unter-Bereich EINE Ansicht, seltene hinten) + EIN Bearbeiten für den ganzen Reiter (E-3).

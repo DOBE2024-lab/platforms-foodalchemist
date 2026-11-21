@@ -105,7 +105,7 @@
                 @if($kannKuratieren)
                     <div class="flex flex-wrap items-center gap-2">
                         {{-- Spec 65: Änderungen in der Spalte erst nach „Bearbeiten" (gleiche Sperre wie der Editor), „Fertig" gibt frei --}}
-                        <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort />
+                        <x-fa::bearbeiten-leiste :zustand="$sperr" sofort />
                         <x-fa::button variant="ghost" size="sm" icon="heroicon-m-arrow-top-right-on-square"
                             wire:click="$dispatch('gp-modal.oeffnen', { id: {{ $gp->id }} })" data-gp-bearbeiten>Im Editor öffnen</x-fa::button>
                     </div>

@@ -59,9 +59,9 @@
                 </x-fa::menu>
             @endif
             {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung --}}
-            <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+            <x-fa::bearbeiten-leiste :zustand="$sperr">
                 <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" wire:loading.attr="disabled" wire:target="speichern" data-produktion-speichern>{{ $orderId === null ? 'Auftrag anlegen' : 'Speichern' }}</x-fa::button>
-            </x-foodalchemist::bearbeiten-leiste>
+            </x-fa::bearbeiten-leiste>
         </div>
     </x-slot:actions>
 
@@ -77,7 +77,7 @@
         ]" />
     </x-slot:kpiHeader>
 
-    <x-foodalchemist::editor-tabs marker="produktion" wire-key="produktion-tabs-{{ $orderId ?? 'neu' }}" :init="'stammdaten'" :gesperrt="$sperrLesen"
+    <x-fa::editor-tabs marker="produktion" wire-key="produktion-tabs-{{ $orderId ?? 'neu' }}" :init="'stammdaten'" :gesperrt="$sperrLesen"
         :tabs="['stammdaten' => 'Stammdaten', 'ziele' => 'Ziele', 'vorschau' => 'Vorschau', 'zeilen' => $orderId ? 'Positionen' : null, 'einkauf' => $orderId ? 'Status und Einkauf' : null]">
 
     @include('foodalchemist::livewire.produktion.partials.editor-stammdaten')
@@ -94,7 +94,7 @@
 
     {{-- ═══ Reiter STATUS UND EINKAUF (aus DetailPanel gemergt — nur bestehender Auftrag) ═══ --}}
     @include('foodalchemist::livewire.produktion.partials.editor-einkauf')
-    </x-foodalchemist::editor-tabs>
+    </x-fa::editor-tabs>
 </x-fa::modal>
 @if($etikettenVorschlag !== [])
 <x-fa::modal name="produktion-etiketten" title="Etiketten für diesen Auftrag" size="max-w-3xl">

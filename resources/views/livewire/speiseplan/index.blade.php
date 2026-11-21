@@ -19,7 +19,7 @@
     </x-slot>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Speisepläne" width="w-72">
+        <x-fa::page-sidebar title="Speisepläne" width="w-72">
             <div class="p-3 flex flex-col gap-3">
                 <div class="relative">
                     <label for="sp-suche" class="sr-only">Speisepläne durchsuchen</label>
@@ -41,12 +41,12 @@
                 </div>
                 <div class="pt-1">{{ $plaene->links('foodalchemist::components.fa.pagination') }}</div>
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- Rechtes Detail-Panel (nur lesend) — konsistent zu Speisekarte/Foodbook --}}
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Detail" width="w-80" scope="activity_speiseplan" side="right" icon="heroicon-o-information-circle" :default-open="true">
+        <x-fa::detail-sidebar title="Detail" width="w-80" scope="activity_speiseplan" side="right" icon="heroicon-o-information-circle" :default-open="true">
             @if($plan)
                 @include('foodalchemist::livewire.speiseplan.partials.detail', ['plan' => $plan])
             @else
@@ -54,7 +54,7 @@
                     <x-fa::empty icon="heroicon-o-calendar-days" title="Kein Plan gewählt">Links einen Plan anklicken, dann erscheinen hier Einträge, Linien und offene Punkte.</x-fa::empty>
                 </div>
             @endif
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     {{-- Editor (Vollbild, Werkbank-Modus, pro Plan) — geöffnet per speiseplan-editor.bearbeiten --}}

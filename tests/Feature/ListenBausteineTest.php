@@ -25,7 +25,7 @@ beforeEach(function () {
 });
 
 it('filter-row: Eltern-Auswahl trägt Balken UND Füllung, solange kein Kind gewählt ist', function () {
-    $html = Blade::render('<x-foodalchemist::filter-row :active="true" :child-active="false" :count="7">01 Gemuese</x-foodalchemist::filter-row>');
+    $html = Blade::render('<x-fa::filter-row :active="true" :child-active="false" :count="7">01 Gemuese</x-fa::filter-row>');
 
     // fa-pass Welle 2: Auswahl = Akzentfüllung (kein Seitenbalken mehr)
     expect($html)->toContain('bg-[var(--fa-accent-soft)]')   // Füllung: dieser Knoten IST die Auswahl
@@ -36,7 +36,7 @@ it('filter-row: Eltern-Auswahl trägt Balken UND Füllung, solange kein Kind gew
 });
 
 it('filter-row: sobald ein Kind gewählt ist, tritt das Elternteil auf den Balken zurück', function () {
-    $html = Blade::render('<x-foodalchemist::filter-row :active="true" :child-active="true" :count="7">01 Gemuese</x-foodalchemist::filter-row>');
+    $html = Blade::render('<x-fa::filter-row :active="true" :child-active="true" :count="7">01 Gemuese</x-fa::filter-row>');
 
     // Das ist der Kern: fette Schrift ja, Füllung NEIN — sonst wären zwei Ebenen gleichzeitig aktiv
     expect($html)->toContain('font-semibold');
@@ -44,25 +44,25 @@ it('filter-row: sobald ein Kind gewählt ist, tritt das Elternteil auf den Balke
 });
 
 it('filter-row: Kind-Zeilen tragen die Füllung, aber keinen eigenen Balken', function () {
-    $aktiv = Blade::render('<x-foodalchemist::filter-row level="child" :active="true" :count="4">01.1 Fruchtgemuese</x-foodalchemist::filter-row>');
+    $aktiv = Blade::render('<x-fa::filter-row level="child" :active="true" :count="4">01.1 Fruchtgemuese</x-fa::filter-row>');
     expect($aktiv)->toContain('bg-[var(--fa-accent-soft)]')->toContain('font-medium');
     // Die Ebene ist durch die Führungslinie des Astes verankert, nicht durch einen Balken
     expect($aktiv)->not->toContain('border-l-2');
 
-    $inaktiv = Blade::render('<x-foodalchemist::filter-row level="child" :active="false" :count="4">01.2 Wurzel</x-foodalchemist::filter-row>');
+    $inaktiv = Blade::render('<x-fa::filter-row level="child" :active="false" :count="4">01.2 Wurzel</x-fa::filter-row>');
     expect($inaktiv)->toContain('text-[var(--fa-ink-2)]')->not->toContain('bg-[var(--fa-accent-soft)]');
 });
 
 it('filter-row: inaktive Eltern tragen weder Füllung noch Balken', function () {
-    $html = Blade::render('<x-foodalchemist::filter-row :active="false" :count="3">02 Obst</x-foodalchemist::filter-row>');
+    $html = Blade::render('<x-fa::filter-row :active="false" :count="3">02 Obst</x-fa::filter-row>');
 
     expect($html)->not->toContain('bg-[var(--fa-accent-soft)]')->not->toContain('border-l-2');
     expect($html)->not->toContain('aria-current');
 });
 
 it('filter-row: ein Zähler von 0 wird gedämpft, bleibt aber klickbar', function () {
-    $leer = Blade::render('<x-foodalchemist::filter-row :active="false" :count="0">03 Kraeuter</x-foodalchemist::filter-row>');
-    $voll = Blade::render('<x-foodalchemist::filter-row :active="false" :count="12">03 Kraeuter</x-foodalchemist::filter-row>');
+    $leer = Blade::render('<x-fa::filter-row :active="false" :count="0">03 Kraeuter</x-fa::filter-row>');
+    $voll = Blade::render('<x-fa::filter-row :active="false" :count="12">03 Kraeuter</x-fa::filter-row>');
 
     expect($leer)->toContain('opacity-60');
     expect($voll)->not->toContain('opacity-60');
@@ -70,16 +70,16 @@ it('filter-row: ein Zähler von 0 wird gedämpft, bleibt aber klickbar', functio
 });
 
 it('filter-row + table-row reichen wire:click und data-Marker durch', function () {
-    $fr = Blade::render('<x-foodalchemist::filter-row wire:click="waehleWg(\'01\')" data-test-marker :count="1">X</x-foodalchemist::filter-row>');
+    $fr = Blade::render('<x-fa::filter-row wire:click="waehleWg(\'01\')" data-test-marker :count="1">X</x-fa::filter-row>');
     expect($fr)->toContain('wire:click="waehleWg(\'01\')"')->toContain('data-test-marker');
 
-    $tr = Blade::render('<x-foodalchemist::table-row wire:key="gp-5" data-gp-zeile="5" :active="false"><td>A</td></x-foodalchemist::table-row>');
+    $tr = Blade::render('<x-fa::table-row wire:key="gp-5" data-gp-zeile="5" :active="false"><td>A</td></x-fa::table-row>');
     expect($tr)->toContain('wire:key="gp-5"')->toContain('data-gp-zeile="5"');
 });
 
 it('table-row: Auswahl über aria-selected (Akzentfüllung per CSS), Trennlinie + Hover bleiben', function () {
-    $aktiv = Blade::render('<x-foodalchemist::table-row :active="true"><td>A</td></x-foodalchemist::table-row>');
-    $ruhig = Blade::render('<x-foodalchemist::table-row :active="false"><td>A</td></x-foodalchemist::table-row>');
+    $aktiv = Blade::render('<x-fa::table-row :active="true"><td>A</td></x-fa::table-row>');
+    $ruhig = Blade::render('<x-fa::table-row :active="false"><td>A</td></x-fa::table-row>');
 
     expect($aktiv)->toContain('aria-selected="true"');
     expect($ruhig)->toContain('aria-selected="false"');
@@ -91,7 +91,7 @@ it('table-row: Auswahl über aria-selected (Akzentfüllung per CSS), Trennlinie 
 });
 
 it('filter-ast zeichnet die Führungslinie der Kind-Ebene', function () {
-    $html = Blade::render('<x-foodalchemist::filter-ast data-sub-liste>x</x-foodalchemist::filter-ast>');
+    $html = Blade::render('<x-fa::filter-ast data-sub-liste>x</x-fa::filter-ast>');
     expect($html)->toContain('border-l')->toContain('border-[var(--fa-line-strong)]')->toContain('data-sub-liste');
 });
 

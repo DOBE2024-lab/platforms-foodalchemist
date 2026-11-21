@@ -71,9 +71,9 @@
                 </x-fa::menu>
                 {{-- Spec 65: der Speiseplan schreibt sofort (Zellen, Mengen, Linien, Stammdaten bei Änderung) — darum
                      „Bearbeiten" (Sperre) und „Fertig" (frei). Der Speichern-Knopf erscheint nur ohne Sperr-Schalter. --}}
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort>
+                <x-fa::bearbeiten-leiste :zustand="$sperr" sofort>
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" wire:loading.attr="disabled" wire:target="speichern" data-sp-speichern>Speichern</x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             </div>
         @endif
     </x-slot:actions>
@@ -131,7 +131,7 @@
              die Zellen im Raster lesen es per :class, siehe partials/zelle). --}}
         <div class="flex gap-4 -mx-6 items-start" x-data="{ rail: {{ count($wochenTage) <= 6 ? 'true' : 'false' }}, markiert: null, markierKey: null }">
             <div class="flex-1 min-w-0 px-6">
-                <x-foodalchemist::editor-tabs marker="sp" wire-key="sp-tabs-{{ $sp->id }}" :init="'kalender'"
+                <x-fa::editor-tabs marker="sp" wire-key="sp-tabs-{{ $sp->id }}" :init="'kalender'"
                     :tabs="[
                         'kalender' => 'Kalender',
                         'mengen' => 'Mengen',
@@ -722,14 +722,14 @@
                             {{-- Spec 33 P5: Status und Zuordnung aus dem geteilten Bauteil. Ein Gültigkeitsfenster
                                  hat der Plan bewusst nicht: es steht in seinen Einträgen. --}}
                             <div class="pt-3 border-t border-[var(--fa-line)]">
-                                <x-foodalchemist::ausgabe-status
+                                <x-fa::ausgabe-status
                                     status-model="form.status"
                                     outlet-model="form.outlet_id"
                                     :betriebe="$betriebe" :zustand="$plan->laufZustand()" :grund="$plan->laufGrund()"
                                     :fenster-hinweis="$fensterHinweis" :konflikt="$portfolioKonflikt"
                                     toggle="aktivUmschalten" />
                             </div>
-                            <x-foodalchemist::crm-kunde-picker
+                            <x-fa::crm-kunde-picker
                                 :ausgabe="$plan" :crm-verfuegbar="$crmVerfuegbar" :firmen="$firmen" :kontakte="$kontakte" />
                         </x-fa::section>
 
@@ -1038,7 +1038,7 @@
                         </x-fa::section>
                         </fieldset>
                     </div>
-                </x-foodalchemist::editor-tabs>
+                </x-fa::editor-tabs>
             </div>
 
             {{-- ═══ Kontext-Spalte rechts ═══

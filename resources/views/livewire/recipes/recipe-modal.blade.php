@@ -84,11 +84,11 @@
                      zurück → beiZutatenPersistiert schließt. Kein paralleler Race, kein Früh-Schließen. --}}
                 {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung,
                      der Editor bleibt im Lesemodus offen. Neuanlage braucht keine Sperre (modus neu = nur der Knopf). --}}
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                <x-fa::bearbeiten-leiste :zustand="$sperr">
                     <x-fa::button variant="primary" icon="heroicon-m-check"
                         x-on:click="const warBestand = $wire.recipeId !== null; $wire.speichern().then(() => { if (warBestand && ! $wire.fehler && $wire.recipeId) $dispatch('zutaten-speichern', { recipeId: $wire.recipeId }) })"
                         data-rezept-speichern>{{ $neu ? 'Rezept anlegen' : 'Speichern' }}</x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             </div>
         @endif
     </x-slot:actions>
@@ -172,7 +172,7 @@
         </p>
     @endif
 
-    <x-foodalchemist::oneshot-ergebnis :anreicherung="$anreicherung" />
+    <x-fa::oneshot-ergebnis :anreicherung="$anreicherung" />
 
     {{-- KI-Überarbeiten (aus dem KI-Assistent): rezeptweit, deshalb über den Reitern — sichtbar,
          egal welcher Reiter gerade offen ist. --}}
@@ -241,7 +241,7 @@
     @endif
 
     @if(! $neu && $copilotOffen)
-        <x-foodalchemist::copilot-box :copilot="$copilot" :status="$copilotStatus" zeilen-wort="Zutat" />
+        <x-fa::copilot-box :copilot="$copilot" :status="$copilotStatus" zeilen-wort="Zutat" />
     @endif
 
     {{-- Spec 28 / E0.1: sticky Tab-Leiste + Alpine-Scope liegen im Baustein `editor-tabs`
@@ -249,7 +249,7 @@
          gemountet werden). Start-Tab: «Aufbau», bei Neuanlage «Stammdaten» (Aufbau ist ohne
          Zutaten leer). Die drei Morph-Fallen (wire:key · x-effect-Reset · ein Scope für Leiste
          und Panels) stecken im Baustein. --}}
-    <x-foodalchemist::editor-tabs marker="rezept" wire-key="rezept-tabs-{{ $recipeId ?? 'neu' }}" visit-action="tabLaden" :gesperrt="in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
+    <x-fa::editor-tabs marker="rezept" wire-key="rezept-tabs-{{ $recipeId ?? 'neu' }}" visit-action="tabLaden" :gesperrt="in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
         :visited="array_keys($geladeneTabs)"
         :init="$neu ? 'eigenschaften' : 'aufbau'"
         :tabs="[
@@ -819,7 +819,7 @@
         @endif
     </div>
         </x-slot:frei>
-    </x-foodalchemist::editor-tabs>
+    </x-fa::editor-tabs>
 
     @endif
 

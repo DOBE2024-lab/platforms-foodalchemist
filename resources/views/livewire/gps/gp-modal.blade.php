@@ -63,11 +63,11 @@
              der Editor bleibt im Lesemodus offen. Neuanlage: nur der Knopf (keine Sperre nötig). --}}
         <div class="ml-auto">
             @if($neu || $kannKuratieren)
-            <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+            <x-fa::bearbeiten-leiste :zustand="$sperr">
                 <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern"
                     :disabled="$autoSuggestPending" wire:loading.attr="disabled" wire:target="autoSuggestFromSupplierItem"
                     data-gp-speichern data-gp-speichern-kopf>{{ $neu ? ($autoSuggestPending ? 'KI analysiert …' : 'Grundprodukt anlegen') : 'Speichern' }}</x-fa::button>
-            </x-foodalchemist::bearbeiten-leiste>
+            </x-fa::bearbeiten-leiste>
             @else
                 <x-fa::badge>Schreibgeschützt</x-fa::badge>
             @endif
@@ -165,7 +165,7 @@
         <livewire:foodalchemist.gps.zukauf-rezept :gp-id="$gp->id" :key="'gp-zukauf-modal-'.$gp->id" />
     @endif
 
-    <x-foodalchemist::editor-tabs marker="gp" wire-key="gp-tabs-{{ $gp?->id ?? 'neu' }}" :init="$neu ? 'allgemein' : 'price'" :gesperrt="(! $neu && ! $kannKuratieren) || in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
+    <x-fa::editor-tabs marker="gp" wire-key="gp-tabs-{{ $gp?->id ?? 'neu' }}" :init="$neu ? 'allgemein' : 'price'" :gesperrt="(! $neu && ! $kannKuratieren) || in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
         :tabs="[
             'price' => $neu ? null : 'Lieferantenartikel',
             'allergene' => $neu ? null : 'Allergene und Zusatzstoffe',
@@ -435,7 +435,7 @@
 
                 @if(! $neu && $gp !== null && ($builder['commodity_group_code'] ?? '') !== '16')
                     <div class="pt-3 border-t border-[var(--fa-line)]">
-                        <x-foodalchemist::ki-header label="Zustand" field="zustand"
+                        <x-fa::ki-header label="Zustand" field="zustand"
                             :source="$gp->condition_source" :confidence="$gp->condition_ai_confidence !== null ? (float) $gp->condition_ai_confidence : null"
                             :reasoning="$gp->condition_ai_reasoning" :hasProposal="isset($kiVorschlag['condition'])">
                             <div class="flex flex-wrap items-center gap-2">
@@ -448,7 +448,7 @@
                                     </x-fa::badge>
                                 @endif
                             </div>
-                        </x-foodalchemist::ki-header>
+                        </x-fa::ki-header>
                     </div>
                 @endif
             </x-fa::section>
@@ -537,7 +537,7 @@
             {{-- ── Reiter: EIGENSCHAFTEN (Merkmale, Favorit, Nährwerte) ───────────── --}}
             <div x-show="tab === 'eigenschaften'" x-cloak class="pt-4 flex flex-col gap-4">
                 <x-fa::section title="Merkmale" icon="heroicon-o-tag">
-                    <x-foodalchemist::ki-header label="Merkmale" field="tags"
+                    <x-fa::ki-header label="Merkmale" field="tags"
                         :source="$gp->tag_source" :confidence="$gp->tag_ai_confidence !== null ? (float) $gp->tag_ai_confidence : null"
                         :reasoning="$gp->tag_ai_reasoning" :hasProposal="isset($kiVorschlag['tags'])">
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2" data-tags-grid>
@@ -552,7 +552,7 @@
                                 </div>
                             @endforeach
                         </div>
-                    </x-foodalchemist::ki-header>
+                    </x-fa::ki-header>
                 </x-fa::section>
 
                 <x-fa::section title="Favorit" icon="heroicon-o-star">
@@ -761,5 +761,5 @@
             </div>
             @endif
         </x-slot:frei>
-    </x-foodalchemist::editor-tabs>
+    </x-fa::editor-tabs>
 </x-fa::modal>

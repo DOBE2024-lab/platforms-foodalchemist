@@ -70,7 +70,7 @@
     </x-slot>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Filter" width="w-72">
+        <x-fa::page-sidebar title="Filter" width="w-72">
             <div class="p-3 flex flex-col gap-4">
                 <div class="relative">
                     <label for="orders-suche" class="sr-only">Bestellungen durchsuchen</label>
@@ -106,9 +106,9 @@
                 @if($sicht !== 'bedarfe')
                     <div class="flex flex-col gap-0.5">
                         <span class="mb-1 fa-t-label">Status</span>
-                        <x-foodalchemist::filter-row wire:click="$set('statusFilter','')" :active="$statusFilter === ''"><span>Alle Status</span></x-foodalchemist::filter-row>
+                        <x-fa::filter-row wire:click="$set('statusFilter','')" :active="$statusFilter === ''"><span>Alle Status</span></x-fa::filter-row>
                         @foreach(['draft','sent','confirmed','delivered','cancelled'] as $s)
-                            <x-foodalchemist::filter-row wire:key="order-status-{{ $s }}" wire:click="$set('statusFilter','{{ $s }}')" :active="$statusFilter === $s">{{ $statusLabels[$s] }}</x-foodalchemist::filter-row>
+                            <x-fa::filter-row wire:key="order-status-{{ $s }}" wire:click="$set('statusFilter','{{ $s }}')" :active="$statusFilter === $s">{{ $statusLabels[$s] }}</x-fa::filter-row>
                         @endforeach
                     </div>
 
@@ -125,13 +125,13 @@
                     </div>
                 @endif
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Bestellung" width="w-96" :maxWidth="760" scope="activity_orders" side="right" :auswahl="(string) $selectedOrderId">
+        <x-fa::detail-sidebar title="Bestellung" width="w-96" :maxWidth="760" scope="activity_orders" side="right" :auswahl="(string) $selectedOrderId">
             <livewire:foodalchemist.orders.detail-panel :order-id="$selectedOrderId" :key="'order-detail-'.($selectedOrderId ?? 'empty')" />
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     {{-- Werkbank-Editor (pro Bestellung und für Bestellrunden), geöffnet per orders-editor.* --}}
@@ -413,7 +413,7 @@
                                         </tr>
                                     @endif
                                     @foreach($gruppe['orders'] as $o)
-                                        <x-foodalchemist::table-row :active="$selectedOrderId === $o['id']" wire:key="{{ ($gruppe['key'])($o) }}" wire:click="oeffnen({{ $o['id'] }})" data-orders-zeile="{{ $o['id'] }}">
+                                        <x-fa::table-row :active="$selectedOrderId === $o['id']" wire:key="{{ ($gruppe['key'])($o) }}" wire:click="oeffnen({{ $o['id'] }})" data-orders-zeile="{{ $o['id'] }}">
                                             @if($mitAuswahl)
                                                 <td onclick="event.stopPropagation()">
                                                     <x-fa::checkbox wire:model.live="selectedOrderIds" value="{{ $o['id'] }}" :disabled="$o['status'] !== \Platform\FoodAlchemist\Enums\OrderStatus::Draft" aria-label="ord-{{ $o['id'] }} auswählen" />
@@ -466,7 +466,7 @@
                                                     @foreach($o['warnings'] as $w)<x-fa::badge tone="warn">{{ $w }}</x-fa::badge>@endforeach
                                                 </div>
                                             </td>
-                                        </x-foodalchemist::table-row>
+                                        </x-fa::table-row>
                                     @endforeach
                                 @endforeach
                             @endif

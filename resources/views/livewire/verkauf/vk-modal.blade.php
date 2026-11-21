@@ -93,11 +93,11 @@
                      Erfolg adressiert das Zutaten-Speichern der eingebetteten Komponenten (MVP-046).
                      Der Editor meldet `zutaten-persistiert` zurück → beiZutatenPersistiert schließt. --}}
                 {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung --}}
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                <x-fa::bearbeiten-leiste :zustand="$sperr">
                     <x-fa::button variant="primary" icon="heroicon-m-check"
                         x-on:click="$wire.speichern().then(() => { if (! $wire.fehler && $wire.recipeId) $dispatch('zutaten-speichern', { recipeId: $wire.recipeId }) })"
                         data-vk-speichern>Speichern</x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             @else
                 <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="anlegen" data-vk-anlegen>Gericht anlegen</x-fa::button>
             @endif
@@ -167,7 +167,7 @@
         </p>
     @endif
 
-    <x-foodalchemist::oneshot-ergebnis :anreicherung="$anreicherung" />
+    <x-fa::oneshot-ergebnis :anreicherung="$anreicherung" />
 
     @if($rezept === null)
         {{-- Anlage-Modus (DoD: Gericht aus Basisrezept manuell) — die Hauptaktion «Gericht anlegen» steht im Kopf. --}}
@@ -265,7 +265,7 @@
         @endif
 
         @if($copilotOffen)
-            <x-foodalchemist::copilot-box :copilot="$copilot" :status="$copilotStatus" prefix="vk-" zeilen-wort="Komponente" />
+            <x-fa::copilot-box :copilot="$copilot" :status="$copilotStatus" prefix="vk-" zeilen-wort="Komponente" />
         @endif
 
         {{-- R7 (Dominique 2026-06-14): Reiter statt langem Scroll. Alpine x-show: alle Panels bleiben im
@@ -275,7 +275,7 @@
              'allergene'-Key bleibt stabil, Label «Deklaration» (Allergene · Zusatzstoffe · Nährwerte · Anteile).
              fa-pass: «Darreichungen» ist in «Kalkulation» aufgegangen — Preisklasse, MwSt und VK entstehen
              je Darreichung, getrennte Reiter zwangen zum Hin- und Herspringen. --}}
-        <x-foodalchemist::editor-tabs marker="vk" wire-key="vk-tabs-{{ $rezept->id }}" :init="'aufbau'" visit-action="tabLaden" :gesperrt="in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
+        <x-fa::editor-tabs marker="vk" wire-key="vk-tabs-{{ $rezept->id }}" :init="'aufbau'" visit-action="tabLaden" :gesperrt="in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
             :tabs="[
                 'aufbau' => 'Aufbau',
                 'kalkulation' => 'Kalkulation',
@@ -791,6 +791,6 @@
             @livewire('foodalchemist.recipes.feedback-panel', ['recipeId' => $rezept->id], key('feedback-vk-'.$rezept->id))
         </div>
             </x-slot:frei>
-        </x-foodalchemist::editor-tabs>
+        </x-fa::editor-tabs>
     @endif
 </x-fa::modal>

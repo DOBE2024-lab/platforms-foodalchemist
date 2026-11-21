@@ -22,7 +22,7 @@ it('rendert das Wissen gruppiert je Kanal + bereinigt Präfixe/Versionen', funct
         'templates' => [['id' => 1, 'name' => 'Vinaigrette-Basis']],
     ];
 
-    $html = Blade::render('<x-foodalchemist::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
+    $html = Blade::render('<x-fa::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
 
     expect($html)->toContain('Verwendetes Wissen')
         ->toContain('Cross-Cutting')->toContain('Domänen')->toContain('Niveau')->toContain('Pairing-Anker')
@@ -35,8 +35,8 @@ it('rendert das Wissen gruppiert je Kanal + bereinigt Präfixe/Versionen', funct
 });
 
 it('ist fail-safe: null oder leerer Kontext rendert nichts (Panel verschwindet)', function () {
-    expect(trim(Blade::render('<x-foodalchemist::kontext-inspektor :kontext="$kontext" />', ['kontext' => null])))->toBe('');
-    expect(trim(Blade::render('<x-foodalchemist::kontext-inspektor :kontext="$kontext" />', ['kontext' => ['wissen' => [], 'templates' => [], 'chars' => 0]])))->toBe('');
+    expect(trim(Blade::render('<x-fa::kontext-inspektor :kontext="$kontext" />', ['kontext' => null])))->toBe('');
+    expect(trim(Blade::render('<x-fa::kontext-inspektor :kontext="$kontext" />', ['kontext' => ['wissen' => [], 'templates' => [], 'chars' => 0]])))->toBe('');
 });
 
 it('beide Generator-Modals kompilieren mit dem eingehängten Inspektor (kein Blade-ParseError)', function () {
@@ -73,7 +73,7 @@ it('zeigt die ECHTEN Prompt-Groessen, nicht nur den Retrieval-Anteil', function 
         ],
     ];
 
-    $html = Blade::render('<x-foodalchemist::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
+    $html = Blade::render('<x-fa::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
 
     // fa-pass 2026-10-05: nur die sichtbaren Begriffe sind in Küchensprache (Anfrage statt Prompt,
     // Kontextdaten statt Kontext-JSON, Ersatzweg statt Fallback, Abrechnungseinheiten statt Token).
@@ -99,7 +99,7 @@ it('bleibt bei der alten Anzeige, wenn die Messsonde nichts liefert', function (
     // Eine Tabelle voller Nullen würde Wissen behaupten, das wir nicht haben.
     $k = ['wissen' => ['domain' => ['fisch_seafood@v1']], 'chars' => 11000, 'templates' => []];
 
-    $html = Blade::render('<x-foodalchemist::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
+    $html = Blade::render('<x-fa::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
 
     expect($html)->toContain('~11.000 Zeichen')
         ->not->toContain('data-prompt-groessen');
@@ -120,7 +120,7 @@ it('zeigt verworfene Dossiers getrennt nach Recherche und Kanon', function () {
         'chars' => 11000, 'templates' => [],
     ];
 
-    $html = Blade::render('<x-foodalchemist::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
+    $html = Blade::render('<x-fa::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
 
     expect($html)->toContain('Verworfen (nicht gesendet)')
         ->toContain('Recherche: fruchtgemuese-substitutionen@v3')
@@ -134,7 +134,7 @@ it('zeigt KEINE Verworfen-Gruppe, wenn nichts verworfen wurde (kein Etikett ohne
         'chars' => 11000, 'templates' => [],
     ];
 
-    $html = Blade::render('<x-foodalchemist::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
+    $html = Blade::render('<x-fa::kontext-inspektor :kontext="$kontext" />', ['kontext' => $k]);
 
     expect($html)->not->toContain('Verworfen (nicht gesendet)');
 });

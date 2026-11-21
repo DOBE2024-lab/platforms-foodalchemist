@@ -7,8 +7,8 @@
     <?php $sperrLesen = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true); ?>
     @include('foodalchemist::livewire.settings.partials.sperr-leiste', ['sofort' => true])
     <fieldset @disabled($sperrLesen) class="contents" data-fa-lesemodus="{{ $sperrLesen ? '1' : '0' }}">
-    @if($fehler)<x-foodalchemist::alert tone="danger" class="mb-2" data-chips-fehler>{{ $fehler }}</x-foodalchemist::alert>@endif
-    @if($meldung)<x-foodalchemist::alert tone="success" class="mb-2" data-chips-meldung>{{ $meldung }}</x-foodalchemist::alert>@endif
+    @if($fehler)<x-fa::alert tone="danger" class="mb-2" data-chips-fehler>{{ $fehler }}</x-fa::alert>@endif
+    @if($meldung)<x-fa::alert tone="success" class="mb-2" data-chips-meldung>{{ $meldung }}</x-fa::alert>@endif
 
     <p class="text-[11px] text-gray-500 mb-3">
         Ein Chip ist ein <strong>Prüf-Kriterium</strong> für Speiseplan-Vorgaben — z. B. „Vegan“, „Schwein“ oder

@@ -28,7 +28,7 @@
 
     {{-- Zone links: Suche · Warengruppen-Baum mit Zahlen · Unterkategorien --}}
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Warengruppen" width="w-80">
+        <x-fa::page-sidebar title="Warengruppen" width="w-80">
             <div class="p-3 flex flex-col gap-3" data-gp-baum>
                 <div class="relative">
                     <label for="gp-suche" class="sr-only">Grundprodukte durchsuchen</label>
@@ -37,35 +37,35 @@
                 </div>
 
                 <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]" data-wg-liste>
-                    <x-foodalchemist::filter-row wire:click="waehleWg('')" :active="$commodity_group === ''"
-                        :count="array_sum($wgCounts)">Alle Warengruppen</x-foodalchemist::filter-row>
+                    <x-fa::filter-row wire:click="waehleWg('')" :active="$commodity_group === ''"
+                        :count="array_sum($wgCounts)">Alle Warengruppen</x-fa::filter-row>
                     @foreach($warengruppen as $wg)
                         <div wire:key="wg-{{ $wg->code }}">
-                            <x-foodalchemist::filter-row wire:click="waehleWg('{{ $wg->code }}')"
+                            <x-fa::filter-row wire:click="waehleWg('{{ $wg->code }}')"
                                 :active="$commodity_group === $wg->code" :child-active="$subKategorie !== ''"
-                                :count="$wgCounts[$wg->code] ?? 0">{{ $wg->codedLabel() }}</x-foodalchemist::filter-row>
+                                :count="$wgCounts[$wg->code] ?? 0">{{ $wg->codedLabel() }}</x-fa::filter-row>
                             @if($commodity_group === $wg->code && count($subCounts) > 0)
-                                <x-foodalchemist::filter-ast data-sub-liste>
+                                <x-fa::filter-ast data-sub-liste>
                                     @foreach($subCounts as $sub => $n)
-                                        <x-foodalchemist::filter-row level="child" wire:key="sub-{{ md5($sub) }}"
+                                        <x-fa::filter-row level="child" wire:key="sub-{{ md5($sub) }}"
                                             wire:click="waehleSub('{{ addslashes($sub) }}')"
-                                            :active="$subKategorie === $sub" :count="$n">{{ $sub }}</x-foodalchemist::filter-row>
+                                            :active="$subKategorie === $sub" :count="$n">{{ $sub }}</x-fa::filter-row>
                                     @endforeach
-                                </x-foodalchemist::filter-ast>
+                                </x-fa::filter-ast>
                             @endif
                         </div>
                     @endforeach
                 </div>
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- Detail-Spalte immer vorhanden: nach dem Anlegen im Dialog wählt `gp-selected` das neue Grundprodukt
          direkt im Panel aus. Ohne gewähltes Grundprodukt zeigt das Panel einen Leerzustand. --}}
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_gps" side="right" :auswahl="(string) $gpId" :aufziehen="$sprungDetail">
+        <x-fa::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_gps" side="right" :auswahl="(string) $gpId" :aufziehen="$sprungDetail">
             <livewire:foodalchemist.gps.detail-panel :gp-id="$gpId" key="gps-browser--gps.detail-panel" />
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     {{-- Editoren und Dialoge (innerhalb x-ui-page, P-2) --}}
@@ -148,7 +148,7 @@
                     </thead>
                     <tbody>
                         @forelse($gps as $gp)
-                            <x-foodalchemist::table-row :active="$gpId === $gp->id" wire:key="gp-{{ $gp->id }}" wire:click="waehleGp({{ $gp->id }})"
+                            <x-fa::table-row :active="$gpId === $gp->id" wire:key="gp-{{ $gp->id }}" wire:click="waehleGp({{ $gp->id }})"
                                 x-data x-on:click="$store.ui?.mSet('activity_gps', 'open', true)"
                                 data-gp-zeile="{{ $gp->id }}">
                                 {{-- R6: Namens-Klick öffnet direkt den Editor (Zeilen-Klick bleibt Detail-Auswahl) --}}
@@ -222,7 +222,7 @@
                                         <x-fa::status :value="$gp->status" />
                                     @endif
                                 </td>@endif
-                            </x-foodalchemist::table-row>
+                            </x-fa::table-row>
                         @empty
                             <tr>
                                 <td colspan="{{ count($spalten) + 1 }}">

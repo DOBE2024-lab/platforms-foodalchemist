@@ -84,7 +84,7 @@
             <x-slot:aktion>
                 <div class="flex flex-wrap items-center gap-2">
                     {{-- Spec 65: Änderungen in der Spalte erst nach „Bearbeiten" (gleiche Sperre wie der Gericht-Editor), „Fertig" gibt frei --}}
-                    <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort />
+                    <x-fa::bearbeiten-leiste :zustand="$sperr" sofort />
                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-top-right-on-square" wire:click="$dispatch('vk-modal.oeffnen', { id: {{ $rezept->id }} })" data-vk-bearbeiten>Im Editor öffnen</x-fa::button>
                 </div>
             </x-slot:aktion>
@@ -259,9 +259,9 @@
                 {{-- Spec 60: Kombinationslogik statt Kern-Anker-Pflege --}}
                 @if($pairingBereit)
                     @if($kombination)
-                        <x-foodalchemist::kombination :daten="$kombination" />
+                        <x-fa::kombination :daten="$kombination" />
                     @endif
-                    <x-foodalchemist::pairing-netz :recipe-id="$rezept->id" :netz="$netz" />
+                    <x-fa::pairing-netz :recipe-id="$rezept->id" :netz="$netz" />
                 @elseif($pairingErlaubt)
                     <div wire:key="pairing-laden-{{ $rezept->id }}" x-init="$wire.pairingLaden()"
                          class="flex items-center gap-2 py-6 fa-t-muted" data-pairing-laedt>

@@ -80,9 +80,9 @@
                 </x-fa::menu>
 
                 {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung, Editor bleibt offen --}}
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                <x-fa::bearbeiten-leiste :zustand="$sperr">
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" data-angebot-speichern>Speichern</x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             </div>
         @endif
     </x-slot:actions>
@@ -100,7 +100,7 @@
                 $angFertig = $angBoard->where('fortschritt', 'fertig')->count();
                 $kpiWeTon = match ($wareneinsatzAmpel ?? 'unbekannt') { 'gruen' => 'good', 'gelb' => 'warn', 'rot' => 'bad', default => null };
             @endphp
-            <x-foodalchemist::kpi-tiles marker="angebot-kpis" :tiles="[
+            <x-fa::kpi-tiles marker="angebot-kpis" :tiles="[
                 ['kpi' => 'gesamt', 'label' => 'Angebotssumme', 'tone' => 'accent',
                  'value' => $voll ? $euro($k['gesamt_vk']) : 'Noch kein Preis'],
                 ['kpi' => 'vkpp', 'label' => 'Preis je Gast',
@@ -223,7 +223,7 @@
         {{-- MITTE: Editor-Reiter --}}
         <div class="flex-1 min-w-0 px-6">
             <div wire:key="angcockpit-{{ $angebot->id }}" class="space-y-4">
-                <x-foodalchemist::editor-tabs marker="angebot" wire-key="angebot-tabs-{{ $angebot->id }}" :init="$hatKapitel ? 'board' : 'anfrage'" :gesperrt="$gesperrt"
+                <x-fa::editor-tabs marker="angebot" wire-key="angebot-tabs-{{ $angebot->id }}" :init="$hatKapitel ? 'board' : 'anfrage'" :gesperrt="$gesperrt"
                     :tabs="[
                         'board' => 'Übersicht',
                         'aufbau' => 'Aufbau',
@@ -731,7 +731,7 @@
                     </div>{{-- /linke Spalte --}}
 
                     {{-- Persistenter Katalog: Konzept · Paket · Format · Gericht. Ein Klick bucht ins gewählte Kapitel. --}}
-                    <x-foodalchemist::katalog-picker marker="angebot" switch="katalogModus" :modes="[
+                    <x-fa::katalog-picker marker="angebot" switch="katalogModus" :modes="[
                         ['key' => 'concept', 'label' => 'Konzept', 'active' => ($pickerModus ?? 'concept') === 'concept'],
                         ['key' => 'paket', 'label' => 'Paket', 'active' => ($pickerModus ?? 'concept') === 'paket'],
                         ['key' => 'format', 'label' => 'Format', 'active' => ($pickerModus ?? 'concept') === 'format'],
@@ -762,7 +762,7 @@
                             </div>
                             <div class="flex-1 overflow-y-auto space-y-0.5">
                                 @forelse($conceptKandidaten ?? [] as $ck)
-                                    <x-foodalchemist::katalog-row wire:key="ack-{{ $ck->id }}" wire:click="conceptHinzu({{ $ck->id }})" :title="$ck->name" :price="$ck->price_per_person_cache !== null ? $euro($ck->price_per_person_cache) : null">{{ $ck->name }}</x-foodalchemist::katalog-row>
+                                    <x-fa::katalog-row wire:key="ack-{{ $ck->id }}" wire:click="conceptHinzu({{ $ck->id }})" :title="$ck->name" :price="$ck->price_per_person_cache !== null ? $euro($ck->price_per_person_cache) : null">{{ $ck->name }}</x-fa::katalog-row>
                                 @empty
                                     <p class="px-2 py-2 {{ $hinweis }}">{{ ($conceptSuche ?? '') !== '' || $facettenAktiv ? 'Keine Konzepte für diese Auswahl.' : 'Noch keine Konzepte angelegt.' }}</p>
                                 @endforelse
@@ -792,7 +792,7 @@
                             </div>
                             <div class="flex-1 overflow-y-auto space-y-0.5">
                                 @forelse($paketKandidaten ?? [] as $pk)
-                                    <x-foodalchemist::katalog-row wire:key="apk-{{ $pk->id }}" wire:click="paketHinzu({{ $pk->id }})" :title="$pk->consumer_name ?: $pk->name" :price="$pk->price_per_person_cache !== null ? $euro($pk->price_per_person_cache) : null">{{ $pk->consumer_name ?: $pk->name }}</x-foodalchemist::katalog-row>
+                                    <x-fa::katalog-row wire:key="apk-{{ $pk->id }}" wire:click="paketHinzu({{ $pk->id }})" :title="$pk->consumer_name ?: $pk->name" :price="$pk->price_per_person_cache !== null ? $euro($pk->price_per_person_cache) : null">{{ $pk->consumer_name ?: $pk->name }}</x-fa::katalog-row>
                                 @empty
                                     <p class="px-2 py-2 {{ $hinweis }}">{{ ($paketSuche ?? '') !== '' || $paketFacettenAktiv ? 'Keine Pakete für diese Auswahl.' : 'Noch keine Pakete angelegt.' }}</p>
                                 @endforelse
@@ -803,7 +803,7 @@
                             <p class="mb-1 shrink-0 {{ $hinweis }}">Bucht ein Format als eigenes Kapitel, die Editionen bleiben aktuell.</p>
                             <div class="flex-1 overflow-y-auto space-y-0.5">
                                 @forelse($formatKandidaten ?? [] as $fk)
-                                    <x-foodalchemist::katalog-row wire:key="afmt-{{ $fk->id }}" wire:click="formatEinfuegen({{ $fk->id }})" :title="$fk->consumer_name ?: $fk->name">{{ $fk->name }}@if($fk->origin === 'kunde')<span class="ml-1 {{ $hinweis }}">(Kundenkonzept)</span>@endif</x-foodalchemist::katalog-row>
+                                    <x-fa::katalog-row wire:key="afmt-{{ $fk->id }}" wire:click="formatEinfuegen({{ $fk->id }})" :title="$fk->consumer_name ?: $fk->name">{{ $fk->name }}@if($fk->origin === 'kunde')<span class="ml-1 {{ $hinweis }}">(Kundenkonzept)</span>@endif</x-fa::katalog-row>
                                 @empty
                                     <p class="px-2 py-2 {{ $hinweis }}">Keine Formate vorhanden.</p>
                                 @endforelse
@@ -823,13 +823,13 @@
                             </div>
                             <div class="flex-1 overflow-y-auto space-y-0.5">
                                 @forelse($gerichtKandidaten ?? [] as $gk)
-                                    <x-foodalchemist::katalog-row wire:key="agk-{{ $gk->id }}" wire:click="gerichtHinzu({{ $gk->id }})" :title="$gk->name" :price="$gk->vk_netto !== null ? $euro($gk->vk_netto) : null">{{ $gk->name }}</x-foodalchemist::katalog-row>
+                                    <x-fa::katalog-row wire:key="agk-{{ $gk->id }}" wire:click="gerichtHinzu({{ $gk->id }})" :title="$gk->name" :price="$gk->vk_netto !== null ? $euro($gk->vk_netto) : null">{{ $gk->name }}</x-fa::katalog-row>
                                 @empty
                                     <p class="px-2 py-2 {{ $hinweis }}">{{ ($gerichtSuche ?? '') !== '' ? 'Keine Gerichte für diese Auswahl.' : 'Gericht suchen oder Hauptgruppe wählen.' }}</p>
                                 @endforelse
                             </div>
                         @endif
-                    </x-foodalchemist::katalog-picker>
+                    </x-fa::katalog-picker>
                     </div>{{-- /2col Aufbau --}}
                 @else
                     <div class="fa-surface">
@@ -953,7 +953,7 @@
                 {{-- ═══ Reiter: KUNDE & BUSINESS-CASE ═══ --}}
                 <div x-show="tab === 'kunde'" x-cloak class="pt-4 flex flex-col gap-4" data-angebot-panel="kunde">
                     <x-fa::section title="Kunde" icon="heroicon-o-building-office">
-                        <x-foodalchemist::crm-kunde-picker
+                        <x-fa::crm-kunde-picker
                             :ausgabe="$angebot" :crm-verfuegbar="$crmVerfuegbar" :firmen="$firmen" :kontakte="$kontakte" />
                     </x-fa::section>
 
@@ -1205,7 +1205,7 @@
                     </x-fa::section>
                 </div>{{-- /Branding & Präsentation --}}
 
-                </x-foodalchemist::editor-tabs>
+                </x-fa::editor-tabs>
             </div>{{-- /angcockpit --}}
         </div>{{-- /Mitte --}}
     </div>{{-- /2-Spalten-Cockpit --}}

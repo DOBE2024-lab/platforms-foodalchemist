@@ -11,7 +11,7 @@
         <x-fa::field label="Paket-Toleranz %" for="kf-tol"><x-fa::input id="kf-tol" wire:model="form.paket_toleranz_pct" numeric /></x-fa::field>
         <x-fa::field label="Rundung" for="kf-rund"><x-fa::select id="kf-rund" wire:model="form.rundung" :options="['0.01' => '0,01 €', '0.10' => '0,10 €', '0.50' => '0,50 €', '1.00' => '1,00 €']" /></x-fa::field>
     </div>
-    <label class="inline-flex items-center gap-2"><input type="checkbox" wire:model="form.tageszeit_aktiv" class="accent-[var(--fa-accent)]" /> Kunde wählt im Link die Tageszeit (Lunch, Dinner, Day-into-Night)</label>
+    <x-fa::checkbox class="inline-flex items-center gap-2" wire:model="form.tageszeit_aktiv">Kunde wählt im Link die Tageszeit (Lunch, Dinner, Day-into-Night)</x-fa::checkbox>
     <p class="fa-t-muted">Regeln wirken nach „Speichern“ auf die Preisvorschau.</p>
 </x-fa::section>
 

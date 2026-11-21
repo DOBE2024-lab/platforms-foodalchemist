@@ -101,14 +101,11 @@
 
                 {{-- 06·H4: opt-in Favoriten-Modus (Default aus → keine Versteifung) --}}
                 <div class="md:col-span-2 flex flex-col gap-1.5" data-richtung="favoriten">
-                    <label class="flex items-start gap-2 fa-t-strong cursor-pointer">
-                        <input type="checkbox" wire:model.live="useFavoritesList" class="mt-0.5 accent-[var(--fa-accent)]" data-vk-favoriten />
+                    <x-fa::checkbox class="flex items-start gap-2 fa-t-strong cursor-pointer" wire:model.live="useFavoritesList" data-vk-favoriten>
                         <span class="inline-flex items-center gap-1.5">@svg('heroicon-o-star', 'w-4 h-4 text-[var(--fa-ink-3)]') Auf Basis meiner Favoriten bauen</span>
-                    </label>
+                    </x-fa::checkbox>
                     <p class="fa-t-muted ml-6">Bevorzugt die gepflegten Lieblings-Grundprodukte, schließt andere aber nicht aus. Aus heißt: freie Auswahl.</p>
-                    <label x-show="$wire.useFavoritesList" class="flex items-center gap-2 ml-6 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] cursor-pointer">
-                        <input type="checkbox" wire:model="favoritesConvenienceOnly" class="accent-[var(--fa-accent)]" data-vk-favoriten-conv /> nur Convenience-Favoriten
-                    </label>
+                    <x-fa::checkbox x-show="$wire.useFavoritesList" class="flex items-center gap-2 ml-6 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] cursor-pointer" wire:model="favoritesConvenienceOnly" data-vk-favoriten-conv>nur Convenience-Favoriten</x-fa::checkbox>
                 </div>
 
                 {{-- Spec 03 L7b: One-Shot — Generieren und Anreichern in einem Durchlauf --}}

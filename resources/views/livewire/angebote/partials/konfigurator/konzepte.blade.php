@@ -38,8 +38,8 @@
                     <x-fa::field label="Dinner-Concept (Id)" for="kfk-dinner" optional hint="leer = nur mittags wählbar"><x-fa::input id="kfk-dinner" type="number" wire:model="konzeptForm.dinner_concept_id" /></x-fa::field>
                 </div>
                 <div class="flex flex-wrap items-center gap-4">
-                    <label class="inline-flex items-center gap-2"><input type="checkbox" wire:model="konzeptForm.indikativ_lunch" class="accent-[var(--fa-accent)]" /> Lunch-Preis indikativ</label>
-                    <label class="inline-flex items-center gap-2"><input type="checkbox" wire:model="konzeptForm.indikativ_dinner" class="accent-[var(--fa-accent)]" /> Dinner-Preis indikativ</label>
+                    <x-fa::checkbox class="inline-flex items-center gap-2" wire:model="konzeptForm.indikativ_lunch">Lunch-Preis indikativ</x-fa::checkbox>
+                    <x-fa::checkbox class="inline-flex items-center gap-2" wire:model="konzeptForm.indikativ_dinner">Dinner-Preis indikativ</x-fa::checkbox>
                     <span class="ml-auto flex gap-2">
                         <x-fa::button size="sm" variant="ghost" wire:click="konzeptBearbeitenAbbrechen">Abbrechen</x-fa::button>
                         <x-fa::button size="sm" variant="primary" wire:click="konzeptSpeichern">Übernehmen</x-fa::button>

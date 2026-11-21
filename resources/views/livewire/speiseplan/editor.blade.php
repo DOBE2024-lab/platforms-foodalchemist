@@ -25,7 +25,6 @@
     $chipAus = 'bg-[var(--fa-surface)] border-[var(--fa-line-strong)] text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)] hover:border-[var(--fa-ink-3)]';
     $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $karte = 'fa-surface p-3 flex flex-col gap-2';
-    $haken = 'rounded accent-[var(--fa-accent)]';
 
     // Wareneinsatz-Zustand gegen das Zielband (Service liefert ok · unter · ueber · weit_ueber · unbekannt).
     $wesText = ['ok' => 'text-[var(--fa-ok)]', 'unter' => 'text-[var(--fa-info)]', 'ueber' => 'text-[var(--fa-warn)]', 'weit_ueber' => 'text-[var(--fa-crit)]', 'unbekannt' => 'text-[var(--fa-ink-3)]'];
@@ -216,8 +215,8 @@
                                                 @endforeach
                                             </x-fa::select>
                                         </x-fa::field>
-                                        <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model="wocheKopierenMerge" class="{{ $haken }}" /> Mit vorhandenen Einträgen zusammenführen</label>
-                                        <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model="wocheKopierenPax" class="{{ $haken }}" /> Essen-Zahlen mitnehmen</label>
+                                        <x-fa::checkbox class="flex items-center gap-2 h-9 fa-t-body" wire:model="wocheKopierenMerge">Mit vorhandenen Einträgen zusammenführen</x-fa::checkbox>
+                                        <x-fa::checkbox class="flex items-center gap-2 h-9 fa-t-body" wire:model="wocheKopierenPax">Essen-Zahlen mitnehmen</x-fa::checkbox>
                                         <div class="ml-auto flex items-center gap-2">
                                             <x-fa::button variant="ghost" wire:click="$set('wocheKopierenOffen', false)">Abbrechen</x-fa::button>
                                             <x-fa::button icon="heroicon-m-document-duplicate" wire:click="wocheKopieren">Woche kopieren</x-fa::button>
@@ -701,8 +700,8 @@
                                     <x-fa::field label="Wareneinsatz von (%)" for="sp-linie-wesmin"><x-fa::input id="sp-linie-wesmin" inputmode="decimal" wire:model="linieForm.target_wes_min_pct" numeric placeholder="leer = keine Grenze" /></x-fa::field>
                                     <x-fa::field label="Wareneinsatz bis (%)" for="sp-linie-wesmax"><x-fa::input id="sp-linie-wesmax" inputmode="decimal" wire:model="linieForm.target_wes_max_pct" numeric placeholder="leer = Ziel des Kalkulationsprofils" /></x-fa::field>
                                     <x-fa::field label="Essen je Tag" for="sp-linie-pax"><x-fa::input id="sp-linie-pax" type="number" min="0" wire:model="linieForm.default_pax" numeric placeholder="Standard des Plans" /></x-fa::field>
-                                    <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model="linieForm.is_vegetarian" class="{{ $haken }}" /> Nur vegetarisch</label>
-                                    <label class="flex items-center gap-2 h-9 fa-t-body" title="Dauerangebote (Salatbar …) zählen nicht für die Wiederholungsregel"><input type="checkbox" wire:model="linieForm.is_standing" class="{{ $haken }}" /> Dauerangebot</label>
+                                    <x-fa::checkbox class="flex items-center gap-2 h-9 fa-t-body" wire:model="linieForm.is_vegetarian">Nur vegetarisch</x-fa::checkbox>
+                                    <x-fa::checkbox class="flex items-center gap-2 h-9 fa-t-body" title="Dauerangebote (Salatbar …) zählen nicht für die Wiederholungsregel" wire:model="linieForm.is_standing">Dauerangebot</x-fa::checkbox>
                                 </div>
                             </x-fa::section>
                         @endif
@@ -825,10 +824,9 @@
                                     @endif
                                 </div>
                             @else
-                                <label class="flex items-start gap-2 fa-t-body" data-sp-vorlage-schalter>
-                                    <input type="checkbox" @checked($sp->is_template) wire:click="vorlageUmschalten" class="{{ $haken }} mt-0.5" />
+                                <x-fa::checkbox class="flex items-start gap-2 fa-t-body" :checked="$sp->is_template" wire:click="vorlageUmschalten" data-sp-vorlage-schalter>
                                     <span>Als Vorlage freigeben. Kalkulationsprofile bekommen eine verknüpfte Kopie und übernehmen Änderungen per Abgleich.</span>
-                                </label>
+                                </x-fa::checkbox>
                                 @if($sp->is_template)
                                     <div class="flex flex-col gap-2" data-sp-betriebskopien>
                                         @forelse($betriebsKopien as $bk)
@@ -859,7 +857,7 @@
                         <x-fa::section title="Zyklus ausrollen" icon="heroicon-o-arrow-path" description="Den {{ $sp->cycle_weeks }}-Wochen-Block ab Start auf alle Folgewochen bis zum Zieldatum kopieren. Belegte Zellen bleiben unberührt, außer du wählst „Belegte Zellen ersetzen“. Die Essen-Zahlen wandern mit.">
                             <div class="flex flex-wrap items-end gap-3">
                                 <x-fa::field label="Ausrollen bis" for="sp-ausrollen-bis" class="w-48"><x-fa::input id="sp-ausrollen-bis" type="date" wire:model="ausrollenBis" title="Zyklus bis zu diesem Datum ausrollen" /></x-fa::field>
-                                <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model.live="ausrollenErsetzen" class="{{ $haken }}" /> Belegte Zellen ersetzen</label>
+                                <x-fa::checkbox class="flex items-center gap-2 h-9 fa-t-body" wire:model.live="ausrollenErsetzen">Belegte Zellen ersetzen</x-fa::checkbox>
                                 <x-fa::button icon="heroicon-m-arrow-path" wire:click="ausrollen" :wire:confirm="$ausrollenErsetzen ? 'Belegte Zellen in den Folgewochen werden durch die Vorlage ersetzt. Fortfahren?' : null" data-sp-ausrollen>Zyklus ausrollen</x-fa::button>
                                 @if($ausrollenInfo)<x-fa::signal tone="info" class="self-center">{{ $ausrollenInfo }}</x-fa::signal>@endif
                             </div>
@@ -884,7 +882,7 @@
                                 <x-fa::field label="Linie (Linien- und Buffetschild)" for="sp-ausgabe-linie" class="w-64">
                                     <x-fa::select id="sp-ausgabe-linie" wire:model.live="ausgabeLinie" placeholder="Alle Linien" :options="$matrixLinien->pluck('name', 'id')" />
                                 </x-fa::field>
-                                <label class="flex items-center gap-2 h-9 fa-t-body"><input type="checkbox" wire:model.live="ausgabePreise" class="{{ $haken }}" /> Preise zeigen</label>
+                                <x-fa::checkbox class="flex items-center gap-2 h-9 fa-t-body" wire:model.live="ausgabePreise">Preise zeigen</x-fa::checkbox>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2" data-sp-ausgabe-formate>
                                 @foreach([
@@ -957,13 +955,12 @@
                                 </x-fa::field>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <label class="flex items-start gap-2 fa-t-body" data-sp-praes-laufend>
-                                    <input type="checkbox" wire:model="presentationLaufendeWoche" class="{{ $haken }} mt-0.5">
+                                <x-fa::checkbox class="flex items-start gap-2 fa-t-body" wire:model="presentationLaufendeWoche" data-sp-praes-laufend>
                                     <span>Immer die laufende Woche zeigen (jeden Montag neu eingefroren). Sonst {{ $kwText }}.</span>
-                                </label>
-                                <label class="flex items-center gap-2 fa-t-body"><input type="checkbox" wire:model="presentationPreisAnzeige" class="{{ $haken }}" data-sp-praes-preis> Preise anzeigen</label>
+                                </x-fa::checkbox>
+                                <x-fa::checkbox class="flex items-center gap-2 fa-t-body" wire:model="presentationPreisAnzeige" data-sp-praes-preis>Preise anzeigen</x-fa::checkbox>
                                 {{-- Ebene 2 · Republish-Preis-Schutz (nur relevant mit Preisen) --}}
-                                <label class="flex items-center gap-2 fa-t-body" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen. An: aktuelle Verkaufspreise übernehmen. Nur mit Preisen relevant; die erste Veröffentlichung ist immer aktuell."><input type="checkbox" wire:model="presentationPreiseAktualisieren" class="{{ $haken }}"> Preise beim erneuten Veröffentlichen aktualisieren</label>
+                                <x-fa::checkbox class="flex items-center gap-2 fa-t-body" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen. An: aktuelle Verkaufspreise übernehmen. Nur mit Preisen relevant; die erste Veröffentlichung ist immer aktuell." wire:model="presentationPreiseAktualisieren">Preise beim erneuten Veröffentlichen aktualisieren</x-fa::checkbox>
                                 <p class="fa-t-muted">Der Aushang in der Gemeinschaftsverpflegung ist ohne Preise üblich; die Kennzeichnung der Allergene und Zusatzstoffe ist immer sichtbar. Preise z. B. für Café- oder Bistro-Pläne, sie folgen dem aktiven Kalkulationsprofil.</p>
                             </div>
 

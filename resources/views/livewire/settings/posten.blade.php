@@ -109,11 +109,10 @@
                                 </div>
                                 <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[var(--fa-line)]">
                                     {{-- Spec 83 B3g: der Pass ist ein Sammelposten ohne eigenes Personal --}}
-                                    <label class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Ein Sammelposten hat kein eigenes Personal: Kapazität und Last hängen an den beteiligten Posten, es gibt keine Überlast-Warnung für ihn. Gedacht für den Pass.">
-                                        <input type="checkbox" @checked($p->ist_sammelposten) wire:change="feldSetzen({{ $p->id }}, 'ist_sammelposten', $event.target.checked ? '1' : '0')" data-posten-sammelposten />
+                                    <x-fa::checkbox class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Ein Sammelposten hat kein eigenes Personal: Kapazität und Last hängen an den beteiligten Posten, es gibt keine Überlast-Warnung für ihn. Gedacht für den Pass." :checked="$p->ist_sammelposten" wire:change="feldSetzen({{ $p->id }}, 'ist_sammelposten', $event.target.checked ? '1' : '0')" data-posten-sammelposten>
                                         Sammelposten (Pass)
                                         @if($p->ist_sammelposten)<span class="text-[var(--fa-ink-3)]" data-posten-sammelposten-hinweis>· ohne eigenes Personal</span>@endif
-                                    </label>
+                                    </x-fa::checkbox>
                                     <x-fa::button size="sm" variant="ghost" wire:click="aktivToggle({{ $p->id }})"
                                         :icon="$p->is_inactive ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-pause-circle'"
                                         title="Posten werden stillgelegt, nicht gelöscht. Sonst liefen bestehende Zuteilungen ins Leere."

@@ -139,7 +139,7 @@
                     </div>
                 @endif
                 @if($darf)
-                    <label class="mt-3 flex items-center gap-2 text-[length:var(--fa-text-md)]"><input type="checkbox" wire:model="merken" data-preisliste-merken /> Zuordnung für diesen Lieferanten merken und beim nächsten Upload anwenden</label>
+                    <x-fa::checkbox class="mt-3 flex items-center gap-2 text-[length:var(--fa-text-md)]" wire:model="merken" data-preisliste-merken>Zuordnung für diesen Lieferanten merken und beim nächsten Upload anwenden</x-fa::checkbox>
                     <div class="pt-3"><x-fa::button variant="primary" icon="heroicon-m-arrows-right-left" wire:click="zuordnen" wire:loading.attr="disabled" data-preisliste-zuordnen>Zuordnen und abgleichen</x-fa::button></div>
                 @endif
             </x-fa::section>

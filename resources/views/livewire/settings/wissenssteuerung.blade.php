@@ -57,9 +57,7 @@
                     <option value="">Alle Bereiche ({{ $bericht['keys'] }})</option>
                     @foreach($bereiche as $b)<option value="{{ $b }}">{{ WS::BEREICH_LABEL[$b] ?? WS::lesbar($b) }}</option>@endforeach
                 </x-fa::select>
-                <label class="flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer whitespace-nowrap">
-                    <input type="checkbox" wire:model.live="nurBefunde" class="w-4 h-4 rounded accent-[var(--fa-accent)]" data-ws-nur-befunde /> Nur mit Befund
-                </label>
+                <x-fa::checkbox class="flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer whitespace-nowrap" wire:model.live="nurBefunde" data-ws-nur-befunde>Nur mit Befund</x-fa::checkbox>
             </div>
         </x-slot:actions>
 

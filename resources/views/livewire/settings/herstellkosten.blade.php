@@ -106,7 +106,7 @@
                         <tr wire:key="kblock-{{ $b['key'] }}">
                             <td class="font-medium">{{ $b['label'] }}</td>
                             <td><x-fa::badge>{{ $basisLabel[$b['type']] ?? $b['type'] }}</x-fa::badge></td>
-                            <td class="text-center"><input type="checkbox" wire:model="schema.{{ $i }}.active" aria-label="{{ $b['label'] }} aktiv" class="w-4 h-4 accent-[var(--fa-accent)]" /></td>
+                            <td class="text-center"><x-fa::checkbox wire:model="schema.{{ $i }}.active" aria-label="{{ $b['label'] }} aktiv" /></td>
                             <td>
                                 @if($istGk)
                                     <x-fa::choice name="schema.{{ $i }}.mode" :options="['abgeleitet' => 'Automatisch', 'manuell' => 'Manuell']" />

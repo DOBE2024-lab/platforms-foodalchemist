@@ -748,9 +748,7 @@
             {{-- Spec 74: Lagerartikel (Grundvorrat) — nicht über den Rezeptbedarf bestellen, sondern nachfüllen --}}
             @if($lagerartikelInfo !== null)
                 <div class="mt-3 flex flex-col gap-1.5" data-gp-lagerartikel>
-                    <label class="inline-flex items-center gap-1.5 fa-t-body">
-                        <input type="checkbox" wire:model.live="lagerartikelForm.ist" class="w-4 h-4 rounded accent-[var(--fa-accent)]" /> Lagerartikel (Grundvorrat, z. B. Gewürze, Öle)
-                    </label>
+                    <x-fa::checkbox class="inline-flex items-center gap-1.5 fa-t-body" wire:model.live="lagerartikelForm.ist">Lagerartikel (Grundvorrat, z. B. Gewürze, Öle)</x-fa::checkbox>
                     @if($lagerartikelForm['ist'])
                         <div class="flex flex-wrap items-end gap-2">
                             <x-fa::field label="Mindestbestand" for="gpla-min"><span class="inline-flex items-center gap-1"><x-fa::input id="gpla-min" size="sm" wire:model="lagerartikelForm.min" inputmode="decimal" class="w-20" /><span class="fa-t-muted">{{ $lagerartikelInfo['einheit'] }}</span></span></x-fa::field>

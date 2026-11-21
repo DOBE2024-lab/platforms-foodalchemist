@@ -36,7 +36,7 @@
                             <tbody>
                                 @foreach($zeilen as $i => $z)
                                     <tr wire:key="re-z-{{ $i }}-{{ $z['delivery_note_line_id'] ?? 'x' }}" class="{{ empty($z['an']) ? 'opacity-50' : '' }}" data-re-zeile>
-                                        <td><input type="checkbox" wire:model.live="zeilen.{{ $i }}.an" aria-label="auf Rechnung"></td>
+                                        <td><x-fa::checkbox wire:model.live="zeilen.{{ $i }}.an" aria-label="auf Rechnung" /></td>
                                         <td>{{ $z['lieferschein'] ?? '–' }}<span class="fa-t-muted">{{ $z['nummer'] ? ' · ' . $z['nummer'] : ' · ohne Bestellung' }}</span></td>
                                         <td class="font-medium">{{ $z['designation'] }}</td>
                                         <td class="text-right"><x-fa::input size="sm" numeric class="w-20" wire:model.live.blur="zeilen.{{ $i }}.qty" aria-label="Menge" /></td>

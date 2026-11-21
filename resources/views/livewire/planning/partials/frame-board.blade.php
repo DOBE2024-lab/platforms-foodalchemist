@@ -71,9 +71,7 @@
                         </div>
                     </x-fa::field>
                     <div class="col-span-2 md:col-span-2 xl:col-span-2 flex items-center gap-1.5 h-7">
-                        <label class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] mr-auto">
-                            <input type="checkbox" wire:model="frameSlots.{{ $i }}.is_pflicht" class="w-4 h-4 accent-[var(--fa-accent)]" /> Pflicht
-                        </label>
+                        <x-fa::checkbox class="inline-flex items-center gap-1.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] mr-auto" wire:model="frameSlots.{{ $i }}.is_pflicht">Pflicht</x-fa::checkbox>
                         <x-fa::icon-button icon="heroicon-m-check" label="Gang speichern" size="sm" wire:click="frameSlotSpeichern({{ $i }})" />
                         <x-fa::icon-button icon="heroicon-m-trash" label="Gang löschen" size="sm" tone="danger" wire:click="frameSlotLoeschen({{ $slot['id'] }})" wire:confirm="Gang samt seinen Regeln löschen?" />
                     </div>

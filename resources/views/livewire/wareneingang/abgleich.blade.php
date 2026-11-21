@@ -16,7 +16,7 @@
             <x-fa::field label="Zeitraum" for="ab-t" class="w-40">
                 <x-fa::select id="ab-t" wire:model.live="tage" :options="[30 => 'letzte 30 Tage', 90 => 'letzte 90 Tage', 365 => 'letztes Jahr']" />
             </x-fa::field>
-            <label class="inline-flex items-center gap-2 pb-2 text-[length:var(--fa-text-sm)]"><input type="checkbox" wire:model.live="nurAbweichung"> nur Abweichungen</label>
+            <x-fa::checkbox class="inline-flex items-center gap-2 pb-2 text-[length:var(--fa-text-sm)]" wire:model.live="nurAbweichung">nur Abweichungen</x-fa::checkbox>
             @if($istAdmin)
                 <span class="flex-1"></span>
                 <div class="flex items-end gap-2" data-ab-toleranz>

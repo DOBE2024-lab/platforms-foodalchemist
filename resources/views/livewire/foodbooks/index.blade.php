@@ -23,7 +23,6 @@
     $kleinSymbol = 'inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-[var(--fa-radius-control)] text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] transition-colors duration-150';
     $dateiFeld = 'block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer file:mr-2 file:h-7 file:px-2.5 file:rounded-[var(--fa-radius-control)] file:border file:border-[var(--fa-line-strong)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:text-[length:var(--fa-text-sm)] file:font-medium hover:file:bg-[var(--fa-hover)]';
     $farbFeld = 'h-9 w-12 shrink-0 cursor-pointer rounded-[var(--fa-radius-control)] border border-[var(--fa-line-strong)] bg-transparent p-0.5';
-    $haken = 'w-4 h-4 shrink-0 accent-[var(--fa-accent)]';
     $medien = fn ($fileId, $pfad) => app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($fileId, $pfad);
     $euro = fn ($wert) => number_format((float) $wert, 2, ',', '.') . ' €';
     // Preisspanne eines Formats (priceRange: min/max der Editionen) — „29,00 – 34,00 €" bzw. ein Wert.
@@ -536,11 +535,10 @@
 
                         <fieldset class="flex flex-wrap gap-x-5 gap-y-2">
                             <legend class="sr-only">Anzeige</legend>
-                            <label class="inline-flex items-center gap-2 fa-t-body"><input type="checkbox" wire:model="presentationPreisAnzeige" class="{{ $haken }}"> Preise pro Person zeigen</label>
-                            <label class="inline-flex items-center gap-2 fa-t-body"><input type="checkbox" wire:model="presentationDeklaration" class="{{ $haken }}"> Allergen-Legende zeigen</label>
+                            <x-fa::checkbox class="inline-flex items-center gap-2 fa-t-body" wire:model="presentationPreisAnzeige">Preise pro Person zeigen</x-fa::checkbox>
+                            <x-fa::checkbox class="inline-flex items-center gap-2 fa-t-body" wire:model="presentationDeklaration">Allergen-Legende zeigen</x-fa::checkbox>
                             {{-- Ebene 2 · Republish-Preis-Schutz: aus = eingefrorene Preise behalten (neue Speisen kommen live rein), an = aktuelle VK ziehen. --}}
-                            <label class="inline-flex items-center gap-2 fa-t-body"
-                                   title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen, neue Speisen kommen mit aktuellem Preis dazu. An: alle aktuellen Verkaufspreise übernehmen. Die erste Veröffentlichung ist immer aktuell."><input type="checkbox" wire:model="presentationPreiseAktualisieren" class="{{ $haken }}"> Preise beim Neu-Veröffentlichen aktualisieren</label>
+                            <x-fa::checkbox class="inline-flex items-center gap-2 fa-t-body" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen, neue Speisen kommen mit aktuellem Preis dazu. An: alle aktuellen Verkaufspreise übernehmen. Die erste Veröffentlichung ist immer aktuell." wire:model="presentationPreiseAktualisieren">Preise beim Neu-Veröffentlichen aktualisieren</x-fa::checkbox>
                         </fieldset>
 
                         <div class="grid gap-3 sm:grid-cols-2">
@@ -692,12 +690,11 @@
                         </x-fa::field>
                     </div>
                     {{-- Textkapitel/Sektion (Dominique 2026-08-27): reine Überschrift/Text ohne eigenes Food. --}}
-                    <label class="flex items-start gap-2 cursor-pointer">
-                        <input type="checkbox" wire:model.live="kapitelForm.is_struktur" wire:change="kapitelSpeichern" class="{{ $haken }} mt-0.5" />
+                    <x-fa::checkbox class="flex items-start gap-2 cursor-pointer" wire:model.live="kapitelForm.is_struktur" wire:change="kapitelSpeichern">
                         <span class="fa-t-body">Textkapitel ohne eigene Speisen
                             <span class="block {{ $hinweis }}">Für Einleitung, Überschrift oder Format-Abschnitt. Kennzahlen kommen dann nur aus den Unterkapiteln.</span>
                         </span>
-                    </label>
+                    </x-fa::checkbox>
 
                     {{-- Spec 43 (Bild-Epic): Kapitel-Bild — überschreibt das Concept-Titelbild im Präsentations-Band --}}
                     <div class="grid gap-4 md:grid-cols-2 pt-3 border-t border-[var(--fa-line)]" data-fb-kapitel-image>
@@ -881,7 +878,7 @@
                                         </span>
                                     </span>
                                     @if($block->type === 'concept_ref')
-                                        <input type="checkbox" wire:click="markiere({{ $block->id }})" @checked(in_array($block->id, $markiert)) title="Für eine Wahl-Gruppe markieren" aria-label="Für eine Wahl-Gruppe markieren" class="{{ $haken }} mt-1" />
+                                        <x-fa::checkbox wire:click="markiere({{ $block->id }})" :checked="in_array($block->id, $markiert)" title="Für eine Wahl-Gruppe markieren" aria-label="Für eine Wahl-Gruppe markieren" />
                                     @else
                                         <span class="w-4 shrink-0"></span>
                                     @endif

@@ -58,13 +58,9 @@
                             :options="['0' => 'Ohne Gruppe'] + $lieferantenGruppen->pluck('name', 'id')->all()" />
                     @endif
                     <div class="flex items-center justify-between gap-2">
-                        <label class="inline-flex items-center gap-2 cursor-pointer text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
-                            <input type="checkbox" wire:model.live="includeInactive" class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" /> Inaktive zeigen
-                        </label>
+                        <x-fa::checkbox class="inline-flex items-center gap-2 cursor-pointer text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" wire:model.live="includeInactive">Inaktive zeigen</x-fa::checkbox>
                         @if($darfMarkenPflege)
-                            <label class="inline-flex items-center gap-2 cursor-pointer text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Rolle offen, Artikel hängen an Rezepturware (§5 Ausnahme 3)">
-                                <input type="checkbox" wire:model.live="einstufen" class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-lieferant-einstufen /> Lieferant einstufen
-                            </label>
+                            <x-fa::checkbox class="inline-flex items-center gap-2 cursor-pointer text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Rolle offen, Artikel hängen an Rezepturware (§5 Ausnahme 3)" wire:model.live="einstufen" data-lieferant-einstufen>Lieferant einstufen</x-fa::checkbox>
                         @endif
                         <x-fa::button size="sm" variant="ghost" icon="heroicon-m-plus"
                             x-on:click="$dispatch('modal.open', { name: 'lieferant-neu' })" data-neuer-lieferant-btn>Lieferant anlegen</x-fa::button>
@@ -182,9 +178,7 @@
                             placeholder="Artikel dieses Lieferanten" class="pl-8" data-lokale-suche />
                     </div>
                 @endif
-                <label class="inline-flex items-center gap-2 cursor-pointer text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">
-                    <input type="checkbox" wire:model.live="onlyActive" class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" /> Nur lieferbare Artikel
-                </label>
+                <x-fa::checkbox class="inline-flex items-center gap-2 cursor-pointer text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" wire:model.live="onlyActive">Nur lieferbare Artikel</x-fa::checkbox>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 @if(! $globaleSuche && $aktiverLieferant)
@@ -307,8 +301,7 @@
                         @forelse($artikel ?? [] as $item)
                             <tr wire:key="item-{{ $item->id }}">
                                 <td>
-                                    <input type="checkbox" wire:model.live="auswahl.{{ $item->id }}" aria-label="{{ $item->designation }} auswählen"
-                                           class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-artikel-checkbox="{{ $item->id }}" />
+                                    <x-fa::checkbox wire:model.live="auswahl.{{ $item->id }}" aria-label="{{ $item->designation }} auswählen" data-artikel-checkbox="{{ $item->id }}" />
                                 </td>
                                 @if($globaleSuche)
                                     <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ $item->supplier?->name ?? '–' }}</td>

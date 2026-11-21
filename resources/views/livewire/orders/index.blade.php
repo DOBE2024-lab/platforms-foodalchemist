@@ -9,7 +9,6 @@
     $statusTon = ['secondary' => 'neutral', 'info' => 'info', 'success' => 'ok', 'danger' => 'crit', 'warning' => 'warn', 'primary' => 'accent'];
     $datum = fn ($wert) => $wert ? \Carbon\Carbon::parse($wert)->format('d.m.Y') : null;
     $zahl = fn ($wert) => number_format((float) $wert, 0, ',', '.');
-    $checkbox = 'rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]';
     $segment = 'h-7 px-3 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors';
     $segmentAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
     $segmentAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
@@ -122,8 +121,8 @@
                     </x-fa::field>
 
                     <div class="flex flex-col gap-1.5">
-                        <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]"><input type="checkbox" wire:model.live="nurMitPositionen" class="{{ $checkbox }}" /> Nur mit Positionen</label>
-                        <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]"><input type="checkbox" wire:model.live="nurMitKlaerung" class="{{ $checkbox }}" /> Nur mit Klärpunkten</label>
+                        <x-fa::checkbox class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" wire:model.live="nurMitPositionen">Nur mit Positionen</x-fa::checkbox>
+                        <x-fa::checkbox class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" wire:model.live="nurMitKlaerung">Nur mit Klärpunkten</x-fa::checkbox>
                     </div>
                 @endif
             </div>
@@ -176,11 +175,7 @@
                     @foreach(($batchCandidates['orders'] ?? []) as $order)
                         <div wire:key="batch-order-{{ $order['id'] }}" class="px-3 py-2.5 flex items-start justify-between gap-4" data-orders-batch-row="{{ $order['id'] }}">
                             <div class="min-w-0 flex items-start gap-3">
-                                <input type="checkbox"
-                                       class="mt-0.5 {{ $checkbox }}"
-                                       wire:click="batchBestellungUmschalten({{ $order['id'] }})"
-                                       @checked(in_array((int) $order['id'], array_map('intval', $selectedOrderIds), true))
-                                       aria-label="Bestellung ord-{{ $order['id'] }} von {{ $order['supplier'] }} auswählen" />
+                                <x-fa::checkbox wire:click="batchBestellungUmschalten({{ $order['id'] }})" :checked="in_array((int) $order['id'], array_map('intval', $selectedOrderIds), true)" aria-label="Bestellung ord-{{ $order['id'] }} von {{ $order['supplier'] }} auswählen" />
                                 <div class="min-w-0">
                                     <p class="fa-t-strong">{{ $order['supplier'] }} <span class="font-normal text-[var(--fa-ink-3)]">· ord-{{ $order['id'] }}</span></p>
                                     <p class="fa-t-muted flex flex-wrap gap-x-3 tabular-nums">
@@ -368,7 +363,7 @@
                         @forelse($bedarfe as $bedarf)
                             <div class="px-4 py-3 flex items-center justify-between gap-4" wire:key="demand-{{ $bedarf['id'] }}">
                                 <div class="min-w-0 flex items-start gap-3">
-                                    <input type="checkbox" wire:model.live="selectedDemandIds" value="{{ $bedarf['id'] }}" class="mt-1 {{ $checkbox }}" @disabled($bedarf['stale'] || $bedarf['triggered']) aria-label="{{ $bedarf['name'] }} auswählen" />
+                                    <x-fa::checkbox wire:model.live="selectedDemandIds" value="{{ $bedarf['id'] }}" :disabled="$bedarf['stale'] || $bedarf['triggered']" aria-label="{{ $bedarf['name'] }} auswählen" />
                                     <div class="min-w-0">
                                         <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)] truncate">{{ $bedarf['name'] }}</p>
                                         <p class="mt-0.5 fa-t-muted tabular-nums">{{ $datum($bedarf['production_date']) ?? 'ohne Datum' }} · {{ $bedarf['targets'] }} Ziele · {{ $bedarf['orders'] }} Bestellungen</p>
@@ -389,7 +384,7 @@
                             <tr>
                                 @if($mitAuswahl)
                                     <th class="w-10">
-                                        <input type="checkbox" wire:click="versandfaehigeAuswahlUmschalten" class="{{ $checkbox }}" @checked($kpis['ready'] > 0 && count($selectedOrderIds) === $kpis['ready']) @disabled($kpis['ready'] === 0) aria-label="Alle versandfähigen Bestellungen auswählen" />
+                                        <x-fa::checkbox wire:click="versandfaehigeAuswahlUmschalten" :checked="$kpis['ready'] > 0 && count($selectedOrderIds) === $kpis['ready']" :disabled="$kpis['ready'] === 0" aria-label="Alle versandfähigen Bestellungen auswählen" />
                                     </th>
                                 @endif
                                 @if($standortSpalte)<th>Standort</th>@endif
@@ -427,7 +422,7 @@
                                         <x-foodalchemist::table-row :active="$selectedOrderId === $o['id']" wire:key="{{ ($gruppe['key'])($o) }}" wire:click="oeffnen({{ $o['id'] }})" data-orders-zeile="{{ $o['id'] }}">
                                             @if($mitAuswahl)
                                                 <td onclick="event.stopPropagation()">
-                                                    <input type="checkbox" wire:model.live="selectedOrderIds" value="{{ $o['id'] }}" class="{{ $checkbox }}" @disabled($o['status'] !== \Platform\FoodAlchemist\Enums\OrderStatus::Draft) aria-label="ord-{{ $o['id'] }} auswählen" />
+                                                    <x-fa::checkbox wire:model.live="selectedOrderIds" value="{{ $o['id'] }}" :disabled="$o['status'] !== \Platform\FoodAlchemist\Enums\OrderStatus::Draft" aria-label="ord-{{ $o['id'] }} auswählen" />
                                                 </td>
                                             @endif
                                             @if($standortSpalte)<td class="whitespace-nowrap" data-standort>{{ $standortNamen[$o['team_id'] ?? 0] ?? '—' }}</td>@endif

@@ -87,7 +87,7 @@
                         <x-fa::field label="Portionsmenge" :hint="$standardmenge ? ($d->is_standard ? 'Aus der Rezeptur' : 'Aus der Standard-Darreichung') : 'Summe der Komponenten unten'">
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-2 min-h-9" data-dar-portionsmenge>
                                 <strong class="tabular-nums">{{ $d->quantity_per_unit_g !== null ? number_format($d->quantity_per_unit_g * ($d->unit_count ?: 1), 1, ',', '.') . ' g' : 'Menge fehlt' }}</strong>
-                                <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]"><input type="checkbox" @checked($standardmenge) wire:change="darStandardmenge({{ $d->id }}, $event.target.checked)" class="accent-[var(--fa-accent)]" data-dar-standardmenge /> Standardmenge verwenden</label>
+                                <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]" :checked="$standardmenge" wire:change="darStandardmenge({{ $d->id }}, $event.target.checked)" data-dar-standardmenge>Standardmenge verwenden</x-fa::checkbox>
                             </div>
                         </x-fa::field>
                         <x-fa::field label="Preisklasse" for="dar-klasse-{{ $d->id }}">

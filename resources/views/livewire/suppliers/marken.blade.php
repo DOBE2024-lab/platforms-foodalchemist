@@ -142,9 +142,7 @@
                         @foreach($typLabel as $wert => $label)<option value="{{ $wert }}">{{ $label }}</option>@endforeach
                     </x-fa::select>
                 </x-fa::field>
-                <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
-                    <input type="checkbox" wire:model.live="nurGlobal" data-mk-nur-global> nur global
-                </label>
+                <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" wire:model.live="nurGlobal" data-mk-nur-global>nur global</x-fa::checkbox>
                 <x-fa::field label="Suchen" for="mk-suche">
                     <x-fa::input id="mk-suche" size="sm" type="search" wire:model.live.debounce.300ms="suche" placeholder="Marke oder Kürzel" />
                 </x-fa::field>

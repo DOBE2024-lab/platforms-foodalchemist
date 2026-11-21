@@ -59,12 +59,8 @@
                         <span class="fa-t-muted tabular-nums whitespace-nowrap" data-stamm-paket-lieferanten-zaehler>{{ count($auswahl) }} von {{ $ld['gesamt'] }} gewählt</span>
                     </div>
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" wire:model.live="nurGewaehlte" class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-stamm-paket-nur-gewaehlte> Nur gewählte
-                        </label>
-                        <label class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" wire:model.live="nachArtikel" class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-stamm-paket-sort-artikel> Meiste Artikel zuerst
-                        </label>
+                        <x-fa::checkbox class="inline-flex items-center gap-2 cursor-pointer" wire:model.live="nurGewaehlte" data-stamm-paket-nur-gewaehlte>Nur gewählte</x-fa::checkbox>
+                        <x-fa::checkbox class="inline-flex items-center gap-2 cursor-pointer" wire:model.live="nachArtikel" data-stamm-paket-sort-artikel>Meiste Artikel zuerst</x-fa::checkbox>
                     </div>
                     @if($ld['lieferanten'] === [])
                         <x-fa::empty compact icon="heroicon-o-truck" title="Keine Lieferanten in dieser Ansicht">Suche oder Filter anpassen.</x-fa::empty>
@@ -73,15 +69,12 @@
                         @foreach($ld['lieferanten'] as $l)
                             @php($istFrei = in_array($l['id'], array_map('intval', $auswahl), true))
                             <li wire:key="spl-{{ $l['id'] }}" class="flex items-center gap-2 px-2 py-1 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]">
-                                <label class="flex min-w-0 flex-1 items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" value="{{ $l['id'] }}" wire:model.live="auswahl" class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-stamm-paket-lieferant="{{ $l['id'] }}">
+                                <x-fa::checkbox class="flex min-w-0 flex-1 items-center gap-2 cursor-pointer" value="{{ $l['id'] }}" wire:model.live="auswahl" data-stamm-paket-lieferant="{{ $l['id'] }}">
                                     <span class="truncate">{{ $l['name'] }}</span>
                                     <span class="ml-auto pl-2 text-[var(--fa-ink-3)] tabular-nums whitespace-nowrap">{{ $l['artikel'] }} Artikel</span>
-                                </label>
+                                </x-fa::checkbox>
                                 {{-- Stamm-Preise mitgeben (Dominique 08.11.2026): laufend die Master-Preise dieses Lieferanten, nur wenn freigeschaltet --}}
-                                <label class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap {{ $istFrei ? 'cursor-pointer text-[var(--fa-ink-2)]' : 'opacity-40' }}" title="Preise des Master-Teams laufend mitgeben">
-                                    <input type="checkbox" value="{{ $l['id'] }}" wire:model.live="preiseAuswahl" @disabled(! $istFrei) class="rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] focus:ring-[var(--fa-accent)]" data-stamm-paket-preise="{{ $l['id'] }}"> Preise
-                                </label>
+                                <x-fa::checkbox class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap {{ $istFrei ? 'cursor-pointer text-[var(--fa-ink-2)]' : 'opacity-40' }}" title="Preise des Master-Teams laufend mitgeben" value="{{ $l['id'] }}" wire:model.live="preiseAuswahl" :disabled="! $istFrei" data-stamm-paket-preise="{{ $l['id'] }}">Preise</x-fa::checkbox>
                             </li>
                         @endforeach
                     </ul>

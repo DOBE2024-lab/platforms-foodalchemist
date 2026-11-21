@@ -20,7 +20,6 @@
     $navAus = 'text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)] hover:text-[var(--fa-ink)]';
     $dateiFeld = 'block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer file:mr-2 file:h-7 file:px-2.5 file:rounded-[var(--fa-radius-control)] file:border-0 file:bg-[var(--fa-accent-soft)] file:text-[var(--fa-accent)] file:font-medium';
     $knopfLeise = 'inline-flex items-center gap-1.5 h-7 px-2.5 whitespace-nowrap rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)] hover:text-[var(--fa-ink)] transition-colors duration-150';
-    $haken = 'rounded border-[var(--fa-line-strong)] text-[var(--fa-accent)] accent-[var(--fa-accent)] focus:ring-[var(--fa-accent)]';
     $euro = fn ($wert) => number_format((float) $wert, 2, ',', '.') . ' €';
     $prozent = fn ($wert) => number_format((float) $wert, 1, ',', '.') . ' %';
     // Rohwerte lesbar machen (Status-Badge-Variante, Fortschritt, Preis-Modus, Wareneinsatz-Ampel).
@@ -188,8 +187,8 @@
                         </div>
                     @endif
                     @if($uv['braucht_bestaetigung'])
-                        <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)]"><input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="uebernahmeBestaetigt" data-angebot-uebernahme-bestaetigung />
-                            Ich habe die Allergen-Änderung geprüft und übernehme die Fassung (nur Rolle Freigeben).</label>
+                        <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)]" wire:model.live="uebernahmeBestaetigt" data-angebot-uebernahme-bestaetigung>
+                            Ich habe die Allergen-Änderung geprüft und übernehme die Fassung (nur Rolle Freigeben).</x-fa::checkbox>
                     @endif
                     <div class="flex gap-2">
                         <x-fa::button variant="primary" wire:click="uebernahmeAusfuehren" :disabled="$uv['braucht_bestaetigung'] && ! $uebernahmeBestaetigt" data-angebot-uebernehmen>Fassung übernehmen</x-fa::button>
@@ -432,10 +431,9 @@
                                     placeholder="{{ $angebot->personen ?: '–' }}" />
                             </x-fa::field>
                         </div>
-                        <label class="flex items-start gap-2 cursor-pointer fa-t-body">
-                            <input type="checkbox" wire:model.live="kapitelForm.is_struktur" wire:change="kapitelSpeichern" class="mt-0.5 {{ $haken }}" />
+                        <x-fa::checkbox class="flex items-start gap-2 cursor-pointer fa-t-body" wire:model.live="kapitelForm.is_struktur" wire:change="kapitelSpeichern">
                             <span>Textkapitel <span class="{{ $hinweis }}">ohne eigenes Essen, etwa Einleitung oder Überschrift. Kennzahlen kommen dann nur aus den Unterkapiteln.</span></span>
-                        </label>
+                        </x-fa::checkbox>
                         @if($kapitel->format_id !== null)
                             @php $fpm = $kapitel->format_price_mode ?? 'additiv'; @endphp
                             <x-fa::field label="Preis des Formats" for="ang-kap-formatpreis" class="max-w-md" data-angebot-formatpreis
@@ -495,7 +493,7 @@
                                             <button type="button" wire:click="blockRunter({{ $block->id }})" class="inline-flex items-center justify-center w-5 h-3.5 text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]" title="Nach unten" aria-label="Nach unten">@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5')</button>
                                         </span>
                                         @if($block->type === 'concept_ref')
-                                            <input type="checkbox" wire:click="markiere({{ $block->id }})" @checked(in_array($block->id, $markiert ?? [])) title="Für eine Wahlgruppe markieren" aria-label="Für eine Wahlgruppe markieren" class="shrink-0 {{ $haken }}" />
+                                            <x-fa::checkbox wire:click="markiere({{ $block->id }})" :checked="in_array($block->id, $markiert ?? [])" title="Für eine Wahlgruppe markieren" aria-label="Für eine Wahlgruppe markieren" />
                                         @else
                                             <span class="w-3.5 shrink-0"></span>
                                         @endif
@@ -1114,10 +1112,10 @@
                         </div>
 
                         <div class="flex flex-wrap gap-x-5 gap-y-2">
-                            <label class="flex items-center gap-2 fa-t-body cursor-pointer"><input type="checkbox" wire:model="presentationPreisAnzeige" class="{{ $haken }}"> Preise je Gast zeigen</label>
-                            <label class="flex items-center gap-2 fa-t-body cursor-pointer" title="Aus: das Cover zeigt nur das Logo, dafür größer – z. B. solange kein Kunde feststeht."><input type="checkbox" wire:model="presentationTitelZeigen" class="{{ $haken }}" data-angebot-praes-titel> Angebotsnamen im Cover zeigen</label>
-                            <label class="flex items-center gap-2 fa-t-body cursor-pointer"><input type="checkbox" wire:model="presentationDeklaration" class="{{ $haken }}"> Allergen-Legende zeigen</label>
-                            <label class="flex items-center gap-2 fa-t-body cursor-pointer" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen, neue Speisen kommen mit aktuellem Preis dazu. An: alle aktuellen Verkaufspreise übernehmen. Die erste Veröffentlichung ist immer aktuell."><input type="checkbox" wire:model="presentationPreiseAktualisieren" class="{{ $haken }}"> Preise aktualisieren</label>
+                            <x-fa::checkbox class="flex items-center gap-2 fa-t-body cursor-pointer" wire:model="presentationPreisAnzeige">Preise je Gast zeigen</x-fa::checkbox>
+                            <x-fa::checkbox class="flex items-center gap-2 fa-t-body cursor-pointer" title="Aus: das Cover zeigt nur das Logo, dafür größer – z. B. solange kein Kunde feststeht." wire:model="presentationTitelZeigen" data-angebot-praes-titel>Angebotsnamen im Cover zeigen</x-fa::checkbox>
+                            <x-fa::checkbox class="flex items-center gap-2 fa-t-body cursor-pointer" wire:model="presentationDeklaration">Allergen-Legende zeigen</x-fa::checkbox>
+                            <x-fa::checkbox class="flex items-center gap-2 fa-t-body cursor-pointer" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen, neue Speisen kommen mit aktuellem Preis dazu. An: alle aktuellen Verkaufspreise übernehmen. Die erste Veröffentlichung ist immer aktuell." wire:model="presentationPreiseAktualisieren">Preise aktualisieren</x-fa::checkbox>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

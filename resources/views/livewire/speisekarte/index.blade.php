@@ -367,10 +367,10 @@
                         </div>
 
                         <div class="flex flex-wrap gap-x-6 gap-y-2">
-                            <label class="{{ $checkbox }}"><input type="checkbox" wire:model="presentationPreisAnzeige"> Preise zeigen</label>
-                            <label class="{{ $checkbox }}"><input type="checkbox" wire:model="presentationDeklaration"> Allergen-Legende zeigen</label>
+                            <x-fa::checkbox class="{{ $checkbox }}" wire:model="presentationPreisAnzeige">Preise zeigen</x-fa::checkbox>
+                            <x-fa::checkbox class="{{ $checkbox }}" wire:model="presentationDeklaration">Allergen-Legende zeigen</x-fa::checkbox>
                             {{-- Ebene 2 · Schutz der Preise beim erneuten Veröffentlichen --}}
-                            <label class="{{ $checkbox }}" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen, neue Speisen kommen mit aktuellem Preis dazu. An: alle aktuellen Verkaufspreise übernehmen. Beim ersten Veröffentlichen gelten immer die aktuellen Preise."><input type="checkbox" wire:model="presentationPreiseAktualisieren"> Preise beim erneuten Veröffentlichen aktualisieren</label>
+                            <x-fa::checkbox class="{{ $checkbox }}" title="Aus: beim erneuten Veröffentlichen bleiben die eingefrorenen Preise stehen, neue Speisen kommen mit aktuellem Preis dazu. An: alle aktuellen Verkaufspreise übernehmen. Beim ersten Veröffentlichen gelten immer die aktuellen Preise." wire:model="presentationPreiseAktualisieren">Preise beim erneuten Veröffentlichen aktualisieren</x-fa::checkbox>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

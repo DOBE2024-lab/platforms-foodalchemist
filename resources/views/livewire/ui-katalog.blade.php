@@ -107,6 +107,12 @@
                 <x-fa::choice name="kreativModus" label="Kreativ-Modus (Einfachauswahl)" :options="['frei' => 'Frei', 'voll' => 'Voll kreativ', 'nah' => 'Nah am Bestand', 'nur_bestand' => 'Nur Bestand']" />
                 <x-fa::choice name="diaeten" multiple label="Diät (Mehrfachauswahl)" :options="['vegan' => 'Vegan', 'vegetarisch' => 'Vegetarisch', 'glutenfrei' => 'Glutenfrei', 'laktosefrei' => 'Laktosefrei', 'halal' => 'Halal']" />
             </div>
+            <div class="flex flex-wrap items-start gap-x-6 gap-y-3" data-katalog-checkbox>
+                <x-fa::checkbox wire:model.live="nurAktive">Nur aktive (x-fa::checkbox)</x-fa::checkbox>
+                <x-fa::checkbox checked hinweis="Zählt nur zertifizierte Ware">Bio</x-fa::checkbox>
+                <x-fa::checkbox disabled>Gesperrt</x-fa::checkbox>
+                <x-fa::checkbox aria-label="Zeile auswählen" />
+            </div>
             <p class="fa-t-muted">Gewählt: {{ $kreativModus }} · {{ implode(', ', $diaeten) ?: 'keine Diät' }}</p>
         </x-fa::section>
 

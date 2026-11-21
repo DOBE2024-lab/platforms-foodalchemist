@@ -9,6 +9,6 @@
     <x-fa::choice name="sparten" label="Sparte" idPrefix="obs-radar" :multiple="true" :options="V::SPARTEN" />
     <x-fa::choice name="typen" label="Trend oder Hype" idPrefix="obs-radar" :multiple="true" :options="V::TYPEN" />
     <x-fa::choice name="ebenen" label="Trendhierarchie" idPrefix="obs-radar" :multiple="true" :options="V::EBENEN" />
-    <label class="fa-obs-radar-check"><input type="checkbox" wire:model.live="nurBefragung"> Nur von der Befragung bestätigt</label>
+    <x-fa::checkbox class="fa-obs-radar-check" wire:model.live="nurBefragung">Nur von der Befragung bestätigt</x-fa::checkbox>
     @if($radarFilterAktiv)<button type="button" class="fa-obs-filter-reset" wire:click="radarFilterZuruecksetzen">Radarfilter zurücksetzen</button>@endif
 </section>

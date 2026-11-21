@@ -141,8 +141,7 @@
         "rohe_checkbox": 1
     },
     "livewire/abos/index.blade.php": {
-        "typo_groesse": 5,
-        "rohe_checkbox": 1
+        "typo_groesse": 5
     },
     "livewire/active-outlet-bar.blade.php": {
         "alte_palette": 11
@@ -150,8 +149,7 @@
     "livewire/angebote/editor.blade.php": {
         "typo_groesse": 39,
         "typo_tinte": 69,
-        "roher_button": 25,
-        "rohe_checkbox": 7
+        "roher_button": 25
     },
     "livewire/angebote/index.blade.php": {
         "typo_groesse": 1,
@@ -175,18 +173,6 @@
     "livewire/angebote/leistung-vorlagen.blade.php": {
         "typo_tinte": 1
     },
-    "livewire/angebote/partials/konfigurator/getraenke.blade.php": {
-        "rohe_checkbox": 1
-    },
-    "livewire/angebote/partials/konfigurator/kalkulation.blade.php": {
-        "rohe_checkbox": 1
-    },
-    "livewire/angebote/partials/konfigurator/konzepte.blade.php": {
-        "rohe_checkbox": 2
-    },
-    "livewire/angebote/partials/konfigurator/leistungen.blade.php": {
-        "rohe_checkbox": 1
-    },
     "livewire/angebote/partials/konfigurator/pakete.blade.php": {
         "typo_groesse": 1,
         "roher_button": 1
@@ -206,11 +192,7 @@
     "livewire/canvas/partials/board.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 6,
-        "roher_button": 2,
-        "rohe_checkbox": 2
-    },
-    "livewire/canvas/partials/feld-vererbung.blade.php": {
-        "rohe_checkbox": 1
+        "roher_button": 2
     },
     "livewire/concepter/browser.blade.php": {
         "typo_groesse": 7,
@@ -224,8 +206,7 @@
     "livewire/concepter/editor.blade.php": {
         "typo_groesse": 29,
         "typo_tinte": 108,
-        "roher_button": 20,
-        "rohe_checkbox": 2
+        "roher_button": 20
     },
     "livewire/concepter/partials/gericht-baum.blade.php": {
         "typo_groesse": 2,
@@ -264,8 +245,7 @@
     "livewire/concepts/index.blade.php": {
         "typo_groesse": 6,
         "typo_tinte": 17,
-        "roher_button": 2,
-        "rohe_checkbox": 2
+        "roher_button": 2
     },
     "livewire/controlling/cockpit.blade.php": {
         "typo_groesse": 3,
@@ -296,21 +276,18 @@
         "roher_button": 1
     },
     "livewire/controlling/panels/preisvergleich.blade.php": {
-        "typo_tinte": 4,
-        "rohe_checkbox": 1
+        "typo_tinte": 4
     },
     "livewire/controlling/panels/promotion.blade.php": {
         "typo_groesse": 2,
         "typo_tinte": 5
     },
     "livewire/controlling/panels/standort-inhalte.blade.php": {
-        "typo_groesse": 2,
-        "rohe_checkbox": 3
+        "typo_groesse": 2
     },
     "livewire/controlling/panels/wareneinsatz.blade.php": {
         "typo_groesse": 2,
-        "typo_tinte": 5,
-        "rohe_checkbox": 2
+        "typo_tinte": 5
     },
     "livewire/controlling/partials/_benchmark.blade.php": {
         "typo_tinte": 1
@@ -337,8 +314,7 @@
     },
     "livewire/favorites/index.blade.php": {
         "typo_groesse": 1,
-        "typo_tinte": 5,
-        "rohe_checkbox": 1
+        "typo_tinte": 5
     },
     "livewire/food-dna/index.blade.php": {
         "typo_groesse": 2,
@@ -347,8 +323,7 @@
     "livewire/foodbooks/index.blade.php": {
         "typo_groesse": 30,
         "typo_tinte": 59,
-        "roher_button": 24,
-        "rohe_checkbox": 5
+        "roher_button": 24
     },
     "livewire/foodbooks/partials/concept-zeilen.blade.php": {
         "typo_groesse": 5,
@@ -394,14 +369,12 @@
     "livewire/gps/detail-panel.blade.php": {
         "typo_groesse": 27,
         "typo_tinte": 36,
-        "roher_button": 6,
-        "rohe_checkbox": 1
+        "roher_button": 6
     },
     "livewire/gps/gp-modal.blade.php": {
         "typo_groesse": 7,
         "typo_tinte": 12,
-        "roher_button": 7,
-        "rohe_checkbox": 4
+        "roher_button": 7
     },
     "livewire/gps/partials/aroma-vorschau.blade.php": {
         "typo_groesse": 3,
@@ -485,8 +458,7 @@
     "livewire/knowledge/browser.blade.php": {
         "typo_groesse": 17,
         "typo_tinte": 33,
-        "roher_button": 8,
-        "rohe_checkbox": 2
+        "roher_button": 8
     },
     "livewire/knowledge/einordnung.blade.php": {
         "typo_groesse": 1
@@ -494,17 +466,14 @@
     "livewire/lager/index.blade.php": {
         "typo_groesse": 18,
         "typo_tinte": 8,
-        "roher_button": 7,
-        "rohe_checkbox": 3
+        "roher_button": 7
     },
     "livewire/lager/partials/filter.blade.php": {
         "typo_groesse": 2,
-        "typo_tinte": 2,
-        "rohe_checkbox": 2
+        "typo_tinte": 2
     },
     "livewire/observatorium/briefing-profil.blade.php": {
-        "roher_button": 5,
-        "rohe_checkbox": 1
+        "roher_button": 5
     },
     "livewire/observatorium/detail.blade.php": {
         "roher_button": 6
@@ -513,8 +482,7 @@
         "roher_button": 2
     },
     "livewire/observatorium/index.blade.php": {
-        "roher_button": 13,
-        "rohe_checkbox": 1
+        "roher_button": 13
     },
     "livewire/observatorium/karte.blade.php": {
         "roher_button": 3
@@ -529,8 +497,7 @@
         "roher_button": 5
     },
     "livewire/observatorium/radar-filter.blade.php": {
-        "roher_button": 1,
-        "rohe_checkbox": 1
+        "roher_button": 1
     },
     "livewire/observatorium/radar-trend.blade.php": {
         "roher_button": 1
@@ -553,8 +520,7 @@
     "livewire/orders/index.blade.php": {
         "typo_groesse": 19,
         "typo_tinte": 24,
-        "roher_button": 7,
-        "rohe_checkbox": 6
+        "roher_button": 7
     },
     "livewire/pakete/index.blade.php": {
         "typo_groesse": 2,
@@ -569,8 +535,7 @@
     "livewire/planning/partials/frame-board.blade.php": {
         "typo_groesse": 3,
         "typo_tinte": 2,
-        "roher_button": 2,
-        "rohe_checkbox": 1
+        "roher_button": 2
     },
     "livewire/planning/partials/phase-stepper.blade.php": {
         "typo_groesse": 1,
@@ -589,7 +554,6 @@
         "typo_groesse": 15,
         "typo_tinte": 35,
         "roher_button": 24,
-        "rohe_checkbox": 2,
         "alte_palette": 11
     },
     "livewire/planung/kapitel-rail.blade.php": {
@@ -644,8 +608,7 @@
     "livewire/planung/partials/leitplanken.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 11,
-        "roher_button": 6,
-        "rohe_checkbox": 4
+        "roher_button": 6
     },
     "livewire/planung/partials/schnellstart-chips.blade.php": {
         "typo_groesse": 1,
@@ -676,19 +639,16 @@
     "livewire/preise/verlauf.blade.php": {
         "typo_groesse": 7,
         "typo_tinte": 17,
-        "roher_button": 5,
-        "rohe_checkbox": 1
+        "roher_button": 5
     },
     "livewire/preislisten/index.blade.php": {
         "typo_groesse": 4,
-        "typo_tinte": 1,
-        "rohe_checkbox": 1
+        "typo_tinte": 1
     },
     "livewire/preislisten/stammdaten-import.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 3,
-        "roher_button": 1,
-        "rohe_checkbox": 2
+        "roher_button": 1
     },
     "livewire/produktion/browser.blade.php": {
         "typo_groesse": 9,
@@ -702,8 +662,7 @@
     "livewire/produktion/editor.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 3,
-        "roher_button": 2,
-        "rohe_checkbox": 1
+        "roher_button": 2
     },
     "livewire/produktion/partials/editor-einkauf.blade.php": {
         "typo_groesse": 2,
@@ -743,8 +702,7 @@
     "livewire/recipes/browser.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 13,
-        "roher_button": 5,
-        "rohe_checkbox": 1
+        "roher_button": 5
     },
     "livewire/recipes/detail-panel.blade.php": {
         "typo_groesse": 11,
@@ -758,8 +716,7 @@
     "livewire/recipes/generator-modal.blade.php": {
         "typo_groesse": 5,
         "typo_tinte": 7,
-        "roher_button": 2,
-        "rohe_checkbox": 2
+        "roher_button": 2
     },
     "livewire/recipes/pairing-netz-modal.blade.php": {
         "hex_farbe": 10,
@@ -794,14 +751,12 @@
     "livewire/recipes/partials/zutaten-kern.blade.php": {
         "typo_groesse": 14,
         "typo_tinte": 59,
-        "roher_button": 17,
-        "rohe_checkbox": 6
+        "roher_button": 17
     },
     "livewire/recipes/recipe-modal.blade.php": {
         "typo_groesse": 15,
         "typo_tinte": 23,
-        "roher_button": 10,
-        "rohe_checkbox": 2
+        "roher_button": 10
     },
     "livewire/recipes/step-editor.blade.php": {
         "typo_groesse": 11,
@@ -847,14 +802,12 @@
     "livewire/settings/einheiten.blade.php": {
         "typo_groesse": 2,
         "typo_tinte": 9,
-        "roher_button": 2,
-        "rohe_checkbox": 1
+        "roher_button": 2
     },
     "livewire/settings/einkauf.blade.php": {
         "typo_groesse": 9,
         "typo_tinte": 15,
-        "roher_button": 3,
-        "rohe_checkbox": 5
+        "roher_button": 3
     },
     "livewire/settings/einsatzorte.blade.php": {
         "typo_tinte": 2
@@ -862,8 +815,7 @@
     "livewire/settings/etiketten.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 2,
-        "roher_button": 2,
-        "rohe_checkbox": 7
+        "roher_button": 2
     },
     "livewire/settings/hausstandards.blade.php": {
         "typo_groesse": 1,
@@ -871,8 +823,7 @@
     },
     "livewire/settings/herstellkosten.blade.php": {
         "typo_groesse": 2,
-        "typo_tinte": 12,
-        "rohe_checkbox": 1
+        "typo_tinte": 12
     },
     "livewire/settings/index.blade.php": {
         "typo_groesse": 2,
@@ -896,11 +847,7 @@
     },
     "livewire/settings/mandanten.blade.php": {
         "typo_groesse": 3,
-        "typo_tinte": 11,
-        "rohe_checkbox": 1
-    },
-    "livewire/settings/partials/behaelter-felder.blade.php": {
-        "rohe_checkbox": 1
+        "typo_tinte": 11
     },
     "livewire/settings/partials/bereich.blade.php": {
         "typo_groesse": 2,
@@ -923,14 +870,12 @@
     "livewire/settings/posten.blade.php": {
         "typo_groesse": 3,
         "typo_tinte": 6,
-        "roher_button": 1,
-        "rohe_checkbox": 1
+        "roher_button": 1
     },
     "livewire/settings/praesentations-designs.blade.php": {
         "typo_groesse": 17,
         "typo_tinte": 14,
-        "roher_button": 3,
-        "rohe_checkbox": 13
+        "roher_button": 3
     },
     "livewire/settings/regeln.blade.php": {
         "typo_groesse": 3,
@@ -950,7 +895,6 @@
         "important": 6,
         "mini_schrift": 6,
         "roher_button": 6,
-        "rohe_checkbox": 2,
         "alte_palette": 7
     },
     "livewire/settings/start.blade.php": {
@@ -961,9 +905,6 @@
         "typo_groesse": 2,
         "typo_tinte": 4,
         "roher_button": 1
-    },
-    "livewire/settings/trendradar.blade.php": {
-        "rohe_checkbox": 2
     },
     "livewire/settings/vk-taxonomie.blade.php": {
         "typo_groesse": 3,
@@ -983,25 +924,21 @@
     "livewire/settings/wissenssteuerung.blade.php": {
         "typo_groesse": 15,
         "typo_tinte": 41,
-        "roher_button": 4,
-        "rohe_checkbox": 1
+        "roher_button": 4
     },
     "livewire/settings/zugriffsrechte.blade.php": {
         "typo_groesse": 2,
-        "typo_tinte": 2,
-        "rohe_checkbox": 2
+        "typo_tinte": 2
     },
     "livewire/signale/detail-panel.blade.php": {
         "typo_groesse": 18,
         "typo_tinte": 21,
-        "roher_button": 3,
-        "rohe_checkbox": 3
+        "roher_button": 3
     },
     "livewire/speisekarte/index.blade.php": {
         "typo_groesse": 14,
         "typo_tinte": 14,
-        "roher_button": 3,
-        "rohe_checkbox": 3
+        "roher_button": 3
     },
     "livewire/speisekarte/leitstelle-rail.blade.php": {
         "typo_groesse": 1,
@@ -1032,8 +969,7 @@
     "livewire/speiseplan/editor.blade.php": {
         "typo_groesse": 31,
         "typo_tinte": 58,
-        "roher_button": 17,
-        "rohe_checkbox": 11
+        "roher_button": 17
     },
     "livewire/speiseplan/index.blade.php": {
         "typo_groesse": 2,
@@ -1061,8 +997,7 @@
     "livewire/suppliers/index.blade.php": {
         "typo_groesse": 7,
         "typo_tinte": 30,
-        "roher_button": 5,
-        "rohe_checkbox": 4
+        "roher_button": 5
     },
     "livewire/suppliers/item-modal.blade.php": {
         "typo_groesse": 6,
@@ -1075,8 +1010,7 @@
     },
     "livewire/suppliers/lieferanten-link.blade.php": {
         "typo_groesse": 2,
-        "typo_tinte": 2,
-        "rohe_checkbox": 1
+        "typo_tinte": 2
     },
     "livewire/suppliers/marke-offen.blade.php": {
         "typo_groesse": 2,
@@ -1084,8 +1018,7 @@
     },
     "livewire/suppliers/marken.blade.php": {
         "typo_groesse": 4,
-        "typo_tinte": 8,
-        "rohe_checkbox": 1
+        "typo_tinte": 8
     },
     "livewire/suppliers/necta-pruefaelle.blade.php": {
         "typo_groesse": 3,
@@ -1098,8 +1031,7 @@
     "livewire/suppliers/supplier-detail.blade.php": {
         "typo_groesse": 10,
         "typo_tinte": 19,
-        "roher_button": 1,
-        "rohe_checkbox": 3
+        "roher_button": 1
     },
     "livewire/team-brille-bar.blade.php": {
         "alte_palette": 5
@@ -1120,16 +1052,14 @@
     "livewire/trendradar/index.blade.php": {
         "typo_groesse": 5,
         "typo_tinte": 12,
-        "roher_button": 11,
-        "rohe_checkbox": 2
+        "roher_button": 11
     },
     "livewire/trendradar/quellen.blade.php": {
         "typo_groesse": 1,
         "typo_tinte": 1
     },
     "livewire/trendradar/wettbewerber.blade.php": {
-        "roher_button": 12,
-        "rohe_checkbox": 2
+        "roher_button": 12
     },
     "livewire/ui-katalog.blade.php": {
         "typo_groesse": 1,
@@ -1150,8 +1080,7 @@
         "typo_tinte": 1
     },
     "livewire/verkauf/partials/darreichung-komponenten.blade.php": {
-        "typo_groesse": 1,
-        "rohe_checkbox": 1
+        "typo_groesse": 1
     },
     "livewire/verkauf/partials/darreichung-zeiten.blade.php": {
         "typo_groesse": 5
@@ -1163,8 +1092,7 @@
     },
     "livewire/verkauf/partials/darreichungen.blade.php": {
         "typo_groesse": 3,
-        "roher_button": 1,
-        "rohe_checkbox": 1
+        "roher_button": 1
     },
     "livewire/verkauf/partials/gemeinsame-zeiten.blade.php": {
         "typo_groesse": 1
@@ -1176,8 +1104,7 @@
     "livewire/verkauf/vk-generator-modal.blade.php": {
         "typo_groesse": 6,
         "typo_tinte": 7,
-        "roher_button": 2,
-        "rohe_checkbox": 2
+        "roher_button": 2
     },
     "livewire/verkauf/vk-modal.blade.php": {
         "typo_groesse": 19,
@@ -1186,8 +1113,7 @@
     },
     "livewire/verwaltung/mandant-beenden.blade.php": {
         "typo_groesse": 2,
-        "typo_tinte": 2,
-        "rohe_checkbox": 1
+        "typo_tinte": 2
     },
     "livewire/verwaltung/master-team.blade.php": {
         "typo_groesse": 2,
@@ -1199,8 +1125,7 @@
     },
     "livewire/verwaltung/stamm-paket.blade.php": {
         "typo_groesse": 4,
-        "typo_tinte": 6,
-        "rohe_checkbox": 4
+        "typo_tinte": 6
     },
     "livewire/voice-modal.blade.php": {
         "typo_groesse": 16,
@@ -1208,19 +1133,16 @@
         "roher_button": 14
     },
     "livewire/wareneingang/abgleich.blade.php": {
-        "typo_groesse": 1,
-        "rohe_checkbox": 1
+        "typo_groesse": 1
     },
     "livewire/wareneingang/index.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 5,
-        "roher_button": 4,
-        "rohe_checkbox": 3
+        "roher_button": 4
     },
     "livewire/wareneingang/rechnungen.blade.php": {
         "typo_groesse": 1,
-        "typo_tinte": 3,
-        "rohe_checkbox": 1
+        "typo_tinte": 3
     },
     "presentation/blocks/_konfigurator_chrome.blade.php": {
         "roher_button": 1

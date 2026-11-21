@@ -58,10 +58,9 @@
                     <p class="fa-t-muted">Kein Mandant hat diese Sammlung abonniert. Das Rezept verlässt nur die Sammlung.</p>
                 @endforelse
                 <p class="fa-t-muted mt-2">Archivierte Ausgaben und angenommene oder abgelehnte Angebote behalten ihre Fassung.</p>
-                <label class="mt-2 inline-flex items-center gap-2 text-[length:var(--fa-text-md)] cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="bestaetigt" data-abos-bestaetigung />
+                <x-fa::checkbox class="mt-2 inline-flex items-center gap-2 text-[length:var(--fa-text-md)] cursor-pointer" wire:model.live="bestaetigt" data-abos-bestaetigung>
                     Ich habe die Vorschau gelesen.
-                </label>
+                </x-fa::checkbox>
                 <div class="flex gap-2 pt-3">
                     <x-fa::button variant="ghost" wire:click="abbrechen">Abbrechen</x-fa::button>
                     <x-fa::button variant="primary" wire:click="ausfuehren" :disabled="! $bestaetigt" data-abos-ausfuehren>{{ $vorschau['knopf'] }}</x-fa::button>

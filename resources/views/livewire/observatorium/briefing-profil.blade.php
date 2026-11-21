@@ -6,7 +6,7 @@
             <h2>Mein Briefing einstellen</h2>
             <p class="fa-obs-subtitle">Gilt nur für dich. Das Briefing zeigt dann immer diese Auswahl, egal welche Filter gerade offen sind.</p>
             <fieldset class="flex flex-col gap-1.5"><legend class="fa-obs-subtitle">Branchen (keine Auswahl = alle)</legend>
-                <div class="fa-obs-filters">@foreach(O::BRANCHEN as $key => $name)<label class="fa-obs-button"><input type="checkbox" value="{{ $key }}" wire:model="profil.branchen">{{ $name }}</label>@endforeach</div>
+                <div class="fa-obs-filters">@foreach(O::BRANCHEN as $key => $name)<x-fa::checkbox class="fa-obs-button" value="{{ $key }}" wire:model="profil.branchen">{{ $name }}</x-fa::checkbox>@endforeach</div>
             </fieldset>
             <div class="fa-obs-filters">
                 <label class="fa-obs-field small"><select wire:model="profil.region" aria-label="Region im Briefing">@foreach(BP::REGIONEN as $key => $name)<option value="{{ $key }}">{{ $name }}</option>@endforeach</select></label>

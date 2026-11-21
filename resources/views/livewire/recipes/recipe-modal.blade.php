@@ -633,7 +633,7 @@
                     @php $an = in_array($art, (array) ($form['storage_types'] ?? []), true); @endphp
                     <tr wire:key="lagerart-{{ $art }}" data-recipe-lagerart="{{ $art }}">
                         <td class="font-medium">{{ $titel }}</td>
-                        <td><input type="checkbox" value="{{ $art }}" wire:model.live="form.storage_types" class="w-4 h-4 rounded accent-[var(--fa-accent)]" aria-label="{{ $titel }} möglich" /></td>
+                        <td><x-fa::checkbox value="{{ $art }}" wire:model.live="form.storage_types" aria-label="{{ $titel }} möglich" /></td>
                         <td>
                             <span class="inline-flex items-center gap-1.5">
                                 <x-fa::input type="number" min="0" size="sm" wire:model="form.{{ $feld }}" numeric placeholder="offen" class="w-24" :disabled="! $an" aria-label="Haltbarkeit {{ $titel }}" />

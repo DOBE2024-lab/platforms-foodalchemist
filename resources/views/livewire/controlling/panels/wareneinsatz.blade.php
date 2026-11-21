@@ -142,10 +142,7 @@
                                     @if($z['lead_ist_optimal'])
                                         <span class="inline-flex text-[var(--fa-ok)]" title="Wird bereits am günstigsten bezogen">@svg('heroicon-m-check-circle', 'w-4 h-4')</span>
                                     @else
-                                        <input type="checkbox" wire:model.live="auswahl" value="{{ $z['gp_id'] }}"
-                                               aria-label="{{ $z['name'] }} auswählen"
-                                               class="w-4 h-4 accent-[var(--fa-accent)]"
-                                               data-ctrl-batch-pick="{{ $z['gp_id'] }}" />
+                                        <x-fa::checkbox wire:model.live="auswahl" value="{{ $z['gp_id'] }}" aria-label="{{ $z['name'] }} auswählen" data-ctrl-batch-pick="{{ $z['gp_id'] }}" />
                                     @endif
                                 </td>
                                 <td>{{ $z['name'] }}</td>

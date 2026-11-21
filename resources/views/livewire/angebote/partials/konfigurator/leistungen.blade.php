@@ -10,10 +10,9 @@
 <x-fa::section title="Aus Vorlagen übernehmen" icon="heroicon-o-document-duplicate" description="Vorlagen werden kopiert. Ändert sich eine Vorlage später, zeigt die Zeile „Vorlage geändert“.">
     <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-x-4 gap-y-1 max-h-64 overflow-auto" data-kf-vorlagen>
         @forelse($vorlagen as $v)
-            <label wire:key="kfv-{{ $v->id }}" class="inline-flex items-start gap-2 py-0.5">
-                <input type="checkbox" value="{{ $v->id }}" wire:model="vorlageAuswahl" class="mt-1 accent-[var(--fa-accent)]" data-kf-vorlage="{{ $v->id }}" />
+            <x-fa::checkbox wire:key="kfv-{{ $v->id }}" class="inline-flex items-start gap-2 py-0.5" value="{{ $v->id }}" wire:model="vorlageAuswahl" data-kf-vorlage="{{ $v->id }}">
                 <span>{{ $v->bezeichnung }} <span class="fa-t-muted">· {{ $kategorieNamen[$v->kategorie] ?? $v->kategorie }} · EK {{ $euro($v->ek_satz) }}</span></span>
-            </label>
+            </x-fa::checkbox>
         @empty
             <p class="fa-t-muted">Noch keine Vorlagen. Unter Konfiguratoren → Leistungs-Vorlagen anlegen.</p>
         @endforelse

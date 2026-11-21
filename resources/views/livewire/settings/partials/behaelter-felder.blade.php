@@ -65,9 +65,7 @@
         </div>
 
         <div class="flex flex-col gap-1.5">
-            <label class="inline-flex items-center gap-2 fa-t-body cursor-pointer">
-                <input type="checkbox" wire:model.live="{{ $praefix }}.ist_traeger" class="rounded accent-[var(--fa-accent)]" />Träger
-            </label>
+            <x-fa::checkbox class="inline-flex items-center gap-2 fa-t-body cursor-pointer" wire:model.live="{{ $praefix }}.ist_traeger">Träger</x-fa::checkbox>
             <p class="fa-t-muted">Nimmt Füllbehälter auf und wird selbst nicht befüllt.</p>
             @if(! empty($f['ist_traeger']))
                 <div class="flex flex-wrap items-end gap-3">

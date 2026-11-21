@@ -645,7 +645,7 @@
                                                             <button type="button" wire:click="slotRunter({{ $slot->id }})" class="text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]" title="Nach unten" aria-label="Nach unten">@svg('heroicon-m-chevron-down', 'w-4 h-4')</button>
                                                         </span>
                                                         @if(! $istStruktur && $slot->sales_recipe_id)
-                                                            <input type="checkbox" wire:click="toggleAuswahl({{ $slot->id }})" @checked(in_array($slot->id, $auswahl)) class="ml-1 w-4 h-4 accent-[var(--fa-accent)]" title="Für „Paket bilden“ markieren" aria-label="Für Paket bilden markieren" />
+                                                            <x-fa::checkbox class="ml-1" wire:click="toggleAuswahl({{ $slot->id }})" :checked="in_array($slot->id, $auswahl)" title="Für „Paket bilden“ markieren" aria-label="Für Paket bilden markieren" />
                                                         @endif
                                                     </div>
                                                 </td>
@@ -778,9 +778,7 @@
                                                 <td class="align-top whitespace-nowrap">
                                                     <div class="flex items-center justify-end gap-0.5">
                                                         @if(! $istStruktur)
-                                                            <label class="inline-flex items-center gap-1 mr-1 {{ $klein }} text-[var(--fa-ink-2)]" title="Pflicht-Position">
-                                                                <input type="checkbox" wire:model="slotForm.{{ $slot->id }}.is_pflicht" wire:change="slotSpeichern({{ $slot->id }})" class="w-4 h-4 accent-[var(--fa-accent)]" />Pflicht
-                                                            </label>
+                                                            <x-fa::checkbox class="inline-flex items-center gap-1 mr-1 {{ $klein }} text-[var(--fa-ink-2)]" title="Pflicht-Position" wire:model="slotForm.{{ $slot->id }}.is_pflicht" wire:change="slotSpeichern({{ $slot->id }})">Pflicht</x-fa::checkbox>
                                                             <x-fa::icon-button icon="heroicon-m-adjustments-horizontal" label="Befüllung ändern" size="sm" wire:click="fillToggle({{ $slot->id }})" />
                                                         @endif
                                                         <button type="button" wire:click="zielSetzen({{ $slot->id }})" aria-pressed="{{ $istZiel ? 'true' : 'false' }}"

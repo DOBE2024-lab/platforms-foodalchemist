@@ -41,8 +41,11 @@ final class UiRegeln
         'leise_definition' => '/\$leise\s*=(?!=)/',
         // Rohe Knöpfe statt x-fa::button.
         'roher_button' => '/<button\b/',
-        // Rohe Checkboxen statt x-fa::checkbox (kommt mit 1.4c). Attribute in Anführungszeichen und -> / => überspringen.
-        'rohe_checkbox' => '/<input\b(?:->|=>|"[^"]*"|\'[^\']*\'|[^>"\'])*?\btype\s*=\s*["\']checkbox["\']/',
+        // Rohe Checkboxen statt x-fa::checkbox (1.4c). Attribute in Anführungszeichen und -> / => überspringen.
+        // Ausnahme (Kurator, 1.4c): die Chip-Checkbox im .fa-chip-Label (input mit sr-only). Sie ist kein Haken, sondern ein
+        // Chip; wo sie 1:1 auf x-fa::choice passt, wird sie dorthin umgestellt, sonst bleibt sie (Einzel-Booleans,
+        // Alpine-x-model, Tag-für-Tag-Sperre, Häkchen-Symbol, title/truncate je Chip).
+        'rohe_checkbox' => '/<input\b(?!(?:->|=>|[^>])*?\bsr-only\b)(?:->|=>|"[^"]*"|\'[^\']*\'|[^>"\'])*?\btype\s*=\s*["\']checkbox["\']/',
         // Alte Tailwind-Palette statt Tokens (--fa-*).
         'alte_palette' => '/(?<![\w-])(?:text|bg|border(?:-[xytrbl])?|ring|ring-offset|divide|outline|from|via|to|placeholder|fill|stroke|decoration|accent|caret|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)(?![\w-])/',
     ];

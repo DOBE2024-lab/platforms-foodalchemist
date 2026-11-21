@@ -62,9 +62,7 @@
                 <x-fa::choice name="typen" label="Trend oder Hype" idPrefix="tr" :multiple="true" :options="V::TYPEN" />
                 <x-fa::choice name="ebenen" label="Trendhierarchie" idPrefix="tr" :multiple="true" :options="V::EBENEN" />
 
-                <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] cursor-pointer">
-                    <input type="checkbox" wire:model.live="nurBefragung" class="accent-[var(--fa-accent)]" /> Nur von der Befragung bestätigt
-                </label>
+                <x-fa::checkbox class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] cursor-pointer" wire:model.live="nurBefragung">Nur von der Befragung bestätigt</x-fa::checkbox>
 
                 @endif
                 @if($filterAktiv)
@@ -228,7 +226,7 @@
                             <div class="p-3 flex flex-col gap-2 min-w-0 flex-1">
                                 <div class="flex items-start gap-2">
                                     @if($darfKuratieren && $eigenesTeam && $insp->trend_id === null)
-                                        <input type="checkbox" value="{{ $insp->id }}" wire:model.live="mergeWahl" class="mt-1 accent-[var(--fa-accent)]" title="Zum Zusammenführen markieren" data-inspiration-merge="{{ $insp->id }}" />
+                                        <x-fa::checkbox class="mt-1" value="{{ $insp->id }}" wire:model.live="mergeWahl" title="Zum Zusammenführen markieren" aria-label="Zum Zusammenführen markieren" data-inspiration-merge="{{ $insp->id }}" />
                                     @endif
                                     @if(array_key_exists($insp->id, $titelEntwurf))
                                         <form class="flex-1 flex flex-col gap-1.5 min-w-0" wire:submit="inspirationUmbenennen({{ $insp->id }})" data-inspiration-titel-form="{{ $insp->id }}">

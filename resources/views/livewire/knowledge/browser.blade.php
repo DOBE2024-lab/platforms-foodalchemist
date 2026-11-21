@@ -86,10 +86,7 @@
                         placeholder="{{ $semantic ? 'Text, Bedeutung oder Begriff' : 'Titel oder Suchbegriff' }}" />
                 </div>
 
-                <label class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] cursor-pointer"
-                       title="Findet auch bedeutungsähnliche Dokumente ohne wörtliche Übereinstimmung">
-                    <input type="checkbox" wire:model.live="semantic" class="accent-[var(--fa-accent)]" data-wissen-semantik /> Bedeutung einbeziehen
-                </label>
+                <x-fa::checkbox class="flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] cursor-pointer" title="Findet auch bedeutungsähnliche Dokumente ohne wörtliche Übereinstimmung" wire:model.live="semantic" data-wissen-semantik>Bedeutung einbeziehen</x-fa::checkbox>
 
                 @if($semanticNote !== null)
                     <x-fa::signal tone="warn" data-wissen-semantik-hinweis>{{ $semanticNote }}</x-fa::signal>
@@ -199,9 +196,7 @@
                             <div class="flex flex-col gap-3">
                                 @include('foodalchemist::livewire.knowledge.einordnung')
                             </div>
-                            <label class="flex items-center gap-2 fa-t-strong cursor-pointer">
-                                <input type="checkbox" wire:model="form.active" class="accent-[var(--fa-accent)]" /> Aktiv (wird mit „Speichern“ übernommen)
-                            </label>
+                            <x-fa::checkbox class="flex items-center gap-2 fa-t-strong cursor-pointer" wire:model="form.active">Aktiv (wird mit „Speichern“ übernommen)</x-fa::checkbox>
                             <p class="fa-t-muted break-all">Kennung <span class="font-mono text-[var(--fa-ink-2)]">{{ $selected->slug }}</span></p>
                         </x-fa::section>
 

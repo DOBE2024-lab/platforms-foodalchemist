@@ -53,10 +53,9 @@
                         </li>
                     @endforeach
                 </ol>
-                <label class="mt-3 inline-flex items-center gap-2 text-[length:var(--fa-text-md)] cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4 rounded accent-[var(--fa-accent)]" wire:model.live="bestaetigt" data-mandant-beenden-bestaetigung />
+                <x-fa::checkbox class="mt-3 inline-flex items-center gap-2 text-[length:var(--fa-text-md)] cursor-pointer" wire:model.live="bestaetigt" data-mandant-beenden-bestaetigung>
                     Ich habe die Vorschau gelesen und will „{{ $vorschau['name'] }}“ beenden und sperren.
-                </label>
+                </x-fa::checkbox>
                 <div class="flex gap-2 pt-3">
                     <x-fa::button variant="ghost" wire:click="abbrechen">Abbrechen</x-fa::button>
                     <x-fa::button variant="primary" icon="heroicon-o-lock-closed" wire:click="beenden({{ $vorschau['team_id'] }})" :disabled="! $bestaetigt" data-mandant-beenden-ausfuehren>Beenden und sperren</x-fa::button>

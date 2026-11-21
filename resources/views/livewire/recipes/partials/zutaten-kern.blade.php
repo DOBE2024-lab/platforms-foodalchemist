@@ -134,9 +134,7 @@
             <select x-model.number="neu.unit_vocab_id" aria-label="Einheit" class="{{ $feld }} fa-select w-24 pr-7" data-park-unit>
                 <template x-for="e in erlaubteEinheiten(geparkt)" :key="e.id"><option :value="e.id" x-text="e.slug"></option></template>
             </select>
-            <label class="inline-flex items-center gap-1.5 shrink-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">
-                <input type="checkbox" x-model="neu.is_optional" class="w-4 h-4 accent-[var(--fa-accent)]" /> optional
-            </label>
+            <x-fa::checkbox class="inline-flex items-center gap-1.5 shrink-0 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" x-model="neu.is_optional">optional</x-fa::checkbox>
             <x-fa::button size="sm" icon="heroicon-m-plus" x-on:click="einfuegen()" title="Einfügen (Enter)" data-park-einfuegen>Zutat einfügen</x-fa::button>
             <button type="button" @click="verwerfen()" class="{{ $ib }}" title="Auswahl verwerfen" aria-label="Auswahl verwerfen" data-park-verwerfen>@svg('heroicon-m-x-mark', 'w-4 h-4')</button>
         </div>
@@ -269,17 +267,14 @@
                     </td>
                     <td class="whitespace-nowrap">
                         <div class="flex items-center justify-end gap-0.5">
-                            <label class="inline-flex items-center gap-1 mr-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Optional: zählt nicht in Ausbeute und Kosten">
-                                <input type="checkbox" x-model="zeile.is_optional" class="w-3.5 h-3.5 accent-[var(--fa-accent)]" aria-label="Optional" /><span>optional</span>
-                            </label>
+                            <x-fa::checkbox class="inline-flex items-center gap-1 mr-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Optional: zählt nicht in Ausbeute und Kosten" x-model="zeile.is_optional" aria-label="Optional"><span>optional</span></x-fa::checkbox>
                             {{-- Zeilenart „Medium“ (Regelwerk Basisrezepte §18.7): Kochmedium, verworfen bis auf 1 − Garverlust; ungesetzt = Vorschlag des GP. Nur im Basisrezept --}}
                             @unless($vkKontext)
-                            <label class="inline-flex items-center gap-1 mr-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]"
-                                   :title="'Medium (Kochmedium wie Nudelwasser, Frittieröl, Lake): wird verworfen, zählt nur zum Anteil (1 − Garverlust) in Ausbeute und Nährwerten, ohne Garverlust gar nicht. Kosten zählen voll.' + (zeile.zeilenart === null || zeile.zeilenart === undefined ? (zeile._gp_kochmedium ? ' Vorschlag vom Grundprodukt.' : '') : '')">
-                                <input type="checkbox" :checked="zeile.zeilenart ? zeile.zeilenart === 'medium' : !!zeile._gp_kochmedium"
-                                       @change="zeile.zeilenart = $event.target.checked ? 'medium' : 'zutat'"
-                                       class="w-3.5 h-3.5 accent-[var(--fa-accent)]" aria-label="Medium" data-zeile-medium /><span>Medium</span>
-                            </label>
+                            <x-fa::checkbox class="inline-flex items-center gap-1 mr-1 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]"
+                                   x-bind:title="'Medium (Kochmedium wie Nudelwasser, Frittieröl, Lake): wird verworfen, zählt nur zum Anteil (1 − Garverlust) in Ausbeute und Nährwerten, ohne Garverlust gar nicht. Kosten zählen voll.' + (zeile.zeilenart === null || zeile.zeilenart === undefined ? (zeile._gp_kochmedium ? ' Vorschlag vom Grundprodukt.' : '') : '')"
+                                   x-bind:checked="zeile.zeilenart ? zeile.zeilenart === 'medium' : !!zeile._gp_kochmedium"
+                                   x-on:change="zeile.zeilenart = $event.target.checked ? 'medium' : 'zutat'"
+                                   aria-label="Medium" data-zeile-medium>Medium</x-fa::checkbox>
                             @endunless
                             {{-- Ersatz (Äquivalenz-Katalog): nur sichtbar, wenn hinterlegt; 1 Klick tauscht um, Menge × Faktor --}}
                             <button type="button" x-show="zeile.ersatz" x-cloak class="{{ $ib }} text-[var(--fa-ok)] hover:text-[var(--fa-ok)] hover:bg-[var(--fa-ok-soft)]"

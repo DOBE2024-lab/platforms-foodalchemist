@@ -96,12 +96,12 @@ class FoodbooksImageTool extends FoodAlchemistTool implements ToolContract, Tool
             if ($imageId <= 0) {
                 return ToolResult::error('image_id ist für kapitel_galerie/entfernen Pflicht.', 'VALIDATION_ERROR');
             }
-            $kapitelId = (int) FoodAlchemistFoodbookChapterImage::whereKey($imageId)->value('chapter_id');
+            $kapitelId = (int) FoodAlchemistFoodbookChapterImage::visibleToTeam($team)->whereKey($imageId)->value('chapter_id');
             if ($kapitelId <= 0) {
                 return ToolResult::error('Galeriebild nicht vorhanden.', 'NOT_FOUND');
             }
         }
-        if (str_starts_with($ziel, 'kapitel_') && ($kapitelFehler = $this->kapitelImFoodbook($id, $kapitelId)) !== null) {
+        if (str_starts_with($ziel, 'kapitel_') && ($kapitelFehler = $this->kapitelImFoodbook($team, $id, $kapitelId)) !== null) {
             return $kapitelFehler;
         }
 
@@ -160,18 +160,18 @@ class FoodbooksImageTool extends FoodAlchemistTool implements ToolContract, Tool
         $contextFileId = match ($ziel) {
             'logo' => FoodAlchemistFoodbook::visibleToTeam($team)->whereKey($id)->value('logo_context_file_id'),
             'cover' => FoodAlchemistFoodbook::visibleToTeam($team)->whereKey($id)->value('cover_context_file_id'),
-            'kapitel_bild' => FoodAlchemistFoodbookKapitel::whereKey($kapitelId)->value('image_context_file_id'),
+            'kapitel_bild' => FoodAlchemistFoodbookKapitel::visibleToTeam($team)->whereKey($kapitelId)->value('image_context_file_id'),
         };
 
         return ['path' => $pfad, 'url' => $media->url($contextFileId !== null ? (int) $contextFileId : null, $pfad)];
     }
 
-    private function kapitelImFoodbook(int $foodbookId, int $kapitelId): ?ToolResult
+    private function kapitelImFoodbook(Team $team, int $foodbookId, int $kapitelId): ?ToolResult
     {
         if ($kapitelId <= 0) {
             return ToolResult::error('kapitel_id ist für Kapitelbilder Pflicht.', 'VALIDATION_ERROR');
         }
-        if (! FoodAlchemistFoodbookKapitel::whereKey($kapitelId)->where('foodbook_id', $foodbookId)->exists()) {
+        if (! FoodAlchemistFoodbookKapitel::visibleToTeam($team)->whereKey($kapitelId)->where('foodbook_id', $foodbookId)->exists()) {
             return ToolResult::error("Kapitel {$kapitelId} gehört nicht zu Foodbook {$foodbookId}.", 'NOT_FOUND');
         }
 

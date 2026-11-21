@@ -36,13 +36,13 @@ trait RezeptFotoZugriff
     /** Schritt dieses Rezepts (beliebige Ebene) oder null. */
     protected function fotoSchritt(FoodAlchemistRecipe $recipe, int $stepId): ?FoodAlchemistRecipeStep
     {
-        return FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->whereKey($stepId)->first();
+        return FoodAlchemistRecipeStep::where('team_id', $recipe->team_id)->where('recipe_id', $recipe->id)->whereKey($stepId)->first();
     }
 
     /** Foto aus dem Pool dieses Rezepts oder null. */
     protected function poolFoto(FoodAlchemistRecipe $recipe, int $photoId): ?FoodAlchemistRecipeStepPhoto
     {
-        return FoodAlchemistRecipeStepPhoto::where('recipe_id', $recipe->id)->whereKey($photoId)->first();
+        return FoodAlchemistRecipeStepPhoto::where('team_id', $recipe->team_id)->where('recipe_id', $recipe->id)->whereKey($photoId)->first();
     }
 
     /** Kompakte Foto-Antwort (wie recipe_steps.GET). */

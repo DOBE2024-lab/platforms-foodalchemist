@@ -1023,7 +1023,7 @@ class ReportExportService
             'sales_net' => $vkNetto,
             // Spec 85: EK EINER Portion gegen den Portions-VK (vorher Ansatz-EK ÷ Portions-VK).
             'food_cost_percent' => ((float) ($vkNetto ?? 0) > 0 && $ekPortion !== null)
-                ? round(($ekPortion / (float) $vkNetto) * 100, 2)
+                ? MargeService::wareneinsatzPct($ekPortion, $vkNetto, 2)
                 : null,
             'sales_wording_standard' => $recipe->sales_wording_standard,
             'plating_text' => $recipe->plating_text,

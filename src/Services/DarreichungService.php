@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Services;
 
+use Platform\FoodAlchemist\Support\Masse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\Team;
@@ -814,7 +815,7 @@ class DarreichungService
 
         if ($deltas->isEmpty() && ! $darreichung->menge_vom_standard) {
             // Stufe 1: proportional — EK/g des Rezepts × Grammatur × Anzahl
-            $ekProG = $recipe->ek_per_kg_eur !== null ? (float) $recipe->ek_per_kg_eur / 1000.0 : null;
+            $ekProG = Masse::preisJeG($recipe->ek_per_kg_eur);
             $grammatur = $this->grammJeEinheit($darreichung, $recipe) ?? 0.0;
             $ekPortion = ($ekProG !== null && $grammatur > 0)
                 ? round($ekProG * $grammatur
@@ -852,7 +853,7 @@ class DarreichungService
             $ekPortion = $nBepreist > 0
                 ? round($kosten * (float) ($darreichung->unit_count ?: 1), 4)
                 : ($recipe->ek_per_kg_eur !== null && $masse > 0
-                    ? round((float) $recipe->ek_per_kg_eur / 1000.0 * $masse
+                    ? round(Masse::preisJeG($recipe->ek_per_kg_eur) * $masse
                         * (float) ($darreichung->unit_count ?: 1), 4)
                     : null);
         }

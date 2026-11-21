@@ -71,8 +71,24 @@ class MargeService
         return [
             'marge_eur' => round($vkNetto - $ekTotalEur, 2),
             'marge_pct' => round(($vkNetto - $ekTotalEur) / $vkNetto * 100, 1),
-            'wareneinsatz_pct' => round($ekTotalEur / $vkNetto * 100, 1),
+            'wareneinsatz_pct' => self::wareneinsatzPct($ekTotalEur, $vkNetto),
         ];
+    }
+
+    /**
+     * Wareneinsatz % = EK ÷ VK × 100 — die eine Rechnung für alle Stellen (CQ 2.2a, vorher ~40 Handrechnungen).
+     * VK fehlt oder ≤ 0 → null (keine Quote ohne Umsatz); EK fehlt → null; EK 0 bei gültigem VK → 0 %.
+     * `$stellen = null` liefert den ungerundeten Wert, wenn die Anzeige selbst formatiert (number_format).
+     * Statisch, damit Blade und Services ohne Container-Auflösung dieselbe Rechnung nutzen.
+     */
+    public static function wareneinsatzPct(mixed $ek, mixed $vk, ?int $stellen = 1): ?float
+    {
+        if ($ek === null || $vk === null || (float) $vk <= 0) {
+            return null;
+        }
+        $pct = (float) $ek / (float) $vk * 100;
+
+        return $stellen === null ? $pct : round($pct, $stellen);
     }
 
     /**

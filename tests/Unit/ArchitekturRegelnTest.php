@@ -140,3 +140,81 @@ it('Architektur-Baseline steigt nicht gegenüber der eingecheckten Fassung', fun
 
     expect($steigt)->toBe([], "Baseline wurde angehoben — bitte Code verbessern statt Baseline erhöhen:\n" . implode("\n", $steigt));
 });
+
+/**
+ * Code-Qualität 2.2a: Geld-Helfer zentral. Keine neue Handrechnung für Wareneinsatz % (→ MargeService::wareneinsatzPct),
+ * EK je Portion (→ DarreichungResolver::ekProPortion) und Preis je kg → je g (→ Support\Masse::preisJeG). Zielwert 0;
+ * die Ausnahmen unten rechnen bewusst etwas anderes und sind mit Grund und exakter Anzahl festgehalten.
+ */
+function geldHandrechnungen(): array
+{
+    $wurzel = dirname(__DIR__, 2);
+    $ekImZaehler = '/(?:^|[^A-Za-z])ek|[a-z]Ek|EK|Mek|kosten|hk1/';
+    $regeln = [
+        'wareneinsatz' => function (string $zeile) use ($ekImZaehler): bool {
+            if (! preg_match_all('/(?<![-+]\s)(?<![-+])((?:\(float\)\s*)?\$\w+(?:\[[^\]]+\]|->\w+)*)\)?\s*\/\s*\(?(?:\(float\)\s*)?\$\w+(?:\[[^\]]+\]|->\w+)*\)?\s*\)?\s*\*\s*100(?!\d)/', $zeile, $m)) {
+                return false;
+            }
+
+            return collect($m[1])->contains(fn ($zaehler) => preg_match($ekImZaehler, $zaehler) === 1);
+        },
+        'ek_je_portion' => fn (string $zeile): bool => preg_match('/ek_total_eur[^;]*?\/\s*(?:max\(\s*1|\$anzahl)/', $zeile) === 1,
+        'kg_in_g' => fn (string $zeile): bool => preg_match('/per_kg\w*[\'"]?\]?\)?\s*\/\s*1000/', $zeile) === 1,
+    ];
+
+    $treffer = [];
+    foreach (['src', 'resources/views'] as $ordner) {
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($wurzel . '/' . $ordner, FilesystemIterator::SKIP_DOTS));
+        foreach ($it as $datei) {
+            if (! str_ends_with($datei->getFilename(), '.php')) {
+                continue;
+            }
+            $rel = substr($datei->getPathname(), strlen($wurzel) + 1);
+            foreach (file($datei->getPathname()) as $zeile) {
+                foreach ($regeln as $regel => $pruefe) {
+                    if ($pruefe($zeile)) {
+                        $treffer[$regel][$rel] = ($treffer[$regel][$rel] ?? 0) + 1;
+                    }
+                }
+            }
+        }
+    }
+
+    return $treffer;
+}
+
+it('Geld-Helfer: keine neuen Handrechnungen für Wareneinsatz, EK je Portion und Preis je kg → g (CQ 2.2a)', function () {
+    // Datei => [Anzahl, Grund]. Nur sinken lassen — eine neue Stelle gehört in den Helfer, nicht hierher.
+    $ausnahmen = [
+        'wareneinsatz' => [
+            'src/Services/MargeService.php' => [1, 'der Helfer selbst'],
+            'src/Services/BenchmarkService.php' => [1, 'EK-Abdeckung (Anteil Gerichte mit EK), keine Quote'],
+            'resources/views/presentation/blocks/chapter_loop.blade.php' => [1, 'VK per Wahrheitswert geprüft (negativer VK zeigte eine Quote) — nicht still vereinheitlicht'],
+        ],
+        'ek_je_portion' => [
+            'src/Services/DarreichungResolver.php' => [1, 'der Helfer selbst'],
+            'src/Services/BenchmarkService.php' => [1, 'SQL-Zeile ohne Model, ek_portion kommt schon aus der Abfrage'],
+            'src/Services/MoneyTruthReportService.php' => [1, 'Diagnose vergleicht bewusst Ansatz ÷ Portionen mit der Darreichung'],
+            'src/Services/SpeiseplanService.php' => [1, 'Darreichung des Eintrags statt Standard, Rückfall 0 statt null'],
+            'src/Services/Concept/CockpitZeilen.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
+            'src/Services/ConceptPreisService.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
+            'src/Services/ConcepterAggregateService.php' => [1, 'Paket-EK mit PAE-Faktor, Rückfall 0'],
+            'src/Services/PaketPreisService.php' => [1, 'Paket-EK mit PAE-Faktor, Rückfall 0'],
+            'src/Services/PaketService.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
+        ],
+        'kg_in_g' => [],
+    ];
+
+    $ist = geldHandrechnungen();
+    $abweichung = [];
+    foreach ($ausnahmen as $regel => $erlaubt) {
+        foreach (($ist[$regel] ?? []) + array_map(fn () => 0, $erlaubt) as $datei => $anzahl) {
+            $soll = $erlaubt[$datei][0] ?? 0;
+            if ($anzahl !== $soll) {
+                $abweichung[] = "{$regel}: {$datei} hat {$anzahl}, erwartet {$soll}" . ($anzahl < $soll ? ' (Ausnahme abbauen)' : ' (Helfer nutzen)');
+            }
+        }
+    }
+
+    expect($abweichung)->toBe([], implode("\n", $abweichung));
+});

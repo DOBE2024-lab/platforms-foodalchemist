@@ -312,7 +312,7 @@ class LeitstelleService
                     $positionen[] = [
                         'art' => 'paket', 'label' => $block->concept?->name ?? ($block->label ?? 'Paket'),
                         'vk' => $vk, 'ek' => $ek, 'preis_einheit' => 'gast',
-                        'we_pct' => ($vk > 0 && $ek > 0) ? round($ek / $vk * 100, 1) : null,
+                        'we_pct' => $ek > 0 ? MargeService::wareneinsatzPct($ek, $vk) : null,
                         'ref_typ' => 'concept', 'ref_id' => $block->concept !== null ? (int) $block->concept->id : null,
                     ];
                 } else {
@@ -322,7 +322,7 @@ class LeitstelleService
                     $positionen[] = [
                         'art' => 'einzel', 'label' => $block->dish?->name ?? ($block->label ?? 'Gericht'),
                         'vk' => $vk, 'ek' => $ek, 'preis_einheit' => 'position',
-                        'we_pct' => ($vk > 0 && $ek > 0) ? round($ek / $vk * 100, 1) : null,
+                        'we_pct' => $ek > 0 ? MargeService::wareneinsatzPct($ek, $vk) : null,
                         'ref_typ' => 'recipe', 'ref_id' => $recipeId,
                     ];
                 }

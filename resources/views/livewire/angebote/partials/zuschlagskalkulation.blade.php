@@ -173,7 +173,7 @@
                             @php
                                 $zEk = $z['ek'] ?? null;
                                 $zVk = $z['price'] ?? null;
-                                $zw = ($zVk !== null && (float) $zVk > 0 && $zEk !== null) ? (float) $zEk / (float) $zVk * 100 : null;
+                                $zw = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($zEk, $zVk, null);
                             @endphp
                             <tr>
                                 <td>@if(!empty($z['role']))<span class="text-[var(--fa-ink-3)]">{{ $z['role'] }}:</span> @endif{{ $z['label'] ?? '–' }}</td>
@@ -188,7 +188,7 @@
                             <td>Summe je Gast</td>
                             <td class="num">{{ $zkEuro($sumEkPp) }}</td>
                             <td class="num">{{ $zkEuro($sumVkPp) }}</td>
-                            <td class="num">{{ $sumVkPp > 0 ? number_format($sumEkPp / $sumVkPp * 100, 1, ',', '.') . ' %' : '–' }}</td>
+                            <td class="num">{{ $sumVkPp > 0 ? number_format(\Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct((float) $sumEkPp, $sumVkPp, null), 1, ',', '.') . ' %' : '–' }}</td>
                         </tr>
                     </tfoot>
                 </table>

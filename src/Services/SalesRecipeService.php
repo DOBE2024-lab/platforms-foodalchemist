@@ -885,9 +885,9 @@ class SalesRecipeService
             $mwst = (float) $catalog['vat_rate'];
         }
         // Spec 85: EK EINER Portion (ek_portion, sonst Ansatz ÷ Portionen) — vorher im Rückfall der ganze Ansatz.
-        $ekBasis = $standard?->ek_portion !== null
-            ? (float) $standard->ek_portion
-            : ($r->ek_total_eur !== null ? (float) $r->ek_total_eur / max(1, (int) ($r->sales_unit_count ?? 1)) : null);
+        // CQ 2.2a: über den Resolver; die oben gelesene Standard-Darreichung als Relation setzen, sonst nähme er
+        // ohne Standard die erste Darreichung (standardFuer) — hier galt bisher ohne Standard der Ansatz ÷ Portionen.
+        $ekBasis = app(DarreichungResolver::class)->ekProPortion($r->setRelation('standardPresentation', $standard));
         $marge = $this->marge->marge($vk['sales_net'], $ekBasis);
 
         // Spec 28 §6.1: Food-Cost-Ampel mitliefern, damit die VK-Editor-Kachel den Wareneinsatz

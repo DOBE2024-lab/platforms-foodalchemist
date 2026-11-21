@@ -144,7 +144,7 @@ class ConceptPaketService
             'price_mode' => $p->price_mode,
             'price_per_person' => $vk,
             'ek_per_person' => $ek,
-            'food_cost_percent' => ($vk !== null && $ek !== null && $vk > 0) ? round($ek / $vk * 100, 1) : null,
+            'food_cost_percent' => MargeService::wareneinsatzPct($ek, $vk),
             'is_inactive' => $p->status === 'archiviert',
         ];
         if ($mitGerichten) {

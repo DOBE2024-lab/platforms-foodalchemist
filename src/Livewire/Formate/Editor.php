@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Livewire\Formate;
 
+use Platform\FoodAlchemist\Services\MargeService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -612,7 +613,7 @@ class Editor extends Component
                         'name' => $c->consumer_name ?: ($c->name ?? 'Konzept nicht mehr verfügbar'),
                         'vk' => $vk,
                         'ek' => $ek,
-                        'w' => ($vk !== null && $vk > 0 && $ek !== null) ? round($ek / $vk * 100, 1) : null,
+                        'w' => MargeService::wareneinsatzPct($ek, $vk),
                     ];
                 })->values());
             $vks = $kalkZeilen->pluck('vk')->filter(fn ($v) => $v !== null && $v > 0)->values();

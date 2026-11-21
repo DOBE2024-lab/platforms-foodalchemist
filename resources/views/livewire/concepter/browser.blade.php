@@ -191,7 +191,7 @@
                                 // Ebene 2: mit Brille der betriebsscharfe €/Gast ($vkDisplay), sonst der Cache.
                                 $betriebsPreis = isset($vkDisplay[$it->id]) && $vkDisplay[$it->id] !== null;
                                 $preis = $betriebsPreis ? (float) $vkDisplay[$it->id] : ($it->price_per_person_cache !== null ? (float) $it->price_per_person_cache : null);
-                                $wareneinsatz = ($istPakete && $preis !== null && $preis > 0 && $it->ek_per_person_cache !== null) ? (float) $it->ek_per_person_cache / $preis * 100 : null;
+                                $wareneinsatz = $istPakete ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($it->ek_per_person_cache, $preis, null) : null;
                                 $darfStatus = ! isset($it->team_id) || \Platform\FoodAlchemist\Support\Curate::canCurate(auth()->user(), $it);   // seit #800 sind Pakete Concepts (kind=paket) → Status wie bei Concepts
                             @endphp
                             <x-foodalchemist::table-row :active="$selectedId === $it->id" wire:key="row-{{ $tab }}-{{ $it->id }}" wire:click="waehle({{ $it->id }})"

@@ -143,9 +143,7 @@ class MenuCandidatePoolService
     {
         $standard = $r->relationLoaded('standardPresentation') ? $r->standardPresentation : null;
 
-        $anzahl = max(1, (int) ($r->sales_unit_count ?? 1));
-        $ek = $standard?->ek_portion !== null ? (float) $standard->ek_portion
-            : ($r->ek_total_eur !== null ? (float) $r->ek_total_eur / $anzahl : null);
+        $ek = $this->darreichungen->ekProPortion($r);   // CQ 2.2a: die eine EK-je-Portion-Regel (Standard eager geladen)
 
         $quelle = match (true) {
             $standard?->sales_net !== null && $standard?->ek_portion !== null => 'darreichung',
@@ -165,7 +163,7 @@ class MenuCandidatePoolService
             'ek_portion' => round($ek, 4),
             'db_eur' => round($vk - $ek, 2),
             'db_pct' => round(($vk - $ek) / $vk * 100, 1),
-            'wareneinsatz_pct' => round($ek / $vk * 100, 1),
+            'wareneinsatz_pct' => MargeService::wareneinsatzPct($ek, $vk),
             'quelle' => $quelle,
             'vollstaendig' => true,
         ];

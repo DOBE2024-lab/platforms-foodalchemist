@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Tools;
 
+use Platform\FoodAlchemist\Services\MargeService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Platform\Core\Contracts\ToolContract;
@@ -129,7 +130,7 @@ class ConceptsListTool extends FoodAlchemistTool implements ToolContract, ToolMe
             'eventtyp' => $eventtyp !== null ? ['id' => (int) $eventtyp->id, 'name' => $eventtyp->name] : null,
             'servierform' => $servierform !== null ? ['id' => (int) $servierform->id, 'name' => $servierform->label] : null,
             'preis_pro_person' => $preis, 'ek_pro_person' => $ek,
-            'wareneinsatz_pct' => $preis !== null && $preis > 0 && $ek !== null ? round($ek / $preis * 100, 1) : null,
+            'wareneinsatz_pct' => MargeService::wareneinsatzPct($ek, $preis),
         ];
     }
 

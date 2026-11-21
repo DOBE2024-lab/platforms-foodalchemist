@@ -361,7 +361,7 @@ class AngebotService
             'ek_per_person' => $ekPp,
             'hk2_pro_person' => $pax > 0 ? round($hk2Gesamt / $pax, 2) : 0.0,
             'db_pro_person' => $pax > 0 ? round($vkPp - $hk2Gesamt / $pax, 2) : $vkPp,
-            'wareneinsatz_pct' => $gesamtVkAuto > 0 ? round($gesamtEk / $gesamtVkAuto * 100, 1) : null,
+            'wareneinsatz_pct' => MargeService::wareneinsatzPct($gesamtEk, $gesamtVkAuto),
             'auto_gesamt' => $gesamtVkAuto,
             'gesamt_vk' => round($gesamt, 2),
             'gesamt_ek' => $gesamtEk,

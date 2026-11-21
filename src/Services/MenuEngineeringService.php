@@ -154,11 +154,9 @@ class MenuEngineeringService
         $out = [];
         foreach ($rezepte as $r) {
             $std = $r->standardPresentation;
-            $anzahl = max(1, (int) ($r->sales_unit_count ?? 1));
-
-            $vk = app(DarreichungResolver::class)->vkNetto($r);   // Spec 85 D-1: Preisleiter (Standard-Darreichung)
-            $ek = $std?->ek_portion !== null ? (float) $std->ek_portion
-                : ($r->ek_total_eur !== null ? (float) $r->ek_total_eur / $anzahl : null);
+            $resolver = app(DarreichungResolver::class);
+            $vk = $resolver->vkNetto($r);   // Spec 85 D-1: Preisleiter (Standard-Darreichung)
+            $ek = $resolver->ekProPortion($r);   // CQ 2.2a: Standard eager geladen → ek_portion, sonst Ansatz ÷ Portionen
 
             $quelle = match (true) {
                 $std?->sales_net !== null && $std?->ek_portion !== null => 'darreichung',
@@ -174,7 +172,7 @@ class MenuEngineeringService
                 'ek_portion' => $ek !== null ? round($ek, 4) : null,
                 'db_eur' => $vollstaendig ? round($vk - $ek, 2) : null,
                 'db_pct' => $vollstaendig ? round(($vk - $ek) / $vk * 100, 1) : null,
-                'wareneinsatz_pct' => $vollstaendig ? round($ek / $vk * 100, 1) : null,
+                'wareneinsatz_pct' => MargeService::wareneinsatzPct($ek, $vk),
                 'quelle' => $quelle,
             ];
         }

@@ -1371,7 +1371,7 @@ class FoodbookService
             'vk_pro_person' => round($vk, 2),
             'ek_per_person' => round($ek, 2),
             'pauschal' => round($pauschal, 2),
-            'food_cost_percent' => $vk > 0 ? round($ek / $vk * 100, 1) : null,
+            'food_cost_percent' => MargeService::wareneinsatzPct($ek, $vk),
         ];
     }
 
@@ -1434,7 +1434,7 @@ class FoodbookService
         $gesamt = $this->gesamt($team, $fb, $outlet);
         $vk = $gesamt['vk_pro_person'];
         $ek = $gesamt['ek_per_person'];
-        $ist = $vk > 0 ? round($ek / $vk * 100, 1) : null;
+        $ist = MargeService::wareneinsatzPct($ek, $vk);
 
         if ($fb->target_food_cost_pct !== null) {
             $ziel = (float) $fb->target_food_cost_pct;
@@ -1504,7 +1504,7 @@ class FoodbookService
             'gesamt_ek' => $pax !== null ? round($ek * $pax, 2) : null,
             // Wareneinsatz % auf denselben gerundeten Per-Person-Werten wie die Anzeige (F-12),
             // damit die Zahl exakt der bisherigen Blade-Rechnung ek_pp / vk_pp * 100 entspricht.
-            'food_cost_percent' => $vkPp > 0 ? round($ekPp / $vkPp * 100, 1) : null,
+            'food_cost_percent' => MargeService::wareneinsatzPct($ekPp, $vkPp),
         ];
     }
 

@@ -106,6 +106,8 @@ final class Ui
             'menueBreite' => [
                 40 => 'w-40', 44 => 'w-44', 48 => 'w-48', 52 => 'w-52', 56 => 'w-56', 60 => 'w-60', 64 => 'w-64', 72 => 'w-72',
             ],
+            // x-fa::menu-item: Zeilenhöhe (eng = Standard, weit = lockere Zeile der Kopf-Menüs)
+            'menuePunktAbstand' => ['eng' => 'py-1.5', 'weit' => 'py-2'],
 
             // ── Buttons
             'btnPrimary' => 'inline-flex items-center justify-center whitespace-nowrap gap-2 h-9 px-3.5 text-[13px] font-medium text-[var(--fa-on-accent)] bg-violet-600 rounded-md hover:bg-violet-700 transition-colors duration-150',

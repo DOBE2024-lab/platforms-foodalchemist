@@ -157,6 +157,61 @@ it('Gericht kalkulieren: Darreichung im VK-Modal und recipe_darreichung.PUT erge
         ->and($abbild($dUi)['sales_net'])->toBeGreaterThan(0.0);
 });
 
+/*
+ * 98 · 2.3d, Unterschied 4 (Grammatur an der Standard-Darreichung): die Oberfläche hat an der Standard-Darreichung keine
+ * Grammatur-Eingabe — „Portionsmenge" zeigt die Menge aus der Rezeptur, die Checkbox „Standardmenge verwenden" schaltet nur
+ * zwischen Rezeptur und Komponentensumme. recipe_darreichung.PUT schrieb dagegen quantity_per_unit_g, schaltete damit
+ * menge_vom_standard still ab, und EK je Portion und Auto-VK rechneten ab dann mit dieser Menge (200 g statt 2000 g:
+ * VK 8 € statt 80 €). Das Tool lehnt das jetzt ab und verweist auf verkaufsrezepte.PUT.
+ *
+ * Bewusst offen (Kurator, 2.3d): an den ÜBRIGEN Darreichungen bleibt quantity_per_unit_g per Tool setzbar, obwohl die
+ * Oberfläche auch dort keine freie Grammatur kennt (Menge vom Standard oder Summe der Komponenten) — gebraucht etwa für Importe.
+ */
+it('recipe_darreichung.PUT: Grammatur an der Standard-Darreichung lehnt das Tool ab, die Rezeptur-Menge bleibt wie in der Oberfläche', function () {
+    $gericht = $this->makeRecipe($this->rootTeam, '[HG] Grammatur | Standard', [
+        'is_sales_recipe' => true, 'yield_kg' => 2.0, 'ek_per_kg_eur' => 12.0, 'ek_total_eur' => 24.0,
+        'ek_n_ingredients_total' => 3, 'ek_n_ingredients_priced' => 3,
+    ]);
+    $d = app(DarreichungService::class)->ensureStandard($this->rootTeam, $gericht->id, 'test');
+    $vorher = $d->fresh()->only(['quantity_per_unit_g', 'menge_vom_standard', 'ek_portion', 'sales_net']);
+
+    $r = app(ToolRegistry::class)->get('foodalchemist.recipe_darreichung.PUT')->execute(
+        ['presentation_id' => $d->id, 'attrs' => ['quantity_per_unit_g' => 200]], new ToolContext($this->user, $this->rootTeam),
+    );
+    expect($r->errorCode)->toBe('VALIDATION_ERROR')
+        ->and($d->fresh()->only(['quantity_per_unit_g', 'menge_vom_standard', 'ek_portion', 'sales_net']))->toBe($vorher)
+        ->and((bool) $d->fresh()->menge_vom_standard)->toBeTrue();
+
+    // Zusammen mit menge_vom_standard=true bleibt der Aufruf erlaubt — die Rezeptur gewinnt, wie beim Häkchen in der Oberfläche.
+    ($this->tool)('foodalchemist.recipe_darreichung.PUT', [
+        'presentation_id' => $d->id, 'attrs' => ['quantity_per_unit_g' => 200, 'menge_vom_standard' => true],
+    ]);
+    expect((bool) $d->fresh()->menge_vom_standard)->toBeTrue()
+        ->and((float) $d->fresh()->quantity_per_unit_g)->toBe(2000.0);
+});
+
+/*
+ * 98 · 2.3d, benannte Abweichung (offen, Entscheidung Dominique): verkaufsrezepte.PUT nimmt sales_quantity_per_unit_g an und
+ * spiegelt es über SalesRecipeService::syncStandardDarreichung als Grammatur in die Standard-Darreichung (menge_vom_standard
+ * wird dabei aus). Die Oberfläche nutzt denselben Sync, hat aber kein Eingabefeld für die Verkaufsmenge. Fachlich gebraucht:
+ * die Verkaufsmenge darf vom Ertrag abweichen (io: Rezept 80, 60 g VK-Menge bei 64 g Ertrag). Ob die Oberfläche ein Feld
+ * bekommt oder das Tool es nicht mehr darf, ist offen — dieser Test hält das heutige Verhalten fest.
+ */
+it('verkaufsrezepte.PUT: sales_quantity_per_unit_g setzt heute die Grammatur der Standard-Darreichung (benannte Abweichung)', function () {
+    $gericht = $this->makeRecipe($this->rootTeam, '[HG] Grammatur | Verkaufsmenge', [
+        'is_sales_recipe' => true, 'yield_kg' => 2.0, 'ek_per_kg_eur' => 12.0, 'ek_total_eur' => 24.0,
+        'ek_n_ingredients_total' => 3, 'ek_n_ingredients_priced' => 3,
+    ]);
+    $d = app(DarreichungService::class)->ensureStandard($this->rootTeam, $gericht->id, 'test');
+
+    ($this->tool)('foodalchemist.verkaufsrezepte.PUT', ['id' => $gericht->id, 'felder' => ['sales_quantity_per_unit_g' => 60]]);
+
+    $d = $d->fresh();
+    expect((float) $d->quantity_per_unit_g)->toBe(60.0)
+        ->and((bool) $d->menge_vom_standard)->toBeFalse()
+        ->and(round((float) $d->ek_portion, 2))->toBe(0.72);
+});
+
 it('Concept bearbeiten: Editor und concepts.PUT schreiben Felder, Einsatzmomente und Saisons gleich', function () {
     $mittag = FoodAlchemistEinsatzmoment::create(['team_id' => $this->rootTeam->id, 'name' => 'Mittagstisch', 'is_inactive' => false, 'sort_order' => 1]);
     $abend = FoodAlchemistEinsatzmoment::create(['team_id' => $this->rootTeam->id, 'name' => 'Abendessen', 'is_inactive' => false, 'sort_order' => 2]);

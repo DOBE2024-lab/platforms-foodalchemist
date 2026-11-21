@@ -126,7 +126,7 @@
                     'max' => $fbFormate->pluck('preis_range.max')->filter(fn ($v) => $v !== null)->max(),
                 ]);
             @endphp
-            <x-foodalchemist::modal name="foodbook-editor" fullscreen dark-canvas title="Foodbook" :title-name="$fb->label">
+            <x-fa::modal name="foodbook-editor" fullscreen dark-canvas title="Foodbook" :title-name="$fb->label">
                 <x-slot:titleExtra>
                     <x-fa::badge :tone="$statusTon($fb)">{{ $fb->statusWert()->label() }}</x-fa::badge>
                 </x-slot:titleExtra>
@@ -712,7 +712,7 @@
                     <div class="flex flex-col gap-1.5 pt-3 border-t border-[var(--fa-line)]">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <label for="kap-description" class="fa-t-label">Einleitung für Gäste</label>
-                            <x-foodalchemist::ki-action action="kiKapitelText" variant="ai" icon="heroicon-o-sparkles" label="Text vorschlagen"
+                            <x-fa::ki-action action="kiKapitelText" variant="ai" icon="heroicon-o-sparkles" label="Text vorschlagen"
                                     title="Die KI schreibt eine Einleitung aus dem Inhalt des Kapitels, der Einleitung des Foodbooks und der Markenstimme"
                                     busy="Schreibt …" data-fb-ki-kapiteltext />
                         </div>
@@ -734,7 +734,7 @@
                                 @foreach($schreibstile as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                             </x-fa::select>
                         </x-fa::field>
-                        <x-foodalchemist::ki-action action="kapitelWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Speisen neu betexten"
+                        <x-fa::ki-action action="kapitelWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Speisen neu betexten"
                                 :disabled="($kapitelForm['writing_style_id'] ?? null) === null || ($kapitelForm['writing_style_id'] ?? '') === ''"
                                 title="Schreibt die Gästetexte aller Konzepte dieses Kapitels im gewählten Schreibstil neu. Gilt nur in diesem Foodbook, das Concept bleibt unverändert. Erst einen Schreibstil wählen."
                                 busy="Betextet …" class="shrink-0 mb-0.5" data-fb-kapitel-wording />
@@ -959,7 +959,7 @@
                                                 <div class="flex items-start gap-1.5">
                                                     <x-fa::textarea id="blk-text-{{ $block->id }}" wire:model="blockForm.customer_text" rows="2" class="flex-1" placeholder="Untertitel oder kurzer Text"></x-fa::textarea>
                                                     @if($block->type === 'concept_ref')
-                                                        <x-foodalchemist::ki-action action="kiKundentext" variant="icon" icon="heroicon-o-sparkles" label="Beschreibung vorschlagen"
+                                                        <x-fa::ki-action action="kiKundentext" variant="icon" icon="heroicon-o-sparkles" label="Beschreibung vorschlagen"
                                                                 title="Die KI schreibt einen verkaufenden Text zu diesem Concept" class="shrink-0 mt-2" data-fb-ki-kundentext />
                                                     @endif
                                                 </div>
@@ -1081,7 +1081,7 @@
                 {{-- Rechtes Overview-Panel (Leitstelle-Rail) ENTFERNT (Dominique 2026-08-23): seine Views sind eigene
                      Reiter. Die Rail-Komponente bleibt (ungemountet) für evtl. Wiederverwendung. --}}
             </div>{{-- /Spalten-Cockpit --}}
-            </x-foodalchemist::modal>{{-- /Editor-Modal (Spec 29) --}}
+            </x-fa::modal>{{-- /Editor-Modal (Spec 29) --}}
         @else
             <x-fa::empty icon="heroicon-o-book-open" title="Kein Foodbook gewählt" class="fa-surface">
                 Links ein Foodbook wählen oder ein neues anlegen. Das Foodbook bündelt fertige Concepts zu einem Portfolio

@@ -23,7 +23,7 @@
     $listenKnopf = 'flex w-full items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
 @endphp
 
-<x-foodalchemist::modal name="gp-modal" :title="$neu ? 'Grundprodukt anlegen' : ($kannKuratieren ? 'Grundprodukt bearbeiten' : 'Grundprodukt ansehen')"
+<x-fa::modal name="gp-modal" :title="$neu ? 'Grundprodukt anlegen' : ($kannKuratieren ? 'Grundprodukt bearbeiten' : 'Grundprodukt ansehen')"
     :title-name="$neu ? null : $gp?->name" :size="$neu ? 'max-w-3xl' : 'max-w-4xl'"
     :fullscreen="! $neu && $gp !== null" :dark-canvas="true">
 
@@ -47,7 +47,7 @@
             @endif
 
             @if($kannKuratieren)
-                <x-foodalchemist::ki-action action="allesAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Alles anreichern"
+                <x-fa::ki-action action="allesAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Alles anreichern"
                     title="Zustand, Merkmale und Aroma-Anker in einem Lauf vorschlagen. Allergene und Nährwerte kommen aus den Lieferantenartikeln. Übernehmen bleibt deine Entscheidung."
                     data-gp-alles-anreichern busy="Läuft …" flash="Vorschläge da" />
             @endif
@@ -217,7 +217,7 @@
                 <x-fa::section title="Vorschlag aus der Bezeichnung" icon="heroicon-o-sparkles" description="Lieferanten-Text einfügen, die KI füllt die Felder darunter. Prüfen und anpassen bleibt bei dir.">
                     <div class="flex flex-wrap items-center gap-2" data-ki-naming>
                         <x-fa::input wire:model="kiRohtext" placeholder="z. B. Zanderfilet TK 400 g" aria-label="Bezeichnung für den KI-Vorschlag" class="flex-1 min-w-[16rem]" />
-                        <x-foodalchemist::ki-action action="kiVorschlagNaming" variant="ai" icon="heroicon-o-sparkles" label="Felder vorschlagen"
+                        <x-fa::ki-action action="kiVorschlagNaming" variant="ai" icon="heroicon-o-sparkles" label="Felder vorschlagen"
                             title="Hauptzutat, Zustand, Verarbeitung und Form aus der Bezeichnung vorschlagen" busy="Wird vorgeschlagen …" flash="Vorschlag da" />
                     </div>
                 </x-fa::section>
@@ -352,7 +352,7 @@
                 @if(! $neu)
                     <div class="flex flex-col gap-2" data-name-aus-la>
                         <div>
-                            <x-foodalchemist::ki-action action="nameAusLeadLa" variant="ai" icon="heroicon-o-sparkles" label="Name aus Lieferantenartikel ableiten"
+                            <x-fa::ki-action action="nameAusLeadLa" variant="ai" icon="heroicon-o-sparkles" label="Name aus Lieferantenartikel ableiten"
                                 title="Namensvorschlag aus der Bezeichnung des Lead-Artikels" busy="Wird abgeleitet …" flash="Vorschlag da" />
                         </div>
                         @if($nameVorschlag !== null)
@@ -388,7 +388,7 @@
                 @if(! $neu && $gp !== null)
                     <x-slot:actions>
                         {{-- Dominique 2026-10-13: Warengruppe + Unterkategorie + Zustand per KI, nicht nur der Zustand --}}
-                        <x-foodalchemist::ki-action action="einordnungKiVorschlagen" variant="ai" icon="heroicon-o-sparkles" label="Einordnung vorschlagen"
+                        <x-fa::ki-action action="einordnungKiVorschlagen" variant="ai" icon="heroicon-o-sparkles" label="Einordnung vorschlagen"
                             title="Warengruppe und Unterkategorie aus deiner Taxonomie plus Zustand — landet im Formular, Speichern übernimmt"
                             data-gp-einordnung-ki busy="Wird eingeordnet …" flash="Vorgeschlagen" />
                     </x-slot:actions>
@@ -584,7 +584,7 @@
                     description="Gilt, wenn eine Rezept-Zutat keinen eigenen Wert hat. Leer lassen übernimmt die Vorgabe der Warengruppe.">
                     <x-slot:actions>
                         {{-- Dominique 2026-10-12: füllt nur leere Felder, Speichern übernimmt --}}
-                        <x-foodalchemist::ki-action action="verlusteKiSchaetzen" variant="ai" icon="heroicon-o-sparkles" label="Verluste schätzen"
+                        <x-fa::ki-action action="verlusteKiSchaetzen" variant="ai" icon="heroicon-o-sparkles" label="Verluste schätzen"
                             title="Gar-/Putzverlust und Stückgewicht als küchenübliche Vorgabe — nur leere Felder, Speichern übernimmt"
                             data-gp-verluste-ki busy="Wird geschätzt …" flash="Geschätzt" />
                     </x-slot:actions>
@@ -611,7 +611,7 @@
                 <x-fa::section title="Gewicht je Form" icon="heroicon-o-scale" :meta="$formen->count() ?: null"
                     description="Legt fest, welche Einheiten im Rezept wählbar sind (Stück, Scheibe, Würfel …), und rechnet den Einkaufspreis um.">
                     <x-slot:actions>
-                        <x-foodalchemist::ki-action action="formenKiSchaetzen" variant="ai" icon="heroicon-o-sparkles" label="Gewichte schätzen"
+                        <x-fa::ki-action action="formenKiSchaetzen" variant="ai" icon="heroicon-o-sparkles" label="Gewichte schätzen"
                             data-gp-formen-ki busy="Wird geschätzt …" flash="Geschätzt" />
                     </x-slot:actions>
                     @if($hinweis)<x-fa::notice tone="ok" data-gp-formen-hinweis>{{ $hinweis }}</x-fa::notice>@endif
@@ -656,7 +656,7 @@
                 <x-fa::section title="Geschmack" icon="heroicon-o-beaker">
                     <x-slot:actions>
                         {{-- 27.10.2026: Profil des rohen GP — Wahrnehmung auf allen 7 Achsen (+ Texturen, wenn keine da sind) --}}
-                        <x-foodalchemist::ki-action action="sensorikKiSchaetzen" variant="ai" icon="heroicon-o-sparkles" label="Mit KI schätzen"
+                        <x-fa::ki-action action="sensorikKiSchaetzen" variant="ai" icon="heroicon-o-sparkles" label="Mit KI schätzen"
                             title="Schätzt sauer, bitter, umami, scharf und die Achsen ohne Messwert. Vorschau, gespeichert wird erst mit Übernehmen."
                             data-gp-sensorik-ki busy="Wird geschätzt …" />
                     </x-slot:actions>
@@ -670,7 +670,7 @@
                     <x-fa::section title="Aroma-Anker" icon="heroicon-o-sparkles" :meta="$gpAnker->count() ?: null">
                         <x-slot:actions>
                             {{-- Dominique 2026-10-12: Kern-Anker per KI aus dem Vokabular, Provenienz ai_inferred --}}
-                            <x-foodalchemist::ki-action action="ankerKiVorschlagen" variant="ai" icon="heroicon-o-sparkles" label="Anker vorschlagen"
+                            <x-fa::ki-action action="ankerKiVorschlagen" variant="ai" icon="heroicon-o-sparkles" label="Anker vorschlagen"
                                 title="Bestimmt den Haupt-Anker aus dem Anker-Vokabular und verknüpft ihn (als KI-Vorschlag markiert)"
                                 data-gp-anker-ki busy="Wird bestimmt …" flash="Anker gesetzt" />
                         </x-slot:actions>
@@ -762,4 +762,4 @@
             @endif
         </x-slot:frei>
     </x-foodalchemist::editor-tabs>
-</x-foodalchemist::modal>
+</x-fa::modal>

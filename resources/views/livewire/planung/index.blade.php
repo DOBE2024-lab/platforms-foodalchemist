@@ -404,7 +404,7 @@
     </x-slot>
 
     {{-- VOLLBILD-EDITOR (Werkbank-Modus) --}}
-    <x-foodalchemist::modal name="planung-editor" fullscreen dark-canvas title="Planung"
+    <x-fa::modal name="planung-editor" fullscreen dark-canvas title="Planung"
                             :title-name="$active ? $anzeigeTitel($active) : null" tab-init="gericht">
         <x-slot:actions>
             {{-- Speichern sichert Titel und Eingaben der Planung. Sekundär: die Hauptaktion jedes Reiters
@@ -488,7 +488,7 @@
                     {{-- Stage 2 (Dominique): ein BESTEHENDES Foodbook wählen → Gerüst planen → Kapitel einzeln
                          erstellen. Oder leer lassen = neues Foodbook aus Brief. --}}
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-book-open" title="Foodbook wählen">
+                        <x-fa::modal-section icon="heroicon-o-book-open" title="Foodbook wählen">
                             <x-slot:actions>
                                 <x-fa::badge :tone="$fbOwnerId ? 'accent' : 'neutral'">{{ $fbOwnerId ? 'Bestehendes Foodbook' : 'Neu aus Brief' }}</x-fa::badge>
                             </x-slot:actions>
@@ -498,10 +498,10 @@
                                     @foreach($fbAuswahl as $fbo)<option value="{{ $fbo->id }}">{{ $fbo->label }}</option>@endforeach
                                 </x-fa::select>
                             </x-fa::field>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-pencil-square" :title="$fbOwnerId ? 'Gerüst aus dem Brief planen' : 'Neues Foodbook aus dem Brief'">
+                        <x-fa::modal-section icon="heroicon-o-pencil-square" :title="$fbOwnerId ? 'Gerüst aus dem Brief planen' : 'Neues Foodbook aus dem Brief'">
                             @if(trim((string) ($fbTitel ?? '')) !== '')
                                 <x-slot:actions>
                                     <x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit(trim($fbTitel), 32) }}</x-fa::badge>
@@ -530,7 +530,7 @@
                                     </x-fa::button>
                                 </div>
                             </div>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                 </div>
 
@@ -545,17 +545,17 @@
                 @endphp
                 {{-- Die beiden Rail-Karten bleiben volle Breite: sie hosten eigene Livewire-Komponenten. --}}
                 @if($fbAktiv !== null)
-                    <x-foodalchemist::modal-section icon="heroicon-o-adjustments-horizontal" title="Vorgaben für das ganze Foodbook">
+                    <x-fa::modal-section icon="heroicon-o-adjustments-horizontal" title="Vorgaben für das ganze Foodbook">
                         <livewire:foodalchemist.planung.foodbook-kontext-rail
                             :foodbook-id="$fbAktiv"
                             :key="'fbkontext-'.$fbAktiv" />
-                    </x-foodalchemist::modal-section>
-                    <x-foodalchemist::modal-section icon="heroicon-o-list-bullet" title="Kapitel">
+                    </x-fa::modal-section>
+                    <x-fa::modal-section icon="heroicon-o-list-bullet" title="Kapitel">
                         <livewire:foodalchemist.planung.kapitel-rail
                             :foodbook-id="$fbAktiv"
                             :session-id="$sessionId"
                             :key="'kaprail-'.$fbAktiv" />
-                    </x-foodalchemist::modal-section>
+                    </x-fa::modal-section>
                 @endif
             </div>
 
@@ -563,7 +563,7 @@
                 <div class="{{ $ausgabeRaster }}">
                     {{-- Stage 2 (Parität Speisekarte/Speiseplan): bestehende Speisekarte wählen ODER neu aus Brief. --}}
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-clipboard-document-list" title="Speisekarte wählen">
+                        <x-fa::modal-section icon="heroicon-o-clipboard-document-list" title="Speisekarte wählen">
                             <x-slot:actions>
                                 <x-fa::badge :tone="$skOwnerId ? 'accent' : 'neutral'">{{ $skOwnerId ? 'Bestehende Karte' : 'Neu aus Brief' }}</x-fa::badge>
                             </x-slot:actions>
@@ -573,10 +573,10 @@
                                     @foreach($skAuswahl as $sko)<option value="{{ $sko->id }}">{{ $sko->name }}</option>@endforeach
                                 </x-fa::select>
                             </x-fa::field>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-pencil-square" :title="$skOwnerId ? 'Gewählte Speisekarte aus dem Brief füllen' : 'Neue Speisekarte aus dem Brief'">
+                        <x-fa::modal-section icon="heroicon-o-pencil-square" :title="$skOwnerId ? 'Gewählte Speisekarte aus dem Brief füllen' : 'Neue Speisekarte aus dem Brief'">
                             @if(trim((string) ($skTitel ?? '')) !== '')
                                 <x-slot:actions>
                                     <x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit(trim($skTitel), 32) }}</x-fa::badge>
@@ -602,7 +602,7 @@
                                     </x-fa::button>
                                 </div>
                             </div>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                 </div>
             </div>
@@ -611,7 +611,7 @@
                 <div class="{{ $ausgabeRaster }}">
                     {{-- Stage 2 (Parität Speisekarte/Speiseplan): bestehenden Speiseplan wählen ODER neu aus Brief. --}}
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-calendar-days" title="Speiseplan wählen">
+                        <x-fa::modal-section icon="heroicon-o-calendar-days" title="Speiseplan wählen">
                             <x-slot:actions>
                                 <x-fa::badge :tone="$spOwnerId ? 'accent' : 'neutral'">{{ $spOwnerId ? 'Bestehender Plan' : 'Neu aus Brief' }}</x-fa::badge>
                             </x-slot:actions>
@@ -621,10 +621,10 @@
                                     @foreach($spAuswahl as $spo)<option value="{{ $spo->id }}">{{ $spo->name }}</option>@endforeach
                                 </x-fa::select>
                             </x-fa::field>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-pencil-square" :title="$spOwnerId ? 'Gewählten Speiseplan aus dem Brief füllen' : 'Neuer Speiseplan aus dem Brief'">
+                        <x-fa::modal-section icon="heroicon-o-pencil-square" :title="$spOwnerId ? 'Gewählten Speiseplan aus dem Brief füllen' : 'Neuer Speiseplan aus dem Brief'">
                             @if(trim((string) ($spTitel ?? '')) !== '')
                                 <x-slot:actions>
                                     <x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit(trim($spTitel), 32) }}</x-fa::badge>
@@ -653,7 +653,7 @@
                                     </x-fa::button>
                                 </div>
                             </div>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                 </div>
             </div>
@@ -662,7 +662,7 @@
             <div wire:key="planung-tab-angebot" x-show="tab==='angebot'" x-cloak class="flex flex-col gap-4 max-w-7xl mx-auto">
                 <div class="{{ $ausgabeRaster }}">
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-document-currency-euro" title="Angebot wählen">
+                        <x-fa::modal-section icon="heroicon-o-document-currency-euro" title="Angebot wählen">
                             <x-slot:actions>
                                 <x-fa::badge :tone="$offerOwnerId ? 'accent' : 'neutral'">{{ $offerOwnerId ? 'Bestehendes Angebot' : 'Neu aus Brief' }}</x-fa::badge>
                             </x-slot:actions>
@@ -672,10 +672,10 @@
                                     @foreach($offerAuswahl as $ao)<option value="{{ $ao->id }}">{{ $ao->name }}</option>@endforeach
                                 </x-fa::select>
                             </x-fa::field>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-pencil-square" :title="$offerOwnerId ? 'Gewähltes Angebot aus dem Brief füllen' : 'Neues Angebot aus dem Brief'">
+                        <x-fa::modal-section icon="heroicon-o-pencil-square" :title="$offerOwnerId ? 'Gewähltes Angebot aus dem Brief füllen' : 'Neues Angebot aus dem Brief'">
                             @if(trim((string) ($offerTitel ?? '')) !== '')
                                 <x-slot:actions>
                                     <x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit(trim($offerTitel), 32) }}</x-fa::badge>
@@ -701,7 +701,7 @@
                                     </x-fa::button>
                                 </div>
                             </div>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                 </div>
             </div>
@@ -710,7 +710,7 @@
             <div wire:key="planung-tab-format" x-show="tab==='format'" x-cloak class="flex flex-col gap-4 max-w-7xl mx-auto">
                 <div class="{{ $ausgabeRaster }}">
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-rectangle-stack" title="Format wählen">
+                        <x-fa::modal-section icon="heroicon-o-rectangle-stack" title="Format wählen">
                             <x-slot:actions>
                                 <x-fa::badge :tone="$fmtOwnerId ? 'accent' : 'neutral'">{{ $fmtOwnerId ? 'Bestehendes Format' : 'Neu aus Brief' }}</x-fa::badge>
                             </x-slot:actions>
@@ -720,10 +720,10 @@
                                     @foreach($fmtAuswahl as $fo)<option value="{{ $fo->id }}">{{ $fo->name }}</option>@endforeach
                                 </x-fa::select>
                             </x-fa::field>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                     <div>
-                        <x-foodalchemist::modal-section icon="heroicon-o-pencil-square" :title="$fmtOwnerId ? 'Gewähltes Format aus dem Brief füllen' : 'Neues Format aus dem Brief'">
+                        <x-fa::modal-section icon="heroicon-o-pencil-square" :title="$fmtOwnerId ? 'Gewähltes Format aus dem Brief füllen' : 'Neues Format aus dem Brief'">
                             @if(trim((string) ($fmtTitel ?? '')) !== '')
                                 <x-slot:actions>
                                     <x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit(trim($fmtTitel), 32) }}</x-fa::badge>
@@ -749,7 +749,7 @@
                                     </x-fa::button>
                                 </div>
                             </div>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                 </div>
             </div>
@@ -790,7 +790,7 @@
                  Genau EINE Hauptaktion: ohne Plan ist „Plan ausarbeiten lassen" primär, mit Plan das Erstellen. --}}
             <div wire:key="planung-tab-concept" x-show="tab==='concept'" class="flex flex-col gap-4 max-w-7xl mx-auto">
                 @php $conceptTitel = trim((string) ($eingabe['concept']['titel'] ?? '')); @endphp
-                <x-foodalchemist::modal-section icon="heroicon-o-pencil-square" title="Was für ein Concept soll entstehen?">
+                <x-fa::modal-section icon="heroicon-o-pencil-square" title="Was für ein Concept soll entstehen?">
                     @if($conceptTitel !== '')
                         <x-slot:actions>
                             <x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit($conceptTitel, 32) }}</x-fa::badge>
@@ -823,14 +823,14 @@
                             <p class="{{ $hinweisText }} max-w-2xl">{{ $modeHint[$eingabe['concept']['creative_mode'] ?? 'voll_kreativ'] ?? '' }}</p>
                         </div>
                     </div>
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
 
                 @include('foodalchemist::livewire.planung.partials.concept-bestehend')
 
                 {{-- KI-Plan (Etappe 2b, geplanter Pfad): arbeitet den Plan vorab aus (Leitidee, Vorteil,
                      Inszenierung, Geschmackswelten + Gänge-Gerüst) und zeigt ihn zur Prüfung, NOCH ohne
                      Gerichte. DF-2 (Spec 41, Entscheid 2026-08-21): der EMPFOHLENE Weg fürs Concepting. --}}
-                <x-foodalchemist::modal-section icon="heroicon-o-light-bulb" title="Plan ausarbeiten lassen">
+                <x-fa::modal-section icon="heroicon-o-light-bulb" title="Plan ausarbeiten lassen">
                     <x-slot:actions>
                         <x-fa::badge tone="accent">empfohlen</x-fa::badge>
                     </x-slot:actions>
@@ -842,7 +842,7 @@
                             <span wire:loading wire:target="kiKopf">Plan wird ausgearbeitet …</span>
                         </x-fa::button>
                     </div>
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
 
                 {{-- A0/A1: der ausgearbeitete Plan bleibt SICHTBAR + bearbeitbar (Semantik + Menü-Aufbau), kein
                      Wegsprung in den Conceptor. Steht im normalen Fluss vor der Erstell-Leiste (vorher IN der
@@ -879,11 +879,11 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         @if($planConceptId)
-                            <x-foodalchemist::ki-action action="goKaskade('concept')" variant="primary" icon="heroicon-o-squares-2x2"
+                            <x-fa::ki-action action="goKaskade('concept')" variant="primary" icon="heroicon-o-squares-2x2"
                                 label="Concept aus Plan erstellen" busy="Wird gestartet …" flash="Gestartet"
                                 :disabled="$laeuft" before="tab='worker'" />
                         @else
-                            <x-foodalchemist::ki-action action="goKaskade('concept')" variant="ghost" icon="heroicon-o-squares-2x2"
+                            <x-fa::ki-action action="goKaskade('concept')" variant="ghost" icon="heroicon-o-squares-2x2"
                                 label="Ohne Plan direkt erstellen" busy="Wird gestartet …" flash="Gestartet"
                                 :disabled="$laeuft" before="tab='worker'" />
                         @endif
@@ -930,9 +930,9 @@
                     {{-- Spec 80 Teil D: Baum · Cluster · Rezept. --}}
                     @include('foodalchemist::livewire.planung.partials.fortschritt')
                 @else
-                    <x-foodalchemist::modal-section icon="heroicon-o-queue-list" title="Fortschritt">
+                    <x-fa::modal-section icon="heroicon-o-queue-list" title="Fortschritt">
                         <x-fa::empty icon="heroicon-o-queue-list" title="Noch nichts gestartet">Starte in „Basisrezept", „Gericht" oder „Concept" eine Erstellung. Der Fortschritt erscheint dann hier.</x-fa::empty>
-                    </x-foodalchemist::modal-section>
+                    </x-fa::modal-section>
                 @endif
             </div>
 
@@ -951,7 +951,7 @@
                 @endphp
                 <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] gap-4 items-start">
                     <div class="space-y-4 min-w-0">
-                        <x-foodalchemist::modal-section icon="heroicon-o-signal" title="Impulse aus dem Trendradar wählen">
+                        <x-fa::modal-section icon="heroicon-o-signal" title="Impulse aus dem Trendradar wählen">
                             <x-slot:actions>
                                 <x-fa::badge :tone="$trGewaehlt > 0 ? 'accent' : 'neutral'">{{ $trGewaehlt }} von {{ \Platform\FoodAlchemist\Services\PlanningSessionService::TRENDRADAR_MAX }}</x-fa::badge>
                             </x-slot:actions>
@@ -992,10 +992,10 @@
                                     @endforelse
                                 </div>
                             </div>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                     <div class="space-y-4 min-w-0 lg:sticky lg:top-0">
-                        <x-foodalchemist::modal-section icon="heroicon-o-document-text" title="Briefing aus der Auswahl">
+                        <x-fa::modal-section icon="heroicon-o-document-text" title="Briefing aus der Auswahl">
                             <div class="flex flex-col gap-3">
                                 @if($trendMeldung)<x-fa::signal tone="crit" data-trend-meldung>{{ $trendMeldung }}</x-fa::signal>@endif
                                 @if($trendVorschau)
@@ -1010,7 +1010,7 @@
                                     <p class="{{ $hinweisText }}">Links Impulse wählen. Hier erscheint das Briefing, das daraus entsteht.</p>
                                 @endif
                             </div>
-                        </x-foodalchemist::modal-section>
+                        </x-fa::modal-section>
                     </div>
                 </div>
             </div>
@@ -1019,7 +1019,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-4 items-start">
                 {{-- LINKE SPALTE: Auswahl + Zusammenhalt --}}
                 <div class="space-y-4 min-w-0">
-                <x-foodalchemist::modal-section icon="heroicon-o-squares-plus" title="Zutaten zusammenstellen">
+                <x-fa::modal-section icon="heroicon-o-squares-plus" title="Zutaten zusammenstellen">
                     @if(!empty($composerAnker))
                         <x-slot:actions>
                             <x-fa::badge tone="accent">{{ count($composerAnker) }} gewählt</x-fa::badge>
@@ -1085,12 +1085,12 @@
                             </div>
                         </div>
                     </div>
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
 
                 {{-- Aus den gewählten Zutaten in einen Erstell-Reiter springen. Der Brief wird vorbefüllt, die
                      Zutaten reisen als verbindliche Leit-Aromen (seed_anker) mit; dort die Leitplanken setzen
                      und starten. --}}
-                <x-foodalchemist::modal-section icon="heroicon-o-arrow-right-circle" title="Daraus weiterbauen">
+                <x-fa::modal-section icon="heroicon-o-arrow-right-circle" title="Daraus weiterbauen">
                     <div class="flex flex-col gap-3">
                         <p class="{{ $hinweisText }}">Übernimmt die Zutaten als <span class="font-semibold text-[var(--fa-ink-2)]">verbindliche Leit-Aromen</span> und springt in den Erstell-Reiter. Der Brief ist vorbefüllt, dort die Leitplanken setzen und erstellen.</p>
                         <div class="flex flex-wrap gap-2">
@@ -1103,12 +1103,12 @@
                             <p class="{{ $hinweisText }}">Erst mindestens eine Zutat wählen.</p>
                         @endif
                     </div>
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
 
                 {{-- „Passt das zusammen?" — Spec 60: dieselbe Kombinationslogik wie im Gericht-Panel
                      (Harmonie nur ★★★, Spannung, offener Bedarf, Konflikt, Klassiker — je mit Grundlage). --}}
                 @if($composerKombination !== null)
-                    <x-foodalchemist::modal-section icon="heroicon-o-link" title="Passt das zusammen?">
+                    <x-fa::modal-section icon="heroicon-o-link" title="Passt das zusammen?">
                         {{-- Zwei Sichten nebeneinander (Dominique 16.10.): Teller aus Komponenten oder eine Zubereitung. --}}
                         <div role="group" aria-label="Bewerten als" class="mb-3 inline-flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]" data-composer-modus>
                             @foreach(['gericht' => 'als Gericht', 'basisrezept' => 'als Basisrezept'] as $m => $mLabel)
@@ -1120,14 +1120,14 @@
                         <div wire:key="composer-kombination-{{ $composerModus }}">
                             <x-foodalchemist::kombination :daten="$composerKombination" />
                         </div>
-                    </x-foodalchemist::modal-section>
+                    </x-fa::modal-section>
                 @endif
                 </div>{{-- /linke Spalte --}}
 
                 {{-- RECHTE SPALTE: Netz --}}
                 <div class="min-w-0">
                 {{-- Netz + Filter-Chips in EINER Alpine-Instanz (wie im Detail-Modal) --}}
-                <x-foodalchemist::modal-section class="!mt-0" icon="heroicon-o-share" title="Netz">
+                <x-fa::modal-section class="!mt-0" icon="heroicon-o-share" title="Netz">
                     @if($composerFocus !== null && $composerFokusLabel)
                         <x-slot:actions>
                             <span class="{{ $pill }} {{ $variantPill['primary'] }}">Fokus: {{ $composerFokusLabel }}</span>
@@ -1193,7 +1193,7 @@
                             </div>
                         </div>
                     @endif
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
                 </div>{{-- /rechte Spalte --}}
                 </div>{{-- /grid --}}
             </div>
@@ -1210,7 +1210,7 @@
                 </div>
             @endif
         @endif
-    </x-foodalchemist::modal>
+    </x-fa::modal>
     {{-- Leitstelle-In-Context: die erzeugten Entwürfe (Basisrezept/Gericht) im Cockpit ansehen,
          statt auf die Listen-Seite zu springen. DOM NACH dem Editor-Modal → z-Stacking (öffnet darüber). --}}
     <livewire:foodalchemist.recipes.recipe-modal key="planung-index--recipes.recipe-modal" />

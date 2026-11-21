@@ -123,7 +123,7 @@ it('Detail-Kopf: Aktionen markiert und Hinweis „Am Computer bearbeiten“ vorh
 });
 
 it('KI-Knopf meldet sich als Ändern-Aktion mit seinem Methodennamen', function () {
-    $html = Blade::render('<x-foodalchemist::ki-action action="kiKohaerenz(12)" label="Kohärenz prüfen" />');
+    $html = Blade::render('<x-fa::ki-action action="kiKohaerenz(12)" label="Kohärenz prüfen" />');
 
     expect($html)->toContain('data-fa-aendern="ki.kiKohaerenz"');
 });

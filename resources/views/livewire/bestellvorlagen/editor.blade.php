@@ -6,7 +6,7 @@
     $segment = 'h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium transition-colors duration-150';
 @endphp
 <div>
-<x-foodalchemist::modal name="vorlage-editor" fullscreen dark-canvas title="Bestellvorlage" :title-name="$vorlage?->name">
+<x-fa::modal name="vorlage-editor" fullscreen dark-canvas title="Bestellvorlage" :title-name="$vorlage?->name">
     <x-slot:actions>
         <div class="flex w-full flex-wrap items-center gap-2">
             @if($hinweis)<x-fa::signal tone="ok">{{ $hinweis }}</x-fa::signal>@endif
@@ -126,5 +126,5 @@
         </x-fa::section>
     </div>
     @endif
-</x-foodalchemist::modal>
+</x-fa::modal>
 </div>

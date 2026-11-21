@@ -134,6 +134,7 @@
         "roher_button": 3
     },
     "layouts/standalone.blade.php": {
+        "alter_namensraum": 3,
         "typo_tinte": 1
     },
     "lieferanten-portal/show.blade.php": {
@@ -147,20 +148,27 @@
         "alte_palette": 11
     },
     "livewire/angebote/editor.blade.php": {
+        "alter_namensraum": 16,
         "typo_groesse": 36,
         "typo_tinte": 59,
         "roher_button": 17
     },
     "livewire/angebote/index.blade.php": {
+        "alter_namensraum": 2,
         "typo_groesse": 1,
         "typo_tinte": 7,
         "roher_button": 2
     },
+    "livewire/angebote/konfigurator-editor.blade.php": {
+        "alter_namensraum": 5
+    },
     "livewire/angebote/konfigurator-praesentation.blade.php": {
+        "alter_namensraum": 1,
         "typo_groesse": 5,
         "typo_tinte": 6
     },
     "livewire/angebote/konfiguratoren.blade.php": {
+        "alter_namensraum": 2,
         "typo_groesse": 1,
         "typo_tinte": 5,
         "roher_button": 2
@@ -177,6 +185,7 @@
         "typo_tinte": 9
     },
     "livewire/bestellvorlagen/editor.blade.php": {
+        "alter_namensraum": 2,
         "typo_groesse": 4,
         "typo_tinte": 3,
         "roher_button": 2
@@ -190,15 +199,18 @@
         "roher_button": 2
     },
     "livewire/concepter/browser.blade.php": {
+        "alter_namensraum": 27,
         "typo_groesse": 6,
         "typo_tinte": 20,
         "roher_button": 3
     },
     "livewire/concepter/detail-panel.blade.php": {
+        "alter_namensraum": 2,
         "typo_groesse": 6,
         "typo_tinte": 9
     },
     "livewire/concepter/editor.blade.php": {
+        "alter_namensraum": 4,
         "typo_groesse": 28,
         "typo_tinte": 104,
         "roher_button": 19
@@ -224,6 +236,7 @@
         "emoji": 6,
         "mini_schrift": 4,
         "style_statisch": 1,
+        "alter_namensraum": 2,
         "alte_palette": 13
     },
     "livewire/concepter/partials/sensorik.blade.php": {
@@ -238,11 +251,13 @@
         "typo_tinte": 2
     },
     "livewire/concepts/index.blade.php": {
+        "alter_namensraum": 14,
         "typo_groesse": 6,
         "typo_tinte": 17,
         "roher_button": 2
     },
     "livewire/controlling/cockpit.blade.php": {
+        "alter_namensraum": 2,
         "typo_groesse": 3,
         "typo_tinte": 1,
         "roher_button": 1
@@ -316,6 +331,7 @@
         "typo_tinte": 2
     },
     "livewire/foodbooks/index.blade.php": {
+        "alter_namensraum": 19,
         "typo_groesse": 28,
         "typo_tinte": 58,
         "roher_button": 12
@@ -343,30 +359,36 @@
         "alte_palette": 31
     },
     "livewire/formate/browser.blade.php": {
+        "alter_namensraum": 20,
         "typo_groesse": 4,
         "typo_tinte": 13,
         "roher_button": 2
     },
     "livewire/formate/detail-panel.blade.php": {
+        "alter_namensraum": 1,
         "typo_groesse": 4,
         "typo_tinte": 5
     },
     "livewire/formate/editor.blade.php": {
+        "alter_namensraum": 3,
         "typo_groesse": 15,
         "typo_tinte": 18,
         "roher_button": 4
     },
     "livewire/gps/browser.blade.php": {
+        "alter_namensraum": 14,
         "typo_groesse": 2,
         "typo_tinte": 15,
         "roher_button": 3
     },
     "livewire/gps/detail-panel.blade.php": {
+        "alter_namensraum": 1,
         "typo_groesse": 27,
         "typo_tinte": 36,
         "roher_button": 6
     },
     "livewire/gps/gp-modal.blade.php": {
+        "alter_namensraum": 8,
         "typo_groesse": 5,
         "typo_tinte": 7,
         "roher_button": 6
@@ -398,6 +420,7 @@
         "roher_button": 2
     },
     "livewire/handy/bestellungen.blade.php": {
+        "alter_namensraum": 2,
         "typo_groesse": 5,
         "typo_tinte": 6,
         "roher_button": 2
@@ -451,6 +474,7 @@
         "roher_button": 1
     },
     "livewire/knowledge/browser.blade.php": {
+        "alter_namensraum": 4,
         "typo_groesse": 16,
         "typo_tinte": 33,
         "roher_button": 7
@@ -477,6 +501,7 @@
         "roher_button": 2
     },
     "livewire/observatorium/index.blade.php": {
+        "alter_namensraum": 2,
         "roher_button": 13
     },
     "livewire/observatorium/karte.blade.php": {
@@ -508,17 +533,19 @@
         "typo_tinte": 6
     },
     "livewire/orders/editor.blade.php": {
+        "alter_namensraum": 3,
         "typo_groesse": 26,
         "typo_tinte": 39,
         "roher_button": 24
     },
     "livewire/orders/index.blade.php": {
+        "alter_namensraum": 10,
         "typo_groesse": 18,
         "typo_tinte": 22,
-        "roher_button": 6,
-        "rohes_menue": 1
+        "roher_button": 6
     },
     "livewire/pakete/index.blade.php": {
+        "alter_namensraum": 12,
         "typo_groesse": 2,
         "typo_tinte": 12,
         "roher_button": 1
@@ -547,6 +574,7 @@
         "emoji": 18,
         "mini_schrift": 5,
         "style_statisch": 7,
+        "alter_namensraum": 5,
         "typo_groesse": 14,
         "typo_tinte": 23,
         "roher_button": 13,
@@ -579,6 +607,7 @@
         "roher_button": 2
     },
     "livewire/planung/partials/erstellen-tab.blade.php": {
+        "alter_namensraum": 1,
         "typo_groesse": 3,
         "typo_tinte": 8,
         "roher_button": 1
@@ -647,15 +676,18 @@
         "roher_button": 1
     },
     "livewire/produktion/browser.blade.php": {
+        "alter_namensraum": 12,
         "typo_groesse": 9,
         "typo_tinte": 17,
         "roher_button": 4
     },
     "livewire/produktion/detail-panel.blade.php": {
+        "alter_namensraum": 1,
         "typo_groesse": 3,
         "typo_tinte": 11
     },
     "livewire/produktion/editor.blade.php": {
+        "alter_namensraum": 4,
         "typo_groesse": 2
     },
     "livewire/produktion/partials/editor-einkauf.blade.php": {
@@ -680,6 +712,7 @@
         "typo_tinte": 3
     },
     "livewire/produktion/tagesplan.blade.php": {
+        "alter_namensraum": 11,
         "typo_groesse": 12,
         "typo_tinte": 90,
         "roher_button": 37
@@ -694,11 +727,13 @@
         "roher_button": 1
     },
     "livewire/recipes/browser.blade.php": {
+        "alter_namensraum": 19,
         "typo_groesse": 3,
         "typo_tinte": 12,
         "roher_button": 4
     },
     "livewire/recipes/detail-panel.blade.php": {
+        "alter_namensraum": 5,
         "typo_groesse": 11,
         "typo_tinte": 19,
         "roher_button": 6
@@ -708,6 +743,7 @@
         "typo_tinte": 2
     },
     "livewire/recipes/generator-modal.blade.php": {
+        "alter_namensraum": 5,
         "typo_groesse": 5,
         "typo_tinte": 7,
         "roher_button": 2
@@ -729,6 +765,7 @@
         "roher_button": 2
     },
     "livewire/recipes/partials/ki-kontext.blade.php": {
+        "alter_namensraum": 2,
         "typo_groesse": 3,
         "typo_tinte": 3
     },
@@ -748,6 +785,7 @@
         "roher_button": 17
     },
     "livewire/recipes/recipe-modal.blade.php": {
+        "alter_namensraum": 6,
         "typo_groesse": 13,
         "typo_tinte": 12,
         "roher_button": 1
@@ -794,6 +832,7 @@
         "typo_tinte": 8
     },
     "livewire/settings/einkauf.blade.php": {
+        "alter_namensraum": 1,
         "typo_groesse": 8,
         "typo_tinte": 14,
         "roher_button": 1
@@ -811,21 +850,27 @@
         "typo_tinte": 8
     },
     "livewire/settings/herstellkosten.blade.php": {
+        "alter_namensraum": 1,
         "typo_groesse": 2,
         "typo_tinte": 12
     },
     "livewire/settings/index.blade.php": {
+        "alter_namensraum": 1,
         "typo_groesse": 2,
         "typo_tinte": 2,
         "roher_button": 1
     },
     "livewire/settings/kalkulation.blade.php": {
+        "alter_namensraum": 1,
         "typo_groesse": 3,
         "typo_tinte": 3
     },
     "livewire/settings/ki.blade.php": {
         "typo_groesse": 9,
         "typo_tinte": 27
+    },
+    "livewire/settings/kueche.blade.php": {
+        "alter_namensraum": 1
     },
     "livewire/settings/kunde-dna.blade.php": {
         "typo_tinte": 1,
@@ -852,6 +897,9 @@
         "typo_tinte": 3,
         "roher_button": 2
     },
+    "livewire/settings/partials/sperr-leiste.blade.php": {
+        "alter_namensraum": 2
+    },
     "livewire/settings/partials/teamprofil-body.blade.php": {
         "typo_groesse": 1,
         "typo_tinte": 1
@@ -862,6 +910,7 @@
         "roher_button": 1
     },
     "livewire/settings/praesentations-designs.blade.php": {
+        "alter_namensraum": 2,
         "typo_groesse": 15,
         "typo_tinte": 12,
         "roher_button": 1
@@ -881,6 +930,7 @@
     "livewire/settings/speiseplan-chips.blade.php": {
         "important": 6,
         "mini_schrift": 6,
+        "alter_namensraum": 4,
         "roher_button": 6,
         "alte_palette": 7
     },
@@ -913,12 +963,16 @@
         "typo_groesse": 2,
         "typo_tinte": 2
     },
+    "livewire/sidebar.blade.php": {
+        "alter_namensraum": 1
+    },
     "livewire/signale/detail-panel.blade.php": {
         "typo_groesse": 18,
         "typo_tinte": 21,
         "roher_button": 3
     },
     "livewire/speisekarte/index.blade.php": {
+        "alter_namensraum": 16,
         "typo_groesse": 12,
         "typo_tinte": 8,
         "roher_button": 1
@@ -949,11 +1003,13 @@
         "alte_palette": 1
     },
     "livewire/speiseplan/editor.blade.php": {
+        "alter_namensraum": 6,
         "typo_groesse": 30,
         "typo_tinte": 54,
         "roher_button": 14
     },
     "livewire/speiseplan/index.blade.php": {
+        "alter_namensraum": 4,
         "typo_groesse": 2,
         "typo_tinte": 3,
         "roher_button": 1
@@ -977,11 +1033,13 @@
         "roher_button": 2
     },
     "livewire/suppliers/index.blade.php": {
+        "alter_namensraum": 2,
         "typo_groesse": 6,
         "typo_tinte": 27,
         "roher_button": 3
     },
     "livewire/suppliers/item-modal.blade.php": {
+        "alter_namensraum": 5,
         "typo_groesse": 6,
         "typo_tinte": 19,
         "roher_button": 4
@@ -1032,6 +1090,7 @@
         "roher_button": 2
     },
     "livewire/trendradar/index.blade.php": {
+        "alter_namensraum": 6,
         "typo_groesse": 5,
         "typo_tinte": 12,
         "roher_button": 11
@@ -1048,11 +1107,13 @@
         "typo_tinte": 2
     },
     "livewire/verkauf/browser.blade.php": {
+        "alter_namensraum": 19,
         "typo_groesse": 3,
         "typo_tinte": 15,
         "roher_button": 4
     },
     "livewire/verkauf/detail-panel.blade.php": {
+        "alter_namensraum": 3,
         "typo_groesse": 16,
         "typo_tinte": 32,
         "roher_button": 1
@@ -1080,15 +1141,16 @@
         "typo_groesse": 1
     },
     "livewire/verkauf/vk-generator-modal.blade.php": {
+        "alter_namensraum": 5,
         "typo_groesse": 6,
         "typo_tinte": 7,
         "roher_button": 2
     },
     "livewire/verkauf/vk-modal.blade.php": {
+        "alter_namensraum": 6,
         "typo_groesse": 17,
         "typo_tinte": 15,
-        "roher_button": 2,
-        "rohes_menue": 1
+        "roher_button": 2
     },
     "livewire/verwaltung/mandant-beenden.blade.php": {
         "typo_groesse": 2,

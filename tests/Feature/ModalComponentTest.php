@@ -11,11 +11,11 @@ uses(TestCase::class);
  */
 it('rendert Titel, fixe Kopf-Aktionen, Sektionen und Footer-Slot', function () {
     $html = Blade::render(<<<'BLADE'
-        <x-foodalchemist::modal name="gp-edit" title="GP bearbeiten">
+        <x-fa::modal name="gp-edit" title="GP bearbeiten">
             <x-slot:actions>AKTIONEN-OBEN</x-slot:actions>
-            <x-foodalchemist::modal-section title="Stammdaten">SEKTION-INHALT</x-foodalchemist::modal-section>
+            <x-fa::modal-section title="Stammdaten">SEKTION-INHALT</x-fa::modal-section>
             <x-slot:footer>FOOTER-AKTIONEN</x-slot:footer>
-        </x-foodalchemist::modal>
+        </x-fa::modal>
         BLADE);
 
     expect($html)->toContain('GP bearbeiten')
@@ -30,7 +30,7 @@ it('rendert Titel, fixe Kopf-Aktionen, Sektionen und Footer-Slot', function () {
 });
 
 it('verdrahtet den Event-Vertrag modal.open / modal.close / modal.closed', function () {
-    $html = Blade::render('<x-foodalchemist::modal name="demo" title="T">X</x-foodalchemist::modal>');
+    $html = Blade::render('<x-fa::modal name="demo" title="T">X</x-fa::modal>');
 
     // Native Listener erhalten den Punkt im Eventnamen; Alpine würde ihn in einer statischen
     // x-on-Direktive als Modifier interpretieren.
@@ -42,7 +42,7 @@ it('verdrahtet den Event-Vertrag modal.open / modal.close / modal.closed', funct
 });
 
 it('holt jedes neu geöffnete Modal vor bereits offene Editoren', function () {
-    $html = Blade::render('<x-foodalchemist::modal name="demo" title="T">X</x-foodalchemist::modal>');
+    $html = Blade::render('<x-fa::modal name="demo" title="T">X</x-fa::modal>');
 
     expect($html)->toContain('bringToFront($el)')
         ->and($html)->toContain('window.__foodAlchemistModalZ')
@@ -51,7 +51,7 @@ it('holt jedes neu geöffnete Modal vor bereits offene Editoren', function () {
 
 it('führt beim Schließen den optionalen Livewire-State-Reset aus', function () {
     $html = Blade::render(<<<'BLADE'
-        <x-foodalchemist::modal name="demo" title="T" :close-via="'schliessenOderZurueck'">X</x-foodalchemist::modal>
+        <x-fa::modal name="demo" title="T" :close-via="'schliessenOderZurueck'">X</x-fa::modal>
         BLADE);
 
     expect($html)->toContain("closeWithState() {  this.\$wire.schliessenOderZurueck();  this.close(); }")
@@ -59,7 +59,7 @@ it('führt beim Schließen den optionalen Livewire-State-Reset aus', function ()
 });
 
 it('lässt Aktionen- und Footer-Slot weg, wenn nicht gesetzt', function () {
-    $html = Blade::render('<x-foodalchemist::modal name="demo" title="T">NUR-KÖRPER</x-foodalchemist::modal>');
+    $html = Blade::render('<x-fa::modal name="demo" title="T">NUR-KÖRPER</x-fa::modal>');
 
     expect($html)->toContain('NUR-KÖRPER')
         ->and($html)->not->toContain('data-modal-zone="actions"')
@@ -74,7 +74,7 @@ it('lässt Aktionen- und Footer-Slot weg, wenn nicht gesetzt', function () {
  * bleiben unverändert die Absicherung für das Standardverhalten.
  */
 it('zFest pinnt eine feste z-[190] statt am globalen bringToFront-Zähler teilzunehmen', function () {
-    $html = Blade::render('<x-foodalchemist::modal name="demo" title="T" :z-fest="true">X</x-foodalchemist::modal>');
+    $html = Blade::render('<x-fa::modal name="demo" title="T" :z-fest="true">X</x-fa::modal>');
 
     expect($html)->toContain('z-[190]')
         ->and($html)->not->toContain('z-[100]')
@@ -85,7 +85,7 @@ it('zFest pinnt eine feste z-[190] statt am globalen bringToFront-Zähler teilzu
 });
 
 it('ohne zFest (Default) bleibt alles beim Alten — z-[100] + Zähler-Teilnahme', function () {
-    $html = Blade::render('<x-foodalchemist::modal name="demo" title="T">X</x-foodalchemist::modal>');
+    $html = Blade::render('<x-fa::modal name="demo" title="T">X</x-fa::modal>');
 
     expect($html)->toContain('z-[100]')
         ->and($html)->not->toContain('z-[190]')
@@ -100,7 +100,7 @@ it('ohne zFest (Default) bleibt alles beim Alten — z-[100] + Zähler-Teilnahme
  * Livewire fasst die Attribute des Wurzel-Elements nicht an, der Name kommt aus der sichtbaren Überschrift.
  */
 it('Wurzel-Element ist wire:ignore.self — die Ebene aus bringToFront überlebt den Livewire-Morph', function () {
-    $html = Blade::render('<x-foodalchemist::modal name="gp-modal" title="Grundprodukt bearbeiten" title-name="Knollensellerie: frisch">X</x-foodalchemist::modal>');
+    $html = Blade::render('<x-fa::modal name="gp-modal" title="Grundprodukt bearbeiten" title-name="Knollensellerie: frisch">X</x-fa::modal>');
 
     // Im Wurzel-Tag: zwischen <div x-data= und data-modal="gp-modal" (das x-data-Attribut enthält selbst '>').
     $start = strpos($html, '<div x-data=');

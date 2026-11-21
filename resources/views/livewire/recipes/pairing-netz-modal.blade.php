@@ -18,7 +18,7 @@
         ? ['stern3' => ['#fcd34d', 'passt dazu'], 'kontrast' => ['#22d3ee', 'deckt offenen Bedarf']]
         : ['stern3' => ['#fcd34d', '★★★ harmoniert'], 'kontrast' => ['#22d3ee', 'Passt als Kontrast']];
 @endphp
-<x-foodalchemist::modal name="pairing-netz" title="Pairing-Netz" :title-name="$zentrumNode['label'] ?? null" size="max-w-7xl" dark-canvas>
+<x-fa::modal name="pairing-netz" title="Pairing-Netz" :title-name="$zentrumNode['label'] ?? null" size="max-w-7xl" dark-canvas>
     @if($zentrumNode === null)
         <x-fa::empty compact icon="heroicon-o-share" title="Kein Rezept gewählt" />
     @else
@@ -71,4 +71,4 @@
             </div>
         </div>
     @endif
-</x-foodalchemist::modal>
+</x-fa::modal>

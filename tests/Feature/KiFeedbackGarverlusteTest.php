@@ -13,7 +13,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  * Paket G, Restliste — die beiden "Garverluste"-Knöpfe (recipe-modal + vk-modal) dispatchen
  * nur ein Fenster-Event ins eingebettete ingredient-editor-Alpine (anderer x-data-Scope,
  * kein direkter $wire-Call von hier aus) — bisher OHNE jedes Klick-Feedback. Statt
- * <x-foodalchemist::ki-action> (das $wire.<action> direkt ruft) eine dokumentierte
+ * <x-fa::ki-action> (das $wire.<action> direkt ruft) eine dokumentierte
  * Ausnahme: eigener Alpine-Zustand, der auf garverluste-fertig/-fehler hört
  * (ingredient-editor.blade.php dispatcht die jetzt nach dem $wire-Call), visuell
  * identisch zur Komponente (Spinner/Haken/Fehler).

@@ -25,7 +25,7 @@
 @endphp
 
 <div>
-    <x-foodalchemist::modal name="formate-editor" title="Format bearbeiten" :title-name="$format?->name" fullscreen dark-canvas>
+    <x-fa::modal name="formate-editor" title="Format bearbeiten" :title-name="$format?->name" fullscreen dark-canvas>
         <x-slot:actions>
             <div class="ml-auto flex flex-wrap items-center gap-2">
                 <span x-data="{ zeigen: false }" x-on:formate-gespeichert.window="zeigen = true; setTimeout(() => zeigen = false, 1600)"
@@ -525,5 +525,5 @@
             @endif
             </fieldset>
         @endif
-    </x-foodalchemist::modal>
+    </x-fa::modal>
 </div>

@@ -23,7 +23,7 @@
 
 {{-- Spec 29-Rollout: Produktion-Editor auf Editor-Page-Muster (fullscreen · dark · editor-tabs · KPI). --}}
 <div>
-<x-foodalchemist::modal name="produktion-editor" fullscreen dark-canvas
+<x-fa::modal name="produktion-editor" fullscreen dark-canvas
     :title="$orderId === null ? 'Neuer Produktionsauftrag' : 'Produktionsauftrag'"
     :title-name="$orderId === null ? null : ($name ?: null)">
 
@@ -95,9 +95,9 @@
     {{-- ═══ Reiter STATUS UND EINKAUF (aus DetailPanel gemergt — nur bestehender Auftrag) ═══ --}}
     @include('foodalchemist::livewire.produktion.partials.editor-einkauf')
     </x-foodalchemist::editor-tabs>
-</x-foodalchemist::modal>
+</x-fa::modal>
 @if($etikettenVorschlag !== [])
-<x-foodalchemist::modal name="produktion-etiketten" title="Etiketten für diesen Auftrag" size="max-w-3xl">
+<x-fa::modal name="produktion-etiketten" title="Etiketten für diesen Auftrag" size="max-w-3xl">
     <form method="GET" action="{{ route('foodalchemist.etiketten.produktion', ['order' => $ops['id']]) }}" target="_blank" class="flex flex-col gap-3" data-produktion-etiketten-form>
         <p class="fa-t-muted">Alle Basisrezepte des Auftrags, je Ansatz ein Etikett mit der Menge eines Ansatzes. Hergestellt am = Produktionstag, Lagerart = Standard des Rezepts. Haken raus oder Anzahl ändern, dann drucken.</p>
         <table class="fa-table fa-table--compact">
@@ -118,6 +118,6 @@
             <x-fa::button type="submit" variant="primary" icon="heroicon-m-printer">Etiketten drucken</x-fa::button>
         </div>
     </form>
-</x-foodalchemist::modal>
+</x-fa::modal>
 @endif
 </div>

@@ -86,6 +86,15 @@
                         <x-fa::menu-item gesperrt icon="heroicon-m-envelope" title="Keine E-Mail hinterlegt">Gesperrt</x-fa::menu-item>
                         <x-fa::menu-item danger icon="heroicon-m-trash">Löschen</x-fa::menu-item>
                     </x-fa::menu>
+                    <x-fa::popover label="Popover-Beispiel" breite="64" data-katalog-popover="">
+                        <x-slot:ausloeser>
+                            <x-fa::button size="sm" icon-right="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="dialog" x-bind:aria-expanded="offen">Popover (x-fa::popover)</x-fa::button>
+                        </x-slot:ausloeser>
+                        <div class="flex flex-col gap-3">
+                            <x-fa::field label="Liefertag" for="katalog-popover-tag"><x-fa::input id="katalog-popover-tag" type="date" /></x-fa::field>
+                            <x-fa::button size="sm" variant="primary" x-on:click="offen = false">Übernehmen</x-fa::button>
+                        </div>
+                    </x-fa::popover>
                     <x-fa::icon-button icon="heroicon-m-trash" label="Zeile entfernen" tone="danger" size="sm" />
                     <x-fa::button disabled>Deaktiviert</x-fa::button>
                 </div>

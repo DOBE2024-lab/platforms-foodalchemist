@@ -135,7 +135,7 @@
     <div class="@container flex flex-col gap-4 min-w-0">
         <div class="grid gap-4 @4xl:grid-cols-2">
             <div class="min-w-0">
-                <x-foodalchemist::modal-section icon="heroicon-o-fire" title="Küche">
+                <x-fa::modal-section icon="heroicon-o-fire" title="Küche">
                     <x-slot:actions>
                         @forelse($kuecheKopf as $w)<x-fa::badge tone="accent">{{ $w }}</x-fa::badge>@empty<x-fa::badge title="Nichts geändert, es gilt die Voreinstellung.">Voreinstellung</x-fa::badge>@endforelse
                     </x-slot:actions>
@@ -184,11 +184,11 @@
                             </div>
                         </div>
                     </div>
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             </div>
 
             <div class="min-w-0">
-                <x-foodalchemist::modal-section icon="heroicon-o-star" title="Anspruch">
+                <x-fa::modal-section icon="heroicon-o-star" title="Anspruch">
                     <x-slot:actions>
                         @forelse($anspruchKopf as $w)<x-fa::badge tone="accent">{{ $w }}</x-fa::badge>@empty<x-fa::badge title="Nichts geändert, es gilt die Voreinstellung.">Voreinstellung</x-fa::badge>@endforelse
                     </x-slot:actions>
@@ -231,13 +231,13 @@
                             </div>
                         </div>
                     </div>
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             </div>
         </div>
 
         <div class="grid gap-4 @4xl:grid-cols-2">
             <div class="min-w-0">
-                <x-foodalchemist::modal-section icon="heroicon-o-sparkles" title="Anreicherung">
+                <x-fa::modal-section icon="heroicon-o-sparkles" title="Anreicherung">
                     <x-slot:actions>
                         @forelse($anreicherungKopf as $w)<x-fa::badge tone="accent">{{ $w }}</x-fa::badge>@empty<x-fa::badge title="Nichts geändert, es gilt die Voreinstellung.">Voreinstellung</x-fa::badge>@endforelse
                     </x-slot:actions>
@@ -270,11 +270,11 @@
                             <x-fa::checkbox x-show="$wire.get('regler.{{ $scope }}.favoriten')" class="flex items-center gap-2 mt-2 ml-6.5 cursor-pointer text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" wire:model="regler.{{ $scope }}.favoriten_conv_only">Nur Convenience-Favoriten</x-fa::checkbox>
                         </div>
                     </div>
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             </div>
 
             <div class="min-w-0">
-                <x-foodalchemist::modal-section icon="heroicon-o-shield-check" title="Ernährung und Allergene">
+                <x-fa::modal-section icon="heroicon-o-shield-check" title="Ernährung und Allergene">
                     <x-slot:actions>
                         @forelse($ausschlussKopf as $w)<x-fa::badge tone="accent">{{ $w }}</x-fa::badge>@empty<x-fa::badge title="Nichts ausgeschlossen.">Keine Vorgabe</x-fa::badge>@endforelse
                     </x-slot:actions>
@@ -303,12 +303,12 @@
                             <p class="{{ $hinweisKlasse }}">{{ empty($r['allergen_nogo'] ?? []) ? 'Kein Allergen ausgeschlossen.' : 'Wird nach der Erstellung geprüft. Treffer werden behoben und gemeldet.' }}</p>
                         </div>
                     </div>
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             </div>
         </div>
 
         <div class="min-w-0">
-            <x-foodalchemist::modal-section icon="heroicon-o-flag" title="Ziel">
+            <x-fa::modal-section icon="heroicon-o-flag" title="Ziel">
                 <x-slot:actions>
                     @forelse($zielKopf as $w)<x-fa::badge tone="accent">{{ $w }}</x-fa::badge>@empty<x-fa::badge title="Nichts geändert, es gilt die Voreinstellung.">Voreinstellung</x-fa::badge>@endforelse
                 </x-slot:actions>
@@ -403,14 +403,14 @@
                         @endif
                     </div>
                 @endif
-            </x-foodalchemist::modal-section>
+            </x-fa::modal-section>
         </div>
 
         @if($scope === 'concept')
             {{-- Struktur — nur Concept: Umfang, Preislage und Vielfalt des GANZEN Menüs/Buffets. Andere Frage
                  als die Ziel-Karte darüber (wofür + wie teuer je Portion), darum eine eigene Karte. --}}
             <div class="min-w-0">
-                <x-foodalchemist::modal-section icon="heroicon-o-squares-2x2" :title="$istBuffet ? 'Aufbau des Buffets' : 'Aufbau des Menüs'">
+                <x-fa::modal-section icon="heroicon-o-squares-2x2" :title="$istBuffet ? 'Aufbau des Buffets' : 'Aufbau des Menüs'">
                     <x-slot:actions>
                         @foreach($strukturKopf as $w)<x-fa::badge tone="accent">{{ $w }}</x-fa::badge>@endforeach
                     </x-slot:actions>
@@ -468,7 +468,7 @@
                         <x-fa::choice name="regler.{{ $scope }}.menue_balance" :options="$balanceOptionen" :live="false" label="Vielfalt" id-prefix="leitplanken" data-menue-balance-select />
                         <p class="{{ $hinweisKlasse }} max-w-2xl">Wie breit streut das Menü über Proteine, Warengruppen und Garmethoden? Ausgewogen: bewusste Vielfalt, Hauptzutaten wiederholen sich nicht. Fokussiert: ein Thema zieht sich durch. Keine Vorgabe: Die KI entscheidet passend zum Briefing.</p>
                     </div>
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             </div>
         @endif
     </div>

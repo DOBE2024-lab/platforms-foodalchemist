@@ -57,7 +57,7 @@
     ];
 @endphp
 <div>
-    <x-foodalchemist::modal name="item-modal" :title="$item !== null && $darfEdit ? 'Artikel bearbeiten' : 'Artikel'"
+    <x-fa::modal name="item-modal" :title="$item !== null && $darfEdit ? 'Artikel bearbeiten' : 'Artikel'"
         :title-name="$item?->designation" :fullscreen="$item !== null" :dark-canvas="$item !== null">
         @if($item)
             <x-slot:actions>
@@ -136,7 +136,7 @@
                     description="Über das Grundprodukt fließen Preis und Allergene dieses Artikels in die Rezepte.">
                     <x-slot:actions>
                         {{-- MatchService: exakte Dubletten (EAN, Artikelnummer), Namensähnlichkeit und semantischer Recall (hybrid_*). Kein Chat-Modell, deshalb Lupe statt Sternchen. --}}
-                        <x-foodalchemist::ki-action action="kiGpVorschlag" variant="ghostXs" icon="heroicon-o-magnifying-glass"
+                        <x-fa::ki-action action="kiGpVorschlag" variant="ghostXs" icon="heroicon-o-magnifying-glass"
                             label="Grundprodukte vorschlagen" busy="Wird gesucht …" flash="Vorschläge geladen"
                             title="Sucht Grundprodukte mit gleicher EAN, gleicher Artikelnummer oder ähnlichem Namen" data-ki-gp-vorschlag />
                         @if(! $item->structure?->gp)
@@ -606,5 +606,5 @@
 
             </x-foodalchemist::editor-tabs>
         @endif
-    </x-foodalchemist::modal>
+    </x-fa::modal>
 </div>

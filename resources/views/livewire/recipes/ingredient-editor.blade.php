@@ -6,7 +6,7 @@
         @include('foodalchemist::livewire.recipes.partials.zutaten-kern')
     @else
         {{-- Spec 28 / E3.3: gleiche Hülle wie Rezept-/Gericht-Editor, Rezeptname im Titel-Chip. --}}
-        <x-foodalchemist::modal name="zutaten-editor" title="Zutaten bearbeiten"
+        <x-fa::modal name="zutaten-editor" title="Zutaten bearbeiten"
             :title-name="$rezept?->name" fullscreen dark-canvas>
             <x-slot:actions>
                 <div class="ml-auto flex items-center gap-2">
@@ -16,7 +16,7 @@
             </x-slot:actions>
 
             @include('foodalchemist::livewire.recipes.partials.zutaten-kern')
-        </x-foodalchemist::modal>
+        </x-fa::modal>
     @endif
 
     {{-- @assets: global registrieren, damit window.zutatenEditor VOR Alpine existiert —

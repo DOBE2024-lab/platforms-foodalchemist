@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Tests\TestCase;
 uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
- * Spec 53 / Paket C — der `$wire`-Aufruf von <x-foodalchemist::ki-action>.
+ * Spec 53 / Paket C — der `$wire`-Aufruf von <x-fa::ki-action>.
  *
  * Warum dieser Test existiert (demo, 2026-10-12): 30 Knöpfe übergeben einen BLANKEN
  * Methodennamen (`action="kiProduktfoto"`). Die Komponente rief dann `$wire.kiProduktfoto`
@@ -23,7 +23,7 @@ beforeEach(function () {
 });
 
 it('ki-action: blanker Methodenname wird als Aufruf mit Klammern an $wire gegeben', function () {
-    $html = Blade::render('<x-foodalchemist::ki-action action="kiProduktfoto" label="Produktfoto erzeugen" />');
+    $html = Blade::render('<x-fa::ki-action action="kiProduktfoto" label="Produktfoto erzeugen" />');
 
     expect($html)
         ->toContain('$wire.kiProduktfoto()')
@@ -35,7 +35,7 @@ it('ki-action: blanker Methodenname wird als Aufruf mit Klammern an $wire gegebe
 });
 
 it('ki-action: Ausdruck mit Argumenten bleibt unverändert', function () {
-    $html = Blade::render('<x-foodalchemist::ki-action action="neuAnreichern(12, true)" label="Neu" />');
+    $html = Blade::render('<x-fa::ki-action action="neuAnreichern(12, true)" label="Neu" />');
 
     expect($html)
         ->toContain('$wire.neuAnreichern(12, true)')
@@ -44,7 +44,7 @@ it('ki-action: Ausdruck mit Argumenten bleibt unverändert', function () {
 });
 
 it('ki-action: der $wire-Aufruf hängt an einem Promise, damit synchrone Fehler im catch landen', function () {
-    $html = Blade::render('<x-foodalchemist::ki-action action="kiSchritte" label="Schritte" />');
+    $html = Blade::render('<x-fa::ki-action action="kiSchritte" label="Schritte" />');
 
     // Promise.resolve().then(() => $wire.x()) — ein TypeError im Ausdruck wird zur Rejection
     // und zeigt seine Meldung, statt 45 s später als „Keine Antwort" zu erscheinen.
@@ -58,7 +58,7 @@ it('ki-action: der $wire-Aufruf hängt an einem Promise, damit synchrone Fehler 
  * Aufruf-String, nicht ob er im Attribut ankommt.
  */
 it('der ganze Klick-Handler bleibt im @click-Attribut — kein gerades Anführungszeichen bricht es auf', function () {
-    $html = Blade::render('<x-foodalchemist::ki-action action="allesAnreichern" label="Alles anreichern" />');
+    $html = Blade::render('<x-fa::ki-action action="allesAnreichern" label="Alles anreichern" />');
 
     expect(preg_match('/@click="([^"]*)"/', $html, $m))->toBe(1)
         ->and($m[1])->toContain('$wire.allesAnreichern()')

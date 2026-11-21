@@ -22,7 +22,7 @@
 @endphp
 
 {{-- R4 (Dominique): Voll-Editor nimmt den ganzen Bildschirm — 19-Zutaten-Rezepte brauchen die Fläche --}}
-<x-foodalchemist::modal name="recipe-modal"
+<x-fa::modal name="recipe-modal"
     :title="! $istOffen ? 'Basisrezept wird geladen' : ($neu ? 'Basisrezept anlegen' : 'Basisrezept')"
     :title-name="$istOffen && ! $neu ? $form['name'] : null"
     size="max-w-3xl" :fullscreen="! $neu" :dark-canvas="true">
@@ -52,7 +52,7 @@
                         </x-slot:ausloeser>
                         {{-- Alles anreichern bleibt ein ki-action: Fortschritt und Erfolg sieht man im Menü. --}}
                         <div class="px-3 py-2 flex flex-col gap-1">
-                            <x-foodalchemist::ki-action action="allesAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Alles anreichern"
+                            <x-fa::ki-action action="allesAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Alles anreichern"
                                 title="Text, Eigenschaften, Produktionsplanung, Equipment, Schritte, Aromen, Pairings, Eignung und Sensorik in einem Lauf. KI-Fotos laufen separat, Ersatz bleibt eine bewusste Verknüpfung von Hand."
                                 class="w-full justify-center" data-alles-anreichern busy="Wird gestartet …" flash="Gestartet" />
                             <span class="{{ $hinweis }}">Füllt alle leeren Felder in einem Lauf. Von Hand Gepflegtes bleibt stehen.</span>
@@ -184,7 +184,7 @@
             <div class="flex flex-wrap items-center gap-2">
                 <x-fa::input wire:model="anweisung" wire:keydown.enter="kiUeberarbeiten"
                     placeholder="z. B. «mach das Rezept vegan und halbiere den Zucker»" class="flex-1 min-w-[16rem]" data-anweisung />
-                <x-foodalchemist::ki-action action="kiUeberarbeiten" variant="ai" icon="heroicon-o-sparkles" label="Vorschlag holen"
+                <x-fa::ki-action action="kiUeberarbeiten" variant="ai" icon="heroicon-o-sparkles" label="Vorschlag holen"
                     data-ueberarbeiten-start busy="Denkt nach …" flash="Vorschlag da" />
             </div>
             @if($ueberarbeitung !== null)
@@ -271,7 +271,7 @@
             <x-slot:actions>
                 {{-- Garverluste: feuert ins eingebettete zutaten-kern (Alpine garverluste() via Window-Event) —
                      lebt in einem ANDEREN x-data-Scope als der $wire-Call selbst, darum kein
-                     <x-foodalchemist::ki-action> (das ruft $wire.<action> direkt); die Rückmeldung
+                     <x-fa::ki-action> (das ruft $wire.<action> direkt); die Rückmeldung
                      kommt hier stattdessen über garverluste-fertig/-fehler (s. ingredient-editor.blade.php),
                      visuell identisch zur Komponente (Spinner/Haken/Fehler). --}}
                 <button type="button" x-data="{ pending: false, ok: false, err: null }"
@@ -324,7 +324,7 @@
                 {{-- Spec 53: Produktfoto (Hero) erzeugen/ersetzen — läuft async (EnrichRecipeJob,
                      nurProduktfoto), gepollt über pruefeProduktfotoErgebnis. --}}
                 @php $bildkosten = config('foodalchemist.ai.bildkosten_usd.models')['gpt-image-1.5'] ?? null; @endphp
-                <x-foodalchemist::ki-action action="kiProduktfoto" variant="ai" icon="heroicon-o-photo" label="Produktfoto erzeugen"
+                <x-fa::ki-action action="kiProduktfoto" variant="ai" icon="heroicon-o-photo" label="Produktfoto erzeugen"
                         busy="Malt …" flash="Foto erzeugt"
                         title="{{ 'Erzeugt oder ersetzt das Foto des fertigen Gerichts' . ($bildkosten !== null ? ', ca. ' . number_format($bildkosten, 3, ',', '.') . ' $ je Bild' : '') . '.' }}"
                         data-ki-produktfoto />
@@ -364,7 +364,7 @@
     <x-fa::section title="Equipment" icon="heroicon-o-wrench-screwdriver" :meta="$eqGewaehlt->count() . ' gewählt'">
         @if(!$neu)
             <x-slot:actions>
-                <x-foodalchemist::ki-action action="kiEquipment" variant="ai" icon="heroicon-o-sparkles" label="Equipment vorschlagen"
+                <x-fa::ki-action action="kiEquipment" variant="ai" icon="heroicon-o-sparkles" label="Equipment vorschlagen"
                     title="Vorschlag aus den Zutaten, landet in der Auswahl. Gespeichert wird erst mit Speichern."
                     busy="Wird ermittelt …" flash="Equipment ermittelt" />
             </x-slot:actions>
@@ -408,7 +408,7 @@
             <div class="sm:col-span-2 flex flex-col gap-1.5">
                 <div class="flex items-center justify-between gap-2">
                     <label for="rezept-name" class="fa-t-label">Name<span class="text-[var(--fa-crit)]" aria-hidden="true"> *</span></label>
-                    <x-foodalchemist::ki-action action="namePutzen" variant="ai" icon="heroicon-o-sparkles" label="Namen glätten"
+                    <x-fa::ki-action action="namePutzen" variant="ai" icon="heroicon-o-sparkles" label="Namen glätten"
                         title="Schreibweise nach dem Rezept-Regelwerk vereinheitlichen" busy="Wird geglättet …" flash="Name geglättet" />
                 </div>
                 <x-fa::input id="rezept-name" wire:model.live.debounce.300ms="form.name" placeholder="Schaumsauce: Beurre Blanc" data-rezept-name />
@@ -425,7 +425,7 @@
                 <div class="flex items-center justify-between gap-2">
                     <label for="rezept-kategorie" class="fa-t-label">Kategorie<span class="text-[var(--fa-crit)]" aria-hidden="true"> *</span></label>
                     @if(!$neu)
-                        <x-foodalchemist::ki-action action="ai_kategorie" variant="ai" icon="heroicon-o-sparkles" label="Kategorie vorschlagen"
+                        <x-fa::ki-action action="ai_kategorie" variant="ai" icon="heroicon-o-sparkles" label="Kategorie vorschlagen"
                             title="Vorschlag erscheint unter dem Feld, übernommen wird erst per Klick" busy="Wird ermittelt …" flash="Kategorie ermittelt" />
                     @endif
                 </div>
@@ -491,7 +491,7 @@
     <x-fa::section title="Beschreibung" icon="heroicon-o-document-text" description="Drei bis fünf sachliche Sätze.">
         @if(!$neu)
             <x-slot:actions>
-                <x-foodalchemist::ki-action action="ai_beschreibung" variant="ai" icon="heroicon-o-sparkles" label="Beschreibung schreiben"
+                <x-fa::ki-action action="ai_beschreibung" variant="ai" icon="heroicon-o-sparkles" label="Beschreibung schreiben"
                     data-ai-description busy="Wird geschrieben …" flash="Beschreibung erstellt" />
                 <x-fa::menu label="Weitere Aktionen zur Beschreibung" size="sm" breite="64">
                     <x-fa::menu-item icon="heroicon-o-lock-closed" abstand="weit" wire:click="manual_beschreibung" title="Aktuellen Text als von Hand gepflegt markieren, die KI überschreibt ihn dann nicht">Vor KI schützen</x-fa::menu-item>
@@ -516,7 +516,7 @@
     {{-- EIGENSCHAFTEN (§4.2.4) — Zeiten, Mengen je Kochvorgang, Charakter --}}
     <x-fa::section title="Eigenschaften" icon="heroicon-o-adjustments-horizontal">
         <x-slot:actions>
-            <x-foodalchemist::ki-action action="kiEigenschaften" variant="ai" icon="heroicon-o-sparkles" label="Eigenschaften schätzen"
+            <x-fa::ki-action action="kiEigenschaften" variant="ai" icon="heroicon-o-sparkles" label="Eigenschaften schätzen"
                 title="Arbeitszeit, Temperatur, Funktion und Geschmack schätzen. Landet in den Feldern, gespeichert wird erst mit Speichern."
                 busy="Wird geschätzt …" flash="Eigenschaften geschätzt" />
         </x-slot:actions>
@@ -556,7 +556,7 @@
             <div class="flex flex-col gap-1.5 min-w-0">
                 <x-fa::choice name="form.production_depth" :live="false" label="Fertigungstiefe" :options="['' => 'Keine Angabe', 'from_scratch' => 'selbst gemacht', 'teilfertig' => 'teilfertig', 'convenience' => 'Convenience']" />
                 <div>
-                    <x-foodalchemist::ki-action action="kiFertigung" variant="ai" icon="heroicon-o-sparkles" label="Aus Zutaten ermitteln"
+                    <x-fa::ki-action action="kiFertigung" variant="ai" icon="heroicon-o-sparkles" label="Aus Zutaten ermitteln"
                         title="Fertigungstiefe aus den Zutaten ableiten" busy="Wird ermittelt …" flash="Fertigung ermittelt" />
                 </div>
             </div>
@@ -682,7 +682,7 @@
             description="So kommt diese Komponente auf Temperatur. Gilt als Vorgabe in jedem Gericht, das sie enthält. Kein Gerät heißt kalt servieren, alles leer heißt keine Angabe und wird als Lücke gemeldet.">
             <x-slot:actions>
                 {{-- Dominique 2026-10-12: Vorschlag ins Formular, Speichern übernimmt --}}
-                <x-foodalchemist::ki-action action="kiRegeneration" variant="ai" icon="heroicon-o-sparkles" label="Regeneration vorschlagen"
+                <x-fa::ki-action action="kiRegeneration" variant="ai" icon="heroicon-o-sparkles" label="Regeneration vorschlagen"
                     title="Ein Programm für das ganze Basisrezept: Gerät aus dem Vokabular, Temperatur, Dauer, Kerntemperatur — oder kalt servieren"
                     data-ki-regeneration busy="Wird vorgeschlagen …" flash="Vorgeschlagen" />
             </x-slot:actions>
@@ -714,7 +714,7 @@
         <x-fa::section title="Behälter je Zweck" icon="heroicon-o-archive-box"
             description="Abfüllen ist nicht Regenerieren: die Suppe kommt aus dem Kipper in Eimer und geht erst am Einsatztag ins GN. Ist der Behälter beim Regenerieren derselbe wie beim Abfüllen, zählt die Produktion ihn nur einmal.">
             <x-slot:actions>
-                <x-foodalchemist::ki-action action="kiDichteklasse" variant="ai" icon="heroicon-o-sparkles" label="Dichteklasse schätzen"
+                <x-fa::ki-action action="kiDichteklasse" variant="ai" icon="heroicon-o-sparkles" label="Dichteklasse schätzen"
                     title="Schätzt die Dichte des Produkts, nie die Zahl der Behälter"
                     data-ki-dichteklasse busy="Wird geschätzt …" flash="Geschätzt" />
             </x-slot:actions>
@@ -775,7 +775,7 @@
         <x-fa::section title="Sensorik" icon="heroicon-o-beaker" description="Profil im gegarten Zustand. Die KI liest dafür Zutaten und Zubereitung.">
             @unless($neu)
                 <x-slot:actions>
-                    <x-foodalchemist::ki-action action="sensorikBewerten" variant="ai" icon="heroicon-o-sparkles" label="Sensorik neu bewerten"
+                    <x-fa::ki-action action="sensorikBewerten" variant="ai" icon="heroicon-o-sparkles" label="Sensorik neu bewerten"
                         busy="Bewertet …" flash="Sensorik bewertet" />
                 </x-slot:actions>
             @endunless
@@ -828,4 +828,4 @@
              Hier bleibt bewusst nur „Abbrechen". --}}
         <x-fa::button variant="ghost" wire:click="$dispatch('modal.close', { name: 'recipe-modal' })">Abbrechen</x-fa::button>
     </x-slot:footer>
-</x-foodalchemist::modal>
+</x-fa::modal>

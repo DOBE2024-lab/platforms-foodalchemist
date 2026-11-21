@@ -122,7 +122,7 @@
             @include('foodalchemist::livewire.speisekarte.partials.vorschau', ['vorschau' => $vorschau])
 
             {{-- ═══════════════ EDITOR = Vollbild-Modal (Foodbook-Muster) ═══════════════ --}}
-            <x-foodalchemist::modal name="speisekarte-editor" fullscreen dark-canvas title="Speisekarte bearbeiten" :title-name="$name">
+            <x-fa::modal name="speisekarte-editor" fullscreen dark-canvas title="Speisekarte bearbeiten" :title-name="$name">
                 <x-slot:titleExtra>
                     <x-fa::badge>{{ $typLabel[$karte->karten_typ] ?? $karte->karten_typ }}</x-fa::badge>
                     <x-fa::badge :tone="$statusTon[$karte->statusWert()->badgeVariant()] ?? 'neutral'">{{ $karte->statusWert()->label() }}</x-fa::badge>
@@ -173,7 +173,7 @@
                                         @endforeach
                                     </x-fa::select>
                                     {{-- Betextet die GANZE Speisekarte im gewählten Stil neu (nur auf Knopfdruck, kostet KI-Leistung). --}}
-                                    <x-foodalchemist::ki-action action="speisekarteWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Karte neu betexten"
+                                    <x-fa::ki-action action="speisekarteWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Karte neu betexten"
                                             :disabled="! $writingStyleId"
                                             title="Alle Positionen der Speisekarte im gewählten Schreibstil neu betexten"
                                             busy="Wird betextet …" class="shrink-0" data-sk-wording />
@@ -202,7 +202,7 @@
                     {{-- Karten-Kopf: Name, Typ, Status und Laufzeit, Kunde, Einleitung. --}}
                     <x-fa::section title="Karte" icon="heroicon-o-clipboard-document-list" wire:key="sk-head-{{ $karte->id }}">
                         <x-slot:actions>
-                            <x-foodalchemist::ki-action action="kiKartenText" variant="ai" icon="heroicon-o-sparkles" label="Einleitung vorschlagen" busy="Wird geschrieben …" data-sk-ki-einleitung />
+                            <x-fa::ki-action action="kiKartenText" variant="ai" icon="heroicon-o-sparkles" label="Einleitung vorschlagen" busy="Wird geschrieben …" data-sk-ki-einleitung />
                         </x-slot:actions>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                             <x-fa::field label="Name" for="sk-name" class="md:col-span-2">
@@ -573,7 +573,7 @@
                     </div>{{-- /sk-body --}}
                 </div>{{-- /Reiter AUFBAU --}}
                 </x-foodalchemist::editor-tabs>
-            </x-foodalchemist::modal>
+            </x-fa::modal>
         @endif
 
     {{-- Bug-Runde 2026-09-17 #1 (Nachbesserung): aus der Karte heraus öffnet das Gericht bzw. das

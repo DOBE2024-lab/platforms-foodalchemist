@@ -30,7 +30,7 @@
     $handy = \Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy();   // #1003 PR5: am Handy nur lesen (Übernehmen, Einstellen am Computer)
 @endphp
 
-<x-foodalchemist::modal name="signal-detail" title="Signal" size="max-w-2xl">
+<x-fa::modal name="signal-detail" title="Signal" size="max-w-2xl">
     <div data-signal-panel class="flex flex-col gap-5">
     @if($sig === null)
         <x-fa::empty icon="heroicon-o-bell" title="Kein Signal gewählt">In der Liste bei einem Signal „Betroffene ansehen“ wählen.</x-fa::empty>
@@ -368,4 +368,4 @@
         </x-fa::section>
     @endif
     </div>
-</x-foodalchemist::modal>
+</x-fa::modal>

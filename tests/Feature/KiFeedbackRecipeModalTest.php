@@ -11,7 +11,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 /**
  * Paket G (Spec 53) — Anlass Dominique 22:50: „wenn ich in den Editoren den KI-Knopf
  * drücke, sieht man nicht, dass er arbeitet." Alle KI-Knöpfe im Recipe-Modal sind auf
- * <x-foodalchemist::ki-action> umgestellt (byte-gleiches wire:target zum Wire-Ausdruck,
+ * <x-fa::ki-action> umgestellt (byte-gleiches wire:target zum Wire-Ausdruck,
  * Alpine pending/ok/err VOR der Server-Antwort). Muster: PlanungLeitstelleTest
  * „ki-action-Komponente: data-ki-action + wire:target …".
  */

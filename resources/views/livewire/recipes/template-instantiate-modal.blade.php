@@ -4,7 +4,7 @@
     $menge = fn ($wert) => rtrim(rtrim(number_format((float) $wert, 2, ',', '.'), '0'), ',');
 @endphp
 
-<x-foodalchemist::modal name="template-instanziieren" title="Rezept aus Vorlage anlegen" size="max-w-2xl">
+<x-fa::modal name="template-instanziieren" title="Rezept aus Vorlage anlegen" size="max-w-2xl">
     @if($fehler !== null)
         <x-fa::notice tone="crit" data-template-fehler>{{ $fehler }}</x-fa::notice>
     @endif
@@ -12,13 +12,13 @@
     @if($templateId === null)
         <x-fa::empty icon="heroicon-o-document-duplicate" title="Keine Vorlage gewählt">Im Basisrezepte-Browser ein Rezept als Vorlage markieren und von dort aus anlegen.</x-fa::empty>
     @else
-        <x-foodalchemist::modal-section title="Vorlage">
+        <x-fa::modal-section title="Vorlage">
             <p class="fa-t-h3" data-template-name>{{ $templateName }}</p>
             <p class="mt-0.5 fa-t-muted">{{ $slotAnzahl }} Platzhalter. Bindemittel-Verhältnis und Zubereitung bleiben wie in der Vorlage.</p>
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
 
         {{-- Variante + Vorschläge --}}
-        <x-foodalchemist::modal-section title="Variante">
+        <x-fa::modal-section title="Variante">
             <x-fa::field for="template-variante" hint="Die Variante wird zur Hauptzutat, die übrigen Platzhalter bekommen die üblichen Zutaten.">
                 <div class="flex items-center gap-2">
                     <x-fa::input id="template-variante" wire:model="variant" wire:keydown.enter.prevent="vorschlaege"
@@ -29,15 +29,15 @@
                     </x-fa::button>
                 </div>
             </x-fa::field>
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
 
         {{-- Name des neuen Rezepts --}}
-        <x-foodalchemist::modal-section title="Name des neuen Rezepts">
+        <x-fa::modal-section title="Name des neuen Rezepts">
             <x-fa::input wire:model="name" placeholder="z. B. Gelee: Brombeere" aria-label="Name des neuen Rezepts" data-template-instanz-name />
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
 
         {{-- Platzhalter zuordnen --}}
-        <x-foodalchemist::modal-section title="Platzhalter zuordnen ({{ $gebundenAnzahl }} von {{ $slotAnzahl }})">
+        <x-fa::modal-section title="Platzhalter zuordnen ({{ $gebundenAnzahl }} von {{ $slotAnzahl }})">
             <div class="flex flex-col gap-2" data-template-slots>
                 @foreach($slotListe as $rid => $slot)
                     @php
@@ -75,7 +75,7 @@
                     {{ $slotAnzahl - $gebundenAnzahl }} {{ ($slotAnzahl - $gebundenAnzahl) === 1 ? 'Platzhalter bleibt' : 'Platzhalter bleiben' }} offen. Das neue Rezept startet dann als Entwurf und lässt sich später ergänzen.
                 </x-fa::signal>
             @endif
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
     @endif
 
     <x-slot:footer>
@@ -86,4 +86,4 @@
             <span wire:loading wire:target="instanziieren">Wird angelegt …</span>
         </x-fa::button>
     </x-slot:footer>
-</x-foodalchemist::modal>
+</x-fa::modal>

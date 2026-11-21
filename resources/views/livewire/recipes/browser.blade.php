@@ -191,7 +191,7 @@
                     <x-fa::button size="sm" wire:click="zuSammlung" data-bulk-zu-sammlung>Zu Sammlung hinzufügen</x-fa::button>
                 @endif
                 <span class="ml-auto"></span>
-                <x-foodalchemist::ki-action action="bulkAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Mit KI anreichern"
+                <x-fa::ki-action action="bulkAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Mit KI anreichern"
                         title="Beschreibung, Kategorie und Geschmack als Vorschläge zur Prüfung (nie automatisch übernommen)"
                         flash="Anreicherung gestartet" data-bulk-anreichern />
             </div>

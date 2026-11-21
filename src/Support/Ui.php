@@ -30,7 +30,7 @@ final class Ui
             'card' => 'rounded-[10px] bg-[var(--fa-surface)] border border-[var(--fa-line)]',
             'cardAccent' => 'hidden',
             // Modal-Sektion als frosted Card (UX-Umbau 2026-07-03): hebt die borderless Inputs
-            // vom Modal-Grund ab → Kontrast statt Grau-auf-Grau. Von <x-foodalchemist::modal-section> genutzt.
+            // vom Modal-Grund ab → Kontrast statt Grau-auf-Grau. Von <x-fa::modal-section> genutzt.
             // 2026-07-31: nahezu opake, klar begrenzte Karte → schwebt deutlich auf dem dunklen
             // Editor-Canvas (DESIGN.md-Tiefe im Light-Theme nachgebaut, kein dark: — README §158).
             'sectionCard' => 'rounded-[10px] bg-[var(--fa-surface)] border border-[var(--fa-line)] p-4',
@@ -104,7 +104,7 @@ final class Ui
 
             // Menü-Breiten (Welle 1, 1.4c): <x-fa::menu breite="56"> — nur diese Stufen, Klassen voll ausgeschrieben (build-css.mjs).
             'menueBreite' => [
-                40 => 'w-40', 44 => 'w-44', 48 => 'w-48', 52 => 'w-52', 56 => 'w-56', 60 => 'w-60', 64 => 'w-64', 72 => 'w-72',
+                40 => 'w-40', 44 => 'w-44', 48 => 'w-48', 52 => 'w-52', 56 => 'w-56', 60 => 'w-60', 64 => 'w-64', 72 => 'w-72', 80 => 'w-80',
             ],
             // x-fa::menu-item: Zeilenhöhe (eng = Standard, weit = lockere Zeile der Kopf-Menüs)
             'menuePunktAbstand' => ['eng' => 'py-1.5', 'weit' => 'py-2'],

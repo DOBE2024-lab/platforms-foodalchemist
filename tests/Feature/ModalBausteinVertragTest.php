@@ -12,7 +12,7 @@ uses(TestCase::class);
 it('Modal-Baustein: nativer Listener statt .dot-Listener (Alpine-3.15-Falle)', function () {
     // Modul-Root über die Klasse auflösen — __DIR__ bricht im Sandbox-Copy-Loop (_SANDBOX_NOTES)
     $modulRoot = dirname((new ReflectionClass(\Platform\FoodAlchemist\FoodAlchemistServiceProvider::class))->getFileName(), 2);
-    $blade = file_get_contents($modulRoot . '/resources/views/components/modal.blade.php');
+    $blade = file_get_contents($modulRoot . '/resources/views/components/fa/modal.blade.php');
 
     expect($blade)->not->toContain('@modal-open.dot')
         ->and($blade)->not->toContain('@modal-close.dot')

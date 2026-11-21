@@ -447,7 +447,7 @@
             </main>
         </div>
 
-        <x-foodalchemist::modal name="wall-gericht" fullscreen dark-canvas title="Gericht" :title-name="$wallGericht->gericht ?? null" :close-via="'gerichtSchliessen'">
+        <x-fa::modal name="wall-gericht" fullscreen dark-canvas title="Gericht" :title-name="$wallGericht->gericht ?? null" :close-via="'gerichtSchliessen'">
             <x-slot:actions>
                 <button type="button" x-data @click="$wire.gerichtSchliessen(); close()"
                         class="{{ $wKnopf }}"
@@ -663,9 +663,9 @@
                     </div>
                 </div>
             @endif
-        </x-foodalchemist::modal>
+        </x-fa::modal>
 
-        <x-foodalchemist::modal name="wall-anleitung" fullscreen dark-canvas title="Anleitung" :title-name="$anleitung['name'] ?? null" :close-via="'anleitungSchliessen'">
+        <x-fa::modal name="wall-anleitung" fullscreen dark-canvas title="Anleitung" :title-name="$anleitung['name'] ?? null" :close-via="'anleitungSchliessen'">
             @if($anleitung && (collect($anleitung['sicherheit']['allergene'] ?? [])->isNotEmpty() || collect($anleitung['sicherheit']['warnungen'] ?? [])->isNotEmpty() || collect($anleitung['sicherheit']['diaet'] ?? [])->isNotEmpty()))
                 <x-slot:titleExtra>
                     <span class="flex min-w-0 flex-wrap items-center gap-1.5" data-tagesplan-wall-sicherheitsblock>
@@ -1064,7 +1064,7 @@
                     </div>
                 </div>
             @endif
-        </x-foodalchemist::modal>
+        </x-fa::modal>
     </div>
 @else
 <x-ui-page>
@@ -1288,7 +1288,7 @@
 
         <livewire:foodalchemist.produktion.editor key="produktion-tagesplan--produktion.editor" />
 
-        <x-foodalchemist::modal name="tagesplan-editor" fullscreen dark-canvas title="Tagesplanung"
+        <x-fa::modal name="tagesplan-editor" fullscreen dark-canvas title="Tagesplanung"
                                 :title-name="$ansicht === 'gericht' ? 'Nach Gerichten' : 'Nach Posten'"
                                 :close-via="'editorSchliessen'">
             <x-slot:actions>
@@ -1468,7 +1468,7 @@
                     </aside>
                 </div>
             </section>
-        </x-foodalchemist::modal>
+        </x-fa::modal>
 
         <x-ui-page-container padding="px-4 pb-6 lg:px-6" spacing="space-y-4">
             @if($fehler)<x-fa::notice tone="crit" data-tagesplan-fehler>{{ $fehler }}</x-fa::notice>@endif

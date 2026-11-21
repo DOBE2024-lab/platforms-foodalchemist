@@ -569,9 +569,9 @@
     </x-slot>
 
     {{-- Fundstück-Dialog: Inspiration in Sekunden ablegen, für alle im Team --}}
-    <x-foodalchemist::modal name="fundstueck-ablegen" title="Fundstück ablegen" size="max-w-2xl">
+    <x-fa::modal name="fundstueck-ablegen" title="Fundstück ablegen" size="max-w-2xl">
         @if($fehler)<x-fa::notice tone="crit">{{ $fehler }}</x-fa::notice>@endif
-        <x-foodalchemist::modal-section title="Was hast du gesehen?">
+        <x-fa::modal-section title="Was hast du gesehen?">
             <div class="grid grid-cols-2 gap-3" data-fundstueck-form>
                 <x-fa::field label="Screenshot oder Foto" for="fs-datei" hint="Bild oder PDF, max. 15 MB" class="col-span-2">
                     <input id="fs-datei" type="file" wire:model="fundDatei" accept="image/*,application/pdf" capture="environment" class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
@@ -588,20 +588,20 @@
                 <x-fa::field label="Schlagworte" for="fs-tags" optional hint="Kommagetrennt. Gleiche Schlagworte bündeln Fundstücke zu Häufungen." class="col-span-2"><x-fa::input id="fs-tags" wire:model="fund.schlagworte" placeholder="z. B. kartoffel, comfort food" /></x-fa::field>
             </div>
             <p class="fa-t-muted">Ein Fundstück ist noch kein Trend. Es landet als Inspiration in der Pinnwand des Teams; weitere Quellen zum selben Thema kommen auf dieselbe Karte. Wer kuratiert, macht daraus einen Hype oder Trend.</p>
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
         <x-slot:footer>
             <x-fa::button variant="ghost" @click="$dispatch('modal.close', { name: 'fundstueck-ablegen' })">Abbrechen</x-fa::button>
             <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="fundstueckAblegen" wire:loading.attr="disabled" data-fundstueck-speichern>Ablegen</x-fa::button>
         </x-slot:footer>
-    </x-foodalchemist::modal>
+    </x-fa::modal>
 
     {{-- Trend-Dialog (Kuratieren): neu oder aus einer Inspiration --}}
-    <x-foodalchemist::modal name="trend-erfassen" title="Trend anlegen" size="max-w-2xl">
+    <x-fa::modal name="trend-erfassen" title="Trend anlegen" size="max-w-2xl">
         @if($fehler)<x-fa::notice tone="crit">{{ $fehler }}</x-fa::notice>@endif
         @if($ausInspirationen !== [])
             <x-fa::notice tone="info">Alle Quellen der Inspiration werden Belege des neuen Trends.</x-fa::notice>
         @endif
-        <x-foodalchemist::modal-section title="Trend">
+        <x-fa::modal-section title="Trend">
             <div class="grid grid-cols-3 gap-3" data-trend-erfassen-form>
                 <x-fa::field label="Name" for="tn-name" required class="col-span-3"><x-fa::input id="tn-name" wire:model="neu.name" placeholder="z. B. Loaded Mash Potatoes" /></x-fa::field>
                 <x-fa::field label="Trend oder Hype" for="tn-typ"><x-fa::select id="tn-typ" wire:model="neu.typ" placeholder="noch offen" :options="V::TYPEN" /></x-fa::field>
@@ -610,9 +610,9 @@
                 <x-fa::field label="Kurzbeschreibung" for="tn-def" optional class="col-span-3"><x-fa::textarea id="tn-def" rows="2" wire:model="neu.definition" /></x-fa::field>
             </div>
             <p class="fa-t-muted">Der Trend landet als „gesichtet“ in der Liste. Aufs Radar kommt er, sobald er eingeordnet ist und einen bestätigenden Beleg hat.</p>
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
         @if($ausInspirationen === [])
-            <x-foodalchemist::modal-section title="Erster Beleg (optional)">
+            <x-fa::modal-section title="Erster Beleg (optional)">
                 <div class="grid grid-cols-2 gap-3">
                     <x-fa::field label="Quelle" for="tn-quelle"><x-fa::select id="tn-quelle" wire:model="neu.quelle" :options="V::QUELLEN" /></x-fa::field>
                     <x-fa::field label="Wo gesehen" for="tn-fundort" optional><x-fa::input id="tn-fundort" wire:model="neu.fundort" placeholder="Studie, Account, Lokal" /></x-fa::field>
@@ -623,11 +623,11 @@
                     </x-fa::field>
                     <x-fa::field label="Notiz" for="tn-notiz" optional class="col-span-2"><x-fa::textarea id="tn-notiz" rows="2" wire:model="neu.notiz" /></x-fa::field>
                 </div>
-            </x-foodalchemist::modal-section>
+            </x-fa::modal-section>
         @endif
         <x-slot:footer>
             <x-fa::button variant="ghost" @click="$dispatch('modal.close', { name: 'trend-erfassen' })">Abbrechen</x-fa::button>
             <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="erfassen" wire:loading.attr="disabled" data-trend-erfassen-speichern>Trend anlegen</x-fa::button>
         </x-slot:footer>
-    </x-foodalchemist::modal>
+    </x-fa::modal>
 </x-ui-page>

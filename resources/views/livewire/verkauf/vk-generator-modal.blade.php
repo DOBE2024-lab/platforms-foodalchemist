@@ -13,7 +13,7 @@
     $offene = count($ergebnis['offene'] ?? []);
 @endphp
 
-<x-foodalchemist::modal name="vk-generator-modal" title="Gericht generieren" size="max-w-2xl">
+<x-fa::modal name="vk-generator-modal" title="Gericht generieren" size="max-w-2xl">
     @if($fehler !== null)
         <x-fa::notice tone="crit" data-vk-generator-fehler>{{ $fehler }}</x-fa::notice>
     @endif
@@ -152,4 +152,4 @@
                 :title="$offene > 0 ? 'Erst die offenen Zutaten klären' : null" data-vk-generator-freigeben>Gericht freigeben</x-fa::button>
         @endif
     </x-slot:footer>
-</x-foodalchemist::modal>
+</x-fa::modal>

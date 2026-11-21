@@ -172,7 +172,7 @@
                 @if($rezept->dishClass === null)
                     <div class="flex flex-wrap items-center gap-2">
                         <x-fa::signal tone="warn">Ohne Speisen-Klasse gibt es keinen VK-Vorschlag.</x-fa::signal>
-                        <x-foodalchemist::ki-action action="ai_klassifizieren" variant="ai" icon="heroicon-o-sparkles" label="Klasse vorschlagen"
+                        <x-fa::ki-action action="ai_klassifizieren" variant="ai" icon="heroicon-o-sparkles" label="Klasse vorschlagen"
                             title="Speisen-Klasse per KI vorschlagen" data-vk-klassifizieren busy="Wird eingeordnet …" flash="Vorschlag da" />
                     </div>
                 @endif
@@ -202,7 +202,7 @@
             {{-- 5 · Inhalt: Komponenten, was auf dem Teller liegt --}}
             <x-fa::section variant="plain" title="Komponenten" icon="heroicon-o-list-bullet" :meta="$rezept->ingredients->count()" data-vk-zutaten>
                 <x-slot:actions>
-                    <x-foodalchemist::ki-action action="ai_rollen" variant="ai" icon="heroicon-o-user-group" label="Rollen verteilen"
+                    <x-fa::ki-action action="ai_rollen" variant="ai" icon="heroicon-o-user-group" label="Rollen verteilen"
                         title="Rollen der Komponenten per KI vorschlagen (Aromaträger, Komponente, Beilage, Garnitur)" data-vk-rollen busy="Wird verteilt …" flash="Vorschlag da" />
                 </x-slot:actions>
                 {{-- M6-05: KI-Vorschlag Rollen — erst prüfen, dann übernehmen --}}
@@ -283,7 +283,7 @@
                             @else
                                 <span class="text-[var(--fa-ink-3)]">noch kein Urteil</span>
                             @endif
-                            <x-foodalchemist::ki-action action="pruefeKohaerenz" variant="ai" icon="heroicon-o-sparkles"
+                            <x-fa::ki-action action="pruefeKohaerenz" variant="ai" icon="heroicon-o-sparkles"
                                 :label="$urteil?->score !== null ? 'Erneut prüfen' : 'Kohärenz prüfen'" class="ml-auto"
                                 data-vk-kohaerenz-pruefen busy="Wird geprüft …" flash="Geprüft" />
                         </div>
@@ -298,7 +298,7 @@
                             @else
                                 <span class="text-[var(--fa-ink-3)]">noch keine</span>
                             @endif
-                            <x-foodalchemist::ki-action action="schlageHeberVor" variant="ai" icon="heroicon-o-sparkles"
+                            <x-fa::ki-action action="schlageHeberVor" variant="ai" icon="heroicon-o-sparkles"
                                 :label="$heberIdeen !== [] ? 'Neu vorschlagen' : 'Ideen vorschlagen'" class="ml-auto"
                                 data-vk-heber-vorschlagen busy="Wird vorgeschlagen …" flash="Vorschlag da" />
                         </div>
@@ -312,7 +312,7 @@
             <x-fa::section variant="plain" title="Eignung" icon="heroicon-o-user-group"
                 :meta="$sektorEignungen->count() + $niveauEignungen->count()" data-vk-eignung>
                 <x-slot:actions>
-                    <x-foodalchemist::ki-action action="kiEignung" variant="ai" icon="heroicon-o-sparkles" label="Eignung vorschlagen"
+                    <x-fa::ki-action action="kiEignung" variant="ai" icon="heroicon-o-sparkles" label="Eignung vorschlagen"
                         title="Sektor und Niveau per KI vorschlagen, nur eindeutig geeignete" data-ki-eignung
                         busy="Wird ermittelt …" flash="Vorschlag da" />
                 </x-slot:actions>

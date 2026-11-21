@@ -6,7 +6,7 @@
     $euro = fn ($w) => $w !== null && $w !== '' ? number_format((float) $w, 2, ',', '.') . ' €' : '–';
 @endphp
 
-<x-foodalchemist::modal name="konfigurator-editor" fullscreen dark-canvas title="Konfigurator" :title-name="$k->name ?? null">
+<x-fa::modal name="konfigurator-editor" fullscreen dark-canvas title="Konfigurator" :title-name="$k->name ?? null">
     <x-slot:actions>
         @if($k)
             <div class="ml-auto flex flex-wrap items-center gap-2">
@@ -82,4 +82,4 @@
             </x-foodalchemist::editor-tabs>
         </div>
     @endif
-</x-foodalchemist::modal>
+</x-fa::modal>

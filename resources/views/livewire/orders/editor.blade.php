@@ -98,7 +98,7 @@
     }
 @endphp
 
-<x-foodalchemist::modal name="orders-editor" fullscreen dark-canvas :title="$istRunde ? 'Bestellrunde' : 'Bestellung'"
+<x-fa::modal name="orders-editor" fullscreen dark-canvas :title="$istRunde ? 'Bestellrunde' : 'Bestellung'"
     :title-name="$istRunde ? ($roundDetail['label'] ?? 'Neu') : ($detail['supplier'] ?? null)">
     @if(! $istRunde)
         <x-slot:titleExtra>
@@ -1337,4 +1337,4 @@
         </x-slot:frei>
     </x-foodalchemist::editor-tabs>
     @endif
-</x-foodalchemist::modal>
+</x-fa::modal>

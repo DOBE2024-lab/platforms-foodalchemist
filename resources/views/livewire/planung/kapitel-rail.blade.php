@@ -27,7 +27,7 @@
                             <span class="min-w-0 break-words">{{ $k['title'] ?: 'Kapitel ohne Titel' }}</span>
                         </button>
                         @if($laeuft)<x-fa::badge tone="warn">läuft</x-fa::badge>@endif
-                        <x-foodalchemist::ki-action action="kapitelErzeugen({{ $k['id'] }})" target="kapitelErzeugen" variant="ai"
+                        <x-fa::ki-action action="kapitelErzeugen({{ $k['id'] }})" target="kapitelErzeugen" variant="ai"
                                 icon="heroicon-o-sparkles" label="Kapitel erstellen" title="Dieses Kapitel mit KI füllen"
                                 class="shrink-0" data-kapitel-erzeugen="{{ $k['id'] }}" />
                     </div>

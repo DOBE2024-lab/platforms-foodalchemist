@@ -39,7 +39,7 @@
     $gesperrt = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true);
 @endphp
 
-<x-foodalchemist::modal name="speiseplan-editor" fullscreen dark-canvas title="Speiseplan bearbeiten"
+<x-fa::modal name="speiseplan-editor" fullscreen dark-canvas title="Speiseplan bearbeiten"
     :title-name="$sp?->name">
 
     <x-slot:actions>
@@ -744,7 +744,7 @@
                                         @endforeach
                                     </x-fa::select>
                                     {{-- Betextet alle Gericht-Einträge im gewählten Stil neu (nur auf Knopfdruck, kostet KI-Leistung). --}}
-                                    <x-foodalchemist::ki-action action="planWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Plan neu betexten"
+                                    <x-fa::ki-action action="planWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Plan neu betexten"
                                             :disabled="! ($form['writing_style_id'] ?? null)"
                                             title="Alle Gerichte des Plans im gewählten Schreibstil neu betexten — ein Name je Gericht"
                                             busy="Wird betextet …" class="shrink-0" data-sp-wording-generieren />
@@ -1087,7 +1087,7 @@
                             <label for="sp-eintrag-wording" class="{{ $etikett }}">Name im Plan</label>
                             <div class="flex items-center gap-1.5">
                                 <x-fa::input id="sp-eintrag-wording" wire:model="detailWording" placeholder="Wording des Gerichts verwenden" class="flex-1 min-w-0" />
-                                <x-foodalchemist::ki-action action="eintragWordingKi" variant="ai" icon="heroicon-o-sparkles" label="KI"
+                                <x-fa::ki-action action="eintragWordingKi" variant="ai" icon="heroicon-o-sparkles" label="KI"
                                         title="Namensvorschlag im Schreibstil des Plans (wird erst mit Übernehmen gespeichert)" busy="…" class="shrink-0" />
                             </div>
                             <x-fa::button size="sm" icon="heroicon-m-check" wire:click="eintragWordingSpeichern" class="self-start" data-sp-eintrag-wording-speichern>Übernehmen</x-fa::button>
@@ -1304,4 +1304,4 @@
             </aside>
         </div>
     @endif
-</x-foodalchemist::modal>
+</x-fa::modal>

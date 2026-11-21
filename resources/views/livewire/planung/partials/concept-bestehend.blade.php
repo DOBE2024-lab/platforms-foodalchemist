@@ -6,7 +6,7 @@
     $bestehende = $this->bestehendeConcepts();
     $gewaehltBestehend = $planConceptId && $bestehende->contains('id', (int) $planConceptId);
 @endphp
-<x-foodalchemist::modal-section icon="heroicon-o-squares-2x2" title="Concept wählen" data-planung-concept-bestehend>
+<x-fa::modal-section icon="heroicon-o-squares-2x2" title="Concept wählen" data-planung-concept-bestehend>
     <x-slot:actions>
         <x-fa::badge :tone="$gewaehltBestehend ? 'accent' : 'neutral'">{{ $gewaehltBestehend ? 'Bestehendes Concept' : 'Neu aus Brief' }}</x-fa::badge>
     </x-slot:actions>
@@ -18,4 +18,4 @@
             @endforeach
         </x-fa::select>
     </x-fa::field>
-</x-foodalchemist::modal-section>
+</x-fa::modal-section>

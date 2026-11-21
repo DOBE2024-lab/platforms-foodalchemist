@@ -42,7 +42,7 @@
         <div class="flex flex-col gap-1.5" data-fbkontext-briefing>
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <label for="fbkontext-einleitung-{{ $fb->id }}" class="fa-t-label">Einleitung für den Kunden</label>
-                <x-foodalchemist::ki-action action="kiEinleitung" variant="ai" icon="heroicon-o-sparkles" label="Einleitung vorschlagen"
+                <x-fa::ki-action action="kiEinleitung" variant="ai" icon="heroicon-o-sparkles" label="Einleitung vorschlagen"
                         busy="Text wird geschrieben …" data-fbkontext-ki />
             </div>
             <x-fa::textarea id="fbkontext-einleitung-{{ $fb->id }}" wire:model.blur="beschreibung" rows="3" class="min-h-[4.5rem]"

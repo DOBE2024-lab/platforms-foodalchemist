@@ -252,7 +252,7 @@
                     <x-fa::checkbox x-show="$wire.generatorFavorites" class="flex items-center gap-2 ml-6 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" wire:model="generatorFavoritesConvenienceOnly" data-generator-favoriten-conv>nur Convenience-Favoriten</x-fa::checkbox>
                 </div>
                 <div class="flex justify-end">
-                    <x-foodalchemist::ki-action action="generatorStart" variant="primary" label="Concept erstellen"
+                    <x-fa::ki-action action="generatorStart" variant="primary" label="Concept erstellen"
                             busy="Baue Gerüst und wähle Gerichte …" data-generator-start />
                 </div>
 

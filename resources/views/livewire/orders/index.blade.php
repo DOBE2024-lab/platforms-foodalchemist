@@ -137,7 +137,7 @@
     {{-- Werkbank-Editor (pro Bestellung und für Bestellrunden), geöffnet per orders-editor.* --}}
     <livewire:foodalchemist.orders.editor key="orders-editor-shell" />
 
-    <x-foodalchemist::modal name="orders-batch" title="Bestellungen auslösen">
+    <x-fa::modal name="orders-batch" title="Bestellungen auslösen">
         <div class="flex flex-col gap-4" data-orders-batch>
             @if($batchResult)
                 <x-fa::notice tone="ok" title="{{ $batchResult['sent'] }} {{ (int) $batchResult['sent'] === 1 ? 'Bestellung' : 'Bestellungen' }} ausgelöst">
@@ -203,7 +203,7 @@
                 <x-fa::empty compact icon="heroicon-o-paper-airplane" title="Keine Entwürfe ausgewählt">In der Liste Entwürfe ankreuzen und erneut prüfen.</x-fa::empty>
             @endif
         </div>
-    </x-foodalchemist::modal>
+    </x-fa::modal>
 
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
         <x-fa::page-header title="Bestellungen" :subtitle="$zahl($trefferZahl) . ' Treffer'">
@@ -220,10 +220,11 @@
                 </x-fa::menu>
 
                 {{-- Neue Bestellrunde: Liefertag und Strategie optional vorgeben, Lieferanten entstehen erst aus Artikeln/Bedarf. --}}
-                <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::button variant="primary" icon="heroicon-m-plus" iconRight="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="dialog" x-bind:aria-expanded="offen">Neue Bestellrunde</x-fa::button>
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="dialog" aria-label="Neue Bestellrunde" class="hidden w-80 fa-surface shadow-lg p-3">
-                        <div class="flex flex-col gap-3">
+                <x-fa::popover label="Neue Bestellrunde" class="inline-block">
+                    <x-slot:ausloeser>
+                        <x-fa::button variant="primary" icon="heroicon-m-plus" iconRight="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="dialog" x-bind:aria-expanded="offen">Neue Bestellrunde</x-fa::button>
+                    </x-slot:ausloeser>
+                    <div class="flex flex-col gap-3">
                         <x-fa::field label="Liefertag" for="orders-neu-liefertag" optional>
                             <x-fa::input id="orders-neu-liefertag" type="date" wire:model="neuerLiefertag" />
                         </x-fa::field>
@@ -237,9 +238,8 @@
                         </x-fa::field>
                         <p class="fa-t-muted">Beim Speichern entsteht je Lieferant und Liefertag eine eigene Bestellung.</p>
                         <x-fa::button variant="primary" x-on:click="offen = false" wire:click="neueBestellung" data-orders-neu>Bestellrunde öffnen</x-fa::button>
-                        </div>
                     </div>
-                </div>
+                </x-fa::popover>
             </x-slot:actions>
         </x-fa::page-header>
 

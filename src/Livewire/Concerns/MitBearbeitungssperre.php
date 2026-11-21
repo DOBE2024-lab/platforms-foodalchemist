@@ -179,7 +179,7 @@ trait MitBearbeitungssperre
         }
     }
 
-    /** Name des x-foodalchemist::modal dieses Editors (null = kein Modal, z.B. Seiten-Editor). */
+    /** Name des x-fa::modal dieses Editors (null = kein Modal, z.B. Seiten-Editor). */
     protected function sperrModalName(): ?string
     {
         return null;

@@ -61,7 +61,7 @@
     <p class="fa-t-muted">RSS und Vorschau ohne API-Gebühren. Die anschließende KI-Auswertung im Eingang kann Kosten verursachen. Google-Trends-Suchspitzen werden separat unter „Quellen“ verwaltet.</p>
 
     @if($darf)
-    <x-foodalchemist::modal name="suchthema-editor" :title="$quelleId ? 'Suchthema bearbeiten' : 'Neues Suchthema'" size="max-w-2xl">
+    <x-fa::modal name="suchthema-editor" :title="$quelleId ? 'Suchthema bearbeiten' : 'Neues Suchthema'" size="max-w-2xl">
         <form id="suchthema-form" wire:submit="speichern" class="flex flex-col gap-4" data-suchauftrag-form>
             <x-fa::field label="Thema" for="beob-name"><x-fa::input id="beob-name" wire:model="form.name" placeholder="z. B. Alkoholfreie Getränke" /></x-fa::field>
             @if($form['ausdruck'] === '')
@@ -112,6 +112,6 @@
             <x-fa::button wire:click="trefferAnsehen" wire:loading.attr="disabled">Treffer ansehen</x-fa::button>
             <x-fa::button type="submit" form="suchthema-form" variant="primary" wire:loading.attr="disabled">{{ $quelleId ? 'Änderungen speichern' : 'Beobachtung starten' }}</x-fa::button>
         </x-slot:footer>
-    </x-foodalchemist::modal>
+    </x-fa::modal>
     @endif
 </div>

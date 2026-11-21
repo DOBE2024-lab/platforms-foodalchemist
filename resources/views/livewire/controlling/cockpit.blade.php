@@ -114,7 +114,7 @@
              sind zu schwer, um alle gleichzeitig zu leben (Journal-Optimierung, Peer-Benchmark).
              Detail-Sprünge gehören in eigene Modals, NICHT in den activity-Slot: dort kollabiert
              die Hauptspalte auf Höhe 0 (Signale-Blank-Bug 2026-08-02). --}}
-        <x-foodalchemist::modal name="controlling-editor" fullscreen dark-canvas
+        <x-fa::modal name="controlling-editor" fullscreen dark-canvas
                                 title="Controlling" :title-name="\Platform\FoodAlchemist\Livewire\Controlling\Cockpit::TABS[$tab] ?? null">
 
             @unless($kpi['leer'])
@@ -161,81 +161,81 @@
             @if($tab === 'lage')
                 {{-- Spec 33 P7: der Signal-Verlauf ist raus, er hatte die Lage überladen.
                      Lage ist die Momentaufnahme, Verlauf ist die Bewegung. --}}
-                <x-foodalchemist::modal-section title="Vergleich mit der Gruppe" icon="heroicon-o-scale">
+                <x-fa::modal-section title="Vergleich mit der Gruppe" icon="heroicon-o-scale">
                     @include('foodalchemist::livewire.controlling.partials._benchmark', ['benchmark' => $benchmark])
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             @endif
 
             @if($tab === 'portfolio')
-                <x-foodalchemist::modal-section title="Was läuft wo" icon="heroicon-o-squares-2x2">
+                <x-fa::modal-section title="Was läuft wo" icon="heroicon-o-squares-2x2">
                     <livewire:foodalchemist.controlling.panels.portfolio key="controlling-cockpit--controlling.panels.portfolio" />
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             @endif
 
             @if($tab === 'verlauf')
-                <x-foodalchemist::modal-section title="Signal-Verlauf" icon="heroicon-o-arrow-trending-down">
+                <x-fa::modal-section title="Signal-Verlauf" icon="heroicon-o-arrow-trending-down">
                     @include('foodalchemist::livewire.controlling.partials._verlauf', ['verlauf' => $verlauf])
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             @endif
 
             @if($tab === 'preise')
-                <x-foodalchemist::modal-section title="Preisvergleich über Lieferanten" icon="heroicon-o-currency-euro">
+                <x-fa::modal-section title="Preisvergleich über Lieferanten" icon="heroicon-o-currency-euro">
                     <livewire:foodalchemist.controlling.panels.preisvergleich key="controlling-cockpit--controlling.panels.preisvergleich" />
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
 
-                <x-foodalchemist::modal-section title="Auffällige Buchungen" icon="heroicon-o-exclamation-triangle">
+                <x-fa::modal-section title="Auffällige Buchungen" icon="heroicon-o-exclamation-triangle">
                     <livewire:foodalchemist.controlling.panels.ausreisser key="controlling-cockpit--controlling.panels.ausreisser" />
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             @endif
 
             @if($tab === 'wareneinsatz')
                 {{-- Erst die gemessene Quote (C4), dann die Optimierung: die Frage „stimmt der
                      Wareneinsatz überhaupt" kommt vor „wo könnte er günstiger sein". --}}
-                <x-foodalchemist::modal-section title="Ist gegen Rezeptur" icon="heroicon-o-scale">
+                <x-fa::modal-section title="Ist gegen Rezeptur" icon="heroicon-o-scale">
                     <livewire:foodalchemist.controlling.panels.abweichung key="controlling-cockpit--controlling.panels.abweichung" />
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
 
-                <x-foodalchemist::modal-section title="Ist gegen günstigsten Bezug" icon="heroicon-o-arrows-right-left">
+                <x-fa::modal-section title="Ist gegen günstigsten Bezug" icon="heroicon-o-arrows-right-left">
                     <livewire:foodalchemist.controlling.panels.wareneinsatz key="controlling-cockpit--controlling.panels.wareneinsatz" />
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             @endif
 
             @if($tab === 'simulation')
-                <x-foodalchemist::modal-section title="Was wäre wenn" icon="heroicon-o-adjustments-horizontal">
+                <x-fa::modal-section title="Was wäre wenn" icon="heroicon-o-adjustments-horizontal">
                     @livewire('foodalchemist.kalkulation.simulation')
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             @endif
 
             @if($tab === 'erfolg')
                 {{-- Spec 33 P6: erst was die laufenden Ausgaben bringen, dann das Gericht-Detail.
                      Die Ausgabe ist die Einheit, in der entschieden wird, das Gericht die, in
                      der nachgesehen wird. --}}
-                <x-foodalchemist::modal-section title="Was bringen die laufenden Ausgaben" icon="heroicon-o-banknotes">
+                <x-fa::modal-section title="Was bringen die laufenden Ausgaben" icon="heroicon-o-banknotes">
                     <livewire:foodalchemist.controlling.panels.promotion key="controlling-cockpit--controlling.panels.promotion" />
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
 
                 {{-- Kein „&amp;" im Titel: der Slot escaped den Wert erneut und im Kopf stand „&AMP;". --}}
-                <x-foodalchemist::modal-section title="Verkaufszahlen und Menu-Engineering" icon="heroicon-o-chart-bar">
+                <x-fa::modal-section title="Verkaufszahlen und Menu-Engineering" icon="heroicon-o-chart-bar">
                     <livewire:foodalchemist.controlling.panels.erfolg key="controlling-cockpit--controlling.panels.erfolg" />
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
 
-                <x-foodalchemist::modal-section title="Preisänderungen seit Veröffentlichung" icon="heroicon-o-link">
+                <x-fa::modal-section title="Preisänderungen seit Veröffentlichung" icon="heroicon-o-link">
                     <livewire:foodalchemist.controlling.panels.link-preise key="controlling-cockpit--controlling.panels.link-preise" />
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             @endif
 
             @if($tab === 'signale')
-                <x-foodalchemist::modal-section title="Geld-Signale" icon="heroicon-o-bell-alert">
+                <x-fa::modal-section title="Geld-Signale" icon="heroicon-o-bell-alert">
                     @include('foodalchemist::livewire.controlling.partials._geld-signale', ['kpi' => $kpi])
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             @endif
 
             @if($tab === 'kennzahlen')
-                <x-foodalchemist::modal-section title="Kalkulations-Kennzahlen" icon="heroicon-o-calculator">
+                <x-fa::modal-section title="Kalkulations-Kennzahlen" icon="heroicon-o-calculator">
                     <livewire:foodalchemist.controlling.panels.kennzahlen key="controlling-cockpit--controlling.panels.kennzahlen" />
-                </x-foodalchemist::modal-section>
+                </x-fa::modal-section>
             @endif
-        </x-foodalchemist::modal>
+        </x-fa::modal>
     </x-ui-page-container>
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}
 </x-ui-page>

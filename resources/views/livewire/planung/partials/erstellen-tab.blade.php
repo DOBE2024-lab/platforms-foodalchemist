@@ -28,7 +28,7 @@
     $goTitel = $scope === 'gericht' ? 'Gericht-Bauplan vorschlagen' : $goLabel . ' erstellen';
 @endphp
 <div class="flex flex-col gap-4 max-w-7xl mx-auto">
-    <x-foodalchemist::modal-section icon="heroicon-o-pencil-square" title="Was soll entstehen?">
+    <x-fa::modal-section icon="heroicon-o-pencil-square" title="Was soll entstehen?">
         @if($titelEcho !== '')
             <x-slot:actions>
                 <x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit($titelEcho, 32) }}</x-fa::badge>
@@ -173,7 +173,7 @@
                 </div>
             @endif
         </div>
-    </x-foodalchemist::modal-section>
+    </x-fa::modal-section>
 
     @include('foodalchemist::livewire.planung.partials.leitplanken', ['scope' => $scope])
 
@@ -190,10 +190,10 @@
     @endif
 
     @if($wissenVorschau !== null)
-        <x-foodalchemist::modal-section icon="heroicon-o-book-open" title="Wissen, das die KI nutzen würde" data-planung-wissen-vorschau>
+        <x-fa::modal-section icon="heroicon-o-book-open" title="Wissen, das die KI nutzen würde" data-planung-wissen-vorschau>
             <p class="mb-2 fa-t-muted">Vorschau, es wurde noch nichts erstellt.</p>
             <x-foodalchemist::kontext-inspektor :kontext="$wissenVorschau" />
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
     @endif
 
     {{-- Erstell-Leiste: klebt unten im Scroll-Bereich (Befund „Knopf unter dem Fold"), aber als EINE
@@ -227,7 +227,7 @@
                 <span wire:loading wire:target="wissenVorschau">Wissen wird geladen …</span>
             </x-fa::button>
             @endunless
-            <x-foodalchemist::ki-action action="goKaskade('{{ $scope }}')" variant="primary" :icon="$goIcon"
+            <x-fa::ki-action action="goKaskade('{{ $scope }}')" variant="primary" :icon="$goIcon"
                 :label="$scope === 'gericht' ? 'Bauplan vorschlagen' : $goLabel . ' erstellen'"
                 busy="Wird gestartet …" flash="Gestartet" :disabled="$laeuft" before="tab='worker'" />
         </div>

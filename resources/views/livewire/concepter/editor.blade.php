@@ -53,7 +53,7 @@
 <div>
     {{-- Spec 28 / E1-2: Titel sagt WAS bearbeitet wird, der Name steht daneben.
          Concept und Paket teilen diesen Editor — der Titel benennt, welches von beiden. --}}
-    <x-foodalchemist::modal name="concepter-editor" :title="($paket || $istPaket) ? 'Paket' : 'Konzept'"
+    <x-fa::modal name="concepter-editor" :title="($paket || $istPaket) ? 'Paket' : 'Konzept'"
         :title-name="$item?->name" fullscreen dark-canvas>
 
         @if($item !== null)
@@ -295,7 +295,7 @@
                                         @foreach($schreibstile as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                                     </x-fa::select>
                                 </x-fa::field>
-                                <x-foodalchemist::ki-action action="wordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Gästetexte schreiben"
+                                <x-fa::ki-action action="wordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Gästetexte schreiben"
                                         title="Schreibt für jede Position einen Namen im gewählten Stil und eine Einleitung fürs Konzept"
                                         busy="Schreibt …" flash="Texte da" class="shrink-0 mb-[22px]" data-ki-concept-wording />
                             </div>
@@ -1587,5 +1587,5 @@
             @endif
             </fieldset>
         @endif
-    </x-foodalchemist::modal>
+    </x-fa::modal>
 </div>

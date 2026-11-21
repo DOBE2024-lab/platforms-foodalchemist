@@ -8,7 +8,7 @@
     $feldTitel = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
 @endphp
 
-<x-foodalchemist::modal name="generator-modal" title="Basisrezept erstellen" size="max-w-2xl">
+<x-fa::modal name="generator-modal" title="Basisrezept erstellen" size="max-w-2xl">
     @if($fehler !== null)
         <x-fa::notice tone="crit" data-generator-fehler>{{ $fehler }}</x-fa::notice>
     @endif
@@ -29,15 +29,15 @@
             @endif
         </div>
     @elseif($ergebnis === null)
-        <x-foodalchemist::modal-section title="Beschreibung">
+        <x-fa::modal-section title="Beschreibung">
             <x-fa::field for="generator-beschreibung" hint="Was soll es werden, wofür wird es verwendet? Je genauer, desto passender das Rezept.">
                 <x-fa::textarea id="generator-beschreibung" wire:model="description" rows="3" data-generator-description
                     placeholder="z. B. Dunkle Rotwein-Schalotten-Reduktion als Saucenbasis für Schmorgerichte" />
             </x-fa::field>
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
 
         {{-- R5: Richtung als Chip-Gruppen mit Erklärung zur jeweils gewählten Option --}}
-        <x-foodalchemist::modal-section title="Richtung (optional)">
+        <x-fa::modal-section title="Richtung (optional)">
             <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-x-6 gap-y-5" data-generator-parameter>
                 @foreach(\Platform\FoodAlchemist\Livewire\Recipes\GeneratorModal::RICHTUNGEN as $g)
                     <div class="flex flex-col gap-1.5 min-w-0" data-richtung="{{ $g['field'] }}">
@@ -95,14 +95,14 @@
                     </div>
                 </div>
             </div>
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
     @else
         @php
             $stat = $ergebnis['statistik'] ?? [];
             $entdrahtet = (int) data_get($ergebnis, 'statistik.kritiker.entdrahtet', 0);
             $koh = $stat['kohaerenz'] ?? null;
         @endphp
-        <x-foodalchemist::modal-section title="Ergebnis">
+        <x-fa::modal-section title="Ergebnis">
             <p class="fa-t-h3" data-generator-ergebnis>{{ $ergebnis['name'] }}</p>
             <div class="flex flex-wrap gap-1.5 mt-2">
                 <x-fa::badge tone="ok">{{ $stat['bestand_gp'] }} {{ (int) $stat['bestand_gp'] === 1 ? 'Grundprodukt' : 'Grundprodukte' }} aus dem Bestand</x-fa::badge>
@@ -131,7 +131,7 @@
                 </p>
             @endif
             <x-foodalchemist::oneshot-ergebnis :anreicherung="$anreicherung" />
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
     @endif
 
     <x-slot:footer>
@@ -152,4 +152,4 @@
                 title="{{ $nOffen > 0 ? 'Erst die offenen Zutaten oben lösen' : 'Rezept freigeben' }}" data-generator-freigeben>Rezept freigeben</x-fa::button>
         @endif
     </x-slot:footer>
-</x-foodalchemist::modal>
+</x-fa::modal>

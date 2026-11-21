@@ -14,7 +14,7 @@ uses(TestCase::class);
  * `waehle()` und beim Löschen frei (`bearbeitenBeenden`). Zutaten- und Schritt-Editor halten keine eigene Sperre:
  * eingebettet nutzen sie das Ziel ihres Editors, frei stehend ist das Ziel null.
  *
- * Damit das so bleibt: Jede Komponente mit Bearbeitungssperre, die ein `x-foodalchemist::modal` rendert, muss beim
+ * Damit das so bleibt: Jede Komponente mit Bearbeitungssperre, die ein `x-fa::modal` rendert, muss beim
  * Schließen freigeben (eigener `modal.closed`-Handler ruft `sperreBeiSchliessen`, dazu `sperrModalName`). Sonst bleibt
  * die Sperre bis zu 15 Minuten liegen und blockiert Kolleginnen und Kollegen.
  */
@@ -41,7 +41,7 @@ it('Spec 84 PR 9 · Modale mit Bearbeitungssperre geben die Sperre beim Schließ
             continue;
         }
         $blade = $views . str_replace('.', '/', $m[1]) . '.blade.php';
-        if (! is_file($blade) || ! str_contains(file_get_contents($blade), 'x-foodalchemist::modal')) {
+        if (! is_file($blade) || ! str_contains(file_get_contents($blade), 'x-fa::modal')) {
             continue;
         }
         $geprueft++;

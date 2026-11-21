@@ -33,7 +33,7 @@
     $gesperrt = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true);
 @endphp
 
-<x-foodalchemist::modal name="angebot-editor" fullscreen dark-canvas title="Angebot"
+<x-fa::modal name="angebot-editor" fullscreen dark-canvas title="Angebot"
     :title-name="$angebot->name ?? null">
     <x-slot:actions>
         @if($angebot)
@@ -619,7 +619,7 @@
                                                 <div class="flex gap-1.5 items-start">
                                                     <x-fa::textarea wire:model="blockForm.customer_text" rows="2" placeholder="Beschreibung oder Untertitel für den Kunden (optional)" aria-label="Beschreibung für den Kunden" />
                                                     @if($block->type === 'concept_ref')
-                                                        <x-foodalchemist::ki-action action="kiKundentext" variant="icon" icon="heroicon-o-sparkles" label="Kundentext von der KI"
+                                                        <x-fa::ki-action action="kiKundentext" variant="icon" icon="heroicon-o-sparkles" label="Kundentext von der KI"
                                                                 title="Verkaufender Beschreibungstext zu diesem Konzept" class="shrink-0 mt-2" data-angebot-ki-kundentext />
                                                     @endif
                                                 </div>
@@ -645,7 +645,7 @@
                     <x-fa::section title="Kundentext" icon="heroicon-o-chat-bubble-bottom-center-text"
                         description="Kurzer Text, der im Angebot in dieses Kapitel einführt.">
                         <x-slot:actions>
-                            <x-foodalchemist::ki-action action="kiKapitelText" variant="ai" icon="heroicon-o-sparkles" label="Text vorschlagen"
+                            <x-fa::ki-action action="kiKapitelText" variant="ai" icon="heroicon-o-sparkles" label="Text vorschlagen"
                                     title="Hinführung aus dem Inhalt des Kapitels, der Einleitung des Angebots und der Markenstimme"
                                     busy="Schreibt …" data-angebot-ki-kapiteltext />
                         </x-slot:actions>
@@ -684,7 +684,7 @@
                                     @foreach($schreibstile ?? [] as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                                 </x-fa::select>
                             </x-fa::field>
-                            <x-foodalchemist::ki-action action="kapitelWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Speisen neu betexten"
+                            <x-fa::ki-action action="kapitelWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Speisen neu betexten"
                                     :disabled="($kapitelForm['writing_style_id'] ?? null) === null || ($kapitelForm['writing_style_id'] ?? '') === ''"
                                     title="Betextet alle Konzepte dieses Kapitels im gewählten Schreibstil neu. Gilt nur für dieses Angebot, das Konzept selbst bleibt unverändert."
                                     busy="Betextet …" class="mb-1" data-angebot-kapitel-wording />
@@ -1210,4 +1210,4 @@
         </div>{{-- /Mitte --}}
     </div>{{-- /2-Spalten-Cockpit --}}
     @endif
-</x-foodalchemist::modal>
+</x-fa::modal>

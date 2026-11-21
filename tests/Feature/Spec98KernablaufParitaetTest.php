@@ -30,7 +30,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 /**
  * 98 · 2.3d — Paritäts-Tests je Kernablauf: dieselbe Eingabe über die Oberfläche (Livewire) und über das MCP-Tool
  * ergibt dasselbe Ergebnis. Verglichen wird ein Abbild ohne IDs, Zeiten und Herkunft (`created_via`, Name/Schlüssel,
- * wo beide Wege einen eigenen Datensatz brauchen). Abläufe: Gericht kalkulieren, Concept für eine
+ * wo beide Wege einen eigenen Datensatz brauchen). Abläufe: Rezept anlegen, Gericht kalkulieren, Concept für eine
  * Gästezahl kalkulieren, Foodbook duplizieren, Produktion (Ziel + freie Position).
  */
 beforeEach(function () {
@@ -43,6 +43,78 @@ beforeEach(function () {
 
         return $r;
     };
+});
+
+/** Vergleichbares Abbild eines Rezepts (ohne ID, Name, Schlüssel und Herkunft). */
+function rezeptAbbild(FoodAlchemistRecipe $r): array
+{
+    $r = $r->fresh();
+
+    return [
+        'status' => $r->status->value, 'sales' => (bool) $r->is_sales_recipe, 'description' => $r->description,
+        'preparation' => $r->preparation, 'work_time_min' => (int) $r->work_time_min,
+        'temperature' => $r->temperature, 'function' => $r->function, 'notes_manual' => $r->notes_manual,
+        'yield_pieces' => $r->yield_pieces === null ? null : (float) $r->yield_pieces,
+        'geraete' => $r->equipment()->orderBy('slug')->pluck('slug')->all(),
+        'schritte' => FoodAlchemistRecipeStep::where('recipe_id', $r->id)->orderBy('position')->pluck('text')->all(),
+    ];
+}
+
+it('Rezept anlegen: Modal und recipes.POST ergeben dasselbe Rezept samt Fachfeldern und Schritten', function () {
+    $kombi = FoodAlchemistVocabKochequipment::create(['team_id' => $this->rootTeam->id, 'slug' => 'kombi', 'name' => 'Kombidämpfer']);
+    $eingabe = [
+        'description' => 'Kräftiger Rinderfond.', 'preparation' => "1. Knochen rösten\n2. Ansetzen und reduzieren", 'work_time_min' => 45,
+        'temperature' => 'warm', 'function' => 'Saucenbasis', 'notes_manual' => 'Am Vortag ansetzen', 'yield_pieces' => 24,
+    ];
+
+    $lw = Livewire::test(RecipeModal::class)->call('oeffnen')->set('form.name', 'Fond: Paritaet Oberflaeche');
+    foreach ($eingabe as $feld => $wert) {
+        $lw->set("form.{$feld}", $wert);
+    }
+    $lw->set('form.equipment_ids', [(string) $kombi->id])->call('speichern')->assertSet('fehler', null);
+    $ui = FoodAlchemistRecipe::where('name', 'Fond: Paritaet Oberflaeche')->firstOrFail();
+
+    $res = ($this->tool)('foodalchemist.recipes.POST', ['name' => 'Fond: Paritaet Tool', 'equipment_ids' => [$kombi->id]] + $eingabe);
+    $mcp = FoodAlchemistRecipe::findOrFail($res->data['recipe']['id']);
+
+    expect(rezeptAbbild($mcp))->toBe(rezeptAbbild($ui))
+        ->and(rezeptAbbild($ui)['schritte'])->toHaveCount(2)
+        ->and(rezeptAbbild($ui)['geraete'])->toBe(['kombi']);
+});
+
+it('Rezept bearbeiten: Modal und recipes.PUT ändern die Fachfelder eines Entwurfs gleich', function () {
+    $kombi = FoodAlchemistVocabKochequipment::create(['team_id' => $this->rootTeam->id, 'slug' => 'kombi', 'name' => 'Kombidämpfer']);
+    $herd = FoodAlchemistVocabKochequipment::create(['team_id' => $this->rootTeam->id, 'slug' => 'herd', 'name' => 'Herd']);
+    $anlegen = fn (string $name) => FoodAlchemistRecipe::findOrFail(($this->tool)('foodalchemist.recipes.POST', [
+        'name' => $name, 'temperature' => 'warm', 'equipment_ids' => [$kombi->id],
+    ])->data['recipe']['id']);
+    $ui = $anlegen('Fond: Bearbeiten Oberflaeche');
+    $mcp = $anlegen('Fond: Bearbeiten Tool');
+    $aenderung = ['temperature' => 'kalt', 'function' => 'Bindung', 'notes_manual' => 'Neu', 'yield_pieces' => 12];
+
+    $lw = Livewire::test(RecipeModal::class)->call('oeffnen', $ui->id);
+    foreach ($aenderung as $feld => $wert) {
+        $lw->set("form.{$feld}", $wert);
+    }
+    $lw->set('form.equipment_ids', [(string) $herd->id])->call('speichern')->assertSet('fehler', null);
+
+    ($this->tool)('foodalchemist.recipes.PUT', ['recipe_id' => $mcp->id, 'equipment_ids' => [$herd->id]] + $aenderung);
+
+    expect(rezeptAbbild($mcp))->toBe(rezeptAbbild($ui))
+        ->and(rezeptAbbild($ui)['temperature'])->toBe('kalt')
+        ->and(rezeptAbbild($ui)['geraete'])->toBe(['herd']);
+});
+
+it('recipes.POST/PUT: unbekannte Geräte und negative Stückzahl lehnt das Tool ab, ohne zu schreiben', function () {
+    $vorher = FoodAlchemistRecipe::count();
+    $r = app(ToolRegistry::class)->get('foodalchemist.recipes.POST')
+        ->execute(['name' => 'Fond: Fremdgeraet', 'equipment_ids' => [999999]], new ToolContext($this->user, $this->rootTeam));
+    expect($r->errorCode)->toBe('VALIDATION_ERROR')->and(FoodAlchemistRecipe::count())->toBe($vorher);
+
+    $id = ($this->tool)('foodalchemist.recipes.POST', ['name' => 'Fond: Stueck'])->data['recipe']['id'];
+    $r = app(ToolRegistry::class)->get('foodalchemist.recipes.PUT')
+        ->execute(['recipe_id' => $id, 'yield_pieces' => -3], new ToolContext($this->user, $this->rootTeam));
+    expect($r->errorCode)->toBe('VALIDATION_ERROR')->and(FoodAlchemistRecipe::find($id)->yield_pieces)->toBeNull();
 });
 
 it('Gericht kalkulieren: Darreichung im VK-Modal und recipe_darreichung.PUT ergeben denselben Preis', function () {

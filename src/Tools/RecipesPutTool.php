@@ -8,6 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Tools\Concerns\RezeptFachfelder;
 
 /**
  * Phase A: Rezept-Update aus dem LLM-Pfad — NUR stub/draft (Draft-Quarantäne).
@@ -16,6 +17,8 @@ use Platform\FoodAlchemist\Services\RecipeService;
  */
 class RecipesPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {
+    use RezeptFachfelder;
+
     public function getName(): string
     {
         return 'foodalchemist.recipes.PUT';
@@ -24,7 +27,7 @@ class RecipesPutTool extends FoodAlchemistTool implements ToolContract, ToolMeta
     public function getDescription(): string
     {
         return 'Aktualisiert ein Rezept im Status stub/draft (Felder: name, description, preparation, '
-            . 'taste_direction, vorgabe_convenience, vorgabe_niveau, work_time_min, variable_work_time_min + variable_work_time_basis (Zeit je kg/Stück/Portion), yield_kg_manual, category_id). status="review" reicht '
+            . 'taste_direction, vorgabe_convenience, vorgabe_niveau, temperature, function, notes_manual, yield_pieces, equipment_ids, work_time_min, variable_work_time_min + variable_work_time_basis (Zeit je kg/Stück/Portion), yield_kg_manual, category_id). status="review" reicht '
             . 'den Entwurf zum menschlichen Review ein (einzige erlaubte Transition). Gepflegte Rezepte '
             . '(review/approved/archived) sind für den MCP-Pfad locked. '
             . '`preparation` (Markdown) wird beim Schreiben in Schritte geparst, ABER nur wenn das '
@@ -63,6 +66,7 @@ class RecipesPutTool extends FoodAlchemistTool implements ToolContract, ToolMeta
                 'default_station_id' => ['description' => 'Ganzzahl oder null — Default-Posten fürs Planer-Routing. IDs aus production_stations.GET; null hebt die Zuordnung auf.'],
                 'yield_kg_manual' => ['type' => 'number'],
                 'category_id' => ['type' => 'integer'],
+            ] + $this->fachfelderSchema() + [
                 'status' => ['type' => 'string', 'enum' => ['review'], 'description' => 'Nur draft→review erlaubt'],
                 'rollen' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Mögliche Teller-Rollen des Basisrezepts '
                     . '(Vokabular Regel gericht.teller_rolle), wichtigste zuerst. Ersetzt die Liste; Quelle manuell — KI und Kaskade '
@@ -97,6 +101,10 @@ class RecipesPutTool extends FoodAlchemistTool implements ToolContract, ToolMeta
         if (isset($arguments['status']) && $arguments['status'] !== 'review') {
             return ToolResult::error('Nur status=review ist über MCP erlaubt.', 'VALIDATION_ERROR');
         }
+        $fach = $this->fachfelder($arguments, $team);   // 98 · 2.3d: Fachfelder wie im Rezept-Modal
+        if ($fach instanceof ToolResult) {
+            return $fach;
+        }
         if (count($arguments) === 1) {
             return ToolResult::error('Keine Änderungen angegeben.', 'VALIDATION_ERROR');
         }
@@ -106,7 +114,7 @@ class RecipesPutTool extends FoodAlchemistTool implements ToolContract, ToolMeta
             'work_time_min', 'setup_time_min', 'standzeit_min', 'variable_work_time_min', 'variable_work_time_basis', 'batch_max_kg', 'batch_max_pieces',
             'max_vorlauf_tage', 'default_station_id', 'yield_kg_manual', 'category_id',
             'storage_type', 'shelf_life_chilled_days', 'shelf_life_frozen_days', 'shelf_life_dry_days', 'storage_types',
-        ]));
+        ])) + $fach;
         // Spec 83 B1: eine variable Zeit ohne Basis bekommt die Standardbasis des Rezept-Modals (kg), sonst bliebe sie ohne Bezug
         if (isset($in['variable_work_time_min']) && ! isset($in['variable_work_time_basis']) && ($recipe->variable_work_time_basis ?? '') === '') {
             $in['variable_work_time_basis'] = 'kg';

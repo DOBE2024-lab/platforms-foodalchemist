@@ -13,6 +13,7 @@ return [
     'Services/ConceptService.php::duplicate' => 'Kopie ins eigene Team (anpassen = eigene Kopie); das Original wird nur gelesen',
     'Services/ConceptService.php::forkVonVorlage' => 'Kopie einer sichtbaren Vorlage ins eigene Team; die Vorlage wird nur gelesen',
     'Services/FeedbackService.php::erstelle' => 'eigene Feedback-Zeile (team_id = Team) zu einem sichtbaren Rezept; das Rezept wird nicht verändert',
+    'Services/FoodbookService.php::dupliziere' => 'Kopie ins eigene Team, auch geerbter Foodbooks (team_id = Team, neue Ids, eigene Bilddateien über DuplikatBilderService); das Original wird nur gelesen (98 · Bild-Löschschutz PR 2)',
     'Services/MatchService.php::bulkFuerLieferant' => 'legt nur eigene Match-Vorschläge an; sichtbare Artikel werden nur gelesen',
     'Services/OrderService.php::addManualLine' => 'eigene Bestellzeile, die einen sichtbaren Lieferantenartikel referenziert (bestellbar = sichtbar)',
     'Services/PaketService.php::duplicate' => 'Kopie ins eigene Team (anpassen = eigene Kopie); das Original wird nur gelesen',

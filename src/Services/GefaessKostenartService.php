@@ -8,6 +8,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistGpGefaessKostenart;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\Scopes\TeamSicht;
+use Platform\FoodAlchemist\Support\MasterTeam;
+use Platform\FoodAlchemist\Support\StammPaket;
 
 /**
  * Art und Preis des Gefäßes einer Darreichung (Entscheid Dominique 17.11.2026, Pilot TASTE & FLY: „einfach einen Preis an den Artikel
@@ -75,7 +77,9 @@ class GefaessKostenartService
     /**
      * Eintrag des Teams am GP: eigener, sonst der des nächsten Oberteams bis zur Kundengrenze, zuletzt der des Masters (nur mit Stamm-Paket).
      * Ein eigener Eintrag des Mandanten schlägt den Master; ohne eigenen erbt er ihn (Befund Deckel Achenbachglas 20.11.2026: Master „mehrweg“,
-     * Mandant sah „einweg“).
+     * Mandant sah „einweg“). Den PREIS aus der Master-Zeile bekommt der Mandant nur mit Preisfreigabe für den Lieferanten des Lead-Artikels
+     * ({@see preisFreigegeben}), sonst null → „Gefäß-Preis fehlt“ bzw. bei einweg/extern der Lead-Artikelpreis in seiner eigenen Preis-Sicht
+     * ({@see PriceService::preisSichtFuer}, die Master-Preise ebenfalls nur mit Freigabe zeigt). Eigene und Oberteam-Zeilen: unverändert.
      *
      * @return array{kostenart: ?string, preis: ?float, team_id: ?int}
      */
@@ -84,13 +88,36 @@ class GefaessKostenartService
         $kette = GefaessZubehoerService::kette($team);
         $zeilen = DB::table('foodalchemist_gp_gefaess_kostenarten')->where('gp_id', $gpId)->whereIn('team_id', $kette)->whereNull('deleted_at')
             ->get(['team_id', 'kostenart', 'preis_stk'])->keyBy('team_id');
+        // Der Master steht nur über das Stamm-Paket in der Kette, wenn er nicht schon Oberteam ist (dann gilt seine Zeile wie jede Oberteam-Zeile)
+        $masterUeberPaket = ($m = MasterTeam::id()) !== null && ! in_array($m, TeamSicht::gekappt(FoodAlchemistGp::teamAncestryIds($team)), true) ? $m : null;
         foreach ($kette as $tid) {
             if (($z = $zeilen->get($tid)) !== null && array_key_exists((string) $z->kostenart, self::ARTEN)) {
-                return ['kostenart' => (string) $z->kostenart, 'preis' => $z->preis_stk !== null ? (float) $z->preis_stk : null, 'team_id' => (int) $tid];
+                $preis = $z->preis_stk !== null ? (float) $z->preis_stk : null;
+                if ($preis !== null && (int) $tid === $masterUeberPaket && ! $this->preisFreigegeben($gpId, $team)) {
+                    $preis = null;   // Kostenart erbt immer, der BHG-Preis nur mit „Preise mitgeben“ für den Lieferanten (Kurator/Dominique 21.11.2026)
+                }
+
+                return ['kostenart' => (string) $z->kostenart, 'preis' => $preis, 'team_id' => (int) $tid];
             }
         }
 
         return ['kostenart' => null, 'preis' => null, 'team_id' => null];
+    }
+
+    /**
+     * Darf das Team den Preis des Masters an diesem Gefäß sehen? Nur wenn der Lieferant des Lead-Artikels am GP beim Mandanten in der
+     * Preisfreigabe steht ({@see StammPaket::preisFreigabeLieferanten}, derselbe Haken wie bei den Artikelpreisen). Ohne Lead-Artikel: nein.
+     */
+    private function preisFreigegeben(int $gpId, Team $team): bool
+    {
+        $frei = StammPaket::preisFreigabeLieferanten($team);
+        if ($frei === []) {
+            return false;
+        }
+        $lieferant = DB::table('foodalchemist_gps as g')->join('foodalchemist_supplier_items as i', 'i.id', '=', 'g.lead_la_supplier_item_id')
+            ->where('g.id', $gpId)->value('i.supplier_id');
+
+        return $lieferant !== null && in_array((int) $lieferant, $frei, true);
     }
 
     /**

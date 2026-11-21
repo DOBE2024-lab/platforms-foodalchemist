@@ -157,6 +157,58 @@ it('Gericht kalkulieren: Darreichung im VK-Modal und recipe_darreichung.PUT erge
         ->and($abbild($dUi)['sales_net'])->toBeGreaterThan(0.0);
 });
 
+it('Concept bearbeiten: Editor und concepts.PUT schreiben Felder, Einsatzmomente und Saisons gleich', function () {
+    $mittag = FoodAlchemistEinsatzmoment::create(['team_id' => $this->rootTeam->id, 'name' => 'Mittagstisch', 'is_inactive' => false, 'sort_order' => 1]);
+    $abend = FoodAlchemistEinsatzmoment::create(['team_id' => $this->rootTeam->id, 'name' => 'Abendessen', 'is_inactive' => false, 'sort_order' => 2]);
+    $sommer = FoodAlchemistSaison::create(['team_id' => $this->rootTeam->id, 'name' => 'Sommer']);
+    $abbild = function (FoodAlchemistConcept $c) {
+        $c = $c->fresh();
+
+        return [
+            'description' => $c->description, 'occasion' => $c->occasion,
+            'momente' => $c->serviceMoments()->orderBy('name')->pluck('name')->all(),
+            'saisons' => $c->seasons()->orderBy('name')->pluck('name')->all(),
+        ];
+    };
+    $ui = $this->makeConcept($this->rootTeam, 'Grill Oberfläche');
+    $mcp = $this->makeConcept($this->rootTeam, 'Grill Tool');
+
+    Livewire::test(ConcepterEditor::class)
+        ->call('oeffnen', 'concepts', $ui->id)
+        ->set('form.description', 'Grillbuffet im Garten')
+        ->set('form.occasion', 'Sommerfest')
+        ->set('form.einsatzmoment_ids', [$mittag->id, $abend->id])
+        ->set('form.saison_ids', [$sommer->id])
+        ->call('speichern')
+        ->assertSet('fehler', null);
+
+    ($this->tool)('foodalchemist.concepts.PUT', [
+        'id' => $mcp->id, 'felder' => ['description' => 'Grillbuffet im Garten', 'occasion' => 'Sommerfest'],
+        'service_moments' => ['Mittagstisch', 'Abendessen'], 'seasons' => ['Sommer'],
+    ]);
+
+    expect($abbild($mcp))->toBe($abbild($ui))
+        ->and($abbild($ui)['momente'])->toBe(['Abendessen', 'Mittagstisch']);
+});
+
+it('concepts.PUT: ohne Facetten bleibt der Bestand, [] leert, unbekannte Namen werden abgelehnt', function () {
+    $mittag = FoodAlchemistEinsatzmoment::create(['team_id' => $this->rootTeam->id, 'name' => 'Mittagstisch', 'is_inactive' => false, 'sort_order' => 1]);
+    $c = $this->makeConcept($this->rootTeam, 'Bestand');
+    ($this->tool)('foodalchemist.concepts.PUT', ['id' => $c->id, 'service_moments' => ['Mittagstisch']]);
+    $momente = fn () => $c->fresh()->serviceMoments()->pluck('name')->all();
+
+    // Bewusste Abweichung vom Editor: der liest fehlende Facetten als leer, das Tool lässt sie stehen.
+    ($this->tool)('foodalchemist.concepts.PUT', ['id' => $c->id, 'felder' => ['description' => 'nur Text']]);
+    expect($momente())->toBe(['Mittagstisch']);
+
+    $r = app(ToolRegistry::class)->get('foodalchemist.concepts.PUT')
+        ->execute(['id' => $c->id, 'service_moments' => ['Mittagstisch', 'Gibtsnicht']], new ToolContext($this->user, $this->rootTeam));
+    expect($r->errorCode)->toBe('VALIDATION_ERROR')->and($momente())->toBe(['Mittagstisch']);
+
+    ($this->tool)('foodalchemist.concepts.PUT', ['id' => $c->id, 'service_moments' => []]);
+    expect($momente())->toBe([])->and($mittag->fresh())->not->toBeNull();
+});
+
 it('Concept kalkulieren: Kalkulations-Tab und concepts.KALKULATION rechnen für dieselbe Gästezahl dasselbe', function () {
     $concept = $this->makeConcept($this->rootTeam, 'Sommerbuffet');
     $gericht = $this->makeRecipe($this->rootTeam, '[HG] Lachs | Paritaet', ['is_sales_recipe' => true]);

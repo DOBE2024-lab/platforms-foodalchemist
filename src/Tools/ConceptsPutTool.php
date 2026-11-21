@@ -21,7 +21,9 @@ class ConceptsPutTool extends FoodAlchemistTool implements ToolContract, ToolMet
     {
         return 'Bearbeitet ein team-eigenes Gerichte-Konzept. felder: name, occasion, level, class, description, '
             . 'target_price_per_person, price_mode, price_display, kundentyp, default_niveau, default_convenience, '
-            . 'writing_style_id … (nur Service-Whitelist wirkt). Status → concepts.STATUS.';
+            . 'writing_style_id … (nur Service-Whitelist wirkt). Status → concepts.STATUS. '
+            . 'Optional service_moments / seasons (Namen wie bei concepts.POST): ersetzen die Liste, [] leert sie; '
+            . 'weggelassen bleibt der Bestand unberührt.';
     }
 
     public function getSchema(): array
@@ -31,8 +33,10 @@ class ConceptsPutTool extends FoodAlchemistTool implements ToolContract, ToolMet
             'properties' => [
                 'id' => ['type' => 'integer', 'description' => 'Konzept-Id (team-eigen).'],
                 'felder' => ['type' => 'object', 'description' => 'Zu schreibende Konzept-Felder.'],
+                'service_moments' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Einsatzmomente (Namen) — ersetzt die Liste; [] leert sie'],
+                'seasons' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Saison-Facetten (Namen) — ersetzt die Liste; [] leert sie'],
             ],
-            'required' => ['id', 'felder'],
+            'required' => ['id'],
         ];
     }
 
@@ -42,17 +46,45 @@ class ConceptsPutTool extends FoodAlchemistTool implements ToolContract, ToolMet
         if ($team === null) {
             return ToolResult::error('Kein Team im Kontext.', 'NO_TEAM');
         }
-        $felder = $arguments['felder'] ?? null;
-        if (! is_array($felder) || $felder === []) {
-            return ToolResult::error('felder muss ein nicht-leeres Objekt sein.', 'VALIDATION_ERROR');
+        $felder = $arguments['felder'] ?? [];
+        // 98 · 2.3d (Parität Concepter-Editor): Facetten nur, wenn übergeben — anders als der Editor, der fehlende als leer liest.
+        $facetten = array_intersect_key($arguments, ['service_moments' => 1, 'seasons' => 1]);
+        if (! is_array($felder) || ($felder === [] && $facetten === [])) {
+            return ToolResult::error('felder (nicht-leeres Objekt) oder service_moments/seasons angeben.', 'VALIDATION_ERROR');
         }
         $id = (int) ($arguments['id'] ?? 0);
         if (($guard = $this->guardOwned($team, FoodAlchemistConcept::class, $id, 'Konzept')) !== null) {
             return $guard;
         }
+        $ids = [];
+        foreach (['service_moments' => 'foodalchemist_service_moments', 'seasons' => 'foodalchemist_seasons'] as $arg => $tabelle) {
+            if (! array_key_exists($arg, $facetten)) {
+                continue;
+            }
+            if (! is_array($facetten[$arg])) {
+                return ToolResult::error("{$arg}: Liste von Namen.", 'VALIDATION_ERROR');
+            }
+            try {   // unbekannter Name → Fehler statt still verworfen: die Liste wird ersetzt, ein fehlender Name löschte einen Bestandswert
+                $ids[$arg] = array_values(array_unique(array_filter(array_map(
+                    fn ($name) => $this->resolveFacetId($team, $tabelle, (string) $name), $facetten[$arg]))));
+            } catch (\RuntimeException $e) {
+                return ToolResult::error("{$arg}: " . $e->getMessage(), 'VALIDATION_ERROR');
+            }
+        }
 
         try {
-            $c = app(ConceptService::class)->update($team, $id, $felder);
+            $c = \Illuminate\Support\Facades\DB::transaction(function () use ($team, $id, $felder, $ids) {
+                $svc = app(ConceptService::class);
+                $c = $felder !== [] ? $svc->update($team, $id, $felder) : FoodAlchemistConcept::where('team_id', $team->id)->findOrFail($id);
+                if (array_key_exists('service_moments', $ids)) {
+                    $svc->syncEinsatzmomente($team, $id, $ids['service_moments']);
+                }
+                if (array_key_exists('seasons', $ids)) {
+                    $svc->syncSaisons($team, $id, $ids['seasons']);
+                }
+
+                return $c;
+            });
         } catch (\RuntimeException $e) {
             return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
         }

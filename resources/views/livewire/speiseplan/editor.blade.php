@@ -59,32 +59,29 @@
                     <span wire:loading wire:target="vollKaskadePruefen">Prüfe …</span>
                 </x-fa::button>
                 </fieldset>
-                <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-72 fa-surface shadow-lg py-1">
-                        <a href="{{ route('foodalchemist.speiseplan.dokument', ['id' => $sp->id, 'mahlzeit' => $mahlzeit, 'montag' => $montagDt->format('Y-m-d')]) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                           class="{{ $menuePunkt }}" title="Wochenaushang zum Drucken oder als PDF, mit Legende der Allergene und Zusatzstoffe" data-sp-aushang>
-                            @svg('heroicon-o-printer', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Woche drucken
-                        </a>
-                        <fieldset @disabled($gesperrt) class="contents">{{-- Spec 65: Drucken bleibt frei, Kopieren/Produktion/Löschen nur im Bearbeiten-Modus --}}
-                        @if($ansicht === 'woche')
-                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="wocheKopierenOeffnen" class="{{ $menuePunkt }}" data-sp-woche-kopieren-btn>
-                                @svg('heroicon-o-document-duplicate', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Woche kopieren
-                            </button>
-                        @endif
-                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="anProduktion"
-                                wire:confirm="Diese Woche ({{ $mahlzeiten[$mahlzeit] ?? '' }}) an die Produktion übergeben? Je Werktag mit Belegung wird ein Produktionsauftrag angelegt (Menge = Teilnehmerzahl)."
-                                class="{{ $menuePunkt }}" title="Je Werktag mit Belegung ein Produktionsauftrag, Menge = Teilnehmerzahl" data-sp-produktion>
-                            @svg('heroicon-o-fire', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Woche an Produktion übergeben
+                <x-fa::menu breite="72">
+                    <a href="{{ route('foodalchemist.speiseplan.dokument', ['id' => $sp->id, 'mahlzeit' => $mahlzeit, 'montag' => $montagDt->format('Y-m-d')]) }}" target="_blank" role="menuitem" x-on:click="offen = false"
+                       class="{{ $menuePunkt }}" title="Wochenaushang zum Drucken oder als PDF, mit Legende der Allergene und Zusatzstoffe" data-sp-aushang>
+                        @svg('heroicon-o-printer', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Woche drucken
+                    </a>
+                    <fieldset @disabled($gesperrt) class="contents">{{-- Spec 65: Drucken bleibt frei, Kopieren/Produktion/Löschen nur im Bearbeiten-Modus --}}
+                    @if($ansicht === 'woche')
+                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="wocheKopierenOeffnen" class="{{ $menuePunkt }}" data-sp-woche-kopieren-btn>
+                            @svg('heroicon-o-document-duplicate', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Woche kopieren
                         </button>
-                        <div class="my-1 border-t border-[var(--fa-line)]" role="separator"></div>
-                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="loeschen({{ $sp->id }})" wire:confirm="Speiseplan löschen?"
-                                class="{{ $menuePunkt }} text-[var(--fa-crit)]" data-sp-loeschen>
-                            @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Speiseplan löschen
-                        </button>
-                        </fieldset>
-                    </div>
-                </div>
+                    @endif
+                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="anProduktion"
+                            wire:confirm="Diese Woche ({{ $mahlzeiten[$mahlzeit] ?? '' }}) an die Produktion übergeben? Je Werktag mit Belegung wird ein Produktionsauftrag angelegt (Menge = Teilnehmerzahl)."
+                            class="{{ $menuePunkt }}" title="Je Werktag mit Belegung ein Produktionsauftrag, Menge = Teilnehmerzahl" data-sp-produktion>
+                        @svg('heroicon-o-fire', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Woche an Produktion übergeben
+                    </button>
+                    <div class="my-1 border-t border-[var(--fa-line)]" role="separator"></div>
+                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="loeschen({{ $sp->id }})" wire:confirm="Speiseplan löschen?"
+                            class="{{ $menuePunkt }} text-[var(--fa-crit)]" data-sp-loeschen>
+                        @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Speiseplan löschen
+                    </button>
+                    </fieldset>
+                </x-fa::menu>
                 {{-- Spec 65: der Speiseplan schreibt sofort (Zellen, Mengen, Linien, Stammdaten bei Änderung) — darum
                      „Bearbeiten" (Sperre) und „Fertig" (frei). Der Speichern-Knopf erscheint nur ohne Sperr-Schalter. --}}
                 <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort>

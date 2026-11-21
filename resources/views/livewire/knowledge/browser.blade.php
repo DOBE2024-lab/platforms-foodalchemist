@@ -505,17 +505,14 @@
 
                         {{-- Löschen (endgültig) nur bei eigenem, gespeichertem Dokument; abgesetzt im Menü. --}}
                         @if($editable && ! $creating)
-                            <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                <div class="hidden w-56 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $selected->id }})"
-                                            wire:confirm="Wissensdokument „{{ $selected->title }}“ endgültig löschen? Das kann nicht rückgängig gemacht werden."
-                                            class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]"
-                                            data-wissen-delete>
-                                        @svg('heroicon-o-trash', 'w-4 h-4') Dokument löschen
-                                    </button>
-                                </div>
-                            </div>
+                            <x-fa::menu>
+                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $selected->id }})"
+                                        wire:confirm="Wissensdokument „{{ $selected->title }}“ endgültig löschen? Das kann nicht rückgängig gemacht werden."
+                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]"
+                                        data-wissen-delete>
+                                    @svg('heroicon-o-trash', 'w-4 h-4') Dokument löschen
+                                </button>
+                            </x-fa::menu>
                         @endif
 
                         {{-- Speichern bleibt auch in der Ansicht sichtbar: der Umschalter schickt ungespeicherte Änderungen mit. --}}

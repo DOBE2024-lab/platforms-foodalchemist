@@ -209,21 +209,21 @@
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
         <x-fa::page-header title="Bestellungen" :subtitle="$zahl($trefferZahl) . ' Treffer'">
             <x-slot:actions>
-                <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::button variant="ghost" icon="heroicon-m-ellipsis-horizontal" iconRight="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Weitere Aktionen</x-fa::button>
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-56 fa-surface shadow-lg py-1">
-                        <a href="{{ route('foodalchemist.einstellungen', ['tab' => 'einkauf', 'bereich' => 'lagerorte']) }}" role="menuitem" class="{{ $menuePunkt }}">
-                            @svg('heroicon-o-archive-box', 'w-4 h-4 text-[var(--fa-ink-3)]') Lagerorte verwalten
-                        </a>
-                        @if($sicht !== 'bedarfe')
-                            <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="leereEntwuerfeLoeschen" wire:confirm="Alle leeren Entwürfe ohne Positionen löschen?"
-                                class="{{ $menuePunkt }} text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
-                                @svg('heroicon-o-trash', 'w-4 h-4') Leere Entwürfe löschen
-                            </button>
-                        @endif
-                    </div>
-                </div>
+                <x-fa::menu class="inline-block">
+                    <x-slot:ausloeser>
+                        <x-fa::button variant="ghost" icon="heroicon-m-ellipsis-horizontal" iconRight="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Weitere Aktionen</x-fa::button>
+                    </x-slot:ausloeser>
+                    <a href="{{ route('foodalchemist.einstellungen', ['tab' => 'einkauf', 'bereich' => 'lagerorte']) }}" role="menuitem" class="{{ $menuePunkt }}">
+                        @svg('heroicon-o-archive-box', 'w-4 h-4 text-[var(--fa-ink-3)]') Lagerorte verwalten
+                    </a>
+                    @if($sicht !== 'bedarfe')
+                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="leereEntwuerfeLoeschen" wire:confirm="Alle leeren Entwürfe ohne Positionen löschen?"
+                            class="{{ $menuePunkt }} text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
+                            @svg('heroicon-o-trash', 'w-4 h-4') Leere Entwürfe löschen
+                        </button>
+                    @endif
+                </x-fa::menu>
 
                 {{-- Neue Bestellrunde: Liefertag und Strategie optional vorgeben, Lieferanten entstehen erst aus Artikeln/Bedarf. --}}
                 <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">

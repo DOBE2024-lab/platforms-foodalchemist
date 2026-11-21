@@ -42,52 +42,49 @@
 
         <div class="flex items-center gap-1 shrink-0">
             {{-- Hinzufügen: Gericht/Konzept/Paket setzen diese Rubrik als Ziel im Katalog rechts; Layout-Blöcke landen direkt. --}}
-            <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                <x-fa::button size="sm" variant="ghost" icon="heroicon-m-plus" icon-right="heroicon-m-chevron-down"
-                    x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Hinzufügen</x-fa::button>
-                <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-56 fa-surface shadow-lg py-1">
-                    <button type="button" role="menuitem" wire:click="pickerOeffnen({{ $rubrik->id }}, 'gericht')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                        @svg('heroicon-o-cake', 'w-4 h-4 text-[var(--fa-ink-3)]') Gericht
-                    </button>
-                    <button type="button" role="menuitem" wire:click="pickerOeffnen({{ $rubrik->id }}, 'konzept')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                        @svg('heroicon-o-rectangle-stack', 'w-4 h-4 text-[var(--fa-ink-3)]') Konzept
-                    </button>
-                    <button type="button" role="menuitem" wire:click="pickerOeffnen({{ $rubrik->id }}, 'paket')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                        @svg('heroicon-o-cube', 'w-4 h-4 text-[var(--fa-ink-3)]') Paket
-                    </button>
-                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                    {{-- Werkstrang M Phase D: Layout-Blöcke. --}}
-                    <button type="button" role="menuitem" wire:click="layoutBlockNeu({{ $rubrik->id }}, 'header')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                        @svg('heroicon-o-h1', 'w-4 h-4 text-[var(--fa-ink-3)]') Zwischenüberschrift
-                    </button>
-                    <button type="button" role="menuitem" wire:click="layoutBlockNeu({{ $rubrik->id }}, 'text')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                        @svg('heroicon-o-bars-3-bottom-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Textblock
-                    </button>
-                    <button type="button" role="menuitem" wire:click="layoutBlockNeu({{ $rubrik->id }}, 'spacer')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                        @svg('heroicon-o-arrows-up-down', 'w-4 h-4 text-[var(--fa-ink-3)]') Abstand
-                    </button>
-                </div>
-            </div>
+            <x-fa::menu>
+                <x-slot:ausloeser>
+                    <x-fa::button size="sm" variant="ghost" icon="heroicon-m-plus" icon-right="heroicon-m-chevron-down"
+                        x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Hinzufügen</x-fa::button>
+                </x-slot:ausloeser>
+                <button type="button" role="menuitem" wire:click="pickerOeffnen({{ $rubrik->id }}, 'gericht')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                    @svg('heroicon-o-cake', 'w-4 h-4 text-[var(--fa-ink-3)]') Gericht
+                </button>
+                <button type="button" role="menuitem" wire:click="pickerOeffnen({{ $rubrik->id }}, 'konzept')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                    @svg('heroicon-o-rectangle-stack', 'w-4 h-4 text-[var(--fa-ink-3)]') Konzept
+                </button>
+                <button type="button" role="menuitem" wire:click="pickerOeffnen({{ $rubrik->id }}, 'paket')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                    @svg('heroicon-o-cube', 'w-4 h-4 text-[var(--fa-ink-3)]') Paket
+                </button>
+                <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                {{-- Werkstrang M Phase D: Layout-Blöcke. --}}
+                <button type="button" role="menuitem" wire:click="layoutBlockNeu({{ $rubrik->id }}, 'header')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                    @svg('heroicon-o-h1', 'w-4 h-4 text-[var(--fa-ink-3)]') Zwischenüberschrift
+                </button>
+                <button type="button" role="menuitem" wire:click="layoutBlockNeu({{ $rubrik->id }}, 'text')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                    @svg('heroicon-o-bars-3-bottom-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Textblock
+                </button>
+                <button type="button" role="menuitem" wire:click="layoutBlockNeu({{ $rubrik->id }}, 'spacer')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                    @svg('heroicon-o-arrows-up-down', 'w-4 h-4 text-[var(--fa-ink-3)]') Abstand
+                </button>
+            </x-fa::menu>
 
             {{-- Weitere Aktionen: Reihenfolge (Werkstrang M Phase C) und Löschen ganz unten, rot. --}}
-            <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen zur Rubrik" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-56 fa-surface shadow-lg py-1">
-                    <button type="button" role="menuitem" wire:click="rubrikHochRunter({{ $rubrik->id }}, 'hoch')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                        @svg('heroicon-o-arrow-up', 'w-4 h-4 text-[var(--fa-ink-3)]') Rubrik nach oben
-                    </button>
-                    <button type="button" role="menuitem" wire:click="rubrikHochRunter({{ $rubrik->id }}, 'runter')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                        @svg('heroicon-o-arrow-down', 'w-4 h-4 text-[var(--fa-ink-3)]') Rubrik nach unten
-                    </button>
-                    <button type="button" role="menuitem" wire:click="logoRubrikUmschalten({{ $rubrik->id }})" x-on:click="offen = false" class="{{ $menuePunkt }}" data-sk-rubrik-logo>
-                        @svg('heroicon-o-photo', 'w-4 h-4 text-[var(--fa-ink-3)]') Logo für die Präsentation
-                    </button>
-                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                    <button type="button" role="menuitem" wire:click="rubrikLoeschen({{ $rubrik->id }})" wire:confirm="Rubrik „{{ $rubrik->title }}“ löschen?" x-on:click="offen = false" class="{{ $menueLoeschen }}">
-                        @svg('heroicon-o-trash', 'w-4 h-4') Rubrik löschen
-                    </button>
-                </div>
-            </div>
+            <x-fa::menu label="Weitere Aktionen zur Rubrik" size="sm">
+                <button type="button" role="menuitem" wire:click="rubrikHochRunter({{ $rubrik->id }}, 'hoch')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                    @svg('heroicon-o-arrow-up', 'w-4 h-4 text-[var(--fa-ink-3)]') Rubrik nach oben
+                </button>
+                <button type="button" role="menuitem" wire:click="rubrikHochRunter({{ $rubrik->id }}, 'runter')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                    @svg('heroicon-o-arrow-down', 'w-4 h-4 text-[var(--fa-ink-3)]') Rubrik nach unten
+                </button>
+                <button type="button" role="menuitem" wire:click="logoRubrikUmschalten({{ $rubrik->id }})" x-on:click="offen = false" class="{{ $menuePunkt }}" data-sk-rubrik-logo>
+                    @svg('heroicon-o-photo', 'w-4 h-4 text-[var(--fa-ink-3)]') Logo für die Präsentation
+                </button>
+                <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                <button type="button" role="menuitem" wire:click="rubrikLoeschen({{ $rubrik->id }})" wire:confirm="Rubrik „{{ $rubrik->title }}“ löschen?" x-on:click="offen = false" class="{{ $menueLoeschen }}">
+                    @svg('heroicon-o-trash', 'w-4 h-4') Rubrik löschen
+                </button>
+            </x-fa::menu>
         </div>
     </div>
 
@@ -172,22 +169,19 @@
                 @if(in_array($pos->type, ['gericht_ref', 'menue_ref', 'header', 'text']))
                     <x-fa::icon-button icon="heroicon-o-pencil-square" label="Position auf der Karte bearbeiten" size="sm" wire:click="positionBearbeiten({{ $pos->id }})" />
                 @endif
-                <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen zur Position" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-52 fa-surface shadow-lg py-1">
-                        {{-- Werkstrang M Phase C: Position in ihrer Rubrik hoch/runter. --}}
-                        <button type="button" role="menuitem" wire:click="positionHochRunter({{ $pos->id }}, 'hoch')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                            @svg('heroicon-o-arrow-up', 'w-4 h-4 text-[var(--fa-ink-3)]') Nach oben
-                        </button>
-                        <button type="button" role="menuitem" wire:click="positionHochRunter({{ $pos->id }}, 'runter')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                            @svg('heroicon-o-arrow-down', 'w-4 h-4 text-[var(--fa-ink-3)]') Nach unten
-                        </button>
-                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                        <button type="button" role="menuitem" wire:click="positionLoeschen({{ $pos->id }})" x-on:click="offen = false" class="{{ $menueLoeschen }}">
-                            @svg('heroicon-o-trash', 'w-4 h-4') Von der Karte nehmen
-                        </button>
-                    </div>
-                </div>
+                <x-fa::menu label="Weitere Aktionen zur Position" size="sm" breite="52">
+                    {{-- Werkstrang M Phase C: Position in ihrer Rubrik hoch/runter. --}}
+                    <button type="button" role="menuitem" wire:click="positionHochRunter({{ $pos->id }}, 'hoch')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                        @svg('heroicon-o-arrow-up', 'w-4 h-4 text-[var(--fa-ink-3)]') Nach oben
+                    </button>
+                    <button type="button" role="menuitem" wire:click="positionHochRunter({{ $pos->id }}, 'runter')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                        @svg('heroicon-o-arrow-down', 'w-4 h-4 text-[var(--fa-ink-3)]') Nach unten
+                    </button>
+                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                    <button type="button" role="menuitem" wire:click="positionLoeschen({{ $pos->id }})" x-on:click="offen = false" class="{{ $menueLoeschen }}">
+                        @svg('heroicon-o-trash', 'w-4 h-4') Von der Karte nehmen
+                    </button>
+                </x-fa::menu>
             </div>
         </div>
 

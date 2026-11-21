@@ -1086,17 +1086,14 @@
             <div class="flex flex-wrap items-center gap-2">
                 <x-fa::button size="sm" variant="secondary" icon="heroicon-o-tv" :href="route('foodalchemist.produktion.wandmonitor', ['von' => $von, 'tage' => 1])"
                               wire:navigate data-tagesplan-wall-toggle>Küchenmonitor öffnen</x-fa::button>
-                <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::icon-button size="sm" icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                    <div class="hidden w-60 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                        <a href="{{ $blattUrl }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-drucken>
-                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt drucken
-                        </a>
-                        <a href="{{ $blattUrl . (str_contains($blattUrl, '?') ? '&' : '?') . 'pdf=1' }}" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-pdf>
-                            @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt als PDF
-                        </a>
-                    </div>
-                </div>
+                <x-fa::menu size="sm" breite="60">
+                    <a href="{{ $blattUrl }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-drucken>
+                        @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt drucken
+                    </a>
+                    <a href="{{ $blattUrl . (str_contains($blattUrl, '?') ? '&' : '?') . 'pdf=1' }}" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-pdf>
+                        @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt als PDF
+                    </a>
+                </x-fa::menu>
                 @if(! $istWall)
                     <x-fa::button size="sm" variant="primary" icon="heroicon-o-pencil-square"
                                   :href="route('foodalchemist.produktion.tagesplan.editor', ['von' => $von, 'bis' => $bis, 'tage' => $tage, 'ansicht' => $ansicht])"
@@ -1301,17 +1298,14 @@
                                 :close-via="'editorSchliessen'">
             <x-slot:actions>
                 <div class="ml-auto flex flex-wrap items-center gap-2">
-                    <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                        <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                        <div class="hidden w-60 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                            <a href="{{ $blattUrl }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-drucken>
-                                @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt drucken
-                            </a>
-                            <a href="{{ $blattUrl . (str_contains($blattUrl, '?') ? '&' : '?') . 'pdf=1' }}" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-pdf>
-                                @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt als PDF
-                            </a>
-                        </div>
-                    </div>
+                    <x-fa::menu breite="60">
+                        <a href="{{ $blattUrl }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-drucken>
+                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt drucken
+                        </a>
+                        <a href="{{ $blattUrl . (str_contains($blattUrl, '?') ? '&' : '?') . 'pdf=1' }}" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-pdf>
+                            @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt als PDF
+                        </a>
+                    </x-fa::menu>
                     <x-fa::button variant="primary" icon="heroicon-o-arrows-right-left" wire:click="vorschlagen" wire:loading.attr="disabled" wire:target="vorschlagen" data-tagesplan-vorschlagen>Verteilung vorschlagen</x-fa::button>
                 </div>
             </x-slot:actions>

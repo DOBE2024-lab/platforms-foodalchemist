@@ -224,21 +224,18 @@
                                 <td class="whitespace-nowrap text-right">
                                     <div class="inline-flex items-center gap-1">
                                         <x-fa::button size="sm" wire:click="lagerSpeichern({{ $lager->id }})">Speichern</x-fa::button>
-                                        <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                            <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" size="sm" label="Weitere Aktionen für {{ $lager->name }}" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                            <div class="hidden w-56 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                                @unless($lager->is_default)
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="lagerStandardSetzen({{ $lager->id }})"
-                                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
-                                                        @svg('heroicon-o-star', 'w-4 h-4 text-[var(--fa-ink-3)]')Als Standardlager setzen
-                                                    </button>
-                                                @endunless
-                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="lagerEntfernen({{ $lager->id }})" wire:confirm="Lagerort entfernen? Mit Bestand wird er nur deaktiviert."
-                                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
-                                                    @svg('heroicon-o-trash', 'w-4 h-4')Lagerort entfernen
+                                        <x-fa::menu class="inline-block" size="sm" label="Weitere Aktionen für {{ $lager->name }}">
+                                            @unless($lager->is_default)
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="lagerStandardSetzen({{ $lager->id }})"
+                                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
+                                                    @svg('heroicon-o-star', 'w-4 h-4 text-[var(--fa-ink-3)]')Als Standardlager setzen
                                                 </button>
-                                            </div>
-                                        </div>
+                                            @endunless
+                                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="lagerEntfernen({{ $lager->id }})" wire:confirm="Lagerort entfernen? Mit Bestand wird er nur deaktiviert."
+                                                class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
+                                                @svg('heroicon-o-trash', 'w-4 h-4')Lagerort entfernen
+                                            </button>
+                                        </x-fa::menu>
                                     </div>
                                 </td>
                             </tr>

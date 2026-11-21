@@ -77,22 +77,18 @@
                                     @if($darfEdit)
                                         <div class="flex items-center justify-end gap-1">
                                             <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $unit->id }})">Bearbeiten</x-fa::button>
-                                            <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                                <x-fa::icon-button size="sm" icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen für {{ $unit->display_de }}"
-                                                    x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                                <div class="hidden w-48 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleInactive({{ $unit->id }}, {{ $unit->is_inactive ? 'false' : 'true' }})"
-                                                            class="flex w-full items-center gap-2 px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)]">
-                                                        @svg($unit->is_inactive ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-eye-slash', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
-                                                        {{ $unit->is_inactive ? 'Aktivieren' : 'Deaktivieren' }}
-                                                    </button>
-                                                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $unit->id }})" wire:confirm="Einheit „{{ $unit->display_de }}“ wirklich löschen?"
-                                                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
-                                                        @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Einheit löschen
-                                                    </button>
-                                                </div>
-                                            </div>
+                                            <x-fa::menu size="sm" label="Weitere Aktionen für {{ $unit->display_de }}" breite="48">
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleInactive({{ $unit->id }}, {{ $unit->is_inactive ? 'false' : 'true' }})"
+                                                        class="flex w-full items-center gap-2 px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)]">
+                                                    @svg($unit->is_inactive ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-eye-slash', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
+                                                    {{ $unit->is_inactive ? 'Aktivieren' : 'Deaktivieren' }}
+                                                </button>
+                                                <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $unit->id }})" wire:confirm="Einheit „{{ $unit->display_de }}“ wirklich löschen?"
+                                                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
+                                                    @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Einheit löschen
+                                                </button>
+                                            </x-fa::menu>
                                         </div>
                                     @endif
                                 </td>

@@ -43,21 +43,21 @@
                 <fieldset @disabled($gesperrt) class="contents" data-fa-lesemodus="{{ $gesperrt ? '1' : '0' }}">
                 {{-- Workflow-Übergänge (Status-Maschine) gebündelt in einem Menü --}}
                 @if(count($angebot->status->uebergaenge()) > 0)
-                    <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false" wire:key="ang-status-{{ $angebot->id }}-{{ $angebot->status->value }}">
-                        <x-fa::button icon="heroicon-m-arrow-path-rounded-square" icon-right="heroicon-m-chevron-down"
-                            x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Status ändern</x-fa::button>
-                        <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-56 fa-surface shadow-lg py-1">
-                            <p class="px-3 pt-1 pb-1.5 {{ $hinweis }}">Jetzt: {{ $angebot->status->label() }}</p>
-                            @foreach($angebot->status->uebergaenge() as $next)
-                                @php $verwirftSnapshot = $eingefroren && in_array($next->value, ['anfrage', 'in_arbeit'], true); @endphp
-                                <button type="button" role="menuitem" wire:click="{{ $verwirftSnapshot ? 'statusSetzenVerwerfend' : 'statusSetzen' }}('{{ $next->value }}')" x-on:click="offen = false"
-                                        @if($verwirftSnapshot) wire:confirm="Dieses Angebot ist eingefroren (Stand der Abo-Rezepte). Zurück auf {{ $next->label() }} verwirft den eingefrorenen Stand, danach folgt es wieder der neuesten Fassung. Fortfahren?" @endif
-                                        class="{{ $menuePunkt }}" data-angebot-status="{{ $next->value }}">
-                                    @svg('heroicon-m-arrow-right', 'w-4 h-4 text-[var(--fa-ink-3)]') Auf {{ $next->label() }} setzen
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
+                    <x-fa::menu wire:key="ang-status-{{ $angebot->id }}-{{ $angebot->status->value }}">
+                        <x-slot:ausloeser>
+                            <x-fa::button icon="heroicon-m-arrow-path-rounded-square" icon-right="heroicon-m-chevron-down"
+                                x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Status ändern</x-fa::button>
+                        </x-slot:ausloeser>
+                        <p class="px-3 pt-1 pb-1.5 {{ $hinweis }}">Jetzt: {{ $angebot->status->label() }}</p>
+                        @foreach($angebot->status->uebergaenge() as $next)
+                            @php $verwirftSnapshot = $eingefroren && in_array($next->value, ['anfrage', 'in_arbeit'], true); @endphp
+                            <button type="button" role="menuitem" wire:click="{{ $verwirftSnapshot ? 'statusSetzenVerwerfend' : 'statusSetzen' }}('{{ $next->value }}')" x-on:click="offen = false"
+                                    @if($verwirftSnapshot) wire:confirm="Dieses Angebot ist eingefroren (Stand der Abo-Rezepte). Zurück auf {{ $next->label() }} verwirft den eingefrorenen Stand, danach folgt es wieder der neuesten Fassung. Fortfahren?" @endif
+                                    class="{{ $menuePunkt }}" data-angebot-status="{{ $next->value }}">
+                                @svg('heroicon-m-arrow-right', 'w-4 h-4 text-[var(--fa-ink-3)]') Auf {{ $next->label() }} setzen
+                            </button>
+                        @endforeach
+                    </x-fa::menu>
                 @endif
 
                 {{-- Einstieg in die Leitstelle-Planung (spiegelt Foodbook »In der Leitstelle planen«) — die eine KI-Aktion im Kopf. --}}
@@ -66,42 +66,39 @@
                 </fieldset>
 
                 {{-- Weitere Aktionen: Drucken · Dokument · Präsentation · Produktion · Löschen (ganz unten, rot) --}}
-                <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-72 fa-surface shadow-lg py-1">
-                        <a href="{{ route('foodalchemist.angebote.karte', $angebot->id) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                           class="{{ $menuePunkt }}" title="Gestaltete Angebotskarte für den Kunden, zum Drucken oder als PDF">
-                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Angebotskarte drucken
-                        </a>
-                        <a href="{{ route('foodalchemist.angebote.dokument', $angebot->id) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                           class="{{ $menuePunkt }}" title="Schlichtes Angebotsdokument, zum Drucken oder als PDF">
-                            @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Angebotsdokument öffnen
-                        </a>
-                        <a href="{{ route('foodalchemist.angebote.praesentation', $angebot->id) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                           class="{{ $menuePunkt }}" title="Kundenpräsentation als Webseite, ohne interne Angaben">
-                            @svg('heroicon-o-presentation-chart-bar', 'w-4 h-4 text-[var(--fa-ink-3)]') Kundenpräsentation ansehen
-                        </a>
-                        {{-- Kopieren ist immer erlaubt (legt ein neues, eigenes Angebot an; das Original bleibt unverändert). --}}
-                        <button type="button" role="menuitem" wire:click="kopieren" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                title="Neues Angebot mit gleichem Aufbau, Branding und Bildern anlegen (Status Anfrage, nicht veröffentlicht)" data-angebot-kopieren>
-                            @svg('heroicon-o-document-duplicate', 'w-4 h-4 text-[var(--fa-ink-3)]') Angebot kopieren
-                        </button>
-                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                        {{-- Spec 65: Drucken/Ansehen bleiben frei (Links), Produktion + Löschen nur im Bearbeiten-Modus --}}
-                        <fieldset @disabled($gesperrt) class="contents">
-                        {{-- Stufe 3 — Angebot → Produktion (concept × Pax → Produktionsauftrag am Event-Tag). --}}
-                        <button type="button" role="menuitem" wire:click="anProduktion" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                title="Angebot in die Produktion übergeben, danach im Tagesplan planbar" data-angebot-produktion>
-                            @svg('heroicon-o-truck', 'w-4 h-4 text-[var(--fa-ink-3)]') An die Produktion übergeben
-                        </button>
-                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                        <button type="button" role="menuitem" wire:click="loeschen" wire:confirm="Angebot löschen?" x-on:click="offen = false"
-                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-angebot-loeschen>
-                            @svg('heroicon-o-trash', 'w-4 h-4') Angebot löschen
-                        </button>
-                        </fieldset>
-                    </div>
-                </div>
+                <x-fa::menu breite="72">
+                    <a href="{{ route('foodalchemist.angebote.karte', $angebot->id) }}" target="_blank" role="menuitem" x-on:click="offen = false"
+                       class="{{ $menuePunkt }}" title="Gestaltete Angebotskarte für den Kunden, zum Drucken oder als PDF">
+                        @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Angebotskarte drucken
+                    </a>
+                    <a href="{{ route('foodalchemist.angebote.dokument', $angebot->id) }}" target="_blank" role="menuitem" x-on:click="offen = false"
+                       class="{{ $menuePunkt }}" title="Schlichtes Angebotsdokument, zum Drucken oder als PDF">
+                        @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Angebotsdokument öffnen
+                    </a>
+                    <a href="{{ route('foodalchemist.angebote.praesentation', $angebot->id) }}" target="_blank" role="menuitem" x-on:click="offen = false"
+                       class="{{ $menuePunkt }}" title="Kundenpräsentation als Webseite, ohne interne Angaben">
+                        @svg('heroicon-o-presentation-chart-bar', 'w-4 h-4 text-[var(--fa-ink-3)]') Kundenpräsentation ansehen
+                    </a>
+                    {{-- Kopieren ist immer erlaubt (legt ein neues, eigenes Angebot an; das Original bleibt unverändert). --}}
+                    <button type="button" role="menuitem" wire:click="kopieren" x-on:click="offen = false" class="{{ $menuePunkt }}"
+                            title="Neues Angebot mit gleichem Aufbau, Branding und Bildern anlegen (Status Anfrage, nicht veröffentlicht)" data-angebot-kopieren>
+                        @svg('heroicon-o-document-duplicate', 'w-4 h-4 text-[var(--fa-ink-3)]') Angebot kopieren
+                    </button>
+                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                    {{-- Spec 65: Drucken/Ansehen bleiben frei (Links), Produktion + Löschen nur im Bearbeiten-Modus --}}
+                    <fieldset @disabled($gesperrt) class="contents">
+                    {{-- Stufe 3 — Angebot → Produktion (concept × Pax → Produktionsauftrag am Event-Tag). --}}
+                    <button type="button" role="menuitem" wire:click="anProduktion" x-on:click="offen = false" class="{{ $menuePunkt }}"
+                            title="Angebot in die Produktion übergeben, danach im Tagesplan planbar" data-angebot-produktion>
+                        @svg('heroicon-o-truck', 'w-4 h-4 text-[var(--fa-ink-3)]') An die Produktion übergeben
+                    </button>
+                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                    <button type="button" role="menuitem" wire:click="loeschen" wire:confirm="Angebot löschen?" x-on:click="offen = false"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-angebot-loeschen>
+                        @svg('heroicon-o-trash', 'w-4 h-4') Angebot löschen
+                    </button>
+                    </fieldset>
+                </x-fa::menu>
 
                 {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung, Editor bleibt offen --}}
                 <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
@@ -353,19 +350,19 @@
                                                 <x-fa::badge :tone="$weTon[$we['status']] ?? 'neutral'"
                                                     title="Wareneinsatz {{ $we['ist_pct'] !== null ? $prozent($we['ist_pct']) : 'unbekannt' }}, Ziel {{ $prozent($we['ziel_pct']) }}">WE {{ $we['ist_pct'] !== null ? $prozent($we['ist_pct']) : 'offen' }}</x-fa::badge>
                                                 {{-- Fortschritt als Chip mit Menü (statt Dropdown je Zeile) --}}
-                                                <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false" wire:key="fort-{{ $kap['kapitel_id'] }}-{{ $kap['fortschritt'] }}">
-                                                    <button type="button" x-on:click="toggle($event)" class="inline-flex items-center gap-0.5" aria-haspopup="menu" x-bind:aria-expanded="offen" aria-label="Fortschritt von {{ $kap['titel'] }} ändern" title="Fortschritt setzen">
-                                                        <x-fa::badge :tone="$fortTon[$kap['fortschritt']] ?? 'neutral'">{{ $fortLabel[$kap['fortschritt']] ?? 'Offen' }}</x-fa::badge>@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]')
-                                                    </button>
-                                                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-40 fa-surface shadow-lg py-1">
-                                                        @foreach($fortLabel as $fortWert => $fortText)
-                                                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="kapitelFortschritt({{ $kap['kapitel_id'] }}, '{{ $fortWert }}')"
-                                                                    class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $kap['fortschritt'] === $fortWert ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
-                                                                {{ $fortText }}@if($kap['fortschritt'] === $fortWert)@svg('heroicon-m-check', 'w-4 h-4')@endif
-                                                            </button>
-                                                        @endforeach
-                                                    </div>
-                                                </div>
+                                                <x-fa::menu class="inline-block" breite="40" wire:key="fort-{{ $kap['kapitel_id'] }}-{{ $kap['fortschritt'] }}">
+                                                    <x-slot:ausloeser>
+                                                        <button type="button" x-on:click="toggle($event)" class="inline-flex items-center gap-0.5" aria-haspopup="menu" x-bind:aria-expanded="offen" aria-label="Fortschritt von {{ $kap['titel'] }} ändern" title="Fortschritt setzen">
+                                                            <x-fa::badge :tone="$fortTon[$kap['fortschritt']] ?? 'neutral'">{{ $fortLabel[$kap['fortschritt']] ?? 'Offen' }}</x-fa::badge>@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]')
+                                                        </button>
+                                                    </x-slot:ausloeser>
+                                                    @foreach($fortLabel as $fortWert => $fortText)
+                                                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="kapitelFortschritt({{ $kap['kapitel_id'] }}, '{{ $fortWert }}')"
+                                                                class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $kap['fortschritt'] === $fortWert ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
+                                                            {{ $fortText }}@if($kap['fortschritt'] === $fortWert)@svg('heroicon-m-check', 'w-4 h-4')@endif
+                                                        </button>
+                                                    @endforeach
+                                                </x-fa::menu>
                                                 <x-fa::button variant="ghost" size="sm" icon="heroicon-m-pencil-square" href="#" wire:click="kapitelWaehle({{ $kap['kapitel_id'] }})" x-on:click.prevent="$dispatch('angebot-goto', { tab: 'aufbau' })" title="Kapitel öffnen und weiterplanen">Öffnen</x-fa::button>
                                             </div>
                                         </div>
@@ -456,25 +453,25 @@
                             <x-fa::button variant="ghost" size="sm" icon="heroicon-m-plus" wire:click="blockBasis('text')">Text</x-fa::button>
                             <x-fa::button variant="ghost" size="sm" icon="heroicon-m-plus" wire:click="blockBasis('spacer')">Leerzeile</x-fa::button>
                             <x-fa::button variant="ghost" size="sm" icon="heroicon-m-plus" wire:click="blockBasis('position')" title="Freie Position mit Menge, Einheit und Satz, pauschal (z. B. Leistung nach Aufwand)" data-angebot-position-neu>Position</x-fa::button>
-                            <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                <x-fa::button size="sm" icon="heroicon-m-plus" icon-right="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Überschrift</x-fa::button>
-                                <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-64 max-h-80 overflow-y-auto fa-surface shadow-lg py-1">
-                                    <button type="button" role="menuitem" wire:click="blockBasis('header_frei')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                                        @svg('heroicon-o-bars-3-bottom-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Freie Überschrift
-                                    </button>
-                                    <button type="button" role="menuitem" wire:click="blockBasis('header_frei_preis')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                                        @svg('heroicon-o-currency-euro', 'w-4 h-4 text-[var(--fa-ink-3)]') Überschrift mit Preis
-                                    </button>
-                                    @foreach($headerPresets ?? [] as $gruppe => $items)
-                                        <p class="px-3 pt-2 pb-0.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">{{ $gruppe }}</p>
-                                        @foreach($items as $p)
-                                            <button type="button" role="menuitem" x-on:click="offen = false"
-                                                    wire:click="presetHinzu(@js($p['type']), @js($p['slug']), @js($p['label']), @js($p['price_basis'] ?? null), {{ ($p['visible'] ?? true) ? 'true' : 'false' }})"
-                                                    class="block w-full truncate px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">{{ $p['label'] }}</button>
-                                        @endforeach
+                            <x-fa::menu breite="64" scroll>
+                                <x-slot:ausloeser>
+                                    <x-fa::button size="sm" icon="heroicon-m-plus" icon-right="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Überschrift</x-fa::button>
+                                </x-slot:ausloeser>
+                                <button type="button" role="menuitem" wire:click="blockBasis('header_frei')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                                    @svg('heroicon-o-bars-3-bottom-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Freie Überschrift
+                                </button>
+                                <button type="button" role="menuitem" wire:click="blockBasis('header_frei_preis')" x-on:click="offen = false" class="{{ $menuePunkt }}">
+                                    @svg('heroicon-o-currency-euro', 'w-4 h-4 text-[var(--fa-ink-3)]') Überschrift mit Preis
+                                </button>
+                                @foreach($headerPresets ?? [] as $gruppe => $items)
+                                    <p class="px-3 pt-2 pb-0.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">{{ $gruppe }}</p>
+                                    @foreach($items as $p)
+                                        <button type="button" role="menuitem" x-on:click="offen = false"
+                                                wire:click="presetHinzu(@js($p['type']), @js($p['slug']), @js($p['label']), @js($p['price_basis'] ?? null), {{ ($p['visible'] ?? true) ? 'true' : 'false' }})"
+                                                class="block w-full truncate px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">{{ $p['label'] }}</button>
                                     @endforeach
-                                </div>
-                            </div>
+                                @endforeach
+                            </x-fa::menu>
                         </x-slot:actions>
 
                         <div class="flex flex-col gap-1" x-data="{ dragBlockId: null }">

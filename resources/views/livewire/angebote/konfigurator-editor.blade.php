@@ -11,17 +11,14 @@
     <x-slot:actions>
         @if($k)
             <div class="ml-auto flex flex-wrap items-center gap-2">
-                <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-72 fa-surface shadow-lg py-1">
-                        <a href="{{ route('foodalchemist.angebote.leistung_vorlagen') }}" target="_blank" role="menuitem" class="{{ $menuePunkt }}">@svg('heroicon-o-wrench-screwdriver', 'w-4 h-4 text-[var(--fa-ink-3)]') Leistungs-Vorlagen öffnen</a>
-                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                        <fieldset @disabled($gesperrt) class="contents">
-                            <button type="button" role="menuitem" wire:click="loeschen" wire:confirm="Konfigurator „{{ $k->name }}“ löschen? Konzepte, Leistungen und Pakete gehen mit." x-on:click="offen = false"
-                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-konfigurator-loeschen>@svg('heroicon-o-trash', 'w-4 h-4') Konfigurator löschen</button>
-                        </fieldset>
-                    </div>
-                </div>
+                <x-fa::menu breite="72">
+                    <a href="{{ route('foodalchemist.angebote.leistung_vorlagen') }}" target="_blank" role="menuitem" class="{{ $menuePunkt }}">@svg('heroicon-o-wrench-screwdriver', 'w-4 h-4 text-[var(--fa-ink-3)]') Leistungs-Vorlagen öffnen</a>
+                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                    <fieldset @disabled($gesperrt) class="contents">
+                        <button type="button" role="menuitem" wire:click="loeschen" wire:confirm="Konfigurator „{{ $k->name }}“ löschen? Konzepte, Leistungen und Pakete gehen mit." x-on:click="offen = false"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-konfigurator-loeschen>@svg('heroicon-o-trash', 'w-4 h-4') Konfigurator löschen</button>
+                    </fieldset>
+                </x-fa::menu>
                 <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" data-konfigurator-speichern>Speichern</x-fa::button>
                 </x-foodalchemist::bearbeiten-leiste>

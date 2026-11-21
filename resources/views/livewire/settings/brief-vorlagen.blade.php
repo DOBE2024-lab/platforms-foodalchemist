@@ -83,22 +83,19 @@
                                                     <x-fa::button size="sm" variant="primary" icon="heroicon-m-check" wire:click="save">Namen speichern</x-fa::button>
                                                 @else
                                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $t->id }})">Umbenennen</x-fa::button>
-                                                    <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                                        <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen für {{ $t->label }}" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                                        <div class="hidden w-52 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleActive({{ $t->id }})" class="{{ $menuPunkt }}">
-                                                                @svg($t->active ? 'heroicon-m-eye-slash' : 'heroicon-m-eye', 'w-4 h-4 text-[var(--fa-ink-3)]')
-                                                                {{ $t->active ? 'Vorlage deaktivieren' : 'Vorlage aktivieren' }}
-                                                            </button>
-                                                            <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="loeschen({{ $t->id }})"
-                                                                    wire:confirm="{{ 'Vorlage „' . $t->label . '“ löschen?' }}"
-                                                                    class="{{ $menuGefahr }}">
-                                                                @svg('heroicon-m-trash', 'w-4 h-4')
-                                                                Vorlage löschen
-                                                            </button>
-                                                        </div>
-                                                    </div>
+                                                    <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $t->label }}" size="sm" breite="52">
+                                                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleActive({{ $t->id }})" class="{{ $menuPunkt }}">
+                                                            @svg($t->active ? 'heroicon-m-eye-slash' : 'heroicon-m-eye', 'w-4 h-4 text-[var(--fa-ink-3)]')
+                                                            {{ $t->active ? 'Vorlage deaktivieren' : 'Vorlage aktivieren' }}
+                                                        </button>
+                                                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                                                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="loeschen({{ $t->id }})"
+                                                                wire:confirm="{{ 'Vorlage „' . $t->label . '“ löschen?' }}"
+                                                                class="{{ $menuGefahr }}">
+                                                            @svg('heroicon-m-trash', 'w-4 h-4')
+                                                            Vorlage löschen
+                                                        </button>
+                                                    </x-fa::menu>
                                                 @endif
                                             </div>
                                         </td>

@@ -79,27 +79,24 @@
 
                 {{-- Weitere Aktionen: Kunden-Karte · Technischer Bericht · Vorlage --}}
                 @if($concept)
-                    <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                        <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" data-concepter-weitere />
-                        <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-72 fa-surface shadow-lg py-1">
-                            {{-- #6 (F3c): Druck-Symmetrie zum Format-Editor — schöne Kunden-Ausgabe + technischer Bericht.
-                                 Die Karte gilt auch fürs Paket (concepts.karte nimmt eine Concept-ID). --}}
-                            <a href="{{ route('foodalchemist.concepts.karte', ['id' => $concept->id]) }}" target="_blank" role="menuitem"
-                               x-on:click="offen = false" class="{{ $menuePunkt }}" title="Menükarte für den Kunden, zum Drucken oder als PDF" data-concepter-karte>
-                                @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Kundenkarte drucken
-                            </a>
-                            <a href="{{ route('foodalchemist.concepts.dokument', array_filter(['id' => $concept->id, 'profil' => 'voll', 'simulation' => $simulationPax > 0 ? 1 : null, 'pax' => $simulationPax > 0 ? $simulationPax : null], fn ($value) => $value !== null)) }}" target="_blank" role="menuitem"
-                               x-on:click="offen = false" class="{{ $menuePunkt }}" title="Vollständiger Bericht vom Gericht über Basisrezept und Grundprodukt bis zum Lieferantenartikel" data-concepter-druck>
-                                @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Technischen Bericht öffnen
-                            </a>
-                            @if(! $concept->is_template)
-                                <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                <button type="button" role="menuitem" wire:click="alsVorlage" x-on:click="offen = false" class="{{ $menuePunkt }}" data-concepter-als-vorlage>
-                                    @svg('heroicon-o-square-2-stack', 'w-4 h-4 text-[var(--fa-ink-3)]') Als Vorlage speichern
-                                </button>
-                            @endif
-                        </div>
-                    </div>
+                    <x-fa::menu ausloeser:data-concepter-weitere="" breite="72">
+                        {{-- #6 (F3c): Druck-Symmetrie zum Format-Editor — schöne Kunden-Ausgabe + technischer Bericht.
+                             Die Karte gilt auch fürs Paket (concepts.karte nimmt eine Concept-ID). --}}
+                        <a href="{{ route('foodalchemist.concepts.karte', ['id' => $concept->id]) }}" target="_blank" role="menuitem"
+                           x-on:click="offen = false" class="{{ $menuePunkt }}" title="Menükarte für den Kunden, zum Drucken oder als PDF" data-concepter-karte>
+                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Kundenkarte drucken
+                        </a>
+                        <a href="{{ route('foodalchemist.concepts.dokument', array_filter(['id' => $concept->id, 'profil' => 'voll', 'simulation' => $simulationPax > 0 ? 1 : null, 'pax' => $simulationPax > 0 ? $simulationPax : null], fn ($value) => $value !== null)) }}" target="_blank" role="menuitem"
+                           x-on:click="offen = false" class="{{ $menuePunkt }}" title="Vollständiger Bericht vom Gericht über Basisrezept und Grundprodukt bis zum Lieferantenartikel" data-concepter-druck>
+                            @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Technischen Bericht öffnen
+                        </a>
+                        @if(! $concept->is_template)
+                            <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                            <button type="button" role="menuitem" wire:click="alsVorlage" x-on:click="offen = false" class="{{ $menuePunkt }}" data-concepter-als-vorlage>
+                                @svg('heroicon-o-square-2-stack', 'w-4 h-4 text-[var(--fa-ink-3)]') Als Vorlage speichern
+                            </button>
+                        @endif
+                    </x-fa::menu>
                 @endif
 
                 {{-- #5 (2026-08-13): EIN Speichern pro Tab — auf «Konzept & Planung» sichert der Knopf

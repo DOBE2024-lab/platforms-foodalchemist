@@ -102,6 +102,11 @@ final class Ui
                 'primary' => 'bg-violet-50 text-violet-700',
             ],
 
+            // Menü-Breiten (Welle 1, 1.4c): <x-fa::menu breite="56"> — nur diese Stufen, Klassen voll ausgeschrieben (build-css.mjs).
+            'menueBreite' => [
+                40 => 'w-40', 44 => 'w-44', 48 => 'w-48', 52 => 'w-52', 56 => 'w-56', 60 => 'w-60', 64 => 'w-64', 72 => 'w-72',
+            ],
+
             // ── Buttons
             'btnPrimary' => 'inline-flex items-center justify-center whitespace-nowrap gap-2 h-9 px-3.5 text-[13px] font-medium text-[var(--fa-on-accent)] bg-violet-600 rounded-md hover:bg-violet-700 transition-colors duration-150',
             'btnGhost' => 'inline-flex items-center justify-center whitespace-nowrap gap-2 h-9 px-3.5 text-[13px] font-medium text-gray-800 bg-[var(--fa-surface)] border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150',

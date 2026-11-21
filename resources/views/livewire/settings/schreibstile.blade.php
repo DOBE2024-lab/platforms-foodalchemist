@@ -75,20 +75,17 @@
                                     <td class="align-top">
                                         <div class="flex items-center justify-end gap-1">
                                             <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $stil->id }})" data-stil-edit>Bearbeiten</x-fa::button>
-                                            <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                                <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen für {{ $stil->name }}" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                                <div class="hidden w-52 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleInactive({{ $stil->id }})" class="{{ $menuPunkt }}">
-                                                        @svg($stil->is_inactive ? 'heroicon-m-eye' : 'heroicon-m-eye-slash', 'w-4 h-4 text-[var(--fa-ink-3)]')
-                                                        {{ $stil->is_inactive ? 'Schreibstil aktivieren' : 'Schreibstil deaktivieren' }}
-                                                    </button>
-                                                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $stil->id }})" wire:confirm="Schreibstil „{{ $stil->name }}“ löschen? Das geht nur, solange ihn nichts verwendet." class="{{ $menuGefahr }}">
-                                                        @svg('heroicon-m-trash', 'w-4 h-4')
-                                                        Schreibstil löschen
-                                                    </button>
-                                                </div>
-                                            </div>
+                                            <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $stil->name }}" size="sm" breite="52">
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleInactive({{ $stil->id }})" class="{{ $menuPunkt }}">
+                                                    @svg($stil->is_inactive ? 'heroicon-m-eye' : 'heroicon-m-eye-slash', 'w-4 h-4 text-[var(--fa-ink-3)]')
+                                                    {{ $stil->is_inactive ? 'Schreibstil aktivieren' : 'Schreibstil deaktivieren' }}
+                                                </button>
+                                                <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $stil->id }})" wire:confirm="Schreibstil „{{ $stil->name }}“ löschen? Das geht nur, solange ihn nichts verwendet." class="{{ $menuGefahr }}">
+                                                    @svg('heroicon-m-trash', 'w-4 h-4')
+                                                    Schreibstil löschen
+                                                </button>
+                                            </x-fa::menu>
                                         </div>
                                     </td>
                                 @endif

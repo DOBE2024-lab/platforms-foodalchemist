@@ -109,22 +109,18 @@
                                             @if($darfEditK)
                                                 <div class="flex items-center justify-end gap-1">
                                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil" wire:click="startKlasseEdit({{ $k->id }}, {{ \Illuminate\Support\Js::from($k->label) }})">Umbenennen</x-fa::button>
-                                                    <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                                        <x-fa::icon-button size="sm" icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen für {{ $k->label }}"
-                                                            x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                                        <div class="hidden w-64 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                                            @if($nRez > 0)
-                                                                <p class="flex items-start gap-2 px-3 py-2 fa-t-muted">
-                                                                    @svg('heroicon-o-lock-closed', 'w-4 h-4 shrink-0 mt-px') Löschen gesperrt: Gerichte nutzen diese Klasse.
-                                                                </p>
-                                                            @else
-                                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="klasseDelete({{ $k->id }})" wire:confirm="Diese Klasse löschen?"
-                                                                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
-                                                                    @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Klasse löschen
-                                                                </button>
-                                                            @endif
-                                                        </div>
-                                                    </div>
+                                                    <x-fa::menu size="sm" label="Weitere Aktionen für {{ $k->label }}" breite="64">
+                                                        @if($nRez > 0)
+                                                            <p class="flex items-start gap-2 px-3 py-2 fa-t-muted">
+                                                                @svg('heroicon-o-lock-closed', 'w-4 h-4 shrink-0 mt-px') Löschen gesperrt: Gerichte nutzen diese Klasse.
+                                                            </p>
+                                                        @else
+                                                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="klasseDelete({{ $k->id }})" wire:confirm="Diese Klasse löschen?"
+                                                                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
+                                                                @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Klasse löschen
+                                                            </button>
+                                                        @endif
+                                                    </x-fa::menu>
                                                 </div>
                                             @endif
                                         </td>

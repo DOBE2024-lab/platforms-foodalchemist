@@ -138,16 +138,13 @@
             @endforeach
             @if($offen > 0)
                 @unless($handy ?? false){{-- #1003 PR7: Alle verwerfen am Computer --}}
-                <div class="relative ml-auto" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-64 fa-surface shadow-lg py-1">
-                        <button type="button" role="menuitem" wire:click="alleVerwerfen" x-on:click="offen = false"
-                                wire:confirm="Alle offenen Ergebnisse dieses Laufs wirklich verwerfen?"
-                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-planung-alle-verwerfen>
-                            @svg('heroicon-o-trash', 'w-4 h-4') Alle offenen verwerfen
-                        </button>
-                    </div>
-                </div>
+                <x-fa::menu class="ml-auto" size="sm" breite="64">
+                    <button type="button" role="menuitem" wire:click="alleVerwerfen" x-on:click="offen = false"
+                            wire:confirm="Alle offenen Ergebnisse dieses Laufs wirklich verwerfen?"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-planung-alle-verwerfen>
+                        @svg('heroicon-o-trash', 'w-4 h-4') Alle offenen verwerfen
+                    </button>
+                </x-fa::menu>
                 @endunless
             @endif
         </div>

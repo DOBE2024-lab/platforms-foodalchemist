@@ -46,62 +46,59 @@
                 @if(! $neu)
                     {{-- KI-Assistent: die drei rezeptweiten KI-Funktionen in EINEM Menü. Die Felder-KI
                          (Name, Kategorie, Beschreibung …) bleibt am jeweiligen Feld. --}}
-                    <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                        <x-fa::button variant="ai" icon="heroicon-m-sparkles" icon-right="heroicon-m-chevron-down"
-                            x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" data-ki-assistent>KI-Assistent</x-fa::button>
-                        <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-72 fa-surface shadow-lg py-1">
-                            {{-- Alles anreichern bleibt ein ki-action: Fortschritt und Erfolg sieht man im Menü. --}}
-                            <div class="px-3 py-2 flex flex-col gap-1">
-                                <x-foodalchemist::ki-action action="allesAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Alles anreichern"
-                                    title="Text, Eigenschaften, Produktionsplanung, Equipment, Schritte, Aromen, Pairings, Eignung und Sensorik in einem Lauf. KI-Fotos laufen separat, Ersatz bleibt eine bewusste Verknüpfung von Hand."
-                                    class="w-full justify-center" data-alles-anreichern busy="Wird gestartet …" flash="Gestartet" />
-                                <span class="{{ $hinweis }}">Füllt alle leeren Felder in einem Lauf. Von Hand Gepflegtes bleibt stehen.</span>
-                            </div>
-                            <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                            <button type="button" role="menuitem" wire:click="$toggle('ueberarbeitenOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                    title="Freie Anweisung: die KI überarbeitet Zutaten, Mengen, Zubereitung und Beschreibung. Erst Vorschau, dann übernehmen." data-ki-ueberarbeiten>
-                                @svg('heroicon-o-pencil-square', 'w-4 h-4 text-[var(--fa-ink-3)]') Mit Anweisung überarbeiten
-                            </button>
-                            <button type="button" role="menuitem" wire:click="$toggle('copilotOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                    title="Die KI prüft Mengen, Einheiten, überflüssige und fehlende Zutaten. Jeder Befund lässt sich einzeln übernehmen, das Rezept bleibt stehen." data-copilot>
-                                @svg('heroicon-o-clipboard-document-check', 'w-4 h-4 text-[var(--fa-ink-3)]') Rezept prüfen lassen
-                            </button>
+                    <x-fa::menu breite="72">
+                        <x-slot:ausloeser>
+                            <x-fa::button variant="ai" icon="heroicon-m-sparkles" icon-right="heroicon-m-chevron-down"
+                                x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" data-ki-assistent>KI-Assistent</x-fa::button>
+                        </x-slot:ausloeser>
+                        {{-- Alles anreichern bleibt ein ki-action: Fortschritt und Erfolg sieht man im Menü. --}}
+                        <div class="px-3 py-2 flex flex-col gap-1">
+                            <x-foodalchemist::ki-action action="allesAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Alles anreichern"
+                                title="Text, Eigenschaften, Produktionsplanung, Equipment, Schritte, Aromen, Pairings, Eignung und Sensorik in einem Lauf. KI-Fotos laufen separat, Ersatz bleibt eine bewusste Verknüpfung von Hand."
+                                class="w-full justify-center" data-alles-anreichern busy="Wird gestartet …" flash="Gestartet" />
+                            <span class="{{ $hinweis }}">Füllt alle leeren Felder in einem Lauf. Von Hand Gepflegtes bleibt stehen.</span>
                         </div>
-                    </div>
+                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                        <button type="button" role="menuitem" wire:click="$toggle('ueberarbeitenOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
+                                title="Freie Anweisung: die KI überarbeitet Zutaten, Mengen, Zubereitung und Beschreibung. Erst Vorschau, dann übernehmen." data-ki-ueberarbeiten>
+                            @svg('heroicon-o-pencil-square', 'w-4 h-4 text-[var(--fa-ink-3)]') Mit Anweisung überarbeiten
+                        </button>
+                        <button type="button" role="menuitem" wire:click="$toggle('copilotOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
+                                title="Die KI prüft Mengen, Einheiten, überflüssige und fehlende Zutaten. Jeder Befund lässt sich einzeln übernehmen, das Rezept bleibt stehen." data-copilot>
+                            @svg('heroicon-o-clipboard-document-check', 'w-4 h-4 text-[var(--fa-ink-3)]') Rezept prüfen lassen
+                        </button>
+                    </x-fa::menu>
 
                     {{-- Weitere Aktionen: Drucken · Vorlage · Löschen (ganz unten, rot — nie neben Speichern) --}}
-                    <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                        <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                        <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-60 fa-surface shadow-lg py-1">
-                            <a href="{{ route('foodalchemist.rezepte.dokument', ['id' => $recipeId, 'profil' => 'produktion']) }}" target="_blank" role="menuitem"
-                               x-on:click="offen = false" class="{{ $menuePunkt }}" title="Druck- und PDF-Bericht mit Profilen und Filtern" data-rezept-druck>
-                                @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Rezept drucken
-                            </a>
-                            {{-- Spec 70: Etikett (Allergene, Zutaten, verbrauchen bis) --}}
-                            <a href="{{ route('foodalchemist.etiketten.index', ['quelle' => 'recipe', 'id' => $recipeId]) }}" target="_blank" role="menuitem"
-                               x-on:click="offen = false" class="{{ $menuePunkt }}" data-rezept-etikett>
-                                @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Etikett drucken
-                            </a>
-                            {{-- R6: Vorlage-Markierung (Basis für «Aus Vorlage» im Browser) --}}
-                            <button type="button" role="menuitem" wire:click="templateToggle" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                    title="Vorlage für neue Rezepte (im Browser: aus Vorlage anlegen)" data-template-toggle>
-                                @svg('heroicon-o-square-2-stack', 'w-4 h-4 text-[var(--fa-ink-3)]') {{ $istTemplate ? 'Vorlage aufheben' : 'Als Vorlage markieren' }}
+                    <x-fa::menu breite="60">
+                        <a href="{{ route('foodalchemist.rezepte.dokument', ['id' => $recipeId, 'profil' => 'produktion']) }}" target="_blank" role="menuitem"
+                           x-on:click="offen = false" class="{{ $menuePunkt }}" title="Druck- und PDF-Bericht mit Profilen und Filtern" data-rezept-druck>
+                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Rezept drucken
+                        </a>
+                        {{-- Spec 70: Etikett (Allergene, Zutaten, verbrauchen bis) --}}
+                        <a href="{{ route('foodalchemist.etiketten.index', ['quelle' => 'recipe', 'id' => $recipeId]) }}" target="_blank" role="menuitem"
+                           x-on:click="offen = false" class="{{ $menuePunkt }}" data-rezept-etikett>
+                            @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Etikett drucken
+                        </a>
+                        {{-- R6: Vorlage-Markierung (Basis für «Aus Vorlage» im Browser) --}}
+                        <button type="button" role="menuitem" wire:click="templateToggle" x-on:click="offen = false" class="{{ $menuePunkt }}"
+                                title="Vorlage für neue Rezepte (im Browser: aus Vorlage anlegen)" data-template-toggle>
+                            @svg('heroicon-o-square-2-stack', 'w-4 h-4 text-[var(--fa-ink-3)]') {{ $istTemplate ? 'Vorlage aufheben' : 'Als Vorlage markieren' }}
+                        </button>
+                        {{-- Spec 82 §13 B6: Arbeitszeile des Master-Teams als Fassung an die Abonnenten geben --}}
+                        @if(\Platform\FoodAlchemist\Support\FassungMenue::sichtbar(auth()->user()?->currentTeamRelation, (int) $recipeId))
+                            <button type="button" role="menuitem" x-on:click="offen = false; $dispatch('fassung-modal.oeffnen', { recipeId: {{ (int) $recipeId }} })" class="{{ $menuePunkt }}"
+                                    title="Stand als neue Fassung an die Abonnenten geben" data-fassung-menue>
+                                @svg('heroicon-o-paper-airplane', 'w-4 h-4 text-[var(--fa-ink-3)]') Veröffentlichen …
                             </button>
-                            {{-- Spec 82 §13 B6: Arbeitszeile des Master-Teams als Fassung an die Abonnenten geben --}}
-                            @if(\Platform\FoodAlchemist\Support\FassungMenue::sichtbar(auth()->user()?->currentTeamRelation, (int) $recipeId))
-                                <button type="button" role="menuitem" x-on:click="offen = false; $dispatch('fassung-modal.oeffnen', { recipeId: {{ (int) $recipeId }} })" class="{{ $menuePunkt }}"
-                                        title="Stand als neue Fassung an die Abonnenten geben" data-fassung-menue>
-                                    @svg('heroicon-o-paper-airplane', 'w-4 h-4 text-[var(--fa-ink-3)]') Veröffentlichen …
-                                </button>
-                            @endif
-                            <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                            <button type="button" role="menuitem" wire:click="loeschen" x-on:click="offen = false"
-                                    wire:confirm="Rezept wirklich löschen? Rezepte, die in anderen Rezepten stecken, bleiben geschützt."
-                                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-rezept-loeschen>
-                                @svg('heroicon-o-trash', 'w-4 h-4') Rezept löschen
-                            </button>
-                        </div>
-                    </div>
+                        @endif
+                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                        <button type="button" role="menuitem" wire:click="loeschen" x-on:click="offen = false"
+                                wire:confirm="Rezept wirklich löschen? Rezepte, die in anderen Rezepten stecken, bleiben geschützt."
+                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-rezept-loeschen>
+                            @svg('heroicon-o-trash', 'w-4 h-4') Rezept löschen
+                        </button>
+                    </x-fa::menu>
                 @endif
 
                 {{-- #1b: EIN Speichern-Weg, sequenziert. Erst Stammdaten (`speichern`), dann — nur bei
@@ -354,17 +351,14 @@
                         busy="Malt …" flash="Foto erzeugt"
                         title="{{ 'Erzeugt oder ersetzt das Foto des fertigen Gerichts' . ($bildkosten !== null ? ', ca. ' . number_format($bildkosten, 3, ',', '.') . ' $ je Bild' : '') . '.' }}"
                         data-ki-produktfoto />
-                <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen zur Zubereitung" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-64 fa-surface shadow-lg py-1">
-                        <button type="button" role="menuitem" wire:click="manual_zubereitung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Die KI überschreibt die Zubereitung dann nicht mehr">
-                            @svg('heroicon-o-lock-closed', 'w-4 h-4 text-[var(--fa-ink-3)]') Vor KI schützen
-                        </button>
-                        <button type="button" role="menuitem" wire:click="clear_zubereitung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Hebt die Herkunfts-Markierung auf, der Text bleibt stehen">
-                            @svg('heroicon-o-arrow-uturn-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Herkunft zurücksetzen
-                        </button>
-                    </div>
-                </div>
+                <x-fa::menu label="Weitere Aktionen zur Zubereitung" size="sm" breite="64">
+                    <button type="button" role="menuitem" wire:click="manual_zubereitung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Die KI überschreibt die Zubereitung dann nicht mehr">
+                        @svg('heroicon-o-lock-closed', 'w-4 h-4 text-[var(--fa-ink-3)]') Vor KI schützen
+                    </button>
+                    <button type="button" role="menuitem" wire:click="clear_zubereitung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Hebt die Herkunfts-Markierung auf, der Text bleibt stehen">
+                        @svg('heroicon-o-arrow-uturn-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Herkunft zurücksetzen
+                    </button>
+                </x-fa::menu>
             </x-slot:actions>
         @endif
         @if($produktfotoLaeuft)
@@ -526,17 +520,14 @@
             <x-slot:actions>
                 <x-foodalchemist::ki-action action="ai_beschreibung" variant="ai" icon="heroicon-o-sparkles" label="Beschreibung schreiben"
                     data-ai-description busy="Wird geschrieben …" flash="Beschreibung erstellt" />
-                <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen zur Beschreibung" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-64 fa-surface shadow-lg py-1">
-                        <button type="button" role="menuitem" wire:click="manual_beschreibung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Aktuellen Text als von Hand gepflegt markieren, die KI überschreibt ihn dann nicht">
-                            @svg('heroicon-o-lock-closed', 'w-4 h-4 text-[var(--fa-ink-3)]') Vor KI schützen
-                        </button>
-                        <button type="button" role="menuitem" wire:click="clear_beschreibung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Text und Herkunft leeren">
-                            @svg('heroicon-o-arrow-uturn-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Beschreibung leeren
-                        </button>
-                    </div>
-                </div>
+                <x-fa::menu label="Weitere Aktionen zur Beschreibung" size="sm" breite="64">
+                    <button type="button" role="menuitem" wire:click="manual_beschreibung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Aktuellen Text als von Hand gepflegt markieren, die KI überschreibt ihn dann nicht">
+                        @svg('heroicon-o-lock-closed', 'w-4 h-4 text-[var(--fa-ink-3)]') Vor KI schützen
+                    </button>
+                    <button type="button" role="menuitem" wire:click="clear_beschreibung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Text und Herkunft leeren">
+                        @svg('heroicon-o-arrow-uturn-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Beschreibung leeren
+                    </button>
+                </x-fa::menu>
             </x-slot:actions>
         @endif
         <x-fa::textarea wire:model="form.description" rows="3" aria-label="Beschreibung" />

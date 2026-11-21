@@ -57,22 +57,19 @@
                     </x-fa::button>
                     <x-foodalchemist::ki-action action="kiFotos" variant="ai" icon="heroicon-o-photo" label="Fotos erzeugen"
                             title="KI-Fotos für alle Schritte ohne Foto erzeugen" busy="Malt …" data-ki-fotos />
-                    <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                        <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen zur Anleitung" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                        <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-60 fa-surface shadow-lg py-1">
-                            <button type="button" role="menuitem" wire:click="$toggle('importOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                    title="Markdown einfügen und in Schritte umwandeln" data-import-toggle>
-                                @svg('heroicon-o-document-arrow-down', 'w-4 h-4 text-[var(--fa-ink-3)]') Markdown einfügen
-                            </button>
-                            @if($schritte->isNotEmpty())
-                                {{-- Spec 27 Phase 4: Postenzettel zum Aufhängen (mit oder ohne Fotos) --}}
-                                <a href="{{ route('foodalchemist.rezepte.anleitung', ['recipe' => $rezept->id]) }}" target="_blank" role="menuitem"
-                                   x-on:click="offen = false" class="{{ $menuePunkt }}" title="Anleitung als Postenzettel drucken" data-anleitung-drucken>
-                                    @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Postenzettel drucken
-                                </a>
-                            @endif
-                        </div>
-                    </div>
+                    <x-fa::menu label="Weitere Aktionen zur Anleitung" size="sm" breite="60">
+                        <button type="button" role="menuitem" wire:click="$toggle('importOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
+                                title="Markdown einfügen und in Schritte umwandeln" data-import-toggle>
+                            @svg('heroicon-o-document-arrow-down', 'w-4 h-4 text-[var(--fa-ink-3)]') Markdown einfügen
+                        </button>
+                        @if($schritte->isNotEmpty())
+                            {{-- Spec 27 Phase 4: Postenzettel zum Aufhängen (mit oder ohne Fotos) --}}
+                            <a href="{{ route('foodalchemist.rezepte.anleitung', ['recipe' => $rezept->id]) }}" target="_blank" role="menuitem"
+                               x-on:click="offen = false" class="{{ $menuePunkt }}" title="Anleitung als Postenzettel drucken" data-anleitung-drucken>
+                                @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Postenzettel drucken
+                            </a>
+                        @endif
+                    </x-fa::menu>
                 </span>
             @endif
         </div>

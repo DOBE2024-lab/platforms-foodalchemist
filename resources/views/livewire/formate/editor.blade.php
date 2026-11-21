@@ -34,19 +34,16 @@
                     @svg('heroicon-m-check', 'w-4 h-4') Gespeichert
                 </span>
                 @if($format)
-                    <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                        <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                        <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-60 fa-surface shadow-lg py-1">
-                            <a href="{{ route('foodalchemist.formate.dokument', ['id' => $format->id]) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                               class="{{ $menuePunkt }}" title="Karte für den Kunden, zum Drucken oder als PDF">
-                                @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Karte drucken
-                            </a>
-                            <a href="{{ route('foodalchemist.formate.report', ['id' => $format->id, 'profil' => 'voll']) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                               class="{{ $menuePunkt }}" title="Ausführlicher Bericht über alle Editionen mit Rezepten, Preisen und Deklaration">
-                                @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Bericht öffnen
-                            </a>
-                        </div>
-                    </div>
+                    <x-fa::menu breite="60">
+                        <a href="{{ route('foodalchemist.formate.dokument', ['id' => $format->id]) }}" target="_blank" role="menuitem" x-on:click="offen = false"
+                           class="{{ $menuePunkt }}" title="Karte für den Kunden, zum Drucken oder als PDF">
+                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Karte drucken
+                        </a>
+                        <a href="{{ route('foodalchemist.formate.report', ['id' => $format->id, 'profil' => 'voll']) }}" target="_blank" role="menuitem" x-on:click="offen = false"
+                           class="{{ $menuePunkt }}" title="Ausführlicher Bericht über alle Editionen mit Rezepten, Preisen und Deklaration">
+                            @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Bericht öffnen
+                        </a>
+                    </x-fa::menu>
                 @endif
                 {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung, der Editor bleibt offen --}}
                 <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">

@@ -363,17 +363,14 @@
                         @if($darfSchreiben)
                             <div class="flex items-center gap-1">
                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="editArt({{ $r->id }})">Bearbeiten</x-fa::button>
-                                <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                    <div class="hidden w-56 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $r->id }})"
-                                                wire:confirm="Art-Steuerung entfernen? Ohne verbleibende Art-Steuerung gilt für diesen Schritt wieder die Kategorie-Steuerung."
-                                                class="{{ $menuGefahr }}">
-                                            @svg('heroicon-m-trash', 'w-4 h-4')
-                                            Art-Steuerung entfernen
-                                        </button>
-                                    </div>
-                                </div>
+                                <x-fa::menu class="inline-block" size="sm">
+                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $r->id }})"
+                                            wire:confirm="Art-Steuerung entfernen? Ohne verbleibende Art-Steuerung gilt für diesen Schritt wieder die Kategorie-Steuerung."
+                                            class="{{ $menuGefahr }}">
+                                        @svg('heroicon-m-trash', 'w-4 h-4')
+                                        Art-Steuerung entfernen
+                                    </button>
+                                </x-fa::menu>
                             </div>
                         @endif
                     </li>
@@ -479,17 +476,14 @@
                                         @if($darfSchreiben)
                                             <div class="flex items-center justify-end gap-1">
                                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $r->id }})" data-ws-edit>Bearbeiten</x-fa::button>
-                                                <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                                    <div class="hidden w-56 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $r->id }})"
-                                                                wire:confirm="Steuerung {{ WS::schrittLabel($r->feature) }} mit {{ $katName($r->category) }} entfernen? Danach wird diese Kategorie für den Schritt nur noch bei Bedarf durchsucht."
-                                                                class="{{ $menuGefahr }}">
-                                                            @svg('heroicon-m-trash', 'w-4 h-4')
-                                                            Steuerung entfernen
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                <x-fa::menu class="inline-block" size="sm">
+                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $r->id }})"
+                                                            wire:confirm="Steuerung {{ WS::schrittLabel($r->feature) }} mit {{ $katName($r->category) }} entfernen? Danach wird diese Kategorie für den Schritt nur noch bei Bedarf durchsucht."
+                                                            class="{{ $menuGefahr }}">
+                                                        @svg('heroicon-m-trash', 'w-4 h-4')
+                                                        Steuerung entfernen
+                                                    </button>
+                                                </x-fa::menu>
                                             </div>
                                         @else
                                             <span class="fa-t-muted whitespace-nowrap">Nur Master-Team</span>

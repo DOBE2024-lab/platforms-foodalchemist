@@ -43,32 +43,29 @@
             @endif
             @if($hatDokument || $darfLoeschen || $etikettenVorschlag !== [])
                 {{-- Weitere Aktionen: Produktionsschein · Löschen (ganz unten, rot — nie neben Speichern) --}}
-                <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-64 fa-surface shadow-lg py-1">
-                        @if($hatDokument)
-                            <a href="{{ route('foodalchemist.produktion.auftraege.dokument', ['order' => $ops['id']]) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                               class="{{ $menuePunkt }}" title="Produktionsschein mit Einkauf, zum Drucken oder als PDF">
-                                @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsschein drucken
-                            </a>
-                        @endif
-                        {{-- Spec 76: Etiketten auch im Menü auffindbar (Sammeldruck aller Basisrezepte) --}}
-                        @if($etikettenVorschlag !== [])
-                            <button type="button" role="menuitem" x-on:click="offen = false; $dispatch('modal.open', { name: 'produktion-etiketten' })" class="{{ $menuePunkt }} w-full text-left" data-produktion-etiketten-menue>
-                                @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Etiketten drucken
-                            </button>
-                        @endif
-                        {{-- Spec 30 E7: Löschen nur geplant/storniert — ein laufender Auftrag wird storniert,
-                             ein fertiger ist Protokoll. --}}
-                        @if($darfLoeschen)
-                            @if($hatDokument)<div class="my-1 border-t border-[var(--fa-line)]"></div>@endif
-                            <button type="button" role="menuitem" wire:click="auftragLoeschen" wire:confirm="Produktionsauftrag samt Positionen löschen?" x-on:click="offen = false"
-                                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-produktion-loeschen>
-                                @svg('heroicon-o-trash', 'w-4 h-4') Auftrag löschen
-                            </button>
-                        @endif
-                    </div>
-                </div>
+                <x-fa::menu breite="64">
+                    @if($hatDokument)
+                        <a href="{{ route('foodalchemist.produktion.auftraege.dokument', ['order' => $ops['id']]) }}" target="_blank" role="menuitem" x-on:click="offen = false"
+                           class="{{ $menuePunkt }}" title="Produktionsschein mit Einkauf, zum Drucken oder als PDF">
+                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsschein drucken
+                        </a>
+                    @endif
+                    {{-- Spec 76: Etiketten auch im Menü auffindbar (Sammeldruck aller Basisrezepte) --}}
+                    @if($etikettenVorschlag !== [])
+                        <button type="button" role="menuitem" x-on:click="offen = false; $dispatch('modal.open', { name: 'produktion-etiketten' })" class="{{ $menuePunkt }} w-full text-left" data-produktion-etiketten-menue>
+                            @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Etiketten drucken
+                        </button>
+                    @endif
+                    {{-- Spec 30 E7: Löschen nur geplant/storniert — ein laufender Auftrag wird storniert,
+                         ein fertiger ist Protokoll. --}}
+                    @if($darfLoeschen)
+                        @if($hatDokument)<div class="my-1 border-t border-[var(--fa-line)]"></div>@endif
+                        <button type="button" role="menuitem" wire:click="auftragLoeschen" wire:confirm="Produktionsauftrag samt Positionen löschen?" x-on:click="offen = false"
+                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-produktion-loeschen>
+                            @svg('heroicon-o-trash', 'w-4 h-4') Auftrag löschen
+                        </button>
+                    @endif
+                </x-fa::menu>
             @endif
             {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung --}}
             <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">

@@ -39,22 +39,19 @@
                                 <span class="truncate">{{ $d['name'] }}</span>
                                 @unless($d['owned'])<x-fa::badge class="shrink-0">Geerbt</x-fa::badge>@endunless
                             </a>
-                            <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen für {{ $d['name'] }}" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                <div class="hidden w-48 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="duplizieren({{ $d['id'] }})" class="{{ $menuPunkt }}">
-                                        @svg('heroicon-m-document-duplicate', 'w-4 h-4 text-[var(--fa-ink-3)]')
-                                        Design duplizieren
+                            <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $d['name'] }}" size="sm" breite="48">
+                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="duplizieren({{ $d['id'] }})" class="{{ $menuPunkt }}">
+                                    @svg('heroicon-m-document-duplicate', 'w-4 h-4 text-[var(--fa-ink-3)]')
+                                    Design duplizieren
+                                </button>
+                                @if($d['owned'])
+                                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="loeschen({{ $d['id'] }})" wire:confirm="Design {{ $d['name'] }} löschen?" class="{{ $menuGefahr }}">
+                                        @svg('heroicon-m-trash', 'w-4 h-4')
+                                        Design löschen
                                     </button>
-                                    @if($d['owned'])
-                                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="loeschen({{ $d['id'] }})" wire:confirm="Design {{ $d['name'] }} löschen?" class="{{ $menuGefahr }}">
-                                            @svg('heroicon-m-trash', 'w-4 h-4')
-                                            Design löschen
-                                        </button>
-                                    @endif
-                                </div>
-                            </div>
+                                @endif
+                            </x-fa::menu>
                         </div>
                     @empty
                         <x-fa::empty icon="heroicon-o-swatch" title="Noch kein eigenes Design" compact>Unten eine Vorlage wählen und daraus starten.</x-fa::empty>

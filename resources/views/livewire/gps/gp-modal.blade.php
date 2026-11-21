@@ -33,19 +33,19 @@
         @if(! $neu && $gp !== null)
             <span class="{{ $titelKlein }}" data-gp-status-kopf>Status</span>
             @if($kannKuratieren && $gp->status !== \Platform\FoodAlchemist\Enums\GpStatus::Merged)
-                <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false" wire:key="gp-status-{{ $gp->id }}-{{ $gp->status->value }}">
-                    <button type="button" x-on:click="toggle($event)" class="inline-flex items-center gap-0.5" aria-haspopup="menu" x-bind:aria-expanded="offen" aria-label="Status ändern" data-gp-status-select>
-                        <x-fa::status :value="$gp->status" />@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]')
-                    </button>
-                    <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-44 fa-surface shadow-lg py-1">
-                        @foreach($statusFaelle as $fall)
-                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="statusSetzen('{{ $fall->value }}')"
-                                    class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $gp->status === $fall ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
-                                {{ $fall->label() }}@if($gp->status === $fall)@svg('heroicon-m-check', 'w-4 h-4')@endif
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
+                <x-fa::menu class="inline-block" breite="44" wire:key="gp-status-{{ $gp->id }}-{{ $gp->status->value }}">
+                    <x-slot:ausloeser>
+                        <button type="button" x-on:click="toggle($event)" class="inline-flex items-center gap-0.5" aria-haspopup="menu" x-bind:aria-expanded="offen" aria-label="Status ändern" data-gp-status-select>
+                            <x-fa::status :value="$gp->status" />@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]')
+                        </button>
+                    </x-slot:ausloeser>
+                    @foreach($statusFaelle as $fall)
+                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="statusSetzen('{{ $fall->value }}')"
+                                class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $gp->status === $fall ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
+                            {{ $fall->label() }}@if($gp->status === $fall)@svg('heroicon-m-check', 'w-4 h-4')@endif
+                        </button>
+                    @endforeach
+                </x-fa::menu>
             @else
                 <x-fa::status :value="$gp->status" />
             @endif
@@ -56,20 +56,17 @@
                     data-gp-alles-anreichern busy="Läuft …" flash="Vorschläge da" />
             @endif
 
-            <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" data-gp-weitere-aktionen />
-                <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-56 fa-surface shadow-lg py-1">
-                    <a role="menuitem" href="{{ route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation']) }}" target="_blank" x-on:click="offen = false" class="{{ $menuePunkt }}" data-gp-druck>
-                        @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Blatt drucken
-                    </a>
-                    <a role="menuitem" href="{{ route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation', 'pdf' => 1]) }}" x-on:click="offen = false" class="{{ $menuePunkt }}" data-gp-pdf>
-                        @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Blatt als PDF laden
-                    </a>
-                    <a role="menuitem" href="{{ route('foodalchemist.etiketten.index', ['quelle' => 'gp', 'id' => $gp->id]) }}" target="_blank" x-on:click="offen = false" class="{{ $menuePunkt }}" data-gp-etikett>
-                        @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Anbruch-Etikett drucken
-                    </a>
-                </div>
-            </div>
+            <x-fa::menu ausloeser:data-gp-weitere-aktionen="">
+                <a role="menuitem" href="{{ route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation']) }}" target="_blank" x-on:click="offen = false" class="{{ $menuePunkt }}" data-gp-druck>
+                    @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Blatt drucken
+                </a>
+                <a role="menuitem" href="{{ route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation', 'pdf' => 1]) }}" x-on:click="offen = false" class="{{ $menuePunkt }}" data-gp-pdf>
+                    @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Blatt als PDF laden
+                </a>
+                <a role="menuitem" href="{{ route('foodalchemist.etiketten.index', ['quelle' => 'gp', 'id' => $gp->id]) }}" target="_blank" x-on:click="offen = false" class="{{ $menuePunkt }}" data-gp-etikett>
+                    @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Anbruch-Etikett drucken
+                </a>
+            </x-fa::menu>
         @endif
 
         {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung,

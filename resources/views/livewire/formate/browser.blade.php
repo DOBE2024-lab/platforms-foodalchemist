@@ -152,19 +152,19 @@
                                 <td class="num {{ $it->editions_count === 0 ? 'text-[var(--fa-ink-3)]' : 'text-[var(--fa-ink-2)]' }}">{{ $it->editions_count }}</td>
                                 {{-- Status als Chip, Änderung über ein kleines Menü --}}
                                 <td class="whitespace-nowrap" wire:click.stop @click.stop>
-                                    <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false" wire:key="fstsel-{{ $it->id }}-{{ $it->status }}">
-                                        <button type="button" x-on:click="toggle($event)" class="inline-flex items-center gap-0.5" aria-haspopup="menu" x-bind:aria-expanded="offen" aria-label="Status von {{ $it->name }} ändern">
-                                            <x-fa::badge :tone="$statusTon[$it->status] ?? 'neutral'" :icon="$statusIcon[$it->status] ?? null">{{ $statusLabel[$it->status] ?? $it->status }}</x-fa::badge>@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]')
-                                        </button>
-                                        <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-40 fa-surface shadow-lg py-1">
-                                            @foreach($statusLabel as $val => $lbl)
-                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="statusSetzen({{ $it->id }}, '{{ $val }}')"
-                                                        class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $it->status === $val ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
-                                                    {{ $lbl }}@if($it->status === $val)@svg('heroicon-m-check', 'w-4 h-4')@endif
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                    </div>
+                                    <x-fa::menu class="inline-block" breite="40" wire:key="fstsel-{{ $it->id }}-{{ $it->status }}">
+                                        <x-slot:ausloeser>
+                                            <button type="button" x-on:click="toggle($event)" class="inline-flex items-center gap-0.5" aria-haspopup="menu" x-bind:aria-expanded="offen" aria-label="Status von {{ $it->name }} ändern">
+                                                <x-fa::badge :tone="$statusTon[$it->status] ?? 'neutral'" :icon="$statusIcon[$it->status] ?? null">{{ $statusLabel[$it->status] ?? $it->status }}</x-fa::badge>@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]')
+                                            </button>
+                                        </x-slot:ausloeser>
+                                        @foreach($statusLabel as $val => $lbl)
+                                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="statusSetzen({{ $it->id }}, '{{ $val }}')"
+                                                    class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $it->status === $val ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
+                                                {{ $lbl }}@if($it->status === $val)@svg('heroicon-m-check', 'w-4 h-4')@endif
+                                            </button>
+                                        @endforeach
+                                    </x-fa::menu>
                                 </td>
                             </x-foodalchemist::table-row>
                         @empty

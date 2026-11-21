@@ -150,20 +150,17 @@
                                     @if($eigen)
                                         <div class="inline-flex items-center gap-1">
                                             <x-fa::button variant="ghost" size="sm" icon="heroicon-m-pencil-square" wire:click="edit({{ $ak->id }})">Bearbeiten</x-fa::button>
-                                            <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                                <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" size="sm" label="Weitere Aktionen für {{ $ak->label }}" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                                <div class="hidden w-52 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleInactive({{ $ak->id }})"
-                                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
-                                                        @svg($ak->is_inactive ? 'heroicon-o-play' : 'heroicon-o-pause', 'w-4 h-4 text-[var(--fa-ink-3)]'){{ $ak->is_inactive ? 'Preisklasse aktivieren' : 'Preisklasse deaktivieren' }}
-                                                    </button>
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $ak->id }})" wire:confirm="Diese Preisklasse löschen?" @disabled($anzahl > 0)
-                                                        title="{{ $anzahl > 0 ? 'Wird von Rezepten genutzt, nur deaktivieren möglich.' : '' }}"
-                                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)] disabled:opacity-40 disabled:pointer-events-none">
-                                                        @svg('heroicon-o-trash', 'w-4 h-4')Preisklasse löschen
-                                                    </button>
-                                                </div>
-                                            </div>
+                                            <x-fa::menu class="inline-block" size="sm" label="Weitere Aktionen für {{ $ak->label }}" breite="52">
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleInactive({{ $ak->id }})"
+                                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
+                                                    @svg($ak->is_inactive ? 'heroicon-o-play' : 'heroicon-o-pause', 'w-4 h-4 text-[var(--fa-ink-3)]'){{ $ak->is_inactive ? 'Preisklasse aktivieren' : 'Preisklasse deaktivieren' }}
+                                                </button>
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $ak->id }})" wire:confirm="Diese Preisklasse löschen?" @disabled($anzahl > 0)
+                                                    title="{{ $anzahl > 0 ? 'Wird von Rezepten genutzt, nur deaktivieren möglich.' : '' }}"
+                                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)] disabled:opacity-40 disabled:pointer-events-none">
+                                                    @svg('heroicon-o-trash', 'w-4 h-4')Preisklasse löschen
+                                                </button>
+                                            </x-fa::menu>
                                         </div>
                                     @else
                                         <x-fa::badge>{{ $ak->team_id === null ? 'Vorgabe' : 'Geerbt' }}</x-fa::badge>

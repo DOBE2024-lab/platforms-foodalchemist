@@ -93,29 +93,26 @@
                         title="Status, Konditionen, Absprachen, Verträge und Fristen" data-beziehung-btn>Stammblatt öffnen</x-fa::button>
                     <x-fa::button icon="heroicon-m-printer" :href="route('foodalchemist.suppliers.dokument', ['id' => $aktiverLieferant->id, 'profil' => 'kalkulation'])" target="_blank"
                         title="Artikelliste mit Grundprodukt und Preisen zum Drucken oder als PDF" data-lieferant-druck>Artikelliste drucken</x-fa::button>
-                    <div class="relative" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                        <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                        <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-56 fa-surface shadow-lg py-1">
-                            <button type="button" role="menuitem" wire:click="anomalienAnzeigen" wire:loading.attr="disabled" x-on:click="offen = false"
-                                    class="flex w-full items-center gap-2 px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)]" data-anomalien-btn>
-                                @svg('heroicon-o-chart-bar', 'w-4 h-4 text-[var(--fa-ink-3)]') Preisausreißer anzeigen
+                    <x-fa::menu>
+                        <button type="button" role="menuitem" wire:click="anomalienAnzeigen" wire:loading.attr="disabled" x-on:click="offen = false"
+                                class="flex w-full items-center gap-2 px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)]" data-anomalien-btn>
+                            @svg('heroicon-o-chart-bar', 'w-4 h-4 text-[var(--fa-ink-3)]') Preisausreißer anzeigen
+                        </button>
+                        {{-- Marken dieses Lieferanten (27.10.): Lesen für alle Teams wie die Seite, darum außerhalb des Bearbeiten-Rechts --}}
+                        <a role="menuitem" href="{{ route('foodalchemist.suppliers.marken', ['lieferant' => $aktiverLieferant->id]) }}" wire:navigate x-on:click="offen = false"
+                           class="flex w-full items-center gap-2 px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)]" data-link-marken-lieferant>
+                            @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Marken
+                        </a>
+                        @if($darfLieferantEdit)
+                            {{-- Stammdaten-Pflege lebt im Stammblatt; hier nur Aktivieren/Deaktivieren --}}
+                            <button type="button" role="menuitem" x-on:click="offen = false"
+                                    wire:click="lieferantDeaktivieren({{ $aktiverLieferant->is_inactive ? 'false' : 'true' }})"
+                                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $aktiverLieferant->is_inactive ? 'text-[var(--fa-ink)]' : 'text-[var(--fa-crit)]' }}">
+                                @svg($aktiverLieferant->is_inactive ? 'heroicon-o-play' : 'heroicon-o-pause', 'w-4 h-4')
+                                {{ $aktiverLieferant->is_inactive ? 'Lieferant aktivieren' : 'Lieferant deaktivieren' }}
                             </button>
-                            {{-- Marken dieses Lieferanten (27.10.): Lesen für alle Teams wie die Seite, darum außerhalb des Bearbeiten-Rechts --}}
-                            <a role="menuitem" href="{{ route('foodalchemist.suppliers.marken', ['lieferant' => $aktiverLieferant->id]) }}" wire:navigate x-on:click="offen = false"
-                               class="flex w-full items-center gap-2 px-3 py-2 text-left fa-t-body hover:bg-[var(--fa-hover)]" data-link-marken-lieferant>
-                                @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Marken
-                            </a>
-                            @if($darfLieferantEdit)
-                                {{-- Stammdaten-Pflege lebt im Stammblatt; hier nur Aktivieren/Deaktivieren --}}
-                                <button type="button" role="menuitem" x-on:click="offen = false"
-                                        wire:click="lieferantDeaktivieren({{ $aktiverLieferant->is_inactive ? 'false' : 'true' }})"
-                                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $aktiverLieferant->is_inactive ? 'text-[var(--fa-ink)]' : 'text-[var(--fa-crit)]' }}">
-                                    @svg($aktiverLieferant->is_inactive ? 'heroicon-o-play' : 'heroicon-o-pause', 'w-4 h-4')
-                                    {{ $aktiverLieferant->is_inactive ? 'Lieferant aktivieren' : 'Lieferant deaktivieren' }}
-                                </button>
-                            @endif
-                        </div>
-                    </div>
+                        @endif
+                    </x-fa::menu>
                     <x-fa::button variant="primary" icon="heroicon-m-plus" x-on:click="$dispatch('modal.open', { name: 'artikel-neu' })" data-neuer-artikel-btn>Artikel anlegen</x-fa::button>
                 </x-slot:actions>
             @else

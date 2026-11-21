@@ -127,52 +127,52 @@
                     {{-- Spec 65: Beleg-Aktionen schreiben sofort — „Bearbeiten" sperrt die Schiene, „Fertig" gibt frei --}}
                     <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort />
                     {{-- Weitere Aktionen: Belege, E-Mails, Storno (ganz unten, rot) --}}
-                    <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                        <x-fa::button variant="ghost" icon="heroicon-m-ellipsis-horizontal" iconRight="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Weitere Aktionen</x-fa::button>
-                        <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-64 fa-surface shadow-lg py-1">
-                            <a href="{{ route('foodalchemist.orders.dokument', ['order' => $detail['id']]) }}" target="_blank" role="menuitem" class="{{ $menuePunkt }}" title="Bestelldokument im neuen Fenster">
-                                @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Bestellung drucken
+                    <x-fa::menu class="inline-block" breite="64">
+                        <x-slot:ausloeser>
+                            <x-fa::button variant="ghost" icon="heroicon-m-ellipsis-horizontal" iconRight="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Weitere Aktionen</x-fa::button>
+                        </x-slot:ausloeser>
+                        <a href="{{ route('foodalchemist.orders.dokument', ['order' => $detail['id']]) }}" target="_blank" role="menuitem" class="{{ $menuePunkt }}" title="Bestelldokument im neuen Fenster">
+                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Bestellung drucken
+                        </a>
+                        <a href="{{ route('foodalchemist.orders.dokument', ['order' => $detail['id'], 'pdf' => 1]) }}" role="menuitem" class="{{ $menuePunkt }}">
+                            @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Als PDF herunterladen
+                        </a>
+                        <a href="{{ route('foodalchemist.orders.dokument', ['order' => $detail['id'], 'csv' => 1]) }}" role="menuitem" class="{{ $menuePunkt }}">
+                            @svg('heroicon-o-table-cells', 'w-4 h-4 text-[var(--fa-ink-3)]') Als CSV herunterladen
+                        </a>
+                        <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                        @if($serverVersand)
+                            <span role="menuitem" aria-disabled="true" class="{{ $menueAus }}" title="Versandart „Direkt per E-Mail“ (Einstellungen → Einkauf)">
+                                @svg('heroicon-o-envelope', 'w-4 h-4') {{ $mailto ? 'Geht beim Absenden direkt per E-Mail raus' : 'E-Mail fehlt beim Lieferanten' }}
+                            </span>
+                        @elseif($mailto)
+                            <a href="{{ $mailto }}" role="menuitem" class="{{ $menuePunkt }}" title="Bestellung als E-Mail an den Lieferanten vorbereiten">
+                                @svg('heroicon-o-envelope', 'w-4 h-4 text-[var(--fa-ink-3)]') E-Mail an Lieferant vorbereiten
                             </a>
-                            <a href="{{ route('foodalchemist.orders.dokument', ['order' => $detail['id'], 'pdf' => 1]) }}" role="menuitem" class="{{ $menuePunkt }}">
-                                @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Als PDF herunterladen
-                            </a>
-                            <a href="{{ route('foodalchemist.orders.dokument', ['order' => $detail['id'], 'csv' => 1]) }}" role="menuitem" class="{{ $menuePunkt }}">
-                                @svg('heroicon-o-table-cells', 'w-4 h-4 text-[var(--fa-ink-3)]') Als CSV herunterladen
-                            </a>
-                            <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                            @if($serverVersand)
-                                <span role="menuitem" aria-disabled="true" class="{{ $menueAus }}" title="Versandart „Direkt per E-Mail“ (Einstellungen → Einkauf)">
-                                    @svg('heroicon-o-envelope', 'w-4 h-4') {{ $mailto ? 'Geht beim Absenden direkt per E-Mail raus' : 'E-Mail fehlt beim Lieferanten' }}
-                                </span>
-                            @elseif($mailto)
-                                <a href="{{ $mailto }}" role="menuitem" class="{{ $menuePunkt }}" title="Bestellung als E-Mail an den Lieferanten vorbereiten">
-                                    @svg('heroicon-o-envelope', 'w-4 h-4 text-[var(--fa-ink-3)]') E-Mail an Lieferant vorbereiten
+                        @else
+                            <span role="menuitem" aria-disabled="true" class="{{ $menueAus }}" title="Keine Bestell-E-Mail beim Lieferanten hinterlegt">
+                                @svg('heroicon-o-envelope', 'w-4 h-4') E-Mail fehlt beim Lieferanten
+                            </span>
+                        @endif
+                        @if(! $serverVersand && in_array($detail['status'], ['sent', 'confirmed'], true))
+                            @if($cancellationMailto)
+                                <a href="{{ $cancellationMailto }}" role="menuitem" class="{{ $menuePunkt }} text-[var(--fa-crit)]" title="Storno-Mail an den Lieferanten vorbereiten" data-order-cancellation-mail>
+                                    @svg('heroicon-o-envelope', 'w-4 h-4') Storno an Lieferant
                                 </a>
                             @else
-                                <span role="menuitem" aria-disabled="true" class="{{ $menueAus }}" title="Keine Bestell-E-Mail beim Lieferanten hinterlegt">
-                                    @svg('heroicon-o-envelope', 'w-4 h-4') E-Mail fehlt beim Lieferanten
+                                <span role="menuitem" aria-disabled="true" class="{{ $menueAus }}" title="Beim Lieferanten fehlt die Bestell-E-Mail" data-order-cancellation-mail-missing>
+                                    @svg('heroicon-o-envelope', 'w-4 h-4') Storno an Lieferant
                                 </span>
                             @endif
-                            @if(! $serverVersand && in_array($detail['status'], ['sent', 'confirmed'], true))
-                                @if($cancellationMailto)
-                                    <a href="{{ $cancellationMailto }}" role="menuitem" class="{{ $menuePunkt }} text-[var(--fa-crit)]" title="Storno-Mail an den Lieferanten vorbereiten" data-order-cancellation-mail>
-                                        @svg('heroicon-o-envelope', 'w-4 h-4') Storno an Lieferant
-                                    </a>
-                                @else
-                                    <span role="menuitem" aria-disabled="true" class="{{ $menueAus }}" title="Beim Lieferanten fehlt die Bestell-E-Mail" data-order-cancellation-mail-missing>
-                                        @svg('heroicon-o-envelope', 'w-4 h-4') Storno an Lieferant
-                                    </span>
-                                @endif
-                            @endif
-                            @if($stornoStatus && ! $sperrLesen)
-                                <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="setStatus('{{ $stornoStatus->value }}')" wire:confirm="Bestellung stornieren?"
-                                    class="{{ $menuePunkt }} text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-status-{{ $stornoStatus->value }}>
-                                    @svg('heroicon-o-x-circle', 'w-4 h-4') {{ $statusKnopf($stornoStatus) }}
-                                </button>
-                            @endif
-                        </div>
-                    </div>
+                        @endif
+                        @if($stornoStatus && ! $sperrLesen)
+                            <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="setStatus('{{ $stornoStatus->value }}')" wire:confirm="Bestellung stornieren?"
+                                class="{{ $menuePunkt }} text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-status-{{ $stornoStatus->value }}>
+                                @svg('heroicon-o-x-circle', 'w-4 h-4') {{ $statusKnopf($stornoStatus) }}
+                            </button>
+                        @endif
+                    </x-fa::menu>
 
                     @unless($sperrLesen)
                     @foreach($nebenStatus as $z)

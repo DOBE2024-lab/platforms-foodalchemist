@@ -248,19 +248,19 @@
                                 {{-- Status als Chip; Kuratoren ändern ihn über ein kleines Menü (Stub bleibt Auto-Zustand) --}}
                                 <td class="whitespace-nowrap" wire:click.stop @click.stop>
                                     @if(\Platform\FoodAlchemist\Support\Curate::canCurate(auth()->user(), $r) && $r->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Stub)
-                                        <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false" wire:key="rst-{{ $r->id }}-{{ $r->status->value }}">
-                                            <button type="button" x-on:click="toggle($event)" class="inline-flex items-center gap-0.5" aria-haspopup="menu" x-bind:aria-expanded="offen" aria-label="Status von {{ $r->name }} ändern" data-status-select>
-                                                <x-fa::status :value="$r->status" />@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]')
-                                            </button>
-                                            <div x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" class="hidden w-40 fa-surface shadow-lg py-1">
-                                                @foreach($statusWahl as $fall)
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="statusSetzen({{ $r->id }}, '{{ $fall->value }}')"
-                                                            class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $r->status === $fall ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
-                                                        {{ $fall->label() }}@if($r->status === $fall)@svg('heroicon-m-check', 'w-4 h-4')@endif
-                                                    </button>
-                                                @endforeach
-                                            </div>
-                                        </div>
+                                        <x-fa::menu class="inline-block" breite="40" wire:key="rst-{{ $r->id }}-{{ $r->status->value }}">
+                                            <x-slot:ausloeser>
+                                                <button type="button" x-on:click="toggle($event)" class="inline-flex items-center gap-0.5" aria-haspopup="menu" x-bind:aria-expanded="offen" aria-label="Status von {{ $r->name }} ändern" data-status-select>
+                                                    <x-fa::status :value="$r->status" />@svg('heroicon-m-chevron-down', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]')
+                                                </button>
+                                            </x-slot:ausloeser>
+                                            @foreach($statusWahl as $fall)
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="statusSetzen({{ $r->id }}, '{{ $fall->value }}')"
+                                                        class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $r->status === $fall ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
+                                                    {{ $fall->label() }}@if($r->status === $fall)@svg('heroicon-m-check', 'w-4 h-4')@endif
+                                                </button>
+                                            @endforeach
+                                        </x-fa::menu>
                                     @else
                                         <x-fa::status :value="$r->status" />
                                     @endif

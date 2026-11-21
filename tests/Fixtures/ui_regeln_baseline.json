@@ -520,7 +520,8 @@
     "livewire/orders/index.blade.php": {
         "typo_groesse": 19,
         "typo_tinte": 24,
-        "roher_button": 7
+        "roher_button": 7,
+        "rohes_menue": 1
     },
     "livewire/pakete/index.blade.php": {
         "typo_groesse": 2,
@@ -1109,7 +1110,8 @@
     "livewire/verkauf/vk-modal.blade.php": {
         "typo_groesse": 19,
         "typo_tinte": 23,
-        "roher_button": 8
+        "roher_button": 8,
+        "rohes_menue": 1
     },
     "livewire/verwaltung/mandant-beenden.blade.php": {
         "typo_groesse": 2,

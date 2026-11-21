@@ -69,22 +69,19 @@
                                     <td class="align-top">
                                         <div class="flex items-center justify-end gap-1">
                                             <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $kat->id }})" data-kat-edit>Bearbeiten</x-fa::button>
-                                            <div class="relative inline-block" x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                                                <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen für {{ $kat->label }}" size="sm" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                                                <div class="hidden w-56 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu">
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleActive({{ $kat->id }})" class="{{ $menuPunkt }}">
-                                                        @svg($kat->active ? 'heroicon-m-eye-slash' : 'heroicon-m-eye', 'w-4 h-4 text-[var(--fa-ink-3)]')
-                                                        {{ $kat->active ? 'Kategorie deaktivieren' : 'Kategorie aktivieren' }}
-                                                    </button>
-                                                    <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $kat->id }})"
-                                                            wire:confirm="Kategorie „{{ $kat->label }}“ und {{ $anzahlDocs }} {{ $anzahlDocs === 1 ? 'Dossier' : 'Dossiers' }} endgültig löschen? Das lässt sich nicht rückgängig machen."
-                                                            class="{{ $menuGefahr }}">
-                                                        @svg('heroicon-m-trash', 'w-4 h-4')
-                                                        Kategorie samt Dossiers löschen
-                                                    </button>
-                                                </div>
-                                            </div>
+                                            <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $kat->label }}" size="sm">
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleActive({{ $kat->id }})" class="{{ $menuPunkt }}">
+                                                    @svg($kat->active ? 'heroicon-m-eye-slash' : 'heroicon-m-eye', 'w-4 h-4 text-[var(--fa-ink-3)]')
+                                                    {{ $kat->active ? 'Kategorie deaktivieren' : 'Kategorie aktivieren' }}
+                                                </button>
+                                                <div class="my-1 border-t border-[var(--fa-line)]"></div>
+                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $kat->id }})"
+                                                        wire:confirm="Kategorie „{{ $kat->label }}“ und {{ $anzahlDocs }} {{ $anzahlDocs === 1 ? 'Dossier' : 'Dossiers' }} endgültig löschen? Das lässt sich nicht rückgängig machen."
+                                                        class="{{ $menuGefahr }}">
+                                                    @svg('heroicon-m-trash', 'w-4 h-4')
+                                                    Kategorie samt Dossiers löschen
+                                                </button>
+                                            </x-fa::menu>
                                         </div>
                                     </td>
                                 @endif

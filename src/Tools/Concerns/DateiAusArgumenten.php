@@ -3,6 +3,7 @@
 namespace Platform\FoodAlchemist\Tools\Concerns;
 
 use Illuminate\Http\UploadedFile;
+use Platform\FoodAlchemist\Support\BildUpload;
 use Platform\FoodAlchemist\Support\SichererAbruf;
 use Platform\FoodAlchemist\Support\TrendVokabular;
 
@@ -62,6 +63,18 @@ trait DateiAusArgumenten
         $mime = $mime ?: (new \finfo(FILEINFO_MIME_TYPE))->file($pfad) ?: 'application/octet-stream';
 
         return new UploadedFile($pfad, $name, $mime, null, true);
+    }
+
+    /**
+     * 98 · 2.3c: dieselbe Bild-Prüfung wie die Oberfläche ({@see \Platform\FoodAlchemist\Support\BildUpload} — `image`, höchstens
+     * 14 MB, deutsche Meldungen). Liefert die erste Meldung oder null, wenn das Bild durchgeht.
+     */
+    protected function bildFehler(UploadedFile $datei): ?string
+    {
+        $pruefung = \Illuminate\Support\Facades\Validator::make(['datei' => $datei],
+            ['datei' => BildUpload::regel(true)], BildUpload::meldungen('datei'));
+
+        return $pruefung->fails() ? (string) $pruefung->errors()->first('datei') : null;
     }
 
     protected function dateiAufraeumen(): void

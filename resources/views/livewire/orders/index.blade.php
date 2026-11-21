@@ -12,7 +12,6 @@
     $segment = 'h-7 px-3 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors';
     $segmentAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
     $segmentAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
 
     $sichten = ['bestellungen' => 'Bestellungen', 'liefertage' => 'Liefertage', 'lieferanten' => 'Lieferanten', 'runden' => 'Runden', 'bedarfe' => 'Bedarfe'];
     $sichtTitel = ['bestellungen' => 'Bestellungen finden', 'liefertage' => 'Nach Liefertag planen', 'lieferanten' => 'Nach Lieferant bündeln', 'runden' => 'Bestellrunden', 'bedarfe' => 'Freigegebene Materialbedarfe'];
@@ -213,15 +212,10 @@
                     <x-slot:ausloeser>
                         <x-fa::button variant="ghost" icon="heroicon-m-ellipsis-horizontal" iconRight="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Weitere Aktionen</x-fa::button>
                     </x-slot:ausloeser>
-                    <a href="{{ route('foodalchemist.einstellungen', ['tab' => 'einkauf', 'bereich' => 'lagerorte']) }}" role="menuitem" class="{{ $menuePunkt }}">
-                        @svg('heroicon-o-archive-box', 'w-4 h-4 text-[var(--fa-ink-3)]') Lagerorte verwalten
-                    </a>
+                    <x-fa::menu-item icon="heroicon-o-archive-box" :href="route('foodalchemist.einstellungen', ['tab' => 'einkauf', 'bereich' => 'lagerorte'])" :schliessen="false">Lagerorte verwalten</x-fa::menu-item>
                     @if($sicht !== 'bedarfe')
                         <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="leereEntwuerfeLoeschen" wire:confirm="Alle leeren Entwürfe ohne Positionen löschen?"
-                            class="{{ $menuePunkt }} text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
-                            @svg('heroicon-o-trash', 'w-4 h-4') Leere Entwürfe löschen
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" wire:click="leereEntwuerfeLoeschen" wire:confirm="Alle leeren Entwürfe ohne Positionen löschen?">Leere Entwürfe löschen</x-fa::menu-item>
                     @endif
                 </x-fa::menu>
 

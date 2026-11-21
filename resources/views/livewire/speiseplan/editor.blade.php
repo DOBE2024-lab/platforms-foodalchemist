@@ -23,7 +23,6 @@
     $chip = 'inline-flex items-center h-7 px-2.5 rounded-full border text-[length:var(--fa-text-sm)] transition-colors duration-150';
     $chipAn = 'bg-[var(--fa-accent-soft)] border-[var(--fa-accent)] text-[var(--fa-accent)] font-medium';
     $chipAus = 'bg-[var(--fa-surface)] border-[var(--fa-line-strong)] text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)] hover:border-[var(--fa-ink-3)]';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $karte = 'fa-surface p-3 flex flex-col gap-2';
 
     // Wareneinsatz-Zustand gegen das Zielband (Service liefert ok · unter · ueber · weit_ueber · unbekannt).
@@ -60,26 +59,14 @@
                 </x-fa::button>
                 </fieldset>
                 <x-fa::menu breite="72">
-                    <a href="{{ route('foodalchemist.speiseplan.dokument', ['id' => $sp->id, 'mahlzeit' => $mahlzeit, 'montag' => $montagDt->format('Y-m-d')]) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                       class="{{ $menuePunkt }}" title="Wochenaushang zum Drucken oder als PDF, mit Legende der Allergene und Zusatzstoffe" data-sp-aushang>
-                        @svg('heroicon-o-printer', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Woche drucken
-                    </a>
+                    <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.speiseplan.dokument', ['id' => $sp->id, 'mahlzeit' => $mahlzeit, 'montag' => $montagDt->format('Y-m-d')])" abstand="weit" target="_blank" title="Wochenaushang zum Drucken oder als PDF, mit Legende der Allergene und Zusatzstoffe" data-sp-aushang>Woche drucken</x-fa::menu-item>
                     <fieldset @disabled($gesperrt) class="contents">{{-- Spec 65: Drucken bleibt frei, Kopieren/Produktion/Löschen nur im Bearbeiten-Modus --}}
                     @if($ansicht === 'woche')
-                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="wocheKopierenOeffnen" class="{{ $menuePunkt }}" data-sp-woche-kopieren-btn>
-                            @svg('heroicon-o-document-duplicate', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Woche kopieren
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-document-duplicate" abstand="weit" wire:click="wocheKopierenOeffnen" data-sp-woche-kopieren-btn>Woche kopieren</x-fa::menu-item>
                     @endif
-                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="anProduktion"
-                            wire:confirm="Diese Woche ({{ $mahlzeiten[$mahlzeit] ?? '' }}) an die Produktion übergeben? Je Werktag mit Belegung wird ein Produktionsauftrag angelegt (Menge = Teilnehmerzahl)."
-                            class="{{ $menuePunkt }}" title="Je Werktag mit Belegung ein Produktionsauftrag, Menge = Teilnehmerzahl" data-sp-produktion>
-                        @svg('heroicon-o-fire', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Woche an Produktion übergeben
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-fire" abstand="weit" wire:click="anProduktion" wire:confirm="Diese Woche ({{ $mahlzeiten[$mahlzeit] ?? '' }}) an die Produktion übergeben? Je Werktag mit Belegung wird ein Produktionsauftrag angelegt (Menge = Teilnehmerzahl)." title="Je Werktag mit Belegung ein Produktionsauftrag, Menge = Teilnehmerzahl" data-sp-produktion>Woche an Produktion übergeben</x-fa::menu-item>
                     <div class="my-1 border-t border-[var(--fa-line)]" role="separator"></div>
-                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="loeschen({{ $sp->id }})" wire:confirm="Speiseplan löschen?"
-                            class="{{ $menuePunkt }} text-[var(--fa-crit)]" data-sp-loeschen>
-                        @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Speiseplan löschen
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen({{ $sp->id }})" wire:confirm="Speiseplan löschen?" data-sp-loeschen>Speiseplan löschen</x-fa::menu-item>
                     </fieldset>
                 </x-fa::menu>
                 {{-- Spec 65: der Speiseplan schreibt sofort (Zellen, Mengen, Linien, Stammdaten bei Änderung) — darum

@@ -15,7 +15,6 @@
         'manual' => 'von Hand gepflegt, die KI überschreibt ihn nicht',
         'auto' => 'automatisch erzeugt',
     ][$z ?? ''] ?? (string) $z;
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $knopfKi = 'inline-flex items-center gap-1.5 h-7 px-2.5 whitespace-nowrap rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium bg-[var(--fa-accent-soft)] text-[var(--fa-accent)] border border-[var(--fa-accent-line)] hover:bg-[var(--fa-accent-soft-hover)] transition-colors duration-150';
     $hinweis = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $laedt = 'py-12 text-center text-[length:var(--fa-text-md)] text-[var(--fa-ink-3)]';
@@ -59,45 +58,23 @@
                             <span class="{{ $hinweis }}">Füllt alle leeren Felder in einem Lauf. Von Hand Gepflegtes bleibt stehen.</span>
                         </div>
                         <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                        <button type="button" role="menuitem" wire:click="$toggle('ueberarbeitenOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                title="Freie Anweisung: die KI überarbeitet Zutaten, Mengen, Zubereitung und Beschreibung. Erst Vorschau, dann übernehmen." data-ki-ueberarbeiten>
-                            @svg('heroicon-o-pencil-square', 'w-4 h-4 text-[var(--fa-ink-3)]') Mit Anweisung überarbeiten
-                        </button>
-                        <button type="button" role="menuitem" wire:click="$toggle('copilotOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                title="Die KI prüft Mengen, Einheiten, überflüssige und fehlende Zutaten. Jeder Befund lässt sich einzeln übernehmen, das Rezept bleibt stehen." data-copilot>
-                            @svg('heroicon-o-clipboard-document-check', 'w-4 h-4 text-[var(--fa-ink-3)]') Rezept prüfen lassen
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-pencil-square" abstand="weit" wire:click="$toggle('ueberarbeitenOffen')" title="Freie Anweisung: die KI überarbeitet Zutaten, Mengen, Zubereitung und Beschreibung. Erst Vorschau, dann übernehmen." data-ki-ueberarbeiten>Mit Anweisung überarbeiten</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-clipboard-document-check" abstand="weit" wire:click="$toggle('copilotOffen')" title="Die KI prüft Mengen, Einheiten, überflüssige und fehlende Zutaten. Jeder Befund lässt sich einzeln übernehmen, das Rezept bleibt stehen." data-copilot>Rezept prüfen lassen</x-fa::menu-item>
                     </x-fa::menu>
 
                     {{-- Weitere Aktionen: Drucken · Vorlage · Löschen (ganz unten, rot — nie neben Speichern) --}}
                     <x-fa::menu breite="60">
-                        <a href="{{ route('foodalchemist.rezepte.dokument', ['id' => $recipeId, 'profil' => 'produktion']) }}" target="_blank" role="menuitem"
-                           x-on:click="offen = false" class="{{ $menuePunkt }}" title="Druck- und PDF-Bericht mit Profilen und Filtern" data-rezept-druck>
-                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Rezept drucken
-                        </a>
+                        <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.rezepte.dokument', ['id' => $recipeId, 'profil' => 'produktion'])" abstand="weit" target="_blank" title="Druck- und PDF-Bericht mit Profilen und Filtern" data-rezept-druck>Rezept drucken</x-fa::menu-item>
                         {{-- Spec 70: Etikett (Allergene, Zutaten, verbrauchen bis) --}}
-                        <a href="{{ route('foodalchemist.etiketten.index', ['quelle' => 'recipe', 'id' => $recipeId]) }}" target="_blank" role="menuitem"
-                           x-on:click="offen = false" class="{{ $menuePunkt }}" data-rezept-etikett>
-                            @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Etikett drucken
-                        </a>
+                        <x-fa::menu-item icon="heroicon-o-tag" :href="route('foodalchemist.etiketten.index', ['quelle' => 'recipe', 'id' => $recipeId])" abstand="weit" target="_blank" data-rezept-etikett>Etikett drucken</x-fa::menu-item>
                         {{-- R6: Vorlage-Markierung (Basis für «Aus Vorlage» im Browser) --}}
-                        <button type="button" role="menuitem" wire:click="templateToggle" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                title="Vorlage für neue Rezepte (im Browser: aus Vorlage anlegen)" data-template-toggle>
-                            @svg('heroicon-o-square-2-stack', 'w-4 h-4 text-[var(--fa-ink-3)]') {{ $istTemplate ? 'Vorlage aufheben' : 'Als Vorlage markieren' }}
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-square-2-stack" abstand="weit" wire:click="templateToggle" title="Vorlage für neue Rezepte (im Browser: aus Vorlage anlegen)" data-template-toggle>{{ $istTemplate ? 'Vorlage aufheben' : 'Als Vorlage markieren' }}</x-fa::menu-item>
                         {{-- Spec 82 §13 B6: Arbeitszeile des Master-Teams als Fassung an die Abonnenten geben --}}
                         @if(\Platform\FoodAlchemist\Support\FassungMenue::sichtbar(auth()->user()?->currentTeamRelation, (int) $recipeId))
-                            <button type="button" role="menuitem" x-on:click="offen = false; $dispatch('fassung-modal.oeffnen', { recipeId: {{ (int) $recipeId }} })" class="{{ $menuePunkt }}"
-                                    title="Stand als neue Fassung an die Abonnenten geben" data-fassung-menue>
-                                @svg('heroicon-o-paper-airplane', 'w-4 h-4 text-[var(--fa-ink-3)]') Veröffentlichen …
-                            </button>
+                            <x-fa::menu-item icon="heroicon-o-paper-airplane" abstand="weit" x-on:click="$dispatch('fassung-modal.oeffnen', { recipeId: {{ (int) $recipeId }} })" title="Stand als neue Fassung an die Abonnenten geben" data-fassung-menue>Veröffentlichen …</x-fa::menu-item>
                         @endif
                         <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                        <button type="button" role="menuitem" wire:click="loeschen" x-on:click="offen = false"
-                                wire:confirm="Rezept wirklich löschen? Rezepte, die in anderen Rezepten stecken, bleiben geschützt."
-                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-rezept-loeschen>
-                            @svg('heroicon-o-trash', 'w-4 h-4') Rezept löschen
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="Rezept wirklich löschen? Rezepte, die in anderen Rezepten stecken, bleiben geschützt." data-rezept-loeschen>Rezept löschen</x-fa::menu-item>
                     </x-fa::menu>
                 @endif
 
@@ -352,12 +329,8 @@
                         title="{{ 'Erzeugt oder ersetzt das Foto des fertigen Gerichts' . ($bildkosten !== null ? ', ca. ' . number_format($bildkosten, 3, ',', '.') . ' $ je Bild' : '') . '.' }}"
                         data-ki-produktfoto />
                 <x-fa::menu label="Weitere Aktionen zur Zubereitung" size="sm" breite="64">
-                    <button type="button" role="menuitem" wire:click="manual_zubereitung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Die KI überschreibt die Zubereitung dann nicht mehr">
-                        @svg('heroicon-o-lock-closed', 'w-4 h-4 text-[var(--fa-ink-3)]') Vor KI schützen
-                    </button>
-                    <button type="button" role="menuitem" wire:click="clear_zubereitung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Hebt die Herkunfts-Markierung auf, der Text bleibt stehen">
-                        @svg('heroicon-o-arrow-uturn-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Herkunft zurücksetzen
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-lock-closed" abstand="weit" wire:click="manual_zubereitung" title="Die KI überschreibt die Zubereitung dann nicht mehr">Vor KI schützen</x-fa::menu-item>
+                    <x-fa::menu-item icon="heroicon-o-arrow-uturn-left" abstand="weit" wire:click="clear_zubereitung" title="Hebt die Herkunfts-Markierung auf, der Text bleibt stehen">Herkunft zurücksetzen</x-fa::menu-item>
                 </x-fa::menu>
             </x-slot:actions>
         @endif
@@ -521,12 +494,8 @@
                 <x-foodalchemist::ki-action action="ai_beschreibung" variant="ai" icon="heroicon-o-sparkles" label="Beschreibung schreiben"
                     data-ai-description busy="Wird geschrieben …" flash="Beschreibung erstellt" />
                 <x-fa::menu label="Weitere Aktionen zur Beschreibung" size="sm" breite="64">
-                    <button type="button" role="menuitem" wire:click="manual_beschreibung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Aktuellen Text als von Hand gepflegt markieren, die KI überschreibt ihn dann nicht">
-                        @svg('heroicon-o-lock-closed', 'w-4 h-4 text-[var(--fa-ink-3)]') Vor KI schützen
-                    </button>
-                    <button type="button" role="menuitem" wire:click="clear_beschreibung" x-on:click="offen = false" class="{{ $menuePunkt }}" title="Text und Herkunft leeren">
-                        @svg('heroicon-o-arrow-uturn-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Beschreibung leeren
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-lock-closed" abstand="weit" wire:click="manual_beschreibung" title="Aktuellen Text als von Hand gepflegt markieren, die KI überschreibt ihn dann nicht">Vor KI schützen</x-fa::menu-item>
+                    <x-fa::menu-item icon="heroicon-o-arrow-uturn-left" abstand="weit" wire:click="clear_beschreibung" title="Text und Herkunft leeren">Beschreibung leeren</x-fa::menu-item>
                 </x-fa::menu>
             </x-slot:actions>
         @endif

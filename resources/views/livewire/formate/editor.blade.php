@@ -19,7 +19,6 @@
     $segmentAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
     $segmentAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
 
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
 
     // Keine nackten Mengen-Zähler an Reitern (Dominique 2026-10-05: „warum steht da Aufbau 1?") —
     // Zahlen am Reiter nur für Offenes/Handlungsbedarf. Die Menge steht im Reiter selbst.
@@ -35,14 +34,8 @@
                 </span>
                 @if($format)
                     <x-fa::menu breite="60">
-                        <a href="{{ route('foodalchemist.formate.dokument', ['id' => $format->id]) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                           class="{{ $menuePunkt }}" title="Karte für den Kunden, zum Drucken oder als PDF">
-                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Karte drucken
-                        </a>
-                        <a href="{{ route('foodalchemist.formate.report', ['id' => $format->id, 'profil' => 'voll']) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                           class="{{ $menuePunkt }}" title="Ausführlicher Bericht über alle Editionen mit Rezepten, Preisen und Deklaration">
-                            @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Bericht öffnen
-                        </a>
+                        <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.formate.dokument', ['id' => $format->id])" abstand="weit" target="_blank" title="Karte für den Kunden, zum Drucken oder als PDF">Karte drucken</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-document-text" :href="route('foodalchemist.formate.report', ['id' => $format->id, 'profil' => 'voll'])" abstand="weit" target="_blank" title="Ausführlicher Bericht über alle Editionen mit Rezepten, Preisen und Deklaration">Bericht öffnen</x-fa::menu-item>
                     </x-fa::menu>
                 @endif
                 {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung, der Editor bleibt offen --}}

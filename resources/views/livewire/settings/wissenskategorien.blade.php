@@ -1,8 +1,6 @@
 {{-- #469: Wissens-Kategorien — pflegbares Vokabular (Klassifikation + grobe Routing-Ebene).
      Häufigste Aufgabe: Kategorie umbenennen oder beschreiben. Liste oben, Anlegen darunter. --}}
 @php
-    $menuPunkt = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $menuGefahr = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]';
 @endphp
 
 <div class="flex flex-col gap-5" data-settings-wissenskategorien>
@@ -70,17 +68,9 @@
                                         <div class="flex items-center justify-end gap-1">
                                             <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $kat->id }})" data-kat-edit>Bearbeiten</x-fa::button>
                                             <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $kat->label }}" size="sm">
-                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleActive({{ $kat->id }})" class="{{ $menuPunkt }}">
-                                                    @svg($kat->active ? 'heroicon-m-eye-slash' : 'heroicon-m-eye', 'w-4 h-4 text-[var(--fa-ink-3)]')
-                                                    {{ $kat->active ? 'Kategorie deaktivieren' : 'Kategorie aktivieren' }}
-                                                </button>
+                                                <x-fa::menu-item :icon="$kat->active ? 'heroicon-m-eye-slash' : 'heroicon-m-eye'" wire:click="toggleActive({{ $kat->id }})">{{ $kat->active ? 'Kategorie deaktivieren' : 'Kategorie aktivieren' }}</x-fa::menu-item>
                                                 <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $kat->id }})"
-                                                        wire:confirm="Kategorie „{{ $kat->label }}“ und {{ $anzahlDocs }} {{ $anzahlDocs === 1 ? 'Dossier' : 'Dossiers' }} endgültig löschen? Das lässt sich nicht rückgängig machen."
-                                                        class="{{ $menuGefahr }}">
-                                                    @svg('heroicon-m-trash', 'w-4 h-4')
-                                                    Kategorie samt Dossiers löschen
-                                                </button>
+                                                <x-fa::menu-item icon="heroicon-m-trash" danger :trenner="false" wire:click="delete({{ $kat->id }})" wire:confirm="Kategorie „{{ $kat->label }}“ und {{ $anzahlDocs }} {{ $anzahlDocs === 1 ? 'Dossier' : 'Dossiers' }} endgültig löschen? Das lässt sich nicht rückgängig machen.">Kategorie samt Dossiers löschen</x-fa::menu-item>
                                             </x-fa::menu>
                                         </div>
                                     </td>

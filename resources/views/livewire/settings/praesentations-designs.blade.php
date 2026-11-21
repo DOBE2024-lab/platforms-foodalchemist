@@ -6,8 +6,6 @@
 @php
     $hakenZeile = 'flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)] cursor-pointer';
     $hilfe = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
-    $menuPunkt = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $menuGefahr = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]';
     $formen = ['foodbook' => 'Foodbook', 'angebot' => 'Angebot', 'speisekarte' => 'Speisekarte', 'speiseplan' => 'Speiseplan', 'konfigurator' => 'Konfigurator'];
     $farbFelder = ['primary' => 'Hauptfarbe', 'accent' => 'Akzentfarbe', 'bg' => 'Hintergrund', 'text' => 'Schriftfarbe'];
 @endphp
@@ -40,16 +38,10 @@
                                 @unless($d['owned'])<x-fa::badge class="shrink-0">Geerbt</x-fa::badge>@endunless
                             </a>
                             <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $d['name'] }}" size="sm" breite="48">
-                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="duplizieren({{ $d['id'] }})" class="{{ $menuPunkt }}">
-                                    @svg('heroicon-m-document-duplicate', 'w-4 h-4 text-[var(--fa-ink-3)]')
-                                    Design duplizieren
-                                </button>
+                                <x-fa::menu-item icon="heroicon-m-document-duplicate" wire:click="duplizieren({{ $d['id'] }})">Design duplizieren</x-fa::menu-item>
                                 @if($d['owned'])
                                     <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="loeschen({{ $d['id'] }})" wire:confirm="Design {{ $d['name'] }} löschen?" class="{{ $menuGefahr }}">
-                                        @svg('heroicon-m-trash', 'w-4 h-4')
-                                        Design löschen
-                                    </button>
+                                    <x-fa::menu-item icon="heroicon-m-trash" danger :trenner="false" wire:click="loeschen({{ $d['id'] }})" wire:confirm="Design {{ $d['name'] }} löschen?">Design löschen</x-fa::menu-item>
                                 @endif
                             </x-fa::menu>
                         </div>

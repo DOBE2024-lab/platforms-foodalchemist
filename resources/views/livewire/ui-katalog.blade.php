@@ -81,6 +81,9 @@
                     <x-fa::menu data-katalog-menue>
                         <x-fa::menu-item icon="heroicon-m-document-duplicate">Duplizieren (x-fa::menu)</x-fa::menu-item>
                         <x-fa::menu-item icon="heroicon-m-archive-box" :schliessen="false">Bleibt offen</x-fa::menu-item>
+                        <x-fa::menu-item :gewaehlt="true">Freigegeben (gewählt)</x-fa::menu-item>
+                        <x-fa::menu-item :gewaehlt="false">Entwurf</x-fa::menu-item>
+                        <x-fa::menu-item gesperrt icon="heroicon-m-envelope" title="Keine E-Mail hinterlegt">Gesperrt</x-fa::menu-item>
                         <x-fa::menu-item danger icon="heroicon-m-trash">Löschen</x-fa::menu-item>
                     </x-fa::menu>
                     <x-fa::icon-button icon="heroicon-m-trash" label="Zeile entfernen" tone="danger" size="sm" />

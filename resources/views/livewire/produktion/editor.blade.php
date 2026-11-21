@@ -13,7 +13,6 @@
     // Gemeinsame Helfer für die Reiter-Partials (werden per @include vererbt).
     $statusTon = ['secondary' => 'neutral', 'info' => 'info', 'success' => 'ok', 'danger' => 'crit', 'warning' => 'warn', 'primary' => 'accent'];
     $menge = fn ($wert, int $stellen = 2) => rtrim(rtrim(number_format((float) $wert, $stellen, ',', '.'), '0'), ',') ?: '0';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $opsStatus = $ops !== null ? \Platform\FoodAlchemist\Enums\ProductionOrderStatus::from($ops['status']) : null;
     $darfLoeschen = $ops !== null && $ops['is_owned'] && in_array($ops['status'], ['planned', 'cancelled'], true);
     $hatDokument = $ops !== null && \Illuminate\Support\Facades\Route::has('foodalchemist.produktion.auftraege.dokument');
@@ -45,25 +44,17 @@
                 {{-- Weitere Aktionen: Produktionsschein · Löschen (ganz unten, rot — nie neben Speichern) --}}
                 <x-fa::menu breite="64">
                     @if($hatDokument)
-                        <a href="{{ route('foodalchemist.produktion.auftraege.dokument', ['order' => $ops['id']]) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                           class="{{ $menuePunkt }}" title="Produktionsschein mit Einkauf, zum Drucken oder als PDF">
-                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsschein drucken
-                        </a>
+                        <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.produktion.auftraege.dokument', ['order' => $ops['id']])" abstand="weit" target="_blank" title="Produktionsschein mit Einkauf, zum Drucken oder als PDF">Produktionsschein drucken</x-fa::menu-item>
                     @endif
                     {{-- Spec 76: Etiketten auch im Menü auffindbar (Sammeldruck aller Basisrezepte) --}}
                     @if($etikettenVorschlag !== [])
-                        <button type="button" role="menuitem" x-on:click="offen = false; $dispatch('modal.open', { name: 'produktion-etiketten' })" class="{{ $menuePunkt }} w-full text-left" data-produktion-etiketten-menue>
-                            @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Etiketten drucken
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-tag" abstand="weit" x-on:click="$dispatch('modal.open', { name: 'produktion-etiketten' })" data-produktion-etiketten-menue>Etiketten drucken</x-fa::menu-item>
                     @endif
                     {{-- Spec 30 E7: Löschen nur geplant/storniert — ein laufender Auftrag wird storniert,
                          ein fertiger ist Protokoll. --}}
                     @if($darfLoeschen)
                         @if($hatDokument)<div class="my-1 border-t border-[var(--fa-line)]"></div>@endif
-                        <button type="button" role="menuitem" wire:click="auftragLoeschen" wire:confirm="Produktionsauftrag samt Positionen löschen?" x-on:click="offen = false"
-                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-produktion-loeschen>
-                            @svg('heroicon-o-trash', 'w-4 h-4') Auftrag löschen
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="auftragLoeschen" wire:confirm="Produktionsauftrag samt Positionen löschen?" data-produktion-loeschen>Auftrag löschen</x-fa::menu-item>
                     @endif
                 </x-fa::menu>
             @endif

@@ -217,10 +217,7 @@
                                                 </button>
                                             </x-slot:ausloeser>
                                             @foreach($statusLabel as $val => $lbl)
-                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="statusSetzen({{ $it->id }}, '{{ $val }}')"
-                                                        class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $it->status === $val ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
-                                                    {{ $lbl }}@if($it->status === $val)@svg('heroicon-m-check', 'w-4 h-4')@endif
-                                                </button>
+                                                <x-fa::menu-item :gewaehlt="$it->status === $val" wire:click="statusSetzen({{ $it->id }}, '{{ $val }}')">{{ $lbl }}</x-fa::menu-item>
                                             @endforeach
                                         </x-fa::menu>
                                     @else

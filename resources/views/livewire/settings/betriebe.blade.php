@@ -83,14 +83,13 @@
                                         <div class="flex items-center justify-end gap-1">
                                             <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $b->id }})">Bearbeiten</x-fa::button>
                                             <x-fa::menu size="sm" label="Weitere Aktionen für {{ $b->name }}" breite="48">
-                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="aktivUmschalten({{ $b->id }})"
-                                                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $b->is_inactive ? 'text-[var(--fa-ink)]' : 'text-[var(--fa-crit)]' }}">
+                                                <x-fa::menu-item :danger="! ($b->is_inactive)" :trenner="false" abstand="weit" wire:click="aktivUmschalten({{ $b->id }})">
                                                     @if($b->is_inactive)
                                                         @svg('heroicon-o-arrow-uturn-left', 'w-4 h-4 shrink-0') Kalkulationsprofil aktivieren
                                                     @else
                                                         @svg('heroicon-o-no-symbol', 'w-4 h-4 shrink-0') Kalkulationsprofil deaktivieren
                                                     @endif
-                                                </button>
+                                                </x-fa::menu-item>
                                             </x-fa::menu>
                                         </div>
                                     </td>

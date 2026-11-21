@@ -15,8 +15,6 @@
 @php
     $aktiv = 'bg-[var(--fa-accent-soft)] text-[var(--fa-accent)] font-medium';
     $hover = 'text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)] hover:text-[var(--fa-ink)]';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $menuePunktRot = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]';
     $menueGruppe = 'px-3 pt-2 pb-1 text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-ink-3)]';
     $menueSymbol = 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]';
     $hinweis = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
@@ -95,19 +93,10 @@
                 <x-slot:actions>
                     <x-fa::menu breite="64">
                         {{-- #5a: technischer Report (Profile + Filter + Produktions-Kaskade + Kapitel-Filter). --}}
-                        <a href="{{ route('foodalchemist.foodbooks.report', $fb->id) }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                           title="Ausführlicher Bericht mit Preisen, Lieferanten, Deklaration und Nährwerten, nach Kapiteln filterbar">
-                            @svg('heroicon-o-document-text', $menueSymbol) Bericht öffnen
-                        </a>
-                        <a href="{{ route('foodalchemist.foodbooks.praesentation', $fb->id) }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                           title="Web-Seite für den Kunden mit Preisen pro Person, ohne interne Angaben">
-                            @svg('heroicon-o-presentation-chart-bar', $menueSymbol) Präsentation ansehen
-                        </a>
+                        <x-fa::menu-item icon="heroicon-o-document-text" :href="route('foodalchemist.foodbooks.report', $fb->id)" abstand="weit" target="_blank" title="Ausführlicher Bericht mit Preisen, Lieferanten, Deklaration und Nährwerten, nach Kapiteln filterbar">Bericht öffnen</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-presentation-chart-bar" :href="route('foodalchemist.foodbooks.praesentation', $fb->id)" abstand="weit" target="_blank" title="Web-Seite für den Kunden mit Preisen pro Person, ohne interne Angaben">Präsentation ansehen</x-fa::menu-item>
                         <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                        <button type="button" role="menuitem" wire:click="duplizieren" x-on:click="offen = false"
-                                wire:confirm="Dieses Foodbook mit allen Kapiteln und Einträgen als Kopie (Entwurf) anlegen?" class="{{ $menuePunkt }}" data-fb-duplizieren>
-                            @svg('heroicon-o-document-duplicate', $menueSymbol) Foodbook duplizieren
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-document-duplicate" abstand="weit" wire:click="duplizieren" wire:confirm="Dieses Foodbook mit allen Kapiteln und Einträgen als Kopie (Entwurf) anlegen?" data-fb-duplizieren>Foodbook duplizieren</x-fa::menu-item>
                     </x-fa::menu>
                     <x-fa::button :href="route('foodalchemist.foodbooks.dokument', $fb->id)" target="_blank" icon="heroicon-m-printer"
                         title="Kundendokument zum Drucken oder als PDF, Allergene und Zusatzstoffe zuschaltbar">Dokument öffnen</x-fa::button>
@@ -150,18 +139,11 @@
                             title="Gerüst und Speisen je Kapitel in der Leitstelle planen lassen" data-fb-in-leitstelle>In der Leitstelle planen</x-fa::button>
 
                         <x-fa::menu breite="60">
-                            <a href="{{ route('foodalchemist.foodbooks.dokument', $fb->id) }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                                @svg('heroicon-o-printer', $menueSymbol) Dokument öffnen
-                            </a>
-                            <a href="{{ route('foodalchemist.foodbooks.praesentation', $fb->id) }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                                @svg('heroicon-o-presentation-chart-bar', $menueSymbol) Präsentation ansehen
-                            </a>
+                            <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.foodbooks.dokument', $fb->id)" abstand="weit" target="_blank">Dokument öffnen</x-fa::menu-item>
+                            <x-fa::menu-item icon="heroicon-o-presentation-chart-bar" :href="route('foodalchemist.foodbooks.praesentation', $fb->id)" abstand="weit" target="_blank">Präsentation ansehen</x-fa::menu-item>
                             <div class="my-1 border-t border-[var(--fa-line)]"></div>
                             <fieldset @disabled($gesperrt) class="contents">{{-- Spec 65: Löschen nur im Bearbeiten-Modus --}}
-                            <button type="button" role="menuitem" wire:click="loeschen({{ $fb->id }})" x-on:click="offen = false" wire:confirm="Foodbook löschen?"
-                                    class="{{ $menuePunktRot }}" data-fb-loeschen>
-                                @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Foodbook löschen
-                            </button>
+                            <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen({{ $fb->id }})" wire:confirm="Foodbook löschen?" data-fb-loeschen>Foodbook löschen</x-fa::menu-item>
                             </fieldset>
                         </x-fa::menu>
 
@@ -230,11 +212,11 @@
                                         <button type="button" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen"
                                                 class="{{ $kleinSymbol }} opacity-0 group-hover:opacity-100 focus:opacity-100" aria-label="Aktionen für {{ $kt['title'] }}" title="Aktionen für das Kapitel">@svg('heroicon-m-ellipsis-horizontal', 'w-4 h-4')</button>
                                     </x-slot:ausloeser>
-                                    <button type="button" role="menuitem" wire:click="kapitelNeu({{ $kt['id'] }})" x-on:click="offen = false" class="{{ $menuePunkt }}">@svg('heroicon-o-plus', $menueSymbol) Unterkapitel anlegen</button>
-                                    <button type="button" role="menuitem" wire:click="kapitelHoch({{ $kt['id'] }})" x-on:click="offen = false" class="{{ $menuePunkt }}">@svg('heroicon-o-chevron-up', $menueSymbol) Nach oben schieben</button>
-                                    <button type="button" role="menuitem" wire:click="kapitelRunter({{ $kt['id'] }})" x-on:click="offen = false" class="{{ $menuePunkt }}">@svg('heroicon-o-chevron-down', $menueSymbol) Nach unten schieben</button>
+                                    <x-fa::menu-item icon="heroicon-o-plus" abstand="weit" wire:click="kapitelNeu({{ $kt['id'] }})">Unterkapitel anlegen</x-fa::menu-item>
+                                    <x-fa::menu-item icon="heroicon-o-chevron-up" abstand="weit" wire:click="kapitelHoch({{ $kt['id'] }})">Nach oben schieben</x-fa::menu-item>
+                                    <x-fa::menu-item icon="heroicon-o-chevron-down" abstand="weit" wire:click="kapitelRunter({{ $kt['id'] }})">Nach unten schieben</x-fa::menu-item>
                                     <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                    <button type="button" role="menuitem" wire:click="kapitelLoeschen({{ $kt['id'] }})" wire:confirm="Kapitel löschen?" x-on:click="offen = false" class="{{ $menuePunktRot }}">@svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Kapitel löschen</button>
+                                    <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="kapitelLoeschen({{ $kt['id'] }})" wire:confirm="Kapitel löschen?">Kapitel löschen</x-fa::menu-item>
                                 </x-fa::menu>
                                 </fieldset>
                             </div>
@@ -838,14 +820,12 @@
                             <x-slot:ausloeser>
                                 <x-fa::button size="sm" icon="heroicon-m-plus" icon-right="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Überschrift einfügen</x-fa::button>
                             </x-slot:ausloeser>
-                            <button type="button" role="menuitem" wire:click="blockBasis('header_frei')" x-on:click="offen = false" class="{{ $menuePunkt }}">Freie Überschrift</button>
-                            <button type="button" role="menuitem" wire:click="blockBasis('header_frei_preis')" x-on:click="offen = false" class="{{ $menuePunkt }}">Überschrift mit Preis</button>
+                            <x-fa::menu-item abstand="weit" wire:click="blockBasis('header_frei')">Freie Überschrift</x-fa::menu-item>
+                            <x-fa::menu-item abstand="weit" wire:click="blockBasis('header_frei_preis')">Überschrift mit Preis</x-fa::menu-item>
                             @foreach($headerPresets as $gruppe => $items)
                                 <div class="{{ $menueGruppe }}">{{ $gruppe }}</div>
                                 @foreach($items as $p)
-                                    <button type="button" role="menuitem" x-on:click="offen = false"
-                                            wire:click="presetHinzu(@js($p['type']), @js($p['slug']), @js($p['label']), @js($p['price_basis'] ?? null), {{ ($p['visible'] ?? true) ? 'true' : 'false' }})"
-                                            class="{{ $menuePunkt }} pl-5 break-words">{{ $p['label'] }}</button>
+                                    <x-fa::menu-item abstand="weit" class="pl-5 break-words" wire:click="presetHinzu({{ \Illuminate\Support\Js::from($p['type']) }}, {{ \Illuminate\Support\Js::from($p['slug']) }}, {{ \Illuminate\Support\Js::from($p['label']) }}, {{ \Illuminate\Support\Js::from($p['price_basis'] ?? null) }}, {{ ($p['visible'] ?? true) ? 'true' : 'false' }})">{{ $p['label'] }}</x-fa::menu-item>
                                 @endforeach
                             @endforeach
                         </x-fa::menu>
@@ -920,10 +900,10 @@
                                             <x-slot:ausloeser>
                                                 <button type="button" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" class="{{ $kleinSymbol }}" aria-label="Weitere Aktionen" title="Weitere Aktionen">@svg('heroicon-m-ellipsis-horizontal', 'w-4 h-4')</button>
                                             </x-slot:ausloeser>
-                                            <button type="button" role="menuitem" wire:click="blockEbene({{ $block->id }}, -1)" x-on:click="offen = false" class="{{ $menuePunkt }}">@svg('heroicon-o-arrow-left', $menueSymbol) Ausrücken</button>
-                                            <button type="button" role="menuitem" wire:click="blockEbene({{ $block->id }}, 1)" x-on:click="offen = false" class="{{ $menuePunkt }}">@svg('heroicon-o-arrow-right', $menueSymbol) Einrücken</button>
+                                            <x-fa::menu-item icon="heroicon-o-arrow-left" abstand="weit" wire:click="blockEbene({{ $block->id }}, -1)">Ausrücken</x-fa::menu-item>
+                                            <x-fa::menu-item icon="heroicon-o-arrow-right" abstand="weit" wire:click="blockEbene({{ $block->id }}, 1)">Einrücken</x-fa::menu-item>
                                             <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                            <button type="button" role="menuitem" wire:click="blockRaus({{ $block->id }})" x-on:click="offen = false" class="{{ $menuePunktRot }}">@svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Aus dem Kapitel entfernen</button>
+                                            <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="blockRaus({{ $block->id }})">Aus dem Kapitel entfernen</x-fa::menu-item>
                                         </x-fa::menu>
                                     </div>
                                 </div>

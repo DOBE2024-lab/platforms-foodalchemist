@@ -16,8 +16,6 @@
 @php
     $euro = fn ($wert) => $wert === null ? null : number_format((float) $wert, 2, ',', '.') . ' €';
     $prozent = fn ($wert, int $dez = 1) => $wert === null ? null : number_format((float) $wert, $dez, ',', '.') . ' %';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $menueLoeschen = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]';
     $hinweis = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $feld = 'fa-control h-9 text-[length:var(--fa-text-md)]';
     $feldKlein = 'fa-control h-7 text-[length:var(--fa-text-sm)]';
@@ -73,46 +71,22 @@
                     </div>
                     <div class="my-1 border-t border-[var(--fa-line)]"></div>
                     {{-- Spec 03 L1a: freie Anweisung → Vorschau → Übernehmen --}}
-                    <button type="button" role="menuitem" wire:click="$toggle('ueberarbeitenOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                            title="Freie Anweisung: die KI überarbeitet Komponenten, Mengen, Beschreibung, Anrichten und Verkaufstext. Speisen-Klasse, Diät, Darreichungen und Verkaufseinheit bleiben unangetastet."
-                            data-vk-ki-ueberarbeiten>
-                        @svg('heroicon-o-pencil-square', 'w-4 h-4 text-[var(--fa-ink-3)]') Mit Anweisung überarbeiten
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-pencil-square" abstand="weit" wire:click="$toggle('ueberarbeitenOffen')" title="Freie Anweisung: die KI überarbeitet Komponenten, Mengen, Beschreibung, Anrichten und Verkaufstext. Speisen-Klasse, Diät, Darreichungen und Verkaufseinheit bleiben unangetastet." data-vk-ki-ueberarbeiten>Mit Anweisung überarbeiten</x-fa::menu-item>
                     {{-- Spec 03 L6b: Copilot — Prüf-Pass statt Neu-Schreiben (Befunde einzeln annehmen) --}}
-                    <button type="button" role="menuitem" wire:click="$toggle('copilotOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                            title="Die KI prüft Mengen, Einheiten, überflüssige und fehlende Komponenten am Maßstab des Verkaufs. Jeder Befund lässt sich einzeln übernehmen."
-                            data-vk-copilot>
-                        @svg('heroicon-o-clipboard-document-check', 'w-4 h-4 text-[var(--fa-ink-3)]') Gericht prüfen lassen
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-clipboard-document-check" abstand="weit" wire:click="$toggle('copilotOffen')" title="Die KI prüft Mengen, Einheiten, überflüssige und fehlende Komponenten am Maßstab des Verkaufs. Jeder Befund lässt sich einzeln übernehmen." data-vk-copilot>Gericht prüfen lassen</x-fa::menu-item>
                 </x-fa::menu>
 
                 {{-- Weitere Aktionen: Komponenten-Editor · Drucken · Löschen (ganz unten, rot — nie neben Speichern) --}}
                 <x-fa::menu breite="64">
-                    <button type="button" role="menuitem" wire:click="$dispatch('zutaten-editor.oeffnen', { id: {{ $rezept->id }} })" x-on:click="offen = false"
-                            class="{{ $menuePunkt }}" data-vk-zutaten>
-                        @svg('heroicon-o-arrows-pointing-out', 'w-4 h-4 text-[var(--fa-ink-3)]') Komponenten bearbeiten
-                    </button>
-                    <a href="{{ route('foodalchemist.rezepte.dokument', ['id' => $rezept->id, 'profil' => 'produktion']) }}" target="_blank" role="menuitem"
-                       x-on:click="offen = false" class="{{ $menuePunkt }}" title="Druck- und PDF-Bericht mit Profilen und Filtern" data-vk-druck>
-                        @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Gericht drucken
-                    </a>
-                    <a href="{{ route('foodalchemist.etiketten.index', ['quelle' => 'recipe', 'id' => $rezept->id]) }}" target="_blank" role="menuitem"
-                       x-on:click="offen = false" class="{{ $menuePunkt }}" data-vk-etikett>
-                        @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Etikett drucken
-                    </a>
+                    <x-fa::menu-item icon="heroicon-o-arrows-pointing-out" abstand="weit" wire:click="$dispatch('zutaten-editor.oeffnen', { id: {{ $rezept->id }} })" data-vk-zutaten>Komponenten bearbeiten</x-fa::menu-item>
+                    <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.rezepte.dokument', ['id' => $rezept->id, 'profil' => 'produktion'])" abstand="weit" target="_blank" title="Druck- und PDF-Bericht mit Profilen und Filtern" data-vk-druck>Gericht drucken</x-fa::menu-item>
+                    <x-fa::menu-item icon="heroicon-o-tag" :href="route('foodalchemist.etiketten.index', ['quelle' => 'recipe', 'id' => $rezept->id])" abstand="weit" target="_blank" data-vk-etikett>Etikett drucken</x-fa::menu-item>
                     {{-- Spec 82 §13 B6: Gericht samt Komponenten als Fassung an die Abonnenten geben (Bedingung an EINER Stelle: FassungMenue) --}}
                     @if(\Platform\FoodAlchemist\Support\FassungMenue::sichtbar(auth()->user()?->currentTeamRelation, $rezept))
-                        <button type="button" role="menuitem" x-on:click="offen = false; $dispatch('fassung-modal.oeffnen', { recipeId: {{ (int) $rezept->id }} })" class="{{ $menuePunkt }}"
-                                title="Stand als neue Fassung an die Abonnenten geben" data-fassung-menue>
-                            @svg('heroicon-o-paper-airplane', 'w-4 h-4 text-[var(--fa-ink-3)]') Veröffentlichen …
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-paper-airplane" abstand="weit" x-on:click="$dispatch('fassung-modal.oeffnen', { recipeId: {{ (int) $rezept->id }} })" title="Stand als neue Fassung an die Abonnenten geben" data-fassung-menue>Veröffentlichen …</x-fa::menu-item>
                     @endif
                     <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                    <button type="button" role="menuitem" wire:click="loeschen" x-on:click="offen = false"
-                            wire:confirm="Gericht wirklich löschen? Nur das Gericht wird entfernt, Basisrezepte und Grundprodukte bleiben bestehen."
-                            class="{{ $menueLoeschen }}" data-vk-loeschen>
-                        @svg('heroicon-o-trash', 'w-4 h-4') Gericht löschen
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="Gericht wirklich löschen? Nur das Gericht wird entfernt, Basisrezepte und Grundprodukte bleiben bestehen." data-vk-loeschen>Gericht löschen</x-fa::menu-item>
                 </x-fa::menu>
 
                 {{-- #1b: EIN Speichern-Weg, sequenziert — erst die Gericht-Daten (`speichern`), dann bei
@@ -656,10 +630,7 @@
                             <x-fa::button size="sm" variant="ai" icon="heroicon-m-sparkles" icon-right="heroicon-m-chevron-down"
                                 x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">KI-Assistent</x-fa::button>
                         </x-slot:ausloeser>
-                        <button type="button" role="menuitem" wire:click="ki('plating')" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                title="Die KI schlägt den Teller-Aufbau vor und legt ihn als Anrichte-Schritte an. Bestehende Schritte werden ersetzt." data-ki-plating>
-                            @svg('heroicon-o-sparkles', 'w-4 h-4 text-[var(--fa-ink-3)]') Anrichten vorschlagen
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-sparkles" abstand="weit" wire:click="ki('plating')" title="Die KI schlägt den Teller-Aufbau vor und legt ihn als Anrichte-Schritte an. Bestehende Schritte werden ersetzt." data-ki-plating>Anrichten vorschlagen</x-fa::menu-item>
                         {{-- Spec 53: Produktfoto (Hero) erzeugen/ersetzen — läuft async (EnrichRecipeJob,
                              nurProduktfoto), gepollt über pruefeProduktfotoErgebnis. --}}
                         <div class="px-3 py-2 flex flex-col gap-1 border-t border-[var(--fa-line)]">

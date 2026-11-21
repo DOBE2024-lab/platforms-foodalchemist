@@ -46,8 +46,6 @@
     $kiAnzahl = ($kannFeedback ? 2 : 0) + ($kannKonf ? 1 : 0);
     $hatWeitere = $kannRueckmeldung || $st->status === 'done' || $st->status === 'geplant';
 
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] disabled:opacity-50';
-    $menueRot = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]';
     $textKlein = 'text-[length:var(--fa-text-sm)]';
     $lesbar = fn (?string $w): string => $w === null || $w === '' ? '' : ucfirst(str_replace('_', ' ', $w));
     $statusRand = match (true) {
@@ -176,10 +174,7 @@
                         </x-slot:ausloeser>
                         @if($kannFeedback)
                             {{-- A2: Feedback zu genau dieser Position → dann gezielt neu generieren (nur diese Position). --}}
-                            <button type="button" role="menuitem" wire:click="toggleKommentar({{ $st->id }})" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                    title="Rückmeldung geben und nur dieses Ergebnis gezielt neu erzeugen">
-                                @svg('heroicon-o-pencil-square', 'w-4 h-4 text-[var(--fa-ink-3)]') {{ $kommentarIstOffen ? 'Rückmeldung schließen' : 'Mit Rückmeldung überarbeiten' }}
-                            </button>
+                            <x-fa::menu-item icon="heroicon-o-pencil-square" abstand="weit" wire:click="toggleKommentar({{ $st->id }})" title="Rückmeldung geben und nur dieses Ergebnis gezielt neu erzeugen">{{ $kommentarIstOffen ? 'Rückmeldung schließen' : 'Mit Rückmeldung überarbeiten' }}</x-fa::menu-item>
                             <div class="px-3 py-1.5">
                                 <x-foodalchemist::ki-action action="neuGenerieren({{ $st->id }})" variant="ai" icon="heroicon-o-arrow-path"
                                     label="Neu erzeugen" title="Neu erzeugen, der aktuelle Stand wird verworfen" busy="Wird neu erzeugt …" flash="Neu erzeugen eingereiht" class="w-full justify-start" />
@@ -204,26 +199,15 @@
                         @if($kannRueckmeldung)
                             {{-- E4 (Spec 40) — Rückkopplung: Lücke im Einkauf melden (Nordstern „Lücke ist Signal")
                                  + noch nicht gepinnte Grundprodukte als Favoriten vorschlagen (Pinnen bleibt beim Menschen). --}}
-                            <button type="button" role="menuitem" wire:click="sourcingLueckenMelden({{ $st->id }})" x-on:click="offen = false"
-                                    wire:loading.attr="disabled" wire:target="sourcingLueckenMelden" class="{{ $menuePunkt }}">
-                                @svg('heroicon-o-exclamation-triangle', 'w-4 h-4 text-[var(--fa-ink-3)]') Fehlende Lieferantenartikel melden
-                            </button>
-                            <button type="button" role="menuitem" wire:click="favoritVorschlaegeLaden({{ $st->id }})" x-on:click="offen = false"
-                                    wire:loading.attr="disabled" wire:target="favoritVorschlaegeLaden" class="{{ $menuePunkt }}">
-                                @svg('heroicon-o-bookmark', 'w-4 h-4 text-[var(--fa-ink-3)]') Favoriten vorschlagen
-                            </button>
+                            <x-fa::menu-item icon="heroicon-o-exclamation-triangle" abstand="weit" wire:click="sourcingLueckenMelden({{ $st->id }})" wire:loading.attr="disabled" wire:target="sourcingLueckenMelden">Fehlende Lieferantenartikel melden</x-fa::menu-item>
+                            <x-fa::menu-item icon="heroicon-o-bookmark" abstand="weit" wire:click="favoritVorschlaegeLaden({{ $st->id }})" wire:loading.attr="disabled" wire:target="favoritVorschlaegeLaden">Favoriten vorschlagen</x-fa::menu-item>
                         @endif
                         @if($st->status === 'done')
                             @if($kannRueckmeldung)<div class="my-1 border-t border-[var(--fa-line)]"></div>@endif
-                            <button type="button" role="menuitem" wire:click="verwirf({{ $st->id }})" x-on:click="offen = false"
-                                    wire:confirm="Dieses Ergebnis wirklich verwerfen?" class="{{ $menueRot }}" data-step-verwerfen>
-                                @svg('heroicon-o-trash', 'w-4 h-4') Ergebnis verwerfen
-                            </button>
+                            <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="verwirf({{ $st->id }})" wire:confirm="Dieses Ergebnis wirklich verwerfen?" data-step-verwerfen>Ergebnis verwerfen</x-fa::menu-item>
                         @elseif($st->status === 'geplant')
                             {{-- Etappe 1, Teil 2: geplante Sub-Rezepte einzeln verwerfen — VOR der Freigabe der Stufe darüber. --}}
-                            <button type="button" role="menuitem" wire:click="verwirfGeplant({{ $st->id }})" x-on:click="offen = false" class="{{ $menueRot }}" data-step-verwerfen>
-                                @svg('heroicon-o-trash', 'w-4 h-4') Nicht benötigt, verwerfen
-                            </button>
+                            <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="verwirfGeplant({{ $st->id }})" data-step-verwerfen>Nicht benötigt, verwerfen</x-fa::menu-item>
                         @endif
                     </x-fa::menu>
                 @endif

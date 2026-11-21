@@ -142,7 +142,7 @@
                     x-on:mouseenter="fokus = {{ (int) $l['la_id'] }}" x-on:mouseleave="fokus = null"
                     :class="aus.includes({{ (int) $l['la_id'] }}) ? 'opacity-50' : ''">
                     @if(count($diagramm['linien']) > 1)
-                        <x-fa::checkbox class="self-center" aria-label="Linie anzeigen" data-legende-schalter
+                        <x-fa::checkbox class="self-center" aria-label="Linie anzeigen" data-legende-schalter=""
                                x-bind:checked="! aus.includes({{ (int) $l['la_id'] }})"
                                x-on:change="aus.includes({{ (int) $l['la_id'] }}) ? aus = aus.filter(i => i !== {{ (int) $l['la_id'] }}) : aus.push({{ (int) $l['la_id'] }})" />
                     @endif

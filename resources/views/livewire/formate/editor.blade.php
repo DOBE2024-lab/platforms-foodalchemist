@@ -481,8 +481,7 @@
             {{-- ── BILDER ── --}}
             @if($tab === 'bilder')
                 <x-fa::section title="Bild hochladen" icon="heroicon-o-arrow-up-tray" description="Bis 14 MB. Das erste Bild wird automatisch Titelbild.">
-                    <input type="file" wire:model="bildUpload" accept="image/*" aria-label="Bild auswählen"
-                           class="block w-full text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] file:mr-3 file:h-9 file:px-3.5 file:rounded-[var(--fa-radius-control)] file:border file:border-[var(--fa-line-strong)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:font-medium file:cursor-pointer hover:file:bg-[var(--fa-hover)]" />
+                    <x-fa::upload size="md" wire:model="bildUpload" accept="image/*" aria-label="Bild auswählen" class="block w-full" />
                     <div wire:loading wire:target="bildUpload" class="text-[length:var(--fa-text-sm)] text-[var(--fa-accent)]">Lädt hoch …</div>
                     @error('bildUpload')<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert">{{ $message }}</p>@enderror
                 </x-fa::section>

@@ -19,7 +19,6 @@
     $menueSymbol = 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]';
     $hinweis = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $kleinSymbol = 'inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-[var(--fa-radius-control)] text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] transition-colors duration-150';
-    $dateiFeld = 'block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer file:mr-2 file:h-7 file:px-2.5 file:rounded-[var(--fa-radius-control)] file:border file:border-[var(--fa-line-strong)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:text-[length:var(--fa-text-sm)] file:font-medium hover:file:bg-[var(--fa-hover)]';
     $farbFeld = 'h-9 w-12 shrink-0 cursor-pointer rounded-[var(--fa-radius-control)] border border-[var(--fa-line-strong)] bg-transparent p-0.5';
     $medien = fn ($fileId, $pfad) => app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($fileId, $pfad);
     $euro = fn ($wert) => number_format((float) $wert, 2, ',', '.') . ' €';
@@ -79,9 +78,9 @@
             @if($fb)
                 @include('foodalchemist::livewire.foodbooks.partials.detail', ['fb' => $fb])
             @else
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]">
+                <x-fa::page>
                     <x-fa::empty icon="heroicon-o-book-open" title="Kein Foodbook gewählt">Links ein Foodbook anklicken, dann erscheinen hier Preis, Kapitel und offene Punkte.</x-fa::empty>
-                </div>
+                </x-fa::page>
             @endif
         </x-fa::detail-sidebar>
     </x-slot>
@@ -680,7 +679,7 @@
                                     <img src="{{ $kapitelImageUrl }}" alt="" class="h-12 w-20 object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                                     <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="kapitelImageEntfernen" data-fb-kapitel-image-remove>Bild entfernen</x-fa::button>
                                 @endif
-                                <input type="file" wire:model="kapitelImageUpload" accept="image/*" class="{{ $dateiFeld }}" aria-label="Kapitelbild hochladen" data-fb-kapitel-image-upload>
+                                <x-fa::upload class="block w-full" wire:model="kapitelImageUpload" accept="image/*" aria-label="Kapitelbild hochladen" data-fb-kapitel-image-upload="" />
                                 <span wire:loading wire:target="kapitelImageUpload" class="{{ $hinweis }}">Wird hochgeladen …</span>
                             </div>
                             @if($kapitelImageFehler)<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert">{{ $kapitelImageFehler }}</span>@endif
@@ -698,7 +697,7 @@
                                             aria-label="Bild entfernen" title="Bild entfernen">@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                     </div>
                                 @endforeach
-                                <input type="file" wire:model="kapitelGalleryUpload" accept="image/*" multiple class="{{ $dateiFeld }}" aria-label="Weitere Bilder hochladen" data-fb-kapitel-gallery-upload>
+                                <x-fa::upload class="block w-full" wire:model="kapitelGalleryUpload" accept="image/*" multiple="" aria-label="Weitere Bilder hochladen" data-fb-kapitel-gallery-upload="" />
                                 <span wire:loading wire:target="kapitelGalleryUpload" class="{{ $hinweis }}">Wird hochgeladen …</span>
                             </div>
                             @error('kapitelGalleryUpload.*')<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert">{{ $message }}</span>@enderror

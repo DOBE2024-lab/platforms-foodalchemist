@@ -1,5 +1,5 @@
 {{-- Planung · Detail (rechte Leiste am Computer, Schritt „Kontext“ am Handy #1003 PR7): Kopf, offene Punkte, Stand je Stufe. --}}
-<div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]">
+<x-fa::page>
     @if($active)
         @php
             $aktStufen = $kaskaden[$active->id]['stufen'] ?? [];
@@ -63,4 +63,4 @@
     @else
         <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Keine Planung gewählt">Eine Karte anklicken, um Herkunft, Stand und Fortschritt zu sehen.</x-fa::empty>
     @endif
-</div>
+</x-fa::page>

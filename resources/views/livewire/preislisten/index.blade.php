@@ -51,7 +51,7 @@
             <x-fa::section title="Preisliste hochladen" icon="heroicon-o-arrow-up-tray" data-preisliste-upload>
                 <div class="flex flex-wrap items-end gap-3">
                     <x-fa::field label="Datei (.xlsx, .ods, .csv — bis 10 MB)" for="pl-datei">
-                        <input id="pl-datei" type="file" wire:model="datei" accept=".xlsx,.xlsm,.ods,.csv,.tsv,.txt" class="fa-control h-9 text-[length:var(--fa-text-md)]" data-preisliste-datei />
+                        <x-fa::upload size="md" id="pl-datei" wire:model="datei" accept=".xlsx,.xlsm,.ods,.csv,.tsv,.txt" data-preisliste-datei="" />
                     </x-fa::field>
                     <x-fa::field label="Lieferant (wenn die Datei keine Lieferant-Spalte hat)" for="pl-lieferant" class="w-72 max-w-full">
                         <x-fa::select id="pl-lieferant" wire:model="lieferantId" placeholder="Aus der Datei" data-preisliste-lieferant>

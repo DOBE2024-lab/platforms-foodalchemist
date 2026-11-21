@@ -4,13 +4,11 @@
 @endphp
 <div class="flex flex-col gap-3" data-preisverlauf="{{ $modus }}">
     <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="inline-flex rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-0.5" role="group" aria-label="Zeitraum" data-preisverlauf-zeitraum>
+        <x-fa::segmented label="Zeitraum" data-preisverlauf-zeitraum="">
             @foreach($zeitraeume as $key => $label)
-                <button type="button" wire:click="zeitraumSetzen('{{ $key }}')" aria-pressed="{{ $zeitraum === $key ? 'true' : 'false' }}"
-                        class="h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] {{ $zeitraum === $key ? 'bg-[var(--fa-accent)] text-[var(--fa-on-accent)] font-medium' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}"
-                        data-zeitraum="{{ $key }}">{{ $label }}</button>
+                <x-fa::segment :an="$zeitraum === $key" wire:click="zeitraumSetzen('{{ $key }}')" data-zeitraum="{{ $key }}">{{ $label }}</x-fa::segment>
             @endforeach
-        </div>
+        </x-fa::segmented>
         @if($modus === 'la' && ($daten['gp_id'] ?? null) !== null && ($daten['la_gesamt'] ?? 0) > 1)
             <button type="button" wire:click="alleArtikelUmschalten" aria-pressed="{{ $alleArtikel ? 'true' : 'false' }}" data-preisverlauf-alle
                     class="h-7 px-2.5 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] text-[length:var(--fa-text-sm)] {{ $alleArtikel ? 'bg-[var(--fa-accent)] text-[var(--fa-on-accent)] font-medium' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}">

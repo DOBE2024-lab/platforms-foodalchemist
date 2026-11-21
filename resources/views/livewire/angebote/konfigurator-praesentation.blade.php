@@ -104,7 +104,7 @@
                     @else
                         <div class="w-full aspect-[4/3] rounded-[var(--fa-radius-control)] border border-dashed border-[var(--fa-line)] bg-[var(--fa-ground)] flex items-center justify-center {{ $hinweisKlasse }}">kein Bild</div>
                     @endif
-                    <input type="file" accept="image/*" wire:model="{{ $zb['prop'] }}" class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer file:mr-2 file:h-7 file:px-2.5 file:rounded-[var(--fa-radius-control)] file:border file:border-[var(--fa-line-strong)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:text-[length:var(--fa-text-sm)] file:font-medium hover:file:bg-[var(--fa-hover)]" data-kfp-zeitbild-upload="{{ $t }}" aria-label="Bild {{ $zb['label'] }} hochladen">
+                    <x-fa::upload accept="image/*" wire:model="{{ $zb['prop'] }}" class="block w-full" data-kfp-zeitbild-upload="{{ $t }}" aria-label="Bild {{ $zb['label'] }} hochladen" />
                 </div>
             @endforeach
         </div>

@@ -86,7 +86,7 @@
     }
 @endphp
 
-<div class="{{ $embedded ? 'flex flex-col gap-3' : 'p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]' }}" data-gp-panel>
+<x-fa::page :eingebettet="$embedded" data-gp-panel="">
     @if($gp === null)
         <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Grundprodukt gewählt">Grundprodukt in der Tabelle anklicken, dann erscheinen hier Preis, Artikel und Allergene.</x-fa::empty>
     @else
@@ -956,4 +956,4 @@
         @endif
         </fieldset>
     @endif
-</div>
+</x-fa::page>

@@ -33,7 +33,7 @@
         $karte['portion']['geschirr'] ?? null,
     ]);
 @endphp
-<div class="flex flex-col gap-4 pb-6 min-h-full bg-[var(--fa-ground)]" data-fa-handbuch="{{ $art }}" x-data="{ reiter: 'zutaten' }">
+<x-fa::page :abstand="false" class="flex flex-col gap-4 pb-6" data-fa-handbuch="{{ $art }}" x-data="{ reiter: 'zutaten' }">
     @if($karte['foto_url'])
         <img src="{{ $karte['foto_url'] }}" alt="" class="w-full aspect-[4/3] object-cover" data-fa-handbuch-foto>
     @endif
@@ -224,4 +224,4 @@
             @if($standort ?? false)<p class="fa-t-muted">Grundpreise der Darreichungen. Der Preis für deinen Standort steht oben bei VK brutto.</p>@endif
         </section>
     @endisset
-</div>
+</x-fa::page>

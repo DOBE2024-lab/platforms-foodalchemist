@@ -17,7 +17,6 @@
     $miniKrit = 'inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-[var(--fa-radius-control)] text-[var(--fa-ink-3)] hover:text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)] transition-colors duration-150';
     $navAn = 'bg-[var(--fa-accent-soft)] text-[var(--fa-accent)] font-medium';
     $navAus = 'text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)] hover:text-[var(--fa-ink)]';
-    $dateiFeld = 'block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] cursor-pointer file:mr-2 file:h-7 file:px-2.5 file:rounded-[var(--fa-radius-control)] file:border-0 file:bg-[var(--fa-accent-soft)] file:text-[var(--fa-accent)] file:font-medium';
     $knopfLeise = 'inline-flex items-center gap-1.5 h-7 px-2.5 whitespace-nowrap rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)] hover:text-[var(--fa-ink)] transition-colors duration-150';
     $euro = fn ($wert) => number_format((float) $wert, 2, ',', '.') . ' €';
     $prozent = fn ($wert) => number_format((float) $wert, 1, ',', '.') . ' %';
@@ -700,7 +699,7 @@
                                     <img src="{{ $kapitelImageUrl }}" alt="" class="h-12 w-20 object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                                     <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="kapitelImageEntfernen" data-angebot-kapitel-image-remove>Bild entfernen</x-fa::button>
                                 @endif
-                                <input type="file" wire:model="kapitelImageUpload" accept="image/*" class="{{ $dateiFeld }} w-auto" aria-label="Kapitelbild hochladen" data-angebot-kapitel-image-upload>
+                                <x-fa::upload wire:model="kapitelImageUpload" accept="image/*" class="block w-full w-auto" aria-label="Kapitelbild hochladen" data-angebot-kapitel-image-upload="" />
                                 <span wire:loading wire:target="kapitelImageUpload" class="{{ $hinweis }}">Lädt …</span>
                             </div>
                         </x-fa::field>
@@ -718,7 +717,7 @@
                                                 title="Bild entfernen" aria-label="Bild entfernen">@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                         </div>
                                     @endforeach
-                                    <input type="file" wire:model="kapitelGalleryUpload" accept="image/*" multiple class="{{ $dateiFeld }} w-auto" aria-label="Weitere Bilder hochladen" data-angebot-kapitel-gallery-upload>
+                                    <x-fa::upload wire:model="kapitelGalleryUpload" accept="image/*" multiple="" class="block w-full w-auto" aria-label="Weitere Bilder hochladen" data-angebot-kapitel-gallery-upload="" />
                                     <span wire:loading wire:target="kapitelGalleryUpload" class="{{ $hinweis }}">Lädt …</span>
                                 </div>
                             </x-fa::field>
@@ -1020,7 +1019,7 @@
                                         <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="brandingLogoEntfernen" data-logo-entfernen>Logo entfernen</x-fa::button>
                                     </div>
                                 @endif
-                                <input type="file" wire:model="logoUpload" accept="image/*" class="{{ $dateiFeld }}" aria-label="Logo hochladen" data-logo-upload />
+                                <x-fa::upload class="block w-full" wire:model="logoUpload" accept="image/*" aria-label="Logo hochladen" data-logo-upload="" />
                                 <span wire:loading wire:target="logoUpload" class="{{ $hinweis }}">Lädt …</span>
                             </x-fa::field>
                             <x-fa::field label="Titelbild" error="coverUpload">
@@ -1030,7 +1029,7 @@
                                         <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="brandingCoverEntfernen" data-cover-entfernen>Titelbild entfernen</x-fa::button>
                                     </div>
                                 @endif
-                                <input type="file" wire:model="coverUpload" accept="image/*" class="{{ $dateiFeld }}" aria-label="Titelbild hochladen" data-cover-upload />
+                                <x-fa::upload class="block w-full" wire:model="coverUpload" accept="image/*" aria-label="Titelbild hochladen" data-cover-upload="" />
                                 <span wire:loading wire:target="coverUpload" class="{{ $hinweis }}">Lädt …</span>
                             </x-fa::field>
                         </div>
@@ -1048,7 +1047,7 @@
                                                 <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="praesBildEntfernen({{ $nr }})">Entfernen</x-fa::button>
                                             </div>
                                         @endif
-                                        <input type="file" wire:model="praesBildUpload.{{ $nr }}" accept="image/*" class="{{ $dateiFeld }}" aria-label="Präsentationsbild {{ $nr }} hochladen" data-praes-bild-upload="{{ $nr }}" />
+                                        <x-fa::upload class="block w-full" wire:model="praesBildUpload.{{ $nr }}" accept="image/*" aria-label="Präsentationsbild {{ $nr }} hochladen" data-praes-bild-upload="{{ $nr }}" />
                                         <span wire:loading wire:target="praesBildUpload.{{ $nr }}" class="{{ $hinweis }}">Lädt …</span>
                                     </x-fa::field>
                                 @endforeach

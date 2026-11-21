@@ -58,7 +58,7 @@
     ];
 @endphp
 
-<div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-vk-panel>
+<x-fa::page data-vk-panel="">
     @if($rezept === null)
         <x-fa::empty icon="heroicon-o-banknotes" title="Kein Gericht gewählt">
             Gericht in der Liste anklicken. Hier erscheinen Preis, Wareneinsatz und Deklaration.
@@ -408,4 +408,4 @@
         </div>
         </fieldset>
     @endif
-</div>
+</x-fa::page>

@@ -71,13 +71,13 @@
                                     $aktiv = $e['lagerung'] !== '' ? $e['lagerung'] : $daten['lagerung'];
                                 @endphp
                                 <x-fa::field label="Lagerung">
-                                    <div class="inline-flex items-center gap-0.5 p-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] self-start" role="group" aria-label="Lagerung" data-etikett-lagerung>
+                                    <x-fa::segmented label="Lagerung" class="self-start" data-etikett-lagerung="">
                                         @foreach($arten as $art)
-                                            <button type="button" wire:click="$set('e.lagerung', '{{ $art }}')" class="{{ $segment }} {{ $aktiv === $art ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}" data-etikett-lagerart="{{ $art }}">
+                                            <x-fa::segment :an="$aktiv === $art" wire:click="$set('e.lagerung', '{{ $art }}')" data-etikett-lagerart="{{ $art }}">
                                                 {{ $kurz[$art] ?? $art }} @if($quelle === 'recipe' && ($daten['haltbar'][$art] ?? null) !== null) <span class="fa-t-muted">· {{ $daten['haltbar'][$art] }} T.</span>@endif
-                                            </button>
+                                            </x-fa::segment>
                                         @endforeach
-                                    </div>
+                                    </x-fa::segmented>
                                 </x-fa::field>
                                 @if($quelle === 'recipe')
                                     <p class="fa-t-muted">Lagerarten und Haltbarkeit pflegst du am Rezept (Stammdaten → Lagerung & Haltbarkeit). <a href="{{ \Platform\FoodAlchemist\Support\Sprungziel::rezept($bezugId) }}" class="text-[var(--fa-accent)] hover:underline" data-etikett-zum-rezept>Zum Rezept →</a></p>

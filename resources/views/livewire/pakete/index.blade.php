@@ -63,7 +63,7 @@
                                 : ['label' => 'Summe Gerichte-VK', 'value' => $geld($sumVk)] + ($nOhneVk > 0 ? ['hint' => 'unvollständig', 'hint_title' => $nOhneVk === 1 ? 'Einem Gericht fehlt der Verkaufspreis' : $nOhneVk . ' Gerichten fehlt der Verkaufspreis'] : [])),
                     ];
                 @endphp
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" wire:key="edit-{{ $selected->id }}">
+                <x-fa::page wire:key="edit-{{ $selected->id }}">
                     {{-- Kopf (Anatomie Detail-Panels): Name, Einordnung, eine Hauptaktion (Speichern, das Detail ist hier der Editor), Löschen im Menü --}}
                     <x-fa::detail-kopf :title="$selected->name" :subtitle="$selected->role ? 'Rolle: ' . $selected->role : 'Ohne Rolle'">
                         <x-slot:badges>
@@ -192,11 +192,11 @@
                         </x-fa::section>
                     </div>
                     </fieldset>
-                </div>
+                </x-fa::page>
             @else
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]">
+                <x-fa::page>
                     <x-fa::empty icon="heroicon-o-puzzle-piece" title="Kein Paket gewählt">In der Tabelle ein Paket anklicken oder oben rechts mit „Neues Paket“ eines anlegen.</x-fa::empty>
-                </div>
+                </x-fa::page>
             @endif
         </x-fa::detail-sidebar>
     </x-slot>

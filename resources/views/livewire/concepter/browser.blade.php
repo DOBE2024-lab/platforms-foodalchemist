@@ -156,12 +156,11 @@
 
         {{-- Umschalter Concepts | Pakete (§10.2) --}}
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <div role="group" aria-label="Ansicht" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
+            <x-fa::segmented label="Ansicht" :breit="true">
                 @foreach(['concepts' => 'Concepts', 'pakete' => 'Pakete'] as $tk => $tl)
-                    <button type="button" wire:click="wechselTab('{{ $tk }}')" aria-pressed="{{ $tab === $tk ? 'true' : 'false' }}"
-                            class="h-8 px-4 rounded-[5px] text-[length:var(--fa-text-md)] font-medium transition-colors {{ $tab === $tk ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}">{{ $tl }}</button>
+                    <x-fa::segment :an="$tab === $tk" size="md" wire:click="wechselTab('{{ $tk }}')">{{ $tl }}</x-fa::segment>
                 @endforeach
-            </div>
+            </x-fa::segmented>
             <p class="fa-t-muted max-w-[60ch]">
                 {{ $istPakete ? 'Ein Paket bündelt mehrere Gerichte zu einem Preis je Person und lässt sich in Concepts einsetzen.' : 'Ein Concept ist ein ganzes Menü oder Buffet aus Positionen. Klick auf den Namen öffnet den Editor.' }}
             </p>

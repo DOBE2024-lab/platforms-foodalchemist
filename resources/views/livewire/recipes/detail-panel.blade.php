@@ -28,7 +28,7 @@
     $statusWahl = ['draft' => 'Zurück auf Entwurf', 'review' => 'Zur Prüfung geben', 'approved' => 'Freigeben'];
 @endphp
 
-<div class="{{ $nurSektion || ($embedded ?? false) ? 'flex flex-col gap-3' : 'p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]' }}" data-rezept-panel>
+<x-fa::page :eingebettet="$nurSektion || ($embedded ?? false)" data-rezept-panel="">
     @if($rezept === null)
         @unless($nurSektion)
             <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Rezept gewählt">Rezept in der Tabelle anklicken, dann erscheinen hier Kosten, Zutaten und Allergene.</x-fa::empty>
@@ -532,4 +532,4 @@
             </fieldset>
         </div>
     @endif
-</div>
+</x-fa::page>

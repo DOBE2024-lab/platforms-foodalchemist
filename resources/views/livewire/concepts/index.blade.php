@@ -145,7 +145,7 @@
                     }
                     [$statusText, $statusTon] = $panelStatus[$selected->status] ?? [$selected->status, 'neutral'];
                 @endphp
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]">
+                <x-fa::page>
                     {{-- Kopf: das Concept wird in der Seitenmitte bearbeitet, hier nur Einordnung + eine Aktion --}}
                     <x-fa::detail-kopf :title="$selected->name" :subtitle="($selected->is_template ? 'Vorlage' : 'Concept') . ' · ' . ($phasen[$selected->phase] ?? $selected->phase)">
                         <x-slot:badges>
@@ -213,11 +213,11 @@
                             @endif
                         </x-fa::section>
                     </div>
-                </div>
+                </x-fa::page>
             @else
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]">
+                <x-fa::page>
                     <x-fa::empty icon="heroicon-o-banknotes" title="Kein Concept gewählt">Links ein Concept wählen, dann stehen hier Preis je Person, Allergene und Aufbau.</x-fa::empty>
-                </div>
+                </x-fa::page>
             @endif
         </x-fa::detail-sidebar>
     </x-slot>

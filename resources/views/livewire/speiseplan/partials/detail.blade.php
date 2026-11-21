@@ -31,7 +31,7 @@
     }
 @endphp
 
-<div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-sp-detail>
+<x-fa::page data-sp-detail="">
     {{-- Kopf: Name, Kunde, eine Hauptaktion, Weiteres im Menü --}}
     <x-fa::detail-kopf :title="$plan->name" :subtitle="$plan->crmCompany?->display_name">
         <x-slot:badges>
@@ -117,4 +117,4 @@
             </dl>
         </x-fa::section>
     </div>
-</div>
+</x-fa::page>

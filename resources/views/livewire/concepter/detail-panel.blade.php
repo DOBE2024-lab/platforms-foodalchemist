@@ -53,7 +53,7 @@
     }
 @endphp
 
-<div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-concepter-panel>
+<x-fa::page data-concepter-panel="">
     @if($concept === null)
         <x-fa::empty icon="heroicon-o-square-3-stack-3d" title="{{ $istPaket || $type === 'pakete' ? 'Kein Paket gewählt' : 'Kein Concept gewählt' }}">
             Links in der Tabelle eine Zeile anklicken, dann erscheinen hier Preis, Aufbau und Bewertung.
@@ -245,4 +245,4 @@
         </div>
         </fieldset>
     @endif
-</div>
+</x-fa::page>

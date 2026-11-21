@@ -152,7 +152,7 @@
                     ];
                 }
             @endphp
-            <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-wissen-panel>
+            <x-fa::page data-wissen-panel="">
                 @if($selected)
                     {{-- Kopf: Titel, Kategorie, Zustand. Hauptaktion speichert Einordnung und Aktiv-Häkchen
                          (beides wirkt erst mit „Speichern“, wie der Knopf über dem Text). --}}
@@ -428,7 +428,7 @@
                         </x-fa::card>
                     </x-fa::section>
                 </div>
-            </div>
+            </x-fa::page>
         </x-fa::detail-sidebar>
     </x-slot>
 
@@ -482,14 +482,10 @@
                         {{-- Ansicht zuerst: sie ist der Normalfall, Bearbeiten die Ausnahme. Bearbeiten/Speichern nur mit
                              Schreibrecht (io 16.10.: Kunden-Team sah die Knöpfe an globalem Wissen; save() prüft serverseitig ohnehin). --}}
                         @if($editable || $creating)
-                        <div role="group" aria-label="Darstellung" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
-                            <button type="button" wire:click="$set('vorschau', true)" aria-pressed="{{ $vorschau ? 'true' : 'false' }}"
-                                    class="h-8 px-3 rounded-[5px] text-[length:var(--fa-text-md)] font-medium transition-colors {{ $vorschau ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}"
-                                    data-wissen-modus="vorschau">Ansicht</button>
-                            <button type="button" wire:click="$set('vorschau', false)" aria-pressed="{{ ! $vorschau ? 'true' : 'false' }}"
-                                    class="h-8 px-3 rounded-[5px] text-[length:var(--fa-text-md)] font-medium transition-colors {{ ! $vorschau ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}"
-                                    data-wissen-modus="bearbeiten">Bearbeiten</button>
-                        </div>
+                        <x-fa::segmented label="Darstellung" :breit="true">
+                            <x-fa::segment :an="$vorschau" size="md" wire:click="$set('vorschau', true)" data-wissen-modus="vorschau">Ansicht</x-fa::segment>
+                            <x-fa::segment :an="! $vorschau" size="md" wire:click="$set('vorschau', false)" data-wissen-modus="bearbeiten">Bearbeiten</x-fa::segment>
+                        </x-fa::segmented>
                         @endif
 
                         {{-- Aktivieren ist Kuration: eigener, sichtbarer Knopf, wirkt sofort (toggleActive prüft das Schreibrecht). --}}

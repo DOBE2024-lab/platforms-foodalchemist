@@ -13,7 +13,7 @@
     $stornoFrage = 'Produktion stornieren? Offene Einkaufsentwürfe werden neu berechnet; bereits ausgelöste Bestellungen bleiben als Klärfall bestehen.';
 @endphp
 
-<div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-produktion-panel>
+<x-fa::page data-produktion-panel="">
     @if($detail === null)
         <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Auftrag gewählt">Produktionsauftrag in der Tabelle anklicken, dann erscheinen hier Mengen, Status, Rezepte und Materialbedarf.</x-fa::empty>
     @else
@@ -219,4 +219,4 @@
             </x-fa::section>
         </div>
     @endif
-</div>
+</x-fa::page>

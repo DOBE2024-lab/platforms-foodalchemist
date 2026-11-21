@@ -192,7 +192,7 @@
                                     <img src="{{ $conceptImageUrl }}" alt="Titelbild" class="h-14 w-24 object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-trash" wire:click="conceptImageEntfernen" data-concept-image-remove>Titelbild entfernen</x-fa::button>
                                 @endif
-                                <input type="file" wire:model="conceptImageUpload" accept="image/*" class="{{ $klein }} text-[var(--fa-ink-2)]" data-concept-image-upload>
+                                <x-fa::upload wire:model="conceptImageUpload" accept="image/*" data-concept-image-upload="" />
                                 <span wire:loading wire:target="conceptImageUpload" class="{{ $hinweis }}">Wird hochgeladen …</span>
                             </div>
                             @if($conceptImageFehler)<x-fa::signal tone="crit">{{ $conceptImageFehler }}</x-fa::signal>@endif
@@ -211,7 +211,7 @@
                                             title="Bild entfernen" aria-label="Bild entfernen" data-gallery-remove>@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                     </div>
                                 @endforeach
-                                <input type="file" wire:model="conceptGalleryUpload" accept="image/*" multiple class="{{ $klein }} text-[var(--fa-ink-2)]" data-concept-gallery-upload>
+                                <x-fa::upload wire:model="conceptGalleryUpload" accept="image/*" multiple="" data-concept-gallery-upload="" />
                                 <span wire:loading wire:target="conceptGalleryUpload" class="{{ $hinweis }}">Wird hochgeladen …</span>
                             </div>
                             @error('conceptGalleryUpload')<x-fa::signal tone="crit">{{ $message }}</x-fa::signal>@enderror
@@ -315,11 +315,11 @@
                         {{-- EIN Quellen-Picker (2026-08-24): Gerichte / Pakete / Basisrezepte.
                              Laptop: unter lg über der Tabelle, ab lg links daneben. --}}
                         <x-fa::card as="aside" x-show="bauModus" x-cloak="" class="w-full lg:w-64 2xl:w-80 shrink-0 flex flex-col gap-2 p-3 lg:sticky lg:top-16 lg:self-start max-h-[55vh] lg:max-h-[calc(100vh-18rem)]" data-konzept-quelle-picker="" data-konzept-basisliste="">
-                            <div class="{{ $segment }} self-start" role="group" aria-label="Quelle" data-linke-liste-umschalter>
-                                <button type="button" wire:click="$set('linkeListe', 'gericht')" class="{{ $segKnopf }} {{ $linkeListe === 'gericht' ? $segAn : $segAus }}">Gerichte</button>
-                                @unless($istPaket)<button type="button" wire:click="$set('linkeListe', 'paket')" class="{{ $segKnopf }} {{ $linkeListe === 'paket' ? $segAn : $segAus }}">Pakete</button>@endunless{{-- kein Paket-in-Paket --}}
-                                <button type="button" wire:click="$set('linkeListe', 'basisrezept')" class="{{ $segKnopf }} {{ $linkeListe === 'basisrezept' ? $segAn : $segAus }}">Basisrezepte</button>
-                            </div>
+                            <x-fa::segmented label="Quelle" class="self-start" data-linke-liste-umschalter="">
+                                <x-fa::segment :an="$linkeListe === 'gericht'" wire:click="$set('linkeListe', 'gericht')">Gerichte</x-fa::segment>
+                                @unless($istPaket)<x-fa::segment :an="$linkeListe === 'paket'" wire:click="$set('linkeListe', 'paket')">Pakete</x-fa::segment>@endunless{{-- kein Paket-in-Paket --}}
+                                <x-fa::segment :an="$linkeListe === 'basisrezept'" wire:click="$set('linkeListe', 'basisrezept')">Basisrezepte</x-fa::segment>
+                            </x-fa::segmented>
 
                             @if($linkeListe === 'gericht')
                                 @include('foodalchemist::livewire.concepter.partials.gericht-baum', ['sucheModel' => 'gerichtSuche'])
@@ -884,10 +884,10 @@
                                                         @endif
                                                         @if($fillSlotId === $slot->id)
                                                             <div class="mt-2 flex flex-col gap-2">
-                                                                <div class="{{ $segment }} self-start" role="group" aria-label="Art">
-                                                                    <button type="button" wire:click="pickTypWaehle('gericht')" class="{{ $segKnopf }} {{ $pickTyp === 'gericht' ? $segAn : $segAus }}">Gericht</button>
-                                                                    <button type="button" wire:click="pickTypWaehle('basisrezept')" class="{{ $segKnopf }} {{ $pickTyp === 'basisrezept' ? $segAn : $segAus }}">Basisrezept</button>
-                                                                </div>
+                                                                <x-fa::segmented label="Art" class="self-start">
+                                                                    <x-fa::segment :an="$pickTyp === 'gericht'" wire:click="pickTypWaehle('gericht')">Gericht</x-fa::segment>
+                                                                    <x-fa::segment :an="$pickTyp === 'basisrezept'" wire:click="pickTypWaehle('basisrezept')">Basisrezept</x-fa::segment>
+                                                                </x-fa::segmented>
                                                                 @if($pickTyp === 'gericht')
                                                                     @include('foodalchemist::livewire.concepter.partials.gericht-baum', ['sucheModel' => 'gerichtSuche'])
                                                                 @else
@@ -932,10 +932,10 @@
                                     einfuegen() { if (!this.geparkt) return; this.$wire.gerichtHinzu(this.geparkt.id, this.quantity); this.geparkt = null; this.quantity = ''; this.flash = true; setTimeout(() => { this.flash = false; }, 1400); },
                                  }">
                             {{-- Umschalter: Gerichte ⇄ Basisrezepte (Pakete enthalten keine Pakete) --}}
-                            <div class="{{ $segment }} self-start" role="group" aria-label="Quelle" data-paket-quelle-umschalter>
-                                <button type="button" wire:click="$set('paketQuelle', 'gericht')" class="{{ $segKnopf }} {{ $paketQuelle !== 'basisrezept' ? $segAn : $segAus }}">Gerichte</button>
-                                <button type="button" wire:click="$set('paketQuelle', 'basisrezept')" class="{{ $segKnopf }} {{ $paketQuelle === 'basisrezept' ? $segAn : $segAus }}">Basisrezepte</button>
-                            </div>
+                            <x-fa::segmented label="Quelle" class="self-start" data-paket-quelle-umschalter="">
+                                <x-fa::segment :an="$paketQuelle !== 'basisrezept'" wire:click="$set('paketQuelle', 'gericht')">Gerichte</x-fa::segment>
+                                <x-fa::segment :an="$paketQuelle === 'basisrezept'" wire:click="$set('paketQuelle', 'basisrezept')">Basisrezepte</x-fa::segment>
+                            </x-fa::segmented>
                             <div class="flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto">
                                 <div x-show="geparkt === null" class="flex flex-col gap-2">
                                     @if($paketQuelle === 'basisrezept')
@@ -1144,10 +1144,10 @@
                         <fieldset @disabled($lesemodus) class="contents" data-fa-lesemodus="{{ $lesemodus ? '1' : '0' }}">
                         <x-fa::section :title="$istPaket ? 'Paketpreis je Person' : 'VK je Person'" icon="heroicon-o-banknotes" data-concept-vk>
                             <x-slot:actions>
-                                <div class="{{ $segment }}" role="group" aria-label="Preisermittlung">
-                                    <button type="button" wire:click="setPreisModus('auto')" class="{{ $segKnopf }} {{ $preisModus === 'auto' ? $segAn : $segAus }}">Automatisch</button>
-                                    <button type="button" wire:click="setPreisModus('fixed')" class="{{ $segKnopf }} {{ $istFix ? $segAn : $segAus }}">Fixiert</button>
-                                </div>
+                                <x-fa::segmented label="Preisermittlung">
+                                    <x-fa::segment :an="$preisModus === 'auto'" wire:click="setPreisModus('auto')">Automatisch</x-fa::segment>
+                                    <x-fa::segment :an="$istFix" wire:click="setPreisModus('fixed')">Fixiert</x-fa::segment>
+                                </x-fa::segmented>
                             </x-slot:actions>
                             {{-- Preisdarstellung (2026-08-25, Dominique): Gesamtpreis (ein Preis fürs Konzept) vs.
                                  Einzelpreise (je Gericht/Paket, à la carte). Pakete sind immer Gesamtpreis. --}}

@@ -131,6 +131,17 @@
             </div>
         </x-fa::section>
 
+        <x-fa::section title="Umschalter, Upload, Seitenrahmen" icon="heroicon-o-arrows-right-left" description="x-fa::segmented für 2–5 Ansichten, x-fa::upload für Dateien, x-fa::page als Rahmen eines Detail-Panels.">
+            <div class="flex flex-wrap items-center gap-3">
+                <x-fa::segmented label="Ansicht (Beispiel)" data-katalog-segmented="">
+                    <x-fa::segment :an="true">Liste</x-fa::segment>
+                    <x-fa::segment :an="false">Karten</x-fa::segment>
+                    <x-fa::segment :an="false">Kalender</x-fa::segment>
+                </x-fa::segmented>
+                <x-fa::upload accept="image/*" aria-label="Bild wählen (Beispiel)" data-katalog-upload="" />
+            </div>
+        </x-fa::section>
+
         <x-fa::section title="Auswahl" icon="heroicon-o-adjustments-horizontal" description="2 bis 6 Optionen als Chips, ab 7 als Auswahlliste. Echte Radio-/Checkbox-Felder, per Tastatur bedienbar.">
             <div class="grid gap-6 md:grid-cols-2">
                 <x-fa::choice name="kreativModus" label="Kreativ-Modus (Einfachauswahl)" :options="['frei' => 'Frei', 'voll' => 'Voll kreativ', 'nah' => 'Nah am Bestand', 'nur_bestand' => 'Nur Bestand']" />

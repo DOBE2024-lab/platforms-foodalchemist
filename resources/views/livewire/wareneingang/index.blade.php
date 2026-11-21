@@ -58,8 +58,7 @@
                         <x-fa::input id="we-datum" type="date" wire:model.blur="form.datum" />
                     </x-fa::field>
                     <x-fa::field label="Beleg (Foto oder PDF)" for="we-anhang" hint="max. 15 MB">
-                        <input id="we-anhang" type="file" wire:model="anhang" accept="image/*,application/pdf" capture="environment"
-                            class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" data-we-anhang />
+                        <x-fa::upload id="we-anhang" wire:model="anhang" accept="image/*,application/pdf" capture="environment" class="block w-full" data-we-anhang="" />
                         @if($anhang)<span class="fa-t-muted">{{ $anhang->getClientOriginalName() }} · <button type="button" class="underline" wire:click="anhangVerwerfen">verwerfen</button></span>@endif
                         <div wire:loading wire:target="anhang" class="fa-t-muted">lädt hoch …</div>
                     </x-fa::field>

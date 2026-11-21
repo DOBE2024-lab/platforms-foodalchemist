@@ -1,8 +1,7 @@
 {{-- #1003 Globale Suche (Handy-Einstieg). Ein Thema je Bildschirm: oben das Feld, darunter Treffer je Art als
      kurze Karten-Liste; ohne Suchwort „Zuletzt angesehen“ (pro Gerät, localStorage fa-zuletzt) und Favoriten.
      Antippen merkt sich den Eintrag als zuletzt angesehen und öffnet die Detailseite (Vollbild). --}}
-<div class="min-h-full bg-[var(--fa-ground)]"
-     x-data="{
+<x-fa::page :abstand="false" x-data="{
         zuletzt: [],
         init() { try { this.zuletzt = JSON.parse(localStorage.getItem('fa-zuletzt') || '[]'); } catch (e) { this.zuletzt = []; } },
         merke(titel, url) {
@@ -87,4 +86,4 @@
             <p class="text-[length:var(--fa-text-base)] text-[var(--fa-ink-3)]">Ab zwei Buchstaben suchen. Artikelnummer oder EAN geht auch.</p>
         @endif
     </div>
-</div>
+</x-fa::page>

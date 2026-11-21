@@ -6,7 +6,7 @@
                 <img src="{{ $logoUrl }}" alt="" class="h-12 w-20 object-contain rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                 <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="entfernen" data-kapitel-logo-remove>Logo entfernen</x-fa::button>
             @endif
-            <input type="file" wire:model="logoUpload" accept="image/*" class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" aria-label="Kapitel-Logo hochladen" data-kapitel-logo-upload>
+            <x-fa::upload wire:model="logoUpload" accept="image/*" class="block" aria-label="Kapitel-Logo hochladen" data-kapitel-logo-upload="" />
             <span wire:loading wire:target="logoUpload" class="fa-t-muted">Wird hochgeladen …</span>
         </div>
         @if($fehler)<span class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert">{{ $fehler }}</span>@endif

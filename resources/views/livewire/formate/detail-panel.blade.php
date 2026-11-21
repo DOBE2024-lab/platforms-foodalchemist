@@ -12,7 +12,7 @@
     $geld = fn (?float $wert) => $wert === null ? null : number_format($wert, 2, ',', '.') . ' €';
 @endphp
 
-<div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-formate-panel>
+<x-fa::page data-formate-panel="">
     @if($format === null)
         <x-fa::empty icon="heroicon-o-rectangle-group" title="Kein Format gewählt">
             Links in der Liste ein Format anklicken, dann erscheinen hier Preisspanne, Editionen und Einsatz.
@@ -171,4 +171,4 @@
         </div>
         </fieldset>
     @endif
-</div>
+</x-fa::page>

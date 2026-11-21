@@ -25,7 +25,7 @@
     }
 @endphp
 
-<div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-orders-detail-panel>
+<x-fa::page data-orders-detail-panel="">
     @if($detail === null)
         <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Keine Bestellung gewählt">Bestellung in der Liste anklicken, dann erscheinen hier Summe, Liefertag, Positionen und offene Punkte.</x-fa::empty>
     @else
@@ -87,4 +87,4 @@
             </x-fa::section>
         </div>
     @endif
-</div>
+</x-fa::page>

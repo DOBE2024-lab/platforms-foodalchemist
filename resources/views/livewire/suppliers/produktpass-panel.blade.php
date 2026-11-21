@@ -34,8 +34,7 @@
         description="PDF oder Foto des Produktpasses bzw. Datenblatts. Die KI liest Allergene, Zusatzstoffe, Nährwerte, Zutatenliste, Gebinde, Haltbarkeit, Herkunft und Marke. Was nicht im Dokument steht, bleibt leer.">
         @if($darfEdit)
             <div class="flex flex-wrap items-end gap-3" data-produktpass-upload>
-                <input type="file" wire:model="datei" accept=".pdf,image/jpeg,image/png,image/webp" aria-label="Produktpass wählen"
-                    class="fa-control h-9 text-[length:var(--fa-text-md)] min-w-0">
+                <x-fa::upload size="md" wire:model="datei" accept=".pdf,image/jpeg,image/png,image/webp" aria-label="Produktpass wählen" class="min-w-0" />
                 <x-fa::button variant="primary" icon="heroicon-m-arrow-up-tray" wire:click="hochladen" wire:loading.attr="disabled"
                     wire:target="hochladen,datei" data-produktpass-hochladen>Hochladen und lesen</x-fa::button>
                 @if($webQuelleDa)

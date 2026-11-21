@@ -15,12 +15,11 @@
         <span class="fa-t-muted tabular-nums">{{ number_format($eintraege->total(), 0, ',', '.') }} Treffer</span>
     </div>
     @if(($reiter ?? []) !== [])
-        <div role="group" aria-label="Ansicht" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]" data-fa-handy-reiter>
+        <x-fa::segmented label="Ansicht" :breit="true" data-fa-handy-reiter="">
             @foreach($reiter as $rk => $rt)
-                <button type="button" wire:click="{{ $reiterWahl }}('{{ $rk }}')" aria-pressed="{{ $reiterAktiv === $rk ? 'true' : 'false' }}"
-                        class="flex-1 min-h-11 rounded-[5px] text-[length:var(--fa-text-md)] font-medium {{ $reiterAktiv === $rk ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)]' }}">{{ $rt }}</button>
+                <x-fa::segment :an="$reiterAktiv === $rk" size="handy" wire:click="{{ $reiterWahl }}('{{ $rk }}')">{{ $rt }}</x-fa::segment>
             @endforeach
-        </div>
+        </x-fa::segmented>
     @endif
     <input type="search" wire:model.live.debounce.300ms="{{ $suchFeld }}" placeholder="{{ $suchHinweis }}" aria-label="{{ $titel }} durchsuchen"
            class="fa-control h-12 text-[length:var(--fa-text-base)]" data-fa-handy-suche>

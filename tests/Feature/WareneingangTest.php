@@ -253,3 +253,15 @@ it('UI: Lesen sieht die Seite, aber keine Schreib-Knöpfe; Zugriffsrechte nur f�
         ->call('freigabeSetzen', $this->koch->id, true)->assertSet('fehler', null);
     expect($this->rechte->rolle($this->koch, $this->rootTeam))->toBe(FaRolle::Freigeben);
 });
+
+it('CQ 2.3f: Ware ohne Bestellung — Lieferantenartikel muss sichtbar sein und zum Lieferanten gehören', function () {
+    $zeile = fn (int $laId) => ['supplier_id' => $this->chefs->id, 'lines' => [['gp_id' => $this->gp['Zucker']->id, 'menge' => '1', 'supplier_item_id' => $laId]]];
+    $fremdTeam = FoodAlchemistSupplierItem::create(['team_id' => $this->childB->id, 'supplier_id' => $this->chefs->id, 'designation' => 'Fremd',
+        'article_number' => 'F-1', 'qty' => 1.0, 'unit_code' => 'kg']);
+
+    expect(fn () => $this->svc->speichern($this->rootTeam, $zeile($fremdTeam->id), $this->koch->id))->toThrow(\RuntimeException::class, 'nicht sichtbar')
+        ->and(fn () => $this->svc->speichern($this->rootTeam, $zeile($this->la['Butter']->id), $this->koch->id))->toThrow(\RuntimeException::class, 'anderen Lieferanten');
+
+    $ls = $this->svc->speichern($this->rootTeam, $zeile($this->la['Zucker']->id), $this->koch->id);
+    expect($ls->lines()->first()->supplier_item_id)->toBe($this->la['Zucker']->id);
+});

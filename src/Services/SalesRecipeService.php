@@ -632,6 +632,7 @@ class SalesRecipeService
         // KI-Programm hätte ausgesehen wie eine Entscheidung (Etikett lügt). Konfidenz/Begründung
         // nur bei `ki`, ein manueller Eintrag nullt sie (manual gewinnt, GL-07).
         $source = ($in['source'] ?? 'manual') === 'ki' ? 'ki' : 'manual';
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, array_intersect_key($in, ['device_vocab_id' => 1]));   // CQ 2.3f
         $werte = [
             'component_label' => trim((string) ($in['component_label'] ?? '')) ?: 'Gesamt',
             'ingredient_id' => $this->pruefeKomponente($recipe, $in['ingredient_id'] ?? null),

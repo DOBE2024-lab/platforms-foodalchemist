@@ -765,3 +765,12 @@ it('Inspiration umbenennen: Anleger mit Lesen oder Kuratieren, fremde Leser nich
         ->assertSeeHtml('data-inspiration-titel-aendern="'.$eigenLeser->inspiration_id.'"')
         ->assertDontSeeHtml('data-inspiration-titel-aendern="'.$iid.'"');
 });
+
+it('CQ 2.3f: Beleg hängt nie an fremder Inspiration oder fremdem Signal', function () {
+    $t = $this->svc->anlegen($this->rootTeam, ['name' => 'Fremd-Test']);
+
+    expect(fn () => $this->svc->belegAnhaengen($this->rootTeam, $t->id, ['quelle' => 'instagram', 'notiz' => 'x', 'inspiration_id' => 999999]))
+        ->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class)
+        ->and(fn () => $this->svc->belegAnhaengen($this->rootTeam, $t->id, ['quelle' => 'instagram', 'notiz' => 'x', 'signal_id' => 999999]))
+        ->toThrow(\RuntimeException::class, 'nicht sichtbar');
+});

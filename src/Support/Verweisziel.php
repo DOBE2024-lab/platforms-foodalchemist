@@ -24,4 +24,64 @@ final class Verweisziel
 
         return $klasse::sichtBedingung($q, $team, true);
     }
+
+    /** Code-Qualität 2.3f: Vokabular-Felder, die überall dieselbe Sicht-Regel haben. Ein Feld, eine Klasse. */
+    public const VOKABULAR = [
+        'writing_style_id' => \Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle::class,
+        'serving_form_id' => \Platform\FoodAlchemist\Models\FoodAlchemistServierform::class,
+        'default_serving_form_id' => \Platform\FoodAlchemist\Models\FoodAlchemistServierform::class,
+        'event_type_id' => \Platform\FoodAlchemist\Models\FoodAlchemistEventtyp::class,
+        'default_event_type_id' => \Platform\FoodAlchemist\Models\FoodAlchemistEventtyp::class,
+        'service_moment_id' => \Platform\FoodAlchemist\Models\FoodAlchemistEinsatzmoment::class,
+        'unit_vocab_id' => \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::class,
+        'device_vocab_id' => \Platform\FoodAlchemist\Models\FoodAlchemistVocabRegenerationDevice::class,
+    ];
+
+    /** Fachliche Bezeichnung je Feld für die Fehlermeldung — nie der rohe Spaltenname. */
+    private const BEZEICHNUNG = [
+        'writing_style_id' => 'Schreibstil', 'serving_form_id' => 'Servierform', 'default_serving_form_id' => 'Servierform',
+        'event_type_id' => 'Eventtyp', 'default_event_type_id' => 'Eventtyp', 'service_moment_id' => 'Einsatzmoment',
+        'unit_vocab_id' => 'Einheit', 'device_vocab_id' => 'Regenerationsgerät',
+    ];
+
+    /**
+     * Wirft, wenn eine gesetzte ID für das Team nicht sichtbar ist. Leer/null = Verknüpfung lösen (erlaubt).
+     *
+     * @param  class-string  $klasse
+     */
+    public static function pruefe(string $klasse, Team $team, mixed $id, string $was): void
+    {
+        $id = (int) ($id ?: 0);
+        if ($id > 0 && ! self::sichtbar($klasse, $team)->whereKey($id)->exists()) {
+            throw new \RuntimeException("{$was} #{$id} ist nicht sichtbar/vorhanden.");
+        }
+    }
+
+    /**
+     * @param  class-string  $klasse
+     * @param  iterable<mixed>  $ids
+     */
+    public static function pruefeIds(string $klasse, Team $team, iterable $ids, string $was): void
+    {
+        foreach ($ids as $id) {
+            self::pruefe($klasse, $team, $id, $was);
+        }
+    }
+
+    /**
+     * Prüft die Vokabular-Felder aus {@see VOKABULAR} und die CRM-Verknüpfung in $in. Mit $bisher (Update) nur Werte, die
+     * sich ändern — ein schon gespeicherter Verweis blockiert keine unabhängige Änderung.
+     */
+    public static function pruefeFelder(Team $team, array $in, ?\Illuminate\Database\Eloquent\Model $bisher = null): void
+    {
+        $neu = fn (string $f) => array_key_exists($f, $in) && (int) ($in[$f] ?: 0) !== (int) ($bisher?->{$f} ?? 0);
+        foreach (self::VOKABULAR as $feld => $klasse) {
+            if ($neu($feld)) {
+                self::pruefe($klasse, $team, $in[$feld], self::BEZEICHNUNG[$feld] ?? $feld);
+            }
+        }
+        if ($neu('crm_company_id') || $neu('crm_contact_id')) {
+            CrmKunden::pruefe($team, ($in['crm_company_id'] ?? null) ?: null, ($in['crm_contact_id'] ?? null) ?: null);
+        }
+    }
 }

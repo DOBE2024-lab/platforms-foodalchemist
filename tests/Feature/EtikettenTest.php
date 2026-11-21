@@ -289,3 +289,16 @@ it('Spec 78: Einstellungen — Drucker anlegen, Vorlage wählt Drucker; MCP prin
     $p = $reg->get('foodalchemist.label_templates.POST')->execute(['name' => 'Per MCP', 'drucker_id' => $id, 'standard_wandmonitor' => true], $ctx);
     expect($p->success)->toBeTrue()->and(FoodAlchemistLabelTemplate::where('name', 'Per MCP')->first())->printer_id->toBe($id)->is_kitchen_default->toBeTrue();
 });
+
+it('CQ 2.3f: Vorlage speichert nur ein sichtbares Design (design:{id}), fremdes oder kaputtes wird abgelehnt', function () {
+    $D = \Platform\FoodAlchemist\Models\FoodAlchemistPresentationDesign::class;
+    $eigen = $D::create(['team_id' => $this->rootTeam->id, 'name' => 'Eigen', 'base_slug' => 'editorial']);
+    $fremd = $D::create(['team_id' => $this->childB->id, 'name' => 'Fremd', 'base_slug' => 'editorial']);
+
+    expect(fn () => $this->svc->speichern($this->rootTeam, null, ['name' => 'F', 'format' => 'a4_24', 'presentation_design' => 'design:'.$fremd->id]))
+        ->toThrow(\RuntimeException::class, 'nicht sichtbar')
+        ->and(fn () => $this->svc->speichern($this->rootTeam, null, ['name' => 'K', 'format' => 'a4_24', 'presentation_design' => 'design:abc']))
+        ->toThrow(\RuntimeException::class, 'ungültig');
+    expect($this->svc->speichern($this->rootTeam, null, ['name' => 'E', 'format' => 'a4_24', 'presentation_design' => 'design:'.$eigen->id])->presentation_design)
+        ->toBe('design:'.$eigen->id);
+});

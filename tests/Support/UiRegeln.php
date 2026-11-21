@@ -50,6 +50,8 @@ final class UiRegeln
         // Bestand (1.4c): zwei Aufklapp-Panels ohne Menü-Liste (orders/index „Neue Bestellrunde“ als Dialog, verkauf/vk-modal
         // „KI-Assistent“ mit Knöpfen, die offen bleiben). Sie nutzen nur den faMenu-Helfer und brauchen einen eigenen Popover-Baustein.
         'rohes_menue' => '/x-data\s*=\s*["\']faMenu\(\)["\']/',
+        // Rohe Menü-Einträge statt x-fa::menu-item (1.4c, Sperrklinke bis PR 3): role="menuitem" am eigenen <button>/<a>.
+        'rohes_menue_item' => '/\brole\s*=\s*["\']menuitem["\']/',
         // Alte Tailwind-Palette statt Tokens (--fa-*).
         'alte_palette' => '/(?<![\w-])(?:text|bg|border(?:-[xytrbl])?|ring|ring-offset|divide|outline|from|via|to|placeholder|fill|stroke|decoration|accent|caret|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)(?![\w-])/',
     ];

@@ -680,7 +680,7 @@
             @endunless
             <x-fa::section title="Positionen" icon="heroicon-o-list-bullet" :meta="count($detail['zeilen'])">
                 <div class="-mx-4 overflow-x-auto">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead><tr>
                             <th class="w-full">Artikel</th>
                             <th class="num">Bedarf</th>
@@ -797,7 +797,7 @@
                                 @if($detail['editierbar'])<td></td>@endif
                             </tr>
                         </tfoot>
-                    </table>
+                    </x-fa::table>
                 </div>
             </x-fa::section>
         </div>
@@ -826,7 +826,7 @@
                     <x-fa::badge tone="accent">Wareneingang netto {{ $euro($receipt['received_net']) }}</x-fa::badge>
                 </div>
                 <div class="-mx-4 overflow-x-auto">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead><tr>
                             <th class="w-full">Artikel</th>
                             <th class="num">Bestellt</th>
@@ -880,7 +880,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             </x-fa::section>
         </div>
@@ -993,7 +993,7 @@
                     @endif
                 </div>
                 <div class="-mx-4 overflow-x-auto">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead><tr>
                             <th>Artikel</th>
                             <th class="num">Grundlage</th>
@@ -1081,7 +1081,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             </x-fa::section>
         </div>

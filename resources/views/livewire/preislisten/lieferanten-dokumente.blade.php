@@ -4,7 +4,7 @@
     <x-fa::section title="Dokumente vom Lieferanten" icon="heroicon-o-document-arrow-up" :meta="$zeilen->count()" data-lieferanten-dokumente>
         @if($meldung)<x-fa::notice tone="ok">{{ $meldung }}</x-fa::notice>@endif
         @if($fehler)<x-fa::notice tone="crit">{{ $fehler }}</x-fa::notice>@endif
-        <table class="fa-table fa-table--compact">
+        <x-fa::table compact>
             <thead><tr><th>Datei</th><th>Lieferant</th><th>Artikel</th><th>Eingegangen</th><th></th></tr></thead>
             <tbody>
                 @foreach($zeilen as $z)
@@ -22,7 +22,7 @@
                     </tr>
                 @endforeach
             </tbody>
-        </table>
+        </x-fa::table>
     </x-fa::section>
 @endif
 </div>

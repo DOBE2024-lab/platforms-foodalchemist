@@ -334,7 +334,7 @@
             @endif
 
             @if($policyForm)
-                <div class="fa-surface p-4 flex flex-col gap-3" data-signal-policy-form>
+                <x-fa::card class="p-4 flex flex-col gap-3" data-signal-policy-form="">
                     <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] leading-relaxed">
                         Gilt für <span class="font-semibold">alle</span> Signale der Art „{{ $sig->type->label() }}“.
                         Schwelle und Frist fassen nur den Bestand zusammen, neue Fälle melden sich weiter.
@@ -363,7 +363,7 @@
                         </div>
                         <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="policySpeichern" data-signal-policy-save>Einstellung speichern</x-fa::button>
                     </div>
-                </div>
+                </x-fa::card>
             @endif
         </x-fa::section>
     @endif

@@ -162,7 +162,7 @@
             @endforeach
         </div>
 
-        <div class="fa-surface overflow-hidden" data-produktion-tabelle>
+        <x-fa::card class="overflow-hidden" data-produktion-tabelle="">
             <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--fa-line)]">
                 <h2 class="fa-t-h2">Produktionsaufträge</h2>
                 <div class="flex flex-wrap items-center gap-3">
@@ -183,7 +183,7 @@
             </div>
 
             <div class="max-h-[70vh] overflow-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">
                         <tr>
                             <th class="w-full min-w-[12rem]">Name</th>
@@ -271,12 +271,12 @@
                             </td></tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             @if($auftraege->hasPages())
                 <div class="px-4 py-3 border-t border-[var(--fa-line)]" data-produktion-pagination>{{ $auftraege->links('foodalchemist::components.fa.pagination') }}</div>
             @endif
-        </div>
+        </x-fa::card>
     </x-ui-page-container>
     @endif
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}

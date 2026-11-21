@@ -22,7 +22,7 @@
             $titel = preg_replace('/^Google News:\s*|\s*\(DE\)$/u', '', $q->name);
             $aktiv = $q->aktiv && $q->rhythmus !== 'aus';
         @endphp
-        <article class="fa-surface p-3 flex flex-col gap-3" wire:key="suchauftrag-{{ $q->id }}" data-suchthema-karte>
+        <x-fa::card as="article" class="p-3 flex flex-col gap-3" wire:key="suchauftrag-{{ $q->id }}" data-suchthema-karte="">
             <div class="flex items-start justify-between gap-3">
                 <h3 class="font-semibold min-w-0 break-words">{{ $titel }}</h3>
                 <x-fa::badge :tone="$aktiv ? 'ok' : 'neutral'">{{ $aktiv ? 'Aktiv' : 'Pausiert' }}</x-fa::badge>
@@ -53,7 +53,7 @@
                     </div>
                 </details>
             </div>
-        </article>
+        </x-fa::card>
     @empty
         <x-fa::empty title="Welches Thema interessiert dich?" icon="heroicon-o-magnifying-glass">Füge dein erstes Thema hinzu, zum Beispiel Fermentation oder alkoholfreie Getränke.</x-fa::empty>
     @endforelse

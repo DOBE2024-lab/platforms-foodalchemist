@@ -37,7 +37,7 @@
         <legend class="fa-t-label">Strukturierte Datenwerte</legend>
         <p class="fa-t-muted">Einzelwert: Minimum und Maximum gleich setzen. Bezugsgröße genau angeben, etwa „Rohgewicht pro Portion“. Ohne passende Werte bleibt eine sichtbare Datenlücke.</p>
         @foreach(($form['datenwerte'] ?? []) as $index => $row)
-            <div wire:key="datenwert-{{ $selectedId }}-{{ $index }}" class="fa-surface p-3 flex flex-col gap-2">
+            <x-fa::card wire:key="datenwert-{{ $selectedId }}-{{ $index }}" class="p-3 flex flex-col gap-2">
                 <div class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))]">
                     @foreach(['kennzahl' => 'Kennzahl', 'min' => 'Minimum', 'max' => 'Maximum', 'einheit' => 'Einheit', 'bezug' => 'Bezugsgröße', 'quelle' => 'Quelle / Fundstelle'] as $field => $fieldLabel)
                         <x-fa::field :label="$fieldLabel" for="wissen-dw-{{ $selectedId ?? 'neu' }}-{{ $index }}-{{ $field }}">
@@ -58,7 +58,7 @@
                 <div class="flex justify-end">
                     <x-fa::button size="sm" variant="danger" icon="heroicon-o-trash" wire:click="removeDatenwert({{ $index }})">Wert entfernen</x-fa::button>
                 </div>
-            </div>
+            </x-fa::card>
         @endforeach
         <div>
             <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="addDatenwert">Datenwert hinzufügen</x-fa::button>

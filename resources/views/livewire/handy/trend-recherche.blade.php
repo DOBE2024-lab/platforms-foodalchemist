@@ -8,7 +8,7 @@
                 $suchauftrag = \Platform\FoodAlchemist\Support\GoogleNewsSuche::lesen($q->url);
                 $begriffe = $suchauftrag ? \Platform\FoodAlchemist\Support\GoogleNewsSuche::anzeige($suchauftrag) : null;
             @endphp
-            <article class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-3 space-y-2 min-w-0 wrap-anywhere" wire:key="hr-{{ $reiter }}-{{ $q->id }}">
+            <x-fa::card as="article" class="p-3 space-y-2 min-w-0 wrap-anywhere" wire:key="hr-{{ $reiter }}-{{ $q->id }}">
                 <div class="flex items-start justify-between gap-2">
                     <h2 class="font-semibold">{{ $q->name }}</h2>
                     <x-fa::badge :tone="$q->aktiv && $q->rhythmus !== 'aus' ? 'ok' : 'neutral'">{{ $q->aktiv && $q->rhythmus !== 'aus' ? 'Aktiv' : 'Pausiert' }}</x-fa::badge>
@@ -26,12 +26,12 @@
                     <p>Stichworte: {{ implode(', ', $q->stichworte_ein ?? []) ?: 'Team-Standard' }}</p>
                     @if($q->stichworte_aus)<p>Ausgeschlossen: {{ implode(', ', $q->stichworte_aus) }}</p>@endif
                 </details>
-            </article>
+            </x-fa::card>
         @empty<x-fa::empty compact title="Keine passenden Einträge" icon="heroicon-o-magnifying-glass">Prüfe deinen Suchbegriff.</x-fa::empty>@endforelse
     @elseif($reiter === 'eingang')
         <p class="fa-t-muted">Die neuesten 50 passenden Einträge einschließlich verworfener Artikel. Vorschläge werden erst nach Prüfung zu Trends.</p>
         @forelse($handyEingang as $e)
-            <article class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-3 space-y-2 min-w-0 wrap-anywhere" wire:key="he-{{ $e->id }}">
+            <x-fa::card as="article" class="p-3 space-y-2 min-w-0 wrap-anywhere" wire:key="he-{{ $e->id }}">
                 <x-fa::badge>{{ V::EINGANG_STATUS[$e->status] ?? $e->status }}</x-fa::badge>
                 <h2 class="font-semibold">{{ $e->titel }}</h2>
                 <p class="fa-t-muted">{{ $e->quelle?->name ?? 'Manuell eingereicht' }}</p>
@@ -39,7 +39,7 @@
                 @if($e->thema)<p class="fa-t-muted">Entwicklung: {{ $e->thema }}</p>@endif
                 @if($e->begruendung)<p class="fa-t-muted">{{ $e->begruendung }}</p>@endif
                 <a href="{{ $e->link() }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center min-h-11 text-[var(--fa-accent)] underline">Original öffnen</a>
-            </article>
+            </x-fa::card>
         @empty<x-fa::empty compact title="Noch keine passenden Artikel" icon="heroicon-o-inbox">Neue passende Funde erscheinen hier nach dem Abruf.</x-fa::empty>@endforelse
     @elseif($handyAutomatik)
         <x-fa::section title="Auswertungsweg">

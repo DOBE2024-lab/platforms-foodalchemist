@@ -23,13 +23,13 @@
     </div>
 
     @if(empty($plan['liste']))
-        <div class="fa-surface">
+        <x-fa::card>
             <x-fa::empty icon="heroicon-o-cpu-chip" title="Noch keine Themen">
                 Themen entstehen, wenn Artikel im Eingang erschlossen und gebündelt sind.
             </x-fa::empty>
-        </div>
+        </x-fa::card>
     @else
-        <div class="fa-surface divide-y divide-[var(--fa-line)]" data-automatik-liste>
+        <x-fa::card class="divide-y divide-[var(--fa-line)]" data-automatik-liste="">
             @foreach($plan['liste'] as $z)
                 @php $k = $z['kennzahlen']; $e = $z['einordnung']; @endphp
                 <article class="p-3 flex flex-col gap-1 min-w-0" wire:key="au-{{ $k['thema_id'] }}" data-automatik-thema="{{ $k['thema_id'] }}">
@@ -54,6 +54,6 @@
                     <p class="fa-t-muted">{{ implode(' ', $e['begruendung']) }}</p>
                 </article>
             @endforeach
-        </div>
+        </x-fa::card>
     @endif
 </div>

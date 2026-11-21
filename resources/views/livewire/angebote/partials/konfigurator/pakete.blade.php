@@ -8,7 +8,7 @@
 
 <x-fa::section title="Pakete" icon="heroicon-o-user-group" :meta="$pakete->count()" description="Die Grenzen legst du fest. Referenz-Pax (Standard: Mitte), Mengen und Preise rechnet das System." data-kf-pakete>
     @if($pakete->isNotEmpty())
-        <table class="fa-table fa-table--compact">
+        <x-fa::table compact>
             <thead><tr><th>Paket</th><th class="num">Von</th><th class="num">Bis</th><th class="num">Referenz-Pax</th><th>Geschnürt</th><th></th></tr></thead>
             <tbody>
                 @foreach($pakete as $p)
@@ -25,7 +25,7 @@
                     </tr>
                 @endforeach
             </tbody>
-        </table>
+        </x-fa::table>
     @endif
     <div class="flex flex-wrap items-end gap-2">
         <x-fa::field label="Von Gästen" for="kfp-von"><x-fa::input id="kfp-von" type="number" min="1" class="w-28" wire:model="paketNeu.von_pax" /></x-fa::field>
@@ -46,7 +46,7 @@
         <x-fa::button icon="heroicon-m-calculator" wire:click="vorschlagen" data-kf-vorschlagen>Vorschlagen</x-fa::button>
     </div>
     @if($vorschlag !== null)
-        <table class="fa-table fa-table--compact" data-kf-vorschlag>
+        <x-fa::table compact data-kf-vorschlag="">
             <thead><tr><th class="num">Von</th><th class="num">Bis</th><th class="num">Referenz</th><th class="num">Größte Abweichung</th></tr></thead>
             <tbody>
                 @foreach($vorschlag as $i => $v)
@@ -54,7 +54,7 @@
                         <td class="num">{{ number_format($v['max_abweichung_pct'], 1, ',', '.') }} %@if(! $v['toleranz_gehalten']) <x-fa::badge tone="warn">über Toleranz</x-fa::badge>@endif</td></tr>
                 @endforeach
             </tbody>
-        </table>
+        </x-fa::table>
         <div class="flex justify-end gap-2">
             <x-fa::button variant="ghost" wire:click="vorschlagVerwerfen">Verwerfen</x-fa::button>
             <x-fa::button variant="primary" wire:click="vorschlagUebernehmen" wire:confirm="Der Vorschlag ersetzt alle Pakete. Handwerte in der Mengen-Matrix gehen verloren. Übernehmen?" data-kf-vorschlag-uebernehmen>Übernehmen</x-fa::button>
@@ -65,7 +65,7 @@
 @if($pakete->isNotEmpty() && $k->leistungen->isNotEmpty())
     <x-fa::section title="Mengen je Paket" icon="heroicon-o-table-cells" description="Feld ändern = Handwert (bleibt beim Schnüren erhalten), leeren = zurück auf die Regel. Grau: Wert nach Regel." data-kf-matrix>
         <div class="overflow-x-auto">
-            <table class="fa-table fa-table--compact">
+            <x-fa::table compact>
                 <thead><tr><th>Leistung</th>@foreach($pakete as $p)<th class="num">{{ $p->anzeigeName() }}<div class="fa-t-muted font-normal">r = {{ $p->referenz_pax }}</div></th>@endforeach</tr></thead>
                 <tbody>
                     @foreach($k->leistungen->whereNull('konfigurator_konzept_id') as $l)
@@ -83,7 +83,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
         <p class="fa-t-muted">Zusatz-Leistungen der Konzepte und Ersetzungen rechnet das System je Konzept; ihre Kosten stehen in der Kalkulation.</p>
     </x-fa::section>

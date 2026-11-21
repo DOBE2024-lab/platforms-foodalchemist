@@ -32,7 +32,7 @@
             @if($gruppen->isEmpty())
                 <x-fa::empty compact icon="heroicon-o-document-duplicate" title="{{ $gesamt === 0 ? 'Noch keine Vorlagen' : 'Keine Vorlage passt' }}">Auch aus einer Bestellrunde oder Bestellung lässt sich eine Vorlage speichern.</x-fa::empty>
             @else
-                <table class="fa-table fa-table--compact" data-vorlagen-tabelle>
+                <x-fa::table compact data-vorlagen-tabelle="">
                     <thead><tr><th>Vorlage</th><th class="text-right">Positionen</th><th>Bestelltag</th><th>Zuletzt bestellt</th><th></th></tr></thead>
                     <tbody>
                         @foreach($gruppen as $kategorie => $vorlagen)
@@ -48,7 +48,7 @@
                             @endforeach
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             @endif
         </x-fa::section>
     </x-ui-page-container>

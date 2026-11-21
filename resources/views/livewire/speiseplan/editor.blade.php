@@ -221,9 +221,9 @@
                                     $zeilenLinien->push(['id' => 0, 'name' => 'Ohne Linie', 'color' => null, 'role' => null, 'plu' => null, 'is_standing' => false]);
                                 }
                             @endphp
-                            <section class="fa-surface min-w-0" aria-label="Wochenraster">
+                            <x-fa::card as="section" class="min-w-0" aria-label="Wochenraster">
                                 <div class="overflow-x-auto" data-sp-matrix x-data="{ dragId: null }">
-                                    <table class="fa-table table-fixed" style="min-width: {{ 152 + count($wochenTage) * 136 }}px">
+                                    <x-fa::table class="table-fixed" style="min-width: {{ 152 + count($wochenTage) * 136 }}px">
                                         <thead><tr>
                                             <th class="w-36">Linie</th>
                                             @foreach($wochenTage as $tag)
@@ -310,9 +310,9 @@
                                                 </tr>
                                             @endif
                                         </tbody>
-                                    </table>
+                                    </x-fa::table>
                                 </div>
-                            </section>
+                            </x-fa::card>
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 fa-t-muted" data-sp-legende>
                                 <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[var(--fa-ok)]"></span>Wareneinsatz im Zielband</span>
                                 <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[var(--fa-warn)]"></span>darüber</span>
@@ -324,7 +324,7 @@
                             {{-- Einfügen unter der Matrix, in voller Breite (Dominique 2026-10-06: „wie in der Demo unten drunter").
                                  Stand vorher als schmales Seitenpanel rechts; die Grundanordnung des Originals gilt. --}}
                             @if($cellDatum !== null)
-                                <section class="fa-surface p-4 flex flex-col gap-3 border-[var(--fa-accent-line)]" data-sp-picker>
+                                <x-fa::card as="section" class="p-4 flex flex-col gap-3 border-[var(--fa-accent-line)]" data-sp-picker="">
                                     <fieldset @disabled($gesperrt) class="contents" data-fa-lesemodus="{{ $gesperrt ? '1' : '0' }}">
                                     <div class="flex flex-wrap items-center gap-3">
                                         <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">
@@ -381,7 +381,7 @@
                                         <x-fa::empty compact icon="heroicon-o-magnifying-glass" title="Keine Treffer">Suchbegriff oder Gruppe ändern.</x-fa::empty>
                                     @endif
                                     </fieldset>
-                                </section>
+                                </x-fa::card>
                             @endif
                         @else
                             {{-- Monats-Kalender --}}
@@ -432,7 +432,7 @@
                             </div>
                             @if($mengen && $mengen['zeilen'] !== [])
                                 <div class="overflow-x-auto -mx-4">
-                                    <table class="fa-table fa-table--compact" data-sp-mengen-matrix>
+                                    <x-fa::table compact data-sp-mengen-matrix="">
                                         <thead><tr>
                                             <th class="pl-4">Linie</th>
                                             <th class="num" title="Summe der Vorwoche (Planwerte)">Vorwoche</th>
@@ -484,7 +484,7 @@
                                                 <td class="num py-2 pr-4">{{ $zahl($mengen['summe']['umsatz']) }} €</td>
                                             </tr>
                                         </tfoot>
-                                    </table>
+                                    </x-fa::table>
                                 </div>
                                 <p class="fa-t-muted">„Vorwoche" und „Ø 4 Wochen" sind Planwerte. Echte Verkaufszahlen stehen im Reiter „Plan/Ist".</p>
                             @else
@@ -522,7 +522,7 @@
                                                 </span>
                                             </div>
                                             <div class="overflow-x-auto">
-                                                <table class="fa-table fa-table--compact">
+                                                <x-fa::table compact>
                                                     <thead><tr><th>Grundprodukt</th><th class="num">Menge</th><th>Gebinde und Artikel</th><th class="num">EK</th></tr></thead>
                                                     <tbody>
                                                         @foreach($lf['positionen'] as $pos)
@@ -541,7 +541,7 @@
                                                             </tr>
                                                         @endforeach
                                                     </tbody>
-                                                </table>
+                                                </x-fa::table>
                                             </div>
                                         </div>
                                     @endforeach
@@ -575,7 +575,7 @@
                                 @endunless
                                 @if($planIst['zeilen'] !== [])
                                     <div class="overflow-x-auto -mx-4">
-                                        <table class="fa-table fa-table--compact" data-sp-planist>
+                                        <x-fa::table compact data-sp-planist="">
                                             <thead><tr><th class="pl-4">Gericht</th><th class="num">Plan</th><th class="num">Ist</th><th class="num">Abweichung</th><th class="num">Umsatz Plan</th><th class="num pr-4">Umsatz Ist</th></tr></thead>
                                             <tbody>
                                                 @foreach($planIst['zeilen'] as $pz)
@@ -589,7 +589,7 @@
                                                     </tr>
                                                 @endforeach
                                             </tbody>
-                                        </table>
+                                        </x-fa::table>
                                     </div>
                                 @endif
                                 @if($planIst['nicht_vergleichbar'] !== [])
@@ -606,7 +606,7 @@
                         <x-fa::section title="Menü-Linien" icon="heroicon-o-queue-list" :meta="$mehrzahl($linien->count(), 'Linie', 'Linien')" description="Jede Linie ist eine Ausgabestelle und eine Zeile im Kalender. Das Zielband ersetzt für die Linie das Ziel des Kalkulationsprofils: Suppe und Dessert dürfen anders kalkulieren als der Hauptgang. Hauptgang-Linien zählen die Gäste des Tages.">
                             {{-- Spec 57 · Paket 2: jede Linie ist eine Ausgabestelle (Rolle, Kasse, Preis, Zielband). --}}
                             <div class="overflow-x-auto -mx-4">
-                                <table class="fa-table">
+                                <x-fa::table>
                                     <thead><tr>
                                         <th class="pl-4">Linie</th><th>Rolle</th><th>Mahlzeit</th><th>Kasse</th>
                                         <th class="num">Preis</th><th class="num">Zielband Wareneinsatz</th><th class="num">Essen je Tag</th><th class="pr-4"><span class="sr-only">Aktionen</span></th>
@@ -651,7 +651,7 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                             <div class="flex items-center gap-2">
                                 <x-fa::input wire:model="neueLinie" wire:keydown.enter="linieAdd" placeholder="Name der neuen Linie" class="w-64" aria-label="Name der neuen Linie" />
@@ -782,7 +782,7 @@
                                             <x-fa::signal tone="info">Neue Linien in der Vorlage: {{ collect($vorlagenAbgleich['neue_linien'])->pluck('name')->implode(', ') }}</x-fa::signal>
                                         @endif
                                         <div class="overflow-x-auto -mx-4">
-                                            <table class="fa-table fa-table--compact">
+                                            <x-fa::table compact>
                                                 <thead><tr><th class="pl-4">Tag</th><th>Linie</th><th>Vorlage</th><th>Kalkulationsprofil</th><th class="pr-4"><span class="sr-only">Aktion</span></th></tr></thead>
                                                 <tbody>
                                                     @foreach(array_slice($vorlagenAbgleich['zellen'], 0, 40) as $vz)
@@ -800,7 +800,7 @@
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
-                                            </table>
+                                            </x-fa::table>
                                         </div>
                                         <div>
                                             <x-fa::button icon="heroicon-m-arrow-down-tray" wire:click="ausVorlageUebernehmen(null)" wire:confirm="Alle Änderungen der Vorlage übernehmen? Lokale Abweichungen bleiben." data-sp-vorlage-uebernehmen>Änderungen aus der Vorlage übernehmen</x-fa::button>
@@ -1049,7 +1049,7 @@
                 {{-- Spec 57 · Paket 5: Eintrag-Detail — Tastatur-Weg zu Ersetzen, Verschieben, Kopieren (MVP-032) --}}
                 @if($detailEintrag)
                     @php $dk = $detailKennzahlen ?? []; @endphp
-                    <section class="fa-surface w-80 max-w-full p-3 flex flex-col gap-3 border-[var(--fa-accent-line)]" data-sp-eintrag-detail="{{ $detailEintrag->id }}">
+                    <x-fa::card as="section" class="w-80 max-w-full p-3 flex flex-col gap-3 border-[var(--fa-accent-line)]" data-sp-eintrag-detail="{{ $detailEintrag->id }}">
                         <header class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
                                 <p class="{{ $etikett }}">{{ $linien->firstWhere('id', $detailEintrag->line_id)?->name ?? 'Ohne Linie' }} · {{ $tagKurz[$detailEintrag->entry_date->isoWeekday()] ?? '' }} {{ $detailEintrag->entry_date->format('d.m.') }} · {{ $mahlzeiten[$detailEintrag->meal] ?? $detailEintrag->meal }}</p>
@@ -1159,7 +1159,7 @@
                             <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" class="w-full" wire:click="eintragRaus({{ $detailEintrag->id }})" wire:confirm="Eintrag entfernen?">Eintrag entfernen</x-fa::button>
                         </div>
                         </fieldset>
-                    </section>
+                    </x-fa::card>
                 @endif
 
                 {{-- Kennzahlen-Kopf mit Ein-/Ausklappen --}}

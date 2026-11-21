@@ -344,7 +344,7 @@
                     @endif
 
                     <x-fa::section variant="plain" title="Wissensauswahl testen" icon="heroicon-o-beaker">
-                        <details class="fa-surface group" data-wissen-vorschau>
+                        <x-fa::card as="details" class="group" data-wissen-vorschau="">
                             <summary class="flex items-center justify-between gap-2 px-3.5 py-2.5 cursor-pointer select-none fa-t-strong">
                                 <span class="flex items-center gap-2">@svg('heroicon-o-beaker', 'w-4 h-4 text-[var(--fa-ink-3)]') Auftrag eingeben und prüfen</span>
                                 @svg('heroicon-m-chevron-down', 'w-4 h-4 text-[var(--fa-ink-3)] transition-transform group-open:rotate-180')
@@ -425,7 +425,7 @@
                                     </div>
                                 @endif
                             </div>
-                        </details>
+                        </x-fa::card>
                     </x-fa::section>
                 </div>
             </div>
@@ -446,7 +446,7 @@
         @if($selected || $creating)
             {{-- Der Text bekommt die ganze Mitte. Ansicht/Bearbeiten ist ein Livewire-Umschalter,
                  weil das Textfeld aufgeschoben bindet: der Inhalt reist mit dem Klick mit. --}}
-            <div class="fa-surface min-w-0" data-wissen-editor>
+            <x-fa::card class="min-w-0" data-wissen-editor="">
                 <div class="px-5 pt-4 pb-3 flex flex-wrap items-start gap-3 border-b border-[var(--fa-line)]">
                     <div class="flex-1 min-w-[16rem]">
                         @if($vorschau)
@@ -543,16 +543,16 @@
                             data-wissen-inhalt placeholder="Text in Markdown: # Überschrift, - Aufzählung, **fett**" />
                     </div>
                 @endif
-            </div>
+            </x-fa::card>
         @else
-            <div class="fa-surface" data-wissen-empty>
+            <x-fa::card data-wissen-empty="">
                 <x-fa::empty icon="heroicon-o-academic-cap" title="Kein Dokument geöffnet">
                     Links ein Dokument wählen oder ein neues anlegen.
                     <x-slot:action>
                         <x-fa::button icon="heroicon-m-plus" wire:click="neu">Neues Wissen</x-fa::button>
                     </x-slot:action>
                 </x-fa::empty>
-            </div>
+            </x-fa::card>
         @endif
     </x-ui-page-container>
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}

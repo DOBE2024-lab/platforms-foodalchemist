@@ -62,7 +62,7 @@
     <x-fa::section title="Flächen" data-teamprofil-flaechen
         description="Räume und Flächen mit ihrer Gästegrenze und Saison, zum Beispiel Terrasse, Saal oder Rooftop.">
         <div class="overflow-x-auto -mx-4">
-            <table class="fa-table">
+            <x-fa::table>
                 <thead><tr><th>Name</th><th class="num">Max. Gäste</th><th class="num">Saison von (Monat)</th><th class="num">bis (Monat)</th><th></th></tr></thead>
                 <tbody>
                     @forelse($flaechen as $f)
@@ -77,7 +77,7 @@
                         <tr><td colspan="5"><x-fa::empty compact icon="heroicon-o-home-modern" title="Noch keine Flächen">Unten die erste Fläche anlegen.</x-fa::empty></td></tr>
                     @endforelse
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
         <div class="flex flex-wrap items-end gap-2 pt-3 border-t border-[var(--fa-line)]" data-teamprofil-flaeche-neu>
             <x-fa::field label="Neue Fläche" for="tp-fl-name" class="w-60 max-w-full">

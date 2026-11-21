@@ -15,7 +15,7 @@
         description="Wo euer Haus anders arbeitet als der Plattform-Standard: Standard-Grundprodukte, Kleinstmengen, Hygiene-Temperaturen. Eine Abweichung gilt sofort für dieses Team und für Unter-Teams ohne eigene. Temperaturen dürfen strenger sein; lockerer nur bis zur belegten Untergrenze.">
         <div class="grid grid-cols-1 gap-4 {{ $offenZeile ? 'xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]' : '' }}">
             <div class="overflow-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead><tr><th>Regel</th><th>Plattform-Standard</th><th>Bei euch</th><th>Herkunft</th><th><span class="sr-only">Aktionen</span></th></tr></thead>
                     <tbody>
                         @foreach($zeilen as $z)
@@ -44,7 +44,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
 
             @if($offenZeile)
@@ -76,7 +76,7 @@
                         </div>
                     @else
                         <div class="max-h-[24rem] overflow-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
-                            <table class="fa-table">
+                            <x-fa::table>
                                 <thead><tr><th>Begriff</th><th>Grundprodukt</th><th>Andere Schreibweisen (Komma)</th><th><span class="sr-only">Entfernen</span></th></tr></thead>
                                 <tbody>
                                     @foreach($form['zeilen'] ?? [] as $i => $z)
@@ -88,7 +88,7 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-                            </table>
+                            </x-fa::table>
                         </div>
                         @unless($sperrLesen)<div><x-fa::button size="sm" variant="ghost" icon="heroicon-m-plus" wire:click="zeileDazu">Zeile hinzufügen</x-fa::button></div>@endunless
                         <p class="{{ $klein }} text-[var(--fa-ink-3)]">Kontext-Bedingungen (z. B. nur From Scratch) übernimmt die Abweichung vom Plattform-Eintrag gleichen Begriffs.</p>

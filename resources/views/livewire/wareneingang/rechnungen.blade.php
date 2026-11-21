@@ -31,7 +31,7 @@
                     <x-fa::notice tone="info">Keine gebuchten, noch nicht abgerechneten Lieferscheine bei diesem Lieferanten. Erst Lieferschein buchen, dann Rechnung erfassen.</x-fa::notice>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="fa-table fa-table--compact min-w-[760px]">
+                        <x-fa::table compact class="min-w-[760px]">
                             <thead><tr><th class="w-8"><span class="sr-only">auf Rechnung</span></th><th>Lieferschein</th><th>Artikel</th><th class="text-right">Menge</th><th class="text-right">Preis Bestellung</th><th class="text-right">Preis Rechnung</th><th class="text-right">Betrag</th></tr></thead>
                             <tbody>
                                 @foreach($zeilen as $i => $z)
@@ -46,7 +46,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
 
@@ -98,7 +98,7 @@
             <x-fa::empty compact icon="heroicon-o-document-text" title="Keine Rechnungen">Rechnungen werden aus gebuchten Lieferscheinen erfasst und gegen Bestellung und Lieferung geprüft.</x-fa::empty>
         @else
             <div class="overflow-x-auto">
-                <table class="fa-table fa-table--compact min-w-[760px]">
+                <x-fa::table compact class="min-w-[760px]">
                     <thead><tr>@if($standortSpalte)<th>Standort</th>@endif<th>Datum</th><th>Nummer</th><th>Lieferant</th><th class="text-right">Summe</th><th>fällig</th><th>Status</th><th><span class="sr-only">Aktionen</span></th></tr></thead>
                     <tbody>
                         @foreach($liste as $r)
@@ -134,7 +134,7 @@
                                                 <span>Toleranz Preis ±{{ $zahl($detail['toleranz']['pct']) }} % oder ±{{ number_format($detail['toleranz']['eur'], 2, ',', '.') }} € je Gebinde</span>
                                                 @if($detail['anhang_url'])<a href="{{ $detail['anhang_url'] }}" target="_blank" rel="noopener" class="underline">Beleg öffnen</a>@endif
                                             </div>
-                                            <table class="fa-table fa-table--compact">
+                                            <x-fa::table compact>
                                                 <thead><tr><th>Position</th><th>Bestellung / LS</th><th class="text-right">bestellt</th><th class="text-right">geliefert</th><th class="text-right">berechnet</th><th class="text-right">Preis Best.</th><th class="text-right">Preis RE</th><th class="text-right">Betrag</th><th>Befund</th><th>Begründung</th></tr></thead>
                                                 <tbody>
                                                     @foreach($detail['zeilen'] as $z)
@@ -168,7 +168,7 @@
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
-                                            </table>
+                                            </x-fa::table>
                                             <div class="flex flex-wrap items-center gap-2">
                                                 @if($detail['status'] === 'erfasst')
                                                     @if($dF)
@@ -196,7 +196,7 @@
                             @endif
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
     </x-fa::section>

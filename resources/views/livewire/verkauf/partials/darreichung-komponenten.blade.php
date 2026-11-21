@@ -6,7 +6,7 @@
     <p class="{{ $hinweis }}">Gramm je Portion eintragen oder weglassen. Leere Felder folgen der angezeigten Referenz. Eigene Mengen bleiben bei einem Standardwechsel erhalten. Neue Zutaten gehören in ein neues Gericht.</p>
     @endif
     <div class="overflow-x-auto">
-        <table class="fa-table fa-table--compact">
+        <x-fa::table compact>
             <thead><tr><th>Komponente</th><th class="num">{{ $standardmenge ? 'Menge (g)' : 'Referenz (g)' }}</th>@unless($standardmenge)<th class="num">Hier (g)</th><th>Weglassen</th>@endunless</tr></thead>
             <tbody>
                 @foreach($rezept->ingredients as $z)
@@ -23,6 +23,6 @@
                     </tr>
                 @endforeach
             </tbody>
-        </table>
+        </x-fa::table>
     </div>
 </section>

@@ -112,7 +112,7 @@
                        description="Diese Umsätze sind erfasst, hängen aber an keinem Gericht und fehlen darum in der Auswertung unten. Eine Zuordnung von Hand bleibt bei jedem neuen Einlesen erhalten."
                        data-ctrl-sales-offen>
             <div class="overflow-x-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead>
                         <tr>
                             <th>Bezeichnung aus der Datei</th>
@@ -149,7 +149,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         </x-fa::section>
     @endif
@@ -205,7 +205,7 @@
             </p>
 
             <div class="overflow-x-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead>
                         <tr>
                             <th>Gericht</th>
@@ -234,7 +234,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
     </x-fa::section>

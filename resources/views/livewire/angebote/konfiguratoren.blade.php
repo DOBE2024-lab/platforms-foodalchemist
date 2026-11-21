@@ -33,8 +33,8 @@
             </div>
         </div>
 
-        <div class="fa-surface overflow-hidden" data-konfigurator-tabelle>
-            <table class="fa-table">
+        <x-fa::card class="overflow-hidden" data-konfigurator-tabelle="">
+            <x-fa::table>
                 <thead><tr><th class="w-full">Name</th><th>Status</th><th>Ort</th><th class="num">Konzepte</th><th class="num">Pakete</th><th>Gültig bis</th><th>Link</th></tr></thead>
                 <tbody>
                     @forelse($liste as $k)
@@ -51,7 +51,7 @@
                         <tr><td colspan="7"><x-fa::empty icon="heroicon-o-adjustments-horizontal" title="Noch kein Konfigurator">Lege einen Konfigurator an, verknüpfe Concepts und übernimm Leistungen aus den Vorlagen.</x-fa::empty></td></tr>
                     @endforelse
                 </tbody>
-            </table>
-        </div>
+            </x-fa::table>
+        </x-fa::card>
     </x-ui-page-container>
 </x-ui-page>

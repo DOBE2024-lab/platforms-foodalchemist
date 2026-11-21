@@ -88,8 +88,7 @@
 
     {{-- Tooltips (außerhalb des SVG), mittig eingeblendet --}}
     @foreach($achsen as $k => $ax)
-        <div x-show="act === '{{ $k }}'" x-cloak x-transition.opacity
-            class="absolute z-20 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1 px-3 py-2 rounded-[var(--fa-radius-control)] fa-surface shadow-lg pointer-events-none whitespace-nowrap">
+        <x-fa::card x-show="act === '{{ $k }}'" x-cloak="" x-transition.opacity="" class="absolute z-20 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1 px-3 py-2 rounded-[var(--fa-radius-control)] shadow-lg pointer-events-none whitespace-nowrap">
             <div class="text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-ink)]">{{ $radarLabels[$k] }}</div>
             <div class="flex items-center justify-between gap-4 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
                 <span class="inline-flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full bg-[var(--fa-accent)]"></span>Sensorik</span>
@@ -101,6 +100,6 @@
                     <span class="tabular-nums font-medium text-[var(--fa-ink)]">{{ $ax['av'] }} %</span>
                 </div>
             @endif
-        </div>
+        </x-fa::card>
     @endforeach
 </div>

@@ -13,7 +13,7 @@
                 <x-fa::empty compact icon="heroicon-o-receipt-percent" title="Keine Positionen">In diesem Monat wurde noch nichts gezählt.</x-fa::empty>
             @else
                 <div class="overflow-x-auto -mx-4">
-                <table class="fa-table fa-table--compact" data-plan-nutzung-tabelle>
+                <x-fa::table compact data-plan-nutzung-tabelle="">
                     <thead><tr><th>Position</th><th class="text-right">Menge</th><th class="text-right">€ / Monat</th><th class="text-right">Tage gebucht</th><th class="text-right">Gebucht bisher</th><th class="text-right">Vorschau Monat</th></tr></thead>
                     <tbody>
                         @foreach($daten['positionen'] as $p)
@@ -30,7 +30,7 @@
                     <tfoot><tr class="font-semibold"><td colspan="4">Summe</td>
                         <td class="text-right tabular-nums" data-plan-nutzung-summe-gebucht>{{ number_format($daten['summe_gebucht'], 2, ',', '.') }} €</td>
                         <td class="text-right tabular-nums" data-plan-nutzung-summe-vorschau>{{ number_format($daten['summe_vorschau'], 2, ',', '.') }} €</td></tr></tfoot>
-                </table>
+                </x-fa::table>
                 </div>
             @endif
             <p class="pt-3 fa-t-muted">

@@ -52,7 +52,7 @@
                     <x-fa::empty compact icon="heroicon-o-archive-box" :title="$bestandGesamt > 0 ? 'Nichts gefunden' : 'Kein Bestand'">{{ $bestandGesamt > 0 ? 'Kein Bestand passt zu den Filtern.' : 'Bestand entsteht durch Wareneingang oder Inventur.' }}</x-fa::empty>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="fa-table fa-table--compact min-w-[640px]">
+                        <x-fa::table compact class="min-w-[640px]">
                             <thead><tr>@if($standortSpalte)<th>Standort</th>@endif<th>Grundprodukt</th><th>Lieferant</th><th>Lagerort</th><th>Stellplatz</th><th class="text-right">Menge</th><th class="text-right">EK je kg/l/Stk</th><th class="text-right">Wert</th><th>Letzte Bewegung</th></tr></thead>
                             <tbody>
                                 @foreach($bestand as $r)
@@ -69,7 +69,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
             </x-fa::section>
@@ -82,7 +82,7 @@
                     <x-fa::empty compact icon="heroicon-o-archive-box" title="Noch keine Lagerartikel">Unten ein Grundprodukt ergänzen oder unter „Einrichten" mehrere markieren.</x-fa::empty>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="fa-table fa-table--compact min-w-[640px]">
+                        <x-fa::table compact class="min-w-[640px]">
                             <thead><tr><th>Grundprodukt</th><th class="text-right">Bestand</th><th class="text-right">Mindestbestand</th><th class="text-right">Sollbestand</th><th>Status</th><th></th></tr></thead>
                             <tbody>
                                 @foreach($lagerartikel as $la)
@@ -106,7 +106,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
                 @if($warengruppenVorschlag !== [])
@@ -220,7 +220,7 @@
                     <x-fa::empty compact icon="heroicon-o-arrows-right-left" title="Keine Bewegungen" />
                 @else
                     <div class="overflow-x-auto">
-                        <table class="fa-table fa-table--compact min-w-[760px]">
+                        <x-fa::table compact class="min-w-[760px]">
                             <thead><tr>@if($standortSpalte)<th>Standort</th>@endif<th>Datum</th><th>Grundprodukt</th><th>Lagerort</th><th>Quelle</th><th>Grund</th><th class="text-right">Menge</th><th class="text-right">Wert</th><th>Notiz</th><th></th></tr></thead>
                             <tbody>
                                 @foreach($bewegungen as $m)
@@ -242,7 +242,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
             </x-fa::section>
@@ -263,7 +263,7 @@
                     @if($inventuren->isEmpty())
                         <x-fa::empty compact icon="heroicon-o-clipboard-document-list" title="Noch keine Inventur" />
                     @else
-                        <table class="fa-table fa-table--compact">
+                        <x-fa::table compact>
                             <thead><tr>@if($standortSpalte)<th>Standort</th>@endif<th>Stichtag</th><th>Lagerort</th><th class="text-right">Positionen</th><th>Status</th><th class="text-right">Wert</th><th></th></tr></thead>
                             <tbody>
                                 @foreach($inventuren as $c)
@@ -278,7 +278,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     @endif
                 </x-fa::section>
             <x-fa::modal name="lager-inventur" fullscreen dark-canvas title="Inventur" :title-name="$inventur !== null ? $inventur->count_date->format('d.m.Y') . ' · ' . ($inventur->location?->name ?? '—') : null">
@@ -325,7 +325,7 @@
                         <x-fa::empty compact icon="heroicon-o-funnel" title="Keine Position passt zu den Filtern" />
                     @else
                     <div class="overflow-x-auto">
-                        <table class="fa-table fa-table--compact min-w-[760px]" data-lager-zaehlliste>
+                        <x-fa::table compact class="min-w-[760px]" data-lager-zaehlliste="">
                             <thead><tr><th>Grundprodukt</th><th class="text-right">Soll</th><th class="text-right">Gezählt</th><th class="text-right">Differenz</th><th class="text-right">EK</th><th class="text-right">Wert</th></tr></thead>
                             <tbody>
                                 @php $letzterPlatz = false; @endphp
@@ -391,7 +391,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                     @endif
 
@@ -450,7 +450,7 @@
                     <x-fa::empty compact icon="heroicon-o-archive-box" title="Keine offenen Chargen" />
                 @else
                     <div class="overflow-x-auto">
-                        <table class="fa-table fa-table--compact min-w-[760px]">
+                        <x-fa::table compact class="min-w-[760px]">
                             <thead><tr><th>Charge</th><th>Rezept</th><th>Lagerort</th><th>Lagerart</th><th class="text-right">Rest</th><th>Hergestellt</th><th>Verbrauchen bis</th><th>Entnehmen</th><th></th></tr></thead>
                             <tbody>
                                 @foreach($chargen as $b)
@@ -476,7 +476,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
             </x-fa::section>
@@ -551,7 +551,7 @@
                             <x-fa::empty compact icon="heroicon-o-squares-plus" title="Keine Grundprodukte">{{ $einrichtenGesamt > 0 ? 'Kein Grundprodukt passt zu den Filtern.' : 'Hier erscheint, was an diesem Lagerort Bestand hat oder zuletzt eingekauft wurde.' }}</x-fa::empty>
                         @else
                             <div class="overflow-x-auto">
-                                <table class="fa-table fa-table--compact min-w-[420px]">
+                                <x-fa::table compact class="min-w-[420px]">
                                     <thead><tr><th class="w-8"></th><th>Grundprodukt</th><th>Zustand</th><th>Stellplatz</th></tr></thead>
                                     <tbody>
                                         @foreach($einrichten as $r)
@@ -572,7 +572,7 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                         @endif
                     </x-fa::section>

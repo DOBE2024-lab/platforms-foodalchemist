@@ -16,13 +16,13 @@
     @endif
 
     @if($quellen->isEmpty())
-        <div class="fa-surface">
+        <x-fa::card>
             <x-fa::empty icon="heroicon-o-rss" title="Noch keine Quellen">
                 Fachpresse und Branchenquellen hier hinterlegen. Neue Quellen stehen auf dem Rhythmus aus den Trendradar-Einstellungen (Standard „aus“).
             </x-fa::empty>
-        </div>
+        </x-fa::card>
     @else
-        <div class="fa-surface divide-y divide-[var(--fa-line)]" data-quellen-liste>
+        <x-fa::card class="divide-y divide-[var(--fa-line)]" data-quellen-liste="">
             @foreach($quellen as $q)
                 @php
                     $eigen = (int) $q->team_id === $teamId;
@@ -92,6 +92,6 @@
                     @endif
                 </article>
             @endforeach
-        </div>
+        </x-fa::card>
     @endif
 </div>

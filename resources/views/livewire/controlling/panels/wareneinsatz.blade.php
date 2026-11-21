@@ -121,7 +121,7 @@
 
             {{-- Top-Einsparpotenziale --}}
             <div class="overflow-x-auto">
-                <table class="fa-table" data-optimierung-top>
+                <x-fa::table data-optimierung-top="">
                     <thead>
                         <tr>
                             <th class="w-8"><span class="sr-only">Auswahl</span></th>
@@ -160,7 +160,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             <p class="fa-t-muted">Günstigster Bezug inklusive Rückvergütung.</p>
         </x-fa::section>

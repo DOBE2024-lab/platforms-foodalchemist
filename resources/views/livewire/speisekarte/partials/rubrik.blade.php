@@ -158,7 +158,7 @@
         </div>
 
         @if($editPosId === $pos->id)
-            <div wire:key="sk-edit-{{ $pos->id }}" class="ml-6 mt-1 mb-3 p-3 fa-surface flex flex-col gap-3">
+            <x-fa::card wire:key="sk-edit-{{ $pos->id }}" class="ml-6 mt-1 mb-3 p-3 flex flex-col gap-3">
                 @if(in_array($pos->type, ['gericht_ref', 'menue_ref']))
                     <x-fa::field label="Name auf der Karte" for="sk-edit-wording-{{ $pos->id }}" hint="Leer lassen, dann gilt der Name aus dem Gericht." error="editWording">
                         <div class="flex items-center gap-2">
@@ -215,7 +215,7 @@
                     {{-- Werkstrang M Phase D: Wahl-Gruppe wird im Druck und in der Vorschau als „A oder B“ gezeigt. --}}
                     <p class="fa-t-muted">Wahl-Gruppe {{ $editVariantGroupId }}: Positionen mit derselben Nummer erscheinen als „… oder …“. Im Aufbau direkt untereinander platzieren.</p>
                 @endif
-            </div>
+            </x-fa::card>
         @endif
     @empty
         <p class="px-2 py-2 fa-t-muted">Noch leer. Über „Hinzufügen“ ein Gericht, Konzept oder Paket einsetzen.</p>

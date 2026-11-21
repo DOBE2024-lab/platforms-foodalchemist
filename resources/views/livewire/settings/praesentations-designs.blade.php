@@ -126,7 +126,7 @@
                 </x-fa::field>
             </div>
 
-            <div class="fa-surface overflow-hidden">
+            <x-fa::card class="overflow-hidden">
                 @if($vorschauHtml !== null)
                     <div class="flex items-center gap-2 px-3 py-2 border-b border-[var(--fa-line)] text-[length:var(--fa-text-sm)] {{ $ungespeichert ? 'bg-[var(--fa-warn-soft)] text-[var(--fa-warn)]' : 'text-[var(--fa-ink-3)]' }}">
                         @svg($ungespeichert ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-eye', 'w-4 h-4 shrink-0')
@@ -138,7 +138,7 @@
                         Oben Form und Quelle wählen, dann zeigt die Vorschau das Design mit echten Daten.
                     </x-fa::empty>
                 @endif
-            </div>
+            </x-fa::card>
         </section>
 
         {{-- ── Rechts: Struktur + Block-Einstellungen + Farben/Schrift ────────────────────── --}}

@@ -20,7 +20,7 @@
             </x-fa::empty>
         @else
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table min-w-[680px]" data-kat-tabelle>
+                <x-fa::table class="min-w-[680px]" data-kat-tabelle="">
                     <thead>
                         <tr>
                             <th>Kategorie</th>
@@ -78,7 +78,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
     </x-fa::section>

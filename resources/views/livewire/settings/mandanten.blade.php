@@ -15,7 +15,7 @@
                 <x-fa::empty compact icon="heroicon-o-building-office-2" title="Keine Mandanten">Es gibt noch kein Haupt-Team neben dem Master-Team.</x-fa::empty>
             @else
                 <div class="overflow-x-auto -mx-4">
-                <table class="fa-table fa-table--compact" data-mandanten-tabelle>
+                <x-fa::table compact data-mandanten-tabelle="">
                     <thead><tr><th>Mandant</th><th>Status</th><th>Modus</th><th>CRM-Firma</th><th>Stamm-Paket</th><th class="text-right">Abos</th><th class="text-right">Unter-Teams</th><th class="text-right">Gebühren Monat</th><th class="text-right">KI Monat</th><th></th></tr></thead>
                     <tbody>
                         @foreach($blaetter as $b)
@@ -64,7 +64,7 @@
                             @endif
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
                 </div>
             @endif
         </x-fa::section>

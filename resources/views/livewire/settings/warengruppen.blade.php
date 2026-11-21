@@ -86,7 +86,7 @@
             @endif
 
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead>
                         <tr>
                             <th class="w-px"><span class="sr-only">Reihenfolge</span></th>
@@ -157,7 +157,7 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         </x-fa::section>
     </div>

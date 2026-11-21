@@ -43,7 +43,7 @@
             </x-fa::empty>
         @else
             <div class="overflow-x-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead>
                         <tr>
                             <th>Befund</th>
@@ -79,7 +79,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
 

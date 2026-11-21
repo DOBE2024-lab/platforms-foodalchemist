@@ -197,7 +197,7 @@
             </x-fa::empty>
         @else
             <div class="overflow-x-auto -mx-4 px-4">
-                <table class="fa-table min-w-[900px]">
+                <x-fa::table class="min-w-[900px]">
                     <thead><tr>
                         <th>Lager</th>
                         <th>Kürzel</th>
@@ -235,7 +235,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
     </x-fa::section>

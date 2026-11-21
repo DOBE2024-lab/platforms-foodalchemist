@@ -8,7 +8,7 @@
     $leg = $vorschau['legende'];
 @endphp
 
-<div class="fa-surface p-6 md:p-8 min-w-0" wire:key="sk-vorschau-{{ $vorschau['karte']->id }}">
+<x-fa::card class="p-6 md:p-8 min-w-0" wire:key="sk-vorschau-{{ $vorschau['karte']->id }}">
     @if($vorschau['branding']['logo'] ?? null)
         <div class="text-center mb-4"><img src="{{ $vorschau['branding']['logo'] }}" alt="" class="inline-block max-h-16 object-contain" /></div>
     @endif
@@ -88,4 +88,4 @@
             </div>
         @endif
     </div>
-</div>
+</x-fa::card>

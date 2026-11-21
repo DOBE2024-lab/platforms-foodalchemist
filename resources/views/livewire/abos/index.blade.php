@@ -98,7 +98,7 @@
                     <x-fa::empty compact icon="heroicon-o-arrow-path-rounded-square" title="Noch keine Abos">Vergib eine Sammlung an einen Mandanten.</x-fa::empty>
                 @else
                     <div class="overflow-x-auto -mx-4">
-                    <table class="fa-table fa-table--compact">
+                    <x-fa::table compact>
                         <thead><tr><th>Mandant</th><th>Sammlung</th><th>Seit</th><th></th></tr></thead>
                         <tbody>
                             @foreach($abos as $a)
@@ -114,7 +114,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                     </div>
                 @endif
             </x-fa::section>
@@ -130,7 +130,7 @@
                             <p class="fa-t-muted">Keine Objekte in dieser Sammlung.</p>
                         @else
                             <div class="overflow-x-auto -mx-4">
-                            <table class="fa-table fa-table--compact">
+                            <x-fa::table compact>
                                 <thead><tr><th>Art</th><th>Name</th><th>Fassung</th><th>Notiz</th><th></th></tr></thead>
                                 <tbody>
                                     @foreach($s['objekte'] as $o)
@@ -153,7 +153,7 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-                            </table>
+                            </x-fa::table>
                             </div>
                         @endif
                     </div>
@@ -172,7 +172,7 @@
                         <p class="fa-t-muted">Noch nichts veröffentlicht.</p>
                     @else
                         <div class="overflow-x-auto -mx-4">
-                        <table class="fa-table fa-table--compact">
+                        <x-fa::table compact>
                             <thead><tr><th>Art</th><th>Name</th><th>Fassung</th><th>Änderung</th></tr></thead>
                             <tbody>
                                 @foreach($objekte[$a['id']] as $f)
@@ -187,7 +187,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                         </div>
                     @endif
                     @if($darfKuendigen)

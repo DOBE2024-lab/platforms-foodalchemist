@@ -106,7 +106,7 @@
                         <div class="flex flex-col gap-1.5">
                             <p class="{{ $klein }} font-medium text-[var(--fa-ink-2)]">{{ ['vokabular' => 'Erlaubte Werte', 'ersetzung' => 'Ersetzungen', 'zuordnung' => 'Zuordnungen'][$form['art']] }} ({{ count($form['zeilen'] ?? []) }})</p>
                             <div class="max-h-[28rem] overflow-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
-                                <table class="fa-table">
+                                <x-fa::table>
                                     <thead><tr>@foreach($keys as $k)<th>{{ $spalten[$k] ?? $k }}</th>@endforeach<th><span class="sr-only">Entfernen</span></th></tr></thead>
                                     <tbody>
                                         @foreach($form['zeilen'] ?? [] as $i => $z)
@@ -116,7 +116,7 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                             <div><x-fa::button size="sm" variant="ghost" icon="heroicon-m-plus" wire:click="zeileDazu">Zeile hinzufügen</x-fa::button></div>
                         </div>

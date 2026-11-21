@@ -401,7 +401,7 @@
                         </div>
                     </x-fa::section>
                 @empty
-                    <div class="fa-surface">
+                    <x-fa::card>
                         @if($signalStatus === 'offen')
                             <x-fa::empty icon="heroicon-o-check-badge" title="Keine offenen Auffälligkeiten">
                                 Neue Befunde erscheinen nach der nächsten Prüfung. Mit „Daten neu prüfen“ sofort messen.
@@ -411,7 +411,7 @@
                                 Hier landen Signale, die als {{ $statusLabel }} markiert wurden.@if($typGewaehltLabel) Gefiltert auf: {{ $typGewaehltLabel }}.@endif
                             </x-fa::empty>
                         @endif
-                    </div>
+                    </x-fa::card>
                 @endforelse
 
                 {{ $signale->links('foodalchemist::components.fa.pagination') }}

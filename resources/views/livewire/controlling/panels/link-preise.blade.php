@@ -24,7 +24,7 @@
                            icon="heroicon-o-link" :meta="$l['anzahl'] . ($l['anzahl'] === 1 ? ' Preis' : ' Preise') . ' · bis ' . number_format($l['max_delta_pct'], 1, ',', '.') . ' %'"
                            :description="$l['titel']" data-ctrl-link-preise-link="{{ $l['id'] }}">
                 <div class="overflow-x-auto">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead>
                             <tr>
                                 <th>Position</th>
@@ -48,7 +48,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
                 @if($l['url'])
                     <div class="mt-2">

@@ -52,7 +52,7 @@
                 </ul>
             @else
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table fa-table--compact" data-projekte-tabelle>
+                <x-fa::table compact data-projekte-tabelle="">
                     <thead><tr><th>Projekt</th><th>Kunde (CRM)</th><th>Phase</th><th>Status</th></tr></thead>
                     <tbody>
                         @foreach($projekte as $p)
@@ -64,7 +64,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             @endif
         @endif

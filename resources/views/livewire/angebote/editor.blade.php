@@ -832,11 +832,11 @@
                     </x-fa::katalog-picker>
                     </div>{{-- /2col Aufbau --}}
                 @else
-                    <div class="fa-surface">
+                    <x-fa::card>
                         <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Kapitel gewählt">
                             Links im Kapitelbaum ein Kapitel wählen, um seinen Aufbau zu bearbeiten, oder unter «Neues Kapitel» eines anlegen.
                         </x-fa::empty>
-                    </div>
+                    </x-fa::card>
                 @endif
                 </div>{{-- /Aufbau-Reiter --}}
 
@@ -846,7 +846,7 @@
                     @if($kalkulation && ! ($kalkulation['leer'] ?? true) && count($kalkulation['kapitel'] ?? []))
                         <x-fa::section title="Preis je Kapitel" icon="heroicon-o-currency-euro" data-angebot-kalk-kapitel>
                             <div class="overflow-x-auto -mx-4">
-                                <table class="fa-table">
+                                <x-fa::table>
                                     <thead>
                                         <tr>
                                             <th class="w-full">Kapitel</th>
@@ -894,16 +894,16 @@
                                             </tr>
                                         @endif
                                     </tfoot>
-                                </table>
+                                </x-fa::table>
                             </div>
                             <p class="{{ $hinweis }}">* eigene Gästezahl des Kapitels, sonst gelten die Gäste des Angebots ({{ $angebot->personen ?: '–' }}). Preis je Gast im Kopf = Angebotssumme geteilt durch die Gäste des Angebots.</p>
                         </x-fa::section>
                     @else
-                        <div class="fa-surface">
+                        <x-fa::card>
                             <x-fa::empty icon="heroicon-o-calculator" title="Noch nichts zu rechnen">
                                 Sobald ein Kapitel Inhalt mit Preis hat, steht hier die Angebotssumme je Kapitel.
                             </x-fa::empty>
-                        </div>
+                        </x-fa::card>
                     @endif
 
                     {{-- Preis-Modus (auto/fixiert) + Begründung --}}
@@ -932,7 +932,7 @@
                     @if($kalkulation && ! ($kalkulation['leer'] ?? true) && ($kalkulation['pax'] ?? 0) > 0 && count($kalkulation['mengen'] ?? []))
                         <x-fa::section title="Mengen für {{ $kalkulation['pax'] }} Gäste" icon="heroicon-o-scale">
                             <div class="max-h-72 overflow-y-auto -mx-4">
-                                <table class="fa-table fa-table--compact">
+                                <x-fa::table compact>
                                     <thead class="sticky top-0 bg-[var(--fa-surface)]">
                                         <tr><th class="w-full">Gericht</th><th class="num">Menge gesamt</th></tr>
                                     </thead>
@@ -944,7 +944,7 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                         </x-fa::section>
                     @endif

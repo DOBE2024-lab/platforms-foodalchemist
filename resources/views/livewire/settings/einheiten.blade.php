@@ -26,7 +26,7 @@
         <fieldset @disabled($sperrLesen) class="contents" data-fa-lesemodus="{{ $sperrLesen ? '1' : '0' }}">
 
         <div class="overflow-x-auto -mx-4">
-            <table class="fa-table">
+            <x-fa::table>
                 <thead>
                     <tr>
                         <th>Kürzel</th>
@@ -89,7 +89,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
         </fieldset>
     </x-fa::section>

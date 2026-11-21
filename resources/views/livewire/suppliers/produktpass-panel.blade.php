@@ -52,7 +52,7 @@
                 Lade den Produktpass hoch, dann stehen die gelesenen Werte hier zur Prüfung.
             </x-fa::empty>
         @else
-            <table class="fa-table" data-produktpass-versionen>
+            <x-fa::table data-produktpass-versionen="">
                 <thead><tr><th>Version</th><th>Datum</th><th>Quelle</th><th>Datei</th><th>Stand</th><th class="text-right">Aktionen</th></tr></thead>
                 <tbody>
                 @foreach($stand['versionen'] as $v)
@@ -81,14 +81,14 @@
                     </tr>
                 @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         @endif
     </x-fa::section>
 
     @if($abweichungen !== [])
         <x-fa::section title="Necta-Abweichungen" icon="heroicon-o-arrows-right-left" meta="{{ count($abweichungen) }} offen" data-produktpass-abweichungen
             description="Necta meldet an diesen Feldern etwas anderes als der Produktpass. Der Produktpass-Wert gilt, bis du entscheidest. Ist der Pass veraltet, lade oben einen neueren hoch.">
-            <table class="fa-table">
+            <x-fa::table>
                 <thead><tr><th>Feld</th><th>Produktpass (gilt)</th><th>Necta</th><th class="text-right">Entscheidung</th></tr></thead>
                 <tbody>
                 @foreach($abweichungen as $a)
@@ -106,7 +106,7 @@
                     </tr>
                 @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </x-fa::section>
     @endif
 
@@ -138,7 +138,7 @@
                     Im Dokument ließ sich nichts sicher ablesen. Schärfer fotografieren oder ein Datenblatt als PDF hochladen.
                 </x-fa::empty>
             @else
-                <table class="fa-table" data-produktpass-felder>
+                <x-fa::table data-produktpass-felder="">
                     <thead><tr><th>Feld</th><th>Gelesen</th><th>Sicherheit</th><th>Bisher</th><th>Stand</th><th></th></tr></thead>
                     <tbody>
                     @foreach($stand['felder'] as $f)
@@ -168,7 +168,7 @@
                         </tr>
                     @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             @endif
             @if(($angezeigt['verworfen_felder'] ?? []) !== [])
                 <p class="fa-t-muted" data-produktpass-verworfen>Nicht verwertbar und ausgelassen: {{ implode(' · ', array_slice($angezeigt['verworfen_felder'], 0, 6)) }}{{ count($angezeigt['verworfen_felder']) > 6 ? ' …' : '' }}</p>
@@ -186,7 +186,7 @@
                     <x-fa::notice tone="info">Vorschlag verworfen, der bisherige Stand gilt.</x-fa::notice>
                 @endif
                 @if($stand['allergene'] !== [])
-                    <table class="fa-table" data-produktpass-allergen-tabelle>
+                    <x-fa::table data-produktpass-allergen-tabelle="">
                         <thead><tr><th>Allergen</th><th>Laut Dokument</th><th>Sicherheit</th><th>Bisher am Artikel</th></tr></thead>
                         <tbody>
                         @foreach($stand['allergene'] as $a)
@@ -200,13 +200,13 @@
                             </tr>
                         @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 @endif
                 @if($stand['allergene_details'] !== [])
                     <p class="fa-t-muted" data-produktpass-unterarten>Unterarten: {{ collect($stand['allergene_details'])->map(fn ($d, $k) => $k.' ('.($allergenText[$d['wert']] ?? $d['wert']).')')->implode(', ') }}</p>
                 @endif
                 @if($stand['zusatzstoffe'] !== [])
-                    <table class="fa-table" data-produktpass-zusatzstoffe>
+                    <x-fa::table data-produktpass-zusatzstoffe="">
                         <thead><tr><th>Zusatzstoff / Kennzeichnung</th><th>Laut Dokument</th><th>Sicherheit</th><th>Bisher am Artikel</th><th></th></tr></thead>
                         <tbody>
                         @foreach($stand['zusatzstoffe'] as $zs)
@@ -221,7 +221,7 @@
                             </tr>
                         @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 @endif
                 @if($darfEdit && $angezeigt['allergene_status'] === 'vorschlag')
                     <div class="flex gap-2">

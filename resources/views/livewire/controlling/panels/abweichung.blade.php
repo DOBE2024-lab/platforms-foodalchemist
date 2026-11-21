@@ -134,7 +134,7 @@
             <x-fa::section title="Je Standort" icon="heroicon-o-building-office-2" data-ctrl-abw-standorte
                 description="Oben die Summe aller Standorte, hier jeder Standort mit seinen eigenen Einkaufspreisen und Zielwerten.">
                 <div class="overflow-x-auto">
-                    <table class="fa-table fa-table--compact">
+                    <x-fa::table compact>
                         <thead><tr><th>Standort</th><th class="text-right">Umsatz</th><th class="text-right">Einkauf</th><th class="text-right">Wareneinsatz Ist</th><th class="text-right">Ziel</th><th class="text-right">Abweichung</th></tr></thead>
                         <tbody>
                             @foreach($jeStandort as $s)
@@ -149,7 +149,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             </x-fa::section>
         @endif

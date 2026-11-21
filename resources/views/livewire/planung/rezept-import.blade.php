@@ -119,7 +119,7 @@
             </div>
         </x-fa::modal-section>
 
-        <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] px-4 py-3 shadow-lg shadow-black/20">
+        <x-fa::card class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-[var(--fa-line-strong)] px-4 py-3 shadow-lg shadow-black/20">
             <div class="flex-1 min-w-[16rem] flex flex-col gap-1">
                 <p class="flex flex-wrap items-center gap-2 fa-t-h3">
                     @svg('heroicon-o-check-circle', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Rezept anlegen
@@ -137,7 +137,7 @@
                     <span wire:loading wire:target="importAnlegen">Wird verknüpft …</span>
                 </x-fa::button>
             </div>
-        </div>
+        </x-fa::card>
     @elseif($importStep === 'fertig' && $importErgebnis)
         <x-fa::modal-section icon="heroicon-o-check-badge" title="Importiert">
             <x-slot:actions>

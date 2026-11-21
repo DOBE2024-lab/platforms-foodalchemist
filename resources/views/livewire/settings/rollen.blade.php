@@ -35,7 +35,7 @@
 
         <fieldset @disabled($sperrLesen) class="contents" data-fa-lesemodus="{{ $sperrLesen ? '1' : '0' }}">
         <div class="overflow-x-auto -mx-4">
-            <table class="fa-table">
+            <x-fa::table>
                 <thead>
                     <tr>
                         <th class="w-full">Rolle</th>
@@ -101,7 +101,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
 
         @unless($scopeOutletName)

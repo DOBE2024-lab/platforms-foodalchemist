@@ -60,7 +60,7 @@
     </header>
 
     @if($fotoFrei && ($handyFoto || $handyFotoMeldung || $errors->has('handyFoto')))
-        <section class="mx-4 flex flex-col gap-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-4" data-fa-handy-foto-bestaetigen>
+        <x-fa::card as="section" class="mx-4 flex flex-col gap-3 p-4" data-fa-handy-foto-bestaetigen="">
             @error('handyFoto')<x-fa::notice tone="crit">{{ $message }}</x-fa::notice>@enderror
             @if($handyFotoMeldung)<x-fa::notice :tone="$handyFotoMeldung === 'Foto gespeichert.' ? 'ok' : 'warn'" data-fa-handy-foto-meldung>{{ $handyFotoMeldung }}</x-fa::notice>@endif
             <span wire:loading wire:target="handyFoto" class="fa-t-muted">lädt hoch …</span>
@@ -75,7 +75,7 @@
                     <x-fa::button class="min-h-11" wire:click="$set('handyFoto', null)">Verwerfen</x-fa::button>
                 </div>
             @endif
-        </section>
+        </x-fa::card>
     @endif
 
     {{-- Kernwerte: drei Zahlen, fehlende werden gezeigt, nicht geschätzt --}}
@@ -189,7 +189,7 @@
     @isset($reiter['regeneration'])
         <section class="px-4 flex flex-col gap-2" x-show="reiter === 'regeneration'" x-cloak data-fa-reiter-inhalt="regeneration">
             @foreach($karte['regeneration'] as $r)
-                <div class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2.5">
+                <x-fa::card class="px-3 py-2.5">
                     <p class="font-medium text-[var(--fa-ink)]">{{ $r['komponente'] }}</p>
                     <p class="text-[length:var(--fa-text-md)] tabular-nums text-[var(--fa-ink-2)]">
                         @if($r['kalt'])
@@ -199,7 +199,7 @@
                         @endif
                     </p>
                     @if(!empty($r['hinweis']) && ! ($r['kalt'] && mb_strtolower(trim($r['hinweis'])) === 'kalt servieren'))<p class="fa-t-muted">{{ $r['hinweis'] }}</p>@endif
-                </div>
+                </x-fa::card>
             @endforeach
             @foreach($karte['behaelter'] as $bh)
                 <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]"><span class="font-medium text-[var(--fa-ink)]">{{ $bh['zweck'] }}:</span> {{ $bh['name'] }}</p>
@@ -210,7 +210,7 @@
     @isset($reiter['formen'])
         <section class="px-4 flex flex-col gap-2" x-show="reiter === 'formen'" x-cloak data-fa-reiter-inhalt="formen">
             @foreach($formen as $d)
-                <div wire:key="hf-{{ $d->id }}" class="flex items-center gap-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2.5">
+                <x-fa::card wire:key="hf-{{ $d->id }}" class="flex items-center gap-3 px-3 py-2.5">
                     <div class="min-w-0 flex-1">
                         <p class="font-medium text-[var(--fa-ink)]">{{ $d->bezeichnung() ?? 'Ohne Form' }}</p>
                         <p class="fa-t-muted">{{ implode(' · ', array_filter([$d->is_standard ? 'Standard' : null, $d->quantity_per_unit_g !== null ? $menge($d->quantity_per_unit_g) . ' g' : null, $d->unit_count !== null && (float) $d->unit_count !== 1.0 ? $menge($d->unit_count) . ' Stück' : null])) }}</p>
@@ -219,7 +219,7 @@
                         <p class="text-[length:var(--fa-text-lg)] font-semibold tabular-nums {{ $d->sales_gross === null ? 'text-[var(--fa-warn)]' : 'text-[var(--fa-ink)]' }}">{{ $d->sales_gross !== null ? number_format($d->sales_gross, 2, ',', '.') . ' €' : 'VK fehlt' }}</p>
                         @if($d->sales_net !== null)<p class="fa-t-muted tabular-nums">netto {{ number_format($d->sales_net, 2, ',', '.') }} €</p>@endif
                     </div>
-                </div>
+                </x-fa::card>
             @endforeach
             @if($standort ?? false)<p class="fa-t-muted">Grundpreise der Darreichungen. Der Preis für deinen Standort steht oben bei VK brutto.</p>@endif
         </section>

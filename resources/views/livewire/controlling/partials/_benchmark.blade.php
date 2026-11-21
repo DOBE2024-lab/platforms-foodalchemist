@@ -19,7 +19,7 @@
                 : 'Noch kein anderes Team der Gruppe mit Portfolio. Der Vergleich greift ab zwei Teams mit Gerichten.' }}
         </p>
         <div class="overflow-x-auto">
-            <table class="fa-table">
+            <x-fa::table>
                 <thead>
                     <tr>
                         <th>Kennzahl</th>
@@ -55,7 +55,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
     </div>
 @endif

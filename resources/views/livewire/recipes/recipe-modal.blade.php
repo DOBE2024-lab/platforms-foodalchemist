@@ -586,7 +586,7 @@
 
     {{-- Spec 76: Lagerarten als Mehrfachauswahl + Haltbarkeit je Lagerart; Standard = Vorwahl für Etikett und Einlagerung --}}
     <x-fa::section title="Lagerung & Haltbarkeit" icon="heroicon-o-archive-box" description="Wie dieses Rezept gelagert werden kann. Beim Etikett und beim Einlagern wählst du nur noch aus diesen Lagerarten — „verbrauchen bis“ rechnet sich aus der Haltbarkeit." data-recipe-lagerung>
-        <table class="fa-table fa-table--compact">
+        <x-fa::table compact>
             <thead><tr><th>Lagerart</th><th>möglich</th><th>haltbar (Tage)</th><th>Standard</th></tr></thead>
             <tbody>
                 @foreach(['gekuehlt' => ['Gekühlt (0–7 °C)', 'shelf_life_chilled_days', null], 'tiefgekuehlt' => ['Tiefgekühlt (−18 °C)', 'shelf_life_frozen_days', 'ab dem Einfrieren'], 'trocken' => ['Trocken / kühl', 'shelf_life_dry_days', null]] as $art => [$titel, $feld, $hint])
@@ -604,7 +604,7 @@
                     </tr>
                 @endforeach
             </tbody>
-        </table>
+        </x-fa::table>
     </x-fa::section>
 
     {{-- EIGNUNG (M9-01k) — Detail-Panel-Kartei via section-Prop --}}
@@ -728,7 +728,7 @@
             </x-fa::field>
 
             <div class="overflow-x-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead>
                         <tr><th>Zweck</th><th>Behälter</th><th class="num">Menge je Behälter</th><th>Skalierung</th><th><span class="sr-only">Aktion</span></th></tr>
                     </thead>
@@ -763,7 +763,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             <p class="{{ $hinweis }}">Tiefer füllbar: Sauce, Suppe · höhengebunden: Gulasch, Reis, Salat · Lagenware: wird gelegt, z. B. Schnitzel, Papadam</p>
         </x-fa::section>

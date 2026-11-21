@@ -41,7 +41,7 @@
 
         @if(count($p['zeilen']))
             <div class="overflow-x-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead>
                         <tr>
                             <th>Ausgabe</th>
@@ -77,7 +77,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
 
             <x-fa::notice tone="info" title="So ist die Spalte Umsatz zu lesen">

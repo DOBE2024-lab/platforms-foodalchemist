@@ -70,7 +70,7 @@
             description="Fleisch, Fisch, Vegetarisch, Vegan. Die Diätform wird am Gericht gewählt.">
             @if($klassen->isNotEmpty())
                 <div class="overflow-x-auto -mx-4">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead>
                             <tr>
                                 <th class="w-full">Klasse</th>
@@ -125,7 +125,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             @else
                 <x-fa::empty compact icon="heroicon-o-squares-2x2" title="Keine Diätformen gefunden">Fleisch, Fisch, Vegetarisch und Vegan gehören zum Grundbestand und erscheinen hier, sobald er eingespielt ist.</x-fa::empty>

@@ -4,14 +4,14 @@
     $leg = $vorschau['legende'];
 @endphp
 
-<section class="fa-surface p-6 flex flex-col gap-4 min-w-0" wire:key="sp-vorschau-{{ $vorschau['plan']->id }}" aria-label="Aushang-Vorschau">
+<x-fa::card as="section" class="p-6 flex flex-col gap-4 min-w-0" wire:key="sp-vorschau-{{ $vorschau['plan']->id }}" aria-label="Aushang-Vorschau">
     <header class="text-center">
         <h2 class="fa-t-h2">{{ $vorschau['plan']->name }}</h2>
         <p class="mt-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $vorschau['mahlzeitLabel'] ?? '' }} · {{ $vorschau['kwLabel'] ?? '' }}</p>
     </header>
 
     <div class="overflow-x-auto">
-        <table class="fa-table">
+        <x-fa::table>
             <thead>
                 <tr>
                     <th>Linie</th>
@@ -47,7 +47,7 @@
                     </td></tr>
                 @endforelse
             </tbody>
-        </table>
+        </x-fa::table>
     </div>
 
     @if(count($leg['allergene']) || count($leg['zusatzstoffe']))
@@ -65,4 +65,4 @@
             <p class="text-[var(--fa-ink-3)]">Kennzeichnung nach LMIV und ZZulV, nach dem Vorsorgeprinzip über alle Komponenten; <span class="font-semibold text-[var(--fa-accent)]">*</span> = Spuren möglich.</p>
         </footer>
     @endif
-</section>
+</x-fa::card>

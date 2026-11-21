@@ -187,7 +187,7 @@
                 @if($fehler)<x-fa::notice tone="crit" class="mb-3" data-tagesplan-fehler>{{ $fehler }}</x-fa::notice>@endif
 
                 @if($wallAnsicht === 'mise')
-                    <section class="h-full min-h-0 overflow-y-auto rounded-2xl border border-[var(--fa-line)] bg-[var(--fa-surface)] p-3" data-tagesplan-mise>
+                    <x-fa::card as="section" class="h-full min-h-0 overflow-y-auto p-3" data-tagesplan-mise="">
                         {{-- Füllt nach Breite: auf dem Laptop zwei bis drei Karten je Reihe, am großen Monitor mehr --}}
                         <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-3">
                             @forelse($miseEnPlace as $m)
@@ -237,7 +237,7 @@
                                 </div>
                             @endforelse
                         </div>
-                    </section>
+                    </x-fa::card>
                 @else
                     @php
                         $nachPosten = $wallPostenGruppen
@@ -251,13 +251,13 @@
                         $einzelLane = $sichtbareBuckets->count() <= 1;
                     @endphp
                     @if($wallZeilen->isEmpty() || $sichtbareBuckets->isEmpty())
-                        <div class="grid h-full place-items-center rounded-2xl border border-[var(--fa-line)] bg-[var(--fa-surface)] text-center" data-tagesplan-leer>
+                        <x-fa::card class="grid h-full place-items-center text-center" data-tagesplan-leer="">
                             <div>
                                 @svg('heroicon-o-check-badge', 'mx-auto w-14 h-14 text-[var(--fa-ink-3)]')
                                 <p class="mt-3 text-3xl font-bold md:text-4xl">{{ $wallGruppenFilter === 'gerichte' ? 'Keine Gerichte an diesem Tag.' : ($wallGruppenFilter === 'basis' ? 'Keine Basisrezepte ohne Gericht.' : 'Heute steht nichts an.') }}</p>
                                 <p class="mt-2 text-lg text-[var(--fa-ink-3)]">Der Küchenmonitor aktualisiert sich automatisch.</p>
                             </div>
-                        </div>
+                        </x-fa::card>
                     @else
                         {{-- Posten-Spalten liegen IMMER nebeneinander und nutzen die volle Höhe.
                              Passen nicht alle auf den Bildschirm (Laptop), scrollt die Reihe seitlich —
@@ -276,7 +276,7 @@
                                     $istPassLane = $wallIstPass($schluessel, $b['station'] ?? null);
                                     $passAuftraege = $istPassLane ? $wallPassAuftraege($laneGruppen) : collect();
                                 @endphp
-                                <section class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-t-4 border-[var(--fa-line)] {{ $tonRand[$laneTon] }} bg-[var(--fa-surface)]" data-tagesplan-lane="{{ $schluessel }}">
+                                <x-fa::card as="section" class="flex h-full min-h-0 flex-col overflow-hidden border-t-4 {{ $tonRand[$laneTon] }}" data-tagesplan-lane="{{ $schluessel }}">
                                     <div class="shrink-0 border-b border-[var(--fa-line)] px-4 py-3">
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="min-w-0">
@@ -397,7 +397,7 @@
                                                             $rezeptTitel = $z->rezept_label ?: $z->name;
                                                             $hakenText = $erledigt ? 'Haken zurücknehmen' : ($laeuft ? 'Als erledigt abhaken' : 'Auftrag starten und als erledigt abhaken');
                                                         @endphp
-                                                        <div class="flex gap-3 rounded-xl border border-[var(--fa-line)] bg-[var(--fa-surface)] p-3 {{ $erledigt ? 'opacity-55' : '' }}" wire:key="wk-{{ $z->id }}" data-tagesplan-zeile="{{ $z->id }}" data-tagesplan-wall-rezept>
+                                                        <x-fa::card class="flex gap-3 p-3 {{ $erledigt ? 'opacity-55' : '' }}" wire:key="wk-{{ $z->id }}" data-tagesplan-zeile="{{ $z->id }}" data-tagesplan-wall-rezept="">
                                                             <button type="button" wire:click="abhaken({{ $z->id }})"
                                                                     class="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border-2 {{ $erledigt ? $wHakenFertig : ($laeuft ? $wHakenLaeuft : $wHakenOffen) }}"
                                                                     title="{{ $hakenText }}" aria-label="{{ $hakenText }}"
@@ -430,7 +430,7 @@
                                                                 @if(!$laeuft && !$erledigt)<p class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[var(--fa-accent)]">@svg('heroicon-m-play', 'w-4 h-4') Startet beim Abhaken</p>@endif
                                                                 @if($z->blocked_reason)<p class="mt-2 rounded-lg {{ $tonFlaeche['crit'] }} px-2.5 py-1.5 text-sm font-medium">Blockiert: {{ $z->blocked_reason }}</p>@endif
                                                             </button>
-                                                        </div>
+                                                        </x-fa::card>
                                                     @endforeach
                                                 </div>
                                                 @endif
@@ -439,7 +439,7 @@
                                         @endif
                                         </div>
                                     </div>
-                                </section>
+                                </x-fa::card>
                             @endforeach
                         </div>
                     @endif
@@ -769,8 +769,7 @@
                             {{-- Spec 76b: Etikett direkt aus der Küche — Anzahl + Menge wählt die Küche; Druckdialog im Monitor (kein neuer Tab) --}}
                             @if(! empty($anleitung['etikett']))
                                 @php $et = $anleitung['etikett']; @endphp
-                                <div class="mt-2 rounded-xl border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] p-2.5" data-tagesplan-wall-etikett
-                                     x-data="{ anzahl: {{ (int) $et['anzahl'] }}, gesamt: {{ $et['gesamt_kg'] !== null ? (float) $et['gesamt_kg'] : 'null' }}, menge: '', hand: false, druckt: false,
+                                <x-fa::card class="mt-2 border-[var(--fa-line-strong)] p-2.5" data-tagesplan-wall-etikett="" x-data="{ anzahl: {{ (int) $et['anzahl'] }}, gesamt: {{ $et['gesamt_kg'] !== null ? (float) $et['gesamt_kg'] : 'null' }}, menge: '', hand: false, druckt: false,
                                         init() { this.rechne() },
                                         rechne() { if (! this.hand) { this.menge = this.gesamt ? (Math.round(this.gesamt / this.anzahl * 1000) / 1000).toString().replace('.', ',') : '' } },
                                         plus(d) { this.anzahl = Math.max(1, Math.min(200, this.anzahl + d)); this.rechne() },
@@ -790,7 +789,7 @@
                                         <span x-text="druckt ? 'Druck wird vorbereitet …' : 'Etiketten drucken'">Etiketten drucken</span>
                                         @svg('heroicon-o-printer', 'w-6 h-6')
                                     </button>
-                                </div>
+                                </x-fa::card>
                             @endif
                         </section>
 
@@ -1328,7 +1327,7 @@
                 {{-- Drei Spalten wie gehabt. Auf dem Laptop schmalere Seitenspalten; die Mitte scrollt mit dem
                      Editor statt in einem eigenen 70-%-Kasten, die Seitenspalten bleiben dabei stehen. --}}
                 <div class="grid grid-cols-1 items-start gap-4 xl:grid-cols-[13rem_minmax(0,1fr)_15rem] 2xl:grid-cols-[16rem_minmax(0,1fr)_20rem]">
-                    <aside class="fa-surface space-y-4 p-3 xl:sticky xl:top-0" data-tagesplan-postenfilter>
+                    <x-fa::card as="aside" class="space-y-4 p-3 xl:sticky xl:top-0" data-tagesplan-postenfilter="">
                         <div class="space-y-2" data-tagesplan-steuerung>
                             <p class="{{ $eyebrow }}">Zeitraum</p>
                             <div class="flex items-center gap-1">
@@ -1352,7 +1351,7 @@
                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-x-mark" wire:click="postenWaehlen(null)">Alle Posten zeigen</x-fa::button>
                             @endif
                         </div>
-                    </aside>
+                    </x-fa::card>
 
                     <main class="min-w-0 space-y-4">
                         @forelse($zeilenNachTag as $tag => $zeilen)
@@ -1360,7 +1359,7 @@
                                 $tagC = \Illuminate\Support\Carbon::parse($tag);
                                 $nachPosten = $zeilen->groupBy(fn ($z) => $z->station_id === null ? '_none' : (int) $z->station_id);
                             @endphp
-                            <section data-modal-zone="section" class="fa-surface overflow-hidden" data-tagesplan-tag="{{ $tag }}">
+                            <x-fa::card as="section" data-modal-zone="section" class="overflow-hidden" data-tagesplan-tag="{{ $tag }}">
                                 <div class="flex flex-wrap items-baseline gap-2 border-b border-[var(--fa-line)] px-4 py-3">
                                     <h3 class="fa-t-h2">{{ $tagC->locale('de')->isoFormat('dd, DD.MM.') }}</h3>
                                     @if($tagC->isToday())<x-fa::badge tone="accent">Heute</x-fa::badge>@endif
@@ -1393,7 +1392,7 @@
                                             @if($b['ohne_zeit'] > 0)<x-fa::signal tone="warn">{{ $b['ohne_zeit'] }} ohne Zeit</x-fa::signal>@endif
                                         </div>
                                         <div class="overflow-x-auto">
-                                            <table class="fa-table fa-table--compact">
+                                            <x-fa::table compact>
                                                 <thead>
                                                     <tr>
                                                         <th class="w-px"><span class="sr-only">Erledigt</span></th>
@@ -1437,21 +1436,21 @@
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
-                                            </table>
+                                            </x-fa::table>
                                         </div>
                                     </div>
                                 @endforeach
-                            </section>
+                            </x-fa::card>
                         @empty
-                            <div data-modal-zone="section" class="fa-surface" data-tagesplan-leer>
+                            <x-fa::card data-modal-zone="section" data-tagesplan-leer="">
                                 <x-fa::empty icon="heroicon-o-calendar" title="In diesem Zeitraum steht nichts an.">
                                     Der Tagesplan zeigt Positionen aus geplanten und laufenden Aufträgen. Zeitraum erweitern oder einen Auftrag einplanen.
                                 </x-fa::empty>
-                            </div>
+                            </x-fa::card>
                         @endforelse
                     </main>
 
-                    <aside class="fa-surface p-3 xl:sticky xl:top-0" data-tagesplan-next>
+                    <x-fa::card as="aside" class="p-3 xl:sticky xl:top-0" data-tagesplan-next="">
                         <p class="{{ $eyebrow }}">Als Nächstes</p>
                         @if($dashboard['naechstes']->isEmpty())
                             <x-fa::empty compact icon="heroicon-o-check-circle" title="Nichts offen" />
@@ -1465,7 +1464,7 @@
                                 @endforeach
                             </ul>
                         @endif
-                    </aside>
+                    </x-fa::card>
                 </div>
             </section>
         </x-fa::modal>
@@ -1550,10 +1549,7 @@
                                     $tagGewaehlt = $selectedDay === $tag;
                                     $tagCarbon = \Illuminate\Support\Carbon::parse($tag)->locale('de');
                                 @endphp
-                                <article wire:click="waehleTag('{{ $tag }}')" x-data x-on:click="$store.ui?.mSet('activity_tagesplan', 'open', true)"
-                                         role="button" tabindex="0" aria-pressed="{{ $tagGewaehlt ? 'true' : 'false' }}"
-                                         class="flex cursor-pointer flex-col gap-3 rounded-[var(--fa-radius-surface)] border border-t-4 bg-[var(--fa-surface)] p-3 transition-colors hover:bg-[var(--fa-hover)] {{ $tonRand[$tagTon] }} {{ $tagGewaehlt ? 'ring-2 ring-[var(--fa-accent)]' : 'border-x-[var(--fa-line)] border-b-[var(--fa-line)]' }}"
-                                         data-tagesplanung-dashboard-tag="{{ $tag }}" data-tagesplanung-dashboard-tag-klickbar>
+                                <x-fa::card as="article" wire:click="waehleTag('{{ $tag }}')" x-data x-on:click="$store.ui?.mSet('activity_tagesplan', 'open', true)" role="button" tabindex="0" aria-pressed="{{ $tagGewaehlt ? 'true' : 'false' }}" class="flex cursor-pointer flex-col gap-3 border-t-4 p-3 transition-colors hover:bg-[var(--fa-hover)] {{ $tonRand[$tagTon] }} {{ $tagGewaehlt ? 'ring-2 ring-[var(--fa-accent)]' : 'border-x-[var(--fa-line)] border-b-[var(--fa-line)]' }}" data-tagesplanung-dashboard-tag="{{ $tag }}" data-tagesplanung-dashboard-tag-klickbar="">
                                     <div class="flex items-start justify-between gap-2">
                                         <div>
                                             <p class="fa-t-muted">{{ $tagCarbon->isoFormat('dddd') }}</p>
@@ -1576,7 +1572,7 @@
                                             <li class="fa-t-muted">Keine Produktion geplant.</li>
                                         @endif
                                     </ul>
-                                </article>
+                                </x-fa::card>
                             @endforeach
                         </div>
                     </x-fa::section>
@@ -1586,7 +1582,7 @@
                             <x-fa::empty icon="heroicon-o-table-cells" title="Noch keine Tagesproduktion geplant">Sobald Aufträge im gewählten Zeitraum eingeplant sind, steht hier die Last je Posten und Tag.</x-fa::empty>
                         @else
                             <div class="-mx-4 overflow-x-auto border-t border-[var(--fa-line)]">
-                                <table class="fa-table fa-table--compact">
+                                <x-fa::table compact>
                                     <thead>
                                         <tr>
                                             <th class="sticky left-0 z-10 bg-[var(--fa-surface)]">Posten</th>
@@ -1618,7 +1614,7 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                         @endif
                     </x-fa::section>

@@ -118,6 +118,19 @@
             </x-fa::section>
         </div>
 
+        <x-fa::section title="Tabelle und Karte" icon="heroicon-o-table-cells" description="x-fa::table für Listen mit Spalten, x-fa::card für abgegrenzte Flächen. Zahlen-Spalten mit class=&quot;num&quot;.">
+            <div class="grid gap-3 md:grid-cols-2">
+                <x-fa::table compact data-katalog-tabelle="">
+                    <thead><tr><th>Artikel</th><th class="num">Preis</th></tr></thead>
+                    <tbody><tr><td>Butter: frisch</td><td class="num">6,90 €</td></tr><tr aria-selected="true"><td>Sahne 30 %</td><td class="num">3,40 €</td></tr></tbody>
+                </x-fa::table>
+                <x-fa::card class="p-4 flex flex-col gap-1" data-katalog-karte="">
+                    <span class="fa-t-strong">Karte (x-fa::card)</span>
+                    <span class="fa-t-muted">Fläche, Rand und Radius aus .fa-surface; Abstand und Layout über class.</span>
+                </x-fa::card>
+            </div>
+        </x-fa::section>
+
         <x-fa::section title="Auswahl" icon="heroicon-o-adjustments-horizontal" description="2 bis 6 Optionen als Chips, ab 7 als Auswahlliste. Echte Radio-/Checkbox-Felder, per Tastatur bedienbar.">
             <div class="grid gap-6 md:grid-cols-2">
                 <x-fa::choice name="kreativModus" label="Kreativ-Modus (Einfachauswahl)" :options="['frei' => 'Frei', 'voll' => 'Voll kreativ', 'nah' => 'Nah am Bestand', 'nur_bestand' => 'Nur Bestand']" />
@@ -170,7 +183,7 @@
 
         <x-fa::section title="Tabelle, Geld, Menge" icon="heroicon-o-table-cells" description="Zahlen rechtsbündig in gleicher Breite. Fehlender Preis wird gezeigt, nie geschätzt. Beispieldaten.">
             <div class="overflow-x-auto">
-                <table class="fa-table min-w-[640px]">
+                <x-fa::table class="min-w-[640px]">
                     <thead><tr><th class="num">Menge</th><th>Zutat</th><th class="num">Garverlust</th><th class="num">Anteil</th><th class="num">EK</th></tr></thead>
                     <tbody>
                         @foreach($zutaten as [$m, $e, $name, $garv, $anteil, $ek])
@@ -183,7 +196,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         </x-fa::section>
 
@@ -215,13 +228,13 @@
             ]" />
             <div class="grid gap-6 lg:grid-cols-2">
                 <x-fa::section title="Zutaten" icon="heroicon-o-list-bullet" meta="5">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <tbody>
                             @foreach($zutaten as [$m, $e, $name, $garv, $anteil, $ek])
                                 <tr><td class="num"><x-fa::menge :value="$m" :unit="$e" /></td><td>{{ $name }}</td><td class="num"><x-fa::money :value="$ek" /></td></tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </x-fa::section>
                 <x-fa::section title="Allergene und Diät" icon="heroicon-o-beaker">
                     <x-fa::deklaration :rezept="$beispielRezept" />

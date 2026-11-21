@@ -1,82 +1,109 @@
 {
     "dokumente/angebot-karte.blade.php": {
         "hex_farbe": 21,
-        "style_block": 1
+        "style_block": 1,
+        "roher_table": 1
     },
     "dokumente/angebot.blade.php": {
         "hex_farbe": 12,
         "style_block": 1,
-        "style_statisch": 2
+        "style_statisch": 2,
+        "roher_table": 2
     },
     "dokumente/anleitung.blade.php": {
         "hex_farbe": 11,
-        "style_block": 1
+        "style_block": 1,
+        "roher_table": 3
     },
     "dokumente/bestelllauf.blade.php": {
         "hex_farbe": 8,
-        "style_block": 1
+        "style_block": 1,
+        "roher_table": 1
     },
     "dokumente/bestellung.blade.php": {
         "hex_farbe": 14,
-        "style_block": 1
+        "style_block": 1,
+        "roher_table": 1
     },
     "dokumente/blatt.blade.php": {
         "hex_farbe": 12,
-        "style_block": 1
+        "style_block": 1,
+        "roher_table": 5
     },
     "dokumente/concept-karte.blade.php": {
         "hex_farbe": 20,
         "style_block": 1,
-        "style_statisch": 4
+        "style_statisch": 4,
+        "roher_table": 1
     },
     "dokumente/etiketten.blade.php": {
         "hex_farbe": 8,
-        "style_block": 1
+        "style_block": 1,
+        "roher_table": 1
     },
     "dokumente/foodbook.blade.php": {
         "hex_farbe": 51,
         "style_block": 1,
         "style_statisch": 21,
         "roher_button": 1,
-        "rohe_checkbox": 1
+        "rohe_checkbox": 1,
+        "roher_table": 5
     },
     "dokumente/format.blade.php": {
         "hex_farbe": 23,
         "style_block": 1,
-        "style_statisch": 1
+        "style_statisch": 1,
+        "roher_table": 3
+    },
+    "dokumente/partials/report-declaration.blade.php": {
+        "roher_table": 2
     },
     "dokumente/partials/report-node-css.blade.php": {
         "hex_farbe": 28
     },
+    "dokumente/partials/report-nutrition.blade.php": {
+        "roher_table": 1
+    },
+    "dokumente/partials/report-order-simulation.blade.php": {
+        "roher_table": 2
+    },
     "dokumente/partials/report-recipe-node.blade.php": {
-        "style_statisch": 11
+        "style_statisch": 11,
+        "roher_table": 3
     },
     "dokumente/partials/report-sensory-radar.blade.php": {
-        "hex_farbe": 12
+        "hex_farbe": 12,
+        "roher_table": 1
     },
     "dokumente/partials/schritt-karten-css.blade.php": {
         "hex_farbe": 6
+    },
+    "dokumente/partials/schritt-karten.blade.php": {
+        "roher_table": 1
     },
     "dokumente/partials/speiseplan-druck-schrift.blade.php": {
         "style_block": 1
     },
     "dokumente/produktionsauftrag.blade.php": {
         "hex_farbe": 13,
-        "style_block": 1
+        "style_block": 1,
+        "roher_table": 3
     },
     "dokumente/report.blade.php": {
         "hex_farbe": 15,
         "important": 1,
         "style_block": 1,
         "style_statisch": 3,
-        "roher_button": 2
+        "roher_button": 2,
+        "roher_table": 4
     },
     "dokumente/speisekarte.blade.php": {
         "hex_farbe": 30,
         "style_block": 1,
         "style_statisch": 7,
         "roher_button": 1,
-        "rohe_checkbox": 1
+        "rohe_checkbox": 1,
+        "roher_table": 1
     },
     "dokumente/speiseplan-buffet.blade.php": {
         "hex_farbe": 11,
@@ -86,27 +113,36 @@
     "dokumente/speiseplan-format.blade.php": {
         "hex_farbe": 20,
         "style_block": 1,
-        "style_statisch": 6
+        "style_statisch": 6,
+        "roher_table": 2
     },
     "dokumente/speiseplan.blade.php": {
         "hex_farbe": 31,
         "emoji": 1,
         "style_block": 1,
-        "style_statisch": 3
+        "style_statisch": 3,
+        "roher_table": 1
     },
     "dokumente/tagesplan_blatt.blade.php": {
         "hex_farbe": 14,
-        "style_block": 1
+        "style_block": 1,
+        "roher_table": 2
     },
     "dokumente/zaehlliste.blade.php": {
         "hex_farbe": 7,
-        "style_block": 1
+        "style_block": 1,
+        "roher_table": 2
     },
     "handbuch/_basisrezept.blade.php": {
-        "roher_button": 3
+        "roher_button": 3,
+        "roher_table": 1
+    },
+    "handbuch/_basisvorschau.blade.php": {
+        "roher_table": 1
     },
     "handbuch/show.blade.php": {
-        "roher_button": 12
+        "roher_button": 12,
+        "roher_table": 3
     },
     "layouts/kiosk.blade.php": {
         "typo_groesse": 1,
@@ -286,7 +322,8 @@
     },
     "livewire/dashboard.blade.php": {
         "typo_groesse": 10,
-        "typo_tinte": 15
+        "typo_tinte": 15,
+        "rohe_karte": 1
     },
     "livewire/demnaechst.blade.php": {
         "typo_groesse": 1,
@@ -308,7 +345,8 @@
     "livewire/foodbooks/index.blade.php": {
         "typo_groesse": 28,
         "typo_tinte": 58,
-        "roher_button": 12
+        "roher_button": 12,
+        "rohe_karte": 1
     },
     "livewire/foodbooks/partials/concept-zeilen.blade.php": {
         "typo_groesse": 5,
@@ -380,7 +418,8 @@
     },
     "livewire/handy/artikel-karte.blade.php": {
         "typo_groesse": 4,
-        "typo_tinte": 8
+        "typo_tinte": 8,
+        "rohe_karte": 2
     },
     "livewire/handy/ausgaben.blade.php": {
         "typo_groesse": 3,
@@ -414,11 +453,13 @@
     "livewire/handy/rezept-handbuch.blade.php": {
         "typo_groesse": 9,
         "typo_tinte": 15,
-        "roher_button": 2
+        "roher_button": 2,
+        "rohe_karte": 1
     },
     "livewire/handy/suche.blade.php": {
         "typo_groesse": 9,
-        "typo_tinte": 16
+        "typo_tinte": 16,
+        "rohe_karte": 1
     },
     "livewire/handy/trend-pinnwand.blade.php": {
         "typo_groesse": 7,
@@ -428,7 +469,8 @@
     "livewire/handy/trends.blade.php": {
         "typo_groesse": 13,
         "typo_tinte": 21,
-        "roher_button": 5
+        "roher_button": 5,
+        "rohe_karte": 1
     },
     "livewire/handy/wissen.blade.php": {
         "typo_groesse": 11,
@@ -476,7 +518,8 @@
         "roher_button": 1
     },
     "livewire/observatorium/marktdaten.blade.php": {
-        "roher_button": 1
+        "roher_button": 1,
+        "roher_table": 1
     },
     "livewire/observatorium/pinnwand.blade.php": {
         "roher_button": 5
@@ -539,6 +582,7 @@
         "typo_groesse": 14,
         "typo_tinte": 23,
         "roher_button": 13,
+        "rohe_karte": 1,
         "alte_palette": 11
     },
     "livewire/planung/kapitel-rail.blade.php": {
@@ -553,7 +597,8 @@
     "livewire/planung/partials/board-worker-kopf.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 2,
-        "roher_button": 1
+        "roher_button": 1,
+        "rohe_karte": 1
     },
     "livewire/planung/partials/concept-plan-positionen.blade.php": {
         "typo_tinte": 2
@@ -584,7 +629,8 @@
     },
     "livewire/planung/partials/fortschritt/rezept.blade.php": {
         "typo_groesse": 2,
-        "typo_tinte": 18
+        "typo_tinte": 18,
+        "roher_table": 1
     },
     "livewire/planung/partials/ki-status-leiste.blade.php": {
         "typo_groesse": 1,
@@ -603,7 +649,8 @@
     "livewire/planung/partials/step-zeile.blade.php": {
         "typo_groesse": 1,
         "typo_tinte": 39,
-        "roher_button": 2
+        "roher_button": 2,
+        "rohe_karte": 1
     },
     "livewire/planung/rezept-import.blade.php": {
         "typo_groesse": 4,
@@ -671,7 +718,8 @@
     "livewire/produktion/tagesplan.blade.php": {
         "typo_groesse": 12,
         "typo_tinte": 90,
-        "roher_button": 37
+        "roher_button": 37,
+        "rohe_karte": 5
     },
     "livewire/projekte/detail.blade.php": {
         "typo_groesse": 6,
@@ -734,7 +782,8 @@
     "livewire/recipes/partials/zutaten-kern.blade.php": {
         "typo_groesse": 14,
         "typo_tinte": 59,
-        "roher_button": 17
+        "roher_button": 17,
+        "rohe_karte": 1
     },
     "livewire/recipes/recipe-modal.blade.php": {
         "typo_groesse": 13,
@@ -753,7 +802,8 @@
     "livewire/review-queue.blade.php": {
         "typo_groesse": 19,
         "typo_tinte": 31,
-        "roher_button": 7
+        "roher_button": 7,
+        "rohe_karte": 3
     },
     "livewire/settings/aufschlagsklassen.blade.php": {
         "typo_groesse": 4,
@@ -785,7 +835,8 @@
     "livewire/settings/einkauf.blade.php": {
         "typo_groesse": 8,
         "typo_tinte": 14,
-        "roher_button": 1
+        "roher_button": 1,
+        "roher_table": 1
     },
     "livewire/settings/einsatzorte.blade.php": {
         "typo_tinte": 2
@@ -871,6 +922,7 @@
         "important": 6,
         "mini_schrift": 6,
         "roher_button": 6,
+        "roher_table": 1,
         "alte_palette": 7
     },
     "livewire/settings/start.blade.php": {
@@ -940,7 +992,8 @@
     "livewire/speiseplan/editor.blade.php": {
         "typo_groesse": 30,
         "typo_tinte": 54,
-        "roher_button": 14
+        "roher_button": 14,
+        "rohe_karte": 1
     },
     "livewire/speiseplan/index.blade.php": {
         "typo_groesse": 2,
@@ -1128,7 +1181,8 @@
         "roher_button": 2
     },
     "presentation/blocks/grid.blade.php": {
-        "style_statisch": 4
+        "style_statisch": 4,
+        "roher_table": 1
     },
     "presentation/blocks/konfig_addons.blade.php": {
         "roher_button": 1,

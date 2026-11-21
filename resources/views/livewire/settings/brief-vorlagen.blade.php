@@ -44,7 +44,7 @@
                 @endif
             @else
                 <div class="overflow-x-auto -mx-4">
-                    <table class="fa-table min-w-[640px]">
+                    <x-fa::table class="min-w-[640px]">
                         <thead>
                             <tr>
                                 <th>Name</th>
@@ -93,7 +93,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             @endif
         </x-fa::section>

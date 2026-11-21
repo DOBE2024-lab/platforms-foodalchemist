@@ -359,7 +359,7 @@
             @endif
 
             @if(($preisBand ?? null) !== null && $preisBand['max'] > 0)
-                <div class="fa-surface flex flex-col gap-2 px-3 py-2.5" data-preis-band>
+                <x-fa::card class="flex flex-col gap-2 px-3 py-2.5" data-preis-band="">
                     <div class="flex items-baseline justify-between gap-2 text-[length:var(--fa-text-sm)]">
                         <span class="text-[var(--fa-ink-2)]">Preisspanne <span class="text-[var(--fa-ink-3)]">aus {{ $preisBand['n'] }} {{ $preisBand['n'] === 1 ? 'Artikel' : 'Artikeln' }}</span></span>
                         <span class="tabular-nums text-[var(--fa-ink)]">{{ $zahl($preisBand['min']) }} bis {{ $zahl($preisBand['max']) }} {{ $preisBand['unit'] }}</span>
@@ -375,7 +375,7 @@
                             <span class="shrink-0 text-[length:var(--fa-text-sm)] font-medium tabular-nums text-[var(--fa-accent)]">Lead {{ $zahl($preisBand['lead']) }}</span>
                         </div>
                     @endif
-                </div>
+                </x-fa::card>
             @endif
 
             @if(($leadSteuerung ?? null) !== null && $gp->n_las_total > 0)
@@ -556,7 +556,7 @@
                 <div><x-fa::badge tone="accent" icon="heroicon-m-sparkles" title="Von der KI geschätzt, keine Artikeldaten{{ $gp->nutri_ai_confidence !== null ? ' · ' . round($gp->nutri_ai_confidence * 100) . ' %' : '' }}" data-naehrwerte-ki-marker>KI-geschätzt</x-fa::badge></div>
             @endif
             @if($naehrwerte !== null && $naehrwerte['energy_kcal']['avg'] !== null)
-                <table class="fa-table fa-table--compact">
+                <x-fa::table compact>
                     <caption class="sr-only">Nährwerte je 100 g</caption>
                     <tbody>
                         @foreach([
@@ -574,7 +574,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             @else
                 <p class="fa-t-muted" data-naehrwerte-leer>Keine Nährwerte in den Artikeln.</p>
             @endif
@@ -620,7 +620,7 @@
                 @endforeach
             </div>
             @if($ankerNetzOffenId !== null)
-                <div class="fa-surface flex flex-col gap-1.5 px-3 py-2.5" data-gp-anker-netz>
+                <x-fa::card class="flex flex-col gap-1.5 px-3 py-2.5" data-gp-anker-netz="">
                     @if($ankerNetz->isEmpty())
                         <p class="fa-t-muted">Kein weiteres Grundprodukt trägt diesen Anker als Kern.</p>
                     @else
@@ -632,7 +632,7 @@
                             @endforeach
                         </div>
                     @endif
-                </div>
+                </x-fa::card>
             @endif
         </x-fa::section>
         @endif
@@ -706,7 +706,7 @@
                 <p class="fa-t-muted">Noch kein Lagerort angelegt (Einstellungen → Einkauf).</p>
             @else
                 <p class="fa-t-muted">Der Stellplatz gilt für dieses Team. Der Wareneingang bucht in den Lagerort mit Stellplatz; ohne Stellplatz ins Standardlager und schlägt beim ersten Eingang einen Platz vor.</p>
-                <table class="fa-table fa-table--compact mt-2" data-gp-lager>
+                <x-fa::table compact class="mt-2" data-gp-lager="">
                     <thead><tr><th>Lagerort</th><th class="text-right">Bestand</th><th>Stellplatz</th></tr></thead>
                     <tbody>
                         @foreach($lagerOrte as $o)
@@ -730,7 +730,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
                 @if($lagerBewegungen->isNotEmpty())
                     <div class="{{ $titelKlein }} mt-3">Letzte Bewegungen</div>
                     <ul class="flex flex-col">
@@ -856,7 +856,7 @@
                     <p class="fa-t-muted mt-1">Gemischte Einheiten im Einkauf — Mengen zeigen nur {{ $eEinheit }}, € enthält alles.</p>
                 @endif
 
-                <table class="fa-table fa-table--compact mt-3" data-einkauf-lieferanten>
+                <x-fa::table compact class="mt-3" data-einkauf-lieferanten="">
                     <thead><tr><th>Lieferant</th><th class="text-right">Menge</th><th class="text-right">€</th><th class="text-right">Ø €/{{ $eEinheit }}</th><th class="text-right">Zuletzt</th></tr></thead>
                     <tbody>
                         @foreach($einkauf['lieferanten'] as $l)
@@ -869,7 +869,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             @endif
             @if(\Illuminate\Support\Facades\Route::has('foodalchemist.lager.index'))
                 <a href="{{ route('foodalchemist.lager.index', ['reiter' => 'bestand']) }}" wire:navigate class="fa-t-muted hover:underline mt-2 inline-block">Zum Lager →</a>

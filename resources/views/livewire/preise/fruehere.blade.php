@@ -13,7 +13,7 @@
         </button>
         @if($fehler)<x-fa::notice tone="crit" class="mb-1" data-fruehere-fehler>{{ $fehler }}</x-fa::notice>@endif
         <div x-show="offen" x-cloak class="max-h-72 overflow-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" data-fruehere-liste>
-            <table class="fa-table">
+            <x-fa::table>
                 <thead>
                     <tr>
                         <th>Gültig ab</th><th>Gültig bis</th><th>Art</th><th class="num">Preis</th><th class="num">Je Basiseinheit</th><th>Quelle</th>@if($darfEdit)<th></th>@endif
@@ -58,7 +58,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
         @if($daten['gekappt'])
             <p class="fa-t-muted" x-show="offen" x-cloak data-fruehere-gekappt>Die neuesten {{ count($daten['zeilen']) }} von {{ $daten['gesamt'] }} Ständen. Den ganzen Verlauf zeigt die Linie.</p>

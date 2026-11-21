@@ -32,7 +32,7 @@
             @forelse($abschnitte as $abschnitt)
                 <section class="flex flex-col gap-2" wire:key="handy-suche-{{ $abschnitt['titel'] }}" data-fa-handy-treffer="{{ $abschnitt['titel'] }}">
                     <h2 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink-2)]">{{ $abschnitt['titel'] }}</h2>
-                    <ul class="fa-surface divide-y divide-[var(--fa-line)] overflow-hidden">
+                    <x-fa::card as="ul" class="divide-y divide-[var(--fa-line)] overflow-hidden">
                         @foreach($abschnitt['treffer'] as $t)
                             <li>
                                 <a href="{{ $t['url'] }}" wire:navigate x-on:click="merke(@js($t['titel']), @js($t['url']))"
@@ -45,7 +45,7 @@
                                 </a>
                             </li>
                         @endforeach
-                    </ul>
+                    </x-fa::card>
                 </section>
             @empty
                 <x-fa::empty title="Nichts gefunden" description="Anderes Wort versuchen, z. B. nur den Anfang des Namens." />
@@ -53,7 +53,7 @@
         @else
             <section class="flex flex-col gap-2" x-show="zuletzt.length" x-cloak data-fa-handy-zuletzt>
                 <h2 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink-2)]">Zuletzt angesehen</h2>
-                <ul class="fa-surface divide-y divide-[var(--fa-line)] overflow-hidden">
+                <x-fa::card as="ul" class="divide-y divide-[var(--fa-line)] overflow-hidden">
                     <template x-for="e in zuletzt" :key="e.url">
                         <li>
                             <a :href="e.url" wire:navigate class="flex items-center gap-3 px-4 min-h-[52px] py-2">
@@ -63,13 +63,13 @@
                             </a>
                         </li>
                     </template>
-                </ul>
+                </x-fa::card>
             </section>
 
             @if($favoriten->isNotEmpty())
                 <section class="flex flex-col gap-2" data-fa-handy-favoriten>
                     <h2 class="text-[length:var(--fa-text-base)] font-semibold text-[var(--fa-ink-2)]">Favoriten</h2>
-                    <ul class="fa-surface divide-y divide-[var(--fa-line)] overflow-hidden">
+                    <x-fa::card as="ul" class="divide-y divide-[var(--fa-line)] overflow-hidden">
                         @foreach($favoriten as $t)
                             <li>
                                 <a href="{{ $t['url'] }}" wire:navigate x-on:click="merke(@js($t['titel']), @js($t['url']))"
@@ -80,7 +80,7 @@
                                 </a>
                             </li>
                         @endforeach
-                    </ul>
+                    </x-fa::card>
                 </section>
             @endif
 

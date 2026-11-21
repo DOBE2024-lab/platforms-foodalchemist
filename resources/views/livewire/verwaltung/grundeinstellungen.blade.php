@@ -12,7 +12,7 @@
                 <x-fa::empty compact icon="heroicon-o-clipboard-document-list" title="Keine Mandanten">Es gibt noch kein Haupt-Team neben dem Master-Team.</x-fa::empty>
             @else
                 <div class="overflow-x-auto -mx-4">
-                <table class="fa-table fa-table--compact" data-grundeinstellungen-tabelle>
+                <x-fa::table compact data-grundeinstellungen-tabelle="">
                     <thead><tr><th>Mandant</th><th>Paket</th><th></th></tr></thead>
                     <tbody>
                         @foreach($mandanten as $m)
@@ -30,7 +30,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
                 </div>
             @endif
         </x-fa::section>
@@ -40,14 +40,14 @@
                 @if($vorschau['daten']['quelle_team_id'] === null)
                     <x-fa::notice tone="warn">Es ist kein Master-Team festgelegt — ohne Master gibt es keine Vorlage zum Kopieren.</x-fa::notice>
                 @else
-                    <table class="fa-table fa-table--compact">
+                    <x-fa::table compact>
                         <thead><tr><th>Bereich</th><th class="text-right">Vorlagen</th><th class="text-right">schon zugeordnet</th><th class="text-right">neu</th></tr></thead>
                         <tbody>
                             @foreach($vorschau['daten']['tabellen'] as $z)
                                 <tr><td>{{ $z['label'] }}</td><td class="text-right tabular-nums">{{ $z['quelle'] }}</td><td class="text-right tabular-nums">{{ $z['bereits'] }}</td><td class="text-right tabular-nums">{{ $z['neu'] }}</td></tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                     <p class="pt-2 fa-t-muted">Gleichnamige Zeilen des Teams werden nicht überschrieben. Rollen kommen ohne Stundensätze.</p>
                 @endif
                 <div class="flex gap-2 pt-3">

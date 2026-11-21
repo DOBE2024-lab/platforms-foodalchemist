@@ -100,7 +100,7 @@
 <x-fa::modal name="produktion-etiketten" title="Etiketten für diesen Auftrag" size="max-w-3xl">
     <form method="GET" action="{{ route('foodalchemist.etiketten.produktion', ['order' => $ops['id']]) }}" target="_blank" class="flex flex-col gap-3" data-produktion-etiketten-form>
         <p class="fa-t-muted">Alle Basisrezepte des Auftrags, je Ansatz ein Etikett mit der Menge eines Ansatzes. Hergestellt am = Produktionstag, Lagerart = Standard des Rezepts. Haken raus oder Anzahl ändern, dann drucken.</p>
-        <table class="fa-table fa-table--compact">
+        <x-fa::table compact>
             <thead><tr><th></th><th>Basisrezept</th><th class="text-right">Anzahl</th><th>Menge je Etikett</th></tr></thead>
             <tbody>
                 @foreach($etikettenVorschlag as $ev)
@@ -112,7 +112,7 @@
                     </tr>
                 @endforeach
             </tbody>
-        </table>
+        </x-fa::table>
         <div class="flex flex-wrap items-end gap-2">
             <x-fa::field label="Vorlage" for="pe-vorlage"><x-fa::select id="pe-vorlage" name="vorlage" size="sm" :options="$etikettVorlagen" /></x-fa::field>
             <x-fa::button type="submit" variant="primary" icon="heroicon-m-printer">Etiketten drucken</x-fa::button>

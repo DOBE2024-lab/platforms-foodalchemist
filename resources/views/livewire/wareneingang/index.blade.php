@@ -92,7 +92,7 @@
                                 </x-fa::checkbox>
                             </div>
                             <div class="overflow-x-auto">
-                                <table class="fa-table fa-table--compact min-w-[760px]">
+                                <x-fa::table compact class="min-w-[760px]">
                                     <thead><tr><th class="w-8"><span class="sr-only">auf Lieferschein</span></th><th>Artikel</th><th class="text-right">bestellt</th><th class="text-right">bisher</th><th class="text-right">offen</th><th class="text-right">geliefert</th><th>Abweichung</th><th>Notiz</th></tr></thead>
                                     <tbody>
                                         @foreach($rows as $z)
@@ -116,7 +116,7 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                         </div>
                     @endforeach
@@ -136,11 +136,11 @@
                             <div class="relative w-72 max-w-full">
                                 <x-fa::input size="sm" wire:model.live.debounce.300ms="gpSuche" placeholder="Grundprodukt suchen …" aria-label="Grundprodukt suchen" data-we-gp-suche />
                                 @if($gpTreffer->isNotEmpty())
-                                    <div class="absolute z-10 mt-1 w-full fa-surface p-1 flex flex-col">
+                                    <x-fa::card class="absolute z-10 mt-1 w-full p-1 flex flex-col">
                                         @foreach($gpTreffer as $g)
                                             <button type="button" class="text-left px-2 py-1 rounded hover:bg-[var(--fa-neutral-soft)]" wire:click="ohneHinzu({{ $g->id }})" wire:key="we-gp-{{ $g->id }}">{{ $g->name }}</button>
                                         @endforeach
-                                    </div>
+                                    </x-fa::card>
                                 @endif
                             </div>
                             @if(count($ohne) > 0 && $orte->count() > 1)
@@ -168,7 +168,7 @@
                     <x-fa::empty compact icon="heroicon-o-truck" title="Keine offenen Lieferungen">Gesendete und bestätigte Bestellungen erscheinen hier, bis ihr Wareneingang gebucht ist.</x-fa::empty>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="fa-table fa-table--compact min-w-[720px]">
+                        <x-fa::table compact class="min-w-[720px]">
                             <thead><tr>@if($standortSpalte)<th>Standort</th>@endif<th>Liefertag</th><th>Lieferant</th><th>Bestellung</th><th class="text-right">Positionen offen</th><th class="text-right">Netto</th><th>Status</th><th><span class="sr-only">Aktionen</span></th></tr></thead>
                             <tbody>
                                 @foreach($erwartet as $tag => $rows)
@@ -200,7 +200,7 @@
                                     @endforeach
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
             </x-fa::section>
@@ -227,7 +227,7 @@
                     <x-fa::empty compact icon="heroicon-o-clipboard-document-list" title="Keine Lieferscheine">Erfasste Lieferscheine stehen hier — mit Abweichungen, Beleg und Status.</x-fa::empty>
                 @else
                     <div class="overflow-x-auto">
-                        <table class="fa-table fa-table--compact min-w-[760px]">
+                        <x-fa::table compact class="min-w-[760px]">
                             <thead><tr>@if($standortSpalte)<th>Standort</th>@endif<th>Geliefert</th><th>Nummer</th><th>Lieferant</th><th class="text-right">Positionen</th><th class="text-right">Abweichungen</th><th class="text-right">Wert</th><th>Status</th><th><span class="sr-only">Aktionen</span></th></tr></thead>
                             <tbody>
                                 @foreach($liste as $n)
@@ -265,7 +265,7 @@
                                                             @if($darf && $eigenerBeleg)<button type="button" class="underline" wire:click="anhangEntfernen({{ $n['id'] }})" wire:confirm="Beleg entfernen?">entfernen</button>@endif
                                                         @endif
                                                     </div>
-                                                    <table class="fa-table fa-table--compact">
+                                                    <x-fa::table compact>
                                                         <thead><tr><th>Artikel</th><th>Bestellung</th><th class="text-right">bestellt</th><th class="text-right">erwartet</th><th class="text-right">geliefert</th><th>Abweichung</th><th>Notiz</th></tr></thead>
                                                         <tbody>
                                                             @foreach($detail['zeilen'] as $z)
@@ -283,14 +283,14 @@
                                                                 </tr>
                                                             @endforeach
                                                         </tbody>
-                                                    </table>
+                                                    </x-fa::table>
                                                 </div>
                                             </td>
                                         </tr>
                                     @endif
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
             </x-fa::section>

@@ -44,7 +44,7 @@
                             @svg('heroicon-m-magnifying-glass', 'w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fa-ink-3)] pointer-events-none')
                             <x-fa::input id="sim-bezug" type="search" wire:model.live.debounce.300ms="gpQuery" class="pl-8" placeholder="Grundprodukt suchen (ab 2 Zeichen)" />
                             @if(count($gpTreffer))
-                                <div class="absolute z-20 mt-1 w-full fa-surface shadow-lg max-h-64 overflow-auto py-1" role="listbox">
+                                <x-fa::card class="absolute z-20 mt-1 w-full shadow-lg max-h-64 overflow-auto py-1" role="listbox">
                                     @foreach($gpTreffer as $t)
                                         <button type="button" role="option" wire:click="waehleGp({{ $t['id'] }}, @js($t['name']))"
                                                 class="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
@@ -54,7 +54,7 @@
                                             @endunless
                                         </button>
                                     @endforeach
-                                </div>
+                                </x-fa::card>
                             @endif
                         </div>
                     @endif
@@ -115,10 +115,10 @@
             ]" />
 
             @if(count($result['top'] ?? []))
-                <div class="fa-surface min-w-0">
+                <x-fa::card class="min-w-0">
                     <p class="px-4 pt-3 pb-1 text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Am stärksten betroffene Gerichte</p>
                     <div class="overflow-x-auto">
-                        <table class="fa-table">
+                        <x-fa::table>
                             <thead>
                                 <tr>
                                     <th class="w-full">Gericht</th>
@@ -142,9 +142,9 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
-                </div>
+                </x-fa::card>
             @else
                 <x-fa::notice tone="info">Keine Gerichte mit Verkaufspreis betroffen. In die Marge-Veränderung fließen nur Gerichte mit hinterlegtem Verkaufspreis ein.</x-fa::notice>
             @endif

@@ -146,14 +146,14 @@
             </div>
         </div>
 
-        <div class="fa-surface overflow-hidden" data-vk-tabelle>
+        <x-fa::card class="overflow-hidden" data-vk-tabelle="">
             {{-- MVP-024: Statuswechsel-Fehler sichtbar statt still verschluckt --}}
             @if($statusFehler !== null)
                 <x-fa::notice tone="crit" class="m-3" data-status-fehler>{{ $statusFehler }}</x-fa::notice>
             @endif
             <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
             <div class="max-h-[70vh] overflow-auto">{{-- R13: schmaler Mittelteil scrollt statt abzuschneiden --}}
-                <table class="fa-table">
+                <x-fa::table>
                     <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">
                         <tr>
                             <th class="w-full">Name</th>
@@ -221,10 +221,10 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             <div class="px-4 py-3 border-t border-[var(--fa-line)]">{{ $rezepte->links('foodalchemist::components.fa.pagination') }}</div>
-        </div>
+        </x-fa::card>
     </x-ui-page-container>
     @endif
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}

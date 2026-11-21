@@ -73,9 +73,9 @@
 
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
         @if(! $plan)
-            <section class="fa-surface">
+            <x-fa::card as="section">
                 <x-fa::empty icon="heroicon-o-calendar-days" title="Kein Speiseplan gewählt">Links einen Speiseplan wählen oder mit „Neuer Plan" einen anlegen.</x-fa::empty>
-            </section>
+            </x-fa::card>
         @else
             <x-fa::page-header :title="$plan->name" :subtitle="$plan->cycle_weeks . '-Wochen-Zyklus · ' . number_format($plan->entries->count(), 0, ',', '.') . ' ' . ($plan->entries->count() == 1 ? 'Eintrag' : 'Einträge')">
                 <x-slot:actions>

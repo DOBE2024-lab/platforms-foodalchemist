@@ -684,7 +684,7 @@
                         <x-fa::empty compact icon="heroicon-o-chart-bar" title="Noch nicht berechnet" data-vk-naehrwerte-leer>Die Nährwerte entstehen beim nächsten Speichern der Komponenten.</x-fa::empty>
                     @else
                         <div class="overflow-x-auto">
-                            <table class="fa-table fa-table--compact" data-vk-naehrwerte>
+                            <x-fa::table compact data-vk-naehrwerte="">
                                 <thead><tr>
                                     <th>Nährwert</th>
                                     <th class="text-right">je 100 g</th>
@@ -707,7 +707,7 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-                            </table>
+                            </x-fa::table>
                         </div>
                         @php [$nutriText, $nutriTon] = ['high' => ['vollständig belegt', 'ok'], 'medium' => ['teilweise belegt', 'warn'], 'low' => ['unsicher', 'crit']][$rezept->nutri_confidence ?? ''] ?? ['nicht bewertet', 'warn']; @endphp
                         <div class="flex flex-col gap-1">

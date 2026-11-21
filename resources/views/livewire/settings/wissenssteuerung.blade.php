@@ -61,7 +61,7 @@
 
         <fieldset @disabled($sperrLesen) class="contents" data-fa-lesemodus="{{ $sperrLesen ? '1' : '0' }}">
         <div class="overflow-x-auto -mx-4">
-            <table class="fa-table min-w-[760px]" data-ws-profile>
+            <x-fa::table class="min-w-[760px]" data-ws-profile="">
                 <thead>
                     <tr>
                         <th>Arbeitsschritt</th>
@@ -204,7 +204,7 @@
                                         @endif
 
                                         @if($darfSchreiben && $kanonKey === $p['prompt_key'])
-                                            <div class="fa-surface p-3 flex flex-col gap-3" data-kanon-editor>
+                                            <x-fa::card class="p-3 flex flex-col gap-3" data-kanon-editor="">
                                                 <p class="{{ $kleinTitel }}">Dossier verbindlich machen</p>
                                                 <div class="grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] items-start">
                                                     <x-fa::field label="Dossier suchen" for="kanon-suche-{{ $loop->index }}" hint="Name oder Titel, ab 2 Zeichen.">
@@ -248,7 +248,7 @@
                                                     <strong class="font-medium text-[var(--fa-ink-2)]">Wenn Platz ist</strong> fällt bei Platzmangel als ganzes Dossier weg, nie als Anschnitt.
                                                     Ein inaktives Dossier lässt sich vorbereitend aufnehmen, liefert aber erst nach dem Aktivieren.
                                                 </p>
-                                            </div>
+                                            </x-fa::card>
                                         @endif
 
                                         <div class="flex flex-col gap-1.5">
@@ -277,7 +277,7 @@
                         <tr><td colspan="5"><x-fa::empty icon="heroicon-o-funnel" title="Kein Arbeitsschritt passt zum Filter" compact>Bereich auf „Alle Bereiche“ stellen oder „Nur mit Befund“ abwählen.</x-fa::empty></td></tr>
                     @endforelse
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
         </fieldset>
     </x-fa::section>
@@ -412,7 +412,7 @@
             <x-fa::empty icon="heroicon-o-folder-open" title="Noch keine Kategorie-Steuerung" compact>Unten einen Arbeitsschritt mit einer Kategorie verknüpfen.</x-fa::empty>
         @else
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table min-w-[720px]">
+                <x-fa::table class="min-w-[720px]">
                     <thead>
                         <tr>
                             <th>Arbeitsschritt</th>
@@ -481,7 +481,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
 

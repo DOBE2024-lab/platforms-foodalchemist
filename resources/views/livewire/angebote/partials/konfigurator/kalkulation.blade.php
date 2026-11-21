@@ -24,7 +24,7 @@
 @foreach($matrix['pakete'] as $p)
     <x-fa::section :title="$p['name']" icon="heroicon-o-currency-euro" :meta="'Referenz ' . $p['referenz_pax'] . ' Gäste'" wire:key="kfmx-{{ $p['paket_id'] }}" data-kf-preise="{{ $p['paket_id'] }}">
         <div class="overflow-x-auto">
-            <table class="fa-table fa-table--compact">
+            <x-fa::table compact>
                 <thead><tr>
                     <th>Konzept</th><th class="num">All-in / Person</th><th class="num">davon Speisen</th><th class="num">davon Leistungen</th><th class="num">EK</th><th class="num">DB</th>
                     <th class="num">bei {{ $p['von_pax'] }} Gästen</th><th class="num">bei {{ $p['bis_pax'] }} Gästen</th>
@@ -66,7 +66,7 @@
                                 <td colspan="8">
                                     <details data-kf-zusammenfassung="{{ $p['paket_id'] }}-{{ $i }}">
                                         <summary class="cursor-pointer fa-t-muted">Zusammenfassung nach Gruppen</summary>
-                                        <table class="fa-table fa-table--compact mt-1">
+                                        <x-fa::table compact class="mt-1">
                                             <thead><tr><th>Gruppe</th><th class="num">VK / Person</th><th class="num">EK / Person</th><th class="num">DB / Person</th><th class="num">VK gesamt</th><th class="num">DB gesamt</th></tr></thead>
                                             <tbody>
                                                 @foreach($f['gruppen'] as $g)
@@ -80,14 +80,14 @@
                                                     </tr>
                                                 @endforeach
                                             </tbody>
-                                        </table>
+                                        </x-fa::table>
                                     </details>
                                 </td>
                             </tr>
                         @endif
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
     </x-fa::section>
 @endforeach

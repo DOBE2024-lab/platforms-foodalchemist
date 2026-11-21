@@ -7,7 +7,7 @@
      (Index::EINZELTITEL), entfällt der innere Titel (h3) der obersten Abschnitts-Ebene; Beschreibung und Knöpfe bleiben.
      Die Regel steht ungeschichtet in foodalchemist-pass.css ([data-settings-einzeltitel]) — als Tailwind-Variante lag sie in
      `utilities.fa` und verlor gegen das Host-`.flex` des h3 (03.11. im Browser gemessen). --}}
-<section id="bereich-{{ $key }}" class="min-w-0 fa-surface p-5 flex flex-col gap-4" data-settings-sektion="{{ $eintrag['sektion'] }}" data-settings-bereich="{{ $key }}">
+<x-fa::card as="section" id="bereich-{{ $key }}" class="min-w-0 p-5 flex flex-col gap-4" data-settings-sektion="{{ $eintrag['sektion'] }}" data-settings-bereich="{{ $key }}">
     <div class="min-w-0 flex items-start gap-3" data-settings-kopf="{{ $key }}">
         <span class="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-[var(--fa-radius-control)] bg-[var(--fa-accent-soft)] text-[var(--fa-accent)]">@svg($icon, 'w-[18px] h-[18px]')</span>
         <div class="min-w-0">
@@ -19,4 +19,4 @@
          data-settings-inhalt @if(in_array($key, \Platform\FoodAlchemist\Livewire\Settings\Index::EINZELTITEL, true)) data-settings-einzeltitel @endif>
         @livewire('foodalchemist.settings.' . $eintrag['sektion'], array_filter(['abschnitt' => $eintrag['abschnitt'], 'imReiter' => $imReiter ? true : null]), key('bereich-' . $key))
     </div>
-</section>
+</x-fa::card>

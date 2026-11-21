@@ -29,7 +29,7 @@
             </x-fa::empty>
         @else
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead>
                         <tr>
                             <th class="w-full">Kalkulationsprofil</th>
@@ -138,7 +138,7 @@
                             @endif
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
 
             <p class="fa-t-muted">
@@ -152,7 +152,7 @@
     @if($standorte !== [])
         <x-fa::section title="Standorte" :meta="count($standorte) . ' Unter-Teams'" data-settings-standorte
             description="Jeder Standort ist ein eigenes Unter-Team mit eigenen Einkaufspreisen, Bestellungen und Lager. Hier legst du fest, welches Kalkulationsprofil er fährt — im Standort ist die Kalkulationsprofil-Brille dann fest eingestellt.">
-            <table class="fa-table fa-table--compact">
+            <x-fa::table compact>
                 <thead><tr><th>Standort</th><th>Kalkulationsprofil</th></tr></thead>
                 <tbody>
                     @foreach($standorte as $st)
@@ -170,7 +170,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </x-fa::section>
     @endif
     </fieldset>

@@ -194,7 +194,7 @@
                 </x-slot:actions>
                 @if($vorschlaege->isNotEmpty())
                     <div class="-mx-4 -mb-4 border-t border-[var(--fa-line)] overflow-x-auto">
-                        <table class="fa-table fa-table--compact">
+                        <x-fa::table compact>
                             <thead>
                                 <tr>
                                     <th>Treffer</th>
@@ -226,7 +226,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @else
                     <x-fa::empty compact icon="heroicon-o-check-circle" title="Keine offenen Vorschläge">
@@ -245,13 +245,13 @@
                     <x-fa::input id="bulk-gp-suche" type="search" size="sm" wire:model.live.debounce.300ms="bulkGpSuche"
                         placeholder="Grundprodukt zuweisen" class="w-60" data-bulk-gp-suche />
                     @if($bulkGpKandidaten->isNotEmpty())
-                        <div class="absolute left-0 top-full mt-1 z-20 w-80 fa-surface shadow-xl py-1">
+                        <x-fa::card class="absolute left-0 top-full mt-1 z-20 w-80 shadow-xl py-1">
                             @foreach($bulkGpKandidaten as $kandidat)
                                 <button type="button" wire:key="bgk-{{ $kandidat->id }}" wire:click="bulkGpZuweisen({{ $kandidat->id }})"
                                         class="block w-full text-left px-3 py-2 fa-t-body hover:bg-[var(--fa-hover)]">{{ $kandidat->name }}</button>
                             @endforeach
                             <p class="px-3 pt-1 pb-1.5 fa-t-muted">Bereits zugeordnete Artikel bleiben unverändert.</p>
-                        </div>
+                        </x-fa::card>
                     @endif
                 </div>
                 <x-fa::button size="sm" wire:click="bulkMappingEntfernen">Zuordnung lösen</x-fa::button>
@@ -266,9 +266,9 @@
         @endif
 
         {{-- Artikel-Tabelle (M2-02) --}}
-        <div class="fa-surface overflow-hidden" data-artikel-tabelle>
+        <x-fa::card class="overflow-hidden" data-artikel-tabelle="">
             <div class="max-h-[70vh] overflow-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">
                         <tr>
                             <th class="w-10"><span class="sr-only">Auswahl</span></th>
@@ -366,12 +366,12 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             @if($artikel)
                 <div class="px-4 py-3 border-t border-[var(--fa-line)]">{{ $artikel->links('foodalchemist::components.fa.pagination') }}</div>
             @endif
-        </div>
+        </x-fa::card>
 
         {{-- LA-Editor-Modal (M2-06/07/08) — innerhalb x-ui-page (Template-Regel) --}}
         <livewire:foodalchemist.suppliers.item-modal key="suppliers-index--suppliers.item-modal" />
@@ -462,7 +462,7 @@
                             <p class="mb-2 fa-t-muted" data-ausreisser-hinweis>Mehr als {{ count($anomalien['ausreisser']) }} Ausreißer ({{ number_format($anomalien['ausreisser_gesamt'], 0, ',', '.') }} insgesamt) – angezeigt werden die größten.</p>
                         @endif
                         <div class="-mx-4 -mb-4 border-t border-[var(--fa-line)] overflow-x-auto">
-                            <table class="fa-table fa-table--compact" data-ausreisser>
+                            <x-fa::table compact data-ausreisser="">
                                 <thead>
                                     <tr>
                                         <th class="w-full">Artikel</th>
@@ -485,7 +485,7 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-                            </table>
+                            </x-fa::table>
                         </div>
                     @else
                         <x-fa::empty compact icon="heroicon-o-check-circle" title="Keine Ausreißer">Alle Vergleichspreise liegen im üblichen Rahmen ihrer Warengruppe.</x-fa::empty>

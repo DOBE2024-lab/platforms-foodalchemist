@@ -216,7 +216,7 @@
 
             {{-- Menü-Karte (Konsumenten-Sicht · C-10) --}}
             <x-fa::section variant="plain" title="{{ $istPaket ? 'Paket-Inhalt' : 'Menü-Karte' }}" icon="heroicon-o-document-text" meta="So sieht es der Gast">
-                <div class="fa-surface px-3 py-2.5 flex flex-col gap-1.5">
+                <x-fa::card class="px-3 py-2.5 flex flex-col gap-1.5">
                     <p class="fa-t-h3">{{ $concept->consumer_name ?: $concept->name }}</p>
                     @if($concept->additional_text)<p class="text-[length:var(--fa-text-sm)] italic text-[var(--fa-ink-2)]">{{ $concept->additional_text }}</p>@endif
                     @forelse($concept->slots as $slot)
@@ -227,7 +227,7 @@
                     @empty
                         <p class="fa-t-muted">Noch keine Positionen.</p>
                     @endforelse
-                </div>
+                </x-fa::card>
             </x-fa::section>
 
             {{-- Wo verwendet? Concept → Foodbooks; Paket → Concepts (eingebettet) --}}

@@ -30,7 +30,7 @@
             <x-fa::empty compact icon="heroicon-o-rectangle-stack" title="Noch keine Zusatzfelder">Für „{{ $typen[$typ] }}“ gibt es nur die Kern-Felder.</x-fa::empty>
         @else
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead><tr><th class="w-full">Feld</th><th>Gruppe</th><th>Art</th><th><span class="sr-only">Aktionen</span></th></tr></thead>
                     <tbody>
                         @foreach($felder as $f)
@@ -47,7 +47,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
     </x-fa::section>

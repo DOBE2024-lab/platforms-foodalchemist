@@ -12,7 +12,7 @@
                 <x-fa::empty compact icon="heroicon-o-building-office" title="Keine Mandanten">Es gibt noch kein Haupt-Team neben dem Master-Team.</x-fa::empty>
             @else
                 <div class="overflow-x-auto -mx-4">
-                <table class="fa-table fa-table--compact" data-mandant-beenden-tabelle>
+                <x-fa::table compact data-mandant-beenden-tabelle="">
                     <thead><tr><th>Mandant</th><th>Status</th><th></th></tr></thead>
                     <tbody>
                         @foreach($mandanten as $m)
@@ -31,7 +31,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
                 </div>
             @endif
         </x-fa::section>

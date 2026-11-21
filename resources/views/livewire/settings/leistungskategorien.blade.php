@@ -9,7 +9,7 @@
         description="Gruppen für Personal, Equipment, Logistik und was ihr sonst als Leistung abrechnet. Die Zusammenfassung im Konfigurator zeigt genau die Kategorien, die vorkommen.">
         <fieldset @disabled($sperrLesen) class="contents" data-fa-lesemodus="{{ $sperrLesen ? '1' : '0' }}">
         <div class="overflow-x-auto -mx-4">
-            <table class="fa-table">
+            <x-fa::table>
                 <thead>
                     <tr>
                         <th class="w-full">Name</th>
@@ -57,7 +57,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
         <p class="fa-t-muted">Ausgeschaltete Kategorien bleiben an bestehenden Leistungen stehen, für neue sind sie nicht wählbar. Geerbte schaltest du nur für euer Team und eure Unter-Teams aus.</p>
         </fieldset>

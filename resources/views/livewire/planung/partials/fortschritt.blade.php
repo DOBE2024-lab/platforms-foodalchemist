@@ -139,11 +139,7 @@
             @if($offen > 0)
                 @unless($handy ?? false){{-- #1003 PR7: Alle verwerfen am Computer --}}
                 <x-fa::menu class="ml-auto" size="sm" breite="64">
-                    <button type="button" role="menuitem" wire:click="alleVerwerfen" x-on:click="offen = false"
-                            wire:confirm="Alle offenen Ergebnisse dieses Laufs wirklich verwerfen?"
-                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-planung-alle-verwerfen>
-                        @svg('heroicon-o-trash', 'w-4 h-4') Alle offenen verwerfen
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="alleVerwerfen" wire:confirm="Alle offenen Ergebnisse dieses Laufs wirklich verwerfen?" data-planung-alle-verwerfen>Alle offenen verwerfen</x-fa::menu-item>
                 </x-fa::menu>
                 @endunless
             @endif

@@ -22,7 +22,6 @@
     $klein = 'text-[length:var(--fa-text-sm)]';
     $hinweis = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $feldLabel = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     // Chips mit wire:click (Facetten, Filter): an = Akzent, aus = ruhig.
     $chip = 'inline-flex items-center gap-1 h-7 px-2.5 rounded-full border text-[length:var(--fa-text-sm)] font-medium transition-colors';
     $chipAn = 'bg-[var(--fa-accent-soft)] border-[var(--fa-accent)] text-[var(--fa-accent)]';
@@ -82,19 +81,11 @@
                     <x-fa::menu ausloeser:data-concepter-weitere="" breite="72">
                         {{-- #6 (F3c): Druck-Symmetrie zum Format-Editor — schöne Kunden-Ausgabe + technischer Bericht.
                              Die Karte gilt auch fürs Paket (concepts.karte nimmt eine Concept-ID). --}}
-                        <a href="{{ route('foodalchemist.concepts.karte', ['id' => $concept->id]) }}" target="_blank" role="menuitem"
-                           x-on:click="offen = false" class="{{ $menuePunkt }}" title="Menükarte für den Kunden, zum Drucken oder als PDF" data-concepter-karte>
-                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Kundenkarte drucken
-                        </a>
-                        <a href="{{ route('foodalchemist.concepts.dokument', array_filter(['id' => $concept->id, 'profil' => 'voll', 'simulation' => $simulationPax > 0 ? 1 : null, 'pax' => $simulationPax > 0 ? $simulationPax : null], fn ($value) => $value !== null)) }}" target="_blank" role="menuitem"
-                           x-on:click="offen = false" class="{{ $menuePunkt }}" title="Vollständiger Bericht vom Gericht über Basisrezept und Grundprodukt bis zum Lieferantenartikel" data-concepter-druck>
-                            @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Technischen Bericht öffnen
-                        </a>
+                        <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.concepts.karte', ['id' => $concept->id])" abstand="weit" target="_blank" title="Menükarte für den Kunden, zum Drucken oder als PDF" data-concepter-karte>Kundenkarte drucken</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-document-text" :href="route('foodalchemist.concepts.dokument', array_filter(['id' => $concept->id, 'profil' => 'voll', 'simulation' => $simulationPax > 0 ? 1 : null, 'pax' => $simulationPax > 0 ? $simulationPax : null], fn ($value) => $value !== null))" abstand="weit" target="_blank" title="Vollständiger Bericht vom Gericht über Basisrezept und Grundprodukt bis zum Lieferantenartikel" data-concepter-druck>Technischen Bericht öffnen</x-fa::menu-item>
                         @if(! $concept->is_template)
                             <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                            <button type="button" role="menuitem" wire:click="alsVorlage" x-on:click="offen = false" class="{{ $menuePunkt }}" data-concepter-als-vorlage>
-                                @svg('heroicon-o-square-2-stack', 'w-4 h-4 text-[var(--fa-ink-3)]') Als Vorlage speichern
-                            </button>
+                            <x-fa::menu-item icon="heroicon-o-square-2-stack" abstand="weit" wire:click="alsVorlage" data-concepter-als-vorlage>Als Vorlage speichern</x-fa::menu-item>
                         @endif
                     </x-fa::menu>
                 @endif

@@ -21,7 +21,6 @@
     $formLabel = fn (?string $slug) => ['stk' => 'Stück'][$slug] ?? ucfirst((string) $slug);
     $titelKlein = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
     $listenKnopf = 'flex w-full items-center justify-between gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
 @endphp
 
 <x-foodalchemist::modal name="gp-modal" :title="$neu ? 'Grundprodukt anlegen' : ($kannKuratieren ? 'Grundprodukt bearbeiten' : 'Grundprodukt ansehen')"
@@ -40,10 +39,7 @@
                         </button>
                     </x-slot:ausloeser>
                     @foreach($statusFaelle as $fall)
-                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="statusSetzen('{{ $fall->value }}')"
-                                class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $gp->status === $fall ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
-                            {{ $fall->label() }}@if($gp->status === $fall)@svg('heroicon-m-check', 'w-4 h-4')@endif
-                        </button>
+                        <x-fa::menu-item :gewaehlt="$gp->status === $fall" wire:click="statusSetzen('{{ $fall->value }}')">{{ $fall->label() }}</x-fa::menu-item>
                     @endforeach
                 </x-fa::menu>
             @else
@@ -57,15 +53,9 @@
             @endif
 
             <x-fa::menu ausloeser:data-gp-weitere-aktionen="">
-                <a role="menuitem" href="{{ route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation']) }}" target="_blank" x-on:click="offen = false" class="{{ $menuePunkt }}" data-gp-druck>
-                    @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Blatt drucken
-                </a>
-                <a role="menuitem" href="{{ route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation', 'pdf' => 1]) }}" x-on:click="offen = false" class="{{ $menuePunkt }}" data-gp-pdf>
-                    @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Blatt als PDF laden
-                </a>
-                <a role="menuitem" href="{{ route('foodalchemist.etiketten.index', ['quelle' => 'gp', 'id' => $gp->id]) }}" target="_blank" x-on:click="offen = false" class="{{ $menuePunkt }}" data-gp-etikett>
-                    @svg('heroicon-o-tag', 'w-4 h-4 text-[var(--fa-ink-3)]') Anbruch-Etikett drucken
-                </a>
+                <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation'])" abstand="weit" target="_blank" data-gp-druck>Blatt drucken</x-fa::menu-item>
+                <x-fa::menu-item icon="heroicon-o-arrow-down-tray" :href="route('foodalchemist.gps.dokument', ['id' => $gp->id, 'profil' => 'kalkulation', 'pdf' => 1])" abstand="weit" data-gp-pdf>Blatt als PDF laden</x-fa::menu-item>
+                <x-fa::menu-item icon="heroicon-o-tag" :href="route('foodalchemist.etiketten.index', ['quelle' => 'gp', 'id' => $gp->id])" abstand="weit" target="_blank" data-gp-etikett>Anbruch-Etikett drucken</x-fa::menu-item>
             </x-fa::menu>
         @endif
 

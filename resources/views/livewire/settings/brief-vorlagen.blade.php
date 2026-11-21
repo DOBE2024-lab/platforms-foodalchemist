@@ -3,8 +3,6 @@
      Spec 84 L1: Vorlagen gehören dem Team — keine globalen, vom Master gepflegten Vorlagen mehr.
      Häufigste Aufgabe: eigene Vorlage umbenennen oder ausblenden. Darum eigene zuerst. --}}
 @php
-    $menuPunkt = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $menuGefahr = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]';
     $zeilenGruppen = [
         ['schluessel' => 'eigene', 'zeilen' => $eigene, 'bearbeitbar' => true, 'key' => 'bt'],
     ];
@@ -84,17 +82,9 @@
                                                 @else
                                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $t->id }})">Umbenennen</x-fa::button>
                                                     <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $t->label }}" size="sm" breite="52">
-                                                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleActive({{ $t->id }})" class="{{ $menuPunkt }}">
-                                                            @svg($t->active ? 'heroicon-m-eye-slash' : 'heroicon-m-eye', 'w-4 h-4 text-[var(--fa-ink-3)]')
-                                                            {{ $t->active ? 'Vorlage deaktivieren' : 'Vorlage aktivieren' }}
-                                                        </button>
+                                                        <x-fa::menu-item :icon="$t->active ? 'heroicon-m-eye-slash' : 'heroicon-m-eye'" wire:click="toggleActive({{ $t->id }})">{{ $t->active ? 'Vorlage deaktivieren' : 'Vorlage aktivieren' }}</x-fa::menu-item>
                                                         <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="loeschen({{ $t->id }})"
-                                                                wire:confirm="{{ 'Vorlage „' . $t->label . '“ löschen?' }}"
-                                                                class="{{ $menuGefahr }}">
-                                                            @svg('heroicon-m-trash', 'w-4 h-4')
-                                                            Vorlage löschen
-                                                        </button>
+                                                        <x-fa::menu-item icon="heroicon-m-trash" danger :trenner="false" wire:click="loeschen({{ $t->id }})" wire:confirm="{{ 'Vorlage „' . $t->label . '“ löschen?' }}">Vorlage löschen</x-fa::menu-item>
                                                     </x-fa::menu>
                                                 @endif
                                             </div>

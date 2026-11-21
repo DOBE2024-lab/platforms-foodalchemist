@@ -60,7 +60,6 @@
     $chip = 'inline-flex items-center h-7 px-2.5 rounded-full border text-[length:var(--fa-text-md)] transition-colors duration-150';
     $chipAn = 'bg-[var(--fa-accent-soft)] border-[var(--fa-accent)] text-[var(--fa-accent)] font-medium';
     $chipAus = 'bg-[var(--fa-surface)] border-[var(--fa-line-strong)] text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)] hover:border-[var(--fa-ink-3)]';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
 
     // Küchenmonitor (Fernsicht, Touch): große Ziele, kräftige Zustandsfarben.
     $wKnopf = 'inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] px-4 text-base font-semibold text-[var(--fa-ink)] transition-colors hover:bg-[var(--fa-hover)]';
@@ -1087,12 +1086,8 @@
                 <x-fa::button size="sm" variant="secondary" icon="heroicon-o-tv" :href="route('foodalchemist.produktion.wandmonitor', ['von' => $von, 'tage' => 1])"
                               wire:navigate data-tagesplan-wall-toggle>Küchenmonitor öffnen</x-fa::button>
                 <x-fa::menu size="sm" breite="60">
-                    <a href="{{ $blattUrl }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-drucken>
-                        @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt drucken
-                    </a>
-                    <a href="{{ $blattUrl . (str_contains($blattUrl, '?') ? '&' : '?') . 'pdf=1' }}" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-pdf>
-                        @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt als PDF
-                    </a>
+                    <x-fa::menu-item icon="heroicon-o-printer" :href="$blattUrl" abstand="weit" target="_blank" data-tagesplan-drucken>Produktionsblatt drucken</x-fa::menu-item>
+                    <x-fa::menu-item icon="heroicon-o-arrow-down-tray" :href="$blattUrl . (str_contains($blattUrl, '?') ? '&' : '?') . 'pdf=1'" abstand="weit" data-tagesplan-pdf>Produktionsblatt als PDF</x-fa::menu-item>
                 </x-fa::menu>
                 @if(! $istWall)
                     <x-fa::button size="sm" variant="primary" icon="heroicon-o-pencil-square"
@@ -1299,12 +1294,8 @@
             <x-slot:actions>
                 <div class="ml-auto flex flex-wrap items-center gap-2">
                     <x-fa::menu breite="60">
-                        <a href="{{ $blattUrl }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-drucken>
-                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt drucken
-                        </a>
-                        <a href="{{ $blattUrl . (str_contains($blattUrl, '?') ? '&' : '?') . 'pdf=1' }}" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}" data-tagesplan-pdf>
-                            @svg('heroicon-o-arrow-down-tray', 'w-4 h-4 text-[var(--fa-ink-3)]') Produktionsblatt als PDF
-                        </a>
+                        <x-fa::menu-item icon="heroicon-o-printer" :href="$blattUrl" abstand="weit" target="_blank" data-tagesplan-drucken>Produktionsblatt drucken</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-arrow-down-tray" :href="$blattUrl . (str_contains($blattUrl, '?') ? '&' : '?') . 'pdf=1'" abstand="weit" data-tagesplan-pdf>Produktionsblatt als PDF</x-fa::menu-item>
                     </x-fa::menu>
                     <x-fa::button variant="primary" icon="heroicon-o-arrows-right-left" wire:click="vorschlagen" wire:loading.attr="disabled" wire:target="vorschlagen" data-tagesplan-vorschlagen>Verteilung vorschlagen</x-fa::button>
                 </div>

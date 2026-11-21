@@ -10,8 +10,6 @@
     $typLabel = ['alacarte' => 'À la carte', 'tageskarte' => 'Tageskarte', 'saisonkarte' => 'Saisonkarte', 'getraenkekarte' => 'Getränkekarte', 'weinkarte' => 'Weinkarte'];
     // Spec 33 P0: Status aus dem Enum; Zustandsfarbe über die Badge-Töne der Bausteine.
     $statusTon = ['success' => 'ok', 'warning' => 'warn', 'danger' => 'crit', 'primary' => 'accent', 'info' => 'info'];
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $menueLoeschen = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]';
     $checkbox = 'inline-flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink)]';
     $linkFeld = 'flex-1 min-w-0 rounded-[var(--fa-radius-control)] px-2.5 py-1.5 font-mono text-[length:var(--fa-text-sm)] break-all select-all bg-[var(--fa-ground)] border border-[var(--fa-line)] text-[var(--fa-ink)]';
 
@@ -105,23 +103,12 @@
             <x-fa::page-header :title="$karte->name">
                 <x-slot:actions>
                     <x-fa::menu breite="64">
-                        <a href="{{ route('foodalchemist.speisekarte.dokument', $karte->id) }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                           title="Karte für den Gast, zum Drucken oder als PDF">
-                            @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Karte drucken
-                        </a>
-                        <a href="{{ route('foodalchemist.speisekarte.praesentation', $karte->id) }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                           title="Digitale Karte so ansehen, wie der Gast sie sieht">
-                            @svg('heroicon-o-device-phone-mobile', 'w-4 h-4 text-[var(--fa-ink-3)]') Digitale Karte ansehen
-                        </a>
+                        <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.speisekarte.dokument', $karte->id)" abstand="weit" target="_blank" title="Karte für den Gast, zum Drucken oder als PDF">Karte drucken</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-device-phone-mobile" :href="route('foodalchemist.speisekarte.praesentation', $karte->id)" abstand="weit" target="_blank" title="Digitale Karte so ansehen, wie der Gast sie sieht">Digitale Karte ansehen</x-fa::menu-item>
                         {{-- Technischer Bericht (Parität Foodbook): Profile und Filter für Preise, Lieferanten, Deklaration, Nährwerte. --}}
-                        <a href="{{ route('foodalchemist.speisekarte.report', $karte->id) }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                           title="Ausführlicher Bericht mit Preisen, Lieferanten, Deklaration und Nährwerten, wie bei Konzept, Format und Foodbook">
-                            @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Bericht öffnen
-                        </a>
+                        <x-fa::menu-item icon="heroicon-o-document-text" :href="route('foodalchemist.speisekarte.report', $karte->id)" abstand="weit" target="_blank" title="Ausführlicher Bericht mit Preisen, Lieferanten, Deklaration und Nährwerten, wie bei Konzept, Format und Foodbook">Bericht öffnen</x-fa::menu-item>
                         <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                        <button type="button" role="menuitem" wire:click="duplizieren" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                            @svg('heroicon-o-document-duplicate', 'w-4 h-4 text-[var(--fa-ink-3)]') Karte duplizieren
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-document-duplicate" abstand="weit" wire:click="duplizieren">Karte duplizieren</x-fa::menu-item>
                     </x-fa::menu>
                     <x-fa::button variant="primary" icon="heroicon-m-pencil-square" x-on:click="$dispatch('modal.open', { name: 'speisekarte-editor' })" data-sk-bearbeiten>Karte bearbeiten</x-fa::button>
                 </x-slot:actions>
@@ -144,14 +131,10 @@
                     <div class="ml-auto flex flex-wrap items-center gap-2">
                         {{-- Weitere Aktionen: Löschen nie direkt neben Speichern. --}}
                         <x-fa::menu breite="60">
-                            <a href="{{ route('foodalchemist.speisekarte.dokument', $karte->id) }}" target="_blank" role="menuitem" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                                @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Karte drucken
-                            </a>
+                            <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.speisekarte.dokument', $karte->id)" abstand="weit" target="_blank">Karte drucken</x-fa::menu-item>
                             <div class="my-1 border-t border-[var(--fa-line)]"></div>
                             <fieldset @disabled($gesperrt) class="contents">{{-- Spec 65: Löschen nur im Bearbeiten-Modus --}}
-                            <button type="button" role="menuitem" wire:click="loeschen" wire:confirm="Diese Speisekarte wirklich löschen?" x-on:click="offen = false" class="{{ $menueLoeschen }}" data-sk-loeschen>
-                                @svg('heroicon-o-trash', 'w-4 h-4') Karte löschen
-                            </button>
+                            <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="Diese Speisekarte wirklich löschen?" data-sk-loeschen>Karte löschen</x-fa::menu-item>
                             </fieldset>
                         </x-fa::menu>
                         {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung, Editor bleibt offen --}}

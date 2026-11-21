@@ -115,10 +115,7 @@
                                                                 @svg('heroicon-o-lock-closed', 'w-4 h-4 shrink-0 mt-px') Löschen gesperrt: Gerichte nutzen diese Klasse.
                                                             </p>
                                                         @else
-                                                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="klasseDelete({{ $k->id }})" wire:confirm="Diese Klasse löschen?"
-                                                                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
-                                                                @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Klasse löschen
-                                                            </button>
+                                                            <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="klasseDelete({{ $k->id }})" wire:confirm="Diese Klasse löschen?">Klasse löschen</x-fa::menu-item>
                                                         @endif
                                                     </x-fa::menu>
                                                 </div>

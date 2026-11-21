@@ -12,7 +12,6 @@
      Häufigste Arbeit = Kapitel füllen und Preis prüfen → Reiter Übersicht · Aufbau · Kalkulation
      zuerst; ein Angebot ohne Kapitel öffnet auf «Anfrage». --}}
 @php
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $hinweis = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $mini = 'inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-[var(--fa-radius-control)] text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] transition-colors duration-150';
     $miniKrit = 'inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-[var(--fa-radius-control)] text-[var(--fa-ink-3)] hover:text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)] transition-colors duration-150';
@@ -51,11 +50,9 @@
                         <p class="px-3 pt-1 pb-1.5 {{ $hinweis }}">Jetzt: {{ $angebot->status->label() }}</p>
                         @foreach($angebot->status->uebergaenge() as $next)
                             @php $verwirftSnapshot = $eingefroren && in_array($next->value, ['anfrage', 'in_arbeit'], true); @endphp
-                            <button type="button" role="menuitem" wire:click="{{ $verwirftSnapshot ? 'statusSetzenVerwerfend' : 'statusSetzen' }}('{{ $next->value }}')" x-on:click="offen = false"
-                                    @if($verwirftSnapshot) wire:confirm="Dieses Angebot ist eingefroren (Stand der Abo-Rezepte). Zurück auf {{ $next->label() }} verwirft den eingefrorenen Stand, danach folgt es wieder der neuesten Fassung. Fortfahren?" @endif
-                                    class="{{ $menuePunkt }}" data-angebot-status="{{ $next->value }}">
-                                @svg('heroicon-m-arrow-right', 'w-4 h-4 text-[var(--fa-ink-3)]') Auf {{ $next->label() }} setzen
-                            </button>
+                            <x-fa::menu-item icon="heroicon-m-arrow-right" abstand="weit" wire:click="{{ $verwirftSnapshot ? 'statusSetzenVerwerfend' : 'statusSetzen' }}('{{ $next->value }}')"
+                                    :wire:confirm="$verwirftSnapshot ? 'Dieses Angebot ist eingefroren (Stand der Abo-Rezepte). Zurück auf ' . $next->label() . ' verwirft den eingefrorenen Stand, danach folgt es wieder der neuesten Fassung. Fortfahren?' : null"
+                                    data-angebot-status="{{ $next->value }}">Auf {{ $next->label() }} setzen</x-fa::menu-item>
                         @endforeach
                     </x-fa::menu>
                 @endif
@@ -67,36 +64,18 @@
 
                 {{-- Weitere Aktionen: Drucken · Dokument · Präsentation · Produktion · Löschen (ganz unten, rot) --}}
                 <x-fa::menu breite="72">
-                    <a href="{{ route('foodalchemist.angebote.karte', $angebot->id) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                       class="{{ $menuePunkt }}" title="Gestaltete Angebotskarte für den Kunden, zum Drucken oder als PDF">
-                        @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Angebotskarte drucken
-                    </a>
-                    <a href="{{ route('foodalchemist.angebote.dokument', $angebot->id) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                       class="{{ $menuePunkt }}" title="Schlichtes Angebotsdokument, zum Drucken oder als PDF">
-                        @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--fa-ink-3)]') Angebotsdokument öffnen
-                    </a>
-                    <a href="{{ route('foodalchemist.angebote.praesentation', $angebot->id) }}" target="_blank" role="menuitem" x-on:click="offen = false"
-                       class="{{ $menuePunkt }}" title="Kundenpräsentation als Webseite, ohne interne Angaben">
-                        @svg('heroicon-o-presentation-chart-bar', 'w-4 h-4 text-[var(--fa-ink-3)]') Kundenpräsentation ansehen
-                    </a>
+                    <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.angebote.karte', $angebot->id)" abstand="weit" target="_blank" title="Gestaltete Angebotskarte für den Kunden, zum Drucken oder als PDF">Angebotskarte drucken</x-fa::menu-item>
+                    <x-fa::menu-item icon="heroicon-o-document-text" :href="route('foodalchemist.angebote.dokument', $angebot->id)" abstand="weit" target="_blank" title="Schlichtes Angebotsdokument, zum Drucken oder als PDF">Angebotsdokument öffnen</x-fa::menu-item>
+                    <x-fa::menu-item icon="heroicon-o-presentation-chart-bar" :href="route('foodalchemist.angebote.praesentation', $angebot->id)" abstand="weit" target="_blank" title="Kundenpräsentation als Webseite, ohne interne Angaben">Kundenpräsentation ansehen</x-fa::menu-item>
                     {{-- Kopieren ist immer erlaubt (legt ein neues, eigenes Angebot an; das Original bleibt unverändert). --}}
-                    <button type="button" role="menuitem" wire:click="kopieren" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                            title="Neues Angebot mit gleichem Aufbau, Branding und Bildern anlegen (Status Anfrage, nicht veröffentlicht)" data-angebot-kopieren>
-                        @svg('heroicon-o-document-duplicate', 'w-4 h-4 text-[var(--fa-ink-3)]') Angebot kopieren
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-document-duplicate" abstand="weit" wire:click="kopieren" title="Neues Angebot mit gleichem Aufbau, Branding und Bildern anlegen (Status Anfrage, nicht veröffentlicht)" data-angebot-kopieren>Angebot kopieren</x-fa::menu-item>
                     <div class="my-1 border-t border-[var(--fa-line)]"></div>
                     {{-- Spec 65: Drucken/Ansehen bleiben frei (Links), Produktion + Löschen nur im Bearbeiten-Modus --}}
                     <fieldset @disabled($gesperrt) class="contents">
                     {{-- Stufe 3 — Angebot → Produktion (concept × Pax → Produktionsauftrag am Event-Tag). --}}
-                    <button type="button" role="menuitem" wire:click="anProduktion" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                            title="Angebot in die Produktion übergeben, danach im Tagesplan planbar" data-angebot-produktion>
-                        @svg('heroicon-o-truck', 'w-4 h-4 text-[var(--fa-ink-3)]') An die Produktion übergeben
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-truck" abstand="weit" wire:click="anProduktion" title="Angebot in die Produktion übergeben, danach im Tagesplan planbar" data-angebot-produktion>An die Produktion übergeben</x-fa::menu-item>
                     <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                    <button type="button" role="menuitem" wire:click="loeschen" wire:confirm="Angebot löschen?" x-on:click="offen = false"
-                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-angebot-loeschen>
-                        @svg('heroicon-o-trash', 'w-4 h-4') Angebot löschen
-                    </button>
+                    <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="Angebot löschen?" data-angebot-loeschen>Angebot löschen</x-fa::menu-item>
                     </fieldset>
                 </x-fa::menu>
 
@@ -357,10 +336,7 @@
                                                         </button>
                                                     </x-slot:ausloeser>
                                                     @foreach($fortLabel as $fortWert => $fortText)
-                                                        <button type="button" role="menuitem" x-on:click="offen = false" wire:click="kapitelFortschritt({{ $kap['kapitel_id'] }}, '{{ $fortWert }}')"
-                                                                class="flex w-full items-center justify-between px-3 py-1.5 text-left text-[length:var(--fa-text-md)] hover:bg-[var(--fa-hover)] {{ $kap['fortschritt'] === $fortWert ? 'font-semibold text-[var(--fa-accent)]' : 'text-[var(--fa-ink)]' }}">
-                                                            {{ $fortText }}@if($kap['fortschritt'] === $fortWert)@svg('heroicon-m-check', 'w-4 h-4')@endif
-                                                        </button>
+                                                        <x-fa::menu-item :gewaehlt="$kap['fortschritt'] === $fortWert" wire:click="kapitelFortschritt({{ $kap['kapitel_id'] }}, '{{ $fortWert }}')">{{ $fortText }}</x-fa::menu-item>
                                                     @endforeach
                                                 </x-fa::menu>
                                                 <x-fa::button variant="ghost" size="sm" icon="heroicon-m-pencil-square" href="#" wire:click="kapitelWaehle({{ $kap['kapitel_id'] }})" x-on:click.prevent="$dispatch('angebot-goto', { tab: 'aufbau' })" title="Kapitel öffnen und weiterplanen">Öffnen</x-fa::button>
@@ -457,18 +433,12 @@
                                 <x-slot:ausloeser>
                                     <x-fa::button size="sm" icon="heroicon-m-plus" icon-right="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen">Überschrift</x-fa::button>
                                 </x-slot:ausloeser>
-                                <button type="button" role="menuitem" wire:click="blockBasis('header_frei')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                                    @svg('heroicon-o-bars-3-bottom-left', 'w-4 h-4 text-[var(--fa-ink-3)]') Freie Überschrift
-                                </button>
-                                <button type="button" role="menuitem" wire:click="blockBasis('header_frei_preis')" x-on:click="offen = false" class="{{ $menuePunkt }}">
-                                    @svg('heroicon-o-currency-euro', 'w-4 h-4 text-[var(--fa-ink-3)]') Überschrift mit Preis
-                                </button>
+                                <x-fa::menu-item icon="heroicon-o-bars-3-bottom-left" abstand="weit" wire:click="blockBasis('header_frei')">Freie Überschrift</x-fa::menu-item>
+                                <x-fa::menu-item icon="heroicon-o-currency-euro" abstand="weit" wire:click="blockBasis('header_frei_preis')">Überschrift mit Preis</x-fa::menu-item>
                                 @foreach($headerPresets ?? [] as $gruppe => $items)
                                     <p class="px-3 pt-2 pb-0.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">{{ $gruppe }}</p>
                                     @foreach($items as $p)
-                                        <button type="button" role="menuitem" x-on:click="offen = false"
-                                                wire:click="presetHinzu(@js($p['type']), @js($p['slug']), @js($p['label']), @js($p['price_basis'] ?? null), {{ ($p['visible'] ?? true) ? 'true' : 'false' }})"
-                                                class="block w-full truncate px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">{{ $p['label'] }}</button>
+                                        <x-fa::menu-item wire:click="presetHinzu({{ \Illuminate\Support\Js::from($p['type']) }}, {{ \Illuminate\Support\Js::from($p['slug']) }}, {{ \Illuminate\Support\Js::from($p['label']) }}, {{ \Illuminate\Support\Js::from($p['price_basis'] ?? null) }}, {{ ($p['visible'] ?? true) ? 'true' : 'false' }})"><span class="min-w-0 truncate">{{ $p['label'] }}</span></x-fa::menu-item>
                                     @endforeach
                                 @endforeach
                             </x-fa::menu>

@@ -506,12 +506,7 @@
                         {{-- Löschen (endgültig) nur bei eigenem, gespeichertem Dokument; abgesetzt im Menü. --}}
                         @if($editable && ! $creating)
                             <x-fa::menu>
-                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $selected->id }})"
-                                        wire:confirm="Wissensdokument „{{ $selected->title }}“ endgültig löschen? Das kann nicht rückgängig gemacht werden."
-                                        class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]"
-                                        data-wissen-delete>
-                                    @svg('heroicon-o-trash', 'w-4 h-4') Dokument löschen
-                                </button>
+                                <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" wire:click="delete({{ $selected->id }})" wire:confirm="Wissensdokument „{{ $selected->title }}“ endgültig löschen? Das kann nicht rückgängig gemacht werden." data-wissen-delete>Dokument löschen</x-fa::menu-item>
                             </x-fa::menu>
                         @endif
 

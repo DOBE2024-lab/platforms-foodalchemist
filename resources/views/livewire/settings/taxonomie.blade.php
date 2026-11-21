@@ -105,11 +105,7 @@
                                                                 @svg('heroicon-o-lock-closed', 'w-4 h-4 shrink-0 mt-px') Löschen gesperrt: {{ $kat->recipe_count }} Rezepte hängen daran. Erst zusammenführen oder umhängen.
                                                             </p>
                                                         @else
-                                                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $kat->id }})"
-                                                                    wire:confirm="Kategorie „{{ $kat->label }}“ löschen?"
-                                                                    class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
-                                                                @svg('heroicon-o-trash', 'w-4 h-4 shrink-0') Kategorie löschen
-                                                            </button>
+                                                            <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="delete({{ $kat->id }})" wire:confirm="Kategorie „{{ $kat->label }}“ löschen?">Kategorie löschen</x-fa::menu-item>
                                                         @endif
                                                     </x-fa::menu>
                                                 </div>

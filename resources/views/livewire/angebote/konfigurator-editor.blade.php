@@ -4,7 +4,6 @@
 @php
     $gesperrt = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true);
     $euro = fn ($w) => $w !== null && $w !== '' ? number_format((float) $w, 2, ',', '.') . ' €' : '–';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
 @endphp
 
 <x-foodalchemist::modal name="konfigurator-editor" fullscreen dark-canvas title="Konfigurator" :title-name="$k->name ?? null">
@@ -12,11 +11,10 @@
         @if($k)
             <div class="ml-auto flex flex-wrap items-center gap-2">
                 <x-fa::menu breite="72">
-                    <a href="{{ route('foodalchemist.angebote.leistung_vorlagen') }}" target="_blank" role="menuitem" class="{{ $menuePunkt }}">@svg('heroicon-o-wrench-screwdriver', 'w-4 h-4 text-[var(--fa-ink-3)]') Leistungs-Vorlagen öffnen</a>
+                    <x-fa::menu-item icon="heroicon-o-wrench-screwdriver" :href="route('foodalchemist.angebote.leistung_vorlagen')" abstand="weit" :schliessen="false" target="_blank">Leistungs-Vorlagen öffnen</x-fa::menu-item>
                     <div class="my-1 border-t border-[var(--fa-line)]"></div>
                     <fieldset @disabled($gesperrt) class="contents">
-                        <button type="button" role="menuitem" wire:click="loeschen" wire:confirm="Konfigurator „{{ $k->name }}“ löschen? Konzepte, Leistungen und Pakete gehen mit." x-on:click="offen = false"
-                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]" data-konfigurator-loeschen>@svg('heroicon-o-trash', 'w-4 h-4') Konfigurator löschen</button>
+                        <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="Konfigurator „{{ $k->name }}“ löschen? Konzepte, Leistungen und Pakete gehen mit." data-konfigurator-loeschen>Konfigurator löschen</x-fa::menu-item>
                     </fieldset>
                 </x-fa::menu>
                 <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">

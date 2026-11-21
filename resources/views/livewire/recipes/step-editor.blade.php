@@ -10,7 +10,6 @@
     $hinweis = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $kasten = 'rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] border border-[var(--fa-line)] px-3 py-2.5 flex flex-col gap-2';
     $nummer = 'shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--fa-accent-soft)] text-[var(--fa-accent)] text-[length:var(--fa-text-sm)] font-semibold tabular-nums';
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $segAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
     $segAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
     $anzahl = fn (int $n, string $eins, string $mehr) => $n . ' ' . ($n === 1 ? $eins : $mehr);
@@ -58,16 +57,10 @@
                     <x-foodalchemist::ki-action action="kiFotos" variant="ai" icon="heroicon-o-photo" label="Fotos erzeugen"
                             title="KI-Fotos für alle Schritte ohne Foto erzeugen" busy="Malt …" data-ki-fotos />
                     <x-fa::menu label="Weitere Aktionen zur Anleitung" size="sm" breite="60">
-                        <button type="button" role="menuitem" wire:click="$toggle('importOffen')" x-on:click="offen = false" class="{{ $menuePunkt }}"
-                                title="Markdown einfügen und in Schritte umwandeln" data-import-toggle>
-                            @svg('heroicon-o-document-arrow-down', 'w-4 h-4 text-[var(--fa-ink-3)]') Markdown einfügen
-                        </button>
+                        <x-fa::menu-item icon="heroicon-o-document-arrow-down" abstand="weit" wire:click="$toggle('importOffen')" title="Markdown einfügen und in Schritte umwandeln" data-import-toggle>Markdown einfügen</x-fa::menu-item>
                         @if($schritte->isNotEmpty())
                             {{-- Spec 27 Phase 4: Postenzettel zum Aufhängen (mit oder ohne Fotos) --}}
-                            <a href="{{ route('foodalchemist.rezepte.anleitung', ['recipe' => $rezept->id]) }}" target="_blank" role="menuitem"
-                               x-on:click="offen = false" class="{{ $menuePunkt }}" title="Anleitung als Postenzettel drucken" data-anleitung-drucken>
-                                @svg('heroicon-o-printer', 'w-4 h-4 text-[var(--fa-ink-3)]') Postenzettel drucken
-                            </a>
+                            <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.rezepte.anleitung', ['recipe' => $rezept->id])" abstand="weit" target="_blank" title="Anleitung als Postenzettel drucken" data-anleitung-drucken>Postenzettel drucken</x-fa::menu-item>
                         @endif
                     </x-fa::menu>
                 </span>

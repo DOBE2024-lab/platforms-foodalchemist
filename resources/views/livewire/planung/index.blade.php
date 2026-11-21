@@ -70,7 +70,6 @@
         return $chip($lbl, 'accent');
     };
     $zustandTon = ['läuft' => 'info', 'prüfen' => 'warn', 'geplant' => 'neutral', 'erledigt' => 'ok', 'fehlgeschlagen' => 'crit'];
-    $menuePunkt = 'flex w-full items-center gap-2 px-3 py-2 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
     $menueGruppe = 'px-3 pt-2 pb-1 text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-ink-3)]';
     $verwerfenFrage = 'Diese Planung verwerfen? Laufende Erstellungen dieser Planung werden ebenfalls gestoppt. Sie wird archiviert, nicht endgültig gelöscht.';
     // Editor-Reiter: Erstellen · Ausgaben · Fortschritt. Optik wie x-foodalchemist::editor-tabs; der Baustein selbst
@@ -203,22 +202,22 @@
                             <x-fa::button variant="primary" icon="heroicon-m-plus" icon-right="heroicon-m-chevron-down" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" data-frei-neu>Neu erstellen</x-fa::button>
                         </x-slot:ausloeser>
                         <p class="{{ $menueGruppe }}">Einzeln mit KI erstellen</p>
-                        <button type="button" role="menuitem" wire:click="schnellErstellen('rezept')" x-on:click="offen = false" class="{{ $menuePunkt }}" data-frei-rezept>@svg('heroicon-o-beaker', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Basisrezept</button>
-                        <button type="button" role="menuitem" wire:click="schnellErstellen('gericht')" x-on:click="offen = false" class="{{ $menuePunkt }}" data-frei-gericht>@svg('heroicon-o-cake', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Gericht</button>
-                        <button type="button" role="menuitem" wire:click="schnellErstellen('concept')" x-on:click="offen = false" class="{{ $menuePunkt }}" data-frei-concept>@svg('heroicon-o-squares-2x2', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Concept</button>
+                        <x-fa::menu-item icon="heroicon-o-beaker" abstand="weit" wire:click="schnellErstellen('rezept')" data-frei-rezept>Basisrezept</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-cake" abstand="weit" wire:click="schnellErstellen('gericht')" data-frei-gericht>Gericht</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-squares-2x2" abstand="weit" wire:click="schnellErstellen('concept')" data-frei-concept>Concept</x-fa::menu-item>
                         <div class="my-1 border-t border-[var(--fa-line)]" role="separator"></div>
                         <p class="{{ $menueGruppe }}">Übernehmen und kombinieren</p>
-                        <button type="button" role="menuitem" wire:click="schnellImport" x-on:click="offen = false" class="{{ $menuePunkt }}" data-frei-import>@svg('heroicon-o-document-arrow-down', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Rezept importieren</button>
+                        <x-fa::menu-item icon="heroicon-o-document-arrow-down" abstand="weit" wire:click="schnellImport" data-frei-import>Rezept importieren</x-fa::menu-item>
                         @unless($handy){{-- #1003 PR7: Composer, Trendradar und Ausgabe-Formen am Computer --}}
-                        <button type="button" role="menuitem" wire:click="schnellComposer" x-on:click="offen = false" class="{{ $menuePunkt }}" data-frei-composer>@svg('heroicon-o-sparkles', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Aus Zutaten kombinieren (Composer)</button>
-                        <button type="button" role="menuitem" wire:click="schnellTrendradar" x-on:click="offen = false" class="{{ $menuePunkt }}" data-frei-trendradar>@svg('heroicon-o-signal', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Aus dem Trendradar (Trend, Hype, Inspiration)</button>
+                        <x-fa::menu-item icon="heroicon-o-sparkles" abstand="weit" wire:click="schnellComposer" data-frei-composer>Aus Zutaten kombinieren (Composer)</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-signal" abstand="weit" wire:click="schnellTrendradar" data-frei-trendradar>Aus dem Trendradar (Trend, Hype, Inspiration)</x-fa::menu-item>
                         <div class="my-1 border-t border-[var(--fa-line)]" role="separator"></div>
                         <p class="{{ $menueGruppe }}">Ganze Ausgabe aus einem Brief</p>
-                        <button type="button" role="menuitem" x-on:click="fbOpen = true; skOpen = false; spOpen = false; offOpen = false; fmtOpen = false; offen = false" class="{{ $menuePunkt }}" data-frei-foodbook>@svg('heroicon-o-book-open', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Foodbook</button>
-                        <button type="button" role="menuitem" x-on:click="skOpen = true; fbOpen = false; spOpen = false; offOpen = false; fmtOpen = false; offen = false" class="{{ $menuePunkt }}" data-frei-speisekarte>@svg('heroicon-o-clipboard-document-list', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Speisekarte</button>
-                        <button type="button" role="menuitem" x-on:click="spOpen = true; fbOpen = false; skOpen = false; offOpen = false; fmtOpen = false; offen = false" class="{{ $menuePunkt }}" data-frei-speiseplan>@svg('heroicon-o-calendar-days', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Speiseplan</button>
-                        <button type="button" role="menuitem" x-on:click="offOpen = true; fbOpen = false; skOpen = false; spOpen = false; fmtOpen = false; offen = false" class="{{ $menuePunkt }}" data-frei-angebot>@svg('heroicon-o-document-text', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Angebot</button>
-                        <button type="button" role="menuitem" x-on:click="fmtOpen = true; fbOpen = false; skOpen = false; spOpen = false; offOpen = false; offen = false" class="{{ $menuePunkt }}" data-frei-format>@svg('heroicon-o-swatch', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Format</button>
+                        <x-fa::menu-item icon="heroicon-o-book-open" abstand="weit" x-on:click="fbOpen = true; skOpen = false; spOpen = false; offOpen = false; fmtOpen = false" data-frei-foodbook>Foodbook</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-clipboard-document-list" abstand="weit" x-on:click="skOpen = true; fbOpen = false; spOpen = false; offOpen = false; fmtOpen = false" data-frei-speisekarte>Speisekarte</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-calendar-days" abstand="weit" x-on:click="spOpen = true; fbOpen = false; skOpen = false; offOpen = false; fmtOpen = false" data-frei-speiseplan>Speiseplan</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-document-text" abstand="weit" x-on:click="offOpen = true; fbOpen = false; skOpen = false; spOpen = false; fmtOpen = false" data-frei-angebot>Angebot</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-swatch" abstand="weit" x-on:click="fmtOpen = true; fbOpen = false; skOpen = false; spOpen = false; offOpen = false" data-frei-format>Format</x-fa::menu-item>
                         @endunless
                     </x-fa::menu>
                 </x-slot:actions>

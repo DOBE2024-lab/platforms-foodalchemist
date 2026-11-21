@@ -1,8 +1,6 @@
 {{-- R5: Schreibstile — eigene Seite, CRUD (sprach_duktus = Material für den KI-Auftrag, GL-06).
      Häufigste Aufgabe: einen bestehenden Stil nachschärfen. Darum steht die Liste oben, Anlegen darunter. --}}
 @php
-    $menuPunkt = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $menuGefahr = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]';
 @endphp
 
 <div class="flex flex-col gap-5" data-settings-schreibstile>
@@ -76,15 +74,9 @@
                                         <div class="flex items-center justify-end gap-1">
                                             <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $stil->id }})" data-stil-edit>Bearbeiten</x-fa::button>
                                             <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $stil->name }}" size="sm" breite="52">
-                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="toggleInactive({{ $stil->id }})" class="{{ $menuPunkt }}">
-                                                    @svg($stil->is_inactive ? 'heroicon-m-eye' : 'heroicon-m-eye-slash', 'w-4 h-4 text-[var(--fa-ink-3)]')
-                                                    {{ $stil->is_inactive ? 'Schreibstil aktivieren' : 'Schreibstil deaktivieren' }}
-                                                </button>
+                                                <x-fa::menu-item :icon="$stil->is_inactive ? 'heroicon-m-eye' : 'heroicon-m-eye-slash'" wire:click="toggleInactive({{ $stil->id }})">{{ $stil->is_inactive ? 'Schreibstil aktivieren' : 'Schreibstil deaktivieren' }}</x-fa::menu-item>
                                                 <div class="my-1 border-t border-[var(--fa-line)]"></div>
-                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $stil->id }})" wire:confirm="Schreibstil „{{ $stil->name }}“ löschen? Das geht nur, solange ihn nichts verwendet." class="{{ $menuGefahr }}">
-                                                    @svg('heroicon-m-trash', 'w-4 h-4')
-                                                    Schreibstil löschen
-                                                </button>
+                                                <x-fa::menu-item icon="heroicon-m-trash" danger :trenner="false" wire:click="delete({{ $stil->id }})" wire:confirm="Schreibstil „{{ $stil->name }}“ löschen? Das geht nur, solange ihn nichts verwendet.">Schreibstil löschen</x-fa::menu-item>
                                             </x-fa::menu>
                                         </div>
                                     </td>

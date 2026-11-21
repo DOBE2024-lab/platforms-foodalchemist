@@ -226,15 +226,9 @@
                                         <x-fa::button size="sm" wire:click="lagerSpeichern({{ $lager->id }})">Speichern</x-fa::button>
                                         <x-fa::menu class="inline-block" size="sm" label="Weitere Aktionen für {{ $lager->name }}">
                                             @unless($lager->is_default)
-                                                <button type="button" role="menuitem" x-on:click="offen = false" wire:click="lagerStandardSetzen({{ $lager->id }})"
-                                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-left fa-t-body hover:bg-[var(--fa-hover)]">
-                                                    @svg('heroicon-o-star', 'w-4 h-4 text-[var(--fa-ink-3)]')Als Standardlager setzen
-                                                </button>
+                                                <x-fa::menu-item icon="heroicon-o-star" wire:click="lagerStandardSetzen({{ $lager->id }})">Als Standardlager setzen</x-fa::menu-item>
                                             @endunless
-                                            <button type="button" role="menuitem" x-on:click="offen = false" wire:click="lagerEntfernen({{ $lager->id }})" wire:confirm="Lagerort entfernen? Mit Bestand wird er nur deaktiviert."
-                                                class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]">
-                                                @svg('heroicon-o-trash', 'w-4 h-4')Lagerort entfernen
-                                            </button>
+                                            <x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" wire:click="lagerEntfernen({{ $lager->id }})" wire:confirm="Lagerort entfernen? Mit Bestand wird er nur deaktiviert.">Lagerort entfernen</x-fa::menu-item>
                                         </x-fa::menu>
                                     </div>
                                 </td>

@@ -5,8 +5,6 @@
 @php
     use Platform\FoodAlchemist\Livewire\Settings\Wissenssteuerung as WS;
 
-    $menuPunkt = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]';
-    $menuGefahr = 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--fa-text-md)] text-[var(--fa-crit)] hover:bg-[var(--fa-crit-soft)]';
     $schluessel = 'font-mono text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $kleinTitel = 'text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-ink-2)]';
     $zahl = fn ($n) => number_format((int) $n, 0, ',', '.');
@@ -364,12 +362,7 @@
                             <div class="flex items-center gap-1">
                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="editArt({{ $r->id }})">Bearbeiten</x-fa::button>
                                 <x-fa::menu class="inline-block" size="sm">
-                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $r->id }})"
-                                            wire:confirm="Art-Steuerung entfernen? Ohne verbleibende Art-Steuerung gilt für diesen Schritt wieder die Kategorie-Steuerung."
-                                            class="{{ $menuGefahr }}">
-                                        @svg('heroicon-m-trash', 'w-4 h-4')
-                                        Art-Steuerung entfernen
-                                    </button>
+                                    <x-fa::menu-item icon="heroicon-m-trash" danger :trenner="false" wire:click="delete({{ $r->id }})" wire:confirm="Art-Steuerung entfernen? Ohne verbleibende Art-Steuerung gilt für diesen Schritt wieder die Kategorie-Steuerung.">Art-Steuerung entfernen</x-fa::menu-item>
                                 </x-fa::menu>
                             </div>
                         @endif
@@ -477,12 +470,7 @@
                                             <div class="flex items-center justify-end gap-1">
                                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $r->id }})" data-ws-edit>Bearbeiten</x-fa::button>
                                                 <x-fa::menu class="inline-block" size="sm">
-                                                    <button type="button" role="menuitem" x-on:click="offen = false" wire:click="delete({{ $r->id }})"
-                                                            wire:confirm="Steuerung {{ WS::schrittLabel($r->feature) }} mit {{ $katName($r->category) }} entfernen? Danach wird diese Kategorie für den Schritt nur noch bei Bedarf durchsucht."
-                                                            class="{{ $menuGefahr }}">
-                                                        @svg('heroicon-m-trash', 'w-4 h-4')
-                                                        Steuerung entfernen
-                                                    </button>
+                                                    <x-fa::menu-item icon="heroicon-m-trash" danger :trenner="false" wire:click="delete({{ $r->id }})" wire:confirm="Steuerung {{ WS::schrittLabel($r->feature) }} mit {{ $katName($r->category) }} entfernen? Danach wird diese Kategorie für den Schritt nur noch bei Bedarf durchsucht.">Steuerung entfernen</x-fa::menu-item>
                                                 </x-fa::menu>
                                             </div>
                                         @else

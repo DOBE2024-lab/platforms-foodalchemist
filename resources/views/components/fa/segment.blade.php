@@ -1,6 +1,6 @@
 {{-- x-fa::segment — Option in x-fa::segmented (2.4a). an: aktiv (weiße Fläche, Schatten, aria-pressed="true").
      an-alpine="ausdruck": Zustand lebt in Alpine (x-bind:class / x-bind:aria-pressed statt Server-Wert).
-     size: sm (Standard, 28px) · md (32px) · handy (44px, füllt die Spur). Ui::maps()['segmentGroesse'].
+     size: sm (Standard, 28px) · md (32px) · eng (32px, px-2/12px für schmale Spalten) · handy (44px, füllt die Spur). Ui::maps()['segmentGroesse'].
      Klick über wire:click / x-on:click; weitere Klassen (flex-1, truncate …) über class. --}}
 @props(['an' => false, 'anAlpine' => null, 'size' => 'sm'])
 @php

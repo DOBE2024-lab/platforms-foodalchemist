@@ -113,6 +113,8 @@ final class Ui
             'segmentGroesse' => [
                 'sm' => 'h-7 px-3 text-[length:var(--fa-text-sm)]',
                 'md' => 'h-8 px-3 text-[length:var(--fa-text-md)]',
+                // eng: schmale Spalten (Zutaten-Editor, Einfüge-Spalte ab 17 rem): Höhe wie md, Abstand und Schrift klein.
+                'eng' => 'h-8 px-2 text-[length:var(--fa-text-sm)]',
                 'handy' => 'flex-1 min-h-11 text-[length:var(--fa-text-md)]',
             ],
 

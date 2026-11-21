@@ -44,8 +44,8 @@
         <x-fa::card as="aside" class="p-3 flex flex-col gap-3 min-w-0" x-bind:class="einfuegenAus === 'gp' ? '' : 'fa-zutaten-passiv'" data-einfuegen="gp" aria-label="Grundprodukte einfügen">
             {{-- Editor schmaler als 92 rem: EINE Einfüge-Spalte mit Umschalter; breiter stehen beide Spalten nebeneinander --}}
             <x-fa::segmented label="Einfügen aus" :breit="true" class="fa-zutaten-umschalter">
-                <x-fa::segment an-alpine="einfuegenAus === 'gp'" size="md" x-on:click="einfuegenAus = 'gp'" class="flex-1">Grundprodukte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="gpTotal"></span></x-fa::segment>
-                <x-fa::segment an-alpine="einfuegenAus === 'rez'" size="md" x-on:click="einfuegenAus = 'rez'" class="flex-1">Basisrezepte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="rezTotal"></span></x-fa::segment>
+                <x-fa::segment an-alpine="einfuegenAus === 'gp'" size="eng" x-on:click="einfuegenAus = 'gp'" class="flex-1">Grundprodukte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="gpTotal"></span></x-fa::segment>
+                <x-fa::segment an-alpine="einfuegenAus === 'rez'" size="eng" x-on:click="einfuegenAus = 'rez'" class="flex-1">Basisrezepte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="rezTotal"></span></x-fa::segment>
             </x-fa::segmented>
 <fieldset class="flex flex-col gap-2 min-w-0">
                 <legend class="sr-only">Grundprodukte filtern</legend>
@@ -406,8 +406,8 @@
             {{-- Editor schmaler als 92 rem: EINE Einfüge-Spalte mit Umschalter; breiter stehen beide Spalten nebeneinander --}}
             @unless($vkKontext)
             <x-fa::segmented label="Einfügen aus" :breit="true" class="fa-zutaten-umschalter">
-                <x-fa::segment an-alpine="einfuegenAus === 'gp'" size="md" x-on:click="einfuegenAus = 'gp'" class="flex-1">Grundprodukte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="gpTotal"></span></x-fa::segment>
-                <x-fa::segment an-alpine="einfuegenAus === 'rez'" size="md" x-on:click="einfuegenAus = 'rez'" class="flex-1">Basisrezepte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="rezTotal"></span></x-fa::segment>
+                <x-fa::segment an-alpine="einfuegenAus === 'gp'" size="eng" x-on:click="einfuegenAus = 'gp'" class="flex-1">Grundprodukte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="gpTotal"></span></x-fa::segment>
+                <x-fa::segment an-alpine="einfuegenAus === 'rez'" size="eng" x-on:click="einfuegenAus = 'rez'" class="flex-1">Basisrezepte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="rezTotal"></span></x-fa::segment>
             </x-fa::segmented>
             @endunless
 <fieldset class="flex flex-col gap-2 min-w-0">

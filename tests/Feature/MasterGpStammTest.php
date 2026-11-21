@@ -76,6 +76,85 @@ it('★ Zubehör, das der Master am Gefäß pflegt, gilt für Mandanten mit Pake
         ->and($sicht($this->childB))->toBe([$deckel->id, $schwarz->id]);   // Unter-Team erbt zuerst vom eigenen Haupt-Team
 });
 
+it('★ Kostenart am Gefäß: Mandant ohne eigenen Eintrag erbt die des Masters; ein eigener Eintrag schlägt sie (Deckel 20.11.2026)', function () {
+    $deckel = ($this->nonFood)(null, 'Deckel: für Achenbachglas');
+    $svc = app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class);
+    $svc->setzen($this->master, $deckel->id, 'mehrweg', '0,12');
+
+    // ohne eigenen Eintrag: geerbt vom Master (vorher sah der Mandant nichts → Automatik „einweg“)
+    // (den Preis nur mit „Preise mitgeben“ für den Lieferanten — hier ohne Lead-Artikel, also nicht; eigener Test unten)
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'mehrweg', 'preis' => null, 'team_id' => $this->master->id])
+        ->and($svc->teamVorgabe($deckel->id, $this->master)['preis'])->toBe(0.12)
+        ->and($svc->teamVorgabe($deckel->id, $this->childA)['kostenart'])->toBe('mehrweg')
+        ->and($svc->teamVorgabe($deckel->id, $this->ohnePaket)['kostenart'])->toBeNull();   // ohne Stamm-Paket kein Master
+
+    // eigener Eintrag des Mandanten schlägt den Master; Unter-Team erbt zuerst vom eigenen Haupt-Team
+    $svc->setzen($this->rootTeam, $deckel->id, 'einweg', '0,30');
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'einweg', 'preis' => 0.3, 'team_id' => $this->rootTeam->id])
+        ->and($svc->teamVorgabe($deckel->id, $this->childA)['team_id'])->toBe($this->rootTeam->id);
+
+    // Master ändert: die Kundenzeile bleibt; Kunde entfernt seine: wieder der Master
+    $svc->setzen($this->master, $deckel->id, 'extern');
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam)['kostenart'])->toBe('einweg');
+    $svc->setzen($this->rootTeam, $deckel->id, null);
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'extern', 'preis' => null, 'team_id' => $this->master->id]);
+});
+
+it('★ Gefäßpreis des Masters nur mit „Preise mitgeben“ für den Lieferanten des Lead-Artikels; die Kostenart erbt immer (Kurator 21.11.2026)', function () {
+    $admin = $this->makeUser($this->rootTeam, 'Plattform Admin');
+    config(['platform-shell.admins' => [strtolower($admin->email)]]);
+    $lieferant = \Platform\FoodAlchemist\Models\FoodAlchemistSupplier::create(['team_id' => null, 'name' => 'Glas-Händler', 'stamm_class' => StammPaket::PAKET]);
+    $la = \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::create(['team_id' => null, 'supplier_id' => $lieferant->id, 'designation' => 'Deckel Achenbach',
+        'article_number' => 'D1', 'qty' => 1, 'unit_code' => 'Stk', 'stamm_class' => StammPaket::PAKET]);
+    $deckel = ($this->nonFood)(null, 'Deckel: für Achenbachglas');
+    $deckel->update(['lead_la_supplier_item_id' => $la->id]);
+    $stamm = app(\Platform\FoodAlchemist\Services\StammPaketService::class);
+    $stamm->setzeLieferanten($this->rootTeam, [$lieferant->id], $admin);
+    $svc = app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class);
+    $svc->setzen($this->master, $deckel->id, 'mehrweg', '0,40');
+
+    // ohne Haken: Art vom Master, Preis nicht → Darreichung meldet „Gefäß-Preis fehlt“ (mehrweg kauft nichts ein, kein Artikel-Rückfall)
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'mehrweg', 'preis' => null, 'team_id' => $this->master->id])
+        ->and($svc->teamVorgabe($deckel->id, $this->childA)['preis'])->toBeNull()
+        ->and($svc->teamVorgabe($deckel->id, $this->master)['preis'])->toBe(0.4)   // der Master selbst sieht seinen Preis
+        ->and(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->stueckKosten($deckel, $this->rootTeam)['preis'])->toBeNull();
+
+    // mit Haken: Preis kommt mit, auch beim Unter-Team
+    $stamm->setzePreisFreigabe($this->rootTeam, [$lieferant->id], $admin);
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'mehrweg', 'preis' => 0.4, 'team_id' => $this->master->id])
+        ->and($svc->teamVorgabe($deckel->id, $this->childA)['preis'])->toBe(0.4);
+
+    // eigener Eintrag des Mandanten schlägt beides (Art und Preis), mit und ohne Haken
+    $svc->setzen($this->rootTeam, $deckel->id, 'einweg', '0,25');
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'einweg', 'preis' => 0.25, 'team_id' => $this->rootTeam->id]);
+    $stamm->setzePreisFreigabe($this->rootTeam, 'keine', $admin);
+    expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'einweg', 'preis' => 0.25, 'team_id' => $this->rootTeam->id]);
+});
+
+it('★ Rückfall auf den Lead-Artikelpreis (einweg ohne Preis am GP) zieht den Master-Preis nur mit Freigabe', function () {
+    $admin = $this->makeUser($this->rootTeam, 'Plattform Admin');
+    config(['platform-shell.admins' => [strtolower($admin->email)]]);
+    $lieferant = \Platform\FoodAlchemist\Models\FoodAlchemistSupplier::create(['team_id' => null, 'name' => 'Glas-Händler', 'stamm_class' => StammPaket::PAKET]);
+    $la = \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::create(['team_id' => null, 'supplier_id' => $lieferant->id, 'designation' => 'Becher',
+        'article_number' => 'B1', 'qty' => 1, 'unit_code' => 'Stk', 'stamm_class' => StammPaket::PAKET]);
+    DB::table('foodalchemist_prices')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'supplier_item_id' => $la->id, 'team_id' => $this->master->id,
+        'status' => '0', 'price' => 0.55, 'is_blocked' => false, 'status_valid_from' => '2026-11-01 00:00:00', 'created_at' => now(), 'updated_at' => now()]);
+    $becher = ($this->nonFood)(null, 'Becher: Einweg');
+    $becher->update(['lead_la_supplier_item_id' => $la->id]);
+    DB::table('foodalchemist_supplier_item_structures')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'supplier_item_id' => $la->id,
+        'gp_id' => $becher->id, 'created_at' => now(), 'updated_at' => now()]);
+    $stamm = app(\Platform\FoodAlchemist\Services\StammPaketService::class);
+    $stamm->setzeLieferanten($this->rootTeam, [$lieferant->id], $admin);
+    app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class)->setzen($this->master, $becher->id, 'einweg');
+    $dar = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+
+    expect($dar->stueckKosten($becher, $this->master)['preis'])->toBe(0.55);
+    expect($dar->stueckKosten($becher, $this->rootTeam)['preis'])->toBeNull();   // kein Master-LA-Preis an der Freigabe vorbei
+    $stamm->setzePreisFreigabe($this->rootTeam, [$lieferant->id], $admin);
+    app()->forgetInstance(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);   // Artikel-Vorrat gilt je Instanz (= je Anfrage)
+    expect(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->stueckKosten($becher, $this->rootTeam)['preis'])->toBe(0.55);
+});
+
 it('★ Kommando hebt Master-GPs: Trockenlauf schreibt nichts, --apply macht sie global, --zurueck holt sie zurück', function () {
     $a = FoodAlchemistGp::create(['team_id' => $this->master->id, 'gp_key' => 'limette||saft', 'name' => 'Limette: Saft', 'status' => 'tentative']);
     $b = FoodAlchemistGp::create(['team_id' => $this->master->id, 'gp_key' => 'deckel||achenbach', 'name' => 'Deckel: für Achenbachglas', 'status' => 'tentative']);

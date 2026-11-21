@@ -78,7 +78,11 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <x-fa::button size="sm" variant="primary">Übernehmen</x-fa::button>
                     <x-fa::button size="sm">Als Vorlage</x-fa::button>
-                    <x-fa::icon-button icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" />
+                    <x-fa::menu data-katalog-menue>
+                        <x-fa::menu-item icon="heroicon-m-document-duplicate">Duplizieren (x-fa::menu)</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-m-archive-box" :schliessen="false">Bleibt offen</x-fa::menu-item>
+                        <x-fa::menu-item danger icon="heroicon-m-trash">Löschen</x-fa::menu-item>
+                    </x-fa::menu>
                     <x-fa::icon-button icon="heroicon-m-trash" label="Zeile entfernen" tone="danger" size="sm" />
                     <x-fa::button disabled>Deaktiviert</x-fa::button>
                 </div>

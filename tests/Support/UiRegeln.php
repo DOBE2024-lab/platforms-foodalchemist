@@ -46,6 +46,10 @@ final class UiRegeln
         // Chip; wo sie 1:1 auf x-fa::choice passt, wird sie dorthin umgestellt, sonst bleibt sie (Einzel-Booleans,
         // Alpine-x-model, Tag-für-Tag-Sperre, Häkchen-Symbol, title/truncate je Chip).
         'rohe_checkbox' => '/<input\b(?!(?:->|=>|[^>])*?\bsr-only\b)(?:->|=>|"[^"]*"|\'[^\']*\'|[^>"\'])*?\btype\s*=\s*["\']checkbox["\']/',
+        // Handgebautes Aufklapp-Menü statt x-fa::menu (1.4c): x-data="faMenu()" gehört in den Baustein.
+        // Bestand (1.4c): zwei Aufklapp-Panels ohne Menü-Liste (orders/index „Neue Bestellrunde“ als Dialog, verkauf/vk-modal
+        // „KI-Assistent“ mit Knöpfen, die offen bleiben). Sie nutzen nur den faMenu-Helfer und brauchen einen eigenen Popover-Baustein.
+        'rohes_menue' => '/x-data\s*=\s*["\']faMenu\(\)["\']/',
         // Alte Tailwind-Palette statt Tokens (--fa-*).
         'alte_palette' => '/(?<![\w-])(?:text|bg|border(?:-[xytrbl])?|ring|ring-offset|divide|outline|from|via|to|placeholder|fill|stroke|decoration|accent|caret|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)(?![\w-])/',
     ];

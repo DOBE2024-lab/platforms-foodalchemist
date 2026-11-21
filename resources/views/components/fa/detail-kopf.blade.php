@@ -11,12 +11,9 @@
             {{ $slot }}
         </div>
         @isset($menue)
-            <div class="relative shrink-0" {{ \Platform\FoodAlchemist\Support\HandyLesemodus::attr('kopf.menue') }} x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
-                <x-fa::icon-button size="sm" icon="heroicon-m-ellipsis-horizontal" label="Weitere Aktionen" x-on:click="toggle($event)" aria-haspopup="menu" x-bind:aria-expanded="offen" />
-                <div class="hidden w-60 fa-surface shadow-lg py-1" x-bind:class="{ hidden: ! offen }" x-bind:style="pos" role="menu" x-on:click="offen = false">
-                    {{ $menue }}
-                </div>
-            </div>
+            <x-fa::menu class="shrink-0" size="sm" breite="60" data-fa-aendern="kopf.menue" :data-fa-aendern-frei="\Platform\FoodAlchemist\Support\HandyLesemodus::frei('kopf.menue')">
+                {{ $menue }}
+            </x-fa::menu>
         @endisset
     </div>
     @isset($badges)

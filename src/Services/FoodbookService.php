@@ -931,7 +931,7 @@ class FoodbookService
     public function setKapitelImage(Team $team, int $kapitelId, UploadedFile $file): string
     {
         $k = $this->ownedKapitel($team, $kapitelId);
-        app(FoodAlchemistMediaService::class)->delete($k->image_context_file_id, (string) $k->image_path, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
         $media = app(FoodAlchemistMediaService::class)->storeImage(
             $file, $team, 'foodalchemist.foodbook_chapter', $kapitelId, "foodalchemist/chapter/{$kapitelId}",
         );
@@ -943,7 +943,7 @@ class FoodbookService
     public function clearKapitelImage(Team $team, int $kapitelId): FoodAlchemistFoodbookKapitel
     {
         $k = $this->ownedKapitel($team, $kapitelId);
-        app(FoodAlchemistMediaService::class)->delete($k->image_context_file_id, (string) $k->image_path, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
         $k->update(['image_context_file_id' => null, 'image_path' => null]);
 
         return $k->refresh();
@@ -970,7 +970,7 @@ class FoodbookService
     {
         $img = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookChapterImage::findOrFail($imageId);
         $this->ownedKapitel($team, (int) $img->chapter_id); // Owner-Guard übers Kapitel
-        app(FoodAlchemistMediaService::class)->delete($img->context_file_id, (string) $img->path, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($img->context_file_id, (string) $img->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($img)]);
         $img->delete();
     }
 
@@ -2243,7 +2243,7 @@ class FoodbookService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $fb->{$spalte};
-        app(FoodAlchemistMediaService::class)->delete($fb->{$contextSpalte}, $alt, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($fb->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($fb, $spalte)]);
 
         $media = app(FoodAlchemistMediaService::class)->storeImage(
             $file,
@@ -2268,7 +2268,7 @@ class FoodbookService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $fb->{$spalte};
-        app(FoodAlchemistMediaService::class)->delete($fb->{$contextSpalte}, $alt, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($fb->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($fb, $spalte)]);
         $fb->update([
             $spalte => null,
             $contextSpalte => null,

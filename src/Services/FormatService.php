@@ -471,7 +471,7 @@ class FormatService
     public function clearImage(Team $team, int $imageId): void
     {
         $image = $this->ownedImage($team, $imageId);
-        app(FoodAlchemistMediaService::class)->delete($image->context_file_id, $image->path, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($image->context_file_id, $image->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($image)]);
         $warHero = (bool) $image->is_hero;
         $formatId = (int) $image->format_id;
         $image->delete();

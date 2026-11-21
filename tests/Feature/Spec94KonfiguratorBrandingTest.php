@@ -44,7 +44,7 @@ it('Veröffentlichen ohne „Gültig bis“ wird abgewiesen, mit Datum läuft de
     Livewire::test(KonfiguratorPraesentation::class, ['konfiguratorId' => $this->k->id])->assertSet('gueltigBis', $bis);
 });
 
-it('Logo- und Titelbild-Upload legen die Datei ab, Entfernen räumt sie; der Snapshot trägt das Branding', function () {
+it('Logo- und Titelbild-Upload legen die Datei ab, der Snapshot trägt das Branding und hält die Datei beim Entfernen', function () {
     config(['filesystems.default' => 'public']);
     Storage::fake('public');
 
@@ -67,7 +67,8 @@ it('Logo- und Titelbild-Upload legen die Datei ab, Entfernen räumt sie; der Sna
     $logo = $k->logo_path;
     $t->call('brandingLogoEntfernen');
     expect($this->k->fresh()->logo_path)->toBeNull();
-    Storage::disk('public')->assertMissing($logo);
+    // Bild-Löschschutz (CQ, Entscheid Kurator): der veröffentlichte Link zeigt das Logo noch → die Datei bleibt bis zum Republish.
+    Storage::disk('public')->assertExists($logo);
 });
 
 it('Ein übernommenes Logo wird beim Ersetzen am Konfigurator nicht beim Foodbook gelöscht', function () {

@@ -8,6 +8,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarteRubrik;
+use Platform\FoodAlchemist\Support\BildVerweise;
 
 /**
  * Optionales Logo je Kapitel (Präsentation 2026-11-13) für alle Präsentationsarten:
@@ -33,7 +34,7 @@ final class KapitelLogoService
         $alt = [$k->logo_context_file_id, $k->logo_path];
         $neu = $this->media->storeImage($datei, $team, $contextTyp, $kapitelId, "{$ordner}/{$kapitelId}/logo");
         $k->forceFill(['logo_context_file_id' => $neu['context_file_id'], 'logo_path' => $neu['path']])->save();
-        $this->alteDateiLoeschen($team, $alt[0], $alt[1]);
+        $this->alteDateiLoeschen($team, $k, $alt[0], $alt[1]);
 
         return $neu;
     }
@@ -43,7 +44,7 @@ final class KapitelLogoService
         $k = $this->eigenesKapitel($team, $art, $kapitelId);
         $alt = [$k->logo_context_file_id, $k->logo_path];
         $k->forceFill(['logo_context_file_id' => null, 'logo_path' => null])->save();
-        $this->alteDateiLoeschen($team, $alt[0], $alt[1]);
+        $this->alteDateiLoeschen($team, $k, $alt[0], $alt[1]);
     }
 
     /** Logo-URL für die Bearbeitungs-Oberfläche (null = kein Logo). */
@@ -73,20 +74,11 @@ final class KapitelLogoService
     }
 
     /**
-     * Datei nur löschen, wenn kein anderes Kapitel (z. B. aus einer Foodbook-Kopie) sie noch nutzt.
+     * Datei nur löschen, wenn keine andere Zeile (z. B. ein Kapitel aus einer Foodbook-Kopie) sie noch nutzt — zentrale Prüfung
+     * über alle Bild-Felder (BildVerweise), gelöschte Zeilen zählen mit.
      */
-    private function alteDateiLoeschen(Team $team, ?int $contextFileId, ?string $pfad): void
+    private function alteDateiLoeschen(Team $team, Model $k, ?int $contextFileId, ?string $pfad): void
     {
-        if (! $contextFileId && trim((string) $pfad) === '') {
-            return;
-        }
-        foreach (self::ARTEN as [$klasse]) {
-            $q = $klasse::withTrashed();   // auch gelöschte Kapitel: Wiederherstellen braucht die Datei
-            $genutzt = $contextFileId ? $q->where('logo_context_file_id', $contextFileId)->exists() : $q->where('logo_path', $pfad)->exists();
-            if ($genutzt) {
-                return;
-            }
-        }
-        $this->media->delete($contextFileId, $pfad, $team);
+        $this->media->loescheWennUnbenutzt($contextFileId, $pfad, $team, [BildVerweise::eigen($k, 'logo_path')]);
     }
 }

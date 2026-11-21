@@ -3,11 +3,14 @@
 namespace Platform\FoodAlchemist\Services;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
 use Platform\Core\Models\ContextFile;
 use Platform\Core\Models\Team;
 use Platform\Core\Services\ContextFileService;
+use Platform\FoodAlchemist\Support\BildVerweise;
 
 class FoodAlchemistMediaService
 {
@@ -135,6 +138,145 @@ class FoodAlchemistMediaService
         }
     }
 
+    /**
+     * Bild-Löschschutz (CQ PR 1): Datei nur löschen, wenn sie keine andere Zeile mehr nutzt (BildVerweise::REGISTER — alle Teams,
+     * gelöschte Zeilen zählen mit). Kopien und Fassungen teilen die Datei mit ihrer Quelle; noch genutzt → nichts tun, der Aufrufer
+     * leert nur seine Spalte. Unbenutzt, aber Datei eines anderen Teams → still überspringen (statt 403), nur Log.
+     *
+     * @param  list<array{tabelle:string, id:int, spalte?:?string, schluessel?:?string}>  $ausser  eigene Verweise des Aufrufers
+     *                                                                                           (BildVerweise::eigen), zählen nicht als Nutzung
+     */
+    public function loescheWennUnbenutzt(?int $contextFileId, ?string $legacyPath, Team $team, array $ausser = []): void
+    {
+        $contextFileId = $contextFileId ?: null;
+        $legacyPath = trim((string) $legacyPath);
+        if ($contextFileId === null && $legacyPath === '') {
+            return;
+        }
+        if ($this->wirdGenutzt($contextFileId, $legacyPath, isset($ausser['tabelle']) ? [$ausser] : $ausser)) {
+            return;
+        }
+        if ($contextFileId !== null) {
+            $datei = ContextFile::query()->withoutGlobalScopes()->find($contextFileId);
+            if ($datei === null) {
+                return;   // Datei schon weg — nichts zu löschen
+            }
+            if ((int) $datei->team_id !== (int) $team->id) {
+                Log::info('Bild nicht gelöscht: Datei gehört einem anderen Team.', [
+                    'context_file_id' => $contextFileId, 'team_id' => $team->id, 'datei_team_id' => $datei->team_id,
+                ]);
+
+                return;
+            }
+        }
+        $this->delete($contextFileId, $legacyPath, $team);
+    }
+
+    /**
+     * Nutzt irgendeine Zeile aus BildVerweise::REGISTER die Datei (context_file_id ODER Pfad)? Ohne Team-Sicht und globale Scopes,
+     * gelöschte Zeilen eingeschlossen. $ausser nimmt die eigenen Verweise des Aufrufers aus.
+     *
+     * @param  list<array{tabelle:string, id:int, spalte?:?string, schluessel?:?string}>  $ausser
+     */
+    public function wirdGenutzt(?int $contextFileId, string $pfad, array $ausser = []): bool
+    {
+        foreach (BildVerweise::REGISTER as $tabelle => $verweise) {
+            foreach ($verweise as $verweis) {
+                if (isset($verweis['json'])) {
+                    if ($this->jsonNutzt($tabelle, $verweis['json'], $contextFileId, $pfad, $ausser)) {
+                        return true;
+                    }
+
+                    continue;
+                }
+                [$idSpalte, $pfadSpalte] = $verweis;
+                $eigene = array_map(fn ($a) => (int) $a['id'], array_filter($ausser, fn ($a) => $a['tabelle'] === $tabelle
+                    && in_array($a['spalte'] ?? null, [null, $idSpalte, $pfadSpalte], true)));
+                $genutzt = DB::table($tabelle)
+                    ->where(function ($w) use ($idSpalte, $pfadSpalte, $contextFileId, $pfad) {
+                        if ($contextFileId !== null) {
+                            $w->orWhere($idSpalte, $contextFileId);
+                        }
+                        if ($pfad !== '') {
+                            $w->orWhere($pfadSpalte, $pfad);
+                        }
+                    })
+                    ->when($eigene !== [], fn ($q) => $q->whereNotIn('id', array_values($eigene)))
+                    ->exists();
+                if ($genutzt) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * JSON-Spalte: Einträge {context_file_id, path} in beliebiger Tiefe. Erst grob per LIKE vorfiltern (keine Volltabellen-Decodierung
+     * je Löschung), dann exakt in PHP prüfen (JSON-Text je DB verschieden: Leerzeichen, escapte Slashes, Zahl oder String).
+     */
+    private function jsonNutzt(string $tabelle, string $spalte, ?int $contextFileId, string $pfad, array $ausser): bool
+    {
+        $muster = [];
+        if ($contextFileId !== null) {
+            foreach ([':', ': '] as $trenner) {
+                foreach (["{$contextFileId},", "{$contextFileId}}", "\"{$contextFileId}\""] as $wert) {
+                    $muster[] = '%"context_file_id"'.$trenner.$wert.'%';
+                }
+            }
+        }
+        $dateiname = $pfad !== '' ? basename($pfad) : '';
+        if ($dateiname !== '') {
+            $muster[] = '%'.$dateiname.'%';   // Dateiname enthält keinen Slash → trifft escapte wie unescapte Pfade
+        }
+        if ($muster === []) {
+            return false;
+        }
+        $eigene = array_values(array_filter($ausser, fn ($a) => $a['tabelle'] === $tabelle && in_array($a['spalte'] ?? null, [null, $spalte], true)));
+        $kandidaten = DB::table($tabelle)->whereNotNull($spalte)
+            ->where(function ($w) use ($spalte, $muster) {
+                foreach ($muster as $m) {
+                    $w->orWhere($spalte, 'like', $m);
+                }
+            })
+            ->select(['id', $spalte]);
+        foreach ($kandidaten->lazyById(200) as $zeile) {
+            $daten = json_decode((string) $zeile->{$spalte}, true);
+            foreach (is_array($daten) ? $daten : [] as $schluessel => $eintrag) {
+                foreach ($eigene as $a) {
+                    if ((int) $a['id'] === (int) $zeile->id && (($a['schluessel'] ?? null) === null || (string) $a['schluessel'] === (string) $schluessel)) {
+                        continue 2;
+                    }
+                }
+                if ($this->eintragNutzt($eintrag, $contextFileId, $pfad)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function eintragNutzt(mixed $eintrag, ?int $contextFileId, string $pfad): bool
+    {
+        if (! is_array($eintrag)) {
+            return false;
+        }
+        if (($contextFileId !== null && (int) ($eintrag['context_file_id'] ?? 0) === $contextFileId)
+            || ($pfad !== '' && is_string($eintrag['path'] ?? null) && $eintrag['path'] === $pfad)) {
+            return true;
+        }
+        foreach ($eintrag as $kind) {
+            if ($this->eintragNutzt($kind, $contextFileId, $pfad)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Direkt löschen, OHNE Nutzungsprüfung — nur für Dateien, die nie geteilt werden (Schriften, BildVerweise::AUSNAHMEN). */
     public function delete(?int $contextFileId, ?string $legacyPath, Team $team): void
     {
         if ($contextFileId !== null) {

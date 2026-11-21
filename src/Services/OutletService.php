@@ -72,7 +72,7 @@ class OutletService
     {
         $o = $this->eigenes($team, $id);
         $media = app(FoodAlchemistMediaService::class);
-        $media->delete($o->logo_context_file_id, (string) $o->logo_path, $team);
+        $media->loescheWennUnbenutzt($o->logo_context_file_id, (string) $o->logo_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($o, 'logo_path')]);
         $res = $media->storeImage($datei, $team, 'foodalchemist.outlet', $o->id, "foodalchemist/outlet-logo/{$o->id}");
         $o->update(['logo_path' => $res['path'], 'logo_context_file_id' => $res['context_file_id']]);
 
@@ -83,7 +83,7 @@ class OutletService
     public function logoEntfernen(Team $team, int $id): FoodAlchemistOutlet
     {
         $o = $this->eigenes($team, $id);
-        app(FoodAlchemistMediaService::class)->delete($o->logo_context_file_id, (string) $o->logo_path, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($o->logo_context_file_id, (string) $o->logo_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($o, 'logo_path')]);
         $o->update(['logo_path' => null, 'logo_context_file_id' => null]);
 
         return $o;

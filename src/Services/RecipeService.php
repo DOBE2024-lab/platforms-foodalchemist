@@ -442,7 +442,7 @@ class RecipeService
     {
         $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($id);
         \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'das Rezeptbild');   // Spec 84 §4.0
-        app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->delete($recipe->image_context_file_id, (string) $recipe->image_path, $team);
+        app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($recipe->image_context_file_id, (string) $recipe->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($recipe, 'image_path')]);
         $media = app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->storeImage(
             $file, $team, 'foodalchemist.recipe', $id, "foodalchemist/recipe/{$id}",
         );
@@ -455,7 +455,7 @@ class RecipeService
     {
         $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($id);
         \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'das Rezeptbild');   // Spec 84 §4.0
-        app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->delete($recipe->image_context_file_id, (string) $recipe->image_path, $team);
+        app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($recipe->image_context_file_id, (string) $recipe->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($recipe, 'image_path')]);
         $recipe->update(['image_context_file_id' => null, 'image_path' => null]);
     }
 

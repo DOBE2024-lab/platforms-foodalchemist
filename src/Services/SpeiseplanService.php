@@ -2836,7 +2836,7 @@ class SpeiseplanService
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
         $this->guard($plan, $team);
         $contextSpalte = $spalte === 'logo_path' ? 'logo_context_file_id' : 'cover_context_file_id';
-        app(FoodAlchemistMediaService::class)->delete($plan->{$contextSpalte}, (string) $plan->{$spalte}, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($plan->{$contextSpalte}, (string) $plan->{$spalte}, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($plan, $spalte)]);
 
         $media = app(FoodAlchemistMediaService::class)->storeImage(
             $file, $team, 'foodalchemist.speiseplan', $planId, "foodalchemist/branding/speiseplan/{$planId}",
@@ -2851,7 +2851,7 @@ class SpeiseplanService
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
         $this->guard($plan, $team);
         $contextSpalte = $spalte === 'logo_path' ? 'logo_context_file_id' : 'cover_context_file_id';
-        app(FoodAlchemistMediaService::class)->delete($plan->{$contextSpalte}, (string) $plan->{$spalte}, $team);
+        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($plan->{$contextSpalte}, (string) $plan->{$spalte}, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($plan, $spalte)]);
         $plan->update([$spalte => null, $contextSpalte => null]);
 
         return $plan->refresh();

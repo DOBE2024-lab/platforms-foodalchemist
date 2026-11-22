@@ -37,9 +37,7 @@ class FassungSignalService
     private const BAUSTEIN_LABEL = ['concept' => 'Konzept', 'paket' => 'Paket', 'format' => 'Format'];
 
     /** EU-Allergene in der Schreibweise des Hauses. */
-    private const ALLERGENE = ['gluten' => 'Gluten', 'crustaceans' => 'Krebstiere', 'eggs' => 'Eier', 'fish' => 'Fisch', 'peanuts' => 'Erdnüsse', 'soy' => 'Soja',
-        'milk' => 'Milch', 'tree_nuts' => 'Schalenfrüchte', 'celery' => 'Sellerie', 'mustard' => 'Senf', 'sesame' => 'Sesam', 'sulphites' => 'Sulfite',
-        'lupin' => 'Lupinen', 'molluscs' => 'Weichtiere'];
+    private const ALLERGENE = \Platform\FoodAlchemist\Support\Allergene::KURZ;
 
     public function __construct(private readonly SignalService $signale, private readonly FassungsVergleich $vergleich) {}
 

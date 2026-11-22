@@ -261,3 +261,25 @@ it('Text-Normalisierer: keine neuen Umlaut-Tabellen außerhalb von Support/Text 
 
     expect($abweichung)->toBe([], implode("\n", $abweichung));
 });
+
+it('Allergen-Labels: keine eigene Label-Karte außerhalb von Support/Allergene (CQ 2.2b)', function () {
+    $wurzel = dirname(__DIR__, 2);
+    $treffer = [];
+    foreach (['src', 'resources/views'] as $ordner) {
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($wurzel . '/' . $ordner, FilesystemIterator::SKIP_DOTS));
+        foreach ($it as $datei) {
+            if (! str_ends_with($datei->getFilename(), '.php')) {
+                continue;
+            }
+            $rel = substr($datei->getPathname(), strlen($wurzel) + 1);
+            foreach (file($datei->getPathname()) as $zeile) {
+                // Schlüssel → deutsches Label; Eingangs-Mappings (Necta: 'crustaceans' => 'allergen_crustaceans') treffen nicht.
+                if (preg_match("/'(crustaceans|molluscs|sulphites)'\s*=>\s*'[A-ZÄÖÜ]/u", $zeile) === 1) {
+                    $treffer[$rel] = ($treffer[$rel] ?? 0) + 1;
+                }
+            }
+        }
+    }
+
+    expect($treffer)->toBe(['src/Support/Allergene.php' => 6], 'Allergen-Labels aus Support\Allergene::LANG/KURZ lesen');
+});

@@ -178,7 +178,7 @@ final class LeistungsRegelPruefung
                 throw new \InvalidArgumentException('Planung: Menge je Einheit, je Gast oder je Stunde.');
             }
             if ($gp !== null) {
-                $name = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->whereKey($gp)->where('commodity_group_code', '16')->value('name');
+                $name = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->whereKey($gp)->whereIn('commodity_group_code', \Platform\FoodAlchemist\Support\WgRolle::codes(\Platform\FoodAlchemist\Support\WgRolle::NON_FOOD))->value('name');
                 if ($name === null) {
                     throw new \InvalidArgumentException("Planung: GP {$gp} ist kein sichtbares Non-Food-Grundprodukt (WG 16).");
                 }

@@ -415,7 +415,7 @@
                 </div>
 
                 {{-- Non-Food (Warengruppe 16): Maße in cm bzw. ml wie im Betrieb gesagt (gespeichert in mm); die Größe geht in den Namen (Regelwerk §6.5) --}}
-                @if(($builder['commodity_group_code'] ?? '') === '16')
+                @if(\Platform\FoodAlchemist\Support\WgRolle::istNonFood($builder['commodity_group_code'] ?? ''))
                     <div class="pt-3 border-t border-[var(--fa-line)] flex flex-col gap-2" data-gp-masse>
                         <p class="fa-t-muted">Maße, falls das Produkt eine Größe hat. Die Größe im Namen kommt aus Ø, sonst Länge x Breite x Höhe, sonst Volumen.</p>
                         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -433,7 +433,7 @@
                     </div>
                 @endif
 
-                @if(! $neu && $gp !== null && ($builder['commodity_group_code'] ?? '') !== '16')
+                @if(! $neu && $gp !== null && ! \Platform\FoodAlchemist\Support\WgRolle::istNonFood($builder['commodity_group_code'] ?? ''))
                     <div class="pt-3 border-t border-[var(--fa-line)]">
                         <x-fa::ki-header label="Zustand" field="zustand"
                             :source="$gp->condition_source" :confidence="$gp->condition_ai_confidence !== null ? (float) $gp->condition_ai_confidence : null"

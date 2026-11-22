@@ -320,7 +320,7 @@ class GpKandidatenSucher
         if ($profil === 'nonfood') {
             return $gp->istNonFood() ? null : 'kein Non-Food-GP (Non-Food-Artikel nur gegen WG 16)';   // kein Zustand, keine Warengruppen-Prüfung (§8.18)
         }
-        if ((string) $gp->commodity_group_code === '16') {
+        if (\Platform\FoodAlchemist\Support\WgRolle::istNonFood($gp->commodity_group_code)) {
             return 'Non-Food-GP (WG 16)';   // Food-Artikel gehört nie dorthin
         }
         if ($profil === 'ersatz') {

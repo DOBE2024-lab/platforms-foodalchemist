@@ -47,8 +47,8 @@ final class NonFoodRegeln
         'Büro & Sonstiges' => self::SUB_BUERO,
     ];
 
-    /** Warengruppen-Code und Name der Non-Food-Warengruppe. */
-    public const WG_CODE = '16';
+    /** Warengruppen-Code und Name der Non-Food-Warengruppe. Code = Anlage-Code der Rolle Non-Food (CQ 3.7); erkannt wird Non-Food über WgRolle::istNonFood. */
+    public const WG_CODE = WgRolle::STANDARD[WgRolle::NON_FOOD][0];
 
     public const WG_NAME = '16 Non-Food';
 

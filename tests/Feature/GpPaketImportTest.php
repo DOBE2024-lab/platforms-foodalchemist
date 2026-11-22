@@ -38,7 +38,7 @@ beforeEach(function () {
 
     $jetzt = now();
     foreach (['04' => 'Fleisch', '05' => 'Fisch', '11' => 'Öle & Fette', '13' => 'Convenience'] as $code => $name) {
-        DB::table('foodalchemist_lookup_commodity_groups')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'code' => $code, 'name' => $name, 'sort_order' => (int) $code, 'created_at' => $jetzt, 'updated_at' => $jetzt]);
+        DB::table('foodalchemist_lookup_commodity_groups')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'code' => $code, 'name' => $name, 'sort_order' => (int) $code, 'created_at' => $jetzt, 'updated_at' => $jetzt] + \Platform\FoodAlchemist\Support\WgRolle::standardFlags($code));
     }
     foreach (['stk' => 'Stück', 'zehe' => 'Zehe'] as $slug => $de) {
         DB::table('foodalchemist_vocab_units')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'slug' => $slug, 'display_de' => $de, 'sort_order' => 1, 'created_at' => $jetzt, 'updated_at' => $jetzt]);

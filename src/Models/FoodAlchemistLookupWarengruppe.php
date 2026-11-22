@@ -18,12 +18,30 @@ class FoodAlchemistLookupWarengruppe extends Model
 
     protected $table = 'foodalchemist_lookup_commodity_groups';
 
-    protected $fillable = ['uuid', 'team_id', 'code', 'name', 'sort_order'];
+    protected $fillable = ['uuid', 'team_id', 'code', 'name', 'sort_order', 'is_getraenk', 'is_non_food', 'is_kuehl', 'is_fertig'];
 
     protected $casts = [
         'uuid' => 'string',
         'sort_order' => 'integer',
+        'is_getraenk' => 'boolean',
+        'is_non_food' => 'boolean',
+        'is_kuehl' => 'boolean',
+        'is_fertig' => 'boolean',
     ];
+
+    /** CQ 3.7: neue Zeilen bekommen die Standard-Rollen ihres Codes (WgRolle::STANDARD), sofern nicht ausdrücklich gesetzt. */
+    protected static function booted(): void
+    {
+        static::creating(function (self $wg) {
+            foreach (\Platform\FoodAlchemist\Support\WgRolle::standardFlags($wg->code) as $spalte => $flag) {
+                if ($wg->getAttribute($spalte) === null) {
+                    $wg->setAttribute($spalte, $flag);
+                }
+            }
+        });
+        static::saved(fn () => \Platform\FoodAlchemist\Support\WgRolle::vergessen());
+        static::deleted(fn () => \Platform\FoodAlchemist\Support\WgRolle::vergessen());
+    }
 
     public function gps(): HasMany
     {

@@ -180,7 +180,7 @@ class NaehrwertPruefService
             $hart('H3', 'saturated_fat', $z['saturated_fat'], '≤ Fett ' . $this->kurz($z['fat']), '„davon gesättigte Fettsäuren“ größer als das Fett');
         }
         // H4 Energie (nicht Getränke: Alkohol fehlt dort oft; nur wenn kcal und alle drei Makros deklariert)
-        if ($wg !== '15' && $z['energy_kcal'] !== null && $z['fat'] !== null && $z['protein'] !== null && $z['carbs_absorbable'] !== null) {
+        if (! \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg) && $z['energy_kcal'] !== null && $z['fat'] !== null && $z['protein'] !== null && $z['carbs_absorbable'] !== null) {
             $at = $this->atwater($z);
             $d = abs($at - $z['energy_kcal']);
             if ($d > (float) $c['energie']['abstand_kcal'] && $d > (float) $c['energie']['anteil'] * max($at, $z['energy_kcal'])) {

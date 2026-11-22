@@ -375,15 +375,15 @@ class GpNamingService
         $wg = (string) ($in['warengruppe'] ?? $in['commodity_group_code'] ?? '');
         $merkmale = array_values(array_filter([
             trim((string) ($in['portion'] ?? '')) !== '' ? $this->normalisierePortion((string) $in['portion']) : '',
-            $wg === '15' ? trim((string) ($in['pflichtangabe'] ?? '')) : '',
-            $wg === '15' && in_array($this->normalisiereZustand($in['condition'] ?? null), ['TK', 'frisch'], true) ? (string) $this->normalisiereZustand($in['condition']) : '',
+            \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg) ? trim((string) ($in['pflichtangabe'] ?? '')) : '',
+            \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg) && in_array($this->normalisiereZustand($in['condition'] ?? null), ['TK', 'frisch'], true) ? (string) $this->normalisiereZustand($in['condition']) : '',
             implode(' ', $fett),
             \Platform\FoodAlchemist\Support\GpNamensKlammern::land($in['herkunft_land'] ?? null),
             ! empty($in['msc']) ? 'msc' : (! empty($in['asc']) ? 'asc' : ''),
         ], fn ($m) => $m !== ''));
         if ($degeneriert) {
             $zustand = (string) $this->normalisiereZustand($in['condition'] ?? null);
-            $pflicht = $wg === '15' ? '' : trim((string) (\Platform\FoodAlchemist\Support\FettAngabe::ziehe((string) ($in['pflichtangabe'] ?? ''))[1] ?? ($in['pflichtangabe'] ?? '')));
+            $pflicht = \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg) ? '' : trim((string) (\Platform\FoodAlchemist\Support\FettAngabe::ziehe((string) ($in['pflichtangabe'] ?? ''))[1] ?? ($in['pflichtangabe'] ?? '')));
             $merkmale = array_values(array_filter([
                 in_array($zustand, $merkmale, true) ? '' : $zustand,
                 $pflicht,
@@ -640,7 +640,7 @@ class GpNamingService
         if (str_contains($sub, 'sirup')) {
             return true;
         }
-        if ($wg === '15') {
+        if (\Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg)) {
             // Ausnahme (Kurator/Klaus 26.10.): Kaffee, Tee und Kakaogetränkepulver sind Grundstoffe und behalten „trocken“. 829 R6 (v3.10, 13.11.2026):
             // TK und frisch bleiben sichtbar und trennen (`Eiswürfel: TK`, `Grapefruitsaft: frisch, PET-Flasche 1 l`); sonst trinkfertig ohne Zustand
             return ! in_array($this->normalisiereZustand($in['condition'] ?? null), ['trocken', 'TK', 'frisch'], true);
@@ -662,7 +662,7 @@ class GpNamingService
     /** Warengruppe 16 (Non-Food)? Die WG steht in den strukturierten Feldern als `warengruppe` oder `commodity_group_code`. */
     private function istNonFood(array $in): bool
     {
-        return (string) ($in['warengruppe'] ?? $in['commodity_group_code'] ?? '') === \Platform\FoodAlchemist\Support\NonFoodRegeln::WG_CODE;
+        return \Platform\FoodAlchemist\Support\WgRolle::istNonFood($in['warengruppe'] ?? $in['commodity_group_code'] ?? '');
     }
 
     /**

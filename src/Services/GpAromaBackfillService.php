@@ -309,7 +309,7 @@ class GpAromaBackfillService
             ->when($scope !== null, fn ($q) => $q->where(fn ($w) => $w->where('g.team_id', $scope->id)
                 ->when(\Platform\FoodAlchemist\Support\MasterTeam::istMaster($scope), fn ($m) => $m->orWhereNull('g.team_id'))))
             ->where('g.is_platzhalter', false)->whereIn('g.status', ['approved', 'tentative'])
-            ->where(fn ($w) => $w->whereNull('g.commodity_group_code')->orWhere('g.commodity_group_code', '!=', \Platform\FoodAlchemist\Support\NonFoodRegeln::WG_CODE))
+            ->where(fn ($w) => $w->whereNull('g.commodity_group_code')->orWhereNotIn('g.commodity_group_code', \Platform\FoodAlchemist\Support\WgRolle::codes(\Platform\FoodAlchemist\Support\WgRolle::NON_FOOD)))
             ->orderBy('g.id');
     }
 

@@ -247,7 +247,7 @@ class GpFelderPlanService
             $key === $n->gpKeyAusFeldern($altSlug, $altIn) => $n->gpKeyAusFeldern($neuSlug, $neuIn),
             $key === $n->buildGpKey($altSlug, $altIn['processing'] ?? null, $altIn['form'] ?? null, $altIn['flavor'] ?? null, $altIn['zusatz'] ?? null)
                 // Getränke (828 R1): Gebinde + Füllmenge trennen am Schlüssel — Alt-Schlüssel in Kurzform wandern in die Feld-Form mit Merkmal-Slot
-                => (string) ($neuIn['warengruppe'] ?? $neuIn['commodity_group_code'] ?? '') === '15'
+                => \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($neuIn['warengruppe'] ?? $neuIn['commodity_group_code'] ?? '')
                     ? $n->gpKeyAusFeldern($neuSlug, $neuIn)
                     : $n->buildGpKey($neuSlug, $neuIn['processing'] ?? null, $neuIn['form'] ?? null, $neuIn['flavor'] ?? null, $neuIn['zusatz'] ?? null),
             default => null,

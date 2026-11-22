@@ -49,10 +49,10 @@ class SteuerklasseService
         $kopf = trim((string) (($gp->main_ingredient_display ?? '') !== '' ? $gp->main_ingredient_display : strtok($name, ':')));
         $alkohol = preg_match('/vol-%/u', $name) === 1 || preg_match(self::ALKOHOL, $kopf) === 1;
 
-        if ($wg === '16') {
+        if (\Platform\FoodAlchemist\Support\WgRolle::istNonFood($wg)) {
             return 'regulaer';
         }
-        if ($wg === '15') {
+        if (\Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg)) {
             if ($alkohol || preg_match(self::GETRAENK_REGULAER_VORRANG, $kopf) === 1) {
                 return 'regulaer';
             }

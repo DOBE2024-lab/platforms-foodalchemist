@@ -35,7 +35,8 @@ beforeEach(function () {
     $this->modalName = [RecipeModal::class => 'recipe-modal', VkModal::class => 'vk-modal'];
 });
 
-dataset('rezept_modale', [RecipeModal::class, VkModal::class]);
+// Benannte Einträge: eine Liste aus zwei Klassennamen läse Pest sonst als Callable [Klasse, Methode] (Datensatz ungültig, Tests fehlen still)
+dataset('rezept_modale', ['Rezept-Modal' => [RecipeModal::class], 'VK-Modal' => [VkModal::class]]);
 
 it('Gerichtsbild: ohne eigene Bearbeitungssperre speichert der Upload nichts, mit Sperre schon', function (string $modal) {
     $rezept = $this->rezepte[$modal];

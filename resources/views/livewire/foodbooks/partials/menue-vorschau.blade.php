@@ -95,7 +95,7 @@
                 </section>
             @empty
                 <x-fa::empty icon="heroicon-o-queue-list" title="Noch keine Kapitel" compact>
-                    Im Editor Kapitel anlegen und Concepts einfügen.
+                    Im Editor Kapitel anlegen und Konzepte einfügen.
                 </x-fa::empty>
             @endforelse
         </div>

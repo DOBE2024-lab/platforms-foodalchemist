@@ -319,7 +319,7 @@
                 @if($eignungVorschlag !== null)
                     <x-fa::notice tone="info" title="Vorschlag: geeignet für" data-eignung-vorschlag>
                         <div class="flex flex-wrap gap-1.5">
-                            @foreach($eignungVorschlag['slugs'] as $slug => $typ)<x-fa::badge tone="info">{{ $typ === 'level' ? 'Niveau' : 'Sektor' }}: {{ $slug }}</x-fa::badge>@endforeach
+                            @foreach($eignungVorschlag['slugs'] as $slug => $typ)<x-fa::badge tone="info">{{ $typ === 'level' ? 'Niveau' : 'Sektor' }}: {{ \Platform\FoodAlchemist\Support\Labels::eignung($slug) }}</x-fa::badge>@endforeach
                         </div>
                         <div class="flex items-center gap-1.5 mt-2">
                             <x-fa::button size="sm" variant="primary" wire:click="eignungUebernehmen" data-eignung-uebernehmen>Eignung übernehmen</x-fa::button>
@@ -334,7 +334,7 @@
                             <span class="w-14 shrink-0 {{ $kleinLabel }}">{{ $lbl }}</span>
                             @forelse($eignungen as $e)
                                 <x-fa::badge :tone="$typ === 'sektor' ? 'neutral' : 'info'" wire:key="eig-{{ $typ }}-{{ $e->id }}" class="pr-0.5" title="{{ $e->source }}{{ $e->ai_confidence !== null ? ' · ' . round($e->ai_confidence * 100) . ' %' : '' }}">
-                                    {{ $e->{$slugSpalte} }}
+                                    {{ \Platform\FoodAlchemist\Support\Labels::eignung($e->{$slugSpalte}) }}
                                     <button type="button" wire:click="eignungEntfernen('{{ $typ }}', '{{ $e->{$slugSpalte} }}')" class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-[var(--fa-surface)]" aria-label="{{ $lbl }} {{ $e->{$slugSpalte} }} entfernen" title="Entfernen">@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                 </x-fa::badge>
                             @empty
@@ -384,13 +384,13 @@
             {{-- 7 · Verwendung: Concepts und Pakete mit einer Position auf dem Gericht, Rezepte mit dem Gericht als Komponente --}}
             <x-fa::section variant="plain" title="Wo verwendet?" icon="heroicon-o-link" :meta="$inConcepts->count() + $eltern->count()" data-vk-verwendung>
                 @if($inConcepts->isEmpty() && $eltern->isEmpty())
-                    <p class="fa-t-muted">In keinem Concept, Paket oder Rezept verwendet.</p>
+                    <p class="fa-t-muted">In keinem Konzept, Paket oder Rezept verwendet.</p>
                 @else
                     <div class="flex flex-col gap-0.5">
                         @foreach($inConcepts as $c)
                             <div class="flex items-center justify-between gap-3 px-2 py-1 text-[length:var(--fa-text-md)]" wire:key="vkc-{{ $c->id }}">
                                 <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $c->name }}</span>
-                                <span class="shrink-0 fa-t-muted">{{ $c->kind === 'paket' ? 'Paket' : 'Concept' }}</span>
+                                <span class="shrink-0 fa-t-muted">{{ $c->kind === 'paket' ? 'Paket' : 'Konzept' }}</span>
                             </div>
                         @endforeach
                         @foreach($eltern as $parent)

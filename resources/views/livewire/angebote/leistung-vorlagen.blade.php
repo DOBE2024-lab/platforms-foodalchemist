@@ -82,7 +82,7 @@
                                     <td class="text-right whitespace-nowrap">
                                         @if($eigen)
                                             <x-fa::button size="sm" variant="ghost" wire:click="aktivUmschalten({{ $v->id }})">{{ $v->aktiv ? 'Deaktivieren' : 'Aktivieren' }}</x-fa::button>
-                                            <x-fa::button size="sm" wire:click="bearbeiten({{ $v->id }})" data-lv-bearbeiten="{{ $v->id }}">Bearbeiten</x-fa::button>
+                                            <x-fa::button size="sm" wire:click="bearbeiten({{ $v->id }})" data-lv-bearbeiten="{{ $v->id }}">Ändern</x-fa::button>
                                             <x-fa::button size="sm" variant="danger" wire:click="loeschen({{ $v->id }})" wire:confirm="Vorlage „{{ $v->bezeichnung }}“ löschen? Kopien in Konfiguratoren bleiben.">Löschen</x-fa::button>
                                         @endif
                                     </td>

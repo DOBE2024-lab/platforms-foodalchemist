@@ -86,7 +86,7 @@ class ConceptService
     {
         return FoodAlchemistConcept::create([
             'team_id' => $team->id,
-            'name' => trim((string) ($in['name'] ?? 'Neues Concept')) ?: 'Neues Concept',
+            'name' => trim((string) ($in['name'] ?? 'Neues Konzept')) ?: 'Neues Konzept',
             'occasion' => $in['occasion'] ?? null,
             'level' => $in['level'] ?? null,
             'class' => $this->norm($in['class'] ?? null),
@@ -1163,7 +1163,7 @@ class ConceptService
     {
         $concept = $this->detail($team, $conceptId);
         if ($concept === null) {
-            throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Concept nicht sichtbar.');
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Konzept nicht sichtbar.');
         }
         $this->guardOwner($concept, $team);
         $nurLuecken = (bool) ($opt['nur_luecken'] ?? false);
@@ -1281,7 +1281,7 @@ class ConceptService
     {
         $concept = $this->detail($team, $conceptId);
         if ($concept === null) {
-            throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Concept nicht sichtbar.');
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Konzept nicht sichtbar.');
         }
         $dishes = [];
         foreach ($concept->slots as $slot) {

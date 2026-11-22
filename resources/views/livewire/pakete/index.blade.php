@@ -184,7 +184,7 @@
                             <x-fa::field label="Name" for="paket-name">
                                 <x-fa::input id="paket-name" wire:model="form.name" />
                             </x-fa::field>
-                            <x-fa::field label="Rolle" for="paket-rolle" hint="Frei wählbar. Im Concept tauschbar gegen Pakete derselben Rolle.">
+                            <x-fa::field label="Rolle" for="paket-rolle" hint="Frei wählbar. Im Konzept tauschbar gegen Pakete derselben Rolle.">
                                 <x-fa::input id="paket-rolle" wire:model="form.role" list="rollen-liste" placeholder="z. B. Vorspeise" />
                                 <datalist id="rollen-liste">@foreach($rollen as $r)<option value="{{ $r }}"></option>@endforeach</datalist>
                             </x-fa::field>
@@ -207,7 +207,7 @@
                 <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="neu">Neues Paket</x-fa::button>
             </x-slot:actions>
         </x-fa::page-header>
-        <p class="fa-t-muted max-w-[70ch]">Ein Paket ist ein bepreistes Bündel mehrerer Gerichte für eine Rolle. Im Concept lässt es sich gegen Pakete derselben Rolle tauschen.</p>
+        <p class="fa-t-muted max-w-[70ch]">Ein Paket ist ein bepreistes Bündel mehrerer Gerichte für eine Rolle. Im Konzept lässt es sich gegen Pakete derselben Rolle tauschen.</p>
 
         <x-fa::card class="overflow-hidden">
             <div class="max-h-[70vh] overflow-auto">

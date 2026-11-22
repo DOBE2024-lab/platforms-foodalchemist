@@ -66,7 +66,7 @@
                                     <td class="num align-top text-[var(--fa-ink-2)]">{{ $kat->sort_order }}</td>
                                     <td class="align-top">
                                         <div class="flex items-center justify-end gap-1">
-                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $kat->id }})" data-kat-edit>Bearbeiten</x-fa::button>
+                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $kat->id }})" data-kat-edit>Ändern</x-fa::button>
                                             <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $kat->label }}" size="sm">
                                                 <x-fa::menu-item :icon="$kat->active ? 'heroicon-m-eye-slash' : 'heroicon-m-eye'" wire:click="toggleActive({{ $kat->id }})">{{ $kat->active ? 'Kategorie deaktivieren' : 'Kategorie aktivieren' }}</x-fa::menu-item>
                                                 <div class="my-1 border-t border-[var(--fa-line)]"></div>

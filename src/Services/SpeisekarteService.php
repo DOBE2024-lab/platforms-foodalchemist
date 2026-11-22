@@ -514,7 +514,7 @@ class SpeisekarteService
         }
         $ok = \Platform\FoodAlchemist\Support\Verweisziel::sichtbar(FoodAlchemistConcept::class, $team)->echte()->whereKey($conceptId)->exists();
         if (! $ok) {
-            throw new \RuntimeException("concept_id {$conceptId} ist kein gültiges, sichtbares Concept.");
+            throw new \RuntimeException("Konzept Nr. {$conceptId} ist nicht gültig oder für dieses Team nicht sichtbar.");
         }
     }
 

@@ -521,14 +521,14 @@
                                         <button type="button" wire:click="blockEbene({{ $block->id }}, -1)" class="{{ $mini }}" title="Ausrücken" aria-label="Ausrücken">@svg('heroicon-m-arrow-left', 'w-3.5 h-3.5')</button>
                                         <button type="button" wire:click="blockEbene({{ $block->id }}, 1)" class="{{ $mini }}" title="Einrücken" aria-label="Einrücken">@svg('heroicon-m-arrow-right', 'w-3.5 h-3.5')</button>
                                         @if($block->type === 'concept_ref' && $block->concept_id)
-                                            <a href="{{ route('foodalchemist.concepter.index', ['edit' => $block->concept_id]) }}" target="_blank" class="{{ $mini }}" title="Im Concepter öffnen" aria-label="Im Concepter öffnen" data-angebot-block-concepter>@svg('heroicon-m-arrow-top-right-on-square', 'w-3.5 h-3.5')</a>
+                                            <a href="{{ route('foodalchemist.concepter.index', ['edit' => $block->concept_id]) }}" target="_blank" class="{{ $mini }}" title="Im Konzepter öffnen" aria-label="Im Konzepter öffnen" data-angebot-block-concepter>@svg('heroicon-m-arrow-top-right-on-square', 'w-3.5 h-3.5')</a>
                                         @endif
                                         <button type="button" wire:click="blockSichtbar({{ $block->id }})" class="{{ $block->visible ? $mini : 'inline-flex items-center gap-1 h-6 px-1.5 shrink-0 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-warn)] hover:bg-[var(--fa-warn-soft)]' }}"
                                                 title="{{ $block->visible ? 'Für den Kunden sichtbar, Klick: nur intern' : 'Nur intern, Klick: für den Kunden sichtbar' }}" aria-label="Sichtbarkeit umschalten">
                                             @if($block->visible)@svg('heroicon-m-eye', 'w-3.5 h-3.5')@else @svg('heroicon-m-eye-slash', 'w-3.5 h-3.5')<span>intern</span>@endif
                                         </button>
                                         @if($block->type !== 'spacer')
-                                            <button type="button" wire:click="blockBearbeiten({{ $block->id }})" class="{{ $mini }}" title="Bearbeiten und Notiz" aria-label="Bearbeiten">@svg('heroicon-m-pencil', 'w-3.5 h-3.5')</button>
+                                            <button type="button" wire:click="blockBearbeiten({{ $block->id }})" class="{{ $mini }}" title="Ändern und Notiz" aria-label="Ändern">@svg('heroicon-m-pencil', 'w-3.5 h-3.5')</button>
                                         @endif
                                         <button type="button" wire:click="blockRaus({{ $block->id }})" class="{{ $miniKrit }}" title="Entfernen" aria-label="Entfernen">@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                     </div>

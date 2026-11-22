@@ -308,7 +308,7 @@
                          schreibt nichts) — erst dieser Knopf legt die Planung an. --}}
                     @elseif($p['type'] === 'planung_start')
                         <div class="{{ $vorschlag }}" wire:key="vp-{{ $i }}" data-voice-proposal-planung>
-                            <p>Planung: <span class="font-semibold">{{ $ebeneText[$p['scope']] ?? $p['scope'] }}</span>@if($p['titel']), {{ $p['titel'] }}@endif</p>
+                            <p>Planung: <span class="font-semibold">{{ $ebeneText[$p['scope']] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($p['scope']) }}</span>@if($p['titel']), {{ $p['titel'] }}@endif</p>
                             <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $p['brief'] }}</p>
                             @if(!empty($p['leitplanken']))
                                 <div class="flex flex-wrap gap-1">
@@ -350,7 +350,7 @@
                          (VoiceModal::komponentenUebernehmen()). --}}
                     @elseif($p['type'] === 'komponenten_uebernahme')
                         <div class="{{ $vorschlag }}" wire:key="vp-{{ $i }}" data-voice-proposal-komponenten>
-                            <p>Vorschlag für die offene Planung: <span class="font-semibold">{{ $ebeneText[$p['scope']] ?? $p['scope'] }}</span></p>
+                            <p>Vorschlag für die offene Planung: <span class="font-semibold">{{ $ebeneText[$p['scope']] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($p['scope']) }}</span></p>
                             @if($p['brief'])
                                 <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">Auftrag: {{ $p['brief'] }}</p>
                             @endif

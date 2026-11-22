@@ -73,7 +73,7 @@
                         <x-fa::bearbeiten-leiste :zustand="$sperr" sofort />
                     @endif
                     @if($hauptSchritt === null && $detail['editierbar'])
-                        <x-fa::button size="sm" :variant="$sperrLesen ? 'ghost' : 'primary'" icon="heroicon-m-pencil-square" wire:click="$dispatch('produktion-editor.bearbeiten', { id: {{ $detail['id'] }} })" data-produktion-bearbeiten>Auftrag bearbeiten</x-fa::button>
+                        <x-fa::button size="sm" :variant="$sperrLesen ? 'ghost' : 'primary'" icon="heroicon-m-pencil-square" wire:click="$dispatch('produktion-editor.bearbeiten', { id: {{ $detail['id'] }} })" data-produktion-bearbeiten>Im Editor öffnen</x-fa::button>
                     @elseif($hauptSchritt !== null)
                         <x-fa::button size="sm" variant="primary" :icon="$statusIcon[$hauptSchritt->value] ?? null"
                             wire:click="setStatus('{{ $hauptSchritt->value }}')" wire:key="pstatus-{{ $hauptSchritt->value }}"
@@ -85,7 +85,7 @@
             @if($hatMenue)
                 <x-slot:menue>
                     @if($bearbeitenImMenue)
-                        <x-fa::menu-item icon="heroicon-m-pencil-square" wire:click="$dispatch('produktion-editor.bearbeiten', { id: {{ $detail['id'] }} })" data-produktion-bearbeiten>Auftrag bearbeiten</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-m-pencil-square" wire:click="$dispatch('produktion-editor.bearbeiten', { id: {{ $detail['id'] }} })" data-produktion-bearbeiten>Im Editor öffnen</x-fa::menu-item>
                     @endif
                     @foreach($vorwaerts as $z)
                         <x-fa::menu-item :icon="$statusIcon[$z->value] ?? null" wire:click="setStatus('{{ $z->value }}')" wire:key="pstatus-{{ $z->value }}"

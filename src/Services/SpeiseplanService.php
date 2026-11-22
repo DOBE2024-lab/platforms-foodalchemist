@@ -1624,7 +1624,7 @@ class SpeiseplanService
 
             return [$name, null];
         }
-        $typ = $e->concept_id !== null ? 'Concept' : 'Paket';
+        $typ = $e->concept_id !== null ? 'Konzept' : 'Paket';
         $n = $gerichte->count();
 
         return [$name, $typ . ($n > 0 ? ' · ' . $n . ' Gericht' . ($n === 1 ? '' : 'e') : '')];

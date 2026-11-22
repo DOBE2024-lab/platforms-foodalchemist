@@ -1068,7 +1068,7 @@
 @else
 <x-ui-page>
     <x-slot:navbar>
-        <x-foodalchemist::shell.page-navbar :title="$istWall ? 'Küchenmonitor' : 'Tagesplanung'" icon="heroicon-o-calendar-days" />
+        <x-foodalchemist::shell.page-navbar :title="$istWall ? 'Küchenmonitor' : 'Tagesplan'" icon="heroicon-o-calendar-days" />
     </x-slot:navbar>
 
     @php
@@ -1092,7 +1092,7 @@
                     <x-fa::button size="sm" variant="primary" icon="heroicon-o-pencil-square"
                                   :href="route('foodalchemist.produktion.tagesplan.editor', ['von' => $von, 'bis' => $bis, 'tage' => $tage, 'ansicht' => $ansicht])"
                                   wire:navigate x-data x-on:click="$dispatch('modal.open', { name: 'tagesplan-editor' })"
-                                  data-tagesplan-editor-link>Tagesplan bearbeiten</x-fa::button>
+                                  data-tagesplan-editor-link>Im Editor öffnen</x-fa::button>
                 @endif
             </div>
         </x-ui-page-actionbar>
@@ -1287,7 +1287,7 @@
 
         <livewire:foodalchemist.produktion.editor key="produktion-tagesplan--produktion.editor" />
 
-        <x-fa::modal name="tagesplan-editor" fullscreen dark-canvas title="Tagesplanung"
+        <x-fa::modal name="tagesplan-editor" fullscreen dark-canvas title="Tagesplan"
                                 :title-name="$ansicht === 'gericht' ? 'Nach Gerichten' : 'Nach Posten'"
                                 :close-via="'editorSchliessen'">
             <x-slot:actions>
@@ -1485,8 +1485,8 @@
             <section class="space-y-3" data-tagesplanung-dashboard>
                 <div class="flex flex-wrap items-end justify-between gap-3">
                     <div class="min-w-0">
-                        <p class="{{ $eyebrow }}">Küchenleiter-Dashboard</p>
-                        <h1 class="text-[length:var(--fa-text-2xl)] font-semibold tracking-tight text-[var(--fa-ink)]">Auslastung und Tageshorizont</h1>
+                        {{-- 98 · 2.4f B: ein Name je Seite (Navbar „Tagesplan“) — Eyebrow entfällt, die Zeile ist Abschnittsüberschrift --}}
+                        <h2 class="fa-t-h">Auslastung und Tageshorizont</h2>
                         <p class="mt-0.5 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] tabular-nums">
                             {{ \Illuminate\Support\Carbon::parse($dashboard['von'])->locale('de')->isoFormat('dd, DD.MM.YYYY') }}
                             bis {{ \Illuminate\Support\Carbon::parse($dashboard['bis'])->locale('de')->isoFormat('dd, DD.MM.YYYY') }}

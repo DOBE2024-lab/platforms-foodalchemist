@@ -142,7 +142,7 @@ class FormatKapitelService
         if ($kapitel->format_id !== null) {
             $name = $kapitel->format?->name ?? 'einem Format';
             throw new \RuntimeException('Dieses Kapitel kommt live aus dem Format „' . $name . '“ und nimmt keine eigenen Einträge auf. '
-                . 'Concepts und Pakete im Format pflegen oder für weitere Speisen ein eigenes Kapitel anlegen.');
+                . 'Konzepte und Pakete im Format pflegen oder für weitere Speisen ein eigenes Kapitel anlegen.');
         }
     }
 }

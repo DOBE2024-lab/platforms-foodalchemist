@@ -82,7 +82,7 @@
                     <x-fa::badge :tone="$statusTon[$plan->statusWert()->badgeVariant()] ?? 'neutral'">{{ $plan->statusWert()->label() }}</x-fa::badge>
                     <x-fa::button icon="heroicon-m-printer" :href="route('foodalchemist.speiseplan.dokument', $plan->id) . '?mahlzeit=' . $vorschauMahlzeit" target="_blank">Aushang drucken</x-fa::button>
                     <x-fa::button icon="heroicon-m-document-duplicate" wire:click="duplizieren" wire:confirm="Diesen Speiseplan mit allen Linien und Zellen als Kopie (Entwurf) anlegen?" data-sp-duplizieren>Plan duplizieren</x-fa::button>
-                    <x-fa::button variant="primary" icon="heroicon-m-pencil-square" wire:click="bearbeiten" data-sp-bearbeiten>Plan bearbeiten</x-fa::button>
+                    <x-fa::button variant="primary" icon="heroicon-m-pencil-square" wire:click="bearbeiten" data-sp-bearbeiten>Im Editor öffnen</x-fa::button>
                 </x-slot:actions>
             </x-fa::page-header>
 

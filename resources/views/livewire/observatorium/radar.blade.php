@@ -22,7 +22,7 @@
                     <circle cx="{{ $position['x'] }}" cy="{{ $position['y'] }}" r="17" fill="transparent"/>
                     @if($t->befragung_bestaetigt)<circle cx="{{ $position['x'] }}" cy="{{ $position['y'] }}" r="11.5" fill="none" stroke="var(--fa-gold-2)" stroke-width="2"/>@endif
                     <circle opacity="{{ $deck }}" cx="{{ $position['x'] }}" cy="{{ $position['y'] }}" r="7" fill="{{ $t->typ === 'hype' ? 'var(--obs-card)' : $farbe }}" stroke="{{ $farbe }}" stroke-width="2" @if($t->typ === 'hype') stroke-dasharray="3 2" @endif/>
-                    <title>{{ $t->name }} · {{ V::TYPEN[$t->typ] ?? $t->typ }} · {{ V::EBENEN[$t->ebene] ?? $t->ebene }}</title>
+                    <title>{{ $t->name }} · {{ V::TYPEN[$t->typ] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($t->typ) }} · {{ V::EBENEN[$t->ebene] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($t->ebene) }}</title>
                 </g>
             @endforeach
         </svg>

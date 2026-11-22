@@ -174,7 +174,7 @@ return [
             'group' => 'Übersicht',
             'items' => [
                 [
-                    'label' => 'Dashboard',
+                    'label' => 'Übersicht',
                     'route' => 'foodalchemist.dashboard',
                     'icon'  => 'heroicon-o-home',
                 ],
@@ -256,7 +256,7 @@ return [
                 ],
                 [
                     // M10R-5: vereinheitlichter Browser (Concepts | Pakete) + Voll-Editor-Modal.
-                    'label' => 'Concepter',
+                    'label' => 'Konzepter',
                     'route' => 'foodalchemist.concepter.index',
                     'icon'  => 'heroicon-o-square-3-stack-3d',
                 ],
@@ -281,7 +281,7 @@ return [
             'group' => 'Ausgabe',
             'items' => [
                 [
-                    'label' => 'Foodbook / Portfolio',
+                    'label' => 'Foodbooks',
                     'route' => 'foodalchemist.foodbooks.index',
                     'icon'  => 'heroicon-o-rectangle-stack',
                 ],
@@ -333,7 +333,7 @@ return [
                     'icon'  => 'heroicon-o-clock',
                 ],
                 [
-                    'label' => 'Wandmonitor',
+                    'label' => 'Küchenmonitor',
                     'route' => 'foodalchemist.produktion.wandmonitor',
                     'icon'  => 'heroicon-o-tv',
                 ],
@@ -594,7 +594,7 @@ return [
          */
         'vokabular_prompt' => 'Küchen- und Warenwirtschafts-Befehle für den Food Alchemist. '
             . 'Fachbegriffe: Basisrezept, Grundprodukt, Lieferantenartikel, Verkaufsgericht, '
-            . 'Speisekarte, Speiseplan, Foodbook, Concepter, Format, Aufschlagsklasse, '
+            . 'Speisekarte, Speiseplan, Foodbook, Konzepter, Format, Aufschlagsklasse, '
             . 'Speisen-Klasse, Darreichung, Warengruppe, Wareneinsatz, Allergene, Leitplanken, '
             . 'Planung, Kaskade, Bestellwesen, Produktion.',
     ],

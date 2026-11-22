@@ -17,7 +17,7 @@ class Demnaechst extends Component
      * fertige Bereiche „Fertig" enthalten (der View filtert darauf), `name` ist Schlüssel im View.
      */
     public const DOMAENEN = [
-        ['icon' => 'heroicon-o-book-open', 'name' => 'Foodbook / Portfolio', 'status' => 'Fertig, im Modul verfügbar',
+        ['icon' => 'heroicon-o-book-open', 'name' => 'Foodbooks', 'status' => 'Fertig, im Modul verfügbar',
             'idee' => 'Speisekarten und Menüs zusammenstellen: Kapitel mit Gerichten, Texten und Varianten, Verkaufstexte im Ton der Marke, Preisstand beim Versand festgehalten, PDF-Export.'],
         ['icon' => 'heroicon-o-calculator', 'name' => 'Kalkulation (HK2)', 'status' => 'Geplant, noch nicht terminiert',
             'idee' => 'Kalkulation auf Basis der Herstellkosten 2: Wareneinsatz plus Arbeitszeit mal Stundensatz plus Gemeinkosten-Zuschläge. Die Arbeitszeit je Rezept ist schon gepflegt.'],

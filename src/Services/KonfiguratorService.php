@@ -281,7 +281,7 @@ class KonfiguratorService
         $erlaubt = \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::query()->whereIn('concept_id', $conceptIds)->pluck('embedded_concept_id')->filter()->all();
         $gehoert = \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::query()->whereKey($slotId)->whereIn('concept_id', array_merge($conceptIds, $erlaubt))->exists();
         if (! $gehoert) {
-            throw new \InvalidArgumentException('Diese Position gehört zu keinem Concept dieses Konzepts.');
+            throw new \InvalidArgumentException('Diese Position gehört zu keinem verknüpften Konzept dieses Konfigurators.');
         }
         $payload = $konzept->payload_json ?? [];
         $overrides = $payload['wording_overrides'] ?? [];
@@ -650,11 +650,11 @@ class KonfiguratorService
         $ziel = array_merge($bisher?->only(self::KONZEPT_FELDER) ?? [], $w);
         foreach (['lunch_concept_id', 'dinner_concept_id'] as $f) {
             if (($ziel[$f] ?? null) !== null && ! FoodAlchemistConcept::visibleToTeam($team)->whereKey($ziel[$f])->exists()) {
-                throw new \InvalidArgumentException('Das Concept gibt es nicht oder es ist für dieses Team nicht sichtbar.');
+                throw new \InvalidArgumentException('Das Konzept gibt es nicht oder es ist für dieses Team nicht sichtbar.');
             }
         }
         if (in_array($rolle, ['haupt', 'getraenk'], true) && ($ziel['lunch_concept_id'] ?? null) === null && ($ziel['dinner_concept_id'] ?? null) === null) {
-            throw new \InvalidArgumentException($rolle === 'haupt' ? 'Ein Hauptkonzept braucht ein Lunch- oder ein Dinner-Concept.' : 'Ein Getränkepaket braucht ein Concept.');
+            throw new \InvalidArgumentException($rolle === 'haupt' ? 'Ein Hauptkonzept braucht ein Lunch- oder ein Dinner-Konzept.' : 'Ein Getränkepaket braucht ein Konzept.');
         }
         if ($rolle === 'getraenk') {
             return $this->getraenkWerte($k, $w, $ziel);
@@ -664,7 +664,7 @@ class KonfiguratorService
         }
         if ($rolle === 'addon') {
             if (($ziel['dinner_concept_id'] ?? null) === null) {
-                throw new \InvalidArgumentException('Ein Add-on braucht sein Concept.');
+                throw new \InvalidArgumentException('Ein Add-on braucht sein Konzept.');
             }
             $w['lunch_concept_id'] = null;
             if (isset($ziel['addon_tageszeit']) && ! in_array($ziel['addon_tageszeit'], FoodAlchemistKonfiguratorKonzept::ADDON_TAGESZEITEN, true)) {

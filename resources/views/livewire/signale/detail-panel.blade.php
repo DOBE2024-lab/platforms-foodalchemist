@@ -201,7 +201,7 @@
                                     </a>
                                 @elseif($it['kind'] === 'concept')
                                     {{-- Tranche C: der Concepter wählt über ?sel= vor (dasselbe Muster wie ?gp= bei den GPs) --}}
-                                    <a href="{{ route('foodalchemist.concepter.index', ['tab' => 'concepts', 'sel' => $it['id']]) }}" wire:navigate class="{{ $linkKlasse }}" title="Konzept im Concepter öffnen">
+                                    <a href="{{ route('foodalchemist.concepter.index', ['tab' => 'concepts', 'sel' => $it['id']]) }}" wire:navigate class="{{ $linkKlasse }}" title="Konzept im Konzepter öffnen">
                                         <span class="truncate">{{ $it['name'] }}</span>
                                     </a>
                                 @elseif($it['kind'] === 'la')

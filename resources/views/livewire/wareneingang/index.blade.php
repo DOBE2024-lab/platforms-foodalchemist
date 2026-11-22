@@ -244,7 +244,7 @@
                                             @if(! $eigenerBeleg)
                                                 <span class="fa-t-muted">nur lesend</span>
                                             @elseif($darf && $n['status'] === 'entwurf')
-                                                <x-fa::button size="sm" wire:click="bearbeiten({{ $n['id'] }})">Bearbeiten</x-fa::button>
+                                                <x-fa::button size="sm" wire:click="bearbeiten({{ $n['id'] }})">Ändern</x-fa::button>
                                                 <x-fa::button size="sm" variant="ghost" wire:click="loeschen({{ $n['id'] }})" wire:confirm="Entwurf löschen?">Löschen</x-fa::button>
                                             @elseif($darf && $n['status'] === 'gebucht')
                                                 <x-fa::button size="sm" variant="ghost" wire:click="stornieren({{ $n['id'] }})" wire:confirm="Lieferschein stornieren? Wareneingang und Lager werden zurückgebucht.">Stornieren</x-fa::button>

@@ -26,7 +26,7 @@
     <x-foodalchemist::shell.page-navbar title="Designsystem" icon="heroicon-o-swatch" />
 
     <div class="max-w-[1200px] mx-auto px-6 py-8 flex flex-col gap-8">
-        <x-fa::page-header title="Bausteine des Food.Alchemist" subtitle="Eine Quelle für jede Oberfläche. Neue Views nutzen nur diese Bausteine.">
+        <x-fa::page-header title="Designsystem" subtitle="Eine Quelle für jede Oberfläche. Neue Views nutzen nur diese Bausteine.">
             <x-slot:actions>
                 <x-fa::button icon="heroicon-m-arrow-top-right-on-square" :href="route('foodalchemist.recipes.index')">Beispiel: Basisrezepte</x-fa::button>
             </x-slot:actions>
@@ -205,6 +205,37 @@
                                 <td class="num text-[var(--fa-ink-2)]">{{ number_format($anteil, 1, ',', '.') }} %</td>
                                 <td class="num"><x-fa::money :value="$ek" /></td>
                             </tr>
+                        @endforeach
+                    </tbody>
+                </x-fa::table>
+            </div>
+        </x-fa::section>
+
+        {{-- 98 · 2.4f (U8): Begriffsliste — entschieden von Dominique am 22.11.2026. Gilt für sichtbare Texte; Routen,
+             Klassen, Livewire-Namen, data-Attribute und MCP-Beschreibungen bleiben. Wächter: tests/Feature/BegriffeWaechterTest. --}}
+        @php
+            $begriffe = [
+                ['Konzept, Konzepte', 'Concept, Concepts', 'Menü, Buffet oder Paket aus Gerichten. Überall in der Oberfläche.'],
+                ['Konzepter', 'Concepter', 'Name des Moduls in Navigation, Kopf und Titeln.'],
+                ['Bearbeiten', '–', 'Nur für den Bearbeiten-Modus (sperrt den Datensatz für andere). Kein Ansichts-Umschalter.'],
+                ['Im Editor öffnen', 'Plan bearbeiten, Karte bearbeiten …', 'Knopf, der einen Editor öffnet.'],
+                ['Ändern', 'Bearbeiten', 'Zeilen-Aktion, die ein Formular füllt.'],
+                ['Tagesplan', 'Tagesplanung, Küchenleiter-Dashboard', 'Eine Seite, ein Name in Navigation, Kopf und Titel.'],
+                ['Küchenmonitor', 'Wandmonitor', 'Anzeige an der Wand der Küche.'],
+                ['Übersicht', 'Dashboard, Food Alchemist', 'Startseite des Moduls.'],
+                ['Etiketten', 'Etikett drucken', 'Seitenname; Drucken ist die Aktion.'],
+                ['Foodbooks', 'Foodbook / Portfolio', 'Seitenname; Portfolio ist eine Ausgabeart.'],
+                ['Basisrezepte', 'Rezepte', 'Auch am Handy.'],
+                ['Nr. 12', '#12', 'Nummer zum Nennen. Technische Kennungen (Slug, UUID, Feldname) erscheinen nicht.'],
+            ];
+        @endphp
+        <x-fa::section title="Begriffe" icon="heroicon-o-language" description="Ein Name je Sache und Seite. Gilt für sichtbare Texte; Routen und technische Namen bleiben." data-katalog-begriffe="">
+            <div class="overflow-x-auto">
+                <x-fa::table class="min-w-[640px]">
+                    <thead><tr><th>Verwenden</th><th>Nicht verwenden</th><th>Wofür</th></tr></thead>
+                    <tbody>
+                        @foreach($begriffe as [$ja, $nein, $wofuer])
+                            <tr><td class="fa-t-strong">{{ $ja }}</td><td class="fa-t-muted">{{ $nein }}</td><td class="fa-t-muted">{{ $wofuer }}</td></tr>
                         @endforeach
                     </tbody>
                 </x-fa::table>

@@ -62,7 +62,7 @@ final class BlockReferenz
     private static function concept(Team $team, mixed $id): void
     {
         if ($id === null || $id === '' || ! Verweisziel::sichtbar(FoodAlchemistConcept::class, $team)->whereKey((int) $id)->exists()) {
-            throw new \RuntimeException('concept_ref-Block braucht ein sichtbares Concept oder Paket.');
+            throw new \RuntimeException('concept_ref-Block braucht ein sichtbares Konzept oder Paket.');
         }
     }
 }

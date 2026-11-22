@@ -95,9 +95,7 @@
         <x-fa::detail-kopf :title="$gp->name" :subtitle="$einordnung !== '' ? $einordnung : null">
             <x-slot:badges>
                 <x-fa::status :value="$gp->status" />
-                @if($gp->main_ingredient_slug !== null)
-                    <span class="inline-flex items-center h-[22px] px-2 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)] font-mono text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" title="Hauptzutat" data-gp-slug>{{ $gp->main_ingredient_slug }}</span>
-                @endif
+                {{-- 98 · 2.4f D: Slug der Hauptzutat ist eine technische Kennung — nicht mehr im Kopf --}}
                 @if($gp->is_derivat)<x-fa::badge tone="info">Derivat{{ $gp->derivedFrom ? ' von ' . $gp->derivedFrom->name : '' }}</x-fa::badge>@endif
                 @if($gp->is_platzhalter)<x-fa::badge>Platzhalter</x-fa::badge>@endif
             </x-slot:badges>
@@ -952,7 +950,7 @@
         </div>
 
         @if($section === null)
-        <p class="pt-3 border-t border-[var(--fa-line)] fa-t-muted"><span class="font-mono">{{ $gp->uuid }}</span>@if($gp->team_id === null)<span> · zentral gepflegt, für alle Teams</span>@endif</p>
+        @if($gp->team_id === null)<p class="pt-3 border-t border-[var(--fa-line)] fa-t-muted">Zentral gepflegt, für alle Teams</p>@endif{{-- 98 · 2.4f D: UUID ausgeblendet --}}
         @endif
         </fieldset>
     @endif

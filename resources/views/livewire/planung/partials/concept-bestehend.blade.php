@@ -6,13 +6,13 @@
     $bestehende = $this->bestehendeConcepts();
     $gewaehltBestehend = $planConceptId && $bestehende->contains('id', (int) $planConceptId);
 @endphp
-<x-fa::modal-section icon="heroicon-o-squares-2x2" title="Concept wählen" data-planung-concept-bestehend>
+<x-fa::modal-section icon="heroicon-o-squares-2x2" title="Konzept wählen" data-planung-concept-bestehend>
     <x-slot:actions>
-        <x-fa::badge :tone="$gewaehltBestehend ? 'accent' : 'neutral'">{{ $gewaehltBestehend ? 'Bestehendes Concept' : 'Neu aus Brief' }}</x-fa::badge>
+        <x-fa::badge :tone="$gewaehltBestehend ? 'accent' : 'neutral'">{{ $gewaehltBestehend ? 'Bestehendes Konzept' : 'Neu aus Brief' }}</x-fa::badge>
     </x-slot:actions>
-    <x-fa::field label="Bestehendes Concept" hint="Gewählt: Leitidee und Positionen dieses Concepts sind der Plan, erstellt werden nur die leeren Positionen. Leer: ein neues Concept aus dem Brief.">
+    <x-fa::field label="Bestehendes Konzept" hint="Gewählt: Leitidee und Positionen dieses Konzepts sind der Plan, erstellt werden nur die leeren Positionen. Leer: ein neues Konzept aus dem Brief.">
         <x-fa::select wire:change="bestehendesConceptWaehlen($event.target.value)" :disabled="$laeuft" data-planung-concept-auswahl>
-            <option value="">Neues Concept aus Brief</option>
+            <option value="">Neues Konzept aus Brief</option>
             @foreach($bestehende as $bc)
                 <option value="{{ $bc->id }}" @selected((int) $planConceptId === (int) $bc->id)>{{ $bc->name }}</option>
             @endforeach

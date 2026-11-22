@@ -624,7 +624,7 @@
                                         <tr wire:key="gpform-{{ $f->form_slug }}">
                                             <td class="font-medium">{{ $formLabel($f->form_slug) }}</td>
                                             <td class="num"><x-fa::menge :value="(float) $f->gramm" unit="g" :decimals="0" /></td>
-                                            <td><x-fa::badge :tone="$f->source === 'ki' ? 'accent' : 'neutral'">{{ $quelleLabel[$f->source] ?? $f->source }}</x-fa::badge></td>
+                                            <td><x-fa::badge :tone="$f->source === 'ki' ? 'accent' : 'neutral'">{{ $quelleLabel[$f->source] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($f->source) }}</x-fa::badge></td>
                                             <td class="text-right">
                                                 <x-fa::icon-button size="sm" tone="danger" icon="heroicon-m-x-mark" label="Form {{ $formLabel($f->form_slug) }} entfernen"
                                                     wire:click="formEntfernen('{{ $f->form_slug }}')" data-gp-form-remove />
@@ -677,7 +677,7 @@
                         <div class="flex flex-wrap gap-1.5" data-gp-anker-liste>
                             @forelse($gpAnker as $a)
                                 <x-fa::badge wire:key="ga-{{ $a->id }}" :tone="$a->role === 'kern' ? 'accent' : 'neutral'" :icon="$a->role === 'kern' ? 'heroicon-s-star' : null"
-                                    title="{{ $a->role === 'kern' ? 'Hauptanker' : 'Nebenanker' }} · {{ $quelleLabel[$a->source] ?? $a->source }}{{ $a->ai_confidence !== null ? ' ' . round($a->ai_confidence * 100) . ' %' : '' }}">
+                                    title="{{ $a->role === 'kern' ? 'Hauptanker' : 'Nebenanker' }} · {{ $quelleLabel[$a->source] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($a->source) }}{{ $a->ai_confidence !== null ? ' ' . round($a->ai_confidence * 100) . ' %' : '' }}">
                                     {{ $a->display_de }}@if(in_array($a->source, $patenQuellen, true))<span class="opacity-70" data-gp-anker-pate> · Pate</span>@endif
                                     <button type="button" wire:click="gpAnkerLoesen({{ $a->id }})" class="-mr-1 inline-flex items-center rounded-full hover:text-[var(--fa-crit)]" aria-label="Anker {{ $a->display_de }} lösen" title="Anker lösen" data-gp-anker-loesen>
                                         @svg('heroicon-m-x-mark', 'w-3.5 h-3.5')

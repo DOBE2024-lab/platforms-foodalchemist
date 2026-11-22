@@ -187,13 +187,13 @@
                                             <td class="font-mono">{{ $z['kuerzel'] }}</td>
                                             <td>{{ $z['lieferant'] ?? 'alle' }}</td>
                                             <td>{{ $z['position'] === 'ende' ? 'am Ende' : 'am Anfang' }}</td>
-                                            <td><x-fa::badge :tone="$typTon[$z['typ']] ?? 'neutral'">{{ $typLabel[$z['typ']] ?? $z['typ'] }}</x-fa::badge></td>
+                                            <td><x-fa::badge :tone="$typTon[$z['typ']] ?? 'neutral'">{{ $typLabel[$z['typ']] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($z['typ']) }}</x-fa::badge></td>
                                             <td class="text-right tabular-nums">{{ $z['vorrang'] }}</td>
                                             <td class="text-right tabular-nums" data-mk-gps>{{ $z['gps'] === null ? '–' : $fmt($z['gps']) }}</td>
                                             <td class="text-right tabular-nums" data-mk-artikel>{{ array_key_exists($z['id'], $artikelZahlen) ? $fmt($artikelZahlen[$z['id']]) : '–' }}</td>
                                             <td class="whitespace-nowrap text-right">
                                                 @if($darfPflegen)
-                                                    <x-fa::button size="sm" variant="ghost" wire:click="bearbeiten({{ $z['id'] }})" data-mk-bearbeiten>Bearbeiten</x-fa::button>
+                                                    <x-fa::button size="sm" variant="ghost" wire:click="bearbeiten({{ $z['id'] }})" data-mk-bearbeiten>Ändern</x-fa::button>
                                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-trash" wire:click="loeschen({{ $z['id'] }})"
                                                         wire:confirm="Eintrag {{ $z['kuerzel'] }} entfernen?" aria-label="Eintrag {{ $z['kuerzel'] }} entfernen" data-mk-loeschen />
                                                 @endif

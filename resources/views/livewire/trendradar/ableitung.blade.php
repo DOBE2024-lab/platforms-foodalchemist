@@ -41,7 +41,7 @@
                 @if($trend->ableitung_quelle !== 'manuell')
                     <x-fa::button size="sm" variant="ai" icon="heroicon-m-sparkles" wire:click="erzeugen" data-ableitung-erzeugen>{{ is_array($ab) && $ab !== [] ? 'Neu erzeugen' : 'Ableitung erzeugen' }}</x-fa::button>
                 @endif
-                <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="oeffnen">Bearbeiten</x-fa::button>
+                <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="oeffnen">Ändern</x-fa::button>
             </div>
         @endif
     </x-fa::section>

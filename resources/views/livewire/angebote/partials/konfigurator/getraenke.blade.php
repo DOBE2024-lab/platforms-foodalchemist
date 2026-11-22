@@ -13,9 +13,9 @@
     $vorschau = fn ($g) => collect($matrix['pakete'])->last()['faelle'] ?? [];
 @endphp
 
-<x-fa::section title="Getränkepaket hinzufügen" icon="heroicon-o-plus-circle" description="Concepts der Kategorie „Getränke“ (ohne diese Kategorie: Suche über alle Concepts). Der Preis läuft mit dem Concepter mit.">
+<x-fa::section title="Getränkepaket hinzufügen" icon="heroicon-o-plus-circle" description="Konzepte der Kategorie „Getränke“ (ohne diese Kategorie: Suche über alle Konzepte). Der Preis läuft mit dem Konzepter mit.">
     <div class="flex flex-wrap items-end gap-3">
-        <x-fa::field label="Concept suchen" for="kf-gsuche" class="w-80 max-w-full"><x-fa::input id="kf-gsuche" type="search" wire:model.live.debounce.300ms="getraenkSuche" placeholder="z. B. Softdrinks, Wein" data-kf-getraenk-suche /></x-fa::field>
+        <x-fa::field label="Konzept suchen" for="kf-gsuche" class="w-80 max-w-full"><x-fa::input id="kf-gsuche" type="search" wire:model.live.debounce.300ms="getraenkSuche" placeholder="z. B. Softdrinks, Wein" data-kf-getraenk-suche /></x-fa::field>
         <x-fa::choice name="getraenkZiel" label="Für" :options="['dinner' => 'Abend (Dinner)', 'lunch' => 'Tag (Lunch)']" />
         <x-fa::checkbox class="inline-flex items-center gap-2 pb-2" wire:model="form.getraenke_pflicht" data-kf-getraenke-pflicht>Getränke Pflicht im Link (sonst „ohne Getränke“ möglich, wirkt nach „Speichern“)</x-fa::checkbox>
     </div>
@@ -45,15 +45,15 @@
                     <x-fa::field label="Dauer" for="kfg-dauer" hint="je Stunde: Einsatzzeit aus der Kalkulation">
                         <x-fa::select id="kfg-dauer" wire:model="konzeptForm.getraenk_dauer" :options="['event' => 'Je Gast fürs ganze Event', 'stunde' => 'Je Gast und Stunde']" data-kfg-dauer />
                     </x-fa::field>
-                    <x-fa::field label="Staffel: Grundstunden" for="kfg-grund" optional hint="Concept-Preis gilt für so viele Stunden"><x-fa::input id="kfg-grund" wire:model="konzeptForm.grund_stunden" numeric data-kfg-grund /></x-fa::field>
+                    <x-fa::field label="Staffel: Grundstunden" for="kfg-grund" optional hint="Konzept-Preis gilt für so viele Stunden"><x-fa::input id="kfg-grund" wire:model="konzeptForm.grund_stunden" numeric data-kfg-grund /></x-fa::field>
                     <x-fa::field label="Staffel: je Folgestunde (€)" for="kfg-folge" optional hint="VK je Gast und weitere Stunde"><x-fa::input id="kfg-folge" wire:model="konzeptForm.folgestunde_satz" numeric data-kfg-folge /></x-fa::field>
-                    <x-fa::field label="Tag: Lunch-Concept (Id)" for="kfg-lunch" optional hint="leer = tagsüber nicht wählbar"><x-fa::input id="kfg-lunch" type="number" wire:model="konzeptForm.lunch_concept_id" /></x-fa::field>
-                    <x-fa::field label="Abend: Dinner-Concept (Id)" for="kfg-dinner" optional hint="leer = abends nicht wählbar"><x-fa::input id="kfg-dinner" type="number" wire:model="konzeptForm.dinner_concept_id" /></x-fa::field>
+                    <x-fa::field label="Tag: Lunch-Konzept (Id)" for="kfg-lunch" optional hint="leer = tagsüber nicht wählbar"><x-fa::input id="kfg-lunch" type="number" wire:model="konzeptForm.lunch_concept_id" /></x-fa::field>
+                    <x-fa::field label="Abend: Dinner-Konzept (Id)" for="kfg-dinner" optional hint="leer = abends nicht wählbar"><x-fa::input id="kfg-dinner" type="number" wire:model="konzeptForm.dinner_concept_id" /></x-fa::field>
                     <x-fa::field label="Nur bei Hauptkonzept" for="kfg-bind" optional>
                         <x-fa::select id="kfg-bind" wire:model="konzeptForm.gebunden_an_id" :options="$haupt->mapWithKeys(fn ($h) => [$h->id => $h->kunden_titel ?: 'Konzept ' . $h->id])->all()" placeholder="Bei allen" />
                     </x-fa::field>
                 </div>
-                <p class="fa-t-muted">Staffel: Grundstunden und Folgestunden-Satz zusammen setzen (z. B. 4 Std. zum Concept-Preis, jede weitere 3,50 €), sonst gilt die Pauschale oben.</p>
+                <p class="fa-t-muted">Staffel: Grundstunden und Folgestunden-Satz zusammen setzen (z. B. 4 Std. zum Konzept-Preis, jede weitere 3,50 €), sonst gilt die Pauschale oben.</p>
                 <div class="flex justify-end gap-2">
                     <x-fa::button size="sm" variant="ghost" wire:click="konzeptBearbeitenAbbrechen">Abbrechen</x-fa::button>
                     <x-fa::button size="sm" variant="primary" wire:click="konzeptSpeichern" data-kfg-speichern>Übernehmen</x-fa::button>
@@ -76,7 +76,7 @@
                         </span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $g->id }})" data-kfg-bearbeiten="{{ $g->id }}">Bearbeiten</x-fa::button>
+                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $g->id }})" data-kfg-bearbeiten="{{ $g->id }}">Ändern</x-fa::button>
                         <x-fa::button size="sm" variant="danger" wire:click="konzeptEntfernen({{ $g->id }})" wire:confirm="Getränkepaket entfernen? Seine Zusatz-Leistungen gehen mit.">Entfernen</x-fa::button>
                     </div>
                 </div>
@@ -84,6 +84,6 @@
             @endif
         </div>
     @empty
-        <p class="fa-t-muted">Noch kein Getränkepaket. Oben ein Concept suchen und als Getränkepaket hinzufügen. Leistungen zum Getränk (Barkeeper, Gläser) im Reiter Leistungen an das Paket hängen.</p>
+        <p class="fa-t-muted">Noch kein Getränkepaket. Oben ein Konzept suchen und als Getränkepaket hinzufügen. Leistungen zum Getränk (Barkeeper, Gläser) im Reiter Leistungen an das Paket hängen.</p>
     @endforelse
 </x-fa::section>

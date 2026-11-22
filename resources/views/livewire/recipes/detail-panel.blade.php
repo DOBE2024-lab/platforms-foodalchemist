@@ -18,13 +18,8 @@
     $chipAn = 'border-[var(--fa-accent)] bg-[var(--fa-accent-soft)] text-[var(--fa-accent)] font-medium';
     $chipAus = 'border-[var(--fa-line-strong)] bg-[var(--fa-surface)] text-[var(--fa-ink-2)] hover:border-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]';
 
-    // Eignungs-Vokabular kommt als Kürzel aus dem Service — hier nur lesbar gemacht.
-    $eignungText = [
-        'haute_cuisine' => 'Haute Cuisine', 'gehoben' => 'Gehoben', 'klassisch' => 'Klassisch',
-        'business' => 'Betriebsgastronomie', 'care' => 'Care', 'crew' => 'Crew-Verpflegung',
-        'event_privat' => 'Privates Event', 'kita_schule' => 'Kita und Schule', 'restaurant' => 'Restaurant',
-    ];
-    $eignungLabel = fn (string $slug) => $eignungText[$slug] ?? ucfirst(str_replace('_', ' ', $slug));
+    // Eignungs-Vokabular kommt als Kürzel aus dem Service — lesbar über Support\Labels (98 · 2.4f D, eine Quelle).
+    $eignungLabel = fn (string $slug) => \Platform\FoodAlchemist\Support\Labels::eignung($slug);
     $statusWahl = ['draft' => 'Zurück auf Entwurf', 'review' => 'Zur Prüfung geben', 'approved' => 'Freigeben'];
 @endphp
 

@@ -23,7 +23,7 @@ class PlanningSessionService
      * Artefakt entsteht, übernimmt die Planung dessen Namen (demo Session #138 hieß dauerhaft
      * „Freies Basisrezept" statt „Püree: Petersilie").
      */
-    public const PLATZHALTER_TITEL = ['Freies Basisrezept', 'Freies Gericht', 'Freies Concept'];
+    public const PLATZHALTER_TITEL = ['Freies Basisrezept', 'Freies Gericht', 'Freies Konzept', 'Freies Concept'];   // 98 · 2.4f: alter Titel bleibt für bestehende Sitzungen
 
     /**
      * Scope → Nomen für die ebenen-spezifische Fassung des Trend-Briefs (Etappe 4, Teil 2 Folge-Chunk).

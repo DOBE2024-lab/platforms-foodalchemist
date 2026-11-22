@@ -76,7 +76,7 @@
                                 <td class="num">{{ $euro($l->ek_satz) }}</td>
                                 <td class="num">{{ $euro($l->vk_satz) }}</td>
                                 <td class="text-right whitespace-nowrap">
-                                    <x-fa::button size="sm" wire:click="leistungBearbeiten({{ $l->id }})">Bearbeiten</x-fa::button>
+                                    <x-fa::button size="sm" wire:click="leistungBearbeiten({{ $l->id }})">Ändern</x-fa::button>
                                     <x-fa::button size="sm" variant="danger" wire:click="leistungEntfernen({{ $l->id }})" wire:confirm="Leistung „{{ $l->bezeichnung }}“ entfernen?">Entfernen</x-fa::button>
                                 </td>
                             </tr>

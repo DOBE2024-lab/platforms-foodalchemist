@@ -10,9 +10,9 @@
     };
 @endphp
 
-<x-fa::section title="Concept hinzufügen" icon="heroicon-o-plus-circle" description="Concepts werden verknüpft, nicht kopiert: der Speisenpreis läuft mit dem Concepter mit.">
+<x-fa::section title="Konzept hinzufügen" icon="heroicon-o-plus-circle" description="Konzepte werden verknüpft, nicht kopiert: der Speisenpreis läuft mit dem Konzepter mit.">
     <div class="flex flex-wrap items-end gap-2">
-        <x-fa::field label="Concept suchen" for="kf-csuche" class="w-80 max-w-full"><x-fa::input id="kf-csuche" type="search" wire:model.live.debounce.300ms="conceptSuche" placeholder="mind. 2 Zeichen" data-kf-concept-suche /></x-fa::field>
+        <x-fa::field label="Konzept suchen" for="kf-csuche" class="w-80 max-w-full"><x-fa::input id="kf-csuche" type="search" wire:model.live.debounce.300ms="conceptSuche" placeholder="mind. 2 Zeichen" data-kf-concept-suche /></x-fa::field>
         <x-fa::choice name="conceptZiel" label="Als" :options="['haupt_dinner' => 'Hauptkonzept · Dinner', 'haupt_lunch' => 'Hauptkonzept · Lunch', 'addon' => 'Add-on']" />
     </div>
     @if($conceptTreffer->isNotEmpty())
@@ -34,8 +34,8 @@
                 <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-3">
                     <x-fa::field label="Titel für den Kunden" for="kfk-titel"><x-fa::input id="kfk-titel" wire:model="konzeptForm.kunden_titel" /></x-fa::field>
                     <x-fa::field label="Claim" for="kfk-claim" optional><x-fa::input id="kfk-claim" wire:model="konzeptForm.claim" /></x-fa::field>
-                    <x-fa::field label="Lunch-Concept (Id)" for="kfk-lunch" optional hint="leer = nur abends wählbar"><x-fa::input id="kfk-lunch" type="number" wire:model="konzeptForm.lunch_concept_id" /></x-fa::field>
-                    <x-fa::field label="Dinner-Concept (Id)" for="kfk-dinner" optional hint="leer = nur mittags wählbar"><x-fa::input id="kfk-dinner" type="number" wire:model="konzeptForm.dinner_concept_id" /></x-fa::field>
+                    <x-fa::field label="Lunch-Konzept (Id)" for="kfk-lunch" optional hint="leer = nur abends wählbar"><x-fa::input id="kfk-lunch" type="number" wire:model="konzeptForm.lunch_concept_id" /></x-fa::field>
+                    <x-fa::field label="Dinner-Konzept (Id)" for="kfk-dinner" optional hint="leer = nur mittags wählbar"><x-fa::input id="kfk-dinner" type="number" wire:model="konzeptForm.dinner_concept_id" /></x-fa::field>
                 </div>
                 <div class="flex flex-wrap items-center gap-4">
                     <x-fa::checkbox class="inline-flex items-center gap-2" wire:model="konzeptForm.indikativ_lunch">Lunch-Preis indikativ</x-fa::checkbox>
@@ -55,7 +55,7 @@
                     <div class="flex items-center gap-1">
                         <x-fa::icon-button icon="heroicon-m-chevron-up" label="Nach oben" size="sm" wire:click="konzeptVerschieben({{ $kz->id }}, -1)" />
                         <x-fa::icon-button icon="heroicon-m-chevron-down" label="Nach unten" size="sm" wire:click="konzeptVerschieben({{ $kz->id }}, 1)" />
-                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $kz->id }})">Bearbeiten</x-fa::button>
+                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $kz->id }})">Ändern</x-fa::button>
                         <x-fa::button size="sm" variant="danger" wire:click="konzeptEntfernen({{ $kz->id }})" wire:confirm="Konzept entfernen? Seine Zusatz-Leistungen gehen mit.">Entfernen</x-fa::button>
                     </div>
                 </div>
@@ -63,7 +63,7 @@
             @endif
         </div>
     @empty
-        <p class="fa-t-muted">Noch kein Hauptkonzept. Oben ein Concept suchen und als Hauptkonzept hinzufügen.</p>
+        <p class="fa-t-muted">Noch kein Hauptkonzept. Oben ein Konzept suchen und als Hauptkonzept hinzufügen.</p>
     @endforelse
 </x-fa::section>
 
@@ -90,7 +90,7 @@
                             @if($a->gebunden_an_id) · nur bei {{ optional($haupt->firstWhere('id', $a->gebunden_an_id))->kunden_titel }}@endif
                             · {{ $preis($a->dinnerConcept) }}</span></span>
                     <span class="flex gap-1">
-                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $a->id }})">Bearbeiten</x-fa::button>
+                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $a->id }})">Ändern</x-fa::button>
                         <x-fa::button size="sm" variant="danger" wire:click="konzeptEntfernen({{ $a->id }})" wire:confirm="Add-on entfernen?">Entfernen</x-fa::button>
                     </span>
                 </div>
@@ -98,6 +98,6 @@
             @endif
         </div>
     @empty
-        <p class="fa-t-muted">Keine Add-ons. Oben ein Concept suchen und „Add-on“ wählen.</p>
+        <p class="fa-t-muted">Keine Add-ons. Oben ein Konzept suchen und „Add-on“ wählen.</p>
     @endforelse
 </x-fa::section>

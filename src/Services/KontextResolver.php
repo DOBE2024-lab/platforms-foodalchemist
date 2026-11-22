@@ -133,7 +133,7 @@ class KontextResolver
         $reihen = [
             ['angebot', 'angebot', $ids['angebot_id'] ?? null, 'angebot', 'Angebot', 4],
             ['foodbook', 'foodbook', $ids['foodbook_id'] ?? null, 'foodbook', 'Foodbook', 5],
-            ['concept', 'concept', $ids['concept_id'] ?? null, 'concept', 'Concept', 6],
+            ['concept', 'concept', $ids['concept_id'] ?? null, 'concept', 'Konzept', 6],
         ];
         foreach ($reihen as [$type, $ownerType, $ownerId, $ebene, $label, $rang]) {
             if ($ownerId === null) {

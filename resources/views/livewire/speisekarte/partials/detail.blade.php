@@ -174,7 +174,7 @@
                 </div>
                 <div class="{{ $zeile }}">
                     <dt class="{{ $schluessel }}">Nummer</dt>
-                    <dd class="{{ $wert }} tabular-nums">#{{ $karte->id }}</dd>
+                    <dd class="{{ $wert }} tabular-nums">Nr. {{ $karte->id }}</dd>
                 </div>
             </dl>
         </x-fa::section>

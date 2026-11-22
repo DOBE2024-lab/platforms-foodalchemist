@@ -149,7 +149,7 @@
                                 <td class="whitespace-nowrap text-right">
                                     @if($eigen)
                                         <div class="inline-flex items-center gap-1">
-                                            <x-fa::button variant="ghost" size="sm" icon="heroicon-m-pencil-square" wire:click="edit({{ $ak->id }})">Bearbeiten</x-fa::button>
+                                            <x-fa::button variant="ghost" size="sm" icon="heroicon-m-pencil-square" wire:click="edit({{ $ak->id }})">Ändern</x-fa::button>
                                             <x-fa::menu class="inline-block" size="sm" label="Weitere Aktionen für {{ $ak->label }}" breite="52">
                                                 <x-fa::menu-item :icon="$ak->is_inactive ? 'heroicon-o-play' : 'heroicon-o-pause'" wire:click="toggleInactive({{ $ak->id }})">{{ $ak->is_inactive ? 'Preisklasse aktivieren' : 'Preisklasse deaktivieren' }}</x-fa::menu-item>
                                                 <x-fa::menu-item wire:click="delete({{ $ak->id }})" wire:confirm="Diese Preisklasse löschen?" :disabled="$anzahl"> 0)

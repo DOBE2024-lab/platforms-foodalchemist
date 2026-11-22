@@ -395,8 +395,8 @@
         "roher_button": 2
     },
     "livewire/gps/detail-panel.blade.php": {
-        "typo_groesse": 27,
-        "typo_tinte": 36,
+        "typo_groesse": 26,
+        "typo_tinte": 35,
         "roher_button": 6
     },
     "livewire/gps/gp-modal.blade.php": {
@@ -724,8 +724,8 @@
         "typo_tinte": 3
     },
     "livewire/produktion/tagesplan.blade.php": {
-        "typo_groesse": 12,
-        "typo_tinte": 90,
+        "typo_groesse": 11,
+        "typo_tinte": 89,
         "roher_button": 37,
         "rohe_karte": 5,
         "rohes_segment": 2

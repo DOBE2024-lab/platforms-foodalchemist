@@ -9,7 +9,7 @@
 <article class="fa-obs-detail" data-observatorium-trend-detail="{{ $t->id }}">
     <div class="fa-obs-tags">
         <span class="fa-obs-pill {{ $t->typ === 'trend' ? 'idea' : 'market' }}">{{ V::TYPEN[$t->typ] ?? 'Typ offen' }} · {{ V::EBENEN[$t->ebene] ?? 'Ebene offen' }}</span>
-        <span class="fa-obs-pill">{{ V::STATUS[$t->status] ?? $t->status }}</span>
+        <span class="fa-obs-pill">{{ V::STATUS[$t->status] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($t->status) }}</span>
         <span class="fa-obs-pill">Konfidenz: {{ V::KONFIDENZ[$t->wirksameKonfidenz()] ?? $t->wirksameKonfidenz() }}</span>
         @if($t->befragung_bestaetigt)<span class="fa-obs-pill idea">Befragung bestätigt{{ $t->befragung_anteil !== null ? ' · '.number_format((float) $t->befragung_anteil, 0, ',', '.').' %' : '' }}</span>@endif
     </div>
@@ -34,7 +34,7 @@
     @if($t->historische_einordnung || $t->gartner_phase || $t->einordnung_begruendung)
         <div class="fa-obs-kicker">Einordnung</div>
         @if($t->historische_einordnung)<p>{{ $t->historische_einordnung }}</p>@endif
-        @if($t->gartner_phase)<p>Gartner Hype Cycle: {{ V::GARTNER_PHASEN[$t->gartner_phase] ?? $t->gartner_phase }}</p>@endif
+        @if($t->gartner_phase)<p>Gartner Hype Cycle: {{ V::GARTNER_PHASEN[$t->gartner_phase] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($t->gartner_phase) }}</p>@endif
         @if($t->einordnung_begruendung)<p>{{ $t->einordnung_begruendung }}</p>@endif
     @endif
 

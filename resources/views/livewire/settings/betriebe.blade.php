@@ -81,7 +81,7 @@
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <div class="flex items-center justify-end gap-1">
-                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $b->id }})">Bearbeiten</x-fa::button>
+                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $b->id }})">Ändern</x-fa::button>
                                             <x-fa::menu size="sm" label="Weitere Aktionen für {{ $b->name }}" breite="48">
                                                 <x-fa::menu-item :danger="! ($b->is_inactive)" :trenner="false" abstand="weit" wire:click="aktivUmschalten({{ $b->id }})">
                                                     @if($b->is_inactive)

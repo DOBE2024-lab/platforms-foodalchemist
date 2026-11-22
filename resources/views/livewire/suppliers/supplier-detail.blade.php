@@ -43,7 +43,7 @@
             <div x-data="{ tab: 'stammblatt' }" class="flex flex-col gap-4" data-supplier-detail="{{ $stammblatt['id'] }}">
                 {{-- Kopf: Status + Hinweis bei geerbtem Lieferanten --}}
                 <div class="flex flex-wrap items-center gap-2">
-                    <x-fa::badge :tone="$statusTon[$stammblatt['status']] ?? 'neutral'" data-status-badge>{{ $statusOptionen[$stammblatt['status']] ?? $stammblatt['status'] }}</x-fa::badge>
+                    <x-fa::badge :tone="$statusTon[$stammblatt['status']] ?? 'neutral'" data-status-badge>{{ $statusOptionen[$stammblatt['status']] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($stammblatt['status']) }}</x-fa::badge>
                     @if($stammblatt['is_inactive'])<x-fa::badge>Inaktiv</x-fa::badge>@endif
                     @if($faelligeAbsprachen > 0)<x-fa::signal tone="warn">{{ $faelligeAbsprachen }} {{ $faelligeAbsprachen === 1 ? 'Wiedervorlage' : 'Wiedervorlagen' }} fällig</x-fa::signal>@endif
                     @if($faelligeFristen > 0)<x-fa::signal tone="crit">{{ $faelligeFristen }} {{ $faelligeFristen === 1 ? 'Kündigungsfrist' : 'Kündigungsfristen' }} erreicht</x-fa::signal>@endif
@@ -79,7 +79,7 @@
                                     <p class="mt-1.5 fa-t-muted">Wird sofort gespeichert. Gesperrte Lieferanten werden nicht mehr bevorzugt.</p>
                                 @else
                                     <p class="mb-1.5 fa-t-label">Status</p>
-                                    <x-fa::badge :tone="$statusTon[$stammblatt['status']] ?? 'neutral'">{{ $statusOptionen[$stammblatt['status']] ?? $stammblatt['status'] }}</x-fa::badge>
+                                    <x-fa::badge :tone="$statusTon[$stammblatt['status']] ?? 'neutral'">{{ $statusOptionen[$stammblatt['status']] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($stammblatt['status']) }}</x-fa::badge>
                                 @endif
                             </div>
                             <div>

@@ -49,7 +49,7 @@
                         <tbody>
                             @foreach($vorlage->lines as $l)
                                 <tr wire:key="vl-{{ $l->id }}">
-                                    <td><x-fa::badge :tone="$typTon[$l->type] ?? 'neutral'">{{ $typText[$l->type] ?? $l->type }}</x-fa::badge></td>
+                                    <td><x-fa::badge :tone="$typTon[$l->type] ?? 'neutral'">{{ $typText[$l->type] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($l->type) }}</x-fa::badge></td>
                                     <td>
                                         <div class="font-medium">{{ $l->bezeichnung() }}</div>
                                         @if($l->type === 'supplier_item' && $l->supplierItem?->supplier)<div class="fa-t-muted">{{ $l->supplierItem->supplier->name }}</div>@endif

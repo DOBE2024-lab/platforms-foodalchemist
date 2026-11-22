@@ -165,7 +165,7 @@
                                 @foreach($pruefliste as $z)
                                     <tr wire:key="pl-z-{{ $z->id }}" data-preisliste-zeile="{{ $z->status }}">
                                         <td class="tabular-nums">{{ $z->row_nr }}</td>
-                                        <td><x-fa::badge :tone="$ton[$z->status] ?? 'neutral'">{{ $text[$z->status] ?? $z->status }}</x-fa::badge></td>
+                                        <td><x-fa::badge :tone="$ton[$z->status] ?? 'neutral'">{{ $text[$z->status] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($z->status) }}</x-fa::badge></td>
                                         <td>{{ $z->article_number ?? $z->ean }}</td>
                                         <td>{{ $z->designation }}</td>
                                         <td class="text-right tabular-nums">{{ $z->price !== null ? number_format((float) $z->price, 2, ',', '.') : '' }}</td>

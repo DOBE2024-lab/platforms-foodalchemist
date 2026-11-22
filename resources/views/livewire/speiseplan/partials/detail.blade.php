@@ -113,7 +113,7 @@
             <dl>
                 <div class="{{ $zeile }}"><dt class="{{ $dt }}">Erstellt</dt><dd class="{{ $dd }}">{{ $plan->created_at?->format('d.m.Y') ?? 'unbekannt' }}</dd></div>
                 <div class="{{ $zeile }}"><dt class="{{ $dt }}">Geändert</dt><dd class="{{ $dd }}">{{ $plan->updated_at?->format('d.m.Y') ?? 'unbekannt' }}</dd></div>
-                <div class="{{ $zeile }}"><dt class="{{ $dt }}">Nummer</dt><dd class="{{ $dd }}">#{{ $plan->id }}</dd></div>
+                <div class="{{ $zeile }}"><dt class="{{ $dt }}">Nummer</dt><dd class="{{ $dd }}">Nr. {{ $plan->id }}</dd></div>
             </dl>
         </x-fa::section>
     </div>

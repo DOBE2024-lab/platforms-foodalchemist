@@ -45,7 +45,7 @@
                                 <td class="whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-1">
                                         @if($e->eigen)
-                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $k->id }})">Bearbeiten</x-fa::button>
+                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $k->id }})">Ändern</x-fa::button>
                                         @endif
                                         @unless($e->aus_oben)
                                             <x-fa::button size="sm" variant="ghost" :icon="$aus ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-eye-slash'"

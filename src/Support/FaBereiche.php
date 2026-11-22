@@ -24,7 +24,7 @@ final class FaBereiche
         'controlling' => 'Controlling',
         'stammdaten' => 'Stammdaten (Grundprodukte, Lieferanten)',
         'rezepte' => 'Rezepte (Basisrezepte, Gerichte, Kalkulation)',
-        'concepter' => 'Concepter & Formate',
+        'concepter' => 'Konzepter & Formate',
         'foodbook' => 'Foodbook',
         'speisekarte' => 'Speisekarte',
         'speiseplan' => 'Speiseplan',

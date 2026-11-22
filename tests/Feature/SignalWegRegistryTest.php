@@ -156,7 +156,7 @@ it('MCP signale.FIX: gibt den Weg statt einer nackten Absage weiter (Lockstep)',
     expect($res->success)->toBeFalse()
         ->and($res->errorCode)->toBe('ACTION_NOT_AVAILABLE')
         ->and($res->error)->toContain('aber ein Weg')
-        ->and($res->error)->toContain('Concepter');
+        ->and($res->error)->toContain('Konzepter');
 
     $stumm = FoodAlchemistSignal::create([
         'team_id' => $this->rootTeam->id,

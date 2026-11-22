@@ -21,6 +21,7 @@
     'aufziehen' => false,    // Sprung per Link (?gp= / ?rezept=): beim Ankommen öffnen, auch wenn zuletzt zugeklappt
     'auswahl' => false,      // Handy (#1003): gewählter Eintrag (id) bzw. null = nichts gewählt; false = Seite meldet nichts
     'lesemodus' => true,     // Handy (#1003): Ändern-Aktionen aus (Support\HandyLesemodus); false z. B. in der Planung
+    'leerZu' => false,       // 98 · 2.4b: ohne Auswahl (auswahl = '') am Rechner eingeklappt; Rail-Klick zeigt den Leerzustand, ohne die gespeicherte Einstellung zu ändern
 ])
 
 @php
@@ -50,6 +51,8 @@
         handy: {!! \Platform\FoodAlchemist\Support\HandyLesemodus::JS_MODUS !!}(),
         auswahl: @js($auswahlWert),
         handyOffen: false,
+        leerZu: @js((bool) $leerZu),
+        leerAuf: false,
         vw: window.innerWidth,
         init() {
             const mq = window.matchMedia('(min-width: 96rem)');
@@ -68,6 +71,7 @@
             new MutationObserver(() => {
                 this.auswahl = this.$el.dataset.faAuswahl ?? '-';
                 this.handyOffen = this.gewaehlt;
+                if (this.auswahl === '') this.leerAuf = false;
                 this.merke();
             }).observe(this.$el, { attributes: true, attributeFilter: ['data-fa-auswahl'] });
             if (@js((bool) $aufziehen) && ! this.handy && ! this.open) this.setOpen(true);
@@ -98,6 +102,7 @@
         resizing: false,
         get open() {
             if (this.handy) return this.handyOffen;
+            if (! this.handy && this.leerZu && this.auswahl === '') return this.leerAuf;
             const v = this.$store.ui?.m(this.scope, 'open');
             return v === undefined ? this.defaultOpen : v;
         },
@@ -108,6 +113,7 @@
         },
         setOpen(v) {
             if (this.handy) { this.handyOffen = v; return; }
+            if (this.leerZu && this.auswahl === '') { this.leerAuf = v; return; }
             this.$store.ui?.mSet(this.scope, 'open', v);
         },
         startResize(e) {
@@ -139,6 +145,7 @@
     data-fa-auswahl="{{ $auswahlWert }}"
     data-fa-detail-sidebar
     @if($lesemodus) data-fa-handy-lesen @endif
+    @if($leerZu) data-fa-leer-zu @endif
     {{ $attributes }}
 >
   {{-- Dunkler Rahmen: Detail-Panels im Werkbank-Modus (wie Navigation, Chat-Leiste, Editoren).

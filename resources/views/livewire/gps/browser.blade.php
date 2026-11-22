@@ -61,9 +61,10 @@
     </x-slot>
 
     {{-- Detail-Spalte immer vorhanden: nach dem Anlegen im Dialog wählt `gp-selected` das neue Grundprodukt
-         direkt im Panel aus. Ohne gewähltes Grundprodukt zeigt das Panel einen Leerzustand. --}}
+         direkt im Panel aus. Ohne gewähltes Grundprodukt bleibt sie eingeklappt (98 · 2.4b, leer-zu); aufgeklappt zeigt
+         das Panel einen Leerzustand. --}}
     <x-slot name="activity">
-        <x-fa::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_gps" side="right" :auswahl="(string) $gpId" :aufziehen="$sprungDetail">
+        <x-fa::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_gps" side="right" :auswahl="(string) $gpId" :leer-zu="true" :aufziehen="$sprungDetail">
             <livewire:foodalchemist.gps.detail-panel :gp-id="$gpId" key="gps-browser--gps.detail-panel" />
         </x-fa::detail-sidebar>
     </x-slot>

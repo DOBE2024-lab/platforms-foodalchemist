@@ -88,7 +88,7 @@
 
 <x-fa::page :eingebettet="$embedded" data-gp-panel="">
     @if($gp === null)
-        <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Grundprodukt gewählt">Grundprodukt in der Tabelle anklicken, dann erscheinen hier Preis, Artikel und Allergene.</x-fa::empty>
+        <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Grundprodukt gewählt">Zeile in der Tabelle anklicken, dann erscheinen hier Preis, Artikel und Allergene. Ein Klick auf den Namen öffnet den Editor.</x-fa::empty>
     @else
         {{-- Kopf (Anatomie Detail-Panels): Name, Einordnung, eine Hauptaktion, Weiteres im Menü --}}
         @if($section === null)

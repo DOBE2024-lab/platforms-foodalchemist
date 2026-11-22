@@ -73,9 +73,9 @@ class SlotEinheitService
      *
      * @return Collection<int, FoodAlchemistVocabEinheit>
      */
-    public function wirksame(Team $team, FoodAlchemistRecipe $dish, ?FoodAlchemistRecipeDarreichung $dar): Collection
+    public function wirksame(Team $team, FoodAlchemistRecipe $dish, ?FoodAlchemistRecipeDarreichung $dar, ?Collection $einheiten = null): Collection
     {
-        return app(VocabularyService::class)->listEinheiten($team)
+        return ($einheiten ?? app(VocabularyService::class)->listEinheiten($team))
             ->filter(fn ($e) => self::wirkt($e, $dish, $dar))->values();
     }
 
@@ -147,13 +147,14 @@ class SlotEinheitService
     public function auswahl(Team $team, object $concept): array
     {
         $aus = [];
+        $einheiten = app(VocabularyService::class)->listEinheiten($team);   // 2.1e: einmal je Konzept statt je Position
         foreach ($concept->slots as $slot) {
             if ($slot->sales_recipe_id === null || $slot->dish === null) {
                 continue;
             }
             $slot->setRelation('concept', $concept);
             $dar = $this->darreichungFuerSlot($slot);
-            $optionen = $this->wirksame($team, $slot->dish, $dar)
+            $optionen = $this->wirksame($team, $slot->dish, $dar, $einheiten)
                 ->map(fn ($e) => ['id' => (int) $e->id, 'label' => (string) $e->slug])->values()->all();
             $unwirksam = $slot->unit_vocab_id !== null && ! in_array((int) $slot->unit_vocab_id, array_column($optionen, 'id'), true)
                 ? ['id' => (int) $slot->unit_vocab_id, 'label' => ($slot->unit?->slug ?? '?') . ' (rechnet nicht)'] : null;

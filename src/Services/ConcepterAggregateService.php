@@ -178,6 +178,8 @@ class ConcepterAggregateService
             'slots.package.dishes.unit' => fn ($q) => $q->select($this->einheitCols()),
             'slots.package.dishes.dish' => fn ($q) => $q->select($this->recipeCols()),
             'slots.dish' => fn ($q) => $q->select($this->recipeCols()),
+            // 2.1e: load() ersetzt die Slots — die Formen je Gericht mitladen, sonst fragen Resolver und Concepter-Aufbau je Slot nach
+            'slots.dish.standardPresentation', 'slots.dish.presentations' => fn ($q) => $q->with('servingForm')->orderByDesc('is_standard')->orderBy('id'),
             'slots.embeddedConcept',
         ]);
 

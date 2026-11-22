@@ -37,9 +37,10 @@ class DarreichungResolver
         // Phase 4: Servierform des Konzepts → passende Darreichung des Gerichts
         $konzeptServierformId = $slot->concept?->serving_form_id;
         if ($konzeptServierformId !== null) {
-            $passend = $slot->dish->presentations()
-                ->where('serving_form_id', $konzeptServierformId)
-                ->orderByDesc('is_standard')->orderBy('id')->first();
+            // Vorgeladene Formen (Concepter-Aufbau, 2.1e) ohne Abfrage — gleiche Reihenfolge: Standard zuerst, dann id
+            $passend = $slot->dish->relationLoaded('presentations')
+                ? $slot->dish->presentations->where('serving_form_id', $konzeptServierformId)->sortBy([['is_standard', 'desc'], ['id', 'asc']])->first()
+                : $slot->dish->presentations()->where('serving_form_id', $konzeptServierformId)->orderByDesc('is_standard')->orderBy('id')->first();
             if ($passend !== null) {
                 return $passend;
             }

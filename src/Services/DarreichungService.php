@@ -573,7 +573,9 @@ class DarreichungService
         // Zubehör am Gefäß-GP (20.11.2026) zählt beim Gefäß — steht dasselbe Teil zusätzlich hier, nicht doppelt rechnen
         $amGefaess = $darreichung->vessel_gp_id !== null
             ? array_flip(array_column(app(GefaessZubehoerService::class)->liste((int) $darreichung->vessel_gp_id, $team)['zeilen'], 'gp_id')) : [];
-        foreach ($darreichung->zubehoer()->with('gp:id,name,team_id,commodity_group_code,lead_la_supplier_item_id,piece_default_g')->get() as $z) {
+        $liste = $darreichung->relationLoaded('zubehoer') ? $darreichung->zubehoer   // vorgeladen (Concepter-Aufbau, 2.1e)
+            : $darreichung->zubehoer()->with('gp:id,name,team_id,commodity_group_code,lead_la_supplier_item_id,piece_default_g')->get();
+        foreach ($liste as $z) {
             // Doppelzählung vermeiden: dasselbe GP als Gefäß oder als Zubehör am Gefäß zählt dort (Gefäß gewinnt). Miete (Lieferant der Gruppe VERLEIH): nur Hinweis, nie je Portion.
             $doppelt = ($darreichung->vessel_gp_id !== null && (int) $darreichung->vessel_gp_id === (int) $z->gp_id) || isset($amGefaess[(int) $z->gp_id]);
             $miete = ! $doppelt && $z->gp !== null && $this->istVerleihGp($z->gp, $team);

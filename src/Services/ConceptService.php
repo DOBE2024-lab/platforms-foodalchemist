@@ -71,6 +71,8 @@ class ConceptService
                 'slots.embeddedConcept:id,name,kind,class,price_per_person_cache,ek_per_person_cache',
                 'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard,ek_total_eur,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.embeddedConcept.slots.dish.standardPresentation',
                 'slots.dish:id,name,sales_wording_standard,ek_total_eur,dish_class_id,spec_is_vegan,spec_is_vegetarian,spec_is_gluten_free,spec_is_lactose_free,spec_is_halal,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.dish.standardPresentation',
+                // 2.1e: alle Formen je Gericht einmal (Resolver, Preis-Cockpit, Aggregat, Concepter-Aufbau) statt je Slot nachzufragen
+                'slots.dish.presentations' => fn ($q) => $q->with('servingForm')->orderByDesc('is_standard')->orderBy('id'),
                 'slots.dish.dishClass:id,label',
                 'slots.unit:id,slug,display_de',
                 'vorlageQuelle:id,name',

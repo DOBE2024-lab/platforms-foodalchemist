@@ -1329,29 +1329,30 @@ class Editor extends Component
                         ->costConcept($team, $concept, $this->simulationPax, $outlet);
                 }
                 if ($istAufbau) {
-                    foreach ($concept->slots as $slot) {
-                        $tauschbar[$slot->id] = $concepts->tauschbarePakete($team, $slot);
-                    }
+                    // 2.1e: tauschbare Pakete sind für jeden Slot dieselbe Liste ({@see ConceptService::tauschbarePakete}) — einmal laden
+                    $tauschbar = array_fill_keys($concept->slots->pluck('id')->all(), $concepts->paketKandidaten($team));
                 }
                 if ($istAufbau || $istAnrichtenTab) {
                     // Umbau-Spec Phase 5: aufgelöste Darreichung je Position sichtbar machen +
                     // „Variante fehlt", wenn die Konzept-Servierform keine passende Form findet
                     $resolver = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class);
+                    // 2.1e (Mess-Test 6): Formen kommen vorgeladen aus ConceptService::detail; das Zubehör aller Formen in einem Zug dazu.
+                    (new \Illuminate\Database\Eloquent\Collection($concept->slots->pluck('dish')->filter()->flatMap->presentations->all()))
+                        ->load('zubehoer.gp:id,name,team_id,commodity_group_code,lead_la_supplier_item_id,piece_default_g');
                     foreach ($concept->slots as $slot) {
                         if ($slot->sales_recipe_id === null) {
                             continue;
                         }
                         $slot->setRelation('concept', $concept);
-                        if ($istAufbau) {
-                            $formen = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::with('servingForm')
-                                ->where('recipe_id', $slot->sales_recipe_id)->orderByDesc('is_standard')->get();
-                            if ($formen->count() > 1) {
-                                // A1: Form-Picker je Position (nur sinnvoll bei mehreren Formen)
-                                $darreichungOptionen[$slot->id] = $formen
-                                    ->map(fn ($f) => ['id' => $f->id, 'label' => $f->bezeichnung() ?? '—'])->all();
-                            }
+                        $formen = $slot->dish?->presentations ?? collect();
+                        if ($slot->presentation_id !== null && ($gesetzt = $formen->firstWhere('id', $slot->presentation_id)) !== null) {
+                            $slot->setRelation('presentation', $gesetzt);
+                        }
+                        if ($istAufbau && $formen->count() > 1) {   // A1: Form-Picker je Position (nur sinnvoll bei mehreren Formen)
+                            $darreichungOptionen[$slot->id] = $formen->map(fn ($f) => ['id' => $f->id, 'label' => $f->bezeichnung() ?? '—'])->all();
                         }
                         $dar = $resolver->fuerSlot($slot);
+                        $dar = $dar !== null ? ($formen->firstWhere('id', $dar->id) ?? $dar) : null;   // geladene Fassung mit Zubehör
                         if ($dar !== null) {
                             $passtZurKonzeptForm = $concept->serving_form_id !== null
                                 && (int) $dar->serving_form_id === (int) $concept->serving_form_id;
@@ -1363,12 +1364,8 @@ class Editor extends Component
                                 $zubehoerInfo[$slot->id] = $zub;
                             }
                         }
-                        if ($istAufbau && $concept->serving_form_id !== null) {
-                            $hatForm = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $slot->sales_recipe_id)
-                                ->where('serving_form_id', $concept->serving_form_id)->exists();
-                            if (! $hatForm) {
-                                $varianteFehlt[$slot->id] = true;
-                            }
+                        if ($istAufbau && $concept->serving_form_id !== null && ! $formen->contains(fn ($f) => (int) $f->serving_form_id === (int) $concept->serving_form_id)) {
+                            $varianteFehlt[$slot->id] = true;
                         }
                     }
                 }

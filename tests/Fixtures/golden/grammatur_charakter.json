@@ -1,0 +1,290 @@
+{
+    "a_bratkartoffeln": {
+        "rezept": {
+            "yield_kg": 1.2,
+            "yield_kg_manual": 1.2,
+            "ek_per_kg": 2.5,
+            "sales_unit_count": null,
+            "sales_quantity_per_unit_g": null,
+            "komponenten_netto_g": 1200.0
+        },
+        "darreichungen": [
+            {
+                "form": "teller",
+                "standard": true,
+                "menge_vom_standard": false,
+                "unit_count": 1.0,
+                "deltas": 0,
+                "gramm": 300.0,
+                "quantity_per_unit_g": 300.0,
+                "ek_portion": 0.75,
+                "calculated_sales_net": 2.5,
+                "sales_net": 2.5,
+                "produktion_10": {
+                    "ansaetze": 2.5,
+                    "gramm_je_portion": 300.0,
+                    "je_zutat": null
+                },
+                "planungsblatt_40_kg": {
+                    "Kartoffeln": 10.0,
+                    "Speck": 2.0
+                }
+            },
+            {
+                "form": "kinder",
+                "standard": false,
+                "menge_vom_standard": false,
+                "unit_count": 1.0,
+                "deltas": 0,
+                "gramm": 150.0,
+                "quantity_per_unit_g": 150.0,
+                "ek_portion": 0.375,
+                "calculated_sales_net": 1.25,
+                "sales_net": 1.25,
+                "produktion_10": {
+                    "ansaetze": 1.25,
+                    "gramm_je_portion": 150.0,
+                    "je_zutat": null
+                },
+                "planungsblatt_40_kg": {
+                    "Kartoffeln": 5.0,
+                    "Speck": 1.0
+                }
+            },
+            {
+                "form": "ohne-speck",
+                "standard": false,
+                "menge_vom_standard": false,
+                "unit_count": 1.0,
+                "deltas": 1,
+                "gramm": 250.0,
+                "quantity_per_unit_g": 250.0,
+                "ek_portion": 0.3,
+                "calculated_sales_net": 1.0,
+                "sales_net": 1.0,
+                "produktion_10": {
+                    "ansaetze": 2.0833,
+                    "gramm_je_portion": 250.0,
+                    "je_zutat": {
+                        "Kartoffeln": 2.5,
+                        "Speck": 0.0
+                    }
+                },
+                "planungsblatt_40_kg": {
+                    "Kartoffeln": 10.0
+                }
+            },
+            {
+                "form": "doppel",
+                "standard": false,
+                "menge_vom_standard": false,
+                "unit_count": 2.0,
+                "deltas": 0,
+                "gramm": 150.0,
+                "quantity_per_unit_g": 150.0,
+                "ek_portion": 0.75,
+                "calculated_sales_net": 2.5,
+                "sales_net": 2.5,
+                "produktion_10": {
+                    "ansaetze": 2.5,
+                    "gramm_je_portion": 300.0,
+                    "je_zutat": null
+                },
+                "planungsblatt_40_kg": {
+                    "Kartoffeln": 10.0,
+                    "Speck": 2.0
+                }
+            },
+            {
+                "form": "wie-standard",
+                "standard": false,
+                "menge_vom_standard": true,
+                "unit_count": 1.0,
+                "deltas": 0,
+                "gramm": 300.0,
+                "quantity_per_unit_g": 300.0,
+                "ek_portion": 0.75,
+                "calculated_sales_net": 2.5,
+                "sales_net": 2.5,
+                "produktion_10": {
+                    "ansaetze": 2.5,
+                    "gramm_je_portion": 300.0,
+                    "je_zutat": {
+                        "Kartoffeln": 2.5,
+                        "Speck": 2.5
+                    }
+                },
+                "planungsblatt_40_kg": {
+                    "Kartoffeln": 10.0,
+                    "Speck": 2.0
+                }
+            }
+        ]
+    },
+    "b_roulade": {
+        "rezept": {
+            "yield_kg": 0.26,
+            "yield_kg_manual": null,
+            "ek_per_kg": 17.08,
+            "sales_unit_count": null,
+            "sales_quantity_per_unit_g": null,
+            "komponenten_netto_g": 260.0
+        },
+        "darreichungen": [
+            {
+                "form": "teller",
+                "standard": true,
+                "menge_vom_standard": true,
+                "unit_count": 1.0,
+                "deltas": 0,
+                "gramm": 260.0,
+                "quantity_per_unit_g": 260.0,
+                "ek_portion": 4.44,
+                "calculated_sales_net": 14.8,
+                "sales_net": 14.8,
+                "produktion_10": {
+                    "ansaetze": 10.0,
+                    "gramm_je_portion": 260.0,
+                    "je_zutat": {
+                        "Jus": 10.0,
+                        "Rinderoberschale": 10.0
+                    }
+                },
+                "planungsblatt_40_kg": {
+                    "Jus": 3.2,
+                    "Rinderoberschale": 7.2
+                }
+            },
+            {
+                "form": "klein",
+                "standard": false,
+                "menge_vom_standard": false,
+                "unit_count": 1.0,
+                "deltas": 1,
+                "gramm": 200.0,
+                "quantity_per_unit_g": 200.0,
+                "ek_portion": 3.12,
+                "calculated_sales_net": 10.4,
+                "sales_net": 10.4,
+                "produktion_10": {
+                    "ansaetze": 7.6923,
+                    "gramm_je_portion": 200.0,
+                    "je_zutat": {
+                        "Jus": 10.0,
+                        "Rinderoberschale": 6.6667
+                    }
+                },
+                "planungsblatt_40_kg": {
+                    "Jus": 3.2,
+                    "Rinderoberschale": 4.8
+                }
+            }
+        ]
+    },
+    "c_schmorbraten": {
+        "rezept": {
+            "yield_kg": 1.0,
+            "yield_kg_manual": 0.8,
+            "ek_per_kg": 17.5,
+            "sales_unit_count": null,
+            "sales_quantity_per_unit_g": null,
+            "komponenten_netto_g": 1000.0
+        },
+        "darreichungen": [
+            {
+                "form": "teller",
+                "standard": true,
+                "menge_vom_standard": false,
+                "unit_count": 1.0,
+                "deltas": 0,
+                "gramm": 200.0,
+                "quantity_per_unit_g": 200.0,
+                "ek_portion": 3.5,
+                "calculated_sales_net": 11.67,
+                "sales_net": 11.67,
+                "produktion_10": {
+                    "ansaetze": 2.5,
+                    "gramm_je_portion": 200.0,
+                    "je_zutat": null
+                },
+                "planungsblatt_40_kg": {
+                    "Rinderschulter": 10.0
+                }
+            },
+            {
+                "form": "kinder",
+                "standard": false,
+                "menge_vom_standard": false,
+                "unit_count": 1.0,
+                "deltas": 0,
+                "gramm": 100.0,
+                "quantity_per_unit_g": 100.0,
+                "ek_portion": 1.75,
+                "calculated_sales_net": 5.83,
+                "sales_net": 5.83,
+                "produktion_10": {
+                    "ansaetze": 1.25,
+                    "gramm_je_portion": 100.0,
+                    "je_zutat": null
+                },
+                "planungsblatt_40_kg": {
+                    "Rinderschulter": 5.0
+                }
+            }
+        ]
+    },
+    "d_eintopf": {
+        "rezept": {
+            "yield_kg": 1.0,
+            "yield_kg_manual": null,
+            "ek_per_kg": 2.7,
+            "sales_unit_count": null,
+            "sales_quantity_per_unit_g": null,
+            "komponenten_netto_g": 1000.0
+        },
+        "darreichungen": [
+            {
+                "form": "teller",
+                "standard": true,
+                "menge_vom_standard": false,
+                "unit_count": 1.0,
+                "deltas": 0,
+                "gramm": 250.0,
+                "quantity_per_unit_g": 250.0,
+                "ek_portion": 0.675,
+                "calculated_sales_net": 2.25,
+                "sales_net": 2.25,
+                "produktion_10": {
+                    "ansaetze": 2.5,
+                    "gramm_je_portion": 250.0,
+                    "je_zutat": null
+                },
+                "planungsblatt_40_kg": {
+                    "Kräuter": 1.0,
+                    "Linsen": 9.0
+                }
+            },
+            {
+                "form": "kinder",
+                "standard": false,
+                "menge_vom_standard": false,
+                "unit_count": 1.0,
+                "deltas": 0,
+                "gramm": 125.0,
+                "quantity_per_unit_g": 125.0,
+                "ek_portion": 0.3375,
+                "calculated_sales_net": 1.12,
+                "sales_net": 1.12,
+                "produktion_10": {
+                    "ansaetze": 1.25,
+                    "gramm_je_portion": 125.0,
+                    "je_zutat": null
+                },
+                "planungsblatt_40_kg": {
+                    "Kräuter": 0.5,
+                    "Linsen": 4.5
+                }
+            }
+        ]
+    }
+}

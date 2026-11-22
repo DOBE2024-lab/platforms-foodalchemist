@@ -119,7 +119,9 @@ it('destilliert Leitplanken aus einem Briefing und schreibt sie in die Sitzung',
         ->and($r['gespeichert'])->toBeTrue()
         // Und die Sitzung trägt sie wirklich.
         ->and($session->refresh()->generation_params['occasion'])->toBe('dinner')
-        ->and($session->generation_params['serviceform'])->toBe('tellerservice');
+        ->and($session->generation_params['serviceform'])->toBe('tellerservice')
+        // CQ 2.5a: der extrahierte Altwert `catering` landet als Sektor-Slug in der Sitzung.
+        ->and($session->generation_params['sektor'])->toBe('event_privat');
 });
 
 it('schreibt NICHTS ohne Sitzungs-Id — reiner Vorschlag', function () {
@@ -161,14 +163,13 @@ it('liefert Werte, die das Achsen-Mapping wirklich aufloest', function () {
     foreach (FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES['occasion'] as $wert) {
         expect($map['occasion'] ?? [])->toHaveKey($wert);
     }
-    // `sektor` ist absichtlich NICHT im geprüften Vokabular (zwei konkurrierende Wertesätze
-     // im Code) — geprüft wird hier stattdessen, dass das Mapping die vier Sektoren kennt,
-     // für die ein Segment-Dossier existiert. `restaurant` ist die bekannte Lücke.
-    foreach (['betriebsgastronomie', 'catering', 'care', 'schule_kita'] as $wert) {
+    // CQ 2.5a: `sektor` ist jetzt geprüft (ein Vokabular, Support\Sektor). Das Mapping kennt die vier
+    // Sektoren mit Segment-Dossier; `restaurant` und `crew` sind die bekannten Lücken.
+    expect(FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES['sektor'])->toBe(\Platform\FoodAlchemist\Support\Sektor::SLUGS);
+    foreach (['business', 'event_privat', 'care', 'kita_schule'] as $wert) {
         expect($map['sektor'] ?? [])->toHaveKey($wert);
     }
-    expect($map['sektor'] ?? [])->not->toHaveKey('restaurant')
-        ->and(FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES)->not->toHaveKey('sektor');
+    expect($map['sektor'] ?? [])->not->toHaveKey('restaurant')->and($map['sektor'] ?? [])->not->toHaveKey('crew');
 });
 
 /*

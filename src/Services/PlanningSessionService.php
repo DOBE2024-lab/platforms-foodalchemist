@@ -365,6 +365,10 @@ class PlanningSessionService
         );
         $gefiltert = array_filter($gefiltert, static fn ($v) => $v !== null && $v !== '' && $v !== []);
 
+        if (is_string($gefiltert['sektor'] ?? null)) {
+            // CQ 2.5a: Altwert der Planung (catering …) → Sektor-Slug, bevor geprüft wird.
+            $gefiltert['sektor'] = \Platform\FoodAlchemist\Support\Sektor::kanonisch($gefiltert['sektor']) ?? $gefiltert['sektor'];
+        }
         foreach ($gefiltert as $key => $wert) {
             $erlaubt = FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES[$key] ?? null;
             if ($erlaubt === null) {

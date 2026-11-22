@@ -56,11 +56,6 @@ class FoodAlchemistPlanningSession extends Model
      * existieren und keiner erkennbar der gültige ist:
      *   · `frische` — `fresh_first|frozen_first|preserved_first` (RecipesGenerateTool) vs.
      *     `frisch|tk|konserviert` (Resolver/Matcher).
-     *   · `sektor` — `betriebsgastronomie|catering|restaurant|care|schule_kita`
-     *     (RecipesGenerateTool:76) vs. `business|care|crew|event_privat|kita_schule|restaurant`
-     *     (RecipeEignungPutTool:22). Das Achsen-Mapping nutzt den ersten Satz; ein Wert aus
-     *     dem zweiten läuft dort ins Leere, aber ihn hier zu VERWERFEN wäre schlimmer —
-     *     `PlanungSessionMcpTest` schreibt legitim `sektor=fine_dining`.
      *   · `kompositions_stil` — Vokabular unklar (`ausgewogen`, `gewagt`, evtl. mehr).
      *
      * Unter-prüfen ist hier richtig: eine Validierung, die Legitimes verwirft, ist schlimmer
@@ -84,6 +79,9 @@ class FoodAlchemistPlanningSession extends Model
         'bestand' => ['hybrid', 'komplett_neu', 'nur_bestand'],
         'occasion' => ['fruehstueck', 'lunch', 'konferenz', 'empfang', 'dinner', 'late_night'],
         'serviceform' => ['tellerservice', 'buffet', 'flying', 'stehempfang', 'boxed'],
+        // CQ 2.5a: ein Sektor-Vokabular (Support\Sektor). Altwerte (catering, betriebsgastronomie, schule_kita)
+        // schlüsselt PlanningSessionService::filterGenerationParams vor der Prüfung über Sektor::ALIASE um.
+        'sektor' => \Platform\FoodAlchemist\Support\Sektor::SLUGS,
         // Mehrfachauswahl — jeder Eintrag wird einzeln geprüft.
         'diaet_hart' => ['vegan', 'vegetarisch', 'glutenfrei', 'laktosefrei', 'halal', 'low_carb'],
         // Basisrezept-Ziel (Ansatz statt Teller) — Spiegel von Planung\Index::MENGE_EINHEITEN.

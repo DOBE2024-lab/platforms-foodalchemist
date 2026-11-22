@@ -19,7 +19,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  */
 beforeEach(fn () => $this->seedTeamHierarchy());
 
-it('leitet die Ausgabeform aus Sektor x Serviceform ab', function (string $sektor, string $service, string $erwartet) {
+it('leitet die Ausgabeform aus Sektor x Serviceform ab', function (string $sektor, string $service, ?string $erwartet) {
     $p = WissensGeltung::mitAbleitung(['sektor' => $sektor, 'serviceform' => $service]);
     expect($p['ausgabeform'] ?? null)->toBe($erwartet);
 })->with([
@@ -28,6 +28,11 @@ it('leitet die Ausgabeform aus Sektor x Serviceform ab', function (string $sekto
     ['catering', 'buffet', 'bankett_buffet'],
     ['betriebsgastronomie', 'buffet', 'volumen_catering'],        // Sektor gewinnt, Serviceform egal
     ['betriebsgastronomie', 'tellerservice', 'volumen_catering'],
+    // CQ 2.5a: die Sektor-Slugs selbst (Altwerte oben laufen über Sektor::ALIASE)
+    ['event_privat', 'tellerservice', 'bankett_tellergericht'],
+    ['event_privat', 'buffet', 'bankett_buffet'],
+    ['business', 'buffet', 'volumen_catering'],
+    ['crew', 'buffet', null],
 ]);
 
 it('★ raet KEINE Kombination, die nicht in der Tabelle steht', function (string $sektor, string $service) {
@@ -122,4 +127,13 @@ it('Migration laesst Dossiers ohne die alte Achse in Ruhe', function () {
 
     expect(\Illuminate\Support\Facades\DB::table('foodalchemist_knowledge_documents')->where('id', $id)->value('geltung'))
         ->toBe($vorher);
+});
+
+it('CQ 2.5a: Geltung mit Altwert passt zum Slug und umgekehrt; neu geschrieben wird der Slug', function () {
+    expect(WissensGeltung::passt(['sektor' => ['catering']], ['sektor' => 'event_privat']))->toBeTrue()
+        ->and(WissensGeltung::passt(['sektor' => ['event_privat']], ['sektor' => 'catering']))->toBeTrue()
+        ->and(WissensGeltung::passt(['sektor' => ['schule_kita']], ['sektor' => 'kita_schule']))->toBeTrue()
+        ->and(WissensGeltung::passt(['sektor' => ['care']], ['sektor' => 'event_privat']))->toBeFalse()
+        ->and(WissensGeltung::normalisieren(['sektor' => ['Catering', 'crew']]))->toBe(['sektor' => ['event_privat', 'crew']]);
+    expect(fn () => WissensGeltung::normalisieren(['sektor' => ['fine_dining']]))->toThrow(RuntimeException::class);
 });

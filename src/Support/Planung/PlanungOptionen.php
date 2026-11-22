@@ -16,14 +16,7 @@ final class PlanungOptionen
      * anbietet, nicht eine zweite, unabhängig gepflegte Kopie. Wert=>Label, `''` = kein
      * Sektor-Constraint (egal/universell).
      */
-    public const SEKTOR_OPTIONEN = [
-        '' => '(egal/universell)',
-        'betriebsgastronomie' => 'Betriebsgastronomie',
-        'catering' => 'Catering / Event',
-        'restaurant' => 'Restaurant / à la carte',
-        'care' => 'Care / Klinik',
-        'schule_kita' => 'Schule / Kita',
-    ];
+    public const SEKTOR_OPTIONEN = ['' => '(egal/universell)'] + \Platform\FoodAlchemist\Support\Sektor::LABELS;
 
     /** Spec 55 Nachtrag: Anlass — dieselbe Extraktions-Begründung wie SEKTOR_OPTIONEN. Nur VK-Scopes (Gericht/Concept). */
     public const OCCASION_OPTIONEN = [

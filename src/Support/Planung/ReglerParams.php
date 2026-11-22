@@ -49,7 +49,8 @@ final class ReglerParams
                 foreach (['level', 'sektor', 'aroma', 'aroma_kueche', 'occasion', 'serviceform',
                     'kompositions_stil', 'menue_balance', 'menue_typ'] as $k) {
                     if (($p[$k] ?? '') !== '') {
-                        $this->regler[$scope][$k] = $p[$k];
+                        // CQ 2.5a: gespeicherte Altwerte (catering …) als Slug in die Auswahl, sonst bliebe das Select leer.
+                        $this->regler[$scope][$k] = $k === 'sektor' && is_string($p[$k]) ? (\Platform\FoodAlchemist\Support\Sektor::kanonisch($p[$k]) ?? $p[$k]) : $p[$k];
                     }
                 }
                 foreach (['diaet_hart', 'allergen_nogo'] as $k) {

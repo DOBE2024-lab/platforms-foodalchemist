@@ -374,9 +374,8 @@
                                 </x-fa::field>
                                 <x-fa::field label="Verpflegungskontext" for="wissen-vorschau-sektor">
                                     <x-fa::select id="wissen-vorschau-sektor" wire:model="previewSector">
-                                        <option value="">Nicht vorgegeben</option><option value="betriebsgastronomie">Betriebsgastronomie</option>
-                                        <option value="catering">Catering</option><option value="care">Care</option>
-                                        <option value="schule_kita">Schule / Kita</option><option value="restaurant">Restaurant</option>
+                                        <option value="">Nicht vorgegeben</option>
+                                        @foreach(\Platform\FoodAlchemist\Support\Sektor::LABELS as $sektorSlug => $sektorLabel)<option value="{{ $sektorSlug }}">{{ $sektorLabel }}</option>@endforeach
                                     </x-fa::select>
                                 </x-fa::field>
                                 <details class="group/weitere">

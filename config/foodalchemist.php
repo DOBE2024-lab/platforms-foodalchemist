@@ -734,10 +734,12 @@ return [
                 'late_night' => ['event_playbook_latenight'],
             ],
             'sektor' => [
-                'betriebsgastronomie' => ['segment.betriebsgastronomie'],
-                'catering' => ['segment.event_bankett_catering'],
+                // CQ 2.5a: Schlüssel = Sektor-Slug; Altwerte (betriebsgastronomie …) löst achsenKandidaten über Sektor::schreibweisen auf.
+                'business' => ['segment.betriebsgastronomie'],
+                'event_privat' => ['segment.event_bankett_catering'],
                 'care' => ['segment.klinik_senioren_care'],
-                'schule_kita' => ['segment.kita_schule_ernaehrung_dge', 'segment.schulverpflegung', 'segment.kita_verpflegung'],
+                'kita_schule' => ['segment.kita_schule_ernaehrung_dge', 'segment.schulverpflegung', 'segment.kita_verpflegung'],
+                // `crew` hat (noch) kein Segment-Dossier — wie `restaurant` bewusst offen.
                 // ⚠ LÜCKE: für `restaurant` existiert kein segment-Dossier. Bewusst NICHT auf
                 // ein anderes Segment umgebogen — ein falsches Profil ist schlechter als keins.
                 // Sobald „Segment: Restaurant / à la carte — Profil" angelegt ist, hier eintragen.
@@ -780,10 +782,11 @@ return [
          * (`mengen_defaults--format-multiplikatoren-*`).
          */
         'ausgabeform_ableitung' => [
+            // CQ 2.5a: Schlüssel = Sektor-Slug (Support\Sektor); WissensGeltung::mitAbleitung schlüsselt Altwerte um.
             'restaurant|tellerservice' => 'a_la_carte',
-            'catering|tellerservice' => 'bankett_tellergericht',
-            'catering|buffet' => 'bankett_buffet',
-            'betriebsgastronomie|*' => 'volumen_catering',
+            'event_privat|tellerservice' => 'bankett_tellergericht',
+            'event_privat|buffet' => 'bankett_buffet',
+            'business|*' => 'volumen_catering',
         ],
 
         'conformance_kanon' => [

@@ -220,7 +220,7 @@ class Index extends Component
             'scopes' => ['gericht'],
             'titel' => '',
             'brief' => 'Fingerfood-Häppchen für einen Steh-Empfang, in einem Bissen ohne Besteck essbar und formstabil (auch nach kurzer Wartezeit auf der Platte). Ansprechend im Flying Service zu reichen.',
-            'sektor' => 'catering',
+            'sektor' => 'event_privat',
             'occasion' => 'empfang',
             'serviceform' => 'flying',
         ],
@@ -229,7 +229,7 @@ class Index extends Component
             'scopes' => ['gericht'],
             'titel' => '',
             'brief' => 'Warmer Hauptgang für ein gesetztes Galadinner im Tellerservice, gehobenes Niveau, sauber anrichtbar und regenerierfähig für den Bankett-Ausstoß.',
-            'sektor' => 'catering',
+            'sektor' => 'event_privat',
             'occasion' => 'dinner',
             'serviceform' => 'tellerservice',
         ],
@@ -238,7 +238,7 @@ class Index extends Component
             'scopes' => ['gericht'],
             'titel' => '',
             'brief' => 'Mittagsgericht für die Betriebsgastronomie am Buffet, warmhalte- und ausgabestabil über die Mittagslinie, kalkulierbarer Wareneinsatz und alltagstaugliche Zutaten.',
-            'sektor' => 'betriebsgastronomie',
+            'sektor' => 'business',
             'occasion' => 'lunch',
             'serviceform' => 'buffet',
         ],
@@ -256,7 +256,7 @@ class Index extends Component
             'scopes' => ['gericht'],
             'titel' => '',
             'brief' => 'Kindgerechtes Mittagsgericht für Schule/Kita am Buffet, mild gewürzt und akzeptanzstark, an DGE-Qualitätsstandards orientiert und in Serie ausgabefähig.',
-            'sektor' => 'schule_kita',
+            'sektor' => 'kita_schule',
             'occasion' => 'lunch',
             'serviceform' => 'buffet',
         ],
@@ -1332,7 +1332,7 @@ class Index extends Component
         // (kein Fremd-Key-Erbe; z. B. VK-/Menü-Achsen eines Gericht-Snapshots landen nicht im Basisrezept).
         foreach (($payload['regler'] ?? []) as $feld => $wert) {
             if (array_key_exists($feld, $this->regler[$scope])) {
-                $this->regler[$scope][$feld] = $wert;
+                $this->regler[$scope][$feld] = $feld === 'sektor' && is_string($wert) ? (\Platform\FoodAlchemist\Support\Sektor::kanonisch($wert) ?? $wert) : $wert;   // CQ 2.5a: Altwert → Slug
             }
         }
         $this->aktiveVorlage[$scope] = (string) $key;   // Chip-Highlight: sichtbar, WELCHE Vorlage geladen wurde

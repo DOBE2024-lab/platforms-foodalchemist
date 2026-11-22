@@ -28,7 +28,7 @@ class ConceptsSektorTool extends FoodAlchemistTool implements ToolContract, Tool
             'type' => 'object',
             'properties' => [
                 'id' => ['type' => 'integer', 'description' => 'Konzept-Id (team-eigen).'],
-                'slug' => ['type' => 'string', 'description' => 'Sektor-Slug.'],
+                'slug' => ['type' => 'string', 'description' => 'Sektor-Slug: '.implode(', ', \Platform\FoodAlchemist\Support\Sektor::SLUGS).'. Setzen prüft gegen diese Liste (Altwerte catering, betriebsgastronomie, schule_kita werden umgeschlüsselt); Entfernen nimmt auch alten Freitext.'],
                 'on' => ['type' => 'boolean', 'description' => 'true = setzen (Default), false = entfernen.'],
             ],
             'required' => ['id', 'slug'],
@@ -58,7 +58,7 @@ class ConceptsSektorTool extends FoodAlchemistTool implements ToolContract, Tool
             return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
         }
 
-        return ToolResult::success(['id' => $id, 'slug' => $slug, 'on' => $on]);
+        return ToolResult::success(['id' => $id, 'slug' => $on ? (\Platform\FoodAlchemist\Support\Sektor::kanonisch($slug) ?? $slug) : $slug, 'on' => $on]);
     }
 
     public function getMetadata(): array

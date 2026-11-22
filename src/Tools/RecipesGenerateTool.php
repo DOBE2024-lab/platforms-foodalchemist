@@ -137,7 +137,7 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
                 'bio' => ['type' => 'boolean', 'default' => false, 'description' => 'Bio-Ware bevorzugen. Default aus — Bio kommt nie zufällig (4.4r)'],
                 'bestand' => ['type' => 'string', 'enum' => ['hybrid', 'nur_bestand', 'komplett_neu'], 'default' => 'hybrid', 'description' => 'Bestand-Nutzung als Prompt-Hinweis; hybrid = Bestand zuerst, Neues nur für Lücken'],
                 'level' => ['type' => 'string', 'enum' => ['haute_cuisine', 'gehoben', 'klassisch']],
-                'sektor' => ['type' => 'string', 'enum' => ['betriebsgastronomie', 'catering', 'restaurant', 'care', 'schule_kita'], 'description' => 'Verpflegungskontext'],
+                'sektor' => ['type' => 'string', 'enum' => \Platform\FoodAlchemist\Support\Sektor::SLUGS, 'description' => 'Verpflegungskontext'],
                 'diaet_hart' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['vegan', 'vegetarisch', 'glutenfrei', 'laktosefrei', 'halal', 'low_carb']], 'description' => 'Diät-Constraints, hart erzwungen (Multi)'],
                 'aroma' => ['type' => 'string', 'description' => 'Freie Aroma-Richtung, z. B. "rauchig-karamellig"'],
                 // ── nur mit vk=true wirksam ──

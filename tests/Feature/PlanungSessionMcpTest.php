@@ -47,14 +47,25 @@ it('PUT ersetzt generation_params + GET liest sie zurück', function () {
 
     $put = $this->registry->get('foodalchemist.planung_session.PUT')->execute([
         'id' => (int) $session->id,
-        'generation_params' => ['sektor' => 'fine_dining', 'ki_bilder' => false, 'saison' => 'herbst'],
+        'generation_params' => ['sektor' => 'crew', 'ki_bilder' => false, 'saison' => 'herbst'],
     ], $this->ctx);
     expect($put->success)->toBeTrue()
-        ->and($put->data['generation_params'])->toMatchArray(['sektor' => 'fine_dining', 'saison' => 'herbst']);
+        ->and($put->data['generation_params'])->toMatchArray(['sektor' => 'crew', 'saison' => 'herbst']);
 
     $get = $this->registry->get('foodalchemist.planung_session.GET')->execute(['id' => (int) $session->id], $this->ctx);
     expect($get->success)->toBeTrue()
-        ->and($get->data['session']['generation_params'])->toMatchArray(['sektor' => 'fine_dining', 'saison' => 'herbst']);
+        ->and($get->data['session']['generation_params'])->toMatchArray(['sektor' => 'crew', 'saison' => 'herbst']);
+});
+
+it('CQ 2.5a: PUT prüft sektor — Altwert wird Slug, Unbekanntes (fine_dining) fällt weg', function () {
+    $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'x', 'brief' => 'y']);
+    $put = fn (string $sektor) => $this->registry->get('foodalchemist.planung_session.PUT')->execute([
+        'id' => (int) $session->id, 'generation_params' => ['sektor' => $sektor, 'saison' => 'herbst'],
+    ], $this->ctx);
+
+    expect($put('catering')->data['generation_params'])->toMatchArray(['sektor' => 'event_privat'])
+        ->and($put('schule_kita')->data['generation_params'])->toMatchArray(['sektor' => 'kita_schule'])
+        ->and($put('fine_dining')->data['generation_params'])->not->toHaveKey('sektor');
 });
 
 it('POST-Tenancy: PUT auf eine geerbte Session wird abgewiesen (D1 ownedSession)', function () {

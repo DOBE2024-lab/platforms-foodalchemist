@@ -322,10 +322,12 @@ class ConceptService
     {
         $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
         $this->guardOwner($concept, $team);
-        $slug = trim($slug);
-        if ($slug === '') {
+        if (trim($slug) === '') {
             return;
         }
+        // CQ 2.5a: nur noch das Sektor-Vokabular (Altwerte über Alias). Bestehender Freitext bleibt in der DB.
+        $slug = \Platform\FoodAlchemist\Support\Sektor::kanonisch($slug)
+            ?? throw new \RuntimeException('Unbekannter Sektor „'.trim($slug).'“. Erlaubt: '.implode(', ', \Platform\FoodAlchemist\Support\Sektor::SLUGS).'.');
         $row = FoodAlchemistConceptSektorEignung::withTrashed()
             ->where('concept_id', $conceptId)->where('sector_slug', $slug)->first();
         if ($row !== null) {

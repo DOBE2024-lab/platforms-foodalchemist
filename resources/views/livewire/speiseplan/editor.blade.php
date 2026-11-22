@@ -16,10 +16,6 @@
 
     // Seitenlokale Klassen — nur Tokens, damit hell und Werkbank stimmen.
     $etikett = 'text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-2)]';
-    $seg = 'inline-flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]';
-    $segKnopf = 'h-7 px-3 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors';
-    $segAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
-    $segAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
     $chip = 'inline-flex items-center h-7 px-2.5 rounded-full border text-[length:var(--fa-text-sm)] transition-colors duration-150';
     $chipAn = 'bg-[var(--fa-accent-soft)] border-[var(--fa-accent)] text-[var(--fa-accent)] font-medium';
     $chipAus = 'bg-[var(--fa-surface)] border-[var(--fa-line-strong)] text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)] hover:border-[var(--fa-ink-3)]';
@@ -146,26 +142,24 @@
                     <div x-show="tab === 'kalender'" x-cloak class="pt-4 flex flex-col gap-4" data-sp-tab-kalender>
                         {{-- Werkzeugleiste in Demo-Reihenfolge: Woche/Monat · Mahlzeit · Kompakt/Detail, Navigation rechts --}}
                         <div class="flex flex-wrap items-center gap-3">
-                            <div role="group" aria-label="Ansicht" class="{{ $seg }}">
+                            <x-fa::segmented label="Ansicht">
                                 @foreach(['woche' => 'Woche', 'monat' => 'Monat'] as $av => $al)
-                                    <button type="button" wire:click="ansichtSetzen('{{ $av }}')" aria-pressed="{{ $ansicht === $av ? 'true' : 'false' }}"
-                                            class="{{ $segKnopf }} {{ $ansicht === $av ? $segAn : $segAus }}">{{ $al }}</button>
+                                    <x-fa::segment :an="$ansicht === $av" wire:click="ansichtSetzen('{{ $av }}')">{{ $al }}</x-fa::segment>
                                 @endforeach
-                            </div>
-                            <div role="group" aria-label="Mahlzeit" class="{{ $seg }}">
+                            </x-fa::segmented>
+                            <x-fa::segmented label="Mahlzeit">
                                 @foreach($mahlzeiten as $mk => $ml)
-                                    <button type="button" wire:click="mahlzeitSetzen('{{ $mk }}')" aria-pressed="{{ $mahlzeit === $mk ? 'true' : 'false' }}"
-                                            class="{{ $segKnopf }} {{ $mahlzeit === $mk ? $segAn : $segAus }}">{{ $ml }}</button>
+                                    <x-fa::segment :an="$mahlzeit === $mk" wire:click="mahlzeitSetzen('{{ $mk }}')">{{ $ml }}</x-fa::segment>
                                 @endforeach
-                            </div>
+                            </x-fa::segmented>
 
                             @if($ansicht === 'woche')
                                 {{-- Spec 57 · Paket 1: Zell-Dichte --}}
-                                <div role="group" aria-label="Zell-Dichte" class="{{ $seg }}" data-sp-dichte>
+                                <x-fa::segmented label="Zell-Dichte" data-sp-dichte="">
                                     @foreach(['kompakt' => 'Kompakt', 'detail' => 'Detail'] as $dv => $dl)
-                                        <button type="button" wire:click="dichteSetzen('{{ $dv }}')" class="{{ $segKnopf }} {{ $dichte === $dv ? $segAn : $segAus }}" aria-pressed="{{ $dichte === $dv ? 'true' : 'false' }}">{{ $dl }}</button>
+                                        <x-fa::segment :an="$dichte === $dv" wire:click="dichteSetzen('{{ $dv }}')">{{ $dl }}</x-fa::segment>
                                     @endforeach
-                                </div>
+                                </x-fa::segmented>
                             @endif
                             <div class="ml-auto flex items-center gap-1">
                                 @if($ansicht === 'woche')
@@ -330,11 +324,11 @@
                                         <p class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">
                                             {{ $pickerErsetzenId ? 'Ersetzen' : 'Einfügen' }} · {{ $tagKurz[\Illuminate\Support\Carbon::parse($cellDatum)->isoWeekday()] ?? '' }} {{ \Illuminate\Support\Carbon::parse($cellDatum)->format('d.m.') }} · {{ $linien->firstWhere('id', $cellLinie)?->name ?? 'Ohne Linie' }}
                                         </p>
-                                        <div role="group" aria-label="Art des Inhalts" class="{{ $seg }}">
+                                        <x-fa::segmented label="Art des Inhalts">
                                             @foreach($typLabel as $tv => $tl)
-                                                <button type="button" wire:click="$set('pickerTyp', '{{ $tv }}')" aria-pressed="{{ $pickerTyp === $tv ? 'true' : 'false' }}" class="{{ $segKnopf }} {{ $pickerTyp === $tv ? $segAn : $segAus }}">{{ $tl }}</button>
+                                                <x-fa::segment :an="$pickerTyp === $tv" wire:click="$set('pickerTyp', '{{ $tv }}')">{{ $tl }}</x-fa::segment>
                                             @endforeach
-                                        </div>
+                                        </x-fa::segmented>
                                         <div class="relative flex-1 min-w-[14rem]">
                                             @svg('heroicon-m-magnifying-glass', 'w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fa-ink-3)] pointer-events-none')
                                             <x-fa::input type="search" wire:model.live.debounce.300ms="pickerSuche" placeholder="{{ $typLabel[$pickerTyp] ?? 'Gericht' }} suchen" class="pl-8" aria-label="{{ $typLabel[$pickerTyp] ?? 'Gericht' }} suchen" />
@@ -498,12 +492,12 @@
                     <div x-show="tab === 'bedarf'" x-cloak class="pt-4 flex flex-col gap-4" data-sp-tab-bedarf>
                         <x-fa::section title="Bedarf" icon="heroicon-o-shopping-cart" :meta="$kwText" description="Rezepte bis zum Grundprodukt aufgelöst, in der Basiseinheit, mit dem Hauptartikel des Lieferanten und ganzen Gebinden.">
                             <div class="flex flex-wrap items-center gap-3">
-                                <div role="group" aria-label="Zeitraum" class="{{ $seg }}">
-                                    <button type="button" wire:click="bedarfTagSetzen(null)" aria-pressed="{{ $bedarfTag === null ? 'true' : 'false' }}" class="{{ $segKnopf }} {{ $bedarfTag === null ? $segAn : $segAus }}">Ganze Woche</button>
+                                <x-fa::segmented label="Zeitraum">
+                                    <x-fa::segment :an="$bedarfTag === null" wire:click="bedarfTagSetzen(null)">Ganze Woche</x-fa::segment>
                                     @foreach($wochenTage as $wt)
-                                        <button type="button" wire:click="bedarfTagSetzen('{{ $wt->format('Y-m-d') }}')" aria-pressed="{{ $bedarfTag === $wt->format('Y-m-d') ? 'true' : 'false' }}" class="{{ $segKnopf }} {{ $bedarfTag === $wt->format('Y-m-d') ? $segAn : $segAus }}">{{ $tagKurz[$wt->isoWeekday()] }}</button>
+                                        <x-fa::segment :an="$bedarfTag === $wt->format('Y-m-d')" wire:click="bedarfTagSetzen('{{ $wt->format('Y-m-d') }}')">{{ $tagKurz[$wt->isoWeekday()] }}</x-fa::segment>
                                     @endforeach
-                                </div>
+                                </x-fa::segmented>
                                 @unless($bedarfAn)
                                     <x-fa::button icon="heroicon-m-calculator" wire:click="bedarfBerechnen" data-sp-bedarf-berechnen>Bedarf berechnen</x-fa::button>
                                 @endunless
@@ -904,7 +898,7 @@
                                             <img src="{{ $brandingBilder['logo'] }}" alt="Logo" class="h-9 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-ground)]">
                                             <x-fa::button variant="ghost" size="sm" wire:click="brandingLogoEntfernen">Logo entfernen</x-fa::button>
                                         @endif
-                                        <input type="file" wire:model="logoUpload" accept="image/*" aria-label="Logo hochladen" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
+                                        <x-fa::upload wire:model="logoUpload" accept="image/*" aria-label="Logo hochladen" />
                                     </div>
                                 </x-fa::field>
                                 <x-fa::field label="Titelbild">
@@ -913,7 +907,7 @@
                                             <img src="{{ $brandingBilder['cover'] }}" alt="Titelbild" class="h-9 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-ground)]">
                                             <x-fa::button variant="ghost" size="sm" wire:click="brandingCoverEntfernen">Titelbild entfernen</x-fa::button>
                                         @endif
-                                        <input type="file" wire:model="coverUpload" accept="image/*" aria-label="Titelbild hochladen" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
+                                        <x-fa::upload wire:model="coverUpload" accept="image/*" aria-label="Titelbild hochladen" />
                                     </div>
                                 </x-fa::field>
                             </div>

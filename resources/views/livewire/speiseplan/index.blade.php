@@ -50,9 +50,9 @@
             @if($plan)
                 @include('foodalchemist::livewire.speiseplan.partials.detail', ['plan' => $plan])
             @else
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]">
+                <x-fa::page>
                     <x-fa::empty icon="heroicon-o-calendar-days" title="Kein Plan gewählt">Links einen Plan anklicken, dann erscheinen hier Einträge, Linien und offene Punkte.</x-fa::empty>
-                </div>
+                </x-fa::page>
             @endif
         </x-fa::detail-sidebar>
     </x-slot>

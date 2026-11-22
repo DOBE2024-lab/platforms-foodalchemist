@@ -299,7 +299,7 @@
                                     <img src="{{ $blockImageUrl }}" alt="" class="h-12 w-20 object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                                     <x-fa::button size="sm" variant="danger" icon="heroicon-m-trash" wire:click="blockBildEntfernen({{ $i }})">Bild entfernen</x-fa::button>
                                 @endif
-                                <input type="file" wire:model="blockImageUpload" accept="image/*" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] min-w-0">
+                                <x-fa::upload wire:model="blockImageUpload" accept="image/*" class="min-w-0" />
                                 <x-fa::signal tone="info" icon="heroicon-m-arrow-path" wire:loading wire:target="blockImageUpload">Wird hochgeladen</x-fa::signal>
                             </div>
                             @error('blockImageUpload')<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert">{{ $message }}</p>@enderror
@@ -405,7 +405,7 @@
                         <x-fa::select id="design-font-style" wire:model="fontStyle" :options="['normal' => 'Normal', 'italic' => 'Kursiv']" />
                     </x-fa::field>
                     <div class="flex flex-col gap-1">
-                        <input type="file" wire:model="fontUpload" accept=".woff2,.woff,.ttf,.otf" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] min-w-0" data-fa-font-datei>
+                        <x-fa::upload wire:model="fontUpload" accept=".woff2,.woff,.ttf,.otf" class="min-w-0" data-fa-font-datei="" />
                         <x-fa::signal tone="info" icon="heroicon-m-arrow-path" wire:loading wire:target="fontUpload">Wird hochgeladen</x-fa::signal>
                     </div>
                     <x-fa::button size="sm" variant="primary" icon="heroicon-m-arrow-up-tray" wire:click="schriftHochladen" data-fa-font-hochladen>Schrift hinzufügen</x-fa::button>

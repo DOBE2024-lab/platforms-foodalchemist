@@ -477,8 +477,7 @@
                             <img src="{{ $dishImageUrl }}" alt="" class="h-12 w-20 object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                             <x-fa::button size="sm" variant="danger" icon="heroicon-m-trash" wire:click="dishImageEntfernen">Foto entfernen</x-fa::button>
                         @endif
-                        <input type="file" wire:model="dishImageUpload" accept="image/*" data-rezept-bild-upload
-                               class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] file:mr-2 file:h-7 file:px-2.5 file:rounded-[var(--fa-radius-control)] file:border file:border-[var(--fa-line-strong)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:cursor-pointer">
+                        <x-fa::upload wire:model="dishImageUpload" accept="image/*" data-rezept-bild-upload="" />
                         <span wire:loading wire:target="dishImageUpload" class="{{ $hinweis }}">Lädt …</span>
                     </div>
                     @error('dishImageUpload')<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]">{{ $message }}</p>@enderror

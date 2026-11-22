@@ -28,7 +28,7 @@
         <x-fa::section title="Stammdaten prüfen" icon="heroicon-o-arrow-up-tray" data-stammdaten-upload>
             <div class="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end">
                 <x-fa::field label="Datei (.xlsx, .ods, .csv — bis 10 MB)" for="sd-datei">
-                    <input id="sd-datei" type="file" wire:model="datei" accept=".xlsx,.xlsm,.ods,.csv,.tsv,.txt" class="fa-control h-9 w-full text-[length:var(--fa-text-md)]" data-stammdaten-datei />
+                    <x-fa::upload size="md" id="sd-datei" wire:model="datei" accept=".xlsx,.xlsm,.ods,.csv,.tsv,.txt" class="w-full" data-stammdaten-datei="" />
                 </x-fa::field>
                 <x-fa::field label="Lieferant (wenn die Datei keine Lieferant-Spalte hat)" for="sd-lieferant" class="w-full md:w-72">
                     <x-fa::select id="sd-lieferant" wire:model="lieferantId" placeholder="Aus der Datei" data-stammdaten-lieferant>

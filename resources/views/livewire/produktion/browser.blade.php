@@ -21,9 +21,6 @@
     $chip = 'inline-flex items-center h-7 px-2.5 rounded-full border text-[length:var(--fa-text-md)] transition-colors duration-150';
     $chipAn = 'bg-[var(--fa-accent-soft)] border-[var(--fa-accent)] text-[var(--fa-accent)] font-medium';
     $chipAus = 'bg-[var(--fa-surface)] border-[var(--fa-line-strong)] text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)] hover:border-[var(--fa-ink-3)]';
-    $segment = 'h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-md)] font-medium transition-colors duration-150';
-    $segmentAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
-    $segmentAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
     $kleinLabel = 'px-2.5 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]';
     $menge = fn ($wert) => rtrim(rtrim(number_format((float) $wert, 2, ',', '.'), '0'), ',') ?: '0';
 @endphp
@@ -166,13 +163,11 @@
             <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--fa-line)]">
                 <h2 class="fa-t-h2">Produktionsaufträge</h2>
                 <div class="flex flex-wrap items-center gap-3">
-                    <div class="inline-flex items-center gap-0.5 p-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)]" role="group" aria-label="Ansicht" data-produktion-ansichten>
+                    <x-fa::segmented label="Ansicht" data-produktion-ansichten="">
                         @foreach($ansichten as $key => $def)
-                            <button type="button" wire:click="waehleAnsicht('{{ $key }}')" wire:key="pa-{{ $key }}"
-                                aria-pressed="{{ $ansicht === $key ? 'true' : 'false' }}"
-                                class="{{ $segment }} {{ $ansicht === $key ? $segmentAn : $segmentAus }}">{{ $def[0] }}</button>
+                            <x-fa::segment :an="$ansicht === $key" wire:click="waehleAnsicht('{{ $key }}')" wire:key="pa-{{ $key }}">{{ $def[0] }}</x-fa::segment>
                         @endforeach
-                    </div>
+                    </x-fa::segmented>
                     <label class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">
                         Je Seite
                         <x-fa::select wire:model.live="perPage" size="sm" class="w-20" data-produktion-perpage>

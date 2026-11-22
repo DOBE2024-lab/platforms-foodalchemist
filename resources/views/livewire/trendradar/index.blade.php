@@ -367,7 +367,7 @@
                     $kf = $gewaehlt->wirksameKonfidenz();
                     $ebIdx = $gewaehlt->ebene ? array_search($gewaehlt->ebene, $ebenenReihe, true) : -1;
                 @endphp
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-trend-detail="{{ $gewaehlt->id }}">
+                <x-fa::page data-trend-detail="{{ $gewaehlt->id }}">
                     <x-fa::detail-kopf :title="$gewaehlt->name" :subtitle="$gewaehlt->kategorie ? V::KATEGORIEN[$gewaehlt->kategorie].($gewaehlt->food_cluster ? ' · '.V::FOOD_CLUSTER[$gewaehlt->food_cluster] : '') : 'Noch nicht eingeordnet'">
                         <x-slot:badges>
                             @if($gewaehlt->typ)<x-fa::badge :tone="$gewaehlt->typ === 'hype' ? 'warn' : 'accent'">{{ V::TYPEN[$gewaehlt->typ] }}</x-fa::badge>@endif
@@ -514,7 +514,7 @@
                                         <div></div>
                                     @endif
                                     <x-fa::field label="Screenshot, Foto oder PDF" for="tb-datei" optional hint="max. 15 MB" class="col-span-2">
-                                        <input id="tb-datei" type="file" wire:model="belegDatei" accept="image/*,application/pdf" class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
+                                        <x-fa::upload id="tb-datei" wire:model="belegDatei" accept="image/*,application/pdf" class="block w-full" />
                                         <div wire:loading wire:target="belegDatei" class="fa-t-muted">lädt hoch …</div>
                                     </x-fa::field>
                                 </div>
@@ -558,11 +558,11 @@
                             </x-fa::section>
                         @endif
                     </div>
-                </div>
+                </x-fa::page>
             @else
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]">
+                <x-fa::page>
                     <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Trend gewählt">Einen Punkt im Radar oder eine Zeile in der Liste anklicken.</x-fa::empty>
-                </div>
+                </x-fa::page>
             @endif
         </x-fa::detail-sidebar>
         @endif
@@ -574,7 +574,7 @@
         <x-fa::modal-section title="Was hast du gesehen?">
             <div class="grid grid-cols-2 gap-3" data-fundstueck-form>
                 <x-fa::field label="Screenshot oder Foto" for="fs-datei" hint="Bild oder PDF, max. 15 MB" class="col-span-2">
-                    <input id="fs-datei" type="file" wire:model="fundDatei" accept="image/*,application/pdf" capture="environment" class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
+                    <x-fa::upload id="fs-datei" wire:model="fundDatei" accept="image/*,application/pdf" capture="environment" class="block w-full" />
                     <div wire:loading wire:target="fundDatei" class="fa-t-muted">lädt hoch …</div>
                 </x-fa::field>
                 <x-fa::field label="Gehört zu" for="fs-inspiration" hint="Gibt es das Thema schon, die Quelle dort hinzufügen statt eine neue Karte anzulegen." class="col-span-2">
@@ -618,7 +618,7 @@
                     <x-fa::field label="Wo gesehen" for="tn-fundort" optional><x-fa::input id="tn-fundort" wire:model="neu.fundort" placeholder="Studie, Account, Lokal" /></x-fa::field>
                     <x-fa::field label="Link" for="tn-url" optional class="col-span-2"><x-fa::input id="tn-url" wire:model="neu.url" placeholder="https://…" /></x-fa::field>
                     <x-fa::field label="Datei" for="tn-datei" optional hint="Bild oder PDF, max. 15 MB" class="col-span-2">
-                        <input id="tn-datei" type="file" wire:model="neuDatei" accept="image/*,application/pdf" class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
+                        <x-fa::upload id="tn-datei" wire:model="neuDatei" accept="image/*,application/pdf" class="block w-full" />
                         <div wire:loading wire:target="neuDatei" class="fa-t-muted">lädt hoch …</div>
                     </x-fa::field>
                     <x-fa::field label="Notiz" for="tn-notiz" optional class="col-span-2"><x-fa::textarea id="tn-notiz" rows="2" wire:model="neu.notiz" /></x-fa::field>

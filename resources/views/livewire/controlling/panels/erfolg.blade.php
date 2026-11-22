@@ -30,9 +30,7 @@
                    data-ctrl-sales-import>
         <div class="flex flex-wrap items-end gap-3">
             <x-fa::field label="Datei hochladen" for="ctrl-sales-datei">
-                <input type="file" id="ctrl-sales-datei" wire:model="datei" accept=".csv,.tsv,.txt"
-                       class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] file:mr-3 file:h-9 file:px-3.5 file:rounded-[var(--fa-radius-control)] file:border file:border-solid file:border-[var(--fa-line-strong)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:text-[length:var(--fa-text-md)] file:font-medium hover:file:bg-[var(--fa-hover)]"
-                       data-ctrl-sales-datei />
+                <x-fa::upload size="md" id="ctrl-sales-datei" wire:model="datei" accept=".csv,.tsv,.txt" data-ctrl-sales-datei="" />
             </x-fa::field>
             <x-fa::button icon="heroicon-o-inbox-arrow-down" wire:click="hochladen" :disabled="! $datei">Datei ablegen</x-fa::button>
 

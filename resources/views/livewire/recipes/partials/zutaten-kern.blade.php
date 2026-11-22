@@ -43,14 +43,10 @@
         @unless($vkKontext)
         <x-fa::card as="aside" class="p-3 flex flex-col gap-3 min-w-0" x-bind:class="einfuegenAus === 'gp' ? '' : 'fa-zutaten-passiv'" data-einfuegen="gp" aria-label="Grundprodukte einfügen">
             {{-- Editor schmaler als 92 rem: EINE Einfüge-Spalte mit Umschalter; breiter stehen beide Spalten nebeneinander --}}
-            <div role="group" aria-label="Einfügen aus" class="fa-zutaten-umschalter flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
-                <button type="button" @click="einfuegenAus = 'gp'" :aria-pressed="einfuegenAus === 'gp'"
-                        class="flex-1 h-8 px-2 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors"
-                        :class="einfuegenAus === 'gp' ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]'">Grundprodukte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="gpTotal"></span></button>
-                <button type="button" @click="einfuegenAus = 'rez'" :aria-pressed="einfuegenAus === 'rez'"
-                        class="flex-1 h-8 px-2 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors"
-                        :class="einfuegenAus === 'rez' ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]'">Basisrezepte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="rezTotal"></span></button>
-            </div>
+            <x-fa::segmented label="Einfügen aus" :breit="true" class="fa-zutaten-umschalter">
+                <x-fa::segment an-alpine="einfuegenAus === 'gp'" size="eng" x-on:click="einfuegenAus = 'gp'" class="flex-1">Grundprodukte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="gpTotal"></span></x-fa::segment>
+                <x-fa::segment an-alpine="einfuegenAus === 'rez'" size="eng" x-on:click="einfuegenAus = 'rez'" class="flex-1">Basisrezepte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="rezTotal"></span></x-fa::segment>
+            </x-fa::segmented>
 <fieldset class="flex flex-col gap-2 min-w-0">
                 <legend class="sr-only">Grundprodukte filtern</legend>
                 <div class="grid grid-cols-1 gap-2">
@@ -409,14 +405,10 @@
         <aside class="fa-surface p-3 flex flex-col gap-3 min-w-0" :class="einfuegenAus === 'rez' ? '' : 'fa-zutaten-passiv'" data-einfuegen="rez" aria-label="Basisrezepte einfügen" @if($vkKontext) style="grid-column: 1" @endif>
             {{-- Editor schmaler als 92 rem: EINE Einfüge-Spalte mit Umschalter; breiter stehen beide Spalten nebeneinander --}}
             @unless($vkKontext)
-            <div role="group" aria-label="Einfügen aus" class="fa-zutaten-umschalter flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
-                <button type="button" @click="einfuegenAus = 'gp'" :aria-pressed="einfuegenAus === 'gp'"
-                        class="flex-1 h-8 px-2 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors"
-                        :class="einfuegenAus === 'gp' ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]'">Grundprodukte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="gpTotal"></span></button>
-                <button type="button" @click="einfuegenAus = 'rez'" :aria-pressed="einfuegenAus === 'rez'"
-                        class="flex-1 h-8 px-2 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors"
-                        :class="einfuegenAus === 'rez' ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]'">Basisrezepte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="rezTotal"></span></button>
-            </div>
+            <x-fa::segmented label="Einfügen aus" :breit="true" class="fa-zutaten-umschalter">
+                <x-fa::segment an-alpine="einfuegenAus === 'gp'" size="eng" x-on:click="einfuegenAus = 'gp'" class="flex-1">Grundprodukte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="gpTotal"></span></x-fa::segment>
+                <x-fa::segment an-alpine="einfuegenAus === 'rez'" size="eng" x-on:click="einfuegenAus = 'rez'" class="flex-1">Basisrezepte <span class="tabular-nums text-[var(--fa-ink-3)]" x-text="rezTotal"></span></x-fa::segment>
+            </x-fa::segmented>
             @endunless
 <fieldset class="flex flex-col gap-2 min-w-0">
                 <legend class="sr-only">Basisrezepte filtern</legend>

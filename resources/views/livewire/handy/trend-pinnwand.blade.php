@@ -21,7 +21,7 @@
 
             <label class="flex flex-col gap-1.5">
                 <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">Foto (Kamera oder Galerie)</span>
-                <input type="file" wire:model="fundDatei" accept="image/*" class="block w-full min-h-11 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" data-fa-handy-ablegen-foto>
+                <x-fa::upload size="handy" wire:model="fundDatei" accept="image/*" class="block w-full min-h-11" data-fa-handy-ablegen-foto="" />
                 <span wire:loading wire:target="fundDatei" class="fa-t-muted">lädt hoch …</span>
             </label>
             @if($eigeneInspirationen !== [])

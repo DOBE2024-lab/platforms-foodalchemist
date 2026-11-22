@@ -83,9 +83,9 @@
             @if($karte)
                 @include('foodalchemist::livewire.speisekarte.partials.detail', ['karte' => $karte])
             @else
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]">
+                <x-fa::page>
                     <x-fa::empty icon="heroicon-o-clipboard-document-list" title="Keine Karte gewählt">Links eine Karte anklicken, dann erscheinen hier Wareneinsatz, Rubriken und offene Punkte.</x-fa::empty>
-                </div>
+                </x-fa::page>
             @endif
         </x-fa::detail-sidebar>
     </x-slot>
@@ -303,7 +303,7 @@
                                             <x-fa::icon-button icon="heroicon-o-trash" label="Logo entfernen" tone="danger" size="sm" wire:click="brandingLogoEntfernen" />
                                         </div>
                                     @endif
-                                    <input type="file" wire:model="logoUpload" accept="image/*" aria-label="Logo hochladen" class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" />
+                                    <x-fa::upload size="md" wire:model="logoUpload" accept="image/*" aria-label="Logo hochladen" />
                                     <div wire:loading wire:target="logoUpload" class="fa-t-muted">Wird hochgeladen …</div>
                                 </x-fa::field>
                                 <x-fa::field label="Titelbild">
@@ -313,7 +313,7 @@
                                             <x-fa::icon-button icon="heroicon-o-trash" label="Titelbild entfernen" tone="danger" size="sm" wire:click="brandingCoverEntfernen" />
                                         </div>
                                     @endif
-                                    <input type="file" wire:model="coverUpload" accept="image/*" aria-label="Titelbild hochladen" class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" />
+                                    <x-fa::upload size="md" wire:model="coverUpload" accept="image/*" aria-label="Titelbild hochladen" />
                                     <div wire:loading wire:target="coverUpload" class="fa-t-muted">Wird hochgeladen …</div>
                                 </x-fa::field>
                             </div>

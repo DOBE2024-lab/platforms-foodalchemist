@@ -1,23 +1,16 @@
     {{-- Reiter ZIELE: links der Katalog (wählen, Menge eingeben, einfügen), rechts der Ziel-Korb.
          Ab Laptop-Breite nebeneinander, darunter gestapelt. --}}
     @php
-        $segment = 'h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-md)] font-medium transition-colors duration-150';
-        $segmentAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
-        $segmentAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
     @endphp
     <div x-show="tab === 'ziele'" x-cloak class="pt-4"
          x-data="produktionZiele(@js($zielTyp), @js($zielVokabular ?? null))"
          data-produktion-ziele-picker>
     <x-fa::section title="Ziele" icon="heroicon-o-flag" description="Was soll produziert werden? Konzepte, Gerichte, Basisrezepte, Foodbook-Kapitel oder Angebote mit Menge übernehmen.">
-        <div class="inline-flex flex-wrap items-center gap-0.5 p-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] self-start" role="group" aria-label="Art des Ziels">
+        <x-fa::segmented label="Art des Ziels" class="flex-wrap self-start">
             <template x-for="t in typen" :key="t.key">
-                <button type="button" @click="typSetzen(t.key)"
-                        class="{{ $segment }}"
-                        :class="zielTyp === t.key ? '{{ $segmentAn }}' : '{{ $segmentAus }}'"
-                        :aria-pressed="zielTyp === t.key ? 'true' : 'false'"
-                        x-text="t.label"></button>
+                <x-fa::segment an-alpine="zielTyp === t.key" x-on:click="typSetzen(t.key)" x-text="t.label"></x-fa::segment>
             </template>
-        </div>
+        </x-fa::segmented>
 
         <div class="flex flex-col lg:flex-row gap-3 items-start">
             <aside class="w-full lg:w-72 xl:w-80 shrink-0 flex flex-col rounded-[var(--fa-radius-surface)] bg-[var(--fa-ground)] border border-[var(--fa-line)] p-2.5 lg:sticky lg:top-14 self-start max-h-[65vh]" data-produktion-katalog>
@@ -52,10 +45,10 @@
                                 <x-fa::input size="sm" numeric x-model="neu.menge" x-on:keydown.enter.prevent="einfuegen()" placeholder="Menge" aria-label="Menge"
                                        class="w-20" data-produktion-menge />
                                 <span x-show="zielTyp !== 'basisrezept'" class="fa-t-muted" x-text="zielTyp === 'concept' ? 'Personen' : 'Portionen'"></span>
-                                <div x-show="zielTyp === 'basisrezept'" x-cloak class="inline-flex items-center gap-0.5 p-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] shrink-0" role="group" aria-label="Einheit" data-produktion-basis-einheit>
-                                    <button type="button" @click="neu.einheit = 'ansaetze'" class="{{ $segment }}" :class="neu.einheit === 'ansaetze' ? '{{ $segmentAn }}' : '{{ $segmentAus }}'">Ansätze</button>
-                                    <button type="button" @click="neu.einheit = 'kg'" class="{{ $segment }}" :class="neu.einheit === 'kg' ? '{{ $segmentAn }}' : '{{ $segmentAus }}'">kg</button>
-                                </div>
+                                <x-fa::segmented label="Einheit" class="shrink-0" x-show="zielTyp === 'basisrezept'" x-cloak="" data-produktion-basis-einheit="">
+                                    <x-fa::segment an-alpine="neu.einheit === 'ansaetze'" x-on:click="neu.einheit = 'ansaetze'">Ansätze</x-fa::segment>
+                                    <x-fa::segment an-alpine="neu.einheit === 'kg'" x-on:click="neu.einheit = 'kg'">kg</x-fa::segment>
+                                </x-fa::segmented>
                                 {{-- Gericht: Darreichung wählen (Menge der Produktion kommt aus deren Grammatur). --}}
                                 <select x-show="zielTyp === 'recipe' && formen.length > 1" x-cloak x-model="neu.form" aria-label="Darreichung"
                                         class="fa-control fa-select pr-8 h-8 w-auto max-w-full text-[length:var(--fa-text-sm)]" data-produktion-darreichung>

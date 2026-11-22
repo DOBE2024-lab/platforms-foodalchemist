@@ -59,8 +59,7 @@
     @endif
 
     <div class="flex flex-wrap items-center gap-2" data-foto-upload>
-        <input type="file" wire:model="fotoUpload" accept="image/*" data-foto-datei aria-label="Foto auswählen"
-               class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] file:mr-2 file:h-7 file:px-2.5 file:rounded-[var(--fa-radius-control)] file:border file:border-[var(--fa-line-strong)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:cursor-pointer" />
+        <x-fa::upload wire:model="fotoUpload" accept="image/*" data-foto-datei="" aria-label="Foto auswählen" />
         <x-fa::input size="sm" wire:model="fotoCaption" placeholder="Bildunterschrift (optional)" aria-label="Bildunterschrift" class="w-56 max-w-full" />
         <x-fa::button size="sm" icon="heroicon-m-arrow-up-tray" wire:click="fotoHochladen" wire:loading.attr="disabled" wire:target="fotoUpload, fotoHochladen" data-foto-hochladen>
             <span wire:loading.remove wire:target="fotoUpload, fotoHochladen">{{ $stepId === 0 ? 'Foto hochladen' : 'Hochladen und zuordnen' }}</span>

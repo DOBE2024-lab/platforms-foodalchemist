@@ -64,7 +64,7 @@
     }
 @endphp
 
-<div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-sk-detail>
+<x-fa::page data-sk-detail="">
     {{-- Kopf: Name, Kartentyp, Logo, eine Hauptaktion, Weiteres im Menü --}}
     <x-fa::detail-kopf :title="$karte->name" :subtitle="$karte->crmCompany?->display_name">
         @if($logoUrl)
@@ -179,4 +179,4 @@
             </dl>
         </x-fa::section>
     </div>
-</div>
+</x-fa::page>

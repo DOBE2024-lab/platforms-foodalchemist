@@ -1156,7 +1156,7 @@
                                              scope="activity_tagesplan" side="right">
                 {{-- Anatomie Detail-Panels (DESIGN.md): Kopf (Tag, Last, „Im Editor öffnen") · Kennzahlen · offene Punkte
                      (Posten über Last) · Inhalt (Posten mit ihren Positionen). Ohne gewählten Tag: Übersicht des Zeitraums. --}}
-                <div class="p-4 flex flex-col gap-5 min-h-full bg-[var(--fa-ground)]" data-tagesplanung-activity>
+                <x-fa::page data-tagesplanung-activity="">
                     @if($selectedDay && $tagDetail)
                         @php
                             $tagPosten = collect($tagDetail['auslastung'])->filter(function ($b) use ($tagDetail) {
@@ -1281,7 +1281,7 @@
                             </x-fa::section>
                         </div>
                     @endif
-                </div>
+                </x-fa::page>
             </x-fa::detail-sidebar>
         </x-slot>
 

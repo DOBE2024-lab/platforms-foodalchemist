@@ -61,6 +61,14 @@ final class UiRegeln
         // Handgebaute Karte statt x-fa::card (2.4a): Klasse fa-surface ODER bg-surface + border + Karten-Radius (surface/card/lg/xl/2xl)
         // in einem class-Attribut. Bestand: klickbare Karten (a, button, label), Tags mit Direktiven im Tag, figure.
         'rohe_karte' => '/(?<![:\w-])class="(?:(?:[^"]*\s)?fa-surface(?=[\s"])|(?=[^"]*(?<![\w-])bg-\[var\(--fa-surface\)\])(?=[^"]*(?<![\w-])border(?![\w-]))(?=[^"]*(?<![\w-])rounded-(?:\[var\(--fa-radius-(?:surface|card)\)\]|lg|xl|2xl)(?![\w-])))/',
+        // Rohes Datei-Feld statt x-fa::upload (2.4a). Ausnahme: der Kamera-Knopf am Handy (label mit input sr-only).
+        'roher_upload' => '/<input\b(?!(?:->|=>|[^>])*?\bsr-only\b)(?:->|=>|"[^"]*"|\'[^\']*\'|[^>"\'])*?\btype\s*=\s*["\']file["\']/',
+        // Handgebauter Umschalter statt x-fa::segmented (2.4a): Spur mit p-0.5/p-1 auf neutral-soft/ground oder eine lokale
+        // $segment/$seg/$segKnopf-Definition. Bestand: Reiter-Leisten (role="tablist"), Kiosk-Tagesplan, Raster-Spur in
+        // orders/editor, die a-Knöpfe im Rezept-Schritt-Editor (bleiben im gesperrten fieldset bedienbar).
+        'rohes_segment' => '/(?<![:\w-])class="(?=[^"]*(?<![\w-])p-(?:0\.5|1)(?![\w-]))(?=[^"]*(?<![\w-])bg-\[var\(--fa-(?:neutral-soft|ground)\)\])[^"]*"|\$seg(?:ment)?(?:Knopf)?\s*=(?!=)/',
+        // Handgebauter Seitenrahmen statt x-fa::page (2.4a).
+        'roher_seitenrahmen' => '/min-h-full bg-\[var\(--fa-ground\)\]/',
         // Alte Tailwind-Palette statt Tokens (--fa-*).
         'alte_palette' => '/(?<![\w-])(?:text|bg|border(?:-[xytrbl])?|ring|ring-offset|divide|outline|from|via|to|placeholder|fill|stroke|decoration|accent|caret|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)(?![\w-])/',
     ];

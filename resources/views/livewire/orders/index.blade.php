@@ -9,9 +9,6 @@
     $statusTon = ['secondary' => 'neutral', 'info' => 'info', 'success' => 'ok', 'danger' => 'crit', 'warning' => 'warn', 'primary' => 'accent'];
     $datum = fn ($wert) => $wert ? \Carbon\Carbon::parse($wert)->format('d.m.Y') : null;
     $zahl = fn ($wert) => number_format((float) $wert, 0, ',', '.');
-    $segment = 'h-7 px-3 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors';
-    $segmentAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
-    $segmentAus = 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]';
 
     $sichten = ['bestellungen' => 'Bestellungen', 'liefertage' => 'Liefertage', 'lieferanten' => 'Lieferanten', 'runden' => 'Runden', 'bedarfe' => 'Bedarfe'];
     $sichtTitel = ['bestellungen' => 'Bestellungen finden', 'liefertage' => 'Nach Liefertag planen', 'lieferanten' => 'Nach Lieferant bündeln', 'runden' => 'Bestellrunden', 'bedarfe' => 'Freigegebene Materialbedarfe'];
@@ -82,10 +79,10 @@
                 @if($sicht !== 'bedarfe')
                     <div class="flex flex-col gap-1.5">
                         <span class="fa-t-label">Datum bezieht sich auf</span>
-                        <div role="group" aria-label="Datumsbasis" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
-                            <button type="button" wire:click="$set('datumsbasis','liefertag')" aria-pressed="{{ $datumsbasis === 'liefertag' ? 'true' : 'false' }}" class="flex-1 {{ $segment }} {{ $datumsbasis === 'liefertag' ? $segmentAn : $segmentAus }}">Liefertag</button>
-                            <button type="button" wire:click="$set('datumsbasis','bestelldatum')" aria-pressed="{{ $datumsbasis === 'bestelldatum' ? 'true' : 'false' }}" class="flex-1 {{ $segment }} {{ $datumsbasis === 'bestelldatum' ? $segmentAn : $segmentAus }}">Bestelldatum</button>
-                        </div>
+                        <x-fa::segmented label="Datumsbasis" :breit="true">
+                            <x-fa::segment :an="$datumsbasis === 'liefertag'" wire:click="$set('datumsbasis','liefertag')" class="flex-1">Liefertag</x-fa::segment>
+                            <x-fa::segment :an="$datumsbasis === 'bestelldatum'" wire:click="$set('datumsbasis','bestelldatum')" class="flex-1">Bestelldatum</x-fa::segment>
+                        </x-fa::segmented>
                     </div>
                 @endif
 
@@ -258,12 +255,11 @@
         </div>
 
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <div role="group" aria-label="Sicht" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
+            <x-fa::segmented label="Sicht" :breit="true">
                 @foreach($sichten as $key => $lbl)
-                    <button type="button" wire:click="$set('sicht','{{ $key }}')" aria-pressed="{{ $sicht === $key ? 'true' : 'false' }}"
-                        class="{{ $segment }} {{ $sicht === $key ? $segmentAn : $segmentAus }}">{{ $lbl }}</button>
+                    <x-fa::segment :an="$sicht === $key" wire:click="$set('sicht','{{ $key }}')">{{ $lbl }}</x-fa::segment>
                 @endforeach
-            </div>
+            </x-fa::segmented>
 
             {{-- Auswahlleiste für den Sammelversand (nur Entwürfe sind auswählbar) --}}
             @if($sicht === 'bestellungen')

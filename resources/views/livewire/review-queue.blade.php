@@ -234,12 +234,11 @@
             <div class="flex flex-col gap-4" data-rq-signale>
                 {{-- Werkzeugleiste: Status links, Typ-Auswahl (nach Bereich gruppiert) rechts --}}
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div role="group" aria-label="Status" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
+                    <x-fa::segmented label="Status" :breit="true">
                         @foreach($signalStatusWerte as $sw)
-                            <button type="button" wire:key="sigst-{{ $sw['value'] }}" wire:click="setSignalStatus('{{ $sw['value'] }}')" aria-pressed="{{ $signalStatus === $sw['value'] ? 'true' : 'false' }}"
-                                    class="h-7 px-3 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors {{ $signalStatus === $sw['value'] ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}">{{ $sw['label'] }}</button>
+                            <x-fa::segment :an="$signalStatus === $sw['value']" wire:key="sigst-{{ $sw['value'] }}" wire:click="setSignalStatus('{{ $sw['value'] }}')">{{ $sw['label'] }}</x-fa::segment>
                         @endforeach
-                    </div>
+                    </x-fa::segmented>
                     <div class="flex flex-wrap items-center gap-2">
                         <label for="rq-typ-wahl" class="fa-t-label">Art</label>
                         <x-fa::select id="rq-typ-wahl" size="sm" class="w-72 max-w-full" wire:key="sigtyp-wahl-{{ $signalTyp ?: 'alle' }}"

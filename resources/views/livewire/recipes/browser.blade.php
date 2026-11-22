@@ -142,13 +142,11 @@
             <x-fa::choice name="status" :options="$statusOptionen" />
             {{-- E14: Ansichts-Schalter — knappe Spalten je Aufgabe --}}
             <div class="flex items-center gap-3">
-                <div role="group" aria-label="Ansicht" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]" data-ansicht-schalter>
+                <x-fa::segmented label="Ansicht" :breit="true" data-ansicht-schalter="">
                     @foreach($ansichten as $ak => [$al, $unused])
-                        <button type="button" wire:click="$set('ansicht', '{{ $ak }}')" aria-pressed="{{ $ansicht === $ak ? 'true' : 'false' }}"
-                                class="h-7 px-3 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors {{ $ansicht === $ak ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}"
-                                data-ansicht="{{ $ak }}">{{ $al }}</button>
+                        <x-fa::segment :an="$ansicht === $ak" wire:click="$set('ansicht', '{{ $ak }}')" data-ansicht="{{ $ak }}">{{ $al }}</x-fa::segment>
                     @endforeach
-                </div>
+                </x-fa::segmented>
                 <x-fa::select wire:model.live="perPage" size="sm" aria-label="Einträge je Seite" class="w-auto" data-per-page>
                     @foreach([25, 50, 100, 250, 500] as $n)<option value="{{ $n }}">{{ $n }} je Seite</option>@endforeach
                 </x-fa::select>

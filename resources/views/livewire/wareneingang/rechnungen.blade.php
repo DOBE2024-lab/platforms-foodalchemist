@@ -22,7 +22,7 @@
                 <x-fa::field label="Rechnungsdatum" for="re-datum"><x-fa::input id="re-datum" type="date" wire:model.blur="form.datum" /></x-fa::field>
                 <x-fa::field label="Summe netto laut Beleg" for="re-total" hint="zur Kontrolle der Erfassung"><x-fa::input id="re-total" numeric wire:model.live.blur="form.total" placeholder="0,00" /></x-fa::field>
                 <x-fa::field label="Beleg (Foto oder PDF)" for="re-anhang" hint="max. 15 MB">
-                    <input id="re-anhang" type="file" wire:model="anhang" accept="image/*,application/pdf" class="block w-full text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
+                    <x-fa::upload id="re-anhang" wire:model="anhang" accept="image/*,application/pdf" class="block w-full" />
                 </x-fa::field>
             </div>
 

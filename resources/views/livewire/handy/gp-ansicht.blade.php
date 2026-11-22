@@ -9,7 +9,7 @@
     $preisJe = fn ($la) => $la->vergleichspreis !== null ? $zahl($la->vergleichspreis['value']) . ' ' . $la->vergleichspreis['unit'] : null;
     $gebindePreis = fn ($la) => $la->aktiver_preis !== null ? $zahl($la->aktiver_preis) . ' €' : null;
 @endphp
-<div class="min-h-full bg-[var(--fa-ground)]" data-fa-handy-gp="{{ $gp?->id ?? 'fehlt' }}">
+<x-fa::page :abstand="false" data-fa-handy-gp="{{ $gp?->id ?? 'fehlt' }}">
     <x-foodalchemist::shell.page-navbar title="Grundprodukt" icon="heroicon-o-cube" />
 
     <div class="mx-auto max-w-2xl px-4 py-4 flex flex-col gap-5">
@@ -127,4 +127,4 @@
             @endif
         @endif
     </div>
-</div>
+</x-fa::page>

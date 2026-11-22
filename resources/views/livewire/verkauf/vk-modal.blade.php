@@ -408,8 +408,7 @@
                                 <img src="{{ $dishImageUrl }}" alt="Foto des Gerichts" class="h-14 w-24 object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]">
                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-o-trash" wire:click="dishImageEntfernen">Foto entfernen</x-fa::button>
                             @endif
-                            <input type="file" wire:model="dishImageUpload" accept="image/*" aria-label="Gericht-Foto hochladen"
-                                   class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] file:mr-3 file:h-7 file:px-2.5 file:rounded-[var(--fa-radius-control)] file:border file:border-[var(--fa-line-strong)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:text-[length:var(--fa-text-sm)] file:font-medium" data-vk-bild-upload>
+                            <x-fa::upload wire:model="dishImageUpload" accept="image/*" aria-label="Gericht-Foto hochladen" data-vk-bild-upload="" />
                             <span wire:loading wire:target="dishImageUpload" class="{{ $hinweis }}">lädt …</span>
                         </div>
                         @error('dishImageUpload')<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert">{{ $message }}</p>@enderror

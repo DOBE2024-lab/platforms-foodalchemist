@@ -109,6 +109,22 @@ final class Ui
             // x-fa::menu-item: Zeilenhöhe (eng = Standard, weit = lockere Zeile der Kopf-Menüs)
             'menuePunktAbstand' => ['eng' => 'py-1.5', 'weit' => 'py-2'],
 
+            // Umschalter-Optionen (2.4a): <x-fa::segment size="sm|md|handy">.
+            'segmentGroesse' => [
+                'sm' => 'h-7 px-3 text-[length:var(--fa-text-sm)]',
+                'md' => 'h-8 px-3 text-[length:var(--fa-text-md)]',
+                // eng: schmale Spalten (Zutaten-Editor, Einfüge-Spalte ab 17 rem): Höhe wie md, Abstand und Schrift klein.
+                'eng' => 'h-8 px-2 text-[length:var(--fa-text-sm)]',
+                'handy' => 'flex-1 min-h-11 text-[length:var(--fa-text-md)]',
+            ],
+
+            // Datei-Upload (2.4a): <x-fa::upload size="sm|md|handy">. Wählknopf in der Optik von x-fa::button (secondary).
+            'uploadGroesse' => [
+                'sm' => 'text-[length:var(--fa-text-sm)] file:mr-2 file:h-7 file:px-2.5 file:text-[length:var(--fa-text-sm)]',
+                'md' => 'text-[length:var(--fa-text-md)] file:mr-3 file:h-9 file:px-3.5 file:text-[length:var(--fa-text-md)]',
+                'handy' => 'text-[length:var(--fa-text-md)] file:mr-3 file:h-11 file:px-4 file:text-[length:var(--fa-text-md)]',
+            ],
+
             // ── Buttons
             'btnPrimary' => 'inline-flex items-center justify-center whitespace-nowrap gap-2 h-9 px-3.5 text-[13px] font-medium text-[var(--fa-on-accent)] bg-violet-600 rounded-md hover:bg-violet-700 transition-colors duration-150',
             'btnGhost' => 'inline-flex items-center justify-center whitespace-nowrap gap-2 h-9 px-3.5 text-[13px] font-medium text-gray-800 bg-[var(--fa-surface)] border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-150',

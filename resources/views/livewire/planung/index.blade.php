@@ -1110,13 +1110,11 @@
                 @if($composerKombination !== null)
                     <x-fa::modal-section icon="heroicon-o-link" title="Passt das zusammen?">
                         {{-- Zwei Sichten nebeneinander (Dominique 16.10.): Teller aus Komponenten oder eine Zubereitung. --}}
-                        <div role="group" aria-label="Bewerten als" class="mb-3 inline-flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]" data-composer-modus>
+                        <x-fa::segmented label="Bewerten als" class="mb-3" data-composer-modus="">
                             @foreach(['gericht' => 'als Gericht', 'basisrezept' => 'als Basisrezept'] as $m => $mLabel)
-                                <button type="button" wire:click="$set('composerModus', '{{ $m }}')" aria-pressed="{{ $composerModus === $m ? 'true' : 'false' }}"
-                                        class="h-8 px-3 rounded-[5px] text-[length:var(--fa-text-md)] font-medium transition-colors {{ $composerModus === $m ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}"
-                                        data-composer-modus-knopf="{{ $m }}">{{ $mLabel }}</button>
+                                <x-fa::segment :an="$composerModus === $m" size="md" data-composer-modus-knopf="{{ $m }}" wire:click="$set('composerModus', '{{ $m }}')">{{ $mLabel }}</x-fa::segment>
                             @endforeach
-                        </div>
+                        </x-fa::segmented>
                         <div wire:key="composer-kombination-{{ $composerModus }}">
                             <x-fa::kombination :daten="$composerKombination" />
                         </div>

@@ -169,13 +169,11 @@
         <x-fa::section variant="plain" title="Betroffen" icon="heroicon-o-queue-list" :meta="$metaZahl">
             <x-slot:actions>
                 @if($betroffen && count($betroffen['items']) > 1)
-                <div role="group" aria-label="Sortierung" class="flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
+                <x-fa::segmented label="Sortierung" :breit="true">
                     @foreach(['name' => 'A bis Z', 'name_desc' => 'Z bis A', 'art' => 'Nach Art'] as $wert => $lbl)
-                        <button type="button" wire:key="sigsort-{{ $wert }}" wire:click="setSort('{{ $wert }}')" aria-pressed="{{ $sort === $wert ? 'true' : 'false' }}"
-                                class="h-7 px-2.5 rounded-[5px] text-[length:var(--fa-text-sm)] font-medium transition-colors {{ $sort === $wert ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}"
-                                data-signal-sort="{{ $wert }}">{{ $lbl }}</button>
+                        <x-fa::segment :an="$sort === $wert" wire:key="sigsort-{{ $wert }}" wire:click="setSort('{{ $wert }}')" data-signal-sort="{{ $wert }}">{{ $lbl }}</x-fa::segment>
                     @endforeach
-                </div>
+                </x-fa::segmented>
                 @endif
             </x-slot:actions>
 

@@ -6,6 +6,8 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Services\DarreichungService;
 
 /**
@@ -22,7 +24,7 @@ class RecipeDarreichungPutTool extends FoodAlchemistTool implements ToolContract
     public function getDescription(): string
     {
         return 'Bearbeitet eine Darreichungsform. attrs: serving_form_id (wechselt die Servierform — '
-            . 'der Weg aus dem Review-Zustand "unbestimmt"), quantity_per_unit_g (Gramm je Portion), menge_vom_standard (bool; übernimmt Mengen des aktuellen Standards, beim Standard aus der Rezeptur; eigene Komponenten bleiben), unit_count (nur Bestandskompatibilität; neue Gerichte haben eine Portion), markup_class_id, '
+            . 'der Weg aus dem Review-Zustand "unbestimmt"), quantity_per_unit_g (Gramm je Portion; nicht an der Standard-Darreichung — deren Menge kommt aus der Rezeptur, die Verkaufsmenge setzt verkaufsrezepte.PUT), menge_vom_standard (bool; übernimmt Mengen des aktuellen Standards, beim Standard aus der Rezeptur; eigene Komponenten bleiben), unit_count (nur Bestandskompatibilität; neue Gerichte haben eine Portion), markup_class_id, '
             . 'name (Bezeichnung der Variante), ausgabe_station_id (sichtbarer Ausgabe-Posten, leer = bisherige Verteilung), arbeitszeiten (Liste mit use_case=anrichten_teller|abfuellen|portionieren_platte|stueck|pauschale, basis=portion|einheit|stueck|behaelter|kg|auftragszeile, ort=kueche|vor_ort, wert>=0; portion/einheit/stueck in Sekunden, sonst Minuten; eine gepflegte Liste ersetzt die Altzeiten vollständig, [] bedeutet bewusst keine aktive Arbeit), '
             . 'price_mode (auto|manuell), sales_net, vat_profile_key, vessel_gp_id (Gefäß: Non-Food-GP der Warengruppe 16, leer löst; bestimmt den Servier-Typ; 1 Stück je Einheit, Kosten nach Art und Preis), vessel_cost_type (Art des Gefäßes, übersteuert den Team-Eintrag am GP: einweg = Preis am GP, sonst Artikelpreis je Stück | mehrweg = Eigenbestand, Preis am GP | extern = Miete/Fremdartikel, Preis am GP, sonst Artikelpreis je Stück; fehlt der Preis: Hinweis, Darreichung unvollständig; leer = Eintrag des Teams aus gp_gefaess_kostenart.PUT, sonst Automatik Verleih→extern, sonst einweg; Zubehör am Gefäß wie Deckel/Etikett kommt aus gp_gefaess_zubehoer.PUT und rechnet automatisch mit), serving_vehicle_vocab_id (Geschirr-Empfehlung = Servier-Typ, kostet nichts, unabhängig vom Gefäß wählbar; neutral: ohne Gefäß der Typ selbst, mit Gefäß eine ausdrückliche Übersteuerung; an der Standard-Darreichung wird der wirksame Typ ins Gericht gespiegelt; leer = Typ des Gefäßes, ein Wert gleich dem Typ des Gefäßes wird geleert), note, anrichten_wert (Spec 83: Einheit aus der Servierform — Teller/Box/Theke/Foodtruck s je Portion, Flying/Fingerfood s je Stück, Buffet/Pause/Sharing min je Platte; leer = Startwert), anrichten_pauschal_min (Minuten je Auftragszeile) (nur Whitelist wirkt).';
     }
@@ -60,6 +62,16 @@ class RecipeDarreichungPutTool extends FoodAlchemistTool implements ToolContract
         // Ohne diesen Weg könnte die UI mehr als das Tool.
         $formId = $attrs['serving_form_id'] ?? null;
         unset($attrs['serving_form_id']);
+
+        // 98 · 2.3d (Parität): an der Standard-Darreichung kommt die Portionsmenge aus der Rezeptur — die Oberfläche hat dort
+        // keine Grammatur-Eingabe. Eine Grammatur hier schaltete menge_vom_standard still ab, und EK je Portion und Auto-VK
+        // rechneten ab dann mit dieser Menge statt mit der Rezeptur. Die Verkaufsmenge des Gerichts setzt verkaufsrezepte.PUT.
+        if (array_key_exists('quantity_per_unit_g', $attrs) && ! in_array($attrs['menge_vom_standard'] ?? null, [true, 1, '1'], true)
+            && FoodAlchemistRecipeDarreichung::whereKey($id)
+                ->whereIn('recipe_id', FoodAlchemistRecipe::visibleToTeam($team)->select('id'))->value('is_standard')) {
+            return ToolResult::error('An der Standard-Darreichung kommt die Portionsmenge aus der Rezeptur; quantity_per_unit_g ist hier nicht setzbar. '
+                . 'Die Verkaufsmenge des Gerichts setzt foodalchemist.verkaufsrezepte.PUT (sales_quantity_per_unit_g).', 'VALIDATION_ERROR');
+        }
 
         $svc = app(DarreichungService::class);
         try {

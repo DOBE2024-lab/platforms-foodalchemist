@@ -8,6 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Tools\Concerns\RezeptFachfelder;
 
 /**
  * Phase A (Weg-A-Ausnahme 2026-07-03): Rezept-Anlage aus dem LLM-Pfad —
@@ -17,6 +18,8 @@ use Platform\FoodAlchemist\Services\RecipeService;
  */
 class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {
+    use RezeptFachfelder;
+
     public function getName(): string
     {
         return 'foodalchemist.recipes.POST';
@@ -55,6 +58,7 @@ class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMet
                 'default_station_id' => ['type' => 'integer', 'description' => 'Default-Posten fürs Planer-Routing'],
                 'yield_kg_manual' => ['type' => 'number', 'description' => 'Nur wenn Auto-Summe nicht passt'],
                 'origin_source' => ['type' => 'string', 'description' => 'Menschenlesbare Provenienz, Default "MCP/KI"'],
+            ] + $this->fachfelderSchema() + [
                 'zutaten' => [
                     'type' => 'array',
                     'items' => [
@@ -108,6 +112,10 @@ class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMet
         if (($fehler = $this->pruefeVariableZeit($arguments)) !== null) {
             return $fehler;
         }
+        $fach = $this->fachfelder($arguments, $team);   // 98 · 2.3d: Fachfelder wie im Rezept-Modal
+        if ($fach instanceof ToolResult) {
+            return $fach;
+        }
         $svc = app(RecipeService::class);
 
         // Gericht = nur Basisrezepte (Dominique 17.11.2026): VOR der Anlage prüfen, sonst bliebe ein Rumpf-Gericht ohne Zutaten stehen.
@@ -142,7 +150,7 @@ class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMet
                 'yield_kg_manual' => $arguments['yield_kg_manual'] ?? null,
                 'origin_source' => ($arguments['origin_source'] ?? '') ?: 'MCP/KI',
                 'created_via' => 'mcp',
-            ]);
+            ] + $fach);
             if (($arguments['preparation'] ?? '') !== '') {
                 $recipe = $svc->update($team, $recipe->id, ['preparation' => $arguments['preparation']]);
             }

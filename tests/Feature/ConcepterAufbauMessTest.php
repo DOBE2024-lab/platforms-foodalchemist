@@ -53,14 +53,14 @@ beforeEach(function () {
     };
 });
 
-it('Mess-Test 6: Formen und Darreichungen wachsen nicht mit der Zahl der Slots', function () {
+it('Mess-Test 6: die Abfragen des Aufbau-Tabs wachsen nicht mit der Zahl der Slots', function () {
     $drei = ($this->zaehle)(($this->baueKonzept)(3));
     $zwoelf = ($this->zaehle)(($this->baueKonzept)(12));
 
-    // Gemessen 22.11.2026: 3 Slots 46, 12 Slots 73 (vorher 56 / 119). Formen/Servierformen/Einheiten: gleich viele.
+    // 2.1e (22.11.2026): 3 Slots 46, 12 Slots 73 (vorher 56 / 119) — Rest waren 3 Sensorik-Abfragen je Gericht der Menü-Bewertung.
+    // Folgepaket: SensorikService::fuerRezepte bündelt sie; jetzt gleich viele Abfragen für 3 und 12 Slots.
     expect($zwoelf['formen'])->toBe($drei['formen'])
-        // Rest je Slot: 3 Sensorik-Abfragen der Menü-Bewertung (SensorikService::fuerRezept je Gericht) — eigenes Folgepaket, nicht 2.1e
-        ->and($zwoelf['gesamt'] - $drei['gesamt'])->toBeLessThanOrEqual(9 * 3 + 2);
+        ->and($zwoelf['gesamt'])->toBe($drei['gesamt']);
 });
 
 it('Aufbau zeigt weiter Form-Auswahl, aufgelöste Darreichung und „Variante fehlt" je Slot', function () {

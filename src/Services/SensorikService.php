@@ -97,6 +97,9 @@ class SensorikService
         if ($recipeIds === []) {
             return [];
         }
+        if (count($recipeIds) === 1 && isset($this->vorrat['gpIds'][$recipeIds[0]])) {
+            return $this->vorrat['gpIds'][$recipeIds[0]];   // CQ 2.1e-Folge: aus dem Vorrat von fuerRezepte()
+        }
         $ing = DB::table('foodalchemist_recipe_ingredients')->whereNull('deleted_at')
             ->whereIn('recipe_id', $recipeIds)->get(['gp_id', 'referenced_recipe_id']);
         $gpIds = $ing->pluck('gp_id')->filter()->all();
@@ -118,13 +121,15 @@ class SensorikService
      */
     public function fuerRezept(int $recipeId, bool $mitGrundlage = false): array
     {
-        $stored = DB::table('foodalchemist_recipe_taste_vectors')->where('recipe_id', $recipeId)->first();
+        $imVorrat = isset($this->vorrat['ids'][$recipeId]);
+        $stored = $imVorrat ? ($this->vorrat['stored'][$recipeId] ?? null)
+            : DB::table('foodalchemist_recipe_taste_vectors')->where('recipe_id', $recipeId)->first();
         if ($stored !== null) {
             $geschmack = [];
             foreach (self::DIMS as $d) {
                 $geschmack[$d] = round((float) ($stored->{$d} ?? 0), 2);
             }
-            $texRows = DB::table('foodalchemist_recipe_textures AS t')
+            $texRows = $imVorrat ? collect($this->vorrat['rezeptTex'][$recipeId] ?? []) : DB::table('foodalchemist_recipe_textures AS t')
                 ->join('foodalchemist_vocab_textures AS v', 'v.id', '=', 't.texture_vocab_id')
                 ->where('t.recipe_id', $recipeId)
                 ->selectRaw('v.slug, v.display_de, MAX(t.intensity) AS intensitaet')
@@ -144,11 +149,86 @@ class SensorikService
         }
         // Lücken nur bei Gerichten (Dominique 29.10.2026, Roastbeef): ein Basisrezept ist ein Baustein, ihm „fehlt" kein Geschmack.
         // Die Dominanten bleiben. Am GP gilt seit #606 „schwach" statt „Lücke".
-        if (! ($out['leer'] ?? false) && ! (bool) DB::table('foodalchemist_recipes')->where('id', $recipeId)->value('is_sales_recipe')) {
+        if (! ($out['leer'] ?? false) && ! (bool) ($imVorrat ? ($this->vorrat['verkauf'][$recipeId] ?? false)
+            : DB::table('foodalchemist_recipes')->where('id', $recipeId)->value('is_sales_recipe'))) {
             $out['luecken'] = [];
         }
 
         return $out;
+    }
+
+    /**
+     * Vorrat für {@see fuerRezepte()} (je Lauf gefüllt, danach geleert): gespeicherte Profile + Texturen, Verkaufs-Flag, Zutatenzeilen,
+     * GP-IDs je Rezept, GP-Vektoren und GP-Texturen. Die Einzelwege lesen daraus statt je Rezept abzufragen.
+     *
+     * @var array<string, mixed>|null
+     */
+    private ?array $vorrat = null;
+
+    /**
+     * Sensorik vieler Rezepte/Gerichte (CQ, Folge aus 2.1e): dasselbe Ergebnis wie {@see fuerRezept()} je ID, aber mit einer festen Zahl
+     * Abfragen statt drei und mehr je Gericht. Unterrezepte im Roh-Pfad laufen weiter über den Einzelweg.
+     *
+     * @param  list<int>  $recipeIds
+     * @return array<int, array>
+     */
+    public function fuerRezepte(array $recipeIds): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $recipeIds))));
+        if ($ids === []) {
+            return [];
+        }
+        $this->vorrat = $this->vorratLaden($ids);
+        try {
+            $out = [];
+            foreach ($ids as $id) {
+                $out[$id] = $this->fuerRezept($id);
+            }
+
+            return $out;
+        } finally {
+            $this->vorrat = null;
+        }
+    }
+
+    /** @return array<string, mixed> */
+    private function vorratLaden(array $ids): array
+    {
+        $v = ['ids' => array_fill_keys($ids, true)];
+        $v['stored'] = DB::table('foodalchemist_recipe_taste_vectors')->whereIn('recipe_id', $ids)->get()->keyBy('recipe_id')->all();
+        $v['rezeptTex'] = DB::table('foodalchemist_recipe_textures AS t')
+            ->join('foodalchemist_vocab_textures AS v', 'v.id', '=', 't.texture_vocab_id')->whereIn('t.recipe_id', array_keys($v['stored']) ?: [0])
+            ->selectRaw('t.recipe_id, v.slug, v.display_de, MAX(t.intensity) AS intensitaet')
+            ->groupBy('t.recipe_id', 'v.slug', 'v.display_de')->get()
+            ->groupBy('recipe_id')->map(fn ($g) => $g->map(fn ($r) => (object) ['slug' => $r->slug, 'display_de' => $r->display_de, 'intensitaet' => $r->intensitaet])->all())->all();
+        $v['verkauf'] = DB::table('foodalchemist_recipes')->whereIn('id', $ids)->pluck('is_sales_recipe', 'id')->map(fn ($x) => (bool) $x)->all();
+
+        // Roh-Pfad (ohne gespeichertes Profil): Zutaten, GP-IDs (+ 1 Ebene Unterrezepte), Vektoren und Texturen der GPs
+        $roh = array_values(array_diff($ids, array_keys($v['stored'])));
+        $zeilen = $roh === [] ? collect() : $this->zutatenZeilen($roh)->groupBy('recipe_id');
+        $v['zutaten'] = [];
+        $v['gpIds'] = [];
+        $subIds = $zeilen->flatten(1)->pluck('referenced_recipe_id')->filter()->map(fn ($x) => (int) $x)->unique()->values()->all();
+        $subGps = $subIds === [] ? collect() : DB::table('foodalchemist_recipe_ingredients')->whereNull('deleted_at')
+            ->whereIn('recipe_id', $subIds)->get(['recipe_id', 'gp_id'])->groupBy('recipe_id');
+        foreach ($roh as $id) {
+            $z = $zeilen->get($id, collect());
+            $v['zutaten'][$id] = $z->all();
+            $gp = $z->pluck('gp_id')->filter()->all();
+            foreach ($z->pluck('referenced_recipe_id')->filter()->unique() as $sub) {
+                $gp = array_merge($gp, $subGps->get((int) $sub, collect())->pluck('gp_id')->filter()->all());
+            }
+            $v['gpIds'][$id] = array_values(array_unique(array_map('intval', $gp)));
+        }
+        $alleGps = array_values(array_unique(array_merge(...array_values($v['gpIds'] ?: [[]]))));
+        if ($alleGps !== []) {
+            $v['vektoren'] = $this->vektorenFuerGps($alleGps);
+            $v['gpTexGps'] = $alleGps;
+            $v['gpTex'] = DB::table('foodalchemist_gp_textures AS t')->join('foodalchemist_vocab_textures AS v', 'v.id', '=', 't.texture_vocab_id')
+                ->whereIn('t.gp_id', $alleGps)->get(['t.gp_id', 't.intensity', 'v.slug', 'v.display_de'])->all();
+        }
+
+        return $v;
     }
 
     /** Hinweis, wenn der Roh-Fallback ohne Mengen nur MAX kann. */
@@ -227,13 +307,7 @@ class SensorikService
      */
     private function zutatenMitGramm(int $recipeId): array
     {
-        $rows = DB::table('foodalchemist_recipe_ingredients AS ri')
-            ->leftJoin('foodalchemist_gps AS g', 'g.id', '=', 'ri.gp_id')
-            ->leftJoin('foodalchemist_recipes AS sr', 'sr.id', '=', 'ri.referenced_recipe_id')
-            ->leftJoin('foodalchemist_vocab_units AS e', 'e.id', '=', 'ri.unit_vocab_id')
-            ->where('ri.recipe_id', $recipeId)->whereNull('ri.deleted_at')->orderBy('ri.position')
-            ->get(['ri.id', 'ri.gp_id', 'ri.referenced_recipe_id', 'ri.quantity', 'ri.zeilenart', 'g.is_kochmedium', 'e.default_in_g', 'e.default_in_ml',
-                DB::raw('COALESCE(g.name, sr.name, ri.raw_text) AS name')]);
+        $rows = isset($this->vorrat['zutaten'][$recipeId]) ? collect($this->vorrat['zutaten'][$recipeId]) : $this->zutatenZeilen([$recipeId]);
         $faktoren = $this->naehrwertFaktoren($recipeId, $rows->isNotEmpty());
         $out = [];
         foreach ($rows as $r) {
@@ -251,6 +325,18 @@ class SensorikService
         }
 
         return $out;
+    }
+
+    /** Zutatenzeilen samt Einheit und Kochmedium-Flag (eine Abfrage für beliebig viele Rezepte, je Rezept nach Position). */
+    private function zutatenZeilen(array $recipeIds)
+    {
+        return DB::table('foodalchemist_recipe_ingredients AS ri')
+            ->leftJoin('foodalchemist_gps AS g', 'g.id', '=', 'ri.gp_id')
+            ->leftJoin('foodalchemist_recipes AS sr', 'sr.id', '=', 'ri.referenced_recipe_id')
+            ->leftJoin('foodalchemist_vocab_units AS e', 'e.id', '=', 'ri.unit_vocab_id')
+            ->whereIn('ri.recipe_id', $recipeIds)->whereNull('ri.deleted_at')->orderBy('ri.recipe_id')->orderBy('ri.position')
+            ->get(['ri.id', 'ri.recipe_id', 'ri.gp_id', 'ri.referenced_recipe_id', 'ri.quantity', 'ri.zeilenart', 'g.is_kochmedium', 'e.default_in_g', 'e.default_in_ml',
+                DB::raw('COALESCE(g.name, sr.name, ri.raw_text) AS name')]);
     }
 
     /**
@@ -403,7 +489,31 @@ class SensorikService
      */
     public function rollenCheck(int $recipeId, array $geschmack): ?array
     {
-        $hg = $this->mainGroup($recipeId);
+        return $this->rolleAus($this->mainGroup($recipeId), $geschmack);
+    }
+
+    /**
+     * Rollen-Check für viele Gerichte mit EINER Abfrage für die Hauptgruppen (Menü-Bewertung im Konzepter-Kopf).
+     *
+     * @param  array<int, array<string, float>>  $geschmackJeId
+     * @return array<int, ?array{role:string, status:string, detail:string}>
+     */
+    public function rollenChecks(array $geschmackJeId): array
+    {
+        $hg = $geschmackJeId === [] ? collect() : DB::table('foodalchemist_recipes AS r')
+            ->leftJoin('foodalchemist_dish_classes AS dc', 'dc.id', '=', 'r.dish_class_id')
+            ->leftJoin('foodalchemist_dish_main_groups AS mg', 'mg.id', '=', 'dc.dish_main_group_id')
+            ->whereIn('r.id', array_keys($geschmackJeId))->pluck('mg.label', 'r.id');
+        $out = [];
+        foreach ($geschmackJeId as $id => $geschmack) {
+            $out[$id] = $this->rolleAus($hg[$id] ?? null, $geschmack);
+        }
+
+        return $out;
+    }
+
+    private function rolleAus(?string $hg, array $geschmack): ?array
+    {
         if ($hg === null) {
             return null;
         }
@@ -603,6 +713,9 @@ class SensorikService
         if ($gpIds === []) {
             return [];
         }
+        if (isset($this->vorrat['vektoren']) && array_diff($gpIds, array_keys($this->vorrat['vektoren'])) === []) {
+            return array_combine($gpIds, array_map(fn ($g) => $this->vorrat['vektoren'][$g], $gpIds));   // aus dem Vorrat, Reihenfolge wie angefragt
+        }
         $gespeichert = DB::table('foodalchemist_gp_taste_vectors')->whereIn('gp_id', $gpIds)
             ->get(array_merge(['gp_id', 'source', 'ai_reasoning'], self::DIMS))->keyBy('gp_id');
         $gemessen = $this->erdungBulk($gpIds);
@@ -670,6 +783,14 @@ class SensorikService
     /** @return \Illuminate\Support\Collection<int, object> */
     private function texturZeilen(array $gpIds)
     {
+        if (isset($this->vorrat['gpTexGps']) && array_diff(array_map('intval', $gpIds), $this->vorrat['gpTexGps']) === []) {
+            // aus dem Vorrat: MAX(intensity) je Textur über die angefragten GPs, wie die Abfrage unten
+            return collect($this->vorrat['gpTex'])->whereIn('gp_id', array_map('intval', $gpIds))
+                ->groupBy(fn ($r) => $r->slug . "\0" . $r->display_de)
+                ->map(fn ($g) => (object) ['slug' => $g->first()->slug, 'display_de' => $g->first()->display_de, 'intensitaet' => $g->max('intensity')])
+                ->sortBy([['slug', 'asc'], ['display_de', 'asc']])->values();
+        }
+
         return DB::table('foodalchemist_gp_textures AS t')
             ->join('foodalchemist_vocab_textures AS v', 'v.id', '=', 't.texture_vocab_id')
             ->whereIn('t.gp_id', $gpIds)

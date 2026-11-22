@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Services;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\Matching\TokenEngine;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * M3-09: GL-12 — GP-Naming, Slugs & Anlage-Guard.
@@ -145,12 +146,7 @@ class GpNamingService
      */
     public function slugify(string $s): string
     {
-        $s = mb_strtolower($s);
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
-        $s = preg_replace('/[^\p{L}\p{N}]+/u', '_', $s);                     // Unicode-Buchstaben (é, è) bleiben
-        $s = preg_replace('/_+/', '_', $s);
-
-        return trim($s, '_');
+        return Text::falte($s, Text::SLUG);                                   // Unicode-Buchstaben (é, è) bleiben
     }
 
     /** Platzhalter, die KI oder Importe für „weiß ich nicht" liefern. Sie sind KEIN Wert (Regelwerk GP §6/§9, §12). */
@@ -1105,7 +1101,7 @@ class GpNamingService
      */
     public function bereinigeHauptzutat(string $hauptzutat, array $quelltexte): array
     {
-        $norm = fn (string $x) => (string) preg_replace('/[^a-z0-9]+/', '', strtr(mb_strtolower($x), ['ä' => 'a', 'ö' => 'o', 'ü' => 'u', 'ß' => 'ss', 'é' => 'e', 'è' => 'e']));
+        $norm = fn (string $x) => (string) preg_replace('/[^a-z0-9]+/', '', strtr(Text::grundlaut(mb_strtolower($x)), ['é' => 'e', 'è' => 'e']));
         $blob = $norm(implode(' ', $quelltexte));
         $verbinder = ['mit', 'in', 'an', 'auf', 'von', 'und', 'nach', 'aus', 'ohne', 'im', 'vom', 'zum', 'au', 'a', 'la'];
         $woerter = preg_split('/\s+/u', trim($this->bereinigeFeld($hauptzutat)), -1, PREG_SPLIT_NO_EMPTY) ?: [];
@@ -1183,7 +1179,7 @@ class GpNamingService
      */
     public function dedupliziereMitHauptzutat(string $hauptzutat, string $feld): string
     {
-        $n = fn (string $x) => (string) preg_replace('/[^a-z0-9]+/', '', strtr(mb_strtolower($x), ['ä' => 'a', 'ö' => 'o', 'ü' => 'u', 'ß' => 'ss']));
+        $n = fn (string $x) => (string) preg_replace('/[^a-z0-9]+/', '', Text::grundlaut(mb_strtolower($x)));
         $f = $n($feld);
         if ($f === '') {
             return $feld;
@@ -1272,6 +1268,6 @@ class GpNamingService
     private function normalisiere(string $s): string
     {
         // Beide Schreibweisen gelten als gleich (Dubletten-/Drift-Vergleich): Umlaute auf ae/oe/ue/ss abbilden, wie Matcher und TokenEngine.
-        return strtr(mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', $s))), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        return Text::falte($s, Text::ZEILE);
     }
 }

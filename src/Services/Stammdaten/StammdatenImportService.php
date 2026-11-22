@@ -12,6 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\FileArticleImportService;
 use Platform\FoodAlchemist\Services\PreislistenImportService;
 use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Stammdaten-Import, Stufe 1a (Kurator 29.10.2026): Vorlage + Einlesen + Abgleich + Prüfliste. Schreibt NICHTS in den Bestand.
@@ -584,9 +585,6 @@ class StammdatenImportService
 
     private function norm(string $s): string
     {
-        $t = mb_strtolower(trim($s));
-        $t = str_replace(['ä', 'ö', 'ü', 'ß'], ['ae', 'oe', 'ue', 'ss'], $t);
-
-        return (string) preg_replace('/[^a-z0-9]/', '', $t);
+        return Text::falte($s, Text::KOMPAKT);
     }
 }

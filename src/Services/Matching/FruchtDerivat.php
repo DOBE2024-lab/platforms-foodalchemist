@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Services\Matching;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\MatchBand;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Spec 96 · Rezeptzeilen, die den Teil einer Frucht nennen („Limette (Saft)“, „Saft von 2 Zitronen“, „Abrieb einer Orange“), gehen
@@ -121,7 +122,7 @@ final class FruchtDerivat
 
     private static function norm(string $s): string
     {
-        return strtr(mb_strtolower(trim($s)), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss', '-' => ' ', '_' => ' ']);
+        return strtr(Text::falte($s), ['-' => ' ', '_' => ' ']);
     }
 
     /** Limette/Limetten → limett, Zitrone/Zitronen → zitron, Blutorange → blutorang */

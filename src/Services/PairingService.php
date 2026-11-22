@@ -11,6 +11,7 @@ use Platform\FoodAlchemist\Enums\AussageTyp;
 use Platform\FoodAlchemist\Enums\Kantenart;
 use Platform\FoodAlchemist\Services\Pairing\AnkerGraph;
 use Platform\FoodAlchemist\Support\AnkerQuelle;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * M5-04/05: GL-10 — Pairing-Kohäsion & Anker-Graph (deterministisch, ohne KI).
@@ -44,10 +45,7 @@ class PairingService
     /** Pairing-Slug-Normalisierung: ä→a … PLUS Digraphen ae→a/oe→o/ue→u (Tabelle 2). */
     public function normalizeAnkerSlug(string $s): string
     {
-        $s = mb_strtolower($s);
-        $s = strtr($s, ['ä' => 'a', 'ö' => 'o', 'ü' => 'u', 'ß' => 'ss']);
-
-        return strtr($s, ['ae' => 'a', 'oe' => 'o', 'ue' => 'u']);
+        return strtr(Text::grundlaut(mb_strtolower($s)), ['ae' => 'a', 'oe' => 'o', 'ue' => 'u']);
     }
 
     /** T1/T2: tolerant + ungerichtet — roh/normalisiert exakt oder _-Präfix; nie Geschwister-Sorten. */
@@ -75,8 +73,7 @@ class PairingService
     /** fold(): lowercase, Umlaut→Digraph, nicht-alnum→Space, kollabiert, umrandet. */
     public function fold(string $s): string
     {
-        $s = mb_strtolower($s);
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        $s = Text::umschrift(mb_strtolower($s));
         $s = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s);
 
         return ' ' . trim(preg_replace('/\s+/', ' ', $s)) . ' ';

@@ -1251,12 +1251,7 @@ class Index extends Component
      * ein verdrahteter GP, der ein angehaktes Allergen »enthält«, wird im Diät-/Allergen-Gate
      * entdrahtet + gemeldet. Keys spiegeln FoodAlchemistGp::ALLERGEN_FIELDS 1:1.
      */
-    public const ALLERGEN_LABELS = [
-        'gluten' => 'Gluten', 'crustaceans' => 'Krebstiere', 'eggs' => 'Eier', 'fish' => 'Fisch',
-        'peanuts' => 'Erdnüsse', 'soy' => 'Soja', 'milk' => 'Milch', 'tree_nuts' => 'Schalenfrüchte',
-        'celery' => 'Sellerie', 'mustard' => 'Senf', 'sesame' => 'Sesam', 'sulphites' => 'Sulfite',
-        'lupin' => 'Lupine', 'molluscs' => 'Weichtiere',
-    ];
+    public const ALLERGEN_LABELS = \Platform\FoodAlchemist\Support\Allergene::KURZ;
 
     /** Pill-Toggle für die Richtungs-Regler EINES Scopes (MULTI_REGLER togglen, sonst Single-Set). */
     public function reglerPill(string $scope, string $feld, string $wert): void

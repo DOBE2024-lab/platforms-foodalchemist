@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Uid\UuidV7;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * M5-02 / ⚠D4: EINBAHN-Import Vault → DB (wiederholbar — Wissen wird auch NACH
@@ -244,11 +245,7 @@ class KnowledgeImportCommand extends Command
 
     private function slug(string $s): string
     {
-        $s = mb_strtolower(trim($s));
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
-        $s = preg_replace('/[^\p{L}\p{N}]+/u', '_', $s);
-
-        return trim(preg_replace('/_+/', '_', $s), '_');
+        return Text::falte($s, Text::SLUG);
     }
 
     private function titel(string $inhalt, string $fallback): string

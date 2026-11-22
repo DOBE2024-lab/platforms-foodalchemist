@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Platform\FoodAlchemist\Models\FoodAlchemistComponentEquivalent;
 use Platform\FoodAlchemist\Support\StammPaket;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * GP-Stamm bereinigen (Dominique/Kurator 19.10.2026): Dubletten mergen, Namen nach Regelwerk korrigieren.
@@ -503,7 +504,7 @@ class GpBereinigenService
     /** Vergleichsform ohne Umlaute (ä→ae, ö→oe, ü→ue, ß→ss), klein. */
     private function umlautNorm(string $s): string
     {
-        return mb_strtolower(strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss', 'Ä' => 'ae', 'Ö' => 'oe', 'Ü' => 'ue']));
+        return mb_strtolower(Text::umschrift(strtr($s, ['Ä' => 'ä', 'Ö' => 'ö', 'Ü' => 'ü'])));   // exakt wie bisher: ẞ bleibt ß
     }
 
     // ── Ausführen ───────────────────────────────────────────────────────────────────────────────────

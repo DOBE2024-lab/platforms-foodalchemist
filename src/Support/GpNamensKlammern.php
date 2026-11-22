@@ -122,6 +122,6 @@ final class GpNamensKlammern
 
     private static function norm(string $s): string
     {
-        return strtr(mb_strtolower(trim($s)), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        return Text::falte($s);
     }
 }

@@ -3,6 +3,7 @@
 namespace Platform\FoodAlchemist\Services\Regeln;
 
 use Platform\FoodAlchemist\Support\RezeptTypVokabular;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Textvergleich des Regel-Motors (Spec 81 Teil A): tolerant gegen Groß-/Kleinschreibung, Umlaut-Umschreibung
@@ -42,7 +43,7 @@ final class RegelText
      */
     public static function tolerantesMuster(string $wort): string
     {
-        $paare = ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss'];
+        $paare = Text::UMSCHRIFT;
         $w = mb_strtolower(trim($wort));
         foreach ($paare as $um => $aus) {
             $w = str_replace($aus, $um, $w);

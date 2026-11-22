@@ -3,6 +3,7 @@
 namespace Platform\FoodAlchemist\Support\Derivat;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Spec 96 · Zwei Arten von Derivat (Dominique 05.11.):
@@ -44,7 +45,7 @@ final class DerivatArt
     public static function ausName(string $name, ?string $mutterWg): string
     {
         $form = str_contains($name, ':') ? (string) substr($name, (int) strpos($name, ':') + 1) : $name;
-        $form = strtr(mb_strtolower($form), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        $form = Text::umschrift(mb_strtolower($form));
         $tokens = preg_split('/[^a-z]+/', $form, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         foreach ($tokens as $t) {
             if (in_array($t, self::ZWECK_IMMER, true) || str_ends_with($t, 'saft') || str_ends_with($t, 'abrieb')) {

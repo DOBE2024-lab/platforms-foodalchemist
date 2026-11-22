@@ -8,6 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
 use Platform\FoodAlchemist\Services\Ai\SemanticRetrievalService;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * E5 (#507): Kalibrierungs-Harness für den semantischen Retrieval-Layer.
@@ -241,8 +242,7 @@ class EmbedEvalCommand extends Command
     /** @return list<string> */
     private function tokens(string $s): array
     {
-        $s = mb_strtolower($s);
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        $s = Text::umschrift(mb_strtolower($s));
         $s = (string) preg_replace('/[^a-z0-9]+/', ' ', $s);
 
         return array_values(array_map(

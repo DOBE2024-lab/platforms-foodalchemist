@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Platform\FoodAlchemist\Exceptions\GpPaketAbgelehntException;
 use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * GP-Paket-Import · Paket lesen, Whitelist/Manifest/SHA prüfen, GP-Einzelprüfungen, Kontext/Vokabular aus io, Wert-/Hash-Hilfen
@@ -342,9 +343,7 @@ class GpPaketValidator
 
     public function normName(string $n): string
     {
-        $n = mb_strtolower(preg_replace('/\s+/u', ' ', trim($n)));
-
-        return strtr($n, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        return Text::falte($n, Text::ZEILE);
     }
 
     /**

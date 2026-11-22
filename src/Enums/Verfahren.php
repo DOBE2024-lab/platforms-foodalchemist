@@ -2,6 +2,8 @@
 
 namespace Platform\FoodAlchemist\Enums;
 
+use Platform\FoodAlchemist\Support\Text;
+
 /**
  * Spec 60 · P4: Zubereitung als festes Vokabular (ersetzt die Prozess-Anker).
  *
@@ -48,8 +50,7 @@ enum Verfahren: string
      */
     public static function ausText(string $text): ?self
     {
-        $t = mb_strtolower($text);
-        $t = strtr($t, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        $t = Text::umschrift(mb_strtolower($text));
         // Reihenfolge = Priorität (prägend vor mild).
         $muster = [
             'karamellisiert' => self::Karamellisiert,

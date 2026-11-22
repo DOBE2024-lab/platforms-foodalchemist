@@ -139,8 +139,8 @@ final class RezeptTypVokabular
     /** Vergleichs-Schlüssel: klein, Umlaute/Akzente zu Grundbuchstaben, Bindestriche zu Leerzeichen. */
     public static function norm(string $s): string
     {
-        $s = mb_strtolower(trim($s));
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss', 'é' => 'e', 'è' => 'e', 'ê' => 'e',
+        $s = Text::falte($s);
+        $s = strtr($s, ['é' => 'e', 'è' => 'e', 'ê' => 'e',
             'â' => 'a', 'à' => 'a', 'ô' => 'o', 'û' => 'u', 'î' => 'i', 'ç' => 'c', '-' => ' ']);
 
         return trim((string) preg_replace('/\s+/u', ' ', $s));

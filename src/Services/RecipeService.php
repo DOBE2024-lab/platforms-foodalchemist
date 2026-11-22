@@ -18,6 +18,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeMainGroup;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
 use Platform\FoodAlchemist\Support\TeamScope;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * M4-04/05 / D-5 §3.1 (Listen-Teil): Basisrezept-Browser — Scope basis() wird
@@ -188,11 +189,7 @@ class RecipeService
     /** Regelwerk §1.7: slug(name) — ä→ae/ö→oe/ü→ue/ß→ss, Sonderzeichen→_, kollabiert. */
     public function rezeptKey(string $name): string
     {
-        $s = mb_strtolower(trim($name));
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
-        $s = preg_replace('/[^\p{L}\p{N}]+/u', '_', $s);
-
-        return trim(preg_replace('/_+/', '_', $s), '_');
+        return Text::falte($name, Text::SLUG);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Services;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Spec 82 §6 — Standardausstattung im Equipment-Vokabular setzen (Dominique 13.10.: 15 Einträge). Eine Logik für Befehl und MCP.
@@ -93,9 +94,6 @@ class EquipmentStandardService
 
     private function norm(string $s): string
     {
-        $s = mb_strtolower(trim($s));
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
-
-        return preg_replace('/[^a-z0-9]+/', '', $s) ?? '';
+        return Text::falte($s, Text::KOMPAKT);
     }
 }

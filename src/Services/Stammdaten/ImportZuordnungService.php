@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistImportZuordnung as Zuordnung;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun as Lauf;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Eigene Lieferanten-Dateien ohne Vorlage (Kurator 29.10.2026). Gemeinsame Stelle für Preislisten- und Stammdaten-Import:
@@ -22,10 +23,7 @@ class ImportZuordnungService
 
     public function norm(string $s): string
     {
-        $t = mb_strtolower(trim($s));
-        $t = str_replace(['ä', 'ö', 'ü', 'ß'], ['ae', 'oe', 'ue', 'ss'], $t);
-
-        return (string) preg_replace('/[^a-z0-9]/', '', $t);
+        return Text::falte($s, Text::KOMPAKT);
     }
 
     /** @param list<string> $kopf */

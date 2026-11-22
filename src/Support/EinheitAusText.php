@@ -44,7 +44,7 @@ final class EinheitAusText
 
     private static function norm(string $s): string
     {
-        return strtr(rtrim(mb_strtolower(trim($s)), '.'), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        return Text::umschrift(rtrim(mb_strtolower(trim($s)), '.'));
     }
 
     /** @return list<string> Singular-Kandidaten (Zweige → zweig, Zehen → zehe, Scheiben → scheibe, Knollen → knolle). */

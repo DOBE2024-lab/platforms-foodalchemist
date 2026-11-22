@@ -16,7 +16,7 @@ final class HandyNavigation
 {
     /** Reiter der unteren Leiste (Suche ist immer da, „Mehr“ öffnet das Blatt). */
     public const REITER = [
-        'foodalchemist.recipes.index' => 'Rezepte',
+        'foodalchemist.recipes.index' => 'Basisrezepte',
         'foodalchemist.planung.index' => 'Planung',
         'foodalchemist.review' => 'Signale',
     ];

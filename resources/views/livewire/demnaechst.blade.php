@@ -5,7 +5,7 @@
      sondern als kurzer Hinweis darunter. data-demnaechst-liste bleibt. --}}
 @php
     $symbol = [
-        'Foodbook / Portfolio' => 'heroicon-o-book-open', 'Kalkulation (HK2)' => 'heroicon-o-calculator',
+        'Foodbooks' => 'heroicon-o-book-open', 'Kalkulation (HK2)' => 'heroicon-o-calculator',
         'Produktionsplanung' => 'heroicon-o-building-office-2', 'Speiseplan' => 'heroicon-o-calendar-days',
         'Speisekarte' => 'heroicon-o-document-text', 'Einkauf' => 'heroicon-o-shopping-cart',
         'Lager' => 'heroicon-o-archive-box', 'Controlling' => 'heroicon-o-chart-bar',

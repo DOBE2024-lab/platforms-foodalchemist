@@ -34,7 +34,7 @@
 
 <x-ui-page>
     <x-slot name="navbar">
-        <x-foodalchemist::shell.page-navbar title="Food Alchemist" icon="heroicon-o-cube" />
+        <x-foodalchemist::shell.page-navbar title="Übersicht" icon="heroicon-o-cube" />
     </x-slot>
 
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-6">

@@ -58,7 +58,7 @@ it('legt das Küchenleiter-Dashboard auf die Tagesplanung und verlinkt den Edito
         ->assertSeeHtml('data-tagesplanung-dashboard')
         ->assertSeeHtml('data-tagesplanung-sidebar')
         ->assertSeeHtml('activity_tagesplan')
-        ->assertSee('Küchenleiter-Dashboard')
+        ->assertSee('Auslastung und Tageshorizont')->assertDontSee('Küchenleiter-Dashboard')   // 98 · 2.4f B
         ->assertSeeHtml('data-tagesplan-editor-link')
         ->assertSeeHtml('data-modal="tagesplan-editor"')
         ->assertSeeHtml('data-tagesplan-editor');

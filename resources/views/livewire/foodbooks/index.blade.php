@@ -33,13 +33,13 @@
 
 <x-ui-page>
     <x-slot:navbar>
-        <x-foodalchemist::shell.page-navbar title="Foodbook / Portfolio" icon="heroicon-o-book-open" />
+        <x-foodalchemist::shell.page-navbar title="Foodbooks" icon="heroicon-o-book-open" />
     </x-slot:navbar>
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Food Alchemist', 'href' => route('foodalchemist.dashboard'), 'icon' => 'cube'],
-            ['label' => 'Foodbook / Portfolio'],
+            ['label' => 'Foodbooks'],
         ]" />
     </x-slot>
 

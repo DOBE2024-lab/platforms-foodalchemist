@@ -174,7 +174,7 @@ return [
             'group' => 'Übersicht',
             'items' => [
                 [
-                    'label' => 'Dashboard',
+                    'label' => 'Übersicht',
                     'route' => 'foodalchemist.dashboard',
                     'icon'  => 'heroicon-o-home',
                 ],
@@ -281,7 +281,7 @@ return [
             'group' => 'Ausgabe',
             'items' => [
                 [
-                    'label' => 'Foodbook / Portfolio',
+                    'label' => 'Foodbooks',
                     'route' => 'foodalchemist.foodbooks.index',
                     'icon'  => 'heroicon-o-rectangle-stack',
                 ],
@@ -333,7 +333,7 @@ return [
                     'icon'  => 'heroicon-o-clock',
                 ],
                 [
-                    'label' => 'Wandmonitor',
+                    'label' => 'Küchenmonitor',
                     'route' => 'foodalchemist.produktion.wandmonitor',
                     'icon'  => 'heroicon-o-tv',
                 ],

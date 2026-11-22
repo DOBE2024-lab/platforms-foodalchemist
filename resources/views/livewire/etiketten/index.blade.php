@@ -12,7 +12,7 @@
     </x-slot>
 
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
-        <x-fa::page-header title="Etikett drucken" subtitle="Für Eigenproduktion, Anbruch und Stellplätze. Allergene und Zutaten kommen aus dem Rezept; leere Datumsfelder rechnet das System." />
+        <x-fa::page-header title="Etiketten" subtitle="Für Eigenproduktion, Anbruch und Stellplätze. Allergene und Zutaten kommen aus dem Rezept; leere Datumsfelder rechnet das System." />
 
         @if($fehler)<x-fa::notice tone="crit" data-etikett-fehler>{{ $fehler }}</x-fa::notice>@endif
         @if($hinweis)<x-fa::notice tone="info">{{ $hinweis }}</x-fa::notice>@endif

@@ -26,7 +26,7 @@
     <x-foodalchemist::shell.page-navbar title="Designsystem" icon="heroicon-o-swatch" />
 
     <div class="max-w-[1200px] mx-auto px-6 py-8 flex flex-col gap-8">
-        <x-fa::page-header title="Bausteine des Food.Alchemist" subtitle="Eine Quelle für jede Oberfläche. Neue Views nutzen nur diese Bausteine.">
+        <x-fa::page-header title="Designsystem" subtitle="Eine Quelle für jede Oberfläche. Neue Views nutzen nur diese Bausteine.">
             <x-slot:actions>
                 <x-fa::button icon="heroicon-m-arrow-top-right-on-square" :href="route('foodalchemist.recipes.index')">Beispiel: Basisrezepte</x-fa::button>
             </x-slot:actions>

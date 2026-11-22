@@ -34,8 +34,8 @@
                 <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-3">
                     <x-fa::field label="Titel für den Kunden" for="kfk-titel"><x-fa::input id="kfk-titel" wire:model="konzeptForm.kunden_titel" /></x-fa::field>
                     <x-fa::field label="Claim" for="kfk-claim" optional><x-fa::input id="kfk-claim" wire:model="konzeptForm.claim" /></x-fa::field>
-                    <x-fa::field label="Lunch-Konzept (Id)" for="kfk-lunch" optional hint="leer = nur abends wählbar"><x-fa::input id="kfk-lunch" type="number" wire:model="konzeptForm.lunch_concept_id" /></x-fa::field>
-                    <x-fa::field label="Dinner-Konzept (Id)" for="kfk-dinner" optional hint="leer = nur mittags wählbar"><x-fa::input id="kfk-dinner" type="number" wire:model="konzeptForm.dinner_concept_id" /></x-fa::field>
+                    <x-fa::field label="Lunch-Konzept" for="kfk-lunch" optional hint="leer = nur abends wählbar"><x-fa::select id="kfk-lunch" wire:model="konzeptForm.lunch_concept_id" :options="$conceptAuswahl" placeholder="— keins —" data-kf-concept-auswahl="lunch" /></x-fa::field>
+                    <x-fa::field label="Dinner-Konzept" for="kfk-dinner" optional hint="leer = nur mittags wählbar"><x-fa::select id="kfk-dinner" wire:model="konzeptForm.dinner_concept_id" :options="$conceptAuswahl" placeholder="— keins —" data-kf-concept-auswahl="dinner" /></x-fa::field>
                 </div>
                 <div class="flex flex-wrap items-center gap-4">
                     <x-fa::checkbox class="inline-flex items-center gap-2" wire:model="konzeptForm.indikativ_lunch">Lunch-Preis indikativ</x-fa::checkbox>

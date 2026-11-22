@@ -7,6 +7,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
+use Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 
 /** Eine Recompute-Reihenfolge für alle mengenunabhängigen Live-Preise. */
@@ -37,12 +38,15 @@ class PricingCascadeService
                 $stats['presentations']++;
             }
         });
-        FoodAlchemistPaket::where('team_id', $team->id)->where('price_mode', 'auto')->chunkById($chunk, function ($rows) use (&$stats) {
-            foreach ($rows as $row) {
-                $this->packages->recomputePrice($row);
-                $stats['packages']++;
-            }
-        });
+        // CQ 2.6b: nach dem Umzug sind alte Pakete eingefroren (nur lesend) — ihr Preis lebt im Paket-Concept weiter
+        if (! PaketAltNurLesen::aktiv()) {
+            FoodAlchemistPaket::where('team_id', $team->id)->where('price_mode', 'auto')->chunkById($chunk, function ($rows) use (&$stats) {
+                foreach ($rows as $row) {
+                    $this->packages->recomputePrice($row);
+                    $stats['packages']++;
+                }
+            });
+        }
         // Eingebettete Concepts können auf andere Concept-Caches zeigen: zwei idempotente Pässe.
         for ($pass = 0; $pass < 2; $pass++) {
             FoodAlchemistConcept::where('team_id', $team->id)->chunkById($chunk, function ($rows) use (&$stats, $pass) {
@@ -94,7 +98,8 @@ class PricingCascadeService
                     ->whereIn('sales_recipe_id', $recipeIds)->whereNull('deleted_at')
                     ->distinct()->pluck('package_id');
                 // auch manuell bepreiste Pakete: recomputePrice lässt deren Preis stehen, frischt aber EK und W% (18.11.2026: Paket-EK blieb sonst alt)
-                FoodAlchemistPaket::where('team_id', $team->id)->whereIn('id', $packageIds)
+                // CQ 2.6b: alte Pakete nach dem Umzug nicht mehr nachrechnen (nur lesend); Concepts mit Verweis laufen unten weiter
+                FoodAlchemistPaket::where('team_id', $team->id)->whereIn('id', PaketAltNurLesen::aktiv() ? [] : $packageIds)
                     ->get()->each(function ($package) use (&$stats) {
                         $this->packages->recomputePrice($package);
                         $stats['packages']++;

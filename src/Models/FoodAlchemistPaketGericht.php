@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Platform\ActivityLog\Traits\LogsActivity;
 use Platform\FoodAlchemist\Models\Concerns\BelongsToTeamHierarchy;
 use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
+use Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen;
 
 /**
  * @ai.description Paket-Gericht (M10-01) — ein VK-Rezept als Bestandteil eines
@@ -18,6 +19,14 @@ class FoodAlchemistPaketGericht extends Model
     use HasUuidV7, LogsActivity, BelongsToTeamHierarchy, SoftDeletes;
 
     protected $table = 'foodalchemist_package_dishes';
+
+    /** CQ 2.6b: nach dem Umzug Alt-Paket → Concept nur noch lesend (Schalter foodalchemist.paket_alt_nur_lesen). */
+    protected static function booted(): void
+    {
+        static::saving(fn () => PaketAltNurLesen::pruefe('Paket-Position'));
+        static::deleting(fn () => PaketAltNurLesen::pruefe('Paket-Position'));
+        static::restoring(fn () => PaketAltNurLesen::pruefe('Paket-Position'));
+    }
 
     protected $guarded = ['id'];
 

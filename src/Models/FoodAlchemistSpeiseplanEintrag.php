@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Platform\ActivityLog\Traits\LogsActivity;
 use Platform\FoodAlchemist\Models\Concerns\BelongsToTeamHierarchy;
 use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
+use Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen;
 
 /**
  * @ai.description Speiseplan-Eintrag (M14) — belegt (woche × wochentag × mahlzeit)
@@ -16,6 +17,17 @@ use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
 class FoodAlchemistSpeiseplanEintrag extends Model
 {
     use HasUuidV7, LogsActivity, BelongsToTeamHierarchy, SoftDeletes;
+
+    /** CQ 2.6b: neue Verweise auf alte Pakete nur bis zum Umzug (Schalter foodalchemist.paket_alt_nur_lesen); fängt alle Schreibwege inkl. Kopien. */
+    protected static function booted(): void
+    {
+        static::saving(function (self $e) {
+            if ($e->package_id !== null && $e->isDirty('package_id')) {
+                PaketAltNurLesen::pruefe('Speiseplan', 'Alte Pakete sind nur noch lesbar (Umzug ins Concept-Modell). '
+                    .'Bitte das Paket als Konzept (concept_id, Art Paket) einplanen.');
+            }
+        });
+    }
 
     protected $table = 'foodalchemist_menu_plan_entries';
 

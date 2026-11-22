@@ -478,6 +478,8 @@ class ConceptService
                 'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null,
             ]);
         } elseif (! empty($in['package_id'])) {
+            \Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen::pruefe('Paket-Slot', 'Alte Pakete sind nur noch lesbar (Umzug ins Concept-Modell). '
+                .'Ein Paket wird über embedded_concept_id (Concept der Art Paket) eingehängt.');   // CQ 2.6b
             $slot->update([
                 'type' => 'paket',
                 'package_id' => (int) $in['package_id'],

@@ -98,6 +98,10 @@ class OrderTemplateService
         if (! in_array($typ, FoodAlchemistOrderTemplateLine::TYPEN, true)) {
             throw new \RuntimeException('Typ muss gp, recipe, supplier_item, concept oder paket sein.');
         }
+        if ($typ === 'paket') {
+            \Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen::pruefe('Bestellvorlage', 'Alte Pakete sind nur noch lesbar (Umzug ins Concept-Modell). '
+                .'Bitte das Paket als Konzept (Art Paket) aufnehmen.');   // CQ 2.6b
+        }
         $spalte = FoodAlchemistOrderTemplateLine::SPALTE[$typ];
         $sichtbar = match ($typ) {
             'gp' => FoodAlchemistGp::visibleToTeam($team)->whereKey($bezugId)->exists(),

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Platform\ActivityLog\Traits\LogsActivity;
 use Platform\FoodAlchemist\Models\Concerns\BelongsToTeamHierarchy;
 use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
+use Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen;
 
 /**
  * @ai.description Paket (M10-01, D-CON-1) — bepreistes Bündel MEHRERER Gerichte,
@@ -38,7 +39,10 @@ class FoodAlchemistPaket extends Model
             if ($paket->preisOverlay) {
                 throw new \LogicException('Overlay-Instanz darf nicht gespeichert werden (Team-Preis einer Abo-Fassung, Spec 82).');
             }
+            PaketAltNurLesen::pruefe('Paket');   // CQ 2.6b: nach dem Umzug nur noch lesend
         });
+        static::deleting(fn () => PaketAltNurLesen::pruefe('Paket'));
+        static::restoring(fn () => PaketAltNurLesen::pruefe('Paket'));
     }
 
     protected $guarded = ['id'];

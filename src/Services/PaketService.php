@@ -305,6 +305,7 @@ class PaketService
     public function reorderGerichte(Team $team, int $paketId, array $ids): void
     {
         $paket = FoodAlchemistPaket::visibleToTeam($team)->findOrFail($paketId);
+        \Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen::pruefe('Paket-Reihenfolge');   // CQ 2.6b: Massen-Update läuft an den Model-Hooks vorbei
         $this->guardOwner($paket, $team);
         DB::transaction(function () use ($paketId, $ids) {
             foreach (array_values($ids) as $i => $id) {
@@ -531,6 +532,9 @@ class PaketService
      */
     public function markStaleForRecipe(int $vkRecipeId): int
     {
+        if (\Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen::aktiv()) {
+            return 0;   // CQ 2.6b: alte Pakete nach dem Umzug nur lesend, Massen-Update läuft an den Model-Hooks vorbei
+        }
         $paketIds = DB::table('foodalchemist_package_dishes')
             ->where('sales_recipe_id', $vkRecipeId)->whereNull('deleted_at')
             ->distinct()->pluck('package_id');

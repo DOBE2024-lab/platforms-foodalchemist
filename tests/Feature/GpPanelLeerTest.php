@@ -44,3 +44,9 @@ it('GP-Browser: Detail-Leiste klappt ohne Auswahl ein und meldet die Auswahl', f
     expect(Livewire::test(Browser::class)->html())->toContain('data-fa-leer-zu')->toContain('data-fa-auswahl=""')
         ->and(Livewire::test(Browser::class)->call('waehleGp', $gp->id)->html())->toContain('data-fa-auswahl="' . $gp->id . '"');
 });
+
+it('leere Panels in Produktion und Formate: gleicher Hinweis, dort öffnet der Name ebenfalls den Editor', function () {
+    foreach ([\Platform\FoodAlchemist\Livewire\Produktion\DetailPanel::class, \Platform\FoodAlchemist\Livewire\Formate\DetailPanel::class] as $panel) {
+        expect(Livewire::test($panel)->html())->toContain('Zeile in der Tabelle anklicken')->toContain('Klick auf den Namen öffnet den Editor');
+    }
+});

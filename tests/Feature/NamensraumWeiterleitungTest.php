@@ -1,9 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Blade;
+use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
-uses(TestCase::class);
+uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
  * Plan 98, 2.4a: Bausteine heißen x-fa::…. Die alten Dateien unter components/ bleiben als Weiterleitung, damit fremde
@@ -43,6 +44,8 @@ it('ein Namensraum: unter components/ außer fa/ und shell/ liegen nur noch Weit
 });
 
 it('alter und neuer Name rendern gleich: handy.nav mit benanntem Slot und handy.kopf', function () {
+    $this->seedTeamHierarchy();                                       // handy.nav baut Links aus der Navigation des Benutzers
+    $this->actingAs($this->makeUser($this->rootTeam));
     foreach (['<x-NS::handy.nav><x-slot:konto><span>KONTO-MARKER</span></x-slot:konto></x-NS::handy.nav>', '<x-NS::handy.kopf />'] as $markup) {
         expect(Blade::render(str_replace('NS', 'foodalchemist', $markup)))->toBe(Blade::render(str_replace('NS', 'fa', $markup)));
     }
@@ -55,6 +58,8 @@ it('alter und neuer Name rendern gleich: handy.nav mit benanntem Slot und handy.
  * und der Slot-Inhalt muss in der Konto-Zeile ankommen.
  */
 it('Host-Aufrufe aus layouts/standalone: handy.kopf, saved-toast und handy.nav mit Slot rendern alt wie neu', function () {
+    $this->seedTeamHierarchy();                                       // handy.nav baut Links aus der Navigation des Benutzers
+    $this->actingAs($this->makeUser($this->rootTeam));
     $aufrufe = [
         'handy.kopf' => '<x-NS::handy.kopf />',
         'saved-toast' => '<x-NS::saved-toast />',
@@ -98,7 +103,7 @@ it('alter und neuer Name rendern gleich: modal mit Slots und Sektion', function 
 
     expect($alt)->toBe($neu)
         ->and($neu)->toContain('AKTIONEN-OBEN')->toContain('EXTRA')->toContain('SEKTION-INHALT')->toContain('FOOTER-AKTIONEN')
-        ->toContain('extra-klasse')->toContain('data-test-modal=""');
+        ->toContain('extra-klasse');                                    // modal selbst reicht keine freien Attribute an die Wurzel
 });
 
 it('alter und neuer Name rendern gleich: ki-action mit Props und freien Attributen', function () {

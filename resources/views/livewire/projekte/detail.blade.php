@@ -12,7 +12,7 @@
     <x-fa::section title="Projektkopf" data-projekt-kopf>
         <div class="flex flex-wrap items-center gap-2 mb-3">
             <x-fa::badge tone="accent" icon="heroicon-m-building-office-2" data-projekt-firma>{{ $firma?->display_name ?? 'CRM-Firma nicht erreichbar' }}</x-fa::badge>
-            <x-fa::badge tone="neutral" data-projekt-phase>Phase: {{ $phasen[$p->phase] ?? $p->phase }}</x-fa::badge>
+            <x-fa::badge tone="neutral" data-projekt-phase>Phase: {{ $phasen[$p->phase] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($p->phase) }}</x-fa::badge>
             @php $pilot = $p->standorte->firstWhere('ist_pilot', true); @endphp
             <x-fa::badge tone="neutral" icon="heroicon-m-map-pin" data-projekt-pilot>Pilot-Standort: {{ $pilot?->name ?? 'noch keiner' }}</x-fa::badge>
             @if(Route::has('crm.companies.show'))

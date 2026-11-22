@@ -319,7 +319,7 @@
                 @if($eignungVorschlag !== null)
                     <x-fa::notice tone="info" title="Vorschlag: geeignet für" data-eignung-vorschlag>
                         <div class="flex flex-wrap gap-1.5">
-                            @foreach($eignungVorschlag['slugs'] as $slug => $typ)<x-fa::badge tone="info">{{ $typ === 'level' ? 'Niveau' : 'Sektor' }}: {{ $slug }}</x-fa::badge>@endforeach
+                            @foreach($eignungVorschlag['slugs'] as $slug => $typ)<x-fa::badge tone="info">{{ $typ === 'level' ? 'Niveau' : 'Sektor' }}: {{ \Platform\FoodAlchemist\Support\Labels::eignung($slug) }}</x-fa::badge>@endforeach
                         </div>
                         <div class="flex items-center gap-1.5 mt-2">
                             <x-fa::button size="sm" variant="primary" wire:click="eignungUebernehmen" data-eignung-uebernehmen>Eignung übernehmen</x-fa::button>
@@ -334,7 +334,7 @@
                             <span class="w-14 shrink-0 {{ $kleinLabel }}">{{ $lbl }}</span>
                             @forelse($eignungen as $e)
                                 <x-fa::badge :tone="$typ === 'sektor' ? 'neutral' : 'info'" wire:key="eig-{{ $typ }}-{{ $e->id }}" class="pr-0.5" title="{{ $e->source }}{{ $e->ai_confidence !== null ? ' · ' . round($e->ai_confidence * 100) . ' %' : '' }}">
-                                    {{ $e->{$slugSpalte} }}
+                                    {{ \Platform\FoodAlchemist\Support\Labels::eignung($e->{$slugSpalte}) }}
                                     <button type="button" wire:click="eignungEntfernen('{{ $typ }}', '{{ $e->{$slugSpalte} }}')" class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-[var(--fa-surface)]" aria-label="{{ $lbl }} {{ $e->{$slugSpalte} }} entfernen" title="Entfernen">@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                 </x-fa::badge>
                             @empty

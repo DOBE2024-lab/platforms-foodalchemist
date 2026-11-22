@@ -48,7 +48,7 @@
             <div class="px-5 py-4 space-y-2">
                 <h3 class="font-medium tracking-tight text-gray-900">Aroma-Anker</h3>
                 <div class="flex flex-wrap gap-1">
-                    @foreach($pairing['anker'] as $a)<span class="{{ $pill }} {{ $variantPill['secondary'] }}">{{ $a['display_de'] ?: $a['slug'] }}</span>@endforeach
+                    @foreach($pairing['anker'] as $a)<span class="{{ $pill }} {{ $variantPill['secondary'] }}">{{ $a['display_de'] ?: \Platform\FoodAlchemist\Support\Labels::lesbar($a['slug']) }}</span>@endforeach
                 </div>
             </div>
         </div>

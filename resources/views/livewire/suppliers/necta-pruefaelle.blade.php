@@ -128,7 +128,7 @@
                                             @else
                                                 <div class="font-medium">{{ $f['artikel'] ?? 'Necta-ID '.$f['legacy_id'] }}</div>
                                             @endif
-                                            <div class="fa-t-muted">{{ $f['lieferant'] ?? '—' }} · {{ $arten[$f['art']] ?? $f['art'] }}</div>
+                                            <div class="fa-t-muted">{{ $f['lieferant'] ?? '—' }} · {{ $arten[$f['art']] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($f['art']) }}</div>
                                         </td>
                                         <td>
                                             {{ $f['feld_label'] }}

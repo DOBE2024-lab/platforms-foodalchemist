@@ -393,7 +393,7 @@ class Editor extends Component
                 'concept_id' => (int) $concept->id,
                 'persons' => $pax,
                 'source_ref' => $base . ':c' . $i,
-                'label' => $angLabel . ' › ' . ($concept->name ?? ('Konzept #' . $concept->id)) . ' (' . $pax . ' P.)',
+                'label' => $angLabel . ' › ' . ($concept->name ?? ('Konzept Nr. ' . $concept->id)) . ' (' . $pax . ' P.)',
             ];
         }
         $this->fehler = null;

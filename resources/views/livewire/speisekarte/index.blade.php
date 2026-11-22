@@ -64,7 +64,7 @@
                             class="w-full text-left px-2.5 py-2 rounded-[var(--fa-radius-control)] transition-colors duration-150 {{ $karteId === $k->id ? 'bg-[var(--fa-accent-soft)] text-[var(--fa-accent)]' : 'text-[var(--fa-ink)] hover:bg-[var(--fa-hover)]' }}"
                             @if($karteId === $k->id) aria-current="true" @endif>
                             <div class="text-[length:var(--fa-text-md)] font-medium break-words leading-snug">{{ $k->name }}</div>
-                            <div class="mt-0.5 text-[length:var(--fa-text-sm)] {{ $karteId === $k->id ? 'text-[var(--fa-accent)]' : 'text-[var(--fa-ink-3)]' }}">{{ $typLabel[$k->karten_typ] ?? $k->karten_typ }} · {{ $k->sections_count }} {{ $k->sections_count === 1 ? 'Rubrik' : 'Rubriken' }}</div>
+                            <div class="mt-0.5 text-[length:var(--fa-text-sm)] {{ $karteId === $k->id ? 'text-[var(--fa-accent)]' : 'text-[var(--fa-ink-3)]' }}">{{ $typLabel[$k->karten_typ] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($k->karten_typ) }} · {{ $k->sections_count }} {{ $k->sections_count === 1 ? 'Rubrik' : 'Rubriken' }}</div>
                         </button>
                     @empty
                         <x-fa::empty compact icon="heroicon-o-clipboard-document-list" title="Keine Karte gefunden">
@@ -114,7 +114,7 @@
                 </x-slot:actions>
             </x-fa::page-header>
             <div class="-mt-2 flex flex-wrap items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">
-                <span>{{ $typLabel[$karte->karten_typ] ?? $karte->karten_typ }}</span>
+                <span>{{ $typLabel[$karte->karten_typ] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($karte->karten_typ) }}</span>
                 <x-fa::badge :tone="$statusTon[$karte->statusWert()->badgeVariant()] ?? 'neutral'">{{ $karte->statusWert()->label() }}</x-fa::badge>
             </div>
 
@@ -124,7 +124,7 @@
             {{-- ═══════════════ EDITOR = Vollbild-Modal (Foodbook-Muster) ═══════════════ --}}
             <x-fa::modal name="speisekarte-editor" fullscreen dark-canvas title="Speisekarte bearbeiten" :title-name="$name">
                 <x-slot:titleExtra>
-                    <x-fa::badge>{{ $typLabel[$karte->karten_typ] ?? $karte->karten_typ }}</x-fa::badge>
+                    <x-fa::badge>{{ $typLabel[$karte->karten_typ] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($karte->karten_typ) }}</x-fa::badge>
                     <x-fa::badge :tone="$statusTon[$karte->statusWert()->badgeVariant()] ?? 'neutral'">{{ $karte->statusWert()->label() }}</x-fa::badge>
                 </x-slot:titleExtra>
                 <x-slot:actions>

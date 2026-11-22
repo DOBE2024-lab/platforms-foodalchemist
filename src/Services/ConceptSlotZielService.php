@@ -49,7 +49,7 @@ class ConceptSlotZielService
             throw new ModelNotFoundException("Paket #{$paketId} nicht sichtbar oder kein Paket.");
         }
         if ($this->enthaelt($paketId, (int) $slot->concept_id)) {
-            throw new \RuntimeException("Paket #{$paketId} enthält dieses Konzept bereits — das wäre ein Kreis.");
+            throw new \RuntimeException("Paket Nr. {$paketId} enthält dieses Konzept bereits — das wäre ein Kreis.");
         }
     }
 

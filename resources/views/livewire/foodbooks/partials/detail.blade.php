@@ -198,7 +198,7 @@
                 </div>
                 <div class="{{ $zeile }}">
                     <dt class="{{ $dt }}">Nummer</dt>
-                    <dd class="{{ $dd }}">{{ $fb->code ?: '#' . $fb->id }}</dd>
+                    <dd class="{{ $dd }}">{{ $fb->code ?: 'Nr. ' . $fb->id }}</dd>
                 </div>
             </dl>
         </x-fa::section>

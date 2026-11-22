@@ -59,7 +59,7 @@
         @if($item !== null)
             <x-slot:titleExtra>
                 @if($concept)
-                    @php [$stText, $stTon] = $statusAnzeige[$concept->status ?? 'draft'] ?? [ucfirst((string) $concept->status), 'neutral']; @endphp
+                    @php [$stText, $stTon] = $statusAnzeige[$concept->status ?? 'draft'] ?? [\Platform\FoodAlchemist\Support\Labels::lesbar((string) $concept->status), 'neutral']; @endphp
                     <x-fa::badge :tone="$stTon" data-concept-status="{{ $concept->status }}">{{ $stText }}</x-fa::badge>
                     @if($concept->is_template)<x-fa::badge tone="info" icon="heroicon-m-square-2-stack">Vorlage</x-fa::badge>@endif
                 @endif

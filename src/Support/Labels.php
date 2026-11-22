@@ -43,6 +43,31 @@ final class Labels
         'none' => 'Unbekannt',   // 98 · 1.1d (U1): GP-Konfidenz ohne belegte Allergene, nie roh „none“ (liest sich wie allergenfrei)
     ];
 
+    /** Eignung (Niveau `level_slug`, Sektor `sector_slug`) — 98 · 2.4f D: nie den Slug zeigen. */
+    private const EIGNUNG = [
+        'haute_cuisine' => 'Haute Cuisine', 'gehoben' => 'Gehoben', 'klassisch' => 'Klassisch',
+        'business' => 'Betriebsgastronomie', 'care' => 'Care', 'crew' => 'Crew-Verpflegung',
+        'event_privat' => 'Privates Event', 'kita_schule' => 'Kita und Schule', 'restaurant' => 'Restaurant',
+    ];
+
+    public static function eignung(?string $wert): string
+    {
+        return $wert !== null && isset(self::EIGNUNG[$wert]) ? self::EIGNUNG[$wert] : self::lesbar($wert);
+    }
+
+    /**
+     * 98 · 2.4f D: Rückfall für Schlüssel ohne Label — lesbar statt technisch („event_privat“ → „Event privat“),
+     * der Inhalt bleibt erkennbar (nicht verstecken, siehe map()).
+     */
+    public static function lesbar(?string $wert): string
+    {
+        if ($wert === null || $wert === '') {
+            return self::LEER;
+        }
+
+        return \Illuminate\Support\Str::ucfirst(str_replace(['_', '-'], ' ', $wert));
+    }
+
     public static function fertigung(?string $wert): string
     {
         return self::map(self::FERTIGUNG, $wert);

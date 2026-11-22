@@ -59,7 +59,7 @@
                             <tr wire:key="proj-{{ $p->id }}" data-projekt-zeile="{{ $p->id }}">
                                 <td class="font-medium"><a href="{{ route('foodalchemist.projekte.show', $p->id) }}" wire:navigate class="hover:underline">{{ $p->name }}</a></td>
                                 <td>{{ $firmenNamen[$p->crm_company_id] ?? '—' }}</td>
-                                <td>{{ $phasen[$p->phase] ?? $p->phase }}</td>
+                                <td>{{ $phasen[$p->phase] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($p->phase) }}</td>
                                 <td><x-fa::badge tone="{{ $p->status === 'aktiv' ? 'ok' : ($p->status === 'pausiert' ? 'warn' : 'neutral') }}">{{ ucfirst($p->status) }}</x-fa::badge></td>
                             </tr>
                         @endforeach

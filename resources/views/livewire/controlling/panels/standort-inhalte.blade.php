@@ -29,7 +29,7 @@
                                 <ul class="flex flex-wrap gap-2">
                                     @foreach($fs as $f)
                                         <li class="inline-flex items-center gap-1" wire:key="fr-{{ $f['id'] }}" data-inhalte-freigabe="{{ $f['id'] }}">
-                                            <x-fa::badge>{{ $ausgabeLabels[$f['ausgabe_typ']] ?? $f['ausgabe_typ'] }} · {{ $f['ausgabe'] }}</x-fa::badge>
+                                            <x-fa::badge>{{ $ausgabeLabels[$f['ausgabe_typ']] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($f['ausgabe_typ']) }} · {{ $f['ausgabe'] }}</x-fa::badge>
                                             <x-fa::button size="sm" variant="ghost" icon="heroicon-m-x-mark" wire:click="freigabeEntziehen({{ $f['id'] }})" aria-label="Freigabe entziehen" />
                                         </li>
                                     @endforeach
@@ -76,7 +76,7 @@
                         <ul class="flex flex-wrap gap-2">
                             @foreach($s['objekte'] as $o)
                                 <li class="inline-flex items-center gap-1" wire:key="samo-{{ $s['id'] }}-{{ $o['typ'] }}-{{ $o['id'] }}">
-                                    <x-fa::badge>{{ $typLabels[$o['typ']] ?? $o['typ'] }} · {{ $o['name'] }}</x-fa::badge>
+                                    <x-fa::badge>{{ $typLabels[$o['typ']] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($o['typ']) }} · {{ $o['name'] }}</x-fa::badge>
                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-x-mark" wire:click="sammlungEntfernen({{ $s['id'] }}, '{{ $o['typ'] }}', {{ $o['id'] }})" aria-label="Aus Sammlung entfernen" />
                                 </li>
                             @endforeach

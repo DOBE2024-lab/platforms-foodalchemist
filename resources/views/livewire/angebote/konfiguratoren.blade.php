@@ -40,7 +40,7 @@
                     @forelse($liste as $k)
                         <x-fa::table-row :active="$selectedId === $k->id" wire:key="kf-{{ $k->id }}" wire:click="waehle({{ $k->id }})" data-konfigurator-zeile="{{ $k->id }}">
                             <td class="font-medium">{{ $k->name }}@if($k->kunden_titel && $k->kunden_titel !== $k->name)<div class="fa-t-muted">{{ $k->kunden_titel }}</div>@endif</td>
-                            <td><x-fa::badge :tone="$statusTon[$k->status] ?? 'neutral'">{{ $statusWerte[$k->status] ?? $k->status }}</x-fa::badge></td>
+                            <td><x-fa::badge :tone="$statusTon[$k->status] ?? 'neutral'">{{ $statusWerte[$k->status] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($k->status) }}</x-fa::badge></td>
                             <td class="text-[var(--fa-ink-2)]">{{ $k->ort ?: '–' }}</td>
                             <td class="num">{{ $k->haupt_count }}</td>
                             <td class="num">{{ $k->pakete_count }}</td>

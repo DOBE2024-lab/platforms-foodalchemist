@@ -229,7 +229,7 @@
                                         <td class="tabular-nums">{{ $m->moved_at?->format('d.m.Y') ?? '–' }}</td>
                                         <td class="font-medium">{{ $m->gp?->name ?? $m->supplierItem?->designation ?? $m->recipe?->name ?? '—' }}</td>
                                         <td>{{ $m->location?->name ?? '—' }}</td>
-                                        <td>{{ $quelleText[$m->source] ?? $m->source }}@if($m->order?->supplier) <span class="fa-t-muted">· {{ $m->order->supplier->name }}</span>@endif</td>
+                                        <td>{{ $quelleText[$m->source] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($m->source) }}@if($m->order?->supplier) <span class="fa-t-muted">· {{ $m->order->supplier->name }}</span>@endif</td>
                                         <td>{{ $m->reason ? ($alleGruende[$m->reason] ?? $m->reason) : '' }}</td>
                                         <td class="text-right tabular-nums {{ $m->direction === 'out' ? 'text-[var(--fa-crit)]' : 'text-[var(--fa-ok)]' }}">{{ $m->direction === 'out' ? '−' : '+' }}{{ $zahl($svc->anzeigeMenge((float) $m->qty_base, $m->base_unit)) }} {{ $svc->anzeigeEinheit($m->base_unit) }}</td>
                                         <td class="text-right tabular-nums">@if($m->value_eur !== null)<x-fa::money :value="$m->value_eur" />@endif</td>

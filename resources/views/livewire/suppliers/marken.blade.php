@@ -187,7 +187,7 @@
                                             <td class="font-mono">{{ $z['kuerzel'] }}</td>
                                             <td>{{ $z['lieferant'] ?? 'alle' }}</td>
                                             <td>{{ $z['position'] === 'ende' ? 'am Ende' : 'am Anfang' }}</td>
-                                            <td><x-fa::badge :tone="$typTon[$z['typ']] ?? 'neutral'">{{ $typLabel[$z['typ']] ?? $z['typ'] }}</x-fa::badge></td>
+                                            <td><x-fa::badge :tone="$typTon[$z['typ']] ?? 'neutral'">{{ $typLabel[$z['typ']] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($z['typ']) }}</x-fa::badge></td>
                                             <td class="text-right tabular-nums">{{ $z['vorrang'] }}</td>
                                             <td class="text-right tabular-nums" data-mk-gps>{{ $z['gps'] === null ? '–' : $fmt($z['gps']) }}</td>
                                             <td class="text-right tabular-nums" data-mk-artikel>{{ array_key_exists($z['id'], $artikelZahlen) ? $fmt($artikelZahlen[$z['id']]) : '–' }}</td>

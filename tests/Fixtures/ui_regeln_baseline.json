@@ -395,8 +395,8 @@
         "roher_button": 2
     },
     "livewire/gps/detail-panel.blade.php": {
-        "typo_groesse": 27,
-        "typo_tinte": 36,
+        "typo_groesse": 26,
+        "typo_tinte": 35,
         "roher_button": 6
     },
     "livewire/gps/gp-modal.blade.php": {

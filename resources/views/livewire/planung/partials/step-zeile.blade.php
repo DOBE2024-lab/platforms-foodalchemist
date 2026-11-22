@@ -24,12 +24,12 @@
     $reuse = (is_array($st->deferred) && is_array($st->deferred['reuse'] ?? null)) ? $st->deferred['reuse'] : null;
     $reuseUnreif = $st->status === 'skipped' && $reuse !== null && ! ($reuse['reif'] ?? false);
 
-    $kindName = ['concept' => 'Konzept', 'gericht' => 'Gericht', 'rezept' => 'Basisrezept'][$st->kind] ?? ucfirst((string) $st->kind);
+    $kindName = ['concept' => 'Konzept', 'gericht' => 'Gericht', 'rezept' => 'Basisrezept'][$st->kind] ?? \Platform\FoodAlchemist\Support\Labels::lesbar((string) $st->kind);
     $kindIcon = ['concept' => 'heroicon-o-squares-2x2', 'gericht' => 'heroicon-o-cake', 'rezept' => 'heroicon-o-beaker'][$st->kind] ?? 'heroicon-o-document';
     $name = $st->label ?: $kindName;
     $laeuftGerade = in_array($st->status, ['queued', 'running'], true);
     $statusTon = $reuseUnreif ? 'warn' : ($stepColor[$st->status] ?? 'neutral');
-    $statusText = $reuseUnreif ? 'Bestand unfertig' : ($stepLabel[$st->status] ?? ucfirst((string) $st->status));
+    $statusText = $reuseUnreif ? 'Bestand unfertig' : ($stepLabel[$st->status] ?? \Platform\FoodAlchemist\Support\Labels::lesbar((string) $st->status));
     $genMs = $st->status === 'done' ? ($snap['timings']['generator_ms'] ?? null) : null;
     $kommentarIstOffen = in_array($st->id, $kommentarOffen ?? [], true);
     $enr = (is_array($st->deferred) && is_array($st->deferred['enrich'] ?? null)) ? $st->deferred['enrich'] : null;

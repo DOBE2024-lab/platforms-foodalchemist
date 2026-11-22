@@ -18,19 +18,7 @@ final class PlanungOptionen
      */
     public const SEKTOR_OPTIONEN = ['' => '(egal/universell)'] + \Platform\FoodAlchemist\Support\Sektor::LABELS;
 
-    /** Spec 55 Nachtrag: Anlass — dieselbe Extraktions-Begründung wie SEKTOR_OPTIONEN. Nur VK-Scopes (Gericht/Concept). */
-    public const OCCASION_OPTIONEN = [
-        '' => '—',
-        'fruehstueck' => 'Frühstück', 'lunch' => 'Lunch', 'konferenz' => 'Konferenz',
-        'empfang' => 'Empfang', 'dinner' => 'Dinner', 'late_night' => 'Late Night',
-    ];
-
-    /** Spec 55 Nachtrag: Serviceform — dieselbe Extraktions-Begründung wie SEKTOR_OPTIONEN. Nur VK-Scopes. */
-    public const SERVICEFORM_OPTIONEN = [
-        '' => '—',
-        'tellerservice' => 'Tellerservice', 'buffet' => 'Buffet', 'flying' => 'Flying Service',
-        'stehempfang' => 'Stehempfang', 'boxed' => 'Boxed',
-    ];
+    // CQ 2.5b: Anlass (OCCASION_OPTIONEN) und Serviceform (SERVICEFORM_OPTIONEN) kommen aus den DB-Vokabularen ({@see PlanungVokabular}).
 
     /**
      * Spec 55 Nachtrag (Agent-am-Brief): Pflicht-Leitplanken je Scope, gegen die der

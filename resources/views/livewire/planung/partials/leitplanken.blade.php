@@ -53,10 +53,13 @@
     $levelOptionen = $keineVorgabe($richtungenByField['level']['optionen']);
     $aromaKuechen = array_replace($I::AROMA_KUECHEN, ['' => 'Keine Vorgabe, die KI wählt']);
     $sektorOptionen = $keineVorgabe($I::SEKTOR_OPTIONEN);
-    $saisonOptionen = array_replace($I::SAISON_OPTIONEN, ['' => 'Ganzjährig']);
+    // CQ 2.5b: Saison, Anlass (Einsatzmoment), Eventtyp, Service-Art aus den DB-Vokabularen; leer = keine Vorgabe
+    $vok = $planungVokabular ?? [];
+    $saisonOptionen = ['' => 'Ganzjährig'] + array_diff_key($vok['saison'] ?? [], ['ganzjaehrig' => true]);
     $einheitOptionen = $keineVorgabe($I::MENGE_EINHEITEN);
-    $anlassOptionen = $keineVorgabe($I::OCCASION_OPTIONEN);
-    $serviceformOptionen = $keineVorgabe($I::SERVICEFORM_OPTIONEN);
+    $anlassOptionen = $keineVorgabe(['' => '—'] + ($vok['occasion'] ?? []));
+    $eventtypOptionen = $keineVorgabe(['' => '—'] + ($vok['eventtyp'] ?? []));
+    $serviceformOptionen = $keineVorgabe(['' => '—'] + ($vok['serviceform'] ?? []));
     $diaetLabels = [
         'vegan' => 'Vegan', 'vegetarisch' => 'Vegetarisch', 'glutenfrei' => 'Glutenfrei',
         'laktosefrei' => 'Laktosefrei', 'halal' => 'Halal', 'low_carb' => 'Low Carb',
@@ -104,17 +107,18 @@
     $zielKopf = $scope === 'rezept'
         ? $kopf([
             trim((string) ($r['ziel_menge'] ?? '')) !== '' ? trim(trim((string) $r['ziel_menge']) . ' ' . (($r['ziel_einheit'] ?? '') !== '' ? ($I::MENGE_EINHEITEN[$r['ziel_einheit']] ?? '') : '')) : null,
-            ($r['saison'] ?? '') !== '' ? ($I::SAISON_OPTIONEN[$r['saison']] ?? null) : null,
+            ($r['saison'] ?? '') !== '' ? ($saisonOptionen[$r['saison']] ?? null) : null,
             trim((string) ($r['ziel_we_pct'] ?? '')) !== '' ? (trim((string) $r['ziel_we_pct']) . ' % Wareneinsatz') : null,
         ])
         : $kopf([
             trim((string) ($r['pax'] ?? '')) !== '' ? (trim((string) $r['pax']) . ' Personen') : null,
             ($scope === 'gericht' && trim((string) ($r['ziel_portion_g'] ?? '')) !== '') ? (trim((string) $r['ziel_portion_g']) . ' g je Portion') : null,
-            ($r['occasion'] ?? '') !== '' ? ($I::OCCASION_OPTIONEN[$r['occasion']] ?? null) : null,
-            ($r['serviceform'] ?? '') !== '' ? ($I::SERVICEFORM_OPTIONEN[$r['serviceform']] ?? null) : null,
+            ($r['occasion'] ?? '') !== '' ? ($anlassOptionen[$r['occasion']] ?? null) : null,
+            ($r['eventtyp'] ?? '') !== '' ? ($eventtypOptionen[$r['eventtyp']] ?? null) : null,
+            ($r['serviceform'] ?? '') !== '' ? ($serviceformOptionen[$r['serviceform']] ?? null) : null,
             ($r['kompositions_stil'] ?? '') !== '' ? ($kompositionsStilLabels[$r['kompositions_stil']] ?? null) : null,
             ($scope === 'gericht' && trim((string) ($r['ziel_vk'] ?? '')) !== '') ? ('VK ' . trim((string) $r['ziel_vk']) . ' €') : null,
-            ($r['saison'] ?? '') !== '' ? ($I::SAISON_OPTIONEN[$r['saison']] ?? null) : null,
+            ($r['saison'] ?? '') !== '' ? ($saisonOptionen[$r['saison']] ?? null) : null,
             trim((string) ($r['ziel_we_pct'] ?? '')) !== '' ? (trim((string) $r['ziel_we_pct']) . ' % Wareneinsatz') : null,
         ]);
 
@@ -377,13 +381,21 @@
                                 </label>
                                 <x-fa::select id="planung-anlass-{{ $scope }}" wire:model="regler.{{ $scope }}.occasion" :options="$anlassOptionen" />
                             </div>
+                            <div class="flex flex-col gap-1.5 w-56">
+                                <label for="planung-eventtyp-{{ $scope }}" class="{{ $labelKlasse }}">Eventtyp
+                                    @if($reglerVonAgent[$scope]['eventtyp'] ?? false)
+                                        <x-fa::badge tone="info" data-regler-von-agent="eventtyp" :title="$agentTitel">vom Assistenten</x-fa::badge>
+                                    @endif
+                                </label>
+                                <x-fa::select id="planung-eventtyp-{{ $scope }}" wire:model="regler.{{ $scope }}.eventtyp" :options="$eventtypOptionen" />
+                            </div>
                             <div class="flex flex-col gap-1.5 min-w-0">
-                                <p class="{{ $labelKlasse }}">Servierform
+                                <p class="{{ $labelKlasse }}">Service-Art
                                     @if($reglerVonAgent[$scope]['serviceform'] ?? false)
                                         <x-fa::badge tone="info" data-regler-von-agent="serviceform" :title="$agentTitel">vom Assistenten</x-fa::badge>
                                     @endif
                                 </p>
-                                <x-fa::choice name="regler.{{ $scope }}.serviceform" :options="$serviceformOptionen" :live="false" id-prefix="leitplanken" aria-label="Servierform" />
+                                <x-fa::choice name="regler.{{ $scope }}.serviceform" :options="$serviceformOptionen" :live="false" id-prefix="leitplanken" aria-label="Service-Art" />
                             </div>
                         </div>
                         <x-fa::choice name="regler.{{ $scope }}.kompositions_stil" :options="['' => 'Keine Vorgabe'] + $kompositionsStilLabels" :live="false" label="Kompositionsstil" id-prefix="leitplanken" />

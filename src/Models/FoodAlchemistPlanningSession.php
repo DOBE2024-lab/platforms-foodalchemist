@@ -77,8 +77,7 @@ class FoodAlchemistPlanningSession extends Model
         'level' => ['haute_cuisine', 'gehoben', 'klassisch'],
         'bio_praeferenz' => ['konventionell', 'bio', 'egal'],
         'bestand' => ['hybrid', 'komplett_neu', 'nur_bestand'],
-        'occasion' => ['fruehstueck', 'lunch', 'konferenz', 'empfang', 'dinner', 'late_night'],
-        'serviceform' => ['tellerservice', 'buffet', 'flying', 'stehempfang', 'boxed'],
+        // occasion/eventtyp/serviceform/saison: Codes aus den DB-Vokabularen (CQ 2.5b, {@see \Platform\FoodAlchemist\Support\Planung\PlanungVokabular})
         // CQ 2.5a: ein Sektor-Vokabular (Support\Sektor). Altwerte (catering, betriebsgastronomie, schule_kita)
         // schlüsselt PlanningSessionService::filterGenerationParams vor der Prüfung über Sektor::ALIASE um.
         'sektor' => \Platform\FoodAlchemist\Support\Sektor::SLUGS,
@@ -95,7 +94,7 @@ class FoodAlchemistPlanningSession extends Model
         // Leitplanken-Ableitung konnte sie nicht setzen und fragte im Basisrezept-Tab nach g/Person.
         'ziel_menge', 'ziel_einheit',
         'use_favorites_list', 'favorites_convenience_only',
-        'occasion', 'serviceform', 'kompositions_stil', 'ziel_vk_eur',
+        'occasion', 'eventtyp', 'serviceform', 'kompositions_stil', 'ziel_vk_eur',
         // KI-Bilder-Toggle (Preisfrage): steuert, ob die Anreicherung Schritt-Fotos + Produktfoto erzeugt.
         'ki_bilder',
         // Anreicherungs-Tiefe bei der Freigabe (Default an): steuert, ob die Voll-Anreicherung die schwere

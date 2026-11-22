@@ -157,7 +157,7 @@ class Index extends Component
         // Basisrezept (Halbfabrikat, kein Teller): Ziel-Menge + Einheit statt Pax/Portion (scope-abhängig, s. Blade).
         'pax' => '', 'ziel_portion_g' => '', 'saison' => '', 'ziel_we_pct' => '',
         'ziel_einheit' => '', 'ziel_menge' => '',
-        'occasion' => '', 'serviceform' => '', 'kompositions_stil' => '',
+        'occasion' => '', 'eventtyp' => '', 'serviceform' => '', 'kompositions_stil' => '',
         'favoriten' => false, 'favoriten_conv_only' => false,
         // `voll_anreichern` Default AN (Entscheid Dominique 2026-09-07): mit AUS ueberspringt
         // die Anreicherung `coverageGlieder` — Step-by-Step, Sensorik, Arbeits-/Ruestzeit,
@@ -322,12 +322,6 @@ class Index extends Component
     /** 98 · 1.3b: Quelle {@see PlanungOptionen::SEKTOR_OPTIONEN} — hier nur noch für Blade/Komponente gespiegelt. */
     public const SEKTOR_OPTIONEN = PlanungOptionen::SEKTOR_OPTIONEN;
 
-    /** 98 · 1.3b: Quelle {@see PlanungOptionen::OCCASION_OPTIONEN} — hier nur noch für Blade/Komponente gespiegelt. */
-    public const OCCASION_OPTIONEN = PlanungOptionen::OCCASION_OPTIONEN;
-
-    /** 98 · 1.3b: Quelle {@see PlanungOptionen::SERVICEFORM_OPTIONEN} — hier nur noch für Blade/Komponente gespiegelt. */
-    public const SERVICEFORM_OPTIONEN = PlanungOptionen::SERVICEFORM_OPTIONEN;
-
     /** 98 · 1.3b: Quelle {@see PlanungOptionen::MANDATORY_LEITPLANKEN} — hier nur noch für Blade/Komponente gespiegelt. */
     public const MANDATORY_LEITPLANKEN = PlanungOptionen::MANDATORY_LEITPLANKEN;
 
@@ -359,15 +353,6 @@ class Index extends Component
         'italienisch' => 'Italienisch', 'asiatisch' => 'Asiatisch (allg.)', 'japanisch' => 'Japanisch',
         'thai' => 'Thai', 'indisch' => 'Indisch', 'orient' => 'Orient', 'lateinamerika' => 'Lateinamerika',
         'neu_nordisch' => 'Neu-Nordisch',
-    ];
-
-    /**
-     * Saison-Achse (L6): Slug => Label. »Ganzjährig« (Default-leer = keine Vorgabe). Prompt-Vorgabe
-     * (Erntefenster/Verfügbarkeit); die deterministische season_coverage-Frame-Rule ist Follow-up.
-     */
-    public const SAISON_OPTIONEN = [
-        '' => 'Ganzjährig / egal',
-        'fruehling' => 'Frühling', 'sommer' => 'Sommer', 'herbst' => 'Herbst', 'winter' => 'Winter',
     ];
 
     /** 98 · 1.3b: Quelle {@see PlanungOptionen::MENGE_EINHEITEN} — hier nur noch für Blade/Komponente gespiegelt. */
@@ -3133,6 +3118,8 @@ class Index extends Component
             'kiStatus' => $kiStatus,
             'irgendeinLaeuft' => $irgendeinLaeuft,
             'pollAktiv' => $pollAktiv, 'laufendeIds' => $laufendeIds,
+            // CQ 2.5b: Saison, Anlass, Eventtyp, Service-Art aus den DB-Vokabularen (Einstellungen › Konzepter-Dimensionen)
+            'planungVokabular' => collect(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::MODELLE)->map(fn ($m, $feld) => app(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::class)->optionen($team, $feld))->all(),
             'active' => $active,
             'lauf' => $lauf, 'kiWartend' => $lauf !== null ? app(PlanningCascadeService::class)->kiWartend($lauf->steps) : [],   // Step-ID → offene KI-Aufträge (Lauf 62)
             'kalkulation' => $kalkulation,

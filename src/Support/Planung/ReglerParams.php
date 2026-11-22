@@ -23,7 +23,7 @@ final class ReglerParams
      */
     public function rehydriereReglerAusParams(FoodAlchemistPlanningSession $session): void
     {
-        $p = is_array($session->generation_params) ? $session->generation_params : [];
+        $p = PlanungVokabular::normalisieren(is_array($session->generation_params) ? $session->generation_params : []);   // Alt: occasion=konferenz → eventtyp
         if ($p === []) {
             return;
         }
@@ -46,7 +46,7 @@ final class ReglerParams
                 if (! isset($this->regler[$scope])) {
                     continue;
                 }
-                foreach (['level', 'sektor', 'aroma', 'aroma_kueche', 'occasion', 'serviceform',
+                foreach (['level', 'sektor', 'aroma', 'aroma_kueche', 'occasion', 'eventtyp', 'serviceform',
                     'kompositions_stil', 'menue_balance', 'menue_typ'] as $k) {
                     if (($p[$k] ?? '') !== '') {
                         // CQ 2.5a: gespeicherte Altwerte (catering …) als Slug in die Auswahl, sonst bliebe das Select leer.
@@ -171,11 +171,16 @@ final class ReglerParams
             }
             unset($p['pax'], $p['ziel_portion_g']);
         }
-        if (! isset(Index::SAISON_OPTIONEN[$p['saison'] ?? '']) || ($p['saison'] ?? '') === '') {
-            unset($p['saison']);   // leer/unbekannt = keine Saison-Vorgabe
+        // CQ 2.5b: Codes aus den DB-Vokabularen; leer/unbekannt = keine Vorgabe, „ganzjährig“ = keine Saison-Vorgabe
+        $p = PlanungVokabular::normalisieren($p);
+        $team = \Platform\FoodAlchemist\Support\FaTeam::aktuell();
+        foreach (array_keys(PlanungVokabular::MODELLE) as $feld) {
+            if (! app(PlanungVokabular::class)->gueltig($team, $feld, $p[$feld] ?? null) || ($feld === 'saison' && $p[$feld] === 'ganzjaehrig')) {
+                unset($p[$feld]);
+            }
         }
         if (! $vk) {
-            unset($p['occasion'], $p['serviceform'], $p['kompositions_stil']);
+            unset($p['occasion'], $p['eventtyp'], $p['serviceform'], $p['kompositions_stil']);
         }
         // Roh-Felder raus, die übersetzt (nicht 1:1) durchgereicht werden — inkl. der Menü-Roh-Eingaben
         // (sie werden unten als kanonische _pp-Keys geparst und nur für den Concept-Scope gesetzt).

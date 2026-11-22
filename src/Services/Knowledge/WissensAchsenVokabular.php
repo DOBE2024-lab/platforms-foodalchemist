@@ -51,7 +51,8 @@ final class WissensAchsenVokabular
             'warengruppe' => self::ausTabelle('foodalchemist_lookup_commodity_groups'),
             'komponentenrolle' => self::alsPaare(\Platform\FoodAlchemist\Support\TellerRolle::werte()),   // Teller-Rollen (Dominique 11.10.)
             'niveau' => self::alsPaare(FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES['level'] ?? []),
-            'occasion' => self::alsPaare(FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES['occasion'] ?? []),
+            // CQ 2.5b: Anlass = Einsatzmoment, plus Eventtyp (Wissens-Tags wie `konferenz` bleiben gültig) — Codes aus der DB
+            'occasion' => self::ausTabelle('foodalchemist_service_moments') + self::ausTabelle('foodalchemist_event_types'),
             'sektor' => \Platform\FoodAlchemist\Support\Sektor::LABELS,   // CQ 2.5a: die eine Quelle; Altwerte laufen über Sektor::ALIASE
             'ausgabeform' => self::alsPaare(self::AUSGABEFORMEN),
             'saison' => self::monate(),

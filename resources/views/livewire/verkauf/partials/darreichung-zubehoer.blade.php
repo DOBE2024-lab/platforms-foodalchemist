@@ -25,7 +25,7 @@
                 @if($zt !== null)
                     <ul class="absolute z-10 mt-1 w-80 max-h-72 overflow-y-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] shadow-lg" data-zubehoer-treffer>
                         @forelse($zt->groupBy('gruppe') as $gruppe => $eintraege)
-                            <li class="px-2.5 pt-2 pb-1 text-[length:var(--fa-text-xs)] font-semibold uppercase tracking-wide text-[var(--fa-ink-3)]" data-zubehoer-gruppe>{{ \Platform\FoodAlchemist\Support\ZubehoerAuswahl::gruppenName($gruppe) }}</li>
+                            <li class="px-2.5 pt-2 pb-1 text-[length:var(--fa-text-sm)] font-semibold uppercase tracking-wide text-[var(--fa-ink-3)]" data-zubehoer-gruppe>{{ \Platform\FoodAlchemist\Support\ZubehoerAuswahl::gruppenName($gruppe) }}</li>
                             @foreach($eintraege as $t)
                                 <li><button type="button" wire:click="darZubehoerHinzu({{ $d->id }}, {{ $t->id }})" class="block w-full text-left px-2.5 py-1.5 hover:bg-[var(--fa-hover)]">{{ $t->name }}</button></li>
                             @endforeach

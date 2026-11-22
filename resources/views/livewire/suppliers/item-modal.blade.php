@@ -535,7 +535,7 @@
                                     :options="\Platform\FoodAlchemist\Services\SteuerklasseService::LABELS" :disabled="! $darfEdit" />
                             </x-fa::field>
                             @if($steuer)
-                                <p class="text-[length:var(--fa-text-xs)] text-[var(--fa-ink-3)]" data-steuer-wirksam>
+                                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-steuer-wirksam>
                                     Wirksam: {{ $steuer['label'] }} ({{ rtrim(rtrim(number_format($steuer['satz'], 2, ',', ''), '0'), ',') }} %){{ $steuer['quelle'] === 'gp' ? ', vom Grundprodukt' : ($steuer['quelle'] === 'artikel' ? ', am Artikel gesetzt' : '') }}.
                                     Satz unter Einstellungen → Kalkulation.
                                     @if($steuer['necta'] !== null)

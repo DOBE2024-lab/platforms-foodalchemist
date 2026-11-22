@@ -133,10 +133,8 @@ it('Modal blendet weich ein und aus, dunkle Editoren mit stärkerem Backdrop', f
  * 98 · 3.9 (io-Check Master): rounded-[var(--fa-radius-card)] renderte 0px, weil das Token fehlte. Jede in Views, src
  * oder CSS ohne Rückfall verwendete --fa-*-Variable muss in resources/css definiert sein (oder inline gesetzt werden).
  */
-const TOKEN_OFFEN = [
-    '--fa-text-xl' => 'liegt dem Kurator zur Entscheidung vor (Größe fehlt in der Skala)',
-    '--fa-text-xs' => 'liegt dem Kurator zur Entscheidung vor (kleiner als die 12-px-Untergrenze?)',
-];
+/** Bewusst leer: --fa-text-xl/-xs gibt es nicht (Kurator 22.11.) — die Skala ist sm 12 · md 13 · base 14 · lg 16 · 2xl 24 · 3xl 28. */
+const TOKEN_OFFEN = [];
 
 it('jede verwendete --fa-*-Variable ohne Rückfall ist definiert; --fa-radius-card ist 10px', function () {
     $wurzel = dirname(__DIR__, 2);

@@ -178,10 +178,10 @@
                     <li>Standorte: {{ $p->standorte->count() }}</li>
                     <li>Planner: {{ $p->planner_projekt_id ? 'Projekt '.$p->planner_projekt_id : 'nicht verknüpft' }}</li>
                 </ul>
-                <p class="mt-2 text-[length:var(--fa-text-xs)] text-[var(--fa-ink-3)]">Firma, Kontakte und Planner bleiben dort, wo sie geführt werden. Hier steht nur der Verweis.</p>
+                <p class="mt-2 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">Firma, Kontakte und Planner bleiben dort, wo sie geführt werden. Hier steht nur der Verweis.</p>
             </x-fa::section>
             <x-fa::section title="Was die KI daraus liest" data-projekt-ki>
-                <p class="text-[length:var(--fa-text-xs)] text-[var(--fa-ink-3)] mb-2">Reihenfolge: Team → Standort → Kunde → Projekt. „Bleibt“ des Kunden steht vorn und gilt bei Widerspruch vor dem Team.</p>
+                <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)] mb-2">Reihenfolge: Team → Standort → Kunde → Projekt. „Bleibt“ des Kunden steht vorn und gilt bei Widerspruch vor dem Team.</p>
                 <ul class="text-[length:var(--fa-text-sm)] flex flex-col gap-1">
                     @forelse($ki['quellen'] as $q)
                         <li wire:key="ki-{{ $q['ebene'] }}" class="flex items-center gap-2" data-projekt-ki-ebene="{{ $q['ebene'] }}">

@@ -11,7 +11,7 @@
     <div class="min-w-0 flex items-start gap-3" data-settings-kopf="{{ $key }}">
         <span class="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-[var(--fa-radius-control)] bg-[var(--fa-accent-soft)] text-[var(--fa-accent)]">@svg($icon, 'w-[18px] h-[18px]')</span>
         <div class="min-w-0">
-            <h2 class="text-[length:var(--fa-text-xl)] font-semibold tracking-tight leading-tight text-[var(--fa-ink)]">{{ $eintrag['label'] }}</h2>
+            <h2 class="text-[length:var(--fa-text-lg)] font-semibold tracking-tight leading-tight text-[var(--fa-ink)]">{{ $eintrag['label'] }}</h2>
             <p class="mt-0.5 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] max-w-[75ch]">{{ $eintrag['hint'] }}</p>
         </div>
     </div>

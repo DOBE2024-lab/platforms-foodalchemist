@@ -85,7 +85,8 @@ php artisan foodalchemist:pakete-to-concepts --apply --id=<id1> --id=<id2> --id=
 - Ausgabe nennt den Journal-Pfad (`storage/app/foodalchemist/paket-umzug/journal-<zeit>.json`). Journal sichern (Kopie neben den Dump).
 - Danach Caches: Preis-Cockpit rechnet beim Öffnen nach; kein Extra-Schritt nötig.
 - Danach Schreibschutz einschalten: in `.env` auf io `FOODALCHEMIST_PAKET_ALT_NUR_LESEN=true`, dann `php artisan config:cache`
-  (falls die Config gecacht ist). Probe: `php artisan tinker --execute="dump(config('foodalchemist.paket_alt_nur_lesen'));"` → `true`.
+  (falls die Config gecacht ist). Probe: `php artisan config:show foodalchemist.paket_alt_nur_lesen` → `true`
+  (kein tinker auf io; `config:show` gibt es seit Laravel 10, die Sandbox läuft auf 13.23).
 
 ## 5 · Verify · [Master · io], Punkt 2 Dominique
 

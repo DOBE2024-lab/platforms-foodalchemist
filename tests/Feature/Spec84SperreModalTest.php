@@ -45,6 +45,11 @@ it('Spec 84 PR 9 · Modale mit Bearbeitungssperre geben die Sperre beim Schließ
             continue;
         }
         $geprueft++;
+        // 98 · 2.2c: der modal.closed-Handler darf in einem eingebundenen Trait stehen (RecipeModal/VkModal teilen ihn).
+        // MitBearbeitungssperre selbst zählt nicht: es definiert sperreBeiSchliessen() nur, ruft es nicht für das Modal auf.
+        foreach (array_diff(class_uses_recursive($klasse), [MitBearbeitungssperre::class]) as $trait) {
+            $code .= "\n" . file_get_contents((new ReflectionClass($trait))->getFileName());
+        }
         $gibtFrei = str_contains($code, 'function sperrModalName') && str_contains($code, 'sperreBeiSchliessen(');
         if (! $gibtFrei && ! isset(SPEC84_MODAL_AUSNAHMEN[$klasse])) {
             $ohne[] = $klasse;

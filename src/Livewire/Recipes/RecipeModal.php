@@ -3,12 +3,11 @@
 namespace Platform\FoodAlchemist\Livewire\Recipes;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Platform\FoodAlchemist\Jobs\EnrichRecipeJob;
+use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Concerns\HatRezeptCopilot;
 use Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast;
 use Platform\FoodAlchemist\Livewire\Concerns\TauschtRezept;
@@ -44,23 +43,11 @@ class RecipeModal extends Component
     use TauschtRezept;      // Verwaltungs-Reiter: tauschen + löschen (dieselbe Mechanik wie im Panel)
     use WithFileUploads;
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
-
-    /** Spec 65: Sperre gilt dem Rezept-Datensatz — derselbe Schlüssel wie im eingebetteten Zutaten-/Schritt-Editor. */
-    protected function sperrZiel(): ?array
-    {
-        return $this->recipeId !== null ? ['recipe', $this->recipeId] : null;
-    }
+    use \Platform\FoodAlchemist\Livewire\Concerns\HatRezeptModalWerkzeuge;   // 98 · 2.2c: Bild, KI, Sensorik, Sperr-Haken (wie VkModal)
 
     protected function sperrModalName(): ?string
     {
         return 'recipe-modal';
-    }
-
-    /** Spec 65: Editor geschlossen → eigene Sperre frei (einziger modal.closed-Handler dieser Komponente). */
-    #[On('modal.closed')]
-    public function beiModalGeschlossen(?string $name = null): void
-    {
-        $this->sperreBeiSchliessen($name);
     }
 
     /**
@@ -87,37 +74,6 @@ class RecipeModal extends Component
         }
     }
 
-    /** Spec 43 (Bild-Epic): Gericht-Foto (Stammdaten). */
-    public $dishImageUpload = null;
-
-    public function updatedDishImageUpload(): void
-    {
-        if ($this->recipeId === null || $this->dishImageUpload === null) {
-            return;
-        }
-        // Spec 65: updated-Hooks laufen NICHT über den call-Haken — ohne eigene Sperre nicht schreiben.
-        if (self::sperreAktiv() && ! $this->darfSchreiben()) {
-            $this->reset('dishImageUpload');
-
-            return;
-        }
-        $team = Auth::user()?->currentTeamRelation;
-        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'dishImageUpload');
-        try {
-            app(RecipeService::class)->storeDishImage($team, $this->recipeId, $this->dishImageUpload);
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
-        $this->reset('dishImageUpload');
-    }
-
-    public function dishImageEntfernen(): void
-    {
-        if ($this->recipeId !== null) {
-            app(RecipeService::class)->clearDishImage(Auth::user()?->currentTeamRelation, $this->recipeId);
-        }
-    }
-
     private const LEER = [
         'name' => '', 'origin_source' => '', 'category_id' => null, 'hauptgruppe_id' => null,
         'taste_direction' => '', 'production_depth' => '', 'work_time_min' => null,
@@ -138,8 +94,6 @@ class RecipeModal extends Component
     public array $form = self::LEER;
 
     public ?string $fehler = null;
-
-    public bool $istOffen = false;
 
     /** @var array<string, bool> Legacy-Client-State aus kurzzeitigem Lazy-Tab-Render; bleibt als No-op, bis alte Livewire-Snapshots verschwunden sind. */
     public array $geladeneTabs = ['aufbau' => true];
@@ -377,23 +331,6 @@ class RecipeModal extends Component
         }
     }
 
-    /**
-     * #1b: Der eingebettete Zutaten-Editor hat erfolgreich gespeichert → JETZT erst schließen
-     * (der Stammdaten-Save lief davor, der Button sequenziert beides). Adressiert wie MVP-046:
-     * nur schließen, wenn genau dieses offene Rezept gemeint ist — sonst zöge ein Zutaten-Save
-     * aus dem Cockpit/Gericht-Editor das Rezept-Modal mit zu. Der Erfolgs-Toast kommt vom
-     * Zutaten-Editor selbst (ein Toast, kein Doppel).
-     */
-    #[On('zutaten-persistiert')]
-    public function beiZutatenPersistiert(?int $recipeId = null): void
-    {
-        if ($this->istOffen && $recipeId !== null && $this->recipeId === $recipeId) {
-            // Spec 65 (Dominique 2026-10-07): Speichern beendet die Bearbeitung und gibt die Sperre frei, der Editor
-            // BLEIBT offen im Lesemodus — man prüft das Ergebnis (frisch gerechnete Kennzahlen) und schließt selbst.
-            $this->bearbeitenBeenden();
-        }
-    }
-
     /** @var array<string, array{werte: array, confidence: float, reasoning: ?string}> transiente GL-07-Vorschläge */
     public array $kiVorschlag = [];
 
@@ -561,58 +498,40 @@ class RecipeModal extends Component
 
     // ── Editor-Parität (Ist-App-Vorbild): Löschen · ✨-Header-Aktionen · Anreichern ──
 
-    // ── R6e: ✨ KI-Überarbeiten — freie Anweisung, Vorschau, Übernehmen (GL-07) ──
+    // ── R6e: ✨ KI-Überarbeiten — freie Anweisung, Vorschau, Übernehmen (GL-07); Ablauf in HatRezeptModalWerkzeuge ──
 
-    public bool $ueberarbeitenOffen = false;
+    protected function ueberarbeitungsPflichtText(): string
+    {
+        return 'Anweisung ist Pflicht (z. B. «mach das Rezept vegan und halbiere den Zucker»).';
+    }
 
-    public string $anweisung = '';
+    protected function ueberarbeitungsRezept(Team $team): ?FoodAlchemistRecipe
+    {
+        return app(RecipeService::class)->detailAnySicht($team, $this->recipeId);
+    }
 
-    /** @var ?array{werte: array, confidence: float} Vorschau — NICHTS persistiert */
-    public ?array $ueberarbeitung = null;
+    protected function ueberarbeitungsVorschlag(Team $team, FoodAlchemistRecipe $r): array
+    {
+        return app(RecipeReviseService::class)->freitextVorschlag($team, $r, $this->anweisung);
+    }
+
+    protected function ueberarbeitungVerwertbar(array $werte): bool
+    {
+        return ! (empty($werte['zutaten']) && empty($werte['preparation']) && empty($werte['description']));
+    }
+
+    protected function ueberarbeitungSchreiben(Team $team, array $werte, mixed $konfidenz): bool
+    {
+        $teile = app(RecipeService::class)->uebernehmeUeberarbeitung($team, $this->recipeId, $werte, $konfidenz);
+        if (in_array('description', $teile, true)) {
+            $this->form['description'] = $werte['description'];
+        }
+
+        return true;
+    }
 
     /** Re-Mount-Zähler für den eingebetteten Zutaten-Editor (rows leben im Client). */
     public int $zutatenVersion = 0;
-
-    /** Re-Mount-Zähler für den eingebetteten Step-Editor (trägt die Fotos) — s. kiProduktfoto. */
-    public int $fotoVersion = 0;
-
-    public function kiUeberarbeiten(): void
-    {
-        $team = Auth::user()?->currentTeamRelation;
-        if ($team === null || $this->recipeId === null || trim($this->anweisung) === '') {
-            $this->fehler = 'Anweisung ist Pflicht (z. B. «mach das Rezept vegan und halbiere den Zucker»).';
-
-            return;
-        }
-        $this->fehler = null;
-        $r = app(RecipeService::class)->detailAnySicht($team, $this->recipeId);
-        if ($r === null) {
-            return;
-        }
-
-        try {
-            // Spec 03 L1a + Workstream W: die grounded Freitext-Revision liegt im geteilten
-            // RecipeReviseService (Regelwerk-Erdung via contextFor) — Web + MCP fahren dieselbe Strecke.
-            $roh = app(RecipeReviseService::class)->freitextVorschlag($team, $r, $this->anweisung);
-        } catch (\RuntimeException $e) {
-            $this->fehler = $e->getMessage();
-
-            return;
-        }
-        $werte = $roh['werte'];
-
-        if (empty($werte['zutaten']) && empty($werte['preparation']) && empty($werte['description'])) {
-            $this->fehler = 'KI lieferte keine verwertbare Überarbeitung — echter Provider nötig (FakeProvider-Grenze).';
-
-            return;
-        }
-        $this->ueberarbeitung = [
-            'werte' => $werte,
-            'confidence' => $roh['confidence'],
-            // E3 (#508): Vorschau, wie das Grounding beim Übernehmen greift.
-            'match_vorschau' => $this->matchVorschau($team, $r, $werte['zutaten'] ?? []),
-        ];
-    }
 
     /**
      * E3 (#508): pro vorgeschlagener Zutat der künftige Grounding-Status.
@@ -626,39 +545,6 @@ class RecipeModal extends Component
     public function matchVorschau($team, $r, array $zutaten): array
     {
         return app(RecipeReviseService::class)->vorschau($team, $r, $zutaten);
-    }
-
-    /** Übernehmen = der EINE Schreib-Moment: Zutaten-Sync + Text-Felder mit Lineage ki. */
-    public function ueberarbeitungUebernehmen(): void
-    {
-        $team = Auth::user()?->currentTeamRelation;
-        if ($team === null || $this->recipeId === null || $this->ueberarbeitung === null) {
-            return;
-        }
-        $werte = $this->ueberarbeitung['werte'];
-
-        try {
-            // Spec 84 C5: derselbe Schreib-Moment wie recipes.REVISE (Eigentum, Override-First, Lineage im Service)
-            $teile = app(RecipeService::class)->uebernehmeUeberarbeitung($team, $this->recipeId, $werte, $this->ueberarbeitung['confidence']);
-            if (in_array('description', $teile, true)) {
-                $this->form['description'] = $werte['description'];
-            }
-        } catch (\RuntimeException $e) {
-            $this->fehler = $e->getMessage();
-
-            return;
-        }
-
-        $this->ueberarbeitung = null;
-        $this->anweisung = '';
-        $this->ueberarbeitenOffen = false;
-        $this->zutatenVersion++;                                      // eingebetteten Editor neu mounten (Client-rows!)
-        $this->dispatch('recipe-gespeichert');
-    }
-
-    public function ueberarbeitungVerwerfen(): void
-    {
-        $this->ueberarbeitung = null;                                 // reject lässt Fachdaten unberührt (GL-07)
     }
 
     // Spec 27: Foto-Upload/-Löschen ist in den `StepEditor` gewandert (Media-Pool +
@@ -829,125 +715,16 @@ class RecipeModal extends Component
         }
     }
 
-    /** ✨ Sensorik: KI bewertet das GEGARTE Rezept (Zutaten + Zubereitung) → Recipe-Sensorik-Tabellen. */
-    public function sensorikBewerten(): void
+    // ── ✨ Alles anreichern (D-5 §4.4 auf EIN Rezept — Bulk-Mechanik M7-06); Ablauf in HatRezeptModalWerkzeuge ──
+
+    protected function anreicherungsRezept(Team $team): ?FoodAlchemistRecipe
     {
-        $this->fehler = null;
-        if ($this->recipeId !== null) {
-            try {
-                app(SensorikService::class)->bewerteRezept($this->recipeId, true);
-            } catch (\RuntimeException $e) {
-                $this->fehler = $e->getMessage();
-            }
-        }
-    }
-
-    // ── ✨ Alles anreichern (D-5 §4.4 auf EIN Rezept — Bulk-Mechanik M7-06) ──
-
-    public ?int $bulkRunId = null;
-
-    public ?array $anreicherung = null;
-
-    public function allesAnreichern(): void
-    {
-        $this->fehler = null;
-        $this->anreicherung = null;
-        $team = Auth::user()?->currentTeamRelation;
-        if ($team === null || $this->recipeId === null) {
-            return;
-        }
-        try {
-            if (app(RecipeService::class)->detail($team, $this->recipeId) === null) {
-                return;
-            }
-            $this->bulkRunId = null;
-            $this->starteAnreicherung($team);   // Hintergrund-Job + Polling, s. HatAnreicherungsLauf
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
+        return app(RecipeService::class)->detail($team, $this->recipeId);
     }
 
     protected function anreicherungFertigEvent(): string
     {
         return 'recipe-gespeichert';
-    }
-
-    // ── Spec 53 Bildstil-Dossier/Produktfoto-Knopf ────────────────────────
-
-    public bool $produktfotoLaeuft = false;
-
-    public ?string $produktfotoFehler = null;
-
-    /**
-     * „KI-Produktfoto erzeugen" — dispatcht {@see EnrichRecipeJob} im `nurProduktfoto`-Modus
-     * (ersetzt NUR das Hero-Foto, keine Schrittfotos, keine Anreicherung). Der Web-Request kehrt
-     * sofort zurück (kein 502), die UI pollt über {@see self::pruefeProduktfotoErgebnis}.
-     *
-     * Doppel-Enqueue-Guard: kein `$stepId` in diesem Modal (auch Rezepte ausserhalb jeder
-     * Kaskade editierbar) — darum ein eigener Cache-Schlüssel je Team+Rezept statt des
-     * step-gebundenen `deferred.bilder`-Mechanismus (s. {@see EnrichRecipeJob}-Klassendoc).
-     */
-    public function kiProduktfoto(): void
-    {
-        $this->produktfotoFehler = null;
-        $team = Auth::user()?->currentTeamRelation;
-        if ($team === null || $this->recipeId === null) {
-            return;
-        }
-        $key = EnrichRecipeJob::produktfotoCacheKey((int) $team->id, (int) $this->recipeId);
-        $stand = Cache::get($key);
-        if (is_array($stand) && in_array($stand['status'] ?? null, ['queued', 'running'], true)) {
-            $this->produktfotoLaeuft = true;   // Lauf ist schon unterwegs — nicht doppelt dispatchen
-            return;
-        }
-        Cache::put($key, ['status' => 'queued', 'at' => now()->toIso8601String()], now()->addMinutes(15));
-        EnrichRecipeJob::dispatch(
-            teamId: (int) $team->id,
-            userId: (int) (Auth::id() ?? 0),
-            recipeId: (int) $this->recipeId,
-            nurProduktfoto: true,
-        );
-        $this->produktfotoLaeuft = true;
-        $this->savedToast('✨ KI-Produktfoto wird erzeugt …');
-    }
-
-    /** Poll-Ziel (wire:poll während $produktfotoLaeuft): liest den Job-Ausgang aus dem Cache. */
-    public function pruefeProduktfotoErgebnis(): void
-    {
-        $team = Auth::user()?->currentTeamRelation;
-        if ($team === null || $this->recipeId === null) {
-            $this->produktfotoLaeuft = false;
-
-            return;
-        }
-        $stand = Cache::get(EnrichRecipeJob::produktfotoCacheKey((int) $team->id, (int) $this->recipeId));
-        if (! is_array($stand) || in_array($stand['status'] ?? null, ['queued', 'running'], true)) {
-            return;   // noch am Rechnen → weiter pollen
-        }
-        $this->produktfotoLaeuft = false;
-        if (($stand['status'] ?? null) === 'failed') {
-            $this->produktfotoFehler = $stand['error'] ?? 'KI-Produktfoto fehlgeschlagen.';
-            $this->errorToast('KI-Produktfoto fehlgeschlagen.');
-
-            return;
-        }
-        // done → NUR den eingebetteten Step-Editor (trägt die Fotos) neu mounten lassen, wie beim
-        // Zutaten-Editor ($zutatenVersion) — NICHT oeffnen()/editorStateEntladen(): das würde das
-        // ganze Formular verwerfen und damit unsichtbar gewordene, noch ungespeicherte Eingaben
-        // in anderen Feldern löschen, nur weil im Hintergrund ein Foto fertig wurde.
-        $this->fotoVersion++;
-        $this->savedToast('✅ KI-Produktfoto erzeugt.');
-    }
-
-    public function bulkAlleUebernehmen(): void
-    {
-        $team = Auth::user()?->currentTeamRelation;
-        if ($team !== null && $this->bulkRunId !== null) {
-            app(BulkEnrichService::class)->alleUebernehmen($team, $this->bulkRunId);
-            $this->bulkRunId = null;
-            $this->oeffnen($this->recipeId);                          // Form mit den übernommenen Werten neu laden
-            $this->dispatch('recipe-gespeichert');
-        }
     }
 
     // Spec 27: die Markdown-Vorschau ist entfallen — der Schritt-Editor zeigt die

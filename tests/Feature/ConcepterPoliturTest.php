@@ -67,7 +67,7 @@ it('Park-Flow: gerichtHinzu setzt die Menge/Person beim Einfügen', function () 
 it('Sektor-Eignung: zuweisen, reaktivieren, entfernen', function () {
     $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'kita_schule');
     $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'care');
-    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toMatchArray(['kita_schule', 'care']);
+    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toEqualCanonicalizing(['kita_schule', 'care']);
 
     // Entfernen (soft-delete) + erneutes Zuweisen reaktiviert dieselbe Zeile (kein Dublett).
     $this->concepts->entferneSektorEignung($this->rootTeam, $this->concept->id, 'kita_schule');
@@ -80,7 +80,7 @@ it('Sektor-Eignung: zuweisen, reaktivieren, entfernen', function () {
 it('CQ 2.5a: Sektor-Eignung prüft gegen das Sektor-Vokabular, Altwerte werden umgeschlüsselt', function () {
     $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'Catering');            // Alias
     $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, ' betriebsgastronomie ');
-    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toMatchArray(['event_privat', 'business']);
+    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toEqualCanonicalizing(['event_privat', 'business']);
 
     expect(fn () => $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'Kita'))
         ->toThrow(RuntimeException::class, 'Unbekannter Sektor „Kita“');
@@ -100,10 +100,12 @@ it('CQ 2.5a: alter Freitext bleibt stehen und lässt sich entfernen', function (
 it('Editor: Sektor über die Auswahl hinzufügen/entfernen', function () {
     Livewire::test(Editor::class)
         ->call('oeffnen', 'concepts', $this->concept->id)
+        ->call('setTab', 'notes')                                   // der Block steht im Reiter Notizen
         ->assertSee('Sektor hinzufügen')
         ->set('neuerSektor', 'event_privat')
         ->call('sektorHinzu')
         ->assertSet('neuerSektor', '')
+        ->assertSee('Sektor event_privat entfernen')                // Chip steht (Slugs werden im Reiter Notizen geladen)
         ->assertSee('Catering und Event');
 
     expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toContain('event_privat');

@@ -1537,7 +1537,7 @@ class Editor extends Component
             'basisNiveaus' => [['slug' => 'haute_cuisine', 'label' => 'Haute'], ['slug' => 'gehoben', 'label' => 'Gehoben'], ['slug' => 'klassisch', 'label' => 'Klassisch']],
             'typFarben' => app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->typFarben($team),
             'paketKandidaten' => $paketKandidaten,
-            'sektorSlugs' => $istStammdaten && $concept !== null ? $concepts->sektorEignungSlugs($concept) : [],
+            'sektorSlugs' => $this->tab === 'notes' && $concept !== null ? $concepts->sektorEignungSlugs($concept) : [],   // Block steht im Reiter Notizen
             // 4c: Kategorie-Feld abgelöst — kategorienFlat nicht mehr benötigt
             // Facetten-Vokabulare (Umbau-Spec Phase 4b)
             // MVP-025: teamgescopt wie die drei Facetten darunter — vorher als Einzelfall ungescopt.

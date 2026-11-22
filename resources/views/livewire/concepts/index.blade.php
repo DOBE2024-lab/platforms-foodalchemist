@@ -435,4 +435,6 @@
         @endif
     </x-ui-page-container>
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}
+    {{-- 98 · 2.4c: erst der Name, dann der Datensatz (LegtMitNamenAn) --}}
+    <x-fa::anlege-dialog :title="$neuText" :knopf="$showVorlagen ? 'Vorlage anlegen' : 'Concept anlegen'" :fehler="$neuFehler" />
 </x-ui-page>

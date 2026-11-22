@@ -86,7 +86,8 @@ it('„Neu" legt im Pakete-Tab ein Paket an und wählt es aus', function () {
 
     Livewire::test(Browser::class)
         ->set('tab', 'pakete')
-        ->call('neu')
+        ->call('neu')->assertDispatched('modal.open', name: 'fa-anlegen')
+        ->set('neuName', 'Grillpaket')->call('neuAnlegen')
         ->assertSet('selectedId', fn ($v) => $v !== null);
 
     expect(FoodAlchemistConcept::pakete()->count())->toBe($vorher + 1);

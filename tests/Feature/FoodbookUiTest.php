@@ -34,7 +34,7 @@ beforeEach(function () {
 });
 
 it('Foodbook-Editor: anlegen, Kapitel, Concept einfügen, €/Person im Cockpit', function () {
-    Livewire::test(FoodbooksIndex::class)->assertOk()->call('neu');
+    Livewire::test(FoodbooksIndex::class)->assertOk()->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     expect($fb)->not->toBeNull();
 
@@ -60,7 +60,7 @@ it('Foodbook-Editor: anlegen, Kapitel, Concept einfügen, €/Person im Cockpit'
 });
 
 it('Foodbook-Editor: kapitelNeu(parentId) legt ein Unterkapitel unter dem Eltern-Kapitel an', function () {
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)
         ->call('waehle', $fb->id)
@@ -76,7 +76,7 @@ it('Foodbook-Editor: kapitelNeu(parentId) legt ein Unterkapitel unter dem Eltern
 });
 
 it('Foodbook-Editor: Header-Preis-Block (person) erscheint mit €/Person im Cockpit', function () {
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)
         ->call('waehle', $fb->id)
@@ -112,7 +112,7 @@ it('Foodbook-Editor: Header-Preis-Block (person) erscheint mit €/Person im Coc
 // #3 (2026-08-25): der Picker enthält ausschließlich Concept · Paket · Format — der Gericht-Reiter
 // ist raus. Format/Paket werden WIE EIN CONCEPT gebucht. Ungültige Werte bleiben auf dem letzten Modus.
 it('Foodbook-Katalog: Modus-Wechsel concept->paket->format schaltet (Server-Modus)', function () {
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     Livewire::test(FoodbooksIndex::class)
         ->call('waehle', $fb->id)
@@ -140,7 +140,7 @@ it('#3: Paket-Reiter listet kind=paket (consumer_name), Concept-Reiter nicht; pa
         ->and($svc->conceptKandidaten($this->rootTeam, '')->pluck('id')->all())->not->toContain($paket->id);
 
     // UI: Paket-Reiter zeigt den Kundennamen (nicht den internen), + einbuchen als concept_ref.
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)
         ->call('waehle', $fb->id)
@@ -170,7 +170,7 @@ it('#7/#1: Block-Vorschau löst ein eingebettetes Paket auf (Gerichte + Paket-Pr
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
     $concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);
 
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)
         ->call('waehle', $fb->id)
@@ -192,7 +192,7 @@ it('C1: Gericht-Zeile inline editieren schreibt den foodbook-lokalen Override + 
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
     $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $green->id]);
 
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'Kap')->call('kapitelNeu');
@@ -234,7 +234,7 @@ it('Paket-in-Kapitel-Wording: das Kapitel-Wording betextet AUCH die Gerichte ein
         'team_id' => $this->rootTeam->id, 'slug' => 'pk-stil', 'name' => 'Verspielt', 'sprach_duktus' => 'locker.',
     ]);
 
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'Kap')->call('kapitelNeu');
@@ -265,7 +265,7 @@ it('Paket-in-Kapitel-Wording: das Kapitel-Wording betextet AUCH die Gerichte ein
 });
 
 it('#4: kapitelVerschiebenAuf sortiert ein Kapitel per Drag vor das Ziel', function () {
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'A')->call('kapitelNeu')
@@ -298,7 +298,7 @@ it('#2: Kapitel-Schreibstil betextet die Konzepte im Kapitel-Stil (sprach_duktus
         'sprach_duktus' => 'KAPITEL-DUKTUS-MARKER: locker, mit Augenzwinkern.',
     ]);
 
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $fb = FoodAlchemistFoodbook::first();
     $comp = Livewire::test(FoodbooksIndex::class)->call('waehle', $fb->id)
         ->set('neuesKapitelTitel', 'Kap')->call('kapitelNeu');

@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Services\ConceptService;
 class Index extends Component
 {
     use WithPagination;
-    use \Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast;
+    use \Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast, \Platform\FoodAlchemist\Livewire\Concerns\LegtMitNamenAn;   // 98 · 2.4c
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
 
     /** Spec 65: Sperre gilt dem gewählten Concept — dasselbe Ziel wie der Concepter-Editor (Typ concept). */
@@ -37,7 +37,7 @@ class Index extends Component
     {
         return [
             'waehle', 'kategorieWaehlen', 'gerichtPicker', 'zielpreisToggle', 'zielpreisBerechnen', 'generatorOeffnen', '$set',
-            'neu', 'ausVorlage', 'alsVorlage', 'generatorStart',
+            'neu', 'neuAnlegen', 'ausVorlage', 'alsVorlage', 'generatorStart',
             'kategorieNeu', 'kategorieEditStart', 'kategorieRename', 'kategorieLoeschen',
         ];
     }
@@ -179,9 +179,10 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function neu(ConceptService $svc): void
+    /** 98 · 2.4c: neu() öffnet den Namensdialog (LegtMitNamenAn), angelegt wird erst mit Namen. */
+    protected function mitNamenAnlegen(string $name): void
     {
-        $c = $svc->create($this->team(), ['name' => 'Neues Concept', 'is_template' => $this->showVorlagen]);
+        $c = ($svc = app(ConceptService::class))->create($this->team(), ['name' => $name, 'is_template' => $this->showVorlagen]);
         $this->waehle($c->id, $svc);
     }
 

@@ -27,7 +27,7 @@ use Platform\FoodAlchemist\Services\PresentationService;
 class Index extends Component
 {
     use WithPagination, WithFileUploads, ManagesCanvas, ManagesPlanningFrame, ManagesPhase, \Platform\FoodAlchemist\Livewire\Concerns\HandyAusgabenLesen;   // #1003
-    use \Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast;
+    use \Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast, \Platform\FoodAlchemist\Livewire\Concerns\LegtMitNamenAn;   // 98 · 2.4c
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
 
     /** Spec 65: Sperre gilt dem gewählten Foodbook. */
@@ -50,7 +50,7 @@ class Index extends Component
     protected function sperrFreiExtra(): array
     {
         return [
-            'beiModalGeschlossen', 'neu', 'waehle', 'duplizieren',
+            'beiModalGeschlossen', 'neu', 'neuAnlegen', 'waehle', 'duplizieren',
             'gotoPage', 'previousPage', 'nextPage', 'setPage', 'resetPage',
             'kopfAnzeigen', 'kapitelWaehle', 'leitstelleAktualisiert',
             'katalogModus', 'waehleGerichtHg', 'waehleGerichtKlasse', 'toggleConceptFacet', 'resetConceptFacetten',
@@ -531,9 +531,9 @@ class Index extends Component
 
     // ── Foodbook ──────────────────────────────────────────────────────────
 
-    public function neu(FoodbookService $svc): void
+    protected function mitNamenAnlegen(string $name): void   // 98 · 2.4c: neu() öffnet den Namensdialog (LegtMitNamenAn)
     {
-        $fb = $svc->create($this->team(), ['label' => 'Neues Foodbook']);
+        $fb = ($svc = app(FoodbookService::class))->create($this->team(), ['label' => $name]);
         $this->waehle($fb->id, $svc);
         $this->gleichBearbeiten();
     }

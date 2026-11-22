@@ -136,7 +136,7 @@ it('E3.4: Eventtyp/Servierform/Einsatzmomente lösen aus dem Foodbook-Default au
 });
 
 it('Livewire: leitplankeSetzen persistiert + leer setzt zurück auf Erben', function () {
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $foodbook = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbook::first();
 
     Livewire::test(FoodbooksIndex::class)

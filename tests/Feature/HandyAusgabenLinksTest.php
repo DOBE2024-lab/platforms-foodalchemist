@@ -82,7 +82,7 @@ it('Server-Sperre am Handy: nur Blättern; Anlegen, Speichern, Duplizieren, Lös
 
 it('Server-Sperre wirkt: Anlegen und Duplizieren vom Handy legen nichts an', function () {
     $vorher = [FoodAlchemistFoodbook::count(), FoodAlchemistSpeisekarte::count(), FoodAlchemistSpeiseplan::count()];
-    handyPr6(Foodbooks::class)->call('neu');
+    handyPr6(Foodbooks::class)->call('neu')->set('neuName', 'Vom Handy')->call('neuAnlegen');   // 98 · 2.4c: neu öffnet nur den Dialog
     handyPr6(Speisekarten::class)->call('neu');
     handyPr6(Speiseplaene::class)->set('selectedId', $this->plan->id)->call('duplizieren');
     expect([FoodAlchemistFoodbook::count(), FoodAlchemistSpeisekarte::count(), FoodAlchemistSpeiseplan::count()])->toBe($vorher);

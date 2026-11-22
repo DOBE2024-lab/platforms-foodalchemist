@@ -48,7 +48,7 @@
                                     <td class="num text-[var(--fa-ink-2)]">{{ $bindCounts[$l->slug] ?? 0 }}</td>
                                     <td class="whitespace-nowrap">
                                         <div class="flex items-center justify-end gap-1">
-                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $l->id }})">Bearbeiten</x-fa::button>
+                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $l->id }})">Ändern</x-fa::button>
                                             <x-fa::button size="sm" variant="ghost" wire:click="toggleActive({{ $l->id }})">{{ $l->active ? 'Deaktivieren' : 'Aktivieren' }}</x-fa::button>
                                         </div>
                                     </td>

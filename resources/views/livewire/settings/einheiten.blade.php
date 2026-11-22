@@ -76,7 +76,7 @@
                                 <td class="whitespace-nowrap" data-unit-aktionen="{{ $darfEdit ? 'edit' : 'readonly' }}">
                                     @if($darfEdit)
                                         <div class="flex items-center justify-end gap-1">
-                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $unit->id }})">Bearbeiten</x-fa::button>
+                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $unit->id }})">Ändern</x-fa::button>
                                             <x-fa::menu size="sm" label="Weitere Aktionen für {{ $unit->display_de }}" breite="48">
                                                 <x-fa::menu-item :icon="$unit->is_inactive ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-eye-slash'" abstand="weit" wire:click="toggleInactive({{ $unit->id }}, {{ $unit->is_inactive ? 'false' : 'true' }})">{{ $unit->is_inactive ? 'Aktivieren' : 'Deaktivieren' }}</x-fa::menu-item>
                                                 <div class="my-1 border-t border-[var(--fa-line)]"></div>

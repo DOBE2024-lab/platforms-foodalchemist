@@ -164,7 +164,7 @@
                                                     <x-fa::button size="sm" :variant="$kanonKey === $p['prompt_key'] ? 'ghost' : 'secondary'"
                                                                   :icon="$kanonKey === $p['prompt_key'] ? 'heroicon-m-check' : 'heroicon-m-pencil-square'"
                                                                   wire:click="kanonEdit('{{ $p['prompt_key'] }}')">
-                                                        {{ $kanonKey === $p['prompt_key'] ? 'Bearbeiten beenden' : 'Verbindliches Wissen bearbeiten' }}
+                                                        {{ $kanonKey === $p['prompt_key'] ? 'Schließen' : 'Verbindliches Wissen ändern' }}
                                                     </x-fa::button>
                                                 @endif
                                             </div>
@@ -360,7 +360,7 @@
                         @endif
                         @if($darfSchreiben)
                             <div class="flex items-center gap-1">
-                                <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="editArt({{ $r->id }})">Bearbeiten</x-fa::button>
+                                <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="editArt({{ $r->id }})">Ändern</x-fa::button>
                                 <x-fa::menu class="inline-block" size="sm">
                                     <x-fa::menu-item icon="heroicon-m-trash" danger :trenner="false" wire:click="delete({{ $r->id }})" wire:confirm="Art-Steuerung entfernen? Ohne verbleibende Art-Steuerung gilt für diesen Schritt wieder die Kategorie-Steuerung.">Art-Steuerung entfernen</x-fa::menu-item>
                                 </x-fa::menu>
@@ -468,7 +468,7 @@
                                     <td class="align-top">
                                         @if($darfSchreiben)
                                             <div class="flex items-center justify-end gap-1">
-                                                <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $r->id }})" data-ws-edit>Bearbeiten</x-fa::button>
+                                                <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $r->id }})" data-ws-edit>Ändern</x-fa::button>
                                                 <x-fa::menu class="inline-block" size="sm">
                                                     <x-fa::menu-item icon="heroicon-m-trash" danger :trenner="false" wire:click="delete({{ $r->id }})" wire:confirm="Steuerung {{ WS::schrittLabel($r->feature) }} mit {{ $katName($r->category) }} entfernen? Danach wird diese Kategorie für den Schritt nur noch bei Bedarf durchsucht.">Steuerung entfernen</x-fa::menu-item>
                                                 </x-fa::menu>

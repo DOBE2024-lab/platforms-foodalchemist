@@ -98,7 +98,7 @@
                                         <td class="whitespace-nowrap">
                                             @if($darfEdit)
                                                 <div class="flex items-center justify-end gap-1">
-                                                    <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $kat->id }})">Bearbeiten</x-fa::button>
+                                                    <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="edit({{ $kat->id }})">Ändern</x-fa::button>
                                                     <x-fa::menu size="sm" label="Weitere Aktionen für {{ $kat->label }}" breite="64">
                                                         @if($kat->recipe_count > 0)
                                                             <p class="flex items-start gap-2 px-3 py-2 fa-t-muted">

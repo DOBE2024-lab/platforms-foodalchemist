@@ -483,8 +483,8 @@
                              Schreibrecht (io 16.10.: Kunden-Team sah die Knöpfe an globalem Wissen; save() prüft serverseitig ohnehin). --}}
                         @if($editable || $creating)
                         <x-fa::segmented label="Darstellung" :breit="true">
-                            <x-fa::segment :an="$vorschau" size="md" wire:click="$set('vorschau', true)" data-wissen-modus="vorschau">Ansicht</x-fa::segment>
-                            <x-fa::segment :an="! $vorschau" size="md" wire:click="$set('vorschau', false)" data-wissen-modus="bearbeiten">Bearbeiten</x-fa::segment>
+                            <x-fa::segment :an="$vorschau" size="md" wire:click="$set('vorschau', true)" data-wissen-modus="vorschau">Vorschau</x-fa::segment>
+                            <x-fa::segment :an="! $vorschau" size="md" wire:click="$set('vorschau', false)" data-wissen-modus="bearbeiten">Text</x-fa::segment>
                         </x-fa::segmented>
                         @endif
 
@@ -527,7 +527,7 @@
                     @endif
                     <div class="px-5 py-4 max-h-[68vh] overflow-y-auto max-w-[80ch] {{ $prose }}" data-wissen-vorschau>
                         @if(trim((string) ($inhaltHtml ?? '')) === '')
-                            <x-fa::empty icon="heroicon-o-document-text" title="Noch kein Inhalt">Mit „Bearbeiten“ den Text schreiben.</x-fa::empty>
+                            <x-fa::empty icon="heroicon-o-document-text" title="Noch kein Inhalt">Unter „Text“ den Inhalt schreiben.</x-fa::empty>
                         @else
                             {!! $inhaltHtml !!}
                         @endif

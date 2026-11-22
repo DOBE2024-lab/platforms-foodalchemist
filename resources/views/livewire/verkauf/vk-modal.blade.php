@@ -497,7 +497,7 @@
                             <span class="flex items-center gap-0.5 shrink-0">
                                 <x-fa::icon-button icon="heroicon-m-chevron-up" label="Nach oben" size="sm" wire:click="regenSchieben({{ $g['regeneration_id'] }}, -1)" />
                                 <x-fa::icon-button icon="heroicon-m-chevron-down" label="Nach unten" size="sm" wire:click="regenSchieben({{ $g['regeneration_id'] }}, 1)" />
-                                <x-fa::icon-button icon="heroicon-o-pencil" label="Bearbeiten" size="sm" wire:click="regenBearbeiten({{ $g['regeneration_id'] }})" />
+                                <x-fa::icon-button icon="heroicon-o-pencil" label="Ändern" size="sm" wire:click="regenBearbeiten({{ $g['regeneration_id'] }})" />
                                 <x-fa::icon-button icon="heroicon-o-trash" label="Löschen" size="sm" tone="danger" wire:click="regenLoeschen({{ $g['regeneration_id'] }})" />
                             </span>
                         </div>

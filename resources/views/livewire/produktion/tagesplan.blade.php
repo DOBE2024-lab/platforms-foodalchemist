@@ -1092,7 +1092,7 @@
                     <x-fa::button size="sm" variant="primary" icon="heroicon-o-pencil-square"
                                   :href="route('foodalchemist.produktion.tagesplan.editor', ['von' => $von, 'bis' => $bis, 'tage' => $tage, 'ansicht' => $ansicht])"
                                   wire:navigate x-data x-on:click="$dispatch('modal.open', { name: 'tagesplan-editor' })"
-                                  data-tagesplan-editor-link>Tagesplan bearbeiten</x-fa::button>
+                                  data-tagesplan-editor-link>Im Editor öffnen</x-fa::button>
                 @endif
             </div>
         </x-ui-page-actionbar>

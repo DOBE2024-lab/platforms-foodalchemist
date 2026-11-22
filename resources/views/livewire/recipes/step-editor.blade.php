@@ -32,10 +32,10 @@
                      (fieldset disabled des Voll-Editors) umschaltbar; reine Alpine-Ansicht, schreibt nichts. --}}
                 <a href="#" role="button" @click.prevent="ansicht = 'bearbeiten'"
                         :class="ansicht === 'bearbeiten' ? '{{ $segAn }}' : '{{ $segAus }}'"
-                        class="inline-flex items-center h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium transition-colors" data-tab-bearbeiten>Bearbeiten</a>
+                        class="inline-flex items-center h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium transition-colors" data-tab-bearbeiten>Schritte</a>
                 <a href="#" role="button" @click.prevent="ansicht = 'anleitung'"
                         :class="ansicht === 'anleitung' ? '{{ $segAn }}' : '{{ $segAus }}'"
-                        class="inline-flex items-center h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium transition-colors" data-tab-anleitung>Anleitung ansehen</a>
+                        class="inline-flex items-center h-7 px-2.5 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium transition-colors" data-tab-anleitung>Anleitung</a>
             </div>
             <span class="{{ $hinweis }} tabular-nums">{{ $anzahl($schritte->count(), 'Schritt', 'Schritte') }} · {{ $anzahl($pool->count(), 'Foto', 'Fotos') }}</span>
 

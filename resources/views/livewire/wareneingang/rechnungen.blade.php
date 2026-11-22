@@ -117,7 +117,7 @@
                                     @if((int) ($r['team_id'] ?? $teamId) !== $teamId)
                                         <span class="fa-t-muted">nur lesend</span>
                                     @elseif($r['status'] === 'erfasst' && $darfErfassen)
-                                        <x-fa::button size="sm" wire:click="bearbeiten({{ $r['id'] }})">Bearbeiten</x-fa::button>
+                                        <x-fa::button size="sm" wire:click="bearbeiten({{ $r['id'] }})">Ändern</x-fa::button>
                                     @endif
                                 </td>
                             </tr>

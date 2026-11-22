@@ -36,7 +36,7 @@
                 @if($detail['reference'])<x-fa::badge title="Anlass">{{ $detail['reference'] }}</x-fa::badge>@endif
             </x-slot:badges>
             <x-slot:aktion>
-                <x-fa::button variant="primary" size="sm" icon="heroicon-m-pencil-square" wire:click="bearbeiten">Bestellung bearbeiten</x-fa::button>
+                <x-fa::button variant="primary" size="sm" icon="heroicon-m-pencil-square" wire:click="bearbeiten">Im Editor öffnen</x-fa::button>
             </x-slot:aktion>
         </x-fa::detail-kopf>
 

@@ -193,7 +193,7 @@
                                             <td class="text-right tabular-nums" data-mk-artikel>{{ array_key_exists($z['id'], $artikelZahlen) ? $fmt($artikelZahlen[$z['id']]) : '–' }}</td>
                                             <td class="whitespace-nowrap text-right">
                                                 @if($darfPflegen)
-                                                    <x-fa::button size="sm" variant="ghost" wire:click="bearbeiten({{ $z['id'] }})" data-mk-bearbeiten>Bearbeiten</x-fa::button>
+                                                    <x-fa::button size="sm" variant="ghost" wire:click="bearbeiten({{ $z['id'] }})" data-mk-bearbeiten>Ändern</x-fa::button>
                                                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-trash" wire:click="loeschen({{ $z['id'] }})"
                                                         wire:confirm="Eintrag {{ $z['kuerzel'] }} entfernen?" aria-label="Eintrag {{ $z['kuerzel'] }} entfernen" data-mk-loeschen />
                                                 @endif

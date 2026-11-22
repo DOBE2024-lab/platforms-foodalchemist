@@ -72,7 +72,7 @@
                                     <td class="num align-top text-[var(--fa-ink-2)]">{{ $stil->sort_order }}</td>
                                     <td class="align-top">
                                         <div class="flex items-center justify-end gap-1">
-                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $stil->id }})" data-stil-edit>Bearbeiten</x-fa::button>
+                                            <x-fa::button size="sm" variant="ghost" icon="heroicon-m-pencil-square" wire:click="edit({{ $stil->id }})" data-stil-edit>Ändern</x-fa::button>
                                             <x-fa::menu class="inline-block" label="Weitere Aktionen für {{ $stil->name }}" size="sm" breite="52">
                                                 <x-fa::menu-item :icon="$stil->is_inactive ? 'heroicon-m-eye' : 'heroicon-m-eye-slash'" wire:click="toggleInactive({{ $stil->id }})">{{ $stil->is_inactive ? 'Schreibstil aktivieren' : 'Schreibstil deaktivieren' }}</x-fa::menu-item>
                                                 <div class="my-1 border-t border-[var(--fa-line)]"></div>

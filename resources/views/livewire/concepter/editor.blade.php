@@ -406,7 +406,7 @@
 
                         <div class="flex-1 min-w-0 flex flex-col gap-4">
                             <div class="flex flex-wrap items-center justify-between gap-3">
-                                <h3 class="fa-t-h2" x-text="bauModus ? 'Positionen bearbeiten' : 'So sieht der Gast das Menü'">Positionen bearbeiten</h3>
+                                <h3 class="fa-t-h2" x-text="bauModus ? 'Aufbau' : 'So sieht der Gast das Menü'">Aufbau</h3>
                                 <div class="flex flex-wrap items-center gap-3">
                                     @if($einfuegenNachId !== null)
                                         <span x-show="bauModus" class="inline-flex items-center gap-1.5 {{ $klein }} text-[var(--fa-accent)]" data-einfuege-ziel>
@@ -417,7 +417,7 @@
                                     {{-- UX-Umbau 2026-07-03: Umschalter Bearbeiten ⇄ Menü (Gäste-Sicht mit aufgelöstem Wording) --}}
                                     <div class="{{ $segment }}" role="group" aria-label="Ansicht" data-konzept-ansicht-toggle>
                                         {{-- Spec 65: Ansichts-Umschalter als <a role=button> — bleibt im gesperrten Lesemodus (fieldset) bedienbar --}}
-                                        <a href="#" role="button" @click.prevent="bauModus = true" :class="bauModus ? '{{ $segAn }}' : '{{ $segAus }}'" class="{{ $segKnopf }}" data-ansicht-bearbeiten>@svg('heroicon-m-adjustments-horizontal', 'w-4 h-4') Bearbeiten</a>
+                                        <a href="#" role="button" @click.prevent="bauModus = true" :class="bauModus ? '{{ $segAn }}' : '{{ $segAus }}'" class="{{ $segKnopf }}" data-ansicht-bearbeiten>@svg('heroicon-m-adjustments-horizontal', 'w-4 h-4') Aufbau</a>
                                         <a href="#" role="button" @click.prevent="bauModus = false" :class="!bauModus ? '{{ $segAn }}' : '{{ $segAus }}'" class="{{ $segKnopf }}" data-ansicht-menue>@svg('heroicon-m-book-open', 'w-4 h-4') Menü</a>
                                     </div>
                                 </div>
@@ -558,7 +558,7 @@
                                 @empty
                                     <x-fa::empty icon="heroicon-o-book-open" title="Noch keine Gerichte im Konzept">
                                         In die Bearbeiten-Ansicht wechseln und links aus Gerichten, Paketen oder Basisrezepten einfügen.
-                                        <x-slot:action><x-fa::button size="sm" icon="heroicon-m-adjustments-horizontal" x-on:click="bauModus = true">Positionen bearbeiten</x-fa::button></x-slot:action>
+                                        <x-slot:action><x-fa::button size="sm" icon="heroicon-m-adjustments-horizontal" x-on:click="bauModus = true">Zum Aufbau</x-fa::button></x-slot:action>
                                     </x-fa::empty>
                                 @endforelse
 

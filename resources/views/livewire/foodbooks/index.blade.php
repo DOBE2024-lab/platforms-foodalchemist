@@ -99,7 +99,7 @@
                     </x-fa::menu>
                     <x-fa::button :href="route('foodalchemist.foodbooks.dokument', $fb->id)" target="_blank" icon="heroicon-m-printer"
                         title="Kundendokument zum Drucken oder als PDF, Allergene und Zusatzstoffe zuschaltbar">Dokument öffnen</x-fa::button>
-                    <x-fa::button variant="primary" icon="heroicon-m-pencil-square" x-on:click="$dispatch('modal.open', { name: 'foodbook-editor' })" data-fb-bearbeiten>Foodbook bearbeiten</x-fa::button>
+                    <x-fa::button variant="primary" icon="heroicon-m-pencil-square" x-on:click="$dispatch('modal.open', { name: 'foodbook-editor' })" data-fb-bearbeiten>Im Editor öffnen</x-fa::button>
                 </x-slot:actions>
             </x-fa::page-header>
 
@@ -888,7 +888,7 @@
                                         <button type="button" wire:click="blockSichtbar({{ $block->id }})" class="{{ $block->visible ? $kleinSymbol : 'inline-flex items-center gap-1 h-7 px-2 shrink-0 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-warn)] hover:bg-[var(--fa-hover)]' }}"
                                                 title="{{ $block->visible ? 'Für Gäste sichtbar. Klicken macht den Eintrag intern.' : 'Nur intern. Klicken zeigt den Eintrag wieder für Gäste.' }}">@if($block->visible)@svg('heroicon-m-eye', 'w-4 h-4')@else @svg('heroicon-m-eye-slash', 'w-4 h-4') Intern @endif</button>
                                         @if($block->type !== 'spacer')
-                                            <button type="button" wire:click="blockBearbeiten({{ $block->id }})" class="{{ $kleinSymbol }}" title="Bearbeiten und Notiz" aria-label="Eintrag bearbeiten">@svg('heroicon-m-pencil', 'w-4 h-4')</button>
+                                            <button type="button" wire:click="blockBearbeiten({{ $block->id }})" class="{{ $kleinSymbol }}" title="Ändern und Notiz" aria-label="Eintrag ändern">@svg('heroicon-m-pencil', 'w-4 h-4')</button>
                                         @endif
                                         <x-fa::menu breite="52">
                                             <x-slot:ausloeser>

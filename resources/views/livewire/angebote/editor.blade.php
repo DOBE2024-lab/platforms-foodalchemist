@@ -528,7 +528,7 @@
                                             @if($block->visible)@svg('heroicon-m-eye', 'w-3.5 h-3.5')@else @svg('heroicon-m-eye-slash', 'w-3.5 h-3.5')<span>intern</span>@endif
                                         </button>
                                         @if($block->type !== 'spacer')
-                                            <button type="button" wire:click="blockBearbeiten({{ $block->id }})" class="{{ $mini }}" title="Bearbeiten und Notiz" aria-label="Bearbeiten">@svg('heroicon-m-pencil', 'w-3.5 h-3.5')</button>
+                                            <button type="button" wire:click="blockBearbeiten({{ $block->id }})" class="{{ $mini }}" title="Ändern und Notiz" aria-label="Ändern">@svg('heroicon-m-pencil', 'w-3.5 h-3.5')</button>
                                         @endif
                                         <button type="button" wire:click="blockRaus({{ $block->id }})" class="{{ $miniKrit }}" title="Entfernen" aria-label="Entfernen">@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                     </div>

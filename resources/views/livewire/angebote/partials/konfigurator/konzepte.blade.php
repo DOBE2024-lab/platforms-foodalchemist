@@ -55,7 +55,7 @@
                     <div class="flex items-center gap-1">
                         <x-fa::icon-button icon="heroicon-m-chevron-up" label="Nach oben" size="sm" wire:click="konzeptVerschieben({{ $kz->id }}, -1)" />
                         <x-fa::icon-button icon="heroicon-m-chevron-down" label="Nach unten" size="sm" wire:click="konzeptVerschieben({{ $kz->id }}, 1)" />
-                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $kz->id }})">Bearbeiten</x-fa::button>
+                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $kz->id }})">Ändern</x-fa::button>
                         <x-fa::button size="sm" variant="danger" wire:click="konzeptEntfernen({{ $kz->id }})" wire:confirm="Konzept entfernen? Seine Zusatz-Leistungen gehen mit.">Entfernen</x-fa::button>
                     </div>
                 </div>
@@ -90,7 +90,7 @@
                             @if($a->gebunden_an_id) · nur bei {{ optional($haupt->firstWhere('id', $a->gebunden_an_id))->kunden_titel }}@endif
                             · {{ $preis($a->dinnerConcept) }}</span></span>
                     <span class="flex gap-1">
-                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $a->id }})">Bearbeiten</x-fa::button>
+                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $a->id }})">Ändern</x-fa::button>
                         <x-fa::button size="sm" variant="danger" wire:click="konzeptEntfernen({{ $a->id }})" wire:confirm="Add-on entfernen?">Entfernen</x-fa::button>
                     </span>
                 </div>

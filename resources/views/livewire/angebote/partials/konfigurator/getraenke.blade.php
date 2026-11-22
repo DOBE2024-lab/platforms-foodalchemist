@@ -76,7 +76,7 @@
                         </span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $g->id }})" data-kfg-bearbeiten="{{ $g->id }}">Bearbeiten</x-fa::button>
+                        <x-fa::button size="sm" wire:click="konzeptBearbeiten({{ $g->id }})" data-kfg-bearbeiten="{{ $g->id }}">Ändern</x-fa::button>
                         <x-fa::button size="sm" variant="danger" wire:click="konzeptEntfernen({{ $g->id }})" wire:confirm="Getränkepaket entfernen? Seine Zusatz-Leistungen gehen mit.">Entfernen</x-fa::button>
                     </div>
                 </div>

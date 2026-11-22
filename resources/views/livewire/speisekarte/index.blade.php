@@ -110,7 +110,7 @@
                         <div class="my-1 border-t border-[var(--fa-line)]"></div>
                         <x-fa::menu-item icon="heroicon-o-document-duplicate" abstand="weit" wire:click="duplizieren">Karte duplizieren</x-fa::menu-item>
                     </x-fa::menu>
-                    <x-fa::button variant="primary" icon="heroicon-m-pencil-square" x-on:click="$dispatch('modal.open', { name: 'speisekarte-editor' })" data-sk-bearbeiten>Karte bearbeiten</x-fa::button>
+                    <x-fa::button variant="primary" icon="heroicon-m-pencil-square" x-on:click="$dispatch('modal.open', { name: 'speisekarte-editor' })" data-sk-bearbeiten>Im Editor öffnen</x-fa::button>
                 </x-slot:actions>
             </x-fa::page-header>
             <div class="-mt-2 flex flex-wrap items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">

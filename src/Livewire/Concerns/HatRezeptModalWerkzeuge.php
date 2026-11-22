@@ -81,6 +81,30 @@ trait HatRezeptModalWerkzeuge
 
     // ── Gerichtsbild ─────────────────────────────────────────────────────
 
+    /** Spec 43 (Bild-Epic): Gericht-Foto — dasselbe Bild-Feld an Basisrezept und Gericht (recipes.image_*). */
+    public $dishImageUpload = null;
+
+    public function updatedDishImageUpload(): void
+    {
+        if ($this->recipeId === null || $this->dishImageUpload === null) {
+            return;
+        }
+        // Spec 65: updated-Hooks laufen NICHT über den call-Haken — ohne eigene Sperre nicht schreiben.
+        if (self::sperreAktiv() && ! $this->darfSchreiben()) {
+            $this->reset('dishImageUpload');
+
+            return;
+        }
+        $team = Auth::user()?->currentTeamRelation;
+        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'dishImageUpload');
+        try {
+            app(RecipeService::class)->storeDishImage($team, $this->recipeId, $this->dishImageUpload);
+        } catch (\Throwable $e) {
+            $this->fehler = $e->getMessage();
+        }
+        $this->reset('dishImageUpload');
+    }
+
     public function dishImageEntfernen(): void
     {
         if ($this->recipeId !== null) {

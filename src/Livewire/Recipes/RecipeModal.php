@@ -74,30 +74,6 @@ class RecipeModal extends Component
         }
     }
 
-    /** Spec 43 (Bild-Epic): Gericht-Foto (Stammdaten). */
-    public $dishImageUpload = null;
-
-    public function updatedDishImageUpload(): void
-    {
-        if ($this->recipeId === null || $this->dishImageUpload === null) {
-            return;
-        }
-        // Spec 65: updated-Hooks laufen NICHT über den call-Haken — ohne eigene Sperre nicht schreiben.
-        if (self::sperreAktiv() && ! $this->darfSchreiben()) {
-            $this->reset('dishImageUpload');
-
-            return;
-        }
-        $team = Auth::user()?->currentTeamRelation;
-        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'dishImageUpload');
-        try {
-            app(RecipeService::class)->storeDishImage($team, $this->recipeId, $this->dishImageUpload);
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
-        $this->reset('dishImageUpload');
-    }
-
     private const LEER = [
         'name' => '', 'origin_source' => '', 'category_id' => null, 'hauptgruppe_id' => null,
         'taste_direction' => '', 'production_depth' => '', 'work_time_min' => null,

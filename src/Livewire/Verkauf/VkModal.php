@@ -57,23 +57,6 @@ class VkModal extends Component
         }
     }
 
-    /** Spec 43 (Bild-Epic): Gericht-Foto — dasselbe Bild-Feld wie am Basisrezept (recipes.image_*). */
-    public $dishImageUpload = null;
-
-    public function updatedDishImageUpload(): void
-    {
-        if ($this->recipeId === null || $this->dishImageUpload === null) {
-            return;
-        }
-        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'dishImageUpload');
-        try {
-            app(\Platform\FoodAlchemist\Services\RecipeService::class)->storeDishImage(Auth::user()?->currentTeamRelation, $this->recipeId, $this->dishImageUpload);
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
-        $this->reset('dishImageUpload');
-    }
-
     public ?int $recipeId = null;                                    // null = Anlage-Modus
 
     /** @var array<string, mixed> */

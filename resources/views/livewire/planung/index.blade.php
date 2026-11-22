@@ -1112,7 +1112,7 @@
                         {{-- Zwei Sichten nebeneinander (Dominique 16.10.): Teller aus Komponenten oder eine Zubereitung. --}}
                         <x-fa::segmented label="Bewerten als" class="mb-3" data-composer-modus="">
                             @foreach(['gericht' => 'als Gericht', 'basisrezept' => 'als Basisrezept'] as $m => $mLabel)
-                                <x-fa::segment :an="$composerModus === $m" size="md" wire:click="$set('composerModus', '{{ $m }}')" data-composer-modus-knopf="{{ $m }}">{{ $mLabel }}</x-fa::segment>
+                                <x-fa::segment :an="$composerModus === $m" size="md" data-composer-modus-knopf="{{ $m }}" wire:click="$set('composerModus', '{{ $m }}')">{{ $mLabel }}</x-fa::segment>
                             @endforeach
                         </x-fa::segmented>
                         <div wire:key="composer-kombination-{{ $composerModus }}">

@@ -7,9 +7,9 @@ uses(TestCase::class);
 
 /** Plan 98, 2.4a PR B: x-fa::table und x-fa::card. */
 it('x-fa::table rendert fa-table, compact und eigene Klassen in der bisherigen Reihenfolge', function () {
-    expect(Blade::render('<x-fa::table><tbody><tr><td>A</td></tr></tbody></x-fa::table>'))
+    expect(trim(Blade::render('<x-fa::table><tbody><tr><td>A</td></tr></tbody></x-fa::table>')))
         ->toBe('<table class="fa-table"><tbody><tr><td>A</td></tr></tbody></table>')
-        ->and(Blade::render('<x-fa::table compact class="min-w-[760px]" data-test-tabelle="">X</x-fa::table>'))
+        ->and(trim(Blade::render('<x-fa::table compact class="min-w-[760px]" data-test-tabelle="">X</x-fa::table>')))
         ->toBe('<table class="fa-table fa-table--compact min-w-[760px]" data-test-tabelle="">X</table>');
 });
 
@@ -23,7 +23,7 @@ it('x-fa::card rendert fa-surface vor den eigenen Klassen, as wählt das Element
 it('x-fa::card reicht blankes x-data und Alpine-Attribute unverändert durch', function () {
     $html = Blade::render('<x-fa::card as="article" x-data x-on:click="auf = true" x-bind:class="auf ? \'a\' : \'\'">K</x-fa::card>');
 
-    expect($html)->toContain('x-data ')->not->toContain('x-data="x-data"')
+    expect($html)->toContain('x-data=""')->not->toContain('x-data="x-data"')
         ->toContain('x-on:click="auf = true"')->toContain('x-bind:class=');
 });
 

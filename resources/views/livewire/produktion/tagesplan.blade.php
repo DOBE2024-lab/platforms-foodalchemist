@@ -773,7 +773,7 @@
                                         init() { this.rechne() },
                                         rechne() { if (! this.hand) { this.menge = this.gesamt ? (Math.round(this.gesamt / this.anzahl * 1000) / 1000).toString().replace('.', ',') : '' } },
                                         plus(d) { this.anzahl = Math.max(1, Math.min(200, this.anzahl + d)); this.rechne() },
-                                        drucke() { this.druckt = true; let url = @js($et['url']); url = url.replace(/([?&])anzahl=\d+/, '$1anzahl=' + this.anzahl); if (this.menge.trim() !== '') { url += '&' + encodeURIComponent('e[menge]') + '=' + encodeURIComponent(this.menge.trim() + ' kg') }
+                                        drucke() { this.druckt = true; let url = {{ \Illuminate\Support\Js::from($et['url']) }}; url = url.replace(/([?&])anzahl=\d+/, '$1anzahl=' + this.anzahl); if (this.menge.trim() !== '') { url += '&' + encodeURIComponent('e[menge]') + '=' + encodeURIComponent(this.menge.trim() + ' kg') }
                                             const f = document.createElement('iframe'); f.style.position = 'fixed'; f.style.width = '0'; f.style.height = '0'; f.style.border = '0'; f.src = url;
                                             f.onload = () => { try { f.contentWindow.focus(); f.contentWindow.print() } catch (e) { window.location.assign(url) } this.druckt = false; setTimeout(() => f.remove(), 60000) }; document.body.appendChild(f) } }">
                                     <p class="text-sm font-semibold text-[var(--fa-ink-2)]">Etiketten</p>

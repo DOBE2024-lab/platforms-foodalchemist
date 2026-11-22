@@ -476,7 +476,7 @@
 
                     {{-- Gemeinsamer Drag-and-drop-Zustand für ALLE (auch verschachtelten) Rubriken: ein x-data
                          am Container statt pro Rubrik. zu[id] klappt Rubriken einzeln auf und zu. --}}
-                    <x-fa::card class="p-4 min-w-0" wire:key="sk-body-{{ $karte->id }}" x-data="{ dragPosId: null, dragRubrikId: null, zu: {}, alleIds: @js($alleRubrikIds) }">
+                    <x-fa::card class="p-4 min-w-0" wire:key="sk-body-{{ $karte->id }}" x-data="{ dragPosId: null, dragRubrikId: null, zu: {}, alleIds: {{ \Illuminate\Support\Js::from($alleRubrikIds) }} }">
 
                         <div class="flex flex-wrap items-center gap-2 mb-3">
                             <x-fa::input wire:model="neueRubrik" wire:keydown.enter="rubrikNeu" placeholder="Neue Rubrik, z. B. Vorspeisen" aria-label="Name der neuen Rubrik" class="w-full sm:w-64" />

@@ -976,6 +976,9 @@ return [
      */
     'master_team_id' => env('FOODALCHEMIST_MASTER_TEAM_ID'),
 
+    // CQ (Folge aus 2.5b): neue Wurzel-Teams bekommen Saison/Einsatzmoment/Eventtyp aus dem Grundbestand ({@see \Platform\FoodAlchemist\Support\Planung\VokabularSeed}).
+    'vokabular_seed_bei_team_anlage' => (bool) env('FOODALCHEMIST_VOKABULAR_SEED', true),
+
     /*
      | Hülle (Support\FaShell): `plattform` = Modul in einer Plattform-Host-App (demo/office, Core-Layout,
      | Modul-CSS aus resources/dist) · `eigenstaendig` = FA ist die Plattform (Host food-alchemist, eigene Hülle).

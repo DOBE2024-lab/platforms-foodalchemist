@@ -122,6 +122,9 @@ class FoodAlchemistServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // CQ (Folge aus 2.5b): neues Wurzel-Team → Grundbestand der Planungs-Vokabulare. Darf das Anlegen nie scheitern lassen.
+        \Platform\Core\Models\Team::created(fn (\Platform\Core\Models\Team $team) => \Platform\FoodAlchemist\Support\Planung\VokabularSeed::fuerNeuesTeam($team));
+
         // Spec 84 §3.3 · Team-Transport in Jobs an EINER Stelle: jeder Job trägt das Team, das beim Versand galt — egal ob aus
         // Livewire, MCP oder FaTeam::imTeam. Läuft auf der Kopie, die in den Payload geht (der laufende Request bleibt unberührt).
         \Illuminate\Support\Facades\Context::dehydrating(function (\Illuminate\Log\Context\Repository $context) {

@@ -33,7 +33,7 @@ it('Rückfall: ein Team ohne eigene Kopien behält lunch, empfang und konferenz 
 });
 
 it('Rückfall: eigene Kopien des Teams gehen vor, das Unterteam erbt sie', function () {
-    VokabularCodes::grundbestandAnlegen($this->rootTeam->id);
+    VokabularCodes::grundbestandAnlegen($this->rootTeam);
     DB::table('foodalchemist_service_moments')->where('team_id', $this->rootTeam->id)->where('code', 'lunch')->update(['name' => 'Mittagstisch']);
 
     expect(app(PlanungVokabular::class)->optionen($this->rootTeam, 'occasion'))->toHaveKey('lunch', 'Mittagstisch')
@@ -48,7 +48,7 @@ it('Konstanten weg: Anlass, Serviceform und Saison stehen nicht mehr im Code', f
 });
 
 it('Codes: Grundbestand behält die bisherigen Planungs-Slugs, Service-Art ist global', function () {
-    VokabularCodes::grundbestandAnlegen($this->rootTeam->id);
+    VokabularCodes::grundbestandAnlegen($this->rootTeam);
     $vok = app(PlanungVokabular::class);
 
     expect($vok->optionen($this->rootTeam, 'occasion'))->toMatchArray(['fruehstueck' => 'Frühstück', 'lunch' => 'Lunch', 'empfang' => 'Apéro/Empfang',
@@ -60,7 +60,7 @@ it('Codes: Grundbestand behält die bisherigen Planungs-Slugs, Service-Art ist g
 });
 
 it('Ein neuer Eintrag in den Einstellungen ist sofort in der Planung wählbar', function () {
-    VokabularCodes::grundbestandAnlegen($this->rootTeam->id);
+    VokabularCodes::grundbestandAnlegen($this->rootTeam);
     app(\Platform\FoodAlchemist\Services\Einstellungen\ConcepterDimensionenService::class)->anlegen($this->rootTeam, 'einsatzmomente', 'Mitternachtsbuffet');
 
     expect(DB::table('foodalchemist_service_moments')->where('name', 'Mitternachtsbuffet')->value('code'))->toBe('mitternachtsbuffet')
@@ -68,7 +68,7 @@ it('Ein neuer Eintrag in den Einstellungen ist sofort in der Planung wählbar', 
 });
 
 it('Leitplanken: DB-Codes passieren, Unbekanntes wird verworfen, konferenz wandert in den Eventtyp', function () {
-    VokabularCodes::grundbestandAnlegen($this->rootTeam->id);
+    VokabularCodes::grundbestandAnlegen($this->rootTeam);
     $verworfen = [];
     $ok = app(PlanningSessionService::class)->filterGenerationParams(
         ['occasion' => 'lunch', 'serviceform' => 'flying', 'saison' => 'herbst', 'eventtyp' => 'hochzeit'], $verworfen, $this->rootTeam);
@@ -79,7 +79,7 @@ it('Leitplanken: DB-Codes passieren, Unbekanntes wird verworfen, konferenz wande
 });
 
 it('Planung zeigt die DB-Auswahl und rehydriert eine Alt-Sitzung mit occasion=konferenz als Eventtyp', function () {
-    VokabularCodes::grundbestandAnlegen($this->rootTeam->id);
+    VokabularCodes::grundbestandAnlegen($this->rootTeam);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Tagung', 'brief' => 'Lunch für 80']);
     DB::table('foodalchemist_planning_sessions')->where('id', $session->id)->update(['generation_params' => json_encode(['occasion' => 'konferenz', 'serviceform' => 'buffet'])]);
 
@@ -91,7 +91,7 @@ it('Planung zeigt die DB-Auswahl und rehydriert eine Alt-Sitzung mit occasion=ko
 });
 
 it('Sprachassistent bietet die DB-Codes an und prüft gegen sie', function () {
-    VokabularCodes::grundbestandAnlegen($this->rootTeam->id);
+    VokabularCodes::grundbestandAnlegen($this->rootTeam);
     expect(VoiceCommandService::regelVokabular('serviceform'))->toHaveKey('stehempfang')
         ->and(VoiceCommandService::regelWertGueltig('occasion', 'dinner'))->toBeTrue()
         ->and(VoiceCommandService::regelWertGueltig('occasion', 'konferenz'))->toBeFalse()
@@ -99,7 +99,7 @@ it('Sprachassistent bietet die DB-Codes an und prüft gegen sie', function () {
 });
 
 it('Trockenlauf-Report schreibt nichts und meldet fehlende Codes', function () {
-    VokabularCodes::grundbestandAnlegen($this->rootTeam->id);
+    VokabularCodes::grundbestandAnlegen($this->rootTeam);
     DB::table('foodalchemist_seasons')->where('team_id', $this->rootTeam->id)->where('name', 'Sommer')->update(['code' => null]);
 
     $this->artisan('foodalchemist:vokabular-codes')->expectsOutputToContain('Sommer → sommer')->assertSuccessful();

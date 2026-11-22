@@ -47,6 +47,9 @@ abstract class TestCase extends BaseTestCase
         // Spec 65: Bestandstests rufen Editor-Methoden direkt — Sperre hier aus; BearbeitungssperreTest schaltet sie ein.
         config(['foodalchemist.bearbeitungssperre' => false]);
 
+        // Vokabular-Seed bei Team-Anlage (CQ, Folge aus 2.5b) aus: Bestandstests legen Saisons/Eventtypen selbst an; VokabularSeedTest schaltet ihn ein.
+        config(['foodalchemist.vokabular_seed_bei_team_anlage' => false]);
+
         // #1002: Bestandstests prüfen den Plattformweg der KI-Tools — der externe MCP-Weg wird nur in KiUmleitungTest eingeschaltet.
         config(['foodalchemist.ai.mcp_extern' => (bool) env('FA_TEST_MCP_EXTERN', false)]);   // FA_TEST_MCP_EXTERN=1: ganze Suite mit eingeschaltetem Extern-Weg (Sicherheitsnetz)
 

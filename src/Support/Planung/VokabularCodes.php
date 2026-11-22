@@ -47,17 +47,25 @@ final class VokabularCodes
         'foodalchemist_seasons' => ['Frühling', 'Sommer', 'Herbst', 'Winter', 'ganzjährig'],
     ];
 
-    /** Grundbestand mit Codes für ein Team anlegen; vorhandene Namen bleiben (idempotent). */
-    public static function grundbestandAnlegen(int $teamId): void
+    /**
+     * Grundbestand mit Codes für ein Team anlegen — je Vokabular nur, wenn das Team in seiner Kette noch nichts sieht (Unterteams erben,
+     * eigene Kopien würden doppelt erscheinen). Idempotent. @return int angelegte Zeilen
+     */
+    public static function grundbestandAnlegen(\Platform\Core\Models\Team $team): int
     {
+        $n = 0;
         foreach (self::GRUNDBESTAND as $tabelle => $namen) {
+            if (\Platform\FoodAlchemist\Support\TeamScope::applyVisible(DB::table($tabelle)->whereNull('deleted_at'), 'team_id', $team)->exists()) {
+                continue;
+            }
             foreach ($namen as $i => $name) {
-                if (! DB::table($tabelle)->where('team_id', $teamId)->where('name', $name)->exists()) {
-                    DB::table($tabelle)->insert(['uuid' => (string) Str::uuid7(), 'team_id' => $teamId, 'name' => $name, 'code' => self::codeFuer($tabelle, $name),
-                        'sort_order' => ($i + 1) * 10, 'created_at' => now(), 'updated_at' => now()]);
-                }
+                DB::table($tabelle)->insert(['uuid' => (string) Str::uuid7(), 'team_id' => $team->id, 'name' => $name, 'code' => self::codeFuer($tabelle, $name),
+                    'sort_order' => ($i + 1) * 10, 'created_at' => now(), 'updated_at' => now()]);
+                $n++;
             }
         }
+
+        return $n;
     }
 
     public static function codeFuer(string $tabelle, string $name): string

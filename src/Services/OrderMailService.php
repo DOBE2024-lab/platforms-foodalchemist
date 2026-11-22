@@ -62,6 +62,9 @@ class OrderMailService
         if (! in_array($typ, self::TYPEN, true)) {
             throw new RuntimeException("Unbekannter Mail-Typ „{$typ}\".");
         }
+        if ($typ === 'storno' && ! $order->wurdeVersendet()) {
+            throw new RuntimeException('Eine Storno-Mail gibt es nur für Bestellungen, die an den Lieferanten verschickt wurden.');
+        }
         $user = auth()->user();
         $daten = $this->inhalt($team, (int) $order->id, $typ, $user?->name);
         if (trim($daten['to']) === '') {
@@ -139,6 +142,9 @@ class OrderMailService
      */
     public function inhalt(Team $team, int $orderId, string $typ, ?string $besteller = null): array
     {
+        if ($typ === 'storno' && ! FoodAlchemistOrder::visibleToTeam($team)->findOrFail($orderId)->wurdeVersendet()) {
+            return ['to' => '', 'subject' => '', 'body' => ''];   // gleiche Regel wie cancellationMailtoData: Entwurf → keine Storno-Mail
+        }
         $standard = $typ === 'storno'
             ? $this->stornoStandard($team, $orderId)
             : $this->orders->mailtoData($team, $orderId);
@@ -159,8 +165,8 @@ class OrderMailService
     }
 
     /**
-     * Storno-Wortlaut wie OrderService::cancellationMailtoData — aber ohne dessen Status-Sperre: die Mail wird
-     * NACH dem Wechsel auf „storniert" geplant und versendet (dort liefert die mailto-Variante bewusst nichts).
+     * Storno-Wortlaut wie OrderService::cancellationMailtoData. Dieselbe Regel ({@see FoodAlchemistOrder::wurdeVersendet}); die Mail wird
+     * NACH dem Wechsel auf „storniert" geplant und versendet, darum ohne die mailto-Bedingung „noch nicht storniert".
      *
      * @return array{to:string, subject:string, body:string}
      */

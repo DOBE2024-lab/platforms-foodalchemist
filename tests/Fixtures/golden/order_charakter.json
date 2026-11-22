@@ -1,0 +1,1185 @@
+{
+    "bedarf_erzeugt": [
+        {
+            "lieferant": "Chefs",
+            "status": "draft",
+            "liefertag": "2026-11-26",
+            "referenz": "Weihnachtsfeier",
+            "total_net": 21.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Mehl 1kg",
+                    "artikel": "ART-MEH",
+                    "gebinde": 10.0,
+                    "manuell": false,
+                    "preis": 2.0,
+                    "summe": 20.0,
+                    "bedarf_g": 10000.0,
+                    "quellen": {
+                        "recipe:2@958cb3aa52": 10000.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                },
+                {
+                    "bezeichnung": "Zucker 1kg",
+                    "artikel": "ART-ZUC",
+                    "gebinde": 1.0,
+                    "manuell": false,
+                    "preis": 1.0,
+                    "summe": 1.0,
+                    "bedarf_g": 1000.0,
+                    "quellen": {
+                        "recipe:2@958cb3aa52": 1000.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        },
+        {
+            "lieferant": "Hanos",
+            "status": "draft",
+            "liefertag": "2026-11-26",
+            "referenz": "Weihnachtsfeier",
+            "total_net": 12.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Butter 1kg",
+                    "artikel": "ART-BUT",
+                    "gebinde": 1.0,
+                    "manuell": false,
+                    "preis": 12.0,
+                    "summe": 12.0,
+                    "bedarf_g": 1000.0,
+                    "quellen": {
+                        "recipe:2@958cb3aa52": 1000.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        }
+    ],
+    "bedarf_reimport_ersetzt": [
+        {
+            "lieferant": "Chefs",
+            "status": "draft",
+            "liefertag": null,
+            "referenz": null,
+            "total_net": 15.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Mehl 1kg",
+                    "artikel": "ART-MEH",
+                    "gebinde": 7.0,
+                    "manuell": false,
+                    "preis": 2.0,
+                    "summe": 14.0,
+                    "bedarf_g": 7000.0,
+                    "quellen": {
+                        "event:Bankett A": 2000.0,
+                        "event:Bankett B": 5000.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                },
+                {
+                    "bezeichnung": "Zucker 1kg",
+                    "artikel": "ART-ZUC",
+                    "gebinde": 1.0,
+                    "manuell": false,
+                    "preis": 1.0,
+                    "summe": 1.0,
+                    "bedarf_g": 1000.0,
+                    "quellen": {
+                        "event:Bankett A": 500.0,
+                        "event:Bankett B": 500.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        },
+        {
+            "lieferant": "Hanos",
+            "status": "draft",
+            "liefertag": null,
+            "referenz": null,
+            "total_net": 12.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Butter 1kg",
+                    "artikel": "ART-BUT",
+                    "gebinde": 1.0,
+                    "manuell": false,
+                    "preis": 12.0,
+                    "summe": 12.0,
+                    "bedarf_g": 1000.0,
+                    "quellen": {
+                        "event:Bankett A": 500.0,
+                        "event:Bankett B": 500.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        }
+    ],
+    "bedarf_vorschau": {
+        "totals": {
+            "sources": 1,
+            "groups": 2,
+            "positions": 3,
+            "unresolved": 0,
+            "total_net": 33.0
+        },
+        "gruppen": [
+            {
+                "supplier": "Chefs",
+                "delivery_date": "2026-11-26",
+                "total_net": 21.0
+            },
+            {
+                "supplier": "Hanos",
+                "delivery_date": "2026-11-26",
+                "total_net": 12.0
+            }
+        ]
+    },
+    "bedarf_zwei_quellen": [
+        {
+            "lieferant": "Chefs",
+            "status": "draft",
+            "liefertag": null,
+            "referenz": null,
+            "total_net": 32.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Mehl 1kg",
+                    "artikel": "ART-MEH",
+                    "gebinde": 15.0,
+                    "manuell": false,
+                    "preis": 2.0,
+                    "summe": 30.0,
+                    "bedarf_g": 15000.0,
+                    "quellen": {
+                        "event:Bankett A": 10000.0,
+                        "event:Bankett B": 5000.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                },
+                {
+                    "bezeichnung": "Zucker 1kg",
+                    "artikel": "ART-ZUC",
+                    "gebinde": 2.0,
+                    "manuell": false,
+                    "preis": 1.0,
+                    "summe": 2.0,
+                    "bedarf_g": 1500.0,
+                    "quellen": {
+                        "event:Bankett A": 1000.0,
+                        "event:Bankett B": 500.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        },
+        {
+            "lieferant": "Hanos",
+            "status": "draft",
+            "liefertag": null,
+            "referenz": null,
+            "total_net": 24.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Butter 1kg",
+                    "artikel": "ART-BUT",
+                    "gebinde": 2.0,
+                    "manuell": false,
+                    "preis": 12.0,
+                    "summe": 24.0,
+                    "bedarf_g": 1500.0,
+                    "quellen": {
+                        "event:Bankett A": 1000.0,
+                        "event:Bankett B": 500.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        }
+    ],
+    "dokument_hanos": {
+        "id": 2,
+        "status": "draft",
+        "status_label": "Entwurf",
+        "reference": null,
+        "desired_delivery_date": null,
+        "created_at": "23.11.2026",
+        "sent_at": null,
+        "confirmed_at": null,
+        "delivered_at": null,
+        "supplier_order_number": null,
+        "confirmed_delivery_date": null,
+        "supplier_confirmation_note": null,
+        "invoice_number": null,
+        "invoice_date": null,
+        "invoice_due_date": null,
+        "payment_term_days": null,
+        "payment_status": null,
+        "invoice_paid_at": null,
+        "payment_note": null,
+        "approval_status": null,
+        "approval_requested_at": null,
+        "approved_at": null,
+        "approved_by": null,
+        "approval_note": null,
+        "invoice_note": null,
+        "total_net": 12,
+        "moq": {
+            "total_net": 12,
+            "min_order_value": null,
+            "free_shipping_threshold": null,
+            "unter_mindestbestellwert": false,
+            "fehlt_bis_min": 0,
+            "frei_haus": false,
+            "fehlt_bis_frei_haus": 0
+        },
+        "receipt": {
+            "lines": 1,
+            "booked": 0,
+            "missing": 1,
+            "differences": 0,
+            "backorderable": 0,
+            "received_net": 0
+        },
+        "invoice": {
+            "lines": 1,
+            "checked": 0,
+            "missing": 1,
+            "differences": 0,
+            "invoice_net": 0,
+            "diff_net": 0
+        },
+        "payment": {
+            "status": null,
+            "label": "keine Rechnung",
+            "state": "no_invoice",
+            "due_date": null,
+            "paid_at": null,
+            "overdue_days": 0,
+            "note": null
+        },
+        "approval": {
+            "status": null,
+            "label": "keine Freigabe",
+            "state": "not_required",
+            "requested_at": null,
+            "approved_at": null,
+            "approved_by": null,
+            "note": null
+        },
+        "claims": {
+            "lines": 0,
+            "open": 0,
+            "credit_expected": 0,
+            "credited": 0,
+            "resolved": 0,
+            "credit_expected_net": 0
+        },
+        "quota": {
+            "lines": 0,
+            "invalid": 0,
+            "exceeded": 0,
+            "remaining_after": 0
+        },
+        "lieferant": {
+            "name": "Hanos",
+            "email_order": "bestellung@hanos.test",
+            "address": null,
+            "postal_code": null,
+            "city": null
+        },
+        "zeilen": [
+            {
+                "article_number": "ART-BUT",
+                "designation": "Butter 1kg",
+                "packaging_unit": "Sack",
+                "pack_qty": 1,
+                "unit_code": "kg",
+                "qty_packs": 1,
+                "pack_price": 12,
+                "line_total": 12,
+                "received_qty_packs": null,
+                "receipt_diff_packs": null,
+                "received_note": null,
+                "invoice_qty_packs": null,
+                "invoice_pack_price": null,
+                "invoice_line_total": null,
+                "invoice_diff_net": null,
+                "invoice_note": null,
+                "claim_status": null,
+                "claim_status_label": "—",
+                "claim_qty_packs": null,
+                "credit_expected_net": null,
+                "claim_note": null,
+                "quota_consumed_packs": null,
+                "quota_consumed_at": null,
+                "quota": null,
+                "needed_base_g": 1000,
+                "bestellbar": true
+            }
+        ]
+    },
+    "herkunft_im_detail": {
+        "herkunft": [
+            {
+                "key": "produktion:P",
+                "type": "produktion",
+                "label": "Hochzeit Meier · 28.11.2026",
+                "production_order_id": "P"
+            },
+            {
+                "key": "event:Bankett",
+                "type": "event",
+                "label": "Bankett",
+                "production_order_id": null
+            }
+        ],
+        "zeilen_herkunft": [
+            [
+                {
+                    "ref": "produktion:P:kuchen",
+                    "type": "produktion",
+                    "label": "Hochzeit Meier · 28.11.2026",
+                    "production_order_id": "P"
+                },
+                {
+                    "ref": "event:Bankett",
+                    "type": "event",
+                    "label": "Bankett",
+                    "production_order_id": null
+                }
+            ],
+            [
+                {
+                    "ref": "produktion:P:kuchen",
+                    "type": "produktion",
+                    "label": "Hochzeit Meier · 28.11.2026",
+                    "production_order_id": "P"
+                },
+                {
+                    "ref": "event:Bankett",
+                    "type": "event",
+                    "label": "Bankett",
+                    "production_order_id": null
+                }
+            ]
+        ]
+    },
+    "herkunft_parser": {
+        "parse": [
+            {
+                "ref": "produktion:P:kuchen",
+                "type": "produktion",
+                "label": "Produktion #P",
+                "production_order_id": "P"
+            },
+            {
+                "ref": "produktion:P:sauce",
+                "type": "produktion",
+                "label": "Produktion #P",
+                "production_order_id": "P"
+            },
+            {
+                "ref": "concept:menue-a@100",
+                "type": "concept",
+                "label": "Konzept menue-a",
+                "production_order_id": null
+            },
+            {
+                "ref": "recipe:kuchen@50",
+                "type": "recipe",
+                "label": "Gericht kuchen",
+                "production_order_id": null
+            },
+            {
+                "ref": "event:Bankett",
+                "type": "event",
+                "label": "Bankett",
+                "production_order_id": null
+            },
+            {
+                "ref": "frei",
+                "type": "sonstige",
+                "label": "frei",
+                "production_order_id": null
+            }
+        ],
+        "aggregat": [
+            {
+                "key": "produktion:P",
+                "type": "produktion",
+                "label": "Produktion #P",
+                "production_order_id": "P"
+            },
+            {
+                "key": "concept:Konzept menue-a",
+                "type": "concept",
+                "label": "Konzept menue-a",
+                "production_order_id": null
+            },
+            {
+                "key": "recipe:Gericht kuchen",
+                "type": "recipe",
+                "label": "Gericht kuchen",
+                "production_order_id": null
+            },
+            {
+                "key": "event:Bankett",
+                "type": "event",
+                "label": "Bankett",
+                "production_order_id": null
+            },
+            {
+                "key": "sonstige:frei",
+                "type": "sonstige",
+                "label": "frei",
+                "production_order_id": null
+            }
+        ],
+        "mit_namen": [
+            {
+                "key": "produktion:P",
+                "type": "produktion",
+                "label": "Hochzeit Meier · 28.11.2026",
+                "production_order_id": "P"
+            },
+            {
+                "key": "concept:Konzept menue-a",
+                "type": "concept",
+                "label": "Konzept menue-a",
+                "production_order_id": null
+            },
+            {
+                "key": "recipe:Gericht kuchen",
+                "type": "recipe",
+                "label": "Gericht kuchen",
+                "production_order_id": null
+            },
+            {
+                "key": "event:Bankett",
+                "type": "event",
+                "label": "Bankett",
+                "production_order_id": null
+            },
+            {
+                "key": "sonstige:frei",
+                "type": "sonstige",
+                "label": "frei",
+                "production_order_id": null
+            }
+        ]
+    },
+    "kontingent": {
+        "la": {
+            "quota_qty_packs": "50.00",
+            "quota_used_packs": "15.00",
+            "quota_valid_from": "2026-11-01T00:00:00.000000Z",
+            "quota_valid_to": "2026-12-31T00:00:00.000000Z",
+            "quota_note": "Rahmenvertrag 2026"
+        },
+        "zeile": {
+            "quota_consumed_packs": "10.00"
+        },
+        "summe": {
+            "lines": 1,
+            "invalid": 0,
+            "exceeded": 0,
+            "remaining_after": 35.0
+        }
+    },
+    "mail_bestellung": {
+        "to": "bestellung@hanos.test",
+        "subject": "Bestellung Hanos — ord-N",
+        "body": "Guten Tag,\n\nbitte folgende Bestellung:\n\n- 1× Sack Butter 1kg (Art. ART-BUT)\n\nNetto gesamt: 12,00 €\n\nVielen Dank."
+    },
+    "mail_storno": {
+        "to": "",
+        "subject": "",
+        "body": ""
+    },
+    "mail_versandpruefung_server": [
+        "Bestellung kann nicht per Mail versendet werden: Beim Lieferanten „Chefs\" fehlt eine gültige Bestell-E-Mail (Lieferant → Bestell-E-Mail).",
+        "ok"
+    ],
+    "mailto_bestellung": {
+        "to": "bestellung@hanos.test",
+        "subject": "Bestellung Hanos — ord-N",
+        "body": "Guten Tag,\n\nbitte folgende Bestellung:\n\n- 1× Sack Butter 1kg (Art. ART-BUT)\n\nNetto gesamt: 12,00 €\n\nVielen Dank."
+    },
+    "mailto_storno": {
+        "to": "",
+        "subject": "",
+        "body": ""
+    },
+    "pflege_artikelwechsel": {
+        "ergebnis_schluessel": [
+            "order_id",
+            "target_order_id",
+            "schiene_wechsel"
+        ],
+        "zustand": [
+            {
+                "lieferant": "Hanos",
+                "status": "draft",
+                "liefertag": "2026-11-26",
+                "referenz": "Vorrat",
+                "total_net": 5.4,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Mehl Hanos 1kg",
+                        "artikel": "H-MEHL",
+                        "gebinde": 3.0,
+                        "manuell": true,
+                        "preis": 1.8,
+                        "summe": 5.4,
+                        "bedarf_g": 0.0,
+                        "quellen": [],
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": "Direkt"
+                    }
+                ]
+            }
+        ]
+    },
+    "pflege_direktbestellung": [
+        {
+            "lieferant": "Chefs",
+            "status": "draft",
+            "liefertag": "2026-11-26",
+            "referenz": "Vorrat",
+            "total_net": 6.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Mehl 1kg",
+                    "artikel": "ART-MEH",
+                    "gebinde": 3.0,
+                    "manuell": true,
+                    "preis": 2.0,
+                    "summe": 6.0,
+                    "bedarf_g": 0.0,
+                    "quellen": [],
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": "Direkt"
+                }
+            ]
+        }
+    ],
+    "pflege_entfernt_und_aufgeraeumt": {
+        "geloescht": 1,
+        "zustand": [
+            {
+                "lieferant": "Chefs",
+                "status": "draft",
+                "liefertag": null,
+                "referenz": null,
+                "total_net": 11.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Mehl 1kg",
+                        "artikel": "ART-MEH",
+                        "gebinde": 5.0,
+                        "manuell": false,
+                        "preis": 2.0,
+                        "summe": 10.0,
+                        "bedarf_g": 5000.0,
+                        "quellen": {
+                            "event:Bankett": 5000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": "Reserve"
+                    },
+                    {
+                        "bezeichnung": "Zucker 1kg",
+                        "artikel": "ART-ZUC",
+                        "gebinde": 1.0,
+                        "manuell": false,
+                        "preis": 1.0,
+                        "summe": 1.0,
+                        "bedarf_g": 500.0,
+                        "quellen": {
+                            "event:Bankett": 500.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            }
+        ]
+    },
+    "pflege_manuell_nach_reimport": [
+        {
+            "lieferant": "Chefs",
+            "status": "draft",
+            "liefertag": null,
+            "referenz": null,
+            "total_net": 25.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Mehl 1kg",
+                    "artikel": "ART-MEH",
+                    "gebinde": 12.0,
+                    "manuell": true,
+                    "preis": 2.0,
+                    "summe": 24.0,
+                    "bedarf_g": 5000.0,
+                    "quellen": {
+                        "event:Bankett": 5000.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": "Reserve"
+                },
+                {
+                    "bezeichnung": "Zucker 1kg",
+                    "artikel": "ART-ZUC",
+                    "gebinde": 1.0,
+                    "manuell": false,
+                    "preis": 1.0,
+                    "summe": 1.0,
+                    "bedarf_g": 500.0,
+                    "quellen": {
+                        "event:Bankett": 500.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        },
+        {
+            "lieferant": "Hanos",
+            "status": "draft",
+            "liefertag": null,
+            "referenz": null,
+            "total_net": 12.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Butter 1kg",
+                    "artikel": "ART-BUT",
+                    "gebinde": 1.0,
+                    "manuell": false,
+                    "preis": 12.0,
+                    "summe": 12.0,
+                    "bedarf_g": 500.0,
+                    "quellen": {
+                        "event:Bankett": 500.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        }
+    ],
+    "pflege_neuquellen_vorschau": {
+        "strategie": "guenstigster_preis",
+        "wechsel": [],
+        "orders": [
+            3
+        ]
+    },
+    "pflege_preis_entwurf_vs_versendet": {
+        "entwurf": 26.0,
+        "versendet": 26.0,
+        "zustand": [
+            {
+                "lieferant": "Chefs",
+                "status": "sent",
+                "liefertag": null,
+                "referenz": null,
+                "total_net": 26.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Mehl 1kg",
+                        "artikel": "ART-MEH",
+                        "gebinde": 10.0,
+                        "manuell": false,
+                        "preis": 2.5,
+                        "summe": 25.0,
+                        "bedarf_g": 10000.0,
+                        "quellen": {
+                            "event:Bankett": 10000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    },
+                    {
+                        "bezeichnung": "Zucker 1kg",
+                        "artikel": "ART-ZUC",
+                        "gebinde": 1.0,
+                        "manuell": false,
+                        "preis": 1.0,
+                        "summe": 1.0,
+                        "bedarf_g": 1000.0,
+                        "quellen": {
+                            "event:Bankett": 1000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            },
+            {
+                "lieferant": "Hanos",
+                "status": "draft",
+                "liefertag": null,
+                "referenz": null,
+                "total_net": 12.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Butter 1kg",
+                        "artikel": "ART-BUT",
+                        "gebinde": 1.0,
+                        "manuell": false,
+                        "preis": 12.0,
+                        "summe": 12.0,
+                        "bedarf_g": 1000.0,
+                        "quellen": {
+                            "event:Bankett": 1000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            }
+        ]
+    },
+    "pflege_zurueck_auf_auto": [
+        {
+            "lieferant": "Chefs",
+            "status": "draft",
+            "liefertag": null,
+            "referenz": null,
+            "total_net": 11.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Mehl 1kg",
+                    "artikel": "ART-MEH",
+                    "gebinde": 5.0,
+                    "manuell": false,
+                    "preis": 2.0,
+                    "summe": 10.0,
+                    "bedarf_g": 5000.0,
+                    "quellen": {
+                        "event:Bankett": 5000.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": "Reserve"
+                },
+                {
+                    "bezeichnung": "Zucker 1kg",
+                    "artikel": "ART-ZUC",
+                    "gebinde": 1.0,
+                    "manuell": false,
+                    "preis": 1.0,
+                    "summe": 1.0,
+                    "bedarf_g": 500.0,
+                    "quellen": {
+                        "event:Bankett": 500.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        },
+        {
+            "lieferant": "Hanos",
+            "status": "draft",
+            "liefertag": null,
+            "referenz": null,
+            "total_net": 12.0,
+            "zeilen": [
+                {
+                    "bezeichnung": "Butter 1kg",
+                    "artikel": "ART-BUT",
+                    "gebinde": 1.0,
+                    "manuell": false,
+                    "preis": 12.0,
+                    "summe": 12.0,
+                    "bedarf_g": 500.0,
+                    "quellen": {
+                        "event:Bankett": 500.0
+                    },
+                    "eingang": null,
+                    "rechnung": [
+                        null,
+                        null
+                    ],
+                    "reklamation": [
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "notiz": null
+                }
+            ]
+        }
+    ],
+    "reklamation_geloescht": {
+        "zeile": {
+            "claim_status": null,
+            "claim_qty_packs": null,
+            "credit_expected_net": null,
+            "claim_note": null
+        },
+        "summe": {
+            "lines": 0,
+            "open": 0,
+            "credit_expected": 0,
+            "credited": 0,
+            "resolved": 0,
+            "credit_expected_net": 0.0
+        }
+    },
+    "reklamation_offen": {
+        "zeile": [
+            {
+                "lieferant": "Chefs",
+                "status": "sent",
+                "liefertag": null,
+                "referenz": null,
+                "total_net": 21.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Mehl 1kg",
+                        "artikel": "ART-MEH",
+                        "gebinde": 10.0,
+                        "manuell": false,
+                        "preis": 2.0,
+                        "summe": 20.0,
+                        "bedarf_g": 10000.0,
+                        "quellen": {
+                            "event:Bankett": 10000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            "credit_expected",
+                            0.0,
+                            4.0,
+                            "Sack gerissen"
+                        ],
+                        "notiz": null
+                    },
+                    {
+                        "bezeichnung": "Zucker 1kg",
+                        "artikel": "ART-ZUC",
+                        "gebinde": 1.0,
+                        "manuell": false,
+                        "preis": 1.0,
+                        "summe": 1.0,
+                        "bedarf_g": 1000.0,
+                        "quellen": {
+                            "event:Bankett": 1000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            },
+            {
+                "lieferant": "Hanos",
+                "status": "draft",
+                "liefertag": null,
+                "referenz": null,
+                "total_net": 12.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Butter 1kg",
+                        "artikel": "ART-BUT",
+                        "gebinde": 1.0,
+                        "manuell": false,
+                        "preis": 12.0,
+                        "summe": 12.0,
+                        "bedarf_g": 1000.0,
+                        "quellen": {
+                            "event:Bankett": 1000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            }
+        ],
+        "summe": {
+            "lines": 1,
+            "open": 0,
+            "credit_expected": 1,
+            "credited": 0,
+            "resolved": 0,
+            "credit_expected_net": 4.0
+        }
+    },
+    "status_wechsel": [
+        [
+            "delivered",
+            "abgelehnt: Statuswechsel von „Entwurf“ zu „geliefert“ ist nicht möglich."
+        ],
+        [
+            "sent",
+            "sent"
+        ],
+        [
+            "confirmed",
+            "confirmed"
+        ],
+        [
+            "delivered",
+            "delivered"
+        ],
+        [
+            "cancelled",
+            "abgelehnt: Statuswechsel von „geliefert“ zu „storniert“ ist nicht möglich."
+        ],
+        [
+            "sent",
+            "abgelehnt: Statuswechsel von „geliefert“ zu „versendet“ ist nicht möglich."
+        ]
+    ]
+}

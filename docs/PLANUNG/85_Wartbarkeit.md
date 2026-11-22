@@ -265,7 +265,7 @@ Der Poll `wire:poll.1500ms="pruefeLauf"` zieht in `KaskadenLauf` (weniger Last).
 - **Laufzeit-Schleife** `WE::abschliessen` → `setStatus(Delivered)` → `fillReceiptFromOrder` → `WE::kurzwegMenge` → `schreibeWareneingangAbleitung`, hält nur über `nichtErfassteAufNull`. Charakterisierungstest gemergt (#458).
 - **Fassade zuerst:** `OrderService` bleibt dünne Fassade, bis alle Aufrufer umgezogen sind; Ziele `OrderKern`, Entwurf/Bedarf, Bestellrunde/Versand/Status, Produktionsbedarf, Wareneingang, Rechnung/Zahlung/Freigabe, Reklamation/Kontingent, Herkunft (Read-Model), Dokument, Ampeln; gemeinsamer Baustein `OrderSummaries`. Hauptkunde `Livewire/Orders/Editor` (≈ 47 Aufrufe). Tabellen: Spec 84 §5.3.
 - **Tests:** OrderServiceTest 101, ProductionOrderServiceTest 39, Wareneingang 11 + Kurzweg 8, TripleMatch 7, Mail 7, Bestellrunde 11; **dünn** Reklamation/Kontingent, Herkunft, Mail/Dokument → vorher Charakterisierungstests.
-- **Zuständig:** test, nach Abschluss von Spec 84.
+- **Zuständig:** CQ / Plan 98, 3.3 (S5). Vorher Charakterisierung: `Spec98OrderCharakterisierungTest` (Golden `tests/Fixtures/golden/order_charakter.json`) und Rauchtest `Spec98RauchToolsOrderTest` (alle Order-Tools + Wege von `Orders/Editor`).
 
 ## §7 · C3 · ServiceProvider (Rest)
 

@@ -30,10 +30,14 @@ it('rendert den Formate-Browser', function () {
 });
 
 it('legt über den Browser ein Format an und öffnet den Editor', function () {
-    Livewire::test(Browser::class)
+    $c = Livewire::test(Browser::class)->assertSeeHtml('data-anlege-dialog')
         ->call('neu')
+        ->assertDispatched('modal.open', name: 'fa-anlegen')->assertNotDispatched('formate-editor.oeffnen');
+    expect(FoodAlchemistFormat::where('team_id', $this->rootTeam->id)->count())->toBe(0);   // 98 · 2.4c: keine Leiche
+
+    $c->set('neuName', 'CHEFS.CORNER')->call('neuAnlegen')
         ->assertDispatched('formate-editor.oeffnen');
-    expect(FoodAlchemistFormat::where('team_id', $this->rootTeam->id)->count())->toBe(1);
+    expect(FoodAlchemistFormat::where('team_id', $this->rootTeam->id)->sole()->name)->toBe('CHEFS.CORNER');
 });
 
 it('Editor: lädt Identität, speichert, öffnet das Modal', function () {

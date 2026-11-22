@@ -26,7 +26,7 @@ beforeEach(function () {
 
     $this->seedTeamHierarchy();
     $this->actingAs($this->makeUser($this->rootTeam));
-    Livewire::test(FoodbooksIndex::class)->call('neu');
+    Livewire::test(FoodbooksIndex::class)->set('neuName', 'Testbuch')->call('neuAnlegen');
     $this->fb = FoodAlchemistFoodbook::first();
 });
 

@@ -23,7 +23,7 @@ use Platform\FoodAlchemist\Support\Curate;
 class Browser extends Component
 {
     use WithPagination;
-    use \Platform\FoodAlchemist\Livewire\Concerns\HatFreigabeSperre;   // 1.1f
+    use \Platform\FoodAlchemist\Livewire\Concerns\HatFreigabeSperre, \Platform\FoodAlchemist\Livewire\Concerns\LegtMitNamenAn;   // 1.1f · 98 2.4c
     use \Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich;   // #1003: am Handy nur suchen, filtern, öffnen
 
     /** #1003: am Handy laufen Reiter, Auswahl, Filter und Blättern; Anlegen, Status und Editor bleiben am Computer. */
@@ -213,19 +213,20 @@ class Browser extends Component
         $this->resetPage();
     }
 
-    /** Neues Concept/Paket anlegen → auswählen + Editor öffnen. */
-    public function neu(ConceptService $concepts, PaketService $pakete): void
+    /** Neues Concept/Paket anlegen → auswählen + Editor öffnen. 98 · 2.4c: erst Dialog mit Namen (LegtMitNamenAn::neu). */
+    protected function mitNamenAnlegen(string $name): void
     {
         $team = $this->team();
+        $concepts = app(ConceptService::class);
         if ($this->tab === 'pakete') {
             // Kaskade: Paket = kind=paket-Concept → im selben Editor wie Konzepte öffnen.
-            $p = $concepts->createPaket($team, ['name' => 'Neues Paket']);
+            $p = $concepts->createPaket($team, ['name' => $name]);
             $this->waehle($p->id);
             $this->dispatch('concepter-editor.oeffnen', type: 'concepts', id: $p->id);
 
             return;
         }
-        $c = $concepts->create($team, ['name' => 'Neues Concept', 'is_template' => $this->showVorlagen]);
+        $c = $concepts->create($team, ['name' => $name, 'is_template' => $this->showVorlagen]);
         $this->waehle($c->id);
         $this->dispatch('concepter-editor.oeffnen', type: 'concepts', id: $c->id);
     }

@@ -18,6 +18,7 @@ use Platform\FoodAlchemist\Services\FormatService;
 class Browser extends Component
 {
     use WithPagination;
+    use \Platform\FoodAlchemist\Livewire\Concerns\LegtMitNamenAn;   // 98 · 2.4c: erst Dialog mit Namen, dann Datensatz
     use \Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich;   // #1003: am Handy nur suchen, filtern, öffnen
 
     /** #1003: am Handy laufen Auswahl, Filter und Blättern; Anlegen, Status und Editor bleiben am Computer. */
@@ -105,10 +106,10 @@ class Browser extends Component
         $this->resetPage();
     }
 
-    /** Neues Format anlegen → auswählen + Editor öffnen. */
-    public function neu(FormatService $formats): void
+    /** Neues Format anlegen → auswählen + Editor öffnen. 98 · 2.4c: neu() öffnet erst den Namensdialog. */
+    protected function mitNamenAnlegen(string $name): void
     {
-        $f = $formats->create($this->team(), ['name' => 'Neues Format']);
+        $f = app(FormatService::class)->create($this->team(), ['name' => $name]);
         $this->waehle($f->id);
         $this->dispatch('formate-editor.oeffnen', id: $f->id);
     }

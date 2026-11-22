@@ -186,4 +186,8 @@
     {{-- Voll-Editor-Modal — auf Seitenebene, öffnet via formate-editor.oeffnen --}}
     <livewire:foodalchemist.formate.editor key="formate-browser--formate.editor" />
     <livewire:foodalchemist.recipes.fassung-modal key="formate-browser--recipes.fassung-modal" />
+    {{-- 98 · 2.4c: erst der Name, dann der Datensatz (LegtMitNamenAn) --}}
+    @unless(\Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy())   {{-- am Handy wird nicht angelegt (#1003) --}}
+    <x-fa::anlege-dialog title="Neues Format" knopf="Format anlegen" :fehler="$neuFehler" />
+    @endunless
 </x-ui-page>

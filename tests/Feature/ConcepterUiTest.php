@@ -61,7 +61,7 @@ it('Concept-Editor: Slot anlegen, mit Paket füllen, Live-Preis im Cockpit', fun
         'price_override_reason' => 'UI-Testpreis',
     ]);
 
-    Livewire::test(ConceptsIndex::class)->call('neu');
+    Livewire::test(ConceptsIndex::class)->set('neuName', 'Test-Concept')->call('neuAnlegen');
     $c = FoodAlchemistConcept::echte()->first();
 
     $comp = Livewire::test(ConceptsIndex::class)

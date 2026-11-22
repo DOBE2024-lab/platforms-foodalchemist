@@ -111,12 +111,11 @@ it('Concepter-Editor: Sperre gilt Concept-übergreifend — Concepts-Seite und D
 
 // ── Concepter-Detailspalte (sofort speichernd) ─────────────────────────────
 
-it('Concepter-Detailspalte: Löschen nur mit Sperre, Kopien ohne; Fertig gibt frei', function () {
+it('Concepter-Detailspalte: Löschen holt die Sperre selbst (98 · 2.4d), Kopien ohne; Fertig gibt frei', function () {
     $this->actingAs($this->anna);
     $c = Livewire::test(ConcepterDetail::class)->call('zeige', 'concepts', $this->concept->id)
-        ->assertSeeHtml('data-bearbeiten-starten')
-        ->call('loeschen');
-    expect(FoodAlchemistConcept::find($this->concept->id))->not->toBeNull();
+        ->assertSeeHtml('data-bearbeiten-starten');
+    expect($c->instance()->sperreErlaubt('loeschen'))->toBeTrue();   // Lösch-Details ohne Sperre: LoeschenAnsichtsmodusTest
 
     $c->call('bearbeitenStarten')->assertSeeHtml('data-bearbeiten-fertig')->call('bearbeitenFertig');
     expect($this->svc->haelt('concept', $this->concept->id, $this->anna->id))->toBeFalse();

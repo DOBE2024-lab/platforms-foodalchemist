@@ -76,17 +76,16 @@
                     <x-fa::button icon="heroicon-m-arrow-uturn-left" wire:click="zurueckZumConcept" title="Paket sichern und zurück ins Konzept">Speichern und zurück zum Konzept</x-fa::button>
                 @endif
 
-                {{-- Weitere Aktionen: Kunden-Karte · Technischer Bericht · Vorlage --}}
-                @if($concept)
+                @if($concept){{-- Weitere Aktionen: Kunden-Karte · Technischer Bericht · Vorlage · Löschen (98 · 2.4d: wie die Detailspalte) --}}
                     <x-fa::menu ausloeser:data-concepter-weitere="" breite="72">
-                        {{-- #6 (F3c): Druck-Symmetrie zum Format-Editor — schöne Kunden-Ausgabe + technischer Bericht.
-                             Die Karte gilt auch fürs Paket (concepts.karte nimmt eine Concept-ID). --}}
+                        {{-- #6 (F3c): Druck-Symmetrie zum Format-Editor — Kunden-Ausgabe + technischer Bericht; Karte gilt auch fürs Paket (Concept-ID). --}}
                         <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.concepts.karte', ['id' => $concept->id])" abstand="weit" target="_blank" title="Menükarte für den Kunden, zum Drucken oder als PDF" data-concepter-karte>Kundenkarte drucken</x-fa::menu-item>
                         <x-fa::menu-item icon="heroicon-o-document-text" :href="route('foodalchemist.concepts.dokument', array_filter(['id' => $concept->id, 'profil' => 'voll', 'simulation' => $simulationPax > 0 ? 1 : null, 'pax' => $simulationPax > 0 ? $simulationPax : null], fn ($value) => $value !== null))" abstand="weit" target="_blank" title="Vollständiger Bericht vom Gericht über Basisrezept und Grundprodukt bis zum Lieferantenartikel" data-concepter-druck>Technischen Bericht öffnen</x-fa::menu-item>
                         @if(! $concept->is_template)
                             <div class="my-1 border-t border-[var(--fa-line)]"></div>
                             <x-fa::menu-item icon="heroicon-o-square-2-stack" abstand="weit" wire:click="alsVorlage" data-concepter-als-vorlage>Als Vorlage speichern</x-fa::menu-item>
                         @endif
+                        @if($type === 'concepts')<div class="my-1 border-t border-[var(--fa-line)]"></div><x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="{{ $paket ? 'Paket löschen?' : 'Concept löschen?' }}" data-concepter-loeschen>{{ $paket ? 'Paket' : 'Concept' }} löschen</x-fa::menu-item>@endif
                     </x-fa::menu>
                 @endif
 

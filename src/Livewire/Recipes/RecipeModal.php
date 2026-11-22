@@ -565,22 +565,30 @@ class RecipeModal extends Component
         }
     }
 
+    /** 98 · 2.4d: auch im Ansichtsmodus — holt die Sperre für die Dauer der Aktion (mitKurzsperre). */
     public function loeschen(RecipeService $recipes): void
     {
         $team = Auth::user()?->currentTeamRelation;
         if ($team === null || $this->recipeId === null) {
             return;
         }
-        try {
-            $recipes->delete($team, $this->recipeId);
-        } catch (\RuntimeException $e) {
-            $this->fehler = $e->getMessage();
+        $this->mitKurzsperre(function () use ($recipes, $team) {
+            try {
+                $recipes->delete($team, $this->recipeId);
+            } catch (\RuntimeException $e) {
+                $this->fehler = $e->getMessage();
 
-            return;
-        }
-        $this->bearbeitenBeenden();                     // Spec 65: Sperre des gelöschten Rezepts sofort frei
-        $this->dispatch('modal.close', name: 'recipe-modal');
-        $this->dispatch('recipe-gespeichert');
+                return;
+            }
+            $this->bearbeitenBeenden();                     // Spec 65: Sperre des gelöschten Rezepts sofort frei
+            $this->dispatch('modal.close', name: 'recipe-modal');
+            $this->dispatch('recipe-gespeichert');
+        });
+    }
+
+    protected function kurzsperrMethoden(): array
+    {
+        return ['loeschen', 'rezeptLoeschen'];
     }
 
     /** ✨ Fertigung: Vorschlag direkt ins Feld (wie namePutzen — nichts persistiert). */

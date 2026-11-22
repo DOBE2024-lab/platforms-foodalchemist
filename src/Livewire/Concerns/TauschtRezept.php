@@ -103,7 +103,11 @@ trait TauschtRezept
         return app(RecipeService::class)->referenzen($this->recipeId);
     }
 
-    /** Rezept löschen (Soft-Delete) — der Service blockt bei jeder harten Referenz. */
+    /**
+     * Rezept löschen (Soft-Delete) — der Service blockt bei jeder harten Referenz.
+     * 98 · 2.4d: auch im Ansichtsmodus; holt die Sperre für die Dauer der Aktion (MitBearbeitungssperre::mitKurzsperre).
+     * Nutzer tragen rezeptLoeschen in kurzsperrMethoden() ein.
+     */
     public function rezeptLoeschen(): void
     {
         $this->fehlerTausch = null;
@@ -117,15 +121,17 @@ trait TauschtRezept
 
             return;
         }
-        try {
-            app(RecipeService::class)->delete($team, $this->recipeId);
-        } catch (\Throwable $e) {
-            $this->fehlerTausch = $e->getMessage();
+        $this->mitKurzsperre(function () use ($team) {
+            try {
+                app(RecipeService::class)->delete($team, $this->recipeId);
+            } catch (\Throwable $e) {
+                $this->fehlerTausch = $e->getMessage();
 
-            return;
-        }
-        $this->dispatch('recipe-gespeichert');                     // Browser: Zeile verschwindet
-        $this->nachRezeptLoeschung();
+                return;
+            }
+            $this->dispatch('recipe-gespeichert');                     // Browser: Zeile verschwindet
+            $this->nachRezeptLoeschung();
+        });
     }
 
     /** Aufräumen nach dem Löschen — das Panel leert seine Auswahl, der Editor schließt zusätzlich. */

@@ -34,7 +34,7 @@ class DetailPanel extends Component
 
     /**
      * Ohne Sperre: Anzeige/Auswahl, Neu-Rendern; Kopien (Als Vorlage speichern, Aus Vorlage anlegen, Duplizieren)
-     * ändern das gewählte Concept nicht. Löschen nur mit Sperre.
+     * ändern das gewählte Concept nicht. Löschen holt sich die Sperre selbst (kurzsperrMethoden).
      */
     protected function sperrFreiExtra(): array
     {
@@ -99,16 +99,30 @@ class DetailPanel extends Component
     }
 
     /** Löschen — Kaskade: beide Reiter sind Concepts (kind concept|paket), also immer ConceptService. */
+    /** 98 · 2.4d: auch im Ansichtsmodus — holt die Sperre für die Dauer der Aktion (mitKurzsperre). */
     public function loeschen(ConceptService $concepts): void
     {
         if ($this->selectedId === null) {
             return;
         }
-        $id = $this->selectedId;
-        $concepts->delete($this->team(), $id);
-        $this->bearbeitenBeenden();   // Spec 65: gelöscht → Sperre frei
-        $this->selectedId = null;
-        $this->dispatch('concepter-geloescht', id: $id);
+        $this->mitKurzsperre(function () use ($concepts) {
+            $id = $this->selectedId;
+            try {
+                $concepts->delete($this->team(), $id);
+            } catch (\RuntimeException $e) {   // z. B. noch in Foodbooks verwendet: Meldung statt Fehlerseite
+                $this->dispatch('fa-saved', message: $e->getMessage(), type: 'error');
+
+                return;
+            }
+            $this->bearbeitenBeenden();   // Spec 65: gelöscht → Sperre frei
+            $this->selectedId = null;
+            $this->dispatch('concepter-geloescht', id: $id);
+        });
+    }
+
+    protected function kurzsperrMethoden(): array
+    {
+        return ['loeschen'];
     }
 
     public function render(ConceptService $concepts, ConcepterAggregateService $agg, ConcepterBewertungService $bewertung)

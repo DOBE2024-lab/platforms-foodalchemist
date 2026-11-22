@@ -20,7 +20,8 @@
                 Editoren außerhalb der Planung) | icon (nur Icon, kein Text).
       icon      Heroicon-Name (optional bei link/ghostXs/primary, Pflicht sinngemäß bei icon).
       title     Tooltip-Override (Default: $error im Fehlerzustand, sonst der Anzeige-Text).
-      confirm   window.confirm()-Text VOR dem $wire-Call (wire:confirm greift nicht bei $wire.*-Calls).
+      confirm   Bestätigungstext VOR dem $wire-Call (wire:confirm greift nicht bei $wire.*-Calls); App-Dialog
+                (shell/fa-bestaetigen), ohne ihn natives confirm. data-fa-confirm="gefahr|normal" steuert Rot.
       disabled  hart deaktiviert (z. B. „geplant" wartet auf Freigabe der Stufe darüber).
       before    Roher Alpine-Ausdruck, SOFORT beim Klick ausgeführt (vor dem $wire-Call), z. B.
                 "tab='worker'" — für Buttons, die zusätzlich zum Wire-Call einen reinen
@@ -93,7 +94,10 @@
     @keydown.space.prevent="$el.click()"
     @click="
         if ({{ $hartDeaktiviert }} || pending || $el.hasAttribute('disabled')) { return }
-        if ($el.dataset.kiConfirm && ! window.confirm($el.dataset.kiConfirm)) { return }
+        if ($el.dataset.kiConfirm && ! $el.__faBestaetigt) {
+            if (window.faBestaetigen) { window.faBestaetigen($el.dataset.kiConfirm, () => { $el.__faBestaetigt = true; $el.click(); $el.__faBestaetigt = false }, $el.dataset.faConfirm); return }
+            if (! window.confirm($el.dataset.kiConfirm)) { return }
+        }
         @if($before){{ $before }};@endif
         pending = true; ok = false; err = null;
         if (typeof busy !== 'undefined') { busy = true }

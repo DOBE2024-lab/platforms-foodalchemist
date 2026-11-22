@@ -37,7 +37,9 @@ function spec84_zaehle(): array
     }
 
     $treffer = [];
-    foreach (['Livewire', 'Tools'] as $ordner) {
+    // Support/Produktion: Aufbereitung, die aus Livewire ausgezogen ist (98 · 3.3, S6: Tagesplan → TagesplanAbfrage).
+    // Wer Abfragen aus einer Komponente verschiebt, nimmt den Zielordner hier auf, sonst fallen sie aus der Zählung.
+    foreach (['Livewire', 'Tools', 'Support/Produktion'] as $ordner) {
         $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src . '/' . $ordner));
         foreach ($it as $datei) {
             if (! $datei->isFile() || $datei->getExtension() !== 'php') {

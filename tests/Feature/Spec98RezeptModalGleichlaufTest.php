@@ -60,3 +60,14 @@ it('Copilot: Prüfen, aus der Ablage holen und Verwerfen sind ohne Sperre frei, 
         expect($lw->instance()->sperreErlaubt($methode))->toBeFalse("{$modal}::{$methode}");
     }
 })->with('rezept_modale');
+
+it('Abbrechen: der eingebettete Zutaten-/Komponenten-Editor wird neu gemountet, verworfene Zeilen verschwinden', function (string $modal) {
+    // Die Zeilen leben im Client des IngredientEditor; neu vom Server kommen sie nur über einen neuen wire:key
+    // (…-v{zutatenVersion} in recipe-modal/vk-modal.blade.php). Vorher blieb der Zähler im VkModal beim Abbrechen gleich.
+    $lw = Livewire::test($modal)->call('oeffnen', $this->rezepte[$modal]->id)->call('bearbeitenStarten');
+    $vorher = $lw->get('zutatenVersion');
+
+    $lw->call('bearbeitenAbbrechen');
+
+    expect($lw->get('zutatenVersion'))->not->toBe($vorher);
+})->with('rezept_modale');

@@ -52,11 +52,12 @@ class VkModal extends Component
         return ['pruefeProduktfotoErgebnis', 'beiZutatenPersistiert', 'beiModalGeschlossen', 'copilotPruefen', 'copilotAusAblage', 'copilotVerwerfen'];
     }
 
-    /** Abbrechen: ungespeicherten Formularstand verwerfen, Datensatz frisch laden. */
+    /** Abbrechen: ungespeicherten Formularstand verwerfen, Datensatz frisch laden (eingebettete Editoren neu mounten). */
     protected function nachAbbrechen(): void
     {
         if ($this->recipeId !== null) {
-            $this->oeffnen($this->recipeId);
+            $this->oeffnen($this->recipeId);                 // setzt zutatenVersion nicht zurück
+            $this->zutatenVersion++;                         // Komponenten-Zeilen leben im Client → neu mounten, sonst bleiben verworfene Eingaben stehen (98 · 2.2c)
         }
     }
 

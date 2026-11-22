@@ -139,6 +139,7 @@
   /* Formen — drei Radien */
   --fa-radius-control: 6px;
   --fa-radius-surface: 10px;
+  --fa-radius-card: 10px;     /* 98 · 3.9: war nirgends definiert → rounded-[var(--fa-radius-card)] renderte 0px (Einstellungen, Controlling) */
   --fa-radius-pill: 999px;
 
   /* Plattform-Rahmen übernehmen die Werte */

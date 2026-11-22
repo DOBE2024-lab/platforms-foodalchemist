@@ -128,3 +128,41 @@ it('Modal blendet weich ein und aus, dunkle Editoren mit stärkerem Backdrop', f
         ->toContain('.fa-modal-backdrop-dunkel { background: rgba(13, 20, 36, 0.7); }')
         ->toContain('@media (prefers-reduced-motion: reduce)');
 });
+
+/**
+ * 98 · 3.9 (io-Check Master): rounded-[var(--fa-radius-card)] renderte 0px, weil das Token fehlte. Jede in Views, src
+ * oder CSS ohne Rückfall verwendete --fa-*-Variable muss in resources/css definiert sein (oder inline gesetzt werden).
+ */
+const TOKEN_OFFEN = [
+    '--fa-text-xl' => 'liegt dem Kurator zur Entscheidung vor (Größe fehlt in der Skala)',
+    '--fa-text-xs' => 'liegt dem Kurator zur Entscheidung vor (kleiner als die 12-px-Untergrenze?)',
+];
+
+it('jede verwendete --fa-*-Variable ohne Rückfall ist definiert; --fa-radius-card ist 10px', function () {
+    $wurzel = dirname(__DIR__, 2);
+    $dateien = array_merge(glob("$wurzel/resources/css/*.css"), iterator_to_array((function () use ($wurzel) {
+        foreach (['resources/views', 'src'] as $ordner) {
+            foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator("$wurzel/$ordner", FilesystemIterator::SKIP_DOTS)) as $f) {
+                if (str_ends_with($f->getFilename(), '.php')) {
+                    yield $f->getPathname();
+                }
+            }
+        }
+    })(), false));
+    $definiert = [];
+    $genutzt = [];
+    foreach ($dateien as $datei) {
+        $s = file_get_contents($datei);
+        preg_match_all('/(--fa-[\w-]+)\s*:/', $s, $d);
+        $definiert += array_flip($d[1]);
+        preg_match_all('/var\((--fa-[\w-]+)\)/', $s, $n);   // nur ohne Rückfall
+        foreach ($n[1] as $token) {
+            $genutzt[$token][] = substr($datei, strlen($wurzel) + 1);
+        }
+    }
+    $fehlt = array_diff_key($genutzt, $definiert, TOKEN_OFFEN);
+
+    expect(array_map(fn ($orte) => array_values(array_unique($orte)), $fehlt))->toBe([])
+        ->and(kontrastTokens(':root'))->toHaveKey('--fa-radius-card')
+        ->and(trim(kontrastTokens(':root')['--fa-radius-card']))->toBe('10px');
+});

@@ -43,10 +43,13 @@ class VkModal extends Component
         return 'vk-modal';
     }
 
-    /** Lesend/Polling: ohne Bearbeiten-Sperre erlaubt. */
+    /**
+     * Lesend/Polling: ohne Bearbeiten-Sperre erlaubt. Die Copilot-Prüfung liest nur (Befunde zeigen, aus der Ablage
+     * holen, verwerfen) — wie im RecipeModal (98 · 2.2c); Übernehmen bleibt gesperrt.
+     */
     protected function sperrFreiExtra(): array
     {
-        return ['pruefeProduktfotoErgebnis', 'beiZutatenPersistiert', 'beiModalGeschlossen'];
+        return ['pruefeProduktfotoErgebnis', 'beiZutatenPersistiert', 'beiModalGeschlossen', 'copilotPruefen', 'copilotAusAblage', 'copilotVerwerfen'];
     }
 
     /** Abbrechen: ungespeicherten Formularstand verwerfen, Datensatz frisch laden. */

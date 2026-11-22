@@ -48,3 +48,15 @@ it('Gerichtsbild: ohne eigene Bearbeitungssperre speichert der Upload nichts, mi
         ->assertSet('fehler', null);
     expect($rezept->fresh()->image_path)->not->toBeNull();
 })->with('rezept_modale');
+
+it('Copilot: Prüfen, aus der Ablage holen und Verwerfen sind ohne Sperre frei, Übernehmen nicht', function (string $modal) {
+    // Vorher brauchte im VkModal schon die lesende Copilot-Prüfung „Bearbeiten“. copilotAusAblage liest nur:
+    // RecipeFindingService::offeneBefundeFuer + RecipeReviewService::bewerte schreiben nichts.
+    $lw = Livewire::test($modal)->call('oeffnen', $this->rezepte[$modal]->id);
+    foreach (['copilotPruefen', 'copilotAusAblage', 'copilotVerwerfen'] as $methode) {
+        expect($lw->instance()->sperreErlaubt($methode))->toBeTrue("{$modal}::{$methode}");
+    }
+    foreach (['copilotUebernehmen', 'copilotAlleUebernehmen', 'copilotBefundVerwerfen'] as $methode) {
+        expect($lw->instance()->sperreErlaubt($methode))->toBeFalse("{$modal}::{$methode}");
+    }
+})->with('rezept_modale');

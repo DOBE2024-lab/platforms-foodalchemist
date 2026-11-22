@@ -183,7 +183,7 @@ final class ConceptVorgabenService
             'materialized_ref' => ['concept_slot_id' => $slotId, 'recipe_id' => (int) $gericht->id],
             'source_meta' => array_merge($idee->source_meta ?? [], ['erdung' => 'bestand', 'original_titel' => (string) $idee->title]),
         ]);
-        app(PlanningCascadeService::class)->markStepDone($stepId, 'recipe', (int) $gericht->id);
+        app(\Platform\FoodAlchemist\Services\Kaskade\KaskadenSchritt::class)->markStepDone($stepId, 'recipe', (int) $gericht->id);
 
         return true;
     }

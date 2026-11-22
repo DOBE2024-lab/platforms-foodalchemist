@@ -958,7 +958,7 @@ class DarreichungService
         }
         if ($rezepte !== []) {
             try {
-                app(PricingCascadeService::class)->recomputeRecipes(array_keys($rezepte));   // Paket-/Konzept-EK + offene Auto-Angebote über diesen Gerichten
+                \Platform\FoodAlchemist\Events\RezeptKostenGeaendert::dispatch(array_keys($rezepte));   // Paket-/Konzept-EK + offene Auto-Angebote (CQ 3.4: Event → PricingCascadeService)
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning('Preis-Kaskade nach Gefäß/Zubehör-Recompute fehlgeschlagen: '.$e->getMessage());
             }

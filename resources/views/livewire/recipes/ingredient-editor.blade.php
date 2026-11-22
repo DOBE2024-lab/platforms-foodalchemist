@@ -27,6 +27,7 @@
     window.zutatenEditor = function (zeilen, standalone, einheiten, vokabular) {
         return {
             rows: zeilen.map((z, i) => ({ ...z, _key: 'z' + i })),
+            geladen: null,   // 98 · 2.4e: gespeicherter Stand (payload) — weicht die Tabelle ab, ist die Summe „vorläufig“
             einheiten,
             neu: { quantity: '', unit_vocab_id: Object.keys(einheiten)[0] ? parseInt(Object.keys(einheiten)[0]) : null, is_optional: false },
             _n: zeilen.length,
@@ -264,6 +265,12 @@
                 return this.rows.map(({ _key, ziel_name, ziel_url, lineage, ek_pro_g, ek_pro_g_min, ek_pro_g_avg, ek_pro_stk, g_pro_stueck, stueck_gewicht, formen_g, ersatz, _garverlust_ki, _gp_kochmedium, _peek, _peekRez, _flash, ...rest }) => ({ ...rest, cooking_loss_source: _garverlust_ki ? 'ki' : undefined }));
             },
             init() {
+                // 98 · 2.4e (U5): Kopf zeigt den gespeicherten Stand, die Tabelle rechnet live. Bis zum Speichern
+                // (Server meldet zutaten-persistiert) ist die Summe als „vorläufig“ gekennzeichnet.
+                this.geladen = JSON.stringify(this.payload());
+                window.addEventListener('zutaten-persistiert', (e) => {
+                    if (Number(e.detail?.recipeId) === Number(this.$wire.recipeId)) this.geladen = JSON.stringify(this.payload());
+                });
                 // Window-Event: der Haupt-"Speichern" des Rezept-Modals (UND der Standalone-Modal-Footer)
                 // stoßen damit das Zutaten-Speichern an. Auch die EINGEBETTETE Instanz lauscht —
                 // sonst gehen Zutaten-Edits (Garverlust/Menge/Tausch) verloren, wenn man "Speichern"
@@ -314,7 +321,12 @@
                 if (e?.slug === 'stk' && z.stueck_gewicht) return z.stueck_gewicht;
                 return null;
             },
-            zeilenEk(z, feld = 'ek_pro_g') {  // Live-Näherung: menge_g × €/g; R5: feld wählt Lead | min | Ø
+            vorlaeufig() { return this.geladen !== null && JSON.stringify(this.payload()) !== this.geladen; },
+            zeilenEk(z, feld = 'ek_pro_g') {  // Anzeige je Zeile, auf 2 Stellen gerundet
+                const w = this.zeilenEkWert(z, feld);
+                return w === null ? null : w.toFixed(2).replace('.', ',') + ' €';
+            },
+            zeilenEkWert(z, feld = 'ek_pro_g') {  // Live-Näherung ungerundet: menge_g × €/g; R5: feld wählt Lead | min | Ø
                 const avg = this.mengeAvg(z);
                 if (z.is_optional || avg === null) return null;
                 // Stück-Zeile: €/Stück gilt DIREKT und braucht kein Gewicht — genau wie der
@@ -323,18 +335,19 @@
                 // Lead-Wert; die Vergleichsspalten (min/Ø) laufen weiter über €/g.
                 if (feld === 'ek_pro_g' && this.einheiten[z.unit_vocab_id]?.slug === 'stk'
                     && z.ek_pro_stk !== null && z.ek_pro_stk !== undefined) {
-                    return (avg * z.ek_pro_stk).toFixed(2).replace('.', ',') + ' €';
+                    return avg * z.ek_pro_stk;
                 }
                 if (z[feld] === null || z[feld] === undefined) return null;
                 const f = this.gFaktor(z);
                 if (!f) return null;
-                return (avg * f * z[feld]).toFixed(2).replace('.', ',') + ' €';
+                return avg * f * z[feld];
             },
+            // 98 · 2.4e: ungerundet addieren, einmal runden — wie RecipeRecomputeService (sonst Cent-Abweichung zum Kopf)
             summe(feld = 'ek_pro_g') {
                 let s = 0;
                 for (const z of this.rows) {
-                    const w = this.zeilenEk(z, feld);
-                    if (w) s += parseFloat(w.replace(',', '.'));
+                    const w = this.zeilenEkWert(z, feld);
+                    if (w) s += w;
                 }
                 return s.toFixed(2).replace('.', ',') + ' €';
             },

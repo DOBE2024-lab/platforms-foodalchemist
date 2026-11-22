@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Services;
 
+use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
 
@@ -12,6 +13,20 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
  */
 class FormatKapitelService
 {
+    /**
+     * 98 · 2.4e (U5): kleinster Editions-Preis je Person über alle Format-Kapitel des Foodbooks, sonst null.
+     * Editionen sind Alternativen und zählen nicht in die Summe (FoodbookService::gesamt) — der Kopf zeigt sie als
+     * „ab …“ (wie die Präsentation preis_range). Dieselbe Quelle wie die Editionen: Concept price_per_person_cache.
+     */
+    public function editionAb(FoodAlchemistFoodbook $fb): ?float
+    {
+        $mins = $fb->chapters()->whereNotNull('format_id')->with('format.slots.concept:id,price_per_person_cache')->get()
+            ->map(fn (FoodAlchemistFoodbookKapitel $k) => $k->format?->priceRange()['min'])
+            ->filter(fn ($v) => $v !== null);
+
+        return $mins->isEmpty() ? null : round((float) $mins->min(), 2);
+    }
+
     /**
      * B (2026-08-31): Editionen eines LEBENDEN Format-Kapitels — format_slots (type=concept) → Concept
      * mit Wording-Kette; header/text/spacer = Struktur-Editionen. EINE Quelle für Dokument/PDF

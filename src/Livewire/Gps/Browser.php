@@ -198,7 +198,7 @@ class Browser extends Component
             'subCounts' => $this->commodity_group !== '' ? $gps->subKategorieCounts($team, $this->commodity_group) : [],
             // Merged = System-Tombstone, komplett unsichtbar (2026-07-02) — weder Filter noch Zeilen
             'statusFaelle' => array_values(array_filter(GpStatus::cases(), fn (GpStatus $f) => $f !== GpStatus::Merged)),
-            'statusCounts' => $gps->statusCounts($team),
+            'statusCounts' => $gps->statusCounts($team, $filters),   // 98 · 2.4e: zählt wie die Tabelle (ohne den Status selbst)
             'kpis' => $kpis->forTeam($team),
         ])->layout(\Platform\FoodAlchemist\Support\FaShell::layout());
     }

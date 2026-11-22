@@ -1474,10 +1474,9 @@ class FoodbookService
     }
 
     /**
-     * Foodbook-Gesamt: (Σ Top-Kapitel Per-Person × Pax) + Pauschal-Anteile. Erst HIER
-     * wird die Gästezahl bindend (F-12, D-CON-5).
+     * Foodbook-Gesamt: (Σ Top-Kapitel Per-Person × Pax) + Pauschal-Anteile. Erst HIER wird die Gästezahl bindend (F-12, D-CON-5).
      *
-     * @return array{vk_pro_person: float, ek_pro_person: float, pauschal: float, personen: ?int, gesamt_vk: ?float, gesamt_ek: ?float, food_cost_percent: ?float}
+     * @return array{vk_pro_person: float, ek_pro_person: float, pauschal: float, personen: ?int, gesamt_vk: ?float, gesamt_ek: ?float, food_cost_percent: ?float, edition_ab: ?float}
      */
     public function gesamt(Team $team, FoodAlchemistFoodbook $fb, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
@@ -1505,6 +1504,7 @@ class FoodbookService
             // Wareneinsatz % auf denselben gerundeten Per-Person-Werten wie die Anzeige (F-12),
             // damit die Zahl exakt der bisherigen Blade-Rechnung ek_pp / vk_pp * 100 entspricht.
             'food_cost_percent' => MargeService::wareneinsatzPct($ekPp, $vkPp),
+            'edition_ab' => app(FormatKapitelService::class)->editionAb($fb),   // 98 · 2.4e: Format-Editionen (Alternativen, nicht summiert) als „ab …“
         ];
     }
 

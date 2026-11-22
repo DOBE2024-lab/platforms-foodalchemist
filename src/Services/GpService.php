@@ -275,12 +275,17 @@ class GpService
         return $gp;
     }
 
-    /** Status-Zähler für Dashboard-Tiles / Filter-Badges. */
-    public function statusCounts(?Team $team): array
+    /**
+     * Status-Zähler für Dashboard-Tiles / Filter-Badges. 98 · 2.4e (U5): mit $filters zählt er wie die Tabelle
+     * (Suche, Warengruppe, Unterkategorie), nur den eigenen Status-Filter lässt er aus — Muster wie wgCounts.
+     * Vorher stand „Alle 9.271“ über 26 Treffern. Ohne Filter wie bisher.
+     */
+    public function statusCounts(?Team $team, array $filters = []): array
     {
-        return $this->scoped(FoodAlchemistGp::query(), $team)
-            ->selectRaw('status, COUNT(*) AS n')
-            ->groupBy('status')
+        $q = $filters === [] ? $this->scoped(FoodAlchemistGp::query(), $team) : $this->browserQuery($team, array_diff_key($filters, ['status' => 1]));
+
+        return $q->selectRaw('foodalchemist_gps.status, COUNT(*) AS n')
+            ->groupBy('foodalchemist_gps.status')
             ->pluck('n', 'status')
             ->all();
     }

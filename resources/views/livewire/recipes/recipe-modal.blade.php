@@ -116,8 +116,8 @@
             $nLetzter = (int) ($voll->ek_n_letzter_preis ?? 0);
             $kennzahlen = [
                 ['kpi' => 'yield', 'label' => 'Ertrag', 'value' => $kg($voll->yield_kg) !== null ? $kg($voll->yield_kg) . ' kg' : 'fehlt', 'tone' => $voll->yield_kg === null ? 'warn' : null],
-                ['kpi' => 'ek', 'label' => 'EK gesamt', 'value' => $euro($voll->ek_total_eur) ?? 'Preis fehlt', 'tone' => $voll->ek_total_eur === null ? 'crit' : null],
-                ['kpi' => 'ekkg', 'label' => 'EK je kg', 'value' => $ekKg !== null ? $euro($ekKg) : 'Preis fehlt', 'primary' => $ekKg !== null,
+                ['kpi' => 'ek', 'label' => 'EK gesamt', 'value' => $euro($voll->ek_total_eur) ?? 'Preis fehlt', 'tone' => $voll->ek_total_eur === null ? 'crit' : null, 'title' => 'Gespeicherter Stand. Die Zutatentabelle rechnet live und ist bis zum Speichern vorläufig.'],
+                ['kpi' => 'ekkg', 'label' => 'EK je kg', 'value' => $ekKg !== null ? $euro($ekKg) : 'Preis fehlt', 'primary' => $ekKg !== null, 'title' => 'Gespeicherter Stand',
                  'tone' => $ekKg === null ? 'crit' : ($nLetzter > 0 ? 'warn' : null),
                  'hint' => $nLetzter > 0 ? 'enthält ' . $nLetzter . ' ' . ($nLetzter === 1 ? 'letzten Preis' : 'letzte Preise') . ' eingestellter Artikel' : null],   // Rückfall 27.10.
                 ['kpi' => 'priced', 'label' => 'Preise', 'value' => $nZutat === 0 ? 'keine Zutaten' : $nPreis . ' von ' . $nZutat,

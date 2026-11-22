@@ -19,13 +19,17 @@
     // Kennzahlen aus dem Vorschau-Stand (wie Kundensicht und Editor-Kopf). Unbekanntes nie als 0,00 €.
     $gesamt = (isset($menue) && is_array($menue)) ? ($menue['gesamt'] ?? []) : [];
     $vkPp = $gesamt['vk_pro_person'] ?? null;
+    $editionAb = $gesamt['edition_ab'] ?? null;   // 98 · 2.4e: Format-Editionen sind Alternativen — „ab …“ statt „Preis fehlt“
     $ekPp = $gesamt['ek_per_person'] ?? null;
     $wePct = $gesamt['food_cost_percent'] ?? null;
     $standTitel = ($menueSnapshotAt ?? null) ? 'Stand der Vorschau: ' . $menueSnapshotAt->format('d.m.Y, H:i') . ' Uhr' : null;
     $kpis = [
         ($vkPp !== null && (float) $vkPp > 0)
-            ? ['kpi' => 'vk', 'label' => 'VK/Person', 'value' => $euro($vkPp), 'primary' => true, 'title' => $standTitel]
-            : ['kpi' => 'vk', 'label' => 'VK/Person', 'value' => 'Preis fehlt', 'tone' => 'crit', 'title' => $standTitel],
+            ? ['kpi' => 'vk', 'label' => 'VK/Person', 'value' => $euro($vkPp), 'primary' => true, 'title' => $standTitel,
+                'hint' => $editionAb !== null ? 'zzgl. Edition ab ' . $euro($editionAb) : null, 'hint_title' => 'Format-Editionen sind Alternativen und zählen nicht in die Summe']
+            : ($editionAb !== null
+                ? ['kpi' => 'vk', 'label' => 'VK/Person je Edition', 'value' => 'ab ' . $euro($editionAb), 'primary' => true, 'title' => $standTitel]
+                : ['kpi' => 'vk', 'label' => 'VK/Person', 'value' => 'Preis fehlt', 'tone' => 'crit', 'title' => $standTitel]),
         ($ekPp !== null && (float) $ekPp > 0)
             ? ['kpi' => 'ek', 'label' => 'EK/Person', 'value' => $euro($ekPp), 'title' => $standTitel]
             : ['kpi' => 'ek', 'label' => 'EK/Person', 'value' => 'fehlt', 'tone' => 'crit', 'title' => $standTitel],

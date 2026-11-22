@@ -366,7 +366,9 @@
             </tbody>
             <tfoot>
                 <tr class="border-t border-[var(--fa-line-strong)]">
-                    <td colspan="6" class="text-right fa-t-label">Summe</td>
+                    <td colspan="6" class="text-right fa-t-label" title="Einkauf des ganzen Ansatzes; der Kopf eines Gerichts zeigt den EK je Verkaufseinheit">
+                        <span x-show="vorlaeufig()" x-cloak class="mr-2 fa-t-muted" data-summe-vorlaeufig>vorläufig, noch nicht gespeichert</span>Summe Ansatz
+                    </td>
                     <td class="num font-semibold text-[var(--fa-ink)]" data-summe-live>
                         <span x-text="summeAnzeige()"></span>
                     </td>

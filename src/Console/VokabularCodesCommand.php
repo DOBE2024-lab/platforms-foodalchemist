@@ -12,12 +12,23 @@ use Platform\FoodAlchemist\Support\Planung\VokabularCodes;
  */
 class VokabularCodesCommand extends Command
 {
-    protected $signature = 'foodalchemist:vokabular-codes {--apply : fehlende Codes wirklich setzen}';
+    protected $signature = 'foodalchemist:vokabular-codes
+        {--apply : wirklich schreiben}
+        {--grundbestand : statt Codes: Wurzel-Teams ohne sichtbare Saisons/Einsatzmomente/Eventtypen zeigen bzw. (mit --apply) den Grundbestand anlegen}';
 
     protected $description = 'Codes der Planungs-Vokabulare: Trockenlauf-Report (Standard) oder fehlende Codes setzen';
 
     public function handle(): int
     {
+        if ($this->option('grundbestand')) {
+            $offen = \Platform\FoodAlchemist\Support\Planung\VokabularSeed::offeneTeams();
+            foreach ($offen as $team) {
+                $this->line("  Team {$team->id} «{$team->name}»" . ($this->option('apply') ? ': ' . VokabularCodes::grundbestandAnlegen($team) . ' Einträge angelegt' : ''));
+            }
+            $this->info(count($offen) . ' Wurzel-Team(s) ohne Grundbestand' . ($this->option('apply') ? ', nachgezogen.' : '. Trockenlauf, nichts geschrieben.'));
+
+            return self::SUCCESS;
+        }
         $probleme = 0;
         foreach (VokabularCodes::bericht() as $tabelle => $teil) {
             $this->line("<info>{$tabelle}</info>: " . count($teil['setzen']) . ' Zeile(n) ohne Code');

@@ -415,6 +415,7 @@ class KonfiguratorEditor extends Component
                         ->orderBy('name')->limit(12)->get(['id', 'name', 'consumer_name', 'price_per_person_cache', 'ek_per_person_cache'])
                     : collect(),
                 'getraenkTreffer' => $this->getraenkTreffer($team),
+                'conceptAuswahl' => $this->konzeptEditId !== null ? $this->conceptAuswahl($team) : [],
                 'vkVorschau' => $this->leistungEditId !== null && ($this->leistungForm['vk_modus'] ?? 'auto') === 'auto' && is_numeric(str_replace(',', '.', (string) ($this->leistungForm['ek_satz'] ?? '')))
                     ? $pricing->vkVorschlag($team, (float) str_replace(',', '.', (string) $this->leistungForm['ek_satz']), ($this->leistungForm['markup_class_id'] ?? '') !== '' ? (int) $this->leistungForm['markup_class_id'] : null)
                     : null,
@@ -430,6 +431,24 @@ class KonfiguratorEditor extends Component
         }
 
         return view('foodalchemist::livewire.angebote.konfigurator-editor', $daten);
+    }
+
+    /**
+     * Auswahl für Lunch-/Dinner-Konzept beim Bearbeiten (statt ID-Eingabe, 2.4f): aktive Konzepte und Entwürfe, die das Team sieht;
+     * Archivierte nur, wenn sie schon gesetzt sind. Die Prüfung beim Speichern bleibt in KonfiguratorService::konzeptWerte.
+     *
+     * @return array<int, string> id => „Name · Konzept/Paket · Aktiv/Entwurf“
+     */
+    private function conceptAuswahl(\Platform\Core\Models\Team $team): array
+    {
+        $gesetzt = array_values(array_filter(array_map('intval', [$this->konzeptForm['lunch_concept_id'] ?? null, $this->konzeptForm['dinner_concept_id'] ?? null])));
+
+        return FoodAlchemistConcept::visibleToTeam($team)->echte()
+            ->where(fn ($w) => $w->whereIn('status', ['active', 'draft'])->when($gesetzt !== [], fn ($o) => $o->orWhereIn('id', $gesetzt)))
+            ->orderBy('name')->get(['id', 'name', 'consumer_name', 'kind', 'status'])
+            ->mapWithKeys(fn ($c) => [(int) $c->id => implode(' · ', [$c->consumer_name ?: $c->name, $c->kind === 'paket' ? 'Paket' : 'Konzept',
+                match ((string) $c->status) { 'active' => 'Aktiv', 'draft' => 'Entwurf', 'archiviert' => 'Archiviert', default => (string) $c->status }])])
+            ->all();
     }
 
     /**

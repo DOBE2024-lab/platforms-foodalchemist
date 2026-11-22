@@ -47,8 +47,8 @@
                     </x-fa::field>
                     <x-fa::field label="Staffel: Grundstunden" for="kfg-grund" optional hint="Konzept-Preis gilt für so viele Stunden"><x-fa::input id="kfg-grund" wire:model="konzeptForm.grund_stunden" numeric data-kfg-grund /></x-fa::field>
                     <x-fa::field label="Staffel: je Folgestunde (€)" for="kfg-folge" optional hint="VK je Gast und weitere Stunde"><x-fa::input id="kfg-folge" wire:model="konzeptForm.folgestunde_satz" numeric data-kfg-folge /></x-fa::field>
-                    <x-fa::field label="Tag: Lunch-Konzept (Id)" for="kfg-lunch" optional hint="leer = tagsüber nicht wählbar"><x-fa::input id="kfg-lunch" type="number" wire:model="konzeptForm.lunch_concept_id" /></x-fa::field>
-                    <x-fa::field label="Abend: Dinner-Konzept (Id)" for="kfg-dinner" optional hint="leer = abends nicht wählbar"><x-fa::input id="kfg-dinner" type="number" wire:model="konzeptForm.dinner_concept_id" /></x-fa::field>
+                    <x-fa::field label="Tag: Lunch-Konzept" for="kfg-lunch" optional hint="leer = tagsüber nicht wählbar"><x-fa::select id="kfg-lunch" wire:model="konzeptForm.lunch_concept_id" :options="$conceptAuswahl" placeholder="— keins —" data-kfg-concept-auswahl="lunch" /></x-fa::field>
+                    <x-fa::field label="Abend: Dinner-Konzept" for="kfg-dinner" optional hint="leer = abends nicht wählbar"><x-fa::select id="kfg-dinner" wire:model="konzeptForm.dinner_concept_id" :options="$conceptAuswahl" placeholder="— keins —" data-kfg-concept-auswahl="dinner" /></x-fa::field>
                     <x-fa::field label="Nur bei Hauptkonzept" for="kfg-bind" optional>
                         <x-fa::select id="kfg-bind" wire:model="konzeptForm.gebunden_an_id" :options="$haupt->mapWithKeys(fn ($h) => [$h->id => $h->kunden_titel ?: 'Konzept ' . $h->id])->all()" placeholder="Bei allen" />
                     </x-fa::field>

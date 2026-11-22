@@ -17,6 +17,8 @@ use Platform\FoodAlchemist\Services\ConceptService;
  */
 class Index extends Component
 {
+    use \Platform\FoodAlchemist\Livewire\Concerns\ZeigtPaketAltNurLesen;   // CQ 2.6b
+
     use WithPagination;
     use \Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast, \Platform\FoodAlchemist\Livewire\Concerns\LegtMitNamenAn;   // 98 · 2.4c
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65

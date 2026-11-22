@@ -353,23 +353,30 @@ class DetailPanel extends Component
         $this->dispatch('gp-gespeichert'); // Browser: Rezept-Zähler/Zeile aktualisieren
     }
 
-    /** GP löschen (Soft-Delete) — Service blockt bei Referenzen. */
+    /** GP löschen (Soft-Delete) — Service blockt bei Referenzen. 98 · 2.4d: auch im Ansichtsmodus (mitKurzsperre). */
     public function gpLoeschen(): void
     {
         $gp = $this->kuratierbaresGp();
         if ($gp === null) {
             return;
         }
-        try {
-            app(\Platform\FoodAlchemist\Services\GpService::class)->deleteGp($gp);
-        } catch (\RuntimeException $e) {
-            $this->fehler = $e->getMessage();
+        $this->mitKurzsperre(function () use ($gp) {
+            try {
+                app(\Platform\FoodAlchemist\Services\GpService::class)->deleteGp($gp);
+            } catch (\RuntimeException $e) {
+                $this->fehler = $e->getMessage();
 
-            return;
-        }
-        $this->bearbeitenBeenden();   // Spec 65: Sperre des gelöschten GP sofort frei
-        $this->gpId = null;
-        $this->dispatch('gp-geloescht');
+                return;
+            }
+            $this->bearbeitenBeenden();   // Spec 65: Sperre des gelöschten GP sofort frei
+            $this->gpId = null;
+            $this->dispatch('gp-geloescht');
+        });
+    }
+
+    protected function kurzsperrMethoden(): array
+    {
+        return ['gpLoeschen'];
     }
 
     /** Curate-Gate + frisches GP — KI-Schätzung ist eine globale Katalog-Aktion (D1). */

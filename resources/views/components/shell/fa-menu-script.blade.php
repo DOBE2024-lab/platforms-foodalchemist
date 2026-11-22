@@ -39,3 +39,5 @@
     else document.addEventListener('alpine:init', () => window.Alpine.data('faMenu', faMenu));
   })();
 </script>
+{{-- 98 · 2.4d: App-Dialog statt confirm() — hier eingebunden, weil der Host diese Datei per @include lädt (#883) --}}
+@include('foodalchemist::components.shell.fa-bestaetigen')

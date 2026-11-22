@@ -43,6 +43,12 @@ class DetailPanel extends Component
      * Ohne Sperre: Anzeige/Navigation, Pairing nachladen, Sektionen aufklappen, Kopie anlegen (ändert das Original nicht),
      * Kosten neu rechnen (abgeleitete Werte, keine Pflege).
      */
+    /** 98 · 2.4d: Löschen holt sich die Sperre selbst (mitKurzsperre). */
+    protected function kurzsperrMethoden(): array
+    {
+        return ['rezeptLoeschen'];
+    }
+
     protected function sperrFreiExtra(): array
     {
         return ['pairingLaden', 'zeige', 'nachSpeichern', 'toggleSektion', 'duplizieren', 'neuBerechnen', 'hochNachZutat', 'hochZuruecksetzen', 'hochAenderungenZuruecknehmen', ...self::handyFotoMethoden()];

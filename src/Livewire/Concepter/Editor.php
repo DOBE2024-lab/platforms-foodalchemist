@@ -35,7 +35,7 @@ use Platform\FoodAlchemist\Services\SalesRecipeService;
 class Editor extends Component
 {
     use ManagesCanvas, ManagesPlanningFrame, ManagesPhase, InteractsWithSavedToast, WithFileUploads, \Platform\FoodAlchemist\Livewire\Concerns\ManagesSlotVorgabe;
-    use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
+    use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre, \Platform\FoodAlchemist\Livewire\Concerns\LoeschtConceptImEditor { \Platform\FoodAlchemist\Livewire\Concerns\LoeschtConceptImEditor::kurzsperrMethoden insteadof \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre; }   // Spec 65 · 98 2.4d
     use \Platform\FoodAlchemist\Livewire\Concerns\FuelltConceptPositionen;   // CQ 1.1c: Positionen anlegen, Ablehnung als Hinweis
 
     /**

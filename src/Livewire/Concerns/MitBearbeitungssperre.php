@@ -36,7 +36,45 @@ trait MitBearbeitungssperre
         return array_merge([
             'bearbeitenStarten', 'bearbeitenAbbrechen', 'bearbeitenFertig', 'sperreHerzschlag', 'sperreLoesen', 'sperreBeiSchliessen',
             'oeffnen', 'tabLaden', 'render', 'mount', '$refresh', '__dispatch', '__lazyLoad', '__lazyLoadIsland',   // Livewire-Nachladen = mount
-        ], $this->sperrFreiExtra());
+        ], $this->sperrFreiExtra(), $this->kurzsperrMethoden());
+    }
+
+    /**
+     * 98 · 2.4d (U9): Aktionen, die auch im Ansichtsmodus erreichbar sind und sich die Sperre SELBST holen
+     * (über mitKurzsperre: holen, ausführen, freigeben). Der call-Haken lässt sie durch, weil sie die Sperre im Rumpf
+     * erzwingen. Nur Methoden eintragen, deren Rumpf vollständig in mitKurzsperre läuft.
+     */
+    protected function kurzsperrMethoden(): array
+    {
+        return [];
+    }
+
+    /**
+     * 98 · 2.4d: Löschen im Ansichtsmodus ohne Ausnahme von Spec 65. Eigene Sperre (Bearbeiten läuft): direkt.
+     * Frei: Sperre holen, ausführen, freigeben. Fremde Sperre: klare Absage, nichts passiert.
+     */
+    protected function mitKurzsperre(callable $tat): void
+    {
+        $ziel = $this->sperrZiel();
+        $user = Auth::user();
+        if ($ziel === null || $user === null || $this->darfSchreiben()) {
+            $tat();
+
+            return;
+        }
+        $svc = app(BearbeitungssperreService::class);
+        $r = $svc->sperren($ziel[0], $ziel[1], (int) $user->id, $user->name ?? null, $user->current_team_id ?? null);
+        if (! $r['ok']) {
+            $this->sperreFremd = $r['inhaber'];
+            $this->dispatch('fa-saved', message: 'Wird gerade von '.($r['inhaber']['name'] ?? 'jemand anderem').' bearbeitet — erst danach möglich.', type: 'error');
+
+            return;
+        }
+        try {
+            $tat();
+        } finally {
+            $svc->freigeben($ziel[0], $ziel[1], (int) $user->id);
+        }
     }
 
     /** Editor-spezifische Lese-Methoden (Suche, Vorschau, Polling …). */

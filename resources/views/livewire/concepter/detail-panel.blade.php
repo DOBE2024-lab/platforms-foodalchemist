@@ -78,11 +78,12 @@
                 </div>
             </x-slot:aktion>
             <x-slot:menue>
-                {{-- #6: „Karte drucken" (schöne Kunden-Ausgabe) + „Report" (technisch). Karte gilt auch fürs Paket. --}}
+                {{-- #6: Kundenkarte (schöne Kunden-Ausgabe) + technischer Bericht. Karte gilt auch fürs Paket.
+                     98 · 2.4d: Namen wie im Editor-Menü. --}}
                 <x-fa::menu-item icon="heroicon-m-printer" :href="route('foodalchemist.concepts.karte', ['id' => $concept->id])" target="_blank"
-                    title="Menü-Karte für den Kunden, zum Drucken oder als PDF" data-concepter-panel-karte>Karte drucken</x-fa::menu-item>
+                    title="Menü-Karte für den Kunden, zum Drucken oder als PDF" data-concepter-panel-karte>Kundenkarte drucken</x-fa::menu-item>
                 <x-fa::menu-item icon="heroicon-m-document-text" :href="route('foodalchemist.concepts.dokument', ['id' => $concept->id, 'profil' => 'voll'])" target="_blank"
-                    title="Technischer Report mit allen Gerichten, Basisrezepten und Produkten" data-concepter-panel-druck>Report öffnen</x-fa::menu-item>
+                    title="Technischer Report mit allen Gerichten, Basisrezepten und Produkten" data-concepter-panel-druck>Technischen Bericht öffnen</x-fa::menu-item>
                 @unless($istPaket)
                     @if($concept->is_template)
                         <x-fa::menu-item icon="heroicon-m-document-duplicate" wire:click="ausVorlage">Concept aus Vorlage anlegen</x-fa::menu-item>

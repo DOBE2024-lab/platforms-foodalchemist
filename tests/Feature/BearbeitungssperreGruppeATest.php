@@ -237,15 +237,17 @@ it('GP-Editor: Neuanlage braucht keine Sperre', function () {
 
 // ── GP-Detailspalte ────────────────────────────────────────────────────────
 
-it('GP-Detailspalte: ohne „Bearbeiten" wird Löschen abgewiesen, mit Sperre gelöscht und frei', function () {
+it('GP-Detailspalte: Schreibaktion ohne „Bearbeiten" abgewiesen, Löschen holt die Sperre kurz (98 · 2.4d), mit Sperre gelöscht und frei', function () {
     $gp = $this->makeGp($this->rootTeam, 'Zanderfilet');
+    $ziel = $this->makeGp($this->rootTeam, 'Hechtfilet');
     $this->actingAs($this->anna);
 
     $c = Livewire::test(GpDetailPanel::class, ['gpId' => $gp->id])
         ->assertSeeHtml('data-bearbeiten-starten')
         ->assertSeeHtml('data-fa-lesemodus="1"')
-        ->call('gpLoeschen');
-    expect(FoodAlchemistGp::find($gp->id))->not->toBeNull();
+        ->call('gpErsetzen', $ziel->id);
+    expect($c->instance()->sperreErlaubt('gpErsetzen'))->toBeFalse()
+        ->and($c->instance()->sperreErlaubt('gpLoeschen'))->toBeTrue();   // Lösch-Details: LoeschenAnsichtsmodusTest
 
     $c->call('bearbeitenStarten')->assertSeeHtml('data-bearbeiten-fertig')->assertSeeHtml('data-fa-lesemodus="0"')
         ->call('gpLoeschen');

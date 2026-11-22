@@ -3,9 +3,10 @@
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistLookupWarengruppe;
 use Platform\FoodAlchemist\Support\WgRolle;
+use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
-uses(TestCase::class);
+uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
  * Code-Qualität 3.7: Rollen-Flags an den Warengruppen (Getränk, Non-Food, kühl, fertig) statt Code-Literale.

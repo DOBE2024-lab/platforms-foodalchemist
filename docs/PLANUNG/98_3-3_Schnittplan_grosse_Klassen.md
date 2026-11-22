@@ -157,9 +157,21 @@ damit ein verlorener Delegator auffällt. Spec90KiPflichtliste keyt `propose(` n
 - Größen-Basis je PR senken (Sperrklinke), sonst rot.
 - Fassaden-Methoden, die nur delegieren, sind Kanten im Graphen: Fassade → Teil ist erlaubt (gleiche Schicht).
 
-## 5 · Offene Fragen an den Kurator
+## 5 · Entscheidungen (Kurator 22.11.)
 
-1. Gehören die Dateien aus 1G (Pairing, KnowledgeContext, DataQuality, Concepter/Editor, Angebote/Editor, Foodbooks/Index, RecipeGenerator) zu 3.3?
-2. S5 Bestellung: Spec 85 nennt „test“ als zuständig, nach Spec 84. Bleibt das, oder gehört es in die Verteilung?
-3. Fassaden-Abbau (Aufrufer umziehen): in 3.3 oder später (eigene Welle)? Vorschlag: später, 3.3 endet mit Fassaden.
-4. K2 macht heute neutrale Kanten sichtbar (die Rückkanten-Zahl steigt einmalig). Einverstanden, das als neue Regel mit Ausgangszählung einzuführen?
+1. **Umfang:** 3.3 = die sechs Klassen A–F. Die übrigen über 1.500 (Abschnitt 1G) bekommen eine Klinke „Zahl der Klassen über 1.500
+   darf nur sinken“ und kommen als **Phase B** danach.
+2. **S5 Bestellung:** Besitz klärt der Kurator mit dem Master; bis dahin ohne festen Besitzer, Charakterisierungstests zuerst.
+3. **Fassaden-Abbau:** nach 3.3, als Teil von 3.8 (Ordnung).
+4. **K2:** freigegeben. Der einmalige Anstieg durch die neue Regel ist in Ordnung; der PR dokumentiert die Ausgangszählung als neue Baseline.
+
+**Verteilung** (Start je Spur erst, wenn ihre Dateien gemergt sind):
+
+| Spur | Besitz | Start |
+|---|---|---|
+| S1 Kaskade, S7 Kreis | Hans | nach Charge 2 (3.4 ist Grundlage) |
+| S2 Planung-UI | Lisa | nach Charge 1+2; nicht gleichzeitig mit `KaskadeFreigabe` (S1), Absprache Lisa ↔ Hans |
+| S3 Speiseplan | Paul | nach Charge 2 |
+| S4 Foodbook | Paul | nach Charge 1; `FoodbookAggregat` nach 2.4e |
+| S6 Produktion | Julia | sofort nach Charge 1 |
+| S5 Bestellung | Julia (sobald geklärt) | nach Klärung, Charakterisierungstests zuerst |

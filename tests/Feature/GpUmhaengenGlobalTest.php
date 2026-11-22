@@ -28,7 +28,7 @@ beforeEach(function () {
     file_put_contents($this->backup, str_repeat('x', 2048));
     $this->sup = FoodAlchemistSupplier::create(['team_id' => null, 'name' => 'Kluth']);
     if (! DB::table('foodalchemist_lookup_commodity_groups')->where('code', '03')->exists()) {
-        DB::table('foodalchemist_lookup_commodity_groups')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'code' => '03', 'name' => 'Kräuter', 'sort_order' => 3, 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('foodalchemist_lookup_commodity_groups')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'code' => '03', 'name' => 'Kräuter', 'sort_order' => 3, 'created_at' => now(), 'updated_at' => now()] + \Platform\FoodAlchemist\Support\WgRolle::standardFlags('03'));
     }
 
     $this->gp = function (string $name, ?int $team = null): FoodAlchemistGp {

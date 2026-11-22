@@ -23,7 +23,7 @@ beforeEach(function () {
     $this->sup = FoodAlchemistSupplier::create(['team_id' => null, 'name' => 'Kluth']);
     $this->wgAnlegen = function (string $code, string $name) {
         if (! DB::table('foodalchemist_lookup_commodity_groups')->where('code', $code)->exists()) {
-            DB::table('foodalchemist_lookup_commodity_groups')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'code' => $code, 'name' => $name, 'sort_order' => (int) $code, 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('foodalchemist_lookup_commodity_groups')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'code' => $code, 'name' => $name, 'sort_order' => (int) $code, 'created_at' => now(), 'updated_at' => now()] + \Platform\FoodAlchemist\Support\WgRolle::standardFlags($code));
         }
     };
     ($this->wgAnlegen)('03', 'Kräuter');

@@ -99,7 +99,7 @@ class ZukaufWare extends Component
         if ($this->suchen && $team !== null && mb_strlen(trim($this->suche)) >= 2) {
             $treffer = FoodAlchemistGp::visibleToTeam($team)
                 ->where('name', 'like', '%' . trim($this->suche) . '%')
-                ->where(fn ($q) => $q->whereNull('commodity_group_code')->orWhere('commodity_group_code', '!=', '16'))
+                ->where(fn ($q) => $q->whereNull('commodity_group_code')->orWhereNotIn('commodity_group_code', \Platform\FoodAlchemist\Support\WgRolle::codes(\Platform\FoodAlchemist\Support\WgRolle::NON_FOOD)))
                 ->where('is_platzhalter', false)
                 ->orderBy('name')->limit(8)->get(['id', 'name']);
         }

@@ -15,8 +15,6 @@ namespace Platform\FoodAlchemist\Support;
  */
 final class AlkoholAngabe
 {
-    public const WG_GETRAENKE = '15';
-
     /** Grenze für „alkoholfrei“ (vol-% bzw. g/100), darunter gilt ein gemessener bzw. angegebener Wert als nein. */
     public const GRENZE = 0.5;
 
@@ -49,7 +47,7 @@ final class AlkoholAngabe
     /** true / false für einen GP der WG 15 (Pflichtangabe bzw. Name, dann Unterkategorie); null ohne Aussage. */
     public static function ausGp(?string $warengruppe, ?string $pflichtangabe, ?string $name, ?string $unterkategorie = null): ?bool
     {
-        if ((string) $warengruppe !== self::WG_GETRAENKE) {
+        if (! WgRolle::istGetraenk($warengruppe)) {   // CQ 3.7: Rolle statt Code
             return null;
         }
         $vol = self::volProzent($pflichtangabe) ?? self::volProzent($name);

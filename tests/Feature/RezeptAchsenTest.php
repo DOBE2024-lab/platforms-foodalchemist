@@ -30,7 +30,7 @@ beforeEach(function () {
     foreach ([['04', '04 Fleisch'], ['01', '01 Gemuese']] as [$c, $n]) {
         DB::table('foodalchemist_lookup_commodity_groups')->insert([
             'uuid' => $uuid(), 'code' => $c, 'name' => $n, 'created_at' => now(), 'updated_at' => now(),
-        ]);
+        ] + \Platform\FoodAlchemist\Support\WgRolle::standardFlags($c));
     }
 
     $this->rezept = FoodAlchemistRecipe::create([

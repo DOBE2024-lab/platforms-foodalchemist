@@ -101,7 +101,7 @@ class LaFelderService
         if ($f['rezepturware'] === true && trim((string) ($f['zusatz'] ?? '')) === '' && $regel->marke !== null) {
             $f['zusatz'] = $regel->marke;
         }
-        if (! $nonFood && $wg === '15') {
+        if (! $nonFood && \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg)) {
             // Getränke (Dominique 28.10.): Klammer-Marke nur, wenn die KI Gattung + Marke erkannt hat; Füllmenge nach §7.1a
             $f = $this->naming->getraenkFelder($f, $regel->marke, [$la->designation, $la->marketing_name]);
         }

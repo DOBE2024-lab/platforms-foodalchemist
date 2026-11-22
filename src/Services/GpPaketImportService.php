@@ -363,7 +363,7 @@ class GpPaketImportService
         $ohneZustand = [];
         foreach ($P as $key => $g) {
             $c = $g['p']['condition'] ?? null;
-            if (($c === null || $c === '') && ! in_array($g['wg'], ['10', '11', '12', '15', '16'], true) && ! (bool) ($g['p']['is_platzhalter'] ?? false)) {
+            if (($c === null || $c === '') && ! in_array($g['wg'], ['10', '11', '12'], true) && ! \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($g['wg']) && ! \Platform\FoodAlchemist\Support\WgRolle::istNonFood($g['wg']) && ! (bool) ($g['p']['is_platzhalter'] ?? false)) {
                 $ohneZustand[] = $key;
             }
         }

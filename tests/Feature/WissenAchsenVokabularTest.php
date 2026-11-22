@@ -37,7 +37,7 @@ beforeEach(function () {
         DB::table('foodalchemist_lookup_commodity_groups')->insert([
             'uuid' => $uuid(), 'code' => $c, 'name' => $l,
             'created_at' => now(), 'updated_at' => now(),
-        ]);
+        ] + \Platform\FoodAlchemist\Support\WgRolle::standardFlags($c));
     }
 });
 

@@ -26,8 +26,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
  */
 class LagerEinrichtungService
 {
-    /** Warengruppen (Regelwerk GP §3), die frisch in die Kühlung gehören. */
-    private const WG_KUEHL = ['01', '02', '03', '04', '05', '06', '13', '14'];
 
     /** Bestellmengen-Einheiten, die schon eine Maßeinheit sind (kein zählbares Gebinde). */
     private const MASS_EINHEITEN = ['kg', 'kgm', 'g', 'grm', 'l', 'ltr', 'lt', 'ml', 'mlt'];
@@ -246,8 +244,8 @@ class LagerEinrichtungService
             // v3.6.0 (Dominique 19.10.): TK auch als Zusatz im Namen/in der Verarbeitung ⇒ Tiefkühlung; Behandlungen ⇒ Kühlung
             GpNamingService::istTk($gp->condition, (string) $gp->name, (string) $gp->processing) => 'tk',
             in_array($zustand, [...GpNamingService::BEHANDLUNG, 'gepoekelt', 'geraeuchert'], true) => 'kuehl',   // Kanon + Alt-Schreibweise
-            $wg === '15' => 'getraenke',
-            $zustand === 'frisch' && in_array($wg, self::WG_KUEHL, true) => 'kuehl',
+            \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg) => 'getraenke',
+            $zustand === 'frisch' && \Platform\FoodAlchemist\Support\WgRolle::istKuehl($wg) => 'kuehl',   // CQ 3.7: Rolle „kühl“ an der Warengruppe
             $zustand === 'frisch' => 'trocken',          // frische Backwaren, Eier-Ersatz, …
             in_array($zustand, ['trocken', 'konserviert'], true) => 'trocken',
             default => null,

@@ -111,7 +111,7 @@ class FoodAlchemistGp extends Model
     /** Non-Food-Grundprodukt (Warengruppe 16): keine Allergene, Nährwerte, Zustände; als Zutat gesperrt, am Rezept nur als Zubehör & Verpackung. */
     public function istNonFood(): bool
     {
-        return (string) $this->commodity_group_code === \Platform\FoodAlchemist\Support\NonFoodRegeln::WG_CODE;
+        return \Platform\FoodAlchemist\Support\WgRolle::istNonFood($this->commodity_group_code);
     }
 
     /** Größe in Betriebs-Einheiten („Ø 27 cm“, „30 x 20 x 5 cm“, „1,5 l“) aus den Maßen — nur Non-Food; null ohne Maß. */
@@ -123,13 +123,13 @@ class FoodAlchemistGp extends Model
     /** Nur Lebensmittel-GPs (ohne Warengruppe 16); GPs ohne Warengruppe zählen als Lebensmittel. */
     public function scopeLebensmittel(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
-        return $query->where(fn ($w) => $w->whereNull('commodity_group_code')->orWhere('commodity_group_code', '!=', \Platform\FoodAlchemist\Support\NonFoodRegeln::WG_CODE));
+        return $query->where(fn ($w) => $w->whereNull('commodity_group_code')->orWhereNotIn('commodity_group_code', \Platform\FoodAlchemist\Support\WgRolle::codes(\Platform\FoodAlchemist\Support\WgRolle::NON_FOOD)));
     }
 
     /** Nur Non-Food-GPs (Warengruppe 16). */
     public function scopeNonFood(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
-        return $query->where('commodity_group_code', \Platform\FoodAlchemist\Support\NonFoodRegeln::WG_CODE);
+        return $query->whereIn('commodity_group_code', \Platform\FoodAlchemist\Support\WgRolle::codes(\Platform\FoodAlchemist\Support\WgRolle::NON_FOOD));
     }
 
     /**

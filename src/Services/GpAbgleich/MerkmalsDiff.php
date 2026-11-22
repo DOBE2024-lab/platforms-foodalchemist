@@ -83,7 +83,7 @@ class MerkmalsDiff
 
         // Bio
         // Getränke (WG 15, §5 Ausnahme 1 + §7.1a): Marke (seit 28.10. als Klammer im Namen), Einzelgebinde und Füllmenge sind Teil der Ware (vol-% steht oben)
-        $getraenk = (string) ($felder['commodity_group_code'] ?? '') === '15' || (string) $gp->commodity_group_code === '15';
+        $getraenk = \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($felder['commodity_group_code'] ?? '') || \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($gp->commodity_group_code);
         if ($getraenk || self::istMarkenSuessware($felder)) {
             $marke = trim((string) ($felder['marke'] ?? ''));
             if ($marke !== '') {

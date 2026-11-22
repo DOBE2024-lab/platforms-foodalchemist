@@ -376,7 +376,7 @@ class GpBereinigenService
             }
             // Reine Umlaut-Umschrift (ae→ä …) ändert nichts am Inhalt: für sie gilt weder die WG-15-Sonderphase noch die Altlast-Prüfung.
             $nurUmlaut = $this->umlautNorm($neu) === $this->umlautNorm((string) $gp->name);
-            if ((string) $gp->commodity_group_code === '15' && ! $nurUmlaut) {
+            if (\Platform\FoodAlchemist\Support\WgRolle::istGetraenk($gp->commodity_group_code) && ! $nurUmlaut) {
                 $konflikt('WG 15 (Getränke): eigene Phase (Gebinde/Zustandswort), hier nicht');
 
                 continue;

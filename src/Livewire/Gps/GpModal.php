@@ -337,7 +337,7 @@ class GpModal extends Component
 
         try {
             // Non-Food (Warengruppe 16): ist keine Größe angegeben, kommt sie aus den Maßen (Ø 27 cm, 30 x 20 x 5 cm, 212 ml)
-            if (($this->builder['commodity_group_code'] ?? '') === \Platform\FoodAlchemist\Support\NonFoodRegeln::WG_CODE && trim((string) ($this->builder['pflichtangabe'] ?? '')) === '') {
+            if (\Platform\FoodAlchemist\Support\WgRolle::istNonFood($this->builder['commodity_group_code'] ?? '') && trim((string) ($this->builder['pflichtangabe'] ?? '')) === '') {
                 $this->masseInNamen();
             }
             $in = [...$this->builder, 'name' => trim($this->manuellerName)];
@@ -953,7 +953,7 @@ class GpModal extends Component
         if ($zusatz !== '') {
             $this->builder['zusatz'] = $zusatz;
         }
-        if ($wg === '15') {
+        if (\Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg)) {
             // Getränke: steht die Marke in der Klammer, nicht doppelt in der Hauptzutat; Füllmenge nach §7.1a in die Pflichtangabe
             $g = $naming->getraenkFelder(['hauptzutat' => $this->builder['hauptzutat'] ?? '', 'zusatz' => $this->builder['zusatz'] ?? '',
                 'pflichtangabe' => $this->builder['pflichtangabe'] ?? ''], $markeRegel,
@@ -1227,7 +1227,7 @@ class GpModal extends Component
             $felder['zusatz'] = $zusatz;
         }
         $wg = trim((string) ($vorschlag->werte['commodity_group_code'] ?? '')) ?: (string) ($this->builder['commodity_group_code'] ?? '');
-        if ($wg === '15') {
+        if (\Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg)) {
             // Getränke (Dominique 28.10.): Marke nicht doppelt (Klammer vs. Hauptzutat), Füllmenge nach §7.1a
             $felder = array_filter(app(GpNamingService::class)->getraenkFelder($felder, $marke, [trim($designation), $quellLa->marketing_name ?? null]),
                 fn ($v) => trim((string) $v) !== '');
@@ -1317,7 +1317,7 @@ class GpModal extends Component
 
         return view('foodalchemist::livewire.gps.gp-modal', [
             'nameVorschlagAenderungen' => $this->nameVorschlagAenderungen(),
-            'servierTypen' => ($this->builder['commodity_group_code'] ?? '') === '16' && $team !== null
+            'servierTypen' => \Platform\FoodAlchemist\Support\WgRolle::istNonFood($this->builder['commodity_group_code'] ?? '') && $team !== null
                 ? \Platform\FoodAlchemist\Support\TeamScope::applyVisible(\Illuminate\Support\Facades\DB::table('foodalchemist_vocab_serving_vehicles')->whereNull('deleted_at')->where('is_inactive', false), 'team_id', $team)->orderBy('group_name')->orderBy('sort_order')->pluck('name', 'id')->all()
                 : [],
             'sperr' => $this->sperrZustand(),   // Spec 65

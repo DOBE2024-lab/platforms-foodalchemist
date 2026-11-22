@@ -35,9 +35,11 @@ final class ZukaufBasisrezeptService
      * Sprossen & Keimlinge (01.8). Ohne Typ in der Zeile zusätzlich Kräuter (03). Rohware (Gemüse, Fleisch …) wird
      * nie Zukauf — „Püree: Kürbis“ ist eine Zubereitung.
      */
-    private const FERTIG_WG = ['10', '11', '13'];
+    /** Knabbereien (09.6) — benannte Fachregel, kein Warengruppen-Flag (CQ 3.7). */
+    private const SUB_KNABBEREIEN = '09.6';
 
-    private const FERTIG_SUB = ['09.6', '01.8'];
+    /** Fertigware auf Unterkategorie-Ebene; die Warengruppen-Ebene trägt die Rolle „fertig“ (WgRolle, CQ 3.7). */
+    private const FERTIG_SUB = [self::SUB_KNABBEREIEN, '01.8'];
 
     /** Ist die Zeile gekaufte Fertigware (sicherer GP-Treffer auf Fertigware) — unabhängig davon, ob ein Typ ableitbar ist? */
     public function istFertigware(Team $team, string $text): bool
@@ -176,7 +178,7 @@ final class ZukaufBasisrezeptService
      */
     public function bietetZukaufAn(FoodAlchemistGp $gp): bool
     {
-        return ! (bool) $gp->is_platzhalter && (string) ($gp->commodity_group_code ?? '') !== '16';
+        return ! (bool) $gp->is_platzhalter && ! \Platform\FoodAlchemist\Support\WgRolle::istNonFood($gp->commodity_group_code);
     }
 
     /** Typ-Vorschlag aus der Warengruppe (Regel basisrezept.zukauf.typ) — null: der Mensch wählt, nie raten. */
@@ -318,7 +320,7 @@ final class ZukaufBasisrezeptService
             return true;
         }
 
-        return (string) $gp->commodity_group_code === '09' && ! str_starts_with((string) ($gp->sub_category ?? ''), '09.6');
+        return (string) $gp->commodity_group_code === '09' && ! str_starts_with((string) ($gp->sub_category ?? ''), self::SUB_KNABBEREIEN);
     }
 
     /**
@@ -368,7 +370,7 @@ final class ZukaufBasisrezeptService
         }
         $wg = (string) ($gp->commodity_group_code ?? '');
         $sub = (string) ($gp->sub_category ?? '');
-        if (in_array($wg, self::FERTIG_WG, true)) {
+        if (\Platform\FoodAlchemist\Support\WgRolle::istFertig($wg)) {
             return true;
         }
         foreach (self::FERTIG_SUB as $s) {

@@ -28,8 +28,8 @@ class MarkeAusArtikel
     /** Kürzel, die auch vor einem Bindestrich zählen (Edna „FF-Laugen…“) — wie `marken_kuerzel.py` (`sep == '-' and w != 'ff'`). */
     public const BINDESTRICH_KUERZEL = ['ff'];
 
-    /** Warengruppen, die nie Rezepturware sind: Wurst (§8.13), Getränke (§5 Ausnahme 1). */
-    public const NIE_REZEPTURWARE_WG = ['04', '15'];
+    /** Warengruppen, die nie Rezepturware sind: Wurst (§8.13); Getränke (§5 Ausnahme 1) über die Rolle (CQ 3.7, WgRolle). */
+    public const NIE_REZEPTURWARE_WG = ['04'];
 
 
     /** @var array<string, array<string, array<string, array{marke: string, vorrang: int, typ: string}>>>|null  'global' bzw. supplier_id → position → kuerzel → Eintrag */
@@ -163,7 +163,7 @@ class MarkeAusArtikel
     /** Wurst (04) und Getränke (15) sind nie Rezepturware im Sinn von §5 Ausnahme 3; sonst bleibt der Wert, wie er kam. */
     public static function rezepturwareFuerWg(?bool $rezepturware, ?string $warengruppe): ?bool
     {
-        return in_array((string) $warengruppe, self::NIE_REZEPTURWARE_WG, true) ? false : $rezepturware;
+        return in_array((string) $warengruppe, self::NIE_REZEPTURWARE_WG, true) || \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($warengruppe) ? false : $rezepturware;
     }
 
     /** Teilen-Hinweis (§5 Ausnahme 3): am Rezeptur-GP hängt schon ein Artikel mit anderer Marke. */

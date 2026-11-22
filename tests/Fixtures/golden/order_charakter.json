@@ -624,18 +624,10 @@
         ],
         "zustand": [
             {
-                "lieferant": "Chefs",
-                "status": "draft",
-                "liefertag": "2026-11-26",
-                "referenz": "Vorrat",
-                "total_net": 0.0,
-                "zeilen": []
-            },
-            {
                 "lieferant": "Hanos",
                 "status": "draft",
                 "liefertag": "2026-11-26",
-                "referenz": null,
+                "referenz": "Vorrat",
                 "total_net": 5.4,
                 "zeilen": [
                     {

@@ -70,4 +70,20 @@ class FoodAlchemistOrder extends Model
 
         return in_array($status, [OrderStatus::Sent, OrderStatus::Confirmed], true) || ($status === OrderStatus::Cancelled && $this->sent_at !== null);
     }
+
+    /**
+     * Artikelwechsel zu einem anderen Lieferanten (OrderService::applyLaSwitch): Die verschobene Zeile verlässt diesen Entwurf.
+     * Entscheid Dominique 22.11.: Entsteht der Ziel-Entwurf erst durch den Wechsel, übernimmt er Referenz und Notiz; wird dieser
+     * Entwurf dadurch leer, verschwindet er sofort (Soft-Delete wie OrderService::deleteEmptyDrafts).
+     */
+    public function zeileAbgegebenAn(FoodAlchemistOrderLine $zeile, self $ziel): void
+    {
+        $zeile->delete();
+        if ($ziel->wasRecentlyCreated) {
+            $ziel->update($this->only(['reference', 'note']));
+        }
+        if ($this->lines()->doesntExist()) {
+            $this->delete();
+        }
+    }
 }

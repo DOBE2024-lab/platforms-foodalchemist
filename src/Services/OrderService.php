@@ -2099,7 +2099,7 @@ class OrderService
             // Beitragslose (manuelle) Zeile: manuelle Menge in die Ziel-Schiene übernehmen.
             $this->addManualLine($team, $newLaId, (float) $line->qty_packs, $line->note, $userId, $deliveryDate);
         }
-        $line->delete();   // Beitrag/Menge verschoben, nicht dupliziert
+        $line->order->zeileAbgegebenAn($line, $targetDraft);   // Beitrag/Menge verschoben, nicht dupliziert; Kopf/leerer Entwurf: Entscheid 22.11.
 
         return $targetDraft;
     }

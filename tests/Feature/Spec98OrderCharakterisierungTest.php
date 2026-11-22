@@ -91,9 +91,13 @@ it('Pflege: Direktbestellung, Kopfdaten, Artikelwechsel zum anderen Lieferanten,
     $this->svc->updateHeader($this->rootTeam, $zeile->order_id, ['reference' => 'Vorrat', 'note' => 'Hintereingang']);
     ($this->golden)('pflege_direktbestellung', $this->bestellZustand());
 
-    // OFFEN, Produktfrage (an Dominique, Kurator 22.11.): Referenz/Notiz wandern heute nicht mit, der leere Alt-Entwurf bleibt bis
-    // deleteEmptyDrafts stehen. Golden hält das heutige Verhalten fest; Änderung nur nach Entscheid.
+    // Entscheid Dominique 22.11.: Entsteht der Ziel-Entwurf erst durch den Wechsel, übernimmt er Referenz und Notiz; der dadurch
+    // leere Alt-Entwurf verschwindet sofort (Soft-Delete). Vorher: Kopf ging verloren, leerer Chefs-Entwurf blieb stehen.
     $wechsel = $this->svc->switchLineArticle($this->rootTeam, $zeile->id, $this->ausweichMehl()->id, auth()->id());
+    $alt = FoodAlchemistOrder::withTrashed()->find($zeile->order_id);
+    $neu = FoodAlchemistOrder::find($wechsel['target_order_id']);
+    expect($alt->trashed())->toBeTrue()
+        ->and($neu->only(['reference', 'note']))->toBe(['reference' => 'Vorrat', 'note' => 'Hintereingang']);
     ($this->golden)('pflege_artikelwechsel', ['ergebnis_schluessel' => array_keys((array) $wechsel), 'zustand' => $this->bestellZustand()]);
 
     $this->svc->addNeedFromTarget($this->rootTeam, ['recipe_id' => $this->kuchen->id, 'portions' => 100], 'event:Bankett');

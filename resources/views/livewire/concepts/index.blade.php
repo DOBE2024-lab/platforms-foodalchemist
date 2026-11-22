@@ -437,6 +437,6 @@
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}
     {{-- 98 · 2.4c: erst der Name, dann der Datensatz (LegtMitNamenAn) --}}
     @unless(\Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy())   {{-- am Handy wird nicht angelegt (#1003) --}}
-    <x-fa::anlege-dialog :title="$neuText" :knopf="$showVorlagen ? 'Vorlage anlegen' : 'Concept anlegen'" :fehler="$neuFehler" />
+    <x-fa::anlege-dialog :title="$neuText" :knopf="$showVorlagen ? 'Vorlage anlegen' : 'Konzept anlegen'" :fehler="$neuFehler" />
     @endunless
 </x-ui-page>

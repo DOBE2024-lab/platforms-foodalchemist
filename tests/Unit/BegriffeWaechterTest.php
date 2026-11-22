@@ -10,8 +10,6 @@
  */
 const BEGRIFFE_AUSNAHMEN = [
     // [Datei, Teilstring der Zeile, Grund]
-    ['src/Livewire/Concepter/Browser.php', "'Neues Concept', 'is_template'", 'entfällt mit 2.4c (Anlege-Dialog)'],
-    ['src/Livewire/Concepts/Index.php', "'Neues Concept', 'is_template'", 'entfällt mit 2.4c (Anlege-Dialog)'],
     ['src/Support/FaBereiche.php', "'Concepter' => 'concepter', 'Concepts' => 'concepter'", 'Namespace-Segmente als Schlüssel'],
     ['src/Services/PlanningSessionService.php', "'Freies Concept'", 'alter Platzhaltertitel bestehender Sitzungen wird weiter erkannt'],
     ['src/Services/VoiceCommandService.php', '', 'KI-Prompt, kein sichtbarer Text'],

@@ -85,7 +85,7 @@
                             <div class="my-1 border-t border-[var(--fa-line)]"></div>
                             <x-fa::menu-item icon="heroicon-o-square-2-stack" abstand="weit" wire:click="alsVorlage" data-concepter-als-vorlage>Als Vorlage speichern</x-fa::menu-item>
                         @endif
-                        @if($type === 'concepts')<div class="my-1 border-t border-[var(--fa-line)]"></div><x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="{{ $paket ? 'Paket löschen?' : 'Concept löschen?' }}" data-concepter-loeschen>{{ $paket ? 'Paket' : 'Concept' }} löschen</x-fa::menu-item>@endif
+                        @if($type === 'concepts')<div class="my-1 border-t border-[var(--fa-line)]"></div><x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="{{ $paket ? 'Paket löschen?' : 'Konzept löschen?' }}" data-concepter-loeschen>{{ $paket ? 'Paket' : 'Konzept' }} löschen</x-fa::menu-item>@endif
                     </x-fa::menu>
                 @endif
 

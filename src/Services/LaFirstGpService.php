@@ -8,6 +8,7 @@ use Platform\FoodAlchemist\Jobs\ConformanceCheckJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\Matching\MatchHeuristics;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * 07·M1 — LA-First-GP-Mint als GETEILTE Fähigkeit (Keystone).
@@ -248,7 +249,7 @@ class LaFirstGpService
         if ($wort === '' || $ziel === '' || str_contains($ziel, ' ')) {
             return null;
         }
-        $umschrift = ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss'];
+        $umschrift = Text::UMSCHRIFT;
         $bisher = '';
         $laenge = mb_strlen($wort);
         for ($i = 0; $i < $laenge; $i++) {

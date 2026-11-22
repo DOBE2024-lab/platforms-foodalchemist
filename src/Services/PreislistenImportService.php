@@ -13,6 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine as Zeile;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Spec 82 §3 / Schritt 4d — Preislisten-Import für Mandanten, Stufe „Abgleich + Prüfliste".
@@ -788,10 +789,7 @@ class PreislistenImportService
 
     private function norm(string $s): string
     {
-        $s = mb_strtolower(trim($s));
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
-
-        return preg_replace('/[^a-z0-9]+/', '', $s) ?? '';
+        return Text::falte($s, Text::KOMPAKT);
     }
 
     private function kuerze(string $s, int $max = 255): ?string

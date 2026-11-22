@@ -46,7 +46,7 @@ final class Suche
      */
     public static function varianten(string $token): array
     {
-        $ascii = strtr($token, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        $ascii = Text::umschrift($token);
         $umlaut = strtr($ascii, ['ae' => 'ä', 'oe' => 'ö', 'ue' => 'ü']);
 
         return array_values(array_unique([$token, $ascii, $umlaut]));
@@ -130,7 +130,7 @@ final class Suche
      */
     private static function einheiten(array $tokens, array $aliasGruppen): array
     {
-        $schluessel = fn (string $s): string => strtr(implode(' ', self::tokens($s)), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        $schluessel = fn (string $s): string => Text::umschrift(implode(' ', self::tokens($s)));
         $mitglieder = [];   // Schlüssel → Alternativen (andere Mitglieder aller Gruppen, in denen er vorkommt)
         $maxWorte = 1;
         foreach ($aliasGruppen as $gruppe) {

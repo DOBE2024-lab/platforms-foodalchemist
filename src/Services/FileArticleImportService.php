@@ -10,6 +10,7 @@ use Platform\FoodAlchemist\Enums\BulkRunType;
 use Platform\FoodAlchemist\Models\FoodAlchemistBulkRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Spec 13 · S1a (Kanal B) — der Datei-Import für Lieferanten-Artikel.
@@ -1256,10 +1257,7 @@ class FileArticleImportService
     /** Header-Normalisierung: Umlaute, Groß/Klein, Satz- und Leerzeichen sind egal. */
     private function normHeader(string $titel): string
     {
-        $t = mb_strtolower(trim($titel));
-        $t = str_replace(['ä', 'ö', 'ü', 'ß'], ['ae', 'oe', 'ue', 'ss'], $t);
-
-        return (string) preg_replace('/[^a-z0-9]/', '', $t);
+        return Text::falte($titel, Text::KOMPAKT);
     }
 
     private function kanonisch(string $norm): ?string

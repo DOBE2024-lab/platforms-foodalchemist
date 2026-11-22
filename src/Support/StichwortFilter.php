@@ -57,8 +57,8 @@ final class StichwortFilter
 
     public static function normalisieren(string $s): string
     {
-        $s = mb_strtolower($s);
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss', 'é' => 'e', 'è' => 'e', 'ê' => 'e', 'á' => 'a', 'à' => 'a', 'ç' => 'c', 'ñ' => 'n']);
+        $s = Text::umschrift(mb_strtolower($s));
+        $s = strtr($s, ['é' => 'e', 'è' => 'e', 'ê' => 'e', 'á' => 'a', 'à' => 'a', 'ç' => 'c', 'ñ' => 'n']);
 
         return trim(preg_replace('/\s+/u', ' ', $s) ?? '');
     }

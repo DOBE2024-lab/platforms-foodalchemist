@@ -17,6 +17,7 @@ use Platform\FoodAlchemist\Services\LeadLaService;
 use Platform\FoodAlchemist\Services\PriceService;
 use Platform\FoodAlchemist\Services\VocabularyService;
 use Platform\FoodAlchemist\Support\Curate;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * M3-09/10: GP-Modal — Neuanlage über den Naming-Builder (GL-12 Render-First,
@@ -1004,7 +1005,7 @@ class GpModal extends Component
      */
     private static function subKategorieTreffer(array $erlaubt, string $vorschlag): ?string
     {
-        $norm = fn (string $x) => trim((string) preg_replace('/[^a-z0-9]+/', ' ', strtr(mb_strtolower($x), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss', '&' => ' und '])));
+        $norm = fn (string $x) => Text::falte(str_replace('&', ' und ', $x), Text::WOERTER);
         $v = $norm($vorschlag);
         if ($v === '') {
             return null;

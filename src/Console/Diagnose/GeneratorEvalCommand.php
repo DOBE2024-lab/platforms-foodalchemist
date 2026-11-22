@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Console\Diagnose;
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Phase 4 (Kohärenz-Gate): Golden-Gerichte-Eval — beweist die Gate-Wirkung END-TO-END
@@ -189,9 +190,7 @@ class GeneratorEvalCommand extends Command
 
     private function fold(string $s): string
     {
-        $s = mb_strtolower(trim($s));
-
-        return strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        return Text::falte($s);
     }
 
     private function pct(?float $v): string

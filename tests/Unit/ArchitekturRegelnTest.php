@@ -218,3 +218,46 @@ it('Geld-Helfer: keine neuen Handrechnungen für Wareneinsatz, EK je Portion und
 
     expect($abweichung)->toBe([], implode("\n", $abweichung));
 });
+
+/** @return array<string, int> Datei => Zeilen mit einer eigenen Umlaut-Tabelle (ä → ae / ä → a), CQ 2.2b. */
+function umlautKopien(): array
+{
+    $wurzel = dirname(__DIR__, 2);
+    $treffer = [];
+    foreach (['src', 'resources/views'] as $ordner) {
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($wurzel . '/' . $ordner, FilesystemIterator::SKIP_DOTS));
+        foreach ($it as $datei) {
+            if (! str_ends_with($datei->getFilename(), '.php')) {
+                continue;
+            }
+            $rel = substr($datei->getPathname(), strlen($wurzel) + 1);
+            foreach (file($datei->getPathname()) as $zeile) {
+                if (preg_match("/'[äöü]'\s*=>\s*'[aou]|str_replace\(\s*\[\s*'[äöüß]'/u", $zeile) === 1) {
+                    $treffer[$rel] = ($treffer[$rel] ?? 0) + 1;
+                }
+            }
+        }
+    }
+
+    return $treffer;
+}
+
+it('Text-Normalisierer: keine neuen Umlaut-Tabellen außerhalb von Support/Text (CQ 2.2b)', function () {
+    // Datei => [Anzahl, Grund]. Nur sinken lassen — neue Stellen nutzen Text::falte()/umschrift()/grundlaut().
+    $ausnahmen = [
+        'src/Support/Text.php' => [2, 'der Normalisierer selbst (UMSCHRIFT, GRUNDLAUT)'],
+        'src/Services/IngredientMatchService.php' => [1, 'Zustand-Regex ohne ß: umschrift() nähme ß dazu, das wäre eine Matching-Änderung (offen, 2.2b gemeldet)'],
+        'src/Support/GpKorrektur.php' => [1, 'Suffix-Vergleich ohne ß: umschrift() nähme ß dazu, das wäre eine Verhaltensänderung (offen, 2.2b gemeldet)'],
+    ];
+
+    $ist = umlautKopien();
+    $abweichung = [];
+    foreach ($ist + array_map(fn () => 0, $ausnahmen) as $datei => $anzahl) {
+        $soll = $ausnahmen[$datei][0] ?? 0;
+        if ($anzahl !== $soll) {
+            $abweichung[] = "{$datei} hat {$anzahl}, erwartet {$soll}" . ($anzahl < $soll ? ' (Ausnahme abbauen)' : ' (Text::falte nutzen)');
+        }
+    }
+
+    expect($abweichung)->toBe([], implode("\n", $abweichung));
+});

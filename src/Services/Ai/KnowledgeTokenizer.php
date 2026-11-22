@@ -2,6 +2,8 @@
 
 namespace Platform\FoodAlchemist\Services\Ai;
 
+use Platform\FoodAlchemist\Support\Text;
+
 /** Gemeinsames Suchvokabular für Generator, MCP und Wissens-Browser. */
 final class KnowledgeTokenizer
 {
@@ -21,7 +23,7 @@ final class KnowledgeTokenizer
     /** @return list<string> */
     public function tokenize(string $s): array
     {
-        $s = str_replace(['ä', 'ö', 'ü', 'ß'], ['ae', 'oe', 'ue', 'ss'], mb_strtolower($s));
+        $s = Text::umschrift(mb_strtolower($s));
         $s = (string) preg_replace('/[^[:alnum:]]+/u', ' ', $s);
         $tokens = [];
         foreach (preg_split('/\s+/u', $s, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $tok) {

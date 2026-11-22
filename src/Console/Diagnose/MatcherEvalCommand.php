@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Console\Diagnose;
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\IngredientMatchService;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * #507 Weg-2: Kalibrierungs-Harness für die DETERMINISTISCHE Terminologie-Schicht
@@ -190,8 +191,7 @@ class MatcherEvalCommand extends Command
     /** @return list<string> */
     private function tokens(string $s): array
     {
-        $s = mb_strtolower($s);
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        $s = Text::umschrift(mb_strtolower($s));
         $s = (string) preg_replace('/[^a-z0-9]+/', ' ', $s);
 
         return array_values(array_map(

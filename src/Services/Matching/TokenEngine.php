@@ -2,6 +2,8 @@
 
 namespace Platform\FoodAlchemist\Services\Matching;
 
+use Platform\FoodAlchemist\Support\Text;
+
 /**
  * M3-08: GL-04-Kern als 1:1-Port (tokenize → stem → token_matches → match_score).
  * Quelle: recipe_matching.rs:181–441 + stemming.rs:46–81 (Pseudocode GL-04 §3.1–3.3).
@@ -48,8 +50,7 @@ class TokenEngine
     /** rs:181–200 — Tokens als MENGE (dedupe), nur Länge ≥ 2; Akzente seit Spec 95 gefaltet (GL-04 A-5/W-1). */
     public function tokenize(string $s): array
     {
-        $s = mb_strtolower($s);
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss'] + self::AKZENTE);
+        $s = strtr(Text::umschrift(mb_strtolower($s)), self::AKZENTE);
         $s = strtr($s, ['-' => ' ', '_' => ' ', ',' => ' ', '.' => ' ', '(' => ' ', ')' => ' ', ':' => ' ', ';' => ' ', '/' => ' ', '\\' => ' ']);
         $s = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s);
 
@@ -203,8 +204,7 @@ class TokenEngine
     /** rs:203–217 — '-'→'_', nur Alphanumerik + '_' behalten, Rest ERSATZLOS weg (auch Spaces). */
     public function normalizeSlug(string $s): string
     {
-        $s = mb_strtolower($s);
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss', '-' => '_'] + self::AKZENTE);
+        $s = strtr(Text::umschrift(mb_strtolower($s)), ['-' => '_'] + self::AKZENTE);
 
         return (string) preg_replace('/[^\p{L}\p{N}_]+/u', '', $s);
     }

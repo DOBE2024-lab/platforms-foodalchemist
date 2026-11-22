@@ -109,6 +109,6 @@ final class GpSammelware
 
     private static function norm(string $s): string
     {
-        return strtr(mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', $s))), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        return Text::falte($s, Text::ZEILE);
     }
 }

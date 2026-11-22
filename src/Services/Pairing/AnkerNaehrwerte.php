@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Services\Pairing;
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Enums\WissensStatus;
 use Platform\FoodAlchemist\Services\SensorikService;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Spec 60 · Ebene 2, Nährwert-Kanal: was ein Anker an Salz, Süße und Fett liefert — gemessen an den
@@ -111,7 +112,7 @@ final class AnkerNaehrwerte
      */
     public function istZutat(string $gpName, string $ankerName): bool
     {
-        $norm = fn (string $x) => trim(strtr(mb_strtolower($x), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']));
+        $norm = fn (string $x) => Text::falte($x);
         $produkt = $norm(explode(':', $gpName, 2)[0]);
         $anker = $norm(explode(',', $ankerName, 2)[0]);
         if ($produkt === '' || $anker === '') {

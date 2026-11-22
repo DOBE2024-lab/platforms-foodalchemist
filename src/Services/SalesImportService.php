@@ -6,6 +6,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSalesFact;
 use RuntimeException;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Spec 32 · C3 — Einlesen des Verkaufs-Ist (CSV) ins {@see FoodAlchemistSalesFact}-Journal.
@@ -355,11 +356,7 @@ class SalesImportService
 
     private function norm(string $s): string
     {
-        $s = mb_strtolower(trim($s));
-        $s = strtr($s, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
-        $s = preg_replace('/[^a-z0-9]+/', ' ', $s) ?? $s;
-
-        return trim(preg_replace('/\s+/', ' ', $s) ?? $s);
+        return Text::falte($s, Text::WOERTER);
     }
 
     /** @return list<string> */

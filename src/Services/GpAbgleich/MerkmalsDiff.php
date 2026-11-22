@@ -4,6 +4,7 @@ namespace Platform\FoodAlchemist\Services\GpAbgleich;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Support\Text;
 
 /**
  * Merkmals-Diff Artikel ↔ GP (Abgleich-Dienst, S4; Regelwerk §8.19/§6.6, Fett exakt nach Regel 826). Je Merkmal `gleich | abweichend | unbekannt`.
@@ -205,12 +206,7 @@ class MerkmalsDiff
 
     private function norm(string $s): string
     {
-        $s = mb_strtolower(trim($s));
-        foreach (['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss'] as $a => $b) {
-            $s = str_replace($a, $b, $s);
-        }
-
-        return trim((string) preg_replace('/[^a-z0-9]+/u', ' ', $s));
+        return Text::falte($s, Text::WOERTER);
     }
 
     /** Prozentwert mit Bezugswort („45 % Fett“, „70 % Kakao“, „90 % Frucht“, „40 vol-%“), Dezimalkomma → Punkt; null = nicht genannt. */

@@ -2,7 +2,10 @@
 
 Stand 22.11.2026 · Entwurf Hans · Grundlage: `foodalchemist:pakete-to-concepts` aus 2.6a (cf9b3528, 0c471d8d, 827ac3e4)
 
-**Wer macht was:** Kurator kündigt an, Dominique gibt das Go je Schritt, der Master führt aus. Kein Schritt auf io ohne Go.
+**Wer macht was:** Kurator kündigt an, Dominique gibt das Go je Schritt, der **Master** führt alle Schritte auf io aus
+(markiert mit **[Master · io]**). Kein Schritt auf io ohne Dominiques Go. Datenbank auf io: MySQL.
+**Voraussetzung:** Branch 2.6b (Schalter `foodalchemist.paket_alt_nur_lesen`) ist auf io ausgerollt, Schalter noch **aus**.
+**Entscheid Kurator 22.11.:** Fail-closed. Umgezogen werden nur die 3 „Green & Tasty“; Fassungen, Abos, Kündigungskopien usw. baut das Kommando nicht um und blockiert, sobald eins davon > 0 ist.
 **Wann:** an einem ruhigen Werktag, nicht in der Woche vor Weihnachten (Plan 98, Zeitplan). Dauer bei heutigem Bestand: unter 30 Minuten.
 
 ## Bestand (19.11., nur lesend gezählt, vor dem Lauf neu zählen → Schritt 0)
@@ -11,7 +14,7 @@ Stand 22.11.2026 · Entwurf Hans · Grundlage: `foodalchemist:pakete-to-concepts
 Concept-Slots, Speiseplan, Bestellvorlagen, Abo-, Sammlungs- und Freigabe-Objekten. Concept-Kopien 11–13 (uuid-Reuse)
 sind seit 13.11. soft-deleted. Entscheid Dominique 19.11.: „Green & Tasty“ wird gebraucht.
 
-## 0 · Vorab-Zählung (lesend, SQL)
+## 0 · Vorab-Zählung (lesend, SQL) · [Master · io]
 
 ```sql
 SELECT COUNT(*) FROM foodalchemist_packages WHERE deleted_at IS NULL AND ist_fassung = 0;          -- erwartet 3
@@ -33,14 +36,14 @@ SELECT id, uuid, kind, ist_fassung, deleted_at FROM foodalchemist_concepts
 Kündigungskopien, Speiseplan- und Bestellvorlagen-Verweise ohnehin (dann wird nichts geschrieben), aber eine neue Fassung oder
 ein neues Abo seit dem 19.11. ist eine Fachfrage, keine Technikfrage.
 
-## 1 · Ankündigung
+## 1 · Ankündigung · [Kurator → Dominique → Team 3]
 
 - Wer: Kurator an Dominique, Dominique an Team 3 („Green & Tasty“).
 - Text (Vorschlag): „Am <Datum> zwischen <Uhrzeit> und <Uhrzeit> ziehen die drei Pakete ‚Green & Tasty‘ ins neue Paketmodell
   um. Bitte in dieser Zeit keine Pakete bearbeiten. Danach findet ihr sie unter Concepts (Art Paket); Preise und Inhalte bleiben gleich.“
 - Bearbeitungsstopp: Ab Ankündigung keine Änderungen an `/pakete` in Team 3.
 
-## 2 · Backup
+## 2 · Backup · [Master · io]
 
 Nur die betroffenen Tabellen, als eigener Dump vor dem Lauf (zusätzlich zur regulären Sicherung):
 
@@ -57,7 +60,7 @@ mysqldump --single-transaction --no-tablespaces <db> \
 Prüfen: Datei nicht leer, `grep -c "INSERT INTO \`foodalchemist_packages\`"` ≥ 1. Ablage außerhalb des Web-Roots, Pfad im Protokoll notieren.
 (Angebote haben keine `package_id`-Spalte; sie erreichen Alt-Pakete nur über Concept-Slots bzw. `packages.offer_id`. Die Angebots-Tabellen sind trotzdem im Dump, damit „Angebote alt = neu“ nachprüfbar bleibt.)
 
-## 3 · Trockenlauf (schreibt nichts)
+## 3 · Trockenlauf (schreibt nichts) · [Master · io]
 
 ```bash
 php artisan foodalchemist:pakete-to-concepts --json=storage/app/foodalchemist/paket-umzug/trockenlauf-$(date +%Y%m%d-%H%M).json
@@ -70,7 +73,7 @@ Zu lesen:
 - **Parität** im Trockenlauf vergleicht Alt-Paket mit der *heutigen* (gelöschten, evtl. veralteten) Kopie. DIFF-Zeilen sind hier erwartbar und kein Abbruchgrund.
 - JSON-Datei an den Kurator.
 
-## 4 · Apply
+## 4 · Apply · [Master · io]
 
 ```bash
 php artisan foodalchemist:pakete-to-concepts --apply --id=<id1> --id=<id2> --id=<id3> \
@@ -81,9 +84,10 @@ php artisan foodalchemist:pakete-to-concepts --apply --id=<id1> --id=<id2> --id=
 - Läuft in einer Transaktion. Bei Blocker: nichts geschrieben, Exit-Code 1.
 - Ausgabe nennt den Journal-Pfad (`storage/app/foodalchemist/paket-umzug/journal-<zeit>.json`). Journal sichern (Kopie neben den Dump).
 - Danach Caches: Preis-Cockpit rechnet beim Öffnen nach; kein Extra-Schritt nötig.
-- Danach Schreibschutz einschalten (Abschnitt „package_id nur lesend“).
+- Danach Schreibschutz einschalten: in `.env` auf io `FOODALCHEMIST_PAKET_ALT_NUR_LESEN=true`, dann `php artisan config:cache`
+  (falls die Config gecacht ist). Probe: `php artisan tinker --execute="dump(config('foodalchemist.paket_alt_nur_lesen'));"` → `true`.
 
-## 5 · Verify
+## 5 · Verify · [Master · io], Punkt 2 Dominique
 
 1. **Paritäts-Report** steht schon in der Apply-Ausgabe und im JSON. Erwartung: `0 mit Paritätsabweichung`, jede Zeile `ok`:
    `preis_gespeichert`, `preis_gerechnet`, `allergene_diaet`, `naehrwerte`, `ek_arbeitszeit`, `mengen_einheiten`,
@@ -99,14 +103,15 @@ php artisan foodalchemist:pakete-to-concepts --apply --id=<id1> --id=<id2> --id=
 
 Abbruchregel: Eine DIFF-Zeile im Apply-Report → Rückweg (Schritt 6), dann Analyse.
 
-## 6 · Rückweg
+## 6 · Rückweg · [Master · io], nur nach Dominiques Go
 
 Stufe 1, Journal (bevorzugt, chirurgisch):
 ```bash
 php artisan foodalchemist:pakete-to-concepts --rueckweg=storage/app/foodalchemist/paket-umzug/journal-<zeit>.json
 ```
 Stellt Concepts 11–13 (inkl. Soft-Delete-Stand), ihre Slots und etwaige Einbettungen exakt auf den Stand vor dem Apply zurück.
-Die Alt-Tabellen hat der Umzug nicht angefasst; `/pakete` funktioniert ohne Rückweg weiter. Schreibschutz wieder aus.
+Die Alt-Tabellen hat der Umzug nicht angefasst; `/pakete` funktioniert ohne Rückweg weiter. Schreibschutz wieder aus
+(`FOODALCHEMIST_PAKET_ALT_NUR_LESEN=false`, ggf. `config:cache`). Reihenfolge: erst Schalter aus, dann Journal-Rückweg.
 
 Stufe 2, Dump (nur wenn Stufe 1 scheitert): die Tabellen aus Schritt 2 aus dem Dump einspielen. Achtung: überschreibt auch
 Änderungen an Concepts/Slots, die seit dem Dump gemacht wurden; deshalb nur im Bearbeitungsfenster aus Schritt 1.
@@ -120,12 +125,21 @@ Schreibwege heute (Stand main e23067a5):
 | Alt-Paket anlegen/ändern/löschen, Positionen | `PaketService`, `/pakete`, Paket-Tools auf der Alt-Tabelle | gesperrt |
 | Alt-Paket-Fassung veröffentlichen | `PaketFassungService::kopiere` (:237) | gesperrt |
 | Concept-Slot mit Alt-Paket befüllen | `ConceptService::fillSlot` (`package_id`-Zweig, :478), `Concepts/Index:321` | abgelehnt, Hinweis auf `embedded_concept_id` |
-| Speiseplan-Eintrag mit `package_id` | `SpeiseplanService` (Prüfung :720), `speiseplan.eintraege.POST/PUT` | abgelehnt |
-| Kündigungskopie eines Alt-Pakets / Slot-Umhängen | `AboKuendigungService::kopiereInhaltPaket` (:765), `:789` | nur noch Bestand (0 auf io) |
+| Speiseplan-Eintrag mit `package_id` | `SpeiseplanService` (Prüfung :720), `speiseplan.eintraege.POST/PUT`, Plan-Kopien | abgelehnt (Hook am Eintrag) |
+| Kündigungskopie eines Alt-Pakets / Slot-Umhängen | `AboKuendigungService::kopiereInhaltPaket` (:765), `:789` | gesperrt über Model-Hooks (Bestand io 0) |
 | Concept-Fassung übernimmt Slot-`package_id` | `ConceptFassungService:261` | kopiert vorhandene Werte (lesend) |
 
-Vorschlag (Entscheid nötig, siehe Bericht): ein Schalter `foodalchemist.paket_alt_nur_lesen` (Standard aus, auf io nach Apply an).
-Er sperrt zentral: Model-Hooks `saving`/`deleting` auf `FoodAlchemistPaket` und `FoodAlchemistPaketGericht` (fängt UI, Services,
-Tools, Fassungen und Kündigungskopien), dazu eine fachliche Ablehnung mit klarer Meldung in `fillSlot` und Speiseplan, bevor
-die Hooks greifen. Rückweg = Schalter aus. Ein Architektur-Test verhindert neue Schreibwege auf `package_id`. Entfernt wird
-der alte Code erst in 2.6c, die Spalten in 3.1.
+Umsetzung (Entscheid Kurator 22.11.): Schalter `foodalchemist.paket_alt_nur_lesen` (`FOODALCHEMIST_PAKET_ALT_NUR_LESEN`,
+Standard aus; auf io nach dem Apply an, Rückweg = aus).
+
+- **Model-Hooks** `saving`/`deleting`/`restoring` auf `FoodAlchemistPaket` und `FoodAlchemistPaketGericht` werfen
+  `PaketAltNurLesenException`. Das fängt UI, Services, Tools, Paket-Fassungen und Kündigungskopien.
+- **Massen-Updates** am Hook vorbei sind abgesichert: `PaketService::reorderGerichte` lehnt ab, `markStaleForRecipe` tut nichts.
+- **Neue Verweise** werden mit klarer Meldung abgelehnt: `ConceptService::fillSlot` (`package_id` → bitte `embedded_concept_id`),
+  Speiseplan-Eintrag (`saving`-Hook am Modell, neuer `package_id`-Wert, auch über Kopien), `OrderTemplateService::positionSetzen` (Typ `paket`).
+- **Nachrechnung:** `PricingCascadeService` lässt alte Pakete aus (sonst bräche jede Rezept-Preisänderung mit einem
+  Green-&-Tasty-Gericht ab). Die Preise der alten Pakete frieren ein; maßgeblich ist das Paket-Concept.
+- **UI:** `/pakete` und der alte `/concepts`-Zweig zeigen die Meldung als Toast (kein Ausblenden der Knöpfe bis 2.6c).
+- **Architektur-Test** `Spec98PaketAltNurLesenTest`: keine neuen Massen-Schreibzugriffe auf die Alt-Tabellen ohne Schalterprüfung,
+  `package_id`-/`paket_id`-Schreibstellen nur Bestand oder weniger.
+- Lesen bleibt unverändert (Detail, Kalkulation, Exporte, Parität). Entfernt wird der alte Code in 2.6c, die Spalten in 3.1.

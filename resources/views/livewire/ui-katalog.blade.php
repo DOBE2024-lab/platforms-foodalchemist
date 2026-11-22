@@ -211,6 +211,37 @@
             </div>
         </x-fa::section>
 
+        {{-- 98 · 2.4f (U8): Begriffsliste — entschieden von Dominique am 22.11.2026. Gilt für sichtbare Texte; Routen,
+             Klassen, Livewire-Namen, data-Attribute und MCP-Beschreibungen bleiben. Wächter: tests/Feature/BegriffeWaechterTest. --}}
+        @php
+            $begriffe = [
+                ['Konzept, Konzepte', 'Concept, Concepts', 'Menü, Buffet oder Paket aus Gerichten. Überall in der Oberfläche.'],
+                ['Konzepter', 'Concepter', 'Name des Moduls in Navigation, Kopf und Titeln.'],
+                ['Bearbeiten', '–', 'Nur für den Bearbeiten-Modus (sperrt den Datensatz für andere). Kein Ansichts-Umschalter.'],
+                ['Im Editor öffnen', 'Plan bearbeiten, Karte bearbeiten …', 'Knopf, der einen Editor öffnet.'],
+                ['Ändern', 'Bearbeiten', 'Zeilen-Aktion, die ein Formular füllt.'],
+                ['Tagesplan', 'Tagesplanung, Küchenleiter-Dashboard', 'Eine Seite, ein Name in Navigation, Kopf und Titel.'],
+                ['Küchenmonitor', 'Wandmonitor', 'Anzeige an der Wand der Küche.'],
+                ['Übersicht', 'Dashboard, Food Alchemist', 'Startseite des Moduls.'],
+                ['Etiketten', 'Etikett drucken', 'Seitenname; Drucken ist die Aktion.'],
+                ['Foodbooks', 'Foodbook / Portfolio', 'Seitenname; Portfolio ist eine Ausgabeart.'],
+                ['Basisrezepte', 'Rezepte', 'Auch am Handy.'],
+                ['Nr. 12', '#12', 'Nummer zum Nennen. Technische Kennungen (Slug, UUID, Feldname) erscheinen nicht.'],
+            ];
+        @endphp
+        <x-fa::section title="Begriffe" icon="heroicon-o-language" description="Ein Name je Sache und Seite. Gilt für sichtbare Texte; Routen und technische Namen bleiben." data-katalog-begriffe="">
+            <div class="overflow-x-auto">
+                <x-fa::table class="min-w-[640px]">
+                    <thead><tr><th>Verwenden</th><th>Nicht verwenden</th><th>Wofür</th></tr></thead>
+                    <tbody>
+                        @foreach($begriffe as [$ja, $nein, $wofuer])
+                            <tr><td class="fa-t-strong">{{ $ja }}</td><td class="fa-t-muted">{{ $nein }}</td><td class="fa-t-muted">{{ $wofuer }}</td></tr>
+                        @endforeach
+                    </tbody>
+                </x-fa::table>
+            </div>
+        </x-fa::section>
+
         <div class="grid gap-8 lg:grid-cols-2">
             <x-fa::section title="Allergene und Diät" icon="heroicon-o-beaker" description="Neu: Enthalten und Spuren zuerst, vollständige Liste eingeklappt. Beispieldaten.">
                 <x-fa::deklaration :rezept="$beispielRezept" />

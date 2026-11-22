@@ -6,6 +6,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Recipes\RecipeModal;
 use Platform\FoodAlchemist\Livewire\Verkauf\VkModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Services\BearbeitungssperreService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -31,6 +32,7 @@ beforeEach(function () {
             'is_sales_recipe' => true,
         ]),
     ];
+    $this->modalName = [RecipeModal::class => 'recipe-modal', VkModal::class => 'vk-modal'];
 });
 
 dataset('rezept_modale', [RecipeModal::class, VkModal::class]);
@@ -70,4 +72,32 @@ it('Abbrechen: der eingebettete Zutaten-/Komponenten-Editor wird neu gemountet, 
     $lw->call('bearbeitenAbbrechen');
 
     expect($lw->get('zutatenVersion'))->not->toBe($vorher);
+})->with('rezept_modale');
+
+it('Geschlossenes Modal: zutaten-persistiert gibt die Sperre eines anderen offenen Editors desselben Nutzers nicht frei', function (string $modal) {
+    $rezept = $this->rezepte[$modal];
+    $sperre = app(BearbeitungssperreService::class);
+    $anna = auth()->user();
+
+    $lw = Livewire::test($modal)->call('oeffnen', $rezept->id)->call('bearbeitenStarten');
+    $lw->dispatch('modal.closed', name: $this->modalName[$modal]);           // per X geschlossen: eigene Sperre frei
+    expect($sperre->haelt('recipe', $rezept->id, $anna->id))->toBeFalse()
+        ->and($lw->get('istOffen'))->toBeFalse();
+
+    // Ein zweiter Editor desselben Nutzers holt sich die Sperre auf dasselbe Rezept (gleicher Schlüssel recipe/id) …
+    expect($sperre->sperren('recipe', $rezept->id, $anna->id, 'Anna')['ok'])->toBeTrue();
+    // … und dessen Zutaten-Save darf über das geschlossene Modal nicht seine Sperre lösen.
+    $lw->dispatch('zutaten-persistiert', recipeId: $rezept->id);
+
+    expect($sperre->haelt('recipe', $rezept->id, $anna->id))->toBeTrue();
+})->with('rezept_modale');
+
+it('Offenes Modal: zutaten-persistiert beendet die Bearbeitung wie bisher', function (string $modal) {
+    $rezept = $this->rezepte[$modal];
+    $lw = Livewire::test($modal)->call('oeffnen', $rezept->id)->call('bearbeitenStarten');
+    expect(app(BearbeitungssperreService::class)->haelt('recipe', $rezept->id, auth()->id()))->toBeTrue();
+
+    $lw->dispatch('zutaten-persistiert', recipeId: $rezept->id);
+
+    expect(app(BearbeitungssperreService::class)->haelt('recipe', $rezept->id, auth()->id()))->toBeFalse();
 })->with('rezept_modale');

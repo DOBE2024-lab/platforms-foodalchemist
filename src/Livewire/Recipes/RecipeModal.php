@@ -95,8 +95,6 @@ class RecipeModal extends Component
 
     public ?string $fehler = null;
 
-    public bool $istOffen = false;
-
     /** @var array<string, bool> Legacy-Client-State aus kurzzeitigem Lazy-Tab-Render; bleibt als No-op, bis alte Livewire-Snapshots verschwunden sind. */
     public array $geladeneTabs = ['aufbau' => true];
 
@@ -330,23 +328,6 @@ class RecipeModal extends Component
             }
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
-        }
-    }
-
-    /**
-     * #1b: Der eingebettete Zutaten-Editor hat erfolgreich gespeichert → JETZT erst schließen
-     * (der Stammdaten-Save lief davor, der Button sequenziert beides). Adressiert wie MVP-046:
-     * nur schließen, wenn genau dieses offene Rezept gemeint ist — sonst zöge ein Zutaten-Save
-     * aus dem Cockpit/Gericht-Editor das Rezept-Modal mit zu. Der Erfolgs-Toast kommt vom
-     * Zutaten-Editor selbst (ein Toast, kein Doppel).
-     */
-    #[On('zutaten-persistiert')]
-    public function beiZutatenPersistiert(?int $recipeId = null): void
-    {
-        if ($this->istOffen && $recipeId !== null && $this->recipeId === $recipeId) {
-            // Spec 65 (Dominique 2026-10-07): Speichern beendet die Bearbeitung und gibt die Sperre frei, der Editor
-            // BLEIBT offen im Lesemodus — man prüft das Ergebnis (frisch gerechnete Kennzahlen) und schließt selbst.
-            $this->bearbeitenBeenden();
         }
     }
 

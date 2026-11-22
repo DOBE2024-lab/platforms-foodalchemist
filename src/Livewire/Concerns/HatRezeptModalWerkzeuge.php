@@ -24,6 +24,9 @@ use Platform\FoodAlchemist\Services\SensorikService;
  */
 trait HatRezeptModalWerkzeuge
 {
+    /** Ist das Modal gerade offen? Beim Schließen per X (modal.closed) und beim Löschen wieder false. */
+    public bool $istOffen = false;
+
     public bool $ueberarbeitenOffen = false;
 
     public string $anweisung = '';
@@ -76,7 +79,26 @@ trait HatRezeptModalWerkzeuge
     #[On('modal.closed')]
     public function beiModalGeschlossen(?string $name = null): void
     {
+        if ($name !== null && $name === $this->sperrModalName()) {
+            $this->istOffen = false;   // 98 · 2.2c: sonst reagiert beiZutatenPersistiert auch nach dem Schließen
+        }
         $this->sperreBeiSchliessen($name);
+    }
+
+    /**
+     * #1b: Der eingebettete Zutaten-/Komponenten-Editor hat erfolgreich gespeichert → Bearbeitung beenden. Adressiert wie
+     * MVP-046: nur, wenn genau dieses OFFENE Rezept gemeint ist. Ein geschlossenes Modal hält keine Sperre mehr; ein
+     * bearbeitenBeenden() hier gäbe sonst die Sperre eines anderen offenen Editors desselben Nutzers auf demselben Rezept
+     * frei (gleicher Schlüssel recipe/id, 98 · 2.2c). Der Erfolgs-Toast kommt vom Zutaten-Editor selbst (ein Toast, kein Doppel).
+     */
+    #[On('zutaten-persistiert')]
+    public function beiZutatenPersistiert(?int $recipeId = null): void
+    {
+        if ($this->istOffen && $recipeId !== null && $this->recipeId === $recipeId) {
+            // Spec 65 (Dominique 2026-10-07): Speichern beendet die Bearbeitung und gibt die Sperre frei, der Editor
+            // BLEIBT offen im Lesemodus — man prüft das Ergebnis (frisch gerechnete Kennzahlen) und schließt selbst.
+            $this->bearbeitenBeenden();
+        }
     }
 
     // ── Gerichtsbild ─────────────────────────────────────────────────────

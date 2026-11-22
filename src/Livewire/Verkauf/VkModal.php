@@ -180,6 +180,7 @@ class VkModal extends Component
         if ($copilot && $this->recipeId !== null) {
             $this->copilotAusAblage();
         }
+        $this->istOffen = true;
         $this->dispatch('modal.open', name: 'vk-modal');
     }
 
@@ -364,7 +365,7 @@ class VkModal extends Component
 
     private function formZuruecksetzen(): void
     {
-        $this->reset(['recipeId', 'form', 'neuName', 'basisSuche', 'basisId', 'regenForm', 'regenEditId', 'kundeName', 'kundeMarketing', 'fehler', 'rollenVorschlag', 'regenVorschlaege',
+        $this->reset(['recipeId', 'istOffen', 'form', 'neuName', 'basisSuche', 'basisId', 'regenForm', 'regenEditId', 'kundeName', 'kundeMarketing', 'fehler', 'rollenVorschlag', 'regenVorschlaege',
             'ueberarbeitenOffen', 'anweisung', 'ueberarbeitung',     // L1a: Revise-Vorschau darf nicht ins nächste Gericht lecken
             'bulkRunId', 'anreicherung',                            // L1b: dito für die Anreicherungs-Lauf-Box
             'kiLineage',                                            // KI-Herkunfts-Marker gehören zu GENAU diesem Gericht
@@ -439,21 +440,6 @@ class VkModal extends Component
         // sonst wäre ein Zutaten-Fehler unsichtbar (Race-Fix, Parität zum Rezept-Editor).
     }
 
-    /**
-     * #1b: eingebettete Komponenten erfolgreich gespeichert → jetzt erst das Gericht-Modal
-     * schließen (adressiert, damit ein Zutaten-Save aus Cockpit/Rezept-Editor nicht hier zieht).
-     * Der Erfolgs-Toast kommt vom Zutaten-Editor (ein Toast, kein Doppel).
-     */
-    #[On('zutaten-persistiert')]
-    public function beiZutatenPersistiert(?int $recipeId = null): void
-    {
-        if ($this->recipeId !== null && $this->recipeId === $recipeId) {
-            // Spec 65 (Dominique 2026-10-07): Speichern beendet die Bearbeitung und gibt die Sperre frei, der Editor
-            // BLEIBT offen im Lesemodus — man prüft das Ergebnis (frisch gerechnete Kennzahlen) und schließt selbst.
-            $this->bearbeitenBeenden();
-        }
-    }
-
     /** VK-Layer lösen (D-6): löscht NUR das Gericht — Basisrezepte + GP-Verknüpfungen bleiben. */
     public function loeschen(): void
     {
@@ -469,6 +455,7 @@ class VkModal extends Component
             return;
         }
         $this->dispatch('recipe-gespeichert');
+        $this->istOffen = false;
         $this->dispatch('modal.close', name: 'vk-modal');
     }
 

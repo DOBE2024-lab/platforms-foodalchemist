@@ -112,6 +112,7 @@ return [
     \Platform\FoodAlchemist\Console\TrendsMessenCommand::class,   // Spec 79
     \Platform\FoodAlchemist\Console\TrendsStartbestandCommand::class,   // Spec 79
     \Platform\FoodAlchemist\Console\VokabularCodesCommand::class,   // CQ 2.5b
+    \Platform\FoodAlchemist\Console\WaisenCommand::class,   // Folge aus Bild-Löschschutz #901/#907
     \Platform\FoodAlchemist\Console\WechselkursHolenCommand::class,
     \Platform\FoodAlchemist\Console\WgRollenCommand::class,   // CQ 3.7: Rollen-Flags der Warengruppen (Probelauf/--apply)
     \Platform\FoodAlchemist\Console\WissenDeckelCheckCommand::class,

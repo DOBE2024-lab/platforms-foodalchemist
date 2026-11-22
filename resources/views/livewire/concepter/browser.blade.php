@@ -39,7 +39,7 @@
     </x-slot>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Filter" width="w-80">
+        <x-fa::page-sidebar title="Filter" width="w-80">
             <div class="p-3 flex flex-col gap-3">
                 <div class="relative">
                     <label for="concepter-suche" class="sr-only">{{ $istPakete ? 'Pakete durchsuchen' : 'Concepts durchsuchen' }}</label>
@@ -50,17 +50,17 @@
 
                 @unless($istPakete)
                     {{-- Vorlagen: eigene Liste, aus der neue Concepts entstehen --}}
-                    <x-foodalchemist::filter-row wire:click="$set('showVorlagen', {{ $showVorlagen ? 'false' : 'true' }})" :active="$showVorlagen">
+                    <x-fa::filter-row wire:click="$set('showVorlagen', {{ $showVorlagen ? 'false' : 'true' }})" :active="$showVorlagen">
                         <span class="inline-flex items-center gap-2">@svg('heroicon-o-square-2-stack', 'w-4 h-4 shrink-0') Nur Vorlagen</span>
-                    </x-foodalchemist::filter-row>
+                    </x-fa::filter-row>
                 @endunless
 
                 {{-- Status (geteilte Dimension, gilt für beide Reiter) --}}
                 <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]">
                     <p class="px-2.5 pb-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">Status</p>
-                    <x-foodalchemist::filter-row wire:click="waehleStatus('')" :active="$statusFilter === ''">Alle Status</x-foodalchemist::filter-row>
+                    <x-fa::filter-row wire:click="waehleStatus('')" :active="$statusFilter === ''">Alle Status</x-fa::filter-row>
                     @foreach($statusLabel as $val => $lbl)
-                        <x-foodalchemist::filter-row wire:key="stf-{{ $val }}" wire:click="waehleStatus('{{ $val }}')" :active="$statusFilter === $val">{{ $lbl }}</x-foodalchemist::filter-row>
+                        <x-fa::filter-row wire:key="stf-{{ $val }}" wire:click="waehleStatus('{{ $val }}')" :active="$statusFilter === $val">{{ $lbl }}</x-fa::filter-row>
                     @endforeach
                 </div>
 
@@ -68,9 +68,9 @@
                 @if(! empty($klassen))
                     <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]">
                         <p class="px-2.5 pb-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">Klasse</p>
-                        <x-foodalchemist::filter-row wire:click="waehleKlasse('')" :active="$klasse === ''">Alle Klassen</x-foodalchemist::filter-row>
+                        <x-fa::filter-row wire:click="waehleKlasse('')" :active="$klasse === ''">Alle Klassen</x-fa::filter-row>
                         @foreach($klassen as $k)
-                            <x-foodalchemist::filter-row wire:key="kl-{{ $loop->index }}" wire:click="waehleKlasse({{ \Illuminate\Support\Js::from($k) }})" :active="$klasse === $k">{{ $k }}</x-foodalchemist::filter-row>
+                            <x-fa::filter-row wire:key="kl-{{ $loop->index }}" wire:click="waehleKlasse({{ \Illuminate\Support\Js::from($k) }})" :active="$klasse === $k">{{ $k }}</x-fa::filter-row>
                         @endforeach
                     </div>
                 @endif
@@ -78,9 +78,9 @@
                 @if($istPakete && ! empty($rollen))
                     <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]">
                         <p class="px-2.5 pb-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">Rolle</p>
-                        <x-foodalchemist::filter-row wire:click="waehleRolle('')" :active="$rolleFilter === ''">Alle Rollen</x-foodalchemist::filter-row>
+                        <x-fa::filter-row wire:click="waehleRolle('')" :active="$rolleFilter === ''">Alle Rollen</x-fa::filter-row>
                         @foreach($rollen as $r)
-                            <x-foodalchemist::filter-row wire:key="ro-{{ $loop->index }}" wire:click="waehleRolle({{ \Illuminate\Support\Js::from($r) }})" :active="$rolleFilter === $r">{{ $r }}</x-foodalchemist::filter-row>
+                            <x-fa::filter-row wire:key="ro-{{ $loop->index }}" wire:click="waehleRolle({{ \Illuminate\Support\Js::from($r) }})" :active="$rolleFilter === $r">{{ $r }}</x-fa::filter-row>
                         @endforeach
                     </div>
                 @endif
@@ -102,14 +102,14 @@
                                 </span>
                                 @if($gewaehlt)<x-fa::badge tone="accent" class="max-w-[9rem]"><span class="truncate" title="{{ $gewaehlt->{$labelFeld} }}">{{ $gewaehlt->{$labelFeld} }}</span></x-fa::badge>@endif
                             </summary>
-                            <x-foodalchemist::filter-ast>
-                                <x-foodalchemist::filter-row level="child" wire:click="waehleFacette('{{ $feld }}', '')" :active="$wert === ''">Alle</x-foodalchemist::filter-row>
+                            <x-fa::filter-ast>
+                                <x-fa::filter-row level="child" wire:click="waehleFacette('{{ $feld }}', '')" :active="$wert === ''">Alle</x-fa::filter-row>
                                 @foreach($vokabular as $eintrag)
-                                    <x-foodalchemist::filter-row level="child" wire:key="{{ $praefix }}-{{ $eintrag->id }}"
+                                    <x-fa::filter-row level="child" wire:key="{{ $praefix }}-{{ $eintrag->id }}"
                                         wire:click="waehleFacette('{{ $feld }}', '{{ $eintrag->id }}')"
-                                        :active="$wert === (string) $eintrag->id">{{ $eintrag->{$labelFeld} }}</x-foodalchemist::filter-row>
+                                        :active="$wert === (string) $eintrag->id">{{ $eintrag->{$labelFeld} }}</x-fa::filter-row>
                                 @endforeach
-                            </x-foodalchemist::filter-ast>
+                            </x-fa::filter-ast>
                         </details>
                     @endforeach
                 </div>
@@ -120,15 +120,15 @@
                     </div>
                 @endif
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- Detail-Spalte erst, wenn etwas gewählt ist (vorher nahm der leere Hinweis Platz der Tabelle weg). --}}
     @if($selectedId !== null)
         <x-slot name="activity">
-            <x-foodalchemist::detail-sidebar title="Detail" width="w-96" :maxWidth="640" scope="activity_concepter" side="right" :auswahl="(string) $selectedId">
+            <x-fa::detail-sidebar title="Detail" width="w-96" :maxWidth="640" scope="activity_concepter" side="right" :auswahl="(string) $selectedId">
                 <livewire:foodalchemist.concepter.detail-panel :selected-id="$selectedId" :type="$tab" key="concepter-browser--concepter.detail-panel" />
-            </x-foodalchemist::detail-sidebar>
+            </x-fa::detail-sidebar>
         </x-slot>
     @endif
 
@@ -168,7 +168,7 @@
         </div>
 
         <div class="fa-surface overflow-hidden">
-            <x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
+            <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
             {{-- Spec 28: eigener Scroll-Kasten, damit der Tabellenkopf kleben kann --}}
             <div class="max-h-[70vh] overflow-auto">
                 <table class="fa-table">
@@ -194,7 +194,7 @@
                                 $wareneinsatz = $istPakete ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($it->ek_per_person_cache, $preis, null) : null;
                                 $darfStatus = ! isset($it->team_id) || \Platform\FoodAlchemist\Support\Curate::canCurate(auth()->user(), $it);   // seit #800 sind Pakete Concepts (kind=paket) → Status wie bei Concepts
                             @endphp
-                            <x-foodalchemist::table-row :active="$selectedId === $it->id" wire:key="row-{{ $tab }}-{{ $it->id }}" wire:click="waehle({{ $it->id }})"
+                            <x-fa::table-row :active="$selectedId === $it->id" wire:key="row-{{ $tab }}-{{ $it->id }}" wire:click="waehle({{ $it->id }})"
                                 x-data x-on:click="$store.ui?.mSet('activity_concepter', 'open', true)">
                                 {{-- Namens-Klick öffnet den Editor, Zeilen-Klick nur das Detail --}}
                                 <td class="min-w-[12rem]">
@@ -239,7 +239,7 @@
                                 @if($istPakete)
                                     <td class="num text-[var(--fa-ink-2)]">{{ $wareneinsatz !== null ? number_format($wareneinsatz, 1, ',', '.') . ' %' : '–' }}</td>
                                 @endif
-                            </x-foodalchemist::table-row>
+                            </x-fa::table-row>
                         @empty
                             <tr>
                                 <td colspan="{{ $istPakete ? $spaltenZahl + 1 : $spaltenZahl }}">

@@ -13,7 +13,7 @@
     $offene = count($ergebnis['offene'] ?? []);
 @endphp
 
-<x-foodalchemist::modal name="vk-generator-modal" title="Gericht generieren" size="max-w-2xl">
+<x-fa::modal name="vk-generator-modal" title="Gericht generieren" size="max-w-2xl">
     @if($fehler !== null)
         <x-fa::notice tone="crit" data-vk-generator-fehler>{{ $fehler }}</x-fa::notice>
     @endif
@@ -110,7 +110,7 @@
 
                 {{-- Spec 03 L7b: One-Shot — Generieren und Anreichern in einem Durchlauf --}}
                 <div class="md:col-span-2 pt-3 border-t border-[var(--fa-line)]">
-                    <x-foodalchemist::oneshot-toggle marker="vk-generator" schritte="Beschreibung, Verkaufstext, Anrichten, Speisen-Klasse" />
+                    <x-fa::oneshot-toggle marker="vk-generator" schritte="Beschreibung, Verkaufstext, Anrichten, Speisen-Klasse" />
                 </div>
             </div>
         </x-fa::section>
@@ -123,17 +123,17 @@
                 <x-fa::badge tone="warn">{{ $ergebnis['statistik']['stub_neu'] }} Platzhalter neu</x-fa::badge>
                 <x-fa::badge :tone="$ergebnis['statistik']['offen'] > 0 ? 'crit' : 'neutral'">{{ $ergebnis['statistik']['offen'] }} offen</x-fa::badge>
             </div>
-            <x-foodalchemist::hardstop-zeilen :offene="$ergebnis['offene']" prefix="vk-"
+            <x-fa::hardstop-zeilen :offene="$ergebnis['offene']" prefix="vk-"
                                              :aufgeklappt="$hardstopOffenIndex" :meldung="$hardstopMeldung" />
-            <x-foodalchemist::stub-offen :stubs="$ergebnis['statistik']['stubs'] ?? []" />
-            <x-foodalchemist::kontext-inspektor :kontext="$ergebnis['kontext'] ?? null" />
+            <x-fa::stub-offen :stubs="$ergebnis['statistik']['stubs'] ?? []" />
+            <x-fa::kontext-inspektor :kontext="$ergebnis['kontext'] ?? null" />
             <p class="fa-t-muted">Speisen-Klasse und Preisklasse sind aus dem Vorschlag übernommen, soweit sie gültig waren. Den Rest im Gericht-Editor pflegen.</p>
             @if($laeuft)
                 <p wire:poll.2s="pruefeErgebnis" class="inline-flex items-center gap-2 text-[length:var(--fa-text-md)] text-[var(--fa-accent)]" data-vk-generator-anreicherung-laeuft>
                     @svg('heroicon-o-arrow-path', 'w-4 h-4 animate-spin') Gericht gespeichert. Vollanreicherung läuft separat …
                 </p>
             @endif
-            <x-foodalchemist::oneshot-ergebnis :anreicherung="$anreicherung" />
+            <x-fa::oneshot-ergebnis :anreicherung="$anreicherung" />
         </x-fa::section>
     @endif
 
@@ -152,4 +152,4 @@
                 :title="$offene > 0 ? 'Erst die offenen Zutaten klären' : null" data-vk-generator-freigeben>Gericht freigeben</x-fa::button>
         @endif
     </x-slot:footer>
-</x-foodalchemist::modal>
+</x-fa::modal>

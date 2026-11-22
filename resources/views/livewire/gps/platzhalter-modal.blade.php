@@ -1,10 +1,10 @@
 {{-- D-5: Platzhalter verwalten (anlegen, umbenennen, löschen). fa-pass Welle 2: Bausteine <x-fa::…>. --}}
-<x-foodalchemist::modal name="platzhalter-modal" title="Platzhalter verwalten" size="max-w-xl">
+<x-fa::modal name="platzhalter-modal" title="Platzhalter verwalten" size="max-w-xl">
     @if($fehler !== null)
         <x-fa::notice tone="crit" class="mb-3" data-platzhalter-fehler>{{ $fehler }}</x-fa::notice>
     @endif
 
-    <x-foodalchemist::modal-section title="Neuer Platzhalter">
+    <x-fa::modal-section title="Neuer Platzhalter">
         <div class="flex items-start gap-2">
             <x-fa::field class="flex-1" for="platzhalter-neu" hint="„(neutral)“ wird angehängt. Ein Platzhalter hat keinen Lieferantenartikel und wird bei der Zuordnung übersprungen.">
                 <x-fa::input id="platzhalter-neu" wire:model="neuName" wire:keydown.enter.prevent="anlegen"
@@ -12,9 +12,9 @@
             </x-fa::field>
             <x-fa::button variant="primary" icon="heroicon-m-plus" class="shrink-0" wire:click="anlegen" wire:loading.attr="disabled" data-platzhalter-anlegen>Platzhalter anlegen</x-fa::button>
         </div>
-    </x-foodalchemist::modal-section>
+    </x-fa::modal-section>
 
-    <x-foodalchemist::modal-section title="Vorhandene Platzhalter ({{ $platzhalter->count() }})">
+    <x-fa::modal-section title="Vorhandene Platzhalter ({{ $platzhalter->count() }})">
         <div class="flex flex-col gap-1" data-platzhalter-liste>
             @forelse($platzhalter as $ph)
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" wire:key="ph-{{ $ph->id }}" data-platzhalter-row="{{ $ph->id }}">
@@ -36,9 +36,9 @@
                 <x-fa::empty compact icon="heroicon-o-square-2-stack" title="Noch keine Platzhalter">Oben einen Namen eingeben und anlegen.</x-fa::empty>
             @endforelse
         </div>
-    </x-foodalchemist::modal-section>
+    </x-fa::modal-section>
 
     <x-slot:footer>
         <x-fa::button variant="ghost" wire:click="$dispatch('modal.close', { name: 'platzhalter-modal' })">Schließen</x-fa::button>
     </x-slot:footer>
-</x-foodalchemist::modal>
+</x-fa::modal>

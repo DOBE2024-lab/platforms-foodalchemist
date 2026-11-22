@@ -75,7 +75,7 @@
     $filterLabel = ['alle' => 'Alle', 'pruefen' => 'Zu prüfen', 'fehler' => 'Fehler', 'bestand' => 'Aus Bestand'];
     $klein = 'text-[length:var(--fa-text-sm)]';
 @endphp
-<x-foodalchemist::modal-section icon="heroicon-o-queue-list" title="Fortschritt">
+<x-fa::modal-section icon="heroicon-o-queue-list" title="Fortschritt">
     <div class="flex flex-col gap-3 min-w-0" data-fortschritt-neu>
         @if($lauf->brief)
             <p class="{{ $klein }} text-[var(--fa-ink-2)] line-clamp-2 break-words"><span class="font-medium text-[var(--fa-ink)]">Auftrag:</span> {{ \Illuminate\Support\Str::limit($lauf->brief, 200) }}</p>
@@ -120,18 +120,18 @@
         <div class="flex flex-wrap items-center gap-2">
             @if($offen > 0)
                 {{-- #1003 PR7: am Handy erlaubt (Dominique 30.10.), Sammel-Freigabe mit Rückfrage. --}}
-                <x-foodalchemist::ki-action action="alleNeuenAnreichern()" target="alleNeuenAnreichern" icon="heroicon-o-sparkles" variant="ai"
+                <x-fa::ki-action action="alleNeuenAnreichern()" target="alleNeuenAnreichern" icon="heroicon-o-sparkles" variant="ai"
                     :confirm="($handy ?? false) ? $offen . ' ' . ($offen === 1 ? 'Vorschlag' : 'Vorschläge') . ' freigeben und anreichern?' : null" :class="($handy ?? false) ? 'min-h-11 max-w-full whitespace-normal text-left' : ''"
                     label="Alle neu gebauten anreichern und freigeben ({{ $offen }})" busy="Wird angereichert …" flash="Anreicherung gestartet" data-planung-alle-anreichern />
             @endif
             @if($laufFailedGenerierbar > 0)
-                <x-foodalchemist::ki-action action="laufWiederAufnehmen()" target="laufWiederAufnehmen" icon="heroicon-o-arrow-path" variant="ghostXs"
+                <x-fa::ki-action action="laufWiederAufnehmen()" target="laufWiederAufnehmen" icon="heroicon-o-arrow-path" variant="ghostXs"
                     label="Gescheiterte Schritte fortsetzen ({{ $laufFailedGenerierbar }})" busy="Wird fortgesetzt …" flash="Fortsetzung eingereiht" data-planung-resume-btn />
             @endif
             @foreach($stufen as $stufe)
                 @if($stufe['zustand'] === 'prüfen')
                     @php $stufeOffen = max(0, (int) ($stufe['total'] ?? 0) - (int) ($stufe['fertig'] ?? 0)); @endphp
-                    <x-foodalchemist::ki-action action="gibStufeFrei('{{ $stufe['kind'] }}')" icon="heroicon-o-check-badge" variant="ghostXs" wire:key="stufe-frei-{{ $stufe['kind'] }}"
+                    <x-fa::ki-action action="gibStufeFrei('{{ $stufe['kind'] }}')" icon="heroicon-o-check-badge" variant="ghostXs" wire:key="stufe-frei-{{ $stufe['kind'] }}"
                         :confirm="($handy ?? false) ? $stufeOffen . ' ' . ($stufeOffen === 1 ? 'Vorschlag' : 'Vorschläge') . ' freigeben und anreichern?' : null" :class="($handy ?? false) ? 'min-h-11 max-w-full whitespace-normal text-left' : ''"
                         label="Ganze Stufe freigeben: {{ $stufeName[$stufe['kind']] ?? $stufe['label'] }}" busy="Wird freigegeben …" flash="Stufe freigegeben" data-planung-stufe-frei="{{ $stufe['kind'] }}" />
                 @endif
@@ -200,7 +200,7 @@
                         <div class="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--fa-line)] bg-[var(--fa-ground)] px-3 py-2 {{ $klein }} text-[var(--fa-ink-3)]">
                             <span>{{ count($c['zeilen']) }} {{ count($c['zeilen']) === 1 ? 'Basisrezept' : 'Basisrezepte' }} · {{ $c['offen'] }} offen{{ $c['fehler'] > 0 ? ' · ' . $c['fehler'] . ' Fehler' : '' }}</span>
                             @if($c['offen'] > 0)
-                                <x-foodalchemist::ki-action action="clusterFreigeben({{ $kopf->id }})" target="clusterFreigeben" icon="heroicon-o-check" variant="ghostXs"
+                                <x-fa::ki-action action="clusterFreigeben({{ $kopf->id }})" target="clusterFreigeben" icon="heroicon-o-check" variant="ghostXs"
                                     :confirm="($handy ?? false) ? $c['offen'] . ' ' . ($c['offen'] === 1 ? 'Vorschlag' : 'Vorschläge') . ' freigeben und anreichern?' : null" :class="($handy ?? false) ? 'min-h-11 max-w-full whitespace-normal text-left' : ''"
                                     label="{{ $kopf->kind === 'gericht' ? 'Gericht + Basisrezepte' : 'Rezept + Unterrezepte' }} anreichern und freigeben" busy="Wird angereichert …" flash="Anreicherung gestartet" />
                             @endif
@@ -215,7 +215,7 @@
                     <div x-data="{ busy: null }" class="flex flex-wrap items-center gap-2 rounded-[var(--fa-radius-control)] border border-dashed border-[var(--fa-line)] px-3 py-2" data-planung-sub-ergaenzen>
                         <x-fa::input size="sm" wire:model="neuerSubName" wire:keydown.enter="ergaenzeSubRezept"
                             placeholder="Fehlendes Basisrezept, z. B. Schweinejus" aria-label="Fehlendes Basisrezept" class="flex-1 min-w-[12rem]" />
-                        <x-foodalchemist::ki-action action="ergaenzeSubRezept()" target="ergaenzeSubRezept" icon="heroicon-o-plus" variant="ghostXs" label="Basisrezept ergänzen"
+                        <x-fa::ki-action action="ergaenzeSubRezept()" target="ergaenzeSubRezept" icon="heroicon-o-plus" variant="ghostXs" label="Basisrezept ergänzen"
                             busy="Wird ergänzt …" flash="Ergänzt" class="shrink-0" />
                     </div>
                 @endif
@@ -235,4 +235,4 @@
             </aside>
         </div>
     </div>
-</x-foodalchemist::modal-section>
+</x-fa::modal-section>

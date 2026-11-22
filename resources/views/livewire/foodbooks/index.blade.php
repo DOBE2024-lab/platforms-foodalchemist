@@ -46,7 +46,7 @@
 
     {{-- Laptop: w-72 statt w-80 — beide Seitenleisten zusammen geben der Mitte 64 px zurück. --}}
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Foodbooks" width="w-72">
+        <x-fa::page-sidebar title="Foodbooks" width="w-72">
             <div class="p-3 flex flex-col gap-3">
                 <x-fa::input type="search" wire:model.live.debounce.300ms="search" placeholder="Foodbook oder Kunde suchen" aria-label="Foodbook oder Kunde suchen" class="w-full" />
                 {{-- Phasen-Filter entfernt (2026-08-31): die alte Foodbook-Statusmaschine ist tot (Planung
@@ -70,12 +70,12 @@
                 {{-- Kapitel-Navigation lebt im Editor-Modal (linke Navi-Spalte, Spec 29 / S8).
                      Die Seiten-Sidebar führt nur die Foodbook-Liste — kein doppelter Baum. --}}
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- Rechtes Detail-Panel (nur lesen) — konsistent zu Speisekarte/Speiseplan. --}}
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Detail" width="w-72" scope="activity_foodbook" side="right" icon="heroicon-o-information-circle" :default-open="true">
+        <x-fa::detail-sidebar title="Detail" width="w-72" scope="activity_foodbook" side="right" icon="heroicon-o-information-circle" :default-open="true">
             @if($fb)
                 @include('foodalchemist::livewire.foodbooks.partials.detail', ['fb' => $fb])
             @else
@@ -83,7 +83,7 @@
                     <x-fa::empty icon="heroicon-o-book-open" title="Kein Foodbook gewählt">Links ein Foodbook anklicken, dann erscheinen hier Preis, Kapitel und offene Punkte.</x-fa::empty>
                 </div>
             @endif
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     <x-ui-page-container padding="px-4 sm:px-6 pb-6" spacing="space-y-4">
@@ -126,7 +126,7 @@
                     'max' => $fbFormate->pluck('preis_range.max')->filter(fn ($v) => $v !== null)->max(),
                 ]);
             @endphp
-            <x-foodalchemist::modal name="foodbook-editor" fullscreen dark-canvas title="Foodbook" :title-name="$fb->label">
+            <x-fa::modal name="foodbook-editor" fullscreen dark-canvas title="Foodbook" :title-name="$fb->label">
                 <x-slot:titleExtra>
                     <x-fa::badge :tone="$statusTon($fb)">{{ $fb->statusWert()->label() }}</x-fa::badge>
                 </x-slot:titleExtra>
@@ -148,9 +148,9 @@
                         </x-fa::menu>
 
                         {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung, Editor bleibt offen --}}
-                        <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                        <x-fa::bearbeiten-leiste :zustand="$sperr">
                             <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" data-fb-speichern>Speichern</x-fa::button>
-                        </x-foodalchemist::bearbeiten-leiste>
+                        </x-fa::bearbeiten-leiste>
                     </div>
                 </x-slot:actions>
 
@@ -231,7 +231,7 @@
             <div wire:key="fbcockpit-{{ $fb->id }}" class="space-y-4">
                 {{-- Spec 42: reine Ausgabe-Form — Planung/Kreativ/DNA/Trend leben in der Leitstelle.
                      Überblick (2026-08-27): Status + Inhalt + Preis je Kapitel auf EINER Seite, Start-Reiter. --}}
-                <x-foodalchemist::editor-tabs marker="fb" wire-key="fb-tabs-{{ $fb->id }}" :gesperrt="$gesperrt"
+                <x-fa::editor-tabs marker="fb" wire-key="fb-tabs-{{ $fb->id }}" :gesperrt="$gesperrt"
                     :tabs="[
                         'board' => 'Überblick',
                         'briefing' => 'Stammdaten',
@@ -403,7 +403,7 @@
 
                         {{-- Spec 33 P5: Status, Gültigkeitsfenster und beide Zuordnungsachsen aus einem geteilten Bauteil. --}}
                         <div class="pt-3 border-t border-[var(--fa-line)]">
-                            <x-foodalchemist::ausgabe-status
+                            <x-fa::ausgabe-status
                                 status-model="form.status" von-model="form.gueltig_von" bis-model="form.gueltig_bis"
                                 outlet-model="form.outlet_id"
                                 :betriebe="$betriebe" :zustand="$fb->laufZustand()" :grund="$fb->laufGrund()"
@@ -421,7 +421,7 @@
                             @endif
                         </div>
 
-                        <x-foodalchemist::crm-kunde-picker
+                        <x-fa::crm-kunde-picker
                             :ausgabe="$fb" :crm-verfuegbar="$crmVerfuegbar" :firmen="$firmen" :kontakte="$kontakte" />
 
                         {{-- Spec-42-Vollzug S3b: Leitplanken, Briefing/Einleitung + KI-Text leben in der Leitstelle
@@ -477,7 +477,7 @@
                         </x-fa::field>
 
                         {{-- Logo + Titelbild (gemeinsam mit dem Konfigurator) --}}
-                        <x-foodalchemist::branding-bilder class="pt-3 border-t border-[var(--fa-line)]"
+                        <x-fa::branding-bilder class="pt-3 border-t border-[var(--fa-line)]"
                             :logo-url="$fb->logo_path ? $medien($fb->logo_context_file_id, $fb->logo_path) : null"
                             :cover-url="$fb->cover_image_path ? $medien($fb->cover_context_file_id, $fb->cover_image_path) : null" />
 
@@ -712,7 +712,7 @@
                     <div class="flex flex-col gap-1.5 pt-3 border-t border-[var(--fa-line)]">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <label for="kap-description" class="fa-t-label">Einleitung für Gäste</label>
-                            <x-foodalchemist::ki-action action="kiKapitelText" variant="ai" icon="heroicon-o-sparkles" label="Text vorschlagen"
+                            <x-fa::ki-action action="kiKapitelText" variant="ai" icon="heroicon-o-sparkles" label="Text vorschlagen"
                                     title="Die KI schreibt eine Einleitung aus dem Inhalt des Kapitels, der Einleitung des Foodbooks und der Markenstimme"
                                     busy="Schreibt …" data-fb-ki-kapiteltext />
                         </div>
@@ -734,7 +734,7 @@
                                 @foreach($schreibstile as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                             </x-fa::select>
                         </x-fa::field>
-                        <x-foodalchemist::ki-action action="kapitelWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Speisen neu betexten"
+                        <x-fa::ki-action action="kapitelWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Speisen neu betexten"
                                 :disabled="($kapitelForm['writing_style_id'] ?? null) === null || ($kapitelForm['writing_style_id'] ?? '') === ''"
                                 title="Schreibt die Gästetexte aller Konzepte dieses Kapitels im gewählten Schreibstil neu. Gilt nur in diesem Foodbook, das Concept bleibt unverändert. Erst einen Schreibstil wählen."
                                 busy="Betextet …" class="shrink-0 mb-0.5" data-fb-kapitel-wording />
@@ -959,7 +959,7 @@
                                                 <div class="flex items-start gap-1.5">
                                                     <x-fa::textarea id="blk-text-{{ $block->id }}" wire:model="blockForm.customer_text" rows="2" class="flex-1" placeholder="Untertitel oder kurzer Text"></x-fa::textarea>
                                                     @if($block->type === 'concept_ref')
-                                                        <x-foodalchemist::ki-action action="kiKundentext" variant="icon" icon="heroicon-o-sparkles" label="Beschreibung vorschlagen"
+                                                        <x-fa::ki-action action="kiKundentext" variant="icon" icon="heroicon-o-sparkles" label="Beschreibung vorschlagen"
                                                                 title="Die KI schreibt einen verkaufenden Text zu diesem Concept" class="shrink-0 mt-2" data-fb-ki-kundentext />
                                                     @endif
                                                 </div>
@@ -993,7 +993,7 @@
                 {{-- Format-Kapitel nimmt keine eigenen Blöcke (Service sperrt addBlock): Concept-/Paket-Reiter entfallen,
                      es bleibt nur „Formate" (legt ein NEUES Kapitel an). --}}
                 @php $katalogModus = $formatKapitel !== null ? 'format' : $pickerModus; @endphp
-                <x-foodalchemist::katalog-picker marker="fb" switch="katalogModus" :modes="array_values(array_filter([
+                <x-fa::katalog-picker marker="fb" switch="katalogModus" :modes="array_values(array_filter([
                     $formatKapitel === null ? ['key' => 'concept', 'label' => 'Concepts', 'active' => $katalogModus === 'concept'] : null,
                     $formatKapitel === null ? ['key' => 'paket', 'label' => 'Pakete', 'active' => $katalogModus === 'paket'] : null,
                     ['key' => 'format', 'label' => 'Formate', 'active' => $katalogModus === 'format'],
@@ -1021,7 +1021,7 @@
                         </div>
                         <div class="flex-1 overflow-y-auto flex flex-col gap-0.5">
                             @forelse($conceptKandidaten as $ck)
-                                <x-foodalchemist::katalog-row wire:key="kck-{{ $ck->id }}" wire:click="conceptHinzu({{ $ck->id }})" :title="$ck->name" :price="$ck->price_per_person_cache !== null ? number_format((float) $ck->price_per_person_cache, 2, ',', '.') . ' €' : null">{{ $ck->name }}</x-foodalchemist::katalog-row>
+                                <x-fa::katalog-row wire:key="kck-{{ $ck->id }}" wire:click="conceptHinzu({{ $ck->id }})" :title="$ck->name" :price="$ck->price_per_person_cache !== null ? number_format((float) $ck->price_per_person_cache, 2, ',', '.') . ' €' : null">{{ $ck->name }}</x-fa::katalog-row>
                             @empty
                                 <p class="px-2 py-2 {{ $hinweis }}">{{ $conceptSuche !== '' || $facettenAktiv ? 'Keine Concepts für diese Auswahl.' : 'Noch keine Concepts angelegt.' }}</p>
                             @endforelse
@@ -1050,7 +1050,7 @@
                         </div>
                         <div class="flex-1 overflow-y-auto flex flex-col gap-0.5">
                             @forelse($paketKandidaten as $pk)
-                                <x-foodalchemist::katalog-row wire:key="kpk-{{ $pk->id }}" wire:click="paketHinzu({{ $pk->id }})" :title="$pk->consumer_name ?: $pk->name" :price="$pk->price_per_person_cache !== null ? number_format((float) $pk->price_per_person_cache, 2, ',', '.') . ' €' : null">{{ $pk->consumer_name ?: $pk->name }}</x-foodalchemist::katalog-row>
+                                <x-fa::katalog-row wire:key="kpk-{{ $pk->id }}" wire:click="paketHinzu({{ $pk->id }})" :title="$pk->consumer_name ?: $pk->name" :price="$pk->price_per_person_cache !== null ? number_format((float) $pk->price_per_person_cache, 2, ',', '.') . ' €' : null">{{ $pk->consumer_name ?: $pk->name }}</x-fa::katalog-row>
                             @empty
                                 <p class="px-2 py-2 {{ $hinweis }}">{{ $paketSuche !== '' || $paketFacettenAktiv ? 'Keine Pakete für diese Auswahl.' : 'Noch keine Pakete angelegt.' }}</p>
                             @endforelse
@@ -1062,26 +1062,26 @@
                         <p class="mb-1 shrink-0 {{ $hinweis }}">Ein Format wird ein eigenes Kapitel, seine Editionen bleiben aktuell.</p>
                         <div class="flex-1 overflow-y-auto flex flex-col gap-0.5">
                             @forelse($formatKandidaten as $fk)
-                                <x-foodalchemist::katalog-row wire:key="kfmt-{{ $fk->id }}" wire:click="formatEinfuegen({{ $fk->id }})" :title="$fk->consumer_name ?: $fk->name">{{ $fk->name }}@if($fk->origin === 'kunde')<span class="ml-1 text-[var(--fa-ink-3)]">(vom Kunden)</span>@endif</x-foodalchemist::katalog-row>
+                                <x-fa::katalog-row wire:key="kfmt-{{ $fk->id }}" wire:click="formatEinfuegen({{ $fk->id }})" :title="$fk->consumer_name ?: $fk->name">{{ $fk->name }}@if($fk->origin === 'kunde')<span class="ml-1 text-[var(--fa-ink-3)]">(vom Kunden)</span>@endif</x-fa::katalog-row>
                             @empty
                                 <p class="px-2 py-2 {{ $hinweis }}">Noch keine Formate angelegt.</p>
                             @endforelse
                         </div>
                     @endif
-                </x-foodalchemist::katalog-picker>
+                </x-fa::katalog-picker>
             </div>{{-- /2col Speisen --}}
             @else
                 <x-fa::empty icon="heroicon-o-queue-list" title="Kein Kapitel gewählt">Links im Kapitelbaum ein Kapitel wählen, um seine Speisen zu bearbeiten.</x-fa::empty>
             @endif{{-- /Kapitel-Editor --}}
                 </div>{{-- /Speisen-Tab (Spec 29 / S6) --}}
-                </x-foodalchemist::editor-tabs>
+                </x-fa::editor-tabs>
             </div>{{-- /fbcockpit --}}
                 </div>{{-- /Mitte --}}
 
                 {{-- Rechtes Overview-Panel (Leitstelle-Rail) ENTFERNT (Dominique 2026-08-23): seine Views sind eigene
                      Reiter. Die Rail-Komponente bleibt (ungemountet) für evtl. Wiederverwendung. --}}
             </div>{{-- /Spalten-Cockpit --}}
-            </x-foodalchemist::modal>{{-- /Editor-Modal (Spec 29) --}}
+            </x-fa::modal>{{-- /Editor-Modal (Spec 29) --}}
         @else
             <x-fa::empty icon="heroicon-o-book-open" title="Kein Foodbook gewählt" class="fa-surface">
                 Links ein Foodbook wählen oder ein neues anlegen. Das Foodbook bündelt fertige Concepts zu einem Portfolio

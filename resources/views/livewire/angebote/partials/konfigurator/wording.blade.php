@@ -26,7 +26,7 @@
         <x-fa::field label="Schreibstil" for="kfw-stil-{{ $kz->id }}" class="flex-1 min-w-[12rem] max-w-xs">
             <x-fa::select id="kfw-stil-{{ $kz->id }}" wire:model.live="wordingStil" :options="$schreibstile" placeholder="Schreibstil wählen" />
         </x-fa::field>
-        <x-foodalchemist::ki-action action="wordingGenerieren({{ $kz->id }})" variant="ai" icon="heroicon-o-sparkles" label="Speisen per KI betexten"
+        <x-fa::ki-action action="wordingGenerieren({{ $kz->id }})" variant="ai" icon="heroicon-o-sparkles" label="Speisen per KI betexten"
             :disabled="$wordingStil === ''" busy="Betextet …" class="shrink-0 mb-0.5"
             title="Schreibt die Gästetexte dieses Konzepts im gewählten Schreibstil neu. Gilt nur in diesem Konfigurator, das Concept bleibt unverändert." />
     </div>

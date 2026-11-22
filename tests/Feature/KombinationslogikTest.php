@@ -165,7 +165,7 @@ it('Abgeschmeckt: ein Spritzer Essig deckt den Säure-Bedarf im Basisrezept, ohn
         ->and($offen($mit))->not->toContain('saeure')
         ->and(app(RezeptProfil::class)->fuer($mit->id)['abgeschmeckt'])->toBe(['saeure']);
 
-    $html = Blade::render('<x-foodalchemist::kombination :daten="$d" />', ['d' => ($this->logik)()->daten($this->croutons->fresh())]);
+    $html = Blade::render('<x-fa::kombination :daten="$d" />', ['d' => ($this->logik)()->daten($this->croutons->fresh())]);
     expect($html)->toContain('data-profil-liefert')->and($html)->toContain('Knusper')->and($html)->toContain('●●●');
 });
 
@@ -213,13 +213,13 @@ it('K2: im Basisrezept heißt ein offener Bedarf „Passt als Kontrast", im Geri
         ->and($texte)->toContain('Passt als Kontrast: Säure (für Kartoffeln: mehlig)')
         ->and(implode(' ', $texte))->not->toContain('fehlt')
         ->and($b['zusammenfassung'])->toContain('passt als Kontrast: ')->not->toContain('fehlt:');
-    $html = Blade::render('<x-foodalchemist::kombination :daten="$d" />', ['d' => $b]);
+    $html = Blade::render('<x-fa::kombination :daten="$d" />', ['d' => $b]);
     expect($html)->toContain('Passt als Kontrast')->not->toContain('Es fehlt')->not->toContain('könnte fehlen');
 
     $g = $logik->daten($this->gericht->fresh());
     expect($g['art'])->toBe('gericht')
         ->and(array_column($g['aussagen']['bedarf_offen'] ?? [], 'text'))->toBe(['Es könnte fehlen: Knusper (für Beilage: Rosmarinkartoffeln)'])
-        ->and(Blade::render('<x-foodalchemist::kombination :daten="$d" />', ['d' => $g]))->toContain('Es fehlt');
+        ->and(Blade::render('<x-fa::kombination :daten="$d" />', ['d' => $g]))->toContain('Es fehlt');
 });
 
 it('K1 Basisrezept (Fall Roastbeef „Salz fehlt" trotz „Liefert Salz"): die Wahrnehmung des gegarten Profils deckt den Bedarf', function () {

@@ -105,7 +105,7 @@
                 @if($kannKuratieren)
                     <div class="flex flex-wrap items-center gap-2">
                         {{-- Spec 65: Änderungen in der Spalte erst nach „Bearbeiten" (gleiche Sperre wie der Editor), „Fertig" gibt frei --}}
-                        <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort />
+                        <x-fa::bearbeiten-leiste :zustand="$sperr" sofort />
                         <x-fa::button variant="ghost" size="sm" icon="heroicon-m-arrow-top-right-on-square"
                             wire:click="$dispatch('gp-modal.oeffnen', { id: {{ $gp->id }} })" data-gp-bearbeiten>Im Editor öffnen</x-fa::button>
                     </div>
@@ -352,7 +352,7 @@
         <x-fa::section variant="plain" title="Lieferantenartikel" icon="heroicon-o-building-storefront" :meta="$gp->n_las_total" data-sektion="las">
             @if($kannKuratieren)
                 <x-slot:actions>
-                    <x-foodalchemist::ki-action action="laVorschlaege" variant="ai" icon="heroicon-o-sparkles" label="Artikel vorschlagen"
+                    <x-fa::ki-action action="laVorschlaege" variant="ai" icon="heroicon-o-sparkles" label="Artikel vorschlagen"
                         title="Nicht verknüpfte Artikel finden, die zum Namen passen" data-la-ki-vorschlag
                         busy="Wird gesucht …" flash="Vorschläge da" />
                 </x-slot:actions>
@@ -547,7 +547,7 @@
             :meta="($naehrwerte['source'] ?? 'la') === 'la' ? 'je 100 g, Mittel der Artikel' : (($naehrwerte['source'] ?? '') === 'ki' ? 'je 100 g, KI-Schätzung' : (($naehrwerte['source'] ?? '') === 'manual' ? 'je 100 g, von Hand' : 'je 100 g'))" data-sektion="naehrwerte">
             @if($kannKuratieren && $naehrwerte !== null && $naehrwerte['energy_kcal']['avg'] === null)
                 <x-slot:actions>
-                    <x-foodalchemist::ki-action action="kiNaehrwerte" variant="ai" icon="heroicon-o-sparkles" label="Mit KI schätzen"
+                    <x-fa::ki-action action="kiNaehrwerte" variant="ai" icon="heroicon-o-sparkles" label="Mit KI schätzen"
                         title="Ohne Artikeldaten per KI schätzen" data-ki-naehrwerte
                         busy="Wird geschätzt …" flash="Geschätzt" />
                 </x-slot:actions>
@@ -586,7 +586,7 @@
         <x-fa::section variant="plain" title="Geschmack" icon="heroicon-o-beaker" data-gp-panel-geschmack>
             <x-slot:actions>
                 @if($kannKuratieren)
-                    <x-foodalchemist::ki-action action="sensorikKiSchaetzen" variant="ai" icon="heroicon-o-sparkles" label="Mit KI schätzen"
+                    <x-fa::ki-action action="sensorikKiSchaetzen" variant="ai" icon="heroicon-o-sparkles" label="Mit KI schätzen"
                         title="Schätzt sauer, bitter, umami, scharf und die Achsen ohne Messwert. Vorschau, gespeichert wird erst mit Übernehmen."
                         data-gp-sensorik-ki busy="Wird geschätzt …" />
                 @endif
@@ -602,7 +602,7 @@
         @if($section === null && $gp !== null)
         <x-fa::section variant="plain" title="Aroma-Anker" icon="heroicon-o-sparkles" data-gp-panel-anker>
             <x-slot:actions>
-                <x-foodalchemist::ki-action action="ankerKiVorschlagen" variant="ai" icon="heroicon-o-sparkles" label="Anker vorschlagen"
+                <x-fa::ki-action action="ankerKiVorschlagen" variant="ai" icon="heroicon-o-sparkles" label="Anker vorschlagen"
                     title="Übernimmt die Anker einiger Grundprodukte derselben Hauptzutat, sonst bestimmt die KI den Haupt-Anker aus dem Vokabular"
                     data-gp-anker-ki busy="Wird bestimmt …" flash="Anker gesetzt" />
             </x-slot:actions>
@@ -642,7 +642,7 @@
         <x-fa::section variant="plain" title="Ersatzprodukte" icon="heroicon-o-scale" meta="selbst machen oder kaufen" data-sektion="ersatz">
             @if($kannKuratieren)
                 <x-slot:actions>
-                    <x-foodalchemist::ki-action action="ersatzKiRelevant" variant="ai" icon="heroicon-o-sparkles" label="Ersatz vorschlagen"
+                    <x-fa::ki-action action="ersatzKiRelevant" variant="ai" icon="heroicon-o-sparkles" label="Ersatz vorschlagen"
                         data-ersatz-ki-relevant busy="Prüft …" flash="Geprüft" />
                 </x-slot:actions>
             @endif

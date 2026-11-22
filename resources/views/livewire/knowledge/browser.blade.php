@@ -76,7 +76,7 @@
 
     {{-- LINKS: Suche, Filter, Dokumentliste --}}
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Dokumente" width="w-80">
+        <x-fa::page-sidebar title="Dokumente" width="w-80">
             <div class="p-3 flex flex-col gap-3" data-wissen-liste>
                 {{-- Suche: der Platzhalter sagt, WAS gesucht wird; er schaltet mit „Bedeutung einbeziehen" mit. --}}
                 <div class="relative">
@@ -130,12 +130,12 @@
                     <div class="pt-2 border-t border-[var(--fa-line)]" data-wissen-seiten>{{ $docs->links('foodalchemist::components.fa.pagination') }}</div>
                 @endif
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- RECHTS: wofür wird dieses Wissen genutzt --}}
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_knowledge" side="right">
+        <x-fa::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_knowledge" side="right">
             {{-- Anatomie Detail-Panels (DESIGN.md): Kopf, Kennzahlen, offene Punkte, Einordnung, Suchbegriffe,
                  Wo es wirkt; danach die beiden Werkzeuge (Rückwärts nachsehen, Wissensauswahl testen). --}}
             @php
@@ -429,7 +429,7 @@
                     </x-fa::section>
                 </div>
             </div>
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">

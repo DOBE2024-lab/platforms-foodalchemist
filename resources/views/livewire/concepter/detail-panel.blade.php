@@ -72,7 +72,7 @@
             </x-slot:badges>
             <x-slot:aktion>
                 <div class="flex flex-wrap items-center gap-2">
-                    <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort />
+                    <x-fa::bearbeiten-leiste :zustand="$sperr" sofort />
                     <x-fa::button variant="ghost" size="sm" icon="heroicon-m-arrow-top-right-on-square"
                         wire:click="$dispatch('concepter-editor.oeffnen', { type: 'concepts', id: {{ $concept->id }} })">Im Editor öffnen</x-fa::button>
                 </div>
@@ -119,7 +119,7 @@
             @if(! $istPaket && $score !== null)
                 <div class="flex items-center gap-3" title="Menü-Bewertung: Anteil bestandener Prüfungen">
                     <x-fa::badge :tone="$scoreBadgeTon">Bewertung {{ $score }}</x-fa::badge>
-                    <x-foodalchemist::meter :value="$score" :max="100" :tone="$scoreTone" :ticks="[50, 80]" class="flex-1" />
+                    <x-fa::meter :value="$score" :max="100" :tone="$scoreTone" :ticks="[50, 80]" class="flex-1" />
                 </div>
             @endif
         </div>

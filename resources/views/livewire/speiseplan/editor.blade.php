@@ -39,7 +39,7 @@
     $gesperrt = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true);
 @endphp
 
-<x-foodalchemist::modal name="speiseplan-editor" fullscreen dark-canvas title="Speiseplan bearbeiten"
+<x-fa::modal name="speiseplan-editor" fullscreen dark-canvas title="Speiseplan bearbeiten"
     :title-name="$sp?->name">
 
     <x-slot:actions>
@@ -71,9 +71,9 @@
                 </x-fa::menu>
                 {{-- Spec 65: der Speiseplan schreibt sofort (Zellen, Mengen, Linien, Stammdaten bei Änderung) — darum
                      „Bearbeiten" (Sperre) und „Fertig" (frei). Der Speichern-Knopf erscheint nur ohne Sperr-Schalter. --}}
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort>
+                <x-fa::bearbeiten-leiste :zustand="$sperr" sofort>
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" wire:loading.attr="disabled" wire:target="speichern" data-sp-speichern>Speichern</x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             </div>
         @endif
     </x-slot:actions>
@@ -131,7 +131,7 @@
              die Zellen im Raster lesen es per :class, siehe partials/zelle). --}}
         <div class="flex gap-4 -mx-6 items-start" x-data="{ rail: {{ count($wochenTage) <= 6 ? 'true' : 'false' }}, markiert: null, markierKey: null }">
             <div class="flex-1 min-w-0 px-6">
-                <x-foodalchemist::editor-tabs marker="sp" wire-key="sp-tabs-{{ $sp->id }}" :init="'kalender'"
+                <x-fa::editor-tabs marker="sp" wire-key="sp-tabs-{{ $sp->id }}" :init="'kalender'"
                     :tabs="[
                         'kalender' => 'Kalender',
                         'mengen' => 'Mengen',
@@ -722,14 +722,14 @@
                             {{-- Spec 33 P5: Status und Zuordnung aus dem geteilten Bauteil. Ein Gültigkeitsfenster
                                  hat der Plan bewusst nicht: es steht in seinen Einträgen. --}}
                             <div class="pt-3 border-t border-[var(--fa-line)]">
-                                <x-foodalchemist::ausgabe-status
+                                <x-fa::ausgabe-status
                                     status-model="form.status"
                                     outlet-model="form.outlet_id"
                                     :betriebe="$betriebe" :zustand="$plan->laufZustand()" :grund="$plan->laufGrund()"
                                     :fenster-hinweis="$fensterHinweis" :konflikt="$portfolioKonflikt"
                                     toggle="aktivUmschalten" />
                             </div>
-                            <x-foodalchemist::crm-kunde-picker
+                            <x-fa::crm-kunde-picker
                                 :ausgabe="$plan" :crm-verfuegbar="$crmVerfuegbar" :firmen="$firmen" :kontakte="$kontakte" />
                         </x-fa::section>
 
@@ -744,7 +744,7 @@
                                         @endforeach
                                     </x-fa::select>
                                     {{-- Betextet alle Gericht-Einträge im gewählten Stil neu (nur auf Knopfdruck, kostet KI-Leistung). --}}
-                                    <x-foodalchemist::ki-action action="planWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Plan neu betexten"
+                                    <x-fa::ki-action action="planWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Plan neu betexten"
                                             :disabled="! ($form['writing_style_id'] ?? null)"
                                             title="Alle Gerichte des Plans im gewählten Schreibstil neu betexten — ein Name je Gericht"
                                             busy="Wird betextet …" class="shrink-0" data-sp-wording-generieren />
@@ -1038,7 +1038,7 @@
                         </x-fa::section>
                         </fieldset>
                     </div>
-                </x-foodalchemist::editor-tabs>
+                </x-fa::editor-tabs>
             </div>
 
             {{-- ═══ Kontext-Spalte rechts ═══
@@ -1087,7 +1087,7 @@
                             <label for="sp-eintrag-wording" class="{{ $etikett }}">Name im Plan</label>
                             <div class="flex items-center gap-1.5">
                                 <x-fa::input id="sp-eintrag-wording" wire:model="detailWording" placeholder="Wording des Gerichts verwenden" class="flex-1 min-w-0" />
-                                <x-foodalchemist::ki-action action="eintragWordingKi" variant="ai" icon="heroicon-o-sparkles" label="KI"
+                                <x-fa::ki-action action="eintragWordingKi" variant="ai" icon="heroicon-o-sparkles" label="KI"
                                         title="Namensvorschlag im Schreibstil des Plans (wird erst mit Übernehmen gespeichert)" busy="…" class="shrink-0" />
                             </div>
                             <x-fa::button size="sm" icon="heroicon-m-check" wire:click="eintragWordingSpeichern" class="self-start" data-sp-eintrag-wording-speichern>Übernehmen</x-fa::button>
@@ -1304,4 +1304,4 @@
             </aside>
         </div>
     @endif
-</x-foodalchemist::modal>
+</x-fa::modal>

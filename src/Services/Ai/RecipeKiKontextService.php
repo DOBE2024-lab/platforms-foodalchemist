@@ -16,7 +16,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
  *
  * Jetzt: der Generator hängt seinen Call ans Rezept (RecipeGeneratorService, nach dem Commit),
  * der Gateway persistiert die Kanäle (`knowledge_channels`) — und dieser Dienst baut daraus
- * das Bündel, das `x-foodalchemist::kontext-inspektor` versteht. Read-only, fail-safe:
+ * das Bündel, das `x-fa::kontext-inspektor` versteht. Read-only, fail-safe:
  * kein Call → null → Panel bleibt aus.
  */
 class RecipeKiKontextService

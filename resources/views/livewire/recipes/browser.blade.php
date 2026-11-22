@@ -19,7 +19,7 @@
     </x-slot:navbar>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Hauptgruppen" width="w-80">
+        <x-fa::page-sidebar title="Hauptgruppen" width="w-80">
             <div class="p-3 flex flex-col gap-3" data-rezept-baum>
                 <div class="relative">
                     <label for="rezept-suche" class="sr-only">Rezepte durchsuchen</label>
@@ -41,54 +41,54 @@
                 </div>
 
                 {{-- R6: Vorlagen-Filter --}}
-                <x-foodalchemist::filter-row wire:click="toggleTemplates" :active="$nurTemplates"
+                <x-fa::filter-row wire:click="toggleTemplates" :active="$nurTemplates"
                     :count="$nurTemplates ? null : $templateAnzahl" data-templates-toggle>
                     <span class="inline-flex items-center gap-2">@svg('heroicon-o-square-2-stack', 'w-4 h-4 shrink-0') Nur Vorlagen</span>
-                </x-foodalchemist::filter-row>
+                </x-fa::filter-row>
 
                 <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]" data-hg-liste>
                     {{-- MVP-042: Gesamtzahl aus der Tabellenquery, nicht aus der Summe der Hauptgruppen --}}
-                    <x-foodalchemist::filter-row wire:click="waehleHauptgruppe(null)"
+                    <x-fa::filter-row wire:click="waehleHauptgruppe(null)"
                         :active="$hauptgruppe === null && ! $ohneKategorie"
-                        :count="$gesamtCount" data-gesamt-count>Alle Hauptgruppen</x-foodalchemist::filter-row>
+                        :count="$gesamtCount" data-gesamt-count>Alle Hauptgruppen</x-fa::filter-row>
                     @foreach($hauptgruppen as $hg)
                         <div wire:key="hg-{{ $hg->id }}">
-                            <x-foodalchemist::filter-row wire:click="waehleHauptgruppe({{ $hg->id }})"
+                            <x-fa::filter-row wire:click="waehleHauptgruppe({{ $hg->id }})"
                                 :active="$hauptgruppe === $hg->id" :child-active="$kategorie !== null"
-                                :count="$hgCounts[$hg->id] ?? 0">{{ $hg->label }}</x-foodalchemist::filter-row>
+                                :count="$hgCounts[$hg->id] ?? 0">{{ $hg->label }}</x-fa::filter-row>
                             @if($hauptgruppe === $hg->id && $kategorien->isNotEmpty())
-                                <x-foodalchemist::filter-ast data-kat-liste>
+                                <x-fa::filter-ast data-kat-liste>
                                     @foreach($kategorien as $kat)
                                         @if(($katCounts[$kat->id] ?? 0) > 0)
-                                            <x-foodalchemist::filter-row level="child" wire:key="kat-{{ $kat->id }}"
+                                            <x-fa::filter-row level="child" wire:key="kat-{{ $kat->id }}"
                                                 wire:click="waehleKategorie({{ $kat->id }})"
                                                 :active="$kategorie === $kat->id"
-                                                :count="$katCounts[$kat->id]">{{ $kat->label }}</x-foodalchemist::filter-row>
+                                                :count="$katCounts[$kat->id]">{{ $kat->label }}</x-fa::filter-row>
                                         @endif
                                     @endforeach
-                                </x-foodalchemist::filter-ast>
+                                </x-fa::filter-ast>
                             @endif
                         </div>
                     @endforeach
 
                     {{-- MVP-042: Rezepte ohne Kategorie über den Baum erreichbar machen --}}
                     @if($ohneKategorieCount > 0 || $ohneKategorie)
-                        <x-foodalchemist::filter-row wire:click="waehleOhneKategorie" :active="$ohneKategorie" :count="$ohneKategorieCount"
+                        <x-fa::filter-row wire:click="waehleOhneKategorie" :active="$ohneKategorie" :count="$ohneKategorieCount"
                             title="Basisrezepte ohne Kategorie — über die Hauptgruppen nicht auffindbar" data-ohne-kategorie>
                             <span class="italic">Ohne Kategorie</span>
-                        </x-foodalchemist::filter-row>
+                        </x-fa::filter-row>
                     @endif
                 </div>
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- Detail-Spalte erst, wenn ein Rezept gewählt ist — vorher nahm der leere Hinweis ~400 px der Tabelle weg. --}}
     @if($recipeId !== null)
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_recipes" side="right" :auswahl="(string) $recipeId" :aufziehen="$sprungDetail">
+        <x-fa::detail-sidebar title="Detail" width="w-96" :maxWidth="760" scope="activity_recipes" side="right" :auswahl="(string) $recipeId" :aufziehen="$sprungDetail">
             <livewire:foodalchemist.recipes.detail-panel :recipe-id="$recipeId" key="recipes-browser--recipes.detail-panel" />
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
     @endif
 
@@ -191,7 +191,7 @@
                     <x-fa::button size="sm" wire:click="zuSammlung" data-bulk-zu-sammlung>Zu Sammlung hinzufügen</x-fa::button>
                 @endif
                 <span class="ml-auto"></span>
-                <x-foodalchemist::ki-action action="bulkAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Mit KI anreichern"
+                <x-fa::ki-action action="bulkAnreichern" variant="ai" icon="heroicon-o-sparkles" label="Mit KI anreichern"
                         title="Beschreibung, Kategorie und Geschmack als Vorschläge zur Prüfung (nie automatisch übernommen)"
                         flash="Anreicherung gestartet" data-bulk-anreichern />
             </div>
@@ -202,7 +202,7 @@
             @if($statusFehler !== null)
                 <x-fa::notice tone="crit" class="m-3" data-status-fehler>{{ $statusFehler }}</x-fa::notice>
             @endif
-            <x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
+            <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
             <div class="max-h-[70vh] overflow-auto">
                 <table class="fa-table">
                     <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">
@@ -216,7 +216,7 @@
                     </thead>
                     <tbody>
                         @forelse($rezepte as $r)
-                            <x-foodalchemist::table-row :active="$recipeId === $r->id" wire:key="r-{{ $r->id }}" wire:click="waehleRezept({{ $r->id }})"
+                            <x-fa::table-row :active="$recipeId === $r->id" wire:key="r-{{ $r->id }}" wire:click="waehleRezept({{ $r->id }})"
                                 x-data x-on:click="$store.ui?.mSet('activity_recipes', 'open', true)"
                                 data-rezept-zeile="{{ $r->id }}">
                                 <td wire:click.stop>
@@ -262,7 +262,7 @@
                                         <x-fa::status :value="$r->status" />
                                     @endif
                                 </td>@endif
-                            </x-foodalchemist::table-row>
+                            </x-fa::table-row>
                         @empty
                             <tr>
                                 <td colspan="{{ count($spalten) + 2 }}">

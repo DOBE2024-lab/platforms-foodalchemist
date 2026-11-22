@@ -29,7 +29,7 @@
     <x-slot:navbar><x-foodalchemist::shell.page-navbar title="Gastronomie-Observatorium" icon="heroicon-o-globe-alt" /></x-slot:navbar>
     @unless($istHandy)
     <x-slot:sidebar>
-        <x-foodalchemist::page-sidebar title="Observatorium" width="w-64" :minWidth="220" :maxWidth="340" data-observatorium-navigation>
+        <x-fa::page-sidebar title="Observatorium" width="w-64" :minWidth="220" :maxWidth="340" data-observatorium-navigation>
             <nav class="fa-obs-nav" aria-label="Observatorium-Bereiche">
                 <div class="fa-obs-nav-label">Observatorium</div>
                 @foreach(O::ANSICHTEN as $key => [$name, $icon])
@@ -48,7 +48,7 @@
                 <div class="fa-obs-nav-foot"><p class="fa-obs-subtitle fa-obs-nav-meta" data-observatorium-kuratiert>Kuratiert von BHG.DIGITAL · {{ $quellenAnzahl }} Quellen</p></div>
                 @endif
             </nav>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot:sidebar>
     @endunless
 

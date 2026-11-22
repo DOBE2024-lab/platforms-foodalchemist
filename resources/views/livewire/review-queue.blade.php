@@ -92,7 +92,7 @@
                 @if($zeigen('signale.laeufe'))
                 <div class="flex flex-wrap items-center justify-end gap-2" data-rq-laeufe>
                     <div class="inline-flex items-center gap-2 h-9 pl-1 pr-2 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)]">
-                        <x-foodalchemist::ki-action action="befundeLaufen" variant="ai" icon="heroicon-o-sparkles" label="KI-Befunde sammeln"
+                        <x-fa::ki-action action="befundeLaufen" variant="ai" icon="heroicon-o-sparkles" label="KI-Befunde sammeln"
                                 title="Rezept-Copilot über die fälligen Rezepte laufen lassen. Ruft das Modell für jedes Rezept einzeln, darum die Obergrenze rechts."
                                 busy="Wird eingereiht …" flash="Lauf gestartet" data-rq-befunde />
                         <label for="rq-befunde-limit" class="fa-t-muted">höchstens</label>
@@ -388,7 +388,7 @@
                                                 <x-fa::button variant="ghost" size="sm" wire:click="toggleKiPanel({{ $sig->id }})">Schließen</x-fa::button>
                                                 @if($zeigen('kiFixAusfuehren'))
                                                 {{-- #1003: am Handy ändert „Automatisch beheben“ erst nach Bestätigung (Entwurf ändert nichts) --}}
-                                                <x-foodalchemist::ki-action action="kiFixAusfuehren({{ $sig->id }})" target="kiFixAusfuehren" variant="primary"
+                                                <x-fa::ki-action action="kiFixAusfuehren({{ $sig->id }})" target="kiFixAusfuehren" variant="primary"
                                                         :icon="$istFix ? 'heroicon-o-play' : 'heroicon-o-sparkles'" :label="$istFix ? 'Automatisch beheben' : 'Entwurf erzeugen'"
                                                         :confirm="$handy && $istFix ? 'Automatisch beheben? ' . $ki['flavorLabel'] . ($anzahl !== null ? ' · betrifft ' . number_format($anzahl, 0, ',', '.') . ' Objekte' : '') . '. ' . $ki['plan'] . ' Die betroffenen Objekte werden im Hintergrund geändert.' : null"
                                                         busy="Läuft …" data-rq-ki-fix="{{ $sig->id }}" />

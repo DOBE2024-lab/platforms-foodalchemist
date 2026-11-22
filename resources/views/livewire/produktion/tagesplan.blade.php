@@ -447,7 +447,7 @@
             </main>
         </div>
 
-        <x-foodalchemist::modal name="wall-gericht" fullscreen dark-canvas title="Gericht" :title-name="$wallGericht->gericht ?? null" :close-via="'gerichtSchliessen'">
+        <x-fa::modal name="wall-gericht" fullscreen dark-canvas title="Gericht" :title-name="$wallGericht->gericht ?? null" :close-via="'gerichtSchliessen'">
             <x-slot:actions>
                 <button type="button" x-data @click="$wire.gerichtSchliessen(); close()"
                         class="{{ $wKnopf }}"
@@ -663,9 +663,9 @@
                     </div>
                 </div>
             @endif
-        </x-foodalchemist::modal>
+        </x-fa::modal>
 
-        <x-foodalchemist::modal name="wall-anleitung" fullscreen dark-canvas title="Anleitung" :title-name="$anleitung['name'] ?? null" :close-via="'anleitungSchliessen'">
+        <x-fa::modal name="wall-anleitung" fullscreen dark-canvas title="Anleitung" :title-name="$anleitung['name'] ?? null" :close-via="'anleitungSchliessen'">
             @if($anleitung && (collect($anleitung['sicherheit']['allergene'] ?? [])->isNotEmpty() || collect($anleitung['sicherheit']['warnungen'] ?? [])->isNotEmpty() || collect($anleitung['sicherheit']['diaet'] ?? [])->isNotEmpty()))
                 <x-slot:titleExtra>
                     <span class="flex min-w-0 flex-wrap items-center gap-1.5" data-tagesplan-wall-sicherheitsblock>
@@ -1064,7 +1064,7 @@
                     </div>
                 </div>
             @endif
-        </x-foodalchemist::modal>
+        </x-fa::modal>
     </div>
 @else
 <x-ui-page>
@@ -1101,7 +1101,7 @@
 
     @if(! $istWall)
         <x-slot name="sidebar">
-            <x-foodalchemist::page-sidebar title="Zeitraum und Posten" width="w-72">
+            <x-fa::page-sidebar title="Zeitraum und Posten" width="w-72">
                 <div class="p-3 space-y-5" data-tagesplanung-sidebar>
                     <div class="space-y-2" data-tagesplan-steuerung>
                         <p class="{{ $eyebrow }}">Zeitraum</p>
@@ -1129,16 +1129,16 @@
                     <div class="space-y-2" data-tagesplan-postenfilter>
                         <p class="{{ $eyebrow }}">Posten</p>
                         <div class="space-y-1">
-                            <x-foodalchemist::filter-row wire:click="postenWaehlen(null)" :active="$postenFilter === null">
+                            <x-fa::filter-row wire:click="postenWaehlen(null)" :active="$postenFilter === null">
                                 <span class="font-medium">Alle Posten</span>
-                            </x-foodalchemist::filter-row>
-                            <x-foodalchemist::filter-ast>
+                            </x-fa::filter-row>
+                            <x-fa::filter-ast>
                                 @foreach($postenListe as $p)
-                                    <x-foodalchemist::filter-row level="child" wire:key="tps-{{ $p->id }}"
+                                    <x-fa::filter-row level="child" wire:key="tps-{{ $p->id }}"
                                         wire:click="postenWaehlen({{ $p->id }})"
-                                        :active="$postenFilter === $p->id">{{ $p->name }}</x-foodalchemist::filter-row>
+                                        :active="$postenFilter === $p->id">{{ $p->name }}</x-fa::filter-row>
                                 @endforeach
-                            </x-foodalchemist::filter-ast>
+                            </x-fa::filter-ast>
                         </div>
                     </div>
 
@@ -1149,11 +1149,11 @@
                         <p class="fa-t-muted">Rechnet Vorlauftage so, dass kein Posten über Last läuft. Übernommen wird erst nach Bestätigung.</p>
                     </div>
                 </div>
-            </x-foodalchemist::page-sidebar>
+            </x-fa::page-sidebar>
         </x-slot>
 
         <x-slot name="activity">
-            <x-foodalchemist::detail-sidebar title="Tagesdetail" width="w-80" :maxWidth="760"
+            <x-fa::detail-sidebar title="Tagesdetail" width="w-80" :maxWidth="760"
                                              scope="activity_tagesplan" side="right">
                 {{-- Anatomie Detail-Panels (DESIGN.md): Kopf (Tag, Last, „Im Editor öffnen") · Kennzahlen · offene Punkte
                      (Posten über Last) · Inhalt (Posten mit ihren Positionen). Ohne gewählten Tag: Übersicht des Zeitraums. --}}
@@ -1283,12 +1283,12 @@
                         </div>
                     @endif
                 </div>
-            </x-foodalchemist::detail-sidebar>
+            </x-fa::detail-sidebar>
         </x-slot>
 
         <livewire:foodalchemist.produktion.editor key="produktion-tagesplan--produktion.editor" />
 
-        <x-foodalchemist::modal name="tagesplan-editor" fullscreen dark-canvas title="Tagesplanung"
+        <x-fa::modal name="tagesplan-editor" fullscreen dark-canvas title="Tagesplanung"
                                 :title-name="$ansicht === 'gericht' ? 'Nach Gerichten' : 'Nach Posten'"
                                 :close-via="'editorSchliessen'">
             <x-slot:actions>
@@ -1302,7 +1302,7 @@
             </x-slot:actions>
 
             <x-slot:kpiHeader>
-                <x-foodalchemist::kpi-tiles marker="tagesplan-editor" :tiles="[
+                <x-fa::kpi-tiles marker="tagesplan-editor" :tiles="[
                     ['kpi' => 'offen', 'label' => 'Offen', 'tone' => 'accent', 'value' => (string) $dashboard['kpis']['offen']],
                     ['kpi' => 'zeit', 'label' => 'Arbeitszeit', 'value' => $dashboard['kpis']['minuten'] . ' min'],
                     ['kpi' => 'manntage', 'label' => 'Manntage', 'value' => number_format($dashboard['kpis']['minuten'] / 480, 1, ',', '.'), 'title' => '1 Manntag = 480 Minuten'],
@@ -1468,7 +1468,7 @@
                     </aside>
                 </div>
             </section>
-        </x-foodalchemist::modal>
+        </x-fa::modal>
 
         <x-ui-page-container padding="px-4 pb-6 lg:px-6" spacing="space-y-4">
             @if($fehler)<x-fa::notice tone="crit" data-tagesplan-fehler>{{ $fehler }}</x-fa::notice>@endif

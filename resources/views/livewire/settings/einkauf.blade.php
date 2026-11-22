@@ -15,7 +15,7 @@
     @php $sperrLesen = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true); @endphp
     @include('foodalchemist::livewire.settings.partials.sperr-leiste', ['sofort' => true, 'hint' => 'Strategie, Bestellversand, Lagerorte und Stamm-Lieferanten.'])
     @unless($sperrLesen || ! $zeige('leitartikel'))   {{-- die Leiste speichert nur die Strategie --}}
-    <x-foodalchemist::save-bar :meldung="$meldung" hint="Speichert die Strategie für den kalkulierenden Artikel." />
+    <x-fa::save-bar :meldung="$meldung" hint="Speichert die Strategie für den kalkulierenden Artikel." />
     @endunless
     @if(($sperrLesen || ! $zeige('leitartikel')) && $meldung)<x-fa::notice tone="ok" data-save-bar-meldung>{{ $meldung }}</x-fa::notice>@endif
     <fieldset @disabled($sperrLesen) class="contents" data-fa-lesemodus="{{ $sperrLesen ? '1' : '0' }}">

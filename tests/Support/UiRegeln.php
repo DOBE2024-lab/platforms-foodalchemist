@@ -26,6 +26,10 @@ final class UiRegeln
         // Modul-CSS griffe dort erst nach einem Build (Preisverlauf: SVG schrumpfte auf 56 × 24 px). Sobald etwas anderes im selben style
         // steht (Farbe, Breite, Abstand …), zählt er wieder.
         'style_statisch' => '/(?<![:\w-])style="(?![^"]*\{\{)(?!\s*(?:grid-(?:column|row|area)\s*:\s*[^;"]+;?\s*)+")[^"]+"/',
+        // Alter Komponenten-Namensraum (2.4a): Bausteine heißen x-fa::…; die alten Dateien unter components/ sind nur noch
+        // Weiterleitungen für fremde Aufrufe (Bestand 0 seit 2.4a PR A). Benannte Ausnahme: x-foodalchemist::shell.* (page-navbar, text-css, fa-menu-script),
+        // weil der Host food-alchemist.de components/shell/page-navbar überschreibt und ein x-fa-Name den Override still umginge.
+        'alter_namensraum' => '/<\/?x-foodalchemist::(?!shell\.)/',
     ];
 
     /**
@@ -47,8 +51,7 @@ final class UiRegeln
         // Alpine-x-model, Tag-für-Tag-Sperre, Häkchen-Symbol, title/truncate je Chip).
         'rohe_checkbox' => '/<input\b(?!(?:->|=>|[^>])*?\bsr-only\b)(?:->|=>|"[^"]*"|\'[^\']*\'|[^>"\'])*?\btype\s*=\s*["\']checkbox["\']/',
         // Handgebautes Aufklapp-Menü statt x-fa::menu (1.4c): x-data="faMenu()" gehört in den Baustein.
-        // Bestand (1.4c): zwei Aufklapp-Panels ohne Menü-Liste (orders/index „Neue Bestellrunde“ als Dialog, verkauf/vk-modal
-        // „KI-Assistent“ mit Knöpfen, die offen bleiben). Sie nutzen nur den faMenu-Helfer und brauchen einen eigenen Popover-Baustein.
+        // Bestand 0 seit 2.4a: die zwei Aufklapp-Panels ohne Menü-Liste („Neue Bestellrunde“, „KI-Assistent“) nutzen x-fa::popover.
         'rohes_menue' => '/x-data\s*=\s*["\']faMenu\(\)["\']/',
         // Rohe Menü-Einträge statt x-fa::menu-item (1.4c, Bestand 0 seit PR 3): role="menuitem" am eigenen <button>/<a>/<span>.
         'rohes_menue_item' => '/\brole\s*=\s*["\']menuitem["\']/',

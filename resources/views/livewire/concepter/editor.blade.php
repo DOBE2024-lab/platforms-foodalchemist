@@ -53,7 +53,7 @@
 <div>
     {{-- Spec 28 / E1-2: Titel sagt WAS bearbeitet wird, der Name steht daneben.
          Concept und Paket teilen diesen Editor — der Titel benennt, welches von beiden. --}}
-    <x-foodalchemist::modal name="concepter-editor" :title="($paket || $istPaket) ? 'Paket' : 'Konzept'"
+    <x-fa::modal name="concepter-editor" :title="($paket || $istPaket) ? 'Paket' : 'Konzept'"
         :title-name="$item?->name" fullscreen dark-canvas>
 
         @if($item !== null)
@@ -94,9 +94,9 @@
                      Stammdaten + Canvas + Rahmen zusammen (konzeptSpeichern), sonst nur die Stammdaten. --}}
                 {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung,
                      der Editor bleibt offen (bearbeitungSpeichern wählt konzeptSpeichern/speichern je Reiter). --}}
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                <x-fa::bearbeiten-leiste :zustand="$sperr">
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="bearbeitungSpeichern" data-concepter-speichern>Speichern</x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             </div>
         </x-slot:actions>
 
@@ -111,7 +111,7 @@
                 $vkWert = $stripVk === null ? 'Preis fehlt' : ((float) $stripVk > 0 ? $euro($stripVk) : 'noch kein Preis');
             @endphp
             <x-slot:kpiHeader>
-                <x-foodalchemist::kpi-tiles :cols="4" marker="konzept-kpis" :tiles="array_values(array_filter([
+                <x-fa::kpi-tiles :cols="4" marker="konzept-kpis" :tiles="array_values(array_filter([
                     ['kpi' => 'vk-person', 'label' => 'VK je Person', 'tone' => ($stripVk !== null && (float) $stripVk > 0) ? 'accent' : 'warn', 'value' => $vkWert],
                     ['kpi' => 'we-person', 'label' => 'Wareneinsatz je Person', 'value' => $stripEk === null ? 'Preis fehlt' : $euro($stripEk)],
                     ['kpi' => 'we-pct', 'label' => 'Wareneinsatz', 'tone' => $stripWeTone,
@@ -132,7 +132,7 @@
         @else
             {{-- Reiter im SERVER-Modus des Bausteins: der Concepter hält den Reiter in Livewire und
                  rendert nur das aktive Panel. 'allergene'-Key bleibt stabil, Label „Deklaration". --}}
-            <x-foodalchemist::editor-tabs marker="konzept" action="setTab" :active="$tab" :tabs="[
+            <x-fa::editor-tabs marker="konzept" action="setTab" :active="$tab" :tabs="[
                 'aufbau' => 'Aufbau',
                 'stammdaten' => 'Stammdaten',
                 'konzept' => ($concept && ! $istPaket) ? 'Konzept & Planung' : null,
@@ -295,7 +295,7 @@
                                         @foreach($schreibstile as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                                     </x-fa::select>
                                 </x-fa::field>
-                                <x-foodalchemist::ki-action action="wordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Gästetexte schreiben"
+                                <x-fa::ki-action action="wordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Gästetexte schreiben"
                                         title="Schreibt für jede Position einen Namen im gewählten Stil und eine Einleitung fürs Konzept"
                                         busy="Schreibt …" flash="Texte da" class="shrink-0 mb-[22px]" data-ki-concept-wording />
                             </div>
@@ -1587,5 +1587,5 @@
             @endif
             </fieldset>
         @endif
-    </x-foodalchemist::modal>
+    </x-fa::modal>
 </div>

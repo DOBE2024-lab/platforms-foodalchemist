@@ -103,7 +103,7 @@ it('Handy-Entscheidung setzt das Cookie, das der Server liest (dieselbe Entschei
 
 it('Hotfix 31.10.: kein Desktop-Schalter am Handy mehr, eine gemerkte Wahl „desktop“ wird gelöscht', function () {
     $kopf = \Illuminate\Support\Facades\Blade::render('<x-fa::detail-kopf title="T"><x-slot:aktion><span>A</span></x-slot:aktion></x-fa::detail-kopf>');
-    $nav = \Illuminate\Support\Facades\Blade::render('<x-foodalchemist::handy.nav />');
+    $nav = \Illuminate\Support\Facades\Blade::render('<x-fa::handy.nav />');
     $handbuch = file_get_contents(__DIR__ . '/../../resources/views/livewire/handy/rezept-handbuch.blade.php');
 
     foreach ([$kopf, $nav, $handbuch] as $html) {

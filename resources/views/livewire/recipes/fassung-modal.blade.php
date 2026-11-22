@@ -1,6 +1,6 @@
 {{-- Spec 82 §12 B / §13 B6 — Rezept veröffentlichen (nur Master): Stand, Abweichung, Allergen-Hinweis, Pflicht-Notiz. --}}
 
-<x-foodalchemist::modal name="fassung-modal" :title="$artLabel.' veröffentlichen'" :title-name="$rezept?->name" size="max-w-xl">
+<x-fa::modal name="fassung-modal" :title="$artLabel.' veröffentlichen'" :title-name="$rezept?->name" size="max-w-xl">
     <div class="flex flex-col gap-3" data-fassung-modal>
         @if($fehler)<x-fa::notice tone="crit" data-fassung-fehler>{{ $fehler }}</x-fa::notice>@endif
         @if($meldung)<x-fa::notice tone="ok" data-fassung-meldung>{{ $meldung }}</x-fa::notice>@endif
@@ -57,4 +57,4 @@
                 :disabled="trim($notiz) === '' || $status['stamm_verstoesse'] !== [] || $status['blockiert'] !== null || ($status['letzte'] && ! $status['weicht_ab'])" data-fassung-veroeffentlichen>Veröffentlichen</x-fa::button>
         @endif
     </x-slot:footer>
-</x-foodalchemist::modal>
+</x-fa::modal>

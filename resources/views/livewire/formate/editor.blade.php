@@ -25,7 +25,7 @@
 @endphp
 
 <div>
-    <x-foodalchemist::modal name="formate-editor" title="Format bearbeiten" :title-name="$format?->name" fullscreen dark-canvas>
+    <x-fa::modal name="formate-editor" title="Format bearbeiten" :title-name="$format?->name" fullscreen dark-canvas>
         <x-slot:actions>
             <div class="ml-auto flex flex-wrap items-center gap-2">
                 <span x-data="{ zeigen: false }" x-on:formate-gespeichert.window="zeigen = true; setTimeout(() => zeigen = false, 1600)"
@@ -39,16 +39,16 @@
                     </x-fa::menu>
                 @endif
                 {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung, der Editor bleibt offen --}}
-                <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                <x-fa::bearbeiten-leiste :zustand="$sperr">
                     <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="bearbeitungSpeichern" wire:loading.attr="disabled" wire:target="bearbeitungSpeichern" data-format-speichern>Speichern</x-fa::button>
-                </x-foodalchemist::bearbeiten-leiste>
+                </x-fa::bearbeiten-leiste>
             </div>
         </x-slot:actions>
 
         @if($format === null)
             <x-fa::empty icon="heroicon-o-rectangle-group" title="Kein Format geladen">Das Format ist nicht mehr verfügbar. Editor schließen und die Liste neu laden.</x-fa::empty>
         @else
-            <x-foodalchemist::editor-tabs marker="format" action="setTab" :active="$tab" :tabs="[
+            <x-fa::editor-tabs marker="format" action="setTab" :active="$tab" :tabs="[
                 'identitaet' => 'Identität',
                 'editionen' => 'Aufbau',
                 'kalkulation' => 'Kalkulation',
@@ -525,5 +525,5 @@
             @endif
             </fieldset>
         @endif
-    </x-foodalchemist::modal>
+    </x-fa::modal>
 </div>

@@ -26,7 +26,7 @@
     </x-slot:navbar>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Formate" width="w-80">
+        <x-fa::page-sidebar title="Formate" width="w-80">
             <div class="p-3 flex flex-col gap-3">
                 <div class="relative">
                     <label for="format-suche" class="sr-only">Formate durchsuchen</label>
@@ -36,19 +36,19 @@
 
                 <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]">
                     <p class="px-2.5 pb-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">Status</p>
-                    <x-foodalchemist::filter-row wire:click="waehleStatus('')" :active="$statusFilter === ''">Alle Status</x-foodalchemist::filter-row>
+                    <x-fa::filter-row wire:click="waehleStatus('')" :active="$statusFilter === ''">Alle Status</x-fa::filter-row>
                     @foreach($statusLabel as $val => $lbl)
-                        <x-foodalchemist::filter-row wire:key="fst-{{ $val }}" wire:click="waehleStatus('{{ $val }}')" :active="$statusFilter === $val">{{ $lbl }}</x-foodalchemist::filter-row>
+                        <x-fa::filter-row wire:key="fst-{{ $val }}" wire:click="waehleStatus('{{ $val }}')" :active="$statusFilter === $val">{{ $lbl }}</x-fa::filter-row>
                     @endforeach
                 </div>
 
                 <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]">
                     <p class="px-2.5 pb-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">Herkunft</p>
-                    <x-foodalchemist::filter-row wire:click="waehleOrigin('')" :active="$originFilter === ''">Jede Herkunft</x-foodalchemist::filter-row>
+                    <x-fa::filter-row wire:click="waehleOrigin('')" :active="$originFilter === ''">Jede Herkunft</x-fa::filter-row>
                     @foreach($originLabel as $val => $lbl)
-                        <x-foodalchemist::filter-row wire:key="fori-{{ $val }}" wire:click="waehleOrigin('{{ $val }}')" :active="$originFilter === $val">
+                        <x-fa::filter-row wire:key="fori-{{ $val }}" wire:click="waehleOrigin('{{ $val }}')" :active="$originFilter === $val">
                             <span class="inline-flex items-center gap-1.5">{{ $lbl }}@if($val === 'kunde')@svg('heroicon-m-lock-closed', 'w-3.5 h-3.5 shrink-0')@endif</span>
-                        </x-foodalchemist::filter-row>
+                        </x-fa::filter-row>
                     @endforeach
                 </div>
 
@@ -68,14 +68,14 @@
                                 </span>
                                 @if($gewaehlt)<x-fa::badge tone="accent" class="max-w-[9rem]"><span class="truncate" title="{{ $gewaehlt->{$labelFeld} }}">{{ $gewaehlt->{$labelFeld} }}</span></x-fa::badge>@endif
                             </summary>
-                            <x-foodalchemist::filter-ast>
-                                <x-foodalchemist::filter-row level="child" wire:click="waehleFacette('{{ $feld }}', '')" :active="$wert === ''">Alle</x-foodalchemist::filter-row>
+                            <x-fa::filter-ast>
+                                <x-fa::filter-row level="child" wire:click="waehleFacette('{{ $feld }}', '')" :active="$wert === ''">Alle</x-fa::filter-row>
                                 @foreach($vokabular as $eintrag)
-                                    <x-foodalchemist::filter-row level="child" wire:key="{{ $praefix }}-{{ $eintrag->id }}"
+                                    <x-fa::filter-row level="child" wire:key="{{ $praefix }}-{{ $eintrag->id }}"
                                         wire:click="waehleFacette('{{ $feld }}', '{{ $eintrag->id }}')"
-                                        :active="$wert === (string) $eintrag->id">{{ $eintrag->{$labelFeld} }}</x-foodalchemist::filter-row>
+                                        :active="$wert === (string) $eintrag->id">{{ $eintrag->{$labelFeld} }}</x-fa::filter-row>
                                 @endforeach
-                            </x-foodalchemist::filter-ast>
+                            </x-fa::filter-ast>
                         </details>
                     @endforeach
                 </div>
@@ -86,15 +86,15 @@
                     </div>
                 @endif
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- Detail-Spalte erst, wenn ein Format gewählt ist (vorher nahm der leere Hinweis Platz der Tabelle weg). --}}
     @if($selectedId !== null)
         <x-slot name="activity">
-            <x-foodalchemist::detail-sidebar title="Detail" width="w-96" :maxWidth="640" scope="activity_formate" side="right" :auswahl="(string) $selectedId">
+            <x-fa::detail-sidebar title="Detail" width="w-96" :maxWidth="640" scope="activity_formate" side="right" :auswahl="(string) $selectedId">
                 <livewire:foodalchemist.formate.detail-panel :selected-id="$selectedId" key="formate-browser--formate.detail-panel" />
-            </x-foodalchemist::detail-sidebar>
+            </x-fa::detail-sidebar>
         </x-slot>
     @endif
 
@@ -129,7 +129,7 @@
                     </thead>
                     <tbody>
                         @forelse($items as $it)
-                            <x-foodalchemist::table-row :active="$selectedId === $it->id" wire:key="frow-{{ $it->id }}" wire:click="waehle({{ $it->id }})"
+                            <x-fa::table-row :active="$selectedId === $it->id" wire:key="frow-{{ $it->id }}" wire:click="waehle({{ $it->id }})"
                                 x-data x-on:click="$store.ui?.mSet('activity_formate', 'open', true)">
                                 {{-- Namens-Klick öffnet den Editor, Zeilen-Klick nur das Detail --}}
                                 <td class="min-w-[10rem]">
@@ -163,7 +163,7 @@
                                         @endforeach
                                     </x-fa::menu>
                                 </td>
-                            </x-foodalchemist::table-row>
+                            </x-fa::table-row>
                         @empty
                             <tr>
                                 <td colspan="5">

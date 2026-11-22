@@ -12,7 +12,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <x-foodalchemist::handy.kopf />
+  <x-fa::handy.kopf />
   <title>{{ isset($title) ? $title.' · ' : '' }}Food Alchemist</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,7 +72,7 @@
     @include('foodalchemist::layouts.partials.standalone-nav')
 
     <main class="flex-1 min-w-0 h-screen flex flex-col overflow-hidden bg-[var(--fa-ground)]">
-      <x-foodalchemist::saved-toast />
+      <x-fa::saved-toast />
       {{-- Terminal (Chat · Agenda · Feature …) — vorerst aus platform-core; bei der Ablösung (Spur 2)
            wird es ein eigener Teil des Food.Alchemist. Steht im DOM vor dem Inhalt, wird per order-first
            aber unter ihm angezeigt (wie im Plattform-Layout). --}}
@@ -91,7 +91,7 @@
 
   {{-- #1003 Untere Leiste der Handy-Oberfläche (am Computer unsichtbar) --}}
   @auth
-    <x-foodalchemist::handy.nav />
+    <x-fa::handy.nav />
   @endauth
 
   <livewire:notifications.notices.index />

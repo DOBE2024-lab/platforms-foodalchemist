@@ -57,7 +57,7 @@
     ];
 @endphp
 <div>
-    <x-foodalchemist::modal name="item-modal" :title="$item !== null && $darfEdit ? 'Artikel bearbeiten' : 'Artikel'"
+    <x-fa::modal name="item-modal" :title="$item !== null && $darfEdit ? 'Artikel bearbeiten' : 'Artikel'"
         :title-name="$item?->designation" :fullscreen="$item !== null" :dark-canvas="$item !== null">
         @if($item)
             <x-slot:actions>
@@ -66,10 +66,10 @@
                         <p class="fa-t-muted min-w-0">Speichern sichert Stammdaten, Verpackung und Eigenschaften.</p>
                         {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung --}}
                         <div class="ml-auto">
-                            <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                            <x-fa::bearbeiten-leiste :zustand="$sperr">
                                 <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern"
                                     wire:loading.attr="disabled" wire:target="speichern" data-la-speichern>Speichern</x-fa::button>
-                            </x-foodalchemist::bearbeiten-leiste>
+                            </x-fa::bearbeiten-leiste>
                         </div>
                     @else
                         <x-fa::badge icon="heroicon-m-lock-closed" class="ml-auto"
@@ -81,7 +81,7 @@
             {{-- Kennzahlen fix im Kopf. Leitwert = Einkaufspreis (accent). Grundprodukt und Allergene sind
                  echte Vollständigkeiten (good/warn). Fehlende Werte werden benannt, nicht als Strich versteckt. --}}
             <x-slot:kpiHeader>
-                <x-foodalchemist::kpi-tiles marker="la-editor-kpis" :cols="5" :tiles="[
+                <x-fa::kpi-tiles marker="la-editor-kpis" :cols="5" :tiles="[
                     ['kpi' => 'ek', 'label' => 'Einkaufspreis je ' . $bestellEinheit, 'tone' => 'accent',
                      'title' => 'Gültiger Einkaufspreis, netto, je ' . $bestellEinheit,
                      'value' => $aktivPreis !== null ? number_format($aktivPreis, 2, ',', '.') . ' €'
@@ -121,7 +121,7 @@
 
             {{-- Alpine-Modus: alle Reiter bleiben im DOM, damit die entangle-Bindings (Allergene,
                  Zusatzstoffe) und ungespeicherte Eingaben beim Umschalten erhalten bleiben. --}}
-            <x-foodalchemist::editor-tabs marker="la" wire-key="la-tabs-{{ $item->id }}" :init="$gpName === null ? 'gp' : 'preise'" :gesperrt="$darfEdit && in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
+            <x-fa::editor-tabs marker="la" wire-key="la-tabs-{{ $item->id }}" :init="$gpName === null ? 'gp' : 'preise'" :gesperrt="$darfEdit && in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
                 :tabs="[
                     'gp' => 'Grundprodukt',
                     'preise' => 'Preise',
@@ -136,7 +136,7 @@
                     description="Über das Grundprodukt fließen Preis und Allergene dieses Artikels in die Rezepte.">
                     <x-slot:actions>
                         {{-- MatchService: exakte Dubletten (EAN, Artikelnummer), Namensähnlichkeit und semantischer Recall (hybrid_*). Kein Chat-Modell, deshalb Lupe statt Sternchen. --}}
-                        <x-foodalchemist::ki-action action="kiGpVorschlag" variant="ghostXs" icon="heroicon-o-magnifying-glass"
+                        <x-fa::ki-action action="kiGpVorschlag" variant="ghostXs" icon="heroicon-o-magnifying-glass"
                             label="Grundprodukte vorschlagen" busy="Wird gesucht …" flash="Vorschläge geladen"
                             title="Sucht Grundprodukte mit gleicher EAN, gleicher Artikelnummer oder ähnlichem Namen" data-ki-gp-vorschlag />
                         @if(! $item->structure?->gp)
@@ -604,7 +604,7 @@
                 <livewire:foodalchemist.suppliers.produktpass-panel :item-id="$item->id" :key="'pp-la-'.$item->id" />
             </div>{{-- /Reiter PRODUKTPASS --}}
 
-            </x-foodalchemist::editor-tabs>
+            </x-fa::editor-tabs>
         @endif
-    </x-foodalchemist::modal>
+    </x-fa::modal>
 </div>

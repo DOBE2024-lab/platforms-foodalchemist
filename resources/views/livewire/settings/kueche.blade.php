@@ -7,7 +7,7 @@
     @php $sperrLesen = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true); @endphp
     @include('foodalchemist::livewire.settings.partials.sperr-leiste', ['sofort' => false, 'hint' => 'Grundrichtung für Rezeptvorschläge.'])
     @unless($sperrLesen)
-    <x-foodalchemist::save-bar :meldung="$meldung" data-kueche-meldung
+    <x-fa::save-bar :meldung="$meldung" data-kueche-meldung
         hint="Grundrichtung für Rezeptvorschläge. Was du im Rezept ausdrücklich vorgibst, geht immer vor." />
     @endunless
     @if($sperrLesen && $meldung)<x-fa::notice tone="ok" data-kueche-meldung>{{ $meldung }}</x-fa::notice>@endif

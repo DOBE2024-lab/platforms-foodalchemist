@@ -1,7 +1,3 @@
-{{--
-    Der Kind-Ast einer Filter-Spalte: eine feine Führungslinie verankert die Kind-Ebene am Elternteil.
-    Nutzung: x-foodalchemist::filter-ast data-sub-liste → Slot: filter-row level="child"
---}}
-<div {{ $attributes->merge(['class' => 'ml-3 my-1 pl-2 border-l border-[var(--fa-line-strong)] flex flex-col gap-0.5']) }} data-fa-filter-ast>
-    {{ $slot }}
-</div>
+{{-- Weiterleitung (2.4a): <x-foodalchemist::filter-ast> heißt jetzt <x-fa::filter-ast>. Bleibt für alte Aufrufe
+     (u. a. Host food-alchemist.de); neue Aufrufe nutzen x-fa. Reicht Attribute und Slots unverändert durch. --}}
+@include('foodalchemist::components.fa.filter-ast')

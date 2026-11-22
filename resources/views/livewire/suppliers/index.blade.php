@@ -69,11 +69,11 @@
 
                 <div class="flex flex-col gap-0.5">
                     @forelse($lieferanten as $l)
-                        <x-foodalchemist::filter-row wire:key="sup-{{ $l->id }}" wire:click="waehleLieferant({{ $l->id }})"
+                        <x-fa::filter-row wire:key="sup-{{ $l->id }}" wire:click="waehleLieferant({{ $l->id }})"
                             :active="! $globaleSuche && $supplierId === $l->id" :count="$l->item_count"
                             title="{{ $l->name }}: {{ $fmt($l->item_count) }} Artikel, {{ $fmt($l->mapped_count) }} einem Grundprodukt zugeordnet{{ $l->is_inactive ? ' (inaktiv)' : '' }}">
                             <span class="{{ $l->is_inactive ? 'line-through text-[var(--fa-ink-3)]' : '' }}">{{ $l->name }}</span>
-                        </x-foodalchemist::filter-row>
+                        </x-fa::filter-row>
                     @empty
                         <x-fa::empty compact icon="heroicon-o-truck" title="Kein Lieferant gefunden">Filter leeren oder einen Lieferanten anlegen.</x-fa::empty>
                     @endforelse
@@ -384,7 +384,7 @@
         <livewire:foodalchemist.suppliers.supplier-detail key="suppliers-index--suppliers.supplier-detail" />
 
         {{-- Neuer Lieferant (gehört dem anlegenden Team — D1) --}}
-        <x-foodalchemist::modal name="lieferant-neu" title="Lieferant anlegen" size="max-w-2xl">
+        <x-fa::modal name="lieferant-neu" title="Lieferant anlegen" size="max-w-2xl">
             @if($fehler)<x-fa::notice tone="crit">{{ $fehler }}</x-fa::notice>@endif
             <x-fa::section title="Stammdaten" description="Der Lieferant gehört deinem Team. Artikel legst du danach über „Artikel anlegen“ an.">
                 <div class="grid grid-cols-2 gap-3">
@@ -418,10 +418,10 @@
                 <x-fa::button variant="ghost" x-on:click="$dispatch('modal.close', { name: 'lieferant-neu' })">Abbrechen</x-fa::button>
                 <x-fa::button variant="primary" wire:click="lieferantAnlegen">Lieferant anlegen</x-fa::button>
             </x-slot:footer>
-        </x-foodalchemist::modal>
+        </x-fa::modal>
 
         {{-- M2-11: Neuer Artikel (Minimal-Pflichtfelder, gehört dem anlegenden Team — D1) --}}
-        <x-foodalchemist::modal name="artikel-neu" title="Artikel anlegen" size="max-w-2xl">
+        <x-fa::modal name="artikel-neu" title="Artikel anlegen" size="max-w-2xl">
             @if($fehler)<x-fa::notice tone="crit">{{ $fehler }}</x-fa::notice>@endif
             <x-fa::section title="Stammdaten" :description="'Wird für ' . ($aktiverLieferant?->name ?? 'den gewählten Lieferanten') . ' angelegt und gehört deinem Team. Danach öffnet sich der Artikel zum Ergänzen.'">
                 <div class="grid grid-cols-2 gap-3">
@@ -448,10 +448,10 @@
                 <x-fa::button variant="ghost" x-on:click="$dispatch('modal.close', { name: 'artikel-neu' })">Abbrechen</x-fa::button>
                 <x-fa::button variant="primary" wire:click="artikelAnlegen">Artikel anlegen</x-fa::button>
             </x-slot:footer>
-        </x-foodalchemist::modal>
+        </x-fa::modal>
 
         {{-- M2-12: Preis-Anomalien --}}
-        <x-foodalchemist::modal name="preis-anomalien" title="Preisausreißer" size="max-w-5xl">
+        <x-fa::modal name="preis-anomalien" title="Preisausreißer" size="max-w-5xl">
             @if($anomalien === null)
                 <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">Wird berechnet …</p>
             @else
@@ -506,7 +506,7 @@
                     @endforelse
                 </x-fa::section>
             @endif
-        </x-foodalchemist::modal>
+        </x-fa::modal>
     </x-ui-page-container>
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}
 </x-ui-page>

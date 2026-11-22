@@ -105,7 +105,7 @@
             <x-fa::button size="sm" variant="ghost" :icon="$rezept->is_template ? 'heroicon-s-star' : 'heroicon-o-star'" wire:click="templateToggle"
                 class="{{ $rezept->is_template ? 'text-[var(--fa-accent)]' : '' }}" title="{{ $rezept->is_template ? 'Ist Vorlage. Klick nimmt die Markierung zurück' : 'Als Vorlage für neue Rezepte markieren' }}" data-template-btn>{{ $rezept->is_template ? 'Vorlage' : 'Als Vorlage markieren' }}</x-fa::button>
         </div>
-        <x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
+        <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
 
     {{-- ── STANDALONE-Detail rechts im Basisrezepte-Browser (Anatomie Detail-Panels) ── --}}
     @else
@@ -172,7 +172,7 @@
             </x-slot:badges>
             <x-slot:aktion>
                 <div class="flex flex-wrap items-center gap-2">
-                    <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort />
+                    <x-fa::bearbeiten-leiste :zustand="$sperr" sofort />
                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-top-right-on-square" wire:click="$dispatch('recipe-modal.oeffnen', { id: {{ $rezept->id }} })" data-rezept-bearbeiten>Im Editor öffnen</x-fa::button>
                 </div>
             </x-slot:aktion>
@@ -198,7 +198,7 @@
                     title="{{ $rezept->is_template ? 'Ist Vorlage. Klick nimmt die Markierung zurück' : 'Als Vorlage für neue Rezepte markieren' }}" data-template-btn>{{ $rezept->is_template ? 'Vorlage-Markierung entfernen' : 'Als Vorlage markieren' }}</x-fa::menu-item>
             </x-slot:menue>
         </x-fa::detail-kopf>
-        <x-foodalchemist::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
+        <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
 
         {{-- Spec 65: Detailspalte — Änderungen erst nach „Bearbeiten" (gleiche Sperre wie der Editor), „Fertig" gibt frei --}}
         <fieldset @disabled(in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)) class="contents" data-fa-lesemodus="{{ in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true) ? '1' : '0' }}">
@@ -386,9 +386,9 @@
                 </x-slot:actions>
                 @if($pairingBereit)
                     @if($kombination ?? null)
-                        <x-foodalchemist::kombination :daten="$kombination" />
+                        <x-fa::kombination :daten="$kombination" />
                     @endif
-                    <x-foodalchemist::pairing-netz :recipe-id="$rezept->id" :netz="$netz" />
+                    <x-fa::pairing-netz :recipe-id="$rezept->id" :netz="$netz" />
                 @elseif($pairingErlaubt)
                     <div wire:key="pairing-laden-{{ $rezept->id }}" x-init="$wire.pairingLaden()"
                          class="flex items-center gap-2 py-6 fa-t-muted" data-pairing-laedt>

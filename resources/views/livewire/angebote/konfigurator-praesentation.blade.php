@@ -1,6 +1,6 @@
 {{-- Spec 94 · Konfigurator-Editor, Reiter Branding und Präsentation — aufgebaut wie im Foodbook: „Präsentation für den Kunden“
      (Design, Gültig bis als Pflicht, eigener Link-Name, Vorschau, Veröffentlichen, Link) und Branding (Logo/Titelbild über
-     x-foodalchemist::branding-bilder, Farben, Übernehmen). Kein Kontakt-Knopf: die Anfrage im Konfigurator ersetzt ihn. --}}
+     x-fa::branding-bilder, Farben, Übernehmen). Kein Kontakt-Knopf: die Anfrage im Konfigurator ersetzt ihn. --}}
 @php
     $gesperrt = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true);
     $hinweisKlasse = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
@@ -69,7 +69,7 @@
 
     <fieldset @disabled($gesperrt) class="contents">
     <x-fa::section title="Branding" icon="heroicon-o-swatch" description="Logo und Titelbild erscheinen im Kopf des Kundenlinks, wenn das Design sie zeigt. Die Farben kommen aus dem Design, das gestaltest du unter „Designs gestalten“." data-kfp-branding>
-        <x-foodalchemist::branding-bilder :logo-url="$logoUrl" :cover-url="$coverUrl" />
+        <x-fa::branding-bilder :logo-url="$logoUrl" :cover-url="$coverUrl" />
 
         <div class="flex flex-wrap items-end gap-3 pt-3 border-t border-[var(--fa-line)]">
             <x-fa::field label="Betrieb" for="kfp-betrieb" optional hint="Ohne eigenes Logo gilt das Logo des Betriebs; es wird beim Veröffentlichen eingefroren.">

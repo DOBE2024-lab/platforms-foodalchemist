@@ -12,9 +12,9 @@
     </x-slot:navbar>
 
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Bestellung" width="w-96" :maxWidth="760" scope="activity_orders" side="right" :auswahl="(string) $selectedOrderId">
+        <x-fa::detail-sidebar title="Bestellung" width="w-96" :maxWidth="760" scope="activity_orders" side="right" :auswahl="(string) $selectedOrderId">
             <livewire:foodalchemist.orders.detail-panel :order-id="$selectedOrderId" :key="'order-detail-'.($selectedOrderId ?? 'empty')" />
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     <div class="flex-1 min-w-0 h-full overflow-y-auto px-4 py-4 space-y-3" data-fa-handy-bestellungen>

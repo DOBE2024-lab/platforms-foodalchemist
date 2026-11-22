@@ -21,7 +21,7 @@
     </x-slot>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Rollen" width="w-72">
+        <x-fa::page-sidebar title="Rollen" width="w-72">
             <div class="p-3 flex flex-col gap-3">
                 <div class="relative">
                     <label for="pakete-suche" class="sr-only">Pakete durchsuchen</label>
@@ -30,17 +30,17 @@
                 </div>
                 <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]">
                     <p class="px-2.5 pb-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">Rolle</p>
-                    <x-foodalchemist::filter-row wire:click="$set('rolleFilter', '')" :active="$rolleFilter === ''">Alle Rollen</x-foodalchemist::filter-row>
+                    <x-fa::filter-row wire:click="$set('rolleFilter', '')" :active="$rolleFilter === ''">Alle Rollen</x-fa::filter-row>
                     @foreach($rollen as $role)
-                        <x-foodalchemist::filter-row wire:key="role-{{ $loop->index }}" wire:click="$set('rolleFilter', {{ \Illuminate\Support\Js::from($role) }})" :active="$rolleFilter === $role">{{ $role }}</x-foodalchemist::filter-row>
+                        <x-fa::filter-row wire:key="role-{{ $loop->index }}" wire:click="$set('rolleFilter', {{ \Illuminate\Support\Js::from($role) }})" :active="$rolleFilter === $role">{{ $role }}</x-fa::filter-row>
                     @endforeach
                 </div>
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Paket" width="w-96" :maxWidth="640" scope="activity_pakete" side="right">
+        <x-fa::detail-sidebar title="Paket" width="w-96" :maxWidth="640" scope="activity_pakete" side="right">
             @if($selected)
                 @php
                     $nGerichte = $selected->dishes->count();
@@ -73,9 +73,9 @@
                         </x-slot:badges>
                         <x-slot:aktion>
                             {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung --}}
-                            <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                            <x-fa::bearbeiten-leiste :zustand="$sperr">
                                 <x-fa::button variant="primary" size="sm" icon="heroicon-m-check" wire:click="speichern" data-paket-speichern>Speichern</x-fa::button>
-                            </x-foodalchemist::bearbeiten-leiste>
+                            </x-fa::bearbeiten-leiste>
                         </x-slot:aktion>
                         <x-slot:menue>
                             {{-- Spec 82 §13 B6: Veröffentlichen — EINE Bedingung (Support\FassungMenue) für alle Arten --}}
@@ -198,7 +198,7 @@
                     <x-fa::empty icon="heroicon-o-puzzle-piece" title="Kein Paket gewählt">In der Tabelle ein Paket anklicken oder oben rechts mit „Neues Paket“ eines anlegen.</x-fa::empty>
                 </div>
             @endif
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
@@ -228,7 +228,7 @@
                             @php
                                 $vkBetrieb = $vkDisplay[$b->id] ?? null;
                             @endphp
-                            <x-foodalchemist::table-row :active="$selectedId === $b->id" wire:key="b-{{ $b->id }}" wire:click="waehle({{ $b->id }})">
+                            <x-fa::table-row :active="$selectedId === $b->id" wire:key="b-{{ $b->id }}" wire:click="waehle({{ $b->id }})">
                                 <td class="min-w-[12rem] font-medium text-[var(--fa-ink)]">{{ $b->name }}</td>
                                 <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ $b->role ?? '–' }}</td>
                                 <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ $b->level ? ($niveauLabel[$b->level] ?? $b->level) : '–' }}</td>
@@ -243,7 +243,7 @@
                                 </td>
                                 <td class="num text-[var(--fa-ink-2)]">{{ $b->food_cost_percent !== null ? number_format((float) $b->food_cost_percent, 1, ',', '.') . ' %' : '–' }}</td>
                                 <td class="whitespace-nowrap"><x-fa::badge :tone="$b->price_mode === 'auto' ? 'info' : 'neutral'">{{ $modusLabel[$b->price_mode] ?? $b->price_mode }}</x-fa::badge></td>
-                            </x-foodalchemist::table-row>
+                            </x-fa::table-row>
                         @empty
                             <tr>
                                 <td colspan="7">

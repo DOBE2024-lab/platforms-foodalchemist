@@ -1,14 +1,4 @@
 {
-    "components/detail-sidebar.blade.php": {
-        "mini_schrift": 1,
-        "style_statisch": 1
-    },
-    "components/kpi-tiles.blade.php": {
-        "mini_schrift": 1
-    },
-    "components/pairing-netz.blade.php": {
-        "emoji": 3
-    },
     "dokumente/angebot-karte.blade.php": {
         "hex_farbe": 21,
         "style_block": 1
@@ -515,8 +505,7 @@
     "livewire/orders/index.blade.php": {
         "typo_groesse": 18,
         "typo_tinte": 22,
-        "roher_button": 6,
-        "rohes_menue": 1
+        "roher_button": 6
     },
     "livewire/pakete/index.blade.php": {
         "typo_groesse": 2,
@@ -1087,8 +1076,7 @@
     "livewire/verkauf/vk-modal.blade.php": {
         "typo_groesse": 17,
         "typo_tinte": 15,
-        "roher_button": 2,
-        "rohes_menue": 1
+        "roher_button": 2
     },
     "livewire/verwaltung/mandant-beenden.blade.php": {
         "typo_groesse": 2,

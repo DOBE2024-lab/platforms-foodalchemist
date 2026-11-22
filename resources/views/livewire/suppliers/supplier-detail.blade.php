@@ -35,7 +35,7 @@
     $eff = (float) ($stufenInfo['prozent'] ?? 0);
 @endphp
 
-<x-foodalchemist::modal name="supplier-detail" :title="$stammblatt['name'] ?? 'Lieferant'" size="max-w-4xl">
+<x-fa::modal name="supplier-detail" :title="$stammblatt['name'] ?? 'Lieferant'" size="max-w-4xl">
     <div wire:key="supplier-detail-{{ $supplierId }}">
         @if($stammblatt === null)
             <x-fa::empty icon="heroicon-o-truck" title="Kein Lieferant gewählt">Links in der Liste einen Lieferanten wählen und „Stammblatt öffnen“ klicken.</x-fa::empty>
@@ -526,4 +526,4 @@
     <x-slot:footer>
         <x-fa::button x-on:click="$dispatch('modal.close', { name: 'supplier-detail' })">Schließen</x-fa::button>
     </x-slot:footer>
-</x-foodalchemist::modal>
+</x-fa::modal>

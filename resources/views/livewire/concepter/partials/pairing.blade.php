@@ -15,7 +15,7 @@
             <div class="{{ $cardAccent }}"></div>
             <div class="px-5 py-4 space-y-3">
                 <h3 class="font-medium tracking-tight text-gray-900">Passt das zusammen?</h3>
-                <x-foodalchemist::kombination :daten="$k" />
+                <x-fa::kombination :daten="$k" />
             </div>
         </div>
         @if(($pairing['netz']['nodes'] ?? []) !== [])
@@ -33,7 +33,7 @@
                     </p>
                     {{-- Die Vorschau ist für die schmale Detail-Spalte gebaut — im breiten Editor begrenzen, sonst skaliert die Schrift mit. --}}
                     <div class="max-w-xl">
-                        <x-foodalchemist::pairing-netz :recipe-id="$pairing['netz']['meta']['recipe_id'] ?? 0" :netz="$pairing['netz']" />
+                        <x-fa::pairing-netz :recipe-id="$pairing['netz']['meta']['recipe_id'] ?? 0" :netz="$pairing['netz']" />
                     </div>
                 </div>
             </div>

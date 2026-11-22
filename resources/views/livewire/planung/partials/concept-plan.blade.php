@@ -5,7 +5,7 @@
      fa-pass: eigene Karte mit Bausteinen (Tokens, hell + Werkbank) statt grüner Sonderfläche. --}}
 @php $pv = $this->planVorschau(); @endphp
 @if($pv !== null)
-    <x-foodalchemist::modal-section icon="heroicon-o-document-text" :title="'Ausgearbeiteter Plan' . ($pv['name'] !== '' ? ': ' . $pv['name'] : '')" data-planung-plan-panel>
+    <x-fa::modal-section icon="heroicon-o-document-text" :title="'Ausgearbeiteter Plan' . ($pv['name'] !== '' ? ': ' . $pv['name'] : '')" data-planung-plan-panel>
         <x-slot:actions>
             <x-fa::badge tone="ok" icon="heroicon-m-check">Plan liegt vor</x-fa::badge>
             {{-- Conceptor bleibt optionaler Tiefen-Editor (Entscheid 2026-08-18): per Knopf, kein Pflicht-Sprung. --}}
@@ -49,5 +49,5 @@
 
         {{-- Menü-Aufbau mit Gericht-Vorgaben je Position (eigenes Partial, Trait PlanGerichtVorgaben). --}}
         @include('foodalchemist::livewire.planung.partials.concept-plan-positionen')
-    </x-foodalchemist::modal-section>
+    </x-fa::modal-section>
 @endif

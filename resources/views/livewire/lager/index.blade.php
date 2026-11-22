@@ -281,7 +281,7 @@
                         </table>
                     @endif
                 </x-fa::section>
-            <x-foodalchemist::modal name="lager-inventur" fullscreen dark-canvas title="Inventur" :title-name="$inventur !== null ? $inventur->count_date->format('d.m.Y') . ' · ' . ($inventur->location?->name ?? '—') : null">
+            <x-fa::modal name="lager-inventur" fullscreen dark-canvas title="Inventur" :title-name="$inventur !== null ? $inventur->count_date->format('d.m.Y') . ' · ' . ($inventur->location?->name ?? '—') : null">
                 @if($inventur !== null)
                 <div class="flex flex-col gap-4" data-lager-inventur-editor>
                 @if($fehler)<x-fa::notice tone="crit">{{ $fehler }}</x-fa::notice>@endif
@@ -406,7 +406,7 @@
                 </x-fa::section>
                 </div>
                 @endif
-            </x-foodalchemist::modal>
+            </x-fa::modal>
         @endif
 
         {{-- ── Eigenproduktion (Spec 69) ─────────────────────────────────── --}}

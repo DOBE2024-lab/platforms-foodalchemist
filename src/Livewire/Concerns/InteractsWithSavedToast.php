@@ -6,7 +6,7 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
  * Einheitliche, flüchtige „Gespeichert"-Rückmeldung für ALLE Save-Aktionen.
  *
  * Feuert das Browser-Event `fa-saved`, das die einmal in der Modul-Sidebar
- * gemountete Alpine-Insel (<x-foodalchemist::saved-toast />) auffängt und als
+ * gemountete Alpine-Insel (<x-fa::saved-toast />) auffängt und als
  * kurzen Toast (~2,5 s) zeigt. Bewusst KEIN platforms-notifications: das
  * geteilte Notice-System persistiert jede Meldung als DB-Zeile (Replay/Badge)
  * — falsch für „Meldung bei jedem Save". Hier: rein clientseitig, keine DB.

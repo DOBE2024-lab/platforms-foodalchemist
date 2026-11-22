@@ -1613,7 +1613,7 @@ it('Cockpit Bild-Status: failed-Badge bietet „neu erzeugen" und re-triggert nu
     Livewire::test(PlanungIndex::class)
         ->call('oeffne', $session->id)
         ->assertSeeHtml('neu erzeugen')
-        // Spec 53 / Paket C: der Knopf ist jetzt <x-foodalchemist::ki-action> ($wire.bilderNeu(...)
+        // Spec 53 / Paket C: der Knopf ist jetzt <x-fa::ki-action> ($wire.bilderNeu(...)
         // statt wire:click) — data-ki-action trägt denselben Wire-Ausdruck als Beleg.
         ->assertSeeHtml('data-ki-action="bilderNeu(' . $step->id . ')"')
         ->call('bilderNeu', $step->id);

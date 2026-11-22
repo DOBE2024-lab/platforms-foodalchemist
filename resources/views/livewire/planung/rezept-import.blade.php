@@ -6,7 +6,7 @@
 @endphp
 <div class="flex flex-col gap-4">
     @if($importStep === 'eingabe')
-        <x-foodalchemist::modal-section icon="heroicon-o-arrow-down-tray" title="Rezept importieren">
+        <x-fa::modal-section icon="heroicon-o-arrow-down-tray" title="Rezept importieren">
             <x-slot:actions>
                 <x-fa::badge>Schritt 1 von 3</x-fa::badge>
             </x-slot:actions>
@@ -39,12 +39,12 @@
                     </x-fa::button>
                 </div>
             </div>
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
     @elseif($importStep === 'vorschau')
         {{-- Prüf-Karte + klebende Anlegen-Leiste: die Zutatenliste wächst mit der Quelle, die Knöpfe
              standen bisher dahinter und rutschten unter den Fold. Felder, Reihenfolge, Bindings und die
              data-import-*-Anker bleiben unverändert. --}}
-        <x-foodalchemist::modal-section icon="heroicon-o-eye" title="Vorschau prüfen">
+        <x-fa::modal-section icon="heroicon-o-eye" title="Vorschau prüfen">
             <x-slot:actions>
                 <x-fa::badge>Schritt 2 von 3</x-fa::badge>
                 @if(in_array($importQuelle, ['bild', 'scan'], true))
@@ -117,7 +117,7 @@
                     <x-fa::textarea wire:model="importVorschau.preparation" rows="6" />
                 </x-fa::field>
             </div>
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
 
         <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] px-4 py-3 shadow-lg shadow-black/20">
             <div class="flex-1 min-w-[16rem] flex flex-col gap-1">
@@ -139,7 +139,7 @@
             </div>
         </div>
     @elseif($importStep === 'fertig' && $importErgebnis)
-        <x-foodalchemist::modal-section icon="heroicon-o-check-badge" title="Importiert">
+        <x-fa::modal-section icon="heroicon-o-check-badge" title="Importiert">
             <x-slot:actions>
                 <x-fa::badge>Schritt 3 von 3</x-fa::badge>
             </x-slot:actions>
@@ -168,6 +168,6 @@
                     <x-fa::button variant="ghost" icon="heroicon-o-arrow-down-tray" wire:click="importReset">Weiteres Rezept importieren</x-fa::button>
                 </div>
             </div>
-        </x-foodalchemist::modal-section>
+        </x-fa::modal-section>
     @endif
 </div>

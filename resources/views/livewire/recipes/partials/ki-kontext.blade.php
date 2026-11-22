@@ -23,7 +23,7 @@
     @endphp
     <x-fa::section variant="plain" title="KI-Kontext" icon="heroicon-o-cpu-chip" :meta="$kmMeta" data-sektion="ki-kontext">
         <p class="fa-t-muted" data-ki-kontext-meta>{{ implode(' · ', $kmTeile) }}</p>
-        <x-foodalchemist::kontext-inspektor :kontext="$kiKontext['kontext']" />
+        <x-fa::kontext-inspektor :kontext="$kiKontext['kontext']" />
     </x-fa::section>
 @endif
 
@@ -57,7 +57,7 @@
                         @endif
                         @if($call['snapshot_fehler'])<x-fa::signal tone="warn">{{ $call['snapshot_fehler'] }}</x-fa::signal>@endif
                         @if($call['fehler'])<x-fa::signal tone="crit">{{ $call['fehler'] }}</x-fa::signal>@endif
-                        <x-foodalchemist::kontext-inspektor :kontext="['wissen' => $call['kanaele'] ?: ['wissen' => $call['wissen_slugs']], 'prompt' => $call['groessen']]" />
+                        <x-fa::kontext-inspektor :kontext="['wissen' => $call['kanaele'] ?: ['wissen' => $call['wissen_slugs']], 'prompt' => $call['groessen']]" />
                         @if(empty($call['wissen_slugs']))<p>Keine Wissensquellen protokolliert.</p>@endif
                         @foreach($call['snapshot_quellen'] as $source)
                             <details>

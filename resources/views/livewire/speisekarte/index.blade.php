@@ -54,7 +54,7 @@
     </x-slot>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Speisekarten" width="w-64">
+        <x-fa::page-sidebar title="Speisekarten" width="w-64">
             <div class="p-3 flex flex-col gap-2">
                 <x-fa::input type="search" wire:model.live.debounce.300ms="search" placeholder="Karte suchen" aria-label="Karte suchen" />
                 <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="neu" class="w-full" data-sk-neu>Neue Karte</x-fa::button>
@@ -74,12 +74,12 @@
                 </div>
                 <div class="pt-1">{{ $karten->links('foodalchemist::components.fa.pagination') }}</div>
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- Rechtes Detail (nur lesend): Logo · Status, Datum, Nummer · Eckdaten der Auswahl --}}
     <x-slot name="activity">
-        <x-foodalchemist::detail-sidebar title="Detail" width="w-72" scope="activity_speisekarte" side="right" icon="heroicon-o-information-circle" :default-open="true">
+        <x-fa::detail-sidebar title="Detail" width="w-72" scope="activity_speisekarte" side="right" icon="heroicon-o-information-circle" :default-open="true">
             @if($karte)
                 @include('foodalchemist::livewire.speisekarte.partials.detail', ['karte' => $karte])
             @else
@@ -87,7 +87,7 @@
                     <x-fa::empty icon="heroicon-o-clipboard-document-list" title="Keine Karte gewählt">Links eine Karte anklicken, dann erscheinen hier Wareneinsatz, Rubriken und offene Punkte.</x-fa::empty>
                 </div>
             @endif
-        </x-foodalchemist::detail-sidebar>
+        </x-fa::detail-sidebar>
     </x-slot>
 
     <x-ui-page-container padding="px-6 pb-6" spacing="space-y-4">
@@ -122,7 +122,7 @@
             @include('foodalchemist::livewire.speisekarte.partials.vorschau', ['vorschau' => $vorschau])
 
             {{-- ═══════════════ EDITOR = Vollbild-Modal (Foodbook-Muster) ═══════════════ --}}
-            <x-foodalchemist::modal name="speisekarte-editor" fullscreen dark-canvas title="Speisekarte bearbeiten" :title-name="$name">
+            <x-fa::modal name="speisekarte-editor" fullscreen dark-canvas title="Speisekarte bearbeiten" :title-name="$name">
                 <x-slot:titleExtra>
                     <x-fa::badge>{{ $typLabel[$karte->karten_typ] ?? $karte->karten_typ }}</x-fa::badge>
                     <x-fa::badge :tone="$statusTon[$karte->statusWert()->badgeVariant()] ?? 'neutral'">{{ $karte->statusWert()->label() }}</x-fa::badge>
@@ -138,16 +138,16 @@
                             </fieldset>
                         </x-fa::menu>
                         {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung, Editor bleibt offen --}}
-                        <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+                        <x-fa::bearbeiten-leiste :zustand="$sperr">
                             <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" wire:loading.attr="disabled" wire:target="speichern" data-sk-speichern>Speichern</x-fa::button>
-                        </x-foodalchemist::bearbeiten-leiste>
+                        </x-fa::bearbeiten-leiste>
                     </div>
                 </x-slot:actions>
 
                 {{-- Reiter über den Baustein editor-tabs. Werkstrang M Phase A (Spec 40 §6): vom Groben zum
                      Kleinen, Kontext zuerst (Zielgruppe und Niveau als Leitplanken), dann Aufbau. Panels bleiben
                      im DOM (x-show); die Leitstelle wird nicht neu eingehängt. --}}
-                <x-foodalchemist::editor-tabs marker="sk" wire-key="sk-tabs-{{ $karte->id }}" :init="'kontext'" :gesperrt="$gesperrt"
+                <x-fa::editor-tabs marker="sk" wire-key="sk-tabs-{{ $karte->id }}" :init="'kontext'" :gesperrt="$gesperrt"
                     :tabs="[
                         'kontext' => 'Kontext',
                         'aufbau' => 'Aufbau',
@@ -173,7 +173,7 @@
                                         @endforeach
                                     </x-fa::select>
                                     {{-- Betextet die GANZE Speisekarte im gewählten Stil neu (nur auf Knopfdruck, kostet KI-Leistung). --}}
-                                    <x-foodalchemist::ki-action action="speisekarteWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Karte neu betexten"
+                                    <x-fa::ki-action action="speisekarteWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Karte neu betexten"
                                             :disabled="! $writingStyleId"
                                             title="Alle Positionen der Speisekarte im gewählten Schreibstil neu betexten"
                                             busy="Wird betextet …" class="shrink-0" data-sk-wording />
@@ -202,7 +202,7 @@
                     {{-- Karten-Kopf: Name, Typ, Status und Laufzeit, Kunde, Einleitung. --}}
                     <x-fa::section title="Karte" icon="heroicon-o-clipboard-document-list" wire:key="sk-head-{{ $karte->id }}">
                         <x-slot:actions>
-                            <x-foodalchemist::ki-action action="kiKartenText" variant="ai" icon="heroicon-o-sparkles" label="Einleitung vorschlagen" busy="Wird geschrieben …" data-sk-ki-einleitung />
+                            <x-fa::ki-action action="kiKartenText" variant="ai" icon="heroicon-o-sparkles" label="Einleitung vorschlagen" busy="Wird geschrieben …" data-sk-ki-einleitung />
                         </x-slot:actions>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                             <x-fa::field label="Name" for="sk-name" class="md:col-span-2">
@@ -231,13 +231,13 @@
                         {{-- Spec 33 P5: Status, Laufzeit und beide Zuordnungen aus dem geteilten Bauteil,
                              dieselbe Bedienung wie in Foodbook und Speiseplan. --}}
                         <div class="pt-3 border-t border-[var(--fa-line)]">
-                            <x-foodalchemist::ausgabe-status
+                            <x-fa::ausgabe-status
                                 status-model="status" von-model="gueltigVon" bis-model="gueltigBis"
                                 outlet-model="outletId"
                                 :betriebe="$betriebe" :zustand="$karte->laufZustand()" :grund="$karte->laufGrund()"
                                 :konflikt="$portfolioKonflikt" toggle="aktivUmschalten" />
                         </div>
-                        <x-foodalchemist::crm-kunde-picker
+                        <x-fa::crm-kunde-picker
                             :ausgabe="$karte" :crm-verfuegbar="$crmVerfuegbar" :firmen="$firmen" :kontakte="$kontakte" />
                     </x-fa::section>
 
@@ -516,7 +516,7 @@
                                  Paket landen in der Ziel-Rubrik (über „Hinzufügen“ an einer Rubrik gewählt); ein Format
                                  wird zur eigenen Rubrik (F5: Editionen bleiben live verknüpft).
                                  Höhe folgt dem Bildschirm, damit die Liste auch auf dem Laptop bis unten erreichbar ist. --}}
-                            <x-foodalchemist::katalog-picker marker="sk" switch="katalogModus"
+                            <x-fa::katalog-picker marker="sk" switch="katalogModus"
                                 class="max-lg:w-full max-lg:static max-lg:max-h-[28rem] lg:w-72 xl:w-80 2xl:w-96 lg:top-14 lg:max-h-[calc(100dvh-14rem)]"
                                 :modes="[
                                     ['key' => 'gericht', 'label' => 'Gericht', 'active' => $pickerModus === 'gericht'],
@@ -530,7 +530,7 @@
                                     <p class="fa-t-muted px-1 mb-1 shrink-0">Setzt ein Format als eigene Rubrik ein. Seine Editionen bleiben verknüpft.</p>
                                     <div class="flex-1 overflow-y-auto flex flex-col gap-0.5">
                                         @forelse($formatKandidaten as $fk)
-                                            <x-foodalchemist::katalog-row wire:key="skfmt-{{ $fk->id }}" wire:click="formatEinfuegen({{ $fk->id }})" data-sk-format-kand :title="$fk->consumer_name ?: $fk->name">{{ $fk->consumer_name ?: $fk->name }}</x-foodalchemist::katalog-row>
+                                            <x-fa::katalog-row wire:key="skfmt-{{ $fk->id }}" wire:click="formatEinfuegen({{ $fk->id }})" data-sk-format-kand :title="$fk->consumer_name ?: $fk->name">{{ $fk->consumer_name ?: $fk->name }}</x-fa::katalog-row>
                                         @empty
                                             <x-fa::empty compact icon="heroicon-o-rectangle-group" :title="trim($formatSuche) !== '' ? 'Kein Format gefunden' : 'Noch keine Formate'" />
                                         @endforelse
@@ -562,18 +562,18 @@
                                     @endif
                                     <div class="flex-1 overflow-y-auto flex flex-col gap-0.5">
                                         @forelse($pickerErgebnisse as $g)
-                                            <x-foodalchemist::katalog-row wire:key="skpk-{{ $g->id }}" :disabled="$pickerRubrikTitel === null" wire:click="{{ $istMenuePicker ? 'positionAusMenue' : 'positionAusGericht' }}({{ (int) ($pickerRubrikId ?? 0) }}, {{ $g->id }})" :title="$g->name" :price="isset($g->vk_netto) && $g->vk_netto !== null ? number_format((float) $g->vk_netto, 2, ',', '.') . ' €' : null">{{ $g->name }}</x-foodalchemist::katalog-row>
+                                            <x-fa::katalog-row wire:key="skpk-{{ $g->id }}" :disabled="$pickerRubrikTitel === null" wire:click="{{ $istMenuePicker ? 'positionAusMenue' : 'positionAusGericht' }}({{ (int) ($pickerRubrikId ?? 0) }}, {{ $g->id }})" :title="$g->name" :price="isset($g->vk_netto) && $g->vk_netto !== null ? number_format((float) $g->vk_netto, 2, ',', '.') . ' €' : null">{{ $g->name }}</x-fa::katalog-row>
                                         @empty
                                             <x-fa::empty compact icon="heroicon-o-magnifying-glass" :title="$leerText" />
                                         @endforelse
                                     </div>
                                 @endif
-                            </x-foodalchemist::katalog-picker>
+                            </x-fa::katalog-picker>
                         </div>{{-- /2 Spalten --}}
                     </div>{{-- /sk-body --}}
                 </div>{{-- /Reiter AUFBAU --}}
-                </x-foodalchemist::editor-tabs>
-            </x-foodalchemist::modal>
+                </x-fa::editor-tabs>
+            </x-fa::modal>
         @endif
 
     {{-- Bug-Runde 2026-09-17 #1 (Nachbesserung): aus der Karte heraus öffnet das Gericht bzw. das

@@ -44,7 +44,7 @@
                     {{-- Ein Knopf für beide Ebenen: der Prompt folgt der Ebene
                          (StepEditor::promptKey → `recipe.steps` bzw. `vk.plating`), damit
                          Anrichten nicht mit Fertigstellungs-Schritten befüllt wird. --}}
-                    <x-foodalchemist::ki-action action="kiSchritte" variant="ai" icon="heroicon-o-sparkles"
+                    <x-fa::ki-action action="kiSchritte" variant="ai" icon="heroicon-o-sparkles"
                             :label="$kiKnopf" :title="$kiTitel . '. Nur ein Vorschlag, gespeichert wird erst beim Übernehmen.'"
                             busy="Denkt nach …" data-ki-schritte />
                     <x-fa::button size="sm" :variant="trim($kiBriefing) !== '' ? 'ai' : 'ghost'" icon="heroicon-o-chat-bubble-bottom-center-text" wire:click="$toggle('briefingOffen')"
@@ -54,7 +54,7 @@
                         <span>Vorgabe</span>
                         @if(trim($kiBriefing) !== '')<span class="w-1.5 h-1.5 rounded-full bg-[var(--fa-accent)]" aria-label="Vorgabe gesetzt"></span>@endif
                     </x-fa::button>
-                    <x-foodalchemist::ki-action action="kiFotos" variant="ai" icon="heroicon-o-photo" label="Fotos erzeugen"
+                    <x-fa::ki-action action="kiFotos" variant="ai" icon="heroicon-o-photo" label="Fotos erzeugen"
                             title="KI-Fotos für alle Schritte ohne Foto erzeugen" busy="Malt …" data-ki-fotos />
                     <x-fa::menu label="Weitere Aktionen zur Anleitung" size="sm" breite="60">
                         <x-fa::menu-item icon="heroicon-o-document-arrow-down" abstand="weit" wire:click="$toggle('importOffen')" title="Markdown einfügen und in Schritte umwandeln" data-import-toggle>Markdown einfügen</x-fa::menu-item>

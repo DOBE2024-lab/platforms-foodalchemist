@@ -23,7 +23,7 @@
 
 {{-- Spec 29-Rollout: Produktion-Editor auf Editor-Page-Muster (fullscreen · dark · editor-tabs · KPI). --}}
 <div>
-<x-foodalchemist::modal name="produktion-editor" fullscreen dark-canvas
+<x-fa::modal name="produktion-editor" fullscreen dark-canvas
     :title="$orderId === null ? 'Neuer Produktionsauftrag' : 'Produktionsauftrag'"
     :title-name="$orderId === null ? null : ($name ?: null)">
 
@@ -59,9 +59,9 @@
                 </x-fa::menu>
             @endif
             {{-- Spec 65: erst „Bearbeiten" (Sperre), dann Abbrechen/Speichern; Speichern beendet die Bearbeitung --}}
-            <x-foodalchemist::bearbeiten-leiste :zustand="$sperr">
+            <x-fa::bearbeiten-leiste :zustand="$sperr">
                 <x-fa::button variant="primary" icon="heroicon-m-check" wire:click="speichern" wire:loading.attr="disabled" wire:target="speichern" data-produktion-speichern>{{ $orderId === null ? 'Auftrag anlegen' : 'Speichern' }}</x-fa::button>
-            </x-foodalchemist::bearbeiten-leiste>
+            </x-fa::bearbeiten-leiste>
         </div>
     </x-slot:actions>
 
@@ -77,7 +77,7 @@
         ]" />
     </x-slot:kpiHeader>
 
-    <x-foodalchemist::editor-tabs marker="produktion" wire-key="produktion-tabs-{{ $orderId ?? 'neu' }}" :init="'stammdaten'" :gesperrt="$sperrLesen"
+    <x-fa::editor-tabs marker="produktion" wire-key="produktion-tabs-{{ $orderId ?? 'neu' }}" :init="'stammdaten'" :gesperrt="$sperrLesen"
         :tabs="['stammdaten' => 'Stammdaten', 'ziele' => 'Ziele', 'vorschau' => 'Vorschau', 'zeilen' => $orderId ? 'Positionen' : null, 'einkauf' => $orderId ? 'Status und Einkauf' : null]">
 
     @include('foodalchemist::livewire.produktion.partials.editor-stammdaten')
@@ -94,10 +94,10 @@
 
     {{-- ═══ Reiter STATUS UND EINKAUF (aus DetailPanel gemergt — nur bestehender Auftrag) ═══ --}}
     @include('foodalchemist::livewire.produktion.partials.editor-einkauf')
-    </x-foodalchemist::editor-tabs>
-</x-foodalchemist::modal>
+    </x-fa::editor-tabs>
+</x-fa::modal>
 @if($etikettenVorschlag !== [])
-<x-foodalchemist::modal name="produktion-etiketten" title="Etiketten für diesen Auftrag" size="max-w-3xl">
+<x-fa::modal name="produktion-etiketten" title="Etiketten für diesen Auftrag" size="max-w-3xl">
     <form method="GET" action="{{ route('foodalchemist.etiketten.produktion', ['order' => $ops['id']]) }}" target="_blank" class="flex flex-col gap-3" data-produktion-etiketten-form>
         <p class="fa-t-muted">Alle Basisrezepte des Auftrags, je Ansatz ein Etikett mit der Menge eines Ansatzes. Hergestellt am = Produktionstag, Lagerart = Standard des Rezepts. Haken raus oder Anzahl ändern, dann drucken.</p>
         <table class="fa-table fa-table--compact">
@@ -118,6 +118,6 @@
             <x-fa::button type="submit" variant="primary" icon="heroicon-m-printer">Etiketten drucken</x-fa::button>
         </div>
     </form>
-</x-foodalchemist::modal>
+</x-fa::modal>
 @endif
 </div>

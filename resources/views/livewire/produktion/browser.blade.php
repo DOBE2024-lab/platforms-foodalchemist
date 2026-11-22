@@ -41,7 +41,7 @@
     </x-slot>
 
     <x-slot name="sidebar">
-        <x-foodalchemist::page-sidebar title="Filter" width="w-72">
+        <x-fa::page-sidebar title="Filter" width="w-72">
             <div class="p-3 flex flex-col gap-3">
                 <div class="relative">
                     <label for="produktion-suche" class="sr-only">Aufträge durchsuchen</label>
@@ -53,15 +53,15 @@
                      die die Liste gar nicht liefert (dieselbe Falle wie MVP-048 im VK-Browser). --}}
                 <div class="flex flex-col gap-0.5 pt-2 border-t border-[var(--fa-line)]" data-produktion-statusfilter>
                     <p class="{{ $kleinLabel }} pb-1">Status</p>
-                    <x-foodalchemist::filter-row wire:click="waehleStatus('')" :active="$statusFilter === ''" :count="$gesamtCount">Alle Status</x-foodalchemist::filter-row>
-                    <x-foodalchemist::filter-ast>
+                    <x-fa::filter-row wire:click="waehleStatus('')" :active="$statusFilter === ''" :count="$gesamtCount">Alle Status</x-fa::filter-row>
+                    <x-fa::filter-ast>
                         @foreach($statusFaelle as $fall)
-                            <x-foodalchemist::filter-row level="child" wire:key="pstat-{{ $fall->value }}"
+                            <x-fa::filter-row level="child" wire:key="pstat-{{ $fall->value }}"
                                 wire:click="waehleStatus('{{ $fall->value }}')"
                                 :active="$statusFilter === $fall->value"
-                                :count="$statusCounts[$fall->value] ?? 0">{{ ucfirst($fall->label()) }}</x-foodalchemist::filter-row>
+                                :count="$statusCounts[$fall->value] ?? 0">{{ ucfirst($fall->label()) }}</x-fa::filter-row>
                         @endforeach
-                    </x-foodalchemist::filter-ast>
+                    </x-fa::filter-ast>
                 </div>
 
                 <div class="flex flex-col gap-2 pt-2 border-t border-[var(--fa-line)]" data-produktion-zeitraum>
@@ -90,7 +90,7 @@
                     </div>
                 @endif
             </div>
-        </x-foodalchemist::page-sidebar>
+        </x-fa::page-sidebar>
     </x-slot>
 
     {{-- Detail-Spalte erst, wenn ein Auftrag gewählt ist: auf dem Laptop fehlte der Tabelle sonst
@@ -98,10 +98,10 @@
          Detail-Panels des Moduls EIN Toggle-Feld. --}}
     @if($orderId !== null)
         <x-slot name="activity">
-            <x-foodalchemist::detail-sidebar title="Auftrag" width="w-80" :maxWidth="760"
+            <x-fa::detail-sidebar title="Auftrag" width="w-80" :maxWidth="760"
                                              scope="activity_produktion" side="right" :auswahl="(string) $orderId">
                 <livewire:foodalchemist.produktion.detail-panel :order-id="$orderId" key="produktion-browser--produktion.detail-panel" />
-            </x-foodalchemist::detail-sidebar>
+            </x-fa::detail-sidebar>
         </x-slot>
     @endif
 
@@ -201,7 +201,7 @@
                                 $aktiv = $a->lines->reject(fn ($l) => (bool) $l->is_struck);
                                 $ziele = collect($a->targets ?? [])->pluck('label')->filter()->values();
                             @endphp
-                            <x-foodalchemist::table-row :active="$orderId === $a->id" wire:key="po-{{ $a->id }}"
+                            <x-fa::table-row :active="$orderId === $a->id" wire:key="po-{{ $a->id }}"
                                 wire:click="waehle({{ $a->id }})"
                                 x-data x-on:click="$store.ui?.mSet('activity_produktion', 'open', true)"
                                 data-produktion-zeile="{{ $a->id }}">
@@ -256,7 +256,7 @@
                                         <td class="whitespace-nowrap"><x-fa::badge :tone="$ind[1]" data-materialbedarf-indikator="{{ $indKey }}">{{ $ind[0] }}</x-fa::badge></td>
                                     @endif
                                 @endforeach
-                            </x-foodalchemist::table-row>
+                            </x-fa::table-row>
                         @empty
                             <tr><td colspan="{{ count($spalten) + 1 }}" data-produktion-leer>
                                 @if($filterAktiv)

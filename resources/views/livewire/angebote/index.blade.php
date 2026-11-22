@@ -66,7 +66,7 @@
                     </thead>
                     <tbody>
                         @forelse($items as $it)
-                            <x-foodalchemist::table-row :active="$selectedId === $it->id" wire:key="ang-{{ $it->id }}" wire:click="waehle({{ $it->id }})" data-angebot-zeile="{{ $it->id }}">
+                            <x-fa::table-row :active="$selectedId === $it->id" wire:key="ang-{{ $it->id }}" wire:click="waehle({{ $it->id }})" data-angebot-zeile="{{ $it->id }}">
                                 <td class="min-w-[12rem] font-medium text-[var(--fa-ink)]">{{ $it->name }}</td>
                                 <td class="whitespace-nowrap">
                                     <x-fa::badge :tone="$statusTon[$it->status->badgeVariant()] ?? 'neutral'" data-status="{{ $it->status->value }}">{{ $it->status->label() }}</x-fa::badge>
@@ -75,7 +75,7 @@
                                 <td class="num text-[var(--fa-ink-2)]">{{ $it->personen ?? '–' }}</td>
                                 <td class="whitespace-nowrap tabular-nums text-[var(--fa-ink-2)]">{{ $it->event_date ? $it->event_date->format('d.m.Y') : '–' }}</td>
                                 <td class="num"><x-fa::money :value="$it->total_price" missing="Noch kein Preis" /></td>
-                            </x-foodalchemist::table-row>
+                            </x-fa::table-row>
                         @empty
                             <tr wire:key="ang-empty">
                                 <td colspan="6">

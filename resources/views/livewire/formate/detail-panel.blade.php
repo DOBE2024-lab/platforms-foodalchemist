@@ -74,7 +74,7 @@
             </x-slot:badges>
             <x-slot:aktion>
                 <div class="flex flex-wrap items-center gap-2">
-                    <x-foodalchemist::bearbeiten-leiste :zustand="$sperr" sofort />
+                    <x-fa::bearbeiten-leiste :zustand="$sperr" sofort />
                     <x-fa::button size="sm" variant="ghost" icon="heroicon-m-arrow-top-right-on-square" wire:click="bearbeiten">Im Editor öffnen</x-fa::button>
                 </div>
             </x-slot:aktion>

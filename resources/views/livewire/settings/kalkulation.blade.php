@@ -16,7 +16,7 @@
     @php $sperrLesen = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true); @endphp
     @include('foodalchemist::livewire.settings.partials.sperr-leiste', ['sofort' => false, 'hint' => 'Verluste gelten für die Rezepte dieses Teams und der Kind-Teams ohne eigene Werte.'])
     @unless($sperrLesen)
-    <x-foodalchemist::save-bar :meldung="$meldung"
+    <x-fa::save-bar :meldung="$meldung"
         hint="Verluste gelten für die Rezepte dieses Teams und der Kind-Teams ohne eigene Werte. Speichern rechnet sie neu." />
     @endunless
     @if($sperrLesen && $meldung)<x-fa::notice tone="ok" data-save-bar-meldung>{{ $meldung }}</x-fa::notice>@endif

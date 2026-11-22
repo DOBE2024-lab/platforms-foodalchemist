@@ -99,7 +99,7 @@
                              Schritte, Sensorik, Zeiten, Equipment, Posten und Pairings leer. --}}
                         @if(($enr['tief'] ?? true) === false)
                             <x-fa::signal tone="info" title="Kernfelder gefüllt ({{ $enr['at'] ?? '' }}), ohne Schritte, Sensorik, Zeiten, Equipment und Pairings (Leitplanke „Voll anreichern“ war aus).">Leicht angereichert</x-fa::signal>
-                            <x-foodalchemist::ki-action action="neuAnreichern({{ $st->id }}, true)" variant="ai" icon="heroicon-o-sparkles" label="Voll anreichern"
+                            <x-fa::ki-action action="neuAnreichern({{ $st->id }}, true)" variant="ai" icon="heroicon-o-sparkles" label="Voll anreichern"
                                 busy="Wird angereichert …" flash="Anreicherung eingereiht"
                                 title="Jetzt in voller Tiefe anreichern: Schritte, Sensorik, Arbeits- und Rüstzeit, Equipment, Posten, geerdete Pairings." />
                         @else
@@ -108,13 +108,13 @@
                     @elseif(in_array($enrStatus, ['queued', 'running'], true))
                         <span class="inline-flex items-center gap-1 {{ $textKlein }} font-medium text-[var(--fa-info)]">@svg('heroicon-o-arrow-path', 'w-3.5 h-3.5 animate-spin') Wird angereichert …</span>
                     @elseif($enrStatus === 'failed')
-                        <x-foodalchemist::ki-action action="neuAnreichern({{ $st->id }})" :error="$enr['error'] ?? null" icon="heroicon-o-arrow-path"
+                        <x-fa::ki-action action="neuAnreichern({{ $st->id }})" :error="$enr['error'] ?? null" icon="heroicon-o-arrow-path"
                             retry="Anreicherung fehlgeschlagen, erneut anreichern" busy="Wird erneut angereichert …"
                             flash="Anreicherung eingereiht" class="{{ $textKlein }}" />
                     @elseif($reuseUnreif)
                         {{-- Kein Auto-Lauf: das übernommene Rezept ist FREMD oder schon freigegeben — daran hängen
                              möglicherweise Gerichte, Foodbooks und Speisepläne. Die Entscheidung gehört dem Menschen. --}}
-                        <x-foodalchemist::ki-action action="neuAnreichern({{ $st->id }})" variant="ai" icon="heroicon-o-sparkles" label="Bestand anreichern"
+                        <x-fa::ki-action action="neuAnreichern({{ $st->id }})" variant="ai" icon="heroicon-o-sparkles" label="Bestand anreichern"
                             busy="Wird angereichert …" flash="Anreicherung eingereiht"
                             title="Bestands-Rezept{{ ($reuse['eigen'] ?? false) ? '' : ' eines anderen Teams' }}{{ ($reuse['status'] ?? '') === 'approved' ? ', bereits freigegeben' : '' }}. Anreicherung bewusst anstoßen, vorhandene Inhalte können dabei neu erzeugt werden." />
                     @endif
@@ -132,7 +132,7 @@
                         @elseif($bldStatus === 'failed')
                             {{-- Etappe 7 Teil 2b: NUR die KI-Fotos neu anstoßen (ohne Voll-Anreicherung). --}}
                             @unless($handy ?? false){{-- #1003 PR7 --}}
-                            <x-foodalchemist::ki-action action="bilderNeu({{ $st->id }})"
+                            <x-fa::ki-action action="bilderNeu({{ $st->id }})"
                                 :error="$bld['error'] ?? 'Bild-Erzeugung fehlgeschlagen'"
                                 retry="Fotos fehlgeschlagen{{ $fotoN > 0 ? ' (' . $fotoN . ' ok)' : '' }}, neu erzeugen"
                                 icon="heroicon-o-photo" busy="Fotos werden neu erzeugt …" flash="Neu erzeugen eingereiht"
@@ -176,19 +176,19 @@
                             {{-- A2: Feedback zu genau dieser Position → dann gezielt neu generieren (nur diese Position). --}}
                             <x-fa::menu-item icon="heroicon-o-pencil-square" abstand="weit" wire:click="toggleKommentar({{ $st->id }})" title="Rückmeldung geben und nur dieses Ergebnis gezielt neu erzeugen">{{ $kommentarIstOffen ? 'Rückmeldung schließen' : 'Mit Rückmeldung überarbeiten' }}</x-fa::menu-item>
                             <div class="px-3 py-1.5">
-                                <x-foodalchemist::ki-action action="neuGenerieren({{ $st->id }})" variant="ai" icon="heroicon-o-arrow-path"
+                                <x-fa::ki-action action="neuGenerieren({{ $st->id }})" variant="ai" icon="heroicon-o-arrow-path"
                                     label="Neu erzeugen" title="Neu erzeugen, der aktuelle Stand wird verworfen" busy="Wird neu erzeugt …" flash="Neu erzeugen eingereiht" class="w-full justify-start" />
                             </div>
                         @endif
                         @if($kannKonf)
                             <div class="px-3 py-1.5">
-                                <x-foodalchemist::ki-action action="konformitaetPruefen({{ (int) $st->ref_id }})" variant="ai" icon="heroicon-o-clipboard-document-check" label="Gegen Regelwerk prüfen"
+                                <x-fa::ki-action action="konformitaetPruefen({{ (int) $st->ref_id }})" variant="ai" icon="heroicon-o-clipboard-document-check" label="Gegen Regelwerk prüfen"
                                     busy="Wird geprüft …" flash="Prüfung eingereiht" title="Konformität gegen die Regelwerke prüfen" class="w-full justify-start" />
                             </div>
                         @endif
                     </x-fa::menu>
                 @elseif($kannKonf)
-                    <x-foodalchemist::ki-action action="konformitaetPruefen({{ (int) $st->ref_id }})" variant="ai" icon="heroicon-o-clipboard-document-check" label="Gegen Regelwerk prüfen"
+                    <x-fa::ki-action action="konformitaetPruefen({{ (int) $st->ref_id }})" variant="ai" icon="heroicon-o-clipboard-document-check" label="Gegen Regelwerk prüfen"
                         busy="Wird geprüft …" flash="Prüfung eingereiht" title="Konformität gegen die Regelwerke prüfen" />
                 @endif
                 @endunless
@@ -216,21 +216,21 @@
                 {{-- Hauptaktion der Karte --}}
                 {{-- #1003 PR7: Freigeben am Handy erlaubt (Dominique 30.10., wie am Computer, ohne Rückfrage); Erzeugen/Überarbeiten am Computer. --}}
                 @if($st->status === 'done')
-                    <x-foodalchemist::ki-action action="gibFrei({{ $st->id }})" variant="primary" icon="heroicon-o-check" :class="($handy ?? false) ? 'min-h-11 max-w-full whitespace-normal text-left' : ''"
+                    <x-fa::ki-action action="gibFrei({{ $st->id }})" variant="primary" icon="heroicon-o-check" :class="($handy ?? false) ? 'min-h-11 max-w-full whitespace-normal text-left' : ''"
                         label="Freigeben" busy="Wird freigegeben …" flash="Freigegeben" data-step-freigeben />
                 @elseif($st->status === 'geplant' && ! ($handy ?? false))
                     @if($istIdee)
                         <x-fa::button size="sm" variant="ghost" icon="heroicon-o-pencil-square" wire:click="toggleKommentar({{ $st->id }})"
                             title="Vorschlag mit Rückmeldung überarbeiten">{{ $kommentarIstOffen ? 'Rückmeldung schließen' : 'Überarbeiten' }}</x-fa::button>
-                        <x-foodalchemist::ki-action action="erzeugeGeplant({{ $st->id }})" variant="primary" icon="heroicon-o-bolt"
+                        <x-fa::ki-action action="erzeugeGeplant({{ $st->id }})" variant="primary" icon="heroicon-o-bolt"
                             label="Vorschlag annehmen" title="Vorschlag annehmen und das Gericht zur Prüfung erzeugen" busy="Wird erzeugt …" flash="Erzeugung eingereiht"
                             />
                     @elseif($istPlan)
-                        <x-foodalchemist::ki-action action="erzeugeGeplant({{ $st->id }})" variant="primary" icon="heroicon-o-check"
+                        <x-fa::ki-action action="erzeugeGeplant({{ $st->id }})" variant="primary" icon="heroicon-o-check"
                             label="Plan annehmen" title="Plan annehmen: Bestand übernehmen, neue Komponenten als Unterrezepte bauen" busy="Wird gebaut …" flash="Bau eingereiht"
                             />
                     @else
-                        <x-foodalchemist::ki-action action="erzeugeGeplant({{ $st->id }})" variant="primary" icon="heroicon-o-bolt"
+                        <x-fa::ki-action action="erzeugeGeplant({{ $st->id }})" variant="primary" icon="heroicon-o-bolt"
                             label="Jetzt erzeugen" title="Jetzt erzeugen, ohne auf die Freigabe der Stufe darüber zu warten" busy="Wird erzeugt …" flash="Erzeugung eingereiht"
                             />
                     @endif
@@ -246,7 +246,7 @@
                 placeholder="Was soll sich ändern? Zum Beispiel: vegetarisch statt Rind, leichter mit weniger Sahne, mehr Säure" />
             <div class="flex flex-wrap items-center justify-end gap-2">
                 <x-fa::button size="sm" variant="ghost" wire:click="toggleKommentar({{ $st->id }})">Abbrechen</x-fa::button>
-                <x-foodalchemist::ki-action
+                <x-fa::ki-action
                     action="{{ $st->status === 'geplant' ? 'vorschlagUeberarbeiten' : 'neuGenerieren' }}({{ $st->id }})"
                     variant="ai" icon="heroicon-o-arrow-path"
                     label="{{ $st->status === 'geplant' ? 'Vorschlag überarbeiten' : 'Mit Rückmeldung neu erzeugen' }}"

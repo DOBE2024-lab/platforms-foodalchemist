@@ -91,6 +91,8 @@ it('Pflege: Direktbestellung, Kopfdaten, Artikelwechsel zum anderen Lieferanten,
     $this->svc->updateHeader($this->rootTeam, $zeile->order_id, ['reference' => 'Vorrat', 'note' => 'Hintereingang']);
     ($this->golden)('pflege_direktbestellung', $this->bestellZustand());
 
+    // OFFEN, Produktfrage (an Dominique, Kurator 22.11.): Referenz/Notiz wandern heute nicht mit, der leere Alt-Entwurf bleibt bis
+    // deleteEmptyDrafts stehen. Golden hält das heutige Verhalten fest; Änderung nur nach Entscheid.
     $wechsel = $this->svc->switchLineArticle($this->rootTeam, $zeile->id, $this->ausweichMehl()->id, auth()->id());
     ($this->golden)('pflege_artikelwechsel', ['ergebnis_schluessel' => array_keys((array) $wechsel), 'zustand' => $this->bestellZustand()]);
 
@@ -205,7 +207,11 @@ it('Dokument und Mail-Inhalte (Bestellung, Storno) mit Standardtexten; Versand-V
     $dok = $this->svc->dokument($this->rootTeam, $hanos->id);
     ($this->golden)('dokument_hanos', $ohneNummern(collect($dok)->except(['erstellt_at', 'generated_at'])->all()));
     ($this->golden)('mail_bestellung', $ohneNummern($mail->inhalt($this->rootTeam, $hanos->id, 'bestellung', 'Einkauf')));
+    // CQ 3.3 Fix: Storno-Mail nur, wenn der Lieferant die Bestellung bekommen hat (gemeinsame Regel FoodAlchemistOrder::wurdeVersendet);
+    // vorher baute OrderMailService für einen Entwurf einen vollständigen Storno-Text, mailto dagegen keinen.
     ($this->golden)('mail_storno', $ohneNummern($mail->inhalt($this->rootTeam, $hanos->id, 'storno', 'Einkauf')));
+    expect($mail->inhalt($this->rootTeam, $hanos->id, 'storno')['body'])->toBe('')
+        ->and(fn () => $mail->planen($this->rootTeam, $hanos->fresh('supplier'), 'storno'))->toThrow(RuntimeException::class, 'nur für Bestellungen, die an den Lieferanten verschickt wurden');
     ($this->golden)('mailto_bestellung', $ohneNummern($this->svc->mailtoData($this->rootTeam, $hanos->id)));
     ($this->golden)('mailto_storno', $ohneNummern($this->svc->cancellationMailtoData($this->rootTeam, $hanos->id)));
 
@@ -221,4 +227,20 @@ it('Dokument und Mail-Inhalte (Bestellung, Storno) mit Standardtexten; Versand-V
         }
     }
     ($this->golden)('mail_versandpruefung_server', $ergebnis);
+});
+
+it('Storno-Regel: versendet → mailto und Server-Text; nach dem Storno nur noch der Server-Text (Mail wird danach geplant)', function () {
+    $this->hanos->update(['email_order' => 'bestellung@hanos.test']);
+    $this->svc->addNeedFromTarget($this->rootTeam, ['recipe_id' => $this->kuchen->id, 'portions' => 100], 'event:Bankett');
+    $hanos = ($this->versendet)(FoodAlchemistOrder::where('supplier_id', $this->hanos->id)->first());
+    $mail = app(OrderMailService::class);
+
+    expect($hanos->wurdeVersendet())->toBeTrue()
+        ->and($this->svc->cancellationMailtoData($this->rootTeam, $hanos->id)['to'])->toBe('bestellung@hanos.test')
+        ->and($mail->inhalt($this->rootTeam, $hanos->id, 'storno')['subject'])->toStartWith('Stornierung unserer Bestellung');
+
+    $this->svc->setStatus($this->rootTeam, $hanos->id, OrderStatus::Cancelled);
+    expect($hanos->fresh()->wurdeVersendet())->toBeTrue()
+        ->and($this->svc->cancellationMailtoData($this->rootTeam, $hanos->id)['to'])->toBe('')          // mailto: schon storniert
+        ->and($mail->inhalt($this->rootTeam, $hanos->id, 'storno')['to'])->toBe('bestellung@hanos.test');   // Server-Mail nach dem Wechsel
 });

@@ -444,7 +444,7 @@
                 {
                     "ref": "produktion:P:kuchen",
                     "type": "produktion",
-                    "label": "Produktion #P",
+                    "label": "Hochzeit Meier · 28.11.2026",
                     "production_order_id": "P"
                 },
                 {
@@ -458,7 +458,7 @@
                 {
                     "ref": "produktion:P:kuchen",
                     "type": "produktion",
-                    "label": "Produktion #P",
+                    "label": "Hochzeit Meier · 28.11.2026",
                     "production_order_id": "P"
                 },
                 {
@@ -598,9 +598,9 @@
         "body": "Guten Tag,\n\nbitte folgende Bestellung:\n\n- 1× Sack Butter 1kg (Art. ART-BUT)\n\nNetto gesamt: 12,00 €\n\nVielen Dank."
     },
     "mail_storno": {
-        "to": "bestellung@hanos.test",
-        "subject": "Stornierung unserer Bestellung ord-N",
-        "body": "Guten Tag,\n\nbitte stornieren Sie unsere Bestellung ord-N vollständig.\nLieferant: Hanos\n\nBitte bestätigen Sie uns die Stornierung kurz schriftlich.\n\nVielen Dank."
+        "to": "",
+        "subject": "",
+        "body": ""
     },
     "mail_versandpruefung_server": [
         "Bestellung kann nicht per Mail versendet werden: Beim Lieferanten „Chefs\" fehlt eine gültige Bestell-E-Mail (Lieferant → Bestell-E-Mail).",

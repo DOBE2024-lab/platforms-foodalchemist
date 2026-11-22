@@ -2379,7 +2379,10 @@ class OrderService
             ];
         })->all();
 
-        $herkunft = $this->herkunftMitProduktionsnamen($team, $this->herkunftAggregat($alleRefs));
+        $aggregat = $this->herkunftAggregat($alleRefs);   // CQ 3.3: Zeilen tragen dieselben Produktionsnamen wie das Aggregat (eine Abfrage)
+        $namen = $this->produktionsNamen($team, collect($aggregat)->pluck('production_order_id')->filter()->map(fn ($id) => (int) $id)->unique()->values());
+        $herkunft = $this->beschrifteHerkunft($aggregat, $namen);
+        $zeilen = array_map(fn (array $z) => array_replace($z, ['herkunft' => $this->beschrifteHerkunft($z['herkunft'], $namen)]), $zeilen);
         $warnings = $this->orderWarnings($order);
         $sendBlockers = $this->sendBlockers($order);
         $invoiceDueDate = $this->invoiceDueDate($order);
@@ -2530,12 +2533,7 @@ class OrderService
      */
     public function herkunftMitProduktionsnamen(Team $team, array $herkunft): array
     {
-        $ids = collect($herkunft)->pluck('production_order_id')->filter()->map(fn ($id) => (int) $id)->unique()->values();
-        if ($ids->isEmpty()) {
-            return $herkunft;
-        }
-
-        return $this->beschrifteHerkunft($herkunft, $this->produktionsNamen($team, $ids));
+        return $this->beschrifteHerkunft($herkunft, $this->produktionsNamen($team, collect($herkunft)->pluck('production_order_id')->filter()->map(fn ($id) => (int) $id)->unique()->values()));
     }
 
     /**
@@ -2568,7 +2566,7 @@ class OrderService
     /** @return \Illuminate\Support\Collection<int, string> production_order_id ⇒ Label (ein Query) */
     private function produktionsNamen(Team $team, \Illuminate\Support\Collection $ids): \Illuminate\Support\Collection
     {
-        return FoodAlchemistProductionOrder::visibleToTeam($team)
+        return $ids->isEmpty() ? collect() : FoodAlchemistProductionOrder::visibleToTeam($team)   // ohne Produktions-Herkunft keine Abfrage
             ->whereIn('id', $ids)
             ->get(['id', 'name', 'production_date'])
             ->mapWithKeys(fn ($p) => [
@@ -2702,7 +2700,7 @@ class OrderService
     {
         $order = FoodAlchemistOrder::visibleToTeam($team)->findOrFail($orderId);
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
-        if (! in_array($status, [OrderStatus::Sent, OrderStatus::Confirmed], true)) {
+        if ($status === OrderStatus::Cancelled || ! $order->wurdeVersendet()) {   // Storno, solange nicht storniert und nur nach Versand
             return ['to' => '', 'subject' => '', 'body' => ''];
         }
 

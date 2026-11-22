@@ -58,4 +58,16 @@ class FoodAlchemistOrder extends Model
             'round_id'
         )->withTimestamps();
     }
+
+    /**
+     * Gemeinsame Storno-Regel (mailto in OrderService::cancellationMailtoData, Server-Mail in OrderMailService): Eine Storno-Mail gibt
+     * es nur für Bestellungen, die der Lieferant bekommen hat — versendet oder bestätigt, oder danach storniert (sent_at gesetzt;
+     * OrderService::setStatus schreibt sent_at bei jedem Versand). Ein Entwurf wurde nie verschickt (Kurator 22.11., CQ 3.3).
+     */
+    public function wurdeVersendet(): bool
+    {
+        $status = $this->status instanceof OrderStatus ? $this->status : OrderStatus::from((string) $this->status);
+
+        return in_array($status, [OrderStatus::Sent, OrderStatus::Confirmed], true) || ($status === OrderStatus::Cancelled && $this->sent_at !== null);
+    }
 }

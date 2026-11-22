@@ -99,9 +99,10 @@
   --fa-surface: #fdfdfe;
   --fa-line: #dde2ea;
   --fa-line-strong: #c5ccd8;
+  --fa-control-line: #848ea2; /* 98 · 3.9: Rand von Bedienelementen (Feld, Chip, secondary-Knopf) ≥ 3:1 (WCAG 1.4.11); Trennlinien bleiben line/line-strong */
   --fa-ink: #131a26;
   --fa-ink-2: #4a5466;
-  --fa-ink-3: #657084;
+  --fa-ink-3: #626c80;       /* 98 · 3.9: ≥ 4,5 auch auf neutral-soft (vorher #657084, 4,29) */
   --fa-accent: #0a3dd6;
   --fa-accent-hover: #0832af;
   --fa-accent-soft: #e6edfe;
@@ -119,7 +120,7 @@
   --fa-warn-soft: #fbefd9;
   --fa-crit: #a8231c;
   --fa-crit-soft: #fbe6e4;
-  --fa-crit-line: #f0b9b4;
+  --fa-crit-line: #b28985;    /* 98 · 3.9: Fehlerrahmen ≥ 3:1 (vorher #f0b9b4, 1,68) */
   --fa-info: #1f5f8b;
   --fa-info-soft: #e3eff8;
   --fa-neutral-soft: #ebeef3;
@@ -138,6 +139,7 @@
   /* Formen — drei Radien */
   --fa-radius-control: 6px;
   --fa-radius-surface: 10px;
+  --fa-radius-card: 10px;     /* 98 · 3.9: war nirgends definiert → rounded-[var(--fa-radius-card)] renderte 0px (Einstellungen, Controlling) */
   --fa-radius-pill: 999px;
 
   /* Plattform-Rahmen übernehmen die Werte */
@@ -231,6 +233,7 @@ button { transition: transform 120ms ease-out, background-color 120ms ease, box-
   --fa-surface: #1a2540;
   --fa-line: #34405e;
   --fa-line-strong: #46557a;
+  --fa-control-line: #63719a; /* 98 · 3.9: ≥ 3:1 auf Karte und Feld */
   --fa-field: #0f1729;       /* Eingabefelder eingelassen: dunkler als die Karte, heller als der Grund */
   --fa-ink: #e6ebf5;
   --fa-ink-2: #b6c0d2;
@@ -247,7 +250,7 @@ button { transition: transform 120ms ease-out, background-color 120ms ease, box-
   --fa-warn-soft: #3a2b12;
   --fa-crit: #ff9a90;
   --fa-crit-soft: #3d1a1a;
-  --fa-crit-line: #6b2b2b;
+  --fa-crit-line: #926464;    /* 98 · 3.9: ≥ 3:1 (vorher #6b2b2b) */
   --fa-info: #8cc7f0;
   --fa-info-soft: #13283d;
   --fa-neutral-soft: #1f2940;
@@ -286,7 +289,7 @@ button { transition: transform 120ms ease-out, background-color 120ms ease, box-
   --color-gray-100: #222d4a;
   --color-gray-200: #34405e;
   --color-gray-300: #46557a;
-  --color-gray-400: #6f7c95;
+  --color-gray-400: #818da2;   /* 98 · 3.9: ≥ 4,5 auf der dunklen Karte (vorher #6f7c95) */
   --color-gray-500: #8b97ad;
   --color-gray-600: #a9b4c7;
   --color-gray-700: #c3ccdb;
@@ -297,7 +300,7 @@ button { transition: transform 120ms ease-out, background-color 120ms ease, box-
   --color-slate-100: #222d4a;
   --color-slate-200: #34405e;
   --color-slate-300: #46557a;
-  --color-slate-400: #6f7c95;
+  --color-slate-400: #818da2;
   --color-slate-500: #8b97ad;
   --color-slate-600: #a9b4c7;
   --color-slate-700: #c3ccdb;
@@ -371,7 +374,7 @@ button { transition: transform 120ms ease-out, background-color 120ms ease, box-
     width: 100%;
     padding-inline: 10px;
     border-radius: var(--fa-radius-control);
-    border: 1px solid var(--fa-line-strong);
+    border: 1px solid var(--fa-control-line);
     background: var(--fa-field, var(--fa-surface));
     color: var(--fa-ink);
     transition: border-color 120ms ease, box-shadow 120ms ease;
@@ -385,7 +388,7 @@ button { transition: transform 120ms ease-out, background-color 120ms ease, box-
   .fa-chip { position: relative; cursor: pointer; }
   .fa-chip > span {
     display: inline-flex; align-items: center; height: 30px; padding: 0 12px;
-    border-radius: var(--fa-radius-pill); border: 1px solid var(--fa-line-strong);
+    border-radius: var(--fa-radius-pill); border: 1px solid var(--fa-control-line);
     background: var(--fa-surface); color: var(--fa-ink-2); font-size: var(--fa-text-md);
     transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
   }
@@ -609,3 +612,14 @@ fieldset[data-fa-lesemodus="1"] :is(input, select, textarea) { opacity: .85; }
    2–3 Zeilen um (Dominique 31.10.). Zentral eine Stufe kleiner auf --fa-text-base (14 px), gleich wie die Treffer der
    Suche und die Signale. Unterzeile und Preis haben eigene Größen und bleiben. */
 [data-fa-handy] :is([data-fa-handy-karte], [data-fa-handy-lieferant], [data-fa-handy-artikel]) { font-size: var(--fa-text-base); }
+
+/* ═══ 98 · 3.9 (U10): weicher Übergang beim Öffnen von Modals ═══════════════════════════════════
+ * Vorher erschienen Backdrop und Panel ohne Einblendung — bei dunklen Editoren ein harter Hell-Dunkel-Wechsel.
+ * Einblenden 180 ms, Ausblenden 120 ms, Panel dazu 0,98 → 1. prefers-reduced-motion schaltet global ab (oben).
+ * Eigene Klassen statt Tailwind-Utilities: der Host baut sein CSS selbst und kennt keine neuen Arbitrary-Werte. */
+.fa-modal-ein { transition: opacity 180ms ease-out; }
+.fa-modal-aus { transition: opacity 120ms ease-in; }
+.fa-modal-start { opacity: 0; }
+.fa-modal-panel { transition: transform 180ms ease-out; }
+.fa-modal-start .fa-modal-panel { transform: scale(0.98); }
+.fa-modal-backdrop-dunkel { background: rgba(13, 20, 36, 0.7); }   /* = --fa-rail (#0d1424) zu 70 %; color-mix bekäme im Build einen deckenden Rückfall */

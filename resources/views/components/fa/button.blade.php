@@ -17,7 +17,7 @@
         'ghost' => 'bg-transparent text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)] hover:text-[var(--fa-ink)]',
         'danger' => 'bg-[var(--fa-surface)] text-[var(--fa-crit)] border border-[var(--fa-crit-line)] hover:bg-[var(--fa-crit-soft)]',
         'ai' => 'bg-[var(--fa-accent-soft)] text-[var(--fa-accent)] border border-[var(--fa-accent-line)] hover:bg-[var(--fa-accent-soft-hover)]',
-        default => 'bg-[var(--fa-surface)] text-[var(--fa-ink)] border border-[var(--fa-line-strong)] hover:bg-[var(--fa-hover)]',
+        default => 'bg-[var(--fa-surface)] text-[var(--fa-ink)] border border-[var(--fa-control-line)] hover:bg-[var(--fa-hover)]',   // 98 · 3.9
     };
     $iconKlasse = $size === 'sm' ? 'w-3.5 h-3.5 shrink-0' : 'w-4 h-4 shrink-0';
 @endphp

@@ -115,6 +115,7 @@ it('Planung: der Modus-Umschalter bleibt beim Rerender stehen und schaltet die S
     $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Composer', 'brief' => '']);
     $lw = \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
         ->call('oeffne', $session->id)
+        ->set('editorTab', 'composer')   // wie der Alpine-Watcher beim Reiterwechsel (2.1d: Composer-Daten nur im aktiven Reiter)
         ->set('composerAnker', [['id' => $this->a['potato'], 'slug' => 'potato', 'label' => 'Kartoffel'],
             ['id' => $this->a['apple'], 'slug' => 'apple', 'label' => 'Apfel']])
         ->set('composerModus', 'basisrezept');

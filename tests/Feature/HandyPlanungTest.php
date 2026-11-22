@@ -67,7 +67,7 @@ it('am Computer unverändert: Reiterleiste mit allen Reitern, Ausgabe-Formen, Ve
 it('Server-Sperre am Handy: Auftrag, Start, Abbruch, Wiederaufnahme, Freigabe/Anreichern und Schritt-Fotos ja; Verwerfen, Pflege, Ausgabe-Formen nein', function () {
     request()->cookies->set(HandyLesemodus::COOKIE, '1');
     foreach (['schnellErstellen', 'oeffne', 'speichern', 'goKaskade', 'kiKopf', 'leitplankenAusBriefing', 'briefDiktatUebernehmen',
-        'laufAbbrechen', 'laufWiederAufnehmen', 'pruefeLauf', 'waehleKnoten', 'fotoHochladen', 'fotoUebernehmen', '_startUpload',
+        'laufAbbrechen', 'laufWiederAufnehmen', 'pruefeLauf', 'laufGeaendert', 'waehleKnoten', 'fotoHochladen', 'fotoUebernehmen', '_startUpload',
         'gibFrei', 'gibStufeFrei', 'clusterFreigeben', 'neuAnreichern', 'alleNeuenAnreichern'] as $m) {
         expect(HandyLesemodus::abgewiesen(new PlanungIndex, $m))->toBeFalse($m);
     }

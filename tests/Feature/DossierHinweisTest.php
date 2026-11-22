@@ -106,6 +106,7 @@ it('Composer zeigt den Hinweis grau im Block „Passt das zusammen?", ohne Konfl
 
     $html = \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
         ->call('oeffne', $session->id)
+        ->set('editorTab', 'composer')   // wie der Alpine-Watcher beim Reiterwechsel (2.1d: Composer-Daten nur im aktiven Reiter)
         ->set('composerAnker', [['id' => $this->a['braised_lemon_sole'], 'slug' => 'braised_lemon_sole', 'label' => 'Limande, geschmort'],
             ['id' => $this->a['lemon'], 'slug' => 'lemon', 'label' => 'Zitrone']])
         ->html();

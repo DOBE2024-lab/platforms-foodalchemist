@@ -25,7 +25,7 @@ trait HandyPlanung
             'planFeldSpeichern', 'planVerwerfen', 'goKaskade',
             // Ergebnis: Lauf beobachten, abbrechen, wieder aufnehmen; freigeben und anreichern (Dominique 30.10.: „wenn ich das
             // plane, will ich es auch freigeben, so dass alles angereichert wird“ — UI-Klick über die Plattform-KI)
-            'pruefeLauf', 'laufAbbrechen', 'laufWiederAufnehmen', 'laufFortsetzen',
+            'pruefeLauf', 'laufGeaendert', 'laufAbbrechen', 'laufWiederAufnehmen', 'laufFortsetzen',
             'gibFrei', 'gibStufeFrei', 'clusterFreigeben', 'neuAnreichern', 'alleNeuenAnreichern',
             'waehleSchritt', 'waehleKnoten', 'setzeFortschrittFilter',
             // Fotos zu einem Schritt (Gericht am Handy fotografieren)

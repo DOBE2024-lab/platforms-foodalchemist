@@ -115,6 +115,7 @@ it('Composer-Tab rendert „Passt das zusammen?" aus der Kombinationslogik, Kont
 
     $html = \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
         ->call('oeffne', $session->id)
+        ->set('editorTab', 'composer')   // wie der Alpine-Watcher beim Reiterwechsel (2.1d: Composer-Daten nur im aktiven Reiter)
         ->set('composerAnker', [['id' => $this->a['pumpkin'], 'slug' => 'pumpkin', 'label' => 'Kürbis'],
             ['id' => $this->a['anise'], 'slug' => 'anise', 'label' => 'Anis']])
         ->html();

@@ -11,6 +11,6 @@
         throw new \InvalidArgumentException("x-fa::upload size=\"{$size}\" gibt es nicht (" . implode(' · ', array_keys($groessen)) . ').');
     }
     $klasse = $groessen[$size] . ' text-[var(--fa-ink-2)] cursor-pointer file:rounded-[var(--fa-radius-control)] file:border file:border-solid'
-        . ' file:border-[var(--fa-line-strong)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:font-medium file:cursor-pointer hover:file:bg-[var(--fa-hover)]';
+        . ' file:border-[var(--fa-control-line)] file:bg-[var(--fa-surface)] file:text-[var(--fa-ink)] file:font-medium file:cursor-pointer hover:file:bg-[var(--fa-hover)]';
 @endphp
 <input type="file" {{ $attributes->class([$klasse]) }}>

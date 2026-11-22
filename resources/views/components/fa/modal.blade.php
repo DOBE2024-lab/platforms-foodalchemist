@@ -63,6 +63,7 @@
         window.addEventListener('modal.close', e => { if (!e.detail?.name || e.detail.name === '{{ $name }}') closeWithState() });
      "
      x-show="open" x-cloak
+     x-transition:enter="fa-modal-ein" x-transition:enter-start="fa-modal-start" x-transition:leave="fa-modal-aus" x-transition:leave-end="fa-modal-start"
      {{-- 2026-10-12 (Dominique): Basisrezept → Grundprodukt → „Bearbeiten" → in die Artikelsuche getippt, und das
           Basisrezept lag wieder vorne. bringToFront setzt die Ebene als INLINE-Stil; der erste Livewire-Roundtrip des
           oberen Modals morpht das Wurzel-Element gegen das Server-HTML (ohne style) und wirft den Stil weg → Ebene 100,
@@ -84,13 +85,14 @@
          damit NUR Tokens um (resources/css/foodalchemist-pass.css) — keine Überschreib-Kaskade mehr. --}}
 
     {{-- Backdrop --}}
-    <div class="absolute inset-0 bg-[var(--fa-rail)]/60" @click="closeWithState()"></div>
+    {{-- 98 · 3.9: bei dunklen Editoren tritt die helle Seite stärker zurück (rail 70 %) --}}
+    <div class="absolute inset-0 {{ $darkCanvas ? 'fa-modal-backdrop-dunkel' : 'bg-[var(--fa-rail)]/60' }}" @click="closeWithState()"></div>
 
     {{-- Panel (frosted, DESIGN.md) --}}
     {{-- max-h: 85vh — Wert MUSS im Host-CSS-Build existieren (arbitrary value!);
          92vh war nie gebaut ⇒ Panel ohne Höhen-Limit ⇒ innerer Scroll tot (Bug 2026-06-12).
          fullscreen: h-full füllt den fixed-Wrapper (Viewport minus p-4) — nur Standard-Klassen. --}}
-    <div class="relative w-full {{ $fullscreen ? 'max-w-none h-full' : $size . ' max-h-[85vh]' }} flex flex-col overflow-hidden rounded-[var(--fa-radius-surface)] bg-[var(--fa-surface)] text-[var(--fa-ink)] border border-[var(--fa-line)] shadow-2xl shadow-black/30 {{ $darkCanvas ? 'fa-editor-canvas' : '' }}" @if($darkCanvas) data-fa-theme="dark" @endif>
+    <div class="relative w-full {{ $fullscreen ? 'max-w-none h-full' : $size . ' max-h-[85vh]' }} flex flex-col overflow-hidden fa-modal-panel rounded-[var(--fa-radius-surface)] bg-[var(--fa-surface)] text-[var(--fa-ink)] border border-[var(--fa-line)] shadow-2xl shadow-black/30 {{ $darkCanvas ? 'fa-editor-canvas' : '' }}" @if($darkCanvas) data-fa-theme="dark" @endif>
 
         {{-- Kopf: Titel + Schließen, darunter fixe Aktionen oben links (P-2) --}}
         <div class="shrink-0 border-b border-[var(--fa-line)] bg-[var(--fa-surface)]">

@@ -357,6 +357,30 @@ class FoodAlchemistServiceProvider extends ServiceProvider
                 app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->vergessen();   // Listen-Merker der Fassungs-Pfad-Prüfung (PR 5)
             },
         );
+        // CQ 3.4: Rückkanäle Rezept → Concepter/Foodbook als synchrone Events (sofort, kein Queue; Reihenfolge und Exceptions wie
+        // vorher beim Direktaufruf). Fehlt hier ein Eintrag, steht die Preisweitergabe still — Spec98AbhaengigkeitsRichtungTest prüft das.
+        \Illuminate\Support\Facades\Event::listen(
+            \Platform\FoodAlchemist\Events\RezeptKostenGeaendert::class,
+            fn ($e) => $this->app->make(\Platform\FoodAlchemist\Services\PricingCascadeService::class)->recomputeRecipes($e->recipeIds),
+        );
+        \Illuminate\Support\Facades\Event::listen(
+            \Platform\FoodAlchemist\Events\TeamKostenGeaendert::class,
+            fn ($e) => $this->app->make(\Platform\FoodAlchemist\Services\PricingCascadeService::class)->recomputeTeam($e->team),
+        );
+        \Illuminate\Support\Facades\Event::listen(   // entfällt in 2.6c mit PaketService
+            \Platform\FoodAlchemist\Events\GerichtePreisVeraltet::class,
+            function ($e) {
+                $pakete = $this->app->make(\Platform\FoodAlchemist\Services\PaketService::class);
+                foreach ($e->recipeIds as $rid) {
+                    $pakete->markStaleForRecipe((int) $rid);
+                }
+            },
+        );
+        // CQ 3.4: Folge eines abgeschlossenen Kaskaden-Steps (Wording-Pass, Kohäsions-Score) — synchron, sofort, kein Queue
+        \Illuminate\Support\Facades\Event::listen(
+            \Platform\FoodAlchemist\Events\KaskadenSchrittAbgeschlossen::class,
+            fn ($e) => $this->app->make(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->nachSchrittAbschluss($e),
+        );
         // Spec 84 E-1: langsame Abfragen messen (aus, solange foodalchemist.leistung.langsam_ms null ist)
         \Platform\FoodAlchemist\Support\LangsameAbfragen::registrieren($this->app);
         \Platform\FoodAlchemist\Support\FremdSchreiben::registrieren($this->app);   // Spec 84 B4: Kanal fa-fremdschreiben

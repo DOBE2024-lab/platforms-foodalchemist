@@ -2,6 +2,9 @@
 
 namespace Platform\FoodAlchemist\Services;
 
+use Platform\FoodAlchemist\Events\GerichtePreisVeraltet;
+use Platform\FoodAlchemist\Events\RezeptKostenGeaendert;
+use Platform\FoodAlchemist\Events\TeamKostenGeaendert;
 use Platform\FoodAlchemist\Support\Masse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -126,7 +129,7 @@ class RecipeRecomputeService
         \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm((int) $teamId, fn () => app(DarreichungService::class)->recomputeFuerRezept($recipeId));
         if ($cascadePrices) {
             try {
-                app(PricingCascadeService::class)->recomputeRecipes([$recipeId]);
+                RezeptKostenGeaendert::dispatch([$recipeId]);   // CQ 3.4: Preisweitergabe per synchronem Event (Listener → PricingCascadeService)
             } catch (\Throwable $e) {
                 Log::warning("Preis-Kaskade für Rezept {$recipeId} fehlgeschlagen: {$e->getMessage()}");
             }
@@ -215,16 +218,13 @@ class RecipeRecomputeService
         // als preis_stale markieren (GP-Preis-Änderung → Baustein-Preis veraltet).
         // Best-effort, außerhalb der Recompute-Transaktion (I8: Edit nicht blocken).
         try {
-            $paketSvc = app(PaketService::class);
-            foreach ($betroffen as $rid) {
-                $paketSvc->markStaleForRecipe((int) $rid);
-            }
+            GerichtePreisVeraltet::dispatch($betroffen);   // CQ 3.4: Listener → PaketService::markStaleForRecipe (entfällt in 2.6c)
         } catch (\Throwable $e) {
             Log::warning("K-07 markStaleForRecipe fehlgeschlagen: {$e->getMessage()}");
         }
 
         try {
-            app(PricingCascadeService::class)->recomputeRecipes($betroffen);
+            RezeptKostenGeaendert::dispatch($betroffen);   // CQ 3.4
         } catch (\Throwable $e) {
             Log::warning("Preis-Kaskade nach Bulk-Recompute fehlgeschlagen: {$e->getMessage()}");
         }
@@ -318,7 +318,7 @@ class RecipeRecomputeService
             ->each(function ($teamId) {
                 if (($team = Team::find($teamId)) !== null) {
                     // Spec 84 B3 C: Preis-Kaskade je Team in dessen Sicht
-                    \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm($team, fn () => app(PricingCascadeService::class)->recomputeTeam($team));
+                    \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm($team, fn () => TeamKostenGeaendert::dispatch($team));   // CQ 3.4: Listener → PricingCascadeService::recomputeTeam
                 }
             });
 

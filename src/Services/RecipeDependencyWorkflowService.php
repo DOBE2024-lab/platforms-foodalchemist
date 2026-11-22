@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Services;
 
+use Platform\FoodAlchemist\Services\Kaskade\KaskadenSchritt;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -280,7 +281,7 @@ class RecipeDependencyWorkflowService
             && ($params['bestand'] ?? null) !== 'nur_bestand' && ! isset($params['ruest_ware']);
         if ($planen) {
             $child->update(['status' => 'running', 'error' => null, 'generator_run_id' => null]);
-            app(PlanningCascadeService::class)->setzePhase((int) $child->id, 'Komponenten werden geplant …');
+            app(KaskadenSchritt::class)->setzePhase((int) $child->id, 'Komponenten werden geplant …');
             \Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob::dispatch($team->id, $userId, (int) $child->id, $text,
                 [...$params, '_voll_anreichern' => $vollAnreichern, '_kind' => true])->onQueue(Warteschlange::rezepte());
 
@@ -356,7 +357,7 @@ class RecipeDependencyWorkflowService
     {
         $rezept = FoodAlchemistRecipe::visibleToTeam($team)->find((int) $bestand['recipe_id']);
         if ($rezept === null) {
-            app(PlanningCascadeService::class)->markStepFailed((int) $child->id, 'Bestands-Basisrezept nicht mehr vorhanden.');
+            app(KaskadenSchritt::class)->markStepFailed((int) $child->id, 'Bestands-Basisrezept nicht mehr vorhanden.');
 
             return;
         }
@@ -366,7 +367,7 @@ class RecipeDependencyWorkflowService
             'deferred' => ['reuse' => ['reif' => true, 'eigen' => (int) $rezept->team_id === (int) $team->id,
                 'luecken' => [], 'status' => (string) ($rezept->status?->value ?? '')]],
         ]);
-        app(PlanningCascadeService::class)->recomputeRunStatus((int) $child->cascade_run_id);
+        app(KaskadenSchritt::class)->recomputeRunStatus((int) $child->cascade_run_id);
     }
 
     /** @param  array<string, mixed>  $params */

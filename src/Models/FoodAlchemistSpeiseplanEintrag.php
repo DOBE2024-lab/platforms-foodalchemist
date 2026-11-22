@@ -23,7 +23,7 @@ class FoodAlchemistSpeiseplanEintrag extends Model
     {
         static::saving(function (self $e) {
             if ($e->package_id !== null && $e->isDirty('package_id')) {
-                PaketAltNurLesen::pruefe('Speiseplan', 'Alte Pakete sind nur noch lesbar (Umzug ins Concept-Modell). '
+                PaketAltNurLesen::pruefe('Speiseplan', 'Alte Pakete sind nur noch lesbar (Umzug ins Konzept-Modell). '
                     .'Bitte das Paket als Konzept (concept_id, Art Paket) einplanen.');
             }
         });

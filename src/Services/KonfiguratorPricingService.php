@@ -423,7 +423,7 @@ class KonfiguratorPricingService
                     }
                 }
                 if ($kern['speisen_fehlen']) {
-                    $warnungen[] = "{$this->fallName($s, $fall)}: Speisenpreis im Concept fehlt.";
+                    $warnungen[] = "{$this->fallName($s, $fall)}: Speisenpreis im Konzept fehlt.";
                 }
                 if ($kern['ungeschnuert']) {
                     $warnungen[] = "{$paket->anzeigeName()}: noch nicht geschnürt.";

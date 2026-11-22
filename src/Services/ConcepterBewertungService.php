@@ -51,7 +51,7 @@ class ConcepterBewertungService
         } elseif (count($paketNiveaus) > 1) {
             $checks[] = $this->check('level', 'Niveau-Konsistenz', 'warn', 'Gemischte Niveaus: ' . implode(', ', $paketNiveaus) . '.');
         } elseif ($concept->level && $paketNiveaus[0] !== $concept->level) {
-            $checks[] = $this->check('level', 'Niveau-Konsistenz', 'warn', 'Pakete „' . $paketNiveaus[0] . '" ≠ Concept-Niveau „' . $concept->level . '".');
+            $checks[] = $this->check('level', 'Niveau-Konsistenz', 'warn', 'Pakete „' . $paketNiveaus[0] . '" ≠ Konzept-Niveau „' . $concept->level . '".');
         } else {
             $checks[] = $this->check('level', 'Niveau-Konsistenz', 'ok', 'Einheitliches Niveau (' . $paketNiveaus[0] . ').');
         }

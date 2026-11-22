@@ -317,7 +317,7 @@ class ReportExportService
 
         return [
             'typ' => 'concept',
-            'titel' => 'Concept',
+            'titel' => 'Konzept',
             'name' => $concept->name,
             'optionen' => $optionen,
             'recipe' => null,

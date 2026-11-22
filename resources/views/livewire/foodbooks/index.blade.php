@@ -729,13 +729,13 @@
                     <div class="flex flex-wrap items-end gap-2 pt-3 border-t border-[var(--fa-line)]" data-fb-kapitel-stil>
                         <x-fa::field label="Schreibstil für dieses Kapitel" for="kap-stil" class="flex-1 min-w-[14rem] max-w-sm">
                             <x-fa::select id="kap-stil" wire:model.live="kapitelForm.writing_style_id" wire:change="kapitelSpeichern" data-fb-kapitel-schreibstil>
-                                <option value="">Wie in den Concepts</option>
+                                <option value="">Wie in den Konzepte</option>
                                 @foreach($schreibstile as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
                             </x-fa::select>
                         </x-fa::field>
                         <x-fa::ki-action action="kapitelWordingGenerieren" variant="ai" icon="heroicon-o-sparkles" label="Speisen neu betexten"
                                 :disabled="($kapitelForm['writing_style_id'] ?? null) === null || ($kapitelForm['writing_style_id'] ?? '') === ''"
-                                title="Schreibt die Gästetexte aller Konzepte dieses Kapitels im gewählten Schreibstil neu. Gilt nur in diesem Foodbook, das Concept bleibt unverändert. Erst einen Schreibstil wählen."
+                                title="Schreibt die Gästetexte aller Konzepte dieses Kapitels im gewählten Schreibstil neu. Gilt nur in diesem Foodbook, das Konzept bleibt unverändert. Erst einen Schreibstil wählen."
                                 busy="Betextet …" class="shrink-0 mb-0.5" data-fb-kapitel-wording />
                     </div>
                     @error('kapitelWording')<p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert" data-fb-kapitel-fehler>{{ $message }}</p>@enderror
@@ -809,7 +809,7 @@
                     {{-- Werkzeugleiste: bricht auf schmalen Bildschirmen um (nicht im Kopf, der umbricht nicht). --}}
                     <div class="flex flex-wrap items-center gap-2">
                         @if(count($markiert) >= 2)
-                            <x-fa::button size="sm" icon="heroicon-m-squares-2x2" wire:click="wahlGruppeBilden" title="Die markierten Concepts werden zur Auswahl für den Gast">Wahl-Gruppe bilden ({{ count($markiert) }})</x-fa::button>
+                            <x-fa::button size="sm" icon="heroicon-m-squares-2x2" wire:click="wahlGruppeBilden" title="Die markierten Konzepte werden zur Auswahl für den Gast">Wahl-Gruppe bilden ({{ count($markiert) }})</x-fa::button>
                         @endif
                         {{-- Concept/Gericht einfügen → im Katalog rechts. --}}
                         <x-fa::button size="sm" icon="heroicon-m-bars-3-bottom-left" wire:click="blockBasis('text')">Text einfügen</x-fa::button>
@@ -853,7 +853,7 @@
                                     <div class="flex-1 min-w-0 pt-0.5 fa-t-body leading-snug break-words">
                                         @switch($block->type)
                                             @case('concept_ref')
-                                                <x-fa::badge tone="info" class="mr-1 align-middle">Concept</x-fa::badge><span class="font-medium">{{ $block->concept?->name ?? 'Concept fehlt' }}</span>
+                                                <x-fa::badge tone="info" class="mr-1 align-middle">Konzept</x-fa::badge><span class="font-medium">{{ $block->concept?->name ?? 'Konzept fehlt' }}</span>
                                                 {{-- Einzelpreis-Concept zeigt keinen Summenpreis (die Preise stehen je Gericht in der Vorschau darunter). --}}
                                                 @if($block->concept?->price_per_person_cache !== null && ! $block->concept?->istEinzelpreis())<span class="text-[var(--fa-ink-2)] tabular-nums"> · {{ $euro($block->concept->price_per_person_cache) }} pro Person</span>@elseif($block->concept?->istEinzelpreis())<span class="text-[var(--fa-ink-3)]"> · Preise je Gericht</span>@endif
                                                 @if(trim((string) $block->wording) !== '')<span class="italic text-[var(--fa-ink-2)]"> · „{{ $block->wording }}“</span>@endif
@@ -883,7 +883,7 @@
                                         @endif
                                         {{-- #6: Deep-Jump ins Concept/Paket — öffnet es direkt im Concepter-Editor (neuer Tab). --}}
                                         @if($block->type === 'concept_ref' && $block->concept_id)
-                                            <a href="{{ route('foodalchemist.concepter.index', ['edit' => $block->concept_id]) }}" target="_blank" class="{{ $kleinSymbol }}" title="Im Concepter öffnen" aria-label="Im Concepter öffnen" data-fb-block-concepter>@svg('heroicon-m-arrow-top-right-on-square', 'w-4 h-4')</a>
+                                            <a href="{{ route('foodalchemist.concepter.index', ['edit' => $block->concept_id]) }}" target="_blank" class="{{ $kleinSymbol }}" title="Im Konzepter öffnen" aria-label="Im Konzepter öffnen" data-fb-block-concepter>@svg('heroicon-m-arrow-top-right-on-square', 'w-4 h-4')</a>
                                         @endif
                                         <button type="button" wire:click="blockSichtbar({{ $block->id }})" class="{{ $block->visible ? $kleinSymbol : 'inline-flex items-center gap-1 h-7 px-2 shrink-0 rounded-[var(--fa-radius-control)] text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-warn)] hover:bg-[var(--fa-hover)]' }}"
                                                 title="{{ $block->visible ? 'Für Gäste sichtbar. Klicken macht den Eintrag intern.' : 'Nur intern. Klicken zeigt den Eintrag wieder für Gäste.' }}">@if($block->visible)@svg('heroicon-m-eye', 'w-4 h-4')@else @svg('heroicon-m-eye-slash', 'w-4 h-4') Intern @endif</button>
@@ -954,7 +954,7 @@
                                                     <x-fa::textarea id="blk-text-{{ $block->id }}" wire:model="blockForm.customer_text" rows="2" class="flex-1" placeholder="Untertitel oder kurzer Text"></x-fa::textarea>
                                                     @if($block->type === 'concept_ref')
                                                         <x-fa::ki-action action="kiKundentext" variant="icon" icon="heroicon-o-sparkles" label="Beschreibung vorschlagen"
-                                                                title="Die KI schreibt einen verkaufenden Text zu diesem Concept" class="shrink-0 mt-2" data-fb-ki-kundentext />
+                                                                title="Die KI schreibt einen verkaufenden Text zu diesem Konzept" class="shrink-0 mt-2" data-fb-ki-kundentext />
                                                     @endif
                                                 </div>
                                             </x-fa::field>
@@ -972,7 +972,7 @@
                         @empty
                             {{-- E1b (Spec 40): der KI-Weg (Voll-Kaskade) ist nicht tot, nur woanders — der Leerzustand zeigt ihn. --}}
                             <x-fa::empty icon="heroicon-o-squares-plus" title="Noch kein Inhalt">
-                                Im Katalog ein Concept, Paket oder Format einfügen oder oben Text und Überschriften ergänzen.
+                                Im Katalog ein Konzept, Paket oder Format einfügen oder oben Text und Überschriften ergänzen.
                                 Die Leitstelle kann je Kapitel auch automatisch ein Konzept erstellen, es landet dann hier.
                             </x-fa::empty>
                         @endforelse
@@ -988,12 +988,12 @@
                      es bleibt nur „Formate" (legt ein NEUES Kapitel an). --}}
                 @php $katalogModus = $formatKapitel !== null ? 'format' : $pickerModus; @endphp
                 <x-fa::katalog-picker marker="fb" switch="katalogModus" :modes="array_values(array_filter([
-                    $formatKapitel === null ? ['key' => 'concept', 'label' => 'Concepts', 'active' => $katalogModus === 'concept'] : null,
+                    $formatKapitel === null ? ['key' => 'concept', 'label' => 'Konzepte', 'active' => $katalogModus === 'concept'] : null,
                     $formatKapitel === null ? ['key' => 'paket', 'label' => 'Pakete', 'active' => $katalogModus === 'paket'] : null,
                     ['key' => 'format', 'label' => 'Formate', 'active' => $katalogModus === 'format'],
                 ]))">
                     @if($katalogModus === 'concept')
-                        <x-fa::input type="search" size="sm" wire:model.live.debounce.300ms="conceptSuche" placeholder="Concept suchen" aria-label="Concept suchen" class="w-full mb-2 shrink-0" data-fb-katalog-concept />
+                        <x-fa::input type="search" size="sm" wire:model.live.debounce.300ms="conceptSuche" placeholder="Konzept suchen" aria-label="Konzept suchen" class="w-full mb-2 shrink-0" data-fb-katalog-concept />
                         @php $facettenAktiv = collect($conceptFacetten)->filter(fn ($v) => $v !== null)->isNotEmpty(); @endphp
                         <div class="grid grid-cols-2 gap-1.5 mb-2 shrink-0" data-fb-concept-facetten>
                             <x-fa::select size="sm" wire:model.live="conceptFacetten.eventtyp" aria-label="Eventtyp" data-fb-facet-eventtyp>
@@ -1017,7 +1017,7 @@
                             @forelse($conceptKandidaten as $ck)
                                 <x-fa::katalog-row wire:key="kck-{{ $ck->id }}" wire:click="conceptHinzu({{ $ck->id }})" :title="$ck->name" :price="$ck->price_per_person_cache !== null ? number_format((float) $ck->price_per_person_cache, 2, ',', '.') . ' €' : null">{{ $ck->name }}</x-fa::katalog-row>
                             @empty
-                                <p class="px-2 py-2 {{ $hinweis }}">{{ $conceptSuche !== '' || $facettenAktiv ? 'Keine Concepts für diese Auswahl.' : 'Noch keine Concepts angelegt.' }}</p>
+                                <p class="px-2 py-2 {{ $hinweis }}">{{ $conceptSuche !== '' || $facettenAktiv ? 'Keine Konzepte für diese Auswahl.' : 'Noch keine Konzepte angelegt.' }}</p>
                             @endforelse
                         </div>
                     @elseif($katalogModus === 'paket')
@@ -1078,8 +1078,8 @@
             </x-fa::modal>{{-- /Editor-Modal (Spec 29) --}}
         @else
             <x-fa::empty icon="heroicon-o-book-open" title="Kein Foodbook gewählt" class="fa-surface">
-                Links ein Foodbook wählen oder ein neues anlegen. Das Foodbook bündelt fertige Concepts zu einem Portfolio
-                mit Kapiteln und Preisen pro Person. Gästezahl und Gesamtpreis stehen im Angebot, einzelne Gerichte im Concepter.
+                Links ein Foodbook wählen oder ein neues anlegen. Das Foodbook bündelt fertige Konzepte zu einem Portfolio
+                mit Kapiteln und Preisen pro Person. Gästezahl und Gesamtpreis stehen im Angebot, einzelne Gerichte im Konzepter.
                 <x-slot:action>
                     <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="neu">Foodbook anlegen</x-fa::button>
                 </x-slot:action>

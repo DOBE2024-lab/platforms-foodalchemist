@@ -374,7 +374,7 @@ class AngebotEinfrierService
             }
             foreach ($angebot->referencedConcepts()->get() as $c) {   // geteilte Katalog-Concepts bleiben unberührt
                 if ($c->slots()->where('sales_recipe_id', $alt)->exists()) {
-                    $offen[] = 'Concept „'.$c->name.'“ (geteilt)';
+                    $offen[] = 'Konzept „'.$c->name.'“ (geteilt)';
                 }
             }
         }

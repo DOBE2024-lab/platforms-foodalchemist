@@ -201,7 +201,7 @@
                                         </div>
                                         <div class="flex items-center gap-0.5 shrink-0">
                                             @if($c)
-                                                <x-fa::icon-button size="sm" icon="heroicon-m-arrow-top-right-on-square" label="Im Concepter öffnen, um Gerichte und Abschnitte zu bearbeiten"
+                                                <x-fa::icon-button size="sm" icon="heroicon-m-arrow-top-right-on-square" label="Im Konzepter öffnen, um Gerichte und Abschnitte zu bearbeiten"
                                                     :href="route('foodalchemist.concepter.index', ['edit' => $c->id])" target="_blank" />
                                             @endif
                                             <x-fa::icon-button size="sm" icon="heroicon-m-map-pin" :label="$istZiel ? 'Einfügeziel aufheben' : 'Neues unter dieser Position einfügen'"
@@ -270,7 +270,7 @@
                                                         @endif
                                                     @endif
                                                 @empty
-                                                    <p class="fa-t-muted">Noch keine Gerichte. Das Konzept im Concepter füllen.</p>
+                                                    <p class="fa-t-muted">Noch keine Gerichte. Das Konzept im Konzepter füllen.</p>
                                                 @endforelse
                                             </div>
                                         </div>

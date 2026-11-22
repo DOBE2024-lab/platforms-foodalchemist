@@ -26,7 +26,7 @@ final class KaskadenAnsicht
      */
     public function stufenAusSteps($steps): array
     {
-        $defs = [['kind' => 'concept', 'label' => 'Concept'], ['kind' => 'gericht', 'label' => 'Gerichte'], ['kind' => 'rezept', 'label' => 'Basisrezepte']];
+        $defs = [['kind' => 'concept', 'label' => 'Konzept'], ['kind' => 'gericht', 'label' => 'Gerichte'], ['kind' => 'rezept', 'label' => 'Basisrezepte']];
         $out = [];
         foreach ($defs as $d) {
             $grp = $steps->where('kind', $d['kind']);

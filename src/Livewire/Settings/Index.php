@@ -77,7 +77,7 @@ class Index extends Component
         // Ebene 1 der DNA-Kette (Umzug 2026-07-21): Team-Food-DNA wohnt bei den Einstellungen, nicht als Top-Level-Nav
         'food-dna' => ['label' => 'Food DNA', 'hint' => 'Leitbild, Stil, Aromatik und No-Gos des eigenen Hauses'],
         // Spec 82 §7 (Schritt 6): pflegbare Zusatzfelder der DNA-Canvases, Oberteam-eigen.
-        'dna-felder' => ['label' => 'DNA-Zusatzfelder', 'hint' => 'Eigene Felder an Team-DNA, Kunden-DNA, Angebot, Foodbook und Concept, Feldgruppen als Reiter'],
+        'dna-felder' => ['label' => 'DNA-Zusatzfelder', 'hint' => 'Eigene Felder an Team-DNA, Kunden-DNA, Angebot, Foodbook und Konzept, Feldgruppen als Reiter'],
         // Spec 42 F3: Kunde-DNA (Ebene 2) zog aus dem Foodbook hierher — Marken-DNA gehört zum Kunden, nicht pro Foodbook.
         'kunde-dna' => ['label' => 'Kunden-DNA', 'hint' => 'Marke, Ton und No-Gos je Kunde'],
         'schreibstile' => ['label' => 'Schreibstile', 'hint' => 'Tonfall für Karten- und Foodbook-Texte anlegen und pflegen'],

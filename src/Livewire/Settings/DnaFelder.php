@@ -25,7 +25,7 @@ class DnaFelder extends Component
 
     /** Typ → Beschriftung, in der Reihenfolge der Kaskade. */
     public const TYPEN = [
-        'food_dna' => 'Team-DNA', 'kunde_dna' => 'Kunden-DNA', 'angebot' => 'Angebot', 'foodbook' => 'Foodbook', 'concept' => 'Concept',
+        'food_dna' => 'Team-DNA', 'kunde_dna' => 'Kunden-DNA', 'angebot' => 'Angebot', 'foodbook' => 'Foodbook', 'concept' => 'Konzept',
     ];
 
     public string $typ = 'food_dna';

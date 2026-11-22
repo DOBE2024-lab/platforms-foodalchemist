@@ -14,7 +14,7 @@
         'low' => 'Allergene unsicher, vor Ausgabe prüfen',
         'unknown' => 'Allergene noch nicht bewertet',
     ];
-    $wort = $istPaket ? 'Paket' : 'Concept';
+    $wort = $istPaket ? 'Paket' : 'Konzept';
 
     if ($concept !== null) {
         $proPerson = $cockpit['price_per_person'] ?? null;
@@ -55,7 +55,7 @@
 
 <x-fa::page data-concepter-panel="">
     @if($concept === null)
-        <x-fa::empty icon="heroicon-o-square-3-stack-3d" title="{{ $istPaket || $type === 'pakete' ? 'Kein Paket gewählt' : 'Kein Concept gewählt' }}">
+        <x-fa::empty icon="heroicon-o-square-3-stack-3d" title="{{ $istPaket || $type === 'pakete' ? 'Kein Paket gewählt' : 'Kein Konzept gewählt' }}">
             Links in der Tabelle eine Zeile anklicken, dann erscheinen hier Preis, Aufbau und Bewertung.
         </x-fa::empty>
     @else
@@ -86,7 +86,7 @@
                     title="Technischer Report mit allen Gerichten, Basisrezepten und Produkten" data-concepter-panel-druck>Technischen Bericht öffnen</x-fa::menu-item>
                 @unless($istPaket)
                     @if($concept->is_template)
-                        <x-fa::menu-item icon="heroicon-m-document-duplicate" wire:click="ausVorlage">Concept aus Vorlage anlegen</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-m-document-duplicate" wire:click="ausVorlage">Konzept aus Vorlage anlegen</x-fa::menu-item>
                     @else
                         <x-fa::menu-item icon="heroicon-m-square-2-stack" wire:click="alsVorlage">Als Vorlage speichern</x-fa::menu-item>
                     @endif
@@ -97,7 +97,7 @@
                     <x-fa::menu-item icon="heroicon-m-paper-airplane" x-on:click="$dispatch('fassung-modal.oeffnen', { art: 'concept', objektId: {{ $concept->id }} })"
                         title="Stand als neue Fassung an die Abonnenten geben" data-fassung-menue>Veröffentlichen …</x-fa::menu-item>
                 @endif
-                <x-fa::menu-item danger icon="heroicon-m-trash" wire:click="loeschen" wire:confirm="{{ $istPaket ? 'Paket löschen?' : 'Concept löschen?' }}">{{ $wort }} löschen</x-fa::menu-item>
+                <x-fa::menu-item danger icon="heroicon-m-trash" wire:click="loeschen" wire:confirm="{{ $istPaket ? 'Paket löschen?' : 'Konzept löschen?' }}">{{ $wort }} löschen</x-fa::menu-item>
             </x-slot:menue>
         </x-fa::detail-kopf>
 
@@ -236,10 +236,10 @@
                 @forelse($verwendung as $v)
                     <div class="flex items-center justify-between gap-3 py-1 text-[length:var(--fa-text-md)]">
                         <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $istPaket ? $v->name : ($v->label ?? '–') }}</span>
-                        <span class="shrink-0 fa-t-muted">{{ $istPaket ? 'Concept' : ('Foodbook' . ($v->jahr ? ' ' . $v->jahr : '') . ($v->customer ? ' · ' . $v->customer : '')) }}</span>
+                        <span class="shrink-0 fa-t-muted">{{ $istPaket ? 'Konzept' : ('Foodbook' . ($v->jahr ? ' ' . $v->jahr : '') . ($v->customer ? ' · ' . $v->customer : '')) }}</span>
                     </div>
                 @empty
-                    <p class="fa-t-muted">{{ $istPaket ? 'In keinem Concept eingesetzt.' : 'In keinem Foodbook verwendet.' }}</p>
+                    <p class="fa-t-muted">{{ $istPaket ? 'In keinem Konzept eingesetzt.' : 'In keinem Foodbook verwendet.' }}</p>
                 @endforelse
             </x-fa::section>
 

@@ -14,7 +14,7 @@
     <livewire:foodalchemist.angebote.konfigurator-editor key="konfiguratoren--editor" />
 
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
-        <x-fa::page-header title="Konfiguratoren" subtitle="All-in-Preise je Concept und Pax-Paket als Kundenlink: Speisen aus dem Concepter, Personal, Equipment und Logistik aus den Leistungs-Vorlagen.">
+        <x-fa::page-header title="Konfiguratoren" subtitle="All-in-Preise je Konzept und Pax-Paket als Kundenlink: Speisen aus dem Konzepter, Personal, Equipment und Logistik aus den Leistungs-Vorlagen.">
             <x-slot:actions>
                 <x-fa::button variant="ghost" icon="heroicon-m-wrench-screwdriver" :href="route('foodalchemist.angebote.leistung_vorlagen')">Leistungs-Vorlagen</x-fa::button>
                 <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="neu" data-konfigurator-neu>Neuer Konfigurator</x-fa::button>
@@ -48,7 +48,7 @@
                             <td>@if($k->presentation_enabled)<x-fa::badge tone="ok">Live</x-fa::badge>@else<span class="text-[var(--fa-ink-3)]">–</span>@endif</td>
                         </x-fa::table-row>
                     @empty
-                        <tr><td colspan="7"><x-fa::empty icon="heroicon-o-adjustments-horizontal" title="Noch kein Konfigurator">Lege einen Konfigurator an, verknüpfe Concepts und übernimm Leistungen aus den Vorlagen.</x-fa::empty></td></tr>
+                        <tr><td colspan="7"><x-fa::empty icon="heroicon-o-adjustments-horizontal" title="Noch kein Konfigurator">Lege einen Konfigurator an, verknüpfe Konzepte und übernimm Leistungen aus den Vorlagen.</x-fa::empty></td></tr>
                     @endforelse
                 </tbody>
             </x-fa::table>

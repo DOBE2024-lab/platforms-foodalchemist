@@ -6,29 +6,29 @@
 @php
     $phasen = \Platform\FoodAlchemist\Services\PhaseService::LABELS;
     $konfTon = ['high' => 'ok', 'medium' => 'warn', 'low' => 'crit', 'unknown' => 'neutral'];
-    $neuText = $showVorlagen ? 'Neue Vorlage' : 'Neues Concept';
+    $neuText = $showVorlagen ? 'Neue Vorlage' : 'Neues Konzept';
     $geld = fn ($wert) => number_format((float) $wert, 2, ',', '.') . ' €';
 @endphp
 
 <x-ui-page>
     <x-slot:navbar>
-        <x-foodalchemist::shell.page-navbar title="Concepts" icon="heroicon-o-rectangle-stack" />
+        <x-foodalchemist::shell.page-navbar title="Konzepte" icon="heroicon-o-rectangle-stack" />
     </x-slot:navbar>
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Food Alchemist', 'href' => route('foodalchemist.dashboard'), 'icon' => 'cube'],
-            ['label' => 'Concepts'],
+            ['label' => 'Konzepte'],
         ]" />
     </x-slot>
 
     <x-slot name="sidebar">
-        <x-fa::page-sidebar title="Concepts" width="w-80">
+        <x-fa::page-sidebar title="Konzepte" width="w-80">
             <div class="p-3 flex flex-col gap-3">
                 <div class="relative">
-                    <label for="concepts-suche" class="sr-only">Concepts durchsuchen</label>
+                    <label for="concepts-suche" class="sr-only">Konzepte durchsuchen</label>
                     @svg('heroicon-m-magnifying-glass', 'w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fa-ink-3)] pointer-events-none')
-                    <x-fa::input id="concepts-suche" type="search" wire:model.live.debounce.300ms="search" placeholder="Concept suchen" class="pl-8" />
+                    <x-fa::input id="concepts-suche" type="search" wire:model.live.debounce.300ms="search" placeholder="Konzept suchen" class="pl-8" />
                 </div>
                 {{-- R4.3: Phasen-Filter --}}
                 <x-fa::select wire:model.live="phaseFilter" aria-label="Phase" size="sm" placeholder="Alle Phasen" data-phase-filter>
@@ -58,12 +58,12 @@
                             </button>
                             @if($showVorlagen)
                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-document-duplicate" wire:click="ausVorlage({{ $c->id }})"
-                                    class="shrink-0 mr-1 opacity-0 group-hover:opacity-100 focus:opacity-100" title="Neues Concept aus dieser Vorlage anlegen">Vorlage nutzen</x-fa::button>
+                                    class="shrink-0 mr-1 opacity-0 group-hover:opacity-100 focus:opacity-100" title="Neues Konzept aus dieser Vorlage anlegen">Vorlage nutzen</x-fa::button>
                             @endif
                         </div>
                     @empty
-                        <x-fa::empty compact icon="heroicon-o-rectangle-stack" :title="$showVorlagen ? 'Noch keine Vorlagen' : 'Noch keine Concepts'">
-                            {{ $showVorlagen ? 'Ein Concept rechts als Vorlage speichern.' : 'Mit „Neues Concept“ oben rechts anlegen.' }}
+                        <x-fa::empty compact icon="heroicon-o-rectangle-stack" :title="$showVorlagen ? 'Noch keine Vorlagen' : 'Noch keine Konzepte'">
+                            {{ $showVorlagen ? 'Ein Konzept rechts als Vorlage speichern.' : 'Mit „Neues Konzept“ oben rechts anlegen.' }}
                         </x-fa::empty>
                     @endforelse
                     @if($concepts->hasPages())
@@ -91,7 +91,7 @@
                                     <x-fa::icon-button size="sm" icon="heroicon-m-pencil" label="Kategorie umbenennen"
                                         wire:click="kategorieEditStart({{ $kat['id'] }}, {{ \Illuminate\Support\Js::from($kat['name']) }})" class="opacity-0 group-hover/kat:opacity-100 focus:opacity-100" />
                                     <x-fa::icon-button size="sm" icon="heroicon-m-trash" tone="danger" label="Kategorie löschen"
-                                        wire:click="kategorieLoeschen({{ $kat['id'] }})" wire:confirm="Kategorie löschen? Unterkategorien und Concepts rücken zur übergeordneten Kategorie."
+                                        wire:click="kategorieLoeschen({{ $kat['id'] }})" wire:confirm="Kategorie löschen? Unterkategorien und Konzepte rücken zur übergeordneten Kategorie."
                                         class="opacity-0 group-hover/kat:opacity-100 focus:opacity-100" />
                                 @endif
                             </div>
@@ -147,7 +147,7 @@
                 @endphp
                 <x-fa::page>
                     {{-- Kopf: das Concept wird in der Seitenmitte bearbeitet, hier nur Einordnung + eine Aktion --}}
-                    <x-fa::detail-kopf :title="$selected->name" :subtitle="($selected->is_template ? 'Vorlage' : 'Concept') . ' · ' . ($phasen[$selected->phase] ?? $selected->phase)">
+                    <x-fa::detail-kopf :title="$selected->name" :subtitle="($selected->is_template ? 'Vorlage' : 'Konzept') . ' · ' . ($phasen[$selected->phase] ?? $selected->phase)">
                         <x-slot:badges>
                             @if($selected->status)<x-fa::badge :tone="$statusTon">{{ $statusText }}</x-fa::badge>@endif
                             @if($selected->is_template)<x-fa::badge tone="info" icon="heroicon-m-square-2-stack">Vorlage</x-fa::badge>@endif
@@ -216,24 +216,24 @@
                 </x-fa::page>
             @else
                 <x-fa::page>
-                    <x-fa::empty icon="heroicon-o-banknotes" title="Kein Concept gewählt">Links ein Concept wählen, dann stehen hier Preis je Person, Allergene und Aufbau.</x-fa::empty>
+                    <x-fa::empty icon="heroicon-o-banknotes" title="Kein Konzept gewählt">Links ein Konzept wählen, dann stehen hier Preis je Person, Allergene und Aufbau.</x-fa::empty>
                 </x-fa::page>
             @endif
         </x-fa::detail-sidebar>
     </x-slot>
 
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
-        <x-fa::page-header :title="$selected ? $selected->name : 'Concepts'"
-            :subtitle="$selected ? ($selected->is_template ? 'Vorlage' : 'Concept') . ' · ' . ($phasen[$selected->phase] ?? $selected->phase) : number_format($concepts->total(), 0, ',', '.') . ($showVorlagen ? ' Vorlagen' : ' Concepts')">
+        <x-fa::page-header :title="$selected ? $selected->name : 'Konzepte'"
+            :subtitle="$selected ? ($selected->is_template ? 'Vorlage' : 'Konzept') . ' · ' . ($phasen[$selected->phase] ?? $selected->phase) : number_format($concepts->total(), 0, ',', '.') . ($showVorlagen ? ' Vorlagen' : ' Konzepte')">
             <x-slot:actions>
                 {{-- R6.1: Brief → Concept aus echten VK-Gerichten (KI baut den Rahmen, Graph wählt die Gerichte) --}}
-                <x-fa::button variant="ai" icon="heroicon-m-sparkles" wire:click="generatorOeffnen" data-generator-oeffnen>Concept aus Kundenbrief</x-fa::button>
+                <x-fa::button variant="ai" icon="heroicon-m-sparkles" wire:click="generatorOeffnen" data-generator-oeffnen>Konzept aus Kundenbrief</x-fa::button>
                 <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="neu">{{ $neuText }}</x-fa::button>
             </x-slot:actions>
         </x-fa::page-header>
 
         @if($generatorOffen)
-            <x-fa::section title="Concept aus Kundenbrief" icon="heroicon-o-sparkles"
+            <x-fa::section title="Konzept aus Kundenbrief" icon="heroicon-o-sparkles"
                 description="Nur echte Verkaufsgerichte. Positionen ohne Treffer bleiben leer, mit Begründung. Das Ergebnis ist ein Entwurf." data-generator-panel>
                 <x-slot:actions>
                     <x-fa::icon-button size="sm" icon="heroicon-m-x-mark" label="Kundenbrief schließen" wire:click="$set('generatorOffen', false)" />
@@ -252,7 +252,7 @@
                     <x-fa::checkbox x-show="$wire.generatorFavorites" class="flex items-center gap-2 ml-6 text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]" wire:model="generatorFavoritesConvenienceOnly" data-generator-favoriten-conv>nur Convenience-Favoriten</x-fa::checkbox>
                 </div>
                 <div class="flex justify-end">
-                    <x-fa::ki-action action="generatorStart" variant="primary" label="Concept erstellen"
+                    <x-fa::ki-action action="generatorStart" variant="primary" label="Konzept erstellen"
                             busy="Baue Gerüst und wähle Gerichte …" data-generator-start />
                 </div>
 
@@ -271,7 +271,7 @@
                             @endforeach
                         </ul>
                         <x-slot:actions>
-                            <x-fa::button size="sm" variant="primary" iconRight="heroicon-m-arrow-right" wire:click="waehle({{ $generatorErgebnis['concept_id'] }})">Concept öffnen</x-fa::button>
+                            <x-fa::button size="sm" variant="primary" iconRight="heroicon-m-arrow-right" wire:click="waehle({{ $generatorErgebnis['concept_id'] }})">Konzept öffnen</x-fa::button>
                         </x-slot:actions>
                     </x-fa::notice>
                 @endif
@@ -304,7 +304,7 @@
                 </div>
                 </fieldset>
                 <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-                    <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="loeschen({{ $selected->id }})" wire:confirm="Concept löschen?" :disabled="$lesemodus">Concept löschen</x-fa::button>
+                    <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="loeschen({{ $selected->id }})" wire:confirm="Konzept löschen?" :disabled="$lesemodus">Konzept löschen</x-fa::button>
                     <div class="flex flex-wrap items-center gap-2">
                         <x-fa::button variant="ghost" icon="heroicon-m-printer" :href="route('foodalchemist.concepts.dokument', ['id' => $selected->id, 'profil' => 'voll'])" target="_blank"
                             title="Druck- und PDF-Report mit allen Gerichten, Basisrezepten und Produkten" data-concept-druck>Report drucken</x-fa::button>
@@ -428,8 +428,8 @@
             </fieldset>
         @else
             <x-fa::card>
-                <x-fa::empty icon="heroicon-o-rectangle-stack" title="Kein Concept gewählt">
-                    Links ein Concept wählen oder oben rechts ein neues anlegen. Aus einer Vorlage entsteht über „Vorlage nutzen“ ein eigenständiges Concept.
+                <x-fa::empty icon="heroicon-o-rectangle-stack" title="Kein Konzept gewählt">
+                    Links ein Konzept wählen oder oben rechts ein neues anlegen. Aus einer Vorlage entsteht über „Vorlage nutzen“ ein eigenständiges Konzept.
                 </x-fa::empty>
             </x-fa::card>
         @endif

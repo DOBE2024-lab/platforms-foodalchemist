@@ -52,7 +52,7 @@ trait PlanBestehendesConcept
         $team = $this->team();
         $session = $this->aktiveSession();
         if ($team === null || $session === null) {
-            $this->fehler = 'Kein Team oder keine Planung offen. Bestehendes Concept nicht wählbar.';
+            $this->fehler = 'Kein Team oder keine Planung offen. Bestehendes Konzept nicht wählbar.';
 
             return;
         }
@@ -64,7 +64,7 @@ trait PlanBestehendesConcept
         }
         $concept = FoodAlchemistConcept::where('team_id', $team->id)->konzepte()->echte()->find($id);
         if ($concept === null) {
-            $this->fehler = 'Das gewählte Concept wurde nicht gefunden oder gehört zu einem anderen Team.';
+            $this->fehler = 'Das gewählte Konzept wurde nicht gefunden oder gehört zu einem anderen Team.';
 
             return;
         }
@@ -83,6 +83,6 @@ trait PlanBestehendesConcept
             $this->eingabe['concept']['brief'] = trim((string) ($concept->brief ?: $concept->description ?: $concept->name));
         }
         $this->ladePlanForm();
-        $this->meldung = 'Bestehendes Concept gewählt. Leitidee und Menü-Aufbau prüfen, dann „Concept aus Plan erstellen": gefüllt werden nur die leeren Positionen.';
+        $this->meldung = 'Bestehendes Konzept gewählt. Leitidee und Menü-Aufbau prüfen, dann „Konzept aus Plan erstellen": gefüllt werden nur die leeren Positionen.';
     }
 }

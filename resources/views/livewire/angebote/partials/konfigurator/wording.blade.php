@@ -13,7 +13,7 @@
                         <li class="flex flex-wrap items-center gap-2" wire:key="kfw-{{ $kz->id }}-{{ $z['slot_id'] }}" style="padding-left: {{ ($z['einrueckung'] ?? 0) * 16 }}px">
                             <x-fa::input size="sm" class="flex-1 min-w-[14rem]" value="{{ $z['text'] }}" wire:change="wordingSetzen({{ $kz->id }}, {{ $z['slot_id'] }}, $event.target.value)"
                                 aria-label="Wording" data-kf-wording-feld="{{ $z['slot_id'] }}" />
-                            <x-fa::badge :tone="$eigen ? 'accent' : (($z['source'] ?? '') === 'name' ? 'warn' : 'neutral')">{{ $eigen ? 'nur hier' : ['konzept' => 'aus dem Concept', 'standard' => 'Gericht-Wording', 'name' => 'Wording fehlt'][$z['source'] ?? ''] ?? '' }}</x-fa::badge>
+                            <x-fa::badge :tone="$eigen ? 'accent' : (($z['source'] ?? '') === 'name' ? 'warn' : 'neutral')">{{ $eigen ? 'nur hier' : ['konzept' => 'aus dem Konzept', 'standard' => 'Gericht-Wording', 'name' => 'Wording fehlt'][$z['source'] ?? ''] ?? '' }}</x-fa::badge>
                             @if($eigen)<x-fa::button size="sm" variant="ghost" wire:click="wordingZuruecksetzen({{ $kz->id }}, {{ $z['slot_id'] }})" data-kf-wording-reset="{{ $z['slot_id'] }}">Zurücksetzen</x-fa::button>@endif
                         </li>
                     @elseif(in_array($z['type'] ?? '', ['header', 'paket'], true))
@@ -28,8 +28,8 @@
         </x-fa::field>
         <x-fa::ki-action action="wordingGenerieren({{ $kz->id }})" variant="ai" icon="heroicon-o-sparkles" label="Speisen per KI betexten"
             :disabled="$wordingStil === ''" busy="Betextet …" class="shrink-0 mb-0.5"
-            title="Schreibt die Gästetexte dieses Konzepts im gewählten Schreibstil neu. Gilt nur in diesem Konfigurator, das Concept bleibt unverändert." />
+            title="Schreibt die Gästetexte dieses Konzepts im gewählten Schreibstil neu. Gilt nur in diesem Konfigurator, das Konzept bleibt unverändert." />
     </div>
-    <p class="mt-2 fa-t-muted">Bilder und Standard-Wording pflegst du im Concepter. Leeres Feld = zurück auf das Concept-Wording.</p>
+    <p class="mt-2 fa-t-muted">Bilder und Standard-Wording pflegst du im Konzepter. Leeres Feld = zurück auf das Konzept-Wording.</p>
     </details>
 @endif

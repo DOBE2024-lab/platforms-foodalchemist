@@ -21,20 +21,20 @@
         || $eventtypFilter !== '' || $servierformFilter !== '' || $momentFilter !== '' || $saisonFilter !== '';
 
     $einheit = $istPakete ? ($items->total() === 1 ? ' Paket' : ' Pakete')
-        : ($showVorlagen ? ($items->total() === 1 ? ' Vorlage' : ' Vorlagen') : ' Concepts');
-    $neuText = $istPakete ? 'Neues Paket' : ($showVorlagen ? 'Neue Vorlage' : 'Neues Concept');
+        : ($showVorlagen ? ($items->total() === 1 ? ' Vorlage' : ' Vorlagen') : ' Konzepte');
+    $neuText = $istPakete ? 'Neues Paket' : ($showVorlagen ? 'Neue Vorlage' : 'Neues Konzept');
     $spaltenZahl = 6;
 @endphp
 
 <x-ui-page>
     <x-slot:navbar>
-        <x-foodalchemist::shell.page-navbar title="Concepter" icon="heroicon-o-square-3-stack-3d" />
+        <x-foodalchemist::shell.page-navbar title="Konzepter" icon="heroicon-o-square-3-stack-3d" />
     </x-slot:navbar>
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Food Alchemist', 'href' => route('foodalchemist.dashboard'), 'icon' => 'cube'],
-            ['label' => 'Concepter'],
+            ['label' => 'Konzepter'],
         ]" />
     </x-slot>
 
@@ -42,10 +42,10 @@
         <x-fa::page-sidebar title="Filter" width="w-80">
             <div class="p-3 flex flex-col gap-3">
                 <div class="relative">
-                    <label for="concepter-suche" class="sr-only">{{ $istPakete ? 'Pakete durchsuchen' : 'Concepts durchsuchen' }}</label>
+                    <label for="concepter-suche" class="sr-only">{{ $istPakete ? 'Pakete durchsuchen' : 'Konzepte durchsuchen' }}</label>
                     @svg('heroicon-m-magnifying-glass', 'w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fa-ink-3)] pointer-events-none')
                     <x-fa::input id="concepter-suche" type="search" wire:model.live.debounce.300ms="search"
-                        placeholder="{{ $istPakete ? 'Paket suchen' : 'Concept suchen' }}" class="pl-8" />
+                        placeholder="{{ $istPakete ? 'Paket suchen' : 'Konzept suchen' }}" class="pl-8" />
                 </div>
 
                 @unless($istPakete)
@@ -135,20 +135,20 @@
     {{-- #1003: am Handy Karten statt Tabelle (wie Rezepte), Concepts | Pakete als Umschalter; Filter bleiben in der linken Schublade --}}
     @if(\Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy())
         @include('foodalchemist::livewire.handy.karten-liste', [
-            'titel' => 'Concepter', 'eintraege' => $items, 'aktivId' => $selectedId, 'wahl' => 'waehle', 'scope' => 'activity_concepter',
-            'suchHinweis' => $istPakete ? 'Paket suchen' : 'Concept suchen',
-            'reiter' => ['concepts' => 'Concepts', 'pakete' => 'Pakete'], 'reiterAktiv' => $tab, 'reiterWahl' => 'wechselTab',
+            'titel' => 'Konzepter', 'eintraege' => $items, 'aktivId' => $selectedId, 'wahl' => 'waehle', 'scope' => 'activity_concepter',
+            'suchHinweis' => $istPakete ? 'Paket suchen' : 'Konzept suchen',
+            'reiter' => ['concepts' => 'Konzepte', 'pakete' => 'Pakete'], 'reiterAktiv' => $tab, 'reiterWahl' => 'wechselTab',
             'unterzeile' => fn ($it) => implode(' · ', array_filter([$it->class ?: null, $it->eventType?->name, $it->servingForm?->label, $statusLabel[$it->status] ?? $it->status])),
             'wert' => function ($it) use ($vkDisplay) {
                 $preis = isset($vkDisplay[$it->id]) && $vkDisplay[$it->id] !== null ? (float) $vkDisplay[$it->id] : ($it->price_per_person_cache !== null ? (float) $it->price_per_person_cache : null);
 
                 return $preis !== null && $preis > 0 ? number_format($preis, 2, ',', '.') . ' €/P.' : null;
             },
-            'leer' => $istPakete ? 'Noch keine Pakete oder andere Suche.' : 'Noch keine Concepts oder andere Suche.',
+            'leer' => $istPakete ? 'Noch keine Pakete oder andere Suche.' : 'Noch keine Konzepte oder andere Suche.',
         ])
     @else
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
-        <x-fa::page-header title="Concepter" :subtitle="number_format($items->total(), 0, ',', '.') . $einheit">
+        <x-fa::page-header title="Konzepter" :subtitle="number_format($items->total(), 0, ',', '.') . $einheit">
             <x-slot:actions>
                 <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="neu">{{ $neuText }}</x-fa::button>
             </x-slot:actions>
@@ -157,12 +157,12 @@
         {{-- Umschalter Concepts | Pakete (§10.2) --}}
         <div class="flex flex-wrap items-center justify-between gap-3">
             <x-fa::segmented label="Ansicht" :breit="true">
-                @foreach(['concepts' => 'Concepts', 'pakete' => 'Pakete'] as $tk => $tl)
+                @foreach(['concepts' => 'Konzepte', 'pakete' => 'Pakete'] as $tk => $tl)
                     <x-fa::segment :an="$tab === $tk" size="md" wire:click="wechselTab('{{ $tk }}')">{{ $tl }}</x-fa::segment>
                 @endforeach
             </x-fa::segmented>
             <p class="fa-t-muted max-w-[60ch]">
-                {{ $istPakete ? 'Ein Paket bündelt mehrere Gerichte zu einem Preis je Person und lässt sich in Concepts einsetzen.' : 'Ein Concept ist ein ganzes Menü oder Buffet aus Positionen. Klick auf den Namen öffnet den Editor.' }}
+                {{ $istPakete ? 'Ein Paket bündelt mehrere Gerichte zu einem Preis je Person und lässt sich in Konzepte einsetzen.' : 'Ein Konzept ist ein ganzes Menü oder Buffet aus Positionen. Klick auf den Namen öffnet den Editor.' }}
             </p>
         </div>
 
@@ -247,9 +247,9 @@
                                     @elseif($istPakete)
                                         <x-fa::empty icon="heroicon-o-puzzle-piece" title="Noch keine Pakete">Mit „Neues Paket“ oben rechts ein Bündel aus Gerichten anlegen.</x-fa::empty>
                                     @elseif($showVorlagen)
-                                        <x-fa::empty icon="heroicon-o-square-2-stack" title="Noch keine Vorlagen">Ein Concept im Detail als Vorlage speichern oder mit „Neue Vorlage“ anlegen.</x-fa::empty>
+                                        <x-fa::empty icon="heroicon-o-square-2-stack" title="Noch keine Vorlagen">Ein Konzept im Detail als Vorlage speichern oder mit „Neue Vorlage“ anlegen.</x-fa::empty>
                                     @else
-                                        <x-fa::empty icon="heroicon-o-square-3-stack-3d" title="Noch keine Concepts">Mit „Neues Concept“ oben rechts ein Menü oder Buffet anlegen.</x-fa::empty>
+                                        <x-fa::empty icon="heroicon-o-square-3-stack-3d" title="Noch keine Konzepte">Mit „Neues Konzept“ oben rechts ein Menü oder Buffet anlegen.</x-fa::empty>
                                     @endif
                                 </td>
                             </tr>

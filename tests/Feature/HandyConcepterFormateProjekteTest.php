@@ -41,12 +41,12 @@ it('Concepter am Handy: Karten mit Umschalter Concepts | Pakete, kein Anlegen; a
     handyTest(ConcepterBrowser::class)
         ->assertSeeHtml('data-fa-handy-karte="' . $this->concept->id . '"')->assertSee('Buffet')
         ->assertSeeHtml('data-fa-handy-reiter')
-        ->assertDontSee('Neues Concept')->assertDontSeeHtml('<table class="fa-table">')
+        ->assertDontSee('Neues Konzept')->assertDontSeeHtml('<table class="fa-table">')
         ->call('wechselTab', 'pakete')
         ->assertSeeHtml('data-fa-handy-karte="' . $this->paket->id . '"')->assertDontSeeHtml('data-fa-handy-karte="' . $this->concept->id . '"');
 
     Livewire::withCookie(HandyLesemodus::COOKIE, '0')->test(ConcepterBrowser::class)
-        ->assertSee('Neues Concept')->assertSeeHtml('<table class="fa-table">')->assertDontSeeHtml('data-fa-handy-liste');
+        ->assertSee('Neues Konzept')->assertSeeHtml('<table class="fa-table">')->assertDontSeeHtml('data-fa-handy-liste');
 });
 
 it('Concepter am Handy: Server-Sperre lässt Reiter, Auswahl und Filter laufen, Anlegen, Status, Editor und Detail-Aktionen nicht; ?edit= öffnet keinen Editor', function () {

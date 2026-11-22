@@ -47,7 +47,7 @@
             // Offene Punkte: was vor dem Einsatz beim Kunden noch fehlt.
             $offen = [];
             if ($nEditionen === 0) {
-                $offen[] = ['crit', 'Noch keine Edition: im Editor unter „Aufbau“ ein Concept einfügen.'];
+                $offen[] = ['crit', 'Noch keine Edition: im Editor unter „Aufbau“ ein Konzept einfügen.'];
             } elseif ($nOhnePreis > 0) {
                 $offen[] = ['warn', $nOhnePreis === 1 ? 'Einer Edition fehlt der Preis.' : $nOhnePreis . ' Editionen fehlt der Preis.'];
             }
@@ -112,7 +112,7 @@
             {{-- Editionen (F2: referenzierte Concepts der type=concept-Slots) --}}
             <x-fa::section variant="plain" title="Editionen" icon="heroicon-o-rectangle-stack" :meta="$conceptSlots->count()">
                 @if($editionen->isEmpty())
-                    <x-fa::empty compact icon="heroicon-o-rectangle-stack" title="Noch keine Editionen">Im Editor unter „Aufbau“ ein Concept einfügen.</x-fa::empty>
+                    <x-fa::empty compact icon="heroicon-o-rectangle-stack" title="Noch keine Editionen">Im Editor unter „Aufbau“ ein Konzept einfügen.</x-fa::empty>
                 @else
                     <ul class="flex flex-col">
                         @foreach($editionen as $s)
@@ -124,7 +124,7 @@
                                     @if(($e->kind ?? null) === 'paket')<x-fa::badge tone="info" class="shrink-0">Paket</x-fa::badge>@endif
                                     <a href="{{ route('foodalchemist.concepter.index', ['edit' => $e->id]) }}" target="_blank"
                                        class="min-w-0 break-words text-[var(--fa-ink)] hover:text-[var(--fa-accent)] hover:underline"
-                                       title="{{ $e->consumer_name ?: $e->name }} im Concepter öffnen">{{ $e->consumer_name ?: $e->name }}</a>
+                                       title="{{ $e->consumer_name ?: $e->name }} im Konzepter öffnen">{{ $e->consumer_name ?: $e->name }}</a>
                                 </span>
                                 <x-fa::money :value="$e->price_per_person_cache" per="Person" class="shrink-0 text-[var(--fa-ink-2)]" />
                             </li>

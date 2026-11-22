@@ -33,7 +33,7 @@
      Speisekarte-Rubrik), die den Namen schon trägt — dann keine h2-Ebenen darunter. --}}
 @php $eingebettet = (bool) ($eingebettet ?? false); @endphp
 <section>
-    @unless($eingebettet)<h2>Concept-Übersicht</h2>@endunless
+    @unless($eingebettet)<h2>Konzept-Übersicht</h2>@endunless
     @if($kacheln !== '')<div class="grid meta keep">{!! $kacheln !!}</div>@endif
     @if($concept['description'] ?? null)<p class="intro">{{ $concept['description'] }}</p>@endif
     @if(count($concept['moments'] ?? []) || count($concept['seasons'] ?? []))

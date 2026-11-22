@@ -24,7 +24,7 @@
     $reuse = (is_array($st->deferred) && is_array($st->deferred['reuse'] ?? null)) ? $st->deferred['reuse'] : null;
     $reuseUnreif = $st->status === 'skipped' && $reuse !== null && ! ($reuse['reif'] ?? false);
 
-    $kindName = ['concept' => 'Concept', 'gericht' => 'Gericht', 'rezept' => 'Basisrezept'][$st->kind] ?? ucfirst((string) $st->kind);
+    $kindName = ['concept' => 'Konzept', 'gericht' => 'Gericht', 'rezept' => 'Basisrezept'][$st->kind] ?? ucfirst((string) $st->kind);
     $kindIcon = ['concept' => 'heroicon-o-squares-2x2', 'gericht' => 'heroicon-o-cake', 'rezept' => 'heroicon-o-beaker'][$st->kind] ?? 'heroicon-o-document';
     $name = $st->label ?: $kindName;
     $laeuftGerade = in_array($st->status, ['queued', 'running'], true);
@@ -159,7 +159,7 @@
                         <x-fa::button size="sm" icon="heroicon-o-eye" wire:click="$dispatch('vk-modal.oeffnen', { id: {{ (int) $st->ref_id }} })">Ansehen</x-fa::button>
                     @elseif($st->kind === 'concept')
                         {{-- Vollen Conceptor inline öffnen (KPIs/Score/Aufbau/Kalkulation/Geschirr) statt Listen-Seite. --}}
-                        <x-fa::button size="sm" icon="heroicon-o-arrow-top-right-on-square" wire:click="$dispatch('concepter-editor.oeffnen', { type: 'concepts', id: {{ (int) $st->ref_id }} })">Concept öffnen</x-fa::button>
+                        <x-fa::button size="sm" icon="heroicon-o-arrow-top-right-on-square" wire:click="$dispatch('concepter-editor.oeffnen', { type: 'concepts', id: {{ (int) $st->ref_id }} })">Konzept öffnen</x-fa::button>
                     @elseif(isset($refRoute[$st->kind]))
                         <x-fa::button size="sm" icon="heroicon-o-arrow-top-right-on-square" :href="route($refRoute[$st->kind])">Öffnen</x-fa::button>
                     @endif
@@ -438,7 +438,7 @@
     @php $fanoutErr = is_array($st->deferred) ? ($st->deferred['fanout_error'] ?? null) : null; @endphp
     @if($fanoutErr)
         {{-- #124: Fan-out crashte, aber das Concept ist freigegeben — Teil-Problem (warn), nicht rot. --}}
-        <x-fa::signal tone="warn">Die Gerichte konnten nicht automatisch erfunden werden: {{ \Illuminate\Support\Str::limit($fanoutErr, 140) }}. Das Concept selbst ist freigegeben.</x-fa::signal>
+        <x-fa::signal tone="warn">Die Gerichte konnten nicht automatisch erfunden werden: {{ \Illuminate\Support\Str::limit($fanoutErr, 140) }}. Das Konzept selbst ist freigegeben.</x-fa::signal>
     @endif
     @php $gesperrt = is_array($st->deferred) ? ($st->deferred['freigabe_gesperrt'] ?? null) : null; @endphp
     @if(is_array($gesperrt) && $gesperrt !== [])

@@ -44,7 +44,7 @@
     $offen = $lauf->steps->where('status', 'done')->count();
     // Aus der früheren Stufenliste übernommen: Stufen-Freigabe, Gesamtzustand, Anreicherungs-Bilanz.
     $stufen = $this->stufenAusSteps($lauf->steps);
-    $stufeName = ['concept' => 'Concept', 'gericht' => 'Gerichte', 'rezept' => 'Basisrezepte'];
+    $stufeName = ['concept' => 'Konzept', 'gericht' => 'Gerichte', 'rezept' => 'Basisrezepte'];
     $laufRunning = $lauf->steps->whereIn('status', ['queued', 'running'])->count();
     $laufDone = $lauf->steps->whereIn('status', ['done', 'freigegeben'])->count();
     $laufFailed = $lauf->steps->where('status', 'failed')->count();

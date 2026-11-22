@@ -234,7 +234,7 @@ final class SignalCockpit
         // Trendradar: das Signal meldet fertige Konzept-ENTWÜRFE, keinen Mangel. Der Weg ist
         // die Sichtung — und die ist Geschmacksurteil, kein Knopf. Ohne diesen Satz stünde ein
         // Signal im Cockpit, das etwas erzeugt hat, aber nicht sagt, wo es liegt.
-        'trend_konzept_vorschlag' => 'Die automatisch erzeugten Konzept-Entwürfe im Concepter sichten und '
+        'trend_konzept_vorschlag' => 'Die automatisch erzeugten Konzept-Entwürfe im Konzepter sichten und '
             . 'entscheiden: weiterbauen oder verwerfen. Sie liegen als Entwurf und werden ohne Zutun '
             . 'nirgends sichtbar — ein Vorschlag ist kein Befund.',
         // Welle 0 · Steuerdaten-Wächter: der Weg ist die Konsole, bewusst kein Knopf. Ein
@@ -277,15 +277,15 @@ final class SignalCockpit
             . 'korrigieren (Name §6, Pflichtangabe §8, Zustand §9). Beim nächsten Konformitäts-Lauf schließt '
             . 'sich das Signal.',
         // Tranche C — der Concepter ist der Ort, an dem ein Konzept überhaupt entsteht.
-        'konzept_slot_luecke' => 'Den unbesetzten Pflicht-Slot im Concepter belegen — oder das Planungs-Gerüst '
+        'konzept_slot_luecke' => 'Den unbesetzten Pflicht-Slot im Konzepter belegen — oder das Planungs-Gerüst '
             . 'anpassen, wenn der Slot so nicht mehr gemeint ist.',
-        'konzept_ohne_wording' => 'Kunden-Wording am Konzept schreiben (Concepter → Wording); ohne Wording ist das '
+        'konzept_ohne_wording' => 'Kunden-Wording am Konzept schreiben (Konzepter → Wording); ohne Wording ist das '
             . 'Konzept intern vollständig, aber nicht zeigbar.',
-        'konzept_preisband_verletzt' => 'Im Concepter einen Gang tauschen oder das Preisband im Planungs-Gerüst '
+        'konzept_preisband_verletzt' => 'Im Konzepter einen Gang tauschen oder das Preisband im Planungs-Gerüst '
             . 'anpassen — welche Seite nachgibt, ist eine Angebots-Entscheidung.',
-        'konzept_regel_verletzt' => 'Im Concepter den Verstoß auflösen (Kandidat tauschen) oder die Regel im Gerüst '
+        'konzept_regel_verletzt' => 'Im Konzepter den Verstoß auflösen (Kandidat tauschen) oder die Regel im Gerüst '
             . 'korrigieren, falls sie so nicht gemeint war.',
-        'konzept_dramaturgie' => 'Im Concepter prüfen, ob die wiederholte Hauptzutat gewollt ist (Themen-Menü) — '
+        'konzept_dramaturgie' => 'Im Konzepter prüfen, ob die wiederholte Hauptzutat gewollt ist (Themen-Menü) — '
             . 'sonst einen der betroffenen Gänge tauschen.',
         // Tranche D — das Kundendokument selbst.
         'foodbook_kapitel_leer' => 'Das Kapitel im Foodbook mit Gerichten belegen (Foodbook → Kapitel) oder das '

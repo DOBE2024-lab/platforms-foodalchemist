@@ -33,7 +33,7 @@
 
     {{-- Phase 5: Typ-Farben — GP / Basisrezept / Gericht durchgängig im Editor + Concepter --}}
     <x-fa::section title="Farben je Positionstyp" data-settings-typfarben
-        description="Kennzeichnet Grundprodukte, Basisrezepte und Gerichte überall gleich: in Listen, Positionstabellen und im Concepter.">
+        description="Kennzeichnet Grundprodukte, Basisrezepte und Gerichte überall gleich: in Listen, Positionstabellen und im Konzepter.">
         <x-slot:actions>
             <x-fa::button size="sm" variant="ghost" icon="heroicon-o-arrow-path" wire:click="farbenZuruecksetzen">Standardfarben einsetzen</x-fa::button>
         </x-slot:actions>

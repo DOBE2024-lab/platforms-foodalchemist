@@ -384,13 +384,13 @@
             {{-- 7 · Verwendung: Concepts und Pakete mit einer Position auf dem Gericht, Rezepte mit dem Gericht als Komponente --}}
             <x-fa::section variant="plain" title="Wo verwendet?" icon="heroicon-o-link" :meta="$inConcepts->count() + $eltern->count()" data-vk-verwendung>
                 @if($inConcepts->isEmpty() && $eltern->isEmpty())
-                    <p class="fa-t-muted">In keinem Concept, Paket oder Rezept verwendet.</p>
+                    <p class="fa-t-muted">In keinem Konzept, Paket oder Rezept verwendet.</p>
                 @else
                     <div class="flex flex-col gap-0.5">
                         @foreach($inConcepts as $c)
                             <div class="flex items-center justify-between gap-3 px-2 py-1 text-[length:var(--fa-text-md)]" wire:key="vkc-{{ $c->id }}">
                                 <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $c->name }}</span>
-                                <span class="shrink-0 fa-t-muted">{{ $c->kind === 'paket' ? 'Paket' : 'Concept' }}</span>
+                                <span class="shrink-0 fa-t-muted">{{ $c->kind === 'paket' ? 'Paket' : 'Konzept' }}</span>
                             </div>
                         @endforeach
                         @foreach($eltern as $parent)

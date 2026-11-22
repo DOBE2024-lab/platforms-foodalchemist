@@ -84,7 +84,7 @@
 
     <p class="fa-t-muted max-w-[75ch] pt-1">
         Die Kalkulation je Gericht und Menge (Herstellkosten, Verkaufspreis-Vorschlag, Deckungsbeitrag) läuft im
-        <a href="{{ route('foodalchemist.concepter.index') }}" class="text-[var(--fa-accent)] hover:underline" wire:navigate>Concepter</a>
+        <a href="{{ route('foodalchemist.concepter.index') }}" class="text-[var(--fa-accent)] hover:underline" wire:navigate>Konzepter</a>
         und je Einzelgericht unter
         <a href="{{ route('foodalchemist.verkauf.index') }}" class="text-[var(--fa-accent)] hover:underline" wire:navigate>Gerichte</a>.
         Die Kosten-Regeln stehen unter

@@ -256,7 +256,7 @@ return [
                 ],
                 [
                     // M10R-5: vereinheitlichter Browser (Concepts | Pakete) + Voll-Editor-Modal.
-                    'label' => 'Concepter',
+                    'label' => 'Konzepter',
                     'route' => 'foodalchemist.concepter.index',
                     'icon'  => 'heroicon-o-square-3-stack-3d',
                 ],
@@ -594,7 +594,7 @@ return [
          */
         'vokabular_prompt' => 'Küchen- und Warenwirtschafts-Befehle für den Food Alchemist. '
             . 'Fachbegriffe: Basisrezept, Grundprodukt, Lieferantenartikel, Verkaufsgericht, '
-            . 'Speisekarte, Speiseplan, Foodbook, Concepter, Format, Aufschlagsklasse, '
+            . 'Speisekarte, Speiseplan, Foodbook, Konzepter, Format, Aufschlagsklasse, '
             . 'Speisen-Klasse, Darreichung, Warengruppe, Wareneinsatz, Allergene, Leitplanken, '
             . 'Planung, Kaskade, Bestellwesen, Produktion.',
     ],

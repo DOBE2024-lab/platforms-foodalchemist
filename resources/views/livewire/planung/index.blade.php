@@ -59,7 +59,7 @@
     $typIconMap = ['concept' => 'heroicon-o-squares-2x2', 'gericht' => 'heroicon-o-cake', 'rezept' => 'heroicon-o-beaker', 'vollkaskade' => 'heroicon-o-bolt'];
     $typIcon = fn ($s) => $typIconMap[$kaskaden[(int) $s->id]['scope'] ?? ''] ?? 'heroicon-o-light-bulb';
     // Board: Ausgabe-Ziel (Owner). Kein Owner → „Frei".
-    $ausgabeZielLabel = ['foodbook' => 'Foodbook', 'speisekarte' => 'Speisekarte', 'speiseplan' => 'Speiseplan', 'offer' => 'Angebot', 'format' => 'Format', 'concept' => 'Concept'];
+    $ausgabeZielLabel = ['foodbook' => 'Foodbook', 'speisekarte' => 'Speisekarte', 'speiseplan' => 'Speiseplan', 'offer' => 'Angebot', 'format' => 'Format', 'concept' => 'Konzept'];
     $ausgabeChip = function ($sessionId) use ($kaskaden, $ausgabeZielLabel, $chip) {
         $ot = $kaskaden[(int) $sessionId]['owner_type'] ?? null;
         if ($ot === null) {
@@ -76,12 +76,12 @@
     // passt hier nicht (der Reiter-Zustand `tab` lebt am Modal, tab-init + modal.open-Detail, die Panels liegen im Body).
     // #1003 PR7: am Handy drei Schritte (Auftrag → Ergebnis → Kontext) statt der Reiterleiste; Auftrag nur diese Arten.
     $handy = \Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy();
-    $handyArten = ['gericht' => 'Gericht', 'basisrezept' => 'Basisrezept', 'concept' => 'Concept', 'import' => 'Import (Foto)'];
+    $handyArten = ['gericht' => 'Gericht', 'basisrezept' => 'Basisrezept', 'concept' => 'Konzept', 'import' => 'Import (Foto)'];
     $schrittKnopf = 'flex-1 inline-flex items-center justify-center gap-1.5 min-h-11 rounded-[5px] text-[length:var(--fa-text-md)] font-medium';
     $schrittAn = 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm';
     $schrittAus = 'text-[var(--fa-ink-2)]';
     $reiterGruppen = [
-        ['basisrezept' => 'Basisrezept', 'gericht' => 'Gericht', 'concept' => 'Concept', 'format' => 'Format', 'composer' => 'Composer', 'trendradar' => 'Trendradar', 'import' => 'Import'],
+        ['basisrezept' => 'Basisrezept', 'gericht' => 'Gericht', 'concept' => 'Konzept', 'format' => 'Format', 'composer' => 'Composer', 'trendradar' => 'Trendradar', 'import' => 'Import'],
         ['foodbook' => 'Foodbook', 'speisekarte' => 'Speisekarte', 'speiseplan' => 'Speiseplan', 'angebot' => 'Angebot'],
         ['worker' => 'Fortschritt'],
     ];
@@ -134,7 +134,7 @@
                             <option value="">Alle Typen</option>
                             <option value="rezept">Basisrezept</option>
                             <option value="gericht">Gericht</option>
-                            <option value="concept">Concept</option>
+                            <option value="concept">Konzept</option>
                             <option value="foodbook">Foodbook</option>
                             <option value="speisekarte">Speisekarte</option>
                             <option value="speiseplan">Speiseplan</option>
@@ -194,7 +194,7 @@
              „Freie Erstellung"-Session (cockpit_frei) an und öffnet den Editor auf dem passenden Reiter.
              Trend bleibt EIN Input, nicht der Rahmen. --}}
         <div class="flex flex-col gap-4" x-data="{ fbOpen: @js($fbPanelAuf), skOpen: false, spOpen: false, offOpen: @js($offerPanelAuf), fmtOpen: false }">
-            <x-fa::page-header title="Planung" subtitle="Basisrezepte, Gerichte und Concepts mit KI entwerfen, ganze Foodbooks, Karten und Angebote aus einem Brief planen.">
+            <x-fa::page-header title="Planung" subtitle="Basisrezepte, Gerichte und Konzepte mit KI entwerfen, ganze Foodbooks, Karten und Angebote aus einem Brief planen.">
                 <x-slot:actions>
                     {{-- Ein „Neu erstellen"-Knopf (Dominique 2026-08-23) statt vieler Knöpfe: Menü in drei Gruppen. --}}
                     <x-fa::menu breite="72" menue:data-frei-menu="">
@@ -204,7 +204,7 @@
                         <p class="{{ $menueGruppe }}">Einzeln mit KI erstellen</p>
                         <x-fa::menu-item icon="heroicon-o-beaker" abstand="weit" wire:click="schnellErstellen('rezept')" data-frei-rezept>Basisrezept</x-fa::menu-item>
                         <x-fa::menu-item icon="heroicon-o-cake" abstand="weit" wire:click="schnellErstellen('gericht')" data-frei-gericht>Gericht</x-fa::menu-item>
-                        <x-fa::menu-item icon="heroicon-o-squares-2x2" abstand="weit" wire:click="schnellErstellen('concept')" data-frei-concept>Concept</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-squares-2x2" abstand="weit" wire:click="schnellErstellen('concept')" data-frei-concept>Konzept</x-fa::menu-item>
                         <div class="my-1 border-t border-[var(--fa-line)]" role="separator"></div>
                         <p class="{{ $menueGruppe }}">Übernehmen und kombinieren</p>
                         <x-fa::menu-item icon="heroicon-o-document-arrow-down" abstand="weit" wire:click="schnellImport" data-frei-import>Rezept importieren</x-fa::menu-item>
@@ -297,11 +297,11 @@
 
             {{-- #5 (2026-08-28): Angebot aus Brief (gleiche Bauart wie Speisekarte) --}}
             <x-fa::section x-show="offOpen" x-cloak icon="heroicon-o-document-text" title="Angebot aus einem Brief planen"
-                description="Je Position entsteht ein Concept, das automatisch im Angebot landet. Preise folgen im Angebots-Editor." data-angebot-brief-panel>
+                description="Je Position entsteht ein Konzept, das automatisch im Angebot landet. Preise folgen im Angebots-Editor." data-angebot-brief-panel>
                 <x-slot:actions><x-fa::icon-button icon="heroicon-m-x-mark" label="Schließen" size="sm" x-on:click="offOpen = false" /></x-slot:actions>
                 <div class="flex flex-col gap-3 max-w-3xl">
                     @if($offerOwnerId)
-                        <x-fa::notice tone="info" data-offer-owner-hinweis>Planung für ein bestehendes Angebot. Brief eingeben, die Concepts entstehen hier und landen dort.</x-fa::notice>
+                        <x-fa::notice tone="info" data-offer-owner-hinweis>Planung für ein bestehendes Angebot. Brief eingeben, die Konzepte entstehen hier und landen dort.</x-fa::notice>
                     @else
                         <x-fa::field label="Name des Angebots" optional>
                             <x-fa::input wire:model="offerTitel" placeholder="zum Beispiel Sommerfest Firma Adler" data-landing-offer-titel />
@@ -323,11 +323,11 @@
 
             {{-- Format aus Brief (gleiche Bauart wie Angebot): gebrandetes Foodkonzept. --}}
             <x-fa::section x-show="fmtOpen" x-cloak icon="heroicon-o-swatch" title="Format aus einem Brief planen"
-                description="Marken-Identität und je Position ein Concept entstehen hier und landen automatisch im Format." data-format-brief-panel>
+                description="Marken-Identität und je Position ein Konzept entstehen hier und landen automatisch im Format." data-format-brief-panel>
                 <x-slot:actions><x-fa::icon-button icon="heroicon-m-x-mark" label="Schließen" size="sm" x-on:click="fmtOpen = false" /></x-slot:actions>
                 <div class="flex flex-col gap-3 max-w-3xl">
                     @if($fmtOwnerId)
-                        <x-fa::notice tone="info" data-fmt-owner-hinweis>Planung für ein bestehendes Format. Brief eingeben, die Concepts entstehen hier und landen dort.</x-fa::notice>
+                        <x-fa::notice tone="info" data-fmt-owner-hinweis>Planung für ein bestehendes Format. Brief eingeben, die Konzepte entstehen hier und landen dort.</x-fa::notice>
                     @else
                         <x-fa::field label="Name des Formats" optional>
                             <x-fa::input wire:model="fmtTitel" placeholder="zum Beispiel Streetfood Markt" data-landing-fmt-titel />
@@ -689,7 +689,7 @@
                                 </x-slot:actions>
                             @endif
                             <div class="flex flex-col gap-3">
-                                <p class="{{ $hinweisText }}">Je Position ein Concept, die Concepts landen automatisch im Angebot.</p>
+                                <p class="{{ $hinweisText }}">Je Position ein Konzept, die Konzepte landen automatisch im Angebot.</p>
                                 @unless($offerOwnerId)
                                     <x-fa::field label="Name des Angebots" optional>
                                         <x-fa::input wire:model="offerTitel" placeholder="zum Beispiel Sommerfest Firma Adler" data-tab-offer-titel />
@@ -721,7 +721,7 @@
                             <x-slot:actions>
                                 <x-fa::badge :tone="$fmtOwnerId ? 'accent' : 'neutral'">{{ $fmtOwnerId ? 'Bestehendes Format' : 'Neu aus Brief' }}</x-fa::badge>
                             </x-slot:actions>
-                            <x-fa::field label="Bestehendes Format" hint="Gewählt: die Concepts entstehen für dieses Format. Leer: ein neues, gebrandetes Format mit Name, Claim und Geschichte aus dem Brief.">
+                            <x-fa::field label="Bestehendes Format" hint="Gewählt: die Konzepte entstehen für dieses Format. Leer: ein neues, gebrandetes Format mit Name, Claim und Geschichte aus dem Brief.">
                                 <x-fa::select wire:model.live="fmtOwnerId" data-tab-fmt-auswahl>
                                     <option value="">Neues Format aus Brief</option>
                                     @foreach($fmtAuswahl as $fo)<option value="{{ $fo->id }}">{{ $fo->name }}</option>@endforeach
@@ -737,7 +737,7 @@
                                 </x-slot:actions>
                             @endif
                             <div class="flex flex-col gap-3">
-                                <p class="{{ $hinweisText }}">Marken-Identität und eigenständige Concepts je Position entstehen hier und landen automatisch im Format.</p>
+                                <p class="{{ $hinweisText }}">Marken-Identität und eigenständige Konzepte je Position entstehen hier und landen automatisch im Format.</p>
                                 @unless($fmtOwnerId)
                                     <x-fa::field label="Name des Formats" optional>
                                         <x-fa::input wire:model="fmtTitel" placeholder="zum Beispiel Streetfood Markt" data-tab-fmt-titel />
@@ -797,7 +797,7 @@
                  Genau EINE Hauptaktion: ohne Plan ist „Plan ausarbeiten lassen" primär, mit Plan das Erstellen. --}}
             <div wire:key="planung-tab-concept" x-show="tab==='concept'" class="flex flex-col gap-4 max-w-7xl mx-auto">
                 @php $conceptTitel = trim((string) ($eingabe['concept']['titel'] ?? '')); @endphp
-                <x-fa::modal-section icon="heroicon-o-pencil-square" title="Was für ein Concept soll entstehen?">
+                <x-fa::modal-section icon="heroicon-o-pencil-square" title="Was für ein Konzept soll entstehen?">
                     @if($conceptTitel !== '')
                         <x-slot:actions>
                             <x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit($conceptTitel, 32) }}</x-fa::badge>
@@ -867,7 +867,7 @@
                 <x-fa::card class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-[var(--fa-line-strong)] px-4 py-3 shadow-lg shadow-black/20" data-planung-erstellen-leiste="">
                     <div class="flex-1 min-w-[16rem] flex flex-col gap-1">
                         <p class="flex flex-wrap items-center gap-2 fa-t-h3">
-                            @svg('heroicon-o-squares-2x2', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Concept erstellen
+                            @svg('heroicon-o-squares-2x2', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Konzept erstellen
                             @if($conceptTitel !== '')<x-fa::badge tone="accent">{{ \Illuminate\Support\Str::limit($conceptTitel, 32) }}</x-fa::badge>@endif
                         </p>
                         @if($planConceptId)
@@ -887,7 +887,7 @@
                     <div class="flex flex-wrap items-center gap-2">
                         @if($planConceptId)
                             <x-fa::ki-action action="goKaskade('concept')" variant="primary" icon="heroicon-o-squares-2x2"
-                                label="Concept aus Plan erstellen" busy="Wird gestartet …" flash="Gestartet"
+                                label="Konzept aus Plan erstellen" busy="Wird gestartet …" flash="Gestartet"
                                 :disabled="$laeuft" before="tab='worker'" />
                         @else
                             <x-fa::ki-action action="goKaskade('concept')" variant="ghost" icon="heroicon-o-squares-2x2"
@@ -940,7 +940,7 @@
                     @include('foodalchemist::livewire.planung.partials.fortschritt')
                 @else
                     <x-fa::modal-section icon="heroicon-o-queue-list" title="Fortschritt">
-                        <x-fa::empty icon="heroicon-o-queue-list" title="Noch nichts gestartet">Starte in „Basisrezept", „Gericht" oder „Concept" eine Erstellung. Der Fortschritt erscheint dann hier.</x-fa::empty>
+                        <x-fa::empty icon="heroicon-o-queue-list" title="Noch nichts gestartet">Starte in „Basisrezept", „Gericht" oder „Konzept" eine Erstellung. Der Fortschritt erscheint dann hier.</x-fa::empty>
                     </x-fa::modal-section>
                 @endif
             </div>
@@ -965,7 +965,7 @@
                                 <x-fa::badge :tone="$trGewaehlt > 0 ? 'accent' : 'neutral'">{{ $trGewaehlt }} von {{ \Platform\FoodAlchemist\Services\PlanningSessionService::TRENDRADAR_MAX }}</x-fa::badge>
                             </x-slot:actions>
                             <div class="flex flex-col gap-3">
-                                <p class="{{ $hinweisText }} max-w-2xl">Einen oder mehrere Impulse wählen, zum Beispiel einen Trend mit einem Hype und zwei Fundstücken. Daraus entsteht ein Briefing für Basisrezept, Gericht oder Concept.</p>
+                                <p class="{{ $hinweisText }} max-w-2xl">Einen oder mehrere Impulse wählen, zum Beispiel einen Trend mit einem Hype und zwei Fundstücken. Daraus entsteht ein Briefing für Basisrezept, Gericht oder Konzept.</p>
                                 <x-fa::input type="search" wire:model.live.debounce.300ms="trendSuche" placeholder="Trends und Fundstücke durchsuchen" aria-label="Trendradar durchsuchen" />
                                 <p class="fa-t-label">Trends und Hypes</p>
                                 <div class="flex flex-col max-h-[40vh] overflow-y-auto -mx-1 px-1" data-trend-kandidaten>
@@ -1012,7 +1012,7 @@
                                     <p class="{{ $hinweisText }}">Übernehmen schreibt das Briefing in den gewählten Reiter. Dort Leitplanken setzen und wie gewohnt starten.</p>
                                     <div class="flex flex-wrap gap-2">
                                         <x-fa::button variant="primary" icon="heroicon-m-arrow-right" wire:click="trendradarUebernehmen('gericht')" data-trend-uebernehmen="gericht">Als Gericht</x-fa::button>
-                                        <x-fa::button variant="secondary" icon="heroicon-m-arrow-right" wire:click="trendradarUebernehmen('concept')" data-trend-uebernehmen="concept">Als Concept</x-fa::button>
+                                        <x-fa::button variant="secondary" icon="heroicon-m-arrow-right" wire:click="trendradarUebernehmen('concept')" data-trend-uebernehmen="concept">Als Konzept</x-fa::button>
                                         <x-fa::button variant="secondary" icon="heroicon-m-arrow-right" wire:click="trendradarUebernehmen('rezept')" data-trend-uebernehmen="rezept">Als Basisrezept</x-fa::button>
                                     </div>
                                 @else

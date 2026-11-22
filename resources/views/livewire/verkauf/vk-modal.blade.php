@@ -395,7 +395,7 @@
                         <x-fa::input id="vk-name" wire:model="form.name" data-vk-name />
                     </x-fa::field>
                     <x-fa::field label="Verkaufstext" for="vk-wording" class="sm:col-span-2"
-                        hint="Neutraler Standard für Concepter und Foodbook. Vorrang haben Foodbook und Konzept, danach dieser Text, zuletzt der interne Name.">
+                        hint="Neutraler Standard für Konzepter und Foodbook. Vorrang haben Foodbook und Konzept, danach dieser Text, zuletzt der interne Name.">
                         <x-fa::input id="vk-wording" wire:model="form.sales_wording_standard" data-vk-wording />
                     </x-fa::field>
                     <x-fa::field label="Beschreibung" for="vk-beschreibung" class="sm:col-span-2" hint="Drei bis fünf sachliche Sätze.">

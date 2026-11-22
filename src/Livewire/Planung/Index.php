@@ -535,7 +535,7 @@ class Index extends Component
         // Platzhalter (PlanningSessionService::PLATZHALTER_TITEL) — wird beim ersten Ergebnis durch dessen Namen ersetzt.
         $titel = match ($scope) {
             'gericht' => 'Freies Gericht',
-            'concept' => 'Freies Concept',
+            'concept' => 'Freies Konzept',
             default => 'Freies Basisrezept',
         };
         $session = $svc->create($team, ['title' => $titel, 'created_via' => 'cockpit_frei']);
@@ -1447,7 +1447,7 @@ class Index extends Component
         if ($vorschlag === null) {
             // concept (kein nüchterner Titel) ODER KI weg/leeres Ergebnis — fail-soft, kein Titel gefüllt.
             $this->fehler = $scope === 'concept'
-                ? 'Für Concepts liefert der KI-Kopf den Namen — der Titelvorschlag gilt nur für Basisrezept/Gericht.'
+                ? 'Für Konzepte liefert der KI-Kopf den Namen — der Titelvorschlag gilt nur für Basisrezept/Gericht.'
                 : 'Kein Titelvorschlag möglich — bitte das Briefing schärfen oder manuell benennen.';
 
             return;
@@ -1814,7 +1814,7 @@ class Index extends Component
         }
         $brief = $this->effektiverBrief('concept');
         if ($brief === '') {
-            $this->fehler = 'Für den KI-Kopf erst ein Concept-Briefing eingeben.';
+            $this->fehler = 'Für den KI-Kopf erst ein Konzept-Briefing eingeben.';
 
             return;
         }

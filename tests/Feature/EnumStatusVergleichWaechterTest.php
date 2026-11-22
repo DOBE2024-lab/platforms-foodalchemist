@@ -10,7 +10,7 @@
  */
 const ENUM_STATUS_GEPRUEFT = [
     // Planung (PlanningRun/-Step: String-Spalten, kein Cast)
-    'src/Livewire/Planung/Index.php', 'src/Livewire/Concerns/FortschrittAnsicht.php', 'src/Support/Planung/KaskadenAnsicht.php',
+    'src/Livewire/Planung/Index.php', 'src/Livewire/Planung/LaufStatus.php', 'src/Livewire/Concerns/FortschrittAnsicht.php', 'src/Support/Planung/KaskadenAnsicht.php',
     'src/Services/PlanningCascadeService.php', 'src/Services/RecipeDependencyWorkflowService.php', 'src/Services/PlanningSessionService.php',
     'resources/views/livewire/planung/partials/step-zeile.blade.php', 'resources/views/livewire/planung/partials/fortschritt.blade.php',
     'resources/views/livewire/planung/index.blade.php',

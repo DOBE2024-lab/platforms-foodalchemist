@@ -1,6 +1,6 @@
 {{-- Board-Kopf (persistent, live): Zustand der Hintergrund-Erstellung + Status-Zähler + je laufendem
      Lauf ein Fortschrittsbalken. Erwartet $workerState, $workerAlter, $kaskaden, $sessions + Helfer-Closures.
-     Live-Poll sitzt am Board-Container (gated auf $irgendeinLaeuft). Nur Tokens, damit hell und dunkel stimmen. --}}
+     Live-Poll: LaufStatus am Board (gated auf $irgendeinLaeuft), neu gerendert nur bei geändertem Stand (2.1d). Nur Tokens, damit hell und dunkel stimmen. --}}
 @php
     // Status-Zähler über die (bereits links gefilterte) Session-Menge.
     $zaehler = collect($sessions)->countBy(fn ($s) => $kaskaden[(int) $s->id]['status'] ?? 'entwurf');
@@ -27,7 +27,10 @@
         {{-- Zustand der Hintergrund-Erstellung --}}
         <x-fa::badge :tone="$ampelTon" data-planung-worker-ampel="{{ $workerState }}">
             <span class="w-2 h-2 rounded-full shrink-0 {{ $punkt }} {{ $workerState === 'gesund' ? 'animate-pulse' : '' }}" aria-hidden="true"></span>
-            {{ $ampelLabel }}@if($alterText)<span class="font-normal opacity-80">, {{ $alterText }}</span>@endif
+            {{-- 2.1d: das Alter zählt Alpine auf dem Client hoch (der Server rendert nur bei geändertem Stand). --}}
+            {{ $ampelLabel }}@if($alterText)<span class="font-normal opacity-80" wire:key="worker-alter-{{ (int) $workerAlter }}" data-planung-worker-alter
+                x-data="{ s: {{ (int) $workerAlter }}, t: null, init() { this.t = setInterval(() => this.s++, 1000) }, destroy() { clearInterval(this.t) } }"
+                x-text="', vor ' + (s < 90 ? s + ' s' : Math.round(s / 60) + ' min')">, {{ $alterText }}</span>@endif
         </x-fa::badge>
 
         {{-- Status-Zähler: gleiche Farben wie die Punkte der Board-Spalten --}}

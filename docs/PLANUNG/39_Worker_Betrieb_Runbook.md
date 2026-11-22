@@ -2,7 +2,7 @@
 
 > **Stand:** 2026-08-16 · **Auftrag:** Roadmap [38 »Planung-Leitstelle«](38_Roadmap_Planung_Leitstelle.md), Etappe 8 (Robustheit) »Worker-Präsenz« — Teil 3 (Doku).
 > **Kern in einem Satz:** Die Planung-Leitstelle rechnet **nichts** im Web-Request — sie dispatcht ausnahmslos Queue-Jobs (LLM raus aus dem Request). **Ohne einen laufenden `queue:work`-Prozess produziert die Leitstelle nichts**; der Nutzer sieht nur einen Spinner.
-> **Quellen (Code):** `src/Services/WorkerHealthService.php` (Heartbeat + Ampel), `src/FoodAlchemistServiceProvider.php:222-234` (Event-Listener), `src/Livewire/Planung/Index.php` (`render()` → Ampel im Cockpit, `pruefeLauf` → reaktiver Per-Lauf-Watchdog).
+> **Quellen (Code):** `src/Services/WorkerHealthService.php` (Heartbeat + Ampel), `src/FoodAlchemistServiceProvider.php:222-234` (Event-Listener), `src/Livewire/Planung/Index.php` (`render()` → Ampel im Cockpit, `pruefeLauf` → reaktiver Per-Lauf-Watchdog), `src/Livewire/Planung/LaufStatus.php` (schlanker Poll seit Code-Qualität 2.1d: meldet nur Änderungen, auch das Überschreiten der Watchdog-Schwelle).
 
 ---
 

@@ -19,12 +19,12 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
 use Platform\FoodAlchemist\Support\Planung\PlanungOptionen;
 use Platform\FoodAlchemist\Support\Planung\KaskadenAnsicht;
 use Platform\FoodAlchemist\Support\Planung\LaufCockpit;
+use Platform\FoodAlchemist\Support\Planung\PlanungReiterDaten;
 use Platform\FoodAlchemist\Support\Planung\ReglerParams;
 use Platform\FoodAlchemist\Services\CanvasService;
 use Platform\FoodAlchemist\Services\BriefingLeitplankenService;
 use Platform\FoodAlchemist\Services\ConceptGeneratorService;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\PairingService;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
 use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
@@ -392,8 +392,14 @@ class Index extends Component
      */
     public ?string $deckelHinweis = null;
 
-    /** Aktiver Kaskaden-Lauf (in-place „Go") — Ziel des wire:poll. */
+    /** Aktiver Kaskaden-Lauf (in-place „Go") — beobachtet von {@see LaufStatus}. */
     public ?int $laufId = null;
+
+    /** 2.1d: aktiver Editor-Reiter (Alpine `tab`, per $watch gemeldet) — nur seine Daten werden geladen. */
+    public string $editorTab = 'gericht';
+
+    /** 2.1d: in dieser Anfrage schon geladener Lauf (pruefeLauf → render lädt ihn nicht erneut). */
+    private ?FoodAlchemistCascadeRun $laufGeladen = null;
 
     /** true, solange der Lauf im Hintergrund rechnet (steuert das Polling). */
     public bool $laeuft = false;
@@ -461,7 +467,7 @@ class Index extends Component
                     $this->eingabe[$scope]['brief'] = $brief;
                 }
             }
-            $this->dispatch('modal.open', name: 'planung-editor', tab: $tab);
+            $this->oeffneEditor($tab);
         }
         // Spec 42 F2 — Handoff aus dem Foodbook: Leitstelle im Owner-Kontext öffnen, „Foodbook aus
         // Brief"-Panel für DIESES bestehende Foodbook vorgeklappt (kein neues Foodbook anlegen).
@@ -595,7 +601,7 @@ class Index extends Component
         $this->eingabe[$scope]['brief'] = PlanningSessionService::briefFuerScope((string) $session->brief, $scope);
         $this->eingabe[$scope]['titel'] = (string) $session->title;
         $this->seedBriefingAusTrendSession($session);
-        $this->dispatch('modal.open', name: 'planung-editor', tab: $scope === 'rezept' ? 'basisrezept' : $scope);
+        $this->oeffneEditor($scope === 'rezept' ? 'basisrezept' : $scope);
     }
 
     /** Board-Einstieg: leere Session anlegen + Editor direkt auf dem Composer-Tab öffnen (Foodpairing). */
@@ -999,8 +1005,14 @@ class Index extends Component
         // Scope-Treue: ein „Freies Basisrezept"-Start öffnet direkt auf dem Basisrezept-Tab (Ebene ≠ Gericht).
         // Ohne $startTab: hat die Planung schon einen Lauf (Ergebnisse/Fortschritt), öffnet sie auf „Fortschritt"
         // (Dominique 2026-10-05) — sonst auf dem Editor-Default (tabInit='gericht').
-        $startTab ??= $this->laufId !== null ? 'worker' : null;
-        $this->dispatch('modal.open', name: 'planung-editor', tab: $startTab);
+        $this->oeffneEditor($startTab ?? ($this->laufId !== null ? 'worker' : null));
+    }
+
+    /** Editor öffnen; der Start-Reiter ist zugleich der aktive Reiter für die Daten (2.1d). null = Modal-Default „gericht". */
+    private function oeffneEditor(?string $tab): void
+    {
+        $this->editorTab = $tab ?? 'gericht';
+        $this->dispatch('modal.open', name: 'planung-editor', tab: $tab);
     }
 
     public function waehle(int $id): void
@@ -2122,7 +2134,14 @@ class Index extends Component
         }
     }
 
-    /** Poll-Ziel (wire:poll während $laeuft): Lauf-Status aus der DB lesen. */
+    /** 2.1d: {@see LaufStatus} meldet einen geänderten Stand → Lauf-Status übernehmen, danach rendert die Planung. */
+    #[On('planung.lauf-geaendert')]
+    public function laufGeaendert(PlanningCascadeService $cascade): void
+    {
+        $this->pruefeLauf($cascade);
+    }
+
+    /** Lauf-Status aus der DB lesen (über {@see laufGeaendert}, sobald sich der Stand ändert). */
     public function pruefeLauf(PlanningCascadeService $cascade): void
     {
         $team = $this->team();
@@ -2131,7 +2150,7 @@ class Index extends Component
 
             return;
         }
-        $lauf = $cascade->lauf($team, $this->laufId);
+        $lauf = $this->laufGeladen = $cascade->lauf($team, $this->laufId);
         // Spec 53 / Paket C: eine Phase (Konformitätsprüfung/Anreicherung/Bilder) kann auch nach dem
         // Ende des Laufs noch offen sein — dann darf pruefeLauf nicht früh abbrechen, sonst würde das
         // Poll-Ziel selbst suggerieren, es sei fertig, während render()s $pollAktiv weiter pollt.
@@ -2982,8 +3001,9 @@ class Index extends Component
         $active = $this->aktiveSession();
         // Aktiver Kaskaden-Lauf (in-place „Go") inkl. Steps — für Fortschritt + Ergebnis-Liste.
         $lauf = ($team !== null && $this->laufId !== null)
-            ? app(PlanningCascadeService::class)->lauf($team, $this->laufId)
+            ? ($this->laufGeladen?->id === $this->laufId ? $this->laufGeladen : app(PlanningCascadeService::class)->lauf($team, $this->laufId))
             : null;
+        $this->laufGeladen = null;
 
         // Anreicherung läuft async NACH der Freigabe → Polling am Leben halten, bis das Ergebnis
         // wirklich angereichert (oder der Fehler sichtbar) ist. Bei einem flachen Gericht ist der Run
@@ -3006,28 +3026,10 @@ class Index extends Component
             'konformitaet' => $konformitaet, 'gpKonformitaet' => $gpKonformitaet] = app(LaufCockpit::class)->fuer($team, $lauf);
 
 
-        // Composer-Tab: Ad-hoc-Netz + „Passt das zusammen?" (Kombinationslogik) + browsebarer Picker.
-        $composerNetz = ['nodes' => [], 'edges' => [], 'meta' => []];
-        $composerKombination = null;
-        $composerBrowse = ['items' => [], 'total' => 0, 'kategorien' => []];
-        if ($team !== null) {
-            $pairing = app(PairingService::class);
-            $composerIds = array_map('intval', array_column($this->composerAnker, 'id'));
-            if ($composerIds !== []) {
-                // Netz: ★★★-Partner, Kontrast-Lieferanten für offene Bedarfe, Konflikt-Linien.
-                $composerNetz = $pairing->pairingNetzForAnkers($team, $composerIds);
-            }
-            if (count($composerIds) >= 2) {
-                // Spec 60: dieselbe Aussage wie im Gericht-Panel und im MCP (composer.KOHAESION).
-                $composerKombination = app(\Platform\FoodAlchemist\Services\Pairing\Kombinationslogik::class)
-                    ->datenAusAnkern($composerIds, null, null, (int) $team->id, $this->composerModus);
-            }
-            // Fokus (falls gesetzt) → Picker-Badge/Sortierung relativ zum fokussierten Anker.
-            $composerBrowse = $pairing->composerAnkerBrowse(
-                $team, (string) $this->composerTerm, $this->composerCategory !== '' ? $this->composerCategory : null,
-                $composerIds, 200, $this->composerFocus
-            );
-        }
+        // 2.1d: Composer, Trendradar und Auswahllisten nur für den aktiven Reiter ({@see PlanungReiterDaten}).
+        $reiter = app(PlanungReiterDaten::class);
+        $composerDaten = $reiter->composer($team, $this->editorTab === 'composer', array_map('intval', array_column($this->composerAnker, 'id')),
+            (string) $this->composerTerm, $this->composerCategory, $this->composerFocus, $this->composerModus);
 
         // Fokus-Label (und Fokus verwerfen, wenn der Anker nicht mehr in der Auswahl ist).
         $composerFokusLabel = null;
@@ -3085,6 +3087,7 @@ class Index extends Component
             : 'Die Hintergrund-Erstellung läuft gerade nicht. Neue Aufträge warten in der Warteschlange, bis sie wieder anläuft.';
         // Board-Poll-Gate: nur pollen, wenn irgendein Lauf tatsächlich läuft (kein Dauer-Poll im Ruhezustand).
         $irgendeinLaeuft = collect($kaskaden)->contains(fn ($k) => (bool) ($k['running'] ?? false));
+        $laufendeIds = collect($kaskaden)->filter(fn ($k) => (bool) ($k['running'] ?? false))->pluck('run_id')->filter()->values()->all();
 
         // Spec 53 / Paket C: globaler KI-Status (Board-Kopf + über der Editor-Tab-Leiste) — EIN Aggregat
         // über alle Steps des Teams, unabhängig davon, ob gerade ein Lauf im Cockpit offen ist.
@@ -3095,26 +3098,6 @@ class Index extends Component
         $ownerKontext = ($team !== null && $active !== null)
             ? app(PlanningCascadeService::class)->ownerKontext($team, (int) $active->id)
             : null;
-
-        // Stage 2: Auswahl-Listen bestehender Ausgabe-Objekte je Tab (Foodbook · Speisekarte · Speiseplan).
-        $fbAuswahl = $team !== null
-            ? \Platform\FoodAlchemist\Models\FoodAlchemistFoodbook::visibleToTeam($team)
-                ->orderByDesc('id')->get(['id', 'label'])
-            : collect();
-        $skAuswahl = $team !== null
-            ? \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte::visibleToTeam($team)
-                ->orderByDesc('id')->get(['id', 'name'])
-            : collect();
-        $spAuswahl = $team !== null
-            ? \Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan::visibleToTeam($team)
-                ->orderByDesc('id')->get(['id', 'name'])
-            : collect();
-        $offerAuswahl = $team !== null
-            ? FoodAlchemistAngebot::visibleToTeam($team)->orderByDesc('id')->get(['id', 'name'])
-            : collect();
-        $fmtAuswahl = $team !== null
-            ? FoodAlchemistFormat::visibleToTeam($team)->orderByDesc('id')->get(['id', 'name'])
-            : collect();
 
         // Spec 55 Nachtrag (Agent-am-Brief): der Formularstand geht bei JEDEM Render an alle
         // gemounteten Agenten-Panels (Browser-Event, kein `#[Reactive]`-Prop — Livewire kennt
@@ -3130,40 +3113,16 @@ class Index extends Component
             );
         }
 
-        // Spec 79 · Kandidaten für den Trendradar-Reiter (nur wenn eine Session offen ist)
-        $trendKandidaten = collect();
-        $fundKandidaten = collect();
-        $trendVorschau = null;
-        if ($team !== null && $this->sessionId !== null) {
-            $tsvc = app(\Platform\FoodAlchemist\Services\TrendService::class);
-            $trendKandidaten = $tsvc->liste($team, ['suche' => $this->trendSuche, 'status' => ['auf_radar', 'in_umsetzung', 'geprueft', 'gesichtet']])
-                ->sortBy(fn ($t) => [in_array($t->status, ['auf_radar', 'in_umsetzung'], true) ? 0 : 1, $t->name])->values();
-            $fundKandidaten = $tsvc->inspirationen($team, 'alle', $this->trendSuche)->take(60)
-                ->map(fn ($i) => ['i' => $i, 'url' => ($bild = $tsvc->titelbild($i)) ? $tsvc->dateiUrl($bild) : null]);
-            $gewaehlt = count($this->trendWahl['trends'] ?? []) + count($this->trendWahl['inspirationen'] ?? []);
-            if ($gewaehlt > 0) {
-                try {
-                    $trendVorschau = app(PlanningSessionService::class)->trendKombination($team,
-                        array_map('intval', $this->trendWahl['trends'] ?? []), array_map('intval', $this->trendWahl['inspirationen'] ?? []))['brief'];
-                } catch (\RuntimeException $e) {
-                    $trendVorschau = null;
-                    $this->trendMeldung = $e->getMessage();
-                }
-            }
-        }
+        // Spec 79 · Kandidaten für den Trendradar-Reiter (nur bei offener Session und aktivem Reiter)
+        $trendDaten = $reiter->trend($team, $this->sessionId !== null && $this->editorTab === 'trendradar', $this->trendSuche, $this->trendWahl);
+        $this->trendMeldung = $trendDaten['trendMeldung'] ?? $this->trendMeldung;
+        unset($trendDaten['trendMeldung']);
 
         return view('foodalchemist::livewire.planung.index', [
-            'trendKandidaten' => $trendKandidaten,
-            'fundKandidaten' => $fundKandidaten,
-            'trendVorschau' => $trendVorschau,
+            ...$trendDaten, ...$composerDaten, ...$reiter->auswahl($team, $this->editorTab),
             // Spec 55: Agenten-Panel — sichtbar, wenn das Team es nicht abgeschaltet hat
             // (Default AN). Eigener Schlüssel, siehe TeamSettingsService::voiceAgentPanelPlanung().
             'agentPanelSichtbar' => $team !== null && app(TeamSettingsService::class)->voiceAgentPanelPlanung($team),
-            'fbAuswahl' => $fbAuswahl,
-            'skAuswahl' => $skAuswahl,
-            'spAuswahl' => $spAuswahl,
-            'offerAuswahl' => $offerAuswahl,
-            'fmtAuswahl' => $fmtAuswahl,
             'sessions' => $sessions,
             'baum' => $baum,
             'kaskaden' => $kaskaden,
@@ -3173,7 +3132,7 @@ class Index extends Component
             'workerWarnung' => $workerWarnung,
             'kiStatus' => $kiStatus,
             'irgendeinLaeuft' => $irgendeinLaeuft,
-            'pollAktiv' => $pollAktiv,
+            'pollAktiv' => $pollAktiv, 'laufendeIds' => $laufendeIds,
             'active' => $active,
             'lauf' => $lauf, 'kiWartend' => $lauf !== null ? app(PlanningCascadeService::class)->kiWartend($lauf->steps) : [],   // Step-ID → offene KI-Aufträge (Lauf 62)
             'kalkulation' => $kalkulation,
@@ -3184,9 +3143,6 @@ class Index extends Component
             'gpKonformitaet' => $gpKonformitaet,
             'fotoPickerStep' => $this->fotoPickerStep,
             'fotoPickerKandidaten' => $fotoPickerKandidaten,
-            'composerNetz' => $composerNetz,
-            'composerKombination' => $composerKombination,
-            'composerBrowse' => $composerBrowse,
             'composerFocus' => $this->composerFocus,
             'composerFokusLabel' => $composerFokusLabel,
         ])->layout(\Platform\FoodAlchemist\Support\FaShell::layout());

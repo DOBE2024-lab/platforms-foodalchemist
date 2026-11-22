@@ -355,7 +355,11 @@
              etwas läuft (kein Dauer-Poll).
              Laptop: jede Spalte hat eine Mindestbreite; reicht die Breite nicht für fünf, scrollt das Board
              waagerecht, statt die Karten unlesbar schmal zu drücken. --}}
-        <div class="flex flex-col gap-3" data-planung-board {{ $irgendeinLaeuft ? 'wire:poll.3s' : '' }}>
+        <div class="flex flex-col gap-3" data-planung-board>
+            {{-- 2.1d: der Board-Poll liest nur noch den Stand der laufenden Läufe (LaufStatus); neu gezeichnet wird bei Änderung. --}}
+            @if($irgendeinLaeuft)
+                <livewire:foodalchemist.planung.lauf-status :lauf-ids="$laufendeIds" :neue-beobachten="true" takt="3s" :key="'planung-board-status-'.implode('-', $laufendeIds)" />
+            @endif
             @include('foodalchemist::livewire.planung.partials.board-worker-kopf')
 
             @php
@@ -467,6 +471,9 @@
             </div>
             @endif
         </x-slot:tabs>
+
+        {{-- 2.1d: aktiven Reiter melden — die Planung lädt Composer, Trendradar und Auswahllisten nur für ihn. --}}
+        <div hidden x-init="$watch('tab', t => { if ($wire.editorTab !== t) $wire.set('editorTab', t) })"></div>
 
         @if($active)
             @if(($ownerKontext ?? null))
@@ -899,7 +906,9 @@
                      (Lauf-Status + Step-Phasen), kein gespeichertes Flag. --}}
                 @if($pollAktiv)
                     @php $kiOffenGesamt = collect($kiWartend ?? [])->sum('anzahl'); @endphp
-                    <div wire:poll.1500ms="pruefeLauf" class="flex items-center gap-2 rounded-[var(--fa-radius-surface)] bg-[var(--fa-info-soft)] px-3.5 py-2.5 text-[length:var(--fa-text-md)] text-[var(--fa-info)]">
+                    {{-- 2.1d: Poll in der schlanken LaufStatus-Komponente; die Fläche rendert nur bei geändertem Stand. --}}
+                    <livewire:foodalchemist.planung.lauf-status :lauf-ids="$laufId !== null ? [$laufId] : []" :key="'planung-lauf-status-'.($laufId ?? 0)" />
+                    <div class="flex items-center gap-2 rounded-[var(--fa-radius-surface)] bg-[var(--fa-info-soft)] px-3.5 py-2.5 text-[length:var(--fa-text-md)] text-[var(--fa-info)]">
                         @svg($kiOffenGesamt > 0 ? 'heroicon-o-clock' : 'heroicon-o-arrow-path', 'w-4 h-4 shrink-0 ' . ($kiOffenGesamt > 0 ? '' : 'animate-spin'))
                         <span @if($kiOffenGesamt > 0) data-planung-wartet-ki @endif>
                             @if($kiOffenGesamt > 0)

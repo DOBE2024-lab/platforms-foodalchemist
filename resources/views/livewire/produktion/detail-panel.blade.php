@@ -15,7 +15,7 @@
 
 <x-fa::page data-produktion-panel="">
     @if($detail === null)
-        <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Auftrag gewählt">Produktionsauftrag in der Tabelle anklicken, dann erscheinen hier Mengen, Status, Rezepte und Materialbedarf.</x-fa::empty>
+        <x-fa::empty icon="heroicon-o-cursor-arrow-rays" title="Kein Auftrag gewählt">Zeile in der Tabelle anklicken, dann erscheinen hier Mengen, Status, Rezepte und Materialbedarf. Ein Klick auf den Namen öffnet den Editor.</x-fa::empty>
     @else
         @php
             $zieleCount = count($detail['targets']);

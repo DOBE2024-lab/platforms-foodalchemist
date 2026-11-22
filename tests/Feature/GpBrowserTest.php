@@ -169,7 +169,7 @@ it('DetailPanel: zeigt Stammdaten nach gp-selected und respektiert D1-Sichtbarke
     $this->actingAs($this->makeUser($this->rootTeam, 'Root User'));
 
     Livewire::test(DetailPanel::class)
-        ->assertSee('Grundprodukt in der Tabelle anklicken', escape: false)
+        ->assertSee('Zeile in der Tabelle anklicken', escape: false)
         ->dispatch('gp-selected', id: $this->zander->id)
         ->assertSee('Zanderfilet')
         ->assertSee('Gemüse'); // Warengruppen-Name aufgelöst

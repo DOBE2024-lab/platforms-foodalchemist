@@ -15,7 +15,7 @@
 <x-fa::page data-formate-panel="">
     @if($format === null)
         <x-fa::empty icon="heroicon-o-rectangle-group" title="Kein Format gewählt">
-            Links in der Liste ein Format anklicken, dann erscheinen hier Preisspanne, Editionen und Einsatz.
+            Zeile in der Tabelle anklicken, dann erscheinen hier Preisspanne, Editionen und Einsatz. Ein Klick auf den Namen öffnet den Editor.
         </x-fa::empty>
     @else
         @php

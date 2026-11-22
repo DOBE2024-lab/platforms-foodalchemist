@@ -48,6 +48,42 @@ it('alter und neuer Name rendern gleich: handy.nav mit benanntem Slot und handy.
     }
 });
 
+/**
+ * #883-Falle: Der Host food-alchemist.de (vendor/foodalchemist/layouts/standalone, Stand 0f698c7) ruft die Bausteine
+ * weiter mit altem Namen auf. Die Aufrufe hier sind wörtlich von dort übernommen (Host setzt keine Attribute);
+ * nur @livewire('user-menu') im Slot ist durch einen Marker ersetzt. Alt und neu müssen dasselbe HTML liefern,
+ * und der Slot-Inhalt muss in der Konto-Zeile ankommen.
+ */
+it('Host-Aufrufe aus layouts/standalone: handy.kopf, saved-toast und handy.nav mit Slot rendern alt wie neu', function () {
+    $aufrufe = [
+        'handy.kopf' => '<x-NS::handy.kopf />',
+        'saved-toast' => '<x-NS::saved-toast />',
+        'handy.nav' => <<<'BLADE'
+            <x-NS::handy.nav>
+              <x-slot:konto>
+                <div class="rounded-[var(--fa-radius-surface)] bg-[var(--fa-rail)] text-[var(--fa-rail-ink)]" data-fa-theme="dark">
+                  HOST-USER-MENU
+                </div>
+              </x-slot:konto>
+            </x-NS::handy.nav>
+            BLADE,
+    ];
+    foreach ($aufrufe as $name => $markup) {
+        $alt = Blade::render(str_replace('NS', 'foodalchemist', $markup));
+        $neu = Blade::render(str_replace('NS', 'fa', $markup));
+        expect(trim($alt))->not->toBe('', $name)->and($alt)->toBe($neu, $name);
+    }
+
+    $nav = Blade::render(str_replace('NS', 'foodalchemist', $aufrufe['handy.nav']));
+    expect($nav)->toMatch('/data-fa-handy-konto>\s*<div class="rounded-\[var\(--fa-radius-surface\)\] bg-\[var\(--fa-rail\)\] text-\[var\(--fa-rail-ink\)\]" data-fa-theme="dark">\s*HOST-USER-MENU\s*<\/div>/')
+        ->and(Blade::render(str_replace('NS', 'foodalchemist', $aufrufe['saved-toast'])))->toContain('fa-saved');
+});
+
+it('Host-Aufruf shell.text-css bleibt unter x-foodalchemist und rendert', function () {
+    expect(trim(Blade::render('<x-foodalchemist::shell.text-css />')))->not->toBe('')
+        ->and(is_file(__DIR__ . '/../../resources/views/components/shell/text-css.blade.php'))->toBeTrue();
+});
+
 it('alter und neuer Name rendern gleich: modal mit Slots und Sektion', function () {
     $markup = <<<'BLADE'
         <x-NS::modal name="gp-edit" title="GP bearbeiten" :z-fest="true" :close-via="'schliessenOderZurueck'" data-test-modal="">

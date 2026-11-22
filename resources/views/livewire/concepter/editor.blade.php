@@ -1458,11 +1458,11 @@
                             <div class="flex flex-wrap items-center gap-1.5">
                                 @foreach($sektorSlugs as $slug)
                                     <span wire:key="sek-{{ $slug }}" class="inline-flex items-center gap-1 h-7 pl-2.5 pr-1 rounded-full {{ $klein }} font-medium bg-[var(--fa-info-soft)] text-[var(--fa-info)]">
-                                        {{ $slug }}
+                                        {{ \Platform\FoodAlchemist\Support\Sektor::label($slug) ?? $slug }}
                                         <button type="button" wire:click="sektorRaus(@js($slug))" class="inline-flex items-center justify-center w-5 h-5 rounded-full hover:bg-[var(--fa-hover)]" title="Sektor entfernen" aria-label="Sektor {{ $slug }} entfernen">@svg('heroicon-m-x-mark', 'w-3.5 h-3.5')</button>
                                     </span>
                                 @endforeach
-                                <x-fa::input size="sm" wire:model="neuerSektor" wire:keydown.enter.prevent="sektorHinzu" placeholder="Sektor eingeben und Enter, z. B. Kita, Klinik" class="w-72" aria-label="Neuer Sektor" />
+                                <x-fa::select size="sm" wire:model="neuerSektor" wire:change="sektorHinzu" placeholder="Sektor hinzufügen …" :options="array_diff_key(\Platform\FoodAlchemist\Support\Sektor::LABELS, array_flip($sektorSlugs))" class="w-60" aria-label="Neuer Sektor" />
                             </div>
                         </x-fa::section>
                         <x-fa::section title="Texte und Notizen" icon="heroicon-o-document-text">

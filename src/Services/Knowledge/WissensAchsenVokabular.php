@@ -27,15 +27,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
  */
 final class WissensAchsenVokabular
 {
-    /**
-     * Verpflegungskontexte.
-     *
-     * Warum hier und nicht in {@see FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES}:
-     * dort fehlt `sektor` ABSICHTLICH — ein Test pinnt das (`BriefingLeitplankenTest`), weil
-     * im Code zwei Wertesätze konkurrieren. Das sind die fünf, die die Leitstelle real setzt
-     * und die `recipes.GENERATE` als Enum führt. Kein dritter Satz, sondern der benutzte.
-     */
-    private const SEKTOREN = ['betriebsgastronomie', 'catering', 'restaurant', 'care', 'schule_kita'];
 
     /**
      * Ausgabeformen — die Zielwerte der Ableitung plus die beiden, für die es keine
@@ -61,7 +52,7 @@ final class WissensAchsenVokabular
             'komponentenrolle' => self::alsPaare(\Platform\FoodAlchemist\Support\TellerRolle::werte()),   // Teller-Rollen (Dominique 11.10.)
             'niveau' => self::alsPaare(FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES['level'] ?? []),
             'occasion' => self::alsPaare(FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES['occasion'] ?? []),
-            'sektor' => self::alsPaare(self::SEKTOREN),
+            'sektor' => \Platform\FoodAlchemist\Support\Sektor::LABELS,   // CQ 2.5a: die eine Quelle; Altwerte laufen über Sektor::ALIASE
             'ausgabeform' => self::alsPaare(self::AUSGABEFORMEN),
             'saison' => self::monate(),
             // `portionskontext` und alles Künftige: bewusst frei, bis es einen echten

@@ -939,7 +939,7 @@ class RecipeService
 
     private const EIGNUNG_TABELLEN = [
         'level' => ['tabelle' => 'foodalchemist_recipe_level_suitability', 'spalte' => 'level_slug', 'slugs' => ['haute_cuisine', 'gehoben', 'klassisch']],
-        'sektor' => ['tabelle' => 'foodalchemist_recipe_sector_suitability', 'spalte' => 'sector_slug', 'slugs' => ['business', 'care', 'crew', 'event_privat', 'kita_schule', 'restaurant']],
+        'sektor' => ['tabelle' => 'foodalchemist_recipe_sector_suitability', 'spalte' => 'sector_slug', 'slugs' => \Platform\FoodAlchemist\Support\Sektor::SLUGS],
     ];
 
     /** @return array<string, array> Vokabular fürs UI */

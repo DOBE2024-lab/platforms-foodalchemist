@@ -65,24 +65,48 @@ it('Park-Flow: gerichtHinzu setzt die Menge/Person beim Einfügen', function () 
 });
 
 it('Sektor-Eignung: zuweisen, reaktivieren, entfernen', function () {
-    $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'Kita');
-    $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'Klinik');
-    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toMatchArray(['Kita', 'Klinik']);
+    $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'kita_schule');
+    $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'care');
+    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toEqualCanonicalizing(['kita_schule', 'care']);
 
     // Entfernen (soft-delete) + erneutes Zuweisen reaktiviert dieselbe Zeile (kein Dublett).
-    $this->concepts->entferneSektorEignung($this->rootTeam, $this->concept->id, 'Kita');
-    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toBe(['Klinik']);
+    $this->concepts->entferneSektorEignung($this->rootTeam, $this->concept->id, 'kita_schule');
+    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toBe(['care']);
 
-    $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'Kita');
+    $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'kita_schule');
     expect($this->concept->sektorEignungen()->count())->toBe(2);          // reaktiviert, nicht doppelt
 });
 
-it('Editor: Sektor über die UI hinzufügen/entfernen', function () {
+it('CQ 2.5a: Sektor-Eignung prüft gegen das Sektor-Vokabular, Altwerte werden umgeschlüsselt', function () {
+    $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'Catering');            // Alias
+    $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, ' betriebsgastronomie ');
+    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toEqualCanonicalizing(['event_privat', 'business']);
+
+    expect(fn () => $this->concepts->setzeSektorEignung($this->rootTeam, $this->concept->id, 'Kita'))
+        ->toThrow(RuntimeException::class, 'Unbekannter Sektor „Kita“');
+    expect($this->concept->sektorEignungen()->count())->toBe(2);
+});
+
+it('CQ 2.5a: alter Freitext bleibt stehen und lässt sich entfernen', function () {
+    \Platform\FoodAlchemist\Models\FoodAlchemistConceptSektorEignung::create([
+        'team_id' => $this->concept->team_id, 'concept_id' => $this->concept->id, 'sector_slug' => 'Klinik', 'source' => 'manual',
+    ]);
+    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toBe(['Klinik']);
+
+    $this->concepts->entferneSektorEignung($this->rootTeam, $this->concept->id, 'Klinik');
+    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toBe([]);
+});
+
+it('Editor: Sektor über die Auswahl hinzufügen/entfernen', function () {
     Livewire::test(Editor::class)
         ->call('oeffnen', 'concepts', $this->concept->id)
-        ->set('neuerSektor', 'Catering')
+        ->call('setTab', 'notes')                                   // der Block steht im Reiter Notizen
+        ->assertSee('Sektor hinzufügen')
+        ->set('neuerSektor', 'event_privat')
         ->call('sektorHinzu')
-        ->assertSet('neuerSektor', '');
+        ->assertSet('neuerSektor', '')
+        ->assertSee('Sektor event_privat entfernen')                // Chip steht (Slugs werden im Reiter Notizen geladen)
+        ->assertSee('Catering und Event');
 
-    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toContain('Catering');
+    expect($this->concepts->sektorEignungSlugs($this->concept->refresh()))->toContain('event_privat');
 });

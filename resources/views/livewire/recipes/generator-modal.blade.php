@@ -62,14 +62,7 @@
                 </div>
 
                 <div class="min-w-0" data-richtung="sektor">
-                    <x-fa::choice name="parameter.sektor" :live="false" label="Sektor (Verpflegung)" :options="[
-                        '' => 'Egal',
-                        'betriebsgastronomie' => 'Betriebsgastronomie',
-                        'catering' => 'Catering und Event',
-                        'restaurant' => 'Restaurant',
-                        'care' => 'Care und Klinik',
-                        'schule_kita' => 'Schule und Kita',
-                    ]" />
+                    <x-fa::choice name="parameter.sektor" :live="false" label="Sektor (Verpflegung)" :options="\Platform\FoodAlchemist\Support\Sektor::optionen('Egal')" />
                 </div>
 
                 {{-- 06·H4: Favoriten-Modus nur auf Wunsch (aus = keine Einengung) --}}

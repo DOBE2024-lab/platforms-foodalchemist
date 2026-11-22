@@ -55,6 +55,7 @@ final class WissensGeltung
                 if (! is_string($value) || mb_strlen($value) > 100) throw new \RuntimeException("Ungültiger Achsenwert für {$axis}.");
                 $value = mb_strtolower(trim($value));
                 if ($value === '') continue;
+                if ($axis === 'sektor') $value = \Platform\FoodAlchemist\Support\Sektor::kanonisch($value) ?? $value;   // CQ 2.5a: neu geschrieben wird der Slug
                 // ★ Prüfen statt still annehmen. Ein erfundener Wert faellt sonst NICHT auf —
                 // er trifft einfach nie, und niemand merkt es. Genau so sind meine ersten
                 // Tags entstanden (`protein` statt `komponente`, `obst_zitrus` statt der
@@ -93,6 +94,7 @@ final class WissensGeltung
             return $params;
         }
         $sektor = is_string($params['sektor'] ?? null) ? mb_strtolower(trim($params['sektor'])) : '';
+        $sektor = \Platform\FoodAlchemist\Support\Sektor::kanonisch($sektor) ?? $sektor;   // CQ 2.5a: Altwert (catering …) → Slug
         $service = is_string($params['serviceform'] ?? null) ? mb_strtolower(trim($params['serviceform'])) : '';
         if ($sektor === '') {
             return $params;
@@ -117,6 +119,11 @@ final class WissensGeltung
             $actual = $params[$axis] ?? null;
             $actual = is_array($actual) ? $actual : [$actual];
             $actual = array_map(static fn ($v) => is_string($v) ? mb_strtolower(trim($v)) : '', $actual);
+            if ($axis === 'sektor') {
+                // CQ 2.5a: gespeicherte Geltungen und Sitzungen können noch Altwerte tragen — beide Seiten auf den Slug.
+                $values = array_map(static fn ($v) => \Platform\FoodAlchemist\Support\Sektor::kanonisch((string) $v) ?? $v, $values);
+                $actual = array_map(static fn ($v) => \Platform\FoodAlchemist\Support\Sektor::kanonisch($v) ?? $v, $actual);
+            }
             if (array_intersect($values, $actual) === []) return false;
         }
         return true;

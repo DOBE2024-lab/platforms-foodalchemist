@@ -650,6 +650,10 @@ class VoiceCommandService
                 is_array($struktur['felder'] ?? null) ? $struktur['felder'] : [],
                 array_flip(\Platform\FoodAlchemist\Support\Planung\PlanungOptionen::AGENT_SCHREIBBARE_REGLER),
             );
+            if (is_string($rohFelder['sektor'] ?? null)) {
+                // CQ 2.5a: gesprochener Altwert (catering …) → Sektor-Slug, sonst fiele er an der Prüfung durch.
+                $rohFelder['sektor'] = \Platform\FoodAlchemist\Support\Sektor::kanonisch($rohFelder['sektor']) ?? $rohFelder['sektor'];
+            }
             $direkt = ($struktur['direkt'] ?? false) === true;
             $felder = $direkt
                 ? array_filter($rohFelder, static fn ($wert, $feld) => self::regelWertGueltig($feld, $wert), ARRAY_FILTER_USE_BOTH)

@@ -49,7 +49,7 @@
                 </x-fa::field>
                 <x-fa::field label="Sektor" for="vkgen-sektor" :hint="$parameter['sektor'] === '' ? 'Für alle Sektoren' : null" data-richtung="sektor">
                     <x-fa::select id="vkgen-sektor" wire:model="parameter.sektor" placeholder="egal"
-                        :options="['betriebsgastronomie' => 'Betriebsgastronomie', 'catering' => 'Catering / Event', 'restaurant' => 'Restaurant / à la carte', 'care' => 'Care / Klinik', 'schule_kita' => 'Schule / Kita']" />
+                        :options="\Platform\FoodAlchemist\Support\Sektor::LABELS" />
                 </x-fa::field>
                 {{-- Spec 03 L8b-2: Ziel-VK als Vorgabe für den Vorschlag (kein Solver) --}}
                 <x-fa::field label="Ziel-VK netto je Portion" for="vkgen-ziel" optional class="sm:col-span-2 md:col-span-1" data-richtung="ziel-vk">

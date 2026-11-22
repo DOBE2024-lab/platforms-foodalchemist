@@ -158,3 +158,19 @@ it('ignoriert eine Achsen-Zeile ohne <achse>:<wert>-Form statt zu sterben', func
 
     expect(app(KnowledgeCanonService::class)->achsenBindungen($this->rootTeam))->toBe([]);
 });
+
+it('CQ 2.5a: Kanon-Zeile mit altem Sektor-Wert greift auch für den neuen Slug (und umgekehrt)', function () {
+    ($this->mkAchse)(($this->mkDoc)('bankett-alt', null, 'segment'), 'sektor', 'catering');       // gespeichert vor 2.5a
+    ($this->mkAchse)(($this->mkDoc)('kita-neu', null, 'segment'), 'sektor', 'kita_schule');       // neu gepflegt
+
+    $neu = app(KnowledgeContextService::class)->contextFor(
+        $this->rootTeam, 'test.achse', 'Karotte Ingwer Pueree', null, [], ['sektor' => 'event_privat']
+    );
+    $alt = app(KnowledgeContextService::class)->contextFor(
+        $this->rootTeam, 'test.achse', 'Karotte Ingwer Pueree', null, [], ['sektor' => 'schule_kita']
+    );
+
+    expect($neu['files_used'])->toContain('bankett-alt@v1')
+        ->and($neu['herkunft']['bankett-alt']['via'])->toBe('achse:sektor')
+        ->and($alt['files_used'])->toContain('kita-neu@v1');
+});

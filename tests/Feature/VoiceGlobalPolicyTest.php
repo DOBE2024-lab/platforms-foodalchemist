@@ -774,7 +774,9 @@ it('Nachtrag: formularstandHinweis meldet "alle gesetzt", wenn keine Pflicht-Lei
 });
 
 it('Nachtrag: regelWertGueltig prüft Enum-Felder gegen das echte Vokabular, Zahlenfelder gegen is_numeric', function () {
-    expect(VoiceCommandService::regelWertGueltig('sektor', 'catering'))->toBeTrue()
+    expect(VoiceCommandService::regelWertGueltig('sektor', 'event_privat'))->toBeTrue()
+        ->and(VoiceCommandService::regelWertGueltig('sektor', 'crew'))->toBeTrue()            // CQ 2.5a: Crew neu in der Planung
+        ->and(VoiceCommandService::regelWertGueltig('sektor', 'catering'))->toBeFalse()       // Altwert nur über Alias, nicht als Wert
         ->and(VoiceCommandService::regelWertGueltig('sektor', 'erfunden'))->toBeFalse()
         ->and(VoiceCommandService::regelWertGueltig('level', 'gehoben'))->toBeTrue()
         ->and(VoiceCommandService::regelWertGueltig('level', 'super_gehoben'))->toBeFalse()
@@ -793,7 +795,7 @@ it('Nachtrag: "struktur" MIT direkt:true wird zu komponenten_direkt, ungültige 
     expect($r['proposals'])->toHaveCount(1);
     $p = $r['proposals'][0];
     expect($p['type'])->toBe('komponenten_direkt')
-        ->and($p['felder'])->toBe(['sektor' => 'catering']);   // pax verworfen — kein gültiger Zahlenwert
+        ->and($p['felder'])->toBe(['sektor' => 'event_privat']);   // pax verworfen; CQ 2.5a: Altwert catering → Slug
 });
 
 it('Nachtrag: "struktur" OHNE direkt bleibt komponenten_uebernahme (Regression — bestehendes Verhalten unverändert)', function () {
@@ -850,10 +852,10 @@ it('Nachtrag: rueckfrageChip() setzt den Regler direkt (Chip-Klick IST die Best�
         'proposals' => [['type' => 'rueckfrage', 'scope' => 'gericht', 'feld' => 'sektor', 'vokabular' => \Platform\FoodAlchemist\Livewire\Planung\Index::SEKTOR_OPTIONEN]],
     ]);
 
-    $modal->call('rueckfrageChip', 0, 'catering')
-        ->assertDispatched('voice.komponenten-uebernahme', scope: 'gericht', felder: ['sektor' => 'catering'], brief: null)
+    $modal->call('rueckfrageChip', 0, 'event_privat')
+        ->assertDispatched('voice.komponenten-uebernahme', scope: 'gericht', felder: ['sektor' => 'event_privat'], brief: null)
         ->assertSet('ergebnis.proposals.0.accepted', true)
-        ->assertSet('ergebnis.proposals.0.beantwortet_mit', 'catering');
+        ->assertSet('ergebnis.proposals.0.beantwortet_mit', 'event_privat');
 });
 
 it('Nachtrag: rueckfrageChip() mit einem Wert ausserhalb des Vokabulars schreibt NICHTS', function () {
@@ -890,7 +892,7 @@ it('Nachtrag: komponenten_direkt-Vorschläge wenden sich automatisch an — kein
 
     Livewire::test(\Platform\FoodAlchemist\Livewire\VoiceModal::class)
         ->call('verarbeiteText', 'Sektor ist Catering')
-        ->assertDispatched('voice.komponenten-uebernahme', scope: 'gericht', felder: ['sektor' => 'catering'], brief: null)
+        ->assertDispatched('voice.komponenten-uebernahme', scope: 'gericht', felder: ['sektor' => 'event_privat'], brief: null)
         ->assertSet('ergebnis.proposals.0.accepted', true);
 });
 
@@ -898,7 +900,7 @@ it('Nachtrag: komponentenRueckgaengig() setzt die Felder leer zurück und markie
     $modal = Livewire::test(\Platform\FoodAlchemist\Livewire\VoiceModal::class);
     $modal->set('ergebnis', [
         'text' => null, 'runden' => 1, 'tool_laeufe' => [], 'aktionen' => [], 'unklar' => false, 'elapsed_ms' => 0,
-        'proposals' => [['type' => 'komponenten_direkt', 'scope' => 'gericht', 'felder' => ['sektor' => 'catering'], 'brief' => null, 'accepted' => true]],
+        'proposals' => [['type' => 'komponenten_direkt', 'scope' => 'gericht', 'felder' => ['sektor' => 'event_privat'], 'brief' => null, 'accepted' => true]],
     ]);
 
     $modal->call('komponentenRueckgaengig', 0)

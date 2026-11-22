@@ -19,7 +19,7 @@ class RecipeEignungPutTool extends FoodAlchemistTool implements ToolContract, To
 
     private const SLUGS = [
         'level' => ['haute_cuisine', 'gehoben', 'klassisch'],
-        'sektor' => ['business', 'care', 'crew', 'event_privat', 'kita_schule', 'restaurant'],
+        'sektor' => \Platform\FoodAlchemist\Support\Sektor::SLUGS,
     ];
 
     public function getName(): string

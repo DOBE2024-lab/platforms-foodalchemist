@@ -43,12 +43,10 @@ final class Labels
         'none' => 'Unbekannt',   // 98 · 1.1d (U1): GP-Konfidenz ohne belegte Allergene, nie roh „none“ (liest sich wie allergenfrei)
     ];
 
-    /** Eignung (Niveau `level_slug`, Sektor `sector_slug`) — 98 · 2.4f D: nie den Slug zeigen. */
+    /** Eignung (Niveau `level_slug`, Sektor `sector_slug`) — 98 · 2.4f D: nie den Slug zeigen. Sektoren aus Support\Sektor (2.5a). */
     private const EIGNUNG = [
         'haute_cuisine' => 'Haute Cuisine', 'gehoben' => 'Gehoben', 'klassisch' => 'Klassisch',
-        'business' => 'Betriebsgastronomie', 'care' => 'Care', 'crew' => 'Crew-Verpflegung',
-        'event_privat' => 'Privates Event', 'kita_schule' => 'Kita und Schule', 'restaurant' => 'Restaurant',
-    ];
+    ] + Sektor::LABELS;
 
     public static function eignung(?string $wert): string
     {

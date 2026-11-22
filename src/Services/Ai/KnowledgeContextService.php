@@ -732,12 +732,11 @@ class KnowledgeContextService
                 continue;
             }
             $wert = trim($wert);
-
+            // CQ 2.5a: Sektor auch unter seinen alten Schreibweisen nachschlagen — Kanon-Zeilen tragen ggf. noch Altwerte.
+            $ws = $achse === 'sektor' ? (\Platform\FoodAlchemist\Support\Sektor::schreibweisen($wert) ?: [$wert]) : [$wert];
             // Kanon zuerst — eine gepflegte Zeile schlaegt den Config-Default.
-            $kandidaten = $gepflegt[$achse][$wert] ?? null;
-            if (! is_array($kandidaten) || $kandidaten === []) {
-                $kandidaten = (is_array($map[$achse] ?? null) ? ($map[$achse][$wert] ?? null) : null);
-            }
+            $kandidaten = collect($ws)->map(fn ($w) => $gepflegt[$achse][$w] ?? null)->first(fn ($k) => is_array($k) && $k !== [])
+                ?? collect($ws)->map(fn ($w) => is_array($map[$achse] ?? null) ? ($map[$achse][$w] ?? null) : null)->first(fn ($k) => is_array($k) && $k !== []);
             if (is_array($kandidaten) && $kandidaten !== []) {
                 $gesucht[$achse] = array_values(array_filter(array_map('strval', $kandidaten)));
             }

@@ -1053,7 +1053,7 @@ it('briefVorlage: füllt Briefing + Sektor/Anlass/Serviceform in den Gericht-Tab
         ->call('oeffne', $session->id)
         ->call('briefVorlage', 'gericht', (string) $tpl->id)
         ->assertSet('eingabe.gericht.brief', $tpl->brief)
-        ->assertSet('regler.gericht.sektor', 'catering')
+        ->assertSet('regler.gericht.sektor', 'event_privat')
         ->assertSet('regler.gericht.occasion', 'empfang')
         ->assertSet('regler.gericht.serviceform', 'flying')
         ->assertSet('aktiveVorlage.gericht', (string) $tpl->id)
@@ -1071,7 +1071,7 @@ it('briefVorlage: überschreibt einen bereits getippten Titel NICHT', function (
         ->set('eingabe.gericht.titel', 'Mein Amuse')
         ->call('briefVorlage', 'gericht', (string) $tpl->id)
         ->assertSet('eingabe.gericht.titel', 'Mein Amuse')       // getippter Titel bleibt
-        ->assertSet('regler.gericht.sektor', 'catering');        // Kontext wird trotzdem gesetzt
+        ->assertSet('regler.gericht.sektor', 'event_privat');        // Kontext wird trotzdem gesetzt
 });
 
 it('briefVorlage: unbekannter Key oder falscher Scope → fehler, keine Änderung', function () {
@@ -1099,10 +1099,10 @@ it('vorlagenFuer: Gericht hat die 6 team-eigenen Start-Vorlagen, Basisrezept (re
     expect($gericht)->toHaveCount(6);                    // die 6 Start-Vorlagen, seit L1-B Kopien im eigenen Team
     expect($inst->vorlagenFuer('rezept'))->toBe([]);     // keine auf Basisrezept (bis das Team selbst eine anlegt)
     // jede Vorlage gehört dem Team (nicht geerbt) + nutzt nur reale Leitplanken-Enums (Sektor aus dem Regler-Snapshot)
-    $sektoren = ['betriebsgastronomie', 'catering', 'restaurant', 'care', 'schule_kita'];
+    // CQ 2.5a: gespeicherte Vorlagen tragen noch Altwerte (catering …) — gültig ist, was Sektor::kanonisch auflöst.
     foreach ($gericht as $v) {
         expect($v['is_global'])->toBeFalse()
-            ->and($sektoren)->toContain($v['regler']['sektor']);
+            ->and(\Platform\FoodAlchemist\Support\Sektor::kanonisch($v['regler']['sektor']))->not->toBeNull();
     }
 });
 
@@ -2212,13 +2212,13 @@ it('L5 Titel-Anker: getippter Gericht-Titel bleibt nur im Bauplan-Brief, NICHT i
 it('L5 Rehydrierung: gesetzte Leitplanken kommen nach Reload zurück in die Regler', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Rehydrat', 'brief' => 'x']);
     app(PlanningSessionService::class)->setGenerationParams($this->rootTeam, (int) $session->id, [
-        'level' => 'gehoben', 'sektor' => 'catering', 'diaet_hart' => ['vegan'], 'aroma_kueche' => 'japanisch',
+        'level' => 'gehoben', 'sektor' => 'catering', 'diaet_hart' => ['vegan'], 'aroma_kueche' => 'japanisch',   // CQ 2.5a: Altwert, kommt als Slug zurück
     ]);
 
     $c = Livewire::test(PlanungIndex::class)->call('oeffne', $session->id);
 
     $c->assertSet('regler.gericht.level', 'gehoben')
-        ->assertSet('regler.gericht.sektor', 'catering')
+        ->assertSet('regler.gericht.sektor', 'event_privat')
         ->assertSet('regler.gericht.aroma_kueche', 'japanisch')
         ->assertSet('regler.gericht.diaet_hart', ['vegan']);
 });
@@ -2473,9 +2473,9 @@ it('Globaler KI-Status: zeigt wartend/laufend fuers Team an, unabhaengig davon o
 it('Spec 55: voiceKomponentenUebernehmen() schreibt Leitplanken + Brief in den Ziel-Scope, whitelisted', function () {
     $test = Livewire::test(PlanungIndex::class)
         ->dispatch('voice.komponenten-uebernahme', scope: 'gericht', felder: [
-            'sektor' => 'catering', 'pax' => '40', 'erfundenes_feld' => 'boese',
+            'sektor' => 'event_privat', 'pax' => '40', 'erfundenes_feld' => 'boese',
         ], brief: 'Business-Frühstück für 40 Personen')
-        ->assertSet('regler.gericht.sektor', 'catering')
+        ->assertSet('regler.gericht.sektor', 'event_privat')
         ->assertSet('regler.gericht.pax', '40')
         ->assertSet('eingabe.gericht.brief', 'Business-Frühstück für 40 Personen')
         ->assertSet('reglerVonAgent.gericht.sektor', true);
@@ -2487,7 +2487,7 @@ it('Spec 55: voiceKomponentenUebernehmen() schreibt Leitplanken + Brief in den Z
 
 it('Spec 55: voiceKomponentenUebernehmen() mit unbekanntem Scope schreibt nichts', function () {
     Livewire::test(PlanungIndex::class)
-        ->dispatch('voice.komponenten-uebernahme', scope: 'quatsch', felder: ['sektor' => 'catering'], brief: null)
+        ->dispatch('voice.komponenten-uebernahme', scope: 'quatsch', felder: ['sektor' => 'event_privat'], brief: null)
         ->assertSet('regler.quatsch', null);
 });
 
@@ -2502,7 +2502,7 @@ it('Spec 55: „vom Agenten"-Badge zeigt sich nach Übernahme im Rendering und v
     $test = Livewire::test(PlanungIndex::class)
         ->call('oeffne', $session->id)
         ->dispatch('voice.komponenten-uebernahme', scope: 'gericht', felder: [
-            'sektor' => 'catering', 'pax' => '40',
+            'sektor' => 'event_privat', 'pax' => '40',
         ], brief: 'Business-Frühstück für 40 Personen');
 
     expect(substr_count($test->html(), 'data-regler-von-agent="sektor"'))->toBe(1)

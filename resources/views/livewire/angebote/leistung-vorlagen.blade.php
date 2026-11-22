@@ -50,7 +50,7 @@
                     Lege z. B. „Servicekraft, 1 je 30 Gäste, EK 30 € je Stunde“ oder „LKW, 1 je 250 Gäste“ an.
                 </x-fa::empty>
             @else
-                <table class="fa-table fa-table--compact" data-lv-tabelle>
+                <x-fa::table compact data-lv-tabelle="">
                     <thead><tr><th>Leistung</th><th>Menge</th><th>Preis je</th><th class="num">EK</th><th class="num">VK</th><th class="num">Aufschlag</th><th></th></tr></thead>
                     <tbody>
                         @foreach($gruppen as $kategorie => $vorlagen)
@@ -90,7 +90,7 @@
                             @endforeach
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             @endif
         </x-fa::section>
     </x-ui-page-container>

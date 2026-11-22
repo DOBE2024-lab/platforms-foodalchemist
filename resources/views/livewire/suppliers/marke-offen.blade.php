@@ -57,7 +57,7 @@
                     <x-fa::empty compact icon="heroicon-o-check-circle" title="Keine unbekannten Kürzel in dieser Auswahl">Filter ändern oder später wieder schauen.</x-fa::empty>
                 @else
                     <div class="-mx-4 -mb-4 overflow-x-auto border-t border-[var(--fa-line)]">
-                        <table class="fa-table">
+                        <x-fa::table>
                             <thead>
                                 <tr>
                                     <th>Kürzel</th>
@@ -137,7 +137,7 @@
                                     @endif
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
             </x-fa::section>

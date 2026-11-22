@@ -195,7 +195,7 @@
             @endif
 
             <div class="overflow-x-auto">
-                <table class="fa-table min-w-[560px]" data-ki-verbrauch-tabelle>
+                <x-fa::table class="min-w-[560px]" data-ki-verbrauch-tabelle="">
                     <thead><tr><th>{{ $verbrauch['ist_haupt'] ? 'Standort / Art' : 'Art' }}</th><th class="num">Aufrufe</th><th class="num">Fehlläufe</th><th class="num">Euro</th></tr></thead>
                     <tbody>
                         @if($verbrauch['ist_haupt'])
@@ -221,7 +221,7 @@
                             <td>Summe</td><td class="num">{{ $vZahl($verbrauch['summe']['calls'] - $verbrauch['summe']['fehler']) }}</td><td class="num">{{ $vZahl($verbrauch['summe']['fehler']) }}</td><td class="num">{{ $vEur($verbrauch['summe']['eur']) }}</td>
                         </tr>
                     </tfoot>
-                </table>
+                </x-fa::table>
             </div>
             <p class="{{ $zeileHilfe }}" data-ki-verbrauch-luecke>
                 Fehlläufe kosten, soweit der Anbieter dabei schon gerechnet hat, und sind im Betrag enthalten. Ohne Embeddings (Wissenssuche) — die werden noch nicht erfasst.
@@ -242,7 +242,7 @@
             </x-fa::empty>
         @else
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table min-w-[960px]" data-ki-statistik>
+                <x-fa::table class="min-w-[960px]" data-ki-statistik="">
                     <thead>
                         <tr>
                             <th>Arbeitsschritt</th>
@@ -298,7 +298,7 @@
                             <td class="num font-semibold text-[var(--fa-ink)]" data-ki-kosten-gesamt>{{ number_format($kostenGesamt, 2, ',', '.') }} {{ $kostenSymbol }}</td>
                         </tr>
                     </tfoot>
-                </table>
+                </x-fa::table>
             </div>
             <p class="fa-t-muted">
                 Mengen in Texteinheiten der KI. Bei älteren Aufrufen ohne gespeicherten Zwischenspeicher-Anteil wird vorsichtig der volle Eingabepreis angesetzt.
@@ -320,7 +320,7 @@
             </x-slot:actions>
             <p class="{{ $zeileHilfe }}">{{ $abrechnung['von']->format('d.m.Y') }} bis {{ $abrechnung['bis']->format('d.m.Y') }}</p>
             <div class="overflow-x-auto">
-                <table class="fa-table min-w-[820px]" data-ki-abrechnung>
+                <x-fa::table class="min-w-[820px]" data-ki-abrechnung="">
                     <thead>
                         <tr>
                             <th>Mandant</th><th>Klasse</th>
@@ -375,7 +375,7 @@
                             </tr>
                         @endif
                     </tfoot>
-                </table>
+                </x-fa::table>
             </div>
         </x-fa::section>
     @endif

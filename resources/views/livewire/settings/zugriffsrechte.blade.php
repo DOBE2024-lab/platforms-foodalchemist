@@ -46,7 +46,7 @@
             <x-fa::notice tone="info">Deine Rolle: „{{ $meineRolle->label() }}“. Das Freigaberecht vergeben nur Inhaber und Admins.</x-fa::notice>
         @endunless
         <div class="overflow-x-auto -mx-4">
-            <table class="fa-table">
+            <x-fa::table>
                 <thead><tr><th>Name</th><th>E-Mail</th><th>Rolle (Plattform)</th><th>im Food Alchemist</th><th>darf Rechnungen freigeben</th><th>Bereiche</th></tr></thead>
                 <tbody>
                     @foreach($mitglieder as $m)
@@ -87,7 +87,7 @@
                         @endif
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
     </x-fa::section>
 

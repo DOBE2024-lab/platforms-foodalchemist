@@ -19,7 +19,7 @@
                     <x-fa::empty compact icon="heroicon-o-map-pin" title="Noch kein Kunden-Standort">Standorte legst du im Projekt in der Phase Standortprofil an.</x-fa::empty>
                 @else
                     <div class="overflow-x-auto -mx-4">
-                        <table class="fa-table fa-table--compact" data-standortprofil-tabelle>
+                        <x-fa::table compact data-standortprofil-tabelle="">
                             <thead><tr><th>Standort</th><th>Projekt</th><th class="num">Geräte bekannt</th><th class="num">Flächen</th><th class="num">Gäste parallel</th><th></th></tr></thead>
                             <tbody>
                                 @foreach($kunden as $z)
@@ -33,7 +33,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
             </x-fa::section>

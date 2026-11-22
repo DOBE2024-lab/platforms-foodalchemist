@@ -65,11 +65,11 @@
         </x-fa::page-header>
 
         @if($kpi['leer'])
-            <div class="fa-surface">
+            <x-fa::card>
                 <x-fa::empty icon="heroicon-o-user-group" title="Kein Team zugeordnet">
                     Ohne Team gibt es keine Zahlen. Wähle oben ein Team aus oder lass dich einem Team zuordnen.
                 </x-fa::empty>
-            </div>
+            </x-fa::card>
         @else
             {{-- Ebene 2: welcher Betrieb treibt die Kostenstruktur-Werte (aktiver Betrieb aus dem Sidebar-Balken). --}}
             @if(!empty($kpi['betrieb_name']))
@@ -134,7 +134,7 @@
                     ]" />
                     @if(! empty($kpi['je_standort']))
                         {{-- Spec 85 PR-D: Brille „alle“ — die Summe oben, darunter jeder Standort mit seinen eigenen Preisen und seinem Profil. --}}
-                        <table class="fa-table mt-3 w-full text-[length:var(--fa-text-sm)]" data-controlling-je-standort>
+                        <x-fa::table class="mt-3 w-full text-[length:var(--fa-text-sm)]" data-controlling-je-standort="">
                             <thead>
                                 <tr><th>Standort</th><th class="num">Ø Wareneinsatz</th><th class="num">Ziel</th><th class="num">EK-Abdeckung</th><th class="num">Einkauf 30 Tage</th><th class="num">Geld-Signale</th></tr>
                             </thead>
@@ -150,7 +150,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     @endif
                 </x-slot:kpiHeader>
             @endunless

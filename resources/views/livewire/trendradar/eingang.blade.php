@@ -33,13 +33,13 @@
     @endif
 
     @if($eintraege->isEmpty())
-        <div class="fa-surface">
+        <x-fa::card>
             <x-fa::empty icon="heroicon-o-inbox" title="Der Eingang ist leer">
                 Hier landen Artikel aus den Quellen (Reiter „Quellen“) und was per MCP eingereicht wird. Die Pinnwand bleibt davon unberührt.
             </x-fa::empty>
-        </div>
+        </x-fa::card>
     @else
-        <div class="fa-surface divide-y divide-[var(--fa-line)]" data-eingang-liste>
+        <x-fa::card class="divide-y divide-[var(--fa-line)]" data-eingang-liste="">
             @foreach($eintraege as $e)
                 @php $eigen = (int) $e->team_id === $teamId; @endphp
                 <article class="p-3 flex flex-col gap-1.5 min-w-0" wire:key="eg-{{ $e->id }}" data-eingang-eintrag="{{ $e->id }}">
@@ -81,6 +81,6 @@
                     @endif
                 </article>
             @endforeach
-        </div>
+        </x-fa::card>
     @endif
 </div>

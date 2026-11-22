@@ -19,7 +19,7 @@
 
     {{-- Ebene 2: Basissatz-Vorschau je Betrieb (lokal, verändert nicht die globale Betriebsbrille) --}}
     @if(count($betriebeOptionen) > 0)
-        <div class="fa-surface p-3 flex flex-wrap items-end gap-x-4 gap-y-2">
+        <x-fa::card class="p-3 flex flex-wrap items-end gap-x-4 gap-y-2">
             <x-fa::field label="Basissatz anzeigen für" for="ak-betrieb" class="w-72 max-w-full">
                 <x-fa::select id="ak-betrieb" wire:model.live="outletId">
                     <option value="">Team-Standard</option>
@@ -35,7 +35,7 @@
                     Kalkulationsprofil wählen, um den Basissatz aus dessen Fixkosten und Marge zu sehen.
                 @endif
             </p>
-        </div>
+        </x-fa::card>
     @endif
 
     <fieldset @disabled($sperrLesen) class="contents" data-fa-lesemodus="{{ $sperrLesen ? '1' : '0' }}">
@@ -68,7 +68,7 @@
     <x-fa::section title="Preisklassen" icon="heroicon-o-tag"
         description="Die Standard-Preisklasse gilt für jedes Rezept ohne eigene Preisklasse. Klassen mit Rezepten lassen sich nur deaktivieren, nicht löschen.">
         <div class="overflow-x-auto -mx-4 px-4">
-            <table class="fa-table min-w-[860px]" data-ak-tabelle>
+            <x-fa::table class="min-w-[860px]" data-ak-tabelle="">
                 <thead><tr>
                     <th class="w-16 text-center">Standard</th>
                     <th>Code</th>
@@ -167,7 +167,7 @@
                         @endif
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
         @if($klassen->isEmpty())
             <x-fa::empty icon="heroicon-o-tag" title="Noch keine Preisklassen" compact>

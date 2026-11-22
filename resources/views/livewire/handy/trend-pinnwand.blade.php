@@ -11,7 +11,7 @@
     @if(! $handyAblegenOffen)
         <x-fa::button variant="primary" icon="heroicon-m-camera" class="w-full min-h-12 justify-center" wire:click="$set('handyAblegenOffen', true)" data-fa-handy-ablegen-oeffnen>Fundstück ablegen</x-fa::button>
     @else
-        <section class="space-y-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-4" data-fa-handy-ablegen>
+        <x-fa::card as="section" class="space-y-3 p-4" data-fa-handy-ablegen="">
             <div class="flex items-center justify-between gap-2">
                 <h2 class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">Fundstück ablegen</h2>
                 <button type="button" wire:click="$set('handyAblegenOffen', false)" class="min-h-11 px-2 fa-t-muted underline">Schließen</button>
@@ -43,7 +43,7 @@
                 <input type="text" wire:model="fund.schlagworte" placeholder="Schlagworte" aria-label="Schlagworte" class="fa-control h-11 flex-1 min-w-0">
             </div>
             <x-fa::button variant="primary" icon="heroicon-m-check" class="w-full min-h-12 justify-center" wire:click="fundstueckAblegen" wire:loading.attr="disabled" data-fa-handy-ablegen-speichern>Ablegen</x-fa::button>
-        </section>
+        </x-fa::card>
     @endif
 
     <div class="flex flex-wrap gap-1.5">
@@ -59,7 +59,7 @@
     <div class="flex flex-col gap-3">
         @forelse($inspirationen as $eintrag)
             @php $insp = $eintrag['i']; @endphp
-            <article class="fa-surface overflow-hidden flex flex-col min-w-0" wire:key="hins-{{ $insp->id }}" data-fa-handy-inspiration="{{ $insp->id }}">
+            <x-fa::card as="article" class="overflow-hidden flex flex-col min-w-0" wire:key="hins-{{ $insp->id }}" data-fa-handy-inspiration="{{ $insp->id }}">
                 @if($eintrag['bild'])
                     <a href="{{ $eintrag['bild'] }}" target="_blank" rel="noopener" class="block bg-[var(--fa-neutral-soft)]">
                         <img src="{{ $eintrag['bild'] }}" alt="{{ $insp->titel }}" class="w-full h-52 object-cover" loading="lazy" />
@@ -95,7 +95,7 @@
                         <p class="text-[length:var(--fa-text-sm)]">Gehört zu <button type="button" class="min-h-11 text-[var(--fa-accent)] underline" wire:click="select({{ $insp->trend->id }})">{{ $insp->trend->name }}</button></p>
                     @endif
                 </div>
-            </article>
+            </x-fa::card>
         @empty
             <x-fa::empty compact icon="heroicon-o-light-bulb" title="Die Pinnwand ist leer">Mit „Fundstück ablegen“ ein Foto oder einen Link sammeln.</x-fa::empty>
         @endforelse

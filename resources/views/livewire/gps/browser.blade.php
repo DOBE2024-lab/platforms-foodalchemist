@@ -122,7 +122,7 @@
             </div>
         </div>
 
-        <div class="fa-surface overflow-hidden" data-gp-tabelle>
+        <x-fa::card class="overflow-hidden" data-gp-tabelle="">
             @if($wgName !== null)
                 <div class="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-[var(--fa-line)] text-[length:var(--fa-text-md)]">
                     <span class="font-semibold text-[var(--fa-ink)]">{{ $wgName }}</span>
@@ -134,7 +134,7 @@
             @endif
             {{-- Eigener Scroll-Container: der Tabellenkopf klebt; breite Tabellen scrollen waagerecht statt abzuschneiden. --}}
             <div class="max-h-[70vh] overflow-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">
                         <tr>
                             <th class="w-full">Name</th>
@@ -231,10 +231,10 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             <div class="px-4 py-3 border-t border-[var(--fa-line)]">{{ $gps->links('foodalchemist::components.fa.pagination') }}</div>
-        </div>
+        </x-fa::card>
     </x-ui-page-container>
     @endif
 </x-ui-page>

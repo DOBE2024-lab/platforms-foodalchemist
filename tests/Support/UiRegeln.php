@@ -55,6 +55,12 @@ final class UiRegeln
         'rohes_menue' => '/x-data\s*=\s*["\']faMenu\(\)["\']/',
         // Rohe Menü-Einträge statt x-fa::menu-item (1.4c, Bestand 0 seit PR 3): role="menuitem" am eigenen <button>/<a>/<span>.
         'rohes_menue_item' => '/\brole\s*=\s*["\']menuitem["\']/',
+        // Rohe Tabellen statt x-fa::table (2.4a). Bestand: Druckvorlagen (dokumente/*, presentation/*, DomPDF ohne Modul-CSS), Handbuch-Druck (handbuch/*, eigene handbuch.css), Observatorium-
+        // Marktdaten (eigene Klasse) und drei Mini-Tabellen ohne .fa-table (fortschritt/rezept, settings/einkauf, speiseplan-chips).
+        'roher_table' => '/<table\b/',
+        // Handgebaute Karte statt x-fa::card (2.4a): Klasse fa-surface ODER bg-surface + border + Karten-Radius (surface/card/lg/xl/2xl)
+        // in einem class-Attribut. Bestand: klickbare Karten (a, button, label), Tags mit Direktiven im Tag, figure.
+        'rohe_karte' => '/(?<![:\w-])class="(?:(?:[^"]*\s)?fa-surface(?=[\s"])|(?=[^"]*(?<![\w-])bg-\[var\(--fa-surface\)\])(?=[^"]*(?<![\w-])border(?![\w-]))(?=[^"]*(?<![\w-])rounded-(?:\[var\(--fa-radius-(?:surface|card)\)\]|lg|xl|2xl)(?![\w-])))/',
         // Alte Tailwind-Palette statt Tokens (--fa-*).
         'alte_palette' => '/(?<![\w-])(?:text|bg|border(?:-[xytrbl])?|ring|ring-offset|divide|outline|from|via|to|placeholder|fill|stroke|decoration|accent|caret|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)(?![\w-])/',
     ];

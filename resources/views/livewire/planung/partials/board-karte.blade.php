@@ -10,7 +10,7 @@
     $istAktiv = ($active->id ?? null) === $s->id;
     $fort = $kaskadeFortschritt($s->id);
 @endphp
-<div wire:key="board-{{ $s->id }}" class="rounded-[var(--fa-radius-surface)] bg-[var(--fa-surface)] border {{ $istAktiv ? 'border-[var(--fa-accent)] ring-2 ring-[var(--fa-accent-line)]' : 'border-[var(--fa-line)] hover:border-[var(--fa-line-strong)]' }} transition-colors" data-planung-karte="{{ $s->id }}" data-planung-karte-aktiv="{{ $istAktiv ? '1' : '0' }}">
+<x-fa::card wire:key="board-{{ $s->id }}" class="{{ $istAktiv ? 'border-[var(--fa-accent)] ring-2 ring-[var(--fa-accent-line)]' : 'border-[var(--fa-line)] hover:border-[var(--fa-line-strong)]' }} transition-colors" data-planung-karte="{{ $s->id }}" data-planung-karte-aktiv="{{ $istAktiv ? '1' : '0' }}">
     <div role="button" tabindex="0" wire:click="waehle({{ $s->id }})" x-on:click="$store.ui?.mSet('activity_planung', 'open', true)" wire:keydown.enter="waehle({{ $s->id }})" class="cursor-pointer px-3 pt-3 pb-2 flex flex-col gap-2" title="Details anzeigen">
         <div class="flex items-start gap-2 min-w-0">
             @svg($typIcon($s), 'w-4 h-4 mt-0.5 shrink-0 text-[var(--fa-ink-3)]')
@@ -31,4 +31,4 @@
             wire:click="planungVerwerfen({{ $s->id }})" wire:confirm="Diese Planung verwerfen? Laufende Erstellungen dieser Planung werden ebenfalls gestoppt. Sie wird archiviert, nicht endgültig gelöscht." data-planung-karte-verwerfen />
         @endunless
     </div>
-</div>
+</x-fa::card>

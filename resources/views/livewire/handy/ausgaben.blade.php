@@ -15,7 +15,7 @@
         <input type="search" wire:model.live.debounce.300ms="search" placeholder="{{ $suchHinweis }}" aria-label="{{ $titel }} durchsuchen"
                class="fa-control h-12 text-[length:var(--fa-text-base)]" data-fa-handy-suche>
 
-        <ul class="flex flex-col rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-y divide-[var(--fa-line)]">
+        <x-fa::card as="ul" class="flex flex-col divide-y divide-[var(--fa-line)]">
             @forelse($karten as $k)
                 <li wire:key="ha-{{ $k['id'] }}" class="flex items-stretch">
                     <a href="{{ $k['href'] }}" class="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 min-h-[60px] text-left" data-fa-handy-karte="{{ $k['id'] }}">
@@ -37,7 +37,7 @@
             @empty
                 <li class="p-4"><x-fa::empty compact icon="heroicon-o-magnifying-glass" title="Nichts gefunden">Andere Suche versuchen.</x-fa::empty></li>
             @endforelse
-        </ul>
+        </x-fa::card>
 
         @if($eintraege->hasPages())
             <div class="flex items-center justify-between gap-3" data-fa-handy-blaettern>

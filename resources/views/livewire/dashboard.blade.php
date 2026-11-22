@@ -105,7 +105,7 @@
             </div>
 
             {{-- Rezepte nach Status + Vorlagen: führt direkt in den gefilterten Rezept-Browser. --}}
-            <div class="fa-surface flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3" data-dashboard-rezeptstatus>
+            <x-fa::card class="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3" data-dashboard-rezeptstatus="">
                 <span class="fa-t-label">Rezepte nach Status</span>
                 @foreach($rezeptStatus as [$wert, $text, $anzahl, $url])
                     <a href="{{ $url }}" class="inline-flex items-center gap-2 group" wire:key="status-{{ $wert }}">
@@ -118,7 +118,7 @@
                     <span class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)] group-hover:text-[var(--fa-accent)]">Vorlagen</span>
                     <span class="tabular-nums text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)] group-hover:text-[var(--fa-accent)]">{{ $zahl($workflow['templates'] ?? 0) }}</span>
                 </a>
-            </div>
+            </x-fa::card>
         </section>
 
         {{-- 3. Nebensächliches: Schnellzugriff, KI-Nutzung, Controlling-Verweis. --}}

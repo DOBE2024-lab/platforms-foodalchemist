@@ -17,7 +17,7 @@
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         @foreach($kacheln as $key => $k)
-            <div class="rounded-[var(--fa-radius-card)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-4 flex flex-col gap-2" data-start-kachel="{{ $key }}">
+            <x-fa::card class="p-4 flex flex-col gap-2" data-start-kachel="{{ $key }}">
                 <h3 class="flex items-center gap-2 fa-t-h2"><span class="w-2 h-2 rounded-full bg-[var(--fa-accent)]"></span>{{ $k['label'] }}</h3>
                 <ul class="flex flex-col gap-1.5">
                     @foreach($k['zeilen'] as $z)
@@ -36,7 +36,7 @@
                         </li>
                     @endforeach
                 </ul>
-            </div>
+            </x-fa::card>
         @endforeach
 
         @if($seiten !== [])

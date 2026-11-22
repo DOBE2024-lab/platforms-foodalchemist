@@ -163,11 +163,11 @@
                     {{-- ═══ LINKS: Positionen ═══ --}}
                     <div class="flex-1 min-w-0 w-full flex flex-col gap-3">
                         {{-- Kartenkopf: kommt automatisch aus der Identität --}}
-                        <div class="fa-surface px-4 py-3 flex flex-col gap-0.5">
+                        <x-fa::card class="px-4 py-3 flex flex-col gap-0.5">
                             <span class="fa-t-muted">Kartenkopf, automatisch aus der Identität</span>
                             <p class="fa-t-h2">{{ $format->consumer_name ?: $format->name }}</p>
                             @if($format->claim)<p class="text-[length:var(--fa-text-md)] italic text-[var(--fa-ink-2)]">„{{ $format->claim }}“</p>@endif
-                        </div>
+                        </x-fa::card>
 
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <h3 class="flex items-baseline gap-2 fa-t-h2">
@@ -192,7 +192,7 @@
                                     $c = $s->concept;
                                     $istPaketSlot = ($c?->kind ?? null) === 'paket';
                                 @endphp
-                                <div wire:key="slot-{{ $s->id }}" class="fa-surface p-4 flex flex-col gap-3 {{ $rahmen }}">
+                                <x-fa::card wire:key="slot-{{ $s->id }}" class="p-4 flex flex-col gap-3 {{ $rahmen }}">
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="min-w-0 flex flex-wrap items-center gap-2">
                                             <span class="fa-t-muted tabular-nums">Position {{ $loop->iteration }}</span>
@@ -277,10 +277,10 @@
                                     @else
                                         <x-fa::notice tone="crit">Das Konzept dieser Position ist nicht mehr verfügbar. Position entfernen.</x-fa::notice>
                                     @endif
-                                </div>
+                                </x-fa::card>
                             @else
                                 {{-- Gliederung: Überschrift / Freitext / Leerzeile --}}
-                                <div wire:key="slot-{{ $s->id }}" class="fa-surface px-4 py-3 flex items-start gap-3 {{ $rahmen }}">
+                                <x-fa::card wire:key="slot-{{ $s->id }}" class="px-4 py-3 flex items-start gap-3 {{ $rahmen }}">
                                     <div class="flex-1 min-w-0">
                                         @if($s->type === 'header')
                                             <x-fa::field label="Überschrift" for="fmt-b-{{ $s->id }}">
@@ -309,17 +309,17 @@
                                         <x-fa::icon-button size="sm" icon="heroicon-m-chevron-down" label="Nach unten schieben" wire:click="slotHochRunter({{ $s->id }}, 1)" :disabled="$loop->last" class="disabled:opacity-30 disabled:pointer-events-none" />
                                         <x-fa::icon-button size="sm" icon="heroicon-m-x-mark" tone="danger" label="{{ ($blockLabel[$s->type] ?? 'Position') }} entfernen" wire:click="slotEntfernen({{ $s->id }})" />
                                     </div>
-                                </div>
+                                </x-fa::card>
                             @endif
                         @empty
-                            <div class="fa-surface">
+                            <x-fa::card>
                                 <x-fa::empty icon="heroicon-o-rectangle-stack" title="Noch kein Aufbau">Rechts eine neue Edition anlegen, ein Konzept oder Paket einfügen oder die Karte mit Überschriften gliedern.</x-fa::empty>
-                            </div>
+                            </x-fa::card>
                         @endforelse
                     </div>
 
                     {{-- ═══ RECHTS: Einfügen (Conceptor-Stil) ═══ --}}
-                    <aside class="w-full lg:w-80 xl:w-96 shrink-0 fa-surface p-4 flex flex-col gap-4 lg:sticky lg:top-14 self-start">
+                    <x-fa::card as="aside" class="w-full lg:w-80 xl:w-96 shrink-0 p-4 flex flex-col gap-4 lg:sticky lg:top-14 self-start">
                         {{-- Picker: Konzept ODER Paket einfügen — das Häufigste zuerst --}}
                         <div class="flex flex-col gap-2">
                             <h4 class="fa-t-h3">Einfügen</h4>
@@ -421,7 +421,7 @@
                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-plus" wire:click="blockHinzu('spacer')">Leerzeile</x-fa::button>
                             </div>
                         </div>
-                    </aside>
+                    </x-fa::card>
                 </div>
             @endif
 
@@ -453,7 +453,7 @@
                         <x-fa::empty compact icon="heroicon-o-rectangle-stack" title="Noch keine Editionen">Im Reiter Aufbau ein Konzept einfügen.</x-fa::empty>
                     @else
                         <div class="overflow-x-auto -mx-4">
-                            <table class="fa-table">
+                            <x-fa::table>
                                 <thead>
                                     <tr>
                                         <th class="w-full">Edition</th>
@@ -472,7 +472,7 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-                            </table>
+                            </x-fa::table>
                         </div>
                     @endif
                 </x-fa::section>
@@ -493,7 +493,7 @@
                     @else
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                             @foreach($format->images as $img)
-                                <div wire:key="img-{{ $img->id }}" class="rounded-[var(--fa-radius-surface)] overflow-hidden border bg-[var(--fa-surface)] {{ $img->is_hero ? 'border-[var(--fa-accent)] ring-1 ring-[var(--fa-accent)]' : 'border-[var(--fa-line)]' }}">
+                                <x-fa::card wire:key="img-{{ $img->id }}" class="overflow-hidden {{ $img->is_hero ? 'border-[var(--fa-accent)] ring-1 ring-[var(--fa-accent)]' : 'border-[var(--fa-line)]' }}">
                                     <div class="relative">
                                         <img src="{{ $img->url() }}" alt="{{ $img->caption }}" class="w-full h-36 object-cover" />
                                         @if($img->is_hero)<x-fa::badge tone="accent" icon="heroicon-m-star" class="absolute top-2 left-2">Titelbild</x-fa::badge>@endif
@@ -510,7 +510,7 @@
                                             <x-fa::icon-button size="sm" icon="heroicon-m-trash" tone="danger" label="Bild löschen" wire:click="bildLoeschen({{ $img->id }})" wire:confirm="Bild löschen?" />
                                         </div>
                                     </div>
-                                </div>
+                                </x-fa::card>
                             @endforeach
                         </div>
                     @endif

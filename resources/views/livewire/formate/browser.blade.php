@@ -115,9 +115,9 @@
             </x-slot:actions>
         </x-fa::page-header>
 
-        <div class="fa-surface overflow-hidden">
+        <x-fa::card class="overflow-hidden">
             <div class="max-h-[70vh] overflow-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">
                         <tr>
                             <th class="w-full">Name</th>
@@ -176,10 +176,10 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             <div class="px-4 py-3 border-t border-[var(--fa-line)]">{{ $items->links('foodalchemist::components.fa.pagination') }}</div>
-        </div>
+        </x-fa::card>
     </x-ui-page-container>
     @endif
 

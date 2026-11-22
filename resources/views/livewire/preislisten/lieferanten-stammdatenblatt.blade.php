@@ -14,14 +14,14 @@
                             <x-fa::button size="sm" variant="ghost" wire:click="entscheiden({{ $z->id }}, 'verwerfen')" data-blatt-verwerfen>Verwerfen</x-fa::button>
                         </span>
                     </div>
-                    <table class="fa-table fa-table--compact">
+                    <x-fa::table compact>
                         <thead><tr><th>Feld</th><th>Bisher</th><th>Vorschlag</th></tr></thead>
                         <tbody>
                             @foreach(($z->diff ?? []) as $feld => [$alt, $neu])
                                 <tr><td>{{ $feldnamen[$feld] ?? $feld }}</td><td>{{ is_array($alt) ? implode(', ', $alt) : ($alt ?? '—') }}</td><td class="font-medium">{{ is_array($neu) ? implode(', ', $neu) : $neu }}</td></tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             @endforeach
         </div>

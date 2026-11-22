@@ -13,7 +13,7 @@
             @else
                 {{-- schmale Karte im Host: die Tabelle scrollt waagerecht, die Aktionsspalte wird nie abgeschnitten --}}
                 <div class="overflow-x-auto -mx-4">
-                <table class="fa-table fa-table--compact" data-stamm-paket-tabelle>
+                <x-fa::table compact data-stamm-paket-tabelle="">
                     <thead><tr><th>Mandant</th><th>Stamm-Paket</th><th class="text-right">Abos am Paket</th><th></th></tr></thead>
                     <tbody>
                         @foreach($mandanten as $m)
@@ -35,7 +35,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
                 </div>
             @endif
         </x-fa::section>

@@ -617,7 +617,7 @@
                     @if($hinweis)<x-fa::notice tone="ok" data-gp-formen-hinweis>{{ $hinweis }}</x-fa::notice>@endif
                     @if($formen->isNotEmpty())
                         <div class="overflow-x-auto">
-                            <table class="fa-table fa-table--compact">
+                            <x-fa::table compact>
                                 <thead><tr><th>Form</th><th class="num">Gewicht</th><th>Herkunft</th><th><span class="sr-only">Aktion</span></th></tr></thead>
                                 <tbody>
                                     @foreach($formen as $f)
@@ -632,7 +632,7 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-                            </table>
+                            </x-fa::table>
                         </div>
                     @else
                         <p class="fa-t-muted" data-gp-formen-leer>Noch keine Gewichte je Form. Schätzen lassen oder unten eintragen.</p>

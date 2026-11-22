@@ -170,7 +170,7 @@
                         </div>
                     @endif
                 </div>
-                <div class="max-h-[44vh] overflow-auto fa-surface divide-y divide-[var(--fa-line)]">
+                <x-fa::card class="max-h-[44vh] overflow-auto divide-y divide-[var(--fa-line)]">
                     @foreach(($batchCandidates['orders'] ?? []) as $order)
                         <div wire:key="batch-order-{{ $order['id'] }}" class="px-3 py-2.5 flex items-start justify-between gap-4" data-orders-batch-row="{{ $order['id'] }}">
                             <div class="min-w-0 flex items-start gap-3">
@@ -191,7 +191,7 @@
                             </div>
                         </div>
                     @endforeach
-                </div>
+                </x-fa::card>
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <x-fa::button variant="danger" wire:click="auswahlStornieren" wire:confirm="Ausgewählte Entwürfe wirklich stornieren?">Auswahl stornieren</x-fa::button>
                     <div class="flex items-center gap-3">
@@ -280,7 +280,7 @@
             @endif
         </div>
 
-        <div class="fa-surface overflow-hidden" data-orders-tabelle>
+        <x-fa::card class="overflow-hidden" data-orders-tabelle="">
             <div class="px-4 pt-4 pb-3 flex items-start justify-between gap-3 border-b border-[var(--fa-line)]">
                 <div class="min-w-0">
                     <h2 class="fa-t-h2">{{ $sichtTitel[$sicht] ?? 'Bestellungen' }}</h2>
@@ -322,14 +322,14 @@
                                     </div>
                                     <x-fa::money :value="$selectedRound['total_net']" class="text-[length:var(--fa-text-md)] font-semibold" />
                                 </div>
-                                <div class="fa-surface divide-y divide-[var(--fa-line)]">
+                                <x-fa::card class="divide-y divide-[var(--fa-line)]">
                                     @foreach($selectedRound['orders'] as $order)
                                         <button type="button" wire:click="oeffnen({{ $order['id'] }})" wire:key="round-order-{{ $order['id'] }}" class="w-full px-3 py-2 text-left flex items-center justify-between gap-2 hover:bg-[var(--fa-hover)]">
                                             <span class="fa-t-body truncate">{{ $order['supplier'] }}</span>
                                             <span class="shrink-0 fa-t-muted tabular-nums">{{ $order['positions'] }} Pos. · {{ number_format($order['total_net'], 2, ',', '.') }} €</span>
                                         </button>
                                     @endforeach
-                                </div>
+                                </x-fa::card>
                                 @if(!empty($selectedRound['blockers']))
                                     <x-fa::signal tone="warn" class="mt-3">{{ implode(' · ', $selectedRound['blockers']) }}</x-fa::signal>
                                 @endif
@@ -373,7 +373,7 @@
                         @endforelse
                     </div>
                 @else
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">
                             <tr>
                                 @if($mitAuswahl)
@@ -471,10 +471,10 @@
                                 @endforeach
                             @endif
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 @endif
             </div>
-        </div>
+        </x-fa::card>
     </x-ui-page-container>
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}
 </x-ui-page>

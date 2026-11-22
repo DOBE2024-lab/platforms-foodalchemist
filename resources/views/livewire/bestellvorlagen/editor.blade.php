@@ -44,7 +44,7 @@
                 <p class="fa-t-muted">Noch keine Positionen — unten hinzufügen.</p>
             @else
                 <div class="overflow-x-auto">
-                    <table class="fa-table fa-table--compact min-w-[640px]" data-vorlage-positionen>
+                    <x-fa::table compact class="min-w-[640px]" data-vorlage-positionen="">
                         <thead><tr><th>Art</th><th>Position</th><th class="text-right">Menge</th><th>Einheit</th><th></th></tr></thead>
                         <tbody>
                             @foreach($vorlage->lines as $l)
@@ -66,7 +66,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             @endif
 
@@ -103,7 +103,7 @@
                             <span class="font-semibold">{{ $g['supplier'] }}</span>
                             <span class="tabular-nums font-semibold"><x-fa::money :value="$g['total_net']" /></span>
                         </div>
-                        <table class="fa-table fa-table--compact mt-1">
+                        <x-fa::table compact class="mt-1">
                             <tbody>
                                 @foreach($g['positionen'] as $i => $p)
                                     <tr wire:key="vp-{{ $g['supplier_id'] }}-{{ $i }}">
@@ -113,7 +113,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endforeach
                 @foreach($vorschau['unresolved'] as $u)

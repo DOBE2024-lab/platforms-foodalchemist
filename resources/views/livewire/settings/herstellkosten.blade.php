@@ -28,7 +28,7 @@
 
     {{-- Ebene 2: Seiten-Wähler Team / Betrieb, steuert die GANZE Seite (lokal, nicht die globale Betriebsbrille) --}}
     @if(count($betriebeOptionen) > 0)
-        <div class="fa-surface p-3 flex flex-col gap-2">
+        <x-fa::card class="p-3 flex flex-col gap-2">
             <div class="flex flex-wrap items-end gap-x-4 gap-y-2">
                 <x-fa::field label="Kosten erfassen für" for="hk-betrieb" class="w-80 max-w-full">
                     <x-fa::select id="hk-betrieb" wire:model.live="outletId">
@@ -54,7 +54,7 @@
             @else
                 <p class="fa-t-muted">Der Team-Standard ist die Vorlage für neue Kalkulationsprofile. Wähle ein Kalkulationsprofil, um dessen eigene Kalkulation zu pflegen.</p>
             @endif
-        </div>
+        </x-fa::card>
     @endif
 
     {{-- Spec 65: der Betriebs-Wähler oben bleibt im Lesemodus bedienbar (lädt nur), alles darunter ist gesperrt --}}
@@ -88,7 +88,7 @@
         </div>
 
         <div class="overflow-x-auto -mx-4 px-4">
-            <table class="fa-table min-w-[760px]">
+            <x-fa::table class="min-w-[760px]">
                 <thead><tr>
                     <th>Kostenblock</th>
                     <th>Berechnet als</th>
@@ -150,7 +150,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
 
         {{-- Neuer Kostenblock --}}
@@ -237,7 +237,7 @@
 
         {{-- Fixkosten-Liste --}}
         <div class="overflow-x-auto -mx-4 px-4">
-            <table class="fa-table min-w-[640px]">
+            <x-fa::table class="min-w-[640px]">
                 <thead><tr>
                     <th class="w-full">Bezeichnung</th>
                     <th>Kostenblock</th>
@@ -264,7 +264,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
         @if(count($fixListe) === 0)
             <x-fa::empty icon="heroicon-o-banknotes" title="{{ $scopeOutletName ? 'Noch keine eigenen Fixkosten für ' . $scopeOutletName : 'Noch keine Fixkosten erfasst' }}" compact>

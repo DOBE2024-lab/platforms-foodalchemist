@@ -15,7 +15,7 @@
     @foreach([['Bereiche', 'Grobe Ziele, an die Wissen gebunden war.', $bereiche], ['KI-Schritte', 'Feine Ziele: einzelne Arbeitsschritte der KI.', $prompts]] as [$titel, $satz, $liste])
         <x-fa::section :title="$titel" :description="$satz" :meta="$liste->count() . ' Einträge'">
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead>
                         <tr>
                             <th class="w-1/3">Name</th>
@@ -58,7 +58,7 @@
                             <tr><td colspan="4"><x-fa::empty compact title="Keine Einträge" /></td></tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         </x-fa::section>
     @endforeach

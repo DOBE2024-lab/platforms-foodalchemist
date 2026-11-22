@@ -21,8 +21,7 @@
     }
 @endphp
 
-<div class="fa-surface overflow-hidden" data-coverage-panel data-coverage-gesamt="{{ $coverage['ampel_gesamt'] }}"
-     x-data="{ covAuf: {{ ($z['verletzt'] ?? 0) > 0 ? 'true' : 'false' }} }">
+<x-fa::card class="overflow-hidden" data-coverage-panel="" data-coverage-gesamt="{{ $coverage['ampel_gesamt'] }}" x-data="{ covAuf: {{ ($z['verletzt'] ?? 0) > 0 ? 'true' : 'false' }} }">
     <button type="button" x-on:click="covAuf = !covAuf" x-bind:aria-expanded="covAuf"
             class="w-full flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left hover:bg-[var(--fa-hover)]">
         <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $ampelPunkt[$coverage['ampel_gesamt']] ?? 'bg-[var(--fa-ink-3)]' }}"></span>
@@ -58,4 +57,4 @@
             <p class="px-4 py-3 fa-t-muted">Das Gerüst hat noch keine prüfbaren Vorgaben. Im Planungs-Gerüst Soll-Werte setzen.</p>
         @endforelse
     </div>
-</div>
+</x-fa::card>

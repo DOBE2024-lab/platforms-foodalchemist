@@ -45,7 +45,7 @@
             <x-fa::empty compact icon="heroicon-o-calculator" title="Noch keine Vorschau">Im Reiter Ziele mindestens ein Ziel einfügen, dann stehen hier Ansätze, Mengen und Arbeitszeit.</x-fa::empty>
         @else
             <div class="overflow-x-auto -mx-4 px-4">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead><tr>
                         <th class="w-full min-w-[12rem]">Rezept</th>
                         <th class="num">Ansätze</th>
@@ -84,7 +84,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             @foreach($vorschau['warnungen'] as $w)
                 <x-fa::notice tone="warn">{{ $w }}</x-fa::notice>

@@ -41,7 +41,7 @@
     <div x-data="{ einfuegenAus: '{{ $vkKontext ? 'rez' : 'gp' }}' }" class="fa-zutaten-layout" data-zutaten-layout>
         {{-- Gericht = nur Basisrezepte (Dominique 17.11.2026): im Gericht gibt es weder GP-Spalte noch GP-Umschalter — nichts Gesperrtes, es taucht einfach nicht auf. --}}
         @unless($vkKontext)
-        <aside class="fa-surface p-3 flex flex-col gap-3 min-w-0" :class="einfuegenAus === 'gp' ? '' : 'fa-zutaten-passiv'" data-einfuegen="gp" aria-label="Grundprodukte einfügen">
+        <x-fa::card as="aside" class="p-3 flex flex-col gap-3 min-w-0" x-bind:class="einfuegenAus === 'gp' ? '' : 'fa-zutaten-passiv'" data-einfuegen="gp" aria-label="Grundprodukte einfügen">
             {{-- Editor schmaler als 92 rem: EINE Einfüge-Spalte mit Umschalter; breiter stehen beide Spalten nebeneinander --}}
             <div role="group" aria-label="Einfügen aus" class="fa-zutaten-umschalter flex p-0.5 gap-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)]">
                 <button type="button" @click="einfuegenAus = 'gp'" :aria-pressed="einfuegenAus === 'gp'"
@@ -106,11 +106,11 @@
                     <p x-show="gpTotal > 200" x-cloak class="px-2 py-2 fa-t-muted" x-text="(gpTotal - 200) + ' weitere, bitte Suche oder Filter verfeinern'"></p>
                 </div>
             </div>
-        </aside>
+        </x-fa::card>
         @endunless
 
         <div class="fa-zutaten-mitte flex flex-col gap-3 min-w-0">
-    <div class="sticky top-0 z-10 flex flex-col gap-2 p-3 rounded-[var(--fa-radius-surface)] bg-[var(--fa-surface)] border border-[var(--fa-line)] shadow-sm" data-add-zeile>
+    <x-fa::card class="sticky top-0 z-10 flex flex-col gap-2 p-3 shadow-sm" data-add-zeile="">
         {{-- Suche (ohne geparktes Ziel) --}}
         <div x-show="geparkt === null" class="flex flex-wrap items-center gap-2">
             <div class="relative flex-1 min-w-[14rem]">
@@ -145,10 +145,10 @@
                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-x-mark" x-on:click="filterZuruecksetzen()">Filter zurücksetzen</x-fa::button>
             </div>
 
-    </div>
+    </x-fa::card>
     {{-- ── Zutaten-Tabelle: scrollt seitlich in schmalen Spalten (Worker), statt abzuschneiden ── --}}
-    <div class="overflow-x-auto rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)]">
-        <table class="fa-table fa-table--compact" data-zutaten-tabelle>
+    <x-fa::card class="overflow-x-auto">
+        <x-fa::table compact data-zutaten-tabelle="">
             {{-- R5: BIS-Spalte raus (quantity_max bleibt in den Daten); drei EK-Sichten --}}
             @php($koepfe = ['Pos.' => null, 'Menge' => null, 'Einheit' => null, 'Zutat' => 'Klick auf den Namen öffnet Grundprodukt oder Basisrezept als Fenster über dem Editor']
                 + ($vkKontext ? ['Rolle' => 'Rolle im Gericht: Aromaträger, Komponente, Beilage oder Garnitur'] : [])
@@ -295,7 +295,7 @@
                                 <span class="tabular-nums" x-text="(zeile._peek?.length ?? 0) + ' Artikel für'"></span><span class="font-semibold text-[var(--fa-ink)]" x-text="zeile.ziel_name"></span>
                             </p>
                             <div class="overflow-x-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)]">
-                                <table class="fa-table fa-table--compact">
+                                <x-fa::table compact>
                                     <thead><tr>
                                         <th class="w-px"><span class="sr-only">Hauptartikel</span></th><th>Lieferant</th><th>Art.-Nr.</th>
                                         <th>Bezeichnung</th><th>Marke</th><th>Gebinde</th>
@@ -319,7 +319,7 @@
                                             <td colspan="9" class="text-[var(--fa-ink-3)]">Keine Artikel mit diesem Grundprodukt verknüpft.</td>
                                         </tr>
                                     </tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                         </div>
                     </td>
@@ -341,7 +341,7 @@
                                    @click.prevent="Livewire.dispatch('recipe-modal.oeffnen', { id: zeile.referenced_recipe_id })" data-rez-oeffnen>Im Editor öffnen</a>
                             </p>
                             <div class="overflow-x-auto rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)]">
-                                <table class="fa-table fa-table--compact">
+                                <x-fa::table compact>
                                     <thead><tr><th class="w-px">#</th><th>Zutat</th><th class="text-right">Menge</th><th>Typ</th></tr></thead>
                                     <tbody>
                                         <template x-for="(z, j) in (zeile._peekRez?.zutaten ?? [])" :key="j">
@@ -356,7 +356,7 @@
                                             <td colspan="4" class="text-[var(--fa-ink-3)]">Keine Zutaten hinterlegt.</td>
                                         </tr>
                                     </tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                         </div>
                     </td>
@@ -383,8 +383,8 @@
                     <td></td>
                 </tr>
             </tfoot>
-        </table>
-    </div>
+        </x-fa::table>
+    </x-fa::card>
 
     {{-- Unter der Tabelle: Ausbeute + Preis-Hinweis — bricht um, wird in schmalen Spalten nie abgeschnitten --}}
     <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">

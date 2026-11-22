@@ -30,7 +30,7 @@
     @else
         @if($vorgabenListe !== [])
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table fa-table--compact">
+                <x-fa::table compact>
                     <thead><tr>
                         <th class="pl-4">Chip</th><th>Mahlzeit</th><th class="num">mind.</th><th class="num">höchstens</th><th class="pr-4 w-full"><span class="sr-only">Aktionen</span></th>
                     </tr></thead>
@@ -69,7 +69,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
         <div class="flex flex-wrap items-end gap-2 {{ $vorgabenListe !== [] ? 'pt-3 border-t border-[var(--fa-line)]' : '' }}">

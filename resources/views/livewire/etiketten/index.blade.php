@@ -134,7 +134,7 @@
                 <p class="fa-t-muted">Noch nichts gedruckt.</p>
             @else
                 <div class="overflow-x-auto">
-                    <table class="fa-table fa-table--compact">
+                    <x-fa::table compact>
                         <thead><tr><th>Wann</th><th>Wer</th><th>Etikett</th><th class="text-right">Anzahl</th><th></th></tr></thead>
                         <tbody>
                             @foreach($verlauf as $vz)
@@ -147,7 +147,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             @endif
         </x-fa::section>

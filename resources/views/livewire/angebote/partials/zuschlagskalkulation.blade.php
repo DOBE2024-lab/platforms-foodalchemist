@@ -69,7 +69,7 @@
         {{-- AUFTRAGSKOSTEN-Wasserfall: MEK → FEK → Schwund → MGK → FGK → HK → V&V → Logistik → HK2 → Preisempfehlung --}}
         @if(count($sim['cost_breakdown'] ?? []))
             <div class="overflow-x-auto" data-auftragskosten-wasserfall>
-                <table class="fa-table fa-table--compact">
+                <x-fa::table compact>
                     <thead>
                         <tr>
                             <th class="w-full">Auftragskosten</th>
@@ -104,7 +104,7 @@
                             <td class="num">{{ $zkEuro($simDb) }}</td>
                         </tr>
                     </tfoot>
-                </table>
+                </x-fa::table>
             </div>
         @endif
 
@@ -117,7 +117,7 @@
                     <span class="font-normal text-[var(--fa-ink-3)]">({{ number_format($simMinuten, 1, ',', '.') }} Minuten)</span>
                 </summary>
                 <div class="overflow-x-auto pt-2">
-                    <table class="fa-table fa-table--compact min-w-[720px]">
+                    <x-fa::table compact class="min-w-[720px]">
                         <thead>
                             <tr>
                                 <th class="w-full">Rezept</th>
@@ -144,7 +144,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             </details>
         @endif
@@ -159,7 +159,7 @@
         @endphp
         <x-fa::section title="Wareneinsatz je Position" icon="heroicon-o-list-bullet" meta="je Gast" data-angebot-wareneinsatz-positionen>
             <div class="overflow-x-auto">
-                <table class="fa-table fa-table--compact">
+                <x-fa::table compact>
                     <thead>
                         <tr>
                             <th class="w-full">Position</th>
@@ -191,7 +191,7 @@
                             <td class="num">{{ $sumVkPp > 0 ? number_format(\Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct((float) $sumEkPp, $sumVkPp, null), 1, ',', '.') . ' %' : '–' }}</td>
                         </tr>
                     </tfoot>
-                </table>
+                </x-fa::table>
             </div>
         </x-fa::section>
     @endif

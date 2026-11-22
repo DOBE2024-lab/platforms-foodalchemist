@@ -39,8 +39,7 @@
      rendert, über foodalchemist.ai.voice_agent_panel_planung). Startet eingeklappt (Team-
      Entscheid Dominique), `x-init` löst dieselbe Initialisierung aus, die früher der
      Öffnen-Klick auslöste (Sitzung wiederherstellen, Kontext setzen — siehe VoiceModal::oeffnen()). --}}
-<div class="fa-surface" data-voice-panel-planung
-     x-data="{ aufgeklappt: false }" x-init="$wire.oeffnen()">
+<x-fa::card data-voice-panel-planung="" x-data="{ aufgeklappt: false }" x-init="$wire.oeffnen()">
     <button type="button" @click="aufgeklappt = ! aufgeklappt" x-bind:aria-expanded="aufgeklappt"
             class="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-left rounded-[var(--fa-radius-surface)] hover:bg-[var(--fa-hover)] transition-colors"
             data-voice-panel-toggle>
@@ -473,4 +472,4 @@
             </div>
         @endif
     </div>
-</div>
+</x-fa::card>

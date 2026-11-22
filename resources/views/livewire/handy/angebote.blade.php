@@ -27,7 +27,7 @@
             @endforeach
         </div>
 
-        <ul class="flex flex-col rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-y divide-[var(--fa-line)]">
+        <x-fa::card as="ul" class="flex flex-col divide-y divide-[var(--fa-line)]">
             @forelse($karten as $k)
                 <li wire:key="hang-{{ $k['id'] }}" class="flex items-stretch">
                     <a href="{{ $k['href'] }}" class="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 min-h-[60px] text-left" data-fa-handy-angebot="{{ $k['id'] }}">
@@ -54,7 +54,7 @@
             @empty
                 <li class="p-4"><x-fa::empty compact icon="heroicon-o-magnifying-glass" title="Nichts gefunden">Suche oder Status zurücksetzen.</x-fa::empty></li>
             @endforelse
-        </ul>
+        </x-fa::card>
 
         @if($eintraege->hasPages())
             <div class="flex items-center justify-between gap-3" data-fa-handy-blaettern>

@@ -25,7 +25,7 @@
     <input type="search" wire:model.live.debounce.300ms="{{ $suchFeld }}" placeholder="{{ $suchHinweis }}" aria-label="{{ $titel }} durchsuchen"
            class="fa-control h-12 text-[length:var(--fa-text-base)]" data-fa-handy-suche>
 
-    <ul class="flex flex-col rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] divide-y divide-[var(--fa-line)]">
+    <x-fa::card as="ul" class="flex flex-col divide-y divide-[var(--fa-line)]">
         @forelse($eintraege as $r)
             <li wire:key="hk-{{ $r->id }}">
                 <button type="button" wire:click="{{ $wahl }}({{ $r->id }})" x-on:click="$store.ui?.mSet('{{ $scope }}', 'open', true)"
@@ -43,6 +43,6 @@
         @empty
             <li class="p-4"><x-fa::empty compact icon="heroicon-o-magnifying-glass" title="Nichts gefunden">{{ $leer }}</x-fa::empty></li>
         @endforelse
-    </ul>
+    </x-fa::card>
     <div>{{ $eintraege->links('foodalchemist::components.fa.pagination') }}</div>
 </div>

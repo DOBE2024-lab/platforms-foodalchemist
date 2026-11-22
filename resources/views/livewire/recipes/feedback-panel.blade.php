@@ -36,7 +36,7 @@
     {{-- Bestehende Einträge --}}
     <div class="flex flex-col gap-2">
         @forelse($eintraege as $f)
-            <article class="fa-surface p-3 flex flex-col gap-1.5" wire:key="fb-{{ $f->id }}">
+            <x-fa::card as="article" class="p-3 flex flex-col gap-1.5" wire:key="fb-{{ $f->id }}">
                 <div class="flex items-start justify-between gap-2">
                     <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                         <x-fa::badge :tone="$quelleTon[$f->quelle->value] ?? 'neutral'">{{ $f->quelle->label() }}</x-fa::badge>
@@ -74,11 +74,11 @@
                 @if($f->comment)<p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">{{ $f->comment }}</p>@endif
                 @if($f->kontext_label)<p class="fa-t-muted">Anlass: {{ $f->kontext_label }}@if($f->kontext_datum) · {{ $f->kontext_datum->format('d.m.Y') }}@endif</p>@endif
                 @if($f->spawned_recipe_id)<x-fa::signal tone="info" icon="heroicon-m-arrow-trending-up">Weiterentwicklung als Entwurf angelegt (Rezept {{ $f->spawned_recipe_id }})</x-fa::signal>@endif
-            </article>
+            </x-fa::card>
         @empty
-            <div class="fa-surface">
+            <x-fa::card>
                 <x-fa::empty compact icon="heroicon-o-chat-bubble-left-right" title="Noch kein Feedback">Die Küche, die es kocht, ist die ehrlichste Quelle. Den ersten Eintrag unten erfassen.</x-fa::empty>
-            </div>
+            </x-fa::card>
         @endforelse
     </div>
 

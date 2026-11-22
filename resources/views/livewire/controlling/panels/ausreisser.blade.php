@@ -34,7 +34,7 @@
         </x-fa::empty>
     @else
         <div class="overflow-x-auto">
-            <table class="fa-table">
+            <x-fa::table>
                 <thead>
                     <tr>
                         @if(! empty($jeStandort))<th>Standort</th>@endif
@@ -65,7 +65,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-fa::table>
         </div>
         <p class="fa-t-muted">
             Korrigiert wird an der Quelle, in der Bestellung oder im Import. Hier wird nur markiert.

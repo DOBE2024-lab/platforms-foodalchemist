@@ -70,7 +70,7 @@
                 @endif
 
                 <div class="overflow-x-auto -mx-4 px-4">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead>
                             <tr>
                                 <th class="w-full min-w-[14rem]">Rezept oder Position</th>
@@ -162,7 +162,7 @@
                                                         @svg('heroicon-m-information-circle', 'w-4 h-4 shrink-0 text-[var(--fa-warn)]')
                                                     @endif
                                                 </summary>
-                                                <div class="absolute right-0 top-full z-30 mt-1 w-80 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-3 text-left whitespace-normal shadow-lg" data-zeile-behaelter-detail>
+                                                <x-fa::card class="absolute right-0 top-full z-30 mt-1 w-80 p-3 text-left whitespace-normal shadow-lg" data-zeile-behaelter-detail="">
                                                     <p class="mb-1 font-medium text-[var(--fa-ink)]">Behälter je Komponente</p>
                                                     <ul class="flex flex-col gap-1">
                                                         @foreach($behaelter['zeilen'] as $teil)<li>{{ $teil }}</li>@endforeach
@@ -174,7 +174,7 @@
                                                             @if($behaelter['luecken'] > 0){{ $behaelter['luecken'] }} {{ $behaelter['luecken'] === 1 ? 'Position' : 'Positionen' }} ohne berechenbaren Bedarf.@endif
                                                         </p>
                                                     @endif
-                                                </div>
+                                                </x-fa::card>
                                             </details>
                                         @endif
                                     </td>
@@ -254,7 +254,7 @@
                                 </td></tr>
                             @endforelse
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
 
                 @if($darfEditieren)

@@ -57,7 +57,7 @@
             @if($zeilen->isEmpty())
                 <p class="fa-t-muted">Noch keine Leistungen. Oben aus Vorlagen übernehmen oder frei anlegen.</p>
             @else
-                <table class="fa-table fa-table--compact">
+                <x-fa::table compact>
                     <thead><tr><th>Leistung</th><th>Menge</th><th>Preis je</th><th class="num">EK</th><th class="num">VK</th><th></th></tr></thead>
                     <tbody>
                         @foreach($zeilen as $l)
@@ -82,7 +82,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             @endif
         </x-fa::section>
     @endif

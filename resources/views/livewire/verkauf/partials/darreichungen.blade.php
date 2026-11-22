@@ -38,7 +38,7 @@
                     $av = $anrichtenVorschau[$d->id] ?? [];
                     $darMarge = app(\Platform\FoodAlchemist\Services\MargeService::class)->marge($d->sales_net, $d->ek_portion);
                 @endphp
-                <div wire:key="dar-{{ $d->id }}" class="fa-surface overflow-hidden flex flex-col" data-dar-editor="{{ $d->id }}">
+                <x-fa::card wire:key="dar-{{ $d->id }}" class="overflow-hidden flex flex-col" data-dar-editor="{{ $d->id }}">
                     <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                         <div><h3 class="font-semibold text-[length:var(--fa-text-lg)]">{{ $d->name ?: $d->servingForm?->label }}</h3>@if($d->name && $d->name !== $d->servingForm?->label)<span class="{{ $hinweis }}">{{ $d->servingForm?->label }}</span>@endif</div>
                         @if($d->is_standard)
@@ -137,7 +137,7 @@
                     @unless($d->is_standard)
                         <div class="border-t border-[var(--fa-line)] p-5"><x-fa::button size="sm" variant="danger" icon="heroicon-o-trash" wire:click="darreichungLoeschen({{ $d->id }})" wire:confirm="Diese Darreichung löschen?">Darreichung löschen</x-fa::button></div>
                     @endunless
-                </div>
+                </x-fa::card>
             @else
                 <x-fa::empty compact title="Noch keine Darreichung">Beim Speichern entsteht automatisch die Standard-Form.</x-fa::empty>
             @endif

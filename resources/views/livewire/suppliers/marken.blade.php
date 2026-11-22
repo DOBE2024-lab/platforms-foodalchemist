@@ -154,7 +154,7 @@
                     <x-fa::empty compact icon="heroicon-o-tag" title="Keine Einträge in dieser Auswahl">Filter ändern.</x-fa::empty>
                 @else
                     <div class="-mx-4 -mb-4 overflow-x-auto border-t border-[var(--fa-line)]">
-                        <table class="fa-table">
+                        <x-fa::table>
                             <thead>
                                 <tr>
                                     <th>Marke</th><th>Kürzel</th><th>Gilt für</th><th>Position</th><th>Typ</th><th class="text-right">Vorrang</th>
@@ -202,7 +202,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
             </x-fa::section>

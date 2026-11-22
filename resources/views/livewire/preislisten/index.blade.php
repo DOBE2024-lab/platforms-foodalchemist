@@ -76,10 +76,10 @@
                         </div>
                         @if($vorschau['beispiel'] !== [])
                             <div class="overflow-x-auto mt-3 -mx-4">
-                                <table class="fa-table fa-table--compact">
+                                <x-fa::table compact>
                                     <thead><tr>@foreach($vorschau['kopf'] as $kopf)<th>{{ $kopf }}</th>@endforeach</tr></thead>
                                     <tbody>@foreach($vorschau['beispiel'] as $zeile)<tr>@foreach($vorschau['kopf'] as $i => $_)<td>{{ $zeile[$i] ?? '' }}</td>@endforeach</tr>@endforeach</tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                         @endif
                         <div class="pt-3">
@@ -97,7 +97,7 @@
             @if($laeufe->isEmpty())
                 <x-fa::empty compact icon="heroicon-o-queue-list" title="Noch keine Läufe">Nach dem ersten Upload steht hier jeder Abgleich mit seinen Zahlen.</x-fa::empty>
             @else
-                <table class="fa-table fa-table--compact">
+                <x-fa::table compact>
                     <thead><tr><th>Datei</th><th>Datum</th><th class="text-right">Zeilen</th><th class="text-right">Treffer offen</th><th class="text-right">Übernommen</th><th class="text-right">Zu prüfen</th><th></th></tr></thead>
                     <tbody>
                         @foreach($laeufe as $l)
@@ -113,7 +113,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             @endif
         </x-fa::section>
 
@@ -132,10 +132,10 @@
                 </div>
                 @if(! empty($lauf->mapping['vorschau']))
                     <div class="overflow-x-auto mt-3 -mx-4">
-                        <table class="fa-table fa-table--compact">
+                        <x-fa::table compact>
                             <thead><tr>@foreach(($lauf->mapping['kopf'] ?? []) as $kopf)<th>{{ $kopf }}</th>@endforeach</tr></thead>
                             <tbody>@foreach($lauf->mapping['vorschau'] as $zeile)<tr>@foreach(($lauf->mapping['kopf'] ?? []) as $i => $_)<td>{{ $zeile[$i] ?? '' }}</td>@endforeach</tr>@endforeach</tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                 @endif
                 @if($darf)
@@ -159,7 +159,7 @@
                     <x-fa::empty compact icon="heroicon-o-check-circle" title="Alles zugeordnet">Alle Zeilen dieses Laufs haben einen Treffer.</x-fa::empty>
                 @else
                     <div class="overflow-x-auto -mx-4">
-                        <table class="fa-table fa-table--compact">
+                        <x-fa::table compact>
                             <thead><tr><th>Zeile</th><th>Status</th><th>Artikelnummer</th><th>Bezeichnung</th><th class="text-right">Preis</th><th>Grund</th></tr></thead>
                             <tbody>
                                 @foreach($pruefliste as $z)
@@ -173,7 +173,7 @@
                                     </tr>
                                 @endforeach
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                     @if($pruefliste->count() >= 500)<p class="fa-t-muted pt-2">Gezeigt werden die ersten 500 Zeilen. Die CSV enthält alle.</p>@endif
                 @endif

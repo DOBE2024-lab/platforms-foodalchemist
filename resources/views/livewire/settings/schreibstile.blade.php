@@ -20,7 +20,7 @@
             </x-fa::empty>
         @else
             <div class="overflow-x-auto -mx-4">
-                <table class="fa-table min-w-[720px]" data-stil-tabelle>
+                <x-fa::table class="min-w-[720px]" data-stil-tabelle="">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -84,7 +84,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
     </x-fa::section>

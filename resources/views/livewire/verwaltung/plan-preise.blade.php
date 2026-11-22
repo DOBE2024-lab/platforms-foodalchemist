@@ -8,7 +8,7 @@
 
         <x-fa::section title="Monatspreise je Baustein" icon="heroicon-o-banknotes" data-plan-preise-aktuell
             description="Netto je Monat. Ein neuer Preis ist eine neue Zeile mit „gültig ab“, die Historie bleibt. Bereits berechnete Tage ändern sich nie.">
-            <div class="overflow-x-auto -mx-4"><table class="fa-table fa-table--compact">
+            <div class="overflow-x-auto -mx-4"><x-fa::table compact>
                 <thead><tr><th>Baustein</th><th class="text-right">€ / Monat</th><th>gültig ab</th></tr></thead>
                 <tbody>
                     @foreach($aktuell as $z)
@@ -19,7 +19,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table></div>
+            </x-fa::table></div>
         </x-fa::section>
 
         <x-fa::section title="Neuen Preis anlegen" icon="heroicon-m-plus">
@@ -47,7 +47,7 @@
                 @if($auswirkung['mandanten'] === [])
                     <p class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">Kein aktiver Mandant nutzt diesen Baustein. Der Preis trifft niemanden.</p>
                 @else
-                    <div class="overflow-x-auto -mx-4"><table class="fa-table fa-table--compact">
+                    <div class="overflow-x-auto -mx-4"><x-fa::table compact>
                         <thead><tr><th>Mandant</th><th class="text-right">Menge</th><th class="text-right">Differenz / Monat</th></tr></thead>
                         <tbody>
                             @foreach($auswirkung['mandanten'] as $m)
@@ -55,7 +55,7 @@
                                     <td class="text-right tabular-nums">{{ number_format($m['differenz_monat'], 2, ',', '.') }} €</td></tr>
                             @endforeach
                         </tbody>
-                    </table></div>
+                    </x-fa::table></div>
                     <p class="pt-2 text-[length:var(--fa-text-md)]">Summe: <strong>{{ number_format($auswirkung['summe_differenz'], 2, ',', '.') }} € / Monat</strong>. Ob eine Preisänderung für Bestandskunden gilt (Preisschutz), klärt die Geschäftsführung, nicht diese Seite.</p>
                 @endif
                 <div class="flex gap-2 pt-3">
@@ -70,7 +70,7 @@
             @if($mandanten === [])
                 <x-fa::empty compact icon="heroicon-o-building-office" title="Keine aktiven Mandanten">Es gibt keinen Mandanten mit Status „aktiv“.</x-fa::empty>
             @else
-                <div class="overflow-x-auto -mx-4"><table class="fa-table fa-table--compact">
+                <div class="overflow-x-auto -mx-4"><x-fa::table compact>
                     <thead><tr><th>Mandant</th><th class="text-right">User</th><th class="text-right">Gebucht bisher</th><th class="text-right">Vorschau Monat</th></tr></thead>
                     <tbody>
                         @foreach($mandanten as $m)
@@ -81,13 +81,13 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table></div>
+                </x-fa::table></div>
             @endif
         </x-fa::section>
 
         @if($historie !== [])
             <x-fa::section title="Verlauf" icon="heroicon-o-clock" data-plan-preise-historie>
-                <div class="overflow-x-auto -mx-4"><table class="fa-table fa-table--compact">
+                <div class="overflow-x-auto -mx-4"><x-fa::table compact>
                     <thead><tr><th>Baustein</th><th class="text-right">€ / Monat</th><th>von</th><th>bis</th><th>Notiz</th></tr></thead>
                     <tbody>
                         @foreach($historie as $h)
@@ -95,7 +95,7 @@
                                 <td>{{ \Carbon\Carbon::parse($h['gueltig_ab'])->format('d.m.Y') }}</td><td>{{ $h['gueltig_bis'] ? \Carbon\Carbon::parse($h['gueltig_bis'])->format('d.m.Y') : '–' }}</td><td>{{ $h['notiz'] }}</td></tr>
                         @endforeach
                     </tbody>
-                </table></div>
+                </x-fa::table></div>
             </x-fa::section>
         @endif
     @endif

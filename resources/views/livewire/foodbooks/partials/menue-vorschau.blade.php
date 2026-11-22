@@ -10,7 +10,7 @@
     $ohneWording = 'italic text-[var(--fa-warn)]';
     $zwischen = 'text-[length:var(--fa-text-sm)] font-semibold text-[var(--fa-ink-2)] mt-1.5';
 @endphp
-<section class="fa-surface p-5 sm:p-6 flex flex-col gap-5 min-w-0" data-fb-menue-vorschau>
+<x-fa::card as="section" class="p-5 sm:p-6 flex flex-col gap-5 min-w-0" data-fb-menue-vorschau="">
     <header class="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[var(--fa-line)]">
         <div class="min-w-0">
             <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)]">So sieht der Kunde das Foodbook</p>
@@ -105,4 +105,4 @@
         Die Gerichtnamen kommen aus dem Gästetext: zuerst der Text im Foodbook, dann der des Konzepts, dann der Standard im Verkauf, zuletzt der interne Name.
         <span class="italic text-[var(--fa-warn)]">Kursiv markiert</span> heißt: kein Gästetext gepflegt.
     </p>
-</section>
+</x-fa::card>

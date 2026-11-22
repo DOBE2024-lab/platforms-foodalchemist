@@ -64,7 +64,7 @@
             @if($kette->isNotEmpty())
                 <section class="flex flex-col gap-1.5" data-fa-handy-gp-artikel="{{ $kette->count() }}">
                     <h2 class="{{ $h2 }}">{{ $kette->count() }} Lieferantenartikel</h2>
-                    <ul class="fa-surface divide-y divide-[var(--fa-line)] overflow-hidden">
+                    <x-fa::card as="ul" class="divide-y divide-[var(--fa-line)] overflow-hidden">
                         @foreach($kette->take(\Platform\FoodAlchemist\Livewire\Handy\GpAnsicht::ARTIKEL_MAX) as $la)
                             <li wire:key="hgp-la-{{ $la->id }}">
                                 <a href="{{ route('foodalchemist.suppliers.index', ['artikel' => $la->id]) }}" wire:navigate class="flex items-center gap-3 px-4 min-h-[52px] py-2 {{ $la->locked ? 'opacity-60' : '' }}">
@@ -76,7 +76,7 @@
                                 </a>
                             </li>
                         @endforeach
-                    </ul>
+                    </x-fa::card>
                     @if($kette->count() > \Platform\FoodAlchemist\Livewire\Handy\GpAnsicht::ARTIKEL_MAX)
                         <p class="fa-t-muted">und {{ $kette->count() - \Platform\FoodAlchemist\Livewire\Handy\GpAnsicht::ARTIKEL_MAX }} weitere</p>
                     @endif

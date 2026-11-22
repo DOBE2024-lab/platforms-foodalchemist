@@ -365,9 +365,9 @@
             @endphp
 
             @if($sessions->count() === 0)
-                <div class="fa-surface" data-planung-board-leer>
+                <x-fa::card data-planung-board-leer="">
                     <x-fa::empty icon="heroicon-o-view-columns" title="Noch keine Planungen">Oben „Neu erstellen" wählen. Jede Planung erscheint hier in der Spalte ihres Stands.</x-fa::empty>
-                </div>
+                </x-fa::card>
             @else
                 <div class="overflow-x-auto -mx-1 px-1 pb-1">
                     <div class="grid grid-cols-1 gap-3 items-start md:grid-cols-none md:grid-flow-col md:auto-cols-[minmax(14rem,1fr)]" data-planung-board-spalten>
@@ -857,7 +857,7 @@
 
                 {{-- Erstell-Leiste: klebt unten (Befund „Knopf unter dem Fold"), als EINE niedrige Zeile. --}}
                 @if($handy)@include('foodalchemist::livewire.planung.partials.worker-praesenz')@endif
-                <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] px-4 py-3 shadow-lg shadow-black/20" data-planung-erstellen-leiste>
+                <x-fa::card class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-[var(--fa-line-strong)] px-4 py-3 shadow-lg shadow-black/20" data-planung-erstellen-leiste="">
                     <div class="flex-1 min-w-[16rem] flex flex-col gap-1">
                         <p class="flex flex-wrap items-center gap-2 fa-t-h3">
                             @svg('heroicon-o-squares-2x2', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') Concept erstellen
@@ -888,7 +888,7 @@
                                 :disabled="$laeuft" before="tab='worker'" />
                         @endif
                     </div>
-                </div>
+                </x-fa::card>
             </div>
 
             {{-- FORTSCHRITT (Alpine-Tab `worker`): alle Läufe zusammen, Status + Baum + Freigabe.
@@ -999,7 +999,7 @@
                             <div class="flex flex-col gap-3">
                                 @if($trendMeldung)<x-fa::signal tone="crit" data-trend-meldung>{{ $trendMeldung }}</x-fa::signal>@endif
                                 @if($trendVorschau)
-                                    <div class="whitespace-pre-line fa-t-body leading-relaxed fa-surface p-3" data-trend-vorschau>{{ $trendVorschau }}</div>
+                                    <x-fa::card class="whitespace-pre-line fa-t-body leading-relaxed p-3" data-trend-vorschau="">{{ $trendVorschau }}</x-fa::card>
                                     <p class="{{ $hinweisText }}">Übernehmen schreibt das Briefing in den gewählten Reiter. Dort Leitplanken setzen und wie gewohnt starten.</p>
                                     <div class="flex flex-wrap gap-2">
                                         <x-fa::button variant="primary" icon="heroicon-m-arrow-right" wire:click="trendradarUebernehmen('gericht')" data-trend-uebernehmen="gericht">Als Gericht</x-fa::button>

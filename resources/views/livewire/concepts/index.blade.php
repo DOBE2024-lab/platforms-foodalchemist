@@ -427,11 +427,11 @@
             </x-fa::section>
             </fieldset>
         @else
-            <div class="fa-surface">
+            <x-fa::card>
                 <x-fa::empty icon="heroicon-o-rectangle-stack" title="Kein Concept gewählt">
                     Links ein Concept wählen oder oben rechts ein neues anlegen. Aus einer Vorlage entsteht über „Vorlage nutzen“ ein eigenständiges Concept.
                 </x-fa::empty>
-            </div>
+            </x-fa::card>
         @endif
     </x-ui-page-container>
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}

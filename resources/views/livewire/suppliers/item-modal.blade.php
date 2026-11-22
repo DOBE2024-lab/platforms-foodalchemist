@@ -268,7 +268,7 @@
                     @endif
 
                     <div class="max-h-[28rem] overflow-auto -mx-1 px-1" data-preis-liste>
-                        <table class="fa-table" data-preis-historie>
+                        <x-fa::table data-preis-historie="">
                             <thead>
                                 <tr>
                                     <th>Gültig ab</th>
@@ -337,7 +337,7 @@
                                     </tr>
                                 @endforelse
                             </tbody>
-                        </table>
+                        </x-fa::table>
                     </div>
                     @if($item !== null)
                         <livewire:foodalchemist.preise.fruehere :item-id="$item->id" :key="'pf-la-'.$item->id" />

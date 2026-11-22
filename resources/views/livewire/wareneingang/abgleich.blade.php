@@ -30,7 +30,7 @@
             <x-fa::empty compact icon="heroicon-o-check-circle" title="Keine Abweichungen">Alles, was geliefert und berechnet wurde, passt zur Bestellung.</x-fa::empty>
         @else
             <div class="overflow-x-auto">
-                <table class="fa-table fa-table--compact min-w-[900px]">
+                <x-fa::table compact class="min-w-[900px]">
                     <thead><tr><th>Befund</th><th>Lieferant / Bestellung</th><th>Artikel</th><th class="text-right">bestellt</th><th class="text-right">geliefert</th><th class="text-right">berechnet</th><th class="text-right">Preis Best.</th><th class="text-right">Preis RE</th><th class="text-right">Δ €</th><th><span class="sr-only">Aktion</span></th></tr></thead>
                     <tbody>
                         @foreach($zeilen as $z)
@@ -54,7 +54,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         @endif
     </x-fa::section>

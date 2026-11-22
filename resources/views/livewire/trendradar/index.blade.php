@@ -98,7 +98,7 @@
         @endif
 
         @if($ansicht === 'radar')
-            <div class="fa-surface p-4" data-trend-radar>
+            <x-fa::card class="p-4" data-trend-radar="">
                 @if($radar->isEmpty())
                     <x-fa::empty icon="heroicon-o-signal" title="Noch nichts auf dem Radar">
                         Trends erscheinen hier, sobald sie eingeordnet sind (Trend/Hype, Ebene, Kategorie), einen bestätigenden Beleg haben und auf „Auf dem Radar“ stehen.
@@ -166,7 +166,7 @@
                     <span class="inline-flex items-center gap-1.5"><svg width="16" height="16"><circle cx="8" cy="8" r="6.5" fill="none" stroke="var(--fa-gold-2)" stroke-width="2" /><circle cx="8" cy="8" r="3.5" fill="var(--fa-ink-3)" /></svg> Befragung bestätigt</span>
                     <span>Blass = niedrige Konfidenz</span>
                 </div>
-            </div>
+            </x-fa::card>
         @elseif($ansicht === 'eingang')
             <livewire:foodalchemist.trendradar.eingang key="trendradar-eingang" />
         @elseif($ansicht === 'beobachten')
@@ -204,12 +204,12 @@
                 </x-fa::notice>
             @endif
             @if($inspirationen->isEmpty())
-                <div class="fa-surface">
+                <x-fa::card>
                     <x-fa::empty icon="heroicon-o-light-bulb" title="Die Pinnwand ist leer">
                         Etwas Spannendes gesehen? Mit „Fundstück ablegen“ den Screenshot oder Link hier sammeln.
                         <x-slot:action><x-fa::button size="sm" wire:click="fundstueckOeffnen">Fundstück ablegen</x-fa::button></x-slot:action>
                     </x-fa::empty>
-                </div>
+                </x-fa::card>
             @else
                 <div class="grid gap-3 grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))]" data-pinnwand>
                     @foreach($inspirationen as $eintrag)
@@ -217,7 +217,7 @@
                             $insp = $eintrag['i'];
                             $eigenesTeam = (int) $insp->team_id === (int) auth()->user()->current_team_id;
                         @endphp
-                        <article class="fa-surface overflow-hidden flex flex-col min-w-0" wire:key="ins-{{ $insp->id }}" data-inspiration="{{ $insp->id }}">
+                        <x-fa::card as="article" class="overflow-hidden flex flex-col min-w-0" wire:key="ins-{{ $insp->id }}" data-inspiration="{{ $insp->id }}">
                             @if($eintrag['bild'])
                                 <a href="{{ $eintrag['bild'] }}" target="_blank" rel="noopener" class="block bg-[var(--fa-neutral-soft)]">
                                     <img src="{{ $eintrag['bild'] }}" alt="{{ $insp->titel }}" class="w-full h-44 object-cover" loading="lazy" />
@@ -302,7 +302,7 @@
                                     @endif
                                 </div>
                             </div>
-                        </article>
+                        </x-fa::card>
                     @endforeach
                 </div>
             @endif
@@ -314,9 +314,9 @@
                             class="fa-chip {{ $statusFilter === $wert ? 'bg-[var(--fa-accent-soft)] text-[var(--fa-accent)]' : '' }}"><span>{{ $label }}</span></button>
                 @endforeach
             </div>
-            <div class="fa-surface overflow-hidden" data-trend-liste>
+            <x-fa::card class="overflow-hidden" data-trend-liste="">
                 <div class="max-h-[70vh] overflow-auto">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead class="sticky top-0 z-10 bg-[var(--fa-surface)]">
                             <tr><th class="w-full">Trend</th><th>Einordnung</th><th>Konfidenz</th><th>Status</th><th class="num">Belege</th></tr>
                         </thead>
@@ -352,9 +352,9 @@
                                 </td></tr>
                             @endforelse
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
-            </div>
+            </x-fa::card>
         @endif
     </x-ui-page-container>
 

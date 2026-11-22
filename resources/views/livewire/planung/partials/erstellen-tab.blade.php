@@ -202,7 +202,7 @@
     @if($handy ?? false)
         @include('foodalchemist::livewire.planung.partials.worker-praesenz')
     @endif
-    <div class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line-strong)] bg-[var(--fa-surface)] px-4 py-3 shadow-lg shadow-black/20" data-planung-erstellen-leiste>
+    <x-fa::card class="sticky bottom-0 z-10 flex flex-wrap items-center gap-x-4 gap-y-2 border-[var(--fa-line-strong)] px-4 py-3 shadow-lg shadow-black/20" data-planung-erstellen-leiste="">
         <div class="flex-1 min-w-[16rem] flex flex-col gap-1">
             <p class="flex flex-wrap items-center gap-2 fa-t-h3">
                 @svg($goIcon, 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]') {{ $goTitel }}
@@ -231,5 +231,5 @@
                 :label="$scope === 'gericht' ? 'Bauplan vorschlagen' : $goLabel . ' erstellen'"
                 busy="Wird gestartet …" flash="Gestartet" :disabled="$laeuft" before="tab='worker'" />
         </div>
-    </div>
+    </x-fa::card>
 </div>

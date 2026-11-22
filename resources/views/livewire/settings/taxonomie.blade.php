@@ -60,7 +60,7 @@
         <div class="flex-1 basis-[26rem] min-w-0 flex flex-col gap-4">
             <x-fa::section title="Kategorien" :meta="$gewaehlt ? $gewaehlt->label . ' · ' . $kategorien->count() . ' Kategorien' : null" data-taxonomie-kategorien x-data="{ dragId: null }">
                 <div class="overflow-x-auto -mx-4">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead>
                             <tr>
                                 <th class="w-px"><span class="sr-only">Reihenfolge</span></th>
@@ -123,7 +123,7 @@
                                 </tr>
                             @endforelse
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             </x-fa::section>
 

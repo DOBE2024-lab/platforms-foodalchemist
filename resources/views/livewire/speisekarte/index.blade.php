@@ -92,11 +92,11 @@
 
     <x-ui-page-container padding="px-6 pb-6" spacing="space-y-4">
         @if(! $karte)
-            <div class="fa-surface">
+            <x-fa::card>
                 <x-fa::empty icon="heroicon-o-clipboard-document-list" title="Keine Speisekarte gewählt">
                     Links eine Karte wählen oder mit „Neue Karte“ eine anlegen.
                 </x-fa::empty>
-            </div>
+            </x-fa::card>
         @else
             {{-- Seitenkopf: eine Hauptaktion (Karte bearbeiten öffnet den Editor als Vollbild-Modal),
                  Ausgaben und Duplizieren im Menü „Weitere Aktionen“. --}}
@@ -476,8 +476,7 @@
 
                     {{-- Gemeinsamer Drag-and-drop-Zustand für ALLE (auch verschachtelten) Rubriken: ein x-data
                          am Container statt pro Rubrik. zu[id] klappt Rubriken einzeln auf und zu. --}}
-                    <div class="fa-surface p-4 min-w-0" wire:key="sk-body-{{ $karte->id }}"
-                         x-data="{ dragPosId: null, dragRubrikId: null, zu: {}, alleIds: @js($alleRubrikIds) }">
+                    <x-fa::card class="p-4 min-w-0" wire:key="sk-body-{{ $karte->id }}" x-data="{ dragPosId: null, dragRubrikId: null, zu: {}, alleIds: {{ \Illuminate\Support\Js::from($alleRubrikIds) }} }">
 
                         <div class="flex flex-wrap items-center gap-2 mb-3">
                             <x-fa::input wire:model="neueRubrik" wire:keydown.enter="rubrikNeu" placeholder="Neue Rubrik, z. B. Vorspeisen" aria-label="Name der neuen Rubrik" class="w-full sm:w-64" />
@@ -570,7 +569,7 @@
                                 @endif
                             </x-fa::katalog-picker>
                         </div>{{-- /2 Spalten --}}
-                    </div>{{-- /sk-body --}}
+                    </x-fa::card>{{-- /sk-body --}}
                 </div>{{-- /Reiter AUFBAU --}}
                 </x-fa::editor-tabs>
             </x-fa::modal>

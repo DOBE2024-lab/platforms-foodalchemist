@@ -269,7 +269,7 @@
                                 <x-fa::button variant="ghost" size="sm" icon="heroicon-m-chevron-double-up" href="#" x-on:click.prevent="auf = {}">Alle zuklappen</x-fa::button>
                             </div>
                         </div>
-                        <div class="fa-surface overflow-hidden divide-y divide-[var(--fa-line)]">
+                        <x-fa::card class="overflow-hidden divide-y divide-[var(--fa-line)]">
                             @forelse($kapitelBoard as $kap)
                                 @php
                                     $we = $kap['wareneinsatz'];
@@ -383,7 +383,7 @@
                                     Links ein neues Kapitel anlegen oder das Foodbook in der Leitstelle planen lassen.
                                 </x-fa::empty>
                             @endforelse
-                        </div>
+                        </x-fa::card>
                     </div>{{-- /auf-Wrapper (Baum-Expand) --}}
                 </div>
 
@@ -445,7 +445,7 @@
                         {{-- Live-Vorschau: Kopf-Band (Bandfarbe + Logo) · Fuß-Linie (Marken-Farbe). Kundenfarben nur zur Laufzeit. --}}
                         <div class="flex flex-col gap-1.5">
                             <span class="fa-t-label">Vorschau</span>
-                            <div class="overflow-hidden rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)]">
+                            <x-fa::card class="overflow-hidden">
                                 <div class="flex items-center justify-between gap-2 px-3 h-10 text-[var(--fa-on-accent)] text-[length:var(--fa-text-sm)] font-semibold" x-bind:style="`background:${band || brand}`">
                                     <span class="truncate">{{ $fb->label }}</span>
                                     @if($fb->logo_path)<img src="{{ $medien($fb->logo_context_file_id, $fb->logo_path) }}" alt="Logo" class="max-h-6 max-w-[90px] object-contain shrink-0" />@endif
@@ -453,7 +453,7 @@
                                 <div class="px-3 py-3 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" x-bind:style="`border-top:3px solid ${brand}`">
                                     <span x-text="footer || 'Erstellt mit Food Alchemist'"></span>
                                 </div>
-                            </div>
+                            </x-fa::card>
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-2">
@@ -581,7 +581,7 @@
                             </div>
 
                             @forelse($betriebsLinks as $bl)
-                                <div class="flex flex-col gap-1.5 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-3" x-data>
+                                <x-fa::card class="flex flex-col gap-1.5 p-3" x-data>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <span class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">{{ $bl['outlet_name'] }}</span>
                                         @if($bl['enabled'])<x-fa::badge tone="ok">Freigegeben</x-fa::badge>@else<x-fa::badge>Zurückgezogen</x-fa::badge>@endif
@@ -596,7 +596,7 @@
                                             <x-fa::button size="sm" wire:click="betriebWiederFreigeben({{ $bl['outlet_id'] }})">Wieder freigeben</x-fa::button>
                                         @endif
                                     </div>
-                                </div>
+                                </x-fa::card>
                             @empty
                                 <p class="{{ $hinweis }}">Noch kein Kalkulationsprofil-Link angelegt.</p>
                             @endforelse
@@ -778,8 +778,7 @@
                                 @endphp
                                 {{-- Aufklappbar (Alpine, kein Roundtrip): dieselbe Lese-Ansicht wie der concept_ref-Block,
                                      ohne Stift/Aktionen. Zu bei mehreren Editionen (Überblick), offen bei genau einer. --}}
-                                <div class="rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2" data-fb-format-edition
-                                     x-data="{ auf: {{ $formatKapitel['editionen_n'] === 1 ? 'true' : 'false' }} }">
+                                <x-fa::card class="px-3 py-2" data-fb-format-edition="" x-data="{ auf: {{ $formatKapitel['editionen_n'] === 1 ? 'true' : 'false' }} }">
                                     <button type="button" class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-left" x-on:click="auf = ! auf" x-bind:aria-expanded="auf" data-fb-format-edition-toggle>
                                         <span class="flex min-w-0 items-baseline gap-1.5 break-words fa-t-h3">
                                             <span class="inline-flex shrink-0 self-center text-[var(--fa-ink-3)] transition-transform" x-bind:class="{ 'rotate-90': auf }">@svg('heroicon-m-chevron-right', 'w-4 h-4')</span>{{ $ed['name'] }}
@@ -799,7 +798,7 @@
                                             @include('foodalchemist::livewire.foodbooks.partials.concept-zeilen', ['zeilen' => $ed['gerichte'], 'blockId' => null])
                                         </div>
                                     @endif
-                                </div>
+                                </x-fa::card>
                             @endif
                         @empty
                             <x-fa::empty compact icon="heroicon-o-squares-plus" title="Das Format hat noch keine Editionen">
@@ -835,11 +834,7 @@
                     <div class="flex flex-col gap-1.5" x-data="{ dragBlockId: null }">
                         @php $hoeheText = ['klein' => 'klein', 'mittel' => 'mittel', 'gross' => 'groß']; @endphp
                         @forelse($kapitel->blocks as $block)
-                            <div wire:key="block-{{ $block->id }}"
-                                 @dragover.prevent @drop.prevent="if (dragBlockId && dragBlockId !== {{ $block->id }}) { $wire.blockVerschiebenAuf(dragBlockId, {{ $block->id }}); } dragBlockId = null"
-                                 :class="dragBlockId === {{ $block->id }} ? 'opacity-40' : (dragBlockId ? 'ring-1 ring-[var(--fa-accent-line)]' : '')"
-                                 class="rounded-[var(--fa-radius-surface)] border {{ $block->variant_group_id ? 'border-[var(--fa-warn)]' : 'border-[var(--fa-line)]' }} bg-[var(--fa-surface)] px-2 py-1.5 {{ $block->visible ? '' : 'opacity-60' }}"
-                                 style="margin-left: {{ $block->level * 20 }}px">
+                            <x-fa::card wire:key="block-{{ $block->id }}" x-on:dragover.prevent="" x-on:drop.prevent="if (dragBlockId && dragBlockId !== {{ $block->id }}) { $wire.blockVerschiebenAuf(dragBlockId, {{ $block->id }}); } dragBlockId = null" x-bind:class="dragBlockId === {{ $block->id }} ? 'opacity-40' : (dragBlockId ? 'ring-1 ring-[var(--fa-accent-line)]' : '')" class="{{ $block->variant_group_id ? 'border-[var(--fa-warn)]' : 'border-[var(--fa-line)]' }} px-2 py-1.5 {{ $block->visible ? '' : 'opacity-60' }}" style="margin-left: {{ $block->level * 20 }}px">
                                 <div class="flex items-start gap-1.5">
                                     <span class="flex items-center shrink-0 pt-0.5">
                                         {{-- R4: setData ist Pflicht, sonst startet Safari den Drag nicht --}}
@@ -974,7 +969,7 @@
                                         </div>
                                     </div>
                                 @endif
-                            </div>
+                            </x-fa::card>
                         @empty
                             {{-- E1b (Spec 40): der KI-Weg (Voll-Kaskade) ist nicht tot, nur woanders — der Leerzustand zeigt ihn. --}}
                             <x-fa::empty icon="heroicon-o-squares-plus" title="Noch kein Inhalt">

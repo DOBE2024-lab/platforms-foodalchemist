@@ -5,7 +5,7 @@
     $feld = $handy ? 'h-11 w-28 text-[length:var(--fa-text-base)]' : 'h-8 w-24';
     $zutat = $hoch['zutat'];
 @endphp
-<div class="flex flex-col gap-1.5 mb-2 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)] px-3 py-2" data-fa-hochrechner>
+<x-fa::card class="flex flex-col gap-1.5 mb-2 px-3 py-2" data-fa-hochrechner="">
     <div class="flex flex-wrap items-center gap-2">
         <label for="hoch-ziel" class="text-[length:var(--fa-text-md)] text-[var(--fa-ink-2)]">Hochrechnen auf</label>
         <span class="inline-flex items-center gap-1.5">
@@ -54,4 +54,4 @@
             <p class="fa-t-muted" data-fa-hoch-ohne-menge>Übernehmen geht erst, wenn alle Zeilen eine Menge haben (fehlt bei {{ implode(', ', $hoch['ohne_menge']) }}) — hier eintragen oder im Zutaten-Editor.</p>
         @endif
     @endif
-</div>
+</x-fa::card>

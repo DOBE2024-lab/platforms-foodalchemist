@@ -78,7 +78,7 @@
     {{-- Dialog „Neu“: Art wählen, dann nur deren Felder --}}
     <div class="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] bg-[rgba(19,26,38,0.28)]" x-show="neu" x-cloak x-transition.opacity
          x-on:click.self="neu = false" data-behaelter-dialog>
-        <div role="dialog" aria-modal="true" aria-label="Neuer Eintrag" class="w-full max-w-lg max-h-[80vh] overflow-y-auto fa-surface p-5 flex flex-col gap-4 shadow-xl">
+        <x-fa::card role="dialog" aria-modal="true" aria-label="Neuer Eintrag" class="w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 flex flex-col gap-4 shadow-xl">
             <div class="flex items-center justify-between gap-3">
                 <h3 class="fa-t-h2">Neu in Behälter & Geräte</h3>
                 <x-fa::icon-button icon="heroicon-m-x-mark" label="Schließen" size="sm" x-on:click="neu = false" />
@@ -108,13 +108,13 @@
                     </div>
                 </div>
             @endforeach
-        </div>
+        </x-fa::card>
     </div>
 
     {{-- Dialog „Behälter bearbeiten“ (serverseitig offen, solange editId gesetzt ist) --}}
     @if($editId !== null)
         <div class="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] bg-[rgba(19,26,38,0.28)]" wire:click.self="zeileAbbrechen" data-behaelter-editform>
-            <div role="dialog" aria-modal="true" aria-label="Behälter bearbeiten" class="w-full max-w-lg max-h-[80vh] overflow-y-auto fa-surface p-5 flex flex-col gap-4 shadow-xl">
+            <x-fa::card role="dialog" aria-modal="true" aria-label="Behälter bearbeiten" class="w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 flex flex-col gap-4 shadow-xl">
                 <div class="flex flex-wrap items-baseline justify-between gap-2">
                     <h3 class="fa-t-h2">Behälter bearbeiten</h3>
                     <p class="fa-t-muted">Die interne Kennung bleibt gleich, Rezepte hängen daran.</p>
@@ -124,7 +124,7 @@
                     <x-fa::button variant="ghost" wire:click="zeileAbbrechen">Abbrechen</x-fa::button>
                     <x-fa::button variant="primary" wire:click="bearbeitenSpeichern" data-behaelter-edit-speichern>Speichern</x-fa::button>
                 </div>
-            </div>
+            </x-fa::card>
         </div>
     @endif
     </fieldset>

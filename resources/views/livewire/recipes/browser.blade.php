@@ -121,7 +121,7 @@
                 <div class="relative">
                     <x-fa::button icon="heroicon-m-square-2-stack" iconRight="heroicon-m-chevron-down" wire:click="$toggle('templateWahlOffen')" data-aus-template>Aus Vorlage</x-fa::button>
                     @if($templateWahlOffen)
-                        <div class="absolute right-0 top-full mt-1 z-30 w-80 max-h-80 overflow-y-auto fa-surface shadow-xl py-1" data-template-liste>
+                        <x-fa::card class="absolute right-0 top-full mt-1 z-30 w-80 max-h-80 overflow-y-auto shadow-xl py-1" data-template-liste="">
                             @forelse($templateListe as $template)
                                 <button type="button" wire:key="tpl-{{ $template->id }}" wire:click="ausTemplate({{ $template->id }})"
                                         class="flex w-full flex-col items-start px-3 py-2 text-left hover:bg-[var(--fa-hover)]">
@@ -131,7 +131,7 @@
                             @empty
                                 <x-fa::empty compact icon="heroicon-o-square-2-stack" title="Noch keine Vorlagen">Im Rezept-Editor „Als Vorlage" markieren.</x-fa::empty>
                             @endforelse
-                        </div>
+                        </x-fa::card>
                     @endif
                 </div>
                 <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="$dispatch('recipe-modal.oeffnen')" data-rezept-anlegen>Neues Basisrezept</x-fa::button>
@@ -197,14 +197,14 @@
             </div>
         @endif
 
-        <div class="fa-surface overflow-hidden" data-rezept-tabelle>
+        <x-fa::card class="overflow-hidden" data-rezept-tabelle="">
             {{-- MVP-022: Statuswechsel-Fehler sichtbar statt still verschluckt --}}
             @if($statusFehler !== null)
                 <x-fa::notice tone="crit" class="m-3" data-status-fehler>{{ $statusFehler }}</x-fa::notice>
             @endif
             <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
             <div class="max-h-[70vh] overflow-auto">
-                <table class="fa-table">
+                <x-fa::table>
                     <thead class="sticky top-0 z-20 bg-[var(--fa-surface)]">
                         <tr>
                             <th class="w-10"><span class="sr-only">Auswahl</span></th>
@@ -271,10 +271,10 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
             <div class="px-4 py-3 border-t border-[var(--fa-line)]">{{ $rezepte->links('foodalchemist::components.fa.pagination') }}</div>
-        </div>
+        </x-fa::card>
     </x-ui-page-container>
     @endif
 </x-ui-page>

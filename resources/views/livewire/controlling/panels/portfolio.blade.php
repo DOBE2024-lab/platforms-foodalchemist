@@ -74,8 +74,8 @@
                 </x-fa::empty>
             </div>
         @else
-            <div class="overflow-x-auto rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)]">
-                <table class="fa-table" data-ctrl-portfolio-matrix>
+            <x-fa::card class="overflow-x-auto">
+                <x-fa::table data-ctrl-portfolio-matrix="">
                     <thead>
                         <tr>
                             <th>{{ $brille === 'betrieb' ? 'Kalkulationsprofil' : 'Kunde' }}</th>
@@ -113,8 +113,8 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
-            </div>
+                </x-fa::table>
+            </x-fa::card>
         @endif
 
         {{-- ── Konflikte ──────────────────────────────────────────────────── --}}
@@ -139,7 +139,7 @@
                            description="Weder Kalkulationsprofil noch Kunde eingetragen. Diese Ausgaben erscheinen in keiner Sicht. Nicht verloren, aber nicht steuerbar: im Editor ein Kalkulationsprofil oder Kunden setzen."
                            data-ctrl-portfolio-ohne>
                 <div class="overflow-x-auto">
-                    <table class="fa-table">
+                    <x-fa::table>
                         <thead>
                             <tr>
                                 <th>Ausgabe</th>
@@ -161,7 +161,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </div>
             </x-fa::section>
         @endif
@@ -170,7 +170,7 @@
         <x-fa::section variant="plain" title="Alle Ausgaben" icon="heroicon-o-queue-list"
                        description="Auch was nicht läuft, mit dem Grund dazu.">
             <div class="overflow-x-auto" data-ctrl-portfolio-liste>
-                <table class="fa-table">
+                <x-fa::table>
                     <thead>
                         <tr>
                             <th>Ausgabe</th>
@@ -198,7 +198,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </x-fa::table>
             </div>
         </x-fa::section>
     @endif

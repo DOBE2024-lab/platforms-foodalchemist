@@ -473,7 +473,7 @@
                         description="Zählt, wie oft Rezepte über ihren bevorzugten Artikel bei einem Lieferanten einkaufen (Anteil an allen Verwendungen), und stellt es den Konditionen gegenüber. Das ist kein echter Umsatz.">
                         @if(count($buendelung) > 0)
                             <div class="-mx-4 -mb-4 border-t border-[var(--fa-line)] overflow-x-auto">
-                                <table class="fa-table" data-buendelung-tabelle>
+                                <x-fa::table data-buendelung-tabelle="">
                                     <thead>
                                         <tr>
                                             <th>Lieferant</th>
@@ -510,7 +510,7 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
+                                </x-fa::table>
                             </div>
                         @else
                             <x-fa::empty compact icon="heroicon-o-arrows-pointing-in" title="Noch keine Verwendung erfasst">

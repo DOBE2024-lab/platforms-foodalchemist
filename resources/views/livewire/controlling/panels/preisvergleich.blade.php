@@ -63,8 +63,8 @@
             Für diese Auswahl gibt es keine Grundprodukte mit Vergleichspreis. Filter lockern oder anders suchen.
         </x-fa::empty>
     @else
-        <div class="overflow-x-auto rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)] bg-[var(--fa-surface)]">
-            <table class="fa-table" data-einkauf-tabelle>
+        <x-fa::card class="overflow-x-auto">
+            <x-fa::table data-einkauf-tabelle="">
                 <thead>
                     <tr>
                         <th>Grundprodukt</th>
@@ -138,8 +138,8 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
-        </div>
+            </x-fa::table>
+        </x-fa::card>
         @if($gekappt)
             <x-fa::signal tone="warn">Nur die ersten {{ $max }} Treffer gezeigt. Enger filtern für den Rest.</x-fa::signal>
         @endif

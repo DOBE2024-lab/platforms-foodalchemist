@@ -41,7 +41,7 @@
 
         <div class="grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))]" data-demnaechst-liste>
             @foreach($geplant as $d)
-                <div class="fa-surface p-4 flex gap-3 min-w-0" wire:key="dom-{{ $loop->index }}">
+                <x-fa::card class="p-4 flex gap-3 min-w-0" wire:key="dom-{{ $loop->index }}">
                     @svg($symbol[$d['name']] ?? 'heroicon-o-light-bulb', 'w-5 h-5 shrink-0 mt-0.5 text-[var(--fa-ink-3)]')
                     <div class="min-w-0 flex flex-col gap-1.5">
                         <div class="flex flex-wrap items-center gap-2">
@@ -55,7 +55,7 @@
                         <p class="text-[length:var(--fa-text-md)] leading-relaxed text-[var(--fa-ink-2)]">{{ $sauber($d['idee']) }}</p>
                         @if(isset($teilweise[$d['name']]))<p class="fa-t-muted">{{ $teilweise[$d['name']] }}</p>@endif
                     </div>
-                </div>
+                </x-fa::card>
             @endforeach
         </div>
 

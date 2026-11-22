@@ -209,6 +209,7 @@ class RecipeService
         $kategorieId = TeamScope::referenz(
             FoodAlchemistRecipeCategory::class, $in['category_id'] ?? null, $team, 'Kategorie'
         );
+        $geraete = $this->geraete($team, $in);
 
         $key = $this->rezeptKey($name);
         if ($this->keyVergeben($team, $key)) {                     // §1.8: Kategorie als Diskriminator
@@ -261,14 +262,7 @@ class RecipeService
             'last_modified_by' => 'editor',
             'created_via' => ($in['created_via'] ?? '') ?: null,     // Phase A: mcp | editor | import | generator
         ]);
-        // Equipment (§4.2.6): M:N-Sync wie update(), nur wenn übergeben
-        if (array_key_exists('equipment_ids', $in) && is_array($in['equipment_ids'])) {
-            // Aus Editor und MCP kommt eine MENSCHLICHE Entscheidung — sie wird als solche
-            // gestempelt, damit die Anreicherung sie spaeter nicht ueberschreibt.
-            $recipe->equipment()->sync(collect($in['equipment_ids'])->mapWithKeys(
-                fn ($id) => [(int) $id => ['source' => 'manual']]
-            )->all());
-        }
+        $geraete !== null && $recipe->equipment()->sync($geraete);   // Equipment (§4.2.6), nur wenn übergeben
         $this->schritteAusMarkdown($recipe, $in);
         app(RecipeRecomputeService::class)->recomputePipeline($recipe->id);
 
@@ -278,12 +272,25 @@ class RecipeService
     }
 
     /** Edit: recipe_key bleibt STABIL (Referenzen/Slugs); Recompute bei kalkulations-relevanten Feldern. */
+    /** Equipment-Sync aus Editor/MCP (null = nicht übergeben): menschliche Entscheidung (`source` manual); neue Geräte müssen sichtbar sein (CQ 2.1d). */
+    private function geraete(Team $team, array $in, ?FoodAlchemistRecipe $bisher = null): ?array
+    {
+        if (! is_array($in['equipment_ids'] ?? null)) {
+            return null;
+        }
+        $ids = array_values(array_unique(array_filter(array_map('intval', $in['equipment_ids']), fn ($id) => $id > 0)));
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefeIds(\Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment::class, $team, array_diff($ids, $bisher?->equipment()->allRelatedIds()->map(fn ($id) => (int) $id)->all() ?? []), 'Gerät');
+
+        return array_fill_keys($ids, ['source' => 'manual']);
+    }
+
     public function update(Team $team, int $id, array $in): FoodAlchemistRecipe
     {
         $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($id);
         if ((int) $recipe->team_id !== (int) $team->id) {
             throw new \RuntimeException('Geerbtes Rezept — Pflege nur durchs Besitzer-Team (D1).');
         }
+        $geraete = $this->geraete($team, $in, $recipe);
         $name = trim($in['name'] ?? $recipe->name);
         if ($name === '') {
             throw new \RuntimeException('Rezept-Name ist Pflicht (§1).');
@@ -334,14 +341,7 @@ class RecipeService
             'version' => $recipe->version + 1,
             'last_modified_by' => 'editor',
         ]);
-        // Equipment (§4.2.6): M:N-Sync, nur wenn übergeben
-        if (array_key_exists('equipment_ids', $in) && is_array($in['equipment_ids'])) {
-            // Aus Editor und MCP kommt eine MENSCHLICHE Entscheidung — sie wird als solche
-            // gestempelt, damit die Anreicherung sie spaeter nicht ueberschreibt.
-            $recipe->equipment()->sync(collect($in['equipment_ids'])->mapWithKeys(
-                fn ($id) => [(int) $id => ['source' => 'manual']]
-            )->all());
-        }
+        $geraete !== null && $recipe->equipment()->sync($geraete);   // Equipment (§4.2.6), nur wenn übergeben
         $this->schritteAusMarkdown($recipe, $in);
         if (array_key_exists('yield_kg_manual', $in) && $in['yield_kg_manual'] !== $altManual) {
             app(RecipeRecomputeService::class)->recomputeNachSpeichern($recipe->id); // ek/kg-Nenner (A-3); 2.1b: Eltern per Queue

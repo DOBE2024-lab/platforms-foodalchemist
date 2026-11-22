@@ -72,3 +72,10 @@ it('x-fa::anlege-dialog: Modal fa-anlegen mit Namensfeld, Enter legt an, Fehler 
         ->toContain('Foodbook anlegen')
         ->toContain('Bitte einen Namen eingeben.');
 });
+
+it('am Handy kein Anlege-Dialog im DOM (dort wird nicht angelegt)', function () {
+    foreach ([ConcepterBrowser::class, ConceptsIndex::class, FoodbooksIndex::class, \Platform\FoodAlchemist\Livewire\Formate\Browser::class] as $klasse) {
+        Livewire::withCookie(\Platform\FoodAlchemist\Support\HandyLesemodus::COOKIE, '1')->test($klasse)->assertDontSeeHtml('data-anlege-dialog');
+        Livewire::withCookie(\Platform\FoodAlchemist\Support\HandyLesemodus::COOKIE, '0')->test($klasse)->assertSeeHtml('data-anlege-dialog');
+    }
+});

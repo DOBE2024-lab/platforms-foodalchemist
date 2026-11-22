@@ -1088,5 +1088,7 @@
     </x-ui-page-container>
     {{-- Spec 53/F Stufe 2: Sprachbefehl-Mount auf Seitenebene (Modal + optionales schwebendes Element). --}}
     {{-- 98 · 2.4c: erst der Name, dann der Datensatz (LegtMitNamenAn) --}}
+    @unless(\Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy())   {{-- am Handy wird nicht angelegt (#1003) --}}
     <x-fa::anlege-dialog title="Foodbook anlegen" knopf="Foodbook anlegen" hint="Den Namen kannst du später im Editor ändern." :fehler="$neuFehler" />
+    @endunless
 </x-ui-page>

@@ -379,8 +379,9 @@ class IngredientEditor extends Component
             // 06·H4: „nur Convenience-Highlights" — verengt den Picker auf die kuratierte Haus-Liste
             ->when((bool) ($gpFilter['nur_favoriten'] ?? false), fn ($w) => $w->whereIn('id', \Platform\FoodAlchemist\Support\FavoritenOverlay::gpIds($team) ?: [0]));   // Spec 85 FAV-1
         $gpTotal = (clone $gpQuery)->count();
-        $gpModels = $gpQuery->orderBy('name')->limit(200)
-            ->get(['id', 'name', 'condition', 'lead_la_supplier_item_id', 'piece_default_g', 'team_id', 'is_platzhalter']);
+        // 98 · 2.4g (U7): exakte Grundprodukte zuerst — Anfangstreffer vor dem Limit, dann fein nach Rang (Text::falte)
+        $gpModels = collect(Suche::nachRang(Suche::anfangZuerst($gpQuery, 'name', $suche)->orderBy('name')->limit(200)
+            ->get(['id', 'name', 'condition', 'lead_la_supplier_item_id', 'piece_default_g', 'team_id', 'is_platzhalter']), $suche, fn ($gp) => $gp->name));
         // Performance: 30× preisProGrammPublic wären ~60 Queries je Tipper — stattdessen EINE
         // Bulk-Query (Ø €/g über aktive kg/l-LAs). Der präzise Lead-Wert kommt beim Parken nach.
         $aktiverPreis = app(PriceService::class)->activePriceSubquery('foodalchemist_supplier_items.id', $team)->toBase(); // Spec 82 3a
@@ -445,12 +446,13 @@ class IngredientEditor extends Component
             ->mapWithKeys(fn ($f) => [(int) $idFuerSlug[$f->form_slug] => (float) $f->gramm])
             ->all());
         $gps = $gpModels
-            ->map(function ($gp) use ($ekJeGp, $stkJeGp, $formSlugsJeGp, $formenGJeGp) {
+            ->map(function ($gp) use ($ekJeGp, $stkJeGp, $formSlugsJeGp, $formenGJeGp, $suche) {
                 $ek = $ekJeGp[$gp->id] ?? null;
                 $istFluessig = str_contains(mb_strtolower($gp->name.' '.($gp->condition ?? '')), 'fluessig');
 
                 return [
                     'type' => 'gp', 'id' => $gp->id, 'name' => $gp->name,
+                    'rang' => $suche !== '' ? Suche::rang($gp->name, $suche) : null,   // 2.4g: Beste Treffer unter dem Suchfeld
                     'is_platzhalter' => (bool) $gp->is_platzhalter,
                     'ek_pro_g' => $ek,
                     'preis_label' => $ek !== null ? number_format($ek * 1000, 2, ',', '.').' €/kg' : null,
@@ -476,13 +478,15 @@ class IngredientEditor extends Component
             ->when(($rezFilter['kat'] ?? '') !== '', fn ($w) => $w->where('category_id', (int) $rezFilter['kat']))
             ->when(($rezFilter['level'] ?? '') !== '', fn ($w) => $w->whereHas('levelSuitabilities', fn ($n) => $n->where('level_slug', $rezFilter['level'])));
         $rezTotal = (clone $rezQuery)->count();
-        $rezepte = $rezQuery->with('levelSuitabilities:id,recipe_id,level_slug')->orderBy('name')->limit(200)
-            ->get(['id', 'name', 'status', 'ek_per_kg_eur', 'yield_kg', 'yield_pieces'])
-            ->map(function ($r) {
+        $rezepte = collect(Suche::nachRang(Suche::anfangZuerst($rezQuery->with('levelSuitabilities:id,recipe_id,level_slug'), 'foodalchemist_recipes.name', $suche)
+            ->orderBy('name')->limit(200)
+            ->get(['id', 'name', 'status', 'ek_per_kg_eur', 'yield_kg', 'yield_pieces']), $suche, fn ($r) => $r->name))
+            ->map(function ($r) use ($suche) {
                 $hatStueck = $r->yield_pieces !== null && (float) $r->yield_pieces > 0 && $r->yield_kg !== null;
 
                 return [
                     'type' => 'sub', 'id' => $r->id, 'name' => '↳ '.$r->name,
+                    'rang' => $suche !== '' ? Suche::rang($r->name, $suche) : null,
                     'ek_pro_g' => Masse::preisJeG($r->ek_per_kg_eur),
                     'preis_label' => $r->ek_per_kg_eur !== null ? number_format((float) $r->ek_per_kg_eur, 2, ',', '.').' €/kg' : null,
                     // Stück-Ertrag → Einheit beim Einfügen auf „stk" vorbelegen + g/Stück fürs Live-Rechnen

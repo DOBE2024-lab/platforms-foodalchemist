@@ -57,6 +57,14 @@
                 this.gpListe = r.gps.items; this.gpTotal = r.gps.total;
                 this.rezListe = r.rezepte.items; this.rezTotal = r.rezepte.total;
             },
+            // 98 · 2.4g (U7): beste Treffer unter dem Suchfeld — beide Listen nach Server-Rang gemischt, Grundprodukt vor
+            // Basisrezept bei gleichem Rang, die Reihenfolge innerhalb einer Liste bleibt (der Server hat sie schon geordnet).
+            besteTreffer() {
+                const mit = (liste, typ) => liste.filter(z => z.rang !== null && z.rang !== undefined).map((z, i) => ({ z, typ, i }));
+                return [...mit(this.gpListe, 0), ...mit(this.rezListe, 1)]
+                    .sort((a, b) => a.z.rang - b.z.rang || a.typ - b.typ || a.i - b.i)
+                    .slice(0, 6).map(t => t.z);
+            },
             browseOnce() {
                 this.trefferOffen = true;
                 if (!this.browserGeladen) this.browse();

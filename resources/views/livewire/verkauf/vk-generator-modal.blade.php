@@ -40,12 +40,13 @@
         <x-fa::section title="Einsatz" icon="heroicon-o-calendar-days">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <x-fa::field label="Anlass" for="vkgen-anlass">
-                    <x-fa::select id="vkgen-anlass" wire:model="parameter.occasion" placeholder="egal"
-                        :options="['fruehstueck' => 'Frühstück', 'lunch' => 'Lunch', 'konferenz' => 'Konferenz', 'empfang' => 'Empfang', 'dinner' => 'Dinner', 'late_night' => 'Late Night']" />
+                    <x-fa::select id="vkgen-anlass" wire:model="parameter.occasion" placeholder="egal" :options="$anlassOptionen" />
                 </x-fa::field>
-                <x-fa::field label="Serviceform" for="vkgen-service">
-                    <x-fa::select id="vkgen-service" wire:model="parameter.serviceform" placeholder="egal"
-                        :options="['tellerservice' => 'Tellerservice', 'buffet' => 'Buffet', 'flying' => 'Flying Service', 'stehempfang' => 'Stehempfang', 'boxed' => 'Boxed']" />
+                <x-fa::field label="Eventtyp" for="vkgen-eventtyp">
+                    <x-fa::select id="vkgen-eventtyp" wire:model="parameter.eventtyp" placeholder="egal" :options="$eventtypOptionen" />
+                </x-fa::field>
+                <x-fa::field label="Service-Art" for="vkgen-service">
+                    <x-fa::select id="vkgen-service" wire:model="parameter.serviceform" placeholder="egal" :options="$serviceArtOptionen" />
                 </x-fa::field>
                 <x-fa::field label="Sektor" for="vkgen-sektor" :hint="$parameter['sektor'] === '' ? 'Für alle Sektoren' : null" data-richtung="sektor">
                     <x-fa::select id="vkgen-sektor" wire:model="parameter.sektor" placeholder="egal"

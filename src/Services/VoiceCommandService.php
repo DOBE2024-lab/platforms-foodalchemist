@@ -288,7 +288,7 @@ class VoiceCommandService
         if ($planungsSessionId === null) {
             return '';
         }
-        $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation;
+        $team = \Platform\FoodAlchemist\Support\FaTeam::aktuell();
         if ($team === null) {
             return '';
         }
@@ -374,8 +374,9 @@ class VoiceCommandService
     {
         return match ($feld) {
             'sektor' => \Platform\FoodAlchemist\Support\Planung\PlanungOptionen::SEKTOR_OPTIONEN,
-            'occasion' => \Platform\FoodAlchemist\Support\Planung\PlanungOptionen::OCCASION_OPTIONEN,
-            'serviceform' => \Platform\FoodAlchemist\Support\Planung\PlanungOptionen::SERVICEFORM_OPTIONEN,
+            // CQ 2.5b: Anlass, Eventtyp, Service-Art aus den DB-Vokabularen des aktiven Teams
+            'occasion', 'eventtyp', 'serviceform' => ['' => '—'] + app(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::class)
+                ->optionen(\Platform\FoodAlchemist\Support\FaTeam::aktuell(), $feld),
             'ziel_einheit' => \Platform\FoodAlchemist\Support\Planung\PlanungOptionen::MENGE_EINHEITEN,
             'level' => ['' => '(egal)', 'haute_cuisine' => 'Haute Cuisine', 'gehoben' => 'Gehoben', 'klassisch' => 'Klassisch'],
             default => null,                                          // pax/ziel_menge/ziel_portion_g/ziel_vk: Zahl, kein Enum

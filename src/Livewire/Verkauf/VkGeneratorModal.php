@@ -38,7 +38,7 @@ class VkGeneratorModal extends Component
     public array $parameter = [
         'convenience' => '', 'frische' => 'frisch', 'bio_praeferenz' => 'konventionell',
         'level' => '', 'sektor' => '', 'diaet_hart' => [], 'aroma' => '',
-        'occasion' => '', 'serviceform' => '', 'kompositions_stil' => '',
+        'occasion' => '', 'eventtyp' => '', 'serviceform' => '', 'kompositions_stil' => '',
     ];
 
     /**
@@ -180,6 +180,13 @@ class VkGeneratorModal extends Component
 
     public function render()
     {
-        return view('foodalchemist::livewire.verkauf.vk-generator-modal');
+        // CQ 2.5b: Anlass, Eventtyp, Service-Art aus den DB-Vokabularen des Teams
+        $vok = app(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::class);
+        $team = \Platform\FoodAlchemist\Support\FaTeam::aktuell();
+
+        return view('foodalchemist::livewire.verkauf.vk-generator-modal', [
+            'anlassOptionen' => $vok->optionen($team, 'occasion'), 'eventtypOptionen' => $vok->optionen($team, 'eventtyp'),
+            'serviceArtOptionen' => $vok->optionen($team, 'serviceform'),
+        ]);
     }
 }

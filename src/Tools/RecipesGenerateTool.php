@@ -31,7 +31,7 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
     /** Richtungs-Parameter, die 1:1 aus den Pills der beiden Modals kommen. */
     private const PILL_KEYS = [
         'convenience', 'frische', 'bestand', 'level', 'sektor', 'aroma',
-        'occasion', 'serviceform', 'kompositions_stil',
+        'occasion', 'eventtyp', 'serviceform', 'kompositions_stil',
     ];
 
     /**
@@ -141,8 +141,10 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
                 'diaet_hart' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['vegan', 'vegetarisch', 'glutenfrei', 'laktosefrei', 'halal', 'low_carb']], 'description' => 'Diät-Constraints, hart erzwungen (Multi)'],
                 'aroma' => ['type' => 'string', 'description' => 'Freie Aroma-Richtung, z. B. "rauchig-karamellig"'],
                 // ── nur mit vk=true wirksam ──
-                'occasion' => ['type' => 'string', 'enum' => ['fruehstueck', 'lunch', 'konferenz', 'empfang', 'dinner', 'late_night'], 'description' => 'Nur vk=true: Anlass'],
-                'serviceform' => ['type' => 'string', 'enum' => ['tellerservice', 'buffet', 'flying', 'stehempfang', 'boxed'], 'description' => 'Nur vk=true: Serviceform'],
+                // CQ 2.5b: Codes aus den Vokabularen des Teams (Einstellungen › Konzepter-Dimensionen), geprüft beim Aufruf
+                'occasion' => ['type' => 'string', 'description' => 'Nur vk=true: Anlass = Einsatzmoment-Code, z. B. fruehstueck | lunch | empfang | dinner | late_night'],
+                'eventtyp' => ['type' => 'string', 'description' => 'Nur vk=true: Eventtyp-Code, z. B. konferenz | gala_bankett | hochzeit'],
+                'serviceform' => ['type' => 'string', 'description' => 'Nur vk=true: Service-Art-Code, z. B. tellerservice | buffet | flying | stehempfang | boxed'],
                 'kompositions_stil' => ['type' => 'string', 'enum' => ['klassisch', 'kreativ', 'gewagt'], 'description' => 'Nur vk=true: filtert den Pairing-Wissensblock (gewagt = nur belegte Paarungen)'],
                 'voll_anreichern' => ['type' => 'boolean', 'default' => false, 'description' => '03·L7: One-Shot — nach der Erdung laeuft der Anreicherungs-Pass durch und fuellt die noch LEEREN Textfelder (Basisrezept: Beschreibung/Kategorie/Geschmack; vk=true: Beschreibung/VK-Wording/Plating/Speisen-Klasse). Kostet 1 Provider-Call je fehlendes Feld und verlaengert den Aufruf entsprechend; bereits gefuellte Felder werden nie angetastet. Mit vk=true und mindestens 2 Komponenten kommt danach EIN weiterer Call fuer das kulinarische Kohaerenz-Urteil (anreicherung.kohaerenz_urteil: score/label/schwachstelle) — das ist die zweite Achse, nicht der deterministische Aroma-Score im Feld kohaerenz. Mit vk=true laeuft zum Schluss das Wirtschaftlichkeits-Glied (03·L8, KEIN Provider-Call): Preisklasse + Standard-Darreichung werden gesetzt, sofern Defaults existieren, danach berechnet der dynamische Unternehmens-Basissatz den Auto-Vorschlag und die Food-Cost-Ampel in anreicherung.wirtschaftlichkeit. Vorschlag und wirksamer VK bleiben getrennt; ein fixierter VK wird nicht ueberschrieben. Fehlt die Preisklasse, rechnet der neutrale Klassenfaktor 100 % sichtbar weiter. Die Portionsgroesse kommt aus dem KI-Vorschlag oder bei vorhandener Verkaufsanzahl deterministisch aus Yield geteilt durch Anzahl. Ohne belastbaren Darreichungs-MEK entsteht kein Nullpreis, sondern eine sichtbare Kalkulationsluecke.'],
                 'complete_coverage' => ['type' => 'boolean', 'default' => false, 'description' => 'Produktionsreife Komplett-Coverage fuer MCP, nur mit voll_anreichern=true: synchronisiert nach den Text-/Klassifikations-Luecken auch operative Detail-Bausteine neu: Fertigungstiefe, Arbeits- und Ruestzeit, Vorlauf, Equipment, Default-Posten soweit belastbar ableitbar, Prozess- und Aromaanker, geerdete Pairings, Niveau-/Sektor-Eignung, Step-by-step und Sensorik. Bestehende Schritte und vorhandene Sensorik werden bewusst ueberschrieben, damit ein geaendertes Rezept wieder konsistent ist. KI-Fotos bleiben eine separate kostenpflichtige Option; Ersatz-Verknuepfungen bleiben manuell. Allergene, Zusatzstoffe und Naehrwerte werden ausschliesslich aus GP-/Lieferanten-Stammdaten aggregiert und hier nicht geschaetzt. Bereits gefuellte Text-/Stammdatenfelder bleiben geschuetzt. Fuer einzelne Rezepte gedacht; grosse Konzept-Laeufe sollen ueber Queue/Run-Orchestrierung laufen.'],
@@ -191,6 +193,16 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
             $wert = $arguments[$key] ?? null;
             if (is_string($wert) && trim($wert) !== '') {
                 $parameter[$key] = trim($wert);
+            }
+        }
+        // CQ 2.5b: Anlass/Eventtyp/Service-Art gegen die DB-Codes des Teams; Alt-Wert occasion=konferenz → eventtyp
+        $parameter = \Platform\FoodAlchemist\Support\Planung\PlanungVokabular::normalisieren($parameter);
+        foreach (['occasion', 'eventtyp', 'serviceform'] as $key) {
+            if (($parameter[$key] ?? '') === '') {
+                unset($parameter[$key]);
+            } elseif (! app(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::class)->gueltig($team, $key, $parameter[$key])) {
+                $erlaubt = implode(' | ', array_keys(app(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::class)->optionen($team, $key)));
+                return ToolResult::error("{$key}={$parameter[$key]} ist unbekannt. Erlaubt: {$erlaubt}", 'VALIDATION_ERROR');
             }
         }
         if (is_array($arguments['diaet_hart'] ?? null)) {

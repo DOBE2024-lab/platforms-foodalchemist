@@ -26,6 +26,8 @@ class ConcepterDimensionenService
         'eventtypen' => ['tabelle' => 'foodalchemist_event_types', 'label' => 'Eventtypen', 'hint' => 'Einer je Konzept, zum Beispiel Konferenz, Gala, Sommerfest.'],
         'saisons' => ['tabelle' => 'foodalchemist_seasons', 'label' => 'Saisons', 'hint' => 'Mehrere je Konzept möglich.'],
         'servierformen' => ['tabelle' => 'foodalchemist_serving_forms', 'label' => 'Servierformen', 'hint' => 'Verbindet Konzept und Darreichung am Gericht. Der Grundbestand kommt aus der Warenwirtschaft, eigene Einträge lassen sich ergänzen.'],
+        // CQ 2.5b: Service-Art der Planung (Tellerservice, Buffet, Flying …), getrennt von den Darreichungs-Servierformen; Grundbestand global.
+        'servicearten' => ['tabelle' => 'foodalchemist_service_arten', 'label' => 'Service-Arten', 'hint' => 'Wie serviert wird, Vorgabe in der Planung, zum Beispiel Tellerservice, Buffet, Flying Service.'],
         // Spec 19 „Foodbook-Leitstelle" (E3.3): Zielgruppen-Vokabular (FA-nativ). Default am Foodbook,
         // Auswahl pro Kapitel, Stempel aufs Konzept beim Kapitel-Go (Pivots aus M1).
         'zielgruppen' => ['tabelle' => 'foodalchemist_target_groups', 'label' => 'Zielgruppen', 'hint' => 'Vorgabe am Foodbook, Auswahl je Kapitel, zum Beispiel Tagungsgast, Bankettgast, VIP-Gala.'],
@@ -58,6 +60,8 @@ class ConcepterDimensionenService
         ];
         if ($vokabular === 'servierformen') {
             $zeile['code'] = Str::slug($name, '_'); // FA-nativ, ohne legacy_id — Import fasst sie nicht an
+        } elseif (in_array($meta['tabelle'], \Platform\FoodAlchemist\Support\Planung\VokabularCodes::TABELLEN, true)) {
+            $zeile['code'] = \Platform\FoodAlchemist\Support\Planung\VokabularCodes::codeFuer($meta['tabelle'], $name);   // CQ 2.5b: Planung speichert den Code
         }
         DB::table($meta['tabelle'])->insert($zeile);
 
@@ -109,10 +113,10 @@ class ConcepterDimensionenService
         return $name;
     }
 
-    /** Servierformen sind Basis-Katalog (Master pflegt global); die übrigen Vokabulare bleiben Team-Sache (Paket/Team). */
+    /** Servierformen und Service-Arten sind Basis-Katalog (Master pflegt global); die übrigen Vokabulare bleiben Team-Sache (Paket/Team). */
     private function darf(string $vokabular, mixed $zeileTeamId, Team $team): bool
     {
-        return $vokabular === 'servierformen'
+        return in_array($vokabular, ['servierformen', 'servicearten'], true)
             ? BasisKatalog::mayWrite($zeileTeamId, $team)
             : TeamScope::owns($zeileTeamId, $team);
     }

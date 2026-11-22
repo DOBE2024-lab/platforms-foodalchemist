@@ -160,9 +160,15 @@ it('weist ein leeres Briefing zurueck', function () {
 it('liefert Werte, die das Achsen-Mapping wirklich aufloest', function () {
     $map = config('foodalchemist.ai.knowledge_axis_map', []);
 
-    foreach (FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES['occasion'] as $wert) {
-        expect($map['occasion'] ?? [])->toHaveKey($wert);
+    // CQ 2.5b: Anlass/Eventtyp kommen aus den DB-Vokabularen (hier: Rückfall auf den Grundbestand). Die bisherigen Planungs-Codes
+    // sind dort gültig und lösen über das Mapping auf; `konferenz` ist seit 22.11. ein Eventtyp.
+    $vok = app(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::class);
+    foreach (['fruehstueck', 'lunch', 'empfang', 'dinner', 'late_night'] as $wert) {
+        expect($vok->gueltig($this->rootTeam, 'occasion', $wert))->toBeTrue()
+            ->and($map['occasion'] ?? [])->toHaveKey($wert);
     }
+    expect($vok->gueltig($this->rootTeam, 'eventtyp', 'konferenz'))->toBeTrue()
+        ->and($map['eventtyp'] ?? [])->toHaveKey('konferenz');
     // CQ 2.5a: `sektor` ist jetzt geprüft (ein Vokabular, Support\Sektor). Das Mapping kennt die vier
     // Sektoren mit Segment-Dossier; `restaurant` und `crew` sind die bekannten Lücken.
     expect(FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES['sektor'])->toBe(\Platform\FoodAlchemist\Support\Sektor::SLUGS);

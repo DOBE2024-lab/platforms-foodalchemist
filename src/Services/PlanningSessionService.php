@@ -326,7 +326,7 @@ class PlanningSessionService
     public function setGenerationParams(Team $team, int $id, array $params): FoodAlchemistPlanningSession
     {
         $session = $this->ownedSession($team, $id);
-        $session->update(['generation_params' => $this->filterGenerationParams($params)]);
+        $session->update(['generation_params' => $this->filterGenerationParams($params, $verworfen, $team)]);
 
         return $session->refresh();
     }
@@ -350,9 +350,10 @@ class PlanningSessionService
      *                                        Menschen zeigen wollen (Freitext-Extraktion).
      * @return array<string, mixed>|null
      */
-    public function filterGenerationParams(array $params, ?array &$verworfen = null): ?array
+    public function filterGenerationParams(array $params, ?array &$verworfen = null, ?Team $team = null): ?array
     {
         $verworfen = [];
+        $params = \Platform\FoodAlchemist\Support\Planung\PlanungVokabular::normalisieren($params);   // Alt-Wert occasion=konferenz → eventtyp (CQ 2.5b)
 
         $unbekannt = array_diff(array_keys($params), FoodAlchemistPlanningSession::ALLOWED_GENERATION_PARAMS);
         foreach ($unbekannt as $key) {
@@ -368,6 +369,15 @@ class PlanningSessionService
         if (is_string($gefiltert['sektor'] ?? null)) {
             // CQ 2.5a: Altwert der Planung (catering …) → Sektor-Slug, bevor geprüft wird.
             $gefiltert['sektor'] = \Platform\FoodAlchemist\Support\Sektor::kanonisch($gefiltert['sektor']) ?? $gefiltert['sektor'];
+        }
+        // CQ 2.5b: Saison, Anlass, Eventtyp, Service-Art gegen die Codes der DB-Vokabulare des Teams (ohne Team: keine Prüfung möglich).
+        $team ??= \Platform\FoodAlchemist\Support\FaTeam::aktuell();
+        $vokabular = app(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::class);
+        foreach (array_keys(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::MODELLE) as $key) {
+            if ($team !== null && isset($gefiltert[$key]) && ! $vokabular->gueltig($team, $key, $gefiltert[$key])) {
+                $verworfen[] = $key . '=' . (is_scalar($gefiltert[$key]) ? (string) $gefiltert[$key] : gettype($gefiltert[$key]));
+                unset($gefiltert[$key]);
+            }
         }
         foreach ($gefiltert as $key => $wert) {
             $erlaubt = FoodAlchemistPlanningSession::ALLOWED_GENERATION_VALUES[$key] ?? null;

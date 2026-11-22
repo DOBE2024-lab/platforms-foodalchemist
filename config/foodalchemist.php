@@ -728,10 +728,14 @@ return [
             'occasion' => [
                 'fruehstueck' => ['event_playbook_brunch'],
                 'lunch' => ['event_playbook_business_lunch'],
-                'konferenz' => ['event_playbook_tagung'],
+                'konferenz' => ['event_playbook_tagung'],   // Alt-Wert; neu als Eventtyp (CQ 2.5b)
                 'empfang' => ['event_playbook_empfang'],
                 'dinner' => ['event_playbook_gala'],
                 'late_night' => ['event_playbook_latenight'],
+            ],
+            // CQ 2.5b: Eventtyp ist eigenes Feld (Dominique 22.11.2026); Codes aus foodalchemist_event_types
+            'eventtyp' => [
+                'konferenz' => ['event_playbook_tagung'],
             ],
             'sektor' => [
                 // CQ 2.5a: Schlüssel = Sektor-Slug; Altwerte (betriebsgastronomie …) löst achsenKandidaten über Sektor::schreibweisen auf.

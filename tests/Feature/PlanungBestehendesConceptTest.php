@@ -93,7 +93,7 @@ it('fremdes Team, Paket oder Vorlage lassen sich nicht wählen', function () {
             ->call('oeffne', $this->session->id)
             ->call('bestehendesConceptWaehlen', $id)
             ->assertSet('planConceptId', null)
-            ->assertSet('fehler', 'Das gewählte Concept wurde nicht gefunden oder gehört zu einem anderen Team.');
+            ->assertSet('fehler', 'Das gewählte Konzept wurde nicht gefunden oder gehört zu einem anderen Team.');
     }
     expect($this->session->refresh()->plan_concept_id)->toBeNull();
 });

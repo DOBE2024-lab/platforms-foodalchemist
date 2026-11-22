@@ -774,7 +774,7 @@ it('KI-Kopf: leeres Concept-Briefing wird gesagt (kein Draft, keine Öffnung)', 
         ->call('oeffne', $session->id)
         ->set('eingabe.concept.brief', '   ')
         ->call('kiKopf')
-        ->assertSet('fehler', 'Für den KI-Kopf erst ein Concept-Briefing eingeben.')
+        ->assertSet('fehler', 'Für den KI-Kopf erst ein Konzept-Briefing eingeben.')
         ->assertNotDispatched('concepter-editor.oeffnen');
 
     expect(FoodAlchemistConcept::where('team_id', $this->rootTeam->id)->where('created_via', 'concept_plan_ui')->count())->toBe(0);

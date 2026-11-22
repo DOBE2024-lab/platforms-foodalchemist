@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Support\Produktion\TagesplanAbfrage;
 
 /**
  * Wandmonitor: Anleitung einer Zeile im Vollbild-Overlay — Schritte, Zutaten, Medien, Behälter, Etikett, Start und
- * Schritt-Haken (98 · 3.3 S6, aus Produktion\Tagesplan herausgelöst). Der Tagesplan öffnet per Event
+ * Schritt-Haken (98 · 3.3 S6, aus Produktion\Tagesplan herausgelöst). Die Wand (TagesplanWall) öffnet per Event
  * `tagesplan-anleitung-oeffnen`; nach Start/Abhaken meldet das Kind `tagesplan-zeile-geaendert`, damit Lanes und Pass
  * neu zeichnen.
  *
@@ -155,7 +155,7 @@ class TagesplanAnleitung extends Component
 
     private function zeileGeaendert(): void
     {
-        $this->dispatch('tagesplan-zeile-geaendert')->to(Tagesplan::class);
+        $this->dispatch('tagesplan-zeile-geaendert')->to(TagesplanWall::class);
     }
 
     public function render(ProductionCapacityService $kap)

@@ -2,6 +2,7 @@
 
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanWall;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation as Posten;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -20,7 +21,7 @@ beforeEach(function () {
     $this->seedTeamHierarchy();
     $this->svc = app(ProductionOrderService::class);
     $this->actingAs($this->makeUser($this->rootTeam, 'Küchenchef'));
-    $this->wand = fn () => Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])->set('modus', 'editor');
+    $this->wand = fn () => Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02']);
     $this->vk = fn (string $key, string $name, array $extra = []) => FoodAlchemistRecipe::create(array_merge([
         'team_id' => $this->rootTeam->id, 'recipe_key' => $key, 'name' => $name, 'status' => 'approved', 'is_sales_recipe' => true, 'yield_kg' => 1.0, 'work_time_min' => 10,
     ], $extra));

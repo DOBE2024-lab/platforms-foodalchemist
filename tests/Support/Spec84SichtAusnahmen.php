@@ -18,11 +18,12 @@ return [
     'Livewire/Orders/Editor.php' => 1,
     'Livewire/Planung/Index.php' => 1,
     'Livewire/Planung/KapitelRail.php' => 1,
+    'Livewire/Produktion/Concerns/HaktZeileAb.php' => 1,    // 98 · 3.3 S6: Tagesplan (vorher 10) verteilt auf Abfrage 3, Anleitung 3, Feedback 1, Wall 1, Concerns 2 — kein neuer Treffer
     'Livewire/Produktion/Concerns/SetztZeileMitWallStart.php' => 1,
     'Livewire/Produktion/Editor.php' => 5,
-    'Livewire/Produktion/Tagesplan.php' => 2,    // 98 · 3.3 S6 verschoben, kein neuer Treffer: 3 → TagesplanAbfrage, 1 → TagesplanFeedback, 3 → TagesplanAnleitung, 1 → Concerns/SetztZeileMitWallStart
     'Livewire/Produktion/TagesplanAnleitung.php' => 3,
     'Livewire/Produktion/TagesplanFeedback.php' => 1,
+    'Livewire/Produktion/TagesplanWall.php' => 1,
     'Livewire/Recipes/DetailPanel.php' => 3,
     'Livewire/Recipes/RecipeModal.php' => 3,
     'Livewire/Recipes/StepEditor.php' => 13,

@@ -732,12 +732,16 @@
         "typo_tinte": 10,
         "roher_button": 3
     },
-    "livewire/produktion/tagesplan.blade.php": {
-        "typo_groesse": 11,
-        "typo_tinte": 56,
-        "roher_button": 25,
+    "livewire/produktion/tagesplan-wall.blade.php": {
+        "typo_tinte": 44,
+        "roher_button": 21,
         "rohe_karte": 2,
         "rohes_segment": 2
+    },
+    "livewire/produktion/tagesplan.blade.php": {
+        "typo_groesse": 11,
+        "typo_tinte": 12,
+        "roher_button": 4
     },
     "livewire/projekte/detail.blade.php": {
         "typo_groesse": 6,

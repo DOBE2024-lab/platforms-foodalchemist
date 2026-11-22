@@ -5,6 +5,7 @@ use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
 use Platform\FoodAlchemist\Livewire\Produktion\TagesplanAnleitung;
 use Platform\FoodAlchemist\Livewire\Produktion\TagesplanFeedback;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanWall;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ProductionOrderService;
@@ -81,23 +82,25 @@ function tagesplanModi(object $t): array
 {
     $basis = ['von' => '2026-08-20'];
     $wand = $basis + ['display' => 'wall'];
+    // Seit S6 PR4 ist der Küchenmonitor ein Kind; die Hülle (Tagesplan, Wandmodus) zeigt es beim ersten Render voll.
+    $kind = fn () => Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02']);
     $grund = array_key_first((array) config('foodalchemist.feedback_gruende', [])) ?? 'zu_salzig';
 
     return [
         'dashboard' => fn () => Livewire::test(Tagesplan::class, $basis),
         'editor' => fn () => Livewire::test(Tagesplan::class, $basis)->set('modus', 'editor'),
-        'wall_lanes' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor'),
-        'wall_mise' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')->call('wallAnsichtSetzen', 'mise'),
-        'wall_basis' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')->call('wallGruppenFilterSetzen', 'basis'),
+        'wall_lanes' => fn () => Livewire::test(Tagesplan::class, $wand),
+        'wall_mise' => fn () => $kind()->call('wallAnsichtSetzen', 'mise'),
+        'wall_basis' => fn () => $kind()->call('wallGruppenFilterSetzen', 'basis'),
         // Seit S6 PR3 ist die Anleitung ein Kind: der Tagesplan öffnet sie per Event, das Netz setzt das geöffnete Kind ein.
-        'wall_anleitung' => fn () => tagesplanMarker(Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')
+        'wall_anleitung' => fn () => tagesplanMarker($kind()
             ->call('oeffneAnleitung', $t->zeile->id)->assertDispatched('tagesplan-anleitung-oeffnen')->html(), $t->zeile->id),
-        'wall_anleitung_gestartet' => fn () => tagesplanMarker(Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')
+        'wall_anleitung_gestartet' => fn () => tagesplanMarker($kind()
             ->call('oeffneAnleitung', $t->zeile->id)->html(), $t->zeile->id,
             ['tagesplan-anleitung' => tagesplanAnleitung($t->zeile->id)->call('anleitungStarten')->call('anleitungStepUmschalten', 0)->html()]),
         // Seit S6 PR2 ist der Bogen ein Kind: Seite = Overlay mit frischem Bogen, dessen Marker gegen den gespeicherten getauscht.
-        'wall_feedback_gespeichert' => function () use ($wand, $t, $grund) {
-            $seite = tagesplanMarker(Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')->call('oeffneAnleitung', $t->zeile->id)->html(), $t->zeile->id);
+        'wall_feedback_gespeichert' => function () use ($kind, $t, $grund) {
+            $seite = tagesplanMarker($kind()->call('oeffneAnleitung', $t->zeile->id)->html(), $t->zeile->id);
             $frisch = tagesplanMarker(Livewire::test(TagesplanFeedback::class, ['lineId' => $t->zeile->id])->html());
             $gespeichert = tagesplanMarker(Livewire::test(TagesplanFeedback::class, ['lineId' => $t->zeile->id])
                 ->call('feedbackGrundUmschalten', $grund)->call('feedbackSetzen', 'geschmack', 4)->call('feedbackSpeichern')->html());
@@ -112,8 +115,8 @@ function tagesplanModi(object $t): array
 
             return $seite;
         },
-        'wall_gericht' => function () use ($wand) {
-            $w = Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor');
+        'wall_gericht' => function () use ($kind) {
+            $w = $kind();
             $key = $w->viewData('wallPostenGruppen')->flatten(1)->first(fn ($g) => str_contains((string) $g->key, 'Rinderbraten'))?->key;
             expect($key)->not->toBeNull();
 

@@ -61,6 +61,7 @@ it('lässt keine View schlechter werden als ihren eingefrorenen Stand', function
 const UI_UMZUEGE = [
     'livewire/produktion/tagesplan-feedback.blade.php' => 'livewire/produktion/tagesplan.blade.php',   // 98 · 3.3 S6
     'livewire/produktion/tagesplan-anleitung.blade.php' => 'livewire/produktion/tagesplan.blade.php',  // 98 · 3.3 S6
+    'livewire/produktion/tagesplan-wall.blade.php' => 'livewire/produktion/tagesplan.blade.php',       // 98 · 3.3 S6
     'src/Support/Produktion/WallStil.php' => 'livewire/produktion/tagesplan.blade.php',                // 98 · 3.3 S6
 ];
 

@@ -4,17 +4,13 @@ namespace Platform\FoodAlchemist\Livewire\Produktion;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Platform\FoodAlchemist\Livewire\Produktion\Concerns\SetztZeileMitWallStart;
-use Platform\FoodAlchemist\Enums\ProductionLineStatus;
-use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
+use Platform\FoodAlchemist\Livewire\Produktion\Concerns\HaktZeileAb;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Services\ProductionCapacityService;
 use Platform\FoodAlchemist\Services\ProductionOrderService;
 use Platform\FoodAlchemist\Services\ProductionPlanService;
-use Platform\FoodAlchemist\Services\ProductionReadinessService;
 use Platform\FoodAlchemist\Support\Produktion\TagesplanAbfrage;
 
 /**
@@ -29,7 +25,7 @@ use Platform\FoodAlchemist\Support\Produktion\TagesplanAbfrage;
  */
 class Tagesplan extends Component
 {
-    use SetztZeileMitWallStart;
+    use HaktZeileAb;
 
     #[Url(as: 'von')]
     public string $von = '';
@@ -65,17 +61,6 @@ class Tagesplan extends Component
 
     /** Stufe 3 P3.4 — der zuletzt gerechnete Planungs-Vorschlag (Review vor Übernahme), oder null. */
     public ?array $vorschlag = null;
-
-    /** Wandmonitor (Spec 35): Ansicht der Wand — 'lanes' (nach Posten) | 'mise' (zusammengefasst). */
-    public string $wallAnsicht = 'lanes';
-
-    /** Wandmonitor: Filter innerhalb der Posten-Lanes — alle | gerichte | basis. */
-    public string $wallGruppenFilter = 'alle';
-
-
-    /** Wandmonitor: Gericht-/Arbeitsblock, dessen enthaltene Rezepte gerade offen sind. */
-    public ?string $wallGerichtKey = null;
-
 
     private const DASHBOARD_FENSTER = [3, 7, 14, 30];
 
@@ -217,102 +202,19 @@ class Tagesplan extends Component
         }
     }
 
-    /**
-     * Spec 30 E6 — Zeile abhaken. Der Tagesplan IST die Küchen-Sicht: nach Posten gefiltert
-     * arbeitet man hier die Positionen des Tages ab. Ein zweiter Klick nimmt den Haken zurück
-     * (Checkliste, kein Beleg-Lebenszyklus).
-     */
-    public function abhaken(int $lineId, ProductionOrderService $svc): void
-    {
-        $this->fehler = null;
-        try {
-            $team = Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
-            $zeile = FoodAlchemistProductionOrderLine::findOrFail($lineId);
-            $ziel = $zeile->line_status === ProductionLineStatus::Done
-                ? ProductionLineStatus::Open
-                : ProductionLineStatus::Done;
-
-            $this->zeileSetzenMitWallStart($team, $zeile, $ziel, $svc, $this->display === 'wall');
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
-    }
-
-    /** Wandmonitor: eine zusammengefasste Mise-en-Place-Komponente gesammelt abhaken. */
-    public function abhakenMise(int $lineId, ProductionOrderService $svc, ProductionCapacityService $kap): void
-    {
-        $this->fehler = null;
-        try {
-            $team = Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
-            [$von, $bis] = $this->zeitraum();
-            $zeilen = $kap->tagesplanZeilen($team, $von, $bis, true);
-            $referenz = $zeilen->first(fn ($z) => (int) $z->id === $lineId);
-            if ($referenz === null) {
-                throw new \RuntimeException('Mise-en-Place-Zeile nicht im aktuellen Tagesfenster.');
-            }
-
-            $gruppe = $zeilen->filter(fn ($z) => $referenz->recipe_id !== null
-                ? (int) $z->recipe_id === (int) $referenz->recipe_id
-                : (string) $z->name === (string) $referenz->name);
-            $ziel = $gruppe->every(fn ($z) => $z->line_status === ProductionLineStatus::Done->value)
-                ? ProductionLineStatus::Open
-                : ProductionLineStatus::Done;
-
-            foreach ($gruppe as $z) {
-                if ($z->line_status === $ziel->value) {
-                    continue;
-                }
-                $this->zeileSetzenMitWallStart($team, FoodAlchemistProductionOrderLine::findOrFail($z->id), $ziel, $svc, $this->display === 'wall');
-            }
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
-    }
-
-    /** Wandmonitor (Spec 35): zwischen Posten-Lanes und zusammengefasster Mise-en-Place umschalten. */
-    public function wallAnsichtSetzen(string $a): void
-    {
-        $this->wallAnsicht = in_array($a, ['lanes', 'mise'], true) ? $a : 'lanes';
-    }
-
-    public function wallGruppenFilterSetzen(string $filter): void
-    {
-        $this->wallGruppenFilter = in_array($filter, ['alle', 'gerichte', 'basis'], true) ? $filter : 'alle';
-    }
-
-    /**
-     * Wandmonitor: Anleitung (Schritte + Zutaten) einer Zeile im Overlay öffnen. Die Anleitung ist ein Kind
-     * (Produktion\TagesplanAnleitung, 98 · 3.3 S6) und hält Zeile und Schritt-Haken selbst.
-     */
-    public function oeffneAnleitung(int $lineId): void
-    {
-        $this->dispatch('tagesplan-anleitung-oeffnen', lineId: $lineId)->to(TagesplanAnleitung::class);
-        $this->dispatch('modal.open', name: 'wall-anleitung');
-    }
-
-    /** Die Anleitung hat eine Zeile gestartet oder abgehakt: Lanes und Pass neu zeichnen. */
-    #[On('tagesplan-zeile-geaendert')]
-    public function zeileGeaendert(): void {}
-
-    public function oeffneGericht(string $key): void
-    {
-        $this->wallGerichtKey = $key;
-        $this->dispatch('modal.open', name: 'wall-gericht');
-    }
-
-    public function gerichtSchliessen(): void
-    {
-        $this->wallGerichtKey = null;
-    }
-
     public function render(ProductionCapacityService $kap)
     {
         $team = Auth::user()?->currentTeamRelation;
         [$von, $bis] = $this->zeitraum();
 
+        // Wandmodus: der Küchenmonitor ist das Kind TagesplanWall (98 · 3.3 S6) und rechnet seine Daten selbst.
+        if ($this->display === 'wall') {
+            return view('foodalchemist::livewire.produktion.tagesplan', ['modus' => $this->modus, 'istWall' => true, 'von' => $von, 'bis' => $bis])
+                ->layout('foodalchemist::layouts.kiosk');
+        }
+
         $auslastung = $team !== null ? $kap->auslastung($team, $von, $bis) : [];
-        $istWall = $this->display === 'wall';
-        $zeilen = $team !== null ? $kap->tagesplanZeilen($team, $von, $bis, $istWall) : collect();
+        $zeilen = $team !== null ? $kap->tagesplanZeilen($team, $von, $bis, false) : collect();
 
         if ($this->postenFilter !== null) {
             $zeilen = $zeilen->where('station_id', $this->postenFilter);
@@ -321,45 +223,35 @@ class Tagesplan extends Component
                 ->filter(fn ($b) => $b !== [])->all();
         }
 
-        // Wandmonitor-Extras nur im Wall-Modus rechnen (Readiness zieht eine zweite, teurere Abfrage).
-        $readiness = ($istWall && $team !== null) ? app(ProductionReadinessService::class)->findings($team, $von, $bis) : [];
         $abfrage = new TagesplanAbfrage;
-        $miseEnPlace = $istWall ? $abfrage->miseEnPlace($zeilen) : collect();
-        // Spec 83 M2: Verknüpfung Ober-/Unterrezept aus den Auftragsdaten (vor den Gruppen: die Sortierung nutzt sie)
-        $abfrage->wallVerknuepfung = $istWall ? $abfrage->wallVerknuepfungen($zeilen) : [];
-        $abfrage->wallSammelposten = ($istWall && $team !== null)
-            ? FoodAlchemistProductionStation::visibleToTeam($team)->where('ist_sammelposten', true)->pluck('id')->map(fn ($id) => (int) $id)->all() : [];
-        $wallPostenGruppen = $istWall ? $abfrage->wallPostenGruppen($zeilen) : collect();
-        $wallGericht = $istWall ? $abfrage->wallGerichtAufloesen($wallPostenGruppen, $this->wallGerichtKey) : null;
 
         $zeilenNachTag = $zeilen->groupBy(fn ($z) => Carbon::parse($z->plan_date)->toDateString());
         $tagDetail = $abfrage->tagDetail($zeilenNachTag, $auslastung, $von, $bis, $this->selectedDay);
 
         return view('foodalchemist::livewire.produktion.tagesplan', [
             'modus' => $this->modus,
-            'istWall' => $istWall,
+            'istWall' => false,
             'von' => $von,
             'bis' => $bis,
             'auslastung' => $auslastung,
             'zeilenNachTag' => $zeilenNachTag,
             'dashboard' => $abfrage->dashboard($zeilen, $auslastung, $von, $bis),
             'tagDetail' => $tagDetail,
-            'readiness' => $readiness,
-            'miseEnPlace' => $miseEnPlace,
-            'wallPostenGruppen' => $wallPostenGruppen,
-            'wallVerknuepfung' => $abfrage->wallVerknuepfung,
-            'wallIstPass' => fn ($schluessel, ?string $name) => $abfrage->wallIstPassLane($schluessel, $name),
-            'wallPassAuftraege' => fn ($laneGruppen) => $abfrage->wallPassAuftraege($laneGruppen),
-            'wallGericht' => $wallGericht,
             'postenListe' => $team !== null
                 ? FoodAlchemistProductionStation::visibleToTeam($team)->where('is_inactive', false)
                     ->orderBy('sort_order')->orderBy('name')->get(['id', 'name'])
                 : collect(),
-        ])->layout($istWall ? 'foodalchemist::layouts.kiosk' : \Platform\FoodAlchemist\Support\FaShell::layout());
+        ])->layout(\Platform\FoodAlchemist\Support\FaShell::layout());
     }
 
 
     /** @return array{0:string,1:string} */
+    /** Abhaken im Editor; der Wandmodus ist seit 98 · 3.3 S6 das Kind TagesplanWall. */
+    protected function imWandmodus(): bool
+    {
+        return $this->display === 'wall';
+    }
+
     private function zeitraum(): array
     {
         try {

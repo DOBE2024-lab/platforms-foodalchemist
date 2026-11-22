@@ -79,6 +79,19 @@ it('Speichern einer Warengruppe verwirft den Cache', function () {
     expect(WgRolle::istGetraenk('15'))->toBeFalse();
 });
 
+it('Cache ist scoped: forgetScopedInstances (Queue-Job/Octane-Request) lädt neu', function () {
+    wgRoh('15', null, ['is_getraenk' => true]);
+    expect(WgRolle::istGetraenk('15'))->toBeTrue();
+
+    // Änderung an der Model-Schicht vorbei (z. B. anderer Prozess) — der Cache hält noch den alten Stand …
+    DB::table('foodalchemist_lookup_commodity_groups')->where('code', '15')->update(['is_getraenk' => false]);
+    expect(WgRolle::istGetraenk('15'))->toBeTrue();
+
+    // … bis Laravel die scoped-Instanzen zurücksetzt.
+    app()->forgetScopedInstances();
+    expect(WgRolle::istGetraenk('15'))->toBeFalse();
+});
+
 it('unbekannte Rolle ist ein Programmierfehler', function () {
     WgRolle::hat('15', 'alkohol');
 })->throws(InvalidArgumentException::class);

@@ -116,20 +116,30 @@ final class WgRolle
         return $out;
     }
 
-    /** Cache verwerfen (nach Änderung an einer Warengruppe). */
+    /** Cache verwerfen (nach Änderung an einer Warengruppe); die nächste Abfrage lädt neu. */
     public static function vergessen(): void
     {
-        if (app()->bound(self::CACHE)) {
-            app()->forgetInstance(self::CACHE);
-        }
+        app()->forgetInstance(self::CACHE);
     }
 
-    /** @return array<string, array<string, bool>> Code => Rolle => Flag, aus dem Basis-Katalog; je Request gecacht. */
+    /**
+     * @return array<string, array<string, bool>> Code => Rolle => Flag, aus dem Basis-Katalog.
+     *
+     * Als `scoped` im Container: Laravel verwirft scoped-Instanzen zwischen Queue-Jobs und Octane-Requests
+     * (`forgetScopedInstances`) — eine Flag-Änderung greift damit spätestens beim nächsten Job/Request.
+     */
     private static function belegung(): array
     {
-        if (app()->bound(self::CACHE)) {
-            return app(self::CACHE);
+        if (! app()->bound(self::CACHE)) {
+            app()->scoped(self::CACHE, fn () => self::lade());
         }
+
+        return app(self::CACHE);
+    }
+
+    /** @return array<string, array<string, bool>> */
+    private static function lade(): array
+    {
         $belegung = [];
         try {
             $master = MasterTeam::id();
@@ -146,7 +156,6 @@ final class WgRolle
         } catch (\Illuminate\Database\QueryException) {
             $belegung = [];   // Spalten noch nicht migriert → Standard
         }
-        app()->instance(self::CACHE, $belegung);
 
         return $belegung;
     }

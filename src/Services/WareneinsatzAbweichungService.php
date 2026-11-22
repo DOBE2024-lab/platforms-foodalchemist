@@ -81,7 +81,7 @@ class WareneinsatzAbweichungService
         $kosten = $verbrauch ?? $einkauf;
 
         $abdeckung = $umsatz > 0 ? round($umsatzZugeordnet / $umsatz * 100, 1) : null;
-        $istPct = $umsatz > 0 ? round($kosten / $umsatz * 100, 1) : null;
+        $istPct = MargeService::wareneinsatzPct($kosten, $umsatz);
 
         // Theoretischer Wareneinsatz: verkaufte Menge × EK je Portion an der Standard-Darreichung.
         // Dieselbe EK-Zahl wie in der Matrix und in der W%-Ampel — sonst stünden hier zwei

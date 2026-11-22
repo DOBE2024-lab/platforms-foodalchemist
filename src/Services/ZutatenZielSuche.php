@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Services;
 
+use Platform\FoodAlchemist\Support\Masse;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -45,7 +46,7 @@ final class ZutatenZielSuche
             ->get(['id', 'name', 'ek_per_kg_eur'])
             ->map(fn ($r) => [
                 'type' => 'sub', 'id' => $r->id, 'name' => '↳ ' . $r->name,
-                'ek_pro_g' => $r->ek_per_kg_eur !== null ? ((float) $r->ek_per_kg_eur) / 1000 : null,
+                'ek_pro_g' => Masse::preisJeG($r->ek_per_kg_eur),
                 'url' => \Platform\FoodAlchemist\Support\Sprungziel::rezept($r->id),
             ]);
 

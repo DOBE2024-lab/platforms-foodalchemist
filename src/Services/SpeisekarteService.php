@@ -641,7 +641,7 @@ class SpeisekarteService
             }
         }
 
-        $we = ($vk !== null && $vk > 0 && $ek !== null) ? round($ek / $vk * 100, 1) : null;
+        $we = MargeService::wareneinsatzPct($ek, $vk);
 
         return ['vk' => $vk, 'ek' => $ek, 'we' => $we, 'quelle' => $vkArr['quelle']];
     }
@@ -699,7 +699,7 @@ class SpeisekarteService
         $rubriken = [];
         foreach ($sections as $r) {
             $a = $roll((int) $r->id);
-            $a['we'] = ($a['vk'] > 0 && $a['ek'] > 0) ? round($a['ek'] / $a['vk'] * 100, 1) : null;
+            $a['we'] = $a['ek'] > 0 ? MargeService::wareneinsatzPct($a['ek'], $a['vk']) : null;
             $rubriken[(int) $r->id] = $a;
         }
 

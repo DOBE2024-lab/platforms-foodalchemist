@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Services;
 
+use Platform\FoodAlchemist\Support\Masse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -898,8 +899,7 @@ class RecipeRecomputeService
         $letzterG = $this->spur()->abholen();
         [$pStk, $bStk] = $gp !== null ? $this->preisProStueckMitBasis($gp) : [null, null];
         $letzterStk = $this->spur()->abholen();
-        $pSub = $z->referencedRecipe?->ek_per_kg_eur !== null
-            ? ((float) $z->referencedRecipe->ek_per_kg_eur) / 1000 : null;
+        $pSub = Masse::preisJeG($z->referencedRecipe?->ek_per_kg_eur);
         // Vererbung statt Neu-Erfinden: das Eltern-Rezept kennt vom Sub nur den €/kg.
         // Trägt das Sub (noch) keine Basis, ist die Herkunft unbekannt — nicht `avg`.
         $bSub = $pSub !== null
@@ -907,7 +907,7 @@ class RecipeRecomputeService
             : null;
         if ($this->subKosten !== null && $z->referenced_recipe_id !== null) {   // Spec 82 3b: Sub-Kosten desselben Teams
             $sub = $this->subKosten[(int) $z->referenced_recipe_id] ?? ['per_kg' => null, 'basis' => null];
-            $pSub = $sub['per_kg'] !== null ? $sub['per_kg'] / 1000 : null;
+            $pSub = Masse::preisJeG($sub['per_kg']);
             $bSub = $pSub !== null ? ($sub['basis'] ?? EkPriceBasis::Unknown) : null;
         } elseif ($z->referenced_recipe_id !== null && $z->referencedRecipe?->ist_fassung) {
             // Spec 82 PR 6b (Lisa): eine Abo-FASSUNG als Zutat eines EIGENEN Rezepts trägt per Leck-Sperre kein ek_per_kg_eur (NULL) — der Sub-Preis kommt aus der
@@ -915,7 +915,7 @@ class RecipeRecomputeService
             $team = $this->recomputeTeam ?? Team::find($z->recipe?->team_id);
             if ($team !== null) {
                 $k = app(KostenCacheService::class)->fuer($z->referencedRecipe, $team);
-                $pSub = $k['vollstaendig'] && $k['ek_per_kg'] !== null ? ((float) $k['ek_per_kg']) / 1000 : null;
+                $pSub = $k['vollstaendig'] ? Masse::preisJeG($k['ek_per_kg']) : null;
                 $bSub = $pSub !== null ? (EkPriceBasis::tryFrom((string) ($k['basis'] ?? '')) ?? EkPriceBasis::Unknown) : null;
             } else {
                 $pSub = null;

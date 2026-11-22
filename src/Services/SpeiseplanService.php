@@ -1166,7 +1166,7 @@ class SpeiseplanService
                 'line_id' => (int) $l->id, 'name' => $l->name, 'color' => $l->color, 'role' => $l->role,
                 'zellen' => $zellen, 'summe' => $summe, 'vorwoche' => $vorwoche, 'schnitt4' => $schnitt4,
                 'umsatz' => round($umsatz, 2),
-                'wes' => $umsatz > 0 ? round($ekWe / $umsatz * 100, 1) : null,
+                'wes' => MargeService::wareneinsatzPct($ekWe, $umsatz),
                 'vk_schnitt' => $summe > 0 ? round($umsatz / max(1, $summe), 2) : null,
             ];
             $gesamt['summe'] += $summe;
@@ -1179,7 +1179,7 @@ class SpeiseplanService
         foreach ($zeilen as $i => $z) {
             $zeilen[$i]['anteil'] = $gesamt['summe'] > 0 ? round($z['summe'] / $gesamt['summe'] * 100, 1) : null;
         }
-        $gesamt['wes'] = $gesamt['umsatz'] > 0 ? round($gesamt['ek_we'] / $gesamt['umsatz'] * 100, 1) : null;
+        $gesamt['wes'] = MargeService::wareneinsatzPct($gesamt['ek_we'], $gesamt['umsatz']);
         unset($gesamt['ek_we']);
         $gesamt['umsatz'] = round($gesamt['umsatz'], 2);
         $gesamt['ek'] = round($gesamt['ek'], 2);
@@ -1463,7 +1463,7 @@ class SpeiseplanService
                     // Wareneinsatz nur, wo ein VK steht: ein Eintrag ohne Preis hätte EK ohne Umsatz
                     // (Bananenbrot ohne Preis ⇒ 16.100 % am Tag). Sein EK zählt trotzdem in die EK-Summe.
                     $mitPreis = $preis['vk'] > 0;
-                    $wes = $mitPreis ? round($preis['ek'] / $preis['vk'] * 100, 1) : null;
+                    $wes = MargeService::wareneinsatzPct($preis['ek'], $preis['vk']);
                     $gerichte = $this->eintragGerichte($e);
                     [$titel, $untertitel] = $this->titelUndWording($e, $gerichte);
                     $naehr = $gerichte->isNotEmpty()
@@ -1513,7 +1513,7 @@ class SpeiseplanService
         foreach ($tage as $ymd => $t) {
             $tage[$ymd]['umsatz'] = round($t['umsatz'], 2);
             $tage[$ymd]['ek'] = round($t['ek'], 2);
-            $tage[$ymd]['wes'] = $t['umsatz'] > 0 ? round($t['ek_we'] / $t['umsatz'] * 100, 1) : null;
+            $tage[$ymd]['wes'] = MargeService::wareneinsatzPct($t['ek_we'], $t['umsatz']);
             $tage[$ymd]['status'] = $this->wesStatus($tage[$ymd]['wes'], ['min' => null, 'max' => $teamZiel]);
             $tage[$ymd]['ek_je_gast'] = $t['gaeste'] > 0 ? round($t['ek'] / $t['gaeste'], 2) : null;
         }
@@ -1522,14 +1522,14 @@ class SpeiseplanService
         foreach ($plan->lines as $l) {
             $w = ($linienWoche[(int) $l->id] ?? []) + ['umsatz' => 0.0, 'ek' => 0.0, 'ek_we' => 0.0];
             $band = $this->zielband($l, $teamZiel);
-            $wes = $w['umsatz'] > 0 ? round($w['ek_we'] / $w['umsatz'] * 100, 1) : null;
+            $wes = MargeService::wareneinsatzPct($w['ek_we'], $w['umsatz']);
             $linien[(int) $l->id] = ['name' => $l->name, 'color' => $l->color, 'band' => $band, 'wes' => $wes, 'status' => $this->wesStatus($wes, $band)];
         }
 
         $wUmsatz = array_sum(array_column($tage, 'umsatz'));
         $wEk = array_sum(array_column($tage, 'ek'));
         $wEkWe = array_sum(array_column($tage, 'ek_we'));
-        $wWes = $wUmsatz > 0 ? round($wEkWe / $wUmsatz * 100, 1) : null;
+        $wWes = MargeService::wareneinsatzPct($wEkWe, $wUmsatz);
         $woche = [
             'umsatz' => round($wUmsatz, 2), 'ek' => round($wEk, 2), 'wes' => $wWes,
             'status' => $this->wesStatus($wWes, ['min' => null, 'max' => $teamZiel]),

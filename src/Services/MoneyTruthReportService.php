@@ -107,8 +107,8 @@ class MoneyTruthReportService
             }
 
             $anzahl = max(1.0, (float) ($recipe->sales_unit_count ?? 1));
-            $wDivision = (float) $recipe->ek_total_eur / $anzahl / $vk * 100;
-            $wDarreichung = $ekPortion / $vk * 100;
+            $wDivision = MargeService::wareneinsatzPct((float) $recipe->ek_total_eur / $anzahl, $vk, null);
+            $wDarreichung = MargeService::wareneinsatzPct($ekPortion, $vk, null);
 
             $vergleichbar++;
             $delta = abs($wDivision - $wDarreichung);

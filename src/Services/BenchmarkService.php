@@ -70,7 +70,7 @@ class BenchmarkService
                 $ekPortion = $z->ek_portion !== null
                     ? (float) $z->ek_portion
                     : (float) $z->ek_total_eur / max(1, (int) ($z->sales_unit_count ?? 1));
-                $summe += $ekPortion / (float) $z->sales_net * 100;
+                $summe += MargeService::wareneinsatzPct($ekPortion, $z->sales_net, null);
             }
             $wPct = $summe / $preiszeilen->count();
         }

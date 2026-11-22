@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Livewire\Recipes;
 
+use Platform\FoodAlchemist\Support\Masse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
@@ -482,7 +483,7 @@ class IngredientEditor extends Component
 
                 return [
                     'type' => 'sub', 'id' => $r->id, 'name' => '↳ '.$r->name,
-                    'ek_pro_g' => $r->ek_per_kg_eur !== null ? ((float) $r->ek_per_kg_eur) / 1000 : null,
+                    'ek_pro_g' => Masse::preisJeG($r->ek_per_kg_eur),
                     'preis_label' => $r->ek_per_kg_eur !== null ? number_format((float) $r->ek_per_kg_eur, 2, ',', '.').' €/kg' : null,
                     // Stück-Ertrag → Einheit beim Einfügen auf „stk" vorbelegen + g/Stück fürs Live-Rechnen
                     'einheit_slug' => $hatStueck ? 'stk' : 'g',
@@ -544,7 +545,7 @@ class IngredientEditor extends Component
         $hatStueck = $r->yield_pieces !== null && (float) $r->yield_pieces > 0 && $r->yield_kg !== null;
 
         return [
-            'ek_pro_g' => $r->ek_per_kg_eur !== null ? ((float) $r->ek_per_kg_eur) / 1000 : null,
+            'ek_pro_g' => Masse::preisJeG($r->ek_per_kg_eur),
             'ek_pro_stk' => null,                                  // Sub-Rezepte tragen €/kg, kein €/Stk
             // Stück-Sub: eigener Stück-Ertrag, identisch zur Server-grammFaktor-Regel
             'g_pro_stueck' => $hatStueck ? (float) $r->yield_kg * 1000 / (float) $r->yield_pieces : null,
@@ -566,7 +567,7 @@ class IngredientEditor extends Component
         }
         $r = FoodAlchemistRecipe::visibleToTeam($team)->find($id);
 
-        return $r?->ek_per_kg_eur !== null ? ((float) $r->ek_per_kg_eur) / 1000 : null;
+        return Masse::preisJeG($r?->ek_per_kg_eur);
     }
 
     public function render(RecipeRecomputeService $recompute)
@@ -615,7 +616,7 @@ class IngredientEditor extends Component
                     $ekProStk = $gpPreise['stk'] ?? null;
                     $varianten = ['min' => $gpPreise['min'], 'avg' => $gpPreise['avg']];
                 } elseif ($z->referencedRecipe?->ek_per_kg_eur !== null) {
-                    $ekProG = ((float) $z->referencedRecipe->ek_per_kg_eur) / 1000;
+                    $ekProG = Masse::preisJeG($z->referencedRecipe->ek_per_kg_eur);
                 }
                 $zeilen[] = [
                     'id' => $z->id,

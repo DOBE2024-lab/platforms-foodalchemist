@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Services;
 
+use Platform\FoodAlchemist\Support\Masse;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -55,7 +56,7 @@ class TeamVkService
         if ($gramm <= 0) {
             return ['vk' => null, 'quelle' => 'keine', 'grund' => 'keine_grammatur', 'mek' => null];
         }
-        $mek = round($kosten['ek_per_kg'] / 1000.0 * $gramm * (float) ($standard->unit_count ?: 1), 4);
+        $mek = round(Masse::preisJeG($kosten['ek_per_kg']) * $gramm * (float) ($standard->unit_count ?: 1), 4);
 
         // Zubehör & Verpackung der Form: zum Preis des Teams (dessen Lead-LA) auf den MEK — fehlt ein Preis, gibt es keinen halben Preis
         if ($standard->vessel_gp_id !== null || $standard->zubehoer()->exists()) {

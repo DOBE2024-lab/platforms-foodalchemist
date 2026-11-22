@@ -1709,7 +1709,7 @@ class Editor extends Component
                     $vk = (float) ($ed['preis_pp'] ?? 0);
                     $ek = (float) ($ed['ek_pp'] ?? 0);
                     $positionen[] = ['art' => 'paket', 'label' => (string) ($ed['name'] ?? ''), 'ek' => $ek, 'vk' => $vk,
-                        'preis_einheit' => 'gast', 'we_pct' => ($vk > 0 && $ek > 0) ? round($ek / $vk * 100, 1) : null];
+                        'preis_einheit' => 'gast', 'we_pct' => $ek > 0 ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk) : null];
                 }
             } else {
                 foreach ($kap['bloecke'] as $b) {
@@ -1720,12 +1720,12 @@ class Editor extends Component
                     $ek = (float) ($b['ek_pp'] ?? 0);
                     $positionen[] = ['art' => ($b['type'] ?? '') === 'recipe_ref' ? 'einzel' : 'paket',
                         'label' => (string) ($b['label'] ?? ''), 'ek' => $ek, 'vk' => $vk,
-                        'preis_einheit' => $b['preis_einheit'] ?? 'gast', 'we_pct' => ($vk > 0 && $ek > 0) ? round($ek / $vk * 100, 1) : null];
+                        'preis_einheit' => $b['preis_einheit'] ?? 'gast', 'we_pct' => $ek > 0 ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk) : null];
                 }
             }
             $vkPP = $kap['vk_pro_person'];
             $ekPP = (float) ($kap['ek_pro_person'] ?? 0);
-            $fcPct = $kap['food_cost_percent'] ?? (($vkPP ?? 0) > 0 && $ekPP > 0 ? round($ekPP / $vkPP * 100, 1) : null);
+            $fcPct = $kap['food_cost_percent'] ?? ($ekPP > 0 ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ekPP, $vkPP) : null);
             $board[] = [
                 'kapitel_id' => (int) $kap['id'],
                 'titel' => (string) ($kap['title_intern'] ?? $kap['title'] ?? ''),

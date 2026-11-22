@@ -159,7 +159,7 @@ class KalkulationService
             'sales_net' => $vk,
             'db_eur' => $ekVoll && $vk !== null ? round($vk - $hk2Pp, 2) : null,
             'db_pct' => $ekVoll && $vk !== null && $vk > 0 ? round(($vk - $hk2Pp) / $vk * 100, 1) : null,
-            'wareneinsatz_pct' => $ekVoll && $vk !== null && $vk > 0 ? round($hk1Pp / $vk * 100, 1) : null,
+            'wareneinsatz_pct' => $ekVoll ? MargeService::wareneinsatzPct($hk1Pp, $vk) : null,
             'bloecke' => $r['bloecke'],
             'marge_pct' => $r['marge_pct'],
             'vk_vorschlag' => $r['vk_vorschlag'],

@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Livewire\Concepter;
 
+use Platform\FoodAlchemist\Services\MargeService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -1320,9 +1321,7 @@ class Editor extends Component
                 $kalkulation = $kalk->conceptHk($team, $concept, $outlet);
                 $conceptVk = (float) ($cockpit['price_per_person'] ?? 0);
                 $conceptMek = (float) ($cockpit['ek_per_person'] ?? 0);
-                $conceptWePct = $conceptVk > 0
-                    ? $conceptMek / $conceptVk * 100
-                    : null;
+                $conceptWePct = MargeService::wareneinsatzPct($conceptMek, $conceptVk, null);
                 $wareneinsatzAmpel = app(\Platform\FoodAlchemist\Services\MargeService::class)
                     ->weAmpel($conceptWePct, $zielWareneinsatzPct);
                 if ($this->tab === 'kalkulation' && $this->simulationPax > 0) {

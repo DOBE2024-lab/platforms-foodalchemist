@@ -18,8 +18,10 @@ return [
     'Livewire/Orders/Editor.php' => 1,
     'Livewire/Planung/Index.php' => 1,
     'Livewire/Planung/KapitelRail.php' => 1,
+    'Livewire/Produktion/Concerns/SetztZeileMitWallStart.php' => 1,
     'Livewire/Produktion/Editor.php' => 5,
-    'Livewire/Produktion/Tagesplan.php' => 6,    // 3 → Support/Produktion/TagesplanAbfrage, 1 → Produktion/TagesplanFeedback (98 · 3.3 S6), kein neuer Treffer
+    'Livewire/Produktion/Tagesplan.php' => 2,    // 98 · 3.3 S6 verschoben, kein neuer Treffer: 3 → TagesplanAbfrage, 1 → TagesplanFeedback, 3 → TagesplanAnleitung, 1 → Concerns/SetztZeileMitWallStart
+    'Livewire/Produktion/TagesplanAnleitung.php' => 3,
     'Livewire/Produktion/TagesplanFeedback.php' => 1,
     'Livewire/Recipes/DetailPanel.php' => 3,
     'Livewire/Recipes/RecipeModal.php' => 3,

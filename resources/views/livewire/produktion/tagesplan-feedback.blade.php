@@ -1,6 +1,6 @@
 {{-- Wandmonitor: Feedbackbogen zum Rezept der offenen Anleitung (Livewire\Produktion\TagesplanFeedback, 98 · 3.3 S6). --}}
 @php
-    $wKarte = 'rounded-2xl border border-[var(--fa-line)] bg-[var(--fa-surface)]';   // wie im Tagesplan
+    $wKarte = \Platform\FoodAlchemist\Support\Produktion\WallStil::KARTE;
     $fbAchsen = [
         'score' => 'Wie lief es?',
         'machbarkeit' => 'Machbarkeit',

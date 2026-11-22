@@ -73,7 +73,10 @@ trait MitBearbeitungssperre
         try {
             $tat();
         } finally {
-            $svc->freigeben($ziel[0], $ziel[1], (int) $user->id);
+            // Nur eine selbst geholte Sperre freigeben — eine eigene aus einem anderen Tab bleibt stehen (Wettlauf-Fenster).
+            if ($r['neu'] ?? false) {
+                $svc->freigeben($ziel[0], $ziel[1], (int) $user->id);
+            }
         }
     }
 

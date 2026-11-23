@@ -48,7 +48,7 @@ use Platform\FoodAlchemist\Support\VoiceMime;
 class Index extends Component
 {
     use WithFileUploads;
-    use \Platform\FoodAlchemist\Livewire\Concerns\HandyPlanung;   // Spec 80 Teil D; #1003 PR7 Handy-Umfang
+    use \Platform\FoodAlchemist\Livewire\Concerns\HandyPlanung, \Platform\FoodAlchemist\Livewire\Concerns\PlanKonzeptAusBrief;   // Spec 80 Teil D; #1003 PR7 Handy-Umfang; 98 · 2.6c Konzept aus Brief (Start)
 
     public ?string $fehler = null;
 

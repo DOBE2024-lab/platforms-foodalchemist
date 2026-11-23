@@ -11,6 +11,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich;
 use Platform\FoodAlchemist\Livewire\Concerns\PlanBestehendesConcept;
 use Platform\FoodAlchemist\Livewire\Concerns\PlanGerichtVorgaben;
+use Platform\FoodAlchemist\Livewire\Concerns\PlanKonzeptAusBrief;
 use Platform\FoodAlchemist\Livewire\Concerns\PlanRezepturFuerGericht;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
@@ -43,7 +44,7 @@ use Platform\FoodAlchemist\Support\Planung\ReglerParams;
  */
 class Brief extends Component
 {
-    use HandyLesebereich, PlanBestehendesConcept, PlanGerichtVorgaben, PlanRezepturFuerGericht;
+    use HandyLesebereich, PlanBestehendesConcept, PlanGerichtVorgaben, PlanKonzeptAusBrief, PlanRezepturFuerGericht;   // PlanKonzeptAusBrief: 98 · 2.6c Brief vorbelegen
 
     /** Aktive Planungs-Session des Parents. Setzt nur der Parent beim Mount (Kind je Session gekeyt). */
     #[Locked]

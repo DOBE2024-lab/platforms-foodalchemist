@@ -212,6 +212,40 @@ class Browser extends Component
         $this->resetPage();
     }
 
+    /** Session-Schlüssel der Übergabe „Konzept aus Brief“ an die Planung (gelesen und gelöscht in Planung\Index::mount). */
+    public const BRIEF_SESSION = 'fa_konzept_aus_brief';
+
+    /** 98 · 2.6c: Brief im Dialog „Konzept aus Brief“ (Anlege-Muster 2.4c: erst Dialog, dann Übergabe). */
+    public string $briefText = '';
+
+    public ?string $briefFehler = null;
+
+    /** „Konzept aus Brief“: nur den Dialog öffnen — angelegt wird nichts. */
+    public function ausBrief(): void
+    {
+        $this->briefText = '';
+        $this->briefFehler = null;
+        $this->dispatch('modal.open', name: 'fa-konzept-brief');
+    }
+
+    /**
+     * „Weiter“: Brief in die Session (nicht in die URL) und in die Planung, Reiter Konzept. Plan und Go laufen dort wie bisher
+     * (planAusBrief → GenerateConceptJob); der Konzepter selbst ruft keine KI.
+     */
+    public function ausBriefWeiter()
+    {
+        $brief = trim($this->briefText);
+        if ($brief === '') {
+            $this->briefFehler = 'Bitte einen Brief eingeben.';
+
+            return null;
+        }
+        $this->briefFehler = null;
+        session()->put(self::BRIEF_SESSION, mb_substr($brief, 0, 5000));
+
+        return $this->redirectRoute('foodalchemist.planung.index', ['tab' => 'concept']);
+    }
+
     /** Neues Concept/Paket anlegen → auswählen + Editor öffnen. 98 · 2.4c: erst Dialog mit Namen (LegtMitNamenAn::neu). */
     protected function mitNamenAnlegen(string $name): void
     {

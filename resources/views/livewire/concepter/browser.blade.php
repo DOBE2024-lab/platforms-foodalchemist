@@ -150,6 +150,9 @@
     <x-ui-page-container padding="px-6 py-6" spacing="space-y-4">
         <x-fa::page-header title="Konzepter" :subtitle="number_format($items->total(), 0, ',', '.') . $einheit">
             <x-slot:actions>
+                @unless($istPakete)
+                    <x-fa::button icon="heroicon-m-sparkles" wire:click="ausBrief" data-konzept-aus-brief="">Konzept aus Brief</x-fa::button>
+                @endunless
                 <x-fa::button variant="primary" icon="heroicon-m-plus" wire:click="neu">{{ $neuText }}</x-fa::button>
             </x-slot:actions>
         </x-fa::page-header>
@@ -278,5 +281,17 @@
     {{-- 98 · 2.4c: erst der Name, dann der Datensatz (LegtMitNamenAn) --}}
     @unless(\Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy())   {{-- am Handy wird nicht angelegt (#1003) --}}
     <x-fa::anlege-dialog :title="$neuText" :knopf="$istPakete ? 'Paket anlegen' : ($showVorlagen ? 'Vorlage anlegen' : 'Konzept anlegen')" :fehler="$neuFehler" />
+    {{-- 98 · 2.6c: „Konzept aus Brief“ — erst der Brief, dann weiter in die Planung (Reiter Konzept); dort Plan und Go wie bisher --}}
+    <x-fa::modal name="fa-konzept-brief" title="Konzept aus Brief" size="max-w-lg">
+        <div data-konzept-brief-dialog="">
+            <x-fa::field label="Brief" for="fa-konzept-brief-text" required hint="Anlass, Gäste, Stil, Budget. Die Planung erstellt daraus den Konzept-Plan." :error="$briefFehler">
+                <x-fa::textarea id="fa-konzept-brief-text" rows="5" wire:model="briefText" data-konzept-brief-text="" />
+            </x-fa::field>
+        </div>
+        <x-slot:footer>
+            <x-fa::button variant="ghost" x-on:click="$dispatch('modal.close', { name: 'fa-konzept-brief' })">Abbrechen</x-fa::button>
+            <x-fa::button variant="primary" wire:click="ausBriefWeiter" data-konzept-brief-weiter="">Weiter zur Planung</x-fa::button>
+        </x-slot:footer>
+    </x-fa::modal>
     @endunless
 </x-ui-page>

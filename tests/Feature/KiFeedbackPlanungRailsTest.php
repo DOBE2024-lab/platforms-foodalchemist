@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\FoodbookKontextRail;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Livewire\Planung\KapitelRail;
@@ -65,7 +66,7 @@ it('FoodbookKontextRail: „KI-Text" (kiEinleitung) hat data-ki-action + wire:ta
     bindeS3GeruestStubPaketG([
         'name' => 'Rail-FB', 'slots' => [['label' => 'Vorspeise', 'slot_type' => 'gang', 'target_count' => 2]],
     ]);
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('fbTitel', 'Rail-FB')->set('fbBrief', 'Menü für 20 Gäste.')->call('foodbookAusBrief');
     $fb = FoodAlchemistFoodbook::where('team_id', $this->rootTeam->id)->where('label', 'Rail-FB')->latest('id')->firstOrFail();
 
@@ -80,7 +81,7 @@ it('KapitelRail: „Kapitel erzeugen" (kapitelErzeugen) hat data-ki-action + wir
     bindeS3GeruestStubPaketG([
         'name' => 'Rail-Kapitel-FB', 'slots' => [['label' => 'Hauptgang', 'slot_type' => 'gang', 'target_count' => 2]],
     ]);
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('fbTitel', 'Rail-Kapitel-FB')->set('fbBrief', 'Menü für 20 Gäste.')->call('foodbookAusBrief');
     $fb = FoodAlchemistFoodbook::where('team_id', $this->rootTeam->id)->where('label', 'Rail-Kapitel-FB')->latest('id')->firstOrFail();
     $kapA = (int) FoodAlchemistFoodbookKapitel::where('foodbook_id', $fb->id)->orderBy('id')->value('id');

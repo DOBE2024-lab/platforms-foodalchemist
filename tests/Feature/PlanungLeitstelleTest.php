@@ -7,6 +7,7 @@ use Platform\FoodAlchemist\Jobs\EnrichRecipeJob;
 use Platform\FoodAlchemist\Jobs\GenerateConceptJob;
 use Platform\FoodAlchemist\Jobs\GenerateRecipeJob;
 use Platform\FoodAlchemist\Jobs\GenerateDishProposalJob;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
@@ -2291,8 +2292,8 @@ it('Ausgabe-Tabs: Editor rendert die 3 Ausgabe-Kickoff-Tabs + Panels (Foodbook/S
         // Tab-Buttons (immer im Tab-Slot)
         ->assertSee('Foodbook')
         ->assertSee('Speisekarte')
-        ->assertSee('Speiseplan')
-        // Panels (im @if($active)-Block)
+        ->assertSee('Speiseplan');
+    Livewire::test(AusBrief::class, ['ort' => 'reiter', 'sessionId' => $session->id])   // Spec 85 C1 PR-5: Ausgabe-Reiter im Kind
         ->assertSeeHtml('data-tab-fb-erzeugen')       // Foodbook aus Brief — live (foodbookAusBrief)
         ->assertSeeHtml('data-tab-sk-erzeugen')       // Speisekarte aus Brief — live (speisekarteAusBrief)
         ->assertSeeHtml('data-tab-sp-erzeugen');      // Speiseplan aus Brief — live (speiseplanAusBrief, Stufe 4)

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\Core\Contracts\LLMProviderContract;
 use Platform\FoodAlchemist\Jobs\GenerateConceptJob;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
@@ -71,7 +72,7 @@ it('foodbookAusBrief: plant Rahmen + Inhalte in der Leitstelle und dockt ans neu
         ],
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('fbTitel', 'Sommer-Gala')
         ->set('fbBrief', 'Sommerliches Galadinner für 80 Gäste, gehobenes Niveau.')
         ->call('foodbookAusBrief')
@@ -114,7 +115,7 @@ it('foodbookAusBrief mit fbOwnerId (Handoff aus dem Modul): plant für ein beste
     $fb = app(FoodbookService::class)->create($this->rootTeam, ['label' => 'Bestehendes FB']);
     $vorher = FoodAlchemistFoodbook::where('team_id', $this->rootTeam->id)->count();
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('fbOwnerId', $fb->id)
         ->set('fbBrief', 'Brief für ein bestehendes Foodbook.')
         ->call('foodbookAusBrief')
@@ -131,7 +132,7 @@ it('foodbookAusBrief mit fbOwnerId (Handoff aus dem Modul): plant für ein beste
 it('foodbookAusBrief: leerer Brief → Meldung, nichts angelegt', function () {
     Queue::fake();
 
-    $comp = Livewire::test(PlanungIndex::class)
+    $comp = Livewire::test(AusBrief::class)
         ->set('fbBrief', '   ')
         ->call('foodbookAusBrief');
 
@@ -156,17 +157,23 @@ it('Foodbook-Auswähler aktiviert die jüngste Owner-Session (updatedFbOwnerId)'
         'source_owner_type' => 'foodbook', 'source_owner_id' => $fb->id, 'created_via' => 'test',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: Owner-Auswahl im Kind, die Session aktiviert der Parent
         ->set('fbOwnerId', $fb->id)                        // Auswahl → updatedFbOwnerId
         ->assertSet('fbOwnerId', $fb->id)
+        ->assertDispatched('planung.owner-gewaehlt', ownerType: 'foodbook', ownerId: $fb->id);
+    Livewire::test(PlanungIndex::class)
+        ->dispatch('planung.owner-gewaehlt', ownerType: 'foodbook', ownerId: $fb->id)
         ->assertSet('sessionId', $session->id);            // jüngste Owner-Session aktiviert
 });
 
 it('Foodbook-Auswähler ohne Vor-Session setzt nur den Owner (keine Session-Aktivierung)', function () {
     $fb = app(FoodbookService::class)->create($this->rootTeam, ['label' => 'Leeres Buch']);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: Owner-Auswahl im Kind, die Session aktiviert der Parent
         ->set('fbOwnerId', $fb->id)
         ->assertSet('fbOwnerId', $fb->id)
+        ->assertDispatched('planung.owner-gewaehlt', ownerType: 'foodbook', ownerId: $fb->id);
+    Livewire::test(PlanungIndex::class)
+        ->dispatch('planung.owner-gewaehlt', ownerType: 'foodbook', ownerId: $fb->id)
         ->assertSet('sessionId', null);                    // kein Owner-Run → keine Aktivierung, aber Auswahl steht
 });

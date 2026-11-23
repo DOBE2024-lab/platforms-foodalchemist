@@ -20,15 +20,15 @@ trait HandyPlanung
             // Übersicht und Editor
             'neuePlanung', 'schnellErstellen', 'schnellImport', 'oeffne', 'waehle', 'speichern', 'kaskadeGestartet', 'importAngelegt',
             // Auftrag: Brief, Leitplanken, KI-Plan und Start liegen im Kind Planung\Brief (Spec 85 C1 PR-4, s. Brief::handyLeseMethoden).
-            // Hier: das Diktat (bis E4 im Parent) und die Empfänger der Brief-Meldungen (Lauf gestartet, Brief gespiegelt).
-            'briefDiktatUebernehmen', 'agentDiktatUebernehmen', 'laufGestartet', 'briefGespiegelt',
+            // Hier nur die Empfänger der Kind-Meldungen: Lauf gestartet, Brief gespiegelt (Brief), Planung öffnen und Owner-Session
+            // aktivieren (Planung\AusBrief, Spec 85 C1 PR-5; beide nur lesend/öffnend wie oeffne). Das Diktat liegt seit PR-5 in den Kindern.
+            'laufGestartet', 'briefGespiegelt', 'oeffneAusKind', 'ownerGewaehlt',
             'markiereUngespeichert', 'entwurfGespeichert',   // Briefing mitspeichern: Hinweis „ungespeichert“ setzen/löschen (schreibt nichts)
             // Ergebnis: Lauf beobachten, abbrechen, wieder aufnehmen; freigeben und anreichern (Dominique 30.10.: „wenn ich das
             // plane, will ich es auch freigeben, so dass alles angereichert wird“ — UI-Klick über die Plattform-KI)
             // (Spec 85 C1 PR-3: die Lauf-Methoden selbst liegen im Kind Planung\KaskadenLauf, s. KaskadenLauf::handyLeseMethoden; hier nur die
             // Parent-Empfänger, die nichts schreiben: Board neu zeichnen, Lauf-Stand und Meldungen des Kinds anzeigen)
             'laufGeaendert', 'laufStatus', 'kindMeldung', 'laufAbbrechen',   // laufAbbrechen: Stopp-Knopf am Board
-            '_startUpload', '_finishUpload', '_uploadErrored', '_removeUpload',   // Brief-Diktat (Audio)
             'nextPage', 'previousPage', 'gotoPage', 'setPage', 'resetPage',
         ];
     }

@@ -24,6 +24,7 @@ use Platform\FoodAlchemist\Services\PlanningSessionService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Services\TitelVorschlagService;
 use Platform\FoodAlchemist\Services\WorkerHealthService;
+use Platform\FoodAlchemist\Support\Planung\DiktatZiele;
 use Platform\FoodAlchemist\Support\Planung\KaskadenStart;
 use Platform\FoodAlchemist\Support\Planung\LeitplankenUebernahme;
 use Platform\FoodAlchemist\Support\Planung\PlanungVokabular;
@@ -923,8 +924,9 @@ class Brief extends Component
     }
 
     /**
-     * Werte von außen ins Briefing eines Scopes: `brief_anhaengen` (Diktat, nie ersetzen), `brief_wenn_leer` (Composer,
-     * getippten Brief nicht überschreiben), `seed_pin` (Composer-Anker, die der Go mitnimmt). Andere Schlüssel werden ignoriert.
+     * Werte von außen ins Briefing eines Scopes (Composer im Parent): `brief_wenn_leer` (getippten Brief nicht überschreiben),
+     * `seed_pin` (Composer-Anker, die der Go mitnimmt). Andere Schlüssel werden ignoriert. Das Diktat kommt seit Spec 85 C1 PR-5
+     * direkt hier an ({@see agentDiktatUebernehmen}).
      *
      * @param  array<string, mixed>  $werte
      */
@@ -934,17 +936,27 @@ class Brief extends Component
         if (! isset($this->eingabe[$scope])) {
             return;
         }
-        $text = trim((string) ($werte['brief_anhaengen'] ?? ''));
-        if ($text !== '') {
-            $alt = trim((string) ($this->eingabe[$scope]['brief'] ?? ''));
-            $this->eingabe[$scope]['brief'] = $alt === '' ? $text : $alt . ' ' . $text;
-        }
         if (isset($werte['brief_wenn_leer']) && trim((string) ($this->eingabe[$scope]['brief'] ?? '')) === '') {
             $this->eingabe[$scope]['brief'] = (string) $werte['brief_wenn_leer'];
         }
         if (isset($werte['seed_pin']) && is_array($werte['seed_pin'])) {
             $this->composerSeedPin = ['scope' => $scope, 'slugs' => array_values(array_map('strval', $werte['seed_pin']))];
         }
+    }
+
+    /**
+     * Kurskorrektur „pro Tab genau EINE Diktierfunktion" (2026-09-19): das Agent-Panel ist in den drei Erstell-Reitern der einzige
+     * Diktier-Weg. Sein Mikro transkribiert selbst (VoiceModal::updatedAudio()) und liefert das Rohtranskript hierher — ANHÄNGEN,
+     * nie ersetzen ({@see DiktatZiele::anhaengen}). Spec 85 C1 PR-5: direkt im Brief statt über den Parent (das Panel steckt im Brief).
+     */
+    #[On('voice.diktat-transkribiert')]
+    public function agentDiktatUebernehmen(string $scope, string $text): void
+    {
+        if (! in_array($scope, Index::SCOPES, true) || trim($text) === '') {
+            return;
+        }
+        $this->eingabe[$scope]['brief'] = DiktatZiele::anhaengen((string) ($this->eingabe[$scope]['brief'] ?? ''), $text);
+        $this->meldung = 'Diktat übernommen — bitte gegenlesen.';
     }
 
     /** Stand beim Laden der Anfrage; {@see rendering()} meldet dem Parent nur, was sich geändert hat. */
@@ -979,7 +991,7 @@ class Brief extends Component
         return [
             'reglerPill', 'briefVorlage', 'titelVorschlagen', 'suchbegriffEntfernen', 'suchbegriffHinzufuegen', 'leitplankenAusBriefing',
             'voiceKomponentenUebernehmen', 'wissenVorschau', 'kiKopf', 'planFeldSpeichern', 'planVerwerfen', 'goKaskade',
-            'briefUebernehmen',   // Diktat (am Handy erlaubt) kommt über dieses Event
+            'briefUebernehmen', 'agentDiktatUebernehmen',   // Diktat über das Agenten-Panel (am Handy erlaubt)
             'entwurfSpeichern',   // „Planung speichern“ (am Handy erlaubt) sichert den Entwurf über dieses Event
         ];
     }

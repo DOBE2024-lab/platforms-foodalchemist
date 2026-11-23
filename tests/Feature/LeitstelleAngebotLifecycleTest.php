@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\Core\Contracts\LLMProviderContract;
 use Platform\FoodAlchemist\Jobs\GenerateConceptJob;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
@@ -72,7 +73,7 @@ it('angebotAusBrief: plant Konzepte in der Leitstelle und dockt ans neue Angebot
         ],
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('offerTitel', 'Sommerfest-Angebot')
         ->set('offerBrief', 'Angebot für ein Sommerfest, 80 Gäste, Flying + Buffet, gehobenes Niveau.')
         ->call('angebotAusBrief')
@@ -109,7 +110,7 @@ it('angebotAusBrief mit offerOwnerId (Handoff): plant für ein bestehendes Angeb
     $angebot = app(AngebotService::class)->create($this->rootTeam, ['name' => 'Bestehendes Angebot']);
     $vorher = FoodAlchemistAngebot::where('team_id', $this->rootTeam->id)->count();
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('offerOwnerId', $angebot->id)
         ->set('offerBrief', 'Brief für ein bestehendes Angebot.')
         ->call('angebotAusBrief')
@@ -124,7 +125,7 @@ it('angebotAusBrief mit offerOwnerId (Handoff): plant für ein bestehendes Angeb
 it('angebotAusBrief: leerer Brief → Meldung, nichts angelegt', function () {
     Queue::fake();
 
-    $comp = Livewire::test(PlanungIndex::class)
+    $comp = Livewire::test(AusBrief::class)
         ->set('offerBrief', '   ')
         ->call('angebotAusBrief');
 
@@ -143,8 +144,11 @@ it('Angebot-Auswähler aktiviert die jüngste Owner-Session (updatedOfferOwnerId
         'source_owner_type' => 'offer', 'source_owner_id' => $angebot->id, 'created_via' => 'test',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: Owner-Auswahl im Kind, die Session aktiviert der Parent
         ->set('offerOwnerId', $angebot->id)
         ->assertSet('offerOwnerId', $angebot->id)
+        ->assertDispatched('planung.owner-gewaehlt', ownerType: 'offer', ownerId: $angebot->id);
+    Livewire::test(PlanungIndex::class)
+        ->dispatch('planung.owner-gewaehlt', ownerType: 'offer', ownerId: $angebot->id)
         ->assertSet('sessionId', $session->id);
 });

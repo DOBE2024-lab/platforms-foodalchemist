@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Jobs\MaterializeSpeiseplanCellJob;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
@@ -25,7 +26,7 @@ beforeEach(function () {
 it('speiseplanAusBrief: legt einen GV-Speiseplan an + startet die Grid-Kaskade (owner=speiseplan), Brief steuert die Zellen', function () {
     Queue::fake();
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('spTitel', 'GV-Herbst')
         ->set('spBrief', 'Herbstlicher Kantinen-Speiseplan, regional, viel Gemüse.')
         ->call('speiseplanAusBrief')
@@ -53,7 +54,7 @@ it('speiseplanAusBrief: legt einen GV-Speiseplan an + startet die Grid-Kaskade (
 it('speiseplanAusBrief: Zyklus aus dem Brief („2 Wochen") wird übernommen', function () {
     Queue::fake();
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('spBrief', 'Rollierender Plan über 2 Wochen, mediterran.')
         ->call('speiseplanAusBrief')
         ->assertSet('spMeldung', null);
@@ -65,7 +66,7 @@ it('speiseplanAusBrief: Zyklus aus dem Brief („2 Wochen") wird übernommen', f
 it('speiseplanAusBrief: leerer Brief → Meldung, nichts angelegt', function () {
     Queue::fake();
 
-    $comp = Livewire::test(PlanungIndex::class)
+    $comp = Livewire::test(AusBrief::class)
         ->set('spBrief', '   ')
         ->call('speiseplanAusBrief');
 
@@ -88,16 +89,22 @@ it('Speiseplan-Auswähler aktiviert die jüngste Owner-Session', function () {
         'source_owner_type' => 'speiseplan', 'source_owner_id' => $plan->id, 'created_via' => 'test',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: Owner-Auswahl im Kind, die Session aktiviert der Parent
         ->set('spOwnerId', $plan->id)
         ->assertSet('spOwnerId', $plan->id)
+        ->assertDispatched('planung.owner-gewaehlt', ownerType: 'speiseplan', ownerId: $plan->id);
+    Livewire::test(PlanungIndex::class)
+        ->dispatch('planung.owner-gewaehlt', ownerType: 'speiseplan', ownerId: $plan->id)
         ->assertSet('sessionId', $session->id);
 });
 
 it('Speiseplan-Auswähler ohne Vor-Session setzt nur den Owner', function () {
     $plan = app(\Platform\FoodAlchemist\Services\SpeiseplanService::class)->create($this->rootTeam, ['name' => 'Leerer Plan']);
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: Owner-Auswahl im Kind, die Session aktiviert der Parent
         ->set('spOwnerId', $plan->id)
         ->assertSet('spOwnerId', $plan->id)
+        ->assertDispatched('planung.owner-gewaehlt', ownerType: 'speiseplan', ownerId: $plan->id);
+    Livewire::test(PlanungIndex::class)
+        ->dispatch('planung.owner-gewaehlt', ownerType: 'speiseplan', ownerId: $plan->id)
         ->assertSet('sessionId', null);
 });

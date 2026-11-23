@@ -23,7 +23,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
  * Kalender, Kosten je Tag/Woche, Wiederholungs-Check in echten Tagen, Veggie-
  * Tagescheck, Zyklus-Vorlage ausrollen. Scope-Härte + Owner-Guard.
  */
-class SpeiseplanService
+class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 {
     use PruefstOutletZuordnung;
 

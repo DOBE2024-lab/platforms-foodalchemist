@@ -407,7 +407,14 @@
         <x-slot:actions>
             {{-- Speichern sichert Titel und Eingaben der Planung. Sekundär: die Hauptaktion jedes Reiters
                  ist das Erstellen in der Leiste unten. --}}
+            {{-- Briefing mitspeichern (23.11.2026): Name der Planung wieder editierbar, Leer-Meldung direkt am Feld. --}}
+            <x-fa::field for="planung-name" error="form.title" data-planung-name>
+                <x-fa::input id="planung-name" size="sm" wire:model.live.debounce.400ms="form.title" placeholder="Name der Planung" aria-label="Name der Planung" :fehler="$errors->has('form.title')" />
+            </x-fa::field>
             <x-fa::button icon="heroicon-m-check" wire:click="speichern">Planung speichern</x-fa::button>
+            @if($ungespeichert)
+                <x-fa::signal tone="warn" data-planung-ungespeichert>ungespeichert</x-fa::signal>
+            @endif
             @if($meldung !== null)
                 <x-fa::signal tone="ok">{{ $meldung }}</x-fa::signal>
             @endif

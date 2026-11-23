@@ -292,6 +292,59 @@ class PlanningSessionService
         return $session->refresh();
     }
 
+    /**
+     * „Briefing mitspeichern“ (Dominique/Kurator 23.11.2026): den Entwurf der drei Planungs-Reiter sichern — je Reiter
+     * Titel, Brief, Kreativ-Modus und Leitplanken (Regler; Vorlage und Seed-Pin bewusst nicht). Nur per „Planung
+     * speichern“. Der Brief des offenen Reiters wird zugleich session.brief (Dashboard-Anzeige, F5). Bleibt nach dem Go
+     * stehen (F4). Gesäubert: nur bekannte Reiter, Kreativ-Modus aus CREATIVE_MODES, Regler nur skalare Werte bzw.
+     * Listen skalarer Werte unter schlichten Schlüsseln (kein beliebiges JSON).
+     *
+     * @param  array<string, array{titel?:mixed, brief?:mixed, creative_mode?:mixed, regler?:mixed}>  $entwurf
+     */
+    public function speichereEntwurf(Team $team, int $id, array $entwurf, ?string $offenerScope = null): FoodAlchemistPlanningSession
+    {
+        $session = $this->ownedSession($team, $id);
+        $sauber = [];
+        foreach (FoodAlchemistPlanningSession::ENTWURF_SCOPES as $scope) {
+            $e = is_array($entwurf[$scope] ?? null) ? $entwurf[$scope] : null;
+            if ($e === null) {
+                continue;
+            }
+            $modus = (string) ($e['creative_mode'] ?? '');
+            $sauber[$scope] = [
+                'titel' => mb_substr(trim((string) ($e['titel'] ?? '')), 0, 255),
+                'brief' => trim((string) ($e['brief'] ?? '')),
+                'creative_mode' => in_array($modus, FoodAlchemistPlanningSession::CREATIVE_MODES, true) ? $modus : 'voll_kreativ',
+                'regler' => $this->sauberRegler(is_array($e['regler'] ?? null) ? $e['regler'] : []),
+            ];
+        }
+        $patch = ['entwurf_json' => $sauber === [] ? null : $sauber + ['gespeichert_at' => now()->toIso8601String()]];
+        if ($offenerScope !== null && isset($sauber[$offenerScope])) {
+            $patch['brief'] = $this->clean($sauber[$offenerScope]['brief']);   // F5: Dashboard zeigt den Brief des offenen Reiters
+        }
+        $session->update($patch);
+
+        return $session->refresh();
+    }
+
+    /** @return array<string, scalar|null|list<scalar>> */
+    private function sauberRegler(array $regler): array
+    {
+        $aus = [];
+        foreach ($regler as $k => $v) {
+            if (! is_string($k) || ! preg_match('/^[a-z][a-z0-9_]{0,40}$/', $k)) {
+                continue;
+            }
+            if (is_scalar($v) || $v === null) {
+                $aus[$k] = is_string($v) ? mb_substr($v, 0, 2000) : $v;
+            } elseif (is_array($v) && array_is_list($v) && count($v) <= 100 && array_filter($v, fn ($x) => ! is_scalar($x)) === []) {
+                $aus[$k] = array_values($v);
+            }
+        }
+
+        return $aus;
+    }
+
     public function setStatus(Team $team, int $id, string $status): FoodAlchemistPlanningSession
     {
         // Spec 77a: ab Kuratieren (Mitglied); ohne angemeldeten Benutzer (System) keine Prüfung

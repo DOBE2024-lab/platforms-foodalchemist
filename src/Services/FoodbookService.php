@@ -34,9 +34,11 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
 {
     use PruefstOutletZuordnung;
 
-    public function __construct(private ConceptService $concepts)
-    {
-    }
+    public function __construct(
+        private ConceptService $concepts,
+        private Foodbook\FoodbookBasis $basis,
+        private Foodbook\FoodbookKapitelBild $kapitelBild,
+    ) {}
 
     public function paginateBrowser(array $filters, Team $team, int $perPage = 100): LengthAwarePaginator
     {
@@ -924,52 +926,27 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
         return $k->refresh();
     }
 
-    // ── Spec 43 (Bild-Epic): Kapitel-Bild (überschreibt das Concept-Titelbild im Kapitel-Band) ──
+    // ── Spec 43 (Bild-Epic): Kapitel-Bild — 98 · 3.3 S4-1: in Foodbook\FoodbookKapitelBild, hier Fassade ──
 
     public function setKapitelImage(Team $team, int $kapitelId, UploadedFile $file): string
     {
-        $k = $this->ownedKapitel($team, $kapitelId);
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
-            $file, $team, 'foodalchemist.foodbook_chapter', $kapitelId, "foodalchemist/chapter/{$kapitelId}",
-        );
-        $k->update(['image_context_file_id' => $media['context_file_id'], 'image_path' => $media['path']]);
-
-        return $media['path'];
+        return $this->kapitelBild->setKapitelImage($team, $kapitelId, $file);
     }
 
     public function clearKapitelImage(Team $team, int $kapitelId): FoodAlchemistFoodbookKapitel
     {
-        $k = $this->ownedKapitel($team, $kapitelId);
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
-        $k->update(['image_context_file_id' => null, 'image_path' => null]);
-
-        return $k->refresh();
+        return $this->kapitelBild->clearKapitelImage($team, $kapitelId);
     }
 
     /** Weiteres Galeriebild (neben dem Kapitel-Bild) ans Foodbook-Kapitel hängen. */
     public function addKapitelGalleryImage(Team $team, int $kapitelId, UploadedFile $file): \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookChapterImage
     {
-        $k = $this->ownedKapitel($team, $kapitelId);
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
-            $file, $team, 'foodalchemist.foodbook_chapter', $kapitelId, "foodalchemist/chapter/{$kapitelId}/gallery",
-        );
-
-        return \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookChapterImage::create([
-            'team_id' => $k->team_id,
-            'chapter_id' => $kapitelId,
-            'context_file_id' => $media['context_file_id'],
-            'path' => $media['path'],
-            'sort_order' => (int) $k->images()->max('sort_order') + 1,
-        ]);
+        return $this->kapitelBild->addKapitelGalleryImage($team, $kapitelId, $file);
     }
 
     public function removeKapitelGalleryImage(Team $team, int $imageId): void
     {
-        $img = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookChapterImage::findOrFail($imageId);
-        $this->ownedKapitel($team, (int) $img->chapter_id); // Owner-Guard übers Kapitel
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($img->context_file_id, (string) $img->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($img)]);
-        $img->delete();
+        $this->kapitelBild->removeKapitelGalleryImage($team, $imageId);
     }
 
     /**
@@ -1813,19 +1790,10 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
         return $snapshot;
     }
 
-    /**
-     * Kunden-Label eines Blocks — concept_ref/recipe_ref über die Wording-Kette
-     * (WordingResolver: wording → kundentext-Legacy → Standard → Name);
-     * header/text behalten kundentext als Inhalt; spacer/image => null.
-     */
+    /** Kunden-Label eines Blocks — 98 · 3.3 S4-1: in Foodbook\FoodbookBasis (Kundentext und Dokument nutzen es). */
     private function dokBlockLabel(FoodAlchemistFoodbookBlock $b): ?string
     {
-        return match (true) {
-            in_array($b->type, ['concept_ref', 'recipe_ref'], true) => app(WordingResolver::class)->blockTitel($b)['text'],
-            str_starts_with((string) $b->type, 'header') => $b->customer_text ?: null,
-            $b->type === 'text' => $b->customer_text ?: null,
-            default => null,
-        };
+        return $this->basis->dokBlockLabel($b);
     }
 
     // ── Picker (für den Editor) ─────────────────────────────────────────────
@@ -2295,30 +2263,19 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
+    // 98 · 3.3 S4-1: Besitzer-Riegel in Foodbook\FoodbookBasis (eine Stelle für alle Teile)
     private function ownedKapitel(Team $team, int $id): FoodAlchemistFoodbookKapitel
     {
-        $k = FoodAlchemistFoodbookKapitel::visibleToTeam($team)->findOrFail($id);
-        if (! $k->isOwnedBy($team)) {
-            throw new \RuntimeException('Geerbtes Foodbook: Ändern kann es nur das Besitzer-Team.');
-        }
-
-        return $k;
+        return $this->basis->ownedKapitel($team, $id);
     }
 
     private function ownedBlock(Team $team, int $id): FoodAlchemistFoodbookBlock
     {
-        $block = FoodAlchemistFoodbookBlock::visibleToTeam($team)->findOrFail($id);
-        if (! $block->isOwnedBy($team)) {
-            throw new \RuntimeException('Geerbtes Foodbook: Ändern kann es nur das Besitzer-Team.');
-        }
-
-        return $block;
+        return $this->basis->ownedBlock($team, $id);
     }
 
     private function guard(FoodAlchemistFoodbook $fb, Team $team): void
     {
-        if (! $fb->isOwnedBy($team)) {
-            throw new \RuntimeException('Geerbtes Foodbook: Ändern kann es nur das Besitzer-Team.');
-        }
+        $this->basis->guard($fb, $team);
     }
 }

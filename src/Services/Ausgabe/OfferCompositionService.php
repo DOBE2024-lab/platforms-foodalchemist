@@ -459,72 +459,10 @@ class OfferCompositionService
      */
     public function blockPreis(FoodAlchemistOfferBlock $block, ?FoodAlchemistOutlet $outlet = null, ?Team $team = null): array
     {
-        // Eingefrorenes Angebot = feste Preise (Spec 82 §12 B3, Dominique 19.10.): VK je Gericht/Form aus der Einfrierung, sonst live
-        $fest = app(\Platform\FoodAlchemist\Support\AngebotFestpreise::class);
-        $festpreise = $fest->fuerKapitel($block->chapter_id !== null ? (int) $block->chapter_id : null);
-        if ($block->type === 'concept_ref' && $block->concept) {
-            $cockpit = $fest->mit($festpreise, fn () => $this->concepts->preisCockpit($block->concept, $outlet, $team));
+        // 98 · 3.6 PR2: Positions-Kern (eine Regel mit dem Foodbook). Eingefrorenes Angebot = feste Preise (Spec 82 §12 B3).
+        $festpreise = app(\Platform\FoodAlchemist\Support\AngebotFestpreise::class)->fuerKapitel($block->chapter_id !== null ? (int) $block->chapter_id : null);
 
-            return ['vk_pp' => (float) $cockpit['price_per_person'], 'ek_pp' => (float) $cockpit['ek_per_person'], 'pauschal' => 0.0, 'ek_vollstaendig' => true,
-                'vk_fehlt' => \Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete: Konzept-Preis nur Summe der bekannten
-        }
-        if ($block->type === 'recipe_ref' && $block->dish) {
-            $faktor = $block->quantity !== null ? (float) $block->quantity : 1.0;
-            $vkFehlt = false;
-            if (($fp = $fest->gericht((int) $block->dish->id, null, $festpreise)) !== null) {
-                // eingefroren: fester VK (fehlt er, weil der EK beim Einfrieren unvollständig war, bleibt er eine sichtbare Lücke)
-                $vk = round((float) ($fp['vk'] ?? 0) * $faktor, 2);
-                $ek = round((float) ($fp['ek_summe'] ?? 0) / max(1, (int) ($block->dish->sales_unit_count ?? 1)) * $faktor, 2);
-                $vkFehlt = $fp['vk'] === null;
-                if ($block->price_basis === 'pauschal') {
-                    return ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => $vk, 'ek_vollstaendig' => $fp['vollstaendig'], 'vk_fehlt' => $vkFehlt, 'eingefroren' => true];
-                }
-
-                return ['vk_pp' => $vk, 'ek_pp' => $ek, 'pauschal' => 0.0, 'ek_vollstaendig' => $fp['vollstaendig'], 'vk_fehlt' => $vkFehlt, 'eingefroren' => true];
-            }
-            if ($team !== null) {
-                // Spec 82 §12 C: VK aus Sicht des Teams — Abo-Fassung: Team-EK × eigener Kalkulationsfaktor; sonst Preis-Leiter
-                $vkInfo = app(\Platform\FoodAlchemist\Services\TeamVkService::class)->fuer($block->dish, $team, $outlet);
-                $vkFehlt = $vkInfo['vk'] === null;
-                $baseVk = (float) ($vkInfo['vk'] ?? 0);
-            } else {
-                // Spec 85 D-1: Preisleiter (Standard-Darreichung); im Betrieb dessen VK, sonst die Baseline.
-                $resolver = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class);
-                $baseVk = (float) (($outlet !== null ? $resolver->vkNetto($block->dish, $outlet) : null) ?? $resolver->vkNetto($block->dish) ?? 0);
-            }
-            $vk = round($baseVk * $faktor, 2);
-            if ($team !== null) {
-                $k = app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->fuer($block->dish, $team);
-                // Spec 85: Team-EK des Ansatzes ÷ Portionen = EK je Portion (wie der VK); vorher der ganze Ansatz.
-                $ek = round((float) ($k['ek_summe'] ?? 0) / max(1, (int) ($block->dish->sales_unit_count ?? 1)) * $faktor, 2);
-                $ekVoll = $k['vollstaendig'] && $k['ek_summe'] !== null;
-            } else {
-                $ek = round((float) ($resolver->ekProPortion($block->dish) ?? 0) * $faktor, 2);   // Spec 85: EK je Portion
-                $ekVoll = $block->dish->ek_total_eur !== null;
-            }
-            if ($block->price_basis === 'pauschal') {
-                return ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => $vk, 'ek_vollstaendig' => $ekVoll, 'vk_fehlt' => $vkFehlt];
-            }
-
-            return ['vk_pp' => $vk, 'ek_pp' => $ek, 'pauschal' => 0.0, 'ek_vollstaendig' => $ekVoll, 'vk_fehlt' => $vkFehlt];
-        }
-        if ($block->type === 'position') {   // Spec 94b: Menge × Satz, EK = Menge × EK je Einheit; Aufwand nur als zzgl. (nicht in der Summe)
-            $menge = (float) ($block->quantity ?? 0);
-            $vk = $block->positionBetrag();   // Spec 94c 8c: Verbrauch mit Deckel höchstens der Deckel
-            $voll = round($menge * (float) ($block->price_value ?? 0), 2);
-            $ek = round($menge * (float) ($block->ek_value ?? 0) * ($voll > 0 ? $vk / $voll : 1.0), 2);
-            $aufwand = $block->istAufwand();
-
-            return ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => $aufwand ? 0.0 : $vk, 'ek_pauschal' => $aufwand ? 0.0 : $ek,
-                'aufwand' => $aufwand ? $vk : 0.0, 'ek_aufwand' => $aufwand ? $ek : 0.0, 'ek_vollstaendig' => $block->ek_value !== null];
-        }
-        if ($block->type === 'header_preis') {
-            return $block->price_basis === 'pauschal'
-                ? ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => (float) ($block->price_value ?? 0), 'ek_vollstaendig' => true]
-                : ['vk_pp' => (float) ($block->price_value ?? 0), 'ek_pp' => 0.0, 'pauschal' => 0.0, 'ek_vollstaendig' => true];
-        }
-
-        return ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => 0.0, 'ek_vollstaendig' => true];
+        return app(\Platform\FoodAlchemist\Services\Position\PositionPreisService::class)->zeile($block, $team, $outlet, null, $festpreise, mitFestpreisen: true);
     }
 
     /**

@@ -20,6 +20,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  * gemeinsamen Positions-Kern. Friert den heutigen Stand ein; die bekannten Abweichungen A1–A9 aus dem Plan sind je Test
  * markiert, mit dem entschiedenen Ziel (Kurator/Dominique). Die PRs 1–4 drehen genau diese Erwartungen um — jede
  * Umstellung ist damit sichtbar und gewollt, nichts ändert sich still. PR1 (Prüfung): P6, P9, Preisbasis beim Ändern, Staffelform.
+ * PR2 (Preis): P1 Team-Kontext im Foodbook, P2 vk_fehlt, P8 ek_pauschal — Foodbook und Angebot liefern dieselbe Zeile.
  *
  * Entscheide: P1 Foodbook rechnet mit Team-Kontext wie das Angebot (Festpreise bleiben angebotsspezifisch) ·
  * P2 fehlender VK überall vk_fehlt · P3 Darreichung nur im Konzept preiswirksam · P4 Wahlgruppen als Spanne, Kapitel mit
@@ -52,17 +53,15 @@ it('Gericht je Person: Foodbook und Angebot rechnen dieselbe Standard-Darreichun
     $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => 2]));
     $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => 2]));
 
-    expect($fb['vk_pp'])->toBe(20.0)->and($ag['vk_pp'])->toBe(20.0)
-        ->and($fb['ek_pp'])->toBe(6.0)
-        ->and($fb)->not->toHaveKey('ek_vollstaendig')      // A3/A2: nur das Angebot meldet die EK-Vollständigkeit (Ziel: beide)
-        ->and($ag)->toHaveKey('ek_vollstaendig');
+    expect($fb)->toBe($ag)                                  // PR2 (P1): eine Regel, Team-Kontext in beiden
+        ->and($fb['vk_pp'])->toBe(20.0)->and($fb['ek_pp'])->toBe(6.0)->and($fb['ek_vollstaendig'])->toBeTrue();
 });
 
-it('A2/A3 fehlender VK: Foodbook rechnet 0 ohne Merker, Angebot (mit Team) meldet vk_fehlt — Ziel P2: überall vk_fehlt', function () {
+it('P2 fehlender VK: Foodbook und Angebot melden vk_fehlt (vorher Foodbook still 0)', function () {
     $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->ohneVk->id]));
     $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->ohneVk->id]));
 
-    expect($fb['vk_pp'])->toBe(0.0)->and($fb)->not->toHaveKey('vk_fehlt')
+    expect($fb['vk_pp'])->toBe(0.0)->and($fb['vk_fehlt'])->toBeTrue()
         ->and($ag['vk_pp'])->toBe(0.0)->and($ag['vk_fehlt'])->toBeTrue();
 });
 
@@ -81,23 +80,22 @@ it('Darreichung im Konzept ist preiswirksam (Referenz für P3)', function () {
     expect((float) $c['price_per_person'])->toBe(12.0);
 });
 
-it('A8 Gericht pauschal: EK fällt in Foodbook und Angebot weg (Ziel P8: EK mitführen)', function () {
+it('P8 Gericht pauschal: Foodbook und Angebot führen den EK als ek_pauschal mit (vorher fiel er weg)', function () {
     $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal']));
     $ag = ($this->agPreis)(($this->agBlock)(['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'price_basis' => 'pauschal']));
 
-    expect($fb['pauschal'])->toBe(10.0)->and($fb['ek_pp'])->toBe(0.0)->and($fb)->not->toHaveKey('ek_pauschal')
-        ->and($ag['pauschal'])->toBe(10.0)->and($ag['ek_pp'])->toBe(0.0)->and($ag)->not->toHaveKey('ek_pauschal');
+    expect($fb)->toBe($ag)
+        ->and($fb['pauschal'])->toBe(10.0)->and($fb['ek_pp'])->toBe(0.0)->and($fb['ek_pauschal'])->toBe(3.0);
 });
 
-it('Konzept: Foodbook und Angebot rechnen dasselbe Konzept (ohne Fassung) heute gleich — A1 betrifft Team/Festpreis', function () {
+it('Konzept: Foodbook und Angebot rechnen dasselbe Konzept identisch (PR2: Team-Kontext in beiden)', function () {
     $konzept = $this->makeConcept($this->t, 'Herbstmenü');
     $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
 
     $fb = ($this->fbPreis)(($this->fbBlock)(['type' => 'concept_ref', 'concept_id' => $konzept->id]));
     $ag = ($this->agPreis)(($this->agBlock)(['type' => 'concept_ref', 'concept_id' => $konzept->id]));
 
-    expect($fb['vk_pp'])->toBe($ag['vk_pp'])->and($fb['ek_pp'])->toBe($ag['ek_pp'])
-        ->and($fb)->not->toHaveKey('ek_vollstaendig')->and($ag['ek_vollstaendig'])->toBeTrue();
+    expect($fb)->toBe($ag)->and($fb['vk_pp'])->toBe(10.0);
 });
 
 it('A6 Wahlgruppen: beide Kapitel-Aggregate summieren alle Alternativen (Ziel P4: Spanne, Kapitel mit der teuersten)', function () {

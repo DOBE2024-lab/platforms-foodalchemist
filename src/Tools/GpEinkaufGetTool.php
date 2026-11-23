@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\PurchaseJournalService;
+use Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService;
 
 /** Spec 66 §4 · Einkauf eines Grundprodukts über die Zeit (aus dem Einkaufsjournal). */
 class GpEinkaufGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

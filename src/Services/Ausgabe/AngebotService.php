@@ -286,7 +286,7 @@ class AngebotService
         ?array $einheiten = null,
     ): array
     {
-        $orderCosting = app(\Platform\FoodAlchemist\Services\OrderCostingService::class);
+        $orderCosting = app(\Platform\FoodAlchemist\Services\Bestellung\OrderCostingService::class);
         $conceptSvc = app(\Platform\FoodAlchemist\Services\ConceptService::class);
         $comp = app(OfferCompositionService::class);
         $pax = max(0, (int) ($angebot->personen ?? 0));
@@ -362,7 +362,7 @@ class AngebotService
             'ek_per_person' => $ekPp,
             'hk2_pro_person' => $pax > 0 ? round($hk2Gesamt / $pax, 2) : 0.0,
             'db_pro_person' => $pax > 0 ? round($vkPp - $hk2Gesamt / $pax, 2) : $vkPp,
-            'wareneinsatz_pct' => \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($gesamtEk, $gesamtVkAuto),
+            'wareneinsatz_pct' => \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($gesamtEk, $gesamtVkAuto),
             'auto_gesamt' => $gesamtVkAuto,
             'gesamt_vk' => round($gesamt, 2),
             'gesamt_ek' => $gesamtEk,
@@ -395,7 +395,7 @@ class AngebotService
         $update = [
             'calculated_total_price' => $auto,
             'price_calculation_source' => 'concept_catalog_sum',
-            'price_calculation_version' => \Platform\FoodAlchemist\Services\CatalogPricingService::VERSION,
+            'price_calculation_version' => \Platform\FoodAlchemist\Services\Preis\CatalogPricingService::VERSION,
             'price_calculated_at' => now(),
         ];
         if ($autoMode) {
@@ -406,7 +406,7 @@ class AngebotService
         app(\Platform\FoodAlchemist\Services\PriceAuditService::class)->record(
             $angebot, 'offer', $oldCalculated, $auto, $oldEffective,
             $angebot->total_price !== null ? (float) $angebot->total_price : null,
-            'concept_catalog_sum', ['calculation_version' => \Platform\FoodAlchemist\Services\CatalogPricingService::VERSION],
+            'concept_catalog_sum', ['calculation_version' => \Platform\FoodAlchemist\Services\Preis\CatalogPricingService::VERSION],
         );
     }
 
@@ -488,7 +488,7 @@ class AngebotService
             return null; // keine voll bekosteten Concept-Einheiten → kein Zuschlags-Wasserfall
         }
         $refPax = $pax > 0 ? $pax : 1; // Per-Person-Referenz (Mischwert bei unterschiedlichen Kapitel-Pax)
-        $orderCosting = app(\Platform\FoodAlchemist\Services\OrderCostingService::class);
+        $orderCosting = app(\Platform\FoodAlchemist\Services\Bestellung\OrderCostingService::class);
         $sum = ['mek' => 0.0, 'fek' => 0.0, 'direct_costs' => 0.0, 'mgk' => 0.0, 'fgk' => 0.0, 'hk' => 0.0, 'hk2' => 0.0,
             'minimum_price' => 0.0, 'target_price' => 0.0, 'contribution_margin' => 0.0, 'active_person_minutes' => 0.0,
             'catalog_price_total' => 0.0];
@@ -540,7 +540,7 @@ class AngebotService
     }
 
     private function costConceptCached(
-        \Platform\FoodAlchemist\Services\OrderCostingService $service,
+        \Platform\FoodAlchemist\Services\Bestellung\OrderCostingService $service,
         Team $team,
         FoodAlchemistConcept $concept,
         int $pax,

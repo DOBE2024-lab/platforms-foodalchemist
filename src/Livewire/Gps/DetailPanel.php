@@ -7,7 +7,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\GpAggregateService;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Support\Curate;
 
 /**
@@ -478,7 +478,7 @@ class DetailPanel extends Component
         }
         $this->lagerartikelFehler = null;
         try {
-            app(\Platform\FoodAlchemist\Services\LagerartikelService::class)->setzen($team, $this->gpId, (bool) $this->lagerartikelForm['ist'], $this->lagerartikelForm['min'], $this->lagerartikelForm['soll']);
+            app(\Platform\FoodAlchemist\Services\Einkauf\LagerartikelService::class)->setzen($team, $this->gpId, (bool) $this->lagerartikelForm['ist'], $this->lagerartikelForm['min'], $this->lagerartikelForm['soll']);
             $this->dispatch('fa-saved', message: 'Lagerartikel gespeichert.', type: 'success');
         } catch (\RuntimeException $e) {
             $this->lagerartikelFehler = $e->getMessage();
@@ -578,7 +578,7 @@ class DetailPanel extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\LagerEinrichtungService::class)
+            app(\Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService::class)
                 ->zuordnen($team, $locationId, [$this->gpId], $binId !== '' && $binId !== null ? (int) $binId : null);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             // fremder Lagerort/Stellplatz — still ignorieren, die Anzeige zeigt den echten Stand
@@ -632,7 +632,7 @@ class DetailPanel extends Component
             'leadSteuerung' => $leadSteuerung,
             'preisBand' => $this->preisBand($kette, $effektiverLeadId),
             'preisTrend' => $kette !== null
-                ? app(\Platform\FoodAlchemist\Services\PriceService::class)->preisTrendBulk($kette->pluck('id')->all(), $team)
+                ? app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->preisTrendBulk($kette->pluck('id')->all(), $team)
                 : [],
             // Ersatz-Logik: Äquivalenzen dieses GP + Such-Kandidaten fürs Verknüpfen
             'ersatz' => $gp !== null && $team !== null && $brauchtErsatz
@@ -656,12 +656,12 @@ class DetailPanel extends Component
                 : collect(),
             // Spec 66 §4: was wurde von diesem GP eingekauft (Monate, Lieferanten) + was liegt am Lager
             'einkauf' => ($gp !== null && $team !== null && $brauchtEinkauf)
-                ? app(\Platform\FoodAlchemist\Services\PurchaseJournalService::class)->gpEinkauf($team, $gp->id)
+                ? app(\Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService::class)->gpEinkauf($team, $gp->id)
                 : null,
             'bestandJetzt' => ($gp !== null && $team !== null && $brauchtEinkauf)
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistInventoryStock::where('team_id', $team->id)->where('gp_id', $gp->id)
                     ->selectRaw('base_unit, SUM(qty_base) AS menge')->groupBy('base_unit')->pluck('menge', 'base_unit')
-                    ->map(fn ($m, $u) => ['menge' => app(\Platform\FoodAlchemist\Services\InventurService::class)->anzeigeMenge((float) $m, (string) $u), 'einheit' => app(\Platform\FoodAlchemist\Services\InventurService::class)->anzeigeEinheit((string) $u)])
+                    ->map(fn ($m, $u) => ['menge' => app(\Platform\FoodAlchemist\Services\Einkauf\InventurService::class)->anzeigeMenge((float) $m, (string) $u), 'einheit' => app(\Platform\FoodAlchemist\Services\Einkauf\InventurService::class)->anzeigeEinheit((string) $u)])
                     ->values()->all()
                 : [],
             // Spec 67: das Grundprodukt „trägt sein Lager": Bestand + Stammplatz je Lagerort, letzte Bewegungen
@@ -701,7 +701,7 @@ class DetailPanel extends Component
     private function lagerartikelLaden($team, FoodAlchemistGp $gp): array
     {
         $la = \Platform\FoodAlchemist\Models\FoodAlchemistGpLagerartikel::where('team_id', $team->id)->where('gp_id', $gp->id)->first();
-        $inv = app(\Platform\FoodAlchemist\Services\InventurService::class);
+        $inv = app(\Platform\FoodAlchemist\Services\Einkauf\InventurService::class);
         $base = $la?->base_unit ?? ($inv->basisEinheit((string) ($gp->leadLa?->unit_code ?? 'kg')) ?: 'g');
         if (($this->lagerartikelForm['gp'] ?? null) !== $gp->id) {
             $fmt = fn ($v) => $v !== null ? str_replace('.', ',', (string) $inv->anzeigeMenge((float) $v, $base)) : '';
@@ -732,6 +732,6 @@ class DetailPanel extends Component
 
     private function lagerOrte($team, FoodAlchemistGp $gp): array
     {
-        return app(\Platform\FoodAlchemist\Services\LagerEinrichtungService::class)->gpLager($team, $gp);
+        return app(\Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService::class)->gpLager($team, $gp);
     }
 }

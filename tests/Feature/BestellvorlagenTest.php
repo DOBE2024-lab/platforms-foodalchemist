@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\OrderTemplateService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderTemplateService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -101,7 +101,7 @@ it('Aus Bestellung: GP-Zeile wird Grundprodukt in kg, Zeile ohne GP fester Artik
     $ohneGp = FoodAlchemistSupplierItem::create(['team_id' => $this->rootTeam->id, 'supplier_id' => $this->laOf['Mehl']->supplier_id,
         'designation' => 'Backpapier', 'article_number' => 'BP', 'qty' => 1, 'unit_code' => 'Stk']);
     FoodAlchemistPrice::create(['team_id' => $this->rootTeam->id, 'supplier_item_id' => $ohneGp->id, 'price' => 5, 'status' => '0']);
-    $orders = app(\Platform\FoodAlchemist\Services\OrderService::class);
+    $orders = app(\Platform\FoodAlchemist\Services\Bestellung\OrderService::class);
     $l1 = $orders->addManualLine($this->rootTeam, $this->laOf['Mehl']->id, 6);
     $orders->addManualLine($this->rootTeam, $ohneGp->id, 2);
 

@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 
 /**
  * R9.2 (read): Lead-Lieferant-Steuerung eines GP — aktueller (gesetzter + effektiver)

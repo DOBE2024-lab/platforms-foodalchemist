@@ -149,7 +149,7 @@
                                                             <td class="text-right"><x-fa::money :value="$z['line_net']" /></td>
                                                             <td>
                                                                 @if($z['befund'])
-                                                                    <x-fa::badge :tone="$befundTon[$z['befund']['re']] ?? 'neutral'">{{ \Platform\FoodAlchemist\Services\TripleMatchService::LABELS[$z['befund']['re']] ?? $z['befund']['re'] }}</x-fa::badge>
+                                                                    <x-fa::badge :tone="$befundTon[$z['befund']['re']] ?? 'neutral'">{{ \Platform\FoodAlchemist\Services\Matching\TripleMatchService::LABELS[$z['befund']['re']] ?? $z['befund']['re'] }}</x-fa::badge>
                                                                     @if(abs($z['befund']['delta_eur']) >= 0.01)<span class="fa-t-muted">{{ $z['befund']['delta_eur'] > 0 ? '+' : '' }}{{ number_format($z['befund']['delta_eur'], 2, ',', '.') }} €</span>@endif
                                                                 @else
                                                                     <span class="fa-t-muted">–</span>

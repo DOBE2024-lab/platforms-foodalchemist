@@ -796,7 +796,7 @@ class ConceptService
             'price_per_person_cache' => $cockpit['price_per_person'],
             'price_incomplete' => ConceptPreisService::unvollstaendig($cockpit),   // CQ price_incomplete: einzige Schreibstelle
             'price_calculation_source' => 'children_sum',
-            'price_calculation_version' => CatalogPricingService::VERSION,
+            'price_calculation_version' => Preis\CatalogPricingService::VERSION,
             'price_calculated_at' => now(),
             ...($expired ? ['price_override_reason' => null, 'price_override_user_id' => null,
                 'price_override_at' => null, 'price_override_expires_at' => null] : []),
@@ -808,7 +808,7 @@ class ConceptService
         app(PriceAuditService::class)->record(
             $concept, 'concept', $oldCalculated, $cockpit['summe_pro_person'] !== null ? (float) $cockpit['summe_pro_person'] : null,
             $oldEffective, $cockpit['price_per_person'] !== null ? (float) $cockpit['price_per_person'] : null, 'children_sum',
-            ['calculation_version' => CatalogPricingService::VERSION],
+            ['calculation_version' => Preis\CatalogPricingService::VERSION],
         );
     }
 

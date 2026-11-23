@@ -11,9 +11,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine as Zeile;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun as Lauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\LieferantenLinkService;
-use Platform\FoodAlchemist\Services\LieferantenUploadBenachrichtigung;
-use Platform\FoodAlchemist\Services\LieferantenUploadService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenLinkService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenUploadBenachrichtigung;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenUploadService;
 use Platform\FoodAlchemist\Support\UploadScanner;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -146,7 +146,7 @@ it('Eigene Datei ohne Vorlage: Lauf „Zuordnung nötig“ mit Herkunft und Link
     $lauf = Lauf::first();
     expect($r->getSession()->get('portal_meldung'))->toContain('Spalten')->and($lauf->status)->toBe(Lauf::STATUS_ZUORDNUNG_NOETIG)->and($lauf->herkunft)->toBe(Lauf::HERKUNFT_LIEFERANTEN_LINK);
 
-    $neu = app(\Platform\FoodAlchemist\Services\PreislistenImportService::class)->zuordnen($this->team, $lauf, ['article_number' => 'Art', 'price' => 'Betrag'], $this->admin->id);
+    $neu = app(\Platform\FoodAlchemist\Services\Preis\PreislistenImportService::class)->zuordnen($this->team, $lauf, ['article_number' => 'Art', 'price' => 'Betrag'], $this->admin->id);
     expect($neu->herkunft)->toBe(Lauf::HERKUNFT_LIEFERANTEN_LINK)->and($neu->link_id)->toBe($this->link['link']->id);
 });
 

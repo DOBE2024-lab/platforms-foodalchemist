@@ -7,10 +7,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Platform\Core\Http\Controllers\Controller;
 use Platform\FoodAlchemist\Models\FoodAlchemistLieferantenLink;
-use Platform\FoodAlchemist\Services\LieferantenDokumentService;
-use Platform\FoodAlchemist\Services\LieferantenLinkService;
-use Platform\FoodAlchemist\Services\LieferantenStammdatenblattService;
-use Platform\FoodAlchemist\Services\LieferantenUploadService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenDokumentService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenLinkService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenStammdatenblattService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenUploadService;
 
 /**
  * Lieferanten-Portal (Stufe 2): Seite OHNE Login, per Token aufgelöst. Stufe 2a zeigt nur den gültigen Zugang (Lieferant, Gültigkeit, freigegebene Bereiche);

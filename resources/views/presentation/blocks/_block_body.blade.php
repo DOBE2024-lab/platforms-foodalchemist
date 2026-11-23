@@ -21,7 +21,7 @@
     $zeigeEk = ! empty($snap['ansicht']['ek']);
     $ekText = function ($ek, $vk = null) {
         if ($ek === null || (float) $ek <= 0) { return ''; }
-        $we = ($vk !== null && (float) $vk > 0) ? ' · ' . number_format(\Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk, null), 0, ',', '.') . ' %' : '';
+        $we = ($vk !== null && (float) $vk > 0) ? ' · ' . number_format(\Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk, null), 0, ',', '.') . ' %' : '';
         return 'EK ' . number_format((float) $ek, 2, ',', '.') . ' €' . $we;
     };
     $blockEk = ($zeigeEk && $blockPrice !== null) ? $ekText($b['ek']['pp'] ?? null, $b['price']['pp'] ?? null) : '';

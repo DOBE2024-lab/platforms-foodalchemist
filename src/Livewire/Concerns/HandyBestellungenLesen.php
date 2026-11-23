@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Platform\FoodAlchemist\Services\BestellListeService;
+use Platform\FoodAlchemist\Services\Bestellung\BestellListeService;
 use Platform\FoodAlchemist\Support\HandyLesemodus;
 
 /**

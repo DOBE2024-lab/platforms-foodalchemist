@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 
 /** MCP-Steuerbarkeit · D4: Lieferantenartikel an einem team-eigenen Lieferanten anlegen. */
 class ArtikelPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

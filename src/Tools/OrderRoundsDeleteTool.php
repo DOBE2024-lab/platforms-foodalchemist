@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 
 /** Spec 73 · Bestellrunde löschen (nur ohne versendete Bestellung). */
 class OrderRoundsDeleteTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

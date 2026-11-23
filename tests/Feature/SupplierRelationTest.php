@@ -3,8 +3,8 @@
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Services\SignalDetektorService;
-use Platform\FoodAlchemist\Services\SupplierAgreementService;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierAgreementService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

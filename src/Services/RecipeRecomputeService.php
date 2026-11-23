@@ -73,7 +73,7 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
 
     public function __construct(
         private GpAggregateService $gpAggregate,
-        private PriceService $preise,
+        private Preis\PriceService $preise,
     ) {
         $this->vorrat = new Rezept\RecomputeVorrat($preise);
         $this->diaet = new Rezept\DiaetEignung();

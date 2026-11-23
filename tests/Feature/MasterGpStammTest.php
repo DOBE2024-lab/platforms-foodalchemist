@@ -108,7 +108,7 @@ it('★ Gefäßpreis des Masters nur mit „Preise mitgeben“ für den Lieferan
         'article_number' => 'D1', 'qty' => 1, 'unit_code' => 'Stk', 'stamm_class' => StammPaket::PAKET]);
     $deckel = ($this->nonFood)(null, 'Deckel: für Achenbachglas');
     $deckel->update(['lead_la_supplier_item_id' => $la->id]);
-    $stamm = app(\Platform\FoodAlchemist\Services\StammPaketService::class);
+    $stamm = app(\Platform\FoodAlchemist\Services\Einkauf\StammPaketService::class);
     $stamm->setzeLieferanten($this->rootTeam, [$lieferant->id], $admin);
     $svc = app(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::class);
     $svc->setzen($this->master, $deckel->id, 'mehrweg', '0,40');
@@ -143,7 +143,7 @@ it('★ Rückfall auf den Lead-Artikelpreis (einweg ohne Preis am GP) zieht den 
     $becher->update(['lead_la_supplier_item_id' => $la->id]);
     DB::table('foodalchemist_supplier_item_structures')->insert(['uuid' => (string) \Illuminate\Support\Str::uuid(), 'team_id' => null, 'supplier_item_id' => $la->id,
         'gp_id' => $becher->id, 'created_at' => now(), 'updated_at' => now()]);
-    $stamm = app(\Platform\FoodAlchemist\Services\StammPaketService::class);
+    $stamm = app(\Platform\FoodAlchemist\Services\Einkauf\StammPaketService::class);
     $stamm->setzeLieferanten($this->rootTeam, [$lieferant->id], $admin);
     app(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::class)->setzen($this->master, $becher->id, 'einweg');
     $dar = app(\Platform\FoodAlchemist\Services\DarreichungService::class);

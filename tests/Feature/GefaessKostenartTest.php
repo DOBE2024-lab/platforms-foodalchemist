@@ -123,7 +123,7 @@ it('Mehrweg ohne Preis am GP: „Gefäß-Preis fehlt“, Kosten 0 im EK, unvolls
 // Bewusst umgestellt 18.11.2026 (vorher: „Verleih ohne Eintrag = Miet-Hinweis ohne Kosten, vollständig“): extern rechnet mit dem Preis —
 // Team-Preis am GP, sonst Lead-Artikelpreis je Stück; fehlt beides, „Gefäß-Preis fehlt“ und unvollständig (nie mehr still „nicht je Portion“).
 it('Verleih-Automatik extern: ohne Eintrag zählt der Artikelpreis je Stück, der Preis am GP geht vor, ohne jeden Preis „Gefäß-Preis fehlt“', function () {
-    app(\Platform\FoodAlchemist\Services\SupplierGroupService::class)->einrichten(true);
+    app(\Platform\FoodAlchemist\Services\Einkauf\SupplierGroupService::class)->einrichten(true);
     $verleih = \Platform\FoodAlchemist\Models\FoodAlchemistSupplierGroup::whereNull('team_id')->where('code', 'VERLEIH')->firstOrFail();
     $miet = ($this->gefaess)('Speiseteller Miete', 0.55, $this->tellerTyp);
     $verleiher = FoodAlchemistSupplier::create(['team_id' => $this->rootTeam->id, 'name' => 'Eventausstatter', 'group_id' => $verleih->id]);

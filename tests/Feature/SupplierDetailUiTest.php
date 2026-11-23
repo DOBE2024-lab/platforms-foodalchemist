@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierAgreement;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierContact;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -32,7 +32,7 @@ it('öffnet das Stammblatt und zeigt Status, Kontakt, Absprache und Dokument', f
     $this->actingAs($this->makeUser($this->rootTeam));
     $this->svc->setStatus($this->rootTeam, $this->lief->id, 'zweitquelle');
     $this->svc->addContact($this->rootTeam, $this->lief->id, ['name' => 'Frau Meier', 'role' => 'KAM']);
-    app(\Platform\FoodAlchemist\Services\SupplierAgreementService::class)
+    app(\Platform\FoodAlchemist\Services\Einkauf\SupplierAgreementService::class)
         ->create($this->rootTeam, $this->lief->id, ['type' => 'zusage', 'note' => '3 % Bonus ab 500 €']);
 
     Livewire::test(SupplierDetail::class)

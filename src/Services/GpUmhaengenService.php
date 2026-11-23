@@ -323,7 +323,7 @@ class GpUmhaengenService
      */
     /**
      * Allergen-/Deklarations-Abweichung des Artikels gegen die Bestandsartikel des Ziel-GP (dieselbe Regel wie beim Einzel-Verknüpfen,
-     * {@see \Platform\FoodAlchemist\Services\LeadLaService::guardAbweichungen}). Leer = darf umgehängt werden.
+     * {@see \Platform\FoodAlchemist\Services\Einkauf\LeadLaService::guardAbweichungen}). Leer = darf umgehängt werden.
      *
      * @return list<string>
      */
@@ -335,7 +335,7 @@ class GpUmhaengenService
             return [];
         }
         try {
-            return app(LeadLaService::class)->guardAbweichungen($team, $ziel, $supplierItemId);
+            return app(Einkauf\LeadLaService::class)->guardAbweichungen($team, $ziel, $supplierItemId);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             return [];   // Artikel für das Team nicht sichtbar: die übrigen Plan-Prüfungen greifen
         }

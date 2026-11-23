@@ -13,8 +13,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPurchaseTransaction;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\InventurService;
-use Platform\FoodAlchemist\Services\PurchaseJournalService;
+use Platform\FoodAlchemist\Services\Einkauf\InventurService;
+use Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -218,7 +218,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         // Web-Recherche zu Lieferantenartikeln (Spec 85 I5-8): Websuche über den Core-Contract (include_web_search, Core #935)
         $this->app->bind(\Platform\FoodAlchemist\Services\Websuche\WebSucheTransport::class, \Platform\FoodAlchemist\Services\Websuche\CoreWebSucheTransport::class);
         // Produktdaten-Quellen fuer den Produktpass-Panel: die Websuche haengt als Quelle websuche im Tag (Knopf Im Web recherchieren)
-        $this->app->tag([\Platform\FoodAlchemist\Services\ArtikelWebRecherche::class], 'produktdaten.quellen');
+        $this->app->tag([\Platform\FoodAlchemist\Services\Einkauf\ArtikelWebRecherche::class], 'produktdaten.quellen');
 
         // M7-10 / D8: STT-Fassade — Binding-Tausch genügt für einen späteren Core-Contract
         // STT-Treiber: 'auto' nimmt den Dienst, für den ein Zugang existiert. Der
@@ -542,7 +542,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         )->by(sha1((string) $r->route('token')) . '|' . $r->ip()));
         $this->app->bind(\Platform\FoodAlchemist\Support\UploadScanner::class, fn () => ($k = config('foodalchemist.lieferanten_link.scanner')) && is_a($k, \Platform\FoodAlchemist\Support\UploadScanner::class, true)
             ? $this->app->make($k) : new \Platform\FoodAlchemist\Support\KeinUploadScan);
-        \Platform\FoodAlchemist\Services\LieferantenUploadBenachrichtigung::registriere();
+        \Platform\FoodAlchemist\Services\Einkauf\LieferantenUploadBenachrichtigung::registriere();
 
         // M8-02: generische Modul-Policy für die Kern-Models (view = Team-Kette,
         // update/delete = Curate-Gate M1-08 — dieselben Regel-Stellen wie die Services)

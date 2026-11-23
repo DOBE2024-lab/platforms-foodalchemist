@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\PreisVerlaufService;
+use Platform\FoodAlchemist\Services\Preis\PreisVerlaufService;
 
 /**
  * Preisverlauf als Liniendiagramm — am Lieferantenartikel (`modus = la`: eine Linie) und am Grundprodukt (`modus = gp`: eine Linie je LA, Lead hervorgehoben).

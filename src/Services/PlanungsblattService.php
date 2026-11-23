@@ -46,9 +46,9 @@ class PlanungsblattService
 
     public function __construct(
         private RecipeRecomputeService $recompute,
-        private LeadLaService $leadLa,
+        private Einkauf\LeadLaService $leadLa,
         private DarreichungResolver $darreichungen,
-        private GebindeRechner $gebinde,
+        private Einkauf\GebindeRechner $gebinde,
         private Produktion\ProductionTimeService $productionTimes,
         private Produktion\BehaelterBedarfService $behaelter,
     ) {

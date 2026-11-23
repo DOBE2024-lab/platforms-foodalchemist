@@ -6,9 +6,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -94,7 +94,7 @@ it('Bündelung: Rückvergütung aus der Team-Staffel statt „nicht hinterlegt�
     expect($vorher['rebate_quelle'])->toBeNull()->and($vorher['anteil_pct'])->toBeGreaterThan(0.0)
         ->and($vorher['bundling_hint'])->toContain('keine Rückvergütung hinterlegt');
 
-    $rabatt = app(\Platform\FoodAlchemist\Services\RebateService::class);
+    $rabatt = app(\Platform\FoodAlchemist\Services\Preis\RebateService::class);
     $rabatt->saveTiers($this->rootTeam, $sid, [['threshold_eur' => 0, 'percent' => 2.5]]);
     $rabatt->saveConfig($this->rootTeam, $sid, ['active' => true, 'assumed_annual_revenue' => 10000]);
 

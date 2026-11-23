@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\IngredientMatchService;
-use Platform\FoodAlchemist\Services\LaFirstGpService;
+use Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService;
 
 /**
  * Phase 0: Zutat-Text → GP-Ground-Truth. Top-Match (GP oder Sub-Rezept) +

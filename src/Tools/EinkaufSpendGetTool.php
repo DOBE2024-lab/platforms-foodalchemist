@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\PurchaseJournalService;
+use Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService;
 
 /**
  * Einkauf E2/E5 (read): echtes Spend aus dem Einkaufsjournal (Ist-Einkäufe, netto) —

@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
-use Platform\FoodAlchemist\Services\ArtikelWebRecherche;
+use Platform\FoodAlchemist\Services\Einkauf\ArtikelWebRecherche;
 use Platform\FoodAlchemist\Services\Websuche\CoreWebSucheTransport;
 use Platform\FoodAlchemist\Services\Websuche\WebSucheTransport;
 use Platform\FoodAlchemist\Support\KiKlassen;

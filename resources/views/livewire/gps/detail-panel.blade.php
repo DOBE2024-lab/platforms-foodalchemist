@@ -428,7 +428,7 @@
                                 @if($la->aktiver_preis !== null || ($la->hat_letzten_preis ?? false))
                                     @if($la->aktiver_preis === null)
                                         {{-- Rückfall 27.10.: letzter bekannter Preis eines eingestellten Artikels, immer gekennzeichnet --}}
-                                        @php $lpk = \Platform\FoodAlchemist\Services\PriceService::letzterPreisKennzeichen($la->letzter_preis_ab, $la->lieferstatus_seit); @endphp
+                                        @php $lpk = \Platform\FoodAlchemist\Services\Preis\PriceService::letzterPreisKennzeichen($la->letzter_preis_ab, $la->lieferstatus_seit); @endphp
                                         <x-fa::badge :tone="$lpk['warnung'] ? 'warn' : 'neutral'" title="{{ $lpk['text'] }}" data-letzter-preis>letzter Preis</x-fa::badge>
                                     @endif
                                     <p class="flex items-center justify-end gap-1 text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]">
@@ -742,8 +742,8 @@
                             <li wire:key="gplm-{{ $m->id }}" class="flex items-center gap-2 py-0.5 text-[length:var(--fa-text-sm)]">
                                 <span class="tabular-nums text-[var(--fa-ink-3)] w-20">{{ $m->moved_at?->format('d.m.Y') }}</span>
                                 <span class="w-28">{{ ['wareneingang' => 'Wareneingang', 'inventur' => 'Inventur', 'zugang' => 'Zugang', 'abgang' => 'Abgang', 'umlagerung' => 'Umlagerung', 'storno' => 'Storno', 'produktion' => 'Produktion'][$m->source] ?? $m->source }}</span>
-                                <span class="tabular-nums {{ $m->direction === 'out' ? 'text-[var(--fa-crit)]' : 'text-[var(--fa-ok)]' }}">{{ $m->direction === 'out' ? '−' : '+' }}{{ rtrim(rtrim(number_format((float) app(\Platform\FoodAlchemist\Services\InventurService::class)->anzeigeMenge((float) $m->qty_base, $m->base_unit), 3, ',', '.'), '0'), ',') }} {{ app(\Platform\FoodAlchemist\Services\InventurService::class)->anzeigeEinheit($m->base_unit) }}</span>
-                                <span class="text-[var(--fa-ink-3)] truncate">{{ $m->location?->name }}@if($m->reason) · {{ (\Platform\FoodAlchemist\Services\LagerBewegungService::GRUENDE['zugang'] + \Platform\FoodAlchemist\Services\LagerBewegungService::GRUENDE['abgang'])[$m->reason] ?? $m->reason }}@endif</span>
+                                <span class="tabular-nums {{ $m->direction === 'out' ? 'text-[var(--fa-crit)]' : 'text-[var(--fa-ok)]' }}">{{ $m->direction === 'out' ? '−' : '+' }}{{ rtrim(rtrim(number_format((float) app(\Platform\FoodAlchemist\Services\Einkauf\InventurService::class)->anzeigeMenge((float) $m->qty_base, $m->base_unit), 3, ',', '.'), '0'), ',') }} {{ app(\Platform\FoodAlchemist\Services\Einkauf\InventurService::class)->anzeigeEinheit($m->base_unit) }}</span>
+                                <span class="text-[var(--fa-ink-3)] truncate">{{ $m->location?->name }}@if($m->reason) · {{ (\Platform\FoodAlchemist\Services\Einkauf\LagerBewegungService::GRUENDE['zugang'] + \Platform\FoodAlchemist\Services\Einkauf\LagerBewegungService::GRUENDE['abgang'])[$m->reason] ?? $m->reason }}@endif</span>
                             </li>
                         @endforeach
                     </ul>

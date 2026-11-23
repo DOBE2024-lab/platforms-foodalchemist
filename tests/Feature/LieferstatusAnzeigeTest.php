@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Livewire\Suppliers\Index;
 use Platform\FoodAlchemist\Livewire\Suppliers\ItemModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\PreisVerlaufService;
+use Platform\FoodAlchemist\Services\Preis\PreisVerlaufService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

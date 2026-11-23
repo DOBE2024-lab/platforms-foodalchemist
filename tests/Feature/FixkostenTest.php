@@ -2,9 +2,9 @@
 
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Settings\Herstellkosten;
-use Platform\FoodAlchemist\Services\CatalogPricingService;
+use Platform\FoodAlchemist\Services\Preis\CatalogPricingService;
 use Platform\FoodAlchemist\Services\Produktion\FixkostenService;
-use Platform\FoodAlchemist\Services\KalkulationService;
+use Platform\FoodAlchemist\Services\Preis\KalkulationService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

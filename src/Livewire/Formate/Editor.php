@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Livewire\Formate;
 
-use Platform\FoodAlchemist\Services\MargeService;
+use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;

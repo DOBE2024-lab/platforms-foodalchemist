@@ -148,7 +148,7 @@ it('DetailPanel M3-07 (DoD): LA A sperren ⇒ B wird effektiver Lead — im Pane
         ->assertSee('LA A billig')
         ->assertSee('LA B teurer');
 
-    $leads = app(\Platform\FoodAlchemist\Services\LeadLaService::class);
+    $leads = app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class);
     expect($leads->effektiverLead($this->zander, $this->rootTeam)->id)->toBe($a->id);
 
     $panel->call('sperreToggle', $a->id, true)->assertHasNoErrors();

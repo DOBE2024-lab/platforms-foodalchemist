@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
  */
 class GpLaufNachlauf
 {
-    public function __construct(private readonly LeadLaService $lead) {}
+    public function __construct(private readonly Einkauf\LeadLaService $lead) {}
 
     /**
      * @param  list<int>  $gpIds

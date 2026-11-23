@@ -5,9 +5,9 @@ namespace Platform\FoodAlchemist\Livewire\Suppliers;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\RebateService;
-use Platform\FoodAlchemist\Services\SupplierAgreementService;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Preis\RebateService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierAgreementService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 use Platform\FoodAlchemist\Services\VocabularyService;
 use RuntimeException;
 
@@ -257,7 +257,7 @@ class SupplierDetail extends Component
             // Spec 85: Merkmal „liefert nur Positivangaben“ — nur Anzeige, gepflegt per foodalchemist:allergene-nur-positiv
             'allergenNurPositiv' => $stammblatt !== null ? \Platform\FoodAlchemist\Models\FoodAlchemistSupplier::visibleToTeam($team)   // Spec 84 Sicht-Wächter
                 ->where('allergene_nur_positiv', true)->find($this->supplierId, ['allergene_nur_positiv_grund', 'allergene_nur_positiv_seit']) : null,
-            'gruppen' => $team !== null ? app(\Platform\FoodAlchemist\Services\SupplierGroupService::class)->liste($team) : collect(),
+            'gruppen' => $team !== null ? app(\Platform\FoodAlchemist\Services\Einkauf\SupplierGroupService::class)->liste($team) : collect(),
             'darfEdit' => (bool) ($stammblatt['is_owned'] ?? false),
             // R9.2 (E6): Bündelungs-Ranking über alle sichtbaren Lieferanten (Nutzungs-Proxy, ehrlich markiert).
             'buendelung' => ($this->supplierId !== null && $team !== null)

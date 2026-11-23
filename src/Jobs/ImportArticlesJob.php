@@ -9,7 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistBulkRun;
-use Platform\FoodAlchemist\Services\FileArticleImportService;
+use Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService;
 
 /**
  * Spec 13 · S3b — der scharfe Kanal-B-Import als Queue-Job. Grund für den Job: der Lauf

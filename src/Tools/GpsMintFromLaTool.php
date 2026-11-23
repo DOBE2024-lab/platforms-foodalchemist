@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\LaFirstGpService;
+use Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService;
 
 /**
  * 07·M3 — LA-First-GP-Mint als MCP-Tool. Löst den Ruby-Schokolade-Fall (#76)
@@ -67,7 +67,7 @@ class GpsMintFromLaTool extends FoodAlchemistTool implements ToolContract, ToolM
 
         // Spec 16: gewählten Kandidaten für die Transparenz-Response holen (deterministisch,
         // dieselbe Wahl wie im Mint) — WG-Lead-gescoped, Terminologie-gerankt.
-        $la = app(\Platform\FoodAlchemist\Services\LaCandidateFinder::class)->best($team, $zutat, $wgHint);
+        $la = app(\Platform\FoodAlchemist\Services\Einkauf\LaCandidateFinder::class)->best($team, $zutat, $wgHint);
 
         $gp = app(LaFirstGpService::class)->mintFromLa($team, $zutat, $slug, $wgHint);
 

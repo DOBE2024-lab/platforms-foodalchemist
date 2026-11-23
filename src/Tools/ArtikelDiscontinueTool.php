@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 
 /** MCP-Steuerbarkeit · D4: Lieferantenartikel auslisten/reaktivieren (team-eigen). */
 class ArtikelDiscontinueTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

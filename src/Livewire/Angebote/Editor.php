@@ -1559,7 +1559,7 @@ class Editor extends Component
         $kalkulation = $angebot ? $svc->kalkulation($team, $angebot, $outlet, $komposition, $einheiten) : null;
         $zielWareneinsatzPct = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)
             ->zielWareneinsatzPct($team, $outlet);
-        $wareneinsatzAmpel = app(\Platform\FoodAlchemist\Services\MargeService::class)
+        $wareneinsatzAmpel = app(\Platform\FoodAlchemist\Services\Preis\MargeService::class)
             ->weAmpel($kalkulation['wareneinsatz_pct'] ?? null, $zielWareneinsatzPct);
 
         // Extern-sichere Kundensicht aus demselben Baum ableiten (keine zweite DB-/Preisrunde).
@@ -1694,7 +1694,7 @@ class Editor extends Component
     {
         $modelle = FoodAlchemistOfferChapter::visibleToTeam($team)
             ->where('offer_id', $angebot->id)->get()->keyBy('id');
-        $ampel = app(\Platform\FoodAlchemist\Services\MargeService::class);
+        $ampel = app(\Platform\FoodAlchemist\Services\Preis\MargeService::class);
         $board = [];
         foreach (($komposition['kapitel'] ?? []) as $kap) {
             $k = $modelle->get($kap['id']);
@@ -1707,7 +1707,7 @@ class Editor extends Component
                     $vk = (float) ($ed['preis_pp'] ?? 0);
                     $ek = (float) ($ed['ek_pp'] ?? 0);
                     $positionen[] = ['art' => 'paket', 'label' => (string) ($ed['name'] ?? ''), 'ek' => $ek, 'vk' => $vk,
-                        'preis_einheit' => 'gast', 'we_pct' => $ek > 0 ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk) : null];
+                        'preis_einheit' => 'gast', 'we_pct' => $ek > 0 ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk) : null];
                 }
             } else {
                 foreach ($kap['bloecke'] as $b) {
@@ -1718,12 +1718,12 @@ class Editor extends Component
                     $ek = (float) ($b['ek_pp'] ?? 0);
                     $positionen[] = ['art' => ($b['type'] ?? '') === 'recipe_ref' ? 'einzel' : 'paket',
                         'label' => (string) ($b['label'] ?? ''), 'ek' => $ek, 'vk' => $vk,
-                        'preis_einheit' => $b['preis_einheit'] ?? 'gast', 'we_pct' => $ek > 0 ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk) : null];
+                        'preis_einheit' => $b['preis_einheit'] ?? 'gast', 'we_pct' => $ek > 0 ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk) : null];
                 }
             }
             $vkPP = $kap['vk_pro_person'];
             $ekPP = (float) ($kap['ek_pro_person'] ?? 0);
-            $fcPct = $kap['food_cost_percent'] ?? ($ekPP > 0 ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ekPP, $vkPP) : null);
+            $fcPct = $kap['food_cost_percent'] ?? ($ekPP > 0 ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ekPP, $vkPP) : null);
             $board[] = [
                 'kapitel_id' => (int) $kap['id'],
                 'titel' => (string) ($kap['title_intern'] ?? $kap['title'] ?? ''),

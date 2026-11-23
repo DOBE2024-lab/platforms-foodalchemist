@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\GpAggregateService;
 use Platform\FoodAlchemist\Services\GpFormService;
 use Platform\FoodAlchemist\Services\Preis\LetzterPreisService;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Support\LeadOverlay;
 
 /**

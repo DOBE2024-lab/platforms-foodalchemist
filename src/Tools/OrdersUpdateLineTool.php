@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderLine;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 
 /**
  * Spec 17/S2+S3 (write): eine Bestellzeile im OFFENEN Entwurf pflegen — Gebinde-Anzahl
@@ -90,7 +90,7 @@ class OrdersUpdateLineTool extends FoodAlchemistTool implements ToolContract, To
 
             if (array_key_exists('received_qty_packs', $arguments)) {
                 // Spec 75c: über den Editor-Lieferschein, Rechte des aufrufenden Benutzers
-                $line = app(\Platform\FoodAlchemist\Services\WareneingangService::class)->kurzwegMenge(
+                $line = app(\Platform\FoodAlchemist\Services\Einkauf\WareneingangService::class)->kurzwegMenge(
                     $team,
                     $lineId,
                     $arguments['received_qty_packs'],
@@ -104,7 +104,7 @@ class OrdersUpdateLineTool extends FoodAlchemistTool implements ToolContract, To
             if (array_key_exists('invoice_qty_packs', $arguments) || array_key_exists('invoice_pack_price', $arguments)) {
                 $current = FoodAlchemistOrderLine::findOrFail($lineId);
                 // Spec 75c: über die Editor-Rechnung, Rechte des aufrufenden Benutzers
-                $line = app(\Platform\FoodAlchemist\Services\LieferantenRechnungService::class)->kurzwegRechnung(
+                $line = app(\Platform\FoodAlchemist\Services\Einkauf\LieferantenRechnungService::class)->kurzwegRechnung(
                     $team,
                     $lineId,
                     array_key_exists('invoice_qty_packs', $arguments) ? $arguments['invoice_qty_packs'] : $current->invoice_qty_packs,

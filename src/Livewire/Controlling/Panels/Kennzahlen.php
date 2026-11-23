@@ -6,8 +6,8 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Services\Produktion\FixkostenService;
-use Platform\FoodAlchemist\Services\KalkulationService;
-use Platform\FoodAlchemist\Services\MargeService;
+use Platform\FoodAlchemist\Services\Preis\KalkulationService;
+use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

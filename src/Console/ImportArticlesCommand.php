@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\FileArticleImportService;
+use Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService;
 
 /**
  * Spec 13 · S1a/S1b/S1c/S2 — Kanal B: Artikel-Datei eines Lieferanten einlesen.

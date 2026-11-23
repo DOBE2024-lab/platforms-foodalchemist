@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Tools;
 
-use Platform\FoodAlchemist\Services\MargeService;
+use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Platform\Core\Contracts\ToolContract;

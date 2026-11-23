@@ -157,7 +157,7 @@ it('Architektur: jeder automatische mintFromLa-Aufrufer prüft istBasisrezeptZei
     // Das Muster der Bugs vom 09.10.: die Regel gilt an einer Stelle, ein zweiter Pfad umgeht sie. Wer einen neuen
     // Mint-Pfad baut, muss hier entscheiden — prüfen oder mit Begründung ausnehmen.
     $ausgenommen = [
-        'Services/LaFirstGpService.php' => 'die Mint-Fähigkeit selbst',
+        'Services/Einkauf/LaFirstGpService.php' => 'die Mint-Fähigkeit selbst',
         'Tools/GpsMintFromLaTool.php' => 'expliziter GP-Auftrag (Name genannt), keine Rezeptzeile',
         'Services/DishReverseService.php' => 'Analyse von Freitext, schreibt keine Rezeptzeilen',
     ];

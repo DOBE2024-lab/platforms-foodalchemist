@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
-use Platform\FoodAlchemist\Services\MatchService;
+use Platform\FoodAlchemist\Services\Matching\MatchService;
 use Platform\FoodAlchemist\Services\QualityRunService;
 use Platform\FoodAlchemist\Services\RecipeFindingsBatchService;
 use Platform\FoodAlchemist\Services\SignalService;

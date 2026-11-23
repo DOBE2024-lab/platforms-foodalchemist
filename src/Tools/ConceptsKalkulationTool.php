@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext;
-use Platform\FoodAlchemist\Services\OrderCostingService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderCostingService;
 
 /**
  * 98 · 2.3c: Concept-Kalkulation mit Gästezahl (read-only) — dieselbe Auftragsvorschau wie im Concepter-Tab

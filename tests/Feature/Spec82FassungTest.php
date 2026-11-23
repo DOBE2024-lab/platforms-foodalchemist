@@ -96,7 +96,7 @@ it('Leck-Sperre: Fassungen tragen nie ek_*, Zusatzkosten oder VK des Masters —
     $la = \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::create(['team_id' => null, 'supplier_id' => $sup->id, 'designation' => 'Kalbsknochen 1 kg', 'qty' => 1.0, 'unit_code' => 'kg']);
     \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure::create(['team_id' => null, 'supplier_item_id' => $la->id, 'gp_id' => $this->knochen->id]);
     $this->knochen->update(['lead_la_supplier_item_id' => $la->id]);
-    app(\Platform\FoodAlchemist\Services\PriceService::class)->createTeamPrice($this->master, $la, 5.00);
+    app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->createTeamPrice($this->master, $la, 5.00);
     app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputePipeline($this->fond->id);
     expect((float) $this->fond->fresh()->ek_total_eur)->toBeGreaterThan(0.0);   // Master-Arbeitszeile ist bepreist
 

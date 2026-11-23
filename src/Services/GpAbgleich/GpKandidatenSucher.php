@@ -7,8 +7,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\GpNamingService;
 use Platform\FoodAlchemist\Services\IngredientMatchService;
-use Platform\FoodAlchemist\Services\LeadLaService;
-use Platform\FoodAlchemist\Services\MatchService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
+use Platform\FoodAlchemist\Services\Matching\MatchService;
 
 /**
  * S2–S5 des Abgleich-Dienstes: GP-Kandidaten für einen Lieferantenartikel (Entscheid Dominique 25.10.2026, Plan §2).

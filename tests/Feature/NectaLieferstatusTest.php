@@ -101,7 +101,7 @@ it('Handpflege gewinnt: ein von Hand gesetzter Lieferstatus wird nie überschrie
 
 it('Artikelliste: Filter „nur lieferbare“ blendet eingestellte aus', function () {
     DB::table('foodalchemist_supplier_items')->where('id', $this->artikel->id)->update(['lieferstatus' => 'eingestellt', 'lieferstatus_seit' => '2026-10-13 22:00:00', 'lieferstatus_quelle' => 'necta']);
-    $svc = app(\Platform\FoodAlchemist\Services\SupplierItemService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class);
     $nur = $svc->paginateForSupplier($this->rootTeam, $this->lieferant->id, ['onlyActive' => true], 100);
     $alle = $svc->paginateForSupplier($this->rootTeam, $this->lieferant->id, ['onlyActive' => false], 100);
     expect(collect($nur->items())->pluck('id'))->not->toContain($this->artikel->id)

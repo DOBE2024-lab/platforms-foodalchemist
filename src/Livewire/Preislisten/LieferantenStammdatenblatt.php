@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Preislisten;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
-use Platform\FoodAlchemist\Services\LieferantenStammdatenblattService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenStammdatenblattService;
 
 /**
  * Stammdatenblatt-Vorschläge der Lieferanten (Stufe 2d): je Datensatz Vorher/Nachher, übernehmen oder verwerfen. Eigene Komponente, in die

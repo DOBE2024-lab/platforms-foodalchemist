@@ -288,7 +288,7 @@
                                     {{-- Interne Sicht (nur $istIntern): EK + Wareneinsatz-% je Gericht als Suffix-HTML (via {!! !!}),
                                          damit keine Blade-Direktive an ein Wortzeichen klebt. Kundensicht: $ekSuffix leer → Zeile unverändert.
                                          Kurzform-@php (kein Block-@php) — foodbook.blade nutzt oberhalb bereits @php(…)-Kurzformen. --}}
-                                    @php($ekSuffix = ($istIntern && ($g['ek'] ?? null) !== null) ? '<span class="kpreis" style="color:#9333ea">EK ' . number_format((float) $g['ek'], 2, ',', '.') . ' €</span>' . ((($g['preis'] ?? null) > 0) ? '<span class="kpreis" style="color:#059669">' . number_format(\Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($g['ek'], $g['preis'], null), 1, ',', '.') . ' %</span>' : '') : '')
+                                    @php($ekSuffix = ($istIntern && ($g['ek'] ?? null) !== null) ? '<span class="kpreis" style="color:#9333ea">EK ' . number_format((float) $g['ek'], 2, ',', '.') . ' €</span>' . ((($g['preis'] ?? null) > 0) ? '<span class="kpreis" style="color:#059669">' . number_format(\Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($g['ek'], $g['preis'], null), 1, ',', '.') . ' %</span>' : '') : '')
                                     @if(($g['type'] ?? '') === 'paket')
                                         <div class="dish paket" style="margin-left: {{ ($g['einrueckung'] ?? 0) * 12 }}px">{{ $g['text'] }}@if(($g['preis'] ?? null) !== null && $g['preis'] > 0)<span class="kpreis">{{ number_format($g['preis'], 2, ',', '.') }} €/Gast</span>@endif{!! $ekSuffix !!}</div>
                                     @elseif(($g['type'] ?? '') === 'header')

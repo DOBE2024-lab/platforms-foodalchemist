@@ -10,9 +10,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
 use Platform\FoodAlchemist\Services\GpNamingService;
-use Platform\FoodAlchemist\Services\LeadLaService;
-use Platform\FoodAlchemist\Services\MatchService;
-use Platform\FoodAlchemist\Services\NonFoodService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
+use Platform\FoodAlchemist\Services\Matching\MatchService;
+use Platform\FoodAlchemist\Services\Einkauf\NonFoodService;
 
 /**
  * EIN Abgleich-Dienst „Lieferantenartikel → GP“ (Entscheid Dominique 25.10.2026, Plan Matching_Plan_2026-10-25): dieselbe Entscheidung für Modal (PR B),

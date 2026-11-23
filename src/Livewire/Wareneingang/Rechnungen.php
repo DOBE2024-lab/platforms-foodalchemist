@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierInvoice;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierInvoiceLine;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\LieferantenRechnungService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenRechnungService;
 
 /**
  * Spec 75b · Reiter Rechnungen im Wareneingang. Erfassen belegt aus gebuchten, noch nicht abgerechneten

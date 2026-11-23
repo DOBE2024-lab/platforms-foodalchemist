@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\LieferantenStammdatenblattService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenStammdatenblattService;
 
 /** Offene Stammdatenblatt-Vorschläge, die Lieferanten über ihren Link eingereicht haben. */
 class LieferantenStammdatenblattGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

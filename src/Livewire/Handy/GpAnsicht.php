@@ -8,7 +8,7 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\GpAggregateService;
 use Platform\FoodAlchemist\Services\GpAromaService;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Services\SensorikService;
 use Platform\FoodAlchemist\Support\FaShell;

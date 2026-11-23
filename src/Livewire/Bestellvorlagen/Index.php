@@ -8,7 +8,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderTemplate;
-use Platform\FoodAlchemist\Services\OrderTemplateService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderTemplateService;
 
 /**
  * Spec 68/73 · Einkauf → Bestellvorlagen. Vorne die Liste, nach Kategorien gruppiert und durchsuchbar;

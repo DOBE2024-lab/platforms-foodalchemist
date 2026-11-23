@@ -7,10 +7,10 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\FoodAlchemist\Livewire\Suppliers\ItemModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\AktionspreisService;
-use Platform\FoodAlchemist\Services\FileArticleImportService;
-use Platform\FoodAlchemist\Services\PreisVerlaufService;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\AktionspreisService;
+use Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService;
+use Platform\FoodAlchemist\Services\Preis\PreisVerlaufService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Tools\ArtikelAktionspreiseGetTool;
 use Platform\FoodAlchemist\Tools\ArtikelAktionspreisePostTool;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -110,7 +110,7 @@ it('Oberfläche: Artikel-Modal legt eine Aktion an und zeigt „Aktion … bis �
         ->set('aktionNeu', ['price' => '19,90', 'ab' => '2026-11-01', 'bis' => '2026-11-30'])->call('aktionAnlegen')
         ->assertSet('fehler', null)->assertSeeHtml('data-aktion-hinweis')->assertSee('30.11.2026');
 
-    $zeile = collect(app(\Platform\FoodAlchemist\Services\SupplierItemService::class)
+    $zeile = collect(app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class)
         ->paginateForSupplier($this->rootTeam, $this->supplier->id, [], 25)->items())->firstWhere('id', $this->la->id);
     expect($zeile->aktion_bis)->toBe('2026-11-30 23:00:00');
 });

@@ -25,7 +25,7 @@ class ProduktionsVerbrauchService
 {
     public function __construct(
         private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
-        private \Platform\FoodAlchemist\Services\InventurService $inventur,
+        private \Platform\FoodAlchemist\Services\Einkauf\InventurService $inventur,
         private EigenproduktionService $eigen,
     ) {}
 

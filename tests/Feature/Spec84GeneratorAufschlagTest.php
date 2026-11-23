@@ -132,7 +132,7 @@ describe('Preisweg', function () {
             'rundungsregeln' => ['nachkommastellen' => 2, 'mode' => 'kaufmaennisch']]);
         $this->masterFassung = FoodAlchemistRecipe::create(['team_id' => $this->fremd->id, 'recipe_key' => 's84-abo', 'name' => 'HG: Abo',
             'status' => 'approved', 'is_sales_recipe' => true, 'markup_class_id' => $this->fremdAlc->id]);
-        $this->preis = fn ($team, $d) => app(\Platform\FoodAlchemist\Services\CatalogPricingService::class)->catalogPrice($team, $d);
+        $this->preis = fn ($team, $d) => app(\Platform\FoodAlchemist\Services\Preis\CatalogPricingService::class)->catalogPrice($team, $d);
         // eigene Klasse des Kunden mit dem GLEICHEN Code wie die Master-Klasse — darf nicht über den Code greifen
         $this->eigenAlc->update(['class_factor_pct' => 150]);
     });

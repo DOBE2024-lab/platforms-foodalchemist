@@ -6,11 +6,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine as Zeile;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun as Lauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
 use Platform\FoodAlchemist\Services\Stammdaten\NaehrwertPruefServiceAdapter;
 use Platform\FoodAlchemist\Services\Stammdaten\NaehrwertPruefer;
 use Platform\FoodAlchemist\Services\Stammdaten\StammdatenImportService;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -163,7 +163,7 @@ it('Nährwert-Prüfer: unplausible Werte erzeugen Hinweise, blockieren aber nich
 });
 
 it('Preis: neu/geändert wird als Soll/Ist gezeigt, geschrieben wird nichts; ungültiger Preis ⇒ Fehler', function () {
-    app(\Platform\FoodAlchemist\Services\PriceService::class)->createFor($this->team, $this->mehl, 10.0, '0');
+    app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->createFor($this->team, $this->mehl, 10.0, '0');
     $vorher = FoodAlchemistPrice::count();
     $lauf = $this->svc->stage($this->team, ($this->csv)("Lieferant;Artikelnummer;Bezeichnung;Nettopreis;Gültig ab\nHanos;1001;Mehl;12,50;01.01.2099\nHanos;1001;Mehl;abc;\n"));
     $z = Zeile::where('run_id', $lauf->id)->orderBy('row_nr')->get();

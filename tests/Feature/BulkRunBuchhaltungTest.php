@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Enums\BulkRunStatus;
 use Platform\FoodAlchemist\Enums\BulkRunType;
 use Platform\FoodAlchemist\Models\FoodAlchemistBulkRun;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
-use Platform\FoodAlchemist\Services\FileArticleImportService;
+use Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

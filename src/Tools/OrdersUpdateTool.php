@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 
 /**
  * Spec 20 · E1 (write): Kopf-Felder einer Bestellschiene pflegen. Draft-Felder bleiben
@@ -115,11 +115,11 @@ class OrdersUpdateTool extends FoodAlchemistTool implements ToolContract, ToolMe
             }
             // Spec 75c: über Editor-Lieferschein bzw. -Rechnung, Rechte des aufrufenden Benutzers
             if ($completeReceipt) {
-                app(\Platform\FoodAlchemist\Services\WareneingangService::class)->kurzwegAllesWieBestellt($team, (int) $arguments['order_id'], $context->user);
+                app(\Platform\FoodAlchemist\Services\Einkauf\WareneingangService::class)->kurzwegAllesWieBestellt($team, (int) $arguments['order_id'], $context->user);
                 $order = \Platform\FoodAlchemist\Models\FoodAlchemistOrder::find((int) $arguments['order_id']);
             }
             if ($completeInvoice) {
-                app(\Platform\FoodAlchemist\Services\LieferantenRechnungService::class)->kurzwegRechnungAusWareneingang($team, (int) $arguments['order_id'], $context->user);
+                app(\Platform\FoodAlchemist\Services\Einkauf\LieferantenRechnungService::class)->kurzwegRechnungAusWareneingang($team, (int) $arguments['order_id'], $context->user);
                 $order = \Platform\FoodAlchemist\Models\FoodAlchemistOrder::find((int) $arguments['order_id']);
             }
             if ($createBackorder) {

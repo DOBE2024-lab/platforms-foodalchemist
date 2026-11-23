@@ -22,8 +22,8 @@ use Platform\FoodAlchemist\Support\TeamScope;
 class SalesRecipeService
 {
     public function __construct(
-        private MargeService $marge,
-        private CatalogPricingService $catalogPricing,
+        private Preis\MargeService $marge,
+        private Preis\CatalogPricingService $catalogPricing,
     )
     {
     }

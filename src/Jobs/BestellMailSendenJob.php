@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Platform\FoodAlchemist\Services\OrderMailService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderMailService;
 
 /** Spec 63: versendet einen geplanten Protokoll-Eintrag (Bestellung/Storno) außerhalb des Requests. */
 class BestellMailSendenJob implements ShouldQueue

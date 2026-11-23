@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\ArtikelWebRecherche;
+use Platform\FoodAlchemist\Services\Einkauf\ArtikelWebRecherche;
 use Platform\FoodAlchemist\Services\Websuche\WebSucheTransport;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -119,7 +119,7 @@ it('★ hängt als Produktdaten-Quelle websuche im Container-Tag; erlaubte Schl�
         'haltbarkeit.chilled_days' => ['wert' => 9, 'url' => 'https://shop.example/caprese'],
         'gebinde.einheit' => ['wert' => 'kg', 'url' => 'https://shop.example/caprese'],       // kein Produktpass-Schlüssel
     ]], $this->quellen);
-    $r = app(\Platform\FoodAlchemist\Services\ArtikelWebRecherche::class)->liefere($this->la);
+    $r = app(\Platform\FoodAlchemist\Services\Einkauf\ArtikelWebRecherche::class)->liefere($this->la);
 
     expect(array_keys($r['felder']))->toBe(['naehrwerte.energy_kcal', 'haltbarkeit.chilled_days'])
         ->and($this->kontext[0])->toContain('naehrwerte.energy_kcal')->toContain('zutatenliste');

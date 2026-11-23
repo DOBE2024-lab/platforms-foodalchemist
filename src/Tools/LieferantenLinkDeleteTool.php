@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistLieferantenLink as Link;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\LieferantenLinkService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenLinkService;
 
 /** Lieferanten-Link widerrufen. */
 class LieferantenLinkDeleteTool extends WareneingangTool implements ToolContract, ToolMetadataContract

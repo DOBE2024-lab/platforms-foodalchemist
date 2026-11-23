@@ -25,7 +25,7 @@ class DishReverseService
     public function __construct(
         private IngredientMatchService $matcher,
         private Pairing\PairingService $pairing,
-        private LaFirstGpService $laFirst,
+        private Einkauf\LaFirstGpService $laFirst,
     ) {
     }
 

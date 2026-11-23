@@ -78,7 +78,7 @@ class SignalCauseService
     public function __construct(
         private DataQualityService $dq,
         private RecipeRecomputeService $recompute,
-        private PriceService $preise,
+        private Preis\PriceService $preise,
     ) {
     }
 

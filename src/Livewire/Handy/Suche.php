@@ -10,8 +10,8 @@ use Platform\FoodAlchemist\Services\FavoriteGpService;
 use Platform\FoodAlchemist\Services\GpService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
-use Platform\FoodAlchemist\Services\SupplierItemService;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 use Platform\FoodAlchemist\Support\FaBereiche;
 use Platform\FoodAlchemist\Support\FaShell;
 

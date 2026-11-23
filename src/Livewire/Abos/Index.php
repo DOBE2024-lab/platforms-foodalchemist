@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Services\Plattform\AboKuendigungService;
 use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
-use Platform\FoodAlchemist\Services\StammPaketService;
+use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 
 /**

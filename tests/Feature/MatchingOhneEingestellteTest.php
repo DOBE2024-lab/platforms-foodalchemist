@@ -3,8 +3,8 @@
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\LeadLaService;
-use Platform\FoodAlchemist\Services\MatchService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
+use Platform\FoodAlchemist\Services\Matching\MatchService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

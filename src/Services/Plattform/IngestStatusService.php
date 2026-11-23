@@ -56,9 +56,9 @@ final class IngestStatusService
     public const MAX_DELTA_ITEMS = 500;
 
     /** Nährwert-Kernwerte = derselbe Umfang, den `setNutrition` schreibt (eine Wahrheit). */
-    public const NAEHRWERT_SPALTEN = \Platform\FoodAlchemist\Services\SupplierItemService::NAEHRWERT_FELDER;
+    public const NAEHRWERT_SPALTEN = \Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::NAEHRWERT_FELDER;
 
-    public function __construct(private \Platform\FoodAlchemist\Services\PriceService $preise, private BulkRunStatusService $laufStatus)
+    public function __construct(private \Platform\FoodAlchemist\Services\Preis\PriceService $preise, private BulkRunStatusService $laufStatus)
     {
     }
 

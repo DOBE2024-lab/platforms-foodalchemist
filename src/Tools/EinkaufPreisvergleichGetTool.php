@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\LeadLaService;
-use Platform\FoodAlchemist\Services\RebateService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
+use Platform\FoodAlchemist\Services\Preis\RebateService;
 use Platform\FoodAlchemist\Support\Suche;
 
 /**

@@ -1215,7 +1215,7 @@ class RecipeService
                         // nicht). Mint ist tentative + LA-verknüpft; keine LA → bleibt unmatched
                         // (Hard-Stop / Sourcing-Wunsch beim Aufrufer). Provenienz wie im Generator.
                         if ($gpId === null && $subId === null && ! $nurSub) {
-                            $mint = app(LaFirstGpService::class)->mintFromLa(
+                            $mint = app(Einkauf\LaFirstGpService::class)->mintFromLa(
                                 $team, $groundName, $z['hauptzutat_slug'] ?? ($z['slug'] ?? null),
                             );
                             if ($mint !== null) {

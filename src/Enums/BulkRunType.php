@@ -15,7 +15,7 @@ namespace Platform\FoodAlchemist\Enums;
  * Alle sieben Fälle haben heute einen echten Schreiber; es ist keine Wunschliste:
  * `enrich`/`enrich_vk`/`enrich_gp` aus {@see \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService},
  * `enrich_concept` aus {@see \Platform\FoodAlchemist\Services\ConceptOneShotService} (Spec 50 · C-4),
- * `ingest` aus {@see \Platform\FoodAlchemist\Services\FileArticleImportService},
+ * `ingest` aus {@see \Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService},
  * `review` aus {@see \Platform\FoodAlchemist\Services\RecipeFindingsBatchService},
  * `detektor` aus {@see \Platform\FoodAlchemist\Services\QualityRunService}.
  */

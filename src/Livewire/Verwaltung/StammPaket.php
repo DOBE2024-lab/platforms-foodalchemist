@@ -8,7 +8,7 @@ use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\StammPaketService;
+use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 
 /**
  * Spec 82 §13 B1 — Stamm-Paket buchen und abbestellen. Eingebettet in die Plattform-Verwaltung des Hosts

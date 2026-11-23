@@ -8,7 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 
 /**
  * „Leads neu wählen" übernehmen (Settings/Einkauf, MCP lead_la.REPICK). ASYNC, weil danach

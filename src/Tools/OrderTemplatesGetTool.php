@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\OrderTemplateService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderTemplateService;
 
 /** Spec 68 · Bestellvorlagen lesen (Liste oder eine Vorlage, optional mit Vorschau je Lieferant). */
 class OrderTemplatesGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

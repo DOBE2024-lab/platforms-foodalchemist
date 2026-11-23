@@ -12,8 +12,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\OrderService;
-use Platform\FoodAlchemist\Services\WareneingangService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
+use Platform\FoodAlchemist\Services\Einkauf\WareneingangService;
 
 /**
  * Spec 75 · gemeinsame Fixture für Wareneingang und Triple Match (geteilt als Trait, nicht als

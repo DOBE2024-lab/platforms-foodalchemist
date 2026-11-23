@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\AktionspreisService;
+use Platform\FoodAlchemist\Services\Preis\AktionspreisService;
 
 /** Aktionspreis (16.10.2026) an einem sichtbaren Lieferantenartikel anlegen: reine Information, die Kalkulation bleibt beim Einkaufspreis. */
 class ArtikelAktionspreisePostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

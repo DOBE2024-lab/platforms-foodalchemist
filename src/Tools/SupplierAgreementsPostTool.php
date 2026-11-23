@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SupplierAgreementService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierAgreementService;
 
 /**
  * R9.1 (write): Absprache/Zusage ODER Vertrags-/Dokument-Metadaten zu einem Lieferanten

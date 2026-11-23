@@ -45,10 +45,10 @@ class WareneinsatzAbweichungService
     public const INVENTUR_TOLERANZ_TAGE = 7;
 
     public function __construct(
-        private PurchaseJournalService $journal,
+        private Einkauf\PurchaseJournalService $journal,
         private TeamSettingsService $settings,
-        private InventurService $inventur,
-        private LagerBewegungService $bewegungen,
+        private Einkauf\InventurService $inventur,
+        private Einkauf\LagerBewegungService $bewegungen,
     ) {
     }
 
@@ -81,7 +81,7 @@ class WareneinsatzAbweichungService
         $kosten = $verbrauch ?? $einkauf;
 
         $abdeckung = $umsatz > 0 ? round($umsatzZugeordnet / $umsatz * 100, 1) : null;
-        $istPct = MargeService::wareneinsatzPct($kosten, $umsatz);
+        $istPct = Preis\MargeService::wareneinsatzPct($kosten, $umsatz);
 
         // Theoretischer Wareneinsatz: verkaufte Menge × EK je Portion an der Standard-Darreichung.
         // Dieselbe EK-Zahl wie in der Matrix und in der W%-Ampel — sonst stünden hier zwei

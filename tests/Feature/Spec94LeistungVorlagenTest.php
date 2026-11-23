@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Livewire\Angebote\LeistungVorlagen;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfiguratorLeistung;
 use Platform\FoodAlchemist\Models\FoodAlchemistLeistungVorlage;
 use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
-use Platform\FoodAlchemist\Services\CatalogPricingService;
+use Platform\FoodAlchemist\Services\Preis\CatalogPricingService;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
 use Platform\FoodAlchemist\Services\LeistungVorlageService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;

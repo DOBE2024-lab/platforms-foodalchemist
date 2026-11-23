@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
-use Platform\FoodAlchemist\Services\CatalogPricingService;
+use Platform\FoodAlchemist\Services\Preis\CatalogPricingService;
 
 /**
  * Einmalig (18.11.2026): Der Preis-Recompute schrieb bis #843 den AUFGELÖSTEN MwSt-Schlüssel in `vat_profile_key` der Darreichung zurück —

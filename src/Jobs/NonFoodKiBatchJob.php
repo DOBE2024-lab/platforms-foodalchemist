@@ -9,7 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemNonfood;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
-use Platform\FoodAlchemist\Services\NonFoodService;
+use Platform\FoodAlchemist\Services\Einkauf\NonFoodService;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
 
 /**

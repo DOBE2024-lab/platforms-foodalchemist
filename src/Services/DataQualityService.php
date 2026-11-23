@@ -45,7 +45,7 @@ class DataQualityService
         private SignalService $signals,
         private CoverageService $coverage,
         private Pairing\PairingService $pairing,
-        private PriceService $preise,
+        private Preis\PriceService $preise,
     ) {
     }
 

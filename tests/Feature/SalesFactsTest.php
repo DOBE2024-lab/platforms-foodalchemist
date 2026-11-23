@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistSalesFact;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Services\Ausgabe\MenuEngineeringService;
-use Platform\FoodAlchemist\Services\SalesImportService;
+use Platform\FoodAlchemist\Services\Einkauf\SalesImportService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

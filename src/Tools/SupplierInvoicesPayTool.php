@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\LieferantenRechnungService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenRechnungService;
 
 /** Spec 75b · Rechnung als bezahlt markieren (Rolle Freigeben). */
 class SupplierInvoicesPayTool extends WareneingangTool implements ToolContract, ToolMetadataContract

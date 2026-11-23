@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ArticleImportTriggerService;
+use Platform\FoodAlchemist\Services\Einkauf\ArticleImportTriggerService;
 
 /**
  * Spec 13 · S3b — die **Auslösung** des Kanal-B-Imports über MCP. Nicht ein zweiter

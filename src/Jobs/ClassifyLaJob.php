@@ -106,7 +106,7 @@ class ClassifyLaJob implements ShouldQueue, \Platform\FoodAlchemist\Services\Ai\
         }
 
         // Non-Food bekommt keine Food-Struktur (Zustand/Verarbeitung/Hauptzutat) — der Klassifikator würde sie erfinden.
-        if (app(\Platform\FoodAlchemist\Services\NonFoodService::class)->istNonFood($la->id)) {
+        if (app(\Platform\FoodAlchemist\Services\Einkauf\NonFoodService::class)->istNonFood($la->id)) {
             return;
         }
 

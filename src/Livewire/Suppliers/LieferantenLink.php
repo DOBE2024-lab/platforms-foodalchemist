@@ -7,7 +7,7 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistLieferantenLink as Link;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\LieferantenLinkService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenLinkService;
 
 /**
  * Lieferanten-Link am Lieferanten (Stufe 2a): erzeugen, Link kopieren (einmalig sichtbar), widerrufen, Protokoll. Eigene Komponente, vom Lieferanten-Modal

@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\MatchService;
+use Platform\FoodAlchemist\Services\Matching\MatchService;
 
 /** MCP-Steuerbarkeit · D4: LA→GP-Matching für alle Artikel eines team-eigenen Lieferanten anstoßen (Vorschläge). */
 class MatchRunTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

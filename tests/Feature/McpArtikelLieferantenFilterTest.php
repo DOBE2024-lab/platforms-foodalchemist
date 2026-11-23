@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemNonfood;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\SupplierGroupService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierGroupService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Platform\FoodAlchemist\Tools\ArtikelListTool;

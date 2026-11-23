@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\LagerEinrichtungService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService;
 
 /** Spec 66b · Stellplätze eines Lagerorts + Grundprodukte mit Stammplatz und Vorschlag lesen. */
 class StorageBinsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

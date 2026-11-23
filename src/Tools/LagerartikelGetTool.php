@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\LagerartikelService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerartikelService;
 
 /** Spec 74 · Lagerartikel (Grundvorrat) mit Bestand, Mindest-/Sollbestand und Ampel. */
 class LagerartikelGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

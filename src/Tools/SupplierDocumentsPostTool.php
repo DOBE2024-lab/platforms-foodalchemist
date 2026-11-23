@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\SupplierAgreementService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierAgreementService;
 
 /** MCP-Steuerbarkeit · D4: Dokument-Metadaten an einem team-eigenen Lieferanten hinterlegen. */
 class SupplierDocumentsPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

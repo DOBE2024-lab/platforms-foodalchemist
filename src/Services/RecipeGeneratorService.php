@@ -486,7 +486,7 @@ class RecipeGeneratorService
                         // bereits berechnet — hier nur noch verwenden (§4 »jus«, LLM-Flag, Convenience-Rolle).
                         $zeile['match_method'] = 'unmatched';
                         $statistik['offen']++;
-                        $laKandidaten = $istBasisrezept ? [] : app(LaCandidateFinder::class)
+                        $laKandidaten = $istBasisrezept ? [] : app(Einkauf\LaCandidateFinder::class)
                             ->find($team, $text, $this->wgHint($z['commodity_group'] ?? $z['warengruppe'] ?? null), 3)
                             ->map(fn ($la) => [
                                 'id' => (int) $la->id,

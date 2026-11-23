@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\StammLieferantService;
+use Platform\FoodAlchemist\Services\Einkauf\StammLieferantService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

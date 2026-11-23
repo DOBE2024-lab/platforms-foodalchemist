@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 
 /**
  * Inaktiver oder gesperrter Lieferant (Kurator 29.10.2026) — aus RecipeRecomputeService ausgelagert (Dateigrößen-Wächter, Spec 85 §9).

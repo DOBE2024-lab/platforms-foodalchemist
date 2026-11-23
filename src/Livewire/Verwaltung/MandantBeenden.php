@@ -7,8 +7,8 @@ use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\MandantBeendenService;
-use Platform\FoodAlchemist\Services\MandantenService;
+use Platform\FoodAlchemist\Services\Plattform\MandantBeendenService;
+use Platform\FoodAlchemist\Services\Plattform\MandantenService;
 
 /**
  * Spec 82 §13 C3 — Mandant beenden: Vorschau, Bestätigung, Entsperren. Eingebettet in die Plattform-Verwaltung des Hosts

@@ -203,7 +203,7 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
                     }
                 }
             }
-            app(DuplikatBilderService::class)->foodbook($quelle, $neu, $map, $team);   // CQ Bild-Löschschutz PR 2: eigene Dateien
+            app(Plattform\DuplikatBilderService::class)->foodbook($quelle, $neu, $map, $team);   // CQ Bild-Löschschutz PR 2: eigene Dateien
 
             return $neu->refresh();
         });

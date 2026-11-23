@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\OutletSettingsService;
+use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
 
 /**
  * Ebene 2: Betriebe/Standorte (Outlets) des Teams + ihre Kalkulations-Overrides listen.
@@ -74,7 +74,7 @@ class OutletsGetTool extends FoodAlchemistTool implements ToolContract, ToolMeta
         })->all();
 
         // Ebene 2: welche Brille gerade aktiv ist (durabel je User+Team; via outlets.SET_ACTIVE gesetzt).
-        $aktiv = app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)
+        $aktiv = app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)
             ->current($team, $context->user?->id !== null ? (int) $context->user->id : null);
 
         return ToolResult::success([

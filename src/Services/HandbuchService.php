@@ -38,7 +38,7 @@ class HandbuchService
     public const TYPEN = [self::TYPE_FOODBOOK, self::TYPE_SPEISEKARTE, self::TYPE_SPEISEPLAN, self::TYPE_ANGEBOT];
 
     public function __construct(
-        private FoodAlchemistMediaService $media,
+        private Plattform\FoodAlchemistMediaService $media,
         private RegenerationCascadeService $regeneration,
         private HandbuchQuellenService $quellen,
         private HandbuchZutatenService $zutaten,

@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\BulkRunType;
 use Platform\FoodAlchemist\Models\FoodAlchemistBulkRun;
-use Platform\FoodAlchemist\Services\BulkRunStatusService;
+use Platform\FoodAlchemist\Services\Plattform\BulkRunStatusService;
 
 /**
  * Spec 22 · H3c — die Quittung nach außen (V-055).

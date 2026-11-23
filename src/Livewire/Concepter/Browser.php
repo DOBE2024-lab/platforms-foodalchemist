@@ -323,7 +323,7 @@ class Browser extends Component
         }
 
         // Ebene 2: betriebsscharfer €/Gast je Zeile, wenn eine Brille aktiv ist (gilt für beide Reiter).
-        $outlet = app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($team);
+        $outlet = app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team);
 
         return view('foodalchemist::livewire.concepter.browser', [
             'items' => $items,

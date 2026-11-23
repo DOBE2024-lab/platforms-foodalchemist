@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Support\StammPaket;
  */
 class StammPaketService
 {
-    use PlattformAdminPruefung;
+    use Plattform\PlattformAdminPruefung;
 
     /** Für lesende Aufrufer (MCP, Oberfläche): wirft FaRechtFehltException, wenn nicht Plattform-Admin. */
     public function nurPlattformAdminOeffentlich(?User $user, string $wofuer): User
@@ -28,8 +28,8 @@ class StammPaketService
 
     public function __construct(
         private readonly FaRechte $rechte,
-        private readonly AboAuskunft $abos,
-        private readonly PlattformProtokoll $protokoll,
+        private readonly Plattform\AboAuskunft $abos,
+        private readonly Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /**

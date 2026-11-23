@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Cache;
-use Platform\FoodAlchemist\Services\VoiceSessionService;
+use Platform\FoodAlchemist\Services\Plattform\VoiceSessionService;
 use Platform\FoodAlchemist\Support\VoiceReferenzResolver;
 use Platform\FoodAlchemist\Tests\TestCase;
 

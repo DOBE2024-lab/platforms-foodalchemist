@@ -16,7 +16,7 @@ use Platform\FoodAlchemist\Support\Text;
  */
 class EquipmentStandardService
 {
-    use PlattformAdminPruefung;
+    use Plattform\PlattformAdminPruefung;
 
     /** Standardausstattung: gilt in jeder Küche als vorhanden, solange ein Team sie nicht ausdrücklich als fehlend markiert. */
     public const STANDARD = [
@@ -24,7 +24,7 @@ class EquipmentStandardService
         'Stabmixer', 'Pürierstab', 'Mixer', 'Küchenmaschine / Planetenrührwerk', 'Induktionsplatte', 'Mörser', 'Mandoline / Hobel',
     ];
 
-    public function __construct(private readonly PlattformProtokoll $protokoll) {}
+    public function __construct(private readonly Plattform\PlattformProtokoll $protokoll) {}
 
     /** Für lesende Aufrufer (MCP): wirft FaRechtFehltException, wenn nicht Plattform-Admin. */
     public function nurPlattformAdminOeffentlich(?User $user, string $wofuer): User

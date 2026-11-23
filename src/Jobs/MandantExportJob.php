@@ -8,7 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Platform\FoodAlchemist\Models\FoodAlchemistMandantExport;
-use Platform\FoodAlchemist\Services\MandantExportService;
+use Platform\FoodAlchemist\Services\Plattform\MandantExportService;
 
 /**
  * Spec 82 §13 C3 — baut das Export-ZIP eines Mandanten. ASYNC (ein Mandant hat schnell sechsstellige Zeilen);

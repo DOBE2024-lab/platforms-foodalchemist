@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Services\KontextResolver;
 use Platform\FoodAlchemist\Services\MachbarkeitService;
 use Platform\FoodAlchemist\Services\ProjektService;
 use Platform\FoodAlchemist\Services\ProjektUebernahmeService;
-use Platform\FoodAlchemist\Services\TeamProfilService;
+use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;
 use Platform\FoodAlchemist\Support\MachbarkeitKontext;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\Profiltraeger;

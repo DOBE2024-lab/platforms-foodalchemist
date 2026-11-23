@@ -68,7 +68,7 @@ it('„Outlet“/„Betrieb“ heißt in der Beschriftung „Kalkulationsprofil�
 
 it('Im Oberteam zeigt die Unter-Team-Karte das Kalkulationsprofil des Unter-Teams', function () {
     $outlet = \Platform\FoodAlchemist\Models\FoodAlchemistOutlet::create(['team_id' => $this->rootTeam->id, 'name' => 'Kantine Nord']);
-    app(\Platform\FoodAlchemist\Services\StandortService::class)->betriebZuordnen($this->rootTeam, $this->childA->id, $outlet->id, $this->user);
+    app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->betriebZuordnen($this->rootTeam, $this->childA->id, $outlet->id, $this->user);
 
     Livewire::test(\Platform\FoodAlchemist\Livewire\Controlling\Panels\StandortInhalte::class)
         ->assertSee('Kalkulationsprofil: Kantine Nord');

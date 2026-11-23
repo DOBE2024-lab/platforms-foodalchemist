@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Settings;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
-use Platform\FoodAlchemist\Services\PlanNutzungService;
+use Platform\FoodAlchemist\Services\Plattform\PlanNutzungService;
 
 /**
  * Spec 82 §13 D/C1 — „Plan und Nutzung“ in den Einstellungen des Oberteams: was der Mandant im Monat zahlt.

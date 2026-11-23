@@ -7,7 +7,7 @@ use Platform\ActivityLog\Traits\LogsActivity;
 
 /**
  * Spec 82 §13 C3 — ein Datenexport (ZIP) eines Mandanten. Verwaltungsdaten: Zustand, Größe, Prüfsumme, Manifest (Zählung).
- * Den Inhalt trägt nur die Datei im privaten Storage. Geschrieben nur über {@see \Platform\FoodAlchemist\Services\MandantExportService}.
+ * Den Inhalt trägt nur die Datei im privaten Storage. Geschrieben nur über {@see \Platform\FoodAlchemist\Services\Plattform\MandantExportService}.
  */
 class FoodAlchemistMandantExport extends Model
 {

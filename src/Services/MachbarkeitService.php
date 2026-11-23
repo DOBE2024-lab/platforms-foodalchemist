@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Support\MachbarkeitKontext;
  */
 class MachbarkeitService
 {
-    public function __construct(private readonly TeamProfilService $profil) {}
+    public function __construct(private readonly Plattform\TeamProfilService $profil) {}
 
     /**
      * @param  list<int>  $recipeIds
@@ -49,10 +49,10 @@ class MachbarkeitService
         $warnungen = [];
         $unbekannt = [];
         foreach ($bedarf as $eqId => $info) {
-            $zustand = $wirksam[$eqId] ?? TeamProfilService::STATUS_UNBEKANNT;
-            if ($zustand === TeamProfilService::STATUS_NICHT_VORHANDEN) {
+            $zustand = $wirksam[$eqId] ?? Plattform\TeamProfilService::STATUS_UNBEKANNT;
+            if ($zustand === Plattform\TeamProfilService::STATUS_NICHT_VORHANDEN) {
                 $warnungen[] = ['equipment_id' => $eqId, 'equipment' => $info['name'], 'benoetigt_in_rezept_id' => $info['recipe_id'], 'benoetigt_in_rezept' => $info['recipe']];
-            } elseif ($zustand === TeamProfilService::STATUS_UNBEKANNT) {
+            } elseif ($zustand === Plattform\TeamProfilService::STATUS_UNBEKANNT) {
                 $unbekannt[] = ['equipment_id' => $eqId, 'equipment' => $info['name'], 'grund' => 'Profil unvollständig'];
             }
         }

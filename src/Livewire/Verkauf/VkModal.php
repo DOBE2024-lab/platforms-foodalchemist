@@ -1175,7 +1175,7 @@ class VkModal extends Component
         $team = Auth::user()?->currentTeamRelation;
         $rezept = $team !== null && $this->recipeId !== null ? $verkauf->detail($team, $this->recipeId) : null;
         // Ebene 2 (D3): VK folgt dem aktiven Betrieb (ambienter Kontext).
-        $outlet = $team !== null ? app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($team) : null;
+        $outlet = $team !== null ? app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team) : null;
 
         // M9-01d/e: Nährwerte pro Stück + Bio-/Regional-Anteil (Gramm-gewichtet über GP-Tags)
         $gProStueck = null;
@@ -1210,18 +1210,18 @@ class VkModal extends Component
 
         // L1b: Lauf-Status der ✨-Anreicherung (Poll-Zeile über dem Editor)
         $bulkRun = $this->bulkRunId !== null && $team !== null
-            ? app(\Platform\FoodAlchemist\Services\BulkEnrichService::class)->status($team, $this->bulkRunId) : null;
+            ? app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class)->status($team, $this->bulkRunId) : null;
 
         return view('foodalchemist::livewire.verkauf.vk-modal', [
             'sperr' => $this->sperrZustand(),   // Spec 65
             'rezept' => $rezept,
             'gpDirekt' => $this->gpDirektZeilen($rezept),   // Altbestand GP direkt im Gericht (17.11.2026)
             'dishImageUrl' => ($rezept !== null && ($rezept->image_context_file_id || $rezept->image_path))
-                ? app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($rezept->image_context_file_id, $rezept->image_path)
+                ? app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($rezept->image_context_file_id, $rezept->image_path)
                 : null,
             'bulkRun' => $bulkRun,
             'bulkOffen' => $bulkRun !== null
-                ? app(\Platform\FoodAlchemist\Services\BulkEnrichService::class)->offeneVorschlaege($team, $this->bulkRunId) : 0,
+                ? app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class)->offeneVorschlaege($team, $this->bulkRunId) : 0,
             'cockpit' => $rezept !== null ? ($cockpitTmp ?? $verkauf->cockpit($rezept, $team, $outlet)) : null,
             'gProStueck' => $gProStueck,
             'anteile' => $anteile,

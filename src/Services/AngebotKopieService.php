@@ -31,7 +31,7 @@ class AngebotKopieService
         'deleted_at',
     ];
 
-    public function __construct(private FoodAlchemistMediaService $media) {}
+    public function __construct(private Plattform\FoodAlchemistMediaService $media) {}
 
     public function kopieren(Team $team, int $id, ?string $name = null): FoodAlchemistAngebot
     {

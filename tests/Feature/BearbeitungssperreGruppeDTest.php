@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ProductionOrderService;
-use Platform\FoodAlchemist\Services\BearbeitungssperreService;
+use Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

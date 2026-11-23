@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Enums\FaRolle;
-use Platform\FoodAlchemist\Services\MandantExportService;
+use Platform\FoodAlchemist\Services\Plattform\MandantExportService;
 
 /**
  * Spec 82 §13 C3 · Datenexport eines Mandanten: Status und Manifest (nur Zählung, keine Inhalte). Die Datei selbst lädt nur

@@ -64,14 +64,14 @@ class WareneinsatzAbweichungService
         // tragen team_id/deleted_at ebenfalls — unqualifiziert wirft SQLite „ambiguous column".
         $t = 'foodalchemist_sales_facts';
         $basis = fn () => DB::table($t)
-            ->whereIn($t . '.team_id', app(StandortService::class)->leseTeamIds($team))->whereNull($t . '.deleted_at')   // Spec 77c: Team-Brille
+            ->whereIn($t . '.team_id', app(Plattform\StandortService::class)->leseTeamIds($team))->whereNull($t . '.deleted_at')   // Spec 77c: Team-Brille
             ->when($von !== null, fn ($q) => $q->whereDate($t . '.sold_at', '>=', $von))
             ->when($bis !== null, fn ($q) => $q->whereDate($t . '.sold_at', '<=', $bis));
 
         $umsatz = (float) $basis()->sum($t . '.revenue_net');
         $umsatzZugeordnet = (float) $basis()->whereNotNull($t . '.recipe_id')->sum($t . '.revenue_net');
         $einkauf = $this->journal->spend($team, null, $von, $bis);
-        $ziel = $this->settings->zielWareneinsatzPct($team, app(ActiveOutletContext::class)->current($team));   // Spec 85 PR-D: Ziel des aktiven Kalkulationsprofils
+        $ziel = $this->settings->zielWareneinsatzPct($team, app(Plattform\ActiveOutletContext::class)->current($team));   // Spec 85 PR-D: Ziel des aktiven Kalkulationsprofils
 
         // Spec 66 §5: mit Inventur am Anfang UND Ende der Periode wird aus der Perioden- eine
         // Verbrauchsrechnung: Verbrauch = Anfangsbestand + Einkauf − Endbestand. Ohne beide

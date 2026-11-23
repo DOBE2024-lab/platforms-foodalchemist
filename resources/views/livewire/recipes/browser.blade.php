@@ -155,7 +155,7 @@
 
         @if($bulkRunId !== null)
             @php
-                $bulkSvc = app(\Platform\FoodAlchemist\Services\BulkEnrichService::class);
+                $bulkSvc = app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class);
                 $run = $bulkSvc->status(\Illuminate\Support\Facades\Auth::user()->currentTeamRelation, $bulkRunId);
             @endphp
             @if($run !== null)

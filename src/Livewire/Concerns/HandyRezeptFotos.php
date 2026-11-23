@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\WithFileUploads;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
-use Platform\FoodAlchemist\Services\BearbeitungssperreService;
+use Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\RezeptFotoService;
 use Platform\FoodAlchemist\Support\HandyLesemodus;

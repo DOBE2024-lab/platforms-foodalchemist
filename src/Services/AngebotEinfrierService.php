@@ -34,7 +34,7 @@ class AngebotEinfrierService
         private readonly FaRechte $rechte,
         private readonly EinfrierKosten $kosten,
         private readonly FassungsVergleich $vergleich,
-        private readonly PlattformProtokoll $protokoll,
+        private readonly Plattform\PlattformProtokoll $protokoll,
         private readonly FassungsUmstellung $umstellung,
     ) {}
 
@@ -296,7 +296,7 @@ class AngebotEinfrierService
             return ['uebernahme_id' => (int) $u->id, 'von_nr' => $vorschau['von_nr'], 'nach_nr' => $vorschau['nach_nr'], 'allergen_geaendert' => $vorschau['allergen_geaendert'],
                 'umgehaengt' => $umgehaengt, 'betroffene_ausgaben' => $vorschau['betroffene_ausgaben']];
         });
-        app(AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
+        app(Plattform\AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
 
         return $ergebnis;
     }

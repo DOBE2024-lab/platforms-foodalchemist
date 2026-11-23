@@ -11,8 +11,8 @@ use Livewire\WithFileUploads;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
-use Platform\FoodAlchemist\Services\OutletService;
+use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
+use Platform\FoodAlchemist\Services\Plattform\OutletService;
 
 /**
  * Spec 33 · P2 — Pflege der Betriebe/Standorte (Outlets).
@@ -90,7 +90,7 @@ class Betriebe extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\StandortService::class)
+            app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)
                 ->betriebZuordnen($team, $unterTeamId, $outletId === '' || $outletId === null ? null : (int) $outletId, Auth::user());
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
@@ -236,7 +236,7 @@ class Betriebe extends Component
             'nutzung' => $nutzung,
             'vorlagenOptionen' => $vorlagenOptionen,
             'logoUrls' => $logoUrls,
-            'standorte' => $team === null ? [] : app(\Platform\FoodAlchemist\Services\StandortService::class)->unterTeams($team),
+            'standorte' => $team === null ? [] : app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->unterTeams($team),
         ]);
     }
 }

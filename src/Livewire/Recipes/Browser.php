@@ -254,7 +254,7 @@ class Browser extends Component
         if ($team === null || $ids === []) {
             return;
         }
-        $this->bulkRunId = app(\Platform\FoodAlchemist\Services\BulkEnrichService::class)->starte($team, $ids);
+        $this->bulkRunId = app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class)->starte($team, $ids);
         $this->auswahl = [];
     }
 
@@ -262,7 +262,7 @@ class Browser extends Component
     {
         $team = Auth::user()?->currentTeamRelation;
         if ($team !== null && $this->bulkRunId !== null) {
-            app(\Platform\FoodAlchemist\Services\BulkEnrichService::class)->alleUebernehmen($team, $this->bulkRunId);
+            app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class)->alleUebernehmen($team, $this->bulkRunId);
             $this->bulkRunId = null;
             $this->dispatch('recipe-gespeichert');
         }

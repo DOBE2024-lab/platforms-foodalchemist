@@ -601,7 +601,7 @@ class AngebotService
         $sichtbar = fn (string $farbe): bool => $kontrast($farbe, '#ffffff') >= 1.5;
         $schrift = fn (string $grund): string => $kontrast($grund, '#ffffff') >= $kontrast($grund, '#1f2937') ? '#ffffff' : '#1f2937';
         $linie = $sichtbar($marke) ? $marke : ($sichtbar($band) ? $band : '#374151');
-        $media = app(FoodAlchemistMediaService::class);
+        $media = app(Plattform\FoodAlchemistMediaService::class);
 
         return [
             'color' => $linie,
@@ -851,9 +851,9 @@ class AngebotService
         $bilder = is_array($angebot->presentation_images_json) ? $angebot->presentation_images_json : [];
         $alt = $bilder[(string) $nummer] ?? null;
         if (is_array($alt)) {
-            app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($alt['context_file_id'] ?? null, (string) ($alt['path'] ?? ''), $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, 'presentation_images_json', $nummer)]);
+            app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($alt['context_file_id'] ?? null, (string) ($alt['path'] ?? ''), $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, 'presentation_images_json', $nummer)]);
         }
-        $media = app(FoodAlchemistMediaService::class)->storeImage($file, $team, 'foodalchemist.offer', $offerId, "foodalchemist/offer-branding/{$offerId}");
+        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage($file, $team, 'foodalchemist.offer', $offerId, "foodalchemist/offer-branding/{$offerId}");
         $bilder[(string) $nummer] = ['context_file_id' => $media['context_file_id'], 'path' => $media['path']];
         $angebot->update(['presentation_images_json' => $bilder]);
 
@@ -867,7 +867,7 @@ class AngebotService
         $bilder = is_array($angebot->presentation_images_json) ? $angebot->presentation_images_json : [];
         $alt = $bilder[(string) $nummer] ?? null;
         if (is_array($alt)) {
-            app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($alt['context_file_id'] ?? null, (string) ($alt['path'] ?? ''), $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, 'presentation_images_json', $nummer)]);
+            app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($alt['context_file_id'] ?? null, (string) ($alt['path'] ?? ''), $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, 'presentation_images_json', $nummer)]);
         }
         unset($bilder[(string) $nummer]);
         $angebot->update(['presentation_images_json' => $bilder !== [] ? $bilder : null]);
@@ -892,9 +892,9 @@ class AngebotService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $angebot->{$spalte};
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($angebot->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, $spalte)]);
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($angebot->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, $spalte)]);
 
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
+        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
             $file,
             $team,
             'foodalchemist.offer',
@@ -917,7 +917,7 @@ class AngebotService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $angebot->{$spalte};
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($angebot->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, $spalte)]);
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($angebot->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, $spalte)]);
         $angebot->update([
             $spalte => null,
             $contextSpalte => null,

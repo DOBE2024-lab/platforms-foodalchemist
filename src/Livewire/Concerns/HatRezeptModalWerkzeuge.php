@@ -8,7 +8,7 @@ use Livewire\Attributes\On;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\EnrichRecipeJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\BulkEnrichService;
+use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
 use Platform\FoodAlchemist\Services\RecipeReviseService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\SensorikService;

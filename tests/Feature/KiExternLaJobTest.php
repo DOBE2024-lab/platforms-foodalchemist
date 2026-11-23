@@ -108,7 +108,7 @@ it('GpAromaNachholenJob extern: KI-Aufträge statt Provider, bis zur Antwort nic
     $gpId = $this->registry->get('foodalchemist.gps.POST')->execute(['hauptzutat' => 'Ananas'], $this->mcp)->data['id'];
     Queue::fake();                                                // Queue-Stand zurücksetzen; der Job läuft jetzt von Hand
     $job = new GpAromaNachholenJob($this->rootTeam->id, (int) $this->user->id, $gpId, true);
-    $job->handle(app(\Platform\FoodAlchemist\Services\BulkEnrichService::class), app(\Platform\FoodAlchemist\Services\GpAromaService::class));
+    $job->handle(app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class), app(\Platform\FoodAlchemist\Services\GpAromaService::class));
 
     $features = DB::table('foodalchemist_ki_auftraege')->where('status', 'offen')->pluck('feature')->all();
     expect($features)->not->toBe([])->and($this->stub->calls)->toBe(0, 'Plattform-Provider nicht gerufen')

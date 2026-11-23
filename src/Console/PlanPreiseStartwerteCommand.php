@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
-use Platform\FoodAlchemist\Services\PlanPreisService;
+use Platform\FoodAlchemist\Services\Plattform\PlanPreisService;
 
 /**
  * Spec 82 §13 D — Platzhalter-Startpreise (Basis 79, User 19, Unter-Team 50, Paket 149, Abo 199) für Bausteine ohne Preis.

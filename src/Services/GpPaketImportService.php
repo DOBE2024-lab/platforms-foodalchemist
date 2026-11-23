@@ -38,7 +38,7 @@ use Symfony\Component\Uid\UuidV7;
  */
 class GpPaketImportService
 {
-    use PlattformAdminPruefung;
+    use Plattform\PlattformAdminPruefung;
 
     /** Pflicht-/Daten-Dateien des Pakets (Skript 300). `gps.jsonl` und `gp_artikel.jsonl` müssen da sein. */
     public const DATEIEN = GpPaketValidator::DATEIEN;

@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\PlanNutzungService;
+use Platform\FoodAlchemist\Services\Plattform\PlanNutzungService;
 
 /** Spec 82 §13 D/C1 · Plan und Nutzung eines Mandanten: Positionen, Mengen, Monatsvorschau, gebuchte Tageswerte. Nur Gebühren und Mengen, nie Inhalte. */
 class PlanNutzungGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

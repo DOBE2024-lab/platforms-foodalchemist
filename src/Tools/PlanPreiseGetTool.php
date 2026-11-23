@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\PlanNutzungService;
-use Platform\FoodAlchemist\Services\PlanPreisService;
+use Platform\FoodAlchemist\Services\Plattform\PlanNutzungService;
+use Platform\FoodAlchemist\Services\Plattform\PlanPreisService;
 
 /** Spec 82 §13 D/B5 · Gebühren-Preise: aktuelle Monatspreise je Baustein, Historie, optional Auswirkung eines neuen Preises (nur Plattform-Admin). */
 class PlanPreiseGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

@@ -4,7 +4,7 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\Looping;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
-use Platform\FoodAlchemist\Services\WorkerHealthService;
+use Platform\FoodAlchemist\Services\Plattform\WorkerHealthService;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class);

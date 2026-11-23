@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Services\FixkostenService;
-use Platform\FoodAlchemist\Services\OutletSettingsService;
+use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

@@ -3,8 +3,8 @@
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
-use Platform\FoodAlchemist\Services\PlattformProtokoll;
-use Platform\FoodAlchemist\Services\SupportFreigabeService;
+use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;
+use Platform\FoodAlchemist\Services\Plattform\SupportFreigabeService;
 use Platform\FoodAlchemist\Support\InhaltsSperre;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

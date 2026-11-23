@@ -124,11 +124,11 @@ it('Daten nur für den aktiven Reiter: Composer-Daten erst auf dem Composer-Reit
 });
 
 it('Ampel: wird der Heartbeat des Workers alt, springt die Ampel beim nächsten Poll um (Board neu gezeichnet)', function () {
-    \Illuminate\Support\Facades\Cache::put(\Platform\FoodAlchemist\Services\WorkerHealthService::HEARTBEAT_KEY, now()->timestamp, 3600);
+    \Illuminate\Support\Facades\Cache::put(\Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::HEARTBEAT_KEY, now()->timestamp, 3600);
     $planung = Livewire::test(PlanungIndex::class)->assertSeeHtml('data-planung-worker-ampel="gesund"');
     $board = Livewire::test(LaufStatus::class, ['laufIds' => [$this->run->id], 'neueBeobachten' => true, 'takt' => '3s']);
 
-    \Illuminate\Support\Facades\Cache::put(\Platform\FoodAlchemist\Services\WorkerHealthService::HEARTBEAT_KEY, now()->subSeconds(120)->timestamp, 3600);
+    \Illuminate\Support\Facades\Cache::put(\Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::HEARTBEAT_KEY, now()->subSeconds(120)->timestamp, 3600);
     $board->call('pruefen')->assertDispatched('planung.lauf-geaendert');
     $planung->dispatch('planung.lauf-geaendert')->assertSeeHtml('data-planung-worker-ampel="still"');
 });

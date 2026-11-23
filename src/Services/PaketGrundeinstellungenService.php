@@ -38,7 +38,7 @@ use Symfony\Component\Uid\UuidV7;
  */
 class PaketGrundeinstellungenService
 {
-    use PlattformAdminPruefung;
+    use Plattform\PlattformAdminPruefung;
 
     public const PAKET = FoodAlchemistTeamPaket::GRUNDEINSTELLUNGEN;
 
@@ -90,7 +90,7 @@ class PaketGrundeinstellungenService
 
     public function __construct(
         private readonly FaRechte $rechte,
-        private readonly PlattformProtokoll $protokoll,
+        private readonly Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /** Für lesende Aufrufer (MCP, Oberfläche): wirft FaRechtFehltException, wenn nicht Plattform-Admin. */

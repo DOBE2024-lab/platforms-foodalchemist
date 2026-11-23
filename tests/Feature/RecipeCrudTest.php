@@ -119,12 +119,13 @@ it('Modal-Roundtrip: Anlage validiert, Edit mit yield_kg_manual triggert Recompu
         ->and((float) $r->yield_kg)->toBe(1.0)                            // Auto bleibt
         ->and($r->version)->toBe(2);
 
-    // Leerer Name ⇒ Fehler, kein Insert
+    // Leerer Name ⇒ Fehler am Feld (98 · 2.4c Nachtrag), kein Insert
     Livewire::test(RecipeModal::class)
         ->call('oeffnen')
         ->set('form.name', '  ')
         ->call('speichern')
-        ->assertSet('fehler', fn ($f) => str_contains((string) $f, 'Pflicht'));
+        ->assertSet('nameFehler', fn ($f) => str_contains((string) $f, 'Pflicht'))
+        ->assertSet('fehler', null);
 });
 
 it('Yield-Guard: Tippfehler/0 im manuellen Yield wird abgewiesen statt still als 0 kg gespeichert', function () {

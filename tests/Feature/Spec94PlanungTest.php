@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfiguratorLeistung;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPlanungService;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
-use Platform\FoodAlchemist\Services\LeistungVorlageService;
+use Platform\FoodAlchemist\Services\Concepter\LeistungVorlageService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Support\LeistungPlanungText;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

@@ -256,7 +256,7 @@ it('B3c Kalkulation: Lohn je Block getrennt („davon“-Zeilen), Summe = FEK', 
     spec83RegenFixture($this, $this->rootTeam, $this->gericht);
     $costing = app(\Platform\FoodAlchemist\Services\Bestellung\OrderCostingService::class);
     app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->update($this->rootTeam, ['stundensatz_eur' => 60]);
-    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Gala']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Hauptgang']);
     $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->gericht->id]);
@@ -315,7 +315,7 @@ it('B3g: Pass ohne Sammelposten-Merkmal nimmt die Komponente ohne Posten', funct
 
 it('B3h Kalkulation: Posten-Last nur bei den beteiligten Posten, Sammel-Pass trägt nichts', function () {
     $p = spec83Posten($this, $this->rootTeam, $this->gericht, true);
-    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Gala']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Hauptgang']);
     $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->gericht->id]);

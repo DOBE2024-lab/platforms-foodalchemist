@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Gericht-Vorgabe je Concept-Position (Dominique 13.11.): „das sind meine Gerichte, baue genau diese". Eine LEERE
  * Position trägt den gewünschten Gerichtstitel (`dish_brief`) und eine optionale Notiz (`dish_brief_note`). Der
- * Fan-out des Concepts macht daraus 1:1 die Skizze, statt frei zu erfinden ({@see \Platform\FoodAlchemist\Services\ConceptVorgabenService}).
+ * Fan-out des Concepts macht daraus 1:1 die Skizze, statt frei zu erfinden ({@see \Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService}).
  *
  * Eigene Spalten, nicht `title`: der Titel ist das Anzeige-Label der Position und wird bei Hand-Anlage mit dem
  * Gangnamen gefüllt — als Vorgabe gelesen, entstünde ein Gericht namens „Vorspeise". Additiv, kein Backfill.

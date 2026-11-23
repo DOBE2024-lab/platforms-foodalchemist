@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistMandant;
 use Platform\FoodAlchemist\Models\FoodAlchemistTeamProfile;
 use Platform\FoodAlchemist\Models\FoodAlchemistTeamProfileEquipment;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\ProjektService;
 use Platform\FoodAlchemist\Services\ProjektUebernahmeService;
 use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;

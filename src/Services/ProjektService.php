@@ -186,7 +186,7 @@ class ProjektService
      */
     public function gateFehlt(FoodAlchemistProjekt $p): array
     {
-        $canvas = app(CanvasService::class)->find('projekt', 'projekt', (int) $p->id);
+        $canvas = app(Concepter\CanvasService::class)->find('projekt', 'projekt', (int) $p->id);
         $eintraege = $canvas?->entries ?? collect();
         $fehlt = [];
         if ($eintraege->where('field_key', 'paket_stufen')->filter(fn ($e) => trim((string) $e->value) !== '')->isEmpty()) {
@@ -255,7 +255,7 @@ class ProjektService
         }
         $fb = app(Foodbook\FoodbookService::class)->create($team, ['label' => $p->name, 'crm_company_id' => $p->crm_company_id, 'projekt_id' => $p->id]);
 
-        $canvasSvc = app(CanvasService::class);
+        $canvasSvc = app(Concepter\CanvasService::class);
         $akte = $canvasSvc->find('projekt', 'projekt', (int) $p->id);
         $liste = fn (string $key) => ($akte?->entries ?? collect())->where('field_key', $key)->sortBy('position')->pluck('value')->filter()->values();
         $skalar = fn (string $key) => $akte?->entries->firstWhere('field_key', $key)?->value;

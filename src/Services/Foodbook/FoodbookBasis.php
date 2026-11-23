@@ -6,7 +6,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
-use Platform\FoodAlchemist\Services\WordingResolver;
+use Platform\FoodAlchemist\Services\Concepter\WordingResolver;
 
 /**
  * Gemeinsame Grundlagen aller Foodbook-Teile (98 · 3.3 S4-1, aus FoodbookService verschoben): Besitzer-Riegel für Foodbook,

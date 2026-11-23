@@ -31,7 +31,7 @@ use Platform\FoodAlchemist\Services\PlanningFrameService;
  */
 class OfferCompositionService
 {
-    public function __construct(private \Platform\FoodAlchemist\Services\ConceptService $concepts) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\Concepter\ConceptService $concepts) {}
 
     // ── Kapitel ─────────────────────────────────────────────────────────────
 
@@ -144,7 +144,7 @@ class OfferCompositionService
      * Spiegelt {@see FoodbookService::strukturAusGeruest()} offer-scoped. Bis hierher endete
      * jeder Weg ins Angebot bei {@see defaultKapitel()} mit dem Titel „Menue": die Slot-Labels
      * des Frames („Aperitif", „Hauptgang", „Dessert") wurden zwar geplant, kamen im
-     * Kundendokument aber nie an, und {@see \Platform\FoodAlchemist\Services\CoverageService}
+     * Kundendokument aber nie an, und {@see \Platform\FoodAlchemist\Services\Concepter\CoverageService}
      * hatte am Angebot nichts, wogegen es messen konnte.
      *
      * **Idempotent**: Slots mit gueltiger `chapter_id` werden uebersprungen; ein Slot, dessen
@@ -529,7 +529,7 @@ class OfferCompositionService
             $cockpit = $fest->mit($festpreise, fn () => $this->concepts->preisCockpit($block->concept, $outlet, $team));
 
             return ['vk_pp' => (float) $cockpit['price_per_person'], 'ek_pp' => (float) $cockpit['ek_per_person'], 'pauschal' => 0.0, 'ek_vollstaendig' => true,
-                'vk_fehlt' => \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete: Konzept-Preis nur Summe der bekannten
+                'vk_fehlt' => \Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete: Konzept-Preis nur Summe der bekannten
         }
         if ($block->type === 'recipe_ref' && $block->dish) {
             $faktor = $block->quantity !== null ? (float) $block->quantity : 1.0;
@@ -552,7 +552,7 @@ class OfferCompositionService
                 $baseVk = (float) ($vkInfo['vk'] ?? 0);
             } else {
                 // Spec 85 D-1: Preisleiter (Standard-Darreichung); im Betrieb dessen VK, sonst die Baseline.
-                $resolver = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class);
+                $resolver = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class);
                 $baseVk = (float) (($outlet !== null ? $resolver->vkNetto($block->dish, $outlet) : null) ?? $resolver->vkNetto($block->dish) ?? 0);
             }
             $vk = round($baseVk * $faktor, 2);
@@ -620,7 +620,7 @@ class OfferCompositionService
             foreach ($format->slots as $fs) {
                 if ($fs->type === 'concept' && $fs->concept !== null) {
                     // Spec 82: eine Abo-Fassung rechnet mit den Preisen des Teams; unvollständig = kein Preis fürs Kapitel (nie 0 €)
-                    $w = app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->preisWerte($fs->concept, $team, $outlet);
+                    $w = app(\Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::class)->preisWerte($fs->concept, $team, $outlet);
                     if (! $w['vollstaendig'] && $w['vk'] === null) {
                         $unvollstaendig = true;
 
@@ -697,7 +697,7 @@ class OfferCompositionService
      */
     public function komposition(Team $team, FoodAlchemistAngebot $angebot, ?FoodAlchemistOutlet $outlet = null, bool $intern = false, bool $mitHandbuchMengen = false): array
     {
-        $wording = app(\Platform\FoodAlchemist\Services\WordingResolver::class);
+        $wording = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class);
         $alle = FoodAlchemistOfferChapter::visibleToTeam($team)->where('offer_id', $angebot->id)
             ->with([
                 'blocks' => fn ($q) => $q->where('visible', true)->orderBy('position'),

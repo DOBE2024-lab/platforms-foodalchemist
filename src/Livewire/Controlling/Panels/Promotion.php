@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Livewire\Controlling\Panels;
 
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\PromotionService;
+use Platform\FoodAlchemist\Services\Concepter\PromotionService;
 
 /**
  * Spec 33 · P6 — was bringt eine laufende Ausgabe?

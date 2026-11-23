@@ -35,7 +35,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     use PruefstOutletZuordnung;
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\ConceptService $concepts,
+        private \Platform\FoodAlchemist\Services\Concepter\ConceptService $concepts,
         private \Platform\FoodAlchemist\Services\Foodbook\FoodbookBasis $basis,
         private \Platform\FoodAlchemist\Services\Foodbook\FoodbookKapitelBild $kapitelBild,
         private \Platform\FoodAlchemist\Services\Foodbook\FoodbookVokabular $vokabular,
@@ -725,7 +725,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
             }
             // Positionen = direkte Gericht-Slots UND die Gerichte eingebetteter Pakete (deren Slot-IDs) —
             // damit das Kapitel-Wording auch die Paket-Gerichte betextet (Dominique-Fund). Eine Stelle mit dem Konfigurator.
-            $positionen = app(\Platform\FoodAlchemist\Services\WordingResolver::class)->wordingPositionen($block->concept);
+            $positionen = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class)->wordingPositionen($block->concept);
             if ($positionen === []) {
                 continue;
             }
@@ -859,7 +859,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     public function addBlock(Team $team, int $kapitelId, array $in): FoodAlchemistFoodbookBlock
     {
         $k = $this->ownedKapitel($team, $kapitelId);
-        app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->pruefeBlockErlaubt($k);   // Format-Kapitel: keine eigenen Blöcke, Pflege im Format
+        app(\Platform\FoodAlchemist\Services\Concepter\FormatKapitelService::class)->pruefeBlockErlaubt($k);   // Format-Kapitel: keine eigenen Blöcke, Pflege im Format
         $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
         $daten['type'] = in_array($in['type'] ?? '', self::BLOCK_TYPES, true) ? $in['type'] : 'text';
         \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten);   // 1.1j: Gericht/Concept/Einheit sichtbar

@@ -63,7 +63,7 @@ it('Stufe B: Legende enthält nur tatsächlich vorkommende Codes', function () {
 it('Fix b: Menü-Position (menue_ref) trägt die Codes PRO GANG, nicht aggregiert auf die Position', function () {
     $gluten = skGericht($this->rootTeam->id, 'skfb1', 'Pasta', ['allergen_gluten' => 'enthalten']);
     $nuss = skGericht($this->rootTeam->id, 'skfb2', 'Nusstorte', ['allergen_tree_nuts' => 'enthalten']);
-    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Menü', 'status' => 'active']);
     $s1 = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
     $concepts->fillSlot($this->rootTeam, $s1->id, ['sales_recipe_id' => $gluten->id]);

@@ -34,6 +34,6 @@ class LeistungVorlagenPostTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return ['vorlage' => app(\Platform\FoodAlchemist\Services\LeistungVorlageService::class)->anlegen($team, $a)->toArray()];
+        return ['vorlage' => app(\Platform\FoodAlchemist\Services\Concepter\LeistungVorlageService::class)->anlegen($team, $a)->toArray()];
     }
 }

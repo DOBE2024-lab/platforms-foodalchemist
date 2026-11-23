@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
+use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 
 /** Spec 77d · Sammlungen pflegen (anlegen, befüllen, leeren, löschen). Ab Kuratieren. */
 class SammlungenPutTool extends WareneingangTool implements ToolContract, ToolMetadataContract

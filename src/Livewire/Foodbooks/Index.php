@@ -1094,7 +1094,7 @@ class Index extends Component
 
     /**
      * Format ins Foodbook buchen: LEBENDES Format-Kapitel (B 2026-08-31, nur `format_id`, keine Blöcke) —
-     * Editionen live aus dem Format, im Editor schreibgeschützt ({@see \Platform\FoodAlchemist\Services\FormatKapitelService}).
+     * Editionen live aus dem Format, im Editor schreibgeschützt ({@see \Platform\FoodAlchemist\Services\Concepter\FormatKapitelService}).
      * Fail-soft: Kunden-IP-/Status-Guard meldet sich als Fehler. Braucht das Foodbook, kein Ziel-Kapitel.
      */
     public function formatEinfuegen(int $formatId, FoodbookService $svc): void
@@ -1230,7 +1230,7 @@ class Index extends Component
         if ($block === null || $block->concept === null) {
             return;
         }
-        $wording = app(\Platform\FoodAlchemist\Services\WordingResolver::class);
+        $wording = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class);
         $kontext = [
             'concept' => $block->concept->name,
             'anzeigename' => trim((string) ($this->blockForm['wording'] ?? '')) !== '' ? $this->blockForm['wording'] : null,
@@ -1407,7 +1407,7 @@ class Index extends Component
         if ($kapitel !== null) {
             $conceptBloecke = $kapitel->blocks->where('type', 'concept_ref')->filter(fn ($b) => $b->concept_id !== null);
             if ($conceptBloecke->isNotEmpty()) {
-                $wording = app(\Platform\FoodAlchemist\Services\WordingResolver::class);
+                $wording = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class);
                 $geladen = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock::whereIn('id', $conceptBloecke->pluck('id'))
                     ->with([
                         'concept.slots' => fn ($q) => $q->orderBy('position'),
@@ -1471,7 +1471,7 @@ class Index extends Component
         // R4.2: Soll/Ist-Coverage live gegen das Planungs-Gerüst (nur wenn eines existiert).
         $coverage = null;
         if ($fb !== null && $this->frameId !== null) {
-            $coverage = app(\Platform\FoodAlchemist\Services\CoverageService::class)->coverage($team, 'foodbook', $fb->id);
+            $coverage = app(\Platform\FoodAlchemist\Services\Concepter\CoverageService::class)->coverage($team, 'foodbook', $fb->id);
         }
 
         // Spec 43: Präsentations-Status + Kunden-Link + Design-Auswahl fürs Branding-&-Präsentation-Tab.
@@ -1547,7 +1547,7 @@ class Index extends Component
             'kapitelTree' => $fb !== null ? $svc->kapitelTree($team, $fb->id) : [],
             'kapitel' => $kapitel,
             'blockMenus' => $blockMenus,   // #7: Live-Menü-Vorschau je concept_ref-Block
-            'formatKapitel' => $kapitel !== null ? app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->ansicht($kapitel) : null,   // Format-Kapitel: Editionen live, nur lesen
+            'formatKapitel' => $kapitel !== null ? app(\Platform\FoodAlchemist\Services\Concepter\FormatKapitelService::class)->ansicht($kapitel) : null,   // Format-Kapitel: Editionen live, nur lesen
             // E5.3: Portfolio/Kapitel-Aggregat + WE ziehen jetzt in die Leitstelle-Rail (Nested-Livewire) um.
             'headerPresets' => FoodbookService::headerPresets(),
             // UX 2026-07-25 (Dominique): Concept-Picker filtert auf die Concepter-DIMENSIONEN

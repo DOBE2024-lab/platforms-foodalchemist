@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Livewire\Settings\FoodDna;
 use Platform\FoodAlchemist\Livewire\Verwaltung\MandantBeenden;
 use Platform\FoodAlchemist\Models\FoodAlchemistMandant;
 use Platform\FoodAlchemist\Services\Plattform\AboAuskunft;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\Plattform\ExportAuskunft;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\Plattform\MandantBeendenService;

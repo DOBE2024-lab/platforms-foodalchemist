@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 
 /** MCP-Steuerbarkeit · D12: einen Listen-Eintrag zu einem Canvas-Feld hinzufügen (Food-DNA-„Welten"). */
 class CanvasEntryAddTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

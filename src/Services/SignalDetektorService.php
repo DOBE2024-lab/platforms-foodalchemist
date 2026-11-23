@@ -317,7 +317,7 @@ class SignalDetektorService
             $recipes = FoodAlchemistRecipe::visibleToTeam($team)->whereIn('id', $affected)->with('standardPresentation')->get();
             $nRecipes = $recipes->count();
             // Spec 85 D-1: VK aus der Standard-Darreichung (Preisleiter), nicht aus recipes.sales_net.
-            $vkJe = $recipes->mapWithKeys(fn ($r) => [(int) $r->id => $r->is_sales_recipe ? app(DarreichungResolver::class)->vkNetto($r) : null]);
+            $vkJe = $recipes->mapWithKeys(fn ($r) => [(int) $r->id => $r->is_sales_recipe ? app(Rezept\DarreichungResolver::class)->vkNetto($r) : null]);
             $gerichte = $recipes->filter(fn ($r) => ($vkJe[(int) $r->id] ?? 0) > 0)->values();
             $nGerichte = $gerichte->count();
 
@@ -953,7 +953,7 @@ class SignalDetektorService
                 'ref_type' => 'recipe',
                 'ref_id' => $r->id,
                 'description' => 'Der Wareneinsatz liegt über dem Ziel. Günstigeren Hauptartikel prüfen, Rezeptur oder Portion anpassen oder Verkaufspreis erhöhen.',
-                'payload' => ['wareneinsatz_pct' => (float) $we, 'ziel_pct' => $ziel, 'sales_net' => app(DarreichungResolver::class)->vkNetto($r), 'outlet_id' => $outlet?->id],
+                'payload' => ['wareneinsatz_pct' => (float) $we, 'ziel_pct' => $ziel, 'sales_net' => app(Rezept\DarreichungResolver::class)->vkNetto($r), 'outlet_id' => $outlet?->id],
             ]
         );
 

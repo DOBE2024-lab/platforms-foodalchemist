@@ -314,7 +314,7 @@ class KaskadeAusgabeVoll
         $map = [];
         $titel = fn ($s) => trim((string) $s->label);
         if ($ownerType === 'format') {
-            $fmt = app(\Platform\FoodAlchemist\Services\FormatService::class);
+            $fmt = app(\Platform\FoodAlchemist\Services\Concepter\FormatService::class);
             foreach ($alle as $s) {
                 if (! $s->istStruktur()) {
                     continue;

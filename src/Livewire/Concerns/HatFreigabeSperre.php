@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 use Illuminate\Support\Facades\Auth;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\Rezept\FreigabeSperre;

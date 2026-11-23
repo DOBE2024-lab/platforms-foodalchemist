@@ -37,11 +37,11 @@ class PlanungsEinstiegService
     public const MODI = ['voll_kreativ', 'hybrid', 'datenbank'];
 
     public function __construct(
-        private ConceptGeneratorService $concepts,
+        private Concepter\ConceptGeneratorService $concepts,
         private PlanningCascadeService $cascade,
         private PlanningSessionService $sessions,
         private TeamSettingsService $settings,
-        private CanvasService $canvas,
+        private Concepter\CanvasService $canvas,
     ) {}
 
     /** @return array{owner: FoodAlchemistFoodbook, session: FoodAlchemistPlanningSession, run: FoodAlchemistCascadeRun} */
@@ -135,7 +135,7 @@ class PlanungsEinstiegService
     public function formatAusBrief(Team $team, string $brief, array $opt): array
     {
         $brief = $this->brief($brief);
-        $formate = app(FormatService::class);
+        $formate = app(Concepter\FormatService::class);
         $format = $this->eigeneHuelle(FoodAlchemistFormat::class, $team, $opt, 'Format', 'Geerbtes Format');
         $neu = $format === null;
         if ($neu) {

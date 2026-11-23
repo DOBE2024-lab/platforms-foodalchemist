@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\ConceptVorgabenService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService;
 use Platform\FoodAlchemist\Services\GerichtHuelleService;
 use Platform\FoodAlchemist\Services\IdeenService;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;

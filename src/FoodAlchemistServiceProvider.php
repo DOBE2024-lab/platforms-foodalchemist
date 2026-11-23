@@ -175,8 +175,8 @@ class FoodAlchemistServiceProvider extends ServiceProvider
             \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock::class, \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::class,
             \Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag::class, \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition::class,
         ] as $inhaltsModel) {
-            $inhaltsModel::saved(fn () => app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->vormerken());
-            $inhaltsModel::deleted(fn () => app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->vormerken());
+            $inhaltsModel::saved(fn () => app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class)->vormerken());
+            $inhaltsModel::deleted(fn () => app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class)->vormerken());
         }
         // Spec 77b · Seiten je Bereich (Route → Bereich), für alle Web-Routen; Nicht-FA-Routen laufen durch.
         $this->app['router']->pushMiddlewareToGroup('web', \Platform\FoodAlchemist\Http\Middleware\FaBereichMiddleware::class);
@@ -358,7 +358,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
             function () {
                 \Platform\FoodAlchemist\Support\StammPaket::flush();
                 \Platform\FoodAlchemist\Support\TeamSperre::flush();
-                app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->vergessen();   // Listen-Merker der Fassungs-Pfad-Prüfung (PR 5)
+                app(\Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::class)->vergessen();   // Listen-Merker der Fassungs-Pfad-Prüfung (PR 5)
             },
         );
         // CQ 3.4: Rückkanäle Rezept → Concepter/Foodbook als synchrone Events (sofort, kein Queue; Reihenfolge und Exceptions wie
@@ -393,7 +393,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         $this->app->terminating(function () {
             \Platform\FoodAlchemist\Support\StammPaket::flush();
             \Platform\FoodAlchemist\Support\TeamSperre::flush();
-            app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->vergessen();
+            app(\Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::class)->vergessen();
         });
 
         /**

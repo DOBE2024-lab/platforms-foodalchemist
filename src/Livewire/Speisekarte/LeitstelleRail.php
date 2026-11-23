@@ -33,7 +33,7 @@ class LeitstelleRail extends Component
             'stand' => $svc->checkliste($this->team(), $this->karteId),
             // Werkstrang M Phase E: Soll/Ist-Coverage gegen das Planungs-Gerüst — nur wenn ein Gerüst
             // existiert (hat_geruest=false → das Blade blendet das Panel aus, kein Frame-Zwang).
-            'coverage' => app(\Platform\FoodAlchemist\Services\CoverageService::class)
+            'coverage' => app(\Platform\FoodAlchemist\Services\Concepter\CoverageService::class)
                 ->coverage($this->team(), 'speisekarte', $this->karteId),
         ]);
     }

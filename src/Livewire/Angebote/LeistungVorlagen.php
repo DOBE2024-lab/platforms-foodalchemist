@@ -8,7 +8,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistLeistungVorlage;
 use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
-use Platform\FoodAlchemist\Services\LeistungVorlageService;
+use Platform\FoodAlchemist\Services\Concepter\LeistungVorlageService;
 
 /**
  * Spec 94 · Angebote → Leistungs-Vorlagen. Personal, Equipment, Logistik und Sonstiges einmal mit Mengenregel, EK und VK

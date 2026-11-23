@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 class PricingCascadeService
 {
     public function __construct(
-        private ConceptService $concepts,
+        private Concepter\ConceptService $concepts,
         private Ausgabe\AngebotService $offers,
     ) {
     }

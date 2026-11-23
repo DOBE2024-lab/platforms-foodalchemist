@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
-use Platform\FoodAlchemist\Services\Concept\KonzeptPreiseNachrechnen;
+use Platform\FoodAlchemist\Services\Concepter\KonzeptPreiseNachrechnen;
 
 /**
  * CQ price_incomplete: Preis-Cache aller Konzepte und Pakete neu rechnen, damit `price_incomplete` gesetzt ist. Standard ist ein

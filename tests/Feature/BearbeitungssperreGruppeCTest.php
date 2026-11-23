@@ -7,8 +7,8 @@ use Platform\FoodAlchemist\Livewire\Formate\DetailPanel as FormateDetail;
 use Platform\FoodAlchemist\Livewire\Formate\Editor as FormateEditor;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptPaketService;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptPaketService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /** Concepter-Paket mit Gericht-Positionen lesen. */
 class PaketeGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
@@ -41,7 +41,7 @@ class PaketeGetTool extends FoodAlchemistTool implements ToolContract, ToolMetad
         if ($paket instanceof ToolResult) {
             return $paket;
         }
-        $paket = app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->anwenden($paket, $team);
+        $paket = app(\Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::class)->anwenden($paket, $team);
 
         return ToolResult::success(['paket' => app(ConceptPaketService::class)->payload($paket, true)]);
     }

@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
-use Platform\FoodAlchemist\Services\ConceptVorgabenService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService;
 
 /**
  * Concepter-Editor, Reiter Aufbau: Gericht-Vorgabe an einer leeren Position (Dominique 13.11.2026).

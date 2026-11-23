@@ -3,9 +3,9 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Foodbooks\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -62,7 +62,7 @@ it('Präsentation: Hinweistexte der Edition („serviert im Schraubglas“) komm
 
     expect($text)->not->toBeNull()->and($text['label'])->toBe('serviert im Schraubglas');
     // Editor-Ansicht des Formats bleibt ohne Texte (nur die Präsentation fragt sie an).
-    expect(collect(app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->editionen($this->format->fresh())[0]['gerichte'] ?? [])->pluck('type')->all())->not->toContain('text');
+    expect(collect(app(\Platform\FoodAlchemist\Services\Concepter\FormatKapitelService::class)->editionen($this->format->fresh())[0]['gerichte'] ?? [])->pluck('type')->all())->not->toContain('text');
 });
 
 it('Interne Vorschau mit EK: die Edition im Format-Kapitel trägt ihren EK pro Person, der Kundenlink nicht (Fix 2026-11-20)', function () {
@@ -75,7 +75,7 @@ it('Interne Vorschau mit EK: die Edition im Format-Kapitel trägt ihren EK pro P
     expect($intern['ek'] ?? null)->toBe(['pp' => 8.4])
         ->and($kunde)->not->toHaveKey('ek');
     // Editionen ohne intern-Flag tragen gar kein EK-Feld (Dokument/PDF für Kunden).
-    expect(app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->editionen($this->format->fresh())[0])->not->toHaveKey('ek_pp');
+    expect(app(\Platform\FoodAlchemist\Services\Concepter\FormatKapitelService::class)->editionen($this->format->fresh())[0])->not->toHaveKey('ek_pp');
 });
 
 it('Interne Vorschau mit EK: eingebettetes Paket zeigt seinen EK je Person, der Kundenlink nicht (2026-11-20)', function () {

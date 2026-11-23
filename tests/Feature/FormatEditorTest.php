@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Livewire\Formate\Editor;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -91,6 +91,6 @@ it('Format C1: eine Gericht-Zeile format-lokal überschreiben (Concept unangetas
         ->and($cslot->fresh()->wording)->not->toBe('Rinderfilet Rossini (Format)');
 
     // WordingResolver wendet den Override mit dem Format-Slot als Kontext an (Vorschau + Druck).
-    $zeilen = app(\Platform\FoodAlchemist\Services\WordingResolver::class)->gerichtZeilen($concept->fresh(), $fslot->fresh());
+    $zeilen = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class)->gerichtZeilen($concept->fresh(), $fslot->fresh());
     expect(collect($zeilen)->firstWhere('type', 'gericht')['text'])->toBe('Rinderfilet Rossini (Format)');
 });

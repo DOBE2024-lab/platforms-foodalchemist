@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /**
  * Concepter-Editor: Positionen anlegen und füllen (aus Concepter/Editor ausgelagert, Spec 85 Größen-Wächter).

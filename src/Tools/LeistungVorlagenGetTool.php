@@ -39,7 +39,7 @@ class LeistungVorlagenGetTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $svc = app(\Platform\FoodAlchemist\Services\LeistungVorlageService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Concepter\LeistungVorlageService::class);
         if (! empty($a['id'])) {
             $v = $svc->finde($team, (int) $a['id']);
 

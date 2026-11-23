@@ -35,7 +35,7 @@ it('MCP paket_gerichte.SET: presentation_id setzen, weglassen erhält, Payload l
     // Seit 2026-11-12 arbeitet paket_gerichte.SET auf Concepter-Paketen (kind=paket-Concepts).
     $ctx = new ToolContext($this->user, $this->rootTeam);
     $tool = app(PaketGerichteSetTool::class);
-    $paket = app(\Platform\FoodAlchemist\Services\ConceptPaketService::class)->create($this->rootTeam, ['name' => 'Beilagen-Duo']);
+    $paket = app(\Platform\FoodAlchemist\Services\Concepter\ConceptPaketService::class)->create($this->rootTeam, ['name' => 'Beilagen-Duo']);
     $tool->execute(['paket_id' => $paket->id, 'items' => [['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]]], $ctx);
 
     $r = $tool->execute(['paket_id' => $paket->id, 'items' => [['sales_recipe_id' => $this->gericht->id, 'presentation_id' => $this->kinder->id]]], $ctx);

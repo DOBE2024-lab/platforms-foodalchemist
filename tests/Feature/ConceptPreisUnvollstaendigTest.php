@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\Concept\KonzeptPreiseNachrechnen;
-use Platform\FoodAlchemist\Services\ConceptPreisService;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\KonzeptPreiseNachrechnen;
+use Platform\FoodAlchemist\Services\Concepter\ConceptPreisService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Platform\FoodAlchemist\Tools\ConceptsListTool;

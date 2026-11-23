@@ -7,7 +7,7 @@ uses(TestCase::class, \Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy::
 /**
  * Spec 85 D-1 · Wächter: die VK-Altspalten am Rezept (`sales_net`, `sales_gross`, `vat_rate`, `markup_class_id`,
  * `markup_class_legacy_id`) sind seit PR-C gedroppt. Preis, MwSt-Profil und Aufschlagsklasse stehen an der
- * Standard-Darreichung: Preisleiter ({@see \Platform\FoodAlchemist\Services\DarreichungResolver::vkNetto()},
+ * Standard-Darreichung: Preisleiter ({@see \Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::vkNetto()},
  * `klasseFuer()`), Accessoren `$rezept->vk_netto` / `$rezept->vk_klasse`, Scope `mitStandardVk()`.
  *
  * Heuristik über `src/` und `resources/views/`: Rezept-Variablen (`$r`, `$recipe`, `$dish`, `->dish`, `$k`, …) mit

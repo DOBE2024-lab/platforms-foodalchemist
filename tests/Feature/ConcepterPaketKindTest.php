@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Livewire\Concepter\Browser;
 use Platform\FoodAlchemist\Livewire\Concepter\DetailPanel;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -130,7 +130,7 @@ it('Picker (gerichtKandidaten) zeigt Entwurf- und review-Gerichte (1.1f: Entwür
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'rd', 'name' => 'Review-Gericht',
         'status' => 'review', 'is_sales_recipe' => true, 'sales_net' => 3.00,
     ]);
-    $namen = app(\Platform\FoodAlchemist\Services\AufbauKandidatenService::class)
+    $namen = app(\Platform\FoodAlchemist\Services\Concepter\AufbauKandidatenService::class)
         ->gerichtKandidaten($this->rootTeam, '')->pluck('name')->all();
     expect($namen)->toContain('Review-Gericht')
         ->and($namen)->toContain('Entwurf-Gericht');

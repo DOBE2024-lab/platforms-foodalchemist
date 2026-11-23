@@ -2,8 +2,8 @@
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistCanvasTemplate;
-use Platform\FoodAlchemist\Services\CanvasService;
-use Platform\FoodAlchemist\Services\DnaResolver;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\DnaResolver;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

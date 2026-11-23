@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SimulationService;
+use Platform\FoodAlchemist\Services\Concepter\SimulationService;
 
 /**
  * R2.2 — Was-wäre-wenn-Preissimulation. Hypothetisches Szenario (Warengruppe |

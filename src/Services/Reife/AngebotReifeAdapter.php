@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
  * Seit C-7 misst der Adapter zusätzlich, ob ein vorhandenes Planungs-Gerüst überhaupt in
  * Kapitel übersetzt wurde ({@see \Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::strukturAusGeruest()}).
  * Das ist NICHT die Coverage: gemessen wird, ob die geplanten Slots als Kapitel existieren,
- * nicht ob sie inhaltlich belegt sind. Den Soll-Ist-Abgleich kann {@see \Platform\FoodAlchemist\Services\CoverageService}
+ * nicht ob sie inhaltlich belegt sind. Den Soll-Ist-Abgleich kann {@see \Platform\FoodAlchemist\Services\Concepter\CoverageService}
  * für `offer` weiterhin nicht — er kennt den Owner-Typ nicht. Ebenso hat die
  * Datenqualitäts-Ampel keine Angebots-Metriken → beides bleibt `nicht_messbar`.
  */

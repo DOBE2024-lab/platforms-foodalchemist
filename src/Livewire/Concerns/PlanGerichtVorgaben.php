@@ -4,8 +4,8 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\ConceptVorgabenService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService;
 
 /**
  * Leitstelle, Plan-Panel „Menü-Aufbau": Gericht-Vorgaben je Position (Dominique 13.11.2026).

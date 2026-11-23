@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ConceptVariantService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptVariantService;
 
 /**
  * R4.4: Konzept-lokale Slot-Variante — Tausch im Concepter mutiert NIE das global

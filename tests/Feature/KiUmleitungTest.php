@@ -58,7 +58,7 @@ beforeEach(function () {
     $stil = \Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle::create(['team_id' => $this->rootTeam->id, 'slug' => 'um-stil', 'name' => 'Verspielt', 'sprach_duktus' => 'locker.']);
     $gericht = \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'um-g1', 'name' => 'Rinderfilet', 'status' => 'approved',
         'is_sales_recipe' => true]);
-    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $menue = $concepts->create($this->rootTeam, ['name' => 'Wording-Menü', 'status' => 'active']);
     $slot = $concepts->addSlot($this->rootTeam, $menue->id, ['role' => 'Hauptgang']);
     $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $gericht->id]);

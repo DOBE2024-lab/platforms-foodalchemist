@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptOneShotService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptOneShotService;
 
 /**
  * Spec 50 · C-4 / E-1 — Anreicherung für ein BESTEHENDES Konzept, das Gegenstück zu

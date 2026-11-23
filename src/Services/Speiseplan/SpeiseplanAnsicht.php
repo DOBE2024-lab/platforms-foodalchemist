@@ -10,9 +10,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
 use Platform\FoodAlchemist\Services\Preis\CatalogPricingService;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\ConcepterAggregateService;
-use Platform\FoodAlchemist\Services\DarreichungResolver;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungResolver;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\GpNamingService;
 use Platform\FoodAlchemist\Services\Preis\MargeService;
@@ -96,7 +96,7 @@ final class SpeiseplanAnsicht
         if ($e->concept_id !== null && $e->concept) {
             $c = $this->concepts->preisCockpit($e->concept, $outlet);
 
-            return ['vk' => (float) $c['price_per_person'], 'ek' => (float) $c['ek_per_person'], 'vorlaeufig' => \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($c)];
+            return ['vk' => (float) $c['price_per_person'], 'ek' => (float) $c['ek_per_person'], 'vorlaeufig' => \Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::unvollstaendig($c)];
         }
         if ($e->sales_recipe_id !== null && $e->dish) {
             $dar = $this->eintragDarreichung($e);

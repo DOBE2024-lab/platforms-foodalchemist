@@ -873,7 +873,7 @@ class AboKuendigungService
         }
         $konzepte = FoodAlchemistConcept::mitFassungen()->whereIn('id', array_values($map['concept'] ?? []))->get()->sortBy(fn ($c) => $c->kind === 'paket' ? 0 : 1);
         foreach ($konzepte as $c) {
-            app(\Platform\FoodAlchemist\Services\ConceptService::class)->recomputeCache($c);
+            app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->recomputeCache($c);
         }
     }
 

@@ -1761,7 +1761,7 @@ it('CoverageService kennt die Speisekarte (istSpeisekarte, kein Fehl-Read als Co
     $frame = $frameSvc->frameFor($this->rootTeam, 'speisekarte', (int) $karte->id);
     $frameSvc->addSlot($this->rootTeam, $frame, ['label' => 'Hauptgang', 'slot_type' => 'station', 'target_count' => 3]);
 
-    $cov = app(\Platform\FoodAlchemist\Services\CoverageService::class)->coverage($this->rootTeam, 'speisekarte', (int) $karte->id);
+    $cov = app(\Platform\FoodAlchemist\Services\Concepter\CoverageService::class)->coverage($this->rootTeam, 'speisekarte', (int) $karte->id);
 
     expect($cov['hat_geruest'])->toBeTrue()
         ->and($cov)->toHaveKey('befunde');

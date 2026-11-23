@@ -134,7 +134,7 @@ class FoodAlchemistRecipe extends Model
 
     /**
      * Spec 85 D-1: VK netto für Anzeigen (`$rezept->vk_netto`). Kommt die Spalte aus {@see scopeMitStandardVk()},
-     * gilt sie; sonst liest die Preisleiter die Standard-Darreichung ({@see \Platform\FoodAlchemist\Services\DarreichungResolver::vkNetto()}).
+     * gilt sie; sonst liest die Preisleiter die Standard-Darreichung ({@see \Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::vkNetto()}).
      * Für Listen `standardPresentation` vorher eager laden, sonst eine Query je Gericht.
      */
     public function getVkNettoAttribute($value): ?float
@@ -143,19 +143,19 @@ class FoodAlchemistRecipe extends Model
             return $value !== null ? (float) $value : null;
         }
 
-        return app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->vkNetto($this);
+        return app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($this);
     }
 
-    /** Spec 85: EK EINER Portion für Anzeigen (`$rezept->ek_pro_portion`) — {@see \Platform\FoodAlchemist\Services\DarreichungResolver::ekProPortion()}. */
+    /** Spec 85: EK EINER Portion für Anzeigen (`$rezept->ek_pro_portion`) — {@see \Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::ekProPortion()}. */
     public function getEkProPortionAttribute(): ?float
     {
-        return app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->ekProPortion($this);
+        return app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->ekProPortion($this);
     }
 
     /** Spec 85 D-1 PR-B: Aufschlagsklasse für Anzeigen (`$rezept->vk_klasse`) — die der Standard-Darreichung. */
     public function getVkKlasseAttribute(): ?FoodAlchemistMarkupClass
     {
-        return app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->klasseFuer($this);
+        return app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->klasseFuer($this);
     }
 
     /** Basisrezepte, die diese Teller-Rolle tragen können (Dominique 11.10.). */

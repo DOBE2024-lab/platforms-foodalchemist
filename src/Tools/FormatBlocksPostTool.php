@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 
 /** MCP-Steuerbarkeit · D6: Struktur-Block (header/text/spacer) in ein Format einfügen. */
 class FormatBlocksPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

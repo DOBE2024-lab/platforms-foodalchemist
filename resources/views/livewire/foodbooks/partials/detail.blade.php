@@ -8,7 +8,7 @@
     $fortLabel = ['offen' => 'Offen', 'in_arbeit' => 'In Arbeit', 'fertig' => 'Fertig'];
     $fortTon = ['offen' => 'neutral', 'in_arbeit' => 'warn', 'fertig' => 'ok'];
     $logoUrl = $fb->logo_path ? app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($fb->logo_context_file_id, $fb->logo_path) : null;
-    $phasen = \Platform\FoodAlchemist\Services\PhaseService::LABELS;
+    $phasen = \Platform\FoodAlchemist\Services\Concepter\PhaseService::LABELS;
     $statusTon = ['success' => 'ok', 'warning' => 'warn', 'danger' => 'crit', 'info' => 'info', 'primary' => 'accent'][$fb->statusWert()->badgeVariant()] ?? 'neutral';
     $zeile = 'flex items-center justify-between gap-3 py-2 border-b border-[var(--fa-line)] last:border-b-0';
     $dt = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]';

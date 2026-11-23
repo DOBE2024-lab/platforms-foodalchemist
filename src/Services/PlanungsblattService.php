@@ -47,7 +47,7 @@ class PlanungsblattService
     public function __construct(
         private RecipeRecomputeService $recompute,
         private Einkauf\LeadLaService $leadLa,
-        private DarreichungResolver $darreichungen,
+        private Rezept\DarreichungResolver $darreichungen,
         private Einkauf\GebindeRechner $gebinde,
         private Produktion\ProductionTimeService $productionTimes,
         private Produktion\BehaelterBedarfService $behaelter,
@@ -250,7 +250,7 @@ class PlanungsblattService
 
         // Basisrezept-Position: Menge = GRAMM/Person → Batches = Gesamt-Gramm ÷ Basis-Yield.
         if (! (bool) ($gericht->is_sales_recipe ?? true)
-            && ! ConcepterAggregateService::stueckModus($unit, $gericht)) {
+            && ! Concepter\ConcepterAggregateService::stueckModus($unit, $gericht)) {
             $basisG = (float) ($gericht->yield_kg ?? 0) * 1000;
             if ($q === null || $q <= 0 || $basisG <= 0) {
                 $warnungen[] = "Position „{$gericht->name}“: Menge/Basis-Yield fehlt — nicht skalierbar.";
@@ -263,13 +263,13 @@ class PlanungsblattService
 
         // VK-Gericht (oder Stück-Modus): Portions-Äquivalent × Personen → Portionen → Batches.
         $darPortionG = $dar?->quantity_per_unit_g !== null ? (float) $dar->quantity_per_unit_g : null;
-        $pae = ConcepterAggregateService::portionsAequivalent($q, $unit, $gericht, $darPortionG);
+        $pae = Concepter\ConcepterAggregateService::portionsAequivalent($q, $unit, $gericht, $darPortionG);
         if ($pae === null) {
             $warnungen[] = "Position „{$gericht->name}“: Gramm-Menge ohne Portionsgewicht — nicht skalierbar.";
 
             return null;
         }
-        $stueck = ConcepterAggregateService::stueckModus($unit, $gericht);
+        $stueck = Concepter\ConcepterAggregateService::stueckModus($unit, $gericht);
         $rezept = $this->ladeRezept((int) $gericht->id);
         if (! $stueck && $rezept !== null && (bool) $rezept->is_sales_recipe) {
             // Portionen dieser Position → Menge aus der geltenden Darreichung (gewählt, sonst Standard).
@@ -520,7 +520,7 @@ class PlanungsblattService
     {
         $q = $block->quantity !== null ? (float) $block->quantity : null;
         $darG = $this->darreichungen->fuerBlock($block)?->quantity_per_unit_g;
-        $pae = ConcepterAggregateService::portionsAequivalent($q, $block->unit, $dish, $darG !== null ? (float) $darG : null);
+        $pae = Concepter\ConcepterAggregateService::portionsAequivalent($q, $block->unit, $dish, $darG !== null ? (float) $darG : null);
         if ($pae === null) {
             $warnungen[] = "Kapitel-Gericht „{$dish->name}“: Gramm-Menge ohne Portionsgewicht — 1 Portion/Person angenommen.";
             $pae = 1.0;

@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class);

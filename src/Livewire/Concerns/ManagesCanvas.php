@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistCanvas;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 
 /**
  * Wiederverwendbarer Canvas-Board-State für Livewire-Komponenten (Food-DNA-Seite,
@@ -238,7 +238,7 @@ trait ManagesCanvas
         $team = $this->canvasTeam();
         $namen = [];
         $out = [];
-        foreach (app(\Platform\FoodAlchemist\Services\DnaResolver::class)->foodDna($team) as $key => $z) {
+        foreach (app(\Platform\FoodAlchemist\Services\Concepter\DnaResolver::class)->foodDna($team) as $key => $z) {
             $quelle = $z['quelle_team_id'];
             if ($quelle !== null && ! isset($namen[$quelle])) {
                 $namen[$quelle] = (string) (Team::find($quelle)?->name ?? 'Oberteam');

@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Settings;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistCanvasTemplate;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 
 /**
  * Spec 82 §7 (Schritt 6) · Pflegeseite der DNA-ZUSATZFELDER: das Oberteam ergänzt je Canvas-Typ eigene Felder

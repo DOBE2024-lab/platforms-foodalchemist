@@ -43,7 +43,7 @@ class DataQualityService
      */
     public function __construct(
         private SignalService $signals,
-        private CoverageService $coverage,
+        private Concepter\CoverageService $coverage,
         private Pairing\PairingService $pairing,
         private Preis\PriceService $preise,
     ) {
@@ -933,7 +933,7 @@ class DataQualityService
         return fn ($q) => $q->select(DB::raw(1))->from('foodalchemist_concept_slots as cs')
             ->whereColumn('cs.concept_id', 'foodalchemist_concepts.id')
             ->whereNull('cs.deleted_at')
-            ->whereNotIn('cs.type', ConceptService::STRUKTUR_TYPEN)
+            ->whereNotIn('cs.type', Concepter\ConceptService::STRUKTUR_TYPEN)
             ->where('cs.is_pflicht', true)
             ->whereNull('cs.package_id')
             ->whereNull('cs.sales_recipe_id');
@@ -945,7 +945,7 @@ class DataQualityService
         return fn ($q) => $q->select(DB::raw(1))->from('foodalchemist_concept_slots as cs')
             ->whereColumn('cs.concept_id', 'foodalchemist_concepts.id')
             ->whereNull('cs.deleted_at')
-            ->whereNotIn('cs.type', ConceptService::STRUKTUR_TYPEN)
+            ->whereNotIn('cs.type', Concepter\ConceptService::STRUKTUR_TYPEN)
             ->where(fn ($w) => $w->whereNotNull('cs.package_id')->orWhereNotNull('cs.sales_recipe_id'));
     }
 

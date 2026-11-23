@@ -5,7 +5,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Concepter\Editor;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrame;
-use Platform\FoodAlchemist\Services\ConceptGeneratorService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService;
 use Platform\FoodAlchemist\Services\PlanningFrameService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -190,7 +190,7 @@ it('Gerichte gebuchter Pakete zählen zur Kohäsions-Basis', function () {
     $imPaket = ($this->gericht)('Lachs-Tartar', $this->hgVor, 14.00);
     $this->makeIngredient($imPaket, 'Lachs', $lachs);
     // 98 · 2.6c: Paket = kind=paket-Concept, eingebettet über embedded_concept_id
-    $cs = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $cs = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $paket = $cs->createPaket($this->rootTeam, ['name' => 'Fisch-Station']);
     $cs->fillSlot($this->rootTeam, $cs->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeisen'])->id, ['sales_recipe_id' => $imPaket->id]);
     $this->makeConceptSlot($this->konzept, ['role' => 'Vorspeisen', 'type' => 'paket', 'embedded_concept_id' => $paket->id, 'position' => 1]);

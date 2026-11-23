@@ -103,10 +103,10 @@ it('schreibzugriff: erkennt Model-Static, Ketten, Variablen, Parameter, Relation
 it('schreibzugriff: erkennt Models aus typisierten Service-Rückgaben, der Service-Aufruf selbst zählt nicht', function () use ($code) {
     $quelle = $code(<<<'PHP'
         public function a($team) {
-            $svc = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+            $svc = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
             $c = $svc->create($team, []);                                  // Service: zählt nicht
             $c->update(['occasion' => 'x']);                               // 1 Model aus Service-Rückgabe
-            $canvas = app(\Platform\FoodAlchemist\Services\CanvasService::class)->canvasFor($team, 't', 'o', null);
+            $canvas = app(\Platform\FoodAlchemist\Services\Concepter\CanvasService::class)->canvasFor($team, 't', 'o', null);
             $canvas->entries()->where('a', 1)->update(['b' => 1]);         // 2 Relation am Rückgabe-Model
         }
     PHP);
@@ -192,13 +192,13 @@ it('Geld-Helfer: keine neuen Handrechnungen für Wareneinsatz, EK je Portion und
             'resources/views/presentation/blocks/chapter_loop.blade.php' => [1, 'VK per Wahrheitswert geprüft (negativer VK zeigte eine Quote) — nicht still vereinheitlicht'],
         ],
         'ek_je_portion' => [
-            'src/Services/DarreichungResolver.php' => [1, 'der Helfer selbst'],
+            'src/Services/Rezept/DarreichungResolver.php' => [1, 'der Helfer selbst'],
             'src/Services/Trend/BenchmarkService.php' => [1, 'SQL-Zeile ohne Model, ek_portion kommt schon aus der Abfrage'],
             'src/Services/MoneyTruthReportService.php' => [1, 'Diagnose vergleicht bewusst Ansatz ÷ Portionen mit der Darreichung'],
             'src/Services/Speiseplan/SpeiseplanAnsicht.php' => [1, 'Darreichung des Eintrags statt Standard, Rückfall 0 statt null (98 · 3.3 S3-2: mit inhaltPreis aus SpeiseplanService verschoben)'],
-            'src/Services/Concept/CockpitZeilen.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
-            'src/Services/ConceptPreisService.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
-            'src/Services/ConcepterAggregateService.php' => [1, 'Paket-EK mit PAE-Faktor, Rückfall 0'],
+            'src/Services/Concepter/CockpitZeilen.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
+            'src/Services/Concepter/ConceptPreisService.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
+            'src/Services/Concepter/ConcepterAggregateService.php' => [1, 'Paket-EK mit PAE-Faktor, Rückfall 0'],
         ],
         'kg_in_g' => [],
     ];

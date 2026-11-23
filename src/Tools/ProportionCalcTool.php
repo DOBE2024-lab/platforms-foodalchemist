@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ProportionService;
+use Platform\FoodAlchemist\Services\Concepter\ProportionService;
 
 /**
  * #513 Tier 1 / Punkt 1 — Grammaturen-Rechner als MCP-Tool (read-only, deterministisch).

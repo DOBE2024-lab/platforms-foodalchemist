@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 
 /** MCP-Steuerbarkeit · D6: eine Format-Position hinter eine andere ziehen (Drag/Einfüge-Ziel). */
 class FormatSlotsMoveTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

@@ -3,6 +3,7 @@
 namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
+use Platform\FoodAlchemist\Console\Concerns\SchreibtLaufDatei;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Services\PaketUmzug\PaketParitaet;
@@ -17,6 +18,8 @@ use Platform\FoodAlchemist\Services\PaketUmzug\PaketUmzugService;
  */
 class PaketeToConceptsCommand extends Command
 {
+    use SchreibtLaufDatei;
+
     protected $signature = 'foodalchemist:pakete-to-concepts
         {--apply : schreiben (ohne Flag nur Trockenlauf)}
         {--id=* : nur diese Alt-Paket-Ids (z. B. --id=1 --id=2); ohne = alle}
@@ -52,14 +55,17 @@ class PaketeToConceptsCommand extends Command
                 return self::FAILURE;
             }
             $pfad = storage_path('app/foodalchemist/paket-umzug/journal-'.now()->format('Ymd-His').'.json');
-            @mkdir(dirname($pfad), 0775, true);
-            file_put_contents($pfad, json_encode($r['journal'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            if (! $this->schreibeLaufDatei($pfad, $r['journal'])) {
+                return self::FAILURE;   // geschrieben ist schon — ohne Journal kein Rückweg, also laut scheitern
+            }
             $this->info('Journal: '.$pfad.' (Rückweg: --rueckweg='.$pfad.')');
         }
 
         $report = $this->bericht($umzug, $paritaet, $ids);
         if (($json = $this->option('json')) !== null) {
-            file_put_contents($json, json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            if (! $this->schreibeLaufDatei($json, $report)) {
+                return self::FAILURE;
+            }
             $this->info("JSON: {$json}");
         }
 

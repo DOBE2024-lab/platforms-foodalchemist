@@ -159,3 +159,15 @@ it('Befehl: Trockenlauf zeigt veraltete Kopie und Parität, --apply legt Journal
     expect(umzugConcept($this->alt)->trashed())->toBeTrue();
     @unlink($journal);
 });
+
+it('--json legt ein fehlendes Zielverzeichnis an (Befund io 23.11.: vorher Exit 1)', function () {
+    $ordner = storage_path('app/foodalchemist/test-'.Str::random(8).'/tief');
+    $datei = $ordner.'/umzug.json';
+
+    $this->artisan('foodalchemist:pakete-to-concepts', ['--id' => [$this->alt->id], '--json' => $datei])->assertExitCode(0);
+
+    expect(json_decode((string) file_get_contents($datei), true))->toBeArray()->toHaveCount(1);
+    @unlink($datei);
+    @rmdir($ordner);
+    @rmdir(dirname($ordner));
+});

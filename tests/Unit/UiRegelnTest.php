@@ -65,6 +65,7 @@ const UI_UMZUEGE = [
     'src/Support/Produktion/WallStil.php' => 'livewire/produktion/tagesplan.blade.php',                // 98 · 3.3 S6
     'livewire/planung/trendradar.blade.php' => 'livewire/planung/index.blade.php',                     // 98 · 3.3 S2-E1 (Spec 85 C1 PR-2)
     'livewire/planung/kaskaden-lauf.blade.php' => 'livewire/planung/index.blade.php',                  // 98 · 3.3 S2-E2 (Spec 85 C1 PR-3)
+    'livewire/planung/brief.blade.php' => 'livewire/planung/index.blade.php',                          // 98 · 3.3 S2-E3 (Spec 85 C1 PR-4)
 ];
 
 it('Umzüge: verschobene Treffer zählen bei der Quelle, ein Anstieg in der Summe bleibt rot (Selbsttest)', function () {

@@ -2,6 +2,7 @@
 
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Stt\SttServiceContract;
@@ -45,7 +46,7 @@ beforeEach(function () {
 it('füllt die Leitplanken DIESES Tabs — und lässt die anderen Tabs unberührt', function () {
     ($this->stub)(['leitplanken' => ['occasion' => 'dinner', 'serviceform' => 'tellerservice', 'level' => 'gehoben']]);
 
-    $c = Livewire::test(Index::class)
+    $c = Livewire::test(Brief::class)
         ->set('eingabe.gericht.brief', 'Abendessen für 40 Gäste, gehoben, am Platz serviert')
         ->call('leitplankenAusBriefing', 'gericht');
 
@@ -65,7 +66,7 @@ it('Formtreue: ein Multi-Regler bleibt Array, auch wenn die KI einen String lief
     // `diaet_hart` ist ein MULTI_REGLER — ein String darin würde reglerPill() zerlegen.
     ($this->stub)(['leitplanken' => ['diaet_hart' => 'vegan']]);
 
-    $c = Livewire::test(Index::class)
+    $c = Livewire::test(Brief::class)
         ->set('eingabe.gericht.brief', 'rein pflanzlich')
         ->call('leitplankenAusBriefing', 'gericht');
 
@@ -79,7 +80,7 @@ it('meldet erfundene Werte als verworfen und fremde Felder als »nicht auf diese
         'menue_quote_vegan_pct' => 30,                               // gültiger Sitzungs-Param, kein Regler
     ]]);
 
-    $c = Livewire::test(Index::class)
+    $c = Livewire::test(Brief::class)
         ->set('eingabe.gericht.brief', 'Gala-Buffet, 30 % vegan')
         ->call('leitplankenAusBriefing', 'gericht');
 
@@ -96,7 +97,7 @@ it('Basisrezept-Tab: Pax × Portion wird zur Charge, scope-fremde Felder gemelde
         'serviceform' => 'tellerservice', 'bestand' => 'nur_bestand',
     ]]);
 
-    $c = Livewire::test(Index::class)
+    $c = Livewire::test(Brief::class)
         ->set('eingabe.rezept.brief', 'Petersilienpüree, 100 pax à 80 g, haute cuisine, nur Bestand')
         ->call('leitplankenAusBriefing', 'rezept');
 
@@ -114,7 +115,7 @@ it('Basisrezept-Tab: Pax × Portion wird zur Charge, scope-fremde Felder gemelde
 it('Gericht-Tab: »nur Bestand« aus dem Briefing landet im Kreativ-Modus (sichtbar), nicht im verdeckten Regler', function () {
     ($this->stub)(['leitplanken' => ['bestand' => 'nur_bestand', 'ziel_menge' => 3, 'ziel_einheit' => 'kg']]);
 
-    $c = Livewire::test(Index::class)
+    $c = Livewire::test(Brief::class)
         ->set('eingabe.gericht.brief', 'nur aus dem Bestand')
         ->call('leitplankenAusBriefing', 'gericht');
 
@@ -141,7 +142,7 @@ it('der Leitplanken-Prompt erfährt, was im Tab entsteht', function () {
         }
     });
 
-    Livewire::test(Index::class)->set('eingabe.rezept.brief', 'Sauce')->call('leitplankenAusBriefing', 'rezept');
+    Livewire::test(Brief::class)->set('eingabe.rezept.brief', 'Sauce')->call('leitplankenAusBriefing', 'rezept');
 
     expect(implode("\n", $gesehen->getArrayCopy()))->toContain('BASISREZEPT')->toContain('ziel_menge');
 });
@@ -149,7 +150,7 @@ it('der Leitplanken-Prompt erfährt, was im Tab entsteht', function () {
 it('offene Punkte werden zur Rückfrage, nicht zur Annahme', function () {
     ($this->stub)(['leitplanken' => ['occasion' => 'lunch'], 'unklar' => ['Wie viele Gäste?', 'Budget pro Person?']]);
 
-    $c = Livewire::test(Index::class)
+    $c = Livewire::test(Brief::class)
         ->set('eingabe.gericht.brief', 'Mittagessen im Sommer')
         ->call('leitplankenAusBriefing', 'gericht');
 
@@ -163,7 +164,7 @@ it('offene Punkte werden zur Rückfrage, nicht zur Annahme', function () {
 it('ohne Briefing kein Call — Fehler statt leerem KI-Aufruf', function () {
     ($this->stub)(['leitplanken' => ['occasion' => 'dinner']]);
 
-    $c = Livewire::test(Index::class)
+    $c = Livewire::test(Brief::class)
         ->set('eingabe.gericht.brief', '   ')
         ->call('leitplankenAusBriefing', 'gericht');
 
@@ -177,14 +178,18 @@ it('Diktat hängt an und überschreibt ein bestehendes Briefing NIE', function (
     expect(app(SttServiceContract::class)->transcribe('BLOB'))->toBe('und bitte glutenfrei');
 
     // Echter Upload-Pfad: `set` löst den updated-Hook aus, der Hook delegiert.
+    // Spec 85 C1 PR-4: das Diktat bleibt bis E4 im Parent und schickt den Text an Planung\Brief, das anhängt.
     $c = Livewire::test(Index::class)
-        ->set('eingabe.rezept.brief', 'Tomatensauce, klassisch')
         ->set('diktatZiel', 'eingabe.rezept.brief')
-        ->set('briefAudio', UploadedFile::fake()->create('diktat.webm', 1, 'audio/webm'));
+        ->set('briefAudio', UploadedFile::fake()->create('diktat.webm', 1, 'audio/webm'))
+        ->assertDispatched('planung.brief-uebernehmen', scope: 'rezept', werte: ['brief_anhaengen' => 'und bitte glutenfrei']);
+    expect($c->get('briefAudio'))->toBeNull();                    // Blob nach der Übernahme freigegeben
 
     // Angehängt, nicht ersetzt — ein überschriebenes Briefing wäre nicht wiederherstellbar.
-    expect($c->get('eingabe.rezept.brief'))->toBe('Tomatensauce, klassisch und bitte glutenfrei')
-        ->and($c->get('briefAudio'))->toBeNull();                    // Blob nach der Übernahme freigegeben
+    $brief = Livewire::test(Brief::class)
+        ->set('eingabe.rezept.brief', 'Tomatensauce, klassisch')
+        ->dispatch('planung.brief-uebernehmen', scope: 'rezept', werte: ['brief_anhaengen' => 'und bitte glutenfrei']);
+    expect($brief->get('eingabe.rezept.brief'))->toBe('Tomatensauce, klassisch und bitte glutenfrei');
 
     // Kurskorrektur „pro Tab genau EINE Diktierfunktion" (2026-09-19): dieser Knopf/Recorder
     // ist aus den drei Creation-Scope-Tabs entfernt (siehe erstellen-tab.blade.php), darum
@@ -201,23 +206,33 @@ it('Diktat hängt an und überschreibt ein bestehendes Briefing NIE', function (
  * Planung\Index, die es genau wie briefDiktatUebernehmen() anhängt statt zu überschreiben.
  */
 it('Nachtrag: agentDiktatUebernehmen() hängt das Panel-Transkript an — nie überschreiben, nur eigener Scope', function () {
-    $c = Livewire::test(Index::class)
+    // Spec 85 C1 PR-4: der Parent reicht das Transkript an Planung\Brief weiter, das Kind hängt an.
+    Livewire::test(Index::class)
+        ->dispatch('voice.diktat-transkribiert', scope: 'gericht', text: 'mit Kräuterkruste')
+        ->assertDispatched('planung.brief-uebernehmen', scope: 'gericht', werte: ['brief_anhaengen' => 'mit Kräuterkruste']);
+    $c = Livewire::test(Brief::class)
         ->set('eingabe.gericht.brief', 'Filet vom Kalb')
-        ->dispatch('voice.diktat-transkribiert', scope: 'gericht', text: 'mit Kräuterkruste');
+        ->dispatch('planung.brief-uebernehmen', scope: 'gericht', werte: ['brief_anhaengen' => 'mit Kräuterkruste']);
 
     expect($c->get('eingabe.gericht.brief'))->toBe('Filet vom Kalb mit Kräuterkruste');
 
-    // Whitelist: ein unbekannter/fremder Scope-Name schreibt nichts.
-    $c2 = Livewire::test(Index::class)
+    // Whitelist: ein unbekannter/fremder Scope-Name schreibt nichts (weder Parent-Weitergabe noch Kind).
+    Livewire::test(Index::class)
+        ->dispatch('voice.diktat-transkribiert', scope: 'unbekannt', text: 'sollte nirgends landen')
+        ->assertNotDispatched('planung.brief-uebernehmen');
+    $c2 = Livewire::test(Brief::class)
         ->set('eingabe.rezept.brief', 'Unberührt')
-        ->dispatch('voice.diktat-transkribiert', scope: 'unbekannt', text: 'sollte nirgends landen');
+        ->dispatch('planung.brief-uebernehmen', scope: 'unbekannt', werte: ['brief_anhaengen' => 'sollte nirgends landen']);
 
     expect($c2->get('eingabe.rezept.brief'))->toBe('Unberührt');
 
     // Leeres Transkript ist ein No-op, kein leerer Anhängsel-Space.
-    $c3 = Livewire::test(Index::class)
+    Livewire::test(Index::class)
+        ->dispatch('voice.diktat-transkribiert', scope: 'concept', text: '   ')
+        ->assertNotDispatched('planung.brief-uebernehmen');
+    $c3 = Livewire::test(Brief::class)
         ->set('eingabe.concept.brief', 'Sommer-Menü')
-        ->dispatch('voice.diktat-transkribiert', scope: 'concept', text: '   ');
+        ->dispatch('planung.brief-uebernehmen', scope: 'concept', werte: ['brief_anhaengen' => '   ']);
 
     expect($c3->get('eingabe.concept.brief'))->toBe('Sommer-Menü');
 });
@@ -226,7 +241,7 @@ it('Nachtrag: der Erstell-Tab hat pro Scope genau EINEN Diktier-Weg — Recorder
     $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Event']);
 
-    $html = Livewire::test(Index::class)->call('oeffne', $session->id)->html();
+    $html = Livewire::test(Brief::class, ['sessionId' => $session->id])->html();   // Spec 85 C1 PR-4: Erstell-Reiter im Kind
 
     // Kein Mikro-Recorder mehr an den drei Creation-Scope-Briefings (das Panel ist die
     // einzige Diktierfunktion dort) — der Leitplanken-Knopf bleibt unabhängig davon stehen.
@@ -238,11 +253,10 @@ it('Nachtrag: der Erstell-Tab hat pro Scope genau EINEN Diktier-Weg — Recorder
 
 it('Diktat ohne Blob fasst nichts an', function () {
     $c = Livewire::test(Index::class)
-        ->set('eingabe.rezept.brief', 'Tomatensauce, klassisch')
-        ->call('briefDiktatUebernehmen');
+        ->call('briefDiktatUebernehmen')
+        ->assertNotDispatched('planung.brief-uebernehmen');   // Spec 85 C1 PR-4: nichts geht an Planung\Brief
 
-    expect($c->get('eingabe.rezept.brief'))->toBe('Tomatensauce, klassisch')
-        ->and($c->get('fehler'))->toBeNull();
+    expect($c->get('fehler'))->toBeNull();
 });
 
 it('Die UI-Fläche trägt beide Knöpfe — Diktat und Leitplanken', function () {
@@ -279,11 +293,10 @@ it('Diktat trifft jedes Briefing-Feld der Planungsstelle', function () {
 it('Diktat erreicht auch den Concept-Tab — der hatte als einziger Scope keinen Knopf', function () {
     config(['foodalchemist.stt.provider' => 'fake', 'foodalchemist.stt.fake_text' => 'Sommer-Menü, vier Gänge']);
 
-    $c = Livewire::test(Index::class)
+    Livewire::test(Index::class)
         ->set('diktatZiel', 'eingabe.concept.brief')
-        ->set('briefAudio', UploadedFile::fake()->create('d.webm', 1, 'audio/webm'));
-
-    expect($c->get('eingabe.concept.brief'))->toBe('Sommer-Menü, vier Gänge');
+        ->set('briefAudio', UploadedFile::fake()->create('d.webm', 1, 'audio/webm'))
+        ->assertDispatched('planung.brief-uebernehmen', scope: 'concept', werte: ['brief_anhaengen' => 'Sommer-Menü, vier Gänge']);
 });
 
 it('Whitelist: ein fremdes Diktat-Ziel schreibt NICHTS und meldet es', function () {
@@ -302,6 +315,7 @@ it('Whitelist: ein fremdes Diktat-Ziel schreibt NICHTS und meldet es', function 
 
 it('Die Whitelist deckt genau die Felder ab, die im Blade auch einen Knopf haben', function () {
     $index = file_get_contents(__DIR__ . '/../../resources/views/livewire/planung/index.blade.php');
+    $index .= "\n" . file_get_contents(__DIR__ . '/../../resources/views/livewire/planung/brief.blade.php');   // Spec 85 C1 PR-4: Concept-Reiter im Kind
     $tab = file_get_contents(__DIR__ . '/../../resources/views/livewire/planung/partials/erstellen-tab.blade.php');
 
     // Die fünf Ausgabeformen + Concept stehen literal im Blade; rezept/gericht kommen

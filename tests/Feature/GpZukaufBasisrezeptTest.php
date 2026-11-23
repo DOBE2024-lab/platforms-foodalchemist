@@ -211,8 +211,8 @@ it('GP-Dialog, Detail-Panel und Planung binden die Blöcke ein', function () {
     Livewire::test(\Platform\FoodAlchemist\Livewire\Gps\DetailPanel::class, ['gpId' => $gp->id])->assertSee('Zukauf-Basisrezept planen');
     Livewire::test(\Platform\FoodAlchemist\Livewire\Gps\GpModal::class)->call('oeffnen', $gp->id)->assertSee('Zukauf-Basisrezept planen');
     $frei = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Freies Basisrezept']);
-    Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)->call('oeffne', $frei->id, 'basisrezept')->assertSee('Zukauf-Ware wählen');
+    Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Brief::class, ['sessionId' => $frei->id])->assertSee('Zukauf-Ware wählen');   // Spec 85 C1 PR-4: Basisrezept-Reiter im Kind
     $zk = app(PlanningSessionService::class)->zukaufAusGp($this->rootTeam, (int) $gp->id)['session'];
-    Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)->call('oeffne', $zk->id, 'basisrezept')
+    Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Brief::class, ['sessionId' => $zk->id])
         ->assertSeeHtml('data-planung-zukauf-ware')->assertSeeHtml('data-planung-zukauf-typ');
 });

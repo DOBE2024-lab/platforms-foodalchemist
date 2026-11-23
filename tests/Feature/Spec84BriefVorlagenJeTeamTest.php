@@ -2,6 +2,7 @@
 
 use Livewire\Livewire;
 use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistBriefTemplate;
 use Platform\FoodAlchemist\Services\BriefTemplateService;
@@ -58,7 +59,7 @@ it('eine offene Planung lädt die Kopie des eigenen Teams (keine Verweise auf di
     $kopie = FoodAlchemistBriefTemplate::where('team_id', $this->rootTeam->id)->where('slug', 'catering_empfang_flying')->firstOrFail();
     $this->actingAs($this->makeUser($this->rootTeam));
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(Brief::class)
         ->call('briefVorlage', 'gericht', (string) $kopie->id)
         ->assertSet('eingabe.gericht.brief', $kopie->brief)
         ->assertSet('aktiveVorlage.gericht', (string) $kopie->id);

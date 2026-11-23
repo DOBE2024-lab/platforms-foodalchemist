@@ -3,6 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Exceptions\PlanungAktionLaeuftBereitsException;
 use Platform\FoodAlchemist\Jobs\ConformanceCheckJob;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
@@ -134,7 +135,7 @@ it('C4: „keine Diät" aus dem Briefing löscht eine vorher gesetzte Diät', fu
         }
     });
 
-    $c = Livewire::test(PlanungIndex::class)
+    $c = Livewire::test(Brief::class)
         ->set('regler.gericht.diaet_hart', ['vegetarisch'])
         ->set('eingabe.gericht.brief', 'Abendessen, keine Diät-Vorgaben')
         ->call('leitplankenAusBriefing', 'gericht');

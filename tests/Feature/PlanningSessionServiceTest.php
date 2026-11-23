@@ -1,5 +1,6 @@
 <?php
 
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -100,10 +101,9 @@ it('Go → alle drei Stufen laufen in-place über den Kaskaden-Motor (kein Hando
     Queue::fake();
     $s = $this->svc->create($this->rootTeam, ['title' => 'Go-Test', 'brief' => 'leichte Küche']);
 
-    Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
-        ->call('oeffne', $s->id)
+    Livewire::test(Brief::class, ['sessionId' => $s->id])
         ->call('goKaskade', 'concept')
-        ->assertSet('laeuft', true)
+        ->assertDispatched('planung.lauf-gestartet')
         ->assertNoRedirect();
 
     Queue::assertPushed(GenerateConceptJob::class);

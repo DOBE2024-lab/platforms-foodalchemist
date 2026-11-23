@@ -7,6 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Models\Team;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Trendradar as PlanungTrendradar;
 use Platform\FoodAlchemist\Livewire\Trendradar\Index as TrendradarIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
@@ -460,12 +461,12 @@ it('Planung UI: Reiter Trendradar kombiniert, übernimmt ins Briefing der Ziel-E
     $fund = $this->svc->fundstueckAblegen($this->rootTeam, ['titel' => 'Koji-Butter auf Brot']);
 
     // Spec 85 C1 PR-2: der Kombinierer ist das Kind Planung\Trendradar; es schreibt die Session und meldet planung.trend-uebernommen,
-    // der Parent füllt daraufhin das Briefing und wechselt den Reiter.
+    // der Parent wechselt den Reiter, Planung\Brief füllt das Briefing (Spec 85 C1 PR-4, beide hören auf dasselbe Event).
     $comp = Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
         ->call('schnellTrendradar')
-        ->assertSeeHtml('data-tab-trendradar')
-        ->set('eingabe.concept.brief', 'Schon getippt');
+        ->assertSeeHtml('data-tab-trendradar');
     $id = $comp->get('sessionId');
+    $brief = Livewire::test(Brief::class, ['sessionId' => $id])->set('eingabe.concept.brief', 'Schon getippt');
 
     Livewire::test(PlanungTrendradar::class, ['sessionId' => $id, 'aktiv' => true])
         ->assertSeeHtml('data-trend-wahl="'.$trend->id.'"')
@@ -480,6 +481,7 @@ it('Planung UI: Reiter Trendradar kombiniert, übernimmt ins Briefing der Ziel-E
 
     $comp->dispatch('planung.trend-uebernommen', scope: 'gericht')
         ->assertDispatched('modal.open', name: 'planung-editor', tab: 'gericht');
+    $comp = $brief->dispatch('planung.trend-uebernommen', scope: 'gericht');
 
     expect($comp->get('eingabe.gericht.brief'))->toStartWith('Aus diesen Impulsen aus dem Trendradar ein Gericht entwickeln.')
         ->and($comp->get('eingabe.gericht.titel'))->toBe('Fermentation + Koji-Butter auf Brot')
@@ -489,7 +491,7 @@ it('Planung UI: Reiter Trendradar kombiniert, übernimmt ins Briefing der Ziel-E
     // Wiederöffnen: Auswahl (Kind, beim Mount) und Briefing (Parent) kommen aus der Session zurück
     Livewire::test(PlanungTrendradar::class, ['sessionId' => $id])->assertSet('trendWahl.trends', [(string) $trend->id])
         ->assertSet('trendWahl.inspirationen', [(string) $fund->inspiration_id]);
-    Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)->call('oeffne', $id)
+    Livewire::test(Brief::class, ['sessionId' => $id])
         ->assertSet('eingabe.concept.brief', 'Aus diesen Impulsen aus dem Trendradar ein Konzept entwickeln.'."\n".'Trend (Konsum-/Branchentrend, Food): Fermentation'."\n".'Inspiration: Koji-Butter auf Brot'."\n".'Die Impulse verbinden, nicht nebeneinanderstellen.');
 });
 

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Livewire\Planung\RezeptImport;
@@ -74,9 +75,17 @@ it('am Computer unverändert: Reiterleiste mit allen Reitern, Ausgabe-Formen, Ve
 
 it('Server-Sperre am Handy: Auftrag, Start, Abbruch, Wiederaufnahme, Freigabe/Anreichern und Schritt-Fotos ja; Verwerfen, Pflege, Ausgabe-Formen nein', function () {
     request()->cookies->set(HandyLesemodus::COOKIE, '1');
-    foreach (['schnellErstellen', 'oeffne', 'speichern', 'goKaskade', 'kiKopf', 'leitplankenAusBriefing', 'briefDiktatUebernehmen',
+    foreach (['schnellErstellen', 'oeffne', 'speichern', 'briefDiktatUebernehmen', 'agentDiktatUebernehmen', 'laufGestartet', 'briefGespiegelt',
         'laufAbbrechen', 'laufGeaendert', 'laufStatus', 'kindMeldung', '_startUpload'] as $m) {
         expect(HandyLesemodus::abgewiesen(new PlanungIndex, $m))->toBeFalse($m);
+    }
+    // Spec 85 C1 PR-4: Auftrag geben und starten liegt im Kind Brief, gleicher Handy-Umfang
+    foreach (['goKaskade', 'kiKopf', 'leitplankenAusBriefing', 'reglerPill', 'briefVorlage', 'titelVorschlagen', 'wissenVorschau',
+        'planFeldSpeichern', 'planVerwerfen', 'voiceKomponentenUebernehmen', 'briefUebernehmen'] as $m) {
+        expect(HandyLesemodus::abgewiesen(new Brief, $m))->toBeFalse('Brief::' . $m);
+    }
+    foreach (['alsVorlageSpeichern', 'loeschenVorlage', 'trendUebernommen', 'bestehendesConceptWaehlen'] as $m) {
+        expect(HandyLesemodus::abgewiesen(new Brief, $m))->toBeTrue('Brief::' . $m);
     }
     // Spec 85 C1 PR-3: Ergebnis, Freigabe, Anreichern und Schritt-Fotos liegen im Kind KaskadenLauf, gleicher Handy-Umfang
     foreach (['laufWiederAufnehmen', 'laufFortsetzen', 'pruefeLauf', 'laufGeaendert', 'waehleKnoten', 'fotoHochladen', 'fotoUebernehmen', '_startUpload',
@@ -88,8 +97,8 @@ it('Server-Sperre am Handy: Auftrag, Start, Abbruch, Wiederaufnahme, Freigabe/An
         'vorschlagUeberarbeiten', 'erzeugeGeplant', 'toggleZutaten', 'toggleKommentar', 'ergaenzeSubRezept', 'konformitaetPruefen'] as $m) {
         expect(HandyLesemodus::abgewiesen(new KaskadenLauf, $m))->toBeTrue('KaskadenLauf::' . $m);
     }
-    foreach (['planungVerwerfen', 'planungDuplizieren', 'alsVorlageSpeichern',
-        'loeschenVorlage', 'foodbookAusBrief', 'speisekarteAusBrief', 'speiseplanAusBrief', 'angebotAusBrief', 'formatAusBrief',
+    foreach (['planungVerwerfen', 'planungDuplizieren',
+        'foodbookAusBrief', 'speisekarteAusBrief', 'speiseplanAusBrief', 'angebotAusBrief', 'formatAusBrief',
         'schnellComposer', 'schnellTrendradar', 'trendUebernommen', 'composerAdd', 'composerUebernehmen'] as $m) {
         expect(HandyLesemodus::abgewiesen(new PlanungIndex, $m))->toBeTrue($m);
     }

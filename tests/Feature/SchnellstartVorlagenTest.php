@@ -2,6 +2,7 @@
 
 use Livewire\Livewire;
 use Platform\Core\Contracts\ToolContext;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Livewire\Settings\BriefVorlagen;
 use Platform\FoodAlchemist\Models\FoodAlchemistBriefTemplate;
@@ -101,7 +102,7 @@ it('Tenancy: ein fremdes Team kann eine Vorlage nicht löschen (Owns-Guard)', fu
 });
 
 it('Livewire: alsVorlageSpeichern snapshotet den aktuellen Stand, briefVorlage wendet ihn an', function () {
-    $c = Livewire::test(PlanungIndex::class)
+    $c = Livewire::test(Brief::class)
         ->set('regler.gericht.level', 'gehoben')
         ->set('regler.gericht.bio_praeferenz', 'bio')
         ->set('eingabe.gericht.brief', 'Snapshot-Brief für den Test.')
@@ -124,7 +125,7 @@ it('Livewire: alsVorlageSpeichern snapshotet den aktuellen Stand, briefVorlage w
 it('Livewire: loeschenVorlage entfernt eine eigene Vorlage', function () {
     $tpl = app(BriefTemplateService::class)->speichere($this->rootTeam, 'gericht', 'Weg damit', 'Brief.', []);
 
-    Livewire::test(PlanungIndex::class)->call('loeschenVorlage', 'gericht', (int) $tpl->id);
+    Livewire::test(Brief::class)->call('loeschenVorlage', 'gericht', (int) $tpl->id);
 
     expect(FoodAlchemistBriefTemplate::find($tpl->id))->toBeNull();
 });

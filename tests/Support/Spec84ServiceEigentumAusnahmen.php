@@ -28,4 +28,5 @@ return [
     'Services/Einstellungen/BehaelterService.php::anlegen' => 'eigene Katalog-Zeile (team_id = Team); applyVisible()->exists() ist nur Dubletten-Schutz in der eigenen Sicht (98 · 2.3a, vorher Livewire Behaelter::create)',
     'Services/Einstellungen/ConcepterDimensionenService.php::anlegen' => 'eigene Vokabular-Zeile (team_id = Team); applyVisible()->exists() ist nur Dubletten-Schutz in der eigenen Sicht (98 · 2.3a)',
     'Services/VocabularyService.php::createRecipeCategory' => 'eigene Kategorie, die eine sichtbare Hauptgruppe referenziert',
+    'Services/Kaskade/KaskadeSpeiseplanVoll.php::starteSpeiseplanVollkaskade' => 'legt nur eigene Lauf-/Step-Zeilen an (team_id = Team); der Plan wird hier nur gelesen, eingetragen wird über SpeiseplanService::addEintrag; bis 3.3 S1 privat hinter starteKaskade. Durch Verschiebung sichtbar geworden (98 · 3.3 S1), keine neue Fläche',
 ];

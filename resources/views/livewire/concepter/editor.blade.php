@@ -11,7 +11,7 @@
      1024 px links daneben (schmaler, ab 1536 px breiter). Raster brechen früher um, Tabellen scrollen
      waagerecht statt abzuschneiden. --}}
 @php
-    $item = $concept ?? $paket;
+    $item = $concept;
     // Kaskade (2026-08-24): ein kind=paket-Concept öffnet im selben Editor wie ein Konzept.
     $istPaket = ($concept?->kind ?? null) === 'paket';
     // Typ-Farbe aus den Team-Einstellungen (Phase 5) — Laufzeitwert, deshalb als style-Bindung.
@@ -53,7 +53,7 @@
 <div>
     {{-- Spec 28 / E1-2: Titel sagt WAS bearbeitet wird, der Name steht daneben.
          Concept und Paket teilen diesen Editor — der Titel benennt, welches von beiden. --}}
-    <x-fa::modal name="concepter-editor" :title="($paket || $istPaket) ? 'Paket' : 'Konzept'"
+    <x-fa::modal name="concepter-editor" :title="$istPaket ? 'Paket' : 'Konzept'"
         :title-name="$item?->name" fullscreen dark-canvas>
 
         @if($item !== null)
@@ -72,10 +72,6 @@
 
         <x-slot:actions>
             <div class="ml-auto flex flex-wrap items-center gap-2">
-                @if($paket && $rueckSprungConceptId)
-                    <x-fa::button icon="heroicon-m-arrow-uturn-left" wire:click="zurueckZumConcept" title="Paket sichern und zurück ins Konzept">Speichern und zurück zum Konzept</x-fa::button>
-                @endif
-
                 @if($concept){{-- Weitere Aktionen: Kunden-Karte · Technischer Bericht · Vorlage · Löschen (98 · 2.4d: wie die Detailspalte) --}}
                     <x-fa::menu ausloeser:data-concepter-weitere="" breite="72">
                         {{-- #6 (F3c): Druck-Symmetrie zum Format-Editor — Kunden-Ausgabe + technischer Bericht; Karte gilt auch fürs Paket (Concept-ID). --}}
@@ -85,7 +81,7 @@
                             <div class="my-1 border-t border-[var(--fa-line)]"></div>
                             <x-fa::menu-item icon="heroicon-o-square-2-stack" abstand="weit" wire:click="alsVorlage" data-concepter-als-vorlage>Als Vorlage speichern</x-fa::menu-item>
                         @endif
-                        @if($type === 'concepts')<div class="my-1 border-t border-[var(--fa-line)]"></div><x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="{{ $paket ? 'Paket löschen?' : 'Konzept löschen?' }}" data-concepter-loeschen>{{ $paket ? 'Paket' : 'Konzept' }} löschen</x-fa::menu-item>@endif
+                        @if($type === 'concepts')<div class="my-1 border-t border-[var(--fa-line)]"></div><x-fa::menu-item icon="heroicon-o-trash" danger :trenner="false" abstand="weit" wire:click="loeschen" wire:confirm="Konzept löschen?" data-concepter-loeschen>Konzept löschen</x-fa::menu-item>@endif
                     </x-fa::menu>
                 @endif
 
@@ -103,7 +99,7 @@
              Wareneinsatz % folgt derselben Team-Ziel-Ampel wie Gericht und Angebot. --}}
         @if($kalkulation)
             @php
-                $stripVk = $concept ? ($cockpit['price_per_person'] ?? 0) : ($paket?->price_per_person !== null ? (float) $paket->price_per_person : null);
+                $stripVk = $concept ? ($cockpit['price_per_person'] ?? 0) : null;
                 $stripEk = $concept ? (($cockpit['ek_per_person'] ?? null) !== null ? (float) $cockpit['ek_per_person'] : null) : (float) ($kalkulation['hk1_pro_person'] ?? 0);   // null = EK unvollständig (Abo-Fassung): kein Preis, nie 0 €
                 $stripWpct = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($stripEk, $stripVk, null);
                 $stripWeTone = match ($wareneinsatzAmpel ?? 'unbekannt') { 'gruen' => 'good', 'gelb' => 'warn', 'rot' => 'bad', default => null };
@@ -137,7 +133,7 @@
                 'konzept' => ($concept && ! $istPaket) ? 'Konzept & Planung' : null,
                 'allergene' => 'Deklaration',
                 'kalkulation' => 'Kalkulation',
-                'anrichten' => ($concept || $paket) ? 'Anrichten' : null,
+                'anrichten' => $concept ? 'Anrichten' : null,
                 'notes' => 'Notizen',
             ]" />
 
@@ -922,99 +918,6 @@
                             </div>{{-- /BEARBEITEN-ANSICHT --}}
                         </div>{{-- /Positionen --}}
                     </div>{{-- /Picker + Positionen --}}
-                @else
-                    {{-- Paket: Posten schnüren — Quellen-Picker links (spiegelt den Konzept-Aufbau) + Posten-Liste --}}
-                    <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-start">
-                        <x-fa::card as="aside" class="w-full lg:w-64 2xl:w-80 shrink-0 flex flex-col gap-2 p-3 lg:sticky lg:top-16 lg:self-start max-h-[55vh] lg:max-h-[calc(100vh-18rem)]" data-paket-quelle-picker="" data-paket-gerichtliste="" x-data="{
-                                    geparkt: null, quantity: '', flash: false,
-                                    park(id, name) { this.geparkt = { id, name }; this.quantity = ''; this.$nextTick(() => this.$refs.quantity && this.$refs.quantity.focus()); },
-                                    einfuegen() { if (!this.geparkt) return; this.$wire.gerichtHinzu(this.geparkt.id, this.quantity); this.geparkt = null; this.quantity = ''; this.flash = true; setTimeout(() => { this.flash = false; }, 1400); },
-                                 }">
-                            {{-- Umschalter: Gerichte ⇄ Basisrezepte (Pakete enthalten keine Pakete) --}}
-                            <x-fa::segmented label="Quelle" class="self-start" data-paket-quelle-umschalter="">
-                                <x-fa::segment :an="$paketQuelle !== 'basisrezept'" wire:click="$set('paketQuelle', 'gericht')">Gerichte</x-fa::segment>
-                                <x-fa::segment :an="$paketQuelle === 'basisrezept'" wire:click="$set('paketQuelle', 'basisrezept')">Basisrezepte</x-fa::segment>
-                            </x-fa::segmented>
-                            <div class="flex flex-col gap-2 flex-1 min-h-0 overflow-y-auto">
-                                <div x-show="geparkt === null" class="flex flex-col gap-2">
-                                    @if($paketQuelle === 'basisrezept')
-                                        <x-fa::input type="search" size="sm" wire:model.live.debounce.300ms="paketGerichtSuche" placeholder="Basisrezept suchen …" aria-label="Basisrezept suchen" />
-                                    @else
-                                        @include('foodalchemist::livewire.concepter.partials.gericht-baum', ['sucheModel' => 'paketGerichtSuche'])
-                                    @endif
-                                    <p class="{{ $hinweis }}">Mit Plus vormerken, {{ $paketQuelle === 'basisrezept' ? 'Gramm je Person' : 'Menge je Person' }} eingeben, mit Enter einfügen.</p>
-                                    @if($paketKandidaten->isNotEmpty())
-                                        <div class="flex flex-col gap-px -mx-1 px-1">
-                                            @foreach($paketKandidaten as $kand)
-                                                <div wire:key="epk-{{ $paketQuelle }}-{{ $kand->id }}" class="flex items-center gap-2 px-2 py-1.5 rounded-[var(--fa-radius-control)] hover:bg-[var(--fa-hover)]">
-                                                    <span class="min-w-0 flex-1 break-words leading-snug fa-t-body" title="{{ $kand->name }}">{{ $kand->name }}</span>@if($kand->status instanceof \Platform\FoodAlchemist\Enums\RecipeStatus && $kand->status !== \Platform\FoodAlchemist\Enums\RecipeStatus::Approved)<x-fa::badge tone="warn" data-entwurf-badge>{{ $kand->status->label() }}</x-fa::badge>@endif
-                                                    <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-3)] tabular-nums">@if($paketQuelle === 'basisrezept'){{ $kand->ek_total_eur !== null ? 'EK ' . $euro($kand->ek_total_eur) : 'kein EK' }}@else{{ $euro($kand->vk_netto) ?? 'kein Preis' }}@endif</span>
-                                                    <x-fa::icon-button icon="heroicon-m-plus" label="Vormerken" size="sm" x-on:click="park({{ $kand->id }}, {{ \Illuminate\Support\Js::from($kand->name) }})" />
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @elseif($paketGerichtSuche !== '' || $pickHg !== null || $pickKlasse !== null || $pickGeschmack !== '' || $pickDiaet !== '')
-                                        <p class="{{ $leerText }}">Keine Treffer für diese Auswahl.</p>
-                                    @endif
-                                </div>
-                                <div x-show="geparkt !== null" x-cloak class="flex flex-col gap-2" data-park-zeile>
-                                    <div class="flex items-center gap-2">
-                                        <x-fa::badge tone="info">{{ $paketQuelle === 'basisrezept' ? 'Basisrezept' : 'Gericht' }}</x-fa::badge>
-                                        <span class="flex-1 min-w-0 break-words fa-t-strong" x-text="geparkt?.name"></span>
-                                    </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <input type="number" step="0.01" min="0" x-ref="quantity" x-model="quantity" @keydown.enter.prevent="einfuegen()" placeholder="{{ $paketQuelle === 'basisrezept' ? 'Gramm je Person' : 'Menge je Person' }}" aria-label="{{ $paketQuelle === 'basisrezept' ? 'Gramm je Person' : 'Menge je Person' }}" class="fa-control h-7 flex-1 min-w-0 text-right tabular-nums {{ $klein }}" />
-                                        <x-fa::button size="sm" icon="heroicon-m-plus" x-on:click="einfuegen()">Einfügen</x-fa::button>
-                                        <x-fa::icon-button icon="heroicon-m-x-mark" label="Abbrechen" size="sm" x-on:click="geparkt = null" />
-                                    </div>
-                                </div>
-                                <x-fa::signal tone="ok" x-show="flash" x-cloak>Hinzugefügt</x-fa::signal>
-                            </div>
-                        </x-fa::card>
-                        <div class="flex-1 min-w-0 flex flex-col gap-3">
-                            <div class="flex flex-wrap items-baseline justify-between gap-2">
-                                <h3 class="fa-t-h2">Posten im Paket</h3>
-                                <span class="{{ $hinweis }}">Gerichte mit Menge je Person, Basisrezepte mit Gramm je Person</span>
-                            </div>
-                            <div class="flex flex-col gap-1.5">
-                                @forelse($paket->dishes as $pg)
-                                    @php $istBasis = ! ($pg->dish?->is_sales_recipe ?? true); @endphp
-                                    <x-fa::card wire:key="epg-{{ $pg->id }}" class="flex flex-wrap items-center gap-2 px-3 py-2">
-                                        <span class="inline-flex flex-col shrink-0">
-                                            <button type="button" wire:click="gerichtHoch({{ $pg->id }})" class="text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]" title="Nach oben" aria-label="Nach oben">@svg('heroicon-m-chevron-up', 'w-4 h-4')</button>
-                                            <button type="button" wire:click="gerichtRunter({{ $pg->id }})" class="text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]" title="Nach unten" aria-label="Nach unten">@svg('heroicon-m-chevron-down', 'w-4 h-4')</button>
-                                        </span>
-                                        <span class="inline-flex items-center h-[22px] px-2 rounded-full {{ $klein }} font-medium bg-[var(--fa-neutral-soft)] text-[var(--fa-ink-2)] shrink-0" style="{{ $typStyle($istBasis ? 'basisrezept' : 'gericht') }}">{{ $istBasis ? 'Basisrezept' : 'Gericht' }}</span>
-                                        <span class="flex-1 min-w-[10rem] break-words fa-t-strong">{{ $pg->dish?->name ?? 'Gericht fehlt' }}</span>
-                                        @if($pg->sales_recipe_id)
-                                            <x-fa::icon-button href="#" :icon="$istBasis ? 'heroicon-o-book-open' : 'heroicon-o-eye'" :label="$istBasis ? 'Basisrezept ansehen' : 'Gericht ansehen'" size="sm"
-                                                x-on:click.prevent="Livewire.dispatch('{{ $istBasis ? 'recipe-modal.oeffnen' : 'vk-modal.oeffnen' }}', { id: {{ $pg->sales_recipe_id }} })" />
-                                        @endif
-                                        <label class="inline-flex items-center gap-1.5 {{ $klein }} text-[var(--fa-ink-2)]">
-                                            {{ $istBasis ? 'Gramm je Person' : 'Menge je Person' }}
-                                            <input type="number" step="0.01" min="0" value="{{ $pg->quantity }}" wire:change="gerichtMengeSpeichern({{ $pg->id }}, $event.target.value)" class="fa-control h-7 w-24 text-right tabular-nums {{ $klein }}" wire:key="epg-menge-{{ $pg->id }}" />
-                                        </label>
-                                        @if(isset($paketFormen[$pg->id]))
-                                            {{-- Darreichung je Posten: Preis und Produktion folgen der gewählten Form. --}}
-                                            <select wire:key="epg-form-{{ $pg->id }}" wire:change="paketGerichtDarreichungSetzen({{ $pg->id }}, $event.target.value)"
-                                                    class="fa-control fa-select pr-8 h-7 w-auto {{ $klein }}" aria-label="Darreichung dieses Postens" data-paket-form-picker
-                                                    title="Form dieses Gerichts im Paket. Standard folgt der Standard-Darreichung des Gerichts.">
-                                                @foreach($paketFormen[$pg->id] as $f)
-                                                    <option value="{{ $f['standard'] ? '' : $f['id'] }}" @selected($f['standard'] ? $pg->presentation_id === null : (int) $pg->presentation_id === $f['id'])>{{ $f['label'] }}{{ $f['gramm'] !== null ? ' · ' . $f['gramm'] . ' g' : '' }}{{ $f['standard'] ? ' (Standard)' : '' }}</option>
-                                                @endforeach
-                                            </select>
-                                        @elseif(! $istBasis && isset($paketPosten[$pg->id]['label']))
-                                            <span class="{{ $klein }} text-[var(--fa-ink-3)]" data-paket-form>{{ $paketPosten[$pg->id]['label'] }}{{ ($paketPosten[$pg->id]['gramm'] ?? null) !== null ? ' · ' . $paketPosten[$pg->id]['gramm'] . ' g' : '' }}</span>
-                                        @endif
-                                        <span class="{{ $klein }} text-[var(--fa-ink-2)] tabular-nums w-24 text-right">@if($istBasis){{ $pg->dish?->ek_total_eur !== null ? 'EK ' . $euro($pg->dish->ek_total_eur) : 'kein EK' }}@else{{ $euro($paketPosten[$pg->id]['vk'] ?? $pg->dish?->vk_netto) ?? 'kein Preis' }}@endif</span>
-                                        <x-fa::icon-button icon="heroicon-m-x-mark" label="Posten entfernen" size="sm" tone="danger" wire:click="gerichtRaus({{ $pg->sales_recipe_id }})" />
-                                    </x-fa::card>
-                                @empty
-                                    <x-fa::empty compact icon="heroicon-o-archive-box" title="Noch keine Posten">Links ein Gericht oder Basisrezept suchen und hinzufügen.</x-fa::empty>
-                                @endforelse
-                            </div>
-                        </div>
-                    </div>
                 @endif
             @endif
 
@@ -1311,47 +1214,6 @@
                                 </x-fa::table>
                             </div>
                         </x-fa::section>
-                    @elseif($paket)
-                        <x-fa::section title="Wareneinsatz je Posten" icon="heroicon-o-queue-list" description="Je Person.">
-                            <div class="overflow-x-auto -mx-4 px-4">
-                                <x-fa::table compact>
-                                    <thead><tr>
-                                        <th>Posten</th>
-                                        <th class="text-right">Menge</th>
-                                        <th class="text-right">Wareneinsatz</th>
-                                        <th class="text-right">VK</th>
-                                    </tr></thead>
-                                    <tbody>
-                                    @forelse($paket->dishes as $pg)
-                                        @php
-                                            $istBasis = ! ($pg->dish?->is_sales_recipe ?? true);
-                                            $faktor = $pg->quantity !== null ? (float) $pg->quantity : 1.0;
-                                            $yieldG = (float) ($pg->dish?->yield_kg ?? 0) * 1000;
-                                            $postenEk = $istBasis
-                                                ? (($pg->dish?->ek_total_eur !== null && $yieldG > 0 && $pg->quantity !== null) ? (float) $pg->dish->ek_total_eur * ((float) $pg->quantity / $yieldG) : null)
-                                                : ($pg->dish?->ek_pro_portion !== null ? $pg->dish->ek_pro_portion * $faktor : null);   // Spec 85: EK je Portion
-                                        @endphp
-                                        <tr>
-                                            <td class="min-w-[12rem]">{{ $pg->dish?->name ?? 'Gericht fehlt' }}</td>
-                                            <td class="num text-[var(--fa-ink-2)]">{{ $pg->quantity !== null ? ($menge($faktor) . ($istBasis ? ' g' : '')) : ($istBasis ? 'Gramm fehlt' : '1') }}</td>
-                                            <td class="num">@if($postenEk !== null){{ $euro($postenEk) }}@else<span class="text-[var(--fa-ink-3)]">offen</span>@endif</td>
-                                            <td class="num text-[var(--fa-ink-2)]">@if($istBasis)<span class="text-[var(--fa-ink-3)]">kein VK</span>@else{{ $pg->dish?->vk_netto !== null ? $euro((float) $pg->dish->vk_netto * $faktor) : 'offen' }}@endif</td>
-                                        </tr>
-                                    @empty
-                                        <tr><td colspan="4" class="text-center text-[var(--fa-ink-3)]">Noch keine Posten.</td></tr>
-                                    @endforelse
-                                    </tbody>
-                                    <tfoot>
-                                        <tr class="font-semibold">
-                                            <td class="pt-2 border-t border-[var(--fa-line-strong)]">Summe je Person</td>
-                                            <td class="pt-2 border-t border-[var(--fa-line-strong)]"></td>
-                                            <td class="num pt-2 border-t border-[var(--fa-line-strong)]">{{ $euro($paket->ek_per_person) ?? 'offen' }}</td>
-                                            <td class="num pt-2 border-t border-[var(--fa-line-strong)] text-[var(--fa-ink-2)]">{{ $aggregat !== null ? $euro($aggregat['vk_summe']) : 'offen' }}</td>
-                                        </tr>
-                                    </tfoot>
-                                </x-fa::table>
-                            </div>
-                        </x-fa::section>
                     @endif
 
                     <fieldset @disabled($lesemodus) class="contents" data-fa-lesemodus="{{ $lesemodus ? '1' : '0' }}">
@@ -1388,38 +1250,6 @@
                                     @endif
                                 </div>
                             @endif
-                        </x-fa::section>
-                    @elseif($paket)
-                        <x-fa::section title="Paketpreis" icon="heroicon-o-banknotes">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                                <x-fa::field label="Preisermittlung" for="cc-paket-modus">
-                                    <x-fa::select id="cc-paket-modus" wire:change="setPreisModus($event.target.value)">
-                                        <option value="auto">Automatisch, Summe der Gerichte</option>
-                                        <option value="fixed" @selected(in_array(($form['price_mode'] ?? 'auto'), ['fixed', 'manuell'], true))>Fixiert</option>
-                                    </x-fa::select>
-                                </x-fa::field>
-                                <x-fa::field label="Preis je Person" for="cc-paket-preis">
-                                    <x-fa::input id="cc-paket-preis" numeric type="number" step="0.01" min="0" wire:model="form.price_per_person" :disabled="($form['price_mode'] ?? 'auto') === 'auto'" />
-                                </x-fa::field>
-                                <x-fa::field label="EK je Person" for="cc-paket-ek" hint="Aus den Gerichten berechnet.">
-                                    <x-fa::input id="cc-paket-ek" numeric type="number" step="0.0001" min="0" wire:model="form.ek_per_person" disabled />
-                                </x-fa::field>
-                                <x-fa::field label="Wareneinsatz %" for="cc-paket-we" hint="Abgeleitet.">
-                                    <x-fa::input id="cc-paket-we" numeric type="number" step="0.1" min="0" wire:model="form.food_cost_percent" disabled />
-                                </x-fa::field>
-                            </div>
-                            @if(in_array(($form['price_mode'] ?? 'auto'), ['fixed', 'manuell'], true))
-                                <div class="flex flex-wrap items-end gap-2">
-                                    <x-fa::field label="Begründung der Abweichung" for="cc-paket-begruendung" class="flex-1 min-w-[14rem]">
-                                        <x-fa::input id="cc-paket-begruendung" wire:model="form.price_override_reason" />
-                                    </x-fa::field>
-                                    <x-fa::button icon="heroicon-m-check" wire:click="speichern">Fixpreis übernehmen</x-fa::button>
-                                </div>
-                            @endif
-                            <div class="flex flex-wrap items-center gap-3 pt-3 border-t border-[var(--fa-line)]">
-                                <x-fa::button icon="heroicon-m-arrow-path" wire:click="neuBerechnen">Wareneinsatz neu berechnen</x-fa::button>
-                                <span class="{{ $hinweis }}">Kosten und automatischer Preis folgen den Gerichten. Ein Fixpreis braucht eine Begründung.</span>
-                            </div>
                         </x-fa::section>
                     @endif
                     </fieldset>

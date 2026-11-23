@@ -9,7 +9,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Support\Curate;
 
 /**
@@ -253,7 +252,7 @@ class Browser extends Component
         }
     }
 
-    public function render(ConceptService $concepts, PaketService $pakete)
+    public function render(ConceptService $concepts)
     {
         $this->normalisiereTab();
         $team = $this->team();

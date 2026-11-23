@@ -7,7 +7,7 @@
     $leiste = $this->fortschrittStufenleiste($lauf->steps);
     $stepLabel = ['geplant' => 'Geplant', 'queued' => 'Wartet', 'running' => 'In Arbeit', 'done' => 'Bereit zur Prüfung', 'freigegeben' => 'Freigegeben', 'verworfen' => 'Verworfen', 'failed' => 'Fehler', 'skipped' => 'Aus dem Bestand'];
     $stepColor = ['geplant' => 'neutral', 'queued' => 'info', 'running' => 'info', 'done' => 'warn', 'freigegeben' => 'ok', 'verworfen' => 'neutral', 'failed' => 'crit', 'skipped' => 'ok'];
-    $refRoute = ['gericht' => 'foodalchemist.verkauf.index', 'rezept' => 'foodalchemist.recipes.index', 'concept' => 'foodalchemist.concepts.index'];
+    $refRoute = ['gericht' => 'foodalchemist.verkauf.index', 'rezept' => 'foodalchemist.recipes.index', 'concept' => 'foodalchemist.concepter.index'];
     // Zeilen-Chip: Herkunft/Zustand in einem Wort (D6).
     $chip = function ($st) {
         $enr = is_array($st->deferred['enrich'] ?? null) ? $st->deferred['enrich']['status'] ?? null : null;

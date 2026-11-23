@@ -179,17 +179,11 @@ Route::get('/gerichte', \Platform\FoodAlchemist\Livewire\Verkauf\Browser::class)
  */
 /**
  * M10R-2 / Doc 15 §10.2: vereinheitlichter Concepter-Browser (Concepts | Pakete
- * in EINEM Screen, 3-Panel im VK-Stil). /concepts + /pakete bleiben transitorisch
- * (Editor), bis das Voll-Editor-Modal (M10R-3) steht.
+ * in EINEM Screen, 3-Panel im VK-Stil). Die alten Seiten /concepts und /pakete sind
+ * mit Plan 98 · 2.6c entfallen.
  */
 Route::get('/concepter', \Platform\FoodAlchemist\Livewire\Concepter\Browser::class)
     ->name('foodalchemist.concepter.index');
-
-Route::get('/concepts', \Platform\FoodAlchemist\Livewire\Concepts\Index::class)
-    ->name('foodalchemist.concepts.index');
-
-Route::get('/pakete', \Platform\FoodAlchemist\Livewire\Pakete\Index::class)
-    ->name('foodalchemist.pakete.index');
 
 // Format-Modul: Marken-/Themen-Container über den Concepts (bündelt Editionen + Marketing-Bildwelt).
 Route::get('/formate', \Platform\FoodAlchemist\Livewire\Formate\Browser::class)

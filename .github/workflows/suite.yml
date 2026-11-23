@@ -111,7 +111,7 @@ jobs:
             git init -q "$WS/$2"
             git -C "$WS/$2" remote add origin "https://github.com/${ORIGINAL}/$1.git"
             git -C "$WS/$2" fetch -q --depth 1 origin "$3"
-            git -C "$WS/$2" checkout -q --detach FETCH_HEAD
+            git -C "$WS/$2" checkout -q -B main FETCH_HEAD   # Branch „main“: Composer liest die Version des Pfad-Pakets daraus (sonst dev-<sha> ≠ dev-main)
           }
           # Modul: Teil-Klon mit voller Historie (BaselineKlinke: merge-base HEAD origin/main)
           M="$WS/platform/modules/platforms-foodalchemist"
@@ -120,7 +120,7 @@ jobs:
             git -C "$M" remote add fork "https://github.com/${GITHUB_REPOSITORY}.git"
             git -C "$M" fetch -q --filter=blob:none fork '+refs/heads/*:refs/remotes/fork/*'
           fi
-          git -C "$M" checkout -q --detach "$MODUL_SHA"
+          git -C "$M" checkout -q -B main "$MODUL_SHA"     # s. o.; origin/main bleibt das Original (BaselineKlinke)
           for r in platforms-core platform-crm platforms-organization platforms-notifications platforms-integrations platforms-activity-log; do
             hole "$r" "platform/modules/$r" "$(jq -r --arg r "$r" '.[$r]' <<<"$GESCHWISTER")"
           done

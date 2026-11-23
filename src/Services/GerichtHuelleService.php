@@ -20,7 +20,7 @@ use RuntimeException;
  * MCP angelegt, oft schon in einem Concept oder Angebot verbaut). Der KI-Assistent am Gericht reicherte nur Texte an,
  * und die Planung konnte nur NEUE Gerichte erzeugen. Hier wird die Hülle zum Ziel der Planung:
  *
- *   - {@see sessionFuer}: Knopf am Gericht → vorbefüllte Planung (Titel = Name, Briefing = Beschreibung), wie der
+ *   - {@see PlanungsEinstiegService::rezepturSessionFuer} (seit 98 · 3.3 S7 P5 dort): Knopf am Gericht → vorbefüllte Planung (Titel = Name, Briefing = Beschreibung), wie der
  *     Zukauf-Knopf am Grundprodukt. Gestartet wird dort mit dem normalen Go (Bauplan → Freigabe → Bau).
  *   - {@see generiere}: der Bau schreibt Komponenten und Basisrezepte IN die Hülle, statt ein zweites Gericht anzulegen
  *     (Generator-Parameter `gericht_fuellen_id`, dieselbe Mechanik wie `stub_fuellen_id` beim Import-Unterrezept).
@@ -49,39 +49,6 @@ final class GerichtHuelleService
             ->whereIn('status', [RecipeStatus::Draft, RecipeStatus::Stub])->find($recipeId);
 
         return $gericht !== null && ! $gericht->ingredients()->whereNull('deleted_at')->exists() ? $gericht : null;
-    }
-
-    /**
-     * Vorbefüllte Planung für die Hülle. Eine offene Planung desselben Gerichts wird wiederverwendet.
-     *
-     * @throws ModelNotFoundException Gericht nicht sichtbar
-     * @throws RuntimeException       geerbt, schon freigegeben oder schon mit Komponenten
-     */
-    public function sessionFuer(Team $team, int $recipeId, string $createdVia = 'gericht'): FoodAlchemistPlanningSession
-    {
-        $gericht = FoodAlchemistRecipe::visibleToTeam($team)->where('is_sales_recipe', true)->find($recipeId);
-        if ($gericht === null) {
-            throw new ModelNotFoundException('Gericht nicht sichtbar.');
-        }
-        if ((int) $gericht->team_id !== (int) $team->id) {
-            throw new RuntimeException('Geerbtes Gericht: eine Rezeptur erstellen kann nur das Besitzer-Team.');
-        }
-        if (self::huelle($team, (int) $gericht->id) === null) {
-            throw new RuntimeException('„Rezeptur erstellen“ gibt es nur für Gerichte im Entwurf ohne Komponenten. Dieses Gericht hat schon Komponenten oder ist freigegeben. Zum Ändern „Mit Anweisung überarbeiten“ nutzen.');
-        }
-        $offen = FoodAlchemistPlanningSession::where('team_id', $team->id)->where('target_recipe_id', $gericht->id)
-            ->where('status', '!=', 'erledigt')->orderByDesc('id')->first();
-        if ($offen !== null) {
-            return $offen;
-        }
-        $session = app(PlanningSessionService::class)->create($team, [
-            'title' => mb_substr((string) $gericht->name, 0, 255),
-            'brief' => trim((string) $gericht->description) !== '' ? (string) $gericht->description : (string) $gericht->name,
-            'created_via' => $createdVia,
-        ]);
-        $session->update(['target_recipe_id' => (int) $gericht->id]);
-
-        return $session->refresh();
     }
 
     /** Das Ziel-Gericht einer Planung (für den Hinweis in der Leitstelle), sonst null. */

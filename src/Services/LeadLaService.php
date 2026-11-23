@@ -384,7 +384,7 @@ class LeadLaService
             return 0;
         }
 
-        return count(app(RecipeRecomputeService::class)->recomputeMany($recipeIds->all()));
+        return count(app(\Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte::class)->recomputeMany($recipeIds->all()));
     }
 
     /**

@@ -62,24 +62,24 @@ it('Hülle: Gericht des eigenen Teams, Entwurf, ohne Komponenten — sonst nicht
 
 // ── Einstieg: Menüpunkt am Gericht → vorbefüllte Planung ────────────────────
 
-it('sessionFuer: Planung mit Name als Titel, Beschreibung als Briefing und dem Gericht als Ziel; eine offene wird wiederverwendet', function () {
+it('rezepturSessionFuer: Planung mit Name als Titel, Beschreibung als Briefing und dem Gericht als Ziel; eine offene wird wiederverwendet', function () {
     $huelle = ($this->huelle)();
 
-    $session = $this->svc->sessionFuer($this->rootTeam, $huelle->id);
+    $session = app(\Platform\FoodAlchemist\Services\PlanungsEinstiegService::class)->rezepturSessionFuer($this->rootTeam, $huelle->id);
     expect($session->title)->toBe(HUELLE_NAME)->and($session->brief)->toBe(HUELLE_TEXT)
         ->and((int) $session->target_recipe_id)->toBe((int) $huelle->id)->and($session->created_via)->toBe('gericht');
 
-    expect($this->svc->sessionFuer($this->rootTeam, $huelle->id)->id)->toBe($session->id)
+    expect(app(\Platform\FoodAlchemist\Services\PlanungsEinstiegService::class)->rezepturSessionFuer($this->rootTeam, $huelle->id)->id)->toBe($session->id)
         ->and(FoodAlchemistPlanningSession::where('target_recipe_id', $huelle->id)->count())->toBe(1);
 });
 
-it('sessionFuer: nicht für geerbte, freigegebene oder schon ausrezeptierte Gerichte', function () {
+it('rezepturSessionFuer: nicht für geerbte, freigegebene oder schon ausrezeptierte Gerichte', function () {
     $huelle = ($this->huelle)();
     $freigegeben = ($this->huelle)('[HG] Freigegeben', ['status' => 'approved']);
 
-    expect(fn () => $this->svc->sessionFuer($this->childA, $huelle->id))->toThrow(RuntimeException::class, 'Besitzer-Team');
-    expect(fn () => $this->svc->sessionFuer($this->rootTeam, $freigegeben->id))->toThrow(RuntimeException::class, 'Entwurf ohne Komponenten');
-    expect(fn () => $this->svc->sessionFuer($this->rootTeam, 999999))->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+    expect(fn () => app(\Platform\FoodAlchemist\Services\PlanungsEinstiegService::class)->rezepturSessionFuer($this->childA, $huelle->id))->toThrow(RuntimeException::class, 'Besitzer-Team');
+    expect(fn () => app(\Platform\FoodAlchemist\Services\PlanungsEinstiegService::class)->rezepturSessionFuer($this->rootTeam, $freigegeben->id))->toThrow(RuntimeException::class, 'Entwurf ohne Komponenten');
+    expect(fn () => app(\Platform\FoodAlchemist\Services\PlanungsEinstiegService::class)->rezepturSessionFuer($this->rootTeam, 999999))->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
     expect(FoodAlchemistPlanningSession::whereNotNull('target_recipe_id')->count())->toBe(0);
 });
 
@@ -97,7 +97,7 @@ it('Menüpunkt: nur für die Hülle sichtbar, „planen" öffnet die Leitstelle 
 
 it('Leitstelle: Titel und Briefing des Gericht-Reiters kommen aus der Planung, der Hinweis nennt das Ziel', function () {
     $huelle = ($this->huelle)();
-    $session = $this->svc->sessionFuer($this->rootTeam, $huelle->id);
+    $session = app(\Platform\FoodAlchemist\Services\PlanungsEinstiegService::class)->rezepturSessionFuer($this->rootTeam, $huelle->id);
 
     Livewire::withQueryParams(['session' => $session->id, 'open' => 1, 'tab' => 'gericht'])->test(Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4: Gericht-Reiter im Kind
         ->assertSet('eingabe.gericht.titel', HUELLE_NAME)
@@ -149,7 +149,7 @@ it('Generator-Weiche: ohne gericht_fuellen_id oder für ein fertiges Gericht gib
 it('Bau-Weiche: der Wurzel-Schritt einer Planung mit Ziel-Gericht baut in die Hülle; was der Mensch gesetzt hat, bleibt', function () {
     $huelle = ($this->huelle)();
     $klasseVorher = $huelle->dish_main_group_id;
-    $session = $this->svc->sessionFuer($this->rootTeam, $huelle->id);
+    $session = app(\Platform\FoodAlchemist\Services\PlanungsEinstiegService::class)->rezepturSessionFuer($this->rootTeam, $huelle->id);
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'gericht', 'status' => 'running']);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
     expect($this->svc->zielFuerStep($this->rootTeam, (int) $step->id)?->id)->toBe($huelle->id);
@@ -180,7 +180,7 @@ it('Bau-Weiche (Plan 98 B): eine an der Hülle gesetzte Portion geht als Ziel in
     // die Portion des Menschen wirkt als ziel_portion_g, auf die der Generator Zutaten und Ertrag bringt.
     $huelle = ($this->huelle)();
     $huelle->forceFill(['sales_quantity_per_unit_g' => 250])->save();
-    $session = $this->svc->sessionFuer($this->rootTeam, $huelle->id);
+    $session = app(\Platform\FoodAlchemist\Services\PlanungsEinstiegService::class)->rezepturSessionFuer($this->rootTeam, $huelle->id);
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'gericht', 'status' => 'running']);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
 

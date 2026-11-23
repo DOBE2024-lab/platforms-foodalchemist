@@ -20,7 +20,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
  */
 class ComponentEquivalentService
 {
-    public function __construct(private RecipeRecomputeService $recompute)
+    public function __construct(private \Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte $recompute)   // 98 · 3.3 S7 P4
     {
     }
 

@@ -205,7 +205,7 @@ class VkModal extends Component
         $dzs = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class);
         foreach ($rezept->presentations()->with('servingForm')->get() as $d) {
             $a = $zeit->anrichten($team, $rezept, [['dar' => $d, 'portionen' => $n]], null, $zjm);
-            $raus[(int) $d->id] = ($a['formen'][0] ?? []) + ($this->darAktiv === null || $this->darAktiv === (int) $d->id ? $dzs->herstellung($team, $rezept, $d, $n) : [])
+            $raus[(int) $d->id] = ($a['formen'][0] ?? []) + ($this->darAktiv === null || $this->darAktiv === (int) $d->id ? app(\Platform\FoodAlchemist\Services\PlanungsblattService::class)->darreichungsHerstellung($team, $rezept, $d, $n) : [])
                 + ['portionen' => $n, 'service_kosten' => $dzs->serviceKosten($team, (float) ($a['vor_ort_minuten'] ?? 0)), 'minuten_gesamt' => round($a['minuten'], 1), 'startwert' => match ($a['formen'][0]['einheit'] ?? 'portion') {
                 'stueck' => \Platform\FoodAlchemist\Services\ProductionTimeService::ANRICHTEN_SEKUNDEN_JE_STUECK,
                 'behaelter' => \Platform\FoodAlchemist\Services\ProductionTimeService::ANRICHTEN_MINUTEN_JE_PLATTE,

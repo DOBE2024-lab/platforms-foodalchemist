@@ -30,7 +30,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
  */
 class KostenCacheService
 {
-    public function __construct(private RecipeRecomputeService $recompute) {}
+    /** 98 · 3.3 S7 P3: nur die Schnittstelle (gebunden an RecipeRecomputeService), nicht die ganze Neuberechnung — löst den Kreis. */
+    public function __construct(private Rezept\TeamKostenRechner $recompute) {}
 
     /** @return array{quelle:string, ek_summe:?float, ek_per_kg:?float, n_priced:int, n_total:int, anteil_fehlend_anzahl:?float, anteil_fehlend_masse:?float, vollstaendig:bool, grund:?string, fehlende:list<array<string,mixed>>, berechnet_at:?string, basis:?string} */
     public function fuer(FoodAlchemistRecipe $recipe, Team $team): array
@@ -48,7 +49,7 @@ class KostenCacheService
             // Neuabgleich der Pilot-Rezepte (05.11.): die EK-Zähler kennen nur zugeordnete Zeilen — eine OFFENE Zeile (kein GP, kein Unterrezept)
             // ist ebenfalls ein fehlender Preis, sonst steht „vollständig“ über einem Rezept mit Lücke. Zähler aus dem Recompute (n_ingredients_unmapped).
             // nur wenn der Zähler etwas meldet, genau nachzählen (er zählt auch optionale Zeilen) — der Normalfall kostet keine Abfrage
-            $offen = (int) ($recipe->n_ingredients_unmapped ?? 0) > 0 ? count(Reife\RecipeReifeAdapter::offeneZutaten($recipe)) : 0;
+            $offen = (int) ($recipe->n_ingredients_unmapped ?? 0) > 0 ? count(\Platform\FoodAlchemist\Support\OffeneZutaten::namen($recipe)) : 0;
             $n = (int) $recipe->ek_n_ingredients_total + $offen;
             $p = (int) $recipe->ek_n_ingredients_priced;
             // Ohne Zähler (Altstand, nie neu gerechnet) gilt ein vorhandener EK als vollständig; mit Zählern zählt priced == total

@@ -176,3 +176,21 @@ it('Auslöser Pin: ein Team pinnt einen anderen Butter-Artikel → nur dieses Te
     expect((bool) DB::table('foodalchemist_recipe_team_kosten')->where('recipe_id', $this->jusF->id)->where('team_id', $this->soul->id)->value('veraltet'))->toBeFalse()
         ->and($this->cache->fuer($this->jusF, $this->broich)['ek_summe'])->toBeGreaterThan($vorher);
 });
+
+it('98 · 3.3 S7 P3 · drei Ebenen: eigenes Rezept → Abo-Jus-Fassung → Fond-Fassung → GP, rekursiv über KostenCache und TeamKostenRechner', function () {
+    // Die Schnittstelle ist an die Neuberechnung gebunden — KostenCacheService rechnet weiter mit derselben Engine
+    expect(app(\Platform\FoodAlchemist\Services\Rezept\TeamKostenRechner::class))->toBeInstanceOf(RecipeRecomputeService::class);
+
+    // Ebene 1: ein eigenes Broich-Rezept nutzt die Abo-Fassung des Jus (Ebene 2), die wiederum die Fond-Fassung (Ebene 3) nutzt
+    $sauce = $this->makeRecipe($this->broich, 'Sauce Broich');
+    $this->makeIngredient($sauce, 'Kalbsjus', null, '200')->update(['referenced_recipe_id' => $this->jusF->id]);
+    DB::table('foodalchemist_recipe_team_kosten')->where('team_id', $this->broich->id)->delete();   // Cache leer: der Recompute muss rechnen lassen
+
+    app(RecipeRecomputeService::class)->recomputePipeline($sauce->id);
+
+    // Recompute → KostenCacheService::fuer(Jus-Fassung, Broich) → rechne → kostenFuerTeam → Fond-Fassung mit Broichs Knochenpreis
+    $jus = ($this->erwartet)($this->broich);
+    expect($jus['vollstaendig'])->toBeTrue()
+        ->and((float) $sauce->fresh()->ek_total_eur)->toEqualWithDelta(0.2 * (float) $jus['ek_per_kg'], 0.011)
+        ->and(DB::table('foodalchemist_recipe_team_kosten')->where('team_id', $this->broich->id)->whereIn('recipe_id', [$this->jusF->id, $this->fondF->id])->count())->toBe(2);
+});

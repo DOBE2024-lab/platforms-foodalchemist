@@ -44,7 +44,7 @@ use Platform\FoodAlchemist\Services\Rezept\RezeptGraphService;
  *   Invariante bleibt Zyklus-Schutz + Selbstreferenz. Regelwerk BR §4.3.
  * I9: vk_* wird hier NIEMALS geschrieben.
  */
-class RecipeRecomputeService
+class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\NeuberechnungRezepte   // 98 · 3.3 S7 P3/P4: KostenCache bzw. Stamm-Dienste ohne Kreis
 {
     // A-5 (2026-08-03): Kein Sub-Rezept-Tiefenlimit (Regelwerk BR §4.3 gelockert). Code-Qualität 2.1c: auch die Eltern-Suche hat keinen
     // Deckel mehr (früher PROPAGATION_LIMIT = 10) — ein Graph-Dienst mit Besucht-Liste ({@see RezeptGraphService::vorfahren}).
@@ -234,11 +234,9 @@ class RecipeRecomputeService
 
         // Spec 60: Aromenprofile mitziehen (Kinder vor Eltern — der Eltern-Hash enthält die Kinder).
         // Best-effort: ein Profil-Fehler blockt nie die Bearbeitung (I8).
+        // 98 · 3.3 S7 P2: per synchronem Event statt Direktaufruf (Listener → Pairing\RezeptProfil::fuer je Id, gleiche Reihenfolge).
         try {
-            $profil = app(Pairing\RezeptProfil::class);
-            foreach ($this->topoOrder($betroffen) as $id) {
-                $profil->fuer((int) $id);
-            }
+            \Platform\FoodAlchemist\Events\AromenprofileVeraltet::dispatch($this->topoOrder($betroffen));
         } catch (\Throwable $e) {
             Log::warning("Aromenprofil nach Recompute fehlgeschlagen: {$e->getMessage()}");
         }

@@ -47,7 +47,7 @@ class FassungService
     public function __construct(
         private FaRechte $rechte,
         private AboService $abos,
-        private RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte $recompute,   // 98 · 3.3 S7 P4: nur die Neuberechnung, nicht die Klasse
         private PlattformProtokoll $protokoll,
     ) {}
 

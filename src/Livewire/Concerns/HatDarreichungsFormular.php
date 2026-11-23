@@ -118,6 +118,27 @@ trait HatDarreichungsFormular
         $this->darServiceCall(fn ($svc, $team) => $svc->setzeStandardmenge($team, $id, $verwenden));
     }
 
+    /** Plan 98 B, Schritt 5: Eingabe „alle Mengen auf … %“ je Variante. @var array<int, string> */
+    public array $darAnteilForm = [];
+
+    /** Plan 98 B (h): „Mengen wirken wie eine Charge – bitte prüfen“ (abgeleitet, DarreichungService::chargenHinweis), sonst null. */
+    public ?string $darChargeHinweis = null;
+
+    /** „Alle Mengen auf … % der Standard-Darreichung“ — schreibt je Komponente ein Delta (DarreichungService::setzeAnteil). */
+    public function darAnteil(int $id): void
+    {
+        $roh = str_replace(',', '.', trim((string) ($this->darAnteilForm[$id] ?? '')));
+        if (! is_numeric($roh)) {
+            $this->fehler = 'Bitte einen Anteil in Prozent eingeben, z. B. 50.';
+
+            return;
+        }
+        $this->darServiceCall(fn ($svc, $team) => $svc->setzeAnteil($team, $id, (float) $roh));
+        if ($this->fehler === null) {
+            unset($this->darAnteilForm[$id]);
+        }
+    }
+
     public function darZeitEntfernen(int $id, int $index): void
     {
         if (! isset($this->darZeitForm[$id][$index])) {
@@ -135,6 +156,7 @@ trait HatDarreichungsFormular
         $this->darZeitStart = [];
         $this->darDeltaOffen = null;
         $this->darNeueForm = '';
+        $this->darChargeHinweis = null;
         if ($this->recipeId === null) {
             return;
         }
@@ -172,6 +194,8 @@ trait HatDarreichungsFormular
         if (! isset($this->darForm[$this->darAktiv])) {
             $this->darAktiv = array_key_first($this->darForm);
         }
+        $gericht = $team !== null ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::visibleToTeam($team)->find($this->recipeId) : null;
+        $this->darChargeHinweis = $gericht !== null ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->chargenHinweis($gericht) : null;
     }
 
     /** Deutsch fürs Eingabefeld: feste Nachkommastellen (Preis) oder ohne überflüssige Nullen. */

@@ -84,10 +84,18 @@
                             </x-fa::select>
                             @if($vehikel->isEmpty())<span class="{{ $hinweis }}" data-dar-typ-leer>Keine Liste: Einstellungen › Behälter › Servier-Vehikel</span>@endif
                         </x-fa::field>
-                        <x-fa::field label="Portionsmenge" :hint="$standardmenge ? ($d->is_standard ? 'Aus der Rezeptur' : 'Aus der Standard-Darreichung') : 'Summe der Komponenten unten'">
+                        {{-- Plan 98 B: die Grammatur ist nur lesend und nennt ihre Herkunft (Modell 23.11.: Gericht = eine Portion) --}}
+                        <x-fa::field label="Portionsmenge" :hint="$standardmenge ? ($d->is_standard ? 'Summe der Bestandteile' : 'Aus der Standard-Darreichung') : 'Summe der Komponenten unten'">
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-2 min-h-9" data-dar-portionsmenge>
                                 <strong class="tabular-nums">{{ $d->quantity_per_unit_g !== null ? number_format($d->quantity_per_unit_g * ($d->unit_count ?: 1), 1, ',', '.') . ' g' : 'Menge fehlt' }}</strong>
                                 <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]" :checked="$standardmenge" wire:change="darStandardmenge({{ $d->id }}, $event.target.checked)" data-dar-standardmenge>Standardmenge verwenden</x-fa::checkbox>
+                                @unless($d->is_standard)
+                                    {{-- Plan 98 B, Schritt 5: alle Mengen auf einen Anteil der Standard-Darreichung (je Komponente ein Delta) --}}
+                                    <span class="inline-flex items-center gap-2" data-dar-anteil>
+                                        <x-fa::input size="sm" numeric class="w-20" inputmode="decimal" wire:model="darAnteilForm.{{ $d->id }}" wire:keydown.enter="darAnteil({{ $d->id }})" aria-label="Anteil der Standard-Darreichung in Prozent" placeholder="%" />
+                                        <x-fa::button size="sm" variant="secondary" wire:click="darAnteil({{ $d->id }})">Alle Mengen auf % vom Standard</x-fa::button>
+                                    </span>
+                                @endunless
                             </div>
                         </x-fa::field>
                         <x-fa::field label="Preisklasse" for="dar-klasse-{{ $d->id }}">
@@ -117,6 +125,7 @@
                             </x-fa::field>
                         @endif
                     </div>
+                    @if($darChargeHinweis)<x-fa::notice tone="warn" data-dar-charge>{{ $darChargeHinweis }}: Die Portion liegt über 3000 g, deshalb gibt es keinen Auto-VK. Mengen je Portion korrigieren oder den VK bewusst festsetzen.</x-fa::notice>@endif
                     @if(($d->unit_count ?? 1) > 1 || ($rezept->sales_unit_count ?? 1) > 1)<x-fa::notice tone="warn">Altbestand mit abweichender Zählweise. Mengen und Zeiten bleiben bis zu einer geprüften Umstellung erhalten.</x-fa::notice>@endif
                     @include('foodalchemist::livewire.verkauf.partials.darreichung-gefaess')
                     {{-- 20.11.2026 (Dominique): die Kennzahlen der Standard-Darreichung stehen schon oben im Kopf — hier nur bei einer anderen

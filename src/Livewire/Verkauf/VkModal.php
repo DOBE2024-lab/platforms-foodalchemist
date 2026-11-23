@@ -223,6 +223,7 @@ class VkModal extends Component
         if ($team === null) {
             return;
         }
+        $kopfVorher = $this->kopfGrammatur();
         try {
             $aktion(app(\Platform\FoodAlchemist\Services\DarreichungService::class), $team);
             $this->fehler = null;
@@ -230,6 +231,13 @@ class VkModal extends Component
             $this->fehler = $e->getMessage();
 
             return;
+        }
+        // Plan 98 B: die Standard-Darreichung spiegelt ihre Grammatur in den Kopf. Ohne Nachladen hielte das Formular den
+        // alten Kopf-Wert, und „Speichern“ im Kopf schickte ihn als Änderung zurück in die Zeile. Eine eigene, noch nicht
+        // gespeicherte Eingabe im Kopf bleibt stehen.
+        $kopfNachher = $this->kopfGrammatur();
+        if ($kopfNachher !== $kopfVorher && $this->zahlGleich($this->form['sales_quantity_per_unit_g'] ?? null, $kopfVorher)) {
+            $this->form['sales_quantity_per_unit_g'] = $kopfNachher;
         }
         $offen = $this->darDeltaOffen;
         $entwuerfe = $this->darZeitEntwuerfe();
@@ -241,9 +249,26 @@ class VkModal extends Component
         $this->dispatch('recipe-gespeichert');
     }
 
+    private function kopfGrammatur(): ?float
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        $wert = $team === null || $this->recipeId === null ? null
+            : FoodAlchemistRecipe::visibleToTeam($team)->whereKey($this->recipeId)->value('sales_quantity_per_unit_g');
+
+        return $wert === null ? null : (float) $wert;
+    }
+
+    private function zahlGleich(mixed $formWert, ?float $kopf): bool
+    {
+        $formWert = $formWert === '' ? null : $formWert;
+
+        return $formWert === null || $kopf === null ? $formWert === null && $kopf === null : abs((float) $formWert - $kopf) < 0.05;
+    }
+
     public function darreichungSpeichern(int $id): void
     {
-        $this->darServiceCall(fn ($svc, $team) => $svc->aktualisieren($team, $id, $this->darForm[$id] ?? []));
+        // Plan 98 B: die Grammatur steht in der Zeile nur zur Anzeige — gesperrt, also nicht mitschicken
+        $this->darServiceCall(fn ($svc, $team) => $svc->aktualisieren($team, $id, array_diff_key($this->darForm[$id] ?? [], ['quantity_per_unit_g' => true])));
     }
 
     public function darreichungPreisModusGeaendert(int $id, string $modus): void
@@ -406,6 +431,7 @@ class VkModal extends Component
         if ($team === null || $this->recipeId === null) {
             return;
         }
+        $this->fehler = null;   // ein erfolgreiches Speichern nach einem abgelehnten zeigt keinen alten Fehler mehr
         try {
             $update = array_map(
                 fn ($v) => $v === '' ? null : $v, $this->form,

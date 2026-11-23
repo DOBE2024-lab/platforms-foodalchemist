@@ -23,7 +23,7 @@ class RecipeDarreichungPostTool extends FoodAlchemistTool implements ToolContrac
     public function getDescription(): string
     {
         return 'Legt eine Darreichungsform an einem team-eigenen Gericht an (serving_form = Slug/Code/Label). '
-            . 'Mehrere Varianten derselben Servierform sind möglich. attrs optional: name, arbeitszeiten (wie recipe_darreichung.PUT), quantity_per_unit_g, unit_count, markup_class_id, price_mode (auto|manuell), sales_net, note, anrichten_wert (Altwert, s. recipe_darreichung.PUT), anrichten_pauschal_min.';
+            . 'Mehrere Varianten derselben Servierform sind möglich. attrs optional: name, arbeitszeiten (wie recipe_darreichung.PUT), unit_count, markup_class_id, price_mode (auto|manuell), sales_net, note, anrichten_wert (Altwert, s. recipe_darreichung.PUT), anrichten_pauschal_min. Eine neue Form folgt der Menge des Standards (der Standard selbst: Ansatz ÷ Portionen); quantity_per_unit_g ist nicht setzbar (VALIDATION_ERROR) — eine kleinere/größere Variante danach mit recipe_darreichung.PUT anteil_prozent.';
     }
 
     public function getSchema(): array

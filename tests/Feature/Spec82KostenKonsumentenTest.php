@@ -172,7 +172,7 @@ it('§8 Punkt 8 / §12 C: VK eines Abo-Gerichts = Team-EK je Portion × Basissat
         $this->makeIngredient($gericht, $z->raw_text, $z->gp, (string) $z->quantity, (int) $z->position);
     }
     app(RecipeRecomputeService::class)->recomputePipeline($gericht->id);
-    $d = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->anlegen($this->master, $gericht->id, $form->id, ['quantity_per_unit_g' => 200]);
+    $d = $this->grammaturAltbestand(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->anlegen($this->master, $gericht->id, $form->id), 200);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     $d->forceFill(['markup_class_id' => $klasseMaster->id, 'sales_net' => 99.0])->save();
     $inhalte = app(InhaltsFreigabeService::class);
     $sid = $inhalte->sammlungAnlegen($this->master, 'Gerichte', null, $this->kurator);

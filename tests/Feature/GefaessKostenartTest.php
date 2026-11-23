@@ -64,8 +64,8 @@ beforeEach(function () {
     $this->gericht = function (string $key = 'dessert') {
         $g = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => $key, 'name' => 'Dessert '.$key, 'status' => 'approved', 'is_sales_recipe' => true, 'ek_per_kg_eur' => 10.0, 'yield_kg' => 1.0]);
         $d = $this->svc->ensureStandard($this->rootTeam, $g->id);
-        // Explizite Bestandsgrammatur: derselbe Servicepfad wie eine Mengenübersteuerung.
-        $d = $this->svc->aktualisieren($this->rootTeam, $d->id, ['quantity_per_unit_g' => 200, 'unit_count' => 1]);
+        // Explizite Bestandsgrammatur — Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
+        $d = $this->grammaturAltbestand($d, 200, 1);
 
         return $d->fresh();
     };

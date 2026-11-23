@@ -90,7 +90,7 @@ beforeEach(function () {
 
     $teller = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->master->id, 'code' => 'teller', 'label' => 'Teller']);
     foreach ([$this->gericht, $this->gericht2] as $g) {
-        app(\Platform\FoodAlchemist\Services\DarreichungService::class)->anlegen($this->master, $g->id, $teller->id, ['quantity_per_unit_g' => 200]);   // ohne Darreichung kein VK
+        $this->grammaturAltbestand(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->anlegen($this->master, $g->id, $teller->id), 200);   // ohne Darreichung kein VK; Plan 98 B: Altbestand-Fixture
     }
     $cs = app(ConceptService::class);
     $mkKonzept = function (string $name, $gericht) use ($cs) {

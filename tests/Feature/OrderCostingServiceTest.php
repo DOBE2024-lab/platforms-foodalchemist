@@ -66,8 +66,9 @@ beforeEach(function () {
         'team_id' => $this->rootTeam->id, 'code' => 'portion', 'label' => 'Portion',
     ]);
     $presentation = app(DarreichungService::class)->anlegen($this->rootTeam, $this->recipe->id, $form->id, [
-        'quantity_per_unit_g' => 100, 'unit_count' => 1, 'price_mode' => 'auto',
+        'unit_count' => 1, 'price_mode' => 'auto',
     ]);
+    $presentation = $this->grammaturAltbestand($presentation, 100, 1);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     app(DarreichungService::class)->recomputePreise($presentation);
 
     $concepts = app(ConceptService::class);

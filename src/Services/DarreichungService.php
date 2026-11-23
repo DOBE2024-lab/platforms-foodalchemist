@@ -39,7 +39,44 @@ class DarreichungService
         private TeamSettingsService $settings,
     ) {}
 
+    /**
+     * Plan 98 B, Sperre (Entscheid Dominique 22.11.2026, Modell 23.11.): Es gibt keine freie Grammatur mehr. Ein Gericht ist
+     * EINE Portion — die Bestandteile tragen ihre Menge je Portion, die Grammatur des Standards ist ihre Summe; Varianten
+     * rechnen aus ihren Komponenten (Anteil am Standard oder Mengen je Komponente). Zentral hier, damit Oberfläche, MCP und
+     * Importe gleich laufen.
+     */
+    public const GRAMMATUR_GESPERRT = 'Die Grammatur ist nicht direkt setzbar: Sie ist am Standard die Summe der Bestandteile '
+        .'(Mengen je Portion), an einer Variante die Summe ihrer Komponenten. Setze stattdessen die Zutatenmengen des Gerichts, '
+        .'an einer Variante den Anteil am Standard (anteil_prozent) oder Mengen je Komponente (recipe_darreichung_delta.PUT).';
+
+    /**
+     * Plan 98 B (h), Entscheid Dominique 23.11. („ok fixe die Ki“): liegt die Portion des Standards (Summe der Bestandteile, bei
+     * festem Ertrag gegart) über dieser Grenze, wirken die Mengen wie eine Charge — kein Auto-VK, Hinweis am Gericht. Nur die
+     * Obergrenze (Kurator 23.11.): Canapés, Pralinen, Amuse-Bouche liegen echt bei 10–15 g; eine Herkunft „aus dem Generator“
+     * ist am Rezept nicht verlässlich markiert (created_via mal mcp, plan_go, import oder leer), deshalb gilt die Regel für alle Gerichte.
+     */
+    public const CHARGE_OBERGRENZE_G = 3000.0;
+
+    public const CHARGE_HINWEIS = 'Mengen wirken wie eine Charge – bitte prüfen';
+
+    /** Modell 23.11. (Dominique): die Portionszahl eines Gerichts ist fest 1 — kein Teiler. Altbestand > 1 stellt die Grammatur-Umstellung um. */
+    public const PORTIONSZAHL_FEST = 'Die Portionszahl eines Gerichts ist fest 1: Die Zutatenmengen gelten je Portion. '
+        .'Ein Gericht mit Mengen für mehrere Portionen wird über foodalchemist:grammatur-automatisch auf eine Portion skaliert.';
+
     public function anlegen(Team $team, int $recipeId, int $servierformId, array $attrs = [], string $createdVia = 'fa_ui'): FoodAlchemistRecipeDarreichung
+    {
+        if (array_key_exists('quantity_per_unit_g', $attrs)) {
+            throw new \RuntimeException(self::GRAMMATUR_GESPERRT);
+        }
+
+        return $this->anlegenIntern($team, $recipeId, $servierformId, $attrs, $createdVia, true);
+    }
+
+    /**
+     * $folgen: jede neue Form folgt der Mengenquelle (Plan 98 B). Nur die Selbstheilung {@see ensureStandard} legt einen
+     * fehlenden Standard noch in Altbestand-Form an (Grammatur aus dem Kopf) — sie repariert Bestand, sie pflegt nicht.
+     */
+    private function anlegenIntern(Team $team, int $recipeId, int $servierformId, array $attrs, string $createdVia, bool $folgen): FoodAlchemistRecipeDarreichung
     {
         $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($recipeId);
         \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'die Darreichung');   // Spec 84 §4.0
@@ -69,9 +106,10 @@ class DarreichungService
             'recipe_id' => $recipe->id,
             'serving_form_id' => $servierformId,
             'is_standard' => $standard === null,               // erste Form = Standard
-            'menge_vom_standard' => ! isset($attrs['quantity_per_unit_g'])
-                && ($standard !== null || ($recipe->sales_quantity_per_unit_g === null && ($recipe->sales_unit_count ?? 1) <= 1)),
-            // Vorbefüllung aus der Standard-Form (F2: KEIN Pauschal-Faktor — User passt an)
+            // Plan 98 B: jede neue Form folgt der Mengenquelle — der Standard der Rezeptur, eine Variante dem Standard
+            'menge_vom_standard' => $folgen || (! isset($attrs['quantity_per_unit_g'])
+                && ($standard !== null || ($recipe->sales_quantity_per_unit_g === null && ($recipe->sales_unit_count ?? 1) <= 1))),
+            // Vorbefüllung aus der Standard-Form; recomputePreise rechnet sie gleich neu
             'quantity_per_unit_g' => $attrs['quantity_per_unit_g'] ?? $standard?->quantity_per_unit_g,
             'unit_vocab_id' => $attrs['unit_vocab_id'] ?? $standard?->unit_vocab_id,
             'unit_count' => $attrs['unit_count'] ?? 1,
@@ -134,14 +172,16 @@ class DarreichungService
         $mengenAttrs = $recipe->sales_quantity_per_unit_g === null && ($recipe->sales_unit_count ?? 1) <= 1
             ? [] : ['quantity_per_unit_g' => $quantityPerUnitG];
 
-        return $this->anlegen($team, $recipe->id, $unbestimmt, $mengenAttrs + [
+        // Plan 98 B: Selbstheilung alter Gerichte bleibt in Altbestand-Form (anlegenIntern ohne Sperre); die Grammatur-
+        // Umstellung und ihr zweiter Trockenlauf fangen solche Standards ein.
+        return $this->anlegenIntern($team, $recipe->id, $unbestimmt, $mengenAttrs + [
             'unit_vocab_id' => $recipe->sales_unit_vocab_id,
             // recipes.sales_unit_count ist die Ausbeute des Rezeptlaufs (Nenner für
             // Yield/Anzahl), nicht die Zahl verkaufter Einheiten IN einer Darreichung.
             // Der Standard repräsentiert genau eine Verkaufseinheit.
             'unit_count' => 1,
             'markup_class_id' => $this->vorbelegteKlasseId($team, $recipe),
-        ], $createdVia);
+        ], $createdVia, false);
     }
 
     /**
@@ -161,7 +201,7 @@ class DarreichungService
 
     private const FELDER = [
         'name', 'arbeitszeiten', 'ausgabe_station_id', 'menge_vom_standard',
-        'quantity_per_unit_g', 'unit_vocab_id', 'unit_count',
+        'unit_vocab_id', 'unit_count',   // quantity_per_unit_g: gesperrt (Plan 98 B), siehe GRAMMATUR_GESPERRT
         'markup_class_id', 'price_mode', 'sales_net',
         'vat_profile_key', 'price_override_reason', 'price_override_expires_at',
         'container_warm_vocab_id', 'container_cold_vocab_id',
@@ -220,7 +260,6 @@ class DarreichungService
     }
 
     private const DEZIMAL_FELDER = [
-        'quantity_per_unit_g' => 'Grammatur',
         'unit_count' => 'Anzahl',
         'anrichten_wert' => 'Anrichten je Einheit',
         'anrichten_pauschal_min' => 'Anrichten-Pauschale',
@@ -229,6 +268,9 @@ class DarreichungService
 
     public function aktualisieren(Team $team, int $darreichungId, array $attrs): FoodAlchemistRecipeDarreichung
     {
+        if (array_key_exists('quantity_per_unit_g', $attrs)) {
+            throw new \RuntimeException(self::GRAMMATUR_GESPERRT);
+        }
         $darreichung = $this->find($team, $darreichungId);
         $update = array_intersect_key($attrs, array_flip(self::FELDER));
         if (array_key_exists('menge_vom_standard', $update)) {
@@ -236,8 +278,6 @@ class DarreichungService
                 throw new \RuntimeException('Mengenherkunft muss Standard oder eigene Menge sein.');
             }
             $update['menge_vom_standard'] = (bool) $update['menge_vom_standard'];
-        } elseif (array_key_exists('quantity_per_unit_g', $update)) {
-            $update['menge_vom_standard'] = false;
         }
         if (array_key_exists('arbeitszeiten', $update)) {
             $update['arbeitszeiten'] = app(DarreichungsZeitService::class)->normalisieren($update['arbeitszeiten']);
@@ -319,9 +359,9 @@ class DarreichungService
                 'price_override_expires_at' => null,
             ]);
         }
-        // Vererbung abschalten darf die aktuelle Komposition nicht neu aus dem Kernrezept mischen.
-        if ($darreichung->menge_vom_standard && ($update['menge_vom_standard'] ?? true) === false
-            && ($darreichung->deltas()->exists() || $darreichung->recipe->standardPresentation?->deltas()->exists())) {
+        // Vererbung abschalten hält die aktuelle Komposition als Mengen je Komponente fest (wie setzeStandardmenge). Plan 98 B:
+        // immer, nicht nur bei vorhandenen Deltas — sonst bliebe eine freie Grammatur übrig.
+        if ($darreichung->menge_vom_standard && ($update['menge_vom_standard'] ?? true) === false) {
             $this->fixiereKomposition($darreichung, $team);
         }
         $vorher = [$darreichung->serving_vehicle_vocab_id, $darreichung->vessel_gp_id];
@@ -442,6 +482,44 @@ class DarreichungService
             }
             $this->recomputeFuerRezept($dar->recipe_id);
         });
+    }
+
+    /**
+     * Plan 98 B, Schritt 5 — „alle Mengen auf … %“: jede Komponente der Variante bekommt δ_i = m_i_std × p, die Grammatur ergibt
+     * sich daraus. Ersetzt die bisherigen Mengen der Variante; was der Standard weglässt, bleibt weggelassen. Weglassungen der
+     * Variante selbst (Delta weggelassen oder auf 0 g) bleiben bestehen — sonst landete still wieder z. B. Speck in „ohne Speck“
+     * (Kurator 23.11., Produktentscheid Dominique steht aus). Danach steht die Variante wie nach der Umstellung (Weg A): eigene
+     * Komposition, Bezug auf die Standard-Komposition. Nicht für den Standard.
+     */
+    public function setzeAnteil(Team $team, int $darreichungId, float $prozent): FoodAlchemistRecipeDarreichung
+    {
+        if (! is_finite($prozent) || $prozent <= 0 || $prozent > 1000) {
+            throw new \RuntimeException('Der Anteil muss zwischen 0 und 1000 % liegen (größer als 0).');
+        }
+        $dar = $this->find($team, $darreichungId);
+        if ($dar->is_standard) {
+            throw new \RuntimeException('Der Anteil bezieht sich auf die Standard-Darreichung — an ihr selbst nicht setzbar.');
+        }
+        DB::transaction(function () use ($dar, $team, $prozent) {
+            $recipe = $dar->recipe()->lockForUpdate()->first();
+            $standard = $this->standardProEinheit($recipe, $team);
+            if ($standard === [] || array_sum(array_column($standard, 'masse_g')) <= 0) {
+                throw new \RuntimeException('Die Standard-Darreichung hat keine Komponenten mit Menge — kein Anteil berechenbar.');
+            }
+            $weggelassen = $dar->deltas()->get()
+                ->filter(fn ($d) => $d->omitted || ($d->quantity_override_g !== null && (float) $d->quantity_override_g <= 0))
+                ->pluck('recipe_ingredient_id')->map(fn ($id) => (int) $id)->all();
+            $dar->deltas()->withTrashed()->forceDelete();
+            foreach ($standard as $ingId => $z) {
+                $m = in_array((int) $ingId, $weggelassen, true) ? 0.0 : round($z['masse_g'] * $prozent / 100, 3);
+                FoodAlchemistRecipeDarreichungDelta::create(['presentation_id' => $dar->id, 'recipe_ingredient_id' => $ingId,
+                    'team_id' => $dar->team_id, 'quantity_override_g' => $m, 'omitted' => $m <= 0]);
+            }
+            $dar->update(['menge_vom_standard' => false, 'komponenten_referenz_g' => null]);
+            $this->recomputePreise($dar->refresh());
+        });
+
+        return $dar->refresh();
     }
 
     /**
@@ -830,30 +908,17 @@ class DarreichungService
             // Stufe 2: Overrides sind ECHTE Gramm je Einheit dieser Form (User-Entscheid
             // 2026-07-03) — die Grammatur der Form ergibt sich aus der Komponenten-Summe,
             // der EK direkt aus Σ (Preis/g × Gramm). Kein Verhältnis-Umweg mehr.
-            $proEinheit = $this->standardProEinheit($recipe, $team, (int) $darreichung->id);
-            $deltaMap = $deltas->keyBy('recipe_ingredient_id');
-            $kosten = 0.0;
-            $masse = 0.0;
-            $nBepreist = 0;
-            foreach ($proEinheit as $ingId => $zeile) {
-                $delta = $deltaMap->get($ingId);
-                if ($delta !== null && $delta->omitted) {
-                    continue;
-                }
-                $m = $delta?->quantity_override_g !== null ? (float) $delta->quantity_override_g : $zeile['masse_g'];
-                if ($zeile['kosten_pro_g'] !== null) {
-                    $nBepreist++;
-                    $kosten += $zeile['kosten_pro_g'] * $m;
-                }
-                $masse += $m;
-            }
+            ['pro_einheit' => $proEinheit, 'kosten' => $kosten, 'masse' => $masse, 'n_bepreist' => $nBepreist]
+                = $this->komponentenSumme($darreichung, $recipe, $team, $deltas);
             $masseBekannt = true;
             if ($proEinheit === [] && $deltas->isEmpty() && $darreichung->menge_vom_standard) {
                 $referenzMasse = $this->grammJeEinheit($darreichung, $recipe);
                 $masseBekannt = $referenzMasse !== null;
                 $masse = $referenzMasse ?? 0;
             }
-            // Auto-Grammatur: g/Einheit = Summe der Komponenten dieser Form
+            // Auto-Grammatur: g/Einheit = Summe der Komponenten dieser Form — bei festem Ertrag gegart (Dominique 23.11.: „Gegart
+            // (Ertrag)“). Kosten und Produktion rechnen weiter auf den rohen Mengen; EK je kg bezieht sich auf den Ertrag.
+            $masse = $proEinheit === [] ? $masse : $masse * $this->garfaktor($recipe, null, $team);
             $darreichung->quantity_per_unit_g = $masseBekannt ? round($masse, 1) : null;
             $ekPortion = $nBepreist > 0
                 ? round($kosten * (float) ($darreichung->unit_count ?: 1), 4)
@@ -873,6 +938,11 @@ class DarreichungService
         $oldEffective = $darreichung->sales_net;
         $darreichung->forceFill(['quantity_per_unit_g' => $darreichung->quantity_per_unit_g, 'ek_portion' => $ekPortion]);
         $price = $this->catalogPricing->catalogPrice($team, $darreichung);
+        if ($price['price_mode'] === 'auto'
+            && $this->chargenHinweis($recipe, $darreichung->is_standard ? $darreichung : null) !== null) {
+            // Plan 98 B (h): Mengen wirken wie eine Charge — kein Auto-VK (ein bewusst fixierter VK bleibt)
+            $price = ['calculated_sales_net' => null, 'sales_net' => null, 'sales_gross' => null] + $price;
+        }
         $darreichung->update([
             'quantity_per_unit_g' => $darreichung->quantity_per_unit_g,
             'ek_portion' => $ekPortion,
@@ -893,6 +963,8 @@ class DarreichungService
             ] : []),
         ]);
 
+        $this->kopfSpiegeln($darreichung, $recipe);
+
         if ($oldCalculated !== $darreichung->calculated_sales_net || $oldEffective !== $darreichung->sales_net) {
             FoodAlchemistPriceChangeAudit::create([
                 'team_id' => $darreichung->team_id,
@@ -912,6 +984,61 @@ class DarreichungService
                     'calculation_version' => $price['calculation_version'],
                 ],
             ]);
+        }
+    }
+
+    /**
+     * Plan 98 B (Kurator 23.11.): Der Rezept-Kopf `sales_quantity_per_unit_g` spiegelt die Grammatur der Standard-Darreichung —
+     * vorher drifteten beide auseinander, sobald sich eine Zutatenmenge änderte (der Kopf blieb stehen, die Darreichung rechnete
+     * neu). Rund 15 Leser hängen noch am Kopf; deren Umzug ist Plan 98 · 3.5. Leise per Query (kein Modell-Event, kein
+     * RezeptKostenGeaendert) — es ändert sich nur der Spiegel, nicht die Kalkulation. Unbekannte Grammatur lässt den Kopf stehen.
+     */
+    /**
+     * Komponenten einer Darreichung mit Mengen-Rezept (Deltas oder „wie Standard“): Σ Kosten und Σ rohe Masse je Einheit, aus den
+     * Zeilen des übergebenen Teams (Preise, Pins und Sub-Kosten dieses Teams). Overrides sind echte Gramm, weggelassen zählt nicht.
+     * Eine Rechnung für den Besitzer ({@see recomputePreise}) und den Abo-Weg ({@see TeamVkService}).
+     *
+     * @return array{pro_einheit: array<int, array{masse_g: float, kosten_pro_g: ?float}>, kosten: float, masse: float, n_bepreist: int, fehlende: list<int>}
+     */
+    public function komponentenSumme(FoodAlchemistRecipeDarreichung $darreichung, FoodAlchemistRecipe $recipe, Team $team, ?\Illuminate\Support\Collection $deltas = null): array
+    {
+        $proEinheit = $this->standardProEinheit($recipe, $team, (int) $darreichung->id);
+        $deltaMap = ($deltas ?? $darreichung->deltas()->get())->keyBy('recipe_ingredient_id');
+        $kosten = 0.0;
+        $masse = 0.0;
+        $nBepreist = 0;
+        $fehlende = [];
+        foreach ($proEinheit as $ingId => $zeile) {
+            $delta = $deltaMap->get($ingId);
+            if ($delta !== null && $delta->omitted) {
+                continue;
+            }
+            $m = $delta?->quantity_override_g !== null ? (float) $delta->quantity_override_g : $zeile['masse_g'];
+            if ($zeile['kosten_pro_g'] !== null) {
+                $nBepreist++;
+                $kosten += $zeile['kosten_pro_g'] * $m;
+            } elseif ($m > 0) {
+                $fehlende[] = (int) $ingId;
+            }
+            $masse += $m;
+        }
+
+        return ['pro_einheit' => $proEinheit, 'kosten' => $kosten, 'masse' => $masse, 'n_bepreist' => $nBepreist, 'fehlende' => $fehlende];
+    }
+
+    private function kopfSpiegeln(FoodAlchemistRecipeDarreichung $darreichung, FoodAlchemistRecipe $recipe): void
+    {
+        if (! $darreichung->is_standard) {
+            return;
+        }
+        $gramm = $this->grammJeEinheit($darreichung, $recipe);
+        if ($gramm === null) {
+            return;
+        }
+        $gramm = round($gramm, 1);
+        if ($recipe->sales_quantity_per_unit_g === null || abs((float) $recipe->sales_quantity_per_unit_g - $gramm) >= 0.05) {
+            FoodAlchemistRecipe::whereKey($recipe->id)->update(['sales_quantity_per_unit_g' => $gramm]);
+            $recipe->sales_quantity_per_unit_g = $gramm;
         }
     }
 
@@ -1004,8 +1131,10 @@ class DarreichungService
         if ($darreichung->is_standard && $darreichung->menge_vom_standard && ! $darreichung->deltas()->exists()) {
             $zeilen = $this->recompute->zeilenKostenUndMassen($recipe, Team::findOrFail($darreichung->team_id));
             if ($zeilen !== []) {
-                // Plan 98 B (Grammatur immer automatisch): Bestandteile ÷ Portionen des Ansatzes — vorher der ganze Ansatz als eine Portion
-                return array_sum(array_column($zeilen, 'masse_g')) / max(1, (int) ($recipe->sales_unit_count ?? 1));
+                // Plan 98 B (Grammatur immer automatisch): Summe der Bestandteile, bei festem Ertrag gegart (Dominique 23.11.); der
+                // Teiler sales_unit_count liest nur noch Altbestand (Gericht = eine Portion)
+                return array_sum(array_column($zeilen, 'masse_g')) * $this->garfaktor($recipe, $zeilen)
+                    / max(1, (int) ($recipe->sales_unit_count ?? 1));
             }
             // Ohne Komponenten kein Rückfall auf die zuvor zwischengespeicherte Portionssumme.
             return $recipe->yield_kg !== null ? (float) $recipe->yield_kg * 1000 / max(1, (int) ($recipe->sales_unit_count ?? 1)) : null;
@@ -1071,6 +1200,7 @@ class DarreichungService
                 $jeZutat[(int) $ingId] = $jeAnsatz > 0 ? $einheiten * $g / $jeAnsatz : 0.0;
             }
             $basis = $ansatzG > 0 ? $ansatzG : $batchMasse;
+            $summeG *= $this->garfaktor($recipe, $batchZeilen);   // gegart wie der Ertrag in $basis; je_zutat bleibt roh
 
             return [
                 'ansaetze' => $basis > 0 ? $einheiten * $summeG / $basis : 0.0,
@@ -1108,6 +1238,46 @@ class DarreichungService
     }
 
     /**
+     * Plan 98 B (h): Hinweis „Mengen wirken wie eine Charge“ — abgeleitet, keine Spalte. Die Portion des Standards liegt über
+     * {@see CHARGE_OBERGRENZE_G}. Er verschwindet, sobald die Mengen im Band liegen oder der VK des Standards bewusst
+     * fixiert ist. Ohne Standard oder ohne bekannte Grammatur: kein Hinweis.
+     */
+    public function chargenHinweis(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $standard = null): ?string
+    {
+        if (! $recipe->is_sales_recipe) {
+            return null;
+        }
+        $standard ??= $recipe->standardPresentation()->first();
+        if ($standard === null || in_array($standard->price_mode, ['fixed', 'manuell'], true)) {
+            return null;
+        }
+        $g = $this->grammJeEinheit($standard, $recipe);
+        if ($g === null || $g <= 0) {
+            return null;
+        }
+        $g *= (float) ($standard->unit_count ?: 1);
+
+        return $g > self::CHARGE_OBERGRENZE_G ? self::CHARGE_HINWEIS : null;
+    }
+
+    /**
+     * Plan 98 B (Dominique 23.11.: „Gegart (Ertrag)“): Faktor roh → gegart für angezeigte Grammaturen. Bei festem Ertrag
+     * (yield_kg_manual) Ertrag ÷ Summe der Bestandteile, sonst 1. Kosten und Produktionsmengen bleiben roh.
+     *
+     * @param  array<int, array{masse_g: float}>|null  $zeilen
+     */
+    public function garfaktor(FoodAlchemistRecipe $recipe, ?array $zeilen = null, ?Team $team = null): float
+    {
+        if ($recipe->yield_kg_manual === null || (float) $recipe->yield_kg_manual <= 0) {
+            return 1.0;
+        }
+        $zeilen ??= $this->recompute->zeilenKostenUndMassen($recipe, $team ?? Team::findOrFail($recipe->team_id));
+        $b = array_sum(array_column($zeilen, 'masse_g'));
+
+        return $b > 0 ? (float) $recipe->yield_kg_manual * 1000 / $b : 1.0;
+    }
+
+    /**
      * Standard-Komposition JE EINHEIT: Batch-Massen der Zutaten skaliert auf die
      * Grammatur der Standard-Darreichung (Fallback: ganze Charge = eine Einheit).
      * Referenz für Delta-Editor (Anzeige „Standard (g)") und Delta-Preisrechnung.
@@ -1133,7 +1303,10 @@ class DarreichungService
         }
         // Plan 98 B: Standard „wie Rezept“ (menge_vom_standard, ohne Deltas) = Ansatz ÷ Portionen, nicht der ganze Ansatz
         $wieRezept = $standard !== null && $standard->menge_vom_standard && $stdG === null;
-        $faktor = ($batchG > 0 && $stdG !== null && (float) $stdG > 0) ? (float) $stdG / $batchG
+        // Bezugsgrammaturen sind gegart (bei festem Ertrag): ins Verhältnis zum Ertrag, nicht zur rohen Summe — die Mengen je
+        // Komponente bleiben roh (Kosten, Produktion)
+        $nenner = $batchG * $this->garfaktor($recipe, $zeilen);
+        $faktor = ($nenner > 0 && $stdG !== null && (float) $stdG > 0) ? (float) $stdG / $nenner
             : ($wieRezept ? 1.0 / max(1, (int) ($recipe->sales_unit_count ?? 1)) : 1.0);
 
         $out = [];

@@ -387,6 +387,7 @@ class SalesRecipeService
         return DB::transaction(function () use ($team, $recipe, $in, $kiLineage) {
             $update = array_intersect_key($in, array_flip(self::VK_FELDER));
             $update = \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::vorgabeFelder($update) + $update;   // unbekannter Wert wirft
+            $this->grammaturNurLesen($recipe, $update);
 
             // MVP-050 (P0): Referenzen autorisieren, BEVOR sie geschrieben werden. Der
             // Owner-Guard oben schützt das Rezept — nicht die daran gehängten Fremdschlüssel.
@@ -510,6 +511,35 @@ class SalesRecipeService
         $this->syncStandardDarreichung($team, $recipe, $update);
     }
 
+    /**
+     * Plan 98 B, Sperre: `sales_quantity_per_unit_g` ist nur noch der Spiegel der Standard-Darreichung
+     * ({@see DarreichungService::kopfSpiegeln}), `sales_unit_count` ist am Gericht fest 1 (Modell Dominique 23.11.: die
+     * Zutatenmengen gelten je Portion, kein Teiler). Ein unveränderter Wert geht durch (der Editor schickt den Kopf mit, auch
+     * ein Altbestand > 1), ein anderer ist ein Fehler — sonst nähme das Tool still etwas an, das nicht wirkt, bzw. ein
+     * Wechsel 4 → 1 vervierfachte die Portion, ohne dass jemand die Mengen anfasst.
+     */
+    private function grammaturNurLesen(FoodAlchemistRecipe $recipe, array &$update): void
+    {
+        $zahl = static fn ($v) => $v === null || $v === '' ? null : str_replace(',', '.', trim((string) $v));
+        $gleich = static fn ($neu, $alt, float $tol) => $neu === null ? $alt === null
+            : ($alt !== null && is_numeric($neu) && abs((float) $neu - (float) $alt) < $tol);
+        foreach (['sales_quantity_per_unit_g' => [0.05, DarreichungService::GRAMMATUR_GESPERRT],
+            'sales_unit_count' => [0.5, DarreichungService::PORTIONSZAHL_FEST]] as $feld => [$tol, $meldung]) {
+            if (! array_key_exists($feld, $update)) {
+                continue;
+            }
+            $neu = $zahl($update[$feld]);
+            $alt = $recipe->{$feld};
+            if ($feld === 'sales_unit_count') {   // leer = 1
+                [$neu, $alt] = [$neu ?? '1', $alt ?? 1];
+            }
+            if (! $gleich($neu, $alt, $tol)) {
+                throw new \RuntimeException($meldung);
+            }
+            unset($update[$feld]);
+        }
+    }
+
     /** VK-Felder des Legacy-Editors in die Standard-Darreichung spiegeln (eine Wahrheit). */
     private function syncStandardDarreichung(Team $team, FoodAlchemistRecipe $recipe, array $update): void
     {
@@ -524,7 +554,6 @@ class SalesRecipeService
             }
         }
         $map = [
-            'sales_quantity_per_unit_g' => 'quantity_per_unit_g',
             'sales_unit_vocab_id' => 'unit_vocab_id',
             'markup_class_id' => 'markup_class_id',
             'container_warm_vocab_id' => 'container_warm_vocab_id',
@@ -537,15 +566,8 @@ class SalesRecipeService
                 $dUpdate[$nach] = $update[$von];
             }
         }
-        if (! array_key_exists('sales_quantity_per_unit_g', $update)
-            && (array_key_exists('sales_unit_count', $update) || $standard->quantity_per_unit_g === null)
-            && $recipe->yield_kg !== null && (int) $recipe->sales_unit_count > 0) {
-            $dUpdate['quantity_per_unit_g'] = round(
-                (float) $recipe->yield_kg * 1000 / (int) $recipe->sales_unit_count,
-                1,
-            );
-            $dUpdate['unit_count'] = 1;
-        }
+        // Plan 98 B: der Sync schreibt keine Grammatur mehr (vorher Ertrag ÷ Portionen als freie Grammatur) und kennt keinen
+        // Teiler — die Portionszahl ist am Gericht fest 1 (grammaturNurLesen).
         if (array_key_exists('sales_net', $update)) {
             if ($update['sales_net'] === null || $update['sales_net'] === '') {
                 $dUpdate['price_mode'] = 'auto';

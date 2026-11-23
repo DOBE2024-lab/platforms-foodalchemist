@@ -35,8 +35,12 @@ final class GerichtHuelleService
 {
     public const QUELLE = 'gericht_huelle';
 
-    /** Am Gericht gesetzte Felder, die der Bau nicht überschreibt (nur wenn sie vorher gefüllt waren). */
-    private const GESCHUETZT = ['name', 'description', 'dish_class_id', 'dish_main_group_id', 'sales_quantity_per_unit_g'];
+    /**
+     * Am Gericht gesetzte Felder, die der Bau nicht überschreibt (nur wenn sie vorher gefüllt waren). Plan 98 B:
+     * `sales_quantity_per_unit_g` nicht mehr — der Kopf spiegelt nur die Standard-Darreichung. Eine vorher gesetzte Portion
+     * geht stattdessen als Ziel (ziel_portion_g) in den Bau, sodass Ertrag und Grammatur dahin kommen.
+     */
+    private const GESCHUETZT = ['name', 'description', 'dish_class_id', 'dish_main_group_id'];
 
     /** Die Hülle zu einer ID — oder null, wenn das Gericht fremd, kein Entwurf mehr oder schon ausrezeptiert ist. */
     public static function huelle(Team $team, int $recipeId): ?FoodAlchemistRecipe
@@ -125,8 +129,10 @@ final class GerichtHuelleService
         }
 
         $vorher = $ziel->only([...self::GESCHUETZT, 'description_source', 'dish_class_source']);
+        $portion = $ziel->sales_quantity_per_unit_g !== null && ! isset($params['ziel_portion_g'])
+            ? ['ziel_portion_g' => (float) $ziel->sales_quantity_per_unit_g] : [];
         $gen = $generator->generiere($team, $beschreibung,
-            [...$params, 'gericht_fuellen_id' => (int) $ziel->id, 'titel_vorgabe' => (string) $ziel->name],
+            [...$params, ...$portion, 'gericht_fuellen_id' => (int) $ziel->id, 'titel_vorgabe' => (string) $ziel->name],
             null, true, 'plan_go', $context, $melde);
 
         $recipe = $gen['recipe'] ?? null;

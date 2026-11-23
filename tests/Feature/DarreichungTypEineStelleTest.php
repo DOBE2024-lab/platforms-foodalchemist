@@ -115,10 +115,12 @@ it('Befehl darreichung-typ-uebernehmen: Trockenlauf, --apply mit Backup, --zurue
 
 it('Standardwechsel zwischen gleichartigen Glasvarianten übernimmt Typ und vererbte Menge, aber keine fremden Zeiten', function () {
     $this->svc->aktualisieren($this->rootTeam, $this->std->id, [
-        'quantity_per_unit_g' => 120, 'serving_vehicle_vocab_id' => $this->tellerTyp,
+        'serving_vehicle_vocab_id' => $this->tellerTyp,
         'arbeitszeiten' => [['use_case' => 'abfuellen', 'basis' => 'einheit', 'ort' => 'kueche', 'wert' => 20]],
     ]);
-    $klein = $this->svc->anlegen($this->rootTeam, $this->gericht->id, $this->buffet->id, ['quantity_per_unit_g' => 80]);
+    // Plan 98 B: Grammaturen als Altbestand-Fixture — das Gericht hat keine Komponenten, ein Anteil ist nicht berechenbar
+    $this->grammaturAltbestand($this->std->fresh(), 120);
+    $klein = $this->grammaturAltbestand($this->svc->anlegen($this->rootTeam, $this->gericht->id, $this->buffet->id), 80);
     $erbt = $this->svc->anlegen($this->rootTeam, $this->gericht->id, $this->buffet->id);
     $this->svc->aktualisieren($this->rootTeam, $klein->id, [
         'vessel_gp_id' => $this->glas->id, 'serving_vehicle_vocab_id' => null,

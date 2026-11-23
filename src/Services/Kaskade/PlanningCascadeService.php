@@ -601,16 +601,58 @@ class PlanningCascadeService
         $grenze = now()->subMinutes(self::VERWAIST_NACH_MINUTEN);
         // Ein Schritt, der auf eine externe KI-Antwort wartet, ist nicht verwaist: sein Job ist sauber beendet und startet mit der
         // Antwort neu (Auftrag gilt 24 h). Ihn hier auf `failed` zu setzen, würfe einen gesunden MCP-Lauf nach 30 Minuten weg.
+        // Gezählt wird nur ein OFFENER, nicht abgelaufener Auftrag (kiWartend); ein abgelaufener hält nichts mehr fest.
         $kiWartend = $this->kiWartend($run->steps);
-        $verwaist = $run->steps->filter(fn ($s) => in_array($s->status, ['queued', 'running'], true)
-            && ! isset($kiWartend[(int) $s->id])
-            && $s->updated_at !== null
-            && $s->updated_at->lt($grenze));
-        foreach ($verwaist as $s) {
-            $this->markStepFailed((int) $s->id, 'Abgebrochen: Die Erstellung hat sich nicht mehr gemeldet. Neu erzeugen oder verwerfen.');
+        $frei = fn ($s) => ! isset($kiWartend[(int) $s->id]);
+        $still = function ($s, mixed $zeit = null) use ($grenze): bool {
+            $t = $zeit !== null ? \Illuminate\Support\Carbon::make($zeit) : $s->updated_at;
+
+            return $t !== null && $t->lt($grenze);
+        };
+        $kiAbgelaufen = $this->kiAbgelaufen($run->steps);
+        $geheilt = 0;
+        $log = fn ($s, string $was) => \Illuminate\Support\Facades\Log::info("Kaskade-Reaper: Lauf {$run->id}, Schritt {$s->id} ({$s->label}): {$was}");
+
+        // Fall 1 (io 23.11., Lauf 62): Schritt in-flight und still — auch wenn sein KI-Auftrag abgelaufen ist (dann mit diesem Grund)
+        foreach ($run->steps->filter(fn ($s) => in_array($s->status, ['queued', 'running'], true) && $frei($s) && $still($s)) as $s) {
+            $grund = isset($kiAbgelaufen[(int) $s->id])
+                ? 'Abgebrochen: KI-Auftrag abgelaufen, die Antwort kam nicht. Neu erzeugen oder verwerfen.'
+                : 'Abgebrochen: Die Erstellung hat sich nicht mehr gemeldet. Neu erzeugen oder verwerfen.';
+            $this->markStepFailed((int) $s->id, $grund);
+            $log($s, 'in-flight → failed' . (isset($kiAbgelaufen[(int) $s->id]) ? ' (KI-Auftrag abgelaufen)' : ''));
+            $geheilt++;
+        }
+        // Fall 3 (Läufe 69, 61, 38): Anreicherung hängt auf queued/running, ohne Job und ohne offenen Auftrag → failed, „neu anreichern“
+        foreach ($run->steps->fresh() as $s) {
+            $enrich = is_array($s->deferred['enrich'] ?? null) ? $s->deferred['enrich'] : null;
+            if ($enrich === null || ! in_array($enrich['status'] ?? null, ['queued', 'running'], true) || ! $frei($s) || ! $still($s, $enrich['at'] ?? null)) {
+                continue;
+            }
+            $deferred = $s->deferred;
+            $deferred['enrich'] = ['status' => 'failed', 'error' => 'Abgebrochen: Die Anreicherung hat sich nicht mehr gemeldet. Neu anreichern.',
+                'at' => now()->toIso8601String()] + $enrich;
+            $s->update(['deferred' => $deferred]);
+            $log($s, 'Anreicherung ' . $enrich['status'] . ' → failed');
+            $geheilt++;
+        }
+        // Liegengebliebene Phase (harter Job-Tod nach setzePhase): hält das Board auf „läuft“
+        foreach ($run->steps->fresh() as $s) {
+            if ($s->phase !== null && $frei($s) && $still($s, $s->phase_at) && ! in_array($s->status, ['queued', 'running'], true)) {
+                FoodAlchemistCascadeRunStep::whereKey($s->id)->update(['phase' => null, 'phase_at' => null]);
+                $log($s, "Phase „{$s->phase}“ geräumt");
+                $geheilt++;
+            }
+        }
+        // Fall 2 (Lauf 66): ohne offene Schritte bleibt ein Lauf sonst auf `running` stehen — einmal neu bewerten
+        if ($run->fresh()?->status === 'running') {
+            $this->recomputeRunStatus((int) $run->id);
+            if ($run->fresh()?->status !== 'running') {
+                \Illuminate\Support\Facades\Log::info("Kaskade-Reaper: Lauf {$run->id} neu bewertet → {$run->fresh()?->status}");
+                $geheilt++;
+            }
         }
 
-        return $verwaist->count();
+        return $geheilt;
     }
 
     /**

@@ -246,21 +246,21 @@ class ProductionCapacityService
             ->all();
 
         $diaet = collect([
-            ['label' => 'vegan', 'ok' => $this->wahr($z->spec_is_vegan ?? false)],
-            ['label' => 'vegetarisch', 'ok' => $this->wahr($z->spec_is_vegetarian ?? false)],
-            ['label' => 'halal', 'ok' => $this->wahr($z->spec_is_halal ?? false)],
-            ['label' => 'glutenfrei', 'ok' => $this->wahr($z->spec_is_gluten_free ?? false)],
-            ['label' => 'laktosefrei', 'ok' => $this->wahr($z->spec_is_lactose_free ?? false)],
+            ['label' => 'vegan', 'ok' => $this->wahr($z->spec_is_vegan ?? null)],
+            ['label' => 'vegetarisch', 'ok' => $this->wahr($z->spec_is_vegetarian ?? null)],
+            ['label' => 'halal', 'ok' => $this->wahr($z->spec_is_halal ?? null)],
+            ['label' => 'glutenfrei', 'ok' => $this->wahr($z->spec_is_gluten_free ?? null)],
+            ['label' => 'laktosefrei', 'ok' => $this->wahr($z->spec_is_lactose_free ?? null)],
         ])->filter(fn ($d) => $d['ok'])->pluck('label')->values()->all();
 
         $warnungen = collect();
         if (in_array((string) ($z->allergens_confidence ?? 'unknown'), ['low', 'unknown', ''], true)) {
             $warnungen->push('Allergene unsicher');
         }
-        if ($this->wahr($z->spec_contains_pork ?? false)) {
+        if ($this->wahr($z->spec_contains_pork ?? null)) {
             $warnungen->push('Schwein');
         }
-        if ($this->wahr($z->spec_contains_beef ?? false)) {
+        if ($this->wahr($z->spec_contains_beef ?? null)) {
             $warnungen->push('Rind');
         }
         if ($z->arbeitszeit_min === null) {

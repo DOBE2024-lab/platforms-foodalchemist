@@ -2356,11 +2356,11 @@ class SpeiseplanService
                 }
             }
             $diaet = match (true) {
-                (bool) $r->spec_is_vegan => ['vegan'],
-                (bool) $r->spec_is_vegetarian => ['vegetarisch'],
+                $r->spec_is_vegan === true => ['vegan'],               // Diät-Fix 98: nur ein echtes true, NULL = unbekannt
+                $r->spec_is_vegetarian === true => ['vegetarisch'],
                 default => array_values(array_filter([
-                    $r->spec_contains_pork ? 'schwein' : null,
-                    $r->spec_contains_beef ? 'rind' : null,
+                    $r->spec_contains_pork === true ? 'schwein' : null,
+                    $r->spec_contains_beef === true ? 'rind' : null,
                     collect($k['allergene'])->contains(fn ($a) => $a['slug'] === 'fish' && $a['status'] === 'enthalten') ? 'fisch' : null,
                 ])),
             };

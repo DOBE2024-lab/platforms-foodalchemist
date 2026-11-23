@@ -809,7 +809,8 @@ class RecipeRecomputeService
                 continue;
             }
             $nTotal++;
-            if ($z->gp_id !== null && $z->gp !== null) {
+            // Diät-Fix 98: „gemappt“ wie bei den Allergenen (istGemappt) — ein KI-Vorschlag unter 0.85 sichert nichts zu.
+            if ($z->gp_id !== null && $z->gp !== null && $this->istGemappt($z)) {
                 $nMapped++;
                 foreach ($felder as $f) {
                     $werte[$f][] = $this->boolOrNull($f === 'contains_alcohol' ? $this->gpAggregate->enthaeltAlkohol($z->gp) : $z->gp->{"tag_{$f}"});
@@ -832,6 +833,7 @@ class RecipeRecomputeService
         foreach (self::SPEC_WARN as $f) {
             $recipe->{"spec_{$f}"} = $this->mergeWarn($werte[$f]);
         }
+        $this->specGegenDeklaration($recipe);
 
         $recipe->spec_n_total = $nTotal;
         $recipe->spec_n_mapped = $nMapped;
@@ -851,9 +853,62 @@ class RecipeRecomputeService
         return $v === null ? null : (bool) $v;
     }
 
-    /** Zusicherung: 0 wenn eine verletzt, NULL wenn eine unbekannt, sonst 1. */
+    /**
+     * Diät-Fix 98 (c): Zusicherungen gegen die Deklaration desselben Rezepts prüfen. Läuft nach allergene() und
+     * yieldUndZaehler(), beide Werte stehen also schon.
+     *  - laktosefrei normativ wie glutenfrei: Milch enthalten/Spuren ⇒ false.
+     *  - unbewertete Deklaration (allergens_confidence 'unknown') ⇒ keine Zusicherung: true wird NULL. Ein false
+     *    bleibt — eine belegte Verletzung (Fisch ist nicht vegan) gilt auch ohne Deklaration.
+     */
+    private function specGegenDeklaration(FoodAlchemistRecipe $recipe): void
+    {
+        if (in_array($recipe->allergen_milk, ['enthalten', 'spuren'], true)) {
+            $recipe->spec_is_lactose_free = false;
+        }
+        if ((self::KONF_RANG[$recipe->allergens_confidence] ?? 0) === 0) {
+            foreach (self::SPEC_ASSURE as $f) {
+                if ($recipe->{"spec_{$f}"} === true) {
+                    $recipe->{"spec_{$f}"} = null;
+                }
+            }
+        }
+    }
+
+    /**
+     * Neu-Rechnung NUR der Diät-/Herkunfts-Flags eines Rezepts (für foodalchemist:diaet-eignung-neu). Lädt wie die
+     * Pipeline, rechnet aber weder Allergene noch Kosten neu (deren gespeicherte Werte gelten) und löst keine Kaskade
+     * aus. Schreibt still (saveQuietly), nur wenn sich ein spec_*-Wert ändert.
+     *
+     * @return array{alt: array<string, bool|null>, neu: array<string, bool|null>}|null  null = unverändert
+     */
+    public function specFlagsNeuRechnen(int $recipeId, bool $schreiben): ?array
+    {
+        $recipe = FoodAlchemistRecipe::withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('recompute')
+            ->findOrFail($recipeId);
+        $felder = array_map(fn ($f) => "spec_{$f}", [...self::SPEC_ASSURE, ...self::SPEC_WARN]);
+        $alt = $recipe->only($felder);
+
+        \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm((int) $recipe->team_id, function () use ($recipe) {
+            $recipe->load(['ingredients.gp', 'ingredients.referencedRecipe']);
+            $this->specFlags($recipe, $recipe->ingredients->filter(fn ($z) => $z->match_method !== MatchMethod::Ignored));
+        });
+        $neu = $recipe->only($felder);
+        if ($neu === $alt) {
+            return null;
+        }
+        if ($schreiben) {
+            $recipe->saveQuietly();
+        }
+
+        return ['alt' => $alt, 'neu' => $neu];
+    }
+
+    /** Zusicherung: 0 wenn eine verletzt, NULL wenn eine unbekannt, sonst 1. Leer ⇒ NULL (Diät-Fix 98: nichts sichert zu). */
     private function mergeAssure(array $werte): ?bool
     {
+        if ($werte === []) {
+            return null;
+        }
         if (in_array(false, $werte, true)) {
             return false;
         }
@@ -864,9 +919,12 @@ class RecipeRecomputeService
         return true;
     }
 
-    /** Warnung: 1 wenn eine trägt, NULL wenn eine unbekannt, sonst 0. */
+    /** Warnung: 1 wenn eine trägt, NULL wenn eine unbekannt, sonst 0. Leer ⇒ NULL (ohne Zutaten ist nichts belegt). */
     private function mergeWarn(array $werte): ?bool
     {
+        if ($werte === []) {
+            return null;
+        }
         if (in_array(true, $werte, true)) {
             return true;
         }

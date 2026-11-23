@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
@@ -23,9 +23,9 @@ class TrendSignalService
 {
     public function __construct(
         private readonly TrendService $trends,
-        private readonly TeamSettingsService $settings,
-        private readonly FaRechte $rechte,
-        private readonly Trends\GoogleTrendsQuelle $quelle,
+        private readonly \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
+        private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
+        private readonly \Platform\FoodAlchemist\Services\Trends\GoogleTrendsQuelle $quelle,
     ) {}
 
     /** Kosten einer Explore-Live-Abfrage in USD (DataForSEO-Preisliste, ein Suchbegriff je Abfrage). */

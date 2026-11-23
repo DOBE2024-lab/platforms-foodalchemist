@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Contracts\ToolContext;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeEmbeddingService;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Platform\FoodAlchemist\Tools\PairingsGetTool;

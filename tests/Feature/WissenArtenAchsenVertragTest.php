@@ -9,8 +9,8 @@ use Platform\FoodAlchemist\Livewire\Settings\Wissenssteuerung;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
 use Platform\FoodAlchemist\Services\Knowledge\DatenwerkResolver;
 use Platform\FoodAlchemist\Services\Knowledge\WissensGeltung;
-use Platform\FoodAlchemist\Services\KnowledgeRoutingService;
-use Platform\FoodAlchemist\Services\KnowledgeService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRoutingService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -77,7 +77,7 @@ class PlanungSessionPostTool extends FoodAlchemistTool implements ToolContract, 
 
         try {
             if (! empty($arguments['trend_ids']) || ! empty($arguments['inspiration_ids']) || ! empty($arguments['fundstueck_ids'])) {
-                $inspirationen = app(\Platform\FoodAlchemist\Services\TrendService::class)->inspirationIdsAus($team, $arguments);
+                $inspirationen = app(\Platform\FoodAlchemist\Services\Trend\TrendService::class)->inspirationIdsAus($team, $arguments);
                 $session = $svc->ausTrendradar($team, (array) ($arguments['trend_ids'] ?? []), $inspirationen, 'mcp_trendradar');
                 if (isset($arguments['brief']) && trim((string) $arguments['brief']) !== '') {
                     $session = $svc->update($team, $session->id, ['brief' => $arguments['brief']]);

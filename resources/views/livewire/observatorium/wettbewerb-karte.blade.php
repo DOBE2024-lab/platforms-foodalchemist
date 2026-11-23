@@ -1,4 +1,4 @@
-@php use Platform\FoodAlchemist\Services\WettbewerbService as W; @endphp
+@php use Platform\FoodAlchemist\Services\Trend\WettbewerbService as W; @endphp
 <article class="fa-obs-story" wire:key="obs-wettbewerb-{{ $e->id }}" data-wettbewerb-meldung="{{ $e->id }}"><div class="fa-obs-story-body">
     <div class="fa-obs-meta"><span>Firmenbezug bestätigt</span><span>{{ $e->veroeffentlicht_am?->format('d.m.Y') ?? 'Veröffentlichungsdatum offen' }}</span></div>
     <h3><button type="button" wire:click="oeffnen({{ $e->id }})">{{ $e->titel }}</button></h3>

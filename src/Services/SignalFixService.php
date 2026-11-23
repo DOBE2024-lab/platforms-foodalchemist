@@ -48,7 +48,7 @@ class SignalFixService
         private DataQualityService $dq,
         private GpAggregateService $gpAgg,
         private LeadLaService $leadLa,
-        private PairingService $pairing,
+        private Pairing\PairingService $pairing,
         private RecipeRecomputeService $recompute,
         private PriceService $preise,
         private SignalService $signals,

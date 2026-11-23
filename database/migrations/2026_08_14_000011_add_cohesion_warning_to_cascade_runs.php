@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
  * Menü-Folge-Kohärenz-Gate · Auto-Trigger (Roadmap Planung-Leitstelle · Etappe 1).
  *
  * `foodalchemist_cascade_runs.cohesion_warning` (json, nullable): trägt die abgestufte Warnung
- * ({@see \Platform\FoodAlchemist\Services\PairingService::menuKohaesionWarnung}: {stufe, score, text})
+ * ({@see \Platform\FoodAlchemist\Services\Pairing\PairingService::menuKohaesionWarnung}: {stufe, score, text})
  * einer per Fan-out ERFUNDENEN Menüfolge. Der Motor scored die Folge automatisch, sobald alle
  * erfundenen Gericht-Steps eines Concept-Steps durch sind (Grounding komplett → Anker vorhanden →
  * scorebar), und persistiert das Ergebnis hier — statt auf den manuellen „Kohäsion prüfen"-Klick

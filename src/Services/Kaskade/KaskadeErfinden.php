@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\ConceptVorgabenService;
 use Platform\FoodAlchemist\Services\GerichtHuelleService;
 use Platform\FoodAlchemist\Services\IdeenService;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\PlanningFrameService;
 use Platform\FoodAlchemist\Services\PlanningSessionService;

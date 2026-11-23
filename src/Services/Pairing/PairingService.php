@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pairing;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -342,7 +342,7 @@ class PairingService
      */
     private function profilKerne(array $recipeIds): array
     {
-        $profil = app(Pairing\RezeptProfil::class);
+        $profil = app(\Platform\FoodAlchemist\Services\Pairing\RezeptProfil::class);
         $out = [];
         foreach (array_unique(array_map('intval', $recipeIds)) as $id) {
             $kern = $profil->fuer($id)['anker'][0]['anchor_id'] ?? null;
@@ -974,7 +974,7 @@ class PairingService
     {
         $minShared = max(1, $minShared);
         $limit = max(1, min(50, $limit));
-        $kern = Pairing\RezeptGraph::KERN;
+        $kern = \Platform\FoodAlchemist\Services\Pairing\RezeptGraph::KERN;
         $eigene = DB::table('foodalchemist_recipe_profile_anker')->where('recipe_id', $recipeId)
             ->where('anteil', '>=', $kern)->pluck('anchor_id');
         if ($eigene->isEmpty()) {
@@ -1244,14 +1244,14 @@ class PairingService
         $team = Team::find((int) $recipe->team_id);
         $istGericht = (bool) $recipe->is_sales_recipe;
         $netz = $team !== null ? $this->pairingNetz($team, (int) $recipe->id) : ['nodes' => [], 'edges' => [], 'meta' => []];
-        $profil = app(Pairing\RezeptProfil::class)->fuer((int) $recipe->id);
+        $profil = app(\Platform\FoodAlchemist\Services\Pairing\RezeptProfil::class)->fuer((int) $recipe->id);
         $anteil = collect($profil['anker'])->sortByDesc('anteil')->take(8);
         $namen = DB::table('foodalchemist_vocab_pairing_anchors')->whereIn('id', $anteil->pluck('anchor_id')->all())->pluck('display_de', 'id');
 
         $out = [
             'type' => 'recipe',
             'ist_gericht' => $istGericht,
-            'kombination' => app(Pairing\Kombinationslogik::class)->daten($recipe),
+            'kombination' => app(\Platform\FoodAlchemist\Services\Pairing\Kombinationslogik::class)->daten($recipe),
             'netz' => $netz,
             'profil' => $anteil->map(fn ($a) => ['name' => (string) ($namen[$a['anchor_id']] ?? '#'.$a['anchor_id']), 'anteil' => round((float) $a['anteil'])])->values()->all(),
             'passt_dazu' => [], 'deckt_bedarf' => [], 'partner' => [], 'kontrast' => [], 'verwandte' => [],
@@ -1263,7 +1263,7 @@ class PairingService
 
             return $out;
         }
-        $kern = $anteil->filter(fn ($a) => $a['anteil'] >= Pairing\RezeptGraph::KERN)->pluck('anchor_id')->map(fn ($i) => (int) $i)->all();
+        $kern = $anteil->filter(fn ($a) => $a['anteil'] >= \Platform\FoodAlchemist\Services\Pairing\RezeptGraph::KERN)->pluck('anchor_id')->map(fn ($i) => (int) $i)->all();
         $out['partner'] = $this->harmoniePartnerNamen($kern);
         $out['kontrast'] = array_map(fn ($c) => ['name' => (string) ($c['display_de'] ?: $c['slug']), 'achse' => $c['achse_label']],
             $this->kontrastUndKonflikt($kern)[0]);
@@ -1394,7 +1394,7 @@ class PairingService
             return $this->gerichtNetz($team, $recipe);
         }
         // Basisrezept: Innenring = Kern-Anker seines Aromenprofils, mit Anteil (Hintergrund sichtbar).
-        $profil = app(Pairing\RezeptProfil::class)->fuer((int) $recipe->id);
+        $profil = app(\Platform\FoodAlchemist\Services\Pairing\RezeptProfil::class)->fuer((int) $recipe->id);
         $anteil = collect($profil['anker'])->mapWithKeys(fn ($a) => [(int) $a['anchor_id'] => (float) $a['anteil']]);
         $inner = $anteil->isEmpty() ? collect() : DB::table('foodalchemist_vocab_pairing_anchors')
             ->whereIn('id', $anteil->keys()->all())->whereNull('deleted_at')->get(['id', 'slug', 'display_de'])
@@ -1418,7 +1418,7 @@ class PairingService
     {
         $cx = self::CANVAS_W / 2;
         $cy = self::CANVAS_H / 2;
-        $logik = app(Pairing\Kombinationslogik::class);
+        $logik = app(\Platform\FoodAlchemist\Services\Pairing\Kombinationslogik::class);
         $analyse = $logik->analysiere($gericht);
         $diaet = $gericht->spec_is_vegan === true ? 'vegan' : ($gericht->spec_is_vegetarian === true ? 'vegetarisch' : null);
         $teamId = $gericht->team_id !== null ? (int) $gericht->team_id : (int) $team->id;
@@ -1850,7 +1850,7 @@ class PairingService
         if ($innerIds === []) {
             return [[], [], []];
         }
-        $logik = app(Pairing\Kombinationslogik::class);
+        $logik = app(\Platform\FoodAlchemist\Services\Pairing\Kombinationslogik::class);
         $analyse = $logik->analysiereBestandteile($logik->bestandteileAusAnkern($innerIds));
         if ($ohneSalz) {
             // Composer (Dominique 16.10.): Salz ist keine Pairing-Frage → kein Salz-Lieferant im Ring
@@ -2033,7 +2033,7 @@ class PairingService
             ->join('foodalchemist_recipes AS r', 'r.id', '=', 'm.recipe_id')
             ->whereIn('m.anchor_id', $candIds)
             ->where('m.recipe_id', '!=', $recipeId)
-            ->where('m.anteil', '>=', Pairing\RezeptGraph::KERN)
+            ->where('m.anteil', '>=', \Platform\FoodAlchemist\Services\Pairing\RezeptGraph::KERN)
             ->where('r.is_sales_recipe', 0)
             ->whereNull('r.deleted_at')
             ->get(['m.recipe_id', 'm.anchor_id', 'r.name']);
@@ -2089,7 +2089,7 @@ class PairingService
         if ($leadLaId === null) {
             return null;
         }
-        $p = app(PriceService::class)->activeFor($leadLaId, $team)?->price;
+        $p = app(\Platform\FoodAlchemist\Services\PriceService::class)->activeFor($leadLaId, $team)?->price;
 
         return $p !== null ? (float) $p : null;
     }
@@ -2151,7 +2151,7 @@ class PairingService
             }
         }
         $manuelleIds = [];
-        foreach (app(ComponentEquivalentService::class)->fuer($team, 'gp', $sourceGpId) as $eq) {
+        foreach (app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)->fuer($team, 'gp', $sourceGpId) as $eq) {
             if ($eq->gegen_kind === 'gp' && $eq->gegen_id !== null) {
                 $poolIds[(int) $eq->gegen_id] = true;
                 $manuelleIds[(int) $eq->gegen_id] = true;
@@ -2250,7 +2250,7 @@ class PairingService
         $scored = array_slice($scored, 0, max(1, $limit));
 
         // ── Anreicherung nur der Top-N (teure Schritte: Allergene, Preis, Kohäsion) ──
-        $agg = app(GpAggregateService::class);
+        $agg = app(\Platform\FoodAlchemist\Services\GpAggregateService::class);
         $sourceAllergene = $agg->allergene($sourceGp);
         $sourceEk = $this->gpLeadListenEk($sourceGp->lead_la_supplier_item_id !== null ? (int) $sourceGp->lead_la_supplier_item_id : null, $team);
 
@@ -2495,7 +2495,7 @@ class PairingService
         if (($id = $this->ankerIdExakt($begriff)) !== null) {
             return ['id' => $id, 'via' => 'exakt'];
         }
-        $term = app(TerminologyService::class);
+        $term = app(\Platform\FoodAlchemist\Services\TerminologyService::class);
         foreach ($term->aliasPhrasesFor($begriff) as $phrase) {
             if (($id = $this->ankerIdExakt($phrase)) !== null) {
                 return ['id' => $id, 'via' => 'synonym'];

@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\TrendSignalService;
+use Platform\FoodAlchemist\Services\Trend\TrendSignalService;
 
 /**
  * Spec 79 · Wöchentliche Google-Trends-Messung je Trend über DataForSEO. Läuft nur für Teams, die es in

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendSignalService;
+use Platform\FoodAlchemist\Services\Trend\TrendSignalService;
 
 /** Spec 79 · Google Trends für einen Trend abfragen (DataForSEO, kostenpflichtig, mit Monatsbudget). */
 class TrendsMessenTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

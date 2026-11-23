@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Support;
 
 /**
- * Quellen eines KI-gesetzten GP-Kern-Ankers ({@see \Platform\FoodAlchemist\Services\PairingService::setGpAnkerInference()}).
+ * Quellen eines KI-gesetzten GP-Kern-Ankers ({@see \Platform\FoodAlchemist\Services\Pairing\PairingService::setGpAnkerInference()}).
  *
  * Pate (Entscheid Dominique 01.11.2026): die Zutat hat keinen eigenen Inspire-Anker, die KI nimmt einen vergleichbaren Ersatz (gleiche
  * Produktgruppe, ähnlicher Geschmack, ähnliche Funktion — Dorade → Wolfsbarsch ja, Feta → Halloumi nein). Eigene Quelle, damit er vom

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\KnowledgeService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
 
 /**
  * Briefing Zutaten-Bulk-Import, 2026-09-18: 11.966 Zutaten-Dossiers liegen fertig gebaut im

@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Enums\Achse;
 use Platform\FoodAlchemist\Enums\BedarfDeckung;
 use Platform\FoodAlchemist\Enums\Kantenart;
 use Platform\FoodAlchemist\Enums\WissensStatus;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 
 /**
  * Spec 60 · P4: strukturiertes Anker-Wissen aus der Dossier-Auslese übernehmen.

@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\MarktdatenService;
+use Platform\FoodAlchemist\Services\Trend\MarktdatenService;
 use Platform\FoodAlchemist\Support\FaTeam;
 use Platform\FoodAlchemist\Support\MasterTeam;
 

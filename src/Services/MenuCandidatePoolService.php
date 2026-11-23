@@ -28,7 +28,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 class MenuCandidatePoolService
 {
     public function __construct(
-        private PairingService $pairing,
+        private Pairing\PairingService $pairing,
         private DarreichungResolver $darreichungen,
     ) {}
 

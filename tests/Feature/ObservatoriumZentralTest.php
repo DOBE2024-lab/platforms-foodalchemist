@@ -8,8 +8,8 @@ use Platform\FoodAlchemist\Livewire\Observatorium\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistObservatoriumLagebild as Lagebild;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendEingang;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\LagebildService;
-use Platform\FoodAlchemist\Services\ObservatoriumService;
+use Platform\FoodAlchemist\Services\Trend\LagebildService;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumService;
 use Platform\FoodAlchemist\Support\FaBereiche;
 use Platform\FoodAlchemist\Support\HandyNavigation;
 use Platform\FoodAlchemist\Support\MasterTeam;
@@ -191,7 +191,7 @@ it('Team-Pinnwand: Mandant heftet Master-Meldung und eigene Idee an, gemeinsam f
     // Leserolle: sieht, heftet nicht an
     $this->actingAs($nurLeser);
     Livewire::test(Index::class)->call('ansichtSetzen', 'pinnwand')->assertSee('TEST-OZ Linsen-Bowl')->assertDontSee('data-pinnwand-idee', false);
-    expect(fn () => app(\Platform\FoodAlchemist\Services\ObservatoriumPinnwandService::class)->ideeAnpinnen($this->mandant, 'x', null, null, $nurLeser->id))
+    expect(fn () => app(\Platform\FoodAlchemist\Services\Trend\ObservatoriumPinnwandService::class)->ideeAnpinnen($this->mandant, 'x', null, null, $nurLeser->id))
         ->toThrow(\Platform\FoodAlchemist\Exceptions\FaRechtFehltException::class);
 });
 

@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeBudget;
 use Platform\FoodAlchemist\Services\Knowledge\SteuerungSicherungService;
-use Platform\FoodAlchemist\Services\KnowledgeRoutingService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRoutingService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

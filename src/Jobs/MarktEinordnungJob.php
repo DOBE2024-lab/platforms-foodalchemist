@@ -13,8 +13,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistMarktdatenEinordnung as Einordnun
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\KiExternLauf;
 use Platform\FoodAlchemist\Services\Ai\KiExternWiederholbar;
-use Platform\FoodAlchemist\Services\MarktdatenService;
-use Platform\FoodAlchemist\Services\MarktEinordnungService;
+use Platform\FoodAlchemist\Services\Trend\MarktdatenService;
+use Platform\FoodAlchemist\Services\Trend\MarktEinordnungService;
 
 /**
  * KI-Einordnung der Marktdaten: ein `propose()` (`markt.einordnung`) mit den abgerufenen Kennzahlen und den Regelsätzen,

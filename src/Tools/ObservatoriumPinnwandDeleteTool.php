@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ObservatoriumPinnwandService;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumPinnwandService;
 
 /** Eintrag von der Team-Pinnwand nehmen (weich gelöscht, eigenes Team, ab Kuratieren). */
 class ObservatoriumPinnwandDeleteTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

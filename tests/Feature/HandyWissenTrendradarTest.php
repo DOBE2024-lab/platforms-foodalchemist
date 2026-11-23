@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Livewire\Trendradar\Index as TrendradarIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendBeleg;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendInspiration;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeEmbeddingService;
-use Platform\FoodAlchemist\Services\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
 use Platform\FoodAlchemist\Support\HandyLesemodus;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

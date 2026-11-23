@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\TrendSignalService;
+use Platform\FoodAlchemist\Services\Trend\TrendSignalService;
 use Platform\FoodAlchemist\Support\StichwortFilter;
 use Platform\FoodAlchemist\Support\TrendAutomatikRegeln;
 use Platform\FoodAlchemist\Support\TrendVokabular;

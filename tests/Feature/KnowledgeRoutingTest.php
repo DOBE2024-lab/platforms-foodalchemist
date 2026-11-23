@@ -2,7 +2,7 @@
 
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
-use Platform\FoodAlchemist\Services\KnowledgeRoutingService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRoutingService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

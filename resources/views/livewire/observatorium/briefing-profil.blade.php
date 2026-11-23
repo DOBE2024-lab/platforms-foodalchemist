@@ -1,4 +1,4 @@
-@php use Platform\FoodAlchemist\Services\ObservatoriumBriefingService as BP; use Platform\FoodAlchemist\Support\ObservatoriumInhalt as O; @endphp
+@php use Platform\FoodAlchemist\Services\Trend\ObservatoriumBriefingService as BP; use Platform\FoodAlchemist\Support\ObservatoriumInhalt as O; @endphp
 {{-- „Mein Briefing“: gespeicherte Einstellung je Person (Dominique 07.11.2026). Ohne Profil = Kurzfassung der aktuellen Filter. --}}
 <div class="fa-obs-briefing fa-obs-abstand" data-briefing-profil>
     @if($profilOffen)

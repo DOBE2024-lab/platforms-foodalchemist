@@ -4,8 +4,8 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendQuelle;
-use Platform\FoodAlchemist\Services\TrendEingangService;
-use Platform\FoodAlchemist\Services\TrendQuellenService;
+use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
+use Platform\FoodAlchemist\Services\Trend\TrendQuellenService;
 
 /**
  * Spec 93 A · Holt fällige plattform-Quellen des Trendradars in den Eingang (RSS/Atom/Übersicht, ohne KI, über den

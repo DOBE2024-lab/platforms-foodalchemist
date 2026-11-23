@@ -35,7 +35,7 @@ class ConceptGeneratorService
     public function __construct(
         private PlanningFrameService $frames,
         private CoverageService $coverage,
-        private PairingService $pairing,
+        private Pairing\PairingService $pairing,
         private ConceptService $concepts,
         private MenuCandidatePoolService $pool,
         private MenuAssemblyService $assembly,

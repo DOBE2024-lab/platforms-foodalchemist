@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendVertiefungService;
+use Platform\FoodAlchemist\Services\Trend\TrendVertiefungService;
 
 /**
  * Vertiefung im Trend-Eingang anstoßen (TrendEingangVertiefenJob). Ruft selbst keine KI: per MCP läuft der Job extern

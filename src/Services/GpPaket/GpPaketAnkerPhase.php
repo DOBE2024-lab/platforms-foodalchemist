@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Services\GpPaket;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Support\GpPaketZaehler;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\TeamScope;

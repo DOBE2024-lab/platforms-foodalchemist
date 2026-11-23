@@ -303,7 +303,7 @@ class Browser extends Component
         $team = Auth::user()?->currentTeamRelation;
         if ($team === null) { $this->fehler = 'Kein Team gewählt.'; return; }
         try {
-            $service = app(\Platform\FoodAlchemist\Services\KnowledgeService::class);
+            $service = app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::class);
             if ($this->creating) {
                 $doc = $service->create($team, $this->form + ['source' => 'ui']);
                 $this->reembed((int) $doc->id);
@@ -321,7 +321,7 @@ class Browser extends Component
     {
         $team = Auth::user()?->currentTeamRelation;
         try {
-            $neu = $team !== null ? app(\Platform\FoodAlchemist\Services\KnowledgeService::class)->aktivUmschalten($team, $id) : null;
+            $neu = $team !== null ? app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::class)->aktivUmschalten($team, $id) : null;
         } catch (\Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException $e) {
             $this->fehler = $e->getMessage();
 
@@ -380,7 +380,7 @@ class Browser extends Component
         }
 
         // D12: Löschen (inkl. Index-Bereinigung) liegt jetzt im KnowledgeService — Browser + MCP knowledge.DELETE teilen den Weg.
-        app(\Platform\FoodAlchemist\Services\KnowledgeService::class)->delete(Auth::user()->currentTeamRelation, (string) $doc->slug);
+        app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::class)->delete(Auth::user()->currentTeamRelation, (string) $doc->slug);
 
         if ($this->selectedId === $id) {
             $this->selectedId = null;
@@ -403,7 +403,7 @@ class Browser extends Component
         }
         // D12: Alias-Anlage liegt jetzt im KnowledgeService (geteilt mit MCP knowledge.ALIAS add).
         try {
-            app(\Platform\FoodAlchemist\Services\KnowledgeService::class)
+            app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::class)
                 ->addAlias(Auth::user()->currentTeamRelation, (string) $doc->slug, $this->newAlias);
         } catch (\RuntimeException) {
             return;
@@ -415,7 +415,7 @@ class Browser extends Component
     {
         // MVP-037: Eigentumsprüfung liegt jetzt im KnowledgeService (geteilt mit MCP knowledge.ALIAS remove).
         try {
-            app(\Platform\FoodAlchemist\Services\KnowledgeService::class)
+            app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::class)
                 ->removeAlias(Auth::user()->currentTeamRelation, $aliasId);
         } catch (\RuntimeException) {
             // still: fremde/unbekannte Alias-ID wird ignoriert (wie vorher).
@@ -451,7 +451,7 @@ class Browser extends Component
         if ($docId === null || $this->eigenesDoc((int) $docId) === null) {
             return;
         }
-        app(\Platform\FoodAlchemist\Services\KnowledgeService::class)->loeseBindung(Auth::user()->currentTeamRelation, $bindingId);   // 98 · 1.3e: Soft-Delete
+        app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::class)->loeseBindung(Auth::user()->currentTeamRelation, $bindingId);   // 98 · 1.3e: Soft-Delete
     }
 
     /**

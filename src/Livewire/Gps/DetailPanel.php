@@ -687,10 +687,10 @@ class DetailPanel extends Component
             // 27.10.2026: Geschmacksprofil (Rohprofil) auch in der Detail-Ansicht — mit „Mit KI schätzen" + „Anker vorschlagen"
             'sensorik' => ($gp !== null && $vollmodus) ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerGp($gp->id) : null,
             'gpAnker' => ($gp !== null && $vollmodus)
-                ? app(\Platform\FoodAlchemist\Services\PairingService::class)->gpAnkerAlle($gp->id)
+                ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->gpAnkerAlle($gp->id)
                 : collect(),
             'ankerNetz' => ($gp !== null && $team !== null && $this->ankerNetzOffenId !== null)
-                ? app(\Platform\FoodAlchemist\Services\PairingService::class)
+                ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)
                     ->gpsForAnkerIds($team, [$this->ankerNetzOffenId])
                     ->where('id', '!=', $gp->id)
                 : collect(),

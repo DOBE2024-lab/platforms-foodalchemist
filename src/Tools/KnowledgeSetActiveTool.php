@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Exceptions\WissenGesperrtException;
-use Platform\FoodAlchemist\Services\KnowledgeService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
 
 /**
  * MCP: ein Wissens-Dokument aktiv/inaktiv schalten. Aktiv = fließt in den KI-Kontext;

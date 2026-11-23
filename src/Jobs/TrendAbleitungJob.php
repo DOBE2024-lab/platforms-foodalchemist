@@ -9,7 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
-use Platform\FoodAlchemist\Services\TrendEingangService;
+use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
 use Platform\FoodAlchemist\Services\Trends\TrendAbleitungService;
 
 /**

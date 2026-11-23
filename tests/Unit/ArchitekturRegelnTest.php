@@ -188,12 +188,12 @@ it('Geld-Helfer: keine neuen Handrechnungen für Wareneinsatz, EK je Portion und
     $ausnahmen = [
         'wareneinsatz' => [
             'src/Services/MargeService.php' => [1, 'der Helfer selbst'],
-            'src/Services/BenchmarkService.php' => [1, 'EK-Abdeckung (Anteil Gerichte mit EK), keine Quote'],
+            'src/Services/Trend/BenchmarkService.php' => [1, 'EK-Abdeckung (Anteil Gerichte mit EK), keine Quote'],
             'resources/views/presentation/blocks/chapter_loop.blade.php' => [1, 'VK per Wahrheitswert geprüft (negativer VK zeigte eine Quote) — nicht still vereinheitlicht'],
         ],
         'ek_je_portion' => [
             'src/Services/DarreichungResolver.php' => [1, 'der Helfer selbst'],
-            'src/Services/BenchmarkService.php' => [1, 'SQL-Zeile ohne Model, ek_portion kommt schon aus der Abfrage'],
+            'src/Services/Trend/BenchmarkService.php' => [1, 'SQL-Zeile ohne Model, ek_portion kommt schon aus der Abfrage'],
             'src/Services/MoneyTruthReportService.php' => [1, 'Diagnose vergleicht bewusst Ansatz ÷ Portionen mit der Darreichung'],
             'src/Services/Speiseplan/SpeiseplanAnsicht.php' => [1, 'Darreichung des Eintrags statt Standard, Rückfall 0 statt null (98 · 3.3 S3-2: mit inhaltPreis aus SpeiseplanService verschoben)'],
             'src/Services/Concept/CockpitZeilen.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],

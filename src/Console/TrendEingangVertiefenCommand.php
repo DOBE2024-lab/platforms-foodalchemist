@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendEingang;
-use Platform\FoodAlchemist\Services\TrendVertiefungService;
+use Platform\FoodAlchemist\Services\Trend\TrendVertiefungService;
 
 /**
  * Tageslauf der Vertiefung: je Team höchstens `trends.vertiefung.auto_je_tag` Marktbewegungen bzw. Einträge aus harten

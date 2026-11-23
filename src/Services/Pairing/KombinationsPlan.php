@@ -7,7 +7,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\Achse;
 use Platform\FoodAlchemist\Enums\Kantenart;
 use Platform\FoodAlchemist\Enums\WissensStatus;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 
 /**
  * Spec 60 · P7b: Kombinationsplan für den Generator — dieselbe Logik VOR dem Generieren, die

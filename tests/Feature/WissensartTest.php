@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService;
 use Platform\FoodAlchemist\Services\Knowledge\WissensProfilService;
 use Platform\FoodAlchemist\Services\Knowledge\Wissensart;
-use Platform\FoodAlchemist\Services\KnowledgeService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

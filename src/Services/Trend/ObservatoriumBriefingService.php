@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\FaRolle;
@@ -20,7 +20,7 @@ class ObservatoriumBriefingService
 
     public const MAX_THEMEN = 10;
 
-    public function __construct(private readonly FaRechte $rechte) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte) {}
 
     public function profil(Team $team, int $userId): ?Profil
     {

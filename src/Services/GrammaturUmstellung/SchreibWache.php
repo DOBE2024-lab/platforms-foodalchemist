@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Event;
  * - Phase 1 (Umbau): nur Darreichungen, Deltas und am Rezept die Spalten sales_unit_count / sales_quantity_per_unit_g der
  *   umgestellten Standards.
  * - Phase 2 (Neuberechnung über den Normalweg): die Erlaubt-Liste unten; Audits und Activity-Log nur INSERT.
+ * - Infrastruktur ({@see infrastrukturTabellen}): der Datenbank-Cache des Frameworks (`cache`, `cache_locks`) ist in jeder Phase
+ *   erlaubt. Auf io läuft CACHE_STORE=database; jedes Cache::remember/lock im Normalweg schreibt dorthin (Trockenlauf 23.11.: Abbruch
+ *   in Phase 0 wegen DELETE/INSERT auf `cache`). Das ist kein fachlicher Schreibzugriff und wird mit der Transaktion zurückgerollt.
+ *   Gezählt wird es trotzdem ({@see anweisungen}).
  * - Warnungen: nur die bekannten Meldungen des Recompute-Wegs zählen ({@see WARN_PRAEFIXE}) — eine fremde Deprecation kippt
  *   den Lauf nicht, ein geschluckter Fehler der Kaskade schon.
  *
@@ -124,6 +128,9 @@ final class SchreibWache
         $op = $op === 'replace' ? 'insert' : $op;
         $tabelle = $m[2];
         $this->anweisungen[$this->phase][$tabelle][$op] = ($this->anweisungen[$this->phase][$tabelle][$op] ?? 0) + 1;
+        if (in_array($tabelle, self::infrastrukturTabellen(), true)) {
+            return;
+        }
 
         $erlaubt = ($this->phase === '1' ? self::PHASE1 : self::PHASE2)[$tabelle] ?? null;
         if ($erlaubt === null || ! in_array($op, $erlaubt, true)) {
@@ -134,6 +141,21 @@ final class SchreibWache
         if ($this->phase === '1' && $tabelle === 'foodalchemist_recipes') {
             $this->pruefeRezeptKopf($sql, $bindings);
         }
+    }
+
+    /**
+     * Tabellen des Framework-Caches (Store `database`), Namen aus der Konfiguration samt Standardnamen. Andere Stores (redis, file,
+     * array) schreiben nicht in die Datenbank und brauchen keinen Eintrag.
+     *
+     * @return list<string>
+     */
+    public static function infrastrukturTabellen(): array
+    {
+        return array_values(array_unique(array_filter([
+            'cache', 'cache_locks',
+            (string) config('cache.stores.database.table', 'cache'),
+            (string) config('cache.stores.database.lock_table', 'cache_locks'),
+        ])));
     }
 
     private function pruefeRezeptKopf(string $sql, array $bindings): void

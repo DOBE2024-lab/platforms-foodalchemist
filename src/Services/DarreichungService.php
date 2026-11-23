@@ -40,13 +40,18 @@ class DarreichungService
     ) {}
 
     /**
-     * Plan 98 B, Sperre (Entscheid Dominique 22.11.2026): Es gibt keine freie Grammatur mehr. Der Standard rechnet aus Ansatz ÷
-     * Portionen, Varianten aus ihren Komponenten (Anteil am Standard oder Mengen je Komponente). Zentral hier, damit
-     * Oberfläche, MCP und Importe gleich laufen.
+     * Plan 98 B, Sperre (Entscheid Dominique 22.11.2026, Modell 23.11.): Es gibt keine freie Grammatur mehr. Ein Gericht ist
+     * EINE Portion — die Bestandteile tragen ihre Menge je Portion, die Grammatur des Standards ist ihre Summe; Varianten
+     * rechnen aus ihren Komponenten (Anteil am Standard oder Mengen je Komponente). Zentral hier, damit Oberfläche, MCP und
+     * Importe gleich laufen.
      */
-    public const GRAMMATUR_GESPERRT = 'Die Grammatur ist nicht direkt setzbar: Sie ergibt sich am Standard aus Ansatz ÷ Portionen, '
-        .'an einer Variante aus ihren Komponenten. Setze stattdessen die Zutatenmengen bzw. die Portionen des Gerichts '
-        .'(sales_unit_count), an einer Variante den Anteil am Standard (anteil_prozent) oder Mengen je Komponente (recipe_darreichung_delta.PUT).';
+    public const GRAMMATUR_GESPERRT = 'Die Grammatur ist nicht direkt setzbar: Sie ist am Standard die Summe der Bestandteile '
+        .'(Mengen je Portion), an einer Variante die Summe ihrer Komponenten. Setze stattdessen die Zutatenmengen des Gerichts, '
+        .'an einer Variante den Anteil am Standard (anteil_prozent) oder Mengen je Komponente (recipe_darreichung_delta.PUT).';
+
+    /** Modell 23.11. (Dominique): die Portionszahl eines Gerichts ist fest 1 — kein Teiler. Altbestand > 1 stellt die Grammatur-Umstellung um. */
+    public const PORTIONSZAHL_FEST = 'Die Portionszahl eines Gerichts ist fest 1: Die Zutatenmengen gelten je Portion. '
+        .'Ein Gericht mit Mengen für mehrere Portionen wird über foodalchemist:grammatur-automatisch auf eine Portion skaliert.';
 
     public function anlegen(Team $team, int $recipeId, int $servierformId, array $attrs = [], string $createdVia = 'fa_ui'): FoodAlchemistRecipeDarreichung
     {

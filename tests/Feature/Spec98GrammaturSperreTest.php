@@ -48,7 +48,7 @@ it('eine neue Variante folgt dem Standard; „eigene Menge“ hält die Komposit
         ->and((float) $n->ek_portion)->toBe(0.75);
 });
 
-it('verkaufsrezepte-Weg: abweichender Kopf wirft, unveränderter geht durch; neue Portionen stellen einen Altbestand-Standard auf automatisch', function () {
+it('verkaufsrezepte-Weg: abweichender Kopf und eine Portionszahl ≠ 1 werfen, unveränderte Werte gehen durch', function () {
     $sales = app(SalesRecipeService::class);
     expect(fn () => $sales->updateVk($this->rootTeam, $this->a->id, ['sales_quantity_per_unit_g' => 250]))
         ->toThrow(RuntimeException::class, 'nicht direkt setzbar');
@@ -56,19 +56,17 @@ it('verkaufsrezepte-Weg: abweichender Kopf wirft, unveränderter geht durch; neu
     $sales->updateVk($this->rootTeam, $this->a->id, ['sales_quantity_per_unit_g' => '300,0', 'name' => 'Bratkartoffeln neu']);
     expect($this->a->fresh()->name)->toBe('Bratkartoffeln neu');
 
-    // A: Standard in Altbestand-Form (300 g fest). 4 Portionen → automatisch, 1,2 kg ÷ 4 = 300 g, EK bleibt
-    $sales->updateVk($this->rootTeam, $this->a->id, ['sales_unit_count' => 4]);
-    $t = ($this->dar)($this->a, 'teller');
-    expect((bool) $t->menge_vom_standard)->toBeTrue()
-        ->and((float) $t->quantity_per_unit_g)->toBe(300.0)
-        ->and((float) $t->ek_portion)->toBe(0.75)
-        ->and((float) $this->a->fresh()->sales_quantity_per_unit_g)->toBe(300.0);
+    // Modell 23.11.: Portionszahl am Gericht fest 1 (leer = 1). Ein anderer Wert wirft und ändert nichts — vorher schrieb
+    // der Sync Ertrag ÷ Portionen als freie Grammatur in den Standard.
+    $vorher = ($this->dar)($this->a, 'teller')->only(['quantity_per_unit_g', 'menge_vom_standard', 'ek_portion']);
+    expect(fn () => $sales->updateVk($this->rootTeam, $this->a->id, ['sales_unit_count' => 4]))
+        ->toThrow(RuntimeException::class, 'fest 1');
+    expect($this->a->fresh()->sales_unit_count)->toBeNull()
+        ->and(($this->dar)($this->a, 'teller')->only(array_keys($vorher)))->toBe($vorher);
 
-    // 6 Portionen: der Standard rechnet selbst neu (vorher schrieb der Sync Ertrag ÷ Portionen als freie Grammatur)
-    $sales->updateVk($this->rootTeam, $this->a->id, ['sales_unit_count' => 6]);
-    expect((float) ($this->dar)($this->a, 'teller')->quantity_per_unit_g)->toBe(200.0)
-        ->and((bool) ($this->dar)($this->a, 'teller')->menge_vom_standard)->toBeTrue()
-        ->and((float) $this->a->fresh()->sales_quantity_per_unit_g)->toBe(200.0);
+    $sales->updateVk($this->rootTeam, $this->a->id, ['sales_unit_count' => '1', 'name' => 'Bratkartoffeln 1']);
+    $sales->updateVk($this->rootTeam, $this->a->id, ['sales_unit_count' => null, 'name' => 'Bratkartoffeln 2']);
+    expect($this->a->fresh()->name)->toBe('Bratkartoffeln 2')->and($this->a->fresh()->sales_unit_count)->toBeNull();
 });
 
 it('Selbstheilung: ensureStandard legt einen fehlenden Standard weiter in Altbestand-Form an (Grammatur aus dem Kopf)', function () {

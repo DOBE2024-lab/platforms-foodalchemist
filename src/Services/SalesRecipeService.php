@@ -513,22 +513,31 @@ class SalesRecipeService
 
     /**
      * Plan 98 B, Sperre: `sales_quantity_per_unit_g` ist nur noch der Spiegel der Standard-Darreichung
-     * ({@see DarreichungService::kopfSpiegeln}). Ein unveränderter Wert geht durch (der Editor schickt den Kopf mit), ein
-     * anderer ist ein Fehler — sonst nähme das Tool still etwas an, das nicht wirkt.
+     * ({@see DarreichungService::kopfSpiegeln}), `sales_unit_count` ist am Gericht fest 1 (Modell Dominique 23.11.: die
+     * Zutatenmengen gelten je Portion, kein Teiler). Ein unveränderter Wert geht durch (der Editor schickt den Kopf mit, auch
+     * ein Altbestand > 1), ein anderer ist ein Fehler — sonst nähme das Tool still etwas an, das nicht wirkt, bzw. ein
+     * Wechsel 4 → 1 vervierfachte die Portion, ohne dass jemand die Mengen anfasst.
      */
     private function grammaturNurLesen(FoodAlchemistRecipe $recipe, array &$update): void
     {
-        if (! array_key_exists('sales_quantity_per_unit_g', $update)) {
-            return;
+        $zahl = static fn ($v) => $v === null || $v === '' ? null : str_replace(',', '.', trim((string) $v));
+        $gleich = static fn ($neu, $alt, float $tol) => $neu === null ? $alt === null
+            : ($alt !== null && is_numeric($neu) && abs((float) $neu - (float) $alt) < $tol);
+        foreach (['sales_quantity_per_unit_g' => [0.05, DarreichungService::GRAMMATUR_GESPERRT],
+            'sales_unit_count' => [0.5, DarreichungService::PORTIONSZAHL_FEST]] as $feld => [$tol, $meldung]) {
+            if (! array_key_exists($feld, $update)) {
+                continue;
+            }
+            $neu = $zahl($update[$feld]);
+            $alt = $recipe->{$feld};
+            if ($feld === 'sales_unit_count') {   // leer = 1
+                [$neu, $alt] = [$neu ?? '1', $alt ?? 1];
+            }
+            if (! $gleich($neu, $alt, $tol)) {
+                throw new \RuntimeException($meldung);
+            }
+            unset($update[$feld]);
         }
-        $neu = $update['sales_quantity_per_unit_g'];
-        $neu = $neu === null || $neu === '' ? null : str_replace(',', '.', trim((string) $neu));
-        $alt = $recipe->sales_quantity_per_unit_g;
-        $gleich = $neu === null ? $alt === null : ($alt !== null && is_numeric($neu) && abs((float) $neu - (float) $alt) < 0.05);
-        if (! $gleich) {
-            throw new \RuntimeException(DarreichungService::GRAMMATUR_GESPERRT);
-        }
-        unset($update['sales_quantity_per_unit_g']);
     }
 
     /** VK-Felder des Legacy-Editors in die Standard-Darreichung spiegeln (eine Wahrheit). */
@@ -557,15 +566,8 @@ class SalesRecipeService
                 $dUpdate[$nach] = $update[$von];
             }
         }
-        // Plan 98 B: neue Portionen am Gericht — der Standard rechnet selbst aus Ansatz ÷ Portionen. Vorher schrieb der Sync hier
-        // Ertrag ÷ Portionen als freie Grammatur in die Darreichung. Ein Standard in Altbestand-Form (eigene Menge ohne Deltas)
-        // geht dabei auf „automatisch“; einer mit Komponenten-Mengen bleibt, wie er ist.
-        if ((array_key_exists('sales_unit_count', $update) || $standard->quantity_per_unit_g === null)
-            && ! $standard->menge_vom_standard && ! $standard->deltas()->exists()
-            && $recipe->yield_kg !== null && (int) $recipe->sales_unit_count > 0) {
-            $dUpdate['menge_vom_standard'] = true;
-            $dUpdate['unit_count'] = 1;
-        }
+        // Plan 98 B: der Sync schreibt keine Grammatur mehr (vorher Ertrag ÷ Portionen als freie Grammatur) und kennt keinen
+        // Teiler — die Portionszahl ist am Gericht fest 1 (grammaturNurLesen).
         if (array_key_exists('sales_net', $update)) {
             if ($update['sales_net'] === null || $update['sales_net'] === '') {
                 $dUpdate['price_mode'] = 'auto';
@@ -578,8 +580,6 @@ class SalesRecipeService
         }
         if ($dUpdate !== []) {
             app(DarreichungService::class)->aktualisieren($team, $standard->id, $dUpdate);
-        } elseif (array_key_exists('sales_unit_count', $update)) {
-            app(DarreichungService::class)->recomputeFuerRezept($recipe->id);   // Grammatur = Ansatz ÷ neue Portionen
         }
     }
 

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendQuellenService;
+use Platform\FoodAlchemist\Services\Trend\TrendQuellenService;
 
 /** Spec 93 A · Quelle entfernen (weich gelöscht; Einträge im Eingang bleiben). */
 class TrendQuellenDeleteTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

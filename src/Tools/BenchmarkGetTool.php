@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\BenchmarkService;
+use Platform\FoodAlchemist\Services\Trend\BenchmarkService;
 
 /**
  * R2.7 — Portfolio-Benchmark (read-only): eigene Portfolio-Kennzahlen vs.

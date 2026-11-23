@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -47,7 +47,7 @@ class TrendVertiefungService
     /** Unter so viel Haupttext gilt eine Seite als nicht lesbar (oder als Login-Wand, wenn ein Passwortfeld da ist). */
     public const MIN_TEXT = 300;
 
-    public function __construct(private readonly FaRechte $rechte, private readonly SichererAbruf $abruf) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte, private readonly SichererAbruf $abruf) {}
 
     /**
      * Knopf / MCP: die genannten Einträge des eigenen Teams vertiefen (höchstens 20 je Aufruf). Bereits vertiefte nur mit $neu.

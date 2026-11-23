@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Recipes\PairingNetzModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

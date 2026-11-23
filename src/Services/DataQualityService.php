@@ -44,7 +44,7 @@ class DataQualityService
     public function __construct(
         private SignalService $signals,
         private CoverageService $coverage,
-        private PairingService $pairing,
+        private Pairing\PairingService $pairing,
         private PriceService $preise,
     ) {
     }

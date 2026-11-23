@@ -20,7 +20,7 @@
 
     // Radar-Geometrie wie Click Dummy 3: viewBox 640, Mitte 320/320, Außenradius 268
     $cx = 320; $cy = 320; $maxR = 268;
-    $ringe = \Platform\FoodAlchemist\Services\TrendService::RINGE;
+    $ringe = \Platform\FoodAlchemist\Services\Trend\TrendService::RINGE;
     $punkt = fn ($grad, $r) => [round($cx + $r * cos(deg2rad($grad)), 1), round($cy - $r * sin(deg2rad($grad)), 1)];
 @endphp
 

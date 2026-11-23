@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\KnowledgeService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
 
 /**
  * MCP: neue Wissens-Kategorie anlegen (team-scoped). Schließt die Lücke, dass das

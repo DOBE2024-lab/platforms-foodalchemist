@@ -5,7 +5,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Observatorium\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendBeleg;
-use Platform\FoodAlchemist\Services\ObservatoriumService;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumService;
 use Platform\FoodAlchemist\Support\HandyLesemodus;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

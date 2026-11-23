@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Support\GpAnkerVorauswahl;
 use Platform\FoodAlchemist\Support\HauptzutatenAusListe;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

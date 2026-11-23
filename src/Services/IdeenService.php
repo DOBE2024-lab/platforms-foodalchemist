@@ -361,7 +361,7 @@ class IdeenService
             ->pluck('sales_recipe_id')->map(fn ($v) => (int) $v)->filter()->unique()->values()->all();
         if ($belegteIds !== []) {
             $belegte = FoodAlchemistRecipe::visibleToTeam($team)->whereIn('id', $belegteIds)->get();
-            $profil = app(PairingService::class)->menueAromaProfil($belegte);
+            $profil = app(Pairing\PairingService::class)->menueAromaProfil($belegte);
             if ($profil !== null) {
                 $kontext['menue_kohaesion'] = [
                     'hinweis' => 'Die Menüfolge trägt bereits diese Aroma-Anker (Pairing-Graph). Erfinde '

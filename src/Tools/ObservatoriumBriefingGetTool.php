@@ -6,8 +6,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ObservatoriumBriefingService as BP;
-use Platform\FoodAlchemist\Services\ObservatoriumService;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumBriefingService as BP;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumService;
 
 /** „Mein Briefing“ lesen: die persönliche Einstellung und die aktuellen Top-Meldungen dazu. */
 class ObservatoriumBriefingGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

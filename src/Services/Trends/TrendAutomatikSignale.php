@@ -8,8 +8,8 @@ use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendQuelle;
 use Platform\FoodAlchemist\Services\SignalService;
-use Platform\FoodAlchemist\Services\TrendQuellenService;
-use Platform\FoodAlchemist\Services\TrendThemenService;
+use Platform\FoodAlchemist\Services\Trend\TrendQuellenService;
+use Platform\FoodAlchemist\Services\Trend\TrendThemenService;
 use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
 /**

@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Services\Pairing\KontrastAbleitung;
 use Platform\FoodAlchemist\Services\Pairing\Kombinationslogik;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Tests\Support\Harmonie;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

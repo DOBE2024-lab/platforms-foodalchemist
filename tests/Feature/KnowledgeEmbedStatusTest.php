@@ -5,7 +5,7 @@ use Platform\Core\Services\EmbeddingProviderRegistry;
 use Platform\Core\Services\EmbeddingService;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeEmbeddingService;
-use Platform\FoodAlchemist\Services\KnowledgeService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
 use Platform\FoodAlchemist\Tests\Support\FakeEmbeddingProvider;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

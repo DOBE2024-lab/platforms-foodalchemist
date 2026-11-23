@@ -614,7 +614,7 @@ class RecipeGeneratorService
             $melde('Kohärenz wird geprüft …');
             $kohaerenzStarted = hrtime(true);
             try {
-                $statistik['kohaerenz'] = app(PairingService::class)->recipeCohesion($recipe);
+                $statistik['kohaerenz'] = app(Pairing\PairingService::class)->recipeCohesion($recipe);
             } catch (\Throwable $e) {
                 // Kohärenz ist Diagnose, kein Blocker der Generierung.
             }

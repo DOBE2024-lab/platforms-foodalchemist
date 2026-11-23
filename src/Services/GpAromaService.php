@@ -146,7 +146,7 @@ class GpAromaService
     {
         $team = $this->besitzerTeam($gp);
 
-        return $team !== null && app(PairingService::class)->darfAnkerPflegen($gp, $team);
+        return $team !== null && app(Pairing\PairingService::class)->darfAnkerPflegen($gp, $team);
     }
 
     // ── Geschwister ────────────────────────────────────────────────────────────────────────────────
@@ -196,7 +196,7 @@ class GpAromaService
         if ($g['status'] !== 'einig' || $team === null) {
             return 0;
         }
-        $pairing = app(PairingService::class);
+        $pairing = app(Pairing\PairingService::class);
         $grund = "Von {$g['geschwister']} Geschwister-GP(s) derselben Hauptzutat ({$gp->main_ingredient_slug}) übernommen";
         foreach ($g['anker'] as $a) {
             $pairing->setGpAnker($team, $gp->id, $a['anchor_id'], $a['role'], 'geschwister', null, $grund);
@@ -304,7 +304,7 @@ class GpAromaService
      */
     private function kontext(FoodAlchemistGp $gp, array $naehrwerte, array $konzentration, bool $mitTextur): array
     {
-        $anker = app(PairingService::class)->gpAnkerAlle($gp->id);
+        $anker = app(Pairing\PairingService::class)->gpAnkerAlle($gp->id);
         $kern = $anker->firstWhere('role', 'kern') ?? $anker->first();
         $nachbarn = DB::table('foodalchemist_gp_taste_vectors AS t')
             ->join('foodalchemist_gps AS g', 'g.id', '=', 't.gp_id')

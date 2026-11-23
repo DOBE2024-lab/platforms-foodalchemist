@@ -3,10 +3,10 @@
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendInspiration;
-use Platform\FoodAlchemist\Services\TrendEingangService;
-use Platform\FoodAlchemist\Services\TrendQuellenService;
+use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
+use Platform\FoodAlchemist\Services\Trend\TrendQuellenService;
 use Platform\FoodAlchemist\Services\Trends\TrendAutomatikService;
-use Platform\FoodAlchemist\Services\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
 use Platform\FoodAlchemist\Support\FaShell;
 use Platform\FoodAlchemist\Support\GoogleNewsSuche;
 use Platform\FoodAlchemist\Support\HandyLesemodus;

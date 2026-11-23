@@ -11,9 +11,9 @@ use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendQuelle;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\ObservatoriumBriefingService;
-use Platform\FoodAlchemist\Services\ObservatoriumService;
-use Platform\FoodAlchemist\Services\TrendService;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumBriefingService;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
 use Platform\FoodAlchemist\Support\FaShell;
 use Platform\FoodAlchemist\Support\HandyLesemodus;
 use Platform\FoodAlchemist\Support\ObservatoriumInhalt as Inhalt;
@@ -239,7 +239,7 @@ class Index extends Component
     private function pinnwandAktion(\Closure $tun, string $ok): void
     {
         try {
-            $tun(app(\Platform\FoodAlchemist\Services\ObservatoriumPinnwandService::class), $this->team());
+            $tun(app(\Platform\FoodAlchemist\Services\Trend\ObservatoriumPinnwandService::class), $this->team());
             $this->meldung = $ok;
         } catch (\RuntimeException $e) {
             $this->meldung = $e->getMessage();
@@ -251,7 +251,7 @@ class Index extends Component
     {
         $this->nurKuratoren();
         try {
-            $ids = app(\Platform\FoodAlchemist\Services\TrendVertiefungService::class)->anstossen($this->team(), [$id], (int) Auth::id(), true);
+            $ids = app(\Platform\FoodAlchemist\Services\Trend\TrendVertiefungService::class)->anstossen($this->team(), [$id], (int) Auth::id(), true);
             $this->meldung = $ids === [] ? 'Die Vertiefung läuft bereits.' : 'Vertiefung gestartet: Die Quelle wird gelesen, die Kernaussagen erscheinen hier in Kürze.';
         } catch (\RuntimeException $e) {
             $this->meldung = $e->getMessage();
@@ -263,7 +263,7 @@ class Index extends Component
     {
         $this->nurKuratoren();
         try {
-            $r = app(\Platform\FoodAlchemist\Services\MarktEinordnungService::class)->einordnen($this->team(), (int) Auth::id());
+            $r = app(\Platform\FoodAlchemist\Services\Trend\MarktEinordnungService::class)->einordnen($this->team(), (int) Auth::id());
             $this->meldung = $r['angestossen'] ? 'Einordnung wird erstellt. Sie erscheint nach dem Neuladen.' : $r['grund'];
         } catch (\RuntimeException $e) {
             $this->meldung = $e->getMessage();
@@ -303,18 +303,18 @@ class Index extends Component
             'typ' => $this->typen, 'ebene' => $this->ebenen, 'nur_befragung' => $this->nurBefragung]);
 
         return view('foodalchemist::livewire.observatorium.index', [
-            'marktdaten' => $this->ansicht === 'zahlen' ? app(\Platform\FoodAlchemist\Services\MarktdatenService::class)->lesen($team) : null,
+            'marktdaten' => $this->ansicht === 'zahlen' ? app(\Platform\FoodAlchemist\Services\Trend\MarktdatenService::class)->lesen($team) : null,
             'istHandy' => HandyLesemodus::anfrageVomHandy(),
             'briefingProfil' => $briefingProfil,
             'eintraege' => $eintraege, 'gewaehlt' => $gewaehlt,
             'weitereQuellen' => $gewaehlt ? $svc->weitereQuellen($team, $gewaehlt) : collect(),
             'merker' => $alleMerker->keyBy('eingang_id'), 'merkerAnzahl' => $alleMerker->count(),
             'darfKuratieren' => $this->darfKuratieren($team), 'teamId' => $team->id, 'kuratiertHier' => ObservatoriumSicht::kuratiertHier($team),
-            'lagebild' => $this->ansicht === 'entdecken' ? app(\Platform\FoodAlchemist\Services\LagebildService::class)->aktuelles($team) : null,
-            'pins' => $this->ansicht === 'pinnwand' ? app(\Platform\FoodAlchemist\Services\ObservatoriumPinnwandService::class)->liste($team) : collect(),
-            'angepinnt' => app(\Platform\FoodAlchemist\Services\ObservatoriumPinnwandService::class)->angepinnteMeldungen($team),
+            'lagebild' => $this->ansicht === 'entdecken' ? app(\Platform\FoodAlchemist\Services\Trend\LagebildService::class)->aktuelles($team) : null,
+            'pins' => $this->ansicht === 'pinnwand' ? app(\Platform\FoodAlchemist\Services\Trend\ObservatoriumPinnwandService::class)->liste($team) : collect(),
+            'angepinnt' => app(\Platform\FoodAlchemist\Services\Trend\ObservatoriumPinnwandService::class)->angepinnteMeldungen($team),
             'darfPinnen' => app(FaRechte::class)->darf(Auth::user(), $team, FaRolle::Kuratieren),
-            'lagebilder' => $this->ansicht === 'lagebild' ? app(\Platform\FoodAlchemist\Services\LagebildService::class)->liste($team, 4)->all() : [],
+            'lagebilder' => $this->ansicht === 'lagebild' ? app(\Platform\FoodAlchemist\Services\Trend\LagebildService::class)->liste($team, 4)->all() : [],
             'wettbewerbVergleich' => [],
             'wettbewerberProfile' => collect(),
             'radarGesamt' => $alleRadarTrends->count(),

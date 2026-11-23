@@ -527,7 +527,7 @@ class PlanningCascadeService
             return [];
         }
         $namen = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->whereIn('id', $luecken)->pluck('name', 'id');
-        $inspiration = app(PairingInspirationService::class);
+        $inspiration = app(Pairing\PairingInspirationService::class);
         $gemeldet = [];
         foreach ($namen as $gpId => $name) {
             if (trim((string) $name) === '') {

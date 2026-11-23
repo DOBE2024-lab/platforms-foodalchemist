@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -115,7 +115,7 @@ class MarktEinordnungService
      */
     public function einordnen(Team $team, ?int $userId = null): array
     {
-        $rechte = app(FaRechte::class);
+        $rechte = app(\Platform\FoodAlchemist\Services\FaRechte::class);
         $userId !== null ? $rechte->pruefeId($userId, $team, FaRolle::Kuratieren, 'Marktdaten einordnen')
             : $rechte->pruefeAngemeldet($team, FaRolle::Kuratieren, 'Marktdaten einordnen');
         $m = app(MarktdatenService::class)->lesenFuerTeam($team);

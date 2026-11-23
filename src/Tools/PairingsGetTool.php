@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 
 /** Phase K: Pairing-Partner einer Zutat aus dem Anker-Graph (Foodpairing Inspire; kuratiert + abgeleitete Molekül-Kanten). */
 class PairingsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

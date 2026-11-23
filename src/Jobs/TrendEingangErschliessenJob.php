@@ -12,8 +12,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTrendEingang;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\KiExternLauf;
 use Platform\FoodAlchemist\Services\Ai\KiExternWiederholbar;
-use Platform\FoodAlchemist\Services\TrendEingangService;
-use Platform\FoodAlchemist\Services\TrendThemenService;
+use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
+use Platform\FoodAlchemist\Services\Trend\TrendThemenService;
 use Platform\FoodAlchemist\Support\ObservatoriumInhalt;
 
 /**

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendEingangService;
+use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
 use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
 /** Spec 93 A · Eingang des Trendradars lesen (systematisch erfasste Artikel, getrennt von der Pinnwand). */

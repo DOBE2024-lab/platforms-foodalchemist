@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
 
 /** Spec 79 · Inspirationen kuratieren: einem Trend zuordnen, einen Trend daraus machen, lösen oder zusammenführen. */
 class FundstueckePutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

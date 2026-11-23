@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 
 /**
  * R6.8 (Pairing-Offense): Aroma-treue Ersatz-Vorschläge für einen GP oder eine

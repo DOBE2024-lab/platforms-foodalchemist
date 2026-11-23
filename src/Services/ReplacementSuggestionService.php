@@ -97,7 +97,7 @@ class ReplacementSuggestionService
 
         $pairing = collect();
         try {
-            $pairing = collect(app(PairingService::class)->aromaTrueSubstitutes($team, $source->id, self::PER_KIND)['candidates'] ?? [])
+            $pairing = collect(app(Pairing\PairingService::class)->aromaTrueSubstitutes($team, $source->id, self::PER_KIND)['candidates'] ?? [])
                 ->keyBy(fn (array $c) => (int) $c['gp_id']);
         } catch (Throwable) {
         }

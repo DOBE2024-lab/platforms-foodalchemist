@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Livewire\Observatorium\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendEingang;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendQuelle;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
-use Platform\FoodAlchemist\Services\TrendVertiefungService;
+use Platform\FoodAlchemist\Services\Trend\TrendVertiefungService;
 use Platform\FoodAlchemist\Support\KiUmleitung;
 use Platform\FoodAlchemist\Support\SichererAbruf;
 use Platform\FoodAlchemist\Support\TrendUrl;

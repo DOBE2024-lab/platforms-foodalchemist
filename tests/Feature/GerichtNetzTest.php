@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Pairing\AnkerVarianten;
 use Platform\FoodAlchemist\Services\Pairing\Kombinationslogik;
 use Platform\FoodAlchemist\Services\Pairing\RezeptProfil;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Tests\Support\Harmonie;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

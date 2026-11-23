@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendBeleg;
-use Platform\FoodAlchemist\Services\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
 
 /** Spec 79 · Inspirations-Pinnwand lesen: Fundstücke des Teams und Häufungen je Schlagwort. */
 class FundstueckeGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

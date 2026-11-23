@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeBudget;
-use Platform\FoodAlchemist\Services\KnowledgeRoutingService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRoutingService;
 
 /**
  * Sicherung der STEUERUNG — die dritte und letzte Lücke neben Kanon und Einordnung.

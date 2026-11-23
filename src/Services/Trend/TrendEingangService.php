@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -38,11 +38,11 @@ class TrendEingangService
     public const AKTIONEN = ['verwerfen', 'wiederherstellen', 'thema', 'pinnwand'];
 
     public function __construct(
-        private readonly FaRechte $rechte,
+        private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
         private readonly TrendService $trends,
         private readonly TrendQuellenService $quellen,
         private readonly QuellenAbruf $abruf,
-        private readonly TeamSettingsService $settings,
+        private readonly \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
         private readonly TrendThemenService $themen,
     ) {}
 
@@ -93,7 +93,7 @@ class TrendEingangService
             'eigenes_team' => $team === null || (int) $e->team_id === (int) $team->id,
             'observatorium' => $e->observatorium, 'herausgeber' => $e->herausgeber, 'herausgeber_url' => $e->herausgeber_url,
             'vertiefung_status' => $e->vertiefung_status,
-            'vertiefung_label' => $e->vertiefung_status !== null ? (\Platform\FoodAlchemist\Services\TrendVertiefungService::STATUS[$e->vertiefung_status] ?? null) : null,
+            'vertiefung_label' => $e->vertiefung_status !== null ? (\Platform\FoodAlchemist\Services\Trend\TrendVertiefungService::STATUS[$e->vertiefung_status] ?? null) : null,
             'vertiefung' => $e->vertiefung, 'vertieft_am' => $e->vertieft_at?->toIso8601String(),
         ];
     }

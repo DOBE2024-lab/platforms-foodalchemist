@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\DB;
-use Platform\FoodAlchemist\Services\KnowledgeRoutingService;
-use Platform\FoodAlchemist\Services\KnowledgeService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRoutingService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

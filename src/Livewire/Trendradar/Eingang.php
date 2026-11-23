@@ -7,8 +7,8 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\TrendEingangService;
-use Platform\FoodAlchemist\Services\TrendThemenService;
+use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
+use Platform\FoodAlchemist\Services\Trend\TrendThemenService;
 
 /**
  * Spec 93 A · Reiter „Eingang“ im Trendradar: systematisch erfasste Artikel als Prüfliste (Titel, Quelle, Datum,

@@ -74,9 +74,9 @@ it('Mandant sieht keinen Master-Preis: Ersatzvorschläge (Pairing) zeigen den EK
     ($this->preis)($this->rootTeam->id, 9.95);   // Master-Preis am globalen Artikel
     $quelle = FoodAlchemistGp::create(['team_id' => null, 'gp_key' => 'akazienhonig|trocken', 'name' => 'Akazienhonig: trocken', 'stamm_class' => 'stamm_paket',
         'lead_la_supplier_item_id' => $this->la->id, 'commodity_group_code' => 'HON']);
-    $methode = (new ReflectionClass(\Platform\FoodAlchemist\Services\PairingService::class))->getMethod('gpLeadListenEk');
+    $methode = (new ReflectionClass(\Platform\FoodAlchemist\Services\Pairing\PairingService::class))->getMethod('gpLeadListenEk');
     $methode->setAccessible(true);
-    $ek = fn ($team) => $methode->invoke(app(\Platform\FoodAlchemist\Services\PairingService::class), (int) $quelle->lead_la_supplier_item_id, $team);
+    $ek = fn ($team) => $methode->invoke(app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class), (int) $quelle->lead_la_supplier_item_id, $team);
 
     expect($ek($this->rootTeam))->toBe(9.95)       // Master sieht seinen Preis
         ->and($ek($this->childA))->toBeNull();      // Mandant: kein Master-Preis

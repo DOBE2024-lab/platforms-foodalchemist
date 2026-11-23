@@ -13,6 +13,8 @@ uses(TestCase::class);
 const BESTELL_RANG = [
     'BestellSchiene' => 0,
     'BestellSummen' => 0,
+    'BestellHerkunft' => 0,
+    'BestellAmpeln' => 1,      // nutzt Summen
 ];
 
 /** @return array<string, list<string>> Teil => Teile (kurz), von denen er per Konstruktor abhängt */

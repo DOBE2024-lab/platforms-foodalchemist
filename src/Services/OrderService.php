@@ -35,64 +35,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
  */
 class OrderService
 {
-    /**
-     * HARTE VERSANDSPERREN. Konstante statt Inline-Array in `sendBlockers()`, weil eine neue
-     * Sperr-Warnung dort sonst STILL zur bloßen Warnung degradiert: der Beleg zeigt den Hinweis,
-     * der Absenden-Knopf wird trotzdem aktiv, `setStatus(Sent)` friert den Snapshot ein und das
-     * Einkaufsjournal bucht ihn als Ist-Einkauf. Nicht umkehrbar in dem Sinn, der zählt — die
-     * Bestellung ist beim Lieferanten raus, auf den falschen Tag. Und kein Test schlägt an,
-     * weil die Warnung ja erzeugt wird.
-     *
-     * `public`, damit der Register-Test die Liste HIER liest statt sie nachzubauen — eine im
-     * Test kopierte Liste driftet vom Original weg und prüft am Ende sich selbst.
-     */
-    public const HARTE_SPERREN = [
-        'leer',
-        'Klärung',
-        'Liefertag nicht beliefert',
-        'Liefertag vorbei',
-        'Bestellschluss verpasst',
-        'Freigabe abgelehnt',
-    ];
+    /** 98 · 3.3 S5: Register liegt in BestellAmpeln (Etiketten aus orderWarnings/supplierLogistikWarnings). */
+    public const HARTE_SPERREN = \Platform\FoodAlchemist\Services\Bestellung\BestellAmpeln::HARTE_SPERREN;
 
-    /**
-     * Hinweise, die absichtlich NICHT sperren — die Küche kommt trotzdem an die Ware.
-     *
-     * Zusammen mit HARTE_SPERREN ist das das VOLLSTÄNDIGE Register aller Etiketten, die
-     * `orderWarnings()` und `supplierLogistikWarnings()` erzeugen können. Ein Wächter-Test
-     * liest die Literale aus dem Quelltext dieser Klasse und hält jedes gegen das Register:
-     * ein neues Etikett ist rot, bis jemand es ausdrücklich hart ODER weich stellt. Damit ist
-     * die Vollzähligkeit erzwungen und nicht behauptet.
-     *
-     * Bewusst weich, mit Begründung — das ist die inhaltliche Hälfte der Liste:
-     *  · `Mindestwert`, `Kontingent …`      — kaufmännisch, nicht operativ blockierend
-     *  · `WE-Differenz`, `RE-Differenz`     — treten erst NACH dem Versand auf
-     *  · `Reklamation offen`, `Zahlung überfällig` — Lieferanten-Historie, nicht dieser Beleg
-     *  · `Liefertag abweichend`             — der Lieferant hat bestätigt, nur anders
-     *  · `Freigabe offen`                   — die Küche kommt auch bei abwesendem Freigeber
-     *    an die Ware. Entschieden 2026-09-03 (Dominique): bleibt weich, „theoretisch müsste
-     *    man ab einer gewissen Summe sich Freigaben holen". Und genau das ist der Grund, warum
-     *    es heute NICHT hart sein kann: die Freigabe wird von HAND angefragt
-     *    (`approval_status` & Co. sind da, ein Auslöser nicht). Hart wäre sie damit beliebig —
-     *    wer keine anfragt, hat keine offene. Mit einer Betrags-Schwelle je Team/Betrieb
-     *    (Muster: `TeamSettingsService::skalar($team, …, $outlet)`, wie `stundensatz_eur`)
-     *    beantwortet sich die Frage von selbst: oberhalb der Schwelle MUSS sie hart sein,
-     *    darunter entsteht sie nie. Backlog, nicht heute.
-     *  · `Bestellschluss heute`, `Liefertag heute` — knapp, aber nicht zu spät
-     */
-    public const WEICHE_HINWEISE = [
-        'Mindestwert',
-        'WE-Differenz',
-        'RE-Differenz',
-        'Reklamation offen',
-        'Kontingent nicht gültig',
-        'Kontingent überschritten',
-        'Liefertag abweichend',
-        'Zahlung überfällig',
-        'Freigabe offen',
-        'Bestellschluss heute',
-        'Liefertag heute',
-    ];
+    /** 98 · 3.3 S5: Register liegt in BestellAmpeln (Etiketten aus orderWarnings/supplierLogistikWarnings). */
+    public const WEICHE_HINWEISE = \Platform\FoodAlchemist\Services\Bestellung\BestellAmpeln::WEICHE_HINWEISE;
 
     public function __construct(
         private PlanungsblattService $planung,
@@ -102,6 +49,8 @@ class OrderService
         private InventoryService $inventory,
         private \Platform\FoodAlchemist\Services\Bestellung\BestellSchiene $schiene,
         private \Platform\FoodAlchemist\Services\Bestellung\BestellSummen $summen,
+        private \Platform\FoodAlchemist\Services\Bestellung\BestellAmpeln $ampeln,
+        private \Platform\FoodAlchemist\Services\Bestellung\BestellHerkunft $herkunft,
     ) {}
 
     // ── Schiene holen/anlegen ─────────────────────────────────────────────
@@ -647,7 +596,7 @@ class OrderService
 
         $drafts = $round->orders->filter(fn (FoodAlchemistOrder $order) => $order->status === OrderStatus::Draft);
         foreach ($drafts as $order) {
-            $blockers = $this->sendBlockers($order);
+            $blockers = $this->ampeln->sendBlockers($order);
             if ($blockers !== []) {
                 throw new \RuntimeException(($order->supplier?->name ?? 'Bestellung #'.$order->id).': '.implode(', ', $blockers));
             }
@@ -683,7 +632,7 @@ class OrderService
             ->with(['supplier', 'lines'])
             ->where('status', OrderStatus::Draft->value)
             ->get()
-            ->filter(fn (FoodAlchemistOrder $order) => $this->sendBlockers($order) === [])
+            ->filter(fn (FoodAlchemistOrder $order) => $this->ampeln->sendBlockers($order) === [])
             ->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
     }
 
@@ -697,7 +646,7 @@ class OrderService
             ->where('status', OrderStatus::Draft->value)
             ->get()
             ->map(function (FoodAlchemistOrder $order) {
-                $blockers = $this->sendBlockers($order);
+                $blockers = $this->ampeln->sendBlockers($order);
 
                 return [
                     'id' => (int) $order->id,
@@ -764,7 +713,7 @@ class OrderService
     {
         $orders = $round->orders;
         $drafts = $orders->filter(fn (FoodAlchemistOrder $order) => $order->status === OrderStatus::Draft);
-        $blockers = $drafts->flatMap(fn (FoodAlchemistOrder $order) => $this->sendBlockers($order))->unique()->values()->all();
+        $blockers = $drafts->flatMap(fn (FoodAlchemistOrder $order) => $this->ampeln->sendBlockers($order))->unique()->values()->all();
         $productionIds = $orders
             ->flatMap(fn (FoodAlchemistOrder $order) => $order->lines
                 ->flatMap(fn (FoodAlchemistOrderLine $line) => array_keys((array) $line->source_contributions)))
@@ -791,7 +740,7 @@ class OrderService
                 'desired_delivery_date' => $order->desired_delivery_date?->toDateString(),
                 'positions' => $order->lines->count(),
                 'total_net' => (float) $order->total_net,
-                'warnings' => $this->orderWarnings($order),
+                'warnings' => $this->ampeln->orderWarnings($order),
             ])->values()->all(),
             'order_count' => $orders->count(),
             'supplier_count' => $orders->pluck('supplier_id')->unique()->count(),
@@ -1206,7 +1155,7 @@ class OrderService
                 $total = (float) ($g['total_net'] ?? 0);
                 $g['references'] = array_keys($g['references'] ?? []);
                 $g['source_refs'] = array_keys($g['source_refs'] ?? []);
-                $g['warnings'] = $this->previewLogistikWarnings($supplier, ($g['delivery_date'] ?? null) ?: null);
+                $g['warnings'] = $this->ampeln->previewLogistikWarnings($supplier, ($g['delivery_date'] ?? null) ?: null);
                 $g['moq'] = [
                     'min_order_value' => $min,
                     'free_shipping_threshold' => $free,
@@ -2182,7 +2131,7 @@ class OrderService
         // Beim Absenden: Snapshot einfrieren = letzten draft-Stand rechnen, dann Status setzen.
         if ($ziel === OrderStatus::Sent) {
             $this->recomputeOrder($order);
-            $blocker = $this->sendBlockers($order->refresh());
+            $blocker = $this->ampeln->sendBlockers($order->refresh());
             if ($blocker !== []) {
                 throw new \RuntimeException('Bestellung kann nicht versendet werden: '.implode(', ', $blocker));
             }
@@ -2319,17 +2268,17 @@ class OrderService
                 'needed_display' => $bedarf,          // E1: korrekte Bedarfsmenge in der Grundeinheit des LA
                 'needed_unit' => $bedarfEinheit,      // kg / l / Stk (nie mehr fälschlich „kg" bei Stück)
                 'note' => $l->note,
-                'herkunft' => $this->parseHerkunft($refs),
+                'herkunft' => $this->herkunft->parseHerkunft($refs),
                 'bestellbar' => $l->pack_price !== null && (float) $l->qty_packs > 0,
             ];
         })->all();
 
-        $aggregat = $this->herkunftAggregat($alleRefs);   // CQ 3.3: Zeilen tragen dieselben Produktionsnamen wie das Aggregat (eine Abfrage)
-        $namen = $this->produktionsNamen($team, collect($aggregat)->pluck('production_order_id')->filter()->map(fn ($id) => (int) $id)->unique()->values());
-        $herkunft = $this->beschrifteHerkunft($aggregat, $namen);
-        $zeilen = array_map(fn (array $z) => array_replace($z, ['herkunft' => $this->beschrifteHerkunft($z['herkunft'], $namen)]), $zeilen);
-        $warnings = $this->orderWarnings($order);
-        $sendBlockers = $this->sendBlockers($order);
+        $aggregat = $this->herkunft->herkunftAggregat($alleRefs);   // CQ 3.3: Zeilen tragen dieselben Produktionsnamen wie das Aggregat (eine Abfrage)
+        $namen = $this->herkunft->produktionsNamen($team, collect($aggregat)->pluck('production_order_id')->filter()->map(fn ($id) => (int) $id)->unique()->values());
+        $herkunft = $this->herkunft->beschrifteHerkunft($aggregat, $namen);
+        $zeilen = array_map(fn (array $z) => array_replace($z, ['herkunft' => $this->herkunft->beschrifteHerkunft($z['herkunft'], $namen)]), $zeilen);
+        $warnings = $this->ampeln->orderWarnings($order);
+        $sendBlockers = $this->ampeln->sendBlockers($order);
         $invoiceDueDate = $this->summen->invoiceDueDate($order);
 
         return [
@@ -2370,10 +2319,10 @@ class OrderService
             'claims' => $this->summen->claimSummary($order),
             'quota' => $this->summen->quotaSummary($order),
             'inventory' => $this->summen->inventorySummaryFromLines($zeilen),
-            'moq' => $this->moqAmpel($order),
+            'moq' => $this->ampeln->moqAmpel($order),
             'warnings' => $warnings,
             'send_blockers' => $sendBlockers,
-            'logistik' => $this->logistikInfo($order),
+            'logistik' => $this->ampeln->logistikInfo($order),
             'herkunft' => $herkunft,   // E1: Schienen-weite Quellen-Übersicht (dedupliziert, mit Links)
             'zeilen' => $zeilen,
         ];
@@ -2404,134 +2353,28 @@ class OrderService
         return [round($g / 1000.0, 3), $unit === 'l' ? 'l' : 'kg'];
     }
 
-    /**
-     * E1: source_ref-Schlüssel in menschenlesbare Herkunft übersetzen. Kein FK — der Präfix
-     * kodiert die Quelle: `produktion:{id}:…` (Produktionsauftrag), `concept:{id}@…`,
-     * `recipe:{id|key}@…`, `event:…`. Unbekanntes bleibt als Roh-Label erhalten.
-     *
-     * @param  list<string>  $refs
-     * @return list<array{ref:string, type:string, label:string, production_order_id:?int}>
-     */
+    /** 98 · 3.3 S5: BestellHerkunft::parseHerkunft() */
     public function parseHerkunft(array $refs): array
     {
-        $out = [];
-        foreach ($refs as $ref) {
-            $ref = (string) $ref;
-            if ($ref === '') {
-                continue;
-            }
-            $type = 'sonstige';
-            $label = $ref;
-            $prodId = null;
-
-            if (preg_match('/^produktion:(\d+):/', $ref, $m)) {
-                $type = 'produktion';
-                $prodId = (int) $m[1];
-                $label = 'Produktion #'.$prodId;
-            } elseif (preg_match('/^concept:([^@:]+)/', $ref, $m)) {
-                $type = 'concept';
-                $label = 'Konzept '.$m[1];
-            } elseif (preg_match('/^recipe:([^@:]+)/', $ref, $m)) {
-                $type = 'recipe';
-                $label = 'Gericht '.$m[1];
-            } elseif (preg_match('/^event:(.+)$/', $ref, $m)) {
-                $type = 'event';
-                $label = $m[1];
-            }
-
-            $out[] = ['ref' => $ref, 'type' => $type, 'label' => $label, 'production_order_id' => $prodId];
-        }
-
-        return $out;
+        return $this->herkunft->parseHerkunft($refs);
     }
 
-    /**
-     * E1: dedupliziertes Schienen-Aggregat der Herkunft — je Quelle einmal (Produktion nach
-     * Auftrag, sonst nach Präfix bis zum ersten „@"), für Panel 3 „Herkunft mit Links".
-     *
-     * @param  list<string>  $refs
-     * @return list<array{key:string, type:string, label:string, production_order_id:?int}>
-     */
+    /** 98 · 3.3 S5: BestellHerkunft::herkunftAggregat() */
     public function herkunftAggregat(array $refs): array
     {
-        $byKey = [];
-        foreach ($this->parseHerkunft($refs) as $h) {
-            $key = $h['production_order_id'] !== null
-                ? 'produktion:'.$h['production_order_id']
-                : $h['type'].':'.$h['label'];
-            $byKey[$key] = [
-                'key' => $key,
-                'type' => $h['type'],
-                'label' => $h['label'],
-                'production_order_id' => $h['production_order_id'],
-            ];
-        }
-
-        return array_values($byKey);
+        return $this->herkunft->herkunftAggregat($refs);
     }
 
-    /**
-     * Produktion-Herkunft als echten Produktionskontext beschriften, nicht nur als ID.
-     *
-     * @param  list<array{key:string, type:string, label:string, production_order_id:?int}>  $herkunft
-     * @return list<array{key:string, type:string, label:string, production_order_id:?int}>
-     */
+    /** 98 · 3.3 S5: BestellHerkunft::herkunftMitProduktionsnamen() */
     public function herkunftMitProduktionsnamen(Team $team, array $herkunft): array
     {
-        return $this->beschrifteHerkunft($herkunft, $this->produktionsNamen($team, collect($herkunft)->pluck('production_order_id')->filter()->map(fn ($id) => (int) $id)->unique()->values()));
+        return $this->herkunft->herkunftMitProduktionsnamen($team, $herkunft);
     }
 
-    /**
-     * #6 N+1: wie {@see herkunftMitProduktionsnamen()}, aber fuer VIELE Bestellungen in EINEM Query.
-     * Vorher wurde die Einzel-Methode je Order aufgerufen (Orders/Index) → 1 ProductionOrder-Query
-     * pro Zeile. Hier gehen ALLE Produktions-IDs ueber alle Orders in ein whereIn; danach wird jede
-     * Order in-memory beschriftet.
-     *
-     * @param  array<int, list<array{key:string, type:string, label:string, production_order_id:?int}>>  $herkunftProOrder
-     * @return array<int, list<array{key:string, type:string, label:string, production_order_id:?int}>>
-     */
+    /** 98 · 3.3 S5: BestellHerkunft::herkunftMitProduktionsnamenBulk() */
     public function herkunftMitProduktionsnamenBulk(Team $team, array $herkunftProOrder): array
     {
-        $ids = collect($herkunftProOrder)
-            ->flatMap(fn ($herkunft) => collect($herkunft)->pluck('production_order_id')->all())
-            ->filter()->map(fn ($id) => (int) $id)->unique()->values();
-        if ($ids->isEmpty()) {
-            return $herkunftProOrder;
-        }
-
-        $namen = $this->produktionsNamen($team, $ids);
-        $out = [];
-        foreach ($herkunftProOrder as $orderId => $herkunft) {
-            $out[$orderId] = $this->beschrifteHerkunft($herkunft, $namen);
-        }
-
-        return $out;
-    }
-
-    /** @return \Illuminate\Support\Collection<int, string> production_order_id ⇒ Label (ein Query) */
-    private function produktionsNamen(Team $team, \Illuminate\Support\Collection $ids): \Illuminate\Support\Collection
-    {
-        return $ids->isEmpty() ? collect() : FoodAlchemistProductionOrder::visibleToTeam($team)   // ohne Produktions-Herkunft keine Abfrage
-            ->whereIn('id', $ids)
-            ->get(['id', 'name', 'production_date'])
-            ->mapWithKeys(fn ($p) => [
-                (int) $p->id => trim(($p->name ?: 'Produktion #'.$p->id).($p->production_date ? ' · '.$p->production_date->format('d.m.Y') : '')),
-            ]);
-    }
-
-    /**
-     * @param  list<array{key:string, type:string, label:string, production_order_id:?int}>  $herkunft
-     * @return list<array{key:string, type:string, label:string, production_order_id:?int}>
-     */
-    private function beschrifteHerkunft(array $herkunft, \Illuminate\Support\Collection $namen): array
-    {
-        return collect($herkunft)->map(function ($h) use ($namen) {
-            if (($h['production_order_id'] ?? null) !== null) {
-                $h['label'] = $namen[(int) $h['production_order_id']] ?? $h['label'];
-            }
-
-            return $h;
-        })->values()->all();
+        return $this->herkunft->herkunftMitProduktionsnamenBulk($team, $herkunftProOrder);
     }
 
     /** S3: Volldaten für Bestell-Dokument (PDF/Druck/CSV) — Lieferant-Stammdaten + Zeilen. */
@@ -2569,7 +2412,7 @@ class OrderService
             'approval_note' => $order->approval_note,
             'invoice_note' => $order->invoice_note,
             'total_net' => (float) $order->total_net,
-            'moq' => $this->moqAmpel($order),
+            'moq' => $this->ampeln->moqAmpel($order),
             'receipt' => $this->summen->receiptSummary($order),
             'invoice' => $this->summen->invoiceSummary($order),
             'payment' => $this->summen->paymentSummary($order),
@@ -3106,246 +2949,28 @@ class OrderService
         return $this->summen->approvalSummary($order);
     }
 
-    /** MOQ-/Frei-Haus-Ampel: total_net gegen Lieferanten-Konditionen (R9). */
+    /** 98 · 3.3 S5: BestellAmpeln::moqAmpel() */
     public function moqAmpel(FoodAlchemistOrder $order): array
     {
-        $supplier = $order->supplier ?? FoodAlchemistSupplier::find($order->supplier_id);
-        $min = $supplier?->min_order_value !== null ? (float) $supplier->min_order_value : null;
-        $frei = $supplier?->free_shipping_threshold !== null ? (float) $supplier->free_shipping_threshold : null;
-        $total = (float) $order->total_net;
-
-        return [
-            'total_net' => $total,
-            'min_order_value' => $min,
-            'free_shipping_threshold' => $frei,
-            'unter_mindestbestellwert' => $min !== null && $total < $min,
-            'fehlt_bis_min' => $min !== null && $total < $min ? round($min - $total, 2) : 0.0,
-            'frei_haus' => $frei !== null && $total >= $frei,
-            'fehlt_bis_frei_haus' => $frei !== null && $total < $frei ? round($frei - $total, 2) : 0.0,
-        ];
+        return $this->ampeln->moqAmpel($order);
     }
 
-    /**
-     * WaWi-Hinweise für operative Einkaufssteuerung. Die Liste bleibt label-basiert, damit
-     * bestehende Views ohne neues DTO weiterarbeiten können.
-     *
-     * @return list<string>
-     */
+    /** 98 · 3.3 S5: BestellAmpeln::orderWarnings() */
     public function orderWarnings(FoodAlchemistOrder $order): array
     {
-        $order->loadMissing(['supplier', 'lines']);
-        $warnings = [];
-        $lines = $order->lines;
-        $total = (float) $order->total_net;
-
-        if ($lines->count() === 0) {
-            $warnings[] = 'leer';
-        }
-        if ($total <= 0.0 || $lines->contains(fn ($line) => $line->pack_price === null || (float) $line->qty_packs <= 0.0)) {
-            $warnings[] = 'Klärung';
-        }
-
-        $moq = $this->moqAmpel($order);
-        if ($lines->count() > 0 && $moq['unter_mindestbestellwert']) {
-            $warnings[] = 'Mindestwert';
-        }
-        if ($this->summen->receiptSummary($order)['differences'] > 0) {
-            $warnings[] = 'WE-Differenz';
-        }
-        if ($this->summen->invoiceSummary($order)['differences'] > 0) {
-            $warnings[] = 'RE-Differenz';
-        }
-        $claims = $this->summen->claimSummary($order);
-        if ($claims['open'] > 0 || $claims['credit_expected'] > 0) {
-            $warnings[] = 'Reklamation offen';
-        }
-        $quota = $this->summen->quotaSummary($order);
-        if ($quota['invalid'] > 0) {
-            $warnings[] = 'Kontingent nicht gültig';
-        }
-        if ($quota['exceeded'] > 0) {
-            $warnings[] = 'Kontingent überschritten';
-        }
-        if (
-            $order->confirmed_delivery_date !== null
-            && $order->desired_delivery_date !== null
-            && ! $order->confirmed_delivery_date->isSameDay($order->desired_delivery_date)
-        ) {
-            $warnings[] = 'Liefertag abweichend';
-        }
-        if ($this->summen->paymentSummary($order)['state'] === 'overdue') {
-            $warnings[] = 'Zahlung überfällig';
-        }
-        $approval = $this->summen->approvalSummary($order);
-        if ($approval['state'] === 'requested') {
-            $warnings[] = 'Freigabe offen';
-        } elseif ($approval['state'] === 'rejected') {
-            $warnings[] = 'Freigabe abgelehnt';
-        }
-
-        $warnings = array_merge($warnings, $this->logistikWarnings($order));
-
-        return array_values(array_unique($warnings));
+        return $this->ampeln->orderWarnings($order);
     }
 
-    /**
-     * Harte Versandsperren: diese Belege darf ein WaWi-Cockpit nicht als Bestellung ausgeben.
-     *
-     * @return list<string>
-     */
+    /** 98 · 3.3 S5: BestellAmpeln::sendBlockers() */
     public function sendBlockers(FoodAlchemistOrder $order): array
     {
-        return array_values(array_filter(
-            $this->orderWarnings($order),
-            fn ($warning) => in_array($warning, self::HARTE_SPERREN, true)
-        ));
+        return $this->ampeln->sendBlockers($order);
     }
 
-    /**
-     * @return array{delivery_days:list<int>, cutoff:?string, lead_days:int, deadline:?string}
-     */
+    /** 98 · 3.3 S5: BestellAmpeln::logistikInfo() */
     public function logistikInfo(FoodAlchemistOrder $order): array
     {
-        $supplier = $order->supplier ?? FoodAlchemistSupplier::find($order->supplier_id);
-        $uhrzeit = $supplier !== null ? $this->cutoffUhrzeit($supplier) : null;
-        $deadline = $this->orderDeadline($order);
-
-        // `cutoff` an denselben Parser wie `deadline` binden: sonst zeigt die Payload eine
-        // Uhrzeit an (»12:00:00«, »abc«), zu der es keine Frist gibt. `deadline = null` ist ab
-        // jetzt die Aussage »dieser Lieferant hat keinen Bestellschluss« — der Editor guardet
-        // schon darauf und druckt dann nichts. `lead_days` bleibt int mit `?? 0`: NULL und 0
-        // heissen fachlich dasselbe (kein Vorlauf), die Aussage trägt `deadline`.
-        return [
-            'delivery_days' => $this->lieferTage($supplier),
-            'cutoff' => $uhrzeit !== null ? sprintf('%02d:%02d', $uhrzeit[0], $uhrzeit[1]) : null,
-            'lead_days' => max(0, (int) ($supplier?->order_lead_days ?? 0)),
-            'deadline' => $deadline?->format('Y-m-d H:i'),
-        ];
+        return $this->ampeln->logistikInfo($order);
     }
 
-    /** @return list<string> */
-    private function logistikWarnings(FoodAlchemistOrder $order): array
-    {
-        $supplier = $order->supplier ?? FoodAlchemistSupplier::find($order->supplier_id);
-        $date = $order->desired_delivery_date;
-        if ($supplier === null || $date === null) {
-            return [];
-        }
-
-        return $this->supplierLogistikWarnings($supplier, $date->copy());
-    }
-
-    /** @return list<string> */
-    private function previewLogistikWarnings(?FoodAlchemistSupplier $supplier, ?string $date): array
-    {
-        if ($supplier === null || $date === null || $date === '') {
-            return [];
-        }
-
-        return $this->supplierLogistikWarnings($supplier, Carbon::parse($date));
-    }
-
-    /** @return list<string> */
-    private function supplierLogistikWarnings(FoodAlchemistSupplier $supplier, Carbon $date): array
-    {
-        $warnings = [];
-        $deliveryDays = $this->lieferTage($supplier);
-        if ($deliveryDays !== [] && ! in_array((int) $date->isoWeekday(), $deliveryDays, true)) {
-            $warnings[] = 'Liefertag nicht beliefert';
-        }
-
-        // Zwei Fälle, zwei Etiketten. Trägt der Lieferant einen Bestellschluss (Vorlaufzeit
-        // ODER Uhrzeit gepflegt), heisst die Grenze so. Trägt er keinen, ist die Grenze der
-        // LIEFERTAG selbst — dann wird auch kein Bestellschluss behauptet. Die Schwelle ist
-        // in beiden Zweigen dieselbe wie bisher (`endOfDay(Liefertag)`), es sperrt also
-        // weiterhin genau dasselbe: nur das Wort ändert sich.
-        $now = Carbon::now();
-        $deadline = $this->supplierDeadline($supplier, $date);
-        if ($deadline !== null) {
-            if ($now->greaterThan($deadline)) {
-                $warnings[] = 'Bestellschluss verpasst';
-            } elseif ($now->isSameDay($deadline)) {
-                $warnings[] = 'Bestellschluss heute';
-            }
-        } elseif ($now->greaterThan($date->copy()->endOfDay())) {
-            $warnings[] = 'Liefertag vorbei';
-        } elseif ($now->isSameDay($date)) {
-            $warnings[] = 'Liefertag heute';
-        }
-
-        return $warnings;
-    }
-
-    private function orderDeadline(FoodAlchemistOrder $order): ?Carbon
-    {
-        $supplier = $order->supplier ?? FoodAlchemistSupplier::find($order->supplier_id);
-        $date = $order->desired_delivery_date;
-        if ($supplier === null || $date === null) {
-            return null;
-        }
-
-        return $this->supplierDeadline($supplier, $date->copy());
-    }
-
-    /**
-     * Gepflegte Bestellschluss-Uhrzeit als [Stunde, Minute], sonst null. Eigene Methode, weil
-     * an ihr auch hängt, OB der Lieferant einen Bestellschluss hat — nicht nur, wann er ist.
-     *
-     * Das optionale `:ss` schliesst einen stillen Fehler: `supplier_conditions.PUT` validiert
-     * das Format nicht, ein per MCP geschriebenes »12:00:00« matchte das alte Muster nicht und
-     * fiel damit in den endOfDay-Zweig — derselbe Bug wie beim nackten Lieferanten, nur mit
-     * gepflegtem Lieferanten und deshalb noch schwerer zu sehen.
-     *
-     * @return ?array{0:int,1:int}
-     */
-    private function cutoffUhrzeit(FoodAlchemistSupplier $supplier): ?array
-    {
-        $cutoff = trim((string) ($supplier->order_cutoff_time ?? ''));
-
-        return preg_match('/^(\d{1,2}):(\d{2})(?::\d{2})?$/', $cutoff, $m) === 1
-            ? [min(23, (int) $m[1]), min(59, (int) $m[2])]
-            : null;
-    }
-
-    /**
-     * Bestellschluss-Zeitpunkt für einen Liefertag — oder null, wenn der Lieferant keinen hat.
-     *
-     * Vorher lieferte der ungepflegte Lieferant `endOfDay(Liefertag)`, also einen ERFUNDENEN
-     * Bestellschluss. Folge: `logistikInfo` wies gleichzeitig `cutoff => null` und eine
-     * `deadline` aus, der Editor druckte daraus »Bestellschluss: … 23:59« für einen
-     * Lieferanten ohne Bestellschluss, und die Sperre trug ein Etikett, das sachlich falsch war.
-     *
-     * Drei Lagen, nicht zwei:
-     *   1. Uhrzeit gepflegt              → echte Frist (Vorlauf + Uhrzeit)
-     *   2. nur Vorlaufzeit gepflegt      → echte Frist, aber tagfein (Ende des Vorlauftags)
-     *   3. weder Vorlauf noch Uhrzeit    → KEINE Frist; der Liefertag selbst ist die Grenze
-     */
-    private function supplierDeadline(FoodAlchemistSupplier $supplier, Carbon $date): ?Carbon
-    {
-        $leadDays = max(0, (int) ($supplier->order_lead_days ?? 0));
-        $uhrzeit = $this->cutoffUhrzeit($supplier);
-
-        if ($leadDays === 0 && $uhrzeit === null) {
-            return null;
-        }
-
-        $deadline = $date->copy()->subDays($leadDays)->startOfDay();
-
-        return $uhrzeit !== null ? $deadline->setTime($uhrzeit[0], $uhrzeit[1]) : $deadline->endOfDay();
-    }
-
-    /** @return list<int> */
-    private function lieferTage(?FoodAlchemistSupplier $supplier): array
-    {
-        if ($supplier === null || trim((string) $supplier->delivery_days) === '') {
-            return [];
-        }
-
-        return collect(explode(',', (string) $supplier->delivery_days))
-            ->map(fn ($day) => (int) trim($day))
-            ->filter(fn ($day) => $day >= 1 && $day <= 7)
-            ->unique()
-            ->values()
-            ->all();
-    }
 }

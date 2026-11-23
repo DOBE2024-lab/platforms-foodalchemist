@@ -109,8 +109,9 @@ beforeEach(function () {
  *     am Wortlaut festgemacht: das Etikett darf sich ändern, die Sperre nicht.
  */
 it('ordnet JEDES im Code erzeugte Warn-Etikett genau einem Register zu (hart | weich)', function () {
+    // 98 · 3.3 S5: die Etiketten entstehen seit der Zerlegung in BestellAmpeln (orderWarnings, supplierLogistikWarnings).
     $quelle = file_get_contents(
-        (new ReflectionClass(OrderService::class))->getFileName()
+        (new ReflectionClass(\Platform\FoodAlchemist\Services\Bestellung\BestellAmpeln::class))->getFileName()
     );
 
     // Alle `$warnings[] = '…';`-Literale. Ein dynamisch gebautes Etikett gäbe es hier nicht —

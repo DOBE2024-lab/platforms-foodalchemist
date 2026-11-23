@@ -87,7 +87,7 @@ jobs:
     name: Shard ${{ matrix.shard }}/${{ inputs.shards }}
     needs: vorbereiten
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 150   # Account: nur 5 Jobs gleichzeitig, Shards laufen in Wellen
     strategy:
       fail-fast: false
       matrix:
@@ -172,6 +172,7 @@ jobs:
         # --parallel nimmt ohne Angabe die Kernzahl des Runners.
         run: |
           set -o pipefail
+          echo "nproc=$(nproc)  php=$(php -r 'echo PHP_VERSION;')  xdebug=$(php -m | grep -ci xdebug)  pcov=$(php -m | grep -ci pcov)"
           php -d memory_limit=1G vendor/bin/pest \
             --configuration=phpunit.xml --testsuite=FoodAlchemist \
             --shard="${SHARD}/${SHARDS}" \

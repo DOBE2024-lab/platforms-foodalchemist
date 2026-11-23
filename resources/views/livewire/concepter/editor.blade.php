@@ -72,6 +72,10 @@
 
         <x-slot:actions>
             <div class="ml-auto flex flex-wrap items-center gap-2">
+                @if($istPaket && $rueckSprungConceptId){{-- aus einem Konzept ins eingebettete Paket gesprungen: Paket sichern, zurück ins Eltern-Konzept --}}
+                    <x-fa::button icon="heroicon-m-arrow-uturn-left" wire:click="zurueckZumConcept" title="Paket sichern und zurück ins Konzept" data-concepter-zurueck>Speichern und zurück zum Konzept</x-fa::button>
+                @endif
+
                 @if($concept){{-- Weitere Aktionen: Kunden-Karte · Technischer Bericht · Vorlage · Löschen (98 · 2.4d: wie die Detailspalte) --}}
                     <x-fa::menu ausloeser:data-concepter-weitere="" breite="72">
                         {{-- #6 (F3c): Druck-Symmetrie zum Format-Editor — Kunden-Ausgabe + technischer Bericht; Karte gilt auch fürs Paket (Concept-ID). --}}

@@ -950,9 +950,17 @@ class Editor extends Component
     public function zurueckZumConcept(): void
     {
         $ziel = $this->rueckSprungConceptId;
-        if ($ziel !== null) {
-            $this->oeffnen('concepts', $ziel);
+        if ($ziel === null) {
+            return;
         }
+        // Spec 65: Navigation ist frei; das Mit-Sichern des Paket-Kopfs nur mit eigener Sperre (sonst nur zurück).
+        if ($this->id !== null && (! self::sperreAktiv() || $this->darfSchreiben())) {
+            $this->speichern();
+            if ($this->fehler !== null) {
+                return;   // Speichern abgelehnt: im Paket bleiben, Hinweis steht
+            }
+        }
+        $this->oeffnen('concepts', $ziel);
     }
 
     /** Ziel-Position fürs Einfügen setzen/abwählen (die nächste neue Position landet darunter). */

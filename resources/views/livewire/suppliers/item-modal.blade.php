@@ -457,17 +457,19 @@
             {{-- ── Reiter PREISE (in x-slot:frei: der Preisverlauf ist Anzeige und bleibt im Lesemodus bedienbar; die Pflege links sperrt eine eigene lese-sperre) ───────────────────────────────────────────────── --}}
             {{-- ab lg zweispaltig: links Preise (Liste + frühere Preise, scrollbar), rechts der Preisverlauf (sticky); darunter untereinander --}}
             <div x-show="tab === 'preise'" x-cloak class="pt-4 grid gap-4 lg:grid-cols-2 lg:items-start" x-data="{ neuOffen: false }" data-preise-reiter>
-              {{-- Preise pflegen (manuell setzen, Aktion, Zeile bearbeiten/löschen, frühere ein-/ausblenden) schreibt: bleibt unter der Sperre --}}
-              <x-fa::lese-sperre :an="$laGesperrt">
               <div class="flex min-w-0 flex-col gap-4" data-preise-links>
                 <x-fa::section title="Preise" icon="heroicon-o-banknotes" :meta="$historie->count() > 0 ? $historie->count() . ' Einträge' : null">
                     <x-slot:actions>
+                        <x-fa::lese-sperre :an="$laGesperrt">
                         @if($darfEdit)
                             <x-fa::button size="sm" variant="primary" icon="heroicon-m-plus" x-on:click="neuOffen = ! neuOffen"
                                 x-bind:aria-expanded="neuOffen" title="Einen Preis von Hand setzen; der bisher gültige endet damit" data-preis-neu-toggle>Preis manuell setzen</x-fa::button>
                         @endif
+                        </x-fa::lese-sperre>
                     </x-slot:actions>
 
+                    {{-- Preise pflegen (manuell setzen, Aktion, Zeile bearbeiten/löschen) schreibt: unter der Sperre. Die Kennzahl-Zeile hat keine Bedienung. --}}
+                    <x-fa::lese-sperre :an="$laGesperrt">
                     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)] px-3 py-2.5" data-ek-aktuell>
                         <span class="fa-t-label">Gültiger Einkaufspreis</span>
                         <span class="fa-t-h2"><x-fa::money :value="$aktivPreis" /></span>
@@ -592,12 +594,13 @@
                             </tbody>
                         </x-fa::table>
                     </div>
+                    </x-fa::lese-sperre>
+                    {{-- Frühere Preise: Aufklapper ist Anzeige (frei); Ein-/Ausblenden sperrt das Kind selbst (reaktive Prop gesperrt + Server-Sperre) --}}
                     @if($item !== null)
-                        <livewire:foodalchemist.preise.fruehere :item-id="$item->id" :key="'pf-la-'.$item->id" />
+                        <livewire:foodalchemist.preise.fruehere :item-id="$item->id" :gesperrt="$laGesperrt" :key="'pf-la-'.$item->id" />
                     @endif
                 </x-fa::section>
               </div>
-              </x-fa::lese-sperre>
 
               {{-- Preisverlauf als Linie (Preis je Basiseinheit, Rohpreis je Gebinde im Tooltip); sticky neben der Liste --}}
               @if($item !== null)

@@ -29,6 +29,6 @@ final class LesemodusDom
     /** Bedienelemente (button, input, select, textarea) unter einer Anzeige-Insel (data-fa-anzeige), die gesperrt sind. */
     public static function gesperrteAnzeigeBedienung(string $html): int
     {
-        return count(array_filter(self::gesperrt($html, '//*[@data-fa-anzeige]//*[self::button or self::input or self::select or self::textarea]')));
+        return count(array_filter(self::gesperrt($html, '//*[@data-fa-anzeige]/descendant-or-self::*[self::button or self::input or self::select or self::textarea]')));
     }
 }

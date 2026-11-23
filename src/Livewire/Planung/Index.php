@@ -70,6 +70,9 @@ class Index extends Component
     /** Editor-Felder der aktiven Session. */
     public array $form = ['title' => '', 'brief' => '', 'analysis' => '', 'creative_mode' => 'voll_kreativ'];
 
+    /** Für welche Planung $form geladen ist — speichern() schreibt nie das Formular einer anderen Planung. */
+    public ?int $formSessionId = null;
+
     /** Composer-Tab: gewählte Anker (Einträge {id, slug, label}), Cap = INNER_ANKER_MAX (12). */
     public array $composerAnker = [];
 
@@ -434,6 +437,7 @@ class Index extends Component
         $this->form['title'] = (string) $session->title;
         $this->form['brief'] = (string) $session->brief;
         $this->form['analysis'] = (string) $session->analysis;
+        $this->formSessionId = (int) $session->id;
         // Das Briefing (Ziel-Ebene überschreiben, andere nur leer füllen) setzt Planung\Brief auf dasselbe Event (Spec 85 C1 PR-4).
         $this->oeffneEditor($scope === 'rezept' ? 'basisrezept' : $scope);
     }
@@ -1027,6 +1031,7 @@ class Index extends Component
             'analysis' => (string) $session->analysis,
             'creative_mode' => (string) $session->creative_mode,
         ];
+        $this->formSessionId = (int) $session->id;
 
         // Spec 85 C1 PR-4: Suchbegriffe, Trend-Vorbefüllung, KI-Kopf-Plan und Leitplanken liest Planung\Brief::mount() aus der Session.
     }
@@ -1038,11 +1043,33 @@ class Index extends Component
         if ($team === null || $session === null) {
             return;
         }
-        $svc->update($team, $session->id, [
-            'title' => $this->form['title'] ?? '',
-            'brief' => $this->form['brief'] ?? null,
-            'analysis' => $this->form['analysis'] ?? null,
-        ]);
+        $this->meldung = null;
+        $this->fehler = null;
+        $this->resetErrorBag('form.title');
+        // Das Formular gehört zu einer anderen Planung (Wechsel ohne Laden): nicht deren Titel/Briefing hierher schreiben.
+        if ($this->formSessionId !== (int) $session->id) {
+            $this->fehler = 'Die Planung wurde gewechselt — bitte neu öffnen und dann speichern.';
+
+            return;
+        }
+        // Leerer Titel: Meldung am Feld und neben dem Knopf statt ungefangener Exception aus dem Service.
+        if (trim((string) ($this->form['title'] ?? '')) === '') {
+            $this->addError('form.title', 'Titel darf nicht leer sein.');
+            $this->fehler = 'Titel darf nicht leer sein.';
+
+            return;
+        }
+        try {
+            $svc->update($team, $session->id, [
+                'title' => $this->form['title'],
+                'brief' => $this->form['brief'] ?? null,
+                'analysis' => $this->form['analysis'] ?? null,
+            ]);
+        } catch (\RuntimeException $e) {
+            $this->fehler = $e->getMessage();
+
+            return;
+        }
         if (in_array($this->form['creative_mode'] ?? null, FoodAlchemistPlanningSession::CREATIVE_MODES, true)) {
             $svc->setCreativeMode($team, $session->id, $this->form['creative_mode']);
         }

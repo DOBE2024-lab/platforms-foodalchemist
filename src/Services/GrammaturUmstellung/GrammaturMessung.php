@@ -145,6 +145,28 @@ final class GrammaturMessung
         return $out;
     }
 
+    /**
+     * Master 23.11.: Darreichungen der Verwender (Eltern) außerhalb der umgestellten Rezepte müssen bleiben — Grammatur, EK, VK,
+     * Preismodus und Produktion innerhalb der Toleranzen. Eingabe wie messen(): recipe_id → [rezept, darreichungen].
+     *
+     * @return list<string> Verstöße
+     */
+    public static function elternVerstoesse(array $alt, array $neu): array
+    {
+        $out = [];
+        foreach ($alt as $rid => $r) {
+            foreach ($r['darreichungen'] as $did => $a) {
+                $n = $neu[$rid]['darreichungen'][$did] ?? null;
+                $diff = $n === null ? ['fehlt'] : self::unterschiede($a, $n);
+                if ($diff !== []) {
+                    $out[] = "Verwender Rezept {$rid}, Darreichung {$did}: ".implode(', ', $diff).' änderte sich — Eltern dürfen sich durch die Umstellung nicht bewegen';
+                }
+            }
+        }
+
+        return $out;
+    }
+
     /** Abweichung in % (neu gegen alt), für die Sortierung im Report; null, wenn alt fehlt oder 0 ist. */
     public static function prozent(?float $alt, ?float $neu): ?float
     {

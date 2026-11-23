@@ -105,7 +105,7 @@ class FoodAlchemistBulkRun extends Model
      *                             fünf Schreiber ja — sie zählen ihre Menge vor dem Anlegen.
      *                             Der Datei-Import über die Konsole kennt die Zeilenzahl erst
      *                             beim Lesen und legt den Lauf mit einer 0 als *Platzhalter*
-     *                             an ({@see \Platform\FoodAlchemist\Services\FileArticleImportService::beendeRun}
+     *                             an ({@see \Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService::beendeRun}
      *                             trägt sie nach). Dieselbe 0, zwei Bedeutungen — ohne diese
      *                             Unterscheidung würde die Leer-Regel den Import beim Anlegen
      *                             als fertig melden und `markiereGescheitert()` (greift nur auf

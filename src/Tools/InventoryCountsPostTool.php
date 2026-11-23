@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\InventurService;
+use Platform\FoodAlchemist\Services\Einkauf\InventurService;
 
 /** Spec 66 §6 · Inventur anlegen (Zählliste vorbelegt aus Bestand + Einkäufen). */
 class InventoryCountsPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

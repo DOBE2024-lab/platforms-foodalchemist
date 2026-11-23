@@ -7,7 +7,7 @@ use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Jobs\ImportArticlesJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\ArticleImportTriggerService;
+use Platform\FoodAlchemist\Services\Einkauf\ArticleImportTriggerService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -57,7 +57,7 @@ class GpPaketImportService
         private readonly GpPaketVerknuepfer $verknuepfer,
         private readonly GpPaketAnkerPhase $anker,
         private readonly GpPaketRueckweg $rueckweg,
-        private readonly LeadLaService $lead,
+        private readonly Einkauf\LeadLaService $lead,
     ) {}
 
     // ── Master-Kontext ─────────────────────────────────────────────────────────────────────────────

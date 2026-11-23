@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\LieferantenDokumentService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenDokumentService;
 
 /** Dokumente vom Lieferanten übernehmen (Produktpass-Weg) oder verwerfen. */
 class LieferantenDokumentEntscheidenTool extends WareneingangTool implements ToolContract, ToolMetadataContract

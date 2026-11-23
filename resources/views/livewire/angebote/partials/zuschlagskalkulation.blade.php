@@ -156,7 +156,7 @@
         @php
             $sumEkPp = isset($sim['ek_per_person']) ? (float) $sim['ek_per_person'] : null;   // unbekannt bleibt null → „offen“, nie 0 % (CQ price_incomplete)
             $sumVkPp = (float) ($sim['price_per_person'] ?? $simCatalogPp);
-            $sumWe = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($sumEkPp, $sumVkPp, null);
+            $sumWe = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($sumEkPp, $sumVkPp, null);
         @endphp
         <x-fa::section title="Wareneinsatz je Position" icon="heroicon-o-list-bullet" meta="je Gast" data-angebot-wareneinsatz-positionen>
             <div class="overflow-x-auto">
@@ -174,7 +174,7 @@
                             @php
                                 $zEk = $z['ek'] ?? null;
                                 $zVk = $z['price'] ?? null;
-                                $zw = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($zEk, $zVk, null);
+                                $zw = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($zEk, $zVk, null);
                             @endphp
                             <tr>
                                 <td>@if(!empty($z['role']))<span class="text-[var(--fa-ink-3)]">{{ $z['role'] }}:</span> @endif{{ $z['label'] ?? '–' }}</td>

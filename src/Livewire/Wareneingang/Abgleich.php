@@ -8,8 +8,8 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\LieferantenRechnungService;
-use Platform\FoodAlchemist\Services\TripleMatchService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenRechnungService;
+use Platform\FoodAlchemist\Services\Matching\TripleMatchService;
 
 /**
  * Spec 75b · Reiter Abgleich: Triple Match über alle Bestellzeilen (bestellt | geliefert | berechnet),

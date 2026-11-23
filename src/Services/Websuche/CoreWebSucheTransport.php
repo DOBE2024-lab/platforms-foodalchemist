@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
  * (`artikel.web_recherche` → stark). Kein eigener HTTP-Client.
  *
  * Meldungen statt Erfindung: sucht der Provider nicht im Web, wirft schon der Gateway (kein Aufruf); meldet er keine Quellen
- * (Core vor #935), wirft der Transport; „keine Quellen gefunden" entscheidet {@see \Platform\FoodAlchemist\Services\ArtikelWebRecherche}.
+ * (Core vor #935), wirft der Transport; „keine Quellen gefunden" entscheidet {@see \Platform\FoodAlchemist\Services\Einkauf\ArtikelWebRecherche}.
  */
 class CoreWebSucheTransport implements WebSucheTransport
 {

@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Services\Plattform\ExportAuskunft;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\Plattform\MandantBeendenService;
 use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;
-use Platform\FoodAlchemist\Services\StammPaketService;
+use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\TeamSperre;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

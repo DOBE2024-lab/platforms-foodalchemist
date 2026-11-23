@@ -27,7 +27,7 @@ class ReplacementSuggestionService
     public function __construct(
         private TokenEngine $tokens,
         private AiGatewayService $ai,
-        private LaCandidateFinder $laFinder,
+        private Einkauf\LaCandidateFinder $laFinder,
         private SemanticRetrievalService $semantic,
         private KnowledgeContextService $wissen,
     ) {}

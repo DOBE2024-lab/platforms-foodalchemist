@@ -191,7 +191,7 @@ it('MCP: gp_derivat.PUT setzt Art und Ausbeute von Hand, gps.GET zeigt sie', fun
 
 it('Bestellung direkt auf ein Derivat: Vorschau UND Entwurf gehen auf die Mutter, Parüren werden nie bestellt', function () {
     $this->ausbeute->setze($this->rootTeam, (int) $this->saft->id, ['derivat_ausbeute_wert' => 30, 'derivat_ausbeute_basis' => 'g_je_stueck']);
-    $svc = app(\Platform\FoodAlchemist\Services\OrderService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Bestellung\OrderService::class);
     $quellen = [
         ['type' => 'gp', 'id' => $this->saft->id, 'qty' => 60, 'unit' => 'g', 'delivery_date' => '2026-12-01'],
         ['type' => 'gp', 'id' => $this->parueren->id, 'qty' => 500, 'unit' => 'g', 'delivery_date' => '2026-12-01'],

@@ -105,7 +105,7 @@
             @php
                 $stripVk = $concept ? ($cockpit['price_per_person'] ?? 0) : null;
                 $stripEk = $concept ? (($cockpit['ek_per_person'] ?? null) !== null ? (float) $cockpit['ek_per_person'] : null) : (float) ($kalkulation['hk1_pro_person'] ?? 0);   // null = EK unvollständig (Abo-Fassung): kein Preis, nie 0 €
-                $stripWpct = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($stripEk, $stripVk, null);
+                $stripWpct = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($stripEk, $stripVk, null);
                 $stripWeTone = match ($wareneinsatzAmpel ?? 'unbekannt') { 'gruen' => 'good', 'gelb' => 'warn', 'rot' => 'bad', default => null };
                 $vkWert = $stripVk === null ? 'Preis fehlt' : ((float) $stripVk > 0 ? $euro($stripVk) : 'noch kein Preis');
             @endphp
@@ -520,7 +520,7 @@
                                                         $enthaelt = collect(['Schwein' => $g0->spec_contains_pork, 'Rind' => $g0->spec_contains_beef])->filter()->keys()->all();
                                                         $ekz = $cockpitZeilen[$s->id]['ek'] ?? null;
                                                         $vkz = $cockpitZeilen[$s->id]['price'] ?? null;
-                                                        $wpct = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ekz, $vkz, null);
+                                                        $wpct = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ekz, $vkz, null);
                                                     @endphp
                                                     <x-fa::card as="article" wire:key="mcard-{{ $s->id }}" class="flex flex-col gap-2 px-3.5 py-3">
                                                         <div class="flex items-start justify-between gap-2">
@@ -612,7 +612,7 @@
                                                 $istAbschnitt = (bool) ($slot->package_id || $slot->embedded_concept_id);
                                                 $ekz = $cockpitZeilen[$slot->id]['ek'] ?? null;
                                                 $vkz = $cockpitZeilen[$slot->id]['price'] ?? null;
-                                                $wpct = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ekz, $vkz, null);
+                                                $wpct = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ekz, $vkz, null);
                                                 $istZiel = $einfuegenNachId === $slot->id;
                                             @endphp
                                             <tr wire:key="erow-{{ $slot->id }}"
@@ -1185,7 +1185,7 @@
                                     </tr></thead>
                                     <tbody>
                                     @forelse($cockpit['zeilen'] as $z)
-                                        @php $zw = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($z['ek'], $z['price'] ?? null, null); @endphp
+                                        @php $zw = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($z['ek'], $z['price'] ?? null, null); @endphp
                                         <tr>
                                             <td class="min-w-[12rem]">@if($z['role'])<span class="text-[var(--fa-ink-2)]">{{ $z['role'] }}:</span> @endif{{ $z['label'] }}</td>
                                             <td class="num">@if($z['ek'] !== null){{ $euro($z['ek']) }}@else<span class="text-[var(--fa-ink-3)]">offen</span>@endif</td>
@@ -1201,7 +1201,7 @@
                                             <td class="pt-2 border-t border-[var(--fa-line-strong)]">Summe je Person</td>
                                             <td class="num pt-2 border-t border-[var(--fa-line-strong)]">{{ $euro($cockpit['ek_per_person']) }}</td>
                                             <td class="num pt-2 border-t border-[var(--fa-line-strong)] text-[var(--fa-ink-2)]">{{ $euro($cockpit['price_per_person']) }}</td>
-                                            @php $fussWe = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($cockpit['ek_per_person'], $cockpit['price_per_person'], null); @endphp<td class="num pt-2 border-t border-[var(--fa-line-strong)]" data-concepter-fuss-we>{{ $fussWe !== null ? number_format($fussWe, 1, ',', '.') . ' %' : (($cockpit['price_per_person'] ?? 0) > 0 ? 'offen' : '') }}</td>
+                                            @php $fussWe = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($cockpit['ek_per_person'], $cockpit['price_per_person'], null); @endphp<td class="num pt-2 border-t border-[var(--fa-line-strong)]" data-concepter-fuss-we>{{ $fussWe !== null ? number_format($fussWe, 1, ',', '.') . ' %' : (($cockpit['price_per_person'] ?? 0) > 0 ? 'offen' : '') }}</td>
                                         </tr>
                                     </tfoot>
                                 </x-fa::table>

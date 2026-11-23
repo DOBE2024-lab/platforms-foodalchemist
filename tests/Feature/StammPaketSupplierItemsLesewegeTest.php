@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\DataQualityService;
 use Platform\FoodAlchemist\Services\GpService;
-use Platform\FoodAlchemist\Services\MatchService;
+use Platform\FoodAlchemist\Services\Matching\MatchService;
 use Platform\FoodAlchemist\Services\SimulationService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

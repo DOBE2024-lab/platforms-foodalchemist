@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\NonFoodService;
+use Platform\FoodAlchemist\Services\Einkauf\NonFoodService;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
 
 /** Non-Food-Urteil eines Lieferantenartikels von Hand setzen oder zurücknehmen (team-eigen). Ein Urteil von Hand überschreibt kein Lauf. */

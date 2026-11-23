@@ -115,7 +115,7 @@ it('TK als Zusatz: Name ⇄ Felder runden sauber; TK wird aus Name/Verarbeitung 
 
 it('Lagerzone: Behandlung = Kühlung, Behandlung mit TK = Tiefkühlung', function () {
     $this->seedTeamHierarchy();
-    $zone = fn (string $name, string $zustand) => app(\Platform\FoodAlchemist\Services\LagerEinrichtungService::class)->zoneFuer(
+    $zone = fn (string $name, string $zustand) => app(\Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService::class)->zoneFuer(
         tap($this->makeGp($this->rootTeam, $name), fn ($g) => $g->forceFill(['condition' => $zustand, 'commodity_group_code' => '04'])->save())->fresh());
 
     expect($zone('Kassler: geräuchert, Scheiben', 'geräuchert'))->toBe('kuehl')

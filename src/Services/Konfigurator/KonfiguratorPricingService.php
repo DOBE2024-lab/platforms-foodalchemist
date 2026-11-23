@@ -23,7 +23,7 @@ use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPaketVorschlag;
 class KonfiguratorPricingService
 {
     public function __construct(
-        private \Platform\FoodAlchemist\Services\CatalogPricingService $katalog,
+        private \Platform\FoodAlchemist\Services\Preis\CatalogPricingService $katalog,
         private KonfiguratorMengenRechner $rechner,
         private KonfiguratorPaketVorschlag $vorschlag,
     ) {

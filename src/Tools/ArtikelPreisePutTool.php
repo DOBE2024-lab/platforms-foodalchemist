@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistPrice;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 
 /** MCP-Steuerbarkeit · D4: eigenen Preis-Eintrag (team_id = Team) eines sichtbaren Lieferantenartikels bearbeiten (Spec 82 3a). */
 class ArtikelPreisePutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

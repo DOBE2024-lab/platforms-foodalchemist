@@ -163,7 +163,7 @@ class MenuCandidatePoolService
             'ek_portion' => round($ek, 4),
             'db_eur' => round($vk - $ek, 2),
             'db_pct' => round(($vk - $ek) / $vk * 100, 1),
-            'wareneinsatz_pct' => MargeService::wareneinsatzPct($ek, $vk),
+            'wareneinsatz_pct' => Preis\MargeService::wareneinsatzPct($ek, $vk),
             'quelle' => $quelle,
             'vollstaendig' => true,
         ];

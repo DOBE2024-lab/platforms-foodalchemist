@@ -4,8 +4,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPrice;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\FileArticleImportService;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -392,7 +392,7 @@ it('schreibt alle drei Detail-Blöcke aus einer Zeile', function () {
         ->and($bericht['details'])->toBe(['naehrwerte' => 1, 'allergene' => 1, 'zusatzstoffe' => 1]);
 
     $item = FoodAlchemistSupplierItem::firstWhere('article_number', '70012');
-    $svc = app(\Platform\FoodAlchemist\Services\SupplierItemService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class);
 
     expect((float) $item->nutritionals->energy_kcal)->toBe(188.0)
         ->and((float) $item->nutritionals->protein)->toBe(2.4)
@@ -418,7 +418,7 @@ it('mischt statt zu ersetzen: eine Teil-Spalte löscht die gepflegten Nachbarwer
         'team_id' => $this->rootTeam->id, 'supplier_id' => $this->supplier->id,
         'article_number' => '70012', 'designation' => 'Sahnesauce',
     ]);
-    $svc = app(\Platform\FoodAlchemist\Services\SupplierItemService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class);
     $svc->setAllergens($this->rootTeam, $item, ['milk' => 'enthalten', 'celery' => 'spuren']);
     $svc->setNutrition($this->rootTeam, $item, ['energy_kcal' => '188', 'protein' => '2,4']);
 
@@ -460,7 +460,7 @@ it('ist auch bei den Detail-Blöcken idempotent und meldet Unlesbares als Warnun
         ->and(implode(' ', $krumm['befunde'][0]['warnungen']))->toContain('Nährwert energy_kcal');
 
     $item = FoodAlchemistSupplierItem::firstWhere('article_number', '70012');
-    expect(app(\Platform\FoodAlchemist\Services\SupplierItemService::class)->getAllergens($item)['milk'])->toBe('enthalten');
+    expect(app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class)->getAllergens($item)['milk'])->toBe('enthalten');
 });
 
 it('meldet eine Detail-Spalte ohne Ziel-Feld, statt sie als Tippfehler zu behandeln', function () {

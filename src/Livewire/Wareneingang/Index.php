@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistInventoryLocation;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\WareneingangService;
+use Platform\FoodAlchemist\Services\Einkauf\WareneingangService;
 
 /**
  * Spec 75a · Einkauf → Wareneingang. Reiter „Erwartet" (offene Lieferungen nach Liefertag) und

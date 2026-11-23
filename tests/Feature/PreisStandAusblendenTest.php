@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Livewire\Preise\Fruehere;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Necta\NectaMapper;
-use Platform\FoodAlchemist\Services\PreisVerlaufService;
+use Platform\FoodAlchemist\Services\Preis\PreisVerlaufService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

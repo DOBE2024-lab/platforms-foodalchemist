@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 
 /** MCP-Steuerbarkeit · D4: Konditionen/Bestell-Parameter eines team-eigenen Lieferanten pflegen. */
 class SupplierConditionsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

@@ -174,7 +174,7 @@ it('Listenpreis folgt dem Artikel: Preis eines stamm_paket-Artikels ist ohne Opt
 });
 
 it('geschlossen (Folge-PR 3a): alle Preis-Lesewege prüfen die Stamm-Sichtbarkeit selbst — Team ohne Opt-in kein Paket-Preis, ohne Team nur der Listenpreis', function () {
-    $ps = app(\Platform\FoodAlchemist\Services\PriceService::class);
+    $ps = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class);
     $liste = FoodAlchemistPrice::create(['team_id' => null, 'supplier_item_id' => $this->laPaket->id, 'price' => 9.9, 'status' => '0']);
     $team = FoodAlchemistPrice::create(['team_id' => $this->childB->id, 'supplier_item_id' => $this->laPaket->id, 'price' => 8.8, 'status' => '0']);
     $basis = FoodAlchemistPrice::create(['team_id' => null, 'supplier_item_id' => $this->laBasis->id, 'price' => 1.5, 'status' => '0']);

@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\MatchService;
+use Platform\FoodAlchemist\Services\Matching\MatchService;
 
 /** MCP-Steuerbarkeit · D4: LA→GP-Match-Vorschlag übernehmen (accept) oder verwerfen (reject). */
 class MatchProposalsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

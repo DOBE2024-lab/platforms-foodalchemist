@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSignalSnapshot;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\EinkaufOptimizerService;
+use Platform\FoodAlchemist\Services\Einkauf\EinkaufOptimizerService;
 use Platform\FoodAlchemist\Services\Ausgabe\MenuEngineeringService;
 use Platform\FoodAlchemist\Services\Foodbook\PortfolioService;
 use Platform\FoodAlchemist\Services\PromotionService;

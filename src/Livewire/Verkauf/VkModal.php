@@ -1266,7 +1266,7 @@ class VkModal extends Component
             // MwSt „aus Preisklasse“: was die leere Wahl je Darreichung ergibt (Anzeige im Select)
             'darMwstVorgabe' => $this->recipeId !== null && $team !== null
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $this->recipeId)->get()
-                    ->mapWithKeys(fn ($d) => [(int) $d->id => app(\Platform\FoodAlchemist\Services\CatalogPricingService::class)->vatKeyAusPreisklasse($team, $d)])->all()
+                    ->mapWithKeys(fn ($d) => [(int) $d->id => app(\Platform\FoodAlchemist\Services\Preis\CatalogPricingService::class)->vatKeyAusPreisklasse($team, $d)])->all()
                 : [],
             'gefaessGps' => $team !== null
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->nonFood()->whereNotIn('status', ['rejected', 'merged'])

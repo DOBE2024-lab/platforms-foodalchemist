@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDeliveryNoteLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistInventoryMovement;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierInvoice;
-use Platform\FoodAlchemist\Services\LieferantenRechnungService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenRechnungService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\Support\SeedsWareneingang;
 use Platform\FoodAlchemist\Tests\TestCase;

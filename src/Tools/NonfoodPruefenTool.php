@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
 
 /** Non-Food-Prüfliste: Artikel, bei denen Regel und KI nicht sicher entscheiden konnten (oder alle als Non-Food erkannten). Nur lesend. */

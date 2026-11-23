@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\EinkaufOptimizerService;
+use Platform\FoodAlchemist\Services\Einkauf\EinkaufOptimizerService;
 
 /**
  * Einkauf E4/E5 (read): Wareneinsatz-Optimierung — Ist-Wareneinsatz aus dem Journal

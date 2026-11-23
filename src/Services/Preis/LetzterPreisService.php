@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 
 /**
  * Rückfall „letzter bekannter Preis“ eingestellter Artikel (Dominique 27.10.2026) für das Rezept-EK — aus RecipeRecomputeService ausgelagert (Dateigrößen-

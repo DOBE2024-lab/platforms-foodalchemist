@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\RebateService;
+use Platform\FoodAlchemist\Services\Preis\RebateService;
 
 /**
  * Einkauf E1 (read): Rückvergütungs-Staffel + effektiver Prozentsatz eines Teams für einen

@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\GpService;
-use Platform\FoodAlchemist\Services\PreisVerlaufService;
+use Platform\FoodAlchemist\Services\Preis\PreisVerlaufService;
 
 /** Preisverlauf als Stufenlinie je Lieferantenartikel (la_id) oder je Grundprodukt (gp_id: eine Linie je LA) samt linearem Trend. Nur lesend. */
 class PreiseVerlaufGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

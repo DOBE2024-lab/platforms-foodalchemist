@@ -67,7 +67,7 @@ class Dashboard extends Component
             'vk_ohne_klasse' => (clone $rezept())->where('is_sales_recipe', true)->whereNull('dish_class_id')->count(),
             // Spec 74: Lagerartikel kurz vor leer
             'unter_mindest' => Schema::hasTable('foodalchemist_gp_lagerartikel')
-                ? count(app(\Platform\FoodAlchemist\Services\LagerartikelService::class)->unterMindest($team)) : 0,
+                ? count(app(\Platform\FoodAlchemist\Services\Einkauf\LagerartikelService::class)->unterMindest($team)) : 0,
         ];
 
         $ki = ['calls' => 0, 'accepted' => 0];

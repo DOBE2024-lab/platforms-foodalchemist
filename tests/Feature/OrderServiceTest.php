@@ -24,8 +24,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\LeadLaService;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 use Platform\FoodAlchemist\Services\PlanungsblattService;
 use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
@@ -2492,7 +2492,7 @@ it('Spec 66: Einkaufsjournal zählt gelieferte bzw. berechnete Menge statt beste
         ->where('source_ref', "order:{$line->order_id}:line:{$line->id}")->first();
     if ($tx() === null) {
         // Journal-Auslöser steht im Team auf „delivered" — dann erst bei Lieferung gespiegelt.
-        app(\Platform\FoodAlchemist\Services\PurchaseJournalService::class)->spiegelOrder($line->order->fresh('lines'));
+        app(\Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService::class)->spiegelOrder($line->order->fresh('lines'));
     }
     expect((float) $tx()->qty)->toBe(10.0);
 

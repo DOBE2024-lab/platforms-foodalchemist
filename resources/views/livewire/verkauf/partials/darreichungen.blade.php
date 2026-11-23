@@ -36,7 +36,7 @@
                     $fixiert = in_array(($darForm[$d->id]['price_mode'] ?? 'auto'), ['fixed', 'manuell'], true);
                     $darFestFehlt = $fixiert ? \Platform\FoodAlchemist\Livewire\Verkauf\VkModal::darFestpreisFehlt($darForm[$d->id] ?? []) : null;
                     $av = $anrichtenVorschau[$d->id] ?? [];
-                    $darMarge = app(\Platform\FoodAlchemist\Services\MargeService::class)->marge($d->sales_net, $d->ek_portion);
+                    $darMarge = app(\Platform\FoodAlchemist\Services\Preis\MargeService::class)->marge($d->sales_net, $d->ek_portion);
                 @endphp
                 <x-fa::card wire:key="dar-{{ $d->id }}" class="overflow-hidden flex flex-col" data-dar-editor="{{ $d->id }}">
                     <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">

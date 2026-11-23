@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 
 /** MCP-Steuerbarkeit · D4: Deklarationen (Zusatzstoffe/Kennzeichnungen) eines team-eigenen Artikels setzen. */
 class ArtikelDeklarationenPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

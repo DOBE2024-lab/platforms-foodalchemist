@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Services\GpPaket;
 
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 
 /** GP-Paket-Import · Preissicht des Master-Teams (globale Stamm-Artikel haben ohne Team KEINE sichtbaren Preise, PriceService::stammFilter). */
 class GpPaketPreisSicht

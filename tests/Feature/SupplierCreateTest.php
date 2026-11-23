@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -58,7 +58,7 @@ it('M2-14: update pflegt Stammdaten — nur Besitzer-Team', function () {
 it('M2-14: lokale Artikel-Suche filtert nur den gewählten Lieferanten', function () {
     $bos = $this->svc->create($this->rootTeam, ['name' => 'BOS Food']);
     $edna = $this->svc->create($this->rootTeam, ['name' => 'Edna']);
-    $items = app(\Platform\FoodAlchemist\Services\SupplierItemService::class);
+    $items = app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class);
     $items->create($this->rootTeam, $bos->id, ['designation' => 'Limettensaft 1l']);
     $items->create($this->rootTeam, $bos->id, ['designation' => 'Zander TK']);
     $items->create($this->rootTeam, $edna->id, ['designation' => 'Limettensaft Edna']);

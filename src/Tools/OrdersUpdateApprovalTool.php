@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrder;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 
 /** MCP-Steuerbarkeit · D11: Freigabe-Status am Bestellkopf pflegen (requested/approved/rejected). */
 class OrdersUpdateApprovalTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

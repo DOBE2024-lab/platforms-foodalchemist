@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
  */
 class SimulationService
 {
-    public function __construct(private MargeImpactService $impact)
+    public function __construct(private Preis\MargeImpactService $impact)
     {
     }
 

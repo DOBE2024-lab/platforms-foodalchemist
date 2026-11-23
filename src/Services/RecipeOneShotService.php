@@ -72,8 +72,8 @@ class RecipeOneShotService
         private Plattform\BulkEnrichService $bulk,
         private CoherenceService $coherence,
         private DarreichungService $darreichungen,
-        private CatalogPricingService $catalogPricing,
-        private MargeService $marge,
+        private Preis\CatalogPricingService $catalogPricing,
+        private Preis\MargeService $marge,
         private TeamSettingsService $settings,
         private SignalDetektorService $detektor,
     ) {
@@ -204,7 +204,7 @@ class RecipeOneShotService
             if ($offene->isEmpty()) {
                 return ['status' => 'vollständig', 'minted' => 0, 'ohne_la' => 0, 'kaskade_gefuehrt' => count($kaskadeGefuehrt)];
             }
-            $mint = app(\Platform\FoodAlchemist\Services\LaFirstGpService::class);
+            $mint = app(\Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService::class);
             $heuristik = app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class);
             $minted = 0;
             $ohneLa = 0;
@@ -1072,6 +1072,6 @@ class RecipeOneShotService
      */
     private function weAmpel(?float $we, float $ziel): string
     {
-        return app(MargeService::class)->weAmpel($we, $ziel);
+        return app(Preis\MargeService::class)->weAmpel($we, $ziel);
     }
 }

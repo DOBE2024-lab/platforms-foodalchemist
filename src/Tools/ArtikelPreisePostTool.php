@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 
 /** MCP-Steuerbarkeit · D4: Preis für einen sichtbaren Lieferantenartikel anlegen — Listenpreis (Besitzer) oder Teampreis (Spec 82 3a). */
 class ArtikelPreisePostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

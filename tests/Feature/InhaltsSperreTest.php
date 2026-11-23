@@ -16,7 +16,7 @@ use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\Plattform\MandantenService;
 use Platform\FoodAlchemist\Services\Plattform\MasterTeamService;
 use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Support\InhaltsSperre;
 use Platform\FoodAlchemist\Support\MasterTeam;

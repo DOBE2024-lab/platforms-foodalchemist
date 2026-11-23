@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Livewire\Concepter;
 
-use Platform\FoodAlchemist\Services\MargeService;
+use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -17,8 +17,8 @@ use Platform\FoodAlchemist\Livewire\Concerns\ManagesPlanningFrame;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\ConcepterBewertungService;
-use Platform\FoodAlchemist\Services\KalkulationService;
-use Platform\FoodAlchemist\Services\OrderCostingService;
+use Platform\FoodAlchemist\Services\Preis\KalkulationService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderCostingService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
 
 /**
@@ -1195,7 +1195,7 @@ class Editor extends Component
                 $kalkulation = $kalk->conceptHk($team, $concept, $outlet);
                 // EK unbekannt (Abo-Fassung unvollständig) bleibt null → Ampel „unbekannt“, nie 0 % (CQ price_incomplete)
                 $conceptWePct = MargeService::wareneinsatzPct($cockpit['ek_per_person'] ?? null, $cockpit['price_per_person'] ?? null, null);
-                $wareneinsatzAmpel = app(\Platform\FoodAlchemist\Services\MargeService::class)
+                $wareneinsatzAmpel = app(\Platform\FoodAlchemist\Services\Preis\MargeService::class)
                     ->weAmpel($conceptWePct, $zielWareneinsatzPct);
                 if ($this->tab === 'kalkulation' && $this->simulationPax > 0) {
                     $auftragsSimulation = app(OrderCostingService::class)

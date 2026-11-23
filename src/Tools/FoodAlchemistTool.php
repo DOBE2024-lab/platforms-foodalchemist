@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Tools;
 
-use Platform\FoodAlchemist\Services\MargeService;
+use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;

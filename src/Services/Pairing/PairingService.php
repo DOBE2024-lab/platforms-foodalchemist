@@ -2089,7 +2089,7 @@ class PairingService
         if ($leadLaId === null) {
             return null;
         }
-        $p = app(\Platform\FoodAlchemist\Services\PriceService::class)->activeFor($leadLaId, $team)?->price;
+        $p = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->activeFor($leadLaId, $team)?->price;
 
         return $p !== null ? (float) $p : null;
     }

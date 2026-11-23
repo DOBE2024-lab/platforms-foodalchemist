@@ -27,7 +27,7 @@
                 $summeEk += (float) $pp['ek'];
             }
         }
-        $weGesamt = $summeEk > 0 ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($summeEk, $summeVk, 0) : null;
+        $weGesamt = $summeEk > 0 ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($summeEk, $summeVk, 0) : null;
         $kennzahlen = [
             ['kpi' => 'positionen', 'label' => 'Positionen', 'value' => (string) $verkaufsPositionen->count(), 'primary' => true],
             ['kpi' => 'rubriken', 'label' => 'Rubriken', 'value' => (string) $karte->sections->whereNull('parent_id')->count()],

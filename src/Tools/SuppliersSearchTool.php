@@ -8,8 +8,8 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
-use Platform\FoodAlchemist\Services\SupplierGroupService;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierGroupService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 
 /**
  * Spec 15 §5a: Lieferanten (Entität, NICHT Artikel) durchsuchen. Hybrid: lexikalisch

@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSalesFact;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\LagerBewegungService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerBewegungService;
 use Platform\FoodAlchemist\Services\WareneinsatzAbweichungService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -146,7 +146,7 @@ it('Oberfläche: Abgang buchen über den Reiter Bewegungen, Storno-Knopf', funct
 });
 
 it('Wareneingang bucht in den Lagerort des Stammplatzes und schlägt beim ersten Eingang einen Stellplatz vor', function () {
-    $ein = app(\Platform\FoodAlchemist\Services\LagerEinrichtungService::class);
+    $ein = app(\Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService::class);
     $kuehlHaupt = $ein->stellplatzAnlegen($this->rootTeam, $this->haupt->id, 'Kühlhaus', 'kuehl');
     $this->butter->forceFill(['condition' => 'frisch', 'commodity_group_code' => '06'])->save();
     $la = $this->butter->leadLa;
@@ -154,7 +154,7 @@ it('Wareneingang bucht in den Lagerort des Stammplatzes und schlägt beim ersten
     $order = \Platform\FoodAlchemist\Models\FoodAlchemistOrder::create(['team_id' => $this->rootTeam->id, 'supplier_id' => $la->supplier_id, 'status' => 'sent']);
     $line = \Platform\FoodAlchemist\Models\FoodAlchemistOrderLine::create(['team_id' => $this->rootTeam->id, 'order_id' => $order->id, 'supplier_item_id' => $la->id, 'gp_id' => $this->butter->id,
         'qty_packs' => 4, 'pack_qty' => 0.25, 'unit_code' => 'kg', 'received_qty_packs' => 4, 'received_at' => now()]);
-    $svc = app(\Platform\FoodAlchemist\Services\InventoryService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Einkauf\InventoryService::class);
 
     // ohne Stammplatz → Standardlager, Vorschlag „Kühlhaus" wird gesetzt
     $svc->syncReceiptLine($line);
@@ -178,7 +178,7 @@ it('Wareneingang bucht in den Lagerort des Stammplatzes und schlägt beim ersten
 });
 
 it('GP-Modal Reiter Lager: Bestand je Lagerort, Stammplatz ohne Bearbeiten setzbar', function () {
-    $ein = app(\Platform\FoodAlchemist\Services\LagerEinrichtungService::class);
+    $ein = app(\Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService::class);
     $bin = $ein->stellplatzAnlegen($this->rootTeam, $this->haupt->id, 'Kühlhaus', 'kuehl');
     Livewire::test(\Platform\FoodAlchemist\Livewire\Gps\DetailPanel::class, ['gpId' => $this->butter->id, 'embedded' => true, 'section' => 'lager'])
         ->assertSee('Hauptlager')->assertSee('20 kg')->assertSee('Küche')
@@ -188,7 +188,7 @@ it('GP-Modal Reiter Lager: Bestand je Lagerort, Stammplatz ohne Bearbeiten setzb
 });
 
 it('Neues/klassifiziertes Grundprodukt bekommt automatisch den Vorschlags-Stellplatz; Handzuordnung bleibt', function () {
-    $ein = app(\Platform\FoodAlchemist\Services\LagerEinrichtungService::class);
+    $ein = app(\Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService::class);
     $tk = $ein->stellplatzAnlegen($this->rootTeam, $this->haupt->id, 'TK-Raum', 'tk');
     $kuehl = $ein->stellplatzAnlegen($this->rootTeam, $this->haupt->id, 'Kühlhaus', 'kuehl');
 
@@ -205,7 +205,7 @@ it('Neues/klassifiziertes Grundprodukt bekommt automatisch den Vorschlags-Stellp
 it('MCP: storage_bins.GET mit gp_id liefert Bestand + Stellplatz je Lagerort, inventory.GET filtert nach gp_id', function () {
     $reg = app(ToolRegistry::class);
     $ctx = new ToolContext($this->user, $this->rootTeam);
-    $ein = app(\Platform\FoodAlchemist\Services\LagerEinrichtungService::class);
+    $ein = app(\Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService::class);
     $bin = $ein->stellplatzAnlegen($this->rootTeam, $this->haupt->id, 'Kühlhaus', 'kuehl');
     $ein->zuordnen($this->rootTeam, $this->haupt->id, [$this->butter->id], $bin->id);
 

@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Orders;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 
 class DetailPanel extends Component
 {

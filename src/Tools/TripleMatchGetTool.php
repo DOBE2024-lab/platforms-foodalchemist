@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TripleMatchService;
+use Platform\FoodAlchemist\Services\Matching\TripleMatchService;
 
 /** Spec 75b · Triple Match lesen. */
 class TripleMatchGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

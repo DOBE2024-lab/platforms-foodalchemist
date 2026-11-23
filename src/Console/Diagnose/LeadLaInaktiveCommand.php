@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console\Diagnose;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 
 /**
  * Bestand: GPs, deren Lead bei einem inaktiven oder gesperrten Lieferanten liegt (Kurator 29.10.2026). Reiner Dry-run — dieselbe Vorschau wie

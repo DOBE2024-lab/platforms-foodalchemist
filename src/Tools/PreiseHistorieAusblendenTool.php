@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\PreisVerlaufService;
+use Platform\FoodAlchemist\Services\Preis\PreisVerlaufService;
 
 /** Einen Preis-Stand als Erfassungsfehler aus Linie, Trend und Statistik nehmen (nicht löschen) oder wieder einblenden — nur FA-Admins. */
 class PreiseHistorieAusblendenTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

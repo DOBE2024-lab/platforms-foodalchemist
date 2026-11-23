@@ -4,8 +4,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\IngredientMatchService;
-use Platform\FoodAlchemist\Services\LaCandidateFinder;
-use Platform\FoodAlchemist\Services\LaFirstGpService;
+use Platform\FoodAlchemist\Services\Einkauf\LaCandidateFinder;
+use Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -41,9 +41,9 @@ it('Mint: „Öl" bekommt kein Aromaöl (Finder schlägt es vor wie auf demo)', 
         app(\Platform\FoodAlchemist\Services\Matching\TokenEngine::class),
         app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class),
         app(\Platform\FoodAlchemist\Services\TerminologyService::class),
-        app(\Platform\FoodAlchemist\Services\StammLieferantService::class),
-        app(\Platform\FoodAlchemist\Services\SupplierItemService::class),
-        app(\Platform\FoodAlchemist\Services\LeadLaStrategieResolver::class),
+        app(\Platform\FoodAlchemist\Services\Einkauf\StammLieferantService::class),
+        app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class),
+        app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaStrategieResolver::class),
     ])->makePartial();
     $mock->shouldReceive('find')->andReturn(collect([$lauchoel]));
     app()->instance(LaCandidateFinder::class, $mock);

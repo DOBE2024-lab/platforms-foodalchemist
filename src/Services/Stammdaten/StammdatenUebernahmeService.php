@@ -9,9 +9,9 @@ use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine as Zeile;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun as Lauf;
-use Platform\FoodAlchemist\Services\FileArticleImportService;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 
 /**
  * Stammdaten-Import, Stufe 1b (Kurator 29.10.2026): Entscheidung je Prüflisten-Zeile und Übernahme in den Bestand.
@@ -173,7 +173,7 @@ class StammdatenUebernahmeService
             return false;
         }
         if (in_array($befund['preis']['status'] ?? '', ['neu', 'geaendert'], true) && $z->supplier_item_id !== null
-            && ($aktiv = app(\Platform\FoodAlchemist\Services\PriceService::class)->activeFor((int) $z->supplier_item_id, $team)) !== null) {
+            && ($aktiv = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->activeFor((int) $z->supplier_item_id, $team)) !== null) {
             $aktiv->update(['status_valid_from' => $z->valid_from]);
         }
         $hinweise = array_values(array_filter((array) $z->hinweise, fn ($h) => ($h['code'] ?? '') !== 'preis_vorgemerkt'));

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TripleMatchService;
+use Platform\FoodAlchemist\Services\Matching\TripleMatchService;
 
 /** Spec 75b · Preis-Toleranz des Triple Match setzen (FA-Admin). */
 class TripleMatchPutTool extends WareneingangTool implements ToolContract, ToolMetadataContract

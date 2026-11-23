@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\OrderCostingService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderCostingService;
 use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
@@ -94,7 +94,7 @@ it('CQ 2.6: Cockpit — Gericht ohne VK ist eine Lücke (Zeile offen, hat_vk_lue
         ->and($zeile['vk_fehlt'])->toBeTrue()
         ->and($c['hat_vk_luecke'])->toBeTrue()
         ->and($c['summe_pro_person'])->toBe($mitVk['summe_pro_person'])
-        ->and(app(\Platform\FoodAlchemist\Services\KalkulationService::class)->conceptHk($this->rootTeam, $this->concept->refresh())['vk_luecke'])->toBeTrue();
+        ->and(app(\Platform\FoodAlchemist\Services\Preis\KalkulationService::class)->conceptHk($this->rootTeam, $this->concept->refresh())['vk_luecke'])->toBeTrue();
 });
 
 it('kalkuliert Vor-Ort-Arbeit mit dem Team-Satz als eigenen Serviceblock ohne Küchenlast', function () {

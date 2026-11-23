@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 
 /** MCP-Steuerbarkeit · D11: den Lieferantenartikel einer Bestellzeile tauschen (Alternative). */
 class OrdersSwitchArticleTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

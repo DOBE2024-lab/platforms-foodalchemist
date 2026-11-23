@@ -61,7 +61,7 @@ class MandantBeendenService
 
     public function __construct(
         private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
-        private readonly \Platform\FoodAlchemist\Services\StammPaketService $paket,
+        private readonly \Platform\FoodAlchemist\Services\Einkauf\StammPaketService $paket,
         private readonly AboAuskunft $abos,
         private readonly StandortService $standorte,
         private readonly PlattformProtokoll $protokoll,

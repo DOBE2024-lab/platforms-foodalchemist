@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOrderTemplate;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderTemplateLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\OrderTemplateService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderTemplateService;
 
 /**
  * Spec 73 · Bestellvorlage im Editor (Vollbild-Modal), wie ein Rezept: Lesen → „Bearbeiten" (Spec 65 Sperre)

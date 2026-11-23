@@ -159,7 +159,7 @@
                     </div>
                 @endforeach
                 <p class="lg:col-span-2 fa-t-muted">
-                    Platzhalter: @foreach(\Platform\FoodAlchemist\Services\OrderMailService::PLATZHALTER as $ph)<code class="font-mono">{{ $ph }}</code>@if(! $loop->last) · @endif @endforeach.
+                    Platzhalter: @foreach(\Platform\FoodAlchemist\Services\Bestellung\OrderMailService::PLATZHALTER as $ph)<code class="font-mono">{{ $ph }}</code>@if(! $loop->last) · @endif @endforeach.
                     Die Signatur wird angehängt.
                 </p>
             </div>

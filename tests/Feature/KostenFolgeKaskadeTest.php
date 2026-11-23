@@ -15,10 +15,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\LeadLaService;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
-use Platform\FoodAlchemist\Services\StammPaketService;
+use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
 use Platform\FoodAlchemist\Support\StammPaket;
@@ -127,7 +127,7 @@ it('★ dieselbe Kette mit einem Gefäß-GP: neuer Artikelpreis und Lead-Wechsel
 });
 
 it('★ Verleih-Gefäß (extern, Automatik) rechnet mit dem Lead-Artikelpreis; ein neuer Preis zieht durch', function () {
-    app(\Platform\FoodAlchemist\Services\SupplierGroupService::class)->einrichten(true);
+    app(\Platform\FoodAlchemist\Services\Einkauf\SupplierGroupService::class)->einrichten(true);
     $verleih = \Platform\FoodAlchemist\Models\FoodAlchemistSupplierGroup::whereNull('team_id')->where('code', 'VERLEIH')->firstOrFail();
     $profimiet = FoodAlchemistSupplier::create(['team_id' => $this->rootTeam->id, 'name' => 'Verleih Köln', 'group_id' => $verleih->id]);
     [$gp] = ($this->artikel)($this->rootTeam, 'Vanillemilch', 4.0);

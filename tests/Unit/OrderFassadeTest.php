@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 
 /**
  * 98 · 3.3 (S5): OrderService wird in Teile unter Services/Bestellung zerlegt und bleibt Fassade. Dieser Test friert die

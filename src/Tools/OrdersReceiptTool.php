@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 
 /** MCP-Steuerbarkeit · D11: Wareneingang je Bestellzeile erfassen (empfangene Gebinde-Menge + Notiz). */
 class OrdersReceiptTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
@@ -48,7 +48,7 @@ class OrdersReceiptTool extends FoodAlchemistTool implements ToolContract, ToolM
 
         try {
             // Spec 75c: über den Editor-Lieferschein, Rechte des aufrufenden Benutzers
-            app(\Platform\FoodAlchemist\Services\WareneingangService::class)->kurzwegMenge(
+            app(\Platform\FoodAlchemist\Services\Einkauf\WareneingangService::class)->kurzwegMenge(
                 $team,
                 $lineId,
                 array_key_exists('received_qty_packs', $arguments) ? $arguments['received_qty_packs'] : null,

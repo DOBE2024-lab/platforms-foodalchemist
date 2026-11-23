@@ -136,7 +136,7 @@ class DarreichungResolver
             // Ebene 2: im Betriebs-Kontext den VK on-the-fly gegen dessen Kostenstruktur;
             // ohne Betrieb der gespeicherte Baseline-VK der Standard-Darreichung (= heute).
             $vk = $outlet !== null
-                ? app(CatalogPricingService::class)->salesNetFor(Team::find($outlet->team_id), $standard, $outlet)
+                ? app(Preis\CatalogPricingService::class)->salesNetFor(Team::find($outlet->team_id), $standard, $outlet)
                 : ($standard->sales_net !== null ? (float) $standard->sales_net : null);
             if ($vk !== null) {
                 return ['vk' => $vk, 'quelle' => 'darreichung'];
@@ -238,7 +238,7 @@ class DarreichungResolver
 
         if ($darreichung !== null) {
             $vk = $outlet !== null
-                ? app(CatalogPricingService::class)->salesNetFor(Team::find($outlet->team_id), $darreichung, $outlet)
+                ? app(Preis\CatalogPricingService::class)->salesNetFor(Team::find($outlet->team_id), $darreichung, $outlet)
                 : ($darreichung->sales_net !== null ? (float) $darreichung->sales_net : null);
             if ($vk !== null) {
                 return $vk;

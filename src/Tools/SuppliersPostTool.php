@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 
 /** MCP-Steuerbarkeit · D4: Lieferant anlegen (team-eigen; Dedup über den Namen). */
 class SuppliersPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

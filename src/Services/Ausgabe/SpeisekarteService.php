@@ -587,7 +587,7 @@ class SpeisekarteService
                 $darr = FoodAlchemistRecipeDarreichung::find($pos->presentation_id);
                 if ($darr !== null) {
                     $vk = $outlet !== null
-                        ? app(\Platform\FoodAlchemist\Services\CatalogPricingService::class)->salesNetFor(\Platform\Core\Models\Team::find($outlet->team_id), $darr, $outlet)
+                        ? app(\Platform\FoodAlchemist\Services\Preis\CatalogPricingService::class)->salesNetFor(\Platform\Core\Models\Team::find($outlet->team_id), $darr, $outlet)
                         : ($darr->sales_net !== null ? (float) $darr->sales_net : null);
                     if ($vk !== null) {
                         return ['vk' => $vk, 'quelle' => 'darreichung'];
@@ -642,7 +642,7 @@ class SpeisekarteService
             }
         }
 
-        $we = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk);
+        $we = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk);
 
         return ['vk' => $vk, 'ek' => $ek, 'we' => $we, 'quelle' => $vkArr['quelle'], 'vorlaeufig' => (bool) ($vkArr['vorlaeufig'] ?? false)];
     }
@@ -700,7 +700,7 @@ class SpeisekarteService
         $rubriken = [];
         foreach ($sections as $r) {
             $a = $roll((int) $r->id);
-            $a['we'] = $a['ek'] > 0 ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($a['ek'], $a['vk']) : null;
+            $a['we'] = $a['ek'] > 0 ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($a['ek'], $a['vk']) : null;
             $rubriken[(int) $r->id] = $a;
         }
 
@@ -757,7 +757,7 @@ class SpeisekarteService
     public function dokumentDaten(Team $team, FoodAlchemistSpeisekarte $karte, bool $intern = false, array $rubrikFilter = [], bool $mitKaskade = false, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
         $agg = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class);
-        $marge = app(\Platform\FoodAlchemist\Services\MargeService::class);
+        $marge = app(\Platform\FoodAlchemist\Services\Preis\MargeService::class);
         $mwstArr = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->mwst($team);
         $mwstSatz = (float) ($mwstArr['regulaer'] ?? 19.0);
         $brutto = (bool) $karte->preis_anzeige_brutto;

@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Livewire\Controlling\Panels\LinkPreise;
 use Platform\FoodAlchemist\Livewire\Controlling\Panels\Preisvergleich;
 use Platform\FoodAlchemist\Livewire\Controlling\Panels\Wareneinsatz;
 use Platform\FoodAlchemist\Models\FoodAlchemistTeamBereich;
-use Platform\FoodAlchemist\Services\SalesImportService;
+use Platform\FoodAlchemist\Services\Einkauf\SalesImportService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Support\FaTeam;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;

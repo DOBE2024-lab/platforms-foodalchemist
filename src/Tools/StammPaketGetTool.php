@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\StammPaketService;
+use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 
 /** Spec 82 §13 B1 · Stamm-Paket: Übersicht aller Mandanten oder Status + Abbestell-Vorschau eines Mandanten (nur Plattform-Admin). */
 class StammPaketGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

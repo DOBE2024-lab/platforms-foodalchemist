@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\GpMasseService;
-use Platform\FoodAlchemist\Services\SupplierGroupService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierGroupService;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -200,7 +200,7 @@ it('Preis-Anstoß: ändert sich der Preis des Gefäß-GP, rechnet die Darreichun
     $anderes = ($this->gericht)('anderes');
     $anderes->update(['ek_portion' => 99.0]);
 
-    app(\Platform\FoodAlchemist\Services\PriceService::class)->createFor($this->rootTeam, FoodAlchemistSupplierItem::findOrFail($this->glas->lead_la_supplier_item_id), 12.00);   // 1,00 €/Stk
+    app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->createFor($this->rootTeam, FoodAlchemistSupplierItem::findOrFail($this->glas->lead_la_supplier_item_id), 12.00);   // 1,00 €/Stk
 
     expect(($this->ek)())->toBe(3.0)->and((float) $anderes->fresh()->ek_portion)->toBe(99.0);
 });

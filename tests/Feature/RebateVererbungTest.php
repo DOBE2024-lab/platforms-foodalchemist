@@ -3,7 +3,7 @@
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierRebateConfig;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierRebateTier;
-use Platform\FoodAlchemist\Services\RebateService;
+use Platform\FoodAlchemist\Services\Preis\RebateService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

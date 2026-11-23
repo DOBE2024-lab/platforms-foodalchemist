@@ -1106,7 +1106,7 @@ class IngredientMatchService
             $lieferant = $this->tiebreakMemo['lead'][(int) $leadId] ??= (int) (\Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::visibleToTeam($team)
                 ->whereKey((int) $leadId)->value('supplier_id') ?? 0);
             $wg = (string) ($gp->commodity_group_code ?? '');
-            $this->tiebreakMemo['stamm'][$wg] ??= array_fill_keys(app(StammLieferantService::class)->stammSupplierIdsFor($team, $wg !== '' ? $wg : null), true);
+            $this->tiebreakMemo['stamm'][$wg] ??= array_fill_keys(app(Einkauf\StammLieferantService::class)->stammSupplierIdsFor($team, $wg !== '' ? $wg : null), true);
             $stamm = $lieferant !== 0 && isset($this->tiebreakMemo['stamm'][$wg][$lieferant]) ? 1 : 0;
         }
 

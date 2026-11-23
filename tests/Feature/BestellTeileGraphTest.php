@@ -20,6 +20,7 @@ const BESTELL_RANG = [
     'BestellEingang' => 0,
     'BestellPflege' => 1,      // nutzt Schiene
     'BestellBedarf' => 2,      // nutzt Ampeln
+    'BestellRunde' => 3,       // nutzt Ampeln, Bedarf
 ];
 
 /** @return array<string, list<string>> Teil => Teile (kurz), von denen er per Konstruktor abhängt */

@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Services\Speiseplan;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
@@ -13,6 +14,7 @@ use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\PresentationDesignService;
 use Platform\FoodAlchemist\Services\PresentationService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanBasis;
+use Platform\FoodAlchemist\Services\WordingResolver;
 
 /**
  * Ausgabe des Speiseplans (98 · 3.3 S3, aus SpeiseplanService verschoben): Wochenaushang (dokumentDaten, Spec 31
@@ -326,6 +328,115 @@ final class SpeiseplanAusgabe
         }
 
         return $ersatz;
+    }
+
+    /**
+     * Buffetschilder: ein Zeltkärtchen je Gericht eines Tages — Pakete und Concepts in ihre
+     * Gerichte aufgelöst ({@see eintragGerichte}), optional dazu je Unterrezept (eine Ebene,
+     * z. B. Jus oder Beilage) ein eigenes Kärtchen. Allergene ausgeschrieben, nicht als Code.
+     *
+     * Diät-Hinweise nur aus gesetzten Flags (vegan/vegetarisch, Schwein/Rind/Fisch) — das
+     * unbestimmte „mit Fleisch“ aus {@see diaetMerkmale} steht auf keinem Buffetschild, weil
+     * Unterrezepte die Flags oft gar nicht tragen. Unbewertete Allergene → `unvollstaendig`.
+     *
+     * @return array<string, mixed>
+     */
+    public function buffetKarten(Team $team, FoodAlchemistSpeiseplan $plan, string $mahlzeit = 'mittag', ?string $montag = null, ?string $tag = null, ?int $lineId = null, bool $mitUnterrezepten = true): array
+    {
+        $mahlzeit = array_key_exists($mahlzeit, SpeiseplanBasis::MAHLZEITEN) ? $mahlzeit : 'mittag';
+        $mo = Carbon::parse($montag ?? $tag ?? ($plan->start_date ?? Carbon::now()))->startOfWeek(Carbon::MONDAY);
+        $tage = [];
+        foreach ($this->basis->wochenTage($plan, $mo) as $t) {
+            $tage[$t->format('Y-m-d')] = SpeiseplanBasis::WOCHENTAGE[$t->isoWeekday()] . ' ' . $t->format('d.m.');
+        }
+        $tagYmd = $tag !== null ? Carbon::parse($tag)->format('Y-m-d') : null;
+        if ($tagYmd === null || ! isset($tage[$tagYmd])) {
+            $tagYmd = array_key_first($tage) ?? $mo->format('Y-m-d');
+        }
+
+        $raster = $this->ansicht->wochenRaster($plan, $mahlzeit, $mo);
+        $linienIds = $plan->lines->filter(fn ($l) => $l->giltFuerMahlzeit($mahlzeit) && ($lineId === null || (int) $l->id === $lineId))
+            ->map(fn ($l) => (int) $l->id)->values()->all();
+        if ($lineId === null) {
+            $linienIds[] = 0;
+        }
+        $linienNamen = $plan->lines->mapWithKeys(fn ($l) => [(int) $l->id => $l->name])->all();
+
+        $agg = app(ConcepterAggregateService::class);
+        $katalog = $agg->kennzeichnungKatalog();
+        $wording = app(WordingResolver::class);
+        $karten = [];
+        $gesehen = [];
+        $karte = function (FoodAlchemistRecipe $r, ?string $zu, ?string $linie) use ($agg, $katalog, $wording): array {
+            $text = $wording->fuerGericht($r)['text'];
+            if (trim((string) $r->sales_wording_standard) === '') {
+                $text = trim(preg_replace('/\s*\([^)]*\)\s*$/u', '', $text) ?? $text);   // „(Basis)“-Suffix ist intern
+            }
+            $teile = array_values(array_filter(array_map('trim', explode('|', $text)), fn ($t) => $t !== ''));
+            $k = $agg->kennzeichnungFromGerichte(collect([$r]));
+            $allergene = [];
+            $unvollstaendig = false;
+            foreach ($k['allergene'] as $a) {
+                if ($a['status'] === 'enthalten' || $a['status'] === 'spuren') {
+                    $allergene[] = ['code' => $katalog['allergene'][$a['slug']]['code'], 'label' => $a['label'], 'spuren' => $a['status'] === 'spuren'];
+                } elseif ($a['status'] === 'unbekannt') {
+                    $unvollstaendig = true;
+                }
+            }
+            $zusatz = [];
+            foreach ($k['zusatzstoffe'] as $z) {
+                if ($z['status'] === 'ja') {
+                    $zusatz[] = ['code' => $katalog['zusatzstoffe'][$z['slug']]['code'], 'label' => $z['label']];
+                }
+            }
+            $diaet = match (true) {
+                $r->spec_is_vegan === true => ['vegan'],               // Diät-Fix 98: nur ein echtes true, NULL = unbekannt
+                $r->spec_is_vegetarian === true => ['vegetarisch'],
+                default => array_values(array_filter([
+                    $r->spec_contains_pork === true ? 'schwein' : null,
+                    $r->spec_contains_beef === true ? 'rind' : null,
+                    collect($k['allergene'])->contains(fn ($a) => $a['slug'] === 'fish' && $a['status'] === 'enthalten') ? 'fisch' : null,
+                ])),
+            };
+
+            return [
+                'recipe_id' => (int) $r->id, 'titel' => $teile[0] ?? (string) $r->name,
+                'wording' => count($teile) > 1 ? implode(' · ', array_slice($teile, 1)) : null,
+                'zu' => $zu, 'linie' => $linie, 'diaet' => $diaet,
+                'allergene' => $allergene, 'zusatzstoffe' => $zusatz, 'unvollstaendig' => $unvollstaendig,
+            ];
+        };
+
+        foreach ($linienIds as $lid) {
+            foreach ($raster[$lid][$tagYmd] ?? [] as $e) {
+                foreach ($this->ernaehrung->eintragGerichte($e) as $g) {
+                    if (isset($gesehen[(int) $g->id])) {
+                        continue;
+                    }
+                    $gesehen[(int) $g->id] = true;
+                    $gk = $karte($g, null, $linienNamen[$lid] ?? null);
+                    $karten[] = $gk;
+                    if (! $mitUnterrezepten) {
+                        continue;
+                    }
+                    $subs = $g->ingredients()->whereNotNull('referenced_recipe_id')->with('referencedRecipe')->orderBy('position')->get()
+                        ->pluck('referencedRecipe')->filter();
+                    foreach ($subs as $sub) {
+                        if (isset($gesehen[(int) $sub->id])) {
+                            continue;
+                        }
+                        $gesehen[(int) $sub->id] = true;
+                        $karten[] = $karte($sub, $gk['titel'], $linienNamen[$lid] ?? null);
+                    }
+                }
+            }
+        }
+
+        return [
+            'format' => 'buffet', 'plan' => $plan, 'mahlzeitLabel' => SpeiseplanBasis::MAHLZEITEN[$mahlzeit],
+            'tagLabel' => $tage[$tagYmd] ?? $tagYmd, 'karten' => $karten, 'mitUnterrezepten' => $mitUnterrezepten,
+            'optik' => $this->druckOptik($team, $plan), 'erzeugt' => Carbon::now()->format('d.m.Y'),
+        ];
     }
 
     /**

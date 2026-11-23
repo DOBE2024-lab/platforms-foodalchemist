@@ -5,11 +5,9 @@ namespace Platform\FoodAlchemist\Services\Fassung;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
-use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
-use Platform\FoodAlchemist\Support\MasterTeam;
 
 /**
  * Spec 82 Abo für Konzepte/Pakete/Formate, PR 7: Veröffentlichen eines MASTER-Formats als Fassung (Entwurf D1: Zeilen-Fassung). Spiegelt {@see ConceptFassungService}.
@@ -23,110 +21,80 @@ use Platform\FoodAlchemist\Support\MasterTeam;
  *   sonst zeigten sie ins Leere.
  * - Bilder (Galerie/Hero) bleiben Verweise auf die Master-Datei (D5); Kopie erst bei Kündigung/Eigene Kopie.
  */
-class FormatFassungService
+class FormatFassungService extends FassungBasis
 {
     /** Spalten, die eine Format-Fassung nie vom Arbeitsstand erbt. */
-    private const NIE_KOPIEREN = [
+    protected const NIE_KOPIEREN = [
         'uuid', 'legacy_id', 'created_at', 'updated_at', 'deleted_at', 'kopie_von_id', 'kopie_stand_at',
         'ist_fassung', 'fassung_von_id', 'fassung_nr', 'inhalt_hash', 'veroeffentlicht_at', 'veroeffentlicht_von', 'aenderungsnotiz', 'fassung_allergen_geaendert',
     ];
 
     private const SLOT_NIE = ['id', 'uuid', 'team_id', 'format_id', 'concept_id', 'created_at', 'updated_at', 'deleted_at'];
 
-    public function __construct(
-        private \Platform\FoodAlchemist\Services\FaRechte $rechte,
-        private \Platform\FoodAlchemist\Services\Plattform\AboService $abos,
-        private \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
-    ) {}
+    private const KUNDEN_IP = 'Ein Kunden-Format (origin=kunde) ist nie abonnierbar und lässt sich nicht veröffentlichen (Kunden-IP, D8).';
 
-    /**
-     * @return array{fassung_id:int, neu:bool, fassung_nr:int, hinweise:list<string>}
-     */
-    public function veroeffentlichen(Team $master, int $formatId, string $notiz, ?User $actor): array
+    protected function modell(): string
     {
-        // Spec 84 B3 C: Lesen im Master; das Recht prüft der Rumpf am übergebenen Team + Nutzer, nicht am Kontext
-        return \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm($master, fn () => $this->veroeffentlichenImTeam($master, $formatId, $notiz, $actor));
+        return FoodAlchemistFormat::class;
     }
 
-    private function veroeffentlichenImTeam(Team $master, int $formatId, string $notiz, ?User $actor): array
+    protected function rechtText(): string
     {
-        if (! MasterTeam::istMaster($master)) {
-            throw new \RuntimeException('Veröffentlichen gibt es nur im Master-Team (Spec 82 §12 B).');
-        }
-        $this->rechte->pruefe($actor, $master, FaRolle::Freigeben, 'Format veröffentlichen');
-        $notiz = trim($notiz);
-        if ($notiz === '') {
-            throw new \RuntimeException('Beim Veröffentlichen ist eine Änderungsnotiz Pflicht (Änderungsprotokoll der Abonnenten).');
-        }
+        return 'Format veröffentlichen';
+    }
+
+    /** @return array{fassung_id:int, neu:bool, fassung_nr:int, hinweise:list<string>} */
+    protected function veroeffentlichenRumpf(Team $master, int $formatId, string $notiz, ?User $actor): array
+    {
         $format = FoodAlchemistFormat::where('team_id', $master->id)->findOrFail($formatId);   // Scope: nie eine Fassung
         if ($format->origin === 'kunde') {
-            throw new \RuntimeException('Ein Kunden-Format (origin=kunde) ist nie abonnierbar und lässt sich nicht veröffentlichen (Kunden-IP, D8).');
+            throw new \RuntimeException(self::KUNDEN_IP);
         }
         $slots = $format->slots()->get();
         $ziele = $this->zieleSammeln($slots);
         $hash = $this->inhaltHash($format, $slots, $ziele);
-        $vorher = FoodAlchemistFormat::mitFassungen()->where('fassung_von_id', $format->id)->where('ist_fassung', true)
-            ->whereNull('deleted_at')->orderByDesc('fassung_nr')->orderByDesc('id')->first();
+        $vorher = $this->letzteFassung((int) $format->id);
         if ($vorher !== null && $vorher->inhalt_hash === $hash) {
             return ['fassung_id' => (int) $vorher->id, 'neu' => false, 'fassung_nr' => (int) $vorher->fassung_nr, 'hinweise' => []];
         }
 
         $fassung = DB::transaction(function () use ($format, $slots, $ziele, $hash, $notiz, $actor, $vorher) {
-            $nr = (int) FoodAlchemistFormat::mitFassungen()->withTrashed()->where('fassung_von_id', $format->id)->where('ist_fassung', true)->max('fassung_nr') + 1;
-            $neu = $this->kopiere($format, $slots, $ziele, $nr, $hash, $notiz, $actor);
-            $this->markiereAllergenAenderung($neu, $vorher);
+            $neu = $this->kopiere($format, $slots, $ziele, $this->naechsteNr((int) $format->id), $hash, $notiz, $actor);
+            $this->markiereAllergenAenderung('format', $neu, $vorher);
 
             return $neu;
         });
 
-        $this->abos->neuBerechnenAlle();
-        $this->protokoll->schreibe('format_fassung_veroeffentlicht', ['format_id' => $format->id, 'fassung_id' => $fassung->id, 'fassung_nr' => (int) $fassung->fassung_nr, 'notiz' => $notiz], $actor, $fassung);
-        try {   // Signale und Folgen: nie ein Grund, die Veröffentlichung scheitern zu lassen
-            app(FassungSignalService::class)->nachBausteinVeroeffentlichung('format', [(int) $fassung->id]);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Format-Fassung veröffentlicht, aber die Signal-Erzeugung ist fehlgeschlagen: '.$e->getMessage(), ['exception' => $e, 'format_id' => $format->id]);
-        }
+        $this->nachVeroeffentlichung(['format_fassung_veroeffentlicht', ['format_id' => $format->id, 'fassung_id' => $fassung->id, 'fassung_nr' => (int) $fassung->fassung_nr, 'notiz' => $notiz]],
+            $actor, $fassung, fn () => app(FassungSignalService::class)->nachBausteinVeroeffentlichung('format', [(int) $fassung->id]),
+            'Format-Fassung veröffentlicht, aber die Signal-Erzeugung ist fehlgeschlagen: ', ['format_id' => $format->id]);
 
         return ['fassung_id' => (int) $fassung->id, 'neu' => true, 'fassung_nr' => (int) $fassung->fassung_nr, 'hinweise' => []];
     }
 
-    /**
-     * Lese-Status für die Oberfläche „Veröffentlichen…“ — rechnet nichts um und schreibt nichts (Spec 82 §13 B6, PR 8). Ein Kunden-Format ist `blockiert` (D8).
-     *
-     * @return array{letzte: ?array{id:int, nr:int, veroeffentlicht_at:?string, notiz:?string}, weicht_ab: bool, blockiert: ?string, hinweise: list<string>, allergen_aenderung: bool, allergen_felder: list<string>}
-     */
+    /** Lese-Status für „Veröffentlichen…“ (siehe {@see FassungBasis::statusMitZielen()}). Ein Kunden-Format ist `blockiert` (D8). */
     public function status(FoodAlchemistFormat $format): array
     {
-        $letzte = FoodAlchemistFormat::mitFassungen()->where('fassung_von_id', $format->id)->where('ist_fassung', true)->whereNull('deleted_at')
-            ->orderByDesc('fassung_nr')->orderByDesc('id')->first();
-        $out = ['letzte' => $letzte === null ? null : ['id' => (int) $letzte->id, 'nr' => (int) $letzte->fassung_nr, 'veroeffentlicht_at' => $letzte->veroeffentlicht_at?->format('d.m.Y H:i'),
-            'notiz' => $letzte->aenderungsnotiz], 'weicht_ab' => true, 'blockiert' => null, 'hinweise' => [], 'allergen_aenderung' => false, 'allergen_felder' => []];
-        if ($format->origin === 'kunde') {
-            $out['blockiert'] = 'Ein Kunden-Format (origin=kunde) ist nie abonnierbar und lässt sich nicht veröffentlichen (Kunden-IP, D8).';
+        $slots = null;
 
-            return $out;
-        }
-        try {
-            $slots = $format->slots()->get();
-            $ziele = $this->zieleSammeln($slots);
-        } catch (\RuntimeException $e) {
-            $out['blockiert'] = $e->getMessage();
+        return $this->statusMitZielen($format, 'format',
+            function () use ($format, &$slots) {
+                $slots = $format->slots()->get();
 
-            return $out;
-        }
-        $out['weicht_ab'] = $letzte === null || $letzte->inhalt_hash !== $this->inhaltHash($format, $slots, $ziele);
-        if ($letzte !== null) {
-            $v = app(FassungsVergleich::class);
-            $ids = [];
-            foreach ($ziele as $c) {
-                array_push($ids, ...$v->rezeptIdsDerKette('concept', (int) $c->id));
-            }
-            $diff = $v->bilderDiff($v->kettenBild('format', (int) $letzte->id), $v->kettenBildAus(array_values(array_unique($ids))));
-            $out['allergen_aenderung'] = $diff !== [];
-            $out['allergen_felder'] = array_keys($diff);
-        }
+                return [$this->zieleSammeln($slots), []];
+            },
+            function (array $ziele) use ($format, &$slots) {
+                return $this->inhaltHash($format, $slots, $ziele);
+            },
+            function (array $ziele, FassungsVergleich $v) {
+                $ids = [];
+                foreach ($ziele as $c) {
+                    array_push($ids, ...$v->rezeptIdsDerKette('concept', (int) $c->id));
+                }
 
-        return $out;
+                return $ids;
+            },
+            $format->origin === 'kunde' ? self::KUNDEN_IP : null);
     }
 
     /**
@@ -147,15 +115,11 @@ class FormatFassungService
             if ($c === null) {
                 continue;   // gelöschtes Konzept fällt weg, wie im Arbeitsstand
             }
-            $f = FoodAlchemistConcept::mitFassungen()->where('fassung_von_id', $c->id)->where('ist_fassung', true)->whereNull('deleted_at')
-                ->orderByDesc('fassung_nr')->orderByDesc('id')->first();
+            $f = $this->letzteFassung((int) $c->id, modell: FoodAlchemistConcept::class);
             $f === null ? $fehlt[] = (string) $c->name : $ziele[(int) $s->concept_id] = $f;
         }
-        if ($fehlt !== []) {
-            $fehlt = array_values(array_unique($fehlt));
-            throw new \RuntimeException('Noch nicht veröffentlichbar: Diese Konzepte im Format haben keine veröffentlichte Fassung: '
-                .implode(', ', array_slice($fehlt, 0, 10)).(count($fehlt) > 10 ? ' …' : '').'. Zuerst veröffentlichen (Spec 82 Abo-Entwurf D2).');
-        }
+        $this->abbruchMitListe('Noch nicht veröffentlichbar: Diese Konzepte im Format haben keine veröffentlichte Fassung: ', array_values(array_unique($fehlt)),
+            '. Zuerst veröffentlichen (Spec 82 Abo-Entwurf D2).');
 
         return $ziele;
     }
@@ -163,20 +127,14 @@ class FormatFassungService
     /** @param array<int, FoodAlchemistConcept> $ziele */
     private function inhaltHash(FoodAlchemistFormat $format, $slots, array $ziele): string
     {
-        $kopf = collect($format->getAttributes())->except(array_merge(['id', 'team_id', 'status'], self::NIE_KOPIEREN))
-            ->reject(fn ($v, $k) => str_ends_with($k, '_at'))->sortKeys()->all();
+        $kopf = $this->hashKopf($format, ['id', 'team_id', 'status']);
         $zeilen = $slots->filter(fn ($s) => $s->concept_id === null || isset($ziele[(int) $s->concept_id]))->map(function (FoodAlchemistFormatSlot $s) use ($ziele) {
             $felder = collect($s->getAttributes())->except(array_merge(self::SLOT_NIE, ['payload_json']))->sortKeys()->all();
 
             return [$felder, $s->concept_id !== null ? (int) $ziele[(int) $s->concept_id]->id : null, $this->payloadUmgeschluesselt($s, $ziele)];
         })->values()->all();
-        $pivots = [
-            $format->serviceMoments()->allRelatedIds()->sort()->values()->all(),
-            $format->seasons()->allRelatedIds()->sort()->values()->all(),
-            $format->targetGroups()->allRelatedIds()->sort()->values()->all(),
-        ];
 
-        return hash('sha256', json_encode([$kopf, $zeilen, $pivots], JSON_UNESCAPED_UNICODE));
+        return hash('sha256', json_encode([$kopf, $zeilen, $this->pivotIds($format)], JSON_UNESCAPED_UNICODE));
     }
 
     /**
@@ -209,11 +167,7 @@ class FormatFassungService
     /** @param array<int, FoodAlchemistConcept> $ziele */
     private function kopiere(FoodAlchemistFormat $format, $slots, array $ziele, int $nr, string $hash, string $notiz, ?User $actor): FoodAlchemistFormat
     {
-        $fassung = $format->replicate(self::NIE_KOPIEREN);
-        $fassung->forceFill([
-            'ist_fassung' => true, 'fassung_von_id' => $format->id, 'fassung_nr' => $nr, 'inhalt_hash' => $hash,
-            'veroeffentlicht_at' => now(), 'veroeffentlicht_von' => $actor?->id, 'aenderungsnotiz' => $notiz,
-        ])->save();
+        $fassung = $this->fassungsKopf($format, $nr, $hash, $notiz, $actor);
         foreach ($slots as $s) {
             if ($s->concept_id !== null && ! isset($ziele[(int) $s->concept_id])) {
                 continue;
@@ -224,25 +178,11 @@ class FormatFassungService
                 'payload_json' => $this->payloadUmgeschluesselt($s, $ziele) ?: null,
             ])->save();
         }
-        $fassung->serviceMoments()->sync($format->serviceMoments()->allRelatedIds()->all());
-        $fassung->seasons()->sync($format->seasons()->allRelatedIds()->all());
-        $fassung->targetGroups()->sync($format->targetGroups()->allRelatedIds()->all());
+        $this->pivotsUebernehmen($format, $fassung);
         foreach ($format->images()->get() as $bild) {   // Bilder bleiben Verweise auf die Master-Datei (D5)
             $bild->replicate(['uuid'])->forceFill(['format_id' => $fassung->id])->save();
         }
 
         return $fassung;
-    }
-
-    /** Allergen-/Zusatzstoff-Erbe über die Kette: Flag an der Fassung, wenn sich das Bild gegenüber der Vorgängerin ändert. */
-    private function markiereAllergenAenderung(FoodAlchemistFormat $fassung, ?FoodAlchemistFormat $vorher): void
-    {
-        if ($vorher === null) {
-            return;
-        }
-        $v = app(FassungsVergleich::class);
-        if ($v->bilderDiff($v->kettenBild('format', (int) $vorher->id), $v->kettenBild('format', (int) $fassung->id)) !== []) {
-            $fassung->forceFill(['fassung_allergen_geaendert' => true])->save();
-        }
     }
 }

@@ -80,7 +80,7 @@ it('bleibt still bei Import, Kommentar, String, relativem Namen und Konstante', 
             {
                 $text = 'Spalte $x und Basis::wert() im String';
                 $n = $r !== null ? PHP_INT_MAX : 0;
-                $s = SpeiseplanService::class;   // gleicher Namespace, Datei existiert
+                $s = TeamSettingsService::class;   // gleicher Namespace, Datei existiert (bleibt dauerhaft im Services-Root, 98 · 3.8)
 
                 return $n;
             }

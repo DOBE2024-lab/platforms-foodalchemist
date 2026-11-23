@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Jobs\GenerateConceptJob;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
@@ -31,7 +32,7 @@ it('Auswahl zeigt nur eigene Konzepte: kein Paket, keine Vorlage, kein fremdes T
     FoodAlchemistConcept::where('id', $this->concepts->create($this->rootTeam, ['name' => 'Station als Paket'])->id)->update(['kind' => 'paket']);
     $this->concepts->create($this->childA, ['name' => 'Fremdes Concept']);
 
-    $liste = Livewire::test(PlanungIndex::class)->call('oeffne', $this->session->id)->instance()->bestehendeConcepts();
+    $liste = Livewire::test(Brief::class, ['sessionId' => $this->session->id])->instance()->bestehendeConcepts();   // Spec 85 C1 PR-4
 
     expect($liste->pluck('id')->all())->toBe([(int) $eigen->id]);
 });
@@ -40,8 +41,7 @@ it('Wählen setzt den Plan, speichert ihn an der Planung und belegt leeren Titel
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Green & Tasty']);
     $concept->update(['description' => 'Drei Stationen, ein Kreislauf.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $this->session->id)
+    Livewire::test(Brief::class, ['sessionId' => $this->session->id])
         ->set('eingabe.concept.titel', '')
         ->set('eingabe.concept.brief', '')
         ->call('bestehendesConceptWaehlen', (string) $concept->id)
@@ -59,8 +59,7 @@ it('ein schon getipptes Briefing bleibt stehen', function () {
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Green & Tasty']);
     $concept->update(['description' => 'Aus dem Concept.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $this->session->id)
+    Livewire::test(Brief::class, ['sessionId' => $this->session->id])
         ->set('eingabe.concept.brief', 'Mein eigener Auftrag.')
         ->call('bestehendesConceptWaehlen', $concept->id)
         ->assertSet('eingabe.concept.brief', 'Mein eigener Auftrag.');
@@ -70,12 +69,11 @@ it('Go mit bestehendem Concept: kein neues Concept, der Lauf zeigt auf das gewä
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Green & Tasty']);
     $vorher = FoodAlchemistConcept::where('team_id', $this->rootTeam->id)->count();
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $this->session->id)
+    Livewire::test(Brief::class, ['sessionId' => $this->session->id])
         ->call('bestehendesConceptWaehlen', $concept->id)
         ->call('goKaskade', 'concept')
         ->assertSet('fehler', null)
-        ->assertSet('laeuft', true)
+        ->assertDispatched('planung.lauf-gestartet')
         ->assertSet('planConceptId', null);   // verbraucht
 
     Queue::assertNotPushed(GenerateConceptJob::class);
@@ -89,8 +87,7 @@ it('fremdes Team, Paket oder Vorlage lassen sich nicht wählen', function () {
     $vorlage = $this->concepts->create($this->rootTeam, ['name' => 'Gerüst-Vorlage', 'is_template' => true]);
 
     foreach ([$fremd->id, $vorlage->id, 999999] as $id) {
-        Livewire::test(PlanungIndex::class)
-            ->call('oeffne', $this->session->id)
+        Livewire::test(Brief::class, ['sessionId' => $this->session->id])
             ->call('bestehendesConceptWaehlen', $id)
             ->assertSet('planConceptId', null)
             ->assertSet('fehler', 'Das gewählte Konzept wurde nicht gefunden oder gehört zu einem anderen Team.');
@@ -101,8 +98,7 @@ it('fremdes Team, Paket oder Vorlage lassen sich nicht wählen', function () {
 it('leere Auswahl löst den Plan wieder, das Concept bleibt bestehen', function () {
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Green & Tasty']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $this->session->id)
+    Livewire::test(Brief::class, ['sessionId' => $this->session->id])
         ->call('bestehendesConceptWaehlen', $concept->id)
         ->call('bestehendesConceptWaehlen', '')
         ->assertSet('planConceptId', null);

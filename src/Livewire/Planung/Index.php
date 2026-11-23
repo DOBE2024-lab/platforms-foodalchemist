@@ -48,7 +48,7 @@ use Platform\FoodAlchemist\Support\VoiceMime;
 class Index extends Component
 {
     use WithFileUploads;
-    use \Platform\FoodAlchemist\Livewire\Concerns\HandyPlanung, \Platform\FoodAlchemist\Livewire\Concerns\PlanBestehendesConcept, \Platform\FoodAlchemist\Livewire\Concerns\PlanGerichtVorgaben, \Platform\FoodAlchemist\Livewire\Concerns\PlanRezepturFuerGericht;   // Spec 80 Teil D; #1003 PR7 Handy-Umfang
+    use \Platform\FoodAlchemist\Livewire\Concerns\HandyPlanung;   // Spec 80 Teil D; #1003 PR7 Handy-Umfang
 
     public ?string $fehler = null;
 
@@ -84,42 +84,6 @@ class Index extends Component
 
     /** „Passt das zusammen?" als Gericht (Teller aus Komponenten) oder als Basisrezept (eine Zubereitung) — Dominique 16.10. */
     public string $composerModus = \Platform\FoodAlchemist\Services\Pairing\Kombinationslogik::MODUS_GERICHT;
-
-    /**
-     * Foodpairing-Composer (2026-08-24): PERSISTENTES Seed-Pin für den „in den Erstellen-Tab springen"-
-     * Flow. Überlebt den Tab-Wechsel als Livewire-State, damit
-     * der reguläre Go im Erstellen-Tab (mit vollem Leitplanken-Regler) die Anker als seed_anker mitnimmt.
-     * Form: ['scope' => 'rezept'|'gericht', 'slugs' => [...]]. Wird in goKaskade nach Verwendung geleert.
-     */
-    public array $composerSeedPin = [];
-
-    // ── Leitstelle: PER-TAB Eingabe + Leitplanken (jeder Scope eigener Zustand) ──
-    /**
-     * Eingabe je Creation-Tab (rezept|gericht|concept): Titel/Beschreibung/Kreativ-Modus.
-     * Jeder Tab ist UNABHÄNGIG — Werte auf einem Tab wirken nicht auf die anderen. In mount()
-     * initialisiert. Am Go zählt der Satz des Start-Tabs.
-     * @var array<string,array{titel:string,brief:string,creative_mode:string}>
-     */
-    public array $eingabe = [];
-
-    /**
-     * Richtungs-Regler (Leitplanken) JE Scope — jeder Tab hat einen eigenen kompletten Satz
-     * (inkl. favoriten/favoriten_conv_only/ziel_vk/voll_anreichern/ki_bilder). In mount() je Tab
-     * aus REGLER_DEFAULT kopiert. **Kaskaden-Regel (User-Entscheid 2026-08-14):** am Go zählt NUR
-     * der Satz des Start-Tabs; er wird als `generation_params` persistiert und propagiert die ganze
-     * Kaskade nach unten (Start-Tab gilt für alles darunter). Spiegelt Generator-/VkGenerator-Modal.
-     * @var array<string,array<string,mixed>>
-     */
-    public array $regler = [];
-
-    /**
-     * Spec 55: welche `$regler[$scope]`-Felder zuletzt vom Sprachbefehl-Agenten übernommen
-     * wurden (`$scope => [$feld => true]`) — reine Anzeige-Markierung für die Leitplanken-UI
-     * („vom Agenten"), kein eigener Speicherort. Ein manueller Edit des Feldes löscht seine
-     * eigene Markierung nicht automatisch (kein Watcher pro Feld) — vertretbar für eine reine
-     * Kennzeichnung, sie verschwindet spätestens beim nächsten Tab-Wechsel/Neuladen.
-     */
-    public array $reglerVonAgent = [];
 
     /** Die drei Creation-Scopes (Tabs mit eigener Eingabe + Leitplanken). */
     public const SCOPES = ['rezept', 'gericht', 'concept'];
@@ -252,15 +216,6 @@ class Index extends Component
         ],
     ];
 
-    /** #1b Grounding-Preview: welches Wissen/Pairing/Template ein Basisrezept-Lauf ziehen würde (on-demand, ohne Generierung). */
-    public ?array $wissenVorschau = null;
-
-    /** Welche Schnellstart-Vorlage je Scope aktuell geladen ist (id) — fürs Chip-Highlight. Eine manuelle Brief-Änderung hebt sie auf ({@see updated()}). */
-    public array $aktiveVorlage = [];
-
-    /** Eingabe für „Als Vorlage speichern" (Snapshot-Name), im Erstell-Tab gebunden. */
-    public string $vorlageName = '';
-
     /**
      * Pill-Gruppen fürs Cockpit-View (Parität zu GeneratorModal::RICHTUNGEN). Inline
      * gehalten statt aus dem Modal referenziert — die Leitstelle ist der neue Ort der
@@ -343,35 +298,10 @@ class Index extends Component
     /** true, solange der Lauf im Hintergrund rechnet (steuert das Polling). */
     public bool $laeuft = false;
 
-    /**
-     * Geplanter Pfad (Etappe 2b, „KI-Kopf"): die ID des vorab ausgearbeiteten, im Conceptor geprüften
-     * Draft-Concepts ({@see kiKopf} → {@see ConceptGeneratorService::planAusBrief}). Gesetzt = der nächste
-     * Concept-Go referenziert diesen Plan (`existing_concept_id`, KEIN neuer GenerateConceptJob), statt neu
-     * zu generieren. `null` = Schnell-Pfad (Brief → Go generiert frisch). **Transient** (keine DB-Spalte) —
-     * lebt nur, solange die Fläche gemountet ist; nach dem Go verbraucht ({@see goKaskade} setzt zurück).
-     */
-    public ?int $planConceptId = null;
-
-    /**
-     * Editierbare Semantik-Skalare des vorbereiteten KI-Kopf-Plans (Leitidee/Name+Claim/USP/Inszenierung/
-     * intern) — INLINE in der Leitstelle sichtbar + änderbar (statt Wegsprung in den Conceptor). Geladen
-     * aus der `concept.plan`-Canvas ({@see ladePlanForm}); {@see planFeldSpeichern} schreibt zurück. Diese
-     * Felder SIND der LLM-Kontext für die Concept-/Gericht-Erzeugung (fließen beim Go mit) — „ein Ort, ein
-     * Kontext". Geschmackswelten + die Menü-Positionen bleiben Lese-Anzeige ({@see planVorschau}).
-     *
-     * @var array<string,string>
-     */
-    public array $planForm = [];
-
     /** Deep-Link `?session=X&open=1` (z.B. vom Trendradar-Carry-in) öffnet den Editor direkt. */
     public function mount(): void
     {
-        // Per-Tab-State initialisieren — jeder Scope eigene Eingabe + eigener Leitplanken-Satz.
-        foreach (self::SCOPES as $s) {
-            $this->eingabe[$s] = ['titel' => '', 'brief' => '', 'creative_mode' => 'voll_kreativ',
-                'suchbegriffe' => [], 'suchbegriff_neu' => ''];
-            $this->regler[$s] = self::REGLER_DEFAULT;
-        }
+        // Spec 85 C1 PR-4: Tab-Eingaben und Leitplanken je Scope leben im Kind Planung\Brief (eigener mount()).
         if (request()->boolean('open') && $this->sessionId !== null && $this->aktiveSession() !== null) {
             $this->ladeForm();
             // Der Speiseplan-Editor leitet nach dem Go HIERHER um (mit `open=1`), und seine eigene
@@ -379,18 +309,9 @@ class Index extends Component
             // Ohne dieses Laden bliebe die Landung also stumm, obwohl der Deckel am Lauf steht.
             $this->ladeLetztenLauf();
             // Spec 53/D: Sprachbefehl-Handoff (VoiceModal::planungStarten()) — `?tab=` sagt, auf
-            // welchem Scope-Tab der Editor öffnet (Scope-Treue wie beim Composer-Übernehmen-Knopf
-            // weiter unten); ohne bekannten Wert bleibt tabInit vom Modal (Default 'gericht').
-            // Die Session trägt bereits den scope-spezifischen Brief (PlanningSessionService::create
-            // im Voice-Pfad) — hier nur ins Tab-Briefing vorbefüllen, wenn dort noch nichts steht.
+            // welchem Scope-Tab der Editor öffnet; ohne bekannten Wert bleibt tabInit vom Modal (Default 'gericht').
+            // Das Vorbefüllen des Tab-Briefings aus der Session macht Planung\Brief::mount() (Spec 85 C1 PR-4).
             $tab = in_array(request('tab'), ['basisrezept', 'gericht', 'concept'], true) ? request('tab') : null;
-            if ($tab !== null) {
-                $scope = $tab === 'basisrezept' ? 'rezept' : $tab;
-                $brief = trim((string) $this->aktiveSession()?->brief);
-                if ($brief !== '' && trim((string) ($this->eingabe[$scope]['brief'] ?? '')) === '') {
-                    $this->eingabe[$scope]['brief'] = $brief;
-                }
-            }
             $this->oeffneEditor($tab);
         }
         // Spec 42 F2 — Handoff aus dem Foodbook: Leitstelle im Owner-Kontext öffnen, „Foodbook aus
@@ -513,9 +434,7 @@ class Index extends Component
         $this->form['title'] = (string) $session->title;
         $this->form['brief'] = (string) $session->brief;
         $this->form['analysis'] = (string) $session->analysis;
-        $this->eingabe[$scope]['brief'] = PlanningSessionService::briefFuerScope((string) $session->brief, $scope);
-        $this->eingabe[$scope]['titel'] = (string) $session->title;
-        $this->seedBriefingAusTrendSession($session);
+        // Das Briefing (Ziel-Ebene überschreiben, andere nur leer füllen) setzt Planung\Brief auf dasselbe Event (Spec 85 C1 PR-4).
         $this->oeffneEditor($scope === 'rezept' ? 'basisrezept' : $scope);
     }
 
@@ -947,33 +866,6 @@ class Index extends Component
     }
 
     /**
-     * Spec 55 (Design-Punkt b): „Übernehmen"-Klick eines `komponenten_uebernahme`-Vorschlags im
-     * eingebetteten Sprachbefehl-Panel ({@see \Platform\FoodAlchemist\Livewire\VoiceModal::komponentenUebernehmen()}) —
-     * schreibt DIREKT in die Regler/den Brief DIESER Komponente (kein MCP-Tool, kein Katalog-
-     * Wachstum). Whitelist der Leitplanken-Schlüssel schon in VoiceCommandService gefiltert,
-     * hier NOCHMAL geprüft (Browser-Events sind kein vertrauenswürdiger Server-Kanal).
-     *
-     * @param  array<string, mixed>  $felder
-     */
-    #[\Livewire\Attributes\On('voice.komponenten-uebernahme')]
-    public function voiceKomponentenUebernehmen(string $scope, array $felder, ?string $brief = null): void
-    {
-        if (! in_array($scope, self::SCOPES, true)) {
-            return;
-        }
-        $erlaubt = array_intersect_key($felder, array_flip(self::AGENT_SCHREIBBARE_REGLER));
-        foreach ($erlaubt as $feld => $wert) {
-            $this->regler[$scope][$feld] = $wert;
-            $this->reglerVonAgent[$scope][$feld] = true;
-        }
-        if ($brief !== null && trim($brief) !== '') {
-            $this->eingabe[$scope]['brief'] = trim($brief);
-            $this->reglerVonAgent[$scope]['brief'] = true;
-        }
-        $this->meldung = 'Vorschlag des Sprachbefehl-Agenten übernommen.';
-    }
-
-    /**
      * Zuletzt-Karte: Planung verwerfen (Soft-Delete, reversibel; finale Etappe #17). Team-owned (D1)
      * über den Service. War die verworfene Session gerade aktiv, wird der Editor-/Lauf-Kontext gelöst.
      */
@@ -1057,6 +949,25 @@ class Index extends Component
         }
     }
 
+    /**
+     * Spec 85 C1 PR-4: Planung\Brief hat einen Lauf gestartet. Parent übernimmt laufId (das Kind KaskadenLauf mountet neu)
+     * und lädt den Session-Spiegel nach, den der Go geschrieben hat (sonst schriebe „Planung speichern“ einen alten Brief zurück).
+     */
+    #[On('planung.lauf-gestartet')]
+    public function laufGestartet(int $laufId): void
+    {
+        $this->laufId = $laufId;
+        $this->laeuft = true;
+        $this->ladeForm();
+    }
+
+    /** Spec 85 C1 PR-4: Planung\Brief hat Brief/Kreativ-Modus auf die Session gespiegelt (KI-Kopf) → Spiegel nachladen. */
+    #[On('planung.brief-gespiegelt')]
+    public function briefGespiegelt(): void
+    {
+        $this->ladeForm();
+    }
+
     /** Spec 85 C1 PR-3: das Kind meldet Lauf-Stand (schreibgeschützte Kopie für Reiter-Badge und Sperren). */
     #[On('planung.lauf-status')]
     public function laufStatus(?int $laufId, bool $laeuft): void
@@ -1117,70 +1028,7 @@ class Index extends Component
             'creative_mode' => (string) $session->creative_mode,
         ];
 
-        // Spec 80: gespeicherte Suchbegriffe je Tab zurückholen (nur Tabs, die welche haben).
-        foreach ((is_array($session->suchbegriffe) ? $session->suchbegriffe : []) as $sc => $liste) {
-            if (isset($this->eingabe[$sc]) && is_array($liste)) {
-                $this->eingabe[$sc]['suchbegriffe'] = array_values(array_filter($liste, static fn ($b) => is_array($b) && isset($b['t'])));
-            }
-        }
-
-        // Trendradar-Anbindung (Spec 79): eine aus dem Trendradar eröffnete Session (`source_trend_refs`,
-        // Carry-in via `?open=1`) füllt ihren Brief ins Tab-Briefing je Ebene vor (nur leere Felder) —
-        // der Nutzer startet mit einem gefüllten Briefing statt Blank Page.
-        if (! empty($session->source_trend_refs)) {
-            $this->seedBriefingAusTrendSession($session);
-        }
-        // Spec 79: die Auswahl im Trendradar-Reiter stellt das Kind Planung\Trendradar beim Mount aus der Herkunft wieder her.
-
-        // #53 Persistenz: einen vorbereiteten KI-Kopf-Plan (plan_concept_id) über den Reload retten —
-        // aber nur, wenn das Draft-Concept noch existiert + team-eigen ist (sonst still auf null; ein
-        // toter/verwaister Zeiger darf den Concept-Go nicht auf einen Geister-Plan schicken). Spiegelt
-        // die Fail-soft-Ownership-Prüfung in goKaskade.
-        $this->planConceptId = null;
-        $team = $this->team();
-        if ($team !== null && $session->plan_concept_id !== null
-            && FoodAlchemistConcept::where('team_id', $team->id)->whereKey($session->plan_concept_id)->exists()) {
-            $this->planConceptId = (int) $session->plan_concept_id;
-        }
-        // Inline-Plan-Panel: die editierbaren Semantik-Felder aus der Canvas nachziehen (leert, wenn kein Plan).
-        $this->ladePlanForm();
-
-        // L5: die beim Go persistierten Leitplanken (generation_params) in die Regler zurücklesen — sonst
-        // zeigt jeder Tab nach einem Reload wieder die Defaults, während der Lauf mit anderen Werten fuhr.
-        $this->rehydriereReglerAusParams($session);
-    }
-
-    private function rehydriereReglerAusParams(FoodAlchemistPlanningSession $session): void
-    {
-        $h = $this->reglerHelfer();
-        $h->rehydriereReglerAusParams($session);
-        $this->regler = $h->regler;   // Spec 84 C1-1: Logik in ReglerParams, der neue Stand kommt zurück
-    }
-
-    /**
-     * Trend-Herkunft → Go-Briefing: den Brief/Titel einer Trend-Session in alle Tab-Briefings
-     * ({@see SCOPES}) übertragen. **Nur befüllen, nie überschreiben** — ein bereits (vom Nutzer
-     * oder einer Vorlage) getipptes Tab-Briefing bleibt unangetastet. Der Session-Brief ist bewusst
-     * scope-agnostisch formuliert (die Session hat keine Ebene); beim Übertragen wird der Lead je Tab
-     * ebenen-spezifisch geschärft ({@see PlanningSessionService::briefFuerScope} — Basisrezept/Gericht/
-     * Konzept), Einordnung/Kernaussage bleiben unverändert. Kein „Go" — nur Prefill (Nordstern: nichts
-     * läuft still).
-     */
-    private function seedBriefingAusTrendSession(FoodAlchemistPlanningSession $session): void
-    {
-        $brief = trim((string) $session->brief);
-        $titel = trim((string) $session->title);
-        if ($brief === '') {
-            return;
-        }
-        foreach (self::SCOPES as $scope) {
-            if (trim((string) ($this->eingabe[$scope]['brief'] ?? '')) === '') {
-                $this->eingabe[$scope]['brief'] = PlanningSessionService::briefFuerScope($brief, $scope);
-            }
-            if ($titel !== '' && trim((string) ($this->eingabe[$scope]['titel'] ?? '')) === '') {
-                $this->eingabe[$scope]['titel'] = $titel;
-            }
-        }
+        // Spec 85 C1 PR-4: Suchbegriffe, Trend-Vorbefüllung, KI-Kopf-Plan und Leitplanken liest Planung\Brief::mount() aus der Session.
     }
 
     public function speichern(PlanningSessionService $svc): void
@@ -1201,10 +1049,6 @@ class Index extends Component
         $this->meldung = 'Gespeichert.';
     }
 
-    // ── Leitstelle: Regler-Bedienung ───────────────────────────────────
-
-    /** Multi-Select-Regler (Toggle in/aus der Liste): Diät + Frische-Erlaubnis + Allergen-No-Go. */
-    private const MULTI_REGLER = ['diaet_hart', 'frische', 'allergen_nogo'];
 
     /**
      * EU-14-Allergen-No-Go (L3): Key => Label. Harter Ausschluss (getrennt vom Diät-Ausschluss) —
@@ -1212,207 +1056,6 @@ class Index extends Component
      * entdrahtet + gemeldet. Keys spiegeln FoodAlchemistGp::ALLERGEN_FIELDS 1:1.
      */
     public const ALLERGEN_LABELS = \Platform\FoodAlchemist\Support\Allergene::KURZ;
-
-    /** Pill-Toggle für die Richtungs-Regler EINES Scopes (MULTI_REGLER togglen, sonst Single-Set). */
-    public function reglerPill(string $scope, string $feld, string $wert): void
-    {
-        if (! isset($this->regler[$scope])) {
-            return;
-        }
-        // Spec 55 Nachtrag: ein Pill-Klick ist ein DIREKTER Server-Write (kein `wire:model`-
-        // Property-Sync) — der generische `updated()`-Hook sieht ihn nie, darum hier explizit
-        // dasselbe "manuelle Änderung löscht den Agent-Marker"-Verhalten wie dort.
-        unset($this->reglerVonAgent[$scope][$feld]);
-        if (in_array($feld, self::MULTI_REGLER, true)) {
-            $cur = (array) ($this->regler[$scope][$feld] ?? []);
-            $this->regler[$scope][$feld] = in_array($wert, $cur, true)
-                ? array_values(array_diff($cur, [$wert]))
-                : [...$cur, $wert];
-
-            return;
-        }
-        if (array_key_exists($feld, $this->regler[$scope])) {
-            $this->regler[$scope][$feld] = $wert;
-        }
-    }
-
-    /**
-     * Brief-Vorlagen, die für den gegebenen Creation-Tab gelten (Schnellstart statt Blank Page,
-     * Etappe 4). Die Blade blendet den Vorlagen-Block nur ein, wenn die Liste nicht leer ist —
-     * so trägt der Basisrezept-Tab (Teil 1: keine Vorlagen) keine leere Auswahl.
-     *
-     * @return array<string,array<string,mixed>>
-     */
-    public function vorlagenFuer(string $scope): array
-    {
-        $team = $this->team();
-
-        return $team ? app(\Platform\FoodAlchemist\Services\BriefTemplateService::class)->fuer($team, $scope) : [];
-    }
-
-    /**
-     * Lädt eine Brief-Vorlage in den Start-Tab (Schnellstart statt Blank Page, Etappe 4). Füllt das
-     * Briefing bewusst (Starter — die leere Seite soll weg) und setzt Sektor/Anlass/Serviceform als
-     * Kontext-Vorschlag; der Titel wird NUR gesetzt, wenn der Nutzer noch keinen getippt hat (nicht
-     * überschreiben). Alles bleibt frei anpassbar. Kein Go — der Mensch prüft und drückt selbst.
-     */
-    public function briefVorlage(string $scope, string $key): void
-    {
-        if (! isset($this->eingabe[$scope]) || ! isset($this->regler[$scope])) {
-            return;
-        }
-        $team = $this->team();
-        $tpl = $team ? app(\Platform\FoodAlchemist\Services\BriefTemplateService::class)->lade($team, (int) $key, $scope) : null;
-        if ($tpl === null) {
-            $this->fehler = 'Unbekannte oder für diesen Tab ungültige Vorlage.';
-
-            return;
-        }
-        $payload = is_array($tpl->payload) ? $tpl->payload : [];
-        $this->eingabe[$scope]['brief'] = (string) $tpl->brief;
-        if (trim((string) ($this->eingabe[$scope]['titel'] ?? '')) === '' && trim((string) $tpl->titel) !== '') {
-            $this->eingabe[$scope]['titel'] = (string) $tpl->titel;
-        }
-        if (! empty($payload['creative_mode']) && array_key_exists('creative_mode', $this->eingabe[$scope])) {
-            $this->eingabe[$scope]['creative_mode'] = (string) $payload['creative_mode'];
-        }
-        // Leitplanken-Snapshot anwenden — NUR Keys, die der Ziel-Regler-Satz dieses Scopes führt
-        // (kein Fremd-Key-Erbe; z. B. VK-/Menü-Achsen eines Gericht-Snapshots landen nicht im Basisrezept).
-        foreach (($payload['regler'] ?? []) as $feld => $wert) {
-            if (array_key_exists($feld, $this->regler[$scope])) {
-                $this->regler[$scope][$feld] = $feld === 'sektor' && is_string($wert) ? (\Platform\FoodAlchemist\Support\Sektor::kanonisch($wert) ?? $wert) : $wert;   // CQ 2.5a: Altwert → Slug
-            }
-        }
-        $this->aktiveVorlage[$scope] = (string) $key;   // Chip-Highlight: sichtbar, WELCHE Vorlage geladen wurde
-        $this->fehler = null;
-        $this->meldung = 'Vorlage „'.$tpl->label.'" geladen — Briefing, Kreativ-Modus und Leitplanken gesetzt, bitte prüfen und anpassen.';
-    }
-
-    /**
-     * Eine MANUELLE Brief-Änderung hebt die Schnellstart-Markierung des Scopes auf — die Vorlage war
-     * nur Startpunkt, ab hier ist es ein eigenes Briefing (ein stehender Chip-Highlight wäre irreführend).
-     * Feuert NICHT beim programmatischen Setzen in {@see briefVorlage()} (nur client-originierte Updates).
-     *
-     * Spec 55: dieselbe Logik für `reglerVonAgent` — der „vom Agenten"-Marker ist eine Aussage
-     * über den AKTUELLEN Feldwert („das steht so, weil der Agent es vorgeschlagen hat"); ändert
-     * der Mensch das Feld manuell, stimmt die Aussage nicht mehr. `updated()` feuert NUR bei
-     * client-originierten `wire:model`-Updates (Tippen/Regler-Bedienung), NICHT wenn
-     * {@see voiceKomponentenUebernehmen()} selbst den Marker setzt (das ist ein Server-Write
-     * in derselben Methode, kein Property-Update-Zyklus).
-     */
-    public function updated(string $name): void
-    {
-        if (preg_match('#^eingabe\.([^.]+)\.brief$#', $name, $m)) {
-            unset($this->aktiveVorlage[$m[1]]);
-            unset($this->reglerVonAgent[$m[1]]['brief']);
-        }
-        if (preg_match('#^regler\.([^.]+)\.([^.]+)$#', $name, $m)) {
-            unset($this->reglerVonAgent[$m[1]][$m[2]]);
-        }
-    }
-
-    /**
-     * „Als Vorlage speichern": nimmt den AKTUELLEN Tab-Stand (Brief + Kreativ-Modus + kompletter
-     * Leitplanken-Satz) als benannte, team-eigene Schnellstart-Vorlage auf — genau dort, wo die Regler
-     * schon eingestellt sind (kein nachgebautes Formular). Erscheint danach als Chip auf DIESEM Scope.
-     */
-    public function alsVorlageSpeichern(string $scope): void
-    {
-        $team = $this->team();
-        if ($team === null || ! isset($this->eingabe[$scope]) || ! isset($this->regler[$scope])) {
-            return;
-        }
-        try {
-            $tpl = app(\Platform\FoodAlchemist\Services\BriefTemplateService::class)->speichere(
-                $team, $scope, $this->vorlageName, (string) ($this->eingabe[$scope]['brief'] ?? ''),
-                $this->regler[$scope],
-                $this->eingabe[$scope]['titel'] ?? null,
-                $this->eingabe[$scope]['creative_mode'] ?? null,
-                Auth::id(),
-            );
-        } catch (\RuntimeException $e) {
-            $this->fehler = $e->getMessage();
-
-            return;
-        }
-        $this->vorlageName = '';
-        $this->aktiveVorlage[$scope] = (string) $tpl->id;   // die gerade gespeicherte ist aktiv markiert
-        $this->fehler = null;
-        $this->meldung = 'Vorlage „'.$tpl->label.'" gespeichert — steht ab jetzt als Schnellstart bereit.';
-    }
-
-    /** Eine team-EIGENE Vorlage löschen (Globals sind read-only → Service wirft). Inline aus dem Chip. */
-    public function loeschenVorlage(string $scope, int $id): void
-    {
-        $team = $this->team();
-        if ($team === null) {
-            return;
-        }
-        try {
-            app(\Platform\FoodAlchemist\Services\BriefTemplateService::class)->loeschen($team, $id);
-        } catch (\RuntimeException $e) {
-            $this->fehler = $e->getMessage();
-
-            return;
-        }
-        if (($this->aktiveVorlage[$scope] ?? null) === (string) $id) {
-            unset($this->aktiveVorlage[$scope]);
-        }
-        $this->fehler = null;
-        $this->meldung = 'Vorlage gelöscht.';
-    }
-
-    /**
-     * Et.4 (Eingabe-Reife) »Titel-/Namensvorschlag aus dem Brief« — Teil 3 (UI). Schlägt aus dem
-     * Tab-Briefing einen nüchternen, §-konformen Titel vor ({@see TitelVorschlagService}, Teil 2 —
-     * `recipe.titel_vorschlag` §1 bzw. `vk.titel_vorschlag` §4.4-Pipe) und füllt ihn ins Tab-Titelfeld
-     * — **nur wenn dort noch keiner steht** (empty-only, Muster {@see briefVorlage});
-     * ein bereits getippter Titel bleibt unangetastet. Kein Go — reiner Vorschlag, der Mensch prüft.
-     *
-     * `concept` ist bewusst außen vor (dessen `name_claim` liefert der kreative KI-Kopf, nicht der
-     * nüchterne Titel-Prompt) — die Blade blendet den Knopf nur im Basisrezept-/Gericht-Tab ein; der
-     * Scope-Guard hier fängt einen Fehl-Aufruf fail-soft ab.
-     */
-    public function titelVorschlagen(string $scope, TitelVorschlagService $svc): void
-    {
-        if (! in_array($scope, self::SCOPES, true) || ! isset($this->eingabe[$scope])) {
-            return;
-        }
-        // Empty-only: ein bereits gesetzter Titel wird NIE überschrieben.
-        if (trim((string) ($this->eingabe[$scope]['titel'] ?? '')) !== '') {
-            $this->fehler = null;
-            $this->meldung = 'Es steht bereits ein Titel — Vorschlag übersprungen (nicht überschrieben).';
-
-            return;
-        }
-        $brief = trim((string) ($this->eingabe[$scope]['brief'] ?? ''));
-        if ($brief === '') {
-            $this->fehler = 'Für den Titelvorschlag erst ein Briefing im Tab eingeben.';
-
-            return;
-        }
-        $vorschlag = $svc->titelVorschlag($scope, $brief);
-        if ($vorschlag === null) {
-            // concept (kein nüchterner Titel) ODER KI weg/leeres Ergebnis — fail-soft, kein Titel gefüllt.
-            $this->fehler = $scope === 'concept'
-                ? 'Für Konzepte liefert der KI-Kopf den Namen — der Titelvorschlag gilt nur für Basisrezept/Gericht.'
-                : 'Kein Titelvorschlag möglich — bitte das Briefing schärfen oder manuell benennen.';
-
-            return;
-        }
-        $this->eingabe[$scope]['titel'] = $vorschlag;
-        $this->fehler = null;
-        $this->meldung = 'Titel vorgeschlagen: „'.$vorschlag.'" — bitte prüfen und anpassen.';
-    }
-
-    /**
-     * Befund des letzten Leitplanken-Vorschlags — bewusst SICHTBAR statt still:
-     * was gesetzt wurde, was verworfen (erfundener Wert), was ignoriert (gültiger
-     * Sitzungs-Parameter, aber kein Regler dieses Tabs) und was offen blieb.
-     *
-     * @var array{scope:string,gesetzt:list<string>,verworfen:list<string>,ignoriert:list<string>,unklar:list<string>,begruendung:?string,confidence:float}|null
-     */
-    public ?array $leitplankenBefund = null;
 
     /** Diktat: Audio-Blob fürs Briefing (WithFileUploads) + Ziel-Feld. */
     public $briefAudio = null;
@@ -1431,159 +1074,6 @@ class Index extends Component
         'eingabe.rezept.brief', 'eingabe.gericht.brief', 'eingabe.concept.brief',
         'fbBrief', 'skBrief', 'spBrief', 'offerBrief', 'fmtBrief',
     ];
-
-    /**
-     * BRIEFING → LEITPLANKEN in der Oberfläche. Bis hierher war die Brücke nur per MCP
-     * erreichbar — ein Produkt muss das in sich lösen (Dominique 2026-09-02).
-     *
-     * Die Sitzung wird ABSICHTLICH nicht mitgegeben: der Vorschlag füllt nur die Regler
-     * DIESES Tabs, damit der Mensch die Pills vor dem Go sieht. Persistiert wird am Go
-     * (Start-Tab-Regel) — die Entscheidung bleibt menschlich.
-     */
-    /**
-     * Spec 80 A3: neue KI-Begriffe + die vom Menschen gesetzten. KI-Chips des Vorlaufs fallen weg,
-     * Mensch-Chips bleiben (auch wenn die KI denselben Begriff liefert — dann zählt er als Mensch).
-     *
-     * @param  list<array{t: string, g: string, q: string}>  $bisher
-     * @param  list<array{t: string, g: string, q: string}>  $neuKi
-     * @return list<array{t: string, g: string, q: string}>
-     */
-    private static function suchbegriffeZusammenfuehren(array $bisher, array $neuKi): array
-    {
-        $mensch = array_values(array_filter($bisher, static fn ($b) => is_array($b) && ($b['q'] ?? '') === 'mensch'));
-        $belegt = array_flip(array_map(static fn ($b) => mb_strtolower((string) $b['t']), $mensch));
-        foreach ($neuKi as $b) {
-            if (is_array($b) && isset($b['t']) && ! isset($belegt[mb_strtolower((string) $b['t'])])) {
-                $mensch[] = ['t' => (string) $b['t'], 'g' => (string) ($b['g'] ?? 'eigene'), 'q' => 'ki'];
-                $belegt[mb_strtolower((string) $b['t'])] = true;
-            }
-        }
-
-        return $mensch;
-    }
-
-    /** Spec 80 A3: Chip entfernen (Index in der Liste des Tabs). */
-    public function suchbegriffEntfernen(string $scope, int $index): void
-    {
-        if (! isset($this->eingabe[$scope]['suchbegriffe'][$index])) {
-            return;
-        }
-        $liste = $this->eingabe[$scope]['suchbegriffe'];
-        unset($liste[$index]);
-        $this->eingabe[$scope]['suchbegriffe'] = array_values($liste);
-    }
-
-    /** Spec 80 A3: eigenen Begriff ergänzen (Gruppe „eigene", Quelle Mensch). Komma trennt mehrere. */
-    public function suchbegriffHinzufuegen(string $scope): void
-    {
-        if (! in_array($scope, self::SCOPES, true)) {
-            return;
-        }
-        $roh = (string) ($this->eingabe[$scope]['suchbegriff_neu'] ?? '');
-        $liste = (array) ($this->eingabe[$scope]['suchbegriffe'] ?? []);
-        $belegt = array_flip(array_map(static fn ($b) => mb_strtolower((string) ($b['t'] ?? '')), $liste));
-        foreach (preg_split('/[,;]/u', $roh) ?: [] as $teil) {
-            $t = trim($teil);
-            if (mb_strlen($t) < 2 || mb_strlen($t) > 60 || isset($belegt[mb_strtolower($t)])) {
-                continue;
-            }
-            $liste[] = ['t' => $t, 'g' => 'eigene', 'q' => 'mensch'];
-            $belegt[mb_strtolower($t)] = true;
-        }
-        $this->eingabe[$scope]['suchbegriffe'] = array_values($liste);
-        $this->eingabe[$scope]['suchbegriff_neu'] = '';
-    }
-
-    /**
-     * Spec 80 A4: die Begriffe als Such-Liste für den Lauf — Gruppen-Priorität (Zutaten zuerst), dann
-     * Eingabe-Reihenfolge. Nur die Wörter; Gruppe/Quelle bleiben an der Sitzung.
-     *
-     * @return list<string>
-     */
-    private function suchbegriffeFuerLauf(string $scope): array
-    {
-        return FoodAlchemistPlanningSession::suchbegriffeFuerLauf((array) ($this->eingabe[$scope]['suchbegriffe'] ?? []));
-    }
-
-    public function leitplankenAusBriefing(string $scope, BriefingLeitplankenService $svc): void
-    {
-        if (! in_array($scope, self::SCOPES, true) || ! isset($this->regler[$scope])) {
-            return;
-        }
-        $brief = trim((string) ($this->eingabe[$scope]['brief'] ?? ''));
-        if ($brief === '') {
-            $this->fehler = 'Für die Leitplanken erst ein Briefing in diesem Tab eingeben.';
-
-            return;
-        }
-        $team = Auth::user()?->currentTeamRelation;
-        if ($team === null) {
-            $this->fehler = 'Kein Team im Kontext.';
-
-            return;
-        }
-
-        try {
-            $r = $svc->ausBriefing($team, $brief, null, $scope);
-        } catch (\Throwable $e) {
-            $this->fehler = 'Leitplanken-Vorschlag fehlgeschlagen: ' . $e->getMessage();
-
-            return;
-        }
-
-        $gesetzt = [];
-        // Scope-fremde Felder (Basisrezept: pax/Portion/Anlass …) hat der Service schon entfernt —
-        // hier nur melden, damit nichts still verschwindet.
-        $ignoriert = array_values((array) ($r['scope_fremd'] ?? []));
-        foreach ($r['leitplanken'] as $feld => $wert) {
-            // Bestand hat außerhalb des Basisrezept-Tabs keinen eigenen Regler — dort steuert der
-            // Kreativ-Modus die Reuse-Achse (reglerParams). »Nur Bestand« aus dem Briefing landet
-            // deshalb im Modus, statt im verdeckten Regler-Wert unterzugehen.
-            if ($feld === 'bestand' && $scope !== 'rezept') {
-                if ($wert === 'nur_bestand') {
-                    $this->eingabe[$scope]['creative_mode'] = 'datenbank';
-                    $gesetzt[] = 'bestand';
-                } else {
-                    $ignoriert[] = 'bestand';
-                }
-
-                continue;
-            }
-            if (! array_key_exists($feld, self::REGLER_DEFAULT)) {
-                // Im Sitzungs-Param-Raum gültig, aber dieser Tab hat den Regler nicht
-                // (z. B. Menü-Quoten). Melden statt verschlucken.
-                $ignoriert[] = (string) $feld;
-
-                continue;
-            }
-            // Formtreue: Multi-Regler bleibt Array, Single-Regler bleibt Skalar — ein String
-            // in `diaet_hart` würde die Pill-Logik (reglerPill) zerlegen.
-            $this->regler[$scope][$feld] = is_array(self::REGLER_DEFAULT[$feld])
-                ? array_values(array_filter((array) $wert, static fn ($v): bool => is_scalar($v)))
-                : (is_array($wert) ? (string) (reset($wert) ?: '') : $wert);
-            $gesetzt[] = (string) $feld;
-        }
-
-        // Spec 80 A3: KI-Suchbegriffe ersetzen die bisherigen KI-Chips; was der Mensch ergänzt hat, bleibt.
-        $this->eingabe[$scope]['suchbegriffe'] = self::suchbegriffeZusammenfuehren(
-            (array) ($this->eingabe[$scope]['suchbegriffe'] ?? []),
-            (array) ($r['suchbegriffe'] ?? []),
-        );
-
-        $this->leitplankenBefund = [
-            'scope' => $scope,
-            'gesetzt' => $gesetzt,
-            'verworfen' => $r['verworfen'],
-            'ignoriert' => $ignoriert,
-            'unklar' => $r['unklar'],
-            'begruendung' => $r['begruendung'],
-            'confidence' => $r['confidence'],
-        ];
-        $this->fehler = null;
-        $this->meldung = $gesetzt === []
-            ? 'Keine Leitplanke ableitbar — das Briefing nennt keine der geschlossenen Achsen.'
-            : count($gesetzt) . ' Leitplanke(n) vorgeschlagen — bitte prüfen, das Go bleibt bei dir.';
-    }
 
     /**
      * Diktat fürs Briefing: gesprochener Text wird ANGEHÄNGT, nie ersetzt — ein Diktat
@@ -1628,8 +1118,7 @@ class Index extends Component
             return;
         }
 
-        $alt = trim((string) $this->diktatWert($ziel));
-        $this->diktatSetzen($ziel, $alt === '' ? $text : $alt . ' ' . $text);
+        $this->diktatAnhaengen($ziel, $text);
         $this->fehler = null;
         $this->meldung = 'Diktat übernommen — bitte gegenlesen.';
     }
@@ -1640,7 +1129,7 @@ class Index extends Component
      * ist raus, siehe erstellen-tab.blade.php). Sein eigenes Mikro transkribiert selbst
      * (VoiceModal::updatedAudio()) und liefert das Rohtranskript hier an — Richtung also
      * UMGEKEHRT zur vorherigen Fassung (die ging vom alten Diktat-Knopf ZUM Panel). Gleiche
-     * Anhängen-nie-überschreiben-Semantik wie briefDiktatUebernehmen()/diktatSetzen().
+     * Anhängen-nie-überschreiben-Semantik wie briefDiktatUebernehmen()/diktatAnhaengen().
      */
     #[On('voice.diktat-transkribiert')]
     public function agentDiktatUebernehmen(string $scope, string $text): void
@@ -1648,412 +1137,24 @@ class Index extends Component
         if (! in_array($scope, self::SCOPES, true) || trim($text) === '') {
             return;
         }
-        $ziel = 'eingabe.' . $scope . '.brief';
-        $alt = trim((string) $this->diktatWert($ziel));
-        $this->diktatSetzen($ziel, $alt === '' ? $text : $alt . ' ' . $text);
+        $this->diktatAnhaengen('eingabe.' . $scope . '.brief', $text);
         $this->meldung = 'Diktat übernommen — bitte gegenlesen.';
     }
 
-    /** Liest das Whitelist-Ziel; `eingabe.<scope>.brief` ist verschachtelt, der Rest flach. */
-    private function diktatWert(string $ziel): string
+    /**
+     * Text an das Whitelist-Ziel ANHÄNGEN (nie ersetzen). `eingabe.<scope>.brief` lebt im Kind Planung\Brief (Spec 85 C1 PR-4):
+     * dorthin geht der Text per `planung.brief-uebernehmen`, das Kind hängt an. Die flachen Ausgabeform-Briefings (fbBrief/…)
+     * bleiben hier bis E4 (Kurator: Diktat bis E4 komplett im Parent).
+     */
+    private function diktatAnhaengen(string $ziel, string $text): void
     {
         if (str_starts_with($ziel, 'eingabe.')) {
-            $scope = explode('.', $ziel)[1] ?? '';
-
-            return (string) ($this->eingabe[$scope]['brief'] ?? '');
-        }
-
-        return (string) ($this->{$ziel} ?? '');
-    }
-
-    private function diktatSetzen(string $ziel, string $wert): void
-    {
-        if (str_starts_with($ziel, 'eingabe.')) {
-            $scope = explode('.', $ziel)[1] ?? '';
-            if (isset($this->eingabe[$scope])) {
-                $this->eingabe[$scope]['brief'] = $wert;
-            }
+            $this->dispatch('planung.brief-uebernehmen', scope: explode('.', $ziel)[1] ?? '', werte: ['brief_anhaengen' => $text]);
 
             return;
         }
-        $this->{$ziel} = $wert;
-    }
-
-    /** Spec 84 C1-1: Leitplanken-Logik liegt in {@see ReglerParams}; hier nur der Zugang mit dem aktuellen Stand. */
-    private function reglerHelfer(): ReglerParams
-    {
-        return new ReglerParams($this->regler, $this->eingabe);
-    }
-
-    private function reglerParams(string $scope): array
-    {
-        return $this->reglerHelfer()->reglerParams($scope);
-    }
-
-    private function menueAchsenFuer(string $scope): array
-    {
-        return $this->reglerHelfer()->menueAchsenFuer($scope);
-    }
-
-    private function menueLeitplankenFehler(string $scope): ?string
-    {
-        return $this->reglerHelfer()->menueLeitplankenFehler($scope);
-    }
-
-    private function zielVkEur(string $scope): ?float
-    {
-        return $this->reglerHelfer()->zielVkEur($scope);
-    }
-
-    private function effektiverBrief(string $scope): string
-    {
-        return $this->reglerHelfer()->effektiverBrief($scope);
-    }
-
-    /**
-     * #1b Grounding-Preview: zeigt VOR dem Go, welches Wissen/Pairing/Template die Generierung für die
-     * aktuellen Regler ziehen würde — OHNE zu generieren. Ruft denselben Kontext-Bau wie die Generierung
-     * ({@see RecipeGenerationContextService::build}) und legt das `kontext`-Bündel für den Kontext-Inspektor
-     * ab. Fail-soft: eine Preview darf den Editor nie brechen.
-     */
-    public function wissenVorschau(string $scope): void
-    {
-        $team = $this->team();
-        if ($team === null || ! in_array($scope, self::SCOPES, true)) {
-            return;
-        }
-        $brief = $this->effektiverBrief($scope);
-        if ($brief === '') {
-            $this->fehler = 'Für die Wissens-Vorschau erst Titel oder Beschreibung im Tab setzen.';
-
-            return;
-        }
-        try {
-            $ctx = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class)
-                ->build($team, $brief, $this->reglerParams($scope), $scope !== 'rezept');
-            $this->wissenVorschau = is_array($ctx['kontext'] ?? null) ? $ctx['kontext'] : null;
-            $this->fehler = null;
-        } catch (\Throwable $e) {
-            $this->fehler = 'Wissens-Vorschau fehlgeschlagen: ' . $e->getMessage();
-        }
-    }
-
-    // ── „KI-Kopf" — Concept-Plan vorab ausarbeiten (Etappe 2b, geplanter Pfad) ──
-
-    /**
-     * „KI-Kopf" (Etappe 2b): arbeitet aus dem Concept-Briefing einen vollständigen Plan-Entwurf aus
-     * ({@see ConceptGeneratorService::planAusBrief} → Draft-Concept + Gerüst + kreative Canvas + LEERE
-     * Fan-out-Slots) und öffnet den vollen inline-Conceptor direkt auf „Konzept & Planung" ({@see
-     * Concepter\Editor::oeffnen} Start-Tab 'konzept') zur Prüfung/Korrektur. Startet KEINE Kaskade —
-     * der geprüfte Plan geht später als `existing_concept_id` in den Go (nächster Chunk). Nur für den
-     * Concept-Scope sinnvoll (ein Concept ist ein Menü, kein Einzelrezept).
-     *
-     * Fail-soft (Nordstern): ein Fehler (leerer Brief / KI aus) wird gesagt, nicht geschluckt — der
-     * Absender ist ein Mensch, der korrigieren kann.
-     */
-    public function kiKopf(ConceptGeneratorService $svc, PlanningSessionService $sessions): void
-    {
-        $team = $this->team();
-        $session = $this->aktiveSession();
-        if ($team === null || $session === null) {
-            $this->fehler = 'Kein Team/Session — KI-Kopf nicht möglich.';
-
-            return;
-        }
-        $brief = $this->effektiverBrief('concept');
-        if ($brief === '') {
-            $this->fehler = 'Für den KI-Kopf erst ein Konzept-Briefing eingeben.';
-
-            return;
-        }
-        // Menü-Leitplanken zuerst validieren (wie beim Go) — der KI-Kopf darf nicht mit einer
-        // stillschweigend verworfenen Zahl-Vorgabe generieren.
-        if (($menueFehler = $this->menueLeitplankenFehler('concept')) !== null) {
-            $this->fehler = $menueFehler;
-
-            return;
-        }
-        // Concept-Briefing auf die Session spiegeln + persistieren (nicht verlieren) — wie beim Go.
-        $this->form['brief'] = (string) ($this->eingabe['concept']['brief'] ?? '');
-        $this->form['creative_mode'] = (string) ($this->eingabe['concept']['creative_mode'] ?? 'voll_kreativ');
-        $this->speichern($sessions);
-
-        $titel = trim((string) ($this->eingabe['concept']['titel'] ?? ''));
-        try {
-            // Menü-Leitplanken (Gänge/Preis-Korridor/Quoten/Balance/Buffet) an den Plan durchreichen —
-            // sonst arbeitet der plan-first-Standard-Pfad ohne sie (Bug: nur der Schnell-Go über den Job
-            // reichte sie bisher). Gleiche menue_*-Teilmenge wie dispatchConceptStep. $via bleibt 'ui'
-            // (der created_via-Marker `concept_plan_ui` wird andernorts erwartet — nicht verändern).
-            $plan = $svc->planAusBrief($team, $brief, [], $titel !== '' ? $titel : null, 'ui', $this->menueAchsenFuer('concept'));
-        } catch (\Throwable $e) {
-            $this->fehler = 'KI-Kopf fehlgeschlagen: ' . $e->getMessage();
-
-            return;
-        }
-        $this->fehler = null;
-        // Draft-ID merken: der nächste Concept-Go referenziert diesen geprüften Plan statt neu zu
-        // generieren („Beide Pfade behalten", Etappe 2b). Verbraucht wird sie in goKaskade.
-        $this->planConceptId = (int) $plan['concept']->id;
-        // #53 persistent: an die Session schreiben, damit der geprüfte Plan einen Reload übersteht
-        // (rehydriert in ladeForm). Fail-soft: kippt die Persistenz, bleibt der Plan wenigstens in der
-        // laufenden Session (transiente Prop) nutzbar — ein Speicher-Fehler darf den KI-Kopf nicht kippen.
-        try {
-            app(PlanningSessionService::class)->setzePlanConcept($team, (int) $session->id, $this->planConceptId);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('[Planung] plan_concept_id-Persistenz übersprungen (KI-Kopf bleibt für diese Session nutzbar) — evtl. Migration fehlt', ['error' => $e->getMessage()]);
-        }
-        // Inline-Plan-Panel: die Semantik-Felder in die Fläche laden — der Plan bleibt SICHTBAR in der
-        // Leitstelle (kein Wegsprung mehr in den Conceptor). „Ein Ort, ein Kontext": Leitidee/Menü hier
-        // prüfen + ändern (fließt in die LLM), dann „Go aus geprüftem Plan". Der Conceptor bleibt als
-        // optionaler Tiefen-Editor per Knopf im Panel erreichbar (Entscheid 2026-08-18).
-        $this->ladePlanForm();
-        $this->meldung = 'KI-Kopf: Plan ausgearbeitet — prüfe/ändere Leitidee & Menü direkt hier, dann „Go aus geprüftem Plan".';
-    }
-
-    /**
-     * Lädt die editierbaren Semantik-Skalare des vorbereiteten Plans aus der `concept.plan`-Canvas in
-     * {@see $planForm} (leert sie, wenn kein Plan/kein Canvas). Rein lesend, fail-soft: ein fehlender
-     * Canvas/Concept lässt das Panel leer, kippt aber nichts.
-     */
-    private function ladePlanForm(): void
-    {
-        $this->planForm = [];
-        $team = $this->team();
-        if ($team === null || (int) ($this->planConceptId ?? 0) <= 0) {
-            return;
-        }
-        $canvas = app(CanvasService::class)->find('concept', 'concept', (int) $this->planConceptId);
-        $werte = $canvas !== null ? app(CanvasService::class)->werte($canvas) : [];
-        foreach (['name_claim', 'leitidee', 'usp_eignung', 'inszenierung', 'intern'] as $key) {
-            $this->planForm[$key] = (string) ($werte[$key] ?? '');
-        }
-    }
-
-    /**
-     * Speichert die inline editierten Semantik-Felder ({@see $planForm}) zurück in die `concept.plan`-
-     * Canvas des vorbereiteten Plans. Diese Felder sind der LLM-Kontext für die Concept-/Gericht-Erzeugung
-     * — eine Änderung hier steuert also direkt, was beim nächsten Go entsteht („ein Ort, ein Kontext").
-     * Fail-soft (Nordstern): ist der Plan inzwischen weg, wird das GESAGT statt still geschluckt.
-     */
-    public function planFeldSpeichern(): void
-    {
-        $team = $this->team();
-        if ($team === null || (int) ($this->planConceptId ?? 0) <= 0) {
-            $this->fehler = 'Kein vorbereiteter Plan — nichts zu speichern.';
-
-            return;
-        }
-        $concept = FoodAlchemistConcept::where('team_id', $team->id)->whereKey($this->planConceptId)->first();
-        if ($concept === null) {   // Plan gelöscht/Team-fremd → Referenz still lösen, Panel schließt sich
-            $this->planConceptId = null;
-            $this->planForm = [];
-            $this->fehler = 'Der vorbereitete Plan ist nicht mehr da — bitte neu ausarbeiten.';
-
-            return;
-        }
-        $canvas = app(CanvasService::class)->canvasFor($team, 'concept', 'concept', (int) $concept->id);
-        app(CanvasService::class)->saveSkalare($canvas, $this->planForm);
-        $this->fehler = null;
-        $this->meldung = 'Plan aktualisiert — die geänderte Leitidee & co. fließen beim Erzeugen in die Gerichte.';
-    }
-
-    /**
-     * Lese-Anzeige des vorbereiteten Plans für das Inline-Panel: Name, Geschmackswelten (repeatable) und
-     * die geplanten Menü-Positionen ({@see FoodAlchemistConcept::slots} — Rolle/Titel/Pflicht). `null`,
-     * wenn kein Plan vorbereitet ist. Rein lesend (2 Queries) — im Render aufgerufen, fail-soft.
-     *
-     * @return array{name:string,geschmackswelten:array<int,array<string,mixed>>,speisen:array<int,array<string,mixed>>}|null
-     */
-    public function planVorschau(): ?array
-    {
-        $team = $this->team();
-        if ($team === null || (int) ($this->planConceptId ?? 0) <= 0) {
-            return null;
-        }
-        $concept = app(ConceptService::class)->detail($team, (int) $this->planConceptId);
-        if ($concept === null) {
-            return null;
-        }
-        $canvas = app(CanvasService::class)->find('concept', 'concept', (int) $concept->id);
-        $werte = $canvas !== null ? app(CanvasService::class)->werte($canvas) : [];
-
-        return [
-            'name' => (string) $concept->name,
-            'geschmackswelten' => is_array($werte['geschmackswelten'] ?? null) ? $werte['geschmackswelten'] : [],
-            'speisen' => $concept->slots->map(fn ($s) => [
-                'rolle' => (string) ($s->role ?? ''),
-                'titel' => (string) ($s->title ?? ''),
-                'pflicht' => (bool) $s->is_pflicht,
-            ])->values()->all(),
-        ];
-    }
-
-    /**
-     * Den vorbereiteten KI-Kopf-Plan verwerfen und zurück auf den Schnell-Pfad wechseln („Beide Pfade
-     * behalten", Etappe 2b): nur die transiente Referenz wird gelöst — der Concept-Go generiert dann
-     * wieder frisch aus dem Briefing. Das Draft-Concept selbst bleibt bestehen (löscht nichts).
-     */
-    public function planVerwerfen(): void
-    {
-        $this->planConceptId = null;
-        // #53 persistent: auch den gespeicherten Zeiger lösen, sonst holt der Reload den verworfenen
-        // Plan wieder (rehydrate in ladeForm). Das Draft-Concept selbst bleibt bestehen (löscht nichts).
-        $session = $this->aktiveSession();
-        if ($session !== null && $session->plan_concept_id !== null && ($team = Auth::user()?->currentTeamRelation) !== null) {
-            try {
-                app(PlanningSessionService::class)->setzePlanConcept($team, (int) $session->id, null);
-            } catch (\Throwable) {
-                // Persistenz-Fehler darf das Verwerfen nicht kippen — die Prop ist bereits null.
-            }
-        }
-        $this->meldung = 'Vorbereiteter Plan verworfen — der Go generiert wieder frisch aus dem Briefing.';
-        $this->fehler = null;
-    }
-
-    // ── „Go" — Tiefen-Leiter über den geteilten Kaskaden-Motor ─────────
-
-    /**
-     * Go → in-place Generierung über {@see PlanningCascadeService}. `$scope` = Einstiegs-Stufe
-     * (`rezept`|`gericht`|`concept`). Sammelt die Richtungs-Regler (rezept/gericht), persistiert
-     * sie als `generation_params` (Fan-out-Vererbung) und reicht sie als Lauf-`params` an den Motor.
-     * Startet im Hintergrund; die Fläche pollt {@see pruefeLauf}. Kein Redirect.
-     */
-    public function goKaskade(string $scope, PlanningCascadeService $cascade, PlanningSessionService $svc): void
-    {
-        $team = $this->team();
-        $session = $this->aktiveSession();
-        if ($team === null || $session === null || ! in_array($scope, self::SCOPES, true)) {
-            return;
-        }
-        $vk = $scope !== 'rezept';
-        // Ziel-VK-Eingabe (nur wo VK) wird GESAGT statt still verworfen — der Absender ist ein
-        // Mensch, der 8,5 statt 850 meinte, und kann korrigieren (L8b-2, Spiegel VkGeneratorModal).
-        if ($vk && trim((string) ($this->regler[$scope]['ziel_vk'] ?? '')) !== '' && $this->zielVkEur($scope) === null) {
-            $this->fehler = 'Ziel-VK: bitte einen Netto-Preis je Portion zwischen 0,50 € und 500,00 € angeben (z. B. 8,50) — oder das Feld leer lassen.';
-
-            return;
-        }
-        // Menü-Leitplanken (nur Concept): eine mistgetippte Zahl wird GESAGT statt still verworfen —
-        // derselbe Grundsatz wie bei Ziel-VK (der Absender ist ein Mensch, der korrigieren kann).
-        if (($menueFehler = $this->menueLeitplankenFehler($scope)) !== null) {
-            $this->fehler = $menueFehler;
-
-            return;
-        }
-        // Kontext des Start-Tabs auf die Session spiegeln (Dashboard-Anzeige + creative_mode) und persistieren.
-        $this->form['brief'] = (string) ($this->eingabe[$scope]['brief'] ?? '');
-        $this->form['creative_mode'] = (string) ($this->eingabe[$scope]['creative_mode'] ?? 'voll_kreativ');
-        $this->speichern($svc);
-        $session = $this->aktiveSession();
-        if ($session === null) {
-            return;
-        }
-        // NUR der Start-Tab zählt: seine Leitplanken werden persistiert und propagieren die ganze
-        // Kaskade nach unten (Start-Tab gilt für alles darunter — User-Entscheid 2026-08-14).
-        $params = $this->reglerParams($scope);
-        // FAIL-SOFT: die Regler fließen ohnehin über die Lauf-`params` in den Depth-1-Job — die
-        // Session-Persistenz ist NUR für die Fan-out-Vererbung. Kippt sie, darf der Go NICHT sterben.
-        try {
-            $svc->setGenerationParams($team, $session->id, $params);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('[Planung] setGenerationParams übersprungen (Fan-out-Vererbung aus) — evtl. Migration fehlt', ['error' => $e->getMessage()]);
-        }
-        // Spec 80 A4: ohne Suchbegriffe (Leitplanken nie abgeleitet) einmal nachziehen — derselbe Aufruf,
-        // nur die Begriffe werden übernommen, die Regler bleiben unangetastet. Fail-soft: ohne Begriffe
-        // sucht der Generator wie bisher mit dem Briefing.
-        if (in_array($scope, ['rezept', 'gericht'], true) && empty($this->eingabe[$scope]['suchbegriffe'])
-            && trim((string) ($this->eingabe[$scope]['brief'] ?? '')) !== '') {
-            try {
-                $abgeleitet = app(BriefingLeitplankenService::class)
-                    ->ausBriefing($team, (string) $this->eingabe[$scope]['brief'], null, $scope);
-                $this->eingabe[$scope]['suchbegriffe'] = (array) ($abgeleitet['suchbegriffe'] ?? []);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('[Planung] Suchbegriffe beim Go nicht ableitbar', ['error' => $e->getMessage()]);
-            }
-        }
-        $suchbegriffe = $this->suchbegriffeFuerLauf($scope);
-        try {
-            $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
-                ->setzeSuchbegriffe($team, (int) $session->id, $scope, (array) ($this->eingabe[$scope]['suchbegriffe'] ?? []));
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('[Planung] Suchbegriffe nicht gespeichert — evtl. Migration fehlt', ['error' => $e->getMessage()]);
-        }
-        // L5: Titel als Namens-Anker — getippten Titel getrennt vom Brief in die Lauf-Params geben
-        // (NICHT in die persistierten Session-Params, sonst erbte JEDES Fan-out-Kind den Gericht-Titel
-        // als Namen). Nur der Depth-1-Job sieht `titel_vorgabe`; der Generator nimmt ihn als Namen.
-        $laufParams = $params;
-        $titelVorgabe = trim((string) ($this->eingabe[$scope]['titel'] ?? ''));
-        if ($titelVorgabe !== '' && $scope !== 'concept') {   // concept: Name kommt aus dem KI-Kopf (name_claim)
-            $laufParams['titel_vorgabe'] = $titelVorgabe;
-        }
-        // Foodpairing-Composer: gezielte Seed-Anker NUR in die Lauf-Params (Depth-1-lokal, exakt wie
-        // titel_vorgabe) — NIE in setGenerationParams, sonst erbte jedes Fan-out-Kind die Anker.
-        // Quelle: das persistente $composerSeedPin (composerUebernehmen → Erstellen-Tab, überlebt den
-        // Tab-Wechsel), nur für den passenden Scope. Pin nach Verwendung leeren → kein Re-Seed bei
-        // späterem unabhängigem Go.
-        $seed = [];
-        $seedAusPin = false;
-        if (($this->composerSeedPin['scope'] ?? null) === $scope) {
-            $seed = array_values($this->composerSeedPin['slugs'] ?? []);
-            $seedAusPin = true;
-        }
-        if ($seed !== [] && $scope !== 'concept') {
-            $laufParams['seed_anker'] = array_values($seed);
-        }
-        // Spec 80: Suchbegriffe NUR Depth-1 (wie titel_vorgabe) — Kind-Rezepte bekommen später die
-        // Begriffe ihrer Komponente (Teil B), nicht die der Wurzel.
-        if ($suchbegriffe !== [] && $scope !== 'concept') {
-            $laufParams['suchbegriffe'] = $suchbegriffe;
-        }
-        if ($seedAusPin) {
-            $this->composerSeedPin = [];
-        }
-        $optionen = [
-            'created_via' => 'plan_go',
-            'brief' => $this->effektiverBrief($scope),
-            'params' => $laufParams,
-            'voll_anreichern' => (bool) ($this->regler[$scope]['voll_anreichern'] ?? true),   // Default AN (s. $reglerDefaults)
-            // Gericht: erst textlicher Bauplan (inkl. Komponenten), Rezept-Draft erst nach Blitz/Freigabe.
-            'proposal_first' => $scope === 'gericht',
-            // Spec 80 B1: Basisrezept erst als Komponenten-Plan (Mensch bestätigt), dann Bau.
-            'plan_first' => $scope === 'rezept',
-        ];
-        // GEPLANTER PFAD (Etappe 2b, „Beide Pfade behalten"): wurde vorab ein KI-Kopf-Plan ausgearbeitet
-        // und im Conceptor geprüft ($planConceptId), referenziert der Concept-Go dieses Draft-Concept
-        // (existing_concept_id → kein neuer GenerateConceptJob), statt neu zu generieren. Ohne Plan =
-        // SCHNELL-PFAD (frische Generierung). FAIL-SOFT: ist der Plan inzwischen weg (gelöscht/Team-fremd),
-        // NICHT hart blocken — Prop still verwerfen und frisch generieren (ein leerer/toter Plan kippt den Go nicht).
-        if ($scope === 'concept' && (int) ($this->planConceptId ?? 0) > 0) {
-            if (FoodAlchemistConcept::where('team_id', $team->id)->whereKey($this->planConceptId)->exists()) {
-                $optionen['existing_concept_id'] = (int) $this->planConceptId;
-            } else {
-                $this->planConceptId = null;
-            }
-        }
-        try {
-            $run = $cascade->starteKaskade($team, $scope, $session, (string) ($this->eingabe[$scope]['creative_mode'] ?? 'voll_kreativ'), $optionen);
-            $this->laufId = $run->id;
-            $this->laeuft = true;
-            // Verbrauch AN DEN SCOPE binden: nur der Concept-Go verbraucht den KI-Kopf-Plan. Sonst löschte ein
-            // Basisrezept-/Gericht-Go den vorbereiteten Concept-Plan, obwohl er für diesen Lauf nie gelesen wurde.
-            if ($scope === 'concept') {
-                $this->planConceptId = null;    // Plan verbraucht (referenziert ODER frisch generiert) → nächster Go Schnell-Pfad
-                // #53 persistent: auch den gespeicherten Zeiger lösen (Plan verbraucht) — sonst böte ein
-                // Reload nach dem Go den bereits verbrauchten Plan wieder an. Fail-soft.
-                if ($session->plan_concept_id !== null) {
-                    try {
-                        app(PlanningSessionService::class)->setzePlanConcept($team, (int) $session->id, null);
-                    } catch (\Throwable) {
-                        // Persistenz-Fehler darf den bereits gestarteten Lauf nicht kippen.
-                    }
-                }
-            }
-            $this->wissenVorschau = null;   // neue Kaskade → Vorschau weg; die Steps zeigen dann das ECHTE Wissen (#1a)
-            $this->meldung = 'Kaskade gestartet — Entwurf wird erzeugt …';
-            $this->fehler = null;
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
+        $alt = trim((string) ($this->{$ziel} ?? ''));
+        $this->{$ziel} = $alt === '' ? $text : $alt . ' ' . $text;
     }
 
     public function landingKaskadenMap(?Team $team, array $sessionIds): array
@@ -2122,13 +1223,6 @@ class Index extends Component
 
             return null;
         }
-        if (trim((string) ($this->eingabe[$scope]['brief'] ?? '')) === '') {
-            $labels = array_values(array_filter(array_map(
-                fn ($a) => trim((string) ($a['label'] ?? $a['slug'] ?? '')),
-                $this->composerAnker,
-            )));
-            $this->eingabe[$scope]['brief'] = 'Foodpairing-Kreation auf Basis von: ' . implode(', ', $labels) . '.';
-        }
 
         return $slugs;
     }
@@ -2145,7 +1239,12 @@ class Index extends Component
         if ($slugs === null) {
             return;
         }
-        $this->composerSeedPin = ['scope' => $scope, 'slugs' => $slugs];
+        // Spec 85 C1 PR-4: Brief-Vorbefüllung (nur wenn leer) und Seed-Pin gehen an Planung\Brief, das den Go macht.
+        $labels = array_values(array_filter(array_map(fn ($a) => trim((string) ($a['label'] ?? $a['slug'] ?? '')), $this->composerAnker)));
+        $this->dispatch('planung.brief-uebernehmen', scope: $scope, werte: [
+            'brief_wenn_leer' => 'Foodpairing-Kreation auf Basis von: ' . implode(', ', $labels) . '.',
+            'seed_pin' => $slugs,
+        ]);
     }
 
     // ── Datenbeschaffung ───────────────────────────────────────────────
@@ -2258,25 +1357,10 @@ class Index extends Component
             ? app(PlanningCascadeService::class)->ownerKontext($team, (int) $active->id)
             : null;
 
-        // Spec 55 Nachtrag (Agent-am-Brief): der Formularstand geht bei JEDEM Render an alle
-        // gemounteten Agenten-Panels (Browser-Event, kein `#[Reactive]`-Prop — Livewire kennt
-        // das für Geschwister-Komponenten nicht). EIN Dispatch-Ort statt an jeder Mutations-
-        // Stelle (reglerPill/updated/leitplankenAusBriefing/...) einzeln — `render()` läuft
-        // nach JEDER Interaktion, ein verpasster Aufrufer kann die Panels nicht veralten
-        // lassen. Nur die AGENT_SCHREIBBARE_REGLER-Teilmenge + Brief je Scope, nicht der ganze
-        // Regler-Satz (Payload klein halten, kein Datenleck an Felder, die der Agent nie liest).
-        foreach (self::SCOPES as $scope) {
-            $this->dispatch('voice.formularstand-aktualisiert', scope: $scope,
-                regler: array_intersect_key($this->regler[$scope] ?? [], array_flip(self::AGENT_SCHREIBBARE_REGLER)),
-                brief: (string) ($this->eingabe[$scope]['brief'] ?? ''),
-            );
-        }
+        // Spec 55 Nachtrag: den Formularstand an die Agenten-Panels dispatcht Planung\Brief bei jedem eigenen Render (Spec 85 C1 PR-4).
 
         return view('foodalchemist::livewire.planung.index', [
             ...$composerDaten, ...$reiter->auswahl($team, $this->editorTab),
-            // Spec 55: Agenten-Panel — sichtbar, wenn das Team es nicht abgeschaltet hat
-            // (Default AN). Eigener Schlüssel, siehe TeamSettingsService::voiceAgentPanelPlanung().
-            'agentPanelSichtbar' => $team !== null && app(TeamSettingsService::class)->voiceAgentPanelPlanung($team),
             'sessions' => $sessions,
             'baum' => $baum,
             'kaskaden' => $kaskaden,
@@ -2287,8 +1371,6 @@ class Index extends Component
             'kiStatus' => $kiStatus,
             'irgendeinLaeuft' => $irgendeinLaeuft,
             'laufendeIds' => $laufendeIds,
-            // CQ 2.5b: Saison, Anlass, Eventtyp, Service-Art aus den DB-Vokabularen (Einstellungen › Konzepter-Dimensionen)
-            'planungVokabular' => collect(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::MODELLE)->map(fn ($m, $feld) => app(\Platform\FoodAlchemist\Support\Planung\PlanungVokabular::class)->optionen($team, $feld))->all(),
             'active' => $active,
             'composerFocus' => $this->composerFocus,
             'composerFokusLabel' => $composerFokusLabel,

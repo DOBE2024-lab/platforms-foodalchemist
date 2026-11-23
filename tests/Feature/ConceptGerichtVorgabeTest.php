@@ -5,6 +5,7 @@ use Livewire\Livewire;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Jobs\MaterializeConceptIdeaJob;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Concepter\Editor as ConcepterEditor;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
@@ -198,8 +199,7 @@ it('Leitstelle: Plan-Panel zeigt Positionen, speichert die Vorgabe und hängt ei
     $leer = ($this->leer)(2, ['role' => 'Hauptgang']);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Green & Tasty']);
 
-    $c = Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    $c = Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->call('bestehendesConceptWaehlen', $this->concept->id)
         ->assertSeeHtml('data-plan-positionen')
         ->assertSee('[VOR] Rote Bete')
@@ -220,8 +220,7 @@ it('Leitstelle: eine Position aus einem anderen Concept lässt sich nicht über 
     $fremd = $this->makeConceptSlot($anderes, ['wording' => null]);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Green & Tasty']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->call('bestehendesConceptWaehlen', $this->concept->id)
         ->call('planVorgabeSpeichern', $fremd->id, VORGABE_KAROTTE);
 

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
 use Platform\FoodAlchemist\Services\VoiceCommandService;
@@ -83,8 +84,7 @@ it('Planung zeigt die DB-Auswahl und rehydriert eine Alt-Sitzung mit occasion=ko
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Tagung', 'brief' => 'Lunch für 80']);
     DB::table('foodalchemist_planning_sessions')->where('id', $session->id)->update(['generation_params' => json_encode(['occasion' => 'konferenz', 'serviceform' => 'buffet'])]);
 
-    Livewire::test(PlanungIndex::class)->call('oeffne', $session->id)
-        ->assertSet('regler.gericht.eventtyp', 'konferenz')
+    Livewire::test(Brief::class, ['sessionId' => $session->id])        ->assertSet('regler.gericht.eventtyp', 'konferenz')
         ->assertSet('regler.gericht.occasion', '')
         ->assertSet('regler.gericht.serviceform', 'buffet')
         ->assertSee('Konferenz/Tagung')->assertSee('Flying Service')->assertSee('Apéro/Empfang');

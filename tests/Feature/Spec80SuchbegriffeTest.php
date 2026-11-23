@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Jobs\GenerateRecipeJob;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\BriefingLeitplankenService;
@@ -72,7 +73,7 @@ it('normalisiert die KI-Suchbegriffe: Gruppen, Mengen raus, Dubletten einmal', f
 it('Leitplanken füllen die Chips; eigene Begriffe überleben ein erneutes Ableiten', function () {
     ($this->stub)($this->petersilie);
 
-    $c = Livewire::test(PlanungIndex::class)
+    $c = Livewire::test(Brief::class)
         ->set('eingabe.rezept.brief', 'Petersilienpüree, grün, mit Petersilienmatte eingefärbt')
         ->call('leitplankenAusBriefing', 'rezept');
 
@@ -99,8 +100,7 @@ it('Go: Suchbegriffe gehen geordnet in den Lauf und an die Sitzung, nicht in die
     ($this->stub)($this->petersilie);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Petersilie']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Petersilienpüree, grün')
         ->set('eingabe.rezept.suchbegriffe', [
             ['t' => 'grün halten', 'g' => 'techniken', 'q' => 'ki'],
@@ -120,8 +120,7 @@ it('Go ohne Chips leitet die Suchbegriffe einmal nach (Regler bleiben unangetast
     ($this->stub)(['leitplanken' => ['level' => 'klassisch'], 'suchbegriffe' => ['zutaten' => ['Petersilienwurzel']]]);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Petersilie']);
 
-    $c = Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    $c = Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Petersilienpüree, grün')
         ->call('goKaskade', 'rezept');
 

@@ -7,6 +7,7 @@ use Platform\FoodAlchemist\Jobs\EnrichRecipeJob;
 use Platform\FoodAlchemist\Jobs\GenerateConceptJob;
 use Platform\FoodAlchemist\Jobs\GenerateRecipeJob;
 use Platform\FoodAlchemist\Jobs\GenerateDishProposalJob;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistBriefTemplate;
@@ -67,8 +68,8 @@ it('setGenerationParams: filtert auf die Whitelist und macht leere Auswahl zu nu
 });
 
 it('Basisrezept: reglerParams nimmt Ziel-Menge + Einheit statt Pax (scope=rezept)', function () {
-    $inst = Livewire::test(PlanungIndex::class)->instance();
-    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, PlanungIndex::class);
+    $inst = Livewire::test(Brief::class)->instance();   // Spec 85 C1 PR-4: Leitplanken im Kind
+    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, Brief::class);
 
     $inst->regler['rezept']['ziel_menge'] = '2,5';   // Dezimal mit Komma
     $inst->regler['rezept']['ziel_einheit'] = 'l';
@@ -83,8 +84,8 @@ it('Basisrezept: reglerParams nimmt Ziel-Menge + Einheit statt Pax (scope=rezept
 });
 
 it('Basisrezept: verdeckte Pax/Portion laufen nicht neben der Charge in den Lauf (demo Lauf #79)', function () {
-    $inst = Livewire::test(PlanungIndex::class)->instance();
-    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, PlanungIndex::class);
+    $inst = Livewire::test(Brief::class)->instance();   // Spec 85 C1 PR-4: Leitplanken im Kind
+    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, Brief::class);
 
     // Pax/Portion haben im Basisrezept-Tab kein Feld — kamen sie per Assistent/Leitplanke in die Regler,
     // liefen sie vorher unsichtbar mit (100 × 80 g = 8 kg neben ziel_menge 2 kg).
@@ -110,8 +111,8 @@ it('Basisrezept: verdeckte Pax/Portion laufen nicht neben der Charge in den Lauf
 });
 
 it('Basisrezept: »nur Bestand« aus dem Regler erreicht den Lauf statt still hybrid (demo Session #138)', function () {
-    $inst = Livewire::test(PlanungIndex::class)->instance();
-    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, PlanungIndex::class);
+    $inst = Livewire::test(Brief::class)->instance();   // Spec 85 C1 PR-4: Leitplanken im Kind
+    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, Brief::class);
 
     expect($call('rezept')['bestand'])->toBe('hybrid');            // Default unverändert
 
@@ -128,8 +129,8 @@ it('Basisrezept: »nur Bestand« aus dem Regler erreicht den Lauf statt still hy
 });
 
 it('Leitplanken-Hygiene: Concept nutzt nur den Menü-Preis-Korridor (kein Portions-VK, kein Ziel-Portion)', function () {
-    $inst = Livewire::test(PlanungIndex::class)->instance();
-    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, PlanungIndex::class);
+    $inst = Livewire::test(Brief::class)->instance();   // Spec 85 C1 PR-4: Leitplanken im Kind
+    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, Brief::class);
 
     // Beide scope-fremden Achsen gesetzt — sie dürfen NICHT in den Concept-Prompt fließen …
     $inst->regler['concept']['ziel_vk'] = '8,50';
@@ -150,14 +151,13 @@ it('Leitplanken-Hygiene: Concept nutzt nur den Menü-Preis-Korridor (kein Portio
 it('Leitstelle: goKaskade reicht die Regler als params UND persistiert sie als generation_params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Rotwein-Reduktion', 'brief' => 'Dunkle Reduktion.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Dunkle Reduktion.')
         ->set('regler.rezept.level', 'gehoben')
         ->set('regler.rezept.convenience', 'from_scratch')
         ->set('regler.rezept.bio_praeferenz', 'bio')      // → bio-Bool true
         ->call('goKaskade', 'rezept')
-        ->assertSet('laeuft', true)
+        ->assertDispatched('planung.lauf-gestartet')
         ->assertNoRedirect();
 
     // Leitplanken an der Session (für den Fan-out) — bio-Bool aus der dreiwertigen Präferenz.
@@ -290,16 +290,16 @@ it('Cockpit rendert die Regler-Leitplanken + die freie Erstell-Leiste (Blade kom
 
     Livewire::test(PlanungIndex::class)
         ->call('oeffne', $session->id)
+        ->assertSeeHtml('data-frei-rezept');         // freie 1-Klick-Erstellung (Board)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4: Erstell-Reiter im Kind
         ->assertSeeHtml('data-planung-regler')      // volle Regler-Fläche im Planung-Tab
-        ->assertSeeHtml('data-frei-rezept')          // freie 1-Klick-Erstellung
         ->assertSeeHtml('data-planung-ziel-vk');     // Gericht-Achse Ziel-VK
 });
 
 it('Etappe 2a: Concept-Go persistiert die Menü-Leitplanken (Gänge + Zielpreis-Korridor je Person) als generation_params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Sommer-Menü', 'brief' => 'Vier Gänge, mediterran.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Vier Gänge, mediterran.')
         ->set('regler.concept.menue_gaenge', '4')
         ->set('regler.concept.menue_preis_min', '35,00')
@@ -320,8 +320,7 @@ it('Etappe 2a: Concept-Go persistiert die Menü-Leitplanken (Gänge + Zielpreis-
 it('Concept-Typ Buffet (#35): menue_typ=buffet wird als generation_param persistiert (Fan-out-Erbe)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Grill-Buffet', 'brief' => 'Sommerliches Grill-Buffet.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Sommerliches Grill-Buffet.')
         ->set('regler.concept.menue_typ', 'buffet')
         ->set('regler.concept.menue_gaenge', '6')
@@ -337,8 +336,7 @@ it('Concept-Typ Buffet (#35): menue_typ=buffet wird als generation_param persist
 it('Concept-Typ Menü (#35): Default menue_typ=menue setzt KEINEN generation_param (byte-identisch)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Menü', 'brief' => 'Vier Gänge.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Vier Gänge.')
         ->set('regler.concept.menue_typ', 'menue')
         ->call('goKaskade', 'concept')
@@ -350,8 +348,7 @@ it('Concept-Typ Menü (#35): Default menue_typ=menue setzt KEINEN generation_par
 it('Etappe 2a: Menü-Leitplanken sind Concept-only — am Gericht-Tab fließen menue_*-Felder NICHT in die Params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Gericht', 'brief' => 'Ein Teller.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Ein Teller.')
         ->set('regler.gericht.menue_gaenge', '4')            // gesetzt, aber Gericht-Scope ignoriert Menü-Achsen
         ->set('regler.gericht.menue_preis_ziel', '45,00')
@@ -366,12 +363,11 @@ it('Etappe 2a: Menü-Leitplanken sind Concept-only — am Gericht-Tab fließen m
 it('Etappe 2a: mistgetippter Menü-Preis am Concept wird GESAGT (fehler), kein Lauf gestartet', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Menü', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'x')
         ->set('regler.concept.menue_preis_ziel', 'viereuro')   // unparsbar
         ->call('goKaskade', 'concept')
-        ->assertSet('laeuft', false)                            // kein Lauf
+        ->assertNotDispatched('planung.lauf-gestartet')                            // kein Lauf
         ->assertNotSet('fehler', null);                         // Absender wird korrigiert statt still verworfen
 
     expect(FoodAlchemistCascadeRun::where('planning_session_id', $session->id)->count())->toBe(0);
@@ -380,8 +376,7 @@ it('Etappe 2a: mistgetippter Menü-Preis am Concept wird GESAGT (fehler), kein L
 it('Etappe 2a: Concept-Tab rendert die Menü-Leitplanken-Sektion (Gänge + Korridor-Felder)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'X', 'brief' => 'y']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4
         ->assertSeeHtml('data-menue-leitplanken')
         ->assertSeeHtml('data-menue-gaenge')
         ->assertSeeHtml('data-menue-preis-ziel');
@@ -390,8 +385,7 @@ it('Etappe 2a: Concept-Tab rendert die Menü-Leitplanken-Sektion (Gänge + Korri
 it('Etappe 2a Teil 2: Concept-Go persistiert die Diät-Quoten (Vegan-/Vegetarisch-Anteil) als _pct-Params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Menü', 'brief' => 'Grüner Fokus.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Grüner Fokus.')
         ->set('regler.concept.menue_quote_vegan', '30')
         ->set('regler.concept.menue_quote_vegetarisch', '50 %')   // %-Zeichen + Space werden tolerant gestrippt
@@ -407,8 +401,7 @@ it('Etappe 2a Teil 2: Concept-Go persistiert die Diät-Quoten (Vegan-/Vegetarisc
 it('Etappe 2a Teil 2: Diät-Quoten sind Concept-only — am Gericht-Tab fließen sie NICHT in die Params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Gericht', 'brief' => 'Ein Teller.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Ein Teller.')
         ->set('regler.gericht.menue_quote_vegan', '30')            // gesetzt, aber Gericht-Scope ignoriert Menü-Achsen
         ->call('goKaskade', 'gericht')
@@ -422,12 +415,11 @@ it('Etappe 2a Teil 2: Diät-Quoten sind Concept-only — am Gericht-Tab fließen
 it('Etappe 2a Teil 2: mistgetippter Diät-Anteil am Concept wird GESAGT (fehler), kein Lauf gestartet', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Menü', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'x')
         ->set('regler.concept.menue_quote_vegan', '150')           // außerhalb 0–100
         ->call('goKaskade', 'concept')
-        ->assertSet('laeuft', false)                               // kein Lauf
+        ->assertNotDispatched('planung.lauf-gestartet')                               // kein Lauf
         ->assertNotSet('fehler', null);                            // Absender wird korrigiert statt still verworfen
 
     expect(FoodAlchemistCascadeRun::where('planning_session_id', $session->id)->count())->toBe(0);
@@ -436,8 +428,7 @@ it('Etappe 2a Teil 2: mistgetippter Diät-Anteil am Concept wird GESAGT (fehler)
 it('Etappe 2a Teil 2: Concept-Tab rendert die Diät-Quoten-Felder (Anteil ≠ harter Ausschluss)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'X', 'brief' => 'y']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4
         ->assertSeeHtml('data-menue-diaet-quoten')
         ->assertSeeHtml('data-menue-quote-vegan')
         ->assertSeeHtml('data-menue-quote-vegetarisch');
@@ -446,8 +437,7 @@ it('Etappe 2a Teil 2: Concept-Tab rendert die Diät-Quoten-Felder (Anteil ≠ ha
 it('Etappe 2a Rest: Concept-Go persistiert die Portfolio-Balance (Menü-Vielfalt) als menue_balance-Param', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Menü', 'brief' => 'Bunt gemischt.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Bunt gemischt.')
         ->set('regler.concept.menue_balance', 'ausgewogen')
         ->call('goKaskade', 'concept')
@@ -461,8 +451,7 @@ it('Etappe 2a Rest: Concept-Go persistiert die Portfolio-Balance (Menü-Vielfalt
 it('Etappe 2a Rest: Portfolio-Balance ist Concept-only — am Gericht-Tab fließt sie NICHT in die Params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Gericht', 'brief' => 'Ein Teller.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Ein Teller.')
         ->set('regler.gericht.menue_balance', 'ausgewogen')       // gesetzt, aber Gericht-Scope ignoriert Menü-Achsen
         ->call('goKaskade', 'gericht')
@@ -475,8 +464,7 @@ it('Etappe 2a Rest: Portfolio-Balance ist Concept-only — am Gericht-Tab fließ
 it('Etappe 2a Rest: unbekannter Portfolio-Balance-Wert am Concept wird still verworfen (nur Enum durchgereicht)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Menü', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'x')
         ->set('regler.concept.menue_balance', 'chaotisch')        // kein MENUE_BALANCE-Enum → kein Key
         ->call('goKaskade', 'concept')
@@ -489,8 +477,7 @@ it('Etappe 2a Rest: unbekannter Portfolio-Balance-Wert am Concept wird still ver
 it('Etappe 2a Rest: Concept-Tab rendert das Portfolio-Balance-Feld', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'X', 'brief' => 'y']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4
         ->assertSeeHtml('data-menue-balance')
         ->assertSeeHtml('data-menue-balance-select');
 });
@@ -587,12 +574,11 @@ it('laufWiederAufnehmen: kein gescheiterter Step → ehrliche Meldung, kein Job'
 it('#1b Grounding-Preview: wissenVorschau baut nur den Kontext, generiert NICHT (kein Lauf)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Rotwein-Reduktion', 'brief' => 'Dunkle Reduktion.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Dunkle Reduktion.')
         ->assertSet('wissenVorschau', null)
         ->call('wissenVorschau', 'rezept')
-        ->assertSet('laeuft', false);            // Vorschau startet keinen Lauf
+        ->assertNotDispatched('planung.lauf-gestartet');            // Vorschau startet keinen Lauf
 
     // Preview ≠ Generierung: kein Kaskaden-Lauf angelegt.
     expect(FoodAlchemistCascadeRun::where('planning_session_id', $session->id)->count())->toBe(0);
@@ -691,8 +677,7 @@ it('KI-Kopf: arbeitet den Plan aus + zeigt ihn INLINE in der Leitstelle (kein We
     bindKiKopfStub();
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Sommer-Menü']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'CHEFS.CORNER — Sommer-Menü, 30 Gäste, leicht, ca. 42 € p. P.')
         ->set('eingabe.concept.titel', 'Sommerglanz')
         ->call('kiKopf')
@@ -715,8 +700,7 @@ it('Inline-Plan: planFeldSpeichern schreibt die editierte Leitidee in die concep
     bindKiKopfStub();
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Edit-Menü']);
 
-    $component = Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    $component = Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Leichtes Sommer-Menü.')
         ->call('kiKopf');
 
@@ -736,8 +720,7 @@ it('Inline-Plan: planVorschau liefert Name + geplante Menü-Positionen (die Spei
     bindKiKopfStub();
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Vorschau-Menü']);
 
-    $inst = Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    $inst = Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Sommer-Menü.')
         ->call('kiKopf')
         ->instance();
@@ -767,8 +750,7 @@ it('A2: neuGenerieren reicht speiseKommentar an die Regeneration weiter und leer
 it('KI-Kopf: leeres Concept-Briefing wird gesagt (kein Draft, keine Öffnung)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Leer']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', '   ')
         ->call('kiKopf')
         ->assertSet('fehler', 'Für den KI-Kopf erst ein Konzept-Briefing eingeben.')
@@ -783,8 +765,7 @@ it('Geplanter Pfad: KI-Kopf merkt planConceptId; der Concept-Go referenziert ihn
     bindKiKopfStub();
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Sommer-Menü']);
 
-    $component = Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    $component = Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'CHEFS.CORNER — Sommer-Menü, 30 Gäste, leicht.')
         ->call('kiKopf');
 
@@ -796,7 +777,7 @@ it('Geplanter Pfad: KI-Kopf merkt planConceptId; der Concept-Go referenziert ihn
     // Go: referenziert den geprüften Draft statt neu zu generieren; Prop wird verbraucht (→ null).
     $component->call('goKaskade', 'concept')
         ->assertSet('fehler', null)
-        ->assertSet('laeuft', true)
+        ->assertDispatched('planung.lauf-gestartet')
         ->assertSet('planConceptId', null);
 
     Queue::assertNotPushed(GenerateConceptJob::class);   // KEIN neuer Concept-Job — Step zeigt auf den Plan
@@ -811,13 +792,12 @@ it('Geplanter Pfad: KI-Kopf merkt planConceptId; der Concept-Go referenziert ihn
 it('Fail-soft: ein toter planConceptId (gelöscht/Team-fremd) blockt den Go NICHT — er fällt auf den Schnell-Pfad zurück (frische Generierung)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'X', 'brief' => 'Leichtes Sommer-Buffet.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Leichtes Sommer-Buffet.')
         ->set('planConceptId', 999999)          // zeigt auf nichts (Existenz-/Team-Guard schlägt fehl)
         ->call('goKaskade', 'concept')
         ->assertSet('fehler', null)              // NICHT hart blocken
-        ->assertSet('laeuft', true)
+        ->assertDispatched('planung.lauf-gestartet')
         ->assertSet('planConceptId', null);      // tote Referenz still verworfen
 
     // Schnell-Pfad: es wird frisch generiert (GenerateConceptJob), nicht referenziert.
@@ -825,7 +805,7 @@ it('Fail-soft: ein toter planConceptId (gelöscht/Team-fremd) blockt den Go NICH
 });
 
 it('planVerwerfen: löst die Plan-Referenz und wechselt zurück auf den Schnell-Pfad (löscht nichts)', function () {
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(Brief::class)
         ->set('planConceptId', 4242)
         ->call('planVerwerfen')
         ->assertSet('planConceptId', null)
@@ -839,8 +819,7 @@ it('#53 persistent: KI-Kopf schreibt plan_concept_id an die Session; der Go verb
     bindKiKopfStub();
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Persistenz-Menü']);
 
-    $component = Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    $component = Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Sommer-Menü, 30 Gäste, leicht.')
         ->call('kiKopf');
 
@@ -849,7 +828,7 @@ it('#53 persistent: KI-Kopf schreibt plan_concept_id an die Session; der Go verb
     expect((int) $session->refresh()->plan_concept_id)->toBe((int) $concept->id);
 
     // Go verbraucht den Plan → gespeicherter Zeiger wieder null (kein Wieder-Anbieten nach Reload).
-    $component->call('goKaskade', 'concept')->assertSet('laeuft', true);
+    $component->call('goKaskade', 'concept')->assertDispatched('planung.lauf-gestartet');
     expect($session->refresh()->plan_concept_id)->toBeNull();
 });
 
@@ -858,8 +837,7 @@ it('#53 persistent: oeffne rehydriert planConceptId aus der Session-Spalte (Plan
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Reload-Menü']);
     $session->update(['plan_concept_id' => (int) $concept->id]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->assertSet('planConceptId', (int) $concept->id);
 });
 
@@ -867,8 +845,7 @@ it('#53 persistent: oeffne verwirft einen toten plan_concept_id still (kein Geis
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Tot']);
     $session->update(['plan_concept_id' => 999999]);   // zeigt auf nichts
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->assertSet('planConceptId', null);
 });
 
@@ -877,8 +854,7 @@ it('#53 persistent: planVerwerfen löst auch den gespeicherten Zeiger (löscht d
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Verwerfen']);
     $session->update(['plan_concept_id' => (int) $concept->id]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->assertSet('planConceptId', (int) $concept->id)
         ->call('planVerwerfen')
         ->assertSet('planConceptId', null);
@@ -893,13 +869,12 @@ it('#53 persistent: planVerwerfen löst auch den gespeicherten Zeiger (löscht d
 it('#17 Hauptseite: landingKaskadenMap spiegelt den jüngsten Lauf-Status je Session (läuft nach Go)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Landing', 'brief' => 'Ein Teller.']);
 
-    $component = Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    $component = Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Ein Teller.')
         ->call('goKaskade', 'gericht')
-        ->assertSet('laeuft', true);
+        ->assertDispatched('planung.lauf-gestartet');
 
-    $map = $component->instance()->landingKaskadenMap($this->rootTeam, [(int) $session->id]);
+    $map = Livewire::test(PlanungIndex::class)->instance()->landingKaskadenMap($this->rootTeam, [(int) $session->id]);   // Board-Daten im Parent
     expect($map[(int) $session->id]['status'])->toBe('läuft')
         ->and($map[(int) $session->id]['running'])->toBeTrue()
         ->and($map[(int) $session->id]['stufen'])->not->toBeEmpty();
@@ -936,10 +911,10 @@ it('#17 Hauptseite: Status-Filter zeigt nur Planungen im gewählten Kaskaden-Sta
     $laeuft = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Laeuft-Session', 'brief' => 'x']);
     app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Entwurf-Session']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $laeuft->id)
+    Livewire::test(Brief::class, ['sessionId' => $laeuft->id])   // Spec 85 C1 PR-4: der Go liegt im Kind
         ->set('eingabe.gericht.brief', 'x')
-        ->call('goKaskade', 'gericht')
+        ->call('goKaskade', 'gericht');
+    Livewire::test(PlanungIndex::class)
         ->set('filterStatus', 'läuft')
         ->assertSee('Laeuft-Session')
         ->assertDontSee('Entwurf-Session');
@@ -949,10 +924,10 @@ it('#17 D: Typ-Filter zeigt nur Planungen des gewählten Kaskaden-Scopes', funct
     $gericht = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Gericht-Session', 'brief' => 'x']);
     app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Ohne-Lauf-Session']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $gericht->id)
+    Livewire::test(Brief::class, ['sessionId' => $gericht->id])   // Spec 85 C1 PR-4: der Go liegt im Kind
         ->set('eingabe.gericht.brief', 'x')
-        ->call('goKaskade', 'gericht')
+        ->call('goKaskade', 'gericht');
+    Livewire::test(PlanungIndex::class)
         ->set('filterTyp', 'gericht')
         ->assertSee('Gericht-Session')
         ->assertDontSee('Ohne-Lauf-Session');   // ohne Lauf = kein Scope → vom Typ-Filter ausgeblendet
@@ -1028,11 +1003,10 @@ it('#17 T2: ergaenzeSubRezept ergänzt ein geplantes Basisrezept am aktiven Lauf
 it('Skizzen-Lineage: ein Gericht-Go OHNE Skizzen-Ursprung lässt origin_dish_idea_id null', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Direkt', 'brief' => 'Direktes Gericht.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Direktes Gericht.')
         ->call('goKaskade', 'gericht')
-        ->assertSet('laeuft', true);
+        ->assertDispatched('planung.lauf-gestartet');
 
     $run = FoodAlchemistCascadeRun::where('team_id', $this->rootTeam->id)->latest('id')->first();
     expect($run)->not->toBeNull()
@@ -1045,8 +1019,7 @@ it('briefVorlage: füllt Briefing + Sektor/Anlass/Serviceform in den Gericht-Tab
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Event']);
     $tpl = FoodAlchemistBriefTemplate::where('team_id', $this->rootTeam->id)->where('slug', 'catering_empfang_flying')->firstOrFail();
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->call('briefVorlage', 'gericht', (string) $tpl->id)
         ->assertSet('eingabe.gericht.brief', $tpl->brief)
         ->assertSet('regler.gericht.sektor', 'event_privat')
@@ -1062,8 +1035,7 @@ it('briefVorlage: überschreibt einen bereits getippten Titel NICHT', function (
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Event']);
     $tpl = FoodAlchemistBriefTemplate::where('team_id', $this->rootTeam->id)->where('slug', 'catering_galadinner')->firstOrFail();
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.titel', 'Mein Amuse')
         ->call('briefVorlage', 'gericht', (string) $tpl->id)
         ->assertSet('eingabe.gericht.titel', 'Mein Amuse')       // getippter Titel bleibt
@@ -1073,8 +1045,7 @@ it('briefVorlage: überschreibt einen bereits getippten Titel NICHT', function (
 it('briefVorlage: unbekannter Key oder falscher Scope → fehler, keine Änderung', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Event']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         // gültiger Key, aber für 'rezept' NICHT freigegeben (Teil 1: nur Gericht)
         ->call('briefVorlage', 'rezept', 'catering_empfang_flying')
         ->assertSet('fehler', 'Unbekannte oder für diesen Tab ungültige Vorlage.')
@@ -1088,7 +1059,7 @@ it('briefVorlage: unbekannter Key oder falscher Scope → fehler, keine Änderun
 it('vorlagenFuer: Gericht hat die 6 team-eigenen Start-Vorlagen, Basisrezept (rezept) ohne eigene keine', function () {
     // Spec 84 L1-B: Vorlagen gehören dem Team — die Seed-Vorlagen erst wie in der Migration an das Hauptteam verteilen
     (require \dirname(__DIR__, 2).'/database/migrations/2026_11_09_100000_brief_vorlagen_je_hauptteam.php')->up();
-    $comp = Livewire::test(PlanungIndex::class);
+    $comp = Livewire::test(Brief::class);   // Spec 85 C1 PR-4: Vorlagen im Kind
     $inst = $comp->instance();
 
     $gericht = $inst->vorlagenFuer('gericht');
@@ -1112,8 +1083,7 @@ it('titelVorschlagen: leeres Titelfeld + Brief → Service-Vorschlag füllt den 
     });
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'X']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Dunkle Rotwein-Reduktion mit Schalotten.')
         ->call('titelVorschlagen', 'rezept')
         ->assertSet('eingabe.rezept.titel', 'Sauce: Rotwein-Reduktion')
@@ -1126,8 +1096,7 @@ it('titelVorschlagen: ein bereits getippter Titel wird NICHT überschrieben (Ser
     });
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'X']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.titel', 'Mein Teller')
         ->set('eingabe.gericht.brief', 'Ein Hauptgang.')
         ->call('titelVorschlagen', 'gericht')
@@ -1141,8 +1110,7 @@ it('titelVorschlagen: leeres Briefing → fehler, kein Titel (Service nicht geru
     });
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'X']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', '   ')
         ->call('titelVorschlagen', 'rezept')
         ->assertSet('eingabe.rezept.titel', '')
@@ -1155,8 +1123,7 @@ it('titelVorschlagen: Service liefert null (KI weg/leer) → fail-soft fehler, k
     });
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'X']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Ein Teller mit unklarem Fokus.')
         ->call('titelVorschlagen', 'gericht')
         ->assertSet('eingabe.gericht.titel', '')
@@ -1178,7 +1145,7 @@ it('Trend-Anbindung: Trend-Session-Open befüllt alle Tab-Briefings + Titel (ebe
         'created_via' => 'trend',
     ]);
 
-    $comp = Livewire::test(PlanungIndex::class)->call('oeffne', $session->id);
+    $comp = Livewire::test(Brief::class, ['sessionId' => $session->id]);   // Spec 85 C1 PR-4: Tab-Briefings im Kind
 
     // Teil 2: der agnostische Lead wird je Tab auf die Ziel-Ebene geschärft; Titel bleibt gleich.
     $nomen = ['rezept' => 'Basisrezept', 'gericht' => 'Gericht', 'concept' => 'Konzept'];
@@ -1200,8 +1167,7 @@ it('Trend-Anbindung: Einordnung/Kernaussage bleiben scope-neutral, nur der Lead 
         'created_via' => 'trend',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->assertSet('eingabe.gericht.brief',
             "Aus diesem Food-Trend ein Gericht entwickeln: Postbiotic Drinks.\n"
             . "Einordnung: Getränke › Fermentierte Getränke.\n"
@@ -1230,10 +1196,11 @@ it('Trend-Anbindung: ein bereits getipptes Tab-Briefing wird NICHT überschriebe
         'created_via' => 'trend',
     ]);
 
-    // Der Nutzer hat im Gericht-Tab schon etwas getippt; die Concept-/Rezept-Tabs sind leer.
-    Livewire::test(PlanungIndex::class)
+    // Spec 85 C1 PR-4: Planung\Brief mountet je Session (Eingaben wandern nicht mehr in eine andere Planung).
+    // Der Nutzer hat im Gericht-Tab etwas getippt; danach kommt die Trend-Übernahme (Ziel: Konzept).
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Mein eigener Gericht-Brief.')
-        ->call('oeffne', $session->id)
+        ->dispatch('planung.trend-uebernommen', scope: 'concept')
         ->assertSet('eingabe.gericht.brief', 'Mein eigener Gericht-Brief.')   // getipptes bleibt
         ->assertSet('eingabe.concept.brief', 'Trend-Brief.')                  // leeres wird gefüllt
         ->assertSet('eingabe.rezept.brief', 'Trend-Brief.');
@@ -1246,8 +1213,7 @@ it('Trend-Anbindung: eine Nicht-Trend-Session lässt die Tab-Briefings leer', fu
         // keine source_trend_refs → kein Prefill
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->assertSet('eingabe.gericht.brief', '')
         ->assertSet('eingabe.concept.brief', '')
         ->assertSet('eingabe.rezept.brief', '');
@@ -1902,8 +1868,8 @@ it('Worker-Präsenz Teil 2: kein Herzschlag (unbekannt) → proaktive Warnung im
 
     Livewire::test(PlanungIndex::class)
         ->call('oeffne', $session->id)
-        ->assertViewHas('workerState', 'unbekannt')       // nie ein Herzschlag gesehen
-        ->assertSeeHtml('data-worker-health');        // Warn-Banner am Go
+        ->assertViewHas('workerState', 'unbekannt');       // nie ein Herzschlag gesehen
+    Livewire::test(Brief::class, ['sessionId' => $session->id])->assertSeeHtml('data-worker-health');        // Warn-Banner am Go   // Spec 85 C1 PR-4: Banner am Go im Kind
 });
 
 it('Worker-Präsenz Teil 2: frischer Herzschlag (gesund) → keine Warnung (Fläche unverändert)', function () {
@@ -1917,8 +1883,8 @@ it('Worker-Präsenz Teil 2: frischer Herzschlag (gesund) → keine Warnung (Flä
     Livewire::test(PlanungIndex::class)
         ->call('oeffne', $session->id)
         ->assertViewHas('workerState', 'gesund')
-        ->assertViewHas('workerWarnung', null)
-        ->assertDontSeeHtml('data-worker-health');
+        ->assertViewHas('workerWarnung', null);
+    Livewire::test(Brief::class, ['sessionId' => $session->id])->assertDontSeeHtml('data-worker-health');   // Spec 85 C1 PR-4
 });
 
 it('Worker-Präsenz Teil 2: alter Herzschlag (still) → proaktive Warnung im Go zeigen', function () {
@@ -1931,8 +1897,8 @@ it('Worker-Präsenz Teil 2: alter Herzschlag (still) → proaktive Warnung im Go
 
     Livewire::test(PlanungIndex::class)
         ->call('oeffne', $session->id)
-        ->assertViewHas('workerState', 'still')
-        ->assertSeeHtml('data-worker-health');
+        ->assertViewHas('workerState', 'still');
+    Livewire::test(Brief::class, ['sessionId' => $session->id])->assertSeeHtml('data-worker-health');   // Spec 85 C1 PR-4: Banner am Go im Kind
 });
 
 // ── Multi-Tenancy Slice 2 (Etappe 8): Read-Audit der Livewire-Client-Actions ──────────
@@ -2021,12 +1987,11 @@ it('Slice 2 / D1-Read: Foto-Picker auf FREMDEN Step → keine Kandidaten (Roh-id
 it('L0.5 Bio dreiwertig: „egal" wird zu bio_pref=neutral (kein −2-Bio-Penalty), bio-Bool bleibt false', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Bio egal', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Rote-Bete-Salat.')
         ->set('regler.rezept.bio_praeferenz', 'egal')
         ->call('goKaskade', 'rezept')
-        ->assertSet('laeuft', true);
+        ->assertDispatched('planung.lauf-gestartet');
 
     // Der Depth-1-Job trägt die dreiwertige Präferenz — „egal" ⇒ neutral (Adjustment 0), nicht 'conventional'.
     \Platform\FoodAlchemist\Tests\Support\KomponentenPlanDurch::bauen();
@@ -2046,8 +2011,7 @@ it('L0.1 KI-Kopf reicht die Menü-Leitplanken (menue_*) an planAusBrief durch', 
         });
     });
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Sommer-Menü, 4 Gänge, ca. 45 € p. P.')
         ->set('regler.concept.menue_gaenge', '4')
         ->set('regler.concept.menue_preis_ziel', '45,00')
@@ -2071,8 +2035,7 @@ it('L0.1 KI-Kopf mit mistgetippter Menü-Zahl wird gesagt (kein planAusBrief-Auf
         });
     });
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Menü.')
         ->set('regler.concept.menue_gaenge', '99')      // > 20 → ungültig
         ->call('kiKopf')
@@ -2086,12 +2049,11 @@ it('L0.9 Plan-Verbrauch ist scope-gebunden: ein Gericht-Go löscht den vorbereit
     $plan = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Plan', 'status' => 'draft']);
     $session->update(['plan_concept_id' => (int) $plan->id]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->assertSet('planConceptId', (int) $plan->id)     // rehydriert
         ->set('eingabe.gericht.brief', 'Ein einzelnes Gericht.')
         ->call('goKaskade', 'gericht')
-        ->assertSet('laeuft', true)
+        ->assertDispatched('planung.lauf-gestartet')
         ->assertSet('planConceptId', (int) $plan->id);    // NICHT verbraucht (falscher Scope)
 
     expect($session->refresh()->plan_concept_id)->toBe((int) $plan->id);
@@ -2102,13 +2064,12 @@ it('L0.9 Plan-Verbrauch ist scope-gebunden: ein Gericht-Go löscht den vorbereit
 it('L1.5 reglerParams: Frische-Multiauswahl wird zu frische_erlaubt (Roh-Zustände) + primärer Pref', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Frische-Filter', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Erbsenpüree.')
         ->call('reglerPill', 'rezept', 'frische', 'tk')
         ->call('reglerPill', 'rezept', 'frische', 'trocken')
         ->call('goKaskade', 'rezept')
-        ->assertSet('laeuft', true);
+        ->assertDispatched('planung.lauf-gestartet');
 
     \Platform\FoodAlchemist\Tests\Support\KomponentenPlanDurch::bauen();
     Queue::assertPushed(GenerateRecipeJob::class, function ($job) {
@@ -2123,8 +2084,7 @@ it('L1.5 reglerParams: Frische-Multiauswahl wird zu frische_erlaubt (Roh-Zustän
 it('L1.5 reglerParams: Frische frisch+... setzt primären Pref auf frisch', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Frische-Frisch', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Salat.')
         ->call('reglerPill', 'rezept', 'frische', 'konserve')
         ->call('reglerPill', 'rezept', 'frische', 'frisch')
@@ -2137,8 +2097,7 @@ it('L1.5 reglerParams: Frische frisch+... setzt primären Pref auf frisch', func
 it('L1.5 Aroma-Küche: aroma_kueche reist als Leitplanke in die Job-Params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Küche', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Ein Hauptgang.')
         ->set('regler.gericht.aroma_kueche', 'japanisch')
         ->call('goKaskade', 'gericht');
@@ -2153,13 +2112,12 @@ it('L1.5 Aroma-Küche: aroma_kueche reist als Leitplanke in die Job-Params', fun
 it('L3 Allergen-No-Go: reglerPill togglet allergen_nogo (Multi) und reicht es in die Job-Params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Allergen', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Etwas ohne Sesam und Milch.')
         ->call('reglerPill', 'rezept', 'allergen_nogo', 'sesame')
         ->call('reglerPill', 'rezept', 'allergen_nogo', 'milk')
         ->call('goKaskade', 'rezept')
-        ->assertSet('laeuft', true);
+        ->assertDispatched('planung.lauf-gestartet');
 
     \Platform\FoodAlchemist\Tests\Support\KomponentenPlanDurch::bauen();
     Queue::assertPushed(GenerateRecipeJob::class, function ($job) {
@@ -2173,12 +2131,11 @@ it('L3 Allergen-No-Go: reglerPill togglet allergen_nogo (Multi) und reicht es in
 it('L5 Titel-Anker: getippter Gericht-Titel bleibt nur im Bauplan-Brief, NICHT in den Session-Params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Titel-Test', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.titel', 'Sommerbowl')
         ->set('eingabe.gericht.brief', 'Eine leichte Bowl.')
         ->call('goKaskade', 'gericht')
-        ->assertSet('laeuft', true);
+        ->assertDispatched('planung.lauf-gestartet');
 
     Queue::assertPushed(GenerateDishProposalJob::class, fn ($job) => str_contains($job->brief, 'Sommerbowl'));
     Queue::assertNotPushed(GenerateRecipeJob::class);
@@ -2192,7 +2149,7 @@ it('L5 Rehydrierung: gesetzte Leitplanken kommen nach Reload zurück in die Regl
         'level' => 'gehoben', 'sektor' => 'catering', 'diaet_hart' => ['vegan'], 'aroma_kueche' => 'japanisch',   // CQ 2.5a: Altwert, kommt als Slug zurück
     ]);
 
-    $c = Livewire::test(PlanungIndex::class)->call('oeffne', $session->id);
+    $c = Livewire::test(Brief::class, ['sessionId' => $session->id]);   // Spec 85 C1 PR-4: Leitplanken im Kind
 
     $c->assertSet('regler.gericht.level', 'gehoben')
         ->assertSet('regler.gericht.sektor', 'event_privat')
@@ -2205,15 +2162,14 @@ it('L5 Rehydrierung: gesetzte Leitplanken kommen nach Reload zurück in die Regl
 it('L6 Menge&Ziel: gültige Zahl-Achsen + Saison reisen in die Job-Params, ungültige entfallen', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Menge', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Ein Hauptgang.')
         ->set('regler.gericht.pax', '50')
         ->set('regler.gericht.ziel_portion_g', '180')
         ->set('regler.gericht.saison', 'sommer')
         ->set('regler.gericht.ziel_we_pct', '999')   // > 100 → ungültig, entfällt
         ->call('goKaskade', 'gericht')
-        ->assertSet('laeuft', true);
+        ->assertDispatched('planung.lauf-gestartet');
 
     Queue::assertPushed(GenerateDishProposalJob::class);
     Queue::assertNotPushed(GenerateRecipeJob::class);
@@ -2444,7 +2400,7 @@ it('Globaler KI-Status: zeigt wartend/laufend fuers Team an, unabhaengig davon o
  * VoiceModal::komponentenUebernehmen(), VoiceCommandService "struktur"-Feld).
  */
 it('Spec 55: voiceKomponentenUebernehmen() schreibt Leitplanken + Brief in den Ziel-Scope, whitelisted', function () {
-    $test = Livewire::test(PlanungIndex::class)
+    $test = Livewire::test(Brief::class)
         ->dispatch('voice.komponenten-uebernahme', scope: 'gericht', felder: [
             'sektor' => 'event_privat', 'pax' => '40', 'erfundenes_feld' => 'boese',
         ], brief: 'Business-Frühstück für 40 Personen')
@@ -2459,7 +2415,7 @@ it('Spec 55: voiceKomponentenUebernehmen() schreibt Leitplanken + Brief in den Z
 });
 
 it('Spec 55: voiceKomponentenUebernehmen() mit unbekanntem Scope schreibt nichts', function () {
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(Brief::class)
         ->dispatch('voice.komponenten-uebernahme', scope: 'quatsch', felder: ['sektor' => 'event_privat'], brief: null)
         ->assertSet('regler.quatsch', null);
 });
@@ -2472,8 +2428,7 @@ it('Spec 55: voiceKomponentenUebernehmen() mit unbekanntem Scope schreibt nichts
 it('Spec 55: „vom Agenten"-Badge zeigt sich nach Übernahme im Rendering und verschwindet bei manueller Änderung', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Event']);
 
-    $test = Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    $test = Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->dispatch('voice.komponenten-uebernahme', scope: 'gericht', felder: [
             'sektor' => 'event_privat', 'pax' => '40',
         ], brief: 'Business-Frühstück für 40 Personen');
@@ -2504,8 +2459,7 @@ it('Nachtrag: render() dispatcht den Formularstand-Event bei jedem Render', func
     // (VoiceModal::formularstandAktualisiert() übernimmt nur den eigenen Scope).
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Event']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('regler.gericht.pax', '40')
         ->assertDispatched('voice.formularstand-aktualisiert');
 });

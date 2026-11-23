@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Jobs\GenerateRecipeJob;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
 use Platform\FoodAlchemist\Services\PairingService;
@@ -116,12 +117,17 @@ it('B1: Übernehmen → goKaskade dispatcht GenerateRecipeJob mit seed_anker —
     $tomate = ($this->mkAnker)('tomate');
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Composer', 'brief' => '']);
 
+    // Spec 85 C1 PR-4: der Composer (Parent) übergibt Brief und Seed-Pin per Event an Planung\Brief, das den Go macht.
+    $werte = ['brief_wenn_leer' => 'Foodpairing-Kreation auf Basis von: Tomate.', 'seed_pin' => ['tomate']];
     Livewire::test(PlanungIndex::class)
         ->call('oeffne', $session->id)
         ->set('composerAnker', [['id' => $tomate, 'slug' => 'tomate', 'label' => 'Tomate']])
         ->call('composerUebernehmen', 'rezept')
+        ->assertDispatched('planung.brief-uebernehmen', scope: 'rezept', werte: $werte);
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
+        ->dispatch('planung.brief-uebernehmen', scope: 'rezept', werte: $werte)
         ->call('goKaskade', 'rezept')
-        ->assertSet('laeuft', true)
+        ->assertDispatched('planung.lauf-gestartet')
         ->assertNoRedirect();
 
     \Platform\FoodAlchemist\Tests\Support\KomponentenPlanDurch::bauen();
@@ -138,10 +144,14 @@ it('composerUebernehmen pinnt seed_anker + Brief OHNE zu dispatchen; goKaskade n
     $tomate = ($this->mkAnker)('tomate');
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Composer', 'brief' => '']);
 
-    $comp = Livewire::test(PlanungIndex::class)
+    $werte = ['brief_wenn_leer' => 'Foodpairing-Kreation auf Basis von: Tomate.', 'seed_pin' => ['tomate']];
+    Livewire::test(PlanungIndex::class)
         ->call('oeffne', $session->id)
         ->set('composerAnker', [['id' => $tomate, 'slug' => 'tomate', 'label' => 'Tomate']])
-        ->call('composerUebernehmen', 'rezept');
+        ->call('composerUebernehmen', 'rezept')
+        ->assertDispatched('planung.brief-uebernehmen', scope: 'rezept', werte: $werte);   // Spec 85 C1 PR-4: an Planung\Brief
+    $comp = Livewire::test(Brief::class, ['sessionId' => $session->id])
+        ->dispatch('planung.brief-uebernehmen', scope: 'rezept', werte: $werte);
 
     // Übernehmen ist der Zwischenschritt: KEIN Dispatch, aber Pin + vorbefüllter Brief.
     Queue::assertNotPushed(GenerateRecipeJob::class);

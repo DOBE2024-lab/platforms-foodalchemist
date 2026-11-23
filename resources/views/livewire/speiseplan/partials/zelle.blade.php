@@ -37,7 +37,7 @@
      x-bind:class="(dragId === {{ $e->id }} ? 'opacity-40 ' : '') + (typeof markiert !== 'undefined' && markiert !== null ? (markiert.includes({{ $e->id }}) ? 'ring-2 ring-[var(--fa-accent)]' : 'opacity-40') : '')">
     <div class="flex items-start gap-1">
         <button type="button" wire:click="eintragOeffnen({{ $e->id }})" class="flex-1 min-w-0 text-left rounded-sm hover:text-[var(--fa-accent)]" aria-label="{{ $titel }}: Details, ersetzen, verschieben, kopieren">
-            <span class="block text-[length:var(--fa-text-md)] font-medium leading-snug break-words">{{ $titel }}</span>
+            <span class="block text-[length:var(--fa-text-md)] font-medium leading-snug break-words">{{ $titel }}@if($e->dish?->trashed())<x-fa::badge tone="neutral" class="ml-1 align-middle" data-gericht-geloescht>gelöscht</x-fa::badge>@endif</span>
             @if(! empty($k['untertitel']))
                 <span class="block text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)] leading-snug line-clamp-2">{{ $k['untertitel'] }}</span>
             @endif

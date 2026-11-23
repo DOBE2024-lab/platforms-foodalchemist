@@ -859,7 +859,7 @@
                                                 @if(trim((string) $block->wording) !== '')<span class="italic text-[var(--fa-ink-2)]"> · „{{ $block->wording }}“</span>@endif
                                                 @break
                                             @case('recipe_ref')
-                                                <x-fa::badge class="mr-1 align-middle">Gericht</x-fa::badge><span class="font-medium">{{ $block->dish?->name ?? 'Gericht fehlt' }}</span>
+                                                <x-fa::badge class="mr-1 align-middle">Gericht</x-fa::badge><span class="font-medium">{{ $block->dish?->name ?? 'Gericht fehlt' }}</span>@if($block->dish?->trashed())<x-fa::badge tone="neutral" class="ml-1 align-middle" data-gericht-geloescht>gelöscht</x-fa::badge>@endif
                                                 <span class="text-[var(--fa-ink-2)] tabular-nums"> · </span><x-fa::money :value="$block->dish?->vk_netto" />@if($block->dish?->vk_netto !== null)<span class="text-[var(--fa-ink-3)]">{{ $block->price_basis === 'pauschal' ? ' pauschal' : ' pro Position' }}</span>@endif
                                                 @if(trim((string) $block->wording) !== '')<span class="italic text-[var(--fa-ink-2)]"> · „{{ $block->wording }}“</span>@endif
                                                 @break

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Jobs\GenerateRecipeJob;
 use Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
@@ -107,8 +108,7 @@ it('Basisrezept-Go startet den Plan statt sofort zu bauen', function () {
     Queue::fake();
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Petersilie']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.rezept.brief', 'Petersilienwurzelpüree, grün, mit Petersilienmatte eingefärbt')
         ->set('eingabe.rezept.suchbegriffe', [['t' => 'Petersilienwurzel', 'g' => 'zutaten', 'q' => 'mensch']])
         ->call('goKaskade', 'rezept');

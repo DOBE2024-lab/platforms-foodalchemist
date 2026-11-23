@@ -1,5 +1,6 @@
 <?php
 
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Jobs\StubAusrezeptierenJob;
@@ -98,7 +99,7 @@ it('Leitstelle: Titel und Briefing des Gericht-Reiters kommen aus der Planung, d
     $huelle = ($this->huelle)();
     $session = $this->svc->sessionFuer($this->rootTeam, $huelle->id);
 
-    Livewire::withQueryParams(['session' => $session->id, 'open' => 1, 'tab' => 'gericht'])->test(PlanungIndex::class)
+    Livewire::withQueryParams(['session' => $session->id, 'open' => 1, 'tab' => 'gericht'])->test(Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4: Gericht-Reiter im Kind
         ->assertSet('eingabe.gericht.titel', HUELLE_NAME)
         ->assertSet('eingabe.gericht.brief', HUELLE_TEXT)
         ->assertSeeHtml('data-planung-rezeptur-ziel')
@@ -108,7 +109,7 @@ it('Leitstelle: Titel und Briefing des Gericht-Reiters kommen aus der Planung, d
 it('Leitstelle: eine Planung ohne Ziel-Gericht bleibt wie sie war', function () {
     $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Frei', 'brief' => 'Irgendwas']);
 
-    Livewire::withQueryParams(['session' => $session->id, 'open' => 1, 'tab' => 'gericht'])->test(PlanungIndex::class)
+    Livewire::withQueryParams(['session' => $session->id, 'open' => 1, 'tab' => 'gericht'])->test(Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4: Gericht-Reiter im Kind
         ->assertSet('eingabe.gericht.titel', '')
         ->assertDontSeeHtml('data-planung-rezeptur-ziel');
 });

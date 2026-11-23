@@ -9,6 +9,16 @@ namespace Platform\FoodAlchemist\Support\Planung;
  */
 final class PlanungOptionen
 {
+    /** Kreativ-Modus: Anzeige-Label je Wert (Parent-Detail, Brief-Reiter). Spec 85 C1 PR-4: aus planung/index.blade.php hierher. */
+    public const MODUS_LABEL = ['voll_kreativ' => 'Frei kreativ', 'hybrid' => 'Kreativ mit Bestand', 'datenbank' => 'Nur Bestand'];
+
+    /** Kreativ-Modus: Wirkungs-Hinweis je Wert (die EINE Achse für Wiederverwendung). */
+    public const MODUS_HINWEIS = [
+        'voll_kreativ' => 'Freie Gerichtsidee. Vorhandene Basisrezepte werden trotzdem wiederverwendet, neu entsteht nur eine echte Lücke.',
+        'hybrid' => 'Freie Idee mit Bezug zum Bestand. Vorhandene Gerichte und Basisrezepte werden bevorzugt wiederverwendet.',
+        'datenbank' => 'Ausschließlich vorhandene Gerichte und Basisrezepte. Lücken bleiben sichtbar und werden nicht neu erstellt.',
+    ];
+
     /**
      * Spec 55 Nachtrag (Agent-am-Brief): vorher NUR als rohe `<option>`-Liste in
      * leitplanken.blade.php gepflegt — als Konstante extrahiert, damit der Sprachbefehl-Agent

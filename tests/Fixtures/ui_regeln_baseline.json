@@ -592,6 +592,10 @@
         "typo_tinte": 4,
         "roher_button": 1
     },
+    "livewire/planung/brief.blade.php": {
+        "typo_tinte": 3,
+        "roher_button": 1
+    },
     "livewire/planung/foodbook-kontext-rail.blade.php": {
         "typo_groesse": 1
     },
@@ -602,8 +606,8 @@
         "mini_schrift": 5,
         "style_statisch": 7,
         "typo_groesse": 11,
-        "typo_tinte": 18,
-        "roher_button": 12,
+        "typo_tinte": 15,
+        "roher_button": 11,
         "rohes_segment": 1,
         "alte_palette": 11
     },

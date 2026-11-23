@@ -19,10 +19,9 @@ trait HandyPlanung
         return [
             // Übersicht und Editor
             'neuePlanung', 'schnellErstellen', 'schnellImport', 'oeffne', 'waehle', 'speichern', 'kaskadeGestartet', 'importAngelegt',
-            // Auftrag (Brief, Leitplanken, Diktat, KI-Plan) und Start
-            'reglerPill', 'briefVorlage', 'titelVorschlagen', 'suchbegriffEntfernen', 'suchbegriffHinzufuegen', 'leitplankenAusBriefing',
-            'briefDiktatUebernehmen', 'agentDiktatUebernehmen', 'voiceKomponentenUebernehmen', 'wissenVorschau', 'kiKopf',
-            'planFeldSpeichern', 'planVerwerfen', 'goKaskade',
+            // Auftrag: Brief, Leitplanken, KI-Plan und Start liegen im Kind Planung\Brief (Spec 85 C1 PR-4, s. Brief::handyLeseMethoden).
+            // Hier: das Diktat (bis E4 im Parent) und die Empfänger der Brief-Meldungen (Lauf gestartet, Brief gespiegelt).
+            'briefDiktatUebernehmen', 'agentDiktatUebernehmen', 'laufGestartet', 'briefGespiegelt',
             // Ergebnis: Lauf beobachten, abbrechen, wieder aufnehmen; freigeben und anreichern (Dominique 30.10.: „wenn ich das
             // plane, will ich es auch freigeben, so dass alles angereichert wird“ — UI-Klick über die Plattform-KI)
             // (Spec 85 C1 PR-3: die Lauf-Methoden selbst liegen im Kind Planung\KaskadenLauf, s. KaskadenLauf::handyLeseMethoden; hier nur die

@@ -235,8 +235,7 @@ it('Spec 55 Nachtrag: Planung/Index rendert das Agenten-Panel EINMAL JE Creation
     $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Event']);
 
-    $html = Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
-        ->call('oeffne', $session->id)
+    $html = Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4: Erstell-Reiter im Kind
         ->html();
     expect(substr_count($html, 'data-voice-panel-planung'))->toBe(3);
 });
@@ -248,8 +247,7 @@ it('Spec 55: das Agenten-Panel rendert NICHT, wenn voice_agent_panel_planung exp
     $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Event']);
 
-    $html = Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
-        ->call('oeffne', $session->id)
+    $html = Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4: Erstell-Reiter im Kind
         ->html();
     expect($html)->not->toContain('data-voice-panel-planung');
 });

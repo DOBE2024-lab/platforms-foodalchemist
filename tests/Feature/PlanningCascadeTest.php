@@ -12,6 +12,7 @@ use Platform\FoodAlchemist\Jobs\GenerateRecipeJob;
 use Platform\FoodAlchemist\Jobs\MaterializeConceptIdeaJob;
 use Platform\FoodAlchemist\Jobs\MaterializeSpeisekartePositionJob;
 use Platform\FoodAlchemist\Jobs\MaterializeSpeiseplanCellJob;
+use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
@@ -1139,11 +1140,10 @@ it('loescheKiFotos: entfernt KI-Fotos (Call-Log), lässt manuelle Uploads stehen
 it('Cockpit: goKaskade startet den Lauf in-place (kein Redirect) und pollt', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Geschmortes Rind', 'brief' => 'Schmorgericht mit Wurzelgemuese.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->call('goKaskade', 'gericht')
-        ->assertSet('laeuft', true)
-        ->assertNotSet('laufId', null)
+        ->assertDispatched('planung.lauf-gestartet')
+        ->assertDispatched('planung.lauf-gestartet')
         ->assertNoRedirect();
 
     Queue::assertPushed(GenerateDishProposalJob::class, fn ($job) => $job->creativeMode === 'voll_kreativ');
@@ -2066,8 +2066,7 @@ it('A2: regeneriereStep ohne Kommentar laesst den Brief unveraendert (Byte-Stabi
 it('goKaskade (concept): persistiert Leitplanken inkl. ki_bilder in generation_params', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Concept-Test', 'brief' => 'Sommer-Buffet.']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.concept.brief', 'Sommer-Buffet.')
         ->set('regler.concept.ki_bilder', true)
         ->set('regler.concept.level', 'gehoben')
@@ -2470,12 +2469,11 @@ it('L1 komplett_neu: Reuse-Gate übersprungen — trotz Bestand wird neu geplant
 it('L1 goKaskade: Kreativ-Modus datenbank persistiert bestand=nur_bestand für die spätere Erdung', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'DB-Modus', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(Brief::class, ['sessionId' => $session->id])
         ->set('eingabe.gericht.brief', 'Ein Gericht.')
         ->set('eingabe.gericht.creative_mode', 'datenbank')
         ->call('goKaskade', 'gericht')
-        ->assertSet('laeuft', true);
+        ->assertDispatched('planung.lauf-gestartet');
 
     Queue::assertPushed(GenerateDishProposalJob::class);
     Queue::assertNotPushed(GenerateRecipeJob::class);

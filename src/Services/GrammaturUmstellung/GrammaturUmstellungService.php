@@ -215,6 +215,11 @@ final class GrammaturUmstellungService
         if ($kenn['zutaten'] === 0 || $kenn['b_g'] <= 0) {
             return ['grund' => 'keine Bestandteile mit Menge'] + $z;
         }
+        // Trockenlauf io 23.11. (R149): Bestandteile ohne Gramm (Stück ohne Stückgewicht …) gingen im Komponentenmodell verloren —
+        // EK, VK und Produktion sanken. Solche Gerichte bleiben unangetastet (Entscheid Dominique 22.11.: nicht ableitbar).
+        if (($kenn['ohne_gewicht'] ?? []) !== []) {
+            return ['grund' => 'Bestandteile ohne Gewicht: '.implode(', ', $kenn['ohne_gewicht'])] + $z;
+        }
         if ($g === null || $g <= 0) {
             return ['grund' => 'keine Grammatur'] + $z;
         }

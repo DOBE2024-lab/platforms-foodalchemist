@@ -1,9 +1,0 @@
-/vendor
-/.env
-/.phpunit.cache
-/.phpunit.result.cache
-/storage/*
-!/storage/.gitkeep
-/bootstrap/cache/*
-!/bootstrap/cache/.gitkeep
-/junit-*.xml

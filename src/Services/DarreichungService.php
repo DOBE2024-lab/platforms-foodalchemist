@@ -445,6 +445,44 @@ class DarreichungService
     }
 
     /**
+     * Plan 98 B, Schritt 5 — „alle Mengen auf … %“: jede Komponente der Variante bekommt δ_i = m_i_std × p, die Grammatur ergibt
+     * sich daraus. Ersetzt die bisherigen Mengen der Variante; was der Standard weglässt, bleibt weggelassen. Weglassungen der
+     * Variante selbst (Delta weggelassen oder auf 0 g) bleiben bestehen — sonst landete still wieder z. B. Speck in „ohne Speck“
+     * (Kurator 23.11., Produktentscheid Dominique steht aus). Danach steht die Variante wie nach der Umstellung (Weg A): eigene
+     * Komposition, Bezug auf die Standard-Komposition. Nicht für den Standard.
+     */
+    public function setzeAnteil(Team $team, int $darreichungId, float $prozent): FoodAlchemistRecipeDarreichung
+    {
+        if (! is_finite($prozent) || $prozent <= 0 || $prozent > 1000) {
+            throw new \RuntimeException('Der Anteil muss zwischen 0 und 1000 % liegen (größer als 0).');
+        }
+        $dar = $this->find($team, $darreichungId);
+        if ($dar->is_standard) {
+            throw new \RuntimeException('Der Anteil bezieht sich auf die Standard-Darreichung — an ihr selbst nicht setzbar.');
+        }
+        DB::transaction(function () use ($dar, $team, $prozent) {
+            $recipe = $dar->recipe()->lockForUpdate()->first();
+            $standard = $this->standardProEinheit($recipe, $team);
+            if ($standard === [] || array_sum(array_column($standard, 'masse_g')) <= 0) {
+                throw new \RuntimeException('Die Standard-Darreichung hat keine Komponenten mit Menge — kein Anteil berechenbar.');
+            }
+            $weggelassen = $dar->deltas()->get()
+                ->filter(fn ($d) => $d->omitted || ($d->quantity_override_g !== null && (float) $d->quantity_override_g <= 0))
+                ->pluck('recipe_ingredient_id')->map(fn ($id) => (int) $id)->all();
+            $dar->deltas()->withTrashed()->forceDelete();
+            foreach ($standard as $ingId => $z) {
+                $m = in_array((int) $ingId, $weggelassen, true) ? 0.0 : round($z['masse_g'] * $prozent / 100, 3);
+                FoodAlchemistRecipeDarreichungDelta::create(['presentation_id' => $dar->id, 'recipe_ingredient_id' => $ingId,
+                    'team_id' => $dar->team_id, 'quantity_override_g' => $m, 'omitted' => $m <= 0]);
+            }
+            $dar->update(['menge_vom_standard' => false, 'komponenten_referenz_g' => null]);
+            $this->recomputePreise($dar->refresh());
+        });
+
+        return $dar->refresh();
+    }
+
+    /**
      * Servier-Typ an EINER Stelle (Entscheid Dominique 18.11.2026): Typ (neutral, Vokabular) und konkretes Gefäß (GP mit Preis) stehen an der
      * Darreichung. Das Feld am Gericht ist nur noch abgeleitet — der wirksame Typ der Standard-Darreichung ({@see vehikelId}) — und Vorgabe für
      * neue Darreichungen. Leser am Gericht (KI-Kontext, Abo-Kopie, MCP-GET) sehen so denselben Typ wie Planungsblatt und Handbuch.

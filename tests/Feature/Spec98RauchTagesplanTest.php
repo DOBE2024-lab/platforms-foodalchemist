@@ -5,6 +5,7 @@ use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
 use Platform\FoodAlchemist\Livewire\Produktion\TagesplanAnleitung;
 use Platform\FoodAlchemist\Livewire\Produktion\TagesplanFeedback;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanWall;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ProductionOrderService;
@@ -54,7 +55,10 @@ it('Editor: rendert mit Auftrag, Posten und Tag wählen, Vorlauf, Abhaken, Vorsc
 });
 
 it('Wall: Lanes und Mise, Gruppenfilter, Mise abhaken, Anleitung und Gericht-Overlay', function () {
-    $wand = Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])->set('modus', 'editor')->assertOk();
+    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])->set('modus', 'editor')->assertOk()
+        ->call('verschiebe', 1)->call('heute')->call('postenWaehlen', null)->assertOk();
+    // Küchenmonitor ist seit 98 · 3.3 S6 ein Kind (TagesplanWall); der Tagesplan ist im Wandmodus nur Hülle.
+    $wand = Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])->assertOk();
     foreach (['lanes', 'mise'] as $ansicht) {
         $wand->call('wallAnsichtSetzen', $ansicht)->assertOk();
     }

@@ -3,8 +3,8 @@
 namespace Platform\FoodAlchemist\Support\Produktion;
 
 /**
- * Küchenmonitor-Stil (Fernsicht, Touch): die Klassen-Strings, die Tagesplan-Wall und ihre Kinder (Anleitung, Feedback,
- * Wall) gemeinsam nutzen — unverändert aus dem @php-Kopf von produktion/tagesplan.blade.php (98 · 3.3 S6). Blade-@include
+ * Küchenmonitor-Stil (Fernsicht, Touch): die Klassen-Strings, die Tagesplan, Wall und deren Kinder (Anleitung, Feedback)
+ * gemeinsam nutzen — unverändert aus dem @php-Kopf von produktion/tagesplan.blade.php (98 · 3.3 S6). Blade-@include
  * gibt keine Variablen zurück; eine Kopie je View hätte die Klassen verdoppelt.
  *
  * Tailwind findet die Klassen hier: Modul-Build scannt src/**\/*.php (build-css.mjs), der Host food-alchemist.de per
@@ -31,6 +31,47 @@ final class WallStil
         'info' => 'bg-[var(--fa-info-soft)] text-[var(--fa-info)]',
         'neutral' => 'bg-[var(--fa-neutral-soft)] text-[var(--fa-ink-3)]',
     ];
+
+    /** Balkenfarbe je Zustandston (Auslastung) — Tagesplanung und Küchenmonitor. */
+    public const TON_BALKEN = [
+        'crit' => 'bg-[var(--fa-crit)]',
+        'warn' => 'bg-[var(--fa-warn)]',
+        'ok' => 'bg-[var(--fa-ok)]',
+        'info' => 'bg-[var(--fa-info)]',
+        'neutral' => 'bg-[var(--fa-ink-3)]',
+    ];
+
+    /** Randfarbe je Zustandston — Tagesplanung und Küchenmonitor. */
+    public const TON_RAND = [
+        'crit' => 'border-[var(--fa-crit)]',
+        'warn' => 'border-[var(--fa-warn)]',
+        'ok' => 'border-[var(--fa-ok)]',
+        'info' => 'border-[var(--fa-info)]',
+        'neutral' => 'border-[var(--fa-line)]',
+    ];
+
+    /** Auslastungs-Stufe → Zustandston (ein Ort für alle Ansichten). */
+    public static function stufeTon(?string $stufe): string
+    {
+        return match ($stufe) {
+            'ueberlast' => 'crit',
+            'eng' => 'warn',
+            'ok' => 'ok',
+            'ohne_kapazitaet' => 'info',
+            default => 'neutral',
+        };
+    }
+
+    public static function stufeText(?string $stufe): string
+    {
+        return match ($stufe) {
+            'ueberlast' => 'Überlast',
+            'eng' => 'Eng',
+            'ok' => 'Im Plan',
+            'ohne_kapazitaet' => 'Ohne Kapazität',
+            default => 'Frei',
+        };
+    }
 
     /** Kilogramm kompakt: 3 Nachkommastellen, Nullen weg („1,5“ statt „1,500“). */
     public static function kg($wert): string

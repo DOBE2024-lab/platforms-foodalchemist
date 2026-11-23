@@ -5,6 +5,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Enums\ProductionLineStatus;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanWall;
 use Platform\FoodAlchemist\Livewire\Produktion\TagesplanAnleitung;
 use Platform\FoodAlchemist\Livewire\Produktion\TagesplanFeedback;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
@@ -191,8 +192,7 @@ it('wählt einen Tag ins rechte Detail-Panel und zeigt dessen Speisen', function
 it('rendert den Wandmodus ohne zu krachen', function () {
     ($this->aufWarmeKueche)();
     // Spec 35: Der Wandmonitor ist ein eigenes Küchenmonitor-Layout (nicht mehr die Editor-Ansicht).
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->assertOk()
         ->assertSee('Brauner Fond')
         ->assertSeeHtml('data-tagesplan-wall')
@@ -209,11 +209,28 @@ it('rendert den Wandmodus ohne zu krachen', function () {
         ->assertDontSeeHtml('data-tagesplanung-sidebar');
 });
 
+/**
+ * 98 · 3.3 S6: Im Wandmodus ist der Tagesplan nur noch Hülle (Kiosk-Layout, URL-Zustand); der Küchenmonitor ist das Kind
+ * TagesplanWall. Tag und Posten bleiben Tagesplan-Zustand: die Knöpfe der Wand rufen $parent.
+ */
+it('Wandmodus: der Tagesplan bindet das Wand-Kind ein und behält Tag und Posten', function () {
+    ($this->aufWarmeKueche)();
+
+    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
+        ->assertOk()
+        ->assertSeeHtml('wire:name="foodalchemist.produktion.tagesplan-wall"')
+        ->assertSeeHtml('data-tagesplan-wall-kiosk')                          // Kind beim ersten Render voll gerendert
+        ->assertSeeHtml('wire:click="$parent.verschiebe(1)"')
+        ->assertSeeHtml('wire:click="$parent.heute"')
+        ->assertDontSeeHtml('data-tagesplanung-dashboard')
+        ->call('verschiebe', 1)
+        ->assertSet('von', '2026-08-21');
+});
+
 it('startet im Wandmodus geplante Aufträge beim Abhaken und setzt die Zeile erledigt', function () {
     $line = Line::where('production_order_id', $this->a1->id)->firstOrFail();
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('abhaken', $line->id)
         ->assertSet('fehler', null);
 
@@ -229,8 +246,7 @@ it('trennt im Wandmonitor zusammengesetzte Gerichts- und Rezeptnamen untereinand
 
     $key = implode('|', [$this->a1->id, '[FIN] Curry-Hummus', '2026-08-20']);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->assertSeeHtml('data-tagesplan-wall-gericht')
         ->assertSeeHtml('data-tagesplan-wall-gericht-open')
         ->assertSee('Gericht')
@@ -261,8 +277,7 @@ it('gruppiert im Wandmonitor Gericht und Basisrezepte als Küchen-Arbeitsblock',
         ->update(['is_basisrezept' => true]);
     ($this->aufWarmeKueche)();
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->assertSeeHtml('data-tagesplan-wall-gericht-gruppe')
         ->assertSeeHtml('data-tagesplan-wall-gericht-open')
         ->assertSeeHtml('data-tagesplan-wall-gruppenfilter')
@@ -284,8 +299,7 @@ it('gruppiert im Wandmonitor Gericht und Basisrezepte als Küchen-Arbeitsblock',
 
     $key = implode('|', [$auftrag->id, '[VOR] Tomate-Burrata', '2026-08-20']);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('oeffneGericht', $key)
         ->assertSeeHtml('data-tagesplan-wall-gericht-detail')
         ->assertSeeHtml('data-tagesplan-wall-gericht-detail-card')
@@ -333,8 +347,7 @@ it('öffnet im Wandmonitor ein Gericht als Arbeitsblock mit tatsächlichen Rezep
     $basisLineId = Line::where('production_order_id', $auftrag->id)->where('recipe_id', $basis->id)->value('id');
     $dekoLineId = Line::where('production_order_id', $auftrag->id)->where('recipe_id', $deko->id)->value('id');
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('oeffneGericht', $key)
         ->assertSet('wallGerichtKey', $key)
         ->assertSeeHtml('data-tagesplan-wall-gericht-detail')
@@ -365,8 +378,7 @@ it('öffnet im Wandmonitor ein Gericht als Arbeitsblock mit tatsächlichen Rezep
         ->forceFill(['zutaten' => [['typ' => 'sub', 'name' => 'Dressing-Ansatz', 'ref_recipe_id' => $unterbasis->id, 'menge' => 0.5, 'einheit' => 'kg']]])
         ->save();
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('oeffneGericht', $key)
         ->call('oeffneAnleitung', $basisLineId)
         ->assertDispatched('tagesplan-anleitung-oeffnen', lineId: $basisLineId);
@@ -392,8 +404,7 @@ it('zeigt im Wandmonitor Allergen-, Diät- und Datenqualitätswarnungen', functi
     ])->save();
     $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->assertSeeHtml('data-tagesplan-wall-sicherheit')
         ->assertSeeHtml('data-tagesplan-wall-allergen')
         ->assertSeeHtml('data-tagesplan-wall-warnung')
@@ -417,8 +428,7 @@ it('fokussiert im Wandmonitor einen Posten und bietet den Reset auf alle Station
     $p = Posten::create(['team_id' => $this->rootTeam->id, 'slug' => 'wk', 'name' => 'Warme Küche']);
     $this->svc->assignLine($this->rootTeam, Line::where('production_order_id', $this->a1->id)->value('id'), ['station_id' => $p->id]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall', 'postenFilter' => $p->id])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02', 'postenFilter' => $p->id])
         ->assertSeeHtml('data-tagesplan-wall-station-filter')
         ->assertSeeHtml('data-tagesplan-wall-station-reset')
         ->assertSeeHtml('data-tagesplan-wall-single-lane')
@@ -428,8 +438,7 @@ it('fokussiert im Wandmonitor einen Posten und bietet den Reset auf alle Station
 });
 
 it('zeigt im leeren Wandmodus trotzdem den gewählten Tag und den Zurück-Button', function () {
-    Livewire::test(Tagesplan::class, ['von' => '2027-01-01', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2027-01-01', 'bis' => '2027-01-14'])
         ->assertSee('Freitag, 1. Januar')
         ->assertSeeHtml('data-tagesplan-wall-zurueck')
         ->assertDontSee('Kein Tag geplant');
@@ -599,8 +608,7 @@ it('Wand und Anleitung: Öffnen per Event, Rückmeldung nach dem Start, Kind im 
     $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
     Line::whereKey($lineId)->update(['zubereitung' => '1. Ansetzen.']);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->assertSeeHtml('wire:name="foodalchemist.produktion.tagesplan-anleitung"')
         ->call('oeffneAnleitung', $lineId)
         ->assertDispatched('tagesplan-anleitung-oeffnen', lineId: $lineId)
@@ -852,8 +860,7 @@ it('fasst gleiche Komponenten über Gerichte zusammen (Mise en Place)', function
         ['source_ref' => 'r:fond', 'recipe_id' => $this->fond->id, 'amount_kg' => 2.0],
     ]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('wallAnsichtSetzen', 'mise')
         ->assertSet('wallAnsicht', 'mise')
         ->assertSeeHtml('data-tagesplan-mise')
@@ -881,8 +888,7 @@ it('öffnet Verkaufsgerichte in Mise en Place als Gericht statt als Basis-Anleit
 
     $key = implode('|', [$auftrag->id, '[HG] Spitzkohl', '2026-08-20']);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('wallAnsichtSetzen', 'mise')
         ->assertSeeHtml('data-tagesplan-mise-gericht')
         ->assertSee('Gericht')
@@ -900,8 +906,7 @@ it('hakt im Wandmodus eine Mise-en-Place-Gruppe gesammelt ab und nimmt sie wiede
     ]);
     $line = Line::where('recipe_id', $this->fond->id)->firstOrFail();
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('wallAnsichtSetzen', 'mise')
         ->assertSeeHtml('data-tagesplan-mise-abhaken')
         ->call('abhakenMise', $line->id)
@@ -910,8 +915,7 @@ it('hakt im Wandmodus eine Mise-en-Place-Gruppe gesammelt ab und nimmt sie wiede
     expect(Line::where('recipe_id', $this->fond->id)->pluck('line_status')->all())
         ->each->toBe(\Platform\FoodAlchemist\Enums\ProductionLineStatus::Done);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
+    Livewire::test(TagesplanWall::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('wallAnsichtSetzen', 'mise')
         ->call('abhakenMise', Line::where('recipe_id', $this->fond->id)->value('id'))
         ->assertSet('fehler', null);

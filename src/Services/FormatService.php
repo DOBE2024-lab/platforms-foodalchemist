@@ -60,7 +60,7 @@ class FormatService
                 // F2e: der Editor/Detail liest den Aufbau ausschließlich aus den Slots (Concept-Referenzen
                 // + Struktur-Blöcke) — der Alt-Editionen-Eager-Load ist mit dem Cutover entfernt.
                 // #3/F6: kind → „Paket"-Badge am Slot; ek_per_person_cache → Detail-Cockpit Ø/W-Kontext.
-                'slots.concept:id,name,consumer_name,claim,description,status,kind,price_per_person_cache,ek_per_person_cache',
+                'slots.concept:id,name,consumer_name,claim,description,status,kind,price_per_person_cache,ek_per_person_cache,price_incomplete',
                 'images' => fn ($q) => $q->orderBy('sort_order'),
                 // F1: Facetten fürs Detail/Editor (Namen → Dimension-Chips im Detail-Panel, #3)
                 'servingForm:id,label', 'eventType:id,name', 'serviceMoments:id,name', 'seasons:id,name', 'targetGroups:id,name',

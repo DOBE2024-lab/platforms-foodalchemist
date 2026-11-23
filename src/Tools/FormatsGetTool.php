@@ -62,6 +62,7 @@ class FormatsGetTool extends FoodAlchemistTool implements ToolContract, ToolMeta
                 'claim' => $s->concept?->claim, 'description' => $s->concept?->description,
                 'status' => $s->concept?->status, 'position' => (int) $s->position,
                 'price_per_person' => $s->concept?->price_per_person_cache !== null ? (float) $s->concept->price_per_person_cache : null,
+                'price_incomplete' => $s->concept?->price_incomplete,
             ])->all(),
             'slots' => $f->slots->map(fn ($s) => [
                 'slot_id' => $s->id, 'type' => $s->type, 'position' => (int) $s->position,

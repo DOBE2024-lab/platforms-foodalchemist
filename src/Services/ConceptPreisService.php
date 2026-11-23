@@ -116,12 +116,15 @@ class ConceptPreisService
         $hatLeer = false;
         $grund = null;
         $fehlende = [];
+        $vkLuecke = false;   // CQ price_incomplete: eingebettetes eigenes Paket mit Teil-Preis
 
         foreach ($slots as $slot) {
             if (in_array($slot->type, ConceptService::STRUKTUR_TYPEN, true)) {
                 continue;
             }
             $z = $this->zeile($slot, $concept, $team, $outlet, $tiefe);
+            $ep = $slot->embedded_concept_id !== null ? $slot->embeddedConcept : null;
+            $vkLuecke = $vkLuecke || ($ep !== null && ! $ep->ist_fassung && $ep->price_incomplete === true);
             $zeilen[] = $z['zeile'];
             if ($z['leer']) {
                 $hatLeer = true;
@@ -153,6 +156,7 @@ class ConceptPreisService
             'hat_stale' => false,
             'hat_leer' => $hatLeer,
             'hat_ek_luecke' => ! $vollstaendig,
+            'hat_vk_luecke' => $vkLuecke,
             'vollstaendig' => $vollstaendig && $preis !== null && $preis > 0,
             'grund' => $vollstaendig ? ($preis !== null && $preis > 0 ? null : 'kein_preis') : $grund,
             'fehlende' => array_values(array_unique($fehlende)),
@@ -175,7 +179,8 @@ class ConceptPreisService
         $concept->setAttribute('calculated_price_per_person', $r['summe_pro_person']);
         $concept->setAttribute('ek_per_person_cache', $r['ek_per_person']);
         $concept->setAttribute('price_mode', 'auto');
-        $concept->syncOriginalAttributes(['price_per_person_cache', 'calculated_price_per_person', 'ek_per_person_cache', 'price_mode']);
+        $concept->setAttribute('price_incomplete', self::unvollstaendig($r));
+        $concept->syncOriginalAttributes(['price_per_person_cache', 'calculated_price_per_person', 'ek_per_person_cache', 'price_mode', 'price_incomplete']);
         $concept->preisOverlay = true;
         $concept->preisTeam = $team;
 
@@ -183,9 +188,31 @@ class ConceptPreisService
     }
 
     /**
+     * Ist der Konzept-Preis nur die Summe der bekannten Positionen? Die eine Regel für das gespeicherte `price_incomplete`
+     * (refreshCache) und das Fassungs-Overlay (CQ price_incomplete):
+     *  - manueller/fester Konzept-Preis → vollständig (Entscheid Dominique: der Preis ist bewusst gesetzt);
+     *  - Team-Kalkulation (Fassungs-Pfad, mit `vollstaendig`) → nicht vollständig oder ein eingebettetes Paket mit Teil-Preis;
+     *  - Arbeitszeilen-Pfad → `hat_vk_luecke` (Position ohne VK oder eingebettetes Paket mit Teil-Preis).
+     *
+     * @param  array<string, mixed>  $cockpit  aus {@see ConceptService::preisCockpit} bzw. {@see self::cockpit}
+     */
+    public static function unvollstaendig(array $cockpit): bool
+    {
+        if (in_array($cockpit['price_mode'] ?? 'auto', ['fixed', 'manuell'], true)) {
+            return false;
+        }
+        if (array_key_exists('vollstaendig', $cockpit)) {
+            return ! $cockpit['vollstaendig'] || (bool) ($cockpit['hat_vk_luecke'] ?? false);
+        }
+
+        return (bool) ($cockpit['hat_vk_luecke'] ?? false);
+    }
+
+    /**
      * Preis und EK je Person für Summen über Konzepte (Format-Kapitel, Report): Fassung → Team-Kalkulation (unvollständig =
-     * `vollstaendig=false`, Werte null); alle anderen Konzepte → die gespeicherten Caches wie bisher (null zählt dort als 0,
-     * das Verhalten des Bestands bleibt unverändert).
+     * `vollstaendig=false`, Werte null); alle anderen Konzepte → die gespeicherten Caches wie bisher (null zählt dort als 0).
+     * `vollstaendig` folgt dort dem gespeicherten `price_incomplete` (CQ price_incomplete; die eine Lesestelle). Noch nicht
+     * berechnet (null) gilt als vollständig, bis `foodalchemist:konzept-preise-nachrechnen` gelaufen ist.
      *
      * @return array{vk: ?float, ek: ?float, vollstaendig: bool}
      */
@@ -195,7 +222,12 @@ class ConceptPreisService
             ? (bool) $concept->ist_fassung
             : (bool) DB::table('foodalchemist_concepts')->where('id', $concept->id)->value('ist_fassung');
         if (! $fassung) {
-            return ['vk' => (float) ($concept->price_per_person_cache ?? 0), 'ek' => (float) ($concept->ek_per_person_cache ?? 0), 'vollstaendig' => true];
+            $unvollstaendig = array_key_exists('price_incomplete', $concept->getAttributes())
+                ? $concept->price_incomplete
+                : DB::table('foodalchemist_concepts')->where('id', $concept->id)->value('price_incomplete');
+
+            return ['vk' => (float) ($concept->price_per_person_cache ?? 0), 'ek' => (float) ($concept->ek_per_person_cache ?? 0),
+                'vollstaendig' => ! (bool) $unvollstaendig];
         }
         $r = $this->cockpit(FoodAlchemistConcept::mitFassungen()->findOrFail($concept->id), $team, $outlet);
 

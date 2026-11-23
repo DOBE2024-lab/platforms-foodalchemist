@@ -154,8 +154,9 @@
          Angebot-Spezifikum: $sim['positionen'] = aggregierte Komposition-Zeilen (role,label,ek,price je Person). --}}
     @if(count($sim['positionen'] ?? []))
         @php
-            $sumEkPp = (float) ($sim['ek_per_person'] ?? 0);
+            $sumEkPp = isset($sim['ek_per_person']) ? (float) $sim['ek_per_person'] : null;   // unbekannt bleibt null → „offen“, nie 0 % (CQ price_incomplete)
             $sumVkPp = (float) ($sim['price_per_person'] ?? $simCatalogPp);
+            $sumWe = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($sumEkPp, $sumVkPp, null);
         @endphp
         <x-fa::section title="Wareneinsatz je Position" icon="heroicon-o-list-bullet" meta="je Gast" data-angebot-wareneinsatz-positionen>
             <div class="overflow-x-auto">
@@ -186,9 +187,9 @@
                     <tfoot>
                         <tr class="font-semibold text-[var(--fa-ink)] [&>td]:border-t [&>td]:border-[var(--fa-line-strong)]">
                             <td>Summe je Gast</td>
-                            <td class="num">{{ $zkEuro($sumEkPp) }}</td>
+                            <td class="num"><x-fa::money :value="$sumEkPp" /></td>
                             <td class="num">{{ $zkEuro($sumVkPp) }}</td>
-                            <td class="num">{{ $sumVkPp > 0 ? number_format(\Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct((float) $sumEkPp, $sumVkPp, null), 1, ',', '.') . ' %' : '–' }}</td>
+                            <td class="num" data-angebot-fuss-we>{{ $sumWe !== null ? number_format($sumWe, 1, ',', '.') . ' %' : ($sumVkPp > 0 ? 'offen' : '–') }}</td>
                         </tr>
                     </tfoot>
                 </x-fa::table>

@@ -1319,9 +1319,8 @@ class Editor extends Component
                 $deklaration = $istDeklarationTab ? $agg->conceptDeklaration($concept) : null;
                 $bewertet = $bewertung->bewerten($concept, $cockpit, $aggregat);
                 $kalkulation = $kalk->conceptHk($team, $concept, $outlet);
-                $conceptVk = (float) ($cockpit['price_per_person'] ?? 0);
-                $conceptMek = (float) ($cockpit['ek_per_person'] ?? 0);
-                $conceptWePct = MargeService::wareneinsatzPct($conceptMek, $conceptVk, null);
+                // EK unbekannt (Abo-Fassung unvollständig) bleibt null → Ampel „unbekannt“, nie 0 % (CQ price_incomplete)
+                $conceptWePct = MargeService::wareneinsatzPct($cockpit['ek_per_person'] ?? null, $cockpit['price_per_person'] ?? null, null);
                 $wareneinsatzAmpel = app(\Platform\FoodAlchemist\Services\MargeService::class)
                     ->weAmpel($conceptWePct, $zielWareneinsatzPct);
                 if ($this->tab === 'kalkulation' && $this->simulationPax > 0) {

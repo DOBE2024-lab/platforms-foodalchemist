@@ -19,6 +19,8 @@ use Platform\FoodAlchemist\Support\AngebotFestpreise;
  * Preis, eingefrorener Festpreis ohne VK) bekommt `price` = null und `vk_fehlt` = true, das Cockpit `hat_vk_luecke`.
  * Die Summe bleibt die Summe der BEKANNTEN Preise — keine stille Änderung der Rechnung, aber auch keine 0 €, die wie
  * ein Preis aussieht. Der FA schätzt nie (vgl. x-fa::money: null = „Preis fehlt").
+ * Ein eingebettetes Paket mit `price_incomplete` behält seinen (Teil-)Preis, die Zeile bekommt `vk_unvollstaendig` und das
+ * Cockpit `hat_vk_luecke` (CQ price_incomplete).
  */
 final class CockpitZeilen
 {
@@ -30,7 +32,7 @@ final class CockpitZeilen
         $concept->loadMissing(['slots' => fn ($q) => $q->orderBy('position'),
             'slots.unit:id,slug,dimension,default_in_g',
             'slots.package:id,name,price_per_person,ek_per_person,price_stale',
-            'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache',   // Kaskade: eingebettetes Paket
+            'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete',   // Kaskade: eingebettetes Paket
             'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation']);
 
         $r = ['zeilen' => [], 'vk' => 0.0, 'ek' => 0.0, 'hat_stale' => false, 'hat_leer' => false, 'hat_ek_luecke' => false, 'hat_vk_luecke' => false];
@@ -44,6 +46,9 @@ final class CockpitZeilen
                 $ep = $slot->embeddedConcept;
                 $zeile = $basis + ['type' => 'paket', 'wording' => $slot->wording, 'label' => $ep->name, 'stale' => false]
                     + $this->werte($ep->price_per_person_cache, $ep->ek_per_person_cache ?? 0, false);
+                if ($ep->price_incomplete === true) {
+                    $zeile['vk_unvollstaendig'] = true;   // CQ price_incomplete: Paket-Preis = Summe seiner bekannten Positionen, der Wert bleibt sichtbar
+                }
             } elseif ($slot->package_id !== null && $slot->package) {
                 $r['hat_stale'] = $r['hat_stale'] || (bool) $slot->package->price_stale;
                 $zeile = $basis + ['type' => 'paket', 'wording' => $slot->wording, 'label' => $slot->package->name, 'stale' => (bool) $slot->package->price_stale]
@@ -56,7 +61,7 @@ final class CockpitZeilen
                 $r['hat_leer'] = true;
                 $zeile = $basis + ['type' => 'leer', 'label' => $slot->title ?? '(leer)', 'price' => null, 'ek' => null, 'ek_fehlt' => false, 'vk_fehlt' => false, 'stale' => false];
             }
-            $r['hat_vk_luecke'] = $r['hat_vk_luecke'] || $zeile['vk_fehlt'];
+            $r['hat_vk_luecke'] = $r['hat_vk_luecke'] || $zeile['vk_fehlt'] || ($zeile['vk_unvollstaendig'] ?? false);
             $r['vk'] += (float) ($zeile['_vk_roh'] ?? $zeile['price'] ?? 0);   // ungerundet summieren wie bisher
             $r['ek'] += (float) ($zeile['_ek_roh'] ?? $zeile['ek'] ?? 0);
             unset($zeile['_vk_roh'], $zeile['_ek_roh']);

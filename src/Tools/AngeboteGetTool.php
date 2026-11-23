@@ -58,6 +58,7 @@ class AngeboteGetTool extends FoodAlchemistTool implements ToolContract, ToolMet
                 'menue' => $svc->menueConcepts($a)->map(fn ($c) => [
                     'concept_id' => (int) $c->id, 'name' => $c->name,
                     'price_per_person' => $c->price_per_person_cache !== null ? (float) $c->price_per_person_cache : null,
+                    'price_incomplete' => $c->price_incomplete,
                 ])->values()->all(),
             ],
             'kalkulation' => $svc->kalkulation($team, $a),

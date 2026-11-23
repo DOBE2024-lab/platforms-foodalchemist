@@ -111,8 +111,9 @@ it('Speiseplan: Eintrag gibt seine Darreichung an die Produktion, Paket seine Me
     $paket->dishes()->first()->update(['presentation_id' => $this->ohneSpeck->id]);
     $paketEintrag = $svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => '2026-10-05', 'package_id' => $paket->id]);
 
-    $ziele = (new ReflectionMethod(SpeiseplanService::class, 'produktionsZiele'))
-        ->invoke($svc, $plan->fresh(['entries', 'lines']), $plan->fresh()->entries, '2026-10-05');
+    // 98 · 3.3 S3-5: produktionsZiele liegt jetzt im Teil SpeiseplanMengen (privat wie vorher).
+    $ziele = (new ReflectionMethod(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanMengen::class, 'produktionsZiele'))
+        ->invoke(app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanMengen::class), $plan->fresh(['entries', 'lines']), $plan->fresh()->entries, '2026-10-05');
     $byRef = collect($ziele)->keyBy(fn ($z) => str_contains($z['source_ref'], ':d') ? 'paket' : 'gericht');
     expect($byRef['gericht']['presentation_id'])->toBe($this->kinder->id)
         ->and($byRef['gericht']['portions'])->toBe(100)

@@ -7,7 +7,7 @@ use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Concerns\ManagesCanvas;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

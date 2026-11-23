@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotEinfrierService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService;
 
 /** Spec 82 §12 B3 · Angebot einfrieren oder den eingefrorenen Stand verwerfen. Der Status-Wechsel auf „angebot“ friert ohnehin ein; dieses Tool ist der direkte Weg. */
 class AngeboteEinfrierenPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

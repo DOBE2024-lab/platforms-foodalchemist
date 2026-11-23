@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /** MCP-Steuerbarkeit · D7: sichtbare Foodbooks auflisten (paginiert). Read-only. */
 class FoodbooksListTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

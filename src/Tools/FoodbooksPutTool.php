@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /** MCP-Steuerbarkeit · D7: Foodbook-Stammdaten bearbeiten (Label, Gültigkeit, Tonalität, Defaults). */
 class FoodbooksPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

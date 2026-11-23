@@ -4,9 +4,9 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Foodbooks\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\FormatService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -157,8 +157,8 @@ it('★ Editor: bei Format-Kapitel fehlen Concept- und Paket-Katalog, „Formate
 });
 
 it('★ Handbuch eines Foodbooks: Format-Kapitel liefert die Gerichte der Editionen (io 18.11.: Handbuch zeigte 0 Kapitel, 0 Speisen)', function () {
-    $quelle = app(\Platform\FoodAlchemist\Services\HandbuchQuellenService::class)
-        ->lies($this->rootTeam, \Platform\FoodAlchemist\Services\HandbuchService::TYPE_FOODBOOK, $this->buch->fresh());
+    $quelle = app(\Platform\FoodAlchemist\Services\Ausgabe\HandbuchQuellenService::class)
+        ->lies($this->rootTeam, \Platform\FoodAlchemist\Services\Ausgabe\HandbuchService::TYPE_FOODBOOK, $this->buch->fresh());
     $items = collect($quelle['sections'])->flatMap(fn ($s) => $s['items']);
 
     expect($items)->not->toBeEmpty()

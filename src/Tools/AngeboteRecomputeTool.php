@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /** MCP-Steuerbarkeit · D10: Angebots-Kalkulation (Auto-Preis aus den Menüs) neu ableiten. */
 class AngeboteRecomputeTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

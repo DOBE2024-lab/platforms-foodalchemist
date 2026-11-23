@@ -13,13 +13,13 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarteRubrik;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\ComponentEquivalentService;
 use Platform\FoodAlchemist\Services\Gericht\GerichtTauschService;
 use Platform\FoodAlchemist\Services\Gericht\GerichtVerwendungen;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -7,7 +7,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /**
  * Speiseplan-Browser (Spec 29 / Editor-Rollout) — schlanke Übersichts-Liste. Das Planen selbst

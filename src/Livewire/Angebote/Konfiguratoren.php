@@ -8,7 +8,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator;
-use Platform\FoodAlchemist\Services\KonfiguratorService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
 
 /**
  * Spec 94 · Angebote → Konfiguratoren. Liste der Konfiguratoren; ein Klick öffnet den Konfigurator-Editor im Vollbild
@@ -170,7 +170,7 @@ class Konfiguratoren extends Component
                     'anfragen' => (int) ($anzahl[$x->id] ?? 0)]);
         } else {
             $k->load(['konzepte', 'pakete']);
-            $matrix = app(\Platform\FoodAlchemist\Services\KonfiguratorPricingService::class)->matrix($k);
+            $matrix = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService::class)->matrix($k);
             $ref = $k->presentationPublicRef();
             $daten += [
                 'kennzahlen' => KonfiguratorEditor::kennzahlen($k, $matrix),

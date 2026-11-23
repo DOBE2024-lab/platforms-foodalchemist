@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -33,9 +33,9 @@ class SpeisekarteService
     use PruefstOutletZuordnung;
 
     public function __construct(
-        private ConceptService $concepts,
-        private DarreichungResolver $darreichung,
-        private WordingResolver $wording,
+        private \Platform\FoodAlchemist\Services\ConceptService $concepts,
+        private \Platform\FoodAlchemist\Services\DarreichungResolver $darreichung,
+        private \Platform\FoodAlchemist\Services\WordingResolver $wording,
     ) {
     }
 
@@ -266,7 +266,7 @@ class SpeisekarteService
                     ]);
                 }
             }
-            app(Plattform\DuplikatBilderService::class)->speisekarte($quelle, $neu, $map, $team);   // CQ Bild-Löschschutz PR 2: eigene Dateien
+            app(\Platform\FoodAlchemist\Services\Plattform\DuplikatBilderService::class)->speisekarte($quelle, $neu, $map, $team);   // CQ Bild-Löschschutz PR 2: eigene Dateien
 
             return $neu->refresh();
         });
@@ -587,7 +587,7 @@ class SpeisekarteService
                 $darr = FoodAlchemistRecipeDarreichung::find($pos->presentation_id);
                 if ($darr !== null) {
                     $vk = $outlet !== null
-                        ? app(CatalogPricingService::class)->salesNetFor(\Platform\Core\Models\Team::find($outlet->team_id), $darr, $outlet)
+                        ? app(\Platform\FoodAlchemist\Services\CatalogPricingService::class)->salesNetFor(\Platform\Core\Models\Team::find($outlet->team_id), $darr, $outlet)
                         : ($darr->sales_net !== null ? (float) $darr->sales_net : null);
                     if ($vk !== null) {
                         return ['vk' => $vk, 'quelle' => 'darreichung'];
@@ -633,7 +633,7 @@ class SpeisekarteService
         if ($pos->type === 'gericht_ref') {
             $dish = $pos->relationLoaded('dish') ? $pos->dish : $pos->dish()->first();
             if ($dish !== null) {
-                $ek = app(DarreichungResolver::class)->ekProPortion($dish);   // Spec 85: EK je Portion (vorher der ganze Ansatz)
+                $ek = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->ekProPortion($dish);   // Spec 85: EK je Portion (vorher der ganze Ansatz)
             }
         } elseif ($pos->type === 'menue_ref') {
             $concept = $pos->relationLoaded('concept') ? $pos->concept : $pos->concept()->first();
@@ -642,7 +642,7 @@ class SpeisekarteService
             }
         }
 
-        $we = MargeService::wareneinsatzPct($ek, $vk);
+        $we = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk);
 
         return ['vk' => $vk, 'ek' => $ek, 'we' => $we, 'quelle' => $vkArr['quelle'], 'vorlaeufig' => (bool) ($vkArr['vorlaeufig'] ?? false)];
     }
@@ -700,7 +700,7 @@ class SpeisekarteService
         $rubriken = [];
         foreach ($sections as $r) {
             $a = $roll((int) $r->id);
-            $a['we'] = $a['ek'] > 0 ? MargeService::wareneinsatzPct($a['ek'], $a['vk']) : null;
+            $a['we'] = $a['ek'] > 0 ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($a['ek'], $a['vk']) : null;
             $rubriken[(int) $r->id] = $a;
         }
 
@@ -756,9 +756,9 @@ class SpeisekarteService
      */
     public function dokumentDaten(Team $team, FoodAlchemistSpeisekarte $karte, bool $intern = false, array $rubrikFilter = [], bool $mitKaskade = false, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $agg = app(ConcepterAggregateService::class);
-        $marge = app(MargeService::class);
-        $mwstArr = app(TeamSettingsService::class)->mwst($team);
+        $agg = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class);
+        $marge = app(\Platform\FoodAlchemist\Services\MargeService::class);
+        $mwstArr = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->mwst($team);
         $mwstSatz = (float) ($mwstArr['regulaer'] ?? 19.0);
         $brutto = (bool) $karte->preis_anzeige_brutto;
 
@@ -822,7 +822,7 @@ class SpeisekarteService
         $rundung = $karte->preis_rundung ?? 'keine';
         $runde = fn (?float $b) => $this->rundeBrutto($b, $rundung);
         // Jod (15.10.2026): freiwilliger Hinweis je Gericht, nur bei Mandanten-Schalter; nie Teil von Codes/Legende
-        $jodAktiv = app(TeamSettingsService::class)->jodHinweisAktiv($team);
+        $jodAktiv = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->jodHinweisAktiv($team);
         $hinweiseFuer = fn (Collection $gerichte) => $agg->freiwilligeHinweise($gerichte, $jodAktiv);
         $walk = function ($parentId, int $depth) use (&$walk, $byParent, &$rubriken, $codesFuer, $codesFuerGericht, $hinweiseFuer, $marge, $mwstSatz, $runde, $outlet) {
             foreach ($byParent[$parentId] ?? [] as $rubrik) {
@@ -909,7 +909,7 @@ class SpeisekarteService
                 'deklaration' => false, 'naehrwerte' => false, 'notizen' => false,
                 'preise' => $intern, 'lieferanten' => $intern, 'ek' => $intern, 'intern' => $intern,
             ];
-            $report = app(\Platform\FoodAlchemist\Services\ReportExportService::class);
+            $report = app(\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService::class);
             foreach (array_values(array_unique($gerichtIds)) as $gid) {
                 try {
                     $d = $report->rezeptDaten($team, $gid, $kOpt);
@@ -1116,9 +1116,9 @@ class SpeisekarteService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $karte->{$spalte};
-        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
 
-        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage(
             $file,
             $team,
             'foodalchemist.speisekarte',
@@ -1141,7 +1141,7 @@ class SpeisekarteService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $karte->{$spalte};
-        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
         $karte->update([
             $spalte => null,
             $contextSpalte => null,
@@ -1163,8 +1163,8 @@ class SpeisekarteService
         return [
             'color' => $color,
             'band' => ($karte->band_color ?? '') !== '' ? $karte->band_color : $color,
-            'logo' => app(Plattform\FoodAlchemistMediaService::class)->dataUri($karte->logo_context_file_id, $karte->logo_path),
-            'cover' => app(Plattform\FoodAlchemistMediaService::class)->dataUri($karte->cover_context_file_id, $karte->cover_image_path),
+            'logo' => app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->dataUri($karte->logo_context_file_id, $karte->logo_path),
+            'cover' => app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->dataUri($karte->cover_context_file_id, $karte->cover_image_path),
             'footer' => ($karte->footer_text ?? '') !== '' ? $karte->footer_text : null,
         ];
     }

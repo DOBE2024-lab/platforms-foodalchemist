@@ -13,7 +13,7 @@ class PricingCascadeService
 {
     public function __construct(
         private ConceptService $concepts,
-        private AngebotService $offers,
+        private Ausgabe\AngebotService $offers,
     ) {
     }
 

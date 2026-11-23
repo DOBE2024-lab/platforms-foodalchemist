@@ -6,8 +6,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Platform\Core\Http\Controllers\Controller;
-use Platform\FoodAlchemist\Services\PresentationService;
-use Platform\FoodAlchemist\Services\PresentationShareCardService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationShareCardService;
 use Symfony\Component\HttpFoundation\Response;
 
 /**

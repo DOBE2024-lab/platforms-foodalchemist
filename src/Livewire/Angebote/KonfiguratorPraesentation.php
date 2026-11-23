@@ -12,9 +12,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
-use Platform\FoodAlchemist\Services\KonfiguratorService;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 
 /**
  * Spec 94 · Reiter „Branding und Präsentation“ des Konfigurator-Editors: Design aus den Präsentations-Designs (Ausgabeform

@@ -3,7 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Foodbooks\Index;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\FormatService;
 use Platform\FoodAlchemist\Services\LeitstelleService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

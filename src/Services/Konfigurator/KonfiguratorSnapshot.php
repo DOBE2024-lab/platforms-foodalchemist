@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Services\Konfigurator;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator;
-use Platform\FoodAlchemist\Services\KonfiguratorPricingService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
 
 /**
  * Spec 94 · Kundensicht des Konfigurators für den Präsentations-Snapshot (Typ `konfigurator`). ALLOWLIST-Neubau:
@@ -291,7 +291,7 @@ final class KonfiguratorSnapshot
 
     /**
      * Stundenangabe der Getränke-Karte je Zeitfenster als Text (Dominique 08.11.2026): Tag und Abend rechnet je Zeitfenster mit seiner
-     * Einsatzzeit ({@see \Platform\FoodAlchemist\Services\KonfiguratorPricingService::getraenkPauschale}), die Karte zeigt deshalb „8 + 8“
+     * Einsatzzeit ({@see \Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService::getraenkPauschale}), die Karte zeigt deshalb „8 + 8“
      * statt der Day-into-Night-Zeit. Ein fehlender Teil zählt nicht.
      *
      * @return array{lunch: string, dinner: string, day_night: string}

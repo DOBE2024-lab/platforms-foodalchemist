@@ -234,7 +234,7 @@ it('gibt Kennzeichnung und Legende auf der Concept-KARTE aus', function () {
     $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
     $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->b->id]);
 
-    $daten = app(\Platform\FoodAlchemist\Services\FoodbookService::class)
+    $daten = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)
         ->conceptKarteDaten($this->rootTeam, $c->id);
 
     $gericht = collect($daten['gerichte'])->firstWhere('type', 'gericht');

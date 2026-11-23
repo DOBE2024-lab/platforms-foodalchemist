@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanChip;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
-use Platform\FoodAlchemist\Services\SpeiseplanVorgabenService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanVorgabenService;
 
 /**
  * Spec 59 — Speiseplan-Chips pflegen: der zentrale Katalog, gegen den Pläne ihre

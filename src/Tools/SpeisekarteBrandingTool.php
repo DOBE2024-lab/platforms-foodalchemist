@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 
 /** MCP-Steuerbarkeit · D8: Speisekarte-Branding setzen (Farben + Footer). Logo/Cover-Upload deferred. */
 class SpeisekarteBrandingTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

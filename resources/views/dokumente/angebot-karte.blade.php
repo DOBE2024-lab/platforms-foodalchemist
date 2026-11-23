@@ -4,7 +4,7 @@
 {{-- #380 Composer: Angebots-„Karte" — schöne Kundenausgabe im Foodbook-Look (Kapitel + Format-Editionen
      als Gäste-Menü + Preis-Footer netto/MwSt/brutto). Marken-Tokens je Angebot (AngebotService::brandingDaten)
      mit Defaults; DomPDF: kein var(), Farben per Blade-Echo, Bilder base64. --}}
-@php($marke = ($branding ?? []) + \Platform\FoodAlchemist\Services\AngebotService::BRANDING_STANDARD)
+@php($marke = ($branding ?? []) + \Platform\FoodAlchemist\Services\Ausgabe\AngebotService::BRANDING_STANDARD)
 @php($brand = $marke['color'])
 @php($band = $marke['band'] ?: $brand)
 @php($footerText = $marke['footer'] ?: 'Erstellt mit Food Alchemist')

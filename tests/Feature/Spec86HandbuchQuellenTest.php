@@ -8,9 +8,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
-use Platform\FoodAlchemist\Services\AngebotService;
-use Platform\FoodAlchemist\Services\HandbuchService;
-use Platform\FoodAlchemist\Services\OfferCompositionService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\HandbuchService;
+use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -63,13 +63,13 @@ beforeEach(function () {
     $slot = $concepts->addSlot($this->rootTeam, $menue->id, ['role' => 'Hauptgang']);
     $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $gericht->id]);
     \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::whereKey($this->kapitelId)->update(['writing_style_id' => $stil->id]);
-    app(\Platform\FoodAlchemist\Services\FoodbookService::class)->addBlock($this->rootTeam, $this->kapitelId, ['type' => 'concept_ref', 'concept_id' => $menue->id]);
-    $karten = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class);
+    app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->addBlock($this->rootTeam, $this->kapitelId, ['type' => 'concept_ref', 'concept_id' => $menue->id]);
+    $karten = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class);
     $rubrik = $karten->addRubrik($this->rootTeam, $this->karteId);
     $karten->addPosition($this->rootTeam, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $gericht->id]);
     \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte::whereKey($this->karteId)->update(['writing_style_id' => $stil->id]);
     // Konfigurator-Konzept mit demselben Menü (Spec 94 KI-Wording)
-    $kf = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class);
+    $kf = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class);
     $this->kfKonzeptId = $kf->konzeptHinzu($this->rootTeam, $kf->anlegen($this->rootTeam, ['name' => 'Gala'])->id, ['rolle' => 'haupt', 'dinner_concept_id' => $menue->id])->id;
     $this->stilId = $stil->id;
     $this->ohneProviderCall = fn () => DB::table('foodalchemist_ai_call_log')->whereNull('error')->count() === 0;

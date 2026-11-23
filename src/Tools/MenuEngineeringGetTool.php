@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\MenuEngineeringService;
+use Platform\FoodAlchemist\Services\Ausgabe\MenuEngineeringService;
 
 /**
  * Spec 32 · C3 (read): Menu-Engineering-Matrix — Popularität × Deckungsbeitrag je Gericht,

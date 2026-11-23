@@ -6,7 +6,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Angebote\KonfiguratorPraesentation;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator;
-use Platform\FoodAlchemist\Services\KonfiguratorService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -75,7 +75,7 @@ it('Ein übernommenes Logo wird beim Ersetzen am Konfigurator nicht beim Foodboo
     config(['filesystems.default' => 'public']);
     Storage::fake('public');
     $fb = FoodAlchemistFoodbook::create(['team_id' => $this->rootTeam->id, 'label' => 'Hochzeit', 'code' => 'FB-1']);
-    $pfad = app(\Platform\FoodAlchemist\Services\FoodbookService::class)->storeLogo($this->rootTeam, $fb->id, UploadedFile::fake()->image('fb.png', 200, 60));
+    $pfad = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->storeLogo($this->rootTeam, $fb->id, UploadedFile::fake()->image('fb.png', 200, 60));
 
     $svc = app(KonfiguratorService::class);
     $svc->brandingUebernehmen($this->rootTeam, $this->k->id, 'foodbook', $fb->id);

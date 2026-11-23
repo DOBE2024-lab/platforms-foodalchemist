@@ -34,7 +34,7 @@ class KonfiguratorPaketMengenPutTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $menge = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->mengeSetzen($team, self::id($a, 'paket_id'), self::id($a, 'leistung_id'),
+        $menge = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->mengeSetzen($team, self::id($a, 'paket_id'), self::id($a, 'leistung_id'),
             ! empty($a['konfigurator_konzept_id']) ? (int) $a['konfigurator_konzept_id'] : null, isset($a['anzahl']) ? (float) $a['anzahl'] : null, $a['notiz'] ?? null);
 
         return ['menge' => $menge->toArray()];

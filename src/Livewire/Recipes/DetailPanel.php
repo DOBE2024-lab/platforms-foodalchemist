@@ -324,7 +324,7 @@ class DetailPanel extends Component
         return view('foodalchemist::livewire.handy.rezept-handbuch', [
             'art' => 'rezept',
             'rezept' => $rezept,
-            'karte' => app(\Platform\FoodAlchemist\Services\HandyDetailService::class)->karte($team, $rezept),
+            'karte' => app(\Platform\FoodAlchemist\Services\Ausgabe\HandyDetailService::class)->karte($team, $rezept),
             'formen' => collect(),
             'hoch' => $rezept->is_sales_recipe ? null : $this->hochrechnung($rezept),   // #1003 Hochrechnen (Ansicht)
             'kennzahlen' => [

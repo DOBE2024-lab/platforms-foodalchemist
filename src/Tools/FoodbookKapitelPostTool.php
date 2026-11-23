@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /** Phase B: Kapitel anlegen (auch verschachtelt) — nur solange das Foodbook draft ist. */
 class FoodbookKapitelPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

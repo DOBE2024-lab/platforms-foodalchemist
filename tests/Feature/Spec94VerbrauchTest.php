@@ -7,10 +7,10 @@ use Platform\FoodAlchemist\Livewire\Angebote\KonfiguratorEditor;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
-use Platform\FoodAlchemist\Services\AngebotService;
-use Platform\FoodAlchemist\Services\KonfiguratorPricingService;
-use Platform\FoodAlchemist\Services\KonfiguratorService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

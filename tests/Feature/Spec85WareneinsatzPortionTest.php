@@ -6,10 +6,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition;
 use Platform\FoodAlchemist\Services\Trend\BenchmarkService;
 use Platform\FoodAlchemist\Services\DarreichungResolver;
-use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\ReportExportService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
+use Platform\FoodAlchemist\Services\Ausgabe\ReportExportService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -120,7 +120,7 @@ it('Wochenauswertung: nachgeladene Spalten erscheinen als eigener Block mit Aufr
             ->toContain('2 nachgeladene Spalten')
             ->toContain('Nachgeladene Spalten')
             ->toContain('sales_unit_count (EK je Portion)')
-            ->toContain('Services/SpeisekarteService.php')
+            ->toContain('Services/Ausgabe/SpeisekarteService.php')
             ->toContain((string) $this->gericht->id)
             ->and($out)->toMatch('/\|\s+2\s+\|\s+sales_unit_count/');
     } finally {

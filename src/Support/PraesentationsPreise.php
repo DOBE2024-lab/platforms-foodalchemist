@@ -73,7 +73,7 @@ final class PraesentationsPreise
 
     /**
      * CQ price_incomplete, Republish `preserve`: mit einem eingefrorenen Preis friert auch sein „vorläufig“-Merker ein.
-     * Liest die Pfade aus {@see \Platform\FoodAlchemist\Services\PresentationService::preisPfade} (Block, Kapitel, Gesamt)
+     * Liest die Pfade aus {@see \Platform\FoodAlchemist\Services\Ausgabe\PresentationService::preisPfade} (Block, Kapitel, Gesamt)
      * und übernimmt den Merker des Alt-Snapshots an genau diesen Knoten; der Live-Merker gilt dort nicht mehr.
      *
      * @param  list<string>  $pfade  die tatsächlich eingefrorenen Preis-Pfade

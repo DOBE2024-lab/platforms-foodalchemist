@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Services\SignalDetektorService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 

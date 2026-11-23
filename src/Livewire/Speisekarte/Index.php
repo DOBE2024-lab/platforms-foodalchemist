@@ -10,9 +10,9 @@ use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 
 /**
  * Speisekarte-Editor (Stufe A) — Browser links + Karten-Editor rechts (Rubrik-Baum,
@@ -1003,7 +1003,7 @@ class Index extends Component
                 ->where('is_inactive', false)->orderBy('sort_order')->orderBy('name')->get(['id', 'name']),
             // Spec 33 P3: Hinweis, kein Verbot.
             'portfolioKonflikt' => $karte === null ? null
-                : app(\Platform\FoodAlchemist\Services\PortfolioService::class)
+                : app(\Platform\FoodAlchemist\Services\Foodbook\PortfolioService::class)
                     ->konfliktHinweis($team, 'speisekarte', (int) $karte->id),
             'crmVerfuegbar' => $svc->crmVerfuegbar(),
             'firmen' => $svc->sucheFirmen($this->firmaSuche),

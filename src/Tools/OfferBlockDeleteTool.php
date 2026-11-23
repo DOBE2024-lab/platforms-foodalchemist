@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
-use Platform\FoodAlchemist\Services\OfferCompositionService;
+use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 
 /**
  * #380 Composer · MCP-Lockstep: einen Block aus einem team-eigenen Angebot-Kapitel entfernen

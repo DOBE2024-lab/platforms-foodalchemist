@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SpeiseplanVorgabenService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanVorgabenService;
 
 /** Spec 59 · MCP im Lockstep: Speiseplan-Prüf-Chip anlegen (oder den Startsatz). */
 class SpeiseplanChipsPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

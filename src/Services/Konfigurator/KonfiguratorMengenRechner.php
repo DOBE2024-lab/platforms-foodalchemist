@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Services\Konfigurator;
 
 /**
  * Spec 94 · Mengenregeln (fest | schluessel | stufen) für einen Satz Leistungen bei einer Gästezahl. Reine Rechnung ohne
- * Datenbank — Teil des {@see \Platform\FoodAlchemist\Services\KonfiguratorPricingService}, das allein ihn aufruft.
+ * Datenbank — Teil des {@see \Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService}, das allein ihn aufruft.
  *
  *   aktiv(l, r)        = (ab_pax leer oder r ≥ ab_pax) und (bis_pax leer oder r ≤ bis_pax)
  *   Bezug(l)           = gaeste: r | leistung: anzahl(bezug_leistung)   (ersetzte Bezugs-Leistung → ihr Ersatz)

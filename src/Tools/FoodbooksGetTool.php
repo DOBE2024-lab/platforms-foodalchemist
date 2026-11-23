@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /** M11-11: Foodbook-Detail (Kopf + Kapitel-Baum + Blöcke + aggregierter Angebotspreis). Read-only. */
 class FoodbooksGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

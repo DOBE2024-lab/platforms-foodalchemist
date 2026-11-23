@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /** MCP-Steuerbarkeit · D10: ein angebots-lokales Menü in den Concept-Katalog überführen (promoten). */
 class AngebotMenuePromoteTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

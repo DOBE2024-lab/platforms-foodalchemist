@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -100,7 +100,7 @@ class MenuEngineeringService
     private function popularitaet(Team $team, ?string $von, ?string $bis): array
     {
         $q = DB::table('foodalchemist_sales_facts')
-            ->whereIn('team_id', app(Plattform\StandortService::class)->leseTeamIds($team))->whereNull('deleted_at')->whereNotNull('recipe_id')   // Spec 85 PR-E: Team-Brille
+            ->whereIn('team_id', app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->leseTeamIds($team))->whereNull('deleted_at')->whereNotNull('recipe_id')   // Spec 85 PR-E: Team-Brille
             ->when($von !== null, fn ($qq) => $qq->whereDate('sold_at', '>=', $von))
             ->when($bis !== null, fn ($qq) => $qq->whereDate('sold_at', '<=', $bis))
             ->selectRaw('recipe_id, SUM(qty_sold) AS menge, SUM(revenue_net) AS umsatz')
@@ -124,7 +124,7 @@ class MenuEngineeringService
         // v0: menschliche Akzeptanz statt Absatz. Ausdrücklich eine andere Aussage.
         $fb = DB::table('foodalchemist_recipe_feedback as f')
             ->join('foodalchemist_recipes as r', 'r.id', '=', 'f.recipe_id')
-            ->whereIn('r.team_id', app(Plattform\StandortService::class)->leseTeamIds($team))->where('r.is_sales_recipe', true)
+            ->whereIn('r.team_id', app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->leseTeamIds($team))->where('r.is_sales_recipe', true)
             ->whereNull('f.deleted_at')->whereNotNull('f.score')
             ->selectRaw('f.recipe_id, AVG(f.score) AS score')
             ->groupBy('f.recipe_id')
@@ -146,7 +146,7 @@ class MenuEngineeringService
      */
     private function wirtschaft(Team $team): array
     {
-        $rezepte = app(Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistRecipe::query(), $team)   // Spec 85 PR-E: Team-Brille
+        $rezepte = app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistRecipe::query(), $team)   // Spec 85 PR-E: Team-Brille
             ->where('is_sales_recipe', true)
             ->with(['standardPresentation:id,recipe_id,sales_net,ek_portion,is_standard'])
             ->get(['foodalchemist_recipes.id', 'name', 'ek_total_eur', 'sales_unit_count']);
@@ -154,7 +154,7 @@ class MenuEngineeringService
         $out = [];
         foreach ($rezepte as $r) {
             $std = $r->standardPresentation;
-            $resolver = app(DarreichungResolver::class);
+            $resolver = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class);
             $vk = $resolver->vkNetto($r);   // Spec 85 D-1: Preisleiter (Standard-Darreichung)
             $ek = $resolver->ekProPortion($r);   // CQ 2.2a: Standard eager geladen → ek_portion, sonst Ansatz ÷ Portionen
 
@@ -172,7 +172,7 @@ class MenuEngineeringService
                 'ek_portion' => $ek !== null ? round($ek, 4) : null,
                 'db_eur' => $vollstaendig ? round($vk - $ek, 2) : null,
                 'db_pct' => $vollstaendig ? round(($vk - $ek) / $vk * 100, 1) : null,
-                'wareneinsatz_pct' => MargeService::wareneinsatzPct($ek, $vk),
+                'wareneinsatz_pct' => \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk),
                 'quelle' => $quelle,
             ];
         }

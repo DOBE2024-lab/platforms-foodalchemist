@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -31,11 +31,11 @@ class AngebotEinfrierService
     private const MAX_TIEFE = 8;
 
     public function __construct(
-        private readonly FaRechte $rechte,
-        private readonly EinfrierKosten $kosten,
-        private readonly FassungsVergleich $vergleich,
-        private readonly Plattform\PlattformProtokoll $protokoll,
-        private readonly FassungsUmstellung $umstellung,
+        private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
+        private readonly \Platform\FoodAlchemist\Services\EinfrierKosten $kosten,
+        private readonly \Platform\FoodAlchemist\Services\FassungsVergleich $vergleich,
+        private readonly \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
+        private readonly \Platform\FoodAlchemist\Services\FassungsUmstellung $umstellung,
     ) {}
 
     public function aktive(FoodAlchemistAngebot $angebot): ?FoodAlchemistAngebotEinfrierung
@@ -277,7 +277,7 @@ class AngebotEinfrierService
             }
             $geaendert = array_values(array_unique(array_merge($umgehaengt['rezepte'], $gericht->ist_fassung ? [] : [(int) $gericht->id])));
             if ($geaendert !== []) {
-                app(RecipeRecomputeService::class)->recomputeMany($geaendert);
+                app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeMany($geaendert);
             }
             $this->zeileNeuEinfrieren($zeile, $gericht->refresh(), $eigentuemer);
 
@@ -296,7 +296,7 @@ class AngebotEinfrierService
             return ['uebernahme_id' => (int) $u->id, 'von_nr' => $vorschau['von_nr'], 'nach_nr' => $vorschau['nach_nr'], 'allergen_geaendert' => $vorschau['allergen_geaendert'],
                 'umgehaengt' => $umgehaengt, 'betroffene_ausgaben' => $vorschau['betroffene_ausgaben']];
         });
-        app(Plattform\AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
+        app(\Platform\FoodAlchemist\Services\Plattform\AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
 
         return $ergebnis;
     }
@@ -400,8 +400,8 @@ class AngebotEinfrierService
         foreach ($formen as $d) {
             // wie die Live-Wege: Abo-Fassung über TeamVkService je Form, eigenes Gericht über den VK der Form (sonst Preisleiter)
             $vk = $gericht->ist_fassung
-                ? app(TeamVkService::class)->fuer($gericht, $eigentuemer, null, $d)['vk']
-                : ($d->sales_net !== null ? (float) $d->sales_net : app(DarreichungResolver::class)->vkNetto($gericht));
+                ? app(\Platform\FoodAlchemist\Services\TeamVkService::class)->fuer($gericht, $eigentuemer, null, $d)['vk']
+                : ($d->sales_net !== null ? (float) $d->sales_net : app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->vkNetto($gericht));
             $jeForm[(int) $d->id] = $k['vollstaendig'] && $vk !== null ? round((float) $vk, 2) : null;
         }
 
@@ -440,7 +440,7 @@ class AngebotEinfrierService
     {
         app(\Platform\FoodAlchemist\Support\AngebotFestpreise::class)->vergessen((int) $angebot->id);   // Festpreise im selben Request neu lesen
         try {
-            app(FassungSignalService::class)->nachAngebotsAenderung($angebot, $einfrierung);
+            app(\Platform\FoodAlchemist\Services\FassungSignalService::class)->nachAngebotsAenderung($angebot, $einfrierung);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Angebot geändert, aber das Nachführen der Fassungs-Signale ist fehlgeschlagen: '.$e->getMessage(), ['exception' => $e, 'angebot_id' => $angebot->id]);
         }

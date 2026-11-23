@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
-use Platform\FoodAlchemist\Services\OfferCompositionService;
+use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 
 /**
  * Spec 50 · C-7 — Blöcke eines Angebot-Kapitels neu ordnen. Gegenstück zu

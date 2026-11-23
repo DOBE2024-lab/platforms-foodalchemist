@@ -103,7 +103,7 @@ it('speisekarte_format_rubriken.POST: bucht ein Format als Rubrik (live menue_re
     $f = FoodAlchemistFormat::create(['team_id' => $this->rootTeam->id, 'name' => 'CHEFS.CORNER', 'consumer_name' => 'Chefs Corner']);
     $c = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'URBAN & FLAVOUR', 'status' => 'active', 'is_template' => false]);
     app(FormatService::class)->slotConceptEinfuegen($this->rootTeam, $f->id, $c->id);
-    $karte = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Abendkarte']);
+    $karte = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Abendkarte']);
 
     $res = ($this->tool)('foodalchemist.speisekarte_format_rubriken.POST', ['speisekarte_id' => $karte->id, 'format_id' => $f->id]);
     expect($res->success)->toBeTrue()

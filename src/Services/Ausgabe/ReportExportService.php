@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Support\Collection;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
@@ -47,8 +47,8 @@ class ReportExportService
         if (array_key_exists($key, $this->preisMemo)) {
             return $this->preisMemo[$key];
         }
-        $p = app(PriceService::class)->activeFor((int) $la->id, $this->preisTeam);
-        if ($p === null && ($lp = app(PriceService::class)->letzterPreisFuer((int) $la->id, $this->preisTeam)) !== null) {
+        $p = app(\Platform\FoodAlchemist\Services\PriceService::class)->activeFor((int) $la->id, $this->preisTeam);
+        if ($p === null && ($lp = app(\Platform\FoodAlchemist\Services\PriceService::class)->letzterPreisFuer((int) $la->id, $this->preisTeam)) !== null) {
             // Rückfall 27.10.: letzter bekannter Preis eines eingestellten Artikels — nicht gespeichert, nur für den Bericht, Quelle sichtbar
             $p = (new \Platform\FoodAlchemist\Models\FoodAlchemistPrice)->forceFill(['price' => $lp['preis']]);
             $p->setAttribute('preis_quelle', 'letzter_eingestellt');
@@ -251,7 +251,7 @@ class ReportExportService
 
         $this->behaelterAusConcept($team, $concept, $optionen);
 
-        app(ConceptPreisService::class)->anwenden($concept, $team);   // Abo-Fassung: Team-Preis statt leerer Master-Caches (Spec 82)
+        app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->anwenden($concept, $team);   // Abo-Fassung: Team-Preis statt leerer Master-Caches (Spec 82)
         $slots = $concept->slots->map(function ($slot) use ($optionen, $team, $concept) {
             $gerichte = collect();
             if ($slot->dish !== null) {
@@ -288,7 +288,7 @@ class ReportExportService
         if ($pax > 0 && ($optionen['simulation'] ?? false)) {
             // Ebene 2: ein via $optionen durchgereichter Betrieb rechnet die Sim mit dessen Kosten (sonst Team-Baseline).
             $simOutlet = ($optionen['outlet'] ?? null) instanceof \Platform\FoodAlchemist\Models\FoodAlchemistOutlet ? $optionen['outlet'] : null;
-            $auftragsSimulation = app(OrderCostingService::class)->costConcept($team, $concept, $pax, $simOutlet);
+            $auftragsSimulation = app(\Platform\FoodAlchemist\Services\OrderCostingService::class)->costConcept($team, $concept, $pax, $simOutlet);
         }
 
         return [
@@ -751,8 +751,8 @@ class ReportExportService
         // der einzige Riegel) — vorher eine Abfrage je Artikel (#491): Broichs Lieferant mit 21.014 Artikeln = 21.014 Abfragen, Timeout/Speicher.
         $items = FoodAlchemistSupplierItem::visibleToTeam($team)->where('foodalchemist_supplier_items.supplier_id', $supplier->id)
             ->select('foodalchemist_supplier_items.*')
-            ->selectSub(app(PriceService::class)->activePriceSubquery('foodalchemist_supplier_items.id', $team), 'aktiver_preis')
-            ->tap(fn ($q) => app(PriceService::class)->mitLetztemPreis($q, 'foodalchemist_supplier_items.id', $team))   // Rückfall eingestellter Artikel (27.10.)
+            ->selectSub(app(\Platform\FoodAlchemist\Services\PriceService::class)->activePriceSubquery('foodalchemist_supplier_items.id', $team), 'aktiver_preis')
+            ->tap(fn ($q) => app(\Platform\FoodAlchemist\Services\PriceService::class)->mitLetztemPreis($q, 'foodalchemist_supplier_items.id', $team))   // Rückfall eingestellter Artikel (27.10.)
             ->with(['structure.gp:id,name,lead_la_supplier_item_id'])
             ->orderBy('designation')->get();
         // dieselbe Form wie FoodAlchemistPrice::price (Cast decimal:4), damit der Bericht byte-gleich bleibt
@@ -797,7 +797,7 @@ class ReportExportService
     public function favoritenDaten(Team $team, array $optionen, int $limit = 300): array
     {
         $this->preisTeam = $team;   // Spec 84: Preise nur in der Sicht dieses Teams
-        $items = app(FavoriteGpService::class)->suggest($team, $limit, null, false);
+        $items = app(\Platform\FoodAlchemist\Services\FavoriteGpService::class)->suggest($team, $limit, null, false);
 
         return [
             'typ' => 'favoriten',
@@ -960,7 +960,7 @@ class ReportExportService
         $sensorik = null;
         if ($optionen['sensorik'] ?? false) {
             try {
-                $sensorik = app(SensorikService::class)->fuerRezept((int) $recipe->id);
+                $sensorik = app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerRezept((int) $recipe->id);
             } catch (\Throwable) {
                 $sensorik = ['leer' => true, 'fehler' => 'Sensorik konnte nicht gelesen werden.'];
             }
@@ -972,8 +972,8 @@ class ReportExportService
         // Amuse-Mengen auf 0 zusammenfällt: 0,008 kg × 0,18 €/kg = 0,0014 € → gerundet 0,00.
         $zeilenKosten = $this->zeilenKosten($recipe);
         // Spec 85 D-1: VK aus der Standard-Darreichung (Preisleiter), nicht aus recipes.sales_net.
-        $vkNetto = app(DarreichungResolver::class)->vkNetto($recipe);
-        $ekPortion = app(DarreichungResolver::class)->ekProPortion($recipe);   // Spec 85: EK je Portion, wie der VK
+        $vkNetto = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->vkNetto($recipe);
+        $ekPortion = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->ekProPortion($recipe);   // Spec 85: EK je Portion, wie der VK
 
         return [
             'id' => (int) $recipe->id,
@@ -1000,14 +1000,14 @@ class ReportExportService
             'sales_net' => $vkNetto,
             // Spec 85: EK EINER Portion gegen den Portions-VK (vorher Ansatz-EK ÷ Portions-VK).
             'food_cost_percent' => ((float) ($vkNetto ?? 0) > 0 && $ekPortion !== null)
-                ? MargeService::wareneinsatzPct($ekPortion, $vkNetto, 2)
+                ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ekPortion, $vkNetto, 2)
                 : null,
             'sales_wording_standard' => $recipe->sales_wording_standard,
             'plating_text' => $recipe->plating_text,
             'category' => $recipe->category?->label,
             'dish_class' => $recipe->dishClass?->label,
             'dish_main_group' => $recipe->dishMainGroup?->label,
-            'markup_class' => ($k = app(DarreichungResolver::class)->klasseFuer($recipe))?->label ?? $k?->code,   // Spec 85 D-1 PR-B
+            'markup_class' => ($k = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->klasseFuer($recipe))?->label ?? $k?->code,   // Spec 85 D-1 PR-B
             'sales_unit' => $recipe->salesUnit?->display_de ?? $recipe->salesUnit?->slug,
             'produktion' => [
                 'production_depth' => $recipe->production_depth,
@@ -1120,7 +1120,7 @@ class ReportExportService
                 ? ($this->teamCache[$recipe->team_id] ??= Team::find($recipe->team_id))
                 : null;
 
-            $zeilen = app(RecipeRecomputeService::class)->zeilenKostenUndMassen($recipe, $team);
+            $zeilen = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->zeilenKostenUndMassen($recipe, $team);
 
             return array_map(fn ($z) => $z['kosten'], $zeilen);
         } catch (\Throwable) {
@@ -1161,7 +1161,7 @@ class ReportExportService
             'adresse' => $kindAdresse,
             // Verkaufstext ohne Marken-Klammer (Kurator 26.10.): Kundensicht (intern=false) zeigt „Sahnesauce: konserviert“ statt „… / (Altoni)“;
             // Bio/Vegan/Glutenfrei/Laktosefrei bleiben. Intern (Kalkulation, Produktion) bleibt der volle GP-Name.
-            'name' => $sub?->name ?? ($gp !== null ? (($optionen['intern'] ?? false) ? $gp->name : app(GpNamingService::class)->nameOhneMarke((string) $gp->name, $gp->zusatz)) : null)
+            'name' => $sub?->name ?? ($gp !== null ? (($optionen['intern'] ?? false) ? $gp->name : app(\Platform\FoodAlchemist\Services\GpNamingService::class)->nameOhneMarke((string) $gp->name, $gp->zusatz)) : null)
                 ?? $z->display_name ?? $z->raw_text,
             'raw_text' => $z->raw_text,
             'menge' => $this->mengeText($this->skaliere($z->quantity, $optionen), $z->unit),
@@ -1365,7 +1365,7 @@ class ReportExportService
     private function photoDataUri(?int $contextFileId, ?string $pfad): ?string
     {
         try {
-            return app(Plattform\FoodAlchemistMediaService::class)->dataUri($contextFileId, $pfad);
+            return app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->dataUri($contextFileId, $pfad);
         } catch (\Throwable) {
             return null;
         }

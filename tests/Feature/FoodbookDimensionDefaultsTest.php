@@ -3,7 +3,7 @@
 use Platform\FoodAlchemist\Models\FoodAlchemistEinsatzmoment;
 use Platform\FoodAlchemist\Models\FoodAlchemistEventtyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

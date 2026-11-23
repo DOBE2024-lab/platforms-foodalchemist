@@ -80,7 +80,7 @@ it('speiseplanAusBrief: leerer Brief → Meldung, nichts angelegt', function () 
  * Speiseplan wählen setzt den Owner + reaktiviert dessen jüngste Planungs-Session (updatedSpOwnerId).
  */
 it('Speiseplan-Auswähler aktiviert die jüngste Owner-Session', function () {
-    $plan = app(\Platform\FoodAlchemist\Services\SpeiseplanService::class)->create($this->rootTeam, ['name' => 'GV-Woche']);
+    $plan = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class)->create($this->rootTeam, ['name' => 'GV-Woche']);
     $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'SP-Planung']);
     FoodAlchemistCascadeRun::create([
@@ -99,7 +99,7 @@ it('Speiseplan-Auswähler aktiviert die jüngste Owner-Session', function () {
 });
 
 it('Speiseplan-Auswähler ohne Vor-Session setzt nur den Owner', function () {
-    $plan = app(\Platform\FoodAlchemist\Services\SpeiseplanService::class)->create($this->rootTeam, ['name' => 'Leerer Plan']);
+    $plan = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class)->create($this->rootTeam, ['name' => 'Leerer Plan']);
     Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: Owner-Auswahl im Kind, die Session aktiviert der Parent
         ->set('spOwnerId', $plan->id)
         ->assertSet('spOwnerId', $plan->id)

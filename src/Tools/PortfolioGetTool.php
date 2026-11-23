@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PortfolioService;
+use Platform\FoodAlchemist\Services\Foodbook\PortfolioService;
 
 /**
  * Spec 33 · P8 (read): wer fährt gerade was — Foodbook, Speisekarte und Speiseplan in einer

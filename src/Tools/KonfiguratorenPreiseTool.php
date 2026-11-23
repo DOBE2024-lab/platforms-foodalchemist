@@ -39,8 +39,8 @@ class KonfiguratorenPreiseTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $k = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->finde($team, self::id($a));
+        $k = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->finde($team, self::id($a));
 
-        return app(\Platform\FoodAlchemist\Services\KonfiguratorPricingService::class)->matrix($k);
+        return app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService::class)->matrix($k);
     }
 }

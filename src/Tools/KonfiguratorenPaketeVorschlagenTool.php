@@ -39,12 +39,12 @@ class KonfiguratorenPaketeVorschlagenTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $k = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->finde($team, self::id($a));
+        $k = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->finde($team, self::id($a));
         if ((int) $a['von'] < 1 || (int) $a['bis'] < (int) $a['von']) {
             throw new \InvalidArgumentException('von ab 1, bis nicht unter von.');
         }
 
-        return ['vorschlag' => app(\Platform\FoodAlchemist\Services\KonfiguratorPricingService::class)->paketgrenzenVorschlagen($k, (int) $a['von'], (int) $a['bis'],
+        return ['vorschlag' => app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService::class)->paketgrenzenVorschlagen($k, (int) $a['von'], (int) $a['bis'],
             isset($a['toleranz_pct']) ? (float) $a['toleranz_pct'] : null, max(1, (int) ($a['raster'] ?? 25)), max(1, (int) ($a['mindestbreite'] ?? 25)))];
     }
 }

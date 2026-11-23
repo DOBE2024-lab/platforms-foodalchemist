@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
 use Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle;
 use Platform\FoodAlchemist\Services\CanvasService;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\KontextResolver;
 use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;
 use Platform\FoodAlchemist\Support\MachbarkeitKontext;

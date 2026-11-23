@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPrice;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\Plattform\MandantenService;
 use Platform\FoodAlchemist\Services\Plattform\MasterTeamService;
 use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;

@@ -284,7 +284,7 @@ it('am Konzept skaliert der Bedarf mit der Personenzahl — aus dem Produktionsp
         'unit_vocab_id' => $this->unitG($this->rootTeam)->id,
     ]);
 
-    $svc = app(\Platform\FoodAlchemist\Services\ReportExportService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService::class);
     $anzahl = function (int $pax) use ($svc, $concept, $sauce) {
         $daten = $svc->conceptDaten($this->rootTeam, (int) $concept->id, [
             'behaelter' => true, 'kaskade' => true, 'pax' => $pax, 'simulation' => false,

@@ -5,8 +5,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
-use Platform\FoodAlchemist\Services\AngebotService;
-use Platform\FoodAlchemist\Services\OfferCompositionService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

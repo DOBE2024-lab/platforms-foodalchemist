@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\ReportExportService;
+use Platform\FoodAlchemist\Services\Ausgabe\ReportExportService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -74,20 +74,20 @@ it('Export: ein Kreis im eingebetteten Paket hängt nicht', function () {
 
 function cqFoodbookKapitel(\Platform\Core\Models\Team $team)
 {
-    $fb = app(\Platform\FoodAlchemist\Services\FoodbookService::class)->create($team, ['label' => 'FB A']);
+    $fb = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->create($team, ['label' => 'FB A']);
 
-    return app(\Platform\FoodAlchemist\Services\FoodbookService::class)->addKapitel($team, $fb->id, ['title' => 'Menü']);
+    return app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->addKapitel($team, $fb->id, ['title' => 'Menü']);
 }
 
 function cqAngebotKapitel(\Platform\Core\Models\Team $team)
 {
     $a = \Platform\FoodAlchemist\Models\FoodAlchemistAngebot::create(['team_id' => $team->id, 'name' => 'Sommerfest', 'status' => 'anfrage', 'personen' => 50]);
 
-    return app(\Platform\FoodAlchemist\Services\OfferCompositionService::class)->addKapitel($team, $a->id, ['title' => 'Menü']);
+    return app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class)->addKapitel($team, $a->id, ['title' => 'Menü']);
 }
 
 it('Foodbook: concept_ref mit fremdem Concept wird beim Anlegen und Ändern abgelehnt, eigenes Paket geht', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $k = cqFoodbookKapitel($this->childA);
     $fremdC = FoodAlchemistConcept::create(['team_id' => $this->childB->id, 'name' => 'Fremd', 'kind' => 'concept', 'status' => 'active']);
     $paket = $this->concepts->createPaket($this->childA, ['name' => 'Eigenes Paket']);
@@ -99,14 +99,14 @@ it('Foodbook: concept_ref mit fremdem Concept wird beim Anlegen und Ändern abge
 });
 
 it('Foodbook: Typwechsel auf concept_ref ohne sichtbares Concept wird abgelehnt', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $b = $svc->addBlock($this->childA, cqFoodbookKapitel($this->childA)->id, ['type' => 'text', 'label' => 'x']);
 
     expect(fn () => $svc->updateBlock($this->childA, $b->id, ['type' => 'concept_ref']))->toThrow(\RuntimeException::class);
 });
 
 it('Angebot: updateBlock prüft concept_id wie addBlock', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\OfferCompositionService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class);
     $eigenC = $this->concepts->create($this->childA, ['name' => 'Eigen']);
     $fremdC = FoodAlchemistConcept::create(['team_id' => $this->childB->id, 'name' => 'Fremd', 'kind' => 'concept', 'status' => 'active']);
     $b = $svc->addBlock($this->childA, cqAngebotKapitel($this->childA)->id, ['type' => 'concept_ref', 'concept_id' => $eigenC->id]);
@@ -116,7 +116,7 @@ it('Angebot: updateBlock prüft concept_id wie addBlock', function () {
 });
 
 it('Angebot: presentation_id muss zum Gericht des Blocks gehören', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\OfferCompositionService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class);
     $anderes = ($this->mk)($this->childA, 'anderes', 'Anderes Gericht');
     $sf = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->childA->id, 'code' => 'kantine', 'label' => 'Kantine']);
     $fremdeForm = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create(['team_id' => $this->childA->id, 'recipe_id' => $anderes->id, 'serving_form_id' => $sf->id, 'is_standard' => false, 'quantity_per_unit_g' => 200, 'unit_count' => 1]);

@@ -34,6 +34,6 @@ class KonfiguratorenPutTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return ['konfigurator' => app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->aendern($team, self::id($a), $a)->makeHidden(['presentation_snapshot_json'])->toArray()];
+        return ['konfigurator' => app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->aendern($team, self::id($a), $a)->makeHidden(['presentation_snapshot_json'])->toArray()];
     }
 }

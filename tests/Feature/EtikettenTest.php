@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistInventoryLocation;
 use Platform\FoodAlchemist\Models\FoodAlchemistLabelTemplate;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\EtikettService;
+use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
 use Platform\FoodAlchemist\Services\LagerEinrichtungService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -258,7 +258,7 @@ it('Spec 76b: Vorlage „Standard für den Wandmonitor" — eigene Küchen-Vorla
 });
 
 it('Spec 78: Druckerprofile — Modell belegt Format vor, Standard je Arbeitsplatz, Vorlage übernimmt Format + Ränder', function () {
-    $d = app(\Platform\FoodAlchemist\Services\DruckerService::class);
+    $d = app(\Platform\FoodAlchemist\Services\Ausgabe\DruckerService::class);
     $zebra = $d->speichern($this->rootTeam, null, ['name' => 'Küche Pass', 'modell' => 'zebra_zd', 'arbeitsplatz' => 'kueche', 'is_default' => true, 'versatz_x_mm' => '1,5']);
     expect($zebra->format)->toBe('eigen')->and($zebra->breite_mm)->toBe(101.6)->and($zebra->versatz_x_mm)->toBe(1.5);
     $brother = $d->speichern($this->rootTeam, null, ['name' => 'Küche 2', 'modell' => 'brother_ql', 'arbeitsplatz' => 'kueche', 'is_default' => true]);

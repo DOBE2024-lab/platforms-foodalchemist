@@ -14,6 +14,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
  */
 interface SpeiseplanDokumentQuelle
 {
-    /** Aushang-Daten der Woche, siehe {@see \Platform\FoodAlchemist\Services\SpeiseplanService::dokumentDaten}. */
+    /** Aushang-Daten der Woche, siehe {@see \Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::dokumentDaten}. */
     public function dokumentDaten(Team $team, FoodAlchemistSpeiseplan $plan, string $mahlzeit = 'mittag', ?string $montag = null, bool $intern = false, bool $mitKaskade = false, ?FoodAlchemistOutlet $outlet = null, bool $mitPreis = false): array;
 }

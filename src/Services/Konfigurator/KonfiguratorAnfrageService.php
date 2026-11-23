@@ -166,7 +166,7 @@ class KonfiguratorAnfrageService
      */
     private function aufwand(FoodAlchemistKonfigurator $k, array $d): array
     {
-        $pricing = app(\Platform\FoodAlchemist\Services\KonfiguratorPricingService::class);
+        $pricing = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService::class);
         $s = $pricing->stand($k);
         $pax = (int) $d['pax'];
         $paket = collect($s['pakete'])->first(fn ($p) => $pax >= (int) $p->von_pax && $pax <= (int) $p->bis_pax);

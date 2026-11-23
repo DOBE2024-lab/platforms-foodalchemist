@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator;
 use Platform\FoodAlchemist\Models\FoodAlchemistLeistungVorlage;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabContainer;
-use Platform\FoodAlchemist\Services\KonfiguratorPricingService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
 
 /**
  * Spec 94b §3 · Bedarf einer Konfigurator-Auswahl für die Event-Planung (Übergabe an OLIVIA, kein eigener Planungsbildschirm).

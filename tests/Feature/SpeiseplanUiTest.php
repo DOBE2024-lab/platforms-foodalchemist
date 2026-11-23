@@ -60,7 +60,7 @@ it('Editor: Zelle (Datum × Mittag) mit Gericht belegen — Eintrag erscheint', 
 });
 
 it('gerichtKandidaten (Spec 42): browst ohne Suche, filtert Hauptgruppe, schließt Varianten aus', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeiseplanService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class);
     $a = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'sa', 'name' => 'Alpha-Gericht', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 5, 'ek_total_eur' => 1, 'dish_main_group_id' => 11]);
     FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'sb', 'name' => 'Beta-Gericht', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 5, 'ek_total_eur' => 1, 'dish_main_group_id' => 22]);
     $variant = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'sv', 'name' => 'Alpha-Variante', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 5, 'ek_total_eur' => 1, 'variant_source_recipe_id' => $a->id]);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -18,7 +18,7 @@ class PresentationFontService
 
     public const MAX_KB = 5120;
 
-    public function __construct(private Plattform\FoodAlchemistMediaService $media) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService $media) {}
 
     /** Familienname auf sichere Zeichen kürzen (wird unescaped in CSS geschrieben). */
     public static function familie(?string $name): string

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PresentationFontService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService;
 use Platform\FoodAlchemist\Tools\Concerns\DateiAusArgumenten;
 
 /** Eigene Schrift (Hausschrift/Kunden-CI) fürs Team hochladen — nutzbar in Präsentations-Designs als typography "team:<Familie>". */

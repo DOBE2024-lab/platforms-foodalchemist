@@ -128,8 +128,15 @@ it('Recompute einer Master-Fassung aus Broich-Kontext: Kosten bei Stufe 1 = Stuf
             DB::rollBack();
         }
     };
-    $null = $kosten(0);
-    $eins = $kosten(1);
+    // Zeit für beide Läufe einfrieren: Der Recompute stempelt *_aggregated_at mit now(). Liegt ein Sekundenwechsel zwischen den
+    // Läufen, unterscheiden sich die Zeilen nur in der Uhrzeit (Flake in der Fork-CI, 98 · 3.3 S7).
+    \Illuminate\Support\Carbon::setTestNow(now()->startOfSecond());
+    try {
+        $null = $kosten(0);
+        $eins = $kosten(1);
+    } finally {
+        \Illuminate\Support\Carbon::setTestNow();
+    }
     unset($null['updated_at'], $eins['updated_at']);
     expect($eins)->toBe($null);
 });

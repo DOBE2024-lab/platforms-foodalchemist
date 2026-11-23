@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
-use Platform\FoodAlchemist\Services\CoverageService;
+use Platform\FoodAlchemist\Services\Concepter\CoverageService;
 use Platform\FoodAlchemist\Services\LeitstelleService;
 
 /**

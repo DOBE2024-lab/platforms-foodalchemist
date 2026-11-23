@@ -38,7 +38,7 @@ class ProjektUebernahmeService
         private readonly ProjektService $projekte,
         private readonly Plattform\TeamAnlegenService $teams,
         private readonly Plattform\TeamProfilService $profile,
-        private readonly CanvasService $canvas,
+        private readonly Concepter\CanvasService $canvas,
         private readonly Plattform\MandantenService $mandanten,
         private readonly Plattform\PlattformProtokoll $protokoll,
         private readonly FaRechte $rechte,

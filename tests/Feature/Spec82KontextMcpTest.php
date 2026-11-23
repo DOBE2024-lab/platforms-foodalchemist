@@ -3,7 +3,7 @@
 use Platform\Core\Contracts\ToolContext;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistMandant;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Platform\FoodAlchemist\Tools\CanvasEntryAddTool;
@@ -67,7 +67,7 @@ it('canvas.ENTRY_ADD: verbindlicher Eintrag an einem Zusatzfeld des Oberteams; i
     $kindAdd = (new CanvasEntryAddTool())->execute(['type' => 'food_dna', 'key' => 'leitaromen', 'value' => 'Salz'], ($this->ctx)($this->kind, $this->childA));
     expect($kindAdd->success)->toBeTrue();
 
-    $zeile = app(\Platform\FoodAlchemist\Services\DnaResolver::class)->foodDna($this->childA)['leitaromen'];
+    $zeile = app(\Platform\FoodAlchemist\Services\Concepter\DnaResolver::class)->foodDna($this->childA)['leitaromen'];
     expect(array_column($zeile['wert'], 'value'))->toBe(['Zitrus', 'Salz'])->and($zeile['wert'][0]['verbindlich'])->toBeTrue();
 
     // Unter-Team darf den Eintrag nicht verbindlich machen

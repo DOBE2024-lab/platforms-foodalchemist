@@ -28,7 +28,7 @@ class AboService
 {
     public function __construct(
         private \Platform\FoodAlchemist\Services\FaRechte $rechte,
-        private \Platform\FoodAlchemist\Services\InhaltsFreigabeService $freigaben,
+        private \Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService $freigaben,
         private PlattformProtokoll $protokoll,
     ) {}
 

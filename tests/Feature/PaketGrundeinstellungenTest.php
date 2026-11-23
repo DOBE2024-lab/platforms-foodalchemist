@@ -7,7 +7,7 @@ use Platform\Core\Models\Team;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Livewire\Verwaltung\Grundeinstellungen;
-use Platform\FoodAlchemist\Services\PaketGrundeinstellungenService;
+use Platform\FoodAlchemist\Services\Concepter\PaketGrundeinstellungenService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\TeamScope;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

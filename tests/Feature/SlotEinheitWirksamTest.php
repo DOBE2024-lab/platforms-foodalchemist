@@ -6,11 +6,11 @@ use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Livewire\Concepter\Editor;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\ConceptPaketService;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\ConcepterAggregateService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptPaketService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\Reife\ConceptReifeAdapter;
-use Platform\FoodAlchemist\Services\SlotEinheitService;
+use Platform\FoodAlchemist\Services\Concepter\SlotEinheitService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Collection;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
-use Platform\FoodAlchemist\Services\ConceptGeneratorService;
-use Platform\FoodAlchemist\Services\MenuCandidatePoolService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService;
+use Platform\FoodAlchemist\Services\Concepter\MenuCandidatePoolService;
 use Platform\FoodAlchemist\Services\PlanningFrameService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

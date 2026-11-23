@@ -187,8 +187,8 @@ final class KonfiguratorSnapshot
      */
     private function detail(object $h): array
     {
-        $wording = app(\Platform\FoodAlchemist\Services\WordingResolver::class);
-        $kz = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class);
+        $wording = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class);
+        $kz = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class);
         $katalog = $kz->kennzeichnungKatalog();
         $usedAlg = [];
         $usedZus = [];

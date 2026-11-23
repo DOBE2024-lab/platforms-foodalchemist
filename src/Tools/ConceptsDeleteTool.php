@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /**
  * Phase C: Konzept löschen (Soft-Delete, wiederherstellbar). Schritt 2 des Cleanup-

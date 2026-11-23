@@ -276,7 +276,7 @@ class AiGatewayService
         // #389/Canvas: stehenden Marken-/Brief-Kontext NUR in kreative Prompts mergen
         // (Klassifikatoren ausgenommen). Kaskade Team-DNA → Kunde-DNA → Angebot → Foodbook → Concept (CanvasService).
         if ($team !== null && in_array($promptKey, self::FOOD_DNA_KEYS, true)) {
-            $context = app(\Platform\FoodAlchemist\Services\CanvasService::class)->cascadeKontext(
+            $context = app(\Platform\FoodAlchemist\Services\Concepter\CanvasService::class)->cascadeKontext(
                 $team,
                 $cidFoodDna !== null ? (int) $cidFoodDna : null,
                 $fbFoodDna !== null ? (int) $fbFoodDna : null,

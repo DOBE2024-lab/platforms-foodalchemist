@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
  * der {@see ConceptReifeAdapter} — hier zählt nur, ob sie da sind und wohin sie zeigen.
  *
  * Kein Gerüst und keine Ampel-Metrik: die Coverage kennt den Owner-Typ `format` nicht
- * ({@see \Platform\FoodAlchemist\Services\CoverageService::coverage()} fiele still in den
+ * ({@see \Platform\FoodAlchemist\Services\Concepter\CoverageService::coverage()} fiele still in den
  * Concept-Zweig), und die Datenqualitäts-Ampel hat keine Format-Checks — beides wird als
  * `nicht_messbar` ausgewiesen statt erfunden.
  */

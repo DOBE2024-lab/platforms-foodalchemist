@@ -1,0 +1,1429 @@
+<?php
+
+namespace Platform\FoodAlchemist\Services\Concepter;
+
+use Illuminate\Http\UploadedFile;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
+use Platform\FoodAlchemist\Models\FoodAlchemistConceptCategory;
+use Platform\FoodAlchemist\Models\FoodAlchemistConceptImage;
+use Platform\FoodAlchemist\Models\FoodAlchemistConceptSektorEignung;
+use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
+use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
+use Platform\FoodAlchemist\Models\FoodAlchemistVocabKlasse;
+
+/**
+ * M10-03/04/05 / Doc 15 §M10: Concept = Slot-Gerüst über mehrere Rollen
+ * (z. B. „Grill-Buffet"). Jeder Slot ist mit GENAU EINEM gefüllt: Paket
+ * (austauschbar) ODER festes Gericht.
+ *
+ * Preis (M10-04): Concept-Preis = Σ der GESPEICHERTEN Paket-Preise (+ feste
+ * Gerichte) — ein Paket-Tausch ändert nur die Differenz, KEIN Kaskaden-
+ * Recompute der ganzen GP→Rezept→Gericht-Kette.
+ *
+ * Vorlage (M10-05, D-CON-7): Vorlage = Kopie-Quelle. „Aus Vorlage starten" forkt
+ * das Slot-Gerüst; das Concept lebt danach eigenständig (Vorlage zieht NICHT
+ * durch). Paket bleibt dagegen Referenz (Änderung schlägt durch).
+ */
+class ConceptService
+{
+    public function paginateBrowser(array $filters, Team $team, int $perPage = 100): LengthAwarePaginator
+    {
+        return FoodAlchemistConcept::visibleToTeam($team)
+            ->konzepte()         // Kaskade: Pakete (kind=paket) gehören in den Pakete-Reiter, nicht hier
+            ->standardisiert()   // #380: angebots-lokale Entwürfe gehören nicht in den Katalog
+            ->with(['eventtyp:id,name', 'servierform:id,label']) // 4c: Facetten-Spalte im Browser
+            ->withCount('slots')
+            ->when(($filters['vorlagen'] ?? false), fn ($q) => $q->vorlagen(), fn ($q) => $q->echte())
+            ->when(($filters['search'] ?? '') !== '', fn ($q) => \Platform\FoodAlchemist\Support\Suche::likeAny($q, ['name', "COALESCE(occasion, '')"], $filters['search']))
+            ->when(($filters['status'] ?? '') !== '', fn ($q) => $q->where('status', $filters['status']))
+            ->when(($filters['phase'] ?? '') !== '', fn ($q) => $q->where('phase', $filters['phase'])) // R4.3
+            ->when(($filters['class'] ?? '') !== '', fn ($q) => $q->where('class', $filters['class']))
+            ->when(($filters['category'] ?? null) === 'none', fn ($q) => $q->whereNull('category_id'))
+            ->when(is_numeric($filters['category'] ?? null), fn ($q) => $q
+                ->whereIn('category_id', $this->descendantIds($team, (int) $filters['category'])))
+            // Facetten-Filter (Umbau-Spec Phase 4b)
+            ->when(is_numeric($filters['servierform'] ?? null), fn ($q) => $q->where('serving_form_id', (int) $filters['servierform']))
+            ->when(is_numeric($filters['eventtyp'] ?? null), fn ($q) => $q->where('event_type_id', (int) $filters['eventtyp']))
+            ->when(is_numeric($filters['einsatzmoment'] ?? null), fn ($q) => $q
+                ->whereHas('serviceMoments', fn ($w) => $w->where('foodalchemist_service_moments.id', (int) $filters['einsatzmoment'])))
+            ->when(is_numeric($filters['season'] ?? null), fn ($q) => $q
+                ->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $filters['season'])))
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->through(fn ($c) => app(ConceptPreisService::class)->anwenden($c, $team));   // Abo-Fassung: Team-Preis statt leerer Master-Spalten
+    }
+
+    public function detail(Team $team, int $id): ?FoodAlchemistConcept
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)
+            ->with([
+                'slots' => fn ($q) => $q->orderBy('position'),
+                // Menü-Ansicht: Paket-Gerichte mit Wording-Feldern (Wording-Kette)
+                // Kaskade: eingebettetes Paket = kind=paket-Concept (Preis + Posten für Anzeige)
+                'slots.embeddedConcept:id,name,kind,class,price_per_person_cache,ek_per_person_cache,price_incomplete',
+                'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard,ek_total_eur,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.embeddedConcept.slots.dish.standardPresentation',
+                'slots.dish:id,name,sales_wording_standard,ek_total_eur,dish_class_id,spec_is_vegan,spec_is_vegetarian,spec_is_gluten_free,spec_is_lactose_free,spec_is_halal,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.dish.standardPresentation',
+                // 2.1e: alle Formen je Gericht einmal (Resolver, Preis-Cockpit, Aggregat, Concepter-Aufbau) statt je Slot nachzufragen
+                'slots.dish.presentations' => fn ($q) => $q->with('servingForm')->orderByDesc('is_standard')->orderBy('id'),
+                'slots.dish.dishClass:id,label',
+                'slots.unit:id,slug,display_de',
+                'vorlageQuelle:id,name',
+            ])
+            ->find($id);
+
+        return $concept === null ? null : app(ConceptPreisService::class)->anwenden($concept, $team);
+    }
+
+    public function create(Team $team, array $in): FoodAlchemistConcept
+    {
+        return FoodAlchemistConcept::create([
+            'team_id' => $team->id,
+            'name' => trim((string) ($in['name'] ?? 'Neues Konzept')) ?: 'Neues Konzept',
+            'occasion' => $in['occasion'] ?? null,
+            'level' => $in['level'] ?? null,
+            'class' => $this->norm($in['class'] ?? null),
+            'status' => $in['status'] ?? 'draft',
+            'is_template' => (bool) ($in['is_template'] ?? false),
+        ]);
+    }
+
+    /**
+     * Kaskade (2026-08-24): Pakete-Reiter im Concepter — kind=paket-Concepts (wiederverwendbare
+     * Bündel mit eigenem Preis). Gleiche Modell-Basis wie Konzepte, nur kind-gefiltert.
+     */
+    public function paginatePakete(array $filters, Team $team, int $perPage = 100): LengthAwarePaginator
+    {
+        return FoodAlchemistConcept::visibleToTeam($team)
+            ->pakete()
+            ->standardisiert()
+            ->echte()
+            ->with(['eventType:id,name', 'servingForm:id,label']) // Kaskade: Facetten-Spalte wie im Concepts-Reiter
+            ->withCount('slots')
+            ->when(($filters['search'] ?? '') !== '', fn ($q) => \Platform\FoodAlchemist\Support\Suche::likeAny($q, ['name'], $filters['search']))
+            ->when(($filters['class'] ?? '') !== '', fn ($q) => $q->where('class', $filters['class']))
+            ->when(($filters['status'] ?? '') !== '', fn ($q) => $q->where('status', $filters['status']))
+            // Facetten-Filter (Kaskade: Paket = kind=paket-Concept → gleiche Dimensionen wie Concept, Umbau-Spec Phase 4b)
+            ->when(is_numeric($filters['servierform'] ?? null), fn ($q) => $q->where('serving_form_id', (int) $filters['servierform']))
+            ->when(is_numeric($filters['eventtyp'] ?? null), fn ($q) => $q->where('event_type_id', (int) $filters['eventtyp']))
+            ->when(is_numeric($filters['einsatzmoment'] ?? null), fn ($q) => $q
+                ->whereHas('serviceMoments', fn ($w) => $w->where('foodalchemist_service_moments.id', (int) $filters['einsatzmoment'])))
+            ->when(is_numeric($filters['season'] ?? null), fn ($q) => $q
+                ->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $filters['season'])))
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->through(fn ($c) => app(ConceptPreisService::class)->anwenden($c, $team));   // Abo-Fassung: Team-Preis statt leerer Master-Spalten
+    }
+
+    /** Neues Paket = kind=paket-Concept anlegen. */
+    public function createPaket(Team $team, array $in): FoodAlchemistConcept
+    {
+        return FoodAlchemistConcept::create([
+            'team_id' => $team->id,
+            'kind' => 'paket',
+            'name' => trim((string) ($in['name'] ?? 'Neues Paket')) ?: 'Neues Paket',
+            'class' => $this->norm($in['class'] ?? null),
+            'level' => $in['level'] ?? null,
+            'status' => $in['status'] ?? 'active',
+            'price_mode' => in_array(($in['price_mode'] ?? 'auto'), ['auto', 'fixed', 'manuell'], true) ? ($in['price_mode'] ?? 'auto') : 'auto',
+            'is_template' => false,
+        ]);
+    }
+
+    /** Distinct-Klassen der Pakete (Filter im Pakete-Reiter). */
+    public function klassenPakete(Team $team): array
+    {
+        return FoodAlchemistConcept::visibleToTeam($team)->pakete()
+            ->whereNotNull('class')->where('class', '!=', '')
+            ->distinct()->orderBy('class')->pluck('class')->all();
+    }
+
+    /** Concept-Status setzen (draft|active|archiviert) — Inline-Pflege aus dem Browser. */
+    public function setStatus(Team $team, int $id, string $status): void
+    {
+        // Spec 77a: ab Kuratieren (Mitglied); ohne angemeldeten Benutzer (System) keine Prüfung
+        app(\Platform\FoodAlchemist\Services\FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Konzept-Status setzen');
+
+        if (! in_array($status, ['draft', 'active', 'archiviert'], true)) {
+            throw new \RuntimeException("Unbekannter Konzept-Status „{$status}“.");
+        }
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
+        \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($concept, $team, 'den Konzept-Status');   // Spec 84 §4.0
+        $concept->update(['status' => app(\Platform\FoodAlchemist\Services\Rezept\FreigabeSperre::class)->wechsel($team, $concept, $status)]);   // 1.1f: Freigabe-Sperre
+    }
+
+    // M10R-1/3: VK-Parität-Metadaten + Konsumenten-Felder + KI-Brief am Concept editierbar.
+    private const FELDER = [
+        'name', 'consumer_name', 'claim', 'occasion', 'level', 'class', 'taste_direction',
+        'writing_style_id', 'category_id', 'status', 'description', 'additional_text', 'note',
+        'brief', 'target_price_per_person', 'diet_requirement', 'structure_requirement', 'season', 'target_group',
+        'price_mode', 'price_per_person_manual', 'price_display',
+        'price_override_reason', 'price_override_expires_at',
+        'serving_form_id', 'event_type_id', // Facetten (Umbau-Spec Phase 4)
+    ];
+
+    /** Felder, die leer („" / 0) als NULL gespeichert werden (FK/optional). */
+    private const FELDER_NULLBAR = [
+        'category_id', 'writing_style_id', 'target_price_per_person', 'price_per_person_manual',
+        'serving_form_id', 'event_type_id',
+    ];
+
+    /**
+     * Referenzierte Fremdschlüssel der FELDER-Whitelist und ihre Herkunftstabelle (MVP-052, P0).
+     * Wie bei den Gerichten (MVP-050): eine Whitelist erlaubt das Schreiben des Felds, sagt aber
+     * nichts über die Zulässigkeit der ID — die kam roh aus dem client-kontrollierten Formular.
+     * `TeamScope::referenz()` prüft SICHTBARKEIT (geerbt/global bleibt nutzbar), nicht Eigentum.
+     */
+    private const REFERENZEN = [
+        'category_id' => FoodAlchemistConceptCategory::class,
+        'writing_style_id' => \Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle::class,
+        'serving_form_id' => \Platform\FoodAlchemist\Models\FoodAlchemistServierform::class,
+        'event_type_id' => \Platform\FoodAlchemist\Models\FoodAlchemistEventtyp::class,
+    ];
+
+    public function update(Team $team, int $id, array $in): FoodAlchemistConcept
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwner($concept, $team);
+        $update = array_intersect_key($in, array_flip(self::FELDER));
+        // Erst NULL-Normalisierung (leeres FK-Feld leeren) …
+        foreach (self::FELDER_NULLBAR as $feld) {
+            if (array_key_exists($feld, $update) && ($update[$feld] === '' || $update[$feld] === null
+                || (in_array($feld, ['category_id', 'writing_style_id'], true) && (int) $update[$feld] === 0))) {
+                $update[$feld] = null;
+            }
+        }
+        // … dann die verbliebenen Referenzen autorisieren (MVP-052).
+        foreach (self::REFERENZEN as $feld => $modelClass) {
+            if (array_key_exists($feld, $update)) {
+                $update[$feld] = \Platform\FoodAlchemist\Support\TeamScope::referenz($modelClass, $update[$feld], $team, $feld);
+            }
+        }
+        if (array_key_exists('class', $update)) {
+            $update['class'] = $this->norm($update['class']);
+        }
+        $mode = $update['price_mode'] ?? $concept->price_mode;
+        if ($mode === 'fixed') {
+            $effective = $update['price_per_person_manual'] ?? $concept->price_per_person_manual;
+            $reason = trim((string) ($update['price_override_reason'] ?? $concept->price_override_reason));
+            if (! is_numeric($effective) || $reason === '') {
+                throw new \RuntimeException('Ein fixierter Konzept-Preis braucht Preis und Begründung.');
+            }
+            $update['price_override_reason'] = $reason;
+            $update['price_override_user_id'] = Auth::id();
+            $update['price_override_at'] = now();
+        } elseif ($mode === 'auto') {
+            $update += ['price_per_person_manual' => null, 'price_override_reason' => null,
+                'price_override_user_id' => null, 'price_override_at' => null, 'price_override_expires_at' => null];
+        }
+        if (isset($update['status']) && $update['status'] !== $concept->status) {   // 1.1j-2: Status nur über setStatus (Rolle Kuratieren, Freigabe-Sperre 1.1f)
+            $this->setStatus($team, $id, (string) $update['status']);
+        }
+        $concept->update(array_diff_key($update, ['status' => 1]));
+        if (array_intersect(['price_mode', 'price_per_person_manual'], array_keys($update)) !== []) {   // Preis-Änderung zieht den Cache nach (Browser, Einbettungen, Foodbook)
+            $this->refreshCache($concept);
+        }
+
+        return $concept->refresh();
+    }
+
+    // ── Spec 43 (Bild-Epic): Concept-Titelbild als Grundlage für Präsentations-Kapitelbänder ──
+
+    public function storeImage(Team $team, int $id, UploadedFile $file): string
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwner($concept, $team);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($concept->image_context_file_id, (string) $concept->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($concept, 'image_path')]);
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage(
+            $file, $team, 'foodalchemist.concept', $id, "foodalchemist/concept/{$id}",
+        );
+        $concept->update(['image_context_file_id' => $media['context_file_id'], 'image_path' => $media['path']]);
+
+        return $media['path'];
+    }
+
+    public function clearImage(Team $team, int $id): FoodAlchemistConcept
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwner($concept, $team);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($concept->image_context_file_id, (string) $concept->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($concept, 'image_path')]);
+        $concept->update(['image_context_file_id' => null, 'image_path' => null]);
+
+        return $concept->refresh();
+    }
+
+    /** Weiteres Galeriebild (neben dem Titelbild) ans Concept hängen. */
+    public function addGalleryImage(Team $team, int $conceptId, UploadedFile $file): FoodAlchemistConceptImage
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
+        $this->guardOwner($concept, $team);
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage(
+            $file, $team, 'foodalchemist.concept', $conceptId, "foodalchemist/concept/{$conceptId}/gallery",
+        );
+
+        return FoodAlchemistConceptImage::create([
+            'team_id' => $concept->team_id,
+            'concept_id' => $conceptId,
+            'context_file_id' => $media['context_file_id'],
+            'path' => $media['path'],
+            'sort_order' => (int) $concept->images()->max('sort_order') + 1,
+        ]);
+    }
+
+    public function removeGalleryImage(Team $team, int $imageId): void
+    {
+        $img = FoodAlchemistConceptImage::findOrFail($imageId);
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($img->concept_id);
+        $this->guardOwner($concept, $team);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($img->context_file_id, (string) $img->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($img)]);
+        $img->delete();
+    }
+
+    // ── Facetten: Mehrfach-Dimensionen (Umbau-Spec Phase 4) ─────────────────
+
+    /** @param  list<int>  $ids */
+    public function syncEinsatzmomente(Team $team, int $id, array $ids): void
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwner($concept, $team);
+        // MVP-052: Pivot-IDs vor dem sync() gegen die Sichtbarkeit prüfen (ein whereIn-Query).
+        $geprueft = \Platform\FoodAlchemist\Support\TeamScope::referenzen(
+            \Platform\FoodAlchemist\Models\FoodAlchemistEinsatzmoment::class, $ids, $team, 'Einsatzmoment');
+        $concept->serviceMoments()->sync($geprueft);
+    }
+
+    /** @param  list<int>  $ids */
+    public function syncSaisons(Team $team, int $id, array $ids): void
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwner($concept, $team);
+        $geprueft = \Platform\FoodAlchemist\Support\TeamScope::referenzen(
+            \Platform\FoodAlchemist\Models\FoodAlchemistSaison::class, $ids, $team, 'Saison');
+        $concept->seasons()->sync($geprueft);
+    }
+
+    // ── Sektor-Eignung (Politur · VK-Parität §10.8, mehrwertig wie Rezept) ───
+
+    /** @return list<string> aktive Sektor-Slugs des Concepts. */
+    public function sektorEignungSlugs(FoodAlchemistConcept $concept): array
+    {
+        return $concept->sectorSuitabilities()->pluck('sector_slug')->all();
+    }
+
+    /** Sektor zuweisen — reaktiviert soft-deleted Zeilen (wie RecipeService::setzeEignung, R11). */
+    public function setzeSektorEignung(Team $team, int $conceptId, string $slug): void
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
+        $this->guardOwner($concept, $team);
+        if (trim($slug) === '') {
+            return;
+        }
+        // CQ 2.5a: nur noch das Sektor-Vokabular (Altwerte über Alias). Bestehender Freitext bleibt in der DB.
+        $slug = \Platform\FoodAlchemist\Support\Sektor::kanonisch($slug)
+            ?? throw new \RuntimeException('Unbekannter Sektor „'.trim($slug).'“. Erlaubt: '.implode(', ', \Platform\FoodAlchemist\Support\Sektor::SLUGS).'.');
+        $row = FoodAlchemistConceptSektorEignung::withTrashed()
+            ->where('concept_id', $conceptId)->where('sector_slug', $slug)->first();
+        if ($row !== null) {
+            if ($row->trashed()) {
+                $row->restore();
+            }
+
+            return;
+        }
+        FoodAlchemistConceptSektorEignung::create([
+            'team_id' => $concept->team_id, 'concept_id' => $conceptId,
+            'sector_slug' => $slug, 'source' => 'manual',
+        ]);
+    }
+
+    public function entferneSektorEignung(Team $team, int $conceptId, string $slug): void
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
+        $this->guardOwner($concept, $team);
+        FoodAlchemistConceptSektorEignung::where('concept_id', $conceptId)
+            ->where('sector_slug', trim($slug))->delete();
+    }
+
+    /** Distinkte verwendete Klassen (Filter) + freies Klasse-Vokabular (§10.3). */
+    public function klassen(Team $team): array
+    {
+        $verwendet = FoodAlchemistConcept::visibleToTeam($team)
+            ->whereNotNull('class')->distinct()->orderBy('class')->pluck('class')->all();
+        $vokabular = FoodAlchemistVocabKlasse::visibleToTeam($team)
+            ->where('is_inactive', false)->orderBy('sort_order')->orderBy('name')->pluck('name')->all();
+
+        return collect($verwendet)->merge($vokabular)->unique()->values()->all();
+    }
+
+    public function delete(Team $team, int $id): void
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwner($concept, $team);
+        \Platform\FoodAlchemist\Support\AboSperre::pruefeLoeschen('concept', $id, $concept->kind === 'paket' ? 'Das Paket-Konzept' : 'Das Konzept');
+
+        // GT-FB-4 / V-06: referenziertes Concept nicht still löschen — erst aus den Foodbooks nehmen.
+        $fbs = $this->verwendetInFoodbooks($team, $id);
+        if ($fbs->isNotEmpty()) {
+            throw new \Platform\FoodAlchemist\Exceptions\NochVerwendetException('Das Konzept wird in '.$fbs->count().($fbs->count() === 1 ? ' Foodbook' : ' Foodbooks').' verwendet. Zuerst dort entfernen.');
+        }
+
+        $concept->delete();
+    }
+
+    // ── Slots ────────────────────────────────────────────────────────────
+
+    public function addSlot(Team $team, int $conceptId, array $in = []): FoodAlchemistConceptSlot
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
+        $this->guardOwner($concept, $team);
+
+        $slot = $concept->slots()->create([
+            'team_id' => $concept->team_id,
+            'role' => $this->norm($in['role'] ?? null),
+            'title' => $this->norm($in['title'] ?? null),
+            'is_pflicht' => (bool) ($in['is_pflicht'] ?? true),
+            'position' => (int) ($concept->slots()->max('position') ?? -1) + 1,
+        ]);
+        $this->refreshCache($concept);
+
+        return $slot;
+    }
+
+    public function updateSlot(Team $team, int $slotId, array $in): FoodAlchemistConceptSlot
+    {
+        $slot = $this->ownedSlot($team, $slotId);
+        $slot->update([
+            'role' => array_key_exists('role', $in) ? $this->norm($in['role']) : $slot->role,
+            'title' => array_key_exists('title', $in) ? $this->norm($in['title']) : $slot->title,
+            'is_pflicht' => array_key_exists('is_pflicht', $in) ? (bool) $in['is_pflicht'] : $slot->is_pflicht,
+            'note' => array_key_exists('note', $in) ? $this->norm($in['note']) : $slot->note, // R6.1: Leer-Begründung des Generators
+        ]);
+
+        return $slot->refresh();
+    }
+
+    /** B3: Struktur-Block-Typen (keine Preis-Position) — analog Foodbook-Block. */
+    public const STRUKTUR_TYPEN = ['text', 'spacer', 'header', 'header_preis'];
+
+    /**
+     * B3: Struktur-Block (Text/Leerzeile/Überschrift/Überschrift+Preis) als Position anlegen —
+     * wie ein Foodbook-Block, aber am Concept. Trägt nicht zum Wareneinsatz/VK bei.
+     */
+    public function addBlock(Team $team, int $conceptId, string $type, array $in = []): FoodAlchemistConceptSlot
+    {
+        if (! in_array($type, self::STRUKTUR_TYPEN, true)) {
+            throw new \RuntimeException('Unbekannter Block-Typ.');
+        }
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
+        $this->guardOwner($concept, $team);
+
+        return $concept->slots()->create([
+            'team_id' => $concept->team_id,
+            'type' => $type,
+            // Spec 50 C-1: ein Gang-/Stations-Header trägt sein Frame-Label als `role`, damit der
+            // Wording-Pass den Header seiner Rolle zuordnen kann. Freie Blöcke (Editor/MCP) lassen es leer.
+            'role' => $this->norm($in['role'] ?? null),
+            'title' => $this->norm($in['title'] ?? null),
+            'text_content' => $this->norm($in['text_content'] ?? null),
+            'height' => $type === 'spacer' ? ($in['height'] ?? 'mittel') : null,
+            'price_value' => $type === 'header_preis' ? ($in['price_value'] ?? null) : null,
+            'price_basis' => $type === 'header_preis' ? ($in['price_basis'] ?? 'person') : null,
+            'is_pflicht' => false,
+            'position' => (int) ($concept->slots()->max('position') ?? -1) + 1,
+        ]);
+    }
+
+    /** B3: Inhalt eines Struktur-Blocks pflegen (Titel/Text/Höhe/Preis). */
+    public function updateBlock(Team $team, int $slotId, array $in): FoodAlchemistConceptSlot
+    {
+        $slot = $this->ownedSlot($team, $slotId);
+        $update = [];
+        foreach (['title', 'text_content', 'height', 'price_basis'] as $f) {
+            if (array_key_exists($f, $in)) {
+                $update[$f] = $this->norm($in[$f]);
+            }
+        }
+        if (array_key_exists('price_value', $in)) {
+            $update['price_value'] = ($in['price_value'] !== '' && $in['price_value'] !== null) ? (float) $in['price_value'] : null;
+        }
+        if ($update !== []) {
+            $slot->update($update);
+        }
+
+        return $slot->refresh();
+    }
+
+    /**
+     * Befüllt einen Slot mit GENAU EINEM: Paket ODER festem Gericht.
+     * Das jeweils andere wird geleert (Invariante „genau eines").
+     */
+    public function fillSlot(Team $team, int $slotId, array $in): FoodAlchemistConceptSlot
+    {
+        $slot = $this->ownedSlot($team, $slotId);
+        $typ = app(ConceptSlotZielService::class)->pruefe($team, $slot, $in);   // 1.1c: Sicht (inkl. Abo-Fassungen), Kreis, Typ (ohne Typ: aus dem Rezept)
+
+        if (! empty($in['embedded_concept_id'])) {
+            // Kaskade: eingebettetes Paket = kind=paket-Concept (neuer Pfad, ersetzt package_id).
+            $slot->update([
+                'type' => 'paket',
+                'embedded_concept_id' => (int) $in['embedded_concept_id'],
+                'package_id' => null,
+                'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null,
+            ]);
+        } elseif (! empty($in['sales_recipe_id'])) {
+            app(SlotEinheitService::class)->pruefeBelegung($team, $slot, (int) $in['sales_recipe_id'], isset($in['unit_vocab_id']) ? (int) $in['unit_vocab_id'] : null);   // 17.11.: nur wirksame Einheit
+            $slot->update([
+                // B2: Gericht (VK) ODER Basisrezept — beide referenzieren sales_recipe_id, `type` unterscheidet.
+                'type' => $typ,
+                'sales_recipe_id' => (int) $in['sales_recipe_id'],
+                'quantity' => $in['quantity'] ?? null, 'unit_vocab_id' => $in['unit_vocab_id'] ?? null,
+                'package_id' => null, 'embedded_concept_id' => null,
+            ]);
+        } else {
+            $slot->update(['type' => 'gericht', 'package_id' => null, 'embedded_concept_id' => null, 'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null]);
+        }
+        $this->refreshCache($slot->concept);
+
+        return $slot->refresh();
+    }
+
+    /** Concept-übergreifendes Wording: Brand-Voice-Anzeigename einer Position setzen/leeren. */
+    public function setSlotWording(Team $team, int $slotId, ?string $text): FoodAlchemistConceptSlot
+    {
+        $slot = $this->ownedSlot($team, $slotId);
+        $text = $text !== null ? trim($text) : null;
+        $slot->update(['wording' => $text === '' ? null : $text]);
+
+        return $slot->refresh();
+    }
+
+    /** A1 (Umbau-Spec 5b): explizite Darreichung je Position — null = auto (Konzept-Form → Standard). */
+    public function setSlotDarreichung(Team $team, int $slotId, ?int $darreichungId): FoodAlchemistConceptSlot
+    {
+        $slot = $this->ownedSlot($team, $slotId);
+        if ($darreichungId !== null) {
+            $gehoertZumGericht = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::whereKey($darreichungId)
+                ->where('recipe_id', $slot->sales_recipe_id)->exists();
+            if (! $gehoertZumGericht) {
+                throw new \RuntimeException('Darreichung gehört nicht zum Gericht dieser Position.');
+            }
+        }
+        $slot->update(['presentation_id' => $darreichungId]);
+
+        return $slot->refresh();
+    }
+
+    /** Inline-Pflege Menge + Einheit einer Gericht-/Basisrezept-Position (Zeilen-Editor). */
+    public function setSlotMengeEinheit(Team $team, int $slotId, ?float $quantity, ?int $einheitId = null): FoodAlchemistConceptSlot
+    {
+        $slot = $this->ownedSlot($team, $slotId);
+        // 17.11.: nur eine NEU gewählte Einheit muss rechnen; eine unveränderte Alt-Einheit bleibt speicherbar (Reife-Befund `einheit_unwirksam`)
+        app(SlotEinheitService::class)->pruefe($team, $slot, $einheitId && (int) $einheitId !== (int) $slot->unit_vocab_id ? (int) $einheitId : null);
+        $slot->update(['quantity' => $quantity, 'unit_vocab_id' => $einheitId ?: null]);
+        $this->refreshCache($slot->concept);
+
+        return $slot->refresh();
+    }
+
+    public function removeSlot(Team $team, int $slotId): void
+    {
+        $slot = $this->ownedSlot($team, $slotId);
+        $concept = $slot->concept;
+        $slot->delete();
+        $this->refreshCache($concept);
+    }
+
+    /** @param list<int> $ids neue Reihenfolge */
+    public function reorderSlots(Team $team, int $conceptId, array $ids): void
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
+        $this->guardOwner($concept, $team);
+        DB::transaction(function () use ($conceptId, $ids) {
+            foreach (array_values($ids) as $i => $id) {
+                FoodAlchemistConceptSlot::where('id', (int) $id)->where('concept_id', $conceptId)->update(['position' => $i]);
+            }
+        });
+    }
+
+    /**
+     * Politur F-11: „Wo verwendet?" — Foodbooks, die dieses Concept über einen
+     * Block referenzieren (Bibliotheks-Sicht über Portfolios/Jahre, §10.8).
+     */
+    public function verwendetInFoodbooks(Team $team, int $conceptId): \Illuminate\Support\Collection
+    {
+        $foodbookIds = DB::table('foodalchemist_foodbook_blocks as b')
+            ->join('foodalchemist_foodbook_chapters as k', 'k.id', '=', 'b.chapter_id')
+            ->where('b.concept_id', $conceptId)->whereNull('b.deleted_at')
+            ->distinct()->pluck('k.foodbook_id');
+
+        return FoodAlchemistFoodbook::visibleToTeam($team)
+            ->whereIn('id', $foodbookIds)->orderBy('label')
+            ->get(['id', 'label', 'jahr', 'customer', 'status']);
+    }
+
+    /**
+     * Kaskade (2026-08-24): „Wo verwendet?" für ein Paket (kind=paket-Concept) — in welchen Concepts
+     * es als Position eingebettet ist (embedded_concept_id).
+     */
+    public function eingebettetInConcepts(Team $team, int $paketConceptId): \Illuminate\Support\Collection
+    {
+        $conceptIds = FoodAlchemistConceptSlot::where('embedded_concept_id', $paketConceptId)
+            ->whereNull('deleted_at')->distinct()->pluck('concept_id');
+
+        return FoodAlchemistConcept::visibleToTeam($team)
+            ->whereIn('id', $conceptIds)->orderBy('name')
+            ->get(['id', 'name', 'status', 'is_template']);
+    }
+
+    /** Austauschbare Pakete für einen Slot = gleiche Rolle (M13-Vorstufe). */
+    /**
+     * B4: Aus markierten Gericht-/Basisrezept-Positionen ein wiederverwendbares Paket bilden —
+     * die Positionen werden durch EINE Paket-Position ersetzt. Struktur-Blöcke/Pakete in der
+     * Auswahl werden ignoriert (nur sales_recipe_id-Positionen wandern ins Paket).
+     */
+    public function bildePaketAusPositionen(Team $team, int $conceptId, array $slotIds, string $name, ?string $role = null): FoodAlchemistConceptSlot
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
+        $this->guardOwner($concept, $team);
+
+        return DB::transaction(function () use ($team, $concept, $slotIds, $name) {
+            $slots = $concept->slots()->whereIn('id', $slotIds)->whereNotNull('sales_recipe_id')
+                ->orderBy('position')->get();
+            if ($slots->isEmpty()) {
+                throw new \RuntimeException('Keine Gerichte oder Basisrezepte ausgewählt.');
+            }
+            $minPos = (int) $slots->min('position');
+
+            // Kaskade: gebildetes Paket = kind=paket-Concept (auto-Preis = Σ), die Gerichte werden seine Slots.
+            $paket = $this->createPaket($team, ['name' => trim($name) !== '' ? trim($name) : 'Paket', 'price_mode' => 'auto']);
+            foreach ($slots->values() as $i => $s) {
+                $paket->slots()->create([
+                    'team_id' => $paket->team_id, 'type' => $s->type ?: 'gericht',
+                    'sales_recipe_id' => $s->sales_recipe_id, 'quantity' => $s->quantity, 'unit_vocab_id' => $s->unit_vocab_id,
+                    'position' => $i, 'is_pflicht' => true,
+                ]);
+            }
+            $this->refreshCache($paket->refresh());   // Paket-Preis (auto = Σ) cachen
+
+            $concept->slots()->whereIn('id', $slots->pluck('id'))->delete();
+            $neu = $concept->slots()->create([
+                'team_id' => $concept->team_id, 'type' => 'paket', 'embedded_concept_id' => $paket->id,
+                'position' => $minPos, 'is_pflicht' => true,
+            ]);
+            $this->refreshCache($concept->refresh());
+
+            return $neu;
+        });
+    }
+
+    public function tauschbarePakete(Team $team, FoodAlchemistConceptSlot $slot): Collection
+    {
+        // Kaskade: tauschbare Pakete = kind=paket-Concepts (jedes aktive überall tauschbar).
+        return $this->paketKandidaten($team);
+    }
+
+    /** Kaskade: Paket-Kandidaten (kind=paket-Concepts) für Concepter-Picker / Swap / Zielpreis. */
+    public function paketKandidaten(Team $team, string $suche = '', array $filters = []): Collection
+    {
+        return FoodAlchemistConcept::visibleToTeam($team)
+            ->pakete()->standardisiert()->echte()
+            ->where('status', 'active') // Picker zeigt nur aktive Pakete (keine Entwürfe/archivierten; Status berücksichtigt)
+            ->when($suche !== '', fn ($q) => \Platform\FoodAlchemist\Support\Suche::likeAny($q, ['name'], $suche))
+            ->when(($filters['class'] ?? '') !== '', fn ($q) => $q->where('class', $filters['class']))
+            // F7b: dieselben Facetten-Filter wie der Format-Picker (Servierform/Eventtyp/Moment/Saison) —
+            // Pakete = kind=paket-Concepts, tragen dieselben Dimensionen wie Concepts.
+            ->when(is_numeric($filters['servierform'] ?? null), fn ($q) => $q->where('serving_form_id', (int) $filters['servierform']))
+            ->when(is_numeric($filters['eventtyp'] ?? null), fn ($q) => $q->where('event_type_id', (int) $filters['eventtyp']))
+            ->when(is_numeric($filters['einsatzmoment'] ?? null), fn ($q) => $q
+                ->whereHas('serviceMoments', fn ($w) => $w->where('foodalchemist_service_moments.id', (int) $filters['einsatzmoment'])))
+            ->when(is_numeric($filters['season'] ?? null), fn ($q) => $q
+                ->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $filters['season'])))
+            ->orderBy('name')
+            ->get(['id', 'name', 'class', 'serving_form_id', 'event_type_id', 'price_per_person_cache', 'price_incomplete', 'ist_fassung', 'team_id'])
+            ->each(fn ($c) => app(ConceptPreisService::class)->anwenden($c, $team));
+    }
+
+    // ── M10-04: Live-Output-Preis (Σ gespeicherte Paket-Preise) ─────────
+
+    /**
+     * Concept-Preis = Σ Slot-Preise aus den GESPEICHERTEN Paket-Preisen
+     * (+ feste Gerichte). KEIN Kaskaden-Recompute — ein Tausch ändert nur die
+     * betroffene Zeile.
+     *
+     * @return array{zeilen: list<array>, preis_pro_person: float, ek_pro_person: float, hat_stale: bool, hat_leer: bool, hat_ek_luecke: bool}
+     */
+    /**
+     * Ebene 2 — betriebsscharfer €/Gast je Concept/Paket für die Listen-Anzeige. Die Slot-Relationen
+     * werden für die ganze Seite EINMAL eager-geladen (das loadMissing in {@see preisCockpit} wird
+     * dann zum No-op), danach je Zeile preisCockpit(outlet). Ohne Brille leer → die Liste fällt auf
+     * den Team-Baseline-Cache (`price_per_person_cache`) zurück. Paket-/embedded-Anteile bleiben
+     * Team-Baseline, exakt wie in preisCockpit (kein Fan-out).
+     *
+     * @param  \Illuminate\Support\Collection<int, FoodAlchemistConcept>  $concepts
+     * @return array<int, float>  concept_id → €/Gast im Betrieb
+     */
+    public function outletPreisMap(Team $team, \Illuminate\Support\Collection $concepts, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet): array
+    {
+        if ($outlet === null || $concepts->isEmpty()) {
+            return [];
+        }
+        $geladen = FoodAlchemistConcept::whereIn('id', $concepts->pluck('id')->all())
+            ->with(['slots' => fn ($q) => $q->orderBy('position'),
+                'slots.unit:id,slug,dimension,default_in_g',
+                'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete',
+                'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation'])
+            ->get();
+
+        $map = [];
+        app(ConceptPreisService::class)->mitVorwaermen($geladen, function () use ($geladen, $outlet, &$map) {   // EINE Abfrage für die ganze Liste statt einer je Konzept
+            foreach ($geladen as $c) {
+                $map[(int) $c->id] = round((float) $this->preisCockpit($c, $outlet)['price_per_person'], 2);
+            }
+        });
+
+        return $map;
+    }
+
+    public function preisCockpit(FoodAlchemistConcept $concept, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, ?Team $team = null): array
+    {
+        // Spec 82 Abo Konzepte PR 4: Konzept-Fassung bzw. eigenes Konzept mit Slots auf Fassungen → Team-Kalkulation
+        // (KostenCacheService/TeamVkService), nie die leeren Master-Spalten. Ohne bestimmbares Team: kein Preis, nicht 0 €.
+        $preis = app(ConceptPreisService::class);
+        if ($preis->istFassungsPfad($concept)) {
+            $fassung = (bool) ($concept->ist_fassung ?? false);
+            // Fassung: betrachtendes Team (Parameter > Overlay-Instanz > Betrieb > angemeldeter Benutzer); eigenes Konzept: sein Besitzer
+            $team = $fassung
+                ? ($team ?? $concept->preisTeam ?? ($outlet !== null ? \Platform\Core\Models\Team::find($outlet->team_id) : null)
+                    ?? \Platform\FoodAlchemist\Support\FaTeam::aktuell())   // Spec 84 A-2
+                : \Platform\Core\Models\Team::find($concept->team_id);
+            if ($team === null) {
+                return ['zeilen' => [], 'price_per_person' => null, 'summe_pro_person' => null, 'price_mode' => 'auto', 'ek_per_person' => null,
+                    'hat_stale' => false, 'hat_leer' => false, 'hat_ek_luecke' => true, 'vollstaendig' => false, 'grund' => 'kein_team',
+                    'fehlende' => [], 'quelle' => 'team_kalkulation'];
+            }
+
+            return $preis->cockpit($concept, $team, $outlet);
+        }
+
+        $z = app(\Platform\FoodAlchemist\Services\Concepter\CockpitZeilen::class)->rechne($concept, $outlet);   // CQ 2.6: Zeilen + VK-Lücke
+        [$zeilen, $vkTotal, $ekTotal] = [$z['zeilen'], $z['vk'], $z['ek']];
+
+        $summe = round($vkTotal, 2);
+        // Manueller Concept-VK (z. B. Lunchbuffet, Preis auf EK-Basis) überschreibt die Summe; EK bleibt aus den Positionen.
+        $expired = $concept->price_override_expires_at?->isPast() ?? false;
+        $manuell = in_array(($concept->price_mode ?? 'auto'), ['fixed', 'manuell'], true)
+            && ! $expired && $concept->price_per_person_manual !== null;
+        $preis = $manuell ? round((float) $concept->price_per_person_manual, 2) : $summe;
+
+        return [
+            'zeilen' => $zeilen,
+            'price_per_person' => $preis,
+            'summe_pro_person' => $summe,        // berechnete Summe der Positionen (auch im manuellen Modus, zur Anzeige)
+            'price_mode' => $manuell ? ($concept->price_mode === 'fixed' ? 'fixed' : 'manuell') : 'auto',
+            'ek_per_person' => round($ekTotal, 2),
+            'hat_stale' => $z['hat_stale'],
+            'hat_leer' => $z['hat_leer'],
+            'hat_ek_luecke' => $z['hat_ek_luecke'],   // ≥1 Gramm-Position ohne Portionsgewicht → EK unvollständig
+            'hat_vk_luecke' => $z['hat_vk_luecke'],   // ≥1 Position ohne berechenbaren VK → Summe zu niedrig, Zeile price=null
+        ];
+    }
+
+    /**
+     * Mengen-Hochrechnung für eine GEGEBENE Pax-Zahl — je Gericht (aus den
+     * Paketen + fest gesetzte Gerichte) `quantity` pro Person × Pax. Das Concept
+     * ist person-UNABHÄNGIG (D-CON-5) — die Pax kommt vom Aufruf (Foodbook/Angebot,
+     * M11), nicht vom Concept. `quantity` = Menge pro Person in der Einheit.
+     *
+     * @return list<array{role:?string, paket:?string, gericht:string, menge_pro_person:?float, unit:?string, gesamt_menge:?float}>
+     */
+    public function mengenHochrechnung(FoodAlchemistConcept $concept, ?int $personen = null): array
+    {
+        $concept->loadMissing([
+            'slots' => fn ($q) => $q->orderBy('position'),
+            'slots.dish:id,name', 'slots.unit:id,slug,display_de',
+        ]);
+
+        $zeilen = [];
+        foreach ($concept->slots as $slot) {
+            if ($slot->sales_recipe_id !== null && $slot->dish) {
+                $mpp = $slot->quantity !== null ? (float) $slot->quantity : null;
+                $zeilen[] = [
+                    'role' => $slot->role, 'paket' => null,
+                    'gericht' => $slot->dish->name,
+                    'menge_pro_person' => $mpp,
+                    'unit' => $slot->unit?->display_de ?? $slot->unit?->slug,
+                    'gesamt_menge' => $mpp !== null && $personen !== null ? round($mpp * $personen, 2) : null,
+                ];
+            }
+        }
+
+        return $zeilen;
+    }
+
+    /**
+     * C-09: Allergen-/Diät-Rollup über ALLE Gerichte des Concepts (aus den
+     * Paketen + feste Gerichte). „all"-Flags (vegan/vegetarisch/halal/glutenfrei/
+     * laktosefrei) gelten nur, wenn ALLE Gerichte sie erfüllen; „enthält"-Flags
+     * (Schwein/Rind) bei MIND. EINEM. Konfidenz = schwächstes Glied. Liest die
+     * GL-08-Spec-Flags am Rezept — keine eigene Aggregation (eine Regel-Stelle).
+     *
+     * @return array{n_gerichte:int, is_vegan:bool, is_vegetarian:bool, is_halal:bool, is_gluten_free:bool, is_lactose_free:bool, contains_pork:bool, contains_beef:bool, konfidenz:string}
+     */
+    public function allergenRollup(FoodAlchemistConcept $concept): array
+    {
+        // 1.1h: dieselbe Positionsliste wie Aggregat/Deklaration, inkl. eingebetteter Pakete (rekursiv); M10R-1: eine Regel-Stelle
+        $agg = app(ConcepterAggregateService::class);
+
+        return $agg->allergenRollupFromGerichte($agg->conceptPositionen($concept)->pluck('gericht'));
+    }
+
+    private function refreshCache(FoodAlchemistConcept $concept): void
+    {
+        // M10R-1: Preis-Cache + Voll-Aggregat-Caches (Nährwerte/Person, Arbeitszeit, EK).
+        $agg = app(ConcepterAggregateService::class)->conceptAggregat($concept);
+        $oldCalculated = $concept->calculated_price_per_person !== null ? (float) $concept->calculated_price_per_person : null;
+        $oldEffective = $concept->price_per_person_cache !== null ? (float) $concept->price_per_person_cache : null;
+        $cockpit = $this->preisCockpit($concept);
+        $expired = $concept->price_override_expires_at?->isPast() ?? false;
+        $concept->update([
+            'price_mode' => $expired ? 'auto' : ($concept->price_mode ?: 'auto'),
+            'price_per_person_manual' => $expired ? null : $concept->price_per_person_manual,
+            'calculated_price_per_person' => $cockpit['summe_pro_person'],
+            'price_per_person_cache' => $cockpit['price_per_person'],
+            'price_incomplete' => ConceptPreisService::unvollstaendig($cockpit),   // CQ price_incomplete: einzige Schreibstelle
+            'price_calculation_source' => 'children_sum',
+            'price_calculation_version' => \Platform\FoodAlchemist\Services\Preis\CatalogPricingService::VERSION,
+            'price_calculated_at' => now(),
+            ...($expired ? ['price_override_reason' => null, 'price_override_user_id' => null,
+                'price_override_at' => null, 'price_override_expires_at' => null] : []),
+            'nutrition_cache' => $agg['naehrwerte'],
+            'work_time_min_cache' => $agg['work_time_min'],
+            // Fassungs-Pfad: EK aus der Team-Kalkulation (der Aggregat-EK liest die leeren Master-Spalten der Fassung); unvollständig = null
+            'ek_per_person_cache' => ($cockpit['quelle'] ?? null) === 'team_kalkulation' ? $cockpit['ek_per_person'] : $agg['ek_per_person'],
+        ]);
+        app(\Platform\FoodAlchemist\Services\PriceAuditService::class)->record(
+            $concept, 'concept', $oldCalculated, $cockpit['summe_pro_person'] !== null ? (float) $cockpit['summe_pro_person'] : null,
+            $oldEffective, $cockpit['price_per_person'] !== null ? (float) $cockpit['price_per_person'] : null, 'children_sum',
+            ['calculation_version' => \Platform\FoodAlchemist\Services\Preis\CatalogPricingService::VERSION],
+        );
+    }
+
+    /** Öffentlicher Kaskaden-Einstieg; Formeln bleiben in preisCockpit/ConcepterAggregateService. */
+    public function recomputeCache(FoodAlchemistConcept $concept): FoodAlchemistConcept
+    {
+        $this->refreshCache($concept);
+
+        return $concept->refresh();
+    }
+
+    // ── M10-05: Vorlage = Fork ─────────────────────────────────────────────
+
+    /** „Aus Vorlage starten" — forkt das Slot-Gerüst in ein neues, eigenständiges Concept. */
+    public function forkVonVorlage(Team $team, int $vorlageId, string $name): FoodAlchemistConcept
+    {
+        $vorlage = FoodAlchemistConcept::visibleToTeam($team)->with('slots')->findOrFail($vorlageId);
+
+        return DB::transaction(function () use ($team, $vorlage, $name) {
+            $neu = FoodAlchemistConcept::create([
+                'team_id' => $team->id, 'name' => $name,
+                'occasion' => $vorlage->occasion, 'level' => $vorlage->level,
+                'status' => 'draft', 'is_template' => false, 'template_source_id' => $vorlage->id,
+            ]);
+            foreach ($vorlage->slots as $slot) {
+                $neu->slots()->create([
+                    'team_id' => $team->id, 'type' => $slot->type, 'role' => $slot->role, 'title' => $slot->title,
+                    'position' => $slot->position, 'is_pflicht' => $slot->is_pflicht,
+                    'package_id' => $slot->package_id,          // Altspalte bis 3.1, nur Bestand
+                    'embedded_concept_id' => $slot->embedded_concept_id,   // 98 · 2.6c: Paket-Konzept bleibt Referenz (zieht durch)
+                    'sales_recipe_id' => $slot->sales_recipe_id, 'quantity' => $slot->quantity,
+                    'unit_vocab_id' => $slot->unit_vocab_id,
+                ]);
+            }
+            $this->refreshCache($neu);
+
+            return $neu->refresh();
+        });
+    }
+
+    /** C-13: Concept duplizieren (Stamm + Slots, eigenständig, „(Kopie)"). */
+    public function duplicate(Team $team, int $id): FoodAlchemistConcept
+    {
+        $orig = FoodAlchemistConcept::visibleToTeam($team)
+            ->with(['slots', 'serviceMoments:id', 'seasons:id', 'targetGroups:id'])->findOrFail($id);
+
+        return DB::transaction(function () use ($team, $orig) {
+            $felder = array_intersect_key($orig->attributesToArray(), array_flip([
+                // Kaskade: kind erhalten, damit ein Paket-Duplikat ein Paket bleibt (nicht zum Concept wird).
+                'kind', 'consumer_name', 'occasion', 'level', 'class', 'taste_direction', 'writing_style_id',
+                'category_id', 'description', 'additional_text', 'brief', 'diet_requirement', 'structure_requirement',
+                'season', 'target_group', 'target_price_per_person', 'is_template',
+                // Facetten + Preis-Metadaten mitnehmen (sonst verliert das Duplikat Servierform/Eventtyp/Paketpreis)
+                'serving_form_id', 'event_type_id', 'price_mode', 'price_per_person_manual',
+            ]));
+            $neu = FoodAlchemistConcept::create($felder + [
+                'team_id' => $team->id, 'name' => $orig->name . ' (Kopie)', 'status' => 'draft',
+            ]);
+            foreach ($orig->slots as $slot) {
+                $neu->slots()->create([
+                    'team_id' => $team->id, 'type' => $slot->type, 'role' => $slot->role, 'title' => $slot->title,
+                    'position' => $slot->position, 'is_pflicht' => $slot->is_pflicht,
+                    'package_id' => $slot->package_id, 'embedded_concept_id' => $slot->embedded_concept_id,
+                    'sales_recipe_id' => $slot->sales_recipe_id,
+                    'quantity' => $slot->quantity, 'unit_vocab_id' => $slot->unit_vocab_id,
+                ] + ($orig->ist_fassung ? ['presentation_id' => $slot->presentation_id, 'wording' => $slot->wording] : []));   // Kopie einer Abo-Fassung behält die gewählte Form (der Preis hängt daran)
+            }
+            // Facetten-Pivots (Einsatzmomente/Saisons/Zielgruppen) mitkopieren
+            $neu->serviceMoments()->sync($orig->serviceMoments->pluck('id')->all());
+            $neu->seasons()->sync($orig->seasons->pluck('id')->all());
+            $neu->targetGroups()->sync($orig->targetGroups->pluck('id')->all());
+            $this->refreshCache($neu);
+
+            return $neu->refresh();
+        });
+    }
+
+    /** „Als Vorlage speichern" — friert das aktuelle Slot-Gerüst als neue Vorlage ein. */
+    public function alsVorlageSpeichern(Team $team, int $conceptId, ?string $name = null): FoodAlchemistConcept
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
+        $vorlage = $this->forkVonVorlage($team, $conceptId, $name ?: ($concept->name . ' (Vorlage)'));
+        $vorlage->update(['is_template' => true, 'template_source_id' => null, 'status' => 'active']);
+
+        return $vorlage->refresh();
+    }
+
+    // ── M13: Zielpreis-Konfigurator (Modus im Concept-Editor) ───────────────
+
+    /**
+     * Schlägt eine Paket-Kombination vor, die dem Zielpreis (€/Person) am nächsten
+     * kommt. Greift NUR an Paket-Slots (gleiche Rolle = `tauschbarePakete`); feste
+     * Gerichte sind Fixkosten. Deterministisch: exhaustiv bei kleiner Kombinatorik,
+     * sonst greedy Hill-Climb. Persistiert NICHTS — erst `zielpreisAnwenden`.
+     *
+     * @return array{vorschlag: array<int,int>, preis: float, aktuell: float, ziel: float,
+     *               aenderungen: int, min: float, max: float, fix: float}
+     */
+    public function zielpreisVorschlag(Team $team, int $conceptId, float $ziel): array
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->with('slots')->findOrFail($conceptId);
+
+        $fix = 0.0;
+        $slots = [];   // adjustable: ['slot_id', 'current_paket_id', 'kandidaten' => [package_id => preis]]
+        $paketPreise = $this->paketKandidaten($team)
+            ->mapWithKeys(fn ($p) => [(int) $p->id => (float) ($p->price_per_person_cache ?? 0)])->all();
+        foreach ($concept->slots as $slot) {
+            // Kaskade: NUR Paket-Slots (eingebettetes kind=paket-Concept) sind tauschbar; feste Gerichte = Fix.
+            if ($slot->embedded_concept_id !== null || $slot->package_id !== null) {
+                $kandidaten = $paketPreise;
+                $current = $slot->embedded_concept_id !== null ? (int) $slot->embedded_concept_id : null;
+                if ($current !== null && ! isset($kandidaten[$current]) && $slot->embeddedConcept) {
+                    $kandidaten[$current] = (float) ($slot->embeddedConcept->price_per_person_cache ?? 0);
+                }
+                if (! empty($kandidaten)) {
+                    $slots[] = ['slot_id' => (int) $slot->id, 'current' => $current, 'kandidaten' => $kandidaten];
+                }
+            } elseif ($slot->sales_recipe_id !== null && $slot->dish) {
+                // Umbau-Spec Phase 5: aufgelöste Darreichung gewinnt (Fixanteil des Zielpreis-Solvers)
+                $slot->setRelation('concept', $concept);
+                $darVk = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNettoFuerSlot($slot);
+                $fix += (float) ($darVk ?? 0) * ($slot->quantity !== null ? (float) $slot->quantity : 1.0);
+            }
+        }
+
+        $aktuell = $this->preisCockpit($concept)['price_per_person'];
+        $zielRest = $ziel - $fix;
+
+        // erreichbare Spanne (Σ min/max je Slot)
+        $min = $fix;
+        $max = $fix;
+        foreach ($slots as $s) {
+            $min += min($s['kandidaten']);
+            $max += max($s['kandidaten']);
+        }
+
+        $wahl = $this->loeseZielpreis($slots, $zielRest);  // [slot_id => package_id]
+        $preis = $fix;
+        foreach ($wahl as $slotId => $paketId) {
+            $s = collect($slots)->firstWhere('slot_id', $slotId);
+            $preis += $s['kandidaten'][$paketId];
+        }
+        $aenderungen = collect($slots)->filter(fn ($s) => ($wahl[$s['slot_id']] ?? null) !== $s['current'])->count();
+
+        return [
+            'vorschlag' => $wahl,
+            'price' => round($preis, 2),
+            'aktuell' => $aktuell,
+            'ziel' => round($ziel, 2),
+            'aenderungen' => $aenderungen,
+            'min' => round($min, 2),
+            'max' => round($max, 2),
+            'fix' => round($fix, 2),
+        ];
+    }
+
+    /**
+     * Kombinations-Optimierung: eine Kandidaten-ID je Slot so wählen, dass die Summe
+     * dem Rest-Ziel am nächsten kommt. Exhaustiv (≤ 4000 Kombis), sonst greedy.
+     *
+     * @param  list<array{slot_id:int, current:?int, kandidaten:array<int,float>}>  $slots
+     * @return array<int,int> slot_id => package_id
+     */
+    private function loeseZielpreis(array $slots, float $zielRest): array
+    {
+        if (empty($slots)) {
+            return [];
+        }
+        $kombis = array_product(array_map(fn ($s) => count($s['kandidaten']), $slots));
+
+        if ($kombis > 0 && $kombis <= 4000) {
+            $bestGap = INF;
+            $best = [];
+            $listen = array_map(fn ($s) => array_keys($s['kandidaten']), $slots);
+            $n = count($slots);
+            for ($i = 0; $i < $kombis; $i++) {
+                $rest = $i;
+                $sum = 0.0;
+                $wahl = [];
+                for ($j = 0; $j < $n; $j++) {
+                    $anz = count($listen[$j]);
+                    $idx = $rest % $anz;
+                    $rest = intdiv($rest, $anz);
+                    $pid = $listen[$j][$idx];
+                    $wahl[$slots[$j]['slot_id']] = $pid;
+                    $sum += $slots[$j]['kandidaten'][$pid];
+                }
+                $gap = abs($sum - $zielRest);
+                if ($gap < $bestGap - 1e-9) {
+                    $bestGap = $gap;
+                    $best = $wahl;
+                }
+            }
+
+            return $best;
+        }
+
+        // Greedy Hill-Climb: Start = aktuelles (oder günstigstes) Paket je Slot
+        $wahl = [];
+        $sum = 0.0;
+        foreach ($slots as $s) {
+            $pid = $s['current'] !== null && isset($s['kandidaten'][$s['current']])
+                ? $s['current'] : array_key_first($s['kandidaten']);
+            $wahl[$s['slot_id']] = $pid;
+            $sum += $s['kandidaten'][$pid];
+        }
+        for ($iter = 0; $iter < 200; $iter++) {
+            $bestGap = abs($sum - $zielRest);
+            $move = null;
+            foreach ($slots as $s) {
+                foreach ($s['kandidaten'] as $pid => $preis) {
+                    if ($pid === $wahl[$s['slot_id']]) {
+                        continue;
+                    }
+                    $neu = $sum - $s['kandidaten'][$wahl[$s['slot_id']]] + $preis;
+                    if (abs($neu - $zielRest) < $bestGap - 1e-9) {
+                        $bestGap = abs($neu - $zielRest);
+                        $move = ['slot' => $s['slot_id'], 'pid' => $pid, 'sum' => $neu];
+                    }
+                }
+            }
+            if ($move === null) {
+                break;
+            }
+            $wahl[$move['slot']] = $move['pid'];
+            $sum = $move['sum'];
+        }
+
+        return $wahl;
+    }
+
+    /** Wendet einen Zielpreis-Vorschlag an (Paket-Tausch je Slot). */
+    public function zielpreisAnwenden(Team $team, int $conceptId, array $vorschlag): FoodAlchemistConcept
+    {
+        $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
+        $this->guardOwner($concept, $team);
+        foreach ($vorschlag as $slotId => $paketId) {
+            $this->fillSlot($team, (int) $slotId, ['embedded_concept_id' => (int) $paketId]);
+        }
+
+        return $concept->refresh();
+    }
+
+    // ── M10c-B: Kategorien (Baum) ──────────────────────────────────────────
+
+    /**
+     * Flache, vorsortierte Kategorie-Liste mit Tiefe (Pre-Order) — die UI rendert
+     * daraus Baum (Einrückung) und Select. Enthält `ancestors` + `has_children`
+     * für <x-foodalchemist::tree>.
+     *
+     * @return list<array{id:int, name:string, parent_id:?int, depth:int, label:string, ancestors:list<int>, has_children:bool}>
+     */
+    public function categoriesFlat(Team $team): array
+    {
+        $alle = FoodAlchemistConceptCategory::visibleToTeam($team)
+            ->orderBy('position')->orderBy('name')->get(['id', 'name', 'parent_id']);
+
+        return $this->flacherBaum($alle);
+    }
+
+    /**
+     * Pre-Order-Walk über eine Baum-Sammlung (Items mit id/name/parent_id) → flache Liste
+     * mit Tiefe, Vorfahren-Kette und Kinder-Flag. Eingabe-Format für <x-foodalchemist::tree>.
+     *
+     * @param  Collection<int, object>  $alle
+     * @return list<array{id:int, name:string, parent_id:?int, depth:int, label:string, ancestors:list<int>, has_children:bool}>
+     */
+    private function flacherBaum(Collection $alle): array
+    {
+        $byParent = $alle->groupBy(fn ($c) => $c->parent_id ?? 0);
+        $out = [];
+        $walk = function ($parentId, int $depth, array $ancestors) use (&$walk, $byParent, &$out) {
+            foreach ($byParent[$parentId] ?? [] as $c) {
+                $id = (int) $c->id;
+                $out[] = [
+                    'id' => $id, 'name' => $c->name,
+                    'parent_id' => $c->parent_id !== null ? (int) $c->parent_id : null,
+                    'depth' => $depth, 'label' => str_repeat('— ', $depth) . $c->name,
+                    'ancestors' => $ancestors,
+                    'has_children' => isset($byParent[$id]),
+                ];
+                $walk($id, $depth + 1, [...$ancestors, $id]);
+            }
+        };
+        $walk(0, 0, []);
+
+        return $out;
+    }
+
+    /** Kategorie-ID + alle Nachfahren (Filter inkl. Untergruppen). @return list<int> */
+    public function descendantIds(Team $team, int $categoryId): array
+    {
+        $kinder = [];
+        foreach ($this->categoriesFlat($team) as $row) {
+            $kinder[$row['parent_id'] ?? 0][] = $row['id'];
+        }
+        $ids = [];
+        $stack = [$categoryId];
+        while ($stack) {
+            $id = array_pop($stack);
+            $ids[] = $id;
+            foreach ($kinder[$id] ?? [] as $kid) {
+                $stack[] = $kid;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * KI-Wording für ein team-eigenes Concept: Intro (→ description) + Positions-Texte (→ setSlotWording)
+     * + Spec 50 Paket C-2: Header-Titel (Gang-/Stationsüberschriften, → title) und Kopf-Felder
+     * `consumer_name`/`claim` (nur, wenn leer — ein gesetzter Kundenname wird nie überschrieben).
+     * Geteilte Web-/MCP-Wahrheit (Concepter-Editor::wordingGenerieren + MCP concept_wording.GENERATE
+     * + Job/Kaskade/concepts.GENERATE via {@see wordingPassFailSoft}).
+     * Workstream W: erdet über KnowledgeContextService (cross_cutting — Anti-Marker/Fakten fürs
+     * Kundentext-Guardrail) + Food-DNA-Concept-Override. Setzt Texte direkt (Brand-Voice am eigenen
+     * Concept = niedrige Risikoklasse, wie die UI). Wirft bei fremdem/fehlendem Concept.
+     *
+     * Header-Regel: die KI darf nur GENERATOR-Header umtexten — erkennbar an `title === role`
+     * (das Frame-Label steht in beiden Feldern, {@see ConceptGeneratorService::headerFuerFrameSlot}).
+     * Hat ein Mensch den Titel schon geändert (title ≠ role), bleibt er stehen (GL-07 Override-First).
+     *
+     * Optionen: `nur_luecken` (bool, default false) — Intro, Positions-Wording und Header werden nur
+     * geschrieben, wo noch nichts steht (Auto-Pässe aus Job/Kaskade/GENERATE); der explizite
+     * concept_wording.GENERATE-Aufruf regeneriert wie bisher.
+     *
+     * @param  array{nur_luecken?:bool}  $opt
+     * @return array{intro:?string, slots_set:int, header_set:int, kopf_set:list<string>}
+     */
+    public function generateWording(Team $team, int $conceptId, ?int $writingStyleId = null, array $opt = []): array
+    {
+        $concept = $this->detail($team, $conceptId);
+        if ($concept === null) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Konzept nicht sichtbar.');
+        }
+        $this->guardOwner($concept, $team);
+        $nurLuecken = (bool) ($opt['nur_luecken'] ?? false);
+
+        $stil = $writingStyleId ? \Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle::find($writingStyleId) : null;
+        $wissen = app(\Platform\FoodAlchemist\Services\Ai\KnowledgeContextService::class)
+            ->contextFor($team, 'concept.wording', (string) ($concept->occasion ?: $concept->name), $stil?->name);
+
+        // Generator-Header (title === role) sind KI-umtextbar; von Menschen betitelte nicht.
+        $headerSlots = $concept->slots
+            ->filter(fn ($s) => in_array($s->type, ['header', 'header_preis'], true)
+                && trim((string) $s->title) !== '' && (string) $s->title === (string) $s->role);
+        $kopfLuecken = array_values(array_filter(['consumer_name', 'claim'], fn ($f) => trim((string) $concept->{$f}) === ''));
+
+        $kontext = [
+            'concept' => $concept->name,
+            'occasion' => $concept->occasion,
+            'class' => $concept->class,
+            'schreibstil' => $stil?->name,
+            'schreibstil_anweisung' => $stil !== null ? (trim((string) $stil->sprach_duktus) ?: null) : null,
+            'schreibstil_beispiele' => $stil !== null ? (trim((string) $stil->beispiele_md) ?: null) : null,
+            'positionen' => $concept->slots
+                ->filter(fn ($s) => $s->sales_recipe_id !== null && $s->dish)
+                ->filter(fn ($s) => ! $nurLuecken || trim((string) $s->wording) === '')
+                ->map(fn ($s) => ['slot_id' => $s->id, 'name' => $s->dish->name, 'sales_wording_standard' => $s->dish->sales_wording_standard ?? null])
+                ->values()->all(),
+            // C-2: Gang-/Stationsüberschriften (Frame-Label als neutraler Ausgangspunkt) + Kopf-Lücken.
+            'header' => $headerSlots->map(fn ($s) => ['slot_id' => $s->id, 'title' => $s->title])->values()->all(),
+            'kopf' => [
+                'consumer_name' => $concept->consumer_name,
+                'claim' => $concept->claim,
+                'description' => $concept->description,
+                'luecken' => $kopfLuecken,
+            ],
+        ];
+
+        $vorschlag = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('concept.wording', $kontext, [
+            'food_dna_concept_id' => $concept->id,
+            'knowledge' => $wissen['block'] ?? null,
+            'knowledge_used' => $wissen['files_used'] ?? null,
+        ]);
+
+        $text = static fn ($v): ?string => is_string($v) && trim($v) !== '' ? trim($v) : null;
+
+        $intro = $text($vorschlag->werte['intro'] ?? null);
+        $kopfUpdate = [];
+        if ($intro !== null && (! $nurLuecken || trim((string) $concept->description) === '')) {
+            $kopfUpdate['description'] = $intro;
+        } else {
+            $intro = null;
+        }
+        foreach ($kopfLuecken as $feld) {
+            $wert = $text($vorschlag->werte[$feld] ?? null);
+            if ($wert !== null) {
+                $kopfUpdate[$feld] = mb_substr($wert, 0, 190);
+            }
+        }
+        if ($kopfUpdate !== []) {
+            $this->update($team, $conceptId, $kopfUpdate);
+        }
+
+        $slotsSet = 0;
+        $positionIds = array_map(fn ($p) => (int) $p['slot_id'], $kontext['positionen']);
+        foreach (($vorschlag->werte['slots'] ?? []) as $slotId => $t) {
+            // Nur angebotene Positionen — bei nur_luecken sind das genau die ohne Wording.
+            if (($t = $text($t)) !== null && in_array((int) $slotId, $positionIds, true)) {
+                $this->setSlotWording($team, (int) $slotId, $t);
+                $slotsSet++;
+            }
+        }
+        $headerSet = 0;
+        $headerIds = $headerSlots->pluck('id')->map(fn ($id) => (int) $id)->all();
+        foreach (($vorschlag->werte['header'] ?? []) as $slotId => $t) {
+            // Nur die angebotenen Generator-Header — die KI kann keinen fremden Slot betiteln.
+            if (($t = $text($t)) !== null && in_array((int) $slotId, $headerIds, true)) {
+                $this->updateSlot($team, (int) $slotId, ['title' => mb_substr($t, 0, 120)]);
+                $headerSet++;
+            }
+        }
+
+        return ['intro' => $intro, 'slots_set' => $slotsSet, 'header_set' => $headerSet,
+            'kopf_set' => array_values(array_diff(array_keys($kopfUpdate), ['description']))];
+    }
+
+    /**
+     * C-2: Wording-Pass als fail-softer Anhang an Generator-Pfade (GenerateConceptJob nach der
+     * Befüllung, PlanningCascade nach dem Fan-out, MCP concepts.GENERATE). Immer `nur_luecken`
+     * — ein Auto-Pass darf nichts überschreiben, was ein Mensch oder ein früherer Pass gesetzt hat.
+     * Schreibstil = der des Concepts (writing_style_id), sonst neutral. `null`, wenn KI/Provider
+     * fehlen oder kippen — das Konzept selbst steht dann trotzdem (Vollständigkeit ist Zusatz, kein Gate).
+     *
+     * @return array{intro:?string, slots_set:int, header_set:int, kopf_set:list<string>}|null
+     */
+    public function wordingPassFailSoft(Team $team, int $conceptId): ?array
+    {
+        try {
+            $concept = FoodAlchemistConcept::query()->whereKey($conceptId)->first();
+            if ($concept === null) {
+                return null;
+            }
+
+            return $this->generateWording($team, $conceptId, $concept->writing_style_id ? (int) $concept->writing_style_id : null, ['nur_luecken' => true]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::info('[FA] Concept-Wording-Pass übersprungen: ' . $e->getMessage(), ['concept_id' => $conceptId]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Aroma-Kohäsion der Gerichte eines Concepts (Slots + eingebettete Pakete) — geteilte Web-/MCP-Wahrheit (Editor + concepts.COHESION).
+     * Read-only; kein Owner-Gate nötig (nur sichtbar). Weniger als 2 Gerichte ⇒ `zu_wenig`.
+     */
+    public function menueKohaesion(Team $team, int $conceptId): array
+    {
+        $concept = $this->detail($team, $conceptId);
+        if ($concept === null) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Konzept nicht sichtbar.');
+        }
+        $dishes = [];
+        foreach ($concept->slots as $slot) {
+            if ($slot->dish) {
+                $dishes[$slot->dish->id] = $slot->dish;
+            } elseif ($slot->embeddedConcept) {
+                foreach ($slot->embeddedConcept->slots as $eps) {
+                    if ($eps->dish) {
+                        $dishes[$eps->dish->id] = $eps->dish;
+                    }
+                }
+            }
+        }
+        $pairing = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class);
+        $kohaesion = count($dishes) >= 2
+            ? $pairing->menuCohesion(array_values($dishes))
+            : ['score' => 0, 'rated_pairs' => 0, 'total_pairs' => 0, 'coverage_pct' => 0, 'weakest_pair' => null, 'unrated_pairs' => [], 'komponenten' => [], 'zu_wenig' => true];
+        $kohaesion['warnung'] = $pairing->menuKohaesionWarnung($kohaesion);
+
+        return $kohaesion;
+    }
+
+    public function createCategory(Team $team, string $name, ?int $parentId = null): FoodAlchemistConceptCategory
+    {
+        $name = trim($name);
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefe(FoodAlchemistConceptCategory::class, $team, $parentId, 'Ober-Kategorie');   // CQ 2.3f
+        $maxPos = FoodAlchemistConceptCategory::where('team_id', $team->id)
+            ->when($parentId, fn ($q, $p) => $q->where('parent_id', $p), fn ($q) => $q->whereNull('parent_id'))
+            ->max('position');
+
+        return FoodAlchemistConceptCategory::create([
+            'team_id' => $team->id,
+            'name' => $name !== '' ? $name : 'Neue Kategorie',
+            'parent_id' => $parentId ?: null,
+            'position' => (int) $maxPos + 1,
+        ]);
+    }
+
+    public function renameCategory(Team $team, int $id, string $name): void
+    {
+        $cat = FoodAlchemistConceptCategory::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwnerCategory($cat, $team);
+        $name = trim($name);
+        if ($name !== '') {
+            $cat->update(['name' => $name]);
+        }
+    }
+
+    /** Löschen: Kinder + zugeordnete Concepts an den Eltern hängen, dann löschen. */
+    public function deleteCategory(Team $team, int $id): void
+    {
+        $cat = FoodAlchemistConceptCategory::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwnerCategory($cat, $team);
+        DB::transaction(function () use ($cat) {
+            FoodAlchemistConceptCategory::where('parent_id', $cat->id)->update(['parent_id' => $cat->parent_id]);
+            FoodAlchemistConcept::where('category_id', $cat->id)->update(['category_id' => $cat->parent_id]);
+            $cat->delete();
+        });
+    }
+
+    // ── Klassen (Baum, §10.3) ──────────────────────────────────────────────
+
+    /**
+     * Flache, vorsortierte Klasse-Liste (Baum) — wie categoriesFlat; `concepts.class` referenziert per Name-String (frei wählbar).
+     *
+     * @return list<array{id:int, name:string, parent_id:?int, depth:int, label:string, ancestors:list<int>, has_children:bool}>
+     */
+    public function klassenFlat(Team $team): array
+    {
+        $alle = FoodAlchemistVocabKlasse::visibleToTeam($team)
+            ->where('is_inactive', false)
+            ->orderBy('sort_order')->orderBy('name')->get(['id', 'name', 'parent_id']);
+
+        return $this->flacherBaum($alle);
+    }
+
+    public function createKlasse(Team $team, string $name, ?int $parentId = null): FoodAlchemistVocabKlasse
+    {
+        $name = trim($name);
+        $name = $name !== '' ? $name : 'Neue Klasse';
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefe(FoodAlchemistVocabKlasse::class, $team, $parentId, 'Ober-Klasse');   // CQ 2.3f
+
+        // Slug team-eindeutig (vocab_klassen.unique[team_id, slug]) — bei Kollision suffixen.
+        $basis = \Illuminate\Support\Str::slug($name) ?: 'class';
+        $slug = $basis;
+        $i = 2;
+        while (FoodAlchemistVocabKlasse::where('team_id', $team->id)->where('slug', $slug)->exists()) {
+            $slug = $basis.'-'.$i++;
+        }
+
+        $maxSort = FoodAlchemistVocabKlasse::where('team_id', $team->id)
+            ->when($parentId, fn ($q, $p) => $q->where('parent_id', $p), fn ($q) => $q->whereNull('parent_id'))
+            ->max('sort_order');
+
+        return FoodAlchemistVocabKlasse::create([
+            'team_id' => $team->id,
+            'name' => $name,
+            'slug' => $slug,
+            'parent_id' => $parentId ?: null,
+            'sort_order' => (int) $maxSort + 1,
+        ]);
+    }
+
+    public function renameKlasse(Team $team, int $id, string $name): void
+    {
+        $k = FoodAlchemistVocabKlasse::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwnerKlasse($k, $team);
+        $name = trim($name);
+        if ($name !== '') {
+            $k->update(['name' => $name]);
+        }
+    }
+
+    /** Löschen: Kinder an den Eltern hängen, dann löschen. `concepts.class` (String) bleibt unberührt. */
+    public function deleteKlasse(Team $team, int $id): void
+    {
+        $k = FoodAlchemistVocabKlasse::visibleToTeam($team)->findOrFail($id);
+        $this->guardOwnerKlasse($k, $team);
+        DB::transaction(function () use ($k) {
+            FoodAlchemistVocabKlasse::where('parent_id', $k->id)->update(['parent_id' => $k->parent_id]);
+            $k->delete();
+        });
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+
+    private function guardOwnerCategory(FoodAlchemistConceptCategory $cat, Team $team): void
+    {
+        if (! $cat->isOwnedBy($team)) {
+            throw new \RuntimeException('Geerbte Kategorie: Ändern kann sie nur das Besitzer-Team.');
+        }
+    }
+
+    private function guardOwnerKlasse(FoodAlchemistVocabKlasse $klasse, Team $team): void
+    {
+        if (! $klasse->isOwnedBy($team)) {
+            throw new \RuntimeException('Geerbte Klasse: Ändern kann sie nur das Besitzer-Team.');
+        }
+    }
+
+    private function ownedSlot(Team $team, int $slotId): FoodAlchemistConceptSlot
+    {
+        $slot = FoodAlchemistConceptSlot::with('concept')->findOrFail($slotId);
+        if ($slot->concept === null || ! in_array((int) $slot->concept->team_id, FoodAlchemistConcept::teamAncestryIds($team), true)) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException('Slot nicht sichtbar.');
+        }
+        $this->guardOwner($slot->concept, $team);
+
+        return $slot;
+    }
+
+    private function guardOwner(FoodAlchemistConcept $concept, Team $team): void
+    {
+        if (! $concept->isOwnedBy($team)) {
+            throw new \RuntimeException('Geerbtes Konzept: Ändern kann es nur das Besitzer-Team.');
+        }
+    }
+
+    private function norm(?string $v): ?string
+    {
+        $v = $v !== null ? trim($v) : null;
+
+        return $v === '' ? null : $v;
+    }
+}

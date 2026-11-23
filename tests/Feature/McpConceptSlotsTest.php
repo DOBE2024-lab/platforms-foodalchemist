@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\ComponentEquivalentService;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

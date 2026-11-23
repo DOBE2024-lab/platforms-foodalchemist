@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /** MCP-Steuerbarkeit · D5: Sektor-Eignung eines team-eigenen Konzepts setzen/entfernen. */
 class ConceptsSektorTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

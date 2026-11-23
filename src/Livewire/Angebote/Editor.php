@@ -933,7 +933,7 @@ class Editor extends Component
         if ($block === null || $block->concept === null) {
             return;
         }
-        $wording = app(\Platform\FoodAlchemist\Services\WordingResolver::class);
+        $wording = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class);
         $kontext = [
             'concept' => $block->concept->name,
             'anzeigename' => trim((string) ($this->blockForm['wording'] ?? '')) !== '' ? $this->blockForm['wording'] : null,
@@ -1392,7 +1392,7 @@ class Editor extends Component
     public function vollKaskadeStarten(
         \Platform\FoodAlchemist\Services\PlanningSessionService $sessions,
         \Platform\FoodAlchemist\Services\PlanningCascadeService $cascade,
-        \Platform\FoodAlchemist\Services\ConceptGeneratorService $gen,
+        \Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService $gen,
     ) {
         $team = $this->team();
         if ($this->selectedId === null) {
@@ -1537,7 +1537,7 @@ class Editor extends Component
         if ($kapitel !== null) {
             $conceptBloecke = $kapitel->blocks->where('type', 'concept_ref')->filter(fn ($b) => $b->concept_id !== null);
             if ($conceptBloecke->isNotEmpty()) {
-                $wording = app(\Platform\FoodAlchemist\Services\WordingResolver::class);
+                $wording = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class);
                 $geladen = FoodAlchemistOfferBlock::whereIn('id', $conceptBloecke->pluck('id'))
                     ->with([
                         'concept.slots' => fn ($q) => $q->orderBy('position'),

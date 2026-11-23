@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
-use Platform\FoodAlchemist\Services\KontextResolver;
+use Platform\FoodAlchemist\Services\Concepter\KontextResolver;
 use Platform\FoodAlchemist\Support\KontextSicht;
 use Platform\FoodAlchemist\Support\MachbarkeitKontext;
 

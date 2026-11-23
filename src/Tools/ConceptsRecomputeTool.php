@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /** MCP-Steuerbarkeit · D5: Preis-/Aggregat-Cache eines team-eigenen Konzepts neu berechnen. */
 class ConceptsRecomputeTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

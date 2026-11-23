@@ -8,7 +8,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Support\Curate;
 
 /**

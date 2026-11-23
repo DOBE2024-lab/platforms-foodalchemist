@@ -6,8 +6,8 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\DarreichungResolver;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungResolver;
 
 /** Phase C: Concept-Detail mit Slots (Gerichte/Pakete/Struktur) + Sektor-Eignung. */
 class ConceptsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

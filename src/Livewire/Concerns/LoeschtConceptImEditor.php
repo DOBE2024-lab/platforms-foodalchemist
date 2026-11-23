@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /**
  * 98 · 2.4d (U9): Löschen auch im Concepter-Editor-Menü, wie in der Detailspalte. Im Ansichtsmodus über

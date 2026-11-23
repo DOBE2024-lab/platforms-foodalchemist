@@ -3,7 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Angebote\Index as Angebote;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
+use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Support\HandyLesemodus;
 use Platform\FoodAlchemist\Support\HandyNavigation;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /**

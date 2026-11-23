@@ -45,7 +45,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
 
     private SpeiseplanMengen $mengen;
 
-    public function __construct(private \Platform\FoodAlchemist\Services\ConceptService $concepts)
+    public function __construct(private \Platform\FoodAlchemist\Services\Concepter\ConceptService $concepts)
     {
         $this->basis = new SpeiseplanBasis();
         $this->ernaehrung = new SpeiseplanErnaehrung($this->basis);

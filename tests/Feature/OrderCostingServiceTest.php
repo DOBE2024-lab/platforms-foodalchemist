@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\Bestellung\OrderCostingService;
 use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;

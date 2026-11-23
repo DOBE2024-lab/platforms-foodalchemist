@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
 use Platform\FoodAlchemist\Services\LeitstelleService;

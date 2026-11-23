@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
-use Platform\FoodAlchemist\Services\LeistungVorlageService;
+use Platform\FoodAlchemist\Services\Concepter\LeistungVorlageService;
 
 /**
  * Spec 94 · Beispiel-Datensatz nach dem Vorbild DOEC „Diva.licious“ (OceanDiva 2026, `DOEC_AllIn_Preise_v2.xlsx`):

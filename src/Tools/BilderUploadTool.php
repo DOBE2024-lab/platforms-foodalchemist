@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\Foodbook\KapitelLogoService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;

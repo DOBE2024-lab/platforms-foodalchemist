@@ -5,8 +5,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSaison;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\CoverageService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\CoverageService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\PlanningFrameService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -147,7 +147,7 @@ it('Live-UI: Coverage-Panel im Concepter sichtbar, Lücken-Klick setzt den Diät
     $comp->call('coverageFuellen', 'vegan')
         ->assertSet('tab', 'aufbau')
         ->assertSet('pickDiaet', 'vegan');
-    $kandidaten = app(\Platform\FoodAlchemist\Services\AufbauKandidatenService::class)
+    $kandidaten = app(\Platform\FoodAlchemist\Services\Concepter\AufbauKandidatenService::class)
         ->gerichtKandidaten($this->rootTeam, '', ['diet_form' => 'vegan']);
     expect($kandidaten->pluck('name')->all())->toBe(['HG: Gemüse-Bowl']);
 });

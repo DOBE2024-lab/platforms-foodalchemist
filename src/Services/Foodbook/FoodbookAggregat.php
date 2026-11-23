@@ -6,10 +6,10 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
-use Platform\FoodAlchemist\Services\ConceptPreisService;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\DarreichungResolver;
-use Platform\FoodAlchemist\Services\FormatKapitelService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptPreisService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungResolver;
+use Platform\FoodAlchemist\Services\Concepter\FormatKapitelService;
 use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 

@@ -87,7 +87,7 @@ it('Lese-Tools: recipes.SEARCH/GET team-scoped, VK-Rezepte bleiben draußen (Sco
 });
 
 it('M11-11: foodbook.GET liefert Kopf + Kapitel/Blöcke + aggregierten Angebotspreis (team-scoped)', function () {
-    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
 
     // 98 · 2.6c: Paket = kind=paket-Concept mit manuellem Preis, eingebettet statt package_id

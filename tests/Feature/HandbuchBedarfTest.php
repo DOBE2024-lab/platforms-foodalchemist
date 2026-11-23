@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Services\Ausgabe\HandbuchService;
 use Platform\FoodAlchemist\Services\Ausgabe\HandbuchZutatenService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -177,7 +177,7 @@ it('beendet einen zyklischen Paketverweis im Handbuch-Mengenpfad', function () {
     $a = $this->makeConcept($this->rootTeam, 'A'); $b = $this->makeConcept($this->rootTeam, 'B');
     $this->makeConceptSlot($a, ['type' => 'paket', 'embedded_concept_id' => $b->id]);
     $this->makeConceptSlot($b, ['type' => 'paket', 'embedded_concept_id' => $a->id]);
-    $rows = app(\Platform\FoodAlchemist\Services\WordingResolver::class)->gerichtZeilen($a, null, false, true);
+    $rows = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class)->gerichtZeilen($a, null, false, true);
     expect(count($rows))->toBe(2);
 });
 

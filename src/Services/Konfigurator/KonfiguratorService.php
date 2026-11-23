@@ -315,7 +315,7 @@ class KonfiguratorService
         foreach (array_filter([$konzept->lunch_concept_id, $konzept->dinner_concept_id]) as $cid) {
             $c = FoodAlchemistConcept::query()->ohneTeamSicht('verweis')
                 ->with(['slots.dish:id,name,sales_wording_standard', 'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard'])->find($cid);
-            $positionen = $c !== null ? app(\Platform\FoodAlchemist\Services\WordingResolver::class)->wordingPositionen($c) : [];
+            $positionen = $c !== null ? app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class)->wordingPositionen($c) : [];
             if ($positionen === []) {
                 continue;
             }

@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptPaketService;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptPaketService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /** Concepter-Paket duplizieren (Kopie im eigenen Team). */
 class PaketeDuplicateTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

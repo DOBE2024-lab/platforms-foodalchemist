@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /** Phase C: Gerichte-Konzept anlegen — immer status=draft (Aktivierung menschlich). */
 class ConceptsPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
@@ -113,7 +113,7 @@ class ConceptsPostTool extends FoodAlchemistTool implements ToolContract, ToolMe
             }
             $geruest = null;
             if (is_array($arguments['geruest'] ?? null) && ($arguments['geruest']['typ'] ?? '') !== '') {
-                $g = app(\Platform\FoodAlchemist\Services\ConceptGeneratorService::class)->kanonischesGeruest(
+                $g = app(\Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService::class)->kanonischesGeruest(
                     $team, $c->refresh(), (string) $arguments['geruest']['typ'],
                     isset($arguments['geruest']['gaenge']) ? (int) $arguments['geruest']['gaenge'] : null,
                 );

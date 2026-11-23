@@ -992,7 +992,7 @@ class RecipeOneShotService
                 'ziel_pct' => $ziel,
                 'ampel' => $this->weAmpel($we, $ziel),
                 'portion_g' => $portion,
-                'aufschlagsklasse' => app(DarreichungResolver::class)->klasseFuer($recipe)?->code ?? $kaskade['code'],
+                'aufschlagsklasse' => app(Rezept\DarreichungResolver::class)->klasseFuer($recipe)?->code ?? $kaskade['code'],
                 // Neu gegenüber dem Schreib-Pfad: WOHER die Klasse kommt. Der Schreiber
                 // verwischt das, weil er sie festschreibt; für einen Reife-Report ist der
                 // Unterschied zwischen „am Gericht gesetzt" und „nur aus dem Default
@@ -1028,7 +1028,7 @@ class RecipeOneShotService
     private function markupKaskade(Team $team, FoodAlchemistRecipe $recipe): array
     {
         // Spec 85 D-1 PR-B: „gesetzt“ = Klasse der Standard-Darreichung (Rückfall Rezeptspalte bis PR-C).
-        if (($gesetzt = app(DarreichungResolver::class)->klasseFuer($recipe)) !== null) {
+        if (($gesetzt = app(Rezept\DarreichungResolver::class)->klasseFuer($recipe)) !== null) {
             return ['id' => (int) $gesetzt->id, 'code' => $gesetzt->code, 'quelle' => 'gesetzt'];
         }
         // Code über die ID auflösen statt über eine Relation: `FoodAlchemistDishMainGroup`

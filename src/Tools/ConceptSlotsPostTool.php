@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\VocabularyService;
 
 /**
@@ -117,7 +117,7 @@ class ConceptSlotsPostTool extends FoodAlchemistTool implements ToolContract, To
                 $slot = $svc->setSlotWording($team, $slot->id, (string) $arguments['wording']);
             }
             if ($vorgabe !== '') {
-                $slot = app(\Platform\FoodAlchemist\Services\ConceptVorgabenService::class)->setze($team, $slot->id, $vorgabe, isset($arguments['dish_brief_note']) ? (string) $arguments['dish_brief_note'] : null);
+                $slot = app(\Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService::class)->setze($team, $slot->id, $vorgabe, isset($arguments['dish_brief_note']) ? (string) $arguments['dish_brief_note'] : null);
             }
             // M3: Darreichung am Slot pinnen (Servierform des Gerichts).
             if (($arguments['presentation'] ?? '') !== '' && $slot->sales_recipe_id !== null) {

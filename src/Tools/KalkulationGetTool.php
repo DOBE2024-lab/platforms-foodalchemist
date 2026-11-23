@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ConceptPaketService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptPaketService;
 use Platform\FoodAlchemist\Services\Preis\KalkulationService;
 
 /**

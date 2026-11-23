@@ -876,7 +876,7 @@ class SalesRecipeService
         ] : null;
 
         $formelFehlt = false;
-        $vk = ['sales_net' => app(DarreichungResolver::class)->vkNetto($r), 'source' => 'leer', 'vorschlag' => null];   // Spec 85 D-1
+        $vk = ['sales_net' => app(Rezept\DarreichungResolver::class)->vkNetto($r), 'source' => 'leer', 'vorschlag' => null];   // Spec 85 D-1
         $mwst = $team !== null ? (float) app(TeamSettingsService::class)->mwst($team)['ermaessigt'] : 0.0;
         $standard = $r->standardPresentation()->first();
         if ($team !== null && $standard !== null) {
@@ -898,7 +898,7 @@ class SalesRecipeService
         // Spec 85: EK EINER Portion (ek_portion, sonst Ansatz ÷ Portionen) — vorher im Rückfall der ganze Ansatz.
         // CQ 2.2a: über den Resolver; die oben gelesene Standard-Darreichung als Relation setzen, sonst nähme er
         // ohne Standard die erste Darreichung (standardFuer) — hier galt bisher ohne Standard der Ansatz ÷ Portionen.
-        $ekBasis = app(DarreichungResolver::class)->ekProPortion($r->setRelation('standardPresentation', $standard));
+        $ekBasis = app(Rezept\DarreichungResolver::class)->ekProPortion($r->setRelation('standardPresentation', $standard));
         $marge = $this->marge->marge($vk['sales_net'], $ekBasis);
 
         // Spec 28 §6.1: Food-Cost-Ampel mitliefern, damit die VK-Editor-Kachel den Wareneinsatz

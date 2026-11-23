@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Services\Reife;
 
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\CoverageService;
+use Platform\FoodAlchemist\Services\Concepter\CoverageService;
 use Platform\FoodAlchemist\Services\DataQualityService;
 
 /**

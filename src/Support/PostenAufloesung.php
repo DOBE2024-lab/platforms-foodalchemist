@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\PaketGrundeinstellungenService;
+use Platform\FoodAlchemist\Services\Concepter\PaketGrundeinstellungenService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

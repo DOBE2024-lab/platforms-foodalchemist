@@ -88,7 +88,7 @@ it('Gericht bereits als recipe_ref-Block im Kapitel → Übernehmen dedupt kapit
 it('uebernehmeGericht mit $conceptId hängt das Gericht gezielt in DIESES Konzept (kein neues Konzept)', function () {
     $chapterId = (int) $this->slot->refresh()->chapter_id;
     // Ziel-Konzept + concept_ref-Block vorbereiten (wie es kapitelFreigeben in E7.3 tun wird).
-    $ziel = app(\Platform\FoodAlchemist\Services\ConceptService::class)
+    $ziel = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)
         ->create($this->rootTeam, ['name' => 'Paket X', 'status' => 'draft']);
     $this->fbSvc->addBlock($this->rootTeam, $chapterId, ['type' => 'concept_ref', 'concept_id' => $ziel->id]);
 

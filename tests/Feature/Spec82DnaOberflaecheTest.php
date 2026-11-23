@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Livewire\Settings\FoodDna;
 use Platform\FoodAlchemist\Livewire\Settings\Index as SettingsIndex;
 use Platform\FoodAlchemist\Livewire\Settings\KundeDna;
 use Platform\FoodAlchemist\Models\FoodAlchemistCanvasTemplate;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -73,7 +73,7 @@ it('Unter-Team: sieht „Geerbt von …“, verbindliche Felder sind gesperrt un
     $kind = $this->svc->find('food_dna', 'team', $this->childA->id);
     expect($kind->entries->firstWhere('field_key', 'no_gos'))->toBeNull()                 // gesperrt: nichts geschrieben
         ->and($kind->entries->firstWhere('field_key', 'leitbild')->value)->toBe('Kita-Küche.');   // frei: überschrieben
-    expect(app(\Platform\FoodAlchemist\Services\DnaResolver::class)->foodDna($this->childA)['no_gos']['wert'])->toBe('Kein Foie gras.');
+    expect(app(\Platform\FoodAlchemist\Services\Concepter\DnaResolver::class)->foodDna($this->childA)['no_gos']['wert'])->toBe('Kein Foie gras.');
 });
 
 it('Unter-Team: ein Verbindlich-Aufruf von Hand wird abgewiesen', function () {

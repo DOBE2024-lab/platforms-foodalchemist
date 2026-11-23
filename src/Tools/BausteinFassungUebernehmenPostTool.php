@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
-use Platform\FoodAlchemist\Services\BausteinFolgeService;
+use Platform\FoodAlchemist\Services\Concepter\BausteinFolgeService;
 
 /** Spec 82 Abo Konzepte/Pakete PR 5 · Neuere Abo-Fassung an EINEM Verweis übernehmen. Bei geändertem Allergenbild nur Rolle Freigeben und mit bestaetigt=true. */
 class BausteinFassungUebernehmenPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

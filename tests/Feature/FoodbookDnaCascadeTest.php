@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

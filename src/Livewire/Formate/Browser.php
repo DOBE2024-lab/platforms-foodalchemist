@@ -7,7 +7,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 
 /**
  * Format-Modul (Phase B): Top-Level-Browser „Formate" — Marken-/Themen-Container

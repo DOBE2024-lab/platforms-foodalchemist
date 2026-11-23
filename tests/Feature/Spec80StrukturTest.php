@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Kaskade\KaskadeAusgabeVoll;
 use Platform\FoodAlchemist\Services\PlanningFrameService;

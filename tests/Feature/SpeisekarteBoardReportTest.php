@@ -3,7 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Ausgabe\ReportExportService;
 use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

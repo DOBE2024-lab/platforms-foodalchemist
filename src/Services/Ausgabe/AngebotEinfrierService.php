@@ -401,7 +401,7 @@ class AngebotEinfrierService
             // wie die Live-Wege: Abo-Fassung über TeamVkService je Form, eigenes Gericht über den VK der Form (sonst Preisleiter)
             $vk = $gericht->ist_fassung
                 ? app(\Platform\FoodAlchemist\Services\TeamVkService::class)->fuer($gericht, $eigentuemer, null, $d)['vk']
-                : ($d->sales_net !== null ? (float) $d->sales_net : app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->vkNetto($gericht));
+                : ($d->sales_net !== null ? (float) $d->sales_net : app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($gericht));
             $jeForm[(int) $d->id] = $k['vollstaendig'] && $vk !== null ? round((float) $vk, 2) : null;
         }
 

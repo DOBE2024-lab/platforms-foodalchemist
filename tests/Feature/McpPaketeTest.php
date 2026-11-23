@@ -4,7 +4,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
-use Platform\FoodAlchemist\Services\ConceptPaketService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptPaketService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

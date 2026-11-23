@@ -8,9 +8,9 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FormatService;
-use Platform\FoodAlchemist\Services\WordingResolver;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\WordingResolver;
 
 /**
  * Format-Modul (Phase B): Voll-Editor-Modal (Concepter-Stil, Fullscreen-Dark).
@@ -107,7 +107,7 @@ class Editor extends Component
             return;
         }
         try {
-            $kopie = app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->kopieAnlegen($this->team(), 'format', (int) $this->id, \Illuminate\Support\Facades\Auth::user());
+            $kopie = app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class)->kopieAnlegen($this->team(), 'format', (int) $this->id, \Illuminate\Support\Facades\Auth::user());
             $this->oeffnen((int) $kopie->id);
             $this->dispatch('fa-saved', message: 'Eigene Kopie angelegt.');
         } catch (\RuntimeException $e) {
@@ -591,7 +591,7 @@ class Editor extends Component
                 ->with(['concept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache'])
                 ->orderBy('position')->get();
             // EINE Abfrage für die Liste; Aufräumen im finally (mitVorwaermen), auch wenn im Block etwas wirft
-            $kalkZeilen = app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->mitVorwaermen($outlet !== null ? $kalkSlots->pluck('concept_id')->filter() : [], fn () => $kalkSlots
+            $kalkZeilen = app(\Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::class)->mitVorwaermen($outlet !== null ? $kalkSlots->pluck('concept_id')->filter() : [], fn () => $kalkSlots
                 ->map(function ($s) use ($outlet) {
                     $c = $s->concept;
                     if ($c === null) {
@@ -603,7 +603,7 @@ class Editor extends Component
                         $cp = app(ConceptService::class)->preisCockpit($c, $outlet);
                         $vk = (float) $cp['price_per_person'] > 0 ? (float) $cp['price_per_person'] : null;
                         $ek = (float) $cp['ek_per_person'] > 0 ? (float) $cp['ek_per_person'] : null;
-                        $vorlaeufig = \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($cp);
+                        $vorlaeufig = \Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::unvollstaendig($cp);
                     } else {
                         $vorlaeufig = $c->price_incomplete === true;   // CQ price_incomplete
                         $vk = $c->price_per_person_cache !== null ? (float) $c->price_per_person_cache : null;
@@ -647,7 +647,7 @@ class Editor extends Component
             'herkunft' => $format !== null ? [
                 'fremd' => $format->team_id !== null && ! $format->isOwnedBy($team),
                 'besitzer' => $format->team_id !== null ? \Platform\Core\Models\Team::find($format->team_id)?->name : null,
-                'original_geaendert' => (bool) app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->originalGeaendert($format),
+                'original_geaendert' => (bool) app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class)->originalGeaendert($format),
             ] : null,
             'format' => $format,
             'aufbauSlots' => $slots,

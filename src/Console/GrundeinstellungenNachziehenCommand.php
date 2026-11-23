@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\PaketGrundeinstellungenService;
+use Platform\FoodAlchemist\Services\Concepter\PaketGrundeinstellungenService;
 
 /**
  * Paket „Grundeinstellungen“ automatisch nachziehen (Dominique 20.11.2026: „wir erweitern ja ständig und die haben ja dieses Paket gebucht“).

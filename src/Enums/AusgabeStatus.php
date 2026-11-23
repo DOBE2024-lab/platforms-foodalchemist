@@ -22,7 +22,7 @@ namespace Platform\FoodAlchemist\Enums;
  * Kapitel/Rubrik über `snapshot_at`/`snapshot_json` (harte Grenze in
  * FoodbookService::anlageZuruckziehen, gelöscht Spec 85).
  *
- * **Abgrenzung zur Phase.** {@see \Platform\FoodAlchemist\Services\PhaseService} (kontext →
+ * **Abgrenzung zur Phase.** {@see \Platform\FoodAlchemist\Services\Concepter\PhaseService} (kontext →
  * struktur → befuellung → kalkulation → freigabe) beschreibt den BAU-Fortschritt und endet mit
  * der Freigabe. Dieser Enum beschreibt, was danach kommt: den Betrieb. Zwei Achsen, die sich
  * nicht ersetzen.

@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDishClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ConceptGeneratorService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Services\PlanningFrameService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -107,7 +107,7 @@ it('Gerüst-Pfad: nur echte Gerichte, No-Go hart, Graph rankt, leerer Slot mit B
     $dessert = collect($e['protokoll'])->firstWhere('slot', 'Dessert');
     expect($dessert['status'])->toBe('leer')->and($dessert['begruendung'])->toContain('bewusst leer');
     $leererSlot = FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNull('sales_recipe_id')->whereNull('package_id')
-        ->whereNotIn('type', \Platform\FoodAlchemist\Services\ConceptService::STRUKTUR_TYPEN)->first();   // C-1: Header sind keine Positionen
+        ->whereNotIn('type', \Platform\FoodAlchemist\Services\Concepter\ConceptService::STRUKTUR_TYPEN)->first();   // C-1: Header sind keine Positionen
     expect($leererSlot->note)->toContain('Kein VK-Gericht erfüllt');
     // Spec 50 C-1: vor jeder Gang-Gruppe steht eine Überschrift — auch vor dem bewusst leeren Dessert.
     $header = FoodAlchemistConceptSlot::where('concept_id', $concept->id)->where('type', 'header')->orderBy('position')->get();
@@ -690,7 +690,7 @@ it('Kreativ-Kopf planAusBrief: Draft + Gerüst + kreative Canvas + LEERE Fan-out
         ->and(FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNotNull('sales_recipe_id')->count())->toBe(0);
 
     // Kreative Canvas gefüllt: Skalare + Geschmackswelten (leere übersprungen, description im meta)
-    $canvas = app(\Platform\FoodAlchemist\Services\CanvasService::class);
+    $canvas = app(\Platform\FoodAlchemist\Services\Concepter\CanvasService::class);
     $cv = $canvas->find('concept', 'concept', $concept->id);
     $werte = $canvas->werte($cv);
     expect($werte['name_claim'])->toContain('Alpenglühen')
@@ -723,10 +723,10 @@ it('Kreativ-Kopf planAusBrief: fail-soft — scheiternder concept.plan lässt Co
     // Gerüst + leerer Fan-out-Slot stehen trotz gescheitertem Plan
     expect($this->frames->find('concept', $concept->id))->not->toBeNull()
         ->and(FoodAlchemistConceptSlot::where('concept_id', $concept->id)->whereNull('sales_recipe_id')
-            ->whereNotIn('type', \Platform\FoodAlchemist\Services\ConceptService::STRUKTUR_TYPEN)->count())->toBe(1);   // C-1: + 1 Header
+            ->whereNotIn('type', \Platform\FoodAlchemist\Services\Concepter\ConceptService::STRUKTUR_TYPEN)->count())->toBe(1);   // C-1: + 1 Header
 
     // Canvas blieb leer (kein Entry angelegt)
-    $canvas = app(\Platform\FoodAlchemist\Services\CanvasService::class);
+    $canvas = app(\Platform\FoodAlchemist\Services\Concepter\CanvasService::class);
     expect($canvas->find('concept', 'concept', $concept->id))->toBeNull();
 });
 
@@ -764,7 +764,7 @@ it('Slot-Semantik: Dessert-Slot bevorzugt die Dessert-Hauptgruppe vor besser bep
         'is_sales_recipe' => true, 'sales_net' => 6.00, 'dish_class_id' => $desKlasse->id,
     ]);
 
-    $frame2 = $this->frames->frameFor($this->rootTeam, 'concept', app(\Platform\FoodAlchemist\Services\ConceptService::class)->create($this->rootTeam, ['name' => 'Träger'])->id);
+    $frame2 = $this->frames->frameFor($this->rootTeam, 'concept', app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->create($this->rootTeam, ['name' => 'Träger'])->id);
     $this->frames->addSlot($this->rootTeam, $frame2, ['label' => 'Dessert', 'slot_type' => 'gang', 'target_count' => 1]);
 
     $e = $this->svc->generiereAusGeruest($this->rootTeam, $frame2->refresh());
@@ -772,8 +772,8 @@ it('Slot-Semantik: Dessert-Slot bevorzugt die Dessert-Hauptgruppe vor besser bep
     expect(collect($dessert['gerichte'])->pluck('name')->all())->toBe(['DES: Vanille-Pannacotta']);
 
     // Heuristik-Kernfälle: Hauptgang↔Hauptgericht (Präfix), kein False-Positive bei freien Labels
-    expect(\Platform\FoodAlchemist\Services\ConceptGeneratorService::slotSemantik('Hauptgang', 'hauptgericht'))->toBe(1)
-        ->and(\Platform\FoodAlchemist\Services\ConceptGeneratorService::slotSemantik('Buffet-Station Süß', 'hauptgericht'))->toBe(0);
+    expect(\Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService::slotSemantik('Hauptgang', 'hauptgericht'))->toBe(1)
+        ->and(\Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService::slotSemantik('Buffet-Station Süß', 'hauptgericht'))->toBe(0);
 });
 
 it('MCP: concepts.GENERATE über Gerüst-Owner + typisierte Fehler ohne Input', function () {
@@ -801,7 +801,7 @@ it('A4: Wording-Erzeugung überschreibt den Brief nicht mehr', function () {
     // Der Kollisionsfall in klein — ohne Generator, direkt an den zwei Schreibpfaden:
     // der Brief steht in `brief`, `generateWording` schreibt sein Intro nach `description`.
     // Vorher teilten sich beide `description`, und das Wording gewann.
-    $svc = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $concept = $svc->create($this->rootTeam, ['name' => 'Brief-Schutz']);
     $svc->update($this->rootTeam, $concept->id, ['brief' => 'Sommerfest, 80 Gäste']);
 

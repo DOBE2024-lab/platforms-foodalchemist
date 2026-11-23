@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Formate;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 
 /**
  * Format-Modul (Phase B): Detail-Panel — Identität + Editionen + Preis-Range +
@@ -89,14 +89,14 @@ class DetailPanel extends Component
         $outlet = app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($this->team());
         $conceptSlots = $format !== null ? $format->slots->where('type', 'concept') : collect();
         // EINE Abfrage für die Liste; Aufräumen im finally (mitVorwaermen), auch wenn im Block etwas wirft
-        $vks = app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->mitVorwaermen($outlet !== null ? $conceptSlots->pluck('concept_id')->filter() : [], fn () => $conceptSlots
+        $vks = app(\Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::class)->mitVorwaermen($outlet !== null ? $conceptSlots->pluck('concept_id')->filter() : [], fn () => $conceptSlots
             ->map(function ($s) use ($outlet) {
                 $c = $s->concept;
                 if ($c === null) {
                     return null;
                 }
                 return $outlet !== null
-                    ? (float) app(\Platform\FoodAlchemist\Services\ConceptService::class)->preisCockpit($c, $outlet)['price_per_person']
+                    ? (float) app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->preisCockpit($c, $outlet)['price_per_person']
                     : ($c->price_per_person_cache !== null ? (float) $c->price_per_person_cache : null);
             })
             ->filter(fn ($v) => $v !== null && $v > 0)

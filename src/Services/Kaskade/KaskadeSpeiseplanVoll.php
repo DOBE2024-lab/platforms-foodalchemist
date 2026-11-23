@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
-use Platform\FoodAlchemist\Services\ConcepterAggregateService;
+use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
 use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;

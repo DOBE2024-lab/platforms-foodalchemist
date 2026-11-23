@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ConceptVariantService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptVariantService;
 
 /** MCP-Steuerbarkeit · D5: Zutat eines Konzept-Slots konzept-lokal tauschen (Variante). */
 class ConceptSlotVarianteSwapTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

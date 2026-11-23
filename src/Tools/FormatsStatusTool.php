@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 
 /** MCP-Steuerbarkeit · D6: Status einer team-eigenen Format-Edition setzen (draft/active/archiviert). */
 class FormatsStatusTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

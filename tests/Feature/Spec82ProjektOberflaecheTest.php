@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Livewire\Projekte\Detail;
 use Platform\FoodAlchemist\Livewire\Projekte\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistCanvasEntry;
 use Platform\FoodAlchemist\Models\FoodAlchemistProjekt;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\ProjektService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

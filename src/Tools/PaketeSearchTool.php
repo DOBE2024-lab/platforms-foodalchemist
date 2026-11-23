@@ -8,8 +8,8 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
-use Platform\FoodAlchemist\Services\ConceptPaketService;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptPaketService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /** Concepter-Pakete per Freitext suchen. */
 class PaketeSearchTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

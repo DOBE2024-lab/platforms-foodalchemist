@@ -301,7 +301,7 @@ class Browser extends Component
             return;
         }
         try {
-            $n = app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->sammlungHinzu($team, (int) $this->sammlungZiel, 'recipe', $ids, Auth::user());
+            $n = app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class)->sammlungHinzu($team, (int) $this->sammlungZiel, 'recipe', $ids, Auth::user());
             $this->dispatch('fa-saved', message: $n . ' Rezept(e) zur Sammlung hinzugefügt.');
             $this->auswahl = [];
         } catch (\RuntimeException $e) {

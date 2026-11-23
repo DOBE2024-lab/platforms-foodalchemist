@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\Einkauf\EinkaufOptimizerService;
 use Platform\FoodAlchemist\Services\Ausgabe\MenuEngineeringService;
 use Platform\FoodAlchemist\Services\Foodbook\PortfolioService;
-use Platform\FoodAlchemist\Services\PromotionService;
+use Platform\FoodAlchemist\Services\Concepter\PromotionService;
 use Platform\FoodAlchemist\Services\SignalTrendService;
 use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 use Platform\FoodAlchemist\Services\Plattform\StandortService;

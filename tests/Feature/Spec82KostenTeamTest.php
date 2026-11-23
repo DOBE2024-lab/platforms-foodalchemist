@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\FassungService;
-use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
+use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\KostenCacheService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;

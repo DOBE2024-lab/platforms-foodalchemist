@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistCanvasEntry;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 
 /** MCP-Steuerbarkeit · D12: einen Listen-Eintrag eines Canvas-Felds entfernen (team-eigen). */
 class CanvasEntryRemoveTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

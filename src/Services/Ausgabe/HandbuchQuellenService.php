@@ -34,7 +34,7 @@ class HandbuchQuellenService
 
     private const WOCHENTAGE = [1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do', 5 => 'Fr', 6 => 'Sa', 7 => 'So'];
 
-    public function __construct(private \Platform\FoodAlchemist\Services\ConcepterAggregateService $agg)
+    public function __construct(private \Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService $agg)
     {
     }
 

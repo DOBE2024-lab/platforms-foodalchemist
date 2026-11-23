@@ -85,7 +85,7 @@ class MaterializeConceptIdeaJob implements ShouldQueue, \Platform\FoodAlchemist\
 
         // Bestand zuerst (Dominique 13.11.2026): trägt die Skizze einer Gericht-Vorgabe ein freigegebenes Bestandsgericht,
         // übernimmt die Freigabe es in die Position — gebaut wird dann nichts.
-        if (app(\Platform\FoodAlchemist\Services\ConceptVorgabenService::class)->uebernimmBestand($team, $this->ideaId, $this->cascadeStepId)) {
+        if (app(\Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService::class)->uebernimmBestand($team, $this->ideaId, $this->cascadeStepId)) {
             return;
         }
 

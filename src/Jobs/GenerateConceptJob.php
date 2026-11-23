@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
-use Platform\FoodAlchemist\Services\ConceptGeneratorService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService;
 
 /**
  * Async-Konzept-Generierung für die Planungs-Kaskade (P1a).
@@ -152,7 +152,7 @@ class GenerateConceptJob implements ShouldQueue, \Platform\FoodAlchemist\Service
             // Wording, Intro, consumer_name/claim) fail-soft, nur Lücken. In den Erfinden-Modi sind die
             // Slots noch leer — dort läuft der Pass nach dem Fan-out (PlanningCascadeService).
             if (! $planFirst) {
-                app(\Platform\FoodAlchemist\Services\ConceptService::class)->wordingPassFailSoft($team, (int) $concept->id);
+                app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->wordingPassFailSoft($team, (int) $concept->id);
             }
             // P1b: in den Erfinden-Modi fächert das Konzept in erfundene Gerichte auf (je leerem Slot
             // eine KI-Idee → eigener Kind-Step + Materialisierungs-Job). Reuse-Modus (datenbank) tut nichts.
@@ -259,7 +259,7 @@ class GenerateConceptJob implements ShouldQueue, \Platform\FoodAlchemist\Service
         } elseif ($this->attachOwnerType === 'format') {
             // Format (gebrandetes Foodkonzept): das erzeugte Concept als Aufbau-Slot (type=concept) ins Format
             // referenzieren — attachContainerId ist die format_id (Container = Format selbst, wie beim Angebot).
-            app(\Platform\FoodAlchemist\Services\FormatService::class)
+            app(\Platform\FoodAlchemist\Services\Concepter\FormatService::class)
                 ->slotConceptEinfuegen($team, $this->attachContainerId, $conceptId);
             // Spec 80 F2: Konzepte kommen asynchron — danach Format in Rahmen-Reihenfolge (inkl. Struktur) ordnen.
             $runId = $this->cascadeStepId !== null

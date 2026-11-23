@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

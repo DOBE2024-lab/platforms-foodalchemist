@@ -225,14 +225,14 @@ class EtikettService
             $quelle = 'recipe';
             $id = (int) $b->recipe_id;
         }
-        $kat = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class)->kennzeichnungKatalog();
+        $kat = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class)->kennzeichnungKatalog();
         $heute = now()->startOfDay();
         $d = ['quelle' => $quelle, 'bezeichnung' => '', 'zusatz' => null, 'zutaten' => [], 'allergene' => [], 'spuren' => [], 'zusatzstoffe' => [],
             'hinweise' => [], 'allergene_unbekannt' => false, 'inhalt' => [], 'haltbar_gekuehlt' => null, 'haltbar_tk' => null, 'lagerung' => null, 'lagerarten' => [], 'haltbar' => []];
 
         if ($quelle === 'recipe') {
             $r = FoodAlchemistRecipe::visibleToTeam($team)->with('ingredients.gp', 'ingredients.referencedRecipe')->findOrFail($id);
-            $k = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class)->kennzeichnungFromGerichte(collect([$r]));
+            $k = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class)->kennzeichnungFromGerichte(collect([$r]));
             foreach ($k['allergene'] as $a) {
                 $eintrag = ['code' => $kat['allergene'][$a['slug']]['code'] ?? '', 'label' => $a['label']];
                 match ($a['status']) {
@@ -248,7 +248,7 @@ class EtikettService
                 }
             }
             // Jod: freiwilliger Hinweis, nur bei Mandanten-Schalter; kein Zusatzstoff-Code
-            $d['hinweise'] = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class)->freiwilligeHinweise(collect([$r]), app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->jodHinweisAktiv($team));
+            $d['hinweise'] = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class)->freiwilligeHinweise(collect([$r]), app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->jodHinweisAktiv($team));
             $d['bezeichnung'] = $this->rezeptname((string) $r->name);
             $d['zutaten'] = $this->zutatenliste($team, $r);
             $d['haltbar_gekuehlt'] = $r->shelf_life_chilled_days;

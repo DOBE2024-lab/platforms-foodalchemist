@@ -225,7 +225,7 @@ it('Druck: Buffetschilder lösen Pakete auf, ergänzen Unterrezepte und schreibe
     $braten->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'referenced_recipe_id' => $jus->id, 'raw_text' => 'Jus', 'quantity' => 100, 'unit_vocab_id' => $g->id]);
     $gratin = druckRezept($this->rootTeam->id, 'druck-gratin', 'Kartoffelgratin', ['milk'], ['is_sales_recipe' => true, 'sales_wording_standard' => 'Kartoffelgratin', 'spec_is_vegetarian' => true], ['eggs']);
     // 98 · 2.6c: Paket = kind=paket-Concept, im Speiseplan über concept_id
-    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Buffet Klassik']);
     foreach ([$braten, $gratin] as $g) {
         $ps = $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Buffet']);

@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -52,7 +52,7 @@ it('B2: fillSlot pflegt type (paket|gericht|basisrezept); basisKandidaten findet
     expect($s->refresh()->type)->toBe('basisrezept')->and($s->sales_recipe_id)->toBe($basis->id);
 
     // Basisrezept-Suche findet das Basisrezept, NICHT die VK-Gerichte
-    $kandidaten = app(\Platform\FoodAlchemist\Services\AufbauKandidatenService::class);
+    $kandidaten = app(\Platform\FoodAlchemist\Services\Concepter\AufbauKandidatenService::class);
     expect($kandidaten->basisKandidaten($this->rootTeam, 'Fond')->pluck('name')->all())->toContain('Fond: Hell');
     expect($kandidaten->basisKandidaten($this->rootTeam, 'Green')->pluck('name')->all())->not->toContain('Salat: Green Power');
 });

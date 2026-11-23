@@ -251,7 +251,7 @@ class ReportExportService
 
         $this->behaelterAusConcept($team, $concept, $optionen);
 
-        app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->anwenden($concept, $team);   // Abo-Fassung: Team-Preis statt leerer Master-Caches (Spec 82)
+        app(\Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::class)->anwenden($concept, $team);   // Abo-Fassung: Team-Preis statt leerer Master-Caches (Spec 82)
         $slots = $concept->slots->map(function ($slot) use ($optionen, $team, $concept) {
             $gerichte = collect();
             if ($slot->dish !== null) {
@@ -972,8 +972,8 @@ class ReportExportService
         // Amuse-Mengen auf 0 zusammenfällt: 0,008 kg × 0,18 €/kg = 0,0014 € → gerundet 0,00.
         $zeilenKosten = $this->zeilenKosten($recipe);
         // Spec 85 D-1: VK aus der Standard-Darreichung (Preisleiter), nicht aus recipes.sales_net.
-        $vkNetto = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->vkNetto($recipe);
-        $ekPortion = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->ekProPortion($recipe);   // Spec 85: EK je Portion, wie der VK
+        $vkNetto = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($recipe);
+        $ekPortion = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->ekProPortion($recipe);   // Spec 85: EK je Portion, wie der VK
 
         return [
             'id' => (int) $recipe->id,
@@ -1007,7 +1007,7 @@ class ReportExportService
             'category' => $recipe->category?->label,
             'dish_class' => $recipe->dishClass?->label,
             'dish_main_group' => $recipe->dishMainGroup?->label,
-            'markup_class' => ($k = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->klasseFuer($recipe))?->label ?? $k?->code,   // Spec 85 D-1 PR-B
+            'markup_class' => ($k = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->klasseFuer($recipe))?->label ?? $k?->code,   // Spec 85 D-1 PR-B
             'sales_unit' => $recipe->salesUnit?->display_de ?? $recipe->salesUnit?->slug,
             'produktion' => [
                 'production_depth' => $recipe->production_depth,

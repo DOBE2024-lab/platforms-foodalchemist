@@ -20,7 +20,7 @@ beforeEach(function () {
         'is_sales_recipe' => true, 'sales_net' => 3.50, 'ek_total_eur' => 1.00,
     ]);
     // 98 · 2.6c: Paket = kind=paket-Concept (manuell 2,50 €/P, EK 0,80 aus seinem Gericht), im Plan über concept_id
-    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $salat = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'sb1', 'name' => 'Salatbar-Mix', 'status' => 'approved',
         'is_sales_recipe' => true, 'sales_net' => 2.50, 'ek_total_eur' => 0.80,

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ConceptVariantService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptVariantService;
 
 /** MCP-Steuerbarkeit · D5: konzept-lokale Varianten eines Slots zurücksetzen (auf das Basis-Gericht). */
 class ConceptSlotVarianteResetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

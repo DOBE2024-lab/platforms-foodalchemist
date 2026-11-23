@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistEinsatzmoment;
 use Platform\FoodAlchemist\Models\FoodAlchemistEventtyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSaison;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -103,7 +103,7 @@ it('Browser-Facetten-Filter grenzt die Formatliste ein', function () {
 });
 
 it('F4: Kalkulations-Tab zeigt €/P, EK und W% je Edition', function () {
-    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $c = $concepts->create($this->rootTeam, ['name' => 'Sommer-Menü']);
     $c->update(['status' => 'active', 'price_per_person_cache' => 20.00, 'ek_per_person_cache' => 5.00]);
     $format = $this->svc->create($this->rootTeam, ['name' => 'CHEFS.CORNER']);

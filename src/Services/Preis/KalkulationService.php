@@ -24,10 +24,10 @@ class KalkulationService
 {
     public function __construct(
         private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
-        private \Platform\FoodAlchemist\Services\ConceptService $concepts,
-        private \Platform\FoodAlchemist\Services\ConcepterAggregateService $aggregat,
+        private \Platform\FoodAlchemist\Services\Concepter\ConceptService $concepts,
+        private \Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService $aggregat,
         private \Platform\FoodAlchemist\Services\Produktion\FixkostenService $fixkosten,
-        private \Platform\FoodAlchemist\Services\DarreichungResolver $resolver,
+        private \Platform\FoodAlchemist\Services\Rezept\DarreichungResolver $resolver,
     ) {
     }
 

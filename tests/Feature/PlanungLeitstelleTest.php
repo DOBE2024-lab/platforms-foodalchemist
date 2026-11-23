@@ -25,7 +25,7 @@ use Platform\FoodAlchemist\Services\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
 use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
 use Platform\FoodAlchemist\Services\RecipeGeneratorService;
-use Platform\FoodAlchemist\Services\TitelVorschlagService;
+use Platform\FoodAlchemist\Services\Concepter\TitelVorschlagService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -712,7 +712,7 @@ it('Inline-Plan: planFeldSpeichern schreibt die editierte Leitidee in die concep
         ->call('planFeldSpeichern')
         ->assertSet('fehler', null);
 
-    $svc = app(\Platform\FoodAlchemist\Services\CanvasService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Concepter\CanvasService::class);
     $werte = $svc->werte($svc->find('concept', 'concept', (int) $concept->id));
     expect($werte['leitidee'])->toBe('Geändert: mediterran, viel Gemüse.');
 });
@@ -834,7 +834,7 @@ it('#53 persistent: KI-Kopf schreibt plan_concept_id an die Session; der Go verb
 });
 
 it('#53 persistent: oeffne rehydriert planConceptId aus der Session-Spalte (Plan übersteht Reload)', function () {
-    $concept = app(\Platform\FoodAlchemist\Services\ConceptService::class)->create($this->rootTeam, ['name' => 'Geprüfter Plan', 'status' => 'draft']);
+    $concept = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->create($this->rootTeam, ['name' => 'Geprüfter Plan', 'status' => 'draft']);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Reload-Menü']);
     $session->update(['plan_concept_id' => (int) $concept->id]);
 
@@ -851,7 +851,7 @@ it('#53 persistent: oeffne verwirft einen toten plan_concept_id still (kein Geis
 });
 
 it('#53 persistent: planVerwerfen löst auch den gespeicherten Zeiger (löscht das Draft nicht)', function () {
-    $concept = app(\Platform\FoodAlchemist\Services\ConceptService::class)->create($this->rootTeam, ['name' => 'Plan', 'status' => 'draft']);
+    $concept = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->create($this->rootTeam, ['name' => 'Plan', 'status' => 'draft']);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Verwerfen']);
     $session->update(['plan_concept_id' => (int) $concept->id]);
 
@@ -2005,7 +2005,7 @@ it('L0.1 KI-Kopf reicht die Menü-Leitplanken (menue_*) an planAusBrief durch', 
     $draft = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Stub', 'status' => 'draft']);
 
     $erhalten = [];
-    $this->mock(\Platform\FoodAlchemist\Services\ConceptGeneratorService::class, function ($m) use (&$erhalten, $draft) {
+    $this->mock(\Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService::class, function ($m) use (&$erhalten, $draft) {
         $m->shouldReceive('planAusBrief')->andReturnUsing(function (...$args) use (&$erhalten, $draft) {
             $erhalten = $args;
             return ['concept' => $draft];
@@ -2029,7 +2029,7 @@ it('L0.1 KI-Kopf reicht die Menü-Leitplanken (menue_*) an planAusBrief durch', 
 it('L0.1 KI-Kopf mit mistgetippter Menü-Zahl wird gesagt (kein planAusBrief-Aufruf)', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Menü fehlerhaft']);
     $aufgerufen = false;
-    $this->mock(\Platform\FoodAlchemist\Services\ConceptGeneratorService::class, function ($m) use (&$aufgerufen) {
+    $this->mock(\Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService::class, function ($m) use (&$aufgerufen) {
         $m->shouldReceive('planAusBrief')->andReturnUsing(function () use (&$aufgerufen) {
             $aufgerufen = true;
             return ['concept' => null];

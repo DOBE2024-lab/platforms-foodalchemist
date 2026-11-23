@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Livewire\Recipes\RecipeModal;
 use Platform\FoodAlchemist\Livewire\Verkauf\VkModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Services\ComponentEquivalentService;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;

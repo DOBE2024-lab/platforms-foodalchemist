@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
+use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 
 /**
  * Spec 77d · Inhalt einer freigegebenen Ausgabe hat sich geändert (Slot, Block, Zutat, Position …) →

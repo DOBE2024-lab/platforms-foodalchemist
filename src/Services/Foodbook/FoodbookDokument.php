@@ -8,9 +8,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
-use Platform\FoodAlchemist\Services\FormatKapitelService;
+use Platform\FoodAlchemist\Services\Concepter\FormatKapitelService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\WordingResolver;
+use Platform\FoodAlchemist\Services\Concepter\WordingResolver;
 
 /**
  * #384/Folge · versendbares Foodbook-/Portfolio-Dokument mit Branding (98 · 3.3 S4-5, aus FoodbookService verschoben):
@@ -173,7 +173,7 @@ final class FoodbookDokument
         // #5b: §-Kennzeichnung PRO GERICHT (Dominique 2026-08-25: nicht pro Konzept) — jede
         // Gericht-Zeile trägt ihre eigenen Allergen-/Zusatzstoff-Codes aus der Gericht-Deklaration;
         // die Legende sammelt nur, was auf den Gerichten tatsächlich vorkommt (LMIV/ZZulV).
-        $kzAgg = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class);
+        $kzAgg = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class);
         $katalog = $kzAgg->kennzeichnungKatalog();
         // Alle Gericht-IDs: aus den concept_ref-Gericht-Zeilen UND den recipe_ref-Block-Labels.
         $recipeIds = collect($rows)->flatMap(function ($r) {
@@ -300,7 +300,7 @@ final class FoodbookDokument
         // §-Kennzeichnung je Gericht + Legende (2026-09-04): die Karte geht an den Kunden,
         // trug aber bis hierher KEINE Deklaration — anders als Foodbook, Speisekarte und
         // Speiseplan, die dieselbe Code-Quelle längst nutzen (Regelwerk Concept §7.1).
-        $kz = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class)
+        $kz = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class)
             ->codesFuerZeilen($wording->gerichtZeilen($concept));
 
         return [

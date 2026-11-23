@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\BausteinFolgeService;
+use Platform\FoodAlchemist\Services\Concepter\BausteinFolgeService;
 
 /** Spec 82 Abo Konzepte/Pakete PR 5 · Welche Verweise des Teams stehen noch auf einer älteren Konzept-/Paket-Fassung (gehalten: Allergen-Änderung oder eingefroren)? */
 class BausteinFassungUebernehmenGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

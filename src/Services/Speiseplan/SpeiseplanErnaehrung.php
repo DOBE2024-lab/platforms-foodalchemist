@@ -8,10 +8,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\ConcepterAggregateService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanVorgabenService;
-use Platform\FoodAlchemist\Services\WordingResolver;
+use Platform\FoodAlchemist\Services\Concepter\WordingResolver;
 
 /**
  * Kennzeichnung und Ernährung im Speiseplan (98 · 3.3 S3, aus SpeiseplanService verschoben): Spec 31 Kennzeichnung

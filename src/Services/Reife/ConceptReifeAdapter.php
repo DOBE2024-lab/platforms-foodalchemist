@@ -4,9 +4,9 @@ namespace Platform\FoodAlchemist\Services\Reife;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptOneShotService;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\CoverageService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptOneShotService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\CoverageService;
 use Platform\FoodAlchemist\Services\DataQualityService;
 
 /**
@@ -143,7 +143,7 @@ class ConceptReifeAdapter extends ContainerReifeAdapter
 
         // 17.11. (Dominique): Positionen mit einer Einheit, die nicht rechnet (ging still als Portion ein) — nur melden, nie ändern
         $c->slots->each(fn ($s) => $s->setRelation('concept', $c));
-        $unwirksam = app(\Platform\FoodAlchemist\Services\SlotEinheitService::class)
+        $unwirksam = app(\Platform\FoodAlchemist\Services\Concepter\SlotEinheitService::class)
             ->unwirksameSlots($c->slots->filter(fn ($s) => $s->unit_vocab_id !== null && $s->sales_recipe_id !== null));
         if ($unwirksam !== []) {
             $luecken[] = $this->luecke('einheit_unwirksam', 'wichtig',

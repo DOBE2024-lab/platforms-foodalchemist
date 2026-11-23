@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\Core\Models\Team;
 use Platform\Crm\Models\CrmCompany;
 use Platform\FoodAlchemist\Livewire\Settings\KundeDna;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -151,7 +151,7 @@ class DetailPanel extends Component
         $this->fehler = null;
         $user = \Illuminate\Support\Facades\Auth::user();
         try {
-            $r = app(\Platform\FoodAlchemist\Services\BausteinFolgeService::class)->uebernehmen($user->currentTeamRelation, $user, $art, $quelle, $rowId, false);
+            $r = app(\Platform\FoodAlchemist\Services\Concepter\BausteinFolgeService::class)->uebernehmen($user->currentTeamRelation, $user, $art, $quelle, $rowId, false);
             $tab = ['format' => 'foodalchemist_formats'][$art] ?? 'foodalchemist_concepts';
             $v = $r['vorschau'];
             $nr = fn (int $id) => (int) \Illuminate\Support\Facades\DB::table($tab)->where('id', $id)->value('fassung_nr');
@@ -182,7 +182,7 @@ class DetailPanel extends Component
         }
         $user = \Illuminate\Support\Facades\Auth::user();
         try {
-            app(\Platform\FoodAlchemist\Services\BausteinFolgeService::class)->uebernehmen($user->currentTeamRelation, $user, (string) $v['art'], (string) $v['quelle'], (int) $v['row_id'], true);
+            app(\Platform\FoodAlchemist\Services\Concepter\BausteinFolgeService::class)->uebernehmen($user->currentTeamRelation, $user, (string) $v['art'], (string) $v['quelle'], (int) $v['row_id'], true);
         } catch (\Platform\FoodAlchemist\Exceptions\FaRechtFehltException|\RuntimeException $e) {
             $this->fehler = $e->getMessage();
 

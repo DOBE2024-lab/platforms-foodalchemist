@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\PaketGrundeinstellungenService;
+use Platform\FoodAlchemist\Services\Concepter\PaketGrundeinstellungenService;
 
 /** Spec 82 §13 I · Paket „Grundeinstellungen" für einen Mandanten buchen (Kopie ins Oberteam; idempotent; nur Plattform-Admin). */
 class PaketGrundeinstellungenPutTool extends WareneingangTool implements ToolContract, ToolMetadataContract

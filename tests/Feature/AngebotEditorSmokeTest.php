@@ -71,7 +71,7 @@ it('Editor: Präsentation veröffentlichen erzeugt einen Kunden-Link', function 
 
 it('Editor berechnet Komposition und Preiseinheiten beim Öffnen jeweils nur einmal', function () {
     $angebot = $this->svc->create($this->rootTeam, ['name' => 'Performance', 'personen' => 20]);
-    $spy = new class(app(\Platform\FoodAlchemist\Services\ConceptService::class)) extends \Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService
+    $spy = new class(app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)) extends \Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService
     {
         public int $kompositionen = 0;
         public int $preiseinheiten = 0;
@@ -108,7 +108,7 @@ it('Editor berechnet Komposition und Preiseinheiten beim Öffnen jeweils nur ein
 
 it('Editor erzeugt Kapitel-Wording als angebots-lokalen Snapshot', function () {
     config(['foodalchemist.ai.provider' => 'fake', 'foodalchemist.ai.backoff' => []]);
-    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $concepts = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $gericht = \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'angebot-wording', 'name' => 'Sellerie',
         'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 4.0,

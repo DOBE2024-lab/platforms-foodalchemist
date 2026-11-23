@@ -740,7 +740,7 @@ class PresentationService
         foreach ($dok['kapitel'] as $k) {
             // Lebendes Format-Kapitel: Editionen (FormatKapitelService, via dokumentDaten) als Blöcke —
             // wie normalizeAngebot. Header/Text-Slots als Struktur, jede Edition ein concept_ref-Block.
-            $blocks = ($k['ist_format'] ?? false) ? app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->praesentationsBloecke($k['editionen'] ?? [], $showPrice, $items, $this->mitEk) : [];
+            $blocks = ($k['ist_format'] ?? false) ? app(\Platform\FoodAlchemist\Services\Concepter\FormatKapitelService::class)->praesentationsBloecke($k['editionen'] ?? [], $showPrice, $items, $this->mitEk) : [];
             foreach ($k['bloecke'] as $b) {
                 $perItem = (bool) ($b['einzelpreise'] ?? false);
                 $blocks[] = [

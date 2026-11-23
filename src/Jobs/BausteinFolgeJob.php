@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Platform\FoodAlchemist\Services\BausteinFolgeService;
+use Platform\FoodAlchemist\Services\Concepter\BausteinFolgeService;
 
 /**
  * Spec 82 Abo Konzepte/Pakete/Formate PR 5 · Verweise eines Mandanten folgen der neuen Konzept-/Paket-Fassung — als Job, wenn die Zahl der betroffenen

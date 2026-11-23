@@ -1,7 +1,7 @@
 <?php
 
 use Platform\Core\Contracts\LLMProviderContract;
-use Platform\FoodAlchemist\Services\TitelVorschlagService;
+use Platform\FoodAlchemist\Services\Concepter\TitelVorschlagService;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class);

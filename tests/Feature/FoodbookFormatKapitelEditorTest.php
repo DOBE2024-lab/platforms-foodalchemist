@@ -2,9 +2,9 @@
 
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Foodbooks\Index;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Services\LeitstelleService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -124,7 +124,7 @@ it('Format ohne Edition: kein Auto-fertig, Editor zeigt den Leerzustand des Form
 
 it('Editor und Dokument lesen dieselbe Editionen-Quelle (FormatKapitelService)', function () {
     $svc = app(FoodbookService::class);
-    $ansicht = app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->ansicht($this->formatKapitel->fresh());
+    $ansicht = app(\Platform\FoodAlchemist\Services\Concepter\FormatKapitelService::class)->ansicht($this->formatKapitel->fresh());
     $dok = collect($svc->dokumentDaten($this->rootTeam, $this->buch->fresh())['kapitel'])->firstWhere('ist_format', true);
 
     expect(collect($ansicht['editionen'])->pluck('name')->all())->toBe(collect($dok['editionen'])->pluck('name')->all())

@@ -375,7 +375,7 @@ class IdeenService
 
         // Gericht-Vorgaben (13.11.2026): was der Mensch an anderen Positionen fest vorgegeben hat, steht schon im Menü —
         // die Erfindung für die übrigen Positionen soll dazu passen und nichts davon wiederholen.
-        $vorgaben = app(ConceptVorgabenService::class)->vorgabenTitel($conceptId);
+        $vorgaben = app(Concepter\ConceptVorgabenService::class)->vorgabenTitel($conceptId);
         if ($vorgaben !== []) {
             $kontext['vorgaben_im_menue'] = [
                 'hinweis' => 'Diese Gerichte sind an anderen Positionen des Menüs fest vorgegeben. Erfinde die übrigen Gerichte passend dazu. '

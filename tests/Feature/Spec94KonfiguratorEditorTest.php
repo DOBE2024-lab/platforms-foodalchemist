@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfiguratorPaketMenge;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
-use Platform\FoodAlchemist\Services\LeistungVorlageService;
+use Platform\FoodAlchemist\Services\Concepter\LeistungVorlageService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

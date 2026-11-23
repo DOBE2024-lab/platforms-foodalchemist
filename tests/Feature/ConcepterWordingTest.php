@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Livewire\Concepter\Editor;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -120,7 +120,7 @@ it('gerichtZeilen löst ein eingebettetes Paket in Paketname + seine Gerichte au
     $slot = $concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
     $concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);
 
-    $zeilen = app(\Platform\FoodAlchemist\Services\WordingResolver::class)->gerichtZeilen($this->concept->fresh());
+    $zeilen = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class)->gerichtZeilen($this->concept->fresh());
 
     $paketZeile = collect($zeilen)->firstWhere('type', 'paket');
     expect($paketZeile)->not->toBeNull()

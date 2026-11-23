@@ -288,7 +288,7 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
                 // 03·L8 / Spec 85 D-1: der VK der Standard-Darreichung (Preisleiter); mit
                 // voll_anreichern=true hat ihn das Wirtschaftlichkeits-Glied gerade
                 // gerechnet (Details inkl. W%-Ampel in anreicherung.wirtschaftlichkeit).
-                'sales_net' => app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->vkNetto($recipe),
+                'sales_net' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($recipe),
                 'n_ingredients_total' => $recipe->n_ingredients_total,
                 'n_ingredients_unmapped' => $recipe->n_ingredients_unmapped,
                 // Plan 98 B (h): Mengen wirken wie eine Charge (Portion über 3000 g) — dann kein Auto-VK; null = unauffällig

@@ -110,7 +110,7 @@ it('B7 + D19 · Foodbooks, Speisekarten, Speisepläne, Pakete und Angebote blät
     app(SpeiseplanService::class)->create($this->rootTeam, ['name' => 'Kantine Süd']);
     FoodAlchemistSpeiseplanEintrag::create(['team_id' => $t, 'menu_plan_id' => $plan->id, 'week' => 1, 'weekday' => 1, 'meal' => 'mittag', 'position' => 1]);
     // Pakete = Concepter-Pakete (kind=paket) seit 2026-11; die Alt-Pakete sind mit 98 · 2.6c entfallen
-    $pakete = app(\Platform\FoodAlchemist\Services\ConceptPaketService::class);
+    $pakete = app(\Platform\FoodAlchemist\Services\Concepter\ConceptPaketService::class);
     $paket = $pakete->create($this->rootTeam, ['name' => 'Antipasti-Paket']);
     $pakete->create($this->rootTeam, ['name' => 'Dessert-Paket']);
     $pakete->syncGerichte($this->rootTeam, $paket->id, [['sales_recipe_id' => $this->makeRecipe($this->rootTeam, 'Vitello tonnato', ['is_sales_recipe' => true])->id]]);

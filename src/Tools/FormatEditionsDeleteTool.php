@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 
 /** Format-Modul: eine Aufbau-Position (Concept-Referenz) aus einem Format entfernen. */
 class FormatEditionsDeleteTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

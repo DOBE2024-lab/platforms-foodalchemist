@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ProportionService;
+use Platform\FoodAlchemist\Services\Concepter\ProportionService;
 
 /**
  * #513 — %→Gramm-Rückschreiben als MCP-Tool (WRITE). Grammatur bleibt Master: das

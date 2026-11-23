@@ -7,7 +7,7 @@ use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\PaketGrundeinstellungenService;
+use Platform\FoodAlchemist\Services\Concepter\PaketGrundeinstellungenService;
 
 /**
  * Spec 82 §13 I — Paket „Grundeinstellungen" buchen. Eingebettet in die Plattform-Verwaltung des Hosts

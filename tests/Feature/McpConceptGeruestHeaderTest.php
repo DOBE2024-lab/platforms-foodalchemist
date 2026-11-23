@@ -4,8 +4,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\WordingResolver;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\WordingResolver;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -104,7 +104,7 @@ it('kanonischesGeruest: schreibt nicht in ein Konzept mit Positionen oder eigene
     $svc = app(ConceptService::class);
     $c = $svc->create($this->rootTeam, ['name' => 'Voll', 'status' => 'draft']);
     $svc->addSlot($this->rootTeam, $c->id, ['role' => 'Gang']);
-    $gen = app(\Platform\FoodAlchemist\Services\ConceptGeneratorService::class);
+    $gen = app(\Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService::class);
     expect(fn () => $gen->kanonischesGeruest($this->rootTeam, $c->fresh(), 'menue'))->toThrow(RuntimeException::class, 'schon Positionen');
 
     $c2 = $svc->create($this->rootTeam, ['name' => 'Gerüst da', 'status' => 'draft']);
@@ -114,7 +114,7 @@ it('kanonischesGeruest: schreibt nicht in ein Konzept mit Positionen oder eigene
 
 it('C-3: name_claim-Split respektiert gesetzte Kopf-Felder und Zeilen ohne Trenner', function () {
     $svc = app(ConceptService::class);
-    $gen = app(\Platform\FoodAlchemist\Services\ConceptGeneratorService::class);
+    $gen = app(\Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService::class);
     $m = new ReflectionMethod($gen, 'uebernehmeNameClaim');
 
     $c = $svc->create($this->rootTeam, ['name' => 'A']);

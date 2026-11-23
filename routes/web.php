@@ -193,7 +193,7 @@ Route::get('/formate', \Platform\FoodAlchemist\Livewire\Formate\Browser::class)
  * F3: Format-Druck — schöne Kunden-Ausgabe (Foodbook-styled, NICHT der technische Report).
  * Druck-HTML; ?pdf=1 = PDF (DomPDF, guarded). Spiegelt die Foodbook-Dokument-Closure.
  */
-Route::get('/formate/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\FormatService $svc) {
+Route::get('/formate/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\Concepter\FormatService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     // ?intern=1 → interne Projektion (Parität zum Foodbook-Dokument); Default = Kundensicht.
     $intern = request()->boolean('intern');

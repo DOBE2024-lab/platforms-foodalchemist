@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Illuminate\Support\Facades\Auth;
-use Platform\FoodAlchemist\Services\PhaseService;
+use Platform\FoodAlchemist\Services\Concepter\PhaseService;
 use RuntimeException;
 
 /**

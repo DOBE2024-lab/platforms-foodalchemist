@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /** MCP-Steuerbarkeit · D5: Layout-Block (Header/Text/Spacer) an einem team-eigenen Konzept anlegen. */
 class ConceptBlocksPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

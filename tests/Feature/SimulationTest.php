@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\SimulationService;
+use Platform\FoodAlchemist\Services\Concepter\SimulationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

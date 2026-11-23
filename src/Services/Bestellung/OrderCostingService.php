@@ -16,7 +16,7 @@ class OrderCostingService
         private \Platform\FoodAlchemist\Services\Produktion\StationLaborRateService $laborRates,
         private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
         private \Platform\FoodAlchemist\Services\Produktion\FixkostenService $fixkosten,
-        private \Platform\FoodAlchemist\Services\ConceptService $concepts,
+        private \Platform\FoodAlchemist\Services\Concepter\ConceptService $concepts,
     ) {
     }
 

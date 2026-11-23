@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
+use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 
 /** Spec 77d · Freigegebenes oder geerbtes Rezept/Konzept/Format als eigene Kopie ins Team holen. */
 class InhalteKopieTool extends WareneingangTool implements ToolContract, ToolMetadataContract

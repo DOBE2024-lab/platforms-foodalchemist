@@ -8,7 +8,7 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Services\GpService;
-use Platform\FoodAlchemist\Services\SimulationService;
+use Platform\FoodAlchemist\Services\Concepter\SimulationService;
 
 /**
  * R2.2 — Was-wäre-wenn-Simulation (UI-Panel in der Kalkulations-Werkstatt).

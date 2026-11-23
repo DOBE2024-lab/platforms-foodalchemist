@@ -287,7 +287,7 @@ class AngebotService
     ): array
     {
         $orderCosting = app(\Platform\FoodAlchemist\Services\Bestellung\OrderCostingService::class);
-        $conceptSvc = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+        $conceptSvc = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
         $comp = app(OfferCompositionService::class);
         $pax = max(0, (int) ($angebot->personen ?? 0));
 
@@ -419,7 +419,7 @@ class AngebotService
      */
     public function dokumentDaten(Team $team, FoodAlchemistAngebot $angebot, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $conceptSvc = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+        $conceptSvc = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
         $angebot->loadMissing(['crmCompany', 'crmContact', 'concepts', 'referenzierteConcepts']);
         $kalk = $this->kalkulation($team, $angebot, $outlet);   // Kurator 19.10.: Druck rechnet gegen das Profil wie die Seite
 

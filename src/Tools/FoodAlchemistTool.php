@@ -478,7 +478,7 @@ abstract class FoodAlchemistTool
      */
     protected function paketConcept(Team $team, int $id, bool $schreiben = true): FoodAlchemistConcept|ToolResult
     {
-        $paket = app(\Platform\FoodAlchemist\Services\ConceptPaketService::class)->sichtbar($team, $id);
+        $paket = app(\Platform\FoodAlchemist\Services\Concepter\ConceptPaketService::class)->sichtbar($team, $id);
         if ($paket === null) {
             $istKonzept = FoodAlchemistConcept::visibleToTeam($team)->whereKey($id)->where('kind', '!=', 'paket')->exists();
 

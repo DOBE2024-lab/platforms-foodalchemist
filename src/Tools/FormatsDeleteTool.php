@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\FormatService;
+use Platform\FoodAlchemist\Services\Concepter\FormatService;
 
 /** Format-Modul: Format löschen. Editionen werden wieder freistehend (nullOnDelete). */
 class FormatsDeleteTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

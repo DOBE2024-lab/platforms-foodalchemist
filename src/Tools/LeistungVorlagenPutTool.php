@@ -34,6 +34,6 @@ class LeistungVorlagenPutTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return ['vorlage' => app(\Platform\FoodAlchemist\Services\LeistungVorlageService::class)->aendern($team, self::id($a), $a)->toArray()];
+        return ['vorlage' => app(\Platform\FoodAlchemist\Services\Concepter\LeistungVorlageService::class)->aendern($team, self::id($a), $a)->toArray()];
     }
 }

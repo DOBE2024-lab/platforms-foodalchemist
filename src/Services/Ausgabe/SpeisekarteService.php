@@ -33,9 +33,9 @@ class SpeisekarteService
     use PruefstOutletZuordnung;
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\ConceptService $concepts,
-        private \Platform\FoodAlchemist\Services\DarreichungResolver $darreichung,
-        private \Platform\FoodAlchemist\Services\WordingResolver $wording,
+        private \Platform\FoodAlchemist\Services\Concepter\ConceptService $concepts,
+        private \Platform\FoodAlchemist\Services\Rezept\DarreichungResolver $darreichung,
+        private \Platform\FoodAlchemist\Services\Concepter\WordingResolver $wording,
     ) {
     }
 
@@ -606,7 +606,7 @@ class SpeisekarteService
                 $cockpit = $this->concepts->preisCockpit($concept, $outlet);
 
                 return ['vk' => (float) $cockpit['price_per_person'], 'quelle' => 'concept',
-                    'vorlaeufig' => \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete
+                    'vorlaeufig' => \Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete
             }
         }
 
@@ -633,7 +633,7 @@ class SpeisekarteService
         if ($pos->type === 'gericht_ref') {
             $dish = $pos->relationLoaded('dish') ? $pos->dish : $pos->dish()->first();
             if ($dish !== null) {
-                $ek = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->ekProPortion($dish);   // Spec 85: EK je Portion (vorher der ganze Ansatz)
+                $ek = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->ekProPortion($dish);   // Spec 85: EK je Portion (vorher der ganze Ansatz)
             }
         } elseif ($pos->type === 'menue_ref') {
             $concept = $pos->relationLoaded('concept') ? $pos->concept : $pos->concept()->first();
@@ -756,7 +756,7 @@ class SpeisekarteService
      */
     public function dokumentDaten(Team $team, FoodAlchemistSpeisekarte $karte, bool $intern = false, array $rubrikFilter = [], bool $mitKaskade = false, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $agg = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class);
+        $agg = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class);
         $marge = app(\Platform\FoodAlchemist\Services\Preis\MargeService::class);
         $mwstArr = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->mwst($team);
         $mwstSatz = (float) ($mwstArr['regulaer'] ?? 19.0);

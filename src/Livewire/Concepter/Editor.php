@@ -14,9 +14,9 @@ use Platform\FoodAlchemist\Livewire\Concerns\ManagesCanvas;
 use Platform\FoodAlchemist\Livewire\Concerns\ManagesPhase;
 use Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast;
 use Platform\FoodAlchemist\Livewire\Concerns\ManagesPlanningFrame;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\ConcepterAggregateService;
-use Platform\FoodAlchemist\Services\ConcepterBewertungService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
+use Platform\FoodAlchemist\Services\Concepter\ConcepterBewertungService;
 use Platform\FoodAlchemist\Services\Preis\KalkulationService;
 use Platform\FoodAlchemist\Services\Bestellung\OrderCostingService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
@@ -294,7 +294,7 @@ class Editor extends Component
             return;
         }
         try {
-            $kopie = app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->kopieAnlegen($this->team(), 'concept', (int) $this->id, \Illuminate\Support\Facades\Auth::user());
+            $kopie = app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class)->kopieAnlegen($this->team(), 'concept', (int) $this->id, \Illuminate\Support\Facades\Auth::user());
             $this->oeffnen('concepts', (int) $kopie->id);
             $this->dispatch('fa-saved', message: 'Eigene Kopie angelegt.');
         } catch (\RuntimeException $e) {
@@ -458,7 +458,7 @@ class Editor extends Component
     public function slotZutatTauschen(int $slotId, int $ingredientId): void
     {
         try {
-            app(\Platform\FoodAlchemist\Services\ConceptVariantService::class)
+            app(\Platform\FoodAlchemist\Services\Concepter\ConceptVariantService::class)
                 ->tauscheZutatKonzeptLokal($this->team(), $slotId, $ingredientId);
             $this->fehler = null;
             $this->dispatch('concepter-gespeichert', id: $this->id);
@@ -471,7 +471,7 @@ class Editor extends Component
     public function slotVarianteZuruecksetzen(int $slotId): void
     {
         try {
-            app(\Platform\FoodAlchemist\Services\ConceptVariantService::class)
+            app(\Platform\FoodAlchemist\Services\Concepter\ConceptVariantService::class)
                 ->zuruecksetzen($this->team(), $slotId);
             $this->fehler = null;
             $this->dispatch('concepter-gespeichert', id: $this->id);
@@ -789,7 +789,7 @@ class Editor extends Component
         $belegte = $this->belegteGerichtIds($concept, $slotId);
         [$niveau, $convenience] = $this->kreativLeitplanken($concept);
 
-        $this->slotVorschlaege[$slotId] = app(\Platform\FoodAlchemist\Services\ConceptGeneratorService::class)
+        $this->slotVorschlaege[$slotId] = app(\Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService::class)
             ->slotKandidaten($this->team(), $frame, $this->frameSlotZurRolle($frame, (string) ($slot->role ?? '')), $belegte, 3, $niveau, $convenience);
     }
 
@@ -1131,7 +1131,7 @@ class Editor extends Component
      */
     private function anrichtenZeilen($concept, $team): array
     {
-        $resolver = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class);
+        $resolver = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class);
         $dar = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
         $zeilen = [];
         $nimm = function (int|string $key, string $name, ?\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung $d) use (&$zeilen, $dar, $team) {
@@ -1148,7 +1148,7 @@ class Editor extends Component
         return $zeilen;
     }
 
-    public function render(ConceptService $concepts, \Platform\FoodAlchemist\Services\AufbauKandidatenService $aufbau, ConcepterAggregateService $agg, ConcepterBewertungService $bewertung, KalkulationService $kalk, SalesRecipeService $sales)
+    public function render(ConceptService $concepts, \Platform\FoodAlchemist\Services\Concepter\AufbauKandidatenService $aufbau, ConcepterAggregateService $agg, ConcepterBewertungService $bewertung, KalkulationService $kalk, SalesRecipeService $sales)
     {
         $team = $this->team();
         $concept = null;
@@ -1208,7 +1208,7 @@ class Editor extends Component
                 if ($istAufbau || $istAnrichtenTab) {
                     // Umbau-Spec Phase 5: aufgelöste Darreichung je Position sichtbar machen +
                     // „Variante fehlt", wenn die Konzept-Servierform keine passende Form findet
-                    $resolver = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class);
+                    $resolver = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class);
                     // 2.1e (Mess-Test 6): Formen kommen vorgeladen aus ConceptService::detail; das Zubehör aller Formen in einem Zug dazu.
                     (new \Illuminate\Database\Eloquent\Collection($concept->slots->pluck('dish')->filter()->flatMap->presentations->all()))
                         ->load('zubehoer.gp:id,name,team_id,commodity_group_code,lead_la_supplier_item_id,piece_default_g');
@@ -1278,7 +1278,7 @@ class Editor extends Component
         // R4.2: Soll/Ist-Coverage live gegen das Planungs-Gerüst (nur wenn eines existiert).
         $coverage = null;
         if ($istKonzeptTab && $concept !== null && $this->frameId !== null) {
-            $coverage = app(\Platform\FoodAlchemist\Services\CoverageService::class)->coverage($team, 'concept', $concept->id);
+            $coverage = app(\Platform\FoodAlchemist\Services\Concepter\CoverageService::class)->coverage($team, 'concept', $concept->id);
         }
 
         // R4.4: Zutaten-Zeilen des aufgeklappten Gericht-Slots (read-first) + Ersatz-Hinweise.
@@ -1313,7 +1313,7 @@ class Editor extends Component
             'herkunft' => ($this->type === 'concepts' ? $concept : null) !== null ? [
                 'fremd' => ($this->type === 'concepts' ? $concept : null)->team_id !== null && ! ($this->type === 'concepts' ? $concept : null)->isOwnedBy($team),
                 'besitzer' => ($this->type === 'concepts' ? $concept : null)->team_id !== null ? \Platform\Core\Models\Team::find(($this->type === 'concepts' ? $concept : null)->team_id)?->name : null,
-                'original_geaendert' => (bool) app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->originalGeaendert(($this->type === 'concepts' ? $concept : null)),
+                'original_geaendert' => (bool) app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class)->originalGeaendert(($this->type === 'concepts' ? $concept : null)),
             ] : null,
             'conceptImageUrl' => ($concept !== null && ($concept->image_context_file_id || $concept->image_path))
                 ? app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($concept->image_context_file_id, $concept->image_path)
@@ -1341,9 +1341,9 @@ class Editor extends Component
             // (Kette Konzept-Wording → VK-Wording-Standard → Name; Quelle für die Herkunft-Badge)
             'slotWording' => $istAufbau && $concept
                 ? collect($concept->slots)->filter(fn ($s) => $s->sales_recipe_id !== null)
-                    ->mapWithKeys(fn ($s) => [$s->id => app(\Platform\FoodAlchemist\Services\WordingResolver::class)->fuerSlot($s)])->all()
+                    ->mapWithKeys(fn ($s) => [$s->id => app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class)->fuerSlot($s)])->all()
                 : [],
-            'slotEinheiten' => $istAufbau && $concept ? app(\Platform\FoodAlchemist\Services\SlotEinheitService::class)->auswahl($team, $concept) : [],   // 17.11.: nur wirksame Einheiten
+            'slotEinheiten' => $istAufbau && $concept ? app(\Platform\FoodAlchemist\Services\Concepter\SlotEinheitService::class)->auswahl($team, $concept) : [],   // 17.11.: nur wirksame Einheiten
             'aggregat' => $aggregat,
             'deklaration' => $deklaration,
             'bewertung' => $bewertet,

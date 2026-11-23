@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Projekte;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Livewire\Concerns\ManagesCanvas;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Support\CrmKunden;
 
 /**

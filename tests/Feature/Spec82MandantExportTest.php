@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Http\Controllers\MandantExportDownloadController;
 use Platform\FoodAlchemist\Jobs\MandantExportJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistMandant;
 use Platform\FoodAlchemist\Models\FoodAlchemistMandantExport;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\Plattform\MandantBeendenService;
 use Platform\FoodAlchemist\Services\Plattform\MandantExportService;
 use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;

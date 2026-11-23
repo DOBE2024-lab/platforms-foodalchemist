@@ -229,7 +229,7 @@ class FassungSignalService
         }
         $folge = ['signale' => []];
         try {
-            $folge = app(BausteinFolgeService::class)->folgen($art, $neueFassungIds);
+            $folge = app(Concepter\BausteinFolgeService::class)->folgen($art, $neueFassungIds);
         } catch (\Throwable $e) {
             Log::error('Verweise folgen der neuen Abo-Fassung nicht: '.$e->getMessage(), ['exception' => $e]);
         }
@@ -284,7 +284,7 @@ class FassungSignalService
     {
         $key = 'fassung-neu:'.$art.':'.$familieId;
         $modell = self::BAUSTEIN_MODELL[$art];
-        $gehalten = app(BausteinFolgeService::class)->gehalten($team, $art, $familieId);
+        $gehalten = app(Concepter\BausteinFolgeService::class)->gehalten($team, $art, $familieId);
         if ($gehalten === []) {
             $this->signale->schliesseGemessen($team, SignalTyp::FassungNeuerVerfuegbar, $key, self::QUELLE, 'Übernommen oder nichts mehr auf der älteren Fassung.');
 

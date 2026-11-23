@@ -4,7 +4,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -117,7 +117,7 @@ it('Abo: der Mandant setzt eine abonnierte Fassung ein; ein Master-Rezept ohne A
     $jus = $this->makeRecipe($master, 'Kalbsjus', ['is_sales_recipe' => true]);
     $jusF = $this->makeRecipe($master, 'Kalbsjus', ['is_sales_recipe' => true, 'ist_fassung' => true, 'fassung_von_id' => $jus->id]);
     $geheim = $this->makeRecipe($master, 'Master-Geheimrezept', ['is_sales_recipe' => true]);
-    $inhalte = app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class);
+    $inhalte = app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class);
     $sammlung = $inhalte->sammlungAnlegen($master, 'Basis', null, $kurator);
     $inhalte->sammlungHinzu($master, $sammlung, 'recipe', [$jus->id], $kurator);
     app(\Platform\FoodAlchemist\Services\Plattform\AboService::class)->abonnieren($master, $mandant, $sammlung, $kurator);

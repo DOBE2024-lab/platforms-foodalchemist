@@ -5,9 +5,9 @@ namespace Platform\FoodAlchemist\Livewire\Concepter;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\ConcepterAggregateService;
-use Platform\FoodAlchemist\Services\ConcepterBewertungService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
+use Platform\FoodAlchemist\Services\Concepter\ConcepterBewertungService;
 
 /**
  * M10R-2/3 / Doc 15 §10.4: kontext-adaptives Detail-Panel im VK-Stil. Zeigt für

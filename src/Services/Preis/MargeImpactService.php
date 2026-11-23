@@ -159,7 +159,7 @@ class MargeImpactService
             ? (int) $r->team_id : (int) $team->id;
         $preisTeams = $teamSicht ? Team::whereIn('id', $recipes->map($preisTeamId)->unique()->all())->get()->keyBy('id') : collect();
         // Spec 85 D-1: VK aus der Standard-Darreichung (Preisleiter), nicht aus recipes.sales_net.
-        $vkJe = $recipes->mapWithKeys(fn ($r) => [(int) $r->id => $r->is_sales_recipe ? app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->vkNetto($r) : null]);
+        $vkJe = $recipes->mapWithKeys(fn ($r) => [(int) $r->id => $r->is_sales_recipe ? app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($r) : null]);
         $gerichte = $recipes->filter(fn ($r) => ($vkJe[(int) $r->id] ?? 0) > 0)->values();
 
         $sumMargeDelta = 0.0;

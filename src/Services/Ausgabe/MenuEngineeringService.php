@@ -154,7 +154,7 @@ class MenuEngineeringService
         $out = [];
         foreach ($rezepte as $r) {
             $std = $r->standardPresentation;
-            $resolver = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class);
+            $resolver = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class);
             $vk = $resolver->vkNetto($r);   // Spec 85 D-1: Preisleiter (Standard-Darreichung)
             $ek = $resolver->ekProPortion($r);   // CQ 2.2a: Standard eager geladen → ek_portion, sonst Ansatz ÷ Portionen
 

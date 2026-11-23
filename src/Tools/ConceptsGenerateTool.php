@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ConceptGeneratorService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService;
 use Platform\FoodAlchemist\Services\PlanningFrameService;
 
 /**
@@ -79,7 +79,7 @@ class ConceptsGenerateTool extends FoodAlchemistTool implements ToolContract, To
 
         // C-2: Wording-Pass fail-soft — ohne KI-Provider bleibt es beim befüllten Konzept (wording=null).
         $wording = ($arguments['wording'] ?? true)
-            ? app(\Platform\FoodAlchemist\Services\ConceptService::class)->wordingPassFailSoft($team, (int) $ergebnis['concept']->id)
+            ? app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->wordingPassFailSoft($team, (int) $ergebnis['concept']->id)
             : null;
 
         return ToolResult::success([

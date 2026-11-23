@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PromotionService;
+use Platform\FoodAlchemist\Services\Concepter\PromotionService;
 
 /**
  * Spec 33 · P8 (read): was bringt eine laufende Ausgabe — Umsatz je Foodbook, Karte und Plan

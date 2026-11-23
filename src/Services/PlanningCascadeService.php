@@ -493,7 +493,7 @@ class PlanningCascadeService
         } elseif ($ownerType === 'offer') {
             app(Ausgabe\AngebotService::class)->referenziereConcept($team, $containerId, $conceptId);   // E2: containerId = Angebots-ID
         } elseif ($ownerType === 'format') {
-            app(\Platform\FoodAlchemist\Services\FormatService::class)->slotConceptEinfuegen($team, $containerId, $conceptId);   // containerId = format_id
+            app(\Platform\FoodAlchemist\Services\Concepter\FormatService::class)->slotConceptEinfuegen($team, $containerId, $conceptId);   // containerId = format_id
             $this->ausgabe()->ordneFormatNachRahmen($team, (int) $step->cascade_run_id);   // Spec 80 F2
         } else {
             return;

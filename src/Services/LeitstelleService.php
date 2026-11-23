@@ -194,7 +194,7 @@ class LeitstelleService
                     }
                     // Ebene 2: im Betriebs-Kontext den €/Gast live gegen den Betrieb rechnen
                     // (preisCockpit), sonst der Team-Baseline-Cache (= heutiges Verhalten).
-                    $cp = $concept !== null && $outlet !== null ? app(\Platform\FoodAlchemist\Services\ConceptService::class)->preisCockpit($concept, $outlet, $team) : null;
+                    $cp = $concept !== null && $outlet !== null ? app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->preisCockpit($concept, $outlet, $team) : null;
                     $paketPreis = $concept === null ? null
                         : ($cp !== null ? (float) $cp['price_per_person']
                             : ($concept->price_per_person_cache !== null ? (float) $concept->price_per_person_cache : null));
@@ -202,7 +202,7 @@ class LeitstelleService
                         'art' => 'paket',
                         'label' => $concept?->name ?? ($block->label ?? 'Paket'),
                         'preis' => $paketPreis,
-                        'preis_vorlaeufig' => $cp !== null ? \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($cp) : $concept?->price_incomplete === true,   // CQ price_incomplete
+                        'preis_vorlaeufig' => $cp !== null ? \Platform\FoodAlchemist\Services\Concepter\ConceptPreisService::unvollstaendig($cp) : $concept?->price_incomplete === true,   // CQ price_incomplete
                         'preis_einheit' => 'gast',
                         'status' => $k->released_at !== null ? 'angelegt' : 'entwurf',
                         'ref_id' => $concept !== null ? (int) $concept->id : null,

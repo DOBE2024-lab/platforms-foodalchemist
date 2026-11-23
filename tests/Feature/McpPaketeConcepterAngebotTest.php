@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotKopieService;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;

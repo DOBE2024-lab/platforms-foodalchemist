@@ -8,7 +8,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Livewire\Concerns\ManagesCanvas;
 use Platform\FoodAlchemist\Models\FoodAlchemistProjekt;
-use Platform\FoodAlchemist\Services\CanvasService;
+use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\ProjektService;
 use Platform\FoodAlchemist\Support\CrmKunden;
@@ -207,7 +207,7 @@ class Detail extends Component
 
         return view('foodalchemist::livewire.projekte.detail', [
             'p' => $p, 'firma' => $firma, 'phasen' => FoodAlchemistProjekt::PHASEN,
-            'ki' => app(\Platform\FoodAlchemist\Services\KontextResolver::class)->fuer($team, ['crm_company_id' => (int) $p->crm_company_id, 'projekt_id' => (int) $p->id]),
+            'ki' => app(\Platform\FoodAlchemist\Services\Concepter\KontextResolver::class)->fuer($team, ['crm_company_id' => (int) $p->crm_company_id, 'projekt_id' => (int) $p->id]),
             'istPlattformAdmin' => ($istAdmin = app(FaRechte::class)->istPlattformAdmin(Auth::user())),
             'oberteamTreffer' => $istAdmin && $this->phase === 'uebergabe' && $p->mandant_team_id === null && $this->oberteamId === null && trim($this->oberteamSuche) !== ''
                 ? Team::whereNull('parent_team_id')->where('name', 'like', '%'.trim($this->oberteamSuche).'%')->where('id', '!=', $team->id)->orderBy('name')->limit(8)->get() : collect(),

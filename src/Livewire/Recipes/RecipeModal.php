@@ -109,7 +109,7 @@ class RecipeModal extends Component
             return;
         }
         try {
-            $kopie = app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->kopieAnlegen($team, 'recipe', $this->recipeId, Auth::user());
+            $kopie = app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class)->kopieAnlegen($team, 'recipe', $this->recipeId, Auth::user());
             $this->oeffnen((int) $kopie->id);
             $this->dispatch('fa-saved', message: 'Eigene Kopie angelegt.');
         } catch (\RuntimeException $e) {
@@ -1174,7 +1174,7 @@ class RecipeModal extends Component
             'herkunft' => $r !== null && $team !== null ? [
                 'fremd' => $r->team_id !== null && ! $r->isOwnedBy($team),
                 'besitzer' => $r->team_id !== null ? \Platform\Core\Models\Team::find($r->team_id)?->name : null,
-                'original_geaendert' => (bool) app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->originalGeaendert($r),
+                'original_geaendert' => (bool) app(\Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService::class)->originalGeaendert($r),
             ] : null,
             'behaelterListe' => $vokabular('foodalchemist_vocab_containers'),
             'geraeteListe' => $vokabular('foodalchemist_vocab_regeneration_devices'),

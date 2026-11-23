@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\CoverageService;
+use Platform\FoodAlchemist\Services\Concepter\CoverageService;
 
 /**
  * R4.2: Soll/Ist-Coverage lesen — DIESELBE Messlatte für Mensch und KI. Die KI

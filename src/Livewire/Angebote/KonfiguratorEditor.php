@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistLeistungVorlage;
 use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
-use Platform\FoodAlchemist\Services\LeistungVorlageService;
+use Platform\FoodAlchemist\Services\Concepter\LeistungVorlageService;
 
 /**
  * Spec 94 · Konfigurator-Editor im Vollbild, aufgebaut wie der Angebots-Editor: Kennzahlen-Leiste, Reiter Übersicht ·
@@ -423,7 +423,7 @@ class KonfiguratorEditor extends Component
                 'speisen' => fn ($c) => $c !== null ? $pricing->speisenPreis($c) : null,
                 // Stufe 5b: Gerichte je Konzept (Haupt und Add-on) und Tageszeit mit Wording-Kette (Konfigurator → Concept → Gericht), wie im Foodbook
                 'gerichtZeilen' => $k->konzepte->mapWithKeys(fn ($kz) => [$kz->id => collect(['lunch' => $kz->lunchConcept, 'dinner' => $kz->dinnerConcept])
-                    ->filter()->map(fn ($c) => app(\Platform\FoodAlchemist\Services\WordingResolver::class)->gerichtZeilen(
+                    ->filter()->map(fn ($c) => app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class)->gerichtZeilen(
                         $c->loadMissing(['slots.dish', 'slots.embeddedConcept.slots.dish']), $kz))->all()])->all(),
                 'schreibstile' => \Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle::visibleToTeam($team)->where('is_inactive', false)->orderBy('name')->pluck('name', 'id')->all(),
                 'anfragen' => \Platform\FoodAlchemist\Models\FoodAlchemistAngebot::visibleToTeam($team)->where('konfigurator_id', $k->id)->latest()->limit(10)->get(),

@@ -9,12 +9,12 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
-use Platform\FoodAlchemist\Services\ConcepterAggregateService;
+use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanBasis;
-use Platform\FoodAlchemist\Services\WordingResolver;
+use Platform\FoodAlchemist\Services\Concepter\WordingResolver;
 
 /**
  * Ausgabe des Speiseplans (98 · 3.3 S3, aus SpeiseplanService verschoben): Wochenaushang (dokumentDaten, Spec 31

@@ -451,7 +451,7 @@
                                     $menueGruppen = collect($menueGruppen)->filter(fn ($g) => $g['type'] === 'paket' ? ($g['dishes'] ?? collect())->isNotEmpty() : (count($g['slots']) > 0 || count($g['texte'] ?? []) > 0))->values();
                                     // Herkunft des Gästetexts: [Text, Ton]
                                     $quelleBadge = ['konzept' => ['Konzept-Wording', 'accent'], 'standard' => ['Standard-Wording', 'neutral'], 'name' => ['Wording fehlt', 'warn']];
-                                    $wres = app(\Platform\FoodAlchemist\Services\WordingResolver::class);
+                                    $wres = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class);
                                 @endphp
 
                                 @forelse($menueGruppen as $g)

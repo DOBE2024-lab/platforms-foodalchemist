@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ConceptService;
+use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 
 /**
  * MCP-Steuerbarkeit · D5: Konzept-Slot bearbeiten (Rolle/Titel/Pflicht/Füllung + wording + quantity).
@@ -89,7 +89,7 @@ class ConceptSlotsPutTool extends FoodAlchemistTool implements ToolContract, Too
             }
             if (array_key_exists('dish_brief', $felder) || array_key_exists('dish_brief_note', $felder)) {
                 $alt = \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::visibleToTeam($team)->whereKey($slotId)->first(['id', 'dish_brief', 'dish_brief_note']);
-                app(\Platform\FoodAlchemist\Services\ConceptVorgabenService::class)->setze(
+                app(\Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService::class)->setze(
                     $team,
                     $slotId,
                     array_key_exists('dish_brief', $felder) ? (string) ($felder['dish_brief'] ?? '') : (string) $alt?->dish_brief,

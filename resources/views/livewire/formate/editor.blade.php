@@ -404,7 +404,7 @@
                         {{-- Neue Edition mit Abschnitts-Gerüst --}}
                         <div class="flex flex-col gap-2 pt-4 border-t border-[var(--fa-line)]">
                             <h4 class="fa-t-h3">Neue Edition</h4>
-                            <x-fa::field for="fmt-neue-edition" hint="Legt die Abschnitte {{ implode(', ', \Platform\FoodAlchemist\Services\FormatService::SEKTIONS_GERUEST) }} gleich mit an.">
+                            <x-fa::field for="fmt-neue-edition" hint="Legt die Abschnitte {{ implode(', ', \Platform\FoodAlchemist\Services\Concepter\FormatService::SEKTIONS_GERUEST) }} gleich mit an.">
                                 <div class="flex items-center gap-2">
                                     <x-fa::input id="fmt-neue-edition" wire:model="neueEditionName" wire:keydown.enter="neueEdition" placeholder="Name, z. B. FUTURE FLAVORS" class="flex-1 min-w-0" />
                                     <x-fa::button icon="heroicon-m-plus" wire:click="neueEdition" class="shrink-0">Edition anlegen</x-fa::button>

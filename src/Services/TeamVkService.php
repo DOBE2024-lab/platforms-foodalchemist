@@ -35,7 +35,7 @@ class TeamVkService
             $recipe = FoodAlchemistRecipe::mitFassungen()->ohneTeamSicht('nachladen')->findOrFail($recipe->id);
         }
         if (! $recipe->ist_fassung) {
-            $r = app(DarreichungResolver::class)->vkNettoMitQuelle($recipe, $outlet);
+            $r = app(Rezept\DarreichungResolver::class)->vkNettoMitQuelle($recipe, $outlet);
 
             return ['vk' => $r['vk'], 'quelle' => $r['quelle'], 'grund' => $r['vk'] === null ? 'kein_vk' : null, 'mek' => null];
         }

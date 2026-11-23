@@ -477,7 +477,7 @@
                                                     @break
                                                 @case('recipe_ref')
                                                     <x-fa::badge tone="info">Gericht</x-fa::badge>
-                                                    <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $block->dish?->name ?? '–' }}</span>
+                                                    <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $block->dish?->name ?? '–' }}@if($block->dish?->trashed())<x-fa::badge tone="neutral" class="ml-1 align-middle" data-gericht-geloescht>gelöscht</x-fa::badge>@endif</span>
                                                     @if($block->dish !== null)
                                                         <x-fa::money :value="$block->dish->vk_netto" :per="$block->price_basis === 'pauschal' ? null : 'Position'" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
                                                         @if($block->price_basis === 'pauschal' && $block->dish->vk_netto !== null)<span class="{{ $hinweis }}">pauschal</span>@endif

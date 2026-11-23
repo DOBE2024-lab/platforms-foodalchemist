@@ -3,7 +3,7 @@
      Kopf (eine Hauptaktion „Im Editor öffnen", Komponenten bearbeiten/Drucken/PDF im Menü) ·
      Kennzahlen (VK brutto, EK, Wareneinsatz) mit Wareneinsatz-Balken und VK-Herleitung · Offene Punkte
      (Blocker, Klasse, KI-Vorschlag) · Allergene und Diät · Komponenten (Rollen-Vorschlag) · Pairing-Netz ·
-     KI-Analyse · Eignung · Nährwerte · KI-Kontext · Wo verwendet?.
+     KI-Analyse · Eignung · Nährwerte · KI-Kontext · Verwaltung (ersetzen, löschen).
      Alles direkt sichtbar (nicht ausklappbar). Funktion, wire:-Bindungen und data-Marker unverändert. --}}
 @php
     $cockpitDa = $rezept !== null && $cockpit !== null;
@@ -381,30 +381,13 @@
             {{-- KI-Kontext der Erstellung (Call-Log ↔ Gericht) — nur bei KI-generierten Gerichten befüllt --}}
             @include('foodalchemist::livewire.recipes.partials.ki-kontext')
 
-            {{-- 7 · Verwendung: Concepts und Pakete mit einer Position auf dem Gericht, Rezepte mit dem Gericht als Komponente --}}
-            <x-fa::section variant="plain" title="Wo verwendet?" icon="heroicon-o-link" :meta="$inConcepts->count() + $eltern->count()" data-vk-verwendung>
-                @if($inConcepts->isEmpty() && $eltern->isEmpty())
-                    <p class="fa-t-muted">In keinem Konzept, Paket oder Rezept verwendet.</p>
-                @else
-                    <div class="flex flex-col gap-0.5">
-                        @foreach($inConcepts as $c)
-                            <div class="flex items-center justify-between gap-3 px-2 py-1 text-[length:var(--fa-text-md)]" wire:key="vkc-{{ $c->id }}">
-                                <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $c->name }}</span>
-                                <span class="shrink-0 fa-t-muted">{{ $c->kind === 'paket' ? 'Paket' : 'Konzept' }}</span>
-                            </div>
-                        @endforeach
-                        @foreach($eltern as $parent)
-                            <a href="#" role="button" wire:key="vkel-{{ $parent->id }}"
-                                    @if($parent->is_sales_recipe) wire:click.prevent="zeige({{ $parent->id }})" @else wire:click.prevent="$dispatch('recipe-modal.oeffnen', { id: {{ $parent->id }} })" @endif
-                                    class="{{ $listenKnopf }}" title="{{ $parent->is_sales_recipe ? 'Gericht anzeigen' : 'Rezept öffnen' }}">
-                                @svg($parent->is_sales_recipe ? 'heroicon-o-banknotes' : 'heroicon-o-arrow-up', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
-                                <span class="min-w-0 flex-1 truncate">{{ $parent->name }}</span>
-                                <span class="shrink-0 fa-t-muted">{{ $parent->is_sales_recipe ? 'Gericht' : 'Rezept' }}</span>
-                            </a>{{-- Spec 65: <a> statt <button> — bleibt im gesperrten Lesemodus (fieldset) bedienbar --}}
-                        @endforeach
-                    </div>
-                @endif
-            </x-fa::section>
+            {{-- 7 · Verwaltung (Gericht-Verwaltung 23.11.2026, ersetzt „Wo verwendet?“): aktive Verwendungen mit Namen, in allen
+                 Verwendungen ersetzen (Vorschau je Bereich), danach löschen — geteiltes Partial mit dem Basisrezept. --}}
+            @if($gerichtVerwaltung !== null)
+                <x-fa::section variant="plain" title="Verwaltung" icon="heroicon-o-cog-6-tooth" :meta="count($gerichtVerwaltung['loesch']['aktiv'])" data-vk-verwendung data-sektion="verwaltung">
+                    @include('foodalchemist::livewire.recipes.partials.verwaltung', ['rezeptName' => $rezept->name, 'kompakt' => true])
+                </x-fa::section>
+            @endif
         </div>
         </fieldset>
     @endif

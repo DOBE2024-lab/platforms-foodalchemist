@@ -1184,8 +1184,8 @@
         "roher_button": 3
     },
     "livewire/verkauf/detail-panel.blade.php": {
-        "typo_groesse": 16,
-        "typo_tinte": 32,
+        "typo_groesse": 15,
+        "typo_tinte": 30,
         "roher_button": 1,
         "rohes_fieldset_sperre": 1
     },

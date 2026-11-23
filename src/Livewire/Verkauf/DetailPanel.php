@@ -21,6 +21,13 @@ class DetailPanel extends Component
 {
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
     use \Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich, \Platform\FoodAlchemist\Livewire\Concerns\HandyRezeptFotos;   // #1003: am Handy nur lesen, Fotos aufnehmen
+    use \Platform\FoodAlchemist\Livewire\Concerns\TauschtRezept;   // Gericht-Verwaltung (23.11.2026): ersetzen in allen Verwendungen + löschen
+
+    /** Gericht-Verwaltung: Ersetzen und Löschen auch im Ansichtsmodus (Kurzsperre, Muster 98 · 2.4d). */
+    protected function kurzsperrMethoden(): array
+    {
+        return ['rezeptLoeschen', 'gerichtErsetzen'];
+    }
 
     /** #1003: am Handy laufen nur Anzeige und Navigation (KI-Läufe und Pflege bleiben am Computer). */
     public function handyLeseMethoden(): array
@@ -349,15 +356,11 @@ class DetailPanel extends Component
             'niveauEignungen' => $rezept !== null ? $rezept->levelSuitabilities()->get() : collect(),
             'sektorEignungen' => $rezept !== null ? $rezept->sectorSuitabilities()->get() : collect(),
             'eignungVokabular' => \Platform\FoodAlchemist\Services\RecipeService::eignungVokabular(),
-            // Anatomie Detail-Panels (2026-10-05), Abschnitt „Wo verwendet?" — nur lesen, Geschwister des
-            // Basisrezept-Panels: Rezepte, die das Gericht als Komponente führen, plus Concepts/Pakete mit einer Position darauf.
-            'eltern' => $rezept !== null ? app(\Platform\FoodAlchemist\Services\RecipeService::class)->getParents($team, $rezept->id) : collect(),
-            'inConcepts' => $rezept !== null
-                ? \Platform\FoodAlchemist\Models\FoodAlchemistConcept::visibleToTeam($team)
-                    ->whereIn('id', \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::where('sales_recipe_id', $rezept->id)
-                        ->whereNull('deleted_at')->distinct()->pluck('concept_id'))
-                    ->orderBy('name')->get(['id', 'name', 'kind'])
-                : collect(),
+            // Gericht-Verwaltung (23.11.2026) ersetzt „Wo verwendet?“: alle aktiven Verwendungen mit Namen, Ersetzen, Löschen.
+            'gerichtVerwaltung' => $rezept !== null ? $this->gerichtVerwaltung() : null,
+            'tauschKandidaten' => $rezept !== null ? $this->tauschKandidaten() : collect(),
+            'tauschBilanz' => null,
+            'tauschReferenzen' => null,
         ]);
     }
 

@@ -70,7 +70,7 @@ class FoodAlchemistOfferBlock extends Model
     public function dish(): BelongsTo
     {
         return $this->belongsTo(FoodAlchemistRecipe::class, 'sales_recipe_id')
-            ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis');   // Spec 82: Verweis löst auch Fassungen auf
+            ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis')->withTrashed();   // Spec 82: Verweis löst auch Fassungen auf · Gericht-Verwaltung: weich gelöschte Gerichte bleiben als Verweis lesbar (historische Ansichten)
     }
 
     /** Spec 94b: die eine Stelle für „zzgl. nach Aufwand“ — eine Position mit Preis-Basis aufwand zählt nicht in die Summe. */

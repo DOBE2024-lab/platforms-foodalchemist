@@ -703,7 +703,7 @@
                                                             <div class="flex flex-col gap-1.5">
                                                                 <div class="flex flex-wrap items-center gap-1.5">
                                                                     <span class="inline-flex items-center h-[22px] px-2 rounded-full {{ $klein }} font-medium bg-[var(--fa-neutral-soft)] text-[var(--fa-ink-2)]" style="{{ $typStyle($istBasisPos ? 'basisrezept' : 'gericht') }}">{{ $istBasisPos ? 'Basisrezept' : 'Gericht' }}</span>
-                                                                    <span class="fa-t-strong break-words">{{ $g->name }}</span>
+                                                                    <span class="fa-t-strong break-words">{{ $g->name }}</span>@if($g->trashed())<x-fa::badge tone="neutral" class="ml-1 align-middle" data-gericht-geloescht>gelöscht</x-fa::badge>@endif
                                                                     {{-- Phase 6: ansehen — Basisrezept → Rezept-Fenster, VK-Gericht → Gericht-Fenster (über dem Editor) --}}
                                                                     <x-fa::icon-button href="#" :icon="$istBasisPos ? 'heroicon-o-book-open' : 'heroicon-o-eye'" :label="$istBasisPos ? 'Rezept ansehen' : 'Gericht ansehen'" size="sm"
                                                                         x-on:click.prevent="Livewire.dispatch('{{ $istBasisPos ? 'recipe-modal' : 'vk-modal' }}.oeffnen', { id: {{ $slot->sales_recipe_id }} })" />

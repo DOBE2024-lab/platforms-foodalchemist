@@ -266,24 +266,6 @@ class OfferCompositionService
         'ek_value'];
 
     /**
-     * Spec 50 · A6 — das Angebot spricht ein anderes Header-Vokabular als das Foodbook.
-     *
-     * `Livewire/Angebote/Editor` bezieht seine Presets aus {@see FoodbookService::headerPresets()};
-     * die tragen `header_neutral` / `header_frei` / `header_frei_preis`. Das Angebot kennt nur
-     * `header` / `header_preis` — der frühere Einzeiler liess jeden Header still zu einem
-     * `text`-Block werden, und die Render-Zweige im Blade konnten nie matchen. Der Nutzer
-     * klickte „Überschrift" und bekam wortlos einen Textblock.
-     *
-     * Deshalb hier ein echtes Mapping statt eines Rückfalls — und ein Wurf für alles
-     * Unbekannte: ein stiller Typ-Wechsel ist die schlechteste Rückmeldung.
-     */
-    private const TYP_ALIAS = [
-        'header_neutral' => 'header',
-        'header_frei' => 'header',
-        'header_frei_preis' => 'header_preis',
-    ];
-
-    /**
      * Spec 50 · C-7 — die Preset-Liste, die das ANGEBOT tragen kann.
      *
      * {@see FoodbookService::headerPresets()} ist gemeinsames Vokabular, enthaelt aber ein
@@ -314,39 +296,6 @@ class OfferCompositionService
         return $raus;
     }
 
-    /**
-     * Spec 50 · C-7 — `price_basis` gegen das Vokabular des Angebots pruefen.
-     * Gleiche Haltung wie {@see aufloesenBlockTyp()}: lieber ein Wurf mit Begruendung als ein
-     * stiller Wert, den die Kalkulation spaeter nicht deuten kann.
-     */
-    private function pruefePreisBasis(?string $basis): void
-    {
-        if ($basis === null || $basis === '') {
-            return;
-        }
-        if (! in_array($basis, FoodAlchemistOfferBlock::PRICE_BASES, true)) {
-            throw new \RuntimeException(
-                'Unbekannte Preis-Basis "' . $basis . '". Das Angebot kennt: '
-                . implode(', ', FoodAlchemistOfferBlock::PRICE_BASES)
-                . ' (Staffelpreise gibt es nur im Foodbook).'
-            );
-        }
-    }
-
-    public static function aufloesenBlockTyp(string $typ): string
-    {
-        $typ = self::TYP_ALIAS[$typ] ?? $typ;
-        if (! in_array($typ, FoodAlchemistOfferBlock::BLOCK_TYPES, true)) {
-            throw new \RuntimeException(
-                'Unbekannter Block-Typ "' . $typ . '". Erlaubt: '
-                . implode(', ', FoodAlchemistOfferBlock::BLOCK_TYPES)
-                . ' (Foodbook-Aliasse: ' . implode(', ', array_keys(self::TYP_ALIAS)) . ').'
-            );
-        }
-
-        return $typ;
-    }
-
     public function addBlock(Team $team, int $chapterId, array $in): FoodAlchemistOfferBlock
     {
         $k = $this->ownedKapitel($team, $chapterId);
@@ -354,15 +303,9 @@ class OfferCompositionService
             throw new \RuntimeException('Ein Format-Kapitel hat keine eigenen Inhalte. Sie kommen direkt aus dem Format.');
         }
         $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
-        $daten['type'] = self::aufloesenBlockTyp($in['type'] ?? '');
-        if ($daten['type'] !== 'position') {
-            $this->pruefePreisBasis($daten['price_basis'] ?? null);
-        }
-        \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten);   // 1.1j: Gericht/Concept/Darreichung/Einheit
-        if ($daten['type'] === 'position') {   // Spec 94b: Menge × Satz, pauschal (in der Summe) oder aufwand (zzgl., nicht in der Summe)
-            $daten['price_basis'] = in_array($daten['price_basis'] ?? null, FoodAlchemistOfferBlock::POSITION_BASES, true) ? $daten['price_basis'] : 'pauschal';
-            $daten['quantity'] ??= 1;
-        }
+        $daten['type'] = (string) ($in['type'] ?? '');
+        // 98 · 3.6: Typ (Foodbook-Aliasse), Preisbasis (keine Staffel), Referenzen; Position: pauschal/aufwand, Menge 1
+        $daten = \Platform\FoodAlchemist\Services\Position\PositionValidierung::block('angebot', $team, $daten);
         $daten['team_id'] = $k->team_id;
         $daten['position'] = (int) $k->blocks()->max('position') + 1;
 
@@ -373,19 +316,13 @@ class OfferCompositionService
     {
         $block = $this->ownedBlock($team, $blockId);
         $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
-        if (array_key_exists('type', $daten)) {
-            $daten['type'] = self::aufloesenBlockTyp((string) $daten['type']);   // A6: auch beim Ändern
-        }
-        $effTyp = array_key_exists('type', $daten) ? $daten['type'] : $block->type;
         foreach (['quantity', 'price_value', 'ek_value', 'unit_vocab_id'] as $f) {   // leere Formularfelder → NULL statt ''
             if (array_key_exists($f, $daten) && ($daten[$f] === '' || $daten[$f] === null)) {
                 $daten[$f] = null;
             }
         }
-        if ($effTyp === 'position' && array_key_exists('price_basis', $daten)) {
-            $daten['price_basis'] = in_array($daten['price_basis'], FoodAlchemistOfferBlock::POSITION_BASES, true) ? $daten['price_basis'] : 'pauschal';
-        }
-        \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten, $block);   // 1.1j: auch concept_ref, Darreichung, Einheit
+        // 98 · 3.6: dieselbe Prüfung wie beim Anlegen — jetzt auch die Preisbasis beim Ändern
+        $daten = \Platform\FoodAlchemist\Services\Position\PositionValidierung::block('angebot', $team, $daten, $block);
         $block->update($daten);
 
         return $block->refresh();

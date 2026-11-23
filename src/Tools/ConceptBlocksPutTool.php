@@ -53,8 +53,8 @@ class ConceptBlocksPutTool extends FoodAlchemistTool implements ToolContract, To
 
         try {
             app(ConceptService::class)->updateBlock($team, $slotId, $felder);
-        } catch (\RuntimeException $e) {
-            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
+        } catch (\RuntimeException $e) {   // 98 · 3.6: Prüfung im Positions-Kern, Code aus dem PositionFehler
+            return ToolResult::error($e->getMessage(), $e instanceof \Platform\FoodAlchemist\Services\Position\PositionFehler ? $e->fehlerCode : 'VALIDATION_ERROR');
         }
 
         return ToolResult::success(['slot_id' => $slotId, 'updated' => true]);

@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Produktion\Concerns;
 use Platform\FoodAlchemist\Enums\ProductionLineStatus;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 
 /**
  * Zeile abhaken/starten — am Wandmonitor startet das zugleich einen noch geplanten Auftrag (und liefert die Zeile im

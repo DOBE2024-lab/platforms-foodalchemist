@@ -2,7 +2,7 @@
 
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Controlling\Panels\Kennzahlen as KalkulationIndex;
-use Platform\FoodAlchemist\Services\FixkostenService;
+use Platform\FoodAlchemist\Services\Produktion\FixkostenService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

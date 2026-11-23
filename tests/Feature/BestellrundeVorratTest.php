@@ -11,9 +11,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\EigenproduktionService;
+use Platform\FoodAlchemist\Services\Produktion\EigenproduktionService;
 use Platform\FoodAlchemist\Services\OrderService;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -222,6 +222,6 @@ it('Spec 74: Ausbuchen nutzt die Gramm aus dem Produktions-Schnappschuss (Darrei
     // Darreichung mit weniger Mehl simulieren: Schnappschuss sagt 8 kg statt 10 kg
     $zut = collect($zeile->zutaten)->map(fn ($z) => ($z['gp_id'] ?? null) === $this->mehl->id ? ['menge_g' => 8000.0] + $z : $z)->all();
     $zeile->update(['zutaten' => $zut, 'is_manual_ansaetze' => true, 'manual_ansaetze' => (float) $zeile->ansaetze / 2]);   // + halbe Menge von Hand
-    [$gp] = app(\Platform\FoodAlchemist\Services\ProduktionsVerbrauchService::class)->verbrauch($order->refresh());
+    [$gp] = app(\Platform\FoodAlchemist\Services\Produktion\ProduktionsVerbrauchService::class)->verbrauch($order->refresh());
     expect($gp[$this->mehl->id])->toEqual(4000);
 });

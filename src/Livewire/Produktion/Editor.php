@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\AngebotService;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\PlanungsblattService;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Support\Suche;
 use Platform\FoodAlchemist\Support\TeamScope;
 
@@ -808,14 +808,14 @@ class Editor extends Component
         $postenSummen = ($team !== null && $this->orderId !== null && $ops !== null)
             ? app(ProductionOrderService::class)->postenSummen($team, (int) $this->orderId) : [];
         $kapazitaetsWarnungen = ($team !== null && $this->orderId !== null && $ops !== null)
-            ? app(\Platform\FoodAlchemist\Services\ProductionCapacityService::class)
+            ? app(\Platform\FoodAlchemist\Services\Produktion\ProductionCapacityService::class)
                 ->warnungenFuer($team, (int) $this->orderId) : [];
 
         return view('foodalchemist::livewire.produktion.editor', [
             'sperr' => $this->sperrZustand(),   // Spec 65
             // Spec 69: was von diesen Rezepten schon als Eigenproduktion im Lager liegt
             'lagerJeRezept' => $team !== null && isset($ops['zeilen'])
-                ? app(\Platform\FoodAlchemist\Services\EigenproduktionService::class)->lagerJeRezept($team, array_values(array_filter(array_column($ops['zeilen'], 'recipe_id'))))
+                ? app(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::class)->lagerJeRezept($team, array_values(array_filter(array_column($ops['zeilen'], 'recipe_id'))))
                 : [],
             'postenListe' => $postenListe,
             'postenSummen' => $postenSummen,

@@ -39,7 +39,7 @@ class HandbuchService
 
     public function __construct(
         private Plattform\FoodAlchemistMediaService $media,
-        private RegenerationCascadeService $regeneration,
+        private Produktion\RegenerationCascadeService $regeneration,
         private HandbuchQuellenService $quellen,
         private HandbuchZutatenService $zutaten,
     ) {
@@ -251,7 +251,7 @@ class HandbuchService
         $regen = $this->regeneration->fuerRezept($recipe);
         $regenZeilen = [];
         foreach ([...$regen['gesamt'], ...$regen['komponenten']] as $z) {
-            if (($z['herkunft'] ?? null) === RegenerationCascadeService::HERKUNFT_FEHLT) {
+            if (($z['herkunft'] ?? null) === Produktion\RegenerationCascadeService::HERKUNFT_FEHLT) {
                 continue;
             }
             $kalt = (bool) ($z['ist_kalt'] ?? false);

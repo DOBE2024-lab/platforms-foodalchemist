@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistKitchenRole;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Services\Einstellungen\KuechenRollenService;
 use Platform\FoodAlchemist\Services\Einstellungen\LagerorteService;
-use Platform\FoodAlchemist\Services\ProductionStationService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionStationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
-use Platform\FoodAlchemist\Services\EquipmentStandardService;
+use Platform\FoodAlchemist\Services\Produktion\EquipmentStandardService;
 
 /**
  * Spec 82 §6 — Standardausstattung im Equipment-Vokabular setzen (Dominique 13.10.: 15 Einträge).

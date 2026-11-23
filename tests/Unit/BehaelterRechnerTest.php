@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\BehaelterRechner;
+use Platform\FoodAlchemist\Services\Produktion\BehaelterRechner;
 
 /**
  * Spec 51 — produzierte Menge (kg) → ganze Behälter, plus Alternativen.

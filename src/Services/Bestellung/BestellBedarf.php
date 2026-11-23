@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\EigenproduktionService;
+use Platform\FoodAlchemist\Services\Produktion\EigenproduktionService;
 
 /**
  * Bausteine der Bedarfs-Vorschau (98 · 3.3 S5, aus OrderService verschoben): Quell-Mengen und -Ziele, Labels und

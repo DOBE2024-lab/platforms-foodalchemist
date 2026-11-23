@@ -114,7 +114,7 @@ it('Selbsttest: eine Kante auf gleichen oder höheren Rang wäre rot', function 
 });
 
 it('Herkunfts-Format: ProductionOrderService führt Präfix und Basis als Alias auf BestellHerkunft (EIN Ort, P4)', function () {
-    $po = \Platform\FoodAlchemist\Services\ProductionOrderService::class;
+    $po = \Platform\FoodAlchemist\Services\Produktion\ProductionOrderService::class;
     $herkunft = \Platform\FoodAlchemist\Services\Bestellung\BestellHerkunft::class;
 
     expect($po::SOURCE_REF_BASE)->toBe('produktion:')

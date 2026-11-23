@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Illuminate\Support\Collection;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder;

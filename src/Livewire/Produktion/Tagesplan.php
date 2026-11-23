@@ -8,9 +8,9 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Platform\FoodAlchemist\Livewire\Produktion\Concerns\HaktZeileAb;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
-use Platform\FoodAlchemist\Services\ProductionCapacityService;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
-use Platform\FoodAlchemist\Services\ProductionPlanService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionCapacityService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionPlanService;
 use Platform\FoodAlchemist\Support\Produktion\TagesplanAbfrage;
 
 /**

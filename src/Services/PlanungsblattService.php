@@ -49,8 +49,8 @@ class PlanungsblattService
         private LeadLaService $leadLa,
         private DarreichungResolver $darreichungen,
         private GebindeRechner $gebinde,
-        private ProductionTimeService $productionTimes,
-        private BehaelterBedarfService $behaelter,
+        private Produktion\ProductionTimeService $productionTimes,
+        private Produktion\BehaelterBedarfService $behaelter,
     ) {
     }
 
@@ -1144,7 +1144,7 @@ class PlanungsblattService
             'vehikel' => $this->vocabName('foodalchemist_vocab_serving_vehicles', app(DarreichungService::class)->vehikelId($dar)),   // wirksamer Typ: Übersteuerung, sonst Typ des Gefäßes
             'geschirr' => $dar->vessel_gp_id !== null ? DB::table('foodalchemist_gps')->where('id', $dar->vessel_gp_id)->value('name') : null,   // Gefäß der Form
             // Kostenart des Gefäßes (17.11.2026): was die Logistik damit tut — mitgeben, zurück in die Spülküche, zurück zum Verleiher, nur Empfehlung
-            'geschirr_art' => $dar->vessel_gp_id !== null ? (\Platform\FoodAlchemist\Services\GefaessKostenartService::LOGISTIK[app(DarreichungService::class)->gefaessKosten($dar)['kostenart'] ?? ''] ?? null) : null,
+            'geschirr_art' => $dar->vessel_gp_id !== null ? (\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::LOGISTIK[app(DarreichungService::class)->gefaessKosten($dar)['kostenart'] ?? ''] ?? null) : null,
             'arbeitszeit_zuschlag_min' => $dar->arbeitszeiten === null ? $dar->work_time_surcharge_min : null,
             'mitgeben' => $this->mitgebenText($formen !== [] ? $formen : [['dar' => $dar, 'portionen' => $portionen]], $team),
         ], fn ($v) => $v !== null && $v !== '');

@@ -207,7 +207,7 @@
         <div class="rezept">
             <h2>{{ $z['name'] }}@if($z['ist_basisrezept']) <span class="chip">Basisrezept</span>@endif</h2>
             {{-- Spec 51: gedruckt wird EIN Wert. Gewaehlt wird im Editor, nicht auf dem Zettel. --}}
-            @php($behaelter = ($opt['darreichung'] ?? false) ? \Platform\FoodAlchemist\Services\BehaelterBedarfService::kurz($z['darreichung']['behaelter_bedarf'] ?? null) : null)
+            @php($behaelter = ($opt['darreichung'] ?? false) ? \Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::kurz($z['darreichung']['behaelter_bedarf'] ?? null) : null)
             <table class="kennzahlen">
                 <tr>
                     <td class="gross"><span>Ansätze</span>{{ rtrim(rtrim(number_format($z['ansaetze'], 2, ',', '.'), '0'), ',') }} Ansätze</td>

@@ -222,7 +222,7 @@ class InventurService
                     );
                     $stock->update(['qty_base' => round((float) $line->qty_counted, 4)]);
                     // Spec 69: Chargen der Eigenproduktion mitziehen
-                    app(EigenproduktionService::class)->inventurAbgleich($team, $stock, $differenz, $gebuchtAm);
+                    app(Produktion\EigenproduktionService::class)->inventurAbgleich($team, $stock, $differenz, $gebuchtAm);
                 }
                 $wert += (float) ($line->wert() ?? 0);
             }
@@ -297,7 +297,7 @@ class InventurService
                 continue;
             }
             [$preis, $preisLetzter] = $s->recipe !== null
-                ? [app(EigenproduktionService::class)->preisJeBasis($s->recipe), false]
+                ? [app(Produktion\EigenproduktionService::class)->preisJeBasis($s->recipe), false]
                 : $this->preisJeBasisMitQuelle($besitzer, $s->gp, $s->gp === null ? $s->supplier_item_id : null, $s->base_unit);
             $menge = (float) $s->qty_base;
             $rows[] = [
@@ -458,7 +458,7 @@ class InventurService
                 'team_id' => $team->id, 'inventory_count_id' => $count->id,
                 'gp_id' => $p['gp_id'], 'supplier_item_id' => $p['supplier_item_id'], 'recipe_id' => $rezept?->id, 'base_unit' => $p['base_unit'],
                 'qty_expected' => round((float) $p['qty_expected'], 4),
-                'price_per_base' => $rezept !== null ? app(EigenproduktionService::class)->preisJeBasis($rezept) : $this->preisJeBasis($team, $gp, $p['supplier_item_id'], $p['base_unit']),
+                'price_per_base' => $rezept !== null ? app(Produktion\EigenproduktionService::class)->preisJeBasis($rezept) : $this->preisJeBasis($team, $gp, $p['supplier_item_id'], $p['base_unit']),
                 'position' => $start + $i + 1,
                 'storage_bin_id' => $p['gp_id'] !== null ? ($stamm[$p['gp_id']] ?? null) : null,
             ] + ($gebinde ?? []));

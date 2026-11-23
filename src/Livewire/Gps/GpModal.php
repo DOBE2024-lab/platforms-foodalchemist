@@ -297,7 +297,7 @@ class GpModal extends Component
             $in += ['derivat_ausbeute_wert' => $wert === '' ? null : (float) $wert, 'derivat_ausbeute_basis' => $this->derivat['basis']];
         }
         if ($in !== []) {
-            app(\Platform\FoodAlchemist\Services\DerivatAusbeuteService::class)->setze($team, (int) $gp->id, $in);
+            app(\Platform\FoodAlchemist\Services\Produktion\DerivatAusbeuteService::class)->setze($team, (int) $gp->id, $in);
         }
     }
 
@@ -311,7 +311,7 @@ class GpModal extends Component
             return;
         }
         try {
-            $r = app(\Platform\FoodAlchemist\Services\DerivatAusbeuteService::class)->schaetzeKi($team, (int) $gp->id);
+            $r = app(\Platform\FoodAlchemist\Services\Produktion\DerivatAusbeuteService::class)->schaetzeKi($team, (int) $gp->id);
             $gp->refresh();
             $this->derivat = [...$this->derivat, 'wert' => $gp->derivat_ausbeute_wert !== null ? (string) (float) $gp->derivat_ausbeute_wert : '',
                 'basis' => (string) ($gp->derivat_ausbeute_basis ?: 'g_je_stueck'), 'quelle' => $gp->derivat_ausbeute_quelle];

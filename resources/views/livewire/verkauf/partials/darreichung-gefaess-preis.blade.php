@@ -11,7 +11,7 @@
         @foreach($gi['zubehoer'] as $z)
             <span class="tabular-nums" wire:key="dar-gef-zub-{{ $d->id }}-{{ $z['gp_id'] }}" data-dar-gefaess-zubehoer="{{ $z['gp_id'] }}">+ {{ rtrim(rtrim(number_format($z['menge'], 3, ',', ''), '0'), ',') }} × {{ $z['name'] }}:
                 @if($z['kosten'] !== null)
-                    {{ $euro($z['kosten']) }}{{ $z['kostenart'] && $z['kostenart'] !== 'einweg' ? ' ('.(\Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN[$z['kostenart']] ?? '').')' : '' }}
+                    {{ $euro($z['kosten']) }}{{ $z['kostenart'] && $z['kostenart'] !== 'einweg' ? ' ('.(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::ARTEN[$z['kostenart']] ?? '').')' : '' }}
                 @else
                     <x-fa::badge tone="warn" title="Kein Preis am Zubehör: am Grundprodukt Art und Preis eintragen oder einen bepreisten Hauptartikel wählen" data-dar-gefaess-zubehoer-preis-fehlt>kein Preis</x-fa::badge>
                 @endif

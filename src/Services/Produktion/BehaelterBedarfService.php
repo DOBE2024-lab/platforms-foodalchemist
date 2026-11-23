@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -98,7 +98,7 @@ class BehaelterBedarfService
      */
     public function behaelterFuerGericht(Team $team, FoodAlchemistRecipe $gericht, float $ansaetze, string $zweck): array
     {
-        $recompute = app(RecipeRecomputeService::class);
+        $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
         $komponenten = [];
         foreach ($gericht->ingredients()->whereNotNull('referenced_recipe_id')->with('referencedRecipe')->get() as $z) {
             $sub = $z->referencedRecipe;

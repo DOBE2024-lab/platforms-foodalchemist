@@ -745,9 +745,8 @@ class Editor extends Component
     public function cockpitKonzeptEinfuegen(string $typ, int $id): void
     {
         $team = Auth::user()?->currentTeamRelation;
-        $typ = $typ === 'paket' ? 'paket' : 'concept';
-        $m = $typ === 'paket' ? \Platform\FoodAlchemist\Models\FoodAlchemistPaket::class : \Platform\FoodAlchemist\Models\FoodAlchemistConcept::class;
-        $obj = $team ? $m::visibleToTeam($team)->find($id) : null;
+        $typ = 'concept';   // 98 · 2.6c: alte Pakete entfallen, ein Paket ist ein Concept (kind=paket)
+        $obj = $team ? \Platform\FoodAlchemist\Models\FoodAlchemistConcept::visibleToTeam($team)->find($id) : null;
         if ($obj === null) {
             return;
         }
@@ -1308,9 +1307,7 @@ class Editor extends Component
         $kq = trim($this->konzeptSuche);
         if (mb_strlen($kq) >= 2) {
             $konzeptTreffer = \Platform\FoodAlchemist\Models\FoodAlchemistConcept::visibleToTeam($team)->where('name', 'like', '%' . $kq . '%')->orderBy('name')->limit(8)->get(['id', 'name'])
-                ->map(fn ($c) => ['typ' => 'concept', 'id' => (int) $c->id, 'name' => (string) $c->name])
-                ->concat(\Platform\FoodAlchemist\Models\FoodAlchemistPaket::visibleToTeam($team)->where('name', 'like', '%' . $kq . '%')->orderBy('name')->limit(8)->get(['id', 'name'])
-                    ->map(fn ($p) => ['typ' => 'paket', 'id' => (int) $p->id, 'name' => (string) $p->name]))->values();
+                ->map(fn ($c) => ['typ' => 'concept', 'id' => (int) $c->id, 'name' => (string) $c->name])->values();
         }
 
         $produktionTreffer = collect();

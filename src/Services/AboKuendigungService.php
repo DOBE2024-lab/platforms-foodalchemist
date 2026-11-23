@@ -10,7 +10,6 @@ use Platform\FoodAlchemist\Jobs\RecomputeTeamRecipesJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistAbo;
 use Platform\FoodAlchemist\Models\FoodAlchemistComponentEquivalent;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
@@ -47,9 +46,9 @@ class AboKuendigungService
     ];
 
     /** Arten im Abo, in Kopier-Reihenfolge (unten zuerst); das Format steht oben (PR 7). */
-    private const ARTEN = ['recipe', 'paket', 'concept', 'format'];
+    private const ARTEN = ['recipe', 'concept', 'format'];   // 98 · 2.6c: Alt-Paket-Art entfallen
 
-    private const TABELLE = ['recipe' => 'foodalchemist_recipes', 'paket' => 'foodalchemist_packages', 'concept' => 'foodalchemist_concepts', 'format' => 'foodalchemist_formats'];
+    private const TABELLE = ['recipe' => 'foodalchemist_recipes', 'concept' => 'foodalchemist_concepts', 'format' => 'foodalchemist_formats'];
 
     /** @var list<string> Hinweise des laufenden Ablaufs (z. B. fehlende Bilddatei) — nie ein Abbruch */
     private array $hinweise = [];
@@ -113,7 +112,7 @@ class AboKuendigungService
      * Master zieht ein Objekt (Rezept, Paket, Konzept) aus einer abonnierten Sammlung zurück (§8: Löschen eines abonnierten Objekts ist gesperrt, nur
      * Zurückziehen). Jeder betroffene Mandant läuft denselben Ablauf wie bei einer Kündigung.
      *
-     * @param  'recipe'|'paket'|'concept'|'format'  $typ
+     * @param  'recipe'|'concept'|'format'  $typ
      * @return array{mandanten: list<array{mandant_team_id:int, vorschau: array<string,mixed>, kopien?: array<int,int>, kopien_je_art?: array<string,array<int,int>>}>, ausgefuehrt: bool}
      */
     public function zurueckziehen(Team $master, int $sammlungId, int $objektId, ?User $actor, bool $bestaetigt, string $typ = 'recipe'): array
@@ -122,7 +121,7 @@ class AboKuendigungService
             throw new \RuntimeException('Zurückziehen gibt es nur im Master-Team.');
         }
         if (! in_array($typ, self::ARTEN, true)) {
-            throw new \RuntimeException('Zurückziehen gibt es für Rezepte, Pakete, Konzepte und Formate.');
+            throw new \RuntimeException('Zurückziehen gibt es für Rezepte, Konzepte (auch Pakete) und Formate.');
         }
         $this->rechte->pruefe($actor, $master, FaRolle::Freigeben, 'Abo-Objekt zurückziehen');
         if (! DB::table('foodalchemist_sammlung_objekte')->where('sammlung_id', $sammlungId)->where('typ', $typ)->where('objekt_id', $objektId)->exists()) {
@@ -160,7 +159,7 @@ class AboKuendigungService
         $this->abos->neuBerechnenAlle();
         // Spec 84 B3 C: je Mandant in dessen Sicht nachrechnen (die Kopien gehören ihm; aus Master-Sicht fände find() sie nicht)
         foreach ($mandanten as $mid => $m) {
-            \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm($mid, fn () => $this->nachrechnen(($m['kopien_je_art'] ?? []) + ['recipe' => [], 'paket' => [], 'concept' => [], 'format' => []]));
+            \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm($mid, fn () => $this->nachrechnen(($m['kopien_je_art'] ?? []) + ['recipe' => [], 'concept' => [], 'format' => []]));
         }
         $this->protokoll->schreibe('abo_objekt_zurueckgezogen', ['sammlung_id' => $sammlungId, 'typ' => $typ, 'objekt_id' => $objektId,
             'mandanten' => array_keys($mandanten)], $actor, $this->modellFuer($typ)::mitFassungen()->find($objektId));
@@ -185,11 +184,10 @@ class AboKuendigungService
         return array_sum(array_map('count', $jeArt));
     }
 
-    /** @return class-string<FoodAlchemistRecipe|FoodAlchemistPaket|FoodAlchemistConcept|\Platform\FoodAlchemist\Models\FoodAlchemistFormat> */
+    /** @return class-string<FoodAlchemistRecipe|FoodAlchemistConcept|\Platform\FoodAlchemist\Models\FoodAlchemistFormat> */
     private function modellFuer(string $typ): string
     {
         return match ($typ) {
-            'paket' => FoodAlchemistPaket::class,
             'concept' => FoodAlchemistConcept::class,
             'format' => \Platform\FoodAlchemist\Models\FoodAlchemistFormat::class,
             default => FoodAlchemistRecipe::class,
@@ -437,9 +435,6 @@ class AboKuendigungService
             ->whereIn('x.sales_recipe_id', $ids)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at')->where('p.ist_fassung', false)
             ->where(fn ($w) => $w->whereNull('p.status')->orWhere('p.status', '!=', 'archiviert'))
             ->select('x.sales_recipe_id AS rid')->distinct()->get(), 'konzept');
-        $merke(DB::table('foodalchemist_package_dishes AS x')->join('foodalchemist_packages AS p', 'p.id', '=', 'x.package_id')
-            ->whereIn('x.sales_recipe_id', $ids)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at')->where('p.ist_fassung', false)
-            ->select('x.sales_recipe_id AS rid')->distinct()->get(), 'paket');
         // als Zutat in einem EIGENEN Rezept (Arbeitszeile) des Mandanten bzw. seiner Unter-Teams
         $merke(DB::table('foodalchemist_recipe_ingredients AS z')->join('foodalchemist_recipes AS r', 'r.id', '=', 'z.recipe_id')
             ->whereIn('z.referenced_recipe_id', $ids)->whereIn('r.team_id', $teams)->where('r.ist_fassung', false)
@@ -480,9 +475,6 @@ class AboKuendigungService
         foreach ($kette['recipe'] as $fid) {
             $map['recipe'][$fid] = $this->kopiereKopf(FoodAlchemistRecipe::mitFassungen()->ohneTeamSicht('abo-pflege')->findOrFail($fid), $mandant, $namen['recipe'][$fid] ?? null);
         }
-        foreach ($kette['paket'] as $fid) {
-            $map['paket'][$fid] = $this->kopiereKopfPaket(FoodAlchemistPaket::mitFassungen()->ohneTeamSicht('abo-pflege')->findOrFail($fid), $mandant, $namen['paket'][$fid] ?? null);
-        }
         foreach ($kette['concept'] as $fid) {
             $map['concept'][$fid] = $this->kopiereKopfKonzept(FoodAlchemistConcept::mitFassungen()->ohneTeamSicht('abo-pflege')->findOrFail($fid), $mandant, $namen['concept'][$fid] ?? null);
         }
@@ -496,9 +488,6 @@ class AboKuendigungService
             $this->kopiereInhalt(FoodAlchemistRecipe::mitFassungen()->ohneTeamSicht('abo-pflege')->findOrFail($fid), $map['recipe'][$fid], $map['recipe'], $mandant, $darMap);
         }
         $this->kopiereErsatz($kette['recipe'], $map['recipe'], $mandant, $bleibt['recipe']);
-        foreach ($kette['paket'] as $fid) {
-            $this->kopiereInhaltPaket(FoodAlchemistPaket::mitFassungen()->ohneTeamSicht('abo-pflege')->findOrFail($fid), $map['paket'][$fid], $map, $darMap, $mandant);
-        }
         foreach ($kette['concept'] as $fid) {
             $this->kopiereInhaltKonzept(FoodAlchemistConcept::mitFassungen()->ohneTeamSicht('abo-pflege')->findOrFail($fid), $map['concept'][$fid], $map, $darMap, $mandant, $slotMap);
         }
@@ -537,18 +526,13 @@ class AboKuendigungService
             }
             $offen = array_fill_keys(self::ARTEN, []);
             if ($neu['concept'] !== []) {
-                $slots = DB::table('foodalchemist_concept_slots')->whereIn('concept_id', $neu['concept'])->whereNull('deleted_at')->get(['package_id', 'embedded_concept_id', 'sales_recipe_id']);
-                $offen['paket'] = array_merge($offen['paket'], $this->nurFassungen('paket', $slots->pluck('package_id')->filter()->all()));
+                $slots = DB::table('foodalchemist_concept_slots')->whereIn('concept_id', $neu['concept'])->whereNull('deleted_at')->get(['embedded_concept_id', 'sales_recipe_id']);
                 $offen['concept'] = array_merge($offen['concept'], $this->nurFassungen('concept', $slots->pluck('embedded_concept_id')->filter()->all()));
                 $offen['recipe'] = array_merge($offen['recipe'], $this->nurFassungen('recipe', $slots->pluck('sales_recipe_id')->filter()->all()));
             }
             if ($neu['format'] !== []) {
                 $offen['concept'] = array_merge($offen['concept'], $this->nurFassungen('concept', DB::table('foodalchemist_format_slots')
                     ->whereIn('format_id', $neu['format'])->whereNull('deleted_at')->whereNotNull('concept_id')->pluck('concept_id')->all()));
-            }
-            if ($neu['paket'] !== []) {
-                $offen['recipe'] = array_merge($offen['recipe'], $this->nurFassungen('recipe', DB::table('foodalchemist_package_dishes')
-                    ->whereIn('package_id', $neu['paket'])->whereNull('deleted_at')->pluck('sales_recipe_id')->all()));
             }
             if ($neu['recipe'] !== []) {
                 $offen['recipe'] = array_merge($offen['recipe'], DB::table('foodalchemist_recipe_ingredients AS z')
@@ -656,18 +640,6 @@ class AboKuendigungService
         }
     }
 
-    private function kopiereKopfPaket(FoodAlchemistPaket $fassung, Team $mandant, ?string $name = null): int
-    {
-        $kopie = $fassung->replicate(['uuid', 'legacy_id', 'ist_fassung', 'fassung_von_id', 'fassung_nr', 'inhalt_hash', 'veroeffentlicht_at', 'veroeffentlicht_von',
-            'aenderungsnotiz', 'fassung_allergen_geaendert', 'kopie_von_id', 'kopie_stand_at', 'offer_id']);
-        $kopie->forceFill([
-            'team_id' => $mandant->id, 'ist_fassung' => false, 'price_mode' => 'auto', 'price_stale' => false,
-            'kopie_von_id' => $fassung->fassung_von_id, 'kopie_stand_at' => now(),   // originalGeaendert() vergleicht gegen die Familie
-        ] + ($name !== null ? ['name' => $name] : []))->save();
-
-        return (int) $kopie->id;
-    }
-
     private function kopiereKopfKonzept(FoodAlchemistConcept $fassung, Team $mandant, ?string $name = null): int
     {
         $kopie = $fassung->replicate(['uuid', 'legacy_id', 'ist_fassung', 'fassung_von_id', 'fassung_nr', 'inhalt_hash', 'veroeffentlicht_at', 'veroeffentlicht_von',
@@ -757,23 +729,6 @@ class AboKuendigungService
     }
 
     /**
-     * Paket-Gerichte der Fassung → Zeilen der Kopie: Rezept = Rezept-Kopie, Form = Form der Rezept-Kopie.
-     *
-     * @param  array<string, array<int,int>>  $map
-     * @param  array<int,int>  $darMap
-     */
-    private function kopiereInhaltPaket(FoodAlchemistPaket $fassung, int $kopieId, array $map, array $darMap, Team $mandant): void
-    {
-        foreach ($fassung->dishes()->get() as $g) {
-            $g->replicate(['uuid', 'created_at', 'updated_at', 'deleted_at'])->forceFill([
-                'package_id' => $kopieId, 'team_id' => $mandant->id,
-                'sales_recipe_id' => $map['recipe'][(int) $g->sales_recipe_id] ?? $g->sales_recipe_id,
-                'presentation_id' => $g->presentation_id !== null ? ($darMap[(int) $g->presentation_id] ?? $g->presentation_id) : null,
-            ])->save();
-        }
-    }
-
-    /**
      * Slots der Konzept-Fassung → Slots der Kopie (Paket, eingebettetes Paket-Konzept, Rezept, Form auf Kopien umgehängt), dazu Facetten und Sektor-Eignung.
      *
      * @param  array<string, array<int,int>>  $map
@@ -786,7 +741,7 @@ class AboKuendigungService
             $neuerSlot = $s->replicate(['uuid', 'created_at', 'updated_at', 'deleted_at']);
             $neuerSlot->forceFill([
                 'concept_id' => $kopieId, 'team_id' => $mandant->id,
-                'package_id' => $s->package_id !== null ? ($map['paket'][(int) $s->package_id] ?? $s->package_id) : null,
+                'package_id' => null,   // 98 · 2.6c: Alt-Pakete gibt es nicht mehr
                 'embedded_concept_id' => $s->embedded_concept_id !== null ? ($map['concept'][(int) $s->embedded_concept_id] ?? $s->embedded_concept_id) : null,
                 'sales_recipe_id' => $s->sales_recipe_id !== null ? ($map['recipe'][(int) $s->sales_recipe_id] ?? $s->sales_recipe_id) : null,
                 'presentation_id' => $s->presentation_id !== null ? ($darMap[(int) $s->presentation_id] ?? $s->presentation_id) : null,
@@ -876,16 +831,13 @@ class AboKuendigungService
             $ids = $q->pluck('x.id')->all();
             $n += DB::table(explode(' AS ', $tab)[0])->whereIn('id', $ids ?: [0])->update(['sales_recipe_id' => $neu]);
         }
-        foreach (['foodalchemist_menu_plan_entries' => ['foodalchemist_menu_plans', 'menu_plan_id', false], 'foodalchemist_concept_slots' => ['foodalchemist_concepts', 'concept_id', true],
-            'foodalchemist_package_dishes' => ['foodalchemist_packages', 'package_id', true]] as $tab => [$parent, $fk, $eigene]) {
+        foreach (['foodalchemist_menu_plan_entries' => ['foodalchemist_menu_plans', 'menu_plan_id', false], 'foodalchemist_concept_slots' => ['foodalchemist_concepts', 'concept_id', true]] as $tab => [$parent, $fk, $eigene]) {
             $q = DB::table("{$tab} AS x")->join("{$parent} AS p", 'p.id', '=', "x.{$fk}")
                 ->where('x.sales_recipe_id', $alt)->whereIn('x.team_id', $teams)->whereNull('x.deleted_at')->whereNull('p.deleted_at');
             if ($eigene) {
                 $q->where('p.ist_fassung', false);   // Pflichtpunkt #367: nie eine Fassung als Eltern-Objekt
             }
-            if ($tab !== 'foodalchemist_package_dishes') {
-                $q->where(fn ($w) => $w->whereNull('p.status')->orWhere('p.status', '!=', 'archiviert'));
-            }
+            $q->where(fn ($w) => $w->whereNull('p.status')->orWhere('p.status', '!=', 'archiviert'));
             $n += DB::table($tab)->whereIn('id', $q->pluck('x.id')->all() ?: [0])->update(['sales_recipe_id' => $neu]);
         }
         $n += app(Rezept\RezeptGraphService::class)->haengeUm(DB::table('foodalchemist_recipe_ingredients AS z')   // 1.1e: Graph-Schreibweg
@@ -917,11 +869,6 @@ class AboKuendigungService
             app(RecipeRecomputeService::class)->recomputeMany($rezepte);
             foreach (FoodAlchemistRecipeDarreichung::whereIn('recipe_id', $rezepte)->get() as $d) {
                 app(DarreichungService::class)->recomputePreise($d);
-            }
-        }
-        foreach (array_values($map['paket'] ?? []) as $id) {
-            if (($p = FoodAlchemistPaket::find($id)) !== null) {
-                app(PaketService::class)->recomputePrice($p);
             }
         }
         $konzepte = FoodAlchemistConcept::mitFassungen()->whereIn('id', array_values($map['concept'] ?? []))->get()->sortBy(fn ($c) => $c->kind === 'paket' ? 0 : 1);

@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Concepter\Browser as ConcepterBrowser;
-use Platform\FoodAlchemist\Livewire\Concepts\Index as ConceptsIndex;
 use Platform\FoodAlchemist\Livewire\Foodbooks\Index as FoodbooksIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
@@ -37,18 +36,6 @@ it('Foodbook: neu öffnet nur den Dialog, leerer Name abgewiesen, mit Namen ange
         ->and($c->get('selectedId'))->toBe($fb->id);
 });
 
-it('Concepts-Seite: neu legt nichts an, mit Namen entsteht das Concept (Vorlage, wenn die Vorlagen-Sicht offen ist)', function () {
-    $c = Livewire::test(ConceptsIndex::class)->assertSeeHtml('data-anlege-dialog')->call('neu');
-    expect(FoodAlchemistConcept::echte()->count())->toBe(0);
-
-    $c->set('neuName', 'Grill-Buffet')->call('neuAnlegen');
-    $concept = FoodAlchemistConcept::echte()->sole();
-    expect($concept->name)->toBe('Grill-Buffet')->and($c->get('selectedId'))->toBe($concept->id);
-
-    Livewire::test(ConceptsIndex::class)->set('showVorlagen', true)->call('neu')->set('neuName', 'Fingerfood-Vorlage')->call('neuAnlegen');
-    expect(FoodAlchemistConcept::where('name', 'Fingerfood-Vorlage')->value('is_template'))->toBeTruthy();
-});
-
 it('Concepter: Concept und Paket erst mit Namen, danach Editor offen; kein „Neues …“ mehr', function () {
     Livewire::test(ConcepterBrowser::class)->assertSeeHtml('data-anlege-dialog')
         ->call('neu')->assertNotDispatched('concepter-editor.oeffnen')
@@ -74,7 +61,7 @@ it('x-fa::anlege-dialog: Modal fa-anlegen mit Namensfeld, Enter legt an, Fehler 
 });
 
 it('am Handy kein Anlege-Dialog im DOM (dort wird nicht angelegt)', function () {
-    foreach ([ConcepterBrowser::class, ConceptsIndex::class, FoodbooksIndex::class, \Platform\FoodAlchemist\Livewire\Formate\Browser::class] as $klasse) {
+    foreach ([ConcepterBrowser::class, FoodbooksIndex::class, \Platform\FoodAlchemist\Livewire\Formate\Browser::class] as $klasse) {
         Livewire::withCookie(\Platform\FoodAlchemist\Support\HandyLesemodus::COOKIE, '1')->test($klasse)->assertDontSeeHtml('data-anlege-dialog');
         Livewire::withCookie(\Platform\FoodAlchemist\Support\HandyLesemodus::COOKIE, '0')->test($klasse)->assertSeeHtml('data-anlege-dialog');
     }

@@ -397,3 +397,29 @@ it('Paket-Tausch bietet jedes aktive Paket — Rollen-Filter entfernt (2026-08-2
 
 // „Paket-Geschirr via Alt-Editor" entfällt — das Geschirr hängt nicht mehr an Slot/Posten; das Gefäß gehört zur Darreichung
 // (Reiter „Anrichten“, nur lesend; abgedeckt durch AnrichtenGefaessTest).
+
+// 98 · 2.6c: Knopf „Speichern und zurück zum Konzept“ nur mit Rücksprung-Kontext; er sichert den Paket-Kopf und springt zurück
+it('Rücksprung: aus dem Konzept ins eingebettete Paket, Knopf speichert das Paket und springt ins Eltern-Konzept zurück', function () {
+    $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $this->paket->id]);
+
+    $comp = Livewire::test(Editor::class)->call('oeffnen', 'concepts', $this->concept->id)
+        ->assertDontSeeHtml('data-concepter-zurueck');            // im Konzept selbst kein Rücksprung
+    $comp->call('paketOeffnen', $this->paket->id)
+        ->assertSet('id', $this->paket->id)
+        ->assertSeeHtml('data-concepter-zurueck')
+        ->assertSee('Speichern und zurück zum Konzept')
+        ->set('form.name', 'Salad Wall XL')
+        ->call('zurueckZumConcept')
+        ->assertSet('id', $this->concept->id)
+        ->assertSet('rueckSprungConceptId', null)
+        ->assertDontSeeHtml('data-concepter-zurueck');
+
+    expect(FoodAlchemistConcept::find($this->paket->id)->name)->toBe('Salad Wall XL');   // Paket-Kopf gesichert
+});
+
+it('Rücksprung: ein direkt geöffnetes Paket (ohne Eltern-Kontext) zeigt den Knopf nicht', function () {
+    Livewire::test(Editor::class)->call('oeffnen', 'concepts', $this->paket->id)
+        ->assertSet('rueckSprungConceptId', null)
+        ->assertDontSeeHtml('data-concepter-zurueck');
+});

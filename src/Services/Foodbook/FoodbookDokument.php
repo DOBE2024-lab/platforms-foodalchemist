@@ -47,11 +47,9 @@ final class FoodbookDokument
             'chapters.blocks' => fn ($q) => $q->where('visible', true)->orderBy('position'),
             // Wording-Kette: Slots (inkl. Paket-Gerichte) fürs Auflösen der Gericht-Zeilen
             'chapters.blocks.concept.slots.dish:id,name,sales_wording_standard',
-            'chapters.blocks.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
             // eingebettetes Paket (kind=paket-Concept) + dessen Gerichte für die Menü-Auflösung
             'chapters.blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
             'chapters.blocks.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
-            'chapters.blocks.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
             // E8.3: recipe_ref braucht sales_net/ek_total_eur für die €/Position-Preisspalte (blockPreis) — sonst rendert der Preis leer.
             'chapters.blocks.dish:id,name,sales_wording_standard,ek_total_eur,sales_unit_count', 'chapters.blocks.dish.standardPresentation',
             // B (2026-08-31): LEBENDES Format-Kapitel — Identität + Editionen live aus dem Format. Editionen =
@@ -59,10 +57,8 @@ final class FoodbookDokument
             'chapters.format', 'chapters.format.images',
             'chapters.format.slots' => fn ($q) => $q->orderBy('position'),
             'chapters.format.slots.concept.slots.dish:id,name,sales_wording_standard',
-            'chapters.format.slots.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
             'chapters.format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
             'chapters.format.slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
-            'chapters.format.slots.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
             'crmCompany', 'crmContact',
         ]);
         $pax = $fb->personen;
@@ -232,11 +228,6 @@ final class FoodbookDokument
                             if ($slot->dish !== null) {
                                 $gerichtIds[] = (int) $slot->dish->id;
                             }
-                            foreach ($slot->package?->dishes ?? [] as $pg) {
-                                if ($pg->dish !== null) {
-                                    $gerichtIds[] = (int) $pg->dish->id;
-                                }
-                            }
                         }
                     }
                 }
@@ -299,10 +290,8 @@ final class FoodbookDokument
             ->with([
                 'slots' => fn ($q) => $q->orderBy('position'),
                 'slots.dish:id,name,sales_wording_standard',
-                'slots.package.dishes.dish:id,name,sales_wording_standard',
                 'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
                 'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
-                'slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
             ])
             ->findOrFail($conceptId);
 

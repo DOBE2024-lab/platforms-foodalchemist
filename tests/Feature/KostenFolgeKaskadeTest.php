@@ -7,7 +7,6 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\KostenFolgeJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistPrice;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
@@ -17,7 +16,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\LeadLaService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\PriceService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\StammPaketService;
@@ -51,16 +49,17 @@ beforeEach(function () {
         app(RecipeRecomputeService::class)->recomputeMany([$basis->id]);
         $d = $this->dar->ensureStandard($t, $gericht->id);
         $d = $this->grammaturAltbestand($d, 100, 1);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
-        $paket = FoodAlchemistPaket::create(['team_id' => $t->id, 'name' => 'Dessert-Paket', 'price_mode' => 'auto']);
-        $paket->gerichte()->create(['team_id' => $t->id, 'sales_recipe_id' => $gericht->id, 'position' => 0, 'quantity' => 1]);
-        $manuell = FoodAlchemistPaket::create(['team_id' => $t->id, 'name' => 'Dessert-Paket fix', 'price_mode' => 'manuell', 'price_per_person' => 9.0]);
-        $manuell->gerichte()->create(['team_id' => $t->id, 'sales_recipe_id' => $gericht->id, 'position' => 0, 'quantity' => 1]);
+        // 98 · 2.6c: Pakete = kind=paket-Concepts (auto und manuell bepreist), im Konzept eingebettet
+        $paket = FoodAlchemistConcept::create(['team_id' => $t->id, 'name' => 'Dessert-Paket', 'kind' => 'paket', 'status' => 'draft', 'price_mode' => 'auto']);
+        $paket->slots()->create(['team_id' => $t->id, 'role' => 'Dessert', 'type' => 'gericht', 'position' => 0, 'sales_recipe_id' => $gericht->id, 'quantity' => 1]);
+        $manuell = FoodAlchemistConcept::create(['team_id' => $t->id, 'name' => 'Dessert-Paket fix', 'kind' => 'paket', 'status' => 'draft',
+            'price_mode' => 'manuell', 'price_per_person_manual' => 9.0]);
+        $manuell->slots()->create(['team_id' => $t->id, 'role' => 'Dessert', 'type' => 'gericht', 'position' => 0, 'sales_recipe_id' => $gericht->id, 'quantity' => 1]);
         $konzept = FoodAlchemistConcept::create(['team_id' => $t->id, 'name' => 'Buffet', 'status' => 'draft']);
-        $konzept->slots()->create(['team_id' => $t->id, 'role' => 'Dessert', 'title' => 'Dessert', 'position' => 0, 'package_id' => $paket->id]);
-        foreach ([$paket, $manuell] as $p) {
-            app(PaketService::class)->recomputePrice($p);
+        $konzept->slots()->create(['team_id' => $t->id, 'role' => 'Dessert', 'title' => 'Dessert', 'type' => 'paket', 'position' => 0, 'embedded_concept_id' => $paket->id]);
+        foreach ([$paket, $manuell, $konzept] as $c) {
+            app(ConceptService::class)->recomputeCache($c);
         }
-        app(ConceptService::class)->recomputeCache($konzept);
 
         return (object) ['basis' => $basis, 'gericht' => $gericht, 'dar' => $d, 'paket' => $paket, 'manuell' => $manuell, 'konzept' => $konzept];
     };
@@ -68,9 +67,9 @@ beforeEach(function () {
         'basis' => ($v = $k->basis->fresh()->ek_per_kg_eur) !== null ? round((float) $v, 2) : null,
         'gericht' => ($v = $k->gericht->fresh()->ek_per_kg_eur) !== null ? round((float) $v, 2) : null,
         'dar' => ($v = $k->dar->fresh()->ek_portion) !== null ? round((float) $v, 4) : null,
-        'paket' => ($v = $k->paket->fresh()->ek_per_person) !== null ? round((float) $v, 4) : null,
-        'manuell' => ($v = $k->manuell->fresh()->ek_per_person) !== null ? round((float) $v, 4) : null,
-        'manuell_preis' => (float) $k->manuell->fresh()->price_per_person,
+        'paket' => ($v = $k->paket->fresh()->ek_per_person_cache) !== null ? round((float) $v, 4) : null,
+        'manuell' => ($v = $k->manuell->fresh()->ek_per_person_cache) !== null ? round((float) $v, 4) : null,
+        'manuell_preis' => (float) $k->manuell->fresh()->price_per_person_cache,
         'konzept' => ($v = $k->konzept->fresh()->ek_per_person_cache) !== null ? round((float) $v, 4) : null,
     ];
     $this->artikel = function (Team $t, string $name, ?float $preis, ?FoodAlchemistSupplier $sup = null, array $gpAttrs = [], float $qty = 1.0, string $einheit = 'kg') {
@@ -111,7 +110,7 @@ it('★ dieselbe Kette mit einem Gefäß-GP: neuer Artikelpreis und Lead-Wechsel
     [$glas, $glasLa] = ($this->artikel)($this->rootTeam, 'Achenbachglas: Broich', 1.20, null,
         ['commodity_group_code' => '16', 'sub_category' => NonFoodRegeln::SUB_GESCHIRR], 12.0, 'Stk');   // 0,10 € je Stück
     $this->dar->aktualisieren($this->rootTeam, $k->dar->id, ['vessel_gp_id' => $glas->id]);
-    app(PaketService::class)->recomputePrice($k->paket->fresh());
+    app(ConceptService::class)->recomputeCache($k->paket->fresh());
     app(ConceptService::class)->recomputeCache($k->konzept->fresh());
     expect(($this->stand)($k)['dar'])->toBe(0.5)->and(($this->stand)($k)['paket'])->toBe(0.5)->and(($this->stand)($k)['konzept'])->toBe(0.5);
 

@@ -2,7 +2,6 @@
 
 use Platform\FoodAlchemist\Services\AngebotService;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -13,15 +12,14 @@ beforeEach(function () {
 });
 
 it('verlangt für neue Fixpreise auf Paket, Concept und Angebot eine Begründung', function () {
-    $packages = app(PaketService::class);
     $concepts = app(ConceptService::class);
     $offers = app(AngebotService::class);
-    $package = $packages->create($this->rootTeam, ['name' => 'Paket', 'price_mode' => 'auto']);
+    $package = $concepts->createPaket($this->rootTeam, ['name' => 'Paket', 'price_mode' => 'auto']);   // 98 · 2.6c: Paket = kind=paket-Concept
     $concept = $concepts->create($this->rootTeam, ['name' => 'Concept']);
     $offer = $offers->create($this->rootTeam, ['name' => 'Angebot']);
 
-    expect(fn () => $packages->update($this->rootTeam, $package->id, [
-        'price_mode' => 'fixed', 'price_per_person' => 20,
+    expect(fn () => $concepts->update($this->rootTeam, $package->id, [
+        'price_mode' => 'fixed', 'price_per_person_manual' => 20,
     ]))->toThrow(RuntimeException::class)
         ->and(fn () => $concepts->update($this->rootTeam, $concept->id, [
             'price_mode' => 'fixed', 'price_per_person_manual' => 30,
@@ -32,15 +30,14 @@ it('verlangt für neue Fixpreise auf Paket, Concept und Angebot eine Begründung
 });
 
 it('hält Fixpreise stabil und führt den Auto-Vergleich weiter', function () {
-    $packages = app(PaketService::class);
     $concepts = app(ConceptService::class);
     $offers = app(AngebotService::class);
-    $package = $packages->create($this->rootTeam, ['name' => 'Paket', 'price_mode' => 'auto']);
-    $packages->update($this->rootTeam, $package->id, [
-        'price_mode' => 'fixed', 'price_per_person' => 20,
+    $package = $concepts->createPaket($this->rootTeam, ['name' => 'Paket', 'price_mode' => 'auto']);   // 98 · 2.6c: Paket = kind=paket-Concept
+    $concepts->update($this->rootTeam, $package->id, [
+        'price_mode' => 'fixed', 'price_per_person_manual' => 20,
         'price_override_reason' => 'Rahmenvertrag',
     ]);
-    $packages->recomputePrice($package->fresh());
+    $concepts->recomputeCache($package->fresh());
 
     $concept = $concepts->create($this->rootTeam, ['name' => 'Concept']);
     $concepts->update($this->rootTeam, $concept->id, [
@@ -57,8 +54,7 @@ it('hält Fixpreise stabil und führt den Auto-Vergleich weiter', function () {
     $offers->aktualisiereAutoPreis($this->rootTeam, $offer->fresh());
 
     expect($package->fresh()->price_mode)->toBe('fixed')
-        ->and((float) $package->fresh()->price_per_person)->toBe(20.0)
-        ->and($package->fresh()->calculated_price_per_person)->toBeNull()
+        ->and((float) $package->fresh()->price_per_person_cache)->toBe(20.0)
         ->and($concept->fresh()->price_mode)->toBe('fixed')
         ->and((float) $concept->fresh()->price_per_person_cache)->toBe(30.0)
         ->and((float) $concept->fresh()->calculated_price_per_person)->toBe(0.0)

@@ -178,14 +178,9 @@ class AngebotEinfrierService
             return;
         }
         $gesehen[$concept->id] = true;
-        foreach ($concept->slots()->with(['paket.dishes', 'embeddedConcept'])->get() as $slot) {
+        foreach ($concept->slots()->with(['embeddedConcept'])->get() as $slot) {
             if ($slot->sales_recipe_id !== null) {
                 $ids[(int) $slot->sales_recipe_id] = true;
-            }
-            foreach ($slot->paket?->dishes ?? [] as $pg) {
-                if ($pg->sales_recipe_id !== null) {
-                    $ids[(int) $pg->sales_recipe_id] = true;
-                }
             }
             if ($slot->embeddedConcept !== null) {
                 $this->gerichteDesConcepts($slot->embeddedConcept, $ids, $gesehen, $tiefe + 1);

@@ -71,7 +71,6 @@ class ConceptsGetTool extends FoodAlchemistTool implements ToolContract, ToolMet
                     'title' => $s->title, 'wording' => $s->wording, 'is_pflicht' => (bool) $s->is_pflicht, 'dish_brief' => $s->dish_brief, 'dish_brief_note' => $s->dish_brief_note,
                     'text_content' => $s->type === 'text' ? $s->text_content : null,   // Hinweistext-Bausteine („serviert im Schraubglas“) per MCP prüfbar
                     'vk_recipe' => $s->dish ? ['id' => $s->dish->id, 'name' => $s->dish->name, 'sales_net' => $s->dish->vk_netto] : null,   // Spec 85 D-1
-                    'paket' => $s->package ? ['id' => $s->package->id, 'name' => $s->package->name, 'price_per_person' => app(\Platform\FoodAlchemist\Services\PaketPreisService::class)->anwenden($s->package, $team)->price_per_person] : null,
                     // aufgelöste Darreichung im Konzept-Kontext (explizit am Slot > Konzept-Servierform > Standard)
                     'resolved_presentation' => $darreichung ? [
                         'presentation_id' => $darreichung->id,

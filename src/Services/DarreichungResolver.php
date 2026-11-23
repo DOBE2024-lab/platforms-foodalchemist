@@ -6,7 +6,6 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaketGericht;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
@@ -47,15 +46,6 @@ class DarreichungResolver
         }
 
         return $this->standardFuer($slot->dish);
-    }
-
-    public function fuerPaketGericht(FoodAlchemistPaketGericht $pg): ?FoodAlchemistRecipeDarreichung
-    {
-        if ($pg->presentation_id !== null && $pg->presentation !== null) {
-            return $pg->presentation;
-        }
-
-        return $pg->dish !== null ? $this->standardFuer($pg->dish) : null;
     }
 
     /**

@@ -4,7 +4,6 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -25,13 +24,12 @@ beforeEach(function () {
 
     $this->arten = [
         'concept' => fn (array $a) => FoodAlchemistConcept::create($a + ['team_id' => $this->master->id]),
-        'paket' => fn (array $a) => FoodAlchemistPaket::create($a + ['team_id' => $this->master->id]),
         'format' => fn (array $a) => FoodAlchemistFormat::create($a + ['team_id' => $this->master->id]),
     ];
-    $this->klassen = ['concept' => FoodAlchemistConcept::class, 'paket' => FoodAlchemistPaket::class, 'format' => FoodAlchemistFormat::class];
+    $this->klassen = ['concept' => FoodAlchemistConcept::class, 'format' => FoodAlchemistFormat::class];   // 98 · 2.6c: Alt-Paket-Art entfallen
 });
 
-dataset('arten', ['concept', 'paket', 'format']);
+dataset('arten', ['concept', 'format']);
 
 it('Fassung ist in keiner normalen Abfrage, mitFassungen() findet sie · :dataset', function (string $art) {
     $klasse = $this->klassen[$art];
@@ -69,25 +67,22 @@ it('fassungen() liefert die Fassungen der Arbeitszeile, neueste zuerst · :datas
     expect($arbeit->fassungen()->pluck('fassung_nr')->map(fn ($v) => (int) $v)->all())->toBe([3, 2, 1]);
 })->with('arten');
 
-it('Verweise lösen Fassungen auf: Slot zeigt auf Konzept- und Paket-Fassung', function () {
+it('Verweise lösen Fassungen auf: Slot zeigt auf Konzept- und Paket-Konzept-Fassung', function () {
     $konzept = ($this->arten['concept'])(['name' => 'Menü']);
     $kFassung = ($this->arten['concept'])(['name' => 'Menü', 'ist_fassung' => true, 'fassung_von_id' => $konzept->id, 'fassung_nr' => 1]);
-    $paket = ($this->arten['paket'])(['name' => 'Salad Wall']);
-    $pFassung = ($this->arten['paket'])(['name' => 'Salad Wall', 'ist_fassung' => true, 'fassung_von_id' => $paket->id, 'fassung_nr' => 1]);
     $eingebettet = ($this->arten['concept'])(['name' => 'Paket-Konzept', 'kind' => 'paket']);
     $eFassung = ($this->arten['concept'])(['name' => 'Paket-Konzept', 'kind' => 'paket', 'ist_fassung' => true, 'fassung_von_id' => $eingebettet->id, 'fassung_nr' => 1]);
 
     $slot = FoodAlchemistConceptSlot::create(['team_id' => $this->master->id, 'concept_id' => $kFassung->id, 'position' => 1,
-        'package_id' => $pFassung->id, 'embedded_concept_id' => $eFassung->id]);
+        'embedded_concept_id' => $eFassung->id]);
     $slot = FoodAlchemistConceptSlot::find($slot->id);
 
     expect($slot->concept?->id)->toBe($kFassung->id)
-        ->and($slot->package?->id)->toBe($pFassung->id)
         ->and($slot->embeddedConcept?->id)->toBe($eFassung->id);
 });
 
-it('Scope-Merker gilt je Tabelle: Rezept-, Konzept-, Paket-, Format-Abfragen sind unabhängig vom ersten Aufruf', function () {
-    foreach (['paket', 'format', 'concept'] as $art) {
+it('Scope-Merker gilt je Tabelle: Rezept-, Konzept-, Format-Abfragen sind unabhängig vom ersten Aufruf', function () {
+    foreach (['format', 'concept'] as $art) {
         $klasse = $this->klassen[$art];
         $a = ($this->arten[$art])(['name' => 'Reihenfolge']);
         ($this->arten[$art])(['name' => 'Reihenfolge', 'ist_fassung' => true, 'fassung_von_id' => $a->id, 'fassung_nr' => 1]);

@@ -6,7 +6,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichungDelta;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\PlanungsblattService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\SpeiseplanService;
@@ -101,30 +100,24 @@ it('Konzept: Slot-Darreichung greift auch bei Menge in Portionen (vorher nur bei
     expect(($this->gpKg)($b)['Kartoffeln'])->toBe(2.5);          // 20 × 150 g ÷ 1200 g × 1000 g
 });
 
-it('Speiseplan: Eintrag gibt seine Darreichung an die Produktion, Paket seine Menge und Form je Gericht', function () {
+it('Speiseplan: Eintrag gibt seine Darreichung an die Produktion', function () {
     $svc = app(SpeiseplanService::class);
     $plan = $svc->create($this->rootTeam, ['name' => 'Kantine', 'start_date' => '2026-10-05', 'default_pax' => 100]);
     $eintrag = $svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => '2026-10-05', 'sales_recipe_id' => $this->gericht->id, 'presentation_id' => $this->kinder->id]);
 
-    $paket = app(PaketService::class)->create($this->rootTeam, ['name' => 'Beilagen-Duo']);
-    app(PaketService::class)->syncGerichte($this->rootTeam, $paket->id, [['sales_recipe_id' => $this->gericht->id, 'quantity' => 0.5, 'unit_vocab_id' => $this->portion->id]]);
-    $paket->dishes()->first()->update(['presentation_id' => $this->ohneSpeck->id]);
-    $paketEintrag = $svc->addEintrag($this->rootTeam, $plan->id, ['entry_date' => '2026-10-05', 'package_id' => $paket->id]);
+    // 98 · 2.6c: der Alt-Paket-Eintrag (package_id) mit eigener Menge/Form je Gericht ist entfallen
 
     // 98 · 3.3 S3-5: produktionsZiele liegt jetzt im Teil SpeiseplanMengen (privat wie vorher).
     $ziele = (new ReflectionMethod(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanMengen::class, 'produktionsZiele'))
         ->invoke(app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanMengen::class), $plan->fresh(['entries', 'lines']), $plan->fresh()->entries, '2026-10-05');
-    $byRef = collect($ziele)->keyBy(fn ($z) => str_contains($z['source_ref'], ':d') ? 'paket' : 'gericht');
-    expect($byRef['gericht']['presentation_id'])->toBe($this->kinder->id)
-        ->and($byRef['gericht']['portions'])->toBe(100)
-        ->and($byRef['paket']['presentation_id'])->toBe($this->ohneSpeck->id)
-        ->and((float) $byRef['paket']['portions'])->toBe(50.0);   // 0,5 Portion × 100 Pax
+    expect($ziele)->toHaveCount(1)
+        ->and($ziele[0]['presentation_id'])->toBe($this->kinder->id)
+        ->and($ziele[0]['portions'])->toBe(100);
 
     $b = $this->blatt->produktionsblattFuerZiele($this->rootTeam, array_values($ziele));
     $kg = ($this->gpKg)($b);
-    // Kinder 100 × 150 g → 12,5 Ansätze → 12,5 kg Kartoffeln, 2,5 kg Speck;
-    // Paket ohne Speck 50 × 250 g Kartoffeln = 12,5 kg Kartoffeln, 0 Speck.
-    expect($kg['Kartoffeln'])->toBe(25.0)->and($kg['Speck'])->toBe(2.5);
+    // Kinder 100 × 150 g → 12,5 Ansätze → 12,5 kg Kartoffeln, 2,5 kg Speck
+    expect($kg['Kartoffeln'])->toBe(12.5)->and($kg['Speck'])->toBe(2.5);
 });
 
 it('Form ohne Grammatur rechnet wie bisher über die Portionszahl (keine stille Änderung)', function () {

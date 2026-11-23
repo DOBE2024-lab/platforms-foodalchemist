@@ -8,7 +8,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptCategory;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptImage;
@@ -64,9 +63,7 @@ class ConceptService
         $concept = FoodAlchemistConcept::visibleToTeam($team)
             ->with([
                 'slots' => fn ($q) => $q->orderBy('position'),
-                'slots.package:id,name,role,class,price_per_person,ek_per_person,food_cost_percent,price_mode,price_stale',
                 // Menü-Ansicht: Paket-Gerichte mit Wording-Feldern (Wording-Kette)
-                'slots.package.dishes.dish:id,name,sales_wording_standard',
                 // Kaskade: eingebettetes Paket = kind=paket-Concept (Preis + Posten für Anzeige)
                 'slots.embeddedConcept:id,name,kind,class,price_per_person_cache,ek_per_person_cache,price_incomplete',
                 'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard,ek_total_eur,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.embeddedConcept.slots.dish.standardPresentation',
@@ -477,15 +474,6 @@ class ConceptService
                 'package_id' => null,
                 'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null,
             ]);
-        } elseif (! empty($in['package_id'])) {
-            \Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen::pruefe('Paket-Slot', 'Alte Pakete sind nur noch lesbar (Umzug ins Konzept-Modell). '
-                .'Ein Paket wird über embedded_concept_id (Konzept der Art Paket) eingehängt.');   // CQ 2.6b
-            $slot->update([
-                'type' => 'paket',
-                'package_id' => (int) $in['package_id'],
-                'embedded_concept_id' => null,
-                'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null,
-            ]);
         } elseif (! empty($in['sales_recipe_id'])) {
             app(SlotEinheitService::class)->pruefeBelegung($team, $slot, (int) $in['sales_recipe_id'], isset($in['unit_vocab_id']) ? (int) $in['unit_vocab_id'] : null);   // 17.11.: nur wirksame Einheit
             $slot->update([
@@ -686,7 +674,6 @@ class ConceptService
         $geladen = FoodAlchemistConcept::whereIn('id', $concepts->pluck('id')->all())
             ->with(['slots' => fn ($q) => $q->orderBy('position'),
                 'slots.unit:id,slug,dimension,default_in_g',
-                'slots.package:id,name,price_per_person,ek_per_person,price_stale',
                 'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete',
                 'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation'])
             ->get();
@@ -757,25 +744,12 @@ class ConceptService
     {
         $concept->loadMissing([
             'slots' => fn ($q) => $q->orderBy('position'),
-            'slots.package.dishes.dish:id,name',
-            'slots.package.dishes.unit:id,slug,display_de',
             'slots.dish:id,name', 'slots.unit:id,slug,display_de',
         ]);
 
         $zeilen = [];
         foreach ($concept->slots as $slot) {
-            if ($slot->package_id !== null && $slot->package) {
-                foreach ($slot->package->dishes as $bg) {
-                    $mpp = $bg->quantity !== null ? (float) $bg->quantity : null;
-                    $zeilen[] = [
-                        'role' => $slot->role, 'paket' => $slot->package->name,
-                        'gericht' => $bg->dish?->name ?? '—',
-                        'menge_pro_person' => $mpp,
-                        'unit' => $bg->unit?->display_de ?? $bg->unit?->slug,
-                        'gesamt_menge' => $mpp !== null && $personen !== null ? round($mpp * $personen, 2) : null,
-                    ];
-                }
-            } elseif ($slot->sales_recipe_id !== null && $slot->dish) {
+            if ($slot->sales_recipe_id !== null && $slot->dish) {
                 $mpp = $slot->quantity !== null ? (float) $slot->quantity : null;
                 $zeilen[] = [
                     'role' => $slot->role, 'paket' => null,
@@ -861,9 +835,10 @@ class ConceptService
             ]);
             foreach ($vorlage->slots as $slot) {
                 $neu->slots()->create([
-                    'team_id' => $team->id, 'role' => $slot->role, 'title' => $slot->title,
+                    'team_id' => $team->id, 'type' => $slot->type, 'role' => $slot->role, 'title' => $slot->title,
                     'position' => $slot->position, 'is_pflicht' => $slot->is_pflicht,
-                    'package_id' => $slot->package_id,          // Paket bleibt Referenz (zieht durch)
+                    'package_id' => $slot->package_id,          // Altspalte bis 3.1, nur Bestand
+                    'embedded_concept_id' => $slot->embedded_concept_id,   // 98 · 2.6c: Paket-Konzept bleibt Referenz (zieht durch)
                     'sales_recipe_id' => $slot->sales_recipe_id, 'quantity' => $slot->quantity,
                     'unit_vocab_id' => $slot->unit_vocab_id,
                 ]);
@@ -1296,12 +1271,6 @@ class ConceptService
                 foreach ($slot->embeddedConcept->slots as $eps) {
                     if ($eps->dish) {
                         $dishes[$eps->dish->id] = $eps->dish;
-                    }
-                }
-            } elseif ($slot->package) {
-                foreach ($slot->package->dishes as $pg) {
-                    if ($pg->dish) {
-                        $dishes[$pg->dish->id] = $pg->dish;
                     }
                 }
             }

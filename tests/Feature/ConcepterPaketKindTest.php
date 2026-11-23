@@ -130,7 +130,7 @@ it('Picker (gerichtKandidaten) zeigt Entwurf- und review-Gerichte (1.1f: Entwür
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'rd', 'name' => 'Review-Gericht',
         'status' => 'review', 'is_sales_recipe' => true, 'sales_net' => 3.00,
     ]);
-    $namen = app(\Platform\FoodAlchemist\Services\PaketService::class)
+    $namen = app(\Platform\FoodAlchemist\Services\AufbauKandidatenService::class)
         ->gerichtKandidaten($this->rootTeam, '')->pluck('name')->all();
     expect($namen)->toContain('Review-Gericht')
         ->and($namen)->toContain('Entwurf-Gericht');

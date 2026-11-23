@@ -144,3 +144,16 @@ Standard aus; auf io nach dem Apply an, Rückweg = aus).
 - **Architektur-Test** `Spec98PaketAltNurLesenTest`: keine neuen Massen-Schreibzugriffe auf die Alt-Tabellen ohne Schalterprüfung,
   `package_id`-/`paket_id`-Schreibstellen nur Bestand oder weniger.
 - Lesen bleibt unverändert (Detail, Kalkulation, Exporte, Parität). Entfernt wird der alte Code in 2.6c, die Spalten in 3.1.
+
+## Nach 2.6c
+
+Mit 2.6c sind die alten Paket-Seiten (`/pakete`, alter `/concepts`-Zweig), `PaketService`, `PaketPreisService`,
+`PaketFassungService` und die Alt-Paket-Tools entfernt. Damit entfallen auch:
+
+- das Kommando `foodalchemist:pakete-to-concepts` (Trockenlauf, Apply, Journal-Rückweg aus Schritt 3, 4 und 6),
+- der Schalter `foodalchemist.paket_alt_nur_lesen` (`FOODALCHEMIST_PAKET_ALT_NUR_LESEN`); ein gesetzter Wert in `.env` auf io wirkt nicht mehr und kann weg.
+
+Neue Verweise auf alte Pakete (`package_id` am Concept-Slot und am Speiseplan-Eintrag, Typ `paket` in Bestellvorlagen) lehnt der Code
+jetzt immer ab. Die Models `FoodAlchemistPaket` und `FoodAlchemistPaketGericht` sind entfernt; eine Bestell-Quelle vom Typ `paket`
+(Alt-Paket) wird nicht mehr aufgelöst, ein Paket kommt als Konzept (`kind=paket`) in die Bestellung. Die Tabellen `foodalchemist_packages`/`_package_dishes` und die `package_id`-Spalten bleiben bis Plan 3.1 stehen.
+Ein Rückweg geht nur noch über den Tabellen-Dump vom 22.11. (Stufe 2 aus Schritt 6), nicht mehr über das Journal.

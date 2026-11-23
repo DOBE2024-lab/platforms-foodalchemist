@@ -6,21 +6,18 @@ use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
-use Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 
 /** Eine Recompute-Reihenfolge für alle mengenunabhängigen Live-Preise. */
 class PricingCascadeService
 {
     public function __construct(
-        private PaketService $packages,
         private ConceptService $concepts,
         private AngebotService $offers,
     ) {
     }
 
-    /** @return array{presentations:int,packages:int,concepts:int,offers:int} */
+    /** @return array{presentations:int,concepts:int,offers:int} */
     public function recomputeTeam(Team $team, int $chunk = 200): array
     {
         // Spec 84 B3 C: die Kaskade rechnet die Zeilen des übergebenen Teams — gelesen wird in dessen Sicht (Rezepte, Pakete, Konzepte,
@@ -30,7 +27,7 @@ class PricingCascadeService
 
     private function recomputeTeamImTeam(Team $team, int $chunk): array
     {
-        $stats = ['presentations' => 0, 'packages' => 0, 'concepts' => 0, 'offers' => 0];
+        $stats = ['presentations' => 0, 'concepts' => 0, 'offers' => 0];
         $presentations = app(DarreichungService::class);
         FoodAlchemistRecipeDarreichung::where('team_id', $team->id)->chunkById($chunk, function ($rows) use (&$stats, $presentations) {
             foreach ($rows as $row) {
@@ -38,15 +35,6 @@ class PricingCascadeService
                 $stats['presentations']++;
             }
         });
-        // CQ 2.6b: nach dem Umzug sind alte Pakete eingefroren (nur lesend) — ihr Preis lebt im Paket-Concept weiter
-        if (! PaketAltNurLesen::aktiv()) {
-            FoodAlchemistPaket::where('team_id', $team->id)->where('price_mode', 'auto')->chunkById($chunk, function ($rows) use (&$stats) {
-                foreach ($rows as $row) {
-                    $this->packages->recomputePrice($row);
-                    $stats['packages']++;
-                }
-            });
-        }
         // Eingebettete Concepts können auf andere Concept-Caches zeigen: zwei idempotente Pässe.
         for ($pass = 0; $pass < 2; $pass++) {
             FoodAlchemistConcept::where('team_id', $team->id)->chunkById($chunk, function ($rows) use (&$stats, $pass) {
@@ -75,12 +63,12 @@ class PricingCascadeService
      * dem Preisgraphen und vermeidet einen Vollscan über fremde Katalogbereiche.
      *
      * @param  array<int|string>  $recipeIds
-     * @return array{packages:int,concepts:int,offers:int}
+     * @return array{concepts:int,offers:int}
      */
     public function recomputeRecipes(array $recipeIds): array
     {
         $recipeIds = collect($recipeIds)->map(fn ($id) => (int) $id)->filter()->unique()->values();
-        $stats = ['packages' => 0, 'concepts' => 0, 'offers' => 0];
+        $stats = ['concepts' => 0, 'offers' => 0];
         if ($recipeIds->isEmpty()) {
             return $stats;
         }
@@ -94,25 +82,10 @@ class PricingCascadeService
 
             // Spec 84 B3 C: je Team in dessen Sicht (Rezept-Recompute ruft das für fremde Teams auf); bei Stufe 0 unverändert
             \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm($team, function () use ($team, $recipeIds, &$stats) {
-                $packageIds = DB::table('foodalchemist_package_dishes')
-                    ->whereIn('sales_recipe_id', $recipeIds)->whereNull('deleted_at')
-                    ->distinct()->pluck('package_id');
-                // auch manuell bepreiste Pakete: recomputePrice lässt deren Preis stehen, frischt aber EK und W% (18.11.2026: Paket-EK blieb sonst alt)
-                // CQ 2.6b: alte Pakete nach dem Umzug nicht mehr nachrechnen (nur lesend); Concepts mit Verweis laufen unten weiter
-                FoodAlchemistPaket::where('team_id', $team->id)->whereIn('id', PaketAltNurLesen::aktiv() ? [] : $packageIds)
-                    ->get()->each(function ($package) use (&$stats) {
-                        $this->packages->recomputePrice($package);
-                        $stats['packages']++;
-                    });
-
                 $conceptIds = DB::table('foodalchemist_concept_slots')
                     ->whereNull('deleted_at')
-                    ->where(function ($query) use ($recipeIds, $packageIds) {
-                        $query->whereIn('sales_recipe_id', $recipeIds);
-                        if ($packageIds->isNotEmpty()) {
-                            $query->orWhereIn('package_id', $packageIds);
-                        }
-                    })->distinct()->pluck('concept_id')->map(fn ($id) => (int) $id)->values()->all();
+                    ->whereIn('sales_recipe_id', $recipeIds)
+                    ->distinct()->pluck('concept_id')->map(fn ($id) => (int) $id)->values()->all();
 
                 // Eingebettete Paket-/Concept-Kaskade von unten nach oben auflösen.
                 $frontier = $conceptIds;

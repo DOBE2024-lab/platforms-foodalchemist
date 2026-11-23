@@ -16,7 +16,6 @@ return [
     'Services/FoodbookService.php::dupliziere' => 'Kopie ins eigene Team, auch geerbter Foodbooks (team_id = Team, neue Ids, eigene Bilddateien über DuplikatBilderService); das Original wird nur gelesen (98 · Bild-Löschschutz PR 2)',
     'Services/MatchService.php::bulkFuerLieferant' => 'legt nur eigene Match-Vorschläge an; sichtbare Artikel werden nur gelesen',
     'Services/OrderService.php::addManualLine' => 'eigene Bestellzeile, die einen sichtbaren Lieferantenartikel referenziert (bestellbar = sichtbar)',
-    'Services/PaketService.php::duplicate' => 'Kopie ins eigene Team (anpassen = eigene Kopie); das Original wird nur gelesen',
     'Services/PreislistenImportService.php::stage' => 'nur Staging-Zeilen des eigenen Teams; sichtbare Lieferanten werden nur gelesen',
     'Services/RecipeService.php::duplicate' => 'Kopie ins eigene Team (anpassen = eigene Kopie); das Original wird nur gelesen',
     'Services/SalesRecipeService.php::createFromBasis' => 'neues eigenes Gericht, das ein sichtbares Basisrezept referenziert (Master-Vererbung)',

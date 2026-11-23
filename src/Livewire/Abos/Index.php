@@ -31,9 +31,9 @@ class Index extends Component
     public string $neuMandantId = '';
 
     /** Arten im Abo (PR 8): Anzeige-Name, Tabelle der Fassungen. */
-    private const ARTEN = ['recipe' => ['Rezept', 'foodalchemist_recipes'], 'paket' => ['Paket', 'foodalchemist_packages'], 'concept' => ['Konzept', 'foodalchemist_concepts'], 'format' => ['Format', 'foodalchemist_formats']];
+    private const ARTEN = ['recipe' => ['Rezept', 'foodalchemist_recipes'], 'concept' => ['Konzept', 'foodalchemist_concepts'], 'format' => ['Format', 'foodalchemist_formats']];
 
-    /** Offene Vorschau: ['art' => 'kuendigen', 'abo_id' => int] oder ['art' => 'zurueckziehen', 'sammlung_id' => int, 'objekt_id' => int, 'typ' => 'recipe'|'paket'|'concept'|'format'] */
+    /** Offene Vorschau: ['art' => 'kuendigen', 'abo_id' => int] oder ['art' => 'zurueckziehen', 'sammlung_id' => int, 'objekt_id' => int, 'typ' => 'recipe'|'concept'|'format'] */
     public ?array $vorschauFuer = null;
 
     public bool $bestaetigt = false;

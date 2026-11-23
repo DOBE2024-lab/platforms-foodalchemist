@@ -35,7 +35,6 @@
         "mengenMatrix": "(Platform\\Core\\Models\\Team $team, Platform\\FoodAlchemist\\Models\\FoodAlchemistSpeiseplan $plan, string $mahlzeit, Illuminate\\Support\\Carbon $montag, ?Platform\\FoodAlchemist\\Models\\FoodAlchemistOutlet $outlet = NULL): array",
         "monatsRaster": "(Platform\\FoodAlchemist\\Models\\FoodAlchemistSpeiseplan $plan, int $jahr, int $monat, ?string $mahlzeit = NULL, ?Platform\\FoodAlchemist\\Models\\FoodAlchemistOutlet $outlet = NULL): array",
         "paginateBrowser": "(array $filters, Platform\\Core\\Models\\Team $team, int $perPage = 100): Illuminate\\Pagination\\LengthAwarePaginator",
-        "paketKandidaten": "(Platform\\Core\\Models\\Team $team, string $suche, int $limit = 50): Illuminate\\Support\\Collection",
         "planIst": "(Platform\\Core\\Models\\Team $team, Platform\\FoodAlchemist\\Models\\FoodAlchemistSpeiseplan $plan, string $mahlzeit, Illuminate\\Support\\Carbon $montag, ?Platform\\FoodAlchemist\\Models\\FoodAlchemistOutlet $outlet = NULL): array",
         "planWordingRegenerieren": "(Platform\\Core\\Models\\Team $team, int $planId): array",
         "removeEintrag": "(Platform\\Core\\Models\\Team $team, int $id): void",

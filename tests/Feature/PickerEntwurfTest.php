@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
-use Platform\FoodAlchemist\Services\PaketService;
+use Platform\FoodAlchemist\Services\AufbauKandidatenService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -22,23 +22,23 @@ beforeEach(function () {
 });
 
 it('Gericht-Picker: Entwurf und Prüfen wählbar, Platzhalter und Veraltet nicht; Status für die Kennzeichnung geladen', function () {
-    $liste = app(PaketService::class)->gerichtKandidaten($this->rootTeam, '', ['hauptgruppe' => $this->hg->id]);
+    $liste = app(AufbauKandidatenService::class)->gerichtKandidaten($this->rootTeam, '', ['hauptgruppe' => $this->hg->id]);
     expect($liste->pluck('name')->all())->toEqualCanonicalizing(['Gericht Freigegeben', 'Gericht Prüfen', 'Gericht Entwurf'])
         ->and($liste->firstWhere('name', 'Gericht Entwurf')->status->label())->toBe('Entwurf');
 });
 
 it('Basis-Picker (Concepter): dieselbe Regel', function () {
-    expect(app(PaketService::class)->basisKandidaten($this->rootTeam, 'Basis')->pluck('name')->all())
+    expect(app(AufbauKandidatenService::class)->basisKandidaten($this->rootTeam, 'Basis')->pluck('name')->all())
         ->toEqualCanonicalizing(['Basis Freigegeben', 'Basis Prüfen', 'Basis Entwurf']);
 });
 
 it('Chip-Zähler = Listenlänge (Picker-Sicht), auch mit weiterem Filter', function () {
     $sales = app(SalesRecipeService::class);
-    $liste = app(PaketService::class)->gerichtKandidaten($this->rootTeam, '', ['hauptgruppe' => $this->hg->id]);
+    $liste = app(AufbauKandidatenService::class)->gerichtKandidaten($this->rootTeam, '', ['hauptgruppe' => $this->hg->id]);
     expect($sales->hauptgruppenCounts($this->rootTeam, ['waehlbar' => true])[$this->hg->id])->toBe($liste->count());
 
     $filter = ['hauptgruppe' => null, 'class' => null, 'geschmack' => 'herzhaft', 'diet_form' => ''];
     $this->makeRecipe($this->rootTeam, 'Gericht Herzhaft', ['is_sales_recipe' => true, 'status' => 'draft', 'dish_main_group_id' => $this->hg->id, 'taste_direction' => 'herzhaft']);
     expect($sales->hauptgruppenCounts($this->rootTeam, ['waehlbar' => true] + $filter)[$this->hg->id])
-        ->toBe(app(PaketService::class)->gerichtKandidaten($this->rootTeam, '', ['hauptgruppe' => $this->hg->id] + $filter)->count());
+        ->toBe(app(AufbauKandidatenService::class)->gerichtKandidaten($this->rootTeam, '', ['hauptgruppe' => $this->hg->id] + $filter)->count());
 });

@@ -19,7 +19,6 @@ use Platform\FoodAlchemist\Services\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\ConcepterBewertungService;
 use Platform\FoodAlchemist\Services\KalkulationService;
 use Platform\FoodAlchemist\Services\OrderCostingService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
 
 /**
@@ -40,8 +39,7 @@ class Editor extends Component
 
     /**
      * Spec 65: Sperre gilt dem geöffneten Datensatz. Konzept UND kind=paket-Concept (Kaskade) sind Concepts → Typ
-     * 'concept' (gleich mit Concepts-Seite und Concepter-Detailspalte); das Alt-Paket (type pakete,
-     * FoodAlchemistPaket) → Typ 'paket' (gleich mit der Pakete-Seite).
+     * 'concept' (gleich mit der Concepter-Detailspalte). Der Alt-Paket-Zweig ist mit Plan 98 · 2.6c entfallen.
      */
     protected function sperrZiel(): ?array
     {
@@ -49,7 +47,7 @@ class Editor extends Component
             return null;
         }
 
-        return [$this->type === 'pakete' ? 'paket' : 'concept', $this->id];
+        return ['concept', $this->id];
     }
 
     protected function sperrModalName(): ?string
@@ -190,7 +188,7 @@ class Editor extends Component
         return ['concept', $this->type === 'concepts' ? $this->id : null];
     }
 
-    public string $type = 'concepts';   // concepts | pakete
+    public string $type = 'concepts';   // seit 98 · 2.6c nur noch concepts (Alt-Paket-Zweig entfallen)
 
     public ?int $id = null;
 
@@ -260,12 +258,6 @@ class Editor extends Component
 
     public string $paketName = '';
 
-    // Aufbau (Paket): Gericht-Suche
-    public string $paketGerichtSuche = '';
-
-    // Aufbau (Paket): Quelle des Posten-Pickers — Gericht (VK) oder Basisrezept (z. B. Hausbrot im Brotkorb-Paket).
-    public string $paketQuelle = 'gericht';
-
     // Aufbau · Gericht-Baum (Picker-Filter, geteilt von Concept-Slot + Paket-Schnüren):
     // gleiche VK-Hauptgruppe→Klasse-Kaskade wie der VK-Browser, damit man Gerichte
     // browsen statt nur tippen kann (Feedback D.B. 2026-06-13).
@@ -314,14 +306,14 @@ class Editor extends Component
     public function oeffnen(string $type, ?int $id, ?string $startTab = null): void
     {
         // Spec 65: anderer Datensatz (auch Sprung ins Paket und zurück) → eigene Sperre am bisherigen freigeben.
-        $neuesZiel = $id !== null ? [$type === 'pakete' ? 'paket' : 'concept', $id] : null;
+        $neuesZiel = $id !== null ? ['concept', $id] : null;
         if ($this->sperrZiel() !== null && $this->sperrZiel() !== $neuesZiel) {
             $this->bearbeitenBeenden();
         }
         $this->reset(['form', 'slotForm', 'blockForm', 'auswahl', 'paketName', 'neuerSlotRolle', 'fillSlotId', 'fillOpenId', 'einfuegenNachId', 'linkeListe', 'paketKlasse', 'paketServierform', 'paketEventtyp', 'paketMoment', 'paketSaison', 'basisSuche', 'kombiSuche', 'basisHg', 'basisKat', 'basisNiveau', 'gerichtSuche', 'pickTyp',
-            'paketGerichtSuche', 'paketQuelle', 'pickHg', 'pickKlasse', 'pickGeschmack', 'pickDiaet', 'zutatenOffenSlotId', 'menueKohaesion', 'slotVorschlaege',
+            'pickHg', 'pickKlasse', 'pickGeschmack', 'pickDiaet', 'zutatenOffenSlotId', 'menueKohaesion', 'slotVorschlaege',
             'zielModus', 'zielPreis', 'zielVorschlag', 'simulationPax', 'rueckSprungConceptId', 'fehler']);
-        $this->type = in_array($type, ['concepts', 'pakete'], true) ? $type : 'concepts';
+        $this->type = 'concepts';   // 98 · 2.6c: einziger Typ; ein altes 'pakete' öffnet die Id als Concept
         $this->id = $id;
         // Start-Tab: der KI-Kopf/Planung-Flow öffnet direkt auf „Konzept & Planung" ('konzept') zur
         // Prüfung; ein ungültiger/fehlender Wert bleibt beim Aufbau-Default (Öffnen aus der Step-Zeile).
@@ -331,52 +323,37 @@ class Editor extends Component
         }
 
         $team = $this->team();
-        if ($this->type === 'pakete') {
-            $p = app(PaketService::class)->detail($team, $id);
-            if ($p === null) {
-                return;
-            }
-            $this->form = [
-                'name' => $p->name, 'consumer_name' => $p->consumer_name ?? '',
-                'role' => $p->role ?? '', 'class' => $p->class ?? '', 'level' => $p->level ?? '',
-                'price_mode' => $p->price_mode, 'price_per_person' => $p->price_per_person,
-                'price_override_reason' => $p->price_override_reason ?? '',
-                'ek_per_person' => $p->ek_per_person, 'food_cost_percent' => $p->food_cost_percent,
-                'description' => $p->description ?? '', 'note' => $p->note ?? '',
-            ];
-        } else {
-            $c = app(ConceptService::class)->detail($team, $id);
-            if ($c === null) {
-                return;
-            }
-            $this->form = [
-                'name' => $c->name, 'consumer_name' => $c->consumer_name ?? '',
-                'class' => $c->class ?? '', 'level' => $c->level ?? '', 'occasion' => $c->occasion ?? '',
-                'category_id' => $c->category_id, 'taste_direction' => $c->taste_direction ?? '',
-                'writing_style_id' => $c->writing_style_id, 'status' => $c->status,
-                'description' => $c->description ?? '', 'additional_text' => $c->additional_text ?? '',
-                'brief' => $c->brief ?? '', 'diet_requirement' => $c->diet_requirement ?? '',
-                'structure_requirement' => $c->structure_requirement ?? '', 'season' => $c->season ?? '',
-                'target_group' => $c->target_group ?? '', 'target_price_per_person' => $c->target_price_per_person,
-                'price_mode' => $c->price_mode ?? 'auto', 'price_per_person_manual' => $c->price_per_person_manual,
-                'price_override_reason' => $c->price_override_reason ?? '',
-                'price_display' => $c->price_display ?? 'gesamt',
-                'note' => $c->note ?? '',
-                // Facetten (Umbau-Spec Phase 4b)
-                'serving_form_id' => $c->serving_form_id, 'event_type_id' => $c->event_type_id,
-                'einsatzmoment_ids' => $c->serviceMoments()->pluck('foodalchemist_service_moments.id')->all(),
-                'saison_ids' => $c->seasons()->pluck('foodalchemist_seasons.id')->all(),
-            ];
-            $this->slotForm = $c->slots->mapWithKeys(fn ($s) => [$s->id => ['role' => $s->role ?? '', 'title' => $s->title ?? '', 'is_pflicht' => (bool) $s->is_pflicht, 'quantity' => $s->quantity, 'unit_vocab_id' => $s->unit_vocab_id, 'wording' => $s->wording ?? '']])->all();
-            $this->blockForm = $c->slots->mapWithKeys(fn ($s) => [$s->id => [
-                'title' => $s->title ?? '', 'text_content' => $s->text_content ?? '',
-                'price_value' => $s->price_value, 'price_basis' => $s->price_basis ?? 'person', 'height' => $s->height ?? 'mittel',
-            ]])->all();
-            // #389/Canvas: Concept-Canvas (kreatives Foodkonzept) über die zentrale Mechanik laden.
-            $this->canvasInit('concept', 'concept', $id);
-            // R4.1: Planungs-Gerüst (Soll-Rahmen) des Konzepts.
-            $this->frameInit('concept', $id);
+        $c = app(ConceptService::class)->detail($team, $id);
+        if ($c === null) {
+            return;
         }
+        $this->form = [
+            'name' => $c->name, 'consumer_name' => $c->consumer_name ?? '',
+            'class' => $c->class ?? '', 'level' => $c->level ?? '', 'occasion' => $c->occasion ?? '',
+            'category_id' => $c->category_id, 'taste_direction' => $c->taste_direction ?? '',
+            'writing_style_id' => $c->writing_style_id, 'status' => $c->status,
+            'description' => $c->description ?? '', 'additional_text' => $c->additional_text ?? '',
+            'brief' => $c->brief ?? '', 'diet_requirement' => $c->diet_requirement ?? '',
+            'structure_requirement' => $c->structure_requirement ?? '', 'season' => $c->season ?? '',
+            'target_group' => $c->target_group ?? '', 'target_price_per_person' => $c->target_price_per_person,
+            'price_mode' => $c->price_mode ?? 'auto', 'price_per_person_manual' => $c->price_per_person_manual,
+            'price_override_reason' => $c->price_override_reason ?? '',
+            'price_display' => $c->price_display ?? 'gesamt',
+            'note' => $c->note ?? '',
+            // Facetten (Umbau-Spec Phase 4b)
+            'serving_form_id' => $c->serving_form_id, 'event_type_id' => $c->event_type_id,
+            'einsatzmoment_ids' => $c->serviceMoments()->pluck('foodalchemist_service_moments.id')->all(),
+            'saison_ids' => $c->seasons()->pluck('foodalchemist_seasons.id')->all(),
+        ];
+        $this->slotForm = $c->slots->mapWithKeys(fn ($s) => [$s->id => ['role' => $s->role ?? '', 'title' => $s->title ?? '', 'is_pflicht' => (bool) $s->is_pflicht, 'quantity' => $s->quantity, 'unit_vocab_id' => $s->unit_vocab_id, 'wording' => $s->wording ?? '']])->all();
+        $this->blockForm = $c->slots->mapWithKeys(fn ($s) => [$s->id => [
+            'title' => $s->title ?? '', 'text_content' => $s->text_content ?? '',
+            'price_value' => $s->price_value, 'price_basis' => $s->price_basis ?? 'person', 'height' => $s->height ?? 'mittel',
+        ]])->all();
+        // #389/Canvas: Concept-Canvas (kreatives Foodkonzept) über die zentrale Mechanik laden.
+        $this->canvasInit('concept', 'concept', $id);
+        // R4.1: Planungs-Gerüst (Soll-Rahmen) des Konzepts.
+        $this->frameInit('concept', $id);
 
         $this->dispatch('modal.open', name: 'concepter-editor');
     }
@@ -398,22 +375,18 @@ class Editor extends Component
         }
         $team = $this->team();
         try {
-            if ($this->type === 'pakete') {
-                app(PaketService::class)->update($team, $this->id, $this->normForm());
-            } else {
-                $svc = app(ConceptService::class);
-                $svc->update($team, $this->id, $this->normForm());
-                // Facetten-Mehrfachdimensionen (Umbau-Spec Phase 4b)
-                $svc->syncEinsatzmomente($team, $this->id, $this->form['einsatzmoment_ids'] ?? []);
-                $svc->syncSaisons($team, $this->id, $this->form['saison_ids'] ?? []);
-            }
+            $svc = app(ConceptService::class);
+            $svc->update($team, $this->id, $this->normForm());
+            // Facetten-Mehrfachdimensionen (Umbau-Spec Phase 4b)
+            $svc->syncEinsatzmomente($team, $this->id, $this->form['einsatzmoment_ids'] ?? []);
+            $svc->syncSaisons($team, $this->id, $this->form['saison_ids'] ?? []);
         } catch (\Throwable $e) {
             $this->fehler = $e->getMessage();
 
             return;
         }
         $this->fehler = null;
-        $this->savedToast($this->type === 'pakete' ? 'Paket gespeichert' : 'Konzept gespeichert');
+        $this->savedToast('Konzept gespeichert');
         $this->dispatch('concepter-gespeichert', id: $this->id);
     }
 
@@ -547,7 +520,7 @@ class Editor extends Component
     /** Auto wird sofort freigegeben; Fixierung erst zusammen mit Preis und Begründung. */
     public function setPreisModus(string $modus): void
     {
-        if (! in_array($this->type, ['concepts', 'pakete'], true)) {
+        if ($this->type !== 'concepts') {
             return;
         }
         $this->form['price_mode'] = in_array($modus, ['auto', 'fixed', 'manuell'], true) ? $modus : 'auto';
@@ -861,12 +834,6 @@ class Editor extends Component
                         $ids[(int) $eps->sales_recipe_id] = true;
                     }
                 }
-            } elseif ($s->package !== null) {
-                foreach ($s->package->dishes as $pg) {
-                    if ($pg->sales_recipe_id !== null) {
-                        $ids[(int) $pg->sales_recipe_id] = true;
-                    }
-                }
             }
         }
 
@@ -983,13 +950,17 @@ class Editor extends Component
     public function zurueckZumConcept(): void
     {
         $ziel = $this->rueckSprungConceptId;
+        if ($ziel === null) {
+            return;
+        }
         // Spec 65: Navigation ist frei; das Mit-Sichern des Paket-Kopfs nur mit eigener Sperre (sonst nur zurück).
-        if ($this->type === 'pakete' && $this->id !== null && (! self::sperreAktiv() || $this->darfSchreiben())) {
+        if ($this->id !== null && (! self::sperreAktiv() || $this->darfSchreiben())) {
             $this->speichern();
+            if ($this->fehler !== null) {
+                return;   // Speichern abgelehnt: im Paket bleiben, Hinweis steht
+            }
         }
-        if ($ziel !== null) {
-            $this->oeffnen('concepts', $ziel);
-        }
+        $this->oeffnen('concepts', $ziel);
     }
 
     /** Ziel-Position fürs Einfügen setzen/abwählen (die nächste neue Position landet darunter). */
@@ -1105,93 +1076,6 @@ class Editor extends Component
         $this->dispatch('concepter-gespeichert', id: $this->id);
     }
 
-    // ── Aufbau · Paket-Gerichte ──────────────────────────────────────────────
-
-    /** Park-Flow: Gericht mit der eingegebenen Menge/Person einfügen (Politur). */
-    public function gerichtHinzu(int $vkRecipeId, $quantity = null): void
-    {
-        if ($this->type !== 'pakete' || $this->id === null) {
-            return;
-        }
-        $svc = app(PaketService::class);
-        $paket = $svc->detail($this->team(), $this->id);
-        $items = $paket->dishes->map(fn ($g) => ['sales_recipe_id' => $g->sales_recipe_id, 'quantity' => $g->quantity, 'unit_vocab_id' => $g->unit_vocab_id])->all();
-        if (! collect($items)->pluck('sales_recipe_id')->contains($vkRecipeId)) {
-            $items[] = ['sales_recipe_id' => $vkRecipeId, 'quantity' => ($quantity !== null && $quantity !== '') ? (float) $quantity : null];
-        }
-        $svc->syncGerichte($this->team(), $this->id, $items);
-        $this->paketGerichtSuche = '';
-        $this->dispatch('concepter-gespeichert', id: $this->id);
-    }
-
-    public function gerichtRaus(int $vkRecipeId): void
-    {
-        $svc = app(PaketService::class);
-        $paket = $svc->detail($this->team(), $this->id);
-        $items = $paket->dishes->reject(fn ($g) => (int) $g->sales_recipe_id === $vkRecipeId)
-            ->map(fn ($g) => ['sales_recipe_id' => $g->sales_recipe_id, 'quantity' => $g->quantity, 'unit_vocab_id' => $g->unit_vocab_id])->values()->all();
-        $svc->syncGerichte($this->team(), $this->id, $items);
-        $this->dispatch('concepter-gespeichert', id: $this->id);
-    }
-
-    /** Darreichung je Paket-Gericht ('' = Standard). Preis und Produktion folgen der Form. */
-    public function paketGerichtDarreichungSetzen(int $rowId, ?string $wert): void
-    {
-        if ($this->type !== 'pakete' || $this->id === null) {
-            return;
-        }
-        try {
-            app(PaketService::class)->setGerichtDarreichung($this->team(), $rowId, ctype_digit((string) $wert) ? (int) $wert : null);
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-
-            return;
-        }
-        $this->dispatch('concepter-gespeichert', id: $this->id);
-    }
-
-    public function gerichtMengeSpeichern(int $rowId, $quantity): void
-    {
-        app(PaketService::class)->setGerichtMenge($this->team(), $this->id, $rowId, $quantity !== '' ? (float) $quantity : null);
-        $this->dispatch('concepter-gespeichert', id: $this->id);
-    }
-
-    public function gerichtHoch(int $rowId): void
-    {
-        $this->verschiebeGericht($rowId, -1);
-    }
-
-    public function gerichtRunter(int $rowId): void
-    {
-        $this->verschiebeGericht($rowId, 1);
-    }
-
-    private function verschiebeGericht(int $rowId, int $richtung): void
-    {
-        $svc = app(PaketService::class);
-        $ids = $svc->detail($this->team(), $this->id)->dishes->pluck('id')->all();
-        $pos = array_search($rowId, $ids, true);
-        $ziel = $pos + $richtung;
-        if ($pos === false || $ziel < 0 || $ziel >= count($ids)) {
-            return;
-        }
-        [$ids[$pos], $ids[$ziel]] = [$ids[$ziel], $ids[$pos]];
-        $svc->reorderGerichte($this->team(), $this->id, $ids);
-        $this->dispatch('concepter-gespeichert', id: $this->id);
-    }
-
-    public function neuBerechnen(): void
-    {
-        if ($this->type === 'pakete' && $this->id !== null) {
-            $p = app(PaketService::class)->detail($this->team(), $this->id);
-            app(PaketService::class)->recomputePrice($p);
-            $this->form['price_per_person'] = $p->refresh()->price_per_person;
-            $this->form['ek_per_person'] = $p->ek_per_person;
-            $this->form['food_cost_percent'] = $p->food_cost_percent;
-            $this->dispatch('concepter-gespeichert', id: $this->id);
-        }
-    }
-
     // ── Sektor-Eignung (Politur · Concept) ───────────────────────────────────
 
     public function sektorHinzu(): void
@@ -1245,7 +1129,7 @@ class Editor extends Component
      *
      * @return list<array<string,mixed>>
      */
-    private function anrichtenZeilen($concept, $paket, $team): array
+    private function anrichtenZeilen($concept, $team): array
     {
         $resolver = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class);
         $dar = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
@@ -1259,24 +1143,15 @@ class Editor extends Component
                 $s->setRelation('concept', $concept);
                 $nimm('slot-'.$s->id, (string) ($s->wording ?: ($s->dish?->name ?: ($s->title ?: 'Position'))), $resolver->fuerSlot($s));
             }
-        } elseif ($paket !== null) {
-            foreach ($paket->dishes as $pg) {
-                $d = $pg->presentation_id ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::with('servingForm')->find($pg->presentation_id)
-                    : ($pg->dish !== null ? $resolver->standardFuer($pg->dish) : null);
-                $nimm('posten-'.$pg->id, (string) ($pg->dish?->name ?: 'Posten'), $d);
-            }
         }
 
         return $zeilen;
     }
 
-    public function render(ConceptService $concepts, PaketService $pakete, ConcepterAggregateService $agg, ConcepterBewertungService $bewertung, KalkulationService $kalk, SalesRecipeService $sales)
+    public function render(ConceptService $concepts, \Platform\FoodAlchemist\Services\AufbauKandidatenService $aufbau, ConcepterAggregateService $agg, ConcepterBewertungService $bewertung, KalkulationService $kalk, SalesRecipeService $sales)
     {
         $team = $this->team();
         $concept = null;
-        $paket = null;
-        $paketFormen = [];      // pg-id ⇒ Formen des Gerichts (nur bei ≥ 2), für die Auswahl je Posten
-        $paketPosten = [];      // pg-id ⇒ geltende Form (Label, Gramm, VK) für die Anzeige
         $cockpit = null;
         $aggregat = null;
         $bewertet = null;
@@ -1292,7 +1167,6 @@ class Editor extends Component
         $zielWareneinsatzPct = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)
             ->zielWareneinsatzPct($team);
         $kandidaten = collect();
-        $paketKandidaten = collect();
         $istAufbau = $this->tab === 'aufbau';
         $istStammdaten = $this->tab === 'stammdaten';
         $istKonzeptTab = $this->tab === 'konzept';
@@ -1374,7 +1248,7 @@ class Editor extends Component
                     $linkeSuche = $this->kombiSuche !== '' ? $this->kombiSuche : $this->basisSuche;
                     $rechteSuche = $this->kombiSuche !== '' ? $this->kombiSuche : $this->gerichtSuche;
                     $basisListe = $this->linkeListe === 'basisrezept'
-                        ? $pakete->basisKandidaten($team, $linkeSuche, [
+                        ? $aufbau->basisKandidaten($team, $linkeSuche, [
                             'hauptgruppe' => $this->basisHg, 'category' => $this->basisKat, 'level' => $this->basisNiveau,
                         ])
                         : collect();
@@ -1388,52 +1262,15 @@ class Editor extends Component
                         ])
                         : collect();
                     $gerichtListe = $this->linkeListe === 'gericht'
-                        ? $pakete->gerichtKandidaten($team, $rechteSuche, $pickFilter)
+                        ? $aufbau->gerichtKandidaten($team, $rechteSuche, $pickFilter)
                         : collect();
                     if ($this->fillSlotId !== null) {
                         if ($this->pickTyp === 'basisrezept') {
-                            $kandidaten = $this->gerichtSuche !== '' ? $pakete->basisKandidaten($team, $this->gerichtSuche) : collect();
+                            $kandidaten = $this->gerichtSuche !== '' ? $aufbau->basisKandidaten($team, $this->gerichtSuche) : collect();
                         } elseif ($pickAktiv($this->gerichtSuche)) {
-                            $kandidaten = $pakete->gerichtKandidaten($team, $this->gerichtSuche, $pickFilter);
+                            $kandidaten = $aufbau->gerichtKandidaten($team, $this->gerichtSuche, $pickFilter);
                         }
                     }
-                }
-            }
-        } elseif ($this->id !== null && $this->type === 'pakete') {
-            $paket = $pakete->detail($team, $this->id);
-            if ($paket !== null) {
-                // Ebene 2: Paket-Kalkulation (VK/Person) folgt dem aktiven Betrieb.
-                $outlet = $team ? app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($team) : null;
-                $aggregat = $agg->paketAggregat($paket);
-                $deklaration = $istDeklarationTab ? $agg->paketDeklaration($paket) : null;
-                $kalkulation = $kalk->paketHk($team, $paket, $outlet);
-                if ($istAufbau) {
-                    $resolver = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class);
-                    $darSvc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
-                    $alleFormen = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::with('servingForm')
-                        ->whereIn('recipe_id', $paket->dishes->pluck('sales_recipe_id')->filter()->all())
-                        ->orderByDesc('is_standard')->orderBy('id')->get()->groupBy('recipe_id');
-                    foreach ($paket->dishes as $pg) {
-                        if (! ($pg->dish?->is_sales_recipe ?? false)) {
-                            continue;
-                        }
-                        $formen = $alleFormen->get($pg->sales_recipe_id, collect());
-                        $gramm = fn ($f) => ($g = $darSvc->grammJeEinheit($f, $pg->dish)) !== null ? (int) round($g * (float) ($f->unit_count ?: 1)) : null;
-                        if ($formen->count() > 1) {
-                            $paketFormen[$pg->id] = $formen->map(fn ($f) => ['id' => (int) $f->id, 'label' => $f->bezeichnung() ?? '—', 'gramm' => $gramm($f), 'standard' => (bool) $f->is_standard])->all();
-                        }
-                        $dar = $resolver->fuerPaketGericht($pg);
-                        if ($dar !== null) {
-                            $paketPosten[$pg->id] = ['label' => $dar->bezeichnung(), 'gramm' => $gramm($dar), 'vk' => $dar->sales_net !== null ? (float) $dar->sales_net : null];
-                        }
-                    }
-                }
-                if ($istAufbau && $this->paketQuelle === 'basisrezept') {
-                    $paketKandidaten = $this->paketGerichtSuche !== ''
-                        ? $pakete->basisKandidaten($team, $this->paketGerichtSuche)
-                        : collect();
-                } elseif ($istAufbau && $pickAktiv($this->paketGerichtSuche)) {
-                    $paketKandidaten = $pakete->gerichtKandidaten($team, $this->paketGerichtSuche, $pickFilter);
                 }
             }
         }
@@ -1497,9 +1334,6 @@ class Editor extends Component
             // Die Hauptgruppe reist jetzt im Filtersatz statt als eigener Parameter (MVP-048).
             'pickKlassenCounts' => $istAufbau && $this->pickHg !== null ? $sales->klassenCounts($team, ['waehlbar' => true] + $pickFilter) : [],
             'concept' => $concept,
-            'paket' => $paket,
-            'paketFormen' => $paketFormen,
-            'paketPosten' => $paketPosten,
             'cockpit' => $cockpit,
             'cockpitZeilen' => $cockpit ? collect($cockpit['zeilen'])->keyBy('slot_id') : collect(),
             'sektionSumme' => $sektionSumme,
@@ -1522,11 +1356,11 @@ class Editor extends Component
             'darreichungInfo' => $darreichungInfo,
             'zubehoerInfo' => $zubehoerInfo,
             'darreichungOptionen' => $darreichungOptionen,
-            'anrichtenZeilen' => $istAnrichtenTab ? $this->anrichtenZeilen($concept, $paket, $team) : [],
+            'anrichtenZeilen' => $istAnrichtenTab ? $this->anrichtenZeilen($concept, $team) : [],
             'kandidaten' => $kandidaten,
             'basisListe' => $basisListe ?? collect(),
             'paketListe' => $paketListe ?? collect(),
-            'paketKlassenListe' => $istAufbau && $this->type === 'concepts' ? $pakete->klassen($team) : [],
+            'paketKlassenListe' => $istAufbau && $this->type === 'concepts' ? $concepts->klassen($team) : [],
             'gerichtListe' => $gerichtListe ?? collect(),
             'basisHauptgruppen' => $istAufbau && $this->type === 'concepts' ? app(\Platform\FoodAlchemist\Services\RecipeService::class)->mainGroups($team) : collect(),
             'basisKategorien' => ($istAufbau && $this->type === 'concepts' && $this->basisHg !== null)
@@ -1535,7 +1369,6 @@ class Editor extends Component
                 : collect(),
             'basisNiveaus' => [['slug' => 'haute_cuisine', 'label' => 'Haute'], ['slug' => 'gehoben', 'label' => 'Gehoben'], ['slug' => 'klassisch', 'label' => 'Klassisch']],
             'typFarben' => app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->typFarben($team),
-            'paketKandidaten' => $paketKandidaten,
             'sektorSlugs' => $this->tab === 'notes' && $concept !== null ? $concepts->sektorEignungSlugs($concept) : [],   // Block steht im Reiter Notizen
             // 4c: Kategorie-Feld abgelöst — kategorienFlat nicht mehr benötigt
             // Facetten-Vokabulare (Umbau-Spec Phase 4b)
@@ -1548,8 +1381,7 @@ class Editor extends Component
                 ->where('is_inactive', false)->orderBy('sort_order')->get(['id', 'name']) : collect(),
             'saisons' => ($istStammdaten || $paketPickerFacetten) ? \Platform\FoodAlchemist\Models\FoodAlchemistSaison::visibleToTeam($team)
                 ->where('is_inactive', false)->orderBy('sort_order')->get(['id', 'name']) : collect(),
-            'klassen' => $istStammdaten ? ($this->type === 'pakete' ? $pakete->klassen($team) : $concepts->klassen($team)) : [],
-            'rollen' => $istStammdaten ? $pakete->rollen($team) : [],
+            'klassen' => $istStammdaten ? $concepts->klassen($team) : [],
             'schreibstile' => $istStammdaten ? FoodAlchemistWritingStyle::visibleToTeam($team)->where('is_inactive', false)
                 ->orderBy('sort_order')->orderBy('name')->get(['id', 'name']) : collect(),
             // Sensorik-Tab: Geschmacks-Balance + Textur über die Concept-Gerichte (nur wenn Tab aktiv).

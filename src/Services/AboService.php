@@ -172,7 +172,6 @@ class AboService
                 ->distinct()->pluck('o.objekt_id')->map(fn ($v) => (int) $v)->all();
         };
         $familien = $familienJe('recipe');
-        $paketFamilien = $familienJe('paket');
         $konzeptFamilien = $familienJe('concept');
         // Formate (PR 7): Kunden-Formate (origin=kunde) sind NIE abonnierbar (D8, Kunden-IP) — auch dann nicht, wenn sie in einer Sammlung stehen
         $formatFamilien = $familienJe('format');
@@ -180,41 +179,39 @@ class AboService
             $formatFamilien = DB::table('foodalchemist_formats')->whereIn('id', $formatFamilien)->where(fn ($w) => $w->whereNull('origin')->orWhere('origin', '!=', 'kunde'))
                 ->pluck('id')->map(fn ($v) => (int) $v)->all();
         }
-        if ($familien === [] && $paketFamilien === [] && $konzeptFamilien === [] && $formatFamilien === []) {
+        if ($familien === [] && $konzeptFamilien === [] && $formatFamilien === []) {
             return [];
         }
 
-        $leer = ['recipe' => [], 'paket' => [], 'concept' => [], 'format' => []];
-        $erst = $this->huelleAus($familien, $paketFamilien, $konzeptFamilien, $formatFamilien, $leer);
+        $leer = ['recipe' => [], 'concept' => [], 'format' => []];
+        $erst = $this->huelleAus($familien, $konzeptFamilien, $formatFamilien, $leer);
         // Spec 84 B3 Regel B (Dominique 17.10.): dazu jede ÄLTERE Fassung der abonnierten Familien, auf die noch etwas Eigenes des Mandanten
         // verweist (Rezept, Konzept, Paket, Angebot, Foodbook, Speiseplan, Speisekarte, Produktion, Bestellvorlage, Lager, Darreichung).
         // Als zusätzliche Saat in denselben Baum-Gang — so ziehen auch die alten Unter-Fassungen einer alten Fassung mit (Jus F1 → Fond F1).
         $saat = $this->referenzierteAlteFassungen($mandantTeamId, $erst, [
-            'recipe' => $familien, 'paket' => $paketFamilien, 'concept' => $konzeptFamilien, 'format' => $formatFamilien,
+            'recipe' => $familien, 'concept' => $konzeptFamilien, 'format' => $formatFamilien,
         ]);
         if ($saat === $leer) {
             return $erst;
         }
 
-        return $this->huelleAus($familien, $paketFamilien, $konzeptFamilien, $formatFamilien, $saat);
+        return $this->huelleAus($familien, $konzeptFamilien, $formatFamilien, $saat);
     }
 
     /**
      * Hülle aus den abonnierten Familien (jüngste Fassung je Familie samt Baum) plus `$saat` (zusätzliche Fassungs-IDs je Art, Regel B).
      *
      * @param  list<int>  $familien
-     * @param  list<int>  $paketFamilien
      * @param  list<int>  $konzeptFamilien
      * @param  list<int>  $formatFamilien
-     * @param  array{recipe: list<int>, paket: list<int>, concept: list<int>, format: list<int>}  $saat
+     * @param  array{recipe: list<int>, concept: list<int>, format: list<int>}  $saat
      * @return array<string, list<int>>
      */
-    private function huelleAus(array $familien, array $paketFamilien, array $konzeptFamilien, array $formatFamilien, array $saat): array
+    private function huelleAus(array $familien, array $konzeptFamilien, array $formatFamilien, array $saat): array
     {
-        // Konzepte (PR 4, auch kind=paket): je Familie die jüngste Fassung; ihre Slots zeigen auf Fassungen von Paket, eingebettetem
-        // Paket-Konzept (rekursiv) und Rezept — alle ziehen in die Hülle mit
+        // Konzepte (PR 4, auch kind=paket): je Familie die jüngste Fassung; ihre Slots zeigen auf Fassungen von eingebettetem
+        // Paket-Konzept (rekursiv) und Rezept — alle ziehen in die Hülle mit (Alt-Pakete entfallen mit 98 · 2.6c)
         $konzeptFassungen = array_merge($this->neuesteFassungenVon('foodalchemist_concepts', $konzeptFamilien), $saat['concept']);
-        $paketFassungen = array_merge($this->neuesteFassungenVon('foodalchemist_packages', $paketFamilien), $saat['paket']);
         $formatFassungen = $this->nurFassungen('foodalchemist_formats', array_merge($this->neuesteFassungenVon('foodalchemist_formats', $formatFamilien), $saat['format']));
         $rezeptSeeds = [];
         // Format-Slots zeigen auf Konzept-Fassungen (und über diese auf Pakete/Rezepte) — sie ziehen in die Konzept-Hülle mit
@@ -231,18 +228,13 @@ class AboService
             }
             $gesehenK = array_merge($gesehenK, $offenK);
             $slots = DB::table('foodalchemist_concept_slots')->whereIn('concept_id', $offenK)->whereNull('deleted_at')
-                ->get(['package_id', 'embedded_concept_id', 'sales_recipe_id']);
-            $paketFassungen = array_merge($paketFassungen, $slots->pluck('package_id')->filter()->map(fn ($v) => (int) $v)->all());
+                ->get(['embedded_concept_id', 'sales_recipe_id']);
             $rezeptSeeds = array_merge($rezeptSeeds, $slots->pluck('sales_recipe_id')->filter()->map(fn ($v) => (int) $v)->all());
             $offenK = $slots->pluck('embedded_concept_id')->filter()->map(fn ($v) => (int) $v)->all();
         }
         $konzeptFassungen = $this->nurFassungen('foodalchemist_concepts', $gesehenK);
-        $paketFassungen = $this->nurFassungen('foodalchemist_packages', $paketFassungen);
-        // Pakete: ihre Gerichte zeigen auf Rezept-Fassungen und ziehen in die Rezept-Hülle mit
-        $paketRezepte = $paketFassungen === [] ? [] : DB::table('foodalchemist_package_dishes')->whereIn('package_id', $paketFassungen)
-            ->whereNull('deleted_at')->pluck('sales_recipe_id')->map(fn ($v) => (int) $v)->all();
 
-        $offen = array_merge($this->neuesteFassungen($familien), $saat['recipe'], $rezeptSeeds, $paketRezepte);
+        $offen = array_merge($this->neuesteFassungen($familien), $saat['recipe'], $rezeptSeeds);
         $fertig = [];
         while ($offen !== []) {
             $offen = array_values(array_diff(array_unique($offen), $fertig));
@@ -260,9 +252,6 @@ class AboService
         if ($nurFassungen !== []) {
             $huelle['recipe'] = $nurFassungen;
         }
-        if ($paketFassungen !== []) {
-            $huelle['paket'] = $paketFassungen;
-        }
         if ($konzeptFassungen !== []) {
             $huelle['concept'] = $konzeptFassungen;
         }
@@ -274,7 +263,7 @@ class AboService
     }
 
     /**
-     * Spec 84 B3 Regel B · Ältere Fassungen, auf die noch etwas Eigenes des Mandanten verweist — je Art (recipe | paket | concept | format).
+     * Spec 84 B3 Regel B · Ältere Fassungen, auf die noch etwas Eigenes des Mandanten verweist — je Art (recipe | concept | format).
      *
      * - Kandidaten: nicht gelöschte Fassungen der Familien, die in der Hülle stehen (abonniert oder über den Baum erreicht), die noch NICHT in
      *   der Hülle sind (also ältere). Nur gegen diese wenigen IDs wird in den Quellen gesucht (Index auf den Verweis-Spalten).
@@ -285,11 +274,11 @@ class AboService
      *
      * @param  array<string, list<int>>  $huelle  Hülle aus dem ersten Gang
      * @param  array<string, list<int>>  $familien  abonnierte Familien je Art
-     * @return array{recipe: list<int>, paket: list<int>, concept: list<int>, format: list<int>}
+     * @return array{recipe: list<int>, concept: list<int>, format: list<int>}
      */
     private function referenzierteAlteFassungen(int $mandantTeamId, array $huelle, array $familien): array
     {
-        $tabellen = ['recipe' => 'foodalchemist_recipes', 'paket' => 'foodalchemist_packages', 'concept' => 'foodalchemist_concepts', 'format' => 'foodalchemist_formats'];
+        $tabellen = ['recipe' => 'foodalchemist_recipes', 'concept' => 'foodalchemist_concepts', 'format' => 'foodalchemist_formats'];
         $kandidaten = [];
         foreach ($tabellen as $art => $tabelle) {
             $drin = $huelle[$art] ?? [];
@@ -297,7 +286,7 @@ class AboService
             $kandidaten[$art] = $fam === [] ? [] : DB::table($tabelle)->whereIn('fassung_von_id', $fam)->where('ist_fassung', true)->whereNull('deleted_at')
                 ->when($drin !== [], fn ($q) => $q->whereNotIn('id', $drin))->pluck('id')->map(fn ($v) => (int) $v)->all();
         }
-        $saat = ['recipe' => [], 'paket' => [], 'concept' => [], 'format' => []];
+        $saat = ['recipe' => [], 'concept' => [], 'format' => []];
         if ($kandidaten === $saat) {
             return $saat;
         }
@@ -338,7 +327,6 @@ class AboService
             ['foodalchemist_recipe_ingredients', 'referenced_recipe_id', ['foodalchemist_recipes', 'recipe_id']],
             ['foodalchemist_concept_slots', 'sales_recipe_id', ['foodalchemist_concepts', 'concept_id']],
             ['foodalchemist_concept_slots', 'variant_source_recipe_id', ['foodalchemist_concepts', 'concept_id']],
-            ['foodalchemist_package_dishes', 'sales_recipe_id', ['foodalchemist_packages', 'package_id']],
             ['foodalchemist_offer_blocks', 'sales_recipe_id', ['foodalchemist_offer_chapters', 'chapter_id']],
             ['foodalchemist_foodbook_blocks', 'sales_recipe_id', ['foodalchemist_foodbook_chapters', 'chapter_id']],
             ['foodalchemist_menu_plan_entries', 'sales_recipe_id', null],
@@ -349,11 +337,6 @@ class AboService
             ['foodalchemist_inventory_stocks', 'recipe_id', null],
             ['foodalchemist_inventory_movements', 'recipe_id', null],
             ['foodalchemist_inventory_count_lines', 'recipe_id', null],
-        ],
-        'paket' => [
-            ['foodalchemist_concept_slots', 'package_id', ['foodalchemist_concepts', 'concept_id']],
-            ['foodalchemist_menu_plan_entries', 'package_id', null],
-            ['foodalchemist_order_template_lines', 'paket_id', null],
         ],
         'concept' => [
             ['foodalchemist_concept_slots', 'embedded_concept_id', ['foodalchemist_concepts', 'concept_id']],

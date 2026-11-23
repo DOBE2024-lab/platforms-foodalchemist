@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Services\Ai\SupplierItemEmbedBackfill;
 class EmbedCommand extends Command
 {
     protected $signature = 'foodalchemist:embed
-        {--pool=all : gps|recipes|knowledge|suppliers|concepts|foodbooks|lab_notes|speisekarten|angebote|pakete|formate|la|all}
+        {--pool=all : gps|recipes|knowledge|suppliers|concepts|foodbooks|lab_notes|speisekarten|angebote|formate|la|all}
         {--team= : nur diese reale team_id (Default: alle Partitionen)}
         {--purge : (nur pool=knowledge/all) verwaiste Vektoren entfernen — Probe-Delete über [1..maxId], off-peak (A2)}
         {--alt-partition= : (nur pool=knowledge/all) NACH dem Embedden die genannte Partition leerräumen — für Dossiers, die das Team gewechselt haben (Umzug auf global). purgeStale erreicht die nicht.}
@@ -39,7 +39,7 @@ class EmbedCommand extends Command
         $team = ($teamOpt === null || $teamOpt === '') ? null : (int) $teamOpt;
 
         $allowed = ['gps', 'recipes', 'knowledge', 'suppliers', 'concepts', 'foodbooks', 'lab_notes',
-            'speisekarten', 'angebote', 'pakete', 'formate', 'la', 'all'];
+            'speisekarten', 'angebote', 'formate', 'la', 'all'];
         if (! in_array($pool, $allowed, true)) {
             $this->error("Unbekannter --pool='{$pool}'. Erlaubt: " . implode('|', $allowed) . '.');
 
@@ -113,11 +113,6 @@ class EmbedCommand extends Command
         if ($pool === 'angebote' || $pool === 'all') {
             $stats = $pools->embedAngebote($team);
             $rows[] = ['Angebot', $stats['candidates'], $this->fmtPartitions($stats['partitions'])];
-        }
-
-        if ($pool === 'pakete' || $pool === 'all') {
-            $stats = $pools->embedPakete($team);
-            $rows[] = ['Paket', $stats['candidates'], $this->fmtPartitions($stats['partitions'])];
         }
 
         if ($pool === 'formate' || $pool === 'all') {

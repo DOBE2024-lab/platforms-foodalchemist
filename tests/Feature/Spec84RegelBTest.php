@@ -7,7 +7,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\AboKuendigungService;
@@ -18,8 +17,6 @@ use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\FormatFassungService;
 use Platform\FoodAlchemist\Services\FormatService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
-use Platform\FoodAlchemist\Services\PaketFassungService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\RezeptFolgeService;
 use Platform\FoodAlchemist\Support\AboSicht;
 use Platform\FoodAlchemist\Support\FaTeam;
@@ -78,21 +75,6 @@ beforeEach(function () {
                     'raw_text' => 'Kalbsjus', 'quantity' => '100', 'unit_vocab_id' => $this->unitG($t)->id, 'position' => 1]);
             },
         ],
-        'paket' => [
-            'modell' => FoodAlchemistPaket::class,
-            'neu' => fn () => app(PaketService::class)->create($this->master, ['name' => 'Fingerfood-Paket'])->id,
-            'aendern' => fn (int $id) => DB::table('foodalchemist_packages')->where('id', $id)->update(['name' => 'Fingerfood-Paket '.random_int(2, 999)]),
-            'publizieren' => fn (int $id, string $n) => app(PaketFassungService::class)->veroeffentlichen($this->master, $id, $n, $this->kurator)['fassung_id'],
-            // eigenes Konzept von $t mit einem Paket-Slot
-            'verweis' => function (Team $t, int $fassungId) {
-                $cs = app(ConceptService::class);
-                $k = FaTeam::imTeam($t, fn () => $cs->create($t, ['name' => 'Menü '.$t->id.'-'.$fassungId]));
-                $slot = FaTeam::imTeam($t, fn () => $cs->addSlot($t, $k->id, ['role' => 'Beilage']));
-                DB::table('foodalchemist_concept_slots')->where('id', $slot->id)->update(['type' => 'paket', 'package_id' => $fassungId]);
-
-                return $slot;
-            },
-        ],
         'concept' => [
             'modell' => FoodAlchemistConcept::class,
             'neu' => fn () => app(ConceptService::class)->create($this->master, ['name' => 'Schwaben-Menü'])->id,
@@ -143,7 +125,7 @@ beforeEach(function () {
     config(['foodalchemist.team_sicht.stufe' => 1]);
 });
 
-dataset('arten', ['recipe', 'paket', 'concept', 'format']);
+dataset('arten', ['recipe', 'concept', 'format']);   // 98 · 2.6c: Alt-Paket-Art entfallen
 
 it('aktuelle Fassung sichtbar, alte ohne Verweis nicht, alte mit eigenem Verweis sichtbar, fremder Verweis zählt nicht', function (string $art) {
     ['f1' => $f1, 'f2' => $f2] = $this->f[$art];

@@ -171,7 +171,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         // Spec 77d · Inhalt einer freigegebenen Ausgabe geändert → Hüllen der Standorte neu rechnen (nur wenn es Freigaben gibt)
         foreach ([
             \Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot::class, \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::class,
-            \Platform\FoodAlchemist\Models\FoodAlchemistPaketGericht::class, \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::class,
+            \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::class,
             \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock::class, \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::class,
             \Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag::class, \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition::class,
         ] as $inhaltsModel) {
@@ -294,10 +294,9 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         \Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::observe(\Platform\FoodAlchemist\Observers\ItemAllergenKonfidenzObserver::class);   // Allergen-Konfidenz/Review sofort nachziehen
 
         // Ausbau (b): Ausgabe-/Container-Pools (Speisekarte/Angebot/Paket/Format) — Einzeledits
-        // synchron; Bulk je Pool via foodalchemist:embed --pool=speisekarten|angebote|pakete|formate.
+        // synchron; Bulk je Pool via foodalchemist:embed --pool=speisekarten|angebote|formate.
         \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte::observe(\Platform\FoodAlchemist\Observers\SpeisekarteEmbeddingObserver::class);
         \Platform\FoodAlchemist\Models\FoodAlchemistAngebot::observe(\Platform\FoodAlchemist\Observers\AngebotEmbeddingObserver::class);
-        \Platform\FoodAlchemist\Models\FoodAlchemistPaket::observe(\Platform\FoodAlchemist\Observers\PaketEmbeddingObserver::class);
         \Platform\FoodAlchemist\Models\FoodAlchemistFormat::observe(\Platform\FoodAlchemist\Observers\FormatEmbeddingObserver::class);
 
         // Embedding-Store-Routing (Runbook 34_Qdrant): FA deklariert selbst, in welchen
@@ -371,15 +370,6 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Event::listen(
             \Platform\FoodAlchemist\Events\TeamKostenGeaendert::class,
             fn ($e) => $this->app->make(\Platform\FoodAlchemist\Services\PricingCascadeService::class)->recomputeTeam($e->team),
-        );
-        \Illuminate\Support\Facades\Event::listen(   // entfällt in 2.6c mit PaketService
-            \Platform\FoodAlchemist\Events\GerichtePreisVeraltet::class,
-            function ($e) {
-                $pakete = $this->app->make(\Platform\FoodAlchemist\Services\PaketService::class);
-                foreach ($e->recipeIds as $rid) {
-                    $pakete->markStaleForRecipe((int) $rid);
-                }
-            },
         );
         // 98 · 3.3 S7 P2: Aromenprofile nach dem Recompute nachziehen — synchron, sofort, in der übergebenen Reihenfolge (Kinder vor Eltern)
         \Illuminate\Support\Facades\Event::listen(

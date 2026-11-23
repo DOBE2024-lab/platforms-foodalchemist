@@ -189,9 +189,11 @@ it('Gerichte gebuchter Pakete zählen zur Kohäsions-Basis', function () {
     // Das gesetzte Gericht steckt NICHT direkt an einer Position, sondern in einem Paket.
     $imPaket = ($this->gericht)('Lachs-Tartar', $this->hgVor, 14.00);
     $this->makeIngredient($imPaket, 'Lachs', $lachs);
-    $paket = app(\Platform\FoodAlchemist\Services\PaketService::class)->create($this->rootTeam, ['name' => 'Fisch-Station', 'role' => 'Vorspeisen']);
-    app(\Platform\FoodAlchemist\Services\PaketService::class)->syncGerichte($this->rootTeam, $paket->id, [['sales_recipe_id' => $imPaket->id]]);
-    $this->makeConceptSlot($this->konzept, ['role' => 'Vorspeisen', 'type' => 'paket', 'package_id' => $paket->id, 'position' => 1]);
+    // 98 · 2.6c: Paket = kind=paket-Concept, eingebettet über embedded_concept_id
+    $cs = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $paket = $cs->createPaket($this->rootTeam, ['name' => 'Fisch-Station']);
+    $cs->fillSlot($this->rootTeam, $cs->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeisen'])->id, ['sales_recipe_id' => $imPaket->id]);
+    $this->makeConceptSlot($this->konzept, ['role' => 'Vorspeisen', 'type' => 'paket', 'embedded_concept_id' => $paket->id, 'position' => 1]);
 
     $angus = ($this->gericht)('Angus-Braten', $this->hgHaupt, 24.00);
     $this->makeIngredient($angus, 'Rind', $rind);

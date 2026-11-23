@@ -8,7 +8,6 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Services\SpeiseplanService;
@@ -25,7 +24,7 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
     {
         return 'Hängt einen Eintrag an einen draft-Speiseplan: datum (YYYY-MM-DD) + mahlzeit '
             . '(fruehstueck|mittag|abend|snack) + line_id (aus speiseplaene.POST) + GENAU EINES von '
-            . 'concept_id | package_id | sales_recipe_id (nur Gerichte, keine Basisrezepte). Optional presentation_id = '
+            . 'concept_id | sales_recipe_id (nur Gerichte, keine Basisrezepte; ein Paket = Concept mit kind=paket über concept_id). Optional presentation_id = '
             . 'Darreichung des Gerichts (ohne Angabe gilt die Standard-Darreichung).';
     }
 
@@ -39,7 +38,6 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
                 'mahlzeit' => ['type' => 'string', 'enum' => ['fruehstueck', 'mittag', 'abend', 'snack'], 'default' => 'mittag'],
                 'line_id' => ['type' => 'integer'],
                 'concept_id' => ['type' => 'integer'],
-                'package_id' => ['type' => 'integer'],
                 'sales_recipe_id' => ['type' => 'integer'],
                 'presentation_id' => ['type' => 'integer', 'description' => 'Optional: Darreichung des Gerichts (nur mit sales_recipe_id).'],
             ],
@@ -62,11 +60,11 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
         if ($plan->statusWert() !== AusgabeStatus::Entwurf) {
             return ToolResult::error("Speiseplan hat Status \"{$plan->statusWert()->label()}\" — via MCP ist nur ein Entwurf editierbar.", 'ACCESS_DENIED');
         }
-        $ziele = array_values(array_intersect(['concept_id', 'package_id', 'sales_recipe_id'], array_keys(array_filter($arguments))));
+        $ziele = array_values(array_intersect(['concept_id', 'sales_recipe_id'], array_keys(array_filter($arguments))));
         if (count($ziele) !== 1) {
-            return ToolResult::error('Genau EINES von concept_id, package_id, sales_recipe_id angeben.', 'VALIDATION_ERROR');
+            return ToolResult::error('Genau EINES von concept_id, sales_recipe_id angeben.', 'VALIDATION_ERROR');
         }
-        $refModelle = ['concept_id' => FoodAlchemistConcept::class, 'package_id' => FoodAlchemistPaket::class, 'sales_recipe_id' => FoodAlchemistRecipe::class];
+        $refModelle = ['concept_id' => FoodAlchemistConcept::class, 'sales_recipe_id' => FoodAlchemistRecipe::class];
         foreach ($refModelle as $key => $model) {
             if (! empty($arguments[$key]) && ! $model::visibleToTeam($team)->whereKey((int) $arguments[$key])->exists()) {
                 return ToolResult::error("{$key} nicht sichtbar/vorhanden.", 'NOT_FOUND');
@@ -79,7 +77,6 @@ class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContr
                 'mahlzeit' => $arguments['mahlzeit'] ?? 'mittag',
                 'line_id' => $arguments['line_id'] ?? null,
                 'concept_id' => $arguments['concept_id'] ?? null,
-                'package_id' => $arguments['package_id'] ?? null,
                 'sales_recipe_id' => $arguments['sales_recipe_id'] ?? null,
                 'presentation_id' => $arguments['presentation_id'] ?? null,
             ]);

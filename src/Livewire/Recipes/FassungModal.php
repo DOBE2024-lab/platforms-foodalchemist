@@ -9,13 +9,11 @@ use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptFassungService;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\FormatFassungService;
-use Platform\FoodAlchemist\Services\PaketFassungService;
 use Platform\FoodAlchemist\Support\FassungMenue;
 use Platform\FoodAlchemist\Support\MasterTeam;
 
@@ -31,7 +29,7 @@ class FassungModal extends Component
 {
     public ?int $recipeId = null;
 
-    /** 'recipe' (Rezept/Gericht, `recipeId`) | 'paket' | 'concept' | 'format' (`objektId`) */
+    /** 'recipe' (Rezept/Gericht, `recipeId`) | 'concept' (auch Paket, kind=paket) | 'format' (`objektId`) */
     public string $art = 'recipe';
 
     public ?int $objektId = null;
@@ -67,7 +65,6 @@ class FassungModal extends Component
                 $neu = $r['neu'] !== [];
             } else {
                 $r = match ($this->art) {
-                    'paket' => app(PaketFassungService::class)->veroeffentlichen($team, $this->objektId, $this->notiz, $user),
                     'concept' => app(ConceptFassungService::class)->veroeffentlichen($team, $this->objektId, $this->notiz, $user),
                     default => app(FormatFassungService::class)->veroeffentlichen($team, $this->objektId, $this->notiz, $user),
                 };
@@ -91,7 +88,6 @@ class FassungModal extends Component
             return null;
         }
         $modell = match ($this->art) {
-            'paket' => FoodAlchemistPaket::class,
             'concept' => FoodAlchemistConcept::class,
             'format' => FoodAlchemistFormat::class,
             default => FoodAlchemistRecipe::class,
@@ -108,7 +104,6 @@ class FassungModal extends Component
         if ($objekt !== null && MasterTeam::istMaster($team)) {
             try {
                 $status = match ($this->art) {
-                    'paket' => app(PaketFassungService::class)->status($objekt),
                     'concept' => app(ConceptFassungService::class)->status($objekt),
                     'format' => app(FormatFassungService::class)->status($objekt),
                     default => app(FassungService::class)->status($objekt),
@@ -123,7 +118,7 @@ class FassungModal extends Component
         return view('foodalchemist::livewire.recipes.fassung-modal', [
             'rezept' => $objekt,   // Name der View-Variable bleibt (Bestand); für andere Arten ist es Paket/Konzept/Format
             'art' => $this->art,
-            'artLabel' => ['recipe' => 'Rezept', 'paket' => 'Paket', 'concept' => 'Konzept', 'format' => 'Format'][$this->art] ?? 'Rezept',
+            'artLabel' => ['recipe' => 'Rezept', 'concept' => 'Konzept', 'format' => 'Format'][$this->art] ?? 'Rezept',
             'status' => $status,
             'darf' => $team !== null && app(FaRechte::class)->darf(Auth::user(), $team, FaRolle::Freigeben),
         ]);

@@ -10,7 +10,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
@@ -27,9 +26,6 @@ use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\OfferCompositionService;
-use Platform\FoodAlchemist\Services\PaketFassungService;
-use Platform\FoodAlchemist\Services\PaketPreisService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\PriceService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\TeamVkService;
@@ -41,7 +37,7 @@ use Platform\FoodAlchemist\Tests\TestCase;
 uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
- * Spec 82 Abo Konzepte, PR 4: Konzept-Fassung (kind concept UND paket, beide Slot-Arten package_id / embedded_concept_id) und
+ * Spec 82 Abo Konzepte, PR 4: Konzept-Fassung (kind concept UND paket, Slot-Art embedded_concept_id; package_id entfällt mit 98 · 2.6c) und
  * der Konzeptpreis je (Fassung × Team) über die Kosten-Dienste. Entscheide 14.10.: D2/D11 blockieren, D10 Hinweis, D9 Darreichung anhängen.
  */
 beforeEach(function () {
@@ -84,11 +80,6 @@ beforeEach(function () {
     $this->kleine = $dar->setzeAnteil($this->master, $dar->anlegen($this->master, $this->gericht->id, $klein->id)->id, 50);   // Plan 98 B: Variante als Anteil vom Standard (statt freier Grammatur): 100 von 200 g
     $this->portion = FoodAlchemistVocabEinheit::create(['team_id' => $this->master->id, 'slug' => 'portion', 'display_de' => 'Portion', 'dimension' => 'count', 'default_in_g' => null]);
 
-    // Paket (Tabelle packages) mit dem Gericht
-    $paketSvc = app(PaketService::class);
-    $this->paket = $paketSvc->create($this->master, ['name' => 'Jus-Duo']);
-    $paketSvc->syncGerichte($this->master, $this->paket->id, [['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]]);
-
     // Paket-Konzept (kind=paket) mit dem Gericht in der kleinen Portion
     $cs = app(ConceptService::class);
     $this->paketKonzept = $cs->createPaket($this->master, ['name' => 'Jus-Kompakt']);
@@ -96,10 +87,8 @@ beforeEach(function () {
     $cs->fillSlot($this->master, $s->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
     $cs->setSlotDarreichung($this->master, $s->id, $this->kleine->id);
 
-    // Konzept: Paket-Slot (package_id), eingebettetes Paket-Konzept (embedded_concept_id), festes Gericht, Struktur-Block
+    // Konzept: eingebettetes Paket-Konzept (embedded_concept_id), festes Gericht, Struktur-Block (Alt-Paket-Slot entfällt mit 98 · 2.6c)
     $this->konzept = $cs->create($this->master, ['name' => 'Jus-Menü']);
-    $s1 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Vorspeise']);
-    $cs->fillSlot($this->master, $s1->id, ['package_id' => $this->paket->id]);
     $s2 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Beilage']);
     $cs->fillSlot($this->master, $s2->id, ['embedded_concept_id' => $this->paketKonzept->id]);
     $s3 = $cs->addSlot($this->master, $this->konzept->id, ['role' => 'Hauptgang']);
@@ -118,7 +107,6 @@ beforeEach(function () {
         {
             $t = $this->t;
             app(FassungService::class)->veroeffentlichen($t->master, $t->gericht->id, 'Erst', $t->kurator);
-            app(PaketFassungService::class)->veroeffentlichen($t->master, $t->paket->id, 'Erst', $t->kurator);
             $t->svc->veroeffentlichen($t->master, $t->paketKonzept->id, 'Erst', $t->kurator);
         }
 
@@ -146,27 +134,26 @@ beforeEach(function () {
     };
 });
 
-it('D2 · ohne veröffentlichte Fassung von Paket, Paket-Konzept und Rezept bricht das Veröffentlichen mit der Liste ab', function () {
+it('D2 · ohne veröffentlichte Fassung von Paket-Konzept und Rezept bricht das Veröffentlichen mit der Liste ab', function () {
     expect(fn () => $this->svc->veroeffentlichen($this->master, $this->konzept->id, 'Erst', $this->kurator))
-        ->toThrow(\RuntimeException::class, 'Jus-Duo');
+        ->toThrow(\RuntimeException::class, 'Jus-Kompakt');
     expect(FoodAlchemistConcept::mitFassungen()->where('ist_fassung', true)->count())->toBe(0);
 });
 
-it('Veröffentlichen: Fassung ohne Master-Preise, Slots zeigen auf Fassungen (beide Paket-Wege + Rezept), Arbeitszeile bleibt', function () {
+it('Veröffentlichen: Fassung ohne Master-Preise, Slots zeigen auf Fassungen (Paket-Konzept + Rezept), Arbeitszeile bleibt', function () {
     $this->hilfe->alleBausteine();
     $this->konzept->update(['price_per_person_manual' => 99.0]);
     $r = $this->svc->veroeffentlichen($this->master, $this->konzept->id, 'Menü erstmals', $this->kurator);
 
     $f = FoodAlchemistConcept::mitFassungen()->find($r['fassung_id']);
     $slots = $f->slots()->orderBy('position')->get();
-    $paketF = FoodAlchemistPaket::mitFassungen()->where('fassung_von_id', $this->paket->id)->where('ist_fassung', true)->sole();
     $konzeptF = FoodAlchemistConcept::mitFassungen()->where('fassung_von_id', $this->paketKonzept->id)->where('ist_fassung', true)->sole();
     $rezeptF = FoodAlchemistRecipe::mitFassungen()->where('fassung_von_id', $this->gericht->id)->where('ist_fassung', true)->sole();
 
     expect($r['neu'])->toBeTrue()->and($r['fassung_nr'])->toBe(1)
         ->and($f->ist_fassung)->toBeTrue()->and($f->fassung_von_id)->toBe($this->konzept->id)->and($f->aenderungsnotiz)->toBe('Menü erstmals')
         ->and($f->price_per_person_cache)->toBeNull()->and($f->price_per_person_manual)->toBeNull()->and($f->ek_per_person_cache)->toBeNull()
-        ->and($slots->pluck('package_id')->filter()->values()->all())->toBe([$paketF->id])
+        ->and($slots->pluck('package_id')->filter()->values()->all())->toBe([])
         ->and($slots->pluck('embedded_concept_id')->filter()->values()->all())->toBe([$konzeptF->id])
         ->and($slots->pluck('sales_recipe_id')->filter()->values()->all())->toBe([$rezeptF->id])
         ->and($slots->where('type', 'header')->count())->toBe(1)   // Struktur-Block bleibt
@@ -205,7 +192,7 @@ it('nur Master und nur ab Rolle Freigeben', function () {
         ->and(fn () => $this->svc->veroeffentlichen($this->master, $this->konzept->id, ' ', $this->kurator))->toThrow(\RuntimeException::class, 'Änderungsnotiz');
 });
 
-it('Abo: Mandant sieht Konzept-Fassung samt Paket-Fassung, Paket-Konzept-Fassung und Rezept-Fassung, nie Arbeitszeilen; ohne Abo nichts', function () {
+it('Abo: Mandant sieht Konzept-Fassung samt Paket-Konzept-Fassung und Rezept-Fassung, nie Arbeitszeilen; ohne Abo nichts', function () {
     $this->hilfe->alleBausteine();
     $this->hilfe->abo([$this->broich]);
     $r = $this->svc->veroeffentlichen($this->master, $this->konzept->id, 'Erst', $this->kurator);
@@ -215,11 +202,9 @@ it('Abo: Mandant sieht Konzept-Fassung samt Paket-Fassung, Paket-Konzept-Fassung
     $konzeptF = FoodAlchemistConcept::mitFassungen()->where('fassung_von_id', $this->paketKonzept->id)->where('ist_fassung', true)->sole();
     expect($konzepteB)->toContain($r['fassung_id'])->and($konzepteB)->toContain($konzeptF->id)
         ->and($konzepteB)->not->toContain($this->konzept->id)->and($konzepteB)->not->toContain($this->paketKonzept->id)
-        ->and($sieht(FoodAlchemistPaket::class, $this->broich))->toHaveCount(1)
-        ->and($sieht(FoodAlchemistPaket::class, $this->broich))->not->toContain($this->paket->id)
         ->and($sieht(FoodAlchemistRecipe::class, $this->broich))->not->toContain($this->gericht->id)
         ->and($sieht(FoodAlchemistConcept::class, $this->soul))->toBe([])
-        ->and(array_keys(app(AboService::class)->huelle((int) $this->broich->id)))->toEqualCanonicalizing(['recipe', 'paket', 'concept']);
+        ->and(array_keys(app(AboService::class)->huelle((int) $this->broich->id)))->toEqualCanonicalizing(['recipe', 'concept']);
 });
 
 it('Preis · gleiches Konzept, zwei Mandanten, zwei Preise — jede Zeile aus den Kosten-Diensten des Teams', function () {
@@ -230,14 +215,11 @@ it('Preis · gleiches Konzept, zwei Mandanten, zwei Preise — jede Zeile aus de
 
     $b = $this->preis->cockpit($f, $this->broich);
     $s = $this->preis->cockpit($f, $this->soul);
-    $paketF = FoodAlchemistPaket::mitFassungen()->where('ist_fassung', true)->sole();
-    $paketB = app(PaketPreisService::class)->fuer($paketF, $this->broich);
     $rezeptF = FoodAlchemistRecipe::mitFassungen()->where('fassung_von_id', $this->gericht->id)->where('ist_fassung', true)->sole();
     $gerichtB = app(TeamVkService::class)->fuer($rezeptF, $this->broich);
 
     expect($b['quelle'])->toBe('team_kalkulation')->and($b['vollstaendig'])->toBeTrue()->and($s['vollstaendig'])->toBeTrue()
         ->and($b['price_per_person'])->toBeGreaterThan(0.0)->and($b['price_per_person'])->toBeLessThan($s['price_per_person'])
-        ->and(collect($b['zeilen'])->firstWhere('role', 'Vorspeise')['price'])->toBe(round($paketB['vk_pro_person'], 2))
         ->and(collect($b['zeilen'])->firstWhere('role', 'Hauptgang')['price'])->toBe(round($gerichtB['vk'], 2))
         ->and($b['price_per_person'])->toBe(round(collect($b['zeilen'])->sum('price'), 2));
 

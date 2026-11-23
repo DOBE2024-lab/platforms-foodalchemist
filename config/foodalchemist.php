@@ -1016,11 +1016,6 @@ return [
     // Notschalter FOODALCHEMIST_BEARBEITUNGSSPERRE=false → Verhalten wie vorher (Test-Grundlage schaltet aus).
     'bearbeitungssperre' => env('FOODALCHEMIST_BEARBEITUNGSSPERRE', true),
 
-    // CQ 2.6b · Nach dem Umzug Alt-Paket → Concept (foodalchemist:pakete-to-concepts --apply) sind alte Pakete nur noch lesbar:
-    // keine Änderung an foodalchemist_packages/_package_dishes, keine neuen package_id-Verweise, keine Nachrechnung alter Pakete.
-    // Standard aus; auf io nach dem Apply FOODALCHEMIST_PAKET_ALT_NUR_LESEN=true. Rückweg = wieder aus.
-    'paket_alt_nur_lesen' => env('FOODALCHEMIST_PAKET_ALT_NUR_LESEN', false),
-
     /*
      * Spec 84 E-1: Messung langsamer Abfragen in der Anwendung (statt MySQL-Slow-Log — der DB-Nutzer auf io hat kein SUPER).
      * `langsam_ms` = null schaltet die ganze Messung aus (Standard). Gesetzt: jede Abfrage ab dieser Dauer landet im

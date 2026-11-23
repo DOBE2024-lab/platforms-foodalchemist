@@ -133,15 +133,6 @@ function spec91_gleichstand(): array
                 'editId' => 'Editor-Zustand',
             ],
         ],
-        \Platform\FoodAlchemist\Livewire\Concepts\Index::class => [
-            'filter' => [
-                'search' => ['foodalchemist.concepts.LIST', 'q'],
-                'showVorlagen' => ['foodalchemist.concepts.LIST', 'vorlagen'],
-                'categoryFilter' => ['foodalchemist.concepts.LIST', 'kategorie'],
-                'phaseFilter' => ['foodalchemist.concepts.LIST', 'phase'],
-            ],
-            'ausnahmen' => ['selectedId' => 'Auswahl eines Konzepts (Detail via concepts.GET), kein Listenfilter'],
-        ],
         \Platform\FoodAlchemist\Livewire\Formate\Browser::class => [
             'filter' => [
                 'search' => ['foodalchemist.formats.LIST', 'q'],
@@ -164,11 +155,6 @@ function spec91_gleichstand(): array
         \Platform\FoodAlchemist\Livewire\Speisekarte\Index::class => [
             'filter' => ['search' => ['foodalchemist.speisekarten.LIST', 'q']],
             'ausnahmen' => ['karteId' => 'Auswahl einer Karte (Detail via speisekarten.GET), kein Listenfilter'],
-        ],
-        \Platform\FoodAlchemist\Livewire\Pakete\Index::class => [
-            // Alt-Paket-Browser (foodalchemist_packages) → abo_pakete.LIST; pakete.LIST führt seit 2026-11 die Concepter-Pakete
-            'filter' => ['search' => ['foodalchemist.abo_pakete.LIST', 'q'], 'rolleFilter' => ['foodalchemist.abo_pakete.LIST', 'role']],
-            'ausnahmen' => ['selectedId' => 'Auswahl eines Pakets (Detail via abo_pakete.GET), kein Listenfilter'],
         ],
         \Platform\FoodAlchemist\Livewire\Speiseplan\Index::class => [
             'filter' => ['search' => ['foodalchemist.speiseplaene.LIST', 'search']],

@@ -11,7 +11,6 @@ use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Jobs\BausteinFolgeJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebotUebernahme;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\VerweisRegister;
 use Platform\FoodAlchemist\Support\TeamSperre;
@@ -43,7 +42,7 @@ class BausteinFolgeService
     /**
      * Nach dem Veröffentlichen: betroffene Verweise folgen lassen. Ab mehr als {@see SYNC_GRENZE} Verweisen wird je Mandant ein Job eingereiht.
      *
-     * @param  'concept'|'paket'|'format'  $art
+     * @param  'concept'|'format'  $art
      * @param  list<int>  $neueFassungIds
      * @return array{umgehaengt:int, gehalten:int, signale: list<array{team:int, familie:int}>, eingereiht: list<int>}
      */
@@ -132,7 +131,7 @@ class BausteinFolgeService
     /**
      * Verweise, die auf einer älteren Fassung der Familie stehen. Je Quelle des Registers eine indizierte Abfrage.
      *
-     * @param  'concept'|'paket'|'format'  $art
+     * @param  'concept'|'format'  $art
      * @param  list<int>  $familien
      * @return Collection<int, object{quelle:string, tab:string, spalte:string, row_id:int, team_id:int, alt_id:int, familie_id:int, eltern_id:int, eltern_name:?string, wo:string, eingefroren:bool, konzept_eltern_id:?int}>
      */
@@ -155,7 +154,7 @@ class BausteinFolgeService
                 $alle->push((object) ['quelle' => $quelle, 'tab' => $r['tab'], 'spalte' => $r['spalte'], 'row_id' => (int) $row->row_id, 'team_id' => (int) $row->team_id,
                     'alt_id' => (int) $row->alt_id, 'familie_id' => (int) $aeltere[(int) $row->alt_id]->fassung_von_id, 'eltern_id' => (int) $row->eltern_id,
                     'eltern_name' => $row->eltern_name, 'wo' => $r['wo'], 'eingefroren' => ! empty($r['angebot']) && $eingefroren->has((int) $row->eltern_id),
-                    'konzept_eltern_id' => $quelle === 'konzept_paket' || $quelle === 'konzept_eingebettet' ? (int) $row->eltern_id : null]);
+                    'konzept_eltern_id' => $quelle === 'konzept_eingebettet' ? (int) $row->eltern_id : null]);
             }
         }
 
@@ -226,7 +225,7 @@ class BausteinFolgeService
      * Übernehmen EINES gehaltenen Verweises (Eigenes Konzept, Format, Foodbook, Speisekarte, Speiseplan, Angebot). Ohne `$bestaetigt` nur die Vorschau.
      * Allergen-Änderung: Bestätigung Pflicht und Rolle Freigeben; sonst Rolle Kuratieren. Historie + Protokoll.
      *
-     * @param  'concept'|'paket'|'format'  $art
+     * @param  'concept'|'format'  $art
      * @return array{vorschau?: array, umgehaengt?: bool, nach_fassung_id?: int}
      */
     public function uebernehmen(Team $team, ?User $actor, string $art, string $quelle, int $rowId, bool $bestaetigt): array
@@ -310,11 +309,10 @@ class BausteinFolgeService
         }
     }
 
-    /** @return class-string<FoodAlchemistConcept|FoodAlchemistPaket|\Platform\FoodAlchemist\Models\FoodAlchemistFormat> */
+    /** @return class-string<FoodAlchemistConcept|\Platform\FoodAlchemist\Models\FoodAlchemistFormat> */
     private function modell(string $art): string
     {
         return match ($art) {
-            'paket' => FoodAlchemistPaket::class,
             'format' => \Platform\FoodAlchemist\Models\FoodAlchemistFormat::class,
             default => FoodAlchemistConcept::class,
         };

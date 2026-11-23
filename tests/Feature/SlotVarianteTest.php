@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\ComponentEquivalentService;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\ConceptVariantService;
-use Platform\FoodAlchemist\Services\PaketService;
+use Platform\FoodAlchemist\Services\AufbauKandidatenService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -97,7 +97,7 @@ it('Variante ist katalog-unsichtbar (Picker + VK-Browser), Idempotenz beim zweit
 
     expect(FoodAlchemistRecipe::where('variant_source_recipe_id', $this->gericht->id)->count())->toBe(1);
 
-    $picker = app(PaketService::class)->gerichtKandidaten($this->rootTeam, 'Butterkuchen');
+    $picker = app(AufbauKandidatenService::class)->gerichtKandidaten($this->rootTeam, 'Butterkuchen');
     expect($picker->pluck('id')->all())->toBe([$this->gericht->id]); // Variante fehlt
 
     $browser = app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)

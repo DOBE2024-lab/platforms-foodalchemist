@@ -8,7 +8,6 @@ use Platform\Core\Services\EmbeddingService;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistLabNote;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
@@ -151,18 +150,15 @@ it('degradiert sauber ohne Provider — kein Vektor, kein Fehler', function () {
         ->and(($this->vectors)(PoolEmbeddingService::ENTITY_TYPE_SUPPLIER)->count())->toBe(0);
 });
 
-// ── Spec 82: Fassungs-Zeilen (Konzept/Paket/Format) gehören nicht in den Pool ──────────────
+// ── Spec 82: Fassungs-Zeilen (Konzept/Format) gehören nicht in den Pool (Alt-Paket-Pool mit 98 · 2.6c entfallen) ──────────────
 
-it('Backfill embeddet Arbeitszeilen, nie Fassungs-Zeilen (Konzept, Paket, Format)', function () {
+it('Backfill embeddet Arbeitszeilen, nie Fassungs-Zeilen (Konzept, Format)', function () {
     $c = FoodAlchemistConcept::create(['team_id' => $this->childA->id, 'name' => 'Grill-Buffet']);
     FoodAlchemistConcept::create(['team_id' => $this->childA->id, 'name' => 'Grill-Buffet', 'ist_fassung' => true, 'fassung_von_id' => $c->id, 'fassung_nr' => 1]);
-    $p = FoodAlchemistPaket::create(['team_id' => $this->childA->id, 'name' => 'Salad Wall']);
-    FoodAlchemistPaket::create(['team_id' => $this->childA->id, 'name' => 'Salad Wall', 'ist_fassung' => true, 'fassung_von_id' => $p->id, 'fassung_nr' => 1]);
     $f = FoodAlchemistFormat::create(['team_id' => $this->childA->id, 'name' => 'Hochzeit']);
     FoodAlchemistFormat::create(['team_id' => $this->childA->id, 'name' => 'Hochzeit', 'ist_fassung' => true, 'fassung_von_id' => $f->id, 'fassung_nr' => 1]);
 
     expect($this->svc->embedConcepts()['candidates'])->toBe(1)
-        ->and($this->svc->embedPakete()['candidates'])->toBe(1)
         ->and($this->svc->embedFormate()['candidates'])->toBe(1);
 });
 

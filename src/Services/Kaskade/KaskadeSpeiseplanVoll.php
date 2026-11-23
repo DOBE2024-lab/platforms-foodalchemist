@@ -124,7 +124,7 @@ class KaskadeSpeiseplanVoll
         $wochenOffen = 0;
         $zellenInOffenenWochen = 0;
         // Spec 57 · 10.2: Namen/Diät der vorhandenen Einträge einmal laden (Leitplanken je Zelle).
-        $plan->loadMissing(['entries.dish', 'entries.concept', 'entries.package']);
+        $plan->loadMissing(['entries.dish', 'entries.concept']);
         $this->zellNamenMemo = [];
         foreach (range(1, $weeks) as $week) {
             $vorWoche = $idx;

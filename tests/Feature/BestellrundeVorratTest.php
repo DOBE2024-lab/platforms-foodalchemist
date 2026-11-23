@@ -20,7 +20,6 @@ use Platform\FoodAlchemist\Tests\TestCase;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderRound;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Services\LagerartikelService;
 use Platform\FoodAlchemist\Livewire\Orders\Editor as OrdersEditor;
 use Livewire\Livewire;
@@ -112,21 +111,24 @@ it('Spec 73: Lager, das eine gespeicherte Runde angerechnet hat, zählt in der n
 });
 
 it('Spec 73: Paket × Personen als Quelle (Vorschau, Vorlage, Bestellrunde)', function () {
-    $paket = FoodAlchemistPaket::create(['team_id' => $this->rootTeam->id, 'name' => 'Kuchenbuffet']);
-    $paket->dishes()->create(['team_id' => $this->rootTeam->id, 'sales_recipe_id' => $this->kuchen->id, 'position' => 1]);
-    $p = app(OrderService::class)->previewFromSources($this->rootTeam, [['type' => 'paket', 'id' => $paket->id, 'qty' => 100, 'unit' => 'persons']]);
+    // 98 · 2.6c: Paket = kind=paket-Concept, als Quelle Typ concept; der Alt-Typ paket ist entfallen
+    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Kuchenbuffet']);
+    $concepts->fillSlot($this->rootTeam, $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Kuchen'])->id, ['sales_recipe_id' => $this->kuchen->id]);
+    $p = app(OrderService::class)->previewFromSources($this->rootTeam, [['type' => 'concept', 'id' => $paket->id, 'qty' => 100, 'unit' => 'persons']]);
     expect((float) s73pos($p, $this->mehl)['qty_packs'])->toBe(10.0);
 
     $tpl = app(\Platform\FoodAlchemist\Services\OrderTemplateService::class);
     $v = $tpl->anlegen($this->rootTeam, ['name' => 'Buffet', 'kategorie' => 'Events']);
-    $tpl->positionSetzen($this->rootTeam, $v->id, 'paket', $paket->id, 100);
-    expect($tpl->quellen($this->rootTeam, $v->id))->toMatchArray([['type' => 'paket', 'id' => $paket->id, 'qty' => 100.0, 'unit' => 'persons', 'delivery_date' => null, 'reference' => 'Vorlage Buffet']])
+    $tpl->positionSetzen($this->rootTeam, $v->id, 'concept', $paket->id, 100);
+    expect($tpl->quellen($this->rootTeam, $v->id))->toMatchArray([['type' => 'concept', 'id' => $paket->id, 'qty' => 100.0, 'unit' => 'persons', 'delivery_date' => null, 'reference' => 'Vorlage Buffet']])
         ->and($tpl->kategorien($this->rootTeam))->toBe(['Events']);
+    expect(fn () => $tpl->positionSetzen($this->rootTeam, $v->id, 'paket', $paket->id, 100))->toThrow(\RuntimeException::class, 'Typ muss');
 
     Livewire::test(OrdersEditor::class)->call('oeffnenNeu')
         ->set('konzeptSuche', 'Kuchenb')->assertSee('Kuchenbuffet')
-        ->call('cockpitKonzeptEinfuegen', 'paket', $paket->id)
-        ->assertSet('cockpitSources', fn ($v) => $v[0]['type'] === 'paket' && $v[0]['unit'] === 'persons');
+        ->call('cockpitKonzeptEinfuegen', 'concept', $paket->id)
+        ->assertSet('cockpitSources', fn ($v) => $v[0]['type'] === 'concept' && $v[0]['unit'] === 'persons');
 });
 
 it('Spec 74: Lagerartikel kommen aus dem Vorrat, unter Mindestbestand wird nachgefüllt', function () {

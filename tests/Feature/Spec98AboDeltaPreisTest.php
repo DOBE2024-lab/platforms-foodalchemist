@@ -5,7 +5,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Models\Team;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
+use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichungDelta;
@@ -15,13 +15,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\AboService;
-use Platform\FoodAlchemist\Services\DarreichungResolver;
+use Platform\FoodAlchemist\Services\ConceptFassungService;
+use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
-use Platform\FoodAlchemist\Services\PaketFassungService;
-use Platform\FoodAlchemist\Services\PaketPreisService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\PriceService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\TeamVkService;
@@ -36,7 +34,8 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  * Plan 98 B (k), Kurator 23.11.2026: im Abo rechnet eine Darreichung mit Deltas (jede Variante) je Komponente mit den
  * Team-Preisen des Mandanten — dieselbe Rechnung wie beim Besitzer (DarreichungService::komponentenSumme). Vorher „kein VK“
  * mit Grund deltas_im_abo_offen. Fehlt einer genutzten Komponente der Team-Preis: kein VK, Grund komponente_ohne_team_preis.
- * Aufbau wie Spec82PaketPreisTest: Kalbsjus (Knochen + Butter), Standard 200 g, Variante „klein“ = 50 % vom Standard.
+ * Aufbau wie Spec82KonzeptFassungTest: Kalbsjus (Knochen + Butter), Standard 200 g, Variante „klein“ = 50 % vom Standard; das Paket ist
+ * seit 98 · 2.6c ein Paket-Konzept (kind=paket), seine Fassung hängt die kleine Portion samt Deltas an die Rezept-Fassung (Spec 82 D9).
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
@@ -78,21 +77,20 @@ beforeEach(function () {
     $this->kleine = $dar->setzeAnteil($this->master, $dar->anlegen($this->master, $this->gericht->id, $this->klein->id)->id, 50);   // Plan 98 B: Variante als Anteil vom Standard (statt freier Grammatur): 100 von 200 g
     $this->portion = FoodAlchemistVocabEinheit::create(['team_id' => $this->master->id, 'slug' => 'portion', 'display_de' => 'Portion', 'dimension' => 'count', 'default_in_g' => null]);
 
-    $paketSvc = app(PaketService::class);
-    $this->paket = $paketSvc->create($this->master, ['name' => 'Jus-Duo']);
-    $paketSvc->syncGerichte($this->master, $this->paket->id, [['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]]);
+    $cs = app(ConceptService::class);
+    $this->paket = $cs->createPaket($this->master, ['name' => 'Jus-Duo']);
+    $slot = $cs->addSlot($this->master, $this->paket->id, ['role' => 'Beilage']);
+    $cs->fillSlot($this->master, $slot->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1, 'unit_vocab_id' => $this->portion->id]);
+    $cs->setSlotDarreichung($this->master, $slot->id, $this->kleine->id);   // das Paket führt die kleine Portion
 
     $this->fassungen = app(FassungService::class);
     $this->fassungen->veroeffentlichen($this->master, $this->gericht->id, 'Erst', $this->kurator);
     $inhalte = app(InhaltsFreigabeService::class);
     $sid = $inhalte->sammlungAnlegen($this->master, 'Pakete', null, $this->kurator);
-    $inhalte->sammlungHinzu($this->master, $sid, 'paket', [$this->paket->id], $this->kurator);
+    $inhalte->sammlungHinzu($this->master, $sid, 'concept', [$this->paket->id], $this->kurator);
     foreach ([$this->broich, $this->soul, $this->neu] as $t) {
         app(AboService::class)->abonnieren($this->master, $t, $sid, $this->kurator);
     }
-    $this->paketF = FoodAlchemistPaket::mitFassungen()->findOrFail(
-        app(PaketFassungService::class)->veroeffentlichen($this->master, $this->paket->id, 'Erst', $this->kurator)['fassung_id']);
-    $this->gerichtF = FoodAlchemistRecipe::mitFassungen()->where('fassung_von_id', $this->gericht->id)->where('ist_fassung', true)->sole();
 
     $p = app(PriceService::class);
     $p->createTeamPrice($this->broich, $laKnochen, 4.00);
@@ -101,12 +99,10 @@ beforeEach(function () {
     $p->createTeamPrice($this->soul, $this->laButter, 12.00);
     $p->createTeamPrice($this->neu, $this->laButter, 10.00);   // Neukunde: Knochen ohne Preis → unvollständig
 
-    // wie Spec82PaketPreisTest „gewählte Darreichung“: das Paket führt die kleine Portion, die Paket-Fassung trägt sie mit Deltas
-    $this->paket->dishes()->first()->update(['presentation_id' => $this->kleine->id]);
-    $kleinPaketF = FoodAlchemistPaket::mitFassungen()->findOrFail(
-        app(PaketFassungService::class)->veroeffentlichen($this->master, $this->paket->id, 'Kleine Portion', $this->kurator)['fassung_id']);
-    $zeile = $kleinPaketF->dishes()->first();
-    $this->kleinF = app(DarreichungResolver::class)->fuerPaketGericht($zeile);
+    // Paket-Fassung: die gewählte kleine Portion hängt samt Deltas an der Rezept-Fassung
+    $r = app(ConceptFassungService::class)->veroeffentlichen($this->master, $this->paket->id, 'Kleine Portion', $this->kurator);
+    $zeile = FoodAlchemistConcept::mitFassungen()->findOrFail($r['fassung_id'])->slots()->whereNotNull('sales_recipe_id')->sole();
+    $this->kleinF = FoodAlchemistRecipeDarreichung::findOrFail($zeile->presentation_id);
     $this->gerichtF = FoodAlchemistRecipe::mitFassungen()->findOrFail($this->kleinF->recipe_id);
     expect($this->kleinF->is_standard)->toBeFalse()->and($this->kleinF->deltas()->count())->toBe(2);
     $this->deltaF = fn (string $name) => FoodAlchemistRecipeDarreichungDelta::where('presentation_id', $this->kleinF->id)

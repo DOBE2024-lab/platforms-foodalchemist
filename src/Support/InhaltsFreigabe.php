@@ -27,7 +27,6 @@ final class InhaltsFreigabe
         \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::class => 'recipe',
         \Platform\FoodAlchemist\Models\FoodAlchemistConcept::class => 'concept',
         \Platform\FoodAlchemist\Models\FoodAlchemistFormat::class => 'format',
-        \Platform\FoodAlchemist\Models\FoodAlchemistPaket::class => 'paket',
         \Platform\FoodAlchemist\Models\FoodAlchemistFoodbook::class => 'foodbook',
         \Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan::class => 'speiseplan',
         \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte::class => 'speisekarte',
@@ -41,7 +40,6 @@ final class InhaltsFreigabe
         'foodalchemist_recipes' => 'recipe',
         'foodalchemist_concepts' => 'concept',
         'foodalchemist_formats' => 'format',
-        'foodalchemist_packages' => 'paket',
         'foodalchemist_foodbooks' => 'foodbook',
         'foodalchemist_menu_plans' => 'speiseplan',
         'foodalchemist_menu_cards' => 'speisekarte',
@@ -143,7 +141,7 @@ final class InhaltsFreigabe
     /** Schema-Merker je Tabelle und Prozess (nicht im Team-Flush), siehe flushTeamAncestryCache. */
     private static array $fassungDa = [];
 
-    private const FASSUNGS_TABELLEN = ['recipe' => 'foodalchemist_recipes', 'concept' => 'foodalchemist_concepts', 'paket' => 'foodalchemist_packages', 'format' => 'foodalchemist_formats'];
+    private const FASSUNGS_TABELLEN = ['recipe' => 'foodalchemist_recipes', 'concept' => 'foodalchemist_concepts', 'format' => 'foodalchemist_formats'];
 
     /** Tabelle aus der ID-Spalte (ohne Präfix: Standardtabelle des Typs). Foodbook/Speiseplan/Speisekarte haben keine Fassung. */
     private static function standardTabelle(string $typ, string $idSpalte): ?string

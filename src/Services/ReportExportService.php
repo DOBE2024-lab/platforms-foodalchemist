@@ -245,8 +245,6 @@ class ReportExportService
                 'slots' => fn ($q) => $q->orderBy('position'),
                 'slots.unit:id,slug,display_de',
                 'slots.dish' => fn ($q) => $q->with($this->recipeRelations()),
-                'slots.package.dishes.unit:id,slug,display_de',
-                'slots.package.dishes.dish' => fn ($q) => $q->with($this->recipeRelations()),
                 'slots.embeddedConcept',   // 1.1j: eingebettete Pakete (kind=paket-Concept) gehören in den Export
             ])
             ->findOrFail($id);
@@ -255,9 +253,6 @@ class ReportExportService
 
         app(ConceptPreisService::class)->anwenden($concept, $team);   // Abo-Fassung: Team-Preis statt leerer Master-Caches (Spec 82)
         $slots = $concept->slots->map(function ($slot) use ($optionen, $team, $concept) {
-            if ($slot->package !== null) {
-                app(PaketPreisService::class)->anwenden($slot->package, $team);   // Abo-Paket: Team-Preis
-            }
             $gerichte = collect();
             if ($slot->dish !== null) {
                 $gerichte->push([
@@ -265,19 +260,6 @@ class ReportExportService
                     'menge' => $this->mengeText($slot->quantity, $slot->unit),
                     'recipe' => $this->recipeNode($slot->dish, $optionen, 0, []),
                 ]);
-            }
-            if ($slot->package !== null) {
-                foreach ($slot->package->dishes as $paketGericht) {
-                    if ($paketGericht->dish === null) {
-                        continue;
-                    }
-                    $gerichte->push([
-                        'quelle' => 'paket',
-                        'paket' => $slot->package->name,
-                        'menge' => $this->mengeText($paketGericht->quantity, $paketGericht->unit),
-                        'recipe' => $this->recipeNode($paketGericht->dish, $optionen, 0, []),
-                    ]);
-                }
             }
             $ep = $slot->embeddedConcept;
             foreach ($ep !== null ? $this->eingebetteteGerichte($ep, [(int) $concept->id => true]) : [] as [$paketName, $ps]) {
@@ -294,15 +276,9 @@ class ReportExportService
                 'position' => (int) $slot->position,
                 'role' => $slot->role,
                 'title' => $slot->title,
-                'type' => ($slot->package_id !== null || $ep !== null) ? 'paket' : ($slot->sales_recipe_id !== null ? 'gericht' : 'leer'),
-                'package' => $slot->package ? [
-                    'id' => (int) $slot->package->id,
-                    'name' => $slot->package->name,
-                    'price_per_person' => $slot->package->price_per_person,
-                    'ek_per_person' => $slot->package->ek_per_person,
-                    'food_cost_percent' => $slot->package->food_cost_percent,
-                ] : ($ep !== null ? ['id' => (int) $ep->id, 'name' => $ep->name, 'price_per_person' => $ep->price_per_person_cache,
-                    'ek_per_person' => $ep->ek_per_person_cache, 'food_cost_percent' => null, 'price_incomplete' => $ep->price_incomplete] : null),
+                'type' => $ep !== null ? 'paket' : ($slot->sales_recipe_id !== null ? 'gericht' : 'leer'),
+                'package' => $ep !== null ? ['id' => (int) $ep->id, 'name' => $ep->name, 'price_per_person' => $ep->price_per_person_cache,
+                    'ek_per_person' => $ep->ek_per_person_cache, 'food_cost_percent' => null, 'price_incomplete' => $ep->price_incomplete] : null,
                 'gerichte' => $gerichte->values()->all(),
             ];
         })->values();

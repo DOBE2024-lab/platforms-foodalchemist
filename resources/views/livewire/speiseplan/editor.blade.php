@@ -26,7 +26,7 @@
     $wesPunkt = ['ok' => 'bg-[var(--fa-ok)]', 'unter' => 'bg-[var(--fa-info)]', 'ueber' => 'bg-[var(--fa-warn)]', 'weit_ueber' => 'bg-[var(--fa-crit)]', 'unbekannt' => 'bg-[var(--fa-ink-3)]'];
     $ampelTon = ['success' => 'ok', 'warning' => 'warn', 'danger' => 'crit'];
     $konfidenzText = ['high' => 'hoch', 'medium' => 'mittel', 'low' => 'niedrig', 'none' => 'keine'];
-    $typLabel = ['gericht' => 'Gericht', 'concept' => 'Konzept', 'paket' => 'Paket'];
+    $typLabel = ['gericht' => 'Gericht', 'concept' => 'Konzept'];   // 98 · 2.6c: Pakete sind Concepts (kind=paket)
 
     $gaesteAusRollen = (bool) ($zk['gaeste_aus_rollen'] ?? false);
     $kwText = 'KW ' . (int) $montagDt->format('W') . ' · ' . ($mahlzeiten[$mahlzeit] ?? '');
@@ -1055,9 +1055,7 @@
                                         ? ['Gericht öffnen', "Livewire.dispatch('vk-modal.oeffnen', { id: " . (int) $detailEintrag->sales_recipe_id . ' })']
                                         : ($detailEintrag->concept_id !== null
                                             ? ['Konzept öffnen', "Livewire.dispatch('concepter-editor.oeffnen', { type: 'concepts', id: " . (int) $detailEintrag->concept_id . ' })']
-                                            : ($detailEintrag->package_id !== null
-                                                ? ['Paket öffnen', "Livewire.dispatch('concepter-editor.oeffnen', { type: 'pakete', id: " . (int) $detailEintrag->package_id . ' })']
-                                                : null));
+                                            : null);
                                 @endphp
                                 @if($inhaltOeffnen)
                                     <button type="button" x-on:click="{{ $inhaltOeffnen[1] }}" class="mt-1 inline-flex items-center gap-1 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-accent)] hover:underline" data-sp-inhalt-link>

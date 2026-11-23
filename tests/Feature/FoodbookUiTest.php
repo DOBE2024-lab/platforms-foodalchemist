@@ -10,7 +10,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTargetGroup;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\FoodbookService;
 use Platform\FoodAlchemist\Services\IdeenService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -26,11 +25,12 @@ beforeEach(function () {
     $this->actingAs($this->user);
 
     // Concept „Grill-Buffet" (4,50 €/P) als einfügbarer Inhalt
-    $paket = app(PaketService::class)->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    app(PaketService::class)->update($this->rootTeam, $paket->id, ['price_per_person' => 4.50]);
+    // 98 · 2.6c: Paket = kind=paket-Concept (manuell 4,50 €/P), eingebettet
+    $paket = app(ConceptService::class)->createPaket($this->rootTeam, ['name' => 'Salad Wall']);
+    app(ConceptService::class)->update($this->rootTeam, $paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
     $this->concept = app(ConceptService::class)->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = app(ConceptService::class)->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
-    app(ConceptService::class)->fillSlot($this->rootTeam, $slot->id, ['package_id' => $paket->id]);
+    app(ConceptService::class)->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);
 });
 
 it('Foodbook-Editor: anlegen, Kapitel, Concept einfügen, €/Person im Cockpit', function () {

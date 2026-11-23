@@ -84,6 +84,11 @@ class KaskadeSpeiseplanVoll
         if ($plan === null) {
             throw new RuntimeException('Speiseplan nicht gefunden.');
         }
+        // 98 · 3.3 S7 P0: Ein geerbter Plan ist sichtbar, gehört aber dem Besitzer-Team. Früh abweisen, statt einen Lauf anzulegen,
+        // dessen Zellen danach alle am Riegel in SpeiseplanService::addEintrag scheitern.
+        if (! $plan->isOwnedBy($team)) {
+            throw new RuntimeException('Dieser Speiseplan gehört einem anderen Team. Leere Zellen mit KI füllen kann nur das Team, dem der Plan gehört.');
+        }
         if ($plan->lines->isEmpty()) {
             throw new RuntimeException('Der Speiseplan hat keine Menü-Linien. Bitte zuerst im Reiter „Menü-Linien" eine Linie anlegen.');
         }

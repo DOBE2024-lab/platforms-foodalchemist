@@ -8,9 +8,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
+use Platform\FoodAlchemist\Services\Position\PositionFehler;
 
 /**
- * Code-Qualität 1.1j: EINE Schreibpfad-Prüfung für Inhalts-Blöcke in Foodbook und Angebot.
+ * Code-Qualität 1.1j: EINE Schreibpfad-Prüfung für Inhalts-Blöcke in Foodbook und Angebot (98 · 3.6: Teil von
+ * Position\PositionValidierung; Fehler als PositionFehler mit MCP-Code, Referenz nicht sichtbar = NOT_FOUND).
  * Was ein Block referenziert, muss das schreibende Team sehen dürfen (Sicht-Regel inkl. Abo-Fassungen, {@see Verweisziel}):
  * - recipe_ref: sichtbares VK-Gericht, keine konzept-lokale Slot-Variante (Spec 19 E1.1)
  * - concept_ref: sichtbares Concept oder Paket (kind=paket) — concept_id trägt beide
@@ -38,31 +40,31 @@ final class BlockReferenz
         if (($daten['presentation_id'] ?? null) !== null && $daten['presentation_id'] !== '') {
             $rid = $wert('sales_recipe_id');
             if ($rid === null || ! FoodAlchemistRecipeDarreichung::whereKey((int) $daten['presentation_id'])->where('recipe_id', (int) $rid)->exists()) {
-                throw new \RuntimeException('Darreichung gehört nicht zum Gericht dieses Blocks.');
+                throw new PositionFehler('Darreichung gehört nicht zum Gericht dieses Blocks.');
             }
         }
         if (($daten['unit_vocab_id'] ?? null) !== null && $daten['unit_vocab_id'] !== ''
             && ! Verweisziel::sichtbar(FoodAlchemistVocabEinheit::class, $team)->whereKey((int) $daten['unit_vocab_id'])->exists()) {
-            throw new \RuntimeException("Einheit {$daten['unit_vocab_id']} ist nicht sichtbar/vorhanden.");
+            throw new PositionFehler("Einheit {$daten['unit_vocab_id']} ist nicht sichtbar/vorhanden.", 'NOT_FOUND');
         }
     }
 
     private static function gericht(Team $team, mixed $id): void
     {
         if ($id === null || $id === '') {
-            throw new \RuntimeException('recipe_ref-Block braucht ein sales_recipe_id (VK-Gericht).');
+            throw new PositionFehler('recipe_ref-Block braucht ein sales_recipe_id (VK-Gericht).');
         }
         $ok = Verweisziel::sichtbar(FoodAlchemistRecipe::class, $team)->verkauf()
             ->whereNull('variant_source_recipe_id')->whereKey((int) $id)->exists();
         if (! $ok) {
-            throw new \RuntimeException("sales_recipe_id {$id} ist kein gültiges, sichtbares VK-Gericht (keine Slot-Variante).");
+            throw new PositionFehler("sales_recipe_id {$id} ist kein gültiges, sichtbares VK-Gericht (keine Slot-Variante) — via foodalchemist.verkaufsrezepte.SEARCH ermitteln.", 'NOT_FOUND');
         }
     }
 
     private static function concept(Team $team, mixed $id): void
     {
         if ($id === null || $id === '' || ! Verweisziel::sichtbar(FoodAlchemistConcept::class, $team)->whereKey((int) $id)->exists()) {
-            throw new \RuntimeException('concept_ref-Block braucht ein sichtbares Konzept oder Paket.');
+            throw new PositionFehler('concept_ref-Block braucht ein sichtbares Konzept oder Paket — via foodalchemist.concepts.SEARCH ermitteln.', 'NOT_FOUND');
         }
     }
 }

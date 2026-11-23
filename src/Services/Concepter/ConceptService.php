@@ -415,9 +415,8 @@ class ConceptService
      */
     public function addBlock(Team $team, int $conceptId, string $type, array $in = []): FoodAlchemistConceptSlot
     {
-        if (! in_array($type, self::STRUKTUR_TYPEN, true)) {
-            throw new \RuntimeException('Unbekannter Block-Typ.');
-        }
+        // 98 · 3.6: gemeinsame Prüfung — unbekannter Typ abgelehnt, header_preis für neue Blöcke verboten (P6, er rechnete nie mit)
+        \Platform\FoodAlchemist\Services\Position\PositionValidierung::block('konzept', $team, ['type' => $type]);
         $concept = FoodAlchemistConcept::visibleToTeam($team)->findOrFail($conceptId);
         $this->guardOwner($concept, $team);
 
@@ -441,6 +440,9 @@ class ConceptService
     public function updateBlock(Team $team, int $slotId, array $in): FoodAlchemistConceptSlot
     {
         $slot = $this->ownedSlot($team, $slotId);
+        if (array_key_exists('price_basis', $in)) {   // 98 · 3.6: Preisbasis des Bestands-header_preis gegen das Profil
+            $in['price_basis'] = \Platform\FoodAlchemist\Services\Position\PositionValidierung::block('konzept', $team, ['price_basis' => $in['price_basis']], $slot)['price_basis'];
+        }
         $update = [];
         foreach (['title', 'text_content', 'height', 'price_basis'] as $f) {
             if (array_key_exists($f, $in)) {

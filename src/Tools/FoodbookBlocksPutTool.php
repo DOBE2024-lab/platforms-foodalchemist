@@ -64,8 +64,8 @@ class FoodbookBlocksPutTool extends FoodAlchemistTool implements ToolContract, T
 
         try {
             app(FoodbookService::class)->updateBlock($team, $blockId, $in);
-        } catch (\RuntimeException $e) {
-            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
+        } catch (\RuntimeException $e) {   // 98 · 3.6: Prüfung im Positions-Kern, Code aus dem PositionFehler
+            return ToolResult::error($e->getMessage(), $e instanceof \Platform\FoodAlchemist\Services\Position\PositionFehler ? $e->fehlerCode : 'VALIDATION_ERROR');
         }
 
         return ToolResult::success(['block_id' => $blockId, 'updated' => array_keys($in)]);

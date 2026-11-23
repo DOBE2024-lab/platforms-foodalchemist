@@ -62,7 +62,10 @@ it('B3: Struktur-Blöcke (text/spacer/header/header_preis) zählen nicht zum Con
     $s = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'HG']);
     $this->concepts->fillSlot($this->rootTeam, $s->id, ['sales_recipe_id' => $this->dessert->id]); // 5,50
 
-    $header = $this->concepts->addBlock($this->rootTeam, $concept->id, 'header_preis', ['title' => 'Vorspeisen', 'price_value' => 12.00]);
+    // 98 · 3.6 P6: header_preis lässt sich nicht mehr neu anlegen (er rechnete nie mit) — der Bestand bleibt und zählt weiter nicht
+    expect(fn () => $this->concepts->addBlock($this->rootTeam, $concept->id, 'header_preis', ['title' => 'Vorspeisen']))->toThrow(RuntimeException::class);
+    $header = \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::create(['team_id' => $this->rootTeam->id, 'concept_id' => $concept->id,
+        'type' => 'header_preis', 'title' => 'Vorspeisen', 'price_value' => 12.00, 'price_basis' => 'person', 'position' => 5]);
     $this->concepts->addBlock($this->rootTeam, $concept->id, 'text', ['text_content' => 'Hinweis']);
     $this->concepts->addBlock($this->rootTeam, $concept->id, 'spacer');
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Fassung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;

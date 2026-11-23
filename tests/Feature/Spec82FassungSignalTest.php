@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
-use Platform\FoodAlchemist\Services\FassungService;
+use Platform\FoodAlchemist\Services\Fassung\FassungService;
 use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 use Platform\FoodAlchemist\Services\SignalService;
@@ -173,7 +173,7 @@ it('Die neuen Signal-Typen haben Label, Icon und einen Weg (Registry), und das P
 });
 
 it('Ein Fehler bei der Signal-Erzeugung bremst die Veröffentlichung nicht und rollt sie nicht zurück: er wird gemeldet, nicht geworfen', function () {
-    app()->instance(\Platform\FoodAlchemist\Services\FassungSignalService::class, new class(app(SignalService::class), app(\Platform\FoodAlchemist\Services\FassungsVergleich::class)) extends \Platform\FoodAlchemist\Services\FassungSignalService {
+    app()->instance(\Platform\FoodAlchemist\Services\Fassung\FassungSignalService::class, new class(app(SignalService::class), app(\Platform\FoodAlchemist\Services\Fassung\FassungsVergleich::class)) extends \Platform\FoodAlchemist\Services\Fassung\FassungSignalService {
         public function nachVeroeffentlichung(array $neueFassungIds): int
         {
             throw new \RuntimeException('Signal-Dienst kaputt');
@@ -201,7 +201,7 @@ it('Ein Fehler beim Nachführen nach dem Übernehmen rollt die Übernahme nicht 
     $angebote->setStatus($this->broich, $angebot->id, 'angebot');
     ($this->knochenMenge)('2500');
     ($this->publiziere)('Mehr Knochen');
-    app()->instance(\Platform\FoodAlchemist\Services\FassungSignalService::class, new class(app(SignalService::class), app(\Platform\FoodAlchemist\Services\FassungsVergleich::class)) extends \Platform\FoodAlchemist\Services\FassungSignalService {
+    app()->instance(\Platform\FoodAlchemist\Services\Fassung\FassungSignalService::class, new class(app(SignalService::class), app(\Platform\FoodAlchemist\Services\Fassung\FassungsVergleich::class)) extends \Platform\FoodAlchemist\Services\Fassung\FassungSignalService {
         public function nachAngebotsAenderung(FoodAlchemistAngebot $angebot, ?\Platform\FoodAlchemist\Models\FoodAlchemistAngebotEinfrierung $einfrierung = null): void
         {
             throw new \RuntimeException('Signal-Dienst kaputt');

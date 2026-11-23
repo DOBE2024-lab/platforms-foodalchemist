@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
-use Platform\FoodAlchemist\Services\FassungService;
+use Platform\FoodAlchemist\Services\Fassung\FassungService;
 use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Support\StammPaket;

@@ -37,8 +37,8 @@ class RezeptFolgeService
     private ?array $eingefroren = null;
 
     public function __construct(
-        private readonly FassungsVergleich $vergleich,
-        private readonly FassungsUmstellung $umstellung,
+        private readonly Fassung\FassungsVergleich $vergleich,
+        private readonly Fassung\FassungsUmstellung $umstellung,
         private readonly RecipeRecomputeService $recompute,
         private readonly FaRechte $rechte,
         private readonly Plattform\PlattformProtokoll $protokoll,
@@ -143,7 +143,7 @@ class RezeptFolgeService
         if ($signaleNachfuehren) {
             foreach ($out['signale'] as $s) {
                 try {
-                    app(FassungSignalService::class)->aktion(Team::findOrFail($s['team']), $s['familie']);
+                    app(Fassung\FassungSignalService::class)->aktion(Team::findOrFail($s['team']), $s['familie']);
                 } catch (\Throwable $ex) {
                     Log::error('Signal nach Fassungs-Folge fehlgeschlagen: '.$ex->getMessage(), ['exception' => $ex]);
                 }
@@ -287,7 +287,7 @@ class RezeptFolgeService
         $this->protokoll->schreibe('rezept_fassung_uebernommen', ['recipe_id' => (int) $recipe->id, 'familie_id' => $familieId, 'von' => $v['von_nr'], 'nach' => $v['nach_nr'],
             'allergen_geaendert' => $v['allergen_geaendert'], 'bestaetigt' => $v['braucht_bestaetigung']], $user, $historie);
         try {
-            app(FassungSignalService::class)->aktion($team, $familieId);
+            app(Fassung\FassungSignalService::class)->aktion($team, $familieId);
         } catch (\Throwable $e) {
             Log::error('Signal nach Übernehmen am Rezept fehlgeschlagen: '.$e->getMessage(), ['exception' => $e]);
         }

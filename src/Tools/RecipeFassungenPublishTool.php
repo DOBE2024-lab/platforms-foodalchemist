@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\FassungService;
+use Platform\FoodAlchemist\Services\Fassung\FassungService;
 
 /** Spec 82 §12 B · Rezept veröffentlichen: friert Rezept + Unter-Rezepte des Masters als Fassung ein (nur Master, Rolle „Freigeben“). */
 class RecipeFassungenPublishTool extends WareneingangTool implements ToolContract, ToolMetadataContract

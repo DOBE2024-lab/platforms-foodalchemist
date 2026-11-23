@@ -16,7 +16,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\Plattform\AboKuendigungService;
 use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
-use Platform\FoodAlchemist\Services\FassungService;
+use Platform\FoodAlchemist\Services\Fassung\FassungService;
 use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Services\RecipeService;

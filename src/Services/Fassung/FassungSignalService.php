@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Fassung;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +39,7 @@ class FassungSignalService
     /** EU-Allergene in der Schreibweise des Hauses. */
     private const ALLERGENE = \Platform\FoodAlchemist\Support\Allergene::KURZ;
 
-    public function __construct(private readonly SignalService $signale, private readonly FassungsVergleich $vergleich) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\SignalService $signale, private readonly FassungsVergleich $vergleich) {}
 
     /**
      * Nach dem Veröffentlichen: Info-Signale für die Mandanten mit der neuen Fassung in der Hülle, Aktions-Signale für Teams mit eingefrorenen Angeboten.
@@ -63,7 +63,7 @@ class FassungSignalService
         // 4d: eigene Rezepte folgen der neuen Fassung (nach dem Commit, Fehler geloggt); danach die Aktions-Signale für die berührten Team × Familie
         $folge = ['signale' => []];
         try {
-            $folge = app(RezeptFolgeService::class)->folgen($neueFassungIds);
+            $folge = app(\Platform\FoodAlchemist\Services\RezeptFolgeService::class)->folgen($neueFassungIds);
         } catch (\Throwable $e) {
             Log::error('Eigene Rezepte folgen der neuen Abo-Fassung nicht: '.$e->getMessage(), ['exception' => $e]);
         }
@@ -175,7 +175,7 @@ class FassungSignalService
                 }
             }
         }
-        $rezepte = app(RezeptFolgeService::class)->gehalten($team, $familieId);
+        $rezepte = app(\Platform\FoodAlchemist\Services\RezeptFolgeService::class)->gehalten($team, $familieId);
         if ($betroffen === [] && $rezepte === []) {
             $this->signale->schliesseGemessen($team, SignalTyp::FassungNeuerVerfuegbar, $key, self::QUELLE, 'Übernommen oder eingefrorenen Stand verworfen — niemand steht mehr auf der älteren Fassung');
 
@@ -229,7 +229,7 @@ class FassungSignalService
         }
         $folge = ['signale' => []];
         try {
-            $folge = app(Concepter\BausteinFolgeService::class)->folgen($art, $neueFassungIds);
+            $folge = app(\Platform\FoodAlchemist\Services\Concepter\BausteinFolgeService::class)->folgen($art, $neueFassungIds);
         } catch (\Throwable $e) {
             Log::error('Verweise folgen der neuen Abo-Fassung nicht: '.$e->getMessage(), ['exception' => $e]);
         }
@@ -284,7 +284,7 @@ class FassungSignalService
     {
         $key = 'fassung-neu:'.$art.':'.$familieId;
         $modell = self::BAUSTEIN_MODELL[$art];
-        $gehalten = app(Concepter\BausteinFolgeService::class)->gehalten($team, $art, $familieId);
+        $gehalten = app(\Platform\FoodAlchemist\Services\Concepter\BausteinFolgeService::class)->gehalten($team, $art, $familieId);
         if ($gehalten === []) {
             $this->signale->schliesseGemessen($team, SignalTyp::FassungNeuerVerfuegbar, $key, self::QUELLE, 'Übernommen oder nichts mehr auf der älteren Fassung.');
 

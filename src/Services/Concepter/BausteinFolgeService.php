@@ -34,7 +34,7 @@ class BausteinFolgeService
     public const SYNC_GRENZE = 50;
 
     public function __construct(
-        private readonly \Platform\FoodAlchemist\Services\FassungsVergleich $vergleich,
+        private readonly \Platform\FoodAlchemist\Services\Fassung\FassungsVergleich $vergleich,
         private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
         private readonly \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
     ) {}
@@ -116,7 +116,7 @@ class BausteinFolgeService
         if ($signaleNachfuehren) {
             foreach ($out['signale'] as $s) {
                 try {
-                    app(\Platform\FoodAlchemist\Services\FassungSignalService::class)->aktionBaustein($team, $art, $s['familie']);
+                    app(\Platform\FoodAlchemist\Services\Fassung\FassungSignalService::class)->aktionBaustein($team, $art, $s['familie']);
                 } catch (\Throwable $ex) {
                     Log::error('Signal nach Baustein-Folge fehlgeschlagen: '.$ex->getMessage(), ['exception' => $ex]);
                 }
@@ -253,7 +253,7 @@ class BausteinFolgeService
         $this->protokoll->schreibe('baustein_fassung_uebernommen', ['team_id' => $team->id, 'art' => $art, 'quelle' => $quelle, 'row_id' => $rowId,
             'von' => $k->alt_id, 'nach' => (int) $e['neu']->id, 'allergen' => $allergen], $actor, null);
         try {
-            app(\Platform\FoodAlchemist\Services\FassungSignalService::class)->aktionBaustein($team, $art, $k->familie_id);
+            app(\Platform\FoodAlchemist\Services\Fassung\FassungSignalService::class)->aktionBaustein($team, $art, $k->familie_id);
         } catch (\Throwable $ex) {
             Log::error('Signal nach Übernehmen fehlgeschlagen: '.$ex->getMessage(), ['exception' => $ex]);
         }

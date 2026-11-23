@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Fassung;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 
@@ -47,6 +47,6 @@ class FassungsUmstellung
      */
     public function einRezept(FoodAlchemistRecipe $rezept, int $alt, int $neu): int
     {
-        return app(Rezept\RezeptGraphService::class)->haengeUm($rezept->ingredients()->where('referenced_recipe_id', $alt), $neu);
+        return app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->haengeUm($rezept->ingredients()->where('referenced_recipe_id', $alt), $neu);
     }
 }

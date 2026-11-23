@@ -283,7 +283,7 @@ it('Handbuch: Reiter „Gefäß“ statt „Bestandteile“ — Gefäß + Zubeh�
 });
 
 it('Fassungs-Hash: Zubehör am Gefäß ist neuer Inhalt; ohne Zubehör bleibt der Hash wie bisher', function () {
-    $fassungen = app(\Platform\FoodAlchemist\Services\FassungService::class);
+    $fassungen = app(\Platform\FoodAlchemist\Services\Fassung\FassungService::class);
     $hash = fn () => (new ReflectionMethod($fassungen, 'inhaltHash'))->invoke($fassungen, FoodAlchemistRecipe::find($this->dar->recipe_id), []);
     $vorher = $hash();
     $this->zub->setzen($this->rootTeam, $this->glas->id, $this->deckel->id, 1);

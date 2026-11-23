@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Queue;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
 
 /**

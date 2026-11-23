@@ -331,7 +331,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     {
         $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($foodbookId);
         $this->guard($fb, $team);
-        $frames = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class);
+        $frames = app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class);
         $frame = $frames->find('foodbook', $foodbookId);
         if ($frame === null || (int) $frame->slots()->count() === 0) {
             return ['kein_geruest' => true, 'angelegt' => 0, 'uebersprungen' => 0, 'protokoll' => []];

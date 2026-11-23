@@ -111,7 +111,7 @@ it('seed_anker: der Kombinationsplan kommt aus den Ankern, auch wenn die Beschre
 
 it('Composer-Tab rendert „Passt das zusammen?" aus der Kombinationslogik, Kontrast-Chip statt ★★, Picker-Markierung', function () {
     $this->actingAs($this->makeUser($this->rootTeam));
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Composer', 'brief' => '']);
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Composer', 'brief' => '']);
 
     $html = \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
         ->call('oeffne', $session->id)

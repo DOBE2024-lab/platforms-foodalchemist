@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrameRule;
 use Platform\FoodAlchemist\Models\FoodAlchemistSaison;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Services\Concepter\CoverageService;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 use Platform\FoodAlchemist\Services\Plattform\StandortService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Support\FaTeam;

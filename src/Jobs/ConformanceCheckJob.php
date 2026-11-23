@@ -125,8 +125,8 @@ class ConformanceCheckJob implements ShouldQueue, \Platform\FoodAlchemist\Servic
         }
 
         if ($this->cascadeStepId !== null) {
-            app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)
-                ->setzePhase($this->cascadeStepId, \Platform\FoodAlchemist\Services\PlanningCascadeService::PHASE_KONFORMITAET);
+            app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)
+                ->setzePhase($this->cascadeStepId, \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::PHASE_KONFORMITAET);
         }
         // Spec 53 / Paket C: Dauer des Critic-Passes für die Cockpit-/MCP-Anzeige.
         $start = hrtime(true);
@@ -145,7 +145,7 @@ class ConformanceCheckJob implements ShouldQueue, \Platform\FoodAlchemist\Servic
             ]);
         } finally {
             if ($this->cascadeStepId !== null && $this->nochAktuell()) {
-                $svc = app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class);
+                $svc = app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class);
                 $svc->setzePhase($this->cascadeStepId, null);
                 $this->markKonformitaetsDauer((int) round((hrtime(true) - $start) / 1_000_000), $ergebnis['heilung'] ?? null);
             }

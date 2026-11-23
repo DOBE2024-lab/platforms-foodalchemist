@@ -114,7 +114,7 @@ it('D2: die Kandidatenliste an das Modell traegt zustand/verarbeitung/form — a
     $mitFeld = $this->makeGp($this->rootTeam, 'Tomaten / Pelati: konserviert, ganz');
     DB::table('foodalchemist_gps')->where('id', $mitFeld->id)->update(['condition' => 'konserviert']);
 
-    $kontext = app(\Platform\FoodAlchemist\Services\GenerationContextService::class)
+    $kontext = app(\Platform\FoodAlchemist\Services\Planung\GenerationContextService::class)
         ->forGeneration($this->rootTeam, 'Cremesuppe mit Tomaten und Sahne');
 
     $treffer = collect($kontext['gp_kandidaten']['treffer'] ?? [])->keyBy('id');

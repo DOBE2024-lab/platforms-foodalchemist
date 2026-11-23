@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistBriefTemplate;
-use Platform\FoodAlchemist\Services\BriefTemplateService;
+use Platform\FoodAlchemist\Services\Planung\BriefTemplateService;
 
 /**
  * Schnellstart-Vorlagen (Brief-Templates) des Teams auflisten — team-eigene ∪ die des Oberteams (Spec 84 L1: keine Globals),

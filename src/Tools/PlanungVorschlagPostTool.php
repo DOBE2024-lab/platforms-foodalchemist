@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\BriefingLeitplankenService;
+use Platform\FoodAlchemist\Services\Planung\BriefingLeitplankenService;
 
 /**
  * Spec 53 / Paket D — GL-07 für den Sprachbefehl: „Erstelle ein Gericht mit …" darf NICHT direkt

@@ -33,7 +33,7 @@ use RuntimeException;
 class ConceptGeneratorService
 {
     public function __construct(
-        private \Platform\FoodAlchemist\Services\PlanningFrameService $frames,
+        private \Platform\FoodAlchemist\Services\Planung\PlanningFrameService $frames,
         private CoverageService $coverage,
         private \Platform\FoodAlchemist\Services\Pairing\PairingService $pairing,
         private ConceptService $concepts,

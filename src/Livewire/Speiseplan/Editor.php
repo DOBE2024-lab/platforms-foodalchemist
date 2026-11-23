@@ -1075,7 +1075,7 @@ class Editor extends Component
      * Zellen, Zell-Läufe dieses Laufs, Deckel), statt sofort KI-Läufe zu starten. Erst „Starten“
      * im Bestätigungsfeld ruft {@see vollKaskadeStarten}.
      */
-    public function vollKaskadePruefen(\Platform\FoodAlchemist\Services\PlanningCascadeService $cascade): void
+    public function vollKaskadePruefen(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService $cascade): void
     {
         $this->kaskadeMeldung = null;
         $this->kaskadeVorschau = null;
@@ -1113,8 +1113,8 @@ class Editor extends Component
      * in den Planung-Editor (Fortschritt + Freigabe).
      */
     public function vollKaskadeStarten(
-        \Platform\FoodAlchemist\Services\PlanningCascadeService $cascade,
-        \Platform\FoodAlchemist\Services\PlanningSessionService $sessions
+        \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService $cascade,
+        \Platform\FoodAlchemist\Services\Planung\PlanningSessionService $sessions
     ) {
         $this->kaskadeMeldung = null;
         $this->kaskadeVorschau = null;

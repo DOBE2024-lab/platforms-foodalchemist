@@ -7,7 +7,7 @@ use Livewire\Attributes\Reactive;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /**
  * Planungs-Leitstelle · Reiter „Import“ (Spec 85 C1 PR-1, reine Verschiebung aus {@see Index}).

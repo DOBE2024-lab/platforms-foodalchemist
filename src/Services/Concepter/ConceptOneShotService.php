@@ -44,7 +44,7 @@ class ConceptOneShotService
         private readonly ConceptService $concepts,
         private readonly ConceptGeneratorService $generator,
         private readonly \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService $bulk,
-        private readonly \Platform\FoodAlchemist\Services\PlanningFrameService $frames,
+        private readonly \Platform\FoodAlchemist\Services\Planung\PlanningFrameService $frames,
     ) {}
 
     /**

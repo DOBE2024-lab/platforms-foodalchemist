@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrame;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrameRule;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrameSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistSaison;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 use RuntimeException;
 
 /**

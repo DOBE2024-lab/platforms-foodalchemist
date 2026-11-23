@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Livewire\Concerns\ManagesCanvas;
 use Platform\FoodAlchemist\Models\FoodAlchemistProjekt;
 use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\ProjektService;
+use Platform\FoodAlchemist\Services\Planung\ProjektService;
 use Platform\FoodAlchemist\Support\CrmKunden;
 use Platform\FoodAlchemist\Support\FaShell;
 
@@ -174,7 +174,7 @@ class Detail extends Component
             return;
         }
         try {
-            $this->uebernahmeBericht = app(\Platform\FoodAlchemist\Services\ProjektUebernahmeService::class)
+            $this->uebernahmeBericht = app(\Platform\FoodAlchemist\Services\Planung\ProjektUebernahmeService::class)
                 ->uebernehmen(CrmKunden::aktuellesTeam(), Auth::user(), $this->projektId, $oberteam);
             $this->meldung = 'Lizenz erteilt: Die Akte ist in den Mandanten übernommen.';
             $this->oberteamId = null;
@@ -214,7 +214,7 @@ class Detail extends Component
             'oberteam' => $this->oberteamId !== null ? Team::find($this->oberteamId) : null,
             'mandantTeam' => $p->mandant_team_id !== null ? Team::find($p->mandant_team_id) : null,
             'vorschau' => $istAdmin && $this->oberteamId !== null && ($ot = Team::find($this->oberteamId)) !== null && $p->mandant_team_id === null
-                ? app(\Platform\FoodAlchemist\Services\ProjektUebernahmeService::class)->vorschau($team, Auth::user(), (int) $p->id, $ot) : null,
+                ? app(\Platform\FoodAlchemist\Services\Planung\ProjektUebernahmeService::class)->vorschau($team, Auth::user(), (int) $p->id, $ot) : null,
             'gateFehlt' => $svc->gateFehlt($p), 'foodbooks' => $svc->foodbooks($team, (int) $p->id),
             'gateKontakte' => $this->phase === 'paketlogik' && ! $p->strukturFreigegeben() ? CrmKunden::kontakte($team, $this->gateKontaktSuche) : collect(),
             'kontakteVerknuepft' => count(array_filter($rollen, fn ($r) => ! empty($r['meta']['crm_contact_id']))), 'kontakteGesamt' => count($rollen),

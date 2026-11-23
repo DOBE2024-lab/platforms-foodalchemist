@@ -178,7 +178,7 @@ it('Inspiration: die ganze Teamfamilie sieht sich gegenseitig (auch Geschwister)
         expect($this->svc->fundstuecke($team)->pluck('id')->all())->toEqualCanonicalizing([$fA->id, $fRoot->id]);
     }
     // Planung kann Fundstücke der Familie kombinieren
-    $s = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->ausTrendradar($this->childB, [], [(int) $fA->inspiration_id]);
+    $s = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->ausTrendradar($this->childB, [], [(int) $fA->inspiration_id]);
     expect($s->brief)->toContain('Inspiration: Fund aus Standort A');
 
     // Schreiben: nur das hochladende Team, und dort nur mit Kuratieren
@@ -210,7 +210,7 @@ it('Inspiration: unter einem Master-Team sieht jeder Kunde nur die eigene Famili
     expect($this->svc->fundstuecke($this->childA)->pluck('id')->all())->toBe([$fA->id])
         ->and($this->svc->fundstuecke($standortA)->pluck('id')->all())->toBe([$fA->id])
         ->and($this->svc->fundstuecke($this->childB)->pluck('id')->all())->toBe([$fB->id])
-        ->and(fn () => app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->ausTrendradar($this->childB, [], [(int) $fA->inspiration_id]))
+        ->and(fn () => app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->ausTrendradar($this->childB, [], [(int) $fA->inspiration_id]))
             ->toThrow(\RuntimeException::class, 'nicht (mehr) sichtbar');
 });
 
@@ -436,7 +436,7 @@ it('Planung: Kombination aus Trend, Hype und Fundstück wird ein Briefing mit He
         'definition' => 'Langfristiger Wertewandel.', 'beleg' => ['quelle' => 'marktforschung', 'titel' => 'Studie X']]);
     $hype = $this->svc->anlegen($this->rootTeam, ['name' => 'Dubai-Schokolade', 'typ' => 'hype', 'ebene' => 'mode', 'kategorie' => 'food']);
     $fund = $this->svc->fundstueckAblegen($this->rootTeam, ['titel' => 'Pistazien-Kataifi-Tarte', 'notiz' => 'Bäckerei in Köln', 'fundort' => '@baeckerei']);
-    $planung = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class);
+    $planung = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class);
 
     $s = $planung->ausTrendradar($this->rootTeam, [$trend->id, $hype->id], [(int) $fund->inspiration_id]);
     expect($s->created_via)->toBe('trendradar')
@@ -448,7 +448,7 @@ it('Planung: Kombination aus Trend, Hype und Fundstück wird ein Briefing mit He
         ->and($s->brief)->toContain('Inspiration: Pistazien-Kataifi-Tarte — Bäckerei in Köln (gesehen: @baeckerei)')
         ->and($s->analysis)->toStartWith('Vegane Ernährung + Dubai-Schokolade + Pistazien-Kataifi-Tarte')   // Anzeigename in der Leitstelle
         ->and($s->analysis)->toContain('Studie X')
-        ->and(\Platform\FoodAlchemist\Services\PlanningSessionService::briefFuerScope($s->brief, 'gericht'))->toStartWith('Aus diesen Impulsen aus dem Trendradar ein Gericht entwickeln.');
+        ->and(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::briefFuerScope($s->brief, 'gericht'))->toStartWith('Aus diesen Impulsen aus dem Trendradar ein Gericht entwickeln.');
 
     $fremd = $this->svc->anlegen($this->childB, ['name' => 'Nur B']);
     expect(fn () => $planung->ausTrendradar($this->rootTeam, [$fremd->id]))->toThrow(\RuntimeException::class, 'nicht (mehr) sichtbar')
@@ -518,15 +518,15 @@ it('Trendradar → Planung: „In Planung öffnen" legt die Session an und sprin
 it('Concept-Erfindung bekommt den Ursprung aus der Trendradar-Kombination der Planung', function () {
     $trend = $this->svc->anlegen($this->rootTeam, ['name' => 'Fermentation', 'typ' => 'trend', 'ebene' => 'konsum', 'kategorie' => 'food']);
     $fund = $this->svc->fundstueckAblegen($this->rootTeam, ['titel' => 'Koji-Butter']);
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->ausTrendradar($this->rootTeam, [$trend->id], [(int) $fund->inspiration_id]);
-    $frei = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Frei']);
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->ausTrendradar($this->rootTeam, [$trend->id], [(int) $fund->inspiration_id]);
+    $frei = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Frei']);
 
-    $m = new ReflectionMethod(\Platform\FoodAlchemist\Services\IdeenService::class, 'ursprungsTrendBlock');
-    $block = $m->invoke(app(\Platform\FoodAlchemist\Services\IdeenService::class), $this->rootTeam, (int) $session->id);
+    $m = new ReflectionMethod(\Platform\FoodAlchemist\Services\Planung\IdeenService::class, 'ursprungsTrendBlock');
+    $block = $m->invoke(app(\Platform\FoodAlchemist\Services\Planung\IdeenService::class), $this->rootTeam, (int) $session->id);
     expect($block)->toStartWith('# URSPRUNG AUS DEM TRENDRADAR')
         ->and($block)->toContain('Trend (Konsum-/Branchentrend, Food): Fermentation')
         ->and($block)->toContain('Inspiration: Koji-Butter')
-        ->and($m->invoke(app(\Platform\FoodAlchemist\Services\IdeenService::class), $this->rootTeam, (int) $frei->id))->toBeNull();
+        ->and($m->invoke(app(\Platform\FoodAlchemist\Services\Planung\IdeenService::class), $this->rootTeam, (int) $frei->id))->toBeNull();
 });
 
 it('Rückbau-Migration: alte Trend-Dossiers inaktiv, trend-Routing gelöscht, Cluster-Tabellen weg', function () {

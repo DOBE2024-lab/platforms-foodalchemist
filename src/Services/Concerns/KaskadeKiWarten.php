@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Services\Ai\KiAuftragService;
 /**
  * Externer KI-Weg der Kaskade (Lauf 62, io 13.11.2026): Ein per MCP gestarteter Lauf wartet nicht auf den Worker, sondern auf
  * offene KI-Aufträge (ki_auftraege.ANTWORT). Die Job-Transaktion rollt beim Warten zurück, auch die Phase — die offenen Aufträge
- * selbst sind die Wahrheit. Ein wartender Schritt ist auch nicht verwaist (Auftrag gilt 24 h). Dazu der Lauf-Status-Hinweis. Aus {@see \Platform\FoodAlchemist\Services\PlanningCascadeService} gezogen (Größen-Wächter Spec 85 §4).
+ * selbst sind die Wahrheit. Ein wartender Schritt ist auch nicht verwaist (Auftrag gilt 24 h). Dazu der Lauf-Status-Hinweis. Aus {@see \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService} gezogen (Größen-Wächter Spec 85 §4).
  */
 trait KaskadeKiWarten
 {

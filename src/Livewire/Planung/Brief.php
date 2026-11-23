@@ -15,12 +15,12 @@ use Platform\FoodAlchemist\Livewire\Concerns\PlanKonzeptAusBrief;
 use Platform\FoodAlchemist\Livewire\Concerns\PlanRezepturFuerGericht;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
-use Platform\FoodAlchemist\Services\BriefingLeitplankenService;
+use Platform\FoodAlchemist\Services\Planung\BriefingLeitplankenService;
 use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Services\Concepter\TitelVorschlagService;
 use Platform\FoodAlchemist\Services\Plattform\WorkerHealthService;
@@ -249,7 +249,7 @@ class Brief extends Component
     {
         $team = $this->team();
 
-        return $team ? app(\Platform\FoodAlchemist\Services\BriefTemplateService::class)->fuer($team, $scope) : [];
+        return $team ? app(\Platform\FoodAlchemist\Services\Planung\BriefTemplateService::class)->fuer($team, $scope) : [];
     }
 
     /**
@@ -264,7 +264,7 @@ class Brief extends Component
             return;
         }
         $team = $this->team();
-        $tpl = $team ? app(\Platform\FoodAlchemist\Services\BriefTemplateService::class)->lade($team, (int) $key, $scope) : null;
+        $tpl = $team ? app(\Platform\FoodAlchemist\Services\Planung\BriefTemplateService::class)->lade($team, (int) $key, $scope) : null;
         if ($tpl === null) {
             $this->fehler = 'Unbekannte oder für diesen Tab ungültige Vorlage.';
 
@@ -389,7 +389,7 @@ class Brief extends Component
             return;
         }
         try {
-            $tpl = app(\Platform\FoodAlchemist\Services\BriefTemplateService::class)->speichere(
+            $tpl = app(\Platform\FoodAlchemist\Services\Planung\BriefTemplateService::class)->speichere(
                 $team, $scope, $this->vorlageName, (string) ($this->eingabe[$scope]['brief'] ?? ''),
                 $this->regler[$scope],
                 $this->eingabe[$scope]['titel'] ?? null,
@@ -415,7 +415,7 @@ class Brief extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\BriefTemplateService::class)->loeschen($team, $id);
+            app(\Platform\FoodAlchemist\Services\Planung\BriefTemplateService::class)->loeschen($team, $id);
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
 

@@ -149,7 +149,7 @@ it('foodbookAusBrief: leerer Brief → Meldung, nichts angelegt', function () {
  */
 it('Foodbook-Auswähler aktiviert die jüngste Owner-Session (updatedFbOwnerId)', function () {
     $fb = app(FoodbookService::class)->create($this->rootTeam, ['label' => 'Adler Portfolio']);
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Adler-Planung']);
     FoodAlchemistCascadeRun::create([
         'team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'vollkaskade',

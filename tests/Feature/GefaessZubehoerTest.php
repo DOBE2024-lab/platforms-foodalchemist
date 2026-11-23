@@ -243,7 +243,7 @@ it('MCP: gp_gefaess_zubehoer.PUT setzt, liefert Liste mit Preisen, entfernt; Dar
 
 it('Planungsblatt + Produktionsschein: Gefäß und Zubehör auf die Portionen hochgerechnet („Mitgeben“), Menge je Gefäß zählt', function () {
     $this->zub->setzen($this->rootTeam, $this->glas->id, $this->deckel->id, 1);
-    $blatt = app(\Platform\FoodAlchemist\Services\PlanungsblattService::class)->produktionsblatt($this->rootTeam, ['recipe_id' => $this->dar->recipe_id, 'portions' => 120]);
+    $blatt = app(\Platform\FoodAlchemist\Services\Planung\PlanungsblattService::class)->produktionsblatt($this->rootTeam, ['recipe_id' => $this->dar->recipe_id, 'portions' => 120]);
     $top = collect($blatt['rezepte'])->firstWhere('recipe_id', $this->dar->recipe_id);
     expect(data_get($top, 'darreichung.mitgeben'))->toBe('120 × Achenbachglas: Glas, 212 ml · 120 × Deckel: Twist-off, 82 mm');
 

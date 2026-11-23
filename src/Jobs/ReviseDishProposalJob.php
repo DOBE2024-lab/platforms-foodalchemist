@@ -14,7 +14,7 @@ use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /** Überarbeitet nur den textlichen Gericht-Bauplan; erzeugt bewusst noch kein Rezept. */
 class ReviseDishProposalJob implements ShouldQueue, \Platform\FoodAlchemist\Services\Ai\KiExternWiederholbar

@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Support\Planung;
 use Platform\FoodAlchemist\Livewire\Planung\Index;
 
 /**
- * Spec 85 C1 PR-4 (C-c) · den Leitplanken-Vorschlag aus dem Briefing ({@see \Platform\FoodAlchemist\Services\BriefingLeitplankenService::ausBriefing})
+ * Spec 85 C1 PR-4 (C-c) · den Leitplanken-Vorschlag aus dem Briefing ({@see \Platform\FoodAlchemist\Services\Planung\BriefingLeitplankenService::ausBriefing})
  * auf den Formularstand eines Scopes anwenden, aus `Livewire\Planung\Brief::leitplankenAusBriefing` herausgelöst (wortgleich
  * verschoben, Muster {@see ReglerParams}). Zustandsfrei: bekommt eingabe/regler, liefert den neuen Stand und den Befund
  * (gesetzt / verworfen / ignoriert / unklar) zurück. Prüfungen, Service-Aufruf und Meldungen bleiben in der Komponente.

@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
-use Platform\FoodAlchemist\Services\VorgangsRegisterService;
+use Platform\FoodAlchemist\Services\Planung\VorgangsRegisterService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\DB;
-use Platform\FoodAlchemist\Services\GenerationContextService;
+use Platform\FoodAlchemist\Services\Planung\GenerationContextService;
 use Platform\FoodAlchemist\Services\Pairing\KombinationsPlan;
 use Platform\FoodAlchemist\Services\Pairing\KontrastAbleitung;
 use Platform\FoodAlchemist\Services\Pairing\RezeptProfil;

@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
+use Platform\FoodAlchemist\Services\Planung\PlanungsEinstiegService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

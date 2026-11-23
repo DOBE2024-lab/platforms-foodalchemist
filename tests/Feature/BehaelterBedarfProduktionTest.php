@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeContainer as RC;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\PlanungsblattService;
+use Platform\FoodAlchemist\Services\Planung\PlanungsblattService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

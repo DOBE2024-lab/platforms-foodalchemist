@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Planung;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
@@ -161,7 +161,7 @@ class VorgangsRegisterService
     ];
 
     public function __construct(
-        private ReifeService $reife,
+        private \Platform\FoodAlchemist\Services\ReifeService $reife,
         private KnowledgeContextService $wissen,
         private KnowledgeCanonService $kanon,
     ) {}

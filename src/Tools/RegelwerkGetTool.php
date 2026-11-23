@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService;
-use Platform\FoodAlchemist\Services\VorgangsRegisterService;
+use Platform\FoodAlchemist\Services\Planung\VorgangsRegisterService;
 
 /**
  * Spec 50 · E-4 — welche Regelwerke für einen Vorgang oder Prompt-Key verbindlich sind.

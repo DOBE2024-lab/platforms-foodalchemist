@@ -429,7 +429,7 @@ it('E8.3: Entwurf-Ideen erscheinen NIE in der Kundensicht (Dokument)', function 
     $kap = $this->foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Kapitel mit Skizze']);
     $this->foodbooks->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->concept->id]);
     // Skizzen-Ebene: Entwurf-Idee erdet nichts, ist kein Block → darf im Kundendokument NICHT auftauchen.
-    app(\Platform\FoodAlchemist\Services\IdeenService::class)
+    app(\Platform\FoodAlchemist\Services\Planung\IdeenService::class)
         ->add($this->rootTeam, ['chapter_id' => $kap->id, 'title' => 'GEHEIME-SKIZZE-Wildkräuterschaum']);
 
     $rows = collect($this->foodbooks->dokumentDaten($this->rootTeam, $fb->refresh(), false)['kapitel']);

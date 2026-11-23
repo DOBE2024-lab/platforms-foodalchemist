@@ -8,8 +8,8 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\PlanungsEinstiegService;
 
 /**
  * Spec 42 (F5) — MCP-Einstieg „Foodbook aus Brief". Plant ein ganzes Foodbook aus einem Brief in der

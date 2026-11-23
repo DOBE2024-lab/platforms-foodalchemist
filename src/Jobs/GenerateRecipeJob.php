@@ -182,7 +182,7 @@ class GenerateRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services
             // Planungs-„Go"-Lineage: Trend-Herkunft + created_via=plan_go ans Rezept, Session→konvergenz.
             $planId = isset($this->parameter['planning_session_id']) ? (int) $this->parameter['planning_session_id'] : null;
             if ($planId !== null) {
-                $planSvc = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class);
+                $planSvc = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class);
                 $session = $planSvc->get($team, $planId);
                 if ($session !== null) {
                     $planSvc->verknuepfeArtefakt($session, 'recipe', (int) $r['recipe']->id);
@@ -279,7 +279,7 @@ class GenerateRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services
         $runId = \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep::whereKey($stepId)->value('cascade_run_id');
 
         return $runId !== null
-            && app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->istAbgebrochen((int) $runId);
+            && app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->istAbgebrochen((int) $runId);
     }
 
     /**
@@ -294,7 +294,7 @@ class GenerateRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services
             return;
         }
         try {
-            $svc = app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class);
+            $svc = app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class);
             if ($erfolg && $recipeId !== null) {
                 $svc->markStepDone($stepId, 'recipe', $recipeId);
             } else {
@@ -327,7 +327,7 @@ class GenerateRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services
         // für die Rezept-Modals) — das Planungs-Cockpit liest sie über laufStatus()/step-zeile.
         $stepId = $this->cascadeStepId();
         if ($stepId !== null) {
-            app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->setzePhase($stepId, $label);
+            app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->setzePhase($stepId, $label);
         }
     }
 

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Spec-42-Vollzug Stufe 3a — Step↔Kapitel-Zuordnung.
  *
- * Damit ein per-Kapitel-Teil-Lauf ({@see \Platform\FoodAlchemist\Services\PlanningCascadeService::starteKapitelKaskade})
+ * Damit ein per-Kapitel-Teil-Lauf ({@see \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::starteKapitelKaskade})
  * und die kapitelgruppierte Worker-Ansicht Step↔Kapitel zuordnen können, trägt der Step jetzt sein
  * Ziel-Kapitel (`chapter_id`) und optional den zugrundeliegenden Frame-Slot (`slot_id`). Beide werden im
  * gemeinsamen Dispatch-Helfer gesetzt (Voll- UND Kapitel-Kaskade), aber nur für owner_type='foodbook'.

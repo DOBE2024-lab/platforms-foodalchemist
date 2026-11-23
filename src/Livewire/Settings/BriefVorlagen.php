@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Settings;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistBriefTemplate;
-use Platform\FoodAlchemist\Services\BriefTemplateService;
+use Platform\FoodAlchemist\Services\Planung\BriefTemplateService;
 use Platform\FoodAlchemist\Support\TeamScope;
 use RuntimeException;
 

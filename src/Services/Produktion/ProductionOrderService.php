@@ -40,7 +40,7 @@ use Platform\FoodAlchemist\Support\TeamScope;
 class ProductionOrderService
 {
     public function __construct(
-        private \Platform\FoodAlchemist\Services\PlanungsblattService $planung,
+        private \Platform\FoodAlchemist\Services\Planung\PlanungsblattService $planung,
         private ProductionEventService $events,
     ) {}
 

@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\IdeenService;
+use Platform\FoodAlchemist\Services\Planung\IdeenService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -195,7 +195,7 @@ function bindDivergenzStub(array $ideen): void
 // ── Spec 40 E0: KI-Divergenz auf Session-Ebene (Analyse → Skizzen) ───────────
 
 it('E0 kiDivergenzSession legt Session-Skizzen an (planning_session_id, quelle=ki_divergenz_session)', function () {
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Herbst-Menü', 'brief' => 'Wild, Pilze, Kürbis']);
     bindDivergenzStub([
         ['titel' => 'Kürbis-Velouté mit Kernöl', 'beschreibung' => 'samtig, herbstlich', 'komponenten' => [
@@ -233,7 +233,7 @@ it('E0 kiDivergenzSession legt Session-Skizzen an (planning_session_id, quelle=k
 });
 
 it('E0 kiDivergenzSession wirft ohne Analyse-Text (leere Ausgangslage)', function () {
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Leer', 'brief' => '']);
     bindDivergenzStub([['titel' => 'darf nie entstehen']]);
 
@@ -244,7 +244,7 @@ it('E0 kiDivergenzSession wirft ohne Analyse-Text (leere Ausgangslage)', functio
 
 it('E0 kiDivergenzSession bleibt leer ohne Provider-Ideen (Fake-Echo, kein Fehler)', function () {
     config(['foodalchemist.ai.provider' => 'fake']);   // Kontext-Echo → kein `ideen`-Key
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Ohne Provider', 'brief' => 'x']);
 
     $res = $this->svc->kiDivergenzSession($this->rootTeam, (int) $session->id, 'Irgendein Trend-Text', 3);
@@ -255,7 +255,7 @@ it('E0 kiDivergenzSession bleibt leer ohne Provider-Ideen (Fake-Echo, kein Fehle
 });
 
 it('E0 kiDivergenzSession kappt Cross-Team-Zugriff (Tenancy)', function () {
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Root-Session', 'brief' => 'y']);
     bindDivergenzStub([['titel' => 'Fremd-Idee']]);
     $this->actingAs($this->makeUser($this->childA));
@@ -266,7 +266,7 @@ it('E0 kiDivergenzSession kappt Cross-Team-Zugriff (Tenancy)', function () {
 });
 
 it('Live-Test demo 09.10.: Gericht-Bauplan bricht nicht ab, wenn das Wissen über dem Budget liegt', function () {
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Herbst-Hauptgang', 'brief' => 'Rinderfilet, Kürbis']);
     bindDivergenzStub([['titel' => 'Rinderfilet | Kürbis | Jus']]);
     $budget = \Platform\FoodAlchemist\Services\Ai\KnowledgeBudget::forKey('foodbook.kapitel_ideen');

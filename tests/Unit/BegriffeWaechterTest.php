@@ -11,10 +11,10 @@
 const BEGRIFFE_AUSNAHMEN = [
     // [Datei, Teilstring der Zeile, Grund]
     ['src/Support/FaBereiche.php', "'Concepter' => 'concepter', 'Concepts' => 'concepter'", 'Namespace-Segmente als Schlüssel'],
-    ['src/Services/PlanningSessionService.php', "'Freies Concept'", 'alter Platzhaltertitel bestehender Sitzungen wird weiter erkannt'],
+    ['src/Services/Planung/PlanningSessionService.php', "'Freies Concept'", 'alter Platzhaltertitel bestehender Sitzungen wird weiter erkannt'],
     ['src/Services/Plattform/VoiceCommandService.php', '', 'KI-Prompt, kein sichtbarer Text'],
     ['src/Support/KiUmleitung.php', '', 'Beschreibung für Agenten'],
-    ['src/Services/VorgangsRegisterService.php', '', 'Vorgänge für Agenten (foodalchemist.ablauf.GET)'],
+    ['src/Services/Planung/VorgangsRegisterService.php', '', 'Vorgänge für Agenten (foodalchemist.ablauf.GET)'],
     ['resources/views/livewire/ui-katalog.blade.php', "['Konzept, Konzepte', 'Concept, Concepts'", 'Begriffsliste nennt das alte Wort'],
     ['resources/views/livewire/ui-katalog.blade.php', "['Konzepter', 'Concepter'", 'Begriffsliste nennt das alte Wort'],
 ];

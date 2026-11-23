@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
 use Platform\FoodAlchemist\Services\ZukaufBasisrezeptService;
 
@@ -82,8 +82,8 @@ class BuildZukaufRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Servi
             $recipe = $zukauf->baue($team, $step, $this->text, $this->ware, $this->params);
             // Wurzel einer Zukauf-Planung (Knopf am GP, 13.11.): Lineage wie GenerateRecipeJob (Session → konvergenz, created_via plan_go).
             if ($step->parent_step_id === null && isset($this->params['planning_session_id'])
-                && ($session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->get($team, (int) $this->params['planning_session_id'])) !== null) {
-                app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->verknuepfeArtefakt($session, 'recipe', (int) $recipe->id);
+                && ($session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->get($team, (int) $this->params['planning_session_id'])) !== null) {
+                app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->verknuepfeArtefakt($session, 'recipe', (int) $recipe->id);
             }
             $cascade->setzePhase($this->stepId, null);
             $workflow->afterGenerated($team, $this->stepId, $this->userId, $recipe, [], [...$this->params, 'cascade_step_id' => $this->stepId]);

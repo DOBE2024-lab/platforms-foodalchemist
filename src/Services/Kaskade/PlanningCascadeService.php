@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Kaskade;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -107,7 +107,7 @@ class PlanningCascadeService
                 ? $this->speiseplan()->starteSpeiseplanVollkaskade($team, $session, $creativeMode, $optionen) : $this->ausgabe()->starteVollkaskade($team, $session, $creativeMode, $optionen);
         }
         if ($scope === 'rezept' && $session?->source_gp_id !== null) {   // Zukauf-Planung am GP (13.11.): feste Ware, Zukauf-Weg statt Plan/Generator
-            return app(ZukaufBasisrezeptService::class)->starteLauf($team, $session, $creativeMode, $optionen);
+            return app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class)->starteLauf($team, $session, $creativeMode, $optionen);
         }
 
         $brief = trim((string) ($optionen['brief'] ?? ''));
@@ -487,11 +487,11 @@ class PlanningCascadeService
             return;
         }
         if ($ownerType === 'foodbook') {
-            app(Foodbook\FoodbookService::class)->addBlock($team, $containerId, ['type' => 'concept_ref', 'concept_id' => $conceptId]);
+            app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->addBlock($team, $containerId, ['type' => 'concept_ref', 'concept_id' => $conceptId]);
         } elseif ($ownerType === 'speisekarte') {
-            app(Ausgabe\SpeisekarteService::class)->addPosition($team, $containerId, ['type' => 'menue_ref', 'concept_id' => $conceptId]);
+            app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->addPosition($team, $containerId, ['type' => 'menue_ref', 'concept_id' => $conceptId]);
         } elseif ($ownerType === 'offer') {
-            app(Ausgabe\AngebotService::class)->referenziereConcept($team, $containerId, $conceptId);   // E2: containerId = Angebots-ID
+            app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)->referenziereConcept($team, $containerId, $conceptId);   // E2: containerId = Angebots-ID
         } elseif ($ownerType === 'format') {
             app(\Platform\FoodAlchemist\Services\Concepter\FormatService::class)->slotConceptEinfuegen($team, $containerId, $conceptId);   // containerId = format_id
             $this->ausgabe()->ordneFormatNachRahmen($team, (int) $step->cascade_run_id);   // Spec 80 F2
@@ -521,13 +521,13 @@ class PlanningCascadeService
         if ($gpIds === []) {
             return [];
         }
-        $verf = app(FavoriteGpService::class)->verfuegbarkeit($team, $gpIds);
+        $verf = app(\Platform\FoodAlchemist\Services\FavoriteGpService::class)->verfuegbarkeit($team, $gpIds);
         $luecken = array_keys(array_filter($verf, fn ($v) => ($v['bucket'] ?? null) === 'luecke'));
         if ($luecken === []) {
             return [];
         }
         $namen = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->whereIn('id', $luecken)->pluck('name', 'id');
-        $inspiration = app(Pairing\PairingInspirationService::class);
+        $inspiration = app(\Platform\FoodAlchemist\Services\Pairing\PairingInspirationService::class);
         $gemeldet = [];
         foreach ($namen as $gpId => $name) {
             if (trim((string) $name) === '') {

@@ -11,7 +11,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
+use Platform\FoodAlchemist\Services\Planung\PlanungsEinstiegService;
 use Platform\FoodAlchemist\Support\Planung\DiktatZiele;
 use Platform\FoodAlchemist\Support\Planung\PlanungReiterDaten;
 

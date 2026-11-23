@@ -384,7 +384,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         // CQ 3.4: Folge eines abgeschlossenen Kaskaden-Steps (Wording-Pass, Kohäsions-Score) — synchron, sofort, kein Queue
         \Illuminate\Support\Facades\Event::listen(
             \Platform\FoodAlchemist\Events\KaskadenSchrittAbgeschlossen::class,
-            fn ($e) => $this->app->make(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->nachSchrittAbschluss($e),
+            fn ($e) => $this->app->make(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->nachSchrittAbschluss($e),
         );
         // Spec 84 E-1: langsame Abfragen messen (aus, solange foodalchemist.leistung.langsam_ms null ist)
         \Platform\FoodAlchemist\Support\LangsameAbfragen::registrieren($this->app);

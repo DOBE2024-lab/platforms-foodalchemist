@@ -132,7 +132,7 @@ it('PLAN_FROM_BRIEF: setzt Leitplanken + creative_mode; menue_* erreichen die Co
     // Kapitel-Gate: die Concept-Erzeugung startet erst die Kapitel-Freigabe → dann trägt der Job die menue_*-Achsen.
     $run = FoodAlchemistCascadeRun::where('planning_session_id', (int) $session->id)->latest('id')->first();
     $step = $run->steps()->where('kind', 'concept')->where('status', 'geplant')->first();
-    app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->gibStepFrei($this->rootTeam, (int) $step->id);
+    app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->gibStepFrei($this->rootTeam, (int) $step->id);
 
     // Composition-Fix end-to-end: die menue_*-Achsen erreichen den Concept-Job (Rezept-Regler wie level nicht).
     Queue::assertPushed(GenerateConceptJob::class, fn ($j) => ($j->menueAchsen['menue_gaenge'] ?? null) === 5

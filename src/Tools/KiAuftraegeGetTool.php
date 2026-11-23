@@ -71,7 +71,7 @@ class KiAuftraegeGetTool extends FoodAlchemistTool implements ToolContract, Tool
         // Filter auf einen Lauf bzw. einen einzelnen Auftrag: beides wird zu einer ID-Liste
         $uuids = null;
         if (! empty($arguments['run_id'])) {
-            $uuids = app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->kiAuftragIdsFuerLauf($team, (int) $arguments['run_id']);
+            $uuids = app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->kiAuftragIdsFuerLauf($team, (int) $arguments['run_id']);
             if ($uuids === null) {
                 return ToolResult::error('Kaskaden-Lauf nicht gefunden oder nicht team-sichtbar.', 'NOT_FOUND');
             }

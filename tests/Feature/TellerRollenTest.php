@@ -96,7 +96,7 @@ it('Kind-Pfad Ende-zu-Ende: Rolle der Gericht-Zeile → Plan-Job → Bau-Job →
         'parent_step_id' => $eltern->id, 'child_step_id' => $kind->id, 'ingredient_id' => $zeile->id]);
 
     // 1. „jetzt erzeugen“ → Plan-Job trägt die geplante Rolle
-    app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->erzeugeGeplantenStep($this->rootTeam, (int) $kind->id);
+    app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->erzeugeGeplantenStep($this->rootTeam, (int) $kind->id);
     $planJob = null;
     Queue::assertPushed(GenerateRecipePlanJob::class, function ($j) use (&$planJob) { $planJob = $j; return ($j->params['kind_rolle'] ?? null) === 'sauce'; });
 

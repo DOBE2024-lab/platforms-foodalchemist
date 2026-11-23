@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Queue;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GenerationContextService;
+use Platform\FoodAlchemist\Services\Planung\GenerationContextService;
 use Platform\FoodAlchemist\Services\RecipeExtractService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

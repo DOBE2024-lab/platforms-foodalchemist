@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Planung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -45,12 +45,12 @@ class PlanungsblattService
     private array $recipeCache = [];
 
     public function __construct(
-        private RecipeRecomputeService $recompute,
-        private Einkauf\LeadLaService $leadLa,
-        private Rezept\DarreichungResolver $darreichungen,
-        private Einkauf\GebindeRechner $gebinde,
-        private Produktion\ProductionTimeService $productionTimes,
-        private Produktion\BehaelterBedarfService $behaelter,
+        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $leadLa,
+        private \Platform\FoodAlchemist\Services\Rezept\DarreichungResolver $darreichungen,
+        private \Platform\FoodAlchemist\Services\Einkauf\GebindeRechner $gebinde,
+        private \Platform\FoodAlchemist\Services\Produktion\ProductionTimeService $productionTimes,
+        private \Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService $behaelter,
     ) {
     }
 
@@ -250,7 +250,7 @@ class PlanungsblattService
 
         // Basisrezept-Position: Menge = GRAMM/Person → Batches = Gesamt-Gramm ÷ Basis-Yield.
         if (! (bool) ($gericht->is_sales_recipe ?? true)
-            && ! Concepter\ConcepterAggregateService::stueckModus($unit, $gericht)) {
+            && ! \Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::stueckModus($unit, $gericht)) {
             $basisG = (float) ($gericht->yield_kg ?? 0) * 1000;
             if ($q === null || $q <= 0 || $basisG <= 0) {
                 $warnungen[] = "Position „{$gericht->name}“: Menge/Basis-Yield fehlt — nicht skalierbar.";
@@ -263,13 +263,13 @@ class PlanungsblattService
 
         // VK-Gericht (oder Stück-Modus): Portions-Äquivalent × Personen → Portionen → Batches.
         $darPortionG = $dar?->quantity_per_unit_g !== null ? (float) $dar->quantity_per_unit_g : null;
-        $pae = Concepter\ConcepterAggregateService::portionsAequivalent($q, $unit, $gericht, $darPortionG);
+        $pae = \Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::portionsAequivalent($q, $unit, $gericht, $darPortionG);
         if ($pae === null) {
             $warnungen[] = "Position „{$gericht->name}“: Gramm-Menge ohne Portionsgewicht — nicht skalierbar.";
 
             return null;
         }
-        $stueck = Concepter\ConcepterAggregateService::stueckModus($unit, $gericht);
+        $stueck = \Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::stueckModus($unit, $gericht);
         $rezept = $this->ladeRezept((int) $gericht->id);
         if (! $stueck && $rezept !== null && (bool) $rezept->is_sales_recipe) {
             // Portionen dieser Position → Menge aus der geltenden Darreichung (gewählt, sonst Standard).
@@ -520,7 +520,7 @@ class PlanungsblattService
     {
         $q = $block->quantity !== null ? (float) $block->quantity : null;
         $darG = $this->darreichungen->fuerBlock($block)?->quantity_per_unit_g;
-        $pae = Concepter\ConcepterAggregateService::portionsAequivalent($q, $block->unit, $dish, $darG !== null ? (float) $darG : null);
+        $pae = \Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::portionsAequivalent($q, $block->unit, $dish, $darG !== null ? (float) $darG : null);
         if ($pae === null) {
             $warnungen[] = "Kapitel-Gericht „{$dish->name}“: Gramm-Menge ohne Portionsgewicht — 1 Portion/Person angenommen.";
             $pae = 1.0;
@@ -598,7 +598,7 @@ class PlanungsblattService
      */
     private function darreichungsAnteil(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $dar, float $portionen, array &$warnungen): array
     {
-        $anteil = app(DarreichungService::class)->produktionsAnteil($recipe, $dar, $portionen, Team::find($recipe->team_id));
+        $anteil = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->produktionsAnteil($recipe, $dar, $portionen, Team::find($recipe->team_id));
         if ($anteil['warnung'] !== null) {
             $warnungen[] = $anteil['warnung'];
         }
@@ -685,7 +685,7 @@ class PlanungsblattService
         }
 
         // 1.1e: ein eingeschleuster Zyklus liefert sonst still falschen Bedarf (Relaxation bricht an der Pass-Grenze ab) — melden.
-        if (($zyklus = Rezept\RezeptGraphService::findeZyklus(array_map(fn ($subs) => array_column($subs, 'sub'), $kanten))) !== null) {
+        if (($zyklus = \Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::findeZyklus(array_map(fn ($subs) => array_column($subs, 'sub'), $kanten))) !== null) {
             $namen = array_map(fn ($id) => $this->ladeRezept($id)?->name ?? "#{$id}", [...$zyklus, $zyklus[0]]);
             throw new \Platform\FoodAlchemist\Exceptions\RezeptZyklusException($zyklus, 'Zyklus im Rezeptgraph: ' . implode(' → ', $namen) . ' — Bedarf nicht berechenbar.');
         }
@@ -1141,10 +1141,10 @@ class PlanungsblattService
         $info = array_filter([
             'behaelter_warm' => $this->vocabName('foodalchemist_vocab_containers', $dar->container_warm_vocab_id),
             'behaelter_kalt' => $this->vocabName('foodalchemist_vocab_containers', $dar->container_cold_vocab_id),
-            'vehikel' => $this->vocabName('foodalchemist_vocab_serving_vehicles', app(DarreichungService::class)->vehikelId($dar)),   // wirksamer Typ: Übersteuerung, sonst Typ des Gefäßes
+            'vehikel' => $this->vocabName('foodalchemist_vocab_serving_vehicles', app(\Platform\FoodAlchemist\Services\DarreichungService::class)->vehikelId($dar)),   // wirksamer Typ: Übersteuerung, sonst Typ des Gefäßes
             'geschirr' => $dar->vessel_gp_id !== null ? DB::table('foodalchemist_gps')->where('id', $dar->vessel_gp_id)->value('name') : null,   // Gefäß der Form
             // Kostenart des Gefäßes (17.11.2026): was die Logistik damit tut — mitgeben, zurück in die Spülküche, zurück zum Verleiher, nur Empfehlung
-            'geschirr_art' => $dar->vessel_gp_id !== null ? (\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::LOGISTIK[app(DarreichungService::class)->gefaessKosten($dar)['kostenart'] ?? ''] ?? null) : null,
+            'geschirr_art' => $dar->vessel_gp_id !== null ? (\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::LOGISTIK[app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessKosten($dar)['kostenart'] ?? ''] ?? null) : null,
             'arbeitszeit_zuschlag_min' => $dar->arbeitszeiten === null ? $dar->work_time_surcharge_min : null,
             'mitgeben' => $this->mitgebenText($formen !== [] ? $formen : [['dar' => $dar, 'portionen' => $portionen]], $team),
         ], fn ($v) => $v !== null && $v !== '');
@@ -1165,13 +1165,13 @@ class PlanungsblattService
             if (($f['dar'] ?? null) === null) {
                 continue;
             }
-            foreach (app(DarreichungService::class)->gefaessMitgeben($f['dar'], (float) $f['portionen'], $team) as $t) {
+            foreach (app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessMitgeben($f['dar'], (float) $f['portionen'], $team) as $t) {
                 $summe[$t['gp_id']] ??= ['name' => $t['name'], 'menge' => 0.0];
                 $summe[$t['gp_id']]['menge'] += $t['menge'];
             }
         }
 
-        return $summe !== [] ? implode(' · ', array_map(fn ($t) => DarreichungService::stueckText($t['menge'], true).' × '.$t['name'], $summe)) : null;
+        return $summe !== [] ? implode(' · ', array_map(fn ($t) => \Platform\FoodAlchemist\Services\DarreichungService::stueckText($t['menge'], true).' × '.$t['name'], $summe)) : null;
     }
 
     /** @param array<int|string, array{dar: ?FoodAlchemistRecipeDarreichung, portionen: float}> $formen */
@@ -1191,7 +1191,7 @@ class PlanungsblattService
      */
     private function formenAnzeige(FoodAlchemistRecipe $recipe, array $formen): array
     {
-        $darSvc = app(DarreichungService::class);
+        $darSvc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
         $out = [];
         foreach ($formen as $f) {
             $dar = $f['dar'];

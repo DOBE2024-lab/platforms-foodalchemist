@@ -6,9 +6,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
-use Platform\FoodAlchemist\Services\Concepter\ConceptPreisService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
-use Platform\FoodAlchemist\Services\Rezept\DarreichungResolver;
 use Platform\FoodAlchemist\Services\Concepter\FormatKapitelService;
 use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
@@ -28,63 +26,25 @@ final class FoodbookAggregat
     // ── Aggregat / Preis (M11 Cockpit) ──────────────────────────────────────────
 
     /**
-     * Preis-Beitrag eines Blocks (Jarvis-Parität): liefert Per-Person-Anteil (vk/ek)
-     * UND einen Pauschal-Anteil (flach, nicht ×Pax).
-     *  - recipe_ref  → sales_net/ek_total × Menge; `price_basis` steuert die Achse:
-     *                  person (Default) = Per-Person · pauschal = flacher Anteil (€/Position,
-     *                  kein ×Pax; EK bleibt hier ungezählt, WE-Ampel meldet „partiell", E4.4)
-     *  - concept_ref → Concept-€/Person (person-unabhängig)
-     *  - header_frei_preis: person→Per-Person · staffel→Per-Person (nach Pax aufgelöst) · pauschal→flach
+     * Preis-Beitrag eines Blocks — 98 · 3.6 PR2: über den Positions-Kern {@see \Platform\FoodAlchemist\Services\Position\PositionPreisService},
+     * dieselbe Regel wie im Angebot: Per-Person-Anteil (vk/ek) und flacher Anteil (pauschal, ek_pauschal), vk_fehlt bei
+     * fehlendem VK, ek_vollstaendig. Gericht pauschal führt seinen EK jetzt mit (P8).
      *
-     * @return array{vk_pp: float, ek_pp: float, pauschal: float}
+     * @return array{vk_pp: float, ek_pp: float, pauschal: float, ek_pauschal: float, vk_fehlt: bool, ek_vollstaendig: bool}
      */
-    public function blockPreis(FoodAlchemistFoodbookBlock $block, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
+    public function blockPreis(FoodAlchemistFoodbookBlock $block, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, ?Team $team = null): array
     {
-        if ($block->type === 'concept_ref' && $block->concept) {
-            $cockpit = $this->concepts->preisCockpit($block->concept, $outlet);
+        // 98 · 3.6 PR2 (P1): Positions-Kern — Preise aus dem Team wie im Angebot (Team-VK, Kosten-Cache, preisCockpit mit Team);
+        // ohne übergebenes Team das aktuelle bzw. das Besitzer-Team. Festpreise gibt es nur im Angebot.
+        $team ??= \Platform\FoodAlchemist\Support\FaTeam::aktuell() ?? Team::find($block->team_id);
 
-            return ['vk_pp' => (float) $cockpit['price_per_person'], 'ek_pp' => (float) $cockpit['ek_per_person'], 'pauschal' => 0.0, 'vk_fehlt' => ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete
-        }
-        if ($block->type === 'recipe_ref' && $block->dish) {
-            $faktor = $block->quantity !== null ? (float) $block->quantity : 1.0;
-            $resolver = app(DarreichungResolver::class);   // Spec 85 D-1: Preisleiter; im Betrieb dessen VK, sonst die Baseline
-            $baseVk = (float) (($outlet !== null ? $resolver->vkNetto($block->dish, $outlet) : null) ?? $resolver->vkNetto($block->dish) ?? 0);
-            $vk = round($baseVk * $faktor, 2);
-            $ek = round((float) ($resolver->ekProPortion($block->dish) ?? 0) * $faktor, 2);   // Spec 85: EK je Portion, wie der VK
-
-            // Spec 19 E1.2: Einzel-Gericht pauschal (€/Position, flach) vs. per-Person (€/Gast).
-            // Pauschal → VK in den flachen Anteil (kein ×Pax); EK bleibt ungezählt (WE-Ampel
-            // meldet „partiell", E4.4), konsistent zu header_frei_preis/pauschal.
-            if ($block->price_basis === 'pauschal') {
-                return ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => $vk];
-            }
-
-            return ['vk_pp' => $vk, 'ek_pp' => $ek, 'pauschal' => 0.0];
-        }
-        if ($block->type === 'header_frei_preis') {
-            return match ($block->price_basis) {
-                'pauschal' => ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => (float) ($block->price_value ?? 0)],
-                'staffel' => ['vk_pp' => $this->resolveStaffel($block, $pax), 'ek_pp' => 0.0, 'pauschal' => 0.0],
-                default => ['vk_pp' => (float) ($block->price_value ?? 0), 'ek_pp' => 0.0, 'pauschal' => 0.0], // person
-            };
-        }
-
-        return ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => 0.0];
+        return app(\Platform\FoodAlchemist\Services\Position\PositionPreisService::class)->zeile($block, $team, $outlet, $pax);
     }
 
     /** Staffel-Auflösung: höchste Stufe mit min_personen ≤ Pax (ohne Pax die niedrigste). */
     public function resolveStaffel(FoodAlchemistFoodbookBlock $block, ?int $pax): float
     {
-        $stufen = $block->relationLoaded('staffel') ? $block->staffel : $block->staffel()->get();
-        if ($stufen->isEmpty()) {
-            return 0.0;
-        }
-        if ($pax === null) {
-            return (float) $stufen->sortBy('min_persons')->first()->price;
-        }
-        $treffer = $stufen->where('min_persons', '<=', $pax)->sortByDesc('min_persons')->first();
-
-        return (float) ($treffer?->price ?? $stufen->sortBy('min_persons')->first()->price);
+        return app(\Platform\FoodAlchemist\Services\Position\PositionPreisService::class)->staffel($block, $pax);   // 98 · 3.6 PR2
     }
 
     /**
@@ -100,20 +60,22 @@ final class FoodbookAggregat
             'blocks.concept:id,name,price_per_person_cache,price_incomplete,team_id,ist_fassung,price_mode,price_per_person_manual,price_override_expires_at', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
             'blocks.staffel', 'children']);
 
-        $vk = $ek = $pauschal = 0.0;
+        $vk = $ek = $pauschal = $ekPauschal = 0.0;
         $vkFehlt = false;   // CQ price_incomplete: mind. ein Konzept-Preis ist nur die Summe der bekannten Positionen
         foreach ($kapitel->blocks as $block) {
-            $p = $this->blockPreis($block, $pax, $outlet);
+            $p = $this->blockPreis($block, $pax, $outlet, $team);   // 98 · 3.6 PR2 (P1): Team-Kontext wie im Angebot
             $vkFehlt = $vkFehlt || ($p['vk_fehlt'] ?? false);
             $vk += $p['vk_pp'];
             $ek += $p['ek_pp'];
             $pauschal += $p['pauschal'];
+            $ekPauschal += $p['ek_pauschal'] ?? 0.0;   // 98 · 3.6 PR2 (P8): EK pauschaler Gerichte
         }
         foreach ($kapitel->children as $kind) {
             $kindAgg = $this->kapitelAggregat($team, $kind, $pax, $outlet);
             $vk += $kindAgg['vk_pro_person'];
             $ek += $kindAgg['ek_per_person'];
             $pauschal += $kindAgg['pauschal'];
+            $ekPauschal += $kindAgg['ek_pauschal'] ?? 0.0;
             $vkFehlt = $vkFehlt || $kindAgg['vk_fehlt'];
         }
 
@@ -124,7 +86,7 @@ final class FoodbookAggregat
         return [
             'vk_pro_person' => round($vk, 2),
             'ek_per_person' => round($ek, 2),
-            'pauschal' => round($pauschal, 2),
+            'pauschal' => round($pauschal, 2), 'ek_pauschal' => round($ekPauschal, 2),
             'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ek, $vk), 'vk_fehlt' => $vkFehlt,   // Food-Cost aus einer VK-Teilsumme wäre geschönt
         ];
     }

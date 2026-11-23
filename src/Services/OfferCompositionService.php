@@ -14,7 +14,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapterImage;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\FoodbookService;
 use Platform\FoodAlchemist\Services\PlanningFrameService;
 
 /**
@@ -302,7 +301,7 @@ class OfferCompositionService
     public static function headerPresets(): array
     {
         $raus = [];
-        foreach (FoodbookService::headerPresets() as $gruppe => $items) {
+        foreach (\Platform\FoodAlchemist\Services\Foodbook\FoodbookHeaderPresets::liste() as $gruppe => $items) {   // 98 · 3.3 S4-0k: ohne Rückkante zu FoodbookService
             $gefiltert = array_values(array_filter(
                 $items,
                 fn (array $p) => ! isset($p['price_basis']) || in_array($p['price_basis'], FoodAlchemistOfferBlock::PRICE_BASES, true)

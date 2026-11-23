@@ -94,7 +94,6 @@ return [
     \Platform\FoodAlchemist\Console\NectaAbgleichCommand::class,   // Necta-Abgleich: nächtlich + wöchentlich (PR 2)
     \Platform\FoodAlchemist\Console\NonFoodEinrichtenCommand::class,
     \Platform\FoodAlchemist\Console\NonFoodErkennenCommand::class,
-    \Platform\FoodAlchemist\Console\PaketeToConceptsCommand::class,
     \Platform\FoodAlchemist\Console\PlanNutzungZaehlenCommand::class,   // Spec 82 §13 D (täglich, Tageswerte → team_billable_usages)
     \Platform\FoodAlchemist\Console\PlanPreiseStartwerteCommand::class,   // Spec 82 §13 D (Platzhalter-Startpreise)
     \Platform\FoodAlchemist\Console\PlattformBasisHebenCommand::class,

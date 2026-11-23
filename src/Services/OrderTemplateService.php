@@ -38,7 +38,7 @@ class OrderTemplateService
     public function detail(Team $team, int $id): FoodAlchemistOrderTemplate
     {
         return FoodAlchemistOrderTemplate::where('team_id', $team->id)
-            ->with(['lines.gp:id,name', 'lines.recipe:id,name,is_sales_recipe', 'lines.supplierItem:id,designation,supplier_id', 'lines.supplierItem.supplier:id,name', 'lines.concept:id,name', 'lines.paket:id,name'])
+            ->with(['lines.gp:id,name', 'lines.recipe:id,name,is_sales_recipe', 'lines.supplierItem:id,designation,supplier_id', 'lines.supplierItem.supplier:id,name', 'lines.concept:id,name'])
             ->findOrFail($id);
     }
 
@@ -96,22 +96,17 @@ class OrderTemplateService
     {
         $v = FoodAlchemistOrderTemplate::where('team_id', $team->id)->findOrFail($id);
         if (! in_array($typ, FoodAlchemistOrderTemplateLine::TYPEN, true)) {
-            throw new \RuntimeException('Typ muss gp, recipe, supplier_item, concept oder paket sein.');
-        }
-        if ($typ === 'paket') {
-            \Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen::pruefe('Bestellvorlage', 'Alte Pakete sind nur noch lesbar (Umzug ins Konzept-Modell). '
-                .'Bitte das Paket als Konzept (Art Paket) aufnehmen.');   // CQ 2.6b
+            throw new \RuntimeException('Typ muss gp, recipe, supplier_item oder concept sein.');
         }
         $spalte = FoodAlchemistOrderTemplateLine::SPALTE[$typ];
         $sichtbar = match ($typ) {
             'gp' => FoodAlchemistGp::visibleToTeam($team)->whereKey($bezugId)->exists(),
             'recipe' => FoodAlchemistRecipe::visibleToTeam($team)->whereKey($bezugId)->exists(),
             'concept' => \Platform\FoodAlchemist\Models\FoodAlchemistConcept::visibleToTeam($team)->whereKey($bezugId)->exists(),
-            'paket' => \Platform\FoodAlchemist\Models\FoodAlchemistPaket::visibleToTeam($team)->whereKey($bezugId)->exists(),
             default => FoodAlchemistSupplierItem::visibleToTeam($team)->whereKey($bezugId)->exists(),
         };
         if (! $sichtbar) {
-            throw new \RuntimeException(['gp' => 'Grundprodukt', 'recipe' => 'Rezept', 'supplier_item' => 'Lieferantenartikel', 'concept' => 'Konzept', 'paket' => 'Paket'][$typ] . ' nicht gefunden.');
+            throw new \RuntimeException(['gp' => 'Grundprodukt', 'recipe' => 'Rezept', 'supplier_item' => 'Lieferantenartikel', 'concept' => 'Konzept'][$typ] . ' nicht gefunden.');
         }
         $einheit = $this->einheit($typ, $einheit, $bezugId);
         $line = FoodAlchemistOrderTemplateLine::firstOrNew(['order_template_id' => $v->id, 'type' => $typ, $spalte => $bezugId]);

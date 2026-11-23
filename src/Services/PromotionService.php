@@ -146,11 +146,7 @@ class PromotionService
                 ->whereIn('concept_id', $konzepte)->whereNotNull('sales_recipe_id')
                 ->whereNull('deleted_at')->pluck('sales_recipe_id')->all());
         }
-        if ($pakete !== []) {
-            $direkt = array_merge($direkt, DB::table('foodalchemist_package_dishes')
-                ->whereIn('package_id', $pakete)->whereNotNull('sales_recipe_id')
-                ->whereNull('deleted_at')->pluck('sales_recipe_id')->all());
-        }
+        // $pakete (alte package_id) wird seit 98 · 2.6c nicht mehr aufgelöst — die Alt-Pakete gibt es nicht mehr
 
         return array_values(array_unique(array_map('intval', array_filter($direkt))));
     }

@@ -127,18 +127,6 @@ it('Angebot: presentation_id muss zum Gericht des Blocks gehören', function () 
     expect($svc->updateBlock($this->childA, $b->id, ['presentation_id' => $eigeneForm->id])->presentation_id)->toBe($eigeneForm->id);
 });
 
-// ── 3. Alt-Paket ─────────────────────────────────────────────────────────
-
-it('Alt-Paket: syncGerichte lehnt ein fremdes Gericht ab, eigenes und Bestand gehen', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\PaketService::class);
-    $p = $svc->create($this->childA, ['name' => 'Alt', 'role' => 'Hauptgang', 'price_mode' => 'auto']);
-    $svc->syncGerichte($this->childA, $p->id, [['sales_recipe_id' => $this->eigen->id]]);
-
-    expect(fn () => $svc->syncGerichte($this->childA, $p->id, [['sales_recipe_id' => $this->eigen->id], ['sales_recipe_id' => $this->fremd->id]]))
-        ->toThrow(\RuntimeException::class, 'nicht sichtbar');
-    expect($p->fresh()->dishes()->pluck('sales_recipe_id')->all())->toBe([$this->eigen->id]);
-});
-
 // ── 5. Concepter-Editor: Ablehnung als Hinweis ───────────────────────────
 
 it('Editor: ein Basisrezept als „gericht“ eingefügt zeigt einen Hinweis und hinterlässt keine leere Position', function () {

@@ -5,7 +5,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -13,8 +12,16 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 
 beforeEach(function () {
     $this->seedTeamHierarchy();
-    $this->pakete = app(PaketService::class);
     $this->concepts = app(ConceptService::class);
+    // 98 · 2.6c: Paket = kind=paket-Concept mit je einem Slot pro Gericht (ersetzt das Alt-Paket)
+    $this->paketAus = function (string $name, array $rezepte) {
+        $p = $this->concepts->createPaket($this->rootTeam, ['name' => $name, 'price_mode' => 'manuell']);
+        foreach ($rezepte as $r) {
+            $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $p->id, ['role' => 'Posten'])->id, ['sales_recipe_id' => $r->id]);
+        }
+
+        return $p;
+    };
     $this->agg = app(ConcepterAggregateService::class);
 
     // A: vollständig (Portion 250 g, high), vegan. B: vollständig (200 g, medium),
@@ -59,12 +66,9 @@ it('M10R-1: alle additiven Spalten + neuen Tabellen existieren', function () {
 });
 
 it('Paket-Aggregat: Nährwerte/Person aus Portionsgramm, Konfidenz schwächstes Glied', function () {
-    $p = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->syncGerichte($this->rootTeam, $p->id, [
-        ['sales_recipe_id' => $this->a->id], ['sales_recipe_id' => $this->b->id],
-    ]);
+    $p = ($this->paketAus)('Salad Wall', [$this->a, $this->b]);
 
-    $agg = $this->agg->paketAggregat($p->refresh());
+    $agg = $this->agg->conceptAggregat($p->refresh());
 
     // A: 200 kcal × 2.5 = 500; B: 150 × 2.0 = 300 → 800
     expect($agg['naehrwerte']['kcal'])->toBe(800.0)
@@ -79,14 +83,11 @@ it('Paket-Aggregat: Nährwerte/Person aus Portionsgramm, Konfidenz schwächstes 
 });
 
 it('Concept-Aggregat: festes Gericht ohne Portionsgramm degradiert ehrlich (Konfidenz, vollstaendig)', function () {
-    $p = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->syncGerichte($this->rootTeam, $p->id, [
-        ['sales_recipe_id' => $this->a->id], ['sales_recipe_id' => $this->b->id],
-    ]);
+    $p = ($this->paketAus)('Salad Wall', [$this->a, $this->b]);
 
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot1 = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $slot1->id, ['package_id' => $p->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot1->id, ['embedded_concept_id' => $p->id]);
     $slot2 = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
     $this->concepts->fillSlot($this->rootTeam, $slot2->id, ['sales_recipe_id' => $this->c->id, 'quantity' => 2]);
 
@@ -106,28 +107,17 @@ it('Concept-Aggregat: festes Gericht ohne Portionsgramm degradiert ehrlich (Konf
 });
 
 it('fillSlot persistiert die Aggregat-Caches am Concept (refreshCache-Hook)', function () {
-    $p = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->syncGerichte($this->rootTeam, $p->id, [['sales_recipe_id' => $this->a->id]]);
+    $p = ($this->paketAus)('Salad Wall', [$this->a]);
 
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Mini']);
     $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['package_id' => $p->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $p->id]);
 
     $c->refresh();
     expect($c->work_time_min_cache)->toBe(15)
         ->and((float) $c->ek_per_person_cache)->toBe(0.6)
         ->and($c->nutrition_cache)->toBeArray()
         ->and($c->nutrition_cache['kcal'])->toEqual(500);            // 200 × 2.5 (JSON normalisiert .0)
-});
-
-it('syncGerichte persistiert den Paket-Nährwert-Cache', function () {
-    $p = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->syncGerichte($this->rootTeam, $p->id, [['sales_recipe_id' => $this->a->id]]);
-
-    $p->refresh();
-    expect($p->work_time_min_cache)->toBe(15)
-        ->and($p->nutrition_cache)->toBeArray()
-        ->and($p->nutrition_cache['kcal'])->toEqual(500);           // JSON normalisiert .0
 });
 
 // ── Mengen-Modell (Dominique-Entscheid 2026-06-15: einheit-abhängig) ─────────

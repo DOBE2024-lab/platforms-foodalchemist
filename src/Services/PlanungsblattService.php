@@ -191,28 +191,6 @@ class PlanungsblattService
                 foreach ($this->konzeptTops($concept, $personen, $warnungen) as $t) {
                     $tops[] = $t;
                 }
-            } elseif (! empty($ziel['paket_id'])) {
-                // Spec 73: Paket × Personen (Bestellrunde / Bestellvorlage) — Gerichte wie im Konzept-Slot
-                $paket = \Platform\FoodAlchemist\Models\FoodAlchemistPaket::visibleToTeam($team)
-                    ->with(['dishes' => fn ($q) => $q->orderBy('position'), 'dishes.unit:id,slug,dimension,default_in_g',
-                        'dishes.dish:id,name,is_sales_recipe,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces'])
-                    ->find((int) $ziel['paket_id']);
-                if ($paket === null) {
-                    $warnungen[] = "Paket #{$ziel['paket_id']} nicht sichtbar/vorhanden — übersprungen.";
-
-                    continue;
-                }
-                $personen = max(1, (int) ($ziel['persons'] ?? 0));
-                $skalierung ??= ['modus' => 'personen', 'wert' => $personen];
-                $zielLabels[] = "{$paket->name} ({$personen} P.)";
-                foreach ($paket->dishes as $pg) {
-                    if ($pg->dish) {
-                        $t = $this->positionTop($pg->dish, $pg->quantity, $pg->unit, $this->darreichungen->fuerPaketGericht($pg), $personen, $warnungen);
-                        if ($t !== null) {
-                            $tops[] = $t;
-                        }
-                    }
-                }
             } elseif (! empty($ziel['recipe_id'])) {
                 $recipe = FoodAlchemistRecipe::visibleToTeam($team)->find((int) $ziel['recipe_id']);
                 if ($recipe === null) {
@@ -246,9 +224,6 @@ class PlanungsblattService
             'slots' => fn ($q) => $q->orderBy('position'),
             'slots.unit:id,slug,dimension,default_in_g',
             'slots.embeddedConcept:id,name,kind',
-            'slots.package.dishes' => fn ($q) => $q->orderBy('position'),
-            'slots.package.dishes.unit:id,slug,dimension,default_in_g',
-            'slots.package.dishes.dish:id,name,is_sales_recipe,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces',
             'slots.dish:id,name,is_sales_recipe,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces',
         ]);
 
@@ -258,13 +233,6 @@ class PlanungsblattService
             if ($slot->embeddedConcept) {
                 foreach ($this->konzeptTops($slot->embeddedConcept, $personen, $warnungen, $conceptPath) as $top) {
                     $tops[] = $top;
-                }
-            } elseif ($slot->package) {
-                foreach ($slot->package->dishes as $pg) {
-                    if ($pg->dish) {
-                        $dar = $this->darreichungen->fuerPaketGericht($pg);
-                        $tops[] = $this->positionTop($pg->dish, $pg->quantity, $pg->unit, $dar, $personen, $warnungen);
-                    }
                 }
             } elseif ($slot->dish) {
                 $dar = $this->darreichungen->fuerSlot($slot);

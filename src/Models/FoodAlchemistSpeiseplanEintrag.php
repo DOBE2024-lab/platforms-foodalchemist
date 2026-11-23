@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Platform\ActivityLog\Traits\LogsActivity;
 use Platform\FoodAlchemist\Models\Concerns\BelongsToTeamHierarchy;
 use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
-use Platform\FoodAlchemist\Services\PaketUmzug\PaketAltNurLesen;
 
 /**
  * @ai.description Speiseplan-Eintrag (M14) — belegt (woche × wochentag × mahlzeit)
@@ -18,13 +17,12 @@ class FoodAlchemistSpeiseplanEintrag extends Model
 {
     use HasUuidV7, LogsActivity, BelongsToTeamHierarchy, SoftDeletes;
 
-    /** CQ 2.6b: neue Verweise auf alte Pakete nur bis zum Umzug (Schalter foodalchemist.paket_alt_nur_lesen); fängt alle Schreibwege inkl. Kopien. */
+    /** 98 · 2.6c: neue Verweise auf alte Pakete (package_id) werden abgelehnt; ein Paket wird als Concept (concept_id, Art Paket) eingeplant. */
     protected static function booted(): void
     {
         static::saving(function (self $e) {
             if ($e->package_id !== null && $e->isDirty('package_id')) {
-                PaketAltNurLesen::pruefe('Speiseplan', 'Alte Pakete sind nur noch lesbar (Umzug ins Konzept-Modell). '
-                    .'Bitte das Paket als Konzept (concept_id, Art Paket) einplanen.');
+                throw new \RuntimeException('Alte Pakete gibt es nicht mehr. Bitte das Paket als Konzept (concept_id, Art Paket) einplanen.');
             }
         });
     }
@@ -70,18 +68,6 @@ class FoodAlchemistSpeiseplanEintrag extends Model
             ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis');   // Spec 82: Verweis löst auch Fassungen auf
     }
 
-    public function package(): BelongsTo
-    {
-        return $this->belongsTo(FoodAlchemistPaket::class, 'package_id')
-            ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis');   // Spec 82: Verweis löst auch Fassungen auf
-    }
-
-    /** @deprecated #486 deutscher Alias → package() */
-    public function paket(): BelongsTo
-    {
-        return $this->package();
-    }
-
     public function dish(): BelongsTo
     {
         return $this->belongsTo(FoodAlchemistRecipe::class, 'sales_recipe_id')
@@ -115,6 +101,6 @@ class FoodAlchemistSpeiseplanEintrag extends Model
     {
         // Spec 57 · 0.9: über die Haupt-Relationen, damit das Eager-Loading aus
         // SpeiseplanService::detail() greift (die deutschen Aliase luden je Eintrag nach).
-        return $this->concept?->name ?? $this->package?->name ?? $this->dish?->name ?? '—';
+        return $this->concept?->name ?? $this->dish?->name ?? '—';
     }
 }

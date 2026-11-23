@@ -32,9 +32,9 @@ class FassungSignalService
     private const QUELLE = 'fassung';
 
     /** Konzept-/Paket-/Format-Fassungen (PR 4/5/7): Modell und Anzeige-Name je Art. */
-    private const BAUSTEIN_MODELL = ['concept' => \Platform\FoodAlchemist\Models\FoodAlchemistConcept::class, 'paket' => \Platform\FoodAlchemist\Models\FoodAlchemistPaket::class, 'format' => \Platform\FoodAlchemist\Models\FoodAlchemistFormat::class];
+    private const BAUSTEIN_MODELL = ['concept' => \Platform\FoodAlchemist\Models\FoodAlchemistConcept::class, 'format' => \Platform\FoodAlchemist\Models\FoodAlchemistFormat::class];
 
-    private const BAUSTEIN_LABEL = ['concept' => 'Konzept', 'paket' => 'Paket', 'format' => 'Format'];
+    private const BAUSTEIN_LABEL = ['concept' => 'Konzept', 'format' => 'Format'];
 
     /** EU-Allergene in der Schreibweise des Hauses. */
     private const ALLERGENE = \Platform\FoodAlchemist\Support\Allergene::KURZ;
@@ -212,7 +212,7 @@ class FassungSignalService
      * Nach dem Veröffentlichen eines Konzepts/Pakets: Info-Signale für die Mandanten mit der neuen Fassung in der Hülle, Folgen der Verweise
      * ({@see BausteinFolgeService}), danach die Aktions-Signale für die berührten Team × Familie. Fehler hier verhindern nie die Veröffentlichung.
      *
-     * @param  'concept'|'paket'|'format'  $art
+     * @param  'concept'|'format'  $art
      * @param  list<int>  $neueFassungIds  die NEU angelegten Fassungen (nicht die wiederverwendeten)
      */
     public function nachBausteinVeroeffentlichung(string $art, array $neueFassungIds): int

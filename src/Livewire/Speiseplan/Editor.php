@@ -8,7 +8,6 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
@@ -420,7 +419,7 @@ class Editor extends Component
 
     public ?int $cellLinie = null;
 
-    public string $pickerTyp = 'gericht';             // concept | paket | gericht
+    public string $pickerTyp = 'gericht';             // concept | gericht
 
     public string $pickerSuche = '';
 
@@ -999,7 +998,7 @@ class Editor extends Component
         if ($this->planId === null || $this->cellDatum === null) {
             return;
         }
-        $feld = ['concept' => 'concept_id', 'paket' => 'package_id', 'gericht' => 'sales_recipe_id'][$typ] ?? 'sales_recipe_id';
+        $feld = ['concept' => 'concept_id', 'gericht' => 'sales_recipe_id'][$typ] ?? 'sales_recipe_id';
         // Spec 57 · Paket 5: Picker im Ersetzen-Modus tauscht den Inhalt statt einen neuen Eintrag anzulegen.
         if ($this->pickerErsetzenId !== null && $this->eintragDesPlans($svc, $this->pickerErsetzenId) !== null) {
             $svc->ersetzeEintrag($this->team(), $this->pickerErsetzenId, [$feld => $id]);
@@ -1192,7 +1191,6 @@ class Editor extends Component
         $pickerUntergruppen = collect();
         if ($sp !== null && $this->cellDatum !== null) {
             $kandidaten = match ($this->pickerTyp) {
-                'paket' => $svc->paketKandidaten($team, $this->pickerSuche, 50),
                 'concept' => $svc->conceptKandidaten($team, $this->pickerSuche, 50),
                 default => $svc->gerichtKandidaten($team, $this->pickerSuche, 50, $this->pickerHauptgruppe, $this->pickerDishClass),
             };

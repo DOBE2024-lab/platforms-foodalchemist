@@ -35,7 +35,7 @@ class StandortInhalte extends Component
 
     public string $suche = '';
 
-    /** Picker-Ebene: gericht | basis | concept | paket | format */
+    /** Picker-Ebene: gericht | basis | concept | format */
     public string $ebene = 'gericht';
 
     /** Picker-Filter: Status, Kategorie (Rezepte/Konzepte), nur noch nicht Enthaltenes */
@@ -51,7 +51,7 @@ class StandortInhalte extends Component
     /** Ebene → [Sammlungs-Typ, Label] */
     public const EBENEN = [
         'gericht' => ['recipe', 'Gerichte'], 'basis' => ['recipe', 'Basisrezepte'],
-        'concept' => ['concept', 'Konzepte'], 'paket' => ['paket', 'Pakete'], 'format' => ['format', 'Formate'],
+        'concept' => ['concept', 'Konzepte'], 'format' => ['format', 'Formate'],
     ];
 
     public function updatedEbene(): void
@@ -183,7 +183,6 @@ class StandortInhalte extends Component
             [$typ] = self::EBENEN[$this->ebene] ?? self::EBENEN['gericht'];
             $klasse = match ($this->ebene) {
                 'concept' => FoodAlchemistConcept::class,
-                'paket' => \Platform\FoodAlchemist\Models\FoodAlchemistPaket::class,
                 'format' => FoodAlchemistFormat::class,
                 default => FoodAlchemistRecipe::class,
             };

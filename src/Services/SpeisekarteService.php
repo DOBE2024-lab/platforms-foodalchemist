@@ -946,7 +946,7 @@ class SpeisekarteService
             return null;
         }
         if (! array_key_exists($conceptId, $this->speisekarteConceptCache)) {
-            $this->speisekarteConceptCache[$conceptId] = FoodAlchemistConcept::with(['slots.package.dishes.gericht', 'slots.dish', 'slots.embeddedConcept'])->find($conceptId);
+            $this->speisekarteConceptCache[$conceptId] = FoodAlchemistConcept::with(['slots.dish', 'slots.embeddedConcept'])->find($conceptId);
         }
 
         return $this->speisekarteConceptCache[$conceptId];
@@ -984,12 +984,9 @@ class SpeisekarteService
     private function conceptGerichte(FoodAlchemistConcept $concept, array $pfad = []): Collection
     {
         $pfad[(int) $concept->id] = true;
-        $concept->loadMissing(['slots.package.dishes.gericht', 'slots.dish', 'slots.embeddedConcept']);
+        $concept->loadMissing(['slots.dish', 'slots.embeddedConcept']);
         $gerichte = collect();
         foreach ($concept->slots as $slot) {
-            if ($slot->package) {
-                $gerichte = $gerichte->merge($slot->package->dishes->pluck('gericht')->filter());
-            }
             if ($slot->dish) {
                 $gerichte->push($slot->dish);
             }

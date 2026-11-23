@@ -11,7 +11,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderTemplate;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderTemplateLine;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\OrderTemplateService;
@@ -30,7 +29,7 @@ class Editor extends Component
     /** Kopf (gespeichert per „Speichern"). */
     public array $form = ['name' => '', 'kategorie' => '', 'weekday' => '', 'note' => ''];
 
-    public string $suchArt = 'gp';          // gp | recipe | concept | paket | supplier_item
+    public string $suchArt = 'gp';          // gp | recipe | concept | supplier_item
 
     public string $suche = '';
 
@@ -181,8 +180,6 @@ class Editor extends Component
                     ->get(['id', 'name', 'is_sales_recipe'])->map(fn ($r) => ['id' => $r->id, 'name' => $r->name, 'zusatz' => $r->is_sales_recipe ? 'Gericht' : 'Basisrezept']),
                 'concept' => FoodAlchemistConcept::visibleToTeam($team)->where('name', 'like', $like)->orderBy('name')->limit(10)
                     ->get(['id', 'name'])->map(fn ($c) => ['id' => $c->id, 'name' => $c->name, 'zusatz' => 'Konzept']),
-                'paket' => FoodAlchemistPaket::visibleToTeam($team)->where('name', 'like', $like)->orderBy('name')->limit(10)
-                    ->get(['id', 'name'])->map(fn ($p) => ['id' => $p->id, 'name' => $p->name, 'zusatz' => 'Paket']),
                 'supplier_item' => FoodAlchemistSupplierItem::visibleToTeam($team)->with('supplier:id,name')
                     ->where(fn ($w) => $w->where('designation', 'like', $like)->orWhere('article_number', 'like', $q . '%'))
                     ->orderBy('designation')->limit(10)->get(['id', 'designation', 'supplier_id', 'article_number'])

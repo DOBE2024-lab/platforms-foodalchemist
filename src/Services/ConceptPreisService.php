@@ -11,8 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 /**
  * Spec 82 Abo für Konzepte, PR 4 (Preis im Mandantenkontext, §12 C): Konzeptpreis je (Konzept-Fassung × Team).
  *
- * Gleiche Leitplanken wie {@see PaketPreisService}: live, nichts gespeichert, keine Master-Spalte. Pakete laufen über
- * PaketPreisService, eingebettete Paket-Konzepte rekursiv hierüber, Gerichte über KostenCacheService/TeamVkService (mit der am
+ * Live, nichts gespeichert, keine Master-Spalte. Eingebettete Paket-Konzepte laufen rekursiv hierüber, Gerichte über KostenCacheService/TeamVkService (mit der am
  * Slot gewählten Darreichung). Unvollständiger EK/VK eines Postens = „kein Preis" fürs ganze Konzept (null + Grund + fehlende
  * Bestandteile) — nie 0 €, nie Teilsumme (Auflage 4).
  *
@@ -23,7 +22,7 @@ class ConceptPreisService
 {
     private const MAX_TIEFE = 4;
 
-    public function __construct(private PaketPreisService $pakete, private TeamVkService $teamVk) {}
+    public function __construct(private TeamVkService $teamVk) {}
 
     /** @var array<int, bool> Ergebnis von {@see vorwaermen} für die Dauer EINER Liste (danach {@see vergessen}); statisch, weil jeder Aufrufer sich den Dienst frisch aus dem Container holt */
     private static array $vorgewaermt = [];
@@ -48,7 +47,6 @@ class ConceptPreisService
             ->orWhereExists(fn ($q) => $q->from('foodalchemist_concept_slots AS s')->whereColumn('s.concept_id', 'c.id')->whereNull('s.deleted_at')
                 ->where(fn ($x) => $x
                     ->whereExists(fn ($y) => $y->from('foodalchemist_recipes AS r')->whereColumn('r.id', 's.sales_recipe_id')->where('r.ist_fassung', true))
-                    ->orWhereExists(fn ($y) => $y->from('foodalchemist_packages AS p')->whereColumn('p.id', 's.package_id')->where('p.ist_fassung', true))
                     ->orWhereExists(fn ($y) => $y->from('foodalchemist_concepts AS e')->whereColumn('e.id', 's.embedded_concept_id')->where('e.ist_fassung', true)))))
             ->pluck('c.id')->map(fn ($v) => (int) $v)->flip();
         foreach ($ids as $id) {
@@ -98,7 +96,6 @@ class ConceptPreisService
         return DB::table('foodalchemist_concept_slots AS s')->where('s.concept_id', $concept->id)->whereNull('s.deleted_at')
             ->where(fn ($w) => $w
                 ->whereExists(fn ($q) => $q->from('foodalchemist_recipes AS r')->whereColumn('r.id', 's.sales_recipe_id')->where('r.ist_fassung', true))
-                ->orWhereExists(fn ($q) => $q->from('foodalchemist_packages AS p')->whereColumn('p.id', 's.package_id')->where('p.ist_fassung', true))
                 ->orWhereExists(fn ($q) => $q->from('foodalchemist_concepts AS c')->whereColumn('c.id', 's.embedded_concept_id')->where('c.ist_fassung', true)))
             ->exists();
     }
@@ -109,7 +106,7 @@ class ConceptPreisService
      */
     public function cockpit(FoodAlchemistConcept $concept, Team $team, ?FoodAlchemistOutlet $outlet = null, int $tiefe = 0): array
     {
-        $slots = $concept->slots()->orderBy('position')->with(['package', 'embeddedConcept', 'dish', 'unit:id,slug,dimension,default_in_g'])->get();
+        $slots = $concept->slots()->orderBy('position')->with(['embeddedConcept', 'dish', 'unit:id,slug,dimension,default_in_g'])->get();
         $zeilen = [];
         $vkTotal = 0.0;
         $ekTotal = 0.0;
@@ -255,18 +252,6 @@ class ConceptPreisService
             }
 
             return $this->ergebnis($basis + ['type' => 'paket', 'label' => $ep->name], $vk, $ek, $grund);
-        }
-        if ($slot->package_id !== null && $slot->package) {
-            $pk = $slot->package;
-            if ($pk->ist_fassung) {
-                $r = $this->pakete->fuer($pk, $team, $outlet);
-                $grund = $r['vollstaendig'] && $r['ek_pro_person'] !== null ? null : ($r['grund'] ?? 'ek_unvollstaendig');
-
-                return $this->ergebnis($basis + ['type' => 'paket', 'label' => $pk->name], $r['vk_pro_person'], $r['ek_pro_person'], $grund);
-            }
-
-            return $this->ergebnis($basis + ['type' => 'paket', 'label' => $pk->name, 'stale' => (bool) $pk->price_stale],
-                (float) ($pk->price_per_person ?? 0), (float) ($pk->ek_per_person ?? 0), null);
         }
         if ($slot->sales_recipe_id !== null && $slot->dish) {
             return $this->gericht($slot, $concept, $team, $outlet, $basis);

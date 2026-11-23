@@ -161,9 +161,8 @@ it('Oberfläche und MCP: Einstellungen schalten und geben frei; Tools prüfen di
     expect($k->success)->toBeTrue()->and($k->data['kopie_von_id'])->toBe($this->andere->id);
 });
 
-it('Picker: Ebenen Gerichte, Basisrezepte, Konzepte, Pakete, Formate — anhaken und gesammelt hinzufügen', function () {
+it('Picker: Ebenen Gerichte, Basisrezepte, Konzepte, Formate — anhaken und gesammelt hinzufügen', function () {
     $this->actingAs($this->inhaber);
-    $paket = \Platform\FoodAlchemist\Models\FoodAlchemistPaket::create(['team_id' => $this->rootTeam->id, 'name' => 'Fingerfood-Paket']);
     $sid = $this->inhalte->sammlungAnlegen($this->rootTeam, 'Grundsortiment', null, $this->inhaber);
 
     $lw = Livewire::test(StandortInhalte::class)->call('sammlungOeffnen', $sid)
@@ -171,11 +170,10 @@ it('Picker: Ebenen Gerichte, Basisrezepte, Konzepte, Pakete, Formate — anhaken
         ->assertSeeHtml('data-picker-eintrag="'.$this->gericht->id.'"')->assertDontSeeHtml('data-picker-eintrag="'.$this->basis->id.'"');   // Gerichte ≠ Basisrezepte
     $lw->set('ebene', 'basis')->assertSeeHtml('data-picker-eintrag="'.$this->basis->id.'"')->assertDontSeeHtml('data-picker-eintrag="'.$this->gericht->id.'"');
     $lw->set('ebene', 'gericht')->set('pickerAuswahl', [$this->gericht->id => true, $this->andere->id => true])->call('auswahlHinzu')->assertSet('fehler', null);
-    $lw->set('ebene', 'paket')->assertSeeHtml('data-picker-eintrag="'.$paket->id.'"')->set('pickerAuswahl', [$paket->id => true])->call('auswahlHinzu')->assertSet('fehler', null);
     $lw->set('ebene', 'format')->set('pickerAuswahl', [$this->format->id => true])->call('auswahlHinzu');
 
     $objekte = collect($this->inhalte->sammlungen($this->rootTeam)[0]['objekte'])->map(fn ($o) => $o['typ'].':'.$o['id'])->sort()->values()->all();
-    expect($objekte)->toBe(collect(['recipe:'.$this->gericht->id, 'recipe:'.$this->andere->id, 'paket:'.$paket->id, 'format:'.$this->format->id])->sort()->values()->all());
+    expect($objekte)->toBe(collect(['recipe:'.$this->gericht->id, 'recipe:'.$this->andere->id, 'format:'.$this->format->id])->sort()->values()->all());
     // schon Enthaltenes ist markiert und nicht erneut anhakbar
     $lw->set('ebene', 'gericht')->assertSee('schon in der Sammlung');
     // Filter: nur noch nicht enthaltene blendet Enthaltenes aus; Status filtert

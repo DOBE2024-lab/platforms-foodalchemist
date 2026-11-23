@@ -189,7 +189,7 @@ class LeitstelleService
                     $kinder = [];
                     if ($concept !== null) {
                         foreach ($concept->slots as $slot) {
-                            $kinder[] = ['label' => $slot->dish?->name ?? ($slot->package?->name ?? $slot->label ?? 'Slot')];
+                            $kinder[] = ['label' => $slot->dish?->name ?? ($slot->label ?? 'Slot')];
                         }
                     }
                     // Ebene 2: im Betriebs-Kontext den €/Gast live gegen den Betrieb rechnen
@@ -412,7 +412,7 @@ class LeitstelleService
             'chapters.format.slots.concept:id,price_per_person_cache,price_incomplete',
         ];
         if ($mitSlots) {
-            $mit['chapters.blocks.concept'] = fn ($q) => $q->with(['slots' => fn ($s) => $s->orderBy('position'), 'slots.dish:id,name', 'slots.package:id,name']);
+            $mit['chapters.blocks.concept'] = fn ($q) => $q->with(['slots' => fn ($s) => $s->orderBy('position'), 'slots.dish:id,name']);
         } else {
             $mit['chapters.blocks.concept'] = fn ($q) => $q->select('id', 'name', 'price_per_person_cache', 'price_incomplete');
         }

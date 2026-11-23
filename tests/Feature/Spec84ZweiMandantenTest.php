@@ -21,7 +21,6 @@ use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\FormatService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -76,7 +75,7 @@ beforeEach(function () {
         $ids['recipe'] = $this->makeRecipe($t, "{$inhalt} Basisfond", ['is_sales_recipe' => false])->id;
         $ids['dish'] = $this->makeRecipe($t, "{$inhalt} Gericht", ['is_sales_recipe' => true])->id;
         $ids['concept'] = app(ConceptService::class)->create($t, ['name' => "{$inhalt} Konzept"])->id;
-        $ids['paket'] = app(PaketService::class)->create($t, ['name' => "{$inhalt} Paket"])->id;
+        $ids['paket'] = app(ConceptService::class)->createPaket($t, ['name' => "{$inhalt} Paket"])->id;   // 98 · 2.6c: Paket = kind=paket-Concept
         $ids['format'] = app(FormatService::class)->create($t, ['name' => "{$inhalt} Format"])->id;
         $fb = FoodAlchemistFoodbook::create(['team_id' => $t->id, 'label' => "{$inhalt} Foodbook"]);
         $ids['foodbook'] = $fb->id;
@@ -369,8 +368,7 @@ dataset('spec84_seiten', [
     'Gerichte' => [\Platform\FoodAlchemist\Livewire\Verkauf\Browser::class, 'QXAINH Gericht'],
     'Grundprodukte' => [\Platform\FoodAlchemist\Livewire\Gps\Browser::class, 'QXASTM Zanderfilet'],
     'Formate' => [\Platform\FoodAlchemist\Livewire\Formate\Browser::class, 'QXAINH Format'],
-    'Konzepte' => [\Platform\FoodAlchemist\Livewire\Concepts\Index::class, 'QXAINH Konzept'],
-    'Pakete' => [\Platform\FoodAlchemist\Livewire\Pakete\Index::class, 'QXAINH Paket'],
+    'Konzepte' => [\Platform\FoodAlchemist\Livewire\Concepter\Browser::class, 'QXAINH Konzept'],   // 98 · 2.6c: /concepts und /pakete entfallen
     'Foodbooks' => [\Platform\FoodAlchemist\Livewire\Foodbooks\Index::class, 'QXAINH Foodbook'],
     'Speisekarten' => [\Platform\FoodAlchemist\Livewire\Speisekarte\Index::class, 'QXAINH Karte'],
     'Speisepläne' => [\Platform\FoodAlchemist\Livewire\Speiseplan\Index::class, 'QXAINH Wochenplan'],

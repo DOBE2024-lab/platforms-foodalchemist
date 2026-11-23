@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 
 /**
@@ -15,16 +14,16 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
  * Sichtbar nur, wenn das aktive Team das Master-Team ist, das Objekt dem Master gehört und kein Fassungs-Stand ist (veröffentlicht wird die Arbeitszeile,
  * nie eine Fassung). Ein Kunden-Format (origin=kunde) hat nie einen Menüpunkt (D8, Kunden-IP). Die Menüs in Rezept-Modal, Rezept-Detailpanel, Gericht-
  * Modal (VK), Gericht-Detailpanel, Paket-Detail, Konzept-Detailpanel und Format-Detailpanel fragen hier; wer die Bedingung ändert, ändert sie überall.
- * Das Veröffentlichen selbst prüfen {@see \Platform\FoodAlchemist\Services\FassungService} (Rezept), PaketFassungService, ConceptFassungService und
+ * Das Veröffentlichen selbst prüfen {@see \Platform\FoodAlchemist\Services\FassungService} (Rezept), ConceptFassungService und
  * FormatFassungService.
  */
 final class FassungMenue
 {
-    public const ARTEN = ['recipe', 'paket', 'concept', 'format'];
+    public const ARTEN = ['recipe', 'concept', 'format'];
 
-    private const MODELL = ['recipe' => FoodAlchemistRecipe::class, 'paket' => FoodAlchemistPaket::class, 'concept' => FoodAlchemistConcept::class, 'format' => FoodAlchemistFormat::class];
+    private const MODELL = ['recipe' => FoodAlchemistRecipe::class, 'concept' => FoodAlchemistConcept::class, 'format' => FoodAlchemistFormat::class];
 
-    /** @param  'recipe'|'paket'|'concept'|'format'  $art */
+    /** @param  'recipe'|'concept'|'format'  $art */
     public static function sichtbar(?Team $team, Model|int|null $objekt, string $art = 'recipe'): bool
     {
         if ($team === null || $objekt === null || ! MasterTeam::istMaster($team) || ! isset(self::MODELL[$art])) {

@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Enums\SignalTyp;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\DataQualityService;
 use Platform\FoodAlchemist\Services\PairingService;
@@ -161,22 +160,6 @@ it('braucht eine Menüfolge — ein einzelnes Gericht wiederholt sich nicht', fu
     ($this->menue)('Ein-Gang', [($this->gericht)('Lachsfilet', 'lachs')]);
 
     expect($this->dq->countFor($this->rootTeam, 'konzept_dramaturgie'))->toBe(0);
-});
-
-it('sieht auch die Gerichte eines Paket-Slots', function () {
-    $paket = FoodAlchemistPaket::create(['team_id' => $this->rootTeam->id, 'name' => 'Fingerfood-Paket']);
-    foreach ([($this->gericht)('Lachs-Häppchen', 'lachs'), ($this->gericht)('Lachs-Praline', 'lachs')] as $i => $g) {
-        $paket->dishes()->create([
-            'team_id' => $this->rootTeam->id,
-            'sales_recipe_id' => $g->id,
-            'position' => $i + 1,
-        ]);
-    }
-    $k = $this->makeConcept($this->rootTeam, 'Paket-Menü');
-    $this->makeConceptSlot($k, ['type' => 'paket', 'sales_recipe_id' => null, 'package_id' => $paket->id]);
-
-    // Ein Paket bringt seine Gerichte in die Menüfolge ein, auch ohne eigenen Slot.
-    expect($this->dq->countFor($this->rootTeam, 'konzept_dramaturgie'))->toBe(1);
 });
 
 it('hält Arbeitsmenge und Team-Grenze', function () {

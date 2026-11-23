@@ -3,7 +3,6 @@
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -41,7 +40,6 @@ beforeEach(function () {
     $this->fremdPaket = FoodAlchemistConcept::create(['team_id' => $this->childB->id, 'name' => 'Fremdes Paket', 'kind' => 'paket', 'status' => 'active']);
     FoodAlchemistConceptSlot::create(['team_id' => $this->childB->id, 'concept_id' => $this->fremdPaket->id, 'role' => 'x',
         'position' => 0, 'type' => 'gericht', 'sales_recipe_id' => $this->fremd->id]);
-    $this->fremdAltPaket = FoodAlchemistPaket::create(['team_id' => $this->childB->id, 'name' => 'Fremdes Alt-Paket', 'role' => 'x']);
 });
 
 // ── Schreiben ────────────────────────────────────────────────────────────
@@ -70,9 +68,9 @@ it('fillSlot: ein Konzept (kind≠paket) kann nicht als Paket eingebettet werden
         ->toThrow(ModelNotFoundException::class);
 });
 
-it('fillSlot: fremdes Alt-Paket wird abgelehnt', function () {
-    expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['package_id' => $this->fremdAltPaket->id]))
-        ->toThrow(ModelNotFoundException::class);
+it('fillSlot: package_id (Alt-Paket) wird seit 98 · 2.6c immer abgelehnt', function () {
+    expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['package_id' => 4711]))
+        ->toThrow(\RuntimeException::class, 'alte Pakete gibt es nicht mehr');
     expect($this->slot->fresh()->package_id)->toBeNull();
 });
 

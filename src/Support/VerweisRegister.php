@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\DB;
 final class VerweisRegister
 {
     public const REFERENZEN = [
-        'konzept_paket' => ['tab' => 'foodalchemist_concept_slots', 'spalte' => 'package_id', 'art' => 'paket', 'eltern' => 'foodalchemist_concepts', 'fk' => 'concept_id', 'name' => 'name', 'wo' => 'Konzept', 'eigene' => true],
         'konzept_eingebettet' => ['tab' => 'foodalchemist_concept_slots', 'spalte' => 'embedded_concept_id', 'art' => 'concept', 'eltern' => 'foodalchemist_concepts', 'fk' => 'concept_id', 'name' => 'name', 'wo' => 'Konzept', 'eigene' => true],
         'format' => ['tab' => 'foodalchemist_format_slots', 'spalte' => 'concept_id', 'art' => 'concept', 'eltern' => 'foodalchemist_formats', 'fk' => 'format_id', 'name' => 'name', 'wo' => 'Format', 'eigene' => true],
         'foodbook' => ['tab' => 'foodalchemist_foodbook_blocks', 'spalte' => 'concept_id', 'art' => 'concept', 'eltern' => 'foodalchemist_foodbooks', 'fk' => 'foodbook_id', 'name' => 'label', 'wo' => 'Foodbook',
@@ -31,7 +30,6 @@ final class VerweisRegister
         'foodbook_kapitel_format' => ['tab' => 'foodalchemist_foodbook_chapters', 'spalte' => 'format_id', 'art' => 'format', 'eltern' => 'foodalchemist_foodbooks', 'fk' => 'foodbook_id', 'name' => 'label', 'wo' => 'Foodbook'],
         'angebot_kapitel_format' => ['tab' => 'foodalchemist_offer_chapters', 'spalte' => 'format_id', 'art' => 'format', 'eltern' => 'foodalchemist_offers', 'fk' => 'offer_id', 'name' => 'name', 'wo' => 'Angebot', 'angebot' => true],
         'speisekarte_rubrik_format' => ['tab' => 'foodalchemist_menu_card_sections', 'spalte' => 'format_id', 'art' => 'format', 'eltern' => 'foodalchemist_menu_cards', 'fk' => 'menu_card_id', 'name' => 'name', 'wo' => 'Speisekarte'],
-        'speiseplan_paket' => ['tab' => 'foodalchemist_menu_plan_entries', 'spalte' => 'package_id', 'art' => 'paket', 'eltern' => 'foodalchemist_menu_plans', 'fk' => 'menu_plan_id', 'name' => 'name', 'wo' => 'Speiseplan'],
     ];
 
     /**

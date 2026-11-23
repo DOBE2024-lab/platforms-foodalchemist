@@ -42,10 +42,8 @@ class ConcepterBewertungService
         }
 
         // 2 — Niveau-Konsistenz über die Gänge
-        $paketNiveaus = DB::table('foodalchemist_concept_slots as s')
-            ->join('foodalchemist_packages as p', 'p.id', '=', 's.package_id')
-            ->where('s.concept_id', $concept->id)->whereNull('s.deleted_at')
-            ->whereNotNull('p.level')->distinct()->pluck('p.level')->all();
+        // 98 · 2.6c: las nur Niveaus alter Pakete (package_id); die gibt es nicht mehr — offen, ob Paket-Concepts hier zählen sollen
+        $paketNiveaus = [];
         if (count($paketNiveaus) === 0) {
             $checks[] = $this->check('level', 'Niveau-Konsistenz', 'info', 'Keine Niveau-Angabe an den Paketen.');
         } elseif (count($paketNiveaus) > 1) {

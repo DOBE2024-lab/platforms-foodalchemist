@@ -274,12 +274,6 @@
     "livewire/concepter/partials/slot-vorgabe.blade.php": {
         "typo_tinte": 2
     },
-    "livewire/concepts/index.blade.php": {
-        "typo_groesse": 6,
-        "typo_tinte": 17,
-        "roher_button": 2,
-        "rohes_fieldset_sperre": 2
-    },
     "livewire/controlling/cockpit.blade.php": {
         "typo_groesse": 3,
         "typo_tinte": 1,
@@ -571,12 +565,6 @@
         "typo_groesse": 17,
         "typo_tinte": 19,
         "roher_button": 3
-    },
-    "livewire/pakete/index.blade.php": {
-        "typo_groesse": 2,
-        "typo_tinte": 12,
-        "roher_button": 1,
-        "rohes_fieldset_sperre": 1
     },
     "livewire/planning/partials/coverage-panel.blade.php": {
         "typo_groesse": 1,

@@ -54,7 +54,7 @@ beforeEach(function () {
         $g = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => $key, 'name' => 'Dessert '.$key, 'status' => 'approved', 'is_sales_recipe' => true, 'ek_per_kg_eur' => 10.0, 'yield_kg' => 1.0]);
         $d = $this->svc->ensureStandard($this->rootTeam, $g->id);
 
-        return $this->svc->aktualisieren($this->rootTeam, $d->id, ['quantity_per_unit_g' => 200, 'unit_count' => 1])->fresh();
+        return $this->grammaturAltbestand($d, 200, 1)->fresh();   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     };
     $this->glas = ($this->nonFood)('Achenbachglas: Glas, 212 ml', 6.00);        // Artikel 0,50 €/Stk, als Miete 0,28 € am GP
     $this->deckel = ($this->nonFood)('Deckel: Twist-off, 82 mm', 0.84);           // 0,07 €/Stk
@@ -183,7 +183,8 @@ it('Gericht-Modal: Preis direkt unter dem Gefäß, Zubehör mit Menge und Preis,
 
     // weitere Darreichung (nicht Standard): kompakte Kennzahlen-Zeile
     $sf = FoodAlchemistServierform::create(['code' => 'flying', 'team_id' => $this->rootTeam->id, 'label' => 'Flying']);
-    $weitere = $this->svc->anlegen($this->rootTeam, $this->dar->recipe_id, $sf->id, ['quantity_per_unit_g' => 50]);
+    // Plan 98 B: Gericht ohne Komponenten (EK je kg als Fixture) — kein Anteil berechenbar, deshalb Altbestand-Fixture
+    $weitere = $this->grammaturAltbestand($this->svc->anlegen($this->rootTeam, $this->dar->recipe_id, $sf->id), 50);
     $html = Livewire::test(VkModal::class)->call('oeffnen', $this->dar->recipe_id)->set('darAktiv', $weitere->id)->html();
     expect($html)->toContain('data-dar-kennzahlen')->toContain('Diese Darreichung: EK');
 });

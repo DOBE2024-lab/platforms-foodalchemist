@@ -71,8 +71,8 @@ beforeEach(function () {
     $this->teller = FoodAlchemistServierform::create(['team_id' => $this->master->id, 'code' => 'teller', 'label' => 'Teller']);
     $this->klein = FoodAlchemistServierform::create(['team_id' => $this->master->id, 'code' => 'klein', 'label' => 'Klein']);
     $dar = app(DarreichungService::class);
-    $this->standard = $dar->anlegen($this->master, $this->gericht->id, $this->teller->id, ['quantity_per_unit_g' => 200]);
-    $this->kleine = $dar->anlegen($this->master, $this->gericht->id, $this->klein->id, ['quantity_per_unit_g' => 100]);
+    $this->standard = $this->grammaturAltbestand($dar->anlegen($this->master, $this->gericht->id, $this->teller->id), 200);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
+    $this->kleine = $dar->setzeAnteil($this->master, $dar->anlegen($this->master, $this->gericht->id, $this->klein->id)->id, 50);   // Plan 98 B: Variante als Anteil vom Standard (statt freier Grammatur): 100 von 200 g
     $this->portion = FoodAlchemistVocabEinheit::create(['team_id' => $this->master->id, 'slug' => 'portion', 'display_de' => 'Portion', 'dimension' => 'count', 'default_in_g' => null]);
 
     $paketSvc = app(PaketService::class);

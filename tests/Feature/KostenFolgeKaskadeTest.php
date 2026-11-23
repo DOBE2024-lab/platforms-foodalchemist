@@ -50,7 +50,7 @@ beforeEach(function () {
             'raw_text' => 'Basis Vanillecreme', 'quantity' => '500', 'unit_vocab_id' => $this->unitG($t)->id, 'position' => 1]);
         app(RecipeRecomputeService::class)->recomputeMany([$basis->id]);
         $d = $this->dar->ensureStandard($t, $gericht->id);
-        $d = $this->dar->aktualisieren($t, $d->id, ['quantity_per_unit_g' => 100, 'unit_count' => 1]);
+        $d = $this->grammaturAltbestand($d, 100, 1);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
         $paket = FoodAlchemistPaket::create(['team_id' => $t->id, 'name' => 'Dessert-Paket', 'price_mode' => 'auto']);
         $paket->gerichte()->create(['team_id' => $t->id, 'sales_recipe_id' => $gericht->id, 'position' => 0, 'quantity' => 1]);
         $manuell = FoodAlchemistPaket::create(['team_id' => $t->id, 'name' => 'Dessert-Paket fix', 'price_mode' => 'manuell', 'price_per_person' => 9.0]);

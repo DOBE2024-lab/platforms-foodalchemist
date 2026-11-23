@@ -78,7 +78,7 @@ it('erhält eigene Varianten und lässt geerbte Varianten dem neuen Standard fol
 });
 
 it('stellt Bestandsmengen beim Öffnen nicht um und schützt die Umschaltung vor fremden Teams', function () {
-    $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['quantity_per_unit_g' => 120]);
+    $this->grammaturAltbestand($this->dar, 120);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     Livewire::test(VkModal::class)->call('oeffnen', $this->gericht->id);
     expect($this->dar->fresh()->quantity_per_unit_g)->toBe(120.0)->and($this->dar->fresh()->menge_vom_standard)->toBeFalse();
     expect(fn () => $this->svc->setzeStandardmenge($this->childA, $this->dar->id, true))

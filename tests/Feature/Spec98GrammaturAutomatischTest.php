@@ -103,6 +103,28 @@ it('Fertigungstiefe: Hochstufen nach Inhalt zählt als Aufholen in Phase 0, nich
         ->and($this->a->fresh()->production_depth)->toBe('from_scratch');   // Trockenlauf: zurückgerollt
 });
 
+it('Trockenlauf mit aktiver Kopf-Spiegelung: kein Wachen-Verstoß, Fertigungstiefen-Zählung unverändert', function () {
+    // Kurator 23.11.: die Spiegelung schreibt bei jeder Neuberechnung den Kopf — auch in Phase 0 und 2 unter der Schreibwache
+    $ohne = app(GrammaturUmstellungService::class)->lauf(false);
+
+    // Abweichende Köpfe (still, wie ein Altbestand auf io): die Spiegelung greift in Phase 0
+    FoodAlchemistRecipe::whereIn('id', [$this->a->id, $this->c->id])->update(['sales_quantity_per_unit_g' => 999]);
+    FoodAlchemistRecipe::whereKey($this->d->id)->update(['sales_quantity_per_unit_g' => null]);
+    $b = app(GrammaturUmstellungService::class)->lauf(false);
+
+    $kopf = fn ($r) => collect($b['rezepte'])->firstWhere('recipe_id', $r->id)['kennzahlen_alt']['kopf_g'];
+    expect($b['verstoesse'])->toBe([])->and($b['ok'])->toBeTrue()
+        ->and($b['phase0_fertigungstiefe_hochgestuft'])->toBe($ohne['phase0_fertigungstiefe_hochgestuft'])
+        ->and($b['fertigungstiefe_hochgestuft'])->toBe(0)
+        ->and($kopf($this->a))->toBe(300.0)   // gemessen nach Phase 0: gespiegelt, nicht 999
+        ->and($kopf($this->c))->toBe(200.0)
+        ->and($kopf($this->d))->toBe(250.0);  // leerer Kopf wird gefüllt
+    expect(array_keys($b['zaehlung']['0']))->toContain('foodalchemist_recipes');
+    // Trockenlauf: die gespiegelten Köpfe sind mit zurückgerollt
+    expect((float) $this->a->fresh()->sales_quantity_per_unit_g)->toBe(999.0)
+        ->and($this->d->fresh()->sales_quantity_per_unit_g)->toBeNull();
+});
+
 it('Verwender außerhalb der Auswahl (je Masse und je Stück) bleiben unverändert und werden geprüft', function () {
     // Master 23.11.: Eltern, die per --rezept ausgenommen sind, rechnet Phase 2 trotzdem mit
     $t = $this->rootTeam->id;

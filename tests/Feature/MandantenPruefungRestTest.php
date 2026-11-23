@@ -157,7 +157,7 @@ it('Speisekarte: Verweise auch bei Text-Positionen geprüft, Darreichung muss zu
     $mk = fn ($key) => FoodAlchemistRecipe::create(['team_id' => $this->childA->id, 'recipe_key' => $key, 'name' => $key, 'status' => 'approved', 'is_sales_recipe' => true]);
     [$g1, $g2] = [$mk('g1'), $mk('g2')];
     $sf = FoodAlchemistServierform::create(['team_id' => $this->childA->id, 'code' => 'teller', 'label' => 'Teller']);
-    $d2 = app(DarreichungService::class)->anlegen($this->childA, $g2->id, $sf->id, ['quantity_per_unit_g' => 100, 'unit_count' => 1]);
+    $d2 = app(DarreichungService::class)->anlegen($this->childA, $g2->id, $sf->id, ['unit_count' => 1]);   // Plan 98 B: Grammatur spielt hier keine Rolle
     expect(fn () => $svc->addPosition($this->childA, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g1->id, 'presentation_id' => $d2->id]))
         ->toThrow(RuntimeException::class, 'Darreichung gehört nicht');
     $pos = $svc->addPosition($this->childA, $rubrik->id, ['type' => 'gericht_ref', 'sales_recipe_id' => $g2->id, 'presentation_id' => $d2->id]);

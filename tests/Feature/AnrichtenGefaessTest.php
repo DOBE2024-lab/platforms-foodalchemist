@@ -61,8 +61,8 @@ beforeEach(function () {
     $this->gericht = function (string $key = 'salat') {
         $g = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => $key, 'name' => 'Salat '.$key, 'status' => 'approved', 'is_sales_recipe' => true, 'ek_per_kg_eur' => 10.0, 'yield_kg' => 1.0]);
         $d = $this->svc->ensureStandard($this->rootTeam, $g->id);
-        // Explizite Bestandsgrammatur: derselbe Servicepfad wie eine Mengenübersteuerung.
-        $d = $this->svc->aktualisieren($this->rootTeam, $d->id, ['quantity_per_unit_g' => 200, 'unit_count' => 1]);
+        // Explizite Bestandsgrammatur — Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
+        $d = $this->grammaturAltbestand($d, 200, 1);
 
         return $d->fresh();
     };
@@ -185,7 +185,7 @@ it('Füllmenge: Grammatur > Volumen des Gefäßes warnt (nur Hinweis), kleiner/g
     $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['vessel_gp_id' => $this->glas->id]);          // 200 g in 212 ml
     expect($this->svc->gefaessInfo($this->dar->fresh())['warnung'])->toBeNull();
 
-    $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['quantity_per_unit_g' => '250']);
+    $this->grammaturAltbestand($this->dar->fresh(), 250);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     $w = $this->svc->gefaessInfo($this->dar->fresh())['warnung'];
     expect($w)->toContain('250 g')->toContain('212 ml')->and(($this->ek)())->toBeGreaterThan(0);              // kein Block, der EK rechnet weiter
 

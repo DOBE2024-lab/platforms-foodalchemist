@@ -98,7 +98,7 @@ beforeEach(function () {
         'alt_kind' => 'recipe', 'alt_id' => $this->fond->id, 'umrechnungsfaktor' => 1, 'standard_seite' => 'source']);
 
     $teller = FoodAlchemistServierform::create(['team_id' => $this->master->id, 'code' => 'teller', 'label' => 'Teller']);
-    app(DarreichungService::class)->anlegen($this->master, $this->jus->id, $teller->id, ['quantity_per_unit_g' => 200]);
+    $this->grammaturAltbestand(app(DarreichungService::class)->anlegen($this->master, $this->jus->id, $teller->id), 200);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     $this->portion = FoodAlchemistVocabEinheit::create(['team_id' => $this->master->id, 'slug' => 'portion', 'display_de' => 'Portion', 'dimension' => 'count', 'default_in_g' => null]);
 
     $this->fassungen = app(FassungService::class);

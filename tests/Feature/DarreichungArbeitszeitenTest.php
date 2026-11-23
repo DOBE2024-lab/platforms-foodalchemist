@@ -77,7 +77,7 @@ it('verweigert ungültige Werte sowie Änderungen an geerbten und fremden Darrei
 
 it('erlaubt mehrere Buffetvarianten und bewahrt genau einen wechselbaren Standard', function () {
     $svc = app(DarreichungService::class);
-    $zweite = $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id, ['name' => 'Kleines Glas', 'quantity_per_unit_g' => 80]);
+    $zweite = $this->grammaturAltbestand($svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id, ['name' => 'Kleines Glas']), 80);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     expect($zweite->is_standard)->toBeFalse();
     $svc->setzeStandard($this->rootTeam, $zweite->id);
     expect($this->gericht->standardPresentation()->first()->id)->toBe($zweite->id)
@@ -147,10 +147,11 @@ it('vererbt neue Standardmengen und erhält eigene Grammaturen und Komponenten',
     $a = $this->makeIngredient($this->gericht, 'A', $this->makeGp($this->rootTeam, 'A'), '100', 1);
     $b = $this->makeIngredient($this->gericht, 'B', $this->makeGp($this->rootTeam, 'B'), '100', 2);
     $svc = app(DarreichungService::class);
-    $svc->aktualisieren($this->rootTeam, $this->dar->id, ['quantity_per_unit_g' => 120]);
+    $this->grammaturAltbestand($this->dar->fresh(), 120);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     $erbt = $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id, ['name' => 'Erbt']);
     $teil = $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id, ['name' => 'A nur 10 g']);
-    $eigen = $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id, ['name' => 'Eigene 80 g', 'quantity_per_unit_g' => 80]);
+    // Plan 98 B: „eigene 80 g“ als Anteil vom Standard (80 von 120 g) statt freier Grammatur
+    $eigen = $svc->setzeAnteil($this->rootTeam, $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id, ['name' => 'Eigene 80 g'])->id, 80 / 120 * 100);
     $svc->setzeDelta($this->rootTeam, $teil->id, $a->id, 10, false);
     expect($erbt->fresh()->quantity_per_unit_g)->toBe(120.0)->and($teil->fresh()->quantity_per_unit_g)->toBe(70.0);
     $svc->setzeStandard($this->rootTeam, $eigen->id);
@@ -170,7 +171,7 @@ it('hält die Referenz einer angepassten Standardportion stabil und gibt sie kor
     $a = $this->makeIngredient($this->gericht, 'A', $this->makeGp($this->rootTeam, 'A'), '100', 1);
     $b = $this->makeIngredient($this->gericht, 'B', $this->makeGp($this->rootTeam, 'B'), '100', 2);
     $svc = app(DarreichungService::class);
-    $svc->aktualisieren($this->rootTeam, $this->dar->id, ['quantity_per_unit_g' => 120]);
+    $this->grammaturAltbestand($this->dar->fresh(), 120);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     $erbt = $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id);
     $svc->setzeDelta($this->rootTeam, $this->dar->id, $a->id, 30, false);
     expect($this->dar->fresh()->quantity_per_unit_g)->toBe(90.0)->and($erbt->fresh()->quantity_per_unit_g)->toBe(90.0);
@@ -212,9 +213,10 @@ it('erhält die Zeiteinheit eines expliziten Altwerts beim Wechsel der Servierfo
 
 it('berechnet Plattenbedarf aus der tatsächlichen Grammatur der Darreichung', function () {
     $this->gericht->update(['yield_kg' => .2]);
-    $dar = app(DarreichungService::class)->aktualisieren($this->rootTeam, $this->dar->id, ['quantity_per_unit_g' => 80, 'arbeitszeiten' => [
+    app(DarreichungService::class)->aktualisieren($this->rootTeam, $this->dar->id, ['arbeitszeiten' => [
         ['use_case' => 'portionieren_platte', 'basis' => 'behaelter', 'ort' => 'kueche', 'wert' => 2],
     ]]);
+    $dar = $this->grammaturAltbestand($this->dar->fresh(), 80);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     $behaelter = Mockery::mock(\Platform\FoodAlchemist\Services\BehaelterBedarfService::class);
     $behaelter->shouldReceive('behaelterFuerGericht')->once()->withArgs(fn ($team, $gericht, $ansaetze, $zweck) => abs($ansaetze - 40) < .0001 && $zweck === 'ausgabe')
         ->andReturn(['anzahl' => 4]);
@@ -228,9 +230,9 @@ it('berechnet bei vollständig weggelassenen Komponenten keine Kilogrammzeit aus
     $zutat = $this->makeIngredient($this->gericht, 'Salat', $gp, '120');
     $svc = app(DarreichungService::class);
     $svc->aktualisieren($this->rootTeam, $this->dar->id, [
-        'quantity_per_unit_g' => 120,
         'arbeitszeiten' => [['use_case' => 'abfuellen', 'basis' => 'kg', 'ort' => 'kueche', 'wert' => 10]],
     ]);
+    $this->grammaturAltbestand($this->dar->fresh(), 120);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     $svc->setzeDelta($this->rootTeam, $this->dar->id, $zutat->id, null, true);
     expect($this->dar->fresh()->quantity_per_unit_g)->toBe(0.0)
         ->and($svc->grammJeEinheit($this->dar->fresh(), $this->gericht->fresh()))->toBe(0.0);
@@ -243,7 +245,7 @@ it('hält beim Abschalten der Mengenvererbung auch die tatsächliche Komponenten
     $a = $this->makeIngredient($this->gericht, 'A', $this->makeGp($this->rootTeam, 'A'), '100', 1);
     $b = $this->makeIngredient($this->gericht, 'B', $this->makeGp($this->rootTeam, 'B'), '100', 2);
     $svc = app(DarreichungService::class);
-    $svc->aktualisieren($this->rootTeam, $this->dar->id, ['quantity_per_unit_g' => 120]);
+    $this->grammaturAltbestand($this->dar->fresh(), 120);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     $svc->setzeDelta($this->rootTeam, $this->dar->id, $a->id, 30, false);
     $ganz = $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id);
     $teil = $svc->anlegen($this->rootTeam, $this->gericht->id, $this->form->id);

@@ -340,6 +340,21 @@ trait SeedsTeamHierarchy
     }
 
     /**
+     * Plan 98 B, Schritt 6: Grammatur in Altbestand-Form als Fixture — fest eingetragen, eigene Menge, danach der Normalweg
+     * der Neuberechnung (wie früher DarreichungService::aktualisieren mit quantity_per_unit_g). Über Service, MCP und Oberfläche
+     * ist eine freie Grammatur ab der Sperre nicht mehr setzbar; als Kulisse in Tests bleibt sie so erreichbar — genau diese
+     * Zeilen liegen auf io, bis die Grammatur-Umstellung gelaufen ist.
+     */
+    protected function grammaturAltbestand(\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung $d, float $gramm, ?float $anzahl = null): \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung
+    {
+        $d->forceFill(['quantity_per_unit_g' => $gramm, 'menge_vom_standard' => false] + ($anzahl !== null ? ['unit_count' => $anzahl] : []))->save();
+        $svc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+        $d->is_standard ? $svc->recomputeFuerRezept((int) $d->recipe_id) : $svc->recomputePreise($d->refresh());
+
+        return $d->refresh();
+    }
+
+    /**
      * Behälter-Zeile am Rezept (Spec 51 · B-10). Seit `dichteklasse` in der Basisrezept-
      * Schrittfolge steht, gilt der Schritt erst als erfüllt, wenn Klasse UND ein Behälter je Zweck
      * stehen — ein Fixture, das „nichts anzureichern" beweisen will, braucht darum diese Zeile.

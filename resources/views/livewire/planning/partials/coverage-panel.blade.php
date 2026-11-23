@@ -22,8 +22,9 @@
 @endphp
 
 <x-fa::card class="overflow-hidden" data-coverage-panel="" data-coverage-gesamt="{{ $coverage['ampel_gesamt'] }}" x-data="{ covAuf: {{ ($z['verletzt'] ?? 0) > 0 ? 'true' : 'false' }} }">
-    <button type="button" x-on:click="covAuf = !covAuf" x-bind:aria-expanded="covAuf"
-            class="w-full flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left hover:bg-[var(--fa-hover)]">
+    {{-- Auf/Zu = Anzeige: bleibt im Lesemodus (Konzepter, Leitstelle) bedienbar --}}
+    <x-fa::anzeige-knopf x-on:click="covAuf = !covAuf" x-bind:aria-expanded="covAuf"
+            class="w-full flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-left hover:bg-[var(--fa-hover)]" data-coverage-toggle>
         <span class="w-2.5 h-2.5 rounded-full shrink-0 {{ $ampelPunkt[$coverage['ampel_gesamt']] ?? 'bg-[var(--fa-ink-3)]' }}"></span>
         <span class="fa-t-h3">Soll-Ist-Abgleich</span>
         <span class="fa-t-muted">gegen das Planungs-Gerüst</span>
@@ -33,7 +34,7 @@
             @if(($z['verletzt'] ?? 0) > 0)<x-fa::badge tone="crit">{{ $z['verletzt'] }} verletzt</x-fa::badge>@endif
             <span class="text-[var(--fa-ink-3)] transition-transform" x-bind:class="covAuf ? 'rotate-180' : ''">@svg('heroicon-m-chevron-down', 'w-4 h-4')</span>
         </span>
-    </button>
+    </x-fa::anzeige-knopf>
 
     <div x-show="covAuf" x-cloak class="flex flex-col border-t border-[var(--fa-line)] divide-y divide-[var(--fa-line)]">
         @forelse($coverage['befunde'] as $i => $b)

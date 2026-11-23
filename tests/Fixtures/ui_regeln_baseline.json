@@ -221,7 +221,7 @@
     "livewire/canvas/partials/board.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 6,
-        "roher_button": 2
+        "roher_button": 1
     },
     "livewire/concepter/browser.blade.php": {
         "typo_groesse": 5,
@@ -358,7 +358,7 @@
     "livewire/foodbooks/index.blade.php": {
         "typo_groesse": 26,
         "typo_tinte": 56,
-        "roher_button": 12,
+        "roher_button": 11,
         "rohe_karte": 1,
         "rohes_fieldset_sperre": 3
     },
@@ -580,8 +580,7 @@
     },
     "livewire/planning/partials/coverage-panel.blade.php": {
         "typo_groesse": 1,
-        "typo_tinte": 3,
-        "roher_button": 1
+        "typo_tinte": 3
     },
     "livewire/planning/partials/frame-board.blade.php": {
         "typo_groesse": 3,
@@ -777,7 +776,7 @@
     "livewire/recipes/detail-panel.blade.php": {
         "typo_groesse": 11,
         "typo_tinte": 19,
-        "roher_button": 6,
+        "roher_button": 5,
         "rohes_fieldset_sperre": 3
     },
     "livewire/recipes/feedback-panel.blade.php": {
@@ -853,7 +852,7 @@
     "livewire/settings/behaelter.blade.php": {
         "typo_groesse": 4,
         "typo_tinte": 4,
-        "roher_button": 4,
+        "roher_button": 3,
         "rohes_fieldset_sperre": 1
     },
     "livewire/settings/betriebe.blade.php": {
@@ -871,8 +870,7 @@
         "rohes_fieldset_sperre": 1
     },
     "livewire/settings/dna-felder.blade.php": {
-        "typo_tinte": 1,
-        "rohes_fieldset_sperre": 1
+        "typo_tinte": 1
     },
     "livewire/settings/einheiten.blade.php": {
         "typo_groesse": 1,
@@ -959,7 +957,6 @@
     "livewire/settings/posten.blade.php": {
         "typo_groesse": 3,
         "typo_tinte": 6,
-        "roher_button": 1,
         "rohes_fieldset_sperre": 1
     },
     "livewire/settings/praesentations-designs.blade.php": {

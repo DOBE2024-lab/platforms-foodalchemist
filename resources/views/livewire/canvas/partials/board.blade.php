@@ -17,9 +17,10 @@
     @if($reiter)
         <div class="flex flex-wrap gap-1 border-b border-[var(--fa-line)]" role="tablist" data-canvas-reiter>
             @foreach($gruppenNamen as $gn)
-                <button type="button" role="tab" x-on:click="tab = @js($gn)" :aria-selected="tab === @js($gn)"
-                        :class="tab === @js($gn) ? 'border-[var(--fa-accent)] text-[var(--fa-ink)]' : 'border-transparent text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]'"
-                        class="px-3 py-2 text-[length:var(--fa-text-md)] font-medium border-b-2 -mb-px" data-canvas-reiter-tab="{{ md5($gn) }}">{{ $gn }}</button>
+                {{-- Reiter = Anzeige: bleibt im Lesemodus (Einstellungen „Food-DNA“ sperren das Board) bedienbar --}}
+                <x-fa::anzeige-knopf role="tab" x-on:click="tab = {{ \Illuminate\Support\Js::from($gn) }}" x-bind:aria-selected="tab === {{ \Illuminate\Support\Js::from($gn) }}"
+                        x-bind:class="tab === {{ \Illuminate\Support\Js::from($gn) }} ? 'border-[var(--fa-accent)] text-[var(--fa-ink)]' : 'border-transparent text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)]'"
+                        class="px-3 py-2 text-[length:var(--fa-text-md)] font-medium border-b-2 -mb-px" data-canvas-reiter-tab="{{ md5($gn) }}">{{ $gn }}</x-fa::anzeige-knopf>
             @endforeach
         </div>
     @endif

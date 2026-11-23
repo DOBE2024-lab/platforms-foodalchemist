@@ -778,7 +778,7 @@
                                 {{-- Aufklappbar (Alpine, kein Roundtrip): dieselbe Lese-Ansicht wie der concept_ref-Block,
                                      ohne Stift/Aktionen. Zu bei mehreren Editionen (Überblick), offen bei genau einer. --}}
                                 <x-fa::card class="px-3 py-2" data-fb-format-edition="" x-data="{ auf: {{ $formatKapitel['editionen_n'] === 1 ? 'true' : 'false' }} }">
-                                    <button type="button" class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-left" x-on:click="auf = ! auf" x-bind:aria-expanded="auf" data-fb-format-edition-toggle>
+                                    <x-fa::anzeige-knopf class="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-left" x-on:click="auf = ! auf" x-bind:aria-expanded="auf" data-fb-format-edition-toggle>
                                         <span class="flex min-w-0 items-baseline gap-1.5 break-words fa-t-h3">
                                             <span class="inline-flex shrink-0 self-center text-[var(--fa-ink-3)] transition-transform" x-bind:class="{ 'rotate-90': auf }">@svg('heroicon-m-chevron-right', 'w-4 h-4')</span>{{ $ed['name'] }}
                                         </span>
@@ -787,7 +787,7 @@
                                             @elseif($ed['preis_pp'] !== null){{ $euro($ed['preis_pp']) }} pro Gast
                                             @else<span class="text-[var(--fa-warn)]">Preis fehlt</span>@endif
                                         </span>
-                                    </button>
+                                    </x-fa::anzeige-knopf>
                                     @if($ed['claim'])<p class="fa-t-muted italic">{{ $ed['claim'] }}</p>@endif
                                     <p class="mt-1 {{ $hinweis }}">
                                         @if($edPakete->isNotEmpty())Pakete: {{ $edPakete->implode(', ') }} · @endif{{ $edSpeisen }} {{ $edSpeisen === 1 ? 'Speise' : 'Speisen' }}

@@ -82,12 +82,13 @@
             <x-fa::section variant="plain" title="Verwendet in" icon="heroicon-o-link" :meta="$eltern->count()" data-eltern>
                 <div class="flex flex-col gap-0.5">
                     @foreach($eltern as $parent)
-                        <button type="button" wire:key="el-{{ $parent->id }}"
-                                @if($parent->is_sales_recipe) wire:click="$dispatch('vk-modal.oeffnen', { id: {{ $parent->id }} })" @else wire:click="$dispatch('recipe-modal.oeffnen', { id: {{ $parent->id }} })" @endif
+                        {{-- Navigation = Anzeige: bleibt eingebettet im gesperrten Rezept-Editor bedienbar (wie der Standalone-Zweig) --}}
+                        <x-fa::anzeige-knopf wire:key="el-{{ $parent->id }}"
+                                wire:click="$dispatch('{{ $parent->is_sales_recipe ? 'vk-modal.oeffnen' : 'recipe-modal.oeffnen' }}', { id: {{ $parent->id }} })"
                                 class="{{ $listenKnopf }}" title="{{ $parent->is_sales_recipe ? 'Gericht öffnen' : 'Rezept öffnen' }}" data-eltern-link>
                             @svg($parent->is_sales_recipe ? 'heroicon-o-banknotes' : 'heroicon-o-arrow-up', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
                             <span class="min-w-0 flex-1 truncate">{{ $parent->name }}</span>
-                        </button>
+                        </x-fa::anzeige-knopf>
                     @endforeach
                 </div>
             </x-fa::section>

@@ -8,7 +8,8 @@
  *
  * Schritte:
  *  1. git mv src/Services/<Klasse>.php → src/Services/<Ordner>/<Klasse>.php, namespace anpassen.
- *  2. In der verschobenen Datei: kurze Namen von Root-Diensten (bisher derselbe Namespace, ohne use) und relative Namen
+ *  2. In der verschobenen Datei: dirname(__DIR__, N) → N+1 (Pfade zu resources/, database/, src/ bleiben gültig; andere
+ *     __DIR__-Nutzung bricht ab); kurze Namen von Root-Diensten (bisher derselbe Namespace, ohne use) und relative Namen
  *     (`Foodbook\FoodbookBasis`) werden voll qualifiziert. Keine neuen use-Zeilen: Zeilenzahl bleibt (Größen-Basis).
  *  3. Im Root verbliebene Dienste, die eine verschobene Klasse mit kurzem Namen nutzten, schreiben `Ordner\Klasse`
  *     (relativ zum Root-Namespace, ebenfalls ohne neue Zeile).
@@ -167,6 +168,13 @@ foreach ($klassen as $k) {
         }
     }
     $code = $text($t);
+    // Pfade relativ zur Datei: eine Ebene tiefer → dirname(__DIR__, N) wird N+1 (CI-Fund: Schriften der ShareCard, 404)
+    $code = preg_replace_callback('/dirname\(__DIR__(?:,\s*(\d+))?\)/', fn ($m) => 'dirname(__DIR__, '.((int) ($m[1] ?? 1) + 1).')', $code);
+    $rest = preg_replace('/dirname\(__DIR__, \d+\)/', '', $code);
+    if (preg_match('/__DIR__/', $rest)) {
+        fwrite(STDERR, "Datei-relativer Pfad mit __DIR__ in $neu, der nicht über dirname(__DIR__, N) läuft — von Hand anpassen.\n");
+        exit(1);
+    }
     // kurze Verweise auf Root-Dienste, die nicht mitwandern → voll qualifiziert (wandern sie später, zieht Schritt 4 den Namen nach)
     $code = $ersetzeKurz($code, array_map(fn ($n) => '\\'.$basisNs.'\\'.$n, array_combine($bleibt, $bleibt)));
     file_put_contents("$modul/$neu", $code);

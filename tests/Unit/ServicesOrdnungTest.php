@@ -9,6 +9,9 @@ use Platform\FoodAlchemist\Tests\Support\ServicesUmzuege;
  *  · Kein Code nutzt mehr einen alten Klassennamen aus ServicesUmzuege (kein Alias-Lader: Jobs lösen Dienste in handle()
  *    auf, gespeicherte Klassennamen von Diensten gibt es nicht; geprüft in PR 0).
  *  · Der Root von src/Services schrumpft nur (Sperrklinke, Ziel < 50).
+ *  · Jedes dirname(__DIR__, N) unter src/Services zeigt auf src/ oder den Modul-Root — eine Ebene tiefer verschoben, zeigte es
+ *    sonst ins Leere (CI-Fund 3.8: Schriften der ShareCard, DarreichungResolver::aufrufer).
+ *  Alte Klassennamen werden auch in Strings gefunden (ein oder zwei Backslashes), nicht nur in use-Zeilen.
  */
 const SERVICES_ROOT_MAX = 278;
 
@@ -66,4 +69,23 @@ it('der Root von src/Services schrumpft nur; verschobene Dateien liegen nicht me
     expect(count($root))->toBeLessThanOrEqual(SERVICES_ROOT_MAX)
         ->and($nochDa)->toBe([])
         ->and($fehlt)->toBe([]);
+});
+
+it('jedes dirname(__DIR__, N) unter src/Services zeigt auf src/ oder den Modul-Root', function () {
+    $modul = realpath(servicesOrdnungModul());
+    $falsch = [];
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($modul.'/src/Services', FilesystemIterator::SKIP_DOTS)) as $datei) {
+        if ($datei->getExtension() !== 'php') {
+            continue;
+        }
+        preg_match_all('/dirname\(__DIR__(?:,\s*(\d+))?\)/', (string) file_get_contents($datei->getPathname()), $m, PREG_SET_ORDER);
+        foreach ($m as $treffer) {
+            $ziel = dirname($datei->getPath(), (int) ($treffer[1] ?? 1));
+            if (! in_array($ziel, [$modul, $modul.'/src'], true)) {
+                $falsch[] = substr($datei->getPathname(), strlen($modul) + 1).': '.$treffer[0].' → '.$ziel;
+            }
+        }
+    }
+
+    expect($falsch)->toBe([]);
 });

@@ -74,6 +74,7 @@ class FoodAlchemistSpeiseplanLinie extends Model
     /** @deprecated #486 deutscher Alias → mealPlan() */
     public function speiseplan(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'mealPlan');
         return $this->mealPlan();
     }
 
@@ -85,6 +86,7 @@ class FoodAlchemistSpeiseplanLinie extends Model
     /** @deprecated #486 deutscher Alias → entries() */
     public function eintraege(): HasMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'entries');
         return $this->entries();
     }
 }

@@ -70,6 +70,7 @@ class FoodAlchemistFoodbook extends Model
     /** @deprecated #486 deutscher Alias → chapters() */
     public function kapitel(): HasMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'chapters');
         return $this->chapters();
     }
 
@@ -82,6 +83,7 @@ class FoodAlchemistFoodbook extends Model
     /** @deprecated #486 deutscher Alias → writingStyle() */
     public function schreibstil(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'writingStyle');
         return $this->writingStyle();
     }
 

@@ -118,6 +118,7 @@ class FoodAlchemistConcept extends Model
     /** @deprecated #486 deutscher Alias → offer() */
     public function angebot(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'offer');
         return $this->offer();
     }
 
@@ -154,6 +155,7 @@ class FoodAlchemistConcept extends Model
     /** @deprecated #486 deutscher Alias → templateSource() */
     public function vorlageQuelle(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'templateSource');
         return $this->templateSource();
     }
 
@@ -172,6 +174,7 @@ class FoodAlchemistConcept extends Model
     /** @deprecated #486 deutscher Alias → writingStyle() */
     public function schreibstil(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'writingStyle');
         return $this->writingStyle();
     }
 
@@ -186,6 +189,7 @@ class FoodAlchemistConcept extends Model
     /** @deprecated #486 deutscher Alias → servingForm() */
     public function servierform(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'servingForm');
         return $this->servingForm();
     }
 
@@ -198,6 +202,7 @@ class FoodAlchemistConcept extends Model
     /** @deprecated #486 deutscher Alias → eventType() */
     public function eventtyp(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'eventType');
         return $this->eventType();
     }
 
@@ -215,6 +220,7 @@ class FoodAlchemistConcept extends Model
     /** @deprecated #486 deutscher Alias → serviceMoments() */
     public function einsatzmomente()
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'serviceMoments');
         return $this->serviceMoments();
     }
 
@@ -232,6 +238,7 @@ class FoodAlchemistConcept extends Model
     /** @deprecated #486 deutscher Alias → seasons() */
     public function saisons()
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'seasons');
         return $this->seasons();
     }
 
@@ -255,6 +262,7 @@ class FoodAlchemistConcept extends Model
     /** @deprecated #486 deutscher Alias → sectorSuitabilities() */
     public function sektorEignungen(): HasMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'sectorSuitabilities');
         return $this->sectorSuitabilities();
     }
 

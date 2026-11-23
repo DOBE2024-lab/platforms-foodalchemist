@@ -55,6 +55,7 @@ class FoodAlchemistFoodbookBlock extends Model
     /** @deprecated #486 deutscher Alias → chapter() */
     public function kapitel(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'chapter');
         return $this->chapter();
     }
 
@@ -75,6 +76,7 @@ class FoodAlchemistFoodbookBlock extends Model
     /** @deprecated #486 deutscher Alias → dish() */
     public function gericht(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'dish');
         return $this->dish();
     }
 

@@ -28,6 +28,7 @@ class FoodAlchemistDishMainGroup extends Model
     /** @deprecated #486 deutscher Alias → dishClasses() */
     public function klassen()
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'dishClasses');
         return $this->hasMany(FoodAlchemistDishClass::class, 'dish_main_group_id');
     }
 

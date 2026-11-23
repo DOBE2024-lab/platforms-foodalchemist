@@ -34,6 +34,7 @@ class FoodAlchemistServierform extends Model
     /** @deprecated #486 deutscher Alias → presentations() */
     public function darreichungen()
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'presentations');
         return $this->hasMany(FoodAlchemistRecipeDarreichung::class, 'serving_form_id');
     }
 

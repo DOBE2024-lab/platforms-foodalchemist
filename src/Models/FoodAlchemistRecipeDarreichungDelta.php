@@ -35,6 +35,7 @@ class FoodAlchemistRecipeDarreichungDelta extends Model
     /** @deprecated #486 deutscher Alias → presentation() */
     public function darreichung()
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'presentation');
         return $this->presentation();
     }
 

@@ -17,8 +17,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
  * Ohne vollständigen EK gibt es „kein VK" (null), nie 0 € (Auflage 4). Arbeitszeilen laufen unverändert über die
  * Preis-Leiter des DarreichungResolver (Besitzer-Weg).
  *
- * Durchstich-Grenze: Darreichungen mit Deltas (Komponenten weglassen/umgewichten) rechnet der Abo-Weg noch nicht →
- * „kein VK" mit Grund `deltas_im_abo_offen`.
+ * Darreichungen mit Deltas (Plan 98 B: jede Variante) rechnen je Komponente: MEK = Σ Masse × Team-Preis je g aus den Zeilen
+ * des Teams, dieselbe Rechnung wie beim Besitzer (DarreichungService::komponentenSumme). Fehlt einer genutzten Komponente der
+ * Team-Preis, gibt es „kein VK" mit Grund `komponente_ohne_team_preis` — keine stille 0, kein Teilpreis.
  */
 class TeamVkService
 {
@@ -39,24 +40,30 @@ class TeamVkService
             return ['vk' => $r['vk'], 'quelle' => $r['quelle'], 'grund' => $r['vk'] === null ? 'kein_vk' : null, 'mek' => null];
         }
 
-        $kosten = app(KostenCacheService::class)->fuer($recipe, $team);
-        if (! $kosten['vollstaendig'] || $kosten['ek_per_kg'] === null) {
-            return ['vk' => null, 'quelle' => 'keine', 'grund' => 'ek_unvollstaendig', 'mek' => null];
-        }
         $standard = $darreichung !== null && (int) $darreichung->recipe_id === (int) $recipe->id
             ? $darreichung
             : FoodAlchemistRecipeDarreichung::where('recipe_id', $recipe->id)->orderByDesc('is_standard')->orderBy('id')->first();
-        if ($standard === null) {
-            return ['vk' => null, 'quelle' => 'keine', 'grund' => 'keine_darreichung', 'mek' => null];
+        if ($standard !== null && $standard->deltas()->exists()) {
+            // je Komponente: eine weggelassene Zutat ohne Team-Preis stört nicht, eine genutzte schon
+            $k = app(DarreichungService::class)->komponentenSumme($standard, $recipe, $team);
+            if ($k['fehlende'] !== [] || $k['n_bepreist'] === 0) {
+                return ['vk' => null, 'quelle' => 'keine', 'grund' => 'komponente_ohne_team_preis', 'mek' => null];
+            }
+            $mek = round($k['kosten'] * (float) ($standard->unit_count ?: 1), 4);
+        } else {
+            $kosten = app(KostenCacheService::class)->fuer($recipe, $team);
+            if (! $kosten['vollstaendig'] || $kosten['ek_per_kg'] === null) {
+                return ['vk' => null, 'quelle' => 'keine', 'grund' => 'ek_unvollstaendig', 'mek' => null];
+            }
+            if ($standard === null) {
+                return ['vk' => null, 'quelle' => 'keine', 'grund' => 'keine_darreichung', 'mek' => null];
+            }
+            $gramm = app(DarreichungService::class)->grammJeEinheit($standard, $recipe) ?? 0.0;
+            if ($gramm <= 0) {
+                return ['vk' => null, 'quelle' => 'keine', 'grund' => 'keine_grammatur', 'mek' => null];
+            }
+            $mek = round(Masse::preisJeG($kosten['ek_per_kg']) * $gramm * (float) ($standard->unit_count ?: 1), 4);
         }
-        if ($standard->deltas()->exists()) {
-            return ['vk' => null, 'quelle' => 'keine', 'grund' => 'deltas_im_abo_offen', 'mek' => null];
-        }
-        $gramm = app(DarreichungService::class)->grammJeEinheit($standard, $recipe) ?? 0.0;
-        if ($gramm <= 0) {
-            return ['vk' => null, 'quelle' => 'keine', 'grund' => 'keine_grammatur', 'mek' => null];
-        }
-        $mek = round(Masse::preisJeG($kosten['ek_per_kg']) * $gramm * (float) ($standard->unit_count ?: 1), 4);
 
         // Zubehör & Verpackung der Form: zum Preis des Teams (dessen Lead-LA) auf den MEK — fehlt ein Preis, gibt es keinen halben Preis
         if ($standard->vessel_gp_id !== null || $standard->zubehoer()->exists()) {

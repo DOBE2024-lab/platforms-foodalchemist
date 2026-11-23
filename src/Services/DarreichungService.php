@@ -908,23 +908,8 @@ class DarreichungService
             // Stufe 2: Overrides sind ECHTE Gramm je Einheit dieser Form (User-Entscheid
             // 2026-07-03) — die Grammatur der Form ergibt sich aus der Komponenten-Summe,
             // der EK direkt aus Σ (Preis/g × Gramm). Kein Verhältnis-Umweg mehr.
-            $proEinheit = $this->standardProEinheit($recipe, $team, (int) $darreichung->id);
-            $deltaMap = $deltas->keyBy('recipe_ingredient_id');
-            $kosten = 0.0;
-            $masse = 0.0;
-            $nBepreist = 0;
-            foreach ($proEinheit as $ingId => $zeile) {
-                $delta = $deltaMap->get($ingId);
-                if ($delta !== null && $delta->omitted) {
-                    continue;
-                }
-                $m = $delta?->quantity_override_g !== null ? (float) $delta->quantity_override_g : $zeile['masse_g'];
-                if ($zeile['kosten_pro_g'] !== null) {
-                    $nBepreist++;
-                    $kosten += $zeile['kosten_pro_g'] * $m;
-                }
-                $masse += $m;
-            }
+            ['pro_einheit' => $proEinheit, 'kosten' => $kosten, 'masse' => $masse, 'n_bepreist' => $nBepreist]
+                = $this->komponentenSumme($darreichung, $recipe, $team, $deltas);
             $masseBekannt = true;
             if ($proEinheit === [] && $deltas->isEmpty() && $darreichung->menge_vom_standard) {
                 $referenzMasse = $this->grammJeEinheit($darreichung, $recipe);
@@ -1008,6 +993,39 @@ class DarreichungService
      * neu). Rund 15 Leser hängen noch am Kopf; deren Umzug ist Plan 98 · 3.5. Leise per Query (kein Modell-Event, kein
      * RezeptKostenGeaendert) — es ändert sich nur der Spiegel, nicht die Kalkulation. Unbekannte Grammatur lässt den Kopf stehen.
      */
+    /**
+     * Komponenten einer Darreichung mit Mengen-Rezept (Deltas oder „wie Standard“): Σ Kosten und Σ rohe Masse je Einheit, aus den
+     * Zeilen des übergebenen Teams (Preise, Pins und Sub-Kosten dieses Teams). Overrides sind echte Gramm, weggelassen zählt nicht.
+     * Eine Rechnung für den Besitzer ({@see recomputePreise}) und den Abo-Weg ({@see TeamVkService}).
+     *
+     * @return array{pro_einheit: array<int, array{masse_g: float, kosten_pro_g: ?float}>, kosten: float, masse: float, n_bepreist: int, fehlende: list<int>}
+     */
+    public function komponentenSumme(FoodAlchemistRecipeDarreichung $darreichung, FoodAlchemistRecipe $recipe, Team $team, ?\Illuminate\Support\Collection $deltas = null): array
+    {
+        $proEinheit = $this->standardProEinheit($recipe, $team, (int) $darreichung->id);
+        $deltaMap = ($deltas ?? $darreichung->deltas()->get())->keyBy('recipe_ingredient_id');
+        $kosten = 0.0;
+        $masse = 0.0;
+        $nBepreist = 0;
+        $fehlende = [];
+        foreach ($proEinheit as $ingId => $zeile) {
+            $delta = $deltaMap->get($ingId);
+            if ($delta !== null && $delta->omitted) {
+                continue;
+            }
+            $m = $delta?->quantity_override_g !== null ? (float) $delta->quantity_override_g : $zeile['masse_g'];
+            if ($zeile['kosten_pro_g'] !== null) {
+                $nBepreist++;
+                $kosten += $zeile['kosten_pro_g'] * $m;
+            } elseif ($m > 0) {
+                $fehlende[] = (int) $ingId;
+            }
+            $masse += $m;
+        }
+
+        return ['pro_einheit' => $proEinheit, 'kosten' => $kosten, 'masse' => $masse, 'n_bepreist' => $nBepreist, 'fehlende' => $fehlende];
+    }
+
     private function kopfSpiegeln(FoodAlchemistRecipeDarreichung $darreichung, FoodAlchemistRecipe $recipe): void
     {
         if (! $darreichung->is_standard) {

@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class);

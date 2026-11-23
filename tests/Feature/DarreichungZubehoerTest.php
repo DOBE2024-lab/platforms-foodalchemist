@@ -21,7 +21,7 @@ use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\KostenCacheService;
 use Platform\FoodAlchemist\Services\FassungsDarreichungService;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Services\TeamVkService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
@@ -221,7 +221,7 @@ it('Preis-Anstoß: ändert sich der Lead-Preis des Zubehör-GP (Preiszeile, Lead
     // Spec 85 Controlling PR-A: den Lead eines globalen GP setzt angemeldet nur der Besitzer — hier geht es um den Recompute danach,
     // darum der Systemweg ohne Anmeldung (wie Neuwahl-Job/Kommando)
     \Illuminate\Support\Facades\Auth::logout();
-    app(\Platform\FoodAlchemist\Services\LeadLaService::class)->setLeadLa($this->rootTeam, $this->glas->fresh(), $la2->id);
+    app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->setLeadLa($this->rootTeam, $this->glas->fresh(), $la2->id);
     $this->actingAs($this->user);
     expect(($this->ek)())->toBe(2.25)->and((float) $andereDar->fresh()->ek_portion)->toBe(99.0);
 

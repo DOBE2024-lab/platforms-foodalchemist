@@ -2,8 +2,8 @@
 
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
-use Platform\FoodAlchemist\Services\CatalogPricingService;
-use Platform\FoodAlchemist\Services\KalkulationService;
+use Platform\FoodAlchemist\Services\Preis\CatalogPricingService;
+use Platform\FoodAlchemist\Services\Preis\KalkulationService;
 use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

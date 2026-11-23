@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
-use Platform\FoodAlchemist\Services\SupplierGroupService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierGroupService;
 
 /**
  * Legt die sechs Lieferanten-Gruppen als GLOBALEN Basis-Katalog an (team_id NULL) — idempotent, Dry-Run als Default; Kommando statt Migration (Spec 82 §6).

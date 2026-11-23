@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\LieferantenDokumentService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenDokumentService;
 
 /** Offene Datenblätter/Produktpässe, die Lieferanten über ihren Link eingereicht haben. */
 class LieferantenDokumentGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

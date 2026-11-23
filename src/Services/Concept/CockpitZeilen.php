@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Services\Concept;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\CatalogPricingService;
+use Platform\FoodAlchemist\Services\Preis\CatalogPricingService;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungResolver;

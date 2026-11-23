@@ -59,7 +59,7 @@ it('#393: Banner-Zähler offeneMatches ist team-scoped (aktuelles Team), nicht t
 });
 
 it('LA-Modal: ✎ Preis-Inline-Edit ändert Preis/Gültig-bis/Notiz (Komma-Parsing), Unsinn blockt', function () {
-    $p = app(\Platform\FoodAlchemist\Services\PriceService::class)->createFor($this->rootTeam, $this->la, 20.00);
+    $p = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->createFor($this->rootTeam, $this->la, 20.00);
 
     Livewire::test(ItemModal::class)
         ->call('oeffnen', $this->la->id)
@@ -136,7 +136,7 @@ it('Artikel vorschlagen: Verarbeitungsprodukte mit der Hauptzutat im Namen sind 
         FoodAlchemistSupplierItemStructure::create(['team_id' => $this->rootTeam->id, 'supplier_item_id' => $item->id, 'gp_id' => null]);
     }
 
-    $namen = app(\Platform\FoodAlchemist\Services\LeadLaService::class)->kandidatenFuerGp($this->rootTeam, $gp)->pluck('designation')->all();
+    $namen = app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->kandidatenFuerGp($this->rootTeam, $gp)->pluck('designation')->all();
 
     expect($namen)->toContain('Schalotten rund 5kg')
         ->and($namen)->not->toContain('Chutney Schalotte-Birne, GL (390 ML)')

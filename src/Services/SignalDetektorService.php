@@ -267,7 +267,7 @@ class SignalDetektorService
 
         // nur Lead-LAs mit kürzlicher Preisänderung (Vorgänger-Zeile jüngst geschlossen)
         // Spec 82 3a: Lead-Signale sind global → nur Listenpreis-Zeilen (Trend unten ebenso ohne Team).
-        $recent = app(PriceService::class)->nurListenpreis(DB::table('foodalchemist_prices'))
+        $recent = app(Preis\PriceService::class)->nurListenpreis(DB::table('foodalchemist_prices'))
             ->whereIn('supplier_item_id', $leadIds)->whereNull('deleted_at')
             ->whereNotNull('valid_to')->where('valid_to', '>=', $cutoff)
             ->distinct()->pluck('supplier_item_id')->map(fn ($v) => (int) $v)->flip();
@@ -275,9 +275,9 @@ class SignalDetektorService
             return 0;
         }
 
-        $preisSvc = app(PriceService::class);
+        $preisSvc = app(Preis\PriceService::class);
         $recompute = app(RecipeRecomputeService::class);
-        $margeSvc = app(MargeService::class);
+        $margeSvc = app(Preis\MargeService::class);
         // Team-Sicht (Bugfix 27.10.): das Signal geht an dieses Team — nie ein Master-Preis (BHG-Konditionen) bei einem Mandanten
         $trend = $preisSvc->preisTrendBulk(array_keys($recent->all()), $team);
 
@@ -506,7 +506,7 @@ class SignalDetektorService
      *
      * @return array{item_id:int,label:string,diff_pct:float}|null
      */
-    private function guenstigereAlternative(PriceService $preisSvc, int $gpId, int $leadId, float $schwelle, Team $team): ?array
+    private function guenstigereAlternative(Preis\PriceService $preisSvc, int $gpId, int $leadId, float $schwelle, Team $team): ?array
     {
         $las = DB::table('foodalchemist_supplier_items AS i')
             ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'i.id')
@@ -704,7 +704,7 @@ class SignalDetektorService
             ->join('foodalchemist_supplier_items as i', 'i.id', '=', 'g.lead_la_supplier_item_id')
             ->leftJoin('foodalchemist_prices as p', function ($j) {
                 $j->on('p.supplier_item_id', '=', 'i.id')->whereNull('p.deleted_at');
-                app(PriceService::class)->nurListenpreis($j, 'p');   // Spec 82 3a: Frische des globalen Lead-Listenpreises
+                app(Preis\PriceService::class)->nurListenpreis($j, 'p');   // Spec 82 3a: Frische des globalen Lead-Listenpreises
             })
             ->whereNotNull('g.lead_la_supplier_item_id')
             ->whereNull('g.deleted_at')
@@ -746,7 +746,7 @@ class SignalDetektorService
      */
     public function preisAnomalie(Team $team, float $schwelle = 0.5, int $maxGps = 2000): int
     {
-        $ps = app(PriceService::class);
+        $ps = app(Preis\PriceService::class);
         $rows = DB::table('foodalchemist_supplier_item_structures as s')
             ->join('foodalchemist_supplier_items as i', 'i.id', '=', 's.supplier_item_id')
             ->join('foodalchemist_gps as g', 'g.id', '=', 's.gp_id')
@@ -843,7 +843,7 @@ class SignalDetektorService
      */
     public function margeUnterZiel(Team $team, ?FoodAlchemistOutlet $outlet = null): int
     {
-        $kalk = app(KalkulationService::class);
+        $kalk = app(Preis\KalkulationService::class);
         // Spec 85 D-1: Kandidaten = Gerichte mit VK an der Standard-Darreichung.
         $gerichte = FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
             ->whereHas('standardPresentation', fn ($s) => $s->where('sales_net', '>', 0))
@@ -961,11 +961,11 @@ class SignalDetektorService
     }
 
     /** Ein Kalkulator je Lauf — der Batch-Pfad löste ihn früher einmal vor der Schleife auf. */
-    private ?KalkulationService $kalkMemo = null;
+    private ?Preis\KalkulationService $kalkMemo = null;
 
-    private function kalkulation(): KalkulationService
+    private function kalkulation(): Preis\KalkulationService
     {
-        return $this->kalkMemo ??= app(KalkulationService::class);
+        return $this->kalkMemo ??= app(Preis\KalkulationService::class);
     }
 
     /**
@@ -1083,7 +1083,7 @@ class SignalDetektorService
     public function vertragsfristFaellig(Team $team, int $lookaheadDays = 30): int
     {
         $n = 0;
-        foreach (app(SupplierAgreementService::class)->documentsDueForNotice($team, $lookaheadDays) as $d) {
+        foreach (app(Einkauf\SupplierAgreementService::class)->documentsDueForNotice($team, $lookaheadDays) as $d) {
             $deadline = $d->noticeDeadline();
             $supplierName = optional($d->supplier)->name ?? ('Lieferant #' . $d->supplier_id);
             $ueberfaellig = $deadline !== null && $deadline->isPast();

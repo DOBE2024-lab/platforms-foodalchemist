@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Livewire\Preislisten\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -7,7 +7,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
 
 /**
  * Spec 82 §3 / Schritt 4d, Stufe 2 — Preisliste hochladen (CSV oder Excel), Spalten zuordnen, abgleichen, Prüfliste sehen.

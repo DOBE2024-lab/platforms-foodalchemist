@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 
 /**
  * R9.1 (read): Lieferanten-Stammblatt — Stammdaten, Beziehungs-Status, Konditionen,

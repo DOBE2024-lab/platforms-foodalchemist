@@ -106,7 +106,7 @@ class FoodAlchemistSupplierItem extends Model
 
     /**
      * Menge für den Preis je kg/l/Stk (Entscheid Dominique 12.11.2026): ein gesetztes Abtropfgewicht (> 0, Einheit kg/l) vor der
-     * wirksamen Menge ({@see mengeVon}). Einzige Stelle für {@see \Platform\FoodAlchemist\Services\PriceService::vergleichspreis};
+     * wirksamen Menge ({@see mengeVon}). Einzige Stelle für {@see \Platform\FoodAlchemist\Services\Preis\PriceService::vergleichspreis};
      * Bestellung, Lager und Gebinde rechnen weiter mit {@see mengeVon} (Inhalt der Bestelleinheit).
      */
     public static function preisMengeVon(object $la): ?float

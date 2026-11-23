@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Services\Plattform\AboAuskunft;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\Plattform\MasterTeamService;
 use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;
-use Platform\FoodAlchemist\Services\StammPaketService;
+use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 use Platform\FoodAlchemist\Support\FaBereiche;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\StammPaket;

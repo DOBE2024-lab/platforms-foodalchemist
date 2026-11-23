@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Produktion\EigenproduktionService;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -20,7 +20,7 @@ use Platform\FoodAlchemist\Tests\TestCase;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderRound;
-use Platform\FoodAlchemist\Services\LagerartikelService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerartikelService;
 use Platform\FoodAlchemist\Livewire\Orders\Editor as OrdersEditor;
 use Livewire\Livewire;
 
@@ -118,7 +118,7 @@ it('Spec 73: Paket × Personen als Quelle (Vorschau, Vorlage, Bestellrunde)', fu
     $p = app(OrderService::class)->previewFromSources($this->rootTeam, [['type' => 'concept', 'id' => $paket->id, 'qty' => 100, 'unit' => 'persons']]);
     expect((float) s73pos($p, $this->mehl)['qty_packs'])->toBe(10.0);
 
-    $tpl = app(\Platform\FoodAlchemist\Services\OrderTemplateService::class);
+    $tpl = app(\Platform\FoodAlchemist\Services\Bestellung\OrderTemplateService::class);
     $v = $tpl->anlegen($this->rootTeam, ['name' => 'Buffet', 'kategorie' => 'Events']);
     $tpl->positionSetzen($this->rootTeam, $v->id, 'concept', $paket->id, 100);
     expect($tpl->quellen($this->rootTeam, $v->id))->toMatchArray([['type' => 'concept', 'id' => $paket->id, 'qty' => 100.0, 'unit' => 'persons', 'delivery_date' => null, 'reference' => 'Vorlage Buffet']])

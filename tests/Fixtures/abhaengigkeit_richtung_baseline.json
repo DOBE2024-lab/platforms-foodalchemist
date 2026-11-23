@@ -8,13 +8,13 @@
     "Services/GpPaketImportService.php": {
         "rueckkante KostenCacheService": 1
     },
-    "Services/InventurService.php": {
+    "Services/Einkauf/InventurService.php": {
         "rueckkante RecipeRecomputeService": 1
     },
-    "Services/LeadLaService.php": {
+    "Services/Einkauf/LeadLaService.php": {
         "rueckkante KostenCacheService": 1
     },
-    "Services/PriceService.php": {
+    "Services/Preis/PriceService.php": {
         "rueckkante KostenCacheService": 1
     },
     "_graph": {

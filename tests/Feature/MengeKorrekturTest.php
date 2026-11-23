@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Necta\NectaAbgleichService;
 use Platform\FoodAlchemist\Services\Necta\NectaNachholService;
 use Platform\FoodAlchemist\Services\Necta\NectaQuelle;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Tests\Support\NectaAttrappe;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

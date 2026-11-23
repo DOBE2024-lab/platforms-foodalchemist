@@ -8,7 +8,7 @@ use Livewire\Attributes\Reactive;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
-use Platform\FoodAlchemist\Services\PreisVerlaufService;
+use Platform\FoodAlchemist\Services\Preis\PreisVerlaufService;
 use Platform\FoodAlchemist\Support\Curate;
 
 /**

@@ -176,7 +176,7 @@ it('Gebinde direkt nur in einen LEEREN Artikel und in der Einheit der Preisrechn
     expect((float) $this->stamm->fresh()->qty)->toBe(0.66)->and($this->stamm->fresh()->unit_code)->toBe('kg')
         ->and((float) $ml->fresh()->qty)->toBe(0.5)->and($ml->fresh()->unit_code)->toBe('l');
     // Preisrechnung versteht die Einheit
-    expect(app(\Platform\FoodAlchemist\Services\PriceService::class)->vergleichspreis($this->stamm->fresh(), 3.3))->not->toBeNull();
+    expect(app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->vergleichspreis($this->stamm->fresh(), 3.3))->not->toBeNull();
 });
 
 it('Gebinde: gefüllter Artikel mit anderer Menge bleibt unangetastet, die abweichende Menge ist ein PAAR-Vorschlag; ohne erkennbare Einheit keine Menge; andere Dimension nie automatisch', function () {

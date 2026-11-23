@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\WareneingangService;
+use Platform\FoodAlchemist\Services\Einkauf\WareneingangService;
 
 /** Spec 75a · Lieferschein-Entwurf ändern (Kopf und/oder Positionen ersetzen). */
 class DeliveryNotesPutTool extends WareneingangTool implements ToolContract, ToolMetadataContract

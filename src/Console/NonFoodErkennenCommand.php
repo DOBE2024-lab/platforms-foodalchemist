@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Platform\FoodAlchemist\Jobs\NonFoodKiBatchJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemNonfood;
-use Platform\FoodAlchemist\Services\NonFoodService;
+use Platform\FoodAlchemist\Services\Einkauf\NonFoodService;
 use Platform\FoodAlchemist\Support\Warteschlange;
 
 /**

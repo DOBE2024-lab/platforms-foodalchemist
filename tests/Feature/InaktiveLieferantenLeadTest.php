@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPrice;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -81,7 +81,7 @@ it('Status „gesperrt“ wird wie inaktiv behandelt', function () {
 
 it('inaktiver Stamm-Lieferant gewinnt auch bei Strategie stamm_lieferant nicht', function () {
     $this->settings->update($this->rootTeam, ['lead_la_strategie' => 'stamm_lieferant']);
-    app(\Platform\FoodAlchemist\Services\StammLieferantService::class)->setStamm($this->rootTeam, $this->inaktiv->id, '01');
+    app(\Platform\FoodAlchemist\Services\Einkauf\StammLieferantService::class)->setStamm($this->rootTeam, $this->inaktiv->id, '01');
     $gp = ($this->gp)('Essig');
     ($this->la)($gp, $this->inaktiv, 2.00);
     $ok = ($this->la)($gp, $this->aktiv, 3.00);
@@ -153,7 +153,7 @@ it('Recompute-EK: Lead bei inaktivem Lieferanten wird übergangen, der aktive Zw
 it('Recompute-Ersatz folgt der Rangliste (Stamm-Lieferant), nicht dem günstigsten Kandidaten', function () {
     $this->settings->update($this->rootTeam, ['lead_la_strategie' => 'stamm_lieferant']);
     $stamm = ($this->lieferant)('Stamm aktiv');
-    app(\Platform\FoodAlchemist\Services\StammLieferantService::class)->setStamm($this->rootTeam, $stamm->id, '01');
+    app(\Platform\FoodAlchemist\Services\Einkauf\StammLieferantService::class)->setStamm($this->rootTeam, $stamm->id, '01');
     $gp = ($this->gp)('Dressing');
     $alt = ($this->la)($gp, $this->inaktiv, 1.00);
     ($this->la)($gp, $stamm, 8.00);              // Rang 1 (Stamm), teurer

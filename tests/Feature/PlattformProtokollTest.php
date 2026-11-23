@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPlattformEinstellung;
 use Platform\FoodAlchemist\Models\FoodAlchemistTeamStammOptin;
 use Platform\FoodAlchemist\Services\Plattform\MandantenService;
 use Platform\FoodAlchemist\Services\Plattform\MasterTeamService;
-use Platform\FoodAlchemist\Services\StammPaketService;
+use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

@@ -8,9 +8,9 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\EinkaufOptimizerService;
-use Platform\FoodAlchemist\Services\LeadLaService;
-use Platform\FoodAlchemist\Services\MargeImpactService;
+use Platform\FoodAlchemist\Services\Einkauf\EinkaufOptimizerService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
+use Platform\FoodAlchemist\Services\Preis\MargeImpactService;
 use RuntimeException;
 
 /**

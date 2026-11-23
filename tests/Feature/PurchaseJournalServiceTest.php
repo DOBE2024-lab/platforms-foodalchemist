@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistPurchaseTransaction;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\PurchaseJournalService;
+use Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

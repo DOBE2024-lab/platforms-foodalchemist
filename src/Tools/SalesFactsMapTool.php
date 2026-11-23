@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SalesImportService;
+use Platform\FoodAlchemist\Services\Einkauf\SalesImportService;
 
 /** MCP-Steuerbarkeit · D12 (Controlling): einen Verkaufs-Fakt einem Rezept zuordnen/lösen. */
 class SalesFactsMapTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

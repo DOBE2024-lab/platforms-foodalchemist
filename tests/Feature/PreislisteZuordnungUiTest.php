@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistImportZuordnung;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun as Lauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

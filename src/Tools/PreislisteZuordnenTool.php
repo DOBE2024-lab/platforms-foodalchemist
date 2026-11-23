@@ -10,7 +10,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun as Lauf;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
 use Platform\FoodAlchemist\Services\Stammdaten\StammdatenImportService;
 
 /**

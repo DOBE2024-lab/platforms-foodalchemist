@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Livewire\Controlling\Panels\Kennzahlen;
 use Platform\FoodAlchemist\Livewire\Controlling\Panels\Wareneinsatz;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSalesFact;
-use Platform\FoodAlchemist\Services\SalesImportService;
+use Platform\FoodAlchemist\Services\Einkauf\SalesImportService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

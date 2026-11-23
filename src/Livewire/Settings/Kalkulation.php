@@ -70,7 +70,7 @@ class Kalkulation extends Component
             ],
             'rundungsregeln' => [
                 'nachkommastellen' => max(0, min(4, (int) $this->rundung['nachkommastellen'])),
-                'mode' => in_array($this->rundung['mode'], \Platform\FoodAlchemist\Services\CatalogPricingService::ROUNDING_MODES, true)
+                'mode' => in_array($this->rundung['mode'], \Platform\FoodAlchemist\Services\Preis\CatalogPricingService::ROUNDING_MODES, true)
                     ? $this->rundung['mode'] : 'kaufmaennisch',
             ],
         ]);

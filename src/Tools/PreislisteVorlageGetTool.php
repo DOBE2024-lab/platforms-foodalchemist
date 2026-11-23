@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
 
 /** Spec 82 §3 / Schritt 4d · Vorlage der Preisliste: Spalten in kanonischer Reihenfolge, Beispielzeile, Pflichtfelder, CSV-Text. */
 class PreislisteVorlageGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

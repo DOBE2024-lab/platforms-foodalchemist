@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Preislisten;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
-use Platform\FoodAlchemist\Services\LieferantenDokumentService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenDokumentService;
 
 /**
  * Datenblätter und Produktpässe, die Lieferanten über ihren Link eingereicht haben (Stufe 2c): übernehmen (Produktpass-Weg, die KI liest im

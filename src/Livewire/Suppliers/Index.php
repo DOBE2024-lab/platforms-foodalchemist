@@ -7,9 +7,9 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Platform\FoodAlchemist\Services\PriceService;
-use Platform\FoodAlchemist\Services\SupplierItemService;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 use Platform\FoodAlchemist\Support\Curate;
 use RuntimeException;
 
@@ -143,7 +143,7 @@ class Index extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\LeadLaService::class)->setLeadLa($team, $gp, $itemId);
+            app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->setLeadLa($team, $gp, $itemId);
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
         }
@@ -241,7 +241,7 @@ class Index extends Component
             return;
         }
         $team = Auth::user()?->currentTeamRelation;
-        $this->bulkStats = app(\Platform\FoodAlchemist\Services\MatchService::class)
+        $this->bulkStats = app(\Platform\FoodAlchemist\Services\Matching\MatchService::class)
             ->bulkFuerLieferant($team, $this->supplierId);
         $this->reviewOffen = true;
     }
@@ -250,7 +250,7 @@ class Index extends Component
     {
         $this->fehler = null;
         try {
-            app(\Platform\FoodAlchemist\Services\MatchService::class)
+            app(\Platform\FoodAlchemist\Services\Matching\MatchService::class)
                 ->uebernehmeVorschlag(Auth::user()->currentTeamRelation, $proposalId);
         } catch (RuntimeException $e) {
             $this->fehler = $e->getMessage();
@@ -259,7 +259,7 @@ class Index extends Component
 
     public function vorschlagVerwerfen(int $proposalId): void
     {
-        app(\Platform\FoodAlchemist\Services\MatchService::class)->verwerfeVorschlag(Auth::user()->currentTeamRelation, $proposalId);
+        app(\Platform\FoodAlchemist\Services\Matching\MatchService::class)->verwerfeVorschlag(Auth::user()->currentTeamRelation, $proposalId);
     }
 
     // ── M3-11-Nachtrag: Bulk-Leiste (D-2 §4) ────────────────────────────
@@ -293,7 +293,7 @@ class Index extends Component
             if ($struktur?->gp_id !== null) {
                 $gp = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->find($struktur->gp_id);
                 if ($gp !== null) {
-                    app(\Platform\FoodAlchemist\Services\LeadLaService::class)->entknuepfen($team, $gp, $id);
+                    app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->entknuepfen($team, $gp, $id);
                 }
             }
         });
@@ -311,7 +311,7 @@ class Index extends Component
             if ($struktur === null || $struktur->gp_id !== null) {
                 return;                                              // gemappte überspringen (erst lösen, GL-05)
             }
-            app(\Platform\FoodAlchemist\Services\LeadLaService::class)->verknuepfen($team, $gp, $id);
+            app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->verknuepfen($team, $gp, $id);
         });
     }
 
@@ -380,7 +380,7 @@ class Index extends Component
                 ->where('status', 'offen')->count(),
             'lieferanten' => $liste,
             'darfMarkenPflege' => app(\Platform\FoodAlchemist\Services\Plattform\MandantenService::class)->darfVerwaltung(Auth::user()),
-            'lieferantenGruppen' => app(\Platform\FoodAlchemist\Services\SupplierGroupService::class)->liste($team),
+            'lieferantenGruppen' => app(\Platform\FoodAlchemist\Services\Einkauf\SupplierGroupService::class)->liste($team),
             'artikel' => $artikel,
             'globaleSuche' => $globaleSuche,
             'aktiverLieferant' => $globaleSuche ? null : $liste->firstWhere('id', $this->supplierId),

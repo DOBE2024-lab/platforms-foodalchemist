@@ -35,7 +35,7 @@ class DarreichungService
 {
     public function __construct(
         private RecipeRecomputeService $recompute,
-        private CatalogPricingService $catalogPricing,
+        private Preis\CatalogPricingService $catalogPricing,
         private TeamSettingsService $settings,
     ) {}
 

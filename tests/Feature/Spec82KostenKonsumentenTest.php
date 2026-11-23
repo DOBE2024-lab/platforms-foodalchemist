@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\KostenCacheService;
 use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
-use Platform\FoodAlchemist\Services\PriceService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
@@ -145,7 +145,7 @@ it('KostenCacheService lädt Teil-Spalten nach: ein Gericht nur mit id/ek_total_
 });
 
 it('Pflicht (Auflage 4): VK-Vorschlag und Marge — aus einer EK-Teilsumme kein Wareneinsatz/DB, VK-Vorschlag nur vorläufig', function () {
-    $kalk = app(\Platform\FoodAlchemist\Services\KalkulationService::class);
+    $kalk = app(\Platform\FoodAlchemist\Services\Preis\KalkulationService::class);
 
     $neu = $kalk->recipeHk($this->neu, $this->jusF);
     expect($neu['ek_vollstaendig'])->toBeFalse()
@@ -205,5 +205,5 @@ it('§8 Punkt 8 / §12 C: VK eines Abo-Gerichts = Team-EK je Portion × Basissat
     expect($agg['vk_fehlt'])->toBeTrue()->and($agg['food_cost_percent'])->toBeNull();
 
     // Kalkulation (recipeHk) nimmt denselben Team-VK
-    expect(app(\Platform\FoodAlchemist\Services\KalkulationService::class)->recipeHk($this->broich, $fassung)['sales_net'])->toBe($vk['vk']);
+    expect(app(\Platform\FoodAlchemist\Services\Preis\KalkulationService::class)->recipeHk($this->broich, $fassung)['sales_net'])->toBe($vk['vk']);
 });

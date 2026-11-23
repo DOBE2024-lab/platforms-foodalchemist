@@ -12,9 +12,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistInventoryLocation;
 use Platform\FoodAlchemist\Models\FoodAlchemistLookupWarengruppe;
 use Platform\FoodAlchemist\Models\FoodAlchemistStorageBin;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\InventurService;
-use Platform\FoodAlchemist\Services\LagerBewegungService;
-use Platform\FoodAlchemist\Services\LagerEinrichtungService;
+use Platform\FoodAlchemist\Services\Einkauf\InventurService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerBewegungService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService;
 
 /**
  * Spec 66 · Lager: Bestand, Bewegungen, Inventuren — Spec 66b: Einrichten (Stellplätze, Stammplätze,
@@ -232,7 +232,7 @@ class Index extends Component
 
     // ── Lagerartikel (Spec 74) ──────────────────────────────────────────────
 
-    public function lagerartikelSpeichern(int $gpId, \Platform\FoodAlchemist\Services\LagerartikelService $svc): void
+    public function lagerartikelSpeichern(int $gpId, \Platform\FoodAlchemist\Services\Einkauf\LagerartikelService $svc): void
     {
         $this->fehler = null;
         try {
@@ -243,7 +243,7 @@ class Index extends Component
         }
     }
 
-    public function lagerartikelHinzu(int $gpId, \Platform\FoodAlchemist\Services\LagerartikelService $svc): void
+    public function lagerartikelHinzu(int $gpId, \Platform\FoodAlchemist\Services\Einkauf\LagerartikelService $svc): void
     {
         try {
             $svc->setzen($this->team(), $gpId, true);
@@ -253,21 +253,21 @@ class Index extends Component
         }
     }
 
-    public function lagerartikelEntfernen(int $gpId, \Platform\FoodAlchemist\Services\LagerartikelService $svc): void
+    public function lagerartikelEntfernen(int $gpId, \Platform\FoodAlchemist\Services\Einkauf\LagerartikelService $svc): void
     {
         $svc->setzen($this->team(), $gpId, false);
         unset($this->vorrat[$gpId]);
     }
 
     /** Spec 74: alle genutzten Grundprodukte einer Warengruppe als Lagerartikel markieren. */
-    public function warengruppeAlsLagerartikel(string $code, \Platform\FoodAlchemist\Services\LagerartikelService $svc): void
+    public function warengruppeAlsLagerartikel(string $code, \Platform\FoodAlchemist\Services\Einkauf\LagerartikelService $svc): void
     {
         $n = $svc->warengruppeMarkieren($this->team(), $code);
         $this->hinweis = $n . ' Grundprodukt(e) als Lagerartikel markiert — jetzt Mindest- und Sollbestand pflegen.';
     }
 
     /** Einrichten: markierte Grundprodukte als Lagerartikel (Gewürze, Öle …). */
-    public function auswahlAlsLagerartikel(\Platform\FoodAlchemist\Services\LagerartikelService $svc): void
+    public function auswahlAlsLagerartikel(\Platform\FoodAlchemist\Services\Einkauf\LagerartikelService $svc): void
     {
         $n = $svc->markieren($this->team(), array_map('intval', $this->auswahl));
         $this->auswahl = [];
@@ -498,7 +498,7 @@ class Index extends Component
         $lieferantIds = array_filter(array_unique(array_column($bestandAlle, 'lieferant_id')));
 
         // Spec 74: Lagerartikel + Signal „unter Mindestbestand"
-        $laSvc = app(\Platform\FoodAlchemist\Services\LagerartikelService::class);
+        $laSvc = app(\Platform\FoodAlchemist\Services\Einkauf\LagerartikelService::class);
         $lagerartikel = $this->reiter === 'lagerartikel' ? $laSvc->liste($team) : [];
         foreach ($lagerartikel as $la) {
             $this->vorrat[$la['gp_id']] ??= ['min' => $la['min'] !== null ? str_replace('.', ',', (string) $la['min']) : '', 'soll' => $la['soll'] !== null ? str_replace('.', ',', (string) $la['soll']) : ''];

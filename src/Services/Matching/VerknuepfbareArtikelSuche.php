@@ -7,8 +7,8 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierMarke;
 use Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel;
-use Platform\FoodAlchemist\Services\PriceService;
-use Platform\FoodAlchemist\Services\StammLieferantService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
+use Platform\FoodAlchemist\Services\Einkauf\StammLieferantService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Support\Suche;
 

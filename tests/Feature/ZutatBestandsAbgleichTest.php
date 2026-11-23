@@ -2,7 +2,7 @@
 
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\IngredientMatchService;
-use Platform\FoodAlchemist\Services\LaFirstGpService;
+use Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

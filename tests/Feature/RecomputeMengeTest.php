@@ -213,7 +213,7 @@ it('V-049: der Ein-Element-Fall bleibt unverändert und die Kosten propagieren k
 });
 
 it('V-050: der Detektor arbeitet auf der übergebenen GP-Menge statt team-weit — ohne D1 zu weiten', function () {
-    $preise = app(\Platform\FoodAlchemist\Services\PriceService::class);
+    $preise = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class);
 
     $mkSprung = function (string $name) use ($preise) {
         [$gp, $la] = ($this->mkGpMitPreis)($name, 10.00);

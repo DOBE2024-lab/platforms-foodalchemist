@@ -4,8 +4,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\PriceService;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

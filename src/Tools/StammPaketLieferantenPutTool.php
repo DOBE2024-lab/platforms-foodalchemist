@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\StammPaketService;
+use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 
 /** Spec 82 · Lieferanten-Freischaltung eines Mandanten setzen (exakt diese Menge; nur Plattform-Admin). */
 class StammPaketLieferantenPutTool extends WareneingangTool implements ToolContract, ToolMetadataContract

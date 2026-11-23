@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistLabNote;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 use Platform\FoodAlchemist\Tools\ConceptsSearchTool;
 use Platform\FoodAlchemist\Tools\FoodbooksSearchTool;
 use Platform\FoodAlchemist\Tools\LabNotesSearchTool;

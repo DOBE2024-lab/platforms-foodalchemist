@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Services\Necta\NectaMapper;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 
 /**
  * Natrium steht in FA in mg je 100 g: der Necta-Mapper rechnet Salz (g) × 400, die Aggregation (GL-08) Salz g = Natrium mg × 0,0025.

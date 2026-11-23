@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistMandant;
 use Platform\FoodAlchemist\Services\Plattform\AboAuskunft;
 use Platform\FoodAlchemist\Services\Plattform\MandantBeendenService;
 use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;
-use Platform\FoodAlchemist\Services\StammPaketService;
+use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

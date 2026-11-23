@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 use Platform\FoodAlchemist\Support\HandyNavigation;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

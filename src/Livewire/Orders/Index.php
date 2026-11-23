@@ -9,8 +9,8 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Platform\FoodAlchemist\Enums\LeadLaStrategie;
 use Platform\FoodAlchemist\Enums\OrderStatus;
-use Platform\FoodAlchemist\Services\BestellListeService;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\BestellListeService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 use Platform\FoodAlchemist\Support\Zeitraum;
 
 /**

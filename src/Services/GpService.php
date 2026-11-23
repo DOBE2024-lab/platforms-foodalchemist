@@ -214,9 +214,9 @@ class GpService
             ->map(function ($structure) use ($team) {
                 $item = $structure->item;
                 // M2-04: Aktiv-Preis-Regel zentral im PriceService (GL-11 §3.3 — eine Stelle!)
-                $price = $item !== null ? app(PriceService::class)->activeFor($item->id, $team) : null; // Spec 82 3a
+                $price = $item !== null ? app(Preis\PriceService::class)->activeFor($item->id, $team) : null; // Spec 82 3a
                 // Rückfall (27.10.): eingestellter Artikel ohne aktiven Preis → letzter bekannter Preis mit Kennzeichen; `price` bleibt der aktive (oder null)
-                $letzter = $price === null && $item !== null ? app(PriceService::class)->letzterPreisFuer($item->id, $team) : null;
+                $letzter = $price === null && $item !== null ? app(Preis\PriceService::class)->letzterPreisFuer($item->id, $team) : null;
 
                 return (object) [
                     'structure' => $structure,
@@ -356,9 +356,9 @@ class GpService
             ->select('foodalchemist_gps.*', 'lead.unit_code AS lead_unit_code')
             ->selectRaw(\Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::mengeSql('lead').' AS lead_qty')   // korrigierte Menge vor Necta-qty
             ->addSelect('lead.abtropfgewicht AS lead_abtropf')   // Preis je kg rechnet mit dem Abtropfgewicht (12.11.2026)
-            ->selectSub(app(PriceService::class)->activePriceSubquery('lead.id', $team)->toBase(), 'lead_preis') // Spec 82 3a
+            ->selectSub(app(Preis\PriceService::class)->activePriceSubquery('lead.id', $team)->toBase(), 'lead_preis') // Spec 82 3a
             ->addSelect('lead.lieferstatus_seit AS lead_eingestellt_seit')
-            ->tap(fn ($q) => app(PriceService::class)->mitLetztemPreis($q, 'lead.id', $team))   // Rückfall: letzter Preis eines eingestellten Leads (27.10.)
+            ->tap(fn ($q) => app(Preis\PriceService::class)->mitLetztemPreis($q, 'lead.id', $team))   // Rückfall: letzter Preis eines eingestellten Leads (27.10.)
             ->with('commodity_group')
             ->orderBy('foodalchemist_gps.name');
 
@@ -383,8 +383,8 @@ class GpService
             ->select('lead.id', 'lead.unit_code AS lead_unit_code', 'lead.lieferstatus_seit AS lead_eingestellt_seit')
             ->selectRaw(\Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::mengeSql('lead').' AS lead_qty')
             ->addSelect('lead.abtropfgewicht AS lead_abtropf')
-            ->selectSub(app(PriceService::class)->activePriceSubquery('lead.id', $team)->toBase(), 'lead_preis')
-            ->tap(fn ($q) => app(PriceService::class)->mitLetztemPreis($q, 'lead.id', $team))
+            ->selectSub(app(Preis\PriceService::class)->activePriceSubquery('lead.id', $team)->toBase(), 'lead_preis')
+            ->tap(fn ($q) => app(Preis\PriceService::class)->mitLetztemPreis($q, 'lead.id', $team))
             ->get()->keyBy('id');
         $laCounts = $zeilen->isEmpty() ? collect() : \Illuminate\Support\Facades\DB::table('foodalchemist_supplier_item_structures')
             ->whereIn('gp_id', $zeilen->pluck('id'))->whereNull('deleted_at')
@@ -402,7 +402,7 @@ class GpService
     /** Browser-Zeilen anreichern: Preis-Rückfall, Vergleichspreis, Rezept-Verwendungen, effektive Allergen-Badges (erwartet die Lead-Spalten). */
     private function zeilenAnreichern(\Illuminate\Support\Collection $zeilen): void
     {
-        $preise = app(PriceService::class);
+        $preise = app(Preis\PriceService::class);
         $rezepteAktiv = \Illuminate\Support\Facades\Schema::hasTable('foodalchemist_recipes');
 
         // Effektive Allergen-Badges (GL-01, seit M3-04): Override > Mutter (Derivat) > LA-MAX — Bulk in 1 Query
@@ -421,7 +421,7 @@ class GpService
             $gp->setAttribute('lead_letzter', null);
             if ($gp->lead_preis === null && $gp->letzter_preis !== null) {
                 $gp->setAttribute('lead_preis', $gp->letzter_preis);
-                $gp->setAttribute('lead_letzter', PriceService::letzterPreisKennzeichen($gp->letzter_preis_ab, $gp->lead_eingestellt_seit));
+                $gp->setAttribute('lead_letzter', Preis\PriceService::letzterPreisKennzeichen($gp->letzter_preis_ab, $gp->lead_eingestellt_seit));
             }
             $gp->setAttribute('lead_vergleichspreis', $gp->lead_preis !== null
                 ? $preise->vergleichspreis((object) ['qty' => $gp->lead_qty, 'abtropfgewicht' => $gp->lead_abtropf, 'unit_code' => $gp->lead_unit_code], (float) $gp->lead_preis)
@@ -560,7 +560,7 @@ class GpService
             throw new \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException('das Ziel-GP', self::GEERBT);
         }
 
-        $lead = app(LeadLaService::class);
+        $lead = app(Einkauf\LeadLaService::class);
         $umgehaengt = 0;
         $abgelehnt = [];
         foreach ($artikel as $laId) {

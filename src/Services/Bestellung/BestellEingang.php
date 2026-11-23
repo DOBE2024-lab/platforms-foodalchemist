@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Enums\OrderStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\PurchaseJournalService;
+use Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService;
 
 /**
  * Eingangs-Pflege einer Bestellung (98 · 3.3 S5, aus OrderService verschoben): Status-Guards für Wareneingang und

@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistLabelTemplate;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
-use Platform\FoodAlchemist\Services\LagerEinrichtungService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

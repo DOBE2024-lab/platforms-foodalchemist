@@ -43,9 +43,9 @@
         @endif
         @if(!empty($blatt))
             @php
-                $felder = \Platform\FoodAlchemist\Services\LieferantenStammdatenblattService::STAMM_FELDER;
-                $rollen = \Platform\FoodAlchemist\Services\LieferantenStammdatenblattService::ROLLEN;
-                $kanaele = \Platform\FoodAlchemist\Services\LieferantenStammdatenblattService::KANAELE;
+                $felder = \Platform\FoodAlchemist\Services\Einkauf\LieferantenStammdatenblattService::STAMM_FELDER;
+                $rollen = \Platform\FoodAlchemist\Services\Einkauf\LieferantenStammdatenblattService::ROLLEN;
+                $kanaele = \Platform\FoodAlchemist\Services\Einkauf\LieferantenStammdatenblattService::KANAELE;
                 $gebiete = array_pad($blatt['gebiete'], count($blatt['gebiete']) + 2, []);
             @endphp
             <form class="upload blatt" method="POST" action="{{ route('foodalchemist.presentation.lieferanten_portal_stammdatenblatt', ['token' => $token]) }}" enctype="multipart/form-data" data-portal-upload="stammdatenblatt">

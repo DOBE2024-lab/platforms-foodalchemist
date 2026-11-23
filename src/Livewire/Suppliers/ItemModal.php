@@ -8,9 +8,9 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen;
 use Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration;
-use Platform\FoodAlchemist\Services\NonFoodService;
-use Platform\FoodAlchemist\Services\PriceService;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\NonFoodService;
+use Platform\FoodAlchemist\Services\Preis\PriceService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 use Platform\FoodAlchemist\Support\Curate;
 use RuntimeException;
 
@@ -232,7 +232,7 @@ class ItemModal extends Component
                 return;
             }
             $ab = trim((string) $this->aktionNeu['ab']) !== '' ? (string) $this->aktionNeu['ab'] : now('Europe/Berlin')->toDateString();
-            app(\Platform\FoodAlchemist\Services\AktionspreisService::class)->anlegen($this->team(), $this->item($this->itemId), (float) $roh,
+            app(\Platform\FoodAlchemist\Services\Preis\AktionspreisService::class)->anlegen($this->team(), $this->item($this->itemId), (float) $roh,
                 $ab, (string) $this->aktionNeu['bis'], 'manuell', null, [], Auth::id());
             $this->aktionNeu = ['price' => '', 'ab' => '', 'bis' => ''];
             $this->fehler = null;
@@ -320,7 +320,7 @@ class ItemModal extends Component
     {
         $this->fehler = null;
         $item = $this->item($this->itemId);
-        $this->gpVorschlaege = app(\Platform\FoodAlchemist\Services\MatchService::class)
+        $this->gpVorschlaege = app(\Platform\FoodAlchemist\Services\Matching\MatchService::class)
             ->vorschlaegeFuerLa($item, $this->team())
             ->map(fn ($v) => [
                 'gp_id' => $v['gp']->id,
@@ -372,7 +372,7 @@ class ItemModal extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\LeadLaService::class)->verknuepfen($team, $gp, $this->itemId);
+            app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->verknuepfen($team, $gp, $this->itemId);
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
 
@@ -399,7 +399,7 @@ class ItemModal extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\LeadLaService::class)->entknuepfen($team, $gp, $this->itemId);
+            app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->entknuepfen($team, $gp, $this->itemId);
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
 
@@ -435,7 +435,7 @@ class ItemModal extends Component
             'aktiverPreis' => $aktiv,
             // Rückfall 27.10.: eingestellter Artikel ohne aktiven Preis → letzter bekannter Preis (nur Anzeige, gekennzeichnet)
             'letzterPreis' => $item !== null && $aktiv === null ? $preise->letzterPreisFuer($item->id, $team) : null,
-            'aktion' => $item !== null ? app(\Platform\FoodAlchemist\Services\AktionspreisService::class)->aktivFuer($team, $item) : null,
+            'aktion' => $item !== null ? app(\Platform\FoodAlchemist\Services\Preis\AktionspreisService::class)->aktivFuer($team, $item) : null,
             'vergleichspreis' => $item !== null && $aktiv !== null
                 ? $preise->vergleichspreis($item, (float) $aktiv->price)
                 : null,

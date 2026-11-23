@@ -254,7 +254,7 @@ it('B3c: ohne Regenerier-Behälter ist der Block 0 (kein Raten), Basisrezepte ha
 
 it('B3c Kalkulation: Lohn je Block getrennt („davon“-Zeilen), Summe = FEK', function () {
     spec83RegenFixture($this, $this->rootTeam, $this->gericht);
-    $costing = app(\Platform\FoodAlchemist\Services\OrderCostingService::class);
+    $costing = app(\Platform\FoodAlchemist\Services\Bestellung\OrderCostingService::class);
     app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->update($this->rootTeam, ['stundensatz_eur' => 60]);
     $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Gala']);
@@ -321,7 +321,7 @@ it('B3h Kalkulation: Posten-Last nur bei den beteiligten Posten, Sammel-Pass tr�
     $concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->gericht->id]);
     $concepts->recomputeCache($concept->refresh());
 
-    $k = app(\Platform\FoodAlchemist\Services\OrderCostingService::class)->costConcept($this->rootTeam, $concept->refresh(), 100);
+    $k = app(\Platform\FoodAlchemist\Services\Bestellung\OrderCostingService::class)->costConcept($this->rootTeam, $concept->refresh(), 100);
     $last = collect($k['station_load'])->keyBy(fn ($l) => $l['station_id'] ?? 0);
 
     expect($last[$p['saucier']->id]['active_person_minutes'])->toBeGreaterThanOrEqual(33.33)

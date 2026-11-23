@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Jobs\LeadRepickJob;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 
 /**
  * Lead-Neuwahl nach Strategie + Stamm-Matrix (MCP-Spiegel von „Leads neu wählen" in

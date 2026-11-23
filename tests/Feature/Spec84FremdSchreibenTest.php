@@ -213,7 +213,7 @@ it("Ausnahme 'unterteam-verwaltung': Oberteam setzt die Preis-Toleranz des Unter
 
     foreach ([0, 4] as $stufe) {
         config(['foodalchemist.team_sicht.stufe' => $stufe]);
-        FaTeam::imTeam($ober, fn () => app(\Platform\FoodAlchemist\Services\TripleMatchService::class)->setzeToleranz($this->childA, 3.0 + $stufe, 0.5, $admin->id));
+        FaTeam::imTeam($ober, fn () => app(\Platform\FoodAlchemist\Services\Matching\TripleMatchService::class)->setzeToleranz($this->childA, 3.0 + $stufe, 0.5, $admin->id));
 
         $zeilen = DB::table('foodalchemist_team_settings')->where('team_id', $this->childA->id)->get();
         expect($zeilen)->toHaveCount(1)->and((int) $zeilen[0]->id)->toBe((int) $vorhanden->id)

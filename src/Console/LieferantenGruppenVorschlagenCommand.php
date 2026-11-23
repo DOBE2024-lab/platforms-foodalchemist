@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\SupplierGroupService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierGroupService;
 
 /**
  * Schlägt für jeden Lieferanten eine Gruppe vor (aus Necta-Branche und Name) — Dry-Run als Default. Von Hand gesetzte Gruppen bleiben immer

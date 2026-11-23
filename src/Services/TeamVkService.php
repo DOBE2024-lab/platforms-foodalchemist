@@ -79,7 +79,7 @@ class TeamVkService
         $rechnung->forceFill(['ek_portion' => $mek, 'markup_class_id' => null, 'price_mode' => 'auto', 'sales_net' => null]);
         $rechnung->setRelation('recipe', $recipe);
         $rechnung->setRelation('markupClass', null);
-        $preis = app(CatalogPricingService::class)->catalogPrice($team, $rechnung, $outlet);
+        $preis = app(Preis\CatalogPricingService::class)->catalogPrice($team, $rechnung, $outlet);
 
         return $preis['sales_net'] !== null
             ? ['vk' => (float) $preis['sales_net'], 'quelle' => 'team_kalkulation', 'grund' => null, 'mek' => $mek]

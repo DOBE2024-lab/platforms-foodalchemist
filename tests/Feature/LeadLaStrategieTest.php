@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Enums\LeadLaStrategie;
-use Platform\FoodAlchemist\Services\LeadLaStrategieResolver;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaStrategieResolver;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

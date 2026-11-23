@@ -864,7 +864,7 @@ class ProductionOrderService
                 : null;
 
             if ($ziel === ProductionOrderStatus::Cancelled) {
-                $procurementCancellation = app(\Platform\FoodAlchemist\Services\OrderService::class)->withdrawProductionDemand($team, (int) $order->id);
+                $procurementCancellation = app(\Platform\FoodAlchemist\Services\Bestellung\OrderService::class)->withdrawProductionDemand($team, (int) $order->id);
             }
 
             $this->events->record((int) $team->id, (int) $order->id, 'order_status_changed', [
@@ -962,7 +962,7 @@ class ProductionOrderService
             $orderStatus = $o->status instanceof OrderStatus ? $o->status : OrderStatus::from((string) $o->status);
             $cancellationMail = null;
             if (in_array($orderStatus, [OrderStatus::Sent, OrderStatus::Confirmed], true)) {
-                $mail = app(\Platform\FoodAlchemist\Services\OrderService::class)->productionCancellationMailtoData($team, (int) $o->id, $orderId);
+                $mail = app(\Platform\FoodAlchemist\Services\Bestellung\OrderService::class)->productionCancellationMailtoData($team, (int) $o->id, $orderId);
                 if ($mail['to'] !== '') {
                     $cancellationMail = 'mailto:'.$mail['to'].'?subject='.rawurlencode($mail['subject']).'&body='.rawurlencode($mail['body']);
                 }

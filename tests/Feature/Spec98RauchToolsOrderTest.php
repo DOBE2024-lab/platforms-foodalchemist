@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Livewire\Orders\Editor as OrdersEditor;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderRound;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 use Platform\FoodAlchemist\Tests\Support\BestellWelt;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

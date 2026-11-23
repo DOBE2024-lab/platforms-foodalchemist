@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine as Zeile;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun as Lauf;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
 use Platform\FoodAlchemist\Services\Stammdaten\StammdatenUebernahmeService;
 
 /**

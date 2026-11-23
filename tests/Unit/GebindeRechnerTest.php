@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\GebindeRechner;
+use Platform\FoodAlchemist\Services\Einkauf\GebindeRechner;
 
 /**
  * S0 (Spec 17 §E3) — Bedarf (Gramm) → ganze Bestell-Gebinde des Lead-LA.

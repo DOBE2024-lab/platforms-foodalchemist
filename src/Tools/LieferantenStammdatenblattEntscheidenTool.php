@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\LieferantenStammdatenblattService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenStammdatenblattService;
 
 /** Stammdatenblatt-Vorschläge vom Lieferanten übernehmen oder verwerfen. */
 class LieferantenStammdatenblattEntscheidenTool extends WareneingangTool implements ToolContract, ToolMetadataContract

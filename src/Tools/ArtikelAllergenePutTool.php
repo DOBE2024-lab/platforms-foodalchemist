@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 
 /** MCP-Steuerbarkeit · D4: Allergene eines team-eigenen Lieferantenartikels setzen (14 EU-Allergene). */
 class ArtikelAllergenePutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

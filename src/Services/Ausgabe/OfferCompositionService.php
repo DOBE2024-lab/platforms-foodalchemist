@@ -637,7 +637,7 @@ class OfferCompositionService
             }
 
             return ['vk_pro_person' => round($vk, 2), 'ek_pro_person' => round($ek, 2), 'pauschal' => 0.0,
-                'food_cost_percent' => $vkFehlt ? null : \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk), 'preis_range' => null, 'vk_fehlt' => $vkFehlt];
+                'food_cost_percent' => $vkFehlt ? null : \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk), 'preis_range' => null, 'vk_fehlt' => $vkFehlt];
         }
 
         $relationen = ['blocks' => fn ($q) => $q->where('visible', true),
@@ -684,7 +684,7 @@ class OfferCompositionService
 
         // Auflage 4: Food-Cost aus einer EK-Teilsumme wäre geschönt → bei unvollständigem EK keine Quote
         return ['vk_pro_person' => round($vk, 2), 'ek_pro_person' => round($ek, 2), 'pauschal' => round($pauschal, 2),
-            'food_cost_percent' => ($ekVoll && ! $vkFehlt) ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk) : null, 'preis_range' => null,
+            'food_cost_percent' => ($ekVoll && ! $vkFehlt) ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk) : null, 'preis_range' => null,
             'ek_vollstaendig' => $ekVoll, 'vk_fehlt' => $vkFehlt, 'ek_pauschal' => round($ekPauschal, 2),
             'aufwand' => round($aufwand, 2), 'ek_aufwand' => round($ekAufwand, 2)];   // vk_fehlt: mind. ein Gericht ohne VK — Summe ist kein Angebotspreis
     }

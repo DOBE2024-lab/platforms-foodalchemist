@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 
 /** M8-01: Lieferanten-Artikel global durchsuchen (D-2). */
 class ArtikelSearchTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

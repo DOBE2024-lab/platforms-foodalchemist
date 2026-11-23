@@ -921,7 +921,7 @@ Route::get('/lager', \Platform\FoodAlchemist\Livewire\Lager\Index::class)
     ->name('foodalchemist.lager.index');
 
 // Spec 66 · Zählliste einer Inventur: Druck-HTML | ?pdf=1 (DomPDF).
-Route::get('/lager/inventur/{count}/zaehlliste', function (int $count, \Platform\FoodAlchemist\Services\InventurService $svc) {
+Route::get('/lager/inventur/{count}/zaehlliste', function (int $count, \Platform\FoodAlchemist\Services\Einkauf\InventurService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $inventur = $svc->detail($team, $count);
     // Spec 66b: nach Laufweg sortiert, optional nur ein Stellplatz (?stellplatz=ID | ohne)
@@ -941,7 +941,7 @@ Route::get('/lager/inventur/{count}/zaehlliste', function (int $count, \Platform
 })->name('foodalchemist.lager.zaehlliste');
 
 // Gebündeltes Versandprotokoll für eine bewusst ausgewählte Belegmenge.
-Route::get('/bestellungen/versandprotokoll', function (\Platform\FoodAlchemist\Services\OrderService $svc) {
+Route::get('/bestellungen/versandprotokoll', function (\Platform\FoodAlchemist\Services\Bestellung\OrderService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $ids = collect(explode(',', (string) request('ids')))
         ->map(fn ($id) => (int) $id)->filter()->unique()->take(100)->values();
@@ -966,7 +966,7 @@ Route::get('/bestellungen/versandprotokoll', function (\Platform\FoodAlchemist\S
 })->name('foodalchemist.orders.versandprotokoll');
 
 // Spec 17/S3 — Bestell-Dokument: Druck-HTML | ?pdf=1 (DomPDF) | ?csv=1 (Download).
-Route::get('/bestellungen/{order}/dokument', function (int $order, \Platform\FoodAlchemist\Services\OrderService $svc) {
+Route::get('/bestellungen/{order}/dokument', function (int $order, \Platform\FoodAlchemist\Services\Bestellung\OrderService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     try {
         $dok = $svc->dokument($team, $order);

@@ -9,9 +9,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine as Zeile;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportRun as Lauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\FileArticleImportService;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
-use Platform\FoodAlchemist\Services\SupplierItemService;
+use Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;
 use Platform\FoodAlchemist\Support\Text;
 
 /**
@@ -258,7 +258,7 @@ class StammdatenImportService
         }
         $zuo->verwerfen($lauf);
 
-        return app(\Platform\FoodAlchemist\Services\LieferantenUploadService::class)->sichere($neu);
+        return app(\Platform\FoodAlchemist\Services\Einkauf\LieferantenUploadService::class)->sichere($neu);
     }
 
     /**
@@ -424,7 +424,7 @@ class StammdatenImportService
         }
 
         if (($w['preis'] ?? '') !== '' && ($p = $this->preisWert($w['preis'])) !== null) {
-            $aktiv = $item !== null ? app(\Platform\FoodAlchemist\Services\PriceService::class)->activeFor($item->id, $team) : null;
+            $aktiv = $item !== null ? app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->activeFor($item->id, $team) : null;
             $alt = $aktiv?->price !== null ? (float) $aktiv->price : null;
             if ($alt === null || abs($alt - $p) >= 0.0005) {
                 $diff['preis'] = ['alt' => $alt, 'neu' => $p];

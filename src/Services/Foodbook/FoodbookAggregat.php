@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Services\ConceptPreisService;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungResolver;
 use Platform\FoodAlchemist\Services\FormatKapitelService;
-use Platform\FoodAlchemist\Services\MargeService;
+use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\OrderService;
+use Platform\FoodAlchemist\Services\Bestellung\OrderService;
 use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Support\Suche;
 
@@ -426,7 +426,7 @@ class Editor extends Component
     public function mailErneutSenden(int $mailId): void
     {
         $this->fuehreAus(
-            fn ($team) => app(\Platform\FoodAlchemist\Services\OrderMailService::class)->erneutSenden($team, $mailId),
+            fn ($team) => app(\Platform\FoodAlchemist\Services\Bestellung\OrderMailService::class)->erneutSenden($team, $mailId),
             'Mail wird erneut gesendet.'
         );
     }
@@ -873,7 +873,7 @@ class Editor extends Component
         if ($team === null || $templateId <= 0) {
             return;
         }
-        $svc = app(\Platform\FoodAlchemist\Services\OrderTemplateService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Bestellung\OrderTemplateService::class);
         try {
             $v = $svc->detail($team, $templateId);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
@@ -907,7 +907,7 @@ class Editor extends Component
             return;
         }
         try {
-            $v = app(\Platform\FoodAlchemist\Services\OrderTemplateService::class)->ausQuellen($team, $this->vorlageName, $this->cockpitSources, Auth::id());
+            $v = app(\Platform\FoodAlchemist\Services\Bestellung\OrderTemplateService::class)->ausQuellen($team, $this->vorlageName, $this->cockpitSources, Auth::id());
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
 
@@ -926,7 +926,7 @@ class Editor extends Component
             return;
         }
         try {
-            $v = app(\Platform\FoodAlchemist\Services\OrderTemplateService::class)->ausBestellung($team, $this->orderId, $this->vorlageName, Auth::id());
+            $v = app(\Platform\FoodAlchemist\Services\Bestellung\OrderTemplateService::class)->ausBestellung($team, $this->orderId, $this->vorlageName, Auth::id());
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
 
@@ -1223,7 +1223,7 @@ class Editor extends Component
         $erlaubteStatus = [];
         $mailto = null;
         $cancellationMailto = null;
-        $mailDienst = app(\Platform\FoodAlchemist\Services\OrderMailService::class);
+        $mailDienst = app(\Platform\FoodAlchemist\Services\Bestellung\OrderMailService::class);
         $serverVersand = $mailDienst->istServerVersand($team);
         $mailProtokoll = collect();
         if ($this->orderId !== null) {

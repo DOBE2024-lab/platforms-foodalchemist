@@ -24,9 +24,9 @@ const ENUM_STATUS_GEPRUEFT = [
     'src/Services/Trends/TrendAutomatikService.php',   // Spec 93 C: FoodAlchemistTrend.status ist eine String-Spalte (wie TrendService)
     'src/Livewire/Suppliers/ProduktpassPanel.php', 'src/Jobs/ProduktpassLesenJob.php', 'src/Services/Produktpass/ProduktpassService.php',
     'src/Services/Produktpass/ProduktpassAbweichungService.php', 'src/Livewire/Suppliers/NectaPruefaelle.php',
-    'src/Services/OrderMailService.php', 'resources/views/livewire/orders/editor.blade.php', 'src/Services/RecipeFindingService.php',
+    'src/Services/Bestellung/OrderMailService.php', 'resources/views/livewire/orders/editor.blade.php', 'src/Services/RecipeFindingService.php',
     'src/Services/ConformanceService.php', 'src/Models/FoodAlchemistInventoryCount.php', 'resources/views/livewire/projekte/index.blade.php',
-    'resources/views/livewire/preislisten/index.blade.php', 'src/Services/Ai/KiAuftragService.php', 'src/Services/PreislistenImportService.php',
+    'resources/views/livewire/preislisten/index.blade.php', 'src/Services/Ai/KiAuftragService.php', 'src/Services/Preis/PreislistenImportService.php',
     // Markt-Einordnung (#759) und Wettbewerbs-Funde (#744): String-Spalten ohne Enum-Cast
     'src/Jobs/MarktEinordnungJob.php', 'resources/views/livewire/trendradar/wettbewerber.blade.php',
     // Concept: (string)-Cast auf den Status, kein Enum-Modell aus der Liste

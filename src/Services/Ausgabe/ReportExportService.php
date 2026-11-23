@@ -47,8 +47,8 @@ class ReportExportService
         if (array_key_exists($key, $this->preisMemo)) {
             return $this->preisMemo[$key];
         }
-        $p = app(\Platform\FoodAlchemist\Services\PriceService::class)->activeFor((int) $la->id, $this->preisTeam);
-        if ($p === null && ($lp = app(\Platform\FoodAlchemist\Services\PriceService::class)->letzterPreisFuer((int) $la->id, $this->preisTeam)) !== null) {
+        $p = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->activeFor((int) $la->id, $this->preisTeam);
+        if ($p === null && ($lp = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->letzterPreisFuer((int) $la->id, $this->preisTeam)) !== null) {
             // Rückfall 27.10.: letzter bekannter Preis eines eingestellten Artikels — nicht gespeichert, nur für den Bericht, Quelle sichtbar
             $p = (new \Platform\FoodAlchemist\Models\FoodAlchemistPrice)->forceFill(['price' => $lp['preis']]);
             $p->setAttribute('preis_quelle', 'letzter_eingestellt');
@@ -288,7 +288,7 @@ class ReportExportService
         if ($pax > 0 && ($optionen['simulation'] ?? false)) {
             // Ebene 2: ein via $optionen durchgereichter Betrieb rechnet die Sim mit dessen Kosten (sonst Team-Baseline).
             $simOutlet = ($optionen['outlet'] ?? null) instanceof \Platform\FoodAlchemist\Models\FoodAlchemistOutlet ? $optionen['outlet'] : null;
-            $auftragsSimulation = app(\Platform\FoodAlchemist\Services\OrderCostingService::class)->costConcept($team, $concept, $pax, $simOutlet);
+            $auftragsSimulation = app(\Platform\FoodAlchemist\Services\Bestellung\OrderCostingService::class)->costConcept($team, $concept, $pax, $simOutlet);
         }
 
         return [
@@ -751,8 +751,8 @@ class ReportExportService
         // der einzige Riegel) — vorher eine Abfrage je Artikel (#491): Broichs Lieferant mit 21.014 Artikeln = 21.014 Abfragen, Timeout/Speicher.
         $items = FoodAlchemistSupplierItem::visibleToTeam($team)->where('foodalchemist_supplier_items.supplier_id', $supplier->id)
             ->select('foodalchemist_supplier_items.*')
-            ->selectSub(app(\Platform\FoodAlchemist\Services\PriceService::class)->activePriceSubquery('foodalchemist_supplier_items.id', $team), 'aktiver_preis')
-            ->tap(fn ($q) => app(\Platform\FoodAlchemist\Services\PriceService::class)->mitLetztemPreis($q, 'foodalchemist_supplier_items.id', $team))   // Rückfall eingestellter Artikel (27.10.)
+            ->selectSub(app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->activePriceSubquery('foodalchemist_supplier_items.id', $team), 'aktiver_preis')
+            ->tap(fn ($q) => app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->mitLetztemPreis($q, 'foodalchemist_supplier_items.id', $team))   // Rückfall eingestellter Artikel (27.10.)
             ->with(['structure.gp:id,name,lead_la_supplier_item_id'])
             ->orderBy('designation')->get();
         // dieselbe Form wie FoodAlchemistPrice::price (Cast decimal:4), damit der Bericht byte-gleich bleibt
@@ -1000,7 +1000,7 @@ class ReportExportService
             'sales_net' => $vkNetto,
             // Spec 85: EK EINER Portion gegen den Portions-VK (vorher Ansatz-EK ÷ Portions-VK).
             'food_cost_percent' => ((float) ($vkNetto ?? 0) > 0 && $ekPortion !== null)
-                ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ekPortion, $vkNetto, 2)
+                ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ekPortion, $vkNetto, 2)
                 : null,
             'sales_wording_standard' => $recipe->sales_wording_standard,
             'plating_text' => $recipe->plating_text,

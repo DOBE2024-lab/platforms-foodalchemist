@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Livewire\Suppliers\LieferantenLink as LinkKomponente;
 use Platform\FoodAlchemist\Models\FoodAlchemistLieferantenLink as Link;
 use Platform\FoodAlchemist\Models\FoodAlchemistLieferantenLinkEreignis as Ereignis;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\LieferantenLinkService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenLinkService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Platform\FoodAlchemist\Tools\LieferantenLinkDeleteTool;

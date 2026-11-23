@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\PreislistenImportService;
+use Platform\FoodAlchemist\Services\Preis\PreislistenImportService;
 
 /** Artikelliste zum Ausfüllen (Dominique 08.11.2026): alle sichtbaren Artikel in Vorlagen-Spalten, Preis = eigener Teampreis oder leer. */
 class PreislisteArtikelExportTool extends WareneingangTool implements ToolContract, ToolMetadataContract

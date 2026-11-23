@@ -8,8 +8,8 @@ use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\Trend\BenchmarkService;
 use Platform\FoodAlchemist\Services\Produktion\FixkostenService;
-use Platform\FoodAlchemist\Services\MargeService;
-use Platform\FoodAlchemist\Services\PurchaseJournalService;
+use Platform\FoodAlchemist\Services\Preis\MargeService;
+use Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService;
 use Platform\FoodAlchemist\Services\SignalService;
 use Platform\FoodAlchemist\Services\SignalTrendService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
@@ -25,7 +25,7 @@ use Platform\FoodAlchemist\Services\TeamSettingsService;
  *
  * Das hier ist deshalb eine **Werkbank, keine Berichtsseite**. Jeder Tab zeigt eine Lage UND
  * trägt die Aktion dazu. Geschrieben wird ausschließlich über die bestehenden Services
- * ({@see \Platform\FoodAlchemist\Services\LeadLaService}, `OrderService`, `SignalDetektorService`,
+ * ({@see \Platform\FoodAlchemist\Services\Einkauf\LeadLaService}, `OrderService`, `SignalDetektorService`,
  * `SignalFixService`) — dort hängen Tenant-Guard, Recompute-Kaskade und Protokoll.
  *
  * **Kein eigenes Objekt.** Jede Maßnahme landet auf einem Objekt, das schon Lifecycle und Audit

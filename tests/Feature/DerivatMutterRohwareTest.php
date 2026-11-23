@@ -4,8 +4,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\LaCandidateFinder;
-use Platform\FoodAlchemist\Services\LaFirstGpService;
+use Platform\FoodAlchemist\Services\Einkauf\LaCandidateFinder;
+use Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

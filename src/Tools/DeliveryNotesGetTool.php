@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\WareneingangService;
+use Platform\FoodAlchemist\Services\Einkauf\WareneingangService;
 
 /** Spec 75a · Lieferscheine lesen: Liste, Detail, erwartete Lieferungen, Vorschlag je Lieferant. */
 class DeliveryNotesGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

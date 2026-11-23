@@ -47,10 +47,10 @@ class SignalFixService
     public function __construct(
         private DataQualityService $dq,
         private GpAggregateService $gpAgg,
-        private LeadLaService $leadLa,
+        private Einkauf\LeadLaService $leadLa,
         private Pairing\PairingService $pairing,
         private RecipeRecomputeService $recompute,
-        private PriceService $preise,
+        private Preis\PriceService $preise,
         private SignalService $signals,
         private AiGatewayService $ki,
     ) {

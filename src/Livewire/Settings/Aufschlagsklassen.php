@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Exceptions\NochVerwendetException;
 use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\CatalogPricingService;
+use Platform\FoodAlchemist\Services\Preis\CatalogPricingService;
 use Platform\FoodAlchemist\Services\Einstellungen\AufschlagsklassenService;
 use Platform\FoodAlchemist\Services\PricingCascadeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;

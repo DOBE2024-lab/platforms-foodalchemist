@@ -11,9 +11,9 @@ use Platform\FoodAlchemist\Livewire\Suppliers\SupplierDetail;
 use Platform\FoodAlchemist\Models\FoodAlchemistPriceImportLine as Zeile;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierContact;
-use Platform\FoodAlchemist\Services\LieferantenLinkService;
-use Platform\FoodAlchemist\Services\LieferantenStammdatenblattService;
-use Platform\FoodAlchemist\Services\SupplierService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenLinkService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenStammdatenblattService;
+use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

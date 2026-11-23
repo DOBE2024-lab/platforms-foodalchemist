@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\LagerBewegungService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerBewegungService;
 
 /** Spec 67 · Lagerbewegung von Hand buchen: Zugang, Abgang mit Grund, Umlagerung. */
 class InventoryMovementsPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

@@ -1216,7 +1216,7 @@ class MenuAssemblyService
                 'db_pp' => $dbPp,
                 'vk_pp' => $vkPp,
                 'ek_pp' => $ekPp,
-                'wareneinsatz_pct' => MargeService::wareneinsatzPct($ekPp, $vkPp),
+                'wareneinsatz_pct' => Preis\MargeService::wareneinsatzPct($ekPp, $vkPp),
             ],
             'gaeste' => $gaeste,
             'db_gesamt_gaeste' => $gaeste !== null && $gaeste > 0 ? round($dbPp * $gaeste, 2) : null,

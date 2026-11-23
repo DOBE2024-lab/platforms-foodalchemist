@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
-use Platform\FoodAlchemist\Services\NonFoodService;
+use Platform\FoodAlchemist\Services\Einkauf\NonFoodService;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
 
 /**

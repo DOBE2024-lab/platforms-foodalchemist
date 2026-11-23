@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistLieferantenLink as Link;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\LieferantenLinkService;
+use Platform\FoodAlchemist\Services\Einkauf\LieferantenLinkService;
 
 /** Lieferanten-Link erzeugen (Token nur in dieser Antwort). */
 class LieferantenLinkPostTool extends WareneingangTool implements ToolContract, ToolMetadataContract

@@ -6,7 +6,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistInventoryLocation;
 use Platform\FoodAlchemist\Models\FoodAlchemistStorageBin;
-use Platform\FoodAlchemist\Services\LagerEinrichtungService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService;
 
 /**
  * Spec 67: Ein Grundprodukt bekommt automatisch einen Stellplatz im Standardlager seines Teams,

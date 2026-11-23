@@ -42,7 +42,7 @@ class HardstopResolveService
         private readonly RecipeRecomputeService $recompute,
         private readonly GpProposalService $proposals,
         private readonly GpNamingService $naming,
-        private readonly LeadLaService $leadLa,
+        private readonly Einkauf\LeadLaService $leadLa,
     ) {}
 
     /**

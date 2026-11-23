@@ -172,7 +172,7 @@ class MenuEngineeringService
                 'ek_portion' => $ek !== null ? round($ek, 4) : null,
                 'db_eur' => $vollstaendig ? round($vk - $ek, 2) : null,
                 'db_pct' => $vollstaendig ? round(($vk - $ek) / $vk * 100, 1) : null,
-                'wareneinsatz_pct' => \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk),
+                'wareneinsatz_pct' => \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk),
                 'quelle' => $quelle,
             ];
         }

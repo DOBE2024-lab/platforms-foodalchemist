@@ -9,7 +9,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen;
 use Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration;
-use Platform\FoodAlchemist\Services\LeadLaService;
+use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Support\DeklarationsProfil;
 use Platform\FoodAlchemist\Support\GpPaketZaehler;
 use Symfony\Component\Uid\UuidV7;

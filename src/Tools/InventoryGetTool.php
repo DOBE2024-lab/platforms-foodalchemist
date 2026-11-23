@@ -6,8 +6,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\InventurService;
-use Platform\FoodAlchemist\Services\LagerBewegungService;
+use Platform\FoodAlchemist\Services\Einkauf\InventurService;
+use Platform\FoodAlchemist\Services\Einkauf\LagerBewegungService;
 
 /** Spec 66 §6 · Lager lesen: Bestand je GP und Lagerort (bewertet), optional Bewegungen und Bestandswert zum Stichtag. */
 class InventoryGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

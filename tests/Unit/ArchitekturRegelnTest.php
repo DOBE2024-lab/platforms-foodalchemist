@@ -187,7 +187,7 @@ it('Geld-Helfer: keine neuen Handrechnungen für Wareneinsatz, EK je Portion und
     // Datei => [Anzahl, Grund]. Nur sinken lassen — eine neue Stelle gehört in den Helfer, nicht hierher.
     $ausnahmen = [
         'wareneinsatz' => [
-            'src/Services/MargeService.php' => [1, 'der Helfer selbst'],
+            'src/Services/Preis/MargeService.php' => [1, 'der Helfer selbst'],
             'src/Services/Trend/BenchmarkService.php' => [1, 'EK-Abdeckung (Anteil Gerichte mit EK), keine Quote'],
             'resources/views/presentation/blocks/chapter_loop.blade.php' => [1, 'VK per Wahrheitswert geprüft (negativer VK zeigte eine Quote) — nicht still vereinheitlicht'],
         ],

@@ -34,6 +34,6 @@ class KonfiguratorenPostTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return ['konfigurator' => app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->anlegen($team, $a)->makeHidden(['presentation_snapshot_json'])->toArray()];
+        return ['konfigurator' => app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->anlegen($team, $a)->makeHidden(['presentation_snapshot_json'])->toArray()];
     }
 }

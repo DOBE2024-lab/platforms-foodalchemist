@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Handbuch\Panel;
 use Platform\FoodAlchemist\Models\FoodAlchemistHandbuch;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
-use Platform\FoodAlchemist\Services\HandbuchService;
+use Platform\FoodAlchemist\Services\Ausgabe\HandbuchService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

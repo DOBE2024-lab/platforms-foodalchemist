@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 
 /** MCP-Steuerbarkeit · D8: Rubrik unter eine andere Eltern-Rubrik hängen (Baum umhängen). */
 class SpeisekarteRubrikMoveTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

@@ -137,7 +137,7 @@ it('Rerun-Guard (E2.3): Kickoff-Rerun erhält chapter_id per Label-Match → str
     $this->svc->replaceStructure($this->childA, $frame, $payload);
 
     // Struktur anwenden → Slots bekommen chapter_id, 2 Kapitel entstehen.
-    $fbSvc = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $fbSvc = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $erst = $fbSvc->strukturAusGeruest($this->childA, $this->foodbook->id);
     expect($erst['angelegt'])->toBe(2)
         ->and($this->foodbook->chapters()->count())->toBe(2);
@@ -169,7 +169,7 @@ it('Rerun-Guard (E2.3): entfällt ein Label im neuen Gerüst → Warnung, verwai
         ['label' => 'Vorspeisen', 'slot_type' => 'gang'],
         ['label' => 'Käse-Station', 'slot_type' => 'station'],
     ]);
-    app(\Platform\FoodAlchemist\Services\FoodbookService::class)->strukturAusGeruest($this->childA, $this->foodbook->id);
+    app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->strukturAusGeruest($this->childA, $this->foodbook->id);
 
     // Neues Gerüst OHNE „Käse-Station".
     $this->svc->replaceStructure($this->childA, $frame->refresh(), [

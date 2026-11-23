@@ -34,7 +34,7 @@ class KonfiguratorPresentationWithdrawTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        app(\Platform\FoodAlchemist\Services\PresentationService::class)->withdraw($team, \Platform\FoodAlchemist\Services\PresentationService::TYPE_KONFIGURATOR, self::id($a));
+        app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class)->withdraw($team, \Platform\FoodAlchemist\Services\Ausgabe\PresentationService::TYPE_KONFIGURATOR, self::id($a));
 
         return ['zurueckgezogen' => (int) $a['id']];
     }

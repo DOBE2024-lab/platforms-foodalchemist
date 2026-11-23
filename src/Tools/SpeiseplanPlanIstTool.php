@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /** Spec 57 · Paket 8: Plan gegen Ist einer Speiseplan-Woche (Verkaufsjournal), nur lesend. */
 class SpeiseplanPlanIstTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

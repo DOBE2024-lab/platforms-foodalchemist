@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Database\Eloquent\Model;
 use Platform\Core\Models\Team;
@@ -42,7 +42,7 @@ class PresentationService
 
     public function __construct(
         private PresentationDesignService $designs,
-        private Plattform\FoodAlchemistMediaService $media,
+        private \Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService $media,
     ) {
     }
 
@@ -740,7 +740,7 @@ class PresentationService
         foreach ($dok['kapitel'] as $k) {
             // Lebendes Format-Kapitel: Editionen (FormatKapitelService, via dokumentDaten) als Blöcke —
             // wie normalizeAngebot. Header/Text-Slots als Struktur, jede Edition ein concept_ref-Block.
-            $blocks = ($k['ist_format'] ?? false) ? app(FormatKapitelService::class)->praesentationsBloecke($k['editionen'] ?? [], $showPrice, $items, $this->mitEk) : [];
+            $blocks = ($k['ist_format'] ?? false) ? app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->praesentationsBloecke($k['editionen'] ?? [], $showPrice, $items, $this->mitEk) : [];
             foreach ($k['bloecke'] as $b) {
                 $perItem = (bool) ($b['einzelpreise'] ?? false);
                 $blocks[] = [
@@ -962,7 +962,7 @@ class PresentationService
                 'customer' => $angebot->crmCompany?->display_name ?? $angebot->crmContact?->display_name,
                 'kontakt' => $angebot->crmContact?->display_name,
                 'jahr' => $angebot->event_date?->year,
-                'mwst' => app(TeamSettingsService::class)->mwst($team),
+                'mwst' => app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->mwst($team),
                 'stand' => optional($angebot->updated_at)->toIso8601String(),
             ],
             'body' => [

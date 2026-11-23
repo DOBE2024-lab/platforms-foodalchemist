@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 
 /** Position (Gericht/Fix-Menü/Header/Text) in eine Rubrik einer Speisekarte einfügen. */
 class SpeisekartePositionenPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

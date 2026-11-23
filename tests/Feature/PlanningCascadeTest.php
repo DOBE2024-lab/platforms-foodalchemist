@@ -547,7 +547,7 @@ it('E1b ownerKontext: jüngster Owner-Lauf gewinnt, auch wenn ein Cockpit-Lauf n
 // ── E2 (Spec 40): Angebot andocken — Voll-Kaskade + Rückweg (referenziereConcept) ─────────────
 
 it('E2 Voll-Kaskade Angebot: Frame-Slots → Concept-Steps + Job mit attach owner=offer', function () {
-    $offer = app(\Platform\FoodAlchemist\Services\AngebotService::class)
+    $offer = app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)
         ->create($this->rootTeam, ['name' => 'Sommerfest', 'occasion' => 'Firmenfeier', 'personen' => 50]);
     $frames = app(PlanningFrameService::class);
     $frame = $frames->frameFor($this->rootTeam, 'offer', (int) $offer->id);
@@ -572,7 +572,7 @@ it('E2 Voll-Kaskade Angebot: Frame-Slots → Concept-Steps + Job mit attach owne
 // Vorher dispatchte dispatchSlotConcept den GenerateConceptJob OHNE menueAchsen (Default []), sodass die
 // Menü-Zusammenstellung (Gänge/Preis-Korridor/Diät-Quoten/Balance) der Session-Leitplanken NIE ankam.
 it('Phase 1: Vollkaskade reicht die menue_*-Leitplanken der Session an die Concept-Erzeugung durch (Rezept-Regler NICHT)', function () {
-    $offer = app(\Platform\FoodAlchemist\Services\AngebotService::class)
+    $offer = app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)
         ->create($this->rootTeam, ['name' => 'Menü-Leitplanken', 'occasion' => 'Gala', 'personen' => 40]);
     $frames = app(PlanningFrameService::class);
     $frame = $frames->frameFor($this->rootTeam, 'offer', (int) $offer->id);
@@ -596,7 +596,7 @@ it('Phase 1: Vollkaskade reicht die menue_*-Leitplanken der Session an die Conce
 
 it('E2 haengeKonzeptNach: Angebot-Recovery referenziert das Konzept ans Angebot (Pivot)', function () {
     $svc = app(PlanningCascadeService::class);
-    $offer = app(\Platform\FoodAlchemist\Services\AngebotService::class)->create($this->rootTeam, ['name' => 'Gala']);
+    $offer = app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)->create($this->rootTeam, ['name' => 'Gala']);
     $concept = $this->makeConcept($this->rootTeam, 'Menü A');   // standalone (offer_id NULL) → referenzierbar
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'vollkaskade', 'status' => 'running']);
     $step = FoodAlchemistCascadeRunStep::create([
@@ -615,7 +615,7 @@ it('E2 haengeKonzeptNach: Angebot-Recovery referenziert das Konzept ans Angebot 
 
 it('E2 ownerKontext: Angebot-Lauf → Owner-Name + Rück-Route (sel)', function () {
     $svc = app(PlanningCascadeService::class);
-    $offer = app(\Platform\FoodAlchemist\Services\AngebotService::class)->create($this->rootTeam, ['name' => 'Weihnachtsfeier']);
+    $offer = app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)->create($this->rootTeam, ['name' => 'Weihnachtsfeier']);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Ang', 'brief' => 'q']);
     FoodAlchemistCascadeRun::create([
         'team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'vollkaskade',
@@ -1644,7 +1644,7 @@ it('Kapitel-Reconcile (Refinement): neues Kapitel → geplanter Step, gelöschte
     $run = $svc->starteKaskade($this->rootTeam, 'vollkaskade', null, 'voll_kreativ', ['owner_type' => 'foodbook', 'owner_id' => (int) $fb->id]);
     expect($run->steps()->where('kind', 'concept')->where('status', 'geplant')->count())->toBe(2);
 
-    $fbSvc = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $fbSvc = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $kapitel = $fb->chapters()->get();
     // REMOVE „Empfang" · RENAME „Menü"→„Galamenü" · ADD neues Kapitel „Dessert".
     $fbSvc->deleteKapitel($this->rootTeam, (int) $kapitel->firstWhere('title', 'Empfang')->id);
@@ -1663,7 +1663,7 @@ it('Kapitel-Reconcile (Refinement): neues Kapitel → geplanter Step, gelöschte
 });
 
 it('Kapitel-Reconcile: nicht-gestufte / nicht-foodbook Läufe werden abgelehnt (ok=false)', function () {
-    $karte = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'K']);
+    $karte = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'K']);
     $frames = app(PlanningFrameService::class);
     $frame = $frames->frameFor($this->rootTeam, 'speisekarte', (int) $karte->id);
     $frames->addSlot($this->rootTeam, $frame, ['label' => 'Vorspeisen', 'slot_type' => 'station']);
@@ -1705,7 +1705,7 @@ it('Foodbook-Leitstelle (Spec 42): Voll-Kaskade-Knopf öffnet die Leitstelle im 
 // ── P4: Voll-Kaskade aus der Speisekarte ────────────────────────────────────
 
 it('vollkaskade (speisekarte): STANDARD Gerichte — je Rubrik target_count Gericht-Steps + MaterializeSpeisekartePositionJob', function () {
-    $karte = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Sommerkarte']);
+    $karte = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Sommerkarte']);
     $frameSvc = app(PlanningFrameService::class);
     $frame = $frameSvc->frameFor($this->rootTeam, 'speisekarte', (int) $karte->id);
     $frameSvc->addSlot($this->rootTeam, $frame, ['label' => 'Vorspeisen', 'slot_type' => 'station', 'target_count' => 2]);
@@ -1723,7 +1723,7 @@ it('vollkaskade (speisekarte): STANDARD Gerichte — je Rubrik target_count Geri
 });
 
 it('vollkaskade (speisekarte): fuellung=concepte → je Rubrik 1 Concept (altes Verhalten via Flag)', function () {
-    $karte = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Fix-Menü-Karte']);
+    $karte = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Fix-Menü-Karte']);
     $frameSvc = app(PlanningFrameService::class);
     $frame = $frameSvc->frameFor($this->rootTeam, 'speisekarte', (int) $karte->id);
     $frameSvc->addSlot($this->rootTeam, $frame, ['label' => 'Menüs', 'slot_type' => 'station', 'target_count' => 3]);
@@ -1740,8 +1740,8 @@ it('vollkaskade (speisekarte): fuellung=concepte → je Rubrik 1 Concept (altes 
 });
 
 it('materialisiereSpeisekartePosition: erdet ein VK-Gericht → gericht_ref-Position an der Rubrik (Gen gemockt)', function () {
-    $karte = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Karte']);
-    $rubrik = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)->addRubrik($this->rootTeam, (int) $karte->id, ['title' => 'Vorspeisen']);
+    $karte = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Karte']);
+    $rubrik = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->addRubrik($this->rootTeam, (int) $karte->id, ['title' => 'Vorspeisen']);
     $recipe = $this->makeRecipe($this->rootTeam, 'Rubrik-Gericht', ['status' => 'draft', 'is_sales_recipe' => true]);
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'vollkaskade', 'source_owner_type' => 'speisekarte', 'source_owner_id' => $karte->id, 'status' => 'running']);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
@@ -1756,7 +1756,7 @@ it('materialisiereSpeisekartePosition: erdet ein VK-Gericht → gericht_ref-Posi
 });
 
 it('CoverageService kennt die Speisekarte (istSpeisekarte, kein Fehl-Read als Concept)', function () {
-    $karte = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Karte']);
+    $karte = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Karte']);
     $frameSvc = app(PlanningFrameService::class);
     $frame = $frameSvc->frameFor($this->rootTeam, 'speisekarte', (int) $karte->id);
     $frameSvc->addSlot($this->rootTeam, $frame, ['label' => 'Hauptgang', 'slot_type' => 'station', 'target_count' => 3]);
@@ -1768,7 +1768,7 @@ it('CoverageService kennt die Speisekarte (istSpeisekarte, kein Fehl-Read als Co
 });
 
 it('Speisekarte-Leitstelle (Spec 42): Voll-Kaskade-Go springt in die Leitstelle (sk_owner), plant NICHT mehr im Modul', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class);
     $karte = $svc->create($this->rootTeam, ['name' => 'Sommerkarte']);
     $svc->addRubrik($this->rootTeam, (int) $karte->id, ['title' => 'Vorspeisen']);
     $svc->addRubrik($this->rootTeam, (int) $karte->id, ['title' => 'Hauptgang']);
@@ -1800,7 +1800,7 @@ it('Speisekarte-Leitstelle (Spec 42): Voll-Kaskade-Go springt in die Leitstelle 
 it('Positions-Deckel der Speisekarte: nennt die betroffenen RUBRIKEN, nicht nur die Zahl', function () {
     Queue::fake();
 
-    $karte = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)
+    $karte = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)
         ->create($this->rootTeam, ['name' => 'Große Karte']);
 
     $frameSvc = app(PlanningFrameService::class);
@@ -1841,7 +1841,7 @@ it('Positions-Deckel der Speisekarte: nennt die betroffenen RUBRIKEN, nicht nur 
 it('ohne Deckel bleibt die Speisekarte still', function () {
     Queue::fake();
 
-    $karte = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)
+    $karte = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)
         ->create($this->rootTeam, ['name' => 'Kleine Karte']);
     $frameSvc = app(PlanningFrameService::class);
     $frame = $frameSvc->frameFor($this->rootTeam, 'speisekarte', (int) $karte->id);
@@ -1861,7 +1861,7 @@ it('ohne Deckel bleibt die Speisekarte still', function () {
 // ── P5: Speiseplan-Voll-Kaskade (Zell-Fan-out) ──────────────────────────────
 
 it('vollkaskade (speiseplan): ein Gericht-Step je leerer Zelle + MaterializeSpeiseplanCellJob', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeiseplanService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class);
     $plan = $svc->create($this->rootTeam, ['name' => 'Wochenplan', 'start_date' => '2026-08-03']);
     $plan->load('lines');
     // cycle_weeks × Mo–Fr × Linien. KEIN Deckel hier: der Standard-Zyklus ist 4 Wochen, der
@@ -1883,7 +1883,7 @@ it('vollkaskade (speiseplan): ein Gericht-Step je leerer Zelle + MaterializeSpei
 });
 
 it('materialisiereSpeiseplanZelle: erdet die Zelle → Rezept + Speiseplan-Eintrag, Step done (Gen gemockt)', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeiseplanService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class);
     $plan = $svc->create($this->rootTeam, ['name' => 'Plan', 'start_date' => '2026-08-03']);
     $plan->load('lines');
     $line = $plan->lines->first();
@@ -1901,7 +1901,7 @@ it('materialisiereSpeiseplanZelle: erdet die Zelle → Rezept + Speiseplan-Eintr
 });
 
 it('Speiseplan-Editor: Voll-Kaskade-Go startet den Zell-Fan-out + redirected', function () {
-    $plan = app(\Platform\FoodAlchemist\Services\SpeiseplanService::class)->create($this->rootTeam, ['name' => 'Wochenplan', 'start_date' => '2026-08-03']);
+    $plan = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class)->create($this->rootTeam, ['name' => 'Wochenplan', 'start_date' => '2026-08-03']);
     Queue::fake();
 
     Livewire::test(\Platform\FoodAlchemist\Livewire\Speiseplan\Editor::class)
@@ -1935,7 +1935,7 @@ it('bewusste Unterscheidung: gestuft (Cockpit-Scopes + Foodbook-Kapitel-Gate) vs
 
     $cockpit = $svc->starteKaskade($this->rootTeam, 'gericht', $session, 'voll_kreativ');
 
-    $karte = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Ausgabe-Karte']);
+    $karte = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Ausgabe-Karte']);
     $frameSvc = app(PlanningFrameService::class);
     $frame = $frameSvc->frameFor($this->rootTeam, 'speisekarte', (int) $karte->id);
     $frameSvc->addSlot($this->rootTeam, $frame, ['label' => 'Vorspeisen', 'slot_type' => 'station', 'target_count' => 1]);

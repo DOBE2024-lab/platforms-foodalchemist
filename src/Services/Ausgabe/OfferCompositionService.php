@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -31,7 +31,7 @@ use Platform\FoodAlchemist\Services\PlanningFrameService;
  */
 class OfferCompositionService
 {
-    public function __construct(private ConceptService $concepts) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\ConceptService $concepts) {}
 
     // ── Kapitel ─────────────────────────────────────────────────────────────
 
@@ -466,8 +466,8 @@ class OfferCompositionService
     public function setKapitelImage(Team $team, int $chapterId, UploadedFile $file): string
     {
         $k = $this->ownedKapitel($team, $chapterId);
-        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
-        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage(
             $file, $team, 'foodalchemist.offer_chapter', $chapterId, "foodalchemist/offer_chapter/{$chapterId}",
         );
         $k->update(['image_context_file_id' => $media['context_file_id'], 'image_path' => $media['path']]);
@@ -478,7 +478,7 @@ class OfferCompositionService
     public function clearKapitelImage(Team $team, int $chapterId): FoodAlchemistOfferChapter
     {
         $k = $this->ownedKapitel($team, $chapterId);
-        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
         $k->update(['image_context_file_id' => null, 'image_path' => null]);
 
         return $k->refresh();
@@ -488,7 +488,7 @@ class OfferCompositionService
     public function addKapitelGalleryImage(Team $team, int $chapterId, UploadedFile $file): FoodAlchemistOfferChapterImage
     {
         $k = $this->ownedKapitel($team, $chapterId);
-        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage(
             $file, $team, 'foodalchemist.offer_chapter', $chapterId, "foodalchemist/offer_chapter/{$chapterId}/gallery",
         );
 
@@ -505,7 +505,7 @@ class OfferCompositionService
     {
         $img = FoodAlchemistOfferChapterImage::findOrFail($imageId);
         $this->ownedKapitel($team, (int) $img->chapter_id); // Owner-Guard übers Kapitel
-        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($img->context_file_id, (string) $img->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($img)]);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($img->context_file_id, (string) $img->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($img)]);
         $img->delete();
     }
 
@@ -529,7 +529,7 @@ class OfferCompositionService
             $cockpit = $fest->mit($festpreise, fn () => $this->concepts->preisCockpit($block->concept, $outlet, $team));
 
             return ['vk_pp' => (float) $cockpit['price_per_person'], 'ek_pp' => (float) $cockpit['ek_per_person'], 'pauschal' => 0.0, 'ek_vollstaendig' => true,
-                'vk_fehlt' => ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete: Konzept-Preis nur Summe der bekannten
+                'vk_fehlt' => \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete: Konzept-Preis nur Summe der bekannten
         }
         if ($block->type === 'recipe_ref' && $block->dish) {
             $faktor = $block->quantity !== null ? (float) $block->quantity : 1.0;
@@ -547,17 +547,17 @@ class OfferCompositionService
             }
             if ($team !== null) {
                 // Spec 82 §12 C: VK aus Sicht des Teams — Abo-Fassung: Team-EK × eigener Kalkulationsfaktor; sonst Preis-Leiter
-                $vkInfo = app(TeamVkService::class)->fuer($block->dish, $team, $outlet);
+                $vkInfo = app(\Platform\FoodAlchemist\Services\TeamVkService::class)->fuer($block->dish, $team, $outlet);
                 $vkFehlt = $vkInfo['vk'] === null;
                 $baseVk = (float) ($vkInfo['vk'] ?? 0);
             } else {
                 // Spec 85 D-1: Preisleiter (Standard-Darreichung); im Betrieb dessen VK, sonst die Baseline.
-                $resolver = app(DarreichungResolver::class);
+                $resolver = app(\Platform\FoodAlchemist\Services\DarreichungResolver::class);
                 $baseVk = (float) (($outlet !== null ? $resolver->vkNetto($block->dish, $outlet) : null) ?? $resolver->vkNetto($block->dish) ?? 0);
             }
             $vk = round($baseVk * $faktor, 2);
             if ($team !== null) {
-                $k = app(KostenCacheService::class)->fuer($block->dish, $team);
+                $k = app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->fuer($block->dish, $team);
                 // Spec 85: Team-EK des Ansatzes ÷ Portionen = EK je Portion (wie der VK); vorher der ganze Ansatz.
                 $ek = round((float) ($k['ek_summe'] ?? 0) / max(1, (int) ($block->dish->sales_unit_count ?? 1)) * $faktor, 2);
                 $ekVoll = $k['vollstaendig'] && $k['ek_summe'] !== null;
@@ -620,7 +620,7 @@ class OfferCompositionService
             foreach ($format->slots as $fs) {
                 if ($fs->type === 'concept' && $fs->concept !== null) {
                     // Spec 82: eine Abo-Fassung rechnet mit den Preisen des Teams; unvollständig = kein Preis fürs Kapitel (nie 0 €)
-                    $w = app(ConceptPreisService::class)->preisWerte($fs->concept, $team, $outlet);
+                    $w = app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->preisWerte($fs->concept, $team, $outlet);
                     if (! $w['vollstaendig'] && $w['vk'] === null) {
                         $unvollstaendig = true;
 
@@ -637,7 +637,7 @@ class OfferCompositionService
             }
 
             return ['vk_pro_person' => round($vk, 2), 'ek_pro_person' => round($ek, 2), 'pauschal' => 0.0,
-                'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ek, $vk), 'preis_range' => null, 'vk_fehlt' => $vkFehlt];
+                'food_cost_percent' => $vkFehlt ? null : \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk), 'preis_range' => null, 'vk_fehlt' => $vkFehlt];
         }
 
         $relationen = ['blocks' => fn ($q) => $q->where('visible', true),
@@ -684,7 +684,7 @@ class OfferCompositionService
 
         // Auflage 4: Food-Cost aus einer EK-Teilsumme wäre geschönt → bei unvollständigem EK keine Quote
         return ['vk_pro_person' => round($vk, 2), 'ek_pro_person' => round($ek, 2), 'pauschal' => round($pauschal, 2),
-            'food_cost_percent' => ($ekVoll && ! $vkFehlt) ? MargeService::wareneinsatzPct($ek, $vk) : null, 'preis_range' => null,
+            'food_cost_percent' => ($ekVoll && ! $vkFehlt) ? \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($ek, $vk) : null, 'preis_range' => null,
             'ek_vollstaendig' => $ekVoll, 'vk_fehlt' => $vkFehlt, 'ek_pauschal' => round($ekPauschal, 2),
             'aufwand' => round($aufwand, 2), 'ek_aufwand' => round($ekAufwand, 2)];   // vk_fehlt: mind. ein Gericht ohne VK — Summe ist kein Angebotspreis
     }
@@ -697,7 +697,7 @@ class OfferCompositionService
      */
     public function komposition(Team $team, FoodAlchemistAngebot $angebot, ?FoodAlchemistOutlet $outlet = null, bool $intern = false, bool $mitHandbuchMengen = false): array
     {
-        $wording = app(WordingResolver::class);
+        $wording = app(\Platform\FoodAlchemist\Services\WordingResolver::class);
         $alle = FoodAlchemistOfferChapter::visibleToTeam($team)->where('offer_id', $angebot->id)
             ->with([
                 'blocks' => fn ($q) => $q->where('visible', true)->orderBy('position'),

@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Livewire\Foodbooks\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

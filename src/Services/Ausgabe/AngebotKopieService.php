@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +31,7 @@ class AngebotKopieService
         'deleted_at',
     ];
 
-    public function __construct(private Plattform\FoodAlchemistMediaService $media) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService $media) {}
 
     public function kopieren(Team $team, int $id, ?string $name = null): FoodAlchemistAngebot
     {

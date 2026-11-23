@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDishClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\IdeenService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

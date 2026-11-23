@@ -8,7 +8,7 @@ use Livewire\WithFileUploads;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSalesFact;
-use Platform\FoodAlchemist\Services\MenuEngineeringService;
+use Platform\FoodAlchemist\Services\Ausgabe\MenuEngineeringService;
 use Platform\FoodAlchemist\Services\SalesImportService;
 use RuntimeException;
 

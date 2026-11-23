@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Konfigurator;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
@@ -23,7 +23,7 @@ use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPaketVorschlag;
 class KonfiguratorPricingService
 {
     public function __construct(
-        private CatalogPricingService $katalog,
+        private \Platform\FoodAlchemist\Services\CatalogPricingService $katalog,
         private KonfiguratorMengenRechner $rechner,
         private KonfiguratorPaketVorschlag $vorschlag,
     ) {

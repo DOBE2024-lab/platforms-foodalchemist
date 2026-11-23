@@ -5,7 +5,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Livewire\Handbuch\Panel;
 use Platform\FoodAlchemist\Models\FoodAlchemistHandbuch;
-use Platform\FoodAlchemist\Services\HandbuchService;
+use Platform\FoodAlchemist\Services\Ausgabe\HandbuchService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

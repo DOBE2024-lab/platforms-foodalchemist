@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire\Settings;
 
 use Livewire\Component;
 use Platform\FoodAlchemist\Livewire\Concerns\ManagesCanvas;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Support\CrmKunden;
 
 /**

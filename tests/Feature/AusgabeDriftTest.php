@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Services\AusgabeDriftService;
 use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Services\SignalDetektorService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -85,8 +85,8 @@ it('Team-Core: veröffentlichte Ausgabe driftet gegen den Live-VK → NULL-Lane-
 });
 
 it('Spec 85 F5: auch der veröffentlichte Angebots-Link wird geprüft; Gegenprobe: mit „Preise aktualisieren“ neu veröffentlicht → keine Drift', function () {
-    $comp = app(\Platform\FoodAlchemist\Services\OfferCompositionService::class);
-    $angebot = app(\Platform\FoodAlchemist\Services\AngebotService::class)->create($this->childA, ['name' => 'Gala 2027', 'personen' => 40]);
+    $comp = app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class);
+    $angebot = app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)->create($this->childA, ['name' => 'Gala 2027', 'personen' => 40]);
     $kap = $comp->addKapitel($this->childA, $angebot->id, ['title' => 'Hauptgang', 'consumer_title' => 'Hauptgang']);
     $comp->addBlock($this->childA, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
     $angebotDrift = fn () => array_values(array_filter(app(AusgabeDriftService::class)->abgedriftet($this->childA, null),

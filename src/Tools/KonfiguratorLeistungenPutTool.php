@@ -34,6 +34,6 @@ class KonfiguratorLeistungenPutTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return ['leistung' => app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->leistungAendern($team, self::id($a), $a)->toArray()];
+        return ['leistung' => app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->leistungAendern($team, self::id($a), $a)->toArray()];
     }
 }

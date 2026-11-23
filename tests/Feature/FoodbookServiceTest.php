@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Livewire\Foodbooks\Praesentation;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -56,7 +56,7 @@ it('M11-02: Kapitel-Aggregat (concept_ref + Paket-Preisblock) + Pax-Gesamtpreis 
         ->and($gesamt['gesamt_vk'])->toBe(700.00);                    // 7,00 × 100 Pax
 
     // Spec 19 E1.1: recipe_ref ist wieder ein angebotener Block-Typ (Einzel-Gericht direkt am Kapitel)
-    expect(\Platform\FoodAlchemist\Services\FoodbookService::BLOCK_TYPES)->toContain('recipe_ref');
+    expect(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::BLOCK_TYPES)->toContain('recipe_ref');
 });
 
 it('Spec 19 E1.1: recipe_ref-Schreibpfad validiert das VK-Gericht (verkauf-Scope, keine Slot-Variante)', function () {

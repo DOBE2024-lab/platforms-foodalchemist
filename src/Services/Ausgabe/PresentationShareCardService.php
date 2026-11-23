@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Support\Facades\Cache;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
@@ -27,7 +27,7 @@ class PresentationShareCardService
     /** Analog für das PWA-/Homescreen-Icon (Logo auf Marken-Quadrat). */
     private const ICON_VERSION = 1;
 
-    public function __construct(private Plattform\FoodAlchemistMediaService $media)
+    public function __construct(private \Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService $media)
     {
     }
 
@@ -125,7 +125,7 @@ class PresentationShareCardService
         } else {
             // Fallback: Anfangsbuchstabe zentriert (wie bisher).
             $letter = mb_strtoupper(mb_substr(trim((string) ($snap['title'] ?? 'F')) ?: 'F', 0, 1, 'UTF-8'), 'UTF-8');
-            $font = dirname(__DIR__, 2) . '/resources/fonts/PTSerif-Bold.ttf';
+            $font = dirname(__DIR__, 3) . '/resources/fonts/PTSerif-Bold.ttf';
             $fs = (int) round($size * 0.5);
             $bb = imagettfbbox($fs, 0, $font, $letter);
             $tw = $bb[2] - $bb[0];
@@ -201,8 +201,8 @@ class PresentationShareCardService
         }
 
         if ($withText) {
-            $fontBold = dirname(__DIR__, 2) . '/resources/fonts/PTSerif-Bold.ttf';
-            $fontReg = dirname(__DIR__, 2) . '/resources/fonts/PTSerif-Regular.ttf';
+            $fontBold = dirname(__DIR__, 3) . '/resources/fonts/PTSerif-Bold.ttf';
+            $fontReg = dirname(__DIR__, 3) . '/resources/fonts/PTSerif-Regular.ttf';
 
             $title = trim((string) ($snap['title'] ?? 'Foodbook')) ?: 'Foodbook';
             $kicker = trim((string) ($snap['meta']['customer'] ?? ''));

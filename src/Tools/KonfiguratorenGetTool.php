@@ -43,7 +43,7 @@ class KonfiguratorenGetTool extends KonfiguratorToolBasis
             return ['konfiguratoren' => \Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator::visibleToTeam($team)->orderByDesc('updated_at')
                 ->get(['id', 'name', 'kunden_titel', 'status', 'ort', 'gueltig_bis', 'presentation_enabled'])->toArray()];
         }
-        $k = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->finde($team, (int) $a['id']);
+        $k = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->finde($team, (int) $a['id']);
         $k->load(['konzepte', 'leistungen', 'pakete.mengen']);
 
         return ['konfigurator' => $k->makeHidden(['presentation_snapshot_json'])->toArray()];

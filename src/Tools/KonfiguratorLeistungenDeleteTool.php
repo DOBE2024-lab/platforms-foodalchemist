@@ -34,7 +34,7 @@ class KonfiguratorLeistungenDeleteTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->leistungEntfernen($team, self::id($a));
+        app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->leistungEntfernen($team, self::id($a));
 
         return ['geloescht' => (int) $a['id']];
     }

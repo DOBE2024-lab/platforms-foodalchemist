@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /** Phase C: Angebots-Detail inkl. Kalkulation (EK/VK/Marge über alle Concepts). */
 class AngeboteGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

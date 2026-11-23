@@ -14,12 +14,12 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
  */
 interface FoodbookAggregatQuelle
 {
-    /** Siehe {@see \Platform\FoodAlchemist\Services\FoodbookService::kapitelAggregat}. */
+    /** Siehe {@see \Platform\FoodAlchemist\Services\Foodbook\FoodbookService::kapitelAggregat}. */
     public function kapitelAggregat(Team $team, FoodAlchemistFoodbookKapitel $kapitel, ?int $pax = null, ?FoodAlchemistOutlet $outlet = null): array;
 
-    /** Siehe {@see \Platform\FoodAlchemist\Services\FoodbookService::wareneinsatzAmpel}. */
+    /** Siehe {@see \Platform\FoodAlchemist\Services\Foodbook\FoodbookService::wareneinsatzAmpel}. */
     public function wareneinsatzAmpel(Team $team, FoodAlchemistFoodbook $fb, FoodAlchemistFoodbookKapitel $kapitel, ?int $pax = null, ?FoodAlchemistOutlet $outlet = null): array;
 
-    /** Siehe {@see \Platform\FoodAlchemist\Services\FoodbookService::gesamt}. */
+    /** Siehe {@see \Platform\FoodAlchemist\Services\Foodbook\FoodbookService::gesamt}. */
     public function gesamt(Team $team, FoodAlchemistFoodbook $fb, ?FoodAlchemistOutlet $outlet = null): array;
 }

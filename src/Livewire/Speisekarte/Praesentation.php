@@ -7,7 +7,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 
 /**
  * Speisekarten-Präsentation (Web-Ansicht, auth-gated) — Kundensicht ohne EK.

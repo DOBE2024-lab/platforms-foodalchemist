@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotEinfrierService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService;
 
 /** Spec 82 §12 B3 · Eingefrorener Stand eines Angebots lesen: Zeilen (Fassungs-IDs, EK mit Status, Allergene) und „neuere Fassung verfügbar“ mit Allergen-Diff. */
 class AngeboteEinfrierenGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

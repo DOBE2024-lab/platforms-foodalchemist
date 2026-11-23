@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /** MCP-Steuerbarkeit · D9: Speiseplan-Branding setzen (Farben + Footer). Logo/Cover-Upload deferred. */
 class SpeiseplanBrandingTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

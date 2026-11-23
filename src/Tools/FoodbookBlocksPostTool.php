@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\VocabularyService;
 
 /**

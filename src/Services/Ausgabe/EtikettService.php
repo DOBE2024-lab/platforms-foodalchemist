@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -212,7 +212,7 @@ class EtikettService
         // Spec 69: Etikett einer Charge = Rezept-Etikett mit den Daten der Charge (Eingaben haben Vorrang)
         if ($quelle === 'charge') {
             $b = \Platform\FoodAlchemist\Models\FoodAlchemistInventoryBatch::where('team_id', $team->id)->findOrFail($id);
-            $eigen = app(Produktion\EigenproduktionService::class);
+            $eigen = app(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::class);
             foreach ([
                 'charge' => (string) $b->charge, 'hergestellt_am' => $b->produced_at?->toDateString(), 'eingefroren_am' => $b->frozen_at?->toDateString(),
                 'verbrauchen_bis' => $b->best_before?->toDateString(), 'lagerung' => $b->storage_type,
@@ -225,14 +225,14 @@ class EtikettService
             $quelle = 'recipe';
             $id = (int) $b->recipe_id;
         }
-        $kat = app(ConcepterAggregateService::class)->kennzeichnungKatalog();
+        $kat = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class)->kennzeichnungKatalog();
         $heute = now()->startOfDay();
         $d = ['quelle' => $quelle, 'bezeichnung' => '', 'zusatz' => null, 'zutaten' => [], 'allergene' => [], 'spuren' => [], 'zusatzstoffe' => [],
             'hinweise' => [], 'allergene_unbekannt' => false, 'inhalt' => [], 'haltbar_gekuehlt' => null, 'haltbar_tk' => null, 'lagerung' => null, 'lagerarten' => [], 'haltbar' => []];
 
         if ($quelle === 'recipe') {
             $r = FoodAlchemistRecipe::visibleToTeam($team)->with('ingredients.gp', 'ingredients.referencedRecipe')->findOrFail($id);
-            $k = app(ConcepterAggregateService::class)->kennzeichnungFromGerichte(collect([$r]));
+            $k = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class)->kennzeichnungFromGerichte(collect([$r]));
             foreach ($k['allergene'] as $a) {
                 $eintrag = ['code' => $kat['allergene'][$a['slug']]['code'] ?? '', 'label' => $a['label']];
                 match ($a['status']) {
@@ -248,7 +248,7 @@ class EtikettService
                 }
             }
             // Jod: freiwilliger Hinweis, nur bei Mandanten-Schalter; kein Zusatzstoff-Code
-            $d['hinweise'] = app(ConcepterAggregateService::class)->freiwilligeHinweise(collect([$r]), app(TeamSettingsService::class)->jodHinweisAktiv($team));
+            $d['hinweise'] = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class)->freiwilligeHinweise(collect([$r]), app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->jodHinweisAktiv($team));
             $d['bezeichnung'] = $this->rezeptname((string) $r->name);
             $d['zutaten'] = $this->zutatenliste($team, $r);
             $d['haltbar_gekuehlt'] = $r->shelf_life_chilled_days;
@@ -259,7 +259,7 @@ class EtikettService
             $d['lagerung'] = $r->standardLagerart();
         } elseif ($quelle === 'gp') {
             $gp = FoodAlchemistGp::visibleToTeam($team)->with('leadLa')->findOrFail($id);
-            $agg = app(GpAggregateService::class);
+            $agg = app(\Platform\FoodAlchemist\Services\GpAggregateService::class);
             foreach ($agg->allergene($gp) as $slug => $info) {
                 $wert = $info['value'] instanceof AllergenValue ? $info['value']->value : (string) $info['value'];
                 $eintrag = ['code' => $kat['allergene'][$slug]['code'] ?? '', 'label' => FoodAlchemistItemAllergen::ALLERGENE[$slug] ?? $slug];
@@ -275,7 +275,7 @@ class EtikettService
                     $d['zusatzstoffe'][] = ['code' => $kat['zusatzstoffe'][$stoff]['code'] ?? '', 'label' => FoodAlchemistItemDeclaration::STOFFE[$stoff] ?? $stoff];
                 }
             }
-            if (app(TeamSettingsService::class)->jodHinweisAktiv($team)) {
+            if (app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->jodHinweisAktiv($team)) {
                 foreach ($agg->freiwillig($gp) as $feld => $wert) {
                     if ((int) $wert === 3 && isset(FoodAlchemistItemDeclaration::FREIWILLIG_HINWEIS[$feld])) {
                         $d['hinweise'][] = FoodAlchemistItemDeclaration::FREIWILLIG_HINWEIS[$feld];
@@ -336,8 +336,8 @@ class EtikettService
      */
     public function zutatenliste(Team $team, FoodAlchemistRecipe $r, int $ebene = 0): array
     {
-        $rc = app(RecipeRecomputeService::class);
-        $agg = app(GpAggregateService::class);
+        $rc = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+        $agg = app(\Platform\FoodAlchemist\Services\GpAggregateService::class);
         $zeilen = $r->ingredients->filter(fn ($z) => ! in_array($z->calc_mode, ['keine', 'nur_naehrwerte'], true) && ($z->gp_id !== null || $z->referenced_recipe_id !== null));
         $liste = [];
         foreach ($zeilen as $z) {
@@ -542,7 +542,7 @@ class EtikettService
             'schrift_kopf' => $serif ? '"DejaVu Serif", Georgia, serif' : '"DejaVu Sans", Arial, sans-serif',
             // Logo des Betriebs, sonst Food-Alchemist-Wortmarke (Standard, Dominique 2026-10-08)
             'logo' => $v->zeige_logo
-                ? (($outlet !== null ? app(Plattform\FoodAlchemistMediaService::class)->dataUri($outlet->logo_context_file_id ?? null, $outlet->logo_path ?? null) : null) ?? $this->faLogo())
+                ? (($outlet !== null ? app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->dataUri($outlet->logo_context_file_id ?? null, $outlet->logo_path ?? null) : null) ?? $this->faLogo())
                 : null,
         ];
     }
@@ -592,7 +592,7 @@ class EtikettService
      */
     private function kurzname(string $name): string
     {
-        $name = app(GpNamingService::class)->nameOhneMarke($name);
+        $name = app(\Platform\FoodAlchemist\Services\GpNamingService::class)->nameOhneMarke($name);
         $teil = trim(explode(':', $name, 2)[0]);
 
         return $teil !== '' ? $teil : trim($name);

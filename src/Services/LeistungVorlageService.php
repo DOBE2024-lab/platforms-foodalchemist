@@ -19,7 +19,7 @@ class LeistungVorlageService
 {
     public function __construct(
         private LeistungsRegelPruefung $pruefung,
-        private KonfiguratorPricingService $pricing,
+        private Konfigurator\KonfiguratorPricingService $pricing,
         private KonfiguratorMengenRechner $rechner,
     ) {
     }

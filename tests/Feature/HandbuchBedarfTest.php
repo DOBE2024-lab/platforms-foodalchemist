@@ -4,10 +4,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\FormatService;
-use Platform\FoodAlchemist\Services\HandbuchService;
-use Platform\FoodAlchemist\Services\HandbuchZutatenService;
+use Platform\FoodAlchemist\Services\Ausgabe\HandbuchService;
+use Platform\FoodAlchemist\Services\Ausgabe\HandbuchZutatenService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -150,14 +150,14 @@ it('verwendet die gewählte Darreichung für Mengenanzeige und Rezeptbedarf eine
     $dar = app(DarreichungService::class)->setzeAnteil($this->rootTeam, $dar->id, 50);   // Plan 98 B: Variante als Anteil vom Standard (statt freier Grammatur): 100 von 200 g
     $concept = $this->makeConcept($this->rootTeam, 'Kleines Glas');
     $slot = $this->makeConceptSlot($concept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 50, 'unit_vocab_id' => $this->unitG($this->rootTeam)->id, 'presentation_id' => $dar->id]);
-    $menge = app(\Platform\FoodAlchemist\Services\HandbuchPositionsMenge::class)->fuer($slot);
+    $menge = app(\Platform\FoodAlchemist\Services\Ausgabe\HandbuchPositionsMenge::class)->fuer($slot);
     expect($menge['portionen_pro_gast'])->toBe(.5);
     $karte = app(HandbuchService::class)->gerichtKarte($this->rootTeam, $this->gericht->fresh(), 'Kleines Glas', true, $dar);
     expect((float) $karte['portion']['gramm'])->toBe(100.0)
         ->and($karte['zutaten']['zeilen'][0]['menge'])->toBe(40.0)
         ->and($karte['zutaten']['zeilen'][0]['sub_faktor'])->toBe(.04);
     $slot->update(['quantity' => null]);
-    expect(app(\Platform\FoodAlchemist\Services\HandbuchPositionsMenge::class)->fuer($slot->fresh())['portionen_pro_gast'])->toBeNull();
+    expect(app(\Platform\FoodAlchemist\Services\Ausgabe\HandbuchPositionsMenge::class)->fuer($slot->fresh())['portionen_pro_gast'])->toBeNull();
 });
 
 it('übernimmt aus einer fehlerhaften Verknüpfung keine Gerichtskarte eines nicht sichtbaren Teams', function () {

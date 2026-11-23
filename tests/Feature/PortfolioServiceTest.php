@@ -2,10 +2,10 @@
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\PortfolioService;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\PortfolioService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

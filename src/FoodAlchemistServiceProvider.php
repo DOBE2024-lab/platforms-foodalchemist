@@ -210,9 +210,9 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         // Spec 79: Google Trends für den Trendradar — produktiv über DataForSEO (Integrations-Modul)
         $this->app->bind(\Platform\FoodAlchemist\Services\Stammdaten\NaehrwertPruefer::class, \Platform\FoodAlchemist\Services\Stammdaten\NaehrwertPruefServiceAdapter::class);   // Stammdaten-Import: die eine Nährwert-Prüfung (#638)
         $this->app->bind(\Platform\FoodAlchemist\Services\Trends\GoogleTrendsQuelle::class, \Platform\FoodAlchemist\Services\Trends\DataForSeoGoogleTrends::class);
-        $this->app->bind(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanDokumentQuelle::class, \Platform\FoodAlchemist\Services\SpeiseplanService::class);   // 98 · 3.3 S3-0: Präsentation → Speiseplan-Aushang ohne Kreis (Muster K3)
-        $this->app->bind(\Platform\FoodAlchemist\Services\Foodbook\FoodbookDokumentQuelle::class, \Platform\FoodAlchemist\Services\FoodbookService::class);   // 98 · 3.3 S4-0k: Präsentation → Foodbook-Dokument
-        $this->app->bind(\Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregatQuelle::class, \Platform\FoodAlchemist\Services\FoodbookService::class);   // 98 · 3.3 S4-0k: Soll-Ist → Kapitel-Aggregat/Ampel/Gesamt
+        $this->app->bind(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanDokumentQuelle::class, \Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class);   // 98 · 3.3 S3-0: Präsentation → Speiseplan-Aushang ohne Kreis (Muster K3)
+        $this->app->bind(\Platform\FoodAlchemist\Services\Foodbook\FoodbookDokumentQuelle::class, \Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);   // 98 · 3.3 S4-0k: Präsentation → Foodbook-Dokument
+        $this->app->bind(\Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregatQuelle::class, \Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);   // 98 · 3.3 S4-0k: Soll-Ist → Kapitel-Aggregat/Ampel/Gesamt
         $this->app->bind(\Platform\FoodAlchemist\Services\Rezept\TeamKostenRechner::class, \Platform\FoodAlchemist\Services\RecipeRecomputeService::class);   // 98 · 3.3 S7 P3: KostenCache → Team-Kosten ohne Kreis (Muster K3)
         $this->app->bind(\Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte::class, \Platform\FoodAlchemist\Services\RecipeRecomputeService::class);   // 98 · 3.3 S7 P4: Stamm-Dienste → Neuberechnung ohne Kreis (Muster K3)
         // Web-Recherche zu Lieferantenartikeln (Spec 85 I5-8): Websuche über den Core-Contract (include_web_search, Core #935)

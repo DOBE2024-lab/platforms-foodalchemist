@@ -6,7 +6,7 @@
 @php
     $tokens = $snapshot['resolved_design']['tokens'] ?? [];
     $pal = $tokens['palette'] ?? [];
-    $druckFarben = \Platform\FoodAlchemist\Services\PresentationDesignService::druckErsatzfarben($pal);   // Druck auf weißem Papier: zu blasse Farben ersetzen
+    $druckFarben = \Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService::druckErsatzfarben($pal);   // Druck auf weißem Papier: zu blasse Farben ersetzen
     $typo = $tokens['typography'] ?? [];
     $fontMap = [
         'display-serif' => '"Fraunces", Georgia, "Times New Roman", serif',
@@ -15,8 +15,8 @@
         'mono'          => 'ui-monospace, SFMono-Regular, Menlo, monospace',
     ];
     // Generische Keys (display-serif|serif|sans|mono) ODER ein Google-Font aus der Whitelist (PresentationDesignService::GOOGLE_FONTS).
-    $gfHeading = \Platform\FoodAlchemist\Services\PresentationDesignService::googleFont(is_string($typo['heading'] ?? null) ? $typo['heading'] : null);
-    $gfBody = \Platform\FoodAlchemist\Services\PresentationDesignService::googleFont(is_string($typo['body'] ?? null) ? $typo['body'] : null);
+    $gfHeading = \Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService::googleFont(is_string($typo['heading'] ?? null) ? $typo['heading'] : null);
+    $gfBody = \Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService::googleFont(is_string($typo['body'] ?? null) ? $typo['body'] : null);
     // Eigene Team-Schrift: "team:<Familie>" → @font-face aus resolved_design.fonts (Familienname bereinigt, s. PresentationFontService::familie).
     $teamFonts = array_values(array_filter($snapshot['resolved_design']['fonts'] ?? [], fn ($f) => ! empty($f['url'])));
     $teamFamilien = array_unique(array_map(fn ($f) => (string) $f['family'], $teamFonts));
@@ -24,7 +24,7 @@
         if (! is_string($wert) || ! str_starts_with($wert, 'team:')) {
             return null;
         }
-        $fam = \Platform\FoodAlchemist\Services\PresentationFontService::familie(substr($wert, 5));
+        $fam = \Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService::familie(substr($wert, 5));
 
         return in_array($fam, $teamFamilien, true) ? '"' . $fam . '", ' . $fallback : null;
     };
@@ -136,7 +136,7 @@
     @endif
     <style>
         @foreach($teamFonts as $tf)
-        @font-face { font-family: "{!! \Platform\FoodAlchemist\Services\PresentationFontService::familie($tf['family']) !!}"; src: url("{!! str_replace(['"', '\\', '<'], '', (string) $tf['url']) !!}") format("{{ in_array($tf['format'] ?? '', ['woff2', 'woff', 'truetype', 'opentype'], true) ? $tf['format'] : 'woff2' }}"); font-weight: {{ (int) ($tf['weight'] ?? 400) }}; font-style: {{ ($tf['style'] ?? 'normal') === 'italic' ? 'italic' : 'normal' }}; font-display: swap; }
+        @font-face { font-family: "{!! \Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService::familie($tf['family']) !!}"; src: url("{!! str_replace(['"', '\\', '<'], '', (string) $tf['url']) !!}") format("{{ in_array($tf['format'] ?? '', ['woff2', 'woff', 'truetype', 'opentype'], true) ? $tf['format'] : 'woff2' }}"); font-weight: {{ (int) ($tf['weight'] ?? 400) }}; font-style: {{ ($tf['style'] ?? 'normal') === 'italic' ? 'italic' : 'normal' }}; font-display: swap; }
         @endforeach
         :root {
             --pt-primary: {{ $pal['primary'] ?? '#6d28d9' }};

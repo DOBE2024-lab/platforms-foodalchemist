@@ -11,8 +11,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanBasis;
 use Platform\FoodAlchemist\Services\WordingResolver;
 
@@ -146,7 +146,7 @@ final class SpeiseplanAusgabe
                 'deklaration' => false, 'naehrwerte' => false, 'notizen' => false,
                 'preise' => $intern, 'lieferanten' => $intern, 'ek' => $intern, 'intern' => $intern,
             ];
-            $report = app(\Platform\FoodAlchemist\Services\ReportExportService::class);
+            $report = app(\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService::class);
             foreach (array_values(array_unique($gerichtIds)) as $gid) {
                 try {
                     $d = $report->rezeptDaten($team, $gid, $kOpt);

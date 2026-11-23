@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /**
  * MCP-Steuerbarkeit · D10: Angebot-Status setzen (anfrage/in_arbeit/angebot/versendet/angenommen/abgelehnt).

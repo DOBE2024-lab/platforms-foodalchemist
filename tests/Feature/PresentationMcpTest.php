@@ -114,7 +114,7 @@ it('presentation_designs CRUD Round-Trip; fremd-Team-PUT → NOT_FOUND', functio
     expect($put->success)->toBeTrue();
 
     // fremd-Team-Design (childB) via childA-Kontext → NOT_FOUND.
-    $fremdDesign = app(\Platform\FoodAlchemist\Services\PresentationDesignService::class)->create($this->childB, ['name' => 'Fremd', 'base_slug' => 'menu']);
+    $fremdDesign = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService::class)->create($this->childB, ['name' => 'Fremd', 'base_slug' => 'menu']);
     $kontextA = new ToolContext($this->makeUser($this->childA), $this->childA);
     $putFremd = $this->registry->get('foodalchemist.presentation_designs.PUT')->execute(['id' => $fremdDesign->id, 'name' => 'Klau'], $kontextA);
     expect($putFremd->success)->toBeFalse()->and($putFremd->errorCode)->toBe('NOT_FOUND');

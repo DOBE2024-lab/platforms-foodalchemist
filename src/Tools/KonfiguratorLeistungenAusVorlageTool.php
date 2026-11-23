@@ -34,7 +34,7 @@ class KonfiguratorLeistungenAusVorlageTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $erg = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->ausVorlagen($team, self::id($a, 'konfigurator_id'),
+        $erg = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->ausVorlagen($team, self::id($a, 'konfigurator_id'),
             array_map('intval', (array) $a['vorlage_ids']), ! empty($a['konfigurator_konzept_id']) ? (int) $a['konfigurator_konzept_id'] : null, $a['gilt_fuer'] ?? null);
 
         return ['leistungen' => array_map(fn ($l) => $l->toArray(), $erg['leistungen']), 'warnungen' => $erg['warnungen']];

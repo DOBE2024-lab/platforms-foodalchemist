@@ -34,6 +34,6 @@ class KonfiguratorenPaketeVorschlagUebernehmenTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return ['pakete' => app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->vorschlagUebernehmen($team, self::id($a), (array) $a['pakete'])];
+        return ['pakete' => app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->vorschlagUebernehmen($team, self::id($a), (array) $a['pakete'])];
     }
 }

@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistInventoryMovement;
 use Platform\FoodAlchemist\Models\FoodAlchemistInventoryStock;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Produktion\EigenproduktionService;
-use Platform\FoodAlchemist\Services\EtikettService;
+use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
 use Platform\FoodAlchemist\Services\InventurService;
 use Platform\FoodAlchemist\Services\LagerBewegungService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

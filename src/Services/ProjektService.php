@@ -253,7 +253,7 @@ class ProjektService
         if (! $p->strukturFreigegeben()) {
             throw new \RuntimeException('Gate: Struktur + Musterseite sind noch nicht freigegeben.');
         }
-        $fb = app(FoodbookService::class)->create($team, ['label' => $p->name, 'crm_company_id' => $p->crm_company_id, 'projekt_id' => $p->id]);
+        $fb = app(Foodbook\FoodbookService::class)->create($team, ['label' => $p->name, 'crm_company_id' => $p->crm_company_id, 'projekt_id' => $p->id]);
 
         $canvasSvc = app(CanvasService::class);
         $akte = $canvasSvc->find('projekt', 'projekt', (int) $p->id);

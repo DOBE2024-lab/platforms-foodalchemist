@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /**
  * Phase B: Block aus einem Foodbook-Kapitel entfernen (Soft-Delete, wiederherstellbar).

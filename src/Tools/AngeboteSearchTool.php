@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /** Phase C: Angebote durchsuchen (CRM-gebundener Verkaufs-Einstieg). */
 class AngeboteSearchTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

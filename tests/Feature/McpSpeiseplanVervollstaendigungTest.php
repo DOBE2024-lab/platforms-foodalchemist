@@ -5,7 +5,7 @@ use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

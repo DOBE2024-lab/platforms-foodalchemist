@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Foodbook;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
@@ -24,7 +24,7 @@ final class KapitelLogoService
         'speisekarte' => [FoodAlchemistSpeisekarteRubrik::class, 'foodalchemist.menu_card_section', 'foodalchemist/menu_card_section', 'Speisekarten-Rubrik'],
     ];
 
-    public function __construct(private readonly Plattform\FoodAlchemistMediaService $media) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService $media) {}
 
     /** @return array{context_file_id:int, path:string} */
     public function setzen(Team $team, string $art, int $kapitelId, UploadedFile $datei): array

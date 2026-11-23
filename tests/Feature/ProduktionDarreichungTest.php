@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\PlanungsblattService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

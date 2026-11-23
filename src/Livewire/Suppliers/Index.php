@@ -415,7 +415,7 @@ class Index extends Component
      */
     private function handyAnsicht($team, SupplierService $suppliers, SupplierItemService $items, PriceService $preise)
     {
-        $handy = app(\Platform\FoodAlchemist\Services\HandyDetailService::class);
+        $handy = app(\Platform\FoodAlchemist\Services\Ausgabe\HandyDetailService::class);
         $artikelKarte = $this->handyArtikelId !== null ? $handy->artikel($team, $this->handyArtikelId) : null;
         $lieferant = $artikelKarte === null && $this->supplierId !== null ? $handy->lieferantKarte($team, $this->supplierId) : null;
         $suche = trim($this->q);

@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\FormatService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

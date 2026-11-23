@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /**
  * Spec 57 · Paket 5: einen Eintrag verschieben (Datum, Linie, Mahlzeit) und/oder seinen Inhalt

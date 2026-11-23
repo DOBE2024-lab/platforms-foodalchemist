@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Illuminate\Support\Facades\Auth;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /**
  * Angebote am Handy (Dominique 08.11.2026: „wie beim Konfigurator und Foodbook“): Karten mit Suche und Status-Chips, derselbe

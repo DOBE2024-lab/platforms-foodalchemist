@@ -4,8 +4,8 @@ use Illuminate\Support\Carbon;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

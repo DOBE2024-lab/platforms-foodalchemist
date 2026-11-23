@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -34,7 +34,7 @@ class HandbuchQuellenService
 
     private const WOCHENTAGE = [1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do', 5 => 'Fr', 6 => 'Sa', 7 => 'So'];
 
-    public function __construct(private ConcepterAggregateService $agg)
+    public function __construct(private \Platform\FoodAlchemist\Services\ConcepterAggregateService $agg)
     {
     }
 
@@ -57,7 +57,7 @@ class HandbuchQuellenService
 
     private function foodbook(Team $team, FoodAlchemistFoodbook $fb): array
     {
-        $dok = app(FoodbookService::class)->dokumentDaten($team, $fb, false, [], false, null, true);
+        $dok = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->dokumentDaten($team, $fb, false, [], false, null, true);
         $sections = [];
         foreach ($dok['kapitel'] ?? [] as $k) {
             $items = [];
@@ -121,7 +121,7 @@ class HandbuchQuellenService
      */
     private function speiseplan(Team $team, FoodAlchemistSpeiseplan $plan): array
     {
-        $svc = app(SpeiseplanService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class);
         $plan->loadMissing('entries');
         $mit = $plan->entries->filter(fn ($e) => $e->entry_date !== null);
         $heute = Carbon::now()->startOfWeek(Carbon::MONDAY);

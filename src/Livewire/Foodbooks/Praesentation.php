@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire\Foodbooks;
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /**
  * R3.2 (Block C, layout-first) — Externe Kunden-Präsentation eines Foodbooks als

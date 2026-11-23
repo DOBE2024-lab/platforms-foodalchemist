@@ -30,7 +30,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 class AusgabeDriftService
 {
     public function __construct(
-        private PresentationService $presentations,
+        private Ausgabe\PresentationService $presentations,
         private TeamSettingsService $settings,
     ) {
     }
@@ -123,10 +123,10 @@ class AusgabeDriftService
     private function teamCoreAusgaben(Team $team): array
     {
         $typen = [
-            PresentationService::TYPE_FOODBOOK => FoodAlchemistFoodbook::class,
-            PresentationService::TYPE_SPEISEKARTE => FoodAlchemistSpeisekarte::class,
-            PresentationService::TYPE_SPEISEPLAN => FoodAlchemistSpeiseplan::class,
-            PresentationService::TYPE_ANGEBOT => FoodAlchemistAngebot::class,   // Spec 85 F5: auch das Angebot wird eingefroren
+            Ausgabe\PresentationService::TYPE_FOODBOOK => FoodAlchemistFoodbook::class,
+            Ausgabe\PresentationService::TYPE_SPEISEKARTE => FoodAlchemistSpeisekarte::class,
+            Ausgabe\PresentationService::TYPE_SPEISEPLAN => FoodAlchemistSpeiseplan::class,
+            Ausgabe\PresentationService::TYPE_ANGEBOT => FoodAlchemistAngebot::class,   // Spec 85 F5: auch das Angebot wird eingefroren
         ];
 
         $out = [];

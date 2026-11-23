@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /** Spec 57 · Paket 5: eine Speiseplan-Woche auf eine andere Woche kopieren (Massen-Insert → confirm). */
 class SpeiseplanWocheKopierenTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

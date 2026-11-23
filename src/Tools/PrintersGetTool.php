@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\DruckerService;
+use Platform\FoodAlchemist\Services\Ausgabe\DruckerService;
 
 /** Spec 78 · Druckerprofile des Betriebs (Modell, Format, Ränder, Arbeitsplatz) + Kompatibilitätsliste. */
 class PrintersGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

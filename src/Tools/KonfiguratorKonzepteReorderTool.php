@@ -34,7 +34,7 @@ class KonfiguratorKonzepteReorderTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $svc = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class);
         $k = $svc->finde($team, self::id($a, 'konfigurator_id'));
         $eigene = $k->konzepte()->pluck('id')->map(fn ($id) => (int) $id)->all();
         foreach (array_values(array_map('intval', (array) $a['ids'])) as $pos => $id) {

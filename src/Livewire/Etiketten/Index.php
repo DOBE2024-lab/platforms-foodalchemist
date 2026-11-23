@@ -8,7 +8,7 @@ use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\EtikettService;
+use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
 
 /**
  * Spec 70 · Etikett drucken: Formular links, Live-Vorschau rechts (iframe auf die Druckansicht).

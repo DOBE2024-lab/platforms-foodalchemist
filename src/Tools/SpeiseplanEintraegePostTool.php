@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /** Phase C: Eintrag in einen draft-Speiseplan (Gericht/Konzept/Paket an Tag+Mahlzeit+Linie). */
 class SpeiseplanEintraegePostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

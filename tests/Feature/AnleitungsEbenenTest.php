@@ -2,7 +2,7 @@
 
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\ReportExportService;
+use Platform\FoodAlchemist\Services\Ausgabe\ReportExportService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

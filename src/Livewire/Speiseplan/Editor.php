@@ -1219,7 +1219,7 @@ class Editor extends Component
             if ($sp->presentation_enabled && $sp->presentation_token) {
                 $presentationLink = url('/p/speiseplan/' . $sp->presentation_token);
             }
-            $media = app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class);
+            $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class);
             if ($sp->logo_context_file_id || $sp->logo_path) {
                 $brandingBilder['logo'] = $media->url($sp->logo_context_file_id, $sp->logo_path);
             }
@@ -1231,7 +1231,7 @@ class Editor extends Component
         // Ebene 2 (D3): Kosten/Belegung folgen dem Betrieb (dokument-gebunden ?? aktiver Betrieb).
         $outlet = $sp !== null && $sp->outlet_id !== null
             ? \Platform\FoodAlchemist\Models\FoodAlchemistOutlet::where('team_id', $team->id)->find($sp->outlet_id)
-            : ($team !== null ? app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($team) : null);
+            : ($team !== null ? app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team) : null);
 
         // Slice F: bestehende Betriebs-Aushang-Links + wählbare Betriebe (aktiv, team-scoped).
         $betriebsLinks = [];

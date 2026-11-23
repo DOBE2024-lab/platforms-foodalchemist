@@ -669,7 +669,7 @@ class Editor extends Component
         $id = $this->orderId;
         $this->fuehreAus(fn ($team) => $svc->deleteOrder($team, $id), null);
         if ($this->fehler === null) {
-            app(\Platform\FoodAlchemist\Services\BearbeitungssperreService::class)->freigeben('production_order', $id, (int) Auth::id());   // Spec 65
+            app(\Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService::class)->freigeben('production_order', $id, (int) Auth::id());   // Spec 65
             $this->dispatch('modal.close', name: 'produktion-editor');
             $this->dispatch('produktion-geloescht');
         }

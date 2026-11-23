@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\AboKuendigungService;
+use Platform\FoodAlchemist\Services\Plattform\AboKuendigungService;
 
 /** Spec 82 §12 D · Abo kündigen: ohne bestaetigt nur Vorschau (was wird kopiert, was verschwindet), mit bestaetigt ausführen. */
 class AbosDeleteTool extends WareneingangTool implements ToolContract, ToolMetadataContract

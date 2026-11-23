@@ -125,7 +125,7 @@ class TripleMatchService
         $tage = max(1, (int) ($filter['tage'] ?? 90));
         $lines = FoodAlchemistOrderLine::query()
             ->whereHas('order', function ($q) use ($team, $filter, $tage) {
-                app(StandortService::class)->leseBereich($q, $team)   // Spec 77c: Team-Brille
+                app(Plattform\StandortService::class)->leseBereich($q, $team)   // Spec 77c: Team-Brille
                     ->whereIn('status', [OrderStatus::Sent->value, OrderStatus::Confirmed->value, OrderStatus::Delivered->value])
                     ->where(fn ($w) => $w->whereNull('sent_at')->orWhere('sent_at', '>=', now()->subDays($tage)));
                 if (! empty($filter['supplier_id'])) {
@@ -168,7 +168,7 @@ class TripleMatchService
             'kpis' => [
                 'abweichungen' => count($abw),
                 'summe_abweichung_eur' => round(array_sum(array_map(fn ($z) => abs($z['delta_eur']), $abw)), 2),
-                'rechnungen_in_pruefung' => app(StandortService::class)->leseBereich(FoodAlchemistSupplierInvoice::query(), $team)->where('status', FoodAlchemistSupplierInvoice::STATUS_ERFASST)->count(),
+                'rechnungen_in_pruefung' => app(Plattform\StandortService::class)->leseBereich(FoodAlchemistSupplierInvoice::query(), $team)->where('status', FoodAlchemistSupplierInvoice::STATUS_ERFASST)->count(),
                 'nicht_berechnet' => count(array_filter($zeilen, fn ($z) => $z['re'] === 'nicht_berechnet')),
                 'gutschriften_erwartet_eur' => round((float) FoodAlchemistOrderLine::whereIn('id', $lines->pluck('id'))
                     ->whereIn('claim_status', ['open', 'credit_expected'])->sum('credit_expected_net'), 2),
@@ -191,7 +191,7 @@ class TripleMatchService
         $status ??= [FoodAlchemistSupplierInvoice::STATUS_ERFASST, FoodAlchemistSupplierInvoice::STATUS_FREIGEGEBEN, FoodAlchemistSupplierInvoice::STATUS_BEZAHLT];
         $rows = FoodAlchemistSupplierInvoiceLine::query()
             ->whereIn('order_line_id', $orderLineIds)->where('art', 'ware')
-            ->whereHas('invoice', fn ($q) => app(StandortService::class)->leseBereich($q, $team)->whereIn('status', $status)
+            ->whereHas('invoice', fn ($q) => app(Plattform\StandortService::class)->leseBereich($q, $team)->whereIn('status', $status)
                 ->when($ohneInvoiceId !== null, fn ($w) => $w->where('id', '!=', $ohneInvoiceId)))
             ->with('invoice:id,invoice_number')
             ->get();

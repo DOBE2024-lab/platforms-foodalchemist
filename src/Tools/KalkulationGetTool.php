@@ -66,7 +66,7 @@ class KalkulationGetTool extends FoodAlchemistTool implements ToolContract, Tool
             }
         } else {
             // Ebene 2: kein explizites outlet_id → aktive Betriebs-Brille (outlets.SET_ACTIVE), sonst Team-Baseline.
-            $outlet = app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)
+            $outlet = app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)
                 ->current($team, $context->user?->id !== null ? (int) $context->user->id : null);
         }
 

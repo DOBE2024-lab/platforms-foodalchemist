@@ -1864,7 +1864,7 @@ it('Reuse-Picker: fremd-Team-Quell-Foto wird nicht übernommen (fail-soft, kein 
  * Watchdog-`hinweis` (der erst nach ~90 s eines hängenden Laufs anschlägt).
  */
 it('Worker-Präsenz Teil 2: kein Herzschlag (unbekannt) → proaktive Warnung im Go zeigen', function () {
-    \Illuminate\Support\Facades\Cache::forget(\Platform\FoodAlchemist\Services\WorkerHealthService::HEARTBEAT_KEY);
+    \Illuminate\Support\Facades\Cache::forget(\Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::HEARTBEAT_KEY);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'W', 'brief' => 'y']);
 
     Livewire::test(PlanungIndex::class)
@@ -1875,9 +1875,9 @@ it('Worker-Präsenz Teil 2: kein Herzschlag (unbekannt) → proaktive Warnung im
 
 it('Worker-Präsenz Teil 2: frischer Herzschlag (gesund) → keine Warnung (Fläche unverändert)', function () {
     \Illuminate\Support\Facades\Cache::put(
-        \Platform\FoodAlchemist\Services\WorkerHealthService::HEARTBEAT_KEY,
+        \Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::HEARTBEAT_KEY,
         now()->timestamp,
-        \Platform\FoodAlchemist\Services\WorkerHealthService::HEARTBEAT_TTL_SEKUNDEN
+        \Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::HEARTBEAT_TTL_SEKUNDEN
     );
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'W', 'brief' => 'y']);
 
@@ -1890,9 +1890,9 @@ it('Worker-Präsenz Teil 2: frischer Herzschlag (gesund) → keine Warnung (Flä
 
 it('Worker-Präsenz Teil 2: alter Herzschlag (still) → proaktive Warnung im Go zeigen', function () {
     \Illuminate\Support\Facades\Cache::put(
-        \Platform\FoodAlchemist\Services\WorkerHealthService::HEARTBEAT_KEY,
-        now()->timestamp - (\Platform\FoodAlchemist\Services\WorkerHealthService::STILL_SEKUNDEN + 30),
-        \Platform\FoodAlchemist\Services\WorkerHealthService::HEARTBEAT_TTL_SEKUNDEN
+        \Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::HEARTBEAT_KEY,
+        now()->timestamp - (\Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::STILL_SEKUNDEN + 30),
+        \Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::HEARTBEAT_TTL_SEKUNDEN
     );
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'W', 'brief' => 'y']);
 

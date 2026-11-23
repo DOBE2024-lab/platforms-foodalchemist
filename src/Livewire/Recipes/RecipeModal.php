@@ -19,8 +19,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
 use Platform\FoodAlchemist\Services\BehaelterRechner;
-use Platform\FoodAlchemist\Services\BulkEnrichService;
-use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
+use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
+use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\PairingService;
 use Platform\FoodAlchemist\Services\RecipeOneShotService;
 use Platform\FoodAlchemist\Services\RecipeReviseService;
@@ -906,7 +906,7 @@ class RecipeModal extends Component
      * (recipe.regeneration), landet im Formular — gespeichert wird mit dem globalen Speichern (GL-07).
      * „kalt" ist eine Entscheidung (Gerät leer), kein Leer-Ergebnis.
      */
-    public function kiRegeneration(\Platform\FoodAlchemist\Services\BulkEnrichService $bulk): void
+    public function kiRegeneration(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService $bulk): void
     {
         $r = $this->rezept();
         $team = Auth::user()?->currentTeamRelation;

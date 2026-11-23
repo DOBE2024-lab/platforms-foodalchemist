@@ -1507,12 +1507,12 @@ class Index extends Component
             'betriebsLinks' => $betriebsLinks,
             'betriebsOptionen' => $betriebsOptionen,
             'kapitelImageUrl' => ($kapitel !== null && ($kapitel->image_context_file_id || $kapitel->image_path))
-                ? app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($kapitel->image_context_file_id, $kapitel->image_path)
+                ? app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($kapitel->image_context_file_id, $kapitel->image_path)
                 : null,
             'kapitelGallery' => $kapitel !== null
                 ? $kapitel->images->map(fn ($gi) => [
                     'id' => $gi->id,
-                    'url' => app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($gi->context_file_id, $gi->path),
+                    'url' => app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($gi->context_file_id, $gi->path),
                 ])->all()
                 : [],
             'presentationInfo' => $presentationInfo,
@@ -1521,7 +1521,7 @@ class Index extends Component
             // Board (2026-08-27): EIN Baum statt Übersicht/Fortschritt/Preise — Status + Inhalt + Preis je Kapitel.
             // Ebene 2: VK/EK/WE je Kapitel — dokument-gebundener Betrieb ?? Betriebsbrille (wie der Druck, Kurator 19.10.).
             'kapitelBoard' => $fb !== null
-                ? app(\Platform\FoodAlchemist\Services\LeitstelleService::class)->kapitelBoard($team, $fb, app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->fuerDokument($team, $fb->outlet_id)) : [],
+                ? app(\Platform\FoodAlchemist\Services\LeitstelleService::class)->kapitelBoard($team, $fb, app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->fuerDokument($team, $fb->outlet_id)) : [],
             // Coverage/Befunde je Kapitel (aus dem EINEN CoverageService-Call gruppiert) — inline beim Aufklappen.
             'boardCoverage' => collect($coverage['befunde'] ?? [])
                 ->groupBy('chapter_id')->map(fn ($g) => $g->values()->all())->all(),

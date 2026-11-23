@@ -466,8 +466,8 @@ class OfferCompositionService
     public function setKapitelImage(Team $team, int $chapterId, UploadedFile $file): string
     {
         $k = $this->ownedKapitel($team, $chapterId);
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
+        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
             $file, $team, 'foodalchemist.offer_chapter', $chapterId, "foodalchemist/offer_chapter/{$chapterId}",
         );
         $k->update(['image_context_file_id' => $media['context_file_id'], 'image_path' => $media['path']]);
@@ -478,7 +478,7 @@ class OfferCompositionService
     public function clearKapitelImage(Team $team, int $chapterId): FoodAlchemistOfferChapter
     {
         $k = $this->ownedKapitel($team, $chapterId);
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
         $k->update(['image_context_file_id' => null, 'image_path' => null]);
 
         return $k->refresh();
@@ -488,7 +488,7 @@ class OfferCompositionService
     public function addKapitelGalleryImage(Team $team, int $chapterId, UploadedFile $file): FoodAlchemistOfferChapterImage
     {
         $k = $this->ownedKapitel($team, $chapterId);
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
+        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
             $file, $team, 'foodalchemist.offer_chapter', $chapterId, "foodalchemist/offer_chapter/{$chapterId}/gallery",
         );
 
@@ -505,7 +505,7 @@ class OfferCompositionService
     {
         $img = FoodAlchemistOfferChapterImage::findOrFail($imageId);
         $this->ownedKapitel($team, (int) $img->chapter_id); // Owner-Guard übers Kapitel
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($img->context_file_id, (string) $img->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($img)]);
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($img->context_file_id, (string) $img->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($img)]);
         $img->delete();
     }
 

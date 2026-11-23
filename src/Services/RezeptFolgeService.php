@@ -41,7 +41,7 @@ class RezeptFolgeService
         private readonly FassungsUmstellung $umstellung,
         private readonly RecipeRecomputeService $recompute,
         private readonly FaRechte $rechte,
-        private readonly PlattformProtokoll $protokoll,
+        private readonly Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /**
@@ -150,7 +150,7 @@ class RezeptFolgeService
             }
         }
 
-        app(AboService::class)->huelleNachfuehren($teamId);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
+        app(Plattform\AboService::class)->huelleNachfuehren($teamId);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
 
         return $out;
     }
@@ -292,7 +292,7 @@ class RezeptFolgeService
             Log::error('Signal nach Übernehmen am Rezept fehlgeschlagen: '.$e->getMessage(), ['exception' => $e]);
         }
 
-        app(AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
+        app(Plattform\AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
 
         return ['uebernahme_id' => (int) $historie->id, 'von_nr' => $v['von_nr'], 'nach_nr' => $v['nach_nr'], 'allergen_geaendert' => $v['allergen_geaendert']];
     }

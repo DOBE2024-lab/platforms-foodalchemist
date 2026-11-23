@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistMandantExport;
-use Platform\FoodAlchemist\Services\MandantExportService;
+use Platform\FoodAlchemist\Services\Plattform\MandantExportService;
 
 /**
  * Spec 82 §13 C3 — Download des Mandanten-Exports. Hängt an KEINEM Bereich und bleibt auch im gesperrten Team erreichbar

@@ -7,7 +7,7 @@ use Platform\ActivityLog\Traits\LogsActivity;
 
 /**
  * Spec 82 §9/§13 B3 + G — Verwaltungszeile je Mandant (Kunden-Hauptteam). Nur Verwaltungsdaten, nie Inhalte.
- * Ohne Zeile gilt aktiv + autark; geschrieben wird nur über {@see \Platform\FoodAlchemist\Services\MandantenService}.
+ * Ohne Zeile gilt aktiv + autark; geschrieben wird nur über {@see \Platform\FoodAlchemist\Services\Plattform\MandantenService}.
  */
 class FoodAlchemistMandant extends Model
 {

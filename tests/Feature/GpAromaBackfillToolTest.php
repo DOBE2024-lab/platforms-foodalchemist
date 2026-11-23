@@ -304,10 +304,10 @@ it('Pate: wird mit Quelle ai_pate, Begründung und Konfidenz gespeichert und ers
 });
 
 it('Pate ohne Begründung ist ungültig: kein Anker, Grund am Vorschlag, das GP bleibt offen', function () {
-    $wert = \Platform\FoodAlchemist\Services\BulkEnrichService::ankerWert(['anchor_slug' => 'pineapple', 'art' => 'pate', 'pate_begruendung' => '  '], ['pineapple', 'neutral']);
+    $wert = \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::ankerWert(['anchor_slug' => 'pineapple', 'art' => 'pate', 'pate_begruendung' => '  '], ['pineapple', 'neutral']);
     expect($wert)->toBeNull()
-        ->and(\Platform\FoodAlchemist\Services\BulkEnrichService::ankerWert(['anchor_slug' => 'pineapple', 'art' => 'eigen'], ['pineapple', 'neutral']))->toBe(['anchor_slug' => 'pineapple'])
-        ->and(\Platform\FoodAlchemist\Services\BulkEnrichService::ankerWert(['anchor_slug' => 'lime', 'art' => 'pate', 'pate_begruendung' => 'x'], ['pineapple', 'neutral']))->toBeNull('nur aus der Vorauswahl');
+        ->and(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::ankerWert(['anchor_slug' => 'pineapple', 'art' => 'eigen'], ['pineapple', 'neutral']))->toBe(['anchor_slug' => 'pineapple'])
+        ->and(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::ankerWert(['anchor_slug' => 'lime', 'art' => 'pate', 'pate_begruendung' => 'x'], ['pineapple', 'neutral']))->toBeNull('nur aus der Vorauswahl');
 
     $k = ($this->mcp)($this->mandantUser, $this->rootTeam);
     ($this->run)($this->mandantUser, $this->rootTeam, ['nur' => 'anker', 'apply' => true, 'limit' => 10]);

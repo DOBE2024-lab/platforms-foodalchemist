@@ -180,7 +180,7 @@ class SignalTrendService
      */
     public function uebersichtBrille(Team $viewer, ?string $source = null): array
     {
-        $ids = app(StandortService::class)->leseTeamIds($viewer);
+        $ids = app(Plattform\StandortService::class)->leseTeamIds($viewer);
         $teams = Team::whereIn('id', $ids)->get();
         if (count($ids) < 2) {
             return $this->uebersicht($teams->first() ?? $viewer, $source);

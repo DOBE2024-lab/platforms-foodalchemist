@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Support;
 /**
  * Spec 53 / Paket F (4): erkennt, ob ein Transkript eine BESTÄTIGUNG/REFERENZ auf einen
  * bereits gezeigten, noch offenen Vorschlag ist ("ja", "das zweite", "nummer 2") — statt
- * jedes Mal den vollen Tool-Loop zu bemühen. Läuft VOR {@see \Platform\FoodAlchemist\Services\VoiceCommandService::verarbeite()};
+ * jedes Mal den vollen Tool-Loop zu bemühen. Läuft VOR {@see \Platform\FoodAlchemist\Services\Plattform\VoiceCommandService::verarbeite()};
  * ein Treffer wird über DIESELBEN Methoden ausgeführt, die auch der Bestätigen-Klick
  * aufruft (GL-07 bleibt unverändert — nichts läuft hier direkter als über den Knopf).
  *

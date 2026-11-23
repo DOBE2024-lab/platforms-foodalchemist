@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 
 /** Spec 77c · Team-Brille umschalten (nur Ansicht, jede Rolle). */
 class StandorteSetBrilleTool extends WareneingangTool implements ToolContract, ToolMetadataContract

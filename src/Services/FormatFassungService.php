@@ -35,8 +35,8 @@ class FormatFassungService
 
     public function __construct(
         private FaRechte $rechte,
-        private AboService $abos,
-        private PlattformProtokoll $protokoll,
+        private Plattform\AboService $abos,
+        private Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /**

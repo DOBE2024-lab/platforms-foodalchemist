@@ -6,7 +6,7 @@ use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Enums\SupplierRolle;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierMarke;
-use Platform\FoodAlchemist\Services\MandantenService;
+use Platform\FoodAlchemist\Services\Plattform\MandantenService;
 
 /**
  * GP-Regelwerk v3.7.1 §5 Ausnahme 3 — EINE Schreibstelle für Lieferanten-Rolle, Kurzname und Marken-Kürzel (UI-Block und MCP).

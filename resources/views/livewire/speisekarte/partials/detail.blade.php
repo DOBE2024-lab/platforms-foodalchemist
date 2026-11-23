@@ -6,7 +6,7 @@
 @php
     $typLabel = ['alacarte' => 'À la carte', 'tageskarte' => 'Tageskarte', 'saisonkarte' => 'Saisonkarte', 'getraenkekarte' => 'Getränkekarte', 'weinkarte' => 'Weinkarte'];
     $statusTon = ['success' => 'ok', 'warning' => 'warn', 'danger' => 'crit', 'primary' => 'accent', 'info' => 'info'];
-    $logoUrl = $karte->logo_path ? app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($karte->logo_context_file_id, $karte->logo_path) : null;
+    $logoUrl = $karte->logo_path ? app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($karte->logo_context_file_id, $karte->logo_path) : null;
     $rubrikenN = $karte->sections->count();
     $positionenN = $karte->sections->flatMap->items->count();
     $gueltig = ($karte->gueltig_von || $karte->gueltig_bis)

@@ -115,7 +115,7 @@ class MarkenUebersichtService
             foreach (FoodAlchemistSupplierMarke::query()->whereIn('id', $d['ids'])->get() as $zeile) {
                 $this->pflege->kuerzelEntfernen($user, (int) $zeile->supplier_id, (string) $zeile->kuerzel);
             }
-            app(\Platform\FoodAlchemist\Services\PlattformProtokoll::class)->schreibe('marke_zusammengefuehrt', ['marke' => $d['marke'], 'kuerzel' => $d['kuerzel'],
+            app(\Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll::class)->schreibe('marke_zusammengefuehrt', ['marke' => $d['marke'], 'kuerzel' => $d['kuerzel'],
                 'position' => $d['position'], 'vorrang' => $d['vorrang'], 'lieferanten' => $d['lieferanten'], 'entfernte_ids' => $d['ids']], $user, $global);
 
             return $ergebnis + ['nachrendern' => $offen->nachrendern($user, null, $d['kuerzel'], $d['position'], false)];

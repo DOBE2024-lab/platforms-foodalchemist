@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\ActiveOutletContext;
+use Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext;
 
 /**
  * Ebene 2 (D2): „aktiver Betrieb"-Umschalter, oben im FA-Sidebar (linkes Panel).
@@ -49,10 +49,10 @@ class ActiveOutletBar extends Component
                 ->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
 
         // Spec 77c: Unter-Team mit festem Betrieb — nur Anzeige
-        $fest = $team !== null ? app(\Platform\FoodAlchemist\Services\StandortService::class)->zugeordneterBetrieb($team) : null;
+        $fest = $team !== null ? app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->zugeordneterBetrieb($team) : null;
 
         // Kopplung (Kurator 19.10.): steht das Profil auf dem Betrieb, den die Team-Brille vorgibt, sagt die Leiste das
-        $standorte = app(\Platform\FoodAlchemist\Services\StandortService::class);
+        $standorte = app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class);
         $ausBrille = $team !== null && $fest === null ? $standorte->profilDerBrille($team) : null;
         $folgtBrille = $ausBrille !== null && $this->aktiverBetrieb === (int) $ausBrille->id
             ? (string) (\Platform\Core\Models\Team::find($standorte->brille($team)['team_id'])?->name ?? '') : null;

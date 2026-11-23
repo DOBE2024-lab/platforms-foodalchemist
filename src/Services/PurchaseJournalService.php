@@ -216,7 +216,7 @@ class PurchaseJournalService
     private function basisQuery(Team $team, ?string $von, ?string $bis)
     {
         // Spec 77c: Team-Brille — Oberteam liest auf Wunsch den Einkauf seiner Standorte (konsolidiert)
-        return app(StandortService::class)->leseBereich(FoodAlchemistPurchaseTransaction::query(), $team)
+        return app(Plattform\StandortService::class)->leseBereich(FoodAlchemistPurchaseTransaction::query(), $team)
             ->when($von !== null, fn ($q) => $q->whereDate('purchased_at', '>=', $von))
             ->when($bis !== null, fn ($q) => $q->whereDate('purchased_at', '<=', $bis));
     }

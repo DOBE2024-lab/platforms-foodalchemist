@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\PlanPreisService;
+use Platform\FoodAlchemist\Services\Plattform\PlanPreisService;
 
 /** Spec 82 §13 D/B5 · Neuen Gebühren-Preis anlegen (append-only, gültig ab; nur Plattform-Admin, protokolliert). */
 class PlanPreisePostTool extends WareneingangTool implements ToolContract, ToolMetadataContract

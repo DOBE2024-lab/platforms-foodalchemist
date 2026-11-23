@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 
 /** Spec 77c · Oberteam ordnet einem Standort (Unter-Team) einen seiner Betriebe zu. Nur FA-Admin des Oberteams. */
 class StandortePutTool extends WareneingangTool implements ToolContract, ToolMetadataContract

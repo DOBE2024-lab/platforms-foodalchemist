@@ -143,7 +143,7 @@ class EinkaufOptimizerService
      */
     public function optimierenBrille(Team $viewer, array $excludeSupplierIds = [], ?string $von = null, ?string $bis = null): array
     {
-        $standorte = app(StandortService::class);
+        $standorte = app(Plattform\StandortService::class);
         $ids = $standorte->leseTeamIds($viewer);
         $teams = Team::whereIn('id', $ids)->get()->keyBy('id');
 

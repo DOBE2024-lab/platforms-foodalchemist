@@ -167,7 +167,7 @@ class Browser extends Component
     {
         $menge = (self::ANSICHTEN[$this->ansicht] ?? self::ANSICHTEN['standard'])[1];
         $team = Auth::user()?->currentTeamRelation;
-        if ($team !== null && app(\Platform\FoodAlchemist\Services\StandortService::class)->zeigtStandorte($team)) {
+        if ($team !== null && app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->zeigtStandorte($team)) {
             $menge[] = 'standort';
         }
 
@@ -198,7 +198,7 @@ class Browser extends Component
             'gesamtCount' => $svc->browserGesamt($team, $filters),
             'spalten' => $this->spalten(),
             'spaltenKatalog' => self::SPALTEN,
-            'standortNamen' => app(\Platform\FoodAlchemist\Services\StandortService::class)->teamNamen([(int) $team->id, ...app(\Platform\FoodAlchemist\Services\StandortService::class)->unterTeamIds($team)]),
+            'standortNamen' => app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->teamNamen([(int) $team->id, ...app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->unterTeamIds($team)]),
             'ansichten' => self::ANSICHTEN,
             'zeitraeume' => self::ZEITRAEUME,
             'kpiOffen' => $svc->statusCounts($team, [])[ProductionOrderStatus::Planned->value] ?? 0,

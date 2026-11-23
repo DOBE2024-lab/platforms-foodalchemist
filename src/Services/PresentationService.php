@@ -42,7 +42,7 @@ class PresentationService
 
     public function __construct(
         private PresentationDesignService $designs,
-        private FoodAlchemistMediaService $media,
+        private Plattform\FoodAlchemistMediaService $media,
     ) {
     }
 

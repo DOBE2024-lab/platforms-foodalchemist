@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierMarke;
 use Platform\FoodAlchemist\Services\GpNamingService;
-use Platform\FoodAlchemist\Services\PlattformProtokoll;
+use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;
 use Platform\FoodAlchemist\Support\MasterTeam;
 
 /**

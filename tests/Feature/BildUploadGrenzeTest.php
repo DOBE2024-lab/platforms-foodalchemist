@@ -73,7 +73,7 @@ it('Titelbild läuft über die Verkleinerung (lange Kante > maxKante → verklei
 
     $c->assertHasNoErrors();
     $inhalt = Storage::disk('public')->get($this->fb->refresh()->cover_image_path);
-    expect(max(array_slice(getimagesizefromstring($inhalt), 0, 2)))->toBe(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::maxKante());
+    expect(max(array_slice(getimagesizefromstring($inhalt), 0, 2)))->toBe(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::maxKante());
 });
 
 it('Livewires Vorab-Prüfung (über 15 MB) erscheint deutsch statt als Rohschlüssel', function () {

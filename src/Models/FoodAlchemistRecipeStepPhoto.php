@@ -10,7 +10,7 @@ use Platform\ActivityLog\Traits\LogsActivity;
 use Platform\Core\Models\ContextFile;
 use Platform\FoodAlchemist\Models\Concerns\BelongsToTeamHierarchy;
 use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
-use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
+use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 
 /**
  * @ai.description Foto im Media-Pool eines Rezepts (R6); Datei auf dem public-Disk.

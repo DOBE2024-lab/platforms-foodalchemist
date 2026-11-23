@@ -9,8 +9,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Services\BenchmarkService;
-use Platform\FoodAlchemist\Services\OutletSettingsService;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -134,10 +134,10 @@ it('Kennzahlen: die Eingabefelder starten mit den Werten des aktiven Kalkulation
     app(TeamSettingsService::class)->update($this->rootTeam, ['target_food_cost_pct' => 35, 'margin_pct' => 90]);
     $this->actingAs($this->inhaber);
 
-    app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->set($this->rootTeam, $nord->id);
+    app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->set($this->rootTeam, $nord->id);
     Livewire::test(Kennzahlen::class)->assertSet('zielWe', '27')->assertSet('marge', '140');
 
-    app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->set($this->rootTeam, null);
+    app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->set($this->rootTeam, null);
     Livewire::test(Kennzahlen::class)->assertSet('zielWe', '35')->assertSet('marge', '90');   // Gegenprobe: ohne Profil der Team-Standard
 });
 
@@ -148,9 +148,9 @@ it('Abweichung: das Ziel kommt aus dem aktiven Kalkulationsprofil', function () 
     $this->actingAs($this->inhaber);
     $svc = app(\Platform\FoodAlchemist\Services\WareneinsatzAbweichungService::class);
 
-    app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->set($this->rootTeam, $nord->id);
+    app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->set($this->rootTeam, $nord->id);
     expect($svc->analyse($this->rootTeam)['ziel_pct'])->toBe(27.0);
 
-    app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->set($this->rootTeam, null);
+    app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->set($this->rootTeam, null);
     expect($svc->analyse($this->rootTeam)['ziel_pct'])->toBe(35.0);   // Gegenprobe
 });

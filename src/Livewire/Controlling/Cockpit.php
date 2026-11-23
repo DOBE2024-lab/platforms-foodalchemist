@@ -201,7 +201,7 @@ class Cockpit extends Component
 
         // Zeile je Standort (ab 2 Teams in der Brille): eigene Zahlen, eigene Preise, eigenes Profil.
         $von30 = now()->subDays(30)->toDateString();
-        $jeStandort = app(\Platform\FoodAlchemist\Services\StandortService::class)->jeStandort($team, function (Team $t) use ($benchmark, $journal, $fix, $settings, $signale, $marge, $von30) {
+        $jeStandort = app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->jeStandort($team, function (Team $t) use ($benchmark, $journal, $fix, $settings, $signale, $marge, $von30) {
             $o = $this->profil($t);
             $k = $benchmark->kpisFuerTeam((int) $t->id);
             $ziel = $settings->zielWareneinsatzPct($t, $o);

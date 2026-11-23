@@ -379,7 +379,7 @@ class Index extends Component
             'offeneMatches' => \Platform\FoodAlchemist\Models\FoodAlchemistMatchProposal::where('team_id', $team->id)
                 ->where('status', 'offen')->count(),
             'lieferanten' => $liste,
-            'darfMarkenPflege' => app(\Platform\FoodAlchemist\Services\MandantenService::class)->darfVerwaltung(Auth::user()),
+            'darfMarkenPflege' => app(\Platform\FoodAlchemist\Services\Plattform\MandantenService::class)->darfVerwaltung(Auth::user()),
             'lieferantenGruppen' => app(\Platform\FoodAlchemist\Services\SupplierGroupService::class)->liste($team),
             'artikel' => $artikel,
             'globaleSuche' => $globaleSuche,

@@ -114,7 +114,7 @@ class SignalDetektorService
      */
     private function betriebeMitOverrides(Team $team): array
     {
-        $settings = app(OutletSettingsService::class);
+        $settings = app(Plattform\OutletSettingsService::class);
         $relevant = ['margin_pct', 'target_food_cost_pct', 'stundensatz_eur', 'hk2_surcharge_pct', 'labor_overhead_pct'];
 
         $out = [];

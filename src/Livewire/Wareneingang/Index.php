@@ -264,7 +264,7 @@ class Index extends Component
             'darf' => $rechte->darf(Auth::user(), $team, FaRolle::Kuratieren),
             // Spec 77c: Team-Brille „alle" → Standort-Spalte; Belege der Standorte nur lesend
             'teamId' => (int) $team->id,
-            'standortSpalte' => app(\Platform\FoodAlchemist\Services\StandortService::class)->zeigtStandorte($team),
+            'standortSpalte' => app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->zeigtStandorte($team),
             'meineRolle' => $rechte->rolle(Auth::user(), $team),
             'kpis' => [
                 ['label' => 'Heute erwartet', 'value' => $heute, 'primary' => true, 'kpi' => 'heute'],

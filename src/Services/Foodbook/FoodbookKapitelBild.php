@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Services\Foodbook;
 use Illuminate\Http\UploadedFile;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
-use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
+use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 
 /**
  * Spec 43 (Bild-Epic) · Kapitel-Bild und Galerie eines Foodbook-Kapitels (98 · 3.3 S4-1, aus FoodbookService verschoben).

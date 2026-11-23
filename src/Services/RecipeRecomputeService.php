@@ -44,7 +44,7 @@ use Platform\FoodAlchemist\Services\Rezept\RezeptGraphService;
  *   Invariante bleibt Zyklus-Schutz + Selbstreferenz. Regelwerk BR §4.3.
  * I9: vk_* wird hier NIEMALS geschrieben.
  */
-class RecipeRecomputeService
+class RecipeRecomputeService implements Rezept\TeamKostenRechner   // 98 · 3.3 S7 P3: für KostenCacheService
 {
     // A-5 (2026-08-03): Kein Sub-Rezept-Tiefenlimit (Regelwerk BR §4.3 gelockert). Code-Qualität 2.1c: auch die Eltern-Suche hat keinen
     // Deckel mehr (früher PROPAGATION_LIMIT = 10) — ein Graph-Dienst mit Besucht-Liste ({@see RezeptGraphService::vorfahren}).

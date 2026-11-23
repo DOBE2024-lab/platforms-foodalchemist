@@ -167,6 +167,11 @@
                     <x-fa::badge tone="accent">Kornsalat</x-fa::badge>
                     <x-fa::badge tone="info">Rezept</x-fa::badge>
                 </div>
+                {{-- CQ price_incomplete: Konzept-Preis ist nur die Summe der bekannten Positionen. Betrag bleibt sichtbar, nie 0 € oder leer. --}}
+                <div class="flex flex-wrap items-center gap-1.5" data-ui-katalog-vorlaeufig>
+                    <x-fa::money :value="38.5" per="Gast" :vorlaeufig="true" />
+                    <span class="fa-t-muted">x-fa::vorlaeufig, auch als x-fa::money :vorlaeufig</span>
+                </div>
                 <div class="flex flex-wrap gap-4">
                     <x-fa::signal tone="ok">10 von 10 bepreist</x-fa::signal>
                     <x-fa::signal tone="warn">Konfidenz mittel</x-fa::signal>

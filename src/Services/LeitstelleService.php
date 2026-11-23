@@ -316,7 +316,7 @@ class LeitstelleService
                     $ek = $preis['ek_pp'];
                     $positionen[] = [
                         'art' => 'paket', 'label' => $block->concept?->name ?? ($block->label ?? 'Paket'),
-                        'vk' => $vk, 'ek' => $ek, 'preis_einheit' => 'gast',
+                        'vk' => $vk, 'ek' => $ek, 'preis_einheit' => 'gast', 'preis_vorlaeufig' => (bool) ($preis['vk_fehlt'] ?? false),
                         'we_pct' => $ek > 0 ? MargeService::wareneinsatzPct($ek, $vk) : null,
                         'ref_typ' => 'concept', 'ref_id' => $block->concept !== null ? (int) $block->concept->id : null,
                     ];

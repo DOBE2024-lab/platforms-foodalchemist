@@ -204,7 +204,7 @@
                      ausschließlich im internen Kalkulations-Print (Costing-Dokument). --}}
                 @if($istIntern && $k['vk_pro_person'] > 0)
                     <span class="kpreis">
-                        {{ number_format($k['vk_pro_person'], 2, ',', '.') }} €/P
+                        {{ number_format($k['vk_pro_person'], 2, ',', '.') }} €/P{{ ($k['vk_vorlaeufig'] ?? false) ? ' (vorläufig)' : '' }}
                         @if(($k['ek_pro_person'] ?? null) !== null)
                             · <span class="ek">EK {{ number_format($k['ek_pro_person'], 2, ',', '.') }} €/P</span>
                             @if(($k['food_cost_percent'] ?? null) !== null) · <span class="wpz">W {{ number_format($k['food_cost_percent'], 1, ',', '.') }} %</span> @endif
@@ -324,7 +324,7 @@
                     @if(($k['depth'] ?? 0) === 0)
                         <tr>
                             <td>{{ $k['title_intern'] ?: $k['title'] }}</td>
-                            <td class="right">{{ number_format($k['vk_pro_person'] ?? 0, 2, ',', '.') }} €</td>
+                            <td class="right">{{ number_format($k['vk_pro_person'] ?? 0, 2, ',', '.') }} €{{ ($k['vk_vorlaeufig'] ?? false) ? ' (vorläufig)' : '' }}</td>
                             <td class="right" style="color:#9333ea">{{ ($k['ek_pro_person'] ?? null) !== null ? number_format($k['ek_pro_person'], 2, ',', '.') . ' €' : '—' }}</td>
                             <td class="right" style="color:#059669">{{ ($k['food_cost_percent'] ?? null) !== null ? number_format($k['food_cost_percent'], 1, ',', '.') . ' %' : '—' }}</td>
                         </tr>
@@ -340,9 +340,9 @@
     <div class="price">
         @if($istIntern)
             <table>
-                <tr><td>Preis pro Person</td><td class="right">{{ number_format($gesamt['vk_pro_person'], 2, ',', '.') }} €</td></tr>
+                <tr><td>Preis pro Person</td><td class="right">{{ number_format($gesamt['vk_pro_person'], 2, ',', '.') }} €{{ ($gesamt['vk_fehlt'] ?? false) ? ' (vorläufig)' : '' }}</td></tr>
                 <tr><td style="color:#9333ea">Wareneinsatz pro Person</td><td class="right" style="color:#9333ea">{{ number_format($gesamt['ek_per_person'], 2, ',', '.') }} €</td></tr>
-                @if($gesamt['vk_pro_person'] > 0)
+                @if($gesamt['vk_pro_person'] > 0 && $gesamt['food_cost_percent'] !== null)
                     <tr><td style="color:#059669">Wareneinsatz %</td><td class="right" style="color:#059669">{{ number_format($gesamt['food_cost_percent'], 1, ',', '.') }} %</td></tr>
                 @endif
                 @if($gesamt['personen'])<tr><td>Personen</td><td class="right">{{ $gesamt['personen'] }}</td></tr>@endif

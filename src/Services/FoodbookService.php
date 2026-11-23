@@ -1290,7 +1290,7 @@ class FoodbookService
         if ($block->type === 'concept_ref' && $block->concept) {
             $cockpit = $this->concepts->preisCockpit($block->concept, $outlet);
 
-            return ['vk_pp' => (float) $cockpit['price_per_person'], 'ek_pp' => (float) $cockpit['ek_per_person'], 'pauschal' => 0.0];
+            return ['vk_pp' => (float) $cockpit['price_per_person'], 'ek_pp' => (float) $cockpit['ek_per_person'], 'pauschal' => 0.0, 'vk_fehlt' => ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete
         }
         if ($block->type === 'recipe_ref' && $block->dish) {
             $faktor = $block->quantity !== null ? (float) $block->quantity : 1.0;
@@ -1347,11 +1347,11 @@ class FoodbookService
             'blocks.concept:id,name,price_per_person_cache,price_incomplete', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
             'blocks.staffel', 'children']);
 
-        $vk = 0.0;
-        $ek = 0.0;
-        $pauschal = 0.0;
+        $vk = $ek = $pauschal = 0.0;
+        $vkFehlt = false;   // CQ price_incomplete: mind. ein Konzept-Preis ist nur die Summe der bekannten Positionen
         foreach ($kapitel->blocks as $block) {
             $p = $this->blockPreis($block, $pax, $outlet);
+            $vkFehlt = $vkFehlt || ($p['vk_fehlt'] ?? false);
             $vk += $p['vk_pp'];
             $ek += $p['ek_pp'];
             $pauschal += $p['pauschal'];
@@ -1361,17 +1361,18 @@ class FoodbookService
             $vk += $kindAgg['vk_pro_person'];
             $ek += $kindAgg['ek_per_person'];
             $pauschal += $kindAgg['pauschal'];
+            $vkFehlt = $vkFehlt || $kindAgg['vk_fehlt'];
         }
 
         if ($kapitel->price_mode === 'manuell' && $kapitel->price_per_person !== null) {
-            $vk = (float) $kapitel->price_per_person;
+            [$vk, $vkFehlt] = [(float) $kapitel->price_per_person, false];   // gesetzter Kapitelpreis ist nicht vorläufig
         }
 
         return [
             'vk_pro_person' => round($vk, 2),
             'ek_per_person' => round($ek, 2),
             'pauschal' => round($pauschal, 2),
-            'food_cost_percent' => MargeService::wareneinsatzPct($ek, $vk),
+            'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ek, $vk), 'vk_fehlt' => $vkFehlt,   // Food-Cost aus einer VK-Teilsumme wäre geschönt
         ];
     }
 
@@ -1434,7 +1435,7 @@ class FoodbookService
         $gesamt = $this->gesamt($team, $fb, $outlet);
         $vk = $gesamt['vk_pro_person'];
         $ek = $gesamt['ek_per_person'];
-        $ist = MargeService::wareneinsatzPct($ek, $vk);
+        $ist = $gesamt['vk_fehlt'] ? null : MargeService::wareneinsatzPct($ek, $vk);   // CQ price_incomplete: VK-Teilsumme → keine Quote
 
         if ($fb->target_food_cost_pct !== null) {
             $ziel = (float) $fb->target_food_cost_pct;
@@ -1481,18 +1482,17 @@ class FoodbookService
     public function gesamt(Team $team, FoodAlchemistFoodbook $fb, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
         $pax = $fb->personen;
-        $vk = 0.0;
-        $ek = 0.0;
-        $pauschal = 0.0;
+        $vk = $ek = $pauschal = 0.0;
+        $vkFehlt = false;
         foreach ($fb->chapters()->whereNull('parent_id')->get() as $top) {
             $agg = $this->kapitelAggregat($team, $top, $pax, $outlet);
+            $vkFehlt = $vkFehlt || $agg['vk_fehlt'];
             $vk += $agg['vk_pro_person'];
             $ek += $agg['ek_per_person'];
             $pauschal += $agg['pauschal'];
         }
 
-        $vkPp = round($vk, 2);
-        $ekPp = round($ek, 2);
+        [$vkPp, $ekPp] = [round($vk, 2), round($ek, 2)];
 
         return [
             'vk_pro_person' => $vkPp,
@@ -1503,7 +1503,7 @@ class FoodbookService
             'gesamt_ek' => $pax !== null ? round($ek * $pax, 2) : null,
             // Wareneinsatz % auf denselben gerundeten Per-Person-Werten wie die Anzeige (F-12),
             // damit die Zahl exakt der bisherigen Blade-Rechnung ek_pp / vk_pp * 100 entspricht.
-            'food_cost_percent' => MargeService::wareneinsatzPct($ekPp, $vkPp),
+            'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ekPp, $vkPp), 'vk_fehlt' => $vkFehlt,   // CQ price_incomplete
             'edition_ab' => app(FormatKapitelService::class)->editionAb($fb),   // 98 · 2.4e: Format-Editionen (Alternativen, nicht summiert) als „ab …“
         ];
     }
@@ -1625,7 +1625,7 @@ class FoodbookService
                     };
                     $bloecke[] = ['type' => $b->type, 'label' => $label, 'untertitel' => $untertitel,
                         'gerichte' => $gerichte, 'ist_header' => str_starts_with((string) $b->type, 'header'),
-                        'preis_pp' => (float) $bp['vk_pp'], 'pauschal' => (float) $bp['pauschal'],
+                        'preis_pp' => (float) $bp['vk_pp'], 'pauschal' => (float) $bp['pauschal'], 'preis_vorlaeufig' => (bool) ($bp['vk_fehlt'] ?? false),
                         'preis_einheit' => $preisEinheit,
                         // Preisdarstellung (2026-08-25): einzel-Concept → Concept-Summenpreis ausblenden,
                         // stattdessen zeigt jede Gericht-Zeile ihren eigenen Preis (aus gerichtZeilen).
@@ -1645,7 +1645,7 @@ class FoodbookService
                     'anker' => 'k' . $k->id,               // Navleiste-Sprungziel (klickbar in HTML + PDF)
                     'depth' => $depth,
                     'bloecke' => $bloecke,
-                    'vk_pro_person' => $agg['vk_pro_person'],
+                    'vk_pro_person' => $agg['vk_pro_person'], 'vk_vorlaeufig' => $agg['vk_fehlt'],
                 ];
                 if ($intern) {
                     // Marge nur in der internen Projektion (Projektleitung/Vertrieb) — NIE im Kundendokument.

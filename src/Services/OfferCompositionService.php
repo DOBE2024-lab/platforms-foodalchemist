@@ -680,7 +680,7 @@ class OfferCompositionService
             }
         }
         if ($kapitel->price_mode === 'manuell' && $kapitel->price_per_person !== null) {
-            $vk = (float) $kapitel->price_per_person;
+            [$vk, $vkFehlt] = [(float) $kapitel->price_per_person, false];   // CQ price_incomplete: gesetzter Kapitelpreis ist nicht vorläufig
         }
 
         // Auflage 4: Food-Cost aus einer EK-Teilsumme wäre geschönt → bei unvollständigem EK keine Quote

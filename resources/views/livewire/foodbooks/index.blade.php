@@ -320,7 +320,7 @@
                                             @endunless
                                             @if($agg['ek_per_person'] > 0)<span class="text-[var(--fa-ink-3)]" title="Wareneinsatz pro Gast">EK {{ $euro($agg['ek_per_person']) }}</span>@endif
                                             @if($agg['vk_pro_person'] > 0)
-                                                <span class="font-semibold text-[var(--fa-ink)]" title="{{ $istRollup ? 'Summe der Unterkapitel' : 'Verkauf pro Gast' }}">@if($istRollup)<span class="font-normal text-[var(--fa-ink-3)]">Summe </span>@endif{{ $euro($agg['vk_pro_person']) }}<span class="font-normal text-[var(--fa-ink-3)]"> pro Gast</span></span>
+                                                <span class="font-semibold text-[var(--fa-ink)]" title="{{ $istRollup ? 'Summe der Unterkapitel' : 'Verkauf pro Gast' }}">@if($istRollup)<span class="font-normal text-[var(--fa-ink-3)]">Summe </span>@endif{{ $euro($agg['vk_pro_person']) }}<span class="font-normal text-[var(--fa-ink-3)]"> pro Gast</span>@if($agg['vk_fehlt'] ?? false)<x-fa::vorlaeufig />@endif</span>
                                             @endif
                                             <span class="inline-flex items-center gap-1.5 {{ $ampelText[$we['status']] ?? $ampelText['unbekannt'] }}"
                                                   title="Wareneinsatz {{ $we['ist_pct'] !== null ? $pct($we['ist_pct']) : 'nicht berechenbar' }}, Ziel {{ $pct($we['ziel_pct']) }}">
@@ -353,7 +353,7 @@
                                                 <span class="flex-1 min-w-[10rem] break-words text-[var(--fa-ink)]">{{ $p['label'] }}</span>
                                                 <div class="ml-auto flex flex-wrap items-center gap-3 tabular-nums">
                                                     @if($p['ek'] > 0)<span class="text-[var(--fa-ink-3)]">EK {{ $euro($p['ek']) }}</span>@endif
-                                                    <span class="font-semibold text-[var(--fa-ink)]"><x-fa::money :value="$p['vk'] > 0 ? $p['vk'] : null" missing="VK fehlt" :per="$p['preis_einheit'] === 'gast' ? 'Gast' : 'Position'" /></span>
+                                                    <span class="font-semibold text-[var(--fa-ink)]"><x-fa::money :value="$p['vk'] > 0 ? $p['vk'] : null" missing="VK fehlt" :per="$p['preis_einheit'] === 'gast' ? 'Gast' : 'Position'" :vorlaeufig="$p['preis_vorlaeufig'] ?? false" /></span>
                                                     @if($p['we_pct'] !== null)<span class="text-[var(--fa-ink-3)]" title="Wareneinsatz dieser Position">{{ $pct($p['we_pct']) }}</span>@endif
                                                     @if($vkLink)<x-fa::icon-button :href="$vkLink" target="_blank" icon="heroicon-m-arrow-top-right-on-square" label="Im Verkauf öffnen" size="sm" />@endif
                                                 </div>

@@ -219,3 +219,32 @@ it('Schreibwache: fremde Tabelle, fremde Rezept-Spalte und fremdes Rezept sind V
     $w->pruefe('select * from "foodalchemist_concepts"', []);
     expect($w->verstoesse())->toHaveCount(4);
 });
+
+it('Schreibwache: Datenbank-Cache des Frameworks (CACHE_STORE=database) ist in jeder Phase erlaubt, wird aber gezählt', function () {
+    // SQL, wie es der Store `database` erzeugt (Trockenlauf io 23.11.: Abbruch in Phase 0 wegen DELETE/INSERT auf `cache`)
+    $cacheSql = [
+        ['delete from "cache" where "key" in (?)', ['fa:k']],
+        ['insert into "cache" ("expiration", "key", "value") values (?, ?, ?) on conflict ("key") do update set "expiration" = "excluded"."expiration", "value" = "excluded"."value"', [1, 'fa:k', 'v']],
+        ['insert into `cache` (`expiration`, `key`, `value`) values (?, ?, ?) on duplicate key update `expiration` = values(`expiration`), `value` = values(`value`)', [1, 'fa:k', 'v']],
+        ['update `cache_locks` set `owner` = ?, `expiration` = ? where `key` = ?', ['o', 1, 'fa:l']],
+        ['insert into "cache_locks" ("key", "owner", "expiration") values (?, ?, ?)', ['fa:l', 'o', 1]],
+        ['delete from `cache_locks` where `key` = ? and `owner` = ?', ['fa:l', 'o']],
+    ];
+    $w = new SchreibWache;
+    foreach (['0', '1', '2'] as $phase) {
+        $w->phase($phase, [7]);
+        foreach ($cacheSql as [$sql, $b]) {
+            $w->pruefe($sql, $b);
+        }
+    }
+    expect($w->verstoesse())->toBe([])
+        ->and($w->anweisungen()['0']['cache'])->toBe(['delete' => 1, 'insert' => 2])
+        ->and($w->anweisungen()['2']['cache_locks'])->toBe(['update' => 1, 'insert' => 1, 'delete' => 1]);
+
+    // Umbenannte Cache-Tabelle aus der Konfiguration; eine fremde Tabelle bleibt ein Verstoß
+    config(['cache.stores.database.table' => 'fa_cache']);
+    $w->phase('0');
+    $w->pruefe('delete from "fa_cache" where "key" in (?)', ['x']);
+    $w->pruefe('delete from "jobs" where "id" = ?', [1]);
+    expect($w->verstoesse())->toHaveCount(1)->and($w->verstoesse()[0])->toContain('jobs');
+});

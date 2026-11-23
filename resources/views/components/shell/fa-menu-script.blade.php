@@ -33,7 +33,11 @@
         const zu = () => { this.offen = false; };
         window.addEventListener('scroll', zu, true);
         window.addEventListener('resize', zu);
+        // destroy() räumt ab: sonst bleibt je Menü und Seitenwechsel ein toter Listener am Fenster
+        this.aufraeumen = () => { window.removeEventListener('scroll', zu, true); window.removeEventListener('resize', zu); };
       },
+      aufraeumen: null,
+      destroy() { if (this.aufraeumen) this.aufraeumen(); },
     });
     if (window.Alpine) window.Alpine.data('faMenu', faMenu);
     else document.addEventListener('alpine:init', () => window.Alpine.data('faMenu', faMenu));

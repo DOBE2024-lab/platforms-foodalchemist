@@ -25,7 +25,8 @@
         }
     }
     $kastenAttr = new \Illuminate\View\ComponentAttributeBag($kastenAttr);
-    $huelle = $attributes->filter(fn ($wert, $name) => ! str_starts_with($name, 'kasten:'));
+    $huelle = $attributes->filter(fn ($wert, $name) => ! str_starts_with($name, 'kasten:'))
+        ->merge(['wire:key' => 'fa-popover']);   // Morph-Schlüssel je Baustein-Typ (Alpine-Morph-Fix), eigener wire:key gewinnt
 @endphp
 <div {{ $huelle->class(['relative']) }} x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
     {{ $ausloeser }}

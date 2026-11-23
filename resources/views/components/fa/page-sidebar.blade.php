@@ -36,9 +36,16 @@
         handyOffen: false,
         vw: window.innerWidth,
         init() {
-            window.matchMedia('(hover: none) and (pointer: coarse) and (max-width: 47.99rem)').addEventListener('change', () => { this.handy = window.faHandyModus(); this.handyOffen = false; });
-            window.addEventListener('resize', () => { this.vw = window.innerWidth; });
+            // Listener in Variablen, nicht in den Daten: ein MediaQueryList hinter Alpines Proxy wirft „Illegal invocation“
+            const mqHandy = window.matchMedia('(hover: none) and (pointer: coarse) and (max-width: 47.99rem)');
+            const aufHandy = () => { this.handy = window.faHandyModus(); this.handyOffen = false; };
+            const aufBreite = () => { this.vw = window.innerWidth; };
+            mqHandy.addEventListener('change', aufHandy);
+            window.addEventListener('resize', aufBreite);
+            this.aufraeumen = () => { mqHandy.removeEventListener('change', aufHandy); window.removeEventListener('resize', aufBreite); };
         },
+        aufraeumen: null,
+        destroy() { this.aufraeumen && this.aufraeumen(); },
         get gespeichertOffen() {
             const v = this.$store.ui?.m(this.scope, 'open');
             return v === undefined ? this.defaultOpen : v;
@@ -76,6 +83,7 @@
     :class="resizing ? '' : 'transition-all duration-200'"
     class="relative flex-shrink-0 h-full"
     data-fa-page-sidebar
+    @unless($attributes->has('wire:key')) wire:key="fa-page-sidebar-{{ $scope }}" @endunless
     {{ $attributes }}
 >
     {{-- Handy: Abdunklung hinter der Schublade, Antippen schließt --}}

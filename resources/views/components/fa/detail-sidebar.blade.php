@@ -55,10 +55,16 @@
         leerAuf: false,
         vw: window.innerWidth,
         init() {
+            // Listener in Variablen, nicht in den Daten: ein MediaQueryList hinter Alpines Proxy wirft „Illegal invocation“.
+            // destroy() räumt ab — auch bei jedem Neuaufbau, wenn sich data-/x-data-Werte (auswahl) beim Morph ändern.
             const mq = window.matchMedia('(min-width: 96rem)');
-            mq.addEventListener('change', (e) => { this.weit = e.matches; });
-            window.matchMedia('(hover: none) and (pointer: coarse) and (max-width: 47.99rem)').addEventListener('change', () => { this.handy = window.faHandyModus(); this.handyOffen = this.gewaehlt; });
-            window.addEventListener('resize', () => { this.vw = window.innerWidth; });
+            const mqHandy = window.matchMedia('(hover: none) and (pointer: coarse) and (max-width: 47.99rem)');
+            const aufWeit = (e) => { this.weit = e.matches; };
+            const aufHandy = () => { this.handy = window.faHandyModus(); this.handyOffen = this.gewaehlt; };
+            const aufBreite = () => { this.vw = window.innerWidth; };
+            mq.addEventListener('change', aufWeit);
+            mqHandy.addEventListener('change', aufHandy);
+            window.addEventListener('resize', aufBreite);
             this.handyOffen = this.gewaehlt;
             // Handy-Lesemodus serverseitig: Livewire-Anfragen der Handy-Oberfläche tragen X-FA-Handy: 1 (Support\HandyLesemodus)
             if (window.Livewire && ! window.faHandyKopfzeile) {
@@ -68,15 +74,24 @@
                     options.headers['X-FA-Handy'] = window.faHandyModus() ? '1' : '0';
                 });
             }
-            new MutationObserver(() => {
+            const beobachter = new MutationObserver(() => {
                 this.auswahl = this.$el.dataset.faAuswahl ?? '-';
                 this.handyOffen = this.gewaehlt;
                 if (this.auswahl === '') this.leerAuf = false;
                 this.merke();
-            }).observe(this.$el, { attributes: true, attributeFilter: ['data-fa-auswahl'] });
+            });
+            beobachter.observe(this.$el, { attributes: true, attributeFilter: ['data-fa-auswahl'] });
+            this.aufraeumen = () => {
+                mq.removeEventListener('change', aufWeit);
+                mqHandy.removeEventListener('change', aufHandy);
+                window.removeEventListener('resize', aufBreite);
+                beobachter.disconnect();
+            };
             if (@js((bool) $aufziehen) && ! this.handy && ! this.open) this.setOpen(true);
             this.merke();
         },
+        aufraeumen: null,
+        destroy() { this.aufraeumen && this.aufraeumen(); },
         // Handy: geöffnete Detailseite als „Zuletzt angesehen“ merken (Handy-Suche, pro Gerät, localStorage fa-zuletzt)
         merke() {
             if (! this.handy || ! this.gewaehlt) return;
@@ -146,6 +161,7 @@
     data-fa-detail-sidebar
     @if($lesemodus) data-fa-handy-lesen @endif
     @if($leerZu) data-fa-leer-zu @endif
+    @unless($attributes->has('wire:key')) wire:key="fa-detail-sidebar-{{ $scope }}" @endunless
     {{ $attributes }}
 >
   {{-- Dunkler Rahmen: Detail-Panels im Werkbank-Modus (wie Navigation, Chat-Leiste, Editoren).

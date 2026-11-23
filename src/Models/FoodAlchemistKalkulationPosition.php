@@ -38,6 +38,7 @@ class FoodAlchemistKalkulationPosition extends Model
     /** @deprecated #486 deutscher Alias → calculation() */
     public function kalkulation(): BelongsTo
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'calculation');
         return $this->calculation();
     }
 

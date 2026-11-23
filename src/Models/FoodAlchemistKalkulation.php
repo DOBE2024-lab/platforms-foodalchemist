@@ -35,6 +35,7 @@ class FoodAlchemistKalkulation extends Model
     /** @deprecated #486 deutscher Alias → positions() */
     public function positionen(): HasMany
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'positions');
         return $this->positions();
     }
 }

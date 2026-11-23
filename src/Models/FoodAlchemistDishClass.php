@@ -28,6 +28,7 @@ class FoodAlchemistDishClass extends Model
     /** @deprecated #486 deutscher Alias → mainGroup() */
     public function hauptgruppe()
     {
+        \Platform\FoodAlchemist\Support\VeralteterAlias::melde($this, __FUNCTION__, 'mainGroup');
         return $this->mainGroup();
     }
 

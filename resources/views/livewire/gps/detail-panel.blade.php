@@ -170,7 +170,10 @@
             </div>
         @endif
 
+        </x-fa::lese-sperre>
         <div class="flex flex-col">
+        {{-- Sperre je Ebene: innerhalb dieser Hülle eigene Hälften, damit kein </fieldset> ein offenes <div> schließt --}}
+        <x-fa::lese-sperre :an="$lesemodus">
         {{-- PLATZHALTER: Allergene, Zusatzstoffe & Nährwerte von Hand (Entscheid Dominique 19.11.2026, nur Platzhalter; Dienst lehnt alle anderen ab) --}}
         @if($platzhalterStand !== null)
         <x-fa::section variant="plain" title="Allergene, Zusatzstoffe & Nährwerte (manuell, Platzhalter)" icon="heroicon-o-pencil-square" data-sektion="platzhalter-deklaration">
@@ -950,11 +953,11 @@
             </div>
         </x-fa::section>
         @endif
+        </x-fa::lese-sperre>
         </div>
 
         @if($section === null)
         @if($gp->team_id === null)<p class="pt-3 border-t border-[var(--fa-line)] fa-t-muted">Zentral gepflegt, für alle Teams</p>@endif{{-- 98 · 2.4f D: UUID ausgeblendet --}}
         @endif
-        </x-fa::lese-sperre>
     @endif
 </x-fa::page>

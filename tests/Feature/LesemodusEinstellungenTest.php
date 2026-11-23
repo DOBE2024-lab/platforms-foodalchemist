@@ -12,6 +12,7 @@ use Platform\FoodAlchemist\Livewire\Settings\Posten;
 use Platform\FoodAlchemist\Livewire\Settings\PraesentationsDesigns;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
+use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
 use Platform\FoodAlchemist\Tests\Support\LesemodusDom;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -106,8 +107,9 @@ it('Handbuch-Panel: „Lücken prüfen“ bleibt im gesperrten Rahmen des Editor
 it('Rezept eingebettet: „Verwendet in“ bleibt im gesperrten Rezept-Editor bedienbar', function () {
     $basis = $this->makeRecipe($this->rootTeam, 'Fond: Lesemodus');
     $eltern = $this->makeRecipe($this->rootTeam, 'Suppe: Lesemodus');
+    $g = FoodAlchemistVocabEinheit::create(['team_id' => $this->rootTeam->id, 'slug' => 'g', 'display_de' => 'Gramm', 'dimension' => 'mass', 'default_in_g' => 1]);
     FoodAlchemistRecipeIngredient::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $eltern->id, 'position' => 1,
-        'raw_text' => 'Fond', 'quantity' => 1000, 'referenced_recipe_id' => $basis->id, 'match_method' => 'recipe_ref']);
+        'raw_text' => 'Fond', 'quantity' => 1000, 'unit_vocab_id' => $g->id, 'referenced_recipe_id' => $basis->id, 'match_method' => 'recipe_ref']);
     $html = LesemodusDom::inGesperrtemRahmen(Livewire::test(RezeptDetailPanel::class, ['recipeId' => $basis->id, 'embedded' => true])->html());
 
     expect(LesemodusDom::bedienbar($html, '//*[@data-eltern-link]'))->toBe([true]);

@@ -175,7 +175,7 @@ class DataQualityService
         if (isset(self::METRIK_LABELS[$key])) {
             return self::METRIK_LABELS[$key];
         }
-        foreach ([$this->rezeptQualitaetChecks(), $this->konzeptChecks(), $this->foodbookChecks()] as $checks) {
+        foreach ([$this->rezeptQualitaetChecks(), $this->konzeptChecks(), $this->foodbookChecks(), GpStamm\StueckOhneGewicht::checks()] as $checks) {
             if (isset($checks[$key])) {
                 return $checks[$key]['label'];
             }
@@ -365,7 +365,7 @@ class DataQualityService
             $this->gap('gp_tentative_genutzt', self::METRIK_LABELS['gp_tentative_genutzt'], $tentativeGenutzt, SignalTyp::DatenqualitaetGpLa, 'dq-gp-tentative-genutzt',
                 'Nicht freigegebene Grundprodukte sollten nicht in Rezepten stecken. Grundprodukt prüfen und freigeben oder in den Rezepten ersetzen.'),
             $this->gap('gp_konformitaet', self::METRIK_LABELS['gp_konformitaet'], $konfGp, SignalTyp::KonformitaetGp, 'dq-gp-konformitaet',
-                'Bei diesen Grundprodukten verstoßen Angaben gegen die Anlageregeln, zum Beispiel bei Benennung oder Pflichtangaben. Grundprodukt öffnen und die markierten Felder prüfen.'),
+                'Bei diesen Grundprodukten verstoßen Angaben gegen die Anlageregeln, zum Beispiel bei Benennung oder Pflichtangaben. Grundprodukt öffnen und die markierten Felder prüfen.'), ...array_values(array_map(fn ($c) => $this->gap(GpStamm\StueckOhneGewicht::KEY, $c['label'], ($c['q'])($team)->count(), null, null, null, SignalSeverity::Info), GpStamm\StueckOhneGewicht::checks())),   // Pflegeliste, nie rot
         ];
     }
 
@@ -1920,7 +1920,7 @@ class DataQualityService
         foreach ([
             ['recipe', $this->rezeptQualitaetChecks()],
             ['concept', $this->konzeptChecks()],
-            ['foodbook', $this->foodbookChecks()],
+            ['foodbook', $this->foodbookChecks()], ['gp', GpStamm\StueckOhneGewicht::checks()],   // Pflegeliste Stückgewicht (Dominique 23.11.)
         ] as [$kind, $checks]) {
             if (isset($checks[$metrik])) {
                 return [($checks[$metrik]['q'])($team), $kind];

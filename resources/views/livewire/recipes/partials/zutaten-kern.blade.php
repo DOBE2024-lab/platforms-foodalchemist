@@ -17,6 +17,17 @@
 @if($fehler !== null)
     <x-fa::notice tone="crit" class="mb-3" data-editor-fehler>{{ $fehler }}</x-fa::notice>
 @endif
+@if($ohneGewicht !== [])
+    {{-- Entscheid Dominique 23.11.: Zutaten ohne Gewicht werden gespeichert, aber gemeldet (Pflege über das GP-Modal, Bereich Formen) --}}
+    <x-fa::notice tone="warn" class="mb-3" data-editor-ohne-gewicht>
+        {{ count($ohneGewicht) === 1 ? '1 Zutat' : count($ohneGewicht) . ' Zutaten' }} ohne Gewicht:
+        {{ \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::text($ohneGewicht) }}.
+        Kosten laufen über den Stückpreis, Grammatur und Produktionsmenge sind vorläufig.
+        @foreach(collect($ohneGewicht)->whereNotNull('gp_id')->unique('gp_id') as $z)
+            <a href="{{ \Platform\FoodAlchemist\Support\Sprungziel::gp($z['gp_id']) }}" target="_blank" rel="noopener" class="underline" data-ohne-gewicht-gp="{{ $z['gp_id'] }}">Stückgewicht für {{ $z['name'] }} pflegen</a>
+        @endforeach
+    </x-fa::notice>
+@endif
 
 {{-- wire:key: Alpine wertet x-data bei morphdom NICHT neu aus — Rezept-Wechsel muss das Element ersetzen --}}
 <div wire:key="zutaten-editor-{{ $rezept?->id ?? 0 }}"
@@ -257,6 +268,8 @@
                     <td class="num">
                         <span class="text-[var(--fa-ink-2)]" x-text="anteilPctFmt(zeile)"
                               :title="anteilPct(zeile) !== null ? 'Anteil am Gesamtgewicht' : (zeile.is_optional ? 'Optional, zählt nicht' : 'Keine Gramm-Umrechnung hinterlegt')"></span>
+                        {{-- Entscheid Dominique 23.11.: Menge ohne Gewicht (z. B. Stück ohne Stückgewicht) — warnen, nicht sperren --}}
+                        <x-fa::badge tone="warn" x-show="ohneGewicht(zeile)" x-cloak title="Kein Gewicht für diese Einheit. Kosten laufen über den Stückpreis, Grammatur und Produktionsmenge sind vorläufig. Stückgewicht im Grundprodukt pflegen (Formen)." data-zeile-ohne-gewicht>ohne Gewicht</x-fa::badge>
                     </td>
                     <td class="num" data-zeilen-ek-live>
                         {{-- F2 (#511a): unbepreiste Zutat zeigt „Preis fehlt" statt eines stillen Strichs --}}

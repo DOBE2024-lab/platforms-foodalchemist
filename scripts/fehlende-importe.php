@@ -9,7 +9,7 @@
  * Gefunden so in SpeiseplanAusgabe::buffetKarten (Typ-Hinweis im Closure).
  *
  * Geprüft werden kurze Namen in Code-Positionen: Typ-Hinweise vor einer Variable, Rückgabetypen, `X::`, `new X`,
- * `instanceof X`, `catch (X`. Ein Name ist in Ordnung, wenn er importiert ist oder im eigenen Namespace als Datei
+ * `instanceof X`, `catch (X`, dazu (98 · 3.8) `extends`/`implements`, Trait-`use X;` im Klassenrumpf und Attribute `#[X`. Ein Name ist in Ordnung, wenn er importiert ist oder im eigenen Namespace als Datei
  * unter src/ liegt. Kommentare und Strings zählen nicht; relative Namen (`Rezept\X`) und Konstanten werden übersprungen.
  *
  * Aufruf (im Modul-Root):  php scripts/fehlende-importe.php [datei.php …]
@@ -57,9 +57,22 @@ foreach ($dateien as $datei) {
         $nurCode, $treffer, PREG_SET_ORDER
     );
 
+    // 98 · 3.8: auch extends/implements-Listen, Trait-use im Klassenrumpf (eingerückt, anders als Importe oben) und Attribute
+    $namen = array_map(fn ($t) => ($t[1] ?? '') ?: (($t[2] ?? '') ?: (($t[3] ?? '') ?: ($t[4] ?? ''))), $treffer);
+    preg_match_all('/\b(?:extends|implements)\s+([^{]+?)\s*\{/', $nurCode, $listen);
+    preg_match_all('/^[ \t]+use\s+([^;{(]+)[;{]/m', $nurCode, $traits);
+    foreach (array_merge($listen[1], $traits[1]) as $liste) {
+        foreach (preg_split('/\s*,\s*|\s+implements\s+/', trim($liste)) as $teil) {
+            if (preg_match('/^([A-Z]\w*)$/', trim($teil), $n)) {
+                $namen[] = $n[1];
+            }
+        }
+    }
+    preg_match_all('/#\[\s*([A-Z]\w*)(?![\\\\\w])/', $nurCode, $attribute);
+    $namen = array_merge($namen, $attribute[1]);
+
     $fehlt = [];
-    foreach ($treffer as $t) {
-        $name = ($t[1] ?? '') ?: (($t[2] ?? '') ?: (($t[3] ?? '') ?: ($t[4] ?? '')));
+    foreach ($namen as $name) {
         if ($name === '' || in_array($name, ['self', 'static', 'parent'], true) || isset($importiert[$name]) || isset($eingebaut[$name])
             || preg_match('/^[A-Z0-9_]+$/', $name)) {   // KONSTANTE, kein Klassenname
             continue;

@@ -51,10 +51,11 @@ class DarreichungService
 
     /**
      * Plan 98 B (h), Entscheid Dominique 23.11. („ok fixe die Ki“): liegt die Portion des Standards (Summe der Bestandteile, bei
-     * festem Ertrag gegart) außerhalb dieses Bands, wirken die Mengen wie eine Charge — kein Auto-VK, Hinweis am Gericht. Das Band
-     * ist dasselbe wie für die KI-Portion im Generator (portionG).
+     * festem Ertrag gegart) über dieser Grenze, wirken die Mengen wie eine Charge — kein Auto-VK, Hinweis am Gericht. Nur die
+     * Obergrenze (Kurator 23.11.): Canapés, Pralinen, Amuse-Bouche liegen echt bei 10–15 g; eine Herkunft „aus dem Generator“
+     * ist am Rezept nicht verlässlich markiert (created_via mal mcp, plan_go, import oder leer), deshalb gilt die Regel für alle Gerichte.
      */
-    public const PORTION_PLAUSIBEL_G = [20.0, 3000.0];
+    public const CHARGE_OBERGRENZE_G = 3000.0;
 
     public const CHARGE_HINWEIS = 'Mengen wirken wie eine Charge – bitte prüfen';
 
@@ -1219,8 +1220,8 @@ class DarreichungService
     }
 
     /**
-     * Plan 98 B (h): Hinweis „Mengen wirken wie eine Charge“ — abgeleitet, keine Spalte. Die Portion des Standards liegt außerhalb
-     * von {@see PORTION_PLAUSIBEL_G}. Er verschwindet, sobald die Mengen im Band liegen oder der VK des Standards bewusst
+     * Plan 98 B (h): Hinweis „Mengen wirken wie eine Charge“ — abgeleitet, keine Spalte. Die Portion des Standards liegt über
+     * {@see CHARGE_OBERGRENZE_G}. Er verschwindet, sobald die Mengen im Band liegen oder der VK des Standards bewusst
      * fixiert ist. Ohne Standard oder ohne bekannte Grammatur: kein Hinweis.
      */
     public function chargenHinweis(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $standard = null): ?string
@@ -1237,9 +1238,8 @@ class DarreichungService
             return null;
         }
         $g *= (float) ($standard->unit_count ?: 1);
-        [$min, $max] = self::PORTION_PLAUSIBEL_G;
 
-        return $g < $min || $g > $max ? self::CHARGE_HINWEIS : null;
+        return $g > self::CHARGE_OBERGRENZE_G ? self::CHARGE_HINWEIS : null;
     }
 
     /**

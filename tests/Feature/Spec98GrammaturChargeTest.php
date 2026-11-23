@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Tests\TestCase;
 uses(TestCase::class, SeedsTeamHierarchy::class, GrammaturWelt::class);
 
 /**
- * Plan 98 B (h), Entscheid Dominique 23.11.2026 („ok fixe die Ki“): Liegt die Portion eines Gerichts außerhalb 20–3000 g, wirken
+ * Plan 98 B (h/i), Entscheid Dominique 23.11.2026 („ok fixe die Ki“): Liegt die Portion eines Gerichts über 3000 g, wirken
  * die Mengen wie eine Charge — Hinweis am Gericht, in der Generator- und der MCP-Antwort, kein Auto-VK. Abgeleitet, keine Spalte:
  * er verschwindet, sobald die Mengen im Band liegen oder der VK bewusst fixiert ist.
  */
@@ -39,16 +39,17 @@ it('Chargen-Mengen: Hinweis, kein Auto-VK; der EK rechnet weiter', function () {
         ->and($s->sales_net)->toBeNull();
 });
 
-it('Mengen korrigiert (180 g): Hinweis weg, Auto-VK da; zu klein (15 g) wieder Hinweis', function () {
+it('Mengen korrigiert (180 g): Hinweis weg, Auto-VK da; kleine Artikel (15 g, Canapé) ohne Hinweis', function () {
     ($this->neu)(180);
     $s = $this->std->fresh();
     expect($this->svc->chargenHinweis($this->r->fresh()))->toBeNull()
         ->and((float) $s->calculated_sales_net)->toBeGreaterThan(0.0)
         ->and((float) $s->sales_net)->toBeGreaterThan(0.0);
 
+    // Kurator 23.11.: nur die Obergrenze — Canapés, Pralinen, Amuse-Bouche liegen echt bei 10–15 g
     ($this->neu)(15);
-    expect($this->svc->chargenHinweis($this->r->fresh()))->toBe(DarreichungService::CHARGE_HINWEIS)
-        ->and($this->std->fresh()->sales_net)->toBeNull();
+    expect($this->svc->chargenHinweis($this->r->fresh()))->toBeNull()
+        ->and((float) $this->std->fresh()->sales_net)->toBeGreaterThan(0.0);
 });
 
 it('bewusst gesetzter VK: Hinweis weg, der VK bleibt', function () {

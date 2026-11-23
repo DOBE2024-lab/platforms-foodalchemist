@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Services\Plattform\AboKuendigungService;
 use Platform\FoodAlchemist\Services\Plattform\AboService;
-use Platform\FoodAlchemist\Services\FassungService;
+use Platform\FoodAlchemist\Services\Fassung\FassungService;
 use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

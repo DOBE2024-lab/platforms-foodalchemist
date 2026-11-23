@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Fassung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -45,10 +45,10 @@ class FassungService
         'role', 'role_source', 'is_value_relevant', 'calc_mode'];
 
     public function __construct(
-        private FaRechte $rechte,
-        private Plattform\AboService $abos,
+        private \Platform\FoodAlchemist\Services\FaRechte $rechte,
+        private \Platform\FoodAlchemist\Services\Plattform\AboService $abos,
         private \Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte $recompute,   // 98 · 3.3 S7 P4: nur die Neuberechnung, nicht die Klasse
-        private Plattform\PlattformProtokoll $protokoll,
+        private \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /**
@@ -222,7 +222,7 @@ class FassungService
             return [];
         }
         $zeilen = array_map(fn ($z) => [$z['gp_id'], $z['menge']],
-            app(Produktion\GefaessZubehoerService::class)->liste((int) $d->vessel_gp_id, \Platform\Core\Models\Team::find($d->team_id))['zeilen']);
+            app(\Platform\FoodAlchemist\Services\Produktion\GefaessZubehoerService::class)->liste((int) $d->vessel_gp_id, \Platform\Core\Models\Team::find($d->team_id))['zeilen']);
         sort($zeilen);
 
         return $zeilen;

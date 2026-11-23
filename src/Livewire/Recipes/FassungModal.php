@@ -10,10 +10,10 @@ use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ConceptFassungService;
+use Platform\FoodAlchemist\Services\Fassung\ConceptFassungService;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\FassungService;
-use Platform\FoodAlchemist\Services\FormatFassungService;
+use Platform\FoodAlchemist\Services\Fassung\FassungService;
+use Platform\FoodAlchemist\Services\Fassung\FormatFassungService;
 use Platform\FoodAlchemist\Support\FassungMenue;
 use Platform\FoodAlchemist\Support\MasterTeam;
 

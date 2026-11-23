@@ -33,9 +33,9 @@ class AngebotEinfrierService
     public function __construct(
         private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
         private readonly \Platform\FoodAlchemist\Services\EinfrierKosten $kosten,
-        private readonly \Platform\FoodAlchemist\Services\FassungsVergleich $vergleich,
+        private readonly \Platform\FoodAlchemist\Services\Fassung\FassungsVergleich $vergleich,
         private readonly \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
-        private readonly \Platform\FoodAlchemist\Services\FassungsUmstellung $umstellung,
+        private readonly \Platform\FoodAlchemist\Services\Fassung\FassungsUmstellung $umstellung,
     ) {}
 
     public function aktive(FoodAlchemistAngebot $angebot): ?FoodAlchemistAngebotEinfrierung
@@ -440,7 +440,7 @@ class AngebotEinfrierService
     {
         app(\Platform\FoodAlchemist\Support\AngebotFestpreise::class)->vergessen((int) $angebot->id);   // Festpreise im selben Request neu lesen
         try {
-            app(\Platform\FoodAlchemist\Services\FassungSignalService::class)->nachAngebotsAenderung($angebot, $einfrierung);
+            app(\Platform\FoodAlchemist\Services\Fassung\FassungSignalService::class)->nachAngebotsAenderung($angebot, $einfrierung);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Angebot geändert, aber das Nachführen der Fassungs-Signale ist fehlgeschlagen: '.$e->getMessage(), ['exception' => $e, 'angebot_id' => $angebot->id]);
         }

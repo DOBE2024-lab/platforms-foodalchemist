@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Fassung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -40,11 +40,11 @@ class ConceptFassungService
         'price_value', 'price_basis', 'created_at', 'updated_at', 'deleted_at'];
 
     public function __construct(
-        private FaRechte $rechte,
-        private Plattform\AboService $abos,
+        private \Platform\FoodAlchemist\Services\FaRechte $rechte,
+        private \Platform\FoodAlchemist\Services\Plattform\AboService $abos,
         private FassungService $rezeptFassungen,
         private FassungsDarreichungService $fassungsDarreichungen,
-        private Plattform\PlattformProtokoll $protokoll,
+        private \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /**

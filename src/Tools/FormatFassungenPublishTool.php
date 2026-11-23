@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\FormatFassungService;
+use Platform\FoodAlchemist\Services\Fassung\FormatFassungService;
 
 /** Spec 82 Abo Formate · Format veröffentlichen: friert den Arbeitsstand eines Master-Formats als Fassung ein (nur Master, Rolle „Freigeben“). */
 class FormatFassungenPublishTool extends WareneingangTool implements ToolContract, ToolMetadataContract

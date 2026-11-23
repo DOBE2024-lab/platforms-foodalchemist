@@ -202,7 +202,7 @@ it('Planungsblatt: Geschirr trägt die Art für die Logistik (Mehrweg zurück in
 });
 
 it('Fassungs-Hash: ohne gesetzte Art unverändert, eine Übersteuerung ist neuer Inhalt', function () {
-    $fassungen = app(\Platform\FoodAlchemist\Services\FassungService::class);
+    $fassungen = app(\Platform\FoodAlchemist\Services\Fassung\FassungService::class);
     $hash = fn () => (new ReflectionMethod($fassungen, 'inhaltHash'))->invoke($fassungen, $this->dar->recipe()->first(), []);
     $vorher = $hash();
     $this->svc->aktualisieren($this->rootTeam, $this->dar->id, ['vessel_cost_type' => '']);

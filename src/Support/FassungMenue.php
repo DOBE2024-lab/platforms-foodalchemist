@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
  * Sichtbar nur, wenn das aktive Team das Master-Team ist, das Objekt dem Master gehört und kein Fassungs-Stand ist (veröffentlicht wird die Arbeitszeile,
  * nie eine Fassung). Ein Kunden-Format (origin=kunde) hat nie einen Menüpunkt (D8, Kunden-IP). Die Menüs in Rezept-Modal, Rezept-Detailpanel, Gericht-
  * Modal (VK), Gericht-Detailpanel, Paket-Detail, Konzept-Detailpanel und Format-Detailpanel fragen hier; wer die Bedingung ändert, ändert sie überall.
- * Das Veröffentlichen selbst prüfen {@see \Platform\FoodAlchemist\Services\FassungService} (Rezept), ConceptFassungService und
+ * Das Veröffentlichen selbst prüfen {@see \Platform\FoodAlchemist\Services\Fassung\FassungService} (Rezept), ConceptFassungService und
  * FormatFassungService.
  */
 final class FassungMenue

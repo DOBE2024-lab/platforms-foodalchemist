@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Livewire\Recipes\DetailPanel as RezeptDetailPanel;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\FassungService;
+use Platform\FoodAlchemist\Services\Fassung\FassungService;
 use Platform\FoodAlchemist\Support\FassungMenue;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

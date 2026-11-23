@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\ConceptFassungService;
+use Platform\FoodAlchemist\Services\Fassung\ConceptFassungService;
 
 /** Spec 82 Abo Konzepte · Konzept veröffentlichen: friert den Arbeitsstand eines Master-Konzepts (auch kind=paket) als Fassung ein (nur Master, Rolle „Freigeben“). */
 class ConceptFassungenPublishTool extends WareneingangTool implements ToolContract, ToolMetadataContract

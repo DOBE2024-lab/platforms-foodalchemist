@@ -601,10 +601,9 @@
         "emoji": 18,
         "mini_schrift": 5,
         "style_statisch": 7,
-        "typo_groesse": 13,
-        "typo_tinte": 20,
+        "typo_groesse": 12,
+        "typo_tinte": 18,
         "roher_button": 12,
-        "rohe_karte": 1,
         "rohes_segment": 1,
         "alte_palette": 11
     },
@@ -679,6 +678,11 @@
     "livewire/planung/rezept-import.blade.php": {
         "typo_groesse": 3,
         "typo_tinte": 8
+    },
+    "livewire/planung/trendradar.blade.php": {
+        "typo_groesse": 1,
+        "typo_tinte": 2,
+        "rohe_karte": 1
     },
     "livewire/planung/zukauf-ware.blade.php": {
         "roher_button": 1

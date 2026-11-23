@@ -7,6 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Models\Team;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
+use Platform\FoodAlchemist\Livewire\Planung\Trendradar as PlanungTrendradar;
 use Platform\FoodAlchemist\Livewire\Trendradar\Index as TrendradarIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendBeleg;
@@ -458,17 +459,26 @@ it('Planung UI: Reiter Trendradar kombiniert, übernimmt ins Briefing der Ziel-E
     $trend = $this->svc->anlegen($this->rootTeam, ['name' => 'Fermentation', 'typ' => 'trend', 'ebene' => 'konsum', 'kategorie' => 'food']);
     $fund = $this->svc->fundstueckAblegen($this->rootTeam, ['titel' => 'Koji-Butter auf Brot']);
 
+    // Spec 85 C1 PR-2: der Kombinierer ist das Kind Planung\Trendradar; es schreibt die Session und meldet planung.trend-uebernommen,
+    // der Parent füllt daraufhin das Briefing und wechselt den Reiter.
     $comp = Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
         ->call('schnellTrendradar')
         ->assertSeeHtml('data-tab-trendradar')
+        ->set('eingabe.concept.brief', 'Schon getippt');
+    $id = $comp->get('sessionId');
+
+    Livewire::test(PlanungTrendradar::class, ['sessionId' => $id, 'aktiv' => true])
         ->assertSeeHtml('data-trend-wahl="'.$trend->id.'"')
         ->assertSeeHtml('data-inspiration-wahl="'.$fund->inspiration_id.'"')
-        ->set('eingabe.concept.brief', 'Schon getippt')
         ->set('trendWahl.trends', [(string) $trend->id])
         ->set('trendWahl.inspirationen', [(string) $fund->inspiration_id])
         ->assertSeeHtml('data-trend-vorschau')
         ->call('trendradarUebernehmen', 'gericht')
         ->assertSet('trendMeldung', null)
+        ->assertDispatched('planung.trend-uebernommen', scope: 'gericht');
+    Livewire::test(PlanungTrendradar::class, ['sessionId' => $id, 'aktiv' => false])->assertDontSeeHtml('data-trend-wahl=');   // 2.1d: nur aktiver Reiter lädt
+
+    $comp->dispatch('planung.trend-uebernommen', scope: 'gericht')
         ->assertDispatched('modal.open', name: 'planung-editor', tab: 'gericht');
 
     expect($comp->get('eingabe.gericht.brief'))->toStartWith('Aus diesen Impulsen aus dem Trendradar ein Gericht entwickeln.')
@@ -476,10 +486,10 @@ it('Planung UI: Reiter Trendradar kombiniert, übernimmt ins Briefing der Ziel-E
         ->and($comp->get('eingabe.rezept.brief'))->toStartWith('Aus diesen Impulsen aus dem Trendradar ein Basisrezept entwickeln.')
         ->and($comp->get('eingabe.concept.brief'))->toBe('Schon getippt');   // getipptes Briefing bleibt
 
-    // Wiederöffnen: Auswahl und Briefing kommen aus der Session zurück
-    $id = $comp->get('sessionId');
+    // Wiederöffnen: Auswahl (Kind, beim Mount) und Briefing (Parent) kommen aus der Session zurück
+    Livewire::test(PlanungTrendradar::class, ['sessionId' => $id])->assertSet('trendWahl.trends', [(string) $trend->id])
+        ->assertSet('trendWahl.inspirationen', [(string) $fund->inspiration_id]);
     Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)->call('oeffne', $id)
-        ->assertSet('trendWahl.trends', [(string) $trend->id])
         ->assertSet('eingabe.concept.brief', 'Aus diesen Impulsen aus dem Trendradar ein Konzept entwickeln.'."\n".'Trend (Konsum-/Branchentrend, Food): Fermentation'."\n".'Inspiration: Koji-Butter auf Brot'."\n".'Die Impulse verbinden, nicht nebeneinanderstellen.');
 });
 

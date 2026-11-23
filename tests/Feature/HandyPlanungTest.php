@@ -5,6 +5,7 @@ use Livewire\Livewire;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Livewire\Planung\RezeptImport;
+use Platform\FoodAlchemist\Livewire\Planung\Trendradar as PlanungTrendradar;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
@@ -75,9 +76,10 @@ it('Server-Sperre am Handy: Auftrag, Start, Abbruch, Wiederaufnahme, Freigabe/An
         'favoritPinnen', 'favoritVorschlaegeLaden', 'sourcingLueckenMelden', 'neuGenerieren', 'bilderNeu',
         'vorschlagUeberarbeiten', 'erzeugeGeplant', 'toggleZutaten', 'toggleKommentar', 'ergaenzeSubRezept', 'planungVerwerfen', 'planungDuplizieren', 'alsVorlageSpeichern',
         'loeschenVorlage', 'foodbookAusBrief', 'speisekarteAusBrief', 'speiseplanAusBrief', 'angebotAusBrief', 'formatAusBrief',
-        'schnellComposer', 'schnellTrendradar', 'trendradarUebernehmen', 'composerAdd', 'composerUebernehmen', 'konformitaetPruefen'] as $m) {
+        'schnellComposer', 'schnellTrendradar', 'trendUebernommen', 'composerAdd', 'composerUebernehmen', 'konformitaetPruefen'] as $m) {
         expect(HandyLesemodus::abgewiesen(new PlanungIndex, $m))->toBeTrue($m);
     }
+    expect(HandyLesemodus::abgewiesen(new PlanungTrendradar, 'trendradarUebernehmen'))->toBeTrue('Trendradar::trendradarUebernehmen');   // Spec 85 C1 PR-2: Kombinierer bleibt am Computer
     // Import (Foto) ist am Handy voll bedienbar: dieselbe Komponente und Upload-Prüfung wie am Computer.
     foreach (['importExtrahieren', 'importAnlegen', '_startUpload'] as $m) {
         expect(HandyLesemodus::abgewiesen(new RezeptImport, $m))->toBeFalse('RezeptImport::' . $m);

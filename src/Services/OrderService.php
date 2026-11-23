@@ -100,38 +100,16 @@ class OrderService
         private GebindeRechner $gebinde,
         private LeadLaService $leadLa,
         private InventoryService $inventory,
+        private \Platform\FoodAlchemist\Services\Bestellung\BestellSchiene $schiene,
+        private \Platform\FoodAlchemist\Services\Bestellung\BestellSummen $summen,
     ) {}
 
     // ── Schiene holen/anlegen ─────────────────────────────────────────────
 
-    /**
-     * Ein-offener-draft-Guard je (team, supplier, Liefertag): Transaktion + Lock gegen
-     * Doppelklick. `$deliveryDate` = Liefertag (Y-m-d) oder null (undatierter Bucket) — so
-     * koexistieren mehrere offene Bestellungen desselben Lieferanten für verschiedene
-     * Liefertage. Der Liefertag ist damit Teil des Schlüssels, nicht nur ein Kopf-Feld.
-     */
+    /** 98 · 3.3 S5: BestellSchiene::draftForSupplier() */
     public function draftForSupplier(Team $team, int $supplierId, ?string $deliveryDate = null, ?int $userId = null): FoodAlchemistOrder
     {
-        $deliveryDate = ($deliveryDate !== null && $deliveryDate !== '') ? $deliveryDate : null;
-
-        return DB::transaction(function () use ($team, $supplierId, $deliveryDate, $userId) {
-            $draft = FoodAlchemistOrder::where('team_id', $team->id)
-                ->where('supplier_id', $supplierId)
-                ->where('status', OrderStatus::Draft->value)
-                ->when($deliveryDate !== null, fn ($q) => $q->whereDate('desired_delivery_date', $deliveryDate))
-                ->when($deliveryDate === null, fn ($q) => $q->whereNull('desired_delivery_date'))
-                ->lockForUpdate()
-                ->first();
-
-            return $draft ?? FoodAlchemistOrder::create([
-                'team_id' => $team->id,
-                'supplier_id' => $supplierId,
-                'status' => OrderStatus::Draft->value,
-                'desired_delivery_date' => $deliveryDate,
-                'created_by' => $userId,
-                'total_net' => 0,
-            ]);
-        });
+        return $this->schiene->draftForSupplier($team, $supplierId, $deliveryDate, $userId);
     }
 
     // ── Bedarf in die Schienen übernehmen (E9 Granularität, E10 idempotent) ──
@@ -162,9 +140,9 @@ class OrderService
 
                 continue;
             }
-            $draft = $this->draftForSupplier($team, (int) $supplierId, $deliveryDate, $userId);
+            $draft = $this->schiene->draftForSupplier($team, (int) $supplierId, $deliveryDate, $userId);
             foreach ($grp['positionen'] as $pos) {
-                $this->upsertContribution($team, $draft, $pos, $sourceRef);
+                $this->schiene->upsertContribution($team, $draft, $pos, $sourceRef);
             }
             $this->recomputeOrder($draft->refresh());
             $touched[] = (int) $draft->id;
@@ -311,12 +289,12 @@ class OrderService
                 if ($supplierId <= 0) {
                     continue;
                 }
-                $draft = $this->draftForSupplier($team, $supplierId, ($gruppe['delivery_date'] ?? null) ?: null, $userId);
+                $draft = $this->schiene->draftForSupplier($team, $supplierId, ($gruppe['delivery_date'] ?? null) ?: null, $userId);
                 foreach (($gruppe['positionen'] ?? []) as $pos) {
                     if (($pos['type'] ?? '') === 'supplier_item') {
                         $this->addManualLine($team, (int) ($pos['lead_la_id'] ?? 0), max(0.0, (float) ($pos['qty_packs'] ?? 0)), null, $userId, ($gruppe['delivery_date'] ?? null) ?: null);
                     } elseif (($pos['gp_id'] ?? null) !== null && ($pos['lead_la_id'] ?? null) !== null && (float) ($pos['needed_base_g'] ?? 0) > 0) {
-                        $this->upsertContribution($team, $draft, [
+                        $this->schiene->upsertContribution($team, $draft, [
                             'lead_la_id' => (int) $pos['lead_la_id'],
                             'gp_id' => (int) $pos['gp_id'],
                             'menge_g' => (float) $pos['needed_base_g'],
@@ -372,8 +350,8 @@ class OrderService
                 if ($grams <= 0) {
                     continue;
                 }
-                $draft = $this->draftForSupplier($team, (int) $lead->supplier_id, $date, $userId);
-                $this->upsertContribution($team, $draft, ['lead_la_id' => (int) $lead->id, 'gp_id' => (int) $gp->id, 'menge_g' => $grams], $sourceRef);
+                $draft = $this->schiene->draftForSupplier($team, (int) $lead->supplier_id, $date, $userId);
+                $this->schiene->upsertContribution($team, $draft, ['lead_la_id' => (int) $lead->id, 'gp_id' => (int) $gp->id, 'menge_g' => $grams], $sourceRef);
                 $this->recomputeOrder($draft->refresh());
                 $this->kopfAusQuelle($team, (int) $draft->id, $reference);
                 $touched[] = (int) $draft->id;
@@ -996,39 +974,6 @@ class OrderService
             $order->sourcing_strategy = $strategie?->value;
             $order->save();
         }
-    }
-
-    /** Setzt/ersetzt den Beitrag EINER Quelle an der Artikel-Zeile (E10). */
-    private function upsertContribution(Team $team, FoodAlchemistOrder $draft, array $pos, string $sourceRef): void
-    {
-        $laId = $pos['lead_la_id'] ?? null;
-        $gpId = $pos['gp_id'] ?? null;
-        $g = round((float) ($pos['menge_g'] ?? 0), 2);
-        if ($g <= 0) {
-            return;
-        }
-
-        $query = FoodAlchemistOrderLine::where('order_id', $draft->id);
-        $laId !== null
-            ? $query->where('supplier_item_id', $laId)
-            : $query->whereNull('supplier_item_id')->where('gp_id', $gpId);
-        $line = $query->first();
-
-        if ($line === null) {
-            $line = new FoodAlchemistOrderLine([
-                'team_id' => $team->id,
-                'order_id' => $draft->id,
-                'supplier_item_id' => $laId,
-                'gp_id' => $gpId,
-                'source_contributions' => [],
-                'position' => (int) FoodAlchemistOrderLine::where('order_id', $draft->id)->max('position') + 1,
-            ]);
-        }
-
-        $contrib = $line->source_contributions ?? [];
-        $contrib[$sourceRef] = $g;                 // E10: gleiche Quelle ersetzt ihren Beitrag
-        $line->source_contributions = $contrib;
-        $line->save();
     }
 
     private function previewSupplierItem(Team $team, array &$gruppen, array &$unresolved, array $source, ?string $date, string $reference, string $label, string $sourceRef): void
@@ -1688,7 +1633,7 @@ class OrderService
     /** Gebinde-Anzahl manuell übersteuern (bleibt bei Recompute stehen) oder Notiz setzen. */
     public function updateLine(Team $team, int $lineId, array $input): FoodAlchemistOrderLine
     {
-        $line = $this->ownedDraftLine($team, $lineId);
+        $line = $this->schiene->ownedDraftLine($team, $lineId);
         if (array_key_exists('qty_packs', $input) && $input['qty_packs'] !== '' && $input['qty_packs'] !== null) {
             $line->qty_packs = max(0, (float) $input['qty_packs']);
             $line->is_manual_qty = true;
@@ -1708,7 +1653,7 @@ class OrderService
 
     public function removeLine(Team $team, int $lineId): void
     {
-        $line = $this->ownedDraftLine($team, $lineId);
+        $line = $this->schiene->ownedDraftLine($team, $lineId);
         $order = $line->order()->first();
         $line->delete();
         $this->recomputeOrder($order);
@@ -1746,7 +1691,7 @@ class OrderService
         }
         // Liefertag ist Teil des Draft-Schlüssels → schon beim find-or-create setzen.
         $deliveryDate = ($header['desired_delivery_date'] ?? null) ?: null;
-        $draft = $this->draftForSupplier($team, (int) $supplier->id, $deliveryDate, $userId);
+        $draft = $this->schiene->draftForSupplier($team, (int) $supplier->id, $deliveryDate, $userId);
 
         $kopf = array_intersect_key($header, array_flip(['reference', 'note']));
         if ($kopf !== []) {
@@ -1776,7 +1721,7 @@ class OrderService
             throw new \RuntimeException('Lieferantenartikel ohne Lieferant ist nicht bestellbar.');
         }
         $qty = max(0.0, (float) $qtyPacks);
-        $draft = $this->draftForSupplier($team, (int) $la->supplier_id, $deliveryDate, $userId);
+        $draft = $this->schiene->draftForSupplier($team, (int) $la->supplier_id, $deliveryDate, $userId);
 
         $line = FoodAlchemistOrderLine::where('order_id', $draft->id)
             ->where('supplier_item_id', $la->id)
@@ -1811,7 +1756,7 @@ class OrderService
      */
     public function updateHeader(Team $team, int $orderId, array $input): FoodAlchemistOrder
     {
-        $order = $this->ownedOrder($team, $orderId);
+        $order = $this->schiene->ownedOrder($team, $orderId);
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
         if (! $status->istOffen()) {
             throw new \RuntimeException('Nur ein offener Entwurf ist editierbar.');
@@ -1849,7 +1794,7 @@ class OrderService
      */
     public function updateSupplierConfirmation(Team $team, int $orderId, array $input): FoodAlchemistOrder
     {
-        $order = $this->ownedOrder($team, $orderId);
+        $order = $this->schiene->ownedOrder($team, $orderId);
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
         if (! in_array($status, [OrderStatus::Sent, OrderStatus::Confirmed, OrderStatus::Delivered], true)) {
             throw new \RuntimeException('Lieferantenbestätigung ist erst nach dem Absenden möglich.');
@@ -1880,7 +1825,7 @@ class OrderService
      */
     public function updateInvoiceHeader(Team $team, int $orderId, array $input): FoodAlchemistOrder
     {
-        $order = $this->ownedOrder($team, $orderId);
+        $order = $this->schiene->ownedOrder($team, $orderId);
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
         if (! in_array($status, [OrderStatus::Sent, OrderStatus::Confirmed, OrderStatus::Delivered], true)) {
             throw new \RuntimeException('Rechnungskopf ist erst nach dem Absenden möglich.');
@@ -1907,7 +1852,7 @@ class OrderService
      */
     public function updatePayment(Team $team, int $orderId, array $input): FoodAlchemistOrder
     {
-        $order = $this->ownedOrder($team, $orderId);
+        $order = $this->schiene->ownedOrder($team, $orderId);
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
         if (! in_array($status, [OrderStatus::Sent, OrderStatus::Confirmed, OrderStatus::Delivered], true)) {
             throw new \RuntimeException('Zahlungsstatus ist erst nach dem Absenden möglich.');
@@ -1951,7 +1896,7 @@ class OrderService
      */
     public function updateApproval(Team $team, int $orderId, array $input, ?int $userId = null): FoodAlchemistOrder
     {
-        $order = $this->ownedOrder($team, $orderId);
+        $order = $this->schiene->ownedOrder($team, $orderId);
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
         if (! in_array($status, [OrderStatus::Draft, OrderStatus::Sent, OrderStatus::Confirmed], true)) {
             throw new \RuntimeException('Freigabe ist nur vor Abschluss der Bestellung editierbar.');
@@ -2006,7 +1951,7 @@ class OrderService
      */
     public function resourceOrder(Team $team, int $orderId, ?LeadLaStrategie $strategie = null, bool $apply = true, ?int $userId = null): array
     {
-        $order = $this->ownedOrder($team, $orderId);
+        $order = $this->schiene->ownedOrder($team, $orderId);
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
         if (! $status->istOffen()) {
             throw new \RuntimeException('Bezugsquellen lassen sich nur in einem offenen Entwurf neu ermitteln.');
@@ -2089,11 +2034,11 @@ class OrderService
             return null;
         }
         $deliveryDate = $line->order?->desired_delivery_date?->toDateString();
-        $targetDraft = $this->draftForSupplier($team, $newSupplierId, $deliveryDate, $userId);
+        $targetDraft = $this->schiene->draftForSupplier($team, $newSupplierId, $deliveryDate, $userId);
         $contribs = $line->source_contributions ?? [];
         if (! empty($contribs)) {
             foreach ($contribs as $ref => $g) {
-                $this->upsertContribution($team, $targetDraft, ['lead_la_id' => $newLaId, 'gp_id' => $gpId, 'menge_g' => $g], (string) $ref);
+                $this->schiene->upsertContribution($team, $targetDraft, ['lead_la_id' => $newLaId, 'gp_id' => $gpId, 'menge_g' => $g], (string) $ref);
             }
         } else {
             // Beitragslose (manuelle) Zeile: manuelle Menge in die Ziel-Schiene übernehmen.
@@ -2114,7 +2059,7 @@ class OrderService
      */
     public function lineAlternativen(Team $team, int $lineId): array
     {
-        $line = $this->ownedDraftLine($team, $lineId);
+        $line = $this->schiene->ownedDraftLine($team, $lineId);
         if ($line->gp_id === null) {
             return [];
         }
@@ -2181,7 +2126,7 @@ class OrderService
      */
     public function switchLineArticle(Team $team, int $lineId, int $newLaId, ?int $userId = null): array
     {
-        $line = $this->ownedDraftLine($team, $lineId);
+        $line = $this->schiene->ownedDraftLine($team, $lineId);
         if ($line->gp_id === null) {
             throw new \RuntimeException('Zeile ohne Grundprodukt: kein Ausweichartikel wählbar.');
         }
@@ -2226,7 +2171,7 @@ class OrderService
         // Spec 77a: ab Kuratieren (Mitglied); ohne angemeldeten Benutzer (System) keine Prüfung
         app(\Platform\FoodAlchemist\Services\FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Bestellstatus setzen (senden, bestätigen, geliefert, stornieren)');
 
-        $order = $this->ownedOrder($team, $orderId);
+        $order = $this->schiene->ownedOrder($team, $orderId);
         $aktuell = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
         if ($aktuell === $ziel) {
             return $order;
@@ -2351,7 +2296,7 @@ class OrderService
                 'received_note' => $l->received_note,
                 'received_at' => $l->received_at?->format('Y-m-d H:i'),
                 'receipt_diff_packs' => $l->received_qty_packs !== null ? round((float) $l->received_qty_packs - (float) $l->qty_packs, 2) : null,
-                'receipt_status' => $this->lineReceiptStatus($l),
+                'receipt_status' => $this->summen->lineReceiptStatus($l),
                 'invoice_qty_packs' => $l->invoice_qty_packs !== null ? (float) $l->invoice_qty_packs : null,
                 'invoice_pack_price' => $l->invoice_pack_price !== null ? (float) $l->invoice_pack_price : null,
                 'invoice_note' => $l->invoice_note,
@@ -2359,16 +2304,16 @@ class OrderService
                 'invoice_line_total' => $l->invoice_qty_packs !== null && $l->invoice_pack_price !== null
                     ? round((float) $l->invoice_qty_packs * (float) $l->invoice_pack_price, 2)
                     : null,
-                'invoice_diff_net' => $this->lineInvoiceDiffNet($l),
-                'invoice_status' => $this->lineInvoiceStatus($l),
+                'invoice_diff_net' => $this->summen->lineInvoiceDiffNet($l),
+                'invoice_status' => $this->summen->lineInvoiceStatus($l),
                 'claim_status' => $l->claim_status,
-                'claim_status_label' => $this->claimStatusLabel($l->claim_status),
+                'claim_status_label' => $this->summen->claimStatusLabel($l->claim_status),
                 'claim_qty_packs' => $l->claim_qty_packs !== null ? (float) $l->claim_qty_packs : null,
                 'credit_expected_net' => $l->credit_expected_net !== null ? (float) $l->credit_expected_net : null,
                 'claim_note' => $l->claim_note,
                 'quota_consumed_packs' => $l->quota_consumed_packs !== null ? (float) $l->quota_consumed_packs : null,
                 'quota_consumed_at' => $l->quota_consumed_at?->format('Y-m-d H:i'),
-                'quota' => $this->lineQuotaSummary($l, $order->desired_delivery_date ?? now()),
+                'quota' => $this->summen->lineQuotaSummary($l, $order->desired_delivery_date ?? now()),
                 'inventory' => $this->inventory->lineStockSummary($team, $l),
                 'needed_base_g' => (float) $l->needed_base_g,
                 'needed_display' => $bedarf,          // E1: korrekte Bedarfsmenge in der Grundeinheit des LA
@@ -2385,7 +2330,7 @@ class OrderService
         $zeilen = array_map(fn (array $z) => array_replace($z, ['herkunft' => $this->beschrifteHerkunft($z['herkunft'], $namen)]), $zeilen);
         $warnings = $this->orderWarnings($order);
         $sendBlockers = $this->sendBlockers($order);
-        $invoiceDueDate = $this->invoiceDueDate($order);
+        $invoiceDueDate = $this->summen->invoiceDueDate($order);
 
         return [
             'id' => (int) $order->id,
@@ -2418,13 +2363,13 @@ class OrderService
             'editierbar' => $status->istOffen() && $order->isOwnedBy($team),
             'wareneingang_editierbar' => in_array($status, [OrderStatus::Sent, OrderStatus::Confirmed], true) && $order->isOwnedBy($team),
             'rechnung_editierbar' => in_array($status, [OrderStatus::Sent, OrderStatus::Confirmed, OrderStatus::Delivered], true) && $order->isOwnedBy($team),
-            'receipt' => $this->receiptSummary($order),
-            'invoice' => $this->invoiceSummary($order),
-            'payment' => $this->paymentSummary($order),
-            'approval' => $this->approvalSummary($order),
-            'claims' => $this->claimSummary($order),
-            'quota' => $this->quotaSummary($order),
-            'inventory' => $this->inventorySummaryFromLines($zeilen),
+            'receipt' => $this->summen->receiptSummary($order),
+            'invoice' => $this->summen->invoiceSummary($order),
+            'payment' => $this->summen->paymentSummary($order),
+            'approval' => $this->summen->approvalSummary($order),
+            'claims' => $this->summen->claimSummary($order),
+            'quota' => $this->summen->quotaSummary($order),
+            'inventory' => $this->summen->inventorySummaryFromLines($zeilen),
             'moq' => $this->moqAmpel($order),
             'warnings' => $warnings,
             'send_blockers' => $sendBlockers,
@@ -2595,7 +2540,7 @@ class OrderService
         $order = FoodAlchemistOrder::visibleToTeam($team)->with(['supplier', 'lines.supplierItem'])->findOrFail($orderId);
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
         $sup = $order->supplier;
-        $invoiceDueDate = $this->invoiceDueDate($order);
+        $invoiceDueDate = $this->summen->invoiceDueDate($order);
 
         return [
             'id' => (int) $order->id,
@@ -2625,12 +2570,12 @@ class OrderService
             'invoice_note' => $order->invoice_note,
             'total_net' => (float) $order->total_net,
             'moq' => $this->moqAmpel($order),
-            'receipt' => $this->receiptSummary($order),
-            'invoice' => $this->invoiceSummary($order),
-            'payment' => $this->paymentSummary($order),
-            'approval' => $this->approvalSummary($order),
-            'claims' => $this->claimSummary($order),
-            'quota' => $this->quotaSummary($order),
+            'receipt' => $this->summen->receiptSummary($order),
+            'invoice' => $this->summen->invoiceSummary($order),
+            'payment' => $this->summen->paymentSummary($order),
+            'approval' => $this->summen->approvalSummary($order),
+            'claims' => $this->summen->claimSummary($order),
+            'quota' => $this->summen->quotaSummary($order),
             'lieferant' => [
                 'name' => $sup?->name,
                 'email_order' => $sup?->email_order,
@@ -2655,16 +2600,16 @@ class OrderService
                 'invoice_line_total' => $l->invoice_qty_packs !== null && $l->invoice_pack_price !== null
                     ? round((float) $l->invoice_qty_packs * (float) $l->invoice_pack_price, 2)
                     : null,
-                'invoice_diff_net' => $this->lineInvoiceDiffNet($l),
+                'invoice_diff_net' => $this->summen->lineInvoiceDiffNet($l),
                 'invoice_note' => $l->invoice_note,
                 'claim_status' => $l->claim_status,
-                'claim_status_label' => $this->claimStatusLabel($l->claim_status),
+                'claim_status_label' => $this->summen->claimStatusLabel($l->claim_status),
                 'claim_qty_packs' => $l->claim_qty_packs !== null ? (float) $l->claim_qty_packs : null,
                 'credit_expected_net' => $l->credit_expected_net !== null ? (float) $l->credit_expected_net : null,
                 'claim_note' => $l->claim_note,
                 'quota_consumed_packs' => $l->quota_consumed_packs !== null ? (float) $l->quota_consumed_packs : null,
                 'quota_consumed_at' => $l->quota_consumed_at?->format('Y-m-d H:i'),
-                'quota' => $this->lineQuotaSummary($l, $order->desired_delivery_date ?? now()),
+                'quota' => $this->summen->lineQuotaSummary($l, $order->desired_delivery_date ?? now()),
                 'needed_base_g' => (float) $l->needed_base_g,
                 'bestellbar' => $l->pack_price !== null && (float) $l->qty_packs > 0,
             ])->all(),
@@ -2846,7 +2791,7 @@ class OrderService
     /** Setzt alle Wareneingangs-Mengen einer Bestellung auf die bestellte Menge (Spec 75c: über den Editor-Lieferschein). */
     public function completeReceipt(Team $team, int $orderId): FoodAlchemistOrder
     {
-        $this->ownedOrder($team, $orderId);
+        $this->schiene->ownedOrder($team, $orderId);
         app(WareneingangService::class)->kurzwegAllesWieBestellt($team, $orderId);
 
         return FoodAlchemistOrder::findOrFail($orderId);
@@ -2859,7 +2804,7 @@ class OrderService
      */
     public function createBackorderFromReceipt(Team $team, int $orderId, ?string $deliveryDate = null, ?int $userId = null): array
     {
-        $source = $this->ownedOrder($team, $orderId)->load(['supplier', 'lines']);
+        $source = $this->schiene->ownedOrder($team, $orderId)->load(['supplier', 'lines']);
         $missing = $source->lines
             ->filter(fn ($line) => $line->supplier_item_id !== null && $line->received_qty_packs !== null)
             ->map(function ($line) {
@@ -2875,7 +2820,7 @@ class OrderService
         }
 
         $date = ($deliveryDate !== null && trim($deliveryDate) !== '') ? Carbon::parse($deliveryDate)->toDateString() : null;
-        $draft = $this->draftForSupplier($team, (int) $source->supplier_id, $date, $userId);
+        $draft = $this->schiene->draftForSupplier($team, (int) $source->supplier_id, $date, $userId);
         $draft->reference = trim('Nachlieferung ord-'.(int) $source->id.($source->reference ? ' · '.$source->reference : ''));
         $draft->note = trim(($draft->note ? $draft->note."\n" : '').'Nachlieferung aus Wareneingang ord-'.(int) $source->id);
         $draft->save();
@@ -2950,7 +2895,7 @@ class OrderService
     /** Übernimmt die Rechnung aus Wareneingang; falls kein WE gebucht ist, aus der Bestellung (Spec 75c: Editor-Rechnung). */
     public function completeInvoiceFromReceipt(Team $team, int $orderId): FoodAlchemistOrder
     {
-        $this->ownedOrder($team, $orderId);
+        $this->schiene->ownedOrder($team, $orderId);
         app(LieferantenRechnungService::class)->kurzwegRechnungAusWareneingang($team, $orderId);
 
         return FoodAlchemistOrder::findOrFail($orderId);
@@ -3125,344 +3070,40 @@ class OrderService
         }
     }
 
-    /**
-     * @param  list<array<string,mixed>>  $lines
-     * @return array{tracked:int, covered:int, shortage:int}
-     */
-    private function inventorySummaryFromLines(array $lines): array
-    {
-        $tracked = 0;
-        $covered = 0;
-        $shortage = 0;
-
-        foreach ($lines as $line) {
-            $inventory = $line['inventory'] ?? null;
-            if (! is_array($inventory)) {
-                continue;
-            }
-            $tracked++;
-            if ((float) ($inventory['shortage_base'] ?? 0) > 0.0001) {
-                $shortage++;
-            } else {
-                $covered++;
-            }
-        }
-
-        return [
-            'tracked' => $tracked,
-            'covered' => $covered,
-            'shortage' => $shortage,
-        ];
-    }
-
-    /** @return array{lines:int, booked:int, missing:int, differences:int, backorderable:int, received_net:float} */
+    /** 98 · 3.3 S5: BestellSummen::receiptSummary() */
     public function receiptSummary(FoodAlchemistOrder $order): array
     {
-        $order->loadMissing('lines');
-        $booked = 0;
-        $differences = 0;
-        $backorderable = 0;
-        $receivedNet = 0.0;
-
-        foreach ($order->lines as $line) {
-            if ($line->received_qty_packs !== null) {
-                $booked++;
-                $receivedNet += $line->pack_price !== null ? (float) $line->received_qty_packs * (float) $line->pack_price : 0.0;
-                if (abs((float) $line->received_qty_packs - (float) $line->qty_packs) >= 0.01) {
-                    $differences++;
-                }
-                if ((float) $line->received_qty_packs < (float) $line->qty_packs) {
-                    $backorderable++;
-                }
-            }
-        }
-
-        $lines = $order->lines->count();
-
-        return [
-            'lines' => $lines,
-            'booked' => $booked,
-            'missing' => max(0, $lines - $booked),
-            'differences' => $differences,
-            'backorderable' => $backorderable,
-            'received_net' => round($receivedNet, 2),
-        ];
+        return $this->summen->receiptSummary($order);
     }
 
-    /** @return array{lines:int, checked:int, missing:int, differences:int, invoice_net:float, diff_net:float} */
+    /** 98 · 3.3 S5: BestellSummen::invoiceSummary() */
     public function invoiceSummary(FoodAlchemistOrder $order): array
     {
-        $order->loadMissing('lines');
-        $checked = 0;
-        $differences = 0;
-        $invoiceNet = 0.0;
-        $diffNet = 0.0;
-
-        foreach ($order->lines as $line) {
-            if ($line->invoice_qty_packs !== null || $line->invoice_pack_price !== null) {
-                $checked++;
-                $lineTotal = $line->invoice_qty_packs !== null && $line->invoice_pack_price !== null
-                    ? round((float) $line->invoice_qty_packs * (float) $line->invoice_pack_price, 2)
-                    : 0.0;
-                $invoiceNet += $lineTotal;
-                $diff = $this->lineInvoiceDiffNet($line);
-                $diffNet += $diff ?? 0.0;
-                if ($this->lineInvoiceStatus($line) !== 'ok') {
-                    $differences++;
-                }
-            }
-        }
-
-        $lines = $order->lines->count();
-
-        return [
-            'lines' => $lines,
-            'checked' => $checked,
-            'missing' => max(0, $lines - $checked),
-            'differences' => $differences,
-            'invoice_net' => round($invoiceNet, 2),
-            'diff_net' => round($diffNet, 2),
-        ];
+        return $this->summen->invoiceSummary($order);
     }
 
-    /** @return array{status:?string, label:string, state:string, due_date:?string, paid_at:?string, overdue_days:int, note:?string} */
+    /** 98 · 3.3 S5: BestellSummen::paymentSummary() */
     public function paymentSummary(FoodAlchemistOrder $order): array
     {
-        $order->loadMissing('supplier');
-        $dueDate = $this->invoiceDueDate($order);
-        $status = $order->payment_status;
-        if ($status === null && ($order->invoice_number !== null || $order->invoice_date !== null)) {
-            $status = 'open';
-        }
-
-        $state = 'no_invoice';
-        $label = 'keine Rechnung';
-        $overdueDays = 0;
-        if ($status === 'paid') {
-            $state = 'paid';
-            $label = 'bezahlt';
-        } elseif ($status === 'disputed') {
-            $state = 'disputed';
-            $label = 'strittig';
-        } elseif ($status === 'open') {
-            $state = 'open';
-            $label = 'offen';
-            if ($dueDate !== null) {
-                $today = Carbon::today();
-                if ($dueDate->isPast() && ! $dueDate->isSameDay($today)) {
-                    $state = 'overdue';
-                    $label = 'überfällig';
-                    // Carbon 3: diffInDays() liefert float — der dokumentierte Vertrag (overdue_days:int) braucht den Cast.
-                    $overdueDays = (int) $dueDate->diffInDays($today);
-                } elseif ($dueDate->isSameDay($today)) {
-                    $state = 'due_today';
-                    $label = 'heute fällig';
-                }
-            }
-        }
-
-        return [
-            'status' => $status,
-            'label' => $label,
-            'state' => $state,
-            'due_date' => $dueDate?->toDateString(),
-            'paid_at' => $order->invoice_paid_at?->toDateString(),
-            'overdue_days' => $overdueDays,
-            'note' => $order->payment_note,
-        ];
+        return $this->summen->paymentSummary($order);
     }
 
-    /** @return array{lines:int, open:int, credit_expected:int, credited:int, resolved:int, credit_expected_net:float} */
+    /** 98 · 3.3 S5: BestellSummen::claimSummary() */
     public function claimSummary(FoodAlchemistOrder $order): array
     {
-        $order->loadMissing('lines');
-        $summary = [
-            'lines' => 0,
-            'open' => 0,
-            'credit_expected' => 0,
-            'credited' => 0,
-            'resolved' => 0,
-            'credit_expected_net' => 0.0,
-        ];
-
-        foreach ($order->lines as $line) {
-            $status = $line->claim_status;
-            if ($status === null || $status === '') {
-                continue;
-            }
-            $summary['lines']++;
-            if (array_key_exists($status, $summary)) {
-                $summary[$status]++;
-            }
-            if ($line->credit_expected_net !== null) {
-                $summary['credit_expected_net'] += (float) $line->credit_expected_net;
-            }
-        }
-
-        $summary['credit_expected_net'] = round($summary['credit_expected_net'], 2);
-
-        return $summary;
+        return $this->summen->claimSummary($order);
     }
 
-    /** @return array{lines:int, invalid:int, exceeded:int, remaining_after:float} */
+    /** 98 · 3.3 S5: BestellSummen::quotaSummary() */
     public function quotaSummary(FoodAlchemistOrder $order): array
     {
-        $order->loadMissing('lines.supplierItem');
-        $date = $order->desired_delivery_date ?? now();
-        $summary = ['lines' => 0, 'invalid' => 0, 'exceeded' => 0, 'remaining_after' => 0.0];
-
-        foreach ($order->lines as $line) {
-            $quota = $this->lineQuotaSummary($line, $date);
-            if ($quota === null) {
-                continue;
-            }
-            $summary['lines']++;
-            if (! $quota['is_valid_date']) {
-                $summary['invalid']++;
-            }
-            if ($quota['exceeded']) {
-                $summary['exceeded']++;
-            }
-            $summary['remaining_after'] += (float) $quota['remaining_after_packs'];
-        }
-
-        $summary['remaining_after'] = round($summary['remaining_after'], 2);
-
-        return $summary;
+        return $this->summen->quotaSummary($order);
     }
 
-    /**
-     * @return array{qty_packs:float, used_packs:float, consumed_packs:float, remaining_before_packs:float, remaining_after_packs:float, valid_from:?string, valid_to:?string, is_valid_date:bool, exceeded:bool, note:?string}|null
-     */
-    private function lineQuotaSummary(FoodAlchemistOrderLine $line, Carbon|\DateTimeInterface|string|null $date = null): ?array
-    {
-        $item = $line->supplierItem ?? ($line->supplier_item_id !== null ? FoodAlchemistSupplierItem::find((int) $line->supplier_item_id) : null);
-        if ($item === null || $item->quota_qty_packs === null) {
-            return null;
-        }
-
-        $checkDate = $date instanceof Carbon
-            ? $date->copy()
-            : ($date instanceof \DateTimeInterface ? Carbon::instance($date) : Carbon::parse($date ?: now()));
-        $qty = max(0.0, (float) $item->quota_qty_packs);
-        $used = max(0.0, (float) ($item->quota_used_packs ?? 0));
-        $consumed = max(0.0, (float) ($line->quota_consumed_packs ?? 0));
-        $pendingConsumption = $consumed > 0 ? $consumed : (float) $line->qty_packs;
-        $remainingBefore = round($qty - $used + $consumed, 2);
-        $remainingAfter = round($remainingBefore - $pendingConsumption, 2);
-        $validFrom = $item->quota_valid_from;
-        $validTo = $item->quota_valid_to;
-        $isValidDate = true;
-        if ($validFrom !== null && $checkDate->lt($validFrom)) {
-            $isValidDate = false;
-        }
-        if ($validTo !== null && $checkDate->gt($validTo)) {
-            $isValidDate = false;
-        }
-
-        return [
-            'qty_packs' => round($qty, 2),
-            'used_packs' => round($used, 2),
-            'consumed_packs' => round($consumed, 2),
-            'remaining_before_packs' => $remainingBefore,
-            'remaining_after_packs' => $remainingAfter,
-            'valid_from' => $validFrom?->toDateString(),
-            'valid_to' => $validTo?->toDateString(),
-            'is_valid_date' => $isValidDate,
-            'exceeded' => $remainingAfter < 0,
-            'note' => $item->quota_note,
-        ];
-    }
-
-    /** @return array{status:?string, label:string, state:string, requested_at:?string, approved_at:?string, approved_by:?int, note:?string} */
+    /** 98 · 3.3 S5: BestellSummen::approvalSummary() */
     public function approvalSummary(FoodAlchemistOrder $order): array
     {
-        $status = $order->approval_status;
-        $state = $status ?: 'not_required';
-
-        return [
-            'status' => $status,
-            'label' => match ($status) {
-                'requested' => 'Freigabe angefragt',
-                'approved' => 'freigegeben',
-                'rejected' => 'abgelehnt',
-                default => 'keine Freigabe',
-            },
-            'state' => $state,
-            'requested_at' => $order->approval_requested_at?->format('Y-m-d H:i'),
-            'approved_at' => $order->approved_at?->format('Y-m-d H:i'),
-            'approved_by' => $order->approved_by !== null ? (int) $order->approved_by : null,
-            'note' => $order->approval_note,
-        ];
-    }
-
-    private function claimStatusLabel(?string $status): string
-    {
-        return match ($status) {
-            'open' => 'offen',
-            'credit_expected' => 'Gutschrift erwartet',
-            'credited' => 'gutgeschrieben',
-            'resolved' => 'erledigt',
-            default => '—',
-        };
-    }
-
-    private function invoiceDueDate(FoodAlchemistOrder $order): ?Carbon
-    {
-        $invoiceDate = $order->invoice_date;
-        $paymentTermDays = $order->supplier?->payment_term_days;
-        if ($invoiceDate === null || $paymentTermDays === null) {
-            return null;
-        }
-
-        return $invoiceDate->copy()->addDays(max(0, (int) $paymentTermDays));
-    }
-
-    private function lineReceiptStatus(FoodAlchemistOrderLine $line): string
-    {
-        if ($line->received_qty_packs === null) {
-            return 'offen';
-        }
-
-        $diff = round((float) $line->received_qty_packs - (float) $line->qty_packs, 2);
-        if (abs($diff) < 0.01) {
-            return 'ok';
-        }
-
-        return $diff < 0 ? 'unterliefert' : 'überliefert';
-    }
-
-    private function lineInvoiceDiffNet(FoodAlchemistOrderLine $line): ?float
-    {
-        if ($line->invoice_qty_packs === null || $line->invoice_pack_price === null) {
-            return null;
-        }
-
-        $invoiceTotal = (float) $line->invoice_qty_packs * (float) $line->invoice_pack_price;
-        $basisTotal = $line->received_qty_packs !== null
-            ? (float) $line->received_qty_packs * (float) ($line->pack_price ?? 0)
-            : (float) $line->line_total;
-
-        return round($invoiceTotal - $basisTotal, 2);
-    }
-
-    private function lineInvoiceStatus(FoodAlchemistOrderLine $line): string
-    {
-        if ($line->invoice_qty_packs === null && $line->invoice_pack_price === null) {
-            return 'offen';
-        }
-        if ($line->invoice_qty_packs === null || $line->invoice_pack_price === null) {
-            return 'unvollständig';
-        }
-
-        $qtyBasis = $line->received_qty_packs !== null ? (float) $line->received_qty_packs : (float) $line->qty_packs;
-        $qtyDiff = round((float) $line->invoice_qty_packs - $qtyBasis, 2);
-        $priceDiff = round((float) $line->invoice_pack_price - (float) ($line->pack_price ?? 0), 4);
-        if (abs($qtyDiff) < 0.01 && abs($priceDiff) < 0.0001) {
-            return 'ok';
-        }
-
-        return 'abweichung';
+        return $this->summen->approvalSummary($order);
     }
 
     /** MOQ-/Frei-Haus-Ampel: total_net gegen Lieferanten-Konditionen (R9). */
@@ -3508,17 +3149,17 @@ class OrderService
         if ($lines->count() > 0 && $moq['unter_mindestbestellwert']) {
             $warnings[] = 'Mindestwert';
         }
-        if ($this->receiptSummary($order)['differences'] > 0) {
+        if ($this->summen->receiptSummary($order)['differences'] > 0) {
             $warnings[] = 'WE-Differenz';
         }
-        if ($this->invoiceSummary($order)['differences'] > 0) {
+        if ($this->summen->invoiceSummary($order)['differences'] > 0) {
             $warnings[] = 'RE-Differenz';
         }
-        $claims = $this->claimSummary($order);
+        $claims = $this->summen->claimSummary($order);
         if ($claims['open'] > 0 || $claims['credit_expected'] > 0) {
             $warnings[] = 'Reklamation offen';
         }
-        $quota = $this->quotaSummary($order);
+        $quota = $this->summen->quotaSummary($order);
         if ($quota['invalid'] > 0) {
             $warnings[] = 'Kontingent nicht gültig';
         }
@@ -3532,10 +3173,10 @@ class OrderService
         ) {
             $warnings[] = 'Liefertag abweichend';
         }
-        if ($this->paymentSummary($order)['state'] === 'overdue') {
+        if ($this->summen->paymentSummary($order)['state'] === 'overdue') {
             $warnings[] = 'Zahlung überfällig';
         }
-        $approval = $this->approvalSummary($order);
+        $approval = $this->summen->approvalSummary($order);
         if ($approval['state'] === 'requested') {
             $warnings[] = 'Freigabe offen';
         } elseif ($approval['state'] === 'rejected') {
@@ -3706,32 +3347,5 @@ class OrderService
             ->unique()
             ->values()
             ->all();
-    }
-
-    // ── Guards ────────────────────────────────────────────────────────────
-
-    private function ownedOrder(Team $team, int $orderId): FoodAlchemistOrder
-    {
-        $order = FoodAlchemistOrder::visibleToTeam($team)->findOrFail($orderId);
-        if (! $order->isOwnedBy($team)) {
-            throw new \RuntimeException('Diese Bestellung gehört einem anderen Team und lässt sich hier nicht bearbeiten.');
-        }
-
-        return $order;
-    }
-
-    private function ownedDraftLine(Team $team, int $lineId): FoodAlchemistOrderLine
-    {
-        $line = FoodAlchemistOrderLine::with('order')->findOrFail($lineId);
-        $order = $line->order;
-        if ($order === null || ! $order->isOwnedBy($team)) {
-            throw new \RuntimeException('Diese Bestellzeile gehört einem anderen Team und lässt sich hier nicht bearbeiten.');
-        }
-        $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);
-        if (! $status->istOffen()) {
-            throw new \RuntimeException('Nur ein offener Entwurf ist editierbar.');
-        }
-
-        return $line;
     }
 }

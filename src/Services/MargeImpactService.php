@@ -184,8 +184,8 @@ class MargeImpactService
                 continue;
             }
             // Money-Skala (Audit 2026-08-22): sales_net ist der VK PRO PORTION → EK ebenfalls
-            // pro Portion (ek_total_eur / sales_unit_count, Modul-Konvention KalkulationService/
-            // PaketService), sonst mischt marge() Batch-EK mit Portions-VK → marge%/wareneinsatz%
+            // pro Portion (ek_total_eur / sales_unit_count, Modul-Konvention KalkulationService),
+            // sonst mischt marge() Batch-EK mit Portions-VK → marge%/wareneinsatz%
             // falsch. marge_delta_eur ist damit ein Pro-Portion-Delta (konsistent zur VK-Basis).
             $anzahl = max(1, (int) ($rec->sales_unit_count ?? 1));
             $istEkPortion = $istEk / $anzahl;

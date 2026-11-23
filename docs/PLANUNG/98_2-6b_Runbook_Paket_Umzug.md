@@ -154,5 +154,6 @@ Mit 2.6c sind die alten Paket-Seiten (`/pakete`, alter `/concepts`-Zweig), `Pake
 - der Schalter `foodalchemist.paket_alt_nur_lesen` (`FOODALCHEMIST_PAKET_ALT_NUR_LESEN`); ein gesetzter Wert in `.env` auf io wirkt nicht mehr und kann weg.
 
 Neue Verweise auf alte Pakete (`package_id` am Concept-Slot und am Speiseplan-Eintrag, Typ `paket` in Bestellvorlagen) lehnt der Code
-jetzt immer ab. Die Tabellen `foodalchemist_packages`/`_package_dishes` und die `package_id`-Spalten bleiben bis Plan 3.1 stehen.
+jetzt immer ab. Die Models `FoodAlchemistPaket` und `FoodAlchemistPaketGericht` sind entfernt; eine Bestell-Quelle vom Typ `paket`
+(Alt-Paket) wird nicht mehr aufgelöst, ein Paket kommt als Konzept (`kind=paket`) in die Bestellung. Die Tabellen `foodalchemist_packages`/`_package_dishes` und die `package_id`-Spalten bleiben bis Plan 3.1 stehen.
 Ein Rückweg geht nur noch über den Tabellen-Dump vom 22.11. (Stufe 2 aus Schritt 6), nicht mehr über das Journal.

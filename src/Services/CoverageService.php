@@ -23,7 +23,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSaison;
  * oder unbestimmte Diät wird als Hinweis ausgewiesen, nie geraten.
  *
  * Ist-Quellen: Foodbook → Kapitel/Blöcke (concept_ref-Slots + recipe_ref),
- * kapitelAggregat/gesamt (Preis p. P.); Konzept → Slots (dish|package.dishes),
+ * kapitelAggregat/gesamt (Preis p. P.); Konzept → Slots (dish),
  * preisCockpit. Diät = dish_classes.diet_form (kanonische VK-Taxonomie);
  * No-Go-Zutat = Namens-Match über Gericht + direkte Zutaten (GP/Sub-Rezept, 1 Ebene).
  */

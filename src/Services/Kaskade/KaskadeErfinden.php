@@ -479,12 +479,6 @@ class KaskadeErfinden
         foreach ($concept->slots as $slot) {
             if ($slot->dish) {
                 $dishes[$slot->dish->id] = $slot->dish;
-            } elseif ($slot->package) {
-                foreach ($slot->package->dishes as $pg) {
-                    if ($pg->dish) {
-                        $dishes[$pg->dish->id] = $pg->dish;
-                    }
-                }
             }
         }
         $pairing = app(PairingService::class);

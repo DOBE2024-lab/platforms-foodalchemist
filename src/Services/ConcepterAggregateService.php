@@ -22,10 +22,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
  * ein Portions-Äquivalent gebildet — Einheit Portion/Stück (oder keine) → `quantity` direkt
  * (Default 1.0); Gramm-Einheit → `quantity`×g/Einheit ÷ Portionsgramm. EK = ek_total_eur ÷
  * Portionszahl × Portions-Äquivalent. EINE Stelle (`portionsAequivalent()`), genutzt von
- * ConceptService::preisCockpit und PaketService::recomputePrice (Konsistenz-Garant).
+ * ConceptService::preisCockpit (auch für Paket-Konzepte, kind=paket; Konsistenz-Garant).
  * Ehrlich: Gramm-Position ohne Rezept-Portionsgewicht trägt nicht bei (statt Phantasie-Zahl).
  *
- * Pure (keine Service-Abhängigkeiten) — wird von ConceptService/PaketService und den
+ * Pure (keine Service-Abhängigkeiten) — wird von ConceptService und den
  * Livewire-Panels genutzt, niemals direkt von Models (Plattform-Gebot).
  */
 class ConcepterAggregateService
@@ -59,8 +59,8 @@ class ConcepterAggregateService
 
     /**
      * Portions-Äquivalent einer Position: wie viele Rezept-Portionen pro Person die Menge
-     * entspricht. KANONISCHE Mengen-Umrechnung — von ConceptService::preisCockpit und
-     * PaketService::recomputePrice mitgenutzt, damit alle EK-Stellen identisch rechnen.
+     * entspricht. KANONISCHE Mengen-Umrechnung — von ConceptService::preisCockpit (auch Paket-Konzepte)
+     * mitgenutzt, damit alle EK-Stellen identisch rechnen.
      *
      * - Portion/Stück oder KEINE Einheit → `quantity` direkt (Default 1.0).
      * - Gramm-Einheit (dimension=mass, default_in_g>0) → `quantity`×g/Einheit ÷ Portionsgramm.

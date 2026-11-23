@@ -3,6 +3,8 @@
 namespace Platform\FoodAlchemist\Livewire\Planung;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
@@ -19,6 +21,12 @@ use Platform\FoodAlchemist\Services\Plattform\WorkerHealthService;
  *
  * `$laufIds` = die Läufe, die gerade etwas melden (Cockpit: der offene Lauf; Board: alle laufenden).
  * `$neueBeobachten` (Board): ein neu gestarteter Lauf des Teams zählt auch als Änderung.
+ *
+ * Hängende Läufe (io 23.11.: Board pollte tagelang alle 3 s auf einem toten Lauf):
+ * - Takt nach Stillstand ({@see taktFuer}): bis 2 min der Grundtakt, danach 15 s, ab 30 min 60 s.
+ * - Selbstheilung ({@see heilen}): Ab 30 min Stillstand ruft der Poll den Reaper ({@see PlanningCascadeService::reapeVerwaisteSteps}),
+ *   höchstens alle 5 min je Lauf (Cache-Sperre), nur für das Besitzer-Team; ein Fehler im Reaper bricht den Poll nie.
+ * - Board: kurzer Hinweis „hängt seit … — Fortsetzen“ mit Link in den Lauf.
  */
 class LaufStatus extends Component
 {
@@ -39,10 +47,40 @@ class LaufStatus extends Component
 
     public string $stand = '';
 
+    /** Wirksamer Poll-Takt nach Stillstand (Grundtakt `$takt`, 15 s, 60 s). */
+    public string $aktuellerTakt = '';
+
+    /** @var list<array{run_id: int, session_id: ?int, titel: string, minuten: int}> Board: Läufe ohne Fortschritt seit mindestens 30 min */
+    public array $haengend = [];
+
+    /** Sekunden seit dem letzten Fortschritt (jüngster beobachteter Lauf), null = nichts läuft */
+    private ?int $stillSekunden = null;
+
+    /** @var array<int, int> Lauf-Id → Sekunden ohne Fortschritt */
+    private array $stillJeLauf = [];
+
+    public const STILL_15S = 120;
+
+    public const STILL_60S = 1800;
+
+    public const HEILEN_SPERRE_SEK = 300;
+
     public function mount(): void
     {
         $this->laufIds = array_values(array_unique(array_map('intval', $this->laufIds)));
         $this->stand = $this->stand();
+        $this->takten();
+    }
+
+    /** Takt-Stufe nach Stillstand. Öffentlich und statisch für den Test der Stufenwahl. */
+    public static function taktFuer(string $grundtakt, ?int $stillSekunden): string
+    {
+        return match (true) {
+            $stillSekunden === null => $grundtakt,
+            $stillSekunden >= self::STILL_60S => '60s',
+            $stillSekunden >= self::STILL_15S => '15s',
+            default => $grundtakt,
+        };
     }
 
     /** Poll-Ziel: nur bei geändertem Stand die Planung neu zeichnen lassen. */
@@ -54,10 +92,69 @@ class LaufStatus extends Component
             return;
         }
         $neu = $this->stand();
+        if ($this->heilen() > 0) {
+            $neu = $this->stand();
+        }
+        $this->takten();
         if ($neu !== $this->stand) {
             $this->stand = $neu;
             $this->dispatch('planung.lauf-geaendert');
         }
+    }
+
+    private function takten(): void
+    {
+        $this->aktuellerTakt = self::taktFuer($this->takt, $this->stillSekunden);
+        if (! $this->neueBeobachten) {
+            $this->haengend = [];
+
+            return;
+        }
+        $lange = array_filter($this->stillJeLauf, fn ($s) => $s >= self::STILL_60S);
+        if ($lange === []) {
+            $this->haengend = [];
+
+            return;
+        }
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null) {
+            $this->haengend = [];
+
+            return;
+        }
+        $runs = FoodAlchemistCascadeRun::visibleToTeam($team)->whereIn('id', array_keys($lange))->get(['id', 'planning_session_id']);
+        $titel = \Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession::visibleToTeam($team)
+            ->whereIn('id', $runs->pluck('planning_session_id')->filter()->all())->pluck('title', 'id');
+        $this->haengend = $runs->map(fn ($r) => ['run_id' => (int) $r->id, 'session_id' => $r->planning_session_id !== null ? (int) $r->planning_session_id : null,
+            'titel' => (string) ($titel[(int) $r->planning_session_id] ?? 'Lauf ' . $r->id), 'minuten' => intdiv($lange[(int) $r->id], 60)])->values()->all();
+    }
+
+    /**
+     * Selbstheilung hängender Läufe: Reaper für jeden beobachteten Lauf, der seit {@see STILL_60S} keinen Fortschritt hat — höchstens
+     * alle {@see HEILEN_SPERRE_SEK} je Lauf (Cache-Sperre), nur für das Besitzer-Team (der Reaper prüft es selbst noch einmal).
+     * Fehler werden geloggt und nie an den Poll weitergereicht.
+     *
+     * @return int geheilte Schritte bzw. Läufe
+     */
+    private function heilen(): int
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null) {
+            return 0;
+        }
+        $n = 0;
+        foreach ($this->stillJeLauf as $runId => $sek) {
+            if ($sek < self::STILL_60S || ! Cache::add('fa:kaskade-reaper:' . $runId, 1, self::HEILEN_SPERRE_SEK)) {
+                continue;
+            }
+            try {
+                $n += app(PlanningCascadeService::class)->reapeVerwaisteSteps($team, (int) $runId);
+            } catch (\Throwable $e) {
+                Log::warning("Kaskade-Reaper aus dem Poll fehlgeschlagen (Lauf {$runId}): {$e->getMessage()}");
+            }
+        }
+
+        return $n;
     }
 
     /**
@@ -72,11 +169,13 @@ class LaufStatus extends Component
             return '';
         }
         $teile = ['worker:' . (app(WorkerHealthService::class)->status()['state'] ?? 'unbekannt')];
+        $this->stillJeLauf = [];
+        $this->stillSekunden = null;
         if ($this->laufIds !== []) {
             $runs = FoodAlchemistCascadeRun::visibleToTeam($team)->whereIn('id', $this->laufIds)->orderBy('id')
-                ->get(['id', 'status', 'updated_at', 'created_at']);
+                ->get(['id', 'team_id', 'status', 'updated_at', 'created_at']);
             $steps = FoodAlchemistCascadeRunStep::whereIn('cascade_run_id', $runs->pluck('id')->all())
-                ->get(['id', 'team_id', 'cascade_run_id', 'status', 'phase', 'deferred', 'updated_at', 'context_snapshot', 'generator_run_id', 'ref_type', 'ref_id']);
+                ->get(['id', 'team_id', 'cascade_run_id', 'status', 'phase', 'phase_at', 'deferred', 'updated_at', 'context_snapshot', 'generator_run_id', 'ref_type', 'ref_id']);
             $kiOffen = collect(app(PlanningCascadeService::class)->kiWartend($steps))->sum('anzahl');
             foreach ($runs as $r) {
                 $eigene = $steps->where('cascade_run_id', $r->id);
@@ -85,6 +184,14 @@ class LaufStatus extends Component
                 // updated_at hat Sekunden-Auflösung: Status, Phase und `deferred` je Schritt fangen zwei Änderungen in derselben Sekunde.
                 $schritte = $eigene->sortBy('id')->map(fn ($st) => $st->id . ':' . $st->status . ':' . $st->phase . ':' . md5((string) json_encode($st->deferred)))->implode(',');
                 $teile[] = implode('|', [$r->id, $r->status, (string) $r->updated_at, (string) $eigene->max('updated_at'), md5($schritte), $alt ? 'alt' : '']);
+                // Stillstand: letzter Fortschritt an Lauf, Schritten oder Phasen. Nur für eigene, noch laufende Läufe (das Board beobachtet
+                // auch Läufe mit liegengebliebener Phase). Aus den schon geladenen Zeilen — keine zusätzliche Abfrage.
+                if ((int) $r->team_id === (int) $team->id && ($r->status === 'running' || $eigene->whereNotNull('phase')->isNotEmpty())) {
+                    $zuletzt = collect([$r->updated_at, $eigene->max('updated_at'), $eigene->max('phase_at')])->filter()->map(fn ($t) => \Illuminate\Support\Carbon::make($t))->max();
+                    $sek = $zuletzt !== null ? (int) $zuletzt->diffInSeconds(now()) : 0;
+                    $this->stillJeLauf[(int) $r->id] = $sek;
+                    $this->stillSekunden = $this->stillSekunden === null ? $sek : min($this->stillSekunden, $sek);
+                }
             }
             $teile[] = 'ki:' . $kiOffen;
         }

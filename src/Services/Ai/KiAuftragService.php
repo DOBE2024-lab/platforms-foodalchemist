@@ -331,6 +331,26 @@ class KiAuftragService
     }
 
     /**
+     * Lauf-Schlüssel mit einem ABGELAUFENEN Auftrag (Status `abgelaufen` oder `offen` mit verstrichenem `laeuft_ab_at`) — für den Reaper
+     * der Kaskade: Der Ablauf eines Auftrags erreicht den Schritt sonst nie (io 23.11.: Step 62 hing 10 Tage auf `running`). Exakte
+     * Schlüssel wie {@see offeneZuLaeufen}, kein LIKE.
+     *
+     * @param  list<string>  $laufKeys
+     * @return array<string, true>
+     */
+    public function abgelaufeneZuLaeufen(int $teamId, array $laufKeys): array
+    {
+        $laufKeys = array_values(array_unique(array_filter($laufKeys, fn ($k) => is_string($k) && $k !== '')));
+        if ($laufKeys === []) {
+            return [];
+        }
+
+        return DB::table('foodalchemist_ki_auftraege')->where('team_id', $teamId)->whereIn('lauf_key', $laufKeys)
+            ->where(fn ($q) => $q->where('status', 'abgelaufen')->orWhere(fn ($o) => $o->where('status', 'offen')->where('laeuft_ab_at', '<=', now())))
+            ->pluck('lauf_key')->mapWithKeys(fn ($k) => [(string) $k => true])->all();
+    }
+
+    /**
      * Speichert eine externe Antwort. Abgelehnt (RuntimeException): unbekannte/fremde ID, nicht offen, abgelaufen,
      * Antwort kein JSON-Objekt. Die fachliche Prüfung (structural_retry, Guards) macht danach der Wiederholungslauf.
      *

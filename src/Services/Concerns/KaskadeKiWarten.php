@@ -91,6 +91,34 @@ trait KaskadeKiWarten
     }
 
     /**
+     * Welche Schritte haben einen ABGELAUFENEN KI-Auftrag (über dieselben exakten Lauf-Schlüssel wie {@see kiWartend})? Für den Reaper.
+     *
+     * @param  iterable<FoodAlchemistCascadeRunStep>  $steps
+     * @return array<int, true> Step-ID → true
+     */
+    public function kiAbgelaufen(iterable $steps): array
+    {
+        $aus = [];
+        try {
+            $jeTeam = [];
+            foreach ($steps as $s) {
+                foreach ($this->kiLaufKeys($s) as $key) {
+                    $jeTeam[(int) $s->team_id][$key] = (int) $s->id;
+                }
+            }
+            foreach ($jeTeam as $teamId => $keys) {
+                foreach (array_keys(app(KiAuftragService::class)->abgelaufeneZuLaeufen($teamId, array_keys($keys))) as $key) {
+                    $aus[$keys[$key]] = true;
+                }
+            }
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return $aus;
+    }
+
+    /**
      * Die offenen KI-Aufträge eines Laufs (für ki_auftraege.GET mit run_id). null = Lauf für das Team nicht sichtbar.
      *
      * @return list<string>|null Auftrags-IDs (uuid)

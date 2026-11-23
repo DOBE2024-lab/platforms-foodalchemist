@@ -26,6 +26,15 @@ trait TauschtRezept
 
     public ?string $hinweisTausch = null;
 
+    /** Gericht-Verwaltung (Plan 23.11.): gewähltes Ziel-Gericht → Vorschau; erst „Ersetzen“ schreibt. */
+    public ?int $tauschZielId = null;
+
+    /** Gericht-Verwaltung: Haken „auch aktive Foodbooks“ (Standard aus, Live-Inhalt beim Kunden ändert sich). */
+    public bool $tauschAuchAktiveFoodbooks = false;
+
+    /** Gericht-Verwaltung: gewählte Bereiche (Standard alle). @var list<string> */
+    public array $tauschBereiche = [];
+
     /** Alle eigenen Eltern-Zeilen dieses Rezepts auf $zielId umhängen + neu rechnen. */
     public function rezeptErsetzen(int $zielId): void
     {
@@ -58,7 +67,8 @@ trait TauschtRezept
         return Suche::like(
             FoodAlchemistRecipe::visibleToTeam($team)
                 ->whereKeyNot($this->recipeId)
-                ->where('status', '!=', RecipeStatus::Deprecated->value),
+                ->where('status', '!=', RecipeStatus::Deprecated->value)
+                ->when($this->istGerichtTausch(), fn ($q) => $q->where('is_sales_recipe', true)),   // F1: Gericht nur durch Gericht
             'name',
             $this->tauschSuche,
         )->orderBy('name')->limit(6)->get(['id', 'name', 'status', 'team_id', 'is_sales_recipe']);
@@ -116,6 +126,21 @@ trait TauschtRezept
         if ($team === null || $this->recipeId === null) {
             return;
         }
+        if ($this->istGerichtTausch()) {
+            $this->mitKurzsperre(function () use ($team) {
+                try {
+                    app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)->deleteDish($team, $this->recipeId);
+                } catch (\Throwable $e) {
+                    $this->fehlerTausch = $e->getMessage();
+
+                    return;
+                }
+                $this->dispatch('recipe-gespeichert');
+                $this->nachRezeptLoeschung();
+            });
+
+            return;
+        }
         if ($this->tauschReferenzen() === null) {
             $this->fehlerTausch = 'Löschen hier nicht möglich — Gerichte laufen über den Verkaufs-Editor, geerbte Rezepte über ihr Besitzer-Team (D1).';
 
@@ -131,6 +156,91 @@ trait TauschtRezept
             }
             $this->dispatch('recipe-gespeichert');                     // Browser: Zeile verschwindet
             $this->nachRezeptLoeschung();
+        });
+    }
+
+    // ── Gericht-Verwaltung (Plan „Verwaltung am Gericht“, 23.11.2026): Vorschau → Ersetzen → Löschen ──────────
+
+    /** Ist das Rezept dieses Blocks ein Gericht? Dann gilt der Gericht-Weg (alle Ausgaben, Soft-Delete). */
+    protected function istGerichtTausch(): bool
+    {
+        $team = Auth::user()?->currentTeamRelation;
+
+        return $team !== null && $this->recipeId !== null
+            && (bool) FoodAlchemistRecipe::visibleToTeam($team)->whereKey($this->recipeId)->value('is_sales_recipe');
+    }
+
+    /**
+     * Daten des Gericht-Blocks — `null` bei Basisrezepten (dort gilt der Komponenten-Block wie bisher).
+     *
+     * @return array{loesch: array, vorschau: ?array, bereiche: list<string>}|null
+     */
+    protected function gerichtVerwaltung(): ?array
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null || $this->recipeId === null || ! $this->istGerichtTausch()) {
+            return null;
+        }
+        $vorschau = null;
+        if ($this->tauschZielId !== null) {
+            try {
+                $vorschau = app(\Platform\FoodAlchemist\Services\Gericht\GerichtTauschService::class)
+                    ->vorschau($team, $this->recipeId, $this->tauschZielId, $this->tauschAuchAktiveFoodbooks);
+            } catch (\RuntimeException $e) {
+                $this->fehlerTausch = $e->getMessage();
+                $this->tauschZielId = null;
+            }
+        }
+
+        return [
+            'loesch' => app(\Platform\FoodAlchemist\Services\Gericht\GerichtVerwendungen::class)->loeschBilanz($team, $this->recipeId),
+            'vorschau' => $vorschau,
+            'bereiche' => \Platform\FoodAlchemist\Services\Gericht\GerichtVerwendungen::TAUSCH_BEREICHE,
+        ];
+    }
+
+    /** Ziel-Gericht wählen → Vorschau zeigen (schreibt nichts). */
+    public function gerichtTauschVorbereiten(int $zielId): void
+    {
+        $this->fehlerTausch = null;
+        $this->hinweisTausch = null;
+        $this->tauschZielId = $zielId;
+        $this->tauschBereiche = \Platform\FoodAlchemist\Services\Gericht\GerichtVerwendungen::TAUSCH_BEREICHE;
+        $this->tauschSuche = '';
+    }
+
+    public function gerichtTauschAbbrechen(): void
+    {
+        $this->tauschZielId = null;
+        $this->tauschAuchAktiveFoodbooks = false;
+        $this->tauschBereiche = [];
+    }
+
+    /** Ersetzen in den gewählten Bereichen — alles oder nichts. Auch im Ansichtsmodus (Kurzsperre wie Löschen). */
+    public function gerichtErsetzen(): void
+    {
+        $this->fehlerTausch = null;
+        $this->hinweisTausch = null;
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null || $this->recipeId === null || $this->tauschZielId === null) {
+            return;
+        }
+        $this->mitKurzsperre(function () use ($team) {
+            try {
+                $e = app(\Platform\FoodAlchemist\Services\Gericht\GerichtTauschService::class)
+                    ->ersetze($team, $this->recipeId, $this->tauschZielId, $this->tauschBereiche, $this->tauschAuchAktiveFoodbooks);
+            } catch (\RuntimeException $ex) {
+                $this->fehlerTausch = $ex->getMessage();
+
+                return;
+            }
+            $ziel = FoodAlchemistRecipe::visibleToTeam($team)->find($this->tauschZielId)?->name ?? "#{$this->tauschZielId}";
+            $teile = array_filter(array_map(fn ($b, $n) => $n > 0 ? "{$n} {$b}" : null, array_keys($e['getauscht']), $e['getauscht']));
+            $this->hinweisTausch = 'Auf „' . $ziel . '“ umgehängt: ' . ($teile !== [] ? implode(', ', $teile) : 'nichts') . '.'
+                . ($e['bleibt'] !== [] ? ' Bleibt: ' . implode(' · ', array_map(fn ($b) => $b['ort'] . ($b['grund'] ? " ({$b['grund']})" : ''), array_slice($e['bleibt'], 0, 6))) . '.' : '')
+                . ($e['historisch'] > 0 ? " {$e['historisch']} historische Einträge behalten das alte Gericht als Verweis." : '');
+            $this->gerichtTauschAbbrechen();
+            $this->dispatch('recipe-gespeichert');
         });
     }
 

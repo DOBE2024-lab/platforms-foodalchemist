@@ -32,7 +32,6 @@ return [
     'Livewire/Speiseplan/Editor.php' => 1,
     'Livewire/Suppliers/ItemModal.php' => 1,
     'Livewire/Suppliers/ProduktpassPanel.php' => 4,
-    'Livewire/Verkauf/DetailPanel.php' => 1,
     'Livewire/Verkauf/VkModal.php' => 7,
     'Support/Produktion/TagesplanAbfrage.php' => 3,
     'Tools/ConceptSlotsPostTool.php' => 2,

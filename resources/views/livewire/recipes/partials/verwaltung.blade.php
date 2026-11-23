@@ -6,6 +6,8 @@
      Erwartet aus der Komponente: $tauschBilanz · $tauschKandidaten · $tauschReferenzen ·
      $fehlerTausch · $hinweisTausch (Trait TauschtRezept) sowie $tauschSuche.
      Parameter: $rezeptName (für die Rückfragen) · $kompakt (Panel-Typo statt Editor-Typo).
+     Gericht-Verwaltung (23.11.2026): ist $gerichtVerwaltung gesetzt (Gericht statt Basisrezept), zeigt der Block den
+     Gericht-Weg — Bilanz aller aktiven Verwendungen, Vorschau je Bereich, „Ersetzen“, danach Löschen (weich).
      fa-pass: nur Tokens und x-fa-Bausteine (hell + Werkbank-Modus). --}}
 @php
     $tt = $kompakt ? 'text-[length:var(--fa-text-sm)]' : 'text-[length:var(--fa-text-md)]';
@@ -21,6 +23,108 @@
         <x-fa::notice tone="ok" data-rezept-tausch-hinweis>{{ $hinweisTausch }}</x-fa::notice>
     @endif
 
+    @if(($gerichtVerwaltung ?? null) !== null)
+        @php
+            $gv = $gerichtVerwaltung;
+            $vs = $gv['vorschau'];
+            $bereichText = ['konzepte' => 'Konzepte und Pakete', 'komponenten' => 'Als Komponente in Gerichten', 'speiseplan' => 'Speiseplan ab heute',
+                'speisekarte' => 'Gültige Speisekarten', 'angebote' => 'Offene Angebote', 'foodbooks' => 'Foodbooks', 'ersatz' => 'Ersatz-Verknüpfungen'];
+            $geld = fn ($w) => $w === null ? '–' : number_format((float) $w, 2, ',', '.') . ' €';
+        @endphp
+        {{-- 1. Bilanz: aktive Verwendungen mit Namen, historische als Zahl --}}
+        <div class="flex flex-col gap-1.5" data-gericht-bilanz>
+            @if($gv['loesch']['aktiv'] === [])
+                <p class="{{ $tt }} text-[var(--fa-ink)]">Keine aktive Verwendung.</p>
+            @else
+                <p class="{{ $tt }} text-[var(--fa-ink)]">Aktiv verwendet: {{ $mehrzahl(count($gv['loesch']['aktiv']), 'Stelle', 'Stellen') }}.</p>
+                <ul class="{{ $tt }} flex flex-col gap-1" data-gericht-aktiv>
+                    @foreach(array_slice($gv['loesch']['aktiv'], 0, 12) as $i => $a)
+                        <li class="flex items-start gap-2 min-w-0" wire:key="gv-aktiv-{{ $i }}">
+                            <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $a['ort'] }}</span>
+                            @if($a['grund'])<span class="shrink-0 fa-t-muted">{{ $a['grund'] }}</span>@endif
+                        </li>
+                    @endforeach
+                    @if(count($gv['loesch']['aktiv']) > 12)<li class="fa-t-muted">… und {{ count($gv['loesch']['aktiv']) - 12 }} weitere</li>@endif
+                </ul>
+            @endif
+            @if($gv['loesch']['historisch'] > 0)
+                <p class="fa-t-muted" data-gericht-historisch>{{ $mehrzahl((int) $gv['loesch']['historisch'], 'historischer Eintrag', 'historische Einträge') }} (vergangene Tage, versendete Angebote, archivierte Foodbooks …) behalten das Gericht als Verweis.</p>
+            @endif
+        </div>
+
+        {{-- 2. Ersetzen: Ziel wählen → Vorschau je Bereich → Ersetzen --}}
+        @if($vs === null)
+            <div class="flex flex-col gap-1.5" data-gericht-tausch>
+                <label for="gericht-tausch-suche-{{ $kompakt ? 'panel' : 'editor' }}" class="fa-t-label">In allen Verwendungen ersetzen durch <span class="font-normal text-[var(--fa-ink-3)]">(ein Gericht; Menge und Einheit bleiben)</span></label>
+                <x-fa::input type="search" id="gericht-tausch-suche-{{ $kompakt ? 'panel' : 'editor' }}" wire:model.live.debounce.300ms="tauschSuche"
+                    placeholder="Ersatz-Gericht suchen …" :size="$kompakt ? 'sm' : 'md'" data-gericht-tausch-suche />
+                @if($tauschKandidaten->isNotEmpty())
+                    <div class="flex flex-col gap-0.5">
+                        @foreach($tauschKandidaten as $k)
+                            <button type="button" wire:key="gv-kand-{{ $k->id }}" wire:click="gerichtTauschVorbereiten({{ $k->id }})"
+                                    class="w-full text-left px-2 py-1.5 rounded-[var(--fa-radius-control)] {{ $tt }} text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] flex items-center gap-2" data-gericht-tausch-kandidat>
+                                <x-fa::badge :tone="$statusTon[$k->status->value] ?? 'neutral'" class="shrink-0">{{ $k->status->label() }}</x-fa::badge>
+                                <span class="min-w-0 flex-1 truncate">{{ $k->name }}</span>
+                                @svg('heroicon-m-arrows-right-left', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
+                            </button>
+                        @endforeach
+                    </div>
+                @elseif(trim($tauschSuche) !== '')
+                    <p class="fa-t-muted">Kein passendes Gericht gefunden.</p>
+                @endif
+            </div>
+        @else
+            <div class="flex flex-col gap-2 p-3 rounded-[var(--fa-radius-surface)] border border-[var(--fa-line)]" data-gericht-vorschau>
+                <p class="{{ $tt }} fa-t-strong">„{{ $vs['von']['name'] }}“ ersetzen durch „{{ $vs['nach']['name'] }}“</p>
+                @if($vs['ek_delta_je_portion'] !== null)
+                    <p class="fa-t-muted">EK je Portion {{ $vs['ek_delta_je_portion'] >= 0 ? '+' : '' }}{{ number_format((float) $vs['ek_delta_je_portion'], 2, ',', '.') }} € (Standard-Darreichung, Schätzung je Position).</p>
+                @endif
+                @foreach($gv['bereiche'] as $b)
+                    @php $info = $vs['bereiche'][$b]; @endphp
+                    @if($info['anzahl'] > 0 || $info['bleibt'] !== [] || $info['haken'] !== [])
+                        <div class="flex flex-col gap-0.5" wire:key="gv-bereich-{{ $b }}" data-gericht-bereich="{{ $b }}">
+                            <x-fa::checkbox wire:model.live="tauschBereiche" value="{{ $b }}">{{ $bereichText[$b] }}: {{ $info['anzahl'] }}</x-fa::checkbox>
+                            @foreach(array_slice($info['eintraege'], 0, 5) as $i => $e)
+                                <p class="fa-t-muted pl-6" wire:key="gv-{{ $b }}-{{ $i }}">{{ $e['ort'] }}@if($e['hinweis']) · {{ $e['hinweis'] }}@endif</p>
+                            @endforeach
+                            @if(count($info['eintraege']) > 5)<p class="fa-t-muted pl-6">… und {{ count($info['eintraege']) - 5 }} weitere</p>@endif
+                            @foreach($info['bleibt'] as $i => $bl)
+                                <p class="fa-t-muted pl-6" wire:key="gv-{{ $b }}-bleibt-{{ $i }}">Bleibt: {{ $bl['ort'] }}@if($bl['grund']) ({{ $bl['grund'] }})@endif</p>
+                            @endforeach
+                            @if($b === 'angebote')
+                                @foreach($info['preise'] ?? [] as $p)
+                                    <p class="{{ $tt }} pl-6 text-[var(--fa-ink)]" wire:key="gv-preis-{{ $p['id'] }}" data-gericht-angebotspreis>„{{ $p['name'] }}“: {{ $geld($p['preis_vorher']) }} → {{ $geld($p['preis_nachher']) }}</p>
+                                @endforeach
+                            @endif
+                        </div>
+                    @endif
+                @endforeach
+                @if($vs['haken_noetig'])
+                    <x-fa::checkbox wire:model.live="tauschAuchAktiveFoodbooks" hinweis="Live-Inhalt beim Kunden ändert sich; eingefrorene Snapshots bleiben." data-gericht-haken>Auch aktive Foodbooks</x-fa::checkbox>
+                @endif
+                <div class="flex flex-wrap gap-2 pt-1">
+                    <x-fa::button :size="$kompakt ? 'sm' : 'md'" icon="heroicon-m-arrows-right-left" wire:click="gerichtErsetzen"
+                        wire:confirm="„{{ $vs['von']['name'] }}“ in den gewählten Bereichen durch „{{ $vs['nach']['name'] }}“ ersetzen? Danach greifen die üblichen Neuberechnungen." data-gericht-ersetzen>Ersetzen</x-fa::button>
+                    <x-fa::button :size="$kompakt ? 'sm' : 'md'" variant="ghost" wire:click="gerichtTauschAbbrechen">Abbrechen</x-fa::button>
+                </div>
+            </div>
+        @endif
+
+        {{-- 3. Löschen: frei, sobald keine aktive Verwendung mehr besteht (weich; historische Verweise bleiben lesbar) --}}
+        @if($gv['loesch']['eigen'])
+            <div class="pt-3 border-t border-[var(--fa-line)] flex flex-col gap-1.5" data-gericht-loeschen-block>
+                @if($gv['loesch']['frei'])
+                    <div>
+                        <x-fa::button :size="$kompakt ? 'sm' : 'md'" variant="danger" icon="heroicon-m-trash" wire:click="rezeptLoeschen"
+                            wire:confirm="„{{ $rezeptName }}“ löschen? Es verschwindet aus den Listen; historische Einträge zeigen es weiter als Verweis." data-gericht-loeschen>Gericht löschen</x-fa::button>
+                    </div>
+                    <p class="fa-t-muted">Keine aktive Verwendung mehr.@if($gv['loesch']['historisch'] > 0) Bleibt in {{ $mehrzahl((int) $gv['loesch']['historisch'], 'historischem Eintrag', 'historischen Einträgen') }} als Verweis sichtbar.@endif</p>
+                @else
+                    <p class="{{ $tt }} text-[var(--fa-ink)]" data-gericht-loeschsperre><x-fa::signal tone="warn">Löschen nicht möglich</x-fa::signal> Erst oben ersetzen — die aktiven Verwendungen stehen in der Liste.</p>
+                @endif
+            </div>
+        @endif
+    @else
     {{-- 1. Wo hängt das Rezept? MIT Namen (2026-09-04, Dominique: „es wird nicht angezeigt
          wo es drin ist") — eine Menge ohne Adresse hilft beim Umhängen nicht weiter. --}}
     @if($tauschBilanz !== null && ($tauschBilanz['zeilen'] > 0 || $tauschBilanz['fremd_zeilen'] > 0))
@@ -103,5 +207,6 @@
                 <p class="fa-t-muted" data-rezept-ref-info>Nur zur Info, blockiert nicht: {{ implode(' · ', $refInfo) }}</p>
             @endif
         </div>
+    @endif
     @endif
 </div>

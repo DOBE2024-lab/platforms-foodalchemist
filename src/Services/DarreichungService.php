@@ -458,6 +458,9 @@ class DarreichungService
     {
         $anteil = $this->produktionsAnteil($darreichung->recipe, $darreichung, 1, $team);
         foreach ($this->recompute->zeilenKostenUndMassen($darreichung->recipe, $team) as $ingId => $z) {
+            if ($z['ohne_gewicht'] ?? false) {
+                continue;   // keine Gramm festzuhalten — ohne Delta läuft die Zeile im Verhältnis der Variante mit, statt als 0 g weggelassen zu werden
+            }
             $m = ($anteil['je_zutat'][$ingId] ?? $anteil['ansaetze']) * $z['masse_g'] / max(1, (float) ($darreichung->unit_count ?: 1));
             FoodAlchemistRecipeDarreichungDelta::withTrashed()->updateOrCreate(
                 ['presentation_id' => $darreichung->id, 'recipe_ingredient_id' => $ingId],
@@ -511,6 +514,9 @@ class DarreichungService
                 ->pluck('recipe_ingredient_id')->map(fn ($id) => (int) $id)->all();
             $dar->deltas()->withTrashed()->forceDelete();
             foreach ($standard as $ingId => $z) {
+                if (($z['ohne_gewicht'] ?? false) && ! in_array((int) $ingId, $weggelassen, true)) {
+                    continue;   // ohne Gramm: kein Delta, läuft im Anteil mit (sonst wäre sie als 0 g weggelassen)
+                }
                 $m = in_array((int) $ingId, $weggelassen, true) ? 0.0 : round($z['masse_g'] * $prozent / 100, 3);
                 FoodAlchemistRecipeDarreichungDelta::create(['presentation_id' => $dar->id, 'recipe_ingredient_id' => $ingId,
                     'team_id' => $dar->team_id, 'quantity_override_g' => $m, 'omitted' => $m <= 0]);
@@ -1008,9 +1014,23 @@ class DarreichungService
         $masse = 0.0;
         $nBepreist = 0;
         $fehlende = [];
+        $skala = $this->skalaOhneGewicht($proEinheit, $deltaMap);
+        $ohneGewicht = [];
         foreach ($proEinheit as $ingId => $zeile) {
             $delta = $deltaMap->get($ingId);
             if ($delta !== null && $delta->omitted) {
+                continue;
+            }
+            if ($zeile['ohne_gewicht'] ?? false) {
+                // Trockenlauf io 23.11. (R149): Kosten im Anteil der Darreichung, nicht 0. Unbepreist → fehlende (kein stiller Cent)
+                $ohneGewicht[] = (int) $ingId;
+                if ($zeile['kosten_einheit'] !== null) {
+                    $nBepreist++;
+                    $kosten += $zeile['kosten_einheit'] * $skala;
+                } else {
+                    $fehlende[] = (int) $ingId;
+                }
+
                 continue;
             }
             $m = $delta?->quantity_override_g !== null ? (float) $delta->quantity_override_g : $zeile['masse_g'];
@@ -1023,7 +1043,35 @@ class DarreichungService
             $masse += $m;
         }
 
-        return ['pro_einheit' => $proEinheit, 'kosten' => $kosten, 'masse' => $masse, 'n_bepreist' => $nBepreist, 'fehlende' => $fehlende];
+        // vorläufig: Zeilen ohne Gewicht in einer Variante mit eigenen Mengen laufen mit dem mittleren Verhältnis der Variante mit
+        // (genau bei proportionalen Varianten, sonst eine Schätzung)
+        return ['pro_einheit' => $proEinheit, 'kosten' => $kosten, 'masse' => $masse, 'n_bepreist' => $nBepreist, 'fehlende' => $fehlende,
+            'ohne_gewicht' => $ohneGewicht, 'vorlaeufig' => $ohneGewicht !== [] && $deltaMap->isNotEmpty()];
+    }
+
+    /**
+     * Verhältnis einer Darreichung mit eigenen Mengen (Deltas) zum Standard, über die Zeilen MIT Gewicht: Σ wirksame Gramm ÷ Σ Standard-Gramm.
+     * Damit laufen Zeilen ohne Gewicht (Stück ohne Stückgewicht …) im selben Maß mit. Ohne Deltas 1.
+     *
+     * @param  array<int, array{masse_g: float, ohne_gewicht?: bool}>  $proEinheit
+     */
+    private function skalaOhneGewicht(array $proEinheit, \Illuminate\Support\Collection $deltaMap): float
+    {
+        if ($deltaMap->isEmpty()) {
+            return 1.0;
+        }
+        $std = 0.0;
+        $var = 0.0;
+        foreach ($proEinheit as $ingId => $z) {
+            if ($z['ohne_gewicht'] ?? false) {
+                continue;
+            }
+            $d = $deltaMap->get($ingId);
+            $std += $z['masse_g'];
+            $var += $d?->omitted ? 0.0 : ($d?->quantity_override_g !== null ? (float) $d->quantity_override_g : $z['masse_g']);
+        }
+
+        return $std > 0 ? $var / $std : 1.0;
     }
 
     private function kopfSpiegeln(FoodAlchemistRecipeDarreichung $darreichung, FoodAlchemistRecipe $recipe): void
@@ -1172,7 +1220,9 @@ class DarreichungService
      *  - `ansaetze`: Mengenäquivalent (Σ Gramm ÷ Ansatz-Masse) für Zeit, Behälter, Anzeige
      *  - `je_zutat`: nur bei Deltas — Ansätze je recipe_ingredient_id (weicht vom Mittel ab)
      *
-     * @return array{ansaetze: float, je_zutat: ?array<int, float>, gramm_je_portion: ?float, warnung: ?string}
+     *  - `ohne_gewicht`: nur bei Komponenten — Zeilen ohne Gramm, deren Ansätze über den Rezept-Anteil laufen (R149)
+     *
+     * @return array{ansaetze: float, je_zutat: ?array<int, float>, gramm_je_portion: ?float, warnung: ?string, ohne_gewicht?: list<int>}
      */
     public function produktionsAnteil(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $darreichung, float $portionen, ?Team $team = null): array
     {
@@ -1191,8 +1241,17 @@ class DarreichungService
             $deltaMap = $darreichung->deltas()->get()->keyBy('recipe_ingredient_id');
             $jeZutat = [];
             $summeG = 0.0;
+            $skala = $this->skalaOhneGewicht($proEinheit, $deltaMap);
+            $ohneGewicht = [];
             foreach ($proEinheit as $ingId => $zeile) {
                 $delta = $deltaMap->get($ingId);
+                if ($zeile['ohne_gewicht'] ?? false) {
+                    // Ansätze dieser Zeile = Einheiten × Rezept-Anteil je Einheit × Verhältnis der Variante (statt 0, R149)
+                    $ohneGewicht[] = (int) $ingId;
+                    $jeZutat[(int) $ingId] = $delta?->omitted ? 0.0 : $einheiten * (float) ($zeile['anteil'] ?? 0) * $skala;
+
+                    continue;
+                }
                 $g = $delta?->omitted ? 0.0 : ($delta?->quantity_override_g !== null ? (float) $delta->quantity_override_g : $zeile['masse_g']);
                 $summeG += $g;
                 // Ansätze dieser Zutat = gebrauchte Gramm ÷ Gramm je Ansatz (Standard-Komposition ist bereits je Einheit skaliert).
@@ -1206,7 +1265,10 @@ class DarreichungService
                 'ansaetze' => $basis > 0 ? $einheiten * $summeG / $basis : 0.0,
                 'je_zutat' => $jeZutat,
                 'gramm_je_portion' => round($summeG * (float) ($darreichung->unit_count ?: 1), 1),
-                'warnung' => null,
+                'warnung' => $ohneGewicht === [] ? null
+                    : "Gericht „{$recipe->name}“: ".count($ohneGewicht).' Bestandteil(e) ohne Gewicht — Menge im Anteil des Rezepts gerechnet'
+                        .($deltaMap->isNotEmpty() ? ' (vorläufig, Verhältnis der Variante).' : '.'),
+                'ohne_gewicht' => $ohneGewicht,
             ];
         }
 
@@ -1314,6 +1376,10 @@ class DarreichungService
             $out[$ingId] = [
                 'masse_g' => $z['masse_g'] * $faktor,
                 'kosten_pro_g' => ($z['kosten'] !== null && $z['masse_g'] > 0) ? $z['kosten'] / $z['masse_g'] : null,
+                // Zeile ohne Gramm: Anteil am Rezept je Einheit und ihre Kosten in diesem Anteil (statt still 0 g)
+                'ohne_gewicht' => (bool) ($z['ohne_gewicht'] ?? false),
+                'anteil' => $faktor,
+                'kosten_einheit' => ($z['ohne_gewicht'] ?? false) && $z['kosten'] !== null ? $z['kosten'] * $faktor : null,
             ];
         }
         if (! $eigeneReferenz && $standard !== null && $standard->id !== $fuerDarreichung) {

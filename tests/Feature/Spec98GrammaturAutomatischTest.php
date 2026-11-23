@@ -4,6 +4,8 @@ use Illuminate\Support\Str;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichungDelta;
+use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\GrammaturUmstellung\GrammaturMessung;
 use Platform\FoodAlchemist\Services\GrammaturUmstellung\GrammaturUmstellungService;
 use Platform\FoodAlchemist\Services\GrammaturUmstellung\SchreibWache;
@@ -218,4 +220,74 @@ it('Schreibwache: fremde Tabelle, fremde Rezept-Spalte und fremdes Rezept sind V
     $w->pruefe('delete from "foodalchemist_price_change_audits" where "id" = ?', [1]);
     $w->pruefe('select * from "foodalchemist_concepts"', []);
     expect($w->verstoesse())->toHaveCount(4);
+});
+
+it('Schreibwache: Datenbank-Cache des Frameworks (CACHE_STORE=database) ist in jeder Phase erlaubt, wird aber gezählt', function () {
+    // SQL, wie es der Store `database` erzeugt (Trockenlauf io 23.11.: Abbruch in Phase 0 wegen DELETE/INSERT auf `cache`)
+    $cacheSql = [
+        ['delete from "cache" where "key" in (?)', ['fa:k']],
+        ['insert into "cache" ("expiration", "key", "value") values (?, ?, ?) on conflict ("key") do update set "expiration" = "excluded"."expiration", "value" = "excluded"."value"', [1, 'fa:k', 'v']],
+        ['insert into `cache` (`expiration`, `key`, `value`) values (?, ?, ?) on duplicate key update `expiration` = values(`expiration`), `value` = values(`value`)', [1, 'fa:k', 'v']],
+        ['update `cache_locks` set `owner` = ?, `expiration` = ? where `key` = ?', ['o', 1, 'fa:l']],
+        ['insert into "cache_locks" ("key", "owner", "expiration") values (?, ?, ?)', ['fa:l', 'o', 1]],
+        ['delete from `cache_locks` where `key` = ? and `owner` = ?', ['fa:l', 'o']],
+    ];
+    $w = new SchreibWache;
+    foreach (['0', '1', '2'] as $phase) {
+        $w->phase($phase, [7]);
+        foreach ($cacheSql as [$sql, $b]) {
+            $w->pruefe($sql, $b);
+        }
+    }
+    expect($w->verstoesse())->toBe([])
+        ->and($w->anweisungen()['0']['cache'])->toBe(['delete' => 1, 'insert' => 2])
+        ->and($w->anweisungen()['2']['cache_locks'])->toBe(['update' => 1, 'insert' => 1, 'delete' => 1]);
+
+    // Umbenannte Cache-Tabelle aus der Konfiguration; eine fremde Tabelle bleibt ein Verstoß
+    config(['cache.stores.database.table' => 'fa_cache']);
+    $w->phase('0');
+    $w->pruefe('delete from "fa_cache" where "key" in (?)', ['x']);
+    $w->pruefe('delete from "jobs" where "id" = ?', [1]);
+    expect($w->verstoesse())->toHaveCount(1)->and($w->verstoesse()[0])->toContain('jobs');
+});
+
+it('R149 (Trockenlauf io 23.11.): 0,5 Stück Ei ohne Stückgewicht — Gericht bleibt unangetastet, EK, VK und Produktion unverändert', function () {
+    $t = $this->rootTeam->id;
+    $stk = \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::create(['team_id' => $t, 'slug' => 'stk', 'display_de' => 'Stück', 'dimension' => 'count']);
+    // Ei: Preis je Stück (10er-Karton 3,00 € → 0,30 €/Stück), aber KEIN Stückgewicht → im Komponentenmodell 0 g
+    $ei = $this->makeGp($this->rootTeam, 'Ei');
+    $lieferant = \Platform\FoodAlchemist\Models\FoodAlchemistSupplier::create(['team_id' => $t, 'name' => 'Eierhof']);
+    $la = \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::create(['team_id' => $t, 'supplier_id' => $lieferant->id, 'designation' => 'Eier 10 Stk',
+        'article_number' => 'EI-10', 'qty' => 10.0, 'unit_code' => 'Stk', 'packaging_unit' => 'Karton']);
+    \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure::create(['team_id' => $t, 'supplier_item_id' => $la->id, 'gp_id' => $ei->id]);
+    \Platform\FoodAlchemist\Models\FoodAlchemistPrice::create(['team_id' => $t, 'supplier_item_id' => $la->id, 'price' => 3.00, 'status' => '0']);
+    $ei->update(['lead_la_supplier_item_id' => $la->id, 'piece_default_g' => null]);
+
+    [$salat] = ($this->rezept)('linsensalat', '[VOR] Linsensalat | Ei', [[($this->gp)('Belugalinsen', 4.00), 200]]);
+    $salat->ingredients()->create(['team_id' => $t, 'position' => 9, 'gp_id' => $ei->id, 'raw_text' => 'Ei', 'quantity' => 0.5,
+        'unit_vocab_id' => $stk->id, 'match_method' => 'manual']);
+    app(RecipeRecomputeService::class)->recomputePipeline($salat->id);
+    ($this->darreichung)($salat, 'teller', ['is_standard' => true, 'menge_vom_standard' => false, 'quantity_per_unit_g' => 200]);
+    ($this->darreichung)($salat, 'klein', ['is_standard' => false, 'menge_vom_standard' => false, 'quantity_per_unit_g' => 100]);
+    $dar = app(DarreichungService::class);
+    $dar->recomputeFuerRezept($salat->id);
+    $stand = fn () => FoodAlchemistRecipeDarreichung::where('recipe_id', $salat->id)->orderBy('id')
+        ->get(['id', 'quantity_per_unit_g', 'menge_vom_standard', 'komponenten_referenz_g', 'ek_portion', 'sales_net'])->toArray();
+    $produktion = fn () => FoodAlchemistRecipeDarreichung::where('recipe_id', $salat->id)->orderBy('id')->get()
+        ->map(fn ($d) => $dar->produktionsAnteil($salat->fresh(), $d, 10, $this->rootTeam))->all();
+    $vorher = [$stand(), $produktion()];
+    expect((float) $salat->fresh()->ek_total_eur)->toBeGreaterThan(0.8);   // 200 g Linsen 0,80 € + 0,5 Ei 0,15 €
+
+    // Trockenlauf: beide Darreichungen nicht ableitbar, mit dem Ei im Grund
+    $b = app(GrammaturUmstellungService::class)->lauf(false, [$salat->id]);
+    $nicht = collect($b['nicht_ableitbar'])->where('recipe_id', $salat->id);
+    expect($b['ok'])->toBeTrue()
+        ->and($nicht)->toHaveCount(2)
+        ->and($nicht->pluck('grund')->all())->each->toContain('Bestandteile ohne Gewicht: Ei (0,5 Stück)')
+        ->and(collect($b['rezepte'])->pluck('recipe_id')->all())->not->toContain($salat->id);
+
+    // Apply: nichts wird umgestellt — Grammatur, EK, VK und die Produktion (das halbe Ei) bleiben
+    app(GrammaturUmstellungService::class)->lauf(true, [$salat->id]);
+    expect([$stand(), $produktion()])->toEqual($vorher)
+        ->and(FoodAlchemistRecipeDarreichungDelta::whereIn('presentation_id', array_column($vorher[0], 'id'))->count())->toBe(0);
 });

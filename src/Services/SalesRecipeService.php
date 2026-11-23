@@ -831,24 +831,13 @@ class SalesRecipeService
             throw new \RuntimeException('Geerbtes Gericht: Löschen kann es nur das Besitzer-Team.');
         }
 
-        // Referenz-Guard — Schema::hasTable-gesichert, weil nicht jede Umgebung alle Module
-        // ausgerollt hat (z. B. Speiseplan-Tabellen fehlen auf der aktuellen Master-DB).
-        $refs = [];
-        foreach ([
-            [\Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock::class, 'Foodbook'],
-            [\Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::class, 'Konzept'],
-            [\Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag::class, 'Speiseplan'],
-        ] as [$model, $label]) {
-            $table = (new $model)->getTable();
-            if (! \Illuminate\Support\Facades\Schema::hasTable($table)) {
-                continue;
-            }
-            if (($n = $model::where('sales_recipe_id', $recipe->id)->count()) > 0) {
-                $refs[] = "{$n}× {$label}";
-            }
-        }
-        if ($refs !== []) {
-            throw new \RuntimeException('Das Gericht wird noch verwendet (' . implode(', ', $refs) . '). Zuerst dort entfernen.');
+        // Gericht-Verwaltung (Kurator/Dominique 23.11.): EINE Löschregel für Panel, Editor und MCP — aktive Verwendungen sperren
+        // (mit Ort), historische nicht; das Gericht wird weich gelöscht und bleibt dort als Verweis lesbar.
+        $bilanz = app(\Platform\FoodAlchemist\Services\Gericht\GerichtVerwendungen::class)->loeschBilanz($team, (int) $recipe->id);
+        if ($bilanz['aktiv'] !== []) {
+            throw new \RuntimeException('Das Gericht wird noch aktiv verwendet: '
+                . implode(' · ', array_map(fn ($v) => $v['ort'] . ($v['grund'] !== null ? " ({$v['grund']})" : ''), array_slice($bilanz['aktiv'], 0, 8)))
+                . (count($bilanz['aktiv']) > 8 ? ' · …' : '') . '. Erst „in allen Verwendungen ersetzen“, dann löschen.');
         }
 
         DB::transaction(function () use ($recipe) {

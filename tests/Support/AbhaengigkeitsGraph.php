@@ -43,6 +43,8 @@ final class AbhaengigkeitsGraph
         'LieferantenRechnungService' => 3,   // dto.
         'RecipeKnowledgeRun' => 0,           // Wert-Objekt in Services/Knowledge (Kanonstand eines Laufs), Name trügt
         'IngredientMatchService' => 0,       // Zutat-String → GP/Sub-Rezept; ruft keine Rezept-Dienste, wird von ihnen gerufen
+        'GerichtVerwendungen' => 3,          // Gericht-Verwaltung: liest Verwendungen in Konzept, Plan, Karte, Angebot, Foodbook (Präfix „Gericht“ wäre Rezept)
+        'GerichtTauschService' => 4,         // Gericht-Verwaltung: orchestriert den Tausch über alle Ausgaben + Preis-Kaskade
     ];
 
     /** Präfix → Schicht, erste passende Regel gewinnt. */

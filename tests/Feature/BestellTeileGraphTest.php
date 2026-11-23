@@ -19,6 +19,7 @@ const BESTELL_RANG = [
     'BestellDokument' => 2,    // nutzt Summen, Ampeln
     'BestellEingang' => 0,
     'BestellPflege' => 1,      // nutzt Schiene
+    'BestellBedarf' => 2,      // nutzt Ampeln
 ];
 
 /** @return array<string, list<string>> Teil => Teile (kurz), von denen er per Konstruktor abhängt */

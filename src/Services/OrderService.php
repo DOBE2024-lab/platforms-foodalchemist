@@ -55,6 +55,7 @@ class OrderService
         private \Platform\FoodAlchemist\Services\Bestellung\BestellDokument $dokumente,
         private \Platform\FoodAlchemist\Services\Bestellung\BestellEingang $eingang,
         private \Platform\FoodAlchemist\Services\Bestellung\BestellPflege $pflege,
+        private \Platform\FoodAlchemist\Services\Bestellung\BestellBedarf $bedarf,
     ) {}
 
     // ── Schiene holen/anlegen ─────────────────────────────────────────────
@@ -118,20 +119,20 @@ class OrderService
      */
     public function previewFromSources(Team $team, array $sources, LeadLaStrategie|string|null $strategy = null, array $overrides = []): array
     {
-        $strategie = $this->strategieAusWert($strategy);
+        $strategie = $this->bedarf->strategieAusWert($strategy);
         $gruppen = [];
         $unresolved = [];
         $warnings = [];
         $sourceCount = 0;
-        $rezeptLager = $this->rezeptLagerTopf($team, $overrides);
+        $rezeptLager = $this->bedarf->rezeptLagerTopf($team, $overrides);
 
         foreach (array_values($sources) as $idx => $source) {
             $sourceCount++;
             $type = (string) ($source['type'] ?? '');
             $date = ($source['delivery_date'] ?? null) ?: null;
             $reference = trim((string) ($source['reference'] ?? ''));
-            $label = $this->sourceLabel($team, $source);
-            $sourceRef = $this->sourceRef($source, $idx);
+            $label = $this->bedarf->sourceLabel($team, $source);
+            $sourceRef = $this->bedarf->sourceRef($source, $idx);
 
             try {
                 if ($type === 'supplier_item') {
@@ -139,10 +140,10 @@ class OrderService
                 } elseif ($type === 'gp') {
                     $this->previewGp($team, $gruppen, $unresolved, $source, $date, $reference, $label, $sourceRef, $strategie, $overrides);
                 } elseif ($type === 'recipe') {
-                    $this->previewZiel($team, $gruppen, $unresolved, $warnings, $this->zielAusRecipeSource($source), $date, $reference, $label, $sourceRef, $strategie, $overrides, $rezeptLager);
+                    $this->previewZiel($team, $gruppen, $unresolved, $warnings, $this->bedarf->zielAusRecipeSource($source), $date, $reference, $label, $sourceRef, $strategie, $overrides, $rezeptLager);
                 } elseif ($type === 'concept' || $type === 'paket') {
                     // Spec 73: Konzept / Paket × Personen — Auflösung wie in der Produktion
-                    $this->previewZiel($team, $gruppen, $unresolved, $warnings, $this->zielAusMengenQuelle($source), $date, $reference, $label, $sourceRef, $strategie, $overrides, $rezeptLager);
+                    $this->previewZiel($team, $gruppen, $unresolved, $warnings, $this->bedarf->zielAusMengenQuelle($source), $date, $reference, $label, $sourceRef, $strategie, $overrides, $rezeptLager);
                 } elseif ($type === 'nachfuellen') {
                     // Spec 74: Lagerartikel unter Mindestbestand → auf Sollbestand auffüllen
                     foreach (app(LagerartikelService::class)->unterMindest($team) as $la) {
@@ -156,7 +157,7 @@ class OrderService
                 } elseif ($type === 'production') {
                     $production = FoodAlchemistProductionOrder::visibleToTeam($team)->find((int) ($source['id'] ?? 0));
                     if ($production === null) {
-                        $unresolved[] = $this->unresolved($source, $label, 'produktion_fehlt', 'Produktion nicht sichtbar oder nicht vorhanden.');
+                        $unresolved[] = $this->bedarf->unresolved($source, $label, 'produktion_fehlt', 'Produktion nicht sichtbar oder nicht vorhanden.');
 
                         continue;
                     }
@@ -169,7 +170,7 @@ class OrderService
                             $gruppen,
                             $unresolved,
                             $warnings,
-                            $this->zielOhneMeta($target),
+                            $this->bedarf->zielOhneMeta($target),
                             $prodDate,
                             $reference !== '' ? $reference : (string) ($target['label'] ?? ''),
                             $label,
@@ -180,15 +181,15 @@ class OrderService
                         );
                     }
                 } else {
-                    $unresolved[] = $this->unresolved($source, $label, 'quelle_unbekannt', 'Quelltyp wird noch nicht unterstützt.');
+                    $unresolved[] = $this->bedarf->unresolved($source, $label, 'quelle_unbekannt', 'Quelltyp wird noch nicht unterstützt.');
                 }
             } catch (\Throwable $e) {
-                $unresolved[] = $this->unresolved($source, $label, 'quelle_fehlerhaft', $e->getMessage());
+                $unresolved[] = $this->bedarf->unresolved($source, $label, 'quelle_fehlerhaft', $e->getMessage());
             }
         }
 
         [$gruppen, $ausLager, $ausgelassen, $vorrat] = $this->nachbearbeitePreview($team, $gruppen, $overrides);
-        $ordersPreview = $this->finalisierePreviewGruppen($gruppen);
+        $ordersPreview = $this->bedarf->finalisierePreviewGruppen($gruppen);
         $totalNet = round(array_sum(array_map(fn ($g) => (float) ($g['total_net'] ?? 0), $ordersPreview)), 2);
 
         return [
@@ -197,7 +198,7 @@ class OrderService
             'aus_lager' => $ausLager,
             'ausgelassen' => $ausgelassen,
             'lager_abgleich' => ! empty($overrides['lager_abgleich']),
-            'rezept_lager' => $this->rezeptLagerAnzeige($rezeptLager),
+            'rezept_lager' => $this->bedarf->rezeptLagerAnzeige($rezeptLager),
             'vorrat' => $vorrat,                                                        // Spec 74: Lagerartikel aus dem Rezeptbedarf
             'nachfuellen_moeglich' => count(app(LagerartikelService::class)->unterMindest($team)),
             'nachfuellen_aktiv' => collect($sources)->contains(fn ($q) => ($q['type'] ?? '') === 'nachfuellen'),
@@ -231,7 +232,7 @@ class OrderService
             }
         }
         $this->assertProductionSourcesReplaceable($team, $replacementSources);
-        $strategie = $this->strategieAusWert($strategy);
+        $strategie = $this->bedarf->strategieAusWert($strategy);
         $preview = $this->previewFromSources($team, $sources, $strategie, $overrides);
         $cleared = $this->clearSourceRefsFromDrafts($team, $this->replacementSourceRefs($team, $replacementSources, $preview));
         $touched = [];
@@ -284,10 +285,10 @@ class OrderService
             $type = (string) ($source['type'] ?? '');
             $date = ($source['delivery_date'] ?? null) ?: null;
             $reference = trim((string) ($source['reference'] ?? ''));
-            $sourceRef = $this->sourceRef($source, $idx);
+            $sourceRef = $this->bedarf->sourceRef($source, $idx);
 
             if ($type === 'supplier_item') {
-                $line = $this->addManualLine($team, (int) ($source['id'] ?? 0), max(0.0, $this->sourceQty($source)), null, $userId, $date);
+                $line = $this->addManualLine($team, (int) ($source['id'] ?? 0), max(0.0, $this->bedarf->sourceQty($source)), null, $userId, $date);
                 $touched[] = (int) $line->order_id;
                 $this->kopfAusQuelle($team, (int) $line->order_id, $reference);
             } elseif ($type === 'gp') {
@@ -295,7 +296,7 @@ class OrderService
                 if ($gp === null) {
                     continue;
                 }
-                if (($bz = \Platform\FoodAlchemist\Support\Derivat\DerivatBedarf::bestellziel($gp, $this->sourceGramsForGp($gp, $source))) === null) { continue; } [$gp, $grams] = $bz;   // Spec 96: wie previewGp
+                if (($bz = \Platform\FoodAlchemist\Support\Derivat\DerivatBedarf::bestellziel($gp, $this->bedarf->sourceGramsForGp($gp, $source))) === null) { continue; } [$gp, $grams] = $bz;   // Spec 96: wie previewGp
                 $lead = $this->leadLa->effektiverLead($gp, $team, $strategie);
                 if ($lead?->supplier_id === null || $lead?->id === null) {
                     continue;
@@ -309,7 +310,7 @@ class OrderService
                 $this->kopfAusQuelle($team, (int) $draft->id, $reference);
                 $touched[] = (int) $draft->id;
             } elseif (in_array($type, ['recipe', 'concept', 'paket'], true)) {
-                $res = $this->addNeedFromTarget($team, $type === 'recipe' ? $this->zielAusRecipeSource($source) : $this->zielAusMengenQuelle($source), $sourceRef, $userId, $strategie, $date);
+                $res = $this->addNeedFromTarget($team, $type === 'recipe' ? $this->bedarf->zielAusRecipeSource($source) : $this->bedarf->zielAusMengenQuelle($source), $sourceRef, $userId, $strategie, $date);
                 foreach ($res['orders'] as $id) {
                     $this->kopfAusQuelle($team, (int) $id, $reference);
                 }
@@ -323,7 +324,7 @@ class OrderService
                 $prodDate = $date ?: $production->production_date?->toDateString();
                 foreach ($targets as $targetIdx => $target) {
                     $targetRef = ProductionOrderService::sourceRefFor((int) $production->id, (string) ($target['source_ref'] ?? ('target-'.$targetIdx)));
-                    $res = $this->addNeedFromTarget($team, $this->zielOhneMeta($target), $targetRef, $userId, $strategie, $prodDate);
+                    $res = $this->addNeedFromTarget($team, $this->bedarf->zielOhneMeta($target), $targetRef, $userId, $strategie, $prodDate);
                     foreach ($res['orders'] as $id) {
                         $this->kopfAusQuelle($team, (int) $id, $reference !== '' ? $reference : (string) ($target['label'] ?? ''));
                     }
@@ -366,34 +367,15 @@ class OrderService
         return ['_stand' => [
             'sources' => array_values($sources),
             'overrides' => array_diff_key($overrides, ['round_id' => 1]),
-            'source_refs' => array_values(array_unique(array_merge($this->previewSourceRefs($preview), $this->replacementSourceRefs($team, $replacementSources, $preview)))),
+            'source_refs' => array_values(array_unique(array_merge($this->bedarf->previewSourceRefs($preview), $this->replacementSourceRefs($team, $replacementSources, $preview)))),
             'lager_reserviert' => $gp === [] && $rezept === [] ? null : ['gp' => $gp, 'rezept' => $rezept],
         ]];
     }
 
-    /**
-     * Spec 73: Lager, das andere gespeicherte Runden schon angerechnet haben (bis zu ihrem Liefertag).
-     *
-     * @return array{gp: array<int, float>, rezept: array<int, float>, runden: array<int, list<string>>}
-     */
+    /** 98 · 3.3 S5: BestellBedarf::lagerReserviert() */
     public function lagerReserviert(Team $team, ?int $ohneRundeId = null): array
     {
-        $out = ['gp' => [], 'rezept' => [], 'runden' => []];
-        $runden = FoodAlchemistOrderRound::where('team_id', $team->id)->whereNotNull('lager_reserviert')
-            ->when($ohneRundeId !== null, fn ($q) => $q->whereKeyNot($ohneRundeId))
-            ->where(fn ($q) => $q->whereDate('desired_delivery_date', '>=', now()->toDateString())
-                ->orWhere(fn ($w) => $w->whereNull('desired_delivery_date')->where('created_at', '>=', now()->subDays(14))))
-            ->get(['id', 'label', 'lager_reserviert']);
-        foreach ($runden as $r) {
-            foreach (['gp', 'rezept'] as $art) {
-                foreach ((array) ($r->lager_reserviert[$art] ?? []) as $id => $menge) {
-                    $out[$art][(int) $id] = ($out[$art][(int) $id] ?? 0) + (float) $menge;
-                    $out['runden'][$art . ':' . (int) $id][] = (string) $r->label;
-                }
-            }
-        }
-
-        return $out;
+        return $this->bedarf->lagerReserviert($team, $ohneRundeId);
     }
 
     /**
@@ -818,7 +800,7 @@ class OrderService
      */
     private function replacementSourceRefs(Team $team, array $sources, array $preview): array
     {
-        $refs = $this->previewSourceRefs($preview);
+        $refs = $this->bedarf->previewSourceRefs($preview);
         $prefixes = collect($sources)
             ->filter(fn (array $source) => ($source['type'] ?? null) === 'production' && (int) ($source['id'] ?? 0) > 0)
             ->map(fn (array $source) => ProductionOrderService::sourceRefPrefix((int) $source['id']))
@@ -886,18 +868,6 @@ class OrderService
             ->each->delete();
     }
 
-    /** @return list<string> */
-    private function previewSourceRefs(array $preview): array
-    {
-        return collect($preview['orders_preview'] ?? [])
-            ->flatMap(fn ($gruppe) => collect($gruppe['positionen'] ?? [])->pluck('source_ref'))
-            ->filter()
-            ->map(fn ($ref) => (string) $ref)
-            ->unique()
-            ->values()
-            ->all();
-    }
-
     private function markProductionSourcesHandedOver(Team $team, array $sources): void
     {
         foreach ($sources as $source) {
@@ -936,14 +906,14 @@ class OrderService
             ->find((int) ($source['id'] ?? 0));
 
         if ($la === null || $la->supplier_id === null) {
-            $unresolved[] = $this->unresolved($source, $label, 'artikel_fehlt', 'Lieferantenartikel fehlt oder hat keinen Lieferanten.');
+            $unresolved[] = $this->bedarf->unresolved($source, $label, 'artikel_fehlt', 'Lieferantenartikel fehlt oder hat keinen Lieferanten.');
 
             return;
         }
 
-        $qty = max(0.0, $this->sourceQty($source));
+        $qty = max(0.0, $this->bedarf->sourceQty($source));
         if ($qty <= 0) {
-            $unresolved[] = $this->unresolved($source, $label, 'menge_fehlt', 'Menge muss größer 0 sein.');
+            $unresolved[] = $this->bedarf->unresolved($source, $label, 'menge_fehlt', 'Menge muss größer 0 sein.');
 
             return;
         }
@@ -959,7 +929,7 @@ class OrderService
         $geb = $this->gebinde->berechne($ctx, 0.0, $la->structure?->gp?->piece_default_g !== null ? (float) $la->structure->gp->piece_default_g : null);
         $packPrice = $geb['pack_price'] ?? null;
         $lineTotal = $packPrice !== null ? round($qty * (float) $packPrice, 2) : 0.0;
-        $this->previewAddPosition($gruppen, (int) $la->supplier_id, $la->supplier?->name ?? '—', $date, [
+        $this->bedarf->previewAddPosition($gruppen, (int) $la->supplier_id, $la->supplier?->name ?? '—', $date, [
             'source_ref' => $sourceRef,
             'source_label' => $label,
             'reference' => $reference,
@@ -967,7 +937,7 @@ class OrderService
             'gp_id' => $la->structure?->gp?->id !== null ? (int) $la->structure->gp->id : null,
             'gp' => $la->structure?->gp?->name,
             'lead_la_id' => (int) $la->id,
-            'override_key' => $this->overrideKey($sourceRef, $la->structure?->gp?->id !== null ? (int) $la->structure->gp->id : null),
+            'override_key' => $this->bedarf->overrideKey($sourceRef, $la->structure?->gp?->id !== null ? (int) $la->structure->gp->id : null),
             'article_number' => $la->article_number,
             'designation' => $la->designation,
             'qty_packs' => $qty,
@@ -981,7 +951,7 @@ class OrderService
         ]);
 
         if ($packPrice === null) {
-            $unresolved[] = $this->unresolved($source, $label, 'preis_fehlt', 'Preis am Lieferantenartikel fehlt; Position wird als 0-Euro-Klärfall angezeigt.');
+            $unresolved[] = $this->bedarf->unresolved($source, $label, 'preis_fehlt', 'Preis am Lieferantenartikel fehlt; Position wird als 0-Euro-Klärfall angezeigt.');
         }
     }
 
@@ -989,23 +959,23 @@ class OrderService
     {
         $gp = FoodAlchemistGp::visibleToTeam($team)->find((int) ($source['id'] ?? 0));
         if ($gp === null) {
-            $unresolved[] = $this->unresolved($source, $label, 'gp_fehlt', 'Grundprodukt nicht sichtbar oder nicht vorhanden.');
+            $unresolved[] = $this->bedarf->unresolved($source, $label, 'gp_fehlt', 'Grundprodukt nicht sichtbar oder nicht vorhanden.');
 
             return;
         }
 
-        $grams = $this->sourceGramsForGp($gp, $source);
+        $grams = $this->bedarf->sourceGramsForGp($gp, $source);
         if ($grams <= 0) {
-            $unresolved[] = $this->unresolved($source, $label, 'menge_fehlt', 'Menge muss größer 0 sein.');
+            $unresolved[] = $this->bedarf->unresolved($source, $label, 'menge_fehlt', 'Menge muss größer 0 sein.');
 
             return;
         }
-        if (($bz = \Platform\FoodAlchemist\Support\Derivat\DerivatBedarf::bestellziel($gp, $grams)) === null) { $unresolved[] = $this->unresolved($source, $label, 'sammelbestand', 'Nebenprodukt aus dem Sammelbestand, wird nicht bestellt.'); return; } [$gp, $grams] = $bz;   // Spec 96: Zweck-Derivat → Mutter
-        $overrideKey = $this->overrideKey($sourceRef, (int) $gp->id);
+        if (($bz = \Platform\FoodAlchemist\Support\Derivat\DerivatBedarf::bestellziel($gp, $grams)) === null) { $unresolved[] = $this->bedarf->unresolved($source, $label, 'sammelbestand', 'Nebenprodukt aus dem Sammelbestand, wird nicht bestellt.'); return; } [$gp, $grams] = $bz;   // Spec 96: Zweck-Derivat → Mutter
+        $overrideKey = $this->bedarf->overrideKey($sourceRef, (int) $gp->id);
         $lead = $this->leadLa->effektiverLead($gp, $team, $strategie);
         $lead = $this->overrideLead($team, $gp, $overrides[$overrideKey] ?? null) ?? $lead;
         if ($lead?->supplier_id === null || $lead?->id === null) {
-            $unresolved[] = $this->unresolved($source, $label, 'lead_la_fehlt', 'Kein bestellbarer Hauptartikel für dieses Grundprodukt. Lieferantenartikel zuordnen.');
+            $unresolved[] = $this->bedarf->unresolved($source, $label, 'lead_la_fehlt', 'Kein bestellbarer Hauptartikel für dieses Grundprodukt. Lieferantenartikel zuordnen.');
 
             return;
         }
@@ -1013,7 +983,7 @@ class OrderService
         $pieceG = $gp->piece_default_g !== null ? (float) $gp->piece_default_g : null;
         $geb = $this->gebinde->berechne($lead, $grams, $pieceG);
         $packPrice = $geb['pack_price'] ?? null;
-        $this->previewAddPosition($gruppen, (int) $lead->supplier_id, $lead->supplier_name ?? '—', $date, [
+        $this->bedarf->previewAddPosition($gruppen, (int) $lead->supplier_id, $lead->supplier_name ?? '—', $date, [
             'source_ref' => $sourceRef,
             'source_label' => $label,
             'reference' => $reference,
@@ -1029,13 +999,13 @@ class OrderService
             'pack_price' => $packPrice !== null ? (float) $packPrice : null,
             'line_total' => ($geb['line_total'] ?? null) !== null ? (float) $geb['line_total'] : 0.0,
             'needed_base_g' => $grams,
-            'needed_display' => $this->displayMenge($grams, (string) ($source['unit'] ?? 'kg'), $pieceG),
+            'needed_display' => $this->bedarf->displayMenge($grams, (string) ($source['unit'] ?? 'kg'), $pieceG),
             'needed_unit' => (string) ($source['unit'] ?? 'kg'),
             'bestellbar' => $packPrice !== null && (float) ($geb['qty_packs'] ?? 0) > 0,
         ]);
 
         if ($packPrice === null || ! ($geb['berechenbar'] ?? false)) {
-            $unresolved[] = $this->unresolved($source, $label, 'gebinde_preis_fehlt', 'Gebinde oder Preis ist nicht vollständig berechenbar.');
+            $unresolved[] = $this->bedarf->unresolved($source, $label, 'gebinde_preis_fehlt', 'Gebinde oder Preis ist nicht vollständig berechenbar.');
         }
     }
 
@@ -1048,7 +1018,7 @@ class OrderService
             $supplierId = $grp['supplier_id'] ?? null;
             if ($supplierId === null) {
                 foreach (($grp['positionen'] ?? []) as $pos) {
-                    $unresolved[] = $this->unresolved(
+                    $unresolved[] = $this->bedarf->unresolved(
                         ['type' => 'recipe', 'id' => $ziel['recipe_id'] ?? null],
                         $label.($pos['gp'] ? ' · '.$pos['gp'] : ''),
                         'lead_la_fehlt',
@@ -1063,7 +1033,7 @@ class OrderService
                 $geb = $pos['gebinde'] ?? [];
                 $gpId = $pos['gp_id'] !== null ? (int) $pos['gp_id'] : null;
                 $neededG = (float) ($pos['menge_kg'] ?? 0) * 1000.0;
-                $overrideKey = $this->overrideKey($sourceRef, $gpId);
+                $overrideKey = $this->bedarf->overrideKey($sourceRef, $gpId);
                 $leadLaId = $pos['lead_la_id'] !== null ? (int) $pos['lead_la_id'] : null;
                 $supplierForGroup = (int) $supplierId;
                 $supplierName = (string) ($grp['lieferant'] ?? '—');
@@ -1087,7 +1057,7 @@ class OrderService
                     }
                 }
                 $packPrice = $geb['pack_price'] ?? null;
-                $this->previewAddPosition($gruppen, $supplierForGroup, $supplierName, $date, [
+                $this->bedarf->previewAddPosition($gruppen, $supplierForGroup, $supplierName, $date, [
                     'source_ref' => $sourceRef,
                     'source_label' => $label,
                     'reference' => $reference,
@@ -1109,7 +1079,7 @@ class OrderService
                 ]);
 
                 if ($leadLaId === null || $packPrice === null || ! ($geb['berechenbar'] ?? false)) {
-                    $unresolved[] = $this->unresolved(
+                    $unresolved[] = $this->bedarf->unresolved(
                         ['type' => 'recipe', 'id' => $ziel['recipe_id'] ?? null],
                         $label.($pos['gp'] ? ' · '.$pos['gp'] : ''),
                         $leadLaId === null ? 'lead_la_fehlt' : 'gebinde_preis_fehlt',
@@ -1120,153 +1090,10 @@ class OrderService
         }
     }
 
-    private function previewAddPosition(array &$gruppen, int $supplierId, string $supplierName, ?string $date, array $position): void
-    {
-        $key = $supplierId.'|'.($date ?: '');
-        $gruppen[$key] ??= [
-            'supplier_id' => $supplierId,
-            'supplier' => $supplierName,
-            'delivery_date' => $date,
-            'positionen' => [],
-            'total_net' => 0.0,
-            'references' => [],
-            'source_refs' => [],
-        ];
-
-        $gruppen[$key]['positionen'][] = $position;
-        $gruppen[$key]['total_net'] = round((float) $gruppen[$key]['total_net'] + (float) ($position['line_total'] ?? 0), 2);
-        if (($position['reference'] ?? '') !== '') {
-            $gruppen[$key]['references'][$position['reference']] = true;
-        }
-        if (($position['source_ref'] ?? '') !== '') {
-            $gruppen[$key]['source_refs'][$position['source_ref']] = true;
-        }
-    }
-
-    private function finalisierePreviewGruppen(array $gruppen): array
-    {
-        $lieferanten = FoodAlchemistSupplier::query()
-            ->whereIn('id', collect($gruppen)->pluck('supplier_id')->filter()->unique()->values())
-            ->get(['id', 'min_order_value', 'free_shipping_threshold', 'delivery_days', 'order_cutoff_time', 'order_lead_days'])
-            ->keyBy('id');
-
-        return collect($gruppen)
-            ->sortBy(fn ($g) => (($g['delivery_date'] ?? '9999-12-31').'|'.($g['supplier'] ?? '')))
-            ->map(function ($g) use ($lieferanten) {
-                $supplier = $lieferanten[(int) $g['supplier_id']] ?? null;
-                $min = $supplier?->min_order_value !== null ? (float) $supplier->min_order_value : null;
-                $free = $supplier?->free_shipping_threshold !== null ? (float) $supplier->free_shipping_threshold : null;
-                $total = (float) ($g['total_net'] ?? 0);
-                $g['references'] = array_keys($g['references'] ?? []);
-                $g['source_refs'] = array_keys($g['source_refs'] ?? []);
-                $g['warnings'] = $this->ampeln->previewLogistikWarnings($supplier, ($g['delivery_date'] ?? null) ?: null);
-                $g['moq'] = [
-                    'min_order_value' => $min,
-                    'free_shipping_threshold' => $free,
-                    'unter_mindestbestellwert' => $min !== null && $total < $min,
-                    'fehlt_bis_min' => $min !== null && $total < $min ? round($min - $total, 2) : 0.0,
-                    'frei_haus' => $free !== null && $total >= $free,
-                    'fehlt_bis_frei_haus' => $free !== null && $total < $free ? round($free - $total, 2) : 0.0,
-                ];
-
-                return $g;
-            })->values()->all();
-    }
-
-    private function sourceQty(array $source): float
-    {
-        return (float) str_replace(',', '.', trim((string) ($source['qty'] ?? 1)));
-    }
-
-    private function sourceGramsForGp(FoodAlchemistGp $gp, array $source): float
-    {
-        $qty = $this->sourceQty($source);
-        $unit = (string) ($source['unit'] ?? 'kg');
-
-        return match ($unit) {
-            'g' => $qty,
-            'stk' => $gp->piece_default_g !== null ? $qty * (float) $gp->piece_default_g : 0.0,
-            default => $qty * 1000.0,
-        };
-    }
-
-    private function displayMenge(float $grams, string $unit, ?float $pieceG): float
-    {
-        return match ($unit) {
-            'g' => round($grams, 1),
-            'stk' => $pieceG !== null && $pieceG > 0 ? round($grams / $pieceG, 2) : round($grams, 1),
-            default => round($grams / 1000.0, 3),
-        };
-    }
-
-    /** Spec 73: Konzept/Paket-Quelle → Ziel (Personen). */
-    private function zielAusMengenQuelle(array $source): array
-    {
-        $personen = max(1, (int) round($this->sourceQty($source)));
-
-        return ($source['type'] ?? '') === 'paket'
-            ? ['paket_id' => (int) ($source['id'] ?? 0), 'persons' => $personen]
-            : ['concept_id' => (int) ($source['id'] ?? 0), 'persons' => $personen];
-    }
-
-    private function zielAusRecipeSource(array $source): array
-    {
-        $recipe = FoodAlchemistRecipe::find((int) ($source['id'] ?? 0));
-        $qty = max(0.0, $this->sourceQty($source));
-        $unit = (string) ($source['unit'] ?? ($recipe?->is_sales_recipe ? 'portions' : 'ansaetze'));
-        $ziel = ['recipe_id' => (int) ($source['id'] ?? 0)];
-        if ($unit === 'kg') {
-            $ziel['amount_kg'] = $qty;
-        } else {
-            $ziel['portions'] = $qty;
-        }
-
-        return $ziel;
-    }
-
-    private function zielOhneMeta(array $target): array
-    {
-        return array_diff_key($target, array_flip(['source_ref', 'label']));
-    }
-
-    private function sourceLabel(Team $team, array $source): string
-    {
-        $id = (int) ($source['id'] ?? 0);
-
-        return match ((string) ($source['type'] ?? '')) {
-            'supplier_item' => (string) (FoodAlchemistSupplierItem::visibleToTeam($team)->find($id)?->designation ?? ('Artikel #'.$id)),
-            'gp' => (string) (FoodAlchemistGp::visibleToTeam($team)->find($id)?->name ?? ('Grundprodukt #'.$id)),
-            'recipe' => (string) (FoodAlchemistRecipe::visibleToTeam($team)->find($id)?->name ?? ('Rezept #'.$id)),
-            'production' => (string) (FoodAlchemistProductionOrder::visibleToTeam($team)->find($id)?->name ?? ('Produktion #'.$id)),
-            'concept' => (string) (\Platform\FoodAlchemist\Models\FoodAlchemistConcept::visibleToTeam($team)->find($id)?->name ?? ('Konzept #'.$id)),
-            'paket' => (string) (\Platform\FoodAlchemist\Models\FoodAlchemistPaket::visibleToTeam($team)->find($id)?->name ?? ('Paket #'.$id)),
-            'nachfuellen' => 'Lagerartikel nachfüllen',
-            default => 'Quelle',
-        };
-    }
-
-    private function sourceRef(array $source, int $idx): string
-    {
-        if (($source['type'] ?? '') === 'production') {
-            return 'production-source:'.(int) ($source['id'] ?? 0);
-        }
-
-        $basis = implode(':', [
-            (string) ($source['type'] ?? 'source'),
-            (string) ($source['id'] ?? $idx),
-            (string) ($source['qty'] ?? 1),
-            (string) ($source['unit'] ?? ''),
-            (string) ($source['delivery_date'] ?? ''),
-            (string) ($source['reference'] ?? ''),
-        ]);
-
-        return Str::slug((string) ($source['type'] ?? 'source'), '_').':'.(string) ($source['id'] ?? $idx).'@'.substr(sha1($basis), 0, 10);
-    }
-
-    /** Spec 71: stabiler Schlüssel einer Vorschau-Position (für Auslassen / Menge von Hand). */
+    /** 98 · 3.3 S5: BestellBedarf::positionsSchluessel() */
     public function positionsSchluessel(array $pos): string
     {
-        return (string) ($pos['override_key'] ?? ('la:' . ($pos['source_ref'] ?? '') . '|' . ($pos['lead_la_id'] ?? '')));
+        return $this->bedarf->positionsSchluessel($pos);
     }
 
     /**
@@ -1286,8 +1113,8 @@ class OrderService
         $jePos = (array) ($overrides['lager_pos'] ?? []);
         // Bestand immer lesen: jede Position zeigt, was vom GP im Lager liegt — abgezogen wird nur auf Knopfdruck.
         // Spec 73: abzüglich dessen, was andere gespeicherte Runden schon angerechnet haben.
-        $reserviert = $this->lagerReserviert($team, isset($overrides['round_id']) ? (int) $overrides['round_id'] : null);
-        $lager = $this->lagerJeGp($team, $reserviert['gp']);
+        $reserviert = $this->bedarf->lagerReserviert($team, isset($overrides['round_id']) ? (int) $overrides['round_id'] : null);
+        $lager = $this->bedarf->lagerJeGp($team, $reserviert['gp']);
         $ausLager = [];
         $ausgelassen = [];
         $vorrat = [];
@@ -1296,7 +1123,7 @@ class OrderService
         foreach ($gruppen as $gk => $g) {
             $neu = [];
             foreach ($g['positionen'] as $pos) {
-                $pk = $this->positionsSchluessel($pos);
+                $pk = $this->bedarf->positionsSchluessel($pos);
                 $pos['position_key'] = $pk;
                 $gpId = $pos['gp_id'] ?? null;
                 $nachfuellen = str_starts_with((string) ($pos['source_ref'] ?? ''), 'nachfuellen:');
@@ -1364,74 +1191,6 @@ class OrderService
         return [$gruppen, $ausLager, $ausgelassen, $vorrat];
     }
 
-    /** Spec 71: verfügbarer Lagerbestand je GP in g (Stk über Stückgewicht), alle aktiven Lagerorte des Teams. @return array<int, float> */
-    private function lagerJeGp(Team $team, array $reserviert = []): array
-    {
-        $rows = \Platform\FoodAlchemist\Models\FoodAlchemistInventoryStock::query()
-            ->where('foodalchemist_inventory_stocks.team_id', $team->id)->whereNotNull('foodalchemist_inventory_stocks.gp_id')->where('qty_base', '>', 0)
-            ->join('foodalchemist_inventory_locations as l', 'l.id', '=', 'foodalchemist_inventory_stocks.inventory_location_id')
-            ->where('l.is_active', true)->whereNull('l.deleted_at')
-            ->selectRaw('foodalchemist_inventory_stocks.gp_id, foodalchemist_inventory_stocks.base_unit, SUM(qty_base) as menge')
-            ->groupBy('foodalchemist_inventory_stocks.gp_id', 'foodalchemist_inventory_stocks.base_unit')->get();
-        $stueck = FoodAlchemistGp::whereIn('id', $rows->where('base_unit', 'Stk')->pluck('gp_id')->all() ?: [0])->pluck('piece_default_g', 'id');
-        $out = [];
-        foreach ($rows as $r) {
-            $g = match ($r->base_unit) {
-                'g', 'ml' => (float) $r->menge,
-                'Stk' => isset($stueck[$r->gp_id]) && (float) $stueck[$r->gp_id] > 0 ? (float) $r->menge * (float) $stueck[$r->gp_id] : 0.0,
-                default => 0.0,
-            };
-            $out[(int) $r->gp_id] = ($out[(int) $r->gp_id] ?? 0) + $g;
-        }
-        foreach ($reserviert as $gpId => $g) {     // Spec 73: von anderen Runden schon angerechnet
-            if (isset($out[$gpId])) {
-                $out[$gpId] = max(0.0, $out[$gpId] - (float) $g);
-            }
-        }
-
-        return $out;
-    }
-
-    /**
-     * Spec 72: Eigenproduktion im Lager als Topf für die Auflösung. Abgezogen wird wie beim GP nur per Knopf:
-     * `lager_rezept[recipe_id]` (je Rezept) schlägt `lager_abgleich` (alle).
-     *
-     * @return array<int, array{menge: float, base: string, abziehen: bool, bedarf: float, genutzt: float, start: float}>
-     */
-    private function rezeptLagerTopf(Team $team, array $overrides): array
-    {
-        $global = ! empty($overrides['lager_abgleich']);
-        $jeRezept = (array) ($overrides['lager_rezept'] ?? []);
-        $reserviert = $this->lagerReserviert($team, isset($overrides['round_id']) ? (int) $overrides['round_id'] : null)['rezept'];
-        $topf = [];
-        foreach (app(EigenproduktionService::class)->lagerJeRezept($team, null) as $rid => $l) {
-            $frei = max(0.0, (float) $l['menge'] - (float) ($reserviert[(int) $rid] ?? 0));
-            $topf[(int) $rid] = ['menge' => $frei, 'start' => $frei, 'base' => (string) $l['base'],
-                'abziehen' => array_key_exists($rid, $jeRezept) ? (bool) $jeRezept[$rid] : $global, 'bedarf' => 0.0, 'genutzt' => 0.0];
-        }
-
-        return $topf;
-    }
-
-    /** Nur Rezepte, die in dieser Runde gebraucht werden. @return list<array> */
-    private function rezeptLagerAnzeige(array $topf): array
-    {
-        $ep = app(EigenproduktionService::class);
-        $namen = FoodAlchemistRecipe::whereIn('id', array_keys(array_filter($topf, fn ($t) => ($t['bedarf'] ?? 0) > 0)) ?: [0])->pluck('name', 'id');
-        $out = [];
-        foreach ($topf as $rid => $t) {
-            if (($t['bedarf'] ?? 0) <= 0) {
-                continue;
-            }
-            $out[] = ['recipe_id' => (int) $rid, 'name' => (string) ($namen[$rid] ?? "Rezept #{$rid}"), 'base' => $t['base'],
-                'einheit' => $ep->anzeigeEinheit($t['base']), 'abziehen' => (bool) $t['abziehen'],
-                'im_lager' => $ep->anzeigeMenge($t['start'], $t['base']), 'bedarf' => $ep->anzeigeMenge($t['bedarf'], $t['base']),
-                'abgezogen' => $ep->anzeigeMenge($t['genutzt'], $t['base']), 'abgezogen_basis' => round((float) $t['genutzt'], 4)];
-        }
-
-        return $out;
-    }
-
     /** Lieferantenartikel als Gebinde-Kontext (wie overrideLead, ohne GP-Prüfung). */
     private function leadObjekt(Team $team, int $laId): ?object
     {
@@ -1443,11 +1202,6 @@ class OrderService
         return (object) ['id' => (int) $la->id, 'qty' => FoodAlchemistSupplierItem::mengeVon($la), 'unit_code' => $la->unit_code,
             'packaging_unit' => $la->packaging_unit, 'article_number' => $la->article_number, 'designation' => $la->designation,
             'aktiver_preis' => $this->preise->activeFor((int) $la->id, $team)?->price];
-    }
-
-    private function overrideKey(string $sourceRef, ?int $gpId): ?string
-    {
-        return $gpId !== null ? $sourceRef.'|gp:'.$gpId : null;
     }
 
     private function overrideLead(Team $team, FoodAlchemistGp $gp, int|string|null $leadLaId): ?object
@@ -1474,26 +1228,6 @@ class OrderService
             'designation' => $la->designation,
             'aktiver_preis' => $this->preise->activeFor((int) $la->id, $team)?->price,
         ];
-    }
-
-    private function unresolved(array $source, string $label, string $code, string $message): array
-    {
-        return [
-            'type' => (string) ($source['type'] ?? ''),
-            'id' => $source['id'] ?? null,
-            'label' => $label,
-            'code' => $code,
-            'message' => $message,
-        ];
-    }
-
-    private function strategieAusWert(LeadLaStrategie|string|null $strategy): ?LeadLaStrategie
-    {
-        if ($strategy instanceof LeadLaStrategie) {
-            return $strategy;
-        }
-
-        return $strategy !== null && $strategy !== '' ? LeadLaStrategie::tryFrom((string) $strategy) : null;
     }
 
     private function kopfAusQuelle(Team $team, int $orderId, string $reference): void

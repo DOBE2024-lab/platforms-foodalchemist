@@ -143,3 +143,13 @@ it('Befehl: Trockenlauf schreibt nichts, --apply schreibt mit Journal, --rueckwe
     array_map('unlink', $journal);
     @rmdir($ordner);
 });
+
+it('Report-PDF: unbekannte Diät steht als „unbekannt“, nicht als Lücke neben ja/nein', function () {
+    $html = view('foodalchemist::dokumente.partials.report-declaration', ['deklaration' => [
+        'specs' => ['Vegan' => null, 'Halal' => true, 'Enthält Schwein' => false],
+    ]])->render();
+
+    expect($html)->toContain('<span>Vegan</span>unbekannt')
+        ->and($html)->toContain('<span>Halal</span>ja')
+        ->and($html)->toContain('<span>Enthält Schwein</span>nein');
+});

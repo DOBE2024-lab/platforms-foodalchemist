@@ -9,9 +9,8 @@
 @if($specs->isNotEmpty())
     <div class="grid meta">
         @foreach($specs as $label => $wert)
-            @if($wert !== null)
-                <div><span>{{ $label }}</span>{{ $wert ? 'ja' : 'nein' }}</div>
-            @endif
+            {{-- Diät-Fix 98: unbekannt ausweisen statt weglassen — neben „ja“/„nein“ läse sich eine Lücke als Antwort --}}
+            <div><span>{{ $label }}</span>{{ $wert === null ? 'unbekannt' : ($wert ? 'ja' : 'nein') }}</div>
         @endforeach
     </div>
 @endif

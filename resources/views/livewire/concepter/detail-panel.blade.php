@@ -137,6 +137,8 @@
                     @if($aggregat['allergene']['is_halal'])<x-fa::badge tone="ok" icon="heroicon-m-check">halal</x-fa::badge>@endif
                     @if($aggregat['allergene']['contains_pork'])<x-fa::badge tone="warn">enthält Schwein</x-fa::badge>@endif
                     @if($aggregat['allergene']['contains_beef'])<x-fa::badge tone="warn">enthält Rind</x-fa::badge>@endif
+                    {{-- Diät-Fix 98: fehlendes „vegan“ heißt hier oft „unbekannt“, nicht „nicht vegan“ --}}
+                    @if(($nOffen = max([0, ...array_values($aggregat['allergene']['offen'] ?? [])])) > 0)<x-fa::badge tone="neutral" data-concepter-diaet-offen title="{{ $nOffen }} {{ $nOffen === 1 ? 'Gericht' : 'Gerichte' }} ohne bewertete Diät-Eignung">Diät unbekannt</x-fa::badge>@endif
                 </div>
             </div>
         @endif

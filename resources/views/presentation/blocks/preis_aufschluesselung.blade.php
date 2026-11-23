@@ -11,6 +11,7 @@
     $mitSumme = $pa !== null && ($pa['netto'] ?? null) !== null;
     $satzTxt = ($pa['mwst_satz'] ?? null) !== null ? rtrim(rtrim(number_format((float) $pa['mwst_satz'], 1, ',', '.'), '0'), ',') : '';
     $hatMwst = $satzTxt !== '';
+    $gesamtVorlaeufig = ! empty($pa['vorlaeufig']);   // CQ price_incomplete: die Aufschlüsselung wird nicht eingefroren, ihr Merker ist live wie ihre Beträge
 @endphp
 @if($pa && count($pa['zeilen'] ?? []))
     <div class="pt-measure pt-reveal">
@@ -42,7 +43,7 @@
                 @if(($pa['pro_person'] ?? null) !== null && (float) $pa['pro_person'] > 0)
                     @if($modus !== 'brutto' || ! $hatMwst)
                         <div class="pt-preis-zeile pt-preis-gesamt">
-                            <span class="pt-preis-titel">Gesamt pro Person{{ $hatMwst ? ' (netto)' : '' }}</span><span class="pt-preis-pp">{{ $nf($pa['pro_person']) }} €</span>
+                            <span class="pt-preis-titel">Gesamt pro Person{{ $hatMwst ? ' (netto)' : '' }}</span><span class="pt-preis-pp">{{ $nf($pa['pro_person']) }} €@if($gesamtVorlaeufig) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif</span>
                         </div>
                     @endif
                     @if($hatMwst && $modus !== 'netto')
@@ -54,7 +55,7 @@
             @else
                 @if($modus !== 'brutto')
                     <div class="pt-preis-zeile pt-preis-gesamt">
-                        <span class="pt-preis-titel">Gesamt (netto)</span><span class="pt-preis-pax pt-preis-pax--schwach">Ø {{ $pa['pax'] ?: '—' }}</span><span class="pt-preis-pp"></span><span class="pt-preis-summe">{{ $nf($pa['netto']) }} €</span>
+                        <span class="pt-preis-titel">Gesamt (netto)</span><span class="pt-preis-pax pt-preis-pax--schwach">Ø {{ $pa['pax'] ?: '—' }}</span><span class="pt-preis-pp"></span><span class="pt-preis-summe">{{ $nf($pa['netto']) }} €@if($gesamtVorlaeufig) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif</span>
                     </div>
                 @endif
                 @if($modus === 'beide' && $hatMwst)
@@ -64,7 +65,7 @@
                 @endif
                 @if($modus !== 'netto' && $hatMwst)
                     <div class="pt-preis-zeile {{ $modus === 'brutto' ? 'pt-preis-gesamt' : 'pt-preis-brutto' }}">
-                        <span class="pt-preis-titel">Gesamt (brutto)</span><span class="pt-preis-pax pt-preis-pax--schwach">@if($modus === 'brutto')Ø {{ $pa['pax'] ?: '—' }}@endif</span><span class="pt-preis-pp"></span><span class="pt-preis-summe">{{ $nf($pa['brutto']) }} €</span>
+                        <span class="pt-preis-titel">Gesamt (brutto)</span><span class="pt-preis-pax pt-preis-pax--schwach">@if($modus === 'brutto')Ø {{ $pa['pax'] ?: '—' }}@endif</span><span class="pt-preis-pp"></span><span class="pt-preis-summe">{{ $nf($pa['brutto']) }} €@if($gesamtVorlaeufig) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif</span>
                     </div>
                     @if($modus === 'brutto')
                         <div class="pt-preis-zeile pt-preis-mwst"><span class="pt-preis-titel">inkl. {{ $satzTxt }} % MwSt ({{ $nf($pa['mwst_betrag']) }} €)</span></div>

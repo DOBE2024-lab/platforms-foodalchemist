@@ -617,7 +617,7 @@ class PresentationService
             }
         }
 
-        return $ov === [] ? $neu : $this->setzePreisePfade($neu, $ov);
+        return $ov === [] ? $neu : PraesentationsPreise::merkerEinfrieren($alt, $this->setzePreisePfade($neu, $ov), array_keys($ov));   // CQ price_incomplete: Merker friert mit
     }
 
     /**
@@ -792,7 +792,7 @@ class PresentationService
         $pax = isset($g['personen']) ? (int) $g['personen'] : null;
         $zeilen = $showPrice ? PraesentationsPreise::foodbookZeilen($sections, $pax) : [];
         $breakdown = $zeilen !== []
-            ? PraesentationsPreise::aufschluesselung($zeilen, $pax, $ppNetto, isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null, $satz) : null;
+            ? PraesentationsPreise::aufschluesselung($zeilen, $pax, $ppNetto, isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null, $satz) + ['vorlaeufig' => (bool) ($g['vk_fehlt'] ?? false)] : null;
 
         return [
             'title' => (string) ($fb->label ?: $fb->code ?: 'Foodbook'),
@@ -936,7 +936,7 @@ class PresentationService
             'pauschal' => null,
             'personen' => $kalk['pax'] ?? null,
             'gesamt_vk' => isset($kalk['gesamt_vk']) ? (float) $kalk['gesamt_vk'] : null,
-            'zzgl_summe' => $zzgl !== [] ? $zzglSumme : null,   // Spec 94b: geschätzt, nicht im Preis
+            'zzgl_summe' => $zzgl !== [] ? $zzglSumme : null, 'vorlaeufig' => (bool) ($kalk['vk_fehlt'] ?? false),   // Spec 94b: geschätzt, nicht im Preis
         ] : null;
 
         // #380 Q2: kundensichere Preis-Aufschlüsselung (Kapitel · Pax · €/P · Zwischensumme + netto/MwSt/brutto,
@@ -947,7 +947,7 @@ class PresentationService
             $breakdown = [
                 ...PraesentationsPreise::aufschluesselung(PraesentationsPreise::angebotZeilen($komp['kapitel']), $kalk['pax'] ?? null, $ppNetto, $netto, $satz),
                 // Spec 94b: zzgl. nach Aufwand (geschätzt) und die voraussichtliche Gesamtsumme für den Kunden
-                'zzgl' => $zzgl,
+                'zzgl' => $zzgl, 'vorlaeufig' => (bool) ($kalk['vk_fehlt'] ?? false),   // CQ price_incomplete: Aufschlüsselung ist live, ihr Merker auch
                 'zzgl_summe' => $zzglSumme,
                 'voraussichtlich_netto' => round($netto + $zzglSumme, 2),
             ];

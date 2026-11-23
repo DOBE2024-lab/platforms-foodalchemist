@@ -84,9 +84,9 @@
 
     <div class="preis">
         <table>
-            <tr><td>Preis pro Person</td><td class="right">{{ number_format($kalk['vk_pro_person'], 2, ',', '.') }} €</td></tr>
+            <tr><td>Preis pro Person</td><td class="right">{{ number_format($kalk['vk_pro_person'], 2, ',', '.') }} €{{ ($kalk['vk_fehlt'] ?? false) ? ' (vorläufig)' : '' }}</td></tr>
             <tr><td>Personen</td><td class="right">{{ $kalk['pax'] ?: '—' }}</td></tr>
-            <tr><td class="total">Gesamt</td><td class="right total">{{ number_format($kalk['gesamt_vk'], 2, ',', '.') }} €</td></tr>
+            <tr><td class="total">Gesamt</td><td class="right total">{{ number_format($kalk['gesamt_vk'], 2, ',', '.') }} €{{ ($kalk['vk_fehlt'] ?? false) ? ' (vorläufig)' : '' }}</td></tr>
         </table>
     </div>
 

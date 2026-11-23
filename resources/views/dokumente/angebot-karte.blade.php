@@ -148,11 +148,11 @@
     @if($vk_pro_person > 0 || $netto_gesamt > 0)
         <div class="price">
             <table>
-                <tr><td class="lbl">Preis pro Gast (netto)</td><td class="right">{{ $nf($vk_pro_person) }} €</td></tr>
+                <tr><td class="lbl">Preis pro Gast (netto)</td><td class="right">{{ $nf($vk_pro_person) }} €{{ ($kalk['vk_fehlt'] ?? false) ? ' (vorläufig)' : '' }}</td></tr>
                 @if($pax > 0)<tr><td class="lbl">Gäste</td><td class="right">× {{ $pax }}</td></tr>@endif
                 <tr><td class="lbl">Gesamt netto</td><td class="right">{{ $nf($netto_gesamt) }} €</td></tr>
                 <tr><td class="lbl">zzgl. MwSt ({{ rtrim(rtrim(number_format($mwstSatz, 1, ',', '.'), '0'), ',') }} %)</td><td class="right">{{ $nf($mwst_betrag) }} €</td></tr>
-                <tr><td class="total">Gesamt brutto</td><td class="right total">{{ $nf($brutto_gesamt) }} €</td></tr>
+                <tr><td class="total">Gesamt brutto</td><td class="right total">{{ $nf($brutto_gesamt) }} €{{ ($kalk['vk_fehlt'] ?? false) ? ' (vorläufig)' : '' }}</td></tr>
             </table>
             @if($zzglKarte->isNotEmpty())
                 <div class="alt">Zzgl. nach Aufwand bzw. Verbrauch (geschätzt, nicht im Gesamtpreis):

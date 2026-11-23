@@ -72,6 +72,28 @@ final class PraesentationsPreise
     }
 
     /**
+     * CQ price_incomplete, Republish `preserve`: mit einem eingefrorenen Preis friert auch sein „vorläufig“-Merker ein.
+     * Liest die Pfade aus {@see \Platform\FoodAlchemist\Services\PresentationService::preisPfade} (Block, Kapitel, Gesamt)
+     * und übernimmt den Merker des Alt-Snapshots an genau diesen Knoten; der Live-Merker gilt dort nicht mehr.
+     *
+     * @param  list<string>  $pfade  die tatsächlich eingefrorenen Preis-Pfade
+     */
+    public static function merkerEinfrieren(array $alt, array $neu, array $pfade): array
+    {
+        foreach ($pfade as $pfad) {
+            if (preg_match('/^s(\d+)\.b(\d+)\.(?:pp|pauschal)$/', $pfad, $m) && is_array($neu['content']['sections'][$m[1]]['blocks'][$m[2]]['price'] ?? null)) {
+                $neu['content']['sections'][$m[1]]['blocks'][$m[2]]['price']['vorlaeufig'] = (bool) ($alt['content']['sections'][$m[1]]['blocks'][$m[2]]['price']['vorlaeufig'] ?? false);
+            } elseif (preg_match('/^s(\d+)\.pp$/', $pfad, $m) && is_array($neu['content']['sections'][$m[1]]['preis'] ?? null)) {
+                $neu['content']['sections'][$m[1]]['preis']['vorlaeufig'] = (bool) ($alt['content']['sections'][$m[1]]['preis']['vorlaeufig'] ?? false);
+            } elseif (str_starts_with($pfad, 'total.') && is_array($neu['content']['total'] ?? null)) {
+                $neu['content']['total']['vorlaeufig'] = (bool) ($alt['content']['total']['vorlaeufig'] ?? false);
+            }
+        }
+
+        return $neu;
+    }
+
+    /**
      * Aufschlüsselungs-Zeilen fürs Angebot (#380 Q2) aus den Kapiteln der Komposition.
      *
      * @param  list<array<string,mixed>>  $kapitel

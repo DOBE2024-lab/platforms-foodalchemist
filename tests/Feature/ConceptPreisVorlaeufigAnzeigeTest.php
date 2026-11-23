@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Blade;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Concepter\Browser;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
+use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -204,6 +205,62 @@ it('PR C · Präsentation: Vorschau, veröffentlichter Link und Kundenseite zeig
 
     $this->concepts->update($this->rootTeam, $this->teil->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 25]);
     expect($vorschau())->not->toContain('data-preis-vorlaeufig');
+});
+
+it('PR C · Angebot: Gesamtpreis trägt vk_fehlt in Dokument, Karte und Präsentation; ein gesetzter Angebotspreis nicht', function () {
+    $comp = app(OfferCompositionService::class);
+    $svc = app(AngebotService::class);
+    $angebot = $svc->create($this->rootTeam, ['name' => 'Gala 2027', 'personen' => 40]);
+    $kap = $comp->addKapitel($this->rootTeam, $angebot->id, ['title' => 'Buffet']);
+    $comp->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->teil->id]);
+
+    expect($svc->kalkulation($this->rootTeam, $angebot->fresh())['vk_fehlt'])->toBeTrue();
+    $dok = view('foodalchemist::dokumente.angebot', $svc->dokumentDaten($this->rootTeam, $angebot->fresh()) + ['istPdf' => false])->render();
+    expect(substr_count($dok, '(vorläufig)'))->toBeGreaterThanOrEqual(2)->and($dok)->not->toContain('VK fehlt');   // Preis pro Person + Gesamt
+    $karte = view('foodalchemist::dokumente.angebot-karte', $svc->karteDaten($this->rootTeam, $angebot->id) + ['istPdf' => false])->render();
+    expect($karte)->toContain('(vorläufig)');
+    $snap = app(\Platform\FoodAlchemist\Services\PresentationService::class)->previewData($this->rootTeam, 'angebot', $angebot->id);
+    expect($snap['content']['total']['vorlaeufig'])->toBeTrue()->and($snap['content']['preis_aufschluesselung']['vorlaeufig'] ?? false)->toBeTrue();
+
+    \Illuminate\Support\Facades\DB::table('foodalchemist_offers')->where('id', $angebot->id)->update(['price_mode' => 'manuell', 'total_price' => 1200]);
+    expect($svc->kalkulation($this->rootTeam, $angebot->fresh())['vk_fehlt'])->toBeFalse();
+    $dok = view('foodalchemist::dokumente.angebot', $svc->dokumentDaten($this->rootTeam, $angebot->fresh()) + ['istPdf' => false])->render();
+    expect($dok)->toMatch('/Gesamt<\/td><td class="right total">[^<]*€<\/td>/');   // Gesamt ohne Hinweis
+});
+
+it('PR C · Republish preserve: Preis UND Merker bleiben eingefroren, auto zieht beide live', function () {
+    $fbs = app(FoodbookService::class);
+    $praes = app(\Platform\FoodAlchemist\Services\PresentationService::class);
+    $fb = $fbs->create($this->rootTeam, ['label' => 'Freeze-FB', 'personen' => 30]);
+    $kap = $fbs->addKapitel($this->rootTeam, $fb->id, ['title' => 'Buffet']);
+    $fbs->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->teil->id]);
+    $exp = now()->addDays(30)->toDateString();
+    $block = fn () => collect(FoodAlchemistFoodbook::find($fb->id)->presentation_snapshot_json['content']['sections'][0]['blocks'])->firstWhere('kind', 'concept_ref')['price'];
+    $total = fn () => FoodAlchemistFoodbook::find($fb->id)->presentation_snapshot_json['content']['total'];
+
+    $praes->publish($this->rootTeam, 'foodbook', $fb->id, ['expires_at' => $exp]);   // einfrieren: 12 €, vorläufig
+    expect($block()['pp'])->toBe(12.0)->and($block()['vorlaeufig'])->toBeTrue()->and($total()['vorlaeufig'])->toBeTrue();
+
+    // Preis wird vollständig (hier als gesetzter Konzept-Preis), dann preserve: alter Preis und alter Merker
+    $this->concepts->update($this->rootTeam, $this->teil->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 30]);
+    $praes->publish($this->rootTeam, 'foodbook', $fb->id, ['expires_at' => $exp]);
+    expect($block()['pp'])->toBe(12.0)->and($block()['vorlaeufig'])->toBeTrue()
+        ->and($total()['vk_pro_person'])->toBe(12.0)->and($total()['vorlaeufig'])->toBeTrue();
+
+    $praes->publish($this->rootTeam, 'foodbook', $fb->id, ['expires_at' => $exp, 'price_mode' => 'auto']);
+    expect($block()['pp'])->toBe(30.0)->and($block()['vorlaeufig'])->toBeFalse()->and($total()['vorlaeufig'])->toBeFalse();
+});
+
+it('PR C · Präsentations-Layout bringt die dezente Regel .pt-vorlaeufig mit, im hellen und im dunklen Design', function () {
+    $fbs = app(FoodbookService::class);
+    $fb = $fbs->create($this->rootTeam, ['label' => 'Layout-FB']);
+    $kap = $fbs->addKapitel($this->rootTeam, $fb->id, ['title' => 'Buffet']);
+    $fbs->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->teil->id]);
+    $praes = app(\Platform\FoodAlchemist\Services\PresentationService::class);
+    foreach (['editorial', 'kiosk'] as $design) {   // kiosk = dunkle Palette
+        $html = view('foodalchemist::presentation.show', ['snapshot' => $praes->previewData($this->rootTeam, 'foodbook', $fb->id, $design)])->render();
+        expect($html)->toContain('.pt-vorlaeufig {')->toContain('class="pt-vorlaeufig" data-preis-vorlaeufig');
+    }
 });
 
 it('PR C · KapitelPreis: vorlaeufig nur am festen Preis, nie an der Spanne', function () {

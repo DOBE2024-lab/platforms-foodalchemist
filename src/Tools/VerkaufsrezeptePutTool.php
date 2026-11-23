@@ -30,6 +30,7 @@ class VerkaufsrezeptePutTool extends FoodAlchemistTool implements ToolContract, 
             . 'storage_type / storage_types [gekuehlt|tiefgekuehlt|trocken], shelf_life_chilled_days/_frozen_days/_dry_days, …); '
             . 'nur erlaubte Keys werden geschrieben, FKs und Vokabulare geprüft (unbekannter Wert = VALIDATION_ERROR). '
             . 'Von Hand gesetzte dish_class_id/dichteklasse gelten als Override (source=manual). '
+            . 'Die Grammatur (sales_quantity_per_unit_g) ist nur lesend: sie ergibt sich aus Ansatz ÷ Portionen (sales_unit_count) und spiegelt die Standard-Darreichung; ein abweichender Wert = VALIDATION_ERROR. '
             . 'serving_vehicle_vocab_id (Servier-Typ) geht an die Standard-Darreichung — Typ und Gefäß pflegt man dort (recipe_darreichung.PUT); am Gericht ist der Wert nur abgeleitet. '
             . 'Name = [HG] Leitkomponente | Baustein | Baustein … (VK §1), z. B. „[HG] Rinderfilet | Portwein-Jus | Selleriepüree“. Nicht in den Namen: Gefäß/Darreichung, Deko, Öle, Garnitur, Herkunft, Diät-Tags, Grammatur, Marketingname, Füllwörter (mit, auf). Ein geänderter Name wird geprüft, Verstöße kommen als warnungen zurück.';
     }

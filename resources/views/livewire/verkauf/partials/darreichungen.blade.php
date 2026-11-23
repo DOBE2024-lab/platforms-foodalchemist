@@ -84,7 +84,9 @@
                             </x-fa::select>
                             @if($vehikel->isEmpty())<span class="{{ $hinweis }}" data-dar-typ-leer>Keine Liste: Einstellungen › Behälter › Servier-Vehikel</span>@endif
                         </x-fa::field>
-                        <x-fa::field label="Portionsmenge" :hint="$standardmenge ? ($d->is_standard ? 'Aus der Rezeptur' : 'Aus der Standard-Darreichung') : 'Summe der Komponenten unten'">
+                        {{-- Plan 98 B: die Grammatur ist nur lesend und nennt ihre Herkunft --}}
+                        @php $portionen = max(1, (int) ($form['sales_unit_count'] ?? 1)); @endphp
+                        <x-fa::field label="Portionsmenge" :hint="$standardmenge ? ($d->is_standard ? 'Aus Ansatz ÷ '.$portionen.' '.($portionen === 1 ? 'Portion' : 'Portionen') : 'Aus der Standard-Darreichung') : 'Summe der Komponenten unten'">
                             <div class="flex flex-wrap items-center gap-x-4 gap-y-2 min-h-9" data-dar-portionsmenge>
                                 <strong class="tabular-nums">{{ $d->quantity_per_unit_g !== null ? number_format($d->quantity_per_unit_g * ($d->unit_count ?: 1), 1, ',', '.') . ' g' : 'Menge fehlt' }}</strong>
                                 <x-fa::checkbox class="inline-flex items-center gap-2 text-[length:var(--fa-text-sm)]" :checked="$standardmenge" wire:change="darStandardmenge({{ $d->id }}, $event.target.checked)" data-dar-standardmenge>Standardmenge verwenden</x-fa::checkbox>

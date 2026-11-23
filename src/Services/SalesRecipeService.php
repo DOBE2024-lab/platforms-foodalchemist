@@ -387,6 +387,7 @@ class SalesRecipeService
         return DB::transaction(function () use ($team, $recipe, $in, $kiLineage) {
             $update = array_intersect_key($in, array_flip(self::VK_FELDER));
             $update = \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::vorgabeFelder($update) + $update;   // unbekannter Wert wirft
+            $this->grammaturNurLesen($recipe, $update);
 
             // MVP-050 (P0): Referenzen autorisieren, BEVOR sie geschrieben werden. Der
             // Owner-Guard oben schützt das Rezept — nicht die daran gehängten Fremdschlüssel.
@@ -510,6 +511,26 @@ class SalesRecipeService
         $this->syncStandardDarreichung($team, $recipe, $update);
     }
 
+    /**
+     * Plan 98 B, Sperre: `sales_quantity_per_unit_g` ist nur noch der Spiegel der Standard-Darreichung
+     * ({@see DarreichungService::kopfSpiegeln}). Ein unveränderter Wert geht durch (der Editor schickt den Kopf mit), ein
+     * anderer ist ein Fehler — sonst nähme das Tool still etwas an, das nicht wirkt.
+     */
+    private function grammaturNurLesen(FoodAlchemistRecipe $recipe, array &$update): void
+    {
+        if (! array_key_exists('sales_quantity_per_unit_g', $update)) {
+            return;
+        }
+        $neu = $update['sales_quantity_per_unit_g'];
+        $neu = $neu === null || $neu === '' ? null : str_replace(',', '.', trim((string) $neu));
+        $alt = $recipe->sales_quantity_per_unit_g;
+        $gleich = $neu === null ? $alt === null : ($alt !== null && is_numeric($neu) && abs((float) $neu - (float) $alt) < 0.05);
+        if (! $gleich) {
+            throw new \RuntimeException(DarreichungService::GRAMMATUR_GESPERRT);
+        }
+        unset($update['sales_quantity_per_unit_g']);
+    }
+
     /** VK-Felder des Legacy-Editors in die Standard-Darreichung spiegeln (eine Wahrheit). */
     private function syncStandardDarreichung(Team $team, FoodAlchemistRecipe $recipe, array $update): void
     {
@@ -524,7 +545,6 @@ class SalesRecipeService
             }
         }
         $map = [
-            'sales_quantity_per_unit_g' => 'quantity_per_unit_g',
             'sales_unit_vocab_id' => 'unit_vocab_id',
             'markup_class_id' => 'markup_class_id',
             'container_warm_vocab_id' => 'container_warm_vocab_id',
@@ -537,13 +557,13 @@ class SalesRecipeService
                 $dUpdate[$nach] = $update[$von];
             }
         }
-        if (! array_key_exists('sales_quantity_per_unit_g', $update)
-            && (array_key_exists('sales_unit_count', $update) || $standard->quantity_per_unit_g === null)
+        // Plan 98 B: neue Portionen am Gericht — der Standard rechnet selbst aus Ansatz ÷ Portionen. Vorher schrieb der Sync hier
+        // Ertrag ÷ Portionen als freie Grammatur in die Darreichung. Ein Standard in Altbestand-Form (eigene Menge ohne Deltas)
+        // geht dabei auf „automatisch“; einer mit Komponenten-Mengen bleibt, wie er ist.
+        if ((array_key_exists('sales_unit_count', $update) || $standard->quantity_per_unit_g === null)
+            && ! $standard->menge_vom_standard && ! $standard->deltas()->exists()
             && $recipe->yield_kg !== null && (int) $recipe->sales_unit_count > 0) {
-            $dUpdate['quantity_per_unit_g'] = round(
-                (float) $recipe->yield_kg * 1000 / (int) $recipe->sales_unit_count,
-                1,
-            );
+            $dUpdate['menge_vom_standard'] = true;
             $dUpdate['unit_count'] = 1;
         }
         if (array_key_exists('sales_net', $update)) {
@@ -558,6 +578,8 @@ class SalesRecipeService
         }
         if ($dUpdate !== []) {
             app(DarreichungService::class)->aktualisieren($team, $standard->id, $dUpdate);
+        } elseif (array_key_exists('sales_unit_count', $update)) {
+            app(DarreichungService::class)->recomputeFuerRezept($recipe->id);   // Grammatur = Ansatz ÷ neue Portionen
         }
     }
 

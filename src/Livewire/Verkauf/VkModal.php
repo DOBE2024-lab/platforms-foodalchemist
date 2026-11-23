@@ -267,7 +267,8 @@ class VkModal extends Component
 
     public function darreichungSpeichern(int $id): void
     {
-        $this->darServiceCall(fn ($svc, $team) => $svc->aktualisieren($team, $id, $this->darForm[$id] ?? []));
+        // Plan 98 B: die Grammatur steht in der Zeile nur zur Anzeige — gesperrt, also nicht mitschicken
+        $this->darServiceCall(fn ($svc, $team) => $svc->aktualisieren($team, $id, array_diff_key($this->darForm[$id] ?? [], ['quantity_per_unit_g' => true])));
     }
 
     public function darreichungPreisModusGeaendert(int $id, string $modus): void

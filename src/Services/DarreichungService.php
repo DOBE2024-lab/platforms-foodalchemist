@@ -39,7 +39,29 @@ class DarreichungService
         private TeamSettingsService $settings,
     ) {}
 
+    /**
+     * Plan 98 B, Sperre (Entscheid Dominique 22.11.2026): Es gibt keine freie Grammatur mehr. Der Standard rechnet aus Ansatz ÷
+     * Portionen, Varianten aus ihren Komponenten (Anteil am Standard oder Mengen je Komponente). Zentral hier, damit
+     * Oberfläche, MCP und Importe gleich laufen.
+     */
+    public const GRAMMATUR_GESPERRT = 'Die Grammatur ist nicht direkt setzbar: Sie ergibt sich am Standard aus Ansatz ÷ Portionen, '
+        .'an einer Variante aus ihren Komponenten. Setze stattdessen die Zutatenmengen bzw. die Portionen des Gerichts '
+        .'(sales_unit_count), an einer Variante den Anteil am Standard (anteil_prozent) oder Mengen je Komponente (recipe_darreichung_delta.PUT).';
+
     public function anlegen(Team $team, int $recipeId, int $servierformId, array $attrs = [], string $createdVia = 'fa_ui'): FoodAlchemistRecipeDarreichung
+    {
+        if (array_key_exists('quantity_per_unit_g', $attrs)) {
+            throw new \RuntimeException(self::GRAMMATUR_GESPERRT);
+        }
+
+        return $this->anlegenIntern($team, $recipeId, $servierformId, $attrs, $createdVia, true);
+    }
+
+    /**
+     * $folgen: jede neue Form folgt der Mengenquelle (Plan 98 B). Nur die Selbstheilung {@see ensureStandard} legt einen
+     * fehlenden Standard noch in Altbestand-Form an (Grammatur aus dem Kopf) — sie repariert Bestand, sie pflegt nicht.
+     */
+    private function anlegenIntern(Team $team, int $recipeId, int $servierformId, array $attrs, string $createdVia, bool $folgen): FoodAlchemistRecipeDarreichung
     {
         $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($recipeId);
         \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'die Darreichung');   // Spec 84 §4.0
@@ -69,9 +91,10 @@ class DarreichungService
             'recipe_id' => $recipe->id,
             'serving_form_id' => $servierformId,
             'is_standard' => $standard === null,               // erste Form = Standard
-            'menge_vom_standard' => ! isset($attrs['quantity_per_unit_g'])
-                && ($standard !== null || ($recipe->sales_quantity_per_unit_g === null && ($recipe->sales_unit_count ?? 1) <= 1)),
-            // Vorbefüllung aus der Standard-Form (F2: KEIN Pauschal-Faktor — User passt an)
+            // Plan 98 B: jede neue Form folgt der Mengenquelle — der Standard der Rezeptur, eine Variante dem Standard
+            'menge_vom_standard' => $folgen || (! isset($attrs['quantity_per_unit_g'])
+                && ($standard !== null || ($recipe->sales_quantity_per_unit_g === null && ($recipe->sales_unit_count ?? 1) <= 1))),
+            // Vorbefüllung aus der Standard-Form; recomputePreise rechnet sie gleich neu
             'quantity_per_unit_g' => $attrs['quantity_per_unit_g'] ?? $standard?->quantity_per_unit_g,
             'unit_vocab_id' => $attrs['unit_vocab_id'] ?? $standard?->unit_vocab_id,
             'unit_count' => $attrs['unit_count'] ?? 1,
@@ -134,14 +157,16 @@ class DarreichungService
         $mengenAttrs = $recipe->sales_quantity_per_unit_g === null && ($recipe->sales_unit_count ?? 1) <= 1
             ? [] : ['quantity_per_unit_g' => $quantityPerUnitG];
 
-        return $this->anlegen($team, $recipe->id, $unbestimmt, $mengenAttrs + [
+        // Plan 98 B: Selbstheilung alter Gerichte bleibt in Altbestand-Form (anlegenIntern ohne Sperre); die Grammatur-
+        // Umstellung und ihr zweiter Trockenlauf fangen solche Standards ein.
+        return $this->anlegenIntern($team, $recipe->id, $unbestimmt, $mengenAttrs + [
             'unit_vocab_id' => $recipe->sales_unit_vocab_id,
             // recipes.sales_unit_count ist die Ausbeute des Rezeptlaufs (Nenner für
             // Yield/Anzahl), nicht die Zahl verkaufter Einheiten IN einer Darreichung.
             // Der Standard repräsentiert genau eine Verkaufseinheit.
             'unit_count' => 1,
             'markup_class_id' => $this->vorbelegteKlasseId($team, $recipe),
-        ], $createdVia);
+        ], $createdVia, false);
     }
 
     /**
@@ -161,7 +186,7 @@ class DarreichungService
 
     private const FELDER = [
         'name', 'arbeitszeiten', 'ausgabe_station_id', 'menge_vom_standard',
-        'quantity_per_unit_g', 'unit_vocab_id', 'unit_count',
+        'unit_vocab_id', 'unit_count',   // quantity_per_unit_g: gesperrt (Plan 98 B), siehe GRAMMATUR_GESPERRT
         'markup_class_id', 'price_mode', 'sales_net',
         'vat_profile_key', 'price_override_reason', 'price_override_expires_at',
         'container_warm_vocab_id', 'container_cold_vocab_id',
@@ -220,7 +245,6 @@ class DarreichungService
     }
 
     private const DEZIMAL_FELDER = [
-        'quantity_per_unit_g' => 'Grammatur',
         'unit_count' => 'Anzahl',
         'anrichten_wert' => 'Anrichten je Einheit',
         'anrichten_pauschal_min' => 'Anrichten-Pauschale',
@@ -229,6 +253,9 @@ class DarreichungService
 
     public function aktualisieren(Team $team, int $darreichungId, array $attrs): FoodAlchemistRecipeDarreichung
     {
+        if (array_key_exists('quantity_per_unit_g', $attrs)) {
+            throw new \RuntimeException(self::GRAMMATUR_GESPERRT);
+        }
         $darreichung = $this->find($team, $darreichungId);
         $update = array_intersect_key($attrs, array_flip(self::FELDER));
         if (array_key_exists('menge_vom_standard', $update)) {
@@ -236,8 +263,6 @@ class DarreichungService
                 throw new \RuntimeException('Mengenherkunft muss Standard oder eigene Menge sein.');
             }
             $update['menge_vom_standard'] = (bool) $update['menge_vom_standard'];
-        } elseif (array_key_exists('quantity_per_unit_g', $update)) {
-            $update['menge_vom_standard'] = false;
         }
         if (array_key_exists('arbeitszeiten', $update)) {
             $update['arbeitszeiten'] = app(DarreichungsZeitService::class)->normalisieren($update['arbeitszeiten']);
@@ -319,9 +344,9 @@ class DarreichungService
                 'price_override_expires_at' => null,
             ]);
         }
-        // Vererbung abschalten darf die aktuelle Komposition nicht neu aus dem Kernrezept mischen.
-        if ($darreichung->menge_vom_standard && ($update['menge_vom_standard'] ?? true) === false
-            && ($darreichung->deltas()->exists() || $darreichung->recipe->standardPresentation?->deltas()->exists())) {
+        // Vererbung abschalten hält die aktuelle Komposition als Mengen je Komponente fest (wie setzeStandardmenge). Plan 98 B:
+        // immer, nicht nur bei vorhandenen Deltas — sonst bliebe eine freie Grammatur übrig.
+        if ($darreichung->menge_vom_standard && ($update['menge_vom_standard'] ?? true) === false) {
             $this->fixiereKomposition($darreichung, $team);
         }
         $vorher = [$darreichung->serving_vehicle_vocab_id, $darreichung->vessel_gp_id];

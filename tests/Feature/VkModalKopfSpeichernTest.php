@@ -81,27 +81,32 @@ it('alle gespiegelten Felder: was in der Standard-Darreichung steht, übersteht 
         ->toEqual(['sales_unit_vocab_id' => $this->portion->id, 'container_warm_vocab_id' => $this->warmA, 'sales_unit_count' => 10]);
 });
 
-it('Grammatur in der Zeile ändern, im Kopf speichern: sie wird nicht aus Ertrag und Anzahl überschrieben', function () {
+it('Grammatur in der Zeile ist nur Anzeige (Plan 98 B): ein geänderter Formularwert wird nicht gespeichert, auch nicht über den Kopf', function () {
+    // Früher: 96 g in der Zeile gespeichert und gegen Ertrag ÷ Anzahl verteidigt. Jetzt ist die Grammatur gesperrt; die Zeile
+    // schickt sie nicht mit, der Standard behält seine Menge (hier Altbestand 100 g = 1 kg ÷ 10).
     $c = ($this->modal)();
     $c->set("darForm.{$this->standard->id}.quantity_per_unit_g", '96')->call('darreichungSpeichern', $this->standard->id)->assertSet('fehler', null);
-    expect((float) ($this->zeile)()->quantity_per_unit_g)->toBe(96.0);
+    expect((float) ($this->zeile)()->quantity_per_unit_g)->toBe(100.0);
 
     $c->call('speichern')->assertSet('fehler', null);
 
-    expect((float) ($this->zeile)()->quantity_per_unit_g)->toBe(96.0);   // Ertrag 1 kg ÷ 10 wären 100 g
+    expect((float) ($this->zeile)()->quantity_per_unit_g)->toBe(100.0);
 });
 
-it('eine echte Änderung im Kopf geht weiter in die Standard-Darreichung, und die Zeile zeigt danach den neuen Stand', function () {
+it('Grammatur im Kopf ist nur lesend (Plan 98 B): eine Änderung meldet den Fehler und speichert nichts; ohne sie gehen die übrigen Felder weiter', function () {
+    // Früher: 120 g im Kopf gingen als Grammatur in die Standard-Darreichung. Jetzt spiegelt der Kopf nur die Darreichung.
     $c = ($this->modal)();
+    $vorher = ($this->zeile)()->only(['quantity_per_unit_g', 'unit_vocab_id', 'container_warm_vocab_id']);
 
-    $c->set('form.sales_quantity_per_unit_g', '120')->set('form.sales_unit_vocab_id', $this->stk->id)->set('form.container_warm_vocab_id', $this->warmB)
-        ->call('speichern')->assertSet('fehler', null);
+    $c->set('form.sales_quantity_per_unit_g', '120')->set('form.sales_unit_vocab_id', $this->stk->id)->call('speichern');
+    expect($c->get('fehler'))->toContain('nicht direkt setzbar')
+        ->and(($this->zeile)()->only(array_keys($vorher)))->toEqual($vorher);
 
+    $c->set('form.sales_quantity_per_unit_g', '100')->set('form.container_warm_vocab_id', $this->warmB)->call('speichern')->assertSet('fehler', null);
     $zeile = ($this->zeile)();
-    expect((float) $zeile->quantity_per_unit_g)->toBe(120.0)
+    expect((float) $zeile->quantity_per_unit_g)->toBe(100.0)
         ->and((int) $zeile->unit_vocab_id)->toBe((int) $this->stk->id)
         ->and((int) $zeile->container_warm_vocab_id)->toBe((int) $this->warmB)
-        ->and((float) $this->gericht->fresh()->sales_quantity_per_unit_g)->toBe(120.0)
         ->and((int) $c->get("darForm.{$this->standard->id}.unit_vocab_id"))->toBe((int) $this->stk->id);   // Zeilen nach dem Speichern neu geladen
 });
 

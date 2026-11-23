@@ -292,13 +292,11 @@ class RecipeGeneratorService
                     'dish_class_id' => $klasse?->id,
                     'dish_class_source' => $klasse !== null ? 'ki' : null,
                     'dish_main_group_id' => $hg?->id,
-                    // L8b: die Portion kommt AUS DEM VORSCHLAG — sie ist die letzte
-                    // Vorbedingung des Wirtschaftlichkeits-Glieds (L8a) und die einzige,
-                    // für die es keinen ableitbaren Default gibt (V-041: `yield_kg /
-                    // sales_unit_count` wäre der Chargenpreis). `portionG()` lässt nur
-                    // plausible Werte durch; alles andere bleibt die benannte Lücke.
-                    'sales_quantity_per_unit_g' => $this->portionG($kiRezept['portion_g'] ?? null),
                 ], fn ($v) => $v !== null));
+                // L8b: die Portion kommt AUS DEM VORSCHLAG (`portionG()` lässt nur plausible Werte durch). Plan 98 B: sie wird
+                // nicht mehr als Grammatur am Kopf gespeichert (der spiegelt nur noch die Standard-Darreichung), sondern ist das
+                // Ziel, auf das aufEinePortion die Zutaten bringt — Ertrag und Portionszahl bestimmen dann die Grammatur.
+                $kiPortionG = $this->portionG($kiRezept['portion_g'] ?? null);
                 // Spec 85 D-1: Klasse an der Standard-Darreichung (entsteht hier wie bei createLeer; Vorbelegung Klasse → HG → Team)
                 $standard = $recipe->is_sales_recipe ? app(DarreichungService::class)->ensureStandard($team, (int) $recipe->id, 'generator') : null;
                 if ($ak !== null && $standard !== null && (int) $standard->markup_class_id !== (int) $ak->id) {
@@ -597,7 +595,7 @@ class RecipeGeneratorService
             if ($vkModus) {
                 // Dominique 10.10.: ein Gericht ist GENAU EINE Portion — Code-Regel statt KI-Vertrauen (demo Lauf 94:
                 // 28 kg / 12 kg Filet für 80 Pax). Die Produktion multipliziert mit pax.
-                $statistik['portion'] = $this->aufEinePortion($recipe, $parameter);
+                $statistik['portion'] = $this->aufEinePortion($recipe, $parameter, $kiPortionG ?? null);
                 $recipe = $recipe->fresh() ?? $recipe;
             }
             // Fertigungstiefe aus dem Inhalt (Review Berater Lauf 92, Punkt S). In der Kaskade gilt sie als gesetzt
@@ -1445,17 +1443,17 @@ class RecipeGeneratorService
 
     /**
      * Bringt ein Gericht auf GENAU EINE Portion: Ziel = parameter.ziel_portion_g, sonst die Portion aus dem Vorschlag
-     * (sales_quantity_per_unit_g). Liegt der Ertrag (COALESCE(yield_kg_manual, yield_kg)) mehr als die Toleranz daneben,
-     * werden alle Zeilen mit Portion/Ertrag skaliert und neu gerechnet. Danach Portion = Ziel, Verkaufseinheiten = 1.
+     * (portion_g). Liegt der Ertrag (COALESCE(yield_kg_manual, yield_kg)) mehr als die Toleranz daneben, werden alle Zeilen
+     * mit Portion/Ertrag skaliert und neu gerechnet. Danach Verkaufseinheiten = 1; die Grammatur ergibt sich daraus
+     * (Plan 98 B: Ansatz ÷ Portionen, der Kopf spiegelt sie — vorher schrieb der Generator das Ziel als Grammatur).
      *
      * @param  array<string, mixed>  $parameter
      * @return array{ziel_g: float, ertrag_vorher_g: float, faktor: float, skaliert: bool}|null
      */
-    private function aufEinePortion(FoodAlchemistRecipe $recipe, array $parameter): ?array
+    private function aufEinePortion(FoodAlchemistRecipe $recipe, array $parameter, ?float $kiPortionG = null): ?array
     {
         $r = $recipe->fresh() ?? $recipe;
-        $ziel = $this->portionG($parameter['ziel_portion_g'] ?? null)
-            ?? ($r->sales_quantity_per_unit_g !== null ? (float) $r->sales_quantity_per_unit_g : null);
+        $ziel = $this->portionG($parameter['ziel_portion_g'] ?? null) ?? $kiPortionG;
         $ertragKg = $r->yield_kg_manual !== null ? (float) $r->yield_kg_manual : ($r->yield_kg !== null ? (float) $r->yield_kg : null);
         if ($ziel === null || $ziel <= 0 || $ertragKg === null || $ertragKg <= 0) {
             return null;   // ohne Ziel oder Ertrag nichts zu normieren (benannte Lücke bleibt)
@@ -1473,7 +1471,8 @@ class RecipeGeneratorService
             }
             app(RecipeRecomputeService::class)->recomputeAndPropagate((int) $r->id);
         }
-        $r->forceFill(['sales_quantity_per_unit_g' => $ziel, 'sales_unit_count' => 1])->save();
+        $r->forceFill(['sales_unit_count' => 1])->save();
+        app(DarreichungService::class)->recomputeFuerRezept((int) $r->id);   // Grammatur der Standard-Darreichung (und Kopf) neu
 
         return ['ziel_g' => $ziel, 'ertrag_vorher_g' => round($ertragG, 1), 'faktor' => round($faktor, 4), 'skaliert' => $skaliert];
     }

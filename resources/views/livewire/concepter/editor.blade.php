@@ -1035,14 +1035,7 @@
                             <div class="flex flex-wrap items-center gap-1.5" data-deklaration-quoten>
                                 <span class="{{ $feldLabel }} mr-1">{{ $deklaration['quoten']['n'] }} {{ $deklaration['quoten']['n'] === 1 ? 'Gericht' : 'Gerichte' }}</span>
                                 @foreach(['vegetarisch' => 'vegetarisch', 'vegan' => 'vegan', 'glutenfrei' => 'glutenfrei', 'laktosefrei' => 'laktosefrei', 'halal' => 'halal'] as $k => $l)
-                                    @if($deklaration['quoten'][$k] > 0)
-                                        {{-- Quote statt Alles-oder-nichts: „3 von 9" ist die Aussage, die ein Kunde hören will. --}}
-                                        <x-fa::badge :tone="$deklaration['quoten'][$k] === $deklaration['quoten']['n'] ? 'ok' : 'neutral'">{{ $deklaration['quoten'][$k] }} von {{ $deklaration['quoten']['n'] }} {{ $l }}</x-fa::badge>
-                                    @endif
-                                    @if(($deklaration['quoten']['unbekannt'][$k] ?? 0) > 0)
-                                        {{-- Diät-Fix 98: unbekannte Eignung sichtbar, nicht still als „nicht geeignet“ --}}
-                                        <x-fa::badge tone="warn" data-deklaration-quote-offen="{{ $k }}">{{ $deklaration['quoten']['unbekannt'][$k] }} {{ $l }} unbekannt</x-fa::badge>
-                                    @endif
+                                    <x-fa::diaet-quote :schluessel="$k" :label="$l" :anzahl="$deklaration['quoten'][$k]" :n="$deklaration['quoten']['n']" :unbekannt="$deklaration['quoten']['unbekannt'][$k] ?? 0" />
                                 @endforeach
                                 @foreach(['schwein' => 'Schwein', 'rind' => 'Rind'] as $k => $l)
                                     @if(count($deklaration['quoten'][$k]) > 0)
@@ -1073,8 +1066,7 @@
                                                 <td class="font-mono {{ $klein }} whitespace-nowrap">@if($z['codes'] === [])<span class="text-[var(--fa-ink-3)]">keine</span>@else{{ implode(', ', $z['codes']) }}@endif</td>
                                                 <td>
                                                     <div class="flex flex-wrap gap-1">
-                                                        @forelse($z['diaet'] as $d)<x-fa::badge tone="ok">{{ $d }}</x-fa::badge>@empty @if(($z['diaet_offen'] ?? []) === [])<span class="text-[var(--fa-ink-3)]">nichts Besonderes</span>@endif @endforelse
-                                                        @if(($z['diaet_offen'] ?? []) !== [])<x-fa::badge tone="neutral" data-deklaration-zeile-offen title="{{ implode(', ', $z['diaet_offen']) }}">Diät unbekannt</x-fa::badge>@endif
+                                                        <x-fa::diaet-zeile :diaet="$z['diaet']" :offen="$z['diaet_offen'] ?? []" />
                                                     </div>
                                                 </td>
                                                 <td class="num">@if($z['kcal'] !== null){{ number_format((float) $z['kcal'], 0, ',', '.') }}@else<span class="text-[var(--fa-ink-3)]">fehlt</span>@endif</td>

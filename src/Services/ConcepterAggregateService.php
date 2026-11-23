@@ -445,7 +445,7 @@ class ConcepterAggregateService
             'contains_pork' => $eines('spec_contains_pork'),
             'contains_beef' => $eines('spec_contains_beef'),
             // Spec 59: Fleisch nur, wenn BELEGT — `spec_is_vegetarian` ausdrücklich false (nicht
-            // null = unbekannt, siehe RecipeRecomputeService::mergeAssure) oder Schwein/Rind.
+            // null = unbekannt, siehe Rezept\DiaetEignung::mergeAssure) oder Schwein/Rind.
             // Vorher galt alles Nicht-Vegetarische als Fleisch, auch Gerichte ganz ohne Diät-Pflege.
             'fleisch_belegt' => $gerichte->contains(fn ($g) => ($g->spec_is_vegetarian ?? null) === false
                 || ($g->spec_contains_pork ?? null) === true || ($g->spec_contains_beef ?? null) === true),

@@ -70,11 +70,14 @@ class RecipeRecomputeService
     /** Code-Qualität 2.1a: Lese-Vorrat je Lauf (Artikel/Preise, Pins je Team + GP, Formen) */
     private Rezept\RecomputeVorrat $vorrat;
 
+    private Rezept\DiaetEignung $diaet;
+
     public function __construct(
         private GpAggregateService $gpAggregate,
         private PriceService $preise,
     ) {
         $this->vorrat = new Rezept\RecomputeVorrat($preise);
+        $this->diaet = new Rezept\DiaetEignung($gpAggregate);
     }
 
     /** Pipeline für EIN Rezept — idempotent (I4), eine Transaktion (V-07). */
@@ -778,63 +781,10 @@ class RecipeRecomputeService
         return $zeilen->mapWithKeys(fn ($z) => [(int) $z->id => NaehrwertAusbeuteRechner::faktoren(...[...$this->verlustePct($z), $z->istKochmedium()])])->all();
     }
 
-    // ── 6. Spec-Flags (Diät/Herkunft, dynamisch über alle Ebenen) ───────
-    //
-    // Tags sind DYNAMISCH aus der Rezeptur (User-Prinzip 2026-07-06): kommt ein
-    // nicht-veganer GP in ein Gericht, ist es nicht mehr vegan. Quelle = GP-Tags
-    // (FoodAlchemistGp.tag_is_*); Sub-Rezepte liefern ihre bereits berechneten
-    // spec_is_*-Werte (topologische Ordnung garantiert Kinder-vor-Eltern).
-    //
-    // Zwei Logiken:
-    //  - ZUSICHERUNG (vegan/vegetarisch/halal/laktosefrei): AND mit NULL-Propagation —
-    //    1 nur wenn ALLE bekannten Zutaten zusichern und NICHTS unbekannt ist;
-    //    0 sobald eine verletzt; sonst NULL (unbekannt).
-    //  - WARNUNG (enthält Schwein/Rind): OR — 1 sobald eine Zutat es trägt;
-    //    0 nur wenn alles bekannt und nichts trägt; sonst NULL.
-    // spec_is_gluten_free bleibt normativ aus der Allergen-Kette (allergene()).
-    private const SPEC_ASSURE = ['is_vegan', 'is_vegetarian', 'is_halal', 'is_lactose_free'];
-
-    private const SPEC_WARN = ['contains_pork', 'contains_beef', 'contains_alcohol'];   // Spec 94c: Alkohol aus den Artikeln des GP
-
+    // ── 6. Spec-Flags (Diät/Herkunft, dynamisch über alle Ebenen) → Rezept\DiaetEignung ──
     private function specFlags(FoodAlchemistRecipe $recipe, Collection $zutaten): void
     {
-        $felder = [...self::SPEC_ASSURE, ...self::SPEC_WARN];
-        /** @var array<string, list<bool|null>> $werte */
-        $werte = array_fill_keys($felder, []);
-        $nTotal = 0;
-        $nMapped = 0;
-
-        foreach ($zutaten as $z) {
-            if ($z->is_optional) {
-                continue;
-            }
-            $nTotal++;
-            // Diät-Fix 98: „gemappt“ wie bei den Allergenen (istGemappt) — ein KI-Vorschlag unter 0.85 sichert nichts zu.
-            if ($z->gp_id !== null && $z->gp !== null && $this->istGemappt($z)) {
-                $nMapped++;
-                foreach ($felder as $f) {
-                    $werte[$f][] = $this->boolOrNull($f === 'contains_alcohol' ? $this->gpAggregate->enthaeltAlkohol($z->gp) : $z->gp->{"tag_{$f}"});
-                }
-            } elseif ($z->referencedRecipe !== null) {
-                $nMapped++;
-                foreach ($felder as $f) {
-                    $werte[$f][] = $this->boolOrNull($z->referencedRecipe->{"spec_{$f}"});
-                }
-            } else {                                               // ungemappt ⇒ NULL-Beitrag
-                foreach ($felder as $f) {
-                    $werte[$f][] = null;
-                }
-            }
-        }
-
-        foreach (self::SPEC_ASSURE as $f) {
-            $recipe->{"spec_{$f}"} = $this->mergeAssure($werte[$f]);
-        }
-        foreach (self::SPEC_WARN as $f) {
-            $recipe->{"spec_{$f}"} = $this->mergeWarn($werte[$f]);
-        }
-        $this->specGegenDeklaration($recipe);
-
+        ['n_total' => $nTotal, 'n_mapped' => $nMapped] = $this->diaet->setze($recipe, $zutaten, fn ($z) => $this->istGemappt($z));
         $recipe->spec_n_total = $nTotal;
         $recipe->spec_n_mapped = $nMapped;
         $ownRang = match (true) {
@@ -848,32 +798,6 @@ class RecipeRecomputeService
         $recipe->spec_aggregated_at = now();
     }
 
-    private function boolOrNull(mixed $v): ?bool
-    {
-        return $v === null ? null : (bool) $v;
-    }
-
-    /**
-     * Diät-Fix 98 (c): Zusicherungen gegen die Deklaration desselben Rezepts prüfen. Läuft nach allergene() und
-     * yieldUndZaehler(), beide Werte stehen also schon.
-     *  - laktosefrei normativ wie glutenfrei: Milch enthalten/Spuren ⇒ false.
-     *  - unbewertete Deklaration (allergens_confidence 'unknown') ⇒ keine Zusicherung: true wird NULL. Ein false
-     *    bleibt — eine belegte Verletzung (Fisch ist nicht vegan) gilt auch ohne Deklaration.
-     */
-    private function specGegenDeklaration(FoodAlchemistRecipe $recipe): void
-    {
-        if (in_array($recipe->allergen_milk, ['enthalten', 'spuren'], true)) {
-            $recipe->spec_is_lactose_free = false;
-        }
-        if ((self::KONF_RANG[$recipe->allergens_confidence] ?? 0) === 0) {
-            foreach (self::SPEC_ASSURE as $f) {
-                if ($recipe->{"spec_{$f}"} === true) {
-                    $recipe->{"spec_{$f}"} = null;
-                }
-            }
-        }
-    }
-
     /**
      * Neu-Rechnung NUR der Diät-/Herkunfts-Flags eines Rezepts (für foodalchemist:diaet-eignung-neu). Lädt wie die
      * Pipeline, rechnet aber weder Allergene noch Kosten neu (deren gespeicherte Werte gelten) und löst keine Kaskade
@@ -885,14 +809,13 @@ class RecipeRecomputeService
     {
         $recipe = FoodAlchemistRecipe::withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('recompute')
             ->findOrFail($recipeId);
-        $felder = array_map(fn ($f) => "spec_{$f}", [...self::SPEC_ASSURE, ...self::SPEC_WARN]);
-        $alt = $recipe->only($felder);
+        $alt = $recipe->only(Rezept\DiaetEignung::felder());
 
         \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm((int) $recipe->team_id, function () use ($recipe) {
             $recipe->load(['ingredients.gp', 'ingredients.referencedRecipe']);
             $this->specFlags($recipe, $recipe->ingredients->filter(fn ($z) => $z->match_method !== MatchMethod::Ignored));
         });
-        $neu = $recipe->only($felder);
+        $neu = $recipe->only(Rezept\DiaetEignung::felder());
         if ($neu === $alt) {
             return null;
         }
@@ -901,38 +824,6 @@ class RecipeRecomputeService
         }
 
         return ['alt' => $alt, 'neu' => $neu];
-    }
-
-    /** Zusicherung: 0 wenn eine verletzt, NULL wenn eine unbekannt, sonst 1. Leer ⇒ NULL (Diät-Fix 98: nichts sichert zu). */
-    private function mergeAssure(array $werte): ?bool
-    {
-        if ($werte === []) {
-            return null;
-        }
-        if (in_array(false, $werte, true)) {
-            return false;
-        }
-        if (in_array(null, $werte, true)) {
-            return null;
-        }
-
-        return true;
-    }
-
-    /** Warnung: 1 wenn eine trägt, NULL wenn eine unbekannt, sonst 0. Leer ⇒ NULL (ohne Zutaten ist nichts belegt). */
-    private function mergeWarn(array $werte): ?bool
-    {
-        if ($werte === []) {
-            return null;
-        }
-        if (in_array(true, $werte, true)) {
-            return true;
-        }
-        if (in_array(null, $werte, true)) {
-            return null;
-        }
-
-        return false;
     }
 
     /**

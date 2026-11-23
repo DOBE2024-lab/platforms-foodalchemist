@@ -142,14 +142,10 @@ final class BestellBedarf
         };
     }
 
-    /** Spec 73: Konzept/Paket-Quelle → Ziel (Personen). */
+    /** Spec 73: Konzept-Quelle (auch Paket = kind=paket) → Ziel (Personen). */
     public function zielAusMengenQuelle(array $source): array
     {
-        $personen = max(1, (int) round($this->sourceQty($source)));
-
-        return ($source['type'] ?? '') === 'paket'
-            ? ['paket_id' => (int) ($source['id'] ?? 0), 'persons' => $personen]
-            : ['concept_id' => (int) ($source['id'] ?? 0), 'persons' => $personen];
+        return ['concept_id' => (int) ($source['id'] ?? 0), 'persons' => max(1, (int) round($this->sourceQty($source)))];
     }
 
     public function zielAusRecipeSource(array $source): array
@@ -182,7 +178,6 @@ final class BestellBedarf
             'recipe' => (string) (FoodAlchemistRecipe::visibleToTeam($team)->find($id)?->name ?? ('Rezept #'.$id)),
             'production' => (string) (FoodAlchemistProductionOrder::visibleToTeam($team)->find($id)?->name ?? ('Produktion #'.$id)),
             'concept' => (string) (\Platform\FoodAlchemist\Models\FoodAlchemistConcept::visibleToTeam($team)->find($id)?->name ?? ('Konzept #'.$id)),
-            'paket' => (string) (\Platform\FoodAlchemist\Models\FoodAlchemistPaket::visibleToTeam($team)->find($id)?->name ?? ('Paket #'.$id)),
             'nachfuellen' => 'Lagerartikel nachfüllen',
             default => 'Quelle',
         };

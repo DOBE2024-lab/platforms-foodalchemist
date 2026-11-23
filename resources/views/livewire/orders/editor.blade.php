@@ -353,7 +353,7 @@
                                         @foreach($konzeptTreffer as $k)
                                             <button type="button" wire:click="cockpitKonzeptEinfuegen('{{ $k['typ'] }}', {{ $k['id'] }})" wire:key="cockpit-konzept-{{ $k['typ'] }}-{{ $k['id'] }}" class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[var(--fa-hover)]">
                                                 <span class="min-w-0 truncate fa-t-body">{{ $k['name'] }}</span>
-                                                <x-fa::badge tone="info" class="shrink-0">{{ $k['typ'] === 'paket' ? 'Paket' : 'Konzept' }}</x-fa::badge>
+                                                <x-fa::badge tone="info" class="shrink-0">Konzept</x-fa::badge>
                                             </button>
                                         @endforeach
                                     </div>
@@ -416,7 +416,7 @@
                                                 <option value="stk">Stk</option>
                                             @elseif($s['type'] === 'production' || $s['type'] === 'nachfuellen')
                                                 <option value="auftrag">{{ $s['type'] === 'nachfuellen' ? 'alle unter Minimum' : 'Auftrag' }}</option>
-                                            @elseif($s['type'] === 'concept' || $s['type'] === 'paket')
+                                            @elseif($s['type'] === 'concept')
                                                 <option value="persons">Personen</option>
                                             @else
                                                 <option value="portions">Portionen</option>

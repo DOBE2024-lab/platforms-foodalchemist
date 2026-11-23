@@ -50,7 +50,7 @@ final class SchreibWache
 
     /** Warn-/Fehlermeldungen des Recompute-Wegs (RecipeRecomputeService::recomputeMany und seine Listener). */
     public const WARN_PRAEFIXE = [
-        'Recompute-Propagation', 'K-07 markStaleForRecipe', 'Preis-Kaskade', 'Aromenprofil nach Recompute', 'Grammatur-Umstellung',
+        'Recompute-Propagation', 'Preis-Kaskade', 'Aromenprofil nach Recompute', 'Grammatur-Umstellung',
     ];
 
     private ?string $phase = null;

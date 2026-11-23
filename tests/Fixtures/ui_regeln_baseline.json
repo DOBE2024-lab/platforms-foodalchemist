@@ -234,9 +234,9 @@
         "rohes_fieldset_sperre": 1
     },
     "livewire/concepter/editor.blade.php": {
-        "typo_groesse": 28,
-        "typo_tinte": 101,
-        "roher_button": 10,
+        "typo_groesse": 27,
+        "typo_tinte": 83,
+        "roher_button": 8,
         "rohes_segment": 2,
         "rohes_fieldset_sperre": 4
     },

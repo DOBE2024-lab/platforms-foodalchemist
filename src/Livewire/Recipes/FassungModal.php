@@ -29,7 +29,7 @@ class FassungModal extends Component
 {
     public ?int $recipeId = null;
 
-    /** 'recipe' (Rezept/Gericht, `recipeId`) | 'paket' | 'concept' | 'format' (`objektId`) */
+    /** 'recipe' (Rezept/Gericht, `recipeId`) | 'concept' (auch Paket, kind=paket) | 'format' (`objektId`) */
     public string $art = 'recipe';
 
     public ?int $objektId = null;
@@ -118,7 +118,7 @@ class FassungModal extends Component
         return view('foodalchemist::livewire.recipes.fassung-modal', [
             'rezept' => $objekt,   // Name der View-Variable bleibt (Bestand); für andere Arten ist es Paket/Konzept/Format
             'art' => $this->art,
-            'artLabel' => ['recipe' => 'Rezept', 'paket' => 'Paket', 'concept' => 'Konzept', 'format' => 'Format'][$this->art] ?? 'Rezept',
+            'artLabel' => ['recipe' => 'Rezept', 'concept' => 'Konzept', 'format' => 'Format'][$this->art] ?? 'Rezept',
             'status' => $status,
             'darf' => $team !== null && app(FaRechte::class)->darf(Auth::user(), $team, FaRolle::Freigeben),
         ]);

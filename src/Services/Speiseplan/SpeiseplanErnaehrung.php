@@ -5,7 +5,6 @@ namespace Platform\FoodAlchemist\Services\Speiseplan;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
@@ -106,7 +105,7 @@ final class SpeiseplanErnaehrung
     /**
      * Löst einen Speiseplan-Eintrag (Concept/Paket/Gericht) auf seine tatsächlichen Gerichte
      * (Verkaufsrezepte) auf — Basis für Kennzeichnungs- und Diät-Rollups. Gleiche Sammel-Logik
-     * wie {@see ConceptService::allergenRollup} (slots→package→dishes + slot→dish). In-Request
+     * wie {@see ConceptService::allergenRollup} (slot→dish). In-Request
      * memoisiert, damit derselbe Inhalt in einer Woche nicht mehrfach geladen wird.
      *
      * @return Collection<int, FoodAlchemistRecipe>
@@ -174,16 +173,10 @@ final class SpeiseplanErnaehrung
         if ($e->sales_recipe_id !== null) {
             $dish = FoodAlchemistRecipe::find($e->sales_recipe_id);
             $gerichte = $dish ? collect([$dish]) : collect();
-        } elseif ($e->package_id !== null) {
-            $pkg = FoodAlchemistPaket::with('dishes.gericht')->find($e->package_id);
-            $gerichte = $pkg ? $pkg->dishes->pluck('gericht')->filter() : collect();
         } elseif ($e->concept_id !== null) {
-            $c = FoodAlchemistConcept::with(['slots.package.dishes.gericht', 'slots.dish'])->find($e->concept_id);
+            $c = FoodAlchemistConcept::with(['slots.dish'])->find($e->concept_id);
             if ($c !== null) {
                 foreach ($c->slots as $slot) {
-                    if ($slot->package) {
-                        $gerichte = $gerichte->merge($slot->package->dishes->pluck('gericht')->filter());
-                    }
                     if ($slot->dish) {
                         $gerichte->push($slot->dish);
                     }

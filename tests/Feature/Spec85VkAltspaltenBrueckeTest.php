@@ -17,7 +17,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  * Harte Bedingung (Kurator 19.10.): übersetzt wird nur aus `tests/`. Schreibt Produktionscode eine Altspalte, muss der
  * Test ROT werden — sonst wäre er grün und io liefe in einen SQL-Fehler (Spalte fehlt).
  */
-const SPEC85_BRUECKE_BASIS_MAX = 166;   // Stand 23.10. — darf nur sinken
+const SPEC85_BRUECKE_BASIS_MAX = 164;   // Stand 23.10. — darf nur sinken; −2 mit 98 · 2.6c (ConcepterUiTest, PaketOutletPreisTest entfernt)
 
 beforeEach(function () {
     $this->seedTeamHierarchy();

@@ -142,8 +142,8 @@ class OrderService
                     $this->previewGp($team, $gruppen, $unresolved, $source, $date, $reference, $label, $sourceRef, $strategie, $overrides);
                 } elseif ($type === 'recipe') {
                     $this->previewZiel($team, $gruppen, $unresolved, $warnings, $this->bedarf->zielAusRecipeSource($source), $date, $reference, $label, $sourceRef, $strategie, $overrides, $rezeptLager);
-                } elseif ($type === 'concept' || $type === 'paket') {
-                    // Spec 73: Konzept / Paket × Personen — Auflösung wie in der Produktion
+                } elseif ($type === 'concept') {
+                    // Spec 73: Konzept (auch Paket = kind=paket) × Personen — Auflösung wie in der Produktion; Typ paket (Alt-Paket) entfällt mit 98 · 2.6c
                     $this->previewZiel($team, $gruppen, $unresolved, $warnings, $this->bedarf->zielAusMengenQuelle($source), $date, $reference, $label, $sourceRef, $strategie, $overrides, $rezeptLager);
                 } elseif ($type === 'nachfuellen') {
                     // Spec 74: Lagerartikel unter Mindestbestand → auf Sollbestand auffüllen
@@ -310,7 +310,7 @@ class OrderService
                 $this->recomputeOrder($draft->refresh());
                 $this->kopfAusQuelle($team, (int) $draft->id, $reference);
                 $touched[] = (int) $draft->id;
-            } elseif (in_array($type, ['recipe', 'concept', 'paket'], true)) {
+            } elseif (in_array($type, ['recipe', 'concept'], true)) {
                 $res = $this->addNeedFromTarget($team, $type === 'recipe' ? $this->bedarf->zielAusRecipeSource($source) : $this->bedarf->zielAusMengenQuelle($source), $sourceRef, $userId, $strategie, $date);
                 foreach ($res['orders'] as $id) {
                     $this->kopfAusQuelle($team, (int) $id, $reference);

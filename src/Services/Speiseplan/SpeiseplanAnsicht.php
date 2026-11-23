@@ -16,7 +16,6 @@ use Platform\FoodAlchemist\Services\DarreichungResolver;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\GpNamingService;
 use Platform\FoodAlchemist\Services\MargeService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**
@@ -99,9 +98,6 @@ final class SpeiseplanAnsicht
 
             return ['vk' => (float) $c['price_per_person'], 'ek' => (float) $c['ek_per_person'], 'vorlaeufig' => \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($c)];
         }
-        if ($e->package_id !== null && $e->package) {
-            return ['vk' => (float) ($e->package->price_per_person ?? 0), 'ek' => (float) ($e->package->ek_per_person ?? 0)];
-        }
         if ($e->sales_recipe_id !== null && $e->dish) {
             $dar = $this->eintragDarreichung($e);
             $vk = null;
@@ -116,7 +112,6 @@ final class SpeiseplanAnsicht
 
             // EK JE PORTION: ek_portion der geltenden Darreichung. `ek_total_eur` ist der Ansatz
             // (alle Portionen) — bis 2026-10-07 stand er hier ungeteilt und blähte WE-% und EK/Gast auf.
-            // Fallback wie PaketService::recomputePrice: Ansatz / Portionen.
             // Fallback ohne Darreichung: Ansatz ÷ Portionen, ohne Portionszahl = eine Portion —
             // dieselbe Konvention wie DarreichungService::recomputePreise (gemessen 2026-10-07:
             // 950 von 950 Gerichten ohne sales_unit_count, bei 837 ist Portions-EK = Ansatz-EK).

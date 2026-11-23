@@ -112,7 +112,7 @@ class AboKuendigungService
      * Master zieht ein Objekt (Rezept, Paket, Konzept) aus einer abonnierten Sammlung zurück (§8: Löschen eines abonnierten Objekts ist gesperrt, nur
      * Zurückziehen). Jeder betroffene Mandant läuft denselben Ablauf wie bei einer Kündigung.
      *
-     * @param  'recipe'|'paket'|'concept'|'format'  $typ
+     * @param  'recipe'|'concept'|'format'  $typ
      * @return array{mandanten: list<array{mandant_team_id:int, vorschau: array<string,mixed>, kopien?: array<int,int>, kopien_je_art?: array<string,array<int,int>>}>, ausgefuehrt: bool}
      */
     public function zurueckziehen(Team $master, int $sammlungId, int $objektId, ?User $actor, bool $bestaetigt, string $typ = 'recipe'): array

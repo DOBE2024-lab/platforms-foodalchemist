@@ -141,6 +141,25 @@ def lies_vorlage(ordner: str):
     return {"summe": summe, "alt_in": alt_in, "prozesse": prozesse} if prozesse else None
 
 
+def lies_skips(ordner: str) -> list:
+    """Übersprungene Tests (JUnit <skipped/>, bei Pest auch todo) mit Datei, Test und Grund."""
+    liste = []
+    for datei in glob.glob(os.path.join(ordner, "**", "junit-*.xml"), recursive=True):
+        try:
+            wurzel = ET.parse(datei).getroot()
+        except ET.ParseError:
+            continue
+        for tc in wurzel.iter("testcase"):
+            s = tc.find("skipped")
+            if s is not None:
+                liste.append({
+                    "datei": kurzpfad((tc.get("file") or tc.get("classname") or "").split("::")[0]),
+                    "test": tc.get("name") or "?",
+                    "grund": erste_zeile(s.get("message") or s.text or ""),
+                })
+    return sorted(liste, key=lambda r: (r["datei"], r["test"]))
+
+
 def main() -> int:
     ordner, ergebnis = sys.argv[1], sys.argv[2]
     pruefen = "--pruefen" in sys.argv
@@ -195,6 +214,15 @@ def main() -> int:
         zelle = lambda t: t.replace("|", "\\|")
         for r in sorted(rote, key=lambda r: (r["datei"], r["test"])):
             print(f"| {r['shard']} | `{zelle(r['datei'])}` | {zelle(r['test'])} | {zelle(r['grund'])} |")
+    skips = lies_skips(ordner)
+    if skips:
+        print(f"\n<details><summary>Übersprungen ({len(skips)}, inkl. todo)</summary>\n")
+        print("| Datei | Test | Grund |")
+        print("|---|---|---|")
+        zelle = lambda t: t.replace("|", "\\|")
+        for r in skips:
+            print(f"| `{zelle(r['datei'])}` | {zelle(r['test'])} | {zelle(r['grund'])} |")
+        print("\n</details>")
     vorlage = lies_vorlage(ordner)
     if vorlage:
         z = vorlage["summe"]

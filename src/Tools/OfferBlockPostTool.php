@@ -82,8 +82,8 @@ class OfferBlockPostTool extends FoodAlchemistTool implements ToolContract, Tool
             $block = app(OfferCompositionService::class)->addBlock($team, $chapterId, $daten);
         } catch (ModelNotFoundException) {
             return ToolResult::error('Kapitel nicht sichtbar/vorhanden.', 'NOT_FOUND');
-        } catch (\RuntimeException $e) {
-            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
+        } catch (\RuntimeException $e) {   // 98 · 3.6: Prüfung im Positions-Kern, Code aus dem PositionFehler
+            return ToolResult::error($e->getMessage(), $e instanceof \Platform\FoodAlchemist\Services\Position\PositionFehler ? $e->fehlerCode : 'VALIDATION_ERROR');
         }
 
         return ToolResult::success(['block' => [

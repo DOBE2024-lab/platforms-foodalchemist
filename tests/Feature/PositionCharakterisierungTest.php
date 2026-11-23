@@ -19,7 +19,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  * 98 · 3.6 PR0 — Charakterisierung der drei Positionsarten (Concept-Slot, Foodbook-Block, Angebots-Block) VOR dem
  * gemeinsamen Positions-Kern. Friert den heutigen Stand ein; die bekannten Abweichungen A1–A9 aus dem Plan sind je Test
  * markiert, mit dem entschiedenen Ziel (Kurator/Dominique). Die PRs 1–4 drehen genau diese Erwartungen um — jede
- * Umstellung ist damit sichtbar und gewollt, nichts ändert sich still.
+ * Umstellung ist damit sichtbar und gewollt, nichts ändert sich still. PR1 (Prüfung): P6, P9, Preisbasis beim Ändern, Staffelform.
  *
  * Entscheide: P1 Foodbook rechnet mit Team-Kontext wie das Angebot (Festpreise bleiben angebotsspezifisch) ·
  * P2 fehlender VK überall vk_fehlt · P3 Darreichung nur im Konzept preiswirksam · P4 Wahlgruppen als Spanne, Kapitel mit
@@ -112,13 +112,15 @@ it('A6 Wahlgruppen: beide Kapitel-Aggregate summieren alle Alternativen (Ziel P4
     expect($fb['vk_pro_person'])->toBe(24.0)->and($ag['vk_pro_person'])->toBe(24.0);
 });
 
-it('A7 header_preis im Konzept: gespeichert, aber im Preis nicht gezählt (Ziel P6: für neue Slots verboten, Bestand bleibt)', function () {
+it('P6 header_preis im Konzept: neue Blöcke werden abgelehnt (er rechnete nie mit); Bestand bleibt im Preis ungezählt', function () {
     $konzept = $this->makeConcept($this->t, 'Herbstmenü');
     $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
-    $slot = app(ConceptService::class)->addBlock($this->t, $konzept->id, 'header_preis', ['label' => 'Aufpreis', 'price_value' => 5]);
+    expect(fn () => app(ConceptService::class)->addBlock($this->t, $konzept->id, 'header_preis', ['title' => 'Aufpreis', 'price_value' => 5]))
+        ->toThrow(RuntimeException::class, 'Unbekannter Block-Typ');
 
-    expect($slot)->toBeInstanceOf(FoodAlchemistConceptSlot::class)
-        ->and((float) app(ConceptService::class)->preisCockpit($konzept->fresh(), null, $this->t)['price_per_person'])->toBe(10.0);
+    FoodAlchemistConceptSlot::create(['team_id' => $this->t->id, 'concept_id' => $konzept->id, 'type' => 'header_preis', 'position' => 9,
+        'price_value' => 5, 'price_basis' => 'person']);   // Bestand (auf io: 0 Zeilen)
+    expect((float) app(ConceptService::class)->preisCockpit($konzept->fresh(), null, $this->t)['price_per_person'])->toBe(10.0);
 });
 
 it('Staffel: Foodbook-Preiskopf rechnet die Stufe zur Pax; das Angebot lehnt Staffel ab (Ziel P5: bleibt so)', function () {
@@ -127,26 +129,25 @@ it('Staffel: Foodbook-Preiskopf rechnet die Stufe zur Pax; das Angebot lehnt Sta
 
     expect(($this->fbPreis)($b, 80)['vk_pp'])->toBe(25.0)->and(($this->fbPreis)($b, 10)['vk_pp'])->toBe(30.0);
     expect(fn () => app(OfferCompositionService::class)->addBlock($this->t, $this->kap->id, ['type' => 'header_preis', 'price_basis' => 'staffel', 'price_value' => 5]))
-        ->toThrow(RuntimeException::class);
+        ->toThrow(RuntimeException::class, 'Staffelpreise gibt es nur im Foodbook');
+    expect(fn () => app(FoodbookService::class)->setStaffel($this->t, $b->id, [['min_persons' => 10, 'price' => 30], ['min_persons' => 10, 'price' => 25]]))
+        ->toThrow(RuntimeException::class, 'doppelt');   // 98 · 3.6 PR1: Staffelform geprüft
 });
 
-it('A9 unbekannter Typ: Foodbook fällt still auf text, Angebot und Konzept lehnen ab (Ziel P9: überall ablehnen)', function () {
-    $fb = app(FoodbookService::class)->addBlock($this->t, $this->fb->id, ['type' => 'quatsch']);
-    expect($fb->type)->toBe('text');
-
-    expect(fn () => app(OfferCompositionService::class)->addBlock($this->t, $this->kap->id, ['type' => 'quatsch']))->toThrow(RuntimeException::class);
-    expect(fn () => app(ConceptService::class)->addBlock($this->t, $this->makeConcept($this->t, 'K')->id, 'quatsch'))->toThrow(RuntimeException::class);
+it('P9 unbekannter Typ: alle drei Arten lehnen ab (vorher fiel das Foodbook still auf text zurück)', function () {
+    expect(fn () => app(FoodbookService::class)->addBlock($this->t, $this->fb->id, ['type' => 'quatsch']))->toThrow(RuntimeException::class, 'Unbekannter Block-Typ');
+    expect(fn () => app(OfferCompositionService::class)->addBlock($this->t, $this->kap->id, ['type' => 'quatsch']))->toThrow(RuntimeException::class, 'Unbekannter Block-Typ');
+    expect(fn () => app(ConceptService::class)->addBlock($this->t, $this->makeConcept($this->t, 'K')->id, 'quatsch'))->toThrow(RuntimeException::class, 'Unbekannter Block-Typ');
 });
 
-it('A8 Preisbasis: nur Angebot-addBlock prüft sie; Foodbook und Angebot nehmen beim Ändern jede Preisbasis an (Ziel: eine Prüfung im Kern, add und update)', function () {
+it('Preisbasis: eine Prüfung beim Anlegen UND Ändern in Foodbook und Angebot; Aliasse pro_person/pro_stueck kanonisch', function () {
     $fb = ($this->fbBlock)(['type' => 'header_frei_preis', 'price_basis' => 'person', 'price_value' => 5]);
-    app(FoodbookService::class)->updateBlock($this->t, $fb->id, ['price_basis' => 'quatsch']);
-    expect($fb->fresh()->price_basis)->toBe('quatsch');
+    expect(fn () => app(FoodbookService::class)->updateBlock($this->t, $fb->id, ['price_basis' => 'quatsch']))->toThrow(RuntimeException::class, 'Unbekannte Preis-Basis');
+    app(FoodbookService::class)->updateBlock($this->t, $fb->id, ['price_basis' => 'pro_stueck']);
+    expect($fb->fresh()->price_basis)->toBe('pauschal');
 
     $ag = ($this->agBlock)(['type' => 'header_preis', 'price_basis' => 'person', 'price_value' => 5]);
-    app(OfferCompositionService::class)->updateBlock($this->t, $ag->id, ['price_basis' => 'quatsch']);
-    expect($ag->fresh()->price_basis)->toBe('quatsch');
-
+    expect(fn () => app(OfferCompositionService::class)->updateBlock($this->t, $ag->id, ['price_basis' => 'quatsch']))->toThrow(RuntimeException::class, 'Unbekannte Preis-Basis');
     expect(fn () => app(OfferCompositionService::class)->addBlock($this->t, $this->kap->id, ['type' => 'header_preis', 'price_basis' => 'quatsch', 'price_value' => 5]))
-        ->toThrow(RuntimeException::class);
+        ->toThrow(RuntimeException::class, 'Unbekannte Preis-Basis');
 });

@@ -34,7 +34,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
  */
 class WareneingangService
 {
-    /** Bestellstatus, auf die ein Lieferschein buchen darf (spiegelt OrderService::guardReceiptLine). */
+    /** Bestellstatus, auf die ein Lieferschein buchen darf (spiegelt Bestellung\BestellEingang::guardReceiptLine). */
     public const OFFENE_STATUS = [OrderStatus::Sent, OrderStatus::Confirmed];
 
     private const ANHANG_MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];

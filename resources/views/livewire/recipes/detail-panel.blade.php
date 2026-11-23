@@ -97,8 +97,8 @@
                 @if($rezept->status->value !== $wert)<x-fa::button size="sm" wire:click="statusSetzen('{{ $wert }}')" data-status-btn="{{ $wert }}">{{ $lbl }}</x-fa::button>@endif
             @endforeach
             <x-fa::button size="sm" variant="ghost" icon="heroicon-o-document-duplicate" wire:click="duplizieren" data-duplizieren-btn>Duplizieren</x-fa::button>
-            <x-fa::button size="sm" variant="ghost" :icon="$rezept->is_template ? 'heroicon-s-star' : 'heroicon-o-star'" wire:click="templateToggle"
-                class="{{ $rezept->is_template ? 'text-[var(--fa-accent)]' : '' }}" title="{{ $rezept->is_template ? 'Ist Vorlage. Klick nimmt die Markierung zurück' : 'Als Vorlage für neue Rezepte markieren' }}" data-template-btn>{{ $rezept->is_template ? 'Vorlage' : 'Als Vorlage markieren' }}</x-fa::button>
+            <x-fa::button size="sm" variant="ghost" icon="heroicon-m-square-2-stack" wire:click="templateToggle"
+                title="{{ $rezept->is_template ? 'Ist Vorlage. Klick hebt sie auf, das Rezept bleibt.' : 'Als Vorlage für neue Rezepte speichern. Sie steht dann unter „Aus Vorlage“.' }}" data-template-btn>{{ $rezept->is_template ? 'Vorlage aufheben' : 'Als Vorlage speichern' }}</x-fa::button>
         </div>
         <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
 
@@ -163,7 +163,7 @@
             <x-slot:badges>
                 <x-fa::status :value="$rezept->status" />
                 <x-fa::badge tone="info">{{ $rezept->category?->label ?? 'Ohne Kategorie' }}</x-fa::badge>
-                @if($rezept->is_template)<x-fa::badge tone="accent" icon="heroicon-m-star">Vorlage</x-fa::badge>@endif
+                @if($rezept->is_template)<x-fa::badge tone="info" icon="heroicon-m-square-2-stack">Vorlage</x-fa::badge>@endif
             </x-slot:badges>
             <x-slot:aktion>
                 <div class="flex flex-wrap items-center gap-2">
@@ -189,8 +189,8 @@
                     <x-fa::menu-item icon="heroicon-m-paper-airplane" x-on:click="$dispatch('fassung-modal.oeffnen', { recipeId: {{ $rezept->id }} })"
                         title="Stand als neue Fassung an die Abonnenten geben" data-fassung-menue>Veröffentlichen …</x-fa::menu-item>
                 @endif
-                <x-fa::menu-item :icon="$rezept->is_template ? 'heroicon-s-star' : 'heroicon-m-star'" wire:click="templateToggle"
-                    title="{{ $rezept->is_template ? 'Ist Vorlage. Klick nimmt die Markierung zurück' : 'Als Vorlage für neue Rezepte markieren' }}" data-template-btn>{{ $rezept->is_template ? 'Vorlage-Markierung entfernen' : 'Als Vorlage markieren' }}</x-fa::menu-item>
+                <x-fa::menu-item icon="heroicon-m-square-2-stack" wire:click="templateToggle"
+                    title="{{ $rezept->is_template ? 'Ist Vorlage. Klick hebt sie auf, das Rezept bleibt.' : 'Als Vorlage für neue Rezepte speichern. Sie steht dann unter „Aus Vorlage“.' }}" data-template-btn>{{ $rezept->is_template ? 'Vorlage aufheben' : 'Als Vorlage speichern' }}</x-fa::menu-item>
             </x-slot:menue>
         </x-fa::detail-kopf>
         <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}

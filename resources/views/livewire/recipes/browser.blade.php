@@ -129,7 +129,7 @@
                                     <span class="fa-t-muted tabular-nums">{{ $template->n_ingredients_total }} Zutaten{{ $template->yield_kg !== null ? ' · ' . number_format((float) $template->yield_kg, 2, ',', '.') . ' kg' : '' }}</span>
                                 </button>
                             @empty
-                                <x-fa::empty compact icon="heroicon-o-square-2-stack" title="Noch keine Vorlagen">Im Rezept-Editor „Als Vorlage" markieren.</x-fa::empty>
+                                <x-fa::empty compact icon="heroicon-o-square-2-stack" title="Noch keine Vorlagen" data-template-leer>Rezept öffnen, dann im Menü ⋯ (Weitere Aktionen) „Als Vorlage speichern“ wählen.</x-fa::empty>
                             @endforelse
                         </x-fa::card>
                     @endif

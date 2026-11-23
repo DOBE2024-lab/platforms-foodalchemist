@@ -68,7 +68,7 @@
                         {{-- Spec 70: Etikett (Allergene, Zutaten, verbrauchen bis) --}}
                         <x-fa::menu-item icon="heroicon-o-tag" :href="route('foodalchemist.etiketten.index', ['quelle' => 'recipe', 'id' => $recipeId])" abstand="weit" target="_blank" data-rezept-etikett>Etikett drucken</x-fa::menu-item>
                         {{-- R6: Vorlage-Markierung (Basis für «Aus Vorlage» im Browser) --}}
-                        <x-fa::menu-item icon="heroicon-o-square-2-stack" abstand="weit" wire:click="templateToggle" title="Vorlage für neue Rezepte (im Browser: aus Vorlage anlegen)" data-template-toggle>{{ $istTemplate ? 'Vorlage aufheben' : 'Als Vorlage markieren' }}</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-square-2-stack" abstand="weit" wire:click="templateToggle" title="{{ $istTemplate ? 'Ist Vorlage. Klick hebt sie auf, das Rezept bleibt.' : 'Als Vorlage für neue Rezepte speichern. Sie steht dann unter „Aus Vorlage“.' }}" data-template-toggle>{{ $istTemplate ? 'Vorlage aufheben' : 'Als Vorlage speichern' }}</x-fa::menu-item>
                         {{-- Spec 82 §13 B6: Arbeitszeile des Master-Teams als Fassung an die Abonnenten geben --}}
                         @if(\Platform\FoodAlchemist\Support\FassungMenue::sichtbar(auth()->user()?->currentTeamRelation, (int) $recipeId))
                             <x-fa::menu-item icon="heroicon-o-paper-airplane" abstand="weit" x-on:click="$dispatch('fassung-modal.oeffnen', { recipeId: {{ (int) $recipeId }} })" title="Stand als neue Fassung an die Abonnenten geben" data-fassung-menue>Veröffentlichen …</x-fa::menu-item>

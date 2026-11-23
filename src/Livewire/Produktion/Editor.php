@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\PlanungsblattService;
 use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
@@ -829,9 +829,9 @@ class Editor extends Component
             'ops' => $ops,
             // Spec 76: Sammeldruck — Basisrezepte des Auftrags mit Vorschlag (je Ansatz ein Etikett)
             'etikettenVorschlag' => $ops !== null && ($ops['id'] ?? null) !== null && \Illuminate\Support\Facades\Route::has('foodalchemist.etiketten.produktion')
-                ? app(\Platform\FoodAlchemist\Services\EtikettService::class)->produktionPositionen(Auth::user()->currentTeamRelation, (int) $ops['id'])
+                ? app(\Platform\FoodAlchemist\Services\Ausgabe\EtikettService::class)->produktionPositionen(Auth::user()->currentTeamRelation, (int) $ops['id'])
                 : [],
-            'etikettVorlagen' => Auth::user()?->currentTeamRelation ? app(\Platform\FoodAlchemist\Services\EtikettService::class)->vorlagen(Auth::user()->currentTeamRelation)->pluck('name', 'id') : collect(),
+            'etikettVorlagen' => Auth::user()?->currentTeamRelation ? app(\Platform\FoodAlchemist\Services\Ausgabe\EtikettService::class)->vorlagen(Auth::user()->currentTeamRelation)->pluck('name', 'id') : collect(),
             'erlaubteStatus' => $erlaubteStatus,
             'verknuepfteOrders' => $verknuepfteOrders,
             'zielUebergaben' => $zielUebergaben,

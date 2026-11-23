@@ -11,8 +11,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfiguratorLeistung;
 use Platform\FoodAlchemist\Models\FoodAlchemistLeistungVorlage;
 use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
-use Platform\FoodAlchemist\Services\KonfiguratorPricingService;
-use Platform\FoodAlchemist\Services\KonfiguratorService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
 use Platform\FoodAlchemist\Services\LeistungVorlageService;
 
 /**

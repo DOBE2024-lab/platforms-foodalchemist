@@ -8,10 +8,10 @@ use Platform\FoodAlchemist\Mail\KonfiguratorAnfrageMail;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\AngebotService;
-use Platform\FoodAlchemist\Services\KonfiguratorService;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -102,7 +102,7 @@ it('Anfrage-Schutz: Honeypot und fremde IDs legen nichts an, zurückgezogener Li
 });
 
 it('Editor-Reiter: Branding speichern, aus einem Foodbook übernehmen, veröffentlichen', function () {
-    $fb = app(\Platform\FoodAlchemist\Services\FoodbookService::class)->create($this->rootTeam, ['label' => 'FB']);
+    $fb = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->create($this->rootTeam, ['label' => 'FB']);
     $fb->update(['brand_color' => '#112233', 'footer_text' => 'DOEC Catering']);
 
     // Farben kommen im Link aus dem Design (keine Farbwähler mehr); Übernehmen kopiert sie trotzdem mit

@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Tools;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\HandbuchService;
+use Platform\FoodAlchemist\Services\Ausgabe\HandbuchService;
 
 /**
  * Spec 86 — Gemeinsamer Rumpf der Handbuch-Tools (PUBLISH | WITHDRAW | GET je Ausgabe-Dokument).

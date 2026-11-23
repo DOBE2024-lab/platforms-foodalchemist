@@ -10,8 +10,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Support\KapitelAuswahl;
 
 /**
@@ -73,9 +73,9 @@ class PraesentationsDesigns extends Component
             return;
         }
         $this->resetFeedback();
-        $this->validate(['fontUpload' => 'required|file|max:' . \Platform\FoodAlchemist\Services\PresentationFontService::MAX_KB], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('fontUpload', \Platform\FoodAlchemist\Services\PresentationFontService::MAX_KB));
+        $this->validate(['fontUpload' => 'required|file|max:' . \Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService::MAX_KB], \Platform\FoodAlchemist\Support\DateiUpload::meldungen('fontUpload', \Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService::MAX_KB));
         try {
-            $font = app(\Platform\FoodAlchemist\Services\PresentationFontService::class)
+            $font = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService::class)
                 ->upload($this->team(), $this->fontUpload, $this->fontFamilie, (int) $this->fontWeight, $this->fontStyle);
             $this->status = "Schrift „{$font->family}“ hinzugefügt. Sie steht jetzt bei der Schriftwahl unter „Eigene Schriften“.";
             $this->reset('fontUpload');
@@ -91,7 +91,7 @@ class PraesentationsDesigns extends Component
         }
         $this->resetFeedback();
         try {
-            app(\Platform\FoodAlchemist\Services\PresentationFontService::class)->delete($this->team(), $id);
+            app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService::class)->delete($this->team(), $id);
             $this->status = 'Schrift entfernt.';
         } catch (\Throwable $e) {
             $this->fehler = $e->getMessage();
@@ -102,7 +102,7 @@ class PraesentationsDesigns extends Component
     private function schriftOptionen(): array
     {
         $team = [];
-        foreach (app(\Platform\FoodAlchemist\Services\PresentationFontService::class)->familien($this->team()) as $f) {
+        foreach (app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService::class)->familien($this->team()) as $f) {
             $team['team:' . $f] = $f;
         }
         $google = [];
@@ -122,7 +122,7 @@ class PraesentationsDesigns extends Component
     {
         $team = $this->team();
 
-        return app(\Platform\FoodAlchemist\Services\PresentationFontService::class)->list($team)
+        return app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService::class)->list($team)
             ->map(fn ($f) => ['id' => (int) $f->id, 'family' => $f->family, 'weight' => (int) $f->weight, 'style' => $f->style, 'format' => $f->format, 'eigen' => $f->isOwnedBy($team)])
             ->all();
     }

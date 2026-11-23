@@ -40,7 +40,7 @@ class KonfiguratorKonzepteWordingGenerateTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $svc = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class);
         $n = $svc->wordingGenerieren($team, self::id($a, 'konzept_id'), self::id($a, 'writing_style_id'));
         $kz = \Platform\FoodAlchemist\Models\FoodAlchemistKonfiguratorKonzept::visibleToTeam($team)->find(self::id($a, 'konzept_id'));
 

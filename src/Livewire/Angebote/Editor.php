@@ -10,10 +10,10 @@ use Platform\FoodAlchemist\Livewire\Concerns\ManagesCanvas;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
-use Platform\FoodAlchemist\Services\AngebotService;
-use Platform\FoodAlchemist\Services\OfferCompositionService;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 
 /**
  * Angebote-Editor (Fullscreen-Modal, pro Angebot) — 1:1-Fork des Foodbook-Editors
@@ -341,7 +341,7 @@ class Editor extends Component
             return;
         }
         try {
-            $this->uebernahmeVorschau = app(\Platform\FoodAlchemist\Services\AngebotEinfrierService::class)->uebernahmeVorschau($angebot, $zeileId, $familieId);
+            $this->uebernahmeVorschau = app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService::class)->uebernahmeVorschau($angebot, $zeileId, $familieId);
         } catch (\RuntimeException $e) {
             $this->uebernahmeVorschau = null;
             $this->errorToast($e->getMessage());
@@ -362,7 +362,7 @@ class Editor extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\AngebotEinfrierService::class)
+            app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService::class)
                 ->uebernehmen($this->team(), Auth::user(), $angebot, (int) $v['zeile_id'], (int) $v['familie_id'], $this->uebernahmeBestaetigt);
         } catch (\Platform\FoodAlchemist\Exceptions\FaRechtFehltException|\RuntimeException $e) {
             $this->errorToast($e->getMessage());
@@ -1492,7 +1492,7 @@ class Editor extends Component
     {
         $team = $this->team();
         $angebot = $this->selectedId !== null ? $svc->detail($team, $this->selectedId) : null;
-        $this->eingefroren = $angebot !== null && app(\Platform\FoodAlchemist\Services\AngebotEinfrierService::class)->aktive($angebot) !== null;
+        $this->eingefroren = $angebot !== null && app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService::class)->aktive($angebot) !== null;
         if ($this->selectedId !== null && $angebot === null) {
             $this->selectedId = null;
         }
@@ -1597,7 +1597,7 @@ class Editor extends Component
         // Kapitel-Bild + Galerie-URLs (Media-Service).
         $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class);
 
-        $einfrierSvc = app(\Platform\FoodAlchemist\Services\AngebotEinfrierService::class);
+        $einfrierSvc = app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService::class);
 
         return view('foodalchemist::livewire.angebote.editor', [
             'sperr' => $this->sperrZustand(),   // Spec 65

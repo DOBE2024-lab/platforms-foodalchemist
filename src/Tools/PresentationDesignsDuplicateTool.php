@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
 
 /** MCP-Steuerbarkeit · D12: ein Präsentations-Design duplizieren (aus eigenem Design oder Builtin). */
 class PresentationDesignsDuplicateTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

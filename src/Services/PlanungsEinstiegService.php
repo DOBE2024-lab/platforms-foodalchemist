@@ -48,7 +48,7 @@ class PlanungsEinstiegService
     public function foodbookAusBrief(Team $team, string $brief, array $opt): array
     {
         $brief = $this->brief($brief);
-        $foodbooks = app(FoodbookService::class);
+        $foodbooks = app(Foodbook\FoodbookService::class);
         $fb = $this->eigeneHuelle(FoodAlchemistFoodbook::class, $team, $opt, 'Foodbook', 'Geerbtes Foodbook')
             ?? $foodbooks->create($team, ['label' => $this->titel($opt, 'Foodbook aus Brief')]);
 
@@ -72,7 +72,7 @@ class PlanungsEinstiegService
     {
         $brief = $this->brief($brief);
         $karte = $this->eigeneHuelle(FoodAlchemistSpeisekarte::class, $team, $opt, 'Speisekarte', 'Geerbte Speisekarte')
-            ?? app(SpeisekarteService::class)->create($team, ['name' => $this->titel($opt, 'Speisekarte aus Brief')]);
+            ?? app(Ausgabe\SpeisekarteService::class)->create($team, ['name' => $this->titel($opt, 'Speisekarte aus Brief')]);
 
         $this->concepts->geruestAusBriefFuerOwner($team, 'speisekarte', (int) $karte->id, $brief, [
             'segment' => $this->settings->segment($team),
@@ -99,7 +99,7 @@ class PlanungsEinstiegService
             if (preg_match('/(\d+)\s*[- ]?woche/iu', $brief, $m)) {
                 $in['cycle_weeks'] = max(1, (int) $m[1]);
             }
-            $plan = app(SpeiseplanService::class)->create($team, $in);
+            $plan = app(Speiseplan\SpeiseplanService::class)->create($team, $in);
         }
 
         return ['owner' => $plan] + $this->sessionUndKaskade($team, 'speiseplan', (int) $plan->id, 'Speiseplan aus Brief: ' . ($plan->name ?? ('#' . $plan->id)), $brief, $opt);
@@ -115,7 +115,7 @@ class PlanungsEinstiegService
     {
         $brief = $this->brief($brief);
         $angebot = $this->eigeneHuelle(FoodAlchemistAngebot::class, $team, $opt, 'Angebot', 'Geerbtes Angebot')
-            ?? app(AngebotService::class)->create($team, ['name' => $this->titel($opt, 'Angebot aus Brief')]);
+            ?? app(Ausgabe\AngebotService::class)->create($team, ['name' => $this->titel($opt, 'Angebot aus Brief')]);
 
         $this->concepts->geruestAusBriefFuerOwner($team, 'offer', (int) $angebot->id, $brief, [
             'segment' => $this->settings->segment($team),

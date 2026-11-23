@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /** MCP-Steuerbarkeit · D10: eine Concept-Referenz aus einem Angebot lösen (das Concept bleibt bestehen). */
 class AngebotConceptRefDeleteTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

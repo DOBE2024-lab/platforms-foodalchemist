@@ -39,11 +39,11 @@ class KonfiguratorPresentationGetTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $k = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->finde($team, self::id($a));
+        $k = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->finde($team, self::id($a));
         $ref = $k->presentationPublicRef();
 
         return ['live' => $k->isPresentationLive(), 'url' => $ref ? route('foodalchemist.presentation.show', ['type' => 'konfigurator', 'token' => $ref]) : null,
             'expires_at' => $k->presentation_expires_at?->toIso8601String(), 'design' => $k->presentation_design,
-            'design_geaendert' => app(\Platform\FoodAlchemist\Services\PresentationService::class)->designGeaendertSeitPublish($k)];
+            'design_geaendert' => app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class)->designGeaendertSeitPublish($k)];
     }
 }

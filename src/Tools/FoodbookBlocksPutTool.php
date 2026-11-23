@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /** MCP-Steuerbarkeit · D7: einen Foodbook-Block bearbeiten (Label/Text/Menge/Preis/Sichtbarkeit). */
 class FoodbookBlocksPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

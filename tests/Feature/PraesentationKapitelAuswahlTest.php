@@ -2,8 +2,8 @@
 
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Settings\PraesentationsDesigns;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Support\KapitelAuswahl;
 use Platform\FoodAlchemist\Support\KapitelPreis;
 use Platform\FoodAlchemist\Support\PraesentationsDesignWerte;

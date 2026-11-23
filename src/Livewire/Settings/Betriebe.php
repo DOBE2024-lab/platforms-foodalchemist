@@ -219,7 +219,7 @@ class Betriebe extends Component
 
         // Slice F: Präsentations-Vorlagen (Built-ins + team-eigene Designs) für die „Vorlage je Betrieb"-Wahl.
         $vorlagenOptionen = $team === null ? []
-            : app(\Platform\FoodAlchemist\Services\PresentationDesignService::class)->pickerOptions($team, 'foodbook');
+            : app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService::class)->pickerOptions($team, 'foodbook');
 
         // Betriebs-Logo-Vorschau (outlet_id → URL), für die Edit-Zeile.
         $media = app(FoodAlchemistMediaService::class);

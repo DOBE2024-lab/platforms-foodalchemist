@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Livewire\Controlling\Panels;
 
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\PortfolioService;
+use Platform\FoodAlchemist\Services\Foodbook\PortfolioService;
 
 /**
  * Spec 33 · P4 — die Mehrbetriebs-Sicht: wer fährt gerade was.

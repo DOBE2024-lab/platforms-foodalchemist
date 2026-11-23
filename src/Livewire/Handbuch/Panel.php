@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire\Handbuch;
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\HandbuchService;
+use Platform\FoodAlchemist\Services\Ausgabe\HandbuchService;
 
 /**
  * Spec 86 — Handbuch-Link neben dem Kundenlink: veröffentlichen (eingefroren), zurückziehen, Lücken sehen.

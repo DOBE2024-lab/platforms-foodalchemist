@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /** MCP-Steuerbarkeit · D10: ein Katalog-Concept in einem Angebot referenzieren (ohne Kopie). */
 class AngebotConceptRefPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

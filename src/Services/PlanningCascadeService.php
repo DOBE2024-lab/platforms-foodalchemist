@@ -487,11 +487,11 @@ class PlanningCascadeService
             return;
         }
         if ($ownerType === 'foodbook') {
-            app(FoodbookService::class)->addBlock($team, $containerId, ['type' => 'concept_ref', 'concept_id' => $conceptId]);
+            app(Foodbook\FoodbookService::class)->addBlock($team, $containerId, ['type' => 'concept_ref', 'concept_id' => $conceptId]);
         } elseif ($ownerType === 'speisekarte') {
-            app(SpeisekarteService::class)->addPosition($team, $containerId, ['type' => 'menue_ref', 'concept_id' => $conceptId]);
+            app(Ausgabe\SpeisekarteService::class)->addPosition($team, $containerId, ['type' => 'menue_ref', 'concept_id' => $conceptId]);
         } elseif ($ownerType === 'offer') {
-            app(AngebotService::class)->referenziereConcept($team, $containerId, $conceptId);   // E2: containerId = Angebots-ID
+            app(Ausgabe\AngebotService::class)->referenziereConcept($team, $containerId, $conceptId);   // E2: containerId = Angebots-ID
         } elseif ($ownerType === 'format') {
             app(\Platform\FoodAlchemist\Services\FormatService::class)->slotConceptEinfuegen($team, $containerId, $conceptId);   // containerId = format_id
             $this->ausgabe()->ordneFormatNachRahmen($team, (int) $step->cascade_run_id);   // Spec 80 F2

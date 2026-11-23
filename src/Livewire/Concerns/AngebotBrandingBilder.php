@@ -2,8 +2,8 @@
 
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
-use Platform\FoodAlchemist\Services\AngebotKopieService;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotKopieService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /**
  * Angebots-Editor: Branding-Bilder (Logo, Cover, freie Präsentationsbilder 1–3) und „Angebot kopieren".

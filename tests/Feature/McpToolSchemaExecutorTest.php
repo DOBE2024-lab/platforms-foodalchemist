@@ -177,7 +177,7 @@ it('artikel.LIST + suppliers.SEARCH über den echten Executor: supplier_id filte
 });
 
 it('signale.SEARCH + speiseplaene.LIST über den echten Executor: falscher Status ist VALIDATION_ERROR, gültiger filtert (Spec 91 PR 2)', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeiseplanService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class);
     $svc->create($this->rootTeam, ['name' => 'Kantine Nord', 'status' => 'aktiv']);
     $svc->create($this->rootTeam, ['name' => 'Kantine Süd']);
 

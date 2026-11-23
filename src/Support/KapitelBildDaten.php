@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Support;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Platform\Core\Models\ContextFile;
-use Platform\FoodAlchemist\Services\KapitelLogoService;
+use Platform\FoodAlchemist\Services\Foodbook\KapitelLogoService;
 
 /**
  * Präsentation 2026-11-13 — ergänzt die Kapitel eines Snapshots beim Bauen um

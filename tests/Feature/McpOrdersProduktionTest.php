@@ -105,7 +105,7 @@ it('speiseplan.ANPRODUKTION läuft auf dem Erfolgspfad (Tool übergibt Illuminat
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'anprod-1', 'name' => 'G-Anproduktion', 'status' => 'approved',
         'is_sales_recipe' => true, 'sales_net' => 3.0, 'ek_total_eur' => 1.0,
     ]);
-    $plan = app(\Platform\FoodAlchemist\Services\SpeiseplanService::class);
+    $plan = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class);
     $sp = $plan->create($this->rootTeam, ['name' => 'MCP-Anproduktion', 'start_date' => '2026-07-06']);
     $plan->addEintrag($this->rootTeam, $sp->id, ['entry_date' => '2026-07-06', 'mahlzeit' => 'mittag', 'sales_recipe_id' => $g->id]);
 

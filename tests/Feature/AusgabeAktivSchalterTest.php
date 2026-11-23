@@ -6,9 +6,9 @@ use Platform\FoodAlchemist\Livewire\Foodbooks\Index as FoodbookEditor;
 use Platform\FoodAlchemist\Livewire\Speisekarte\Index as SpeisekarteEditor;
 use Platform\FoodAlchemist\Livewire\Speiseplan\Editor as SpeiseplanEditor;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

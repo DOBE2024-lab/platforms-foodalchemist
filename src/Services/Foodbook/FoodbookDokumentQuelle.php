@@ -13,6 +13,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
  */
 interface FoodbookDokumentQuelle
 {
-    /** Dokument-Daten des Foodbooks, siehe {@see \Platform\FoodAlchemist\Services\FoodbookService::dokumentDaten}. */
+    /** Dokument-Daten des Foodbooks, siehe {@see \Platform\FoodAlchemist\Services\Foodbook\FoodbookService::dokumentDaten}. */
     public function dokumentDaten(Team $team, FoodAlchemistFoodbook $fb, bool $intern = false, array $kapitelFilter = [], bool $mitKaskade = false, ?FoodAlchemistOutlet $outlet = null, bool $mitHandbuchMengen = false, bool $mitTexten = false): array;
 }

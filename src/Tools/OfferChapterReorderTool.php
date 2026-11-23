@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\OfferCompositionService;
+use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 
 /**
  * Spec 50 · C-7 — Angebot auf Foodbook-Niveau: Kapitel eines Angebots neu ordnen.

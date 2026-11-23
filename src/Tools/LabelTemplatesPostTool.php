@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\EtikettService;
+use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
 
 /** Spec 70 · Etikett-Vorlage anlegen oder ändern (mit vorlage_id). Pflichtfelder bleiben immer an. */
 class LabelTemplatesPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

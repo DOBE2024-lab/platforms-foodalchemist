@@ -115,7 +115,7 @@ it('Zyklus (Concept bettet sich selbst ein) bricht ab statt endlos zu rekursiere
 
 it('Speisekarte: Fix-Menü mit eingebettetem Paket zeigt die Allergen-Codes des Paket-Gerichts', function () {
     $this->pork->forceFill(['allergen_gluten' => 'enthalten'])->save();
-    $karten = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class);
+    $karten = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class);
 
     $karte = $karten->create($this->rootTeam, ['name' => 'Sommerkarte']);
     $rubrik = $karten->addRubrik($this->rootTeam, $karte->id);

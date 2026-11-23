@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 {{-- Marken-Tokens je Angebot (AngebotService::brandingDaten) mit Defaults; DomPDF: kein var(), Farben per Blade-Echo, Logo base64. --}}
-@php($marke = ($branding ?? []) + \Platform\FoodAlchemist\Services\AngebotService::BRANDING_STANDARD)
+@php($marke = ($branding ?? []) + \Platform\FoodAlchemist\Services\Ausgabe\AngebotService::BRANDING_STANDARD)
 @php($brand = $marke['color'])
 <head>
     <meta charset="utf-8">

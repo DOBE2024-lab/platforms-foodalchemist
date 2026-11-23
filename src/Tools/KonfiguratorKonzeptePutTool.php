@@ -34,6 +34,6 @@ class KonfiguratorKonzeptePutTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return ['konzept' => app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->konzeptAendern($team, self::id($a), $a)->toArray()];
+        return ['konzept' => app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->konzeptAendern($team, self::id($a), $a)->toArray()];
     }
 }

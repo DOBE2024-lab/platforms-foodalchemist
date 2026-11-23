@@ -34,7 +34,7 @@ class KonfiguratorLeistungenVorlageAbgleichTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $svc = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class);
         if (! empty($a['leistung_id'])) {
             return ['leistung' => $svc->vorlageAbgleich($team, (int) $a['leistung_id'])->toArray()];
         }

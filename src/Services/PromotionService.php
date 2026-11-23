@@ -33,7 +33,7 @@ use Platform\Core\Models\Team;
  */
 class PromotionService
 {
-    public function __construct(private PortfolioService $portfolio)
+    public function __construct(private Foodbook\PortfolioService $portfolio)
     {
     }
 

@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Services\Konfigurator;
 
 /**
  * Spec 94 · Paketgrenzen vorschlagen — deterministisch, ohne KI. Teil des
- * {@see \Platform\FoodAlchemist\Services\KonfiguratorPricingService}, das die genauen Preise je Gästezahl liefert.
+ * {@see \Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService}, das die genauen Preise je Gästezahl liefert.
  *
  * Ab Untergrenze u wird das Paket im Raster so weit nach oben geschoben, wie für jede Gästezahl p im Paket und jeden Fall
  * |Preis(Referenz) − Genau(p)| / Genau(p) ≤ Toleranz gilt. Hält schon die Mindestbreite die Toleranz nicht, bleibt es bei

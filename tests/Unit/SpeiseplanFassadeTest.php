@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /**
  * 98 · 3.3 (S3): SpeiseplanService wird in Teile unter Services/Speiseplan zerlegt und bleibt Fassade. Dieser Test friert die

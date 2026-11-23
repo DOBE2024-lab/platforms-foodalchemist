@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
 
 /**
  * Spec 43 (write): Aktualisiert ein eigenes Präsentations-Design (Name/Layout/Tokens).

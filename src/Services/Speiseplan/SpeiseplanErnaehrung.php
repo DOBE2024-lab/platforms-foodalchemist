@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
-use Platform\FoodAlchemist\Services\SpeiseplanVorgabenService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanVorgabenService;
 use Platform\FoodAlchemist\Services\WordingResolver;
 
 /**

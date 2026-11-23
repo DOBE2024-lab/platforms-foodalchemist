@@ -1136,7 +1136,7 @@ class DataQualityService
     {
         $treffer = [];
         foreach (app(AusgabeDriftService::class)->abgedriftet($team) as $d) {
-            if ($d['doc_type'] === PresentationService::TYPE_FOODBOOK) {
+            if ($d['doc_type'] === Ausgabe\PresentationService::TYPE_FOODBOOK) {
                 $treffer[] = (int) $d['doc_id'];
             }
         }

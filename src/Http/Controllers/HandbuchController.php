@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
 use Platform\Core\Http\Controllers\Controller;
-use Platform\FoodAlchemist\Services\HandbuchService;
+use Platform\FoodAlchemist\Services\Ausgabe\HandbuchService;
 use Symfony\Component\HttpFoundation\Response;
 
 /**

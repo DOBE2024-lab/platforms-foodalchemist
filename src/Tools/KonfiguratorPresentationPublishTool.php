@@ -35,7 +35,7 @@ class KonfiguratorPresentationPublishTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->veroeffentlichen($team, self::id($a),
+        return app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->veroeffentlichen($team, self::id($a),
             array_intersect_key($a, array_flip(['verantwortlich_user_id', 'gueltig_bis', 'expires_at', 'design', 'slug'])));
     }
 }

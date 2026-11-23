@@ -26,7 +26,7 @@ class KonfiguratorenBrandingTool extends KonfiguratorToolBasis
 
     protected function felder(): array
     {
-        return [['id' => ['type' => 'integer'], 'brand_color' => ['type' => 'string'], 'band_color' => ['type' => 'string'], 'footer_text' => ['type' => 'string'], 'presentation_design' => ['type' => 'string'], 'outlet_id' => ['type' => 'integer', 'description' => 'Betrieb für den Logo-Rückfall; 0 = keiner'], 'uebernehmen_von' => ['type' => 'string', 'enum' => ['foodbook', 'angebot', 'betrieb']], 'quelle_id' => ['type' => 'integer'], 'bild_entfernen' => ['type' => 'string', 'enum' => \Platform\FoodAlchemist\Services\KonfiguratorService::BILD_ARTEN, 'description' => 'Bild entfernen: logo, cover oder Zeitfenster-Karte lunch|dinner|day_night']], ['id']];
+        return [['id' => ['type' => 'integer'], 'brand_color' => ['type' => 'string'], 'band_color' => ['type' => 'string'], 'footer_text' => ['type' => 'string'], 'presentation_design' => ['type' => 'string'], 'outlet_id' => ['type' => 'integer', 'description' => 'Betrieb für den Logo-Rückfall; 0 = keiner'], 'uebernehmen_von' => ['type' => 'string', 'enum' => ['foodbook', 'angebot', 'betrieb']], 'quelle_id' => ['type' => 'integer'], 'bild_entfernen' => ['type' => 'string', 'enum' => \Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::BILD_ARTEN, 'description' => 'Bild entfernen: logo, cover oder Zeitfenster-Karte lunch|dinner|day_night']], ['id']];
     }
 
     protected function beispiele(): array
@@ -36,7 +36,7 @@ class KonfiguratorenBrandingTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $svc = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class);
         if (! empty($a['bild_entfernen'])) {
             $k = $svc->bildEntfernen($team, self::id($a), (string) $a['bild_entfernen']);
 

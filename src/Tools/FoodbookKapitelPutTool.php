@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistEinsatzmoment;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Models\FoodAlchemistTargetGroup;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /**
  * Spec 19 „Foodbook-Leitstelle" (E4.6): Kapitel-SOLL pflegen — Ziele (Menge/Preis/

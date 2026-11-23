@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Livewire\Settings\PlanNutzung as PlanNutzungKomponent
 use Platform\FoodAlchemist\Models\FoodAlchemistPrice;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\Plattform\GebuehrenZaehler;
 use Platform\FoodAlchemist\Services\Plattform\MandantenService;
 use Platform\FoodAlchemist\Services\Plattform\MandantenStammblattService;

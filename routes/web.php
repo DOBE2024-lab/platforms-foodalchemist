@@ -223,7 +223,7 @@ Route::get('/formate/{id}/dokument', function (int $id, \Platform\FoodAlchemist\
  * ZWEITE Ausgabe NEBEN der schönen `formate.dokument`-Karte — spiegelt `concepts.dokument`:
  * jede Edition drillt filter-identisch wie ein Concept-Report. ?pdf=1 = PDF (DomPDF, guarded).
  */
-Route::get('/formate/{id}/report', function (int $id, \Platform\FoodAlchemist\Services\ReportExportService $svc) {
+Route::get('/formate/{id}/report', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\ReportExportService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $optionen = $svc->optionen(request()->query(), 'format');
     $data = $svc->formatDaten($team, $id, $optionen);
@@ -235,7 +235,7 @@ Route::get('/formate/{id}/report', function (int $id, \Platform\FoodAlchemist\Se
         }
 
         return \Barryvdh\DomPDF\Facade\Pdf::loadView('foodalchemist::dokumente.report', $data + ['istPdf' => true])
-            ->download(\Platform\FoodAlchemist\Services\ReportExportService::pdfDateiname($data['name'] ?? '', 'Format-Report-' . $id));
+            ->download(\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService::pdfDateiname($data['name'] ?? '', 'Format-Report-' . $id));
     }
 
     return view('foodalchemist::dokumente.report', $data + ['istPdf' => false]);
@@ -246,7 +246,7 @@ Route::get('/formate/{id}/report', function (int $id, \Platform\FoodAlchemist\Se
  * Profile: kurz | produktion | kalkulation | voll. Filter als Query-Booleans:
  * preise, lieferanten, steps, sensorik, produktion, notizen, kaskade.
  */
-Route::get('/rezepte/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\ReportExportService $svc) {
+Route::get('/rezepte/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\ReportExportService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $optionen = $svc->optionen(request()->query(), 'recipe');
     $data = $svc->rezeptDaten($team, $id, $optionen);
@@ -258,13 +258,13 @@ Route::get('/rezepte/{id}/dokument', function (int $id, \Platform\FoodAlchemist\
         }
 
         return \Barryvdh\DomPDF\Facade\Pdf::loadView('foodalchemist::dokumente.report', $data + ['istPdf' => true])
-            ->download(\Platform\FoodAlchemist\Services\ReportExportService::pdfDateiname($data['name'] ?? '', ($data['typ'] === 'gericht' ? 'Gericht-' : 'Basisrezept-') . $id));
+            ->download(\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService::pdfDateiname($data['name'] ?? '', ($data['typ'] === 'gericht' ? 'Gericht-' : 'Basisrezept-') . $id));
     }
 
     return view('foodalchemist::dokumente.report', $data + ['istPdf' => false]);
 })->whereNumber('id')->name('foodalchemist.rezepte.dokument');
 
-Route::get('/concepts/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\ReportExportService $svc) {
+Route::get('/concepts/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\ReportExportService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $optionen = $svc->optionen(request()->query(), 'concept');
     $data = $svc->conceptDaten($team, $id, $optionen);
@@ -276,7 +276,7 @@ Route::get('/concepts/{id}/dokument', function (int $id, \Platform\FoodAlchemist
         }
 
         return \Barryvdh\DomPDF\Facade\Pdf::loadView('foodalchemist::dokumente.report', $data + ['istPdf' => true])
-            ->download(\Platform\FoodAlchemist\Services\ReportExportService::pdfDateiname($data['name'] ?? '', 'Concept-' . $id));
+            ->download(\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService::pdfDateiname($data['name'] ?? '', 'Concept-' . $id));
     }
 
     return view('foodalchemist::dokumente.report', $data + ['istPdf' => false]);
@@ -287,7 +287,7 @@ Route::get('/concepts/{id}/dokument', function (int $id, \Platform\FoodAlchemist
  * Ausgabe NEBEN dem technischen Report (foodalchemist.concepts.dokument bleibt unangetastet).
  * Druck-HTML; ?pdf=1 = PDF (DomPDF, guarded). Spiegelt die Foodbook-Dokument-Closure.
  */
-Route::get('/concepts/{id}/karte', function (int $id, \Platform\FoodAlchemist\Services\FoodbookService $svc) {
+Route::get('/concepts/{id}/karte', function (int $id, \Platform\FoodAlchemist\Services\Foodbook\FoodbookService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     try {
         $data = $svc->conceptKarteDaten($team, $id);
@@ -309,7 +309,7 @@ Route::get('/concepts/{id}/karte', function (int $id, \Platform\FoodAlchemist\Se
     return view('foodalchemist::dokumente.concept-karte', $data + ['istPdf' => false]);
 })->whereNumber('id')->name('foodalchemist.concepts.karte');
 
-Route::get('/gps/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\ReportExportService $svc) {
+Route::get('/gps/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\ReportExportService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $data = $svc->gpDaten($team, $id, $svc->optionen(request()->query(), 'gp'));
 
@@ -326,7 +326,7 @@ Route::get('/gps/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Serv
     return view('foodalchemist::dokumente.report', $data + ['istPdf' => false]);
 })->whereNumber('id')->name('foodalchemist.gps.dokument');
 
-Route::get('/lieferanten/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\ReportExportService $svc) {
+Route::get('/lieferanten/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\ReportExportService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $data = $svc->supplierDaten($team, $id, $svc->optionen(request()->query(), 'supplier'));
 
@@ -343,7 +343,7 @@ Route::get('/lieferanten/{id}/dokument', function (int $id, \Platform\FoodAlchem
     return view('foodalchemist::dokumente.report', $data + ['istPdf' => false]);
 })->whereNumber('id')->name('foodalchemist.suppliers.dokument');
 
-Route::get('/favoriten/dokument', function (\Platform\FoodAlchemist\Services\ReportExportService $svc) {
+Route::get('/favoriten/dokument', function (\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $data = $svc->favoritenDaten($team, $svc->optionen(request()->query(), 'favoriten'), request()->integer('limit') ?: 300);
 
@@ -369,7 +369,7 @@ Route::get('/foodbooks', \Platform\FoodAlchemist\Livewire\Foodbooks\Index::class
 /**
  * #384-Folge: Versendbares Foodbook/Portfolio-Dokument — Druck-HTML; ?pdf=1 = PDF (DomPDF, guarded).
  */
-Route::get('/foodbooks/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\FoodbookService $svc) {
+Route::get('/foodbooks/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\Foodbook\FoodbookService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $fb = $svc->detail($team, $id) ?? abort(404);
     // ?intern=1 → interne Projektion (EK/VK/W% pro Person, Projektleitung/Vertrieb). Default = Kundensicht (ohne EK).
@@ -408,7 +408,7 @@ Route::get('/foodbooks/{id}/dokument', function (int $id, \Platform\FoodAlchemis
  * Ebene höher: pro Kapitel drillen die Positionen filter-identisch. Die Produktions-Kaskade lebt
  * HIER (nicht mehr im schönen Dokument). ?kapitel[]=… filtert die Kapitel. ?pdf=1 = PDF (guarded).
  */
-Route::get('/foodbooks/{id}/report', function (int $id, \Platform\FoodAlchemist\Services\ReportExportService $svc) {
+Route::get('/foodbooks/{id}/report', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\ReportExportService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $optionen = $svc->optionen(request()->query(), 'foodbook');
     $kapRaw = request()->query('kapitel', '');
@@ -424,7 +424,7 @@ Route::get('/foodbooks/{id}/report', function (int $id, \Platform\FoodAlchemist\
         }
 
         return \Barryvdh\DomPDF\Facade\Pdf::loadView('foodalchemist::dokumente.report', $data + ['istPdf' => true])
-            ->download(\Platform\FoodAlchemist\Services\ReportExportService::pdfDateiname($data['name'] ?? '', 'Foodbook-Report-' . $id));
+            ->download(\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService::pdfDateiname($data['name'] ?? '', 'Foodbook-Report-' . $id));
     }
 
     return view('foodalchemist::dokumente.report', $data + ['istPdf' => false]);
@@ -468,7 +468,7 @@ Route::get('/angebote/konfiguratoren/{id}/praesentation', [\Platform\FoodAlchemi
  * #384: Versendbares Angebots-Dokument — Druck-HTML; ?pdf=1 = PDF-Download (DomPDF, guarded).
  * Team-scoped via AngebotService::detail.
  */
-Route::get('/angebote/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\AngebotService $svc) {
+Route::get('/angebote/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\AngebotService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $angebot = $svc->detail($team, $id) ?? abort(404);
     // Kurator 19.10.: wie die Seite gegen das aktive Kalkulationsprofil (das Angebot bindet keinen Betrieb)
@@ -491,7 +491,7 @@ Route::get('/angebote/{id}/dokument', function (int $id, \Platform\FoodAlchemist
  * Interner Angebots-Report (Dominique 08.11.2026, wie der Foodbook-Report): Kapitel × Positionen mit Profilen + Filtern
  * (?profil=kalkulation → EK, VK, Wareneinsatz). Sichtbarkeit wie das Dokument über AngebotService::detail. ?pdf=1 = PDF (guarded).
  */
-Route::get('/angebote/{id}/report', function (int $id, \Platform\FoodAlchemist\Services\AngebotService $svc, \Platform\FoodAlchemist\Services\ReportExportService $report) {
+Route::get('/angebote/{id}/report', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\AngebotService $svc, \Platform\FoodAlchemist\Services\Ausgabe\ReportExportService $report) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $angebot = $svc->detail($team, $id) ?? abort(404);
     $data = $report->angebotDaten($team, $angebot, $report->optionen(request()->query(), 'foodbook'));
@@ -502,7 +502,7 @@ Route::get('/angebote/{id}/report', function (int $id, \Platform\FoodAlchemist\S
         }
 
         return \Barryvdh\DomPDF\Facade\Pdf::loadView('foodalchemist::dokumente.report', $data + ['istPdf' => true])
-            ->download(\Platform\FoodAlchemist\Services\ReportExportService::pdfDateiname($data['name'] ?? '', 'Angebot-Report-' . $id));
+            ->download(\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService::pdfDateiname($data['name'] ?? '', 'Angebot-Report-' . $id));
     }
 
     return view('foodalchemist::dokumente.report', $data + ['istPdf' => false]);
@@ -513,7 +513,7 @@ Route::get('/angebote/{id}/report', function (int $id, \Platform\FoodAlchemist\S
  * Dokument. Zeigt die Kapitel/Format-Editionen als Gäste-Menü + Preis-Footer netto+MwSt+brutto.
  * Druck-HTML; ?pdf=1 = PDF (DomPDF, guarded). Spiegelt concepts.karte.
  */
-Route::get('/angebote/{id}/karte', function (int $id, \Platform\FoodAlchemist\Services\AngebotService $svc) {
+Route::get('/angebote/{id}/karte', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\AngebotService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     try {
         $data = $svc->karteDaten($team, $id, app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team));   // wie die Seite
@@ -572,7 +572,7 @@ Route::get('/speiseplan', \Platform\FoodAlchemist\Livewire\Speiseplan\Index::cla
  * Spec 31 / Stufe B: Wochenplan-Aushang (Druck-HTML; ?pdf=1 = PDF-Landscape, DomPDF guarded).
  * Query: ?mahlzeit=mittag&montag=YYYY-MM-DD (Woche+Mahlzeit aus dem Editor). Team-scoped.
  */
-Route::get('/speiseplan/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\SpeiseplanService $svc) {
+Route::get('/speiseplan/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $plan = $svc->detail($team, $id) ?? abort(404);
     $mahlzeit = (string) request()->query('mahlzeit', 'mittag');
@@ -662,7 +662,7 @@ Route::get('/speisekarten', \Platform\FoodAlchemist\Livewire\Speisekarte\Index::
  * Speisekarten-Dokument — Druck-HTML; ?pdf=1 = PDF (DomPDF, guarded). Stufe B liefert
  * `dokumentDaten` (Allergen-/Zusatzstoff-Legende + Brutto-Preise). Team-scoped.
  */
-Route::get('/speisekarten/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\SpeisekarteService $svc) {
+Route::get('/speisekarten/{id}/dokument', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $karte = $svc->detail($team, $id) ?? abort(404);
     // #3: ?intern=1 (EK-Kaskade) · ?kaskade=1 (Produktions-Baum je Gericht) · ?rubrik=… (nur diese Rubriken; Array|CSV).
@@ -701,7 +701,7 @@ Route::get('/speisekarten/{id}/praesentation', [\Platform\FoodAlchemist\Http\Con
  * (Kurzblatt … Volle Kaskade) + Filter (Preise/Lieferanten/Deklaration/Nährwerte/Kaskade) + Rubrik-Filter,
  * über den geteilten `dokumente.report`-View. Rubrik-Baum × Positionen über den geteilten Concept-/Rezept-Körper.
  */
-Route::get('/speisekarten/{id}/report', function (int $id, \Platform\FoodAlchemist\Services\ReportExportService $svc) {
+Route::get('/speisekarten/{id}/report', function (int $id, \Platform\FoodAlchemist\Services\Ausgabe\ReportExportService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $optionen = $svc->optionen(request()->query(), 'speisekarte');
     $rubRaw = request()->query('rubrik', '');
@@ -870,7 +870,7 @@ $faEtikettAusgabe = function (array $data) {
 
     return view('foodalchemist::dokumente.etiketten', $data);
 };
-Route::get('/etiketten/druck', function (\Platform\FoodAlchemist\Services\EtikettService $svc) use ($faEtikettAusgabe) {
+Route::get('/etiketten/druck', function (\Platform\FoodAlchemist\Services\Ausgabe\EtikettService $svc) use ($faEtikettAusgabe) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $quelle = (string) request('quelle', 'recipe');
     abort_unless(in_array($quelle, ['recipe', 'gp', 'stellplatz', 'charge'], true), 404);
@@ -887,7 +887,7 @@ Route::get('/etiketten/druck', function (\Platform\FoodAlchemist\Services\Etiket
     return $faEtikettAusgabe($data);
 })->name('foodalchemist.etiketten.druck');
 // Spec 76: Sammeldruck aus der Produktion (zeilen[line_id][an|anzahl|menge]; ohne Auswahl = Vorschlag)
-Route::get('/etiketten/produktion/{order}', function (int $order, \Platform\FoodAlchemist\Services\EtikettService $svc) use ($faEtikettAusgabe) {
+Route::get('/etiketten/produktion/{order}', function (int $order, \Platform\FoodAlchemist\Services\Ausgabe\EtikettService $svc) use ($faEtikettAusgabe) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     try {
         $pos = $svc->produktionPositionen($team, $order, request()->has('zeilen') ? (array) request('zeilen') : null);
@@ -904,7 +904,7 @@ Route::get('/etiketten/produktion/{order}', function (int $order, \Platform\Food
     return $faEtikettAusgabe($data);
 })->name('foodalchemist.etiketten.produktion');
 // Spec 76: Sammeldruck aus dem Protokoll nochmal drucken
-Route::get('/etiketten/gruppe/{gruppe}', function (string $gruppe, \Platform\FoodAlchemist\Services\EtikettService $svc) use ($faEtikettAusgabe) {
+Route::get('/etiketten/gruppe/{gruppe}', function (string $gruppe, \Platform\FoodAlchemist\Services\Ausgabe\EtikettService $svc) use ($faEtikettAusgabe) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $pos = $svc->gruppenPositionen($team, $gruppe);
     abort_if($pos === [], 404);

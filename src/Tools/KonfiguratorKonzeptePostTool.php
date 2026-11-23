@@ -34,6 +34,6 @@ class KonfiguratorKonzeptePostTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return ['konzept' => app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->konzeptHinzu($team, self::id($a, 'konfigurator_id'), $a)->toArray()];
+        return ['konzept' => app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->konzeptHinzu($team, self::id($a, 'konfigurator_id'), $a)->toArray()];
     }
 }

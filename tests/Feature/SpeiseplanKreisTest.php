@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanDokumentQuelle;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\AbhaengigkeitsGraph;
 use Platform\FoodAlchemist\Tests\TestCase;
 

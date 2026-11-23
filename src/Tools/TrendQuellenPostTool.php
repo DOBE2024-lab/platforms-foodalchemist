@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendQuellenService;
+use Platform\FoodAlchemist\Services\Trend\TrendQuellenService;
 use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
 /** Spec 93 A · Quelle anlegen; ohne feed_typ/abruf_weg prüft das System die URL und wählt den Weg (Feed → Übersicht → MCP). */

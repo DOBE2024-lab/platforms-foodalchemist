@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 /**
  * Ansicht „Markt in Zahlen“ aus den gelesenen Reihen ({@see MarktdatenService::lesen}): Kacheln mit Sparkline, Warengruppen-

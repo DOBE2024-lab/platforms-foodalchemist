@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ObservatoriumBriefingService as BP;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumBriefingService as BP;
 use Platform\FoodAlchemist\Support\ObservatoriumInhalt;
 
 /** „Mein Briefing“ einstellen oder löschen — nur die eigene Einstellung des angemeldeten Nutzers. */

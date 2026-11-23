@@ -153,7 +153,7 @@ it('Vorschläge: veganes Gericht bekommt keinen Hühnerfond und keinen Speck, nu
         $this->makeIngredient($gericht, $name, $gp, '100', 1);
     }
 
-    $sug = app(\Platform\FoodAlchemist\Services\PairingService::class)->componentSuggestions($gericht->fresh());
+    $sug = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->componentSuggestions($gericht->fresh());
     $slugs = collect($sug['klassiker'])->pluck('slug')->merge(collect($sug['signature'])->pluck('slug'))->unique()->values()->all();
 
     expect($slugs)->toBe(['kuemmel']);

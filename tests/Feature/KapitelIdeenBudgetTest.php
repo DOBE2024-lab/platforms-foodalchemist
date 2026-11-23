@@ -39,7 +39,7 @@ afterEach(fn () => KnowledgeBudget::vergiss());
  *  damit allein ~1.500 Zeichen bei (ursprungsTrendBlock kappt selbst auf 1.500). */
 function seedGrosseTrendPlanung(\Platform\Core\Models\Team $team): int
 {
-    $svc = app(\Platform\FoodAlchemist\Services\TrendService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Trend\TrendService::class);
     $ids = [];
     foreach (range(1, 8) as $i) {
         $ids[] = $svc->anlegen($team, ['name' => "Grosser Trend {$i}", 'typ' => 'trend', 'ebene' => 'mega', 'kategorie' => 'food',

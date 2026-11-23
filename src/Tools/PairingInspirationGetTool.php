@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\PairingInspirationService;
+use Platform\FoodAlchemist\Services\Pairing\PairingInspirationService;
 
 /**
  * Spec 19 E9.5 (Nachtrag) — Pairing-Inspiration für die Kreativ-Phase lesen. READ-ONLY.

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Support\ObservatoriumInhalt as Inhalt;
 /** Leseansichten und persönliche Merker; bestehende Trend-Freigaben werden hier nie geändert. */
 class ObservatoriumService
 {
-    public function __construct(private readonly FaRechte $rechte) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte) {}
 
     public function abfrage(Team $team, array $filter = []): Builder
     {

@@ -20,7 +20,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
  */
 class SurplusToDishService
 {
-    public function __construct(private PairingService $pairing)
+    public function __construct(private Pairing\PairingService $pairing)
     {
     }
 

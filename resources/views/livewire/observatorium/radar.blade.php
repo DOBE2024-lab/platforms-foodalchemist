@@ -8,7 +8,7 @@
     <div class="fa-obs-briefing fa-obs-radar">
         @unless($istHandy)
         <svg class="fa-obs-radar-chart" data-observatorium-radar-chart viewBox="0 0 520 550" role="img" aria-label="Trendradar mit {{ $trends->count() }} freigegebenen Entwicklungen">
-            @foreach(\Platform\FoodAlchemist\Services\TrendService::RINGE as $ebene => [$innen, $aussen])<circle cx="260" cy="260" r="{{ $aussen * 220 }}" fill="none" stroke="var(--obs-line)"/><text x="267" y="{{ 260 - $aussen * 220 + 14 }}">{{ V::EBENEN[$ebene] }} · {{ $trends->where('ebene', $ebene)->count() }}</text>@endforeach
+            @foreach(\Platform\FoodAlchemist\Services\Trend\TrendService::RINGE as $ebene => [$innen, $aussen])<circle cx="260" cy="260" r="{{ $aussen * 220 }}" fill="none" stroke="var(--obs-line)"/><text x="267" y="{{ 260 - $aussen * 220 + 14 }}">{{ V::EBENEN[$ebene] }} · {{ $trends->where('ebene', $ebene)->count() }}</text>@endforeach
             <line x1="260" y1="34" x2="260" y2="486" stroke="var(--obs-line)"/>
             @foreach([-29,29] as $grad)<line x1="260" y1="260" x2="{{ 260 + 220 * cos(deg2rad($grad)) }}" y2="{{ 260 - 220 * sin(deg2rad($grad)) }}" stroke="var(--obs-line)"/>@endforeach
             <text x="35" y="510">FOOD</text><text x="375" y="510">NON-FOOD</text>

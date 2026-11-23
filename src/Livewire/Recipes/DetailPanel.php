@@ -83,7 +83,7 @@ class DetailPanel extends Component
         $schluessel = 'fa.detail.pairing.'.$team->id.'.'.$rezept->id.'.'.optional($rezept->updated_at)->timestamp;
 
         return \Illuminate\Support\Facades\Cache::remember($schluessel, 300, fn () => [
-            'netz' => app(\Platform\FoodAlchemist\Services\PairingService::class)->pairingNetz($team, $rezept->id),
+            'netz' => app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->pairingNetz($team, $rezept->id),
             'kombination' => app(\Platform\FoodAlchemist\Services\Pairing\Kombinationslogik::class)->daten($rezept),
         ]);
     }

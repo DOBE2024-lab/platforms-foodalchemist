@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTrendEingang;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendQuelle;
 use Platform\FoodAlchemist\Models\FoodAlchemistWettbewerbFund;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\WettbewerbService;
+use Platform\FoodAlchemist\Services\Trend\WettbewerbService;
 use Platform\FoodAlchemist\Support\GoogleNewsSuche;
 use Platform\FoodAlchemist\Support\HandyLesemodus;
 

@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Tools;
 use Illuminate\Validation\ValidationException;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\WettbewerbService;
+use Platform\FoodAlchemist\Services\Trend\WettbewerbService;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 abstract class WettbewerberTool extends FoodAlchemistTool

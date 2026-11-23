@@ -15,8 +15,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTrendInspiration;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\TrendService;
-use Platform\FoodAlchemist\Services\TrendSignalService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendSignalService;
 use Platform\FoodAlchemist\Support\FaShell;
 use Platform\FoodAlchemist\Support\TrendVokabular as V;
 

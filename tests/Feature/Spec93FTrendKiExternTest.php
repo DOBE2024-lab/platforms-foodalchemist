@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTrendEingang;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendQuelle;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\TrendEingangService;
+use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
 use Platform\FoodAlchemist\Services\Trends\TrendAbleitungService;
 use Platform\FoodAlchemist\Support\SichererAbruf;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -94,7 +94,7 @@ it('extern: auch der Klick in der Oberfläche (ERSCHLIESSEN ohne MCP) und die Ab
     $this->eingang->erschliessenAnstossen($this->rootTeam, [$e->id], $this->user->id);
     expect($this->stub->calls)->toBe(0)->and(($this->offen)()->count())->toBe(1)->and($e->refresh()->status)->toBe('neu');
 
-    $trend = app(\Platform\FoodAlchemist\Services\TrendService::class)->anlegen($this->rootTeam, ['name' => 'TEST-93 Koji'], $this->user->id);
+    $trend = app(\Platform\FoodAlchemist\Services\Trend\TrendService::class)->anlegen($this->rootTeam, ['name' => 'TEST-93 Koji'], $this->user->id);
     app(TrendAbleitungService::class)->anstossen($this->rootTeam, (int) $trend->id, $this->user->id);
     expect($this->stub->calls)->toBe(0)->and(($this->offen)('trend.ableitung')->count())->toBe(1)
         ->and($trend->refresh()->ableitung)->toBeNull();

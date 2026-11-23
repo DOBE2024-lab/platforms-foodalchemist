@@ -7,7 +7,7 @@ use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Livewire\Observatorium\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistObservatoriumBriefingProfil as Profil;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendEingang;
-use Platform\FoodAlchemist\Services\ObservatoriumBriefingService;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumBriefingService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\TrendUrl;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -55,7 +55,7 @@ it('Service: speichern je Person, prüft Werte, Themen bereinigt; Filter wirkt a
         ->and(fn () => $this->svc->speichern($this->mandant, $this->anna->id, ['themen' => implode(',', range(1, 11))]))->toThrow(\RuntimeException::class, 'Höchstens');
 
     $this->actingAs($this->anna);
-    $ids = fn (array $f) => app(\Platform\FoodAlchemist\Services\ObservatoriumService::class)->gruppiert($this->mandant, $f)->pluck('id')->all();
+    $ids = fn (array $f) => app(\Platform\FoodAlchemist\Services\Trend\ObservatoriumService::class)->gruppiert($this->mandant, $f)->pluck('id')->all();
     // Branchen ODER + Region DE + 7 Tage + Themen ODER: Catering (Protein) und Event (alkoholfrei); nicht Kita, nicht alt, nicht CH
     expect($ids(ObservatoriumBriefingService::filter($p->refresh())))->toEqualCanonicalizing([$this->catering->id, $this->event->id]);
     // Nur Branchen, ohne Themen: beide Catering/Event in DE der letzten 7 Tage

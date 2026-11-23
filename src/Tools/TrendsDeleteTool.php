@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
 
 /** Spec 79 · Trend samt Belegen löschen. Zum Aussortieren lieber status=verworfen per PUT. */
 class TrendsDeleteTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

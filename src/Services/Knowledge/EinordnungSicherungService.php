@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Services\Knowledge;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\KnowledgeService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
 use Platform\FoodAlchemist\Support\TeamScope;
 
 /**

@@ -212,7 +212,7 @@ class Wissenssteuerung extends Component
         $this->fehler = $this->hinweis = null;
         if (! $this->darfGlobalSchreiben()) { $this->fehler = 'Diese Einstellung gilt für alle Teams. Ändern darf sie nur das Master-Team.'; return; }
         try {
-            app(\Platform\FoodAlchemist\Services\KnowledgeRoutingService::class)->setArt(
+            app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeRoutingService::class)->setArt(
                 $this->artForm['feature'], $this->artForm['art'], $this->artForm['mode'], (int) $this->artForm['max_docs'],
                 $this->artForm['max_chars_per_doc'] === '' ? null : (int) $this->artForm['max_chars_per_doc']);
             $this->hinweis = 'Gespeichert. Gilt ab dem nächsten KI-Aufruf.';

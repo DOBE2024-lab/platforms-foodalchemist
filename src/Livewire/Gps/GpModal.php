@@ -621,7 +621,7 @@ class GpModal extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\PairingService::class)
+            app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)
                 ->setGpAnker($team, $this->gpId, $ankerId, $this->gpAnkerRolle);
             $this->gpAnkerSuche = '';
         } catch (\RuntimeException $e) {
@@ -634,7 +634,7 @@ class GpModal extends Component
         $this->gpAnkerFehler = null;
         $team = $this->team();
         if ($team !== null && $this->gpId !== null) {
-            app(\Platform\FoodAlchemist\Services\PairingService::class)->removeGpAnker($team, $this->gpId, $ankerId);
+            app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->removeGpAnker($team, $this->gpId, $ankerId);
         }
     }
 
@@ -1368,11 +1368,11 @@ class GpModal extends Component
             'formen' => $gp !== null ? app(\Platform\FoodAlchemist\Services\GpFormService::class)->list($gp->id) : collect(),
             'formSlugs' => \Platform\FoodAlchemist\Services\GpFormService::formSlugs(Auth::user()?->currentTeamRelation),
             'sensorik' => $this->gpId !== null ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerGp($this->gpId) : null,
-            'pairing' => $this->gpId !== null ? app(\Platform\FoodAlchemist\Services\PairingService::class)->panelGp($this->gpId) : null,
+            'pairing' => $this->gpId !== null ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->panelGp($this->gpId) : null,
             // Spec 53 Paket J: Aroma-Anker editierbar (kern + neben) — panelGp()/pairing.blade.php
             // bleiben read-only (liefern nur 'kern', ohne id/role); dieser Block ist die Schreib-Fläche.
             'gpAnker' => $this->gpId !== null
-                ? app(\Platform\FoodAlchemist\Services\PairingService::class)->gpAnkerAlle($this->gpId)
+                ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->gpAnkerAlle($this->gpId)
                 : collect(),
             // „geprüft, kein Aroma-Träger" (Backfill/KI-Knopf) — sonst sähe es aus wie noch nie gefragt
             'gpAnkerNeutral' => $this->gpId !== null && app(\Platform\FoodAlchemist\Services\GpAromaService::class)->istAnkerNeutral($this->gpId),

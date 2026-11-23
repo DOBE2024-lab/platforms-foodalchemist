@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -27,7 +27,7 @@ class TrendQuellenService
     private const FELDER = ['name', 'url', 'art', 'feed_typ', 'abruf_weg', 'rhythmus', 'schwerpunkt_kategorien', 'schwerpunkt_sparten',
         'stichworte_ein', 'stichworte_aus', 'aktiv'];
 
-    public function __construct(private readonly FaRechte $rechte, private readonly QuellenAbruf $abruf, private readonly TeamSettingsService $settings) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte, private readonly QuellenAbruf $abruf, private readonly \Platform\FoodAlchemist\Services\TeamSettingsService $settings) {}
 
     // ── Lesen ──────────────────────────────────────────────────────────────
 

@@ -8,12 +8,12 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\GpService;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 
 /**
  * Spec 53 Paket J: GP↔Aroma-Anker-Zuordnungen lesen. Drei Modi: `gp_id` (Anker dieses EINEN GP,
  * kern+neben), `anchor_slug` (Reverse-Lookup — welche GPs tragen diesen Anker als Kern, s.
- * {@see \Platform\FoodAlchemist\Services\PairingService::gpsForAnkerIds}), oder ohne beides der
+ * {@see \Platform\FoodAlchemist\Services\Pairing\PairingService::gpsForAnkerIds}), oder ohne beides der
  * vollständige, seiten-basierte Export aller Zuordnungen des Teams (page/per_page, wie gps.LIST).
  */
 class GpAnchorsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

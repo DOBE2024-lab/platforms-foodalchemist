@@ -1,7 +1,7 @@
 @php
     $v = (array) ($e->vertiefung ?? []);
     $status = $e->vertiefung_status;
-    $label = $status !== null ? (\Platform\FoodAlchemist\Services\TrendVertiefungService::STATUS[$status] ?? null) : null;
+    $label = $status !== null ? (\Platform\FoodAlchemist\Services\Trend\TrendVertiefungService::STATUS[$status] ?? null) : null;
     $kern = (array) ($v['kernaussagen'] ?? []);
     $methodik = array_filter((array) ($v['methodik'] ?? []));
 @endphp

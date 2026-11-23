@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -32,7 +32,7 @@ class LagebildService
         '/\b(wird|werden|würde|würden)\b[^.]{0,40}\b(durchsetzen|wachsen|boomen|zunehmen|abnehmen|verschwinden|kommen|bleiben)\b/iu',
     ];
 
-    public function __construct(private readonly FaRechte $rechte) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte) {}
 
     /** Neuestes Lagebild aus Sicht des lesenden Teams (gelesen beim Master). */
     public function aktuelles(Team $team): ?array

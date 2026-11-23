@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendEingangService;
+use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
 
 /** Spec 93 A · Artikel per MCP in den Eingang einreichen — derselbe Eingang und dieselben Filter wie der Plattform-Abruf. */
 class TrendEingangPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

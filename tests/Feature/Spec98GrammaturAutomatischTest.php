@@ -3,9 +3,11 @@
 use Illuminate\Support\Str;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
+use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\GrammaturUmstellung\GrammaturMessung;
 use Platform\FoodAlchemist\Services\GrammaturUmstellung\GrammaturUmstellungService;
 use Platform\FoodAlchemist\Services\GrammaturUmstellung\SchreibWache;
+use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\GrammaturWelt;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -99,6 +101,41 @@ it('Fertigungstiefe: Hochstufen nach Inhalt zählt als Aufholen in Phase 0, nich
         ->and($b['phase0_fertigungstiefe_hochgestuft'])->toBe(1)
         ->and($b['fertigungstiefe_hochgestuft'])->toBe(0)
         ->and($this->a->fresh()->production_depth)->toBe('from_scratch');   // Trockenlauf: zurückgerollt
+});
+
+it('Verwender außerhalb der Auswahl (je Masse und je Stück) bleiben unverändert und werden geprüft', function () {
+    // Master 23.11.: Eltern, die per --rezept ausgenommen sind, rechnet Phase 2 trotzdem mit
+    $t = $this->rootTeam->id;
+    $stk = FoodAlchemistVocabEinheit::create(['team_id' => $t, 'slug' => 'stk', 'display_de' => 'Stück', 'dimension' => 'count']);
+    $this->a->update(['yield_pieces' => 4]);
+    $eltern = [];
+    foreach (['masse' => [300, $this->g->id], 'stueck' => [1, $stk->id]] as $key => [$menge, $einheit]) {
+        $p = FoodAlchemistRecipe::create(['team_id' => $t, 'recipe_key' => 'eltern-'.$key, 'name' => 'Menü '.$key, 'status' => 'approved', 'is_sales_recipe' => true]);
+        $p->ingredients()->create(['team_id' => $t, 'position' => 0, 'referenced_recipe_id' => $this->a->id, 'raw_text' => 'Bratkartoffeln',
+            'quantity' => $menge, 'unit_vocab_id' => $einheit, 'match_method' => 'manual']);
+        ($this->darreichung)($p, 'teller', ['is_standard' => true, 'menge_vom_standard' => false, 'quantity_per_unit_g' => 300]);
+        app(RecipeRecomputeService::class)->recomputePipeline($p->id);
+        $eltern[] = $p->id;
+    }
+
+    $b = app(GrammaturUmstellungService::class)->lauf(true, [$this->a->id]);
+
+    expect($b['verstoesse'])->toBe([])->and($b['ok'])->toBeTrue()
+        ->and($b['eltern_geprueft'])->toBe(['rezepte' => 2, 'darreichungen' => 2])
+        ->and(collect($b['rezepte'])->pluck('recipe_id')->all())->toBe([$this->a->id]);   // Eltern selbst nicht umgestellt
+    foreach ($eltern as $id) {
+        expect(FoodAlchemistRecipeDarreichung::where('recipe_id', $id)->first()->menge_vom_standard)->toBeFalse();
+    }
+    @array_map('unlink', glob(storage_path('app/foodalchemist/grammatur-umstellung/journal-*.json')) ?: []);
+});
+
+it('Verwender-Prüfung: jede Bewegung einer Eltern-Darreichung ist ein Verstoß', function () {
+    $d = ['gramm' => 300.0, 'ek_portion' => 1.0, 'calculated_sales_net' => 4.0, 'sales_net' => 4.0, 'price_mode' => 'auto', 'je_zutat' => [1 => 0.25]];
+    $alt = [9 => ['rezept' => [], 'darreichungen' => [5 => $d, 6 => $d]]];
+    $neu = [9 => ['rezept' => [], 'darreichungen' => [5 => ['gramm' => 300.05] + $d, 6 => ['ek_portion' => 1.2] + $d]]];
+    $v = GrammaturMessung::elternVerstoesse($alt, $neu);
+    expect($v)->toHaveCount(1)->and($v[0])->toContain('Darreichung 6')->toContain('ek_portion');
+    expect(GrammaturMessung::elternVerstoesse($alt, [9 => ['rezept' => [], 'darreichungen' => [5 => $d]]]))->toHaveCount(1);   // fehlt
 });
 
 it('--json legt das Zielverzeichnis an', function () {

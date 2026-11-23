@@ -79,6 +79,7 @@ final class GrammaturUmstellungService
         $rids = array_column($plan, 'recipe_id');
         $bericht = ['apply' => $apply, 'ok' => false, 'verstoesse' => [], 'rezepte' => [], 'zaehlung' => [], 'journal' => null,
             'nicht_ableitbar' => $this->nurNichtAbleitbar($alle), 'fertigungstiefe_hochgestuft' => 0, 'phase0_fertigungstiefe_hochgestuft' => 0, 'phase0_ek' => [],
+            'eltern_geprueft' => ['rezepte' => 0, 'darreichungen' => 0],
             'phasen' => ['0' => 'Aufholen veralteter Caches, unabhängig von der Umstellung', '1' => 'Umbau', '2' => 'Neuberechnung nach Umbau']];
         if ($rids === []) {
             $bericht['ok'] = true;
@@ -106,6 +107,10 @@ final class GrammaturUmstellungService
             $bericht['phase0_fertigungstiefe_hochgestuft'] = $geaendert($tiefeVorPhase0, $tiefeVorher);
             $ekVorher = $this->ekJeKg($rids);
             $alt = $this->messen($rids);
+            // Master 23.11.: Verwender außerhalb der Auswahl (etwa per --rezept ausgenommene Rezepte mit festem Ertrag) rechnet
+            // Phase 2 mit — ihre Darreichungen dürfen sich dabei nicht bewegen. Gemessen nach Phase 0, also ohne das Aufholen.
+            $eltern = array_values(array_diff(array_map('intval', app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->vorfahren($rids)), $rids));
+            $elternAlt = $this->messen($eltern);
             $journal = $this->journal($rids);
 
             $wache->phase('1', array_column(array_filter($plan, fn ($r) => collect($r['darreichungen'])
@@ -121,9 +126,11 @@ final class GrammaturUmstellungService
 
             $neu = $this->messen($rids);
             $bericht['rezepte'] = $this->vergleich($plan, $alt, $neu);
+            $elternVerstoesse = GrammaturMessung::elternVerstoesse($elternAlt, $this->messen($eltern));
+            $bericht['eltern_geprueft'] = ['rezepte' => count($eltern), 'darreichungen' => array_sum(array_map(fn ($e) => count($e['darreichungen']), $elternAlt))];
             $bericht['fertigungstiefe_hochgestuft'] = $geaendert($tiefeVorher, $tiefe());   // durch die Umstellung selbst — erwartet 0
 
-            $v = [...$wache->verstoesse(), ...$grenzen->pruefe($t0)['verstoesse'], ...$pruef['verstoesse']];
+            $v = [...$wache->verstoesse(), ...$grenzen->pruefe($t0)['verstoesse'], ...$pruef['verstoesse'], ...$elternVerstoesse];
             foreach ([...($fehler0 ?? []), ...($fehler2 ?? [])] as $id => $f) {
                 $v[] = "Neuberechnung Rezept {$id}: {$f}";
             }

@@ -344,3 +344,40 @@ it('stellt den vorherigen Nutzer auch nach einem Generatorfehler wieder her', fu
         ->and($actor->fresh()->current_team_id)->toBe($originalTeam)
         ->and(app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeRunContext::class)->current())->toBeNull();
 });
+
+/**
+ * CQ 2.5a (Hinweis Lisa): ältere Agenten/Skills schicken noch die alten Planungswerte (catering, betriebsgastronomie,
+ * schule_kita). Das Schema nimmt sie an, die Ausführung schlüsselt sie über Sektor::kanonisch auf den Eignungs-Slug um.
+ * Die Beschreibung nennt nur die neuen Slugs; Unbekanntes wird abgewiesen statt still durchgereicht.
+ */
+it('CQ 2.5a: sektor nimmt Altwerte an und schlüsselt sie um (catering → event_privat), Unbekanntes wird abgewiesen', function () {
+    $gesehen = null;
+    $this->mock(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class, function ($m) use (&$gesehen) {
+        $m->shouldReceive('generiere')->andReturnUsing(function ($team, $beschreibung, array $parameter) use (&$gesehen) {
+            $gesehen = $parameter;
+            throw new RuntimeException('Testgrenze: Parameter gesehen');
+        });
+    });
+    $tool = $this->registry->get('foodalchemist.recipes.GENERATE');
+
+    $tool->execute(['description' => 'Fingerfood für 80', 'sektor' => 'catering'], $this->kontext);
+    expect($gesehen['sektor'] ?? null)->toBe('event_privat');
+
+    $tool->execute(['description' => 'Kantinen-Eintopf', 'sektor' => ' Betriebsgastronomie '], $this->kontext);
+    expect($gesehen['sektor'] ?? null)->toBe('business');
+
+    $tool->execute(['description' => 'Kita-Mittag', 'sektor' => 'kita_schule'], $this->kontext);
+    expect($gesehen['sektor'] ?? null)->toBe('kita_schule');
+
+    $gesehen = null;
+    $falsch = $tool->execute(['description' => 'Menü', 'sektor' => 'fine_dining'], $this->kontext);
+    expect($falsch->success)->toBeFalse()
+        ->and($falsch->errorCode)->toBe('VALIDATION_ERROR')
+        ->and($falsch->error)->toContain('event_privat')
+        ->and($gesehen)->toBeNull();
+
+    $schema = $tool->getSchema()['properties']['sektor'];
+    expect($schema['enum'])->toContain('event_privat')->toContain('catering')->toContain('betriebsgastronomie')->toContain('schule_kita')
+        ->and($schema['description'])->toContain('event_privat')
+        ->and($schema['description'])->not->toContain('catering');
+});

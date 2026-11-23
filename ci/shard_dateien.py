@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Teilt die Testdateien des Moduls auf N Shards auf und gibt die Dateien von Shard i aus.
 
-Aufruf:  shard_dateien.py <tests-ordner> <i> <N> <präfix> [--phpunit <quelle.xml> <ziel.xml>]
+Aufruf:  shard_dateien.py <tests-ordner> <i> <N> <präfix> [--phpunit <quelle.xml> <ziel.xml>] [--listen <ordner>]
 
 Warum nicht `pest --shard`: Pest ermittelt die Testliste über `--list-tests` und erkennt dabei nur
 Klassen im Namespace `Tests\\…`. Die Modultests liegen über den vendor-Symlink außerhalb des Hosts und
@@ -13,6 +13,8 @@ it(/test(-Aufrufe (mindestens 1), gierig auf den jeweils leichtesten Shard (grö
 gleiche Dateien → gleiche Verteilung. Ausgabe: ein Pfad je Zeile, mit <präfix> vor dem Pfad relativ zum
 tests-Ordner. Mit --phpunit: statt der Liste eine Kopie von <quelle.xml>, in der die Suite FoodAlchemist
 genau diese Dateien als <file> führt (Paratest/--parallel arbeitet sauber mit einer Suite, nicht mit vielen Pfaden).
+Mit --listen: zusätzlich <ordner>/dateien-<i>.txt (Dateien dieses Shards) und <ordner>/soll-<i>.txt (alle
+gefundenen *Test.php, das Soll) — ci/zusammenfassung.py prüft daraus Vollständigkeit und Doppelläufe.
 """
 import os
 import re
@@ -54,6 +56,13 @@ def main() -> int:
     shard = sorted(verteile(liste, n)[i - 1])
     print(f"Shard {i}/{n}: {len(shard)} von {len(liste)} Dateien", file=sys.stderr)
     pfade = [os.path.join(praefix, p) for p in shard]
+    if "--listen" in sys.argv:
+        ablage = sys.argv[sys.argv.index("--listen") + 1]
+        os.makedirs(ablage, exist_ok=True)
+        with open(os.path.join(ablage, f"dateien-{i}.txt"), "w", encoding="utf-8") as f:
+            f.write("".join(p + "\n" for p in shard))
+        with open(os.path.join(ablage, f"soll-{i}.txt"), "w", encoding="utf-8") as f:
+            f.write("".join(p + "\n" for p in sorted(p for p, _ in liste)))
     if "--phpunit" in sys.argv:
         quelle, ziel = sys.argv[sys.argv.index("--phpunit") + 1:][:2]
         xml = open(quelle, encoding="utf-8").read()

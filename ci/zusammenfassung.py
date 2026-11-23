@@ -7,6 +7,8 @@ Quellen je Shard (Artefakt shard-<n>):
   pest-<n>.log   Pest-Ausgabe. Die Zeile „Tests: …" liefert die Zahlen wie in Pauls lokalem Bericht
                  (passed, failed, skipped, risky, …) — JUnit kennt kein „risky".
   junit-<n>.xml  Für die Rot-Liste (Datei, Test, erste Zeile der Meldung).
+  dateien-<n>.txt / soll-<n>.txt  Aufteilung (ci/shard_dateien.py). Geprüft: die Vereinigung aller Shard-
+                 Listen ist genau das Soll, jede Datei genau einmal, und alle Shards sahen dasselbe Soll.
 Umgebung: SHARDS, REF, MODUL_SHA, GESCHWISTER (JSON repo → sha).
 
 Ohne --pruefen: Markdown auf stdout. Mit --pruefen: Exit 1, wenn etwas rot ist oder ein Shard
@@ -81,6 +83,44 @@ def lies_rote(ordner: str) -> list:
     return rote
 
 
+def pruefe_aufteilung(ordner: str) -> list:
+    """Fehlerliste (leer = ok): fehlende, doppelte oder fremde Dateien, abweichendes Soll."""
+    def lies(muster):
+        out = {}
+        for datei in glob.glob(os.path.join(ordner, "**", muster), recursive=True):
+            nr = int(re.search(r"-(\d+)\.txt$", datei).group(1))
+            out[nr] = [z.strip() for z in open(datei, encoding="utf-8") if z.strip()]
+        return out
+    listen, solls = lies("dateien-*.txt"), lies("soll-*.txt")
+    fehler = []
+    fehlend_listen = [i for i in range(1, SHARDS + 1) if i not in listen]
+    if fehlend_listen:
+        fehler.append(f"keine Dateiliste von Shard {fehlend_listen}")
+    if not solls:
+        return fehler + ["kein Soll"]
+    soll_werte = {tuple(v) for v in solls.values()}
+    if len(soll_werte) > 1:
+        fehler.append("Shards sahen unterschiedliche Soll-Listen")
+    soll = sorted(set(next(iter(solls.values()))))
+    alle = [p for v in listen.values() for p in v]
+    zaehl = {}
+    for p in alle:
+        zaehl[p] = zaehl.get(p, 0) + 1
+    doppelt = sorted(p for p, n in zaehl.items() if n > 1)
+    fehlt = sorted(set(soll) - set(zaehl)) if not fehlend_listen else []
+    fremd = sorted(set(zaehl) - set(soll))
+    if doppelt:
+        fehler.append(f"{len(doppelt)} Datei(en) in mehreren Shards: {', '.join(doppelt[:5])}")
+    if fehlt:
+        fehler.append(f"{len(fehlt)} Datei(en) in keinem Shard: {', '.join(fehlt[:5])}")
+    if fremd:
+        fehler.append(f"{len(fremd)} Datei(en) nicht im Soll: {', '.join(fremd[:5])}")
+    if not fehler:
+        fehler_frei = f"{len(alle)} Dateien = Soll {len(soll)}, jede genau einmal"
+        print(fehler_frei, file=sys.stderr)
+    return fehler
+
+
 def main() -> int:
     ordner, ergebnis = sys.argv[1], sys.argv[2]
     pruefen = "--pruefen" in sys.argv
@@ -93,16 +133,22 @@ def main() -> int:
     fehlend = [i for i in range(1, SHARDS + 1) if i not in shards]
     summe = {k: sum(s[k] for s in shards.values()) for k in [*ARTEN, "assertions", "tests"]}
     rot = summe["failed"] > 0 or bool(rote)
+    aufteilung = pruefe_aufteilung(ordner)
 
     if pruefen:
-        if rot or fehlend or ergebnis not in ("success", "failure"):
-            print(f"ROT: {summe['failed']} failed, Shards ohne Ergebnis: {fehlend or '-'}, Matrix: {ergebnis}")
+        if rot or fehlend or aufteilung or ergebnis not in ("success", "failure"):
+            print(f"ROT: {summe['failed']} failed, Shards ohne Ergebnis: {fehlend or '-'}, Matrix: {ergebnis}, "
+                  f"Aufteilung: {'; '.join(aufteilung) or 'ok'}")
             return 1
         print("GRÜN")
         return 0
 
-    urteil = "🟢 grün" if not rot and not fehlend else "🔴 rot"
+    urteil = "🟢 grün" if not rot and not fehlend and not aufteilung else "🔴 rot"
     print(f"## FoodAlchemist-Suite: {urteil}\n")
+    if aufteilung:
+        print("**Aufteilung fehlerhaft:** " + "; ".join(aufteilung) + "\n")
+    else:
+        print("Aufteilung geprüft: jede Testdatei genau einmal.\n")
     print(f"Ref `{os.environ.get('REF', '?')}` → `{os.environ.get('MODUL_SHA', '?')}`\n")
     print(f"**{summe['tests']} Tests: {summe['passed']} passed, {summe['failed']} failed, "
           f"{summe['skipped']} skipped, {summe['risky']} risky** "

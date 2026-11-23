@@ -177,7 +177,7 @@ jobs:
           # phpunit-shard.xml = phpunit.xml, die Suite FoodAlchemist listet nur die Dateien dieses Shards
           python3 "$GITHUB_WORKSPACE/werkzeug/ci/shard_dateien.py" \
             "$WS/platform/modules/platforms-foodalchemist/tests" "$SHARD" "$SHARDS" vendor/martin3r/platform-foodalchemist/tests \
-            --phpunit phpunit.xml phpunit-shard.xml
+            --phpunit phpunit.xml phpunit-shard.xml --listen .
           php -d memory_limit=1G vendor/bin/pest \
             --configuration=phpunit-shard.xml --testsuite=FoodAlchemist \
             --parallel \
@@ -191,6 +191,8 @@ jobs:
           path: |
             ws/host/junit-${{ matrix.shard }}.xml
             ws/host/pest-${{ matrix.shard }}.log
+            ws/host/dateien-${{ matrix.shard }}.txt
+            ws/host/soll-${{ matrix.shard }}.txt
           if-no-files-found: warn
           retention-days: 14
 

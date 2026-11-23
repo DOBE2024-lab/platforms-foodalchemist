@@ -25,12 +25,10 @@ trait HandyPlanung
             'planFeldSpeichern', 'planVerwerfen', 'goKaskade',
             // Ergebnis: Lauf beobachten, abbrechen, wieder aufnehmen; freigeben und anreichern (Dominique 30.10.: „wenn ich das
             // plane, will ich es auch freigeben, so dass alles angereichert wird“ — UI-Klick über die Plattform-KI)
-            'pruefeLauf', 'laufGeaendert', 'laufAbbrechen', 'laufWiederAufnehmen', 'laufFortsetzen',
-            'gibFrei', 'gibStufeFrei', 'clusterFreigeben', 'neuAnreichern', 'alleNeuenAnreichern',
-            'waehleSchritt', 'waehleKnoten', 'setzeFortschrittFilter',
-            // Fotos zu einem Schritt (Gericht am Handy fotografieren)
-            'fotoHochladen', 'fotoPickerOeffnen', 'fotoPickerSchliessen', 'fotoUebernehmen',
-            '_startUpload', '_finishUpload', '_uploadErrored', '_removeUpload',
+            // (Spec 85 C1 PR-3: die Lauf-Methoden selbst liegen im Kind Planung\KaskadenLauf, s. KaskadenLauf::handyLeseMethoden; hier nur die
+            // Parent-Empfänger, die nichts schreiben: Board neu zeichnen, Lauf-Stand und Meldungen des Kinds anzeigen)
+            'laufGeaendert', 'laufStatus', 'kindMeldung', 'laufAbbrechen',   // laufAbbrechen: Stopp-Knopf am Board
+            '_startUpload', '_finishUpload', '_uploadErrored', '_removeUpload',   // Brief-Diktat (Audio)
             'nextPage', 'previousPage', 'gotoPage', 'setPage', 'resetPage',
         ];
     }

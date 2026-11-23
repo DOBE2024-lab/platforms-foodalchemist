@@ -16,8 +16,8 @@ return [
     'Livewire/Gps/GpModal.php' => 3,
     'Livewire/Lager/Index.php' => 2,
     'Livewire/Orders/Editor.php' => 1,
-    'Livewire/Planung/Index.php' => 1,
     'Livewire/Planung/KapitelRail.php' => 1,
+    'Livewire/Planung/KaskadenLauf.php' => 1,   // 98 · 3.3 S2-E2: aus Planung/Index verschoben (laufFortsetzen), kein neuer Treffer
     'Livewire/Produktion/Concerns/HaktZeileAb.php' => 1,    // 98 · 3.3 S6: Tagesplan (vorher 10) verteilt auf Abfrage 3, Anleitung 3, Feedback 1, Wall 1, Concerns 2 — kein neuer Treffer
     'Livewire/Produktion/Concerns/SetztZeileMitWallStart.php' => 1,
     'Livewire/Produktion/Editor.php' => 5,

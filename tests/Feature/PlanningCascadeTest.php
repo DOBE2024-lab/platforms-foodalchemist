@@ -13,6 +13,7 @@ use Platform\FoodAlchemist\Jobs\MaterializeConceptIdeaJob;
 use Platform\FoodAlchemist\Jobs\MaterializeSpeisekartePositionJob;
 use Platform\FoodAlchemist\Jobs\MaterializeSpeiseplanCellJob;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
+use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
@@ -1271,8 +1272,8 @@ it('Cockpit: Editor rendert die Freigabe-UI und gibt einen Entwurf über die Kom
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'gericht', 'status' => 'review']);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $recipe->id]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)         // ladeLetztenLauf → laufId=run (Freigabe-UI rendert)
+    Livewire::test(PlanungIndex::class)->call('oeffne', $session->id)->assertSet('laufId', $run->id);   // ladeLetztenLauf → laufId=run
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])   // Spec 85 C1 PR-3: Freigabe-UI im Kind
         ->assertSee('Ganze Stufe freigeben')   // Stufen-Freigabe sichtbar (blade-Render des done-Pfads, Stufe „prüfen")
         ->call('gibFrei', $step->id)
         ->assertSet('meldung', 'Freigegeben.');
@@ -2185,7 +2186,7 @@ it('stufen(): die Basisrezepte-Stufe ist erreicht, sobald Sub-Rezepte geplant si
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'parent_step_id' => $gerichtStep->id, 'depth' => 1, 'kind' => 'rezept', 'status' => 'geplant', 'label' => 'Consommé']);
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'parent_step_id' => $gerichtStep->id, 'depth' => 1, 'kind' => 'rezept', 'status' => 'skipped', 'label' => 'Espuma-Basis']);
 
-    $stufen = Livewire::test(PlanungIndex::class)->set('laufId', $run->id)->instance()->stufen();
+    $stufen = Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])->instance()->stufen();
 
     $basis = collect($stufen)->firstWhere('kind', 'rezept');
     expect($basis)->not->toBeNull()
@@ -2280,7 +2281,7 @@ it('stufen(): leitet Stufen-Zähler + Zustand aus den Steps ab (nur erreichte St
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'done']);
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
 
-    $stufen = Livewire::test(PlanungIndex::class)->set('laufId', $run->id)->instance()->stufen();
+    $stufen = Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])->instance()->stufen();
 
     expect($stufen)->toHaveCount(2);   // concept + gericht erreicht; rezept nicht (0 Steps)
     $g = collect($stufen)->firstWhere('kind', 'gericht');

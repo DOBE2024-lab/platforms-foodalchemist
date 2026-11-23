@@ -1,7 +1,7 @@
 <?php
 
 use Livewire\Livewire;
-use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
+use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Livewire\Recipes\IngredientEditor;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
@@ -112,9 +112,7 @@ it('Cockpit-Fan-out: jeder gewählte Draft mountet eine eigene Editor-Instanz', 
         return [$ids, array_values(array_unique($keys[0]))];
     };
 
-    $cockpit = Livewire::test(PlanungIndex::class)
-        ->set('sessionId', $session->id)
-        ->set('laufId', $run->id)
+    $cockpit = Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])   // Spec 85 C1 PR-3: Fortschritt im Kind
         ->call('toggleZutaten', $stepA->id)
         ->call('toggleZutaten', $stepB->id)
         ->call('toggleZutaten', $stepC->id)

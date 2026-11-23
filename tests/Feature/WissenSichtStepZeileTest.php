@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
-use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
+use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService;
@@ -102,7 +102,7 @@ it('Step-Zeile: zeigt Kanon + Recherche komplett — 20 Recherche-Chips ohne „
         ],
     ]);
 
-    $t = Livewire::test(PlanungIndex::class)->set('sessionId', $session->id)->set('laufId', $run->id)
+    $t = Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->assertSee('Verwendetes Wissen (22)')
         ->assertSee('2 verbindlich vorgegeben')   // Copy-Umbau 2026-10-05: »Kanon« → »verbindlich vorgegeben«
         ->assertSee('20 nachgeschlagen')          // »Recherche« → »nachgeschlagen«
@@ -122,7 +122,7 @@ it('Step-Zeile: alter Snapshot ohne kanon_files rendert weiter (nur Recherche-Gr
         'label' => 'Alt', 'context_snapshot' => ['knowledge_files' => ['pairings/tomate.md', 'domains/suppen.md']],
     ]);
 
-    Livewire::test(PlanungIndex::class)->set('sessionId', $session->id)->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->assertSee('Verwendetes Wissen (2)')
         ->assertSee('0 verbindlich vorgegeben')
         ->assertSee('tomate')->assertSee('suppen')

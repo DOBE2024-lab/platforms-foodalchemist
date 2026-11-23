@@ -8,6 +8,7 @@ use Platform\FoodAlchemist\Jobs\GenerateConceptJob;
 use Platform\FoodAlchemist\Jobs\GenerateRecipeJob;
 use Platform\FoodAlchemist\Jobs\GenerateDishProposalJob;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
+use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistBriefTemplate;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
@@ -27,6 +28,12 @@ use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class, SeedsTeamHierarchy::class);
+
+/** Spec 85 C1 PR-3: der Fortschritt lebt im Kind KaskadenLauf; der Parent öffnet eine Planung auf ihrem jüngsten Lauf (ladeLetztenLauf). */
+function leitstelleLetzterLauf(int $sessionId): ?int
+{
+    return \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun::where('planning_session_id', $sessionId)->orderByDesc('id')->value('id');
+}
 
 /**
  * Planung-Leitstelle: die KI-Erstellung (Regler-Leitplanken) lebt konsolidiert in der Planung.
@@ -495,8 +502,7 @@ it('Queue-Watchdog: Lauf hängt lange OHNE Step-Fortschritt → sichtbarer Hinwe
     // Raw-Update, um den created_at-Touch zu umgehen: „vor 2 Minuten gestartet, immer noch nichts fertig".
     FoodAlchemistCascadeRun::where('id', $run->id)->update(['created_at' => now()->subSeconds(120)]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->set('laeuft', true)
         ->call('pruefeLauf')
         ->assertSet('laeuft', true)              // kein Abbruch — weiter pollen
@@ -510,8 +516,7 @@ it('Queue-Watchdog schweigt, wenn ein Schritt Fortschritt gemacht hat (Worker be
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
     FoodAlchemistCascadeRun::where('id', $run->id)->update(['created_at' => now()->subSeconds(300)]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->set('laeuft', true)
         ->call('pruefeLauf')
         ->assertSet('hinweis', null);            // trotz 5 Min Laufzeit kein Hinweis — Worker lebt
@@ -525,8 +530,7 @@ it('laufFortsetzen: reapt verwaiste Steps und macht den hängenden Lauf handlung
     // Raw-Update (kein Timestamp-Touch): der Job liegt seit 45 Min ohne Rückmeldung → verwaist.
     FoodAlchemistCascadeRunStep::where('id', $step->id)->update(['updated_at' => now()->subMinutes(45)]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->set('laeuft', true)
         ->call('laufFortsetzen')
         ->assertSet('fehler', null)
@@ -542,8 +546,7 @@ it('laufFortsetzen: nichts verwaist → ehrliche Meldung, kein Step angetastet',
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
     // frisch — nicht verwaist
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->set('laeuft', true)
         ->call('laufFortsetzen');
 
@@ -559,8 +562,7 @@ it('laufWiederAufnehmen: nimmt alle gescheiterten generierbaren Steps gebündelt
     $f2 = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'rezept', 'status' => 'failed', 'label' => 'Fail 2']);
     $done = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => 1]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->call('laufWiederAufnehmen')
         ->assertSet('fehler', null);
 
@@ -575,8 +577,7 @@ it('laufWiederAufnehmen: kein gescheiterter Step → ehrliche Meldung, kein Job'
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'gericht', 'status' => 'review', 'staged' => true]);
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => 1]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->call('laufWiederAufnehmen')
         ->assertSet('meldung', 'Kein gescheiterter Schritt zum Fortsetzen.');
 
@@ -609,9 +610,7 @@ it('#4/#1a Cockpit-Baum: Fan-out-Kind eingerückt + „Verwendetes Wissen" aus c
         'kind' => 'rezept', 'status' => 'done', 'label' => 'Kind-Basisrezept', 'depth' => 1,   // Fan-out-Kind → Zeile im Gericht-Cluster
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('sessionId', $session->id)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->assertSee('Wurzel-Gericht')
         ->assertSee('Kind-Basisrezept')          // #4 Fan-out-Kind sichtbar
         ->assertSee('Verwendetes Wissen')        // #1a aus context_snapshot
@@ -628,9 +627,7 @@ it('A: Inline-Zutaten-Review — Toggle mountet den IngredientEditor on-demand f
         'label' => 'Draft-Suppe', 'ref_id' => $rezept->id,
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('sessionId', $session->id)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->assertSee('Zutaten prüfen')            // Toggle da, Editor NOCH nicht offen …
         ->assertSet('zutatenOffen', [])
         ->call('toggleZutaten', $step->id)
@@ -759,7 +756,7 @@ it('A2: neuGenerieren reicht speiseKommentar an die Regeneration weiter und leer
         'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Rinderfilet',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->set('speiseKommentar.' . $step->id, 'vegetarisch statt Rind')
         ->call('neuGenerieren', (int) $step->id)
         ->assertSet('speiseKommentar.' . $step->id, null);   // Einweg-Feedback → nach dem Anstoß geleert
@@ -1019,8 +1016,7 @@ it('#17 T2: ergaenzeSubRezept ergänzt ein geplantes Basisrezept am aktiven Lauf
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'gericht', 'status' => 'review', 'staged' => true, 'brief' => 'Teller']);
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'freigegeben', 'label' => 'Teller', 'depth' => 0, 'sort' => 1, 'parent_step_id' => null]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', (int) $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => (int) $run->id])
         ->set('neuerSubName', 'Schweinejus')
         ->call('ergaenzeSubRezept')
         ->assertSet('neuerSubName', '');   // Feld nach dem Ergänzen geleert
@@ -1281,8 +1277,7 @@ it('Cockpit: Gericht-Step zeigt EK/VK/Marge-Kachel schon am Draft', function () 
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Marge-Gericht',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('data-kalkulation="')
         ->assertSeeHtml('2,50')      // EK gesamt
         ->assertSeeHtml('10,00')     // VK netto
@@ -1299,8 +1294,7 @@ it('Cockpit: Concept-Step trägt KEINE Rezept-Marge-Kachel (Menü ≠ Rezept)', 
         'kind' => 'concept', 'status' => 'done', 'ref_type' => 'concept', 'ref_id' => $concept->id, 'label' => 'Menü A',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('Menü A')                 // Concept-Step rendert (Cockpit ist offen)
         ->assertDontSeeHtml('data-kalkulation="'); // aber KEINE Rezept-Marge-Kachel
 });
@@ -1317,8 +1311,7 @@ it('Cockpit: un-bepreister Draft zeigt die Kachel mit „noch nicht bepreist"', 
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Roh-Gericht',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('data-kalkulation="')
         ->assertSeeHtml('noch nicht bepreist');
 });
@@ -1349,8 +1342,7 @@ it('Cockpit: teil-unbepreistes Gericht wird trotz gesunder Marge als »EK teil-u
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Teil-Gericht',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('EK teil-unbepreist')
         ->assertSeeHtml('Nur 2 von 3 Zutaten bepreist')  // Tooltip trägt die Zahlen
         ->assertSeeHtml('93,8');                          // Marge steht daneben — kein elseif, beides sichtbar
@@ -1369,8 +1361,7 @@ it('Cockpit: voll bepreistes Gericht (priced == total) trägt KEINEN teil-unbepr
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Voll-Gericht',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('data-kalkulation="')     // Kachel da
         ->assertDontSeeHtml('EK teil-unbepreist'); // aber kein Marker
 });
@@ -1390,8 +1381,7 @@ it('Cockpit: fehlende Zähler (nie recomputet) markieren NICHT teil-unbepreist (
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Zaehlerlos-Gericht',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('data-kalkulation="')
         ->assertDontSeeHtml('EK teil-unbepreist');
 });
@@ -1435,8 +1425,7 @@ it('Cockpit: Gericht-Draft mit KI-Fotos zeigt die Zahl der kostenpflichtigen Bil
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Foto-Gericht',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('data-bild-calls="')
         ->assertSeeHtml('2 kostenpflichtige KI-Bilder')   // Anzahl (Plural; Copy ohne »Calls«)
         ->assertSeeHtml('gpt-image-1.5');        // Modell (Kosten-Transparenz, kein EUR)
@@ -1451,8 +1440,7 @@ it('Cockpit: Draft OHNE KI-Fotos trägt keinen Bild-Call-Hinweis', function () {
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Fotolos-Gericht',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertDontSeeHtml('data-bild-calls="');
 });
 
@@ -1469,8 +1457,7 @@ it('Cockpit: fremd-Team-geloggte Bild-Calls zählen NICHT (Kosten dieses Teams)'
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Fremd-Foto-Gericht',
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertDontSeeHtml('data-bild-calls="');
 });
 
@@ -1517,8 +1504,7 @@ it('Cockpit Bild-Status: angefordert + Fotos vorhanden zeigt »N Fotos ✓«', f
     seedFotos($recipe, 2);
     $session = bildStatusRun($this->rootTeam, $recipe, true);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('data-bild-status="')
         ->assertSeeHtml('2 Fotos')   // Haken jetzt als Heroicon, kein ✓-Emoji
         ->assertDontSeeHtml('keine Fotos erzeugt');
@@ -1528,8 +1514,7 @@ it('Cockpit Bild-Status: angefordert, aber 0 Fotos zeigt ehrlich »keine Fotos e
     $recipe = $this->makeRecipe($this->rootTeam, 'Bild-Leer', ['is_sales_recipe' => true, 'status' => 'draft']);
     $session = bildStatusRun($this->rootTeam, $recipe, true);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('data-bild-status="')
         ->assertSeeHtml('keine Fotos erzeugt');
 });
@@ -1539,8 +1524,7 @@ it('Cockpit Bild-Status: OHNE ki_bilder-Anforderung trägt keinen Bild-Status', 
     seedFotos($recipe, 1); // selbst mit Bestandsfoto: nicht angefordert → kein Status
     $session = bildStatusRun($this->rootTeam, $recipe, false);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertDontSeeHtml('data-bild-status="');
 });
 
@@ -1574,8 +1558,7 @@ it('Cockpit Bild-Status: deferred.bilder=failed zeigt »Fotos fehlgeschlagen« (
     $recipe = $this->makeRecipe($this->rootTeam, 'Bild-Failed', ['is_sales_recipe' => true, 'status' => 'draft']);
     $session = bildStatusRunMitBilder($this->rootTeam, $recipe, ['status' => 'failed', 'error' => 'API down', 'n' => 0]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('data-bild-status="')
         ->assertSeeHtml('Fotos fehlgeschlagen')
         ->assertDontSeeHtml('keine Fotos erzeugt');
@@ -1586,8 +1569,7 @@ it('Cockpit Bild-Status: Teil-Fehler (failed + n>0) zeigt »Fotos fehlgeschlagen
     seedFotos($recipe, 2); // Produktfoto ok, ein Schritt kippte
     $session = bildStatusRunMitBilder($this->rootTeam, $recipe, ['status' => 'failed', 'error' => 'ein Schritt kippte', 'n' => 2]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('Fotos fehlgeschlagen (2 ok)');
 });
 
@@ -1596,8 +1578,7 @@ it('Cockpit Bild-Status: deferred.bilder=done fällt auf »N Fotos ✓« zurück
     seedFotos($recipe, 3);
     $session = bildStatusRunMitBilder($this->rootTeam, $recipe, ['status' => 'done', 'n' => 3]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('3 Fotos')
         ->assertDontSeeHtml('Fotos fehlgeschlagen');
 });
@@ -1610,8 +1591,7 @@ it('Cockpit Bild-Status: failed-Badge bietet „neu erzeugen" und re-triggert nu
     $session = bildStatusRunMitBilder($this->rootTeam, $recipe, ['status' => 'failed', 'error' => 'API down', 'n' => 0]);
     $step = FoodAlchemistCascadeRunStep::where('ref_id', $recipe->id)->where('ref_type', 'recipe')->firstOrFail();
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('neu erzeugen')
         // Spec 53 / Paket C: der Knopf ist jetzt <x-fa::ki-action> ($wire.bilderNeu(...)
         // statt wire:click) — data-ki-action trägt denselben Wire-Ausdruck als Beleg.
@@ -1627,8 +1607,7 @@ it('Cockpit Bild-Status: deferred.bilder=queued zeigt Spinner »erzeugt Fotos �
     $recipe = $this->makeRecipe($this->rootTeam, 'Bild-Queued', ['is_sales_recipe' => true, 'status' => 'draft']);
     $session = bildStatusRunMitBilder($this->rootTeam, $recipe, ['status' => 'queued']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('erzeugt Fotos …')
         ->assertDontSeeHtml('Fotos fehlgeschlagen');
 });
@@ -1678,12 +1657,13 @@ it('Margen-Gate: fixierter VK unter Auto-Vorschlag setzt eine sichtbare Warnung 
     $fixiereRezeptpreis($this->rootTeam, $sauber, 14.00);
     $run = $margenRun($this->rootTeam, [$unter, $sauber]);
 
-    $comp = Livewire::test(PlanungIndex::class)
-        ->set('laufId', $run->id)
+    $comp = Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->call('gibStufeFrei', 'gericht')
-        ->assertSeeHtml('data-margen-warnung');
+        ->assertDispatched('planung.meldung', art: 'margen');   // Spec 85 C1 PR-3: das Kind meldet, der Parent zeigt im Modal-Kopf
 
     $w = $comp->get('margenWarnung');
+    Livewire::test(PlanungIndex::class)->dispatch('planung.meldung', text: $w, art: 'margen')
+        ->assertSet('margenWarnung', $w)->assertSeeHtml('data-margen-warnung');
     expect($w)->not->toBeNull()
         ->and($w)->toContain('1 Position unter Auto-Vorschlag')
         ->and($w)->toContain('Unter-Gericht')
@@ -1704,8 +1684,7 @@ it('Margen-Gate: saubere Freigabe (alle auf/über Auto-Vorschlag) → keine Warn
     $fixiereRezeptpreis($this->rootTeam, $b, 8.33);
     $run = $margenRun($this->rootTeam, [$a, $b]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->call('gibStufeFrei', 'gericht')
         ->assertSet('margenWarnung', null)
         ->assertDontSeeHtml('data-margen-warnung');
@@ -1727,8 +1706,7 @@ it('Margen-Gate: Auto-VK und fixierter Preis ohne Vorschlag lösen KEINE Warnung
     $fixiereRezeptpreis($this->rootTeam, $ohneSchwelle, 1.00);
     $run = $margenRun($this->rootTeam, [$auto, $ohneSchwelle]);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', $run->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->call('gibStufeFrei', 'gericht')
         ->assertSet('margenWarnung', null);
 });
@@ -1753,7 +1731,7 @@ it('Cockpit-Upload: manuelles Foto als Pool-Foto übernehmen (kein KI-Call)', fu
         'kind' => 'gericht', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Upload-Pool',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->set('fotoUploads.' . $step->id, \Illuminate\Http\UploadedFile::fake()->image('teller.jpg'))
         ->call('fotoHochladen', $step->id, false)
         ->assertSet('fehler', null);
@@ -1777,7 +1755,7 @@ it('Cockpit-Upload: manuelles Foto als Ergebnis-/Hero-Foto (is_result)', functio
         'kind' => 'gericht', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Upload-Hero',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->set('fotoUploads.' . $step->id, \Illuminate\Http\UploadedFile::fake()->image('hero.jpg'))
         ->call('fotoHochladen', $step->id, true)
         ->assertSet('fehler', null);
@@ -1795,7 +1773,7 @@ it('Cockpit-Upload: ohne gewählte Datei passiert nichts (empty-only, gesagt)', 
         'kind' => 'gericht', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'Upload-Leer',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->call('fotoHochladen', $step->id, false)
         ->assertSet('fehler', 'Kein Foto gewählt.');
 
@@ -1826,7 +1804,7 @@ it('Reuse-Picker: zeigt vorhandene Team-Fotos, schliesst die eigenen Rezept-Foto
         'kind' => 'gericht', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $zielRezept->id, 'label' => 'Reuse-Ziel',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->call('fotoPickerOeffnen', $step->id)
         ->assertSet('fotoPickerStep', $step->id)
         ->assertViewHas('fotoPickerKandidaten', function ($kand) use ($quelleFoto, $eigenesFoto) {
@@ -1851,7 +1829,7 @@ it('Reuse-Picker: vorhandenes Foto als Pool-Foto übernehmen (Kopie, kein KI-Cal
         'kind' => 'gericht', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $zielRezept->id, 'label' => 'Reuse-Z2',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->call('fotoPickerOeffnen', $step->id)
         ->call('fotoUebernehmen', $step->id, $quelleFoto->id, false)
         ->assertSet('fehler', null)
@@ -1882,7 +1860,7 @@ it('Reuse-Picker: vorhandenes Foto als Ergebnis-/Hero-Foto übernehmen (is_resul
         'kind' => 'gericht', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $zielRezept->id, 'label' => 'Reuse-Z3',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->call('fotoUebernehmen', $step->id, $quelleFoto->id, true)
         ->assertSet('fehler', null);
 
@@ -1904,7 +1882,7 @@ it('Reuse-Picker: fremd-Team-Quell-Foto wird nicht übernommen (fail-soft, kein 
         'kind' => 'gericht', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $zielRezept->id, 'label' => 'Reuse-Z4',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->call('fotoUebernehmen', $step->id, $fremdFoto->id, false)
         ->assertSet('fehler', fn ($f) => $f !== null);   // gesagt, nicht still verschluckt
 
@@ -1981,7 +1959,7 @@ it('Slice 2 / D1-Read: getürkte laufId auf fremden Lauf → Run-Action verpufft
     ]);
 
     // Als rootTeam (beforeEach) den fremden Lauf als laufId setzen und die Action feuern.
-    $action(Livewire::test(PlanungIndex::class)->set('laufId', (int) $fremdRun->id));
+    $action(Livewire::test(KaskadenLauf::class, ['laufId' => (int) $fremdRun->id]));
 
     // Nichts passiert: kein Generator-/Freigabe-Job, Fremd-Steps + Fremd-Rezept unangetastet.
     Queue::assertNothingPushed();
@@ -1998,8 +1976,7 @@ it('Slice 2 / D1-Read: getürkte laufId auf fremden Lauf → Run-Action verpufft
 it('Slice 2 / D1-Read: getürkte laufId auf fremden Lauf → render lädt keinen Lauf', function () {
     $fremdRun = FoodAlchemistCascadeRun::create(['team_id' => $this->childA->id, 'scope' => 'gericht', 'status' => 'running']);
 
-    Livewire::test(PlanungIndex::class)
-        ->set('laufId', (int) $fremdRun->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => (int) $fremdRun->id])
         ->assertViewHas('lauf', null);
 });
 
@@ -2017,7 +1994,7 @@ it('Slice 2 / D1-Read: Foto-Picker auf EIGENEN Step listet team-sichtbare Kandid
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $zielRezept->id,
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->set('fotoPickerStep', (int) $step->id)
         ->assertViewHas('fotoPickerKandidaten', fn ($k) => count($k) === 1 && $k[0]['rezept'] === 'Anderes mit Foto');
 });
@@ -2034,7 +2011,7 @@ it('Slice 2 / D1-Read: Foto-Picker auf FREMDEN Step → keine Kandidaten (Roh-id
         'kind' => 'gericht', 'status' => 'done', 'ref_type' => 'recipe', 'ref_id' => $fremdRezept->id,
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(KaskadenLauf::class)
         ->set('fotoPickerStep', (int) $fremdStep->id)
         ->assertViewHas('fotoPickerKandidaten', []);
 });
@@ -2372,8 +2349,7 @@ it('Phase 1 „eingereiht — wartet auf Worker": queued/running-Step ohne Phase
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'rezept', 'status' => 'running']);
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'rezept', 'status' => 'queued', 'label' => 'Fond', 'sort' => 1]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSee('Eingereiht, wartet auf die Hintergrund-Erstellung');   // Copy ohne »Worker«/Gedankenstrich
 });
 
@@ -2382,8 +2358,7 @@ it('Phase gesetzt am Step überschreibt den Platzhalter mit dem echten Fortschri
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'rezept', 'status' => 'running']);
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'rezept', 'status' => 'running', 'phase' => 'Rezept wird entworfen …', 'phase_at' => now(), 'label' => 'Fond', 'sort' => 1]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSee('Rezept wird entworfen …')
         ->assertDontSee('Eingereiht, wartet auf die Hintergrund-Erstellung');
 });
@@ -2391,8 +2366,7 @@ it('Phase gesetzt am Step überschreibt den Platzhalter mit dem echten Fortschri
 it('Poll-Gate (Worker-Tab, 1500ms): Ruhezustand ohne Lauf zeigt kein wire:poll.1500ms', function () {
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Ruhe', 'brief' => 'x']);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertDontSeeHtml('wire:poll.1500ms');
 });
 
@@ -2407,8 +2381,7 @@ it('Poll-Gate (Worker-Tab, 1500ms): eine Phase OHNE laufenden Run (Konformität 
         'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'phase' => PlanningCascadeService::PHASE_KONFORMITAET, 'phase_at' => now(), 'sort' => 1,
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('wire:poll.1500ms');
 });
 
@@ -2418,7 +2391,7 @@ it('Doppel-Enqueue-Guard: zweiter Klick auf neuAnreichern waehrend die erste Anr
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'gericht', 'status' => 'review']);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $recipe->id]);
 
-    $component = Livewire::test(PlanungIndex::class)->call('oeffne', $session->id);
+    $component = Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)]);
     $component->call('neuAnreichern', $step->id);
     $component->call('neuAnreichern', $step->id);   // zweiter Klick, waehrend deferred.enrich=queued steht
 
@@ -2431,7 +2404,7 @@ it('Doppel-Enqueue-Guard: zweiter Klick auf konformitaetPruefen waehrend die ers
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'rezept', 'status' => 'done']);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'rezept', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $recipe->id]);
 
-    $component = Livewire::test(PlanungIndex::class)->call('oeffne', $session->id);
+    $component = Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)]);
     $component->call('konformitaetPruefen', $recipe->id);
     $component->call('konformitaetPruefen', $recipe->id);   // zweiter Klick — der erste hat die Phase schon synchron gesetzt
 
@@ -2445,7 +2418,7 @@ it('ki-action-Komponente: data-ki-action + wire:target sind gesetzt und stimmen 
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'rezept', 'status' => 'done']);
     FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'rezept', 'status' => 'freigegeben', 'ref_type' => 'recipe', 'ref_id' => $recipe->id, 'label' => 'X', 'sort' => 1]);
 
-    $html = Livewire::test(PlanungIndex::class)->call('oeffne', $session->id)->html();
+    $html = Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])->html();
 
     $ausdruck = 'konformitaetPruefen(' . $recipe->id . ')';
     expect($html)->toContain('data-ki-action="' . $ausdruck . '"')

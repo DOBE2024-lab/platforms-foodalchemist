@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Jobs\ConformanceCheckJob;
-use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
+use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistConformanceFinding;
@@ -45,8 +45,7 @@ it('Leitstelle: step-zeile rendert Konformitäts-Hinweise + on-demand prüfen am
         'status' => 'offen', 'fingerprint' => 'testfp-konf-1', 'seen_count' => 1,
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)              // ladeLetztenLauf → laufId=run, ergebnis rendert
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])   // Spec 85 C1 PR-3: Ergebnis im Kind Planung\KaskadenLauf
         ->assertSee('Konformität')                  // die Hinweis-Fläche
         ->assertSee('Plural statt Singular')        // der Befund selbst
         ->assertSee('§6.1')
@@ -84,8 +83,7 @@ it('Leitstelle: step-zeile zeigt die GP-Konformität der Zutaten-GPs eines Rezep
         'status' => 'offen', 'fingerprint' => 'gp-fp-1', 'seen_count' => 1,
     ]);
 
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $run->id])
         ->assertSee('GP-Konformität')
         ->assertSee('Tomaten')                        // der GP-Name im Hinweis
         ->assertSee('Pflichtangabe Kochtyp fehlt');   // der GP-Befund

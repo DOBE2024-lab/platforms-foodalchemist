@@ -67,7 +67,7 @@ it('Spec 84 · Planung: Foto über einen übernommenen (skipped) Schritt mit fre
         'kind' => 'rezept', 'ref_type' => 'recipe', 'ref_id' => $this->fremd->id, 'label' => 'Oberteam-Fond', 'status' => 'skipped', 'sort' => 0,
         'deferred' => ['reuse' => ['reif' => true, 'eigen' => false, 'luecken' => []]]]);
 
-    Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
+    Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf::class, ['laufId' => $run->id])   // Spec 85 C1 PR-3
         ->set("fotoUploads.{$step->id}", UploadedFile::fake()->image('p.jpg'))
         ->call('fotoHochladen', $step->id, true)
         ->assertSet('fehler', SPEC84_FOTO_MELDUNG);

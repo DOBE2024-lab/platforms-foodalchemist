@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
+use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Livewire\Planung\RezeptImport;
 use Platform\FoodAlchemist\Livewire\Planung\Trendradar as PlanungTrendradar;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
@@ -40,6 +41,12 @@ function handyPr7()
     return Livewire::withCookie(HandyLesemodus::COOKIE, '1')->test(PlanungIndex::class);
 }
 
+/** Spec 85 C1 PR-3: Ergebnis und Freigabe leben im Kind KaskadenLauf (Handy-Cookie '1' oder Computer '0'). */
+function laufPr7(int $laufId, string $handy = '1')
+{
+    return Livewire::withCookie(HandyLesemodus::COOKIE, $handy)->test(KaskadenLauf::class, ['laufId' => $laufId]);
+}
+
 it('am Handy: drei Schritte statt Reiterleiste, Auftrag mit Gericht/Basisrezept/Concept/Import, kein Composer, keine Ausgabe-Formen', function () {
     $lw = handyPr7()->call('schnellErstellen', 'gericht');
     $session = FoodAlchemistPlanningSession::query()->latest('id')->first();
@@ -68,15 +75,22 @@ it('am Computer unverändert: Reiterleiste mit allen Reitern, Ausgabe-Formen, Ve
 it('Server-Sperre am Handy: Auftrag, Start, Abbruch, Wiederaufnahme, Freigabe/Anreichern und Schritt-Fotos ja; Verwerfen, Pflege, Ausgabe-Formen nein', function () {
     request()->cookies->set(HandyLesemodus::COOKIE, '1');
     foreach (['schnellErstellen', 'oeffne', 'speichern', 'goKaskade', 'kiKopf', 'leitplankenAusBriefing', 'briefDiktatUebernehmen',
-        'laufAbbrechen', 'laufWiederAufnehmen', 'pruefeLauf', 'laufGeaendert', 'waehleKnoten', 'fotoHochladen', 'fotoUebernehmen', '_startUpload',
-        'gibFrei', 'gibStufeFrei', 'clusterFreigeben', 'neuAnreichern', 'alleNeuenAnreichern'] as $m) {
+        'laufAbbrechen', 'laufGeaendert', 'laufStatus', 'kindMeldung', '_startUpload'] as $m) {
         expect(HandyLesemodus::abgewiesen(new PlanungIndex, $m))->toBeFalse($m);
+    }
+    // Spec 85 C1 PR-3: Ergebnis, Freigabe, Anreichern und Schritt-Fotos liegen im Kind KaskadenLauf, gleicher Handy-Umfang
+    foreach (['laufWiederAufnehmen', 'laufFortsetzen', 'pruefeLauf', 'laufGeaendert', 'waehleKnoten', 'fotoHochladen', 'fotoUebernehmen', '_startUpload',
+        'gibFrei', 'gibStufeFrei', 'clusterFreigeben', 'neuAnreichern', 'alleNeuenAnreichern'] as $m) {
+        expect(HandyLesemodus::abgewiesen(new KaskadenLauf, $m))->toBeFalse('KaskadenLauf::' . $m);
     }
     foreach (['verwirf', 'verwirfGeplant', 'alleVerwerfen', 'planAendern', 'haengeKonzeptNach',
         'favoritPinnen', 'favoritVorschlaegeLaden', 'sourcingLueckenMelden', 'neuGenerieren', 'bilderNeu',
-        'vorschlagUeberarbeiten', 'erzeugeGeplant', 'toggleZutaten', 'toggleKommentar', 'ergaenzeSubRezept', 'planungVerwerfen', 'planungDuplizieren', 'alsVorlageSpeichern',
+        'vorschlagUeberarbeiten', 'erzeugeGeplant', 'toggleZutaten', 'toggleKommentar', 'ergaenzeSubRezept', 'konformitaetPruefen'] as $m) {
+        expect(HandyLesemodus::abgewiesen(new KaskadenLauf, $m))->toBeTrue('KaskadenLauf::' . $m);
+    }
+    foreach (['planungVerwerfen', 'planungDuplizieren', 'alsVorlageSpeichern',
         'loeschenVorlage', 'foodbookAusBrief', 'speisekarteAusBrief', 'speiseplanAusBrief', 'angebotAusBrief', 'formatAusBrief',
-        'schnellComposer', 'schnellTrendradar', 'trendUebernommen', 'composerAdd', 'composerUebernehmen', 'konformitaetPruefen'] as $m) {
+        'schnellComposer', 'schnellTrendradar', 'trendUebernommen', 'composerAdd', 'composerUebernehmen'] as $m) {
         expect(HandyLesemodus::abgewiesen(new PlanungIndex, $m))->toBeTrue($m);
     }
     expect(HandyLesemodus::abgewiesen(new PlanungTrendradar, 'trendradarUebernehmen'))->toBeTrue('Trendradar::trendradarUebernehmen');   // Spec 85 C1 PR-2: Kombinierer bleibt am Computer
@@ -113,13 +127,14 @@ it('Freigabe vom Handy (Dominique 30.10.): schreibt dasselbe wie am Computer, Kn
     [$sHandy, $rHandy, $stepHandy] = ($this->lauf)('Handy', true);
     [$sPc, $rPc, $stepPc] = ($this->lauf)('Computer', true);
 
-    handyPr7()->call('oeffne', $sHandy->id)
+    handyPr7()->call('oeffne', $sHandy->id)->assertSet('laufId', $stepHandy->cascade_run_id);
+    laufPr7($stepHandy->cascade_run_id)
         ->assertSeeHtml('data-step-freigeben')->assertSeeHtml('data-planung-stufe-frei="gericht"')
         ->assertSeeHtml('Vorschlag freigeben und anreichern?')
         ->call('gibFrei', $stepHandy->id)->assertSet('meldung', 'Freigegeben.');
     Queue::assertPushed(\Platform\FoodAlchemist\Jobs\EnrichRecipeJob::class, 1);
 
-    Livewire::withCookie(HandyLesemodus::COOKIE, '0')->test(PlanungIndex::class)->call('oeffne', $sPc->id)
+    laufPr7($stepPc->cascade_run_id, '0')
         ->assertDontSeeHtml('Vorschlag freigeben und anreichern?')   // am Computer ohne Rückfrage (unverändert)
         ->call('gibFrei', $stepPc->id)->assertSet('meldung', 'Freigegeben.');
 
@@ -135,10 +150,10 @@ it('Freigabe vom Handy (Dominique 30.10.): schreibt dasselbe wie am Computer, Kn
 it('Anreichern vom Handy stößt die Anreicherung an; Verwerfen vom Handy bleibt wirkungslos', function () {
     Queue::fake();
     [$session, $recipe, $step] = ($this->lauf)('Anreichern');
-    handyPr7()->call('oeffne', $session->id)->call('gibFrei', $step->id)->call('neuAnreichern', $step->id);
+    laufPr7($step->cascade_run_id)->call('gibFrei', $step->id)->call('neuAnreichern', $step->id);
     Queue::assertPushed(\Platform\FoodAlchemist\Jobs\EnrichRecipeJob::class);
 
     [$s2, $r2, $step2] = ($this->lauf)('Verwerfen');
-    handyPr7()->call('oeffne', $s2->id)->call('verwirf', $step2->id)->call('alleVerwerfen');
+    laufPr7($step2->cascade_run_id)->call('verwirf', $step2->id)->call('alleVerwerfen');
     expect($step2->refresh()->status)->toBe('done')->and($r2->refresh()->trashed())->toBeFalse();
 });

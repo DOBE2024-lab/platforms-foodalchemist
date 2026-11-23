@@ -13,6 +13,7 @@ const ENUM_STATUS_GEPRUEFT = [
     'src/Livewire/Planung/Index.php', 'src/Livewire/Planung/LaufStatus.php', 'src/Livewire/Concerns/FortschrittAnsicht.php', 'src/Support/Planung/KaskadenAnsicht.php',
     'src/Services/PlanningCascadeService.php', 'src/Services/RecipeDependencyWorkflowService.php', 'src/Services/PlanningSessionService.php',
     'src/Services/Kaskade/KaskadenSchritt.php',   // CQ 3.4: Step-/Lauf-Status aus PlanningCascadeService verschoben (CascadeRun.status = String-Spalte)
+    'src/Livewire/Planung/KaskadenLauf.php',   // 98 · 3.3 S2-E2: Lauf-Status-Vergleiche aus Planung/Index verschoben (CascadeRun.status = String-Spalte)
     'resources/views/livewire/planung/partials/step-zeile.blade.php', 'resources/views/livewire/planung/partials/fortschritt.blade.php',
     'resources/views/livewire/planung/index.blade.php',
     // Trends, Produktpass, Necta, Mails, Befunde, Inventur, Projekte, Preislisten-Lauf, KI-Aufträge: eigene Modelle ohne Enum-Cast

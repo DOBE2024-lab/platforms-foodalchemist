@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
+use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrame;
@@ -39,8 +40,10 @@ beforeEach(function () {
 });
 
 it('zeigt als einzige Ansicht Baum, Cluster mit Basisrezepten und Stufenleiste', function () {
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $this->session->id)
+    Livewire::test(PlanungIndex::class)->call('oeffne', $this->session->id)   // Spec 85 C1 PR-3: der Parent öffnet auf dem Lauf, das Kind zeigt ihn
+        ->assertSet('laufId', $this->lauf->id)
+        ->assertSeeHtml('wire:key="planung-lauf-' . $this->session->id . '-' . $this->lauf->id . '"');   // Kind im Test nur als Platzhalter
+    Livewire::test(KaskadenLauf::class, ['laufId' => $this->lauf->id])
         ->assertSeeHtml('data-fortschritt-neu')
         ->assertSeeHtml('data-fortschritt-knoten="slot:' . $this->hauptgang->id . '"')
         ->assertSee('Hauptgerichte')
@@ -51,8 +54,7 @@ it('zeigt als einzige Ansicht Baum, Cluster mit Basisrezepten und Stufenleiste',
 });
 
 it('rechts: Rezeptansicht mit Zutaten und „Woher das kommt"', function () {
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $this->session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $this->lauf->id])
         ->call('waehleSchritt', $this->kindJus->id)
         ->assertSeeHtml('data-fortschritt-rezept')
         ->assertSee('Steinpilze getrocknet')
@@ -62,8 +64,7 @@ it('rechts: Rezeptansicht mit Zutaten und „Woher das kommt"', function () {
 });
 
 it('Filter „Fehler" zeigt nur die gescheiterte Zeile, Knoten-Auswahl setzt den Pfad', function () {
-    $c = Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $this->session->id)
+    $c = Livewire::test(KaskadenLauf::class, ['laufId' => $this->lauf->id])
         ->call('setzeFortschrittFilter', 'fehler');
 
     $c->assertSeeHtml('data-fortschritt-zeile="' . $this->kindFehler->id . '"')
@@ -74,8 +75,7 @@ it('Filter „Fehler" zeigt nur die gescheiterte Zeile, Knoten-Auswahl setzt den
 });
 
 it('Cluster-Fuß reichert nur diesen Cluster an und gibt frei', function () {
-    Livewire::test(PlanungIndex::class)
-        ->call('oeffne', $this->session->id)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $this->lauf->id])
         ->call('clusterFreigeben', $this->kopf->id);
 
     expect($this->kopf->refresh()->status)->toBe('freigegeben')

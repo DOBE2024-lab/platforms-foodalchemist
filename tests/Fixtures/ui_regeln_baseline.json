@@ -601,7 +601,7 @@
         "emoji": 18,
         "mini_schrift": 5,
         "style_statisch": 7,
-        "typo_groesse": 12,
+        "typo_groesse": 11,
         "typo_tinte": 18,
         "roher_button": 12,
         "rohes_segment": 1,
@@ -611,6 +611,9 @@
         "typo_groesse": 1,
         "typo_tinte": 2,
         "roher_button": 2
+    },
+    "livewire/planung/kaskaden-lauf.blade.php": {
+        "typo_groesse": 1
     },
     "livewire/planung/partials/board-karte.blade.php": {
         "typo_groesse": 1,

@@ -6,6 +6,7 @@ use Platform\FoodAlchemist\Support\Masse;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Support\Suche;
 
 /**
  * Zutaten-Picker des Editors (P-8), aus {@see RecipeService::sucheZutatenZiel()} ausgelagert (Größen-Wächter Spec 85 §9).
@@ -26,10 +27,14 @@ final class ZutatenZielSuche
         // Gericht = nur Basisrezepte (Dominique 17.11.2026): der Picker eines Gerichts bietet keine Grundprodukte an.
         $nurBasisrezepte = (bool) FoodAlchemistRecipe::query()->whereKey($ohneRecipeId)->value('is_sales_recipe');
 
-        $gps = $nurBasisrezepte ? collect() : \Platform\FoodAlchemist\Support\Suche::like(
-            FoodAlchemistGp::visibleToTeam($team)->lebensmittel(), 'name', $suche)   // Multi-Wort: jedes Token muss treffen; Non-Food ist keine Zutat
-            ->orderBy('name')->limit($limit)
-            ->get(['id', 'name', 'lead_la_supplier_item_id', 'piece_default_g', 'team_id'])
+        // 98 · 2.4g: exakte Grundprodukte zuerst („Butter“ → „Butter: frisch“ vor „Butteraroma“) — SQL holt Anfangstreffer
+        // vor dem Limit, Suche::nachRang ordnet fein (gefaltet). Kandidaten großzügig, angezeigt werden $limit.
+        $kandidaten = max(50, $limit);
+        $gps = $nurBasisrezepte ? collect() : collect(Suche::nachRang(Suche::anfangZuerst(Suche::like(
+            FoodAlchemistGp::visibleToTeam($team)->lebensmittel(), 'name', $suche), 'name', $suche)   // Multi-Wort: jedes Token muss treffen; Non-Food ist keine Zutat
+            ->orderBy('name')->limit($kandidaten)
+            ->get(['id', 'name', 'lead_la_supplier_item_id', 'piece_default_g', 'team_id']), $suche, fn ($gp) => $gp->name))
+            ->take($limit)
             ->map(fn ($gp) => [
                 'type' => 'gp', 'id' => $gp->id, 'name' => $gp->name,
                 'ek_pro_g' => $recompute->preisProGrammPublic($gp, $team),
@@ -39,11 +44,12 @@ final class ZutatenZielSuche
                 'url' => \Platform\FoodAlchemist\Support\Sprungziel::gp($gp->id),  // R5: Sprung-Ziel
             ]);
 
-        $subs = \Platform\FoodAlchemist\Support\Suche::like(
+        $subs = collect(Suche::nachRang(Suche::anfangZuerst(Suche::like(
             FoodAlchemistRecipe::visibleToTeam($team)->basis()
-                ->where('id', '!=', $ohneRecipeId), 'name', $suche)
-            ->orderBy('name')->limit($limit)
-            ->get(['id', 'name', 'ek_per_kg_eur'])
+                ->where('id', '!=', $ohneRecipeId), 'name', $suche), 'name', $suche)
+            ->orderBy('name')->limit($kandidaten)
+            ->get(['id', 'name', 'ek_per_kg_eur']), $suche, fn ($r) => $r->name))
+            ->take($limit)
             ->map(fn ($r) => [
                 'type' => 'sub', 'id' => $r->id, 'name' => '↳ ' . $r->name,
                 'ek_pro_g' => Masse::preisJeG($r->ek_per_kg_eur),

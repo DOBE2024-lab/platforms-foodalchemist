@@ -25,6 +25,82 @@ final class Suche
     }
 
     /**
+     * 98 · 2.4g (U7): Rang eines Treffers für die Sortierung — kleiner ist besser. „Butter“ stellt „Butter: frisch“
+     * vor „Butteraroma“ und „Kräuterbutter“. Verglichen wird gefaltet (Text::falte, Wörter), der Grundname ist der
+     * Teil vor dem Doppelpunkt (GP-Schema „Produktname: Eigenschaft …“).
+     *   0  Grundname oder ganzer Name = Suche        „Butter: frisch“, „Butter“
+     *   1  Grundname beginnt mit der Suche als Wort  „Butter, gesalzen: frisch“
+     *   2  Name beginnt mit der Suche                „Butteraroma“, „Buttermilch“
+     *   3  ein späteres Wort beginnt mit der Suche   „Erdnuss Butter“
+     *   4  sonst (Teilwort)                          „Kräuterbutter“
+     */
+    public static function rang(string $name, string $suche): int
+    {
+        $q = Text::falte($suche, Text::WOERTER);
+        if ($q === '') {
+            return 4;
+        }
+        $n = Text::falte($name, Text::WOERTER);
+        $grund = Text::falte(explode(':', $name, 2)[0], Text::WOERTER);
+
+        return match (true) {
+            $grund === $q || $n === $q => 0,
+            str_starts_with($grund, $q . ' ') => 1,
+            str_starts_with($n, $q) => 2,
+            str_contains(' ' . $n, ' ' . $q) => 3,
+            default => 4,
+        };
+    }
+
+    /**
+     * 98 · 2.4g: Treffer nach {@see self::rang()} ordnen, bei gleichem Rang der kürzere Grundname und dann alphabetisch.
+     * Leere Suche lässt die Reihenfolge stehen.
+     *
+     * @template T
+     *
+     * @param  iterable<T>  $treffer
+     * @param  callable(T): string  $name
+     * @return list<T>
+     */
+    public static function nachRang(iterable $treffer, string $suche, callable $name): array
+    {
+        $liste = is_array($treffer) ? array_values($treffer) : array_values(iterator_to_array($treffer, false));
+        if (trim($suche) === '') {
+            return $liste;
+        }
+        $schluessel = array_map(function ($t) use ($suche, $name) {
+            $n = $name($t);
+
+            return [self::rang($n, $suche), mb_strlen(trim(explode(':', $n, 2)[0])), Text::falte($n)];
+        }, $liste);
+        $index = array_keys($liste);
+        usort($index, fn ($a, $b) => $schluessel[$a] <=> $schluessel[$b] ?: $a <=> $b);
+
+        return array_map(fn ($i) => $liste[$i], $index);
+    }
+
+    /**
+     * SQL-Vorsortierung vor einem Limit: Treffer, deren Name mit der Suche beginnt, zuerst — sonst schneidet ein Limit
+     * „Butter: frisch“ hinter 200 alphabetischen „…butter…“-Treffern ab. Die feine Ordnung macht {@see self::nachRang()}.
+     *
+     * @template T of \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder
+     *
+     * @param  T  $query
+     * @return T
+     */
+    public static function anfangZuerst($query, string $column, string $suche)
+    {
+        $erstes = self::tokens($suche)[0] ?? '';
+        if ($erstes === '') {
+            return $query;
+        }
+        $faelle = array_map(fn ($v) => "LOWER({$column}) LIKE ?", self::varianten($erstes));
+
+        return $query->orderByRaw('CASE WHEN ' . implode(' OR ', $faelle) . ' THEN 0 ELSE 1 END',
+            array_map(fn ($v) => $v . '%', self::varianten($erstes)));   // wie likeAny: Token als gebundener Parameter
+    }
+
+    /**
      * Hängt pro Token ein AND `LOWER(<column>) LIKE ?` an den Query-Builder.
      * Gibt den Builder zurück (chainbar). Leere Suche = kein Filter.
      *

@@ -117,6 +117,17 @@
                        class="fa-control h-9 pl-8 text-[length:var(--fa-text-md)]" data-browse-suche />
             </div>
         </div>
+        {{-- 98 · 2.4g (U7): die besten Treffer direkt unter dem Suchfeld — exakte Grundprodukte zuerst, Basisrezepte
+             gemischt nach Rang. Die vollen Listen bleiben in den Spalten. --}}
+        <div x-show="geparkt === null && browseQ.trim() !== '' && besteTreffer().length > 0" x-cloak
+             class="flex flex-col rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" data-beste-treffer="">
+            <template x-for="ziel in besteTreffer()" :key="'bt' + ziel.type + ziel.id">
+                <x-fa::katalog-row x-on:click="parke(ziel)" x-bind:title="'Übernehmen: ' + ziel.name.replace('↳ ', '')" data-bester-treffer="">
+                    <span x-text="ziel.name.replace('↳ ', '')"></span>
+                    <span class="fa-t-muted" x-text="' · ' + (ziel.type === 'gp' ? 'Grundprodukt' : 'Basisrezept') + ' · ' + (ziel.preis_label ?? 'Preis fehlt')"></span>
+                </x-fa::katalog-row>
+            </template>
+        </div>
 
         {{-- Park-Zeile: Ziel gewählt → Menge tippen, Enter fügt ein --}}
         <div x-show="geparkt !== null" x-cloak class="flex flex-wrap items-center gap-2" data-park-zeile>

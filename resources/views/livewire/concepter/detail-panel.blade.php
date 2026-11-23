@@ -225,7 +225,7 @@
                     @forelse($concept->slots as $slot)
                         <div>
                             <span class="block fa-t-muted">{{ $slot->role ?: 'Ohne Rolle' }}{{ $slot->is_pflicht ? '' : ' · optional' }}</span>
-                            <p class="fa-t-body">{{ $slot->title ?: ($slot->embeddedConcept?->name ?? $slot->package?->name ?? $slot->dish?->name ?? 'noch leer') }}</p>
+                            <p class="fa-t-body">{{ $slot->title ?: ($slot->embeddedConcept?->name ?? $slot->dish?->name ?? 'noch leer') }}</p>
                         </div>
                     @empty
                         <p class="fa-t-muted">Noch keine Positionen.</p>

@@ -10,7 +10,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistLabNote;
@@ -79,12 +78,10 @@ class PoolEmbeddingService
      */
     public const ENTITY_TYPE_SUPPLIER_ITEM = 'foodalchemist_supplier_item';
 
-    /** Ausbau (b): Ausgabe-/Container-Pools — Speisekarte, Angebot, Paket, Format. */
+    /** Ausbau (b): Ausgabe-/Container-Pools — Speisekarte, Angebot, Format (Alt-Paket-Pool mit 98 · 2.6c entfallen). */
     public const ENTITY_TYPE_SPEISEKARTE = 'foodalchemist_menu_card';
 
     public const ENTITY_TYPE_ANGEBOT = 'foodalchemist_offer';
-
-    public const ENTITY_TYPE_PAKET = 'foodalchemist_package';
 
     public const ENTITY_TYPE_FORMAT = 'foodalchemist_format';
 
@@ -495,13 +492,6 @@ class PoolEmbeddingService
             fn (object $r): string => $this->angebotEmbedText($r), null, $onlyTeamId);
     }
 
-    public function embedPakete(?int $onlyTeamId = null): array
-    {
-        return $this->embedSimple(self::ENTITY_TYPE_PAKET, 'foodalchemist_packages',
-            ['id', 'name', 'consumer_name', 'role', 'description', 'team_id'],
-            fn (object $r): string => $this->paketEmbedText($r), null, $onlyTeamId);
-    }
-
     public function embedFormate(?int $onlyTeamId = null): array
     {
         return $this->embedSimple(self::ENTITY_TYPE_FORMAT, 'foodalchemist_formats',
@@ -564,13 +554,6 @@ class PoolEmbeddingService
             fn (): string => $this->angebotEmbedText($a));
     }
 
-    public function queuePaket(FoodAlchemistPaket $p): void
-    {
-        $this->queueSimple(self::ENTITY_TYPE_PAKET, $p,
-            fn (): bool => $p->deleted_at === null,
-            fn (): string => $this->paketEmbedText($p));
-    }
-
     public function queueFormat(FoodAlchemistFormat $f): void
     {
         $this->queueSimple(self::ENTITY_TYPE_FORMAT, $f,
@@ -611,11 +594,6 @@ class PoolEmbeddingService
     public function deleteAngebot(int $id, int|string|null $rawTeamId = null): void
     {
         $this->safeDelete(self::ENTITY_TYPE_ANGEBOT, $this->partitionTeamId($rawTeamId), $id);
-    }
-
-    public function deletePaket(int $id, int|string|null $rawTeamId = null): void
-    {
-        $this->safeDelete(self::ENTITY_TYPE_PAKET, $this->partitionTeamId($rawTeamId), $id);
     }
 
     public function deleteFormat(int $id, int|string|null $rawTeamId = null): void
@@ -692,11 +670,6 @@ class PoolEmbeddingService
             $a->name ?? '', $a->occasion ?? '', $a->location ?? '',
             self::lead((string) ($a->brief ?? '')), self::lead((string) ($a->description ?? '')),
         ]);
-    }
-
-    public function paketEmbedText(object $p): string
-    {
-        return $this->joinParts([$p->name ?? '', $p->consumer_name ?? '', $p->role ?? '', self::lead((string) ($p->description ?? ''))]);
     }
 
     public function formatEmbedText(object $f): string

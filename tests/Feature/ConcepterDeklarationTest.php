@@ -3,7 +3,6 @@
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -24,7 +23,6 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
-    $this->pakete = app(PaketService::class);
     $this->concepts = app(ConceptService::class);
     $this->agg = app(ConcepterAggregateService::class);
 
@@ -212,12 +210,13 @@ it('bleibt bei einem Konzept ohne Gerichte leer statt zu werfen', function () {
 // ── Paket ────────────────────────────────────────────────────────────────────
 
 it('rechnet Pakete immer als Summe — ein Paket ist ein Gesamtpreis', function () {
-    $p = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->syncGerichte($this->rootTeam, $p->id, [
-        ['sales_recipe_id' => $this->a->id], ['sales_recipe_id' => $this->b->id],
-    ]);
+    // 98 · 2.6c: Paket = kind=paket-Concept (Gesamtpreis), Deklaration über conceptDeklaration
+    $p = $this->concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall', 'price_mode' => 'manuell']);
+    foreach ([$this->a, $this->b] as $r) {
+        $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $p->id, ['role' => 'Posten'])->id, ['sales_recipe_id' => $r->id]);
+    }
 
-    $blatt = $this->agg->paketDeklaration($p->refresh());
+    $blatt = $this->agg->conceptDeklaration($p->refresh());
 
     expect($blatt['modus'])->toBe('summe')
         ->and($blatt['zeilen'])->toHaveCount(2)

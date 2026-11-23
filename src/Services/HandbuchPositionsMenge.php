@@ -3,17 +3,14 @@
 namespace Platform\FoodAlchemist\Services;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaketGericht;
 
 /** Mengen-Allowlist fürs Handbuch; dieselbe Portionsumrechnung wie die Konzeptkalkulation. */
 class HandbuchPositionsMenge
 {
-    public function fuer(FoodAlchemistConceptSlot|FoodAlchemistPaketGericht $position): array
+    public function fuer(FoodAlchemistConceptSlot $position): array
     {
         $recipe = $position->dish?->fresh();
-        $dar = $position instanceof FoodAlchemistConceptSlot
-            ? app(DarreichungResolver::class)->fuerSlot($position)
-            : app(DarreichungResolver::class)->fuerPaketGericht($position);
+        $dar = app(DarreichungResolver::class)->fuerSlot($position);
         if ($dar !== null && (int) $dar->recipe_id !== (int) $recipe?->id) {
             $dar = $recipe !== null ? app(DarreichungResolver::class)->standardFuer($recipe) : null;
         }

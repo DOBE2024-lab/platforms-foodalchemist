@@ -67,18 +67,6 @@ class FoodAlchemistAngebot extends Model
         return $this->hasMany(FoodAlchemistConcept::class, 'offer_id');
     }
 
-    /** Angebots-lokale (spekulative) Paket-Entwürfe dieses Angebots. */
-    public function packages(): HasMany
-    {
-        return $this->hasMany(FoodAlchemistPaket::class, 'offer_id');
-    }
-
-    /** @deprecated #486 deutscher Alias → packages() */
-    public function pakete(): HasMany
-    {
-        return $this->packages();
-    }
-
     /** #380 DoD-5: zusätzlich referenzierte STANDARDISIERTE Katalog-Concepts (geteilt, nicht besessen). */
     public function referencedConcepts(): BelongsToMany
     {

@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Platform\FoodAlchemist\Events\AromenprofileVeraltet;
-use Platform\FoodAlchemist\Events\GerichtePreisVeraltet;
 use Platform\FoodAlchemist\Events\KaskadenSchrittAbgeschlossen;
 use Platform\FoodAlchemist\Events\RezeptKostenGeaendert;
 use Platform\FoodAlchemist\Events\TeamKostenGeaendert;
@@ -30,7 +29,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  *  - Kreis PlanningCascadeService ↔ RecipeDependencyWorkflowService (und ↔ IdeenService/ConceptVorgabenService): der Step-Status
  *    liegt in KaskadenSchritt (Extraktion, kein Event: synchroner Schreiber mit Lauf-Sperre, Kurator 22.11.); die Folge eines
  *    abgeschlossenen Steps hängt am synchronen Event KaskadenSchrittAbgeschlossen.
- *  - Rezept → Preisweitergabe (RecipeRecompute, Darreichung → PricingCascade/PaketService) über synchrone Events.
+ *  - Rezept → Preisweitergabe (RecipeRecompute, Darreichung → PricingCascade) über synchrone Events.
  * 3.3 S7: große Kreis-Komponente 112 → 12 (Rest Wissen/Pairing), Rückkanten 2 → 0 (P5). Mit K2 (P6) sind GP-Stamm, Lieferanten,
  * Preise, Lager/Inventur, Wissen/KI und Matching der Basis zugeordnet; die dabei sichtbaren 6 Rückkanten stehen als Bestand in der
  * Baseline, die Abbau-Liste in {@see AbhaengigkeitsGraph}. Die Klinken halten den Stand.
@@ -97,7 +96,7 @@ it('Klinke: Rückkanten gegen die Schichtrichtung und Größe der Kreis-Komponen
 });
 
 it('Listener sind registriert: ohne Provider-Eintrag stünde die Preisweitergabe still', function () {
-    foreach ([RezeptKostenGeaendert::class, TeamKostenGeaendert::class, GerichtePreisVeraltet::class, KaskadenSchrittAbgeschlossen::class, AromenprofileVeraltet::class] as $event) {
+    foreach ([RezeptKostenGeaendert::class, TeamKostenGeaendert::class, KaskadenSchrittAbgeschlossen::class, AromenprofileVeraltet::class] as $event) {
         expect(Event::hasListeners($event))->toBeTrue("kein Listener für {$event}");
     }
 });

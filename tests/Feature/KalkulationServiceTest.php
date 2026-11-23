@@ -3,7 +3,6 @@
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\KalkulationService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -38,11 +37,17 @@ it('M12: recipeHk — HK1/HK2 pro Portion + Vollkosten-DB', function () {
 });
 
 it('M12: conceptHk — HK2 pro Person + DB gegen Concept-€/Person', function () {
-    $paket = app(PaketService::class)->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    app(PaketService::class)->update($this->rootTeam, $paket->id, ['price_per_person' => 4.50, 'ek_per_person' => 1.35]);
+    // 98 · 2.6c: Paket = kind=paket-Concept (manuell 4,50 €/P, EK 1,35 aus seinem Gericht), eingebettet
+    $salat = \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::create([
+        'team_id' => $this->rootTeam->id, 'recipe_key' => 'sw1', 'name' => 'Salat: Wall', 'status' => 'approved',
+        'is_sales_recipe' => true, 'sales_net' => 4.50, 'ek_total_eur' => 1.35,
+    ]);
+    $paket = app(ConceptService::class)->createPaket($this->rootTeam, ['name' => 'Salad Wall']);
+    app(ConceptService::class)->update($this->rootTeam, $paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
+    app(ConceptService::class)->fillSlot($this->rootTeam, app(ConceptService::class)->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise'])->id, ['sales_recipe_id' => $salat->id]);
     $concept = app(ConceptService::class)->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = app(ConceptService::class)->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
-    app(ConceptService::class)->fillSlot($this->rootTeam, $slot->id, ['package_id' => $paket->id]);
+    app(ConceptService::class)->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);
 
     $hk = $this->kalk->conceptHk($this->rootTeam, $concept->refresh());
     expect($hk['hk1_pro_person'])->toBe(1.35)

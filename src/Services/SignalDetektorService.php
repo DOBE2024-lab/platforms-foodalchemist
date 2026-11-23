@@ -362,16 +362,12 @@ class SignalDetektorService
                 }
             }
 
-            // betroffene Konzepte über die betroffenen Gerichte (direkte Slots + über Pakete)
+            // betroffene Konzepte über die betroffenen Gerichte (direkte Slots; Alt-Pakete entfallen mit 98 · 2.6c)
             $gerichtIds = $gerichte->pluck('id')->map(fn ($v) => (int) $v)->all();
             $conceptDirekt = $gerichtIds === [] ? [] : DB::table('foodalchemist_concept_slots')
                 ->whereIn('sales_recipe_id', $gerichtIds)->whereNull('deleted_at')
                 ->whereNotNull('concept_id')->distinct()->pluck('concept_id')->all();
-            $conceptPaket = $gerichtIds === [] ? [] : DB::table('foodalchemist_package_dishes AS pd')
-                ->join('foodalchemist_concept_slots AS cs', 'cs.package_id', '=', 'pd.package_id')
-                ->whereIn('pd.sales_recipe_id', $gerichtIds)->whereNull('cs.deleted_at')
-                ->whereNotNull('cs.concept_id')->distinct()->pluck('cs.concept_id')->all();
-            $nConcepts = count(array_unique(array_merge($conceptDirekt, $conceptPaket)));
+            $nConcepts = count(array_unique($conceptDirekt));
 
             // Chance: günstigster Nicht-Lead-LA je Einheit vs. Lead
             $chance = $this->guenstigereAlternative($preisSvc, (int) $gpId, $leadId, $schwelle, $team);

@@ -1,8 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -11,8 +9,19 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 
 beforeEach(function () {
     $this->seedTeamHierarchy();
-    $this->pakete = app(PaketService::class);
     $this->concepts = app(ConceptService::class);
+    // 98 · 2.6c: Paket = kind=paket-Concept; optional manueller Preis, Gerichte als Slots
+    $this->paketAus = function (string $name, array $rezepte = [], ?float $preis = null) {
+        $p = $this->concepts->createPaket($this->rootTeam, ['name' => $name, 'price_mode' => $preis !== null ? 'manuell' : 'auto']);
+        if ($preis !== null) {
+            $this->concepts->update($this->rootTeam, $p->id, ['price_mode' => 'manuell', 'price_per_person_manual' => $preis]);
+        }
+        foreach ($rezepte as $r) {
+            $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $p->id, ['role' => 'Posten'])->id, ['sales_recipe_id' => $r->id]);
+        }
+
+        return $p;
+    };
 
     $mk = fn (string $key, string $name, float $vk, float $ek) => FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => $key, 'name' => $name,
@@ -23,52 +32,8 @@ beforeEach(function () {
     $this->dessert = $mk('d', 'Dessert: Cool Down', 5.50, 1.50);
 });
 
-it('PaketService auto-Preis = Σ der Gerichte (vk/ek), W% via MargeService', function () {
-    $b = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'auto']);
-    $this->pakete->syncGerichte($this->rootTeam, $b->id, [
-        ['sales_recipe_id' => $this->green->id], ['sales_recipe_id' => $this->sunny->id],
-    ]);
-
-    $b->refresh();
-    expect((float) $b->price_per_person)->toBe(5.00)              // 2,00 + 3,00
-        ->and((float) $b->ek_per_person)->toBe(1.50)              // 0,60 + 0,90
-        ->and((float) $b->food_cost_percent)->toBe(30.0)       // 1,50 / 5,00
-        ->and($b->price_stale)->toBeFalse()
-        ->and($b->price_calculated_at)->not->toBeNull();
-});
-
-it('PaketService manuell: gesetzter Per-Person-Preis bleibt trotz Gerichten', function () {
-    $b = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->update($this->rootTeam, $b->id, ['price_per_person' => 4.50, 'ek_per_person' => 1.41, 'food_cost_percent' => 31.3]);
-    $this->pakete->syncGerichte($this->rootTeam, $b->id, [['sales_recipe_id' => $this->green->id], ['sales_recipe_id' => $this->sunny->id]]);
-
-    expect((float) $b->refresh()->price_per_person)->toBe(4.50);  // NICHT auf 5,00 überschrieben
-});
-
-it('K-07: recomputeAndPropagate berechnet betroffene Auto-Pakete sofort neu', function () {
-    $auto = $this->pakete->create($this->rootTeam, ['name' => 'Auto', 'role' => 'Vorspeise', 'price_mode' => 'auto']);
-    $this->pakete->syncGerichte($this->rootTeam, $auto->id, [['sales_recipe_id' => $this->green->id]]);
-    expect($auto->refresh()->price_stale)->toBeFalse();             // syncGerichte hat gerade gerechnet
-
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeAndPropagate($this->green->id);
-    expect($auto->refresh()->price_stale)->toBeFalse()              // Live-Kaskade hat den Preis bereits erneuert
-        ->and($auto->refresh()->price_calculation_version)->toBe(\Platform\FoodAlchemist\Services\CatalogPricingService::VERSION);
-});
-
-it('markStaleForRecipe markiert nur Auto-Pakete mit dem Gericht', function () {
-    $auto = $this->pakete->create($this->rootTeam, ['name' => 'Auto', 'role' => 'Vorspeise', 'price_mode' => 'auto']);
-    $manuell = $this->pakete->create($this->rootTeam, ['name' => 'Manuell', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->syncGerichte($this->rootTeam, $auto->id, [['sales_recipe_id' => $this->green->id]]);
-    $this->pakete->syncGerichte($this->rootTeam, $manuell->id, [['sales_recipe_id' => $this->green->id]]);
-
-    $betroffen = $this->pakete->markStaleForRecipe($this->green->id);
-    expect($betroffen)->toBe(1)
-        ->and($auto->refresh()->price_stale)->toBeTrue()
-        ->and($manuell->refresh()->price_stale)->toBeFalse();
-});
-
 it('B2: fillSlot pflegt type (paket|gericht|basisrezept); basisKandidaten findet nur Basisrezepte', function () {
-    $paket = $this->pakete->create($this->rootTeam, ['name' => 'P', 'role' => 'Vorspeise']);
+    $paket = ($this->paketAus)('P');
     $basis = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'b1', 'name' => 'Fond: Hell',
         'status' => 'approved', 'is_sales_recipe' => false, 'ek_total_eur' => 0.40,
@@ -77,7 +42,7 @@ it('B2: fillSlot pflegt type (paket|gericht|basisrezept); basisKandidaten findet
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Menü']);
     $s = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Vorspeise']);
 
-    $this->concepts->fillSlot($this->rootTeam, $s->id, ['package_id' => $paket->id]);
+    $this->concepts->fillSlot($this->rootTeam, $s->id, ['embedded_concept_id' => $paket->id]);
     expect($s->refresh()->type)->toBe('paket');
 
     $this->concepts->fillSlot($this->rootTeam, $s->id, ['sales_recipe_id' => $this->green->id]);
@@ -87,8 +52,9 @@ it('B2: fillSlot pflegt type (paket|gericht|basisrezept); basisKandidaten findet
     expect($s->refresh()->type)->toBe('basisrezept')->and($s->sales_recipe_id)->toBe($basis->id);
 
     // Basisrezept-Suche findet das Basisrezept, NICHT die VK-Gerichte
-    expect($this->pakete->basisKandidaten($this->rootTeam, 'Fond')->pluck('name')->all())->toContain('Fond: Hell');
-    expect($this->pakete->basisKandidaten($this->rootTeam, 'Green')->pluck('name')->all())->not->toContain('Salat: Green Power');
+    $kandidaten = app(\Platform\FoodAlchemist\Services\AufbauKandidatenService::class);
+    expect($kandidaten->basisKandidaten($this->rootTeam, 'Fond')->pluck('name')->all())->toContain('Fond: Hell');
+    expect($kandidaten->basisKandidaten($this->rootTeam, 'Green')->pluck('name')->all())->not->toContain('Salat: Green Power');
 });
 
 it('B3: Struktur-Blöcke (text/spacer/header/header_preis) zählen nicht zum Concept-Preis', function () {
@@ -142,26 +108,25 @@ it('B5: setSlotMengeEinheit skaliert Preis/EK der Position (Zeilen-Editor)', fun
 });
 
 it('ConceptService fillSlot erzwingt GENAU EINES (Paket XOR Gericht)', function () {
-    $b = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise']);
+    $b = ($this->paketAus)('Salad Wall');
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
 
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['package_id' => $b->id]);
-    expect($slot->refresh()->package_id)->toBe($b->id)->and($slot->sales_recipe_id)->toBeNull();
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $b->id]);
+    expect($slot->refresh()->embedded_concept_id)->toBe($b->id)->and($slot->sales_recipe_id)->toBeNull();
 
     // Auf festes Gericht umstellen → Paket wird geleert
     $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->dessert->id, 'quantity' => 1]);
-    expect($slot->refresh()->sales_recipe_id)->toBe($this->dessert->id)->and($slot->package_id)->toBeNull();
+    expect($slot->refresh()->sales_recipe_id)->toBe($this->dessert->id)->and($slot->embedded_concept_id)->toBeNull();
 });
 
 it('M10-04: Concept-Preis = Σ gespeicherte Paket-Preise + feste Gerichte', function () {
-    $salad = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->update($this->rootTeam, $salad->id, ['price_per_person' => 4.50, 'ek_per_person' => 1.41]);
+    $salad = ($this->paketAus)('Salad Wall', [], 4.50);
 
     $concept = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $sVor = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
     $sDess = $this->concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Dessert']);
-    $this->concepts->fillSlot($this->rootTeam, $sVor->id, ['package_id' => $salad->id]);
+    $this->concepts->fillSlot($this->rootTeam, $sVor->id, ['embedded_concept_id' => $salad->id]);
     $this->concepts->fillSlot($this->rootTeam, $sDess->id, ['sales_recipe_id' => $this->dessert->id]);
 
     $cockpit = $this->concepts->preisCockpit($concept->refresh());
@@ -195,17 +160,17 @@ it('M10-04: Paket-Tausch ändert nur die Differenz (kein Kaskaden-Recompute)', f
 });
 
 it('M10-05: Vorlage-Fork kopiert Slots, Paket bleibt Referenz, Concept ist eigenständig', function () {
-    $salad = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise']);
+    $salad = ($this->paketAus)('Salad Wall');
     $vorlage = $this->concepts->create($this->rootTeam, ['name' => '3-Gang', 'is_template' => true]);
     $s1 = $this->concepts->addSlot($this->rootTeam, $vorlage->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['package_id' => $salad->id]);
+    $this->concepts->fillSlot($this->rootTeam, $s1->id, ['embedded_concept_id' => $salad->id]);
     $this->concepts->addSlot($this->rootTeam, $vorlage->id, ['role' => 'Dessert']);
 
     $fork = $this->concepts->forkVonVorlage($this->rootTeam, $vorlage->id, 'Event Mai');
     expect($fork->is_template)->toBeFalse()
         ->and($fork->template_source_id)->toBe($vorlage->id)
         ->and($fork->slots()->count())->toBe(2)
-        ->and($fork->slots()->where('role', 'Vorspeise')->first()->package_id)->toBe($salad->id); // Referenz erhalten
+        ->and($fork->slots()->where('role', 'Vorspeise')->first()->embedded_concept_id)->toBe($salad->id); // Referenz erhalten
 
     // Fork ist eigenständig: Slot löschen ändert die Vorlage nicht
     $this->concepts->removeSlot($this->rootTeam, $fork->slots()->first()->id);
@@ -213,8 +178,8 @@ it('M10-05: Vorlage-Fork kopiert Slots, Paket bleibt Referenz, Concept ist eigen
 });
 
 it('Owner-Guard: Kind-Team kann geerbten Paket/Concept nicht pflegen (D1)', function () {
-    $b = $this->pakete->create($this->rootTeam, ['name' => 'Root-Paket', 'role' => 'Vorspeise']);
-    expect(fn () => $this->pakete->update($this->childA, $b->id, ['name' => 'Hack']))
+    $b = ($this->paketAus)('Root-Paket');
+    expect(fn () => $this->concepts->update($this->childA, $b->id, ['name' => 'Hack']))
         ->toThrow(\RuntimeException::class);
 
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Root-Concept']);
@@ -223,17 +188,14 @@ it('Owner-Guard: Kind-Team kann geerbten Paket/Concept nicht pflegen (D1)', func
 });
 
 it('M10c-A: Concept ist person-unabhängig — Pax kommt erst beim Aufruf der Hochrechnung', function () {
-    $b = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->update($this->rootTeam, $b->id, ['price_per_person' => 4.50, 'ek_per_person' => 1.41]);
-    $this->pakete->syncGerichte($this->rootTeam, $b->id, [['sales_recipe_id' => $this->green->id, 'quantity' => 120]]); // 120 g/Person
-
+    // 98 · 2.6c: festes Gericht mit 120 je Person statt Alt-Paket-Posten (mengenHochrechnung kannte nur Alt-Pakete und feste Gerichte)
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['package_id' => $b->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['sales_recipe_id' => $this->green->id, 'quantity' => 120]);
 
     // Cockpit kennt KEINE Pax mehr (person-unabhängig) — nur €/Person
     $cockpit = $this->concepts->preisCockpit($c->refresh());
-    expect($cockpit['price_per_person'])->toBe(4.50)
+    expect($cockpit)->toHaveKey('price_per_person')
         ->and($cockpit)->not->toHaveKey('personen')
         ->and($cockpit)->not->toHaveKey('gesamt_preis');
 
@@ -275,13 +237,12 @@ it('M10p C-09: Allergen-/Diät-Rollup — all-Flags vs enthält-Flags, Konfidenz
     $pork = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'p1', 'name' => 'Pulled Pork', 'status' => 'approved', 'is_sales_recipe' => true,
         'spec_is_vegan' => false, 'spec_is_vegetarian' => false, 'spec_contains_pork' => true, 'allergens_confidence' => 'low']);
 
-    $vorspeise = $this->pakete->create($this->rootTeam, ['name' => 'Salate', 'role' => 'Vorspeise']);
-    $this->pakete->syncGerichte($this->rootTeam, $vorspeise->id, [['sales_recipe_id' => $veg1->id], ['sales_recipe_id' => $veg2->id]]);
+    $vorspeise = ($this->paketAus)('Salate', [$veg1, $veg2]);
 
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Buffet']);
     $sVor = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Vorspeise']);
     $sHg = $this->concepts->addSlot($this->rootTeam, $c->id, ['role' => 'Hauptgang']);
-    $this->concepts->fillSlot($this->rootTeam, $sVor->id, ['package_id' => $vorspeise->id]);
+    $this->concepts->fillSlot($this->rootTeam, $sVor->id, ['embedded_concept_id' => $vorspeise->id]);
     $this->concepts->fillSlot($this->rootTeam, $sHg->id, ['sales_recipe_id' => $pork->id]);
 
     $rollup = $this->concepts->allergenRollup($c->refresh());

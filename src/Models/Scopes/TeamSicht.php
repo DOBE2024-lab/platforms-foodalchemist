@@ -30,7 +30,6 @@ final class TeamSicht implements Scope
     public const STUFEN = [
         1 => [
             \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::class,
-            \Platform\FoodAlchemist\Models\FoodAlchemistPaket::class,
             \Platform\FoodAlchemist\Models\FoodAlchemistConcept::class,
             \Platform\FoodAlchemist\Models\FoodAlchemistFormat::class,
         ],

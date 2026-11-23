@@ -31,7 +31,6 @@ final class CockpitZeilen
     {
         $concept->loadMissing(['slots' => fn ($q) => $q->orderBy('position'),
             'slots.unit:id,slug,dimension,default_in_g',
-            'slots.package:id,name,price_per_person,ek_per_person,price_stale',
             'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete',   // Kaskade: eingebettetes Paket
             'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation']);
 
@@ -49,10 +48,6 @@ final class CockpitZeilen
                 if ($ep->price_incomplete === true) {
                     $zeile['vk_unvollstaendig'] = true;   // CQ price_incomplete: Paket-Preis = Summe seiner bekannten Positionen, der Wert bleibt sichtbar
                 }
-            } elseif ($slot->package_id !== null && $slot->package) {
-                $r['hat_stale'] = $r['hat_stale'] || (bool) $slot->package->price_stale;
-                $zeile = $basis + ['type' => 'paket', 'wording' => $slot->wording, 'label' => $slot->package->name, 'stale' => (bool) $slot->package->price_stale]
-                    + $this->werte($slot->package->price_per_person, $slot->package->ek_per_person ?? 0, false);
             } elseif ($slot->sales_recipe_id !== null && $slot->dish) {
                 $zeile = $basis + ['type' => 'gericht', 'wording' => $slot->wording, 'label' => $slot->dish->name, 'stale' => false]
                     + $this->gericht($concept, $slot, $outlet);

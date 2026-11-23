@@ -152,7 +152,7 @@ class DetailPanel extends Component
         $user = \Illuminate\Support\Facades\Auth::user();
         try {
             $r = app(\Platform\FoodAlchemist\Services\BausteinFolgeService::class)->uebernehmen($user->currentTeamRelation, $user, $art, $quelle, $rowId, false);
-            $tab = ['paket' => 'foodalchemist_packages', 'format' => 'foodalchemist_formats'][$art] ?? 'foodalchemist_concepts';
+            $tab = ['format' => 'foodalchemist_formats'][$art] ?? 'foodalchemist_concepts';
             $v = $r['vorschau'];
             $nr = fn (int $id) => (int) \Illuminate\Support\Facades\DB::table($tab)->where('id', $id)->value('fassung_nr');
             $this->bausteinUebernahme = $v + ['art' => $art, 'quelle' => $quelle, 'row_id' => $rowId, 'von_nr' => $nr((int) $v['von_fassung_id']), 'nach_nr' => $nr((int) $v['nach_fassung_id']),

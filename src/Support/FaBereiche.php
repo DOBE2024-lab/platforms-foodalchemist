@@ -183,7 +183,7 @@ final class FaBereiche
         'Controlling' => 'controlling',
         'Gps' => 'stammdaten', 'Suppliers' => 'stammdaten', 'Favorites' => 'stammdaten',
         'Recipes' => 'rezepte', 'Verkauf' => 'rezepte', 'Kalkulation' => 'rezepte', 'Kalkulator' => 'rezepte',
-        'Concepter' => 'concepter', 'Concepts' => 'concepter', 'Formate' => 'concepter', 'Pakete' => 'concepter',
+        'Concepter' => 'concepter', 'Concepts' => 'concepter', 'Formate' => 'concepter',
         'Foodbooks' => 'foodbook', 'Speisekarte' => 'speisekarte', 'Speiseplan' => 'speiseplan', 'Angebote' => 'angebote',
         'Produktion' => 'produktion', 'Etiketten' => 'produktion',
         'Orders' => 'einkauf', 'Wareneingang' => 'einkauf', 'Bestellvorlagen' => 'einkauf', 'Preislisten' => 'einkauf',

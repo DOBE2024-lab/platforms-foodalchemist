@@ -11,7 +11,6 @@ use Platform\FoodAlchemist\Exceptions\TeamKontextFehltException;
 use Platform\FoodAlchemist\Http\Middleware\FaBereichMiddleware;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\AboService;
@@ -19,7 +18,6 @@ use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\FormatService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Support\FaTeam;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
@@ -57,7 +55,6 @@ beforeEach(function () {
     foreach (['master' => $this->master, 'a' => $this->a, 'b' => $this->b, 'u' => $this->u] as $k => $t) {
         $this->makeRecipe($t, "R {$k}");
         app(ConceptService::class)->create($t, ['name' => "K {$k}"]);
-        app(PaketService::class)->create($t, ['name' => "P {$k}"]);
         app(FormatService::class)->create($t, ['name' => "F {$k}"]);
     }
 
@@ -78,7 +75,7 @@ beforeEach(function () {
     DB::table('foodalchemist_freigabe_objekte')->insert(['team_id' => $this->u->id, 'typ' => 'recipe', 'objekt_id' => $this->aboFassung]);
     TeamAncestryRegistry::flushAll();
 
-    $this->modelle = [FoodAlchemistRecipe::class, FoodAlchemistConcept::class, FoodAlchemistPaket::class, FoodAlchemistFormat::class];
+    $this->modelle = [FoodAlchemistRecipe::class, FoodAlchemistConcept::class, FoodAlchemistFormat::class];   // 98 · 2.6c: Alt-Paket entfallen
     $this->ids = fn ($q) => $q->pluck((new ($q->getModel()::class))->getTable() . '.id')->map(fn ($v) => (int) $v)->sort()->values()->all();
     $this->teams = fn () => ['master' => $this->master, 'a' => $this->a, 'b' => $this->b, 'u' => $this->u];
 });
@@ -207,7 +204,7 @@ it('B0b MCP: Tool-Hülle mit Nutzer, aber ohne Team → TeamKontextFehltExceptio
 
 // ── Stufe 0 (Standard, so geht der Code live): kein Verhaltensunterschied außer dem Alias-Fix ──
 
-it('Stufe 0 (a): TeamSicht hängt nichts an — SQL und Bindungen mit Scope = ohne Scope, für alle vier Modelle, auch mit Kontext', function () {
+it('Stufe 0 (a): TeamSicht hängt nichts an — SQL und Bindungen mit Scope = ohne Scope, für alle Inhalts-Modelle, auch mit Kontext', function () {
     expect(config('foodalchemist.team_sicht.stufe'))->toBe(0);
     foreach ($this->modelle as $m) {
         foreach ([$this->a, $this->b, null] as $t) {

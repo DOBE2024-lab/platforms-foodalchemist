@@ -24,8 +24,8 @@ final class AboSicht
 {
     public const CACHE_VORHANDEN = 'foodalchemist.abos.vorhanden';
 
-    /** Rezepte, Pakete (PR 2), Konzepte (PR 4, auch kind=paket) und Formate (PR 7; origin=kunde nie, D8). */
-    public const TYPEN = ['recipe', 'paket', 'concept', 'format'];
+    /** Rezepte, Konzepte (PR 4, auch kind=paket) und Formate (PR 7; origin=kunde nie, D8). Die Alt-Paket-Art ist mit 98 · 2.6c entfallen. */
+    public const TYPEN = ['recipe', 'concept', 'format'];
 
     public static function aktiv(): bool
     {
@@ -36,7 +36,6 @@ final class AboSicht
     /** Abo-Art → Modell (für die Fassungs-Historie). */
     public const MODELL_JE_TYP = [
         'recipe' => \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::class,
-        'paket' => \Platform\FoodAlchemist\Models\FoodAlchemistPaket::class,
         'concept' => \Platform\FoodAlchemist\Models\FoodAlchemistConcept::class,
         'format' => \Platform\FoodAlchemist\Models\FoodAlchemistFormat::class,
     ];

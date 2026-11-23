@@ -7,13 +7,12 @@ use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Support\Verweisziel;
 
 /**
  * Code-Qualität 1.1c (K3): Ziele eines Concept-Slots — eingebettetes Paket (kind=paket-Concept),
- * Alt-Paket oder Rezept — beim SCHREIBEN prüfen. {@see ConceptService::fillSlot} nimmt nur Ziele an,
+ * oder Rezept — beim SCHREIBEN prüfen (ein Alt-Paket per package_id wird seit 98 · 2.6c abgelehnt). {@see ConceptService::fillSlot} nimmt nur Ziele an,
  * die das Team sehen darf (bestehende Sicht-Regel inkl. Abo-Fassungen, {@see Verweisziel}), ein Paket
  * nicht in sich selbst (auch nicht über Umwege) und einen zum Rezept passenden Typ.
  *
@@ -53,11 +52,10 @@ class ConceptSlotZielService
         }
     }
 
+    /** 98 · 2.6c: alte Pakete gibt es nicht mehr — neue package_id-Verweise werden abgelehnt. */
     public function pruefeAltPaket(Team $team, int $paketId): void
     {
-        if (! Verweisziel::sichtbar(FoodAlchemistPaket::class, $team)->whereKey($paketId)->exists()) {
-            throw new ModelNotFoundException("Paket #{$paketId} nicht sichtbar/vorhanden.");
-        }
+        throw new \RuntimeException("Paket #{$paketId}: alte Pakete gibt es nicht mehr. Ein Paket wird über embedded_concept_id (Konzept der Art Paket) eingehängt.");
     }
 
     /**

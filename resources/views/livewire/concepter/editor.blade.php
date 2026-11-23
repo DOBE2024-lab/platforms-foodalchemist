@@ -428,11 +428,11 @@
                                         if (in_array($s->type, ['header', 'header_preis'], true)) {
                                             $menueGruppen[] = $aktuelleGruppe;
                                             $aktuelleGruppe = ['type' => 'header', 'title' => $s->title ?: 'Ohne Überschrift', 'headerSlotId' => $s->id, 'slots' => [], 'texte' => []];
-                                        } elseif (($s->embedded_concept_id && $s->embeddedConcept) || ($s->package_id && $s->package)) {
+                                        } elseif ($s->embedded_concept_id && $s->embeddedConcept) {
                                             $menueGruppen[] = $aktuelleGruppe;
-                                            $_ref = $s->embeddedConcept ?? $s->package;
-                                            $_dishes = $s->embeddedConcept ? $s->embeddedConcept->slots->filter(fn ($e) => $e->sales_recipe_id !== null)->values() : $s->package->dishes;
-                                            $_preis = $s->embeddedConcept ? $s->embeddedConcept->price_per_person_cache : $s->package->price_per_person;
+                                            $_ref = $s->embeddedConcept;
+                                            $_dishes = $s->embeddedConcept->slots->filter(fn ($e) => $e->sales_recipe_id !== null)->values();
+                                            $_preis = $s->embeddedConcept->price_per_person_cache;
                                             $menueGruppen[] = ['type' => 'paket', 'title' => $_ref->name, 'price' => $_preis, 'headerSlotId' => null, 'slots' => [], 'texte' => [], 'paket' => $_ref, 'dishes' => $_dishes];
                                             $aktuelleGruppe = ['type' => 'sektion', 'title' => null, 'headerSlotId' => null, 'slots' => [], 'texte' => []];
                                         } elseif ($s->sales_recipe_id && $s->dish) {
@@ -677,12 +677,12 @@
                                                     </td>
                                                     <td class="align-top min-w-[16rem]">
                                                         @php
-                                                            $epk = $slot->embeddedConcept ?? $slot->package;
-                                                            $epkOpenId = $slot->embedded_concept_id ?? $slot->package_id;
-                                                            $epkPreis = $slot->embeddedConcept ? $slot->embeddedConcept->price_per_person_cache : ($slot->package?->price_per_person);
+                                                            $epk = $slot->embeddedConcept;
+                                                            $epkOpenId = $slot->embedded_concept_id;
+                                                            $epkPreis = $slot->embeddedConcept?->price_per_person_cache;
                                                         @endphp
                                                         @if($epk)
-                                                            {{-- Paket = Abschnitt (kind=paket-Concept oder Alt-Package; Gerichte eingerückt darunter) --}}
+                                                            {{-- Paket = Abschnitt (kind=paket-Concept; Gerichte eingerückt darunter) --}}
                                                             <div class="flex flex-wrap items-center gap-1.5">
                                                                 <x-fa::badge tone="info" icon="heroicon-m-archive-box">Paket</x-fa::badge>
                                                                 <span class="fa-t-h3 break-words">{{ $epk->name }}</span>
@@ -771,7 +771,7 @@
                                                 </td>
                                             </tr>
                                             {{-- Paket-Position = Abschnitt: seine Gerichte stehen immer schreibgeschützt eingerückt darunter --}}
-                                            @if($slot->embeddedConcept || ($slot->package_id && $slot->package))
+                                            @if($slot->embeddedConcept)
                                                 <tr wire:key="epaket-{{ $slot->id }}">
                                                     <td></td>
                                                     <td colspan="7" class="align-top">
@@ -788,17 +788,6 @@
                                                                     </div>
                                                                 @empty
                                                                     <p class="px-3 py-2 {{ $hinweis }}">Paket ohne Posten. Im Paket-Editor pflegen.</p>
-                                                                @endforelse
-                                                            @else
-                                                                @forelse($slot->package->dishes as $pg)
-                                                                    <div wire:key="epaketg-{{ $slot->id }}-{{ $pg->id }}" class="flex items-center gap-2 px-3 py-1.5 text-[length:var(--fa-text-md)]">
-                                                                        <span class="flex-1 min-w-0 break-words leading-snug text-[var(--fa-ink)]">{{ $pg->dish?->name ?? 'Gericht fehlt' }}</span>
-                                                                        @if($pg->quantity !== null)<span class="shrink-0 {{ $klein }} text-[var(--fa-ink-2)] tabular-nums">{{ $menge($pg->quantity) }} ×</span>@endif
-                                                                        <span class="shrink-0 {{ $klein }} text-[var(--fa-ink-2)] tabular-nums w-20 text-right">{{ $euro($pg->dish?->vk_netto) }}</span>
-                                                                        @if($pg->sales_recipe_id)<x-fa::icon-button href="#" icon="heroicon-o-eye" label="Gericht ansehen" size="sm" x-on:click.prevent="Livewire.dispatch('vk-modal.oeffnen', { id: {{ $pg->sales_recipe_id }} })" />@endif
-                                                                    </div>
-                                                                @empty
-                                                                    <p class="px-3 py-2 {{ $hinweis }}">Paket ohne Gerichte. Im Paket-Editor pflegen.</p>
                                                                 @endforelse
                                                             @endif
                                                         </div>

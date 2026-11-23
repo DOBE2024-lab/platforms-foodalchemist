@@ -73,7 +73,7 @@
             @if($darf)
                 <div class="flex flex-col gap-2 pt-1" data-vorlage-hinzu>
                     <div class="inline-flex flex-wrap items-center gap-0.5 p-0.5 rounded-[var(--fa-radius-control)] bg-[var(--fa-ground)] self-start">
-                        @foreach(['gp' => 'Grundprodukt', 'recipe' => 'Rezept / Gericht', 'concept' => 'Konzept', 'paket' => 'Paket', 'supplier_item' => 'Fester Artikel'] as $k => $t)
+                        @foreach(['gp' => 'Grundprodukt', 'recipe' => 'Rezept / Gericht', 'concept' => 'Konzept', 'supplier_item' => 'Fester Artikel'] as $k => $t)
                             <button type="button" wire:click="$set('suchArt', '{{ $k }}')" class="{{ $segment }} {{ $suchArt === $k ? 'bg-[var(--fa-surface)] text-[var(--fa-ink)] shadow-sm' : 'text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}">{{ $t }}</button>
                         @endforeach
                     </div>

@@ -72,7 +72,7 @@ class FassungsVergleich
      * Allergen- und Zusatzstoff-Bild eines Konzepts oder Pakets (Fassung) über die ganze Kette: je Feld der höchste Rang aller Rezept-Fassungen
      * darunter (ALL-MAXIMAL wie beim Rezept). Ein Konzept/Paket trägt keine eigenen Allergenspalten, das Erbe kommt aus den Rezepten.
      *
-     * @param  'concept'|'paket'|'format'  $art
+     * @param  'concept'|'format'  $art
      * @return array<string,mixed>
      */
     public function kettenBild(string $art, int $fassungId): array
@@ -122,7 +122,7 @@ class FassungsVergleich
         return $diff;
     }
 
-    /** Alle Rezept-IDs unter einem Konzept bzw. Paket (Slots, Paket-Gerichte, eingebettete Paket-Konzepte rekursiv). @return list<int> */
+    /** Alle Rezept-IDs unter einem Konzept bzw. Format (Slots, eingebettete Paket-Konzepte rekursiv). @return list<int> */
     public function rezeptIdsDerKette(string $art, int $id, int $tiefe = 0): array
     {
         if ($tiefe > 4) {
@@ -136,15 +136,8 @@ class FassungsVergleich
 
             return array_values(array_unique($ids));
         }
-        if ($art === 'paket') {
-            return DB::table('foodalchemist_package_dishes')->where('package_id', $id)->whereNull('deleted_at')
-                ->pluck('sales_recipe_id')->map(fn ($v) => (int) $v)->all();
-        }
-        $slots = DB::table('foodalchemist_concept_slots')->where('concept_id', $id)->whereNull('deleted_at')->get(['package_id', 'embedded_concept_id', 'sales_recipe_id']);
+        $slots = DB::table('foodalchemist_concept_slots')->where('concept_id', $id)->whereNull('deleted_at')->get(['embedded_concept_id', 'sales_recipe_id']);
         $ids = $slots->pluck('sales_recipe_id')->filter()->map(fn ($v) => (int) $v)->all();
-        foreach ($slots->pluck('package_id')->filter()->unique() as $pid) {
-            array_push($ids, ...$this->rezeptIdsDerKette('paket', (int) $pid, $tiefe + 1));
-        }
         foreach ($slots->pluck('embedded_concept_id')->filter()->unique() as $cid) {
             array_push($ids, ...$this->rezeptIdsDerKette('concept', (int) $cid, $tiefe + 1));
         }

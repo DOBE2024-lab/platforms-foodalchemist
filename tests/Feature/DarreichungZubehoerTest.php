@@ -20,7 +20,7 @@ use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\KostenCacheService;
-use Platform\FoodAlchemist\Services\PaketFassungService;
+use Platform\FoodAlchemist\Services\FassungsDarreichungService;
 use Platform\FoodAlchemist\Services\PriceService;
 use Platform\FoodAlchemist\Services\TeamVkService;
 use Platform\FoodAlchemist\Support\StammPaket;
@@ -290,7 +290,7 @@ it('Paket-Fassung und Kündigung: das Zubehör geht in die kopierte Darreichung 
         'is_standard' => false, 'quantity_per_unit_g' => 150, 'unit_count' => 1, 'price_mode' => 'auto']);
     DB::table('foodalchemist_recipe_presentation_zubehoer')->insert(['uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(), 'team_id' => $this->master->id,
         'presentation_id' => $quelle->id, 'gp_id' => $this->glasStamm->id, 'quantity' => 3, 'position' => 1, 'created_at' => now(), 'updated_at' => now()]);
-    $angehaengt = app(PaketFassungService::class)->fassungsDarreichung($fassung, $quelle);
+    $angehaengt = app(FassungsDarreichungService::class)->fassungsDarreichung($fassung, $quelle);
     expect($angehaengt)->not->toBeNull()->and($angehaengt->id)->not->toBe($quelle->id)
         ->and($angehaengt->zubehoer()->count())->toBe(1)->and((float) $angehaengt->zubehoer()->first()->quantity)->toBe(3.0);
 

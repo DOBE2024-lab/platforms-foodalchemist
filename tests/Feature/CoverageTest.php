@@ -147,7 +147,7 @@ it('Live-UI: Coverage-Panel im Concepter sichtbar, Lücken-Klick setzt den Diät
     $comp->call('coverageFuellen', 'vegan')
         ->assertSet('tab', 'aufbau')
         ->assertSet('pickDiaet', 'vegan');
-    $kandidaten = app(\Platform\FoodAlchemist\Services\PaketService::class)
+    $kandidaten = app(\Platform\FoodAlchemist\Services\AufbauKandidatenService::class)
         ->gerichtKandidaten($this->rootTeam, '', ['diet_form' => 'vegan']);
     expect($kandidaten->pluck('name')->all())->toBe(['HG: Gemüse-Bowl']);
 });

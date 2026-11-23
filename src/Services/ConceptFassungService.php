@@ -8,14 +8,13 @@ use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Support\MasterTeam;
 
 /**
  * Spec 82 Abo für Konzepte/Pakete/Formate, PR 4: Veröffentlichen eines MASTER-Konzepts als Fassung (Entwurf D1: Zeilen-Fassung).
- * Gilt für kind=concept UND kind=paket (D6: beide Paket-Wege). Spiegelt {@see PaketFassungService}.
+ * Gilt für kind=concept UND kind=paket (D6). Der alte Paket-Weg (PaketFassungService) ist mit Plan 98 · 2.6c entfallen.
  *
  * Ein Slot zeigt auf GENAU eines von: Paket (`package_id`), eingebettetes Paket-Konzept (`embedded_concept_id`, kind=paket),
  * Gericht/Basisrezept (`sales_recipe_id`). Jedes Ziel braucht eine veröffentlichte Fassung (D2/D11), sonst bricht das
@@ -44,7 +43,7 @@ class ConceptFassungService
         private FaRechte $rechte,
         private AboService $abos,
         private FassungService $rezeptFassungen,
-        private PaketFassungService $paketFassungen,
+        private FassungsDarreichungService $fassungsDarreichungen,
         private PlattformProtokoll $protokoll,
     ) {}
 
@@ -136,9 +135,6 @@ class ConceptFassungService
         if ($letzte !== null) {
             $v = app(FassungsVergleich::class);
             $ids = array_map(fn ($r) => (int) $r->id, array_values($ziele['recipe']));
-            foreach ($ziele['paket'] as $p) {
-                array_push($ids, ...$v->rezeptIdsDerKette('paket', (int) $p->id));
-            }
             foreach ($ziele['concept'] as $c) {
                 array_push($ids, ...$v->rezeptIdsDerKette('concept', (int) $c->id));
             }
@@ -154,20 +150,14 @@ class ConceptFassungService
      * Je Slot-Ziel die jüngste Fassung. Fehlt eine, bricht es mit der Liste ab (D2/D11).
      *
      * @param  \Illuminate\Support\Collection<int, FoodAlchemistConceptSlot>  $slots
-     * @return array{0: array{recipe: array<int, FoodAlchemistRecipe>, paket: array<int, FoodAlchemistPaket>, concept: array<int, FoodAlchemistConcept>}, 1: list<string>}
+     * @return array{0: array{recipe: array<int, FoodAlchemistRecipe>, concept: array<int, FoodAlchemistConcept>}, 1: list<string>}
      */
     private function zieleSammeln($slots): array
     {
-        $ziele = ['recipe' => [], 'paket' => [], 'concept' => []];
+        $ziele = ['recipe' => [], 'concept' => []];
         $fehlt = [];
         $hinweise = [];
         foreach ($slots as $s) {
-            if ($s->package_id !== null && ! isset($ziele['paket'][(int) $s->package_id])) {
-                $p = FoodAlchemistPaket::mitFassungen()->find($s->package_id);
-                $f = $p === null ? null : FoodAlchemistPaket::mitFassungen()->where('fassung_von_id', $p->id)->where('ist_fassung', true)
-                    ->whereNull('deleted_at')->orderByDesc('fassung_nr')->orderByDesc('id')->first();
-                $f === null ? ($p !== null ? $fehlt[] = "Paket „{$p->name}“" : null) : $ziele['paket'][(int) $s->package_id] = $f;
-            }
             if ($s->embedded_concept_id !== null && ! isset($ziele['concept'][(int) $s->embedded_concept_id])) {
                 $c = FoodAlchemistConcept::mitFassungen()->find($s->embedded_concept_id);
                 $f = $c === null ? null : FoodAlchemistConcept::mitFassungen()->where('fassung_von_id', $c->id)->where('ist_fassung', true)
@@ -209,7 +199,7 @@ class ConceptFassungService
             $quelle = $s->presentation_id ? FoodAlchemistRecipeDarreichung::find($s->presentation_id) : null;
 
             return [$felder,
-                $s->package_id !== null ? (int) ($ziele['paket'][(int) $s->package_id]->id ?? 0) : null,
+                null,   // ehemals Alt-Paket (entfallen mit 98 · 2.6c); Platzhalter hält den Inhalts-Hash bestehender Fassungen stabil
                 $s->embedded_concept_id !== null ? (int) ($ziele['concept'][(int) $s->embedded_concept_id]->id ?? 0) : null,
                 $s->sales_recipe_id !== null ? (int) ($ziele['recipe'][(int) $s->sales_recipe_id]->id ?? 0) : null,
                 $quelle === null ? null : [$quelle->only(['serving_form_id', 'quantity_per_unit_g', 'unit_vocab_id', 'unit_count']) + $quelle->inhaltErgaenzung(), (bool) $quelle->is_standard],
@@ -228,7 +218,7 @@ class ConceptFassungService
     private function hatZiel(FoodAlchemistConceptSlot $s, array $ziele): bool
     {
         if ($s->package_id !== null) {
-            return isset($ziele['paket'][(int) $s->package_id]);
+            return false;   // 98 · 2.6c: Alt-Pakete gibt es nicht mehr — die Zeile fällt weg wie bei gelöschtem Ziel
         }
         if ($s->embedded_concept_id !== null) {
             return isset($ziele['concept'][(int) $s->embedded_concept_id]);
@@ -258,10 +248,10 @@ class ConceptFassungService
             $zeile = $s->replicate(['uuid', 'created_at', 'updated_at', 'deleted_at']);
             $zeile->forceFill([
                 'concept_id' => $fassung->id,
-                'package_id' => $s->package_id !== null ? $ziele['paket'][(int) $s->package_id]->id : null,
+                'package_id' => null,
                 'embedded_concept_id' => $s->embedded_concept_id !== null ? $ziele['concept'][(int) $s->embedded_concept_id]->id : null,
                 'sales_recipe_id' => $rezept?->id,
-                'presentation_id' => $rezept !== null && $quelle !== null ? $this->paketFassungen->fassungsDarreichung($rezept, $quelle)?->id : null,
+                'presentation_id' => $rezept !== null && $quelle !== null ? $this->fassungsDarreichungen->fassungsDarreichung($rezept, $quelle)?->id : null,
                 'price_value' => null, 'price_basis' => null,   // Preise der Layout-Blöcke gehören dem Master
             ])->save();
         }

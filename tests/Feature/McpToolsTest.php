@@ -87,15 +87,15 @@ it('Lese-Tools: recipes.SEARCH/GET team-scoped, VK-Rezepte bleiben draußen (Sco
 });
 
 it('M11-11: foodbook.GET liefert Kopf + Kapitel/Blöcke + aggregierten Angebotspreis (team-scoped)', function () {
-    $pakete = app(\Platform\FoodAlchemist\Services\PaketService::class);
     $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
     $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
 
-    $paket = $pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $pakete->update($this->rootTeam, $paket->id, ['price_per_person' => 4.50]);
+    // 98 · 2.6c: Paket = kind=paket-Concept mit manuellem Preis, eingebettet statt package_id
+    $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall']);
+    $concepts->update($this->rootTeam, $paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
     $concept = $concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = $concepts->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
-    $concepts->fillSlot($this->rootTeam, $slot->id, ['package_id' => $paket->id]);
+    $concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);
 
     // CRM-only (b08c5c2): Kundenname kommt aus der verknüpften CRM-Firma, nicht mehr als Freitext.
     $kunde = \Platform\Crm\Models\CrmCompany::create(['team_id' => $this->rootTeam->id, 'name' => 'Hotel Adler', 'is_active' => true]);

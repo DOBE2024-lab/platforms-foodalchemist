@@ -189,8 +189,6 @@ class CoverageService
             'slots' => fn ($q) => $q->orderBy('position'),
             'slots.dish', 'slots.dish.dishClass:id,diet_form',
             'slots.dish.ingredients.gp:id,name', 'slots.dish.ingredients.referencedRecipe:id,name',
-            'slots.package.dishes.dish', 'slots.package.dishes.dish.dishClass:id,diet_form',
-            'slots.package.dishes.dish.ingredients.gp:id,name', 'slots.package.dishes.dish.ingredients.referencedRecipe:id,name',
             'seasons:id,name',
         ]);
 
@@ -200,12 +198,6 @@ class CoverageService
             $zeilen = collect();
             if ($slot->dish) {
                 $zeilen->push($this->gerichtZeile($slot->dish));
-            } elseif ($slot->package) {
-                foreach ($slot->package->dishes as $pg) {
-                    if ($pg->dish) {
-                        $zeilen->push($this->gerichtZeile($pg->dish));
-                    }
-                }
             }
             if ($zeilen->isEmpty()) {
                 continue;
@@ -290,8 +282,6 @@ class CoverageService
             'chapters.blocks.dish.ingredients.gp:id,name', 'chapters.blocks.dish.ingredients.referencedRecipe:id,name',
             'chapters.blocks.concept.slots.dish', 'chapters.blocks.concept.slots.dish.dishClass:id,diet_form',
             'chapters.blocks.concept.slots.dish.ingredients.gp:id,name', 'chapters.blocks.concept.slots.dish.ingredients.referencedRecipe:id,name',
-            'chapters.blocks.concept.slots.package.dishes.dish', 'chapters.blocks.concept.slots.package.dishes.dish.dishClass:id,diet_form',
-            'chapters.blocks.concept.slots.package.dishes.dish.ingredients.gp:id,name', 'chapters.blocks.concept.slots.package.dishes.dish.ingredients.referencedRecipe:id,name',
             'chapters.blocks.concept.seasons:id,name',
         ]);
 
@@ -314,12 +304,6 @@ class CoverageService
                     foreach ($block->concept->slots as $slot) {
                         if ($slot->dish) {
                             $zeilen->push($this->gerichtZeile($slot->dish));
-                        } elseif ($slot->package) {
-                            foreach ($slot->package->dishes as $pg) {
-                                if ($pg->dish) {
-                                    $zeilen->push($this->gerichtZeile($pg->dish));
-                                }
-                            }
                         }
                     }
                 }

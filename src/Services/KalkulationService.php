@@ -5,7 +5,6 @@ namespace Platform\FoodAlchemist\Services;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 
 /**
@@ -189,36 +188,6 @@ class KalkulationService
             'vk_luecke' => (bool) ($cockpit['hat_vk_luecke'] ?? false),   // CQ 2.6: VK zählt nur bekannte Positionen → DB zu niedrig
             'db_eur' => $vk > 0 ? round($vk - $r['hk2'], 2) : null,
             'db_pct' => $vk > 0 ? round(($vk - $r['hk2']) / $vk * 100, 1) : null,
-            'bloecke' => $r['bloecke'],
-            'marge_pct' => $r['marge_pct'],
-            'vk_vorschlag' => $r['vk_vorschlag'],
-        ];
-    }
-
-    /**
-     * Paket-Kalkulation pro Person: HK1 = gespeicherter EK/Person (Buffet) bzw. aus den
-     * Gerichten; Lohn aus dem Arbeitszeit-Rollup; Marge gegen den Paket-€/Person.
-     *
-     * @return array{hk1_pro_person: float, hk2_pro_person: float, vk_pro_person: ?float,
-     *               db_eur: ?float, db_pct: ?float, bloecke: list<array>, marge_pct: float, vk_vorschlag: float}
-     */
-    public function paketHk(Team $team, FoodAlchemistPaket $paket, ?FoodAlchemistOutlet $outlet = null): array
-    {
-        $paket = app(PaketPreisService::class)->anwenden($paket, $team);   // Abo-Fassung: Team-Preis (Spec 82 Abo Pakete PR 3)
-        $agg = $this->aggregat->paketAggregat($paket);
-        $hk1 = $paket->ek_per_person !== null ? (float) $paket->ek_per_person : (float) $agg['ek_per_person'];
-        $r = $this->berechne($team, $hk1, 0.0, 0.0, $outlet);
-        // Ebene 2: VK/Person folgt dem Betrieb (Auto-Paket: Σ Gericht-Outlet-VK; Fix-Preis bleibt).
-        $vk = $outlet !== null
-            ? app(PaketService::class)->paketPreisProPerson($paket, $outlet)
-            : ($paket->price_per_person !== null ? (float) $paket->price_per_person : null);
-
-        return [
-            'hk1_pro_person' => round($hk1, 4),
-            'hk2_pro_person' => $r['hk2'],
-            'vk_pro_person' => $vk,
-            'db_eur' => $vk !== null && $vk > 0 ? round($vk - $r['hk2'], 2) : null,
-            'db_pct' => $vk !== null && $vk > 0 ? round(($vk - $r['hk2']) / $vk * 100, 1) : null,
             'bloecke' => $r['bloecke'],
             'marge_pct' => $r['marge_pct'],
             'vk_vorschlag' => $r['vk_vorschlag'],

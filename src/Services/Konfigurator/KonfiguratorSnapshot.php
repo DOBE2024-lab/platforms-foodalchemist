@@ -203,7 +203,7 @@ final class KonfiguratorSnapshot
                 continue;
             }
             $c = \Platform\FoodAlchemist\Models\FoodAlchemistConcept::query()->ohneTeamSicht('verweis')
-                ->with(['slots.dish', 'slots.embeddedConcept.slots.dish', 'slots.package.dishes.dish', 'images'])->find($cid);
+                ->with(['slots.dish', 'slots.embeddedConcept.slots.dish', 'images'])->find($cid);
             if ($c === null) {
                 continue;
             }

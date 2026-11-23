@@ -16,7 +16,6 @@ use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanAusgabe;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanMengen;
 use Platform\FoodAlchemist\Services\Concerns\PruefstOutletZuordnung;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
@@ -90,7 +89,6 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         return FoodAlchemistSpeiseplan::visibleToTeam($team)
             ->with(['lines',
                 'entries.concept:id,name,price_per_person_cache,price_incomplete',
-                'entries.package:id,name,price_per_person,ek_per_person',
                 // Spec 57 · 0.5: volle Spalten. Die frühere Liste (id,name,sales_net,ek_total_eur)
                 // verschluckte `sales_wording_standard` — der Aushang zeigte den internen Namen —
                 // und Diät-/Nährwert-Spalten, die die Zellen-Kennzahlen brauchen.
@@ -527,14 +525,6 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             ->orderBy('name')->limit($limit)->get(['id', 'name', 'price_per_person_cache', 'price_incomplete']);
     }
 
-    /** Pakete für den Zell-Picker. */
-    public function paketKandidaten(Team $team, string $suche, int $limit = 50): Collection
-    {
-        return FoodAlchemistPaket::visibleToTeam($team)
-            ->when($suche !== '', fn ($q) => \Platform\FoodAlchemist\Support\Suche::like($q, 'name', $suche))
-            ->orderBy('name')->limit($limit)->get(['id', 'name']);
-    }
-
     public function addEintrag(Team $team, int $planId, array $in): FoodAlchemistSpeiseplanEintrag
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
@@ -573,16 +563,18 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     {
         $refs = [
             'concept_id' => FoodAlchemistConcept::class,
-            'package_id' => FoodAlchemistPaket::class,
             'sales_recipe_id' => FoodAlchemistRecipe::class,
         ];
+        if ((int) ($in['package_id'] ?? 0) > 0) {   // 98 · 2.6c: alte Pakete gibt es nicht mehr
+            throw new \RuntimeException('Alte Pakete gibt es nicht mehr. Bitte das Paket als Konzept (Art Paket) einplanen.');
+        }
         foreach ($refs as $feld => $model) {
             $id = (int) ($in[$feld] ?? 0);
             if ($id <= 0) {
                 continue;
             }
             if (! $model::visibleToTeam($team)->whereKey($id)->exists()) {
-                throw new \RuntimeException((['concept_id' => 'Konzept', 'package_id' => 'Paket', 'sales_recipe_id' => 'Gericht'][$feld] ?? 'Inhalt') . ' #' . $id . ' ist nicht vorhanden oder nicht sichtbar.');
+                throw new \RuntimeException((['concept_id' => 'Konzept', 'sales_recipe_id' => 'Gericht'][$feld] ?? 'Inhalt') . ' #' . $id . ' ist nicht vorhanden oder nicht sichtbar.');
             }
             // Der Picker bietet nur Gerichte an — MCP, Kaskade und Vorlagen dürfen kein Basisrezept
             // vorbeischieben (kein VK, keine Portion, keine Darreichung).
@@ -590,10 +582,10 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
                 throw new \RuntimeException('Rezept #' . $id . ' ist kein Gericht — in den Speiseplan kommen nur Gerichte.');
             }
 
-            return array_merge(array_fill_keys(array_keys($refs), null), [$feld => $id]);
+            return array_merge(['concept_id' => null, 'package_id' => null, 'sales_recipe_id' => null], [$feld => $id]);
         }
 
-        throw new \RuntimeException('Genau einen Inhalt angeben: Konzept, Paket oder Gericht.');
+        throw new \RuntimeException('Genau einen Inhalt angeben: Konzept oder Gericht.');
     }
 
     /** 98 · 3.3 S3: SpeiseplanBasis::effektivePax() */
@@ -704,7 +696,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
      */
     public function kiWordingVorschlag(Team $team, int $eintragId): array
     {
-        $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with(['mealPlan.writingStyle', 'dish', 'concept', 'package', 'line'])->findOrFail($eintragId);
+        $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with(['mealPlan.writingStyle', 'dish', 'concept', 'line'])->findOrFail($eintragId);
         $this->basis->guard($e->mealPlan, $team);
         $plan = $e->mealPlan;
         $stil = $plan->writingStyle;

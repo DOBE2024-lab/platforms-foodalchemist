@@ -28,7 +28,7 @@ class InhaltsFreigabeService
 {
     public const AUSGABE_TYPEN = ['sammlung' => 'Sammlung', 'foodbook' => 'Foodbook', 'speiseplan' => 'Speiseplan', 'speisekarte' => 'Speisekarte'];
 
-    public const SAMMLUNG_TYPEN = ['recipe' => 'Rezept', 'concept' => 'Konzept', 'paket' => 'Paket', 'format' => 'Format'];
+    public const SAMMLUNG_TYPEN = ['recipe' => 'Rezept', 'concept' => 'Konzept', 'format' => 'Format'];
 
     private const AUSGABE_TABELLEN = ['foodbook' => 'foodalchemist_foodbooks', 'speiseplan' => 'foodalchemist_menu_plans', 'speisekarte' => 'foodalchemist_menu_cards'];
 
@@ -266,8 +266,8 @@ class InhaltsFreigabeService
     public function kopieAnlegen(Team $team, string $typ, int $id, ?User $actor): \Illuminate\Database\Eloquent\Model
     {
         $this->rechte->pruefe($actor, $team, FaRolle::Kuratieren, 'eigene Kopie anlegen');
-        if (! in_array($typ, ['recipe', 'concept', 'paket', 'format'], true)) {
-            throw new \RuntimeException('Eine eigene Kopie gibt es für Rezepte, Konzepte, Pakete und Formate.');
+        if (! in_array($typ, ['recipe', 'concept', 'format'], true)) {
+            throw new \RuntimeException('Eine eigene Kopie gibt es für Rezepte, Konzepte (auch Pakete) und Formate.');
         }
         $original = $this->modelFuer($typ)::visibleToTeam($team)->findOrFail($id);
         if ($original->isOwnedBy($team)) {
@@ -276,7 +276,6 @@ class InhaltsFreigabeService
         $kopie = match ($typ) {
             'recipe' => app(RecipeService::class)->duplicate($team, $id, (string) $original->name),
             'concept' => app(ConceptService::class)->duplicate($team, $id),
-            'paket' => app(PaketService::class)->duplicate($team, $id),
             'format' => $this->formatKopie($team, $original),
         };
         if ($typ !== 'recipe') {
@@ -388,8 +387,7 @@ class InhaltsFreigabeService
         };
         match ($typ) {
             'format' => $hol('foodalchemist_format_slots', 'format_id', ['concept_id' => 'concept']),
-            'concept' => $hol('foodalchemist_concept_slots', 'concept_id', ['sales_recipe_id' => 'recipe', 'package_id' => 'paket', 'embedded_concept_id' => 'concept']),
-            'paket' => $hol('foodalchemist_package_dishes', 'package_id', ['sales_recipe_id' => 'recipe']),
+            'concept' => $hol('foodalchemist_concept_slots', 'concept_id', ['sales_recipe_id' => 'recipe', 'embedded_concept_id' => 'concept']),
             'recipe' => $hol('foodalchemist_recipe_ingredients', 'recipe_id', ['referenced_recipe_id' => 'recipe']),
             'foodbook' => [
                 $hol('foodalchemist_foodbook_chapters', 'foodbook_id', ['format_id' => 'format', 'concept_id' => 'concept', 'sales_recipe_id' => 'recipe']),
@@ -397,7 +395,7 @@ class InhaltsFreigabeService
                 $hol('foodalchemist_foodbook_blocks', 'chapter_id', ['concept_id' => 'concept', 'sales_recipe_id' => 'recipe'],
                     $this->kinderIds('foodalchemist_foodbook_chapters', 'foodbook_id', $ids)),
             ],
-            'speiseplan' => $hol('foodalchemist_menu_plan_entries', 'menu_plan_id', ['concept_id' => 'concept', 'package_id' => 'paket', 'sales_recipe_id' => 'recipe']),
+            'speiseplan' => $hol('foodalchemist_menu_plan_entries', 'menu_plan_id', ['concept_id' => 'concept', 'sales_recipe_id' => 'recipe']),
             'speisekarte' => [
                 // Positionen hängen an der Sektion
                 $hol('foodalchemist_menu_card_items', 'section_id', ['concept_id' => 'concept', 'sales_recipe_id' => 'recipe'],
@@ -456,8 +454,7 @@ class InhaltsFreigabeService
             'recipe' => new FoodAlchemistRecipe(),
             'concept' => new FoodAlchemistConcept(),
             'format' => new FoodAlchemistFormat(),
-            'paket' => new \Platform\FoodAlchemist\Models\FoodAlchemistPaket(),
-            default => throw new \RuntimeException('In eine Sammlung kommen Rezepte, Konzepte, Pakete und Formate.'),
+            default => throw new \RuntimeException('In eine Sammlung kommen Rezepte, Konzepte (auch Pakete) und Formate.'),
         };
     }
 

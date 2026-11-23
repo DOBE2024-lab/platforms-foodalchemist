@@ -184,17 +184,6 @@ class WordingResolver
 
                 continue;
             }
-            if ($slot->package_id !== null && $slot->package !== null) {
-                $zeilen[] = ['type' => 'paket', 'text' => (string) $slot->package->name, 'source' => null, 'einrueckung' => 0,
-                    'preis' => $einzel ? ($preisMap[$slot->id]['vk'] ?? null) : null,
-                    'ek' => $einzel ? ($preisMap[$slot->id]['ek'] ?? null) : null];
-                foreach ($slot->package->dishes as $pg) {
-                    $r = $this->fuerGericht($pg->dish);
-                    $zeilen[] = ['type' => 'gericht', 'text' => $r['text'], 'source' => $r['source'], 'einrueckung' => 1, 'recipe_id' => $pg->dish?->id] + ($mitMengen ? ['menge' => app(HandbuchPositionsMenge::class)->fuer($pg)] : []);
-                }
-
-                continue;
-            }
             if (in_array($slot->type, ['header', 'header_preis'], true) && trim((string) $slot->title) !== '') {
                 $zeilen[] = ['type' => 'header', 'text' => (string) $slot->title, 'source' => null, 'einrueckung' => 0];
 

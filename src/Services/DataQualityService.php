@@ -98,7 +98,6 @@ class DataQualityService
         ['foodalchemist_concept_slots', 'sales_recipe_id'],
         ['foodalchemist_foodbook_blocks', 'sales_recipe_id'],
         ['foodalchemist_menu_plan_entries', 'sales_recipe_id'],
-        ['foodalchemist_package_dishes', 'sales_recipe_id'],
     ];
 
     /**
@@ -111,7 +110,6 @@ class DataQualityService
         ['foodalchemist_concept_slots', 'sales_recipe_id'],
         ['foodalchemist_foodbook_blocks', 'sales_recipe_id'],
         ['foodalchemist_menu_plan_entries', 'sales_recipe_id'],
-        ['foodalchemist_package_dishes', 'sales_recipe_id'],
     ];
 
     /** Die 14 EU-Allergen-Spalten am Rezept (GL-01) — `unbekannt` ist der Default nach dem Insert. */
@@ -898,15 +896,7 @@ class DataQualityService
             ->whereNotNull('sales_recipe_id')
             ->pluck('sales_recipe_id')->all();
 
-        $ausPaket = DB::table('foodalchemist_package_dishes as pd')
-            ->join('foodalchemist_concept_slots as cs', 'cs.package_id', '=', 'pd.package_id')
-            ->where('cs.concept_id', $conceptId)
-            ->whereNull('cs.deleted_at')
-            ->whereNull('pd.deleted_at')
-            ->whereNotNull('pd.sales_recipe_id')
-            ->pluck('pd.sales_recipe_id')->all();
-
-        return array_values(array_unique(array_map('intval', array_merge($direkt, $ausPaket))));
+        return array_values(array_unique(array_map('intval', $direkt)));
     }
 
     /**
@@ -979,17 +969,9 @@ class DataQualityService
             return $q->select(DB::raw(1))->from('foodalchemist_concept_slots as cs')
                 ->whereColumn('cs.concept_id', 'foodalchemist_concepts.id')
                 ->whereNull('cs.deleted_at')
-                ->where(fn ($w) => $w
-                    ->where(fn ($gericht) => $gericht
-                        ->whereNotNull('cs.sales_recipe_id')
-                        ->whereRaw("LENGTH(TRIM(COALESCE(cs.wording, ''))) = 0")
-                        ->whereExists($ohneStandard('cs.sales_recipe_id')))
-                    ->orWhere(fn ($paket) => $paket
-                        ->whereNotNull('cs.package_id')
-                        ->whereExists(fn ($p) => $p->select(DB::raw(1))->from('foodalchemist_package_dishes as pd')
-                            ->whereColumn('pd.package_id', 'cs.package_id')
-                            ->whereNull('pd.deleted_at')
-                            ->whereExists($ohneStandard('pd.sales_recipe_id')))));
+                ->whereNotNull('cs.sales_recipe_id')
+                ->whereRaw("LENGTH(TRIM(COALESCE(cs.wording, ''))) = 0")
+                ->whereExists($ohneStandard('cs.sales_recipe_id'));
         };
     }
 

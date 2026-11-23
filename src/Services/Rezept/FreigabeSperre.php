@@ -170,14 +170,9 @@ class FreigabeSperre
             $neueC = [];
             if ($concepts !== []) {
                 $slots = DB::table('foodalchemist_concept_slots')->whereIn('concept_id', $concepts)->whereNull('deleted_at')
-                    ->get(['sales_recipe_id', 'embedded_concept_id', 'package_id']);
+                    ->get(['sales_recipe_id', 'embedded_concept_id']);
                 $neueR = $slots->pluck('sales_recipe_id')->filter()->all();
                 $neueC = $slots->pluck('embedded_concept_id')->filter()->all();
-                $pakete = $slots->pluck('package_id')->filter()->all();
-                if ($pakete !== []) {
-                    $neueR = array_merge($neueR, DB::table('foodalchemist_package_dishes')->whereIn('package_id', $pakete)->whereNull('deleted_at')
-                        ->pluck('sales_recipe_id')->filter()->all());
-                }
             }
             if ($rezepte !== []) {
                 $neueR = array_merge($neueR, DB::table('foodalchemist_recipe_ingredients')->whereIn('recipe_id', $rezepte)->whereNull('deleted_at')

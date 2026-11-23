@@ -15,7 +15,6 @@ const BEGRIFFE_AUSNAHMEN = [
     ['src/Services/VoiceCommandService.php', '', 'KI-Prompt, kein sichtbarer Text'],
     ['src/Support/KiUmleitung.php', '', 'Beschreibung für Agenten'],
     ['src/Services/VorgangsRegisterService.php', '', 'Vorgänge für Agenten (foodalchemist.ablauf.GET)'],
-    ['src/Services/PaketUmzug/PaketUmzugService.php', '', 'Umzugsprotokoll für den Betrieb'],
     ['resources/views/livewire/ui-katalog.blade.php', "['Konzept, Konzepte', 'Concept, Concepts'", 'Begriffsliste nennt das alte Wort'],
     ['resources/views/livewire/ui-katalog.blade.php', "['Konzepter', 'Concepter'", 'Begriffsliste nennt das alte Wort'],
 ];

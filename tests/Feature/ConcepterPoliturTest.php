@@ -6,7 +6,6 @@ use Platform\FoodAlchemist\Livewire\Concepter\Editor;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -19,7 +18,6 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 beforeEach(function () {
     $this->seedTeamHierarchy();
     $this->actingAs($this->makeUser($this->rootTeam));
-    $this->pakete = app(PaketService::class);
     $this->concepts = app(ConceptService::class);
     $this->foodbooks = app(FoodbookService::class);
 
@@ -27,10 +25,10 @@ beforeEach(function () {
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'g', 'name' => 'Green Power',
         'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 2.00, 'ek_total_eur' => 0.60,
     ]);
-    $this->paket = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise']);
+    $this->paket = $this->concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall']);   // 98 · 2.6c: Paket = kind=paket-Concept
     $this->concept = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['package_id' => $this->paket->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $this->paket->id]);
 });
 
 it('Wo verwendet?: Concept → Foodbooks, die es referenzieren', function () {
@@ -53,15 +51,6 @@ it('DetailPanel rendert „Wo verwendet?" für ein ausgewähltes Paket', functio
         ->call('zeige', 'pakete', $this->paket->id)
         ->assertSee('Wo verwendet')
         ->assertSee('Grill-Buffet');                                  // das nutzende Concept
-});
-
-it('Park-Flow: gerichtHinzu setzt die Menge/Person beim Einfügen', function () {
-    Livewire::test(Editor::class)
-        ->call('oeffnen', 'pakete', $this->paket->id)
-        ->call('gerichtHinzu', $this->green->id, 1.5);
-
-    $row = $this->paket->gerichte()->first();
-    expect((float) $row->quantity)->toBe(1.5);
 });
 
 it('Sektor-Eignung: zuweisen, reaktivieren, entfernen', function () {

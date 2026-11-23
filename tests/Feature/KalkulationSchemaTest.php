@@ -8,7 +8,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFixkosten;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\KalkulationService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -79,11 +78,12 @@ it('conceptHk: Katalog-Rollup bleibt ohne Pax frei von Produktionslohn', functio
         'is_sales_recipe' => true, 'sales_net' => 6.00, 'ek_total_eur' => 2.00,
         'work_time_min' => 10, 'sales_unit_count' => 1,
     ]);
-    $paket = app(PaketService::class)->create($this->rootTeam, ['name' => 'P', 'role' => 'Vorspeise', 'price_mode' => 'auto']);
-    app(PaketService::class)->syncGerichte($this->rootTeam, $paket->id, [['sales_recipe_id' => $g->id]]);
+    // 98 · 2.6c: Paket = kind=paket-Concept, eingebettet
+    $paket = app(ConceptService::class)->createPaket($this->rootTeam, ['name' => 'P']);
+    app(ConceptService::class)->fillSlot($this->rootTeam, app(ConceptService::class)->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise'])->id, ['sales_recipe_id' => $g->id]);
     $concept = app(ConceptService::class)->create($this->rootTeam, ['name' => 'C']);
     $slot = app(ConceptService::class)->addSlot($this->rootTeam, $concept->id, ['role' => 'Vorspeise']);
-    app(ConceptService::class)->fillSlot($this->rootTeam, $slot->id, ['package_id' => $paket->id]);
+    app(ConceptService::class)->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);
 
     $hk = $this->kalk->conceptHk($this->rootTeam, $concept->refresh());
     // WE/Person = 2,00; ohne Auftragsmenge gibt es keine belastbare FEK.

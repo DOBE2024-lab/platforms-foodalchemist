@@ -224,11 +224,14 @@ it('Druck: Buffetschilder lösen Pakete auf, ergänzen Unterrezepte und schreibe
     $g = FoodAlchemistVocabEinheit::where('slug', 'g')->first();
     $braten->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'referenced_recipe_id' => $jus->id, 'raw_text' => 'Jus', 'quantity' => 100, 'unit_vocab_id' => $g->id]);
     $gratin = druckRezept($this->rootTeam->id, 'druck-gratin', 'Kartoffelgratin', ['milk'], ['is_sales_recipe' => true, 'sales_wording_standard' => 'Kartoffelgratin', 'spec_is_vegetarian' => true], ['eggs']);
-    $paket = \Platform\FoodAlchemist\Models\FoodAlchemistPaket::create(['team_id' => $this->rootTeam->id, 'name' => 'Buffet Klassik']);
-    foreach ([$braten, $gratin] as $i => $g) {
-        $paket->dishes()->create(['team_id' => $this->rootTeam->id, 'sales_recipe_id' => $g->id, 'position' => $i]);
+    // 98 · 2.6c: Paket = kind=paket-Concept, im Speiseplan über concept_id
+    $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
+    $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Buffet Klassik']);
+    foreach ([$braten, $gratin] as $g) {
+        $ps = $concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Buffet']);
+        $concepts->fillSlot($this->rootTeam, $ps->id, ['sales_recipe_id' => $g->id]);
     }
-    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-06', 'line_id' => $this->linie->id, 'package_id' => $paket->id]);
+    $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => '2026-10-06', 'line_id' => $this->linie->id, 'concept_id' => $paket->id]);
     $plan = $this->svc->detail($this->rootTeam, $this->plan->id);
 
     $d = $this->svc->buffetKarten($this->rootTeam, $plan, 'mittag', $this->mo, '2026-10-06');

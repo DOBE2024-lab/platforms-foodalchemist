@@ -4,7 +4,6 @@ namespace Platform\FoodAlchemist\Services;
 
 use Illuminate\Support\Collection;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 
 /**
@@ -106,39 +105,6 @@ class ConcepterAggregateService
             && (float) $gericht->yield_pieces > 0;
     }
 
-    // ── Paket-Aggregat ──────────────────────────────────────────────────────
-
-    /**
-     * @return array{n_gerichte:int, naehrwerte:array, allergene:array,
-     *               ek_pro_person:float, vk_summe:float, work_time_min:int}
-     */
-    public function paketAggregat(FoodAlchemistPaket $paket): array
-    {
-        return $this->aggregat($this->paketPositionen($paket));
-    }
-
-    /**
-     * Die (gericht, quantity, unit, darreichung)-Liste eines Pakets — eine Quelle für
-     * Aggregat UND Deklarationsblatt, damit beide über dieselbe Grundmenge reden.
-     *
-     * @return Collection<int, array{gericht: object, quantity: ?float, unit: ?object, darreichung: mixed}>
-     */
-    public function paketPositionen(FoodAlchemistPaket $paket): Collection
-    {
-        // load() statt loadMissing(): erzwingt den vollen Spalten-Satz, auch wenn der
-        // Aufrufer die Gerichte schon mit reduzierten Spalten geladen hat (z. B. detail()).
-        $paket->load([
-            'dishes' => fn ($q) => $q->orderBy('position'),
-            'dishes.unit' => fn ($q) => $q->select($this->einheitCols()),
-            'dishes.dish' => fn ($q) => $q->select($this->recipeCols()),
-        ]);
-
-        return $paket->dishes
-            ->map(fn ($pg) => ['gericht' => $pg->dish, 'quantity' => $pg->quantity, 'unit' => $pg->unit,
-                'darreichung' => $pg->dish !== null ? $this->darreichungen->fuerPaketGericht($pg) : null])
-            ->filter(fn ($r) => $r['gericht'] !== null)->values();
-    }
-
     // ── Concept-Aggregat (über Pakete + feste Gerichte) ──────────────────────
 
     /**
@@ -174,9 +140,6 @@ class ConcepterAggregateService
         $concept->load([
             'slots' => fn ($q) => $q->orderBy('position'),
             'slots.unit' => fn ($q) => $q->select($this->einheitCols()),
-            'slots.package.dishes' => fn ($q) => $q->orderBy('position'),
-            'slots.package.dishes.unit' => fn ($q) => $q->select($this->einheitCols()),
-            'slots.package.dishes.dish' => fn ($q) => $q->select($this->recipeCols()),
             'slots.dish' => fn ($q) => $q->select($this->recipeCols()),
             // 2.1e: load() ersetzt die Slots — die Formen je Gericht mitladen, sonst fragen Resolver und Concepter-Aufbau je Slot nach
             'slots.dish.standardPresentation', 'slots.dish.presentations' => fn ($q) => $q->with('servingForm')->orderByDesc('is_standard')->orderBy('id'),
@@ -186,14 +149,7 @@ class ConcepterAggregateService
         $mitMenge = collect();
         foreach ($concept->slots as $slot) {
             $slot->setRelation('concept', $concept); // Resolver braucht die Konzept-Servierform ohne Lazy-Load
-            if ($slot->package) {
-                foreach ($slot->package->dishes as $pg) {
-                    if ($pg->dish) {
-                        $mitMenge->push(['gericht' => $pg->dish, 'quantity' => $pg->quantity, 'unit' => $pg->unit,
-                            'darreichung' => $this->darreichungen->fuerPaketGericht($pg)]);
-                    }
-                }
-            } elseif ($slot->embedded_concept_id !== null && $slot->embeddedConcept) {
+            if ($slot->embedded_concept_id !== null && $slot->embeddedConcept) {
                 if (! isset($pfad[(int) $slot->embedded_concept_id])) {
                     $mitMenge = $mitMenge->merge($this->conceptPositionen($slot->embeddedConcept, $pfad));
                 }
@@ -891,24 +847,5 @@ class ConcepterAggregateService
         $modus = $concept->istEinzelpreis() ? 'spanne' : 'summe';   // eine Quelle für die Einzelpreis-Frage
 
         return $this->deklarationsblatt($this->conceptPositionen($concept), $modus);
-    }
-
-    /** Deklarationsblatt eines Pakets — ein Paket ist immer ein Gesamtpreis, also Summe. */
-    public function paketDeklaration(FoodAlchemistPaket $paket): array
-    {
-        return $this->deklarationsblatt($this->paketPositionen($paket), 'summe');
-    }
-
-    // ── Cache-Persistenz ─────────────────────────────────────────────────────
-
-    public function cachePaket(FoodAlchemistPaket $paket): FoodAlchemistPaket
-    {
-        $agg = $this->paketAggregat($paket);
-        $paket->update([
-            'nutrition_cache' => $agg['naehrwerte'],
-            'work_time_min_cache' => $agg['work_time_min'],
-        ]);
-
-        return $paket->refresh();
     }
 }

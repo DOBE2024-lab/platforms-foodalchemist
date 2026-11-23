@@ -6,7 +6,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -18,7 +17,6 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
-    $this->pakete = app(PaketService::class);
     $this->concepts = app(ConceptService::class);
     $this->foodbooks = app(FoodbookService::class);
 
@@ -27,12 +25,18 @@ beforeEach(function () {
         'is_sales_recipe' => true, 'sales_net' => 2.50, 'ek_total_eur' => 0.75,
     ]);
     // Concept „Grill-Buffet" mit einem Paket (manuell 4,50 €/P) → preis_pro_person_cache
-    $paket = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'price_mode' => 'manuell']);
-    $this->pakete->update($this->rootTeam, $paket->id, ['price_per_person' => 4.50, 'ek_per_person' => 1.35]);
+    // 98 · 2.6c: Paket = kind=paket-Concept (manuell 4,50 €/P, EK 1,35 aus seinem Gericht), eingebettet
+    $salat = FoodAlchemistRecipe::create([
+        'team_id' => $this->rootTeam->id, 'recipe_key' => 'sw1', 'name' => 'Salat: Wall', 'status' => 'approved',
+        'is_sales_recipe' => true, 'sales_net' => 4.50, 'ek_total_eur' => 1.35,
+    ]);
+    $paket = $this->concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall']);
+    $this->concepts->update($this->rootTeam, $paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
+    $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $paket->id, ['role' => 'Vorspeise'])->id, ['sales_recipe_id' => $salat->id]);
     $this->paket = $paket;
     $this->concept = $this->concepts->create($this->rootTeam, ['name' => 'Grill-Buffet']);
     $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['package_id' => $paket->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $paket->id]);
 });
 
 it('M11-02: Kapitel-Aggregat (concept_ref + Paket-Preisblock) + Pax-Gesamtpreis — KEINE Einzelgerichte', function () {
@@ -220,7 +224,7 @@ it('GT-FB-2: Live-Referenz — Concept-Preisänderung zieht im Foodbook live mit
     expect($this->foodbooks->gesamt($this->rootTeam, $fb->refresh())['vk_pro_person'])->toBe(4.50);
 
     // Paket-Preis am Concept ändern → Foodbook-Summe zieht live mit (Live-Referenz, kein Snapshot).
-    $this->pakete->update($this->rootTeam, $this->paket->id, ['price_per_person' => 6.00]);
+    $this->concepts->update($this->rootTeam, $this->paket->id, ['price_per_person_manual' => 6.00]);
     expect($this->foodbooks->gesamt($this->rootTeam, $fb->refresh())['vk_pro_person'])->toBe(6.00);
 });
 
@@ -235,7 +239,7 @@ it('GT-FB-3: n:m — gleiches Concept in zwei Foodbooks, Änderung wirkt in beid
     expect($this->foodbooks->gesamt($this->rootTeam, $fb1->refresh())['vk_pro_person'])->toBe(4.50)
         ->and($this->foodbooks->gesamt($this->rootTeam, $fb2->refresh())['vk_pro_person'])->toBe(4.50);
 
-    $this->pakete->update($this->rootTeam, $this->paket->id, ['price_per_person' => 5.00]);
+    $this->concepts->update($this->rootTeam, $this->paket->id, ['price_per_person_manual' => 5.00]);
     expect($this->foodbooks->gesamt($this->rootTeam, $fb1->refresh())['vk_pro_person'])->toBe(5.00)
         ->and($this->foodbooks->gesamt($this->rootTeam, $fb2->refresh())['vk_pro_person'])->toBe(5.00); // keine Kopie
 });

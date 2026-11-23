@@ -199,8 +199,6 @@ it('Geld-Helfer: keine neuen Handrechnungen für Wareneinsatz, EK je Portion und
             'src/Services/Concept/CockpitZeilen.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
             'src/Services/ConceptPreisService.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
             'src/Services/ConcepterAggregateService.php' => [1, 'Paket-EK mit PAE-Faktor, Rückfall 0'],
-            'src/Services/PaketPreisService.php' => [1, 'Paket-EK mit PAE-Faktor, Rückfall 0'],
-            'src/Services/PaketService.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
         ],
         'kg_in_g' => [],
     ];

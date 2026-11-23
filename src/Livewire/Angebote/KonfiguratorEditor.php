@@ -424,7 +424,7 @@ class KonfiguratorEditor extends Component
                 // Stufe 5b: Gerichte je Konzept (Haupt und Add-on) und Tageszeit mit Wording-Kette (Konfigurator → Concept → Gericht), wie im Foodbook
                 'gerichtZeilen' => $k->konzepte->mapWithKeys(fn ($kz) => [$kz->id => collect(['lunch' => $kz->lunchConcept, 'dinner' => $kz->dinnerConcept])
                     ->filter()->map(fn ($c) => app(\Platform\FoodAlchemist\Services\WordingResolver::class)->gerichtZeilen(
-                        $c->loadMissing(['slots.dish', 'slots.embeddedConcept.slots.dish', 'slots.package.dishes.dish']), $kz))->all()])->all(),
+                        $c->loadMissing(['slots.dish', 'slots.embeddedConcept.slots.dish']), $kz))->all()])->all(),
                 'schreibstile' => \Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle::visibleToTeam($team)->where('is_inactive', false)->orderBy('name')->pluck('name', 'id')->all(),
                 'anfragen' => \Platform\FoodAlchemist\Models\FoodAlchemistAngebot::visibleToTeam($team)->where('konfigurator_id', $k->id)->latest()->limit(10)->get(),
             ];

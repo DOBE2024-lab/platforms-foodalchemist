@@ -834,12 +834,6 @@ class Editor extends Component
                         $ids[(int) $eps->sales_recipe_id] = true;
                     }
                 }
-            } elseif ($s->package !== null) {
-                foreach ($s->package->dishes as $pg) {
-                    if ($pg->sales_recipe_id !== null) {
-                        $ids[(int) $pg->sales_recipe_id] = true;
-                    }
-                }
             }
         }
 

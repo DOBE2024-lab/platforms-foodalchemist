@@ -18,18 +18,17 @@ class FoodAlchemistOrderTemplateLine extends Model
 {
     use HasUuidV7, LogsActivity, BelongsToTeamHierarchy, SoftDeletes;
 
-    public const TYPEN = ['gp', 'recipe', 'supplier_item', 'concept', 'paket'];
+    public const TYPEN = ['gp', 'recipe', 'supplier_item', 'concept'];   // 98 · 2.6c: Typ paket (Alt-Paket) entfallen
 
     public const EINHEITEN = [
         'gp' => ['kg' => 'kg', 'g' => 'g', 'stk' => 'Stück'],
         'recipe' => ['portions' => 'Portionen', 'ansaetze' => 'Ansätze', 'kg' => 'kg'],
         'supplier_item' => ['gebinde' => 'Gebinde'],
         'concept' => ['persons' => 'Personen'],
-        'paket' => ['persons' => 'Personen'],
     ];
 
     /** Spalte des Bezugs je Typ. */
-    public const SPALTE = ['gp' => 'gp_id', 'recipe' => 'recipe_id', 'supplier_item' => 'supplier_item_id', 'concept' => 'concept_id', 'paket' => 'paket_id'];
+    public const SPALTE = ['gp' => 'gp_id', 'recipe' => 'recipe_id', 'supplier_item' => 'supplier_item_id', 'concept' => 'concept_id'];
 
     protected $table = 'foodalchemist_order_template_lines';
 
@@ -64,12 +63,6 @@ class FoodAlchemistOrderTemplateLine extends Model
             ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis');   // Spec 82: Verweis löst auch Fassungen auf
     }
 
-    public function paket(): BelongsTo
-    {
-        return $this->belongsTo(FoodAlchemistPaket::class, 'paket_id')
-            ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis');   // Spec 82: Verweis löst auch Fassungen auf
-    }
-
     /** Quelle im Format der Bestellrunde (OrderService::previewFromSources). */
     public function alsQuelle(): array
     {
@@ -87,7 +80,6 @@ class FoodAlchemistOrderTemplateLine extends Model
             'gp' => $this->gp?->name,
             'recipe' => $this->recipe?->name,
             'concept' => $this->concept?->name,
-            'paket' => $this->paket?->name,
             default => $this->supplierItem?->designation,
         } ?: '— nicht mehr vorhanden —';
     }

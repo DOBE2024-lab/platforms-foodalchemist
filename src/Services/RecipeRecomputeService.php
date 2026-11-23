@@ -2,7 +2,6 @@
 
 namespace Platform\FoodAlchemist\Services;
 
-use Platform\FoodAlchemist\Events\GerichtePreisVeraltet;
 use Platform\FoodAlchemist\Events\RezeptKostenGeaendert;
 use Platform\FoodAlchemist\Events\TeamKostenGeaendert;
 use Platform\FoodAlchemist\Support\Masse;
@@ -215,15 +214,6 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
                 $fehler[$id] = $meldung;
             }
             Log::error("Recompute-Propagation: {$meldung}");
-        }
-
-        // K-07 / Doc 15 §M12: Auto-Pakete, die ein neu berechnetes Gericht enthalten,
-        // als preis_stale markieren (GP-Preis-Änderung → Baustein-Preis veraltet).
-        // Best-effort, außerhalb der Recompute-Transaktion (I8: Edit nicht blocken).
-        try {
-            GerichtePreisVeraltet::dispatch($betroffen);   // CQ 3.4: Listener → PaketService::markStaleForRecipe (entfällt in 2.6c)
-        } catch (\Throwable $e) {
-            Log::warning("K-07 markStaleForRecipe fehlgeschlagen: {$e->getMessage()}");
         }
 
         try {

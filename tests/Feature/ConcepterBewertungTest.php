@@ -4,7 +4,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\ConcepterBewertungService;
-use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -17,7 +16,6 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 beforeEach(function () {
     $this->seedTeamHierarchy();
     $this->team = $this->rootTeam;   // öffentliche dyn. Prop für die Helper unten
-    $this->pakete = app(PaketService::class);
     $this->concepts = app(ConceptService::class);
     $this->agg = app(ConcepterAggregateService::class);
     $this->bew = app(ConcepterBewertungService::class);
@@ -28,13 +26,14 @@ beforeEach(function () {
         'sales_quantity_per_unit_g' => 200, 'nutri_kcal_per_100g' => 120, 'nutri_confidence' => 'high',
         'spec_is_vegan' => true, 'spec_is_vegetarian' => true, 'allergens_confidence' => 'high',
     ]);
-    $this->paket = $this->pakete->create($this->rootTeam, ['name' => 'Salad Wall', 'role' => 'Vorspeise', 'level' => 'klassisch']);
-    $this->pakete->update($this->rootTeam, $this->paket->id, ['price_per_person' => 4.50, 'level' => 'klassisch']);
-    $this->pakete->syncGerichte($this->rootTeam, $this->paket->id, [['sales_recipe_id' => $veg->id]]);
+    // 98 · 2.6c: Paket = kind=paket-Concept (manueller Preis), eingebettet statt package_id
+    $this->paket = $this->concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall', 'level' => 'klassisch']);
+    $this->concepts->update($this->rootTeam, $this->paket->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 4.50]);
+    $this->concepts->fillSlot($this->rootTeam, $this->concepts->addSlot($this->rootTeam, $this->paket->id, ['role' => 'Vorspeise'])->id, ['sales_recipe_id' => $veg->id]);
 
     $this->concept = $this->concepts->create($this->rootTeam, ['name' => 'Mini-Menü', 'level' => 'klassisch']);
     $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Vorspeise']);
-    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['package_id' => $this->paket->id]);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $this->paket->id]);
 });
 
 function bewertungFuer($self): array
@@ -51,11 +50,11 @@ function statusVon(array $bew, string $key): string
     return collect($bew['checks'])->firstWhere('key', $key)['status'] ?? 'missing';
 }
 
-it('befülltes Menü, einheitliches Niveau, hohe Konfidenz → Struktur/Niveau/Allergen ok', function () {
+it('befülltes Menü, hohe Konfidenz → Struktur/Allergen ok; Niveau nur Info (las Alt-Pakete, 98 · 2.6c)', function () {
     $b = bewertungFuer($this);
 
     expect(statusVon($b, 'struktur'))->toBe('ok')
-        ->and(statusVon($b, 'level'))->toBe('ok')
+        ->and(statusVon($b, 'level'))->toBe('info')
         ->and(statusVon($b, 'allergen'))->toBe('ok')
         ->and($b['score'])->toBeGreaterThanOrEqual(80);
 });

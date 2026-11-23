@@ -69,7 +69,7 @@
                             @elseif(($ed['typ'] ?? '') === 'spacer')
                                 <div class="h-3"></div>
                             @else
-                                <p class="font-semibold text-gray-900 mt-4">{{ $ed['name'] }}@if($ed['preis_pp'] ?? null)<span class="ml-2 text-xs font-normal text-gray-500">{{ number_format((float) $ed['preis_pp'], 2, ',', '.') }} € p.P.@if($ed['preis_vorlaeufig'] ?? false) vorläufig@endif</span>@endif</p>
+                                <p class="font-semibold text-gray-900 mt-4">{{ $ed['name'] }}@if($ed['preis_pp'] ?? null)<span class="ml-2 text-xs font-normal text-gray-500">{{ number_format((float) $ed['preis_pp'], 2, ',', '.') }} € p.P.@if($ed['preis_vorlaeufig'] ?? false) vorläufig @endif</span>@endif</p>
                                 @if($ed['claim'] ?? null)<p class="text-xs italic text-gray-500 mb-1">{{ $ed['claim'] }}</p>@endif
                                 @foreach($ed['gerichte'] ?? [] as $g)
                                     @if(($g['type'] ?? '') === 'paket' || ($g['type'] ?? '') === 'header')

@@ -81,7 +81,7 @@ class FoodbookService
         return FoodAlchemistFoodbook::visibleToTeam($team)
             ->with(['chapters' => fn ($q) => $q->orderBy('position'),
                 'chapters.blocks' => fn ($q) => $q->orderBy('position'),
-                'chapters.blocks.concept:id,name,price_per_person_cache,price_display,price_incomplete',   // price_display → Editor-Chip istEinzelpreis
+                'chapters.blocks.concept:id,name,price_per_person_cache,price_display,price_incomplete,team_id,ist_fassung,price_mode,price_per_person_manual,price_override_expires_at',   // price_display → Editor-Chip istEinzelpreis
                 'chapters.blocks.dish:id,name,ek_total_eur,sales_unit_count', 'chapters.blocks.dish.standardPresentation',   // Spec 85: EK je Portion (blockPreis)
                 'crmCompany', 'crmContact',   // #369: CRM-Kunde-Link
                 'serviceMoments', 'targetGroups', 'defaultEventType', 'defaultServingForm']) // Spec 19 E3.3: Bedarf-Defaults
@@ -1344,7 +1344,7 @@ class FoodbookService
     public function kapitelAggregat(Team $team, FoodAlchemistFoodbookKapitel $kapitel, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
         $kapitel->loadMissing(['blocks' => fn ($q) => $q->where('visible', true),
-            'blocks.concept:id,name,price_per_person_cache,price_incomplete', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
+            'blocks.concept:id,name,price_per_person_cache,price_incomplete,team_id,ist_fassung,price_mode,price_per_person_manual,price_override_expires_at', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
             'blocks.staffel', 'children']);
 
         $vk = $ek = $pauschal = 0.0;

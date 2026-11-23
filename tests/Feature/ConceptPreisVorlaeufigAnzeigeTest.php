@@ -204,7 +204,8 @@ it('PR C · Präsentation: Vorschau, veröffentlichter Link und Kundenseite zeig
     $this->actingAs($this->user);
 
     $this->concepts->update($this->rootTeam, $this->teil->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 25]);
-    expect($vorschau())->not->toContain('data-preis-vorlaeufig');
+    expect($vorschau())->not->toContain('data-preis-vorlaeufig')   // Gesamt las den Konzept-Preis über einen schmalen Eager-Load ohne price_mode (12 statt 25)
+        ->and($fbs->gesamt($this->rootTeam, $fb->fresh())['vk_pro_person'])->toEqual(25.0);
 });
 
 it('PR C · Angebot: Gesamtpreis trägt vk_fehlt in Dokument, Karte und Präsentation; ein gesetzter Angebotspreis nicht', function () {
@@ -239,16 +240,16 @@ it('PR C · Republish preserve: Preis UND Merker bleiben eingefroren, auto zieht
     $total = fn () => FoodAlchemistFoodbook::find($fb->id)->presentation_snapshot_json['content']['total'];
 
     $praes->publish($this->rootTeam, 'foodbook', $fb->id, ['expires_at' => $exp]);   // einfrieren: 12 €, vorläufig
-    expect($block()['pp'])->toBe(12.0)->and($block()['vorlaeufig'])->toBeTrue()->and($total()['vorlaeufig'])->toBeTrue();
+    expect($block()['pp'])->toEqual(12.0)->and($block()['vorlaeufig'])->toBeTrue()->and($total()['vorlaeufig'])->toBeTrue();
 
     // Preis wird vollständig (hier als gesetzter Konzept-Preis), dann preserve: alter Preis und alter Merker
     $this->concepts->update($this->rootTeam, $this->teil->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 30]);
     $praes->publish($this->rootTeam, 'foodbook', $fb->id, ['expires_at' => $exp]);
-    expect($block()['pp'])->toBe(12.0)->and($block()['vorlaeufig'])->toBeTrue()
-        ->and($total()['vk_pro_person'])->toBe(12.0)->and($total()['vorlaeufig'])->toBeTrue();
+    expect($block()['pp'])->toEqual(12.0)->and($block()['vorlaeufig'])->toBeTrue()
+        ->and($total()['vk_pro_person'])->toEqual(12.0)->and($total()['vorlaeufig'])->toBeTrue();
 
     $praes->publish($this->rootTeam, 'foodbook', $fb->id, ['expires_at' => $exp, 'price_mode' => 'auto']);
-    expect($block()['pp'])->toBe(30.0)->and($block()['vorlaeufig'])->toBeFalse()->and($total()['vorlaeufig'])->toBeFalse();
+    expect($block()['pp'])->toEqual(30.0)->and($block()['vorlaeufig'])->toBeFalse()->and($total()['vorlaeufig'])->toBeFalse();
 });
 
 it('PR C · Präsentations-Layout bringt die dezente Regel .pt-vorlaeufig mit, im hellen und im dunklen Design', function () {

@@ -187,7 +187,7 @@ abstract class FoodAlchemistTool
                     'wareneinsatz_pct' => MargeService::wareneinsatzPct($ek, $vk),
                     // Spec 83 B3i/B3l: gepflegte Anrichte-Zeit (null = Startwert) und ihre Einheit aus der Form
                     'anrichten_wert' => $d->anrichten_wert !== null ? (float) $d->anrichten_wert : null,
-                    'anrichten_einheit' => \Platform\FoodAlchemist\Services\ProductionTimeService::anrichteEinheit($d->servingForm?->code),
+                    'anrichten_einheit' => \Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::anrichteEinheit($d->servingForm?->code),
                     'anrichten_pauschal_min' => $d->anrichten_pauschal_min !== null ? (float) $d->anrichten_pauschal_min : null,
                     'name' => $d->name,
                     'arbeitszeiten' => $d->arbeitszeiten,

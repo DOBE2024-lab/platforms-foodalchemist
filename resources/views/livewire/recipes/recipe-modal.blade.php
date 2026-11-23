@@ -721,7 +721,7 @@
 
             <x-fa::field label="Dichteklasse" for="rezept-dichteklasse" hint="Auffangnetz: greift nur, wo keine Menge je Behälter steht." class="sm:max-w-sm">
                 <x-fa::select id="rezept-dichteklasse" wire:model="dichteklasse" placeholder="Nicht gepflegt">
-                    @foreach(\Platform\FoodAlchemist\Services\BehaelterRechner::DICHTE as $klasse => $kgProLiter)
+                    @foreach(\Platform\FoodAlchemist\Services\Produktion\BehaelterRechner::DICHTE as $klasse => $kgProLiter)
                         <option value="{{ $klasse }}">{{ $dichteText[$klasse] ?? $klasse }} ({{ number_format($kgProLiter, 2, ',', '') }} kg/l)</option>
                     @endforeach
                 </x-fa::select>

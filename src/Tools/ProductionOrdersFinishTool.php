@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 
 class ProductionOrdersFinishTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {

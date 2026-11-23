@@ -212,7 +212,7 @@ class EtikettService
         // Spec 69: Etikett einer Charge = Rezept-Etikett mit den Daten der Charge (Eingaben haben Vorrang)
         if ($quelle === 'charge') {
             $b = \Platform\FoodAlchemist\Models\FoodAlchemistInventoryBatch::where('team_id', $team->id)->findOrFail($id);
-            $eigen = app(EigenproduktionService::class);
+            $eigen = app(Produktion\EigenproduktionService::class);
             foreach ([
                 'charge' => (string) $b->charge, 'hergestellt_am' => $b->produced_at?->toDateString(), 'eingefroren_am' => $b->frozen_at?->toDateString(),
                 'verbrauchen_bis' => $b->best_before?->toDateString(), 'lagerung' => $b->storage_type,

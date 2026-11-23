@@ -351,7 +351,7 @@ class Index extends Component
         if ($r === null) {
             return;
         }
-        $eigen = app(\Platform\FoodAlchemist\Services\EigenproduktionService::class);
+        $eigen = app(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::class);
         $this->einlagern = [
             'recipe_id' => $r->id, 'name' => $r->name, 'einheit' => $eigen->anzeigeEinheit($eigen->einheit($r)),
             'menge' => $this->einlagern['menge'] ?? '', 'location_id' => $this->einlagern['location_id'] ?? ($this->lagerortId ?: ''),
@@ -361,7 +361,7 @@ class Index extends Component
         $this->einlagernSuche = '';
     }
 
-    public function einlagernSpeichern(\Platform\FoodAlchemist\Services\EigenproduktionService $svc): void
+    public function einlagernSpeichern(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService $svc): void
     {
         if (empty($this->einlagern['recipe_id'])) {
             $this->fehler = 'Bitte ein Rezept wählen.';
@@ -375,7 +375,7 @@ class Index extends Component
         });
     }
 
-    public function entnehmen(int $batchId, \Platform\FoodAlchemist\Services\EigenproduktionService $svc): void
+    public function entnehmen(int $batchId, \Platform\FoodAlchemist\Services\Produktion\EigenproduktionService $svc): void
     {
         $e = $this->entnahme[$batchId] ?? [];
         $this->aktion(function () use ($svc, $batchId, $e) {
@@ -528,15 +528,15 @@ class Index extends Component
                 : collect(),
             'gruende' => LagerBewegungService::GRUENDE,
             'chargen' => $this->reiter === 'eigenproduktion'
-                ? app(\Platform\FoodAlchemist\Services\EigenproduktionService::class)->offeneChargen($team, null, $ortId)
+                ? app(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::class)->offeneChargen($team, null, $ortId)
                     ->when($this->nurAblaufend, fn ($c) => $c->filter(fn ($b) => $b->best_before !== null && $b->tageBisAblauf() <= 3)->values())
                 : collect(),
-            'ablaufendAnzahl' => app(\Platform\FoodAlchemist\Services\EigenproduktionService::class)->ablaufend($team)->count(),
+            'ablaufendAnzahl' => app(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::class)->ablaufend($team)->count(),
             'einlagernTreffer' => $this->reiter === 'eigenproduktion' && mb_strlen(trim($this->einlagernSuche)) >= 2
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::visibleToTeam($team)->where('name', 'like', '%' . trim($this->einlagernSuche) . '%')
                     ->orderBy('name')->limit(10)->get(['id', 'name', 'is_sales_recipe'])
                 : collect(),
-            'eigen' => app(\Platform\FoodAlchemist\Services\EigenproduktionService::class),
+            'eigen' => app(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::class),
             'inventuren' => $this->reiter === 'inventur' ? $svc->liste($team) : collect(),
             'inventur' => $inventur,
             // Spec 77c: Team-Brille „alle" → Standort-Spalte; Belege anderer Standorte nur lesend

@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
-use Platform\FoodAlchemist\Services\EquipmentStandardService;
+use Platform\FoodAlchemist\Services\Produktion\EquipmentStandardService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

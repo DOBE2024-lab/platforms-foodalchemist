@@ -771,7 +771,7 @@
                         <span class="inline-flex flex-wrap items-center gap-2">
                             <x-fa::select id="gp-gef-kostenart" size="sm" wire:model="gefaessKostenart" class="w-60" data-gp-gefaess-kostenart-wahl>
                                 <option value="">{{ $gefaessKostenartInfo['geerbt'] ? 'wie '.$gefaessKostenartInfo['geerbt_von'].': '.$gefaessKostenartInfo['geerbt'] : 'Automatik (Verleih: extern, sonst Einweg)' }}</option>
-                                @foreach(\Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN as $artKey => $artLabel)<option value="{{ $artKey }}">{{ $artLabel }}</option>@endforeach
+                                @foreach(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::ARTEN as $artKey => $artLabel)<option value="{{ $artKey }}">{{ $artLabel }}</option>@endforeach
                             </x-fa::select>
                             <span class="inline-flex items-center gap-1"><x-fa::input id="gp-gef-preis" size="sm" wire:model="gefaessPreis" inputmode="decimal" placeholder="Preis" class="w-20" aria-label="Preis je Stück" data-gp-gefaess-preis /><span class="fa-t-muted">€/Stk</span></span>
                             <x-fa::button size="sm" wire:click="gefaessKostenartSetzen" data-gp-gefaess-kostenart-speichern>Speichern</x-fa::button>
@@ -793,7 +793,7 @@
                             <x-fa::input size="sm" inputmode="decimal" value="{{ rtrim(rtrim(number_format($z['menge'], 3, ',', ''), '0'), ',') }}" aria-label="Stück je Gefäß"
                                 wire:change="gefaessZubehoerMengeSetzen({{ $z['gp_id'] }}, $event.target.value)" class="w-16 text-right tabular-nums" />
                             <span class="fa-t-body">× {{ $z['name'] }}</span>
-                            <span class="fa-t-muted">{{ \Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN[$z['kostenart']] ?? '' }}</span>
+                            <span class="fa-t-muted">{{ \Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::ARTEN[$z['kostenart']] ?? '' }}</span>
                             @if($z['kosten'] !== null)<span class="tabular-nums" data-gp-gefaess-zubehoer-kosten>{{ number_format($z['kosten'], 2, ',', '.') }} €</span>
                             @else<x-fa::badge tone="warn" title="Kein Preis: am Zubehör-Grundprodukt Art und Preis eintragen oder einen bepreisten Hauptartikel wählen" data-gp-gefaess-zubehoer-preis-fehlt>kein Preis</x-fa::badge>@endif
                             <x-fa::icon-button icon="heroicon-o-x-mark" label="Zubehör entfernen" size="sm" wire:click="gefaessZubehoerWeg({{ $z['gp_id'] }})" />

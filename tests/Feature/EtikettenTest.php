@@ -176,7 +176,7 @@ it('Spec 76: Lagerarten am Rezept — Mehrfachauswahl, Standard, Haltbarkeit je 
     $t = $this->svc->daten($this->rootTeam, 'recipe', $r->id, ['lagerung' => 'trocken', 'hergestellt_am' => '2026-10-01']);
     expect($t['datum']['verbrauchen_bis']->toDateString())->toBe('2026-10-11');                    // trocken: 01.10. + 10
 
-    $b = app(\Platform\FoodAlchemist\Services\EigenproduktionService::class)->einlagern($this->rootTeam, ['recipe_id' => $r->id, 'menge' => 1, 'produziert_am' => '2026-10-01', 'lagerart' => 'trocken']);
+    $b = app(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::class)->einlagern($this->rootTeam, ['recipe_id' => $r->id, 'menge' => 1, 'produziert_am' => '2026-10-01', 'lagerart' => 'trocken']);
     expect($b->best_before->toDateString())->toBe('2026-10-11');
 });
 
@@ -209,7 +209,7 @@ it('Spec 76: Druckprotokoll — Einzeldruck wird festgehalten (Vorschau nicht, N
 });
 
 it('Spec 76: Sammeldruck aus der Produktion — Basisrezepte je Ansatz, Auswahl, Protokoll als Gruppe, nochmal drucken', function () {
-    $prod = app(\Platform\FoodAlchemist\Services\ProductionOrderService::class);
+    $prod = app(\Platform\FoodAlchemist\Services\Produktion\ProductionOrderService::class);
     $order = $prod->saveNew($this->rootTeam, '2026-10-20', 'Bankett', [['recipe_id' => $this->suppe->id, 'amount_kg' => 4, 'source_ref' => 'r:s']]);
     $pos = $this->svc->produktionPositionen($this->rootTeam, $order->id);
     $suppe = collect($pos)->firstWhere('id', $this->suppe->id);
@@ -240,10 +240,10 @@ it('Spec 76: Sammeldruck aus der Produktion — Basisrezepte je Ansatz, Auswahl,
 it('Hotfix: Produktionsauftrag mit Altbestand-Ziel ohne source_ref öffnet (stabile Ref), Menü hat „Etiketten drucken"', function () {
     $order = \Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder::create(['team_id' => $this->rootTeam->id, 'name' => 'Altbestand', 'production_date' => '2026-09-05', 'status' => 'planned',
         'targets' => [['label' => 'Suppe (4 kg)', 'amount_kg' => 4, 'recipe_id' => $this->suppe->id]]]);
-    $d1 = app(\Platform\FoodAlchemist\Services\ProductionOrderService::class)->detail($this->rootTeam, $order->id);
-    $d2 = app(\Platform\FoodAlchemist\Services\ProductionOrderService::class)->detail($this->rootTeam, $order->id);
+    $d1 = app(\Platform\FoodAlchemist\Services\Produktion\ProductionOrderService::class)->detail($this->rootTeam, $order->id);
+    $d2 = app(\Platform\FoodAlchemist\Services\Produktion\ProductionOrderService::class)->detail($this->rootTeam, $order->id);
     expect($d1['targets'][0]['source_ref'])->toStartWith('ziel:')->toBe($d2['targets'][0]['source_ref']);
-    app(\Platform\FoodAlchemist\Services\ProductionOrderService::class)->recomputeOrder($this->rootTeam, $order->refresh());
+    app(\Platform\FoodAlchemist\Services\Produktion\ProductionOrderService::class)->recomputeOrder($this->rootTeam, $order->refresh());
     \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Produktion\Editor::class)->call('oeffnenBearbeiten', $order->id)
         ->assertSee('Suppe (4 kg)')->assertSee('Etiketten drucken');
 });

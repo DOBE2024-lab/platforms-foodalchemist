@@ -7,7 +7,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\Trend\BenchmarkService;
-use Platform\FoodAlchemist\Services\FixkostenService;
+use Platform\FoodAlchemist\Services\Produktion\FixkostenService;
 use Platform\FoodAlchemist\Services\MargeService;
 use Platform\FoodAlchemist\Services\PurchaseJournalService;
 use Platform\FoodAlchemist\Services\SignalService;

@@ -744,7 +744,7 @@ Route::get('/produktion/wandmonitor', \Platform\FoodAlchemist\Livewire\Produktio
 // Spec 30 E8 — druckbares Posten-Blatt der Tages-Ausgabe: pro Tag pro Posten eine
 // Abhak-Checkliste über alle Aufträge. Aggregation wie die Tagesplan-Komponente
 // (gleiches Fenster/Posten-Filter), aber als Druck-HTML statt Livewire-Seite.
-Route::get('/produktion/tagesplan/blatt', function (\Platform\FoodAlchemist\Services\ProductionCapacityService $kap) {
+Route::get('/produktion/tagesplan/blatt', function (\Platform\FoodAlchemist\Services\Produktion\ProductionCapacityService $kap) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $von = \Illuminate\Support\Carbon::parse(request('von') ?: now()->toDateString())->toDateString();
     $tage = max(1, min(60, request()->integer('tage') ?: 14));
@@ -792,7 +792,7 @@ Route::get('/blaetter', fn () => redirect()->route('foodalchemist.produktion.ind
     ->name('foodalchemist.blaetter.index');
 
 // Spec 18/S3 — filterbare Produktionsdoku: HTML-Vorschau | ?pdf=1 | ?csv=1.
-Route::get('/produktion/auftraege/{order}/dokument', function (int $order, \Platform\FoodAlchemist\Services\ProductionOrderService $svc) {
+Route::get('/produktion/auftraege/{order}/dokument', function (int $order, \Platform\FoodAlchemist\Services\Produktion\ProductionOrderService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $optionen = $svc->dokumentOptionen(request()->query());
     try {

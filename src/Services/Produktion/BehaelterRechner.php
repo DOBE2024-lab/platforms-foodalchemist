@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 /**
  * Spec 51 — Bedarfs-Primitive für Behälter: rechnet die PRODUZIERTE MENGE (kg) in ganze

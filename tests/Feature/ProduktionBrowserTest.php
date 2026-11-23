@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Browser;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

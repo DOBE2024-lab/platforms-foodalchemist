@@ -2,7 +2,7 @@
 
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ProductionTimeService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionTimeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

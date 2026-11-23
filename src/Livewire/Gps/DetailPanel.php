@@ -500,7 +500,7 @@ class DetailPanel extends Component
         }
         $this->gefaessKostenartFehler = null;
         try {
-            $n = app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class)->setzen($team, $this->gpId, $this->gefaessKostenart, $this->gefaessPreis);
+            $n = app(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::class)->setzen($team, $this->gpId, $this->gefaessKostenart, $this->gefaessPreis);
             $this->dispatch('fa-saved', message: 'Gefäß gespeichert'.($n > 0 ? " — {$n} Darreichungen neu gerechnet." : '.'), type: 'success');
         } catch (\RuntimeException $e) {
             $this->gefaessKostenartFehler = $e->getMessage();
@@ -714,7 +714,7 @@ class DetailPanel extends Component
     /** Art + Preis als Gefäß: eigener Eintrag ins Formular (einmal je GP), geerbter Eintrag des Oberteams als Hinweis. */
     private function gefaessKostenartLaden($team, FoodAlchemistGp $gp): array
     {
-        $svc = app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::class);
         $vorgabe = $svc->teamVorgabe((int) $gp->id, $team);
         $eigen = $vorgabe['team_id'] === (int) $team->id;
         if ($this->gefaessKostenartGp !== $gp->id) {
@@ -724,7 +724,7 @@ class DetailPanel extends Component
         }
 
         return ['geerbt' => ! $eigen && $vorgabe['kostenart'] !== null
-                ? \Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN[$vorgabe['kostenart']].($vorgabe['preis'] !== null ? ', '.number_format($vorgabe['preis'], 2, ',', '.').' €/Stk' : '') : null,
+                ? \Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::ARTEN[$vorgabe['kostenart']].($vorgabe['preis'] !== null ? ', '.number_format($vorgabe['preis'], 2, ',', '.').' €/Stk' : '') : null,
             'geerbt_von' => ! $eigen && $vorgabe['team_id'] !== null ? (\Platform\Core\Models\Team::find($vorgabe['team_id'])?->name) : null];
     }
 

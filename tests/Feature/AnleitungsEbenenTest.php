@@ -361,7 +361,7 @@ it('der Report liefert die Anrichte-Schritte als eigene Liste', function () {
 
 it('der Produktionsschein kennt Regeneration und Anrichten als eigene Schalter', function () {
     // §3.6 auch am Auftrag: die Küche vor Ort braucht das Programm, der Pass den Aufbau.
-    $svc = app(\Platform\FoodAlchemist\Services\ProductionOrderService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Produktion\ProductionOrderService::class);
 
     $produktion = $svc->dokumentOptionen(['profil' => 'produktion']);
     expect($produktion['regeneration'])->toBeTrue()
@@ -437,7 +437,7 @@ it('die Zeitrechnung ignoriert eine Alt-Ruestzeit am Gericht', function () {
         'work_time_min' => 10, 'setup_time_min' => 45,
     ]);
 
-    $svc = app(\Platform\FoodAlchemist\Services\ProductionTimeService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::class);
     $amGericht = $svc->calculate($this->rootTeam, $gericht->fresh(), 1.0, 'kg');
     $amBasis = $svc->calculate($this->rootTeam, $basis->fresh(), 1.0, 'kg');
 

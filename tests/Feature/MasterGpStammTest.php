@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GefaessZubehoerService;
+use Platform\FoodAlchemist\Services\Produktion\GefaessZubehoerService;
 use Platform\FoodAlchemist\Services\GpNamingService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
@@ -78,7 +78,7 @@ it('★ Zubehör, das der Master am Gefäß pflegt, gilt für Mandanten mit Pake
 
 it('★ Kostenart am Gefäß: Mandant ohne eigenen Eintrag erbt die des Masters; ein eigener Eintrag schlägt sie (Deckel 20.11.2026)', function () {
     $deckel = ($this->nonFood)(null, 'Deckel: für Achenbachglas');
-    $svc = app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::class);
     $svc->setzen($this->master, $deckel->id, 'mehrweg', '0,12');
 
     // ohne eigenen Eintrag: geerbt vom Master (vorher sah der Mandant nichts → Automatik „einweg“)
@@ -110,7 +110,7 @@ it('★ Gefäßpreis des Masters nur mit „Preise mitgeben“ für den Lieferan
     $deckel->update(['lead_la_supplier_item_id' => $la->id]);
     $stamm = app(\Platform\FoodAlchemist\Services\StammPaketService::class);
     $stamm->setzeLieferanten($this->rootTeam, [$lieferant->id], $admin);
-    $svc = app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::class);
     $svc->setzen($this->master, $deckel->id, 'mehrweg', '0,40');
 
     // ohne Haken: Art vom Master, Preis nicht → Darreichung meldet „Gefäß-Preis fehlt“ (mehrweg kauft nichts ein, kein Artikel-Rückfall)
@@ -145,7 +145,7 @@ it('★ Rückfall auf den Lead-Artikelpreis (einweg ohne Preis am GP) zieht den 
         'gp_id' => $becher->id, 'created_at' => now(), 'updated_at' => now()]);
     $stamm = app(\Platform\FoodAlchemist\Services\StammPaketService::class);
     $stamm->setzeLieferanten($this->rootTeam, [$lieferant->id], $admin);
-    app(\Platform\FoodAlchemist\Services\GefaessKostenartService::class)->setzen($this->master, $becher->id, 'einweg');
+    app(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::class)->setzen($this->master, $becher->id, 'einweg');
     $dar = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
 
     expect($dar->stueckKosten($becher, $this->master)['preis'])->toBe(0.55);

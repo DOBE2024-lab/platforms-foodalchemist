@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +25,7 @@ class ProductionPlanService
 
     public function __construct(
         private ProductionOrderService $orders,
-        private TeamSettingsService $settings,
+        private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
     ) {}
 
     /**

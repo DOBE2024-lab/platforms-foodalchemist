@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\EigenproduktionService;
+use Platform\FoodAlchemist\Services\Produktion\EigenproduktionService;
 
 /** Spec 69 · Eigenproduktion entnehmen — FIFO nach Haltbarkeit oder aus einer bestimmten Charge. */
 class EigenproduktionEntnahmeTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

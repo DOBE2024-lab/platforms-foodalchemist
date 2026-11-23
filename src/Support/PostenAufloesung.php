@@ -13,8 +13,8 @@ use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**
  * Spec 83 B2/B2a/B3g: EINE Regel, welcher Küchenposten für ein Rezept gilt — geteilt von den Auftragszeilen
- * ({@see \Platform\FoodAlchemist\Services\ProductionOrderService}) und der Verteilung der Gerichts-Blöcke auf Posten
- * ({@see \Platform\FoodAlchemist\Services\ProductionTimeService::postenAnteile}). Aus ProductionOrderService::standardPosten
+ * ({@see \Platform\FoodAlchemist\Services\Produktion\ProductionOrderService}) und der Verteilung der Gerichts-Blöcke auf Posten
+ * ({@see \Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::postenAnteile}). Aus ProductionOrderService::standardPosten
  * verschoben (Verhalten 1:1), damit die beiden Stellen nicht still auseinanderlaufen.
  *
  * Routing-Reihenfolge: `recipes.default_station_id` (eigen/sichtbar, sonst die Paket-Kopie des Master-Postens, B2a) > bei Gerichten

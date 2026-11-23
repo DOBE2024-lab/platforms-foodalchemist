@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\DerivatAusbeuteService;
+use Platform\FoodAlchemist\Services\Produktion\DerivatAusbeuteService;
 use Platform\FoodAlchemist\Services\GpService;
 
 /**

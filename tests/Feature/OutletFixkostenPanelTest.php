@@ -3,7 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Settings\Herstellkosten;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\FixkostenService;
+use Platform\FoodAlchemist\Services\Produktion\FixkostenService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

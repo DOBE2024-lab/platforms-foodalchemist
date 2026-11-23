@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -178,6 +178,6 @@ class GefaessKostenartService
             FoodAlchemistGpGefaessKostenart::create(['team_id' => $team->id, 'gp_id' => $gp->id, 'kostenart' => $art, 'preis_stk' => $preis]);
         }
 
-        return app(DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gp->id]);
+        return app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gp->id]);
     }
 }

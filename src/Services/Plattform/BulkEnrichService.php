@@ -390,7 +390,7 @@ class BulkEnrichService
         ], $opts);
 
         $klasse = $p->werte['dichteklasse'] ?? null;
-        $klasse = is_string($klasse) && array_key_exists($klasse, \Platform\FoodAlchemist\Services\BehaelterRechner::DICHTE) ? $klasse : null;
+        $klasse = is_string($klasse) && array_key_exists($klasse, \Platform\FoodAlchemist\Services\Produktion\BehaelterRechner::DICHTE) ? $klasse : null;
         $behaelter = is_array($p->werte['behaelter_je_zweck'] ?? null) ? $p->werte['behaelter_je_zweck'] : [];
         $behaelter = array_filter($behaelter, fn ($id) => is_numeric($id) && $katalog->contains(fn ($b) => (int) $b->id === (int) $id));
 
@@ -746,7 +746,7 @@ class BulkEnrichService
         $gelandet = false;
 
         $klasse = $wert['dichteklasse'] ?? null;
-        if (is_string($klasse) && array_key_exists($klasse, \Platform\FoodAlchemist\Services\BehaelterRechner::DICHTE) && $r->dichteklasse_source !== 'manual') {
+        if (is_string($klasse) && array_key_exists($klasse, \Platform\FoodAlchemist\Services\Produktion\BehaelterRechner::DICHTE) && $r->dichteklasse_source !== 'manual') {
             $r->update(['dichteklasse' => $klasse, 'dichteklasse_source' => 'ki',
                 'dichteklasse_ai_confidence' => $prop->confidence, 'dichteklasse_ai_reasoning' => $prop->reasoning]);
             $gelandet = true;

@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\OrderService;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Support\Suche;
 
 /**

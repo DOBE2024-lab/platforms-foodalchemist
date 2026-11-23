@@ -132,7 +132,7 @@ it('Standardwechsel zwischen gleichartigen Glasvarianten übernimmt Typ und vere
         ->and($erbt->fresh()->quantity_per_unit_g)->toBe(80.0)
         ->and($erbt->fresh()->arbeitszeiten)->toBeNull()
         ->and($this->std->fresh()->quantity_per_unit_g)->toBe(120.0);
-    $time = app(\Platform\FoodAlchemist\Services\ProductionTimeService::class)
+    $time = app(\Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::class)
         ->calculateForBatches($this->rootTeam, $this->gericht->fresh(), 100, null, [
             ['darreichung_id' => $klein->id, 'portionen' => 100],
         ]);

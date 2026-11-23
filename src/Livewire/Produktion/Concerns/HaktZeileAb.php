@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Produktion\Concerns;
 use Illuminate\Support\Facades\Auth;
 use Platform\FoodAlchemist\Enums\ProductionLineStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 
 /**
  * Eine Zeile abhaken (Tagesplan-Editor und Küchenmonitor, 98 · 3.3 S6 aus Produktion\Tagesplan verschoben). Die

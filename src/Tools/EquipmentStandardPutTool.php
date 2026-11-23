@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\EquipmentStandardService;
+use Platform\FoodAlchemist\Services\Produktion\EquipmentStandardService;
 
 /** Spec 82 §6 · Standardausstattung im Equipment-Vokabular setzen (nur Plattform-Admin), mit Trockenlauf als Standard. */
 class EquipmentStandardPutTool extends WareneingangTool implements ToolContract, ToolMetadataContract

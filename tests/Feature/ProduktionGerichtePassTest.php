@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistTeamSetting;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Services\Reife\RecipeReifeAdapter;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

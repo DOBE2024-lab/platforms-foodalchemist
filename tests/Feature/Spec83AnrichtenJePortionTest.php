@@ -3,7 +3,7 @@
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\ProductionTimeService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionTimeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -226,7 +226,7 @@ function spec83RegenFixture($test, $team, $gericht): array
 
 it('B3c/B3j: Gericht weist zwei Blöcke getrennt aus — Regenerieren (Behälter × 30 s), Anrichten; Gerätezeit passiv', function () {
     spec83RegenFixture($this, $this->rootTeam, $this->gericht);
-    $behaelter = app(\Platform\FoodAlchemist\Services\BehaelterBedarfService::class)->regenerierBehaelter($this->rootTeam, $this->gericht->fresh(), 100);
+    $behaelter = app(\Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::class)->regenerierBehaelter($this->rootTeam, $this->gericht->fresh(), 100);
     $r = $this->times->calculateForBatches($this->rootTeam, $this->gericht->fresh(), 100);
     $b = $r['bloecke'];
 

@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 
 /**
  * 98 · 2.3c: freie Position aus einem geplanten Produktionsauftrag entfernen — wie im Produktions-Editor

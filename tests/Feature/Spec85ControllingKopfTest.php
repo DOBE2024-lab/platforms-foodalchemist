@@ -115,7 +115,7 @@ it('Geld-Signale folgen der Brille und zählen je Standort nur die eigenen; frem
 });
 
 it('alle: Fixkosten und Break-even summieren die Standorte mit je eigenem Profil', function () {
-    $fix = app(\Platform\FoodAlchemist\Services\FixkostenService::class);
+    $fix = app(\Platform\FoodAlchemist\Services\Produktion\FixkostenService::class);
     $fix->create($this->childA, ['label' => 'Miete A', 'amount' => 1000, 'block_key' => 'gemeinkosten']);
     $fix->create($this->childB, ['label' => 'Miete B', 'amount' => 2000, 'block_key' => 'gemeinkosten']);
     app(TeamSettingsService::class)->update($this->rootTeam, ['target_food_cost_pct' => 30]);

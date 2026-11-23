@@ -222,7 +222,7 @@ class FassungService
             return [];
         }
         $zeilen = array_map(fn ($z) => [$z['gp_id'], $z['menge']],
-            app(GefaessZubehoerService::class)->liste((int) $d->vessel_gp_id, \Platform\Core\Models\Team::find($d->team_id))['zeilen']);
+            app(Produktion\GefaessZubehoerService::class)->liste((int) $d->vessel_gp_id, \Platform\Core\Models\Team::find($d->team_id))['zeilen']);
         sort($zeilen);
 
         return $zeilen;

@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\ProductionTimeService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionTimeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -217,10 +217,10 @@ it('berechnet Plattenbedarf aus der tatsächlichen Grammatur der Darreichung', f
         ['use_case' => 'portionieren_platte', 'basis' => 'behaelter', 'ort' => 'kueche', 'wert' => 2],
     ]]);
     $dar = $this->grammaturAltbestand($this->dar->fresh(), 80);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
-    $behaelter = Mockery::mock(\Platform\FoodAlchemist\Services\BehaelterBedarfService::class);
+    $behaelter = Mockery::mock(\Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::class);
     $behaelter->shouldReceive('behaelterFuerGericht')->once()->withArgs(fn ($team, $gericht, $ansaetze, $zweck) => abs($ansaetze - 40) < .0001 && $zweck === 'ausgabe')
         ->andReturn(['anzahl' => 4]);
-    app()->instance(\Platform\FoodAlchemist\Services\BehaelterBedarfService::class, $behaelter);
+    app()->instance(\Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::class, $behaelter);
     $r = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->berechnen($this->rootTeam, $this->gericht->fresh(), $dar, 100);
     expect($r['minuten'])->toBe(8.0)->and($r['vollstaendig'])->toBeTrue();
 });

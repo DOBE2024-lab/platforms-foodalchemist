@@ -114,9 +114,13 @@
 
             <div class="flex flex-wrap items-end gap-3">
                 <x-fa::choice name="previewType" label="Vorschau als" :options="$formen" />
+                {{-- „EK-Ansicht im Link“ ist Design-Datum (wird mit dem Design gespeichert, gibt EK im Kundenlink frei): unter die Sperre.
+                     Vorschau als / Quelle daneben sind Anzeige und bleiben frei. --}}
+                <x-fa::lese-sperre :an="$sperrLesen">
                 @if(in_array($previewType, ['foodbook', 'angebot'], true))
                     <x-fa::checkbox class="{{ $hakenZeile }} pb-2" title="Gespeichert im Design: Foodbook und Angebot bekommen im veröffentlichten Link den Knopf „EK einblenden“. Jeder mit dem Link kann umschalten. Ohne Haken kein Knopf. Wirkt nach dem nächsten Veröffentlichen." wire:model.live="tokens.ek_im_link" data-fa-vorschau-ek>EK-Ansicht im Link</x-fa::checkbox>
                 @endif
+                </x-fa::lese-sperre>
                 <x-fa::field label="Quelle" for="design-vorschau-quelle" class="flex-1 min-w-[12rem]">
                     <x-fa::select id="design-vorschau-quelle" wire:model.live="previewSourceId" placeholder="Quelle wählen">
                         @foreach($quellenOptionen as $opt)

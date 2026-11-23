@@ -410,8 +410,11 @@ class DarreichungService
         $this->typInsGericht($darreichung->refresh(), false);
     }
 
-    /** Wirksame Mengen festhalten, bevor eine Darreichung ihre Referenz wechselt. */
-    private function fixiereKomposition(FoodAlchemistRecipeDarreichung $darreichung, Team $team): void
+    /**
+     * Wirksame Mengen festhalten, bevor eine Darreichung ihre Referenz wechselt. Öffentlich für die Grammatur-Umstellung
+     * (Plan 98 B, Weg A): dieselbe Rechnung wie der UI-Schalter „Standardmenge verwenden“ — EK und Produktionsmengen bleiben.
+     */
+    public function fixiereKomposition(FoodAlchemistRecipeDarreichung $darreichung, Team $team): void
     {
         $anteil = $this->produktionsAnteil($darreichung->recipe, $darreichung, 1, $team);
         foreach ($this->recompute->zeilenKostenUndMassen($darreichung->recipe, $team) as $ingId => $z) {
@@ -1001,7 +1004,8 @@ class DarreichungService
         if ($darreichung->is_standard && $darreichung->menge_vom_standard && ! $darreichung->deltas()->exists()) {
             $zeilen = $this->recompute->zeilenKostenUndMassen($recipe, Team::findOrFail($darreichung->team_id));
             if ($zeilen !== []) {
-                return array_sum(array_column($zeilen, 'masse_g'));
+                // Plan 98 B (Grammatur immer automatisch): Bestandteile ÷ Portionen des Ansatzes — vorher der ganze Ansatz als eine Portion
+                return array_sum(array_column($zeilen, 'masse_g')) / max(1, (int) ($recipe->sales_unit_count ?? 1));
             }
             // Ohne Komponenten kein Rückfall auf die zuvor zwischengespeicherte Portionssumme.
             return $recipe->yield_kg !== null ? (float) $recipe->yield_kg * 1000 / max(1, (int) ($recipe->sales_unit_count ?? 1)) : null;
@@ -1127,7 +1131,10 @@ class DarreichungService
                 $eigeneReferenz = true;
             }
         }
-        $faktor = ($batchG > 0 && $stdG !== null && (float) $stdG > 0) ? (float) $stdG / $batchG : 1.0;
+        // Plan 98 B: Standard „wie Rezept“ (menge_vom_standard, ohne Deltas) = Ansatz ÷ Portionen, nicht der ganze Ansatz
+        $wieRezept = $standard !== null && $standard->menge_vom_standard && $stdG === null;
+        $faktor = ($batchG > 0 && $stdG !== null && (float) $stdG > 0) ? (float) $stdG / $batchG
+            : ($wieRezept ? 1.0 / max(1, (int) ($recipe->sales_unit_count ?? 1)) : 1.0);
 
         $out = [];
         foreach ($zeilen as $ingId => $z) {

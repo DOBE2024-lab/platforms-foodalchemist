@@ -25,7 +25,7 @@ class GrammaturAutomatischCommand extends Command
         {--rueckweg= : Journal-Datei eines --apply-Laufs zurückspielen}
         {--json= : Report zusätzlich als JSON in diese Datei schreiben}';
 
-    protected $description = 'Plan 98 B: freie Grammaturen → aus Bestandteilen bzw. Portionen (Trockenlauf, Journal, Rückweg, Report).';
+    protected $description = 'Plan 98 B: freie Grammaturen → Summe der Bestandteile, Gericht = eine Portion (Trockenlauf, Journal, Rückweg, Report, Entscheidungsliste).';
 
     public function handle(GrammaturUmstellungService $umstellung): int
     {
@@ -75,7 +75,7 @@ class GrammaturAutomatischCommand extends Command
             $preis = fn (?array $m) => $m === null ? '–' : sprintf('%s g · EK %s · VK %s', $m['gramm'] ?? '–', $m['ek_portion'] ?? '–', $m['sales_net'] ?? '–');
             $this->line(sprintf('%-17s R%d T%d %s · D%d%s · %s%s', strtoupper($d['kategorie']), $r['recipe_id'], $r['team_id'], $r['name'],
                 $d['darreichung_id'], $d['standard'] ? ' (Standard)' : '', $d['aktion'],
-                $d['portionen'] !== null ? " {$d['portionen']} P ({$d['portionen_quelle']})" : ''));
+                $d['standard'] && $d['fester_ertrag'] ? ' · FESTER ERTRAG (vorläufig Weg A, wartet auf Dominique)' : ''));
             $this->line(sprintf('    alt %s → neu %s · Grammatur %s %% · Preismodus %s → %s',
                 $preis($d['alt']), $preis($d['neu']), $d['gramm_prozent'] ?? '–', $d['alt']['price_mode'] ?? '–', $d['neu']['price_mode']));
             if ($d['unterschiede'] !== []) {
@@ -108,6 +108,16 @@ class GrammaturAutomatischCommand extends Command
                     $t, $team, $s['rezepte'], $s['max_prozent'] ?? '–', $s['max_recipe_id'] ?? '–', $s['ab_warnschwelle'],
                     GrammaturMessung::SPRUNG_WARN_PROZENT);
                 $s['ab_warnschwelle'] > 0 ? $this->warn($zeile) : $this->line($zeile);
+            }
+        }
+        // Kurator 23.11.: Entscheidungsliste für Dominique — Standards, deren freie Grammatur von der Summe der Bestandteile abweicht
+        $liste = $zeilen->filter(fn ($d) => $d['standard'] && in_array('gramm', $d['unterschiede'], true));
+        if ($liste->isNotEmpty()) {
+            $this->warn('Entscheidungsliste — freie Grammatur ≠ Summe der Bestandteile (Gericht = eine Portion):');
+            foreach ($liste as $d) {
+                $this->line(sprintf('    R%d T%d %s: Grammatur %s g → Summe %s g · EK je Portion %s → %s%s', $d['rezept']['recipe_id'], $d['rezept']['team_id'],
+                    $d['rezept']['name'], $d['alt']['gramm'] ?? '–', $d['neu']['gramm'] ?? '–', $d['alt']['ek_portion'] ?? '–', $d['neu']['ek_portion'] ?? '–',
+                    $d['fester_ertrag'] ? ' · fester Ertrag (Weg A, Rohgewicht)' : ''));
             }
         }
         $kat = $zeilen->countBy('kategorie');

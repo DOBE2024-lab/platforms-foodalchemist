@@ -12,14 +12,17 @@ use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Support\FremdSchreiben;
 
 /**
- * Plan 98 B · Grammatur „immer automatisch“ für den Bestand (Entscheide Dominique 22.11.2026, Kurator 23.11.2026).
+ * Plan 98 B · Grammatur „immer automatisch“ für den Bestand (Entscheide Dominique 22.11.2026, Modell 23.11.2026: ein Gericht
+ * ist EINE Portion — „die sind alle auf eine Portion angelegt“).
  *
  * Kandidat ist jede Darreichung mit freier Grammatur: menge_vom_standard = 0 und keine Deltas.
- * - Standard mit ableitbarer Portionszahl → Rezept bekommt sales_unit_count, der Standard rechnet „wie Rezept“ (Bestandteile ÷ Portionen).
- *   Portionen: die des Rezepts, wenn Ertrag ÷ Portionen höchstens 25 % von der Grammatur abweicht (eingefrorene Formelwerte,
- *   Rezept 80); sonst Ertrag ÷ Grammatur, wenn das bis auf 2 % ganzzahlig ist.
- * - sonst, und für jede freie Variante: Weg A ({@see DarreichungService::fixiereKomposition}) — die Komposition wird als Deltas
- *   festgehalten, EK und Produktionsmengen bleiben, die Grammatur wird zur Summe der Bestandteile (bei festem Ertrag das Rohgewicht).
+ * - Standard → automatisch: die Grammatur ist die Summe der Bestandteile (menge_vom_standard, ohne Deltas). Die Zutatenmengen
+ *   werden NICHT angefasst; die Portionszahl bleibt bzw. wird 1 (leer gilt als 1, es wird nie ein anderer Wert gesetzt).
+ *   Weicht die freie Grammatur von der Summe ab, zeigt der Lauf alte Grammatur, neue Summe und EK je Portion vorher/nachher —
+ *   Entscheidungsliste für Dominique (z. B. io Rezept 80: 60 → 64 g).
+ * - Standard mit festem Ertrag: vorläufig Weg A ({@see DarreichungService::fixiereKomposition}), eigens markiert, bis Dominique
+ *   bestätigt — die Komposition wird als Deltas festgehalten, EK und Produktionsmengen bleiben, die Grammatur wird zum Rohgewicht.
+ * - Jede freie Variante: Weg A.
  * - nicht ableitbar (keine Bestandteile, keine Grammatur): bleibt unberührt, nie wird still 0 geschrieben.
  *
  * Ablauf in EINER Transaktion: Phase 0 Normal-Neuberechnung (damit alte Caches nicht als Abweichung der Umstellung erscheinen),
@@ -27,10 +30,6 @@ use Platform\FoodAlchemist\Support\FremdSchreiben;
  */
 final class GrammaturUmstellungService
 {
-    public const PORTIONEN_GANZZAHL_TOL = 0.02;
-
-    public const PORTIONEN_REZEPT_TOL = 0.25;
-
     public function __construct(
         private DarreichungService $darreichungen,
         private RecipeRecomputeService $recompute,
@@ -208,24 +207,17 @@ final class GrammaturUmstellungService
     private function aktion(FoodAlchemistRecipe $r, FoodAlchemistRecipeDarreichung $d, array $kenn): array
     {
         $z = ['darreichung_id' => (int) $d->id, 'standard' => (bool) $d->is_standard, 'name' => $d->name, 'aktion' => 'nicht_ableitbar',
-            'portionen' => null, 'portionen_quelle' => null, 'grund' => null];
+            'fester_ertrag' => (bool) $kenn['fester_ertrag'], 'grund' => null];
         $g = $this->darreichungen->grammJeEinheit($d, $r);
         if ($kenn['zutaten'] === 0 || $kenn['b_g'] <= 0) {
             return ['grund' => 'keine Bestandteile mit Menge'] + $z;
         }
         if ($g === null || $g <= 0) {
-            return ['grund' => 'keine Grammatur und keine Portionszahl'] + $z;
+            return ['grund' => 'keine Grammatur'] + $z;
         }
-        if ($d->is_standard && $kenn['y_g'] !== null) {
-            $suc = $kenn['portionen'];
-            if ($suc !== null && $suc >= 1 && abs($kenn['y_g'] / $suc - $g) / $g <= self::PORTIONEN_REZEPT_TOL) {
-                return ['aktion' => 'portionen', 'portionen' => $suc, 'portionen_quelle' => 'Rezept'] + $z;
-            }
-            $p = $kenn['y_g'] / $g;
-            $rund = (int) round($p);
-            if ($rund >= 1 && abs($p - $rund) / $rund <= self::PORTIONEN_GANZZAHL_TOL) {
-                return ['aktion' => 'portionen', 'portionen' => $rund, 'portionen_quelle' => 'Ertrag ÷ Grammatur'] + $z;
-            }
+        // Standard ohne festen Ertrag → Summe der Bestandteile; mit festem Ertrag vorläufig Weg A (Kurator 23.11.)
+        if ($d->is_standard && ! $kenn['fester_ertrag']) {
+            return ['aktion' => 'summe'] + $z;
         }
 
         return ['aktion' => 'komposition'] + $z;
@@ -251,11 +243,14 @@ final class GrammaturUmstellungService
                         DB::table('foodalchemist_recipe_presentations')->where('id', $d->id)->update(['komponenten_referenz_g' => $g, 'updated_at' => now()]);
                         $zaehle('foodalchemist_recipe_presentation_deltas', $p['team_id'], $d->deltas()->count());
                         $zaehle('foodalchemist_recipe_presentations', $p['team_id']);
-                    } elseif ($z['aktion'] === 'portionen') {
-                        DB::table('foodalchemist_recipes')->where('id', $r->id)->update(['sales_unit_count' => $z['portionen'], 'updated_at' => now()]);
+                    } elseif ($z['aktion'] === 'summe') {
+                        // Modell 23.11.: Portionszahl 1 (leer gilt als 1) — nur ein Altbestand > 1 wird auf 1 gesetzt, nie ein anderer Wert
+                        if ((int) ($r->sales_unit_count ?? 1) > 1) {
+                            DB::table('foodalchemist_recipes')->where('id', $r->id)->update(['sales_unit_count' => 1, 'updated_at' => now()]);
+                            $zaehle('foodalchemist_recipes', $p['team_id']);
+                        }
                         DB::table('foodalchemist_recipe_presentations')->where('id', $d->id)
                             ->update(['menge_vom_standard' => true, 'komponenten_referenz_g' => null, 'updated_at' => now()]);
-                        $zaehle('foodalchemist_recipes', $p['team_id']);
                         $zaehle('foodalchemist_recipe_presentations', $p['team_id']);
                     }
                     $standardNeu = $standardNeu || ($z['standard'] && $z['aktion'] !== 'nicht_ableitbar');
@@ -321,7 +316,7 @@ final class GrammaturUmstellungService
                     $hinweis = 'nicht umgestellt, aber verändert ('.implode(', ', $diff).')';
                 }
                 $zeilen[] = ['darreichung_id' => $id, 'standard' => $n['standard'], 'aktion' => $akt['aktion'] ?? 'folgt_standard',
-                    'portionen' => $akt['portionen'] ?? null, 'portionen_quelle' => $akt['portionen_quelle'] ?? null, 'grund' => $akt['grund'] ?? null,
+                    'fester_ertrag' => (bool) $alt[$p['recipe_id']]['rezept']['fester_ertrag'], 'grund' => $akt['grund'] ?? null,
                     'kategorie' => $kat, 'unterschiede' => $diff, 'hinweis' => $hinweis ?? $this->hinweis($diff, $alt[$p['recipe_id']]['rezept']),
                     'gramm_prozent' => GrammaturMessung::prozent($a['gramm'] ?? null, $n['gramm']), 'alt' => $a, 'neu' => $n];
             }

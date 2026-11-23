@@ -1,4 +1,22 @@
 {
+    "Services/GpAggregateService.php": {
+        "rueckkante NaehrwertAggregatService": 1
+    },
+    "Services/GpMasseService.php": {
+        "rueckkante DarreichungService": 1
+    },
+    "Services/GpPaketImportService.php": {
+        "rueckkante KostenCacheService": 1
+    },
+    "Services/InventurService.php": {
+        "rueckkante RecipeRecomputeService": 1
+    },
+    "Services/LeadLaService.php": {
+        "rueckkante KostenCacheService": 1
+    },
+    "Services/PriceService.php": {
+        "rueckkante KostenCacheService": 1
+    },
     "_graph": {
         "groesste_kreis_komponente": 12,
         "klassen_in_kreisen": 60

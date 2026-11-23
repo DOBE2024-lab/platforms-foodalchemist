@@ -7,14 +7,24 @@ namespace Platform\FoodAlchemist\Tests\Support;
  *
  * Kante A → B, wenn A die Service-Klasse B nutzt: `B::class`, `B::methode(`, Typ-Hinweis `B $x`, `new B`. Kommentare zählen nicht.
  * Schichten (unten → oben); erlaubt sind Kanten nach unten und innerhalb einer Schicht:
- *   0 Basis        Kaskaden-Status (KaskadenSchritt). GP-Stamm, Wissen, Pairing/Kombinationslogik rufen heute in beide
- *                  Richtungen (z. B. GpService → RecipeRecompute, PairingService ↔ Rezept-Generator) und bleiben vorerst neutral.
+ *   0 Basis        Kaskaden-Status (KaskadenSchritt); seit 3.3 S7 P6 (K2) auch GP-Stamm, Lieferanten-Artikel (LA), Leitartikel,
+ *                  Lieferanten, Preise, Lager/Inventur, Wissen/KI, Vokabular, Matching (IngredientMatch, Match*) und die
+ *                  Schnittstelle NeuberechnungRezepte. Pairing/Kombinationslogik bleibt neutral (Rest-Kreis Wissen/Pairing).
  *   1 Rezept       Rezept, Darreichung, Recompute, Kosten, Nährwert/Allergen, Produktionszeit
  *   2 Concepter    Concept, Paket, Format
  *   3 Ausgabe      Foodbook, Angebot/Offer, Speisekarte, Speiseplan, Präsentation, Report, Planungsblatt, Bestellung
+ *                  (dazu Wareneingang und Lieferanten-Rechnung: Einkauf an der Bestellung)
  *   4 Orchestrierung  Planung (Kaskade), PricingCascadeService — darf in alle Schichten nach unten
- * Nicht zugeordnete Services (u. a. Einkauf, Lager, Lieferanten, GP-Stamm, Wissen) sind neutral: Ihre Zuordnung kommt in 3.3
- * bzw. 3.8 (Kurator 22.11.). Ziel 3.3: die große Kreis-Komponente abbauen, 0 Rückkanten.
+ * Nicht zugeordnete Services bleiben neutral. 3.3 S7: Rückkanten 2 → 0 (P5); mit K2 (P6, Kurator 23.11. Variante B) kommen 6
+ * Rückkanten als Bestand der neuen Regel in die Baseline. Abbau-Folgepunkte je Kante:
+ *   - GpAggregateService → NaehrwertAggregatService       Nährwert-Aggregat des GP; Lesemodell nach Basis oder Event
+ *   - GpMasseService → DarreichungService                  Masse-Umrechnung liest die Darreichung; Lese-Schnittstelle (K3)
+ *   - GpPaketImportService → KostenCacheService            Kosten-Cache „veraltet“ nach Import; Event wie TeamKostenGeaendert
+ *   - LeadLaService → KostenCacheService                   dto. nach Leitartikel-Wechsel
+ *   - PriceService → KostenCacheService                    dto. nach Preisänderung
+ *   - InventurService → RecipeRecomputeService             Lesewerte preisProGramm/Stück, letzterPreisGenutzt; Lese-Schnittstelle
+ * Dazu die neutralen Lese-Wege aus P4 (SignalDetektor, BehaelterBedarf, ProduktionsVerbrauch, ZutatenZielSuche, Sensorik,
+ * HardstopResolve → RecipeRecomputeService), die erst mit ihrer Zuordnung zählen.
  */
 final class AbhaengigkeitsGraph
 {
@@ -28,6 +38,11 @@ final class AbhaengigkeitsGraph
         'PlanungsblattService' => 3,
         'ConceptPreisService' => 2,
         'PlanningFrameService' => 2,         // Planungsrahmen (Slots wie Concept/Format), keine Kaskaden-Orchestrierung
+        // 3.3 S7 P6 (K2, Variante B)
+        'WareneingangService' => 3,          // Einkauf an der Bestellung (OrderService), kein Stamm
+        'LieferantenRechnungService' => 3,   // dto.
+        'RecipeKnowledgeRun' => 0,           // Wert-Objekt in Services/Knowledge (Kanonstand eines Laufs), Name trügt
+        'IngredientMatchService' => 0,       // Zutat-String → GP/Sub-Rezept; ruft keine Rezept-Dienste, wird von ihnen gerufen
     ];
 
     /** Präfix → Schicht, erste passende Regel gewinnt. */
@@ -36,6 +51,8 @@ final class AbhaengigkeitsGraph
         '/^(Foodbook|Offer|Angebot|Speisekarte|Speiseplan|Report|Order|Bestell)/' => 3,
         '/^(Concept|Paket|Format)/' => 2,
         '/^(Recipe|Rezept|Darreichung|Ingredient|Naehrwert|Allergen|Kosten|ProductionTime|Gericht|SubRecipe)/' => 1,
+        // 3.3 S7 P6 (K2): Basis — GP-Stamm, LA, Leitartikel, Lieferanten, Preise, Lager/Inventur, Wissen/KI, Vokabular, Matching
+        '/^(Gp|La[A-Z]|LeadLa|Supplier|Lieferant|Price|LetzterPreis|Aktionspreis|Lager|Inventur|Inventory|Wareneingang|Knowledge|AiGateway|KiAuftrag|Vocabulary|Match|NeuberechnungRezepte)/' => 0,
     ];
 
     /** @return array<string, string> Klasse => Pfad relativ zu src (nur Services) */

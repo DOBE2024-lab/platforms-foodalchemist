@@ -31,8 +31,9 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  *    liegt in KaskadenSchritt (Extraktion, kein Event: synchroner Schreiber mit Lauf-Sperre, Kurator 22.11.); die Folge eines
  *    abgeschlossenen Steps hängt am synchronen Event KaskadenSchrittAbgeschlossen.
  *  - Rezept → Preisweitergabe (RecipeRecompute, Darreichung → PricingCascade/PaketService) über synchrone Events.
- * Einkauf, Lager, Lieferanten, GP-Stamm und Wissen sind vorerst neutral; ihre Zuordnung kommt in 3.3 bzw. 3.8, dort auch der
- * Abbau der großen Kreis-Komponente (Ziel 0 Rückkanten). Bis dahin halten die Klinken den Stand.
+ * 3.3 S7: große Kreis-Komponente 112 → 12 (Rest Wissen/Pairing), Rückkanten 2 → 0 (P5). Mit K2 (P6) sind GP-Stamm, Lieferanten,
+ * Preise, Lager/Inventur, Wissen/KI und Matching der Basis zugeordnet; die dabei sichtbaren 6 Rückkanten stehen als Bestand in der
+ * Baseline, die Abbau-Liste in {@see AbhaengigkeitsGraph}. Die Klinken halten den Stand.
  */
 function richtungSrc(): string
 {

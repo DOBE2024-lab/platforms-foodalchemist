@@ -35,8 +35,9 @@ use Platform\FoodAlchemist\Services\PresentationService;
  *  - `tausch`     eigene, aktive Verwendung — wird beim Ersetzen umgehängt
  *  - `haken`      aktives Foodbook (Status aktiv oder live Präsentation) bzw. Katalog-Konzept daran — nur mit dem Haken
  *                 „auch aktive Foodbooks“ (Live-Inhalt beim Kunden ändert sich, eingefrorene Snapshots bleiben)
- *  - `bleibt`     aktiv, aber hier nicht tauschbar (fremdes Team, eingefrorenes oder manuell bepreistes Angebot, Einheit
- *                 passt nicht, offene Produktion, Abo) — sperrt das Löschen, mit Namen
+ *  - `bleibt`     aktiv, aber hier nicht tauschbar (fremdes Team, eingefrorenes offenes Angebot, offene Produktion, Abo)
+ *                 — sperrt das Löschen, mit Namen. Offene Angebote mit manuellem Preis werden getauscht, der Preis bleibt
+ *                 (Hinweis „Preis manuell – bitte prüfen“, Dominique 23.11.)
  *  - `historisch` Vergangenheit: vergangene Speiseplan-Tage, abgelaufene Speisekarten, versendete/angenommene/abgelehnte
  *                 Angebote, inaktive/archivierte Foodbooks, abgeschlossene Produktion, Archiv-Konzepte — sperrt nicht,
  *                 behält das weich gelöschte Gericht als Verweis
@@ -303,8 +304,8 @@ final class GerichtVerwendungen
         if (FoodAlchemistAngebotEinfrierung::where('angebot_id', $angebot->id)->whereNull('verworfen_at')->exists()) {
             return ['status' => 'bleibt', 'grund' => 'Angebot eingefroren (Stand der Abo-Rezepte)', 'hinweis' => null];
         }
-        if (($angebot->price_mode ?? 'auto') !== 'auto') {
-            return ['status' => 'bleibt', 'grund' => 'Angebot mit manuellem Preis', 'hinweis' => null];
+        if (($angebot->price_mode ?? 'auto') !== 'auto') {   // Dominique 23.11.: Inhalt tauschen, manueller Preis bleibt
+            return ['status' => 'tausch', 'grund' => null, 'hinweis' => 'Preis manuell – bitte prüfen'];
         }
 
         return ['status' => 'tausch', 'grund' => null, 'hinweis' => null];

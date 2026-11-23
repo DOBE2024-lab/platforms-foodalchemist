@@ -27,7 +27,8 @@ use Platform\FoodAlchemist\Services\SpeiseplanService;
  *
  * Grundsatz „überall ersetzen, danach einwandfrei löschen“: Nach einem vollständigen Tausch (inklusive Haken „auch aktive
  * Foodbooks“) ist das Löschen für das eigene Team frei. Sperren bleiben nur aktive Nutzung anderer Teams, eingefrorene
- * oder manuell bepreiste offene Angebote, offene Produktion und laufende Abos — jeweils mit Namen.
+ * offene Angebote, offene Produktion und laufende Abos — jeweils mit Namen. Offene Angebote mit manuellem Preis werden
+ * getauscht, der Preis bleibt (Hinweis „Preis manuell – bitte prüfen“).
  *
  * Geschrieben wird ausschließlich über die vorhandenen Schreibwege (fillSlot/setSlotDarreichung/setSlotWording,
  * RecipeService::ersetzeInVerwendungen, SpeiseplanService::ersetzeEintrag, SpeisekarteService::updatePosition,
@@ -98,7 +99,7 @@ final class GerichtTauschService
             app(PricingCascadeService::class)->recomputeRecipes([(int) $nach->id, (int) $von->id]);   // Konzepte + Angebote am Konzept
             $angebote = app(AngebotService::class);
             foreach (FoodAlchemistAngebot::whereIn('id', $erg['angebote'])->get() as $a) {   // Kapitel-Blöcke hängen an keinem Konzept
-                if ($this->verwendungen->istOffen($a) && ($a->price_mode ?? 'auto') === 'auto') {
+                if ($this->verwendungen->istOffen($a)) {   // manueller Preis bleibt: aktualisiereAutoPreis schreibt dann nur die Kalkulation
                     $angebote->aktualisiereAutoPreis($team, $a);
                 }
             }
@@ -263,7 +264,7 @@ final class GerichtTauschService
     /**
      * F4: Preis vorher/nachher je offenem Angebot, exakt: Konzepte und Angebote probeweise tauschen, kalkulieren, zurückrollen.
      *
-     * @return list<array{id:int, name:string, preis_vorher:?float, preis_nachher:?float}>
+     * @return list<array{id:int, name:string, preis_vorher:?float, preis_nachher:?float, preis_manuell:bool}>
      */
     private function angebotsPreise(Team $team, FoodAlchemistRecipe $von, FoodAlchemistRecipe $nach, array $alle, bool $auchAktiveFoodbooks): array
     {
@@ -290,7 +291,8 @@ final class GerichtTauschService
         }
 
         return $angebote->map(fn ($a) => ['id' => (int) $a->id, 'name' => (string) $a->name,
-            'preis_vorher' => $vorher[$a->id], 'preis_nachher' => $nachher[$a->id] ?? null])->all();
+            'preis_vorher' => $vorher[$a->id], 'preis_nachher' => $nachher[$a->id] ?? null,
+            'preis_manuell' => ($a->price_mode ?? 'auto') !== 'auto'])->all();   // manueller Preis bleibt — nur Kalkulation zum Prüfen
     }
 
     private function autoGesamt(AngebotService $svc, Team $team, FoodAlchemistAngebot $a): ?float

@@ -114,18 +114,28 @@ it('Speisekarte: gültige Karte getauscht (Wording zurück), abgelaufene bleibt'
         ->and((int) $alt->fresh()->sales_recipe_id)->toBe($this->alt->id);
 });
 
-it('Angebote: nur offene auto-Angebote; versendete historisch, manuelle bleiben und sperren', function () {
+it('Angebote: offene getauscht (manueller Preis bleibt, Hinweis), versendete historisch, eingefrorene bleiben', function () {
     $offen = gtAngebot($this, 'Hochzeit', 'anfrage');
     $versendet = gtAngebot($this, 'Firmenfeier', 'versendet');
     $manuell = gtAngebot($this, 'Jubiläum', 'in_arbeit', 'manual');
+    $manuellId = $manuell->chapter->offer_id;
+    FoodAlchemistAngebot::whereKey($manuellId)->update(['total_price' => 999.0]);
+    $eingefroren = gtAngebot($this, 'Gala', 'angebot');
+    \Platform\FoodAlchemist\Models\FoodAlchemistAngebotEinfrierung::create(['team_id' => $this->t->id, 'angebot_id' => $eingefroren->chapter->offer_id, 'status_beim_einfrieren' => 'angebot', 'eingefroren_at' => now()]);
+
+    $v = $this->svc->vorschau($this->t, $this->alt->id, $this->neu->id);
+    expect(collect($v['bereiche']['angebote']['eintraege'])->firstWhere('ort', 'Angebot „Jubiläum“')['hinweis'])->toBe('Preis manuell – bitte prüfen')
+        ->and(collect($v['bereiche']['angebote']['preise'])->firstWhere('name', 'Jubiläum')['preis_manuell'])->toBeTrue();
 
     $e = $this->svc->ersetze($this->t, $this->alt->id, $this->neu->id);
 
     expect((int) $offen->fresh()->sales_recipe_id)->toBe($this->neu->id)
+        ->and((int) $manuell->fresh()->sales_recipe_id)->toBe($this->neu->id)
+        ->and((float) FoodAlchemistAngebot::find($manuellId)->total_price)->toBe(999.0)   // manueller Preis bleibt
         ->and((int) $versendet->fresh()->sales_recipe_id)->toBe($this->alt->id)
-        ->and((int) $manuell->fresh()->sales_recipe_id)->toBe($this->alt->id)
-        ->and($e['angebote_neu_berechnet'])->toBe(1)
-        ->and(collect($e['bleibt'])->pluck('grund')->all())->toContain('Angebot mit manuellem Preis');
+        ->and((int) $eingefroren->fresh()->sales_recipe_id)->toBe($this->alt->id)
+        ->and(collect($e['bleibt'])->pluck('grund')->all())->toContain('Angebot eingefroren (Stand der Abo-Rezepte)')
+        ->and(app(GerichtVerwendungen::class)->loeschBilanz($this->t, $this->alt->id)['aktiv'])->toHaveCount(1);   // nur das eingefrorene sperrt
 });
 
 it('Foodbooks: Entwurf getauscht, aktives nur mit Haken, inaktives historisch', function () {

@@ -5,8 +5,10 @@
     $hinweisText = 'fa-t-muted';   // gleicher Wert wie der Parent-Hinweistext (Token statt Einzelwert)
     $ausgabeRaster = 'grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 items-start';
 @endphp
-@if($ort === 'board')
+{{-- EINE Wurzel außerhalb des @if: Livewire 4 setzt um @if Kommentar-Marker (<!--[if BLOCK]>); als erstes Element würde der
+     Kind-Tag leer erkannt („Invalid Livewire child tag name“ beim nächsten Render des Parents). --}}
 <div class="contents">
+@if($ort === 'board')
     {{-- Spec 42 F1: ein ganzes Foodbook aus einem Brief planen. Rahmen (Gerüst/Struktur) + Inhalte
          entstehen HIER in der Leitstelle; das Foodbook ist reine Ausgabe. --}}
     <x-fa::section x-show="fbOpen" x-cloak icon="heroicon-o-book-open" title="Foodbook aus einem Brief planen"
@@ -129,9 +131,7 @@
             </div>
         </div>
     </x-fa::section>
-</div>
 @else
-<div class="contents">
     {{-- AUSGABE-FORMEN (Spec-42-Vollzug): aus einem Brief plant die Leitstelle die ganze Ausgabeform
          (owner-getaggte Voll-Kaskade), die Inhalte landen automatisch dort. Gleiche Bauart überall:
          Auswahl links (schmaler), Brief rechts, ab xl nebeneinander. Jede Karte steckt in einem eigenen
@@ -401,5 +401,5 @@
             </div>
         </div>
     </div>
-</div>
 @endif
+</div>

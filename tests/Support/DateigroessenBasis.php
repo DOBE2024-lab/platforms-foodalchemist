@@ -6,7 +6,6 @@
 
 return [
     'src/Services/OrderService.php' => [1877, 'C2 Bestell-Cluster (Spec 85 §6); Zerlegen nach Services/Bestellung (98 · 3.3 S5)'],
-    'src/Services/FoodbookService.php' => [2353, 'mit C4 (Spec 85 §8/§9); −11 durch WordingResolver::wordingPositionen (Spec 94); −21 Format-Kapitel → FormatKapitelService; −26 Block-Referenzprüfung → Support\BlockReferenz (CQ 1.1j); −1 Duplikat-Bilder → DuplikatBilderService (CQ Bild-Löschschutz 2)'],
     'src/Services/PairingService.php' => [2588, 'Lesen / Bewerten / Pflege (Spec 85 §9)'],
     'src/Services/Ai/KnowledgeContextService.php' => [2170, 'Routing / Budget / Prompt-Bau (Spec 85 §9)'],
     'src/Services/DataQualityService.php' => [2040, 'Metriken je Bereich (Spec 85 §9)'],

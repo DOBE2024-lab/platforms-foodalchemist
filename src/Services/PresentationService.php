@@ -644,7 +644,7 @@ class PresentationService
     {
         // mitKaskade=false → Kaskaden-Leak (EK/Lieferant) entsteht gar nicht erst.
         // mitTexten (2026-11-19): Text-Bausteine des Konzepts („serviert im Schraubglas“) kamen im Foodbook-Link nie an — im Angebot schon.
-        $dok = app(FoodbookService::class)->dokumentDaten($team, $fb, $this->mitEk, [], false, $outlet, false, true);
+        $dok = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookDokumentQuelle::class)->dokumentDaten($team, $fb, $this->mitEk, [], false, $outlet, false, true);   // 98 · 3.3 S4-0k
 
         $showPrice = (bool) $settings['price_display'];
         $showDecl = (bool) $settings['declaration'];

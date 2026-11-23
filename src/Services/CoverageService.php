@@ -32,7 +32,7 @@ class CoverageService
     public function __construct(
         private PlanningFrameService $frames,
         private ConceptService $concepts,
-        private FoodbookService $foodbooks,
+        private \Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregatQuelle $foodbooks,   // 98 · 3.3 S4-0k: Lese-Rückweg über Schnittstelle
     ) {}
 
     private const AMPEL_RANG = ['info' => 0, 'erfuellt' => 1, 'teilerfuellt' => 2, 'verletzt' => 3];

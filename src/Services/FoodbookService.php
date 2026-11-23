@@ -30,13 +30,19 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTargetGroup;
  *
  * Scope-Härte: visibleToTeam in JEDER Query; Schreiben nur durchs Besitzer-Team.
  */
-class FoodbookService
+class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\FoodbookAggregatQuelle
 {
     use PruefstOutletZuordnung;
 
-    public function __construct(private ConceptService $concepts)
-    {
-    }
+    public function __construct(
+        private ConceptService $concepts,
+        private Foodbook\FoodbookBasis $basis,
+        private Foodbook\FoodbookKapitelBild $kapitelBild,
+        private Foodbook\FoodbookVokabular $vokabular,
+        private Foodbook\FoodbookKundentext $kundentext,
+        private Foodbook\FoodbookAggregat $aggregat,
+        private Foodbook\FoodbookDokument $dokument,
+    ) {}
 
     public function paginateBrowser(array $filters, Team $team, int $perPage = 100): LengthAwarePaginator
     {
@@ -78,14 +84,7 @@ class FoodbookService
 
     public function detail(Team $team, int $id): ?FoodAlchemistFoodbook
     {
-        return FoodAlchemistFoodbook::visibleToTeam($team)
-            ->with(['chapters' => fn ($q) => $q->orderBy('position'),
-                'chapters.blocks' => fn ($q) => $q->orderBy('position'),
-                'chapters.blocks.concept:id,name,price_per_person_cache,price_display,price_incomplete,team_id,ist_fassung,price_mode,price_per_person_manual,price_override_expires_at',   // price_display → Editor-Chip istEinzelpreis
-                'chapters.blocks.dish:id,name,ek_total_eur,sales_unit_count', 'chapters.blocks.dish.standardPresentation',   // Spec 85: EK je Portion (blockPreis)
-                'crmCompany', 'crmContact',   // #369: CRM-Kunde-Link
-                'serviceMoments', 'targetGroups', 'defaultEventType', 'defaultServingForm']) // Spec 19 E3.3: Bedarf-Defaults
-            ->find($id);
+        return $this->basis->detail($team, $id);   // 98 · 3.3 S4-3: Lesemodell in Foodbook\FoodbookBasis (Kundentext liest es)
     }
 
     // ── Foodbook ────────────────────────────────────────────────────────────
@@ -210,319 +209,68 @@ class FoodbookService
         });
     }
 
-    // ── Spec 19 E3.3: Bedarf — Foodbook-Default-Dimensionen (kaskadieren als Boden) ──
+    // ── Spec 19 E3.3/E3.5 + #369: Zielgruppen-Vokabular, Default-Dimensionen, Leitplanken, CRM-Suche —
+    //    98 · 3.3 S4-2: in Foodbook\FoodbookVokabular, hier Fassade ──
 
-    /** Default-Einsatzmoment (Tagesablauf) an/abwählen — 1–n-Pivot foodbook_service_moments. */
     public function toggleEinsatzmoment(Team $team, int $fbId, int $momentId): void
     {
-        $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($fbId);
-        $this->guard($fb, $team);
-        $fb->serviceMoments()->allRelatedIds()->contains($momentId) || \Platform\FoodAlchemist\Support\Verweisziel::pruefe(\Platform\FoodAlchemist\Models\FoodAlchemistEinsatzmoment::class, $team, $momentId, 'Einsatzmoment');
-        $fb->serviceMoments()->toggle([$momentId]);
+        $this->vokabular->toggleEinsatzmoment($team, $fbId, $momentId);
     }
 
-    /** Default-Zielgruppe an/abwählen — 1–n-Pivot foodbook_target_groups (Entscheidung 4). */
     public function toggleZielgruppe(Team $team, int $fbId, int $targetGroupId): void
     {
-        $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($fbId);
-        $this->guard($fb, $team);
-        $fb->targetGroups()->allRelatedIds()->contains($targetGroupId) || \Platform\FoodAlchemist\Support\Verweisziel::pruefe(FoodAlchemistTargetGroup::class, $team, $targetGroupId, 'Zielgruppe');
-        $fb->targetGroups()->toggle([$targetGroupId]);
+        $this->vokabular->toggleZielgruppe($team, $fbId, $targetGroupId);
     }
 
-    /**
-     * Spec 19 E4.6: Zielgruppen eines Kapitels setzen (PUT-Semantik — `sync` auf die genaue Liste; leeres Array = alle entfernen).
-     * Kapitel-Zielgruppen überschreiben den Foodbook-Default in der Kaskade (leitplanken()/zielgruppenKaskade). Neue IDs
-     * müssen team-sichtbares Vokabular sein (Entscheidung 6; CQ 2.3f: hier geprüft, nicht nur im MCP-Guard).
-     *
-     * @param  list<int>  $ids
-     */
     public function setKapitelZielgruppen(Team $team, int $kapitelId, array $ids): void
     {
-        $k = $this->ownedKapitel($team, $kapitelId);
-        \Platform\FoodAlchemist\Support\Verweisziel::pruefeIds(FoodAlchemistTargetGroup::class, $team, array_diff($ids, $k->targetGroups()->allRelatedIds()->all()), 'Zielgruppe');
-        $k->targetGroups()->sync(array_values(array_unique(array_map('intval', $ids))));
+        $this->vokabular->setKapitelZielgruppen($team, $kapitelId, $ids);
     }
 
-    // ── Spec 19 E3.5: Zielgruppen-Vokabular (MCP-Lesefläche + Anlage) ──
-
-    /**
-     * Team-sichtbares Zielgruppen-Vokabular (eigenes Team + Master-Kette), sortiert.
-     * Für `zielgruppen.GET` und die Bedarf-Sektion. Read-only.
-     */
     public function zielgruppenListe(Team $team, bool $inklInaktiv = true): Collection
     {
-        return FoodAlchemistTargetGroup::visibleToTeam($team)
-            ->when(! $inklInaktiv, fn ($q) => $q->where('is_inactive', false))
-            ->orderBy('sort_order')->orderBy('name')->get();
+        return $this->vokabular->zielgruppenListe($team, $inklInaktiv);
     }
 
-    /**
-     * Neue Zielgruppe anlegen (immer team-eigen). Dedup gegen das eigene Team
-     * (unique(team_id,name) — ein Kind-Team darf einen Master-Namen bewusst
-     * überschreiben). Wirft RuntimeException bei leerem/doppeltem Namen.
-     */
     public function zielgruppeAnlegen(Team $team, array $in): FoodAlchemistTargetGroup
     {
-        $name = trim((string) ($in['name'] ?? ''));
-        if ($name === '') {
-            throw new \RuntimeException('Name der Zielgruppe ist Pflicht.');
-        }
-        $doppelt = FoodAlchemistTargetGroup::where('team_id', $team->id)
-            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->exists();
-        if ($doppelt) {
-            throw new \RuntimeException("Zielgruppe «{$name}» existiert bereits.");
-        }
-
-        return FoodAlchemistTargetGroup::create([
-            'team_id' => $team->id,
-            'name' => $name,
-            'description' => trim((string) ($in['description'] ?? '')) ?: null,
-            'sort_order' => (int) ($in['sort_order'] ?? 100),
-            'is_inactive' => false,
-        ]);
+        return $this->vokabular->zielgruppeAnlegen($team, $in);
     }
 
-    /**
-     * Kreative Leitplanken auflösen: die effektive Guideline für Generierung + Vorschläge.
-     * Kaskade (spezifisch gewinnt): Kapitel/Konzept-Niveau (concept.level) → Foodbook-Default
-     * → Segment (aus Küchen-Typ). Niveau kanonisiert (haute → haute_cuisine). Convenience:
-     * Foodbook-Default → Segment. Kundentyp = Foodbook-Feld (kein Fallback). So kann ein
-     * Foodbook basic/hochwertig/premium tragen (Niveau je Kapitel), mit Foodbook-Default als Boden.
-     *
-     * Spec 19 E3.4: DER Auflösungs-Punkt für Vorschläge, Kickoff, Canvas, Anlage-Stempel. Wird
-     * ein Kapitel übergeben, kaskadieren die Dimensions-Keys Kapitel(+Eltern) → Foodbook → Segment
-     * (Segment-Boden nur niveau/convenience). `zielgruppen` kaskadiert über die M1-Pivots
-     * (Kapitel-Stempel schlägt Foodbook-Default). Eventtyp/Servierform/Einsatzmomente lösen
-     * vorerst nur auf Foodbook-Ebene auf — die Kapitel-Overrides sind M3-Spalten (E4.1) und werden
-     * dort in dieser Kaskade ergänzt. `quellen` protokolliert je Dimension die gewinnende Ebene.
-     *
-     * @return array{kundentyp: ?string, niveau: ?string, convenience: ?string, niveau_quelle: ?string,
-     *     zielgruppen: list<array{id:int, name:string}>, event_type_id: ?int, serving_form_id: ?int,
-     *     service_moment_ids: list<int>, quellen: array<string, ?string>}
-     */
     public function leitplanken(Team $team, FoodAlchemistFoodbook $fb, ?FoodAlchemistConcept $concept = null, ?FoodAlchemistFoodbookKapitel $kapitel = null): array
     {
-        $segment = app(TeamSettingsService::class)->segment($team);
-        $kapitelNiveau = TeamSettingsService::normNiveau($concept?->level);
-
-        $niveau = $kapitelNiveau ?? $fb->default_niveau ?? ($segment['niveau'] ?? null);
-        $niveauQuelle = $kapitelNiveau !== null ? 'kapitel'
-            : ($fb->default_niveau !== null ? 'foodbook'
-            : (($segment['niveau'] ?? null) !== null ? 'segment' : null));
-
-        // Zielgruppen: erstes Kapitel im Pfad (Kapitel → Eltern → …) mit eigener Stempelung
-        // gewinnt, sonst Foodbook-Default.
-        [$zielgruppen, $zgQuelle] = $this->zielgruppenKaskade($fb, $kapitel);
-
-        // Eventtyp/Servierform/Einsatzmomente: vorerst Foodbook-Default (Kapitel-Override = M3/E4.1).
-        $eventTypeId = $fb->default_event_type_id !== null ? (int) $fb->default_event_type_id : null;
-        $servingFormId = $fb->default_serving_form_id !== null ? (int) $fb->default_serving_form_id : null;
-        $serviceMomentIds = $fb->serviceMoments->map(fn ($m) => (int) $m->id)->values()->all();
-
-        // Kreativ-Modus (E9.1): Kaskade Kapitel → Foodbook → Code-Default 'hybrid'.
-        [$kreativModus, $kmQuelle] = $this->kreativModusRoh($fb, $kapitel);
-
-        return [
-            'kundentyp' => $fb->kundentyp,
-            'niveau' => $niveau,
-            'convenience' => $fb->default_convenience ?? ($segment['convenience'] ?? null),
-            'niveau_quelle' => $niveauQuelle,
-            'zielgruppen' => $zielgruppen,
-            'event_type_id' => $eventTypeId,
-            'serving_form_id' => $servingFormId,
-            'service_moment_ids' => $serviceMomentIds,
-            'creative_mode' => $kreativModus,
-            'quellen' => [
-                'niveau' => $niveauQuelle,
-                'zielgruppen' => $zgQuelle,
-                'event_type_id' => $eventTypeId !== null ? 'foodbook' : null,
-                'serving_form_id' => $servingFormId !== null ? 'foodbook' : null,
-                'service_moment_ids' => $serviceMomentIds !== [] ? 'foodbook' : null,
-                'creative_mode' => $kmQuelle,
-            ],
-        ];
+        return $this->vokabular->leitplanken($team, $fb, $concept, $kapitel);
     }
 
-    /**
-     * Spec 19 E9.1: Kreativ-Modus-Kaskade (roh, ohne Team-Guard — für leitplanken()).
-     * Kapitel.creative_mode → Foodbook.creative_mode_default → CREATIVE_MODE_DEFAULT ('hybrid').
-     * Unbekannte/ungültige Werte fallen auf den Default zurück (weiche Prüfung, Vokabular-Pflicht).
-     *
-     * @return array{0: string, 1: string} [modus, quelle('kapitel'|'foodbook'|'default')]
-     */
-    private function kreativModusRoh(FoodAlchemistFoodbook $fb, ?FoodAlchemistFoodbookKapitel $kapitel): array
-    {
-        $gueltig = FoodAlchemistFoodbookKapitel::CREATIVE_MODES;
-        $kapModus = $kapitel?->creative_mode;
-        if ($kapModus !== null && in_array($kapModus, $gueltig, true)) {
-            return [$kapModus, 'kapitel'];
-        }
-        $fbModus = $fb->creative_mode_default;
-        if ($fbModus !== null && in_array($fbModus, $gueltig, true)) {
-            return [$fbModus, 'foodbook'];
-        }
-
-        return [FoodAlchemistFoodbookKapitel::CREATIVE_MODE_DEFAULT, 'default'];
-    }
-
-    /**
-     * Spec 19 E9.1: aufgelöster Kreativ-Modus eines Kapitels (team-geguarded, öffentlich).
-     * Der Auflösungs-Punkt für den Kreativ-Tab (E9.4), die Pairing-Inspiration (E9.2) und MCP.
-     *
-     * @return array{modus: string, quelle: string, optionen: list<string>}
-     */
     public function kreativModus(Team $team, FoodAlchemistFoodbookKapitel $kapitel): array
     {
-        $kapitel = $this->ownedKapitel($team, (int) $kapitel->id);
-        [$modus, $quelle] = $this->kreativModusRoh($kapitel->foodbook, $kapitel);
-
-        return ['modus' => $modus, 'quelle' => $quelle, 'optionen' => FoodAlchemistFoodbookKapitel::CREATIVE_MODES];
+        return $this->vokabular->kreativModus($team, $kapitel);
     }
 
-    /**
-     * Spec 19 E3.4: Zielgruppen-Kaskade. Läuft das Kapitel und seine Eltern hoch; das erste mit
-     * eigener Stempelung gewinnt (Quelle 'kapitel'). Findet sich keine, greift der Foodbook-Default
-     * ('foodbook'). Nirgends gesetzt ⇒ leer + null. Zyklus-Schutz via `$besucht` (Baum ist über
-     * `moveKapitel` acyclisch, Guard aus Vorsicht).
-     *
-     * @return array{0: list<array{id:int, name:string}>, 1: ?string} [zielgruppen, quelle]
-     */
-    private function zielgruppenKaskade(FoodAlchemistFoodbook $fb, ?FoodAlchemistFoodbookKapitel $kapitel): array
-    {
-        $node = $kapitel;
-        $besucht = [];
-        while ($node !== null && ! isset($besucht[(int) $node->id])) {
-            $besucht[(int) $node->id] = true;
-            $zg = $node->targetGroups->map(fn ($t) => ['id' => (int) $t->id, 'name' => (string) $t->name])->values()->all();
-            if ($zg !== []) {
-                return [$zg, 'kapitel'];
-            }
-            $node = $node->parent;
-        }
-        $fbZg = $fb->targetGroups->map(fn ($t) => ['id' => (int) $t->id, 'name' => (string) $t->name])->values()->all();
-
-        return $fbZg !== [] ? [$fbZg, 'foodbook'] : [[], null];
-    }
-
-    /**
-     * Spec 19 E4.2: aufgelöste SOLL-Sicht eines Kapitels — die Mengen-/Preis-/WE-Ziele mit
-     * Vererbung **Kapitel → Eltern → Slot → Foodbook**. Pro Feld gewinnt der erste nicht-leere
-     * Wert entlang der Kette; `quellen[<feld>]` nennt die Herkunfts-Ebene
-     * ('kapitel'|'eltern'|'slot'|'foodbook'|null). Ergänzt `leitplanken()` (das die
-     * Zielgruppen/Dimensionen liefert) um die kapitel-scoped SOLL-Ziele. DER SOLL-Punkt für
-     * `pruefeKapitel` (E4.3), `wareneinsatzAmpel` (E4.4) und die Kapitel-Planung-Rail (E5.3).
-     *
-     * Feld-Ebenen: target_count/price_anchor/price_min/price_max kennen Slot-Fallback (der flache
-     * Slot trug die Ziele vor der E4.1-Stempelung); niveau/serving_form_id/target_food_cost_pct
-     * kennen Foodbook-Default; service_moment_id/pricing_mode nur die Kapitel-Kette (Foodbook führt
-     * Einsatzmomente als 1–n-Pivot, kein Einzel-Default).
-     *
-     * @return array{
-     *     target_count: ?int, price_anchor: ?float, price_min: ?float, price_max: ?float,
-     *     niveau: ?string, serving_form_id: ?int, service_moment_id: ?int, pricing_mode: ?string,
-     *     target_food_cost_pct: ?float, quellen: array<string, ?string>
-     * }
-     */
     public function kapitelZiele(Team $team, FoodAlchemistFoodbookKapitel $kapitel): array
     {
-        $kapitel = $this->ownedKapitel($team, (int) $kapitel->id);
-        $fb = $kapitel->foodbook;
-
-        // Kapitel-Kette: self + Eltern hoch (Zyklus-Guard aus Vorsicht — moveKapitel hält den Baum acyclisch).
-        $kette = [];
-        $node = $kapitel;
-        $besucht = [];
-        while ($node !== null && ! isset($besucht[(int) $node->id])) {
-            $besucht[(int) $node->id] = true;
-            $kette[] = $node;
-            $node = $node->parent;
-        }
-
-        // Ist-Bezug: der flache Planungs-Slot dieses Kapitels (Slot-Ziele als Fallback, falls das
-        // Kapitel-Feld leer ist — z.B. nach manuellem Reset oder bei Kapiteln ohne Stempelung).
-        $slot = \Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrameSlot::where('chapter_id', $kapitel->id)->first();
-
-        $quellen = [];
-        $gesetzt = static fn ($w): bool => $w !== null && $w !== '';
-        $resolve = function (string $feld, $slotWert, $fbWert) use ($kette, $slot, $gesetzt, &$quellen) {
-            foreach ($kette as $i => $k) {
-                if ($gesetzt($k->{$feld})) {
-                    $quellen[$feld] = $i === 0 ? 'kapitel' : 'eltern';
-
-                    return $k->{$feld};
-                }
-            }
-            if ($slot !== null && $gesetzt($slotWert)) {
-                $quellen[$feld] = 'slot';
-
-                return $slotWert;
-            }
-            if ($gesetzt($fbWert)) {
-                $quellen[$feld] = 'foodbook';
-
-                return $fbWert;
-            }
-            $quellen[$feld] = null;
-
-            return null;
-        };
-
-        $targetCount = $resolve('target_count', $slot?->target_count, null);
-        $priceAnchor = $resolve('price_anchor', $slot?->price_anchor, null);
-        $priceMin = $resolve('price_min', $slot?->price_min, null);
-        $priceMax = $resolve('price_max', $slot?->price_max, null);
-        $niveau = $resolve('niveau', null, $fb?->default_niveau);
-        $servingFormId = $resolve('serving_form_id', null, $fb?->default_serving_form_id);
-        $serviceMomentId = $resolve('service_moment_id', null, null);
-        $pricingMode = $resolve('pricing_mode', null, null);
-        $targetFoodCostPct = $resolve('target_food_cost_pct', null, $fb?->target_food_cost_pct);
-
-        return [
-            'target_count' => $targetCount !== null ? (int) $targetCount : null,
-            'price_anchor' => $priceAnchor !== null ? (float) $priceAnchor : null,
-            'price_min' => $priceMin !== null ? (float) $priceMin : null,
-            'price_max' => $priceMax !== null ? (float) $priceMax : null,
-            'niveau' => $niveau !== null ? (string) $niveau : null,
-            'serving_form_id' => $servingFormId !== null ? (int) $servingFormId : null,
-            'service_moment_id' => $serviceMomentId !== null ? (int) $serviceMomentId : null,
-            'pricing_mode' => $pricingMode !== null ? (string) $pricingMode : null,
-            'target_food_cost_pct' => $targetFoodCostPct !== null ? (float) $targetFoodCostPct : null,
-            'quellen' => $quellen,
-        ];
+        return $this->vokabular->kapitelZiele($team, $kapitel);
     }
 
-    // ── #369: CRM-Kunde-Link (MVP, nur verlinken) — class_exists-geschützt (Modul läuft ohne crm) ──
+    public function crmVerfuegbar(): bool
+    {
+        return $this->vokabular->crmVerfuegbar();
+    }
+
+    public function sucheFirmen(string $suche, int $limit = 10): Collection
+    {
+        return $this->vokabular->sucheFirmen($suche, $limit);
+    }
+
+    public function sucheKontakte(string $suche, int $limit = 10): Collection
+    {
+        return $this->vokabular->sucheKontakte($suche, $limit);
+    }
 
     public function verknuepfeKunde(Team $team, int $id, ?int $companyId, ?int $contactId): FoodAlchemistFoodbook
     {
         \Platform\FoodAlchemist\Support\CrmKunden::pruefe($team, $companyId, $contactId);
         return $this->update($team, $id, ['crm_company_id' => $companyId, 'crm_contact_id' => $contactId]);
-    }
-
-    public function crmVerfuegbar(): bool
-    {
-        return class_exists(\Platform\Crm\Services\CompanyLinkService::class);
-    }
-
-    public function sucheFirmen(string $suche, int $limit = 10): Collection
-    {
-        $suche = trim($suche);
-        if ($suche === '' || ! $this->crmVerfuegbar()) {
-            return collect();
-        }
-
-        return \Platform\FoodAlchemist\Support\CrmKunden::firmen(\Platform\FoodAlchemist\Support\CrmKunden::aktuellesTeam(), $suche, $limit);
-    }
-
-    public function sucheKontakte(string $suche, int $limit = 10): Collection
-    {
-        $suche = trim($suche);
-        if ($suche === '' || ! class_exists(\Platform\Crm\Services\ContactLinkService::class)) {
-            return collect();
-        }
-
-        return \Platform\FoodAlchemist\Support\CrmKunden::kontakte(\Platform\FoodAlchemist\Support\CrmKunden::aktuellesTeam(), $suche, $limit);
     }
 
     public function delete(Team $team, int $id): void
@@ -924,52 +672,27 @@ class FoodbookService
         return $k->refresh();
     }
 
-    // ── Spec 43 (Bild-Epic): Kapitel-Bild (überschreibt das Concept-Titelbild im Kapitel-Band) ──
+    // ── Spec 43 (Bild-Epic): Kapitel-Bild — 98 · 3.3 S4-1: in Foodbook\FoodbookKapitelBild, hier Fassade ──
 
     public function setKapitelImage(Team $team, int $kapitelId, UploadedFile $file): string
     {
-        $k = $this->ownedKapitel($team, $kapitelId);
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
-            $file, $team, 'foodalchemist.foodbook_chapter', $kapitelId, "foodalchemist/chapter/{$kapitelId}",
-        );
-        $k->update(['image_context_file_id' => $media['context_file_id'], 'image_path' => $media['path']]);
-
-        return $media['path'];
+        return $this->kapitelBild->setKapitelImage($team, $kapitelId, $file);
     }
 
     public function clearKapitelImage(Team $team, int $kapitelId): FoodAlchemistFoodbookKapitel
     {
-        $k = $this->ownedKapitel($team, $kapitelId);
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->image_context_file_id, (string) $k->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($k, 'image_path')]);
-        $k->update(['image_context_file_id' => null, 'image_path' => null]);
-
-        return $k->refresh();
+        return $this->kapitelBild->clearKapitelImage($team, $kapitelId);
     }
 
     /** Weiteres Galeriebild (neben dem Kapitel-Bild) ans Foodbook-Kapitel hängen. */
     public function addKapitelGalleryImage(Team $team, int $kapitelId, UploadedFile $file): \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookChapterImage
     {
-        $k = $this->ownedKapitel($team, $kapitelId);
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
-            $file, $team, 'foodalchemist.foodbook_chapter', $kapitelId, "foodalchemist/chapter/{$kapitelId}/gallery",
-        );
-
-        return \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookChapterImage::create([
-            'team_id' => $k->team_id,
-            'chapter_id' => $kapitelId,
-            'context_file_id' => $media['context_file_id'],
-            'path' => $media['path'],
-            'sort_order' => (int) $k->images()->max('sort_order') + 1,
-        ]);
+        return $this->kapitelBild->addKapitelGalleryImage($team, $kapitelId, $file);
     }
 
     public function removeKapitelGalleryImage(Team $team, int $imageId): void
     {
-        $img = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookChapterImage::findOrFail($imageId);
-        $this->ownedKapitel($team, (int) $img->chapter_id); // Owner-Guard übers Kapitel
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($img->context_file_id, (string) $img->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($img)]);
-        $img->delete();
+        $this->kapitelBild->removeKapitelGalleryImage($team, $imageId);
     }
 
     /**
@@ -1240,621 +963,61 @@ class FoodbookService
      */
     public static function headerPresets(): array
     {
-        $gang = fn ($slug, $label) => ['slug' => "gang.$slug", 'label' => $label, 'type' => 'header_neutral'];
-        $zeit = fn ($slug, $label) => ['slug' => "zeit.$slug", 'label' => $label, 'type' => 'header_neutral'];
-
-        return [
-            'Gänge / Service' => [
-                $gang('get_together', 'Get-together'), $gang('aperitif', 'Aperitif'), $gang('flying', 'Flying'),
-                $gang('vorspeisen', 'Vorspeisen'), $gang('suppen', 'Suppen'), $gang('zwischengang', 'Zwischengang'),
-                $gang('hauptgang', 'Hauptgang'), $gang('beilagen', 'Beilagen'), $gang('dessert', 'Dessert'),
-                $gang('kaese', 'Käse'), $gang('buffet', 'Buffet'), $gang('fingerfood', 'Fingerfood'),
-                $gang('snacks', 'Snacks'), $gang('late_night', 'Late Night'), $gang('getraenke', 'Getränke'),
-                $gang('kaffee_tee', 'Kaffee & Tee'),
-            ],
-            'Tageszeit' => [
-                $zeit('breakfast', 'Breakfast'), $zeit('brunch', 'Brunch'), $zeit('lunch', 'Lunch'),
-                $zeit('coffee_break', 'Coffee Break'), $zeit('dinner', 'Dinner'), $zeit('after_work', 'After Work'),
-            ],
-            'Konzept / Format (+ Preis)' => [
-                ['slug' => 'format.menue_paket', 'label' => 'Menü-Paket', 'type' => 'header_frei_preis', 'price_basis' => 'person'],
-                ['slug' => 'format.buffet_paket', 'label' => 'Buffet-Paket', 'type' => 'header_frei_preis', 'price_basis' => 'person'],
-                ['slug' => 'format.flat_rate', 'label' => 'Flat-Rate', 'type' => 'header_frei_preis', 'price_basis' => 'pauschal'],
-                ['slug' => 'format.staffelpreis_block', 'label' => 'Staffelpreis-Block', 'type' => 'header_frei_preis', 'price_basis' => 'staffel'],
-            ],
-            'Intern (nicht sichtbar)' => [
-                ['slug' => 'intern.kalkulation', 'label' => 'Interne Kalkulation', 'type' => 'header_neutral', 'visible' => false],
-                ['slug' => 'intern.personal', 'label' => 'Personal', 'type' => 'header_neutral', 'visible' => false],
-                ['slug' => 'intern.logistik', 'label' => 'Logistik', 'type' => 'header_neutral', 'visible' => false],
-                ['slug' => 'intern.equipment', 'label' => 'Equipment', 'type' => 'header_neutral', 'visible' => false],
-                ['slug' => 'intern.bemerkungen', 'label' => 'Bemerkungen', 'type' => 'header_neutral', 'visible' => false],
-            ],
-        ];
+        return \Platform\FoodAlchemist\Services\Foodbook\FoodbookHeaderPresets::liste();   // 98 · 3.3 S4-0k: Daten ohne Dienst-Abhängigkeit
     }
 
-    // ── Aggregat / Preis (M11 Cockpit) ──────────────────────────────────────────
+    // ── Aggregat / Preis (M11 Cockpit) — 98 · 3.3 S4-4: in Foodbook\FoodbookAggregat, hier Fassade (und FoodbookAggregatQuelle) ──
 
-    /**
-     * Preis-Beitrag eines Blocks (Jarvis-Parität): liefert Per-Person-Anteil (vk/ek)
-     * UND einen Pauschal-Anteil (flach, nicht ×Pax).
-     *  - recipe_ref  → sales_net/ek_total × Menge; `price_basis` steuert die Achse:
-     *                  person (Default) = Per-Person · pauschal = flacher Anteil (€/Position,
-     *                  kein ×Pax; EK bleibt hier ungezählt, WE-Ampel meldet „partiell", E4.4)
-     *  - concept_ref → Concept-€/Person (person-unabhängig)
-     *  - header_frei_preis: person→Per-Person · staffel→Per-Person (nach Pax aufgelöst) · pauschal→flach
-     *
-     * @return array{vk_pp: float, ek_pp: float, pauschal: float}
-     */
     public function blockPreis(FoodAlchemistFoodbookBlock $block, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        if ($block->type === 'concept_ref' && $block->concept) {
-            $cockpit = $this->concepts->preisCockpit($block->concept, $outlet);
-
-            return ['vk_pp' => (float) $cockpit['price_per_person'], 'ek_pp' => (float) $cockpit['ek_per_person'], 'pauschal' => 0.0, 'vk_fehlt' => ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete
-        }
-        if ($block->type === 'recipe_ref' && $block->dish) {
-            $faktor = $block->quantity !== null ? (float) $block->quantity : 1.0;
-            $resolver = app(DarreichungResolver::class);   // Spec 85 D-1: Preisleiter; im Betrieb dessen VK, sonst die Baseline
-            $baseVk = (float) (($outlet !== null ? $resolver->vkNetto($block->dish, $outlet) : null) ?? $resolver->vkNetto($block->dish) ?? 0);
-            $vk = round($baseVk * $faktor, 2);
-            $ek = round((float) ($resolver->ekProPortion($block->dish) ?? 0) * $faktor, 2);   // Spec 85: EK je Portion, wie der VK
-
-            // Spec 19 E1.2: Einzel-Gericht pauschal (€/Position, flach) vs. per-Person (€/Gast).
-            // Pauschal → VK in den flachen Anteil (kein ×Pax); EK bleibt ungezählt (WE-Ampel
-            // meldet „partiell", E4.4), konsistent zu header_frei_preis/pauschal.
-            if ($block->price_basis === 'pauschal') {
-                return ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => $vk];
-            }
-
-            return ['vk_pp' => $vk, 'ek_pp' => $ek, 'pauschal' => 0.0];
-        }
-        if ($block->type === 'header_frei_preis') {
-            return match ($block->price_basis) {
-                'pauschal' => ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => (float) ($block->price_value ?? 0)],
-                'staffel' => ['vk_pp' => $this->resolveStaffel($block, $pax), 'ek_pp' => 0.0, 'pauschal' => 0.0],
-                default => ['vk_pp' => (float) ($block->price_value ?? 0), 'ek_pp' => 0.0, 'pauschal' => 0.0], // person
-            };
-        }
-
-        return ['vk_pp' => 0.0, 'ek_pp' => 0.0, 'pauschal' => 0.0];
+        return $this->aggregat->blockPreis($block, $pax, $outlet);
     }
 
-    /** Staffel-Auflösung: höchste Stufe mit min_personen ≤ Pax (ohne Pax die niedrigste). */
     public function resolveStaffel(FoodAlchemistFoodbookBlock $block, ?int $pax): float
     {
-        $stufen = $block->relationLoaded('staffel') ? $block->staffel : $block->staffel()->get();
-        if ($stufen->isEmpty()) {
-            return 0.0;
-        }
-        if ($pax === null) {
-            return (float) $stufen->sortBy('min_persons')->first()->price;
-        }
-        $treffer = $stufen->where('min_persons', '<=', $pax)->sortByDesc('min_persons')->first();
-
-        return (float) ($treffer?->price ?? $stufen->sortBy('min_persons')->first()->price);
+        return $this->aggregat->resolveStaffel($block, $pax);
     }
 
-    /**
-     * Rekursives Kapitel-Aggregat: sichtbare Blöcke + Unterkapitel. Per-Person (vk/ek)
-     * getrennt vom Pauschal-Anteil. Manuell gesetzter `preis_pro_person` übersteuert
-     * die Per-Person-VK-Summe (EK + Pauschal bleiben gerechnet).
-     *
-     * @return array{vk_pro_person: float, ek_pro_person: float, pauschal: float, food_cost_percent: ?float}
-     */
     public function kapitelAggregat(Team $team, FoodAlchemistFoodbookKapitel $kapitel, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $kapitel->loadMissing(['blocks' => fn ($q) => $q->where('visible', true),
-            'blocks.concept:id,name,price_per_person_cache,price_incomplete,team_id,ist_fassung,price_mode,price_per_person_manual,price_override_expires_at', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
-            'blocks.staffel', 'children']);
-
-        $vk = $ek = $pauschal = 0.0;
-        $vkFehlt = false;   // CQ price_incomplete: mind. ein Konzept-Preis ist nur die Summe der bekannten Positionen
-        foreach ($kapitel->blocks as $block) {
-            $p = $this->blockPreis($block, $pax, $outlet);
-            $vkFehlt = $vkFehlt || ($p['vk_fehlt'] ?? false);
-            $vk += $p['vk_pp'];
-            $ek += $p['ek_pp'];
-            $pauschal += $p['pauschal'];
-        }
-        foreach ($kapitel->children as $kind) {
-            $kindAgg = $this->kapitelAggregat($team, $kind, $pax, $outlet);
-            $vk += $kindAgg['vk_pro_person'];
-            $ek += $kindAgg['ek_per_person'];
-            $pauschal += $kindAgg['pauschal'];
-            $vkFehlt = $vkFehlt || $kindAgg['vk_fehlt'];
-        }
-
-        if ($kapitel->price_mode === 'manuell' && $kapitel->price_per_person !== null) {
-            [$vk, $vkFehlt] = [(float) $kapitel->price_per_person, false];   // gesetzter Kapitelpreis ist nicht vorläufig
-        }
-
-        return [
-            'vk_pro_person' => round($vk, 2),
-            'ek_per_person' => round($ek, 2),
-            'pauschal' => round($pauschal, 2),
-            'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ek, $vk), 'vk_fehlt' => $vkFehlt,   // Food-Cost aus einer VK-Teilsumme wäre geschönt
-        ];
+        return $this->aggregat->kapitelAggregat($team, $kapitel, $pax, $outlet);
     }
 
-    /**
-     * Spec 19 E4.4: Wareneinsatz-Ampel eines Kapitels. **IST** = tatsächliche Food-Cost-%
-     * aus `kapitelAggregat()` (EK ÷ VK der Per-Person-Anteile, rekursiv über Nachfahren).
-     * **SOLL** = Ziel-Wareneinsatz mit Kaskade Kapitel → Eltern → Foodbook (via `kapitelZiele`)
-     * → Team-Setting (`zielWareneinsatzPct`, 30 %-Default). Toleranz = `food_cost_tolerance_pp`
-     * des Foodbooks (Code-Default 5,0 pp).
-     *
-     * Ampel: `gruen` IST ≤ Ziel · `gelb` IST ≤ Ziel+Toleranz · `rot` darüber · `unbekannt`
-     * ohne IST (kein Per-Person-VK). **Partiell-Hinweis:** Pauschal-Anteile (header_frei_preis/
-     * pauschal, recipe_ref/pauschal) tragen VK, aber ihr EK bleibt ungezählt (`blockPreis`, E1.2)
-     * → die IST-Quote unterschätzt den echten Food-Cost. `partiell=true` markiert das, damit die
-     * Kalkulations-Rail (E5.3) und `coverage.GET` (E4.6) den Vorbehalt sichtbar machen.
-     *
-     * @return array{status: string, ist_pct: ?float, ziel_pct: float, toleranz_pp: float,
-     *               quelle: string, partiell: bool}
-     */
     public function wareneinsatzAmpel(Team $team, FoodAlchemistFoodbook $fb, FoodAlchemistFoodbookKapitel $kapitel, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        // kapitelZiele zuerst — erzwingt Team-Scope + Ownership (ownedKapitel) vor jeder Rechnung.
-        $ziele = $this->kapitelZiele($team, $kapitel);
-        $ziel = $ziele['target_food_cost_pct'];
-        $quelle = $ziele['quellen']['target_food_cost_pct'] ?? null;
-        if ($ziel === null) {
-            // Ebene 2: ohne Kapitel-Ziel folgt die Soll-Quote der Betriebsbrille (Betriebs-Ziel-WE).
-            $ziel = app(TeamSettingsService::class)->zielWareneinsatzPct($team, $outlet);
-            $quelle = 'settings';
-        }
-        $ziel = (float) $ziel;
-
-        $agg = $this->kapitelAggregat($team, $kapitel, $pax, $outlet);
-        $ist = $agg['food_cost_percent']; // ?float
-
-        $tol = $fb->food_cost_tolerance_pp !== null ? (float) $fb->food_cost_tolerance_pp : 5.0;
-
-        return [
-            'status' => $this->weAmpelStatus($ist, $ziel, $tol),
-            'ist_pct' => $ist,
-            'ziel_pct' => round($ziel, 2),
-            'toleranz_pp' => round($tol, 2),
-            'quelle' => $quelle ?? 'settings',
-            'partiell' => $agg['pauschal'] > 0,
-        ];
+        return $this->aggregat->wareneinsatzAmpel($team, $fb, $kapitel, $pax, $outlet);
     }
 
-    /**
-     * Spec 19 E8.2 — Portfolio-Wareneinsatz-Ampel des GANZEN Foodbooks (Rail-Kalkulation-
-     * Panel, Kopf-Modus). Gleiche Ampel-Logik wie {@see wareneinsatzAmpel}, aber IST aus dem
-     * Foodbook-Gesamt ({@see gesamt}: Σ Top-Kapitel Per-Person, EK ÷ VK) statt je Kapitel.
-     * **SOLL** = Foodbook-Ziel (`target_food_cost_pct`) → Team-Setting-Default (30 %);
-     * Toleranz = `food_cost_tolerance_pp` (Code-Default 5,0 pp). **Partiell** = Pauschal-Anteil
-     * im Gesamt (EK ungezählt → IST unterschätzt), analog zur Kapitel-Ampel.
-     *
-     * @return array{status: string, ist_pct: ?float, ziel_pct: float, toleranz_pp: float, quelle: string, partiell: bool}
-     */
     public function foodbookWareneinsatzAmpel(Team $team, FoodAlchemistFoodbook $fb, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $gesamt = $this->gesamt($team, $fb, $outlet);
-        $vk = $gesamt['vk_pro_person'];
-        $ek = $gesamt['ek_per_person'];
-        $ist = $gesamt['vk_fehlt'] ? null : MargeService::wareneinsatzPct($ek, $vk);   // CQ price_incomplete: VK-Teilsumme → keine Quote
-
-        if ($fb->target_food_cost_pct !== null) {
-            $ziel = (float) $fb->target_food_cost_pct;
-            $quelle = 'foodbook';
-        } else {
-            // Ebene 2: Soll-Quote folgt der Betriebsbrille.
-            $ziel = app(TeamSettingsService::class)->zielWareneinsatzPct($team, $outlet);
-            $quelle = 'settings';
-        }
-        $tol = $fb->food_cost_tolerance_pp !== null ? (float) $fb->food_cost_tolerance_pp : 5.0;
-
-        return [
-            'status' => $this->weAmpelStatus($ist, $ziel, $tol),
-            'ist_pct' => $ist,
-            'ziel_pct' => round($ziel, 2),
-            'toleranz_pp' => round($tol, 2),
-            'quelle' => $quelle,
-            'partiell' => $gesamt['pauschal'] > 0,
-        ];
+        return $this->aggregat->foodbookWareneinsatzAmpel($team, $fb, $outlet);
     }
 
-    /**
-     * Gemeinsame Ampel-Klassifikation (E4.4/E8.2): `gruen` IST ≤ Ziel · `gelb` IST ≤ Ziel+Toleranz
-     * · `rot` darüber · `unbekannt` ohne IST. Wird von Kapitel- ({@see wareneinsatzAmpel}) und
-     * Portfolio-Ampel ({@see foodbookWareneinsatzAmpel}) geteilt (identische Grenzen).
-     */
-    private function weAmpelStatus(?float $ist, float $ziel, float $tol): string
-    {
-        if ($ist === null) {
-            return 'unbekannt';
-        }
-        if ($ist <= $ziel) {
-            return 'gruen';
-        }
-
-        return $ist <= $ziel + $tol ? 'gelb' : 'rot';
-    }
-
-    /**
-     * Foodbook-Gesamt: (Σ Top-Kapitel Per-Person × Pax) + Pauschal-Anteile. Erst HIER wird die Gästezahl bindend (F-12, D-CON-5).
-     *
-     * @return array{vk_pro_person: float, ek_pro_person: float, pauschal: float, personen: ?int, gesamt_vk: ?float, gesamt_ek: ?float, food_cost_percent: ?float, edition_ab: ?float}
-     */
     public function gesamt(Team $team, FoodAlchemistFoodbook $fb, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $pax = $fb->personen;
-        $vk = $ek = $pauschal = 0.0;
-        $vkFehlt = false;
-        foreach ($fb->chapters()->whereNull('parent_id')->get() as $top) {
-            $agg = $this->kapitelAggregat($team, $top, $pax, $outlet);
-            $vkFehlt = $vkFehlt || $agg['vk_fehlt'];
-            $vk += $agg['vk_pro_person'];
-            $ek += $agg['ek_per_person'];
-            $pauschal += $agg['pauschal'];
-        }
-
-        [$vkPp, $ekPp] = [round($vk, 2), round($ek, 2)];
-
-        return [
-            'vk_pro_person' => $vkPp,
-            'ek_per_person' => $ekPp,
-            'pauschal' => round($pauschal, 2),
-            'personen' => $pax,
-            'gesamt_vk' => $pax !== null ? round($vk * $pax + $pauschal, 2) : null,
-            'gesamt_ek' => $pax !== null ? round($ek * $pax, 2) : null,
-            // Wareneinsatz % auf denselben gerundeten Per-Person-Werten wie die Anzeige (F-12),
-            // damit die Zahl exakt der bisherigen Blade-Rechnung ek_pp / vk_pp * 100 entspricht.
-            'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ekPp, $vkPp), 'vk_fehlt' => $vkFehlt,   // CQ price_incomplete
-            'edition_ab' => app(FormatKapitelService::class)->editionAb($fb),   // 98 · 2.4e: Format-Editionen (Alternativen, nicht summiert) als „ab …“
-        ];
+        return $this->aggregat->gesamt($team, $fb, $outlet);
     }
 
-    // ── #384/Folge: versendbares Foodbook/Portfolio-Dokument ───────────────────
+    // ── #384/Folge: versendbares Dokument, Concept-Karte, Vorschau-Snapshot — 98 · 3.3 S4-5: in Foodbook\FoodbookDokument, hier Fassade ──
 
-    /**
-     * Daten fürs versendbare Foodbook-Dokument (Druck/PDF): Kapitel-Baum (Pre-Order,
-     * Tiefe) mit NUR sichtbaren Blöcken (Export-Filter `sichtbar`) + Kunden-Labels
-     * (konsumententitel/kundentext), pro Kapitel der Per-Person-Preis, + Gesamt.
-     * interne_bemerkung wird NIE ausgegeben (Kundensicht).
-     *
-     * @return array{fb:FoodAlchemistFoodbook, kapitel:list<array>, gesamt:array, kunde:?string}
-     */
-    /**
-     * @param  list<int>  $kapitelFilter  #3: leer = alle Kapitel; sonst nur diese Kapitel-IDs. Ein
-     *                                     selektiertes Kapitel, dessen Eltern rausgefiltert wurde,
-     *                                     wird auf die oberste Ebene gehoben (sonst nie erreicht).
-     * @param  bool  $mitKaskade  #3: zusätzlich den Produktions-Baum je Gericht anhängen (EK nur intern).
-     */
     public function dokumentDaten(Team $team, FoodAlchemistFoodbook $fb, bool $intern = false, array $kapitelFilter = [], bool $mitKaskade = false, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, bool $mitHandbuchMengen = false, bool $mitTexten = false): array
     {
-        $fb->loadMissing([
-            'chapters' => fn ($q) => $q->orderBy('position'),
-            'chapters.blocks' => fn ($q) => $q->where('visible', true)->orderBy('position'),
-            // Wording-Kette: Slots (inkl. Paket-Gerichte) fürs Auflösen der Gericht-Zeilen
-            'chapters.blocks.concept.slots.dish:id,name,sales_wording_standard',
-            'chapters.blocks.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-            // eingebettetes Paket (kind=paket-Concept) + dessen Gerichte für die Menü-Auflösung
-            'chapters.blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
-            'chapters.blocks.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
-            'chapters.blocks.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
-            // E8.3: recipe_ref braucht sales_net/ek_total_eur für die €/Position-Preisspalte (blockPreis) — sonst rendert der Preis leer.
-            'chapters.blocks.dish:id,name,sales_wording_standard,ek_total_eur,sales_unit_count', 'chapters.blocks.dish.standardPresentation',
-            // B (2026-08-31): LEBENDES Format-Kapitel — Identität + Editionen live aus dem Format. Editionen =
-            // format_slots (type=concept) → Concept; die Wording-Kette der Editions-Concepte wie bei chapters.blocks.
-            'chapters.format', 'chapters.format.images',
-            'chapters.format.slots' => fn ($q) => $q->orderBy('position'),
-            'chapters.format.slots.concept.slots.dish:id,name,sales_wording_standard',
-            'chapters.format.slots.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-            'chapters.format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
-            'chapters.format.slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
-            'chapters.format.slots.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
-            'crmCompany', 'crmContact',
-        ]);
-        $pax = $fb->personen;
-
-        // #3: Kapitel-Filter — nur ausgewählte Kapitel rendern; rausgefilterte Eltern hochziehen.
-        $chapters = $fb->chapters;
-        if ($kapitelFilter !== []) {
-            $erlaubt = array_flip(array_map('intval', $kapitelFilter));
-            $chapters = $chapters->filter(fn ($k) => isset($erlaubt[(int) $k->id]))->values();
-            $vorhanden = array_flip($chapters->pluck('id')->map(fn ($v) => (int) $v)->all());
-            $byParent = $chapters->groupBy(fn ($k) => ($k->parent_id !== null && isset($vorhanden[(int) $k->parent_id])) ? (int) $k->parent_id : 0);
-        } else {
-            $byParent = $chapters->groupBy(fn ($k) => $k->parent_id ?? 0);
-        }
-        $wording = app(WordingResolver::class);
-
-        $rows = [];
-        $walk = function ($parentId, int $depth) use (&$walk, $byParent, &$rows, $team, $pax, $wording, $intern, $outlet, $mitHandbuchMengen, $mitTexten) {
-            foreach ($byParent[$parentId] ?? [] as $k) {
-                // B (2026-08-31): LEBENDES Format-Kapitel — Identität + Editionen LIVE aus dem Format
-                // rendern (statt der Kapitel-Blöcke). Editionen = format_slots (type=concept) → Concept
-                // (Wording-Kette wie sonst); header/text/spacer = Struktur-Editionen. Showcase:
-                // vk_pro_person=null (Editionen sind Alternativen → Preis-Range, KEIN additiver Summand).
-                if ($k->format_id !== null) {
-                    $format = $k->format;
-                    if ($format === null) {
-                        // Reconciliation: Format weg (soft-deleted) → leerer Platzhalter, kein Fehler.
-                        $rows[] = ['title' => $k->consumer_title ?: $k->title, 'title_intern' => $k->title,
-                            'text' => trim((string) $k->description) ?: null, 'anker' => 'k' . $k->id, 'depth' => $depth,
-                            'bloecke' => [], 'ist_format' => true, 'editionen' => [], 'vk_pro_person' => null];
-                        $walk((int) $k->id, $depth + 1);
-
-                        continue;
-                    }
-                    $editionen = app(FormatKapitelService::class)->editionen($format, $mitHandbuchMengen, $mitTexten, $intern);
-                    $hero = $format->images->firstWhere('is_hero', true);
-                    $rows[] = [
-                        'title' => $k->consumer_title ?: ($format->consumer_name ?: $format->name),
-                        'title_intern' => $k->title ?: $format->name,
-                        'text' => trim((string) ($k->description ?: $format->story)) ?: null,
-                        'anker' => 'k' . $k->id,
-                        'depth' => $depth,
-                        'bloecke' => [],
-                        'ist_format' => true,
-                        'claim' => $format->claim,
-                        'hero' => $hero?->dataUri(),
-                        'preis_range' => $format->priceRange(),
-                        'editionen' => $editionen,
-                        'vk_pro_person' => null,   // Showcase — Editionen sind Alternativen, nicht additiv
-                    ];
-                    $walk((int) $k->id, $depth + 1);
-
-                    continue;
-                }
-                $bloecke = [];
-                foreach ($k->blocks as $b) {
-                    $label = $this->dokBlockLabel($b);
-                    if ($label === null || $label === '') {
-                        continue; // spacer/image/leerer Header
-                    }
-                    // Untertitel: kundentext zusätzlich, wenn er nicht schon das Label ist (Legacy-Doppelrolle)
-                    $untertitel = trim((string) $b->customer_text);
-                    $untertitel = ($untertitel !== '' && $untertitel !== $label) ? $untertitel : null;
-                    // concept_ref: Gerichte des Concepts mit aufgelöster Wording-Kette als Kundenzeilen
-                    $gerichte = ($b->type === 'concept_ref' && $b->concept !== null)
-                        ? $wording->gerichtZeilen($b->concept, $b, $mitTexten, $mitHandbuchMengen)   // $mitTexten: Präsentation zeigt Text-Bausteine des Konzepts (wie das Angebot)
-                        : [];
-                    // Block-Preis für die Preis-links-Spalte (Referenz-Layout „x € pro Person").
-                    $bp = $this->blockPreis($b, $pax, $outlet);
-                    // E8.3: €/Gast vs. €/Position — Preis-Einheit typ-getrieben (spiegelt LeitstelleService::preiseBaum):
-                    // concept_ref = Paket → pro Gast · recipe_ref = Einzelgericht → pro Position · sonst null (Header/Text).
-                    $preisEinheit = match ($b->type) {
-                        'concept_ref' => 'gast',
-                        'recipe_ref' => 'position',
-                        default => null,
-                    };
-                    $bloecke[] = ['type' => $b->type, 'label' => $label, 'untertitel' => $untertitel,
-                        'gerichte' => $gerichte, 'ist_header' => str_starts_with((string) $b->type, 'header'),
-                        'preis_pp' => (float) $bp['vk_pp'], 'pauschal' => (float) $bp['pauschal'], 'preis_vorlaeufig' => (bool) ($bp['vk_fehlt'] ?? false),
-                        'preis_einheit' => $preisEinheit,
-                        // Preisdarstellung (2026-08-25): einzel-Concept → Concept-Summenpreis ausblenden,
-                        // stattdessen zeigt jede Gericht-Zeile ihren eigenen Preis (aus gerichtZeilen).
-                        'einzelpreise' => $b->type === 'concept_ref' && $b->concept !== null && $b->concept->istEinzelpreis(),
-                        // #5b: Einzelgericht-Block trägt seine Rezept-ID → per-Gericht-Codes am Block-Label.
-                        'recipe_id' => $b->type === 'recipe_ref' ? ($b->sales_recipe_id !== null ? (int) $b->sales_recipe_id : null) : null,
-                        'codes' => []] + ($intern ? ['ek_pp' => (float) $bp['ek_pp']] : []);   // EK je Baustein NUR intern (EK-Schalter, Kalkulations-Print)
-                }
-                $agg = $this->kapitelAggregat($team, $k, $pax, $outlet);
-                $row = [
-                    'title' => $k->consumer_title ?: $k->title,
-                    'title_intern' => $k->title,           // interner Titel für die Projektleitung-Sicht
-                    // Spec 03 · L2b: die Kapitel-Hinführung. Das Feld existierte im Schema und war
-                    // über MCP schreibbar, wurde aber von keiner Projektion gelesen — ein Kundentext,
-                    // der nie beim Kunden ankam. Gleiche Rolle wie `fb->description` auf Buch-Ebene.
-                    'text' => trim((string) $k->description) ?: null,
-                    'anker' => 'k' . $k->id,               // Navleiste-Sprungziel (klickbar in HTML + PDF)
-                    'depth' => $depth,
-                    'bloecke' => $bloecke,
-                    'vk_pro_person' => $agg['vk_pro_person'], 'vk_vorlaeufig' => $agg['vk_fehlt'],
-                ];
-                if ($intern) {
-                    // Marge nur in der internen Projektion (Projektleitung/Vertrieb) — NIE im Kundendokument.
-                    $row['ek_pro_person'] = $agg['ek_per_person'];
-                    $row['food_cost_percent'] = $agg['food_cost_percent'];
-                }
-                $rows[] = $row;
-                $walk((int) $k->id, $depth + 1);
-            }
-        };
-        $walk(0, 0);
-
-        // #5b: §-Kennzeichnung PRO GERICHT (Dominique 2026-08-25: nicht pro Konzept) — jede
-        // Gericht-Zeile trägt ihre eigenen Allergen-/Zusatzstoff-Codes aus der Gericht-Deklaration;
-        // die Legende sammelt nur, was auf den Gerichten tatsächlich vorkommt (LMIV/ZZulV).
-        $kzAgg = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class);
-        $katalog = $kzAgg->kennzeichnungKatalog();
-        // Alle Gericht-IDs: aus den concept_ref-Gericht-Zeilen UND den recipe_ref-Block-Labels.
-        $recipeIds = collect($rows)->flatMap(function ($r) {
-            $ausBloecke = collect($r['bloecke'])->flatMap(fn ($b) => collect($b['gerichte'])->pluck('recipe_id')->push($b['recipe_id'] ?? null));
-            // B: Format-Editionen tragen ihre Gericht-Zeilen (LMIV-Codes je Gericht) ausserhalb der bloecke.
-            $ausEditionen = collect($r['editionen'] ?? [])->flatMap(fn ($e) => collect($e['gerichte'])->pluck('recipe_id'));
-
-            return $ausBloecke->concat($ausEditionen);
-        })->filter()->map(fn ($v) => (int) $v)->unique()->values()->all();
-        $usedAlg = [];
-        $usedZus = [];
-        if ($recipeIds !== []) {
-            $dishes = FoodAlchemistRecipe::whereIn('id', $recipeIds)->get()->keyBy('id');
-            // Normale Closure (kein arrow fn) — $usedAlg/$usedZus MÜSSEN by-ref laufen, damit die
-            // Legende die real vorkommenden Codes sammelt (arrow fn würde sie by value kopieren).
-            $codesFuer = function (?int $rid) use ($dishes, $kzAgg, $katalog, &$usedAlg, &$usedZus): array {
-                return ($rid !== null && $dishes->get($rid) !== null)
-                    ? $kzAgg->gerichtCodes($dishes->get($rid), $usedAlg, $usedZus, $katalog) : [];
-            };
-            foreach ($rows as $ri => $row) {
-                foreach ($row['bloecke'] as $bi => $blk) {
-                    // recipe_ref: Codes am Block-Label (Einzelgericht ist selbst ein Gericht).
-                    $rows[$ri]['bloecke'][$bi]['codes'] = $codesFuer($blk['recipe_id'] ?? null);
-                    // concept_ref: Codes je Gericht-Zeile.
-                    foreach ($blk['gerichte'] as $gi => $g) {
-                        $rows[$ri]['bloecke'][$bi]['gerichte'][$gi]['codes'] = $codesFuer(isset($g['recipe_id']) ? (int) $g['recipe_id'] : null);
-                    }
-                }
-                // B: LEBENDES Format-Kapitel — Codes je Editions-Gericht (LMIV, pro Gericht).
-                foreach ($row['editionen'] ?? [] as $ei => $ed) {
-                    foreach ($ed['gerichte'] as $gi => $g) {
-                        $rows[$ri]['editionen'][$ei]['gerichte'][$gi]['codes'] = $codesFuer(isset($g['recipe_id']) ? (int) $g['recipe_id'] : null);
-                    }
-                }
-            }
-        }
-        $legende = $kzAgg->kennzeichnungLegende($usedAlg, $usedZus, $katalog);
-
-        // #3: optionaler Produktions-Kaskaden-Anhang. Gericht-IDs aus den (gefilterten) Kapitel-
-        // Blöcken: recipe_ref = direktes Gericht, concept_ref = Slot-/Paket-Gerichte. Je Gericht der
-        // rekursive Baum aus ReportExportService (wiederverwendet report-recipe-node). EK nur intern
-        // (ek/preise/lieferanten an $intern gebunden) → Kundensicht zeigt Struktur+Mengen ohne Kosten.
-        $kaskaden = [];
-        if ($mitKaskade) {
-            $gerichtIds = [];
-            foreach ($chapters as $k) {
-                foreach ($k->blocks as $b) {
-                    if ($b->type === 'recipe_ref' && $b->dish !== null) {
-                        $gerichtIds[] = (int) $b->dish->id;
-                    } elseif ($b->type === 'concept_ref' && $b->concept !== null) {
-                        foreach ($b->concept->slots as $slot) {
-                            if ($slot->dish !== null) {
-                                $gerichtIds[] = (int) $slot->dish->id;
-                            }
-                            foreach ($slot->package?->dishes ?? [] as $pg) {
-                                if ($pg->dish !== null) {
-                                    $gerichtIds[] = (int) $pg->dish->id;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            $kOpt = [
-                'stammdaten' => true, 'zutaten' => true, 'kaskade' => true,
-                'steps' => false, 'sensorik' => false, 'produktion' => false, 'bilder' => false,
-                'deklaration' => false, 'naehrwerte' => false, 'notizen' => false,
-                'preise' => $intern, 'lieferanten' => $intern, 'ek' => $intern, 'intern' => $intern,
-            ];
-            $report = app(\Platform\FoodAlchemist\Services\ReportExportService::class);
-            foreach (array_values(array_unique($gerichtIds)) as $gid) {
-                try {
-                    $d = $report->rezeptDaten($team, $gid, $kOpt);
-                    $kaskaden[] = ['name' => $d['name'], 'recipe' => $d['recipe'], 'optionen' => $kOpt];
-                } catch (\Throwable) {
-                    // fail-soft: ein nicht ladbares Gericht kippt den Druck nicht
-                }
-            }
-        }
-
-        return [
-            'fb' => $fb,
-            'intern' => $intern,
-            'kapitel' => $rows,
-            'gesamt' => $this->gesamt($team, $fb, $outlet),
-            // #5b: §-Kennzeichnungs-Legende (nur real vorkommende Allergene/Zusatzstoffe) — ganz unten im Dokument.
-            'legende' => $legende,
-            // CRM-only: Kontaktperson separat.
-            'customer' => $fb->crmCompany?->display_name,
-            'kontakt' => $fb->crmContact?->display_name,
-            // Kundendokument-Vollständigkeit: gesetzlicher MwSt-Satz + Stand-Datum.
-            'mwst' => app(TeamSettingsService::class)->mwst($team),
-            'stand' => $fb->updated_at,
-            // PDF-Redesign: pro-Foodbook-Marke (Farbe/Band/Logo/Cover/Footer), DomPDF-taugliche base64-Bilder.
-            'branding' => $this->brandingDaten($fb),
-            // #3: Produktions-Kaskaden-Anhang (leer, wenn nicht angefordert).
-            'kaskaden' => $kaskaden,
-            // #3: volle Kapitel-Liste (ungefiltert) + aktiver Filter — für den Kapitel-Picker im Dokument.
-            'alle_kapitel' => $fb->chapters->map(fn ($k) => ['id' => (int) $k->id, 'title' => $k->consumer_title ?: $k->title])->values()->all(),
-            'aktive_kapitel' => array_map('intval', $kapitelFilter),
-        ];
+        return $this->dokument->dokumentDaten($team, $fb, $intern, $kapitelFilter, $mitKaskade, $outlet, $mitHandbuchMengen, $mitTexten);
     }
 
-    /**
-     * F3: schöne Einzel-Concept-„Karte" (Druck/PDF) — die fehlende hübsche Einzel-Ausgabe
-     * des Concepters (bisher gab es dort nur den technischen Report). Foodbook-styled:
-     * Konsumenten-Titel + Claim + Hinführung + die aufgelösten Menü-Zeilen (gleiche
-     * Wording-Kette wie Foodbook/Format) + €/Gast. Klein gehalten: reine Menü-Sicht
-     * (kein EK/Marge — das ist die Kunden-Ausgabe). Team-scoped über visibleToTeam.
-     *
-     * @return array{
-     *     concept: FoodAlchemistConcept, titel: string, claim: ?string, text: ?string,
-     *     preis_pp: ?float, gerichte: list<array<string, mixed>>, mwst: ?array, stand: mixed
-     * }
-     */
     public function conceptKarteDaten(Team $team, int $conceptId): array
     {
-        $concept = FoodAlchemistConcept::visibleToTeam($team)
-            ->with([
-                'slots' => fn ($q) => $q->orderBy('position'),
-                'slots.dish:id,name,sales_wording_standard',
-                'slots.package.dishes.dish:id,name,sales_wording_standard',
-                'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
-                'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
-                'slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
-            ])
-            ->findOrFail($conceptId);
-
-        $wording = app(WordingResolver::class);
-
-        // §-Kennzeichnung je Gericht + Legende (2026-09-04): die Karte geht an den Kunden,
-        // trug aber bis hierher KEINE Deklaration — anders als Foodbook, Speisekarte und
-        // Speiseplan, die dieselbe Code-Quelle längst nutzen (Regelwerk Concept §7.1).
-        $kz = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class)
-            ->codesFuerZeilen($wording->gerichtZeilen($concept));
-
-        return [
-            'concept' => $concept,
-            'titel' => $concept->consumer_name ?: $concept->name,
-            'claim' => $concept->claim,
-            'text' => trim((string) $concept->description) ?: null,
-            'preis_pp' => $concept->price_per_person_cache !== null ? (float) $concept->price_per_person_cache : null,
-            // Preisdarstellung (2026-08-25): einzel → Concept-Summenpreis ausblenden, Preise je Gericht-Zeile.
-            'einzelpreise' => $concept->istEinzelpreis(),
-            'gerichte' => $kz['zeilen'],
-            'legende' => $kz['legende'],
-            'mwst' => app(TeamSettingsService::class)->mwst($team),
-            'stand' => $concept->updated_at,
-        ];
+        return $this->dokument->conceptKarteDaten($team, $conceptId);
     }
 
     public function vorschauSnapshot(FoodAlchemistFoodbook $fb): ?array
     {
-        $snapshot = $fb->preview_snapshot_json;
-        if (! is_array($snapshot)) {
-            return null;
-        }
-
-        $snapshot['snapshot_at'] = $fb->preview_snapshot_at;
-
-        return $snapshot;
+        return $this->dokument->vorschauSnapshot($fb);
     }
 
     public function vorschauSnapshotAktualisieren(Team $team, int $foodbookId): array
     {
-        $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($foodbookId);
-        $this->guard($fb, $team);
-
-        $snapshot = $this->dokumentDaten($team, $fb);
-        unset($snapshot['fb']);
-        $snapshot['snapshot_version'] = 1;
-
-        $fb->forceFill([
-            'preview_snapshot_json' => $snapshot,
-            'preview_snapshot_at' => now(),
-        ])->save();
-
-        return $snapshot;
-    }
-
-    /**
-     * Kunden-Label eines Blocks — concept_ref/recipe_ref über die Wording-Kette
-     * (WordingResolver: wording → kundentext-Legacy → Standard → Name);
-     * header/text behalten kundentext als Inhalt; spacer/image => null.
-     */
-    private function dokBlockLabel(FoodAlchemistFoodbookBlock $b): ?string
-    {
-        return match (true) {
-            in_array($b->type, ['concept_ref', 'recipe_ref'], true) => app(WordingResolver::class)->blockTitel($b)['text'],
-            str_starts_with((string) $b->type, 'header') => $b->customer_text ?: null,
-            $b->type === 'text' => $b->customer_text ?: null,
-            default => null,
-        };
+        return $this->dokument->vorschauSnapshotAktualisieren($team, $foodbookId);
     }
 
     // ── Picker (für den Editor) ─────────────────────────────────────────────
@@ -1988,366 +1151,58 @@ class FoodbookService
         });
     }
 
-    // ── Spec 03 · L2: KI-Kundentext ─────────────────────────────────────────────
-    //
-    // Löst den M11-08-Platzhalter ab (kiAndockKontext, gelöscht Spec 85): der sammelte nur die Eingaben,
-    // hier läuft der Call. Bewusst NUR Vorschlag — geschrieben wird nichts, auch nicht
-    // `description`. Übernehmen ist ein eigener, menschlicher Akt in der Fläche
-    // (Backup-Lehre 2026-06-30: ein Generator, der ein handgeschriebenes Kundentext-Feld
-    // still überschreibt, vernichtet Arbeit, die nirgends versioniert ist).
+    // ── Spec 03 · L2: KI-Kundentext — 98 · 3.3 S4-3: in Foodbook\FoodbookKundentext, hier Fassade ──
 
-    /**
-     * Kundentext-Vorschlag für die Foodbook-Einleitung. Persistiert NICHTS außer der
-     * Audit-Zeile des Gateways (GL-07 I3). Ohne gebundenen Provider wirft `propose()`
-     * typisiert (KiNichtVerfuegbar/KiDeaktiviert) — hier bewusst NICHT geschluckt,
-     * die Fläche formuliert die Meldung.
-     *
-     * @return array{text: string, confidence: ?float, call_log_id: ?int}
-     */
     public function kiKundentextVorschlag(Team $team, int $foodbookId): array
     {
-        $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($foodbookId);
-        $this->guard($fb, $team);                                    // D1: Schreiben/Erzeugen nur durchs Besitzer-Team
-
-        // Workstream W (MCP-Steuerbarkeit D7): Kundentext an Cross-Cutting-Fakten erden (Anti-Marker
-        // etc.) — Guardrail fürs kundensichtbare Wording. Wirkt Web + MCP (Parität).
-        $wissen = app(\Platform\FoodAlchemist\Services\Ai\KnowledgeContextService::class)
-            ->contextFor($team, 'foodbook.kundentext', (string) ($fb->label ?: 'Foodbook'));
-
-        $proposal = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose(
-            'foodbook.kundentext',
-            $this->kundentextKontext($team, $fb),
-            [
-                'food_dna_foodbook_id' => (int) $fb->id,
-                // Ebene 2 der DNA-Kette: der Endkunde des Foodbooks (Muster wie kiKundentext am Block)
-                'food_dna_crm_company_id' => $fb->crm_company_id !== null ? (int) $fb->crm_company_id : null,
-                'target_table' => 'foodalchemist_foodbooks',
-                'target_id' => (int) $fb->id,
-                'knowledge' => $wissen['block'] ?? null,
-                'knowledge_used' => $wissen['files_used'] ?? null,
-            ],
-        );
-
-        $text = trim((string) ($proposal->werte['text'] ?? ''));
-        if ($text === '') {
-            // Leere Antwort NICHT als Erfolg verkaufen — sonst zeigt die Vorschau ein leeres
-            // Kästchen und „Übernehmen" würde das Feld leeren.
-            throw new \RuntimeException('Die KI hat keinen Text geliefert. Bitte erneut versuchen.');
-        }
-
-        return ['text' => $text, 'confidence' => $proposal->confidence, 'call_log_id' => $proposal->callLogId];
+        return $this->kundentext->kiKundentextVorschlag($team, $foodbookId);
     }
 
-    /**
-     * Spec 03 · L2b — dasselbe für die **Kapitel**-Ebene (`foodbook_chapters.description`).
-     * Eigener Einstieg, aber derselbe Prompt-Key: die Ebene steht im Kontext (`ebene`),
-     * nicht im Key. Persistiert ebenfalls nichts — Übernehmen bleibt ein menschlicher Akt.
-     *
-     * @return array{text: string, confidence: ?float, call_log_id: ?int}
-     */
     public function kiKapitelKundentextVorschlag(Team $team, int $kapitelId): array
     {
-        $k = $this->ownedKapitel($team, $kapitelId);           // D1: Pflege nur durchs Besitzer-Team
-        $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($k->foodbook_id);
-
-        // Workstream W (D7): dieselbe Cross-Cutting-Erdung wie am Buch-Kundentext (geteilter Prompt-Key).
-        $wissen = app(\Platform\FoodAlchemist\Services\Ai\KnowledgeContextService::class)
-            ->contextFor($team, 'foodbook.kundentext', (string) ($k->title ?: $fb->label ?: 'Kapitel'));
-
-        $proposal = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose(
-            'foodbook.kundentext',
-            $this->kapitelKundentextKontext($team, $fb, $k),
-            [
-                'food_dna_foodbook_id' => (int) $fb->id,
-                'food_dna_crm_company_id' => $fb->crm_company_id !== null ? (int) $fb->crm_company_id : null,
-                // Ziel ist das KAPITEL, nicht das Buch — die Audit-Zeile muss zeigen, welches
-                // Feld der Vorschlag füllen soll (sonst sind n Kapitel-Calls nicht unterscheidbar).
-                'target_table' => 'foodalchemist_foodbook_chapters',
-                'target_id' => (int) $k->id,
-                'knowledge' => $wissen['block'] ?? null,
-                'knowledge_used' => $wissen['files_used'] ?? null,
-            ],
-        );
-
-        $text = trim((string) ($proposal->werte['text'] ?? ''));
-        if ($text === '') {
-            throw new \RuntimeException('Die KI hat keinen Text geliefert. Bitte erneut versuchen.');
-        }
-
-        return ['text' => $text, 'confidence' => $proposal->confidence, 'call_log_id' => $proposal->callLogId];
+        return $this->kundentext->kiKapitelKundentextVorschlag($team, $kapitelId);
     }
 
-    /**
-     * Kontext-Vertrag des Kundentexts: WAS im Angebot steht (Gliederung über die
-     * Wording-Kette — dieselben Kunden-Labels wie im PDF, nicht die internen Namen)
-     * + WIE es gerahmt ist (Leitplanken) + das Roh-Briefing als Umformungs-Vorlage.
-     * Die Marken-/Schreibstil-Kette hängt `AiGatewayService::propose` selbst an.
-     *
-     * @return array<string, mixed>
-     */
-    private function kundentextKontext(Team $team, FoodAlchemistFoodbook $fb): array
-    {
-        $voll = $this->detail($team, (int) $fb->id) ?? $fb;
+    // ── Branding (pro Foodbook) — 98 · 3.3 S4-5: in Foodbook\FoodbookDokument, hier Fassade ──
 
-        $gliederung = [];
-        foreach ($voll->chapters as $k) {
-            $gliederung[] = $this->kundentextKapitelZeile($k);
-            if (count($gliederung) >= 20) {
-                break;
-            }
-        }
-
-        $briefing = trim((string) $voll->description);
-
-        return [
-            'ebene' => 'foodbook',
-            'titel' => $voll->label,
-            'kunde' => $voll->crmCompany?->display_name,
-            'personen' => $voll->personen,
-            'briefing_ist' => $briefing !== '' ? $briefing : null,
-            'gliederung' => $gliederung,
-            'leitplanken' => $this->leitplanken($team, $voll),
-        ];
-    }
-
-    /**
-     * Kontext-Vertrag der Kapitel-Ebene. Drei Unterschiede zur Buch-Ebene, jeder mit Grund:
-     *  · Die `gliederung` ist auf DIESES Kapitel geschnitten (plus seine Unterkapitel — ein
-     *    Eltern-Kapitel ist eine Klammer, sein Inhalt hängt darunter). Die Nachbar-Kapitel
-     *    gehören nicht dazu: die Hinführung soll das Kapitel eröffnen, nicht das Buch.
-     *  · `briefing_ist` ist der **Kapitel**-Text, falls schon einer steht (Umformen statt
-     *    Neuschreiben, wie auf der Buch-Ebene). Das Buch-Briefing kommt getrennt als
-     *    `rahmen_einleitung` mit — damit die Hinführung nicht die Einleitung wiederholt.
-     *  · `leitplanken` werden MIT Kapitel aufgelöst (Zielgruppen-/Kreativ-Kaskade
-     *    Kapitel → Foodbook), sonst schriebe die KI gegen den Buch-Default.
-     *
-     * @return array<string, mixed>
-     */
-    private function kapitelKundentextKontext(Team $team, FoodAlchemistFoodbook $fb, FoodAlchemistFoodbookKapitel $k): array
-    {
-        $gliederung = [$this->kundentextKapitelZeile($k)];
-        foreach ($k->children()->limit(19)->get() as $kind) {
-            $gliederung[] = $this->kundentextKapitelZeile($kind);
-        }
-
-        $kapitelText = trim((string) $k->description);
-        $rahmen = trim((string) $fb->description);
-
-        // Fix (a) / #2: der KAPITEL-Schreibstil-Override dominiert (falls gesetzt) — sonst hängt die
-        // Cascade in propose() den Foodbook-/Team-Default an. So folgt die Kapitel-Hinführung dem
-        // Kapitel-Stil, konsistent zum Kapitel-Wording. sprach_duktus, nicht nur der Name.
-        $stil = $k->writingStyle;
-        $stilKontext = $stil !== null ? array_filter([
-            'schreibstil' => $stil->name,
-            'schreibstil_anweisung' => trim((string) $stil->sprach_duktus) ?: null,
-            'schreibstil_beispiele' => trim((string) $stil->beispiele_md) ?: null,
-        ], fn ($v) => $v !== null) : [];
-
-        return [
-            'ebene' => 'kapitel',
-            'titel' => trim((string) ($k->consumer_title ?: $k->title)),
-            'foodbook_titel' => $fb->label,
-            'kunde' => $fb->crmCompany?->display_name,
-            'personen' => $fb->personen,
-            'briefing_ist' => $kapitelText !== '' ? $kapitelText : null,
-            'rahmen_einleitung' => $rahmen !== '' ? $rahmen : null,
-            'gliederung' => $gliederung,
-            'leitplanken' => $this->leitplanken($team, $fb, null, $k),
-        ] + $stilKontext;
-    }
-
-    /**
-     * Eine Kapitel-Zeile der KI-Gliederung: Kunden-Label des Kapitels + seine sichtbaren
-     * Positionen über die Wording-Kette. Von beiden Ebenen geteilt, damit ein Kapitel in
-     * der Buch- und in der Kapitel-Sicht dasselbe zeigt.
-     *
-     * @return array{kapitel: string, positionen: list<string>}
-     */
-    private function kundentextKapitelZeile(FoodAlchemistFoodbookKapitel $k): array
-    {
-        $positionen = [];
-        foreach ($k->blocks as $b) {
-            if (! $b->visible) {
-                continue;                                            // Export-Filter gilt auch für die KI-Sicht
-            }
-            $t = trim((string) $this->dokBlockLabel($b));
-            if ($t !== '') {
-                $positionen[] = $t;
-            }
-        }
-
-        return [
-            'kapitel' => trim((string) ($k->consumer_title ?: $k->title)),
-            // Deckel gegen Prompt-Aufblähung: ein 60-Positionen-Buffet-Kapitel braucht
-            // die KI nicht vollständig, um den Bogen zu spannen.
-            'positionen' => array_slice(array_values(array_unique($positionen)), 0, 12),
-        ];
-    }
-
-    // ── Branding (pro Foodbook) ─────────────────────────────────────────────────
-    //
-    // UI-agnostische API: der Branding/CI-Tab im Cockpit (separate Session) UND MCP/Console
-    // rufen dieselben Methoden. Owner-Guard wie überall (D1). Bilder laufen fuer neue Uploads
-    // ueber Core ContextFiles (zentraler Disk/S3), alte public-Pfade bleiben lesbar.
-
-    /** Setzt Farb-/Text-Marke. $in: brand_color, band_color, footer_text (jeweils optional). */
     public function setBranding(Team $team, int $foodbookId, array $in): FoodAlchemistFoodbook
     {
-        $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($foodbookId);
-        $this->guard($fb, $team);
-
-        $daten = [];
-        if (array_key_exists('brand_color', $in)) {
-            $daten['brand_color'] = $this->normHexOderThrow($in['brand_color'], 'Markenfarbe') ?? '#6d28d9';
-        }
-        if (array_key_exists('band_color', $in)) {
-            // Leer → null (Blade leitet dann aus brand_color ab).
-            $daten['band_color'] = $this->normHexOderThrow($in['band_color'], 'Bandfarbe', erlaubeLeer: true);
-        }
-        if (array_key_exists('footer_text', $in)) {
-            $t = trim((string) $in['footer_text']);
-            $daten['footer_text'] = $t !== '' ? $t : null;
-        }
-        if ($daten !== []) {
-            $fb->update($daten);
-        }
-
-        return $fb->refresh();
+        return $this->dokument->setBranding($team, $foodbookId, $in);
     }
 
     public function storeLogo(Team $team, int $foodbookId, UploadedFile $file): string
     {
-        return $this->speichereBrandingBild($team, $foodbookId, $file, 'logo_path');
+        return $this->dokument->storeLogo($team, $foodbookId, $file);
     }
 
     public function storeCover(Team $team, int $foodbookId, UploadedFile $file): string
     {
-        return $this->speichereBrandingBild($team, $foodbookId, $file, 'cover_image_path');
+        return $this->dokument->storeCover($team, $foodbookId, $file);
     }
 
     public function clearLogo(Team $team, int $foodbookId): FoodAlchemistFoodbook
     {
-        return $this->loescheBrandingBild($team, $foodbookId, 'logo_path');
+        return $this->dokument->clearLogo($team, $foodbookId);
     }
 
     public function clearCover(Team $team, int $foodbookId): FoodAlchemistFoodbook
     {
-        return $this->loescheBrandingBild($team, $foodbookId, 'cover_image_path');
+        return $this->dokument->clearCover($team, $foodbookId);
     }
 
-    private function speichereBrandingBild(Team $team, int $foodbookId, UploadedFile $file, string $spalte): string
-    {
-        $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($foodbookId);
-        $this->guard($fb, $team);
-
-        $contextSpalte = $this->brandingContextSpalte($spalte);
-        $alt = (string) $fb->{$spalte};
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($fb->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($fb, $spalte)]);
-
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
-            $file,
-            $team,
-            'foodalchemist.foodbook',
-            $foodbookId,
-            "foodalchemist/branding/{$foodbookId}",
-        );
-        $pfad = $media['path'];
-        $fb->update([
-            $spalte => $pfad,
-            $contextSpalte => $media['context_file_id'],
-        ]);
-
-        return $pfad;
-    }
-
-    private function loescheBrandingBild(Team $team, int $foodbookId, string $spalte): FoodAlchemistFoodbook
-    {
-        $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($foodbookId);
-        $this->guard($fb, $team);
-
-        $contextSpalte = $this->brandingContextSpalte($spalte);
-        $alt = (string) $fb->{$spalte};
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($fb->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($fb, $spalte)]);
-        $fb->update([
-            $spalte => null,
-            $contextSpalte => null,
-        ]);
-
-        return $fb->refresh();
-    }
-
-    /**
-     * Marken-Tokens fürs Dokument-Blade. Logo/Cover als base64-Data-URI (DomPDF lädt keine
-     * http-URLs, enable_remote ist aus) — funktioniert im HTML- wie im PDF-Pfad. band leer →
-     * aus brand_color, footer null → Blade nutzt Default-Zeile.
-     *
-     * @return array{color:string, band:string, logo:?string, cover:?string, footer:?string}
-     */
-    private function brandingDaten(FoodAlchemistFoodbook $fb): array
-    {
-        $color = ($fb->brand_color ?? '') !== '' ? $fb->brand_color : '#6d28d9';
-
-        return [
-            'color' => $color,
-            'band' => ($fb->band_color ?? '') !== '' ? $fb->band_color : $color,
-            'logo' => app(FoodAlchemistMediaService::class)->dataUri($fb->logo_context_file_id, $fb->logo_path),
-            'cover' => app(FoodAlchemistMediaService::class)->dataUri($fb->cover_context_file_id, $fb->cover_image_path),
-            'footer' => ($fb->footer_text ?? '') !== '' ? $fb->footer_text : null,
-        ];
-    }
-
-    private function brandingContextSpalte(string $spalte): string
-    {
-        return match ($spalte) {
-            'logo_path' => 'logo_context_file_id',
-            'cover_image_path' => 'cover_context_file_id',
-            default => throw new \InvalidArgumentException("Unbekannte Branding-Bildspalte: {$spalte}"),
-        };
-    }
-
-    /** Hex-Validierung wie Settings\Kueche::sanitizeFarben. erlaubeLeer=true → '' ⇒ null. */
-    private function normHexOderThrow($wert, string $feld, bool $erlaubeLeer = false): ?string
-    {
-        $v = trim((string) $wert);
-        if ($v === '') {
-            if ($erlaubeLeer) {
-                return null;
-            }
-            throw new \RuntimeException("{$feld} darf nicht leer sein.");
-        }
-        if (! preg_match('/^#[0-9a-fA-F]{6}$/', $v)) {
-            throw new \RuntimeException("{$feld}: ungültiger Farbwert „{$v}“ (erwartet #RRGGBB).");
-        }
-
-        return strtolower($v);
-    }
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
-
+    // 98 · 3.3 S4-1: Besitzer-Riegel in Foodbook\FoodbookBasis (eine Stelle für alle Teile)
     private function ownedKapitel(Team $team, int $id): FoodAlchemistFoodbookKapitel
     {
-        $k = FoodAlchemistFoodbookKapitel::visibleToTeam($team)->findOrFail($id);
-        if (! $k->isOwnedBy($team)) {
-            throw new \RuntimeException('Geerbtes Foodbook: Ändern kann es nur das Besitzer-Team.');
-        }
-
-        return $k;
+        return $this->basis->ownedKapitel($team, $id);
     }
 
     private function ownedBlock(Team $team, int $id): FoodAlchemistFoodbookBlock
     {
-        $block = FoodAlchemistFoodbookBlock::visibleToTeam($team)->findOrFail($id);
-        if (! $block->isOwnedBy($team)) {
-            throw new \RuntimeException('Geerbtes Foodbook: Ändern kann es nur das Besitzer-Team.');
-        }
-
-        return $block;
+        return $this->basis->ownedBlock($team, $id);
     }
 
     private function guard(FoodAlchemistFoodbook $fb, Team $team): void
     {
-        if (! $fb->isOwnedBy($team)) {
-            throw new \RuntimeException('Geerbtes Foodbook: Ändern kann es nur das Besitzer-Team.');
-        }
+        $this->basis->guard($fb, $team);
     }
 }

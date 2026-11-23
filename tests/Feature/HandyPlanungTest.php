@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
@@ -75,13 +76,13 @@ it('am Computer unverändert: Reiterleiste mit allen Reitern, Ausgabe-Formen, Ve
 
 it('Server-Sperre am Handy: Auftrag, Start, Abbruch, Wiederaufnahme, Freigabe/Anreichern und Schritt-Fotos ja; Verwerfen, Pflege, Ausgabe-Formen nein', function () {
     request()->cookies->set(HandyLesemodus::COOKIE, '1');
-    foreach (['schnellErstellen', 'oeffne', 'speichern', 'briefDiktatUebernehmen', 'agentDiktatUebernehmen', 'laufGestartet', 'briefGespiegelt',
-        'laufAbbrechen', 'laufGeaendert', 'laufStatus', 'kindMeldung', '_startUpload'] as $m) {
+    foreach (['schnellErstellen', 'oeffne', 'speichern', 'laufGestartet', 'briefGespiegelt', 'oeffneAusKind', 'ownerGewaehlt',
+        'laufAbbrechen', 'laufGeaendert', 'laufStatus', 'kindMeldung'] as $m) {
         expect(HandyLesemodus::abgewiesen(new PlanungIndex, $m))->toBeFalse($m);
     }
     // Spec 85 C1 PR-4: Auftrag geben und starten liegt im Kind Brief, gleicher Handy-Umfang
     foreach (['goKaskade', 'kiKopf', 'leitplankenAusBriefing', 'reglerPill', 'briefVorlage', 'titelVorschlagen', 'wissenVorschau',
-        'planFeldSpeichern', 'planVerwerfen', 'voiceKomponentenUebernehmen', 'briefUebernehmen'] as $m) {
+        'planFeldSpeichern', 'planVerwerfen', 'voiceKomponentenUebernehmen', 'briefUebernehmen', 'agentDiktatUebernehmen'] as $m) {
         expect(HandyLesemodus::abgewiesen(new Brief, $m))->toBeFalse('Brief::' . $m);
     }
     foreach (['alsVorlageSpeichern', 'loeschenVorlage', 'trendUebernommen', 'bestehendesConceptWaehlen'] as $m) {
@@ -97,8 +98,11 @@ it('Server-Sperre am Handy: Auftrag, Start, Abbruch, Wiederaufnahme, Freigabe/An
         'vorschlagUeberarbeiten', 'erzeugeGeplant', 'toggleZutaten', 'toggleKommentar', 'ergaenzeSubRezept', 'konformitaetPruefen'] as $m) {
         expect(HandyLesemodus::abgewiesen(new KaskadenLauf, $m))->toBeTrue('KaskadenLauf::' . $m);
     }
+    // Spec 85 C1 PR-5: die Ausgabe-Formen aus dem Brief (samt Recorder-Diktat) liegen im Kind AusBrief und bleiben am Computer
+    foreach (['foodbookAusBrief', 'speisekarteAusBrief', 'speiseplanAusBrief', 'angebotAusBrief', 'formatAusBrief', 'briefDiktatUebernehmen', '_startUpload'] as $m) {
+        expect(HandyLesemodus::abgewiesen(new AusBrief, $m))->toBeTrue('AusBrief::' . $m);
+    }
     foreach (['planungVerwerfen', 'planungDuplizieren',
-        'foodbookAusBrief', 'speisekarteAusBrief', 'speiseplanAusBrief', 'angebotAusBrief', 'formatAusBrief',
         'schnellComposer', 'schnellTrendradar', 'trendUebernommen', 'composerAdd', 'composerUebernehmen'] as $m) {
         expect(HandyLesemodus::abgewiesen(new PlanungIndex, $m))->toBeTrue($m);
     }

@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Livewire;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\ReportExportService;
@@ -82,6 +83,8 @@ it('Planung-Leitstelle nimmt den sk_owner-Handoff an (skOwnerId + Panel auf)', f
 
     Livewire::withQueryParams(['sk_owner' => $karte->id])
         ->test(PlanungIndex::class)
-        ->assertSet('skOwnerId', $karte->id)
         ->assertSet('skPanelAuf', true);
+    Livewire::withQueryParams(['sk_owner' => $karte->id])   // Spec 85 C1 PR-5: die Owner-Auswahl liest Planung\AusBrief
+        ->test(AusBrief::class)
+        ->assertSet('skOwnerId', $karte->id);
 });

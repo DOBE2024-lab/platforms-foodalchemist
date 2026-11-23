@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\Core\Contracts\LLMProviderContract;
 use Platform\FoodAlchemist\Jobs\GenerateConceptJob;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Livewire\Planung\FoodbookKontextRail;
 use Platform\FoodAlchemist\Livewire\Planung\KapitelRail;
@@ -74,7 +75,7 @@ function macheFoodbookMitKapiteln(\Platform\Core\Models\Team $rootTeam): FoodAlc
             ['label' => 'Hauptgang', 'slot_type' => 'gang', 'is_pflicht' => true],
         ],
     ]);
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('fbTitel', 'Kapitel-FB')
         ->set('fbBrief', 'Menü für 60 Gäste, gehoben.')
         ->call('foodbookAusBrief');

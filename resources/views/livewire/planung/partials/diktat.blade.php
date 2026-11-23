@@ -1,7 +1,7 @@
 {{--
     Diktat-Knopf für EIN Briefing-Feld der Planungsstelle.
 
-    Erwartet: $ziel = Property-Pfad aus Index::DIKTAT_ZIELE
+    Erwartet: $ziel = Property-Pfad aus Support\Planung\DiktatZiele::ZIELE (Recorder) bzw. eingabe.<scope>.brief (ohne Recorder)
               (z. B. 'fbBrief' oder 'eingabe.gericht.brief')
     Optional:  $mitLeitplanken = Scope-Name (rezept|gericht|concept) → zeigt zusätzlich
                den „Leitplanken aus Briefing"-Knopf. Nur die drei Erstell-Scopes haben Regler.

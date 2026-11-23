@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\Core\Contracts\LLMProviderContract;
 use Platform\FoodAlchemist\Jobs\GenerateConceptJob;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
@@ -70,7 +71,7 @@ it('formatAusBrief: plant Konzepte in der Leitstelle und dockt ans neue Format (
         ],
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('fmtTitel', 'Streetfood Weltreise')
         ->set('fmtBrief', 'Gebrandetes Streetfood-Format, 2 Stationen, gehobenes Business-Catering.')
         ->call('formatAusBrief')
@@ -99,7 +100,7 @@ it('formatAusBrief mit fmtOwnerId (Handoff): plant für ein bestehendes Format, 
     $format = app(FormatService::class)->create($this->rootTeam, ['name' => 'Bestehendes Format', 'origin' => 'eigen']);
     $vorher = FoodAlchemistFormat::where('team_id', $this->rootTeam->id)->count();
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('fmtOwnerId', $format->id)
         ->set('fmtBrief', 'Brief für ein bestehendes Format.')
         ->call('formatAusBrief')
@@ -114,7 +115,7 @@ it('formatAusBrief mit fmtOwnerId (Handoff): plant für ein bestehendes Format, 
 it('formatAusBrief: leerer Brief → Meldung, nichts angelegt', function () {
     Queue::fake();
 
-    $comp = Livewire::test(PlanungIndex::class)
+    $comp = Livewire::test(AusBrief::class)
         ->set('fmtBrief', '   ')
         ->call('formatAusBrief');
 
@@ -133,8 +134,11 @@ it('Format-Auswähler aktiviert die jüngste Owner-Session (updatedFmtOwnerId)',
         'source_owner_type' => 'format', 'source_owner_id' => $format->id, 'created_via' => 'test',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: Owner-Auswahl im Kind, die Session aktiviert der Parent
         ->set('fmtOwnerId', $format->id)
         ->assertSet('fmtOwnerId', $format->id)
+        ->assertDispatched('planung.owner-gewaehlt', ownerType: 'format', ownerId: $format->id);
+    Livewire::test(PlanungIndex::class)
+        ->dispatch('planung.owner-gewaehlt', ownerType: 'format', ownerId: $format->id)
         ->assertSet('sessionId', $session->id);
 });

@@ -168,14 +168,18 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
           DB_URL: ''
-        # Kein --processes: Pest reicht es bei --shard an `--list-tests` durch, PHPUnit lehnt es ab.
-        # --parallel nimmt ohne Angabe die Kernzahl des Runners.
+        # Aufteilung selbst (ci/shard_dateien.py) statt `pest --shard`: Pests Testliste erkennt nur Klassen
+        # im Namespace Tests\… — bei den Modultests bliebe sie leer, jeder Shard liefe die ganze Suite.
+        # Kein --processes: --parallel nimmt ohne Angabe die Kernzahl des Runners.
         run: |
           set -o pipefail
           echo "nproc=$(nproc)  php=$(php -r 'echo PHP_VERSION;')  xdebug=$(php -m | grep -ci xdebug)  pcov=$(php -m | grep -ci pcov)"
+          # phpunit-shard.xml = phpunit.xml, die Suite FoodAlchemist listet nur die Dateien dieses Shards
+          python3 "$GITHUB_WORKSPACE/werkzeug/ci/shard_dateien.py" \
+            "$WS/platform/modules/platforms-foodalchemist/tests" "$SHARD" "$SHARDS" vendor/martin3r/platform-foodalchemist/tests \
+            --phpunit phpunit.xml phpunit-shard.xml
           php -d memory_limit=1G vendor/bin/pest \
-            --configuration=phpunit.xml --testsuite=FoodAlchemist \
-            --shard="${SHARD}/${SHARDS}" \
+            --configuration=phpunit-shard.xml --testsuite=FoodAlchemist \
             --parallel \
             --log-junit="junit-${SHARD}.xml" 2>&1 | tee "pest-${SHARD}.log"
 

@@ -30,7 +30,7 @@
 | 2 | Favoriten | `/favoriten` | offen | |
 | 2 | Formate | `/formate` | offen | |
 | 2 | Concepter (Browser) | `/concepter` | offen | |
-| 2 | Concepts / Pakete | `/concepts`, `/pakete` | offen | prüfen, ob noch eigenständig nötig (Concepter vereinheitlicht) |
+| 2 | Concepts / Pakete | `/concepts`, `/pakete` | entfernt | mit Plan 98 · 2.6c abgeschaltet, Pakete und Konzepte nur noch im Concepter |
 | 3 | Rezept-Editor | Modal | offen | Summenzeile bricht um · Entwicklersprache („Save-Recompute") · zwei leere Filterspalten · Löschen neben Speichern · 3 KI-Knöpfe · Werkbank-Modus |
 | 3 | Gericht-/VK-Editor | Modal | offen | Werkbank-Modus |
 | 3 | GP-Editor | Modal | offen | |

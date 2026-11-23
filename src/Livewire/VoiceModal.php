@@ -167,8 +167,8 @@ class VoiceModal extends Component
         'recipe' => ['route' => 'foodalchemist.recipes.index', 'param' => 'rezept', 'event' => 'recipe-selected', 'label' => 'Basisrezept öffnen'],
         'verkaufsrezept' => ['route' => 'foodalchemist.verkauf.index', 'param' => 'rezept', 'event' => 'vk-recipe-selected', 'label' => 'Gericht öffnen'],
         'gp' => ['route' => 'foodalchemist.gps.index', 'param' => 'gp', 'event' => null, 'label' => 'Grundprodukt öffnen'],
-        'concept' => ['route' => 'foodalchemist.concepts.index', 'param' => 'c', 'event' => null, 'label' => 'Konzept öffnen'],
-        'paket' => ['route' => 'foodalchemist.pakete.index', 'param' => 'b', 'event' => null, 'label' => 'Paket öffnen'],
+        'concept' => ['route' => 'foodalchemist.concepter.index', 'param' => 'sel', 'event' => null, 'label' => 'Konzept öffnen'],
+        'paket' => ['route' => 'foodalchemist.concepter.index', 'param' => 'sel', 'event' => null, 'label' => 'Paket öffnen'],   // 98 · 2.6c: Pakete = Concepts (kind=paket)
         'foodbook' => ['route' => 'foodalchemist.foodbooks.index', 'param' => 'fb', 'event' => null, 'label' => 'Foodbook öffnen'],
         'speisekarte' => ['route' => 'foodalchemist.speisekarte.index', 'param' => 'sk', 'event' => null, 'label' => 'Speisekarte öffnen'],
         'speiseplan' => ['route' => 'foodalchemist.speiseplan.index', 'param' => 'sp', 'event' => null, 'label' => 'Speiseplan öffnen'],

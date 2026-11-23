@@ -654,8 +654,6 @@ abstract class FoodAlchemistTool
             'gps' => ['route' => 'foodalchemist.gps.index', 'label' => 'Grundprodukte'],
             'gp_detail' => ['route' => 'foodalchemist.gps.show', 'label' => 'Grundprodukt-Detail', 'record' => 'gp'],
             'concepter' => ['route' => 'foodalchemist.concepter.index', 'label' => 'Concepter'],
-            'concepts' => ['route' => 'foodalchemist.concepts.index', 'label' => 'Konzepte'],
-            'pakete' => ['route' => 'foodalchemist.pakete.index', 'label' => 'Pakete'],
             'formate' => ['route' => 'foodalchemist.formate.index', 'label' => 'Formate'],
             'foodbooks' => ['route' => 'foodalchemist.foodbooks.index', 'label' => 'Foodbooks'],
             'speisekarte' => ['route' => 'foodalchemist.speisekarte.index', 'label' => 'Speisekarten'],
@@ -770,60 +768,6 @@ abstract class FoodAlchemistTool
         }
 
         return $this->guardOwned($team, \Platform\FoodAlchemist\Models\FoodAlchemistFormat::class, (int) $img->format_id, 'Format');
-    }
-
-    /**
-     * Kompakte Paket-Serialisierung (D5d) — geteilt von pakete.GET/LIST/SEARCH. Mit $withDishes werden
-     * die Gericht-Positionen (Row-Id, Gericht, Menge/Einheit) mitgegeben.
-     */
-    protected function paketPayload(\Platform\FoodAlchemist\Models\FoodAlchemistPaket $p, bool $withDishes = false, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, ?\Platform\Core\Models\Team $team = null): array
-    {
-        $out = [
-            'id' => (int) $p->id,
-            'name' => $p->name,
-            'consumer_name' => $p->consumer_name,
-            'role' => $p->role,
-            'class' => $p->class,
-            'level' => $p->level,
-            'price_mode' => $p->price_mode,
-            'price_per_person' => $p->price_per_person !== null ? (float) $p->price_per_person : null,
-            'ek_per_person' => $p->ek_per_person !== null ? (float) $p->ek_per_person : null,
-            'food_cost_percent' => $p->food_cost_percent !== null ? (float) $p->food_cost_percent : null,
-            'is_inactive' => (bool) $p->is_inactive,
-        ];
-        // Spec 82 Abo Pakete PR 3: eine Abo-Fassung trägt keine Master-Preise — Preis/EK kommen live aus der Team-Kalkulation
-        // (KostenCacheService/TeamVkService); unvollständig = null + Grund, nie 0 €.
-        $team ??= null;
-        $teamPreis = $team !== null && $p->ist_fassung
-            ? app(\Platform\FoodAlchemist\Services\PaketPreisService::class)->fuer($p, $team, $outlet) : null;
-        if ($teamPreis !== null) {
-            $out['price_per_person'] = $teamPreis['vk_pro_person'];
-            $out['ek_per_person'] = $teamPreis['ek_pro_person'];
-            $out['food_cost_percent'] = $teamPreis['food_cost_percent'];
-            $out['price_complete'] = $teamPreis['vollstaendig'];
-            $out['price_reason'] = $teamPreis['grund'];
-            $out['price_missing'] = $teamPreis['fehlende'];
-        }
-        // Ebene 2: VK/Person im Betriebs-Kontext (Auto-Paket on-the-fly; Fix-Preis bleibt) — price_per_person = Team-Baseline.
-        if ($outlet !== null) {
-            $out['outlet_id'] = (int) $outlet->id;
-            $out['price_per_person_outlet'] = $teamPreis !== null
-                ? $teamPreis['vk_pro_person']
-                : app(\Platform\FoodAlchemist\Services\PaketService::class)->paketPreisProPerson($p, $outlet);
-        }
-        if ($withDishes) {
-            $out['dishes'] = $p->dishes->map(fn ($g) => [
-                'row_id' => (int) $g->id,
-                'sales_recipe_id' => (int) $g->sales_recipe_id,
-                'name' => $g->dish?->name,
-                'quantity' => $g->quantity !== null ? (float) $g->quantity : null,
-                'unit' => $g->unit?->slug,
-                'presentation_id' => $g->presentation_id !== null ? (int) $g->presentation_id : null,
-                'darreichung' => $g->presentation_id !== null ? $g->presentation?->servingForm?->label : null,
-            ])->values()->all();
-        }
-
-        return $out;
     }
 
     /**

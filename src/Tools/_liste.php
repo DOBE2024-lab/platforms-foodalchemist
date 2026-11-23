@@ -13,8 +13,6 @@
 
 return [
     \Platform\FoodAlchemist\Tools\AblaufGetTool::class,
-    \Platform\FoodAlchemist\Tools\AboPaketeGetTool::class,   // Abo-/Alt-Pakete lesend (Team-Preis, Spec 82)
-    \Platform\FoodAlchemist\Tools\AboPaketeListTool::class,
     \Platform\FoodAlchemist\Tools\AbosDeleteTool::class,   // Spec 82 §12 D: Kündigung mit tiefer Kopie
     \Platform\FoodAlchemist\Tools\AbosGetTool::class,
     \Platform\FoodAlchemist\Tools\AbosPostTool::class,
@@ -410,8 +408,6 @@ return [
     \Platform\FoodAlchemist\Tools\PaketePutTool::class,
     \Platform\FoodAlchemist\Tools\PaketeRecomputeTool::class,
     \Platform\FoodAlchemist\Tools\PaketeSearchTool::class,
-    \Platform\FoodAlchemist\Tools\PaketFassungenGetTool::class,
-    \Platform\FoodAlchemist\Tools\PaketFassungenPublishTool::class,
     \Platform\FoodAlchemist\Tools\PaketGerichteMengeTool::class,
     \Platform\FoodAlchemist\Tools\PaketGerichteReorderTool::class,
     \Platform\FoodAlchemist\Tools\PaketGerichteSetTool::class,

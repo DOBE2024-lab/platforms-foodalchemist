@@ -21,7 +21,7 @@ class UiOpenTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
         'verkaufsrezept' => \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::class,
         'gp' => \Platform\FoodAlchemist\Models\FoodAlchemistGp::class,
         'concept' => \Platform\FoodAlchemist\Models\FoodAlchemistConcept::class,
-        'paket' => \Platform\FoodAlchemist\Models\FoodAlchemistPaket::class,
+        'paket' => \Platform\FoodAlchemist\Models\FoodAlchemistConcept::class,   // 98 · 2.6c: Paket = Concept kind=paket (Ids aus pakete.LIST)
         'foodbook' => \Platform\FoodAlchemist\Models\FoodAlchemistFoodbook::class,
         'speisekarte' => \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte::class,
         'speiseplan' => \Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan::class,
@@ -74,6 +74,8 @@ class UiOpenTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
             $q->where('is_sales_recipe', true);
         } elseif ($type === 'recipe') {
             $q->where('is_sales_recipe', false);
+        } elseif ($type === 'paket') {
+            $q->where('kind', 'paket');
         }
         if (! $q->exists()) {
             return ToolResult::error('Datensatz nicht sichtbar/vorhanden.', 'NOT_FOUND');

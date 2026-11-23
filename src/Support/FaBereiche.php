@@ -76,7 +76,7 @@ final class FaBereiche
         'controlling' => 'controlling', 'einkauf' => 'controlling',   // einkauf.* = alte Auswertungs-Routen → Controlling (Spec 32)
         'gps' => 'stammdaten', 'suppliers' => 'stammdaten', 'favorites' => 'stammdaten',
         'recipes' => 'rezepte', 'rezepte' => 'rezepte', 'verkauf' => 'rezepte', 'kalkulation' => 'rezepte', 'kalkulator' => 'rezepte',
-        'concepter' => 'concepter', 'concepts' => 'concepter', 'formate' => 'concepter', 'pakete' => 'concepter',
+        'concepter' => 'concepter', 'concepts' => 'concepter', 'formate' => 'concepter',
         'foodbooks' => 'foodbook', 'speisekarte' => 'speisekarte', 'speiseplan' => 'speiseplan', 'angebote' => 'angebote',
         'produktion' => 'produktion', 'etiketten' => 'produktion',
         'orders' => 'einkauf', 'wareneingang' => 'einkauf', 'bestellvorlagen' => 'einkauf', 'preislisten' => 'einkauf',
@@ -113,7 +113,7 @@ final class FaBereiche
         // Spec 82 §13 B1/B4: Plattform-Steuerung (Stamm-Paket, Master-Team, Mandanten-Verwaltung, Gebühren) — Rechteprüfung im Dienst (nur Plattform-Admin), nicht je Bereich
         ['stamm_paket', null], ['paket_grundeinstellungen', null], ['master_team', null], ['mandant_export', null], ['equipment_standard', null], ['mandanten', null], ['plan_preise', null], ['plan_nutzung', null], ['support_zugang', null], ['ki_klassen', null], ['ki_verbrauch', null],   // Spec 84 §4.4 (E3): Rechte-Pflege des Mandanten, bereichsfrei wie die Zugriffsrechte
         // Spec 82 §8 / §13 B6: Abos (Bereich „Abos" im Master-Team)
-        ['abos', 'abos'], ['abo_pakete', 'abos'],
+        ['abos', 'abos'],
         // Spec 77d: Inhalte für Standorte (Editor im Controlling), Sammlungen + eigene Kopie gehören zu den Rezepten
         ['standort_inhalte', 'controlling'], ['sammlungen', 'rezepte'], ['inhalte', 'rezepte'],
         // Controlling (Auswertungen; Spec 32 hat die Einkaufs-Auswertungen hierher verlegt)

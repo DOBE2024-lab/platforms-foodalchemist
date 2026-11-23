@@ -14,7 +14,7 @@ function popoverHtml(string $props = '', string $inhalt = 'INHALT'): string
 it('rendert Hülle mit faMenu, Auslöser und Kasten als Dialog mit Breite 80 und Innenabstand', function () {
     $html = popoverHtml('label="Neue Bestellrunde" class="inline-block" data-test-pop=""');
 
-    expect($html)->toMatch('/<div class="relative inline-block" data-test-pop="" x-data="faMenu\(\)"/')
+    expect($html)->toMatch('/<div class="relative inline-block" wire:key="fa-popover" data-test-pop="" x-data="faMenu\(\)"/')
         ->and($html)->toContain('AUF')
         ->and($html)->toMatch('/class="hidden w-80 fa-surface shadow-lg p-3" x-bind:class="\{ hidden: ! offen \}" x-bind:style="pos" role="dialog"\s+aria-label="Neue Bestellrunde"/')
         ->and($html)->toContain('INHALT');

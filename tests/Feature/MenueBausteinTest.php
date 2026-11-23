@@ -99,7 +99,7 @@ it('menu-item: :disabled wird zum disabled-Attribut des Knopfs', function () {
 it('detail-kopf nutzt x-fa::menu und behält die Handy-Markierung', function () {
     $html = menueHtml('<x-fa::detail-kopf title="Minestrone"><x-slot:menue><x-fa::menu-item>Löschen</x-fa::menu-item></x-slot:menue></x-fa::detail-kopf>');
 
-    expect($html)->toContain('<div class="relative shrink-0" data-fa-aendern="kopf.menue" x-data="faMenu()"')
+    expect($html)->toContain('<div class="relative shrink-0" wire:key="fa-menu" data-fa-aendern="kopf.menue" x-data="faMenu()"')
         ->and($html)->toContain('class="hidden w-60 fa-surface shadow-lg py-1"')
         ->and($html)->not->toContain('data-fa-aendern-frei');
 

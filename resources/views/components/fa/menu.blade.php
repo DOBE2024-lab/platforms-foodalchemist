@@ -27,7 +27,8 @@
     };
     $ausloeserAttr = $mitPraefix('ausloeser:');
     $menueAttr = $mitPraefix('menue:');
-    $huelle = $attributes->filter(fn ($wert, $name) => ! str_starts_with($name, 'ausloeser:') && ! str_starts_with($name, 'menue:'));
+    $huelle = $attributes->filter(fn ($wert, $name) => ! str_starts_with($name, 'ausloeser:') && ! str_starts_with($name, 'menue:'))
+        ->merge(['wire:key' => 'fa-menu']);   // Morph-Schlüssel je Baustein-Typ (Alpine-Morph-Fix), eigener wire:key gewinnt
 @endphp
 <div {{ $huelle->class(['relative']) }} x-data="faMenu()" x-on:keydown.escape="offen = false" x-on:click.outside="offen = false">
     @isset($ausloeser)

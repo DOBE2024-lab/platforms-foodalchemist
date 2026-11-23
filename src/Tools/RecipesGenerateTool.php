@@ -291,6 +291,8 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
                 'sales_net' => app(\Platform\FoodAlchemist\Services\DarreichungResolver::class)->vkNetto($recipe),
                 'n_ingredients_total' => $recipe->n_ingredients_total,
                 'n_ingredients_unmapped' => $recipe->n_ingredients_unmapped,
+                // Plan 98 B (h): Mengen wirken wie eine Charge (Portion außerhalb 20–3000 g) — dann kein Auto-VK; null = unauffällig
+                'charge_hinweis' => app(\Platform\FoodAlchemist\Services\DarreichungService::class)->chargenHinweis($recipe),
             ],
             // `statistik.stubs` (L7b-2) = die in diesem Lauf NEU angelegten
             // Sub-Rezept-Stubs mit Namen: bewusst leere Halbfabrikat-Platzhalter,

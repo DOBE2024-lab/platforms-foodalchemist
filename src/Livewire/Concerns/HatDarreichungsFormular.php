@@ -121,6 +121,9 @@ trait HatDarreichungsFormular
     /** Plan 98 B, Schritt 5: Eingabe „alle Mengen auf … %“ je Variante. @var array<int, string> */
     public array $darAnteilForm = [];
 
+    /** Plan 98 B (h): „Mengen wirken wie eine Charge – bitte prüfen“ (abgeleitet, DarreichungService::chargenHinweis), sonst null. */
+    public ?string $darChargeHinweis = null;
+
     /** „Alle Mengen auf … % der Standard-Darreichung“ — schreibt je Komponente ein Delta (DarreichungService::setzeAnteil). */
     public function darAnteil(int $id): void
     {
@@ -153,6 +156,7 @@ trait HatDarreichungsFormular
         $this->darZeitStart = [];
         $this->darDeltaOffen = null;
         $this->darNeueForm = '';
+        $this->darChargeHinweis = null;
         if ($this->recipeId === null) {
             return;
         }
@@ -190,6 +194,8 @@ trait HatDarreichungsFormular
         if (! isset($this->darForm[$this->darAktiv])) {
             $this->darAktiv = array_key_first($this->darForm);
         }
+        $gericht = $team !== null ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::visibleToTeam($team)->find($this->recipeId) : null;
+        $this->darChargeHinweis = $gericht !== null ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->chargenHinweis($gericht) : null;
     }
 
     /** Deutsch fürs Eingabefeld: feste Nachkommastellen (Preis) oder ohne überflüssige Nullen. */

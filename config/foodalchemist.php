@@ -1798,6 +1798,9 @@ return [
                 // Dominique 10.10.: ein Gericht ist IMMER genau eine Portion; der Code skaliert Abweichungen nach.
                 . 'Die Zutatenmengen (quantity) gelten fuer GENAU EINE Portion (parameter.ziel_portion_g bzw. '
                 . 'portion_g) — EIN Teller, nicht die Produktion; rechne NICHT auf eine Gaestezahl hoch. '
+                // Plan 98 B (h), Dominique 23.11.: Chargen-Antworten trotz Anweisung (demo Lauf 94) — ein Gegenbeispiel schaerft sie
+                . 'Beispiel fuer 80 Gaeste und 350 g Portion: FALSCH {"text":"Rinderfilet","quantity":12000,"unit":"g"} (Produktion), '
+                . 'RICHTIG {"text":"Rinderfilet","quantity":150,"unit":"g"} (ein Teller); die Summe aller quantity liegt nahe portion_g. '
                 . 'zutaten: [{text, quantity, unit (g|ml|kg|l|el|tl|stk), slug, note, '
                 // Ausbeute (2026-09-06): Garverlust je Zutat wie im Basis-Prompt — auch am Teller
                 // schwindet die Rohware (Steak 25 %, gebratenes Gemüse 20 %), sonst steht der

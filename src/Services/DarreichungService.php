@@ -49,6 +49,15 @@ class DarreichungService
         .'(Mengen je Portion), an einer Variante die Summe ihrer Komponenten. Setze stattdessen die Zutatenmengen des Gerichts, '
         .'an einer Variante den Anteil am Standard (anteil_prozent) oder Mengen je Komponente (recipe_darreichung_delta.PUT).';
 
+    /**
+     * Plan 98 B (h), Entscheid Dominique 23.11. („ok fixe die Ki“): liegt die Portion des Standards (Summe der Bestandteile, bei
+     * festem Ertrag gegart) außerhalb dieses Bands, wirken die Mengen wie eine Charge — kein Auto-VK, Hinweis am Gericht. Das Band
+     * ist dasselbe wie für die KI-Portion im Generator (portionG).
+     */
+    public const PORTION_PLAUSIBEL_G = [20.0, 3000.0];
+
+    public const CHARGE_HINWEIS = 'Mengen wirken wie eine Charge – bitte prüfen';
+
     /** Modell 23.11. (Dominique): die Portionszahl eines Gerichts ist fest 1 — kein Teiler. Altbestand > 1 stellt die Grammatur-Umstellung um. */
     public const PORTIONSZAHL_FEST = 'Die Portionszahl eines Gerichts ist fest 1: Die Zutatenmengen gelten je Portion. '
         .'Ein Gericht mit Mengen für mehrere Portionen wird über foodalchemist:grammatur-automatisch auf eine Portion skaliert.';
@@ -943,6 +952,11 @@ class DarreichungService
         $oldEffective = $darreichung->sales_net;
         $darreichung->forceFill(['quantity_per_unit_g' => $darreichung->quantity_per_unit_g, 'ek_portion' => $ekPortion]);
         $price = $this->catalogPricing->catalogPrice($team, $darreichung);
+        if ($price['price_mode'] === 'auto'
+            && $this->chargenHinweis($recipe, $darreichung->is_standard ? $darreichung : null) !== null) {
+            // Plan 98 B (h): Mengen wirken wie eine Charge — kein Auto-VK (ein bewusst fixierter VK bleibt)
+            $price = ['calculated_sales_net' => null, 'sales_net' => null, 'sales_gross' => null] + $price;
+        }
         $darreichung->update([
             'quantity_per_unit_g' => $darreichung->quantity_per_unit_g,
             'ek_portion' => $ekPortion,
@@ -1202,6 +1216,30 @@ class DarreichungService
             'gramm_je_portion' => round($gramm * (float) ($darreichung?->unit_count ?: 1), 1),
             'warnung' => $warnung,
         ];
+    }
+
+    /**
+     * Plan 98 B (h): Hinweis „Mengen wirken wie eine Charge“ — abgeleitet, keine Spalte. Die Portion des Standards liegt außerhalb
+     * von {@see PORTION_PLAUSIBEL_G}. Er verschwindet, sobald die Mengen im Band liegen oder der VK des Standards bewusst
+     * fixiert ist. Ohne Standard oder ohne bekannte Grammatur: kein Hinweis.
+     */
+    public function chargenHinweis(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $standard = null): ?string
+    {
+        if (! $recipe->is_sales_recipe) {
+            return null;
+        }
+        $standard ??= $recipe->standardPresentation()->first();
+        if ($standard === null || in_array($standard->price_mode, ['fixed', 'manuell'], true)) {
+            return null;
+        }
+        $g = $this->grammJeEinheit($standard, $recipe);
+        if ($g === null || $g <= 0) {
+            return null;
+        }
+        $g *= (float) ($standard->unit_count ?: 1);
+        [$min, $max] = self::PORTION_PLAUSIBEL_G;
+
+        return $g < $min || $g > $max ? self::CHARGE_HINWEIS : null;
     }
 
     /**

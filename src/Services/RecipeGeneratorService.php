@@ -597,6 +597,8 @@ class RecipeGeneratorService
                 // 28 kg / 12 kg Filet für 80 Pax). Die Produktion multipliziert mit pax.
                 $statistik['portion'] = $this->aufEinePortion($recipe, $parameter, $kiPortionG ?? null);
                 $recipe = $recipe->fresh() ?? $recipe;
+                // Plan 98 B (h), Dominique 23.11.: ohne plausibles Ziel bleibt eine Chargen-Antwort unskaliert — benennen, kein Auto-VK
+                $statistik['charge_hinweis'] = app(DarreichungService::class)->chargenHinweis($recipe);
             }
             // Fertigungstiefe aus dem Inhalt (Review Berater Lauf 92, Punkt S). In der Kaskade gilt sie als gesetzt
             // (Quelle kaskade, die KI-Anreicherung überschreibt sie nicht); außerhalb darf das Fertigungs-Glied nachbessern.

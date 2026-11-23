@@ -130,7 +130,7 @@
         {{-- Spec 65: Sidebar — Änderungen erst nach „Bearbeiten". Eingebettet im GP-Dialog sperrt dessen
              editor-tabs-fieldset (diese Instanz rendert beim Klick auf „Bearbeiten" im Dialog nicht neu). --}}
         @php $lesemodus = ! $embedded && in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true); @endphp
-        <fieldset @disabled($lesemodus) class="contents" data-fa-lesemodus="{{ $lesemodus ? '1' : '0' }}">
+        <x-fa::lese-sperre :an="$lesemodus">
 
         @if($fehler !== null)<x-fa::notice tone="crit" data-la-fehler>{{ $fehler }}</x-fa::notice>@endif
         @if($hinweis !== null)<x-fa::notice tone="ok" data-hinweis>{{ $hinweis }}</x-fa::notice>@endif
@@ -497,13 +497,16 @@
                 @endif
             </div>
         </x-fa::section>
-        {{-- Preisverlauf als Linie: eine Linie je Lieferantenartikel, Lead hervorgehoben (Detail UND GP-Modal, das dieses Panel einbettet) --}}
-        @if($gp->n_las_total > 0)
-            <x-fa::section variant="plain" title="Preisverlauf" icon="heroicon-o-presentation-chart-line" data-sektion="preisverlauf">
-                <livewire:foodalchemist.preise.verlauf modus="gp" :objekt-id="$gp->id" :key="'pv-gp-'.$gp->id" />
-            </x-fa::section>
         @endif
+        </x-fa::lese-sperre>
+
+        {{-- Anzeige-Insel außerhalb der Sperre: Preisverlauf bleibt im Lesemodus bedienbar. Eingebettet (section las im GP-Dialog)
+             rendert ihn gp-modal in x-slot:frei, weil diese Instanz beim „Bearbeiten“ im Dialog nicht neu rendert. --}}
+        @if($section === null && $gp->n_las_total > 0)
+            @include('foodalchemist::livewire.gps.partials.preisverlauf', ['gp' => $gp])
         @endif
+
+        <x-fa::lese-sperre :an="$lesemodus">
 
         {{-- Fachabschnitte --}}
         {{-- Stammdaten --}}
@@ -952,6 +955,6 @@
         @if($section === null)
         @if($gp->team_id === null)<p class="pt-3 border-t border-[var(--fa-line)] fa-t-muted">Zentral gepflegt, für alle Teams</p>@endif{{-- 98 · 2.4f D: UUID ausgeblendet --}}
         @endif
-        </fieldset>
+        </x-fa::lese-sperre>
     @endif
 </x-fa::page>

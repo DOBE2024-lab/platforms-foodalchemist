@@ -753,6 +753,14 @@
         @endif
         {{-- Spec 67: Stellplatz ist Betriebsdatum — auch ohne „Bearbeiten“ pflegbar --}}
         <x-slot:frei>
+            {{-- Anzeige-Insel im Reiter „price“: Preisverlauf unter der Artikel-Kette, ohne „Bearbeiten“ bedienbar (gleiches Partial wie die Detailspalte) --}}
+            @if(! $neu && $gp !== null && $gp->n_las_total > 0)
+            <div x-show="tab === 'price'" x-cloak class="pt-4">
+                <x-fa::section>
+                    @include('foodalchemist::livewire.gps.partials.preisverlauf', ['gp' => $gp])
+                </x-fa::section>
+            </div>
+            @endif
             @if($gpId)
             <div x-show="tab === 'lager'" x-cloak class="pt-4">
                 <x-fa::section>

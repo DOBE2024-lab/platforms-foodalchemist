@@ -119,9 +119,10 @@
                 </x-fa::notice>
             @endif
 
+            @php $laGesperrt = $darfEdit && in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true); @endphp
             {{-- Alpine-Modus: alle Reiter bleiben im DOM, damit die entangle-Bindings (Allergene,
                  Zusatzstoffe) und ungespeicherte Eingaben beim Umschalten erhalten bleiben. --}}
-            <x-fa::editor-tabs marker="la" wire-key="la-tabs-{{ $item->id }}" :init="$gpName === null ? 'gp' : 'preise'" :gesperrt="$darfEdit && in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true)"
+            <x-fa::editor-tabs marker="la" wire-key="la-tabs-{{ $item->id }}" :init="$gpName === null ? 'gp' : 'preise'" :gesperrt="$laGesperrt"
                 :tabs="[
                     'gp' => 'Grundprodukt',
                     'preise' => 'Preise',
@@ -202,158 +203,6 @@
                     </div>
                 </x-fa::section>
             </div>{{-- /Reiter GRUNDPRODUKT --}}
-
-            {{-- ── Reiter PREISE ───────────────────────────────────────────────── --}}
-            {{-- ab lg zweispaltig: links Preise (Liste + frühere Preise, scrollbar), rechts der Preisverlauf (sticky); darunter untereinander --}}
-            <div x-show="tab === 'preise'" x-cloak class="pt-4 grid gap-4 lg:grid-cols-2 lg:items-start" x-data="{ neuOffen: false }" data-preise-reiter>
-              <div class="flex min-w-0 flex-col gap-4" data-preise-links>
-                <x-fa::section title="Preise" icon="heroicon-o-banknotes" :meta="$historie->count() > 0 ? $historie->count() . ' Einträge' : null">
-                    <x-slot:actions>
-                        @if($darfEdit)
-                            <x-fa::button size="sm" variant="primary" icon="heroicon-m-plus" x-on:click="neuOffen = ! neuOffen"
-                                x-bind:aria-expanded="neuOffen" title="Einen Preis von Hand setzen; der bisher gültige endet damit" data-preis-neu-toggle>Preis manuell setzen</x-fa::button>
-                        @endif
-                    </x-slot:actions>
-
-                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)] px-3 py-2.5" data-ek-aktuell>
-                        <span class="fa-t-label">Gültiger Einkaufspreis</span>
-                        <span class="fa-t-h2"><x-fa::money :value="$aktivPreis" /></span>
-                        <span class="fa-t-muted">je {{ $bestellEinheit }}</span>
-                        @if($vergleichspreis !== null)
-                            <span class="fa-t-muted">entspricht <x-fa::money :value="$vergleichspreis['value']" :per="$einheitKurz($vergleichspreis['unit'])" /></span>
-                        @elseif($aktivPreis !== null)
-                            <x-fa::signal tone="warn" title="Ohne Inhalt und Kalkulationseinheit kein Preis je kg, l oder Stück">Menge fehlt für den Preis je kg</x-fa::signal>
-                        @endif
-                        @if(($letzterPreis ?? null) !== null)
-                            {{-- Rückfall 27.10.: Kalkulation und Lead-Wahl nutzen den letzten bekannten Preis, solange der Artikel eingestellt ist --}}
-                            <x-fa::badge :tone="$letzterPreis['warnung'] ? 'warn' : 'neutral'" title="{{ $letzterPreis['text'] }}" data-letzter-preis>
-                                letzter Preis <x-fa::money :value="$letzterPreis['preis']" />
-                            </x-fa::badge>
-                        @endif
-                        {{-- Aktion = reine Information (Entscheid 16.10.2026): Kalkulation bleibt beim Einkaufspreis oben --}}
-                        @if($aktion !== null)
-                            <x-fa::badge tone="warn" title="Aktionspreis, zählt nicht in Kalkulation und Preis-Linie" data-aktion-hinweis>
-                                Aktion <x-fa::money :value="(float) $aktion->price" /> bis {{ \Illuminate\Support\Carbon::parse($aktion->valid_to)->subSecond()->setTimezone('Europe/Berlin')->format('d.m.Y') }}
-                            </x-fa::badge>
-                        @endif
-                    </div>
-
-                    @if($darfEdit)
-                        <div x-show="neuOffen" x-cloak class="flex flex-wrap items-end gap-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3" data-preis-neu>
-                            <x-fa::field label="Neuer Preis (€, netto)" for="la-preis-neu" class="w-40">
-                                <x-fa::input id="la-preis-neu" wire:model="preisNeu.price" inputmode="decimal" placeholder="z. B. 47,50" numeric />
-                            </x-fa::field>
-                            <x-fa::choice name="preisNeu.status" id-prefix="la-preis" label="Art" :live="false"
-                                :options="['0' => 'Standard-EK', '2' => 'Läuft aus']" />
-                            <div class="flex flex-col gap-1">
-                                <x-fa::button wire:click="preisAnlegen" icon="heroicon-m-plus">Preis anlegen</x-fa::button>
-                            </div>
-                            <p class="basis-full fa-t-muted">Der bisher gültige Preis endet mit dem neuen Eintrag.</p>
-                        </div>
-                        <div x-show="neuOffen" x-cloak class="flex flex-wrap items-end gap-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3" data-aktion-neu>
-                            <x-fa::field label="Aktionspreis (€, netto)" for="la-aktion-preis" class="w-40">
-                                <x-fa::input id="la-aktion-preis" wire:model="aktionNeu.price" inputmode="decimal" placeholder="z. B. 39,90" numeric />
-                            </x-fa::field>
-                            <x-fa::field label="ab" for="la-aktion-ab" class="w-40">
-                                <x-fa::input id="la-aktion-ab" type="date" wire:model="aktionNeu.ab" />
-                            </x-fa::field>
-                            <x-fa::field label="bis" for="la-aktion-bis" class="w-40">
-                                <x-fa::input id="la-aktion-bis" type="date" wire:model="aktionNeu.bis" />
-                            </x-fa::field>
-                            <div class="flex flex-col gap-1">
-                                <x-fa::button wire:click="aktionAnlegen" icon="heroicon-m-plus" data-aktion-anlegen>Aktion anlegen</x-fa::button>
-                            </div>
-                            <p class="basis-full fa-t-muted">Eine Aktion ist ein Hinweis; die Kalkulation rechnet weiter mit dem Einkaufspreis. Entfernen über „Frühere Preise“ (ausblenden).</p>
-                        </div>
-                    @endif
-
-                    <div class="max-h-[28rem] overflow-auto -mx-1 px-1" data-preis-liste>
-                        <x-fa::table data-preis-historie="">
-                            <thead>
-                                <tr>
-                                    <th>Gültig ab</th>
-                                    <th>Gültig bis</th>
-                                    <th>Art</th>
-                                    <th class="num">Preis</th>
-                                    <th class="num">Je {{ $proEinheitOk ? $item->unit_code : 'Einheit' }}</th>
-                                    <th>Notiz</th>
-                                    <th><span class="sr-only">Aktionen</span></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($historie as $p)
-                                    <tr wire:key="preis-{{ $p->id }}">
-                                        @if($preisEditId === $p->id)
-                                            <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ $datum($p->status_valid_from) ?? $datum($p->creation_date) ?? 'unbekannt' }}</td>
-                                            <td>
-                                                <x-fa::input size="sm" type="date" wire:model="preisEdit.valid_to" aria-label="Gültig bis" class="w-36" />
-                                            </td>
-                                            <td><x-fa::badge>{{ $p->category->label() }}</x-fa::badge></td>
-                                            <td class="num">
-                                                <x-fa::input size="sm" wire:model="preisEdit.price" inputmode="decimal" aria-label="Preis in Euro" numeric class="w-24" />
-                                            </td>
-                                            <td class="num text-[var(--fa-ink-3)]">wird neu berechnet</td>
-                                            <td>
-                                                <x-fa::input size="sm" wire:model="preisEdit.note" placeholder="Notiz" aria-label="Notiz" class="min-w-32" />
-                                            </td>
-                                            <td class="whitespace-nowrap text-right">
-                                                <div class="inline-flex items-center gap-1.5">
-                                                    <x-fa::button size="sm" variant="ghost" wire:click="preisEditAbbrechen">Abbrechen</x-fa::button>
-                                                    <x-fa::button size="sm" icon="heroicon-m-check" wire:click="preisUpdate" data-preis-update>Preis sichern</x-fa::button>
-                                                </div>
-                                            </td>
-                                        @else
-                                            <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ $datum($p->status_valid_from) ?? $datum($p->creation_date) ?? 'unbekannt' }}</td>
-                                            <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ $datum($p->valid_to) ?? 'offen' }}</td>
-                                            <td><x-fa::badge :tone="$p->category->istAktiv() ? 'ok' : 'neutral'">{{ $p->category->label() }}</x-fa::badge></td>
-                                            <td class="num font-medium"><x-fa::money :value="$p->price" /></td>
-                                            <td class="num text-[var(--fa-ink-2)]">
-                                                @if($p->price !== null && $proEinheitOk)
-                                                    <x-fa::money :value="(float) $p->price / (float) $item->qty" :per="$item->unit_code" />
-                                                @else
-                                                    <span class="text-[var(--fa-ink-3)]">nicht berechenbar</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-[var(--fa-ink-2)] min-w-40 break-words">{{ $p->note ?: '' }}</td>
-                                            <td class="whitespace-nowrap text-right">
-                                                @if($darfEdit)
-                                                    <div class="inline-flex items-center gap-0.5">
-                                                        <x-fa::icon-button size="sm" icon="heroicon-o-pencil-square" label="Preis bearbeiten"
-                                                            wire:click="preisBearbeiten({{ $p->id }})" data-preis-edit />
-                                                        <x-fa::icon-button size="sm" tone="danger" icon="heroicon-o-trash" label="Preis löschen"
-                                                            wire:click="preisLoeschen({{ $p->id }})" wire:confirm="Diesen Preis löschen?" />
-                                                    </div>
-                                                @endif
-                                            </td>
-                                        @endif
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7">
-                                            <x-fa::empty compact icon="heroicon-o-banknotes" title="Noch kein Preis erfasst">
-                                                Ohne Preis rechnen Rezepte mit diesem Artikel nicht vollständig.@if($darfEdit) <span>Über «Preis erfassen» den ersten Preis anlegen.</span>@endif
-                                            </x-fa::empty>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </x-fa::table>
-                    </div>
-                    @if($item !== null)
-                        <livewire:foodalchemist.preise.fruehere :item-id="$item->id" :key="'pf-la-'.$item->id" />
-                    @endif
-                </x-fa::section>
-              </div>
-
-              {{-- Preisverlauf als Linie (Preis je Basiseinheit, Rohpreis je Gebinde im Tooltip); sticky neben der Liste --}}
-              @if($item !== null)
-                <div class="min-w-0 lg:sticky lg:top-0" data-preise-rechts>
-                    <x-fa::section title="Preisverlauf" icon="heroicon-o-presentation-chart-line" data-sektion="preisverlauf">
-                        <livewire:foodalchemist.preise.verlauf modus="la" :objekt-id="$item->id" :key="'pv-la-'.$item->id" />
-                    </x-fa::section>
-                </div>
-              @endif
-            </div>{{-- /Reiter PREISE --}}
 
             {{-- ── Reiter ALLERGENE UND NÄHRWERTE ──────────────────────────────── --}}
             <div x-show="tab === 'deklaration'" x-cloak class="pt-4 flex flex-col gap-4">
@@ -604,6 +453,162 @@
                 <livewire:foodalchemist.suppliers.produktpass-panel :item-id="$item->id" :key="'pp-la-'.$item->id" />
             </div>{{-- /Reiter PRODUKTPASS --}}
 
+            <x-slot:frei>
+            {{-- ── Reiter PREISE (in x-slot:frei: der Preisverlauf ist Anzeige und bleibt im Lesemodus bedienbar; die Pflege links sperrt eine eigene lese-sperre) ───────────────────────────────────────────────── --}}
+            {{-- ab lg zweispaltig: links Preise (Liste + frühere Preise, scrollbar), rechts der Preisverlauf (sticky); darunter untereinander --}}
+            <div x-show="tab === 'preise'" x-cloak class="pt-4 grid gap-4 lg:grid-cols-2 lg:items-start" x-data="{ neuOffen: false }" data-preise-reiter>
+              {{-- Preise pflegen (manuell setzen, Aktion, Zeile bearbeiten/löschen, frühere ein-/ausblenden) schreibt: bleibt unter der Sperre --}}
+              <x-fa::lese-sperre :an="$laGesperrt">
+              <div class="flex min-w-0 flex-col gap-4" data-preise-links>
+                <x-fa::section title="Preise" icon="heroicon-o-banknotes" :meta="$historie->count() > 0 ? $historie->count() . ' Einträge' : null">
+                    <x-slot:actions>
+                        @if($darfEdit)
+                            <x-fa::button size="sm" variant="primary" icon="heroicon-m-plus" x-on:click="neuOffen = ! neuOffen"
+                                x-bind:aria-expanded="neuOffen" title="Einen Preis von Hand setzen; der bisher gültige endet damit" data-preis-neu-toggle>Preis manuell setzen</x-fa::button>
+                        @endif
+                    </x-slot:actions>
+
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[var(--fa-radius-control)] bg-[var(--fa-neutral-soft)] px-3 py-2.5" data-ek-aktuell>
+                        <span class="fa-t-label">Gültiger Einkaufspreis</span>
+                        <span class="fa-t-h2"><x-fa::money :value="$aktivPreis" /></span>
+                        <span class="fa-t-muted">je {{ $bestellEinheit }}</span>
+                        @if($vergleichspreis !== null)
+                            <span class="fa-t-muted">entspricht <x-fa::money :value="$vergleichspreis['value']" :per="$einheitKurz($vergleichspreis['unit'])" /></span>
+                        @elseif($aktivPreis !== null)
+                            <x-fa::signal tone="warn" title="Ohne Inhalt und Kalkulationseinheit kein Preis je kg, l oder Stück">Menge fehlt für den Preis je kg</x-fa::signal>
+                        @endif
+                        @if(($letzterPreis ?? null) !== null)
+                            {{-- Rückfall 27.10.: Kalkulation und Lead-Wahl nutzen den letzten bekannten Preis, solange der Artikel eingestellt ist --}}
+                            <x-fa::badge :tone="$letzterPreis['warnung'] ? 'warn' : 'neutral'" title="{{ $letzterPreis['text'] }}" data-letzter-preis>
+                                letzter Preis <x-fa::money :value="$letzterPreis['preis']" />
+                            </x-fa::badge>
+                        @endif
+                        {{-- Aktion = reine Information (Entscheid 16.10.2026): Kalkulation bleibt beim Einkaufspreis oben --}}
+                        @if($aktion !== null)
+                            <x-fa::badge tone="warn" title="Aktionspreis, zählt nicht in Kalkulation und Preis-Linie" data-aktion-hinweis>
+                                Aktion <x-fa::money :value="(float) $aktion->price" /> bis {{ \Illuminate\Support\Carbon::parse($aktion->valid_to)->subSecond()->setTimezone('Europe/Berlin')->format('d.m.Y') }}
+                            </x-fa::badge>
+                        @endif
+                    </div>
+
+                    @if($darfEdit)
+                        <div x-show="neuOffen" x-cloak class="flex flex-wrap items-end gap-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3" data-preis-neu>
+                            <x-fa::field label="Neuer Preis (€, netto)" for="la-preis-neu" class="w-40">
+                                <x-fa::input id="la-preis-neu" wire:model="preisNeu.price" inputmode="decimal" placeholder="z. B. 47,50" numeric />
+                            </x-fa::field>
+                            <x-fa::choice name="preisNeu.status" id-prefix="la-preis" label="Art" :live="false"
+                                :options="['0' => 'Standard-EK', '2' => 'Läuft aus']" />
+                            <div class="flex flex-col gap-1">
+                                <x-fa::button wire:click="preisAnlegen" icon="heroicon-m-plus">Preis anlegen</x-fa::button>
+                            </div>
+                            <p class="basis-full fa-t-muted">Der bisher gültige Preis endet mit dem neuen Eintrag.</p>
+                        </div>
+                        <div x-show="neuOffen" x-cloak class="flex flex-wrap items-end gap-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3" data-aktion-neu>
+                            <x-fa::field label="Aktionspreis (€, netto)" for="la-aktion-preis" class="w-40">
+                                <x-fa::input id="la-aktion-preis" wire:model="aktionNeu.price" inputmode="decimal" placeholder="z. B. 39,90" numeric />
+                            </x-fa::field>
+                            <x-fa::field label="ab" for="la-aktion-ab" class="w-40">
+                                <x-fa::input id="la-aktion-ab" type="date" wire:model="aktionNeu.ab" />
+                            </x-fa::field>
+                            <x-fa::field label="bis" for="la-aktion-bis" class="w-40">
+                                <x-fa::input id="la-aktion-bis" type="date" wire:model="aktionNeu.bis" />
+                            </x-fa::field>
+                            <div class="flex flex-col gap-1">
+                                <x-fa::button wire:click="aktionAnlegen" icon="heroicon-m-plus" data-aktion-anlegen>Aktion anlegen</x-fa::button>
+                            </div>
+                            <p class="basis-full fa-t-muted">Eine Aktion ist ein Hinweis; die Kalkulation rechnet weiter mit dem Einkaufspreis. Entfernen über „Frühere Preise“ (ausblenden).</p>
+                        </div>
+                    @endif
+
+                    <div class="max-h-[28rem] overflow-auto -mx-1 px-1" data-preis-liste>
+                        <x-fa::table data-preis-historie="">
+                            <thead>
+                                <tr>
+                                    <th>Gültig ab</th>
+                                    <th>Gültig bis</th>
+                                    <th>Art</th>
+                                    <th class="num">Preis</th>
+                                    <th class="num">Je {{ $proEinheitOk ? $item->unit_code : 'Einheit' }}</th>
+                                    <th>Notiz</th>
+                                    <th><span class="sr-only">Aktionen</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($historie as $p)
+                                    <tr wire:key="preis-{{ $p->id }}">
+                                        @if($preisEditId === $p->id)
+                                            <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ $datum($p->status_valid_from) ?? $datum($p->creation_date) ?? 'unbekannt' }}</td>
+                                            <td>
+                                                <x-fa::input size="sm" type="date" wire:model="preisEdit.valid_to" aria-label="Gültig bis" class="w-36" />
+                                            </td>
+                                            <td><x-fa::badge>{{ $p->category->label() }}</x-fa::badge></td>
+                                            <td class="num">
+                                                <x-fa::input size="sm" wire:model="preisEdit.price" inputmode="decimal" aria-label="Preis in Euro" numeric class="w-24" />
+                                            </td>
+                                            <td class="num text-[var(--fa-ink-3)]">wird neu berechnet</td>
+                                            <td>
+                                                <x-fa::input size="sm" wire:model="preisEdit.note" placeholder="Notiz" aria-label="Notiz" class="min-w-32" />
+                                            </td>
+                                            <td class="whitespace-nowrap text-right">
+                                                <div class="inline-flex items-center gap-1.5">
+                                                    <x-fa::button size="sm" variant="ghost" wire:click="preisEditAbbrechen">Abbrechen</x-fa::button>
+                                                    <x-fa::button size="sm" icon="heroicon-m-check" wire:click="preisUpdate" data-preis-update>Preis sichern</x-fa::button>
+                                                </div>
+                                            </td>
+                                        @else
+                                            <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ $datum($p->status_valid_from) ?? $datum($p->creation_date) ?? 'unbekannt' }}</td>
+                                            <td class="whitespace-nowrap text-[var(--fa-ink-2)]">{{ $datum($p->valid_to) ?? 'offen' }}</td>
+                                            <td><x-fa::badge :tone="$p->category->istAktiv() ? 'ok' : 'neutral'">{{ $p->category->label() }}</x-fa::badge></td>
+                                            <td class="num font-medium"><x-fa::money :value="$p->price" /></td>
+                                            <td class="num text-[var(--fa-ink-2)]">
+                                                @if($p->price !== null && $proEinheitOk)
+                                                    <x-fa::money :value="(float) $p->price / (float) $item->qty" :per="$item->unit_code" />
+                                                @else
+                                                    <span class="text-[var(--fa-ink-3)]">nicht berechenbar</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-[var(--fa-ink-2)] min-w-40 break-words">{{ $p->note ?: '' }}</td>
+                                            <td class="whitespace-nowrap text-right">
+                                                @if($darfEdit)
+                                                    <div class="inline-flex items-center gap-0.5">
+                                                        <x-fa::icon-button size="sm" icon="heroicon-o-pencil-square" label="Preis bearbeiten"
+                                                            wire:click="preisBearbeiten({{ $p->id }})" data-preis-edit />
+                                                        <x-fa::icon-button size="sm" tone="danger" icon="heroicon-o-trash" label="Preis löschen"
+                                                            wire:click="preisLoeschen({{ $p->id }})" wire:confirm="Diesen Preis löschen?" />
+                                                    </div>
+                                                @endif
+                                            </td>
+                                        @endif
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7">
+                                            <x-fa::empty compact icon="heroicon-o-banknotes" title="Noch kein Preis erfasst">
+                                                Ohne Preis rechnen Rezepte mit diesem Artikel nicht vollständig.@if($darfEdit) <span>Über «Preis erfassen» den ersten Preis anlegen.</span>@endif
+                                            </x-fa::empty>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </x-fa::table>
+                    </div>
+                    @if($item !== null)
+                        <livewire:foodalchemist.preise.fruehere :item-id="$item->id" :key="'pf-la-'.$item->id" />
+                    @endif
+                </x-fa::section>
+              </div>
+              </x-fa::lese-sperre>
+
+              {{-- Preisverlauf als Linie (Preis je Basiseinheit, Rohpreis je Gebinde im Tooltip); sticky neben der Liste --}}
+              @if($item !== null)
+                <div class="min-w-0 lg:sticky lg:top-0" data-preise-rechts data-fa-anzeige>
+                    <x-fa::section title="Preisverlauf" icon="heroicon-o-presentation-chart-line" data-sektion="preisverlauf">
+                        <livewire:foodalchemist.preise.verlauf modus="la" :objekt-id="$item->id" :key="'pv-la-'.$item->id" />
+                    </x-fa::section>
+                </div>
+              @endif
+            </div>{{-- /Reiter PREISE --}}
+            </x-slot:frei>
             </x-fa::editor-tabs>
         @endif
     </x-fa::modal>

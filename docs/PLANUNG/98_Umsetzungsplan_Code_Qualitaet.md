@@ -10,6 +10,7 @@ Befund-IDs (K1, B3, U2 …) verweisen auf Bericht 97. Aufwand: S ≤ ½ Tag, M 1
 - **Sperrklinke statt Großumbau.** Architektur- und UI-Regeln werden als Tests mit Ausgangszählung eingeführt. Die Zahl darf nur sinken, nie steigen. So wird ab Welle 1 nichts mehr schlechter, auch wenn der Abbau Wochen dauert.
 - **Ein PR je Paket.** Kleine PRs, je eigener Worktree. Pakete, die viele Blade-Dateien anfassen (1.4, 2.5), laufen allein, nicht parallel zu anderen UI-Arbeiten.
 - **Headless-Regel ab sofort:** Neue Funktion = Service-Methode + Tool + UI. Ohne Tool gilt sie als nicht fertig.
+- **Testläufe (ab 23.11.2026):** Die volle Suite läuft in GitHub Actions im Fork `DOBE2024-lab/platforms-foodalchemist` (Workflow `suite.yml` auf dem Fork-Branch `ci/suite`, Start per `workflow_dispatch` mit `ref`), nicht lokal. Im Original liegt kein Workflow, und es gibt keine PRs aus dem Fork. Fertige Pakete werden zu Sammel-Chargen gestapelt, der Kopf wird einmal in der Cloud getestet und dann gemergt. Riskante Stufen kommen ans Ende des Stapels. Datenlöschende Pakete (z. B. 2.6c) laufen als eigene kleine Charge. Lokal nur Syntax-Prüfung und kleine Einzeldatei-Läufe mit einem Prozess.
 
 ---
 
@@ -159,7 +160,7 @@ Befund-IDs (K1, B3, U2 …) verweisen auf Bericht 97. Aufwand: S ≤ ½ Tag, M 1
 |---|---|
 | KW 47–48 | Welle 1 |
 | KW 49–KW 3/2027 | Welle 2 inkl. Paket-Umstellung 2.6 (über die Feiertage nur 2.1/2.2; 2.6b nicht in der Woche vor Weihnachten) |
-| ab KW 4/2027 | Usertest Teil B, danach Welle 3 Paket für Paket |
+| ab KW 48 | Welle 3 Paket für Paket, parallel zum Rest von Welle 2. Usertest Teil B entfällt (Entscheidung 23.11.2026) |
 
 ## Gegenprüfung durch Codex (2026-11-19)
 

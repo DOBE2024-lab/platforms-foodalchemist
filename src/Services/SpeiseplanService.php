@@ -10,6 +10,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanBasis;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanErnaehrung;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanAnsicht;
 use Platform\FoodAlchemist\Services\Concerns\PruefstOutletZuordnung;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
@@ -34,10 +35,13 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 
     private SpeiseplanErnaehrung $ernaehrung;
 
+    private SpeiseplanAnsicht $ansicht;
+
     public function __construct(private ConceptService $concepts)
     {
         $this->basis = new SpeiseplanBasis();
         $this->ernaehrung = new SpeiseplanErnaehrung($this->basis);
+        $this->ansicht = new SpeiseplanAnsicht($this->concepts, $this->basis, $this->ernaehrung);
     }
 
     public const MAHLZEITEN = SpeiseplanBasis::MAHLZEITEN;
@@ -504,7 +508,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             $pax = $this->basis->effektivePax($e, $plan);
             $proGericht[$gid]['name'] ??= $this->ernaehrung->eintragName($e);
             $proGericht[$gid]['plan'] = ($proGericht[$gid]['plan'] ?? 0) + $pax;
-            $proGericht[$gid]['plan_umsatz'] = ($proGericht[$gid]['plan_umsatz'] ?? 0) + $this->eintragPreis($e, $outlet)['vk'] * $pax;
+            $proGericht[$gid]['plan_umsatz'] = ($proGericht[$gid]['plan_umsatz'] ?? 0) + $this->ansicht->eintragPreis($e, $outlet)['vk'] * $pax;
         }
 
         $ist = $proGericht === [] ? collect() : \Platform\FoodAlchemist\Models\FoodAlchemistSalesFact::where('team_id', $team->id)
@@ -1046,10 +1050,10 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
                 'sales_recipe_id' => $e->sales_recipe_id !== null ? (int) $e->sales_recipe_id : null,
                 'presentation_id' => $e->presentation_id !== null ? (int) $e->presentation_id : null,
                 'wording' => $e->wording,
-                'darreichung' => $this->eintragDarreichung($e)?->servingForm?->label,
+                'darreichung' => $this->ansicht->eintragDarreichung($e)?->servingForm?->label,
                 'name' => $this->ernaehrung->eintragName($e),
                 // Preis je Person ohne Betrieb (Linienpreis gewinnt beim VK, EK je Portion).
-                ...(fn (array $p) => ['vk' => round($p['vk'], 2), 'ek' => round($p['ek'], 2)])($this->eintragPreis($e)),
+                ...(fn (array $p) => ['vk' => round($p['vk'], 2), 'ek' => round($p['ek'], 2)])($this->ansicht->eintragPreis($e)),
                 'pax' => $e->pax !== null ? (int) $e->pax : null,
                 'pax_effektiv' => $this->basis->effektivePax($e, $plan),
             ])->values()->all();
@@ -1107,7 +1111,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
                 $summe += (int) $p;
                 $gesamt['je_tag'][$ymd] += (int) $p;
                 foreach ($index[(int) $l->id . '|' . $ymd] ?? [] as $e) {
-                    $preis = $this->eintragPreis($e, $outlet);
+                    $preis = $this->ansicht->eintragPreis($e, $outlet);
                     $pax = $this->basis->effektivePax($e, $plan);
                     $umsatz += $preis['vk'] * $pax;
                     $ek += $preis['ek'] * $pax;
@@ -1219,398 +1223,60 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 
     // ── Wochen-Matrix + Monats-Kalender ──────────────────────────────────
 
-    /**
-     * Wochen-Matrix einer Mahlzeit: [line_id][Y-m-d] => list<Eintrag> (Mo..So ab $montag).
-     * Einträge ohne Linie laufen unter Key 0 (»Ohne Linie«).
-     *
-     * @return array<int, array<string, list<FoodAlchemistSpeiseplanEintrag>>>
-     */
+    /** 98 · 3.3 S3: SpeiseplanAnsicht::wochenRaster() */
     public function wochenRaster(FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag): array
     {
-        $start = $montag->copy()->startOfDay();
-        $ende = $start->copy()->addDays(6);
-        $grid = [];
-        foreach ($plan->entries as $e) {
-            if ($e->entry_date === null || $e->meal !== $mahlzeit || ! $e->entry_date->between($start, $ende)) {
-                continue;
-            }
-            $grid[(int) $e->line_id][$e->entry_date->format('Y-m-d')][] = $e;
-        }
-
-        return $grid;
+        return $this->ansicht->wochenRaster($plan, $mahlzeit, $montag);
     }
 
-    /**
-     * Monats-Belegung: [Y-m-d] => {count, vk} (optional auf eine Mahlzeit gefiltert).
-     *
-     * @return array<string, array{count:int, vk:float}>
-     */
+    /** 98 · 3.3 S3: SpeiseplanAnsicht::monatsRaster() */
     public function monatsRaster(FoodAlchemistSpeiseplan $plan, int $jahr, int $monat, ?string $mahlzeit = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $out = [];
-        foreach ($plan->entries as $e) {
-            if ($e->entry_date === null || (int) $e->entry_date->year !== $jahr || (int) $e->entry_date->month !== $monat) {
-                continue;
-            }
-            if ($mahlzeit !== null && $e->meal !== $mahlzeit) {
-                continue;
-            }
-            $key = $e->entry_date->format('Y-m-d');
-            $p = $this->eintragPreis($e, $outlet);
-            $out[$key]['count'] = ($out[$key]['count'] ?? 0) + 1;
-            $out[$key]['vk'] = round(($out[$key]['vk'] ?? 0) + $p['vk'], 2);
-        }
-
-        return $out;
+        return $this->ansicht->monatsRaster($plan, $jahr, $monat, $mahlzeit, $outlet);
     }
 
-    /** Per-Person-Preis eines Eintrags (Concept/Paket/Gericht). @return array{vk: float, ek: float} */
+    /** 98 · 3.3 S3: SpeiseplanAnsicht::eintragPreis() */
     public function eintragPreis(FoodAlchemistSpeiseplanEintrag $e, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $preis = $this->inhaltPreis($e, $outlet);
-        // Spec 57 · E1: eine Linie mit `price_mode=manuell` setzt den Ausgabepreis (Anzeige und
-        // Kennzahlen). Der EK bleibt der des Inhalts; das Gericht behält seinen eigenen VK.
-        $manuell = $e->line_id !== null ? $e->line?->manuellerPreis() : null;
-        if ($manuell !== null) {
-            $preis = ['vk' => $manuell, 'vorlaeufig' => false] + $preis;   // Linienpreis gesetzt, nicht summiert
-        }
-
-        return $preis;
+        return $this->ansicht->eintragPreis($e, $outlet);
     }
 
-    /** VK/EK je Person aus dem Inhalt selbst (Concept/Paket/Gericht), ohne Linienpreis. @return array{vk: float, ek: float} */
-    private function inhaltPreis(FoodAlchemistSpeiseplanEintrag $e, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
-    {
-        if ($e->concept_id !== null && $e->concept) {
-            $c = $this->concepts->preisCockpit($e->concept, $outlet);
-
-            return ['vk' => (float) $c['price_per_person'], 'ek' => (float) $c['ek_per_person'], 'vorlaeufig' => \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($c)];
-        }
-        if ($e->package_id !== null && $e->package) {
-            return ['vk' => (float) ($e->package->price_per_person ?? 0), 'ek' => (float) ($e->package->ek_per_person ?? 0)];
-        }
-        if ($e->sales_recipe_id !== null && $e->dish) {
-            $dar = $this->eintragDarreichung($e);
-            $vk = null;
-            if ($dar !== null && $e->presentation_id !== null && (int) $dar->id === (int) $e->presentation_id) {
-                // Explizit gewählte Form: deren VK (im Betrieb gegen dessen Kostenstruktur).
-                $vk = $outlet !== null
-                    ? app(CatalogPricingService::class)->salesNetFor(Team::find($outlet->team_id), $dar, $outlet)
-                    : ($dar->sales_net !== null ? (float) $dar->sales_net : null);
-            }
-            $resolver = app(DarreichungResolver::class);   // Spec 85 D-1: Preisleiter; im Betrieb dessen VK, sonst die Baseline
-            $vk ??= (float) (($outlet !== null ? $resolver->vkNetto($e->dish, $outlet) : null) ?? $resolver->vkNetto($e->dish) ?? 0);
-
-            // EK JE PORTION: ek_portion der geltenden Darreichung. `ek_total_eur` ist der Ansatz
-            // (alle Portionen) — bis 2026-10-07 stand er hier ungeteilt und blähte WE-% und EK/Gast auf.
-            // Fallback wie PaketService::recomputePrice: Ansatz / Portionen.
-            // Fallback ohne Darreichung: Ansatz ÷ Portionen, ohne Portionszahl = eine Portion —
-            // dieselbe Konvention wie DarreichungService::recomputePreise (gemessen 2026-10-07:
-            // 950 von 950 Gerichten ohne sales_unit_count, bei 837 ist Portions-EK = Ansatz-EK).
-            $ek = $dar?->ek_portion !== null
-                ? (float) $dar->ek_portion
-                : (float) ($e->dish->ek_total_eur ?? 0) / max(1, (int) ($e->dish->sales_unit_count ?? 1));
-
-            return ['vk' => (float) $vk, 'ek' => $ek];
-        }
-
-        return ['vk' => 0.0, 'ek' => 0.0];
-    }
-
-    /** Geltende Darreichung eines Gericht-Eintrags (explizit → Standard), null bei Concept/Paket. */
+    /** 98 · 3.3 S3: SpeiseplanAnsicht::eintragDarreichung() */
     public function eintragDarreichung(FoodAlchemistSpeiseplanEintrag $e): ?FoodAlchemistRecipeDarreichung
     {
-        return app(DarreichungResolver::class)->fuerSpeiseplanEintrag($e);
+        return $this->ansicht->eintragDarreichung($e);
     }
 
-    /**
-     * Kosten/Person der sichtbaren Woche+Mahlzeit: je Tag und Wochensumme.
-     *
-     * @return array{pro_tag: array<string,array{vk:float,ek:float}>, woche: array{vk:float,ek:float}}
-     */
+    /** 98 · 3.3 S3: SpeiseplanAnsicht::wochenKosten() */
     public function wochenKosten(FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $start = $montag->copy()->startOfDay();
-        $ende = $start->copy()->addDays(6);
-        $proTag = [];
-        $wVk = 0.0;
-        $wEk = 0.0;
-        foreach ($plan->entries as $e) {
-            if ($e->entry_date === null || $e->meal !== $mahlzeit || ! $e->entry_date->between($start, $ende)) {
-                continue;
-            }
-            $p = $this->eintragPreis($e, $outlet);
-            $k = $e->entry_date->format('Y-m-d');
-            $proTag[$k]['vk'] = round(($proTag[$k]['vk'] ?? 0) + $p['vk'], 2);
-            $proTag[$k]['ek'] = round(($proTag[$k]['ek'] ?? 0) + $p['ek'], 2);
-            $wVk += $p['vk'];
-            $wEk += $p['ek'];
-        }
-
-        return ['pro_tag' => $proTag, 'woche' => ['vk' => round($wVk, 2), 'ek' => round($wEk, 2)]];
+        return $this->ansicht->wochenKosten($plan, $mahlzeit, $montag, $outlet);
     }
 
     // ── Spec 57 · Paket 1+2: Zelle „auf einen Blick“ + Zielband je Linie ────────
 
-    /**
-     * Zielband Wareneinsatz einer Linie in %. Ohne gepflegtes Band gilt das Team-/Betriebs-Ziel
-     * als Obergrenze (keine Untergrenze) — dieselbe Leiter wie {@see MargeService::weAmpel}.
-     *
-     * @return array{min:?float, max:float, quelle:string}
-     */
+    /** 98 · 3.3 S3: SpeiseplanAnsicht::zielband() */
     public function zielband(?FoodAlchemistSpeiseplanLinie $linie, float $teamZiel): array
     {
-        $min = $linie?->target_wes_min_pct;
-        $max = $linie?->target_wes_max_pct;
-        if ($min === null && $max === null) {
-            return ['min' => null, 'max' => $teamZiel, 'quelle' => 'team'];
-        }
-
-        return ['min' => $min, 'max' => $max ?? $teamZiel, 'quelle' => 'linie'];
+        return $this->ansicht->zielband($linie, $teamZiel);
     }
 
-    /**
-     * Ampel für einen Wareneinsatz gegen ein Band: `unter` (unter der Untergrenze, nur Hinweis) ·
-     * `ok` · `ueber` (bis 1,5 × Obergrenze) · `weit_ueber` · `unbekannt` (kein VK — nie geraten).
-     */
+    /** 98 · 3.3 S3: SpeiseplanAnsicht::wesStatus() */
     public function wesStatus(?float $wes, array $band): string
     {
-        if ($wes === null) {
-            return 'unbekannt';
-        }
-        if ($band['min'] !== null && $wes < (float) $band['min']) {
-            return 'unter';
-        }
-        if ($wes <= (float) $band['max']) {
-            return 'ok';
-        }
-
-        return $wes > (float) $band['max'] * 1.5 ? 'weit_ueber' : 'ueber';
+        return $this->ansicht->wesStatus($wes, $band);
     }
 
-    /**
-     * Kennzahlen der sichtbaren Woche für die Matrix: je Eintrag (Titel/Wording, Diät, LMIV-Codes,
-     * VK, EK, Wareneinsatz gegen das Zielband der Linie, Pax, kcal) und je Öffnungstag (Gäste =
-     * Essen auf Hauptgang-Linien, Umsatz, Wareneinsatz, EK je Gast), dazu je Linie die Wochen-Quote.
-     * Rechnet nichts neu: Preis über {@see eintragPreis}, Pax über {@see effektivePax}, Diät und
-     * Kennzeichnung über den {@see ConcepterAggregateService}.
-     *
-     * @return array{eintraege: array<int, array>, tage: array<string, array>, linien: array<int, array>, team_ziel: float, gaeste_aus_rollen: bool}
-     */
+    /** 98 · 3.3 S3: SpeiseplanAnsicht::zellenKennzahlen() */
     public function zellenKennzahlen(Team $team, FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, bool $mitKomponenten = false): array
     {
-        $agg = app(ConcepterAggregateService::class);
-        $teamZiel = app(TeamSettingsService::class)->zielWareneinsatzPct($team, $outlet);
-        $linienById = $plan->lines->keyBy(fn ($l) => (int) $l->id);
-        $hatRollen = $plan->lines->contains(fn ($l) => $l->istHauptgang());
-
-        $tage = [];
-        foreach ($this->basis->wochenTage($plan, $montag) as $tag) {
-            $tage[$tag->format('Y-m-d')] = ['gaeste' => 0, 'portionen' => 0, 'umsatz' => 0.0, 'ek' => 0.0, 'ek_we' => 0.0, 'ohne_preis' => 0];
-        }
-        $linienWoche = [];
-        $eintraege = [];
-
-        foreach ($this->wochenRaster($plan, $mahlzeit, $montag) as $lineId => $proTag) {
-            $linie = $linienById->get((int) $lineId);
-            $band = $this->zielband($linie, $teamZiel);
-            foreach ($proTag as $ymd => $liste) {
-                foreach ($liste as $e) {
-                    $preis = $this->eintragPreis($e, $outlet);
-                    $pax = $this->basis->effektivePax($e, $plan);
-                    // Wareneinsatz nur, wo ein VK steht: ein Eintrag ohne Preis hätte EK ohne Umsatz
-                    // (Bananenbrot ohne Preis ⇒ 16.100 % am Tag). Sein EK zählt trotzdem in die EK-Summe.
-                    $mitPreis = $preis['vk'] > 0;
-                    $wes = MargeService::wareneinsatzPct($preis['ek'], $preis['vk']);
-                    $gerichte = $this->ernaehrung->eintragGerichte($e);
-                    [$titel, $untertitel] = $this->titelUndWording($e, $gerichte);
-                    $naehr = $gerichte->isNotEmpty()
-                        ? $agg->naehrwertAggregat($gerichte->map(fn ($g) => ['gericht' => $g, 'quantity' => 1, 'unit' => null]))
-                        : null;
-
-                    $eintraege[(int) $e->id] = [
-                        'id' => (int) $e->id,
-                        'typ' => $e->concept_id !== null ? 'concept' : ($e->package_id !== null ? 'paket' : 'gericht'),
-                        'titel' => $titel,
-                        'untertitel' => $untertitel,
-                        'diaet' => $this->ernaehrung->diaetMerkmale($agg->allergenRollupFromGerichte($gerichte), $agg->kennzeichnungFromGerichte($gerichte)),
-                        'codes' => $this->ernaehrung->eintragCodes($e),
-                        'vk' => round($preis['vk'], 2), 'vk_vorlaeufig' => (bool) ($preis['vorlaeufig'] ?? false),
-                        'ek' => round($preis['ek'], 2),
-                        'linienpreis' => $linie?->manuellerPreis() !== null,
-                        'wes' => $wes,
-                        'band' => $band,
-                        'status' => $this->wesStatus($wes, $band),
-                        'pax' => $pax,
-                        'pax_override' => (int) $e->pax > 0,
-                        'kcal' => $naehr['kcal'] ?? null,
-                        'portion_g' => $this->portionG($e, $gerichte),
-                        // Nur eine EIGENS gewählte Form wird an der Zelle genannt; Standard bleibt stumm.
-                        // Die Grammatur (portion_g) zeigt die Zelle immer — sie folgt der geltenden Form.
-                        'darreichung' => $e->presentation_id !== null ? $this->eintragDarreichung($e)?->servingForm?->label : null,
-                        'komponenten' => $mitKomponenten ? $this->komponenten($e, $gerichte) : [],
-                    ];
-
-                    if (isset($tage[$ymd])) {
-                        $tage[$ymd]['umsatz'] += $preis['vk'] * $pax;
-                        $tage[$ymd]['ek'] += $preis['ek'] * $pax;
-                        $tage[$ymd]['ek_we'] += $mitPreis ? $preis['ek'] * $pax : 0.0;
-                        $tage[$ymd]['ohne_preis'] += $mitPreis ? 0 : 1;
-                        $tage[$ymd]['portionen'] += $pax;
-                        if ($linie?->istHauptgang()) {
-                            $tage[$ymd]['gaeste'] += $pax;
-                        }
-                        $linienWoche[(int) $lineId]['umsatz'] = ($linienWoche[(int) $lineId]['umsatz'] ?? 0) + $preis['vk'] * $pax;
-                        $linienWoche[(int) $lineId]['ek'] = ($linienWoche[(int) $lineId]['ek'] ?? 0) + $preis['ek'] * $pax;
-                        $linienWoche[(int) $lineId]['ek_we'] = ($linienWoche[(int) $lineId]['ek_we'] ?? 0) + ($mitPreis ? $preis['ek'] * $pax : 0.0);
-                    }
-                }
-            }
-        }
-
-        foreach ($tage as $ymd => $t) {
-            $tage[$ymd]['umsatz'] = round($t['umsatz'], 2);
-            $tage[$ymd]['ek'] = round($t['ek'], 2);
-            $tage[$ymd]['wes'] = MargeService::wareneinsatzPct($t['ek_we'], $t['umsatz']);
-            $tage[$ymd]['status'] = $this->wesStatus($tage[$ymd]['wes'], ['min' => null, 'max' => $teamZiel]);
-            $tage[$ymd]['ek_je_gast'] = $t['gaeste'] > 0 ? round($t['ek'] / $t['gaeste'], 2) : null;
-        }
-
-        $linien = [];
-        foreach ($plan->lines as $l) {
-            $w = ($linienWoche[(int) $l->id] ?? []) + ['umsatz' => 0.0, 'ek' => 0.0, 'ek_we' => 0.0];
-            $band = $this->zielband($l, $teamZiel);
-            $wes = MargeService::wareneinsatzPct($w['ek_we'], $w['umsatz']);
-            $linien[(int) $l->id] = ['name' => $l->name, 'color' => $l->color, 'band' => $band, 'wes' => $wes, 'status' => $this->wesStatus($wes, $band)];
-        }
-
-        $wUmsatz = array_sum(array_column($tage, 'umsatz'));
-        $wEk = array_sum(array_column($tage, 'ek'));
-        $wEkWe = array_sum(array_column($tage, 'ek_we'));
-        $wWes = MargeService::wareneinsatzPct($wEkWe, $wUmsatz);
-        $woche = [
-            'umsatz' => round($wUmsatz, 2), 'ek' => round($wEk, 2), 'wes' => $wWes,
-            'status' => $this->wesStatus($wWes, ['min' => null, 'max' => $teamZiel]),
-            'portionen' => (int) array_sum(array_column($tage, 'portionen')),
-            'gaeste' => (int) array_sum(array_column($tage, 'gaeste')),
-            'ohne_preis' => (int) array_sum(array_column($tage, 'ohne_preis')),
-        ];
-
-        return ['eintraege' => $eintraege, 'tage' => $tage, 'linien' => $linien, 'woche' => $woche, 'team_ziel' => $teamZiel, 'gaeste_aus_rollen' => $hatRollen];
+        return $this->ansicht->zellenKennzahlen($team, $plan, $mahlzeit, $montag, $outlet, $mitKomponenten);
     }
 
-    /**
-     * Wareneinsatz-Budget-Ampel (Spec 57 · E2): Ø EK je GAST und Tag gegen das Budget (€/Person).
-     * Gäste = Essen auf Hauptgang-Linien. Hat kein Plan-Tag Hauptgang-Gäste (Linien ohne Rolle),
-     * gilt das Altmodell „Summe je Person über alle Linien“ — ausgewiesen in `basis`.
-     *
-     * @return ?array{avg:float, budget:float, ueber_tage:int, ampel:string, basis:string}
-     */
+    /** 98 · 3.3 S3: SpeiseplanAnsicht::budgetAmpel() */
     public function budgetAmpel(FoodAlchemistSpeiseplan $plan, array $kennzahlen, array $kosten): ?array
     {
-        if (! $plan->budget_wareneinsatz) {
-            return null;
-        }
-        $budget = (float) $plan->budget_wareneinsatz;
-        $jeGast = collect($kennzahlen['tage'] ?? [])->pluck('ek_je_gast')->filter(fn ($v) => $v !== null);
-        if ($jeGast->isNotEmpty()) {
-            $werte = $jeGast;
-            $basis = 'je_gast';
-        } else {
-            $werte = collect($kosten['pro_tag'] ?? [])->pluck('ek');
-            $basis = 'summe_linien';
-        }
-        if ($werte->isEmpty()) {
-            return null;
-        }
-        $avg = round((float) $werte->avg(), 2);
-        $ueber = $werte->filter(fn ($v) => (float) $v > $budget)->count();
-
-        return [
-            'avg' => $avg, 'budget' => $budget, 'ueber_tage' => $ueber, 'basis' => $basis,
-            'ampel' => $avg > $budget ? 'danger' : ($ueber > 0 ? 'warning' : 'success'),
-        ];
-    }
-
-    /**
-     * Portionsgewicht der Zelle — dieselbe Regel wie der Portions-EK in
-     * DarreichungService::recomputePreise, damit Grammatur und Preis zusammenpassen:
-     * Grammatur der geltenden Form × Anzahl; fehlt sie an der STANDARD-Form, Rezept-Grammatur,
-     * sonst Ertrag ÷ Portionen (mind. 1). Ohne Form: Rezept-Grammatur bzw. Ertrag ÷ Portionen (mind. 1).
-     */
-    private function portionG(FoodAlchemistSpeiseplanEintrag $e, Collection $gerichte): ?float
-    {
-        $dar = $this->eintragDarreichung($e);
-        $anzahl = (float) ($dar?->unit_count ?: 1);
-        if ($dar !== null && (float) ($dar->quantity_per_unit_g ?? 0) > 0) {
-            return round((float) $dar->quantity_per_unit_g * $anzahl, 1);
-        }
-        $dish = $e->dish;
-        if ($dish === null) {
-            return $gerichte->sum(fn ($g) => (float) ($g->sales_quantity_per_unit_g ?? 0)) ?: null;
-        }
-        if ((float) ($dish->sales_quantity_per_unit_g ?? 0) > 0) {
-            return round((float) $dish->sales_quantity_per_unit_g * $anzahl, 1);
-        }
-        if ($dish->yield_kg === null || (float) $dish->yield_kg <= 0) {
-            return null;
-        }
-        if ($dar !== null) {
-            // Nur die Standard-Form fällt auf den Ertrag zurück (wie recomputePreise); andere Formen
-            // ohne Grammatur haben auch keinen Portions-EK.
-            return $dar->is_standard ? round((float) $dish->yield_kg * 1000 / max(1, (int) ($dish->sales_unit_count ?? 0)) * $anzahl, 1) : null;
-        }
-        // Ohne Form: dieselbe Konvention wie der EK — Ansatz ÷ Portionen, ohne Portionszahl eine Portion.
-        return round((float) $dish->yield_kg * 1000 / max(1, (int) ($dish->sales_unit_count ?? 0)), 1);
-    }
-
-    /**
-     * Titel + Wording für die Zelle. Gericht: Wording-Kette ({@see eintragName}); der erste
-     * Pipe-Teil wird Titel, der Rest Untertitel („Kürbissuppe | Ingwer | Kernöl“). Concept/Paket:
-     * Name + Anzahl Gerichte.
-     *
-     * @return array{0:string, 1:?string}
-     */
-    private function titelUndWording(FoodAlchemistSpeiseplanEintrag $e, Collection $gerichte): array
-    {
-        $name = $this->ernaehrung->eintragName($e);
-        if ($e->sales_recipe_id !== null) {
-            $teile = array_values(array_filter(array_map('trim', explode('|', $name)), fn ($t) => $t !== ''));
-            if (count($teile) > 1) {
-                return [$teile[0], implode(' · ', array_slice($teile, 1))];
-            }
-
-            return [$name, null];
-        }
-        $typ = $e->concept_id !== null ? 'Konzept' : 'Paket';
-        $n = $gerichte->count();
-
-        return [$name, $typ . ($n > 0 ? ' · ' . $n . ' Gericht' . ($n === 1 ? '' : 'e') : '')];
-    }
-
-    /**
-     * Komponenten für die Detail-Dichte: beim Gericht die Zutaten (Name, Menge, Einheit), bei
-     * Concept/Paket die enthaltenen Gerichte. Nur auf Anforderung geladen (eine Abfrage je Gericht).
-     *
-     * @return list<array{name:string, menge:?string}>
-     */
-    private function komponenten(FoodAlchemistSpeiseplanEintrag $e, Collection $gerichte): array
-    {
-        if ($e->sales_recipe_id === null) {
-            return $gerichte->map(fn ($g) => ['name' => (string) $g->name, 'menge' => null])->values()->all();
-        }
-        $dish = $gerichte->first();
-        if ($dish === null) {
-            return [];
-        }
-
-        return $dish->ingredients()->with(['gp:id,name,zusatz', 'referencedRecipe:id,name', 'unit:id,slug'])->limit(12)->get()
-            ->map(fn ($z) => [
-                'name' => (string) ($z->display_name ?: ($z->gp !== null ? app(GpNamingService::class)->nameOhneMarke((string) $z->gp->name, $z->gp->zusatz) : ($z->referencedRecipe?->name ?? $z->raw_text))),   // Kundendokument: ohne Marken-Klammer
-                'menge' => $z->quantity !== null
-                    ? rtrim(rtrim(number_format((float) $z->quantity, 2, ',', ''), '0'), ',') . ' ' . ($z->unit?->slug ?? '')
-                    : null,
-            ])->values()->all();
+        return $this->ansicht->budgetAmpel($plan, $kennzahlen, $kosten);
     }
 
     // Spec 57 · 0.9: der linienbasierte `veggieCheck` ist entfernt — er wurde berechnet, aber nie
@@ -1675,7 +1341,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 
         $agg = app(ConcepterAggregateService::class);
         $tage = [];
-        $raster = $this->wochenRaster($plan, $mahlzeit, $mo);       // [line_id][Ymd] => [entries]
+        $raster = $this->ansicht->wochenRaster($plan, $mahlzeit, $mo);       // [line_id][Ymd] => [entries]
         $usedAlg = [];
         $usedZus = [];
 
@@ -1691,7 +1357,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             }
             // Preis nur wenn ausdrücklich gewünscht (GV-Aushang ist per Default preislos), betriebs-aware.
             if ($mitPreis) {
-                $zelle['vk'] = round((float) $this->eintragPreis($e, $outlet)['vk'], 2);
+                $zelle['vk'] = round((float) $this->ansicht->eintragPreis($e, $outlet)['vk'], 2);
             }
 
             return $zelle;
@@ -1803,7 +1469,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         $this->basis->guard($plan, $team);
         $mahlzeit = array_key_exists($mahlzeit, self::MAHLZEITEN) ? $mahlzeit : 'mittag';
         $produktion = app(ProductionOrderService::class);
-        $raster = $this->wochenRaster($plan, $mahlzeit, $montag);
+        $raster = $this->ansicht->wochenRaster($plan, $mahlzeit, $montag);
         $referenz = 'Speiseplan #' . $plan->id;
 
         $auftraege = 0;
@@ -1939,7 +1605,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function wochenBedarf(Team $team, FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?string $tag = null): array
     {
         $mahlzeit = array_key_exists($mahlzeit, self::MAHLZEITEN) ? $mahlzeit : 'mittag';
-        $raster = $this->wochenRaster($plan, $mahlzeit, $montag);
+        $raster = $this->ansicht->wochenRaster($plan, $mahlzeit, $montag);
         $tage = array_map(fn (Carbon $t) => $t->format('Y-m-d'), $this->basis->wochenTage($plan, $montag));
         if ($tag !== null) {
             $tage = array_values(array_intersect($tage, [Carbon::parse($tag)->format('Y-m-d')]));
@@ -1986,8 +1652,8 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             return $dok + ['format' => 'woche'];
         }
         $mo = Carbon::parse($dok['montag']);
-        $zk = $this->zellenKennzahlen($team, $plan, $dok['mahlzeit'], $mo, $outlet, $format === 'liste');
-        $raster = $this->wochenRaster($plan, $dok['mahlzeit'], $mo);
+        $zk = $this->ansicht->zellenKennzahlen($team, $plan, $dok['mahlzeit'], $mo, $outlet, $format === 'liste');
+        $raster = $this->ansicht->wochenRaster($plan, $dok['mahlzeit'], $mo);
         $tageDerWoche = array_column($dok['tage'], 'label', 'ymd');
         $tagYmd = $tag !== null ? Carbon::parse($tag)->format('Y-m-d') : null;
         $tage = $tagYmd !== null && isset($tageDerWoche[$tagYmd]) ? [$tagYmd] : array_keys($tageDerWoche);
@@ -2143,7 +1809,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             $tagYmd = array_key_first($tage) ?? $mo->format('Y-m-d');
         }
 
-        $raster = $this->wochenRaster($plan, $mahlzeit, $mo);
+        $raster = $this->ansicht->wochenRaster($plan, $mahlzeit, $mo);
         $linienIds = $plan->lines->filter(fn ($l) => $l->giltFuerMahlzeit($mahlzeit) && ($lineId === null || (int) $l->id === $lineId))
             ->map(fn ($l) => (int) $l->id)->values()->all();
         if ($lineId === null) {
@@ -2237,13 +1903,13 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function csvZeilen(Team $team, FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
         $mahlzeit = array_key_exists($mahlzeit, self::MAHLZEITEN) ? $mahlzeit : 'mittag';
-        $zk = $this->zellenKennzahlen($team, $plan, $mahlzeit, $montag, $outlet);
+        $zk = $this->ansicht->zellenKennzahlen($team, $plan, $mahlzeit, $montag, $outlet);
         $linien = $plan->lines->keyBy(fn ($l) => (int) $l->id);
         $tage = array_map(fn (Carbon $t) => $t->format('Y-m-d'), $this->basis->wochenTage($plan, $montag));
         $zahl = fn ($v, int $d = 2) => $v === null ? '' : number_format((float) $v, $d, ',', '');
 
         $zeilen = [['Datum', 'Tag', 'Mahlzeit', 'Linie', 'Kassen-Nr.', 'Gericht', 'Kennzeichnung', 'Essen', 'VK netto', 'EK', 'Wareneinsatz %']];
-        foreach ($this->wochenRaster($plan, $mahlzeit, $montag) as $lineId => $proTag) {
+        foreach ($this->ansicht->wochenRaster($plan, $mahlzeit, $montag) as $lineId => $proTag) {
             foreach ($proTag as $ymd => $liste) {
                 if (! in_array($ymd, $tage, true)) {
                     continue;

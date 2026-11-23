@@ -15,6 +15,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
+    config(['filesystems.default' => 'public']);   // wie FoodbookBrandingTest: Bilder laufen über Core-ContextFiles auf der Standard-Disk
     Storage::fake('public');
     $this->actingAs($this->makeUser($this->rootTeam, 'Foodbook'));
     $this->svc = app(FoodbookService::class);

@@ -135,7 +135,8 @@ jobs:
           printf '%s\n' 'APP_NAME=Laravel' 'APP_ENV=testing' 'APP_KEY=' 'APP_DEBUG=true' \
             'APP_LOCALE=en' 'APP_FALLBACK_LOCALE=en' 'APP_FAKER_LOCALE=en_US' \
             'LOG_CHANNEL=stack' "AUTH_MODEL='Platform\\Core\\Models\\User'" \
-            'FOODALCHEMIST_AI_PROVIDER=fake' > .env
+            'FOODALCHEMIST_AI_PROVIDER=fake' \
+            'DB_CONNECTION=sqlite' 'DB_DATABASE=:memory:' > .env   # package:discover fragt die DB ab (core: Tabelle modules)
 
       - uses: shivammathur/setup-php@v2
         with:

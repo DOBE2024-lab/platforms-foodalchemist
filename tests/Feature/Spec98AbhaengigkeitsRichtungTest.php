@@ -90,7 +90,8 @@ it('Klinke: Rückkanten gegen die Schichtrichtung und Größe der Kreis-Komponen
 
     expect(BaselineKlinke::schlechterAls($ist, BaselineKlinke::lesen(AbhaengigkeitsGraph::baselinePfad())))->toBe([]);
 
-    $steigt = BaselineKlinke::steigtGegenueberGit(AbhaengigkeitsGraph::baselinePfad());
+    // 98 · 3.8: Rückkanten schlüsseln nach Pfad; ein verschobener Dienst zählt bei seinem alten Pfad (ServicesUmzuege)
+    $steigt = BaselineKlinke::steigtGegenueberGit(AbhaengigkeitsGraph::baselinePfad(), \Platform\FoodAlchemist\Tests\Support\ServicesUmzuege::zielZuQuelle());
     if ($steigt !== null) {
         expect($steigt)->toBe([], 'Baseline darf nur sinken');
     }

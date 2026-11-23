@@ -8,6 +8,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanBasis;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanErnaehrung;
 use Platform\FoodAlchemist\Services\Concerns\PruefstOutletZuordnung;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
@@ -27,33 +29,22 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 {
     use PruefstOutletZuordnung;
 
+    /** 98 · 3.3 S3: Teile unter Services/Speiseplan, je Fassade eine gemeinsame Instanz (Gerichte-Memo der Ernährung). */
+    private SpeiseplanBasis $basis;
+
+    private SpeiseplanErnaehrung $ernaehrung;
+
     public function __construct(private ConceptService $concepts)
     {
+        $this->basis = new SpeiseplanBasis();
+        $this->ernaehrung = new SpeiseplanErnaehrung($this->basis);
     }
 
-    public const MAHLZEITEN = ['fruehstueck' => 'Frühstück', 'mittag' => 'Mittag', 'abend' => 'Abend', 'snack' => 'Snack'];
+    public const MAHLZEITEN = SpeiseplanBasis::MAHLZEITEN;
 
-    public const WOCHENTAGE = [1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do', 5 => 'Fr', 6 => 'Sa', 7 => 'So'];
+    public const WOCHENTAGE = SpeiseplanBasis::WOCHENTAGE;
 
-    /**
-     * Spec 31 (GV-Ausbau) — Kostformen, deren Tages-Abdeckung geprüft wird. Alle aus den
-     * vorhandenen Diät-Spec-Flags am Rezept ableitbar (keine neuen Daten). „Passiert/püriert"
-     * bewusst NICHT dabei — dafür gibt es (noch) kein Datenfeld, also nicht raten.
-     */
-    public const KOSTFORMEN = [
-        'vegetarisch' => 'Vegetarisch',
-        'vegan' => 'Vegan',
-        'schweinefrei' => 'Schweinefleischfrei',
-        'glutenfrei' => 'Glutenfrei',
-        'laktosefrei' => 'Laktosefrei',
-        'halal' => 'Halal',
-    ];
-
-    /** In-Request-Memo: Eintrag-Inhalt (c{id}/p{id}/g{id}) → aufgelöste Gerichte-Sammlung. */
-    private array $gerichteCache = [];
-
-    /** Konfidenz-Rang (schwächstes Glied) — lokal, da die Aggregat-Konstante privat ist. */
-    private const KONF_RANG = ['unknown' => 0, 'low' => 1, 'medium' => 2, 'high' => 3];
+    public const KOSTFORMEN = SpeiseplanErnaehrung::KOSTFORMEN;
 
     public function paginateBrowser(array $filters, Team $team, int $perPage = 100): LengthAwarePaginator
     {
@@ -210,7 +201,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function update(Team $team, int $id, array $in): FoodAlchemistSpeiseplan
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($id);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $update = $this->pruefeOutlet($team, array_intersect_key($in, array_flip(self::FELDER)));
         \Platform\FoodAlchemist\Support\Verweisziel::pruefeFelder($team, $update, $plan);
         // Spec 33 P0: Status IMMER durch den Enum schleusen — `status` steht in FELDER (Service UND MCP).
@@ -254,7 +245,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         $quelle = FoodAlchemistSpeiseplan::visibleToTeam($team)
             ->with(['lines' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'), 'entries'])
             ->findOrFail($id);
-        $this->guard($quelle, $team);
+        $this->basis->guard($quelle, $team);
 
         return \Illuminate\Support\Facades\DB::transaction(function () use ($quelle, $team, $ueberschreiben, $quelleMerken) {
             $neu = FoodAlchemistSpeiseplan::create($this->pruefeOutlet($team, array_merge(
@@ -299,7 +290,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function setzeVorlage(Team $team, int $planId, bool $istVorlage): FoodAlchemistSpeiseplan
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         if ($istVorlage && $plan->source_plan_id !== null) {
             throw new \RuntimeException('Dieser Plan ist selbst eine Kalkulationsprofil-Kopie und kann keine Vorlage sein.');
         }
@@ -316,7 +307,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function betriebsKopieAnlegen(Team $team, int $vorlageId, int $outletId): FoodAlchemistSpeiseplan
     {
         $vorlage = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($vorlageId);
-        $this->guard($vorlage, $team);
+        $this->basis->guard($vorlage, $team);
         if (! $vorlage->is_template) {
             throw new \RuntimeException('Der Plan ist nicht als Vorlage freigegeben.');
         }
@@ -416,8 +407,8 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             $out[] = [
                 'key' => $key, 'datum' => $datum, 'mahlzeit' => $meal,
                 'linie' => (int) $vLinie > 0 ? ($vLinienName[(int) $vLinie] ?? 'Linie #' . $vLinie) : 'Ohne Linie',
-                'vorlage' => collect($z['v'] ?? [])->map(fn ($e) => $this->eintragName($e))->values()->all(),
-                'betrieb' => collect($z['k'] ?? [])->map(fn ($e) => $this->eintragName($e))->values()->all(),
+                'vorlage' => collect($z['v'] ?? [])->map(fn ($e) => $this->ernaehrung->eintragName($e))->values()->all(),
+                'betrieb' => collect($z['k'] ?? [])->map(fn ($e) => $this->ernaehrung->eintragName($e))->values()->all(),
                 'art' => isset($geaendert[$key]) ? 'vorlage_geaendert' : 'lokal_abweichend',
             ];
         }
@@ -438,7 +429,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function ausVorlageUebernehmen(Team $team, int $kopieId, ?array $zellKeys = null): int
     {
         $kopie = FoodAlchemistSpeiseplan::visibleToTeam($team)->with('lines')->findOrFail($kopieId);
-        $this->guard($kopie, $team);
+        $this->basis->guard($kopie, $team);
         $abgleich = $this->vorlagenAbgleich($team, $kopieId);
         if ($abgleich['vorlage'] === null) {
             throw new \RuntimeException('Dieser Plan ist keine Kalkulationsprofil-Kopie einer Vorlage.');
@@ -510,8 +501,8 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
                 continue;
             }
             $gid = (int) $e->sales_recipe_id;
-            $pax = $this->effektivePax($e, $plan);
-            $proGericht[$gid]['name'] ??= $this->eintragName($e);
+            $pax = $this->basis->effektivePax($e, $plan);
+            $proGericht[$gid]['name'] ??= $this->ernaehrung->eintragName($e);
             $proGericht[$gid]['plan'] = ($proGericht[$gid]['plan'] ?? 0) + $pax;
             $proGericht[$gid]['plan_umsatz'] = ($proGericht[$gid]['plan_umsatz'] ?? 0) + $this->eintragPreis($e, $outlet)['vk'] * $pax;
         }
@@ -581,7 +572,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function delete(Team $team, int $id): void
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($id);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $plan->delete();
     }
 
@@ -590,7 +581,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function addLinie(Team $team, int $planId, array $in): FoodAlchemistSpeiseplanLinie
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $felder = $this->linienFelder($in);
 
         return $plan->lines()->create(array_merge($felder, [
@@ -605,7 +596,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function updateLinie(Team $team, int $linieId, array $in): FoodAlchemistSpeiseplanLinie
     {
         $linie = FoodAlchemistSpeiseplanLinie::visibleToTeam($team)->with('mealPlan')->findOrFail($linieId);
-        $this->guard($linie->mealPlan, $team);
+        $this->basis->guard($linie->mealPlan, $team);
         $upd = $this->linienFelder($in);
         if (array_key_exists('name', $upd) && $upd['name'] === '') {
             $upd['name'] = $linie->name;
@@ -618,7 +609,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function removeLinie(Team $team, int $linieId): void
     {
         $linie = FoodAlchemistSpeiseplanLinie::visibleToTeam($team)->with('mealPlan')->findOrFail($linieId);
-        $this->guard($linie->mealPlan, $team);
+        $this->basis->guard($linie->mealPlan, $team);
         // FK app-seitig: Einträge der Linie entkoppeln statt löschen
         FoodAlchemistSpeiseplanEintrag::where('line_id', $linie->id)->update(['line_id' => null]);
         $linie->delete();
@@ -628,7 +619,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function reorderLinie(Team $team, int $linieId, int $richtung): void
     {
         $linie = FoodAlchemistSpeiseplanLinie::visibleToTeam($team)->with('mealPlan')->findOrFail($linieId);
-        $this->guard($linie->mealPlan, $team);
+        $this->basis->guard($linie->mealPlan, $team);
         $nachbar = FoodAlchemistSpeiseplanLinie::where('menu_plan_id', $linie->menu_plan_id)->whereNull('deleted_at')
             ->when($richtung < 0,
                 fn ($q) => $q->where('sort_order', '<', $linie->sort_order)->orderByDesc('sort_order'),
@@ -682,7 +673,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function addEintrag(Team $team, int $planId, array $in): FoodAlchemistSpeiseplanEintrag
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $inhalt = $this->pruefeInhalt($team, $in);
         $inhalt['presentation_id'] = $this->pruefeDarreichung($inhalt['sales_recipe_id'], $in['presentation_id'] ?? null);
         $datum = Carbon::parse($in['entry_date'])->startOfDay();
@@ -740,55 +731,22 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         throw new \RuntimeException('Genau einen Inhalt angeben: Konzept, Paket oder Gericht.');
     }
 
-    /**
-     * Spec 57: effektive Essen/Portionen eines Eintrags — Eintrag-Override › Linien-Standard ›
-     * Plan-Standard. Eine Stelle für Produktion, Kennzahlen, Mengen und Bedarf.
-     */
+    /** 98 · 3.3 S3: SpeiseplanBasis::effektivePax() */
     public function effektivePax(FoodAlchemistSpeiseplanEintrag $e, FoodAlchemistSpeiseplan $plan): int
     {
-        if ((int) $e->pax > 0) {
-            return (int) $e->pax;
-        }
-        $linie = $e->line_id !== null ? $plan->lines->firstWhere('id', (int) $e->line_id) : null;
-        if ($linie !== null && (int) $linie->default_pax > 0) {
-            return (int) $linie->default_pax;
-        }
-
-        return max(1, (int) ($plan->default_pax ?: 100));
+        return $this->basis->effektivePax($e, $plan);
     }
 
-    /**
-     * Spec 57 · Paket 9: die Öffnungstage einer Woche als Datumsliste (ab Montag).
-     *
-     * @return list<Carbon>
-     */
+    /** 98 · 3.3 S3: SpeiseplanBasis::wochenTage() */
     public function wochenTage(FoodAlchemistSpeiseplan $plan, Carbon $montag): array
     {
-        $mo = $montag->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
-
-        return array_map(fn (int $iso) => $mo->copy()->addDays($iso - 1), $plan->oeffnungstage());
-    }
-
-    /**
-     * Tage für die Wochen-Aggregate: explizite Anzahl (Alt-Signatur, ab Montag) oder — Standard —
-     * die Öffnungstage des Plans.
-     *
-     * @return list<Carbon>
-     */
-    private function aggregatTage(FoodAlchemistSpeiseplan $plan, Carbon $montag, ?int $anzahl): array
-    {
-        if ($anzahl === null) {
-            return $this->wochenTage($plan, $montag);
-        }
-        $mo = $montag->copy()->startOfDay();
-
-        return array_map(fn (int $i) => $mo->copy()->addDays($i), range(0, max(1, $anzahl) - 1));
+        return $this->basis->wochenTage($plan, $montag);
     }
 
     public function removeEintrag(Team $team, int $id): void
     {
         $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with('mealPlan')->findOrFail($id);
-        $this->guard($e->mealPlan, $team);
+        $this->basis->guard($e->mealPlan, $team);
         $e->delete();
     }
 
@@ -796,7 +754,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function setEintragPax(Team $team, int $id, $pax): void
     {
         $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with('mealPlan')->findOrFail($id);
-        $this->guard($e->mealPlan, $team);
+        $this->basis->guard($e->mealPlan, $team);
         $wert = (int) $pax;
         $e->update(['pax' => $wert > 0 ? $wert : null]);
     }
@@ -811,7 +769,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     {
         $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with('mealPlan.lines')->findOrFail($id);
         $plan = $e->mealPlan;
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $ziel = Carbon::parse($datum)->startOfDay();
         $meal = $mahlzeit !== null && array_key_exists($mahlzeit, self::MAHLZEITEN) ? $mahlzeit : $e->meal;
         if ($lineId !== null && ! $plan->lines->contains('id', $lineId)) {
@@ -836,7 +794,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function ersetzeEintrag(Team $team, int $id, array $inhalt): FoodAlchemistSpeiseplanEintrag
     {
         $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with('mealPlan')->findOrFail($id);
-        $this->guard($e->mealPlan, $team);
+        $this->basis->guard($e->mealPlan, $team);
         $neu = $this->pruefeInhalt($team, $inhalt);
         // Neues Gericht ⇒ die alte Darreichung passt nicht mehr; ohne Angabe gilt wieder der Standard.
         $neu['presentation_id'] = $this->pruefeDarreichung($neu['sales_recipe_id'], $inhalt['presentation_id'] ?? null);
@@ -853,7 +811,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function setEintragDarreichung(Team $team, int $id, ?int $presentationId): FoodAlchemistSpeiseplanEintrag
     {
         $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with('mealPlan')->findOrFail($id);
-        $this->guard($e->mealPlan, $team);
+        $this->basis->guard($e->mealPlan, $team);
         if ($presentationId !== null && $e->sales_recipe_id === null) {
             throw new \RuntimeException('Eine Darreichung gibt es nur an Gericht-Einträgen.');
         }
@@ -866,7 +824,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function setEintragWording(Team $team, int $id, ?string $wording): FoodAlchemistSpeiseplanEintrag
     {
         $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with('mealPlan')->findOrFail($id);
-        $this->guard($e->mealPlan, $team);
+        $this->basis->guard($e->mealPlan, $team);
         $text = trim((string) $wording);
         $e->update(['wording' => $text !== '' ? mb_substr($text, 0, 500) : null]);
 
@@ -882,7 +840,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function kiWordingVorschlag(Team $team, int $eintragId): array
     {
         $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with(['mealPlan.writingStyle', 'dish', 'concept', 'package', 'line'])->findOrFail($eintragId);
-        $this->guard($e->mealPlan, $team);
+        $this->basis->guard($e->mealPlan, $team);
         $plan = $e->mealPlan;
         $stil = $plan->writingStyle;
 
@@ -921,7 +879,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function planWordingRegenerieren(Team $team, int $planId): array
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->with('entries')->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         if ($plan->writing_style_id === null) {
             throw new \RuntimeException('Kein Schreibstil gewählt — nichts zu betexten.');
         }
@@ -972,7 +930,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     {
         $e = FoodAlchemistSpeiseplanEintrag::visibleToTeam($team)->with('mealPlan')->findOrFail($id);
         $plan = $e->mealPlan;
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $neu = 0;
         foreach (array_unique(array_map('strval', $daten)) as $d) {
             $ziel = Carbon::parse($d)->startOfDay();
@@ -1012,7 +970,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function kopiereWoche(Team $team, int $planId, string $vonMontag, string $nachMontag, bool $zusammenfuehren = false, bool $mitPax = true, ?string $mahlzeit = null): array
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $von = Carbon::parse($vonMontag)->startOfWeek(Carbon::MONDAY)->startOfDay();
         $nach = Carbon::parse($nachMontag)->startOfWeek(Carbon::MONDAY)->startOfDay();
         if ($von->equalTo($nach)) {
@@ -1089,11 +1047,11 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
                 'presentation_id' => $e->presentation_id !== null ? (int) $e->presentation_id : null,
                 'wording' => $e->wording,
                 'darreichung' => $this->eintragDarreichung($e)?->servingForm?->label,
-                'name' => $this->eintragName($e),
+                'name' => $this->ernaehrung->eintragName($e),
                 // Preis je Person ohne Betrieb (Linienpreis gewinnt beim VK, EK je Portion).
                 ...(fn (array $p) => ['vk' => round($p['vk'], 2), 'ek' => round($p['ek'], 2)])($this->eintragPreis($e)),
                 'pax' => $e->pax !== null ? (int) $e->pax : null,
-                'pax_effektiv' => $this->effektivePax($e, $plan),
+                'pax_effektiv' => $this->basis->effektivePax($e, $plan),
             ])->values()->all();
     }
 
@@ -1110,7 +1068,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function mengenMatrix(Team $team, FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
         $mo = $montag->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
-        $tage = array_map(fn (Carbon $t) => $t->format('Y-m-d'), $this->wochenTage($plan, $mo));
+        $tage = array_map(fn (Carbon $t) => $t->format('Y-m-d'), $this->basis->wochenTage($plan, $mo));
         $linien = $plan->lines->filter(fn ($l) => $l->giltFuerMahlzeit($mahlzeit))->values();
 
         // Einmal indizieren (Linie|Tag) statt je Zelle alle Einträge zu durchsuchen — ein
@@ -1124,11 +1082,11 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         $zellPax = function (int $lineId, string $ymd) use ($plan, $index): ?int {
             $liste = $index[$lineId . '|' . $ymd] ?? [];
 
-            return $liste === [] ? null : (int) max(array_map(fn ($e) => $this->effektivePax($e, $plan), $liste));
+            return $liste === [] ? null : (int) max(array_map(fn ($e) => $this->basis->effektivePax($e, $plan), $liste));
         };
         $wochenSumme = function (int $lineId, Carbon $woMo) use ($zellPax, $plan): int {
             $s = 0;
-            foreach ($this->wochenTage($plan, $woMo) as $t) {
+            foreach ($this->basis->wochenTage($plan, $woMo) as $t) {
                 $s += (int) ($zellPax($lineId, $t->format('Y-m-d')) ?? 0);
             }
 
@@ -1150,7 +1108,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
                 $gesamt['je_tag'][$ymd] += (int) $p;
                 foreach ($index[(int) $l->id . '|' . $ymd] ?? [] as $e) {
                     $preis = $this->eintragPreis($e, $outlet);
-                    $pax = $this->effektivePax($e, $plan);
+                    $pax = $this->basis->effektivePax($e, $plan);
                     $umsatz += $preis['vk'] * $pax;
                     $ek += $preis['ek'] * $pax;
                     $ekWe += $preis['vk'] > 0 ? $preis['ek'] * $pax : 0.0;   // WE nur über Einträge mit Preis
@@ -1196,7 +1154,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function setzeZellenPax(Team $team, int $planId, int $lineId, string $datum, string $mahlzeit, $pax): int
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $wert = (int) $pax;
         // Je Model speichern (nicht per Massen-Update), damit das Activity-Log die Änderung sieht.
         $eintraege = FoodAlchemistSpeiseplanEintrag::where('menu_plan_id', $plan->id)
@@ -1219,7 +1177,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function uebernehmeVorwoche(Team $team, int $planId, string $mahlzeit, Carbon $montag): int
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->with(['lines', 'entries'])->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $vorher = $this->mengenMatrix($team, $plan, $mahlzeit, $montag->copy()->subWeek());
         $n = 0;
         foreach ($vorher['zeilen'] as $z) {
@@ -1245,14 +1203,14 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             throw new \RuntimeException('Skalierungsfaktor muss zwischen 0 und 10 liegen.');
         }
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->with(['lines', 'entries'])->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $mo = $montag->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
         $n = 0;
         foreach ($plan->entries as $e) {
             if ($e->entry_date === null || $e->meal !== $mahlzeit || ! $e->entry_date->between($mo, $mo->copy()->addDays(6))) {
                 continue;
             }
-            $e->update(['pax' => max(1, (int) round($this->effektivePax($e, $plan) * $faktor))]);
+            $e->update(['pax' => max(1, (int) round($this->basis->effektivePax($e, $plan) * $faktor))]);
             $n++;
         }
 
@@ -1447,7 +1405,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         $hatRollen = $plan->lines->contains(fn ($l) => $l->istHauptgang());
 
         $tage = [];
-        foreach ($this->wochenTage($plan, $montag) as $tag) {
+        foreach ($this->basis->wochenTage($plan, $montag) as $tag) {
             $tage[$tag->format('Y-m-d')] = ['gaeste' => 0, 'portionen' => 0, 'umsatz' => 0.0, 'ek' => 0.0, 'ek_we' => 0.0, 'ohne_preis' => 0];
         }
         $linienWoche = [];
@@ -1459,12 +1417,12 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             foreach ($proTag as $ymd => $liste) {
                 foreach ($liste as $e) {
                     $preis = $this->eintragPreis($e, $outlet);
-                    $pax = $this->effektivePax($e, $plan);
+                    $pax = $this->basis->effektivePax($e, $plan);
                     // Wareneinsatz nur, wo ein VK steht: ein Eintrag ohne Preis hätte EK ohne Umsatz
                     // (Bananenbrot ohne Preis ⇒ 16.100 % am Tag). Sein EK zählt trotzdem in die EK-Summe.
                     $mitPreis = $preis['vk'] > 0;
                     $wes = MargeService::wareneinsatzPct($preis['ek'], $preis['vk']);
-                    $gerichte = $this->eintragGerichte($e);
+                    $gerichte = $this->ernaehrung->eintragGerichte($e);
                     [$titel, $untertitel] = $this->titelUndWording($e, $gerichte);
                     $naehr = $gerichte->isNotEmpty()
                         ? $agg->naehrwertAggregat($gerichte->map(fn ($g) => ['gericht' => $g, 'quantity' => 1, 'unit' => null]))
@@ -1475,8 +1433,8 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
                         'typ' => $e->concept_id !== null ? 'concept' : ($e->package_id !== null ? 'paket' : 'gericht'),
                         'titel' => $titel,
                         'untertitel' => $untertitel,
-                        'diaet' => $this->diaetMerkmale($agg->allergenRollupFromGerichte($gerichte), $agg->kennzeichnungFromGerichte($gerichte)),
-                        'codes' => $this->eintragCodes($e),
+                        'diaet' => $this->ernaehrung->diaetMerkmale($agg->allergenRollupFromGerichte($gerichte), $agg->kennzeichnungFromGerichte($gerichte)),
+                        'codes' => $this->ernaehrung->eintragCodes($e),
                         'vk' => round($preis['vk'], 2), 'vk_vorlaeufig' => (bool) ($preis['vorlaeufig'] ?? false),
                         'ek' => round($preis['ek'], 2),
                         'linienpreis' => $linie?->manuellerPreis() !== null,
@@ -1615,7 +1573,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
      */
     private function titelUndWording(FoodAlchemistSpeiseplanEintrag $e, Collection $gerichte): array
     {
-        $name = $this->eintragName($e);
+        $name = $this->ernaehrung->eintragName($e);
         if ($e->sales_recipe_id !== null) {
             $teile = array_values(array_filter(array_map('trim', explode('|', $name)), fn ($t) => $t !== ''));
             if (count($teile) > 1) {
@@ -1628,47 +1586,6 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         $n = $gerichte->count();
 
         return [$name, $typ . ($n > 0 ? ' · ' . $n . ' Gericht' . ($n === 1 ? '' : 'e') : '')];
-    }
-
-    /**
-     * Diät-Merkmale aus vorhandenen Flags — ohne Raten. Geflügel/Lamm/Wild haben kein Datenfeld;
-     * sie erscheinen als „fleisch“ (unbestimmt), nicht als geratene Tierart (Spec 57 · E3).
-     * Spec 59: „fleisch“ nur bei BELEGTEM Fleisch (`fleisch_belegt` im Rollup). Gerichte ganz ohne
-     * Diät-Pflege liefern `[]` (= ohne Angabe) — unbekannt ist nicht Fleisch.
-     *
-     * @return list<string>  vegan | vegetarisch | schwein | rind | fisch | fleisch
-     */
-    private function diaetMerkmale(array $roll, array $kennzeichnung): array
-    {
-        if (($roll['n_gerichte'] ?? 0) === 0) {
-            return [];
-        }
-        if ($roll['is_vegan']) {
-            return ['vegan'];
-        }
-        if ($roll['is_vegetarian']) {
-            return ['vegetarisch'];
-        }
-        $out = [];
-        if ($roll['contains_pork']) {
-            $out[] = 'schwein';
-        }
-        if ($roll['contains_beef']) {
-            $out[] = 'rind';
-        }
-        $fisch = collect($kennzeichnung['allergene'] ?? [])->contains(fn ($a) => $a['slug'] === 'fish' && $a['status'] === 'enthalten');
-        if ($fisch) {
-            $out[] = 'fisch';
-        }
-
-        // „Fleisch" nur, wenn es FESTSTEHT (mind. ein Gericht ausdrücklich nicht vegetarisch, oder
-        // Schwein/Rind gepflegt). Unbekannte Diät-Angaben (NULL nach Recompute, GP ohne Tags) sind
-        // kein Fleisch — vorher landeten Suppen und Desserts ohne Pflege als „Fleisch" auf dem Aushang.
-        if ($out === [] && ($roll['fleisch_belegt'] ?? false)) {
-            $out[] = 'fleisch';
-        }
-
-        return $out;
     }
 
     /**
@@ -1702,122 +1619,28 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 
     // ── Spec 31 (GV-Ausbau): Kennzeichnung + Kostformen-Abdeckung ─────────────
 
-    /**
-     * Löst einen Speiseplan-Eintrag (Concept/Paket/Gericht) auf seine tatsächlichen Gerichte
-     * (Verkaufsrezepte) auf — Basis für Kennzeichnungs- und Diät-Rollups. Gleiche Sammel-Logik
-     * wie {@see ConceptService::allergenRollup} (slots→package→dishes + slot→dish). In-Request
-     * memoisiert, damit derselbe Inhalt in einer Woche nicht mehrfach geladen wird.
-     *
-     * @return Collection<int, FoodAlchemistRecipe>
-     */
-    /**
-     * Anzeigename eines Eintrags fürs Kunden-/Aushang-Dokument: Gericht über die Wording-Kette
-     * (saubere Kunden-Namen, ohne interne [HG]/[KAE]-Marker), Paket/Concept behalten ihren Namen.
-     */
+    /** 98 · 3.3 S3: SpeiseplanErnaehrung::eintragName() */
     public function eintragName(FoodAlchemistSpeiseplanEintrag $e): string
     {
-        // Eigenes Wording des Eintrags (Hand oder KI) vor der Wording-Kette des Gerichts.
-        if (trim((string) $e->wording) !== '') {
-            return trim((string) $e->wording);
-        }
-        if ($e->sales_recipe_id !== null) {
-            $dish = $e->relationLoaded('dish') ? $e->dish : $e->dish()->first();
-            if ($dish !== null) {
-                return app(WordingResolver::class)->fuerGericht($dish)['text'] ?? $e->inhaltName();
-            }
-        }
-
-        return $e->inhaltName();
+        return $this->ernaehrung->eintragName($e);
     }
 
-    /**
-     * LMIV-Codes EINES Eintrags (Allergen-Buchstaben, `*` = Spuren, Zusatzstoff-Nummern) aus dem
-     * Kennzeichnungs-Rollup seiner Gerichte. Sammelt die vorkommenden Slugs by-ref für die Legende.
-     * Eine Stelle für Aushang ({@see dokumentDaten}) und Zellen-Kennzahlen.
-     *
-     * @return list<string>
-     */
+    /** 98 · 3.3 S3: SpeiseplanErnaehrung::eintragCodes() */
     public function eintragCodes(FoodAlchemistSpeiseplanEintrag $e, array &$usedAlg = [], array &$usedZus = []): array
     {
-        $agg = app(ConcepterAggregateService::class);
-        $katalog = $agg->kennzeichnungKatalog();
-        $k = $agg->kennzeichnungFromGerichte($this->eintragGerichte($e));
-        $codes = [];
-        foreach ($k['allergene'] as $a) {
-            if ($a['status'] === 'enthalten' || $a['status'] === 'spuren') {
-                $usedAlg[$a['slug']] = true;
-                $codes[] = $katalog['allergene'][$a['slug']]['code'] . ($a['status'] === 'spuren' ? '*' : '');
-            }
-        }
-        foreach ($k['zusatzstoffe'] as $z) {
-            if ($z['status'] === 'ja') {
-                $usedZus[$z['slug']] = true;
-                $codes[] = $katalog['zusatzstoffe'][$z['slug']]['code'];
-            }
-        }
-
-        return $codes;
+        return $this->ernaehrung->eintragCodes($e, $usedAlg, $usedZus);
     }
 
+    /** 98 · 3.3 S3: SpeiseplanErnaehrung::eintragGerichte() */
     public function eintragGerichte(FoodAlchemistSpeiseplanEintrag $e): Collection
     {
-        $key = $e->inhaltKey();
-        if ($key === null) {
-            return collect();
-        }
-        if (isset($this->gerichteCache[$key])) {
-            return $this->gerichteCache[$key];
-        }
-
-        $gerichte = collect();
-        if ($e->sales_recipe_id !== null) {
-            $dish = FoodAlchemistRecipe::find($e->sales_recipe_id);
-            $gerichte = $dish ? collect([$dish]) : collect();
-        } elseif ($e->package_id !== null) {
-            $pkg = FoodAlchemistPaket::with('dishes.gericht')->find($e->package_id);
-            $gerichte = $pkg ? $pkg->dishes->pluck('gericht')->filter() : collect();
-        } elseif ($e->concept_id !== null) {
-            $c = FoodAlchemistConcept::with(['slots.package.dishes.gericht', 'slots.dish'])->find($e->concept_id);
-            if ($c !== null) {
-                foreach ($c->slots as $slot) {
-                    if ($slot->package) {
-                        $gerichte = $gerichte->merge($slot->package->dishes->pluck('gericht')->filter());
-                    }
-                    if ($slot->dish) {
-                        $gerichte->push($slot->dish);
-                    }
-                }
-            }
-        }
-
-        return $this->gerichteCache[$key] = $gerichte->filter()->unique('id')->values();
+        return $this->ernaehrung->eintragGerichte($e);
     }
 
-    /**
-     * LMIV-Kennzeichnung (14 Allergene + 18 Zusatzstoffe) je Werktag der sichtbaren Woche +
-     * Wochen-Rollup, ALL-MAXIMAL über alle Gerichte des Tages. Für Rail-Übersicht + Aushang.
-     *
-     * @return array{pro_tag: array<string, array>, woche: array}
-     */
+    /** 98 · 3.3 S3: SpeiseplanErnaehrung::wochenKennzeichnung() */
     public function wochenKennzeichnung(FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?int $tage = null): array
     {
-        $agg = app(ConcepterAggregateService::class);
-        $proTag = [];
-        $wocheGerichte = collect();
-        foreach ($this->aggregatTage($plan, $montag, $tage) as $tag) {
-            $tagGerichte = collect();
-            foreach ($plan->entries as $e) {
-                if ($e->entry_date === null || $e->meal !== $mahlzeit || ! $e->entry_date->isSameDay($tag)) {
-                    continue;
-                }
-                $tagGerichte = $tagGerichte->merge($this->eintragGerichte($e));
-            }
-            $tagGerichte = $tagGerichte->filter()->unique('id')->values();
-            $proTag[$tag->format('Y-m-d')] = $agg->kennzeichnungFromGerichte($tagGerichte);
-            $wocheGerichte = $wocheGerichte->merge($tagGerichte);
-        }
-
-        return ['pro_tag' => $proTag, 'woche' => $agg->kennzeichnungFromGerichte($wocheGerichte->unique('id')->values())];
+        return $this->ernaehrung->wochenKennzeichnung($plan, $mahlzeit, $montag, $tage);
     }
 
     /**
@@ -1858,9 +1681,9 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 
         // Zellen-Inhalt je Eintrag → Name + Codes; sammelt nebenbei die Legende.
         $codesFuer = function (FoodAlchemistSpeiseplanEintrag $e) use (&$usedAlg, &$usedZus, $outlet, $mitPreis): array {
-            $codes = $this->eintragCodes($e, $usedAlg, $usedZus);
+            $codes = $this->ernaehrung->eintragCodes($e, $usedAlg, $usedZus);
 
-            $zelle = ['name' => $this->eintragName($e), 'codes' => $codes];
+            $zelle = ['name' => $this->ernaehrung->eintragName($e), 'codes' => $codes];
             // Gericht-Foto als Identifier (frische URL erst im Aushang, PresentationService::hydrateImages).
             $dish = $e->sales_recipe_id !== null ? $e->dish : null;
             if ($dish !== null && ($dish->image_context_file_id || $dish->image_path)) {
@@ -1875,7 +1698,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         };
 
         // Spec 57 · Paket 9: Spalten = Öffnungstage des Plans (Standard Mo–Fr).
-        foreach ($this->wochenTage($plan, $mo) as $tag) {
+        foreach ($this->basis->wochenTage($plan, $mo) as $tag) {
             $tage[] = ['ymd' => $tag->format('Y-m-d'), 'label' => self::WOCHENTAGE[$tag->isoWeekday()] . ' ' . $tag->format('d.m.')];
         }
         $letzterTag = $tage !== [] ? Carbon::parse(end($tage)['ymd']) : $mo->copy()->addDays(4);
@@ -1920,7 +1743,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             foreach ($raster as $proLinie) {
                 foreach ($proLinie as $eintraege) {
                     foreach ($eintraege as $e) {
-                        foreach ($this->eintragGerichte($e) as $g) {
+                        foreach ($this->ernaehrung->eintragGerichte($e) as $g) {
                             if ($g !== null) {
                                 $gerichtIds[] = (int) $g->id;
                             }
@@ -1954,8 +1777,8 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
             'tage' => $tage,
             'zeilen' => $zeilen,
             'legende' => ['allergene' => $legendeAlg, 'zusatzstoffe' => $legendeZus],
-            'kostformen' => $this->kostformAbdeckung($plan, $mahlzeit, $mo),
-            'naehrwerte' => $this->wochenNaehrwerte($plan, $mahlzeit, $mo),
+            'kostformen' => $this->ernaehrung->kostformAbdeckung($plan, $mahlzeit, $mo),
+            'naehrwerte' => $this->ernaehrung->wochenNaehrwerte($plan, $mahlzeit, $mo),
             'erzeugt' => Carbon::now()->format('d.m.Y'),
             // #3: Kaskaden-Anhang + interne Sicht.
             'intern' => $intern,
@@ -1977,7 +1800,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
      */
     public function wocheAnProduktion(Team $team, FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?int $userId = null): array
     {
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $mahlzeit = array_key_exists($mahlzeit, self::MAHLZEITEN) ? $mahlzeit : 'mittag';
         $produktion = app(ProductionOrderService::class);
         $raster = $this->wochenRaster($plan, $mahlzeit, $montag);
@@ -1988,7 +1811,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         $gesperrt = 0;
         $zieleGesamt = 0;
         $tage = [];
-        foreach ($this->wochenTage($plan, $montag) as $tag) {
+        foreach ($this->basis->wochenTage($plan, $montag) as $tag) {
             $ymd = $tag->format('Y-m-d');
             $eintraege = collect($raster)->flatMap(fn ($proLinie) => $proLinie[$ymd] ?? []);
             if ($eintraege->isEmpty()) {
@@ -2042,7 +1865,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     {
         $targets = [];
         foreach ($eintraege as $e) {
-            $pax = $this->effektivePax($e, $plan);
+            $pax = $this->basis->effektivePax($e, $plan);
             $ref = 'menuplan:' . $plan->id . ':' . $ymd . ':' . $e->id;
             if ($e->concept_id !== null) {
                 $targets[] = ['concept_id' => (int) $e->concept_id, 'persons' => $pax, 'source_ref' => $ref];
@@ -2117,7 +1940,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     {
         $mahlzeit = array_key_exists($mahlzeit, self::MAHLZEITEN) ? $mahlzeit : 'mittag';
         $raster = $this->wochenRaster($plan, $mahlzeit, $montag);
-        $tage = array_map(fn (Carbon $t) => $t->format('Y-m-d'), $this->wochenTage($plan, $montag));
+        $tage = array_map(fn (Carbon $t) => $t->format('Y-m-d'), $this->basis->wochenTage($plan, $montag));
         if ($tag !== null) {
             $tage = array_values(array_intersect($tage, [Carbon::parse($tag)->format('Y-m-d')]));
         }
@@ -2312,7 +2135,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         $mahlzeit = array_key_exists($mahlzeit, self::MAHLZEITEN) ? $mahlzeit : 'mittag';
         $mo = Carbon::parse($montag ?? $tag ?? ($plan->start_date ?? Carbon::now()))->startOfWeek(Carbon::MONDAY);
         $tage = [];
-        foreach ($this->wochenTage($plan, $mo) as $t) {
+        foreach ($this->basis->wochenTage($plan, $mo) as $t) {
             $tage[$t->format('Y-m-d')] = self::WOCHENTAGE[$t->isoWeekday()] . ' ' . $t->format('d.m.');
         }
         $tagYmd = $tag !== null ? Carbon::parse($tag)->format('Y-m-d') : null;
@@ -2375,7 +2198,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 
         foreach ($linienIds as $lid) {
             foreach ($raster[$lid][$tagYmd] ?? [] as $e) {
-                foreach ($this->eintragGerichte($e) as $g) {
+                foreach ($this->ernaehrung->eintragGerichte($e) as $g) {
                     if (isset($gesehen[(int) $g->id])) {
                         continue;
                     }
@@ -2416,7 +2239,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         $mahlzeit = array_key_exists($mahlzeit, self::MAHLZEITEN) ? $mahlzeit : 'mittag';
         $zk = $this->zellenKennzahlen($team, $plan, $mahlzeit, $montag, $outlet);
         $linien = $plan->lines->keyBy(fn ($l) => (int) $l->id);
-        $tage = array_map(fn (Carbon $t) => $t->format('Y-m-d'), $this->wochenTage($plan, $montag));
+        $tage = array_map(fn (Carbon $t) => $t->format('Y-m-d'), $this->basis->wochenTage($plan, $montag));
         $zahl = fn ($v, int $d = 2) => $v === null ? '' : number_format((float) $v, $d, ',', '');
 
         $zeilen = [['Datum', 'Tag', 'Mahlzeit', 'Linie', 'Kassen-Nr.', 'Gericht', 'Kennzeichnung', 'Essen', 'VK netto', 'EK', 'Wareneinsatz %']];
@@ -2431,7 +2254,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
                     $zeilen[] = [
                         Carbon::parse($ymd)->format('d.m.Y'), self::WOCHENTAGE[Carbon::parse($ymd)->isoWeekday()],
                         self::MAHLZEITEN[$mahlzeit], $l?->name ?? 'Ohne Linie', $l?->plu ?? '',
-                        $this->eintragName($e), implode(' ', $k['codes'] ?? []), (int) ($k['pax'] ?? 0),
+                        $this->ernaehrung->eintragName($e), implode(' ', $k['codes'] ?? []), (int) ($k['pax'] ?? 0),
                         $zahl($k['vk'] ?? null), $zahl($k['ek'] ?? null), $zahl($k['wes'] ?? null, 1),
                     ];
                 }
@@ -2449,213 +2272,22 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 
     // ── Spec 31 / Stufe D: DGE-Nährwertbilanz + Abwechslung ──────────────────
 
-    /**
-     * Nährwert-Wochenbilanz — Ø je Person und Werktag (kcal/Eiweiß/Fett/ges.Fett/Salz/Zucker/KH).
-     * Reuse {@see ConcepterAggregateService::naehrwertAggregat}: je Gericht 1 Portion/Person
-     * (GV-Modell „eine Komponente = eine Portion"). Gemittelt über Werktage MIT Nährwertdaten.
-     *
-     * @return array{schnitt: array<string,?float>, tage_mit_daten:int, confidence:string}
-     */
+    /** 98 · 3.3 S3: SpeiseplanErnaehrung::wochenNaehrwerte() */
     public function wochenNaehrwerte(FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?int $tage = null): array
     {
-        $agg = app(ConcepterAggregateService::class);
-        $felder = ['kcal', 'protein_g', 'fett_g', 'gesfett_g', 'salz_g', 'zucker_g', 'kh_g'];
-        $summe = array_fill_keys($felder, 0.0);
-        $nTage = 0;
-        $konfRang = null;
-
-        foreach ($this->aggregatTage($plan, $montag, $tage) as $tag) {
-            $rows = collect();
-            foreach ($plan->entries as $e) {
-                if ($e->entry_date === null || $e->meal !== $mahlzeit || ! $e->entry_date->isSameDay($tag)) {
-                    continue;
-                }
-                foreach ($this->eintragGerichte($e) as $g) {
-                    $rows->push(['gericht' => $g, 'quantity' => 1, 'unit' => null]);
-                }
-            }
-            if ($rows->isEmpty()) {
-                continue;
-            }
-            $n = $agg->naehrwertAggregat($rows);
-            if (($n['n_mit_naehrwerten'] ?? 0) === 0) {
-                continue;
-            }
-            $nTage++;
-            foreach ($felder as $f) {
-                $summe[$f] += (float) ($n[$f] ?? 0);
-            }
-            $rang = self::KONF_RANG[$n['confidence']] ?? 0;
-            $konfRang = $konfRang === null ? $rang : min($konfRang, $rang);
-        }
-
-        $schnitt = array_fill_keys($felder, null);
-        if ($nTage > 0) {
-            foreach ($felder as $f) {
-                $roh = $summe[$f] / $nTage;
-                $schnitt[$f] = $f === 'kcal' ? round($roh) : ($f === 'salz_g' ? round($roh, 2) : round($roh, 1));
-            }
-        }
-
-        return [
-            'schnitt' => $schnitt,
-            'tage_mit_daten' => $nTage,
-            'confidence' => $nTage === 0 ? 'unknown' : (array_search($konfRang ?? 0, self::KONF_RANG, true) ?: 'unknown'),
-        ];
+        return $this->ernaehrung->wochenNaehrwerte($plan, $mahlzeit, $montag, $tage);
     }
 
-    /**
-     * Abwechslung/Häufigkeit der Woche: Diät-Mix je serviertem GERICHT + Warengruppen-Häufigkeit
-     * (dish_main_group) + Spec 59 Plan-Vorgaben (mind./höchstens je Chip). Weicher Hinweis, wenn
-     * eine Warengruppe die Woche dominiert (≥ $tage Vorkommen). Alles aus vorhandenen Feldern.
-     *
-     * Spec 59: Diät je Gericht über denselben Rollup wie die Zellen-Chips ({@see diaetMerkmale}).
-     * Vorher zählte alles Nicht-Vegane/-Vegetarische als „mit Fleisch oder Fisch“ — auch Gerichte
-     * ganz ohne Diät-Pflege. Jetzt: Fleisch nur belegt, Rest unter `ohne_angabe`.
-     * Zählbasis = Gericht-Vorkommen (ein Paket/Concept mit 3 Gerichten zählt 3).
-     * `diaet_eintraege`/`wg_eintraege`/`treffer` liefern die Eintrag-Ids fürs Hervorheben in der Matrix.
-     *
-     * @return array{diaet: array{vegan:int, vegetarisch:int, fleisch:int, fisch:int, schwein:int, rind:int, ohne_angabe:int, omnivor:int},
-     *               warengruppen: list<array{id:int, name:string, count:int}>, hinweis: ?string,
-     *               vorgaben: list<array>, treffer: array<int, list<int>>,
-     *               diaet_eintraege: array<string, list<int>>, wg_eintraege: array<int, list<int>>}
-     */
+    /** 98 · 3.3 S3: SpeiseplanErnaehrung::wochenAbwechslung() */
     public function wochenAbwechslung(FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?int $tage = null): array
     {
-        $agg = app(ConcepterAggregateService::class);
-        $diaetKeys = ['vegan', 'vegetarisch', 'fleisch', 'fisch', 'schwein', 'rind', 'ohne_angabe'];
-        $diaet = array_fill_keys($diaetKeys, 0);
-        $omni = 0;
-        $diaetEintraege = array_fill_keys($diaetKeys, []);
-        $wg = [];            // dish_main_group_id => count
-        $wgEintraege = [];   // dish_main_group_id => [entry_id => true]
-        $paare = [];         // je Gericht-Vorkommen: Merkmale für die Vorgaben-Prüfung
-        $merkmaleCache = [];
-        $tageListe = $this->aggregatTage($plan, $montag, $tage);
-        $tage = count($tageListe);
-        foreach ($tageListe as $tag) {
-            foreach ($plan->entries as $e) {
-                if ($e->entry_date === null || $e->meal !== $mahlzeit || ! $e->entry_date->isSameDay($tag)) {
-                    continue;
-                }
-                foreach ($this->eintragGerichte($e) as $g) {
-                    $gc = collect([$g]);
-                    $m = $merkmaleCache[$g->id] ??= $this->diaetMerkmale($agg->allergenRollupFromGerichte($gc), $agg->kennzeichnungFromGerichte($gc));
-                    // Schwein/Rind sind Fleisch — für Zählung und Chip „Fleisch“.
-                    if (array_intersect($m, ['schwein', 'rind']) !== [] && ! in_array('fleisch', $m, true)) {
-                        $m[] = 'fleisch';
-                    }
-                    $schluessel = $m === [] ? ['ohne_angabe'] : $m;
-                    foreach ($schluessel as $k) {
-                        $diaet[$k]++;
-                        $diaetEintraege[$k][$e->id] = true;
-                    }
-                    if (in_array('fleisch', $m, true) || in_array('fisch', $m, true)) {
-                        $omni++;
-                    }
-                    $gid = $g->dish_main_group_id !== null ? (int) $g->dish_main_group_id : null;
-                    if ($gid !== null) {
-                        $wg[$gid] = ($wg[$gid] ?? 0) + 1;
-                        $wgEintraege[$gid][$e->id] = true;
-                    }
-                    $paare[] = ['entry_id' => (int) $e->id, 'gericht_id' => (int) $g->id, 'diaet' => $m, 'hauptgruppe' => $gid];
-                }
-            }
-        }
-
-        // Warengruppen-Namen in EINER Query auflösen.
-        $namen = [];
-        if ($wg !== []) {
-            // Spec 84 Stufe 4: gespeicherte Verweise der Gerichte (auch Abo-Gerichte mit Master-HG) — Label wie die Relation ('verweis')
-            $namen = \Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup::ohneTeamSicht('verweis')->whereIn('id', array_keys($wg))
-                ->pluck('label', 'id')->all();
-        }
-        arsort($wg);
-        $warengruppen = [];
-        $dominant = null;
-        foreach ($wg as $gid => $count) {
-            $name = $namen[$gid] ?? ('#' . $gid);
-            $warengruppen[] = ['id' => (int) $gid, 'name' => $name, 'count' => $count];
-            if ($dominant === null && $count >= $tage) {
-                $dominant = $name;
-            }
-        }
-        $vorgaben = app(SpeiseplanVorgabenService::class)->auswerten($plan, $mahlzeit, $paare);
-
-        return [
-            // `omnivor` (= Gerichte mit Fleisch ∪ Fisch) bleibt für Altverwender.
-            'diaet' => $diaet + ['omnivor' => $omni],
-            'warengruppen' => array_slice($warengruppen, 0, 6),
-            'hinweis' => $dominant !== null ? 'Warengruppe „' . $dominant . '" dominiert die Woche — mehr Abwechslung erwägen.' : null,
-            'vorgaben' => $vorgaben['vorgaben'],
-            'treffer' => $vorgaben['treffer'],
-            'diaet_eintraege' => array_map('array_keys', $diaetEintraege),
-            'wg_eintraege' => array_map('array_keys', $wgEintraege),
-        ];
+        return $this->ernaehrung->wochenAbwechslung($plan, $mahlzeit, $montag, $tage);
     }
 
-    /**
-     * Kostformen-Abdeckung: hat jeder Werktag in der gewählten Mahlzeit mindestens EINEN Eintrag,
-     * der die jeweilige Kostform erfüllt? Verallgemeinert den linien-basierten {@see veggieCheck}
-     * auf die tatsächliche Rezept-Diät (Diät-Flag-Rollup je Eintrag, ein Eintrag genügt/Tag).
-     *
-     * @return list<array{key:string, label:string, erfuellt:bool, fehltage:list<string>, abgedeckt:int, tage:int}>
-     */
+    /** 98 · 3.3 S3: SpeiseplanErnaehrung::kostformAbdeckung() */
     public function kostformAbdeckung(FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?int $tage = null): array
     {
-        $agg = app(ConcepterAggregateService::class);
-        $fehl = array_fill_keys(array_keys(self::KOSTFORMEN), []);
-        $tageListe = $this->aggregatTage($plan, $montag, $tage);
-        $tage = count($tageListe);
-
-        foreach ($tageListe as $tag) {
-            $tagErfuellt = array_fill_keys(array_keys(self::KOSTFORMEN), false);
-            foreach ($plan->entries as $e) {
-                if ($e->entry_date === null || $e->meal !== $mahlzeit || ! $e->entry_date->isSameDay($tag)) {
-                    continue;
-                }
-                $roll = $agg->allergenRollupFromGerichte($this->eintragGerichte($e));
-                foreach (self::KOSTFORMEN as $k => $_) {
-                    if (! $tagErfuellt[$k] && $this->kostformErfuellt($k, $roll)) {
-                        $tagErfuellt[$k] = true;
-                    }
-                }
-            }
-            foreach (self::KOSTFORMEN as $k => $_) {
-                if (! $tagErfuellt[$k]) {
-                    $fehl[$k][] = $tag->format('Y-m-d');
-                }
-            }
-        }
-
-        $out = [];
-        foreach (self::KOSTFORMEN as $k => $label) {
-            $out[] = [
-                'key' => $k, 'label' => $label,
-                'erfuellt' => $fehl[$k] === [], 'fehltage' => $fehl[$k],
-                'abgedeckt' => $tage - count($fehl[$k]), 'tage' => $tage,
-            ];
-        }
-
-        return $out;
-    }
-
-    /** Erfüllt der Diät-Flag-Rollup eines Eintrags die Kostform? (leerer Eintrag erfüllt nichts) */
-    private function kostformErfuellt(string $key, array $roll): bool
-    {
-        if (($roll['n_gerichte'] ?? 0) === 0) {
-            return false;
-        }
-
-        return match ($key) {
-            'vegetarisch' => (bool) $roll['is_vegetarian'],
-            'vegan' => (bool) $roll['is_vegan'],
-            'schweinefrei' => ! $roll['contains_pork'],
-            'glutenfrei' => (bool) $roll['is_gluten_free'],
-            'laktosefrei' => (bool) $roll['is_lactose_free'],
-            'halal' => (bool) $roll['is_halal'],
-            default => false,
-        };
+        return $this->ernaehrung->kostformAbdeckung($plan, $mahlzeit, $montag, $tage);
     }
 
     /**
@@ -2717,7 +2349,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     public function vorlageAusrollen(Team $team, int $planId, string $bisDatum, bool $belegteErsetzen = false): int
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         if ($plan->start_date === null) {
             return 0;
         }
@@ -2779,19 +2411,12 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
         });
     }
 
-    private function guard(FoodAlchemistSpeiseplan $plan, Team $team): void
-    {
-        if (! $plan->isOwnedBy($team)) {
-            throw new \RuntimeException('Geerbter Speiseplan: Ändern kann ihn nur das Besitzer-Team.');
-        }
-    }
-
     // ── Spec 43: Branding (neu für Speiseplan; gespiegelt aus FoodbookService) ──
 
     public function setBranding(Team $team, int $planId, array $in): FoodAlchemistSpeiseplan
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
 
         $daten = [];
         if (array_key_exists('brand_color', $in)) {
@@ -2834,7 +2459,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     private function speichereBrandingBild(Team $team, int $planId, UploadedFile $file, string $spalte): string
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $contextSpalte = $spalte === 'logo_path' ? 'logo_context_file_id' : 'cover_context_file_id';
         app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($plan->{$contextSpalte}, (string) $plan->{$spalte}, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($plan, $spalte)]);
 
@@ -2849,7 +2474,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
     private function loescheBrandingBild(Team $team, int $planId, string $spalte): FoodAlchemistSpeiseplan
     {
         $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->findOrFail($planId);
-        $this->guard($plan, $team);
+        $this->basis->guard($plan, $team);
         $contextSpalte = $spalte === 'logo_path' ? 'logo_context_file_id' : 'cover_context_file_id';
         app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($plan->{$contextSpalte}, (string) $plan->{$spalte}, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($plan, $spalte)]);
         $plan->update([$spalte => null, $contextSpalte => null]);

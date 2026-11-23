@@ -25,7 +25,8 @@ function speiseplanFassadeIst(): array
         $methoden[$m->getName()] = ($m->isStatic() ? 'static ' : '').'('.implode(', ', $parameter).'): '.$typ($m->getReturnType());
     }
     ksort($methoden);
-    $konstanten = array_map(fn ($w) => $w, $klasse->getConstants());
+    $oeffentlich = $klasse->getReflectionConstants(ReflectionClassConstant::IS_PUBLIC);   // private Konstanten ziehen mit ihrem Teil um
+    $konstanten = array_combine(array_map(fn ($c) => $c->getName(), $oeffentlich), array_map(fn ($c) => $c->getValue(), $oeffentlich));
     ksort($konstanten);
 
     return ['methoden' => $methoden, 'konstanten' => $konstanten];

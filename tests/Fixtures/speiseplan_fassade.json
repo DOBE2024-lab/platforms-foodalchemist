@@ -80,28 +80,6 @@
             "liste",
             "buffet"
         ],
-        "FELDER": [
-            "name",
-            "start_date",
-            "cycle_weeks",
-            "min_abstand_tage",
-            "status",
-            "description",
-            "note",
-            "default_pax",
-            "budget_wareneinsatz",
-            "outlet_id",
-            "crm_company_id",
-            "crm_contact_id",
-            "opening_days",
-            "writing_style_id"
-        ],
-        "KONF_RANG": {
-            "unknown": 0,
-            "low": 1,
-            "medium": 2,
-            "high": 3
-        },
         "KOSTFORMEN": {
             "vegetarisch": "Vegetarisch",
             "vegan": "Vegan",
@@ -110,20 +88,6 @@
             "laktosefrei": "Laktosefrei",
             "halal": "Halal"
         },
-        "LINIEN_FELDER": [
-            "name",
-            "color",
-            "is_vegetarian",
-            "role",
-            "plu",
-            "price_mode",
-            "price_value",
-            "target_wes_min_pct",
-            "target_wes_max_pct",
-            "default_pax",
-            "is_standing",
-            "meal"
-        ],
         "MAHLZEITEN": {
             "fruehstueck": "Frühstück",
             "mittag": "Mittag",

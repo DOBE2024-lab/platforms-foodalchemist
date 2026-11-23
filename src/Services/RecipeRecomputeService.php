@@ -234,11 +234,9 @@ class RecipeRecomputeService
 
         // Spec 60: Aromenprofile mitziehen (Kinder vor Eltern — der Eltern-Hash enthält die Kinder).
         // Best-effort: ein Profil-Fehler blockt nie die Bearbeitung (I8).
+        // 98 · 3.3 S7 P2: per synchronem Event statt Direktaufruf (Listener → Pairing\RezeptProfil::fuer je Id, gleiche Reihenfolge).
         try {
-            $profil = app(Pairing\RezeptProfil::class);
-            foreach ($this->topoOrder($betroffen) as $id) {
-                $profil->fuer((int) $id);
-            }
+            \Platform\FoodAlchemist\Events\AromenprofileVeraltet::dispatch($this->topoOrder($betroffen));
         } catch (\Throwable $e) {
             Log::warning("Aromenprofil nach Recompute fehlgeschlagen: {$e->getMessage()}");
         }

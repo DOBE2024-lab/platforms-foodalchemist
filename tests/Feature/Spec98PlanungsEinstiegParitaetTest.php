@@ -5,6 +5,7 @@ use Livewire\Livewire;
 use Platform\Core\Contracts\LLMProviderContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Services\FoodbookService;
@@ -100,7 +101,7 @@ dataset('ausgaben', [
 it('Oberfläche und Tool ergeben denselben Lauf, dieselbe Session und dieselbe Hülle', function (string $methode, string $praefix, string $tool, string $ownerType) {
     $brief = 'Sommerfest, 80 Gäste, gehobenes Niveau, 4 Wochen Zyklus.';
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: die Ausgabe-Formulare liegen im Kind
         ->set($praefix . 'Titel', 'Paritaet')
         ->set($praefix . 'Brief', $brief)
         ->call($methode)
@@ -124,7 +125,7 @@ it('Besitz: eine geerbte Hülle plant weder die Oberfläche noch das Tool', func
     $this->actingAs($kindUser);
     $vorher = FoodAlchemistCascadeRun::count();
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('fbOwnerId', $fb->id)
         ->set('fbBrief', 'Brief')
         ->call('foodbookAusBrief')

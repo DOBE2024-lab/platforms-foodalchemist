@@ -5,6 +5,7 @@ use Livewire\Livewire;
 use Platform\Core\Contracts\LLMProviderContract;
 use Platform\FoodAlchemist\Jobs\GenerateConceptJob;
 use Platform\FoodAlchemist\Jobs\MaterializeSpeisekartePositionJob;
+use Platform\FoodAlchemist\Livewire\Planung\AusBrief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
@@ -74,7 +75,7 @@ it('speisekarteAusBrief: plant Rahmen + Inhalte in der Leitstelle und dockt an d
         ],
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('skTitel', 'Sommerkarte')
         ->set('skBrief', 'À-la-carte-Sommerkarte, mediterran, gehobenes Niveau.')
         ->call('speisekarteAusBrief')
@@ -116,7 +117,7 @@ it('speisekarteAusBrief mit skOwnerId (Handoff aus dem Modul): plant für eine b
     $karte = app(SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Bestehende Karte']);
     $vorher = FoodAlchemistSpeisekarte::where('team_id', $this->rootTeam->id)->count();
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)
         ->set('skOwnerId', $karte->id)
         ->set('skBrief', 'Brief für eine bestehende Speisekarte.')
         ->call('speisekarteAusBrief')
@@ -132,7 +133,7 @@ it('speisekarteAusBrief mit skOwnerId (Handoff aus dem Modul): plant für eine b
 it('speisekarteAusBrief: leerer Brief → Meldung, nichts angelegt', function () {
     Queue::fake();
 
-    $comp = Livewire::test(PlanungIndex::class)
+    $comp = Livewire::test(AusBrief::class)
         ->set('skBrief', '   ')
         ->call('speisekarteAusBrief');
 
@@ -155,16 +156,22 @@ it('Speisekarte-Auswähler aktiviert die jüngste Owner-Session', function () {
         'source_owner_type' => 'speisekarte', 'source_owner_id' => $karte->id, 'created_via' => 'test',
     ]);
 
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: Owner-Auswahl im Kind, die Session aktiviert der Parent
         ->set('skOwnerId', $karte->id)
         ->assertSet('skOwnerId', $karte->id)
+        ->assertDispatched('planung.owner-gewaehlt', ownerType: 'speisekarte', ownerId: $karte->id);
+    Livewire::test(PlanungIndex::class)
+        ->dispatch('planung.owner-gewaehlt', ownerType: 'speisekarte', ownerId: $karte->id)
         ->assertSet('sessionId', $session->id);
 });
 
 it('Speisekarte-Auswähler ohne Vor-Session setzt nur den Owner', function () {
     $karte = app(SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Leere Karte']);
-    Livewire::test(PlanungIndex::class)
+    Livewire::test(AusBrief::class)   // Spec 85 C1 PR-5: Owner-Auswahl im Kind, die Session aktiviert der Parent
         ->set('skOwnerId', $karte->id)
         ->assertSet('skOwnerId', $karte->id)
+        ->assertDispatched('planung.owner-gewaehlt', ownerType: 'speisekarte', ownerId: $karte->id);
+    Livewire::test(PlanungIndex::class)
+        ->dispatch('planung.owner-gewaehlt', ownerType: 'speisekarte', ownerId: $karte->id)
         ->assertSet('sessionId', null);
 });

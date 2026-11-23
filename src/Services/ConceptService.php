@@ -835,9 +835,10 @@ class ConceptService
             ]);
             foreach ($vorlage->slots as $slot) {
                 $neu->slots()->create([
-                    'team_id' => $team->id, 'role' => $slot->role, 'title' => $slot->title,
+                    'team_id' => $team->id, 'type' => $slot->type, 'role' => $slot->role, 'title' => $slot->title,
                     'position' => $slot->position, 'is_pflicht' => $slot->is_pflicht,
-                    'package_id' => $slot->package_id,          // Paket bleibt Referenz (zieht durch)
+                    'package_id' => $slot->package_id,          // Altspalte bis 3.1, nur Bestand
+                    'embedded_concept_id' => $slot->embedded_concept_id,   // 98 · 2.6c: Paket-Konzept bleibt Referenz (zieht durch)
                     'sales_recipe_id' => $slot->sales_recipe_id, 'quantity' => $slot->quantity,
                     'unit_vocab_id' => $slot->unit_vocab_id,
                 ]);

@@ -690,7 +690,7 @@ class BulkEnrichService
                 }
                 if ($gelandet > 0) {
                     // Der Verlust ändert Ausbeute und EK/kg — der Recompute zieht Rezept + Nutzer nach.
-                    app(RecipeRecomputeService::class)->recomputeAndPropagate($r->id);
+                    app(\Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte::class)->recomputeAndPropagate($r->id);
                 }
                 break;
         }

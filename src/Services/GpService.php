@@ -620,7 +620,7 @@ class GpService
         );
 
         // V-049: die Ersetzung trifft eine Menge — einmal rechnen, nicht je Rezept.
-        app(RecipeRecomputeService::class)->recomputeMany($recipeIds->all());
+        app(\Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte::class)->recomputeMany($recipeIds->all());
 
         return ['zeilen' => (int) $zeilen, 'rezepte' => $recipeIds->count()];
     }

@@ -253,17 +253,14 @@ class RecipeReifeAdapter implements ReifeAdapter
     }
 
     /**
-     * Namen der offenen Pflicht-Zutaten (kein GP, kein Unterrezept, nicht optional, nicht bewusst ignoriert) — auch für die
-     * EK-Vollständigkeit ({@see \Platform\FoodAlchemist\Services\KostenCacheService::fuer}).
+     * Namen der offenen Pflicht-Zutaten (kein GP, kein Unterrezept, nicht optional, nicht bewusst ignoriert).
+     * Liegt seit 98 · 3.3 S7 P1 in {@see \Platform\FoodAlchemist\Support\OffeneZutaten::namen}.
      *
      * @return list<string>
      */
     public static function offeneZutaten(FoodAlchemistRecipe $r): array
     {
-        return $r->ingredients()->whereNull('gp_id')->whereNull('referenced_recipe_id')->where('is_optional', false)
-            ->where(fn ($q) => $q->whereNull('match_method')->orWhere('match_method', '!=', \Platform\FoodAlchemist\Enums\MatchMethod::Ignored->value))
-            ->orderBy('position')->get(['display_name', 'raw_text'])
-            ->map(fn ($z) => (string) ($z->display_name ?: $z->raw_text))->values()->all();
+        return \Platform\FoodAlchemist\Support\OffeneZutaten::namen($r);
     }
 
     /** @return array{code: string, ebene: string, schwere: string, was: string, wie: ?array} */

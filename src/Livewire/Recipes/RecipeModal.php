@@ -174,7 +174,7 @@ class RecipeModal extends Component
 
         if ($id !== null) {
             $team = Auth::user()?->currentTeamRelation;
-            $r = FoodAlchemistRecipe::visibleToTeam($team)->with(['kategorie:id,main_group_id', 'equipment:id'])->find($id);
+            $r = FoodAlchemistRecipe::visibleToTeam($team)->with(['category:id,main_group_id', 'equipment:id'])->find($id);
             if ($r !== null) {
                 $this->form = [
                     'name' => $r->name,

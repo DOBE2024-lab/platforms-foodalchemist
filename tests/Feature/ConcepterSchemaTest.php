@@ -49,7 +49,7 @@ it('baut ein Concept mit Slots: Paket ODER festes Gericht je Slot (Grill-Buffet)
     expect($slots)->toHaveCount(2)
         ->and($slots[0]->embeddedConcept->name)->toBe('Salad Wall')
         ->and($slots[1]->embeddedConcept)->toBeNull()
-        ->and($slots[1]->gericht->name)->toBe('Salat: Green Power');
+        ->and($slots[1]->dish->name)->toBe('Salat: Green Power');
 });
 
 it('Vorlage-Scopes + Rollen-Vokabular', function () {

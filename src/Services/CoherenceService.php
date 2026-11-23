@@ -131,7 +131,7 @@ class CoherenceService
     private function lade(Team $team, int $recipeId): FoodAlchemistRecipe
     {
         return FoodAlchemistRecipe::visibleToTeam($team)
-            ->with(['ingredients' => fn ($q) => $q->whereNull('deleted_at'), 'ingredients.gp:id,name', 'ingredients.referencedRecipe:id,name', 'speisenKlasse:id,label'])
+            ->with(['ingredients' => fn ($q) => $q->whereNull('deleted_at'), 'ingredients.gp:id,name', 'ingredients.referencedRecipe:id,name', 'dishClass:id,label'])
             ->findOrFail($recipeId);
     }
 

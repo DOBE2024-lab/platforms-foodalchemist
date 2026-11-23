@@ -169,7 +169,7 @@ class DetailPanel extends Component
         $svc = app(\Platform\FoodAlchemist\Services\RecipeService::class);
         try {
             $spalte = $typ === 'level' ? 'level_slug' : 'sector_slug';
-            $relation = $typ === 'level' ? 'niveauEignungen' : 'sektorEignungen';
+            $relation = $typ === 'level' ? 'levelSuitabilities' : 'sectorSuitabilities';
             $aktiv = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($this->recipeId)
                 ->{$relation}->pluck($spalte)->contains($slug);
             $aktiv

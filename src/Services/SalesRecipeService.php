@@ -257,10 +257,10 @@ class SalesRecipeService
     {
         return FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
             ->with([
-                'speisenKlasse:id,label,diet_form,dish_main_group_id',
+                'dishClass:id,label,diet_form,dish_main_group_id',
                 'dishClass.mainGroup:id,code,label',
                 'standardPresentation.markupClass',   // Spec 85 D-1 PR-C: Klasse nur an der Darreichung (DarreichungResolver::klasseFuer)
-                'vkEinheit:id,slug,display_de',
+                'salesUnit:id,slug,display_de',
                 'ingredients' => fn ($q) => $q->whereNull('deleted_at')->orderBy('position'),
                 // M9-01e: Bio-/Regional-Anteil braucht die GP-Tags; Nährwert-Faktor die Einheit
                 'ingredients.gp:id,name,tag_is_organic,tag_is_regional', 'ingredients.referencedRecipe:id,name',

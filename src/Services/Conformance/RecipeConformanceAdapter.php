@@ -588,7 +588,7 @@ class RecipeConformanceAdapter implements ConformanceAdapter
         $kontext = [
             'artefakt_typ' => $vk ? 'Verkaufsgericht (VK)' : 'Basisrezept/Komponente',
             'name' => $r->name,
-            'kategorie' => $r->kategorie?->label,
+            'kategorie' => $r->category?->label,
             'beschreibung' => $r->description,
             'zutaten' => $r->ingredients->map(fn ($z) => [
                 'text' => $z->gp?->name ?? $z->referencedRecipe?->name ?? $z->display_name ?? $z->raw_text,
@@ -706,7 +706,7 @@ class RecipeConformanceAdapter implements ConformanceAdapter
         $vorschlag = app(AiGatewayService::class)->propose($promptKey, [
             'anweisung' => $direktive,
             'name' => $r->name,
-            'kategorie' => $r->is_sales_recipe ? $r->dishMainGroup?->code : $r->kategorie?->label,
+            'kategorie' => $r->is_sales_recipe ? $r->dishMainGroup?->code : $r->category?->label,
             'diaetform' => $r->is_sales_recipe ? $r->dishClass?->diet_form : null,
             'description' => $r->description,
             'preparation' => $r->preparation,

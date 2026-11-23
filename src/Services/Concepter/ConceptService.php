@@ -36,7 +36,7 @@ class ConceptService
         return FoodAlchemistConcept::visibleToTeam($team)
             ->konzepte()         // Kaskade: Pakete (kind=paket) gehören in den Pakete-Reiter, nicht hier
             ->standardisiert()   // #380: angebots-lokale Entwürfe gehören nicht in den Katalog
-            ->with(['eventtyp:id,name', 'servierform:id,label']) // 4c: Facetten-Spalte im Browser
+            ->with(['eventType:id,name', 'servingForm:id,label']) // 4c: Facetten-Spalte im Browser
             ->withCount('slots')
             ->when(($filters['vorlagen'] ?? false), fn ($q) => $q->vorlagen(), fn ($q) => $q->echte())
             ->when(($filters['search'] ?? '') !== '', fn ($q) => \Platform\FoodAlchemist\Support\Suche::likeAny($q, ['name', "COALESCE(occasion, '')"], $filters['search']))
@@ -72,7 +72,7 @@ class ConceptService
                 'slots.dish.presentations' => fn ($q) => $q->with('servingForm')->orderByDesc('is_standard')->orderBy('id'),
                 'slots.dish.dishClass:id,label',
                 'slots.unit:id,slug,display_de',
-                'vorlageQuelle:id,name',
+                'templateSource:id,name',
             ])
             ->find($id);
 

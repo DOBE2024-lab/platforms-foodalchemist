@@ -201,13 +201,13 @@ class RecipeReviseService
     {
         $r->loadMissing([
             'ingredients.gp', 'ingredients.referencedRecipe', 'ingredients.unit',
-            'dishClass', 'darreichungen.servingForm', 'salesUnit',
+            'dishClass', 'presentations.servingForm', 'salesUnit',
         ]);
 
         $facetten = [
             'speisen_klasse' => $r->dishClass?->label,
             'diaetform' => $r->dishClass?->diet_form,
-            'darreichungen' => $r->darreichungen->map(fn ($d) => $d->servingForm?->label)->filter()->values()->all(),
+            'darreichungen' => $r->presentations->map(fn ($d) => $d->servingForm?->label)->filter()->values()->all(),
             'verkaufseinheit' => trim(($r->sales_unit_count !== null ? $r->sales_unit_count . ' × ' : '') . ($r->salesUnit?->display_de ?? '')) ?: null,
             'portion_g' => $r->sales_quantity_per_unit_g,
             'aufschlagsklasse' => $r->vk_klasse?->code,   // Spec 85 D-1 PR-B: Klasse der Standard-Darreichung

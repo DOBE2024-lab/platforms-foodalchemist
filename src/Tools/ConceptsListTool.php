@@ -121,8 +121,8 @@ class ConceptsListTool extends FoodAlchemistTool implements ToolContract, ToolMe
         $preis = $c->price_per_person_cache !== null ? (float) $c->price_per_person_cache : null;
         $ek = $c->ek_per_person_cache !== null ? (float) $c->ek_per_person_cache : null;
         // paginateBrowser lädt eventtyp/servierform, paginatePakete eventType/servingForm (gleiche Spalten) — das geladene nehmen, kein N+1
-        $eventtyp = $c->relationLoaded('eventtyp') ? $c->eventtyp : $c->eventType;
-        $servierform = $c->relationLoaded('servierform') ? $c->servierform : $c->servingForm;
+        $eventtyp = $c->eventType;
+        $servierform = $c->servingForm;
 
         return [
             'id' => $c->id, 'name' => $c->name, 'kind' => $c->kind === 'paket' ? 'paket' : 'konzept', 'status' => $c->status, 'class' => $c->class,

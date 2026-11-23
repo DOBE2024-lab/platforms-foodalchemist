@@ -34,7 +34,7 @@ trait PlanGerichtVorgaben
 
         return FoodAlchemistConceptSlot::where('team_id', $concept->team_id)->where('concept_id', $concept->id)
             ->whereNotIn('type', ConceptService::STRUKTUR_TYPEN)
-            ->with(['gericht:id,name', 'embeddedConcept:id,name'])
+            ->with(['dish:id,name', 'embeddedConcept:id,name'])
             ->orderBy('position')->orderBy('id')->get()
             ->map(fn (FoodAlchemistConceptSlot $s) => [
                 'id' => (int) $s->id,
@@ -42,7 +42,7 @@ trait PlanGerichtVorgaben
                 'titel' => (string) ($s->title ?? ''),
                 'pflicht' => (bool) $s->is_pflicht,
                 'leer' => ConceptVorgabenService::istLeer($s),
-                'gericht' => $s->gericht?->name ?? $s->embeddedConcept?->name,
+                'gericht' => $s->dish?->name ?? $s->embeddedConcept?->name,
                 'vorgabe' => (string) ($s->dish_brief ?? ''),
                 'notiz' => (string) ($s->dish_brief_note ?? ''),
             ])->values()->all();

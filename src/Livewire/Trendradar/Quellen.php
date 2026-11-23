@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\TrendQuellenService;
+use Platform\FoodAlchemist\Services\Trend\TrendQuellenService;
 use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
 /**

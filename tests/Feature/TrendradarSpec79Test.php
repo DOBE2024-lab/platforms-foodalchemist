@@ -15,8 +15,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTrendBeleg;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendInspiration;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendSignal;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\TrendService;
-use Platform\FoodAlchemist\Services\TrendSignalService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendSignalService;
 use Platform\FoodAlchemist\Services\Trends\GoogleTrendsQuelle;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -564,7 +564,7 @@ it('Sparten (Nachtrag 08.10.): Mehrfachauswahl, geprüft; Filter zeigt passende 
     $this->svc->aendern($this->rootTeam, $kita->id, ['sparten' => []]);
     expect($kita->refresh()->sparten)->toBeNull();
     expect($this->svc->alsArray($event->refresh())['sparten_labels'])->toBe(['Event & Bankett', 'Restaurant & Hotel'])
-        ->and(\Platform\FoodAlchemist\Services\TrendService::SEKTOREN)->toHaveKey('format');
+        ->and(\Platform\FoodAlchemist\Services\Trend\TrendService::SEKTOREN)->toHaveKey('format');
 
     // Oberfläche: Filter „Sparte" + Feld im Einordnen; Badge an der Liste; Speichern übernimmt Sparten
     $lw = \Livewire\Livewire::test(TrendradarIndex::class)->set('ansicht', 'liste')

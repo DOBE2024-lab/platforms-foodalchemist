@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\LagebildService;
+use Platform\FoodAlchemist\Services\Trend\LagebildService;
 
 /**
  * Observatorium zentral: wöchentliches Lagebild schreiben (nur Master-Team, Kuratieren). Der Text kommt vom Aufrufer (Claude-Läufer);

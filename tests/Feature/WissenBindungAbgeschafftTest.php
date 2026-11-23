@@ -93,7 +93,7 @@ it('knowledge.POST und knowledge.PUT nehmen kein bind_layers mehr an — und sch
 
 it('bindLayer() wirft und nennt den Weg, der heute wirkt', function () {
     ['id' => $docId] = seedVaultDoc();
-    $dienst = app(\Platform\FoodAlchemist\Services\KnowledgeService::class);
+    $dienst = app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::class);
 
     expect(fn () => $dienst->bindLayer($this->rootTeam, $docId, 'recipe', 'always'))
         ->toThrow(RuntimeException::class, 'abgeschafft');

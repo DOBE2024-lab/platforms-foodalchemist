@@ -45,14 +45,14 @@ beforeEach(function () {
             ]);
         }
         foreach (['boiled_broccoli', 'curry_powder', 'tofu_2485'] as $slug) {
-            app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $ids[$slug], 'kern');
+            app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $ids[$slug], 'kern');
         }
         // Geschwister (gleiche Hauptzutat) tragen alle vier Anker als Kern → alle vier stünden in der Vorauswahl
         $gp->update(['main_ingredient_slug' => 'curry']);
         $geschwister = $this->makeGp($this->rootTeam, 'Curry: Kokos, frisch');
         $geschwister->update(['main_ingredient_slug' => 'curry']);
         foreach (['boiled_broccoli', 'curry_powder', 'coconut_milk'] as $slug) {
-            app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnker($this->rootTeam, $geschwister->id, $ids[$slug], 'kern');
+            app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->setGpAnker($this->rootTeam, $geschwister->id, $ids[$slug], 'kern');
         }
 
         return [$gp, $ids];
@@ -146,7 +146,7 @@ it('GP: „Anker vorschlagen" nennt einen von Hand verknüpften Anker — Meldun
     $ankerId = DB::table('foodalchemist_vocab_pairing_anchors')->insertGetId([
         'uuid' => (string) Str::uuid7(), 'slug' => 'basilikum', 'display_de' => 'Basilikum', 'created_at' => now(), 'updated_at' => now(),
     ]);
-    app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $ankerId, 'kern');
+    app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $ankerId, 'kern');
     ($this->mockKi)(['gp.anker' => ['anchor_slug' => 'basilikum']]);
 
     Livewire::test(GpModal::class)->call('oeffnen', $gp->id)->call('ankerKiVorschlagen')
@@ -158,7 +158,7 @@ it('GP: „Anker vorschlagen" bei 3 Kern- und 6 Nebenankern fragt die KI gar nic
     [$gp] = ($this->gpMitDreiKernAnkern)();
     foreach (range(1, 6) as $i) {
         $a = DB::table('foodalchemist_vocab_pairing_anchors')->insertGetId(['uuid' => (string) Str::uuid7(), 'slug' => "neben_{$i}", 'display_de' => "Neben {$i}", 'created_at' => now(), 'updated_at' => now()]);
-        app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $a, 'neben');
+        app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $a, 'neben');
     }
     $this->mock(AiGatewayService::class, fn ($mock) => $mock->shouldNotReceive('propose'));
 

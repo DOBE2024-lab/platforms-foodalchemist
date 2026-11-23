@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
 use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
 /** Spec 79 · Trend einordnen, bearbeiten, Status setzen. Nur Felder, die übergeben werden, ändern sich. */

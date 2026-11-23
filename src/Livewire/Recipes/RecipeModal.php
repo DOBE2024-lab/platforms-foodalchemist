@@ -21,7 +21,7 @@ use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
 use Platform\FoodAlchemist\Services\BehaelterRechner;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Services\RecipeOneShotService;
 use Platform\FoodAlchemist\Services\RecipeReviseService;
 use Platform\FoodAlchemist\Services\RecipeService;

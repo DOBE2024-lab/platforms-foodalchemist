@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\LagebildService;
+use Platform\FoodAlchemist\Services\Trend\LagebildService;
 
 /** Observatorium zentral: wöchentliche Lagebilder lesen (neueste zuerst, Belege aufgelöst). Kein KI-Aufruf. */
 class TrendLagebildGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

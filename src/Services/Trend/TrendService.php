@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -26,7 +26,7 @@ use Platform\FoodAlchemist\Support\TrendVokabular as V;
  */
 class TrendService
 {
-    public function __construct(private readonly FaRechte $rechte) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte) {}
 
     /** Spec 93 C: Felder, die ein Mensch gesetzt hat, merkt sich der Trend (manuell_felder) — die Automatik fasst sie nie an. */
     public const MANUELLE_FELDER = ['typ', 'ebene', 'kategorie', 'sparten', 'status', 'konfidenz'];
@@ -784,7 +784,7 @@ class TrendService
         if ($datei->getSize() > V::DATEI_MAX_KB * 1024) {
             throw new \RuntimeException('Die Datei ist größer als 15 MB.');
         }
-        $res = app(ContextFileService::class)->uploadForContext(app(Plattform\FoodAlchemistMediaService::class)->verkleinert($datei), 'foodalchemist.trend_beleg', (int) $beleg->id, [
+        $res = app(ContextFileService::class)->uploadForContext(app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->verkleinert($datei), 'foodalchemist.trend_beleg', (int) $beleg->id, [
             'team_id' => $team->id, 'user_id' => $userId, 'folder' => 'foodalchemist/trends/'.($beleg->trend_id !== null ? (int) $beleg->trend_id : 'fundstuecke'),
             'keep_original' => true, 'generate_variants' => false,
         ]);

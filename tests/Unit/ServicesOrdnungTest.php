@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Tests\Support\ServicesUmzuege;
  *    auf, gespeicherte Klassennamen von Diensten gibt es nicht; geprüft in PR 0).
  *  · Der Root von src/Services schrumpft nur (Sperrklinke, Ziel < 50).
  */
-const SERVICES_ROOT_MAX = 245;
+const SERVICES_ROOT_MAX = 226;
 
 function servicesOrdnungModul(): string
 {

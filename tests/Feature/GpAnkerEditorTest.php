@@ -5,7 +5,7 @@ use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Gps\DetailPanel;
 use Platform\FoodAlchemist\Livewire\Gps\GpModal;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

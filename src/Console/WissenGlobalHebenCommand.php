@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Services\Ai\KnowledgeEmbeddingService;
  * Spec 52 — den kuratierten Bestand dorthin heben, wo er hingehört: nach global.
  *
  * Entscheid Dominique 2026-09-11: „alles was ich jetzt reingebe ist master, und das was
- * online ist ist auch master wissen". Neue Dossiers legt {@see \Platform\FoodAlchemist\Services\KnowledgeService::create}
+ * online ist ist auch master wissen". Neue Dossiers legt {@see \Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::create}
  * seitdem global an; dieses Kommando holt den BESTAND nach.
  *
  * ⚠ REIHENFOLGE: erst `FOODALCHEMIST_MASTER_TEAM_ID` setzen und den Code ausrollen, DANN

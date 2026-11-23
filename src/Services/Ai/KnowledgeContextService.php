@@ -1659,7 +1659,7 @@ class KnowledgeContextService
         }
         sort($matched);
 
-        $svc = app(\Platform\FoodAlchemist\Services\PairingService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class);
         $zeilen = [];
         foreach (array_slice($matched, 0, $maxAnchors) as $stem) {
             // Stem (Doc-Slug, evtl. mit »-«) → Anker-Slug (»_«) für die Graph-Auflösung.
@@ -1853,7 +1853,7 @@ class KnowledgeContextService
     private function zutatGroundingBlock(?Team $team, array $hauptzutatSlugs, string $feature, int $maxDocs, array &$filesUsed, string $hauptzutatenQuelle, array &$geerdeteAnker): KnowledgeContextBlock
     {
         $aspekt = $this->zutatAspektFuer($feature);
-        $pairing = app(\Platform\FoodAlchemist\Services\PairingService::class);
+        $pairing = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class);
         $blocks = [];
         $geladen = [];
         foreach ($hauptzutatSlugs as $hz) {

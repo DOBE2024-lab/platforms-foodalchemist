@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pairing;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -27,8 +27,8 @@ class PairingInspirationService
 {
     public function __construct(
         private readonly PairingService $pairing,
-        private readonly FavoriteGpService $favoriten,
-        private readonly SignalService $signale,
+        private readonly \Platform\FoodAlchemist\Services\FavoriteGpService $favoriten,
+        private readonly \Platform\FoodAlchemist\Services\SignalService $signale,
     ) {}
 
     /** voll_kreativ ⇒ abstrakt (kein GP), sonst geerdet. */

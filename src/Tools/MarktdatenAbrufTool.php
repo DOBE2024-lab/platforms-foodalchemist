@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\MarktdatenService;
+use Platform\FoodAlchemist\Services\Trend\MarktdatenService;
 
 class MarktdatenAbrufTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {

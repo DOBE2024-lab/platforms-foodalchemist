@@ -267,7 +267,7 @@ class KnowledgeEmbeddingService
 
     /**
      * Inkrementelles Re-Embed EINES Wissens-Dokuments (Service-/UI-Pfad). Ein Eloquent-
-     * Observer ist unmöglich: {@see \Platform\FoodAlchemist\Services\KnowledgeService} und der
+     * Observer ist unmöglich: {@see \Platform\FoodAlchemist\Services\Knowledge\KnowledgeService} und der
      * Knowledge-Browser schreiben per DB::table (kein Model-Event). Darum ruft der Schreib-Pfad
      * diese Methode explizit. Async über die Queue ({@see EmbeddingService::queueEmbedAndStore}
      * → GenerateEmbeddingJob), source_hash-idempotent — Spiegel von PoolEmbeddingService::queueGp.

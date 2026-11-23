@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Knowledge;
 
 use Illuminate\Support\Facades\DB;
 

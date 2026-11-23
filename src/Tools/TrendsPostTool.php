@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
 use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
 /** Spec 79 · Trend erfassen — optional gleich eingeordnet und mit erstem Beleg (Link, Notiz, Screenshot). */

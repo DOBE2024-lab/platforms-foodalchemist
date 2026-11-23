@@ -1,6 +1,6 @@
 @php
     use Platform\FoodAlchemist\Support\ObservatoriumInhalt as O;
-    use Platform\FoodAlchemist\Services\WettbewerbService as W;
+    use Platform\FoodAlchemist\Services\Trend\WettbewerbService as W;
 @endphp
 <div class="fa-wett" data-wettbewerber-research>
     @include('foodalchemist::livewire.observatorium.styles')

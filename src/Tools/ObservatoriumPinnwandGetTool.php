@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistObservatoriumPin as Pin;
-use Platform\FoodAlchemist\Services\ObservatoriumPinnwandService;
+use Platform\FoodAlchemist\Services\Trend\ObservatoriumPinnwandService;
 
 /** Team-Pinnwand im Observatorium lesen (gemeinsam fürs Team): angepinnte Meldungen und eigene Ideen. */
 class ObservatoriumPinnwandGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

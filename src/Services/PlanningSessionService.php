@@ -170,7 +170,7 @@ class PlanningSessionService
      */
     public function trendKombination(Team $team, array $trendIds, array $inspirationIds = [], array $fundstueckIds = []): array
     {
-        $trendSvc = app(TrendService::class);
+        $trendSvc = app(Trend\TrendService::class);
         $trendIds = array_values(array_unique(array_map('intval', $trendIds)));
         $inspirationIds = $trendSvc->inspirationIdsAus($team, ['inspiration_ids' => $inspirationIds, 'fundstueck_ids' => $fundstueckIds]);
         $anzahl = count($trendIds) + count($inspirationIds);
@@ -240,7 +240,7 @@ class PlanningSessionService
      */
     public function refsInspirationen(Team $team, ?array $refs): array
     {
-        return app(TrendService::class)->inspirationIdsAus($team, [
+        return app(Trend\TrendService::class)->inspirationIdsAus($team, [
             'inspiration_ids' => $refs['inspiration_ids'] ?? [], 'fundstueck_ids' => $refs['fundstueck_ids'] ?? [],
         ]);
     }

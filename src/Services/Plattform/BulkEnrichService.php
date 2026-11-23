@@ -1087,7 +1087,7 @@ class BulkEnrichService
         }
         if ($feld === 'anker' && $ankerRolle === 'neben') {
             // Nebenanker: vorhandene Anker raus aus dem Vokabular, als Kontext dazu. Nur hier — der Bulk-Lauf fragt unverändert (Fingerabdruck).
-            $vorhanden = app(\Platform\FoodAlchemist\Services\PairingService::class)->gpAnkerAlle($gp->id);
+            $vorhanden = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->gpAnkerAlle($gp->id);
             $vokabular = array_values(array_diff($vokabular, $vorhanden->pluck('slug')->all()));
             $ankerZusatz += [
                 'gesucht' => 'Nebenanker: Die Kern-Anker sind vergeben (vorhandene_anker). Waehle den wichtigsten WEITEREN Aroma-Traeger '
@@ -1236,11 +1236,11 @@ class BulkEnrichService
                 // Kein Aroma-Träger ist eine Antwort, kein Leerlauf: festhalten, sonst fragt jeder Lauf neu (io-Probe 01.11.2026).
                 // Ein vorhandener KI-Anker bleibt — neutral setzt nie einen Anker ab. Ausnahme Neu-Fragen (`anker_ki`): die neue Antwort
                 // ersetzt die alte KI-Antwort; Katalog-, Paket- und Hand-Anker bleiben immer.
-                if (($wert['neu'] ?? false) === true && app(\Platform\FoodAlchemist\Services\PairingService::class)->darfAnkerPflegen($gp, $team)) {
+                if (($wert['neu'] ?? false) === true && app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->darfAnkerPflegen($gp, $team)) {
                     DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->whereNull('deleted_at')
                         ->whereIn('source', \Platform\FoodAlchemist\Support\AnkerQuelle::KI_QUELLEN)->update(['deleted_at' => now(), 'updated_at' => now()]);
                 }
-                if (! $aroma->hatAnker($gp->id) && \Platform\FoodAlchemist\Services\GpAromaService::neutralTabelle() && app(\Platform\FoodAlchemist\Services\PairingService::class)->darfAnkerPflegen($gp, $team)) {
+                if (! $aroma->hatAnker($gp->id) && \Platform\FoodAlchemist\Services\GpAromaService::neutralTabelle() && app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->darfAnkerPflegen($gp, $team)) {
                     $aroma->merkeAnkerNeutral($gp->id, (int) $team->id, 'ai', $prop->confidence !== null ? (float) $prop->confidence : null,
                         (string) ($prop->reasoning ?: 'Bulk-Anreicherung: kein Aroma-Träger'));
                     $ok = true;
@@ -1251,7 +1251,7 @@ class BulkEnrichService
                 if (! $manuell && $ankerId !== null) {
                     $pate = ($wert['pate'] ?? false) === true;
                     try {
-                        $ok = app(\Platform\FoodAlchemist\Services\PairingService::class)->setGpAnkerInference($team, $gp->id, (int) $ankerId,
+                        $ok = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->setGpAnkerInference($team, $gp->id, (int) $ankerId,
                             (float) ($prop->confidence ?? 0.0),
                             $pate ? '[Pate] '.($wert['pate_begruendung'] ?? '').(($prop->reasoning ?? '') !== '' ? ' — '.$prop->reasoning : '')
                                 : (string) ($prop->reasoning ?: 'Bulk-Anreicherung'),

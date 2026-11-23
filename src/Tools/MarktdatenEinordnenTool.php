@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\MarktEinordnungService;
+use Platform\FoodAlchemist\Services\Trend\MarktEinordnungService;
 
 /**
  * KI-Einordnung „Markt in Zahlen“ aus den gespeicherten Werten anstoßen — ohne neuen Destatis-Abruf (Kuratieren). Ruft selbst

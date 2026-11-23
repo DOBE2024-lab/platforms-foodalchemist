@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTrendInspiration;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendQuelle;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\TrendEingangService;
+use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
 use Platform\FoodAlchemist\Services\Trends\TrendAutomatikService;
 use Platform\FoodAlchemist\Support\SichererAbruf;
 use Platform\FoodAlchemist\Support\TrendAutomatikRegeln;
@@ -221,10 +221,10 @@ it('Quellenart verbraucherstudie: eigenes Vokabular, als Quelle anlegbar, zählt
     $k = app(TrendAutomatikService::class)->kennzahlen($this->rootTeam, $thema, TrendAutomatikRegeln::startwerte());
     expect($k['quellenarten'])->toBe(['marktforschung', 'verbraucherstudie']);
 
-    $trend = app(\Platform\FoodAlchemist\Services\TrendService::class)->anlegen($this->rootTeam, ['name' => 'TEST-93 Fermentation',
+    $trend = app(\Platform\FoodAlchemist\Services\Trend\TrendService::class)->anlegen($this->rootTeam, ['name' => 'TEST-93 Fermentation',
         'beleg' => ['quelle' => 'verbraucherstudie', 'titel' => 'TEST-93 Report']]);
     // bestätigende Quelle allein = „mittel“ mit Bestätigung (eine bloße sonstige Quelle allein wäre „niedrig“); kein Befragungs-Siegel
-    $b = app(\Platform\FoodAlchemist\Services\TrendService::class)->bewertung($trend);
+    $b = app(\Platform\FoodAlchemist\Services\Trend\TrendService::class)->bewertung($trend);
     expect($b['konfidenz'])->toBe('mittel')->and($b['begruendung'])->toContain('Bestätigt durch Verbraucherstudie')->and($b['befragung'])->toBeFalse();
 });
 

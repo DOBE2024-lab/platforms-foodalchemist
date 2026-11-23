@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Recipes;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\PairingService;
+use Platform\FoodAlchemist\Services\Pairing\PairingService;
 
 /**
  * M5-07 / D-7: Pairing-Netz-Modal — Empfehler (2026-07-22 Redesign): »was passt

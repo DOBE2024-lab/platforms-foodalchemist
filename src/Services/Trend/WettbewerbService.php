@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +23,7 @@ class WettbewerbService
     public const BEWEGUNGEN = ['meldung' => 'Unternehmensmeldung', 'angebot' => 'Angebote & Konzepte', 'standort' => 'Standorte & Expansion',
         'auftrag' => 'Aufträge & Vergaben', 'partnerschaft' => 'Partnerschaften', 'personal' => 'Personal & Führung'];
 
-    public function __construct(private readonly FaRechte $rechte) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte) {}
 
     private function recht(Team $team, bool $schreiben = false, ?int $userId = null): void
     {

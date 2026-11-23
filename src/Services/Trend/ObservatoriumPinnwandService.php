@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
@@ -17,7 +17,7 @@ class ObservatoriumPinnwandService
 {
     public const MAX_NOTIZ = 1000;
 
-    public function __construct(private readonly FaRechte $rechte, private readonly ObservatoriumService $observatorium) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte, private readonly ObservatoriumService $observatorium) {}
 
     /** @return Collection<int, Pin> neueste zuerst, mit Meldung */
     public function liste(Team $team): Collection

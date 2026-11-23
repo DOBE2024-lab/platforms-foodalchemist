@@ -170,7 +170,7 @@ it('C4: stoppt vor dem Modell wenn der Pflichtkanon nicht ins Prüfbudget passt'
 
 
 it('C4: ergänzt geroutetes Fachwissen im Userblock und protokolliert die Quellen', function () {
-    app(\Platform\FoodAlchemist\Services\KnowledgeService::class)->create($this->rootTeam, [
+    app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::class)->create($this->rootTeam, [
         'slug' => 'tomaten-fachwissen', 'title' => 'Tomaten Gewürfelt', 'category' => 'cross_cutting',
         'art' => 'fachwissen', 'content_md' => 'GEROUTETES_FACHWISSEN bis ENDE.',
     ]);
@@ -189,7 +189,7 @@ it('C4: ergänzt geroutetes Fachwissen im Userblock und protokolliert die Quelle
 });
 
 it('C4: eine fehlende zweite Pflichtquelle verhindert eine unvollständige Prüfung', function () {
-    app(\Platform\FoodAlchemist\Services\KnowledgeService::class)->create($this->rootTeam, [
+    app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeService::class)->create($this->rootTeam, [
         'slug' => 'zweite-pflichtregel', 'title' => 'Zweite Regel', 'category' => 'regelwerk',
         'content_md' => 'Zweite Pflichtregel.',
     ]);

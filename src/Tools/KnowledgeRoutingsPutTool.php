@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\KnowledgeRoutingService;
+use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRoutingService;
 
 /**
  * S1b: Wissens-Routing SETZEN/ENTFERNEN zur Laufzeit — eine Kategorie ohne Code-Deploy routen

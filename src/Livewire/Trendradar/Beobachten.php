@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendQuelle;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\TrendQuellenService;
+use Platform\FoodAlchemist\Services\Trend\TrendQuellenService;
 use Platform\FoodAlchemist\Services\Trends\QuellenAbruf;
 use Platform\FoodAlchemist\Support\GoogleNewsSuche;
 use Platform\FoodAlchemist\Support\StichwortFilter;

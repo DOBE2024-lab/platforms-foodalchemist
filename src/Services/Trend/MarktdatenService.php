@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Trend;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\FaRolle;
@@ -83,7 +83,7 @@ class MarktdatenService
     /** Mindestabstand in Prozentpunkten, ab dem eine Vergleichsaussage eine Richtung nennt; darunter „etwa gleich“. */
     public const AUSSAGE_SCHWELLE_PP = 0.5;
 
-    public function __construct(private readonly FaRechte $rechte, private readonly GenesisClient $client, private readonly GenesisCsvLeser $leser) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte, private readonly GenesisClient $client, private readonly GenesisCsvLeser $leser) {}
 
     public static function quelle(string $tabelle): string
     {

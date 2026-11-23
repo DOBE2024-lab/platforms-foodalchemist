@@ -1275,7 +1275,7 @@ class ConceptService
                 }
             }
         }
-        $pairing = app(\Platform\FoodAlchemist\Services\PairingService::class);
+        $pairing = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class);
         $kohaesion = count($dishes) >= 2
             ? $pairing->menuCohesion(array_values($dishes))
             : ['score' => 0, 'rated_pairs' => 0, 'total_pairs' => 0, 'coverage_pct' => 0, 'weakest_pair' => null, 'unrated_pairs' => [], 'komponenten' => [], 'zu_wenig' => true];

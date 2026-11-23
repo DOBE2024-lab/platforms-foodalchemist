@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
-use Platform\FoodAlchemist\Services\TrendService;
+use Platform\FoodAlchemist\Services\Trend\TrendService;
 
 /**
  * Spec 79 · Startbestand: die 27 Trends aus Sarah Sporks Projektarbeit (BHG Trend Radar 2026,

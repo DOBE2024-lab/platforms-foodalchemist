@@ -166,6 +166,53 @@ it('PR C · ein vollständig bepreistes Konzept im Foodbook ist nicht vorläufig
         ->and($fbs->gesamt($this->rootTeam, $fb->fresh())['vk_fehlt'])->toBeFalse();
 });
 
+it('PR C · Kunden-PDF: Konzept-Block mit Teil-Preis trägt „(vorläufig)“, nach manuellem Konzept-Preis nicht mehr', function () {
+    $fbs = app(FoodbookService::class);
+    $fb = $fbs->create($this->rootTeam, ['label' => 'Kunden-FB', 'personen' => 30]);
+    $kap = $fbs->addKapitel($this->rootTeam, $fb->id, ['title' => 'Buffet']);
+    $fbs->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->teil->id]);
+    $pdf = fn () => view('foodalchemist::dokumente.foodbook', $fbs->dokumentDaten($this->rootTeam, $fb->fresh(), false) + ['istPdf' => false])->render();
+
+    $html = $pdf();
+    expect(substr_count($html, '(vorläufig)'))->toBe(1)->and($html)->toContain('12,00')
+        ->not->toContain('VK fehlt')->not->toContain('Wareneinsatz');   // Kundensicht: nur „vorläufig“, keine Interna
+
+    $this->concepts->update($this->rootTeam, $this->teil->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 25]);
+    expect($pdf())->not->toContain('(vorläufig)')->toContain('25,00');
+});
+
+it('PR C · Präsentation: Vorschau, veröffentlichter Link und Kundenseite zeigen „vorläufig“, nach manuellem Preis nicht', function () {
+    $fbs = app(FoodbookService::class);
+    $fb = $fbs->create($this->rootTeam, ['label' => 'Praes-FB', 'personen' => 30]);
+    $kap = $fbs->addKapitel($this->rootTeam, $fb->id, ['title' => 'Buffet']);
+    $fbs->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->teil->id]);
+    $praes = app(\Platform\FoodAlchemist\Services\PresentationService::class);
+    $vorschau = fn () => view('foodalchemist::presentation.show', ['snapshot' => $praes->previewData($this->rootTeam, 'foodbook', $fb->id)])->render();
+
+    $snap = $praes->previewData($this->rootTeam, 'foodbook', $fb->id);
+    $block = collect($snap['content']['sections'][0]['blocks'])->firstWhere('kind', 'concept_ref');
+    expect($block['price']['vorlaeufig'])->toBeTrue()->and($snap['content']['total']['vorlaeufig'])->toBeTrue()
+        ->and($snap['content']['sections'][0]['preis']['vorlaeufig'] ?? false)->toBeTrue();
+    $html = $vorschau();
+    expect($html)->toContain('data-preis-vorlaeufig')->toContain('vorläufig')->not->toContain('VK fehlt');
+
+    $this->get(route('foodalchemist.foodbooks.praesentation', $fb->id))->assertOk()->assertSee('data-preis-vorlaeufig', false);
+    $res = $praes->publish($this->rootTeam, 'foodbook', $fb->id, ['expires_at' => now()->addDays(30)->toDateString()]);
+    auth()->logout();
+    $this->get('/p/foodbook/' . $res['token'])->assertOk()->assertSee('data-preis-vorlaeufig', false);
+    $this->actingAs($this->user);
+
+    $this->concepts->update($this->rootTeam, $this->teil->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 25]);
+    expect($vorschau())->not->toContain('data-preis-vorlaeufig');
+});
+
+it('PR C · KapitelPreis: vorlaeufig nur am festen Preis, nie an der Spanne', function () {
+    expect(\Platform\FoodAlchemist\Support\KapitelPreis::ausKapitel(['vk_pro_person' => 12.0, 'vk_vorlaeufig' => true], false))->toHaveKey('vorlaeufig', true)
+        ->and(\Platform\FoodAlchemist\Support\KapitelPreis::ausKapitel(['vk_pro_person' => 12.0, 'vk_fehlt' => true], false))->toHaveKey('vorlaeufig', true)
+        ->and(\Platform\FoodAlchemist\Support\KapitelPreis::ausKapitel(['vk_pro_person' => 12.0], false))->not->toHaveKey('vorlaeufig')
+        ->and(\Platform\FoodAlchemist\Support\KapitelPreis::ausKapitel(['vk_pro_person' => null, 'vk_fehlt' => true, 'preis_range' => ['min' => 10, 'max' => 20]], true))->not->toHaveKey('vorlaeufig');
+});
+
 it('Designsystem-Seite zeigt den Baustein „vorläufig“', function () {
     Livewire::test(\Platform\FoodAlchemist\Livewire\UiKatalog::class)->assertSeeHtml('data-ui-katalog-vorlaeufig')->assertSeeHtml('data-preis-vorlaeufig');
 });

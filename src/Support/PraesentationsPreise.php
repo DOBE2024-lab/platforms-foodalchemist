@@ -61,7 +61,7 @@ final class PraesentationsPreise
             $zeilen[] = [
                 'titel' => (string) $s['title'],
                 'pax' => $pax,
-                'vk_pro_person' => $s['preis']['pp'],
+                'vk_pro_person' => $s['preis']['pp'], 'vorlaeufig' => (bool) ($s['preis']['vorlaeufig'] ?? false),
                 'gesamt' => (! $alt && $pax) ? round((float) $s['preis']['pp'] * $pax, 2) : null,
                 'alternativen' => $alt,
                 'preis_range' => $alt ? ['min' => $s['preis']['min'], 'max' => $s['preis']['max']] : null,
@@ -90,7 +90,7 @@ final class PraesentationsPreise
             $zeilen[] = [
                 'titel' => (string) $kap['title'],
                 'pax' => $kap['pax'] ?? null,
-                'vk_pro_person' => $kap['vk_pro_person'],
+                'vk_pro_person' => $kap['vk_pro_person'], 'vorlaeufig' => (bool) ($kap['vk_fehlt'] ?? false),
                 'gesamt' => $kap['gesamt'] ?? null,
                 'alternativen' => $isAlt,
                 'preis_range' => $kap['preis_range'] ?? null,

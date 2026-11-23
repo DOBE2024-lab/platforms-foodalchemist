@@ -753,7 +753,7 @@ class PresentationService
                     'price' => ($showPrice && ! $perItem) ? [
                         'pp' => (float) ($b['preis_pp'] ?? 0),
                         'pauschal' => (float) ($b['pauschal'] ?? 0),
-                        'unit' => $b['preis_einheit'] ?? null,
+                        'unit' => $b['preis_einheit'] ?? null, 'vorlaeufig' => (bool) ($b['preis_vorlaeufig'] ?? false),
                     ] : null,
                     'codes' => $showDecl ? array_values((array) ($b['codes'] ?? [])) : [],
                     'items' => $items($b['gerichte'] ?? []),
@@ -785,7 +785,7 @@ class PresentationService
             'mwst_satz' => $satz,
             'pauschal' => isset($g['pauschal']) ? (float) $g['pauschal'] : null,
             'personen' => $g['personen'] ?? null,
-            'gesamt_vk' => isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null,
+            'gesamt_vk' => isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null, 'vorlaeufig' => (bool) ($g['vk_fehlt'] ?? false),   // CQ price_incomplete
         ] : null;
 
         // Preis-Aufschlüsselung (2026-11-19) auch fürs Foodbook: je Hauptkapitel €/Person, mit Gästezahl auch Summen.
@@ -862,7 +862,7 @@ class PresentationService
                         'kind' => 'concept_ref', 'label' => (string) ($ed['name'] ?? ''), 'subtitle' => $ed['claim'] ?? null,
                         'is_header' => false, 'per_item_price' => $einzel,
                         'price' => ($showPrice && ! $einzel && ($ed['preis_pp'] ?? null) !== null)
-                            ? ['pp' => (float) $ed['preis_pp'], 'pauschal' => 0.0, 'unit' => 'gast'] : null,
+                            ? ['pp' => (float) $ed['preis_pp'], 'pauschal' => 0.0, 'unit' => 'gast', 'vorlaeufig' => (bool) ($ed['preis_vorlaeufig'] ?? false)] : null,
                         'codes' => [], 'items' => $this->angebotItems($ed['gerichte'] ?? [], $showPrice),
                     ] + ($this->mitEk && $showPrice && ! $einzel && ($ed['ek_pp'] ?? null) !== null ? ['ek' => ['pp' => (float) $ed['ek_pp']]] : []);
                 }
@@ -902,7 +902,7 @@ class PresentationService
                         'kind' => (string) ($b['type'] ?? ''), 'label' => (string) ($b['label'] ?? ''), 'subtitle' => null,
                         'is_header' => false, 'per_item_price' => $einzel,
                         'price' => ($showPrice && ! $einzel)
-                            ? ['pp' => (float) ($b['preis_pp'] ?? 0), 'pauschal' => (float) ($b['pauschal'] ?? 0), 'unit' => $b['preis_einheit'] ?? null] : null,
+                            ? ['pp' => (float) ($b['preis_pp'] ?? 0), 'pauschal' => (float) ($b['pauschal'] ?? 0), 'unit' => $b['preis_einheit'] ?? null, 'vorlaeufig' => (bool) ($b['preis_vorlaeufig'] ?? false)] : null,
                         'codes' => [], 'items' => $this->angebotItems($b['gerichte'] ?? [], $showPrice),
                     ] + ($this->mitEk && $showPrice && ! $einzel && isset($b['ek_pp']) && ($b['ek_vollstaendig'] ?? false) ? ['ek' => ['pp' => (float) $b['ek_pp']]] : []);
                 }

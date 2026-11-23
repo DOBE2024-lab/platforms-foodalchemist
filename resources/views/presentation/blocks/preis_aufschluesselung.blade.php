@@ -30,7 +30,7 @@
                         @if(($z['alternativen'] ?? false) && ($z['preis_range'] ?? null))
                             {{ $z['preis_range']['min'] !== null ? $nf($z['preis_range']['min']) : '—' }}–{{ $z['preis_range']['max'] !== null ? $nf($z['preis_range']['max']) : '—' }} €
                         @elseif(($z['vk_pro_person'] ?? null) !== null)
-                            {{ $nf($z['vk_pro_person']) }} €
+                            {{ $nf($z['vk_pro_person']) }} €@if($z['vorlaeufig'] ?? false) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif
                         @else — @endif
                     </span>
                     @if($mitSumme)<span class="pt-preis-summe">{{ ($z['gesamt'] ?? null) !== null ? $nf($z['gesamt']) . ' €' : '—' }}</span>@endif

@@ -125,7 +125,7 @@ class FormatKapitelService
                 'kind' => 'concept_ref', 'label' => (string) ($ed['name'] ?? ''), 'subtitle' => $ed['claim'] ?? null,
                 'is_header' => false, 'per_item_price' => $einzel,
                 'price' => ($showPrice && ! $einzel && ($ed['preis_pp'] ?? null) !== null)
-                    ? ['pp' => (float) $ed['preis_pp'], 'pauschal' => 0.0, 'unit' => 'gast'] : null,
+                    ? ['pp' => (float) $ed['preis_pp'], 'pauschal' => 0.0, 'unit' => 'gast', 'vorlaeufig' => (bool) ($ed['preis_vorlaeufig'] ?? false)] : null,
                 'codes' => [], 'items' => $items($ed['gerichte'] ?? []),
             ] + ($mitEk && $showPrice && ! $einzel && ($ed['ek_pp'] ?? null) !== null ? ['ek' => ['pp' => (float) $ed['ek_pp']]] : []);
         }

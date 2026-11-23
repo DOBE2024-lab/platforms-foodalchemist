@@ -235,7 +235,7 @@
                         <div style="height: 8px"></div>
                     @else
                         <table class="cblock"><tr>
-                            <td class="cprice">@if($ed['preis_pp'] ?? null)<div class="val">{{ number_format((float) $ed['preis_pp'], 2, ',', '.') }} €</div><div class="basis">pro Gast</div>@endif</td>
+                            <td class="cprice">@if($ed['preis_pp'] ?? null)<div class="val">{{ number_format((float) $ed['preis_pp'], 2, ',', '.') }} €</div><div class="basis">pro Gast{{ ($ed['preis_vorlaeufig'] ?? false) ? ' (vorläufig)' : '' }}</div>@endif</td>
                             <td class="cbody">
                                 <div class="cname">{{ $ed['name'] }}</div>
                                 @if($ed['claim'] ?? null)<div class="ctag">{{ $ed['claim'] }}</div>@endif
@@ -274,7 +274,7 @@
                                 @php($einheit = $blk['preis_einheit'] ?? null)
                                 @unless($blk['einzelpreise'] ?? false)
                                     @if($preisPP > 0)
-                                        <div class="val">{{ number_format($preisPP, 2, ',', '.') }} €</div><div class="basis">{{ $einheit === 'position' ? 'pro Position' : 'pro Gast' }}</div>
+                                        <div class="val">{{ number_format($preisPP, 2, ',', '.') }} €</div><div class="basis">{{ $einheit === 'position' ? 'pro Position' : 'pro Gast' }}{{ ($blk['preis_vorlaeufig'] ?? false) ? ' (vorläufig)' : '' }}</div>
                                     @elseif($pauschal > 0)
                                         <div class="val">{{ number_format($pauschal, 2, ',', '.') }} €</div><div class="basis">pauschal</div>
                                     @endif

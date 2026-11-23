@@ -48,7 +48,7 @@
                             $kapEk = (! empty($snap['ansicht']['ek']) && ($s['ek']['pp'] ?? 0) > 0) ? (float) $s['ek']['pp'] : null;
                             $kapVk = $s['preis']['pp'] ?? null;
                         @endphp
-                        <p class="pt-section-price" data-pt-kapitel-preis><span class="pt-section-price-wert">{{ $kapitelPreis }}</span> <span class="pt-section-price-label">{{ $kapitelPreisLabel }}</span>@if($kapEk !== null)<span class="pt-ek" data-pt-ek>EK {{ number_format($kapEk, 2, ',', '.') }} €{{ $kapVk ? ' · ' . number_format($kapEk / $kapVk * 100, 0, ',', '.') . ' %' : '' }}</span>@endif</p>
+                        <p class="pt-section-price" data-pt-kapitel-preis><span class="pt-section-price-wert">{{ $kapitelPreis }}</span> <span class="pt-section-price-label">{{ $kapitelPreisLabel }}</span>@if(! empty($s['preis']['vorlaeufig'])) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif@if($kapEk !== null)<span class="pt-ek" data-pt-ek>EK {{ number_format($kapEk, 2, ',', '.') }} €{{ $kapVk ? ' · ' . number_format($kapEk / $kapVk * 100, 0, ',', '.') . ' %' : '' }}</span>@endif</p>
                     @endif
                 </div>
                 @if($split)

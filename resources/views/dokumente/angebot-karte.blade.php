@@ -106,7 +106,7 @@
                 @if($kap['ist_format'] && $kap['format_price_mode'] === 'alternativen' && $kap['preis_range'])
                     <span class="kp">{{ $kap['preis_range']['min'] !== null ? $nf($kap['preis_range']['min']) : '—' }}–{{ $kap['preis_range']['max'] !== null ? $nf($kap['preis_range']['max']) : '—' }} €/Gast</span>
                 @elseif($kap['vk_pro_person'] !== null && $kap['vk_pro_person'] > 0)
-                    <span class="kp">{{ $nf($kap['vk_pro_person']) }} €/Gast</span>
+                    <span class="kp">{{ $nf($kap['vk_pro_person']) }} €/Gast{{ ($kap['vk_fehlt'] ?? false) ? ' (vorläufig)' : '' }}</span>
                 @endif
             </div>
             @if($kap['text'])<div class="kap-text">{{ $kap['text'] }}</div>@endif
@@ -118,7 +118,7 @@
                     @elseif(($ed['typ'] ?? '') === 'text')
                         @if(($ed['text'] ?? '') !== '')<div class="free-text">{{ $ed['text'] }}</div>@endif
                     @else
-                        <div class="edition-title">{{ $ed['name'] }}@if(($ed['preis_pp'] ?? null) !== null && $ed['preis_pp'] > 0)<span class="kp">{{ $nf($ed['preis_pp']) }} €/Gast</span>@endif</div>
+                        <div class="edition-title">{{ $ed['name'] }}@if(($ed['preis_pp'] ?? null) !== null && $ed['preis_pp'] > 0)<span class="kp">{{ $nf($ed['preis_pp']) }} €/Gast{{ ($ed['preis_vorlaeufig'] ?? false) ? ' (vorläufig)' : '' }}</span>@endif</div>
                         @foreach(($ed['gerichte'] ?? []) as $z)
                             @include('foodalchemist::dokumente.partials.angebot-karte-zeile', ['z' => $z, 'einzel' => $ed['einzelpreise'] ?? false, 'nf' => $nf])
                         @endforeach

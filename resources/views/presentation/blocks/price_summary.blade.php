@@ -15,10 +15,10 @@
         <div class="pt-price-summary">
             @if($hatMwst && $modus === 'brutto')
                 <span class="pt-price-big">{{ number_format((float) $ppBrutto, 2, ',', '.') }} €</span>
-                <span class="pt-price-label">pro Person · inkl. {{ $satzTxt }} % MwSt</span>
+                <span class="pt-price-label">pro Person · inkl. {{ $satzTxt }} % MwSt</span>@if(! empty($total['vorlaeufig'])) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif
             @else
                 <span class="pt-price-big">{{ number_format((float) $ppNetto, 2, ',', '.') }} €</span>
-                <span class="pt-price-label">pro Person{{ $nettoSuffix }}</span>
+                <span class="pt-price-label">pro Person{{ $nettoSuffix }}</span>@if(! empty($total['vorlaeufig'])) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif
                 @if($hatMwst && $modus === 'beide')
                     <span style="display:block;margin-top:.4rem;font-size:.95rem;color:var(--pt-muted,#6b7280);">
                         {{ number_format((float) $ppBrutto, 2, ',', '.') }} € pro Person inkl. {{ $satzTxt }} % MwSt

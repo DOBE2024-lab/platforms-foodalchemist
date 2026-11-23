@@ -121,3 +121,13 @@ it('MCP: concepts.LIST führt price_incomplete je Zeile', function () {
     expect(ConceptsListTool::zeile($this->concept->refresh()->loadCount('slots')))->toHaveKey('price_incomplete', true)
         ->and(ConceptsListTool::zeile($this->voll->refresh()->loadCount('slots')))->toHaveKey('price_incomplete', false);
 });
+
+it('Zuschlagskalkulation: Summe je Gast ohne bekannten EK zeigt „offen“, nie 0 %', function () {
+    $sim = ['pax' => 50, 'catalog_price_per_person' => 30.0, 'price_per_person' => 30.0, 'ek_per_person' => null, 'complete' => false,
+        'positionen' => [['role' => 'Dessert', 'label' => 'Ohne VK', 'ek' => null, 'price' => 30.0]]];
+    $html = view('foodalchemist::livewire.angebote.partials.zuschlagskalkulation', ['auftragsKalkulation' => $sim])->render();
+    expect($html)->toMatch('/data-angebot-fuss-we>\s*offen\s*</');
+
+    $html = view('foodalchemist::livewire.angebote.partials.zuschlagskalkulation', ['auftragsKalkulation' => ['ek_per_person' => 9.0] + $sim])->render();
+    expect($html)->toMatch('/data-angebot-fuss-we>\s*30,0 %\s*</');
+});

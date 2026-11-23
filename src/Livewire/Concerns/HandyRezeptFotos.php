@@ -74,7 +74,7 @@ trait HandyRezeptFotos
 
                 return;
             }
-            $selbstGeholt = true;
+            $selbstGeholt = (bool) ($r['neu'] ?? false);   // nur eine neu geholte Sperre wieder freigeben
         }
 
         try {

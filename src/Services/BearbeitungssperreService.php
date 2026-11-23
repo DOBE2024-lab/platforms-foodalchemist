@@ -19,7 +19,7 @@ final class BearbeitungssperreService
 
     private const TABELLE = 'foodalchemist_bearbeitungssperren';
 
-    /** @return array{ok: bool, inhaber: ?array{user_id:int, name:?string, seit:string, laeuft_ab:string}} */
+    /** @return array{ok: bool, inhaber: ?array{user_id:int, name:?string, seit:string, laeuft_ab:string}, neu: bool} — neu: diese Anfrage hat die Sperre angelegt (nicht nur verlängert) */
     public function sperren(string $typ, string|int $id, int $userId, ?string $name, ?int $teamId = null): array
     {
         $id = (string) $id;
@@ -31,12 +31,12 @@ final class BearbeitungssperreService
 
         $vorhanden = $this->zeile($typ, $id);
         if ($vorhanden !== null && (int) $vorhanden->user_id !== $userId) {
-            return ['ok' => false, 'inhaber' => $this->inhaber($vorhanden)];
+            return ['ok' => false, 'inhaber' => $this->inhaber($vorhanden), 'neu' => false];
         }
         if ($vorhanden !== null) {
             DB::table(self::TABELLE)->where('id', $vorhanden->id)->update(['laeuft_ab' => $ab, 'updated_at' => $jetzt]);
 
-            return ['ok' => true, 'inhaber' => null];
+            return ['ok' => true, 'inhaber' => null, 'neu' => false];
         }
 
         try {
@@ -48,14 +48,16 @@ final class BearbeitungssperreService
             // Wettlauf: jemand war Millisekunden schneller
             $andere = $this->zeile($typ, $id);
             if ($andere !== null && (int) $andere->user_id !== $userId) {
-                return ['ok' => false, 'inhaber' => $this->inhaber($andere)];
+                return ['ok' => false, 'inhaber' => $this->inhaber($andere), 'neu' => false];
             }
             if ($andere === null) {
                 throw $e;
             }
+
+            return ['ok' => true, 'inhaber' => null, 'neu' => false];   // eigene Sperre aus einem anderen Tab kam zuvor
         }
 
-        return ['ok' => true, 'inhaber' => null];
+        return ['ok' => true, 'inhaber' => null, 'neu' => true];
     }
 
     /** Gehört das Ziel gerade dieser Person (und ist nicht abgelaufen)? */

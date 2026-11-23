@@ -15,6 +15,8 @@ const BESTELL_RANG = [
     'BestellSummen' => 0,
     'BestellHerkunft' => 0,
     'BestellAmpeln' => 1,      // nutzt Summen
+    'BestellLesen' => 0,
+    'BestellDokument' => 2,    // nutzt Summen, Ampeln
 ];
 
 /** @return array<string, list<string>> Teil => Teile (kurz), von denen er per Konstruktor abhängt */
@@ -84,4 +86,30 @@ it('Selbsttest: eine Kante auf gleichen oder höheren Rang wäre rot', function 
     expect($erlaubt('B', 'A'))->toBeTrue()
         ->and($erlaubt('A', 'B'))->toBeFalse()
         ->and($erlaubt('A', 'A'))->toBeFalse();
+});
+
+it('Herkunfts-Format: ProductionOrderService führt Präfix und Basis als Alias auf BestellHerkunft (EIN Ort, P4)', function () {
+    $po = \Platform\FoodAlchemist\Services\ProductionOrderService::class;
+    $herkunft = \Platform\FoodAlchemist\Services\Bestellung\BestellHerkunft::class;
+
+    expect($po::SOURCE_REF_BASE)->toBe('produktion:')
+        ->and($herkunft::PRODUKTION_BASIS)->toBe($po::SOURCE_REF_BASE)
+        ->and($po::sourceRefPrefix(1))->toBe('produktion:1:')
+        ->and($herkunft::produktionsPraefix(10))->toBe($po::sourceRefPrefix(10))
+        ->and($po::sourceRefFor(7, 'x'))->toBe('produktion:7:x');
+
+    $geparst = app($herkunft)->parseHerkunft([$po::sourceRefFor(42, 'ref')]);
+    expect($geparst[0]['production_order_id'])->toBe(42);
+});
+
+it('Herkunfts-Format: produktionsAuftragId liest nur `produktion:{id}:` und unterscheidet #1 von #10', function () {
+    $h = \Platform\FoodAlchemist\Services\Bestellung\BestellHerkunft::class;
+
+    expect($h::produktionsAuftragId('produktion:12:abc'))->toBe(12)
+        ->and($h::produktionsAuftragId($h::produktionsPraefix(10).'x'))->toBe(10)
+        ->and($h::produktionsAuftragId('produktion:1'))->toBeNull()      // ohne trailing-Doppelpunkt kein Treffer
+        ->and($h::produktionsAuftragId('produktion:abc:x'))->toBeNull()
+        ->and($h::produktionsAuftragId('concept:5@x'))->toBeNull()
+        ->and($h::produktionsAuftragId('vorproduktion:5:'))->toBeNull()
+        ->and($h::produktionsAuftragId(''))->toBeNull();
 });

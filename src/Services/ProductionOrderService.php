@@ -22,6 +22,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Services\Bestellung\BestellHerkunft;
 use Platform\FoodAlchemist\Support\TeamScope;
 
 /**
@@ -75,12 +76,12 @@ class ProductionOrderService
      * Es gibt bewusst KEINE FK (eine Bestellzeile kann N Quellen haben) — die
      * Verknüpfung Produktion↔Bestellung läuft ausschließlich über diesen Präfix.
      */
-    public const SOURCE_REF_BASE = 'produktion:';
+    public const SOURCE_REF_BASE = BestellHerkunft::PRODUKTION_BASIS;
 
-    /** Per-Auftrag-Präfix `produktion:{id}:` (trailing-Doppelpunkt disambiguiert #1 gegen #10). */
+    /** Per-Auftrag-Präfix `produktion:{id}:` (trailing-Doppelpunkt disambiguiert #1 gegen #10); Format in BestellHerkunft. */
     public static function sourceRefPrefix(int $productionOrderId): string
     {
-        return self::SOURCE_REF_BASE.$productionOrderId.':';
+        return BestellHerkunft::produktionsPraefix($productionOrderId);
     }
 
     /** Voller Quell-Key `produktion:{id}:{ref}` für die Bedarfs-Übergabe. */
@@ -1111,10 +1112,10 @@ class ProductionOrderService
             }
             $versendet = in_array($ostat, [OrderStatus::Sent, OrderStatus::Confirmed, OrderStatus::Delivered], true);
             foreach (array_keys((array) $line->source_contributions) as $key) {
-                if (! preg_match('/^'.preg_quote(self::SOURCE_REF_BASE, '/').'(\d+):/', (string) $key, $m)) {
+                $pid = BestellHerkunft::produktionsAuftragId((string) $key);
+                if ($pid === null) {
                     continue;
                 }
-                $pid = (int) $m[1];
                 if (! array_key_exists($pid, $result)) {
                     continue;
                 }

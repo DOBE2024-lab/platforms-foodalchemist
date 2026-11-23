@@ -74,6 +74,7 @@ final class BestellAmpeln
     public function __construct(
         private BestellSummen $summen,
     ) {}
+
     /** MOQ-/Frei-Haus-Ampel: total_net gegen Lieferanten-Konditionen (R9). */
     public function moqAmpel(FoodAlchemistOrder $order): array
     {

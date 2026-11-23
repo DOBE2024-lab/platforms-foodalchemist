@@ -12,6 +12,25 @@ use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder;
 final class BestellHerkunft
 {
     /**
+     * Basis-Token der Produktions-Herkunft in `order_lines.source_contributions` (P4: EIN Ort für Bau und Lesen).
+     * Liegt hier statt in ProductionOrderService, damit Bestell-Teile das Format kennen, ohne den Produktionsdienst
+     * (und über ihn die Fassade) zu ziehen (98 · 3.3 S5); ProductionOrderService führt Konstante und Präfix als Alias.
+     */
+    public const PRODUKTION_BASIS = 'produktion:';
+
+    /** Per-Auftrag-Präfix `produktion:{id}:` (trailing-Doppelpunkt disambiguiert #1 gegen #10). */
+    public static function produktionsPraefix(int $productionOrderId): string
+    {
+        return self::PRODUKTION_BASIS.$productionOrderId.':';
+    }
+
+    /** Produktionsauftrag-ID aus einem Quell-Key `produktion:{id}:…`, sonst null (Gegenstück zu produktionsPraefix). */
+    public static function produktionsAuftragId(string $ref): ?int
+    {
+        return preg_match('/^'.preg_quote(self::PRODUKTION_BASIS, '/').'(\d+):/', $ref, $m) ? (int) $m[1] : null;
+    }
+
+    /**
      * E1: source_ref-Schlüssel in menschenlesbare Herkunft übersetzen. Kein FK — der Präfix
      * kodiert die Quelle: `produktion:{id}:…` (Produktionsauftrag), `concept:{id}@…`,
      * `recipe:{id|key}@…`, `event:…`. Unbekanntes bleibt als Roh-Label erhalten.
@@ -31,9 +50,8 @@ final class BestellHerkunft
             $label = $ref;
             $prodId = null;
 
-            if (preg_match('/^produktion:(\d+):/', $ref, $m)) {
+            if (($prodId = self::produktionsAuftragId($ref)) !== null) {
                 $type = 'produktion';
-                $prodId = (int) $m[1];
                 $label = 'Produktion #'.$prodId;
             } elseif (preg_match('/^concept:([^@:]+)/', $ref, $m)) {
                 $type = 'concept';
@@ -64,7 +82,7 @@ final class BestellHerkunft
         $byKey = [];
         foreach ($this->parseHerkunft($refs) as $h) {
             $key = $h['production_order_id'] !== null
-                ? 'produktion:'.$h['production_order_id']
+                ? self::PRODUKTION_BASIS.$h['production_order_id']
                 : $h['type'].':'.$h['label'];
             $byKey[$key] = [
                 'key' => $key,

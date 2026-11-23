@@ -51,6 +51,13 @@ use Platform\FoodAlchemist\Services\PresentationService;
  */
 final class GerichtVerwendungen
 {
+    /** Ziel-Modelle für anklickbare Orte (Sicht wird je Ort geprüft). */
+    private const ZIEL_MODELLE = [
+        'konzept' => FoodAlchemistConcept::class, 'angebot' => FoodAlchemistAngebot::class, 'speiseplan' => \Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan::class,
+        'speisekarte' => \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte::class, 'foodbook' => FoodAlchemistFoodbook::class,
+        'gericht' => FoodAlchemistRecipe::class, 'rezept' => FoodAlchemistRecipe::class,
+    ];
+
     public const OFFENE_ANGEBOTE = ['anfrage', 'in_arbeit', 'angebot'];
 
     public const BEREICHE = ['konzepte', 'komponenten', 'speiseplan', 'speisekarte', 'angebote', 'foodbooks', 'ersatz', 'produktion', 'abos'];
@@ -66,7 +73,7 @@ final class GerichtVerwendungen
         $heute = ($heute ?? Carbon::today())->copy()->startOfDay();
         $this->teamNamen = [];
 
-        return array_merge(
+        $alle = array_merge(
             $this->konzepte($team, $gerichtId, $heute),
             $this->komponenten($team, $gerichtId),
             $this->speiseplan($team, $gerichtId, $heute),
@@ -77,20 +84,43 @@ final class GerichtVerwendungen
             $this->produktion($gerichtId),
             $this->abos($gerichtId),
         );
+
+        return array_map(fn ($v) => $v + ['ziel' => $this->ziel($team, $v['meta']['ziel'] ?? null)], $alle);
     }
+
+    /**
+     * Anklickbarer Ort (Kurator/Dominique 23.11.: wie früher „Wo verwendet?“) — nur, wenn das Team ihn sehen darf;
+     * fremde bzw. nicht sichtbare Orte bleiben Text.
+     *
+     * @param  array{0:string,1:int}|null  $ziel
+     * @return array{typ:string, id:int}|null
+     */
+    private function ziel(Team $team, ?array $ziel): ?array
+    {
+        if ($ziel === null || ! isset(self::ZIEL_MODELLE[$ziel[0]])) {
+            return null;
+        }
+        $schluessel = $ziel[0] . ':' . $ziel[1];
+        $this->sichtbar[$schluessel] ??= self::ZIEL_MODELLE[$ziel[0]]::visibleToTeam($team)->whereKey($ziel[1])->exists();
+
+        return $this->sichtbar[$schluessel] ? ['typ' => $ziel[0], 'id' => (int) $ziel[1]] : null;
+    }
+
+    /** @var array<string, bool> */
+    private array $sichtbar = [];
 
     /**
      * Lösch-Bilanz eines Gerichts: aktive Verwendungen sperren (mit Ort und Grund), historische nicht. Eine Regel für
      * Panel, Editor und MCP (SalesRecipeService::deleteDish).
      *
-     * @return array{frei:bool, aktiv: list<array{bereich:string,ort:string,grund:?string}>, historisch:int, eigen:bool}
+     * @return array{frei:bool, aktiv: list<array{bereich:string,ort:string,ziel:?array,grund:?string}>, historisch:int, eigen:bool}
      */
     public function loeschBilanz(Team $team, int $gerichtId): array
     {
         $gericht = FoodAlchemistRecipe::withTrashed()->find($gerichtId);
         $eigen = $gericht !== null && (int) $gericht->team_id === (int) $team->id;
         $alle = $gericht !== null ? $this->alle($team, $gerichtId) : [];
-        $aktiv = array_values(array_map(fn ($v) => ['bereich' => $v['bereich'], 'ort' => $v['ort'],
+        $aktiv = array_values(array_map(fn ($v) => ['bereich' => $v['bereich'], 'ort' => $v['ort'], 'ziel' => $v['ziel'] ?? null,
             'grund' => $v['grund'] ?? ($v['status'] === 'haken' ? 'aktives Foodbook' : 'aktive Verwendung')],
             array_filter($alle, fn ($v) => $v['status'] !== 'historisch')));
 
@@ -115,7 +145,7 @@ final class GerichtVerwendungen
             }
             $art = $c->kind === 'paket' ? 'Paket' : 'Konzept';
             $basis = ['id' => (int) $slot->id, 'name' => (string) ($slot->dish?->name ?? ''), 'team_id' => (int) $c->team_id,
-                'meta' => ['concept_id' => (int) $c->id, 'presentation_id' => $slot->presentation_id, 'quantity' => $slot->quantity,
+                'meta' => ['ziel' => ['konzept', (int) $c->id], 'concept_id' => (int) $c->id, 'presentation_id' => $slot->presentation_id, 'quantity' => $slot->quantity,
                     'unit_vocab_id' => $slot->unit_vocab_id, 'wording' => $slot->wording]];
 
             if ($c->offer_id !== null) {   // angebots-lokal: gehört dem Angebot, Regel der Angebote
@@ -124,6 +154,7 @@ final class GerichtVerwendungen
                     'ort' => "{$art} „{$c->name}“ im Angebot „" . ($angebot?->name ?? '?') . '“'];
                 $out[array_key_last($out)]['meta']['offer_id'] = $angebot?->id;
                 $out[array_key_last($out)]['meta']['art'] = 'slot';
+                $out[array_key_last($out)]['meta']['ziel'] = $angebot !== null ? ['angebot', (int) $angebot->id] : null;
 
                 continue;
             }
@@ -219,7 +250,7 @@ final class GerichtVerwendungen
             $out[] = ['bereich' => 'komponenten', 'id' => (int) $z->id, 'name' => (string) $r->name,
                 'ort' => ($r->is_sales_recipe ? 'Gericht' : 'Basisrezept') . " „{$r->name}“", 'team_id' => (int) $r->team_id,
                 'status' => $eigen ? 'tausch' : 'bleibt', 'grund' => $eigen ? null : $this->fremd($r->team_id), 'hinweis' => null,
-                'meta' => ['recipe_id' => (int) $r->id]];
+                'meta' => ['recipe_id' => (int) $r->id, 'ziel' => [$r->is_sales_recipe ? 'gericht' : 'rezept', (int) $r->id]]];
         }
 
         return $out;
@@ -241,7 +272,7 @@ final class GerichtVerwendungen
             $out[] = ['bereich' => 'speiseplan', 'id' => (int) $e->id, 'name' => $ort, 'ort' => $ort, 'team_id' => (int) $plan->team_id,
                 'status' => $vergangen ? 'historisch' : ($eigen ? 'tausch' : 'bleibt'),
                 'grund' => $vergangen ? 'vergangener Tag' : ($eigen ? null : $this->fremd($plan->team_id)), 'hinweis' => null,
-                'meta' => ['plan_id' => (int) $plan->id, 'presentation_id' => $e->presentation_id]];
+                'meta' => ['ziel' => ['speiseplan', (int) $plan->id], 'plan_id' => (int) $plan->id, 'presentation_id' => $e->presentation_id]];
         }
 
         return $out;
@@ -263,7 +294,7 @@ final class GerichtVerwendungen
             $out[] = ['bereich' => 'speisekarte', 'id' => (int) $p->id, 'name' => $ort, 'ort' => $ort, 'team_id' => (int) $karte->team_id,
                 'status' => ! $gilt ? 'historisch' : ($eigen ? 'tausch' : 'bleibt'),
                 'grund' => ! $gilt ? 'Karte abgelaufen' : ($eigen ? null : $this->fremd($karte->team_id)), 'hinweis' => null,
-                'meta' => ['karte_id' => (int) $karte->id, 'presentation_id' => $p->presentation_id, 'wording' => $p->wording]];
+                'meta' => ['ziel' => ['speisekarte', (int) $karte->id], 'karte_id' => (int) $karte->id, 'presentation_id' => $p->presentation_id, 'wording' => $p->wording]];
         }
 
         return $out;
@@ -281,7 +312,7 @@ final class GerichtVerwendungen
             }
             $ort = "Angebot „{$angebot->name}“";
             $out[] = ['bereich' => 'angebote', 'id' => (int) $b->id, 'name' => $ort, 'ort' => $ort, 'team_id' => (int) $angebot->team_id,
-                'meta' => ['offer_id' => (int) $angebot->id, 'art' => 'block', 'presentation_id' => $b->presentation_id, 'wording' => $b->wording]]
+                'meta' => ['ziel' => ['angebot', (int) $angebot->id], 'offer_id' => (int) $angebot->id, 'art' => 'block', 'presentation_id' => $b->presentation_id, 'wording' => $b->wording]]
                 + $this->angebotsRegel($team, $angebot, $ort);
         }
 
@@ -332,7 +363,7 @@ final class GerichtVerwendungen
             };
             $out[] = ['bereich' => 'foodbooks', 'id' => (int) $b->id, 'name' => $ort, 'ort' => $ort, 'team_id' => (int) $fb->team_id,
                 'status' => $status, 'grund' => $grund, 'hinweis' => null,
-                'meta' => ['foodbook_id' => (int) $fb->id, 'presentation_id' => $b->presentation_id, 'wording' => $b->wording]];
+                'meta' => ['ziel' => ['foodbook', (int) $fb->id], 'foodbook_id' => (int) $fb->id, 'presentation_id' => $b->presentation_id, 'wording' => $b->wording]];
         }
 
         return $out;

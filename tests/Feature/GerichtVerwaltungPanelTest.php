@@ -59,3 +59,16 @@ it('Vorschau → Ersetzen → Löschen', function () {
         ->and(FoodAlchemistRecipe::withTrashed()->find($this->alt->id)?->trashed())->toBeTrue()
         ->and(FoodAlchemistConceptSlot::where('sales_recipe_id', $this->alt->id)->count())->toBe(0);
 });
+
+it('Orte sind anklickbar wie früher „Wo verwendet?“; fremde, nicht sichtbare Orte bleiben Text', function () {
+    $menue = $this->makeRecipe($this->rootTeam, 'Festmenü', ['is_sales_recipe' => true]);
+    $this->makeIngredient($menue, 'Roulade', null, '1')->update(['referenced_recipe_id' => $this->alt->id]);
+    $fremd = $this->makeConcept($this->childA, 'Menü Kind-Team');   // für das Root-Team nicht sichtbar (Kind-Team)
+    $this->makeConceptSlot($fremd, ['sales_recipe_id' => $this->alt->id]);
+
+    Livewire::test(DetailPanel::class)->call('zeige', $this->alt->id)
+        ->assertSeeHtml('href="' . e(route('foodalchemist.concepter.index', ['edit' => $this->slot->concept_id])) . '"')
+        ->assertSeeHtml("\$dispatch('vk-recipe-selected', { id: {$menue->id} })")
+        ->assertSee('Konzept „Menü Kind-Team“')
+        ->assertDontSeeHtml('href="' . e(route('foodalchemist.concepter.index', ['edit' => $fremd->id])) . '"');
+});

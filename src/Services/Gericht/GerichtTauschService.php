@@ -63,9 +63,9 @@ final class GerichtTauschService
             $getauscht = array_values(array_filter($zeilen, fn ($v) => $this->wirdGetauscht($v, $auchAktiveFoodbooks)));
             $bereiche[$b] = [
                 'anzahl' => count($getauscht),
-                'eintraege' => array_map(fn ($v) => ['id' => $v['id'], 'ort' => $v['ort'], 'hinweis' => $v['hinweis'],
+                'eintraege' => array_map(fn ($v) => ['id' => $v['id'], 'ort' => $v['ort'], 'ziel' => $v['ziel'] ?? null, 'hinweis' => $v['hinweis'],
                     'ek_alt' => $ekAlt, 'ek_neu' => $ekNeu, 'vk_alt' => $vkAlt, 'vk_neu' => $vkNeu], $getauscht),
-                'bleibt' => array_map(fn ($v) => ['ort' => $v['ort'], 'grund' => $v['grund']],
+                'bleibt' => array_map(fn ($v) => ['ort' => $v['ort'], 'ziel' => $v['ziel'] ?? null, 'grund' => $v['grund']],
                     array_values(array_filter($zeilen, fn ($v) => ! $this->wirdGetauscht($v, $auchAktiveFoodbooks) && $v['status'] !== 'historisch'))),
                 'haken' => array_map(fn ($v) => ['ort' => $v['ort'], 'grund' => $v['grund']],
                     array_values(array_filter($zeilen, fn ($v) => $v['status'] === 'haken'))),

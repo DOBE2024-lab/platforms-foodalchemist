@@ -34,13 +34,13 @@
         {{-- 1. Bilanz: aktive Verwendungen mit Namen, historische als Zahl --}}
         <div class="flex flex-col gap-1.5" data-gericht-bilanz>
             @if($gv['loesch']['aktiv'] === [])
-                <p class="{{ $tt }} text-[var(--fa-ink)]">Keine aktive Verwendung.</p>
+                <p class="fa-t-body">Keine aktive Verwendung.</p>
             @else
-                <p class="{{ $tt }} text-[var(--fa-ink)]">Aktiv verwendet: {{ $mehrzahl(count($gv['loesch']['aktiv']), 'Stelle', 'Stellen') }}.</p>
+                <p class="fa-t-body">Aktiv verwendet: {{ $mehrzahl(count($gv['loesch']['aktiv']), 'Stelle', 'Stellen') }}.</p>
                 <ul class="{{ $tt }} flex flex-col gap-1" data-gericht-aktiv>
                     @foreach(array_slice($gv['loesch']['aktiv'], 0, 12) as $i => $a)
                         <li class="flex items-start gap-2 min-w-0" wire:key="gv-aktiv-{{ $i }}">
-                            <span class="min-w-0 break-words text-[var(--fa-ink)]">{{ $a['ort'] }}</span>
+                            @include('foodalchemist::livewire.recipes.partials.verwaltung-ort', ['ort' => $a['ort'], 'ziel' => $a['ziel'] ?? null])
                             @if($a['grund'])<span class="shrink-0 fa-t-muted">{{ $a['grund'] }}</span>@endif
                         </li>
                     @endforeach
@@ -55,18 +55,18 @@
         {{-- 2. Ersetzen: Ziel wählen → Vorschau je Bereich → Ersetzen --}}
         @if($vs === null)
             <div class="flex flex-col gap-1.5" data-gericht-tausch>
-                <label for="gericht-tausch-suche-{{ $kompakt ? 'panel' : 'editor' }}" class="fa-t-label">In allen Verwendungen ersetzen durch <span class="font-normal text-[var(--fa-ink-3)]">(ein Gericht; Menge und Einheit bleiben)</span></label>
+                <label for="gericht-tausch-suche-{{ $kompakt ? 'panel' : 'editor' }}" class="fa-t-label">In allen Verwendungen ersetzen durch <span class="fa-t-muted font-normal">(ein Gericht; Menge und Einheit bleiben)</span></label>
                 <x-fa::input type="search" id="gericht-tausch-suche-{{ $kompakt ? 'panel' : 'editor' }}" wire:model.live.debounce.300ms="tauschSuche"
                     placeholder="Ersatz-Gericht suchen …" :size="$kompakt ? 'sm' : 'md'" data-gericht-tausch-suche />
                 @if($tauschKandidaten->isNotEmpty())
                     <div class="flex flex-col gap-0.5">
                         @foreach($tauschKandidaten as $k)
-                            <button type="button" wire:key="gv-kand-{{ $k->id }}" wire:click="gerichtTauschVorbereiten({{ $k->id }})"
-                                    class="w-full text-left px-2 py-1.5 rounded-[var(--fa-radius-control)] {{ $tt }} text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] flex items-center gap-2" data-gericht-tausch-kandidat>
+                            <a href="#" role="button" wire:key="gv-kand-{{ $k->id }}" wire:click.prevent="gerichtTauschVorbereiten({{ $k->id }})"
+                                    class="w-full text-left px-2 py-1.5 rounded-[var(--fa-radius-control)] fa-t-body hover:bg-[var(--fa-hover)] flex items-center gap-2" data-gericht-tausch-kandidat>
                                 <x-fa::badge :tone="$statusTon[$k->status->value] ?? 'neutral'" class="shrink-0">{{ $k->status->label() }}</x-fa::badge>
                                 <span class="min-w-0 flex-1 truncate">{{ $k->name }}</span>
-                                @svg('heroicon-m-arrows-right-left', 'w-4 h-4 shrink-0 text-[var(--fa-ink-3)]')
-                            </button>
+                                @svg('heroicon-m-arrows-right-left', 'w-4 h-4 shrink-0 fa-t-muted')
+                            </a>
                         @endforeach
                     </div>
                 @elseif(trim($tauschSuche) !== '')
@@ -85,15 +85,15 @@
                         <div class="flex flex-col gap-0.5" wire:key="gv-bereich-{{ $b }}" data-gericht-bereich="{{ $b }}">
                             <x-fa::checkbox wire:model.live="tauschBereiche" value="{{ $b }}">{{ $bereichText[$b] }}: {{ $info['anzahl'] }}</x-fa::checkbox>
                             @foreach(array_slice($info['eintraege'], 0, 5) as $i => $e)
-                                <p class="fa-t-muted pl-6" wire:key="gv-{{ $b }}-{{ $i }}">{{ $e['ort'] }}@if($e['hinweis']) · {{ $e['hinweis'] }}@endif</p>
+                                <p class="fa-t-muted pl-6" wire:key="gv-{{ $b }}-{{ $i }}">@include('foodalchemist::livewire.recipes.partials.verwaltung-ort', ['ort' => $e['ort'], 'ziel' => $e['ziel'] ?? null])@if($e['hinweis']) · <span data-gericht-hinweis>{{ $e['hinweis'] }}</span>@endif</p>
                             @endforeach
                             @if(count($info['eintraege']) > 5)<p class="fa-t-muted pl-6">… und {{ count($info['eintraege']) - 5 }} weitere</p>@endif
                             @foreach($info['bleibt'] as $i => $bl)
-                                <p class="fa-t-muted pl-6" wire:key="gv-{{ $b }}-bleibt-{{ $i }}">Bleibt: {{ $bl['ort'] }}@if($bl['grund']) ({{ $bl['grund'] }})@endif</p>
+                                <p class="fa-t-muted pl-6" wire:key="gv-{{ $b }}-bleibt-{{ $i }}">Bleibt: @include('foodalchemist::livewire.recipes.partials.verwaltung-ort', ['ort' => $bl['ort'], 'ziel' => $bl['ziel'] ?? null])@if($bl['grund']) ({{ $bl['grund'] }})@endif</p>
                             @endforeach
                             @if($b === 'angebote')
                                 @foreach($info['preise'] ?? [] as $p)
-                                    <p class="{{ $tt }} pl-6 text-[var(--fa-ink)]" wire:key="gv-preis-{{ $p['id'] }}" data-gericht-angebotspreis>„{{ $p['name'] }}“: {{ $geld($p['preis_vorher']) }} → {{ $geld($p['preis_nachher']) }}</p>
+                                    <p class="fa-t-body pl-6" wire:key="gv-preis-{{ $p['id'] }}" data-gericht-angebotspreis>„{{ $p['name'] }}“: @if($p['preis_manuell'] ?? false)Preis manuell – bitte prüfen (Kalkulation {{ $geld($p['preis_vorher']) }} → {{ $geld($p['preis_nachher']) }})@else{{ $geld($p['preis_vorher']) }} → {{ $geld($p['preis_nachher']) }}@endif</p>
                                 @endforeach
                             @endif
                         </div>
@@ -120,7 +120,7 @@
                     </div>
                     <p class="fa-t-muted">Keine aktive Verwendung mehr.@if($gv['loesch']['historisch'] > 0) Bleibt in {{ $mehrzahl((int) $gv['loesch']['historisch'], 'historischem Eintrag', 'historischen Einträgen') }} als Verweis sichtbar.@endif</p>
                 @else
-                    <p class="{{ $tt }} text-[var(--fa-ink)]" data-gericht-loeschsperre><x-fa::signal tone="warn">Löschen nicht möglich</x-fa::signal> Erst oben ersetzen — die aktiven Verwendungen stehen in der Liste.</p>
+                    <p class="fa-t-body" data-gericht-loeschsperre><x-fa::signal tone="warn">Löschen nicht möglich</x-fa::signal> Erst oben ersetzen — die aktiven Verwendungen stehen in der Liste.</p>
                 @endif
             </div>
         @endif

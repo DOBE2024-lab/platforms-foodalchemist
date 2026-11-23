@@ -31,6 +31,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use RuntimeException;
 use Platform\FoodAlchemist\Support\Warteschlange;
 use Platform\FoodAlchemist\Services\Kaskade\KaskadenSchritt;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadeKontext;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadeAbfragen;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadeSpeiseplanVoll;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadeAusgabeVoll;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadeErfinden;
 use Platform\FoodAlchemist\Events\KaskadenSchrittAbgeschlossen;
 
 /**
@@ -50,8 +55,6 @@ use Platform\FoodAlchemist\Events\KaskadenSchrittAbgeschlossen;
 class PlanningCascadeService
 {
     use \Platform\FoodAlchemist\Services\Concerns\KaskadeKiWarten;   // externer KI-Weg (Lauf 62) + Lauf-Status-Hinweis
-    /** Async-Result via Cache (Job-Vertrag) — Minuten, bis der Worker den Step abschließt. */
-    private const RESULT_TTL_MIN = 15;
 
     /**
      * Spec 53 / Paket C: Phasen-Texte (`cascade_run_steps.phase`) als Konstanten statt Magic-Strings —
@@ -62,40 +65,6 @@ class PlanningCascadeService
     public const PHASE_ANREICHERUNG = 'Anreicherung läuft …';
     public const PHASE_BILDER = 'KI-Fotos werden erzeugt …';
     public const PHASE_KONFORMITAET = 'Konformität wird geprüft …';
-
-    /** Deckel gegen Runaway-Kosten: max. Zellen (= KI-Gericht-Generierungen) je Speiseplan-Voll-Kaskade. */
-    /**
-     * Wie viele Zyklus-Wochen ein Speiseplan-Lauf auf einmal baut (Dominique 2026-09-03:
-     * „Deckel 6 Wochenplan").
-     *
-     * WOCHEN, nicht Zellen — weil die Küche in Wochen plant und weil eine Zellenzahl die Absicht
-     * nicht ausdrücken kann: die Linienzahl ist pro Plan frei (Starter sind drei, es können mehr
-     * sein), 6 Wochen sind also 90 Zellen bei drei Linien und 150 bei fünf. Ein fester
-     * Zellen-Deckel hätte je nach Plan 6 oder 3,6 Wochen bedeutet, ohne dass es jemand sieht.
-     *
-     * Gezählt werden nur Wochen, in denen der Lauf wirklich etwas gestartet hat. Damit arbeitet
-     * ein zweiter Lauf von selbst weiter: die Zellen der ersten sechs Wochen sind dann belegt,
-     * werden übersprungen, und der Deckel greift erst wieder ab Woche 13.
-     */
-    private const SPEISEPLAN_MAX_WOCHEN = 6;
-
-    /**
-     * Absolute Notbremse gegen einen entarteten Plan (z. B. 20 Linien) — NICHT der eigentliche
-     * Deckel, das sind die Wochen oben. 6 Wochen × 6 Linien × 5 Werktage = 180, darum 200: ein
-     * normal breiter Plan läuft nie hier hinein, ein pathologischer wird gestoppt und gemeldet.
-     *
-     * Vorher stand hier 30 — bei einem Standard-Zyklus (4 Wochen × 3 Linien × 5 Werktage = 60
-     * Zellen) fiel damit die HÄLFTE jedes Auftrags weg, und zwar unsichtbar. Der Wert war als
-     * Kosten-Schutz gedacht; gerechnet kostet ein 30-Zellen-Lauf 0,50–3 $, ein 60er also
-     * einstellige Dollar. Er schützte Centbeträge und warf dafür die halbe Arbeit weg.
-     */
-    private const SPEISEPLAN_MAX_ZELLEN = 200;
-
-    /** Runaway-/Kosten-Deckel: max. VK-Gericht-Positionen einer Speisekarte-Vollkaskade (Gerichte-Füllung). */
-    private const SPEISEKARTE_MAX_POSITIONEN = 40;
-
-    /** Deckel gegen Runaway-Kosten: max. leere Slots (= erfundene KI-Gerichte) je Concept-Fan-out. */
-    private const CONCEPT_MAX_SLOTS = 30;
 
     /**
      * Ab wann ein in-flight Step (`queued`/`running`) als VERWAIST (abgebrochen) gilt — Urteil beim
@@ -134,7 +103,7 @@ class PlanningCascadeService
         // speiseplan (P5) = ein Gericht je leerer Zyklus-Zelle (Zeitachse, kein Concept-Zwischenschritt).
         if ($scope === 'vollkaskade') {
             return (string) ($optionen['owner_type'] ?? '') === 'speiseplan'
-                ? $this->starteSpeiseplanVollkaskade($team, $session, $creativeMode, $optionen) : $this->starteVollkaskade($team, $session, $creativeMode, $optionen);
+                ? $this->speiseplan()->starteSpeiseplanVollkaskade($team, $session, $creativeMode, $optionen) : $this->ausgabe()->starteVollkaskade($team, $session, $creativeMode, $optionen);
         }
         if ($scope === 'rezept' && $session?->source_gp_id !== null) {   // Zukauf-Planung am GP (13.11.): feste Ware, Zukauf-Weg statt Plan/Generator
             return app(ZukaufBasisrezeptService::class)->starteLauf($team, $session, $creativeMode, $optionen);
@@ -218,7 +187,7 @@ class PlanningCascadeService
                 // läuft über den bestehenden staged-Pfad (deferred.fanout → FanoutConceptJob).
                 $this->referenziereConceptStep($team, $step, $existingConceptId, $creativeMode, $staged, $session?->id);
             } else {
-                $this->dispatchConceptStep($team, $step, $brief, $session?->id, $creativeMode, $params);
+                $this->kontext()->dispatchConceptStep($team, $step, $brief, $session?->id, $creativeMode, $params);
             }
         } elseif ($planFirst) {
             \Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob::dispatch($team->id, (int) (Auth::id() ?? 0), (int) $step->id, $brief, $params);
@@ -235,66 +204,31 @@ class PlanningCascadeService
             );
         } else {
             // Im gestuften Lauf schiebt der Root-Step (Basisrezept/Gericht) seine Kinder auf bis zur Freigabe.
-            $this->dispatchRezeptStep($team, $step, $brief, $params, $scope === 'gericht', $vollAnreichern, $session?->id, $staged);
+            $this->kontext()->dispatchRezeptStep($team, $step, $brief, $params, $scope === 'gericht', $vollAnreichern, $session?->id, $staged);
         }
 
         return $run;
     }
 
-    /** Dispatch der Rezept-/Gericht-Generierung für einen Step (spiegelt HatGeneratorLauf::starteLauf). */
-    private function dispatchRezeptStep(
-        Team $team,
-        FoodAlchemistCascadeRunStep $step,
-        string $brief,
-        array $params,
-        bool $vkModus,
-        bool $vollAnreichern,
-        ?int $planningSessionId,
-        bool $staged = false,
-    ): void {
-        $runId = (string) Str::uuid();
-        // Parameter-Bündel: Lineage (planning_session_id, vom Job an verknuepfeArtefakt) + der
-        // Rückkanal an diesen Step (cascade_step_id → Job meldet Ergebnis/Fehler hierher zurück).
-        $jobParams = $params;
-        if ($planningSessionId !== null) {
-            $jobParams['planning_session_id'] = $planningSessionId;
-        }
-        $jobParams['cascade_step_id'] = $step->id;
-        // Gestuft: der Root-Step schiebt seine Sub-Rezepte auf (afterGenerated legt sie in `deferred` ab
-        // statt zu dispatchen); freigegeben wird die nächste Ebene erst bei der Freigabe. Sonst eager.
-        $jobParams['auto_dependencies'] = ! $staged;
-        $jobParams['_defer_children'] = $staged;
-
-        $step->update(['generator_run_id' => $runId]);
-        Cache::put(GenerateRecipeJob::cacheKey($runId), ['status' => 'pending'], now()->addMinutes(self::RESULT_TTL_MIN));
-        // Doppel-Anreicherung vermeiden: im gestuften Lauf IST die Freigabe der Anreicherungs-Schritt
-        // (starteFolgestufe → EnrichRecipeJob, completeCoverage). Eine Vor-Freigabe-Voll-Anreicherung am
-        // noch nicht freigegebenen Draft liefe dieselbe teure Coverage-Kette ein zweites Mal — darum im
-        // staged-Modus unterdrücken. Nicht-gestuft (Direkt-Materialisierung) behält das Alt-Verhalten.
-        $vorFreigabeAnreichern = $vollAnreichern && ! $staged;   // Spec 80 H: nicht gestufte Läufe haben kein Freigabe-Tor — dort bleibt es bewusst so
-        GenerateRecipeJob::dispatch($runId, $team->id, (int) (\Illuminate\Support\Facades\Auth::id() ?? 0), $brief, $jobParams, $vkModus, $vorFreigabeAnreichern, extern: (bool) ($jobParams['_extern'] ?? false));
+    /** Plan 98 · 3.3 S1: gemeinsame Helfer (Lauf, Step-Eigentum, Leitplanken, Step-Dispatch) liegen in {@see KaskadeKontext}. */
+    private function kontext(): KaskadeKontext
+    {
+        return app(KaskadeKontext::class);
     }
 
-    /**
-     * Dispatch der Konzept-Generierung für einen Step (Reuse-Assembler; im Erfinden-Modus fächert der Job auf).
-     *
-     * `$attachOwnerType`/`$attachContainerId` (Spec-42-Vollzug S3a): das erzeugte Konzept dockt an einen
-     * Ausgabe-Container (foodbook→Kapitel). Bei Cockpit-Concepts (frei) bleiben beide null. Wichtig, damit
-     * ein NEU-Generieren eines Kapitel-Concepts ({@see regeneriereStep}) den Kapitel-Attach nicht verliert.
-     */
-    private function dispatchConceptStep(Team $team, FoodAlchemistCascadeRunStep $step, string $brief, ?int $planningSessionId, string $creativeMode, array $params = [], ?string $attachOwnerType = null, ?int $attachContainerId = null): void
+    private function speiseplan(): KaskadeSpeiseplanVoll
     {
-        $runId = (string) Str::uuid();
-        $step->update(['generator_run_id' => $runId]);
-        Cache::put(GenerateConceptJob::cacheKey($runId), ['status' => 'pending'], now()->addMinutes(self::RESULT_TTL_MIN));
-        // Menü-Leitplanken des Concept-Tabs (menue_*-Keys aus reglerParams) an die Konzept-Erzeugung
-        // reichen — sie speisen den Gerüst-Kopf (Preis-Korridor je Person). Nur die menue_*-Teilmenge,
-        // damit der Job-Payload schlank und die Absicht klar bleibt.
-        $menueAchsen = array_filter($params, fn ($k) => str_starts_with((string) $k, 'menue_'), ARRAY_FILTER_USE_KEY);
-        GenerateConceptJob::dispatch(
-            $runId, $team->id, (int) (\Illuminate\Support\Facades\Auth::id() ?? 0), $brief,
-            null, $planningSessionId, $step->id, $creativeMode, false, false, $attachOwnerType, $attachContainerId, $menueAchsen
-        );
+        return app(KaskadeSpeiseplanVoll::class);
+    }
+
+    private function ausgabe(): KaskadeAusgabeVoll
+    {
+        return app(KaskadeAusgabeVoll::class);
+    }
+
+    private function erfinden(): KaskadeErfinden
+    {
+        return app(KaskadeErfinden::class);
     }
 
     /**
@@ -345,1377 +279,64 @@ class PlanningCascadeService
 
     // ── P3/P4: Voll-Kaskade — Ausgabe-Frame → 1 Concept je Slot ───────────
 
-    /**
-     * Voll-Kaskade aus einem Ausgabe-Frame (P3 Foodbook, P4 Speisekarte): je Frame-Slot ein Concept-Step
-     * + eigener {@see GenerateConceptJob} (der ans Ausgabe-Kapitel/-Rubrik hängt und danach in Gerichte
-     * fächert). Owner + ID kommen über `$optionen['owner_type']`/`['owner_id']`; die Slots werden owner-
-     * spezifisch in Container (Kapitel/Rubrik) materialisiert. Ohne Frame/Slots → ehrlicher Fehler.
-     *
-     * @param  array{owner_type?:string, owner_id?:int, created_via?:string}  $optionen
-     */
-    private function starteVollkaskade(Team $team, ?FoodAlchemistPlanningSession $session, string $creativeMode, array $optionen): FoodAlchemistCascadeRun
-    {
-        $ownerType = (string) ($optionen['owner_type'] ?? '');
-        $ownerId = (int) ($optionen['owner_id'] ?? 0);
-        // P3 foodbook, P4 speisekarte (je 1 Concept/Slot). E2 (Spec 40): offer — je Slot ein Concept, ans
-        // Angebot referenziert (Pivot). format — je Slot ein Concept-Baustein, ins gebrandete Foodkonzept
-        // referenziert (format_slot type=concept, wie offer). Der Speiseplan (P5) läuft über einen eigenen Zell-Pfad.
-        if (! in_array($ownerType, ['foodbook', 'speisekarte', 'offer', 'format'], true) || $ownerId <= 0) {
-            throw new RuntimeException('Die Planung braucht ein Ziel: Foodbook, Speisekarte, Angebot oder Format.');
-        }
-
-        $frame = app(PlanningFrameService::class)->find($ownerType, $ownerId);
-        if ($frame === null || $frame->slots()->count() === 0) {
-            throw new RuntimeException('Es gibt noch kein Planungs-Gerüst. Bitte zuerst die Struktur anlegen.');
-        }
-
-        // FOODBOOK läuft GESTUFT (Kapitel-Gate): erst das Kapitel-Grundgerüst als geplante Concept-Steps
-        // (Run=prüfen), dann Kapitel für Kapitel die Concept-Erzeugung + Freigabe (Nutzer-Wunsch: Kapitel
-        // erst prüfen/korrigieren). Speisekarte/Angebot bleiben EAGER (staged=false) — sie haben keine
-        // vorab materialisierte Container-/Kapitel-Ebene (Rubriken/Angebot entstehen erst im Fan-out),
-        // ein Kapitel-Gate ist dort nicht sinnvoll. Der Concept→Gericht-Fan-out wird bei staged automatisch
-        // mitgestuft (GenerateConceptJob deferrt ihn), Gate 2 (Concept-Review) läuft über die bestehende
-        // gibStepFrei/starteFolgestufe-Maschinerie.
-        $staged = $ownerType === 'foodbook';
-        $run = FoodAlchemistCascadeRun::create([
-            'team_id' => $team->id,
-            'planning_session_id' => $session?->id,
-            'scope' => 'vollkaskade',
-            'creative_mode' => $creativeMode,
-            'brief' => 'Voll-Kaskade ' . $ownerType . ' #' . $ownerId,
-            'status' => 'running',
-            'staged' => $staged,
-            'source_owner_type' => $ownerType,
-            'source_owner_id' => $ownerId,
-            'created_via' => (string) ($optionen['created_via'] ?? 'plan_go'),
-        ]);
-
-        // Speisekarte-Füllung (Nutzer: „in der Regel mit Gerichten befüllt"): Standard = je Rubrik N einzelne
-        // VK-Gerichte (gericht_ref); 'concepte' = altes Verhalten (je Rubrik 1 Concept/Fix-Menü). Nur speisekarte.
-        // FRISCH aus der DB lesen — das übergebene Session-Objekt ist nach setGenerationParams veraltet.
-        $freshSession = $session !== null ? app(PlanningSessionService::class)->get($team, (int) $session->id) : null;
-        $sessionParams = is_array($freshSession?->generation_params) ? $freshSession->generation_params : [];
-        $speisekarteGerichte = $ownerType === 'speisekarte' && ($sessionParams['speisekarte_fuellung'] ?? 'gerichte') !== 'concepte';
-
-        $slots = $this->vollkaskadeSlots($team, $ownerType, $ownerId, $frame);
-        // Spec 80 F: Struktur-Elemente des Rahmens direkt in die Ausgabe (nach den Kapiteln, vor den Konzepten).
-        try {
-            $strukturMap = $this->legeStrukturAn($team, $ownerType, $ownerId, $frame);
-            if ($strukturMap !== []) {
-                $run->update(['params' => [...(is_array($run->params) ? $run->params : []), 'struktur_map' => $strukturMap]]);
-            }
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('[Kaskade] Struktur-Elemente nicht angelegt', ['run' => $run->id, 'error' => $e->getMessage()]);
-        }
-        $idx = 0;
-        // Sammler für den Positions-Deckel: EIN Befund für die ganze Karte statt eines Vermerks
-        // je Rubrik. `$idx` ist ein durchlaufender Zähler über alle Rubriken — der Deckel greift
-        // deshalb genau einmal mitten in einer Rubrik, und alle folgenden bekommen null. Ohne
-        // diesen Sammler wüsste die Meldung nicht, WELCHE Rubriken leer geblieben sind, und
-        // „8 Positionen fehlen" ist für einen Koch nutzlos, wenn er nicht weiss, ob ihm die
-        // Vorspeisen oder die Desserts fehlen.
-        $deckel = [];
-        foreach ($slots as [$slot, $containerId]) {
-            if ($staged) {
-                // Kapitel-Gate: nur PLANEN (geplant), NICHT dispatchen — die Concept-Erzeugung startet erst
-                // die Kapitel-Freigabe (gibStepFrei/FREIGABE auf den geplanten Kapitel-Step).
-                $this->planeSlotConcept($team, $run, $slot, $ownerType, (int) $containerId, $idx, 'geplant');
-                $idx++;
-            } elseif ($speisekarteGerichte) {
-                // Standard-Speisekarte: die Rubrik mit N einzelnen VK-Gerichten füllen (statt 1 Concept).
-                $idx = $this->dispatchRubrikGerichte($team, $run, $slot, (int) $containerId, $idx, $session?->id, $deckel);
-            } else {
-                $this->dispatchSlotConcept($team, $run, $slot, $ownerType, (int) $containerId, $idx, $creativeMode, $session?->id);
-                $idx++;
-            }
-        }
-        if (($deckel['rubriken'] ?? []) !== []) {
-            $offen = (int) array_sum(array_column($deckel['rubriken'], 'offen'));
-            $run->vermerkeDeckel(
-                'speisekarte_positionen',
-                self::SPEISEKARTE_MAX_POSITIONEN,
-                (int) ($deckel['verlangt'] ?? 0),
-                $offen,
-                $this->speisekarteDeckelText($offen, (int) ($deckel['verlangt'] ?? 0), $deckel['rubriken']),
-            );
-        }
-        if ($idx === 0) {
-            $run->update(['status' => 'failed']);   // Frame ohne verwertbare Slots
-        } elseif ($staged) {
-            // geplante Kapitel-Steps → Run auf „prüfen" (review) heben, damit der Kapitel-Gate sichtbar ist.
-            $this->recomputeRunStatus((int) $run->id);
-        }
-
-        return $run;
-    }
-
-    /**
-     * Spec-42-Vollzug S3a — gezielter Teil-Lauf für GENAU EIN Foodbook-Kapitel (statt der ganzen
-     * Voll-Kaskade). Nutzt denselben Attach-je-Kapitel-Pfad wie {@see starteVollkaskade} (ein
-     * {@see GenerateConceptJob} mit `attachOwnerType='foodbook'` + `attachContainerId=chapter_id`), nur
-     * für das eine gekoppelte Slot↔Kapitel-Paar. Das „Kapitel-Go" der Leitstelle ersetzt damit den alten
-     * kaskaden-fremden `FoodbookService::kapitelFreigeben`-Bypass — jede Erzeugung läuft über den Motor.
-     *
-     * Jeder Aufruf = ein NEUER Run mit einem Step (kein Anhängen an fremde Runs → keine Race). Nicht
-     * idempotent — Doppel-Klick-Schutz macht die UI (Button-Disable am jüngsten „läuft"-Step des Kapitels).
-     */
+    /** Voll-Kaskade für ein Foodbook-Kapitel. Liegt in {@see KaskadeAusgabeVoll::starteKapitelKaskade}. */
     public function starteKapitelKaskade(Team $team, ?FoodAlchemistPlanningSession $session, string $creativeMode, int $foodbookId, int $chapterId, array $optionen = []): FoodAlchemistCascadeRun
     {
-        if (! in_array($creativeMode, FoodAlchemistPlanningSession::CREATIVE_MODES, true)) {
-            $creativeMode = 'voll_kreativ';
-        }
-        $frame = app(PlanningFrameService::class)->find('foodbook', $foodbookId);
-        if ($frame === null || $frame->slots()->count() === 0) {
-            throw new RuntimeException('Das Foodbook hat noch kein Planungs-Gerüst. Bitte zuerst die Struktur anlegen.');
-        }
-        // Genau das gekoppelte Slot↔Kapitel-Paar suchen (vollkaskadeSlots stellt strukturAusGeruest-Idempotenz sicher).
-        $treffer = null;
-        foreach ($this->vollkaskadeSlots($team, 'foodbook', $foodbookId, $frame) as [$slot, $containerId]) {
-            if ((int) $containerId === $chapterId) {
-                $treffer = [$slot, (int) $containerId];
-                break;
-            }
-        }
-        if ($treffer === null) {
-            throw new RuntimeException('Dieses Kapitel ist nicht aus dem Planungs-Gerüst entstanden. Mit KI füllen lassen sich nur Kapitel aus dem Gerüst.');
-        }
-
-        $run = FoodAlchemistCascadeRun::create([
-            'team_id' => $team->id,
-            'planning_session_id' => $session?->id,
-            'scope' => 'vollkaskade',   // gleiche Scope-Semantik wie die Voll-Kaskade (nur 1 Slot)
-            'creative_mode' => $creativeMode,
-            'brief' => 'Kapitel-Kaskade foodbook #' . $foodbookId . ' — Kapitel #' . $chapterId,
-            'status' => 'running',
-            'staged' => false,
-            'source_owner_type' => 'foodbook',
-            'source_owner_id' => $foodbookId,
-            'created_via' => (string) ($optionen['created_via'] ?? 'leitstelle_kapitel_go'),
-        ]);
-        [$slot, $containerId] = $treffer;
-        $this->dispatchSlotConcept($team, $run, $slot, 'foodbook', $containerId, 0, $creativeMode, $session?->id);
-
-        return $run;
+        return $this->ausgabe()->starteKapitelKaskade($team, $session, $creativeMode, $foodbookId, $chapterId, $optionen);
     }
 
-    /**
-     * Ein Slot → ein Concept-Step + {@see GenerateConceptJob} (Attach an den Owner-Container). Der EINE
-     * Ort, an dem `chapter_id`/`slot_id` am Step gesetzt werden — genutzt von {@see starteVollkaskade}
-     * (Schleife) UND {@see starteKapitelKaskade} (einmal). Für foodbook trägt der Brief die editierten
-     * Kapitel-Ziele ({@see kapitelBrief}, Kapitel schlägt Slot), sonst der reine {@see slotBrief}.
-     */
-    private function dispatchSlotConcept(Team $team, FoodAlchemistCascadeRun $run, $slot, string $ownerType, int $containerId, int $idx, string $creativeMode, ?int $sessionId): FoodAlchemistCascadeRunStep
-    {
-        $step = $this->planeSlotConcept($team, $run, $slot, $ownerType, $containerId, $idx, 'running');
-        $this->dispatcheConceptStep($team, $run, $step, $slot, $ownerType, $containerId, $creativeMode, $sessionId);
-
-        return $step;
-    }
-
-    /**
-     * Slot → Concept-Step ANLEGEN (ohne Dispatch). $status='running' (eager, direkt danach dispatcht) oder
-     * 'geplant' (gestufte Foodbook-Vollkaskade: Kapitel-Gate — der Step wartet auf die Kapitel-Freigabe,
-     * bevor der GenerateConceptJob läuft). Der EINE Ort, an dem chapter_id/slot_id am Step gesetzt werden.
-     */
-    private function planeSlotConcept(Team $team, FoodAlchemistCascadeRun $run, $slot, string $ownerType, int $containerId, int $idx, string $status): FoodAlchemistCascadeRunStep
-    {
-        $chapterId = $ownerType === 'foodbook' ? $containerId : null;
-
-        return FoodAlchemistCascadeRunStep::create([
-            'team_id' => $team->id,
-            'cascade_run_id' => $run->id,
-            'parent_step_id' => null,
-            'kind' => 'concept',
-            'label' => Str::limit((string) ($slot->label ?: 'Konzept'), 120),
-            'status' => $status,
-            'sort' => $idx,
-            'chapter_id' => $chapterId,
-            'slot_id' => (int) $slot->id,
-        ]);
-    }
-
-    /**
-     * Den {@see GenerateConceptJob} für einen bereits angelegten Concept-Step dispatchen (Step → running).
-     * Getrennt von der Step-Anlage, damit der gestufte Foodbook-Gate den Step erst PLANT (geplant) und
-     * erst bei der Kapitel-Freigabe hier dispatcht ({@see erzeugeGeplantesConcept}). Für foodbook trägt der
-     * Brief die editierten Kapitel-Ziele ({@see kapitelBrief}), sonst der reine {@see slotBrief}.
-     */
-    private function dispatcheConceptStep(Team $team, FoodAlchemistCascadeRun $run, FoodAlchemistCascadeRunStep $step, $slot, string $ownerType, int $containerId, string $creativeMode, ?int $sessionId): void
-    {
-        $chapterId = $ownerType === 'foodbook' ? $containerId : null;
-        $brief = $chapterId !== null
-            ? $this->kapitelBrief($chapterId, $slot)
-            : $this->slotBrief($ownerType, (int) $run->source_owner_id, $slot);
-        $runId = (string) Str::uuid();
-        $step->update(['generator_run_id' => $runId, 'status' => 'running']);
-        Cache::put(GenerateConceptJob::cacheKey($runId), ['status' => 'pending'], now()->addMinutes(self::RESULT_TTL_MIN));
-        // Kompositions-Fix: die Menü-Leitplanken der Session (menue_*: Gänge/Preis-Korridor/Diät-Quoten/
-        // Balance) an die Concept-Erzeugung reichen — sonst steuert die Menü-/Kapitel-Zusammenstellung nichts.
-        $menueAchsen = $this->sessionMenueAchsen($team, $sessionId);
-        // Je Frame-Slot ein Concept — bei Foodbook/Angebot/Format also so viele, wie das
-        // Gerüst Slots hat (beim Angebot ungedeckelt). Eigene Schlange.
-        GenerateConceptJob::dispatch(
-            $runId, $team->id, (int) (\Illuminate\Support\Facades\Auth::id() ?? 0),
-            $brief, (string) ($slot->label ?: null),
-            $sessionId, $step->id, $creativeMode, false, false, $ownerType, $containerId, $menueAchsen
-        )->onQueue(Warteschlange::kaskade());
-    }
-
-    /**
-     * Slots eines Ausgabe-Frames in Container materialisieren + als [slot, containerId] zurückgeben.
-     * foodbook: `strukturAusGeruest` legt je Slot ein Kapitel an (chapter_id). speisekarte: je Slot eine
-     * Rubrik (idempotent per Titel).
-     *
-     * @return list<array{0: \Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrameSlot, 1: int}>
-     */
-    private function vollkaskadeSlots(Team $team, string $ownerType, int $ownerId, $frame): array
-    {
-        $out = [];
-        // Spec 80 F: Struktur-Elemente erzeugen kein Concept — sie legt legeStrukturAn() direkt in die Ausgabe.
-        $frame->setRelation('slots', $frame->slots()->orderBy('position')->get()->reject(fn ($s) => $s->istStruktur())->values());
-        if ($ownerType === 'foodbook') {
-            app(FoodbookService::class)->strukturAusGeruest($team, $ownerId);   // Slots → Kapitel (idempotent)
-            $frame->setRelation('slots', $frame->slots()->orderBy('position')->get()->reject(fn ($s) => $s->istStruktur())->values());
-            foreach ($frame->slots as $slot) {
-                if ($slot->chapter_id !== null) {
-                    $out[] = [$slot, (int) $slot->chapter_id];
-                }
-            }
-
-            return $out;
-        }
-        if ($ownerType === 'speisekarte') {
-            $svc = app(SpeisekarteService::class);
-            foreach ($frame->slots as $slot) {
-                $out[] = [$slot, $svc->rubrikFuerSlot($team, $ownerId, (string) ($slot->label ?: 'Rubrik'))];
-            }
-
-            return $out;
-        }
-        if ($ownerType === 'offer' || $ownerType === 'format') {
-            // E2 (Spec 40): der „Container" IST das Angebot selbst — jedes erzeugte Konzept wird ans Angebot
-            // referenziert (Pivot foodalchemist_offer_concept, {@see AngebotService::referenziereConcept}); es gibt
-            // keinen Zwischen-Container wie Kapitel/Rubrik. Darum ist die containerId überall die Angebots-ID.
-            // format läuft identisch: der Container IST das Format, jedes Concept wird als format_slot
-            // (type=concept) referenziert ({@see FormatService::slotConceptEinfuegen}) — containerId = format_id.
-            foreach ($frame->slots as $slot) {
-                $out[] = [$slot, $ownerId];
-            }
-
-            return $out;
-        }
-
-        return $out;
-    }
-
-    /**
-     * Spec 80 Teil F: Struktur-Elemente des Rahmens (Titel, Titel mit Preis, Freitext, Leerzeile) 1:1 in die
-     * Ausgabe legen — ohne KI, ohne Step. Foodbook/Speisekarte: an den ANFANG des folgenden Abschnitts
-     * (Entscheid Dominique 2026-10-09; ohne folgenden Abschnitt ans Ende des letzten). Format: an ihre Stelle,
-     * die Reihenfolge hält {@see ordneFormatNachRahmen}. Gibt die Zuordnung Rahmen-Slot → Ausgabe-Element zurück.
-     *
-     * @return array<int, int>
-     */
-    private function legeStrukturAn(Team $team, string $ownerType, int $ownerId, $frame): array
-    {
-        $alle = $frame->slots()->orderBy('position')->get()->values();
-        if ($alle->first(fn ($s) => $s->istStruktur()) === null) {
-            return [];
-        }
-        $map = [];
-        $titel = fn ($s) => trim((string) $s->label);
-        if ($ownerType === 'format') {
-            $fmt = app(\Platform\FoodAlchemist\Services\FormatService::class);
-            foreach ($alle as $s) {
-                if (! $s->istStruktur()) {
-                    continue;
-                }
-                $typ = ['titel' => 'header', 'titel_preis' => 'header', 'freitext' => 'text', 'leerzeile' => 'spacer'][$s->slot_type];
-                $neu = $fmt->slotBlockEinfuegen($team, $ownerId, $typ, ['title' => $typ === 'header' ? $titel($s) : null, 'text_content' => $typ === 'text' ? ($s->note ?: $titel($s)) : null]);
-                $map[(int) $s->id] = (int) $neu->id;
-            }
-
-            return $map;
-        }
-        // Foodbook/Speisekarte: Gruppen aufeinanderfolgender Struktur-Elemente → Anfang des folgenden Abschnitts.
-        $gruppe = [];
-        $ziele = [];
-        foreach ($alle as $i => $s) {
-            if ($s->istStruktur()) {
-                $gruppe[] = $s;
-
-                continue;
-            }
-            if ($gruppe !== []) {
-                $ziele[] = [$gruppe, $s, 'anfang'];
-                $gruppe = [];
-            }
-        }
-        if ($gruppe !== []) {
-            $letzter = $alle->reverse()->first(fn ($s) => ! $s->istStruktur());
-            if ($letzter !== null) {
-                $ziele[] = [$gruppe, $letzter, 'ende'];
-            }
-        }
-        foreach ($ziele as [$elemente, $abschnitt, $wo]) {
-            if ($ownerType === 'foodbook') {
-                $kapitelId = (int) ($abschnitt->fresh()->chapter_id ?? 0);
-                if ($kapitelId <= 0) {
-                    continue;
-                }
-                $fb = app(FoodbookService::class);
-                $neue = [];
-                foreach ($elemente as $s) {
-                    $typ = ['titel' => 'header_frei', 'titel_preis' => 'header_frei_preis', 'freitext' => 'text', 'leerzeile' => 'spacer'][$s->slot_type];
-                    $block = $fb->addBlock($team, $kapitelId, array_filter([
-                        'type' => $typ, 'label' => $typ !== 'spacer' ? $titel($s) : null,
-                        'customer_text' => $typ === 'text' ? ($s->note ?: $titel($s)) : null,
-                        'price_value' => $typ === 'header_frei_preis' ? $s->price_anchor : null,
-                        'price_basis' => $typ === 'header_frei_preis' ? 'person' : null,
-                    ], fn ($v) => $v !== null));
-                    $neue[] = $block;
-                    $map[(int) $s->id] = (int) $block->id;
-                }
-                if ($wo === 'anfang') {
-                    $min = (int) \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock::where('chapter_id', $kapitelId)
-                        ->whereNotIn('id', array_map(fn ($b) => $b->id, $neue))->min('position');
-                    foreach ($neue as $k => $b) {
-                        $b->update(['position' => $min - count($neue) + $k]);
-                    }
-                }
-            } elseif ($ownerType === 'speisekarte') {
-                $sk = app(SpeisekarteService::class);
-                $rubrikId = $sk->rubrikFuerSlot($team, $ownerId, (string) ($abschnitt->label ?: 'Rubrik'));
-                $neue = [];
-                foreach ($elemente as $s) {
-                    $typ = ['titel' => 'header', 'titel_preis' => 'header', 'freitext' => 'text', 'leerzeile' => 'spacer'][$s->slot_type];
-                    $pos = $sk->addPosition($team, $rubrikId, array_filter([
-                        'type' => $typ, 'label' => $typ !== 'spacer' ? $titel($s) : null,
-                        'consumer_text' => $typ === 'text' ? ($s->note ?: $titel($s)) : null,
-                        'price_value' => $s->slot_type === 'titel_preis' ? $s->price_anchor : null,
-                    ], fn ($v) => $v !== null));
-                    $neue[] = $pos;
-                    $map[(int) $s->id] = (int) $pos->id;
-                }
-                if ($wo === 'anfang') {
-                    $min = (int) \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition::where('section_id', $rubrikId)
-                        ->whereNotIn('id', array_map(fn ($p) => $p->id, $neue))->min('position');
-                    foreach ($neue as $k => $p) {
-                        $p->update(['position' => $min - count($neue) + $k]);
-                    }
-                }
-            }
-        }
-
-        return $map;
-    }
-
-    /**
-     * Spec 80 F2: Format-Reihenfolge = Rahmen-Reihenfolge. Konzepte hängen sich asynchron ans Ende; danach ordnet
-     * diese Funktion alle vom Lauf erzeugten Elemente (Struktur + Konzepte) nach der Position ihres Rahmen-Slots.
-     * Elemente, die schon vorher im Format standen, bleiben vorne in ihrer Reihenfolge. Idempotent.
-     */
+    /** Format-Inhalte nach dem Rahmen ordnen. Liegt in {@see KaskadeAusgabeVoll::ordneFormatNachRahmen}. */
     public function ordneFormatNachRahmen(Team $team, int $runId): void
     {
-        $run = FoodAlchemistCascadeRun::find($runId);
-        if ($run === null || $run->source_owner_type !== 'format') {
-            return;
-        }
-        $formatId = (int) $run->source_owner_id;
-        $frame = app(PlanningFrameService::class)->find('format', $formatId);
-        if ($frame === null) {
-            return;
-        }
-        $map = (array) (($run->params ?? [])['struktur_map'] ?? []);
-        $conceptJeSlot = $run->steps()->where('kind', 'concept')->whereNotNull('slot_id')->whereNotNull('ref_id')->pluck('ref_id', 'slot_id');
-        $formatSlots = \Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot::where('format_id', $formatId)->orderBy('position')->get();
-        $gewuenscht = [];
-        foreach ($frame->slots()->orderBy('position')->get() as $s) {
-            if (isset($map[$s->id])) {
-                $gewuenscht[] = (int) $map[$s->id];
-            } elseif (($cid = $conceptJeSlot->get($s->id)) !== null) {
-                $fs = $formatSlots->first(fn ($f) => $f->type === 'concept' && (int) $f->concept_id === (int) $cid);
-                if ($fs !== null) {
-                    $gewuenscht[] = (int) $fs->id;
-                }
-            }
-        }
-        $rest = $formatSlots->pluck('id')->map(fn ($i) => (int) $i)->reject(fn ($i) => in_array($i, $gewuenscht, true))->values()->all();
-        foreach ([...$rest, ...$gewuenscht] as $pos => $id) {
-            \Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot::whereKey($id)->update(['position' => $pos + 1]);
-        }
-    }
-
-    /** Kompakter Brief je Slot für die Concept-Erzeugung (Rolle/Label + Ziele + Preis-Anker). */
-    private function slotBrief(string $ownerType, int $ownerId, $slot): string
-    {
-        $teile = ['[' . ($slot->label ?: 'Gang') . ']'];
-        if ((int) $slot->target_count > 0) {
-            $teile[] = 'Zielanzahl Gerichte: ' . (int) $slot->target_count;
-        }
-        if ($slot->price_anchor !== null) {
-            $teile[] = 'Preis-Anker p.P.: ' . $slot->price_anchor . ' €';
-        }
-        if ($slot->note !== null && trim((string) $slot->note) !== '') {
-            $teile[] = trim((string) $slot->note);
-        }
-
-        return 'Konzept für die Rolle ' . implode(' — ', $teile) . '.';
-    }
-
-    /**
-     * Wie {@see slotBrief}, aber die editierten M3-Kapitel-Ziele schlagen den Slot (Spec-42-Vollzug S3a):
-     * Zielanzahl + Preis-Anker kommen aus dem Kapitel, wenn dort gesetzt; das Kapitel-Niveau kommt additiv
-     * dazu. So wirkt die Kapitel-Steuerung der Leitstelle tatsächlich auf die frische Generierung.
-     */
-    private function kapitelBrief(int $chapterId, $slot): string
-    {
-        $kap = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::find($chapterId);
-        $teile = ['[' . ($slot->label ?: ($kap?->title ?: 'Gang')) . ']'];
-        $targetCount = ($kap && $kap->target_count !== null) ? (int) $kap->target_count : (int) $slot->target_count;
-        if ($targetCount > 0) {
-            $teile[] = 'Zielanzahl Gerichte: ' . $targetCount;
-        }
-        $priceAnchor = ($kap && $kap->price_anchor !== null) ? $kap->price_anchor : $slot->price_anchor;
-        if ($priceAnchor !== null) {
-            $teile[] = 'Preis-Anker p.P.: ' . $priceAnchor . ' €';
-        }
-        if ($kap && $kap->niveau !== null && trim((string) $kap->niveau) !== '') {
-            $teile[] = 'Niveau: ' . $kap->niveau;
-        }
-        if ($slot->note !== null && trim((string) $slot->note) !== '') {
-            $teile[] = trim((string) $slot->note);
-        }
-
-        return 'Konzept für die Rolle ' . implode(' — ', $teile) . '.';
+        $this->ausgabe()->ordneFormatNachRahmen($team, $runId);
     }
 
     // ── P5: Speiseplan-Voll-Kaskade — ein Gericht je leerer Zyklus-Zelle ──
 
     /**
-     * Speiseplan-Voll-Kaskade (P5): füllt leere Zellen des Zyklus (cycle_weeks × Mo–Fr × Mittag × Linien) mit
-     * erfundenen Gerichten. Anders als Foodbook/Speisekarte (Slot → Concept) hält eine Zelle EIN Gericht — je
-     * leerer Zelle ein Gericht-Step + {@see MaterializeSpeiseplanCellJob} (generiert + trägt via addEintrag ein).
-     * Gedeckelt ({@see SPEISEPLAN_MAX_ZELLEN}) gegen Runaway-Kosten. Der Vermerk liegt in
-     * `deckel_hinweise` (Schlüssel `speiseplan_zellen`) und erreicht über die Status-DTO die
-     * Leitstelle — erst DAMIT ist es kein stiller Deckel.
-     *
-     * Vorher stand hier „die Zahl der übersprungenen Zellen steht im Run
-     * (`params.gedeckelt_zellen_offen`) — kein stiller Deckel". Das war doppelt falsch: der
-     * Schlüssel wurde von niemandem gelesen (die Status-DTO filtert `params` gegen
-     * ALLOWED_GENERATION_PARAMS, weil dieser Beutel die LEITPLANKEN zeigt), und der Schreibweg
-     * überschrieb `params` KOMPLETT statt zu mergen — womit er zusätzlich den
-     * Leitplanken-Fallback tötete, und zwar genau bei den gedeckelten Läufen, die man am
-     * ehesten nachlesen will. Ein Standard-Zyklus sind 4 Wochen × 3 Linien × 5 Werktage
-     * = 60 leere Zellen; die Hälfte fiel damit unsichtbar weg.
-     */
-    private function starteSpeiseplanVollkaskade(Team $team, ?FoodAlchemistPlanningSession $session, string $creativeMode, array $optionen): FoodAlchemistCascadeRun
-    {
-        $planId = (int) ($optionen['owner_id'] ?? 0);
-        $plan = $planId > 0 ? FoodAlchemistSpeiseplan::visibleToTeam($team)->with(['lines', 'entries'])->find($planId) : null;
-        if ($plan === null) {
-            throw new RuntimeException('Speiseplan nicht gefunden.');
-        }
-        if ($plan->lines->isEmpty()) {
-            throw new RuntimeException('Der Speiseplan hat keine Menü-Linien. Bitte zuerst im Reiter „Menü-Linien" eine Linie anlegen.');
-        }
-
-        $run = FoodAlchemistCascadeRun::create([
-            'team_id' => $team->id,
-            'planning_session_id' => $session?->id,
-            'scope' => 'vollkaskade',
-            'creative_mode' => $creativeMode,
-            'brief' => 'Voll-Kaskade speiseplan #' . $planId,
-            'status' => 'running',
-            // Wie Foodbook/Speisekarte: EAGER (staged=false) — je leerer Zelle sofort ein Gericht-Job,
-            // Sammel-Review im Editor. Explizit gesetzt (nicht DB-Default), s. starteVollkaskade.
-            'staged' => false,
-            'source_owner_type' => 'speiseplan',
-            'source_owner_id' => $planId,
-            'created_via' => (string) ($optionen['created_via'] ?? 'plan_go'),
-        ]);
-
-        $start = \Illuminate\Support\Carbon::parse($plan->start_date ?? now())->startOfWeek();   // Montag
-        $weeks = max(1, (int) ($plan->cycle_weeks ?? 1));
-        $belegt = $this->speiseplanBelegt($plan);
-
-        // Spec-42-Vollzug S4: der Session-Brief (Anlass/Saison/Richtung) steuert jede Zell-Generierung mit
-        // („Speiseplan aus Brief"). Leer = unverändertes Alt-Verhalten (nur Linien-Brief).
-        $planKontext = trim((string) ($session?->brief ?? ''));
-        $idx = 0;
-        $offen = 0;
-        // Wochen-Deckel: gezählt werden nur Wochen, in denen der Lauf wirklich etwas gestartet
-        // hat. Eine Woche, deren Zellen schon belegt sind, verbraucht also KEIN Budget — genau
-        // dadurch nimmt ein zweiter Lauf die nächsten sechs Wochen und nicht wieder die ersten.
-        $wochenMitArbeit = 0;
-        $wochenOffen = 0;
-        $zellenInOffenenWochen = 0;
-        // Spec 57 · 10.2: Namen/Diät der vorhandenen Einträge einmal laden (Leitplanken je Zelle).
-        $plan->loadMissing(['entries.dish', 'entries.concept', 'entries.package']);
-        $this->zellNamenMemo = [];
-        foreach (range(1, $weeks) as $week) {
-            $vorWoche = $idx;
-            $zellen = $this->leereSpeiseplanZellen($plan, $start, $week, $belegt);
-            $veganZiel = $this->speiseplanVeganZiele($plan, $zellen);
-            if ($wochenMitArbeit >= self::SPEISEPLAN_MAX_WOCHEN) {
-                // Budget aufgebraucht: zählen, was diese Woche gekostet hätte, und weiter —
-                // nicht abbrechen, sonst wüssten wir den Rest nicht.
-                if ($zellen !== []) {
-                    $wochenOffen++;
-                    $zellenInOffenenWochen += count($zellen);
-                }
-
-                continue;
-            }
-            foreach ($zellen as [$datum, $linie, $meal]) {
-                if ($idx >= self::SPEISEPLAN_MAX_ZELLEN) {
-                    $offen++;
-                    continue;
-                }
-                $brief = ($planKontext !== '' ? 'Rahmen: ' . $planKontext . ' — ' : '')
-                    . $this->speiseplanZellBrief($linie, $meal)
-                    . $this->speiseplanZellLeitplanken($plan, $datum, $linie, $meal, ($veganZiel[$datum] ?? null) === (int) $linie->id);
-                $step = FoodAlchemistCascadeRunStep::create([
-                    'team_id' => $team->id,
-                    'cascade_run_id' => $run->id,
-                    'parent_step_id' => null,
-                    'kind' => 'gericht',
-                    'label' => Str::limit($linie->name . ' · ' . $datum, 120),
-                    'status' => 'running',
-                    'sort' => $idx,
-                ]);
-                // Die größte Menge im System: bis 90 Zellen je Klick. Eigene Schlange,
-                // damit sie nichts anderes verdrängt — und damit die Sub-Rezepte dieser
-                // Zellen parallel auf `rezepte` weiterlaufen statt dahinter zu warten.
-                MaterializeSpeiseplanCellJob::dispatch(
-                    $team->id, (int) (\Illuminate\Support\Facades\Auth::id() ?? 0),
-                    $planId, $datum, $meal, (int) $linie->id, $brief, (int) $step->id, $session?->id
-                )->onQueue(Warteschlange::gerichte());
-                $idx++;
-            }
-            if ($idx > $vorWoche) {
-                $wochenMitArbeit++;
-            }
-        }
-        // `verlangt` = alle LEEREN Zellen. Belegte sind oben schon per `continue` raus, `$idx`
-        // zählt nur die gestarteten — die Summe braucht also keinen zweiten Zähler.
-        $run->vermerkeDeckel(
-            'speiseplan_wochen',
-            self::SPEISEPLAN_MAX_WOCHEN,
-            $wochenMitArbeit + $wochenOffen,
-            $wochenOffen,
-            $this->deckelTextWochen($wochenMitArbeit, $wochenOffen, $zellenInOffenenWochen),
-        );
-        // Die Notbremse wird nur vermerkt, wenn sie wirklich gegriffen hat — bei einem normal
-        // breiten Plan bleibt sie stumm, weil der Wochen-Deckel vorher bindet.
-        $run->vermerkeDeckel(
-            'speiseplan_zellen',
-            self::SPEISEPLAN_MAX_ZELLEN,
-            $idx + $offen,
-            $offen,
-            $this->deckelTextZellen($idx, $idx + $offen, $offen),
-        );
-        if ($idx === 0) {
-            $run->update(['status' => 'done']);   // keine leere Zelle → nichts zu tun (kein Fehler)
-        }
-
-        return $run;
-    }
-
-    /**
-     * Vermerkt die Lücke EINES Konzept-Durchgangs — und nennt den Grund, der wirklich gegriffen hat.
-     *
-     * Drei Ursachen, drei Sätze, und der entscheidende Punkt: die Arithmetik muss immer schließen.
-     * Ein Satz wie »18 von 25 Positionen ohne Skizze — die KI liefert höchstens 12« widerspricht
-     * sich selbst (25 − 18 = 7, die Grenze hat also NICHT gebunden) und ist damit genau der
-     * Fehler, den dieser Umbau beheben soll. Der Koch kann nur eine Sache selbst prüfen: ob die
-     * Zahlen aufgehen.
-     *
-     * Die Reihenfolge der Prüfung folgt der DOMINANZ, nicht der Code-Reihenfolge — das war mein
-     * erster Fehler hier. Bei 33 leeren Positionen, 30 angefragten und 2 gelieferten fehlen 31;
-     * der 30er-Deckel erklärt davon aber nur 3. »Der Lauf fragt höchstens 30 ab« wäre dann
-     * formal richtig und trotzdem die falsche Auskunft. Also:
-     *
-     *   1. Modell hat unterliefert (erzeugt < min(angefragt, grenze)) → »die KI hat nur N geliefert«
-     *   2. Ideen-Klemme gegriffen (erzeugt === grenze < angefragt) → »die KI liefert höchstens N auf einmal«
-     *   3. Slot-Deckel gegriffen (leer > CONCEPT_MAX_SLOTS) → »der Lauf fragt höchstens N Positionen auf einmal ab«
-     *
-     * Stapeln sich 2 und 3, wird 2 genannt: die Klemme ist die pro Lauf bindende Grenze, der
-     * 30er würde erst wirken, wenn man sie hebt.
-     *
-     * »auf einmal« statt »je Konzept«: dass eine Paket-Station intern selbst ein Konzept ist, ist
-     * Code-Wissen. Der Leser bezöge die Zahl sonst auf das ganze Konzept statt auf diesen Durchgang.
-     *
-     * KEIN »zweiter Lauf für den Rest«: der Slot-Filter prüft nur auf NULL und sortiert nach
-     * `position, id` — ein zweiter Lauf nimmt real wieder die Positionen 1–12 und doppelt.
-     *
-     * @param  list<int>  $seen  Rekursions-Pfad; ab Tiefe 1 ist dieser Durchgang eine Paket-Station
-     */
-    private function vermerkeConceptLuecke(int $runId, int $conceptId, int $slotsLeer, int $angefragt, int $erzeugt, int $grenze, array $seen, ?string $ideenFehler = null): void
-    {
-        $offen = $slotsLeer - $erzeugt;
-        if ($offen < 1) {
-            return;
-        }
-
-        $run = FoodAlchemistCascadeRun::find($runId);
-        if ($run === null) {
-            return;
-        }
-
-        if ($erzeugt < min($angefragt, $grenze)) {
-            // Ein gescheiterter Ideen-Aufruf (Budget/Provider/…) ist ein ANDERER Befund als „die KI
-            // hat 0 geliefert" — der Mensch braucht den echten Grund, nicht eine Vermutung über die
-            // KI-Antwort, wenn sie nie gefragt wurde.
-            $grund = $erzeugt === 0
-                ? ($ideenFehler ?? 'die KI hat keine geliefert')
-                : sprintf('die KI hat nur %d geliefert', $erzeugt);
-        } elseif ($angefragt > $grenze) {
-            $grund = sprintf('die KI liefert höchstens %d auf einmal', $grenze);
-        } else {
-            $grund = sprintf('der Lauf fragt höchstens %d Positionen auf einmal ab', self::CONCEPT_MAX_SLOTS);
-        }
-
-        // Ab Tiefe 1 ist der Durchgang eine eingebettete Station — der Ort gehört vorn hin, sonst
-        // weiß der Leser nicht, WELCHE Station Lücken hat.
-        $station = count($seen) > 1
-            ? trim((string) (FoodAlchemistConcept::find($conceptId)?->name ?? '')) : '';
-        $ort = $station !== '' ? sprintf('Station „%s": ', $station) : '';
-
-        $run->vermerkeDeckel(
-            'concept_luecke:' . $conceptId,
-            $grenze,
-            $slotsLeer,
-            $offen,
-            sprintf(
-                '%s%d von %d Positionen ohne Skizze. Grund: %s. Den Rest im Konzept von Hand besetzen, '
-                . 'ein zweiter KI-Lauf würde wieder vorne beginnen.',
-                $ort,
-                $offen,
-                $slotsLeer,
-                $grund,
-            ),
-        );
-    }
-
-    /**
-     * Der Satz für den Positions-Deckel der Speisekarte. Nennt die RUBRIKEN, nicht nur die Zahl:
-     * „8 Positionen fehlen" ist für einen Koch nutzlos, wenn er nicht weiss, ob ihm die
-     * Vorspeisen oder die Desserts fehlen.
-     *
-     * Höchstens EINE Rubrik ist angefangen — `$idx` läuft über alle Rubriken durch, der Deckel
-     * greift also genau einmal mitten in einer und alle folgenden bekommen null. Diese eine wird
-     * mit „x von y" genannt, die leeren gesammelt.
-     *
-     * KEIN „zweiter Lauf" als Handlung, anders als beim Speiseplan: dort baut der Lauf `$belegt`
-     * aus den Einträgen und nimmt den Rest. Hier gibt es keinen Bestands-Abgleich und `$idx`
-     * startet wieder bei 0 — ein zweiter Voll-Lauf bestückt also die VORDEREN Rubriken ein
-     * zweites Mal und lässt die leeren weiter leer. Genau die falsche Empfehlung hätte doppelte
-     * Kosten und doppelte Entwürfe erzeugt.
-     *
-     * @param  list<array{rubrik:string, verlangt:int, erzeugt:int, offen:int}>  $rubriken
-     */
-    private function speisekarteDeckelText(int $offen, int $verlangt, array $rubriken): string
-    {
-        $angefangen = array_values(array_filter($rubriken, static fn (array $r): bool => $r['erzeugt'] > 0));
-        $leer = array_values(array_filter($rubriken, static fn (array $r): bool => $r['erzeugt'] === 0));
-
-        $teile = [];
-        foreach ($angefangen as $r) {
-            $teile[] = sprintf('„%s" %d von %d', $r['rubrik'], $r['erzeugt'], $r['verlangt']);
-        }
-        if ($leer !== []) {
-            $namen = array_map(static fn (array $r): string => '„' . $r['rubrik'] . '"', array_slice($leer, 0, 3));
-            $rest = count($leer) - count($namen);
-            $teile[] = implode(' und ', $namen)
-                . ($rest > 0 ? sprintf(' und %d weitere Rubriken', $rest) : '')
-                . ' ganz leer';
-        }
-
-        return sprintf(
-            '%d von %d Gerichten fehlen (je KI-Lauf höchstens %d): %s. Diese Rubriken im Karten-Editor '
-            . 'über „+ Gericht" füllen. Ein zweiter KI-Lauf würde die vorderen Rubriken doppelt bestücken.',
-            $offen,
-            $verlangt,
-            self::SPEISEKARTE_MAX_POSITIONEN,
-            implode(', ', $teile),
-        );
-    }
-
-    /**
-     * Wie viele Zellen einer Zyklus-Woche noch leer sind — für die Deckel-Rechnung, ohne die
-     * Woche zu bauen. Spiegelt die Schleifen-Bedingungen (Mo–Fr × Linien, belegte raus) exakt;
-     * eine abweichende Zählung hier würde eine falsche Zahl in die Meldung schreiben, und eine
-     * falsche Zahl ist schlimmer als keine Meldung.
-     *
-     * @param  array<string, bool>  $belegt
-     */
-    private function leereSpeiseplanZellen(FoodAlchemistSpeiseplan $plan, \Illuminate\Support\Carbon $start, int $week, array $belegt): array
-    {
-        // Spec 57 · Paket 9 + E11: Öffnungstage des Plans (Standard Mo–Fr) × Linien; jede Linie
-        // in IHRER Mahlzeit (ohne feste Mahlzeit: Mittag, wie bisher).
-        $leer = [];
-        foreach ($plan->oeffnungstage() as $weekday) {
-            $datum = $start->copy()->addDays(($week - 1) * 7 + ($weekday - 1))->format('Y-m-d');
-            foreach ($plan->lines as $linie) {
-                $meal = ($linie->meal ?? '') !== '' ? (string) $linie->meal : 'mittag';
-                if (! isset($belegt[$datum . '|' . $meal . '|' . (int) $linie->id])) {
-                    $leer[] = [$datum, $linie, $meal];
-                }
-            }
-        }
-
-        return $leer;
-    }
-
-    /** @return array<string, bool>  belegte Zellen als `Y-m-d|mahlzeit|line_id` */
-    private function speiseplanBelegt(FoodAlchemistSpeiseplan $plan): array
-    {
-        $belegt = [];
-        foreach ($plan->entries as $e) {
-            if ($e->entry_date !== null) {
-                $belegt[$e->entry_date->format('Y-m-d') . '|' . $e->meal . '|' . (int) $e->line_id] = true;
-            }
-        }
-
-        return $belegt;
-    }
-
-    /** Zell-Brief: Mahlzeit + Rolle der Linie + Linienname (+ vegetarisch). Mittag bleibt „Mittagsgericht“. */
-    private function speiseplanZellBrief(\Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie $linie, string $meal): string
-    {
-        $wort = [
-            'fruehstueck' => 'Frühstücksgericht', 'mittag' => 'Mittagsgericht',
-            'abend' => 'Abendgericht', 'snack' => 'Snack',
-        ][$meal] ?? 'Mittagsgericht';
-        $rolle = $linie->role !== null && $linie->role !== 'hauptgang'
-            ? (\Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie::ROLLEN[$linie->role] ?? null)
-            : null;
-
-        return $wort . ($rolle !== null ? ' (' . $rolle . ')' : '')
-            . ' für die Linie „' . $linie->name . '“' . ($linie->is_vegetarian ? ' (vegetarisch)' : '') . '.';
-    }
-
-    /** @var array<int, string> Spec 57 · 10.2: Anzeigename je Eintrag-ID (ein Lauf, keine N+1). */
-    private array $zellNamenMemo = [];
-
-    /**
-     * Spec 57 · 10.2: Welche leere Zelle eines Tages soll das vegane Gericht liefern, wenn der Tag
-     * noch keins hat? Bevorzugt eine vegetarische Hauptgang-Linie, sonst die erste Hauptgang-Linie.
-     * Tage mit veganem Eintrag bekommen kein Ziel.
-     *
-     * @param  list<array{0:string, 1:\Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie, 2:string}>  $zellen
-     * @return array<string, int>  Datum → line_id
-     */
-    private function speiseplanVeganZiele(FoodAlchemistSpeiseplan $plan, array $zellen): array
-    {
-        $svc = app(SpeiseplanService::class);
-        $agg = app(ConcepterAggregateService::class);
-        $ziele = [];
-        foreach (collect($zellen)->groupBy(fn ($z) => $z[0]) as $datum => $tagZellen) {
-            $hatVegan = $plan->entries->contains(fn ($e) => $e->entry_date?->format('Y-m-d') === $datum
-                && $agg->allergenRollupFromGerichte($svc->eintragGerichte($e))['is_vegan']);
-            if ($hatVegan) {
-                continue;
-            }
-            $haupt = $tagZellen->filter(fn ($z) => $z[1]->istHauptgang());
-            $wahl = $haupt->first(fn ($z) => (bool) $z[1]->is_vegetarian) ?? $haupt->first();
-            if ($wahl !== null) {
-                $ziele[$datum] = (int) $wahl[1]->id;
-            }
-        }
-
-        return $ziele;
-    }
-
-    /**
-     * Spec 57 · 10.2: Leitplanken aus dem PLANZUSTAND für eine Zelle — statt jede Zelle isoliert zu
-     * erzeugen. (1) Was in ±max(6, Mindestabstand) Tagen schon steht, nicht wiederholen. (2) Fehlt
-     * dem Tag ein veganes Gericht, fragt genau eine Zelle danach. (3) Preis und Wareneinsatz-Ziel
-     * der Linie (Backlog #90). Heuristisch: Zellen eines Laufs laufen parallel und sehen einander
-     * nicht — verbleibende Wiederholungen zeigt die Rail des Editors (LLM_GUIDE §3).
-     */
-    private function speiseplanZellLeitplanken(FoodAlchemistSpeiseplan $plan, string $datum, \Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie $linie, string $meal, bool $veganGewuenscht): string
-    {
-        $svc = app(SpeiseplanService::class);
-        $tag = \Illuminate\Support\Carbon::parse($datum)->startOfDay();
-        $fenster = max(6, (int) $plan->min_abstand_tage);
-        $namen = $plan->entries
-            ->filter(fn ($e) => $e->entry_date !== null && $e->meal === $meal && abs((int) $e->entry_date->copy()->startOfDay()->diffInDays($tag, false)) <= $fenster)
-            ->map(fn ($e) => $this->zellNamenMemo[(int) $e->id] ??= $svc->eintragName($e))
-            ->unique()->take(10)->values()->all();
-
-        $teile = [];
-        if ($namen !== []) {
-            $teile[] = 'nicht wiederholen, steht in ±' . $fenster . ' Tagen schon im Plan: ' . implode('; ', $namen);
-        }
-        if ($veganGewuenscht) {
-            $teile[] = 'dem Tag fehlt noch ein veganes Gericht — bitte vegan';
-        }
-        $preis = $linie->manuellerPreis();
-        if ($preis !== null) {
-            $teile[] = 'Verkaufspreis netto ' . number_format($preis, 2, ',', '') . ' € je Portion';
-        }
-        if ($linie->target_wes_max_pct !== null) {
-            $teile[] = 'Wareneinsatz-Ziel ' . ($linie->target_wes_min_pct !== null ? number_format((float) $linie->target_wes_min_pct, 0) . '–' : 'bis ')
-                . number_format((float) $linie->target_wes_max_pct, 0) . ' %'
-                . ($preis !== null ? ' (EK höchstens ' . number_format($preis * (float) $linie->target_wes_max_pct / 100, 2, ',', '') . ' €)' : '');
-        }
-
-        return $teile !== [] ? ' Leitplanken aus dem Plan: ' . implode(' · ', $teile) . '.' : '';
-    }
-
-    /**
-     * Spec 57 · Paket 10.1: Vorschau vor dem Start — wie viele Zellen sind leer und wie viele
-     * würde EIN Lauf jetzt starten (Wochen-Deckel + Notbremse wie {@see starteSpeiseplanVollkaskade}).
-     * Nur lesend, legt nichts an.
+     * Vorschau der Speiseplan-Voll-Kaskade (Zellen, Deckel). Liegt in {@see KaskadeSpeiseplanVoll::speiseplanVorschau}.
      *
      * @return array{linien:int, leer:int, dieser_lauf:int, wochen:int, gedeckelt:bool}
      */
     public function speiseplanVorschau(Team $team, int $planId): array
     {
-        $plan = FoodAlchemistSpeiseplan::visibleToTeam($team)->with(['lines', 'entries'])->find($planId);
-        if ($plan === null) {
-            throw new RuntimeException('Speiseplan nicht gefunden.');
-        }
-        $start = \Illuminate\Support\Carbon::parse($plan->start_date ?? now())->startOfWeek();
-        $weeks = max(1, (int) ($plan->cycle_weeks ?? 1));
-        $belegt = $this->speiseplanBelegt($plan);
-        $leer = 0;
-        $diesmal = 0;
-        $wochenMitArbeit = 0;
-        foreach (range(1, $weeks) as $week) {
-            $n = count($this->leereSpeiseplanZellen($plan, $start, $week, $belegt));
-            $leer += $n;
-            if ($n > 0 && $wochenMitArbeit < self::SPEISEPLAN_MAX_WOCHEN) {
-                $diesmal += $n;
-                $wochenMitArbeit++;
-            }
-        }
-        $diesmal = min($diesmal, self::SPEISEPLAN_MAX_ZELLEN);
-
-        return [
-            'linien' => $plan->lines->count(), 'leer' => $leer, 'dieser_lauf' => $diesmal,
-            'wochen' => $weeks, 'gedeckelt' => $diesmal < $leer,
-        ];
+        return $this->speiseplan()->speiseplanVorschau($team, $planId);
     }
 
     /**
-     * Der Satz für den Wochen-Deckel. Nennt WOCHEN, weil der Mensch in Wochen plant — die
-     * Zellenzahl steht als Größenordnung dahinter.
-     *
-     * Die Handlung ist hier einfacher als beim Zell-Deckel: weil nur Wochen MIT Arbeit gezählt
-     * werden, findet ein zweiter Lauf die ersten sechs belegt und nimmt die nächsten sechs. Es
-     * braucht kein Vorrücken des Startdatums und keine Bedingung.
-     */
-    private function deckelTextWochen(int $gebaut, int $offen, int $zellen): string
-    {
-        return sprintf(
-            'Wochen %d–%d noch offen (%d Zellen). Ein KI-Lauf füllt höchstens %d Wochen. Sobald die '
-            . 'ersten %d im Plan stehen, noch einmal „Leere Zellen mit KI füllen" starten, dann kommen die nächsten dran.',
-            $gebaut + 1,
-            $gebaut + $offen,
-            $zellen,
-            self::SPEISEPLAN_MAX_WOCHEN,
-            $gebaut,
-        );
-    }
-
-    /**
-     * Der Satz, den der Mensch liest, wenn der Zell-Deckel gegriffen hat. EINE Formulierungsstelle —
-     * die Fläche liest den gespeicherten `text` und formatiert nichts nach.
-     *
-     * Zwei Zahlen, nicht eine: »30 nicht erzeugt« sagt nicht, wie groß der Auftrag war. 30 von 33
-     * ist eine Randlage, 30 von 60 der halbe Plan.
-     *
-     * Die Bedingung »wenn die ersten im Plan stehen« ist kein Beiwerk, sondern der Unterschied
-     * zwischen richtig und falsch: {@see materialisiereSpeiseplanZelle} trägt den Eintrag sofort
-     * nach der Generierung ein, nicht erst bei der Freigabe. Ein zweiter Lauf baut `$belegt` aus
-     * den Einträgen und nimmt darum exakt den Rest — klickt der Mensch aber sofort, sind die
-     * Zellen noch leer und er erzeugt dieselben Gerichte ein zweites Mal.
-     */
-    private function deckelTextZellen(int $gestartet, int $verlangt, int $offen): string
-    {
-        return sprintf(
-            '%d von %d Zellen gestartet, %d %s leer. Sobald die ersten im Plan stehen, im Speiseplan '
-            . 'noch einmal „Leere Zellen mit KI füllen" starten. Der Lauf nimmt nur die leeren Zellen.',
-            $gestartet,
-            $verlangt,
-            $offen,
-            $offen === 1 ? 'bleibt' : 'bleiben',
-        );
-    }
-
-    /**
-     * Die am Planung-Go gesetzten Richtungs-Regler (Leitplanken) der Session — leer, wenn keine
-     * Session/keine Regler. Der Kaskaden-Fan-out erbt sie damit an die erzeugten Gerichte, sodass
-     * Niveau/Convenience/Bio/Diät/… nicht nur beim Depth-1-Go greifen, sondern durch die ganze Kaskade.
-     *
-     * **Leitplanken-Trennung (Roadmap Et.2a):** dieser Helfer speist ausschliesslich die REZEPT-
-     * Erzeugung ({@see materialisiereConceptGericht}, {@see materialisiereSpeiseplanZelle}). Nur die
-     * REZEPT-Leitplanken (Niveau/Convenience/Frische/Bio/Diät/Aroma/…) propagieren an Gerichte/
-     * Basisrezepte. Die MENÜ-Leitplanken (`menue_*`: Anzahl Gänge · Preis-Korridor je Person · Diät-
-     * Quoten · Portfolio-Balance) steuern die ZUSAMMENSTELLUNG des Menüs (Concept-Ebene, gelesen beim
-     * Concept-Dispatch) und werden hier bewusst herausgefiltert — für ein einzelnes Gericht/Basisrezept
-     * sind sie bedeutungslos und würden, in den Rezept-Prompt serialisiert, die Generierung verfälschen.
+     * Die Rezept-Leitplanken der Session (ohne `menue_*`). Liegt in {@see KaskadeKontext::sessionGenerationParams}.
      *
      * @return array<string,mixed>
      */
     public function sessionGenerationParams(Team $team, ?int $planningSessionId): array
     {
-        if ($planningSessionId === null) {
-            return [];
-        }
-        $sess = app(PlanningSessionService::class)->get($team, $planningSessionId);
-        $params = is_array($sess?->generation_params) ? $sess->generation_params : [];
-
-        // Menü-Leitplanken bleiben auf der Concept-Ebene — nicht in die Rezept-Generierung durchreichen.
-        return array_filter($params, fn ($k) => ! str_starts_with((string) $k, 'menue_'), ARRAY_FILTER_USE_KEY);
+        return $this->kontext()->sessionGenerationParams($team, $planningSessionId);
     }
 
-    /**
-     * Die MENÜ-Leitplanken (`menue_*`) der Session — das Gegenstück zu {@see sessionGenerationParams}
-     * (das genau diese herausfiltert). Sie steuern die ZUSAMMENSTELLUNG (Anzahl Gänge · Preis-Korridor je
-     * Person · Diät-Quoten · Portfolio-Balance) und gehören an die Concept-Erzeugung des Vollkaskade-Slot-
-     * Fan-outs ({@see dispatchSlotConcept}) — bis hier bekam der {@see GenerateConceptJob} dort mangels
-     * durchgereichter Achsen den Default `[]`, sodass die Menü-Leitplanken die Komposition NIE erreichten
-     * (der Cockpit-Concept-Pfad {@see dispatchConceptStep} reicht sie dagegen schon durch).
-     *
-     * @return array<string,mixed>
-     */
-    private function sessionMenueAchsen(Team $team, ?int $planningSessionId): array
-    {
-        if ($planningSessionId === null) {
-            return [];
-        }
-        $sess = app(PlanningSessionService::class)->get($team, $planningSessionId);
-        $params = is_array($sess?->generation_params) ? $sess->generation_params : [];
-
-        return array_filter($params, fn ($k) => str_starts_with((string) $k, 'menue_'), ARRAY_FILTER_USE_KEY);
-    }
-
-    /**
-     * Worker-Logik (aus {@see MaterializeSpeiseplanCellJob}): erdet EINE Speiseplan-Zelle zu einem VK-Gericht
-     * ({@see RecipeGeneratorService}, vkModus) und trägt es via {@see SpeiseplanService::addEintrag} in die
-     * Zelle (Datum/Mahlzeit/Linie) ein; Trend-Lineage + Rückmeldung an den Step.
-     */
+    /** Worker-Logik für eine Speiseplan-Zelle. Liegt in {@see KaskadeSpeiseplanVoll::materialisiereSpeiseplanZelle}. */
     public function materialisiereSpeiseplanZelle(Team $team, int $planId, string $entryDate, string $meal, int $lineId, string $brief, int $stepId, ?int $planningSessionId = null): void
     {
-        try {
-            // Fan-out erbt die Leitplanken der Session (Regler am Planung-Go); Steuer-Keys gewinnen.
-            $params = array_merge($this->sessionGenerationParams($team, $planningSessionId), ['auto_dependencies' => true, 'cascade_step_id' => $stepId]);
-            $workflow = app(RecipeDependencyWorkflowService::class);
-            $context = $workflow->prepare($team, $stepId, $brief, $params, true);
-            // Spec 53 / Paket C-Nachtrag: derselbe Fortschritts-Callback wie GenerateRecipeJob —
-            // generiere() meldet dieselben Stufen (Kontext & Wissen/KI schreibt/Zutaten/Kohärenz),
-            // hier bisher ungenutzt. Phase am Step statt am Cache (kein eigener Cache-Key hier).
-            $gen = app(RecipeGeneratorService::class)->generiere(
-                $team, $brief, $params, null, true, 'plan_go', $context,
-                fn (string $stufe) => $this->setzePhase($stepId, $stufe),
-            );
-            $recipe = $gen['recipe'] ?? null;
-            if ($recipe === null) {
-                throw new RuntimeException('Die KI hat kein Rezept geliefert. Bitte neu erzeugen.');
-            }
-            app(SpeiseplanService::class)->addEintrag($team, $planId, [
-                'entry_date' => $entryDate, 'mahlzeit' => $meal, 'line_id' => $lineId, 'sales_recipe_id' => (int) $recipe->id,
-            ]);
-            if ($planningSessionId !== null) {
-                $sess = app(PlanningSessionService::class)->get($team, $planningSessionId);
-                if ($sess !== null) {
-                    app(PlanningSessionService::class)->verknuepfeArtefakt($sess, 'recipe', (int) $recipe->id);
-                }
-            }
-            $workflow->afterGenerated($team, $stepId, (int) (\Illuminate\Support\Facades\Auth::id() ?? 0), $recipe, $gen['offene'] ?? [], $params);
-            $this->markStepDone($stepId, 'recipe', (int) $recipe->id);
-        } catch (\Throwable $e) {
-            $this->markStepFailed($stepId, $e->getMessage());
-        }
+        $this->speiseplan()->materialisiereSpeiseplanZelle($team, $planId, $entryDate, $meal, $lineId, $brief, $stepId, $planningSessionId);
     }
 
-    /**
-     * Standard-Speisekarte (Gerichte-Füllung): eine Rubrik mit N einzelnen VK-Gerichten füllen. Je Slot
-     * `target_count` (KI-Vorgabe aus dem Brief) Gericht-Steps + je Step ein {@see MaterializeSpeisekartePositionJob}
-     * (erdet ein VK-Gericht, hängt es als gericht_ref-Position an die Rubrik). Spiegelt den Speiseplan-Zell-
-     * Fan-out. Gedeckelt ({@see SPEISEKARTE_MAX_POSITIONEN}) gegen Runaway-Kosten; der Rest wird im
-     * Sammler `$deckel` gemerkt und nach der Slot-Schleife als EIN Vermerk in `deckel_hinweise`
-     * geschrieben (vorher: ein `params`-UPDATE je Rubrik, das niemand las — die Status-DTO filtert
-     * `params` gegen ALLOWED_GENERATION_PARAMS).
-     *
-     * @return int der nächste freie sort-Index
-     */
-    private function dispatchRubrikGerichte(Team $team, FoodAlchemistCascadeRun $run, $slot, int $rubrikId, int $idx, ?int $sessionId, array &$deckel = []): int
-    {
-        $anzahl = max(1, (int) ($slot->target_count ?? 1));
-        // Nur Rubriken zählen, die wirklich durch DIESEN Pfad laufen — die 'concepte'-Füllung
-        // hat ihren eigenen Zweig und darf die Positions-Rechnung nicht verfälschen.
-        $deckel['verlangt'] = (int) ($deckel['verlangt'] ?? 0) + $anzahl;
-        $brief = $this->slotBrief('speisekarte', (int) $run->source_owner_id, $slot);
-        $userId = (int) (\Illuminate\Support\Facades\Auth::id() ?? 0);
-        for ($i = 0; $i < $anzahl; $i++) {
-            if ($idx >= self::SPEISEKARTE_MAX_POSITIONEN) {
-                // Merken, WIE WEIT diese Rubrik kam — der Name ist die halbe Meldung.
-                $deckel['rubriken'][] = [
-                    'rubrik' => trim((string) ($slot->label ?: 'Rubrik')),
-                    'verlangt' => $anzahl,
-                    'erzeugt' => $i,
-                    'offen' => $anzahl - $i,
-                ];
-
-                break;
-            }
-            $step = FoodAlchemistCascadeRunStep::create([
-                'team_id' => $team->id,
-                'cascade_run_id' => $run->id,
-                'parent_step_id' => null,
-                'kind' => 'gericht',
-                'label' => Str::limit((string) ($slot->label ?: 'Gericht') . ' #' . ($i + 1), 120),
-                'status' => 'running',
-                'sort' => $idx,
-                'slot_id' => (int) $slot->id,
-            ]);
-            // Bis 40 Positionen je Karte, in einer Schleife — dieselbe Schlange wie die
-            // Speiseplan-Zellen: es ist dasselbe Artefakt (erzeugtes Gericht).
-            MaterializeSpeisekartePositionJob::dispatch($team->id, $userId, $rubrikId, $brief, (int) $step->id, $sessionId)
-                ->onQueue(Warteschlange::gerichte());
-            $idx++;
-        }
-
-        return $idx;
-    }
-
-    /**
-     * Worker (Standard-Speisekarte): erdet EIN VK-Gericht aus dem Rubrik-Brief und hängt es als
-     * gericht_ref-Position an die Rubrik ({@see SpeisekarteService::addPosition}). 1:1 zu
-     * {@see materialisiereSpeiseplanZelle}, nur der Attach-Endpunkt ändert sich (addPosition statt addEintrag).
-     */
+    /** Worker-Logik für eine Speisekarte-Position. Liegt in {@see KaskadeAusgabeVoll::materialisiereSpeisekartePosition}. */
     public function materialisiereSpeisekartePosition(Team $team, int $rubrikId, string $brief, int $stepId, ?int $planningSessionId = null): void
     {
-        try {
-            $params = array_merge($this->sessionGenerationParams($team, $planningSessionId), ['auto_dependencies' => true, 'cascade_step_id' => $stepId]);
-            $workflow = app(RecipeDependencyWorkflowService::class);
-            $context = $workflow->prepare($team, $stepId, $brief, $params, true);
-            // Spec 53 / Paket C-Nachtrag: derselbe Fortschritts-Callback wie GenerateRecipeJob —
-            // generiere() meldet dieselben Stufen (Kontext & Wissen/KI schreibt/Zutaten/Kohärenz),
-            // hier bisher ungenutzt. Phase am Step statt am Cache (kein eigener Cache-Key hier).
-            $gen = app(RecipeGeneratorService::class)->generiere(
-                $team, $brief, $params, null, true, 'plan_go', $context,
-                fn (string $stufe) => $this->setzePhase($stepId, $stufe),
-            );
-            $recipe = $gen['recipe'] ?? null;
-            if ($recipe === null) {
-                throw new RuntimeException('Die KI hat kein Rezept geliefert. Bitte neu erzeugen.');
-            }
-            app(SpeisekarteService::class)->addPosition($team, $rubrikId, [
-                'type' => 'gericht_ref', 'sales_recipe_id' => (int) $recipe->id,
-            ]);
-            if ($planningSessionId !== null) {
-                $sess = app(PlanningSessionService::class)->get($team, $planningSessionId);
-                if ($sess !== null) {
-                    app(PlanningSessionService::class)->verknuepfeArtefakt($sess, 'recipe', (int) $recipe->id);
-                }
-            }
-            $workflow->afterGenerated($team, $stepId, (int) (\Illuminate\Support\Facades\Auth::id() ?? 0), $recipe, $gen['offene'] ?? [], $params);
-            $this->markStepDone($stepId, 'recipe', (int) $recipe->id);
-        } catch (\Throwable $e) {
-            $this->markStepFailed($stepId, $e->getMessage());
-        }
+        $this->ausgabe()->materialisiereSpeisekartePosition($team, $rubrikId, $brief, $stepId, $planningSessionId);
     }
 
     // ── P1b: Erfinden — Fan-out des Concepts in erfundene Gerichte ─────────
 
-    /**
-     * Fächert ein frisch erzeugtes Konzept in erfundene Gerichte auf (Erfinden-Modus). Je LEEREM Slot
-     * (kein Gericht, kein Paket) lässt die KI eine Gericht-Idee erfinden ({@see IdeenService::kiDivergenzConcept},
-     * EIN Call für alle Slots), ordnet Ideen den Slots der Reihe nach zu, legt je Idee einen Kind-Step
-     * (kind=gericht, parent=Concept-Step) im Status `geplant` an.
-     *
-     * VORSCHLAG-GATE (2026-09-01): hier wird NICHTS mehr dispatcht. {@see MaterializeConceptIdeaJob}
-     * (erdet + verdrahtet) startet erst der Mensch über {@see erzeugeGeplantenStep}. Dieser Satz stand
-     * bis 2026-09-03 im Gegenteil hier und hat eine Fehldiagnose erzeugt („die Paket-Slot-Erkennung ist
-     * verloren gegangen") — ein Docblock, der dem Code 60 Zeilen darunter widerspricht, ist Teil des Bugs.
-     *
-     * ZWEI Grenzen wirken hier hintereinander, und die zweite ist meist die WIRKSAME:
-     * {@see CONCEPT_MAX_SLOTS} (30) bestimmt, nach wie vielen Positionen überhaupt gefragt wird,
-     * und {@see IdeenService::IDEEN_MAX} (12), wie viele Skizzen eine Antwort liefert. Bei 25
-     * leeren Positionen greift also nicht der 30er, sondern die 12er-Klemme — eine Meldung über
-     * den 30er wäre irreführend. Beide werden darum als EIN Befund vermerkt
-     * ({@see vermerkeConceptLuecke}), dessen Satz sich in jedem Fall aufrechnet.
-     *
-     * Graceful: ohne LLM (Sandbox/Kill-Switch) wirft die Divergenz → 0 Ideen, 0 Kind-Steps; der Run geht
-     * mit dem Konzept allein auf review. Wirft NIE (der Concept-Job fängt zusätzlich ab).
-     */
+    /** P1b Fan-out des Concepts in erfundene Gerichte. Liegt in {@see KaskadeErfinden::fanoutConceptInvention}. */
     public function fanoutConceptInvention(Team $team, int $conceptStepId, int $conceptId, string $mode, ?int $planningSessionId = null, array $seen = []): void
     {
-        $conceptStep = FoodAlchemistCascadeRunStep::find($conceptStepId);
-        if ($conceptStep === null) {
-            return;
-        }
-        if (in_array($conceptId, $seen, true)) {
-            return;   // A1: Zyklus-Schutz für die Paket-Rekursion (bei generierten Pakets nie erreicht)
-        }
-        $seen[] = $conceptId;
-        $runId = (int) $conceptStep->cascade_run_id;
-
-        // Leere Gericht-Slots (Reuse hat noch nicht gefüllt) — OHNE die eingebetteten Paket-Slots
-        // (type=paket, embedded_concept_id): ein Paket-Slot ist kein Gericht zum Erfinden, sondern ein
-        // Bündel (Station), dessen INNERE Gerichte weiter unten rekursiv gefächert werden. (Früher
-        // Latenz-Bug: embed-Paket-Slots galten fälschlich als leer.)
-        // Gericht-Vorgaben (13.11.2026): Positionen MIT Vorgabe bekommen ihre Skizze 1:1, erfunden wird nur für den Rest.
-        $leere = app(ConceptVorgabenService::class)->planeVorgaben($team, $conceptStep, $conceptId, FoodAlchemistConceptSlot::where('concept_id', $conceptId)
-            ->whereNull('sales_recipe_id')
-            ->whereNull('package_id')
-            ->whereNull('embedded_concept_id')
-            ->whereNotIn('type', ['text', 'spacer', 'header', 'header_preis'])
-            ->orderBy('position')->orderBy('id')
-            ->get());
-
-        if ($leere->isNotEmpty()) {
-            // Deckel gegen Runaway-/Kosten-Risiko bei großem Menü-Brief (analog SPEISEPLAN_MAX_WOCHEN):
-            // wir fragen die KI gar nicht erst nach mehr als N Ideen. Der Vermerk geht unten in
-            // `deckel_hinweise` — vorher stand er in `params.gedeckelt_slots_offen`, wo ihn niemand
-            // las (die Status-DTO filtert `params` gegen ALLOWED_GENERATION_PARAMS).
-            // `$slotsLeer` VOR dem Deckel merken — das ist die Zahl, die der Mensch verlangt hat.
-            $slotsLeer = $leere->count();
-            if ($slotsLeer > self::CONCEPT_MAX_SLOTS) {
-                $leere = $leere->take(self::CONCEPT_MAX_SLOTS);
-            }
-
-            $ideen = [];
-            $div = null;   // muss VOR dem try stehen — im Fehlerfall wäre es sonst undefiniert
-            // Anlass (Lauf 72, 2026-09-17): ein gescheiterter kiDivergenzConcept-Call verschwand
-            // hier bisher spurlos (nackter catch, kein Log) — der Run meldete "die KI hat keine
-            // geliefert", obwohl sie nie gefragt wurde (z. B. KnowledgeBudgetExceeded). $ideenFehler
-            // trägt den ECHTEN Grund an vermerkeConceptLuecke weiter, geloggt wird IMMER.
-            $ideenFehler = null;
-            try {
-                // Wissen+Trend fließen in die Divergenz (voller Stack + generischer Trend + Ursprungs-Trend der Planung).
-                $div = app(IdeenService::class)->kiDivergenzConcept($team, $conceptId, $leere->count(), null, $planningSessionId);
-                $ideen = is_array($div['angelegt'] ?? null) ? $div['angelegt'] : [];
-            } catch (\Platform\FoodAlchemist\Services\Ai\KnowledgeBudgetExceeded $e) {
-                $ideen = [];
-                $ideenFehler = 'Wissensbudget überschritten (' . $e->getMessage() . ')';
-                \Illuminate\Support\Facades\Log::warning('[fanoutConceptInvention] kiDivergenzConcept: Wissensbudget überschritten', [
-                    'concept_id' => $conceptId, 'error' => $e->getMessage(),
-                ]);
-            } catch (\Throwable $e) {
-                // KI nicht verfügbar/Fehler → keine Erfindung für die direkten Slots (graceful); Pakete
-                // werden dennoch versucht. Graceful heißt aber nicht stumm — geloggt wird trotzdem.
-                $ideen = [];
-                $ideenFehler = 'Ideen-Aufruf fehlgeschlagen (' . get_class($e) . ': ' . $e->getMessage() . ')';
-                \Illuminate\Support\Facades\Log::warning('[fanoutConceptInvention] kiDivergenzConcept fehlgeschlagen', [
-                    'concept_id' => $conceptId, 'exception' => get_class($e), 'error' => $e->getMessage(),
-                ]);
-            }
-
-            // EIN Befund für diesen Konzept-Durchgang, statt getrennter Vermerke für den
-            // Slot-Deckel und die Ideen-Klemme. Grund: die beiden greifen nacheinander an
-            // derselben Zahl, und zwei Meldungen über dieselbe Lücke widersprechen sich
-            // rechnerisch. Der Schlüssel trägt die Konzept-ID, weil `vermerkeDeckel` je Schlüssel
-            // ERSETZT — die Paket-Rekursion unten würde den äußeren Eintrag sonst löschen.
-            $this->vermerkeConceptLuecke(
-                $runId,
-                $conceptId,
-                $slotsLeer,
-                $leere->count(),          // tatsächlich ANGEFRAGT (nach dem Slot-Deckel)
-                count($ideen),
-                (int) ($div['grenze'] ?? IdeenService::IDEEN_MAX),
-                $seen,
-                $ideenFehler,
-            );
-
-            foreach (array_values($ideen) as $idx => $idee) {
-                $slot = $leere[$idx] ?? null;
-                if ($slot === null) {
-                    break;   // mehr Ideen als leere Slots — Rest ignorieren
-                }
-                $idee->update([
-                    // Vorschlag-Gate: noch KEIN Materialisierungs-Job. Erst der Mensch startet ihn
-                    // über den geplanten Gericht-Step; bis dahin existiert nur diese Text-Skizze.
-                    'generation_status' => null,
-                    'source_meta' => array_merge($idee->source_meta ?? [], ['target_concept_slot_id' => (int) $slot->id]),
-                ]);
-                $step = FoodAlchemistCascadeRunStep::create([
-                    'team_id' => $team->id,
-                    'cascade_run_id' => $runId,
-                    'parent_step_id' => $conceptStepId,
-                    'kind' => 'gericht',
-                    'label' => Str::limit((string) $idee->title, 120),
-                    'status' => 'geplant',
-                    'sort' => $idx + 1,
-                    'context_snapshot' => [
-                        'dish_idea_id' => (int) $idee->id,
-                        'beschreibung' => (string) ($idee->description ?? ''),
-                        'komponenten' => array_values((array) (($idee->source_meta ?? [])['komponenten'] ?? [])),
-                    ],
-                ]);
-            }
-        }
-
-        // A1: eingebettete Pakete (Buffet-Stationen) rekursiv befüllen — je Paket seine INNEREN Gerichte
-        // erfinden. Der Paket-Auto-Preis (Σ) zieht nach, sobald die inneren Slots gefüllt sind — was
-        // seit dem Vorschlag-Gate NICHT automatisch passiert, sondern je innerem Slot erst nach dem
-        // menschlichen Klick (erzeugeGeplantenStep → MaterializeConceptIdeaJob → fillSlot →
-        // refreshCache auf dem Paket-Concept). 1 Ebene tief
-        // (generierte Pakete verschachteln nicht), $seen schützt gegen zyklische Bestands-Embeds.
-        $paketIds = FoodAlchemistConceptSlot::where('concept_id', $conceptId)
-            ->whereNotNull('embedded_concept_id')
-            ->pluck('embedded_concept_id')->unique()->values();
-        foreach ($paketIds as $paketId) {
-            $this->fanoutConceptInvention($team, $conceptStepId, (int) $paketId, $mode, $planningSessionId, $seen);
-        }
+        $this->erfinden()->fanoutConceptInvention($team, $conceptStepId, $conceptId, $mode, $planningSessionId, $seen);
     }
 
-    /**
-     * Worker-Logik (aus {@see MaterializeConceptIdeaJob}): erdet EINE erfundene Concept-Idee zu einem
-     * echten VK-Gericht ({@see RecipeGeneratorService::generiere}, vkModus) und verdrahtet es in den
-     * vorgemerkten leeren Slot ({@see ConceptService::fillSlot}); Lineage an die Idee, Rückmeldung an
-     * den Kind-Step. Fehler (inkl. KI-Ausfall) → Step failed, Idee markiert — kein „halbes Wrack".
-     */
+    /** Worker-Logik für ein erfundenes Concept-Gericht. Liegt in {@see KaskadeErfinden::materialisiereConceptGericht}. */
     public function materialisiereConceptGericht(Team $team, int $ideaId, int $stepId, ?int $planningSessionId = null): void
     {
-        $idee = FoodAlchemistDishIdea::where('team_id', $team->id)->find($ideaId);
-        if ($idee === null) {
-            $this->markStepFailed($stepId, 'Die Gericht-Skizze gibt es nicht mehr.');
-
-            return;
-        }
-        $slotId = (int) ($idee->source_meta['target_concept_slot_id'] ?? 0);
-        $beschreibung = trim(implode(' — ', array_filter([(string) $idee->title, (string) $idee->description]))) ?: (string) $idee->title;
-        // Der geprüfte Bauplan ersetzt eine erneute blinde Zerlegung: Der Generator erhält Namen,
-        // Funktion und technisches Ziel der Komponenten und kann damit zuerst Bestands-Basisrezepte matchen.
-        $komponenten = array_values((array) (($idee->source_meta ?? [])['komponenten'] ?? []));
-        if ($komponenten !== []) {
-            $zeilen = collect($komponenten)->filter(fn ($k) => is_array($k))->map(function (array $k): string {
-                return trim(implode(' — ', array_filter([
-                    (string) ($k['name'] ?? ''),
-                    isset($k['funktion']) ? 'Funktion: ' . $k['funktion'] : null,
-                    isset($k['herstellung']) ? 'Ziel: ' . $k['herstellung'] : null,
-                ])));
-            })->filter()->values()->all();
-            if ($zeilen !== []) {
-                $beschreibung .= "\nKomponentenplan:\n- " . implode("\n- ", $zeilen);
-            }
-        }
-
-        // Gestuft (Gate pro Ebene): das Gericht schiebt seine Basisrezepte auf bis zu seiner Freigabe.
-        $run = FoodAlchemistCascadeRunStep::find($stepId)?->run;
-        $staged = (bool) ($run?->staged ?? false);
-        try {
-            // Fan-out erbt die Leitplanken der Session (Regler am Planung-Go); Steuer-Keys gewinnen.
-            $params = array_merge($this->sessionGenerationParams($team, $planningSessionId), [
-                'auto_dependencies' => ! $staged,
-                '_defer_children' => $staged,
-                'cascade_step_id' => $stepId,
-            ]);
-            // Die Suchbegriffe des Laufs (Chips der Session, #227) liegen nur in den Lauf-Params — vorher erreichten
-            // sie den Gericht-Bau nie (demo Lauf 86, Step 556: 18 Suchbegriffe gesetzt, Snapshot `suchbegriffe = []`).
-            $laufSuchbegriffe = RecipeGenerationContextService::suchbegriffeAus(is_array($run?->params) ? $run->params : []);
-            if ($laufSuchbegriffe !== [] && RecipeGenerationContextService::suchbegriffeAus($params) === []) {
-                $params['suchbegriffe'] = $laufSuchbegriffe;
-            }
-            // Et.6 (Roadmap Z.205): Zielpreis-Korridor Concept → Gericht — je erfundenem Gericht einen
-            // Ziel-VK aus dem Concept-Frame ableiten (aus dem Fan-out des Concepts, nicht aus dem Rezept-Regler).
-            // Ein bereits gesetzter ziel_vk_eur (explizite Rezept-Leitplanke) gewinnt und wird nicht überschrieben.
-            if (! isset($params['ziel_vk_eur'])) {
-                $zielVk = $this->conceptGerichtZielVk($team, $slotId);
-                if ($zielVk !== null) {
-                    $params['ziel_vk_eur'] = $zielVk;
-                }
-            }
-            $workflow = app(RecipeDependencyWorkflowService::class);
-            $context = $workflow->prepare($team, $stepId, $beschreibung, $params, true);
-            // Spec 53 / Paket C-Nachtrag: derselbe Fortschritts-Callback wie materialisiereSpeisekarte-
-            // Position/-SpeiseplanZelle — dies ist der häufigste Gericht-Pfad live (jedes erfundene
-            // Gericht aus Concept-/Foodbook-Fan-out, MaterializeConceptIdeaJob), bisher ohne Phase.
-            $gen = app(GerichtHuelleService::class)->generiere(   // baut in die Gericht-Hülle, wenn der Schritt eine hat, sonst neu
-                $team, $stepId, $beschreibung, $params, $context,
-                fn (string $stufe) => $this->setzePhase($stepId, $stufe),
-            );
-            $recipe = $gen['recipe'] ?? null;
-            if ($recipe === null) {
-                throw new RuntimeException('Die KI hat kein Rezept geliefert. Bitte neu erzeugen.');
-            }
-            app(ConceptVorgabenService::class)->setzeGericht($team, $slotId, (int) $recipe->id, $idee);   // füllt die Position; Wortlaut einer Vorgabe bleibt Kundenwording
-            $idee->update([
-                'generation_status' => 'erstellt',
-                'status' => 'freigegeben',
-                'generated_recipe_id' => (int) $recipe->id,
-                'materialized_at' => now(),
-                'materialized_ref' => ['concept_slot_id' => $slotId, 'recipe_id' => (int) $recipe->id],
-                'source_meta' => array_merge($idee->source_meta ?? [], ['erdung' => 'ki_generiert', 'original_titel' => (string) $idee->title]),
-            ]);
-            // Lineage aufs erfundene Rezept (created_via=plan_go); die Trendradar-Herkunft steht an der Session.
-            if ($planningSessionId !== null) {
-                $sess = app(PlanningSessionService::class)->get($team, $planningSessionId);
-                if ($sess !== null) {
-                    app(PlanningSessionService::class)->verknuepfeArtefakt($sess, 'recipe', (int) $recipe->id);
-                }
-            }
-            $workflow->afterGenerated($team, $stepId, (int) (\Illuminate\Support\Facades\Auth::id() ?? 0), $recipe, $gen['offene'] ?? [], $params);
-            $this->markStepDone($stepId, 'recipe', (int) $recipe->id);
-        } catch (\Throwable $e) {
-            $idee->update(['generation_status' => 'fehlgeschlagen', 'source_meta' => array_merge($idee->source_meta ?? [], ['generation_fehler' => mb_substr($e->getMessage(), 0, 500)])]);
-            $this->markStepFailed($stepId, $e->getMessage());
-        }
-    }
-
-    /**
-     * Et.6 (Roadmap Z.205): **Zielpreis-Korridor Concept → Gericht (aus Frame).** Leitet für ein
-     * erfundenes Concept-Gericht einen Ziel-VK (netto je Portion) aus dem Concept-Frame ab, damit
-     * das Wirtschaftlichkeits-Glied der Anreicherung ({@see RecipeOneShotService::wirtschaftlichkeitsGlied}
-     * via {@see EnrichRecipeJob}) das Gericht gegen ein echtes Ziel misst statt gegen null.
-     *
-     * Quelle in Reihenfolge (keine Erfindung, „aus Frame"):
-     *   1. **Preis-Anker des passenden Frame-Slots** (per Gericht, via Slot-Rolle = Frame-Slot-Label
-     *      gematcht) — die verlustfreie per-Gericht-Angabe, die der Frame direkt trägt;
-     *   2. sonst der **Frame-Kopf-Zielpreis je Person** (`target_price_pp`) gleichmäßig auf die Positionen
-     *      verteilt (`target_price_pp / Σ target_count`). Ein Menü-Zielpreis je Person wird nur durch die
-     *      Zahl der Gänge zu einem per-Gericht-Wert — die Gleichverteilung ist eine bewusste, dokumentierte
-     *      Allokations-Annahme (kein erfundener Datenwert), greift nur, wenn kein Slot-Anker vorliegt.
-     * Kein Ziel-Slot / kein Frame / kein Preis / Wert ≤ 0 → null (kein `ziel_vk_eur`, Bestandsverhalten).
-     */
-    private function conceptGerichtZielVk(Team $team, int $slotId): ?float
-    {
-        if ($slotId <= 0) {
-            return null;
-        }
-        $slot = FoodAlchemistConceptSlot::find($slotId);
-        if ($slot === null) {
-            return null;
-        }
-        $frame = app(PlanningFrameService::class)->find('concept', (int) $slot->concept_id);
-        if ($frame === null) {
-            return null;
-        }
-        $frame->loadMissing('slots');
-
-        // 1) Preis-Anker des Frame-Slots mit gleicher Rolle (Label) — per Gericht, verlustfrei.
-        $rolle = trim((string) ($slot->role ?? ''));
-        if ($rolle !== '') {
-            $treffer = $frame->slots->first(
-                fn ($fs) => trim((string) ($fs->label ?? '')) === $rolle && $fs->price_anchor !== null
-            );
-            if ($treffer !== null) {
-                $anker = round((float) $treffer->price_anchor, 2);
-                if ($anker > 0) {
-                    return $anker;
-                }
-            }
-        }
-
-        // 2) Kopf-Zielpreis je Person, gleichmäßig auf die Positionen (Σ target_count) verteilt.
-        if ($frame->target_price_pp !== null) {
-            $positionen = (int) $frame->slots->sum(fn ($fs) => max(1, (int) ($fs->target_count ?? 1)));
-            if ($positionen > 0) {
-                $jeGericht = round((float) $frame->target_price_pp / $positionen, 2);
-                if ($jeGericht > 0) {
-                    return $jeGericht;
-                }
-            }
-        }
-
-        return null;
+        $this->erfinden()->materialisiereConceptGericht($team, $ideaId, $stepId, $planningSessionId);
     }
 
     // ── Rückkanal aus dem Job (läuft im Queue-Worker) ──────────────────────
@@ -1747,7 +368,7 @@ class PlanningCascadeService
      */
     public function brecheLaufAb(Team $team, int $runId): bool
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         if ($run === null || ! $run->isOwnedBy($team) || $run->status !== 'running') {
             return false;
         }
@@ -1811,7 +432,7 @@ class PlanningCascadeService
         // (Timeout/OOM in FanoutConceptJob) für immer am Step stehen.
         $step->update(['deferred' => $deferred, 'phase' => null, 'phase_at' => null]);
         $this->recomputeRunStatus((int) $step->cascade_run_id);
-        $this->scoreConceptCohesionIfComplete($step);
+        $this->erfinden()->scoreConceptCohesionIfComplete($step);
     }
 
     /**
@@ -1847,7 +468,7 @@ class PlanningCascadeService
      */
     public function haengeKonzeptNach(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         $deferred = is_array($step->deferred) ? $step->deferred : [];
         $pending = is_array($deferred['pending_attach'] ?? null) ? $deferred['pending_attach'] : null;
         if ($pending === null) {
@@ -1867,7 +488,7 @@ class PlanningCascadeService
             app(AngebotService::class)->referenziereConcept($team, $containerId, $conceptId);   // E2: containerId = Angebots-ID
         } elseif ($ownerType === 'format') {
             app(\Platform\FoodAlchemist\Services\FormatService::class)->slotConceptEinfuegen($team, $containerId, $conceptId);   // containerId = format_id
-            $this->ordneFormatNachRahmen($team, (int) $step->cascade_run_id);   // Spec 80 F2
+            $this->ausgabe()->ordneFormatNachRahmen($team, (int) $step->cascade_run_id);   // Spec 80 F2
         } else {
             return;
         }
@@ -1885,7 +506,7 @@ class PlanningCascadeService
      */
     public function meldeSourcingLuecken(Team $team, int $stepId): array
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null) {
             return [];
         }
@@ -1926,7 +547,7 @@ class PlanningCascadeService
      */
     public function favoritKandidatenFuerStep(Team $team, int $stepId): array
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null) {
             return [];
         }
@@ -1963,7 +584,7 @@ class PlanningCascadeService
      */
     public function reapeVerwaisteSteps(Team $team, int $runId): int
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         // D1-Slice 3: sichtbarer, nicht besessener Lauf → sauberer No-op. Hier ist das KEINE Kosmetik,
         // sondern ein echter Cross-Tenant-Write-Riegel: markStepFailed(stepId) trägt (anders als
         // regeneriereStep) KEINEN ownedStep-Guard → ohne diese Zeile könnte ein Kind-Team die Steps
@@ -2007,7 +628,7 @@ class PlanningCascadeService
      */
     public function setzeLaufFort(Team $team, int $runId): int
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         // D1-Slice 3: sichtbarer, nicht besessener Lauf → sauberer No-op statt lautem Wurf im ersten
         // regeneriereStep (dessen ownedStep fängt es zwar, aber laut). Siehe reapeVerwaisteSteps/gibStufeFrei.
         if ($run === null || ! $run->isOwnedBy($team)) {
@@ -2023,98 +644,6 @@ class PlanningCascadeService
     }
 
     // ── Auto-Trigger: Menü-Folge-Kohärenz-Gate nach der Fan-out-Erfindung ──
-
-    /**
-     * Feuert das Menü-Folge-Kohärenz-Gate automatisch, sobald die per Fan-out ERFUNDENE Menüfolge
-     * eines Concept-Steps vollständig geerdet ist — statt auf den manuellen „Kohäsion prüfen"-Klick
-     * im Conceptor zu warten. Die erfundene Folge wird erst NACH dem Grounding scorebar (Skizzen /
-     * laufende Steps tragen noch keine Anker), deshalb hier am Fan-out-Abschluss und nicht schon bei
-     * der Erfindung ({@see fanoutConceptInvention}).
-     *
-     * Der Abschluss-Haken sitzt am Job-Rückkanal ({@see markStepDone}/{@see markStepFailed}): jeder
-     * {@see \Platform\FoodAlchemist\Jobs\MaterializeConceptIdeaJob} meldet EINEN Gericht-Step; der
-     * Handler bestimmt den zugehörigen Concept-Step (der meldende Step selbst = eager-Pfad, wo die
-     * Kinder inline liefen; oder dessen Concept-Eltern = async-Pfad, wo der LETZTE Kind-Job die
-     * Erfindung abschließt) und scored erst, wenn KEIN erfundenes Gericht mehr offen ist.
-     *
-     * Fail-soft: eine nicht-scorebare Folge (Provider-los, ungemappt, zu wenig Gerichte) persistiert
-     * `null` und darf den Rückkanal nie kippen.
-     */
-    private function scoreConceptCohesionIfComplete(?FoodAlchemistCascadeRunStep $step): void
-    {
-        if ($step === null) {
-            return;
-        }
-        // Den zugehörigen Concept-Step bestimmen: DIESER Step ist es selbst (eager: der Concept meldet
-        // sich fertig, seine erfundenen Gerichte liefen schon inline), oder ein erfundener Gericht-Step
-        // meldet sich (async: der letzte Kind-Job schließt die Fan-out-Erfindung ab).
-        if ($step->kind === 'concept') {
-            $conceptStep = $step;
-        } elseif ($step->kind === 'gericht' && $step->parent_step_id !== null) {
-            $conceptStep = FoodAlchemistCascadeRunStep::find($step->parent_step_id);
-        } else {
-            return;   // Rezept/GP-Steps oder freie Gericht-Läufe (kein Concept-Eltern) → kein Menü-Gate
-        }
-        if ($conceptStep === null || $conceptStep->kind !== 'concept' || $conceptStep->ref_id === null) {
-            return;
-        }
-
-        // Scorebar erst, wenn ALLE erfundenen Gericht-Geschwister durch sind (kein Job/Platzhalter mehr
-        // offen) UND überhaupt ein erfundenes Gericht existiert (ohne Fan-out gibt es keine Folge).
-        $gerichte = FoodAlchemistCascadeRunStep::where('parent_step_id', $conceptStep->id)
-            ->where('kind', 'gericht')->get(['status']);
-        if ($gerichte->isEmpty()
-            || $gerichte->whereIn('status', ['geplant', 'queued', 'running'])->isNotEmpty()) {
-            return;
-        }
-
-        $team = Team::find($conceptStep->team_id);
-        if ($team === null) {
-            return;
-        }
-        // Spec 50 C-2: alle erfundenen Gerichte stehen → Wording-Pass (Header-Titel, Positions-Wording,
-        // Intro, consumer_name/claim), nur Lücken, fail-soft — VOR dem Kohäsions-Score, damit das
-        // Konzept beim Review komplett ist.
-        app(ConceptService::class)->wordingPassFailSoft($team, (int) $conceptStep->ref_id);
-        try {
-            $this->persistConceptCohesion((int) $conceptStep->cascade_run_id, $team, (int) $conceptStep->ref_id);
-        } catch (\Throwable) {
-            // fail-soft: eine nicht-scorebare Folge darf den Job-Rückkanal nie kippen
-        }
-    }
-
-    /**
-     * Berechnet die Aroma-Kohäsion der Gerichte eines Concepts ({@see PairingService::menuCohesion} →
-     * {@see PairingService::menuKohaesionWarnung}) und persistiert die abgestufte Warnung am Run
-     * (`cohesion_warning`). Gleiche Auffaltung der Gerichte wie {@see \Platform\FoodAlchemist\Livewire\Concepter\Editor::kohaesionPruefen}
-     * (Slot-Gericht + Paket-Gerichte, dubletten-frei). `null`, wenn nichts zu beurteilen ist.
-     */
-    private function persistConceptCohesion(int $runId, Team $team, int $conceptId): void
-    {
-        $concept = app(ConceptService::class)->detail($team, $conceptId);
-        if ($concept === null) {
-            return;
-        }
-        $dishes = [];
-        foreach ($concept->slots as $slot) {
-            if ($slot->dish) {
-                $dishes[$slot->dish->id] = $slot->dish;
-            } elseif ($slot->package) {
-                foreach ($slot->package->dishes as $pg) {
-                    if ($pg->dish) {
-                        $dishes[$pg->dish->id] = $pg->dish;
-                    }
-                }
-            }
-        }
-        $pairing = app(PairingService::class);
-        $kohaesion = count($dishes) >= 2
-            ? $pairing->menuCohesion(array_values($dishes))
-            : ['zu_wenig' => true];
-        $warnung = $pairing->menuKohaesionWarnung($kohaesion);
-
-        FoodAlchemistCascadeRun::find($runId)?->update(['cohesion_warning' => $warnung]);
-    }
 
     /** Lauf-Status aus den Steps ableiten (atomar unter Lauf-Sperre), {@see KaskadenSchritt::recomputeRunStatus}. */
     public function recomputeRunStatus(int $runId): void
@@ -2133,7 +662,7 @@ class PlanningCascadeService
      */
     public function nachSchrittAbschluss(KaskadenSchrittAbgeschlossen $e): void
     {
-        $this->scoreConceptCohesionIfComplete($e->step);
+        $this->erfinden()->scoreConceptCohesionIfComplete($e->step);
     }
 
     // ── Freigabe / Verwerfen (Gate 2 — inline im Editor) ───────────────────
@@ -2153,7 +682,7 @@ class PlanningCascadeService
      */
     public function gibStepFrei(Team $team, int $stepId): string
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->status === 'geplant') {
             if ($step->kind === 'concept') {
                 $this->erzeugeGeplantesConcept($team, $stepId);
@@ -2202,7 +731,7 @@ class PlanningCascadeService
      */
     public function gibStufeFrei(Team $team, int $runId, string $kind): void
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         // D1-Slice 3: ein SICHTBARER, aber nicht besessener Lauf (childA sieht den vererbten
         // Root-Lauf) ist hier ein sauberer No-op — nicht ein lauter Wurf im ersten `gibStepFrei`.
         // Der per-Step `ownedStep`-Guard fängt es zwar korrekt (kein Write), aber laut statt leise;
@@ -2347,7 +876,7 @@ class PlanningCascadeService
      */
     public function reBilder(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null || ! in_array($step->kind, ['rezept', 'gericht'], true)) {
             return;
         }
@@ -2370,7 +899,7 @@ class PlanningCascadeService
      */
     public function uebernimmManuellesFotoFuerStep(Team $team, int $stepId, \Illuminate\Http\UploadedFile $datei, bool $istErgebnis = false, ?string $caption = null): ?FoodAlchemistRecipeStepPhoto
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null || ! in_array($step->kind, ['rezept', 'gericht'], true)) {
             return null;
         }
@@ -2393,7 +922,7 @@ class PlanningCascadeService
      */
     public function uebernimmVorhandenesFotoFuerStep(Team $team, int $stepId, int $quelleFotoId, bool $istErgebnis = false, ?string $caption = null): ?FoodAlchemistRecipeStepPhoto
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null || ! in_array($step->kind, ['rezept', 'gericht'], true)) {
             return null;
         }
@@ -2409,7 +938,7 @@ class PlanningCascadeService
      */
     public function reAnreichern(Team $team, int $stepId, ?bool $completeCoverageErzwingen = null): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null || ! in_array($step->kind, ['rezept', 'gericht'], true)) {
             return;
         }
@@ -2495,7 +1024,7 @@ class PlanningCascadeService
      */
     public function regeneriereStep(Team $team, int $stepId, ?string $kommentar = null): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if (! in_array($step->kind, ['rezept', 'gericht', 'concept'], true)) {
             return;
         }
@@ -2592,7 +1121,7 @@ class PlanningCascadeService
             // Kapitel (stiller Datenverlust) — der Kapitel-Bezug steckt am Step (chapter_id).
             $attachOwnerType = ($step->chapter_id !== null && $run?->source_owner_type === 'foodbook') ? 'foodbook' : null;
             $attachContainerId = $attachOwnerType !== null ? (int) $step->chapter_id : null;
-            $this->dispatchConceptStep($team, $step, $brief, $sessionId, (string) ($run?->creative_mode ?? 'voll_kreativ'), $params, $attachOwnerType, $attachContainerId);
+            $this->kontext()->dispatchConceptStep($team, $step, $brief, $sessionId, (string) ($run?->creative_mode ?? 'voll_kreativ'), $params, $attachOwnerType, $attachContainerId);
         } elseif ($step->kind === 'rezept' && $step->parent_step_id !== null) {
             // Kind-Basisrezept: wie beim ersten Start (eigene Vorgaben, eigener Plan) — nicht mit den Lauf-Params
             // der Wurzel, sonst kam z. B. das Aroma des Gerichts zurück. Ein Nutzer-Kommentar reist im Brief mit.
@@ -2607,7 +1136,7 @@ class PlanningCascadeService
             if ($step->kind === 'rezept' && ! empty(($step->context_snapshot ?? [])['plan']) && is_array($planKomponenten)) {
                 $params['plan_komponenten'] = $planKomponenten;
             }
-            $this->dispatchRezeptStep($team, $step, $brief, $params, $step->kind === 'gericht', false, $sessionId, $staged);
+            $this->kontext()->dispatchRezeptStep($team, $step, $brief, $params, $step->kind === 'gericht', false, $sessionId, $staged);
         }
         $this->recomputeRunStatus((int) $step->cascade_run_id);
     }
@@ -2620,7 +1149,7 @@ class PlanningCascadeService
      */
     public function aenderePlan(Team $team, int $stepId, string $aktion, array $daten = []): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         $snap = is_array($step->context_snapshot) ? $step->context_snapshot : [];
         if ($step->status !== 'geplant' || empty($snap['plan'])) {
             throw new RuntimeException('Der Plan kann nur vor dem Bau geändert werden.');
@@ -2687,7 +1216,7 @@ class PlanningCascadeService
         }
         $step->update(['status' => 'running', 'error' => null]);
         $run->update(['status' => 'running']);
-        $this->dispatchRezeptStep($team, $step, (string) $run->brief, $params, false, false,
+        $this->kontext()->dispatchRezeptStep($team, $step, (string) $run->brief, $params, false, false,
             $run->planning_session_id !== null ? (int) $run->planning_session_id : null, (bool) $run->staged);
         $this->recomputeRunStatus((int) $run->id);
     }
@@ -2698,7 +1227,7 @@ class PlanningCascadeService
      */
     public function verwirfStep(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if (! in_array($step->status, ['done', 'failed'], true)) {
             return;
         }
@@ -2744,7 +1273,7 @@ class PlanningCascadeService
      */
     public function erzeugeGeplantenStep(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         // Spec 80 B1: bestätigter Komponenten-Plan eines Basisrezepts → bauen.
         if ($step->kind === 'rezept' && $step->parent_step_id === null && $step->status === 'geplant'
             && ! empty(($step->context_snapshot ?? [])['plan'])) {
@@ -2782,7 +1311,7 @@ class PlanningCascadeService
     /** Überarbeitet einen geplanten Gericht-Bauplan, ohne ihn zu materialisieren. */
     public function ueberarbeiteGerichtVorschlag(Team $team, int $stepId, string $feedback): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         $ideeId = (int) (($step->context_snapshot ?? [])['dish_idea_id'] ?? 0);
         $feedback = trim($feedback);
         if ($step->kind !== 'gericht' || $step->status !== 'geplant' || $ideeId <= 0 || $feedback === '') {
@@ -2802,7 +1331,7 @@ class PlanningCascadeService
      */
     public function erzeugeGeplantesConcept(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->kind !== 'concept' || $step->status !== 'geplant') {
             return;
         }
@@ -2820,7 +1349,7 @@ class PlanningCascadeService
             return;
         }
         $containerId = $ownerType === 'foodbook' ? (int) $step->chapter_id : (int) $run->source_owner_id;
-        $this->dispatcheConceptStep(
+        $this->ausgabe()->dispatcheConceptStep(
             $team, $run, $step, $slot, $ownerType, $containerId,
             (string) $run->creative_mode,
             $run->planning_session_id !== null ? (int) $run->planning_session_id : null
@@ -2845,7 +1374,7 @@ class PlanningCascadeService
      */
     public function synchronisiereKapitelSteps(Team $team, int $runId): array
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         if ($run === null || ! $run->isOwnedBy($team) || (string) $run->source_owner_type !== 'foodbook' || ! $run->staged) {
             return ['ok' => false, 'grund' => 'Nur gestufte, team-eigene Foodbook-Läufe.'];
         }
@@ -2884,7 +1413,7 @@ class PlanningCascadeService
             $titel = (string) ($kapitel->firstWhere('id', $chapterId)?->title ?: $slot->label);
             $st = $stepBySlot->get((int) $slot->id);
             if ($st === null) {
-                $this->planeSlotConcept($team, $run, $slot, 'foodbook', $chapterId, ++$idx, 'geplant');
+                $this->ausgabe()->planeSlotConcept($team, $run, $slot, 'foodbook', $chapterId, ++$idx, 'geplant');
                 $ergaenzt++;
             } elseif ($st->status === 'geplant') {
                 $neuLabel = Str::limit($titel, 120);
@@ -2923,7 +1452,7 @@ class PlanningCascadeService
      */
     public function verwirfGeplantenStep(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->status !== 'geplant') {
             return;
         }
@@ -2947,7 +1476,7 @@ class PlanningCascadeService
      */
     public function ergaenzeManuellenSubStep(Team $team, int $runId, string $name, ?int $parentStepId = null): ?FoodAlchemistCascadeRunStep
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         if ($run === null || ! $run->isOwnedBy($team)) {
             return null;
         }
@@ -3032,7 +1561,7 @@ class PlanningCascadeService
      */
     public function gibNeueFrei(Team $team, int $runId, ?array $nurSteps = null): array
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         if ($run === null || ! $run->isOwnedBy($team)) {
             return ['freigegeben' => 0, 'uebersprungen' => 0];
         }
@@ -3060,7 +1589,7 @@ class PlanningCascadeService
     /** Bulk-Verwerfen aller noch offenen (done|failed) Steps eines Laufs. */
     public function verwirfRun(Team $team, int $runId): void
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         // D1-Slice 3: sichtbarer, nicht besessener Lauf → sauberer No-op (siehe gibStufeFrei).
         if ($run === null || ! $run->isOwnedBy($team)) {
             return;
@@ -3070,305 +1599,53 @@ class PlanningCascadeService
         }
     }
 
-    private function ownedStep(Team $team, int $stepId): FoodAlchemistCascadeRunStep
-    {
-        $step = FoodAlchemistCascadeRunStep::visibleToTeam($team)->findOrFail($stepId);
-        if (! $step->isOwnedBy($team)) {
-            throw new RuntimeException('Dieser Schritt gehört einem anderen Team. Freigeben und ändern kann nur das Team, das die Planung angelegt hat.');
-        }
-
-        return $step;
-    }
-
     // ── Abfragen (für die Fläche) ─────────────────────────────────────────
 
-    /** Neuester Lauf einer Planung (für das Cockpit-Polling), null wenn keiner. */
+    /** Neuester Lauf einer Planung (für das Cockpit-Polling), null wenn keiner. Liegt in {@see KaskadeAbfragen}. */
     public function letzterLauf(Team $team, int $planningSessionId): ?FoodAlchemistCascadeRun
     {
-        return FoodAlchemistCascadeRun::visibleToTeam($team)
-            ->where('planning_session_id', $planningSessionId)
-            ->orderByDesc('id')
-            ->first();
+        return $this->abfragen()->letzterLauf($team, $planningSessionId);
     }
 
     /**
-     * Spec 53 / Paket C: Globaler KI-Status fürs Planung-Kopf — EIN Aggregat über alle Steps des
-     * Teams (nicht nur die des aktuell offenen Laufs), damit „N warten · M laufen" auch sichtbar ist,
-     * wenn gerade kein Lauf im Cockpit geöffnet ist. Team-EIGENE Steps (nicht die Team-Ancestry —
-     * der Status soll zeigen, was DIESES Team gerade selbst anstößt).
+     * Globaler KI-Status fürs Planung-Kopf. Liegt in {@see KaskadeAbfragen::kiStatusFuerTeam}.
      *
      * @return array{wartend:int, laufend:int, aktuelle_phase:?string, fehler_24h:int, queue:?int}
      */
     public function kiStatusFuerTeam(Team $team): array
     {
-        $steps = FoodAlchemistCascadeRunStep::where('team_id', $team->id);
-
-        $wartend = (clone $steps)->where('status', 'queued')->count();
-        // „laufend" = belegt gerade tatsächlich einen Worker-Slot: primäre Generierung (status=running)
-        // ODER eine sekundäre Phase (Anreicherung/Bilder/Konformität), die auch nach der Freigabe
-        // (status=freigegeben/done) noch läuft und deshalb kein `running` mehr trägt.
-        $laufend = (clone $steps)->where(function ($q) {
-            $q->where('status', 'running')->orWhereNotNull('phase');
-        })->count();
-        $aktuellePhase = (clone $steps)->whereNotNull('phase')
-            ->orderByDesc('phase_at')
-            ->value('phase');
-        $fehler24h = (clone $steps)->where('status', 'failed')
-            ->where('updated_at', '>=', now()->subDay())
-            ->count();
-
-        // Optionale Queue-Tiefe: nur wenn die `jobs`-Tabelle existiert UND die Default-Queue-Connection
-        // `database` ist (sonst liegt die Warteschlange z. B. in Redis — kein Job hierfür zu erfinden).
-        $queue = null;
-        try {
-            if (config('queue.default') === 'database' && \Illuminate\Support\Facades\Schema::hasTable('jobs')) {
-                $queue = (int) \Illuminate\Support\Facades\DB::table('jobs')->count();
-            }
-        } catch (\Throwable) {
-            $queue = null;
-        }
-
-        return [
-            'wartend' => $wartend,
-            'laufend' => $laufend,
-            'aktuelle_phase' => $aktuellePhase,
-            'fehler_24h' => $fehler24h,
-            'queue' => $queue,
-        ];
+        return $this->abfragen()->kiStatusFuerTeam($team);
     }
 
     /**
-     * E1b (Spec 40): Owner-Kontext der Session für die Leitstelle — macht den Einbahn-Sprung zum
-     * sichtbaren Round-Trip: WOFÜR wird hier geplant (Ausgabe-Modul + Name) + der Rückweg dorthin.
-     * Liest den jüngsten Lauf der Session MIT Ausgabe-Owner (`source_owner_type`/`_id` — die sitzen
-     * auf dem Lauf, nicht der Session) und löst Anzeige-Name + Rück-Route inkl. Deep-Link-Param auf.
-     * `null`, wenn die Session keinen Ausgabe-Owner trägt (freie Cockpit-Planung) → dann kein Banner.
+     * Owner-Kontext der Session für die Leitstelle. Liegt in {@see KaskadeAbfragen::ownerKontext}.
      *
      * @return array{owner_type:string, owner_id:int, typ_label:string, name:string, route:string, route_param:array<string,int>}|null
      */
     public function ownerKontext(Team $team, int $sessionId): ?array
     {
-        $run = FoodAlchemistCascadeRun::visibleToTeam($team)
-            ->where('planning_session_id', $sessionId)
-            ->whereNotNull('source_owner_type')
-            ->whereNotNull('source_owner_id')
-            ->orderByDesc('id')->first();
-        if ($run === null) {
-            return null;
-        }
-        $type = (string) $run->source_owner_type;
-        $id = (int) $run->source_owner_id;
-        [$typLabel, $name, $route, $param] = match ($type) {
-            'foodbook' => ['Foodbook', \Platform\FoodAlchemist\Models\FoodAlchemistFoodbook::visibleToTeam($team)->whereKey($id)->value('label'), 'foodalchemist.foodbooks.index', 'fb'],
-            'speisekarte' => ['Speisekarte', \Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte::visibleToTeam($team)->whereKey($id)->value('name'), 'foodalchemist.speisekarte.index', 'sk'],
-            'speiseplan' => ['Speiseplan', FoodAlchemistSpeiseplan::visibleToTeam($team)->whereKey($id)->value('name'), 'foodalchemist.speiseplan.index', 'sp'],
-            'offer' => ['Angebot', \Platform\FoodAlchemist\Models\FoodAlchemistAngebot::visibleToTeam($team)->whereKey($id)->value('name'), 'foodalchemist.angebote.index', 'sel'],
-            'format' => ['Format', \Platform\FoodAlchemist\Models\FoodAlchemistFormat::visibleToTeam($team)->whereKey($id)->value('name'), 'foodalchemist.formate.index', 'fmt'],
-            default => [null, null, null, null],
-        };
-        if ($route === null) {
-            return null;
-        }
-
-        return [
-            'owner_type' => $type,
-            'owner_id' => $id,
-            'typ_label' => $typLabel,
-            'name' => (string) ($name !== null && $name !== '' ? $name : $typLabel . ' #' . $id),
-            'route' => $route,
-            'route_param' => [$param => $id],
-        ];
+        return $this->abfragen()->ownerKontext($team, $sessionId);
     }
 
-    /** Ein team-sichtbarer Lauf inkl. Steps (oder null). */
+    /** Ein team-sichtbarer Lauf inkl. Steps (oder null). Liegt in {@see KaskadeKontext}. */
     public function lauf(Team $team, int $runId): ?FoodAlchemistCascadeRun
     {
-        return FoodAlchemistCascadeRun::visibleToTeam($team)->with('steps')->find($runId);
+        return $this->kontext()->lauf($team, $runId);
     }
 
     /**
-     * Etappe 9 (MCP): der READ-ONLY Kaskaden-Status eines Laufs als flache, KI-lesbare Struktur —
-     * die Statuszahlen, die das Cockpit zeigt, aber headless. Team-gescopt über {@see lauf()}
-     * (visibleToTeam = Read-Contract); `null`, wenn der Lauf für das Team nicht sichtbar ist.
-     *
-     * Rein ableitend, keine Erfindung: Lauf-Kopf + je Ebene (`kind`) ein Status-Aggregat + die
-     * Einzel-Schritte (inkl. Anreicherungs-/Bild-Status aus `deferred`) + ein `hinweis`, der den
-     * bestehenden Run-Status (running|review|done|failed) in einen Handlungs-Satz übersetzt
-     * (Freigabe/Fortsetzen bleiben human-only, kein MCP-Trigger).
+     * READ-ONLY Kaskaden-Status eines Laufs für MCP und Fläche. Liegt in {@see KaskadeAbfragen::laufStatus}.
      *
      * @return array<string, mixed>|null
      */
     public function laufStatus(Team $team, int $runId): ?array
     {
-        $run = $this->lauf($team, $runId);
-        if ($run === null) {
-            return null;
-        }
-
-        $steps = $run->steps->sortBy('sort')->values();
-        // Externer KI-Weg: wartet ein Schritt auf eine Antwort von außen, steht das an keinem Step-Feld (die Job-Transaktion rollt beim
-        // Warten zurück, auch die Phase) — die offenen Aufträge selbst sind die Wahrheit.
-        $kiWartend = $this->kiWartend($steps);
-
-        $schritte = $steps->map(function (FoodAlchemistCascadeRunStep $s) use ($kiWartend): array {
-            $deferred = is_array($s->deferred) ? $s->deferred : [];
-            $ki = $kiWartend[(int) $s->id] ?? null;
-            $snapshot = is_array($s->context_snapshot) ? $s->context_snapshot : [];
-
-            return array_filter([
-                'id' => (int) $s->id,
-                'ebene' => (string) $s->kind,
-                'label' => (string) $s->label,
-                'status' => (string) $s->status,
-                // Spec 53 / Paket C(-Nachtrag): DB-Wahrheit der laufenden Zwischen-Phase (Cockpit + MCP)
-                // — die Terminal-Phasen (Entwurf bereit/Fehler) ergeben sich aus `status`, nicht aus
-                // `phase`. queued/running OHNE gesetzte Phase heißt „dispatcht, aber der Worker hat den
-                // Job noch nicht aufgenommen" (Cockpit-Text „eingereiht — wartet auf Worker",
-                // step-zeile.blade.php) — derselbe Text hier, damit ein MCP-Konsument dieselbe
-                // Unterscheidung sieht, statt sie aus Status+fehlender Phase selbst zu rekonstruieren.
-                // Wartet der Schritt auf eine externe KI-Antwort, ist DAS die Phase — nicht „wartet auf Worker" (Lauf 62, io 13.11.2026:
-                // der Worker war frei, der Lauf wartete auf ki_auftraege.ANTWORT, Status und Cockpit zeigten auf die Queue).
-                'phase' => $ki !== null
-                    ? self::kiWartetText((int) $ki['anzahl'])
-                    : ($s->phase ?: (in_array($s->status, ['queued', 'running'], true) ? 'eingereiht — wartet auf Worker' : null)),
-                'wartet_auf_ki' => $ki,
-                // Spec 53 / Paket A: `context_snapshot['timings']` je Step (generator_ms/context_ms/…),
-                // sobald Paket A sie schreibt — Peter zeigt sie nur an, Fallback null bis dahin.
-                'timings' => (! empty($snapshot['timings']) && is_array($snapshot['timings'])) ? $snapshot['timings'] : null,
-                'tiefe' => (int) $s->depth,
-                'ref_type' => $s->ref_type,
-                'ref_id' => $s->ref_id !== null ? (int) $s->ref_id : null,
-                'parent_step_id' => $s->parent_step_id !== null ? (int) $s->parent_step_id : null,
-                'anreicherung' => $deferred['enrich']['status'] ?? null,
-                // Tiefe des Anreicherungs-Passes: bei complete_coverage=false bleiben Schritte,
-                // Sensorik, Zeiten, Equipment und Pairings leer. Headless war das nicht
-                // unterscheidbar — 'done' sah in beiden Faellen gleich aus.
-                'anreicherung_tief' => isset($deferred['enrich']['tief'])
-                    ? (bool) $deferred['enrich']['tief'] : null,
-                // Reifegrad einer UEBERNAHME (`skipped`). Ohne das ist per MCP nicht erkennbar,
-                // dass „uebernommen" auf ein draft mit 0 Schritten zeigt — genau der Fall, der
-                // Lauf 65 als „abgeschlossen" meldete.
-                'uebernahme_reif' => isset($deferred['reuse']['reif'])
-                    ? (bool) $deferred['reuse']['reif'] : null,
-                'uebernahme_luecken' => ! empty($deferred['reuse']['luecken'])
-                    ? array_values((array) $deferred['reuse']['luecken']) : null,
-                'bilder' => $deferred['bilder']['status'] ?? null,
-                'fehler' => $s->error,
-                // E-P0 (Spec 40): Attach-Fehler auch headless sichtbar — das Konzept ist erzeugt, hängt aber
-                // nicht am Ausgabe-Kapitel/der Rubrik (behebbar per haengeKonzeptNach). Nur gesetzt, wenn offen.
-                'attach_fehler' => $deferred['attach_error'] ?? null,
-                // Verwendetes Wissen je Step (aus context_snapshot, geschrieben von RecipeGenerationContextService::build):
-                // welche Wissens-Dossiers real in den Prompt geflossen sind — damit die Erdung headless prüfbar ist.
-                'wissen' => ! empty($snapshot['knowledge_files']) ? $snapshot['knowledge_files'] : null,
-                // Spec 53 Paket B Aufgabe 6 — was gebaut, aber NICHT gesendet wurde, additiv neben
-                // 'wissen': 'retrieval' aus dem Budget-Schnitt der Fuzzy-Discovery, 'kanon' aus
-                // gedroppten wenn_platz-Dossiers (RecipeDependencyWorkflowService::afterGenerated
-                // korrigiert diesen Zweig nach dem Gateway-Call). Nur der Snapshot-Key wird gelesen —
-                // kein neuer Rechenweg. `null` statt einer leeren Struktur, solange nichts verworfen
-                // wurde (kein Etikett ohne Landebahn).
-                'wissen_verworfen' => (static function () use ($snapshot): ?array {
-                    $d = is_array($snapshot['knowledge_dropped'] ?? null) ? $snapshot['knowledge_dropped'] : [];
-                    $retrieval = is_array($d['retrieval'] ?? null) ? array_values($d['retrieval']) : [];
-                    $kanon = is_array($d['kanon'] ?? null) ? array_values($d['kanon']) : [];
-
-                    return ($retrieval === [] && $kanon === []) ? null : array_filter([
-                        'retrieval' => $retrieval !== [] ? $retrieval : null,
-                        'kanon' => $kanon !== [] ? $kanon : null,
-                    ]);
-                })(),
-            ], static fn ($v): bool => $v !== null && $v !== '');
-        })->all();
-
-        // Task 6 (#505-Nachtrag 2026-09, Lauf 65 „abgeschlossen" trotz 0-Schritte-Draft):
-        // RecipeService::reifegrad() bleibt die einzige Wahrheit — hier nur aggregiert, was
-        // RecipeDependencyWorkflowService::afterGenerated je Step bereits in deferred.reuse
-        // ablegt, damit der Run-Kopf (nicht nur die einzelne Step-Zeile) zeigt, ob "übernommen"
-        // wirklich fertig heißt.
-        $uebernahme = $this->zaehleUebernommenUnreif($steps);
-
-        $stufen = $steps->groupBy('kind')->map(static function ($group, $kind): array {
-            return [
-                'ebene' => (string) $kind,
-                'gesamt' => $group->count(),
-                'geplant' => $group->where('status', 'geplant')->count(),
-                'laufend' => $group->whereIn('status', ['queued', 'running'])->count(),
-                'entwurf_offen' => $group->where('status', 'done')->count(),   // fertiger Draft, wartet auf Freigabe (Gate 2)
-                'freigegeben' => $group->where('status', 'freigegeben')->count(),
-                'uebernommen' => $group->where('status', 'skipped')->count(),   // Reuse-Treffer
-                'verworfen' => $group->where('status', 'verworfen')->count(),
-                'fehlgeschlagen' => $group->where('status', 'failed')->count(),
-            ];
-        })->values()->all();
-
-        // Die real wirksamen Leitplanken dieses Laufs — gegen die Whitelist gefiltert, damit nur die Regler
-        // (nicht die Flow-Steuer-Keys owner_type/cascade_step_id/…) sichtbar werden. So ist per MCP prüfbar,
-        // WOMIT der Lauf lief (Kern des „Leitplanken prüfen").
-        // Quelle: bei Leaf-Läufen (rezept|gericht|concept) ist run.params die am START eingefrorene Kopie;
-        // bei Vollkaskaden bleibt run.params leer (der Fan-out liest die Session live) → Fallback auf die
-        // Session-generation_params, sonst wäre die wirksame Steuerung dort unsichtbar.
-        $quelle = is_array($run->params) ? $run->params : [];
-        if ($quelle === [] && $run->planning_session_id !== null) {
-            $sess = app(PlanningSessionService::class)->get($team, (int) $run->planning_session_id);
-            $quelle = is_array($sess?->generation_params) ? $sess->generation_params : [];
-        }
-        $leitplanken = array_intersect_key(
-            $quelle,
-            array_flip(FoodAlchemistPlanningSession::ALLOWED_GENERATION_PARAMS)
-        );
-
-        return [
-            'run_namespace' => 'planung_kaskade',
-            'lauf' => array_filter([
-                'id' => (int) $run->id,
-                'scope' => (string) $run->scope,
-                'status' => (string) $run->status,
-                'gestuft' => (bool) $run->staged,
-                'creative_mode' => (string) $run->creative_mode,
-                'planning_session_id' => $run->planning_session_id !== null ? (int) $run->planning_session_id : null,
-                'origin_dish_idea_id' => $run->origin_dish_idea_id !== null ? (int) $run->origin_dish_idea_id : null,
-                'uebernommen' => $uebernahme['gesamt'] > 0 ? $uebernahme['gesamt'] : null,
-                'uebernommen_unreif' => $uebernahme['gesamt'] > 0 ? $uebernahme['unreif'] : null,
-            ], static fn ($v): bool => $v !== null && $v !== ''),
-            'leitplanken' => $leitplanken === [] ? null : $leitplanken,
-            'stufen' => $stufen,
-            'schritte' => $schritte,
-            'kohaerenz_warnung' => is_array($run->cohesion_warning) ? $run->cohesion_warning : null,
-            // Was der Lauf NICHT erzeugt hat. Steht hier NEBEN den Leitplanken und nicht darin:
-            // `params` wird oben gegen ALLOWED_GENERATION_PARAMS gefiltert, weil es die wirksame
-            // STEUERUNG zeigen soll — ein Ergebnis-Hinweis darin wurde deshalb weggeworfen. Genau
-            // das ist der Grund, warum `params.gedeckelt_zellen_offen` seit seiner Einführung
-            // niemanden erreicht hat, obwohl der Docblock „kein stiller Deckel" behauptete.
-            'deckel_hinweise' => is_array($run->deckel_hinweise) && $run->deckel_hinweise !== []
-                ? array_values($run->deckel_hinweise)
-                : null,
-            // Offene KI-Aufträge des Laufs (externer Weg) mit der nächsten Aktion — null, wenn der Lauf auf keine Antwort wartet.
-            'ki_auftraege_offen' => self::kiAuftraegeOffenBlock($kiWartend, (int) $run->id),
-            'hinweis' => $this->laufStatusHinweis((string) $run->status, $steps, count(self::kiIds($kiWartend)), (int) $run->id, (string) ($run->created_via ?? '')),
-        ];
+        return $this->abfragen()->laufStatus($team, $runId);
     }
 
-    /**
-     * `skipped`-Steps (Bestands-Übernahme) + wie viele davon laut `deferred.reuse.reif`
-     * UNREIF sind. `RecipeService::reifegrad()` bleibt die einzige Quelle für „reif" — hier
-     * wird nur das von `RecipeDependencyWorkflowService::afterGenerated` bereits geschriebene
-     * deferred-Feld gezählt (fehlt `reuse` ganz, zählt der Step nicht mit — kein Reuse-Fall).
-     *
-     * @return array{gesamt: int, unreif: int, unreif_labels: list<string>}
-     */
-    private function zaehleUebernommenUnreif(mixed $steps): array
+    private function abfragen(): KaskadeAbfragen
     {
-        $uebernommen = collect($steps)->where('status', 'skipped');
-        $unreif = $uebernommen->filter(static function ($s): bool {
-            $reuse = is_array($s->deferred['reuse'] ?? null) ? $s->deferred['reuse'] : null;
-
-            return $reuse !== null && ! ($reuse['reif'] ?? false);
-        });
-
-        return [
-            'gesamt' => $uebernommen->count(),
-            'unreif' => $unreif->count(),
-            'unreif_labels' => $unreif->pluck('label')->filter()->values()->all(),
-        ];
+        return app(KaskadeAbfragen::class);
     }
 
     /** Brief für die Erzeugung: Session-Brief (Fallback Titel) + Analyse-Auszug (spiegelt Planung::goBrief). */

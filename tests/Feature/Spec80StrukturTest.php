@@ -7,6 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
 use Platform\FoodAlchemist\Services\FoodbookService;
 use Platform\FoodAlchemist\Services\FormatService;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadeAusgabeVoll;
 use Platform\FoodAlchemist\Services\PlanningFrameService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -23,7 +24,7 @@ beforeEach(function () {
     $this->frames = app(PlanningFrameService::class);
     $team = $this->rootTeam;   // vor dem Binden lesen — in der gebundenen Closure ist die Test-Eigenschaft geschützt
     $this->lege = fn (string $typ, int $id, $frame) => Closure::bind(
-        fn () => $this->legeStrukturAn($team, $typ, $id, $frame), app(PlanningCascadeService::class), PlanningCascadeService::class)();
+        fn () => $this->legeStrukturAn($team, $typ, $id, $frame), app(KaskadeAusgabeVoll::class), KaskadeAusgabeVoll::class)();   // 98 · 3.3 S1: privat in KaskadeAusgabeVoll
 });
 
 it('Struktur-Typen nur in Rahmen von Foodbook, Speisekarte und Format', function () {

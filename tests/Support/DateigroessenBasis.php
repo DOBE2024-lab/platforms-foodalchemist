@@ -5,7 +5,7 @@
 // Stand 2026-10-19 (main 9e1d3fc6, nach Stufe 4 #514, Sweep #516, C1 PR-1 #515, D-2-Lösch-PRs): 19 Dateien über 1.500 Zeilen.
 
 return [
-    'src/Services/OrderService.php' => [3737, 'C2 Bestell-Cluster (Spec 85 §6)'],
+    'src/Services/OrderService.php' => [2576, 'C2 Bestell-Cluster (Spec 85 §6); Zerlegen nach Services/Bestellung (98 · 3.3 S5)'],
     'src/Livewire/Planung/Index.php' => [3137, 'C1 PR-1 … PR-5 (Spec 85 §5)'],
     'src/Services/PlanningCascadeService.php' => [3386, 'nach Stufen schneiden (Spec 85 §9)'],
     'src/Services/SpeiseplanService.php' => [2875, 'Lifecycle / Aushang / Auswertung (Spec 85 §9)'],

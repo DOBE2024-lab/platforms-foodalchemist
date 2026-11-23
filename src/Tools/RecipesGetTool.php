@@ -23,6 +23,8 @@ class RecipesGetTool extends FoodAlchemistTool implements ToolContract, ToolMeta
             . 'Herkunft des EK (lead = gewählte Lieferantenartikel, avg = Lieferanten-Durchschnitt '
             . 'und damit eine Schätzung, mixed = teils, unknown = nicht nachvollziehbar). '
             . 'Zutaten-IDs und Garverluste sind für recipe_ingredients.PUT enthalten; Default-Posten für recipes.PUT. '
+            . '`zutaten_ohne_gewicht` (nur wenn vorhanden): Zeilen mit Menge, aber ohne Gramm, z. B. Stück ohne Stückgewicht. Ihre Kosten laufen über '
+            . 'den Stückpreis, Grammatur und Produktionsmenge sind vorläufig; das Gewicht wird am Grundprodukt gepflegt (Formen bzw. Stückgewicht). '
             . 'PDF direkt über foodalchemist.recipes.PDF, verfügbare Posten über production_stations.GET.';
     }
 
@@ -101,6 +103,7 @@ class RecipesGetTool extends FoodAlchemistTool implements ToolContract, ToolMeta
         if ($presentations !== []) {
             $daten['presentations'] = $presentations;
         }
+        $daten += $this->zutatenOhneGewicht($team, (int) $r->id);   // Entscheid Dominique 23.11.: Pflegehinweis Stückgewicht
 
         return ToolResult::success($daten);
     }

@@ -59,6 +59,14 @@ class IngredientEditor extends Component
 
     public ?string $fehler = null;
 
+    /**
+     * Zutaten ohne Gewicht nach dem Speichern (Entscheid Dominique 23.11.: warnen, Speichern bleibt möglich). Aus
+     * {@see \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::zeilen} — derselben Rechnung wie EK und Produktion.
+     *
+     * @var list<array{ingredient_id: int, name: string, menge: float, einheit: ?string, gp_id: ?int}>
+     */
+    public array $ohneGewicht = [];
+
     /** Editor-Parität: eingebettet im Voll-Editor (ohne Modal-Hülle, eine Quelle). */
     public bool $eingebettet = false;
 
@@ -114,6 +122,7 @@ class IngredientEditor extends Component
     public function speichern(array $zeilen, ?int $recipeId = null): void
     {
         $this->fehler = null;
+        $this->ohneGewicht = [];
         $team = Auth::user()?->currentTeamRelation;
         if ($team === null || $this->recipeId === null) {
             return;
@@ -130,6 +139,7 @@ class IngredientEditor extends Component
             // Eine im Editor GEÄNDERTE Teller-Rolle ist Handarbeit (unveränderte behalten ihre Quelle, s. syncIngredients).
             $zeilen = array_map(static fn ($z) => is_array($z) ? [...$z, 'role_source' => 'manuell'] : $z, $zeilen);
             app(RecipeService::class)->syncIngredients($team, $this->recipeId, $zeilen);
+            $this->ohneGewichtMerken($team);
             if (! $this->eingebettet) {
                 $this->dispatch('modal.close', name: 'zutaten-editor');
             }
@@ -149,6 +159,40 @@ class IngredientEditor extends Component
             $this->dispatch('zutaten-persistiert', recipeId: $this->recipeId);
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
+        }
+    }
+
+    /**
+     * Zähl-Defaults je GP und Einheit (gp_count_unit_defaults, „Zehe 5 g“) für den Client-Spiegel von grammFaktor: der Server liest sie
+     * nach der GP-Form und vor dem Einheiten-Gewicht (T1 Zeile 3b). Im Client stehen sie in `formen_g` hinter den Formen — fehlten sie,
+     * zeigte der Editor „ohne Gewicht“ (und keinen Anteil), wo der Server rechnet.
+     *
+     * @param  list<int>  $gpIds
+     * @return array<int, array<int, float>> GP-Id → Einheit-Id → Gramm
+     */
+    private static function zaehlGramm(array $gpIds): array
+    {
+        if ($gpIds === []) {
+            return [];
+        }
+        $out = [];
+        foreach (DB::table('foodalchemist_gp_count_unit_defaults')->whereIn('gp_id', $gpIds)->whereNull('deleted_at')->whereNotNull('default_g')
+            ->get(['gp_id', 'unit_vocab_id', 'default_g']) as $r) {
+            $out[(int) $r->gp_id][(int) $r->unit_vocab_id] = (float) $r->default_g;
+        }
+
+        return $out;
+    }
+
+    /** Hinweis „ohne Gewicht“ nach dem Speichern — reine Anzeige, ein Fehler darin bricht das Speichern nie. */
+    private function ohneGewichtMerken(\Platform\Core\Models\Team $team): void
+    {
+        try {
+            $rezept = \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::visibleToTeam($team)
+                ->with(['ingredients.unit', 'ingredients.gp'])->find($this->recipeId);
+            $this->ohneGewicht = $rezept !== null ? \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::zeilen($rezept, $team) : [];
+        } catch (\Throwable) {
+            $this->ohneGewicht = [];
         }
     }
 
@@ -445,8 +489,9 @@ class IngredientEditor extends Component
             ->filter(fn ($f) => $idFuerSlug->has($f->form_slug))
             ->mapWithKeys(fn ($f) => [(int) $idFuerSlug[$f->form_slug] => (float) $f->gramm])
             ->all());
+        $zaehl = self::zaehlGramm($gpModels->pluck('id')->map(fn ($id) => (int) $id)->all());
         $gps = $gpModels
-            ->map(function ($gp) use ($ekJeGp, $stkJeGp, $formSlugsJeGp, $formenGJeGp, $suche) {
+            ->map(function ($gp) use ($ekJeGp, $stkJeGp, $formSlugsJeGp, $formenGJeGp, $suche, $zaehl) {
                 $ek = $ekJeGp[$gp->id] ?? null;
                 $istFluessig = str_contains(mb_strtolower($gp->name.' '.($gp->condition ?? '')), 'fluessig');
 
@@ -463,7 +508,7 @@ class IngredientEditor extends Component
                     // dann muss der Client es auch KENNEN, sonst rechnet er die Zeile mit
                     // Faktor 0 (Anteil %/Yield/EK leer), während der Save 25 Stk voll ansetzt.
                     'stueck_gewicht' => $gp->piece_default_g !== null ? (float) $gp->piece_default_g : null,
-                    'formen_g' => $formenGJeGp[$gp->id] ?? [],
+                    'formen_g' => ($formenGJeGp[$gp->id] ?? []) + ($zaehl[$gp->id] ?? []),
                     'ek_pro_stk' => $stkJeGp[$gp->id] ?? null,
                 ];
             })->values()->all();
@@ -539,7 +584,7 @@ class IngredientEditor extends Component
                 'formen_g' => FoodAlchemistGpForm::where('gp_id', $gp->id)->get(['form_slug', 'gramm'])
                     ->filter(fn ($f) => $idFuerSlug->has($f->form_slug))
                     ->mapWithKeys(fn ($f) => [(int) $idFuerSlug[$f->form_slug] => (float) $f->gramm])
-                    ->all(),
+                    ->all() + (self::zaehlGramm([(int) $gp->id])[(int) $gp->id] ?? []),
             ];
         }
         $r = FoodAlchemistRecipe::visibleToTeam($team)->find($id);
@@ -604,6 +649,7 @@ class IngredientEditor extends Component
                 ->filter(fn ($f) => $idFuerSlug->has($f->form_slug))
                 ->mapWithKeys(fn ($f) => [(int) $idFuerSlug[$f->form_slug] => (float) $f->gramm])
                 ->all());
+            $zaehlBestand = self::zaehlGramm(array_map('intval', $gpIds));
             $preisVarianten = $recompute->preisVariantenProGrammPublic(
                 $rezept->ingredients->pluck('gp')->filter()->unique('id')->values(),
                 $team,
@@ -671,7 +717,7 @@ class IngredientEditor extends Component
                     'g_pro_stueck' => $this->gProStueckSub($z),          // 1: Sub-Stück-Ertrag
                     'stueck_gewicht' => $z->gp?->piece_default_g !== null // 4b: NUR bei „stk"
                         ? (float) $z->gp->piece_default_g : null,
-                    'formen_g' => $z->gp_id !== null ? ($formenGJeGp[$z->gp_id] ?? []) : [],
+                    'formen_g' => $z->gp_id !== null ? ($formenGJeGp[$z->gp_id] ?? []) + ($zaehlBestand[$z->gp_id] ?? []) : [],
                     // €/Stück fürs gewichtsfreie Stück-Rechnen (Spiegel zutatKosten count-Zweig)
                     'ek_pro_stk' => $ekProStk,
                     'ersatz' => null,                                 // Äquivalenz-Katalog — gebündelt unten

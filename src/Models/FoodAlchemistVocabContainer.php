@@ -41,12 +41,12 @@ class FoodAlchemistVocabContainer extends Model
      */
     public function nutzvolumenL(): ?float
     {
-        return \Platform\FoodAlchemist\Services\BehaelterRechner::nutzvolumenL($this);
+        return \Platform\FoodAlchemist\Services\Produktion\BehaelterRechner::nutzvolumenL($this);
     }
 
     public function grundflaecheCm2(): ?float
     {
-        return \Platform\FoodAlchemist\Services\BehaelterRechner::grundflaecheCm2($this);
+        return \Platform\FoodAlchemist\Services\Produktion\BehaelterRechner::grundflaecheCm2($this);
     }
 
     /**

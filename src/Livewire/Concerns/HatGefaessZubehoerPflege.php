@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 use Illuminate\Support\Facades\Auth;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\GefaessZubehoerService;
+use Platform\FoodAlchemist\Services\Produktion\GefaessZubehoerService;
 use Platform\FoodAlchemist\Support\ZubehoerAuswahl;
 
 /**

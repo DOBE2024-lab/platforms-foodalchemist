@@ -450,8 +450,8 @@ class SalesRecipeService
             // Editor (`manual` gewinnt gegen den Bulk-Vorschlag, s. BulkEnrichService::dichteklasse).
             if (array_key_exists('dichteklasse', $update)) {
                 $klasse = ($update['dichteklasse'] ?? '') === '' ? null : (string) $update['dichteklasse'];
-                if ($klasse !== null && ! array_key_exists($klasse, BehaelterRechner::DICHTE)) {
-                    throw new \RuntimeException('Unbekannte Dichteklasse „'.$klasse.'" — erlaubt: '.implode(', ', array_keys(BehaelterRechner::DICHTE)).'.');
+                if ($klasse !== null && ! array_key_exists($klasse, Produktion\BehaelterRechner::DICHTE)) {
+                    throw new \RuntimeException('Unbekannte Dichteklasse „'.$klasse.'" — erlaubt: '.implode(', ', array_keys(Produktion\BehaelterRechner::DICHTE)).'.');
                 }
                 $update['dichteklasse'] = $klasse;
                 if ($klasse !== $recipe->dichteklasse) {

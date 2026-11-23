@@ -652,7 +652,7 @@ class AngebotService
         }
 
         $name = 'Angebot: ' . $angebot->name . ' (' . $pax . ' Pers.)';
-        $order = app(\Platform\FoodAlchemist\Services\ProductionOrderService::class)
+        $order = app(\Platform\FoodAlchemist\Services\Produktion\ProductionOrderService::class)
             ->saveNew($team, $datum, $name, $targets, 'Angebot #' . $angebot->id, null, $userId);
 
         return ['order_id' => $order->id, 'ziele' => count($targets)];

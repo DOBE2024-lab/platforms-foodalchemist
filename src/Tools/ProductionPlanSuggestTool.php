@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ProductionPlanService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionPlanService;
 
 /** MCP-Steuerbarkeit · D11: Produktionsplan-Vorschlag für einen Zeitraum berechnen (read/preview). */
 class ProductionPlanSuggestTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

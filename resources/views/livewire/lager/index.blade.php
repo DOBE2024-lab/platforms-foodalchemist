@@ -420,7 +420,7 @@
                     <div class="grid gap-3 md:grid-cols-3">
                         <x-fa::field :label="'Menge (' . $einlagern['einheit'] . ')'" for="ep-menge"><x-fa::input id="ep-menge" wire:model="einlagern.menge" inputmode="decimal" class="w-28 text-right" data-lager-einlagern-menge /></x-fa::field>
                         <x-fa::field label="Lagerort" for="ep-ort"><x-fa::select id="ep-ort" wire:model="einlagern.location_id" :options="$orte->pluck('name', 'id')" placeholder="Standardlager" /></x-fa::field>
-                        <x-fa::field label="Lagerart" for="ep-art"><x-fa::select id="ep-art" wire:model.live="einlagern.lagerart" :options="! empty($einlagern['lagerarten']) ? array_intersect_key(\Platform\FoodAlchemist\Services\EigenproduktionService::LAGERARTEN, array_flip($einlagern['lagerarten'])) : \Platform\FoodAlchemist\Services\EigenproduktionService::LAGERARTEN" /></x-fa::field>
+                        <x-fa::field label="Lagerart" for="ep-art"><x-fa::select id="ep-art" wire:model.live="einlagern.lagerart" :options="! empty($einlagern['lagerarten']) ? array_intersect_key(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::LAGERARTEN, array_flip($einlagern['lagerarten'])) : \Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::LAGERARTEN" /></x-fa::field>
                         <x-fa::field label="Hergestellt am" for="ep-prod"><x-fa::input id="ep-prod" type="date" wire:model="einlagern.produziert_am" /></x-fa::field>
                         @if(($einlagern['lagerart'] ?? '') === 'tiefgekuehlt')
                             <x-fa::field label="Eingefroren am" for="ep-tk" hint="leer = Herstelldatum"><x-fa::input id="ep-tk" type="date" wire:model="einlagern.eingefroren_am" /></x-fa::field>
@@ -459,7 +459,7 @@
                                         <td class="tabular-nums font-medium">{{ $b->charge }}</td>
                                         <td>{{ $b->recipe?->name ?? '—' }}</td>
                                         <td>{{ $b->location?->name ?? '—' }}</td>
-                                        <td>{{ \Platform\FoodAlchemist\Services\EigenproduktionService::LAGERARTEN[$b->storage_type] ?? $b->storage_type }}</td>
+                                        <td>{{ \Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::LAGERARTEN[$b->storage_type] ?? $b->storage_type }}</td>
                                         <td class="text-right tabular-nums">{{ $zahl($eigen->anzeigeMenge((float) $b->qty_rest, $b->base_unit)) }} {{ $eigen->anzeigeEinheit($b->base_unit) }}</td>
                                         <td class="tabular-nums">{{ $b->produced_at?->format('d.m.Y') }}</td>
                                         <td class="tabular-nums {{ $tage !== null && $tage < 0 ? 'text-[var(--fa-crit)] font-semibold' : ($tage !== null && $tage <= 3 ? 'text-[var(--fa-warn)] font-semibold' : '') }}">{{ $b->best_before?->format('d.m.Y') ?? '–' }}{{ $tage !== null && $tage < 0 ? ' · abgelaufen' : '' }}</td>
@@ -467,7 +467,7 @@
                                             <span class="inline-flex items-center gap-1">
                                                 <input type="text" inputmode="decimal" wire:model="entnahme.{{ $b->id }}.menge" class="fa-control h-7 w-16 text-right tabular-nums text-[length:var(--fa-text-sm)]" aria-label="Menge in {{ $eigen->anzeigeEinheit($b->base_unit) }}" />
                                                 <select wire:model="entnahme.{{ $b->id }}.grund" class="fa-control fa-select h-7 pr-8 text-[length:var(--fa-text-sm)]" aria-label="Grund">
-                                                    @foreach(\Platform\FoodAlchemist\Services\EigenproduktionService::ENTNAHME_GRUENDE as $gk => $gl)<option value="{{ $gk }}">{{ $gl }}</option>@endforeach
+                                                    @foreach(\Platform\FoodAlchemist\Services\Produktion\EigenproduktionService::ENTNAHME_GRUENDE as $gk => $gl)<option value="{{ $gk }}">{{ $gl }}</option>@endforeach
                                                 </select>
                                                 <x-fa::button size="sm" wire:click="entnehmen({{ $b->id }})" data-lager-entnehmen="{{ $b->id }}">Entnehmen</x-fa::button>
                                             </span>

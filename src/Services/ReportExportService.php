@@ -885,7 +885,7 @@ class ReportExportService
                 if ($e['bereits_gezaehlt'] ?? false) {
                     continue;
                 }
-                $kurz = \Platform\FoodAlchemist\Services\BehaelterBedarfService::varianteKurz($e);
+                $kurz = \Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::varianteKurz($e);
                 if ($kurz !== null) {
                     $raus[] = ['zweck' => $e['zweck'], 'kurz' => $kurz];
                 }
@@ -912,7 +912,7 @@ class ReportExportService
             return null;
         }
 
-        $svc = app(\Platform\FoodAlchemist\Services\BehaelterBedarfService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::class);
         $menge = $zielKg !== null ? (float) $zielKg : null;
 
         $ergebnisse = array_filter([
@@ -924,7 +924,7 @@ class ReportExportService
 
         $raus = [];
         foreach ($ergebnisse as $e) {
-            $kurz = \Platform\FoodAlchemist\Services\BehaelterBedarfService::varianteKurz($e);
+            $kurz = \Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::varianteKurz($e);
             if ($kurz !== null) {
                 $raus[] = ['zweck' => $e['zweck'], 'kurz' => $kurz];
             }

@@ -8,9 +8,9 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
-use Platform\FoodAlchemist\Services\ProductionCapacityService;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
-use Platform\FoodAlchemist\Services\ProduktionListeService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionCapacityService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProduktionListeService;
 use Platform\FoodAlchemist\Support\Zeitraum;
 
 /**

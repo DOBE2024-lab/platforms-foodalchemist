@@ -12,10 +12,10 @@ class OrderCostingService
 {
     public function __construct(
         private PlanungsblattService $planning,
-        private ProductionTimeService $times,
-        private StationLaborRateService $laborRates,
+        private Produktion\ProductionTimeService $times,
+        private Produktion\StationLaborRateService $laborRates,
         private TeamSettingsService $settings,
-        private FixkostenService $fixkosten,
+        private Produktion\FixkostenService $fixkosten,
         private ConceptService $concepts,
     ) {
     }

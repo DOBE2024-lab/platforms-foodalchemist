@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
-use Platform\FoodAlchemist\Services\BehaelterRechner;
+use Platform\FoodAlchemist\Services\Produktion\BehaelterRechner;
 use Platform\FoodAlchemist\Services\RecipeService;
 
 /**

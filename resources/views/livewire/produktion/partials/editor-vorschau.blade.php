@@ -56,7 +56,7 @@
                     <tbody>
                         @foreach($vorschau['rezepte'] as $r)
                             @php
-                                $behaelter = \Platform\FoodAlchemist\Services\BehaelterBedarfService::kurz($r['behaelter'] ?? null);
+                                $behaelter = \Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::kurz($r['behaelter'] ?? null);
                             @endphp
                             <tr>
                                 <td>

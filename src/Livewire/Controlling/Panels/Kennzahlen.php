@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Controlling\Panels;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Enums\FaRolle;
-use Platform\FoodAlchemist\Services\FixkostenService;
+use Platform\FoodAlchemist\Services\Produktion\FixkostenService;
 use Platform\FoodAlchemist\Services\KalkulationService;
 use Platform\FoodAlchemist\Services\MargeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;

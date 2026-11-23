@@ -313,7 +313,7 @@ class DarreichungService
         }
         $update = [...$update, ...$this->referenzenPruefen($team, $update, $darreichung)];
         if (array_key_exists('vessel_cost_type', $update)) {
-            $update['vessel_cost_type'] = GefaessKostenartService::pruefe($update['vessel_cost_type']);
+            $update['vessel_cost_type'] = Produktion\GefaessKostenartService::pruefe($update['vessel_cost_type']);
         }
         // Gefäß: nur ein sichtbares Non-Food-GP (WG 16)
         if (array_key_exists('vessel_gp_id', $update) && $update['vessel_gp_id'] !== null) {
@@ -659,7 +659,7 @@ class DarreichungService
         $zeilen = [];
         // Zubehör am Gefäß-GP (20.11.2026) zählt beim Gefäß — steht dasselbe Teil zusätzlich hier, nicht doppelt rechnen
         $amGefaess = $darreichung->vessel_gp_id !== null
-            ? array_flip(array_column(app(GefaessZubehoerService::class)->liste((int) $darreichung->vessel_gp_id, $team)['zeilen'], 'gp_id')) : [];
+            ? array_flip(array_column(app(Produktion\GefaessZubehoerService::class)->liste((int) $darreichung->vessel_gp_id, $team)['zeilen'], 'gp_id')) : [];
         $liste = $darreichung->relationLoaded('zubehoer') ? $darreichung->zubehoer   // vorgeladen (Concepter-Aufbau, 2.1e)
             : $darreichung->zubehoer()->with('gp:id,name,team_id,commodity_group_code,lead_la_supplier_item_id,piece_default_g')->get();
         foreach ($liste as $z) {
@@ -750,7 +750,7 @@ class DarreichungService
         $zub = $this->gefaessZubehoerKosten($gp, $team);
 
         return [...$info, 'kostenart' => $st['kostenart'], 'kostenart_quelle' => $st['kostenart_quelle'], 'kostenart_vorgabe' => $st['kostenart_vorgabe'],
-            'miete' => $st['kostenart'] === GefaessKostenartService::EXTERN, 'preis_quelle' => $st['preis_quelle'],
+            'miete' => $st['kostenart'] === Produktion\GefaessKostenartService::EXTERN, 'preis_quelle' => $st['preis_quelle'],
             'kosten' => $st['preis'], 'preis_fehlt' => $st['preis'] === null,
             'zubehoer' => $zub['zeilen'], 'zubehoer_summe' => $zub['summe'], 'zubehoer_preis_fehlt' => $zub['preis_fehlt'],
             // Gefäß + Zubehör je Einheit (nur bekannte Preise; fehlt einer, sagen es preis_fehlt / zubehoer_preis_fehlt)
@@ -765,10 +765,10 @@ class DarreichungService
      */
     public function stueckKosten(\Platform\FoodAlchemist\Models\FoodAlchemistGp $gp, ?Team $team, ?string $uebersteuerung = null): array
     {
-        $art = app(GefaessKostenartService::class)->wirksamArt($uebersteuerung, (int) $gp->id, $team, fn () => $this->istVerleihGp($gp, $team));
+        $art = app(Produktion\GefaessKostenartService::class)->wirksamArt($uebersteuerung, (int) $gp->id, $team, fn () => $this->istVerleihGp($gp, $team));
         $preis = $art['preis_gp'];
         $quelle = $preis !== null ? 'gp' : null;
-        if ($preis === null && $art['kostenart'] !== GefaessKostenartService::MEHRWEG) {
+        if ($preis === null && $art['kostenart'] !== Produktion\GefaessKostenartService::MEHRWEG) {
             $preis = $this->recompute->preisProStueckPublic($gp, $team);   // einweg UND extern: Lead-Artikelpreis je Stück (Mehrweg kauft nichts ein)
             $quelle = $preis !== null ? 'artikel' : null;
         }
@@ -785,7 +785,7 @@ class DarreichungService
      */
     public function gefaessZubehoerKosten(\Platform\FoodAlchemist\Models\FoodAlchemistGp $gefaess, ?Team $team): array
     {
-        $liste = app(GefaessZubehoerService::class)->liste((int) $gefaess->id, $team);
+        $liste = app(Produktion\GefaessZubehoerService::class)->liste((int) $gefaess->id, $team);
         if ($liste['zeilen'] === []) {
             return ['summe' => 0.0, 'preis_fehlt' => false, 'zeilen' => []];
         }
@@ -824,7 +824,7 @@ class DarreichungService
         $einheiten = $portionen * (float) ($d->unit_count ?: 1);
         $name = (string) DB::table('foodalchemist_gps')->where('id', $d->vessel_gp_id)->value('name');
         $out = [['gp_id' => (int) $d->vessel_gp_id, 'name' => $name, 'menge' => round($einheiten, 3), 'rolle' => 'gefaess']];
-        foreach (app(GefaessZubehoerService::class)->liste((int) $d->vessel_gp_id, $team)['zeilen'] as $z) {
+        foreach (app(Produktion\GefaessZubehoerService::class)->liste((int) $d->vessel_gp_id, $team)['zeilen'] as $z) {
             $out[] = ['gp_id' => $z['gp_id'], 'name' => $z['name'], 'menge' => round($einheiten * $z['menge'], 3), 'rolle' => 'zubehoer'];
         }
 
@@ -1107,7 +1107,7 @@ class DarreichungService
             return 0;
         }
         // Zubehör am Gefäß (20.11.2026): ändert sich Preis oder Art des Deckels, rechnen die Darreichungen mit dem Glas neu
-        $gpIds = array_values(array_unique([...$gpIds, ...app(GefaessZubehoerService::class)->gefaesseMitZubehoer($gpIds)]));
+        $gpIds = array_values(array_unique([...$gpIds, ...app(Produktion\GefaessZubehoerService::class)->gefaesseMitZubehoer($gpIds)]));
         $ids = collect();
         foreach (array_chunk($gpIds, 500) as $teil) {
             $ids = $ids->merge(DB::table('foodalchemist_recipe_presentation_zubehoer')->whereIn('gp_id', $teil)->whereNull('deleted_at')->distinct()->pluck('presentation_id'))

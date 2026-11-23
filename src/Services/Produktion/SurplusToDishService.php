@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -20,7 +20,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
  */
 class SurplusToDishService
 {
-    public function __construct(private Pairing\PairingService $pairing)
+    public function __construct(private \Platform\FoodAlchemist\Services\Pairing\PairingService $pairing)
     {
     }
 

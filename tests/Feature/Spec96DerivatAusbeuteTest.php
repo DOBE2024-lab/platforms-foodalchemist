@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
-use Platform\FoodAlchemist\Services\DerivatAusbeuteService;
+use Platform\FoodAlchemist\Services\Produktion\DerivatAusbeuteService;
 use Platform\FoodAlchemist\Services\GpFormService;
 use Platform\FoodAlchemist\Services\IngredientMatchService;
 use Platform\FoodAlchemist\Services\Matching\FruchtDerivat;

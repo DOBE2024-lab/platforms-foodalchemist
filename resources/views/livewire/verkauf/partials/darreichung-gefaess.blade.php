@@ -10,8 +10,8 @@
                     {{-- Art des Gefäßes (17.11.2026): leer = Eintrag des Teams am Grundprodukt (Art + Preis), sonst Automatik (Verleih → extern, sonst Einweg) --}}
                     <label class="inline-flex items-center gap-1"><span class="font-medium">Kostenart</span>
                         <select wire:model="darForm.{{ $d->id }}.vessel_cost_type" wire:change="darreichungSpeichern({{ $d->id }})" aria-label="Art des Gefäßes" class="{{ $feldKlein }} fa-select pr-8 w-52" data-dar-kostenart>
-                            <option value="">{{ 'Vorgabe: '.(\Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN[$gi['kostenart_vorgabe']] ?? '–') }}</option>
-                            @foreach(\Platform\FoodAlchemist\Services\GefaessKostenartService::ARTEN as $artKey => $artLabel)<option value="{{ $artKey }}">{{ $artLabel }}</option>@endforeach
+                            <option value="">{{ 'Vorgabe: '.(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::ARTEN[$gi['kostenart_vorgabe']] ?? '–') }}</option>
+                            @foreach(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::ARTEN as $artKey => $artLabel)<option value="{{ $artKey }}">{{ $artLabel }}</option>@endforeach
                         </select>
                     </label>
                 @endif

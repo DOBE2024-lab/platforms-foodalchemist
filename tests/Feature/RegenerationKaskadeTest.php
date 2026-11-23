@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeRegeneration;
-use Platform\FoodAlchemist\Services\RegenerationCascadeService as Kaskade;
+use Platform\FoodAlchemist\Services\Produktion\RegenerationCascadeService as Kaskade;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

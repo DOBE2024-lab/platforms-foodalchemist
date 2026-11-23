@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistKitchenRole;
@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 
 class StationLaborRateService
 {
-    public function __construct(private TeamSettingsService $settings) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\TeamSettingsService $settings) {}
 
     /**
      * @return array{hourly_rate:float,source:string,warnings:list<string>}

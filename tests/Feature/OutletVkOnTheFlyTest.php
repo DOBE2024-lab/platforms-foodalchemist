@@ -53,7 +53,7 @@ it('StationLaborRateService — Lohnquelle + Stundensatz folgen dem Betrieb', fu
     $this->settings->update($this->childA, ['stundensatz_eur' => 35, 'labor_cost_source' => 'team_flat']);
     $betrieb = ($this->betrieb)('Werk', ['stundensatz_eur' => 50, 'labor_cost_source' => 'station_roles']);
 
-    $rateService = app(\Platform\FoodAlchemist\Services\StationLaborRateService::class);
+    $rateService = app(\Platform\FoodAlchemist\Services\Produktion\StationLaborRateService::class);
     // Team: team_flat @ 35 €/h.
     $team = $rateService->rate($this->childA, null, null);
     expect($team['source'])->toBe('team_flat')->and($team['hourly_rate'])->toBe(35.0);
@@ -77,7 +77,7 @@ it('StationLaborRateService — Rollen-Sätze je Betrieb überschreibbar', funct
     // Betrieb überschreibt den Koch-Satz 28 → 40.
     $betrieb = ($this->betrieb)('Nord', ['labor_cost_source' => 'station_roles', 'outlet_role_rates' => [(string) $koch->id => 40]]);
 
-    $rateService = app(\Platform\FoodAlchemist\Services\StationLaborRateService::class);
+    $rateService = app(\Platform\FoodAlchemist\Services\Produktion\StationLaborRateService::class);
     expect($rateService->rate($this->childA, $station->fresh(), null)['hourly_rate'])->toBe(28.0)
         ->and($rateService->rate($this->childA, $station->fresh(), $betrieb)['hourly_rate'])->toBe(40.0);
 });

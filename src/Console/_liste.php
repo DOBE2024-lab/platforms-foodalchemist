@@ -41,6 +41,7 @@ return [
     \Platform\FoodAlchemist\Console\Diagnose\RezeptLueckenVergleichCommand::class,   // 29.10.2026: Messung K1/K4a vorher/nachher (nur lesend)
     \Platform\FoodAlchemist\Console\Diagnose\TrendThemenAehnlichkeitCommand::class,   // Spec 93 B (Messung, schreibt nichts)
     \Platform\FoodAlchemist\Console\Diagnose\VollstaendigkeitReportCommand::class,
+    \Platform\FoodAlchemist\Console\Diagnose\WaisenCommand::class,   // 98 · 3.5: Waisen-Report der Kernkette (nur lesend)
     // W2-4: §-Deckung — hätte den verlorenen §12 gefunden.
     \Platform\FoodAlchemist\Console\Diagnose\WissenDeckungCommand::class,
     // Spec 52/A1: Grundlinie am tatsächlich versendeten Aufruf — inkl. der drei

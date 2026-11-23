@@ -121,6 +121,26 @@ def pruefe_aufteilung(ordner: str) -> list:
     return fehler
 
 
+def lies_vorlage(ordner: str):
+    """Zeilen „TestDbVorlage pid=… geladen=… gebaut=… alt_nicht_leer=… aus=… [alt_in=K:n,…]“ aus vorlage-<n>.log."""
+    summe = {"geladen": 0, "gebaut": 0, "alt_nicht_leer": 0, "aus": 0}
+    alt_in, prozesse = {}, 0
+    for datei in glob.glob(os.path.join(ordner, "**", "vorlage-*.log"), recursive=True):
+        for zeile in open(datei, encoding="utf-8", errors="replace"):
+            if not zeile.startswith("TestDbVorlage "):
+                continue
+            prozesse += 1
+            for k in summe:
+                m = re.search(rf"\b{k}=(\d+)", zeile)
+                summe[k] += int(m.group(1)) if m else 0
+            m = re.search(r"alt_in=(\S+)", zeile)
+            for teil in (m.group(1).split(",") if m else []):
+                name, _, n = teil.rpartition(":")
+                kurz = name.rsplit("\\", 1)[-1]
+                alt_in[kurz] = alt_in.get(kurz, 0) + int(n or 0)
+    return {"summe": summe, "alt_in": alt_in, "prozesse": prozesse} if prozesse else None
+
+
 def main() -> int:
     ordner, ergebnis = sys.argv[1], sys.argv[2]
     pruefen = "--pruefen" in sys.argv
@@ -175,6 +195,14 @@ def main() -> int:
         zelle = lambda t: t.replace("|", "\\|")
         for r in sorted(rote, key=lambda r: (r["datei"], r["test"])):
             print(f"| {r['shard']} | `{zelle(r['datei'])}` | {zelle(r['test'])} | {zelle(r['grund'])} |")
+    vorlage = lies_vorlage(ordner)
+    if vorlage:
+        z = vorlage["summe"]
+        print("\n### Test-DB-Vorlage\n")
+        print(f"geladen {z['geladen']}, gebaut {z['gebaut']}, alter Weg (DB nicht leer) {z['alt_nicht_leer']}, "
+              f"abgeschaltet {z['aus']} — {vorlage['prozesse']} Prozesse.")
+        if vorlage["alt_in"]:
+            print("\nAlter Weg in: " + ", ".join(f"`{k}` ({n})" for k, n in sorted(vorlage["alt_in"].items(), key=lambda x: -x[1])[:30]))
     try:
         geschwister = json.loads(os.environ.get("GESCHWISTER") or "{}")
     except json.JSONDecodeError:

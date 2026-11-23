@@ -183,6 +183,15 @@ jobs:
             --parallel \
             --log-junit="junit-${SHARD}.xml" 2>&1 | tee "pest-${SHARD}.log"
 
+      - name: Vorlagen-Zähler
+        if: always()
+        working-directory: ws/host
+        # Test-DB-Vorlage (tests/Support/TestDbVorlage): je Worker-Prozess eine Zeile geladen/gebaut/alt. Ohne die
+        # Vorlage im getesteten Stand bleibt die Datei leer.
+        run: |
+          cat "$(php -r 'echo sys_get_temp_dir();')"/fa-test-vorlage/zaehler-*.log > "vorlage-${SHARD}.log" 2>/dev/null || true
+          cat "vorlage-${SHARD}.log"
+
       - name: Ergebnis sichern
         if: always()
         uses: actions/upload-artifact@v4
@@ -193,6 +202,7 @@ jobs:
             ws/host/pest-${{ matrix.shard }}.log
             ws/host/dateien-${{ matrix.shard }}.txt
             ws/host/soll-${{ matrix.shard }}.txt
+            ws/host/vorlage-${{ matrix.shard }}.log
           if-no-files-found: warn
           retention-days: 14
 

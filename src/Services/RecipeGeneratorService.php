@@ -293,9 +293,8 @@ class RecipeGeneratorService
                     'dish_class_source' => $klasse !== null ? 'ki' : null,
                     'dish_main_group_id' => $hg?->id,
                 ], fn ($v) => $v !== null));
-                // L8b: die Portion kommt AUS DEM VORSCHLAG (`portionG()` lässt nur plausible Werte durch). Plan 98 B: sie wird
-                // nicht mehr als Grammatur am Kopf gespeichert (der spiegelt nur noch die Standard-Darreichung), sondern ist das
-                // Ziel, auf das aufEinePortion die Zutaten bringt — Ertrag und Portionszahl bestimmen dann die Grammatur.
+                // L8b: die Portion AUS DEM VORSCHLAG (`portionG()` nur plausibel). Plan 98 B: nicht mehr als Grammatur am Kopf (der
+                // spiegelt die Standard-Darreichung), sondern Ziel, auf das aufEinePortion die Zutaten bringt.
                 $kiPortionG = $this->portionG($kiRezept['portion_g'] ?? null);
                 // Spec 85 D-1: Klasse an der Standard-Darreichung (entsteht hier wie bei createLeer; Vorbelegung Klasse → HG → Team)
                 $standard = $recipe->is_sales_recipe ? app(DarreichungService::class)->ensureStandard($team, (int) $recipe->id, 'generator') : null;
@@ -1447,7 +1446,7 @@ class RecipeGeneratorService
      * Bringt ein Gericht auf GENAU EINE Portion: Ziel = parameter.ziel_portion_g, sonst die Portion aus dem Vorschlag
      * (portion_g). Liegt der Ertrag (COALESCE(yield_kg_manual, yield_kg)) mehr als die Toleranz daneben, werden alle Zeilen
      * mit Portion/Ertrag skaliert und neu gerechnet. Danach Verkaufseinheiten = 1; die Grammatur ergibt sich daraus
-     * (Plan 98 B: Ansatz ÷ Portionen, der Kopf spiegelt sie — vorher schrieb der Generator das Ziel als Grammatur).
+     * (Plan 98 B: Summe der Bestandteile, der Kopf spiegelt sie — vorher schrieb der Generator das Ziel als Grammatur).
      *
      * @param  array<string, mixed>  $parameter
      * @return array{ziel_g: float, ertrag_vorher_g: float, faktor: float, skaliert: bool}|null

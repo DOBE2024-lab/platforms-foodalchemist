@@ -431,6 +431,7 @@ class VkModal extends Component
         if ($team === null || $this->recipeId === null) {
             return;
         }
+        $this->fehler = null;   // ein erfolgreiches Speichern nach einem abgelehnten zeigt keinen alten Fehler mehr
         try {
             $update = array_map(
                 fn ($v) => $v === '' ? null : $v, $this->form,

@@ -202,7 +202,7 @@ it('verkaufsrezepte.PUT: abweichende sales_quantity_per_unit_g ist VALIDATION_ER
         ->execute(['id' => $gericht->id, 'felder' => $felder], new ToolContext($this->user, $this->rootTeam));
 
     $r = $tool(['sales_quantity_per_unit_g' => 60]);
-    expect($r->errorCode)->toBe('VALIDATION_ERROR')->and($r->error)->toContain('Ansatz ÷ Portionen')
+    expect($r->errorCode)->toBe('VALIDATION_ERROR')->and($r->error)->toContain('Summe der Bestandteile')
         ->and($d->fresh()->only(['quantity_per_unit_g', 'menge_vom_standard', 'ek_portion']))->toBe($vorher);
 
     $kopf = (float) $gericht->fresh()->sales_quantity_per_unit_g;

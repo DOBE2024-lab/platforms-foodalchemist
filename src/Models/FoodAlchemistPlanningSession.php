@@ -34,6 +34,9 @@ class FoodAlchemistPlanningSession extends Model
     /** Kreativ-Modus (speist PairingInspirationService, spiegelt die E9-Modi). */
     public const CREATIVE_MODES = ['voll_kreativ', 'hybrid', 'datenbank'];
 
+    /** Reiter der Planung, deren Entwurf „Planung speichern“ sichert (Briefing mitspeichern). */
+    public const ENTWURF_SCOPES = ['rezept', 'gericht', 'concept'];
+
     /**
      * Richtungs-Regler (Leitplanken), die am Planung-Go gesetzt und in den Kaskaden-
      * Fan-out vererbt werden. Whitelist gegen beliebiges JSON — die Keys spiegeln die
@@ -128,6 +131,7 @@ class FoodAlchemistPlanningSession extends Model
         'generation_params' => 'array',
         'source_trend_refs' => 'array',   // Spec 79: {trend_ids:[…], inspiration_ids:[…]} (Altbestand: fundstueck_ids)
         'suchbegriffe' => 'array',        // Spec 80: {rezept|gericht|concept: [{t, g, q}]}
+        'entwurf_json' => 'array',        // Briefing mitspeichern: {rezept|gericht|concept: {titel, brief, creative_mode, regler}, gespeichert_at}
     ];
 
     /** Spec 80: Gruppen der Suchbegriffe (Reihenfolge = Anzeige- und Such-Priorität). */

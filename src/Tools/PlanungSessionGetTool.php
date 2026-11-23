@@ -24,7 +24,7 @@ class PlanungSessionGetTool extends FoodAlchemistTool implements ToolContract, T
     {
         return 'Listet Planungs-/Kreativ-Sessions (Doppel-Diamant) — ohne id alle team-sichtbaren, '
             . 'mit id eine einzelne. Felder: title, status (divergenz|konvergenz|erledigt), creative_mode, '
-            . 'source_trend_refs (Herkunft aus dem Trendradar), brief, analysis, generation_params (gesetzte '
+            . 'source_trend_refs (Herkunft aus dem Trendradar), brief, analysis, entwurf (per „Planung speichern“ gesicherter Entwurf je Reiter rezept|gericht|concept: titel, brief, creative_mode, regler, dazu gespeichert_at; null = nie gespeichert), generation_params (gesetzte '
             . 'Richtungs-Regler/Leitplanken). Read-only.';
     }
 
@@ -71,6 +71,8 @@ class PlanungSessionGetTool extends FoodAlchemistTool implements ToolContract, T
             'brief' => $s->brief,
             'analysis' => $s->analysis,
             'generation_params' => $s->generation_params,
+            // Briefing mitspeichern: gespeicherter Entwurf je Reiter (titel, brief, creative_mode, regler) + gespeichert_at — Headless lesbar.
+            'entwurf' => $s->entwurf_json,
             'created_via' => $s->created_via,
             'updated_at' => optional($s->updated_at)->toDateTimeString(),
         ];

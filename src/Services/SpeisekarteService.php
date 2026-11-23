@@ -86,7 +86,7 @@ class SpeisekarteService
                 'sections' => fn ($q) => $q->orderBy('position'),
                 'sections.items' => fn ($q) => $q->orderBy('position'),
                 'sections.items.dish:id,name,ek_total_eur,sales_unit_count', 'sections.items.dish.standardPresentation',
-                'sections.items.concept:id,name,price_per_person_cache',
+                'sections.items.concept:id,name,price_per_person_cache,price_incomplete',
                 'outlet', 'crmCompany', 'crmContact',
             ])
             ->find($id);
@@ -605,7 +605,8 @@ class SpeisekarteService
             if ($concept) {
                 $cockpit = $this->concepts->preisCockpit($concept, $outlet);
 
-                return ['vk' => (float) $cockpit['price_per_person'], 'quelle' => 'concept'];
+                return ['vk' => (float) $cockpit['price_per_person'], 'quelle' => 'concept',
+                    'vorlaeufig' => \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete
             }
         }
 
@@ -643,7 +644,7 @@ class SpeisekarteService
 
         $we = MargeService::wareneinsatzPct($ek, $vk);
 
-        return ['vk' => $vk, 'ek' => $ek, 'we' => $we, 'quelle' => $vkArr['quelle']];
+        return ['vk' => $vk, 'ek' => $ek, 'we' => $we, 'quelle' => $vkArr['quelle'], 'vorlaeufig' => (bool) ($vkArr['vorlaeufig'] ?? false)];
     }
 
     /**
@@ -735,7 +736,7 @@ class SpeisekarteService
             ->where('kind', $kind === 'paket' ? 'paket' : 'concept')
             ->where('status', 'active')
             ->when($suche !== '', fn ($q) => \Platform\FoodAlchemist\Support\Suche::like($q, 'name', $suche))
-            ->orderBy('name')->limit($limit)->get(['id', 'name', 'price_per_person_cache']);
+            ->orderBy('name')->limit($limit)->get(['id', 'name', 'price_per_person_cache', 'price_incomplete']);
     }
 
     // ── Dokument / Druck (Stufe B) ───────────────────────────────────────────

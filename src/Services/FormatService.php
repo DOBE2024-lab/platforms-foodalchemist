@@ -255,7 +255,7 @@ class FormatService
             ->when(is_numeric($filters['season'] ?? null), fn ($q) => $q
                 ->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $filters['season'])))
             ->orderBy('name')->limit($limit)
-            ->get(['id', 'name', 'consumer_name', 'kind', 'class', 'price_per_person_cache']);
+            ->get(['id', 'name', 'consumer_name', 'kind', 'class', 'price_per_person_cache', 'price_incomplete']);
     }
 
     /** Concept als Aufbau-Position (Referenz) einfügen; optional direkt hinter $afterSlotId. */
@@ -530,7 +530,7 @@ class FormatService
     {
         // F2e: ausschließlich über die Concept-Referenz-Slots (Alt-Editionen-Fallback entfernt).
         $format = FoodAlchemistFormat::visibleToTeam($team)
-            ->with(['slots.concept:id,price_per_person_cache'])
+            ->with(['slots.concept:id,price_per_person_cache,price_incomplete'])
             ->findOrFail($id);
 
         return $format->priceRange();
@@ -559,12 +559,12 @@ class FormatService
             ->with([
                 'slots' => fn ($q) => $q->orderBy('position'),
                 // Edition-Identität (Kapitel-Parität) + Preis-Cache + Preisdarstellung (gesamt|einzel).
-                'slots.concept:id,name,consumer_name,claim,description,status,price_per_person_cache,price_display',
+                'slots.concept:id,name,consumer_name,claim,description,status,price_per_person_cache,price_incomplete,price_display',
                 // Menü-Zeilen der Edition (gleiche Wording-Auflösung wie Foodbook/Editor-Vorschau).
                 'slots.concept.slots' => fn ($q) => $q->orderBy('position'),
                 'slots.concept.slots.dish:id,name,sales_wording_standard',
                 'slots.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-                'slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
+                'slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
                 'slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
                 'heroImage',
             ])
@@ -585,6 +585,7 @@ class FormatService
                     'claim' => $concept->claim,
                     'text' => trim((string) $concept->description) ?: null,
                     'preis_pp' => $concept->price_per_person_cache !== null ? (float) $concept->price_per_person_cache : null,
+                    'preis_vorlaeufig' => $concept->price_incomplete === true,   // CQ price_incomplete
                     // Preisdarstellung (2026-08-25): einzel → Concept-Summenpreis ausblenden, Preise je Gericht-Zeile.
                     'einzelpreise' => $concept->istEinzelpreis(),
                     // Format C1: den Format-Slot als Override-Kontext → format-lokale Wordings auch im Druck.

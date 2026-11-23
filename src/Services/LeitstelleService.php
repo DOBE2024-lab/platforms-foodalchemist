@@ -66,7 +66,9 @@ class LeitstelleService
 
         $mitInhalt = 0;
         $bepreist = 0;
+        $vorlaeufig = 0;   // CQ price_incomplete: Kapitel mit einem Konzept, dessen Preis nur die Summe der bekannten ist
         foreach ($kapitel as $k) {
+            $vorlaeufig += $k->blocks->contains(fn ($b) => $b->type === 'concept_ref' && $b->concept?->price_incomplete === true) ? 1 : 0;
             $inhalt = $this->inhaltsBloecke($k)->count();
             $hatInhalt = $inhalt > 0 || $k->released_at !== null;
             if ($hatInhalt) {
@@ -112,9 +114,11 @@ class LeitstelleService
             $kapitelAnzahl > 0 && $mitInhalt < $kapitelAnzahl ? ($kapitelAnzahl - $mitInhalt) . ' Kapitel ohne Inhalt (Paket/Einzelgericht).' : null);
 
         // 7 Preise → preise/preise (Bezug: befüllte Kapitel)
+        $preisStufe = $this->anteilStufe($bepreist, $mitInhalt);
         $steps[] = $this->step('preise', 7, 'Preise', 'preise', 'preise',
-            $this->anteilStufe($bepreist, $mitInhalt),
-            $mitInhalt > 0 && $bepreist < $mitInhalt ? ($mitInhalt - $bepreist) . ' befüllte Kapitel noch ohne Preis.' : null);
+            $preisStufe === 'erledigt' && $vorlaeufig > 0 ? 'teil' : $preisStufe,
+            $mitInhalt > 0 && $bepreist < $mitInhalt ? ($mitInhalt - $bepreist) . ' befüllte Kapitel noch ohne Preis.'
+                : ($vorlaeufig > 0 ? $vorlaeufig . ' Kapitel mit vorläufigem Preis: ein Konzept hat Positionen ohne Verkaufspreis.' : null));
 
         return $steps;
     }
@@ -190,14 +194,15 @@ class LeitstelleService
                     }
                     // Ebene 2: im Betriebs-Kontext den €/Gast live gegen den Betrieb rechnen
                     // (preisCockpit), sonst der Team-Baseline-Cache (= heutiges Verhalten).
+                    $cp = $concept !== null && $outlet !== null ? app(\Platform\FoodAlchemist\Services\ConceptService::class)->preisCockpit($concept, $outlet, $team) : null;
                     $paketPreis = $concept === null ? null
-                        : ($outlet !== null
-                            ? (float) app(\Platform\FoodAlchemist\Services\ConceptService::class)->preisCockpit($concept, $outlet, $team)['price_per_person']
+                        : ($cp !== null ? (float) $cp['price_per_person']
                             : ($concept->price_per_person_cache !== null ? (float) $concept->price_per_person_cache : null));
                     $positionen[] = [
                         'art' => 'paket',
                         'label' => $concept?->name ?? ($block->label ?? 'Paket'),
                         'preis' => $paketPreis,
+                        'preis_vorlaeufig' => $cp !== null ? \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($cp) : $concept?->price_incomplete === true,   // CQ price_incomplete
                         'preis_einheit' => 'gast',
                         'status' => $k->released_at !== null ? 'angelegt' : 'entwurf',
                         'ref_id' => $concept !== null ? (int) $concept->id : null,
@@ -404,12 +409,12 @@ class LeitstelleService
             'chapters.targetGroups:id',
             'targetGroups:id',
             // Lebendes Format-Kapitel: Editionen-Zahl + Preisspanne (priceRange) fürs Board.
-            'chapters.format.slots.concept:id,price_per_person_cache',
+            'chapters.format.slots.concept:id,price_per_person_cache,price_incomplete',
         ];
         if ($mitSlots) {
             $mit['chapters.blocks.concept'] = fn ($q) => $q->with(['slots' => fn ($s) => $s->orderBy('position'), 'slots.dish:id,name', 'slots.package:id,name']);
         } else {
-            $mit['chapters.blocks.concept'] = fn ($q) => $q->select('id', 'name', 'price_per_person_cache');
+            $mit['chapters.blocks.concept'] = fn ($q) => $q->select('id', 'name', 'price_per_person_cache', 'price_incomplete');
         }
 
         $loaded = FoodAlchemistFoodbook::visibleToTeam($team)->with($mit)->find($fb->id);

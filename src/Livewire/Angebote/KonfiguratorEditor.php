@@ -396,8 +396,8 @@ class KonfiguratorEditor extends Component
             $this->dispatch('konfigurator-sperre')->to(KonfiguratorPraesentation::class);
         }
         if ($k !== null) {
-            $k->load(['konzepte.lunchConcept:id,name,consumer_name,price_per_person_cache,price_per_person_manual,price_mode,ek_per_person_cache,price_override_expires_at',
-                'konzepte.dinnerConcept:id,name,consumer_name,price_per_person_cache,price_per_person_manual,price_mode,ek_per_person_cache,price_override_expires_at',
+            $k->load(['konzepte.lunchConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,price_per_person_manual,price_mode,ek_per_person_cache,price_override_expires_at',
+                'konzepte.dinnerConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,price_per_person_manual,price_mode,ek_per_person_cache,price_override_expires_at',
                 'leistungen', 'pakete.mengen']);
             $matrix = $pricing->matrix($k);
             $q = trim($this->conceptSuche);
@@ -412,7 +412,7 @@ class KonfiguratorEditor extends Component
                 'klassen' => FoodAlchemistMarkupClass::visibleToTeam($team)->bereich('leistung')->where('is_inactive', false)->orderBy('code')->get(['id', 'code', 'label', 'class_factor_pct']),
                 'conceptTreffer' => mb_strlen($q) >= 2
                     ? FoodAlchemistConcept::visibleToTeam($team)->where(fn ($w) => $w->where('name', 'like', "%{$q}%")->orWhere('consumer_name', 'like', "%{$q}%"))
-                        ->orderBy('name')->limit(12)->get(['id', 'name', 'consumer_name', 'price_per_person_cache', 'ek_per_person_cache'])
+                        ->orderBy('name')->limit(12)->get(['id', 'name', 'consumer_name', 'price_per_person_cache', 'price_incomplete', 'ek_per_person_cache'])
                     : collect(),
                 'getraenkTreffer' => $this->getraenkTreffer($team),
                 'conceptAuswahl' => $this->konzeptEditId !== null ? $this->conceptAuswahl($team) : [],
@@ -467,7 +467,7 @@ class KonfiguratorEditor extends Component
         return FoodAlchemistConcept::visibleToTeam($team)
             ->when($kat->isNotEmpty(), fn ($w) => $w->whereIn('category_id', $kat))
             ->when($q !== '', fn ($w) => $w->where(fn ($x) => $x->where('name', 'like', "%{$q}%")->orWhere('consumer_name', 'like', "%{$q}%")))
-            ->orderBy('name')->limit(12)->get(['id', 'name', 'consumer_name', 'price_per_person_cache', 'ek_per_person_cache']);
+            ->orderBy('name')->limit(12)->get(['id', 'name', 'consumer_name', 'price_per_person_cache', 'price_incomplete', 'ek_per_person_cache']);
     }
 
     /** Kennzahlen-Leiste: All-in „ab“ (günstigster Fall im größten Paket), schwächster DB, Zahl der Warnungen. */

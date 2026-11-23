@@ -20,7 +20,7 @@ class FormatKapitelService
      */
     public function editionAb(FoodAlchemistFoodbook $fb): ?float
     {
-        $mins = $fb->chapters()->whereNotNull('format_id')->with('format.slots.concept:id,price_per_person_cache')->get()
+        $mins = $fb->chapters()->whereNotNull('format_id')->with('format.slots.concept:id,price_per_person_cache,price_incomplete')->get()
             ->map(fn (FoodAlchemistFoodbookKapitel $k) => $k->format?->priceRange()['min'])
             ->filter(fn ($v) => $v !== null);
 
@@ -47,6 +47,7 @@ class FormatKapitelService
                     'claim' => $ed->claim ?: null,
                     'text' => trim((string) $ed->description) ?: null,
                     'preis_pp' => $ed->price_per_person_cache !== null ? (float) $ed->price_per_person_cache : null,
+                    'preis_vorlaeufig' => $ed->price_incomplete === true,   // CQ price_incomplete
                     'einzelpreise' => $ed->istEinzelpreis(),
                     'gerichte' => $wording->gerichtZeilen($ed, null, $mitTexten, $mitHandbuchMengen),   // $mitTexten: Hinweistexte der Pakete in der Präsentation
                 ] + ($intern ? ['ek_pp' => $ed->ek_per_person_cache !== null ? (float) $ed->ek_per_person_cache : null] : []);   // EK je Edition NUR intern (wie Angebot)
@@ -75,7 +76,7 @@ class FormatKapitelService
             'format.slots' => fn ($q) => $q->orderBy('position'),
             'format.slots.concept.slots.dish:id,name,sales_wording_standard',
             'format.slots.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-            'format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
+            'format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
             'format.slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
             'format.slots.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
         ]);

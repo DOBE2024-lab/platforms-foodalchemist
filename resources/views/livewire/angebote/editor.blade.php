@@ -471,7 +471,7 @@
                                                     @if($block->concept?->istEinzelpreis())
                                                         <span class="{{ $hinweis }}">Einzelpreise</span>
                                                     @elseif($block->concept !== null)
-                                                        <x-fa::money :value="$block->concept->price_per_person_cache" per="Gast" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
+                                                        <x-fa::money :value="$block->concept->price_per_person_cache" per="Gast" :vorlaeufig="$block->concept->price_incomplete === true" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
                                                     @endif
                                                     @if(trim((string) $block->wording) !== '')<span class="italic text-[var(--fa-accent)]">„{{ $block->wording }}“</span>@endif
                                                     @break

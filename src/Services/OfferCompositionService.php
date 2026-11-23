@@ -529,7 +529,8 @@ class OfferCompositionService
         if ($block->type === 'concept_ref' && $block->concept) {
             $cockpit = $fest->mit($festpreise, fn () => $this->concepts->preisCockpit($block->concept, $outlet, $team));
 
-            return ['vk_pp' => (float) $cockpit['price_per_person'], 'ek_pp' => (float) $cockpit['ek_per_person'], 'pauschal' => 0.0, 'ek_vollstaendig' => true];
+            return ['vk_pp' => (float) $cockpit['price_per_person'], 'ek_pp' => (float) $cockpit['ek_per_person'], 'pauschal' => 0.0, 'ek_vollstaendig' => true,
+                'vk_fehlt' => ConceptPreisService::unvollstaendig($cockpit)];   // CQ price_incomplete: Konzept-Preis nur Summe der bekannten
         }
         if ($block->type === 'recipe_ref' && $block->dish) {
             $faktor = $block->quantity !== null ? (float) $block->quantity : 1.0;
@@ -605,7 +606,7 @@ class OfferCompositionService
     ): array
     {
         if ($kapitel->format_id !== null) {
-            $format = $kapitel->relationLoaded('format') ? $kapitel->format : $kapitel->format()->with('slots.concept:id,price_per_person_cache,ek_per_person_cache')->first();
+            $format = $kapitel->relationLoaded('format') ? $kapitel->format : $kapitel->format()->with('slots.concept:id,price_per_person_cache,price_incomplete,ek_per_person_cache')->first();
             if ($format === null) {
                 return ['vk_pro_person' => null, 'ek_pro_person' => 0.0, 'pauschal' => 0.0, 'food_cost_percent' => null, 'preis_range' => null];
             }
@@ -616,29 +617,32 @@ class OfferCompositionService
             $vk = 0.0;
             $ek = 0.0;
             $unvollstaendig = false;
+            $vkFehlt = false;
             foreach ($format->slots as $fs) {
                 if ($fs->type === 'concept' && $fs->concept !== null) {
                     // Spec 82: eine Abo-Fassung rechnet mit den Preisen des Teams; unvollständig = kein Preis fürs Kapitel (nie 0 €)
                     $w = app(ConceptPreisService::class)->preisWerte($fs->concept, $team, $outlet);
-                    if (! $w['vollstaendig']) {
+                    if (! $w['vollstaendig'] && $w['vk'] === null) {
                         $unvollstaendig = true;
 
                         continue;
                     }
+                    // CQ price_incomplete: eigenes Konzept mit Teil-Preis zählt mit seiner Summe, das Kapitel trägt vk_fehlt
+                    $vkFehlt = $vkFehlt || ! $w['vollstaendig'];
                     $vk += (float) $w['vk'];
                     $ek += (float) $w['ek'];
                 }
             }
             if ($unvollstaendig) {
-                return ['vk_pro_person' => null, 'ek_pro_person' => 0.0, 'pauschal' => 0.0, 'food_cost_percent' => null, 'preis_range' => null];
+                return ['vk_pro_person' => null, 'ek_pro_person' => 0.0, 'pauschal' => 0.0, 'food_cost_percent' => null, 'preis_range' => null, 'vk_fehlt' => true];
             }
 
             return ['vk_pro_person' => round($vk, 2), 'ek_pro_person' => round($ek, 2), 'pauschal' => 0.0,
-                'food_cost_percent' => MargeService::wareneinsatzPct($ek, $vk), 'preis_range' => null];
+                'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ek, $vk), 'preis_range' => null, 'vk_fehlt' => $vkFehlt];
         }
 
         $relationen = ['blocks' => fn ($q) => $q->where('visible', true),
-            'blocks.concept:id,name,price_per_person_cache', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation'];
+            'blocks.concept:id,name,price_per_person_cache,price_incomplete', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation'];
         if ($mitKindkapiteln) {
             $relationen[] = 'children';
         }
@@ -700,7 +704,7 @@ class OfferCompositionService
                 'blocks' => fn ($q) => $q->where('visible', true)->orderBy('position'),
                 'blocks.concept.slots.dish:id,name,sales_wording_standard,ek_total_eur,dish_class_id,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'blocks.concept.slots.dish.standardPresentation',
                 'blocks.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-                'blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
+                'blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
                 'blocks.concept.images',
                 'blocks.dish:id,name,sales_wording_standard,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
                 'format.slots' => fn ($q) => $q->orderBy('position'),
@@ -744,6 +748,7 @@ class OfferCompositionService
                     'eigene_pax' => $k->personen !== null,
                     'gesamt' => $kapGesamt,
                     'vk_pro_person' => $agg['vk_pro_person'],
+                    'vk_fehlt' => (bool) ($agg['vk_fehlt'] ?? false),   // CQ price_incomplete: Summe nur der bekannten Preise
                     'pauschal' => $agg['pauschal'],
                     'preis_range' => $agg['preis_range'],
                     'bloecke' => [],
@@ -767,6 +772,7 @@ class OfferCompositionService
                             $edZeile = ['typ' => 'concept', 'name' => $ed->consumer_name ?: $ed->name, 'claim' => $ed->claim ?: null,
                                 'text' => trim((string) $ed->description) ?: null,
                                 'preis_pp' => $ed->price_per_person_cache !== null ? (float) $ed->price_per_person_cache : null,
+                                'preis_vorlaeufig' => $ed->price_incomplete === true,
                                 'einzelpreise' => $ed->istEinzelpreis(), 'gerichte' => $wording->gerichtZeilen($ed, null, true, $mitHandbuchMengen)];
                             if ($intern) {
                                 $edZeile['ek_pp'] = $ed->ek_per_person_cache !== null ? (float) $ed->ek_per_person_cache : null;
@@ -788,6 +794,7 @@ class OfferCompositionService
                             'ist_header' => str_starts_with((string) $b->type, 'header'),
                             'concept_id' => $b->concept_id !== null ? (int) $b->concept_id : null,
                             'preis_pp' => (float) $bp['vk_pp'],
+                            'preis_vorlaeufig' => (bool) ($bp['vk_fehlt'] ?? false),
                             'pauschal' => (float) $bp['pauschal'],
                             'preis_einheit' => match ($b->type) { 'concept_ref' => 'gast', 'recipe_ref' => 'position', 'position' => 'pauschal', default => null },
                             // Spec 94b: Position zeigt Menge, Einheit und Satz (Kundensicht, ohne EK)

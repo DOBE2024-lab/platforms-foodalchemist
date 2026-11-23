@@ -655,7 +655,7 @@ class ConceptService
             ->when(is_numeric($filters['season'] ?? null), fn ($q) => $q
                 ->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $filters['season'])))
             ->orderBy('name')
-            ->get(['id', 'name', 'class', 'serving_form_id', 'event_type_id', 'price_per_person_cache', 'ist_fassung', 'team_id'])
+            ->get(['id', 'name', 'class', 'serving_form_id', 'event_type_id', 'price_per_person_cache', 'price_incomplete', 'ist_fassung', 'team_id'])
             ->each(fn ($c) => app(ConceptPreisService::class)->anwenden($c, $team));
     }
 

@@ -19,7 +19,7 @@
         <ul class="flex flex-col divide-y divide-[var(--fa-line)]" data-kf-concept-treffer>
             @foreach($conceptTreffer as $c)
                 <li wire:key="kfct-{{ $c->id }}" class="flex items-center justify-between gap-2 py-1.5">
-                    <span>{{ $conceptName($c) }} <span class="fa-t-muted">· {{ $euro($c->price_per_person_cache) }} je Person</span></span>
+                    <span>{{ $conceptName($c) }} <span class="fa-t-muted">· {{ $euro($c->price_per_person_cache) }} je Person</span>@if($c->price_incomplete === true)<x-fa::vorlaeufig />@endif</span>
                     <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="conceptHinzu({{ $c->id }})" data-kf-concept-hinzu="{{ $c->id }}">Hinzufügen</x-fa::button>
                 </li>
             @endforeach

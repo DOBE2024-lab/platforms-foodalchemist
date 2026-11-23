@@ -233,7 +233,7 @@
                                         <div class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-ground)] px-3 py-2.5">
                                             <div class="flex items-center justify-between gap-2 mb-1.5">
                                                 <span class="fa-t-label">So steht es auf der Karte</span>
-                                                <x-fa::money :value="$c->price_per_person_cache" per="Person" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
+                                                <x-fa::money :value="$c->price_per_person_cache" :vorlaeufig="$c->price_incomplete === true" per="Person" class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
                                             </div>
                                             <div class="flex flex-col gap-0.5">
                                                 @forelse($editionMenus[$s->id] ?? [] as $g)
@@ -379,7 +379,7 @@
                                     @forelse($paketKandidaten as $k)
                                         <li wire:key="pkand-{{ $k->id }}" class="flex items-center gap-2 py-1.5 border-t border-[var(--fa-line)] first:border-t-0">
                                             <span class="min-w-0 flex-1 break-words fa-t-body" title="{{ $k->name }}">{{ $k->consumer_name ?: $k->name }}</span>
-                                            <x-fa::money :value="$k->price_per_person_cache" class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
+                                            <x-fa::money :value="$k->price_per_person_cache" :vorlaeufig="$k->price_incomplete === true" class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
                                             <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="conceptEinfuegen({{ $k->id }})" class="shrink-0">Einfügen</x-fa::button>
                                         </li>
                                     @empty
@@ -391,7 +391,7 @@
                                     @forelse($kandidaten as $k)
                                         <li wire:key="kand-{{ $k->id }}" class="flex items-center gap-2 py-1.5 border-t border-[var(--fa-line)] first:border-t-0">
                                             <span class="min-w-0 flex-1 break-words fa-t-body" title="{{ $k->name }}">{{ $k->consumer_name ?: $k->name }}</span>
-                                            <x-fa::money :value="$k->price_per_person_cache" class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
+                                            <x-fa::money :value="$k->price_per_person_cache" :vorlaeufig="$k->price_incomplete === true" class="shrink-0 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" />
                                             <x-fa::button size="sm" icon="heroicon-m-plus" wire:click="conceptEinfuegen({{ $k->id }})" class="shrink-0">Einfügen</x-fa::button>
                                         </li>
                                     @empty
@@ -466,7 +466,7 @@
                                     @foreach($kalkZeilen as $z)
                                         <tr>
                                             <td class="break-words">{{ $z['name'] }}</td>
-                                            <td class="num"><x-fa::money :value="$z['vk']" /></td>
+                                            <td class="num"><x-fa::money :value="$z['vk']" :vorlaeufig="$z['vorlaeufig'] ?? false" /></td>
                                             <td class="num text-[var(--fa-ink-2)]"><x-fa::money :value="$z['ek']" missing="Kosten fehlen" /></td>
                                             <td class="num {{ ($z['w'] !== null && $z['w'] > 35) ? 'text-[var(--fa-crit)] font-medium' : '' }}">{{ $z['w'] !== null ? number_format($z['w'], 1, ',', '.') . ' %' : '–' }}</td>
                                         </tr>

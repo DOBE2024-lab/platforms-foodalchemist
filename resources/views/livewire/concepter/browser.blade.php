@@ -142,7 +142,7 @@
             'wert' => function ($it) use ($vkDisplay) {
                 $preis = isset($vkDisplay[$it->id]) && $vkDisplay[$it->id] !== null ? (float) $vkDisplay[$it->id] : ($it->price_per_person_cache !== null ? (float) $it->price_per_person_cache : null);
 
-                return $preis !== null && $preis > 0 ? number_format($preis, 2, ',', '.') . ' €/P.' : null;
+                return $preis !== null && $preis > 0 ? number_format($preis, 2, ',', '.') . ' €/P.' . (! isset($vkDisplay[$it->id]) && $it->price_incomplete === true ? ' vorläufig' : '') : null;
             },
             'leer' => $istPakete ? 'Noch keine Pakete oder andere Suche.' : 'Noch keine Konzepte oder andere Suche.',
         ])
@@ -231,7 +231,7 @@
                                     @else
                                         <span class="inline-flex items-center gap-1 {{ $betriebsPreis ? 'font-medium text-[var(--fa-ink)]' : '' }}">
                                             @if($betriebsPreis)@svg('heroicon-m-building-storefront', 'w-3.5 h-3.5 text-[var(--fa-ink-3)]')@endif
-                                            <x-fa::money :value="$preis" />
+                                            <x-fa::money :value="$preis" :vorlaeufig="! $betriebsPreis && $it->price_incomplete === true" />
                                         </span>
                                     @endif
                                 </td>

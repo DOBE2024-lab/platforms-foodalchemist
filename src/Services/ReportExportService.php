@@ -302,7 +302,7 @@ class ReportExportService
                     'ek_per_person' => $slot->package->ek_per_person,
                     'food_cost_percent' => $slot->package->food_cost_percent,
                 ] : ($ep !== null ? ['id' => (int) $ep->id, 'name' => $ep->name, 'price_per_person' => $ep->price_per_person_cache,
-                    'ek_per_person' => $ep->ek_per_person_cache, 'food_cost_percent' => null] : null),
+                    'ek_per_person' => $ep->ek_per_person_cache, 'food_cost_percent' => null, 'price_incomplete' => $ep->price_incomplete] : null),
                 'gerichte' => $gerichte->values()->all(),
             ];
         })->values();
@@ -330,6 +330,7 @@ class ReportExportService
                 'status' => $concept->status,
                 'description' => $concept->description,
                 'price_per_person_cache' => $concept->price_per_person_cache,
+                'price_incomplete' => $concept->price_incomplete,   // CQ price_incomplete
                 'ek_per_person_cache' => $concept->ek_per_person_cache,
                 'work_time_min_cache' => $concept->work_time_min_cache,
                 'category' => $concept->category?->name,
@@ -386,7 +387,7 @@ class ReportExportService
         $format = FoodAlchemistFormat::visibleToTeam($team)
             ->with([
                 'slots' => fn ($q) => $q->orderBy('position'),
-                'slots.concept:id,name,consumer_name,claim,description,status,price_per_person_cache',
+                'slots.concept:id,name,consumer_name,claim,description,status,price_per_person_cache,price_incomplete',
                 'heroImage',
                 // F2e: priceRange liest ausschließlich slots.concept (Alt-Editionen-Fallback entfernt).
                 'servingForm:id,label',

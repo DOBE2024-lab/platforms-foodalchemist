@@ -51,7 +51,7 @@
                                 <span class="block fa-t-muted tabular-nums">
                                     {{ $c->slots_count }} {{ $c->slots_count === 1 ? 'Position' : 'Positionen' }}
                                     @if($preisListe !== null)
-                                        · <span class="{{ isset($vkDisplay[$c->id]) ? 'font-medium text-[var(--fa-ink-2)]' : '' }}" @if(isset($vkDisplay[$c->id])) title="€/Gast für {{ $aktiverBetrieb }}" @endif>{{ $geld($preisListe) }}</span>
+                                        · <span class="{{ isset($vkDisplay[$c->id]) ? 'font-medium text-[var(--fa-ink-2)]' : '' }}" @if(isset($vkDisplay[$c->id])) title="€/Gast für {{ $aktiverBetrieb }}" @endif>{{ $geld($preisListe) }}</span>@if(! isset($vkDisplay[$c->id]) && $c->price_incomplete === true)<x-fa::vorlaeufig />@endif
                                     @endif
                                     · {{ $phasen[$c->phase] ?? $c->phase }}
                                 </span>

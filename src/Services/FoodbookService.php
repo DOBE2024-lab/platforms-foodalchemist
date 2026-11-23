@@ -1344,7 +1344,7 @@ class FoodbookService
     public function kapitelAggregat(Team $team, FoodAlchemistFoodbookKapitel $kapitel, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
         $kapitel->loadMissing(['blocks' => fn ($q) => $q->where('visible', true),
-            'blocks.concept:id,name,price_per_person_cache', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
+            'blocks.concept:id,name,price_per_person_cache,price_incomplete', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
             'blocks.staffel', 'children']);
 
         $vk = 0.0;
@@ -1533,7 +1533,7 @@ class FoodbookService
             'chapters.blocks.concept.slots.dish:id,name,sales_wording_standard',
             'chapters.blocks.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
             // eingebettetes Paket (kind=paket-Concept) + dessen Gerichte für die Menü-Auflösung
-            'chapters.blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
+            'chapters.blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
             'chapters.blocks.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
             'chapters.blocks.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
             // E8.3: recipe_ref braucht sales_net/ek_total_eur für die €/Position-Preisspalte (blockPreis) — sonst rendert der Preis leer.
@@ -1544,7 +1544,7 @@ class FoodbookService
             'chapters.format.slots' => fn ($q) => $q->orderBy('position'),
             'chapters.format.slots.concept.slots.dish:id,name,sales_wording_standard',
             'chapters.format.slots.concept.slots.package.dishes.dish:id,name,sales_wording_standard',
-            'chapters.format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
+            'chapters.format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
             'chapters.format.slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
             'chapters.format.slots.concept.slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
             'crmCompany', 'crmContact',
@@ -1784,7 +1784,7 @@ class FoodbookService
                 'slots' => fn ($q) => $q->orderBy('position'),
                 'slots.dish:id,name,sales_wording_standard',
                 'slots.package.dishes.dish:id,name,sales_wording_standard',
-                'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
+                'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
                 'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
                 'slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
             ])
@@ -1880,7 +1880,7 @@ class FoodbookService
             ->when(! empty($facetten['servierform']), fn ($q) => $q->where('serving_form_id', (int) $facetten['servierform']))
             ->when(! empty($facetten['einsatzmoment']), fn ($q) => $q->whereHas('serviceMoments', fn ($w) => $w->where('foodalchemist_service_moments.id', (int) $facetten['einsatzmoment'])))
             ->when(! empty($facetten['season']), fn ($q) => $q->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $facetten['season'])))
-            ->orderBy('name')->limit($limit)->get(['id', 'name', 'price_per_person_cache', 'event_type_id', 'serving_form_id']);
+            ->orderBy('name')->limit($limit)->get(['id', 'name', 'price_per_person_cache', 'price_incomplete', 'event_type_id', 'serving_form_id']);
     }
 
     /**
@@ -1898,7 +1898,7 @@ class FoodbookService
             ->when(! empty($facetten['servierform']), fn ($q) => $q->where('serving_form_id', (int) $facetten['servierform']))
             ->when(! empty($facetten['einsatzmoment']), fn ($q) => $q->whereHas('serviceMoments', fn ($w) => $w->where('foodalchemist_service_moments.id', (int) $facetten['einsatzmoment'])))
             ->when(! empty($facetten['season']), fn ($q) => $q->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $facetten['season'])))
-            ->orderBy('name')->limit($limit)->get(['id', 'name', 'consumer_name', 'price_per_person_cache', 'event_type_id', 'serving_form_id']);
+            ->orderBy('name')->limit($limit)->get(['id', 'name', 'consumer_name', 'price_per_person_cache', 'price_incomplete', 'event_type_id', 'serving_form_id']);
     }
 
     /** Einzelne Gerichte (VK-Rezepte) für den recipe_ref-Picker. */

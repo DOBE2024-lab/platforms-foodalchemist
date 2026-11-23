@@ -5,7 +5,6 @@ namespace Platform\FoodAlchemist\Services\Rezept;
 use Closure;
 use Illuminate\Support\Collection;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\GpAggregateService;
 
 /**
  * Spec-Flags (Diät/Herkunft, dynamisch über alle Ebenen). Ausgelagert aus
@@ -29,8 +28,6 @@ class DiaetEignung
 
     public const WARN = ['contains_pork', 'contains_beef', 'contains_alcohol'];   // Spec 94c: Alkohol aus den Artikeln des GP
 
-    public function __construct(private GpAggregateService $gpAggregate) {}
-
     /** Die spec_*-Spaltennamen (Zusicherung + Warnung). @return list<string> */
     public static function felder(): array
     {
@@ -40,10 +37,14 @@ class DiaetEignung
     /**
      * Setzt spec_is_* / spec_contains_* am Rezept (ohne Speichern) und gibt die Zähler zurück.
      *
+     * Keine eigene Dienst-Abhängigkeit (Spec 98 Klinke: sonst läge die Klasse im großen Kreis über GpAggregateService):
+     * „gemappt?“ und „Alkohol im GP?“ reicht der RecipeRecomputeService als Closures herein.
+     *
      * @param  Closure(\Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient): bool  $istGemappt
+     * @param  Closure(\Platform\FoodAlchemist\Models\FoodAlchemistGp): (bool|null)  $enthaeltAlkohol
      * @return array{n_total: int, n_mapped: int}
      */
-    public function setze(FoodAlchemistRecipe $recipe, Collection $zutaten, Closure $istGemappt): array
+    public function setze(FoodAlchemistRecipe $recipe, Collection $zutaten, Closure $istGemappt, Closure $enthaeltAlkohol): array
     {
         $felder = [...self::ASSURE, ...self::WARN];
         /** @var array<string, list<bool|null>> $werte */
@@ -60,7 +61,7 @@ class DiaetEignung
             if ($z->gp_id !== null && $z->gp !== null && $istGemappt($z)) {
                 $nMapped++;
                 foreach ($felder as $f) {
-                    $werte[$f][] = $this->boolOrNull($f === 'contains_alcohol' ? $this->gpAggregate->enthaeltAlkohol($z->gp) : $z->gp->{"tag_{$f}"});
+                    $werte[$f][] = $this->boolOrNull($f === 'contains_alcohol' ? $enthaeltAlkohol($z->gp) : $z->gp->{"tag_{$f}"});
                 }
             } elseif ($z->referencedRecipe !== null) {
                 $nMapped++;

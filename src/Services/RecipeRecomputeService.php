@@ -77,7 +77,7 @@ class RecipeRecomputeService
         private PriceService $preise,
     ) {
         $this->vorrat = new Rezept\RecomputeVorrat($preise);
-        $this->diaet = new Rezept\DiaetEignung($gpAggregate);
+        $this->diaet = new Rezept\DiaetEignung();
     }
 
     /** Pipeline für EIN Rezept — idempotent (I4), eine Transaktion (V-07). */
@@ -784,7 +784,7 @@ class RecipeRecomputeService
     // ── 6. Spec-Flags (Diät/Herkunft, dynamisch über alle Ebenen) → Rezept\DiaetEignung ──
     private function specFlags(FoodAlchemistRecipe $recipe, Collection $zutaten): void
     {
-        ['n_total' => $nTotal, 'n_mapped' => $nMapped] = $this->diaet->setze($recipe, $zutaten, fn ($z) => $this->istGemappt($z));
+        ['n_total' => $nTotal, 'n_mapped' => $nMapped] = $this->diaet->setze($recipe, $zutaten, fn ($z) => $this->istGemappt($z), fn ($gp) => $this->gpAggregate->enthaeltAlkohol($gp));
         $recipe->spec_n_total = $nTotal;
         $recipe->spec_n_mapped = $nMapped;
         $ownRang = match (true) {

@@ -50,7 +50,7 @@ it('kiNaehrwerte: Vorschlag validiert → Übernehmen schreibt Fallback-Schicht;
 
 it('Allergene werden nicht per KI geschätzt — weder Detailspalte noch gps.ENRICH (Dominique 2026-10-13)', function () {
     expect(method_exists(DetailPanel::class, 'kiAllergene'))->toBeFalse()
-        ->and(\Platform\FoodAlchemist\Services\BulkEnrichService::SCHRITTE_GP_EXPLIZIT)->not->toContain('allergene');
+        ->and(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::SCHRITTE_GP_EXPLIZIT)->not->toContain('allergene');
 });
 
 it('FakeProvider-Echo ⇒ ehrlicher Fehler, nichts geschrieben; Kind-Team blockt am Curate-Gate', function () {

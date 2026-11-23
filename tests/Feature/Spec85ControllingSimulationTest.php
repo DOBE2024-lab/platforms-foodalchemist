@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\LeadLaService;
 use Platform\FoodAlchemist\Services\PriceService;
 use Platform\FoodAlchemist\Services\SimulationService;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

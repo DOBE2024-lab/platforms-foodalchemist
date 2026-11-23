@@ -193,8 +193,8 @@ it('Kundengrenze: unter einem Master-Team endet Haupt-Team, Kontingent und Stand
     expect($rechte->kundenHauptTeam($enkel)->id)->toBe($this->childA->id)
         ->and($rechte->kundenHauptTeam($this->childB)->id)->toBe($this->childB->id)
         ->and($rechte->kundenHauptTeam($this->rootTeam)->id)->toBe($this->rootTeam->id);
-    expect(app(\Platform\FoodAlchemist\Services\StandortService::class)->unterTeamIds($this->rootTeam))->toBe([])   // Master hat keine Standorte
-        ->and(app(\Platform\FoodAlchemist\Services\StandortService::class)->unterTeamIds($this->childA))->toBe([(int) $enkel->id]);
+    expect(app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->unterTeamIds($this->rootTeam))->toBe([])   // Master hat keine Standorte
+        ->and(app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->unterTeamIds($this->childA))->toBe([(int) $enkel->id]);
 
     config(['foodalchemist.master_team_id' => null]);
     expect($rechte->kundenHauptTeam($enkel)->id)->toBe($this->rootTeam->id);   // ohne Master wie bisher

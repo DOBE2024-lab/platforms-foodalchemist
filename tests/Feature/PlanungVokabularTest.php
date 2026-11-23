@@ -5,7 +5,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
-use Platform\FoodAlchemist\Services\VoiceCommandService;
+use Platform\FoodAlchemist\Services\Plattform\VoiceCommandService;
 use Platform\FoodAlchemist\Support\Planung\PlanungOptionen;
 use Platform\FoodAlchemist\Support\Planung\PlanungVokabular;
 use Platform\FoodAlchemist\Support\Planung\VokabularCodes;

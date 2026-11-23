@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Support;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\MandantenService;
+use Platform\FoodAlchemist\Services\Plattform\MandantenService;
 
 /**
  * Spec 82 §13 G — Betreiber und Kurator getrennt: Ein Plattform-Admin ohne echte Mitgliedschaft sieht in einem Kunden-Team KEINE Inhalte.
@@ -64,7 +64,7 @@ final class InhaltsSperre
         }
 
         // Spec 84 §4.4 (E3): befristeter Support-Zugang, vom Mandanten erteilt, hebt die Sperre für seine Dauer auf
-        return app(\Platform\FoodAlchemist\Services\SupportFreigabeService::class)->aktiveFuer($team, $user) === null;
+        return app(\Platform\FoodAlchemist\Services\Plattform\SupportFreigabeService::class)->aktiveFuer($team, $user) === null;
     }
 
     /**
@@ -82,7 +82,7 @@ final class InhaltsSperre
             return null;
         }
 
-        return app(\Platform\FoodAlchemist\Services\SupportFreigabeService::class)->aktiveFuer($team, $user);
+        return app(\Platform\FoodAlchemist\Services\Plattform\SupportFreigabeService::class)->aktiveFuer($team, $user);
     }
 
     /** Mitglied des Master-Teams, das einen KURATIERTEN Mandanten liest (vertraglich, §13 G): nicht gesperrt, aber nur lesend (FaRechte::rolle). */

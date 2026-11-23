@@ -147,7 +147,7 @@ class MargeImpactService
         }
         // Spec 85 PR-F ($teamSicht, Simulation): Rezepte der Team-Brille (alle = jeder Standort), gerechnet mit den Preisen und Leitartikeln des
         // BETRACHTENDEN Teams — bei Rezepten eines Standorts der Brille mit dessen eigenen (nie eine gemeinsame Preis-Sicht). Sonst wie bisher.
-        $lens = $teamSicht ? app(StandortService::class)->leseTeamIds($team) : [];
+        $lens = $teamSicht ? app(Plattform\StandortService::class)->leseTeamIds($team) : [];
         // Sicht des Betrachters (eigene, Master-Kette = geerbte/Abo-Rezepte, globale) PLUS die Rezepte der Standorte der Brille
         $extra = array_values(array_diff($lens, [(int) $team->id]));
         $basis = $teamSicht && $extra !== []

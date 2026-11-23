@@ -570,7 +570,7 @@ class RecipeStepService
             return false;
         }
         $foto->steps()->detach();
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($foto->context_file_id, $foto->pfad, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($foto)]);
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($foto->context_file_id, $foto->pfad, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($foto)]);
         $foto->delete();
 
         return true;

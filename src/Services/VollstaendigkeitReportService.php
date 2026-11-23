@@ -58,7 +58,7 @@ class VollstaendigkeitReportService
     {
         $felder = [];
         foreach ($schritte as $schritt) {
-            $ziel = BulkEnrichService::ZIELFELDER[$schritt] ?? null;
+            $ziel = Plattform\BulkEnrichService::ZIELFELDER[$schritt] ?? null;
             // Zeilen-Schritte (B-1/B-2: regeneration, garverlust, rollen) haben kein Spaltenziel —
             // ihre Lücke zählt `zeilenLuecken()` relational.
             if ($ziel !== null && $ziel['feld'] !== null) {
@@ -182,16 +182,16 @@ class VollstaendigkeitReportService
     private function blockAnreicherung(Team $team): array
     {
         $basis = ['gesamt' => $this->basisrezepte($team)->count()];
-        foreach ($this->felder(BulkEnrichService::SCHRITTE) as $schritt => $feld) {
+        foreach ($this->felder(Plattform\BulkEnrichService::SCHRITTE) as $schritt => $feld) {
             $basis["leer_{$schritt}"] = (clone $this->basisrezepte($team))->whereNull($feld)->count();
         }
-        $basis += $this->zeilenLuecken($this->basisrezepte($team), BulkEnrichService::SCHRITTE);
+        $basis += $this->zeilenLuecken($this->basisrezepte($team), Plattform\BulkEnrichService::SCHRITTE);
 
         $vk = ['gesamt' => $this->gerichte($team)->count()];
-        foreach ($this->felder(BulkEnrichService::SCHRITTE_VK) as $schritt => $feld) {
+        foreach ($this->felder(Plattform\BulkEnrichService::SCHRITTE_VK) as $schritt => $feld) {
             $vk["leer_{$schritt}"] = (clone $this->gerichte($team))->whereNull($feld)->count();
         }
-        $vk += $this->zeilenLuecken($this->gerichte($team), BulkEnrichService::SCHRITTE_VK);
+        $vk += $this->zeilenLuecken($this->gerichte($team), Plattform\BulkEnrichService::SCHRITTE_VK);
 
         $ohneSchritt = [];
         foreach (self::FELDER_OHNE_SCHRITT as $feld) {

@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\MasterTeamService;
+use Platform\FoodAlchemist\Services\Plattform\MasterTeamService;
 
 /** Spec 82 §13 B4 · Master-Team lesen, optional die Wirkungs-Vorschau eines Wechsels (nur Plattform-Admin). */
 class MasterTeamGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

@@ -3,7 +3,7 @@
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\OutletSettingsService;
+use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -202,9 +202,9 @@ class PortfolioService
 
     // ── intern ────────────────────────────────────────────────────────────────
 
-    private function brille(): StandortService
+    private function brille(): Plattform\StandortService
     {
-        return app(StandortService::class);
+        return app(Plattform\StandortService::class);
     }
 
     /**

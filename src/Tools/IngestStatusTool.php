@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\IngestStatusService;
+use Platform\FoodAlchemist\Services\Plattform\IngestStatusService;
 
 /**
  * Spec 13 · S3 — Lese-Fläche des Katalog-Ingests (Kanal B). Read-only: der Import

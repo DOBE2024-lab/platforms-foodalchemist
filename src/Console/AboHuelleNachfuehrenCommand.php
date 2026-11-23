@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\Plattform\AboService;
 
 /**
  * Spec 84 B3 Regel B · Abo-Hüllen aller Mandanten nachts neu rechnen.

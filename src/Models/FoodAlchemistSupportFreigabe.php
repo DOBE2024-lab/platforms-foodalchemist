@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
 
 /**
  * Spec 84 §4.4 (E3) · Befristeter Support-Zugang, den ein Mandant Plattform-Admins gibt. Geschrieben nur über
- * {@see \Platform\FoodAlchemist\Services\SupportFreigabeService}; jede Freigabe, jeder Widerruf und jeder Zugriff hängt als
+ * {@see \Platform\FoodAlchemist\Services\Plattform\SupportFreigabeService}; jede Freigabe, jeder Widerruf und jeder Zugriff hängt als
  * Plattform-Protokoll an dieser Zeile.
  */
 class FoodAlchemistSupportFreigabe extends Model

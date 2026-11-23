@@ -23,7 +23,7 @@ use Platform\FoodAlchemist\Support\MasterTeam;
  */
 class ProjektUebernahmeService
 {
-    use PlattformAdminPruefung;
+    use Plattform\PlattformAdminPruefung;
 
     /** Kunden-DNA-Feld → Team-DNA-Feld. Der Default-Schreibstil wird NICHT kopiert: Schreibstile gehören dem Master-Team und wären im Oberteam ein toter Verweis. */
     public const DNA_ZUORDNUNG = [
@@ -36,11 +36,11 @@ class ProjektUebernahmeService
 
     public function __construct(
         private readonly ProjektService $projekte,
-        private readonly TeamAnlegenService $teams,
-        private readonly TeamProfilService $profile,
+        private readonly Plattform\TeamAnlegenService $teams,
+        private readonly Plattform\TeamProfilService $profile,
         private readonly CanvasService $canvas,
-        private readonly MandantenService $mandanten,
-        private readonly PlattformProtokoll $protokoll,
+        private readonly Plattform\MandantenService $mandanten,
+        private readonly Plattform\PlattformProtokoll $protokoll,
         private readonly FaRechte $rechte,
     ) {}
 

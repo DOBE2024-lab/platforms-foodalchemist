@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistBulkGpProposal;
 use Platform\FoodAlchemist\Models\FoodAlchemistBulkProposal;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\BulkEnrichService;
+use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
 use Platform\FoodAlchemist\Services\ConceptGeneratorService;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\FeedbackService;

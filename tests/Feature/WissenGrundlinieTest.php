@@ -145,7 +145,7 @@ it('B3: die Aufrufstellen der Rezept-Kette geben knowledge_dropped_chars weiter'
         'src/Services/RecipeOneShotService.php',
         'src/Services/RecipeReviseService.php',
         'src/Services/RecipeReviewService.php',
-        'src/Services/BulkEnrichService.php',
+        'src/Services/Plattform/BulkEnrichService.php',
         'src/Livewire/Recipes/RecipeModal.php',
         'src/Livewire/Recipes/StepEditor.php',
     ];

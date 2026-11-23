@@ -8,13 +8,13 @@ use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\AboKuendigungService;
-use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\Plattform\AboKuendigungService;
+use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\SignalService;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 use Platform\FoodAlchemist\Support\FaTeam;
 use Platform\FoodAlchemist\Support\FremdSchreiben;
 use Platform\FoodAlchemist\Support\StammPaket;
@@ -182,7 +182,7 @@ it("Ausnahme 'abo-pflege': Kündigung durch den Master kopiert in den Mandanten,
 
     $r = FaTeam::imTeam($this->master, fn () => app(AboKuendigungService::class)->kuendigen($this->master, $abo->id, $kurator, bestaetigt: true));
     expect($r['kopien'])->not->toBeEmpty();
-    $fremd = array_filter(($this->zeilen)(), fn ($k) => $k['art'] === 'fremd' && str_starts_with((string) ($k['aufrufer'] ?? ''), 'Services/AboKuendigungService.php'));
+    $fremd = array_filter(($this->zeilen)(), fn ($k) => $k['art'] === 'fremd' && str_starts_with((string) ($k['aufrufer'] ?? ''), 'Services/Plattform/AboKuendigungService.php'));
     expect($fremd)->toBe([]);
 });
 

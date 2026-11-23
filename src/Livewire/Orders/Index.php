@@ -476,8 +476,8 @@ class Index extends Component
 
         return view('foodalchemist::livewire.orders.index', [
             // Spec 77c: Team-Brille „alle" → Standort-Spalte
-            'standortSpalte' => app(\Platform\FoodAlchemist\Services\StandortService::class)->zeigtStandorte($team),
-            'standortNamen' => app(\Platform\FoodAlchemist\Services\StandortService::class)->teamNamen([(int) $team->id, ...app(\Platform\FoodAlchemist\Services\StandortService::class)->unterTeamIds($team)]),
+            'standortSpalte' => app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->zeigtStandorte($team),
+            'standortNamen' => app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->teamNamen([(int) $team->id, ...app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->unterTeamIds($team)]),
             'liste' => $liste,
             'gruppen' => $gruppen,
             'liefertagGruppen' => $liefertagGruppen,

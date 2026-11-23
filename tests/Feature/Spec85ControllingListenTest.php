@@ -21,7 +21,7 @@ use Platform\FoodAlchemist\Services\PortfolioService;
 use Platform\FoodAlchemist\Services\PromotionService;
 use Platform\FoodAlchemist\Services\SignalTrendService;
 use Platform\FoodAlchemist\Services\SpeisekarteService;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

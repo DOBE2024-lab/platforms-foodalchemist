@@ -27,7 +27,7 @@ class PresentationShareCardService
     /** Analog für das PWA-/Homescreen-Icon (Logo auf Marken-Quadrat). */
     private const ICON_VERSION = 1;
 
-    public function __construct(private FoodAlchemistMediaService $media)
+    public function __construct(private Plattform\FoodAlchemistMediaService $media)
     {
     }
 

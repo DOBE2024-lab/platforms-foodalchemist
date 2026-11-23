@@ -41,10 +41,10 @@ class ConceptFassungService
 
     public function __construct(
         private FaRechte $rechte,
-        private AboService $abos,
+        private Plattform\AboService $abos,
         private FassungService $rezeptFassungen,
         private FassungsDarreichungService $fassungsDarreichungen,
-        private PlattformProtokoll $protokoll,
+        private Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /**

@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Livewire\Suppliers\ItemModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\BearbeitungssperreService;
+use Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService;
 use Platform\FoodAlchemist\Tests\Support\LesemodusDom;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

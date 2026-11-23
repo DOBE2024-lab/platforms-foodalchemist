@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\TeamBillableUsage;
 use Platform\FoodAlchemist\Models\FoodAlchemistMandant;
-use Platform\FoodAlchemist\Services\GebuehrenZaehler;
+use Platform\FoodAlchemist\Services\Plattform\GebuehrenZaehler;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

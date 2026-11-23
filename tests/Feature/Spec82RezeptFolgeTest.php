@@ -16,7 +16,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalStatus;
 use Platform\FoodAlchemist\Enums\SignalTyp;
-use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\AngebotEinfrierService;
 use Platform\FoodAlchemist\Services\AngebotService;
 use Platform\FoodAlchemist\Services\FassungService;

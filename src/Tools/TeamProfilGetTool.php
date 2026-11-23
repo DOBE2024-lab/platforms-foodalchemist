@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\TeamProfilService;
+use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;
 
 /** Spec 82 §6 · Teamprofil lesen: Küchen-Fakten (Pax, Convenience-Grad), Flächen, Equipment dreiwertig. */
 class TeamProfilGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

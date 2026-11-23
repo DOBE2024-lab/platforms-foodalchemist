@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\AngebotService;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
+use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\KapitelLogoService;
 use Platform\FoodAlchemist\Services\PresentationDesignService;
 use Platform\FoodAlchemist\Services\RecipeService;

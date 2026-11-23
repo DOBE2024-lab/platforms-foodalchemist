@@ -7,7 +7,7 @@ use Platform\ActivityLog\Traits\LogsActivity;
 
 /**
  * Spec 82 §13 D — Monatspreis eines Gebühren-Bausteins, append-only mit „gültig ab“. Bewusst ohne team_id:
- * die Preise gelten für die ganze Plattform. Geschrieben nur über {@see \Platform\FoodAlchemist\Services\PlanPreisService}.
+ * die Preise gelten für die ganze Plattform. Geschrieben nur über {@see \Platform\FoodAlchemist\Services\Plattform\PlanPreisService}.
  */
 class FoodAlchemistPlanPreis extends Model
 {

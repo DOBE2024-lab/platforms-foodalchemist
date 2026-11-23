@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Livewire\Abos\Index as AbosIndex;
 use Platform\FoodAlchemist\Livewire\Recipes\FassungModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Support\FaBereiche;

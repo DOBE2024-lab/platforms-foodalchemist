@@ -653,7 +653,7 @@ class PreisVerlaufService
 
     private function protokoll(string $aktion, FoodAlchemistSupplierItem $item, string $quelle, int $id, object $zeile, ?int $userId, ?string $grund): void
     {
-        app(PlattformProtokoll::class)->schreibe($aktion, array_filter([
+        app(Plattform\PlattformProtokoll::class)->schreibe($aktion, array_filter([
             'quelle' => $quelle, 'stand_id' => $id, 'preis' => (float) $zeile->price, 'grund' => $grund,
             'gueltig_ab' => $zeile->status_valid_from ?? $zeile->change_date ?? null,
         ], fn ($v) => $v !== null), $userId !== null ? \Platform\Core\Models\User::find($userId) : null, $item);

@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\Plattform\AboService;
 
 /** Spec 82 §8 / §13 B6 · Abos lesen: das Master-Team sieht alle seine Abos, ein Mandant (bzw. Unter-Team) die seines Oberteams. */
 class AbosGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

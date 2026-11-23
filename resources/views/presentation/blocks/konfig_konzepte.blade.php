@@ -2,7 +2,7 @@
      Preis pro Person aus der Preistabelle (live für Gästezahl und Tageszeit, bei „Tag und Abend“ der eigene Teil) und „Details“: Detailansicht mit Beschreibung, Bildern und den
      Gerichten je Tageszeit im Wording wie im Foodbook (Stufe 5b), dazu Allergen-Codes je Gericht und „Konzept wählen“. --}}
 @php
-    $media = app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class);
+    $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class);
     $ansicht = ($style['ansicht'] ?? 'raster') === 'liste' ? 'pt-konfig-liste' : 'pt-konfig-raster';
     $mitBild = $style['show_bild'] ?? true;
     $mitAb = $style['show_ab_preis'] ?? true;

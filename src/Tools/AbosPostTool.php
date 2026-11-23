@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\Plattform\AboService;
 
 /** Spec 82 §8 / §13 B6 · Abo vergeben: Sammlung des Master-Teams an einen Mandanten (nur Master-Team, Rolle „Freigeben“). */
 class AbosPostTool extends WareneingangTool implements ToolContract, ToolMetadataContract

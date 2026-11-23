@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupportFreigabe;
-use Platform\FoodAlchemist\Services\SupportFreigabeService;
+use Platform\FoodAlchemist\Services\Plattform\SupportFreigabeService;
 
 /** Spec 84 §4.4 (E3) · Support-Zugang sofort widerrufen (nur Owner/Admin des Hauptteams). */
 class SupportZugangDeleteTool extends WareneingangTool implements ToolContract, ToolMetadataContract

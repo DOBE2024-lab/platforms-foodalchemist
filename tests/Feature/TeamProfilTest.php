@@ -5,7 +5,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
 use Platform\FoodAlchemist\Services\MachbarkeitService;
-use Platform\FoodAlchemist\Services\TeamProfilService;
+use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;
 use Platform\FoodAlchemist\Support\MachbarkeitKontext;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

@@ -299,7 +299,7 @@
                                 <x-fa::field label="Logo">
                                     @if($logoPath)
                                         <div class="flex items-center gap-2">
-                                            <img src="{{ app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($karte?->logo_context_file_id, $logoPath) }}" alt="Logo" class="h-10 rounded-[var(--fa-radius-control)] bg-[var(--fa-surface)] border border-[var(--fa-line)] p-1" />
+                                            <img src="{{ app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($karte?->logo_context_file_id, $logoPath) }}" alt="Logo" class="h-10 rounded-[var(--fa-radius-control)] bg-[var(--fa-surface)] border border-[var(--fa-line)] p-1" />
                                             <x-fa::icon-button icon="heroicon-o-trash" label="Logo entfernen" tone="danger" size="sm" wire:click="brandingLogoEntfernen" />
                                         </div>
                                     @endif
@@ -309,7 +309,7 @@
                                 <x-fa::field label="Titelbild">
                                     @if($coverPath)
                                         <div class="flex items-center gap-2">
-                                            <img src="{{ app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($karte?->cover_context_file_id, $coverPath) }}" alt="Titelbild" class="h-14 rounded-[var(--fa-radius-control)] object-cover" />
+                                            <img src="{{ app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($karte?->cover_context_file_id, $coverPath) }}" alt="Titelbild" class="h-14 rounded-[var(--fa-radius-control)] object-cover" />
                                             <x-fa::icon-button icon="heroicon-o-trash" label="Titelbild entfernen" tone="danger" size="sm" wire:click="brandingCoverEntfernen" />
                                         </div>
                                     @endif

@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
-use Platform\FoodAlchemist\Services\BildWaisenService;
+use Platform\FoodAlchemist\Services\Plattform\BildWaisenService;
 
 /**
  * Waisen-Bilddateien (Folge aus dem Bild-Löschschutz #901/#907): Standard ist ein Bericht, der nichts schreibt.

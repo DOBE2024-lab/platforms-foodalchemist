@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\MandantExportService;
+use Platform\FoodAlchemist\Services\Plattform\MandantExportService;
 
 /**
  * Spec 82 §13 C3 · Datenexport eines Mandanten ANSTOSSEN (Job). Plattform-Admin oder Inhaber/Admin des Mandanten. Der Auslöser sieht

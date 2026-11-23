@@ -12,7 +12,7 @@ use Livewire\WithPagination;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\BulkEnrichService;
+use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
 use Platform\FoodAlchemist\Services\MatchService;
 use Platform\FoodAlchemist\Services\QualityRunService;
 use Platform\FoodAlchemist\Services\RecipeFindingsBatchService;
@@ -395,7 +395,7 @@ class ReviewQueue extends Component
 
         $signalSvc = app(SignalService::class);
         // Ebene 2: die Signale-Werkbank folgt der Betriebsbrille (Betriebs-Lane + Team-Core-Lane).
-        $outlet = app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($team);
+        $outlet = app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team);
 
         // Spec 21 · E2: Zustands-Sicht (Bestand + Delta + Policy) über der Einzelliste.
         // Ein Aufruf, zwei Verwendungen — die Zeilen selbst und die Typen, die dadurch

@@ -52,7 +52,7 @@ class GpAromaBackfillService
         File::ensureDirectoryExists($bericht);
         $stempel = now()->format('Ymd_His');
         $aroma = app(GpAromaService::class);
-        $bulk = app(BulkEnrichService::class);
+        $bulk = app(Plattform\BulkEnrichService::class);
 
         $neutralNeu = in_array('anker_neutral', $neuQuellen, true);
         $ohneAnker = $nur !== 'profil' ? $this->ohneAnker($scope, $neutralNeu) : [];
@@ -348,7 +348,7 @@ class GpAromaBackfillService
      * @param  list<int>  $rezeptIds
      * @param  list<int>  $ankerIds  GPs, deren KI-Anker neu gefragt wird (`anker_ki`)
      */
-    private function neuSchaetzen(BulkEnrichService $bulk, Team $team, array $gpIds, array $rezeptIds, int $limit, bool $extern, string $protokoll, callable $ausgabe, array $ankerIds = []): int
+    private function neuSchaetzen(Plattform\BulkEnrichService $bulk, Team $team, array $gpIds, array $rezeptIds, int $limit, bool $extern, string $protokoll, callable $ausgabe, array $ankerIds = []): int
     {
         $n = 0;
         $ankerIds = array_values(array_filter($this->streueNachWg($ankerIds), fn ($id) => ($gp = FoodAlchemistGp::find($id)) !== null && app(GpAromaService::class)->anreicherbar($gp) && $gp->isOwnedBy($team)));

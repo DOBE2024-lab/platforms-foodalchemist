@@ -229,7 +229,7 @@ class SignalService
     {
         // Spec 85 PR-D: mit Team-Brille (Controlling-Kopf) zählen die Signale der Brillen-Teams; bei „eigen“ bleibt es die sichtbare Kette wie bisher
         $basis = $mitBrille
-            ? app(StandortService::class)->leseBereichOderSichtbar(FoodAlchemistSignal::query(), $team)
+            ? app(Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistSignal::query(), $team)
             : FoodAlchemistSignal::visibleToTeam($team);
 
         return $basis->offen()

@@ -7,9 +7,9 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanPreis;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\GebuehrenZaehler;
-use Platform\FoodAlchemist\Services\PlanNutzungService;
-use Platform\FoodAlchemist\Services\PlanPreisService;
+use Platform\FoodAlchemist\Services\Plattform\GebuehrenZaehler;
+use Platform\FoodAlchemist\Services\Plattform\PlanNutzungService;
+use Platform\FoodAlchemist\Services\Plattform\PlanPreisService;
 
 /**
  * Spec 82 §13 B5/D — Gebühren-Preispflege. Eingebettet in die Plattform-Verwaltung des Hosts

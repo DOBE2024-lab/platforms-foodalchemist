@@ -33,7 +33,7 @@ class Ausreisser extends Component
         $treffer = [];
         $jeStandort = [];
         if ($team !== null) {
-            $standorte = app(\Platform\FoodAlchemist\Services\StandortService::class);
+            $standorte = app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class);
             $teams = \Platform\Core\Models\Team::whereIn('id', $this->leseTeamIds($team))->get();
             foreach ($teams as $t) {
                 $r = $standorte->alsEigen($t, fn () => $anomalien->detect($t, max(1.5, (float) $this->faktor)));

@@ -55,7 +55,6 @@ class AngebotService
                 'crmCompany', 'crmContact',
                 'concepts' => fn ($q) => $q->withCount('slots')->orderBy('name'),
                 'referencedConcepts' => fn ($q) => $q->withCount('slots'),
-                'pakete:id,name,offer_id',
             ])
             ->find($id);
     }

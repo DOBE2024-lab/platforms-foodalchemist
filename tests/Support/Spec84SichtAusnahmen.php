@@ -19,7 +19,7 @@ return [
     'Livewire/Planung/Index.php' => 1,
     'Livewire/Planung/KapitelRail.php' => 1,
     'Livewire/Produktion/Editor.php' => 5,
-    'Livewire/Produktion/Tagesplan.php' => 10,
+    'Livewire/Produktion/Tagesplan.php' => 7,    // 3 mit der Aufbereitung nach Support/Produktion/TagesplanAbfrage (98 · 3.3 S6), kein neuer Treffer
     'Livewire/Recipes/DetailPanel.php' => 3,
     'Livewire/Recipes/RecipeModal.php' => 3,
     'Livewire/Recipes/StepEditor.php' => 13,
@@ -30,6 +30,7 @@ return [
     'Livewire/Suppliers/ProduktpassPanel.php' => 4,
     'Livewire/Verkauf/DetailPanel.php' => 1,
     'Livewire/Verkauf/VkModal.php' => 7,
+    'Support/Produktion/TagesplanAbfrage.php' => 3,
     'Tools/ConceptSlotsPostTool.php' => 2,
     'Tools/EinkaufSpendGetTool.php' => 1,
     'Tools/FoodAlchemistTool.php' => 2,

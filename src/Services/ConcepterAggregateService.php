@@ -429,8 +429,10 @@ class ConcepterAggregateService
     public function allergenRollupFromGerichte(Collection $gerichte): array
     {
         $gerichte = $gerichte->filter()->unique('id')->values();
-        $alle = fn (string $feld) => $gerichte->isNotEmpty() && $gerichte->every(fn ($g) => (bool) $g->{$feld});
-        $eines = fn (string $feld) => $gerichte->contains(fn ($g) => (bool) $g->{$feld});
+        // Diät-Fix 98: NULL (unbekannt) zählt nie als erfüllt und nie als „enthält“ — nur ein echtes true.
+        $alle = fn (string $feld) => $gerichte->isNotEmpty() && $gerichte->every(fn ($g) => ($g->{$feld} ?? null) === true);
+        $eines = fn (string $feld) => $gerichte->contains(fn ($g) => ($g->{$feld} ?? null) === true);
+        $offen = fn (string $feld) => $gerichte->filter(fn ($g) => ($g->{$feld} ?? null) === null)->count();
         $minKonf = $gerichte->isEmpty() ? 0 : $gerichte->min(fn ($g) => self::KONF_RANG[$g->allergens_confidence] ?? 0);
 
         return [
@@ -443,10 +445,14 @@ class ConcepterAggregateService
             'contains_pork' => $eines('spec_contains_pork'),
             'contains_beef' => $eines('spec_contains_beef'),
             // Spec 59: Fleisch nur, wenn BELEGT — `spec_is_vegetarian` ausdrücklich false (nicht
-            // null = unbekannt, siehe RecipeRecomputeService::mergeAssure) oder Schwein/Rind.
+            // null = unbekannt, siehe Rezept\DiaetEignung::mergeAssure) oder Schwein/Rind.
             // Vorher galt alles Nicht-Vegetarische als Fleisch, auch Gerichte ganz ohne Diät-Pflege.
-            'fleisch_belegt' => $gerichte->contains(fn ($g) => (($g->spec_is_vegetarian ?? null) !== null && ! (bool) $g->spec_is_vegetarian)
-                || (bool) ($g->spec_contains_pork ?? false) || (bool) ($g->spec_contains_beef ?? false)),
+            'fleisch_belegt' => $gerichte->contains(fn ($g) => ($g->spec_is_vegetarian ?? null) === false
+                || ($g->spec_contains_pork ?? null) === true || ($g->spec_contains_beef ?? null) === true),
+            // Diät-Fix 98: je Zusicherung die Zahl der Gerichte mit unbekannter Eignung (Anzeige „k unbekannt“)
+            'offen' => ['is_vegan' => $offen('spec_is_vegan'), 'is_vegetarian' => $offen('spec_is_vegetarian'),
+                'is_halal' => $offen('spec_is_halal'), 'is_gluten_free' => $offen('spec_is_gluten_free'),
+                'is_lactose_free' => $offen('spec_is_lactose_free')],
             'confidence' => array_search($minKonf, self::KONF_RANG, true) ?: 'unknown',
         ];
     }
@@ -797,12 +803,15 @@ class ConcepterAggregateService
                 $kcalWerte[] = $kcal;
             }
 
-            $diaet = [];
+            $diaet = $diaetOffen = [];
             foreach (['spec_is_vegan' => 'vegan', 'spec_is_vegetarian' => 'vegetarisch',
                 'spec_is_gluten_free' => 'glutenfrei', 'spec_is_lactose_free' => 'laktosefrei',
                 'spec_is_halal' => 'halal'] as $feld => $tag) {
-                if ((bool) ($g->{$feld} ?? false)) {
+                $wert = $g->{$feld} ?? null;
+                if ($wert === true) {
                     $diaet[] = $tag;
+                } elseif ($wert === null) {
+                    $diaetOffen[] = $tag;                          // Diät-Fix 98: unbekannt, nicht „nicht geeignet“
                 }
             }
             // vegan impliziert vegetarisch — beide Pills nebeneinander sind Rauschen.
@@ -825,6 +834,7 @@ class ConcepterAggregateService
                 'portion_g' => $portionG,
                 'confidence' => $konf,
                 'diaet' => $diaet,
+                'diaet_offen' => $diaetOffen,
                 'fehlt' => $fehlt,
             ];
             if ($fehlt !== []) {
@@ -832,8 +842,9 @@ class ConcepterAggregateService
             }
         }
 
-        $zaehl = fn (string $feld) => $gerichte->filter(fn ($g) => (bool) ($g->{$feld} ?? false))->count();
-        $namen = fn (string $feld) => $gerichte->filter(fn ($g) => (bool) ($g->{$feld} ?? false))
+        $zaehl = fn (string $feld) => $gerichte->filter(fn ($g) => ($g->{$feld} ?? null) === true)->count();
+        $offen = fn (string $feld) => $gerichte->filter(fn ($g) => ($g->{$feld} ?? null) === null)->count();
+        $namen = fn (string $feld) => $gerichte->filter(fn ($g) => ($g->{$feld} ?? null) === true)
             ->map(fn ($g) => (string) $g->name)->values()->all();
 
         return [
@@ -850,6 +861,10 @@ class ConcepterAggregateService
                 'halal' => $zaehl('spec_is_halal'),
                 'schwein' => $namen('spec_contains_pork'),
                 'rind' => $namen('spec_contains_beef'),
+                // Diät-Fix 98: Gerichte mit unbekannter Eignung je Zusicherung — „2 von 2 vegan“ kippt nicht still zu „0 von 2“
+                'unbekannt' => ['vegetarisch' => $offen('spec_is_vegetarian'), 'vegan' => $offen('spec_is_vegan'),
+                    'glutenfrei' => $offen('spec_is_gluten_free'), 'laktosefrei' => $offen('spec_is_lactose_free'),
+                    'halal' => $offen('spec_is_halal')],
             ],
             'luecken' => $luecken,
             'modus' => $naehrwertModus,

@@ -16,6 +16,6 @@ return [
     'src/Livewire/Angebote/Editor.php' => [1754, 'C4 Komposition (Spec 85 §8)'],
     'src/Livewire/Concepter/Editor.php' => [1598, 'C6 Slots / Paket-Positionen (Spec 85 §9); −34 Positionen anlegen → Concerns\FuelltConceptPositionen (CQ 1.1j)'],
     'src/Livewire/Foodbooks/Index.php' => [1625, 'C4 Komposition (Spec 85 §8); +1 Handy-Weiche #1003 PR6'],
-    'resources/views/livewire/concepter/editor.blade.php' => [1587, 'C6 mit Concepter/Editor (Spec 85 §9)'],
+    'resources/views/livewire/concepter/editor.blade.php' => [1584, 'C6 mit Concepter/Editor (Spec 85 §9)'],
     'src/Services/RecipeGeneratorService.php' => [1528, 'Nicht-Kernlogik auslagern (Spec 85 §9)'],
 ];

@@ -102,6 +102,10 @@
         @if($nichtGeeignet !== [])
             <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]"><span class="inline-block w-[92px] font-medium text-[var(--fa-ink-2)]">Nicht geeignet</span>{{ implode(' · ', $nichtGeeignet) }}</p>
         @endif
+        {{-- Diät-Fix 98: unbekannt ist weder geeignet noch ungeeignet — offen ausweisen statt verschweigen --}}
+        @if($diaetOffen !== [])
+            <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-deklaration-diaet-offen><span class="inline-block w-[92px] font-medium text-[var(--fa-ink-2)]">Unbekannt</span>{{ implode(' · ', $diaetOffen) }}</p>
+        @endif
         @foreach($fleisch as $tier)
             <x-fa::signal tone="warn">enthält {{ $tier }}</x-fa::signal>
         @endforeach

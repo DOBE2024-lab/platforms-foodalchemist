@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
+use Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf;
 use Platform\FoodAlchemist\Livewire\Planung\LaufStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
@@ -71,14 +72,17 @@ it('Watchdog: das Überschreiten der Schwelle zählt als Änderung, die Planung 
     FoodAlchemistCascadeRun::where('id', $this->run->id)->update(['created_at' => now()->subSeconds(120)]);
     $status->call('pruefen')->assertDispatched('planung.lauf-geaendert');
 
-    Livewire::test(PlanungIndex::class)->set('laufId', $this->run->id)->set('laeuft', true)
+    Livewire::test(KaskadenLauf::class, ['laufId' => $this->run->id])->set('laeuft', true)   // Spec 85 C1 PR-3: Lauf-Zustand im Kind
         ->dispatch('planung.lauf-geaendert')
         ->assertSet('laeuft', true)->assertNotSet('hinweis', null);
 });
 
 it('Planung: das Status-Ereignis zieht den Lauf nach und lädt ihn je Anfrage nur einmal; der Fortschritt bindet LaufStatus statt wire:poll ein', function () {
-    $planung = Livewire::test(PlanungIndex::class)->call('oeffne', $this->session->id)->set('laufId', $this->run->id)->set('laeuft', true);
-    // Kinder-Komponenten rendert der Test nur als Platzhalter mit wire:key
+    // Kinder-Komponenten rendert der Test nur als Platzhalter mit wire:key. Spec 85 C1 PR-3: die Planung bindet das Kind
+    // KaskadenLauf ein, das Kind den LaufStatus.
+    Livewire::test(PlanungIndex::class)->call('oeffne', $this->session->id)
+        ->assertSeeHtml('wire:key="planung-lauf-' . $this->session->id . '-' . $this->run->id . '"')->assertDontSeeHtml('wire:poll.1500ms="pruefeLauf"');
+    $planung = Livewire::test(KaskadenLauf::class, ['laufId' => $this->run->id])->set('laeuft', true);
     $planung->assertSeeHtml('wire:key="planung-lauf-status-' . $this->run->id . '"')->assertDontSeeHtml('wire:poll.1500ms="pruefeLauf"');
 
     $laufLaden = 0;
@@ -88,7 +92,8 @@ it('Planung: das Status-Ereignis zieht den Lauf nach und lädt ihn je Anfrage nu
         }
     });
     $this->run->update(['status' => 'review']);
-    $planung->dispatch('planung.lauf-geaendert')->assertSet('laeuft', false);
+    $planung->dispatch('planung.lauf-geaendert')->assertSet('laeuft', false)
+        ->assertDispatched('planung.lauf-status', laufId: $this->run->id, laeuft: false);   // Parent-Kopie zieht nach
 
     expect($laufLaden)->toBe(1);
 });

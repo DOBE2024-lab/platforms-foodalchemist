@@ -114,7 +114,7 @@ it('C3: Heilung lässt Verweiszeilen-Text stehen und löst eine umbenannte Grund
 });
 
 it('C7: Stufe nur aus gescheiterten Schritten heißt „fehlgeschlagen", nicht „erledigt"', function () {
-    $inst = Livewire::test(PlanungIndex::class)->instance();
+    $inst = Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\KaskadenLauf::class)->instance();   // Spec 85 C1 PR-3
     $stufen = $inst->stufenAusSteps(collect([
         (object) ['kind' => 'rezept', 'status' => 'failed', 'deferred' => null],
     ]));

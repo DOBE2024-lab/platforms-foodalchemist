@@ -33,11 +33,24 @@ final class GrammaturMessung
     /**
      * Rezept-Kennzahlen für den Report: B (Netto-Summe der Bestandteile), Y (Kalkulations-Ertrag), fester Ertrag, Zutaten.
      *
-     * @return array{b_g: float, y_g: ?float, fester_ertrag: bool, zutaten: int, unbepreist: int, portionen: ?int, kopf_g: ?float, ek_per_kg: ?float}
+     * `ohne_gewicht`: Bestandteile mit Menge, aber ohne Gramm (z. B. 0,5 Stück Ei ohne Stückgewicht). Das Komponentenmodell der
+     * Darreichung rechnet nur über Gramm — solche Zeilen fielen bei der Umstellung aus EK und Produktion heraus (Trockenlauf io 23.11.,
+     * R149). Nicht gezählt: optionale Zeilen und „q. s.“ (die wiegen bewusst 0 g).
+     *
+     * @return array{b_g: float, y_g: ?float, fester_ertrag: bool, zutaten: int, unbepreist: int, portionen: ?int, kopf_g: ?float, ek_per_kg: ?float, ohne_gewicht: list<string>}
      */
     public function rezept(FoodAlchemistRecipe $r, Team $team): array
     {
         $zeilen = $this->recompute->zeilenKostenUndMassen($r, $team);
+        $zutaten = $r->ingredients->keyBy('id');
+        $ohneGewicht = [];
+        foreach ($zeilen as $id => $z) {
+            $zutat = $zutaten->get($id);
+            if ($zutat !== null && $z['masse_g'] <= 0 && ! $zutat->is_optional && $zutat->unit?->slug !== 'qs' && (float) $zutat->quantity > 0) {
+                $ohneGewicht[] = trim((string) ($zutat->display_name ?: $zutat->raw_text)).' ('.rtrim(rtrim(number_format((float) $zutat->quantity, 3, ',', ''), '0'), ',')
+                    .' '.($zutat->unit?->display_de ?? $zutat->unit?->slug ?? '?').')';
+            }
+        }
         $y = $r->yield_kg_manual !== null ? (float) $r->yield_kg_manual : ($r->yield_kg !== null ? (float) $r->yield_kg : null);
 
         return [
@@ -49,6 +62,7 @@ final class GrammaturMessung
             'portionen' => $r->sales_unit_count !== null ? (int) $r->sales_unit_count : null,
             'kopf_g' => $r->sales_quantity_per_unit_g !== null ? (float) $r->sales_quantity_per_unit_g : null,
             'ek_per_kg' => $r->ek_per_kg_eur !== null ? round((float) $r->ek_per_kg_eur, 6) : null,
+            'ohne_gewicht' => $ohneGewicht,
         ];
     }
 

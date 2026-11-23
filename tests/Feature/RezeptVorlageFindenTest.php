@@ -55,7 +55,7 @@ it('Editor: „Weitere Aktionen“ führt „Als Vorlage speichern“ bzw. „Vo
 it('Wächter: Rezept-Views kennen nur noch einen Wortlaut und ein Symbol für Vorlagen', function () {
     $verstoesse = [];
     foreach (glob(dirname(__DIR__, 2).'/resources/views/livewire/recipes/*.blade.php') as $datei) {
-        $inhalt = file_get_contents($datei);
+        $inhalt = (string) preg_replace('/\{\{--.*?--\}\}/s', '', file_get_contents($datei));   // Blade-Kommentare zählen nicht
         foreach (['Als Vorlage markieren', 'Vorlage-Markierung', '„Als Vorlage"'] as $alt) {
             if (str_contains($inhalt, $alt)) {
                 $verstoesse[] = basename($datei).': '.$alt;

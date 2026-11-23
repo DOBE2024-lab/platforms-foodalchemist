@@ -2,7 +2,6 @@
 <div class="flex flex-col gap-4" data-settings-dna-felder>
     @php $sperrLesen = in_array($sperr['modus'] ?? 'aus', ['lesen', 'fremd'], true); @endphp
     @include('foodalchemist::livewire.settings.partials.sperr-leiste', ['sofort' => true, 'hint' => 'Zusatzfelder gelten für dieses Team und seine Unter-Teams.'])
-    <fieldset @disabled($sperrLesen) class="contents" data-fa-lesemodus="{{ $sperrLesen ? '1' : '0' }}">
 
     <x-fa::section title="Zusatzfelder" description="Die Kern-Felder jeder DNA bleiben fest. Hier ergänzt du eigene Felder, zum Beispiel „Nachhaltigkeit“ an der Team-DNA. Sie erscheinen im Board und fließen in die KI-Texte ein. Die Feldgruppe ist der Reiter, unter dem das Feld steht.">
         <div class="flex flex-wrap items-end gap-3">
@@ -12,6 +11,8 @@
                 </x-fa::select>
             </x-fa::field>
         </div>
+        {{-- „Gilt für“ filtert nur die Liste (Anzeige, frei); alles Ändernde darunter liegt unter der Sperre --}}
+        <x-fa::lese-sperre :an="$sperrLesen">
         <p class="fa-t-muted">Kern-Felder ({{ count($kernFelder) }}, nicht änderbar): {{ collect($kernFelder)->pluck('label')->implode(' · ') }}</p>
 
         @if($fehler)<x-fa::notice tone="crit" data-dnaf-fehler>{{ $fehler }}</x-fa::notice>@endif
@@ -50,6 +51,6 @@
                 </x-fa::table>
             </div>
         @endif
+        </x-fa::lese-sperre>
     </x-fa::section>
-    </fieldset>
 </div>

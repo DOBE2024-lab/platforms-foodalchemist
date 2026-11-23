@@ -67,8 +67,8 @@
                         </div>
                     @endforeach
                     @if($vokabular['zeilen']->count() > $sichtbar)
-                        <button type="button" x-on:click="alle = ! alle" class="self-start text-[length:var(--fa-text-sm)] text-[var(--fa-accent)] hover:underline" data-vokabular-alle="{{ $key }}"
-                                x-text="alle ? 'Weniger zeigen' : @js('+ ' . ($vokabular['zeilen']->count() - $sichtbar) . ' weitere')"></button>
+                        <x-fa::anzeige-knopf x-on:click="alle = ! alle" class="self-start text-[length:var(--fa-text-sm)] text-[var(--fa-accent)] hover:underline" data-vokabular-alle="{{ $key }}"
+                                x-text="alle ? 'Weniger zeigen' : {{ \Illuminate\Support\Js::from('+ ' . ($vokabular['zeilen']->count() - $sichtbar) . ' weitere') }}"></x-fa::anzeige-knopf>
                     @endif
                 </div>
             @endif

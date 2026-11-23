@@ -382,7 +382,7 @@
                             <div class="rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] p-3 flex flex-col gap-2" x-data="{ kopiert: false }">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <div class="{{ $linkFeld }}" data-sk-praes-link>{{ $presentationLink }}</div>
-                                    <x-fa::button size="sm" icon="heroicon-m-clipboard-document" x-on:click="navigator.clipboard.writeText('{{ $presentationLink }}'); kopiert = true; setTimeout(() => kopiert = false, 1600)">
+                                    <x-fa::button size="sm" icon="heroicon-m-clipboard-document" href="#" data-fa-anzeige x-on:click.prevent="navigator.clipboard.writeText('{{ $presentationLink }}'); kopiert = true; setTimeout(() => kopiert = false, 1600)">
                                         <span x-text="kopiert ? 'Kopiert' : 'Link kopieren'">Link kopieren</span>
                                     </x-fa::button>
                                 </div>
@@ -416,7 +416,7 @@
                                     </div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <div class="{{ $linkFeld }}">{{ $bl['url'] }}</div>
-                                        <x-fa::button size="sm" icon="heroicon-m-clipboard-document" x-on:click="navigator.clipboard.writeText('{{ $bl['url'] }}'); kopiert = true; setTimeout(() => kopiert = false, 1600)">
+                                        <x-fa::button size="sm" icon="heroicon-m-clipboard-document" href="#" data-fa-anzeige x-on:click.prevent="navigator.clipboard.writeText('{{ $bl['url'] }}'); kopiert = true; setTimeout(() => kopiert = false, 1600)">
                                             <span x-text="kopiert ? 'Kopiert' : 'Link kopieren'">Link kopieren</span>
                                         </x-fa::button>
                                         @if($bl['enabled'])

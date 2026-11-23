@@ -67,6 +67,9 @@ final class UiRegeln
         // $segment/$seg/$segKnopf-Definition. Bestand: Reiter-Leisten (role="tablist"), Kiosk-Tagesplan, Raster-Spur in
         // orders/editor, die a-Knöpfe im Rezept-Schritt-Editor (bleiben im gesperrten fieldset bedienbar).
         'rohes_segment' => '/(?<![:\w-])class="(?=[^"]*(?<![\w-])p-(?:0\.5|1)(?![\w-]))(?=[^"]*(?<![\w-])bg-\[var\(--fa-(?:neutral-soft|ground)\)\])[^"]*"|\$seg(?:ment)?(?:Knopf)?\s*=(?!=)/',
+        // Rohe Lesemodus-Sperre statt x-fa::lese-sperre (Spec 65, 98 Lesemodus-Anzeige): <fieldset @disabled(…)> gehört in den Baustein,
+        // der die Regel für Anzeige-Inseln (data-fa-anzeige, außerhalb der Sperre) an einer Stelle beschreibt. Bestand 51, sinkt je View.
+        'rohes_fieldset_sperre' => '/<fieldset\b[^>]*@disabled/',
         // Handgebauter Seitenrahmen statt x-fa::page (2.4a).
         'roher_seitenrahmen' => '/min-h-full bg-\[var\(--fa-ground\)\]/',
         // Alte Tailwind-Palette statt Tokens (--fa-*).

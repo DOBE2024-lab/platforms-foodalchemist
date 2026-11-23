@@ -49,7 +49,7 @@
                     @endphp
                     <div class="border-b border-[var(--fa-line)] {{ $p->is_inactive ? 'opacity-60' : '' }}" role="listitem" x-data="{ offen: false }"
                          wire:key="posten-{{ $p->id }}" data-posten="{{ $p->id }}">
-                        <button type="button" x-on:click="offen = ! offen" x-bind:aria-expanded="offen"
+                        <x-fa::anzeige-knopf x-on:click="offen = ! offen" x-bind:aria-expanded="offen"
                                 class="{{ $zeileGrid }} w-full px-1 py-2.5 text-left fa-t-body hover:bg-[var(--fa-hover)] rounded-[var(--fa-radius-control)]"
                                 data-posten-zeile>
                             <span class="text-[var(--fa-ink-3)] transition-transform duration-150" x-bind:class="offen ? 'rotate-90' : ''">@svg('heroicon-m-chevron-right', 'w-4 h-4')</span>
@@ -60,7 +60,7 @@
                             <span class="min-w-0 truncate text-[var(--fa-ink-2)]">{{ $p->group_name ?: '—' }}</span>
                             <span class="text-right tabular-nums" @if($abg !== null) title="aus der Besetzung berechnet" @endif>{{ $minuten !== null ? number_format((int) $minuten, 0, ',', '.') . ' min' : 'frei' }}</span>
                             <span class="min-w-0 truncate text-[var(--fa-ink-2)]" data-posten-besetzung-kurz>{{ $besetzungKurz }}</span>
-                        </button>
+                        </x-fa::anzeige-knopf>
 
                         <div class="ml-8 mb-3 p-3 rounded-[var(--fa-radius-control)] bg-[var(--fa-bg,var(--fa-neutral-soft))] flex flex-col gap-3" x-show="offen" x-cloak data-posten-details>
                             @if($eigen)

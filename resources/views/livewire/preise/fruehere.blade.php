@@ -6,7 +6,7 @@
 <div data-fruehere-wurzel>
 @if($daten['gesamt'] > 0)
     <div x-data="{ offen: false }" class="flex flex-col gap-2" data-fruehere-preise>
-        <button type="button" x-on:click="offen = ! offen" x-bind:aria-expanded="offen"
+        <button type="button" x-on:click="offen = ! offen" x-bind:aria-expanded="offen" data-fa-anzeige
                 class="inline-flex items-center gap-1.5 self-start text-[length:var(--fa-text-md)] font-medium text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]" data-fruehere-toggle>
             @svg('heroicon-m-chevron-right', 'w-4 h-4 shrink-0 transition-transform')
             Frühere Preise ({{ $daten['gesamt'] }})
@@ -43,6 +43,8 @@
                             </td>
                             @if($darfEdit)
                                 <td class="whitespace-nowrap" x-data="{ frage: false }">
+                                    {{-- Ein-/Ausblenden schreibt: im Lesemodus des LA-Dialogs gesperrt; Aufklapper oben bleibt frei --}}
+                                    <x-fa::lese-sperre :an="$gesperrt">
                                     @if($z['ausgeblendet'])
                                         <x-fa::button size="sm" variant="ghost" wire:click="einblenden({{ $z['id'] }})" data-fruehere-einblenden>Einblenden</x-fa::button>
                                     @else
@@ -53,6 +55,7 @@
                                             <x-fa::button size="sm" variant="ghost" x-on:click="frage = false">Abbrechen</x-fa::button>
                                         </span>
                                     @endif
+                                    </x-fa::lese-sperre>
                                 </td>
                             @endif
                         </tr>

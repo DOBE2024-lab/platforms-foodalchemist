@@ -56,7 +56,7 @@
 
     <div class="flex flex-col gap-1" data-handbuch-luecken>
         <div>
-            <x-fa::button size="sm" variant="ghost" wire:click="pruefen" data-handbuch-pruefen>Lücken prüfen</x-fa::button>
+            <x-fa::button size="sm" variant="ghost" href="#" x-on:click.prevent="" wire:click="pruefen" data-fa-anzeige data-handbuch-pruefen>Lücken prüfen</x-fa::button>{{-- prüft nur (setzt $luecken): bleibt im Lesemodus bedienbar --}}
         </div>
         @if($luecken !== null && $luecken === [])
             <p class="{{ $hinweisKlasse }}">Alle Gerichte haben Zubereitung, Anrichten und Regeneration.</p>

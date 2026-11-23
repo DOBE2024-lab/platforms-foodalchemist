@@ -320,7 +320,7 @@
                         @if($repick['wechsel'] !== [])
                             <x-fa::button variant="primary" wire:click="repickUebernehmen">Ausgewählte übernehmen</x-fa::button>
                         @endif
-                        <x-fa::button variant="ghost" wire:click="repickSchliessen">Schließen</x-fa::button>
+                        <x-fa::button variant="ghost" href="#" x-on:click.prevent="" wire:click="repickSchliessen" data-fa-anzeige data-lead-repick-schliessen>Schließen</x-fa::button>{{-- schließt nur die Vorschau: wie „Leads neu wählen …“ im Lesemodus bedienbar --}}
                     </div>
                 </div>
             @endif

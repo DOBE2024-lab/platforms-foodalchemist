@@ -222,6 +222,28 @@ class PraesentationsDesigns extends Component
         $this->ungespeichert = true;
     }
 
+    /** Stand vor einer Änderung von „EK-Ansicht im Link“: [Wert, ungespeichert] (nur innerhalb einer Anfrage). */
+    private ?array $ekVorher = null;
+
+    public function updatingTokensEkImLink(): void
+    {
+        $this->ekVorher = [$this->tokens['ek_im_link'] ?? false, $this->ungespeichert];
+    }
+
+    /**
+     * Spec 65 · Server-Guard (98 Lesemodus): „EK-Ansicht im Link“ gibt im veröffentlichten Link die Einkaufspreise frei. Der Haken ist ein
+     * wire:model (kein Methodenaufruf), der call-Haken greift hier also nicht. Ohne gehaltene Sperre zurück auf den Stand davor, auch
+     * „ungespeichert“ — sonst nähme ein späteres „Bearbeiten“ + Speichern den im Lesemodus gesetzten Haken unbemerkt mit.
+     */
+    public function updatedTokensEkImLink(): void
+    {
+        $vorher = $this->ekVorher;
+        $this->ekVorher = null;
+        if ($vorher !== null && $this->schreibenAbgewiesen('updatedTokensEkImLink')) {
+            [$this->tokens['ek_im_link'], $this->ungespeichert] = $vorher;
+        }
+    }
+
     private function markiereGeaendert(): void
     {
         $this->ungespeichert = true;

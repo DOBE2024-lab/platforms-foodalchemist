@@ -968,9 +968,9 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
 
     // ── Aggregat / Preis (M11 Cockpit) — 98 · 3.3 S4-4: in Foodbook\FoodbookAggregat, hier Fassade (und FoodbookAggregatQuelle) ──
 
-    public function blockPreis(FoodAlchemistFoodbookBlock $block, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
+    public function blockPreis(FoodAlchemistFoodbookBlock $block, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, ?Team $team = null): array
     {
-        return $this->aggregat->blockPreis($block, $pax, $outlet);
+        return $this->aggregat->blockPreis($block, $pax, $outlet, $team);
     }
 
     public function resolveStaffel(FoodAlchemistFoodbookBlock $block, ?int $pax): float

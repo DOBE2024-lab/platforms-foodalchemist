@@ -19,7 +19,8 @@ return [
     'Livewire/Planung/Index.php' => 1,
     'Livewire/Planung/KapitelRail.php' => 1,
     'Livewire/Produktion/Editor.php' => 5,
-    'Livewire/Produktion/Tagesplan.php' => 7,    // 3 mit der Aufbereitung nach Support/Produktion/TagesplanAbfrage (98 · 3.3 S6), kein neuer Treffer
+    'Livewire/Produktion/Tagesplan.php' => 6,    // 3 → Support/Produktion/TagesplanAbfrage, 1 → Produktion/TagesplanFeedback (98 · 3.3 S6), kein neuer Treffer
+    'Livewire/Produktion/TagesplanFeedback.php' => 1,
     'Livewire/Recipes/DetailPanel.php' => 3,
     'Livewire/Recipes/RecipeModal.php' => 3,
     'Livewire/Recipes/StepEditor.php' => 13,

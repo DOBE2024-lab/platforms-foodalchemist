@@ -3,6 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanFeedback;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ProductionOrderService;
@@ -35,11 +36,24 @@ beforeEach(function () {
     ]);
     $svc->setStatus($this->rootTeam, $order->id, ProductionOrderStatus::InProgress);
     $this->zeile = Line::where('production_order_id', $order->id)->where('recipe_id', $fond->id)->first();
+    $GLOBALS['tagesplanKinder'] = [
+        'tagesplan-feedback' => fn (?int $offen) => Livewire::test(TagesplanFeedback::class, ['lineId' => $offen])->html(),
+    ];
 });
 
+/**
+ * Livewire rendert ein Kind nur beim ersten Render mit; nach einer weiteren Aktion am Parent steht im Test-HTML nur die
+ * leere Hülle (im Browser bleibt das Kind stehen). Solche Hüllen ersetzt das Netz durch ein frisch gerendertes Kind.
+ *
+ * @var array<string, \Closure(?int): string> Kind-Alias (ohne foodalchemist.produktion.) => frisches HTML zur offenen Zeile
+ */
+$GLOBALS['tagesplanKinder'] = [];
+
 /** @return array<string, int> Marker => Anzahl, sortiert. */
-function tagesplanMarker(string $html): array
+function tagesplanMarker(string $html, ?int $zeile = null): array
 {
+    $html = preg_replace_callback('/<(\w+) wire:id="[^"]+" wire:name="foodalchemist\.produktion\.([a-z-]+)"[^>]*><\/\1>/',
+        fn ($m) => isset($GLOBALS['tagesplanKinder'][$m[2]]) ? ($GLOBALS['tagesplanKinder'][$m[2]])($zeile) : $m[0], $html);
     preg_match_all('/\bdata-tagesplan[a-z0-9-]*/', $html, $m);
     $zaehler = array_count_values($m[0]);
     ksort($zaehler);
@@ -62,9 +76,23 @@ function tagesplanModi(object $t): array
         'wall_anleitung' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')->call('oeffneAnleitung', $t->zeile->id),
         'wall_anleitung_gestartet' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')
             ->call('oeffneAnleitung', $t->zeile->id)->call('anleitungStarten')->call('anleitungStepUmschalten', 0),
-        'wall_feedback_gespeichert' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')
-            ->call('oeffneAnleitung', $t->zeile->id)->call('feedbackGrundUmschalten', $grund)->call('feedbackSetzen', 'geschmack', 4)
-            ->call('feedbackSpeichern'),
+        // Seit S6 PR2 ist der Bogen ein Kind: Seite = Overlay mit frischem Bogen, dessen Marker gegen den gespeicherten getauscht.
+        'wall_feedback_gespeichert' => function () use ($wand, $t, $grund) {
+            $seite = tagesplanMarker(Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')->call('oeffneAnleitung', $t->zeile->id)->html(), $t->zeile->id);
+            $frisch = tagesplanMarker(Livewire::test(TagesplanFeedback::class, ['lineId' => $t->zeile->id])->html());
+            $gespeichert = tagesplanMarker(Livewire::test(TagesplanFeedback::class, ['lineId' => $t->zeile->id])
+                ->call('feedbackGrundUmschalten', $grund)->call('feedbackSetzen', 'geschmack', 4)->call('feedbackSpeichern')->html());
+            foreach ($frisch as $m => $n) {
+                $seite[$m] -= $n;
+            }
+            foreach ($gespeichert as $m => $n) {
+                $seite[$m] = ($seite[$m] ?? 0) + $n;
+            }
+            $seite = array_filter($seite);
+            ksort($seite);
+
+            return $seite;
+        },
         'wall_gericht' => function () use ($wand) {
             $w = Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor');
             $key = $w->viewData('wallPostenGruppen')->flatten(1)->first(fn ($g) => str_contains((string) $g->key, 'Rinderbraten'))?->key;
@@ -78,7 +106,8 @@ function tagesplanModi(object $t): array
 it('jeder Modus rendert dieselben data-tagesplan-Marker wie vor dem Schnitt', function () {
     $ist = [];
     foreach (tagesplanModi($this) as $modus => $baue) {
-        $ist[$modus] = tagesplanMarker($baue()->assertOk()->html());
+        $r = $baue();
+        $ist[$modus] = is_array($r) ? $r : tagesplanMarker($r->assertOk()->html(), $r->get('anleitungLineId'));
     }
 
     if (getenv('TAGESPLAN_GOLDEN_SCHREIBEN')) {

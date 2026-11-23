@@ -5,6 +5,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Enums\ProductionLineStatus;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanFeedback;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation as Posten;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -497,9 +498,13 @@ it('nimmt am Wandmonitor ein Kuechen-Feedback auf und legt es an derselben Stell
     $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
     $recipeId = (int) Line::whereKey($lineId)->value('recipe_id');
 
+    // 98 · 3.3 S6: der Bogen ist ein eigenes Kind im Anleitungs-Overlay (TagesplanFeedback, Zeile als Prop).
     Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
         ->set('modus', 'editor')
         ->call('oeffneAnleitung', $lineId)
+        ->assertSeeHtml('wire:name="foodalchemist.produktion.tagesplan-feedback"');   // Kind gemountet (nach Aktionen nur als Hülle im HTML)
+
+    Livewire::test(TagesplanFeedback::class, ['lineId' => $lineId])
         ->assertSeeHtml('data-tagesplan-wall-feedback')
         ->assertSeeHtml('data-tagesplan-wall-feedback-speichern')
         ->assertSeeHtml('data-tagesplan-wall-feedback-gruende')
@@ -540,9 +545,7 @@ it('haengt ein Diktat an den Feedback-Kommentar an, statt ihn zu ersetzen', func
     config(['foodalchemist.stt.provider' => 'fake', 'foodalchemist.stt.fake_text' => 'der Kipper war belegt']);
     $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
 
-    $c = Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    $c = Livewire::test(TagesplanFeedback::class, ['lineId' => $lineId])
         ->assertSeeHtml('data-diktat="wall-feedback"')
         ->set('feedbackForm.comment', 'Ansatz zu groß.')
         ->set('feedbackAudio', UploadedFile::fake()->create('diktat.webm', 1, 'audio/webm'));
@@ -556,12 +559,42 @@ it('haengt ein Diktat an den Feedback-Kommentar an, statt ihn zu ersetzen', func
         ->assertSet('fehler', fn ($f) => str_contains((string) $f, 'Diktat war leer'));
 });
 
+/**
+ * 98 · 3.3 S6 (Entscheid Kurator): In der Küche schließt man ein Overlay schnell versehentlich — ein halb ausgefüllter,
+ * womöglich diktierter Bogen darf dabei nicht verloren gehen. Der Bogen bleibt deshalb im Wandmodus gemountet
+ * (dieselbe Instanz), ohne offene Anleitung nur versteckt.
+ */
+it('der Feedback-Bogen überlebt Schließen und Wiederöffnen der Anleitung', function () {
+    $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
+    $c = Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
+        ->set('modus', 'editor')
+        ->call('oeffneAnleitung', $lineId);
+    $bogen = function () use ($c): ?string {
+        preg_match('/<section\b[^>]*wire:name="foodalchemist\.produktion\.tagesplan-feedback"[^>]*>/', $c->html(), $tag);
+        preg_match('/wire:id="([^"]+)"/', $tag[0] ?? '', $id);
+
+        return $id[1] ?? null;
+    };
+
+    $instanz = $bogen();
+    expect($instanz)->not->toBeNull();
+    $c->call('anleitungSchliessen');
+    expect($bogen())->toBe($instanz);                       // geschlossen: weiter gemountet
+    $c->call('oeffneAnleitung', $lineId);
+    expect($bogen())->toBe($instanz);                       // wieder offen: dieselbe Instanz, derselbe Zustand
+
+    // Ohne Zeile hält der Bogen seinen Text, ist aber versteckt und trägt keinen Marker.
+    Livewire::test(TagesplanFeedback::class, ['lineId' => null])
+        ->set('feedbackForm.comment', 'Kipper war belegt')
+        ->assertSet('feedbackForm.comment', 'Kipper war belegt')
+        ->assertSeeHtml('hidden')
+        ->assertDontSeeHtml('data-tagesplan-wall-feedback');
+});
+
 it('loescht den Wert, wenn dieselbe Zahl noch einmal getippt wird', function () {
     $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    Livewire::test(TagesplanFeedback::class, ['lineId' => $lineId])
         ->call('feedbackSetzen', 'score', 4)
         ->assertSet('feedbackForm.score', 4)
         ->call('feedbackSetzen', 'score', 4)

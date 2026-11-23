@@ -3,6 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanFeedback;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\ProductionOrderService;
@@ -70,6 +71,8 @@ it('Feedback: Grund, Werte, Speichern zur Zeile', function () {
     $grund = array_key_first((array) config('foodalchemist.feedback_gruende', [])) ?? 'zu_salzig';
     Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])->set('modus', 'editor')
         ->call('oeffneAnleitung', $this->zeile->id)
+        ->assertSeeHtml('wire:name="foodalchemist.produktion.tagesplan-feedback"');   // Kind gemountet (nach Aktionen nur als Hülle im HTML)
+    Livewire::test(TagesplanFeedback::class, ['lineId' => $this->zeile->id])
         ->call('feedbackGrundUmschalten', $grund)
         ->call('feedbackSetzen', 'geschmack', 4)
         ->call('feedbackSpeichern')

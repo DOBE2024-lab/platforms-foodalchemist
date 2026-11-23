@@ -14,7 +14,7 @@ return [
     'src/Services/Ai/KnowledgeContextService.php' => [2170, 'Routing / Budget / Prompt-Bau (Spec 85 §9)'],
     'src/Services/DataQualityService.php' => [2040, 'Metriken je Bereich (Spec 85 §9)'],
     'src/Livewire/Angebote/Editor.php' => [1754, 'C4 Komposition (Spec 85 §8)'],
-    'resources/views/livewire/produktion/tagesplan.blade.php' => [1627, 'C6 mit Produktion/Tagesplan (Spec 85 §9)'],
+    'resources/views/livewire/produktion/tagesplan.blade.php' => [1560, 'C6 mit Produktion/Tagesplan (Spec 85 §9); −67 Feedback → produktion/tagesplan-feedback (98 · 3.3 S6)'],
     'src/Livewire/Concepter/Editor.php' => [1599, 'C6 Slots / Paket-Positionen (Spec 85 §9); −34 Positionen anlegen → Concerns\FuelltConceptPositionen (CQ 1.1j)'],
     'src/Livewire/Foodbooks/Index.php' => [1625, 'C4 Komposition (Spec 85 §8); +1 Handy-Weiche #1003 PR6'],
     'resources/views/livewire/concepter/editor.blade.php' => [1587, 'C6 mit Concepter/Editor (Spec 85 §9)'],

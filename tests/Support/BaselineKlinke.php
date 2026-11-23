@@ -44,9 +44,14 @@ final class BaselineKlinke
      * Regeln, die in der Vergleichsfassung noch gar nicht vorkommen, gelten als neu eingeführt
      * und dürfen ihre Ausgangszählung mitbringen.
      *
+     * $umzuege (neue Datei => Quelldatei): Code, der unverändert aus der Quelle in eine neue Datei gezogen wurde
+     * (98 · 3.3, Zerlegen großer Klassen/Views). Für den Vergleich zählen seine Treffer bei der Quelle — die Summe
+     * darf nicht steigen, nur der Ort wechselt. Gilt nur für Dateien, die es in der Vergleichsfassung noch nicht gibt.
+     *
+     * @param  array<string, string>  $umzuege
      * @return list<string>|null null = nicht prüfbar (kein git, Datei in der Vergleichsfassung nicht vorhanden)
      */
-    public static function steigtGegenueberGit(string $pfad): ?array
+    public static function steigtGegenueberGit(string $pfad, array $umzuege = []): ?array
     {
         $pfad = realpath($pfad) ?: $pfad;
         $wurzel = self::git(dirname($pfad), 'rev-parse --show-toplevel');
@@ -60,12 +65,22 @@ final class BaselineKlinke
             return null;
         }
 
-        return self::gestiegen(self::lesen($pfad), json_decode($alt, true) ?? []);
+        return self::gestiegen(self::lesen($pfad), json_decode($alt, true) ?? [], $umzuege);
     }
 
     /** @return list<string> */
-    public static function gestiegen(array $neu, array $alt): array
+    public static function gestiegen(array $neu, array $alt, array $umzuege = []): array
     {
+        foreach ($umzuege as $ziel => $quelle) {
+            if (isset($alt[$ziel]) || ! isset($neu[$ziel])) {
+                continue;   // Ziel gab es schon (dann normaler Vergleich) oder hat keine Treffer
+            }
+            foreach ($neu[$ziel] as $regel => $anzahl) {
+                $neu[$quelle][$regel] = ($neu[$quelle][$regel] ?? 0) + $anzahl;
+            }
+            unset($neu[$ziel]);
+        }
+
         $bekannteRegeln = [];
         foreach ($alt as $regeln) {
             $bekannteRegeln += array_fill_keys(array_keys($regeln), true);

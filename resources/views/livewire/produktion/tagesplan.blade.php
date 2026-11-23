@@ -701,19 +701,15 @@
                     $wallStandzeit = $anleitung['standzeit_min'] ?? null;
                     $wallDurchlaufzeit = $anleitung['durchlaufzeit_min'] ?? $wallArbeitszeit;
                     $wallStartedAt = $anleitung['started_at'] ?? null;
-                    $fbAchsen = [
-                        'score' => 'Wie lief es?',
-                        'machbarkeit' => 'Machbarkeit',
-                        'aufwand' => 'Aufwand',
-                        'geschmack' => 'Geschmack',
-                    ];
-                    $fbGruende = (array) config('foodalchemist.feedback_gruende', []);
-                    $fbGewaehlt = (array) ($feedbackForm['gruende'] ?? []);
                 @endphp
+                @endif
+                {{-- Grid steht immer (98 · 3.3 S6): der Feedback-Bogen darin bleibt gemountet, ein halb ausgefüllter Bogen
+                     überlebt das Schließen des Overlays. Ohne offene Anleitung ist das Grid versteckt und trägt keinen Marker. --}}
                 {{-- Linke Spalte scrollt auf niedrigen Bildschirmen selbst — sonst lag das Feedback unten
                      außer Reichweite, solange die Schritte rechts länger waren. --}}
-                <div class="grid gap-3 xl:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)] 2xl:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)]" data-tagesplan-wall-anleitung>
+                <div class="grid gap-3 xl:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)] 2xl:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)]" @if($anleitung) data-tagesplan-wall-anleitung @else hidden @endif>
                     <aside class="space-y-3 xl:sticky xl:top-0 xl:max-h-[calc(100dvh-9rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
+                        @if($anleitung)
                         <div class="{{ $wKarte }} px-3 py-2">
                             <p class="{{ $wEyebrow }}">Auftrag</p>
                             <p class="mt-0.5 text-base">für {{ $anleitung['auftrag'] }}</p>
@@ -882,79 +878,15 @@
 
                         {{-- Am Ende, wo es hingehoert: bewertet wird, was gekocht wurde. Landet ueber
                              FeedbackService in derselben Ablage wie der Feedback-Tab des Rezepts. --}}
-                        <section class="{{ $wKarte }} px-3 py-3" data-tagesplan-wall-feedback>
-                            <h3 class="text-lg font-bold">Feedback zum Rezept</h3>
-                            @if($feedbackGespeichert)
-                                <p class="mt-1 inline-flex items-center gap-1 text-sm font-medium text-[var(--fa-ok)]" data-tagesplan-wall-feedback-ok>@svg('heroicon-m-check', 'w-4 h-4') Gespeichert, steht jetzt am Rezept.</p>
-                            @else
-                                <p class="mt-0.5 text-sm text-[var(--fa-ink-3)]">Die Küche, die es kocht, ist die ehrlichste Quelle.</p>
-                            @endif
-
-                            <div class="mt-3 space-y-3">
-                                @foreach($fbAchsen as $fbKey => $fbLabel)
-                                    <div wire:key="fb-{{ $fbKey }}">
-                                        <span class="block text-sm text-[var(--fa-ink-2)]">{{ $fbLabel }}</span>
-                                        <div class="mt-1 flex gap-1.5" role="group" aria-label="{{ $fbLabel }}" data-tagesplan-wall-feedback-achse="{{ $fbKey }}">
-                                            @for($fbN = 1; $fbN <= 5; $fbN++)
-                                                @php
-                                                    $fbAktiv = (int) ($feedbackForm[$fbKey] ?? 0) === $fbN;
-                                                @endphp
-                                                <button type="button"
-                                                        wire:click="feedbackSetzen('{{ $fbKey }}', {{ $fbN }})"
-                                                        aria-pressed="{{ $fbAktiv ? 'true' : 'false' }}"
-                                                        class="h-11 min-w-11 flex-1 rounded-lg border text-base font-bold tabular-nums transition-colors {{ $fbAktiv ? 'border-[var(--fa-accent)] bg-[var(--fa-accent)] text-[var(--fa-on-accent)]' : 'border-[var(--fa-line)] bg-[var(--fa-ground)] text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}"
-                                                        @if($fbAktiv) data-tagesplan-wall-feedback-aktiv @endif>{{ $fbN }}</button>
-                                            @endfor
-                                        </div>
-                                    </div>
-                                @endforeach
-
-                                {{-- Antippbare Gruende: der haeufige Fall wird zaehlbar, ohne Tastatur. --}}
-                                @if($fbGruende !== [])
-                                    <div>
-                                        <span class="block text-sm text-[var(--fa-ink-2)]">Was war los? Mehrfachauswahl möglich.</span>
-                                        <div class="mt-1 flex flex-wrap gap-1.5" data-tagesplan-wall-feedback-gruende>
-                                            @foreach($fbGruende as $fbSlug => $fbText)
-                                                @php
-                                                    $fbAn = in_array($fbSlug, $fbGewaehlt, true);
-                                                @endphp
-                                                <button type="button" wire:key="fbg-{{ $fbSlug }}"
-                                                        wire:click="feedbackGrundUmschalten('{{ $fbSlug }}')"
-                                                        aria-pressed="{{ $fbAn ? 'true' : 'false' }}"
-                                                        class="h-10 rounded-lg border px-3 text-sm font-medium transition-colors {{ $fbAn ? 'border-[var(--fa-accent)] bg-[var(--fa-accent-soft)] text-[var(--fa-accent)]' : 'border-[var(--fa-line)] bg-[var(--fa-ground)] text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]' }}"
-                                                        @if($fbAn) data-tagesplan-wall-feedback-grund-aktiv="{{ $fbSlug }}" @endif>{{ $fbText }}</button>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <div>
-                                    <div class="flex items-center justify-between gap-2">
-                                        <label for="tp-wall-feedback-kommentar" class="text-sm text-[var(--fa-ink-2)]">Sonst noch etwas?</label>
-                                        {{-- Derselbe Diktat-Knopf wie Planungsstelle und Step-Editor: am Pass
-                                             bedienen nasse Hände keine Bildschirmtastatur. --}}
-                                        @include('foodalchemist::livewire.recipes.partials.diktat-knopf', [
-                                            'audio' => 'feedbackAudio',
-                                            'marker' => 'wall-feedback',
-                                            'label' => 'Sprechen',
-                                            'btnAi' => 'inline-flex items-center gap-1.5 h-10 rounded-lg border border-[var(--fa-line)] bg-[var(--fa-ground)] px-3 text-sm font-medium text-[var(--fa-ink-2)] hover:text-[var(--fa-ink)]',
-                                        ])
-                                    </div>
-                                    <textarea id="tp-wall-feedback-kommentar" wire:model="feedbackForm.comment" rows="2"
-                                              class="fa-control mt-1 w-full py-2 text-base leading-relaxed"
-                                              placeholder="Sprechen oder tippen, was keine der Kacheln trifft …"
-                                              data-tagesplan-wall-feedback-kommentar></textarea>
-                                </div>
-
-                                <button type="button" wire:click="feedbackSpeichern"
-                                        class="h-11 w-full rounded-lg bg-[var(--fa-accent)] text-base font-semibold text-[var(--fa-on-accent)] transition-colors hover:bg-[var(--fa-accent-hover)]"
-                                        data-tagesplan-wall-feedback-speichern>Feedback speichern</button>
-                            </div>
-                        </section>
+                        @endif
+                        <livewire:foodalchemist.produktion.tagesplan-feedback :line-id="$anleitung ? (int) $anleitung['line_id'] : null" key="tagesplan-feedback" />
+                        @if($anleitung)
 
                         <div class="h-20 shrink-0" aria-hidden="true"></div>{{-- Auslauf: letzter Knopf (Feedback speichern) bleibt über dem Rand erreichbar, auch im Vollbild --}}
+                        @endif
                     </aside>
 
+                    @if($anleitung)
                     <section class="{{ $wKarte }} p-3 md:p-4" data-tagesplan-wall-media>
                         <h3 class="text-lg font-bold">Schritte und Medien</h3>
                         @if(!empty($anleitung['schritte']))
@@ -1053,8 +985,9 @@
                             </div>
                         @endif
                     </section>
+                    @endif
                 </div>
-            @else
+                @if(! $anleitung)
                 <div class="grid min-h-[60vh] place-items-center text-center" data-tagesplan-wall-anleitung-leer>
                     <div>
                         @svg('heroicon-o-question-mark-circle', 'mx-auto w-14 h-14 text-[var(--fa-ink-3)]')

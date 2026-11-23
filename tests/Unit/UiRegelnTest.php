@@ -54,8 +54,27 @@ it('lässt keine View schlechter werden als ihren eingefrorenen Stand', function
     expect($schlechter)->toBe([], "Design-Regeln verletzt — Token/Baustein nutzen statt Einzelwert:\n" . implode("\n", $schlechter));
 });
 
+/**
+ * Unverändert verschobene Blade-Teile (neue Datei => Quelldatei). Ihre Treffer zählen für die Klinke weiter bei der
+ * Quelle, die Summe darf nicht steigen. Nur für reine Umzüge; wer dabei umschreibt, senkt stattdessen die Zahlen.
+ */
+const UI_UMZUEGE = [
+    'livewire/produktion/tagesplan-feedback.blade.php' => 'livewire/produktion/tagesplan.blade.php',   // 98 · 3.3 S6
+];
+
+it('Umzüge: verschobene Treffer zählen bei der Quelle, ein Anstieg in der Summe bleibt rot (Selbsttest)', function () {
+    $alt = ['quelle.blade.php' => ['roher_button' => 5]];
+    $umzug = ['ziel.blade.php' => 'quelle.blade.php'];
+
+    expect(BaselineKlinke::gestiegen(['quelle.blade.php' => ['roher_button' => 3], 'ziel.blade.php' => ['roher_button' => 2]], $alt, $umzug))->toBe([])
+        ->and(BaselineKlinke::gestiegen(['quelle.blade.php' => ['roher_button' => 3], 'ziel.blade.php' => ['roher_button' => 3]], $alt, $umzug))
+        ->toBe(['quelle.blade.php: roher_button 5 → 6'])
+        ->and(BaselineKlinke::gestiegen(['quelle.blade.php' => ['roher_button' => 3], 'ziel.blade.php' => ['roher_button' => 2]], $alt))
+        ->toBe(['ziel.blade.php: roher_button 0 → 2']);   // ohne Umzugsliste: neue Datei steigt
+});
+
 it('UI-Baseline steigt nicht gegenüber der eingecheckten Fassung', function () {
-    $steigt = BaselineKlinke::steigtGegenueberGit(UiRegeln::baselinePfad());
+    $steigt = BaselineKlinke::steigtGegenueberGit(UiRegeln::baselinePfad(), UI_UMZUEGE);
     if ($steigt === null) {
         $this->markTestSkipped('Keine eingecheckte Vergleichsfassung (kein git oder Datei neu).');
     }

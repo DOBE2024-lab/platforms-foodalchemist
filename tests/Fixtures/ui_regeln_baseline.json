@@ -723,10 +723,14 @@
     "livewire/produktion/partials/wall-verknuepfung.blade.php": {
         "typo_tinte": 3
     },
+    "livewire/produktion/tagesplan-feedback.blade.php": {
+        "typo_tinte": 10,
+        "roher_button": 3
+    },
     "livewire/produktion/tagesplan.blade.php": {
         "typo_groesse": 11,
-        "typo_tinte": 89,
-        "roher_button": 37,
+        "typo_tinte": 79,
+        "roher_button": 34,
         "rohe_karte": 5,
         "rohes_segment": 2
     },

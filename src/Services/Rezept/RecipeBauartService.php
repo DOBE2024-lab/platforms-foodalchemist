@@ -103,7 +103,7 @@ class RecipeBauartService
         return [
             'name' => $r->name,
             'einstufung_ist' => $ist,
-            'kategorie' => $r->kategorie?->label,
+            'kategorie' => $r->category?->label,
             'hauptgruppe' => $r->dishMainGroup?->label,
             'zubereitung' => mb_strimwidth((string) $r->preparation, 0, 1500, '…'),
             'bestandteile' => $r->ingredients

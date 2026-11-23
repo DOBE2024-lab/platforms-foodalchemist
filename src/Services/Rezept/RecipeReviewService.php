@@ -153,7 +153,7 @@ class RecipeReviewService
             'name' => $r->name,
             'description' => $r->description,
             'preparation' => $r->preparation,
-            'kategorie' => $r->kategorie?->label,
+            'kategorie' => $r->category?->label,
             // Kohärenz-Gate (2026-08-07): die grobe Geschmacksrichtung ist der Massstab
             // für süß-in-herzhaft — ohne sie kann der Prüf-Pass einen Dessert-Fremdkörper
             // in einem herzhaften Gericht gar nicht sehen. Sicht-neutral (schadet VK nicht).

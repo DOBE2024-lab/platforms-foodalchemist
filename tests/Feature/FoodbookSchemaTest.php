@@ -27,8 +27,8 @@ it('Foodbook: Mappe mit Kunde + Pax, Kapitel-Baum, Blöcke (concept_ref + recipe
         'jahr' => 2027, 'customer' => 'Hotel Adler', 'personen' => 120, 'status' => 'draft',
     ]);
 
-    $top = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'Abendveranstaltung', 'position' => 0]);
-    $sub = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'parent_id' => $top->id, 'title' => 'Hauptgang', 'position' => 0]);
+    $top = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Abendveranstaltung', 'position' => 0]);
+    $sub = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'parent_id' => $top->id, 'title' => 'Hauptgang', 'position' => 0]);
 
     $top->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'header', 'label' => 'Willkommen', 'position' => 0]);
     $sub->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'concept_ref', 'concept_id' => $this->concept->id, 'position' => 0]);
@@ -36,11 +36,11 @@ it('Foodbook: Mappe mit Kunde + Pax, Kapitel-Baum, Blöcke (concept_ref + recipe
 
     expect($fb->customer)->toBe('Hotel Adler')
         ->and($fb->personen)->toBe(120)
-        ->and($fb->kapitel()->count())->toBe(2)
+        ->and($fb->chapters()->count())->toBe(2)
         ->and($top->children()->count())->toBe(1)
         ->and($sub->blocks()->count())->toBe(2)
         ->and($sub->blocks()->where('type', 'concept_ref')->first()->concept->name)->toBe('Grill-Buffet')
-        ->and($sub->blocks()->where('type', 'recipe_ref')->first()->gericht->name)->toBe('Gruß aus der Küche');
+        ->and($sub->blocks()->where('type', 'recipe_ref')->first()->dish->name)->toBe('Gruß aus der Küche');
 });
 
 it('Team-Hierarchie: Kind sieht Eltern-Foodbooks; Besitzer-Check (D1)', function () {

@@ -33,7 +33,7 @@ it('#3: mitKaskade hängt den Produktions-Baum je Gericht an; EK nur intern', fu
     ]);
 
     $fb = ($this->makeFb)();
-    $kap = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kap 1', 'position' => 0]);
+    $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kap 1', 'position' => 0]);
     $kap->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref',
         'sales_recipe_id' => $gericht->id, 'quantity' => 1, 'position' => 0, 'visible' => true]);
 
@@ -58,7 +58,7 @@ it('#5b: §-Codes PRO GERICHT + Legende (nur real vorkommende Allergene/Zusatzst
         'is_sales_recipe' => true, 'allergen_gluten' => 'enthalten', 'allergen_milk' => 'spuren',
     ]);
     $fb = ($this->makeFb)();
-    $kap = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kap', 'position' => 0]);
+    $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kap', 'position' => 0]);
     $kap->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref',
         'sales_recipe_id' => $gericht->id, 'quantity' => 1, 'position' => 0, 'visible' => true]);
 
@@ -78,8 +78,8 @@ it('#5b: §-Codes PRO GERICHT + Legende (nur real vorkommende Allergene/Zusatzst
 
 it('#3: kapitelFilter beschränkt die gerenderten Kapitel', function () {
     $fb = ($this->makeFb)();
-    $k1 = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'Vorspeisen', 'position' => 0]);
-    $k2 = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'Hauptgang', 'position' => 1]);
+    $k1 = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Vorspeisen', 'position' => 0]);
+    $k2 = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Hauptgang', 'position' => 1]);
 
     $alle = $this->svc->dokumentDaten($this->rootTeam, $fb->fresh());
     $nur1 = $this->svc->dokumentDaten($this->rootTeam, $fb->fresh(), intern: false, kapitelFilter: [$k1->id], mitKaskade: false);
@@ -93,7 +93,7 @@ it('#5a: das Foodbook-Dokument rendert die Produktions-Kaskade NICHT mehr (die l
     $this->makeIngredient($gericht, 'Salz', null, '5', 1);
 
     $fb = ($this->makeFb)();
-    $kap = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kap', 'position' => 0]);
+    $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kap', 'position' => 0]);
     $kap->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'recipe_ref',
         'sales_recipe_id' => $gericht->id, 'quantity' => 1, 'position' => 0, 'visible' => true]);
 

@@ -420,7 +420,7 @@ class AngebotService
     public function dokumentDaten(Team $team, FoodAlchemistAngebot $angebot, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
         $conceptSvc = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
-        $angebot->loadMissing(['crmCompany', 'crmContact', 'concepts', 'referenzierteConcepts']);
+        $angebot->loadMissing(['crmCompany', 'crmContact', 'concepts', 'referencedConcepts']);
         $kalk = $this->kalkulation($team, $angebot, $outlet);   // Kurator 19.10.: Druck rechnet gegen das Profil wie die Seite
 
         $menues = [];

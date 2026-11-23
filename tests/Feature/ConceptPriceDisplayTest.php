@@ -65,7 +65,7 @@ it('Foodbook-Dokument: einzel-Block trägt das einzelpreise-Flag + Preise je Ger
     $einzel = ($this->einzelSetup)('einzel');
     $fb = FoodAlchemistFoodbook::create(['team_id' => $this->rootTeam->id, 'code' => 'FB-PD', 'label' => 'PD',
         'jahr' => 2027, 'personen' => 10, 'status' => 'draft']);
-    $kap = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kuchen', 'position' => 0]);
+    $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Kuchen', 'position' => 0]);
     $kap->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'concept_ref',
         'concept_id' => $einzel->id, 'position' => 0, 'visible' => true]);
 
@@ -83,7 +83,7 @@ it('Foodbook-Editor: detail() lädt price_display → istEinzelpreis am Block-Co
     $einzel = ($this->einzelSetup)('einzel');
     $fb = FoodAlchemistFoodbook::create(['team_id' => $this->rootTeam->id, 'code' => 'FB-DET', 'label' => 'Det',
         'jahr' => 2027, 'personen' => 10, 'status' => 'draft']);
-    $kap = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'K', 'position' => 0]);
+    $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'K', 'position' => 0]);
     $kap->blocks()->create(['team_id' => $this->rootTeam->id, 'type' => 'concept_ref',
         'concept_id' => $einzel->id, 'position' => 0, 'visible' => true]);
 
@@ -97,10 +97,10 @@ it('Kapitel-Board: depth-first Baum-Reihenfolge — Kind direkt unter Eltern tro
         'jahr' => 2027, 'personen' => 10, 'status' => 'draft']);
     // Flache position-Reihenfolge (A, B, A-Kind, B-Kind) folgt NICHT der Baumstruktur —
     // das Board muss depth-first umsortieren: A, A-Kind, B, B-Kind.
-    $a = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'A', 'position' => 0]);
-    $b = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'B', 'position' => 1]);
-    $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'A-Kind', 'parent_id' => $a->id, 'position' => 2]);
-    $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'B-Kind', 'parent_id' => $b->id, 'position' => 5]);
+    $a = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'A', 'position' => 0]);
+    $b = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'B', 'position' => 1]);
+    $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'A-Kind', 'parent_id' => $a->id, 'position' => 2]);
+    $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'B-Kind', 'parent_id' => $b->id, 'position' => 5]);
 
     $board = app(LeitstelleService::class)->kapitelBoard($this->rootTeam, $fb->fresh());
     expect(collect($board)->pluck('titel')->all())->toBe(['A', 'A-Kind', 'B', 'B-Kind']);
@@ -109,7 +109,7 @@ it('Kapitel-Board: depth-first Baum-Reihenfolge — Kind direkt unter Eltern tro
 it('Kapitel-Fortschritt: Default offen · Setter persistiert · Enum-Guard', function () {
     $fb = FoodAlchemistFoodbook::create(['team_id' => $this->rootTeam->id, 'code' => 'FB-FS', 'label' => 'FS',
         'jahr' => 2027, 'personen' => 10, 'status' => 'draft']);
-    $kap = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'K', 'position' => 0]);
+    $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'K', 'position' => 0]);
 
     // Default = offen im Board.
     $board = app(LeitstelleService::class)->kapitelBoard($this->rootTeam, $fb->fresh());
@@ -129,7 +129,7 @@ it('Kapitel-Fortschritt: Default offen · Setter persistiert · Enum-Guard', fun
 it('Textkapitel: is_struktur Default false · im Board · via updateKapitel persistiert', function () {
     $fb = FoodAlchemistFoodbook::create(['team_id' => $this->rootTeam->id, 'code' => 'FB-STR', 'label' => 'Str',
         'jahr' => 2027, 'personen' => 10, 'status' => 'draft']);
-    $kap = $fb->kapitel()->create(['team_id' => $this->rootTeam->id, 'title' => 'Intro', 'position' => 0]);
+    $kap = $fb->chapters()->create(['team_id' => $this->rootTeam->id, 'title' => 'Intro', 'position' => 0]);
 
     $board = app(LeitstelleService::class)->kapitelBoard($this->rootTeam, $fb->fresh());
     expect($board[0]['is_struktur'])->toBeFalse();

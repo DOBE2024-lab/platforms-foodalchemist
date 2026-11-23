@@ -73,6 +73,9 @@ class Index extends Component
     /** Für welche Planung $form geladen ist — speichern() schreibt nie das Formular einer anderen Planung. */
     public ?int $formSessionId = null;
 
+    /** Briefing mitspeichern: es gibt Änderungen, die „Planung speichern“ noch nicht gesichert hat (Hinweis im Modal-Kopf). */
+    public bool $ungespeichert = false;
+
     /** Composer-Tab: gewählte Anker (Einträge {id, slug, label}), Cap = INNER_ANKER_MAX (12). */
     public array $composerAnker = [];
 
@@ -1032,6 +1035,7 @@ class Index extends Component
             'creative_mode' => (string) $session->creative_mode,
         ];
         $this->formSessionId = (int) $session->id;
+        $this->ungespeichert = false;
 
         // Spec 85 C1 PR-4: Suchbegriffe, Trend-Vorbefüllung, KI-Kopf-Plan und Leitplanken liest Planung\Brief::mount() aus der Session.
     }
@@ -1073,7 +1077,36 @@ class Index extends Component
         if (in_array($this->form['creative_mode'] ?? null, FoodAlchemistPlanningSession::CREATIVE_MODES, true)) {
             $svc->setCreativeMode($team, $session->id, $this->form['creative_mode']);
         }
+        // Briefing mitspeichern: das Kind Planung\Brief sichert den Entwurf aller Reiter (Texte + Leitplanken) und setzt
+        // session.brief auf den Brief des offenen Reiters; „ungespeichert“ fällt erst mit seiner Bestätigung.
+        $this->dispatch('planung.speichern', sessionId: (int) $session->id, scope: $this->offenerScope());
         $this->meldung = 'Gespeichert.';
+    }
+
+    /** Reiter des Editors → Scope des Entwurfs (Basisrezept-Reiter = Scope rezept); andere Reiter haben keinen Brief. */
+    private function offenerScope(): ?string
+    {
+        $scope = $this->editorTab === 'basisrezept' ? 'rezept' : $this->editorTab;
+
+        return in_array($scope, self::SCOPES, true) ? $scope : null;
+    }
+
+    /** Name der Planung im Editor geändert → ungespeichert. */
+    public function updatedForm(): void
+    {
+        $this->ungespeichert = true;
+    }
+
+    #[On('planung.ungespeichert')]
+    public function markiereUngespeichert(): void
+    {
+        $this->ungespeichert = true;
+    }
+
+    #[On('planung.entwurf-gespeichert')]
+    public function entwurfGespeichert(): void
+    {
+        $this->ungespeichert = false;
     }
 
 

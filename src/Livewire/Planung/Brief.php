@@ -36,7 +36,9 @@ use Platform\FoodAlchemist\Support\Planung\ReglerParams;
  *
  * Zusammenspiel mit dem Parent (gekeyt je Session, `sessionId` gesperrt, `laeuft` reaktiv als Sperre):
  *  · Brief → Parent: `planung.lauf-gestartet(laufId)` nach dem Go, `planung.brief-gespiegelt` nach dem Spiegeln auf die Session,
+ *    `planung.ungespeichert` bei jeder Eingabe-/Leitplanken-Änderung, `planung.entwurf-gespeichert` nach dem Sichern des Entwurfs,
  *    `planung.meldung(text, art)` für Meldung/Fehler im Modal-Kopf (nur bei Änderung, {@see rendering()}).
+ *  · Parent → Brief: `planung.speichern(sessionId, scope)` sichert den Entwurf aller Reiter (Briefing mitspeichern).
  *  · Parent/Kinder → Brief: `planung.brief-uebernehmen(scope, werte)` (Diktat hängt an, Composer füllt leer und setzt den Seed-Pin),
  *    `planung.trend-uebernommen(scope)` (Ziel-Ebene überschreiben, andere nur leer füllen; kein Remount, Entscheid Kurator).
  *  · Agenten-Panels: `voice.formularstand-aktualisiert` bei jedem Render, `voice.komponenten-uebernahme` hierher.
@@ -306,6 +308,70 @@ class Brief extends Component
         }
         if (preg_match('#^regler\.([^.]+)\.([^.]+)$#', $name, $m)) {
             unset($this->reglerVonAgent[$m[1]][$m[2]]);
+        }
+        // Briefing mitspeichern: jede Änderung an Eingabe oder Leitplanken → Hinweis „ungespeichert“ im Modal-Kopf.
+        if (preg_match('#^(eingabe\.[^.]+\.(titel|brief|creative_mode)|regler\.)#', $name)) {   // Suchbegriffe speichern sich selbst
+            $this->dispatch('planung.ungespeichert');
+        }
+    }
+
+    /**
+     * „Briefing mitspeichern“ (Dominique/Kurator 23.11.2026): auf „Planung speichern“ im Parent den Entwurf aller drei
+     * Reiter sichern — Titel, Brief, Kreativ-Modus, Leitplanken (Vorlage und Seed-Pin nicht). Nur für die eigene Planung:
+     * das Event trägt die Session des Parent-Formulars; passt sie nicht (Wechsel), wird nichts geschrieben.
+     */
+    #[On('planung.speichern')]
+    public function entwurfSpeichern(int $sessionId, ?string $scope, PlanningSessionService $svc): void
+    {
+        $team = $this->team();
+        if ($team === null || $this->sessionId === null || $sessionId !== $this->sessionId) {
+            return;
+        }
+        $entwurf = [];
+        foreach (Index::SCOPES as $s) {
+            $entwurf[$s] = [
+                'titel' => (string) ($this->eingabe[$s]['titel'] ?? ''),
+                'brief' => (string) ($this->eingabe[$s]['brief'] ?? ''),
+                'creative_mode' => (string) ($this->eingabe[$s]['creative_mode'] ?? 'voll_kreativ'),
+                'regler' => $this->regler[$s] ?? [],
+            ];
+        }
+        try {
+            $svc->speichereEntwurf($team, $this->sessionId, $entwurf, in_array($scope, Index::SCOPES, true) ? $scope : null);
+        } catch (\RuntimeException $e) {
+            $this->fehler = $e->getMessage();
+
+            return;
+        }
+        $this->fehler = null;
+        $this->dispatch('planung.entwurf-gespeichert');
+    }
+
+    /**
+     * Gespeicherten Entwurf in die Reiter zurückholen. Leitplanken nur für bekannte Regler-Schlüssel; war nach dem Speichern
+     * schon ein Go, gelten für die Leitplanken die beim Go persistierten Werte (generation_params, schon rehydriert).
+     */
+    private function ladeEntwurf(FoodAlchemistPlanningSession $session): void
+    {
+        $entwurf = is_array($session->entwurf_json) ? $session->entwurf_json : [];
+        if ($entwurf === []) {
+            return;
+        }
+        $gespeichert = isset($entwurf['gespeichert_at']) ? \Illuminate\Support\Carbon::parse($entwurf['gespeichert_at']) : null;
+        $letzterGo = \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun::visibleToTeam($this->team())->where('planning_session_id', $session->id)->max('created_at');
+        $reglerAusEntwurf = $gespeichert === null || $letzterGo === null || $gespeichert->gte(\Illuminate\Support\Carbon::parse($letzterGo));
+        foreach (Index::SCOPES as $s) {
+            $e = is_array($entwurf[$s] ?? null) ? $entwurf[$s] : null;
+            if ($e === null) {
+                continue;
+            }
+            $this->eingabe[$s]['titel'] = (string) ($e['titel'] ?? '');
+            $this->eingabe[$s]['brief'] = (string) ($e['brief'] ?? '');
+            $this->eingabe[$s]['creative_mode'] = in_array($e['creative_mode'] ?? null, FoodAlchemistPlanningSession::CREATIVE_MODES, true)
+                ? $e['creative_mode'] : 'voll_kreativ';
+            if ($reglerAusEntwurf && is_array($e['regler'] ?? null)) {
+                $this->regler[$s] = array_merge(Index::REGLER_DEFAULT, array_intersect_key($e['regler'], Index::REGLER_DEFAULT));
+            }
         }
     }
 
@@ -817,6 +883,9 @@ class Brief extends Component
         // L5: die beim Go persistierten Leitplanken (generation_params) in die Regler zurücklesen — sonst
         // zeigt jeder Tab nach einem Reload wieder die Defaults, während der Lauf mit anderen Werten fuhr.
         $this->rehydriereReglerAusParams($session);
+
+        // Briefing mitspeichern: der gespeicherte Entwurf je Reiter (Texte immer, Leitplanken wenn nach dem letzten Go gespeichert).
+        $this->ladeEntwurf($session);
     }
 
     /**
@@ -910,6 +979,7 @@ class Brief extends Component
             'reglerPill', 'briefVorlage', 'titelVorschlagen', 'suchbegriffEntfernen', 'suchbegriffHinzufuegen', 'leitplankenAusBriefing',
             'voiceKomponentenUebernehmen', 'wissenVorschau', 'kiKopf', 'planFeldSpeichern', 'planVerwerfen', 'goKaskade',
             'briefUebernehmen',   // Diktat (am Handy erlaubt) kommt über dieses Event
+            'entwurfSpeichern',   // „Planung speichern“ (am Handy erlaubt) sichert den Entwurf über dieses Event
         ];
     }
 

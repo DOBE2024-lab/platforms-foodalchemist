@@ -77,6 +77,20 @@ it('Watchdog: das Überschreiten der Schwelle zählt als Änderung, die Planung 
         ->assertSet('laeuft', true)->assertNotSet('hinweis', null);
 });
 
+it('Spec 85 C1 PR-3: ein Poll ohne Änderung meldet dem Parent nichts (keine Render-Schleife Parent ↔ Kind)', function () {
+    $kind = Livewire::test(KaskadenLauf::class, ['laufId' => $this->run->id])->assertSet('laeuft', true);   // läuft, frisch → kein Watchdog
+    $kind->dispatch('planung.lauf-geaendert')
+        ->assertSet('laeuft', true)
+        ->assertNotDispatched('planung.lauf-status')
+        ->assertNotDispatched('planung.meldung');
+    $kind->dispatch('planung.lauf-geaendert')->assertNotDispatched('planung.lauf-status')->assertNotDispatched('planung.meldung');
+
+    $this->run->update(['status' => 'review']);   // Gegenprobe: echte Änderung → genau dann melden
+    $kind->dispatch('planung.lauf-geaendert')
+        ->assertDispatched('planung.lauf-status', laufId: $this->run->id, laeuft: false)
+        ->assertDispatched('planung.meldung', art: 'meldung');
+});
+
 it('Planung: das Status-Ereignis zieht den Lauf nach und lädt ihn je Anfrage nur einmal; der Fortschritt bindet LaufStatus statt wire:poll ein', function () {
     // Kinder-Komponenten rendert der Test nur als Platzhalter mit wire:key. Spec 85 C1 PR-3: die Planung bindet das Kind
     // KaskadenLauf ein, das Kind den LaufStatus.

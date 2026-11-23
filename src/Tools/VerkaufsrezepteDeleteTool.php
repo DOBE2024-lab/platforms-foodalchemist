@@ -22,8 +22,10 @@ class VerkaufsrezepteDeleteTool extends FoodAlchemistTool implements ToolContrac
 
     public function getDescription(): string
     {
-        return 'Löscht ein team-eigenes Gericht (confirm=true Pflicht). Entfernt die VK-Ebene, nicht die '
-            . 'referenzierten Basisrezepte.';
+        return 'Löscht ein team-eigenes Gericht weich (confirm=true Pflicht). Entfernt die VK-Ebene, nicht die '
+            . 'referenzierten Basisrezepte. Gesperrt, solange es aktiv verwendet wird (Konzepte/Pakete, Komponente, Speiseplan ab heute, '
+            . 'gültige Karten, offene Angebote, Foodbook-Entwürfe/aktive Foodbooks, Ersatz, offene Produktion, Abos) — vorher mit '
+            . 'recipes.REPLACE (bereiche) ersetzen. Historische Einträge behalten das Gericht als Verweis.';
     }
 
     public function getSchema(): array

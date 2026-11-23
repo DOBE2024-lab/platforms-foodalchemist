@@ -893,6 +893,8 @@ class DarreichungService
             ] : []),
         ]);
 
+        $this->kopfSpiegeln($darreichung, $recipe);
+
         if ($oldCalculated !== $darreichung->calculated_sales_net || $oldEffective !== $darreichung->sales_net) {
             FoodAlchemistPriceChangeAudit::create([
                 'team_id' => $darreichung->team_id,
@@ -912,6 +914,28 @@ class DarreichungService
                     'calculation_version' => $price['calculation_version'],
                 ],
             ]);
+        }
+    }
+
+    /**
+     * Plan 98 B (Kurator 23.11.): Der Rezept-Kopf `sales_quantity_per_unit_g` spiegelt die Grammatur der Standard-Darreichung —
+     * vorher drifteten beide auseinander, sobald sich eine Zutatenmenge änderte (der Kopf blieb stehen, die Darreichung rechnete
+     * neu). Rund 15 Leser hängen noch am Kopf; deren Umzug ist Plan 98 · 3.5. Leise per Query (kein Modell-Event, kein
+     * RezeptKostenGeaendert) — es ändert sich nur der Spiegel, nicht die Kalkulation. Unbekannte Grammatur lässt den Kopf stehen.
+     */
+    private function kopfSpiegeln(FoodAlchemistRecipeDarreichung $darreichung, FoodAlchemistRecipe $recipe): void
+    {
+        if (! $darreichung->is_standard) {
+            return;
+        }
+        $gramm = $this->grammJeEinheit($darreichung, $recipe);
+        if ($gramm === null) {
+            return;
+        }
+        $gramm = round($gramm, 1);
+        if ($recipe->sales_quantity_per_unit_g === null || abs((float) $recipe->sales_quantity_per_unit_g - $gramm) >= 0.05) {
+            FoodAlchemistRecipe::whereKey($recipe->id)->update(['sales_quantity_per_unit_g' => $gramm]);
+            $recipe->sales_quantity_per_unit_g = $gramm;
         }
     }
 

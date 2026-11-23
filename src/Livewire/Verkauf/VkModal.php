@@ -223,6 +223,7 @@ class VkModal extends Component
         if ($team === null) {
             return;
         }
+        $kopfVorher = $this->kopfGrammatur();
         try {
             $aktion(app(\Platform\FoodAlchemist\Services\DarreichungService::class), $team);
             $this->fehler = null;
@@ -230,6 +231,13 @@ class VkModal extends Component
             $this->fehler = $e->getMessage();
 
             return;
+        }
+        // Plan 98 B: die Standard-Darreichung spiegelt ihre Grammatur in den Kopf. Ohne Nachladen hielte das Formular den
+        // alten Kopf-Wert, und „Speichern“ im Kopf schickte ihn als Änderung zurück in die Zeile. Eine eigene, noch nicht
+        // gespeicherte Eingabe im Kopf bleibt stehen.
+        $kopfNachher = $this->kopfGrammatur();
+        if ($kopfNachher !== $kopfVorher && $this->zahlGleich($this->form['sales_quantity_per_unit_g'] ?? null, $kopfVorher)) {
+            $this->form['sales_quantity_per_unit_g'] = $kopfNachher;
         }
         $offen = $this->darDeltaOffen;
         $entwuerfe = $this->darZeitEntwuerfe();
@@ -239,6 +247,22 @@ class VkModal extends Component
         }
         $this->darDeltaOffen = $offen;
         $this->dispatch('recipe-gespeichert');
+    }
+
+    private function kopfGrammatur(): ?float
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        $wert = $team === null || $this->recipeId === null ? null
+            : FoodAlchemistRecipe::visibleToTeam($team)->whereKey($this->recipeId)->value('sales_quantity_per_unit_g');
+
+        return $wert === null ? null : (float) $wert;
+    }
+
+    private function zahlGleich(mixed $formWert, ?float $kopf): bool
+    {
+        $formWert = $formWert === '' ? null : $formWert;
+
+        return $formWert === null || $kopf === null ? $formWert === null && $kopf === null : abs((float) $formWert - $kopf) < 0.05;
     }
 
     public function darreichungSpeichern(int $id): void

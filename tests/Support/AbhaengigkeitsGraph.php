@@ -32,7 +32,7 @@ final class AbhaengigkeitsGraph
 
     /** Präfix → Schicht, erste passende Regel gewinnt. */
     private const PRAEFIXE = [
-        '/^(Planning|Planung)/' => 4,
+        '/^(Planning|Planung|Kaskade)/' => 4,   // 3.3 S1: Teile der Kaskaden-Fassade (Services/Kaskade); KaskadenSchritt steht explizit auf 0
         '/^(Foodbook|Offer|Angebot|Speisekarte|Speiseplan|Report|Order|Bestell)/' => 3,
         '/^(Concept|Paket|Format)/' => 2,
         '/^(Recipe|Rezept|Darreichung|Ingredient|Naehrwert|Allergen|Kosten|ProductionTime|Gericht|SubRecipe)/' => 1,

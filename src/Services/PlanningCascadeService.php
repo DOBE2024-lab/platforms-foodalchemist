@@ -31,6 +31,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use RuntimeException;
 use Platform\FoodAlchemist\Support\Warteschlange;
 use Platform\FoodAlchemist\Services\Kaskade\KaskadenSchritt;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadeKontext;
 use Platform\FoodAlchemist\Events\KaskadenSchrittAbgeschlossen;
 
 /**
@@ -50,9 +51,6 @@ use Platform\FoodAlchemist\Events\KaskadenSchrittAbgeschlossen;
 class PlanningCascadeService
 {
     use \Platform\FoodAlchemist\Services\Concerns\KaskadeKiWarten;   // externer KI-Weg (Lauf 62) + Lauf-Status-Hinweis
-    /** Async-Result via Cache (Job-Vertrag) — Minuten, bis der Worker den Step abschließt. */
-    private const RESULT_TTL_MIN = 15;
-
     /**
      * Spec 53 / Paket C: Phasen-Texte (`cascade_run_steps.phase`) als Konstanten statt Magic-Strings —
      * Schreiber (Jobs) UND Leser (Index::konformitaetPruefen vergleicht gegen PHASE_KONFORMITAET, um
@@ -218,7 +216,7 @@ class PlanningCascadeService
                 // läuft über den bestehenden staged-Pfad (deferred.fanout → FanoutConceptJob).
                 $this->referenziereConceptStep($team, $step, $existingConceptId, $creativeMode, $staged, $session?->id);
             } else {
-                $this->dispatchConceptStep($team, $step, $brief, $session?->id, $creativeMode, $params);
+                $this->kontext()->dispatchConceptStep($team, $step, $brief, $session?->id, $creativeMode, $params);
             }
         } elseif ($planFirst) {
             \Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob::dispatch($team->id, (int) (Auth::id() ?? 0), (int) $step->id, $brief, $params);
@@ -235,66 +233,16 @@ class PlanningCascadeService
             );
         } else {
             // Im gestuften Lauf schiebt der Root-Step (Basisrezept/Gericht) seine Kinder auf bis zur Freigabe.
-            $this->dispatchRezeptStep($team, $step, $brief, $params, $scope === 'gericht', $vollAnreichern, $session?->id, $staged);
+            $this->kontext()->dispatchRezeptStep($team, $step, $brief, $params, $scope === 'gericht', $vollAnreichern, $session?->id, $staged);
         }
 
         return $run;
     }
 
-    /** Dispatch der Rezept-/Gericht-Generierung für einen Step (spiegelt HatGeneratorLauf::starteLauf). */
-    private function dispatchRezeptStep(
-        Team $team,
-        FoodAlchemistCascadeRunStep $step,
-        string $brief,
-        array $params,
-        bool $vkModus,
-        bool $vollAnreichern,
-        ?int $planningSessionId,
-        bool $staged = false,
-    ): void {
-        $runId = (string) Str::uuid();
-        // Parameter-Bündel: Lineage (planning_session_id, vom Job an verknuepfeArtefakt) + der
-        // Rückkanal an diesen Step (cascade_step_id → Job meldet Ergebnis/Fehler hierher zurück).
-        $jobParams = $params;
-        if ($planningSessionId !== null) {
-            $jobParams['planning_session_id'] = $planningSessionId;
-        }
-        $jobParams['cascade_step_id'] = $step->id;
-        // Gestuft: der Root-Step schiebt seine Sub-Rezepte auf (afterGenerated legt sie in `deferred` ab
-        // statt zu dispatchen); freigegeben wird die nächste Ebene erst bei der Freigabe. Sonst eager.
-        $jobParams['auto_dependencies'] = ! $staged;
-        $jobParams['_defer_children'] = $staged;
-
-        $step->update(['generator_run_id' => $runId]);
-        Cache::put(GenerateRecipeJob::cacheKey($runId), ['status' => 'pending'], now()->addMinutes(self::RESULT_TTL_MIN));
-        // Doppel-Anreicherung vermeiden: im gestuften Lauf IST die Freigabe der Anreicherungs-Schritt
-        // (starteFolgestufe → EnrichRecipeJob, completeCoverage). Eine Vor-Freigabe-Voll-Anreicherung am
-        // noch nicht freigegebenen Draft liefe dieselbe teure Coverage-Kette ein zweites Mal — darum im
-        // staged-Modus unterdrücken. Nicht-gestuft (Direkt-Materialisierung) behält das Alt-Verhalten.
-        $vorFreigabeAnreichern = $vollAnreichern && ! $staged;   // Spec 80 H: nicht gestufte Läufe haben kein Freigabe-Tor — dort bleibt es bewusst so
-        GenerateRecipeJob::dispatch($runId, $team->id, (int) (\Illuminate\Support\Facades\Auth::id() ?? 0), $brief, $jobParams, $vkModus, $vorFreigabeAnreichern, extern: (bool) ($jobParams['_extern'] ?? false));
-    }
-
-    /**
-     * Dispatch der Konzept-Generierung für einen Step (Reuse-Assembler; im Erfinden-Modus fächert der Job auf).
-     *
-     * `$attachOwnerType`/`$attachContainerId` (Spec-42-Vollzug S3a): das erzeugte Konzept dockt an einen
-     * Ausgabe-Container (foodbook→Kapitel). Bei Cockpit-Concepts (frei) bleiben beide null. Wichtig, damit
-     * ein NEU-Generieren eines Kapitel-Concepts ({@see regeneriereStep}) den Kapitel-Attach nicht verliert.
-     */
-    private function dispatchConceptStep(Team $team, FoodAlchemistCascadeRunStep $step, string $brief, ?int $planningSessionId, string $creativeMode, array $params = [], ?string $attachOwnerType = null, ?int $attachContainerId = null): void
+    /** Plan 98 · 3.3 S1: gemeinsame Helfer (Lauf, Step-Eigentum, Leitplanken, Step-Dispatch) liegen in {@see KaskadeKontext}. */
+    private function kontext(): KaskadeKontext
     {
-        $runId = (string) Str::uuid();
-        $step->update(['generator_run_id' => $runId]);
-        Cache::put(GenerateConceptJob::cacheKey($runId), ['status' => 'pending'], now()->addMinutes(self::RESULT_TTL_MIN));
-        // Menü-Leitplanken des Concept-Tabs (menue_*-Keys aus reglerParams) an die Konzept-Erzeugung
-        // reichen — sie speisen den Gerüst-Kopf (Preis-Korridor je Person). Nur die menue_*-Teilmenge,
-        // damit der Job-Payload schlank und die Absicht klar bleibt.
-        $menueAchsen = array_filter($params, fn ($k) => str_starts_with((string) $k, 'menue_'), ARRAY_FILTER_USE_KEY);
-        GenerateConceptJob::dispatch(
-            $runId, $team->id, (int) (\Illuminate\Support\Facades\Auth::id() ?? 0), $brief,
-            null, $planningSessionId, $step->id, $creativeMode, false, false, $attachOwnerType, $attachContainerId, $menueAchsen
-        );
+        return app(KaskadeKontext::class);
     }
 
     /**
@@ -548,10 +496,10 @@ class PlanningCascadeService
             : $this->slotBrief($ownerType, (int) $run->source_owner_id, $slot);
         $runId = (string) Str::uuid();
         $step->update(['generator_run_id' => $runId, 'status' => 'running']);
-        Cache::put(GenerateConceptJob::cacheKey($runId), ['status' => 'pending'], now()->addMinutes(self::RESULT_TTL_MIN));
+        Cache::put(GenerateConceptJob::cacheKey($runId), ['status' => 'pending'], now()->addMinutes(KaskadeKontext::RESULT_TTL_MIN));
         // Kompositions-Fix: die Menü-Leitplanken der Session (menue_*: Gänge/Preis-Korridor/Diät-Quoten/
         // Balance) an die Concept-Erzeugung reichen — sonst steuert die Menü-/Kapitel-Zusammenstellung nichts.
-        $menueAchsen = $this->sessionMenueAchsen($team, $sessionId);
+        $menueAchsen = $this->kontext()->sessionMenueAchsen($team, $sessionId);
         // Je Frame-Slot ein Concept — bei Foodbook/Angebot/Format also so viele, wie das
         // Gerüst Slots hat (beim Angebot ungedeckelt). Eigene Schlange.
         GenerateConceptJob::dispatch(
@@ -1247,51 +1195,13 @@ class PlanningCascadeService
     }
 
     /**
-     * Die am Planung-Go gesetzten Richtungs-Regler (Leitplanken) der Session — leer, wenn keine
-     * Session/keine Regler. Der Kaskaden-Fan-out erbt sie damit an die erzeugten Gerichte, sodass
-     * Niveau/Convenience/Bio/Diät/… nicht nur beim Depth-1-Go greifen, sondern durch die ganze Kaskade.
-     *
-     * **Leitplanken-Trennung (Roadmap Et.2a):** dieser Helfer speist ausschliesslich die REZEPT-
-     * Erzeugung ({@see materialisiereConceptGericht}, {@see materialisiereSpeiseplanZelle}). Nur die
-     * REZEPT-Leitplanken (Niveau/Convenience/Frische/Bio/Diät/Aroma/…) propagieren an Gerichte/
-     * Basisrezepte. Die MENÜ-Leitplanken (`menue_*`: Anzahl Gänge · Preis-Korridor je Person · Diät-
-     * Quoten · Portfolio-Balance) steuern die ZUSAMMENSTELLUNG des Menüs (Concept-Ebene, gelesen beim
-     * Concept-Dispatch) und werden hier bewusst herausgefiltert — für ein einzelnes Gericht/Basisrezept
-     * sind sie bedeutungslos und würden, in den Rezept-Prompt serialisiert, die Generierung verfälschen.
+     * Die Rezept-Leitplanken der Session (ohne `menue_*`). Liegt in {@see KaskadeKontext::sessionGenerationParams}.
      *
      * @return array<string,mixed>
      */
     public function sessionGenerationParams(Team $team, ?int $planningSessionId): array
     {
-        if ($planningSessionId === null) {
-            return [];
-        }
-        $sess = app(PlanningSessionService::class)->get($team, $planningSessionId);
-        $params = is_array($sess?->generation_params) ? $sess->generation_params : [];
-
-        // Menü-Leitplanken bleiben auf der Concept-Ebene — nicht in die Rezept-Generierung durchreichen.
-        return array_filter($params, fn ($k) => ! str_starts_with((string) $k, 'menue_'), ARRAY_FILTER_USE_KEY);
-    }
-
-    /**
-     * Die MENÜ-Leitplanken (`menue_*`) der Session — das Gegenstück zu {@see sessionGenerationParams}
-     * (das genau diese herausfiltert). Sie steuern die ZUSAMMENSTELLUNG (Anzahl Gänge · Preis-Korridor je
-     * Person · Diät-Quoten · Portfolio-Balance) und gehören an die Concept-Erzeugung des Vollkaskade-Slot-
-     * Fan-outs ({@see dispatchSlotConcept}) — bis hier bekam der {@see GenerateConceptJob} dort mangels
-     * durchgereichter Achsen den Default `[]`, sodass die Menü-Leitplanken die Komposition NIE erreichten
-     * (der Cockpit-Concept-Pfad {@see dispatchConceptStep} reicht sie dagegen schon durch).
-     *
-     * @return array<string,mixed>
-     */
-    private function sessionMenueAchsen(Team $team, ?int $planningSessionId): array
-    {
-        if ($planningSessionId === null) {
-            return [];
-        }
-        $sess = app(PlanningSessionService::class)->get($team, $planningSessionId);
-        $params = is_array($sess?->generation_params) ? $sess->generation_params : [];
-
-        return array_filter($params, fn ($k) => str_starts_with((string) $k, 'menue_'), ARRAY_FILTER_USE_KEY);
+        return $this->kontext()->sessionGenerationParams($team, $planningSessionId);
     }
 
     /**
@@ -1303,7 +1213,7 @@ class PlanningCascadeService
     {
         try {
             // Fan-out erbt die Leitplanken der Session (Regler am Planung-Go); Steuer-Keys gewinnen.
-            $params = array_merge($this->sessionGenerationParams($team, $planningSessionId), ['auto_dependencies' => true, 'cascade_step_id' => $stepId]);
+            $params = array_merge($this->kontext()->sessionGenerationParams($team, $planningSessionId), ['auto_dependencies' => true, 'cascade_step_id' => $stepId]);
             $workflow = app(RecipeDependencyWorkflowService::class);
             $context = $workflow->prepare($team, $stepId, $brief, $params, true);
             // Spec 53 / Paket C-Nachtrag: derselbe Fortschritts-Callback wie GenerateRecipeJob —
@@ -1392,7 +1302,7 @@ class PlanningCascadeService
     public function materialisiereSpeisekartePosition(Team $team, int $rubrikId, string $brief, int $stepId, ?int $planningSessionId = null): void
     {
         try {
-            $params = array_merge($this->sessionGenerationParams($team, $planningSessionId), ['auto_dependencies' => true, 'cascade_step_id' => $stepId]);
+            $params = array_merge($this->kontext()->sessionGenerationParams($team, $planningSessionId), ['auto_dependencies' => true, 'cascade_step_id' => $stepId]);
             $workflow = app(RecipeDependencyWorkflowService::class);
             $context = $workflow->prepare($team, $stepId, $brief, $params, true);
             // Spec 53 / Paket C-Nachtrag: derselbe Fortschritts-Callback wie GenerateRecipeJob —
@@ -1603,7 +1513,7 @@ class PlanningCascadeService
         $staged = (bool) ($run?->staged ?? false);
         try {
             // Fan-out erbt die Leitplanken der Session (Regler am Planung-Go); Steuer-Keys gewinnen.
-            $params = array_merge($this->sessionGenerationParams($team, $planningSessionId), [
+            $params = array_merge($this->kontext()->sessionGenerationParams($team, $planningSessionId), [
                 'auto_dependencies' => ! $staged,
                 '_defer_children' => $staged,
                 'cascade_step_id' => $stepId,
@@ -1747,7 +1657,7 @@ class PlanningCascadeService
      */
     public function brecheLaufAb(Team $team, int $runId): bool
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         if ($run === null || ! $run->isOwnedBy($team) || $run->status !== 'running') {
             return false;
         }
@@ -1847,7 +1757,7 @@ class PlanningCascadeService
      */
     public function haengeKonzeptNach(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         $deferred = is_array($step->deferred) ? $step->deferred : [];
         $pending = is_array($deferred['pending_attach'] ?? null) ? $deferred['pending_attach'] : null;
         if ($pending === null) {
@@ -1885,7 +1795,7 @@ class PlanningCascadeService
      */
     public function meldeSourcingLuecken(Team $team, int $stepId): array
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null) {
             return [];
         }
@@ -1926,7 +1836,7 @@ class PlanningCascadeService
      */
     public function favoritKandidatenFuerStep(Team $team, int $stepId): array
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null) {
             return [];
         }
@@ -1963,7 +1873,7 @@ class PlanningCascadeService
      */
     public function reapeVerwaisteSteps(Team $team, int $runId): int
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         // D1-Slice 3: sichtbarer, nicht besessener Lauf → sauberer No-op. Hier ist das KEINE Kosmetik,
         // sondern ein echter Cross-Tenant-Write-Riegel: markStepFailed(stepId) trägt (anders als
         // regeneriereStep) KEINEN ownedStep-Guard → ohne diese Zeile könnte ein Kind-Team die Steps
@@ -2007,7 +1917,7 @@ class PlanningCascadeService
      */
     public function setzeLaufFort(Team $team, int $runId): int
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         // D1-Slice 3: sichtbarer, nicht besessener Lauf → sauberer No-op statt lautem Wurf im ersten
         // regeneriereStep (dessen ownedStep fängt es zwar, aber laut). Siehe reapeVerwaisteSteps/gibStufeFrei.
         if ($run === null || ! $run->isOwnedBy($team)) {
@@ -2153,7 +2063,7 @@ class PlanningCascadeService
      */
     public function gibStepFrei(Team $team, int $stepId): string
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->status === 'geplant') {
             if ($step->kind === 'concept') {
                 $this->erzeugeGeplantesConcept($team, $stepId);
@@ -2202,7 +2112,7 @@ class PlanningCascadeService
      */
     public function gibStufeFrei(Team $team, int $runId, string $kind): void
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         // D1-Slice 3: ein SICHTBARER, aber nicht besessener Lauf (childA sieht den vererbten
         // Root-Lauf) ist hier ein sauberer No-op — nicht ein lauter Wurf im ersten `gibStepFrei`.
         // Der per-Step `ownedStep`-Guard fängt es zwar korrekt (kein Write), aber laut statt leise;
@@ -2347,7 +2257,7 @@ class PlanningCascadeService
      */
     public function reBilder(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null || ! in_array($step->kind, ['rezept', 'gericht'], true)) {
             return;
         }
@@ -2370,7 +2280,7 @@ class PlanningCascadeService
      */
     public function uebernimmManuellesFotoFuerStep(Team $team, int $stepId, \Illuminate\Http\UploadedFile $datei, bool $istErgebnis = false, ?string $caption = null): ?FoodAlchemistRecipeStepPhoto
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null || ! in_array($step->kind, ['rezept', 'gericht'], true)) {
             return null;
         }
@@ -2393,7 +2303,7 @@ class PlanningCascadeService
      */
     public function uebernimmVorhandenesFotoFuerStep(Team $team, int $stepId, int $quelleFotoId, bool $istErgebnis = false, ?string $caption = null): ?FoodAlchemistRecipeStepPhoto
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null || ! in_array($step->kind, ['rezept', 'gericht'], true)) {
             return null;
         }
@@ -2409,7 +2319,7 @@ class PlanningCascadeService
      */
     public function reAnreichern(Team $team, int $stepId, ?bool $completeCoverageErzwingen = null): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->ref_type !== 'recipe' || $step->ref_id === null || ! in_array($step->kind, ['rezept', 'gericht'], true)) {
             return;
         }
@@ -2495,7 +2405,7 @@ class PlanningCascadeService
      */
     public function regeneriereStep(Team $team, int $stepId, ?string $kommentar = null): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if (! in_array($step->kind, ['rezept', 'gericht', 'concept'], true)) {
             return;
         }
@@ -2592,7 +2502,7 @@ class PlanningCascadeService
             // Kapitel (stiller Datenverlust) — der Kapitel-Bezug steckt am Step (chapter_id).
             $attachOwnerType = ($step->chapter_id !== null && $run?->source_owner_type === 'foodbook') ? 'foodbook' : null;
             $attachContainerId = $attachOwnerType !== null ? (int) $step->chapter_id : null;
-            $this->dispatchConceptStep($team, $step, $brief, $sessionId, (string) ($run?->creative_mode ?? 'voll_kreativ'), $params, $attachOwnerType, $attachContainerId);
+            $this->kontext()->dispatchConceptStep($team, $step, $brief, $sessionId, (string) ($run?->creative_mode ?? 'voll_kreativ'), $params, $attachOwnerType, $attachContainerId);
         } elseif ($step->kind === 'rezept' && $step->parent_step_id !== null) {
             // Kind-Basisrezept: wie beim ersten Start (eigene Vorgaben, eigener Plan) — nicht mit den Lauf-Params
             // der Wurzel, sonst kam z. B. das Aroma des Gerichts zurück. Ein Nutzer-Kommentar reist im Brief mit.
@@ -2607,7 +2517,7 @@ class PlanningCascadeService
             if ($step->kind === 'rezept' && ! empty(($step->context_snapshot ?? [])['plan']) && is_array($planKomponenten)) {
                 $params['plan_komponenten'] = $planKomponenten;
             }
-            $this->dispatchRezeptStep($team, $step, $brief, $params, $step->kind === 'gericht', false, $sessionId, $staged);
+            $this->kontext()->dispatchRezeptStep($team, $step, $brief, $params, $step->kind === 'gericht', false, $sessionId, $staged);
         }
         $this->recomputeRunStatus((int) $step->cascade_run_id);
     }
@@ -2620,7 +2530,7 @@ class PlanningCascadeService
      */
     public function aenderePlan(Team $team, int $stepId, string $aktion, array $daten = []): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         $snap = is_array($step->context_snapshot) ? $step->context_snapshot : [];
         if ($step->status !== 'geplant' || empty($snap['plan'])) {
             throw new RuntimeException('Der Plan kann nur vor dem Bau geändert werden.');
@@ -2687,7 +2597,7 @@ class PlanningCascadeService
         }
         $step->update(['status' => 'running', 'error' => null]);
         $run->update(['status' => 'running']);
-        $this->dispatchRezeptStep($team, $step, (string) $run->brief, $params, false, false,
+        $this->kontext()->dispatchRezeptStep($team, $step, (string) $run->brief, $params, false, false,
             $run->planning_session_id !== null ? (int) $run->planning_session_id : null, (bool) $run->staged);
         $this->recomputeRunStatus((int) $run->id);
     }
@@ -2698,7 +2608,7 @@ class PlanningCascadeService
      */
     public function verwirfStep(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if (! in_array($step->status, ['done', 'failed'], true)) {
             return;
         }
@@ -2744,7 +2654,7 @@ class PlanningCascadeService
      */
     public function erzeugeGeplantenStep(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         // Spec 80 B1: bestätigter Komponenten-Plan eines Basisrezepts → bauen.
         if ($step->kind === 'rezept' && $step->parent_step_id === null && $step->status === 'geplant'
             && ! empty(($step->context_snapshot ?? [])['plan'])) {
@@ -2782,7 +2692,7 @@ class PlanningCascadeService
     /** Überarbeitet einen geplanten Gericht-Bauplan, ohne ihn zu materialisieren. */
     public function ueberarbeiteGerichtVorschlag(Team $team, int $stepId, string $feedback): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         $ideeId = (int) (($step->context_snapshot ?? [])['dish_idea_id'] ?? 0);
         $feedback = trim($feedback);
         if ($step->kind !== 'gericht' || $step->status !== 'geplant' || $ideeId <= 0 || $feedback === '') {
@@ -2802,7 +2712,7 @@ class PlanningCascadeService
      */
     public function erzeugeGeplantesConcept(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->kind !== 'concept' || $step->status !== 'geplant') {
             return;
         }
@@ -2845,7 +2755,7 @@ class PlanningCascadeService
      */
     public function synchronisiereKapitelSteps(Team $team, int $runId): array
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         if ($run === null || ! $run->isOwnedBy($team) || (string) $run->source_owner_type !== 'foodbook' || ! $run->staged) {
             return ['ok' => false, 'grund' => 'Nur gestufte, team-eigene Foodbook-Läufe.'];
         }
@@ -2923,7 +2833,7 @@ class PlanningCascadeService
      */
     public function verwirfGeplantenStep(Team $team, int $stepId): void
     {
-        $step = $this->ownedStep($team, $stepId);
+        $step = $this->kontext()->ownedStep($team, $stepId);
         if ($step->status !== 'geplant') {
             return;
         }
@@ -2947,7 +2857,7 @@ class PlanningCascadeService
      */
     public function ergaenzeManuellenSubStep(Team $team, int $runId, string $name, ?int $parentStepId = null): ?FoodAlchemistCascadeRunStep
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         if ($run === null || ! $run->isOwnedBy($team)) {
             return null;
         }
@@ -3032,7 +2942,7 @@ class PlanningCascadeService
      */
     public function gibNeueFrei(Team $team, int $runId, ?array $nurSteps = null): array
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         if ($run === null || ! $run->isOwnedBy($team)) {
             return ['freigegeben' => 0, 'uebersprungen' => 0];
         }
@@ -3060,7 +2970,7 @@ class PlanningCascadeService
     /** Bulk-Verwerfen aller noch offenen (done|failed) Steps eines Laufs. */
     public function verwirfRun(Team $team, int $runId): void
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         // D1-Slice 3: sichtbarer, nicht besessener Lauf → sauberer No-op (siehe gibStufeFrei).
         if ($run === null || ! $run->isOwnedBy($team)) {
             return;
@@ -3068,16 +2978,6 @@ class PlanningCascadeService
         foreach ($run->steps->whereIn('status', ['done', 'failed']) as $s) {
             $this->verwirfStep($team, (int) $s->id);
         }
-    }
-
-    private function ownedStep(Team $team, int $stepId): FoodAlchemistCascadeRunStep
-    {
-        $step = FoodAlchemistCascadeRunStep::visibleToTeam($team)->findOrFail($stepId);
-        if (! $step->isOwnedBy($team)) {
-            throw new RuntimeException('Dieser Schritt gehört einem anderen Team. Freigeben und ändern kann nur das Team, das die Planung angelegt hat.');
-        }
-
-        return $step;
     }
 
     // ── Abfragen (für die Fläche) ─────────────────────────────────────────
@@ -3180,10 +3080,10 @@ class PlanningCascadeService
         ];
     }
 
-    /** Ein team-sichtbarer Lauf inkl. Steps (oder null). */
+    /** Ein team-sichtbarer Lauf inkl. Steps (oder null). Liegt in {@see KaskadeKontext}. */
     public function lauf(Team $team, int $runId): ?FoodAlchemistCascadeRun
     {
-        return FoodAlchemistCascadeRun::visibleToTeam($team)->with('steps')->find($runId);
+        return $this->kontext()->lauf($team, $runId);
     }
 
     /**
@@ -3200,7 +3100,7 @@ class PlanningCascadeService
      */
     public function laufStatus(Team $team, int $runId): ?array
     {
-        $run = $this->lauf($team, $runId);
+        $run = $this->kontext()->lauf($team, $runId);
         if ($run === null) {
             return null;
         }

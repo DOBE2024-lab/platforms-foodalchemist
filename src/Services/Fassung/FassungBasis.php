@@ -110,6 +110,23 @@ abstract class FassungBasis
         return ($auchOhne === null ? $kopf : $kopf->reject($auchOhne))->reject(fn ($v, $k) => str_ends_with($k, '_at'))->sortKeys()->all();
     }
 
+    /** @return list<list<int>> Servicemomente, Saisons, Zielgruppen (Konzept, Format) für den Inhalts-Hash */
+    protected function pivotIds(Model $zeile): array
+    {
+        return [
+            $zeile->serviceMoments()->allRelatedIds()->sort()->values()->all(),
+            $zeile->seasons()->allRelatedIds()->sort()->values()->all(),
+            $zeile->targetGroups()->allRelatedIds()->sort()->values()->all(),
+        ];
+    }
+
+    protected function pivotsUebernehmen(Model $von, Model $fassung): void
+    {
+        $fassung->serviceMoments()->sync($von->serviceMoments()->allRelatedIds()->all());
+        $fassung->seasons()->sync($von->seasons()->allRelatedIds()->all());
+        $fassung->targetGroups()->sync($von->targetGroups()->allRelatedIds()->all());
+    }
+
     /**
      * Nach dem Veröffentlichen: Bibliothek der Abonnenten nachziehen, Protokoll, Signale. Signale und Folgen sind nie ein
      * Grund, die Veröffentlichung scheitern zu lassen.

@@ -3,6 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanAnleitung;
 use Platform\FoodAlchemist\Livewire\Produktion\TagesplanFeedback;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -61,15 +62,20 @@ it('Wall: Lanes und Mise, Gruppenfilter, Mise abhaken, Anleitung und Gericht-Ove
         $wand->call('wallGruppenFilterSetzen', $filter)->assertOk();
     }
     $wand->call('abhakenMise', $this->zeile->id)
+        ->call('oeffneAnleitung', $this->zeile->id)->assertDispatched('tagesplan-anleitung-oeffnen')
+        ->call('zeileGeaendert')
+        ->call('oeffneGericht', 'r:braten')->call('gerichtSchliessen')
+        ->assertOk();
+    // Anleitung ist seit 98 · 3.3 S6 ein Kind (TagesplanAnleitung).
+    Livewire::test(TagesplanAnleitung::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('oeffneAnleitung', $this->zeile->id)->call('anleitungStarten')
         ->call('anleitungStepUmschalten', 0)->call('anleitungAlleStepsUmschalten')->call('anleitungSchliessen')
-        ->call('oeffneGericht', 'r:braten')->call('gerichtSchliessen')
         ->assertOk();
 });
 
 it('Feedback: Grund, Werte, Speichern zur Zeile', function () {
     $grund = array_key_first((array) config('foodalchemist.feedback_gruende', [])) ?? 'zu_salzig';
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])->set('modus', 'editor')
+    Livewire::test(TagesplanAnleitung::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
         ->call('oeffneAnleitung', $this->zeile->id)
         ->assertSeeHtml('wire:name="foodalchemist.produktion.tagesplan-feedback"');   // Kind gemountet (nach Aktionen nur als Hülle im HTML)
     Livewire::test(TagesplanFeedback::class, ['lineId' => $this->zeile->id])

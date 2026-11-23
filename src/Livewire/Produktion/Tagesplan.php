@@ -4,10 +4,11 @@ namespace Platform\FoodAlchemist\Livewire\Produktion;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Platform\FoodAlchemist\Livewire\Produktion\Concerns\SetztZeileMitWallStart;
 use Platform\FoodAlchemist\Enums\ProductionLineStatus;
-use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Services\ProductionCapacityService;
@@ -28,6 +29,8 @@ use Platform\FoodAlchemist\Support\Produktion\TagesplanAbfrage;
  */
 class Tagesplan extends Component
 {
+    use SetztZeileMitWallStart;
+
     #[Url(as: 'von')]
     public string $von = '';
 
@@ -69,14 +72,10 @@ class Tagesplan extends Component
     /** Wandmonitor: Filter innerhalb der Posten-Lanes — alle | gerichte | basis. */
     public string $wallGruppenFilter = 'alle';
 
-    /** Wandmonitor: Zeile, deren Anleitung gerade im Overlay offen ist (null = zu). */
-    public ?int $anleitungLineId = null;
 
     /** Wandmonitor: Gericht-/Arbeitsblock, dessen enthaltene Rezepte gerade offen sind. */
     public ?string $wallGerichtKey = null;
 
-    /** Wandmonitor: flüchtige Step-Checks je geöffneter Anleitungszeile. Dauerhaft ist die Zeile selbst. */
-    public array $anleitungStepStatus = [];
 
     private const DASHBOARD_FENSTER = [3, 7, 14, 30];
 
@@ -233,7 +232,7 @@ class Tagesplan extends Component
                 ? ProductionLineStatus::Open
                 : ProductionLineStatus::Done;
 
-            $this->zeileSetzenMitWallStart($team, $zeile, $ziel, $svc);
+            $this->zeileSetzenMitWallStart($team, $zeile, $ziel, $svc, $this->display === 'wall');
         } catch (\Throwable $e) {
             $this->fehler = $e->getMessage();
         }
@@ -263,39 +262,11 @@ class Tagesplan extends Component
                 if ($z->line_status === $ziel->value) {
                     continue;
                 }
-                $this->zeileSetzenMitWallStart($team, FoodAlchemistProductionOrderLine::findOrFail($z->id), $ziel, $svc);
+                $this->zeileSetzenMitWallStart($team, FoodAlchemistProductionOrderLine::findOrFail($z->id), $ziel, $svc, $this->display === 'wall');
             }
         } catch (\Throwable $e) {
             $this->fehler = $e->getMessage();
         }
-    }
-
-    private function zeileSetzenMitWallStart($team, FoodAlchemistProductionOrderLine $zeile, ProductionLineStatus $ziel, ProductionOrderService $svc): int
-    {
-        $lineId = (int) $zeile->id;
-        if ($this->display === 'wall' && in_array($ziel, [ProductionLineStatus::InProgress, ProductionLineStatus::Done], true)) {
-            $order = $zeile->productionOrder;
-            $status = $order?->status instanceof ProductionOrderStatus
-                ? $order->status
-                : ($order?->status !== null ? ProductionOrderStatus::from((string) $order->status) : null);
-
-            if ($order !== null && $status === ProductionOrderStatus::Planned) {
-                $svc->setStatus($team, (int) $order->id, ProductionOrderStatus::InProgress);
-
-                $neu = FoodAlchemistProductionOrderLine::query()
-                    ->where('production_order_id', $order->id)
-                    ->when($zeile->recipe_id !== null, fn ($q) => $q->where('recipe_id', $zeile->recipe_id))
-                    ->when($zeile->recipe_id === null, fn ($q) => $q->whereKey($lineId))
-                    ->orderBy('position')
-                    ->first();
-
-                $lineId = (int) ($neu?->id ?? $lineId);
-            }
-        }
-
-        $svc->setLineStatus($team, $lineId, $ziel);
-
-        return $lineId;
     }
 
     /** Wandmonitor (Spec 35): zwischen Posten-Lanes und zusammengefasster Mise-en-Place umschalten. */
@@ -309,17 +280,19 @@ class Tagesplan extends Component
         $this->wallGruppenFilter = in_array($filter, ['alle', 'gerichte', 'basis'], true) ? $filter : 'alle';
     }
 
-    /** Wandmonitor: Anleitung (Schritte + Zutaten) einer Zeile im Overlay öffnen. */
+    /**
+     * Wandmonitor: Anleitung (Schritte + Zutaten) einer Zeile im Overlay öffnen. Die Anleitung ist ein Kind
+     * (Produktion\TagesplanAnleitung, 98 · 3.3 S6) und hält Zeile und Schritt-Haken selbst.
+     */
     public function oeffneAnleitung(int $lineId): void
     {
-        $this->anleitungLineId = $lineId;
+        $this->dispatch('tagesplan-anleitung-oeffnen', lineId: $lineId)->to(TagesplanAnleitung::class);
         $this->dispatch('modal.open', name: 'wall-anleitung');
     }
 
-    public function anleitungSchliessen(): void
-    {
-        $this->anleitungLineId = null;
-    }
+    /** Die Anleitung hat eine Zeile gestartet oder abgehakt: Lanes und Pass neu zeichnen. */
+    #[On('tagesplan-zeile-geaendert')]
+    public function zeileGeaendert(): void {}
 
     public function oeffneGericht(string $key): void
     {
@@ -330,102 +303,6 @@ class Tagesplan extends Component
     public function gerichtSchliessen(): void
     {
         $this->wallGerichtKey = null;
-    }
-
-    public function anleitungStarten(ProductionOrderService $svc): void
-    {
-        $this->fehler = null;
-        try {
-            if ($this->anleitungLineId === null) {
-                return;
-            }
-
-            $team = Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
-            $this->anleitungLineId = $this->zeileSetzenMitWallStart($team, FoodAlchemistProductionOrderLine::findOrFail($this->anleitungLineId), ProductionLineStatus::InProgress, $svc);
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
-    }
-
-    public function anleitungStepUmschalten(int $index, ProductionOrderService $svc, ProductionCapacityService $kap): void
-    {
-        $this->fehler = null;
-        try {
-            $anleitung = $this->aktuelleAnleitung($kap);
-            if ($anleitung === null || ! array_key_exists($index, $anleitung['arbeitsschritte'])) {
-                return;
-            }
-
-            $lineId = (int) $anleitung['line_id'];
-            $schritte = collect($this->anleitungStepStatus[$lineId] ?? [])->map(fn ($i) => (int) $i);
-            $schritte = $schritte->contains($index)
-                ? $schritte->reject(fn ($i) => $i === $index)
-                : $schritte->push($index);
-
-            $this->anleitungStepStatus[$lineId] = $schritte->unique()->sort()->values()->all();
-            $this->anleitungAlsErledigtWennVollstaendig($anleitung, $svc);
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
-    }
-
-    public function anleitungAlleStepsUmschalten(ProductionOrderService $svc, ProductionCapacityService $kap): void
-    {
-        $this->fehler = null;
-        try {
-            $anleitung = $this->aktuelleAnleitung($kap);
-            if ($anleitung === null) {
-                return;
-            }
-
-            $lineId = (int) $anleitung['line_id'];
-            $alle = array_keys($anleitung['arbeitsschritte']);
-            $erledigt = collect($this->anleitungStepStatus[$lineId] ?? [])->intersect($alle)->count();
-            if ($alle !== [] && $erledigt === count($alle)) {
-                $this->anleitungStepStatus[$lineId] = [];
-                if (($anleitung['line_status'] ?? null) === ProductionLineStatus::Done->value) {
-                    $team = Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
-                    $this->anleitungLineId = $this->zeileSetzenMitWallStart($team, FoodAlchemistProductionOrderLine::findOrFail($lineId), ProductionLineStatus::Open, $svc);
-                }
-
-                return;
-            }
-
-            $this->anleitungStepStatus[$lineId] = $alle;
-            $this->anleitungAlsErledigtWennVollstaendig($anleitung, $svc);
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
-    }
-
-    private function anleitungAlsErledigtWennVollstaendig(array $anleitung, ProductionOrderService $svc): void
-    {
-        $lineId = (int) $anleitung['line_id'];
-        $alle = array_keys($anleitung['arbeitsschritte']);
-        if ($alle === []) {
-            return;
-        }
-
-        $erledigt = collect($this->anleitungStepStatus[$lineId] ?? [])->intersect($alle)->count();
-        if ($erledigt !== count($alle) || ($anleitung['line_status'] ?? null) === ProductionLineStatus::Done->value) {
-            return;
-        }
-
-        $team = Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
-        $this->anleitungLineId = $this->zeileSetzenMitWallStart($team, FoodAlchemistProductionOrderLine::findOrFail($lineId), ProductionLineStatus::Done, $svc);
-    }
-
-    private function aktuelleAnleitung(ProductionCapacityService $kap): ?array
-    {
-        if ($this->anleitungLineId === null) {
-            return null;
-        }
-
-        $team = Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
-        [$von, $bis] = $this->zeitraum();
-        $zeilen = $kap->tagesplanZeilen($team, $von, $bis, true);
-
-        return (new TagesplanAbfrage)->anleitungAufloesen($zeilen, $this->anleitungLineId, $this->anleitungStepStatus);
     }
 
     public function render(ProductionCapacityService $kap)
@@ -453,7 +330,6 @@ class Tagesplan extends Component
         $abfrage->wallSammelposten = ($istWall && $team !== null)
             ? FoodAlchemistProductionStation::visibleToTeam($team)->where('ist_sammelposten', true)->pluck('id')->map(fn ($id) => (int) $id)->all() : [];
         $wallPostenGruppen = $istWall ? $abfrage->wallPostenGruppen($zeilen) : collect();
-        $anleitung = $istWall ? $abfrage->anleitungAufloesen($zeilen, $this->anleitungLineId, $this->anleitungStepStatus) : null;
         $wallGericht = $istWall ? $abfrage->wallGerichtAufloesen($wallPostenGruppen, $this->wallGerichtKey) : null;
 
         $zeilenNachTag = $zeilen->groupBy(fn ($z) => Carbon::parse($z->plan_date)->toDateString());
@@ -475,7 +351,6 @@ class Tagesplan extends Component
             'wallIstPass' => fn ($schluessel, ?string $name) => $abfrage->wallIstPassLane($schluessel, $name),
             'wallPassAuftraege' => fn ($laneGruppen) => $abfrage->wallPassAuftraege($laneGruppen),
             'wallGericht' => $wallGericht,
-            'anleitung' => $anleitung,
             'postenListe' => $team !== null
                 ? FoodAlchemistProductionStation::visibleToTeam($team)->where('is_inactive', false)
                     ->orderBy('sort_order')->orderBy('name')->get(['id', 'name'])

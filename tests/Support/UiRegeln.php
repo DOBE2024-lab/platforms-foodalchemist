@@ -73,6 +73,14 @@ final class UiRegeln
         'alte_palette' => '/(?<![\w-])(?:text|bg|border(?:-[xytrbl])?|ring|ring-offset|divide|outline|from|via|to|placeholder|fill|stroke|decoration|accent|caret|shadow)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)(?![\w-])/',
     ];
 
+    /**
+     * Klassen-Strings, die aus Views in PHP gezogen wurden (gemeinsame Quelle für Livewire-Kinder). Sie zählen mit, sonst
+     * fielen sie aus der Klinke. Schlüssel = Pfad relativ zum Modul; neue Einträge nur mit Paket-Verweis.
+     */
+    public const PHP_STILQUELLEN = [
+        'src/Support/Produktion/WallStil.php',   // 98 · 3.3 S6: Küchenmonitor-Stil für Tagesplan-Wall und Kinder
+    ];
+
     public static function zaehlen(): array
     {
         $basis = realpath(__DIR__ . '/../../resources/views');
@@ -88,6 +96,15 @@ final class UiRegeln
             $inhalt = preg_replace('/\{\{--.*?--\}\}/s', '', $inhalt);
             $regeln = str_starts_with($pfad, 'components/') ? self::REGELN : self::REGELN + self::REGELN_AUSSER_BAUSTEINE;
             foreach ($regeln as $regel => $muster) {
+                $anzahl = preg_match_all($muster, $inhalt);
+                if ($anzahl > 0) {
+                    $ergebnis[$pfad][$regel] = $anzahl;
+                }
+            }
+        }
+        foreach (self::PHP_STILQUELLEN as $pfad) {
+            $inhalt = (string) file_get_contents(__DIR__ . '/../../' . $pfad);
+            foreach (self::REGELN + self::REGELN_AUSSER_BAUSTEINE as $regel => $muster) {
                 $anzahl = preg_match_all($muster, $inhalt);
                 if ($anzahl > 0) {
                     $ergebnis[$pfad][$regel] = $anzahl;

@@ -5,6 +5,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Enums\ProductionLineStatus;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanAnleitung;
 use Platform\FoodAlchemist\Livewire\Produktion\TagesplanFeedback;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation as Posten;
@@ -44,6 +45,9 @@ beforeEach(function () {
     ]);
 
     $this->plan = fn () => Livewire::test(Tagesplan::class, ['von' => '2026-08-15'])->set('modus', 'editor');
+    // 98 · 3.3 S6: die Wand-Anleitung ist ein Kind (TagesplanAnleitung); Zeitraum wie der Wandmonitor ab 20.08. (14 Tage).
+    $this->anleitung = fn (int $lineId) => Livewire::test(TagesplanAnleitung::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
+        ->call('oeffneAnleitung', $lineId);
     // Spec 83 M1: „Nicht zugeteilt“ und der Pass zeigen Auftrags-Karten. Die Tests der klassischen Posten-Spalte legen die Zeilen
     // deshalb auf einen normalen Posten (Warme Küche).
     $this->aufWarmeKueche = function () {
@@ -365,7 +369,10 @@ it('öffnet im Wandmonitor ein Gericht als Arbeitsblock mit tatsächlichen Rezep
         ->set('modus', 'editor')
         ->call('oeffneGericht', $key)
         ->call('oeffneAnleitung', $basisLineId)
-        ->assertSet('anleitungLineId', $basisLineId)
+        ->assertDispatched('tagesplan-anleitung-oeffnen', lineId: $basisLineId);
+
+    ($this->anleitung)($basisLineId)
+        ->assertSet('lineId', $basisLineId)
         ->assertSeeHtml('data-tagesplan-wall-anleitung')
         ->assertSeeHtml('data-tagesplan-wall-subrezepte')
         ->assertSeeHtml('data-tagesplan-wall-subrezept')
@@ -397,6 +404,9 @@ it('zeigt im Wandmonitor Allergen-, Diät- und Datenqualitätswarnungen', functi
         ->assertSee('Schwein')
         ->assertSee('vegetarisch')
         ->call('oeffneAnleitung', $lineId)
+        ->assertDispatched('tagesplan-anleitung-oeffnen', lineId: $lineId);
+
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-sicherheitsblock')
         ->assertSeeHtml('data-modal-zone="title-extra"')
         ->assertSee('Milch')
@@ -446,9 +456,7 @@ it('zeigt in der Wand-Anleitung den Behaelterbedarf dieser Zeile samt Alternativ
             'hinweis' => 'Umfüllen am Einsatztag'],
     ]]]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-behaelter')
         ->assertSee('1× Eimer 10 l')
         ->assertSee('Regenerieren · Brauner Fond')
@@ -468,9 +476,7 @@ it('zeigt einen durchgaengigen Behaelter EINMAL, und den Grund wenn nichts bemes
         'zusammen' => ['durchgaengig' => true, 'anzahl' => 5, 'behaelter' => 'GN 1/1 65mm', 'hinweis' => 'durchgängig, kein Umfüllen'],
     ]]]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSee('Abfüllen & Regenerieren')
         ->assertSee('5× GN 1/1 65mm')
         ->assertSee('durchgängig, kein Umfüllen');
@@ -482,9 +488,7 @@ it('zeigt einen durchgaengigen Behaelter EINMAL, und den Grund wenn nichts bemes
         'je_komponente' => [], 'zusammen' => ['durchgaengig' => false, 'hinweis' => ''],
     ]]]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-behaelter')
         ->assertSee('Ausbeute (yield_kg) fehlt');
 });
@@ -499,9 +503,7 @@ it('nimmt am Wandmonitor ein Kuechen-Feedback auf und legt es an derselben Stell
     $recipeId = (int) Line::whereKey($lineId)->value('recipe_id');
 
     // 98 · 3.3 S6: der Bogen ist ein eigenes Kind im Anleitungs-Overlay (TagesplanFeedback, Zeile als Prop).
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('wire:name="foodalchemist.produktion.tagesplan-feedback"');   // Kind gemountet (nach Aktionen nur als Hülle im HTML)
 
     Livewire::test(TagesplanFeedback::class, ['lineId' => $lineId])
@@ -566,9 +568,7 @@ it('haengt ein Diktat an den Feedback-Kommentar an, statt ihn zu ersetzen', func
  */
 it('der Feedback-Bogen überlebt Schließen und Wiederöffnen der Anleitung', function () {
     $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
-    $c = Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId);
+    $c = ($this->anleitung)($lineId);
     $bogen = function () use ($c): ?string {
         preg_match('/<section\b[^>]*wire:name="foodalchemist\.produktion\.tagesplan-feedback"[^>]*>/', $c->html(), $tag);
         preg_match('/wire:id="([^"]+)"/', $tag[0] ?? '', $id);
@@ -589,6 +589,54 @@ it('der Feedback-Bogen überlebt Schließen und Wiederöffnen der Anleitung', fu
         ->assertSet('feedbackForm.comment', 'Kipper war belegt')
         ->assertSeeHtml('hidden')
         ->assertDontSeeHtml('data-tagesplan-wall-feedback');
+});
+
+/**
+ * 98 · 3.3 S6: Die Anleitung ist ein Kind. Der Tagesplan öffnet sie per Event, das Kind meldet Start/Abhaken zurück,
+ * damit Lanes und Pass neu zeichnen. Solange sie offen ist, pollt sie selbst (vorher zeichnete der Poll der Wand sie mit).
+ */
+it('Wand und Anleitung: Öffnen per Event, Rückmeldung nach dem Start, Kind im Wandmodus gemountet', function () {
+    $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
+    Line::whereKey($lineId)->update(['zubereitung' => '1. Ansetzen.']);
+
+    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
+        ->set('modus', 'editor')
+        ->assertSeeHtml('wire:name="foodalchemist.produktion.tagesplan-anleitung"')
+        ->call('oeffneAnleitung', $lineId)
+        ->assertDispatched('tagesplan-anleitung-oeffnen', lineId: $lineId)
+        ->assertDispatched('modal.open', name: 'wall-anleitung')
+        ->dispatch('tagesplan-zeile-geaendert')
+        ->assertOk();
+
+    ($this->anleitung)($lineId)
+        ->call('anleitungStarten')
+        ->assertSet('fehler', null)
+        ->assertDispatched('tagesplan-zeile-geaendert');
+
+    // Ausserhalb des Wandmodus gibt es keine Anleitung.
+    Livewire::test(Tagesplan::class, ['von' => '2026-08-20'])->set('modus', 'editor')
+        ->assertDontSeeHtml('wire:name="foodalchemist.produktion.tagesplan-anleitung"');
+});
+
+it('die offene Anleitung pollt alle 30 s und zeigt danach den Zeilenstatus, den ein anderes Gerät gesetzt hat', function () {
+    $this->svc->setStatus($this->rootTeam, $this->a1->id, ProductionOrderStatus::InProgress);   // Auftrag läuft schon
+    $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
+    Line::whereKey($lineId)->update(['zubereitung' => "1. Ansetzen.\n2. Abschmecken."]);
+
+    Livewire::test(TagesplanAnleitung::class, ['von' => '2026-08-20', 'bis' => '2026-09-02'])
+        ->assertDontSeeHtml('wire:poll.30s');                       // zu: kein Poll
+
+    $anleitung = ($this->anleitung)($lineId)
+        ->assertSeeHtml('wire:poll.30s')                             // offen: Poll
+        ->assertSeeHtml('data-tagesplan-wall-start')
+        ->assertSee('Alle Schritte abhaken');
+
+    // Ein anderes Gerät (Wand nebenan, Handy) hakt die Zeile ab — ohne diese Komponente.
+    $this->svc->setLineStatus($this->rootTeam, $lineId, ProductionLineStatus::Done);
+
+    $anleitung->call('$refresh')                                    // was wire:poll auslöst
+        ->assertDontSeeHtml('data-tagesplan-wall-start')
+        ->assertSee('Alle Schritte erledigt');
 });
 
 it('loescht den Wert, wenn dieselbe Zahl noch einmal getippt wird', function () {
@@ -615,10 +663,8 @@ it('öffnet im Wandmodus die touchfreundliche Anleitung mit Medienbereich', func
     $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
     Line::whereKey($lineId)->update(['zubereitung' => "## Mise en Place\n1. Fonds erhitzen.\n2. Abschmecken und bereitstellen."]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
-        ->assertSet('anleitungLineId', $lineId)
+    ($this->anleitung)($lineId)
+        ->assertSet('lineId', $lineId)
         ->assertSeeHtml('data-tagesplan-wall-anleitung')
         ->assertSeeHtml('data-tagesplan-wall-anleitung-zurueck')
         ->assertSeeHtml('anleitungSchliessen(); close()')
@@ -643,9 +689,7 @@ it('normalisiert lokale Foto-URLs aus Produktions-Snapshots zurück auf die konf
         ]],
     ]]]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-bilder')
         ->assertSeeHtml('src="https://s3.example.test/foodalchemist/ki-schritt-1.webp"')
         ->assertDontSeeHtml('src="http://localhost/storage/ki-schritt-1.webp"');
@@ -682,9 +726,7 @@ it('erneuert abgelaufene signierte Foto-URLs im Wandmodus über die ContextFile'
         ]],
     ]]]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-bilder')
         ->assertSee($token . '.webp')   // dieselbe Datei wird weiter referenziert …
         ->assertSee('signature=')       // … aber frisch signiert
@@ -699,9 +741,7 @@ it('zeigt Zutaten in der Wandmonitor-Anleitung immer untereinander', function ()
         ['name' => 'Deko: Sesam', 'menge' => '0', 'einheit' => 'kg'],
     ]]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-zutatenliste')
         ->assertSeeHtml('data-tagesplan-wall-zutat')
         ->assertDontSeeHtml('mt-3 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3')
@@ -718,9 +758,7 @@ it('zeigt in der Wandmonitor-Anleitung die Gesamtmenge kompakt an', function () 
         'produzierte_menge_kg' => 2.75,
     ]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-gesamtmenge')
         ->assertSee('2,75 kg');
 });
@@ -736,9 +774,7 @@ it('zeigt in der Wandmonitor-Anleitung Equipment und keinen Ansätze-Block', fun
     ]);
     $this->fond->equipment()->attach($equipment->id, ['note' => 'sauber bereitstellen']);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-equipment')
         ->assertSeeHtml('data-tagesplan-wall-equipment-item')
         ->assertSee('Kipper')
@@ -750,9 +786,7 @@ it('startet in der Wandmonitor-Anleitung die Rezeptzeit', function () {
     $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
     Line::whereKey($lineId)->update(['zubereitung' => '1. Ansetzen.', 'arbeitszeit_min' => 45]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-start')
         ->assertSee('45 min')
         ->call('anleitungStarten')
@@ -769,9 +803,7 @@ it('hakt in der Wandmonitor-Anleitung einzelne Schritte ab und setzt die Zeile n
         'zubereitung' => "## Mise en Place\n1. Fonds erhitzen.\n2. Abschmecken und bereitstellen.",
     ]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-step-abhaken')
         ->assertSeeHtml('data-tagesplan-wall-anleitung-alle-steps')
         ->assertSeeHtml('data-tagesplan-wall-step-fortschritt')
@@ -781,9 +813,7 @@ it('hakt in der Wandmonitor-Anleitung einzelne Schritte ab und setzt die Zeile n
     expect(Line::where('production_order_id', $this->a1->id)->where('recipe_id', $this->fond->id)->firstOrFail()->line_status)
         ->not->toBe(ProductionLineStatus::Done);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->call('anleitungStepUmschalten', 0)
         ->call('anleitungStepUmschalten', 1)
         ->assertSet('fehler', null);
@@ -798,9 +828,7 @@ it('hakt in der Wandmonitor-Anleitung alle Schritte mit einem großen Haken ab',
         'zubereitung' => "1. Bereitstellen.\n2. Fertigstellen.",
     ]);
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
+    ($this->anleitung)($lineId)
         ->assertSeeHtml('data-tagesplan-wall-anleitung-alle-steps')
         ->call('anleitungAlleStepsUmschalten')
         ->assertSet('fehler', null);
@@ -812,10 +840,8 @@ it('hakt in der Wandmonitor-Anleitung alle Schritte mit einem großen Haken ab',
 it('zeigt im Wandmodus einen klaren Leerzustand statt leerer Anleitung', function () {
     $lineId = Line::where('production_order_id', $this->a1->id)->value('id');
 
-    Livewire::test(Tagesplan::class, ['von' => '2026-08-20', 'display' => 'wall'])
-        ->set('modus', 'editor')
-        ->call('oeffneAnleitung', $lineId)
-        ->assertSet('anleitungLineId', $lineId)
+    ($this->anleitung)($lineId)
+        ->assertSet('lineId', $lineId)
         ->assertSeeHtml('data-tagesplan-wall-anleitung-leer')
         ->assertSee('Keine Anleitung hinterlegt.');
 });

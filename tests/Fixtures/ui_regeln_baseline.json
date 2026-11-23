@@ -723,15 +723,20 @@
     "livewire/produktion/partials/wall-verknuepfung.blade.php": {
         "typo_tinte": 3
     },
+    "livewire/produktion/tagesplan-anleitung.blade.php": {
+        "typo_tinte": 20,
+        "roher_button": 9,
+        "rohe_karte": 3
+    },
     "livewire/produktion/tagesplan-feedback.blade.php": {
         "typo_tinte": 10,
         "roher_button": 3
     },
     "livewire/produktion/tagesplan.blade.php": {
         "typo_groesse": 11,
-        "typo_tinte": 79,
-        "roher_button": 34,
-        "rohe_karte": 5,
+        "typo_tinte": 56,
+        "roher_button": 25,
+        "rohe_karte": 2,
         "rohes_segment": 2
     },
     "livewire/projekte/detail.blade.php": {
@@ -1219,5 +1224,8 @@
     "presentation/blocks/price_summary.blade.php": {
         "hex_farbe": 1,
         "style_statisch": 1
+    },
+    "src/Support/Produktion/WallStil.php": {
+        "typo_tinte": 3
     }
 }

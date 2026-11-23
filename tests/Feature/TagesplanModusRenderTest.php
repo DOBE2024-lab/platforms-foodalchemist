@@ -3,6 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Tagesplan;
+use Platform\FoodAlchemist\Livewire\Produktion\TagesplanAnleitung;
 use Platform\FoodAlchemist\Livewire\Produktion\TagesplanFeedback;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine as Line;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -38,6 +39,7 @@ beforeEach(function () {
     $this->zeile = Line::where('production_order_id', $order->id)->where('recipe_id', $fond->id)->first();
     $GLOBALS['tagesplanKinder'] = [
         'tagesplan-feedback' => fn (?int $offen) => Livewire::test(TagesplanFeedback::class, ['lineId' => $offen])->html(),
+        'tagesplan-anleitung' => fn (?int $offen) => tagesplanAnleitung($offen)->html(),
     ];
 });
 
@@ -50,15 +52,29 @@ beforeEach(function () {
 $GLOBALS['tagesplanKinder'] = [];
 
 /** @return array<string, int> Marker => Anzahl, sortiert. */
-function tagesplanMarker(string $html, ?int $zeile = null): array
+function tagesplanMarker(string $html, ?int $zeile = null, array $kindHtml = []): array
 {
-    $html = preg_replace_callback('/<(\w+) wire:id="[^"]+" wire:name="foodalchemist\.produktion\.([a-z-]+)"[^>]*><\/\1>/',
-        fn ($m) => isset($GLOBALS['tagesplanKinder'][$m[2]]) ? ($GLOBALS['tagesplanKinder'][$m[2]])($zeile) : $m[0], $html);
+    // Hüllen rekursiv ersetzen (Anleitung → darin Feedback); $kindHtml gibt für einen Alias ein bestimmtes HTML vor.
+    for ($tiefe = 0; $tiefe < 3; $tiefe++) {
+        $vorher = $html;
+        $html = preg_replace_callback('/<(\w+) wire:id="[^"]+" wire:name="foodalchemist\.produktion\.([a-z-]+)"[^>]*><\/\1>/',
+            fn ($m) => $kindHtml[$m[2]] ?? (isset($GLOBALS['tagesplanKinder'][$m[2]]) ? ($GLOBALS['tagesplanKinder'][$m[2]])($zeile) : $m[0]), $html);
+        if ($html === $vorher) {
+            break;
+        }
+    }
     preg_match_all('/\bdata-tagesplan[a-z0-9-]*/', $html, $m);
     $zaehler = array_count_values($m[0]);
     ksort($zaehler);
 
     return $zaehler;
+}
+
+function tagesplanAnleitung(?int $zeile): \Livewire\Features\SupportTesting\Testable
+{
+    $kind = Livewire::test(TagesplanAnleitung::class, ['von' => '2026-08-20', 'bis' => '2026-09-02']);
+
+    return $zeile === null ? $kind : $kind->call('oeffneAnleitung', $zeile);
 }
 
 function tagesplanModi(object $t): array
@@ -73,9 +89,12 @@ function tagesplanModi(object $t): array
         'wall_lanes' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor'),
         'wall_mise' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')->call('wallAnsichtSetzen', 'mise'),
         'wall_basis' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')->call('wallGruppenFilterSetzen', 'basis'),
-        'wall_anleitung' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')->call('oeffneAnleitung', $t->zeile->id),
-        'wall_anleitung_gestartet' => fn () => Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')
-            ->call('oeffneAnleitung', $t->zeile->id)->call('anleitungStarten')->call('anleitungStepUmschalten', 0),
+        // Seit S6 PR3 ist die Anleitung ein Kind: der Tagesplan öffnet sie per Event, das Netz setzt das geöffnete Kind ein.
+        'wall_anleitung' => fn () => tagesplanMarker(Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')
+            ->call('oeffneAnleitung', $t->zeile->id)->assertDispatched('tagesplan-anleitung-oeffnen')->html(), $t->zeile->id),
+        'wall_anleitung_gestartet' => fn () => tagesplanMarker(Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')
+            ->call('oeffneAnleitung', $t->zeile->id)->html(), $t->zeile->id,
+            ['tagesplan-anleitung' => tagesplanAnleitung($t->zeile->id)->call('anleitungStarten')->call('anleitungStepUmschalten', 0)->html()]),
         // Seit S6 PR2 ist der Bogen ein Kind: Seite = Overlay mit frischem Bogen, dessen Marker gegen den gespeicherten getauscht.
         'wall_feedback_gespeichert' => function () use ($wand, $t, $grund) {
             $seite = tagesplanMarker(Livewire::test(Tagesplan::class, $wand)->set('modus', 'editor')->call('oeffneAnleitung', $t->zeile->id)->html(), $t->zeile->id);
@@ -107,7 +126,7 @@ it('jeder Modus rendert dieselben data-tagesplan-Marker wie vor dem Schnitt', fu
     $ist = [];
     foreach (tagesplanModi($this) as $modus => $baue) {
         $r = $baue();
-        $ist[$modus] = is_array($r) ? $r : tagesplanMarker($r->assertOk()->html(), $r->get('anleitungLineId'));
+        $ist[$modus] = is_array($r) ? $r : tagesplanMarker($r->assertOk()->html());
     }
 
     if (getenv('TAGESPLAN_GOLDEN_SCHREIBEN')) {

@@ -149,8 +149,8 @@ abstract class FassungBasis
     /**
      * Konzept/Format: Lese-Status für die Oberfläche „Veröffentlichen…“ — rechnet nichts um und schreibt nichts (Spec 82 §13 B6, PR 8).
      *
-     * @param  callable(): array{0: array, 1: list<string>}  $ziele  Ziele + Hinweise; RuntimeException ⇒ `blockiert`
-     * @param  callable(array): string  $hash
+     * @param  callable(\Illuminate\Support\Collection): array{0: array, 1: list<string>}  $ziele  Ziele + Hinweise aus den Slots; RuntimeException ⇒ `blockiert`
+     * @param  callable(\Illuminate\Support\Collection, array): string  $hash
      * @param  callable(array, FassungsVergleich): list<int>  $rezeptIds  Rezepte der Kette zum Allergen-Vergleich
      * @return array{letzte: ?array{id:int, nr:int, veroeffentlicht_at:?string, notiz:?string}, weicht_ab: bool, blockiert: ?string, hinweise: list<string>, allergen_aenderung: bool, allergen_felder: list<string>}
      */
@@ -165,14 +165,15 @@ abstract class FassungBasis
             return $out;
         }
         try {
-            [$z, $hinweise] = $ziele();
+            $slots = $arbeitszeile->slots()->get();
+            [$z, $hinweise] = $ziele($slots);
         } catch (\RuntimeException $e) {
             $out['blockiert'] = $e->getMessage();
 
             return $out;
         }
         $out['hinweise'] = $hinweise;
-        $out['weicht_ab'] = $letzte === null || $letzte->inhalt_hash !== $hash($z);
+        $out['weicht_ab'] = $letzte === null || $letzte->inhalt_hash !== $hash($slots, $z);
         if ($letzte !== null) {
             $v = app(FassungsVergleich::class);
             $diff = $v->bilderDiff($v->kettenBild($art, (int) $letzte->id), $v->kettenBildAus(array_values(array_unique($rezeptIds($z, $v)))));

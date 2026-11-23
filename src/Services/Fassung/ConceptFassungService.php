@@ -88,17 +88,8 @@ class ConceptFassungService extends FassungBasis
     /** Lese-Status für „Veröffentlichen…“ (siehe {@see FassungBasis::statusMitZielen()}). */
     public function status(FoodAlchemistConcept $concept): array
     {
-        $slots = null;
-
-        return $this->statusMitZielen($concept, 'concept',
-            function () use ($concept, &$slots) {
-                $slots = $concept->slots()->get();
-
-                return $this->zieleSammeln($slots);
-            },
-            function (array $ziele) use ($concept, &$slots) {
-                return $this->inhaltHash($concept, $slots, $ziele);
-            },
+        return $this->statusMitZielen($concept, 'concept', fn ($slots) => $this->zieleSammeln($slots),
+            fn ($slots, array $ziele) => $this->inhaltHash($concept, $slots, $ziele),
             function (array $ziele, FassungsVergleich $v) {
                 $ids = array_map(fn ($r) => (int) $r->id, array_values($ziele['recipe']));
                 foreach ($ziele['concept'] as $c) {

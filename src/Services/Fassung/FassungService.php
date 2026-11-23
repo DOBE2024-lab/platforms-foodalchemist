@@ -5,10 +5,8 @@ namespace Platform\FoodAlchemist\Services\Fassung;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
-use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
-use Platform\FoodAlchemist\Support\MasterTeam;
 
 /**
  * Spec 82 §12 B · Durchstich Schritt 2: Arbeitsstand und veröffentlichte Fassung sind getrennt.
@@ -23,10 +21,10 @@ use Platform\FoodAlchemist\Support\MasterTeam;
  *   Neuberechnung schreibt für Fassungen keine Kosten (RecipeRecomputeService::kosten).
  * - VK-Darreichungen, Kalkulationsprofile und Präsentationen des Masters werden NICHT mitkopiert.
  */
-class FassungService
+class FassungService extends FassungBasis
 {
     /** Spalten, die eine Fassung nie vom Arbeitsstand erbt. */
-    private const NIE_KOPIEREN = [
+    protected const NIE_KOPIEREN = [
         'uuid', 'legacy_id', 'recipe_key', 'kopie_von_id', 'kopie_stand_at', 'created_at', 'updated_at', 'deleted_at',
         'ek_total_eur', 'ek_per_kg_eur', 'ek_price_basis', 'ek_n_ingredients_priced', 'ek_n_ingredients_total',
         'additional_costs_eur',
@@ -45,31 +43,27 @@ class FassungService
         'role', 'role_source', 'is_value_relevant', 'calc_mode'];
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\FaRechte $rechte,
-        private \Platform\FoodAlchemist\Services\Plattform\AboService $abos,
+        \Platform\FoodAlchemist\Services\FaRechte $rechte,
+        \Platform\FoodAlchemist\Services\Plattform\AboService $abos,
         private \Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte $recompute,   // 98 · 3.3 S7 P4: nur die Neuberechnung, nicht die Klasse
-        private \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
-    ) {}
-
-    /**
-     * @return array{fassung_id:int, neu:list<int>, wiederverwendet:list<int>, allergen_geaendert:list<int>}
-     */
-    public function veroeffentlichen(Team $master, int $recipeId, string $notiz, ?User $actor): array
-    {
-        // Spec 84 B3 C: Lesen im Master; das Recht prüft der Rumpf am übergebenen Team + Nutzer, nicht am Kontext
-        return \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm($master, fn () => $this->veroeffentlichenImTeam($master, $recipeId, $notiz, $actor));
+        \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
+    ) {
+        parent::__construct($rechte, $abos, $protokoll);
     }
 
-    private function veroeffentlichenImTeam(Team $master, int $recipeId, string $notiz, ?User $actor): array
+    protected function modell(): string
     {
-        if (! MasterTeam::istMaster($master)) {
-            throw new \RuntimeException('Veröffentlichen gibt es nur im Master-Team (Spec 82 §12 B).');
-        }
-        $this->rechte->pruefe($actor, $master, FaRolle::Freigeben, 'Rezept veröffentlichen');
-        $notiz = trim($notiz);
-        if ($notiz === '') {
-            throw new \RuntimeException('Beim Veröffentlichen ist eine Änderungsnotiz Pflicht (Änderungsprotokoll der Abonnenten).');
-        }
+        return FoodAlchemistRecipe::class;
+    }
+
+    protected function rechtText(): string
+    {
+        return 'Rezept veröffentlichen';
+    }
+
+    /** @return array{fassung_id:int, neu:list<int>, wiederverwendet:list<int>, allergen_geaendert:list<int>} */
+    protected function veroeffentlichenRumpf(Team $master, int $recipeId, string $notiz, ?User $actor): array
+    {
         $wurzel = FoodAlchemistRecipe::ohneTeamSicht('abo-pflege')->where('team_id', $master->id)->where('ist_fassung', false)->findOrFail($recipeId);
 
         $baum = $this->baumKinderZuerst($wurzel, (int) $master->id);
@@ -82,8 +76,7 @@ class FassungService
             $allergen = [];
             foreach ($baum as $recipe) {
                 $hash = $this->inhaltHash($recipe, $map);
-                $vorher = FoodAlchemistRecipe::mitFassungen()->ohneTeamSicht('abo-pflege')->where('fassung_von_id', $recipe->id)->where('ist_fassung', true)
-                    ->whereNull('deleted_at')->orderByDesc('fassung_nr')->orderByDesc('id')->first();
+                $vorher = $this->letzteFassung((int) $recipe->id, sichtGrund: 'abo-pflege');
                 if ($vorher !== null && $vorher->inhalt_hash === $hash) {
                     $map[$recipe->id] = (int) $vorher->id;
                     $wieder[] = (int) $vorher->id;
@@ -91,7 +84,7 @@ class FassungService
                     continue;
                 }
                 // Nummer über ALLE Fassungen der Familie, auch soft-gelöschte: UNIQUE(team_id, recipe_key) zählt sie mit
-                $nr = (int) FoodAlchemistRecipe::mitFassungen()->ohneTeamSicht('eindeutigkeit')->withTrashed()->where('fassung_von_id', $recipe->id)->where('ist_fassung', true)->max('fassung_nr') + 1;
+                $nr = $this->naechsteNr((int) $recipe->id, 'eindeutigkeit');
                 $fassung = $this->kopiere($recipe, $map, $nr, $hash, $notiz, $actor);
                 $this->recompute->recomputePipeline($fassung->id, false);
                 $fassung->refresh();
@@ -106,20 +99,13 @@ class FassungService
             return ['fassung_id' => $map[$baum[array_key_last($baum)]->id], 'neu' => $neu, 'wiederverwendet' => $wieder, 'allergen_geaendert' => $allergen];
         });
 
-        $this->abos->neuBerechnenAlle();   // Bibliothek der Abonnenten zieht auf die neueste Fassung nach
-        if ($ergebnis['neu'] !== []) {
-            $this->protokoll->schreibe('fassung_veroeffentlicht', ['recipe_id' => $wurzel->id, 'fassung_id' => $ergebnis['fassung_id'],
-                'neu' => $ergebnis['neu'], 'allergen_geaendert' => $ergebnis['allergen_geaendert'], 'notiz' => $notiz],
-                $actor, FoodAlchemistRecipe::mitFassungen()->find($ergebnis['fassung_id']));
-        }
-
-        if ($ergebnis['neu'] !== []) {   // Spec 82 §12 B: Signale „Abo-Rezept aktualisiert“ / „Neuere Fassung verfügbar“ — nie ein Grund, die Veröffentlichung scheitern zu lassen
-            try {
-                app(FassungSignalService::class)->nachVeroeffentlichung($ergebnis['neu']);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Fassung veröffentlicht, aber die Signal-Erzeugung ist fehlgeschlagen: '.$e->getMessage(), ['exception' => $e, 'recipe_id' => $wurzel->id]);
-            }
-        }
+        // Bibliothek der Abonnenten zieht immer nach; Protokoll und Signale („Abo-Rezept aktualisiert“ / „Neuere Fassung verfügbar“) nur bei neuen Fassungen
+        $neu = $ergebnis['neu'] !== [];
+        $this->nachVeroeffentlichung($neu ? ['fassung_veroeffentlicht', ['recipe_id' => $wurzel->id, 'fassung_id' => $ergebnis['fassung_id'],
+            'neu' => $ergebnis['neu'], 'allergen_geaendert' => $ergebnis['allergen_geaendert'], 'notiz' => $notiz]] : null,
+            $actor, $neu ? FoodAlchemistRecipe::mitFassungen()->find($ergebnis['fassung_id']) : null,
+            fn () => $neu ? app(FassungSignalService::class)->nachVeroeffentlichung($ergebnis['neu']) : null,
+            'Fassung veröffentlicht, aber die Signal-Erzeugung ist fehlgeschlagen: ', ['recipe_id' => $wurzel->id]);
 
         return $ergebnis;
     }
@@ -157,12 +143,8 @@ class FassungService
     /** @param list<FoodAlchemistRecipe> $baum */
     private function pruefeNurStammGps(array $baum): void
     {
-        $eigene = $this->stammVerstoesse($baum);
-        if ($eigene !== []) {
-            throw new \RuntimeException('Noch nicht veröffentlichbar: Diese GPs gehören dem Master-Team, nicht dem globalen Stamm: '
-                . implode(', ', array_slice($eigene, 0, 10)) . (count($eigene) > 10 ? ' …' : '')
-                . '. Kein Fehler im Rezept — Veröffentlichen ist nach dem Stamm-Umzug möglich (Spec 82, Entscheidung 1 = C).');
-        }
+        $this->abbruchMitListe('Noch nicht veröffentlichbar: Diese GPs gehören dem Master-Team, nicht dem globalen Stamm: ', $this->stammVerstoesse($baum),
+            '. Kein Fehler im Rezept — Veröffentlichen ist nach dem Stamm-Umzug möglich (Spec 82, Entscheidung 1 = C).');
     }
 
     /**
@@ -182,11 +164,8 @@ class FassungService
     /** @param array<int,int> $map Arbeitszeile → Fassung (Unter-Rezepte) */
     private function inhaltHash(FoodAlchemistRecipe $recipe, array $map): string
     {
-        $kopf = collect($recipe->getAttributes())
-            ->except(array_merge(['id', 'team_id', 'status', 'version'], self::NIE_KOPIEREN))
-            ->reject(fn ($v, $k) => collect(self::ABGELEITET_PRAEFIXE)->contains(fn ($p) => str_starts_with($k, $p)) && $k !== 'yield_kg_manual')
-            ->reject(fn ($v, $k) => str_ends_with($k, '_at'))
-            ->sortKeys()->all();
+        $kopf = $this->hashKopf($recipe, ['id', 'team_id', 'status', 'version'],
+            fn ($v, $k) => collect(self::ABGELEITET_PRAEFIXE)->contains(fn ($p) => str_starts_with($k, $p)) && $k !== 'yield_kg_manual');
         $zutaten = $recipe->ingredients()->get()->map(function ($z) use ($map) {
             $felder = $z->only(self::ZUTAT_FELDER);
             if ($felder['referenced_recipe_id'] !== null) {
@@ -231,12 +210,7 @@ class FassungService
     /** @param array<int,int> $map */
     private function kopiere(FoodAlchemistRecipe $recipe, array $map, int $nr, string $hash, string $notiz, ?User $actor): FoodAlchemistRecipe
     {
-        $fassung = $recipe->replicate(self::NIE_KOPIEREN);
-        $fassung->forceFill([
-            'recipe_key' => $recipe->recipe_key . '@f' . $nr,
-            'ist_fassung' => true, 'fassung_von_id' => $recipe->id, 'fassung_nr' => $nr, 'inhalt_hash' => $hash,
-            'veroeffentlicht_at' => now(), 'veroeffentlicht_von' => $actor?->id, 'aenderungsnotiz' => $notiz,
-        ])->save();
+        $fassung = $this->fassungsKopf($recipe, $nr, $hash, $notiz, $actor, ['recipe_key' => $recipe->recipe_key . '@f' . $nr]);
 
         $zutatMap = [];
         foreach ($recipe->ingredients()->get() as $z) {
@@ -273,8 +247,7 @@ class FassungService
         $map = [];
         $neu = [];
         foreach ($baum as $r) {
-            $vorher = FoodAlchemistRecipe::mitFassungen()->where('fassung_von_id', $r->id)->where('ist_fassung', true)
-                ->orderByDesc('fassung_nr')->orderByDesc('id')->first();
+            $vorher = $this->letzteFassung((int) $r->id, false);
             if ($vorher !== null && $vorher->inhalt_hash === $this->inhaltHash($r, $map)) {
                 $map[$r->id] = (int) $vorher->id;
             } else {
@@ -282,8 +255,7 @@ class FassungService
                 $neu[] = (string) $r->name;
             }
         }
-        $letzte = FoodAlchemistRecipe::mitFassungen()->where('fassung_von_id', $arbeitszeile->id)->where('ist_fassung', true)
-            ->orderByDesc('fassung_nr')->orderByDesc('id')->first();
+        $letzte = $this->letzteFassung((int) $arbeitszeile->id, false);
         $felder = [];
         if ($letzte !== null) {
             $a = $this->allergenBild($arbeitszeile);
@@ -296,8 +268,7 @@ class FassungService
         }
 
         return [
-            'letzte' => $letzte === null ? null : ['id' => (int) $letzte->id, 'nr' => (int) $letzte->fassung_nr,
-                'veroeffentlicht_at' => $letzte->veroeffentlicht_at ? \Illuminate\Support\Carbon::parse($letzte->veroeffentlicht_at)->format('d.m.Y H:i') : null, 'notiz' => $letzte->aenderungsnotiz],
+            'letzte' => $this->statusLetzte($letzte, fn ($d) => $d ? \Illuminate\Support\Carbon::parse($d)->format('d.m.Y H:i') : null),
             'weicht_ab' => $neu !== [],
             'neu_im_baum' => $neu,
             'allergen_aenderung' => $felder !== [],

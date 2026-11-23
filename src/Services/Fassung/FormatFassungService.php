@@ -75,17 +75,8 @@ class FormatFassungService extends FassungBasis
     /** Lese-Status für „Veröffentlichen…“ (siehe {@see FassungBasis::statusMitZielen()}). Ein Kunden-Format ist `blockiert` (D8). */
     public function status(FoodAlchemistFormat $format): array
     {
-        $slots = null;
-
-        return $this->statusMitZielen($format, 'format',
-            function () use ($format, &$slots) {
-                $slots = $format->slots()->get();
-
-                return [$this->zieleSammeln($slots), []];
-            },
-            function (array $ziele) use ($format, &$slots) {
-                return $this->inhaltHash($format, $slots, $ziele);
-            },
+        return $this->statusMitZielen($format, 'format', fn ($slots) => [$this->zieleSammeln($slots), []],
+            fn ($slots, array $ziele) => $this->inhaltHash($format, $slots, $ziele),
             function (array $ziele, FassungsVergleich $v) {
                 $ids = [];
                 foreach ($ziele as $c) {

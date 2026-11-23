@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Services\Pairing\Kombinationslogik;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Services\Trend\TrendService;
 
 /**

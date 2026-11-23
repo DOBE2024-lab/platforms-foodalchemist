@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Planung;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Platform\Core\Models\Team;
@@ -37,18 +37,18 @@ class PlanungsEinstiegService
     public const MODI = ['voll_kreativ', 'hybrid', 'datenbank'];
 
     public function __construct(
-        private Concepter\ConceptGeneratorService $concepts,
-        private PlanningCascadeService $cascade,
+        private \Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService $concepts,
+        private \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService $cascade,
         private PlanningSessionService $sessions,
-        private TeamSettingsService $settings,
-        private Concepter\CanvasService $canvas,
+        private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
+        private \Platform\FoodAlchemist\Services\Concepter\CanvasService $canvas,
     ) {}
 
     /** @return array{owner: FoodAlchemistFoodbook, session: FoodAlchemistPlanningSession, run: FoodAlchemistCascadeRun} */
     public function foodbookAusBrief(Team $team, string $brief, array $opt): array
     {
         $brief = $this->brief($brief);
-        $foodbooks = app(Foodbook\FoodbookService::class);
+        $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
         $fb = $this->eigeneHuelle(FoodAlchemistFoodbook::class, $team, $opt, 'Foodbook', 'Geerbtes Foodbook')
             ?? $foodbooks->create($team, ['label' => $this->titel($opt, 'Foodbook aus Brief')]);
 
@@ -72,7 +72,7 @@ class PlanungsEinstiegService
     {
         $brief = $this->brief($brief);
         $karte = $this->eigeneHuelle(FoodAlchemistSpeisekarte::class, $team, $opt, 'Speisekarte', 'Geerbte Speisekarte')
-            ?? app(Ausgabe\SpeisekarteService::class)->create($team, ['name' => $this->titel($opt, 'Speisekarte aus Brief')]);
+            ?? app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)->create($team, ['name' => $this->titel($opt, 'Speisekarte aus Brief')]);
 
         $this->concepts->geruestAusBriefFuerOwner($team, 'speisekarte', (int) $karte->id, $brief, [
             'segment' => $this->settings->segment($team),
@@ -99,7 +99,7 @@ class PlanungsEinstiegService
             if (preg_match('/(\d+)\s*[- ]?woche/iu', $brief, $m)) {
                 $in['cycle_weeks'] = max(1, (int) $m[1]);
             }
-            $plan = app(Speiseplan\SpeiseplanService::class)->create($team, $in);
+            $plan = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class)->create($team, $in);
         }
 
         return ['owner' => $plan] + $this->sessionUndKaskade($team, 'speiseplan', (int) $plan->id, 'Speiseplan aus Brief: ' . ($plan->name ?? ('#' . $plan->id)), $brief, $opt);
@@ -115,7 +115,7 @@ class PlanungsEinstiegService
     {
         $brief = $this->brief($brief);
         $angebot = $this->eigeneHuelle(FoodAlchemistAngebot::class, $team, $opt, 'Angebot', 'Geerbtes Angebot')
-            ?? app(Ausgabe\AngebotService::class)->create($team, ['name' => $this->titel($opt, 'Angebot aus Brief')]);
+            ?? app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)->create($team, ['name' => $this->titel($opt, 'Angebot aus Brief')]);
 
         $this->concepts->geruestAusBriefFuerOwner($team, 'offer', (int) $angebot->id, $brief, [
             'segment' => $this->settings->segment($team),
@@ -135,7 +135,7 @@ class PlanungsEinstiegService
     public function formatAusBrief(Team $team, string $brief, array $opt): array
     {
         $brief = $this->brief($brief);
-        $formate = app(Concepter\FormatService::class);
+        $formate = app(\Platform\FoodAlchemist\Services\Concepter\FormatService::class);
         $format = $this->eigeneHuelle(FoodAlchemistFormat::class, $team, $opt, 'Format', 'Geerbtes Format');
         $neu = $format === null;
         if ($neu) {
@@ -185,7 +185,7 @@ class PlanungsEinstiegService
         if ((int) $gericht->team_id !== (int) $team->id) {
             throw new RuntimeException('Geerbtes Gericht: eine Rezeptur erstellen kann nur das Besitzer-Team.');
         }
-        if (GerichtHuelleService::huelle($team, (int) $gericht->id) === null) {
+        if (\Platform\FoodAlchemist\Services\GerichtHuelleService::huelle($team, (int) $gericht->id) === null) {
             throw new RuntimeException('„Rezeptur erstellen“ gibt es nur für Gerichte im Entwurf ohne Komponenten. Dieses Gericht hat schon Komponenten oder ist freigegeben. Zum Ändern „Mit Anweisung überarbeiten“ nutzen.');
         }
         $offen = FoodAlchemistPlanningSession::where('team_id', $team->id)->where('target_recipe_id', $gericht->id)

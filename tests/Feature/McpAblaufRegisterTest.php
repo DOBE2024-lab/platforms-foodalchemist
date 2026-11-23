@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService;
-use Platform\FoodAlchemist\Services\VorgangsRegisterService;
+use Platform\FoodAlchemist\Services\Planung\VorgangsRegisterService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

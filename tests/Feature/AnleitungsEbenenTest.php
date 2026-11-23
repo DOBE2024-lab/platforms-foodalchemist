@@ -395,7 +395,7 @@ it('das Produktionsblatt liefert Regenerations-Programm und Anrichte-Schritte je
         'core_temp_c' => 52, 'sort_order' => 1,
     ]);
 
-    $blatt = app(\Platform\FoodAlchemist\Services\PlanungsblattService::class)
+    $blatt = app(\Platform\FoodAlchemist\Services\Planung\PlanungsblattService::class)
         ->produktionsblattFuerZiele($this->rootTeam, [['recipe_id' => $gericht->id, 'portionen' => 10]]);
 
     $zeile = collect($blatt['rezepte'])->firstWhere('recipe_id', $gericht->id);

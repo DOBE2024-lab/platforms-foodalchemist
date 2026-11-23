@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistProjekt;
-use Platform\FoodAlchemist\Services\ProjektService;
+use Platform\FoodAlchemist\Services\Planung\ProjektService;
 
 /** Spec 82 §9 · Projekte (Agentur-Akten im Master-Team) lesen: Liste oder ein Projekt mit Standorten. */
 class ProjekteGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

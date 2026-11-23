@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 class OrderCostingService
 {
     public function __construct(
-        private \Platform\FoodAlchemist\Services\PlanungsblattService $planning,
+        private \Platform\FoodAlchemist\Services\Planung\PlanungsblattService $planning,
         private \Platform\FoodAlchemist\Services\Produktion\ProductionTimeService $times,
         private \Platform\FoodAlchemist\Services\Produktion\StationLaborRateService $laborRates,
         private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,

@@ -8,8 +8,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeBudget;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeBudgetExceeded;
-use Platform\FoodAlchemist\Services\IdeenService;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\IdeenService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -46,7 +46,7 @@ function seedGrosseTrendPlanung(\Platform\Core\Models\Team $team): int
             'definition' => str_repeat('Fermentation ist ein starker Food-Trend. ', 8)])->id;
     }
 
-    return (int) app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->ausTrendradar($team, $ids)->id;
+    return (int) app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->ausTrendradar($team, $ids)->id;
 }
 
 it('(a) kiDivergenzConcept kappt den Wissensblock hart aufs Prompt-Key-Budget — kein KnowledgeBudgetExceeded mehr', function () {

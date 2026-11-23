@@ -10,7 +10,7 @@
     <div class="space-y-4 min-w-0">
         <x-fa::modal-section icon="heroicon-o-signal" title="Impulse aus dem Trendradar wählen">
             <x-slot:actions>
-                <x-fa::badge :tone="$trGewaehlt > 0 ? 'accent' : 'neutral'">{{ $trGewaehlt }} von {{ \Platform\FoodAlchemist\Services\PlanningSessionService::TRENDRADAR_MAX }}</x-fa::badge>
+                <x-fa::badge :tone="$trGewaehlt > 0 ? 'accent' : 'neutral'">{{ $trGewaehlt }} von {{ \Platform\FoodAlchemist\Services\Planung\PlanningSessionService::TRENDRADAR_MAX }}</x-fa::badge>
             </x-slot:actions>
             <div class="flex flex-col gap-3">
                 <p class="{{ $hinweisText }} max-w-2xl">Einen oder mehrere Impulse wählen, zum Beispiel einen Trend mit einem Hype und zwei Fundstücken. Daraus entsteht ein Briefing für Basisrezept, Gericht oder Konzept.</p>

@@ -148,7 +148,7 @@ it('speisekarteAusBrief: leerer Brief → Meldung, nichts angelegt', function ()
  */
 it('Speisekarte-Auswähler aktiviert die jüngste Owner-Session', function () {
     $karte = app(SpeisekarteService::class)->create($this->rootTeam, ['name' => 'Abendkarte']);
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'SK-Planung']);
     FoodAlchemistCascadeRun::create([
         'team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'vollkaskade',

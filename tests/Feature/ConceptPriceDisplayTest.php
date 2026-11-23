@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Livewire\Concepter\Editor;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\LeitstelleService;
+use Platform\FoodAlchemist\Services\Planung\LeitstelleService;
 use Platform\FoodAlchemist\Services\Concepter\WordingResolver;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

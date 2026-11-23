@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /**
  * Etappe 9 · Slice 2 (Roadmap »Mise en Place«) — MCP-Kaskaden-**START** (Go), WRITE.
@@ -87,9 +87,9 @@ class PlanungKaskadeStartPostTool extends FoodAlchemistTool implements ToolContr
             if ($chips === [] && $laufBrief !== '') {
                 // Wie die Oberfläche: ohne Chips einmal aus dem Briefing ableiten und an der Session sichern.
                 try {
-                    $chips = (array) (app(\Platform\FoodAlchemist\Services\BriefingLeitplankenService::class)
+                    $chips = (array) (app(\Platform\FoodAlchemist\Services\Planung\BriefingLeitplankenService::class)
                         ->ausBriefing($team, $laufBrief, null, $scope)['suchbegriffe'] ?? []);
-                    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+                    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
                         ->setzeSuchbegriffe($team, (int) $session->id, $scope, $chips);
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::warning('[Planung/MCP] Suchbegriffe nicht ableitbar', ['error' => $e->getMessage()]);

@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
-use Platform\FoodAlchemist\Services\BriefingLeitplankenService;
+use Platform\FoodAlchemist\Services\Planung\BriefingLeitplankenService;
 
 /**
  * BRIEFING → LEITPLANKEN: freier Text (getippt oder gesprochen) wird zum Regler-Satz,

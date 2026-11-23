@@ -8,9 +8,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrame;
 use Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
-use Platform\FoodAlchemist\Services\IdeenService;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\IdeenService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

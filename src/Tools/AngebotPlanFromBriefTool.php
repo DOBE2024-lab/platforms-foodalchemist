@@ -8,8 +8,8 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanungsEinstiegService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\PlanungsEinstiegService;
 
 /**
  * MCP-Einstieg „Angebot aus Brief" — spiegelt {@see \Platform\FoodAlchemist\Livewire\Planung\Index::angebotAusBrief}.

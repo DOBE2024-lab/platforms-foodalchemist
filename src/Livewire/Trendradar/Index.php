@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Livewire\Concerns\HandyTrendsLesen;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendInspiration;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Services\Trend\TrendService;
 use Platform\FoodAlchemist\Services\Trend\TrendSignalService;

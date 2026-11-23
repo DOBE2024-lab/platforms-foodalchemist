@@ -869,7 +869,7 @@ class ReportExportService
         }
 
         try {
-            $blatt = app(\Platform\FoodAlchemist\Services\PlanungsblattService::class)
+            $blatt = app(\Platform\FoodAlchemist\Services\Planung\PlanungsblattService::class)
                 ->produktionsblattFuerZiele($team, [['concept_id' => (int) $concept->id, 'persons' => $pax]]);
         } catch (\Throwable) {
             return;                                    // Bericht bleibt lesbar, nur ohne Bedarf

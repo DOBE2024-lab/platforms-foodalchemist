@@ -300,7 +300,7 @@ class VoiceCommandService
             if ($run === null) {
                 return '';
             }
-            $status = app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->laufStatus($team, (int) $run->id);
+            $status = app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->laufStatus($team, (int) $run->id);
         } catch (\Throwable) {
             return '';                                               // Kontext ist ein Bonus, kein Pflichtpfad
         }

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PlanungsblattService;
+use Platform\FoodAlchemist\Services\Planung\PlanungsblattService;
 
 /**
  * R7.1 — Produktionsblatt (read-only): Konzept + Personen ODER Gericht +

@@ -157,7 +157,7 @@ it('Zukauf-Bau: „Typ: Ware (Zukauf)“, die Ware als Zeile, Hilfsstoffe nur al
     (new \Platform\FoodAlchemist\Jobs\BuildZukaufRecipeJob($this->rootTeam->id, (int) auth()->id(), (int) $kind->id, 'Kürbiskernöl',
         ['gp_id' => (int) $oel->id, 'gp_name' => 'Kuerbiskernoel: trocken', 'typ' => 'Öl', 'bezeichnung' => 'Kürbiskernöl'],
         ['bedarf_menge' => 400.0, 'bedarf_einheit' => 'ml']))->handle(
-        app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class), app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class), app(RecipeDependencyWorkflowService::class));
+        app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class), app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class), app(RecipeDependencyWorkflowService::class));
 
     $kind->refresh();
     expect($kind->error)->toBeNull();

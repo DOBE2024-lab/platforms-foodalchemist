@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Support\Planung;
 
 use Platform\FoodAlchemist\Livewire\Planung\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /**
  * Spec 84 C1 Schritt 1 · Leitplanken-Logik der Planung, aus `Livewire\Planung\Index` herausgelöst (wortgleich verschoben).

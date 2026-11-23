@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
 use Platform\FoodAlchemist\Services\RecipeKomponentenPlanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

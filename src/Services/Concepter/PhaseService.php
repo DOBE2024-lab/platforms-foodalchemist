@@ -25,7 +25,7 @@ class PhaseService
     ];
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\PlanningFrameService $frames,
+        private \Platform\FoodAlchemist\Services\Planung\PlanningFrameService $frames,
         private CoverageService $coverage,
     ) {}
 

@@ -5,7 +5,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Planung\Brief;
 use Platform\FoodAlchemist\Livewire\Planung\Index as PlanungIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistBriefTemplate;
-use Platform\FoodAlchemist\Services\BriefTemplateService;
+use Platform\FoodAlchemist\Services\Planung\BriefTemplateService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

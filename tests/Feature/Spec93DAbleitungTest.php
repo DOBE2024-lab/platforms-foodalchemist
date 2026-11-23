@@ -16,7 +16,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTrendEingang;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendInspiration;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Services\Trend\TrendEingangService;
 use Platform\FoodAlchemist\Services\Trend\TrendService;

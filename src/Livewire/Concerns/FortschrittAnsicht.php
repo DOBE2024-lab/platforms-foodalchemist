@@ -47,7 +47,7 @@ trait FortschrittAnsicht
     /** Spec 80 D7: Plan-Karte — Aktion auf eine Komponente des Plans (entfernen · menge · bestand_ablehnen · hinzufuegen). */
     public function planAendern(int $stepId, string $aktion, ?int $index = null): void
     {
-        $cascade = app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class);
+        $cascade = app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class);
         $team = $this->team();
         if ($team === null) {
             return;
@@ -69,7 +69,7 @@ trait FortschrittAnsicht
     }
 
     /** Cluster-Fuß: Gericht + seine Basisrezepte anreichern und freigeben (Spec 80 H3, nur dieser Cluster). */
-    public function clusterFreigeben(int $kopfId, \Platform\FoodAlchemist\Services\PlanningCascadeService $cascade): void
+    public function clusterFreigeben(int $kopfId, \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService $cascade): void
     {
         $team = $this->team();
         if ($team === null || $this->laufId === null) {
@@ -199,7 +199,7 @@ trait FortschrittAnsicht
         // Spec 80 F4: Struktur-Elemente des Rahmens an ihrer Stelle zeigen (ruhig, nicht klickbar) und die
         // Abschnitte in Rahmen-Reihenfolge ordnen — so entspricht der Baum der Ausgabe.
         if (in_array($lauf->source_owner_type, \Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrameSlot::STRUKTUR_OWNER, true)) {
-            $frame = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class)->find((string) $lauf->source_owner_type, (int) $lauf->source_owner_id);
+            $frame = app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class)->find((string) $lauf->source_owner_type, (int) $lauf->source_owner_id);
             if ($frame !== null) {
                 $rang = [];
                 $strukturArt = ['titel' => 'Titel', 'titel_preis' => 'Titel mit Preis', 'freitext' => 'Freitext', 'leerzeile' => 'Leerzeile'];

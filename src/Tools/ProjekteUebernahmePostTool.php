@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\ProjektUebernahmeService;
+use Platform\FoodAlchemist\Services\Planung\ProjektUebernahmeService;
 
 /** Spec 82 §9 · „Lizenz erteilt“: Projekt in den Mandanten übernehmen (Kopie). Einmalig, nur Plattform-Admin, protokolliert. */
 class ProjekteUebernahmePostTool extends WareneingangTool implements ToolContract, ToolMetadataContract

@@ -201,7 +201,7 @@ it('Phase E: Leitstelle zeigt Checkliste immer, Coverage nur bei Planungs-Gerüs
         ->assertDontSee('Soll-Ist-Abgleich');
 
     // Mit Gerüst (Frame + Slot): Coverage-Panel erscheint.
-    $frames = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class);
+    $frames = app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class);
     $frame = $frames->frameFor($this->rootTeam, 'speisekarte', $karte->id);
     $frames->addSlot($this->rootTeam, $frame, ['label' => 'Vorspeisen']);
 

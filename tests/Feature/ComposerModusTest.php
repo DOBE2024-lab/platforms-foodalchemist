@@ -112,7 +112,7 @@ it('Netz: kein Partner mit dem Grundnamen einer gewählten Zutat — Teilstring 
 
 it('Planung: der Modus-Umschalter bleibt beim Rerender stehen und schaltet die Sicht', function () {
     $this->actingAs($this->makeUser($this->rootTeam));
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Composer', 'brief' => '']);
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Composer', 'brief' => '']);
     $lw = \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
         ->call('oeffne', $session->id)
         ->set('editorTab', 'composer')   // wie der Alpine-Watcher beim Reiterwechsel (2.1d: Composer-Daten nur im aktiven Reiter)

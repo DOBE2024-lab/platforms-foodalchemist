@@ -102,7 +102,7 @@ it('höchstens 3 Hinweise je Gericht', function () {
 it('Composer zeigt den Hinweis grau im Block „Passt das zusammen?", ohne Konflikt-Zählung', function () {
     ($this->hinweis)('braised_lemon_sole', 'anker:lemon', 'Zitrone', 'ein Spritzer hebt die Milde, zu viel überdeckt sie');
     $this->actingAs($this->makeUser($this->rootTeam));
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Composer', 'brief' => '']);
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Composer', 'brief' => '']);
 
     $html = \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Index::class)
         ->call('oeffne', $session->id)

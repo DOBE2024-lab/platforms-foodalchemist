@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Support\Planung;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /**
  * Spec 84 C1 Schritt 1 · Aufbereitung der Kaskaden-Läufe für die Planungs-Ansicht (Stufen, Status je Session, Auto-Titel),

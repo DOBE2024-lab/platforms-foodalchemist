@@ -75,7 +75,7 @@ class RecipeGenerationContextService
 
     public function __construct(
         private KnowledgeContextService $knowledge,
-        private GenerationContextService $generation,
+        private Planung\GenerationContextService $generation,
         private RecipeTemplateService $templates,
         private TeamSettingsService $settings,
         private TokenEngine $tokens,

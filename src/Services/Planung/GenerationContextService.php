@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Planung;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
@@ -38,7 +38,7 @@ class GenerationContextService
     private const REZEPT_CAND_MAX = 12;
 
     public function __construct(
-        private IngredientMatchService $matcher,
+        private \Platform\FoodAlchemist\Services\IngredientMatchService $matcher,
         private TokenEngine $tokens,
     ) {
     }
@@ -96,9 +96,9 @@ class GenerationContextService
         // breiterer Reuse-Recall über Bedeutung. Additiv: ergänzt NUR Kandidaten, die die per-Token-
         // Lexik noch nicht hat (Lexik behält Vorrang in Reihenfolge/Benennung). Leer ohne Flag/
         // Provider ⇒ graceful, byte-identisches Verhalten.
-        $sem = app(Ai\SemanticRetrievalService::class)->candidates(
+        $sem = app(\Platform\FoodAlchemist\Services\Ai\SemanticRetrievalService::class)->candidates(
             $team, $description,
-            [Ai\PoolEmbeddingService::ENTITY_TYPE_GP, Ai\PoolEmbeddingService::ENTITY_TYPE_RECIPE],
+            [\Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService::ENTITY_TYPE_GP, \Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService::ENTITY_TYPE_RECIPE],
             $gpCandMax,
         );
         if ($sem !== []) {
@@ -106,9 +106,9 @@ class GenerationContextService
             $semRezept = [];
             foreach ($sem as $hit) {
                 $id = (int) $hit['entity_id'];
-                if ($hit['entity_type'] === Ai\PoolEmbeddingService::ENTITY_TYPE_GP && ! isset($gp[$id])) {
+                if ($hit['entity_type'] === \Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService::ENTITY_TYPE_GP && ! isset($gp[$id])) {
                     $semGp[$id] = round((float) $hit['score'], 3);
-                } elseif ($hit['entity_type'] === Ai\PoolEmbeddingService::ENTITY_TYPE_RECIPE && ! isset($rezepte[$id])) {
+                } elseif ($hit['entity_type'] === \Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService::ENTITY_TYPE_RECIPE && ! isset($rezepte[$id])) {
                     $semRezept[$id] = round((float) $hit['score'], 3);
                 }
             }
@@ -184,7 +184,7 @@ class GenerationContextService
         // Lieferanten, Konflikte und (Gericht) Basisrezepte aus dem Bestand.
         // Spec 80 A4: ganze Suchbegriffe zuerst („glatte Petersilie" trifft den Anker exakt, die
         // Einzelwörter nicht), danach die Leit-Tokens wie bisher.
-        $plan = app(Pairing\KombinationsPlan::class)->fuer($team, array_values(array_unique([...$phrasen, ...$tokens])), $vkModus);
+        $plan = app(\Platform\FoodAlchemist\Services\Pairing\KombinationsPlan::class)->fuer($team, array_values(array_unique([...$phrasen, ...$tokens])), $vkModus);
         if ($plan !== null) {
             $out['kombinationsplan'] = $plan;
         }

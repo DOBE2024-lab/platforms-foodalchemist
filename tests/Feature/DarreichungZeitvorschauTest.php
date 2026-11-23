@@ -64,7 +64,7 @@ beforeEach(function () {
 
 it('Herstellung = Summe der Basisrezept-Zeiten aus ProductionTimeService für dieselbe Menge', function () {
     foreach ([100.0 => 50.0, 250.0 => 100.0] as $portionen => $soll) {
-        $h = app(\Platform\FoodAlchemist\Services\PlanungsblattService::class)->darreichungsHerstellung($this->rootTeam, $this->gericht->fresh(), $this->dar->fresh(), $portionen);
+        $h = app(\Platform\FoodAlchemist\Services\Planung\PlanungsblattService::class)->darreichungsHerstellung($this->rootTeam, $this->gericht->fresh(), $this->dar->fresh(), $portionen);
         // Jus-Bedarf: Portionen × 100 g ÷ 1 kg Ansatz → Ansätze; dieselbe Rechnung wie Planungsblatt/Auftrag
         $pts = app(ProductionTimeService::class)->calculateForBatches($this->rootTeam, $this->jus->fresh(), $portionen * 0.1);
         expect($h['herstellung_minuten'])->toBe(round($pts['active_person_minutes'], 1))

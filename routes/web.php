@@ -1068,7 +1068,7 @@ Route::get('/bestellungen/{order}/dokument', function (int $order, \Platform\Foo
  * Versendbares/druckbares Planungs-Blatt — Druck-HTML; ?pdf=1 = PDF (DomPDF, guarded).
  * typ=produktion|bestellung, Ziel via concept_id+persons ODER recipe_id+portions.
  */
-Route::get('/blaetter/dokument', function (\Platform\FoodAlchemist\Services\PlanungsblattService $svc) {
+Route::get('/blaetter/dokument', function (\Platform\FoodAlchemist\Services\Planung\PlanungsblattService $svc) {
     $team = \Illuminate\Support\Facades\Auth::user()?->currentTeamRelation ?? abort(403, 'Kein Team zugeordnet.');
     $typ = in_array(request('typ'), ['bestellung', 'einkauf'], true) ? request('typ') : 'produktion';
     $ziel = array_filter([

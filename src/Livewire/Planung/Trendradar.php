@@ -7,7 +7,7 @@ use Livewire\Attributes\Reactive;
 use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Concerns\HandyLesebereich;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Support\Planung\PlanungReiterDaten;
 
 /**

@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
-use Platform\FoodAlchemist\Services\IdeenService;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\IdeenService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /** Erzeugt einen textlichen Gericht-Bauplan; noch kein Recipe-Datensatz. */
 class GenerateDishProposalJob implements ShouldQueue, \Platform\FoodAlchemist\Services\Ai\KiExternWiederholbar

@@ -232,7 +232,7 @@ it('Spec 55: Sidebar hat KEINEN Sprachbefehl-Knopf mehr', function () {
 it('Spec 55 Nachtrag: Planung/Index rendert das Agenten-Panel EINMAL JE Creation-Scope (3×), nicht mehr auf Board-Ebene', function () {
     // Erstellen-Tab (und damit der Panel-Slot) rendert erst im Editor-Zustand MIT offener
     // Session — ohne die kommt die Landing-Liste (kein Erstellen-Tab, 0 Panels korrekt).
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Event']);
 
     $html = Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4: Erstell-Reiter im Kind
@@ -244,7 +244,7 @@ it('Spec 55: das Agenten-Panel rendert NICHT, wenn voice_agent_panel_planung exp
     app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->update($this->rootTeam, [
         'voice_agent_panel_planung' => false,
     ]);
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Event']);
 
     $html = Livewire::test(\Platform\FoodAlchemist\Livewire\Planung\Brief::class, ['sessionId' => $session->id])   // Spec 85 C1 PR-4: Erstell-Reiter im Kind
@@ -288,7 +288,7 @@ it('Spec 55: verarbeite() ohne planungsSessionId bricht nicht — kein Kaskaden-
 });
 
 it('Spec 55 (Design-Punkt c): ein fehlgeschlagener Kaskaden-Schritt landet als Hinweis im Systemprompt', function () {
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Test', 'brief' => 'Test-Brief']);
     $run = \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun::create([
         'team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id,

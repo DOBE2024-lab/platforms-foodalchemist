@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Planung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -22,7 +22,7 @@ use Platform\FoodAlchemist\Support\MasterTeam;
  */
 class ProjektService
 {
-    public function __construct(private readonly FaRechte $rechte)
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte)
     {
     }
 
@@ -170,7 +170,7 @@ class ProjektService
         $s = FoodAlchemistProjektStandort::where('projekt_id', $p->id)->findOrFail($standortId);
         $warPilot = (int) $p->pilot_standort_id === (int) $s->id;
         $s->delete();
-        app(Plattform\TeamProfilService::class)->loescheStandortProfil($team, (int) $s->id);   // Standortprofil geht mit dem Standort
+        app(\Platform\FoodAlchemist\Services\Plattform\TeamProfilService::class)->loescheStandortProfil($team, (int) $s->id);   // Standortprofil geht mit dem Standort
         if ($warPilot) {
             $naechster = FoodAlchemistProjektStandort::where('projekt_id', $p->id)->orderBy('sort_order')->orderBy('id')->first();
             $this->pilotSetzen($team, $user, $p->id, $naechster?->id);
@@ -186,7 +186,7 @@ class ProjektService
      */
     public function gateFehlt(FoodAlchemistProjekt $p): array
     {
-        $canvas = app(Concepter\CanvasService::class)->find('projekt', 'projekt', (int) $p->id);
+        $canvas = app(\Platform\FoodAlchemist\Services\Concepter\CanvasService::class)->find('projekt', 'projekt', (int) $p->id);
         $eintraege = $canvas?->entries ?? collect();
         $fehlt = [];
         if ($eintraege->where('field_key', 'paket_stufen')->filter(fn ($e) => trim((string) $e->value) !== '')->isEmpty()) {
@@ -253,9 +253,9 @@ class ProjektService
         if (! $p->strukturFreigegeben()) {
             throw new \RuntimeException('Gate: Struktur + Musterseite sind noch nicht freigegeben.');
         }
-        $fb = app(Foodbook\FoodbookService::class)->create($team, ['label' => $p->name, 'crm_company_id' => $p->crm_company_id, 'projekt_id' => $p->id]);
+        $fb = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->create($team, ['label' => $p->name, 'crm_company_id' => $p->crm_company_id, 'projekt_id' => $p->id]);
 
-        $canvasSvc = app(Concepter\CanvasService::class);
+        $canvasSvc = app(\Platform\FoodAlchemist\Services\Concepter\CanvasService::class);
         $akte = $canvasSvc->find('projekt', 'projekt', (int) $p->id);
         $liste = fn (string $key) => ($akte?->entries ?? collect())->where('field_key', $key)->sortBy('position')->pluck('value')->filter()->values();
         $skalar = fn (string $key) => $akte?->entries->firstWhere('field_key', $key)?->value;

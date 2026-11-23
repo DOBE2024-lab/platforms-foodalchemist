@@ -21,10 +21,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
-use Platform\FoodAlchemist\Services\IdeenService;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Planung\IdeenService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Services\RecipeGeneratorService;
 use Platform\FoodAlchemist\Services\RecipeImageService;
 use Platform\FoodAlchemist\Services\RecipeOneShotService;
@@ -925,7 +925,7 @@ it('Spec 53 / Paket C: EnrichRecipeJob setzt die Phase waehrend anreichern() und
         ->handle(app(RecipeOneShotService::class));
 
     $fresh = $step->refresh();
-    expect($phaseWaehrendLauf)->toBe(\Platform\FoodAlchemist\Services\PlanningCascadeService::PHASE_ANREICHERUNG)
+    expect($phaseWaehrendLauf)->toBe(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::PHASE_ANREICHERUNG)
         ->and($fresh->phase)->toBeNull()
         ->and($fresh->deferred['enrich']['status'] ?? null)->toBe('done')
         ->and($fresh->deferred['enrich']['dauer_ms'] ?? null)->toBeInt();

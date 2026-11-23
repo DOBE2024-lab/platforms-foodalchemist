@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Support\Facades\Cache;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
@@ -27,7 +27,7 @@ class PresentationShareCardService
     /** Analog für das PWA-/Homescreen-Icon (Logo auf Marken-Quadrat). */
     private const ICON_VERSION = 1;
 
-    public function __construct(private Plattform\FoodAlchemistMediaService $media)
+    public function __construct(private \Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService $media)
     {
     }
 

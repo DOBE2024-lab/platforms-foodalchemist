@@ -55,7 +55,7 @@ class SpeiseplanPresentationGetTool extends FoodAlchemistTool implements ToolCon
             'url' => ($plan->presentation_enabled && $plan->presentationPublicRef())
                 ? url('/p/speiseplan/' . $plan->presentationPublicRef()) : null,
             // Slice F: zusätzliche Betriebs-Links (je Betrieb eigener Link/Vorlage/Freigabe).
-            'betriebs_links' => app(\Platform\FoodAlchemist\Services\PresentationService::class)
+            'betriebs_links' => app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class)
                 ->outletPresentations($team, 'speiseplan', (int) $plan->id),
         ]);
     }

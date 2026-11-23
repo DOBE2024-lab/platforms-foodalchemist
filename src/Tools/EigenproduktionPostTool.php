@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\Produktion\EigenproduktionService;
-use Platform\FoodAlchemist\Services\EtikettService;
+use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
 
 /** Spec 69 · Eigenproduktion einlagern (neue Charge) — liefert Charge + Etikett-Link. */
 class EigenproduktionPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

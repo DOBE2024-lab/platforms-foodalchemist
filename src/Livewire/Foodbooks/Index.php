@@ -14,10 +14,10 @@ use Platform\FoodAlchemist\Livewire\Concerns\ManagesPlanningFrame;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\IdeenService;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 
 /**
  * M11-03 / Doc 15 §9.3: Foodbook-Editor — stellt fertige **Concepts** zu einem
@@ -828,7 +828,7 @@ class Index extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\FoodbookService::class)->kapitelFortschritt($team, $id, $wert);
+            app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)->kapitelFortschritt($team, $id, $wert);
         } catch (\RuntimeException $e) {
             // fremdes/geerbtes Kapitel oder unbekannte Stufe: wie bisher still ignorieren (der Board-Punkt bleibt stehen)
             unset($e);
@@ -1538,7 +1538,7 @@ class Index extends Component
             // Spec 33 P3: Hinweis, kein Verbot — zwei parallel laufende Ausgaben derselben
             // Art in derselben Zuordnung können gewollt sein (Übergang, Sonderfall).
             'portfolioKonflikt' => $fb === null ? null
-                : app(\Platform\FoodAlchemist\Services\PortfolioService::class)
+                : app(\Platform\FoodAlchemist\Services\Foodbook\PortfolioService::class)
                     ->konfliktHinweis($team, 'foodbook', (int) $fb->id),
             // D (UX-Umbau): Kunden-Vorschau (Menü-Ansicht) mit aufgelöster Wording-Kette — dieselbe Quelle wie das Druck-Dokument
             'menue' => $menue,

@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /**
  * 98 · 3.3 (S4): FoodbookService wird in Teile unter Services/Foodbook zerlegt und bleibt Fassade. Dieser Test friert die

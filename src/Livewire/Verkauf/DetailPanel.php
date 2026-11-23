@@ -367,7 +367,7 @@ class DetailPanel extends Component
     /** #1003 Handy: Kernwerte Portion · VK brutto (aktiver Standort, wie am Computer) · Wareneinsatz. */
     private function handyHandbuch($team, FoodAlchemistRecipe $rezept, ?array $cockpit, bool $standort)
     {
-        $svc = app(\Platform\FoodAlchemist\Services\HandyDetailService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\HandyDetailService::class);
         $karte = $svc->karte($team, $rezept);
         $gramm = $karte['portion']['gramm'] ?? null;
         $vk = $cockpit['sales_gross'] ?? null;

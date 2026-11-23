@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Konfigurator;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -131,7 +131,7 @@ class KonfiguratorService
         $k = $this->eigener($team, $id);
         [$spalte, $contextSpalte] = $this->bildSpalten($art);
         $this->bildFreigeben($team, $k, $spalte, $contextSpalte);
-        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage($datei, $team, 'foodalchemist.konfigurator', $k->id, "foodalchemist/branding/konfigurator-{$k->id}");
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage($datei, $team, 'foodalchemist.konfigurator', $k->id, "foodalchemist/branding/konfigurator-{$k->id}");
         $k->update([$spalte => $media['path'], $contextSpalte => $media['context_file_id']]);
 
         return $k->fresh();
@@ -165,7 +165,7 @@ class KonfiguratorService
      */
     private function bildFreigeben(Team $team, FoodAlchemistKonfigurator $k, string $spalte, string $contextSpalte): void
     {
-        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->{$contextSpalte}, (string) $k->{$spalte}, $team, [BildVerweise::eigen($k, $spalte)]);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->{$contextSpalte}, (string) $k->{$spalte}, $team, [BildVerweise::eigen($k, $spalte)]);
     }
 
     /**
@@ -218,7 +218,7 @@ class KonfiguratorService
         if (array_key_exists('slug', $in)) {
             $einstellungen['slug'] = $in['slug'];
         }
-        $erg = app(PresentationService::class)->publish($team, PresentationService::TYPE_KONFIGURATOR, $k->id, $einstellungen);
+        $erg = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class)->publish($team, \Platform\FoodAlchemist\Services\Ausgabe\PresentationService::TYPE_KONFIGURATOR, $k->id, $einstellungen);
         $k = $this->aendern($team, $k->id, ['status' => 'live']);
 
         return $erg + ['verantwortlich_user_id' => $k->verantwortlich_user_id, 'gueltig_bis' => $k->gueltig_bis?->format('Y-m-d')];
@@ -227,7 +227,7 @@ class KonfiguratorService
     public function zurueckziehen(Team $team, int $id): void
     {
         $this->eigener($team, $id);
-        app(PresentationService::class)->withdraw($team, PresentationService::TYPE_KONFIGURATOR, $id);
+        app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class)->withdraw($team, \Platform\FoodAlchemist\Services\Ausgabe\PresentationService::TYPE_KONFIGURATOR, $id);
     }
 
     // ── Konzepte ─────────────────────────────────────────────────────────────────
@@ -315,7 +315,7 @@ class KonfiguratorService
         foreach (array_filter([$konzept->lunch_concept_id, $konzept->dinner_concept_id]) as $cid) {
             $c = FoodAlchemistConcept::query()->ohneTeamSicht('verweis')
                 ->with(['slots.dish:id,name,sales_wording_standard', 'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard'])->find($cid);
-            $positionen = $c !== null ? app(WordingResolver::class)->wordingPositionen($c) : [];
+            $positionen = $c !== null ? app(\Platform\FoodAlchemist\Services\WordingResolver::class)->wordingPositionen($c) : [];
             if ($positionen === []) {
                 continue;
             }

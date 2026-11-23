@@ -2,7 +2,7 @@
 
 use Platform\Core\Models\Team;
 use Platform\Crm\Models\CrmCompany;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Support\CrmKunden;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

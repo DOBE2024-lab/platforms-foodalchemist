@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\EtikettService;
+use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
 
 /** Spec 70 · Etikett erzeugen: Inhalt prüfen + Druck-/PDF-Link für Rezept, Grundprodukt oder Stellplatz. */
 class LabelsPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 
 /**
  * Werkstrang M Phase A (Spec 40 §6): Speisekarten-KOPF aktualisieren — schließt die MCP-Lockstep-Lücke

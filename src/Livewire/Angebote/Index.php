@@ -7,7 +7,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 
 /**
  * #380 — Angebote-Browser, am Concepter orientiert (3-Panel: Filter links · Tabelle

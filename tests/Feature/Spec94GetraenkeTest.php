@@ -7,10 +7,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistConceptCategory;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfiguratorKonzept;
-use Platform\FoodAlchemist\Services\KonfiguratorPricingService;
-use Platform\FoodAlchemist\Services\KonfiguratorService;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

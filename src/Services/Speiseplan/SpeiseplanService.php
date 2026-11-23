@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Speiseplan;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -28,7 +28,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
  * Kalender, Kosten je Tag/Woche, Wiederholungs-Check in echten Tagen, Veggie-
  * Tagescheck, Zyklus-Vorlage ausrollen. Scope-Härte + Owner-Guard.
  */
-class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
+class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanDokumentQuelle
 {
     use PruefstOutletZuordnung;
 
@@ -45,7 +45,7 @@ class SpeiseplanService implements Speiseplan\SpeiseplanDokumentQuelle
 
     private SpeiseplanMengen $mengen;
 
-    public function __construct(private ConceptService $concepts)
+    public function __construct(private \Platform\FoodAlchemist\Services\ConceptService $concepts)
     {
         $this->basis = new SpeiseplanBasis();
         $this->ernaehrung = new SpeiseplanErnaehrung($this->basis);

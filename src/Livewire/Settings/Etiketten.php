@@ -7,8 +7,8 @@ use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\EtikettService;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
 
 /**
  * Spec 70 · Einstellungen → Etiketten: Vorlagen gestalten (Format, Typ, Felder + Reihenfolge,
@@ -110,7 +110,7 @@ class Etiketten extends Component
     /** Modell gewechselt → Format aus der Kompatibilitätsliste vorbelegen. */
     public function updatedDruckerModell(): void
     {
-        $m = \Platform\FoodAlchemist\Services\DruckerService::MODELLE[$this->drucker['modell'] ?? ''] ?? null;
+        $m = \Platform\FoodAlchemist\Services\Ausgabe\DruckerService::MODELLE[$this->drucker['modell'] ?? ''] ?? null;
         if ($m !== null) {
             $this->drucker['format'] = $m['format'];
             $this->drucker['breite_mm'] = isset($m['breite_mm']) ? (string) $m['breite_mm'] : '';
@@ -118,7 +118,7 @@ class Etiketten extends Component
         }
     }
 
-    public function druckerSpeichern(\Platform\FoodAlchemist\Services\DruckerService $svc): void
+    public function druckerSpeichern(\Platform\FoodAlchemist\Services\Ausgabe\DruckerService $svc): void
     {
         $this->aktion(function () use ($svc) {
             $p = $svc->speichern($this->team(), $this->druckerId ?: null, $this->drucker);
@@ -127,7 +127,7 @@ class Etiketten extends Component
         });
     }
 
-    public function druckerLoeschen(\Platform\FoodAlchemist\Services\DruckerService $svc): void
+    public function druckerLoeschen(\Platform\FoodAlchemist\Services\Ausgabe\DruckerService $svc): void
     {
         if (! $this->druckerId) {
             return;
@@ -165,9 +165,9 @@ class Etiketten extends Component
         return view('foodalchemist::livewire.settings.etiketten', [
             'vorlagen' => $vorlagen,
             'formate' => array_map(fn ($f) => $f['label'], EtikettService::FORMATE),
-            'druckerListe' => app(\Platform\FoodAlchemist\Services\DruckerService::class)->liste($team),   // Spec 78
-            'modelle' => array_map(fn ($m) => $m['label'], \Platform\FoodAlchemist\Services\DruckerService::MODELLE),
-            'arbeitsplaetze' => \Platform\FoodAlchemist\Services\DruckerService::ARBEITSPLAETZE,
+            'druckerListe' => app(\Platform\FoodAlchemist\Services\Ausgabe\DruckerService::class)->liste($team),   // Spec 78
+            'modelle' => array_map(fn ($m) => $m['label'], \Platform\FoodAlchemist\Services\Ausgabe\DruckerService::MODELLE),
+            'arbeitsplaetze' => \Platform\FoodAlchemist\Services\Ausgabe\DruckerService::ARBEITSPLAETZE,
             'feldKatalog' => EtikettService::FELDER,
             'betriebe' => FoodAlchemistOutlet::where('team_id', $team->id)->orderBy('name')->pluck('name', 'id'),
             'designs' => collect($designs->pickerOptions($team, 'etikett'))->pluck('label', 'value'),

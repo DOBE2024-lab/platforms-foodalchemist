@@ -88,7 +88,7 @@ it('Lese-Tools: recipes.SEARCH/GET team-scoped, VK-Rezepte bleiben draußen (Sco
 
 it('M11-11: foodbook.GET liefert Kopf + Kapitel/Blöcke + aggregierten Angebotspreis (team-scoped)', function () {
     $concepts = app(\Platform\FoodAlchemist\Services\ConceptService::class);
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
 
     // 98 · 2.6c: Paket = kind=paket-Concept mit manuellem Preis, eingebettet statt package_id
     $paket = $concepts->createPaket($this->rootTeam, ['name' => 'Salad Wall']);
@@ -117,7 +117,7 @@ it('M11-11: foodbook.GET liefert Kopf + Kapitel/Blöcke + aggregierten Angebotsp
 });
 
 it('E1.4: foodbook_blocks.POST recipe_ref-Roundtrip — sales_recipe_id + price_basis-Angleich (pro_stueck→pauschal)', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $vk = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'vk_ref', 'name' => 'HG: Wolfsbarsch',
         'status' => 'draft', 'is_sales_recipe' => true, 'sales_net' => 12.50,
@@ -152,7 +152,7 @@ it('E1.4: foodbook_blocks.POST recipe_ref-Roundtrip — sales_recipe_id + price_
 });
 
 it('E1.4: foodbook_blocks.POST Tenancy — fremd-Team-Gericht als sales_recipe_id blockt (NOT_FOUND)', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     // Gericht gehört Kind A — für Root (Ancestry aufwärts) NICHT sichtbar.
     $fremd = FoodAlchemistRecipe::create([
         'team_id' => $this->childA->id, 'recipe_key' => 'vk_fremd', 'name' => 'HG: Fremd',
@@ -271,7 +271,7 @@ it('E3.5: Tenancy — foodbooks.POST mit fremd-Team-Zielgruppe blockt (NOT_FOUND
 // ── Spec 19 E4.6: foodbook_kapitel.PUT (Ziele+Zielgruppen+pricing_mode) + coverage.GET-WE ──
 
 it('E4.6: foodbook_kapitel.PUT setzt SOLL-Ziele + pricing_mode + Zielgruppen; kapitelZiele spiegelt sie', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $sf = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->rootTeam->id, 'label' => 'Buffet', 'code' => 'buffet']);
     $zg = \Platform\FoodAlchemist\Models\FoodAlchemistTargetGroup::create(['team_id' => $this->rootTeam->id, 'name' => 'Bankett-Gast']);
     $fb = $foodbooks->create($this->rootTeam, ['label' => 'Ziele-PUT', 'personen' => 100]);
@@ -307,7 +307,7 @@ it('E4.6: foodbook_kapitel.PUT setzt SOLL-Ziele + pricing_mode + Zielgruppen; ka
 });
 
 it('E4.6: foodbook_kapitel.PUT Tenancy — fremd-Team-Zielgruppe blockt (NOT_FOUND), Kapitel unverändert', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $fremd = \Platform\FoodAlchemist\Models\FoodAlchemistTargetGroup::create(['team_id' => $this->childA->id, 'name' => 'Fremd-Gruppe']);
     $fb = $foodbooks->create($this->rootTeam, ['label' => 'Tenancy-Ziele', 'personen' => 50]);
     $kap = $foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Kap']);
@@ -322,7 +322,7 @@ it('E4.6: foodbook_kapitel.PUT Tenancy — fremd-Team-Zielgruppe blockt (NOT_FOU
 });
 
 it('E4.6: coverage.GET liefert bei Foodbook eine wareneinsatz[]-Sektion je Kapitel', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $frames = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class);
     $fb = $foodbooks->create($this->rootTeam, ['label' => 'WE-Coverage', 'personen' => 100]);
     $kap = $foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Hauptgänge']);
@@ -347,7 +347,7 @@ it('E4.6: coverage.GET liefert bei Foodbook eine wareneinsatz[]-Sektion je Kapit
 // ── Spec 19 E5.4: leitstelle.GET (Checkliste + Kapitel-Matrix + Kapitel-Stand) ──
 
 it('E5.4: leitstelle.GET ohne chapter_id liefert Checkliste (7 Schritte) + Kapitel-Matrix', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $fb = $foodbooks->create($this->rootTeam, ['label' => 'Leitstelle-Überblick', 'personen' => 100]);
     $kap = $foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Hauptgänge']);
 
@@ -372,7 +372,7 @@ it('E5.4: leitstelle.GET ohne chapter_id liefert Checkliste (7 Schritte) + Kapit
 });
 
 it('E5.4: leitstelle.GET mit chapter_id liefert Kapitel-Stand (Ziele/Zielgruppen/WE) + Coverage-Befunde', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $frames = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class);
     $zg = \Platform\FoodAlchemist\Models\FoodAlchemistTargetGroup::create(['team_id' => $this->rootTeam->id, 'name' => 'Bankett-Gast']);
     $fb = $foodbooks->create($this->rootTeam, ['label' => 'Leitstelle-Kapitel', 'personen' => 100]);
@@ -398,7 +398,7 @@ it('E5.4: leitstelle.GET mit chapter_id liefert Kapitel-Stand (Ziele/Zielgruppen
 });
 
 it('E5.4: leitstelle.GET Tenancy — Foodbook eines fremden Teams + fremdes Kapitel blocken (NOT_FOUND)', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     // Fremd-Team-Foodbook: für rootTeam nicht sichtbar (childA ist NICHT Vorfahr von root).
     $fremdFb = $foodbooks->create($this->childA, ['label' => 'Fremd', 'personen' => 20]);
     $tool = $this->registry->get('foodalchemist.leitstelle.GET');
@@ -416,7 +416,7 @@ it('E5.4: leitstelle.GET Tenancy — Foodbook eines fremden Teams + fremdes Kapi
 // ── Spec 19 E6.5: kapitel_ideen.GET/POST/PUT (Kreativ-Skizzen, Entwürfe) ──
 
 it('E6.5: kapitel_ideen.POST/GET — freie Idee + Paket-Gruppe + Paket-Zuordnung, GET gruppiert', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $fb = $foodbooks->create($this->rootTeam, ['label' => 'Skizzen-Foodbook', 'personen' => 80]);
     $kap = $foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Vorspeisen']);
     $post = $this->registry->get('foodalchemist.kapitel_ideen.POST');
@@ -466,7 +466,7 @@ it('E6.5: kapitel_ideen.POST/GET — freie Idee + Paket-Gruppe + Paket-Zuordnung
 });
 
 it('E6.5: kapitel_ideen.PUT — verwerfen/reaktivieren, Paket umbenennen, Paket auflösen', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $fb = $foodbooks->create($this->rootTeam, ['label' => 'PUT-Foodbook', 'personen' => 60]);
     $kap = $foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Hauptgänge']);
     $post = $this->registry->get('foodalchemist.kapitel_ideen.POST');
@@ -507,7 +507,7 @@ it('E6.5: kapitel_ideen.PUT — verwerfen/reaktivieren, Paket umbenennen, Paket 
 });
 
 it('E6.5: kapitel_ideen Tenancy — fremdes Kapitel blockt GET + POST (NOT_FOUND)', function () {
-    $foodbooks = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     // childA ist NICHT Vorfahr von root → dessen Kapitel für root unsichtbar.
     $fremdFb = $foodbooks->create($this->childA, ['label' => 'Fremd-Skizzen', 'personen' => 20]);
     $fremdKap = $foodbooks->addKapitel($this->childA, $fremdFb->id, ['title' => 'Fremd-Kap']);

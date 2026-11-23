@@ -204,7 +204,7 @@ class WordingResolver
             $r = $block !== null ? $this->fuerBlockSlot($block, $slot) : $this->fuerSlot($slot);
             $zeilen[] = ['type' => 'gericht', 'text' => $r['text'], 'source' => $r['source'], 'einrueckung' => 0, 'slot_id' => $slot->id, 'recipe_id' => $slot->sales_recipe_id,
                 'preis' => $einzel ? ($preisMap[$slot->id]['vk'] ?? null) : null,
-                'ek' => $einzel ? ($preisMap[$slot->id]['ek'] ?? null) : null] + ($mitMengen ? ['menge' => app(HandbuchPositionsMenge::class)->fuer($slot)] : []);
+                'ek' => $einzel ? ($preisMap[$slot->id]['ek'] ?? null) : null] + ($mitMengen ? ['menge' => app(Ausgabe\HandbuchPositionsMenge::class)->fuer($slot)] : []);
         }
 
         return $zeilen;

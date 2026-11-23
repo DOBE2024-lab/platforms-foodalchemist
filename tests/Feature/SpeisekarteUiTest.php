@@ -120,7 +120,7 @@ it('Phase B: Gericht-Picker filtert per Facette + bleibt nach dem Einfügen offe
 // ── Werkstrang M Phase C (Spec 40 §6): Umsortieren + Verschieben ──────────────
 
 it('Phase C: Position hoch/runter, in andere Rubrik verschieben, Rubrik hoch/runter', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class);
     $karte = $svc->create($this->rootTeam, ['name' => 'Karte C']);
     $rA = $svc->addRubrik($this->rootTeam, $karte->id, ['title' => 'Rubrik A']);
     $rB = $svc->addRubrik($this->rootTeam, $karte->id, ['title' => 'Rubrik B']);
@@ -147,7 +147,7 @@ it('Phase C: Position hoch/runter, in andere Rubrik verschieben, Rubrik hoch/run
 });
 
 it('Phase C: movePosition über Karten-Grenze wirft (kein Cross-Card-Move)', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class);
     $k1 = $svc->create($this->rootTeam, ['name' => 'K1']);
     $k2 = $svc->create($this->rootTeam, ['name' => 'K2']);
     $r1 = $svc->addRubrik($this->rootTeam, $k1->id, ['title' => 'R1']);
@@ -162,7 +162,7 @@ it('Phase C: movePosition über Karten-Grenze wirft (kein Cross-Card-Move)', fun
 // ── Werkstrang M Phase D (Spec 40 §6): Layout-Blöcke + Wahl-Gruppen ───────────
 
 it('Phase D: Layout-Block einfügen + Wahl-Gruppe setzen + dokumentDaten trägt variant_group_id', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class);
     $karte = $svc->create($this->rootTeam, ['name' => 'Karte D']);
     $r = $svc->addRubrik($this->rootTeam, $karte->id, ['title' => 'Rubrik']);
     $comp = Livewire::test(SpeisekarteIndex::class)->call('waehle', $karte->id);
@@ -191,7 +191,7 @@ it('Phase D: Layout-Block einfügen + Wahl-Gruppe setzen + dokumentDaten trägt 
 // ── Werkstrang M Phase E (Spec 40 §6): Planungshilfe „was fehlt" ──────────────
 
 it('Phase E: Leitstelle zeigt Checkliste immer, Coverage nur bei Planungs-Gerüst', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class);
     $karte = $svc->create($this->rootTeam, ['name' => 'Karte E']);
 
     // Ohne Gerüst: Checkliste ja, Coverage-Panel nein (kein Frame-Zwang).
@@ -213,7 +213,7 @@ it('Phase E: Leitstelle zeigt Checkliste immer, Coverage nur bei Planungs-Gerüs
 // ── Werkstrang M UX-Ausbau: Drag & Drop (positionAblegen / rubrikAblegen) ─────
 
 it('UX D&D: positionAblegen sortiert in der Rubrik + verschiebt zwischen Rubriken', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class);
     $karte = $svc->create($this->rootTeam, ['name' => 'DnD']);
     $rA = $svc->addRubrik($this->rootTeam, $karte->id, ['title' => 'A']);
     $rB = $svc->addRubrik($this->rootTeam, $karte->id, ['title' => 'B']);
@@ -236,7 +236,7 @@ it('UX D&D: positionAblegen sortiert in der Rubrik + verschiebt zwischen Rubrike
 });
 
 it('UX D&D: rubrikAblegen sortiert Rubriken derselben Ebene', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SpeisekarteService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class);
     $karte = $svc->create($this->rootTeam, ['name' => 'DnDR']);
     $rA = $svc->addRubrik($this->rootTeam, $karte->id, ['title' => 'A']);
     $rB = $svc->addRubrik($this->rootTeam, $karte->id, ['title' => 'B']);

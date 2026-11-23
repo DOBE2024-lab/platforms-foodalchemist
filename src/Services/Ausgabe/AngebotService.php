@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -286,8 +286,8 @@ class AngebotService
         ?array $einheiten = null,
     ): array
     {
-        $orderCosting = app(OrderCostingService::class);
-        $conceptSvc = app(ConceptService::class);
+        $orderCosting = app(\Platform\FoodAlchemist\Services\OrderCostingService::class);
+        $conceptSvc = app(\Platform\FoodAlchemist\Services\ConceptService::class);
         $comp = app(OfferCompositionService::class);
         $pax = max(0, (int) ($angebot->personen ?? 0));
 
@@ -362,7 +362,7 @@ class AngebotService
             'ek_per_person' => $ekPp,
             'hk2_pro_person' => $pax > 0 ? round($hk2Gesamt / $pax, 2) : 0.0,
             'db_pro_person' => $pax > 0 ? round($vkPp - $hk2Gesamt / $pax, 2) : $vkPp,
-            'wareneinsatz_pct' => MargeService::wareneinsatzPct($gesamtEk, $gesamtVkAuto),
+            'wareneinsatz_pct' => \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($gesamtEk, $gesamtVkAuto),
             'auto_gesamt' => $gesamtVkAuto,
             'gesamt_vk' => round($gesamt, 2),
             'gesamt_ek' => $gesamtEk,
@@ -395,7 +395,7 @@ class AngebotService
         $update = [
             'calculated_total_price' => $auto,
             'price_calculation_source' => 'concept_catalog_sum',
-            'price_calculation_version' => CatalogPricingService::VERSION,
+            'price_calculation_version' => \Platform\FoodAlchemist\Services\CatalogPricingService::VERSION,
             'price_calculated_at' => now(),
         ];
         if ($autoMode) {
@@ -403,10 +403,10 @@ class AngebotService
                 'price_override_user_id' => null, 'price_override_at' => null, 'price_override_expires_at' => null];
         }
         $angebot->update($update);
-        app(PriceAuditService::class)->record(
+        app(\Platform\FoodAlchemist\Services\PriceAuditService::class)->record(
             $angebot, 'offer', $oldCalculated, $auto, $oldEffective,
             $angebot->total_price !== null ? (float) $angebot->total_price : null,
-            'concept_catalog_sum', ['calculation_version' => CatalogPricingService::VERSION],
+            'concept_catalog_sum', ['calculation_version' => \Platform\FoodAlchemist\Services\CatalogPricingService::VERSION],
         );
     }
 
@@ -419,7 +419,7 @@ class AngebotService
      */
     public function dokumentDaten(Team $team, FoodAlchemistAngebot $angebot, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $conceptSvc = app(ConceptService::class);
+        $conceptSvc = app(\Platform\FoodAlchemist\Services\ConceptService::class);
         $angebot->loadMissing(['crmCompany', 'crmContact', 'concepts', 'referenzierteConcepts']);
         $kalk = $this->kalkulation($team, $angebot, $outlet);   // Kurator 19.10.: Druck rechnet gegen das Profil wie die Seite
 
@@ -488,7 +488,7 @@ class AngebotService
             return null; // keine voll bekosteten Concept-Einheiten → kein Zuschlags-Wasserfall
         }
         $refPax = $pax > 0 ? $pax : 1; // Per-Person-Referenz (Mischwert bei unterschiedlichen Kapitel-Pax)
-        $orderCosting = app(OrderCostingService::class);
+        $orderCosting = app(\Platform\FoodAlchemist\Services\OrderCostingService::class);
         $sum = ['mek' => 0.0, 'fek' => 0.0, 'direct_costs' => 0.0, 'mgk' => 0.0, 'fgk' => 0.0, 'hk' => 0.0, 'hk2' => 0.0,
             'minimum_price' => 0.0, 'target_price' => 0.0, 'contribution_margin' => 0.0, 'active_person_minutes' => 0.0,
             'catalog_price_total' => 0.0];
@@ -540,7 +540,7 @@ class AngebotService
     }
 
     private function costConceptCached(
-        OrderCostingService $service,
+        \Platform\FoodAlchemist\Services\OrderCostingService $service,
         Team $team,
         FoodAlchemistConcept $concept,
         int $pax,
@@ -557,7 +557,7 @@ class AngebotService
         $angebot = FoodAlchemistAngebot::visibleToTeam($team)->with(['crmCompany', 'crmContact'])->findOrFail($id);
         $komposition = app(OfferCompositionService::class)->komposition($team, $angebot, $outlet, false);
         $kalk = $this->kalkulation($team, $angebot, $outlet);
-        $mwst = app(TeamSettingsService::class)->mwst($team);
+        $mwst = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->mwst($team);
         $satz = ($mwst['default_satz'] ?? 'ermaessigt') === 'regulaer'
             ? (float) ($mwst['regulaer'] ?? 19.0)
             : (float) ($mwst['ermaessigt'] ?? 7.0);
@@ -601,7 +601,7 @@ class AngebotService
         $sichtbar = fn (string $farbe): bool => $kontrast($farbe, '#ffffff') >= 1.5;
         $schrift = fn (string $grund): string => $kontrast($grund, '#ffffff') >= $kontrast($grund, '#1f2937') ? '#ffffff' : '#1f2937';
         $linie = $sichtbar($marke) ? $marke : ($sichtbar($band) ? $band : '#374151');
-        $media = app(Plattform\FoodAlchemistMediaService::class);
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class);
 
         return [
             'color' => $linie,
@@ -851,9 +851,9 @@ class AngebotService
         $bilder = is_array($angebot->presentation_images_json) ? $angebot->presentation_images_json : [];
         $alt = $bilder[(string) $nummer] ?? null;
         if (is_array($alt)) {
-            app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($alt['context_file_id'] ?? null, (string) ($alt['path'] ?? ''), $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, 'presentation_images_json', $nummer)]);
+            app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($alt['context_file_id'] ?? null, (string) ($alt['path'] ?? ''), $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, 'presentation_images_json', $nummer)]);
         }
-        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage($file, $team, 'foodalchemist.offer', $offerId, "foodalchemist/offer-branding/{$offerId}");
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage($file, $team, 'foodalchemist.offer', $offerId, "foodalchemist/offer-branding/{$offerId}");
         $bilder[(string) $nummer] = ['context_file_id' => $media['context_file_id'], 'path' => $media['path']];
         $angebot->update(['presentation_images_json' => $bilder]);
 
@@ -867,7 +867,7 @@ class AngebotService
         $bilder = is_array($angebot->presentation_images_json) ? $angebot->presentation_images_json : [];
         $alt = $bilder[(string) $nummer] ?? null;
         if (is_array($alt)) {
-            app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($alt['context_file_id'] ?? null, (string) ($alt['path'] ?? ''), $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, 'presentation_images_json', $nummer)]);
+            app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($alt['context_file_id'] ?? null, (string) ($alt['path'] ?? ''), $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, 'presentation_images_json', $nummer)]);
         }
         unset($bilder[(string) $nummer]);
         $angebot->update(['presentation_images_json' => $bilder !== [] ? $bilder : null]);
@@ -892,9 +892,9 @@ class AngebotService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $angebot->{$spalte};
-        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($angebot->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, $spalte)]);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($angebot->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, $spalte)]);
 
-        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage(
             $file,
             $team,
             'foodalchemist.offer',
@@ -917,7 +917,7 @@ class AngebotService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $angebot->{$spalte};
-        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($angebot->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, $spalte)]);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($angebot->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($angebot, $spalte)]);
         $angebot->update([
             $spalte => null,
             $contextSpalte => null,

@@ -10,14 +10,14 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\KonfiguratorPricingService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
 use Platform\FoodAlchemist\Services\LeitstelleService;
-use Platform\FoodAlchemist\Services\OfferCompositionService;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -187,7 +187,7 @@ it('PR C · Präsentation: Vorschau, veröffentlichter Link und Kundenseite zeig
     $fb = $fbs->create($this->rootTeam, ['label' => 'Praes-FB', 'personen' => 30]);
     $kap = $fbs->addKapitel($this->rootTeam, $fb->id, ['title' => 'Buffet']);
     $fbs->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->teil->id]);
-    $praes = app(\Platform\FoodAlchemist\Services\PresentationService::class);
+    $praes = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class);
     $vorschau = fn () => view('foodalchemist::presentation.show', ['snapshot' => $praes->previewData($this->rootTeam, 'foodbook', $fb->id)])->render();
 
     $snap = $praes->previewData($this->rootTeam, 'foodbook', $fb->id);
@@ -220,7 +220,7 @@ it('PR C · Angebot: Gesamtpreis trägt vk_fehlt in Dokument, Karte und Präsent
     expect(substr_count($dok, '(vorläufig)'))->toBeGreaterThanOrEqual(2)->and($dok)->not->toContain('VK fehlt');   // Preis pro Person + Gesamt
     $karte = view('foodalchemist::dokumente.angebot-karte', $svc->karteDaten($this->rootTeam, $angebot->id) + ['istPdf' => false])->render();
     expect($karte)->toContain('(vorläufig)');
-    $snap = app(\Platform\FoodAlchemist\Services\PresentationService::class)->previewData($this->rootTeam, 'angebot', $angebot->id);
+    $snap = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class)->previewData($this->rootTeam, 'angebot', $angebot->id);
     expect($snap['content']['total']['vorlaeufig'])->toBeTrue()->and($snap['content']['preis_aufschluesselung']['vorlaeufig'] ?? false)->toBeTrue();
 
     \Illuminate\Support\Facades\DB::table('foodalchemist_offers')->where('id', $angebot->id)->update(['price_mode' => 'manuell', 'total_price' => 1200]);
@@ -231,7 +231,7 @@ it('PR C · Angebot: Gesamtpreis trägt vk_fehlt in Dokument, Karte und Präsent
 
 it('PR C · Republish preserve: Preis UND Merker bleiben eingefroren, auto zieht beide live', function () {
     $fbs = app(FoodbookService::class);
-    $praes = app(\Platform\FoodAlchemist\Services\PresentationService::class);
+    $praes = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class);
     $fb = $fbs->create($this->rootTeam, ['label' => 'Freeze-FB', 'personen' => 30]);
     $kap = $fbs->addKapitel($this->rootTeam, $fb->id, ['title' => 'Buffet']);
     $fbs->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->teil->id]);
@@ -257,7 +257,7 @@ it('PR C · Präsentations-Layout bringt die dezente Regel .pt-vorlaeufig mit, i
     $fb = $fbs->create($this->rootTeam, ['label' => 'Layout-FB']);
     $kap = $fbs->addKapitel($this->rootTeam, $fb->id, ['title' => 'Buffet']);
     $fbs->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $this->teil->id]);
-    $praes = app(\Platform\FoodAlchemist\Services\PresentationService::class);
+    $praes = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class);
     foreach (['editorial', 'kiosk'] as $design) {   // kiosk = dunkle Palette
         $html = view('foodalchemist::presentation.show', ['snapshot' => $praes->previewData($this->rootTeam, 'foodbook', $fb->id, $design)])->render();
         expect($html)->toContain('.pt-vorlaeufig {')->toContain('class="pt-vorlaeufig" data-preis-vorlaeufig');

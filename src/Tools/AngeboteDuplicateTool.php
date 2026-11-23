@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotKopieService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotKopieService;
 
 /** Angebot kopieren (Aufbau, Branding, Bilder, lokale Concepts) — wie „Angebot kopieren“ im Editor. */
 class AngeboteDuplicateTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

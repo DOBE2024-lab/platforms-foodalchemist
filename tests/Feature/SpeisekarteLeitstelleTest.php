@@ -7,8 +7,8 @@ use Platform\FoodAlchemist\Livewire\Speisekarte\Index as SpeisekarteIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\SpeisekarteLeitstelleService;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteLeitstelleService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

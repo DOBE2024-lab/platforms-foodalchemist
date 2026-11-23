@@ -35,7 +35,7 @@ class KonfiguratorKonzepteWordingTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        $k = app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->wordingSetzen($team, self::id($a, 'konzept_id'), self::id($a, 'concept_slot_id'),
+        $k = app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->wordingSetzen($team, self::id($a, 'konzept_id'), self::id($a, 'concept_slot_id'),
             isset($a['text']) ? (string) $a['text'] : null);
 
         return ['konzept_id' => $k->id, 'wording_overrides' => $k->payload_json['wording_overrides'] ?? []];

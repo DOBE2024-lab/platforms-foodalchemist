@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Speisekarte;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\SpeisekarteLeitstelleService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteLeitstelleService;
 
 /**
  * Speisekarte-Leitstelle-Rail (Stufe E) — read-only Cockpit-Streifen mit der abgeleiteten

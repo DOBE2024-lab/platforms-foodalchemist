@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /** MCP-Steuerbarkeit · D7: Blöcke eines Kapitels in einem Entwurf-Foodbook neu ordnen. */
 class FoodbookBlocksReorderTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

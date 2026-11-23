@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Foodbook;
 
 use Illuminate\Support\Carbon;
 use Platform\Core\Models\Team;
@@ -202,9 +202,9 @@ class PortfolioService
 
     // ── intern ────────────────────────────────────────────────────────────────
 
-    private function brille(): Plattform\StandortService
+    private function brille(): \Platform\FoodAlchemist\Services\Plattform\StandortService
     {
-        return app(Plattform\StandortService::class);
+        return app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class);
     }
 
     /**

@@ -264,7 +264,7 @@ it('Planungsblatt + Produktionsschein: Gefäß und Zubehör auf die Portionen ho
 
 it('Handbuch: Reiter „Gefäß“ statt „Bestandteile“ — Gefäß + Zubehör je Portion, ohne Preise; ohne Gefäß ehrlich leer', function () {
     $this->zub->setzen($this->rootTeam, $this->glas->id, $this->deckel->id, 1);
-    $handbuch = app(\Platform\FoodAlchemist\Services\HandbuchService::class);
+    $handbuch = app(\Platform\FoodAlchemist\Services\Ausgabe\HandbuchService::class);
     $karte = $handbuch->gerichtKarte($this->rootTeam, FoodAlchemistRecipe::find($this->dar->recipe_id), 'Dessert', false, $this->dar->fresh());
     expect($karte['gefaess'])->toBe(['1 × Achenbachglas: Glas, 212 ml', '1 × Deckel: Twist-off, 82 mm'])
         ->and($karte)->not->toHaveKey('bestandteile')

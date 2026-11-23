@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Support;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
-use Platform\FoodAlchemist\Services\AngebotEinfrierService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService;
 
 /**
  * Eingefrorenes Angebot = feste Preise (Spec 82 §12 B3, Dominique 19.10.). Ein Request-Kontext (scoped), damit die Preiswege des Angebots —

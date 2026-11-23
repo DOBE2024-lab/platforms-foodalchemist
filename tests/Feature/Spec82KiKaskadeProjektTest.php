@@ -7,7 +7,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Livewire\Projekte\Detail;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
 use Platform\FoodAlchemist\Services\CanvasService;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\KontextResolver;
 use Platform\FoodAlchemist\Services\ProjektService;
 use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;

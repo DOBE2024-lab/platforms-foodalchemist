@@ -1,9 +1,9 @@
 <?php
 
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\ReifeService;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -5,11 +5,11 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Settings\PraesentationsDesigns;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\AngebotService;
-use Platform\FoodAlchemist\Services\OfferCompositionService;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationFontService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationFontService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -154,7 +154,7 @@ it('materialisiereSpeisekartePosition setzt die generiere()-Stufen als Phase, ge
             return ['recipe' => $recipe, 'offene' => []];
         });
     });
-    $this->mock(\Platform\FoodAlchemist\Services\SpeisekarteService::class, fn ($m) => $m->shouldReceive('addPosition')->once());
+    $this->mock(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class, fn ($m) => $m->shouldReceive('addPosition')->once());
 
     (new MaterializeSpeisekartePositionJob($this->rootTeam->id, (int) $this->user->id, 1, 'Brief', (int) $step->id))
         ->handle();
@@ -185,7 +185,7 @@ it('materialisiereSpeiseplanZelle setzt die generiere()-Stufen als Phase, geloes
             return ['recipe' => $recipe, 'offene' => []];
         });
     });
-    $this->mock(\Platform\FoodAlchemist\Services\SpeiseplanService::class, fn ($m) => $m->shouldReceive('addEintrag')->once());
+    $this->mock(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class, fn ($m) => $m->shouldReceive('addEintrag')->once());
 
     (new MaterializeSpeiseplanCellJob($this->rootTeam->id, (int) $this->user->id, 1, '2026-09-20', 'mittag', 1, 'Brief', (int) $step->id))
         ->handle();

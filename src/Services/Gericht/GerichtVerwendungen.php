@@ -25,7 +25,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 
 /**
  * Gericht-Verwaltung (Plan „Verwaltung am Gericht“, Kurator/Dominique 23.11.2026): ALLE Verwendungen eines Gerichts,

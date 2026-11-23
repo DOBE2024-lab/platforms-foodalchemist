@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
-use Platform\FoodAlchemist\Services\SpeiseplanVorgabenService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanVorgabenService;
 
 /** MCP-Steuerbarkeit · D9: Speiseplan-Stammdaten bearbeiten (Zyklus, Pax, Budget, Betrieb). */
 class SpeiseplaenePutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

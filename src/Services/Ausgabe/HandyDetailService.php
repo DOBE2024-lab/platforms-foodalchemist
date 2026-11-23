@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -84,13 +84,13 @@ class HandyDetailService
      */
     public function artikel(Team $team, int $id): ?FoodAlchemistSupplierItem
     {
-        $items = app(SupplierItemService::class);
+        $items = app(\Platform\FoodAlchemist\Services\SupplierItemService::class);
         $item = $items->byIds($team, [$id], ['onlyActive' => false])->first();
         if ($item === null) {
             return null;
         }
         $item->loadMissing('supplier:id,name');
-        $item->setAttribute('vergleichspreis', app(PriceService::class)->vergleichspreis($item, $item->aktiver_preis !== null ? (float) $item->aktiver_preis : null));
+        $item->setAttribute('vergleichspreis', app(\Platform\FoodAlchemist\Services\PriceService::class)->vergleichspreis($item, $item->aktiver_preis !== null ? (float) $item->aktiver_preis : null));
         $item->setAttribute('allergen_werte', $items->getAllergens($item));
 
         return $item;

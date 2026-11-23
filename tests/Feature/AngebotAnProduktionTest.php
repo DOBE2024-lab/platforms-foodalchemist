@@ -2,7 +2,7 @@
 
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -25,7 +25,7 @@ it('legt aus einem Angebot einen Produktionsauftrag am Event-Tag an', function (
     $concept = $this->makeConcept($this->rootTeam, 'Menü A', ['offer_id' => $angebot->id]);
     // #380 Composer: die Komposition (Kapitel/Block) ist die autoritative Quelle — das Menü
     // wird als concept_ref-Block angebunden (so wie neuesConcept/referenziereConcept/Voll-Kaskade es tun).
-    $comp = app(\Platform\FoodAlchemist\Services\OfferCompositionService::class);
+    $comp = app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class);
     $kapitel = $comp->addKapitel($this->rootTeam, $angebot->id, ['title' => 'Menü']);
     $comp->addBlock($this->rootTeam, $kapitel->id, ['type' => 'concept_ref', 'concept_id' => $concept->id]);
 

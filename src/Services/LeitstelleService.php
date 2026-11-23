@@ -29,7 +29,7 @@ use RuntimeException;
 class LeitstelleService
 {
     public function __construct(
-        private FoodbookService $foodbooks,
+        private Foodbook\FoodbookService $foodbooks,
     ) {}
 
     private const DISH_IDEAS_TABLE = 'foodalchemist_dish_ideas';

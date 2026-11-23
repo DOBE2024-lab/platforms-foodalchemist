@@ -38,6 +38,6 @@ class KonfiguratorPaketePutTool extends KonfiguratorToolBasis
             $a['referenz_pax'] = null;   // 0 = zurück auf die Mitte (kein Union-Typ im Schema)
         }
 
-        return ['paket' => app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->paketAendern($team, self::id($a), $a)->toArray()];
+        return ['paket' => app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->paketAendern($team, self::id($a), $a)->toArray()];
     }
 }

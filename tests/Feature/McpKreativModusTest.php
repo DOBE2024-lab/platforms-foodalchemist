@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

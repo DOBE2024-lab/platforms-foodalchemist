@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ReportExportService;
+use Platform\FoodAlchemist\Services\Ausgabe\ReportExportService;
 
 /** Plattform-PDF über MCP: kurzlebiger Snapshot-Download oder explizit Base64. */
 class RecipesPdfGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

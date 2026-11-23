@@ -584,7 +584,7 @@ it('P1b MCP: ADD_TARGET mit chapter_id expandiert in eingefrorene Einzel-Ziele (
     $registry = app(\Platform\Core\Tools\ToolRegistry::class);
     $kontext = new \Platform\Core\Contracts\ToolContext($user, $this->rootTeam);
 
-    $fb = app(\Platform\FoodAlchemist\Services\FoodbookService::class);
+    $fb = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
     $book = $fb->create($this->rootTeam, ['label' => 'FB', 'personen' => 20]);
     $kap = $fb->addKapitel($this->rootTeam, $book->id, ['title' => 'Desserts']);
     $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->kuchen->id]);

@@ -9,9 +9,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\CanvasService;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Platform\FoodAlchemist\Tools\CanvasEntryAddTool;
@@ -87,7 +87,7 @@ it('Angebots-Kapitel-Kundentext übergibt ebenfalls Angebots-Id und Kunde', func
     $angebot = FoodAlchemistAngebot::create([
         'team_id' => $this->rootTeam->id, 'name' => 'Sommerfest', 'status' => 'anfrage', 'personen' => 50, 'crm_company_id' => 4711,
     ]);
-    $kapitel = app(\Platform\FoodAlchemist\Services\OfferCompositionService::class)->addKapitel($this->rootTeam, $angebot->id, ['title' => 'Menü']);
+    $kapitel = app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class)->addKapitel($this->rootTeam, $angebot->id, ['title' => 'Menü']);
     $optionen = null;
     $this->mock(AiGatewayService::class, function ($mock) use (&$optionen) {
         $mock->shouldReceive('propose')->andReturnUsing(function (string $key, array $kontext, array $options = []) use (&$optionen) {

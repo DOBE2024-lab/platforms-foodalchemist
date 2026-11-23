@@ -9,14 +9,14 @@ use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
  * Spec 50 · Etappe 7 — Reife eines Angebots (kundengebundene Instanz).
  *
  * Kopf = der Brief (Anlass, Personen, Datum, Budget) plus der Kundentext (`description`).
- * Den Kundentext schlägt {@see \Platform\FoodAlchemist\Services\AngebotService::kiKundentextVorschlag()}
+ * Den Kundentext schlägt {@see \Platform\FoodAlchemist\Services\Ausgabe\AngebotService::kiKundentextVorschlag()}
  * vor — seit C-7 auch über `angebot.KUNDENTEXT_GENERATE`; persistiert wird er über `angebote.PUT`.
  * Struktur = Kapitel/Blöcke wie im Foodbook (Blatt-Kapitel ohne Inhalt, Ref ohne Ziel,
  * Header ohne Titel). Ein Angebot ohne Kapitel UND ohne angebots-lokales Konzept hat keine
  * Menü-Substanz — das blockiert, denn der Beleg hätte keine Position.
  *
  * Seit C-7 misst der Adapter zusätzlich, ob ein vorhandenes Planungs-Gerüst überhaupt in
- * Kapitel übersetzt wurde ({@see \Platform\FoodAlchemist\Services\OfferCompositionService::strukturAusGeruest()}).
+ * Kapitel übersetzt wurde ({@see \Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::strukturAusGeruest()}).
  * Das ist NICHT die Coverage: gemessen wird, ob die geplanten Slots als Kapitel existieren,
  * nicht ob sie inhaltlich belegt sind. Den Soll-Ist-Abgleich kann {@see \Platform\FoodAlchemist\Services\CoverageService}
  * für `offer` weiterhin nicht — er kennt den Owner-Typ nicht. Ebenso hat die

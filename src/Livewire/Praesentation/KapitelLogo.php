@@ -7,7 +7,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\KapitelLogoService;
+use Platform\FoodAlchemist\Services\Foodbook\KapitelLogoService;
 
 /**
  * Optionales Logo je Kapitel (Präsentation 2026-11-13) — ein Baustein für Foodbook-Kapitel, Angebots-Kapitel und

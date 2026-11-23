@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /** MCP-Steuerbarkeit · D9: Pax-Override eines Speiseplan-Eintrags setzen (0/leer = Plan-Default gilt). */
 class SpeiseplanEintraegePaxTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

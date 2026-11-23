@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Ausgabe;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -38,8 +38,8 @@ class HandbuchService
     public const TYPEN = [self::TYPE_FOODBOOK, self::TYPE_SPEISEKARTE, self::TYPE_SPEISEPLAN, self::TYPE_ANGEBOT];
 
     public function __construct(
-        private Plattform\FoodAlchemistMediaService $media,
-        private Produktion\RegenerationCascadeService $regeneration,
+        private \Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService $media,
+        private \Platform\FoodAlchemist\Services\Produktion\RegenerationCascadeService $regeneration,
         private HandbuchQuellenService $quellen,
         private HandbuchZutatenService $zutaten,
     ) {
@@ -251,7 +251,7 @@ class HandbuchService
         $regen = $this->regeneration->fuerRezept($recipe);
         $regenZeilen = [];
         foreach ([...$regen['gesamt'], ...$regen['komponenten']] as $z) {
-            if (($z['herkunft'] ?? null) === Produktion\RegenerationCascadeService::HERKUNFT_FEHLT) {
+            if (($z['herkunft'] ?? null) === \Platform\FoodAlchemist\Services\Produktion\RegenerationCascadeService::HERKUNFT_FEHLT) {
                 continue;
             }
             $kalt = (bool) ($z['ist_kalt'] ?? false);
@@ -289,7 +289,7 @@ class HandbuchService
             'regeneration' => $regenZeilen,
             // 20.11.2026 (Dominique): Reiter „Gefäß“ statt „Bestandteile“ — Gefäß + Zubehör je Portion dieser Darreichung, ohne Preise
             // (gleiche Quelle wie Kosten und Logistik). Leere Liste = kein Gefäß hinterlegt.
-            'gefaess' => $dar !== null ? app(DarreichungService::class)->gefaessZeilenJePortion($dar, $team) : [],
+            'gefaess' => $dar !== null ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessZeilenJePortion($dar, $team) : [],
             'codes' => [],
         ];
     }
@@ -297,7 +297,7 @@ class HandbuchService
     /** Kennzeichnung genau dieses Rezepts; niemals die Angaben des übergeordneten Gerichts übernehmen. */
     public static function kennzeichnungSnapshot(FoodAlchemistRecipe $recipe): array
     {
-        $agg = app(ConcepterAggregateService::class);
+        $agg = app(\Platform\FoodAlchemist\Services\ConcepterAggregateService::class);
         $daten = $agg->kennzeichnungFromGerichte(collect([$recipe]));
         $katalog = $agg->kennzeichnungKatalog()['allergene'];
         $out = ['enthalten' => [], 'spuren' => [], 'offen' => false];

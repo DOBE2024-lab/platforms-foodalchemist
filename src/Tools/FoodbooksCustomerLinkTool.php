@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
-use Platform\FoodAlchemist\Services\FoodbookService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /** MCP-Steuerbarkeit · D7: Foodbook mit einem CRM-Kunden verknüpfen/lösen. */
 class FoodbooksCustomerLinkTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

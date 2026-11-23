@@ -637,7 +637,7 @@ final class TagesplanAbfrage
         if ($team === null) {
             return null;
         }
-        $svc = app(\Platform\FoodAlchemist\Services\EtikettService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Ausgabe\EtikettService::class);
         $vorlage = $svc->kuechenVorlage($team);   // Spec 76b: eigene Vorlage für den Wandmonitor
         $anzahl = max(1, (int) ceil((float) $line->ansaetze_effektiv - 1e-9));
         $datum = \Platform\FoodAlchemist\Models\FoodAlchemistProductionOrder::whereKey($line->production_order_id)->value('production_date');

@@ -238,7 +238,7 @@ final class FoodbookDokument
                 'deklaration' => false, 'naehrwerte' => false, 'notizen' => false,
                 'preise' => $intern, 'lieferanten' => $intern, 'ek' => $intern, 'intern' => $intern,
             ];
-            $report = app(\Platform\FoodAlchemist\Services\ReportExportService::class);
+            $report = app(\Platform\FoodAlchemist\Services\Ausgabe\ReportExportService::class);
             foreach (array_values(array_unique($gerichtIds)) as $gid) {
                 try {
                     $d = $report->rezeptDaten($team, $gid, $kOpt);

@@ -246,15 +246,15 @@ class GenerateConceptJob implements ShouldQueue, \Platform\FoodAlchemist\Service
     private function attachEinmal(\Platform\Core\Models\Team $team, int $conceptId): void
     {
         if ($this->attachOwnerType === 'foodbook') {
-            app(\Platform\FoodAlchemist\Services\FoodbookService::class)
+            app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class)
                 ->addBlock($team, $this->attachContainerId, ['type' => 'concept_ref', 'concept_id' => $conceptId]);
         } elseif ($this->attachOwnerType === 'speisekarte') {
-            app(\Platform\FoodAlchemist\Services\SpeisekarteService::class)
+            app(\Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService::class)
                 ->addPosition($team, $this->attachContainerId, ['type' => 'menue_ref', 'concept_id' => $conceptId]);
         } elseif ($this->attachOwnerType === 'offer') {
             // E2 (Spec 40): das erzeugte (standalone) Konzept ans Angebot referenzieren — Pivot
             // foodalchemist_offer_concept. attachContainerId ist die Angebots-ID (kein Zwischen-Container).
-            app(\Platform\FoodAlchemist\Services\AngebotService::class)
+            app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)
                 ->referenziereConcept($team, $this->attachContainerId, $conceptId);
         } elseif ($this->attachOwnerType === 'format') {
             // Format (gebrandetes Foodkonzept): das erzeugte Concept als Aufbau-Slot (type=concept) ins Format

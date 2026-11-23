@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotEinfrierService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService;
 
 /** Spec 82 §12 B3 · Neuere Fassung in ein eingefrorenes Angebot übernehmen. Bei geändertem Allergenbild nur Rolle Freigeben und mit bestaetigt=true. */
 class AngeboteUebernehmenPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

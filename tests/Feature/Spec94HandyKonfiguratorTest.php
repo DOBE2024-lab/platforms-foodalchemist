@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Angebote\Konfiguratoren;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\KonfiguratorService;
+use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService;
 use Platform\FoodAlchemist\Support\HandyLesemodus;
 use Platform\FoodAlchemist\Support\HandyNavigation;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

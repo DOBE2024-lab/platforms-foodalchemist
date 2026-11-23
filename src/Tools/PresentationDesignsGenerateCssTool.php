@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
 
 /** MCP-Steuerbarkeit · D12: aus einem Brief KI-CSS/Tokens für ein Präsentations-Design vorschlagen. */
 class PresentationDesignsGenerateCssTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

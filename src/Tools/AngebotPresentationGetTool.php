@@ -57,7 +57,7 @@ class AngebotPresentationGetTool extends FoodAlchemistTool implements ToolContra
             'url' => ($angebot->presentation_enabled && $angebot->presentationPublicRef())
                 ? url('/p/angebot/' . $angebot->presentationPublicRef()) : null,
             // Zusätzliche Betriebs-Links (je Betrieb eigener Link/Vorlage/Freigabe).
-            'betriebs_links' => app(\Platform\FoodAlchemist\Services\PresentationService::class)
+            'betriebs_links' => app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class)
                 ->outletPresentations($team, 'angebot', (int) $angebot->id),
         ]);
     }

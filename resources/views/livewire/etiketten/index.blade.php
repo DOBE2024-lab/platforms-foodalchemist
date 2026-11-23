@@ -67,7 +67,7 @@
                                 {{-- Spec 76: nur die Lagerarten, die das Rezept erlaubt; „verbrauchen bis“ rechnet sich daraus --}}
                                 @php
                                     $kurz = ['gekuehlt' => 'Gekühlt', 'tiefgekuehlt' => 'TK', 'trocken' => 'Trocken'];
-                                    $arten = $quelle === 'recipe' && ! empty($daten['lagerarten']) ? $daten['lagerarten'] : array_keys(\Platform\FoodAlchemist\Services\EtikettService::LAGERUNG);
+                                    $arten = $quelle === 'recipe' && ! empty($daten['lagerarten']) ? $daten['lagerarten'] : array_keys(\Platform\FoodAlchemist\Services\Ausgabe\EtikettService::LAGERUNG);
                                     $aktiv = $e['lagerung'] !== '' ? $e['lagerung'] : $daten['lagerung'];
                                 @endphp
                                 <x-fa::field label="Lagerung">

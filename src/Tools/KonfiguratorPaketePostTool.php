@@ -34,6 +34,6 @@ class KonfiguratorPaketePostTool extends KonfiguratorToolBasis
 
     protected function ausfuehren(Team $team, array $a): mixed
     {
-        return ['paket' => app(\Platform\FoodAlchemist\Services\KonfiguratorService::class)->paketAnlegen($team, self::id($a, 'konfigurator_id'), $a)->toArray()];
+        return ['paket' => app(\Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorService::class)->paketAnlegen($team, self::id($a, 'konfigurator_id'), $a)->toArray()];
     }
 }

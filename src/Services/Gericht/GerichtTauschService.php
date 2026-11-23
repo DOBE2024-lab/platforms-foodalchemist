@@ -10,16 +10,16 @@ use Platform\FoodAlchemist\Models\FoodAlchemistComponentEquivalent;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\ComponentEquivalentService;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungResolver;
-use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\OfferCompositionService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
+use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 use Platform\FoodAlchemist\Services\PricingCascadeService;
 use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\SpeisekarteService;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /**
  * Gericht-Verwaltung (Plan „Verwaltung am Gericht“, Kurator/Dominique 23.11.2026): ein Gericht in allen aktiven

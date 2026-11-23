@@ -3,7 +3,7 @@
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Angebote\Editor;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -51,7 +51,7 @@ it('Editor: Präsentation veröffentlichen erzeugt einen Kunden-Link', function 
         'team_id' => $this->rootTeam->id, 'name' => 'MenüSmoke', 'kind' => 'concept', 'status' => 'active',
         'price_per_person_cache' => 15.0, 'ek_per_person_cache' => 5.0,
     ]);
-    $comp = app(\Platform\FoodAlchemist\Services\OfferCompositionService::class);
+    $comp = app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class);
     $kap = $comp->addKapitel($this->rootTeam, $angebot->id, ['title' => 'Menü']);
     $comp->addBlock($this->rootTeam, $kap->id, ['type' => 'concept_ref', 'concept_id' => $c->id]);
 
@@ -71,7 +71,7 @@ it('Editor: Präsentation veröffentlichen erzeugt einen Kunden-Link', function 
 
 it('Editor berechnet Komposition und Preiseinheiten beim Öffnen jeweils nur einmal', function () {
     $angebot = $this->svc->create($this->rootTeam, ['name' => 'Performance', 'personen' => 20]);
-    $spy = new class(app(\Platform\FoodAlchemist\Services\ConceptService::class)) extends \Platform\FoodAlchemist\Services\OfferCompositionService
+    $spy = new class(app(\Platform\FoodAlchemist\Services\ConceptService::class)) extends \Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService
     {
         public int $kompositionen = 0;
         public int $preiseinheiten = 0;
@@ -98,7 +98,7 @@ it('Editor berechnet Komposition und Preiseinheiten beim Öffnen jeweils nur ein
             return parent::preisEinheiten($team, $angebot, $outlet);
         }
     };
-    app()->instance(\Platform\FoodAlchemist\Services\OfferCompositionService::class, $spy);
+    app()->instance(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class, $spy);
 
     Livewire::test(Editor::class)->call('oeffnen', $angebot->id)->assertOk();
 
@@ -121,7 +121,7 @@ it('Editor erzeugt Kapitel-Wording als angebots-lokalen Snapshot', function () {
         'sprach_duktus' => 'ANGEBOT-DUKTUS: leicht und charmant.',
     ]);
     $angebot = $this->svc->create($this->rootTeam, ['name' => 'Wording-Angebot', 'personen' => 20]);
-    $composer = app(\Platform\FoodAlchemist\Services\OfferCompositionService::class);
+    $composer = app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class);
     $kapitel = $composer->addKapitel($this->rootTeam, $angebot->id, ['title' => 'Menü']);
     $block = $composer->addBlock($this->rootTeam, $kapitel->id, ['type' => 'concept_ref', 'concept_id' => $concept->id]);
 

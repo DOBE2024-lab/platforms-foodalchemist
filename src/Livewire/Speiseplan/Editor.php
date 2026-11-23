@@ -11,9 +11,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
-use Platform\FoodAlchemist\Services\PresentationDesignService;
-use Platform\FoodAlchemist\Services\PresentationService;
-use Platform\FoodAlchemist\Services\SpeiseplanService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
+use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 
 /**
  * Speiseplan-Editor (Fullscreen-Dark-Modal, pro Plan) — herausgezogen aus dem bisherigen
@@ -1318,7 +1318,7 @@ class Editor extends Component
             ),
             // Spec 33 P3: Hinweis, kein Verbot.
             'portfolioKonflikt' => $sp === null ? null
-                : app(\Platform\FoodAlchemist\Services\PortfolioService::class)
+                : app(\Platform\FoodAlchemist\Services\Foodbook\PortfolioService::class)
                     ->konfliktHinweis($this->team(), 'speiseplan', (int) $sp->id),
             'crmVerfuegbar' => $svc->crmVerfuegbar(),
             'firmen' => $svc->sucheFirmen($this->firmaSuche),
@@ -1377,7 +1377,7 @@ class Editor extends Component
     #[\Livewire\Attributes\Computed]
     public function vorgabenKatalog(): \Illuminate\Support\Collection
     {
-        return app(\Platform\FoodAlchemist\Services\SpeiseplanVorgabenService::class)->katalog($this->team());
+        return app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanVorgabenService::class)->katalog($this->team());
     }
 
     /** Vorgabe aus dem gewählten Chip hinzufügen — übernimmt dessen Standardwerte (mind./höchstens). */
@@ -1389,7 +1389,7 @@ class Editor extends Component
 
             return;
         }
-        $svc = app(\Platform\FoodAlchemist\Services\SpeiseplanVorgabenService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanVorgabenService::class);
         if ($this->vorgabenSchreiben(fn (array $v) => [...$v, $svc->vorgabeAusChip($chip)])) {
             $this->neueVorgabeChip = '';
         }
@@ -1431,7 +1431,7 @@ class Editor extends Component
             return false;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\SpeiseplanVorgabenService::class)
+            app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanVorgabenService::class)
                 ->setzeVorgaben($this->team(), $this->planId, $aendern(array_values((array) ($plan->vorgaben ?? []))));
         } catch (\RuntimeException $e) {
             $this->vorgabenFehler = $e->getMessage();

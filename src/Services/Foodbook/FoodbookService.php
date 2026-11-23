@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Foodbook;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -30,18 +30,18 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTargetGroup;
  *
  * Scope-Härte: visibleToTeam in JEDER Query; Schreiben nur durchs Besitzer-Team.
  */
-class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\FoodbookAggregatQuelle
+class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\FoodbookDokumentQuelle, \Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregatQuelle
 {
     use PruefstOutletZuordnung;
 
     public function __construct(
-        private ConceptService $concepts,
-        private Foodbook\FoodbookBasis $basis,
-        private Foodbook\FoodbookKapitelBild $kapitelBild,
-        private Foodbook\FoodbookVokabular $vokabular,
-        private Foodbook\FoodbookKundentext $kundentext,
-        private Foodbook\FoodbookAggregat $aggregat,
-        private Foodbook\FoodbookDokument $dokument,
+        private \Platform\FoodAlchemist\Services\ConceptService $concepts,
+        private \Platform\FoodAlchemist\Services\Foodbook\FoodbookBasis $basis,
+        private \Platform\FoodAlchemist\Services\Foodbook\FoodbookKapitelBild $kapitelBild,
+        private \Platform\FoodAlchemist\Services\Foodbook\FoodbookVokabular $vokabular,
+        private \Platform\FoodAlchemist\Services\Foodbook\FoodbookKundentext $kundentext,
+        private \Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregat $aggregat,
+        private \Platform\FoodAlchemist\Services\Foodbook\FoodbookDokument $dokument,
     ) {}
 
     public function paginateBrowser(array $filters, Team $team, int $perPage = 100): LengthAwarePaginator
@@ -203,7 +203,7 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
                     }
                 }
             }
-            app(Plattform\DuplikatBilderService::class)->foodbook($quelle, $neu, $map, $team);   // CQ Bild-Löschschutz PR 2: eigene Dateien
+            app(\Platform\FoodAlchemist\Services\Plattform\DuplikatBilderService::class)->foodbook($quelle, $neu, $map, $team);   // CQ Bild-Löschschutz PR 2: eigene Dateien
 
             return $neu->refresh();
         });
@@ -331,7 +331,7 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
     {
         $fb = FoodAlchemistFoodbook::visibleToTeam($team)->findOrFail($foodbookId);
         $this->guard($fb, $team);
-        $frames = app(PlanningFrameService::class);
+        $frames = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class);
         $frame = $frames->find('foodbook', $foodbookId);
         if ($frame === null || (int) $frame->slots()->count() === 0) {
             return ['kein_geruest' => true, 'angelegt' => 0, 'uebersprungen' => 0, 'protokoll' => []];
@@ -591,7 +591,7 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
         ], static fn ($v) => $v !== null && $v !== '');
 
         try {
-            $gen = app(RecipeGeneratorService::class)->generiere($team, $beschreibung, $parameter, null, true);
+            $gen = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($team, $beschreibung, $parameter, null, true);
             $recipe = $gen['recipe'] ?? null;
             if ($recipe === null) {
                 throw new \RuntimeException('Die KI hat kein Rezept erstellt.');
@@ -725,7 +725,7 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
             }
             // Positionen = direkte Gericht-Slots UND die Gerichte eingebetteter Pakete (deren Slot-IDs) —
             // damit das Kapitel-Wording auch die Paket-Gerichte betextet (Dominique-Fund). Eine Stelle mit dem Konfigurator.
-            $positionen = app(WordingResolver::class)->wordingPositionen($block->concept);
+            $positionen = app(\Platform\FoodAlchemist\Services\WordingResolver::class)->wordingPositionen($block->concept);
             if ($positionen === []) {
                 continue;
             }
@@ -859,7 +859,7 @@ class FoodbookService implements Foodbook\FoodbookDokumentQuelle, Foodbook\Foodb
     public function addBlock(Team $team, int $kapitelId, array $in): FoodAlchemistFoodbookBlock
     {
         $k = $this->ownedKapitel($team, $kapitelId);
-        app(FormatKapitelService::class)->pruefeBlockErlaubt($k);   // Format-Kapitel: keine eigenen Blöcke, Pflege im Format
+        app(\Platform\FoodAlchemist\Services\FormatKapitelService::class)->pruefeBlockErlaubt($k);   // Format-Kapitel: keine eigenen Blöcke, Pflege im Format
         $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
         $daten['type'] = in_array($in['type'] ?? '', self::BLOCK_TYPES, true) ? $in['type'] : 'text';
         \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten);   // 1.1j: Gericht/Concept/Einheit sichtbar

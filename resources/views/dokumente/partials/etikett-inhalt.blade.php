@@ -21,7 +21,7 @@
                     <div class="z bis">Verbrauchen bis: {!! $leerModus || $d['datum']['verbrauchen_bis'] === null ? $linie : e($datum($d['datum']['verbrauchen_bis'])) !!}</div>
                     @break
                 @case('lagerung')
-                    @if($d['lagerung'])<div class="z klein">{{ \Platform\FoodAlchemist\Services\EtikettService::LAGERUNG[$d['lagerung']] ?? '' }}</div>@endif
+                    @if($d['lagerung'])<div class="z klein">{{ \Platform\FoodAlchemist\Services\Ausgabe\EtikettService::LAGERUNG[$d['lagerung']] ?? '' }}</div>@endif
                     @break
                 @case('menge')
                     <div class="z"><span class="k">Menge:</span> {!! $d['menge'] !== null ? e($d['menge']) : $linie !!}</div>

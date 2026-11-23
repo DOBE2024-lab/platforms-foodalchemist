@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
-use Platform\FoodAlchemist\Services\AngebotEinfrierService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService;
 
 /** Spec 82 §12 B3 · Vorschau „neuere Fassung übernehmen“: Allergen-Diff, Zwischenfassungen, betroffene Angebote, ob eine Bestätigung nötig ist. Schreibt nichts. */
 class AngeboteUebernehmenGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

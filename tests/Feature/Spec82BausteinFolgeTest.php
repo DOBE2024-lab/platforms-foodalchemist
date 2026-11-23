@@ -21,7 +21,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Plattform\AboService;
-use Platform\FoodAlchemist\Services\AngebotService;
+use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\BausteinFolgeService;
 use Platform\FoodAlchemist\Services\ConceptFassungService;
 use Platform\FoodAlchemist\Services\ConceptPreisService;

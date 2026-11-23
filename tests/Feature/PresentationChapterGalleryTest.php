@@ -2,8 +2,8 @@
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Platform\FoodAlchemist\Services\FoodbookService;
-use Platform\FoodAlchemist\Services\PresentationService;
+use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
+use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -88,7 +88,7 @@ it('Gericht-Foto: Identifier im Snapshot, gerendert nur mit Design-Toggle', func
     $this->get('/p/foodbook/' . $ohne['token'])->assertOk()->assertDontSee('<img class="pt-item-foto', false);
 
     // Mit Design-Toggle show_dish_photos: Foto sichtbar.
-    $design = app(\Platform\FoodAlchemist\Services\PresentationDesignService::class)->create($team, [
+    $design = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService::class)->create($team, [
         'name' => 'Mit Fotos',
         'layout_json' => [
             ['block_type' => 'cover', 'style' => []],
@@ -138,7 +138,7 @@ it('Kapitel-Bilder abschaltbar: show_chapter_image=false → kein Band-Bild', fu
     $this->get('/p/foodbook/' . $an['token'])->assertOk()->assertSee('foodalchemist/chapter/x.jpg', false);
 
     // Toggle aus: kein Band-Bild.
-    $design = app(\Platform\FoodAlchemist\Services\PresentationDesignService::class)->create($team, [
+    $design = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService::class)->create($team, [
         'name' => 'Ohne Kapitelbild',
         'layout_json' => [
             ['block_type' => 'cover', 'style' => []],

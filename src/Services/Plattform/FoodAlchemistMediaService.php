@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;

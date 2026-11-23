@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;

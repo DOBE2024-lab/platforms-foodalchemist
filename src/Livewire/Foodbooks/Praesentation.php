@@ -36,7 +36,7 @@ class Praesentation extends Component
         // Reconcile (Ebene 2): dokument-gebundener Betrieb gewinnt, sonst der aktive Betrieb.
         $outlet = $fb->outlet_id !== null
             ? \Platform\FoodAlchemist\Models\FoodAlchemistOutlet::where('team_id', $team->id)->find($fb->outlet_id)
-            : app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($team);
+            : app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team);
 
         // Kundensicht: dieselbe serverseitige Projektion wie das Kundendokument — NIE EK/W%.
         $data = $svc->dokumentDaten($team, $fb, false, [], false, $outlet);

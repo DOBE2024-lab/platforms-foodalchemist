@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
 use Platform\FoodAlchemist\Services\CanvasService;
 use Platform\FoodAlchemist\Services\ProjektService;
 use Platform\FoodAlchemist\Services\ProjektUebernahmeService;
-use Platform\FoodAlchemist\Services\TeamProfilService;
+use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\Profiltraeger;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

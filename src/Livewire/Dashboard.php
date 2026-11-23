@@ -10,7 +10,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\ActiveOutletContext;
+use Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext;
 use Platform\FoodAlchemist\Services\KpiService;
 
 /**

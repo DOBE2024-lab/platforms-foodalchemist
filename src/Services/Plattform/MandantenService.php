@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -27,7 +27,7 @@ class MandantenService
     use PlattformAdminPruefung;
 
     public function __construct(
-        private readonly FaRechte $rechte,
+        private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
         private readonly PlattformProtokoll $protokoll,
     ) {}
 

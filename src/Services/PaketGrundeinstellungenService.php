@@ -90,7 +90,7 @@ class PaketGrundeinstellungenService
 
     public function __construct(
         private readonly FaRechte $rechte,
-        private readonly PlattformProtokoll $protokoll,
+        private readonly Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /** Für lesende Aufrufer (MCP, Oberfläche): wirft FaRechtFehltException, wenn nicht Plattform-Admin. */

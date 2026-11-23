@@ -204,7 +204,7 @@ class Rechnungen extends Component
             'darfErfassen' => $rechte->darf(Auth::user(), $team, FaRolle::Kuratieren),
             'darfFreigeben' => $rechte->darf(Auth::user(), $team, FaRolle::Freigeben),
             'teamId' => (int) $team->id,
-            'standortSpalte' => app(\Platform\FoodAlchemist\Services\StandortService::class)->zeigtStandorte($team),
+            'standortSpalte' => app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->zeigtStandorte($team),
         ]);
     }
 

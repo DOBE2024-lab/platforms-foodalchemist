@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -60,13 +60,13 @@ class MandantBeendenService
     ];
 
     public function __construct(
-        private readonly FaRechte $rechte,
-        private readonly StammPaketService $paket,
+        private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
+        private readonly \Platform\FoodAlchemist\Services\StammPaketService $paket,
         private readonly AboAuskunft $abos,
         private readonly StandortService $standorte,
         private readonly PlattformProtokoll $protokoll,
         private readonly MandantenService $mandanten,
-        private readonly ExportAuskunft $export,
+        private readonly \Platform\FoodAlchemist\Services\ExportAuskunft $export,
     ) {
     }
 

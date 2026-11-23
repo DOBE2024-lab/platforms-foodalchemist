@@ -7,7 +7,7 @@ use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\MasterTeamService;
+use Platform\FoodAlchemist\Services\Plattform\MasterTeamService;
 
 /**
  * Spec 82 §13 B4 — Master-Team festlegen. Eingebettet in die Plattform-Verwaltung des Hosts

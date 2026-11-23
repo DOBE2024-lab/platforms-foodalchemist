@@ -34,7 +34,7 @@ use Platform\FoodAlchemist\Services\SpeiseplanService;
 use Platform\FoodAlchemist\Services\Stt\SttServiceContract;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Services\TitelVorschlagService;
-use Platform\FoodAlchemist\Services\WorkerHealthService;
+use Platform\FoodAlchemist\Services\Plattform\WorkerHealthService;
 use Platform\FoodAlchemist\Support\TeamScope;
 use Platform\FoodAlchemist\Support\VoiceFehlerText;
 use Platform\FoodAlchemist\Support\VoiceMime;

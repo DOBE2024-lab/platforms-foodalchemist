@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistItemNutritional;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\IngestStatusService;
+use Platform\FoodAlchemist\Services\Plattform\IngestStatusService;
 use Platform\FoodAlchemist\Services\PriceService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

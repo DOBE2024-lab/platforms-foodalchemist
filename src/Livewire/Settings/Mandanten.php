@@ -5,8 +5,8 @@ namespace Platform\FoodAlchemist\Livewire\Settings;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
-use Platform\FoodAlchemist\Services\MandantenService;
-use Platform\FoodAlchemist\Services\MandantenStammblattService;
+use Platform\FoodAlchemist\Services\Plattform\MandantenService;
+use Platform\FoodAlchemist\Services\Plattform\MandantenStammblattService;
 
 /**
  * Spec 82 §9/§13 C1 — Mandanten mit Stammblatt: ein Blick je Mandant (Status, Modus, CRM-Firma, Bereiche, Stamm-Paket, Abos,

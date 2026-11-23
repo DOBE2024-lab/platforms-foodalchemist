@@ -295,7 +295,7 @@ class Index extends Component
 
         return match ($sektion) {
             'plan-nutzung' => $team !== null && app(\Platform\FoodAlchemist\Services\PlanNutzungService::class)->darfLesen($user, $team),
-            'mandanten' => app(\Platform\FoodAlchemist\Services\MandantenService::class)->darfVerwaltung($user),
+            'mandanten' => app(\Platform\FoodAlchemist\Services\Plattform\MandantenService::class)->darfVerwaltung($user),
             default => true,
         };
     }
@@ -341,7 +341,7 @@ class Index extends Component
         if ($teamId === null || ! self::darfAendern() || ! (bool) config('foodalchemist.bearbeitungssperre', true)) {
             return;
         }
-        $svc = app(\Platform\FoodAlchemist\Services\BearbeitungssperreService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService::class);
         $belegt = [];
         foreach ($this->reiterSperrziele() as $key => $bereich) {
             $r = $svc->sperren('settings.' . $bereich, (int) $teamId, (int) $user->id, $user->name ?? null, (int) $teamId);
@@ -369,7 +369,7 @@ class Index extends Component
         if ($uid === null || $teamId === null) {
             return;
         }
-        $svc = app(\Platform\FoodAlchemist\Services\BearbeitungssperreService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService::class);
         foreach ($this->reiterSperrziele() as $bereich) {
             $svc->verlaengern('settings.' . $bereich, (int) $teamId, (int) $uid);
         }
@@ -382,7 +382,7 @@ class Index extends Component
         if ($uid === null || $teamId === null || $this->tab === '') {
             return;
         }
-        $svc = app(\Platform\FoodAlchemist\Services\BearbeitungssperreService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService::class);
         foreach ($this->reiterSperrziele() as $bereich) {
             if ($svc->haelt('settings.' . $bereich, (int) $teamId, (int) $uid)) {
                 $svc->freigeben('settings.' . $bereich, (int) $teamId, (int) $uid);
@@ -434,7 +434,7 @@ class Index extends Component
             || ! (bool) config('foodalchemist.bearbeitungssperre', true)) {
             return ['modus' => 'aus', 'fremd' => []];
         }
-        $svc = app(\Platform\FoodAlchemist\Services\BearbeitungssperreService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService::class);
         $meins = false;
         $fremd = [];
         foreach ($ziele as $key => $bereich) {

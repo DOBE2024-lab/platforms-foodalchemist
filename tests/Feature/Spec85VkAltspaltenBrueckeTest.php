@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
-use Platform\FoodAlchemist\Services\AboKuendigungService;
+use Platform\FoodAlchemist\Services\Plattform\AboKuendigungService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\Support\VkAltspaltenBruecke;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -38,7 +38,7 @@ it('★ Produktionscode, der eine Altspalte schreibt, wird rot — mit Datei und
     $mitAltspalte->setRawAttributes([...$mitAltspalte->getAttributes(), 'sales_net' => 9.0], true);   // wie eine Zeile vor dem Drop
 
     expect(fn () => spec85_kopiere_kopf($mitAltspalte, $this->childA))
-        ->toThrow(LogicException::class, 'Altspalte aus Produktionscode: src/Services/AboKuendigungService.php:');
+        ->toThrow(LogicException::class, 'Altspalte aus Produktionscode: src/Services/Plattform/AboKuendigungService.php:');
 });
 
 it('Gegenprobe: derselbe Produktionsweg ohne Altspalte legt die Kopie an', function () {

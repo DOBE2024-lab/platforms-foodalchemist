@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
@@ -20,9 +20,9 @@ class MandantenStammblattService
 {
     public function __construct(
         private readonly MandantenService $mandanten,
-        private readonly FaRechte $rechte,
+        private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
         private readonly AboAuskunft $abos,
-        private readonly PlanNutzungService $nutzung,
+        private readonly \Platform\FoodAlchemist\Services\PlanNutzungService $nutzung,
     ) {}
 
     /**

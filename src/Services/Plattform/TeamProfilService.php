@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
@@ -37,7 +37,7 @@ class TeamProfilService
     /** Wie die DNA-Parameter der Konfiguration (Planung, Speisekarte, Generator). */
     public const CONVENIENCE = ['from_scratch', 'teil_convenience', 'voll_convenience'];
 
-    public function __construct(private readonly FaRechte $rechte) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte) {}
 
     /** Darf das Team `$betrachter` das Profil von `$ziel` lesen? Sich selbst oder ein Unter-Team (Brille). */
     public function darfLesen(Team $betrachter, Team|Profiltraeger $ziel): bool

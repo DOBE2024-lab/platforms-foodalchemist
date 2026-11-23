@@ -460,7 +460,7 @@ class FormatService
         $format = FoodAlchemistFormat::visibleToTeam($team)->findOrFail($formatId);
         $this->guardOwner($format, $team);
 
-        $stored = app(FoodAlchemistMediaService::class)->storeImage(
+        $stored = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
             $file, $team, 'foodalchemist_format', $formatId, "foodalchemist/formate/{$formatId}");
 
         $istErstes = ! FoodAlchemistFormatImage::where('format_id', $formatId)->exists();
@@ -479,7 +479,7 @@ class FormatService
     public function clearImage(Team $team, int $imageId): void
     {
         $image = $this->ownedImage($team, $imageId);
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($image->context_file_id, $image->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($image)]);
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($image->context_file_id, $image->path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($image)]);
         $warHero = (bool) $image->is_hero;
         $formatId = (int) $image->format_id;
         $image->delete();

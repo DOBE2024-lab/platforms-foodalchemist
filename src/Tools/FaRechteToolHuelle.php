@@ -126,7 +126,7 @@ class FaRechteToolHuelle implements ToolContract, ToolMetadataContract
             }
             // Spec 84 §4.4 (E3): Tool-Aufruf im Support-Zugang → Protokoll inkl. lesend/schreibend
             if ($gTeam instanceof Team && ($sf = \Platform\FoodAlchemist\Support\InhaltsSperre::perSupportZugang($user, $gTeam)) !== null) {
-                app(\Platform\FoodAlchemist\Services\SupportFreigabeService::class)->protokolliereZugriff($sf, $user, $gTeam, 'mcp:'.$this->getName(), ! ($this->getMetadata()['read_only'] ?? false));
+                app(\Platform\FoodAlchemist\Services\Plattform\SupportFreigabeService::class)->protokolliereZugriff($sf, $user, $gTeam, 'mcp:'.$this->getName(), ! ($this->getMetadata()['read_only'] ?? false));
             }
         }
         // Spec 77b: Bereich des Tools (Team gebucht ∧ User nicht eingeschränkt) — gilt auch für lesende Tools

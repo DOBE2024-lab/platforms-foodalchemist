@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\OutletSettingsService;
+use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
 
 /**
  * Ebene 2: Kalkulations-Overrides EINES Betriebs (Outlet-Ebene) schreiben — Gegenstück zu

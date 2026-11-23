@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -55,7 +55,7 @@ class AboKuendigungService
     private array $hinweise = [];
 
     public function __construct(
-        private FaRechte $rechte,
+        private \Platform\FoodAlchemist\Services\FaRechte $rechte,
         private AboService $abos,
         private PlattformProtokoll $protokoll,
     ) {}
@@ -888,7 +888,7 @@ class AboKuendigungService
             }
             $n += DB::table($tab)->whereIn('id', $q->pluck('x.id')->all() ?: [0])->update(['sales_recipe_id' => $neu]);
         }
-        $n += app(Rezept\RezeptGraphService::class)->haengeUm(DB::table('foodalchemist_recipe_ingredients AS z')   // 1.1e: Graph-Schreibweg
+        $n += app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->haengeUm(DB::table('foodalchemist_recipe_ingredients AS z')   // 1.1e: Graph-Schreibweg
             ->whereIn('z.recipe_id', DB::table('foodalchemist_recipes')->whereIn('team_id', $teams)->where('ist_fassung', false)->whereNull('deleted_at')->select('id'))
             ->where('z.referenced_recipe_id', $alt)->whereNull('z.deleted_at'), $neu, [], 'z.recipe_id');
 
@@ -914,19 +914,19 @@ class AboKuendigungService
         }
         $rezepte = array_values($map['recipe'] ?? []);
         if ($rezepte !== []) {
-            app(RecipeRecomputeService::class)->recomputeMany($rezepte);
+            app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeMany($rezepte);
             foreach (FoodAlchemistRecipeDarreichung::whereIn('recipe_id', $rezepte)->get() as $d) {
-                app(DarreichungService::class)->recomputePreise($d);
+                app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputePreise($d);
             }
         }
         foreach (array_values($map['paket'] ?? []) as $id) {
             if (($p = FoodAlchemistPaket::find($id)) !== null) {
-                app(PaketService::class)->recomputePrice($p);
+                app(\Platform\FoodAlchemist\Services\PaketService::class)->recomputePrice($p);
             }
         }
         $konzepte = FoodAlchemistConcept::mitFassungen()->whereIn('id', array_values($map['concept'] ?? []))->get()->sortBy(fn ($c) => $c->kind === 'paket' ? 0 : 1);
         foreach ($konzepte as $c) {
-            app(ConceptService::class)->recomputeCache($c);
+            app(\Platform\FoodAlchemist\Services\ConceptService::class)->recomputeCache($c);
         }
     }
 

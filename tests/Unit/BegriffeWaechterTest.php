@@ -12,7 +12,7 @@ const BEGRIFFE_AUSNAHMEN = [
     // [Datei, Teilstring der Zeile, Grund]
     ['src/Support/FaBereiche.php', "'Concepter' => 'concepter', 'Concepts' => 'concepter'", 'Namespace-Segmente als Schlüssel'],
     ['src/Services/PlanningSessionService.php', "'Freies Concept'", 'alter Platzhaltertitel bestehender Sitzungen wird weiter erkannt'],
-    ['src/Services/VoiceCommandService.php', '', 'KI-Prompt, kein sichtbarer Text'],
+    ['src/Services/Plattform/VoiceCommandService.php', '', 'KI-Prompt, kein sichtbarer Text'],
     ['src/Support/KiUmleitung.php', '', 'Beschreibung für Agenten'],
     ['src/Services/VorgangsRegisterService.php', '', 'Vorgänge für Agenten (foodalchemist.ablauf.GET)'],
     ['src/Services/PaketUmzug/PaketUmzugService.php', '', 'Umzugsprotokoll für den Betrieb'],

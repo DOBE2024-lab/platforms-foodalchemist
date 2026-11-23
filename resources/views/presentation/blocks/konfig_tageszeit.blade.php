@@ -2,7 +2,7 @@
      bei Tag und Abend optional ein anderes Konzept für den Abend. --}}
 @php
     // Bilder der Zeitfenster-Karten (08.11.2026) wie bei den Konzeptkarten; Design-Schalter show_bild (Standard an)
-    $media = app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class);
+    $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class);
     $mitBild = $style['show_bild'] ?? true;
     $zeitBild = fn (string $t) => $mitBild && ! empty($content['tageszeit_bilder'][$t]) ? $media->url($content['tageszeit_bilder'][$t]['context_file_id'] ?? null, $content['tageszeit_bilder'][$t]['path'] ?? null) : null;
 @endphp

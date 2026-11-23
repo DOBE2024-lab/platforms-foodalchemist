@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 
@@ -300,7 +300,7 @@ class VoiceCommandService
             if ($run === null) {
                 return '';
             }
-            $status = app(PlanningCascadeService::class)->laufStatus($team, (int) $run->id);
+            $status = app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->laufStatus($team, (int) $run->id);
         } catch (\Throwable) {
             return '';                                               // Kontext ist ein Bonus, kein Pflichtpfad
         }

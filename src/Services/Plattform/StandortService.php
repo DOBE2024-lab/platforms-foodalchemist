@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -21,7 +21,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistTeamBetrieb;
  */
 class StandortService
 {
-    public function __construct(private FaRechte $rechte) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\FaRechte $rechte) {}
 
     /** @return list<int> alle Unter-Teams (Nachfahren) ohne das Team selbst */
     public function unterTeamIds(Team $team): array

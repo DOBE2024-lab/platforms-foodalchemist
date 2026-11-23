@@ -37,7 +37,7 @@ class InhaltsFreigabeService
     /** @var array<string, list<string>> */
     private array $spalten = [];
 
-    public function __construct(private FaRechte $rechte, private StandortService $standorte) {}
+    public function __construct(private FaRechte $rechte, private Plattform\StandortService $standorte) {}
 
     // ── Schnellstart-Haken ──
 
@@ -285,7 +285,7 @@ class InhaltsFreigabeService
         $kopie->forceFill(['kopie_von_id' => $original->id, 'kopie_stand_at' => $original->updated_at ?? now()])->save();
         $this->letzteHinweise = [];
         if ($typ === 'format') {   // Galerie/Hero in den Speicher des Teams; fehlt die Datei: Kopie ohne dieses Bild + Hinweis
-            $media = app(FoodAlchemistMediaService::class);
+            $media = app(Plattform\FoodAlchemistMediaService::class);
             foreach ($original->images()->get() as $bild) {
                 $m = $media->kopiereBild($bild->context_file_id, $bild->path, $team, 'foodalchemist_format', (int) $kopie->id, "foodalchemist/formate/{$kopie->id}");
                 if ($m === null) {
@@ -308,7 +308,7 @@ class InhaltsFreigabeService
 
     private function kopiereKonzeptBilder(FoodAlchemistConcept $original, FoodAlchemistConcept $kopie, Team $team): void
     {
-        $media = app(FoodAlchemistMediaService::class);
+        $media = app(Plattform\FoodAlchemistMediaService::class);
         if ($original->image_context_file_id !== null || trim((string) $original->image_path) !== '') {
             $m = $media->kopiereBild($original->image_context_file_id, $original->image_path, $team, 'foodalchemist.concept', (int) $kopie->id, "foodalchemist/concept/{$kopie->id}");
             $m !== null

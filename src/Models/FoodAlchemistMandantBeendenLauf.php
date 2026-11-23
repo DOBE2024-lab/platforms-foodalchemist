@@ -7,7 +7,7 @@ use Platform\ActivityLog\Traits\LogsActivity;
 
 /**
  * Spec 82 §13 C3 — ein Lauf „Mandant beenden“ (Schritte + Fortschritt). Reine Verwaltungsdaten, nie Inhalte.
- * Geschrieben nur über {@see \Platform\FoodAlchemist\Services\MandantBeendenService}.
+ * Geschrieben nur über {@see \Platform\FoodAlchemist\Services\Plattform\MandantBeendenService}.
  */
 class FoodAlchemistMandantBeendenLauf extends Model
 {

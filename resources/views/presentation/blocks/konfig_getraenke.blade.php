@@ -3,7 +3,7 @@
      kombinierbar (Haken); „ohne Getränke“, wenn der Konfigurator sie nicht verlangt. Bindung an ein Hauptkonzept filtert das Skript. --}}
 @if(! empty($content['getraenke']))
     @php
-        $media = app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class);
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class);
         $url = fn ($b) => ! empty($b) ? $media->url($b['context_file_id'] ?? null, $b['path'] ?? null) : null;
         $mitBild = $style['show_bild'] ?? true;
     @endphp

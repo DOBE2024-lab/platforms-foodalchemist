@@ -19,6 +19,6 @@ class ExportAuskunft
     /** Liegt für den Mandanten ein fertiger Export vor, dessen Datei noch da ist? */
     public function vorhanden(Team $mandant): bool
     {
-        return app(MandantExportService::class)->vorhanden($mandant);
+        return app(Plattform\MandantExportService::class)->vorhanden($mandant);
     }
 }

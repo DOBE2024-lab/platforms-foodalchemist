@@ -8,7 +8,7 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Enums\GpStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
-use Platform\FoodAlchemist\Services\BulkEnrichService;
+use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
 use Platform\FoodAlchemist\Services\FavoriteGpService;
 use Platform\FoodAlchemist\Services\GpAggregateService;
 use Platform\FoodAlchemist\Services\GpNamingService;

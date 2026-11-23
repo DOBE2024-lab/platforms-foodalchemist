@@ -36,11 +36,11 @@ class ProjektUebernahmeService
 
     public function __construct(
         private readonly ProjektService $projekte,
-        private readonly TeamAnlegenService $teams,
-        private readonly TeamProfilService $profile,
+        private readonly Plattform\TeamAnlegenService $teams,
+        private readonly Plattform\TeamProfilService $profile,
         private readonly CanvasService $canvas,
-        private readonly MandantenService $mandanten,
-        private readonly PlattformProtokoll $protokoll,
+        private readonly Plattform\MandantenService $mandanten,
+        private readonly Plattform\PlattformProtokoll $protokoll,
         private readonly FaRechte $rechte,
     ) {}
 

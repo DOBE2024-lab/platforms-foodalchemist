@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
-use Platform\FoodAlchemist\Services\PlattformAdminPruefung;
+use Platform\FoodAlchemist\Services\Plattform\PlattformAdminPruefung;
 use Platform\Core\Models\User;
 
 /**

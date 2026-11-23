@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Einstellungen\BehaelterService;
 use Platform\FoodAlchemist\Services\Einstellungen\EinsatzorteService;
 use Platform\FoodAlchemist\Services\Einstellungen\VkTaxonomieService;
-use Platform\FoodAlchemist\Services\OutletService;
+use Platform\FoodAlchemist\Services\Plattform\OutletService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

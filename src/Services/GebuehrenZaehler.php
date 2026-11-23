@@ -28,7 +28,7 @@ class GebuehrenZaehler
 {
     public function __construct(
         private readonly PlanPreisService $preise,
-        private readonly AboAuskunft $abos,
+        private readonly Plattform\AboAuskunft $abos,
     ) {}
 
     /**

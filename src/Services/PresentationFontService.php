@@ -18,7 +18,7 @@ class PresentationFontService
 
     public const MAX_KB = 5120;
 
-    public function __construct(private FoodAlchemistMediaService $media) {}
+    public function __construct(private Plattform\FoodAlchemistMediaService $media) {}
 
     /** Familienname auf sichere Zeichen kürzen (wird unescaped in CSS geschrieben). */
     public static function familie(?string $name): string

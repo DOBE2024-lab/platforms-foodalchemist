@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Enums\FaRolle;
@@ -11,7 +11,7 @@ trait PlattformAdminPruefung
 {
     protected function nurPlattformAdmin(?User $user, string $wofuer): User
     {
-        if ($user === null || $user->isAiUser() || ! app(FaRechte::class)->istPlattformAdmin($user)) {
+        if ($user === null || $user->isAiUser() || ! app(\Platform\FoodAlchemist\Services\FaRechte::class)->istPlattformAdmin($user)) {
             throw new FaRechtFehltException(FaRolle::Admin, null, $wofuer.' (nur Plattform-Admin)');
         }
 

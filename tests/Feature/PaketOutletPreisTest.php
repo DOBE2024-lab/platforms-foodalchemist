@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Services\KalkulationService;
-use Platform\FoodAlchemist\Services\OutletSettingsService;
+use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
 use Platform\FoodAlchemist\Services\PaketService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

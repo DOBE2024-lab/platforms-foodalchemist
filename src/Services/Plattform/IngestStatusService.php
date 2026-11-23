@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -56,9 +56,9 @@ final class IngestStatusService
     public const MAX_DELTA_ITEMS = 500;
 
     /** Nährwert-Kernwerte = derselbe Umfang, den `setNutrition` schreibt (eine Wahrheit). */
-    public const NAEHRWERT_SPALTEN = SupplierItemService::NAEHRWERT_FELDER;
+    public const NAEHRWERT_SPALTEN = \Platform\FoodAlchemist\Services\SupplierItemService::NAEHRWERT_FELDER;
 
-    public function __construct(private PriceService $preise, private BulkRunStatusService $laufStatus)
+    public function __construct(private \Platform\FoodAlchemist\Services\PriceService $preise, private BulkRunStatusService $laufStatus)
     {
     }
 

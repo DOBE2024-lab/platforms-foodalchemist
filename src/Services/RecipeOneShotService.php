@@ -69,7 +69,7 @@ class RecipeOneShotService
     private const FREITEXT_MAX = 240;
 
     public function __construct(
-        private BulkEnrichService $bulk,
+        private Plattform\BulkEnrichService $bulk,
         private CoherenceService $coherence,
         private DarreichungService $darreichungen,
         private CatalogPricingService $catalogPricing,
@@ -104,7 +104,7 @@ class RecipeOneShotService
 
     private function anreichernImLauf(Team $team, FoodAlchemistRecipe $recipe, ?float $zielVk = null, bool $completeCoverage = false, bool $refresh = false, ?callable $shouldStop = null, array $leitplanken = []): array
     {
-        $alle = $recipe->is_sales_recipe ? BulkEnrichService::SCHRITTE_VK : BulkEnrichService::SCHRITTE;
+        $alle = $recipe->is_sales_recipe ? Plattform\BulkEnrichService::SCHRITTE_VK : Plattform\BulkEnrichService::SCHRITTE;
         // #4: `refresh` = bewusster „Alles anreichern"-Klick im Editor → auch gefüllte, nicht-manuelle
         // Textfelder neu erzeugen (nach Zutatenänderung). Der Auto-Pfad (Generierung / Kaskaden-Job)
         // lässt es weg und füllt nur echte Lücken — sonst würden frisch generierte Felder sofort

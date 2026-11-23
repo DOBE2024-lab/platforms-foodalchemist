@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -63,7 +63,7 @@ class MandantExportService
         'foodalchemist_sammlung_objekte' => ['foodalchemist_sammlungen', 'sammlung_id', 'id'],
     ];
 
-    public function __construct(private readonly FaRechte $rechte, private readonly StandortService $standorte)
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte, private readonly StandortService $standorte)
     {
     }
 

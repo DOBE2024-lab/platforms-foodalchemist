@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Platform\Core\Models\ContextFile;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Services\ConceptService;
-use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
+use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\FoodbookService;
 use Platform\FoodAlchemist\Support\BildVerweise;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -209,7 +209,7 @@ it('Wächter: jede Bild-Spalte der foodalchemist_*-Tabellen steht im Register od
 
 it('Wächter: kein Bild wird am Löschschutz vorbei gelöscht (MediaService->delete nur in der Erlaubnisliste)', function () {
     $erlaubt = [
-        'src/Services/FoodAlchemistMediaService.php',   // delete() selbst, gerufen aus loescheWennUnbenutzt()
+        'src/Services/Plattform/FoodAlchemistMediaService.php',   // delete() selbst, gerufen aus loescheWennUnbenutzt()
         'src/Services/PresentationFontService.php',     // Schriftdateien je Team, nie geteilt (BildVerweise::AUSNAHMEN)
     ];
     $basis = dirname(__DIR__, 2);

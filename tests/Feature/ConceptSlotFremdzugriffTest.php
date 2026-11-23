@@ -122,7 +122,7 @@ it('Abo: der Mandant setzt eine abonnierte Fassung ein; ein Master-Rezept ohne A
     $inhalte = app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class);
     $sammlung = $inhalte->sammlungAnlegen($master, 'Basis', null, $kurator);
     $inhalte->sammlungHinzu($master, $sammlung, 'recipe', [$jus->id], $kurator);
-    app(\Platform\FoodAlchemist\Services\AboService::class)->abonnieren($master, $mandant, $sammlung, $kurator);
+    app(\Platform\FoodAlchemist\Services\Plattform\AboService::class)->abonnieren($master, $mandant, $sammlung, $kurator);
 
     $c = $this->concepts->create($mandant, ['name' => 'Mandanten-Menü']);
     $slot = $this->concepts->addSlot($mandant, $c->id, ['role' => 'Hauptgang']);

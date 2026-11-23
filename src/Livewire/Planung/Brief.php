@@ -22,7 +22,7 @@ use Platform\FoodAlchemist\Services\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Services\TitelVorschlagService;
-use Platform\FoodAlchemist\Services\WorkerHealthService;
+use Platform\FoodAlchemist\Services\Plattform\WorkerHealthService;
 use Platform\FoodAlchemist\Support\Planung\KaskadenStart;
 use Platform\FoodAlchemist\Support\Planung\LeitplankenUebernahme;
 use Platform\FoodAlchemist\Support\Planung\PlanungVokabular;

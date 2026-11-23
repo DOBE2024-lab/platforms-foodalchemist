@@ -20,7 +20,7 @@
     $hinweis = 'text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]';
     $kleinSymbol = 'inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-[var(--fa-radius-control)] text-[var(--fa-ink-3)] hover:text-[var(--fa-ink)] hover:bg-[var(--fa-hover)] transition-colors duration-150';
     $farbFeld = 'h-9 w-12 shrink-0 cursor-pointer rounded-[var(--fa-radius-control)] border border-[var(--fa-line-strong)] bg-transparent p-0.5';
-    $medien = fn ($fileId, $pfad) => app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($fileId, $pfad);
+    $medien = fn ($fileId, $pfad) => app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($fileId, $pfad);
     $euro = fn ($wert) => number_format((float) $wert, 2, ',', '.') . ' €';
     // Preisspanne eines Formats (priceRange: min/max der Editionen) — „29,00 – 34,00 €" bzw. ein Wert.
     $spanne = fn (?array $r) => ($r['min'] ?? null) === null ? null

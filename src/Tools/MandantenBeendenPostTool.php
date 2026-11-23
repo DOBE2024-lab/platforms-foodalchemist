@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\MandantBeendenService;
+use Platform\FoodAlchemist\Services\Plattform\MandantBeendenService;
 
 /**
  * Spec 82 §13 C3 · „Mandant beenden“ AUSFÜHREN, ABBRECHEN, ENTSPERREN. Nur Plattform-Admin. Ausführen braucht die Vorschau

@@ -50,7 +50,7 @@ class KontextResolver
     public function __construct(
         private CanvasService $canvas,
         private DnaResolver $dna,
-        private TeamProfilService $profil,
+        private Plattform\TeamProfilService $profil,
     ) {
     }
 
@@ -307,7 +307,7 @@ class KontextResolver
             return null;   // Erdung ist eine Verbesserung, keine Voraussetzung
         }
         $zeilen = [];
-        $fehlt = array_values(array_map(static fn ($a) => $a['name'], array_filter($p['ausstattung'], static fn ($a) => $a['status'] === TeamProfilService::STATUS_NICHT_VORHANDEN)));
+        $fehlt = array_values(array_map(static fn ($a) => $a['name'], array_filter($p['ausstattung'], static fn ($a) => $a['status'] === Plattform\TeamProfilService::STATUS_NICHT_VORHANDEN)));
         if ($fehlt !== []) {
             $zeilen[] = 'Nicht vorhanden: '.implode(', ', $fehlt);
         }
@@ -334,7 +334,7 @@ class KontextResolver
         if ($zeilen === []) {
             return null;
         }
-        $unbekannt = count(array_filter($p['ausstattung'], static fn ($a) => $a['status'] === TeamProfilService::STATUS_UNBEKANNT && ! $a['standard']));
+        $unbekannt = count(array_filter($p['ausstattung'], static fn ($a) => $a['status'] === Plattform\TeamProfilService::STATUS_UNBEKANNT && ! $a['standard']));
         if ($unbekannt > 0) {
             $zeilen[] = "Profil unvollständig ($unbekannt Geräte unbekannt) — daraus nichts als fehlend annehmen";
         }

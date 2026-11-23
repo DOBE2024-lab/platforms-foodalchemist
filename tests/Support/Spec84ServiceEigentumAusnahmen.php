@@ -6,8 +6,8 @@
 // Stand 2026-10-17: 17 Methoden.
 
 return [
-    'Services/BulkEnrichService.php::verarbeiteGp' => 'legt nur eigene KI-Vorschläge an (team_id = Team); der Riegel sitzt in uebernehmenGp',
-    'Services/BulkEnrichService.php::verarbeiteRezept' => 'legt nur eigene KI-Vorschläge an (team_id = Team); der Riegel sitzt in uebernehmen',
+    'Services/Plattform/BulkEnrichService.php::verarbeiteGp' => 'legt nur eigene KI-Vorschläge an (team_id = Team); der Riegel sitzt in uebernehmenGp',
+    'Services/Plattform/BulkEnrichService.php::verarbeiteRezept' => 'legt nur eigene KI-Vorschläge an (team_id = Team); der Riegel sitzt in uebernehmen',
     'Services/AngebotKopieService.php::kopieren' => 'Kopie ins eigene Team (team_id = Team, neue Ids, eigene Bilddateien); das Original wird nur gelesen',
     'Services/ConceptService.php::alsVorlageSpeichern' => 'Kopie ins eigene Team (anpassen = eigene Kopie); das Original wird nur gelesen',
     'Services/ConceptService.php::duplicate' => 'Kopie ins eigene Team (anpassen = eigene Kopie); das Original wird nur gelesen',

@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\OutletSettingsService;
+use Platform\FoodAlchemist\Services\Plattform\OutletSettingsService;
 use Platform\FoodAlchemist\Services\SignalDetektorService;
 use Platform\FoodAlchemist\Services\SignalService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;

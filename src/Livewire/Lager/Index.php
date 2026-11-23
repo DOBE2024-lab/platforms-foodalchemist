@@ -541,8 +541,8 @@ class Index extends Component
             'inventur' => $inventur,
             // Spec 77c: Team-Brille „alle" → Standort-Spalte; Belege anderer Standorte nur lesend
             'teamId' => (int) $team->id,
-            'standortSpalte' => app(\Platform\FoodAlchemist\Services\StandortService::class)->zeigtStandorte($team),
-            'standortNamen' => app(\Platform\FoodAlchemist\Services\StandortService::class)->teamNamen([(int) $team->id, ...app(\Platform\FoodAlchemist\Services\StandortService::class)->unterTeamIds($team)]),
+            'standortSpalte' => app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->zeigtStandorte($team),
+            'standortNamen' => app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->teamNamen([(int) $team->id, ...app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->unterTeamIds($team)]),
             'zeilen' => $zeilen,
             'summen' => $summen,
             'kandidaten' => $kandidaten,

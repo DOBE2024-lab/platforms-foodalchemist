@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
@@ -29,7 +29,7 @@ class SupportFreigabeService
     /** @var array<string, ?FoodAlchemistSupportFreigabe> "hauptteam:user" → aktive Freigabe */
     private array $merker = [];
 
-    public function __construct(private FaRechte $rechte, private PlattformProtokoll $protokoll) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\FaRechte $rechte, private PlattformProtokoll $protokoll) {}
 
     public static function stundenStandard(): int
     {

@@ -1554,7 +1554,7 @@ class Editor extends Component
         }
 
         // Ebene 2: Angebot wird gegen den aktiven Betrieb gerechnet (Kosten + Ziel-WE-Ampel).
-        $outlet = app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($team);
+        $outlet = app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team);
         // Den schweren Kompositionsbaum und seine Preiseinheiten pro Render nur einmal bauen.
         $komposition = $angebot ? $comp->komposition($team, $angebot, $outlet, true) : null;
         $einheiten = $angebot ? $comp->preisEinheiten($team, $angebot, $outlet) : null;
@@ -1597,7 +1597,7 @@ class Editor extends Component
         $facetten = $svc->facetten($team);
 
         // Kapitel-Bild + Galerie-URLs (Media-Service).
-        $media = app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class);
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class);
 
         $einfrierSvc = app(\Platform\FoodAlchemist\Services\AngebotEinfrierService::class);
 

@@ -8,7 +8,7 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\WorkerHealthService;
+use Platform\FoodAlchemist\Services\Plattform\WorkerHealthService;
 
 /**
  * Code-Qualität 2.1d · schlanker Poll der Planung. Vorher pollte die ganze `Planung/Index` (3,2k Zeilen) alle 1,5 s

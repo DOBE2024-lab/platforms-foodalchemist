@@ -48,8 +48,8 @@ it('livewire_import: use-Zeile und voll qualifizierter Name zählen, Doku-Kommen
 
 it('schreibzugriff: Service-Aufrufe mit gleichem Methodennamen zählen nicht', function () use ($code) {
     $quelle = $code(<<<'PHP'
-        public function a(\Platform\FoodAlchemist\Services\OutletSettingsService $svc) {
-            $row = app(\Platform\FoodAlchemist\Services\OutletSettingsService::class)->update(1, 2, []);
+        public function a(\Platform\FoodAlchemist\Services\Plattform\OutletSettingsService $svc) {
+            $row = app(\Platform\FoodAlchemist\Services\Plattform\OutletSettingsService::class)->update(1, 2, []);
             $svc->delete(3);
             $this->service->save();
             return $row;

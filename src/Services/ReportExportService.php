@@ -1389,7 +1389,7 @@ class ReportExportService
     private function photoDataUri(?int $contextFileId, ?string $pfad): ?string
     {
         try {
-            return app(FoodAlchemistMediaService::class)->dataUri($contextFileId, $pfad);
+            return app(Plattform\FoodAlchemistMediaService::class)->dataUri($contextFileId, $pfad);
         } catch (\Throwable) {
             return null;
         }

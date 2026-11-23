@@ -37,7 +37,7 @@ class BausteinFolgeService
     public function __construct(
         private readonly FassungsVergleich $vergleich,
         private readonly FaRechte $rechte,
-        private readonly PlattformProtokoll $protokoll,
+        private readonly Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /**
@@ -124,7 +124,7 @@ class BausteinFolgeService
             }
         }
 
-        app(AboService::class)->huelleNachfuehren($teamId);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
+        app(Plattform\AboService::class)->huelleNachfuehren($teamId);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
 
         return $out;
     }
@@ -259,7 +259,7 @@ class BausteinFolgeService
             Log::error('Signal nach Übernehmen fehlgeschlagen: '.$ex->getMessage(), ['exception' => $ex]);
         }
 
-        app(AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
+        app(Plattform\AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
 
         return ['umgehaengt' => true, 'nach_fassung_id' => (int) $e['neu']->id];
     }

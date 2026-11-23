@@ -327,7 +327,7 @@ class DetailPanel extends Component
         $team = Auth::user()?->currentTeamRelation;
         $rezept = $team !== null && $this->recipeId !== null ? $verkauf->detail($team, $this->recipeId) : null;
         // Ebene 2 (D3): VK folgt dem aktiven Betrieb.
-        $outlet = $team !== null ? app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($team) : null;
+        $outlet = $team !== null ? app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team) : null;
 
         // #1003: am Handy die Handbuch-Ansicht (Portion, VK, Schritte, Anrichten, Regeneration, Formen)
         if ($rezept !== null && \Platform\FoodAlchemist\Support\HandyLesemodus::anfrageVomHandy()) {
@@ -342,7 +342,7 @@ class DetailPanel extends Component
             'kiHistorie' => $rezept !== null ? app(\Platform\FoodAlchemist\Services\Ai\RecipeKiKontextService::class)->historieFuerRezept($rezept) : [],
             // Spec 43: Gericht-Foto als Mini-Bild im Detail-Panel.
             'rezeptBildUrl' => ($rezept !== null && ($rezept->image_context_file_id || $rezept->image_path))
-                ? app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($rezept->image_context_file_id, $rezept->image_path)
+                ? app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($rezept->image_context_file_id, $rezept->image_path)
                 : null,
             'cockpit' => $rezept !== null ? $verkauf->cockpit($rezept, $team, $outlet) : null,
             // Layer: Pairing-Netz-Daten hier laden statt in der anonymen x-Komponente (gleiche Guard wie im Blade: $rezept !== null).

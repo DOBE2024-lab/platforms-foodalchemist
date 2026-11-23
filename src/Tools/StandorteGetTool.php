@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 
 /** Spec 77c · Standorte (Unter-Teams) des Teams, ihr fester Betrieb und die eigene Team-Brille lesen. */
 class StandorteGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

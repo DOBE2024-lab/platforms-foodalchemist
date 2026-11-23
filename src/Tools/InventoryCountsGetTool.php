@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\InventurService;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 
 /** Spec 66 §6 · Inventuren lesen: Liste oder eine Inventur mit Zählliste. */
 class InventoryCountsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

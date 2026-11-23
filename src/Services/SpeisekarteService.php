@@ -266,7 +266,7 @@ class SpeisekarteService
                     ]);
                 }
             }
-            app(DuplikatBilderService::class)->speisekarte($quelle, $neu, $map, $team);   // CQ Bild-Löschschutz PR 2: eigene Dateien
+            app(Plattform\DuplikatBilderService::class)->speisekarte($quelle, $neu, $map, $team);   // CQ Bild-Löschschutz PR 2: eigene Dateien
 
             return $neu->refresh();
         });
@@ -1119,9 +1119,9 @@ class SpeisekarteService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $karte->{$spalte};
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
 
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
+        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
             $file,
             $team,
             'foodalchemist.speisekarte',
@@ -1144,7 +1144,7 @@ class SpeisekarteService
 
         $contextSpalte = $this->brandingContextSpalte($spalte);
         $alt = (string) $karte->{$spalte};
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($karte->{$contextSpalte}, $alt, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($karte, $spalte)]);
         $karte->update([
             $spalte => null,
             $contextSpalte => null,
@@ -1166,8 +1166,8 @@ class SpeisekarteService
         return [
             'color' => $color,
             'band' => ($karte->band_color ?? '') !== '' ? $karte->band_color : $color,
-            'logo' => app(FoodAlchemistMediaService::class)->dataUri($karte->logo_context_file_id, $karte->logo_path),
-            'cover' => app(FoodAlchemistMediaService::class)->dataUri($karte->cover_context_file_id, $karte->cover_image_path),
+            'logo' => app(Plattform\FoodAlchemistMediaService::class)->dataUri($karte->logo_context_file_id, $karte->logo_path),
+            'cover' => app(Plattform\FoodAlchemistMediaService::class)->dataUri($karte->cover_context_file_id, $karte->cover_image_path),
             'footer' => ($karte->footer_text ?? '') !== '' ? $karte->footer_text : null,
         ];
     }

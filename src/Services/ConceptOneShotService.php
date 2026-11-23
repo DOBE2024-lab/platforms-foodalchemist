@@ -43,7 +43,7 @@ class ConceptOneShotService
     public function __construct(
         private readonly ConceptService $concepts,
         private readonly ConceptGeneratorService $generator,
-        private readonly BulkEnrichService $bulk,
+        private readonly Plattform\BulkEnrichService $bulk,
         private readonly PlanningFrameService $frames,
     ) {}
 

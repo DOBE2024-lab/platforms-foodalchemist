@@ -19,8 +19,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\AboKuendigungService;
-use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\Plattform\AboKuendigungService;
+use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\ConceptFassungService;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungService;
@@ -295,7 +295,7 @@ it('Eigene Kopie (kopieAnlegen) nimmt das Bild mit; fehlt die Datei, Kopie ohne 
 
 it('Bilder: auch ein Fehler beim Schreiben ins Mandanten-Speicher bricht die Kündigung nicht ab (Kopie ohne Bild + Hinweis)', function () {
     ($this->soulAbos)('titel.jpg');
-    $this->app->bind(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class, fn () => new class(app(\Platform\Core\Services\ContextFileService::class)) extends \Platform\FoodAlchemist\Services\FoodAlchemistMediaService {
+    $this->app->bind(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class, fn () => new class(app(\Platform\Core\Services\ContextFileService::class)) extends \Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService {
         public function storeImage(\Illuminate\Http\UploadedFile $file, \Platform\Core\Models\Team $team, string $contextType, int $contextId, string $folder): array
         {
             throw new \RuntimeException('Speicher voll');

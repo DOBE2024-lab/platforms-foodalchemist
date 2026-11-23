@@ -28,8 +28,8 @@ class StammPaketService
 
     public function __construct(
         private readonly FaRechte $rechte,
-        private readonly AboAuskunft $abos,
-        private readonly PlattformProtokoll $protokoll,
+        private readonly Plattform\AboAuskunft $abos,
+        private readonly Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /**

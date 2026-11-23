@@ -131,7 +131,7 @@ class KonfiguratorService
         $k = $this->eigener($team, $id);
         [$spalte, $contextSpalte] = $this->bildSpalten($art);
         $this->bildFreigeben($team, $k, $spalte, $contextSpalte);
-        $media = app(FoodAlchemistMediaService::class)->storeImage($datei, $team, 'foodalchemist.konfigurator', $k->id, "foodalchemist/branding/konfigurator-{$k->id}");
+        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage($datei, $team, 'foodalchemist.konfigurator', $k->id, "foodalchemist/branding/konfigurator-{$k->id}");
         $k->update([$spalte => $media['path'], $contextSpalte => $media['context_file_id']]);
 
         return $k->fresh();
@@ -165,7 +165,7 @@ class KonfiguratorService
      */
     private function bildFreigeben(Team $team, FoodAlchemistKonfigurator $k, string $spalte, string $contextSpalte): void
     {
-        app(FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->{$contextSpalte}, (string) $k->{$spalte}, $team, [BildVerweise::eigen($k, $spalte)]);
+        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($k->{$contextSpalte}, (string) $k->{$spalte}, $team, [BildVerweise::eigen($k, $spalte)]);
     }
 
     /**

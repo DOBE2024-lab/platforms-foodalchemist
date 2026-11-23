@@ -22,7 +22,7 @@ class PlanNutzungService
 {
     public function __construct(
         private readonly FaRechte $rechte,
-        private readonly MandantenService $mandanten,
+        private readonly Plattform\MandantenService $mandanten,
         private readonly GebuehrenZaehler $zaehler,
         private readonly PlanPreisService $preise,
     ) {}

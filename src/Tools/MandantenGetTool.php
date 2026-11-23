@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\MandantenService;
-use Platform\FoodAlchemist\Services\MandantenStammblattService;
+use Platform\FoodAlchemist\Services\Plattform\MandantenService;
+use Platform\FoodAlchemist\Services\Plattform\MandantenStammblattService;
 
 /** Spec 82 §9/§13 B3 + G · Mandanten (Verwaltungsdaten): Liste oder ein Mandant. Nie Inhalte. */
 class MandantenGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

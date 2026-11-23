@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\TeamAnlegenService;
+use Platform\FoodAlchemist\Services\Plattform\TeamAnlegenService;
 
 /**
  * M8-05 / D1+D2: Team-Onboarding — Kind-Team anlegen, Modul freischalten

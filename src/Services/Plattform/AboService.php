@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Plattform;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -27,8 +27,8 @@ use Platform\FoodAlchemist\Support\StammPaket;
 class AboService
 {
     public function __construct(
-        private FaRechte $rechte,
-        private InhaltsFreigabeService $freigaben,
+        private \Platform\FoodAlchemist\Services\FaRechte $rechte,
+        private \Platform\FoodAlchemist\Services\InhaltsFreigabeService $freigaben,
         private PlattformProtokoll $protokoll,
     ) {}
 
@@ -122,7 +122,7 @@ class AboService
         if ($team === null) {
             return;
         }
-        $mandant = (int) app(FaRechte::class)->hauptTeam($team)->id;
+        $mandant = (int) app(\Platform\FoodAlchemist\Services\FaRechte::class)->hauptTeam($team)->id;
         if (DB::table('foodalchemist_abos')->where('mandant_team_id', $mandant)->where('status', FoodAlchemistAbo::AKTIV)->exists()) {
             $this->neuBerechnen($mandant);
         }

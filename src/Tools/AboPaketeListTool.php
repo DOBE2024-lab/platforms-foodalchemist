@@ -54,7 +54,7 @@ class AboPaketeListTool extends FoodAlchemistTool implements ToolContract, ToolM
                 return ToolResult::error('Kalkulationsprofil nicht gefunden im Team.', 'NOT_FOUND');
             }
         } else {
-            $outlet = app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)
+            $outlet = app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)
                 ->current($team, $context->user?->id !== null ? (int) $context->user->id : null);
         }
         $filters = [];

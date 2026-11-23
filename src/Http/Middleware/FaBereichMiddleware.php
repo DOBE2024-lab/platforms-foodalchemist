@@ -31,7 +31,7 @@ class FaBereichMiddleware
         }
         // Spec 84 §4.4 (E3): Seitenaufruf im Support-Zugang → Protokoll
         if ($user instanceof User && ($sf = \Platform\FoodAlchemist\Support\InhaltsSperre::perSupportZugang($user, $user->currentTeamRelation)) !== null) {
-            app(\Platform\FoodAlchemist\Services\SupportFreigabeService::class)->protokolliereZugriff($sf, $user, $user->currentTeamRelation, 'seite:'.($routeName ?? $request->path()));
+            app(\Platform\FoodAlchemist\Services\Plattform\SupportFreigabeService::class)->protokolliereZugriff($sf, $user, $user->currentTeamRelation, 'seite:'.($routeName ?? $request->path()));
         }
         if ($bereich !== null && $user instanceof User && ($team = $user->currentTeamRelation) !== null
             && ! app(FaRechte::class)->darfBereich($user, $team, $bereich)) {

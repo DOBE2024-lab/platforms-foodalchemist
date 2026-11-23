@@ -160,7 +160,7 @@ it('Architektur: keine neuen Schreibwege auf die alte Paket-Persistenz und auf p
     // Bestand 22.11.2026: Kopien vorhandener Werte (Fassungen, Kündigungskopien, Speiseplan-Kopien), Leeren auf null,
     // geschützte Eingänge (ConceptService::fillSlot; Speiseplan über den Eintrag-Hook) und Konfigurator-Pakete (eigene Tabelle, nicht betroffen).
     $bestand = [
-        'Services/AboKuendigungService.php' => 2, 'Services/ConceptFassungService.php' => 1, 'Services/ConceptService.php' => 6,
+        'Services/Plattform/AboKuendigungService.php' => 2, 'Services/ConceptFassungService.php' => 1, 'Services/ConceptService.php' => 6,
         'Services/KonfiguratorPricingService.php' => 1, 'Services/PaketFassungService.php' => 1, 'Services/SpeiseplanService.php' => 5,
     ];
     foreach ($verweise as $datei => $n) {

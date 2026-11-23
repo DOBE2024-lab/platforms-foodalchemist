@@ -21,7 +21,7 @@ class PlanPreisService
 {
     use PlattformAdminPruefung;
 
-    public function __construct(private readonly PlattformProtokoll $protokoll) {}
+    public function __construct(private readonly Plattform\PlattformProtokoll $protokoll) {}
 
     /** Für lesende Aufrufer (MCP, Oberfläche). */
     public function nurPlattformAdminOeffentlich(?User $user, string $wofuer): User

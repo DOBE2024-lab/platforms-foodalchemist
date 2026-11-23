@@ -525,7 +525,7 @@ class Editor extends Component
     {
         $format = $this->id !== null ? $formats->detail($this->team(), $this->id) : null;
         // Ebene 2: die Kalkulation folgt der Betriebsbrille — je Edition der €/Gast gegen den Betrieb.
-        $outlet = app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($this->team());
+        $outlet = app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($this->team());
 
         // F2: Aufbau-Positionen (Slots) in Reihenfolge — Concept-Referenzen + Struktur-Blöcke.
         $slots = collect();

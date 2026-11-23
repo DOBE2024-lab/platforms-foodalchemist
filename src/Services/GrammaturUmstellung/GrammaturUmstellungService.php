@@ -78,7 +78,7 @@ final class GrammaturUmstellungService
         $plan = array_values(array_filter($alle, fn ($r) => collect($r['darreichungen'])->contains(fn ($d) => $d['aktion'] !== 'nicht_ableitbar')));
         $rids = array_column($plan, 'recipe_id');
         $bericht = ['apply' => $apply, 'ok' => false, 'verstoesse' => [], 'rezepte' => [], 'zaehlung' => [], 'journal' => null,
-            'nicht_ableitbar' => $this->nurNichtAbleitbar($alle), 'fertigungstiefe_hochgestuft' => 0, 'phase0_ek' => [],
+            'nicht_ableitbar' => $this->nurNichtAbleitbar($alle), 'fertigungstiefe_hochgestuft' => 0, 'phase0_fertigungstiefe_hochgestuft' => 0, 'phase0_ek' => [],
             'phasen' => ['0' => 'Aufholen veralteter Caches, unabhängig von der Umstellung', '1' => 'Umbau', '2' => 'Neuberechnung nach Umbau']];
         if ($rids === []) {
             $bericht['ok'] = true;
@@ -94,10 +94,16 @@ final class GrammaturUmstellungService
             $t0 = now()->startOfSecond();
             $wache->phase('0');
             $ekVorPhase0 = $this->ekStand($rids);
+            // Fertigungstiefe VOR Phase 0 messen: das Hochstufen (RecipeRecomputeService, Inhalt teilfertig) ist Aufholen wie die
+            // Caches — gemessen erst danach stand der Zähler immer auf 0 (Review Kurator 23.11.)
+            $tiefe = fn () => DB::table('foodalchemist_recipes')->whereIn('id', $rids)->pluck('production_depth', 'id')->all();
+            $geaendert = fn (array $vorher, array $nachher) => count(array_filter($rids, fn ($id) => ($vorher[$id] ?? null) !== ($nachher[$id] ?? null)));
+            $tiefeVorPhase0 = $tiefe();
             $this->recompute->recomputeMany($rids, $fehler0);
             $bericht['zaehlung']['0'] = $grenzen->pruefe($t0)['zaehlung'];
             $bericht['phase0_ek'] = GrammaturMessung::ekSpruenge($ekVorPhase0, $this->ekStand($rids));
-            $tiefeVorher = DB::table('foodalchemist_recipes')->whereIn('id', $rids)->pluck('production_depth', 'id')->all();
+            $tiefeVorher = $tiefe();
+            $bericht['phase0_fertigungstiefe_hochgestuft'] = $geaendert($tiefeVorPhase0, $tiefeVorher);
             $ekVorher = $this->ekJeKg($rids);
             $alt = $this->messen($rids);
             $journal = $this->journal($rids);
@@ -115,8 +121,7 @@ final class GrammaturUmstellungService
 
             $neu = $this->messen($rids);
             $bericht['rezepte'] = $this->vergleich($plan, $alt, $neu);
-            $tiefeNachher = DB::table('foodalchemist_recipes')->whereIn('id', $rids)->pluck('production_depth', 'id')->all();
-            $bericht['fertigungstiefe_hochgestuft'] = count(array_filter($rids, fn ($id) => ($tiefeVorher[$id] ?? null) !== ($tiefeNachher[$id] ?? null)));
+            $bericht['fertigungstiefe_hochgestuft'] = $geaendert($tiefeVorher, $tiefe());   // durch die Umstellung selbst — erwartet 0
 
             $v = [...$wache->verstoesse(), ...$grenzen->pruefe($t0)['verstoesse'], ...$pruef['verstoesse']];
             foreach ([...($fehler0 ?? []), ...($fehler2 ?? [])] as $id => $f) {

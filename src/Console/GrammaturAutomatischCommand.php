@@ -111,8 +111,10 @@ class GrammaturAutomatischCommand extends Command
             }
         }
         $kat = $zeilen->countBy('kategorie');
-        $this->info(sprintf('%d gleich, %d nicht verlustfrei, %d nicht ableitbar, %d Fertigungstiefen hochgestuft.',
+        $this->info(sprintf('%d gleich, %d nicht verlustfrei, %d nicht ableitbar, %d Fertigungstiefen durch die Umstellung hochgestuft.',
             $kat['gleich'] ?? 0, $kat['nicht_verlustfrei'] ?? 0, count($b['nicht_ableitbar']), $b['fertigungstiefe_hochgestuft']));
+        $this->line(sprintf('Phase 0 (Aufholen, unabhängig von der Umstellung): %d Fertigungstiefen nach Inhalt hochgestuft.',
+            $b['phase0_fertigungstiefe_hochgestuft'] ?? 0));
         foreach ($b['verstoesse'] as $v) {
             $this->error('VERSTOSS: '.$v);
         }

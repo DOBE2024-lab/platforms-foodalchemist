@@ -88,6 +88,19 @@ it('--apply stellt um, zieht den Kopf nach, und der Rückweg stellt alles wieder
         ->and(($this->dar)($this->a, 'kinder')->deltas()->count())->toBe(0);
 });
 
+it('Fertigungstiefe: Hochstufen nach Inhalt zählt als Aufholen in Phase 0, nicht als Folge der Umstellung', function () {
+    // A wird von der Kaskade geführt, steht auf from_scratch, enthält aber Convenience-Ware (WG 13) → der Normalweg stuft hoch
+    $this->a->ingredients()->first()->gp()->update(['commodity_group_code' => '13']);
+    FoodAlchemistRecipe::whereKey($this->a->id)->update(['production_depth' => 'from_scratch', 'production_depth_source' => 'kaskade']);
+
+    $b = app(GrammaturUmstellungService::class)->lauf(false);
+
+    expect($b['ok'])->toBeTrue()
+        ->and($b['phase0_fertigungstiefe_hochgestuft'])->toBe(1)
+        ->and($b['fertigungstiefe_hochgestuft'])->toBe(0)
+        ->and($this->a->fresh()->production_depth)->toBe('from_scratch');   // Trockenlauf: zurückgerollt
+});
+
 it('--json legt das Zielverzeichnis an', function () {
     $datei = storage_path('app/foodalchemist/test-'.Str::random(8).'/bericht.json');
     $this->artisan('foodalchemist:grammatur-automatisch', ['--json' => $datei])->assertExitCode(0);

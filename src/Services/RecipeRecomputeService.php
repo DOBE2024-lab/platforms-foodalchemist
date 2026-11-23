@@ -603,7 +603,10 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
                 : $this->mengeAvg($z) * $this->grammFaktor($z)
                     * (1 - $this->effektiverPutzverlust($z) / 100)
                     * (1 - $this->effektiverGarverlust($z) / 100);
-            $out[$z->id] = ['kosten' => $priced ? $kosten : null, 'masse_g' => $masseG];
+            // Menge ohne Gramm (z. B. 0,5 Stück Ei ohne Stückgewicht): im Komponentenmodell der Darreichung nicht über Gramm
+            // abbildbar — sie läuft dort über ihre Kosten bzw. ihren Rezept-Anteil mit (Trockenlauf io 23.11., R149)
+            $ohneGewicht = $masseG <= 0 && ! $z->is_optional && $z->unit?->slug !== 'qs' && $this->mengeAvg($z) > 0;
+            $out[$z->id] = ['kosten' => $priced ? $kosten : null, 'masse_g' => $masseG, 'ohne_gewicht' => $ohneGewicht];
         }
 
         return $out;

@@ -137,7 +137,9 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
                 'bio' => ['type' => 'boolean', 'default' => false, 'description' => 'Bio-Ware bevorzugen. Default aus — Bio kommt nie zufällig (4.4r)'],
                 'bestand' => ['type' => 'string', 'enum' => ['hybrid', 'nur_bestand', 'komplett_neu'], 'default' => 'hybrid', 'description' => 'Bestand-Nutzung als Prompt-Hinweis; hybrid = Bestand zuerst, Neues nur für Lücken'],
                 'level' => ['type' => 'string', 'enum' => ['haute_cuisine', 'gehoben', 'klassisch']],
-                'sektor' => ['type' => 'string', 'enum' => \Platform\FoodAlchemist\Support\Sektor::SLUGS, 'description' => 'Verpflegungskontext'],
+                // CQ 2.5a: Altwerte (catering, betriebsgastronomie, schule_kita) nimmt das Schema an, die Ausführung schlüsselt sie um.
+                'sektor' => ['type' => 'string', 'enum' => [...\Platform\FoodAlchemist\Support\Sektor::SLUGS, ...array_keys(\Platform\FoodAlchemist\Support\Sektor::ALIASE)],
+                    'description' => 'Verpflegungskontext: '.implode(' | ', \Platform\FoodAlchemist\Support\Sektor::SLUGS)],
                 'diaet_hart' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['vegan', 'vegetarisch', 'glutenfrei', 'laktosefrei', 'halal', 'low_carb']], 'description' => 'Diät-Constraints, hart erzwungen (Multi)'],
                 'aroma' => ['type' => 'string', 'description' => 'Freie Aroma-Richtung, z. B. "rauchig-karamellig"'],
                 // ── nur mit vk=true wirksam ──
@@ -197,6 +199,14 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
         }
         // CQ 2.5b: Anlass/Eventtyp/Service-Art gegen die DB-Codes des Teams; Alt-Wert occasion=konferenz → eventtyp
         $parameter = \Platform\FoodAlchemist\Support\Planung\PlanungVokabular::normalisieren($parameter);
+        // CQ 2.5a: Sektor-Altwert → Eignungs-Slug (wie Planung/Voice); Unbekanntes nicht still an den Generator durchreichen.
+        if (isset($parameter['sektor'])) {
+            $sektor = \Platform\FoodAlchemist\Support\Sektor::kanonisch($parameter['sektor']);
+            if ($sektor === null) {
+                return ToolResult::error("sektor={$parameter['sektor']} ist unbekannt. Erlaubt: ".implode(' | ', \Platform\FoodAlchemist\Support\Sektor::SLUGS), 'VALIDATION_ERROR');
+            }
+            $parameter['sektor'] = $sektor;
+        }
         foreach (['occasion', 'eventtyp', 'serviceform'] as $key) {
             if (($parameter[$key] ?? '') === '') {
                 unset($parameter[$key]);

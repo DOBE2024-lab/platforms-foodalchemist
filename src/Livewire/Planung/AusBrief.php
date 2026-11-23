@@ -43,9 +43,13 @@ class AusBrief extends Component
     #[Reactive]
     public ?int $fbAusSession = null;
 
-    /** Aktiver Editor-Reiter des Parents (2.1d: Auswahlliste nur für den aktiven Reiter laden). */
+    /**
+     * Aktiver Editor-Reiter des Parents (2.1d: Auswahlliste nur für den aktiven Reiter laden).
+     * Nullbar: Livewire 4 hydriert reaktive Props bei JEDER Parent-Anfrage aus den übergebenen Props; die Board-Instanz
+     * bekommt keinen Reiter → null. Als `string` warf das einen TypeError und jede Planungs-Anfrage endete in 500 (io, Charge 7).
+     */
     #[Reactive]
-    public string $editorTab = '';
+    public ?string $editorTab = null;
 
     public ?string $fehler = null;
 
@@ -493,7 +497,7 @@ class AusBrief extends Component
         $daten = [];
         if ($this->ort === 'reiter') {
             // 2.1d: Auswahllisten bestehender Ausgabe-Objekte nur für den aktiven Reiter ({@see PlanungReiterDaten::auswahl}).
-            $daten = app(PlanungReiterDaten::class)->auswahl($team, $this->editorTab);
+            $daten = app(PlanungReiterDaten::class)->auswahl($team, (string) $this->editorTab);
             // Foodbook-Reiter: Rails für das gewählte Foodbook ODER das Foodbook der aktiven Session (Owner-Kontext aus dem Parent).
             $fbAktiv = $this->fbOwnerId ?? $this->fbAusSession;
             $daten['fbAktiv'] = $fbAktiv;

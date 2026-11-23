@@ -218,7 +218,11 @@
             </x-fa::page-header>
 
             @unless($handy){{-- #1003 PR7: Ausgabe-Formen aus dem Brief bleiben am Computer --}}
-            <livewire:foodalchemist.planung.aus-brief ort="board" key="planung-ausbrief-board" />   {{-- Spec 85 C1 PR-5 --}}
+            {{-- Dieselben reaktiven Props wie der Reiter: Livewire 4 hydriert sie bei JEDER Parent-Anfrage aus den übergebenen
+                 Props, ein fehlendes kommt als null an (Charge 7: 500 auf jeder Planungs-Anfrage). Wächter: ReaktivePropsEinbindungTest. --}}
+            <livewire:foodalchemist.planung.aus-brief ort="board" :session-id="$sessionId" :editor-tab="$editorTab"
+                :fb-aus-session="($ownerKontext['owner_type'] ?? null) === 'foodbook' ? (int) $ownerKontext['owner_id'] : null"
+                key="planung-ausbrief-board" />   {{-- Spec 85 C1 PR-5 --}}
             @endunless
         </div>
 

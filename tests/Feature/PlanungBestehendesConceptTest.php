@@ -32,7 +32,7 @@ it('Auswahl zeigt nur eigene Konzepte: kein Paket, keine Vorlage, kein fremdes T
     FoodAlchemistConcept::where('id', $this->concepts->create($this->rootTeam, ['name' => 'Station als Paket'])->id)->update(['kind' => 'paket']);
     $this->concepts->create($this->childA, ['name' => 'Fremdes Concept']);
 
-    $liste = Livewire::test(PlanungIndex::class)->call('oeffne', $this->session->id)->instance()->bestehendeConcepts();
+    $liste = Livewire::test(Brief::class, ['sessionId' => $this->session->id])->instance()->bestehendeConcepts();   // Spec 85 C1 PR-4
 
     expect($liste->pluck('id')->all())->toBe([(int) $eigen->id]);
 });

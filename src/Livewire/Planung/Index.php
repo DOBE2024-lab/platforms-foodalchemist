@@ -1049,10 +1049,6 @@ class Index extends Component
         $this->meldung = 'Gespeichert.';
     }
 
-    // ── Leitstelle: Regler-Bedienung ───────────────────────────────────
-
-    /** Multi-Select-Regler (Toggle in/aus der Liste): Diät + Frische-Erlaubnis + Allergen-No-Go. */
-    private const MULTI_REGLER = ['diaet_hart', 'frische', 'allergen_nogo'];
 
     /**
      * EU-14-Allergen-No-Go (L3): Key => Label. Harter Ausschluss (getrennt vom Diät-Ausschluss) —

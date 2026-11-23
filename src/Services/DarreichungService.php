@@ -921,7 +921,9 @@ class DarreichungService
                 $masseBekannt = $referenzMasse !== null;
                 $masse = $referenzMasse ?? 0;
             }
-            // Auto-Grammatur: g/Einheit = Summe der Komponenten dieser Form
+            // Auto-Grammatur: g/Einheit = Summe der Komponenten dieser Form — bei festem Ertrag gegart (Dominique 23.11.: „Gegart
+            // (Ertrag)“). Kosten und Produktion rechnen weiter auf den rohen Mengen; EK je kg bezieht sich auf den Ertrag.
+            $masse = $proEinheit === [] ? $masse : $masse * $this->garfaktor($recipe, null, $team);
             $darreichung->quantity_per_unit_g = $masseBekannt ? round($masse, 1) : null;
             $ekPortion = $nBepreist > 0
                 ? round($kosten * (float) ($darreichung->unit_count ?: 1), 4)
@@ -1096,8 +1098,10 @@ class DarreichungService
         if ($darreichung->is_standard && $darreichung->menge_vom_standard && ! $darreichung->deltas()->exists()) {
             $zeilen = $this->recompute->zeilenKostenUndMassen($recipe, Team::findOrFail($darreichung->team_id));
             if ($zeilen !== []) {
-                // Plan 98 B (Grammatur immer automatisch): Bestandteile ÷ Portionen des Ansatzes — vorher der ganze Ansatz als eine Portion
-                return array_sum(array_column($zeilen, 'masse_g')) / max(1, (int) ($recipe->sales_unit_count ?? 1));
+                // Plan 98 B (Grammatur immer automatisch): Summe der Bestandteile, bei festem Ertrag gegart (Dominique 23.11.); der
+                // Teiler sales_unit_count liest nur noch Altbestand (Gericht = eine Portion)
+                return array_sum(array_column($zeilen, 'masse_g')) * $this->garfaktor($recipe, $zeilen)
+                    / max(1, (int) ($recipe->sales_unit_count ?? 1));
             }
             // Ohne Komponenten kein Rückfall auf die zuvor zwischengespeicherte Portionssumme.
             return $recipe->yield_kg !== null ? (float) $recipe->yield_kg * 1000 / max(1, (int) ($recipe->sales_unit_count ?? 1)) : null;
@@ -1163,6 +1167,7 @@ class DarreichungService
                 $jeZutat[(int) $ingId] = $jeAnsatz > 0 ? $einheiten * $g / $jeAnsatz : 0.0;
             }
             $basis = $ansatzG > 0 ? $ansatzG : $batchMasse;
+            $summeG *= $this->garfaktor($recipe, $batchZeilen);   // gegart wie der Ertrag in $basis; je_zutat bleibt roh
 
             return [
                 'ansaetze' => $basis > 0 ? $einheiten * $summeG / $basis : 0.0,
@@ -1200,6 +1205,23 @@ class DarreichungService
     }
 
     /**
+     * Plan 98 B (Dominique 23.11.: „Gegart (Ertrag)“): Faktor roh → gegart für angezeigte Grammaturen. Bei festem Ertrag
+     * (yield_kg_manual) Ertrag ÷ Summe der Bestandteile, sonst 1. Kosten und Produktionsmengen bleiben roh.
+     *
+     * @param  array<int, array{masse_g: float}>|null  $zeilen
+     */
+    public function garfaktor(FoodAlchemistRecipe $recipe, ?array $zeilen = null, ?Team $team = null): float
+    {
+        if ($recipe->yield_kg_manual === null || (float) $recipe->yield_kg_manual <= 0) {
+            return 1.0;
+        }
+        $zeilen ??= $this->recompute->zeilenKostenUndMassen($recipe, $team ?? Team::findOrFail($recipe->team_id));
+        $b = array_sum(array_column($zeilen, 'masse_g'));
+
+        return $b > 0 ? (float) $recipe->yield_kg_manual * 1000 / $b : 1.0;
+    }
+
+    /**
      * Standard-Komposition JE EINHEIT: Batch-Massen der Zutaten skaliert auf die
      * Grammatur der Standard-Darreichung (Fallback: ganze Charge = eine Einheit).
      * Referenz für Delta-Editor (Anzeige „Standard (g)") und Delta-Preisrechnung.
@@ -1225,7 +1247,10 @@ class DarreichungService
         }
         // Plan 98 B: Standard „wie Rezept“ (menge_vom_standard, ohne Deltas) = Ansatz ÷ Portionen, nicht der ganze Ansatz
         $wieRezept = $standard !== null && $standard->menge_vom_standard && $stdG === null;
-        $faktor = ($batchG > 0 && $stdG !== null && (float) $stdG > 0) ? (float) $stdG / $batchG
+        // Bezugsgrammaturen sind gegart (bei festem Ertrag): ins Verhältnis zum Ertrag, nicht zur rohen Summe — die Mengen je
+        // Komponente bleiben roh (Kosten, Produktion)
+        $nenner = $batchG * $this->garfaktor($recipe, $zeilen);
+        $faktor = ($nenner > 0 && $stdG !== null && (float) $stdG > 0) ? (float) $stdG / $nenner
             : ($wieRezept ? 1.0 / max(1, (int) ($recipe->sales_unit_count ?? 1)) : 1.0);
 
         $out = [];

@@ -51,17 +51,22 @@ it('Trockenlauf: Kategorien wie erwartet, nichts geschrieben', function () {
     expect($b['verstoesse'])->toBe([])->and($b['ok'])->toBeTrue();
     // F: Standard wird automatisch (Summe der Bestandteile), nichts ändert sich
     expect($z[($this->dar)($f, 'teller')->id])->toMatchArray(['aktion' => 'summe', 'fester_ertrag' => false, 'kategorie' => 'gleich']);
-    // A: fester Ertrag → vorläufig Weg A, eigens markiert; Kinder und Doppel über Deltas, „wie Standard“ zieht mit — alles gleich.
+    // A (Chargen-Form, fester Ertrag 1,2 kg): Standard → „ertrag“, gegart = 1200 g statt 300 g → Entscheidungsliste. Kinder und Doppel
+    // über Deltas gleich; „ohne Speck“ (teilweise Deltas) wird vorher festgehalten und bleibt gleich; „wie Standard“ zieht mit.
     // Früher: Standard 1,2 kg ÷ 300 g = 4 Portionen — Modell 23.11.: keine Portionszahl > 1 an Gerichten.
-    expect($z[($this->dar)($this->a, 'teller')->id])->toMatchArray(['aktion' => 'komposition', 'fester_ertrag' => true, 'kategorie' => 'gleich'])
+    $at = $z[($this->dar)($this->a, 'teller')->id];
+    expect($at)->toMatchArray(['aktion' => 'ertrag', 'fester_ertrag' => true, 'kategorie' => 'nicht_verlustfrei'])
+        ->and([$at['alt']['gramm'], $at['neu']['gramm']])->toBe([300.0, 1200.0])
         ->and($z[($this->dar)($this->a, 'kinder')->id])->toMatchArray(['aktion' => 'komposition', 'kategorie' => 'gleich'])
         ->and($z[($this->dar)($this->a, 'doppel')->id]['kategorie'])->toBe('gleich')
-        ->and($z[($this->dar)($this->a, 'wie-standard')->id])->toMatchArray(['aktion' => 'folgt_standard', 'kategorie' => 'gleich']);
-    // C: fester Ertrag — nur die Grammatur ändert sich (+25 %), EK und Produktion bleiben
+        ->and($z[($this->dar)($this->a, 'ohne-speck')->id]['kategorie'])->toBe('gleich')
+        ->and($z[($this->dar)($this->a, 'wie-standard')->id]['aktion'])->toBe('folgt_standard');
+    // C (fester Ertrag 0,8 kg auf 1 kg roh, Chargen-Form): Standard → gegart 800 g statt 200 g. Die Kinder-Variante über Weg A
+    // zeigt jetzt gegart 100 g wie vorher — früher Rohgewicht 125 g (+25 %).
     $c = $z[($this->dar)($this->c, 'teller')->id];
-    expect($c['kategorie'])->toBe('nicht_verlustfrei')->and($c['unterschiede'])->toBe(['gramm'])
-        ->and($c['gramm_prozent'])->toBe(25.0)->and($c['hinweis'])->toContain('Rohgewicht')
-        ->and($z[($this->dar)($this->c, 'kinder')->id]['unterschiede'])->toBe(['gramm']);
+    expect($c)->toMatchArray(['aktion' => 'ertrag', 'kategorie' => 'nicht_verlustfrei'])
+        ->and([$c['alt']['gramm'], $c['neu']['gramm']])->toBe([200.0, 800.0])->and($c['hinweis'])->toContain('gegart')
+        ->and($z[($this->dar)($this->c, 'kinder')->id]['kategorie'])->toBe('gleich');
     // D: freie Grammatur 250 g ≠ Summe 1000 g → Entscheidungsliste: alte Grammatur, neue Summe, EK vorher/nachher
     $d = $z[($this->dar)($this->d, 'teller')->id];
     expect($d)->toMatchArray(['aktion' => 'summe', 'fester_ertrag' => false, 'kategorie' => 'nicht_verlustfrei'])
@@ -87,15 +92,17 @@ it('--apply stellt um, zieht den Kopf nach, und der Rückweg stellt alles wieder
 
     $this->artisan('foodalchemist:grammatur-automatisch', ['--apply' => true])->assertExitCode(0);
 
-    // A (fester Ertrag): Weg A — Komposition als Deltas, Portionszahl bleibt leer (= 1), Zutatenmengen unberührt
-    expect(($this->dar)($this->a, 'teller')->deltas()->count())->toBe(2)
-        ->and((float) ($this->dar)($this->a, 'teller')->quantity_per_unit_g)->toBe(300.0)
+    // A (fester Ertrag): automatisch, gegart = Ertrag 1200 g; Portionszahl bleibt leer (= 1), Zutatenmengen unberührt
+    expect((bool) ($this->dar)($this->a, 'teller')->menge_vom_standard)->toBeTrue()
+        ->and(($this->dar)($this->a, 'teller')->deltas()->count())->toBe(0)
+        ->and((float) ($this->dar)($this->a, 'teller')->quantity_per_unit_g)->toBe(1200.0)
         ->and($this->a->fresh()->sales_unit_count)->toBeNull()
         ->and((float) $this->a->ingredients()->where('raw_text', 'Kartoffeln')->value('quantity'))->toBe(1000.0)
         ->and(($this->dar)($this->a, 'kinder')->deltas()->count())->toBe(2)
         ->and((float) ($this->dar)($this->a, 'kinder')->quantity_per_unit_g)->toBe(150.0)
-        ->and((float) $this->c->fresh()->sales_quantity_per_unit_g)->toBe(250.0)      // Kopf = Grammatur des Standards
-        ->and((float) ($this->dar)($this->c, 'teller')->ek_portion)->toBe(3.5)        // EK bleibt (Weg A)
+        ->and((float) $this->c->fresh()->sales_quantity_per_unit_g)->toBe(800.0)      // Kopf = gegarte Grammatur des Standards
+        ->and((float) ($this->dar)($this->c, 'teller')->ek_portion)->toBe(14.0)       // ganzer Ansatz 1 kg à 14 €/kg (Entscheidungsliste)
+        ->and((float) ($this->dar)($this->c, 'kinder')->quantity_per_unit_g)->toBe(100.0)   // Weg A, gegart
         // D: Standard automatisch = Summe der Bestandteile (1000 g), der Kopf spiegelt sie
         ->and((bool) ($this->dar)($this->d, 'teller')->menge_vom_standard)->toBeTrue()
         ->and((float) ($this->dar)($this->d, 'teller')->quantity_per_unit_g)->toBe(1000.0)

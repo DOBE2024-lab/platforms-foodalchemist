@@ -20,9 +20,12 @@ use Platform\FoodAlchemist\Support\FremdSchreiben;
  *   werden NICHT angefasst; die Portionszahl bleibt bzw. wird 1 (leer gilt als 1, es wird nie ein anderer Wert gesetzt).
  *   Weicht die freie Grammatur von der Summe ab, zeigt der Lauf alte Grammatur, neue Summe und EK je Portion vorher/nachher —
  *   Entscheidungsliste für Dominique (z. B. io Rezept 80: 60 → 64 g).
- * - Standard mit festem Ertrag: vorläufig Weg A ({@see DarreichungService::fixiereKomposition}), eigens markiert, bis Dominique
- *   bestätigt — die Komposition wird als Deltas festgehalten, EK und Produktionsmengen bleiben, die Grammatur wird zum Rohgewicht.
- * - Jede freie Variante: Weg A.
+ * - Standard mit festem Ertrag → „ertrag“ (Dominique 23.11.: „Gegart (Ertrag)“): ebenso automatisch, die angezeigte Grammatur ist
+ *   gegart ({@see DarreichungService::garfaktor}); im Report eigens markiert, alte → neue Grammatur.
+ * - Jede freie Variante: Weg A ({@see DarreichungService::fixiereKomposition}) — die Komposition wird als Deltas festgehalten,
+ *   EK und Produktionsmengen bleiben (bei festem Ertrag gegart angezeigt).
+ * - Varianten mit nur teilweisen Deltas beziehen den Rest vom Standard: wird der Standard umgestellt, werden sie vorher
+ *   ebenso festgehalten (Weg A), sonst sprängen ihre übrigen Mengen mit dem Standard.
  * - nicht ableitbar (keine Bestandteile, keine Grammatur): bleibt unberührt, nie wird still 0 geschrieben.
  *
  * Ablauf in EINER Transaktion: Phase 0 Normal-Neuberechnung (damit alte Caches nicht als Abweichung der Umstellung erscheinen),
@@ -215,9 +218,9 @@ final class GrammaturUmstellungService
         if ($g === null || $g <= 0) {
             return ['grund' => 'keine Grammatur'] + $z;
         }
-        // Standard ohne festen Ertrag → Summe der Bestandteile; mit festem Ertrag vorläufig Weg A (Kurator 23.11.)
-        if ($d->is_standard && ! $kenn['fester_ertrag']) {
-            return ['aktion' => 'summe'] + $z;
+        // Standard → automatisch: Summe der Bestandteile, bei festem Ertrag gegart (Dominique 23.11.)
+        if ($d->is_standard) {
+            return ['aktion' => $kenn['fester_ertrag'] ? 'ertrag' : 'summe'] + $z;
         }
 
         return ['aktion' => 'komposition'] + $z;
@@ -233,7 +236,15 @@ final class GrammaturUmstellungService
         foreach ($plan as $p) {
             TeamSicht::lesenIm($p['team_id'], function () use ($p, $zaehle) {
                 $team = Team::findOrFail($p['team_id']);
-                $standardNeu = false;
+                // Varianten mit teilweisen Deltas hängen am Standard — vor seiner Umstellung festhalten (Weg A)
+                if (collect($p['darreichungen'])->contains(fn ($z) => $z['standard'] && in_array($z['aktion'], ['summe', 'ertrag'], true))) {
+                    $abhaengig = FoodAlchemistRecipeDarreichung::ohneTeamSicht('grammatur-umstellung')->where('recipe_id', $p['recipe_id'])
+                        ->where('is_standard', false)->where('menge_vom_standard', false)->whereHas('deltas')->get();
+                    foreach ($abhaengig as $v) {
+                        $this->darreichungen->fixiereKomposition($v, $team);
+                        $zaehle('foodalchemist_recipe_presentation_deltas', $p['team_id'], $v->deltas()->count());
+                    }
+                }
                 foreach ($p['darreichungen'] as $z) {
                     $r = $this->rezept($p['recipe_id']);
                     $d = $this->darreichung($z['darreichung_id']);
@@ -243,7 +254,7 @@ final class GrammaturUmstellungService
                         DB::table('foodalchemist_recipe_presentations')->where('id', $d->id)->update(['komponenten_referenz_g' => $g, 'updated_at' => now()]);
                         $zaehle('foodalchemist_recipe_presentation_deltas', $p['team_id'], $d->deltas()->count());
                         $zaehle('foodalchemist_recipe_presentations', $p['team_id']);
-                    } elseif ($z['aktion'] === 'summe') {
+                    } elseif (in_array($z['aktion'], ['summe', 'ertrag'], true)) {
                         // Modell 23.11.: Portionszahl 1 (leer gilt als 1) — nur ein Altbestand > 1 wird auf 1 gesetzt, nie ein anderer Wert
                         if ((int) ($r->sales_unit_count ?? 1) > 1) {
                             DB::table('foodalchemist_recipes')->where('id', $r->id)->update(['sales_unit_count' => 1, 'updated_at' => now()]);
@@ -253,32 +264,12 @@ final class GrammaturUmstellungService
                             ->update(['menge_vom_standard' => true, 'komponenten_referenz_g' => null, 'updated_at' => now()]);
                         $zaehle('foodalchemist_recipe_presentations', $p['team_id']);
                     }
-                    $standardNeu = $standardNeu || ($z['standard'] && $z['aktion'] !== 'nicht_ableitbar');
                 }
-                if ($standardNeu) {
-                    $this->kopfNachziehen($p['recipe_id']);
-                    $zaehle('foodalchemist_recipes', $p['team_id']);
-                }
+                // Der Kopf folgt in Phase 2 über die Kopf-Spiegelung (DarreichungService::kopfSpiegeln) — gegart wie der Standard
             });
         }
 
         return $zaehlung;
-    }
-
-    /** Kopf = Grammatur der Standard-Darreichung (Kurator 23.11.: sonst laufen Kopf und Darreichung auseinander). Leer bleibt leer. */
-    private function kopfNachziehen(int $recipeId): void
-    {
-        $r = $this->rezept($recipeId);
-        $std = $r->standardPresentation()->first();
-        if ($r->sales_quantity_per_unit_g === null || $std === null) {
-            return;
-        }
-        $g = $std->deltas()->exists()
-            ? (float) $std->deltas()->where('omitted', false)->sum('quantity_override_g')
-            : $this->darreichungen->grammJeEinheit($std, $r);
-        if ($g !== null) {
-            DB::table('foodalchemist_recipes')->where('id', $recipeId)->update(['sales_quantity_per_unit_g' => round($g, 1), 'updated_at' => now()]);
-        }
     }
 
     /** @return array<int, array{rezept: array, darreichungen: array<int, array>}> */
@@ -342,7 +333,7 @@ final class GrammaturUmstellungService
         }
         $teile = [];
         if (in_array('gramm', $diff, true) && $kenn['fester_ertrag']) {
-            $teile[] = 'fester Ertrag, angezeigt wird das Rohgewicht der Bestandteile';
+            $teile[] = 'fester Ertrag → gegart: angezeigt wird der Ertrag je Portion';
         }
         if ($kenn['unbepreist'] > 0) {
             $teile[] = $kenn['unbepreist'].' unbepreiste Bestandteile';

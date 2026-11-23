@@ -50,11 +50,11 @@ function statusVon(array $bew, string $key): string
     return collect($bew['checks'])->firstWhere('key', $key)['status'] ?? 'missing';
 }
 
-it('befülltes Menü, hohe Konfidenz → Struktur/Allergen ok; Niveau nur Info (las Alt-Pakete, 98 · 2.6c)', function () {
+it('befülltes Menü, einheitliches Niveau, hohe Konfidenz → Struktur/Niveau/Allergen ok', function () {
     $b = bewertungFuer($this);
 
     expect(statusVon($b, 'struktur'))->toBe('ok')
-        ->and(statusVon($b, 'level'))->toBe('info')
+        ->and(statusVon($b, 'level'))->toBe('ok')
         ->and(statusVon($b, 'allergen'))->toBe('ok')
         ->and($b['score'])->toBeGreaterThanOrEqual(80);
 });
@@ -76,4 +76,28 @@ it('Preis-Korridor: Ziel weit daneben → fail, Ziel nah → ok', function () {
 
     $this->concepts->update($this->rootTeam, $this->concept->id, ['target_price_per_person' => 4.60]);
     expect(statusVon(bewertungFuer($this), 'price'))->toBe('ok');           // ~2 % Abw.
+});
+
+// 98 · 2.6c: Niveau-Konsistenz liest das Niveau der eingebetteten Paket-Concepts (kind=paket, level)
+it('Niveau-Konsistenz: Paket-Niveau weicht vom Konzept-Niveau ab → warn', function () {
+    $this->concepts->update($this->rootTeam, $this->paket->id, ['level' => 'gehoben']);
+
+    expect(statusVon(bewertungFuer($this), 'level'))->toBe('warn');
+});
+
+it('Niveau-Konsistenz: zwei Pakete mit unterschiedlichem Niveau → warn (gemischt)', function () {
+    $zweites = $this->concepts->createPaket($this->rootTeam, ['name' => 'Dessert-Station', 'level' => 'haute_cuisine']);
+    $slot = $this->concepts->addSlot($this->rootTeam, $this->concept->id, ['role' => 'Dessert']);
+    $this->concepts->fillSlot($this->rootTeam, $slot->id, ['embedded_concept_id' => $zweites->id]);
+
+    $b = bewertungFuer($this);
+    expect(statusVon($b, 'level'))->toBe('warn')
+        ->and(collect($b['checks'])->firstWhere('key', 'level')['detail'])->toContain('Gemischte Niveaus');
+});
+
+it('Niveau-Konsistenz: ohne Paket (nur Gerichte) → info', function () {
+    $ohne = $this->concepts->create($this->rootTeam, ['name' => 'Nur Gerichte', 'level' => 'klassisch']);
+    $this->concept = $ohne;
+
+    expect(statusVon(bewertungFuer($this), 'level'))->toBe('info');
 });

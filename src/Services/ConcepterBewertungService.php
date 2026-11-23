@@ -42,8 +42,12 @@ class ConcepterBewertungService
         }
 
         // 2 — Niveau-Konsistenz über die Gänge
-        // 98 · 2.6c: las nur Niveaus alter Pakete (package_id); die gibt es nicht mehr — offen, ob Paket-Concepts hier zählen sollen
-        $paketNiveaus = [];
+        // 98 · 2.6c: Pakete sind eingebettete Concepts (kind=paket); ihr Niveau steht wie beim Konzept in `level`
+        $paketNiveaus = DB::table('foodalchemist_concept_slots as s')
+            ->join('foodalchemist_concepts as p', 'p.id', '=', 's.embedded_concept_id')
+            ->where('s.concept_id', $concept->id)->whereNull('s.deleted_at')
+            ->where('p.kind', 'paket')->whereNull('p.deleted_at')
+            ->whereNotNull('p.level')->distinct()->pluck('p.level')->all();
         if (count($paketNiveaus) === 0) {
             $checks[] = $this->check('level', 'Niveau-Konsistenz', 'info', 'Keine Niveau-Angabe an den Paketen.');
         } elseif (count($paketNiveaus) > 1) {

@@ -411,7 +411,8 @@
                     <x-fa::ki-action action="namePutzen" variant="ai" icon="heroicon-o-sparkles" label="Namen glätten"
                         title="Schreibweise nach dem Rezept-Regelwerk vereinheitlichen" busy="Wird geglättet …" flash="Name geglättet" />
                 </div>
-                <x-fa::input id="rezept-name" wire:model.live.debounce.300ms="form.name" placeholder="Schaumsauce: Beurre Blanc" data-rezept-name />
+                <x-fa::input id="rezept-name" wire:model.live.debounce.300ms="form.name" placeholder="Schaumsauce: Beurre Blanc" :fehler="$nameFehler" data-rezept-name />
+                @if($nameFehler)<p id="rezept-name-fehler" class="fa-t-muted text-[var(--fa-crit)]" role="alert" data-rezept-name-fehler>{{ $nameFehler }}</p>@endif
                 <p class="{{ $hinweis }}">Schema «Typ: Bezeichnung (Variante)», jedes Wort groß.@if($keyVorschau !== '')<span> Kennung <span class="font-mono text-[var(--fa-ink-2)]" data-key-vorschau>{{ $keyVorschau }}</span>{{ $neu ? '' : ', bleibt stabil' }}.</span>@endif</p>
             </div>
 

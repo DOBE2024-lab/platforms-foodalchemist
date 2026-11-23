@@ -95,6 +95,9 @@ class RecipeModal extends Component
 
     public ?string $fehler = null;
 
+    /** Fehler am Namensfeld (98 · 2.4c Nachtrag): rote Linie, aria-invalid, Meldung direkt darunter statt oben im Hinweis */
+    public ?string $nameFehler = null;
+
     /** @var array<string, bool> Legacy-Client-State aus kurzzeitigem Lazy-Tab-Render; bleibt als No-op, bis alte Livewire-Snapshots verschwunden sind. */
     public array $geladeneTabs = ['aufbau' => true];
 
@@ -144,6 +147,7 @@ class RecipeModal extends Component
         $this->recipeId = null;
         $this->form = self::LEER;
         $this->fehler = null;
+        $this->nameFehler = null;
 
         $this->kiVorschlag = [];
         $this->ueberarbeitenOffen = false;
@@ -158,7 +162,7 @@ class RecipeModal extends Component
 
     private function ladeRezept(?int $id): void
     {
-        $this->reset('fehler');
+        $this->reset('fehler', 'nameFehler');
         $this->anreicherung = null;
         $this->copilotZuruecksetzen();                             // L6b: Befunde gehören zu GENAU diesem Rezept
         $this->recipeId = $id;
@@ -241,6 +245,13 @@ class RecipeModal extends Component
     public function speichern(RecipeService $recipes): void
     {
         $this->fehler = null;
+        $this->nameFehler = null;
+        // §1: ohne Namen kein Rezept — Meldung am Feld (gleicher Text wie RecipeService::create/update)
+        if (trim((string) ($this->form['name'] ?? '')) === '') {
+            $this->nameFehler = 'Rezept-Name ist Pflicht (§1).';
+
+            return;
+        }
         $team = Auth::user()?->currentTeamRelation;
         if ($team === null) {
             return;
@@ -754,6 +765,14 @@ class RecipeModal extends Component
         }
         if (! empty($vorschlag->werte['name']) && is_string($vorschlag->werte['name'])) {
             $this->form['name'] = $vorschlag->werte['name'];
+        }
+    }
+
+    /** Ein eingetippter Name nimmt die Markierung sofort zurück. */
+    public function updatedFormName(): void
+    {
+        if ($this->nameFehler !== null && trim((string) ($this->form['name'] ?? '')) !== '') {
+            $this->nameFehler = null;
         }
     }
 

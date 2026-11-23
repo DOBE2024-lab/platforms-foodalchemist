@@ -34,9 +34,6 @@ class KaskadenLauf extends Component
     use WithFileUploads;
     use FortschrittAnsicht, HandyLesebereich;   // Spec 80 Teil D (Baum · Cluster · Rezept); #1003 Handy-Umfang
 
-    use WithFileUploads;
-    use \Platform\FoodAlchemist\Livewire\Concerns\FortschrittAnsicht, \Platform\FoodAlchemist\Livewire\Concerns\HandyPlanung, \Platform\FoodAlchemist\Livewire\Concerns\PlanBestehendesConcept, \Platform\FoodAlchemist\Livewire\Concerns\PlanGerichtVorgaben, \Platform\FoodAlchemist\Livewire\Concerns\PlanRezepturFuerGericht;   // Spec 80 Teil D; #1003 PR7 Handy-Umfang
-
     public ?string $fehler = null;
 
     public ?string $meldung = null;

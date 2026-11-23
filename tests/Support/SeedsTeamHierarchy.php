@@ -42,8 +42,114 @@ trait SeedsTeamHierarchy
 
     protected function seedTeamHierarchy(): void
     {
+        // Test-Tempo (TestDbVorlage): einmal je Prozess migrieren, danach je Test eine Kopie der Vorlage in die frische
+        // :memory:-DB. Ist die DB nicht leer (Test hat selbst vorgearbeitet) oder FA_TEST_OHNE_VORLAGE=1: alter Weg.
+        $pfade = $this->testDbMigrationsPfade();
+        $weg = TestDbVorlage::weg($pfade, static::class);
+        if ($weg === 'laden') {
+            TestDbVorlage::lade($pfade);
+        } else {
+            $start = TestDbVorlage::jetzt();
+            $this->migriereTestDb($pfade);
+            if ($weg === 'bauen') {
+                TestDbVorlage::speichere($pfade, $start, TestDbVorlage::jetzt());
+            }
+        }
+
+        $this->rootTeam = Team::create(['name' => 'Root (Katalog-Besitzer)', 'user_id' => 1, 'personal_team' => false]);
+        $this->childA = Team::create(['name' => 'Kind A', 'user_id' => 1, 'personal_team' => false, 'parent_team_id' => $this->rootTeam->id]);
+        $this->childB = Team::create(['name' => 'Kind B', 'user_id' => 1, 'personal_team' => false, 'parent_team_id' => $this->rootTeam->id]);
+
+        // Stale Ketten aus früheren Tests desselben Prozesses verwerfen (V-048).
+        // Früher stand hier eine Handliste über 14 von 77 Models; sie wuchs nur, wenn jemand
+        // darüber stolperte, und eine fehlende Zeile machte D1-Tests grün aus dem falschen
+        // Grund. Jetzt trägt sich jede Klasse selbst ein, sobald sie eine Kette cacht —
+        // hier (und in TestCase::setUp) wird die registrierte Menge geleert, nicht aufgezählt.
+        TeamAncestryRegistry::flushAll();
+
+        // Modul-Routen für Full-Page-Komponenten: der ServiceProvider registriert sie nur
+        // hinter PlatformCore/ModuleRouter (modules-Tabelle beim Boot noch leer) — ohne sie
+        // crasht jede View mit route('foodalchemist.*') (Breadcrumbs/Sidebar) im Test-Env.
+        if (! \Illuminate\Support\Facades\Route::has('foodalchemist.dashboard')) {
+            \Illuminate\Support\Facades\Route::middleware('web')->prefix('foodalchemist')
+                ->group(\dirname(__DIR__, 2) . '/routes/web.php');
+
+            // Der Namens-Index der RouteCollection ist zu diesem Zeitpunkt schon gebaut —
+            // ohne Refresh sind die Routen VORHANDEN, aber `Route::has()`/`route()` finden
+            // sie nicht (und Dokument-Tests skippen sich fälschlich weg).
+            \Illuminate\Support\Facades\Route::getRoutes()->refreshNameLookups();
+        }
+    }
+
+    /**
+     * Migrations-Pfade der Test-DB (Dateien/Ordner). Gehen 1:1 in `artisan migrate --path` und in den Vorlagen-Hash.
+     *
+     * @return list<string>
+     */
+    private function testDbMigrationsPfade(): array
+    {
         $core = base_path('vendor/martin3r/platform-core/database/migrations');
         $module = \dirname(__DIR__, 2) . '/database/migrations';
+
+        return [
+            $core . '/0001_01_01_000000_create_users_table.php', // Cores Version (current_team_id)
+            $core . '/2026_01_11_160000_add_ai_user_fields_to_users_table.php', // type/team_id (User-Model-Hooks erwarten sie)
+            $core . '/0001_01_01_000005_create_teams_table.php',
+            $core . '/2025_11_08_150000_add_parent_team_id_to_teams_table.php',
+            // x-ui-page-navbar fragt `modules` + team_user ab — nötig für Full-Page-Komponenten via Livewire::test (M3-02)
+            $core . '/0001_01_01_000006_create_team_user_table.php',
+            $core . '/0001_01_01_000011_create_modules_table.php',
+            $core . '/2025_11_08_150001_add_scope_type_to_modules_table.php',
+            $core . '/2025_12_20_000001_create_team_user_last_modules_table.php',
+            $core . '/2026_04_12_000004_create_module_usage_counts_table.php',
+            // `checkins` gehört CORE (nicht platform-organization — der frühere Kommentar
+            // hier war falsch und hat die Suche nach einer Organization-Abhängigkeit
+            // ausgelöst, die es nicht gibt). Gebraucht, weil x-ui-page-navbar per
+            // @livewire('core.navbar-checkin') bei JEDEM Full-Page-Render darauf zugreift
+            // (liest mood_score/daily_goal, ruft Checkin::currentStreak) — M3-02.
+            // Bewusst Cores echte Migrationen statt eines handgebauten Stubs: der Stub
+            // erfand team_id/check_in/check_out und ließ mood_score/daily_goal weg; er
+            // trug nur, solange die Tabelle leer blieb. Reihenfolge: nach users (FK).
+            $core . '/2025_01_09_000001_create_checkins_table.php',
+            $core . '/2025_01_21_000001_add_kpi_fields_to_checkins_table.php',
+            // `context_files` gehört CORE. FA-Branding (Logo/Cover an Foodbook &
+            // Speisekarte) speichert Bilder seit 07899da (2026-08-11) über Cores
+            // ContextFileService — die Module-Migration
+            // 2026_08_11_000002_attach_core_context_files_to_foodalchemist_images
+            // hängt FKs auf `context_files` an, und delete() liest
+            // `context_file_variants`. Ohne diese Tabellen scheitern die
+            // Branding-Upload-Tests mit "no such table: context_files". Die
+            // user_id-nullable-ALTER ist plain ->change() (Prod: user_id nullable,
+            // z.B. Upload ohne Acting-User) und SQLite-safe. Bewusst NICHT dabei:
+            // die ALTERs auf context_file_references (…_000004 / make_context_file_id_nullable)
+            // — die nutzen SHOW INDEX / DROP FOREIGN KEY / information_schema (MySQL-only)
+            // und brechen auf SQLite. Reihenfolge egal: Migrator sortiert nach Namen.
+            $core . '/2025_01_01_000001_create_context_files_table.php',
+            $core . '/2025_01_01_000002_create_context_file_variants_table.php',
+            $core . '/2025_01_01_000003_create_context_file_references_table.php',
+            $core . '/2026_02_15_000001_make_user_id_nullable_on_context_files_table.php',
+            // Spec 52: Cores `layouts/app.blade.php` liest bei JEDEM Full-Page-Render die
+            // UI-Praeferenzen des Users (Sidebar-Zustand). Ohne diese Tabelle antwortet
+            // JEDER `$this->get(route(...))` mit 500 — und weil `Livewire::test` das Layout
+            // gar nicht rendert, blieb genau das jahrelang unsichtbar
+            // (feedback_fa_test_harness_layout_blind). Damit sind Ganzseiten-Tests
+            // ueberhaupt erst moeglich.
+            $core . '/2026_06_06_000001_create_user_ui_preferences_table.php',
+            // Ebenfalls Layout: die Navbar liest das Team-Modell-Mapping.
+            $core . '/2026_02_05_000001_create_team_core_ai_models_table.php',
+            $core . '/0001_01_01_000007_create_team_invitations_table.php',
+            $module,
+            ...self::echtesActivityLog(),
+        ];
+    }
+
+    /**
+     * Der bisherige Aufbau der Test-DB: Stubs + gezielte Migrationen.
+     *
+     * @param  list<string>  $pfade
+     */
+    private function migriereTestDb(array $pfade): void
+    {
 
         // Stub: die AI-User-Migration hängt einen FK auf core_ai_models an users —
         // SQLite validiert ALLE Tabellen-FKs beim Insert, also muss die Tabelle existieren.
@@ -117,81 +223,8 @@ trait SeedsTeamHierarchy
 
         $this->artisan('migrate', [
             '--realpath' => true,
-            '--path' => [
-                $core . '/0001_01_01_000000_create_users_table.php', // Cores Version (current_team_id)
-                $core . '/2026_01_11_160000_add_ai_user_fields_to_users_table.php', // type/team_id (User-Model-Hooks erwarten sie)
-                $core . '/0001_01_01_000005_create_teams_table.php',
-                $core . '/2025_11_08_150000_add_parent_team_id_to_teams_table.php',
-                // x-ui-page-navbar fragt `modules` + team_user ab — nötig für Full-Page-Komponenten via Livewire::test (M3-02)
-                $core . '/0001_01_01_000006_create_team_user_table.php',
-                $core . '/0001_01_01_000011_create_modules_table.php',
-                $core . '/2025_11_08_150001_add_scope_type_to_modules_table.php',
-                $core . '/2025_12_20_000001_create_team_user_last_modules_table.php',
-                $core . '/2026_04_12_000004_create_module_usage_counts_table.php',
-                // `checkins` gehört CORE (nicht platform-organization — der frühere Kommentar
-                // hier war falsch und hat die Suche nach einer Organization-Abhängigkeit
-                // ausgelöst, die es nicht gibt). Gebraucht, weil x-ui-page-navbar per
-                // @livewire('core.navbar-checkin') bei JEDEM Full-Page-Render darauf zugreift
-                // (liest mood_score/daily_goal, ruft Checkin::currentStreak) — M3-02.
-                // Bewusst Cores echte Migrationen statt eines handgebauten Stubs: der Stub
-                // erfand team_id/check_in/check_out und ließ mood_score/daily_goal weg; er
-                // trug nur, solange die Tabelle leer blieb. Reihenfolge: nach users (FK).
-                $core . '/2025_01_09_000001_create_checkins_table.php',
-                $core . '/2025_01_21_000001_add_kpi_fields_to_checkins_table.php',
-                // `context_files` gehört CORE. FA-Branding (Logo/Cover an Foodbook &
-                // Speisekarte) speichert Bilder seit 07899da (2026-08-11) über Cores
-                // ContextFileService — die Module-Migration
-                // 2026_08_11_000002_attach_core_context_files_to_foodalchemist_images
-                // hängt FKs auf `context_files` an, und delete() liest
-                // `context_file_variants`. Ohne diese Tabellen scheitern die
-                // Branding-Upload-Tests mit "no such table: context_files". Die
-                // user_id-nullable-ALTER ist plain ->change() (Prod: user_id nullable,
-                // z.B. Upload ohne Acting-User) und SQLite-safe. Bewusst NICHT dabei:
-                // die ALTERs auf context_file_references (…_000004 / make_context_file_id_nullable)
-                // — die nutzen SHOW INDEX / DROP FOREIGN KEY / information_schema (MySQL-only)
-                // und brechen auf SQLite. Reihenfolge egal: Migrator sortiert nach Namen.
-                $core . '/2025_01_01_000001_create_context_files_table.php',
-                $core . '/2025_01_01_000002_create_context_file_variants_table.php',
-                $core . '/2025_01_01_000003_create_context_file_references_table.php',
-                $core . '/2026_02_15_000001_make_user_id_nullable_on_context_files_table.php',
-                // Spec 52: Cores `layouts/app.blade.php` liest bei JEDEM Full-Page-Render die
-                // UI-Praeferenzen des Users (Sidebar-Zustand). Ohne diese Tabelle antwortet
-                // JEDER `$this->get(route(...))` mit 500 — und weil `Livewire::test` das Layout
-                // gar nicht rendert, blieb genau das jahrelang unsichtbar
-                // (feedback_fa_test_harness_layout_blind). Damit sind Ganzseiten-Tests
-                // ueberhaupt erst moeglich.
-                $core . '/2026_06_06_000001_create_user_ui_preferences_table.php',
-                // Ebenfalls Layout: die Navbar liest das Team-Modell-Mapping.
-                $core . '/2026_02_05_000001_create_team_core_ai_models_table.php',
-                $core . '/0001_01_01_000007_create_team_invitations_table.php',
-                $module,
-                ...self::echtesActivityLog(),
-            ],
+            '--path' => $pfade,
         ])->run();
-
-        $this->rootTeam = Team::create(['name' => 'Root (Katalog-Besitzer)', 'user_id' => 1, 'personal_team' => false]);
-        $this->childA = Team::create(['name' => 'Kind A', 'user_id' => 1, 'personal_team' => false, 'parent_team_id' => $this->rootTeam->id]);
-        $this->childB = Team::create(['name' => 'Kind B', 'user_id' => 1, 'personal_team' => false, 'parent_team_id' => $this->rootTeam->id]);
-
-        // Stale Ketten aus früheren Tests desselben Prozesses verwerfen (V-048).
-        // Früher stand hier eine Handliste über 14 von 77 Models; sie wuchs nur, wenn jemand
-        // darüber stolperte, und eine fehlende Zeile machte D1-Tests grün aus dem falschen
-        // Grund. Jetzt trägt sich jede Klasse selbst ein, sobald sie eine Kette cacht —
-        // hier (und in TestCase::setUp) wird die registrierte Menge geleert, nicht aufgezählt.
-        TeamAncestryRegistry::flushAll();
-
-        // Modul-Routen für Full-Page-Komponenten: der ServiceProvider registriert sie nur
-        // hinter PlatformCore/ModuleRouter (modules-Tabelle beim Boot noch leer) — ohne sie
-        // crasht jede View mit route('foodalchemist.*') (Breadcrumbs/Sidebar) im Test-Env.
-        if (! \Illuminate\Support\Facades\Route::has('foodalchemist.dashboard')) {
-            \Illuminate\Support\Facades\Route::middleware('web')->prefix('foodalchemist')
-                ->group(\dirname(__DIR__, 2) . '/routes/web.php');
-
-            // Der Namens-Index der RouteCollection ist zu diesem Zeitpunkt schon gebaut —
-            // ohne Refresh sind die Routen VORHANDEN, aber `Route::has()`/`route()` finden
-            // sie nicht (und Dokument-Tests skippen sich fälschlich weg).
-            \Illuminate\Support\Facades\Route::getRoutes()->refreshNameLookups();
-        }
     }
 
     /** User mit current_team_id im gegebenen Team (für UI-/Curate-Gating-Tests, M1-08). */

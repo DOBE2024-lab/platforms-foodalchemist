@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="FoodAlchemist">
+            <directory>vendor/martin3r/platform-foodalchemist/tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <!-- V-001 (22·H1): die Suite rendert echte Blades und baut im Fehlerfall Whoops-Frames
+             auf — im PHP-Default 128M bricht sie mit „Allowed memory size … exhausted" ab und
+             SIEHT damit wie ein Code-Fehler aus. Hier verankert, damit der nackte
+             `vendor/bin/pest` verlässlich ist (kein `-d memory_limit=1G` mehr nötig). Die
+             Modul-Suite hebt es zusätzlich selbst in Platform\FoodAlchemist\Tests\TestCase —
+             diese Datei gehört dem Host, der Riegel muss mitreisen. -->
+        <ini name="memory_limit" value="1G"/>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <!-- Test-DB ist verbindlich SQLite :memory: (pro Test frisch → de-facto Isolation, da
+             die Suite bewusst kein RefreshDatabase/DatabaseTransactions bindet). ACHTUNG: diese
+             <env>-Werte setzen sich NICHT gegen eine im Shell gesetzte DB_*-Variable durch
+             (Laravel liest über den immutable Dotenv-Repository; PHPUnit force greift da nicht) —
+             ein Shell-`DB_CONNECTION=mysql` würde die isolationsfreie Suite still gegen die
+             persistente Dev-MySQL (foodalchemist) laufen lassen → Pollution/Flakiness. Die harte
+             Absicherung dagegen ist der Laufzeit-Guard in der Modul-TestCase (assertFreshTestDatabase).
+             Kontext → Modul-TestCase (assertFreshTestDatabase). -->
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="DB_URL" value=""/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+    </php>
+</phpunit>

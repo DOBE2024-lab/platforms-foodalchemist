@@ -379,6 +379,16 @@ class FoodAlchemistServiceProvider extends ServiceProvider
                 }
             },
         );
+        // 98 · 3.3 S7 P2: Aromenprofile nach dem Recompute nachziehen — synchron, sofort, in der übergebenen Reihenfolge (Kinder vor Eltern)
+        \Illuminate\Support\Facades\Event::listen(
+            \Platform\FoodAlchemist\Events\AromenprofileVeraltet::class,
+            function ($e) {
+                $profil = $this->app->make(\Platform\FoodAlchemist\Services\Pairing\RezeptProfil::class);
+                foreach ($e->recipeIds as $id) {
+                    $profil->fuer((int) $id);
+                }
+            },
+        );
         // CQ 3.4: Folge eines abgeschlossenen Kaskaden-Steps (Wording-Pass, Kohäsions-Score) — synchron, sofort, kein Queue
         \Illuminate\Support\Facades\Event::listen(
             \Platform\FoodAlchemist\Events\KaskadenSchrittAbgeschlossen::class,

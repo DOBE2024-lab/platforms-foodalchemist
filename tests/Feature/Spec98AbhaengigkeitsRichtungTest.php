@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Platform\FoodAlchemist\Events\AromenprofileVeraltet;
 use Platform\FoodAlchemist\Events\GerichtePreisVeraltet;
 use Platform\FoodAlchemist\Events\KaskadenSchrittAbgeschlossen;
 use Platform\FoodAlchemist\Events\RezeptKostenGeaendert;
@@ -95,7 +96,7 @@ it('Klinke: Rückkanten gegen die Schichtrichtung und Größe der Kreis-Komponen
 });
 
 it('Listener sind registriert: ohne Provider-Eintrag stünde die Preisweitergabe still', function () {
-    foreach ([RezeptKostenGeaendert::class, TeamKostenGeaendert::class, GerichtePreisVeraltet::class, KaskadenSchrittAbgeschlossen::class] as $event) {
+    foreach ([RezeptKostenGeaendert::class, TeamKostenGeaendert::class, GerichtePreisVeraltet::class, KaskadenSchrittAbgeschlossen::class, AromenprofileVeraltet::class] as $event) {
         expect(Event::hasListeners($event))->toBeTrue("kein Listener für {$event}");
     }
 });

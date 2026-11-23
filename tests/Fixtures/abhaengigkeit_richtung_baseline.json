@@ -6,7 +6,7 @@
         "rueckkante PlanningSessionService": 1
     },
     "_graph": {
-        "groesste_kreis_komponente": 34,
-        "klassen_in_kreisen": 72
+        "groesste_kreis_komponente": 21,
+        "klassen_in_kreisen": 71
     }
 }

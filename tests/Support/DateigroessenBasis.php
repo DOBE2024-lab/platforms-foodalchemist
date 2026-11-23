@@ -7,7 +7,6 @@
 return [
     'src/Services/OrderService.php' => [1877, 'C2 Bestell-Cluster (Spec 85 §6); Zerlegen nach Services/Bestellung (98 · 3.3 S5)'],
     'src/Livewire/Planung/Index.php' => [2297, 'C1 PR-1 … PR-5 (Spec 85 §5)'],
-    'src/Services/FoodbookService.php' => [1638, 'mit C4 (Spec 85 §8/§9); −11 durch WordingResolver::wordingPositionen (Spec 94); −21 Format-Kapitel → FormatKapitelService; −26 Block-Referenzprüfung → Support\BlockReferenz (CQ 1.1j); −1 Duplikat-Bilder → DuplikatBilderService (CQ Bild-Löschschutz 2); −29 Header-Presets → Foodbook\FoodbookHeaderPresets (98 · 3.3 S4-0k); −43 Basis + Kapitel-Bild → Foodbook\FoodbookBasis/FoodbookKapitelBild (S4-1); −250 Vokabular → Foodbook\FoodbookVokabular (S4-2); −190 KI-Kundentext → Foodbook\FoodbookKundentext (S4-3); −203 Aggregat/Preis → Foodbook\FoodbookAggregat (S4-4)'],
     'src/Services/PairingService.php' => [2588, 'Lesen / Bewerten / Pflege (Spec 85 §9)'],
     'src/Services/Ai/KnowledgeContextService.php' => [2170, 'Routing / Budget / Prompt-Bau (Spec 85 §9)'],
     'src/Services/DataQualityService.php' => [2040, 'Metriken je Bereich (Spec 85 §9)'],

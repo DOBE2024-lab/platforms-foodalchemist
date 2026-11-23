@@ -16,7 +16,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Http\Controllers\VoiceAudioController;
 use Platform\FoodAlchemist\Jobs\EnrichRecipeJob;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\Stt\SttServiceContract;
 use Platform\FoodAlchemist\Services\TeamSettingsService;

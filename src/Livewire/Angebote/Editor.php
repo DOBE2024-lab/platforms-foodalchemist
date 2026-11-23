@@ -1390,8 +1390,8 @@ class Editor extends Component
      * Angebots-Kopf (Anlass/Gäste) auto-strukturiert. Springt in die Leitstelle.
      */
     public function vollKaskadeStarten(
-        \Platform\FoodAlchemist\Services\PlanningSessionService $sessions,
-        \Platform\FoodAlchemist\Services\PlanningCascadeService $cascade,
+        \Platform\FoodAlchemist\Services\Planung\PlanningSessionService $sessions,
+        \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService $cascade,
         \Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService $gen,
     ) {
         $team = $this->team();
@@ -1403,7 +1403,7 @@ class Editor extends Component
             return null;
         }
         try {
-            $frame = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class)->find('offer', (int) $this->selectedId);
+            $frame = app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class)->find('offer', (int) $this->selectedId);
             if ($frame === null || $frame->slots()->count() === 0) {
                 $gen->geruestAusBriefFuerOwner($team, 'offer', (int) $this->selectedId, $this->angebotBrief($angebot));
             }

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Services\ZukaufBasisrezeptService;
 use Platform\FoodAlchemist\Support\RezeptTypVokabular;
 

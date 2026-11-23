@@ -36,7 +36,7 @@ use Platform\FoodAlchemist\Services\RecipeOneShotService;
  *
  * Etappe 7, Teil 2b — »nur Bilder«-Modus (`$nurBilder`): re-triggert AUSSCHLIESSLICH die KI-Fotos
  * (ohne Voll-Anreicherung), z. B. nach `deferred.bilder=failed` über den Cockpit-Knopf „neu erzeugen"
- * ({@see \Platform\FoodAlchemist\Services\PlanningCascadeService::reBilder}). Ersetzt die alten
+ * ({@see \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::reBilder}). Ersetzt die alten
  * KI-Fotos statt sie anzuhäufen (manuelle Uploads bleiben) und lässt `deferred.enrich` unangetastet.
  *
  * Spec 53 Bildstil-Dossier/Produktfoto-Knopf — »nur Produktfoto«-Modus (`$nurProduktfoto`): erzeugt
@@ -301,7 +301,7 @@ class EnrichRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services\A
         $runId = \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep::whereKey($this->stepId)->value('cascade_run_id');
 
         return $runId !== null
-            && app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->istAbgebrochen((int) $runId);
+            && app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->istAbgebrochen((int) $runId);
     }
 
     /** Harter Job-Abbruch (nicht vom inneren try/catch abgefangen, z. B. Timeout/OOM): als
@@ -483,12 +483,12 @@ class EnrichRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services\A
         }
         // Spec 53 / Paket C: dieselbe Statusänderung als Phase am Step — running zeigt „Anreicherung
         // läuft …", done/failed löschen sie wieder (die Anzeige zeigt dann den enrich-Status selbst).
-        app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->setzePhase(
-            (int) $this->stepId, $status === 'running' ? \Platform\FoodAlchemist\Services\PlanningCascadeService::PHASE_ANREICHERUNG : null,
+        app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->setzePhase(
+            (int) $this->stepId, $status === 'running' ? \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::PHASE_ANREICHERUNG : null,
         );
         $runId = FoodAlchemistCascadeRunStep::whereKey($this->stepId)->value('cascade_run_id');
         if ($runId !== null) {
-            app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->recomputeRunStatus((int) $runId);
+            app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->recomputeRunStatus((int) $runId);
         }
     }
 
@@ -517,7 +517,7 @@ class EnrichRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services\A
 
         // Der Lauf hing wegen dieser Lücke in `review` — ist sie zu, darf er abschließen.
         if ($reife['reif'] && $fresh->cascade_run_id !== null) {
-            app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)
+            app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)
                 ->recomputeRunStatus((int) $fresh->cascade_run_id);
         }
     }
@@ -551,8 +551,8 @@ class EnrichRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services\A
         }
         // Spec 53 / Paket C: dieselbe Statusänderung als Phase am Step — running zeigt „KI-Fotos werden
         // erzeugt …", done/failed löschen sie wieder (die Anzeige zeigt dann den bilder-Status selbst).
-        app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)->setzePhase(
-            (int) $this->stepId, $status === 'running' ? \Platform\FoodAlchemist\Services\PlanningCascadeService::PHASE_BILDER : null,
+        app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)->setzePhase(
+            (int) $this->stepId, $status === 'running' ? \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::PHASE_BILDER : null,
         );
     }
 

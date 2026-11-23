@@ -8,8 +8,8 @@ use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Ai\KiExternModus;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Livewire\Projekte\Index as ProjektIndex;
 use Platform\FoodAlchemist\Livewire\Projekte\KundeDnaPhase;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Concepter\FormatService;
-use Platform\FoodAlchemist\Services\ProjektService;
+use Platform\FoodAlchemist\Services\Planung\ProjektService;
 use Platform\FoodAlchemist\Support\HandyLesemodus;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

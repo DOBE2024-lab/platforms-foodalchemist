@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /**
  * Kapitel-Reconcile (Refinement zum Kapitel-Gate): nachdem der Mensch VOR der Freigabe die Kapitel eines

@@ -118,7 +118,7 @@ class AngebotReifeAdapter extends ContainerReifeAdapter
         }
 
         // ── 3. Gerüst — geplante Slots, die noch kein Kapitel sind (C-7) ───────────
-        $frame = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class)->find('offer', (int) $a->id);
+        $frame = app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class)->find('offer', (int) $a->id);
         $slots = $frame !== null ? $frame->slots()->orderBy('position')->get() : collect();
         $geruestMessbar = $slots->isNotEmpty();
         if ($geruestMessbar) {

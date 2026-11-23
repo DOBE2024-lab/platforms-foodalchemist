@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 
 /**
  * R6.1: Brief/Gerüst → fertiges Draft-Konzept mit Kohäsions-Beweis. Kern-Invariante:

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Planung;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -361,7 +361,7 @@ class IdeenService
             ->pluck('sales_recipe_id')->map(fn ($v) => (int) $v)->filter()->unique()->values()->all();
         if ($belegteIds !== []) {
             $belegte = FoodAlchemistRecipe::visibleToTeam($team)->whereIn('id', $belegteIds)->get();
-            $profil = app(Pairing\PairingService::class)->menueAromaProfil($belegte);
+            $profil = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->menueAromaProfil($belegte);
             if ($profil !== null) {
                 $kontext['menue_kohaesion'] = [
                     'hinweis' => 'Die Menüfolge trägt bereits diese Aroma-Anker (Pairing-Graph). Erfinde '
@@ -375,7 +375,7 @@ class IdeenService
 
         // Gericht-Vorgaben (13.11.2026): was der Mensch an anderen Positionen fest vorgegeben hat, steht schon im Menü —
         // die Erfindung für die übrigen Positionen soll dazu passen und nichts davon wiederholen.
-        $vorgaben = app(Concepter\ConceptVorgabenService::class)->vorgabenTitel($conceptId);
+        $vorgaben = app(\Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService::class)->vorgabenTitel($conceptId);
         if ($vorgaben !== []) {
             $kontext['vorgaben_im_menue'] = [
                 'hinweis' => 'Diese Gerichte sind an anderen Positionen des Menüs fest vorgegeben. Erfinde die übrigen Gerichte passend dazu. '

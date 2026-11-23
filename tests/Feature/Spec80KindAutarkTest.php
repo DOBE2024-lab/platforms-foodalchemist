@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Queue;
 use Platform\FoodAlchemist\Jobs\GenerateRecipeJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

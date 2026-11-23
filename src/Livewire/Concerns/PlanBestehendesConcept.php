@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
  * lassen", und das legt immer ein neues Concept an. Ein von Hand oder per MCP angelegtes Concept (Canvas,
  * Positionen) ließ sich so nicht weiterplanen.
  *
- * Der Lauf selbst kann das längst: {@see \Platform\FoodAlchemist\Services\PlanningCascadeService::starteKaskade}
+ * Der Lauf selbst kann das längst: {@see \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::starteKaskade}
  * nimmt `existing_concept_id` für jedes team-eigene Concept. Hier entsteht nur der Einstieg; gewählt wird
  * derselbe Zeiger wie beim KI-Kopf (Prop + `plan_concept_id` an der Session), Plan-Panel, „Plan verwerfen"
  * und der Go bleiben unverändert.

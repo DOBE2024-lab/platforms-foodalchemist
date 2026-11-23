@@ -81,7 +81,7 @@ it('speiseplanAusBrief: leerer Brief → Meldung, nichts angelegt', function () 
  */
 it('Speiseplan-Auswähler aktiviert die jüngste Owner-Session', function () {
     $plan = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class)->create($this->rootTeam, ['name' => 'GV-Woche']);
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'SP-Planung']);
     FoodAlchemistCascadeRun::create([
         'team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'vollkaskade',

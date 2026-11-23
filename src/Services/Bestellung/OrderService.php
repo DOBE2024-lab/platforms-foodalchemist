@@ -42,7 +42,7 @@ class OrderService
     public const WEICHE_HINWEISE = \Platform\FoodAlchemist\Services\Bestellung\BestellAmpeln::WEICHE_HINWEISE;
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\PlanungsblattService $planung,
+        private \Platform\FoodAlchemist\Services\Planung\PlanungsblattService $planung,
         private \Platform\FoodAlchemist\Services\Preis\PriceService $preise,
         private \Platform\FoodAlchemist\Services\Einkauf\GebindeRechner $gebinde,
         private \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $leadLa,

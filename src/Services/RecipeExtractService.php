@@ -53,7 +53,7 @@ class RecipeExtractService
         // Spec 95 Stufe 2: wie GENERATE die Bestands-Kandidaten mitgeben — die KI darf je Zeile eine gp_id VORSCHLAGEN (der Text bleibt
         // wörtlich); der Generator prüft sie wie jeden Vorschlag (validiereProposedGp) und fällt sonst auf den Textabgleich zurück.
         if ($rohText !== '' && config('foodalchemist.import.gp_kandidaten', true)) {
-            $gpKandidaten = app(GenerationContextService::class)->forGeneration($team, $rohText)['gp_kandidaten'] ?? null;
+            $gpKandidaten = app(Planung\GenerationContextService::class)->forGeneration($team, $rohText)['gp_kandidaten'] ?? null;
             if ($gpKandidaten !== null) {
                 // der Generator-Hinweis („benenne exakt auf diese GPs“) gilt hier NICHT — der Import bleibt treu
                 $kontext['gp_kandidaten'] = ['hinweis' => 'Nur zur Rückbindung: gp_id angeben, wenn die Zutat EXAKT einem Kandidaten entspricht. '

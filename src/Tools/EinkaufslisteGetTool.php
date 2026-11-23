@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\LeadLaStrategie;
-use Platform\FoodAlchemist\Services\PlanungsblattService;
+use Platform\FoodAlchemist\Services\Planung\PlanungsblattService;
 
 /**
  * R7.1 — Einkaufsliste (read-only): über MEHRERE Ziele (Event / mehrere

@@ -152,7 +152,7 @@ it('B3i: ohne bekannte Formen (Produktionsauftrag, Schritt 1) gilt die Standard-
 
 it('B3i Kalkulation/Planungsblatt: bestellte Darreichungen kommen aus den Zielen (Flying 40 Portionen à 3 Stück)', function () {
     $d = spec83Formen($this->rootTeam, $this->gericht);
-    $blatt = app(\Platform\FoodAlchemist\Services\PlanungsblattService::class)->produktionsblattFuerZiele($this->rootTeam, [
+    $blatt = app(\Platform\FoodAlchemist\Services\Planung\PlanungsblattService::class)->produktionsblattFuerZiele($this->rootTeam, [
         ['recipe_id' => $this->gericht->id, 'portions' => 60, 'presentation_id' => $d['teller']->id],
         ['recipe_id' => $this->gericht->id, 'portions' => 40, 'presentation_id' => $d['flying']->id],
     ]);
@@ -193,7 +193,7 @@ it('B3i MCP im Lockstep: recipe_darreichung.PUT setzt die Anrichte-Felder, verka
 });
 
 it('Planungsblatt: Ansätze und Portionen des Gerichts bleiben unverändert, nur die Arbeitszeit folgt B3', function () {
-    $blatt = app(\Platform\FoodAlchemist\Services\PlanungsblattService::class)
+    $blatt = app(\Platform\FoodAlchemist\Services\Planung\PlanungsblattService::class)
         ->produktionsblattFuerZiele($this->rootTeam, [['recipe_id' => $this->gericht->id, 'portions' => 100]]);
     $zeile = collect($blatt['rezepte'])->firstWhere('recipe_id', $this->gericht->id);
 

@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Services\Concepter\CoverageService;
-use Platform\FoodAlchemist\Services\LeitstelleService;
+use Platform\FoodAlchemist\Services\Planung\LeitstelleService;
 
 /**
  * Spec 19 „Foodbook-Leitstelle" (E5.4): die Lesefläche, mit der eine KI den User

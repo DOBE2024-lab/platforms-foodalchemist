@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Services\DataQualityService;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -6,9 +6,9 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
-use Platform\FoodAlchemist\Services\BriefingLeitplankenService;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Planung\BriefingLeitplankenService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 
 /**
  * Spec 85 C1 PR-4 (C-c) · der Start eines Laufs aus dem Briefing, aus `Livewire\Planung\Brief::goKaskade` herausgelöst

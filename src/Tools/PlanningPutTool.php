@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 
 /**
  * R4.1: Planungs-Gerüst setzen — die KI übersetzt ein Kunden-Brief in einen

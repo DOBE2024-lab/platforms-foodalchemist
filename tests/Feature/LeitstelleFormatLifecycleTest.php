@@ -126,7 +126,7 @@ it('formatAusBrief: leerer Brief → Meldung, nichts angelegt', function () {
 
 it('Format-Auswähler aktiviert die jüngste Owner-Session (updatedFmtOwnerId)', function () {
     $format = app(FormatService::class)->create($this->rootTeam, ['name' => 'Gala-Format', 'origin' => 'eigen']);
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Format-Planung']);
     FoodAlchemistCascadeRun::create([
         'team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'vollkaskade',

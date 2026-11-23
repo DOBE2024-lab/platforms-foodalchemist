@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /**
  * Zell-Worker der Speiseplan-Voll-Kaskade (P5): erdet EINE leere Zyklus-Zelle zu einem VK-Gericht und

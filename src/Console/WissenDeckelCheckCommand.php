@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService;
-use Platform\FoodAlchemist\Services\VorgangsRegisterService;
+use Platform\FoodAlchemist\Services\Planung\VorgangsRegisterService;
 
 /**
  * Spec 50 · Etappe 8b — zwei Invarianten der Wissensbasis, die niemand von Hand halten kann.

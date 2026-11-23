@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Services\Concepter\MenuCandidatePoolService;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

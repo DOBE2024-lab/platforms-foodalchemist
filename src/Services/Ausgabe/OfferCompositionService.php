@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapterImage;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 
 /**
  * #380 Composer — Angebot-Aufbau nach Foodbook-Vorbild, aber in EIGENEN Tabellen

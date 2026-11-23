@@ -136,7 +136,7 @@ it('angebotAusBrief: leerer Brief → Meldung, nichts angelegt', function () {
 
 it('Angebot-Auswähler aktiviert die jüngste Owner-Session (updatedOfferOwnerId)', function () {
     $angebot = app(AngebotService::class)->create($this->rootTeam, ['name' => 'Gala-Angebot']);
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Angebot-Planung']);
     FoodAlchemistCascadeRun::create([
         'team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'vollkaskade',

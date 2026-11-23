@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /**
  * Etappe 9 · Slice 2 (Roadmap »Mise en Place«) — MCP-Kaskaden-**FREIGABE** (Gate 2), WRITE.

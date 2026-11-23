@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Queue;
 use Platform\FoodAlchemist\Jobs\MaterializeSpeiseplanCellJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

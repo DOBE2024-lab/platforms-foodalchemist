@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Platform\FoodAlchemist\Livewire\Concepter\Browser as ConcepterBrowser;
 use Platform\FoodAlchemist\Livewire\Planung\Brief;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 
 /**
  * 98 · 2.6c · „Konzept aus Brief“ aus dem Konzepter: Der Konzepter legt den Brief in die Session und leitet auf

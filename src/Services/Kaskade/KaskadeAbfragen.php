@@ -8,8 +8,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Services\Concerns\KaskadeKiWarten;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\PlanningSessionService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 
 /**
  * Plan 98 · 3.3 S1 · Lese-Seite der Kaskade für Fläche und MCP, verschoben aus {@see PlanningCascadeService} (reine

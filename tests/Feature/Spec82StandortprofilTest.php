@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Livewire\Standortprofil\Index;
 use Platform\FoodAlchemist\Models\FoodAlchemistTeamProfile;
 use Platform\FoodAlchemist\Models\FoodAlchemistTeamProfileEquipment;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
-use Platform\FoodAlchemist\Services\ProjektService;
+use Platform\FoodAlchemist\Services\Planung\ProjektService;
 use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\Profiltraeger;

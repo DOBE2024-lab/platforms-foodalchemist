@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
 use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\Concepter\KontextResolver;
-use Platform\FoodAlchemist\Services\ProjektService;
+use Platform\FoodAlchemist\Services\Planung\ProjektService;
 use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\Profiltraeger;

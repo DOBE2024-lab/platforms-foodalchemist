@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Livewire\Projekte\Detail;
 use Platform\FoodAlchemist\Livewire\Projekte\KundeDnaPhase;
 use Platform\FoodAlchemist\Services\Concepter\CanvasService;
 use Platform\FoodAlchemist\Services\Concepter\KontextResolver;
-use Platform\FoodAlchemist\Services\ProjektService;
+use Platform\FoodAlchemist\Services\Planung\ProjektService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

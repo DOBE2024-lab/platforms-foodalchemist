@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
 
 /**
  * @ai.description Kaskaden-Lauf (Planungs-Kaskade, P0): EIN „Go" auf einer Planung. Der geteilte
- * Motor ({@see \Platform\FoodAlchemist\Services\PlanningCascadeService}) legt ihn an und fächert
+ * Motor ({@see \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService}) legt ihn an und fächert
  * ihn in {@see FoodAlchemistCascadeRunStep} auf (Baum concept → gericht → rezept/gp).
  *
  * `scope` bestimmt die Einstiegs-Tiefe (rezept ⊂ gericht ⊂ concept ⊂ vollkaskade); der Motor läuft
@@ -46,9 +46,9 @@ class FoodAlchemistCascadeRun extends Model
      * Runaway-Deckel der Generierung.
      *
      * Warum am Model und nicht im Service: die Deckel sitzen in drei verschiedenen Diensten
-     * ({@see \Platform\FoodAlchemist\Services\PlanningCascadeService} für Zellen/Positionen/Slots,
+     * ({@see \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService} für Zellen/Positionen/Slots,
      * {@see \Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService} für Schritte/Tiefe,
-     * {@see \Platform\FoodAlchemist\Services\IdeenService} für die Ideen-Klemme). Ein gemeinsamer
+     * {@see \Platform\FoodAlchemist\Services\Planung\IdeenService} für die Ideen-Klemme). Ein gemeinsamer
      * Weg hier verhindert, dass die Struktur über sechs Stellen driftet — und dass der siebte
      * Deckel wieder still wird, weil sein Autor die Form nicht kennt.
      *

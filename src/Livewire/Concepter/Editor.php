@@ -776,7 +776,7 @@ class Editor extends Component
             return;
         }
 
-        $frame = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class)->find('concept', $this->id);
+        $frame = app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class)->find('concept', $this->id);
         if ($frame === null) {
             // Ohne Gerüst gibt es keine Vorgaben — Rolle, Aroma-Kanten und Anker-Dichte ranken
             // trotzdem. In-Memory-Gerüst, damit der Lese-Pfad NICHTS anlegt (frameOderAnlegen

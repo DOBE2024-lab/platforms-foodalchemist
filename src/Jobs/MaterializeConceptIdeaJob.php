@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /**
  * Fan-out-Worker der Planungs-Kaskade (P1b): erdet EINE erfundene Concept-Idee zu einem VK-Gericht

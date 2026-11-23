@@ -42,7 +42,7 @@ it('concepts.POST geruest=menue: je Gang ein Header (title=role=Label) vor genau
     }
     // Dramaturgie endet mit dem Dessert; Zielpreis wandert an den Gerüst-Kopf.
     expect(mb_strtolower((string) $slots->where('type', 'header')->last()->title))->toContain('dessert');
-    $frame = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class)->find('concept', (int) $res->data['concept']['id']);
+    $frame = app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class)->find('concept', (int) $res->data['concept']['id']);
     expect($frame)->not->toBeNull()->and((float) $frame->target_price_pp)->toBe(58.0)->and($frame->slots()->count())->toBe(4);
 });
 
@@ -108,7 +108,7 @@ it('kanonischesGeruest: schreibt nicht in ein Konzept mit Positionen oder eigene
     expect(fn () => $gen->kanonischesGeruest($this->rootTeam, $c->fresh(), 'menue'))->toThrow(RuntimeException::class, 'schon Positionen');
 
     $c2 = $svc->create($this->rootTeam, ['name' => 'Gerüst da', 'status' => 'draft']);
-    app(\Platform\FoodAlchemist\Services\PlanningFrameService::class)->frameFor($this->rootTeam, 'concept', $c2->id);
+    app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class)->frameFor($this->rootTeam, 'concept', $c2->id);
     expect(fn () => $gen->kanonischesGeruest($this->rootTeam, $c2->fresh(), 'buffet'))->toThrow(RuntimeException::class, 'schon ein Planungs-Gerüst');
 });
 

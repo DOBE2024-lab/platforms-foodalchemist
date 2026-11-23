@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Planung;
 
 use Illuminate\Support\Str;
 use Platform\Core\Models\Team;

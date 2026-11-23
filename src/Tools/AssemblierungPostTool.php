@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\Concepter\MenuAssemblyService;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 
 /**
  * 12·S2b (R2.4) — marge-optimale Assemblierung als **Vorschau**. Rahmen (Planungs-Gerüst)

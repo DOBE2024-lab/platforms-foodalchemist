@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Models\FoodAlchemistTargetGroup;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

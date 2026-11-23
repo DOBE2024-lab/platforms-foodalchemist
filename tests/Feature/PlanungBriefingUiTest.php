@@ -224,7 +224,7 @@ it('Nachtrag: agentDiktatUebernehmen() hängt das Panel-Transkript an — nie ü
 });
 
 it('Nachtrag: der Erstell-Tab hat pro Scope genau EINEN Diktier-Weg — Recorder aus, Leitplanken-Knopf bleibt', function () {
-    $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
+    $session = app(\Platform\FoodAlchemist\Services\Planung\PlanningSessionService::class)
         ->create($this->rootTeam, ['title' => 'Event']);
 
     $html = Livewire::test(Brief::class, ['sessionId' => $session->id])->html();   // Spec 85 C1 PR-4: Erstell-Reiter im Kind

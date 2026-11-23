@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Livewire\Concepter\Editor;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningFrame;
 use Platform\FoodAlchemist\Services\Concepter\ConceptGeneratorService;
-use Platform\FoodAlchemist\Services\PlanningFrameService;
+use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

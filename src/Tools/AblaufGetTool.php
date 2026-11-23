@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\VorgangsRegisterService;
+use Platform\FoodAlchemist\Services\Planung\VorgangsRegisterService;
 
 /**
  * Spec 50 · E-3 — „Wie geht das hier?" als Werkzeug.

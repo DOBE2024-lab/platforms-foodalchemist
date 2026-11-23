@@ -323,7 +323,7 @@ it('E4.6: foodbook_kapitel.PUT Tenancy — fremd-Team-Zielgruppe blockt (NOT_FOU
 
 it('E4.6: coverage.GET liefert bei Foodbook eine wareneinsatz[]-Sektion je Kapitel', function () {
     $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
-    $frames = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class);
+    $frames = app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class);
     $fb = $foodbooks->create($this->rootTeam, ['label' => 'WE-Coverage', 'personen' => 100]);
     $kap = $foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Hauptgänge']);
     // Gerüst nötig, damit coverage hat_geruest=true liefert (sonst Kurzschluss im Tool).
@@ -373,7 +373,7 @@ it('E5.4: leitstelle.GET ohne chapter_id liefert Checkliste (7 Schritte) + Kapit
 
 it('E5.4: leitstelle.GET mit chapter_id liefert Kapitel-Stand (Ziele/Zielgruppen/WE) + Coverage-Befunde', function () {
     $foodbooks = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);
-    $frames = app(\Platform\FoodAlchemist\Services\PlanningFrameService::class);
+    $frames = app(\Platform\FoodAlchemist\Services\Planung\PlanningFrameService::class);
     $zg = \Platform\FoodAlchemist\Models\FoodAlchemistTargetGroup::create(['team_id' => $this->rootTeam->id, 'name' => 'Bankett-Gast']);
     $fb = $foodbooks->create($this->rootTeam, ['label' => 'Leitstelle-Kapitel', 'personen' => 100]);
     $kap = $foodbooks->addKapitel($this->rootTeam, $fb->id, ['title' => 'Hauptgänge']);

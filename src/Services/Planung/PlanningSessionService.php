@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Planung;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
@@ -93,7 +93,7 @@ class PlanningSessionService
      */
     public function zukaufAusGp(Team $team, int $gpId, ?string $typ = null, string $createdVia = 'gp'): array
     {
-        $zukauf = app(ZukaufBasisrezeptService::class);
+        $zukauf = app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class);
         $gp = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->find($gpId);
         if ($gp === null) {
             throw new RuntimeException('Grundprodukt nicht gefunden oder nicht sichtbar.');
@@ -170,7 +170,7 @@ class PlanningSessionService
      */
     public function trendKombination(Team $team, array $trendIds, array $inspirationIds = [], array $fundstueckIds = []): array
     {
-        $trendSvc = app(Trend\TrendService::class);
+        $trendSvc = app(\Platform\FoodAlchemist\Services\Trend\TrendService::class);
         $trendIds = array_values(array_unique(array_map('intval', $trendIds)));
         $inspirationIds = $trendSvc->inspirationIdsAus($team, ['inspiration_ids' => $inspirationIds, 'fundstueck_ids' => $fundstueckIds]);
         $anzahl = count($trendIds) + count($inspirationIds);
@@ -240,7 +240,7 @@ class PlanningSessionService
      */
     public function refsInspirationen(Team $team, ?array $refs): array
     {
-        return app(Trend\TrendService::class)->inspirationIdsAus($team, [
+        return app(\Platform\FoodAlchemist\Services\Trend\TrendService::class)->inspirationIdsAus($team, [
             'inspiration_ids' => $refs['inspiration_ids'] ?? [], 'fundstueck_ids' => $refs['fundstueck_ids'] ?? [],
         ]);
     }

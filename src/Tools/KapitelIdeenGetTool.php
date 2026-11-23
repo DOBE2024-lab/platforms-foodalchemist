@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
-use Platform\FoodAlchemist\Services\IdeenService;
+use Platform\FoodAlchemist\Services\Planung\IdeenService;
 
 /**
  * Spec 19 „Foodbook-Leitstelle" (E6.5): Kreativ-Skizzen eines Owners lesen — GRUPPIERT

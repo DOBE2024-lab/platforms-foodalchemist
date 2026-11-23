@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\IdeenService;
+use Platform\FoodAlchemist\Services\Planung\IdeenService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 
@@ -1521,14 +1521,14 @@ class Index extends Component
             // Board (2026-08-27): EIN Baum statt Übersicht/Fortschritt/Preise — Status + Inhalt + Preis je Kapitel.
             // Ebene 2: VK/EK/WE je Kapitel — dokument-gebundener Betrieb ?? Betriebsbrille (wie der Druck, Kurator 19.10.).
             'kapitelBoard' => $fb !== null
-                ? app(\Platform\FoodAlchemist\Services\LeitstelleService::class)->kapitelBoard($team, $fb, app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->fuerDokument($team, $fb->outlet_id)) : [],
+                ? app(\Platform\FoodAlchemist\Services\Planung\LeitstelleService::class)->kapitelBoard($team, $fb, app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->fuerDokument($team, $fb->outlet_id)) : [],
             // Coverage/Befunde je Kapitel (aus dem EINEN CoverageService-Call gruppiert) — inline beim Aufklappen.
             'boardCoverage' => collect($coverage['befunde'] ?? [])
                 ->groupBy('chapter_id')->map(fn ($g) => $g->values()->all())->all(),
             'coverage' => $coverage,
             // Spec 19 E5.2: abgeleitete 7-Schritt-Leitstellen-Checkliste (offen/teil/erledigt + Sprungziel)
             'checkliste' => $fb !== null
-                ? app(\Platform\FoodAlchemist\Services\LeitstelleService::class)->checkliste($team, $fb) : [],
+                ? app(\Platform\FoodAlchemist\Services\Planung\LeitstelleService::class)->checkliste($team, $fb) : [],
             'foodbooks' => $svc->paginateBrowser(['search' => $this->search], $team),
             'fb' => $fb,
             // Spec 33 P5: Auswahl für das geteilte Status-/Zuordnungs-Bauteil. Nur aktive

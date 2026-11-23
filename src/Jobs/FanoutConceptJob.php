@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
-use Platform\FoodAlchemist\Services\PlanningCascadeService;
+use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 
 /**
  * Gestufte Kaskade: startet den Gericht-Fan-out eines Concepts NACH dessen Freigabe.

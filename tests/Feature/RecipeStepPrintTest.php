@@ -2,7 +2,7 @@
 
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
-use Platform\FoodAlchemist\Services\PlanungsblattService;
+use Platform\FoodAlchemist\Services\Planung\PlanungsblattService;
 use Platform\FoodAlchemist\Services\RecipeStepService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

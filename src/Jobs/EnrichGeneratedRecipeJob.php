@@ -117,8 +117,8 @@ class EnrichGeneratedRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\S
         // Pass läuft — derselbe Text wie EnrichRecipeJob::markEnrich, damit die Anzeige nicht unterscheidet,
         // welcher der beiden Anreicherungs-Jobs gerade läuft.
         if ($this->cascadeStepId !== null) {
-            app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)
-                ->setzePhase($this->cascadeStepId, \Platform\FoodAlchemist\Services\PlanningCascadeService::PHASE_ANREICHERUNG);
+            app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)
+                ->setzePhase($this->cascadeStepId, \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::PHASE_ANREICHERUNG);
         }
         try {
             $this->schreibe([
@@ -143,7 +143,7 @@ class EnrichGeneratedRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\S
             $this->fertigMitFehler($e->getMessage());
         } finally {
             if ($this->cascadeStepId !== null) {
-                app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)
+                app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)
                     ->setzePhase($this->cascadeStepId, null);
             }
         }
@@ -156,7 +156,7 @@ class EnrichGeneratedRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\S
         // Harter Job-Tod (Timeout/OOM) läuft NICHT durchs finally in handleInRun() — ohne das hier
         // bliebe die Phase am Step stehen und $pollAktiv würde für immer weiterpollen.
         if ($this->cascadeStepId !== null) {
-            app(\Platform\FoodAlchemist\Services\PlanningCascadeService::class)
+            app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class)
                 ->setzePhase($this->cascadeStepId, null);
         }
     }

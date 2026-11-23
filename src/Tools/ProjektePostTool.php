@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\ProjektService;
+use Platform\FoodAlchemist\Services\Planung\ProjektService;
 
 /** Spec 82 §9 · Projekt anlegen (Agentur-Akte zu einer CRM-Firma des Master-Teams). Schreibt nichts ins CRM. */
 class ProjektePostTool extends WareneingangTool implements ToolContract, ToolMetadataContract

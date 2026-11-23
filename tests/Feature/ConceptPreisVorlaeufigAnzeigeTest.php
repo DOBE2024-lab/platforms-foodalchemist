@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\Konfigurator\KonfiguratorPricingService;
-use Platform\FoodAlchemist\Services\LeitstelleService;
+use Platform\FoodAlchemist\Services\Planung\LeitstelleService;
 use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;

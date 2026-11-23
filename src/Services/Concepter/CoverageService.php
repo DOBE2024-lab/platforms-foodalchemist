@@ -30,7 +30,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSaison;
 class CoverageService
 {
     public function __construct(
-        private \Platform\FoodAlchemist\Services\PlanningFrameService $frames,
+        private \Platform\FoodAlchemist\Services\Planung\PlanningFrameService $frames,
         private ConceptService $concepts,
         private \Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregatQuelle $foodbooks,   // 98 · 3.3 S4-0k: Lese-Rückweg über Schnittstelle
     ) {}

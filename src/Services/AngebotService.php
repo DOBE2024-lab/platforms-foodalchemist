@@ -351,13 +351,15 @@ class AngebotService
         $manuell = in_array(($angebot->price_mode ?? 'auto'), ['fixed', 'manuell'], true)
             && ! $expired && $angebot->total_price !== null;
         $gesamt = $manuell ? round((float) $angebot->total_price, 2) : $gesamtVkAuto;
+        // CQ price_incomplete: mind. ein Kapitel ist nur die Summe der bekannten Preise; ein gesetzter Angebotspreis gilt als vollständig
+        $vkFehlt = ! $manuell && collect($komposition['kapitel'])->contains(fn ($k) => (bool) ($k['vk_fehlt'] ?? false));
 
         return [
             'pax' => $pax,
             'price_mode' => $manuell ? ($angebot->price_mode === 'fixed' ? 'fixed' : 'manuell') : 'auto',
             'leer' => $gesamtVkAuto <= 0.0 && count($units) === 0,
             'alternativen' => $einheiten['alternativen'],
-            'vk_pro_person' => $vkPp,
+            'vk_pro_person' => $vkPp, 'vk_fehlt' => $vkFehlt,
             'ek_per_person' => $ekPp,
             'hk2_pro_person' => $pax > 0 ? round($hk2Gesamt / $pax, 2) : 0.0,
             'db_pro_person' => $pax > 0 ? round($vkPp - $hk2Gesamt / $pax, 2) : $vkPp,
@@ -705,7 +707,7 @@ class AngebotService
             ->when(! empty($facetten['servierform']), fn ($q) => $q->where('serving_form_id', (int) $facetten['servierform']))
             ->when(! empty($facetten['einsatzmoment']), fn ($q) => $q->whereHas('serviceMoments', fn ($w) => $w->where('foodalchemist_service_moments.id', (int) $facetten['einsatzmoment'])))
             ->when(! empty($facetten['season']), fn ($q) => $q->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $facetten['season'])))
-            ->orderBy('name')->limit($limit)->get(['id', 'name', 'price_per_person_cache', 'event_type_id', 'serving_form_id']);
+            ->orderBy('name')->limit($limit)->get(['id', 'name', 'price_per_person_cache', 'price_incomplete', 'event_type_id', 'serving_form_id']);
     }
 
     /** #380 Composer: Formate (Marken-Container) für den „+ Format"-Picker (team-sichtbar, nicht archiviert). Spiegelt SpeisekarteService::formatKandidaten. */
@@ -775,7 +777,7 @@ class AngebotService
             ->when(! empty($facetten['servierform']), fn ($q) => $q->where('serving_form_id', (int) $facetten['servierform']))
             ->when(! empty($facetten['einsatzmoment']), fn ($q) => $q->whereHas('serviceMoments', fn ($w) => $w->where('foodalchemist_service_moments.id', (int) $facetten['einsatzmoment'])))
             ->when(! empty($facetten['season']), fn ($q) => $q->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $facetten['season'])))
-            ->orderBy('name')->limit($limit)->get(['id', 'name', 'consumer_name', 'price_per_person_cache', 'event_type_id', 'serving_form_id']);
+            ->orderBy('name')->limit($limit)->get(['id', 'name', 'consumer_name', 'price_per_person_cache', 'price_incomplete', 'event_type_id', 'serving_form_id']);
     }
 
     /**

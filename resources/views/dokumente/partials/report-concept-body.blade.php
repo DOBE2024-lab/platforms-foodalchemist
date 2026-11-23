@@ -23,7 +23,7 @@
         $kachel('Anlass', $concept['occasion'] ?? null),
         $kachel('Niveau', ($concept['level'] ?? null) ? ($niveauLabel[$concept['level']] ?? $concept['level']) : null),
         $kachel('Kategorie', $concept['category'] ?? null),
-        $kachel('Preis / Person', ($concept['price_per_person_cache'] ?? null) !== null ? $money($concept['price_per_person_cache']) : null),
+        $kachel('Preis / Person', ($concept['price_per_person_cache'] ?? null) !== null ? $money($concept['price_per_person_cache']) . (($concept['price_incomplete'] ?? null) === true ? ' (vorläufig)' : '') : null),
         $kachel('Wareneinsatz / Person', ($concept['ek_per_person_cache'] ?? null) !== null ? $money($concept['ek_per_person_cache']) : null),
         $kachel('Arbeitszeit', ($concept['work_time_min_cache'] ?? null) !== null ? $concept['work_time_min_cache'] . ' min' : null),
         $kachel('Servierform', $concept['serving_form'] ?? null),

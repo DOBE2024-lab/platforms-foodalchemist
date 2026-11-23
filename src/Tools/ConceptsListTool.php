@@ -130,6 +130,7 @@ class ConceptsListTool extends FoodAlchemistTool implements ToolContract, ToolMe
             'eventtyp' => $eventtyp !== null ? ['id' => (int) $eventtyp->id, 'name' => $eventtyp->name] : null,
             'servierform' => $servierform !== null ? ['id' => (int) $servierform->id, 'name' => $servierform->label] : null,
             'preis_pro_person' => $preis, 'ek_pro_person' => $ek,
+            'price_incomplete' => $c->price_incomplete,   // true = Preis ist nur die Summe der bekannten Positionen; null = noch nicht berechnet
             'wareneinsatz_pct' => MargeService::wareneinsatzPct($ek, $preis),
         ];
     }

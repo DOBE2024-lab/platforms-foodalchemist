@@ -493,6 +493,8 @@
         .pt-text-block--konzept .pt-text-block-body { font-style: italic;@if($konzeptText === 'kursiv_leise') color: var(--pt-muted); font-size: .94em;@endif }
         @endif
         .pt-codes { color: var(--pt-muted); font-size: .62em; font-weight: 600; letter-spacing: .06em; vertical-align: super; margin-left: 4px; }
+        /* CQ price_incomplete: „vorläufig“ hinter einem Preis aus der Summe der bekannten Preise; dezent, in der Präsentationsschrift, kein Badge */
+        .pt-vorlaeufig { margin-left: .45em; font-family: var(--pt-body-font); font-size: .72em; font-weight: 400; font-style: italic; letter-spacing: .02em; text-transform: none; color: color-mix(in srgb, var(--pt-text) 65%, var(--pt-bg)); white-space: nowrap; }   /* 65 %: gedämpft, aber ≥ 4,5:1 auch in den hellen Designs (--pt-muted dort nur ~3,7:1) */
 
         /* Preis-Summe */
         .pt-price-summary { text-align: center; margin-top: calc(var(--pt-gap) * 1.4); padding: clamp(26px,5vw,42px); background: var(--pt-surface); border-radius: 6px; }

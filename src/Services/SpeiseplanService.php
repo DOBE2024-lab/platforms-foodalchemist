@@ -82,7 +82,7 @@ class SpeiseplanService
     {
         return FoodAlchemistSpeiseplan::visibleToTeam($team)
             ->with(['lines',
-                'entries.concept:id,name,price_per_person_cache',
+                'entries.concept:id,name,price_per_person_cache,price_incomplete',
                 'entries.package:id,name,price_per_person,ek_per_person',
                 // Spec 57 · 0.5: volle Spalten. Die frühere Liste (id,name,sales_net,ek_total_eur)
                 // verschluckte `sales_wording_standard` — der Aushang zeigte den internen Namen —
@@ -668,7 +668,7 @@ class SpeiseplanService
         return FoodAlchemistConcept::visibleToTeam($team)->echte()
             ->where('status', 'active') // Picker zeigt nur aktive (keine Entwürfe/archivierten; Status berücksichtigt)
             ->when($suche !== '', fn ($q) => \Platform\FoodAlchemist\Support\Suche::like($q, 'name', $suche))
-            ->orderBy('name')->limit($limit)->get(['id', 'name', 'price_per_person_cache']);
+            ->orderBy('name')->limit($limit)->get(['id', 'name', 'price_per_person_cache', 'price_incomplete']);
     }
 
     /** Pakete für den Zell-Picker. */
@@ -1314,7 +1314,7 @@ class SpeiseplanService
         // Kennzahlen). Der EK bleibt der des Inhalts; das Gericht behält seinen eigenen VK.
         $manuell = $e->line_id !== null ? $e->line?->manuellerPreis() : null;
         if ($manuell !== null) {
-            $preis['vk'] = $manuell;
+            $preis = ['vk' => $manuell, 'vorlaeufig' => false] + $preis;   // Linienpreis gesetzt, nicht summiert
         }
 
         return $preis;
@@ -1326,7 +1326,7 @@ class SpeiseplanService
         if ($e->concept_id !== null && $e->concept) {
             $c = $this->concepts->preisCockpit($e->concept, $outlet);
 
-            return ['vk' => (float) $c['price_per_person'], 'ek' => (float) $c['ek_per_person']];
+            return ['vk' => (float) $c['price_per_person'], 'ek' => (float) $c['ek_per_person'], 'vorlaeufig' => \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($c)];
         }
         if ($e->package_id !== null && $e->package) {
             return ['vk' => (float) ($e->package->price_per_person ?? 0), 'ek' => (float) ($e->package->ek_per_person ?? 0)];
@@ -1477,7 +1477,7 @@ class SpeiseplanService
                         'untertitel' => $untertitel,
                         'diaet' => $this->diaetMerkmale($agg->allergenRollupFromGerichte($gerichte), $agg->kennzeichnungFromGerichte($gerichte)),
                         'codes' => $this->eintragCodes($e),
-                        'vk' => round($preis['vk'], 2),
+                        'vk' => round($preis['vk'], 2), 'vk_vorlaeufig' => (bool) ($preis['vorlaeufig'] ?? false),
                         'ek' => round($preis['ek'], 2),
                         'linienpreis' => $linie?->manuellerPreis() !== null,
                         'wes' => $wes,

@@ -25,6 +25,7 @@
         return 'EK ' . number_format((float) $ek, 2, ',', '.') . ' €' . $we;
     };
     $blockEk = ($zeigeEk && $blockPrice !== null) ? $ekText($b['ek']['pp'] ?? null, $b['price']['pp'] ?? null) : '';
+    $blockVorlaeufig = $blockPrice !== null && ! empty($b['price']['vorlaeufig']);   // CQ price_incomplete: Summe der bekannten Preise
 @endphp
 {{--
   Semantische Klassen (für Design-CSS, Liste in presentation_designs.POST/PUT):
@@ -42,13 +43,13 @@
     @elseif(!empty($b['label']) && $preisBetont)
         <h3 class="pt-block-header{{ $bKind !== '' ? ' pt-block-header--' . $bKind : '' }}">{{ $b['label'] }}@if($showCodes && !empty($b['codes']))<span class="pt-codes">{{ implode(' ', array_map('strval', $b['codes'])) }}</span>@endif</h3>
         @if($preisStil === 'betont')
-            <p class="pt-concept-price pt-concept-price--oben" data-pt-konzept-preis><span class="pt-concept-price-wert">{{ $preisWert }}</span>@if($preisEinheit !== '') <span class="pt-concept-price-label">{{ $preisEinheit }}</span>@endif @if($blockEk !== '')<span class="pt-ek" data-pt-ek>{{ $blockEk }}</span>@endif</p>
+            <p class="pt-concept-price pt-concept-price--oben" data-pt-konzept-preis><span class="pt-concept-price-wert">{{ $preisWert }}</span>@if($preisEinheit !== '') <span class="pt-concept-price-label">{{ $preisEinheit }}</span>@endif@if($blockVorlaeufig) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif @if($blockEk !== '')<span class="pt-ek" data-pt-ek>{{ $blockEk }}</span>@endif</p>
         @endif
     @elseif(!empty($b['label']) && $blockPrice !== null)
         <div class="pt-line pt-line--concept">
             <span class="pt-line-label">{{ $b['label'] }}@if($showCodes && !empty($b['codes']))<span class="pt-codes">{{ implode(' ', array_map('strval', $b['codes'])) }}</span>@endif</span>
             <span class="pt-line-dots" aria-hidden="true"></span>
-            <span class="pt-line-price">{{ $blockPrice }}@if($blockEk !== '')<span class="pt-ek" data-pt-ek>{{ $blockEk }}</span>@endif</span>
+            <span class="pt-line-price">{{ $blockPrice }}@if($blockVorlaeufig) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif@if($blockEk !== '')<span class="pt-ek" data-pt-ek>{{ $blockEk }}</span>@endif</span>
         </div>
     @elseif(!empty($b['label']) && $showKonzeptName)
         <h3 class="pt-block-header{{ $bKind !== '' ? ' pt-block-header--' . $bKind : '' }}">{{ $b['label'] }}@if($showCodes && !empty($b['codes']))<span class="pt-codes">{{ implode(' ', array_map('strval', $b['codes'])) }}</span>@endif</h3>
@@ -87,6 +88,6 @@
         @endif
     @endforeach
     @if($preisBetont && $preisStil === 'ende')
-        <p class="pt-concept-price pt-concept-price--ende" data-pt-konzept-preis><span class="pt-concept-price-wert">{{ $preisWert }}</span>@if($preisEinheit !== '') <span class="pt-concept-price-label">{{ $preisEinheit }}</span>@endif @if($blockEk !== '')<span class="pt-ek" data-pt-ek>{{ $blockEk }}</span>@endif</p>
+        <p class="pt-concept-price pt-concept-price--ende" data-pt-konzept-preis><span class="pt-concept-price-wert">{{ $preisWert }}</span>@if($preisEinheit !== '') <span class="pt-concept-price-label">{{ $preisEinheit }}</span>@endif@if($blockVorlaeufig) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif @if($blockEk !== '')<span class="pt-ek" data-pt-ek>{{ $blockEk }}</span>@endif</p>
     @endif
 </div>

@@ -61,7 +61,7 @@ final class PraesentationsPreise
             $zeilen[] = [
                 'titel' => (string) $s['title'],
                 'pax' => $pax,
-                'vk_pro_person' => $s['preis']['pp'],
+                'vk_pro_person' => $s['preis']['pp'], 'vorlaeufig' => (bool) ($s['preis']['vorlaeufig'] ?? false),
                 'gesamt' => (! $alt && $pax) ? round((float) $s['preis']['pp'] * $pax, 2) : null,
                 'alternativen' => $alt,
                 'preis_range' => $alt ? ['min' => $s['preis']['min'], 'max' => $s['preis']['max']] : null,
@@ -69,6 +69,28 @@ final class PraesentationsPreise
         }
 
         return $zeilen;
+    }
+
+    /**
+     * CQ price_incomplete, Republish `preserve`: mit einem eingefrorenen Preis friert auch sein „vorläufig“-Merker ein.
+     * Liest die Pfade aus {@see \Platform\FoodAlchemist\Services\PresentationService::preisPfade} (Block, Kapitel, Gesamt)
+     * und übernimmt den Merker des Alt-Snapshots an genau diesen Knoten; der Live-Merker gilt dort nicht mehr.
+     *
+     * @param  list<string>  $pfade  die tatsächlich eingefrorenen Preis-Pfade
+     */
+    public static function merkerEinfrieren(array $alt, array $neu, array $pfade): array
+    {
+        foreach ($pfade as $pfad) {
+            if (preg_match('/^s(\d+)\.b(\d+)\.(?:pp|pauschal)$/', $pfad, $m) && is_array($neu['content']['sections'][$m[1]]['blocks'][$m[2]]['price'] ?? null)) {
+                $neu['content']['sections'][$m[1]]['blocks'][$m[2]]['price']['vorlaeufig'] = (bool) ($alt['content']['sections'][$m[1]]['blocks'][$m[2]]['price']['vorlaeufig'] ?? false);
+            } elseif (preg_match('/^s(\d+)\.pp$/', $pfad, $m) && is_array($neu['content']['sections'][$m[1]]['preis'] ?? null)) {
+                $neu['content']['sections'][$m[1]]['preis']['vorlaeufig'] = (bool) ($alt['content']['sections'][$m[1]]['preis']['vorlaeufig'] ?? false);
+            } elseif (str_starts_with($pfad, 'total.') && is_array($neu['content']['total'] ?? null)) {
+                $neu['content']['total']['vorlaeufig'] = (bool) ($alt['content']['total']['vorlaeufig'] ?? false);
+            }
+        }
+
+        return $neu;
     }
 
     /**
@@ -90,7 +112,7 @@ final class PraesentationsPreise
             $zeilen[] = [
                 'titel' => (string) $kap['title'],
                 'pax' => $kap['pax'] ?? null,
-                'vk_pro_person' => $kap['vk_pro_person'],
+                'vk_pro_person' => $kap['vk_pro_person'], 'vorlaeufig' => (bool) ($kap['vk_fehlt'] ?? false),
                 'gesamt' => $kap['gesamt'] ?? null,
                 'alternativen' => $isAlt,
                 'preis_range' => $kap['preis_range'] ?? null,

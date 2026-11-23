@@ -617,7 +617,7 @@ class PresentationService
             }
         }
 
-        return $ov === [] ? $neu : $this->setzePreisePfade($neu, $ov);
+        return $ov === [] ? $neu : PraesentationsPreise::merkerEinfrieren($alt, $this->setzePreisePfade($neu, $ov), array_keys($ov));   // CQ price_incomplete: Merker friert mit
     }
 
     /**
@@ -753,7 +753,7 @@ class PresentationService
                     'price' => ($showPrice && ! $perItem) ? [
                         'pp' => (float) ($b['preis_pp'] ?? 0),
                         'pauschal' => (float) ($b['pauschal'] ?? 0),
-                        'unit' => $b['preis_einheit'] ?? null,
+                        'unit' => $b['preis_einheit'] ?? null, 'vorlaeufig' => (bool) ($b['preis_vorlaeufig'] ?? false),
                     ] : null,
                     'codes' => $showDecl ? array_values((array) ($b['codes'] ?? [])) : [],
                     'items' => $items($b['gerichte'] ?? []),
@@ -785,14 +785,14 @@ class PresentationService
             'mwst_satz' => $satz,
             'pauschal' => isset($g['pauschal']) ? (float) $g['pauschal'] : null,
             'personen' => $g['personen'] ?? null,
-            'gesamt_vk' => isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null,
+            'gesamt_vk' => isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null, 'vorlaeufig' => (bool) ($g['vk_fehlt'] ?? false),   // CQ price_incomplete
         ] : null;
 
         // Preis-Aufschlüsselung (2026-11-19) auch fürs Foodbook: je Hauptkapitel €/Person, mit Gästezahl auch Summen.
         $pax = isset($g['personen']) ? (int) $g['personen'] : null;
         $zeilen = $showPrice ? PraesentationsPreise::foodbookZeilen($sections, $pax) : [];
         $breakdown = $zeilen !== []
-            ? PraesentationsPreise::aufschluesselung($zeilen, $pax, $ppNetto, isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null, $satz) : null;
+            ? PraesentationsPreise::aufschluesselung($zeilen, $pax, $ppNetto, isset($g['gesamt_vk']) ? (float) $g['gesamt_vk'] : null, $satz) + ['vorlaeufig' => (bool) ($g['vk_fehlt'] ?? false)] : null;
 
         return [
             'title' => (string) ($fb->label ?: $fb->code ?: 'Foodbook'),
@@ -862,7 +862,7 @@ class PresentationService
                         'kind' => 'concept_ref', 'label' => (string) ($ed['name'] ?? ''), 'subtitle' => $ed['claim'] ?? null,
                         'is_header' => false, 'per_item_price' => $einzel,
                         'price' => ($showPrice && ! $einzel && ($ed['preis_pp'] ?? null) !== null)
-                            ? ['pp' => (float) $ed['preis_pp'], 'pauschal' => 0.0, 'unit' => 'gast'] : null,
+                            ? ['pp' => (float) $ed['preis_pp'], 'pauschal' => 0.0, 'unit' => 'gast', 'vorlaeufig' => (bool) ($ed['preis_vorlaeufig'] ?? false)] : null,
                         'codes' => [], 'items' => $this->angebotItems($ed['gerichte'] ?? [], $showPrice),
                     ] + ($this->mitEk && $showPrice && ! $einzel && ($ed['ek_pp'] ?? null) !== null ? ['ek' => ['pp' => (float) $ed['ek_pp']]] : []);
                 }
@@ -902,7 +902,7 @@ class PresentationService
                         'kind' => (string) ($b['type'] ?? ''), 'label' => (string) ($b['label'] ?? ''), 'subtitle' => null,
                         'is_header' => false, 'per_item_price' => $einzel,
                         'price' => ($showPrice && ! $einzel)
-                            ? ['pp' => (float) ($b['preis_pp'] ?? 0), 'pauschal' => (float) ($b['pauschal'] ?? 0), 'unit' => $b['preis_einheit'] ?? null] : null,
+                            ? ['pp' => (float) ($b['preis_pp'] ?? 0), 'pauschal' => (float) ($b['pauschal'] ?? 0), 'unit' => $b['preis_einheit'] ?? null, 'vorlaeufig' => (bool) ($b['preis_vorlaeufig'] ?? false)] : null,
                         'codes' => [], 'items' => $this->angebotItems($b['gerichte'] ?? [], $showPrice),
                     ] + ($this->mitEk && $showPrice && ! $einzel && isset($b['ek_pp']) && ($b['ek_vollstaendig'] ?? false) ? ['ek' => ['pp' => (float) $b['ek_pp']]] : []);
                 }
@@ -936,7 +936,7 @@ class PresentationService
             'pauschal' => null,
             'personen' => $kalk['pax'] ?? null,
             'gesamt_vk' => isset($kalk['gesamt_vk']) ? (float) $kalk['gesamt_vk'] : null,
-            'zzgl_summe' => $zzgl !== [] ? $zzglSumme : null,   // Spec 94b: geschätzt, nicht im Preis
+            'zzgl_summe' => $zzgl !== [] ? $zzglSumme : null, 'vorlaeufig' => (bool) ($kalk['vk_fehlt'] ?? false),   // Spec 94b: geschätzt, nicht im Preis
         ] : null;
 
         // #380 Q2: kundensichere Preis-Aufschlüsselung (Kapitel · Pax · €/P · Zwischensumme + netto/MwSt/brutto,
@@ -947,7 +947,7 @@ class PresentationService
             $breakdown = [
                 ...PraesentationsPreise::aufschluesselung(PraesentationsPreise::angebotZeilen($komp['kapitel']), $kalk['pax'] ?? null, $ppNetto, $netto, $satz),
                 // Spec 94b: zzgl. nach Aufwand (geschätzt) und die voraussichtliche Gesamtsumme für den Kunden
-                'zzgl' => $zzgl,
+                'zzgl' => $zzgl, 'vorlaeufig' => (bool) ($kalk['vk_fehlt'] ?? false),   // CQ price_incomplete: Aufschlüsselung ist live, ihr Merker auch
                 'zzgl_summe' => $zzglSumme,
                 'voraussichtlich_netto' => round($netto + $zzglSumme, 2),
             ];

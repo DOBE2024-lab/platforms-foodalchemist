@@ -83,6 +83,7 @@ return [
     // Monolithen-Pfad wiederhergestellt, den Welle 0 abgebaut hat.
     \Platform\FoodAlchemist\Console\KnowledgePolicySeedCommand::class,
     \Platform\FoodAlchemist\Console\KochmediumVorbelegenCommand::class,   // §18.7 Kochmedium-Vorschlag am GP (17.11.2026)
+    \Platform\FoodAlchemist\Console\KonzeptPreiseNachrechnenCommand::class,   // CQ price_incomplete: Bestand nachrechnen (Standard Trockenlauf)
     \Platform\FoodAlchemist\Console\LeadSichtNachlaufCommand::class,
     \Platform\FoodAlchemist\Console\LieferantenGruppenEinrichtenCommand::class,
     \Platform\FoodAlchemist\Console\LieferantenGruppenVorschlagenCommand::class,

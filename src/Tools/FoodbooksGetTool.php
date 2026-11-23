@@ -101,6 +101,7 @@ class FoodbooksGetTool extends FoodAlchemistTool implements ToolContract, ToolMe
                     'level' => $b->level,
                     'variant_group_id' => $b->variant_group_id !== null ? (int) $b->variant_group_id : null,
                     'price_per_person' => $b->concept?->price_per_person_cache ?? $b->price_value,
+                    'price_incomplete' => $b->concept?->price_incomplete,   // nur bei Konzept-Blöcken; null = kein Konzept oder noch nicht berechnet
                 ])->values()->all(),
             ])->values()->all(),
         ]);

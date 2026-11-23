@@ -26,7 +26,8 @@
     $kpis = [
         ($vkPp !== null && (float) $vkPp > 0)
             ? ['kpi' => 'vk', 'label' => 'VK/Person', 'value' => $euro($vkPp), 'primary' => true, 'title' => $standTitel,
-                'hint' => $editionAb !== null ? 'zzgl. Edition ab ' . $euro($editionAb) : null, 'hint_title' => 'Format-Editionen sind Alternativen und zählen nicht in die Summe']
+                'hint' => ($gesamt['vk_fehlt'] ?? false) ? 'vorläufig' : ($editionAb !== null ? 'zzgl. Edition ab ' . $euro($editionAb) : null),
+                'hint_title' => ($gesamt['vk_fehlt'] ?? false) ? 'Summe der bekannten Preise: mindestens eine Position hat noch keinen Verkaufspreis' : 'Format-Editionen sind Alternativen und zählen nicht in die Summe']
             : ($editionAb !== null
                 ? ['kpi' => 'vk', 'label' => 'VK/Person je Edition', 'value' => 'ab ' . $euro($editionAb), 'primary' => true, 'title' => $standTitel]
                 : ['kpi' => 'vk', 'label' => 'VK/Person', 'value' => 'Preis fehlt', 'tone' => 'crit', 'title' => $standTitel]),
@@ -138,7 +139,7 @@
                             </span>
                             @if(empty($k['is_struktur']) && ! empty($k['hat_inhalt']))
                                 @if($kVk > 0)
-                                    <x-fa::money :value="$kVk" per="Person" class="shrink-0 fa-t-body" />
+                                    <x-fa::money :value="$kVk" per="Person" class="shrink-0 fa-t-body" :vorlaeufig="$agg['vk_fehlt'] ?? false" />
                                 @elseif($kPauschal > 0)
                                     <span class="shrink-0 fa-t-body tabular-nums" title="Pauschalpreis">{{ $euro($kPauschal) }} <span class="text-[var(--fa-ink-3)]">pauschal</span></span>
                                 @else

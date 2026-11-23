@@ -47,7 +47,7 @@ it('★ Präsentations-Daten: Format-Kapitel trägt die Editionen als Blöcke (�
     $ed = $bloecke->firstWhere('kind', 'concept_ref');
     expect($ed)->not->toBeNull()
         ->and($ed['label'])->toBe('Lissabon Edition')
-        ->and($ed['price'])->toBe(['pp' => 29.5, 'pauschal' => 0.0, 'unit' => 'gast'])
+        ->and($ed['price'])->toBe(['pp' => 29.5, 'pauschal' => 0.0, 'unit' => 'gast', 'vorlaeufig' => false])
         ->and(collect($ed['items'])->pluck('label')->all())->toContain('Bacalhau mit Kichererbsen');
     // Allowlist: keine Interna in den Items
     expect(array_keys($ed['items'][0]))->toBe(['kind', 'label', 'indent', 'price', 'codes', 'image']);

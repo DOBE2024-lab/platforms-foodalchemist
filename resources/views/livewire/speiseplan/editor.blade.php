@@ -364,7 +364,7 @@
                                                         @if($pickerTyp === 'gericht' && $k->vk_netto)
                                                             <span>{{ $zahl($k->vk_netto, 2) }} €</span>
                                                         @elseif($pickerTyp === 'concept' && ($k->price_per_person_cache ?? null))
-                                                            <span>{{ $zahl($k->price_per_person_cache, 2) }} € je Person</span>
+                                                            <span>{{ $zahl($k->price_per_person_cache, 2) }} € je Person</span>@if($k->price_incomplete === true)<x-fa::vorlaeufig />@endif
                                                         @endif
                                                         @svg('heroicon-m-plus-circle', 'w-5 h-5 text-[var(--fa-ink-3)] group-hover:text-[var(--fa-accent)]')
                                                     </span>
@@ -1069,7 +1069,7 @@
                         </header>
                         @if($dk !== [])
                             <dl class="grid grid-cols-3 rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] divide-x divide-[var(--fa-line)] text-center">
-                                <div class="px-2 py-1.5"><dt class="fa-t-muted">Verkauf netto</dt><dd class="text-[length:var(--fa-text-md)] font-semibold"><x-fa::money :value="((float) ($dk['vk'] ?? 0)) > 0 ? $dk['vk'] : null" /></dd></div>
+                                <div class="px-2 py-1.5"><dt class="fa-t-muted">Verkauf netto</dt><dd class="text-[length:var(--fa-text-md)] font-semibold"><x-fa::money :value="((float) ($dk['vk'] ?? 0)) > 0 ? $dk['vk'] : null" :vorlaeufig="$dk['vk_vorlaeufig'] ?? false" /></dd></div>
                                 <div class="px-2 py-1.5"><dt class="fa-t-muted">EK</dt><dd class="text-[length:var(--fa-text-md)] font-semibold"><x-fa::money :value="$dk['ek'] ?? null" /></dd></div>
                                 <div class="px-2 py-1.5"><dt class="fa-t-muted">Wareneinsatz</dt><dd class="text-[length:var(--fa-text-md)] font-semibold tabular-nums {{ $wesText[$dk['status'] ?? 'unbekannt'] ?? '' }}">{{ ($dk['wes'] ?? null) !== null ? $zahl($dk['wes'], 1) . ' %' : '–' }}</dd></div>
                             </dl>

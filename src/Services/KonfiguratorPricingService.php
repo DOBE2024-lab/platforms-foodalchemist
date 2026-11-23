@@ -182,10 +182,12 @@ class KonfiguratorPricingService
         $speisenVk = 0.0;
         $speisenEk = 0.0;
         $speisenFehlen = false;
+        $speisenVorlaeufig = false;   // CQ price_incomplete
         $gruppen = [];   // Schlüssel → [art, slug, vk, ek] (Speisen je Person, Leistungen gesamt — unten durch den Teiler)
-        $speise = function (?int $conceptId, string $art) use ($s, &$speisenVk, &$speisenEk, &$speisenFehlen, &$gruppen): void {
+        $speise = function (?int $conceptId, string $art) use ($s, &$speisenVk, &$speisenEk, &$speisenFehlen, &$speisenVorlaeufig, &$gruppen): void {
             $p = $conceptId !== null ? ($s['speisen'][$conceptId] ?? null) : null;
             $speisenFehlen = $speisenFehlen || $p === null || $p['vk'] === null;
+            $speisenVorlaeufig = $speisenVorlaeufig || ($p['vorlaeufig'] ?? false);
             $speisenVk += (float) ($p['vk'] ?? 0);
             $speisenEk += (float) ($p['ek'] ?? 0);
             $gruppen[$art] ??= [$art, null, 0.0, 0.0];
@@ -277,7 +279,7 @@ class KonfiguratorPricingService
         $vkPp *= $rabatt;   // Kombi-Rabatt auf den ganzen Konzeptanteil (Speisen + Leistungen, nicht Add-ons) und auf Getränkepakete (Spec 94c), EK bleibt
 
         return ['speisen_vk' => round($speisenVk, 4), 'speisen_ek' => round($speisenEk, 4), 'leistungen_vk' => round($lVk, 4), 'leistungen_ek' => round($lEk, 4),
-            'teiler' => $teiler, 'vk_pp' => $vkPp, 'ek_pp' => $ekPp, 'speisen_fehlen' => $speisenFehlen, 'ungeschnuert' => $ungeschnuert,
+            'teiler' => $teiler, 'vk_pp' => $vkPp, 'ek_pp' => $ekPp, 'speisen_fehlen' => $speisenFehlen, 'speisen_vorlaeufig' => $speisenVorlaeufig, 'ungeschnuert' => $ungeschnuert,
             'einsaetze' => $einsaetze,
             'einzel' => array_map([$this, 'einzelBetrag'], array_values($verbrauch !== null ? $einzel + ['g' . $verbrauch['getraenk_id'] => $verbrauch] : $einzel)),
             'gruppen' => array_values(array_map(fn ($g) => ['art' => $g[0], 'slug' => $g[1], 'vk_pp' => $teiler > 0 ? $g[2] * $rabatt : 0.0, 'ek_pp' => $teiler > 0 ? $g[3] : 0.0], $gruppen))];
@@ -424,6 +426,8 @@ class KonfiguratorPricingService
                 }
                 if ($kern['speisen_fehlen']) {
                     $warnungen[] = "{$this->fallName($s, $fall)}: Speisenpreis im Konzept fehlt.";
+                } elseif ($kern['speisen_vorlaeufig'] ?? false) {
+                    $warnungen[] = "{$this->fallName($s, $fall)}: Speisenpreis im Konzept ist vorläufig, Positionen ohne Verkaufspreis.";
                 }
                 if ($kern['ungeschnuert']) {
                     $warnungen[] = "{$paket->anzeigeName()}: noch nicht geschnürt.";
@@ -512,7 +516,8 @@ class KonfiguratorPricingService
         $manuell = in_array($c->price_mode ?? 'auto', ['fixed', 'manuell'], true) && ! $abgelaufen && $c->price_per_person_manual !== null;
         $vk = $manuell ? $c->price_per_person_manual : $c->price_per_person_cache;
 
-        return ['vk' => $vk !== null ? (float) $vk : null, 'ek' => $c->ek_per_person_cache !== null ? (float) $c->ek_per_person_cache : null];
+        return ['vk' => $vk !== null ? (float) $vk : null, 'ek' => $c->ek_per_person_cache !== null ? (float) $c->ek_per_person_cache : null,
+            'vorlaeufig' => ! $manuell && $c->price_incomplete === true];   // CQ price_incomplete: Cache nur Summe der bekannten Preise
     }
 
     /**

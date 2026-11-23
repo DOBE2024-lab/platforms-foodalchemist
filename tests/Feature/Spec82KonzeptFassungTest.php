@@ -1,10 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\DB;
+use Livewire\Livewire;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Models\Team;
 use Platform\Core\Tools\ToolRegistry;
+use Platform\FoodAlchemist\Livewire\Concepter\Editor;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
+use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
+use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistPaket;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -15,12 +19,14 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\AngebotService;
 use Platform\FoodAlchemist\Services\ConceptFassungService;
 use Platform\FoodAlchemist\Services\ConceptPreisService;
 use Platform\FoodAlchemist\Services\ConceptService;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\FassungService;
 use Platform\FoodAlchemist\Services\InhaltsFreigabeService;
+use Platform\FoodAlchemist\Services\OfferCompositionService;
 use Platform\FoodAlchemist\Services\PaketFassungService;
 use Platform\FoodAlchemist\Services\PaketPreisService;
 use Platform\FoodAlchemist\Services\PaketService;
@@ -268,6 +274,36 @@ it('Auflage 4 · unvollständiger EK = kein Preis (null + Grund + fehlende Besta
     expect($w['vollstaendig'])->toBeFalse()->and($w['vk'])->toBeNull();
 });
 
+it('CQ price_incomplete · Overlay setzt den Merker aus der Team-Kalkulation, nie gespeichert', function () {
+    $this->hilfe->alleBausteine();
+    $this->hilfe->abo([$this->broich, $this->neu]);
+    $this->hilfe->preise();
+    $fid = $this->svc->veroeffentlichen($this->master, $this->konzept->id, 'Erst', $this->kurator)['fassung_id'];
+
+    $voll = $this->preis->anwenden(FoodAlchemistConcept::mitFassungen()->findOrFail($fid), $this->broich);
+    $teil = $this->preis->anwenden(FoodAlchemistConcept::mitFassungen()->findOrFail($fid), $this->neu);   // Neukunde: Knochen ohne Preis
+    expect($voll->price_incomplete)->toBeFalse()->and($voll->isDirty('price_incomplete'))->toBeFalse()
+        ->and($teil->price_incomplete)->toBeTrue()->and($teil->isDirty('price_incomplete'))->toBeFalse()
+        ->and($this->preis->preisWerte($voll, $this->broich)['vollstaendig'])->toBeTrue()
+        ->and($this->preis->preisWerte($teil, $this->neu)['vollstaendig'])->toBeFalse()
+        ->and(DB::table('foodalchemist_concepts')->where('id', $fid)->value('price_incomplete'))->toBeNull();
+});
+
+it('CQ price_incomplete · additives Format-Kapitel mit einer Fassung ohne Team-VK: kein Preis, nie die Teilsumme', function () {
+    $this->hilfe->alleBausteine();
+    $this->hilfe->abo([$this->neu]);
+    $this->hilfe->preise();
+    $fid = $this->svc->veroeffentlichen($this->master, $this->konzept->id, 'Erst', $this->kurator)['fassung_id'];   // Neukunde: Knochen ohne Preis
+    $this->actingAs($this->neuChef);
+    $comp = app(OfferCompositionService::class);
+    $angebot = app(AngebotService::class)->create($this->neu, ['name' => 'Gala', 'personen' => 40]);
+    $format = FoodAlchemistFormat::create(['team_id' => $this->neu->id, 'name' => 'Gala', 'status' => 'aktiv']);
+    FoodAlchemistFormatSlot::create(['team_id' => $this->neu->id, 'format_id' => $format->id, 'type' => 'concept', 'concept_id' => $fid, 'position' => 0]);
+
+    $agg = $comp->kapitelAggregat($this->neu, $comp->insertFormatKapitel($this->neu, $angebot->id, $format->id)->fresh());
+    expect($agg['vk_pro_person'])->toBeNull()->and($agg['vk_fehlt'])->toBeTrue()->and($agg['food_cost_percent'])->toBeNull();
+});
+
 it('Leck-Sperre · Overlay-Instanz nicht dirty, save()/update()/touch() werfen, Fassung bleibt in der DB ohne Preis', function () {
     $this->hilfe->alleBausteine();
     $this->hilfe->abo([$this->broich]);
@@ -325,6 +361,19 @@ it('eigene Kopie einer Abo-Konzept-Fassung: Preis mit den Team-Preisen des Manda
     $this->actingAs($this->neuChef);
     $kopieN = $inhalte->kopieAnlegen($this->neu, 'concept', $fid, $this->neuChef);
     expect($kopieN->price_per_person_cache)->toBeNull()->and($kopieN->ek_per_person_cache)->toBeNull();
+});
+
+it('CQ price_incomplete · Concepter-Fuß: manueller Preis ohne vollständigen EK zeigt „offen“, nie 0 %', function () {
+    $this->hilfe->alleBausteine();
+    $this->hilfe->abo([$this->neu]);
+    $this->hilfe->preise();
+    $fid = $this->svc->veroeffentlichen($this->master, $this->konzept->id, 'Erst', $this->kurator)['fassung_id'];
+    $this->actingAs($this->neuChef);
+    $kopie = app(InhaltsFreigabeService::class)->kopieAnlegen($this->neu, 'concept', $fid, $this->neuChef);   // Neukunde: Knochen ohne Preis
+    app(ConceptService::class)->update($this->neu, $kopie->id, ['price_mode' => 'manuell', 'price_per_person_manual' => 30]);
+
+    $html = Livewire::test(Editor::class)->call('oeffnen', 'concepts', $kopie->id, 'kalkulation')->html();
+    expect($html)->toMatch('/data-concepter-fuss-we>\s*offen\s*</')->and($html)->not->toMatch('/data-concepter-fuss-we>\s*0,0 %/');
 });
 
 it('MCP: concept_fassungen.PUBLISH und .GET', function () {

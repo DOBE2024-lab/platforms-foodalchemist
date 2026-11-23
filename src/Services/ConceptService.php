@@ -68,7 +68,7 @@ class ConceptService
                 // Menü-Ansicht: Paket-Gerichte mit Wording-Feldern (Wording-Kette)
                 'slots.package.dishes.dish:id,name,sales_wording_standard',
                 // Kaskade: eingebettetes Paket = kind=paket-Concept (Preis + Posten für Anzeige)
-                'slots.embeddedConcept:id,name,kind,class,price_per_person_cache,ek_per_person_cache',
+                'slots.embeddedConcept:id,name,kind,class,price_per_person_cache,ek_per_person_cache,price_incomplete',
                 'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard,ek_total_eur,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.embeddedConcept.slots.dish.standardPresentation',
                 'slots.dish:id,name,sales_wording_standard,ek_total_eur,dish_class_id,spec_is_vegan,spec_is_vegetarian,spec_is_gluten_free,spec_is_lactose_free,spec_is_halal,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.dish.standardPresentation',
                 // 2.1e: alle Formen je Gericht einmal (Resolver, Preis-Cockpit, Aggregat, Concepter-Aufbau) statt je Slot nachzufragen
@@ -655,7 +655,7 @@ class ConceptService
             ->when(is_numeric($filters['season'] ?? null), fn ($q) => $q
                 ->whereHas('seasons', fn ($w) => $w->where('foodalchemist_seasons.id', (int) $filters['season'])))
             ->orderBy('name')
-            ->get(['id', 'name', 'class', 'serving_form_id', 'event_type_id', 'price_per_person_cache', 'ist_fassung', 'team_id'])
+            ->get(['id', 'name', 'class', 'serving_form_id', 'event_type_id', 'price_per_person_cache', 'price_incomplete', 'ist_fassung', 'team_id'])
             ->each(fn ($c) => app(ConceptPreisService::class)->anwenden($c, $team));
     }
 
@@ -687,7 +687,7 @@ class ConceptService
             ->with(['slots' => fn ($q) => $q->orderBy('position'),
                 'slots.unit:id,slug,dimension,default_in_g',
                 'slots.package:id,name,price_per_person,ek_per_person,price_stale',
-                'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache',
+                'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete',
                 'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation'])
             ->get();
 
@@ -820,6 +820,7 @@ class ConceptService
             'price_per_person_manual' => $expired ? null : $concept->price_per_person_manual,
             'calculated_price_per_person' => $cockpit['summe_pro_person'],
             'price_per_person_cache' => $cockpit['price_per_person'],
+            'price_incomplete' => ConceptPreisService::unvollstaendig($cockpit),   // CQ price_incomplete: einzige Schreibstelle
             'price_calculation_source' => 'children_sum',
             'price_calculation_version' => CatalogPricingService::VERSION,
             'price_calculated_at' => now(),

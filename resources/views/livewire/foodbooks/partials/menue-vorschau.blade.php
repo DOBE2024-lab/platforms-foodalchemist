@@ -52,7 +52,7 @@
                                 <div class="mt-2 flex flex-col gap-0.5">
                                     <p class="flex flex-wrap items-baseline gap-x-2 fa-t-h3">
                                         <span class="break-words">{{ $ed['name'] }}</span>
-                                        @if($ed['preis_pp'] ?? null)<span class="text-[length:var(--fa-text-md)] font-normal text-[var(--fa-ink-2)] tabular-nums">{{ number_format((float) $ed['preis_pp'], 2, ',', '.') }} € pro Person</span>@endif
+                                        @if($ed['preis_pp'] ?? null)<span class="text-[length:var(--fa-text-md)] font-normal text-[var(--fa-ink-2)] tabular-nums">{{ number_format((float) $ed['preis_pp'], 2, ',', '.') }} € pro Person</span>@if($ed['preis_vorlaeufig'] ?? false)<x-fa::vorlaeufig />@endif @endif
                                     </p>
                                     @if($ed['claim'] ?? null)<p class="fa-t-muted italic">{{ $ed['claim'] }}</p>@endif
                                     @foreach($ed['gerichte'] ?? [] as $g)

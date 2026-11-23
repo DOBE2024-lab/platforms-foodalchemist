@@ -39,7 +39,7 @@
                     <{{ $hTag }} class="text-lg font-medium tracking-tight text-gray-900">{{ $k['title'] }}</{{ $hTag }}>
                     @if($k['vk_pro_person'] > 0)
                         <div class="text-right shrink-0">
-                            <div class="text-lg font-semibold text-violet-600">{{ number_format($k['vk_pro_person'], 2, ',', '.') }} €</div>
+                            <div class="text-lg font-semibold text-violet-600">{{ number_format($k['vk_pro_person'], 2, ',', '.') }} €@if($k['vk_vorlaeufig'] ?? false)<span class="ml-1 text-xs font-normal opacity-70" data-preis-vorlaeufig>vorläufig</span>@endif</div>
                             <div class="text-[10px] uppercase tracking-wider text-gray-400">pro Person</div>
                         </div>
                     @endif
@@ -69,7 +69,7 @@
                             @elseif(($ed['typ'] ?? '') === 'spacer')
                                 <div class="h-3"></div>
                             @else
-                                <p class="font-semibold text-gray-900 mt-4">{{ $ed['name'] }}@if($ed['preis_pp'] ?? null)<span class="ml-2 text-xs font-normal text-gray-500">{{ number_format((float) $ed['preis_pp'], 2, ',', '.') }} € p.P.</span>@endif</p>
+                                <p class="font-semibold text-gray-900 mt-4">{{ $ed['name'] }}@if($ed['preis_pp'] ?? null)<span class="ml-2 text-xs font-normal text-gray-500">{{ number_format((float) $ed['preis_pp'], 2, ',', '.') }} € p.P.@if($ed['preis_vorlaeufig'] ?? false) vorläufig @endif</span>@endif</p>
                                 @if($ed['claim'] ?? null)<p class="text-xs italic text-gray-500 mb-1">{{ $ed['claim'] }}</p>@endif
                                 @foreach($ed['gerichte'] ?? [] as $g)
                                     @if(($g['type'] ?? '') === 'paket' || ($g['type'] ?? '') === 'header')
@@ -114,7 +114,7 @@
         <div class="rounded-2xl bg-gray-900 text-white px-8 py-6 flex items-center justify-between gap-4">
             <div>
                 <div class="text-[11px] uppercase tracking-wider text-white/50">Preis pro Person</div>
-                <div class="text-2xl font-semibold">{{ number_format($gesamt['vk_pro_person'], 2, ',', '.') }} €</div>
+                <div class="text-2xl font-semibold">{{ number_format($gesamt['vk_pro_person'], 2, ',', '.') }} €@if($gesamt['vk_fehlt'] ?? false)<span class="ml-1 text-xs font-normal text-white/60" data-preis-vorlaeufig>vorläufig</span>@endif</div>
             </div>
             @php($mwstSatz = ($mwst ?? null) ? (($mwst['default_satz'] ?? 'ermaessigt') === 'regulaer' ? ($mwst['regulaer'] ?? 19) : ($mwst['ermaessigt'] ?? 7)) : null)
             <div class="text-right text-[11px] text-white/60 max-w-xs leading-relaxed">

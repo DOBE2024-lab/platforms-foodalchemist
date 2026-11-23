@@ -1308,7 +1308,7 @@
                                             <td class="pt-2 border-t border-[var(--fa-line-strong)]">Summe je Person</td>
                                             <td class="num pt-2 border-t border-[var(--fa-line-strong)]">{{ $euro($cockpit['ek_per_person']) }}</td>
                                             <td class="num pt-2 border-t border-[var(--fa-line-strong)] text-[var(--fa-ink-2)]">{{ $euro($cockpit['price_per_person']) }}</td>
-                                            <td class="num pt-2 border-t border-[var(--fa-line-strong)]">{{ $cockpit['price_per_person'] > 0 ? number_format(\Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct((float) $cockpit['ek_per_person'], $cockpit['price_per_person'], null), 1, ',', '.') . ' %' : '' }}</td>
+                                            @php $fussWe = \Platform\FoodAlchemist\Services\MargeService::wareneinsatzPct($cockpit['ek_per_person'], $cockpit['price_per_person'], null); @endphp<td class="num pt-2 border-t border-[var(--fa-line-strong)]" data-concepter-fuss-we>{{ $fussWe !== null ? number_format($fussWe, 1, ',', '.') . ' %' : (($cockpit['price_per_person'] ?? 0) > 0 ? 'offen' : '') }}</td>
                                         </tr>
                                     </tfoot>
                                 </x-fa::table>

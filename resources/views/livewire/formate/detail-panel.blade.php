@@ -126,7 +126,7 @@
                                        class="min-w-0 break-words text-[var(--fa-ink)] hover:text-[var(--fa-accent)] hover:underline"
                                        title="{{ $e->consumer_name ?: $e->name }} im Konzepter öffnen">{{ $e->consumer_name ?: $e->name }}</a>
                                 </span>
-                                <x-fa::money :value="$e->price_per_person_cache" per="Person" class="shrink-0 text-[var(--fa-ink-2)]" />
+                                <x-fa::money :value="$e->price_per_person_cache" :vorlaeufig="$e->price_incomplete === true" per="Person" class="shrink-0 text-[var(--fa-ink-2)]" />
                             </li>
                         @endforeach
                     </ul>

@@ -539,7 +539,7 @@ class Editor extends Component
         if ($this->id !== null && $this->tab === 'editionen' && $format !== null) {
             $slots = $format->slots()
                 // #3/F6: kind → „Paket"-Badge am Slot.
-                ->with(['concept:id,name,consumer_name,claim,description,status,kind,price_per_person_cache'])
+                ->with(['concept:id,name,consumer_name,claim,description,status,kind,price_per_person_cache,price_incomplete'])
                 ->orderBy('position')->get();
 
             // #2: geteilter Filtersatz (Klasse + Facetten) für beide Picker-Reiter.
@@ -570,7 +570,7 @@ class Editor extends Component
                         'slots.dish:id,name,sales_wording_standard',
                         'slots.package.dishes.dish:id,name,sales_wording_standard',
                         // eingebettetes Paket (kind=paket-Concept) + dessen Gerichte für die rekursive Vorschau
-                        'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache',
+                        'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
                         'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
                         'slots.embeddedConcept.slots.package.dishes.dish:id,name,sales_wording_standard',
                     ])
@@ -590,7 +590,7 @@ class Editor extends Component
         $kalkSumme = ['n' => 0, 'min' => null, 'max' => null, 'avg' => null, 'avg_w' => null];
         if ($this->id !== null && $this->tab === 'kalkulation' && $format !== null) {
             $kalkSlots = $format->slots()->where('type', 'concept')
-                ->with(['concept:id,name,consumer_name,price_per_person_cache,ek_per_person_cache'])
+                ->with(['concept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache'])
                 ->orderBy('position')->get();
             // EINE Abfrage für die Liste; Aufräumen im finally (mitVorwaermen), auch wenn im Block etwas wirft
             $kalkZeilen = app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->mitVorwaermen($outlet !== null ? $kalkSlots->pluck('concept_id')->filter() : [], fn () => $kalkSlots
@@ -605,7 +605,9 @@ class Editor extends Component
                         $cp = app(ConceptService::class)->preisCockpit($c, $outlet);
                         $vk = (float) $cp['price_per_person'] > 0 ? (float) $cp['price_per_person'] : null;
                         $ek = (float) $cp['ek_per_person'] > 0 ? (float) $cp['ek_per_person'] : null;
+                        $vorlaeufig = \Platform\FoodAlchemist\Services\ConceptPreisService::unvollstaendig($cp);
                     } else {
+                        $vorlaeufig = $c->price_incomplete === true;   // CQ price_incomplete
                         $vk = $c->price_per_person_cache !== null ? (float) $c->price_per_person_cache : null;
                         $ek = $c->ek_per_person_cache !== null ? (float) $c->ek_per_person_cache : null;
                     }
@@ -614,6 +616,7 @@ class Editor extends Component
                         'vk' => $vk,
                         'ek' => $ek,
                         'w' => MargeService::wareneinsatzPct($ek, $vk),
+                        'vorlaeufig' => $vorlaeufig,
                     ];
                 })->values());
             $vks = $kalkZeilen->pluck('vk')->filter(fn ($v) => $v !== null && $v > 0)->values();

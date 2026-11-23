@@ -131,7 +131,7 @@
                     <span class="hidden md:inline tabular-nums fa-t-muted w-20 text-right shrink-0" title="Einkauf netto">{{ ($p['ek'] ?? null) !== null ? 'EK ' . $geld($p['ek']) : 'EK offen' }}</span>
                 @endif
                 <span class="inline-flex items-center justify-end gap-1 w-24 shrink-0 text-right text-[var(--fa-ink)]">
-                    <x-fa::money :value="$p['vk'] ?? null" />
+                    <x-fa::money :value="$p['vk'] ?? null" :vorlaeufig="$p['vorlaeufig'] ?? false" />
                     @if(($p['quelle'] ?? null) === 'manuell')<span class="inline-flex text-[var(--fa-accent)]" title="Preis von Hand gesetzt">@svg('heroicon-m-hand-raised', 'w-3.5 h-3.5')</span>@endif
                     @if(($p['vk'] ?? null) !== null && ($p['quelle'] ?? null) === 'keine')<span class="inline-flex text-[var(--fa-warn)]" title="Preis ohne Quelle, bitte prüfen">@svg('heroicon-m-exclamation-triangle', 'w-3.5 h-3.5')</span>@endif
                 </span>

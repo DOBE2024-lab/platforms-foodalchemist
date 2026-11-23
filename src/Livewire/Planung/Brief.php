@@ -23,6 +23,7 @@ use Platform\FoodAlchemist\Services\PlanningSessionService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Services\TitelVorschlagService;
 use Platform\FoodAlchemist\Services\WorkerHealthService;
+use Platform\FoodAlchemist\Support\Planung\KaskadenStart;
 use Platform\FoodAlchemist\Support\Planung\PlanungVokabular;
 use Platform\FoodAlchemist\Support\Planung\ReglerParams;
 
@@ -460,17 +461,6 @@ class Brief extends Component
         $this->eingabe[$scope]['suchbegriff_neu'] = '';
     }
 
-    /**
-     * Spec 80 A4: die Begriffe als Such-Liste für den Lauf — Gruppen-Priorität (Zutaten zuerst), dann
-     * Eingabe-Reihenfolge. Nur die Wörter; Gruppe/Quelle bleiben an der Sitzung.
-     *
-     * @return list<string>
-     */
-    private function suchbegriffeFuerLauf(string $scope): array
-    {
-        return FoodAlchemistPlanningSession::suchbegriffeFuerLauf((array) ($this->eingabe[$scope]['suchbegriffe'] ?? []));
-    }
-
     public function leitplankenAusBriefing(string $scope, BriefingLeitplankenService $svc): void
     {
         if (! in_array($scope, Index::SCOPES, true) || ! isset($this->regler[$scope])) {
@@ -788,7 +778,7 @@ class Brief extends Component
      * sie als `generation_params` (Fan-out-Vererbung) und reicht sie als Lauf-`params` an den Motor.
      * Startet im Hintergrund; die Fläche pollt {@see pruefeLauf}. Kein Redirect.
      */
-    public function goKaskade(string $scope, PlanningCascadeService $cascade, PlanningSessionService $svc): void
+    public function goKaskade(string $scope, PlanningSessionService $svc): void
     {
         $team = $this->team();
         $session = $this->aktiveSession();
@@ -816,111 +806,19 @@ class Brief extends Component
         if ($session === null) {
             return;
         }
-        // NUR der Start-Tab zählt: seine Leitplanken werden persistiert und propagieren die ganze
-        // Kaskade nach unten (Start-Tab gilt für alles darunter — User-Entscheid 2026-08-14).
-        $params = $this->reglerParams($scope);
-        // FAIL-SOFT: die Regler fließen ohnehin über die Lauf-`params` in den Depth-1-Job — die
-        // Session-Persistenz ist NUR für die Fan-out-Vererbung. Kippt sie, darf der Go NICHT sterben.
-        try {
-            $svc->setGenerationParams($team, $session->id, $params);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('[Planung] setGenerationParams übersprungen (Fan-out-Vererbung aus) — evtl. Migration fehlt', ['error' => $e->getMessage()]);
+        // Spec 85 C1 PR-4 (C-c): Lauf-Start (Params persistieren, Suchbegriffe, Lauf-Params, geplanter Pfad, Start,
+        // Plan-Verbrauch) in {@see KaskadenStart}; hier bleiben Prüfungen, Spiegeln und Meldungen.
+        $r = app(KaskadenStart::class)->starte($team, $session, $scope, $this->eingabe, $this->regler, $this->composerSeedPin, $this->planConceptId);
+        [$this->eingabe, $this->composerSeedPin, $this->planConceptId] = [$r['eingabe'], $r['seed_pin'], $r['plan_concept_id']];
+        if ($r['run'] === null) {
+            $this->fehler = $r['fehler'];
+
+            return;
         }
-        // Spec 80 A4: ohne Suchbegriffe (Leitplanken nie abgeleitet) einmal nachziehen — derselbe Aufruf,
-        // nur die Begriffe werden übernommen, die Regler bleiben unangetastet. Fail-soft: ohne Begriffe
-        // sucht der Generator wie bisher mit dem Briefing.
-        if (in_array($scope, ['rezept', 'gericht'], true) && empty($this->eingabe[$scope]['suchbegriffe'])
-            && trim((string) ($this->eingabe[$scope]['brief'] ?? '')) !== '') {
-            try {
-                $abgeleitet = app(BriefingLeitplankenService::class)
-                    ->ausBriefing($team, (string) $this->eingabe[$scope]['brief'], null, $scope);
-                $this->eingabe[$scope]['suchbegriffe'] = (array) ($abgeleitet['suchbegriffe'] ?? []);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('[Planung] Suchbegriffe beim Go nicht ableitbar', ['error' => $e->getMessage()]);
-            }
-        }
-        $suchbegriffe = $this->suchbegriffeFuerLauf($scope);
-        try {
-            $session = app(\Platform\FoodAlchemist\Services\PlanningSessionService::class)
-                ->setzeSuchbegriffe($team, (int) $session->id, $scope, (array) ($this->eingabe[$scope]['suchbegriffe'] ?? []));
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('[Planung] Suchbegriffe nicht gespeichert — evtl. Migration fehlt', ['error' => $e->getMessage()]);
-        }
-        // L5: Titel als Namens-Anker — getippten Titel getrennt vom Brief in die Lauf-Params geben
-        // (NICHT in die persistierten Session-Params, sonst erbte JEDES Fan-out-Kind den Gericht-Titel
-        // als Namen). Nur der Depth-1-Job sieht `titel_vorgabe`; der Generator nimmt ihn als Namen.
-        $laufParams = $params;
-        $titelVorgabe = trim((string) ($this->eingabe[$scope]['titel'] ?? ''));
-        if ($titelVorgabe !== '' && $scope !== 'concept') {   // concept: Name kommt aus dem KI-Kopf (name_claim)
-            $laufParams['titel_vorgabe'] = $titelVorgabe;
-        }
-        // Foodpairing-Composer: gezielte Seed-Anker NUR in die Lauf-Params (Depth-1-lokal, exakt wie
-        // titel_vorgabe) — NIE in setGenerationParams, sonst erbte jedes Fan-out-Kind die Anker.
-        // Quelle: das persistente $composerSeedPin (composerUebernehmen → Erstellen-Tab, überlebt den
-        // Tab-Wechsel), nur für den passenden Scope. Pin nach Verwendung leeren → kein Re-Seed bei
-        // späterem unabhängigem Go.
-        $seed = [];
-        $seedAusPin = false;
-        if (($this->composerSeedPin['scope'] ?? null) === $scope) {
-            $seed = array_values($this->composerSeedPin['slugs'] ?? []);
-            $seedAusPin = true;
-        }
-        if ($seed !== [] && $scope !== 'concept') {
-            $laufParams['seed_anker'] = array_values($seed);
-        }
-        // Spec 80: Suchbegriffe NUR Depth-1 (wie titel_vorgabe) — Kind-Rezepte bekommen später die
-        // Begriffe ihrer Komponente (Teil B), nicht die der Wurzel.
-        if ($suchbegriffe !== [] && $scope !== 'concept') {
-            $laufParams['suchbegriffe'] = $suchbegriffe;
-        }
-        if ($seedAusPin) {
-            $this->composerSeedPin = [];
-        }
-        $optionen = [
-            'created_via' => 'plan_go',
-            'brief' => $this->effektiverBrief($scope),
-            'params' => $laufParams,
-            'voll_anreichern' => (bool) ($this->regler[$scope]['voll_anreichern'] ?? true),   // Default AN (s. $reglerDefaults)
-            // Gericht: erst textlicher Bauplan (inkl. Komponenten), Rezept-Draft erst nach Blitz/Freigabe.
-            'proposal_first' => $scope === 'gericht',
-            // Spec 80 B1: Basisrezept erst als Komponenten-Plan (Mensch bestätigt), dann Bau.
-            'plan_first' => $scope === 'rezept',
-        ];
-        // GEPLANTER PFAD (Etappe 2b, „Beide Pfade behalten"): wurde vorab ein KI-Kopf-Plan ausgearbeitet
-        // und im Conceptor geprüft ($planConceptId), referenziert der Concept-Go dieses Draft-Concept
-        // (existing_concept_id → kein neuer GenerateConceptJob), statt neu zu generieren. Ohne Plan =
-        // SCHNELL-PFAD (frische Generierung). FAIL-SOFT: ist der Plan inzwischen weg (gelöscht/Team-fremd),
-        // NICHT hart blocken — Prop still verwerfen und frisch generieren (ein leerer/toter Plan kippt den Go nicht).
-        if ($scope === 'concept' && (int) ($this->planConceptId ?? 0) > 0) {
-            if (FoodAlchemistConcept::where('team_id', $team->id)->whereKey($this->planConceptId)->exists()) {
-                $optionen['existing_concept_id'] = (int) $this->planConceptId;
-            } else {
-                $this->planConceptId = null;
-            }
-        }
-        try {
-            $run = $cascade->starteKaskade($team, $scope, $session, (string) ($this->eingabe[$scope]['creative_mode'] ?? 'voll_kreativ'), $optionen);
-            $this->dispatch('planung.lauf-gestartet', laufId: (int) $run->id);   // Parent übernimmt laufId/laeuft (Spec 85 C1 PR-4)
-            // Verbrauch AN DEN SCOPE binden: nur der Concept-Go verbraucht den KI-Kopf-Plan. Sonst löschte ein
-            // Basisrezept-/Gericht-Go den vorbereiteten Concept-Plan, obwohl er für diesen Lauf nie gelesen wurde.
-            if ($scope === 'concept') {
-                $this->planConceptId = null;    // Plan verbraucht (referenziert ODER frisch generiert) → nächster Go Schnell-Pfad
-                // #53 persistent: auch den gespeicherten Zeiger lösen (Plan verbraucht) — sonst böte ein
-                // Reload nach dem Go den bereits verbrauchten Plan wieder an. Fail-soft.
-                if ($session->plan_concept_id !== null) {
-                    try {
-                        app(PlanningSessionService::class)->setzePlanConcept($team, (int) $session->id, null);
-                    } catch (\Throwable) {
-                        // Persistenz-Fehler darf den bereits gestarteten Lauf nicht kippen.
-                    }
-                }
-            }
-            $this->wissenVorschau = null;   // neue Kaskade → Vorschau weg; die Steps zeigen dann das ECHTE Wissen (#1a)
-            $this->meldung = 'Kaskade gestartet — Entwurf wird erzeugt …';
-            $this->fehler = null;
-        } catch (\Throwable $e) {
-            $this->fehler = $e->getMessage();
-        }
+        $this->dispatch('planung.lauf-gestartet', laufId: (int) $r['run']->id);   // Parent übernimmt laufId/laeuft (Spec 85 C1 PR-4)
+        $this->wissenVorschau = null;   // neue Kaskade → Vorschau weg; die Steps zeigen dann das ECHTE Wissen (#1a)
+        $this->meldung = 'Kaskade gestartet — Entwurf wird erzeugt …';
+        $this->fehler = null;
     }
 
     public function mount(): void

@@ -1111,7 +1111,7 @@ class PresentationService
         // GV-Aushang ist per Default preislos; nur wenn price_display an ist, ziehen wir die
         // (betriebs-aware) Preise mit — Deklaration/LMIV bleibt davon unberührt (mergeSettings erzwingt sie).
         $showPrice = (bool) $settings['price_display'];
-        $dok = app(SpeiseplanService::class)->dokumentDaten($team, $plan, $mahlzeit, $montag, false, false, $outlet, $showPrice);
+        $dok = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanDokumentQuelle::class)->dokumentDaten($team, $plan, $mahlzeit, $montag, false, false, $outlet, $showPrice);
 
         $tage = array_map(fn ($t) => ['key' => $t['ymd'] ?? '', 'label' => $t['label'] ?? ''], $dok['tage'] ?? []);
         $lines = [];

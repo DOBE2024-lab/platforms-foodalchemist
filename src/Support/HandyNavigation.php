@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Support;
 
-use Platform\FoodAlchemist\Services\ActiveOutletContext;
+use Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext;
 use Platform\FoodAlchemist\Services\SignalService;
 
 /**

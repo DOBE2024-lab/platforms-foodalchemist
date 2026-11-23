@@ -86,7 +86,7 @@ class DetailPanel extends Component
         // #3: Cockpit — read-only Reduktion der Editions-Preise (Preisspanne + Ø €/P + Zählung),
         // KEINE eigene Formel/Recompute. Editionen = Alternativen → Range statt Summe.
         // Ebene 2: mit Brille der €/Gast je Edition live gegen den Betrieb (preisCockpit), sonst Cache.
-        $outlet = app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($this->team());
+        $outlet = app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($this->team());
         $conceptSlots = $format !== null ? $format->slots->where('type', 'concept') : collect();
         // EINE Abfrage für die Liste; Aufräumen im finally (mitVorwaermen), auch wenn im Block etwas wirft
         $vks = app(\Platform\FoodAlchemist\Services\ConceptPreisService::class)->mitVorwaermen($outlet !== null ? $conceptSlots->pluck('concept_id')->filter() : [], fn () => $conceptSlots

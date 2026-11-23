@@ -52,9 +52,9 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         $this->app->scoped(\Platform\FoodAlchemist\Support\AngebotFestpreise::class);   // eingefrorenes Angebot: Festpreise je Request
         $this->app->scoped(\Platform\FoodAlchemist\Services\Ai\KiKlassenEinstellung::class);   // Spec 85: KI-Klasse je Schritt, je Request gelesen
         // Spec 84 §4.4 (E3): aktive Support-Freigabe je Request/Job gemerkt (FaRechte::rolle fragt die Sperre sehr oft)
-        $this->app->scoped(\Platform\FoodAlchemist\Services\SupportFreigabeService::class);
+        $this->app->scoped(\Platform\FoodAlchemist\Services\Plattform\SupportFreigabeService::class);
         // Spec 77c: Team-Namen der Standort-Spalte je Request merken
-        $this->app->scoped(\Platform\FoodAlchemist\Services\StandortService::class);
+        $this->app->scoped(\Platform\FoodAlchemist\Services\Plattform\StandortService::class);
         /**
          * Config laden
          * 
@@ -160,7 +160,7 @@ class FoodAlchemistServiceProvider extends ServiceProvider
             // Polls ($refresh …) und der Sperr-Herzschlag sind kein Zugriff — sonst flutet ein offenes Fenster das Protokoll
             if ($user instanceof \Platform\Core\Models\User && ! str_starts_with((string) $method, '$') && $method !== 'sperreHerzschlag'
                 && ($sf = \Platform\FoodAlchemist\Support\InhaltsSperre::perSupportZugang($user, $user->currentTeamRelation)) !== null) {
-                app(\Platform\FoodAlchemist\Services\SupportFreigabeService::class)->protokolliereZugriff($sf, $user, $user->currentTeamRelation, 'livewire:'.$component::class.'::'.$method);
+                app(\Platform\FoodAlchemist\Services\Plattform\SupportFreigabeService::class)->protokolliereZugriff($sf, $user, $user->currentTeamRelation, 'livewire:'.$component::class.'::'.$method);
             }
             if ($bereich !== null && $user instanceof \Platform\Core\Models\User && ($team = $user->currentTeamRelation) !== null
                 && ! app(\Platform\FoodAlchemist\Services\FaRechte::class)->darfBereich($user, $team, $bereich)) {
@@ -336,17 +336,17 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         }
 
         // Roadmap Planung-Leitstelle · Et.8 »Worker-Präsenz«: jeder lebende Queue-Worker stempelt einen
-        // Herzschlag ({@see \Platform\FoodAlchemist\Services\WorkerHealthService}). `Looping` feuert bei
+        // Herzschlag ({@see \Platform\FoodAlchemist\Services\Plattform\WorkerHealthService}). `Looping` feuert bei
         // JEDER Worker-Schleife — auch im Leerlauf — und ist damit die ehrliche „ein Worker ist da"-Quelle;
         // `JobProcessing` hält busy-Phasen frisch. Der Stempel ist gedrosselt (10 s) und fail-soft, die
         // Signale sind plattformweit (FA-Jobs teilen die Default-Queue → jeder Worker, der sie leert, zählt).
         \Illuminate\Support\Facades\Event::listen(
             \Illuminate\Queue\Events\Looping::class,
-            fn () => $this->app->make(\Platform\FoodAlchemist\Services\WorkerHealthService::class)->heartbeat(),
+            fn () => $this->app->make(\Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::class)->heartbeat(),
         );
         \Illuminate\Support\Facades\Event::listen(
             \Illuminate\Queue\Events\JobProcessing::class,
-            fn () => $this->app->make(\Platform\FoodAlchemist\Services\WorkerHealthService::class)->heartbeat(),
+            fn () => $this->app->make(\Platform\FoodAlchemist\Services\Plattform\WorkerHealthService::class)->heartbeat(),
         );
 
         // Spec 82 §12 A3: Der Opt-in-Stand (StammPaket::$cache, static) darf Request-/Job-Grenzen nicht überleben —

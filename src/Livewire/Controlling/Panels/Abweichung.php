@@ -47,7 +47,7 @@ class Abweichung extends Component
             'a' => $team !== null ? $svc->analyse($team, $von, $bis) : null,
             // Spec 77c: Team-Brille „alle" → Summe oben, je Standort nebeneinander (eigene Preise + Einstellungen)
             'jeStandort' => $team !== null
-                ? app(\Platform\FoodAlchemist\Services\StandortService::class)->jeStandort($team, fn ($t) => $svc->analyse($t, $von, $bis))
+                ? app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->jeStandort($team, fn ($t) => $svc->analyse($t, $von, $bis))
                 : [],
         ]);
     }

@@ -107,9 +107,9 @@ it('Regel 4 · ENRICH-Mint: der Anker läuft nicht mehr synchron im Lauf', funct
     $unit = \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::create(['team_id' => $this->rootTeam->id, 'slug' => 'g', 'display_de' => 'Gramm', 'dimension' => 'mass', 'default_in_g' => 1]);
     \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $recipe->id, 'raw_text' => 'Rinderbeinscheibe',
         'quantity' => '500', 'unit_vocab_id' => $unit->id, 'position' => 1]);
-    $bulk = Mockery::mock(\Platform\FoodAlchemist\Services\BulkEnrichService::class)->makePartial();
+    $bulk = Mockery::mock(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class)->makePartial();
     $bulk->shouldNotReceive('ankerNachziehen');
-    app()->instance(\Platform\FoodAlchemist\Services\BulkEnrichService::class, $bulk);
+    app()->instance(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class, $bulk);
 
     $r = app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $recipe->fresh());
 

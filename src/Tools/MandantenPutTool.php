@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\MandantenService;
+use Platform\FoodAlchemist\Services\Plattform\MandantenService;
 
 /** Spec 82 §9/§13 B3 + G · Mandant pflegen: Status, Modus, CRM-Firma, Notiz. Der Modus nur durch Plattform-Admin. */
 class MandantenPutTool extends WareneingangTool implements ToolContract, ToolMetadataContract

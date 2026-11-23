@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\GebuehrenZaehler;
+use Platform\FoodAlchemist\Services\Plattform\GebuehrenZaehler;
 
 /**
  * Spec 82 §13 D — täglicher Zähl-Lauf der FA-Gebühren je Kunden-Hauptteam; schreibt Tageswerte in team_billable_usages.

@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire;
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 
 /**
  * Spec 77c · Team-Brille im Oberteam: welcher Standort gelesen wird — eigenes Team, alle Standorte

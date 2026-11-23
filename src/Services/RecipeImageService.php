@@ -159,7 +159,7 @@ class RecipeImageService
             throw new \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException('das Rezept',
                 'Dieses Rezept gehört einem anderen Team (übernommener Bestand) – Fotos bitte am eigenen Rezept anlegen.');
         }
-        $media = app(FoodAlchemistMediaService::class)->storeImage(
+        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
             $datei,
             $team,
             'foodalchemist.recipe',

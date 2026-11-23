@@ -69,9 +69,9 @@ it('M7/Bulk + M8/Tools: Run-Status fremder Teams unsichtbar; Tools antworten tea
     $this->actingAs($this->makeUser($this->childB, 'B-User'));
     config(['foodalchemist.ai.provider' => 'fake', 'foodalchemist.ai.backoff' => []]);
     $bBasis = ($this->mkRezept)($this->childB, 'b_bulk');
-    $runId = app(\Platform\FoodAlchemist\Services\BulkEnrichService::class)->starte($this->childB, [$bBasis->id]);
+    $runId = app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class)->starte($this->childB, [$bBasis->id]);
 
-    expect(app(\Platform\FoodAlchemist\Services\BulkEnrichService::class)->status($this->childA, $runId))->toBeNull();
+    expect(app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class)->status($this->childA, $runId))->toBeNull();
 
     $userA = $this->makeUser($this->childA, 'A-User');
     $suche = app(\Platform\Core\Tools\ToolRegistry::class)->get('foodalchemist.recipes.SEARCH')

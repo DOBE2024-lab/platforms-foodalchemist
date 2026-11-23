@@ -82,7 +82,7 @@ class LieferantenRechnungService
     /** @return list<array<string,mixed>> */
     public function liste(Team $team, array $filter = []): array
     {
-        $q = app(StandortService::class)->leseBereich(FoodAlchemistSupplierInvoice::query(), $team)->with(['supplier', 'lines'])
+        $q = app(Plattform\StandortService::class)->leseBereich(FoodAlchemistSupplierInvoice::query(), $team)->with(['supplier', 'lines'])
             ->orderByDesc('invoice_date')->orderByDesc('id');
         if (! empty($filter['supplier_id'])) {
             $q->where('supplier_id', (int) $filter['supplier_id']);
@@ -101,7 +101,7 @@ class LieferantenRechnungService
     public function detail(Team $team, int $id): array
     {
         // Spec 77c: lesend auch Rechnungen der Standorte (Team-Brille); Schreiben bleibt bei eigene()
-        $inv = (app(StandortService::class)->leseBereich(FoodAlchemistSupplierInvoice::query(), $team)->whereKey($id)->first() ?? $this->eigene($team, $id))
+        $inv = (app(Plattform\StandortService::class)->leseBereich(FoodAlchemistSupplierInvoice::query(), $team)->whereKey($id)->first() ?? $this->eigene($team, $id))
             ->load(['supplier', 'lines.orderLine', 'lines.deliveryNoteLine.deliveryNote']);
         $tol = $this->match->toleranz($team);
         $olIds = $inv->lines->pluck('order_line_id')->filter()->unique()->values()->all();
@@ -554,7 +554,7 @@ class LieferantenRechnungService
             'status_label' => FoodAlchemistSupplierInvoice::STATUS_LABELS[$i->status] ?? $i->status,
             'source' => (string) ($i->source ?? 'beleg'),
             'team_id' => (int) $i->team_id,
-            'standort' => app(StandortService::class)->teamNamen([(int) $i->team_id])[(int) $i->team_id] ?? null,
+            'standort' => app(Plattform\StandortService::class)->teamNamen([(int) $i->team_id])[(int) $i->team_id] ?? null,
             'strittig' => (bool) $i->is_disputed,
             'paid_at' => $i->paid_at?->toDateString(),
             'note' => $i->note,

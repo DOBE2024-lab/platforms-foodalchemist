@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\VoiceCommandService;
+use Platform\FoodAlchemist\Services\Plattform\VoiceCommandService;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class);

@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
-use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
+use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\PresentationDesignService;
 use Platform\FoodAlchemist\Services\PresentationService;
 use Platform\FoodAlchemist\Support\KapitelAuswahl;

@@ -23,7 +23,7 @@ class TeamSettingsService
      * Spec 53 / Paket F: Agenten-Modus des Sprachbefehls (Claude-Code-Mode-Switcher-Vorbild).
      * `fragen` (Default, heutiges Verhalten) = jede Schreibaktion nur als Vorschlag mit
      * Bestätigen-Klick (GL-07 unverändert). `auto_sicher` = die REVERSIBLEN Vorschläge aus
-     * {@see \Platform\FoodAlchemist\Services\VoiceCommandService::AUTO_ERLAUBT} laufen direkt,
+     * {@see \Platform\FoodAlchemist\Services\Plattform\VoiceCommandService::AUTO_ERLAUBT} laufen direkt,
      * Unumkehrbares bleibt Vorschlag. `nur_lesen` = keine Vorschläge, der Agent antwortet nur.
      */
     public const VOICE_AGENT_MODES = ['fragen', 'auto_sicher', 'nur_lesen'];

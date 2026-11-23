@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanLinie;
 use Platform\FoodAlchemist\Services\ConcepterAggregateService;
-use Platform\FoodAlchemist\Services\FoodAlchemistMediaService;
+use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\PresentationDesignService;
 use Platform\FoodAlchemist\Services\PresentationService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanBasis;

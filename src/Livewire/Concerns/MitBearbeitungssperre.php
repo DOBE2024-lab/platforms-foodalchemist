@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Platform\FoodAlchemist\Services\BearbeitungssperreService;
+use Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService;
 
 /**
  * Spec 65 · Bearbeitungssperre für Editoren (Livewire).

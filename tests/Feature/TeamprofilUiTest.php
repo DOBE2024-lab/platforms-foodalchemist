@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Livewire\Recipes\DetailPanel;
 use Platform\FoodAlchemist\Livewire\Settings\Index as Einstellungen;
 use Platform\FoodAlchemist\Livewire\Settings\Teamprofil;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
-use Platform\FoodAlchemist\Services\TeamProfilService;
+use Platform\FoodAlchemist\Services\Plattform\TeamProfilService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

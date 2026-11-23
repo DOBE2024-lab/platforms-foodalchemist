@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\ActiveOutletContext;
+use Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext;
 use Platform\FoodAlchemist\Services\SpeisekarteService;
 
 /**

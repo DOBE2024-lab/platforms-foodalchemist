@@ -22,8 +22,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\AboKuendigungService;
-use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\Plattform\AboKuendigungService;
+use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\AngebotService;
 use Platform\FoodAlchemist\Services\ConceptFassungService;
 use Platform\FoodAlchemist\Services\ConceptService;
@@ -330,7 +330,7 @@ it('MCP abos.WITHDRAW mit typ, abos.DELETE liefert kopien_je_art', function () {
 });
 
 it('Mandant beenden (systemLauf): AboAuskunft kündigt alle Abos samt Konzepten und Paketen', function () {
-    $x = app(\Platform\FoodAlchemist\Services\AboAuskunft::class)->kuendigen($this->broich, $this->broichChef);
+    $x = app(\Platform\FoodAlchemist\Services\Plattform\AboAuskunft::class)->kuendigen($this->broich, $this->broichChef);
     expect(FoodAlchemistAbo::where('mandant_team_id', $this->broich->id)->where('status', FoodAlchemistAbo::AKTIV)->count())->toBe(0)
         ->and(slotPaketId($this))->not->toBe($this->p1->id)
         ->and(FoodAlchemistConcept::ohneTeamSicht('test')->where('team_id', $this->broich->id)->where('kopie_von_id', $this->konzept->id)->count())->toBe(1);

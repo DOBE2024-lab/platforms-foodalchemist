@@ -82,7 +82,7 @@ class Editor extends Component
             return;
         }
         if ($alteId !== null && Auth::id() !== null) {
-            app(\Platform\FoodAlchemist\Services\BearbeitungssperreService::class)->freigeben('order', $alteId, (int) Auth::id());
+            app(\Platform\FoodAlchemist\Services\Plattform\BearbeitungssperreService::class)->freigeben('order', $alteId, (int) Auth::id());
         }
         if (self::sperreAktiv()) {
             $this->bearbeitenStarten();

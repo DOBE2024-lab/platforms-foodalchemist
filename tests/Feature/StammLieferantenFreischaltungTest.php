@@ -8,8 +8,8 @@ use Platform\FoodAlchemist\Livewire\Verwaltung\StammPaket as StammPaketKomponent
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\MasterTeamService;
-use Platform\FoodAlchemist\Services\PlattformProtokoll;
+use Platform\FoodAlchemist\Services\Plattform\MasterTeamService;
+use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;
 use Platform\FoodAlchemist\Services\StammPaketService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\StammPaket;

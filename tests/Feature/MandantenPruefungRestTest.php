@@ -206,7 +206,7 @@ it('Speisekarte gericht_ref: abonnierte Fassung erlaubt, Master ohne Abo und fre
     $inhalte = app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class);
     $sammlung = $inhalte->sammlungAnlegen($master, 'Basis', null, $kurator);
     $inhalte->sammlungHinzu($master, $sammlung, 'recipe', [$jus->id], $kurator);
-    app(\Platform\FoodAlchemist\Services\AboService::class)->abonnieren($master, $mandant, $sammlung, $kurator);
+    app(\Platform\FoodAlchemist\Services\Plattform\AboService::class)->abonnieren($master, $mandant, $sammlung, $kurator);
 
     $svc = app(SpeisekarteService::class);
     $karte = $svc->create($mandant, ['name' => 'Mandanten-Karte']);

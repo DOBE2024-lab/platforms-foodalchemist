@@ -2,7 +2,7 @@
 
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Dashboard;
-use Platform\FoodAlchemist\Services\KpiService;
+use Platform\FoodAlchemist\Services\Plattform\KpiService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

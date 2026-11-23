@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrder;
 use Platform\FoodAlchemist\Models\FoodAlchemistOrderLine;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 
 /**
  * Lesesicht auf Bestellungen (98 · 3.3 S5, aus OrderService verschoben): Liste je Team (Standort-Sichtbarkeit,

@@ -542,7 +542,7 @@ class EtikettService
             'schrift_kopf' => $serif ? '"DejaVu Serif", Georgia, serif' : '"DejaVu Sans", Arial, sans-serif',
             // Logo des Betriebs, sonst Food-Alchemist-Wortmarke (Standard, Dominique 2026-10-08)
             'logo' => $v->zeige_logo
-                ? (($outlet !== null ? app(FoodAlchemistMediaService::class)->dataUri($outlet->logo_context_file_id ?? null, $outlet->logo_path ?? null) : null) ?? $this->faLogo())
+                ? (($outlet !== null ? app(Plattform\FoodAlchemistMediaService::class)->dataUri($outlet->logo_context_file_id ?? null, $outlet->logo_path ?? null) : null) ?? $this->faLogo())
                 : null,
         ];
     }

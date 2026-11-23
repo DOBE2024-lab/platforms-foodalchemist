@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Jobs\BulkEnrichJob;
 use Platform\FoodAlchemist\Jobs\ImportArticlesJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistBulkRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
-use Platform\FoodAlchemist\Services\IngestStatusService;
+use Platform\FoodAlchemist\Services\Plattform\IngestStatusService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -93,7 +93,7 @@ it('beendet den Lauf auch, wenn das Team unter dem Job weggefallen ist', functio
     // Der einzige Fehl-Fall, den `handle()` selbst sieht — vorher ein stilles `return`
     // bei den beiden Enrich-Jobs.
     $run = h3bLauf($this->rootTeam->id, BulkRunType::Enrich);
-    (new BulkEnrichJob($run->id, 999999, [1], ['wording']))->handle(app(\Platform\FoodAlchemist\Services\BulkEnrichService::class));
+    (new BulkEnrichJob($run->id, 999999, [1], ['wording']))->handle(app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class));
 
     $frisch = FoodAlchemistBulkRun::findOrFail($run->id);
     expect($frisch->status)->toBe(BulkRunStatus::Failed)

@@ -1186,7 +1186,7 @@ class Editor extends Component
             $concept = $concepts->detail($team, $this->id);
             if ($concept !== null) {
                 // Ebene 2 (D3): Concept-Preise, HK-Kalkulation + Pax-Simulation folgen dem aktiven Betrieb.
-                $outlet = $team ? app(\Platform\FoodAlchemist\Services\ActiveOutletContext::class)->current($team) : null;
+                $outlet = $team ? app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team) : null;
                 $cockpit = $concepts->preisCockpit($concept, $outlet, $team);
                 $sektionSumme = $istAufbau ? $this->sektionsSummen($concept, $cockpit['zeilen']) : [];
                 $aggregat = $agg->conceptAggregat($concept);
@@ -1316,12 +1316,12 @@ class Editor extends Component
                 'original_geaendert' => (bool) app(\Platform\FoodAlchemist\Services\InhaltsFreigabeService::class)->originalGeaendert(($this->type === 'concepts' ? $concept : null)),
             ] : null,
             'conceptImageUrl' => ($concept !== null && ($concept->image_context_file_id || $concept->image_path))
-                ? app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($concept->image_context_file_id, $concept->image_path)
+                ? app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($concept->image_context_file_id, $concept->image_path)
                 : null,
             'conceptGallery' => $concept !== null
                 ? $concept->images->map(fn ($gi) => [
                     'id' => $gi->id,
-                    'url' => app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($gi->context_file_id, $gi->path),
+                    'url' => app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($gi->context_file_id, $gi->path),
                 ])->all()
                 : [],
             'slotZutaten' => $slotZutaten,

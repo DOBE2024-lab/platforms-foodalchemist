@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebotEinfrierung;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\AboService;
+use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\AngebotEinfrierService;
 use Platform\FoodAlchemist\Services\AngebotService;
 use Platform\FoodAlchemist\Services\EinfrierKosten;

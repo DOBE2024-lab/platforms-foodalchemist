@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Support;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\MandantenService;
+use Platform\FoodAlchemist\Services\Plattform\MandantenService;
 
 /**
  * Spec 82 §13 G — darf `$betrachter` den Marken-Kontext des Teams `$ziel` sehen?

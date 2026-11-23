@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistBulkGpProposal;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Ai\KiAuftragService;
 use Platform\FoodAlchemist\Services\Ai\KiExternModus;
-use Platform\FoodAlchemist\Services\BulkEnrichService;
+use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

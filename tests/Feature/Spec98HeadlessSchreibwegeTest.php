@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Services\GpAbgleich\GpAbgleichService;
 use Platform\FoodAlchemist\Services\GpService;
 use Platform\FoodAlchemist\Services\LabNoteService;
-use Platform\FoodAlchemist\Services\OutletService;
+use Platform\FoodAlchemist\Services\Plattform\OutletService;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
 use Platform\FoodAlchemist\Services\ProductionStationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

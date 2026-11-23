@@ -982,7 +982,7 @@
                             <div class="rounded-[var(--fa-radius-control)] overflow-hidden border border-[var(--fa-line)]">
                                 <div class="flex items-center justify-between gap-2 px-3 h-9 text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-on-accent)]" :style="`background:${band || brand}`">
                                     <span class="truncate">{{ $angebot->name }}</span>
-                                    @if($angebot->logo_path)<img src="{{ app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($angebot->logo_context_file_id, $angebot->logo_path) }}" alt="Logo" class="max-h-5 max-w-[90px] object-contain shrink-0" />@endif
+                                    @if($angebot->logo_path)<img src="{{ app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($angebot->logo_context_file_id, $angebot->logo_path) }}" alt="Logo" class="max-h-5 max-w-[90px] object-contain shrink-0" />@endif
                                 </div>
                                 <div class="px-3 py-3 bg-[var(--fa-surface)] text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]" :style="`border-top:3px solid ${brand}`">
                                     <span x-text="footer || 'Erstellt mit Food Alchemist'"></span>
@@ -1015,7 +1015,7 @@
                             <x-fa::field label="Logo" error="logoUpload">
                                 @if($angebot->logo_path)
                                     <div class="flex items-center gap-2 mb-1">
-                                        <img src="{{ app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($angebot->logo_context_file_id, $angebot->logo_path) }}" alt="Logo" class="h-10 max-w-[120px] object-contain rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-1" />
+                                        <img src="{{ app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($angebot->logo_context_file_id, $angebot->logo_path) }}" alt="Logo" class="h-10 max-w-[120px] object-contain rounded-[var(--fa-radius-control)] border border-[var(--fa-line)] bg-[var(--fa-surface)] p-1" />
                                         <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="brandingLogoEntfernen" data-logo-entfernen>Logo entfernen</x-fa::button>
                                     </div>
                                 @endif
@@ -1025,7 +1025,7 @@
                             <x-fa::field label="Titelbild" error="coverUpload">
                                 @if($angebot->cover_image_path)
                                     <div class="flex items-center gap-2 mb-1">
-                                        <img src="{{ app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($angebot->cover_context_file_id, $angebot->cover_image_path) }}" alt="Titelbild" class="h-10 max-w-[120px] object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" />
+                                        <img src="{{ app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($angebot->cover_context_file_id, $angebot->cover_image_path) }}" alt="Titelbild" class="h-10 max-w-[120px] object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" />
                                         <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="brandingCoverEntfernen" data-cover-entfernen>Titelbild entfernen</x-fa::button>
                                     </div>
                                 @endif
@@ -1043,7 +1043,7 @@
                                     <x-fa::field :label="'Bild ' . $nr" :error="'praesBildUpload.' . $nr">
                                         @if(is_array($pb))
                                             <div class="flex items-center gap-2 mb-1">
-                                                <img src="{{ app(\Platform\FoodAlchemist\Services\FoodAlchemistMediaService::class)->url($pb['context_file_id'] ?? null, $pb['path'] ?? null) }}" alt="Präsentationsbild {{ $nr }}" class="h-10 max-w-[120px] object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" />
+                                                <img src="{{ app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($pb['context_file_id'] ?? null, $pb['path'] ?? null) }}" alt="Präsentationsbild {{ $nr }}" class="h-10 max-w-[120px] object-cover rounded-[var(--fa-radius-control)] border border-[var(--fa-line)]" />
                                                 <x-fa::button variant="danger" size="sm" icon="heroicon-m-trash" wire:click="praesBildEntfernen({{ $nr }})">Entfernen</x-fa::button>
                                             </div>
                                         @endif

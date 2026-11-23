@@ -7,9 +7,9 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\ActiveOutletContext;
+use Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\StandortService;
+use Platform\FoodAlchemist\Services\Plattform\StandortService;
 use Platform\FoodAlchemist\Support\FaTeam;
 
 /**

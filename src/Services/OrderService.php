@@ -1487,7 +1487,7 @@ class OrderService
     public function detail(Team $team, int $orderId): array
     {
         // Spec 77c: Oberteam darf Belege seiner Standorte lesend öffnen (is_owned/editierbar bleiben false)
-        $order = app(StandortService::class)->lesbarMitUnterTeams(FoodAlchemistOrder::query(), $team)
+        $order = app(Plattform\StandortService::class)->lesbarMitUnterTeams(FoodAlchemistOrder::query(), $team)
             ->with(['supplier', 'lines.gp:id,piece_default_g', 'lines.supplierItem'])
             ->findOrFail($orderId);
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status);

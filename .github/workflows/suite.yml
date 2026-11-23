@@ -19,7 +19,7 @@ on:
         required: true
         default: main
       shards:
-        description: 'Anzahl Shards (je Shard 4 Prozesse)'
+        description: 'Anzahl Shards (je Shard parallel über alle Kerne des Runners, ubuntu-latest: 4)'
         required: true
         default: '12'
 
@@ -168,12 +168,14 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
           DB_URL: ''
+        # Kein --processes: Pest reicht es bei --shard an `--list-tests` durch, PHPUnit lehnt es ab.
+        # --parallel nimmt ohne Angabe die Kernzahl des Runners.
         run: |
           set -o pipefail
           php -d memory_limit=1G vendor/bin/pest \
             --configuration=phpunit.xml --testsuite=FoodAlchemist \
             --shard="${SHARD}/${SHARDS}" \
-            --parallel --processes=4 \
+            --parallel \
             --log-junit="junit-${SHARD}.xml" 2>&1 | tee "pest-${SHARD}.log"
 
       - name: Ergebnis sichern

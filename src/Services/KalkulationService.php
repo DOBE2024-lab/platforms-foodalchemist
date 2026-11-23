@@ -26,7 +26,7 @@ class KalkulationService
         private TeamSettingsService $settings,
         private ConceptService $concepts,
         private ConcepterAggregateService $aggregat,
-        private FixkostenService $fixkosten,
+        private Produktion\FixkostenService $fixkosten,
         private DarreichungResolver $resolver,
     ) {
     }

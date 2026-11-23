@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
-use Platform\FoodAlchemist\Services\ProduktionListeService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProduktionListeService;
 use Platform\FoodAlchemist\Services\Plattform\StandortService;
 use Platform\FoodAlchemist\Support\Zeitraum;
 

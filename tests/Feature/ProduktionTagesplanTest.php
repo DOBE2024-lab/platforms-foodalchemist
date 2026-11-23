@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation as Posten;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeFeedback;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -110,7 +110,7 @@ it('zeigt Auslastung mit Balken nur dort, wo eine Kapazität hinterlegt ist', fu
         ->assertSee('Warme Küche')->assertSee('Kalte Küche')
         ->assertSeeHtml('data-tagesplan-auslastung');
 
-    $auslastung = app(\Platform\FoodAlchemist\Services\ProductionCapacityService::class)
+    $auslastung = app(\Platform\FoodAlchemist\Services\Produktion\ProductionCapacityService::class)
         ->auslastung($this->rootTeam, '2026-08-15', '2026-08-28');
     $buckets = collect($auslastung)->flatten(1);
 

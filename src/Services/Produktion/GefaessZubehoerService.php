@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -99,7 +99,7 @@ class GefaessZubehoerService
             }
         });
 
-        return app(DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gefaess->id]);
+        return app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gefaess->id]);
     }
 
     /**
@@ -116,7 +116,7 @@ class GefaessZubehoerService
                 ->where('gefaess_gp_id', $gefaess->id)->where('zubehoer_gp_id', $zubehoerGpId)->get()->each->delete();
         });
 
-        return app(DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gefaess->id]);
+        return app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gefaess->id]);
     }
 
     /**
@@ -130,7 +130,7 @@ class GefaessZubehoerService
         FoodAlchemistGpGefaessZubehoer::query()->ohneTeamSicht('eigene-zeile')->withTrashed()->where('team_id', $team->id)
             ->where('gefaess_gp_id', $gefaess->id)->get()->each->forceDelete();
 
-        return app(DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gefaess->id]);
+        return app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gefaess->id]);
     }
 
     /**

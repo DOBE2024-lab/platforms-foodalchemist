@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Enums\ProductionOrderStatus;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 
 /**
  * Spec 18 — Cockpit-DetailPanel eines Produktionsauftrags (v3-Design wie
@@ -122,7 +122,7 @@ class DetailPanel extends Component
         // Spec 30 E5: Posten-Auslastung + passive Überlast-Meldung für DIESEN Auftrag
         $postenSummen = $this->orderId !== null && $detail !== null ? $svc->postenSummen($team, $this->orderId) : [];
         $kapazitaetsWarnungen = $this->orderId !== null && $detail !== null
-            ? app(\Platform\FoodAlchemist\Services\ProductionCapacityService::class)->warnungenFuer($team, $this->orderId)
+            ? app(\Platform\FoodAlchemist\Services\Produktion\ProductionCapacityService::class)->warnungenFuer($team, $this->orderId)
             : [];
 
         return view('foodalchemist::livewire.produktion.detail-panel', [

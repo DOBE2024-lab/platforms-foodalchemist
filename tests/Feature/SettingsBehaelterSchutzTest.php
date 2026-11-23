@@ -165,7 +165,7 @@ it('Freigabe entziehen wirkt: der Rechner rechnet danach nicht mehr, sondern nen
     $behaelter = \Platform\FoodAlchemist\Models\FoodAlchemistVocabContainer::find($id);
     expect($behaelter->eignung)->toBe(['abfuellen']);
 
-    $rechner = new \Platform\FoodAlchemist\Services\BehaelterRechner;
+    $rechner = new \Platform\FoodAlchemist\Services\Produktion\BehaelterRechner;
     $out = $rechner->varianten(40.0, [
         'container' => $behaelter, 'referenz_menge_kg' => 9.0, 'dichteklasse' => null,
         'skalierung' => 'tiefer_fuellbar', 'max_schichthoehe_mm' => null, 'konfidenz_rang3' => false,

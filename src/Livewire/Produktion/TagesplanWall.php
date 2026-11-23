@@ -11,9 +11,9 @@ use Platform\FoodAlchemist\Enums\ProductionLineStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Concerns\HaktZeileAb;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
-use Platform\FoodAlchemist\Services\ProductionCapacityService;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
-use Platform\FoodAlchemist\Services\ProductionReadinessService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionCapacityService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionReadinessService;
 use Platform\FoodAlchemist\Support\Produktion\TagesplanAbfrage;
 
 /**

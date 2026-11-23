@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SurplusToDishService;
+use Platform\FoodAlchemist\Services\Produktion\SurplusToDishService;
 
 /**
  * R6.10 (Pairing-Offense): Überschuss-zu-Gericht — Lager meldet Überschuss (Mock/

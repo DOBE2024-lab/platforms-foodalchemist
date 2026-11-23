@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Illuminate\Support\Str;
 use Platform\Core\Models\Team;
@@ -24,8 +24,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 class ProduktionsVerbrauchService
 {
     public function __construct(
-        private RecipeRecomputeService $recompute,
-        private InventurService $inventur,
+        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\InventurService $inventur,
         private EigenproduktionService $eigen,
     ) {}
 

@@ -13,8 +13,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\GefaessKostenartService;
-use Platform\FoodAlchemist\Services\GefaessZubehoerService;
+use Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService;
+use Platform\FoodAlchemist\Services\Produktion\GefaessZubehoerService;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -252,7 +252,7 @@ it('Planungsblatt + Produktionsschein: Gefäß und Zubehör auf die Portionen ho
 
     // 2 Deckel je Glas, 45 Portionen: 45 Gläser, 90 Deckel
     $this->zub->setzen($this->rootTeam, $this->glas->id, $this->deckel->id, 2);
-    $orders = app(\Platform\FoodAlchemist\Services\ProductionOrderService::class);
+    $orders = app(\Platform\FoodAlchemist\Services\Produktion\ProductionOrderService::class);
     $order = $orders->draftForDate($this->rootTeam, '2026-12-01');
     $orders->addTarget($this->rootTeam, $order->id, ['recipe_id' => $this->dar->recipe_id, 'portions' => 45], 'a');
     $dok = $orders->dokument($this->rootTeam, $order->id);

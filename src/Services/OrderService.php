@@ -165,7 +165,7 @@ class OrderService
                     $targets = $this->releasedProductionTargets($production);
                     $prodDate = $date ?: $production->production_date?->toDateString();
                     foreach ($targets as $targetIdx => $target) {
-                        $targetRef = ProductionOrderService::sourceRefFor((int) $production->id, (string) ($target['source_ref'] ?? ('target-'.$targetIdx)));
+                        $targetRef = Produktion\ProductionOrderService::sourceRefFor((int) $production->id, (string) ($target['source_ref'] ?? ('target-'.$targetIdx)));
                         $this->previewZiel(
                             $team,
                             $gruppen,
@@ -324,7 +324,7 @@ class OrderService
                 $targets = $this->releasedProductionTargets($production);
                 $prodDate = $date ?: $production->production_date?->toDateString();
                 foreach ($targets as $targetIdx => $target) {
-                    $targetRef = ProductionOrderService::sourceRefFor((int) $production->id, (string) ($target['source_ref'] ?? ('target-'.$targetIdx)));
+                    $targetRef = Produktion\ProductionOrderService::sourceRefFor((int) $production->id, (string) ($target['source_ref'] ?? ('target-'.$targetIdx)));
                     $res = $this->addNeedFromTarget($team, $this->bedarf->zielOhneMeta($target), $targetRef, $userId, $strategie, $prodDate);
                     foreach ($res['orders'] as $id) {
                         $this->kopfAusQuelle($team, (int) $id, $reference !== '' ? $reference : (string) ($target['label'] ?? ''));
@@ -390,7 +390,7 @@ class OrderService
         if ($production->procurement_released_at === null || empty($production->procurement_targets_snapshot)) {
             throw new \RuntimeException('Materialbedarf dieser Produktion ist noch nicht freigegeben.');
         }
-        if ($production->procurement_targets_hash !== ProductionOrderService::targetsHash($production->targets)) {
+        if ($production->procurement_targets_hash !== Produktion\ProductionOrderService::targetsHash($production->targets)) {
             throw new \RuntimeException('Materialbedarf wurde nach der Freigabe geändert. Bitte in Produktion erneut freigeben.');
         }
 
@@ -411,10 +411,10 @@ class OrderService
             ->orderBy('production_date')
             ->get()
             ->map(function (FoodAlchemistProductionOrder $production) use ($team) {
-                $linked = app(ProductionOrderService::class)->verknuepfteOrders($team, (int) $production->id);
+                $linked = app(Produktion\ProductionOrderService::class)->verknuepfteOrders($team, (int) $production->id);
                 $round = $linked->flatMap(fn (FoodAlchemistOrder $order) => $order->rounds)
                     ->sortByDesc('id')->first();
-                $stale = $production->procurement_targets_hash !== ProductionOrderService::targetsHash($production->targets);
+                $stale = $production->procurement_targets_hash !== Produktion\ProductionOrderService::targetsHash($production->targets);
                 $triggered = $linked->contains(fn (FoodAlchemistOrder $order) => in_array(
                     $order->status instanceof OrderStatus ? $order->status : OrderStatus::from((string) $order->status),
                     [OrderStatus::Sent, OrderStatus::Confirmed, OrderStatus::Delivered],
@@ -445,7 +445,7 @@ class OrderService
      */
     public function withdrawProductionDemand(Team $team, int $productionOrderId): array
     {
-        $prefix = ProductionOrderService::sourceRefPrefix($productionOrderId);
+        $prefix = Produktion\ProductionOrderService::sourceRefPrefix($productionOrderId);
         $draftLines = FoodAlchemistOrderLine::query()
             ->where('team_id', $team->id)
             ->whereHas('order', fn ($query) => $query
@@ -647,7 +647,7 @@ class OrderService
                 continue;
             }
             $production->last_handover_at = now();
-            $production->handover_targets_hash = ProductionOrderService::targetsHash($production->targets);
+            $production->handover_targets_hash = Produktion\ProductionOrderService::targetsHash($production->targets);
             $production->save();
         }
     }

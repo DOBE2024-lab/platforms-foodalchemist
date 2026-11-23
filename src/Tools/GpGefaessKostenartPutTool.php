@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\GefaessKostenartService;
+use Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService;
 
 /** Art + Preis eines Gefäß-GP für das eigene Team setzen (17.11.2026) — gilt für alle Darreichungen des Teams mit diesem Gefäß. */
 class GpGefaessKostenartPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

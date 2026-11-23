@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -40,7 +40,7 @@ use Platform\FoodAlchemist\Support\TeamScope;
 class ProductionOrderService
 {
     public function __construct(
-        private PlanungsblattService $planung,
+        private \Platform\FoodAlchemist\Services\PlanungsblattService $planung,
         private ProductionEventService $events,
     ) {}
 
@@ -864,7 +864,7 @@ class ProductionOrderService
                 : null;
 
             if ($ziel === ProductionOrderStatus::Cancelled) {
-                $procurementCancellation = app(OrderService::class)->withdrawProductionDemand($team, (int) $order->id);
+                $procurementCancellation = app(\Platform\FoodAlchemist\Services\OrderService::class)->withdrawProductionDemand($team, (int) $order->id);
             }
 
             $this->events->record((int) $team->id, (int) $order->id, 'order_status_changed', [
@@ -892,7 +892,7 @@ class ProductionOrderService
     public function listForTeam(Team $team, ?string $status = null): Collection
     {
         // Spec 77c: Team-Brille (bei „eigen" unverändert visibleToTeam)
-        return app(Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistProductionOrder::query(), $team)
+        return app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistProductionOrder::query(), $team)
             ->when($status !== null, fn ($q) => $q->where('status', $status))
             ->orderByRaw("CASE status WHEN 'planned' THEN 0 ELSE 1 END")
             ->orderBy('production_date')
@@ -940,7 +940,7 @@ class ProductionOrderService
     {
         $suche = trim((string) ($filters['suche'] ?? ''));
 
-        return app(Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistProductionOrder::query(), $team)
+        return app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistProductionOrder::query(), $team)
             ->when(($filters['status'] ?? '') !== '', fn ($q) => $q->where('status', $filters['status']))
             // whereDate: `production_date` persistiert mit Zeitanteil — ein reiner
             // Datumsvergleich würde den letzten Tag des Fensters verschlucken.
@@ -954,7 +954,7 @@ class ProductionOrderService
     /** Detail-Aggregat für UI/MCP. */
     public function detail(Team $team, int $orderId): array
     {
-        $order = app(Plattform\StandortService::class)->lesbarMitUnterTeams(FoodAlchemistProductionOrder::query(), $team)->with(['lines.recipe:id,name', 'lines.station:id,name'])->findOrFail($orderId);
+        $order = app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->lesbarMitUnterTeams(FoodAlchemistProductionOrder::query(), $team)->with(['lines.recipe:id,name', 'lines.station:id,name'])->findOrFail($orderId);
         $status = $order->status instanceof ProductionOrderStatus ? $order->status : ProductionOrderStatus::from((string) $order->status);
 
         // P4: verknüpfte Bestellschienen (kompakt fürs UI/MCP) + Stale-Marker.
@@ -962,7 +962,7 @@ class ProductionOrderService
             $orderStatus = $o->status instanceof OrderStatus ? $o->status : OrderStatus::from((string) $o->status);
             $cancellationMail = null;
             if (in_array($orderStatus, [OrderStatus::Sent, OrderStatus::Confirmed], true)) {
-                $mail = app(OrderService::class)->productionCancellationMailtoData($team, (int) $o->id, $orderId);
+                $mail = app(\Platform\FoodAlchemist\Services\OrderService::class)->productionCancellationMailtoData($team, (int) $o->id, $orderId);
                 if ($mail['to'] !== '') {
                     $cancellationMail = 'mailto:'.$mail['to'].'?subject='.rawurlencode($mail['subject']).'&body='.rawurlencode($mail['body']);
                 }

@@ -88,7 +88,7 @@
                         <tbody>
                             @forelse($zeilen as $z)
                                 @php
-                                    $behaelter = \Platform\FoodAlchemist\Services\BehaelterBedarfService::kompakt($z['darreichung']['behaelter_bedarf'] ?? null);
+                                    $behaelter = \Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::kompakt($z['darreichung']['behaelter_bedarf'] ?? null);
                                 @endphp
                                 <tr class="{{ $z['ist_gestrichen'] ? 'opacity-60' : '' }}" wire:key="pz-{{ $z['id'] }}" data-produktion-zeile="{{ $z['id'] }}">
                                     <td>

@@ -140,7 +140,7 @@ it('Produktionsauftrag friert die Schrittfolge mit ein (steps_snapshot)', functi
     $r = $this->makeRecipe($this->rootTeam, 'Fond: Auftrag', ['preparation' => null, 'yield_kg' => 2.0]);
     app(RecipeStepService::class)->sync($r, [['phase' => 'Garen', 'text' => 'Ansetzen und ziehen lassen.']]);
 
-    $order = app(\Platform\FoodAlchemist\Services\ProductionOrderService::class)->saveNew(
+    $order = app(\Platform\FoodAlchemist\Services\Produktion\ProductionOrderService::class)->saveNew(
         $this->rootTeam, '2026-08-05', 'Testauftrag',
         [['source_ref' => 'test:1', 'recipe_id' => $r->id, 'portions' => 4]],
         userId: $this->user->id,

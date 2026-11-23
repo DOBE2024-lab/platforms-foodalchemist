@@ -7,7 +7,7 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Platform\FoodAlchemist\Models\FoodAlchemistKitchenRole;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
-use Platform\FoodAlchemist\Services\ProductionStationService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionStationService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

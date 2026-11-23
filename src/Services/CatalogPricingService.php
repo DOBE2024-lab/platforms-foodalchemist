@@ -16,7 +16,7 @@ class CatalogPricingService
 
     public function __construct(
         private TeamSettingsService $settings,
-        private FixkostenService $fixkosten,
+        private Produktion\FixkostenService $fixkosten,
     ) {
     }
 

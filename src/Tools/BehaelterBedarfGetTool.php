@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabContainer;
-use Platform\FoodAlchemist\Services\BehaelterBedarfService;
+use Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService;
 
 /**
  * Spec 51 · MCP: den gerechneten Behälter-Bedarf abfragen, ohne einen Auftrag anzulegen.

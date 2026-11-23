@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Services\GpService;
 use Platform\FoodAlchemist\Services\LabNoteService;
 use Platform\FoodAlchemist\Services\Plattform\OutletService;
 use Platform\FoodAlchemist\Services\PlanningSessionService;
-use Platform\FoodAlchemist\Services\ProductionStationService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionStationService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

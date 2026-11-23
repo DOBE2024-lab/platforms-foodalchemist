@@ -9,8 +9,8 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Enums\ProductionLineStatus;
 use Platform\FoodAlchemist\Livewire\Produktion\Concerns\SetztZeileMitWallStart;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
-use Platform\FoodAlchemist\Services\ProductionCapacityService;
-use Platform\FoodAlchemist\Services\ProductionOrderService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionCapacityService;
+use Platform\FoodAlchemist\Services\Produktion\ProductionOrderService;
 use Platform\FoodAlchemist\Support\Produktion\TagesplanAbfrage;
 
 /**

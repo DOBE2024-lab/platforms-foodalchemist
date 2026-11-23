@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Produktion;
 
 use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
@@ -31,7 +31,7 @@ class FixkostenService
 
     public const CATERING_EXAMPLE_BASES = ['mek' => 30000, 'fek' => 24000, 'hk' => 60000];
 
-    public function __construct(private TeamSettingsService $settings)
+    public function __construct(private \Platform\FoodAlchemist\Services\TeamSettingsService $settings)
     {
     }
 

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\EigenproduktionService;
+use Platform\FoodAlchemist\Services\Produktion\EigenproduktionService;
 
 /** Spec 69 · Offene Chargen der Eigenproduktion lesen (älteste Haltbarkeit zuerst), optional nur bald ablaufende. */
 class InventoryBatchesGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

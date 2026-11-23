@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RegenerationCascadeService;
+use Platform\FoodAlchemist\Services\Produktion\RegenerationCascadeService;
 
 /**
  * Spec 51 · MCP: die Regenerations-KASKADE eines Rezepts lesen — mit Herkunft je Zeile.

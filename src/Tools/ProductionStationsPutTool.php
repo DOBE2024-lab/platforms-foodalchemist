@@ -58,7 +58,7 @@ class ProductionStationsPutTool extends FoodAlchemistTool implements ToolContrac
         if (! array_key_exists('ist_sammelposten', $arguments)) {
             return ToolResult::error('ist_sammelposten (true|false) angeben.', 'VALIDATION_ERROR');
         }
-        $posten = app(\Platform\FoodAlchemist\Services\ProductionStationService::class)
+        $posten = app(\Platform\FoodAlchemist\Services\Produktion\ProductionStationService::class)
             ->setzeSammelposten($team, $posten, (bool) $arguments['ist_sammelposten']);
 
         return ToolResult::success(['posten' => ['id' => (int) $posten->id, 'name' => $posten->name, 'ist_sammelposten' => (bool) $posten->ist_sammelposten]]);

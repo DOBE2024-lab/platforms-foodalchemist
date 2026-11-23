@@ -104,6 +104,11 @@
             },
             // Wie der alte Hinweis: verknüpft, nicht optional, kein €/g. Ausnahme Stück-Zeile mit €/Stück:
             // die ist bepreist (zeilenEk/bepreistInfo rechnen sie), also kein „Preis fehlt".
+            // Spiegel von zeilenKostenUndMassen.ohne_gewicht: Menge da, nicht optional, nicht „q. s.“, aber kein Gramm-Faktor
+            ohneGewicht(z) {
+                const e = this.einheiten[z.unit_vocab_id];
+                return !z.is_optional && !!e && e.slug !== 'qs' && (this.mengeAvg(z) ?? 0) > 0 && !this.gFaktor(z) && !!(z.gp_id || z.referenced_recipe_id);
+            },
             preisFehlt(z) {
                 if (!(z.gp_id || z.referenced_recipe_id) || z.is_optional) return false;
                 if (this.einheiten[z.unit_vocab_id]?.slug === 'stk' && z.ek_pro_stk !== null && z.ek_pro_stk !== undefined) return false;

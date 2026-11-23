@@ -1,12 +1,6 @@
 {
-    "Services/DarreichungsZeitService.php": {
-        "rueckkante PlanungsblattService": 1
-    },
-    "Services/GerichtHuelleService.php": {
-        "rueckkante PlanningSessionService": 1
-    },
     "_graph": {
         "groesste_kreis_komponente": 12,
-        "klassen_in_kreisen": 61
+        "klassen_in_kreisen": 60
     }
 }

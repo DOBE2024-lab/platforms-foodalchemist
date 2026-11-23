@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Services\GerichtHuelleService;
  * Menüpunkt „Rezeptur erstellen" im KI-Assistenten des Gerichts (Dominique 13.11.2026). Ein Gericht im Entwurf
  * ohne Komponenten trägt mit Name und Beschreibung schon alles, was die Planung braucht. Der Punkt legt KEINE
  * Rezeptur an, sondern öffnet die Planung (Reiter Gericht) mit einer vorbefüllten Session
- * ({@see GerichtHuelleService::sessionFuer}); dort startet der Mensch mit dem normalen Go, prüft den Bauplan und
+ * ({@see \Platform\FoodAlchemist\Services\PlanungsEinstiegService::rezepturSessionFuer}); dort startet der Mensch mit dem normalen Go, prüft den Bauplan und
  * gibt frei. Gebaut wird in DIESES Gericht. Spiegelt den Zukauf-Knopf am Grundprodukt (Gps\ZukaufRezept).
  *
  * Eigene Komponente, weil VkModal auf seiner Größen-Basis steht (Spec 85 §9).
@@ -28,7 +28,7 @@ class RezepturErstellen extends Component
         $this->recipeId = $recipeId;
     }
 
-    public function planen(GerichtHuelleService $huelle)
+    public function planen(\Platform\FoodAlchemist\Services\PlanungsEinstiegService $einstieg)
     {
         $this->fehler = null;
         $team = Auth::user()?->currentTeamRelation;
@@ -36,7 +36,7 @@ class RezepturErstellen extends Component
             return null;
         }
         try {
-            $session = $huelle->sessionFuer($team, $this->recipeId);
+            $session = $einstieg->rezepturSessionFuer($team, $this->recipeId);
         } catch (ModelNotFoundException) {
             $this->fehler = 'Gericht nicht gefunden oder nicht sichtbar.';
 

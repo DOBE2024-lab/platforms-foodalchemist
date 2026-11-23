@@ -2,6 +2,7 @@
 
 namespace Platform\FoodAlchemist\Services;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
@@ -10,8 +11,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
+use RuntimeException;
 
 /**
  * 98 · 1.3d · „X aus Brief" — EIN Use-Case je Ausgabe (Foodbook, Speisekarte, Speiseplan, Angebot, Format) für die
@@ -162,6 +165,43 @@ class PlanungsEinstiegService
     }
 
     // ── gemeinsame Schritte ─────────────────────────────────────────────
+
+    /**
+     * „Rezeptur erstellen“ am Gericht: vorbefüllte Planung für die Hülle ({@see GerichtHuelleService::huelle}). Eine offene Planung
+     * desselben Gerichts wird wiederverwendet.
+     *
+     * 98 · 3.3 S7 P5: verschoben aus GerichtHuelleService::sessionFuer. Die Rezept-Schicht legte hier eine Planung an
+     * (Rückkante GerichtHuelleService → PlanningSessionService); der Einstieg in die Planung gehört in die Planungs-Schicht.
+     *
+     * @throws ModelNotFoundException Gericht nicht sichtbar
+     * @throws RuntimeException       geerbt, schon freigegeben oder schon mit Komponenten
+     */
+    public function rezepturSessionFuer(Team $team, int $recipeId, string $createdVia = 'gericht'): FoodAlchemistPlanningSession
+    {
+        $gericht = FoodAlchemistRecipe::visibleToTeam($team)->where('is_sales_recipe', true)->find($recipeId);
+        if ($gericht === null) {
+            throw new ModelNotFoundException('Gericht nicht sichtbar.');
+        }
+        if ((int) $gericht->team_id !== (int) $team->id) {
+            throw new RuntimeException('Geerbtes Gericht: eine Rezeptur erstellen kann nur das Besitzer-Team.');
+        }
+        if (GerichtHuelleService::huelle($team, (int) $gericht->id) === null) {
+            throw new RuntimeException('„Rezeptur erstellen“ gibt es nur für Gerichte im Entwurf ohne Komponenten. Dieses Gericht hat schon Komponenten oder ist freigegeben. Zum Ändern „Mit Anweisung überarbeiten“ nutzen.');
+        }
+        $offen = FoodAlchemistPlanningSession::where('team_id', $team->id)->where('target_recipe_id', $gericht->id)
+            ->where('status', '!=', 'erledigt')->orderByDesc('id')->first();
+        if ($offen !== null) {
+            return $offen;
+        }
+        $session = app(PlanningSessionService::class)->create($team, [
+            'title' => mb_substr((string) $gericht->name, 0, 255),
+            'brief' => trim((string) $gericht->description) !== '' ? (string) $gericht->description : (string) $gericht->name,
+            'created_via' => $createdVia,
+        ]);
+        $session->update(['target_recipe_id' => (int) $gericht->id]);
+
+        return $session->refresh();
+    }
 
     private function brief(string $brief): string
     {

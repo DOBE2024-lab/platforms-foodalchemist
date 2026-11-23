@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Services\GerichtHuelleService;
 
 /**
  * Leitstelle, Reiter Gericht: Planung mit einem Ziel-Gericht (Dominique 13.11.2026). Kommt die Planung vom
- * Menüpunkt „Rezeptur erstellen" am Gericht ({@see GerichtHuelleService::sessionFuer}), trägt sie `target_recipe_id`.
+ * Menüpunkt „Rezeptur erstellen" am Gericht ({@see \Platform\FoodAlchemist\Services\PlanungsEinstiegService::rezepturSessionFuer}), trägt sie `target_recipe_id`.
  * Dann belegt dieser Trait Titel und Briefing des Gericht-Reiters aus der Planung vor (nur leere Felder, einmal je
  * Planung) und liefert das Ziel für den Hinweis im Reiter. Der Go bleibt der normale; der Bau schreibt in das Gericht.
  *

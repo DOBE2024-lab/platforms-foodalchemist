@@ -1256,4 +1256,26 @@ class PlanungsblattService
             ])
             ->find($id);
     }
+
+    /**
+     * Zeitvorschau (Entscheid Dominique 19.11.2026): Herstellung der Komponenten für N Portionen dieser Darreichung.
+     * 98 · 3.3 S7 P5: verschoben aus DarreichungsZeitService::herstellung (Rückkante Darreichung → Planungsblatt).
+     * Rechnet das Planungsblatt selbst ({@see PlanungsblattService::produktionsblatt}, je Basisrezept
+     * {@see ProductionTimeService::calculateForBatches}) — keine zweite Logik. Personenminuten nur aus den Basisrezepten;
+     * passive Zeiten (Standzeit, Gerätezeit Regeneration) aller Zeilen getrennt, nie in den Personenminuten.
+     *
+     * @return array{herstellung_minuten: float, herstellung_rezepte: list<array{name: string, minuten: float}>, passiv_minuten: float}
+     */
+    public function darreichungsHerstellung(Team $team, FoodAlchemistRecipe $gericht, FoodAlchemistRecipeDarreichung $dar, float $portionen): array
+    {
+        $rezepte = app(PlanungsblattService::class)->produktionsblatt($team,
+            ['recipe_id' => $gericht->id, 'portions' => $portionen, 'presentation_id' => $dar->id])['rezepte'];
+        $basis = array_values(array_filter($rezepte, fn (array $r) => $r['ist_basisrezept']));
+
+        return [
+            'herstellung_minuten' => round(array_sum(array_map(fn (array $r) => (float) $r['arbeitszeit_min'], $basis)), 1),
+            'herstellung_rezepte' => array_map(fn (array $r) => ['name' => (string) $r['name'], 'minuten' => round((float) $r['arbeitszeit_min'], 1)], $basis),
+            'passiv_minuten' => round(array_sum(array_map(fn (array $r) => (float) ($r['zeitplanung']['passive_minutes'] ?? 0), $rezepte)), 1),
+        ];
+    }
 }

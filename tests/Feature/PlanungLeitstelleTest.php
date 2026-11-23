@@ -68,8 +68,8 @@ it('setGenerationParams: filtert auf die Whitelist und macht leere Auswahl zu nu
 });
 
 it('Basisrezept: reglerParams nimmt Ziel-Menge + Einheit statt Pax (scope=rezept)', function () {
-    $inst = Livewire::test(PlanungIndex::class)->instance();
-    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, PlanungIndex::class);
+    $inst = Livewire::test(Brief::class)->instance();   // Spec 85 C1 PR-4: Leitplanken im Kind
+    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, Brief::class);
 
     $inst->regler['rezept']['ziel_menge'] = '2,5';   // Dezimal mit Komma
     $inst->regler['rezept']['ziel_einheit'] = 'l';
@@ -84,8 +84,8 @@ it('Basisrezept: reglerParams nimmt Ziel-Menge + Einheit statt Pax (scope=rezept
 });
 
 it('Basisrezept: verdeckte Pax/Portion laufen nicht neben der Charge in den Lauf (demo Lauf #79)', function () {
-    $inst = Livewire::test(PlanungIndex::class)->instance();
-    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, PlanungIndex::class);
+    $inst = Livewire::test(Brief::class)->instance();   // Spec 85 C1 PR-4: Leitplanken im Kind
+    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, Brief::class);
 
     // Pax/Portion haben im Basisrezept-Tab kein Feld — kamen sie per Assistent/Leitplanke in die Regler,
     // liefen sie vorher unsichtbar mit (100 × 80 g = 8 kg neben ziel_menge 2 kg).
@@ -111,8 +111,8 @@ it('Basisrezept: verdeckte Pax/Portion laufen nicht neben der Charge in den Lauf
 });
 
 it('Basisrezept: »nur Bestand« aus dem Regler erreicht den Lauf statt still hybrid (demo Session #138)', function () {
-    $inst = Livewire::test(PlanungIndex::class)->instance();
-    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, PlanungIndex::class);
+    $inst = Livewire::test(Brief::class)->instance();   // Spec 85 C1 PR-4: Leitplanken im Kind
+    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, Brief::class);
 
     expect($call('rezept')['bestand'])->toBe('hybrid');            // Default unverändert
 
@@ -129,8 +129,8 @@ it('Basisrezept: »nur Bestand« aus dem Regler erreicht den Lauf statt still hy
 });
 
 it('Leitplanken-Hygiene: Concept nutzt nur den Menü-Preis-Korridor (kein Portions-VK, kein Ziel-Portion)', function () {
-    $inst = Livewire::test(PlanungIndex::class)->instance();
-    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, PlanungIndex::class);
+    $inst = Livewire::test(Brief::class)->instance();   // Spec 85 C1 PR-4: Leitplanken im Kind
+    $call = Closure::bind(fn (string $s) => $this->reglerParams($s), $inst, Brief::class);
 
     // Beide scope-fremden Achsen gesetzt — sie dürfen NICHT in den Concept-Prompt fließen …
     $inst->regler['concept']['ziel_vk'] = '8,50';
@@ -1059,7 +1059,7 @@ it('briefVorlage: unbekannter Key oder falscher Scope → fehler, keine Änderun
 it('vorlagenFuer: Gericht hat die 6 team-eigenen Start-Vorlagen, Basisrezept (rezept) ohne eigene keine', function () {
     // Spec 84 L1-B: Vorlagen gehören dem Team — die Seed-Vorlagen erst wie in der Migration an das Hauptteam verteilen
     (require \dirname(__DIR__, 2).'/database/migrations/2026_11_09_100000_brief_vorlagen_je_hauptteam.php')->up();
-    $comp = Livewire::test(PlanungIndex::class);
+    $comp = Livewire::test(Brief::class);   // Spec 85 C1 PR-4: Vorlagen im Kind
     $inst = $comp->instance();
 
     $gericht = $inst->vorlagenFuer('gericht');

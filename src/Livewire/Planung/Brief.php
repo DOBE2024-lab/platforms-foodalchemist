@@ -208,6 +208,9 @@ class Brief extends Component
         }
     }
 
+    /** Multi-Select-Regler (Toggle in/aus der Liste): Diät + Frische-Erlaubnis + Allergen-No-Go. Spec 85 C1 PR-4: aus Index (war private, nur hier gebraucht). */
+    private const MULTI_REGLER = ['diaet_hart', 'frische', 'allergen_nogo'];
+
     /** Pill-Toggle für die Richtungs-Regler EINES Scopes (MULTI_REGLER togglen, sonst Single-Set). */
     public function reglerPill(string $scope, string $feld, string $wert): void
     {
@@ -218,7 +221,7 @@ class Brief extends Component
         // Property-Sync) — der generische `updated()`-Hook sieht ihn nie, darum hier explizit
         // dasselbe "manuelle Änderung löscht den Agent-Marker"-Verhalten wie dort.
         unset($this->reglerVonAgent[$scope][$feld]);
-        if (in_array($feld, Index::MULTI_REGLER, true)) {
+        if (in_array($feld, self::MULTI_REGLER, true)) {
             $cur = (array) ($this->regler[$scope][$feld] ?? []);
             $this->regler[$scope][$feld] = in_array($wert, $cur, true)
                 ? array_values(array_diff($cur, [$wert]))

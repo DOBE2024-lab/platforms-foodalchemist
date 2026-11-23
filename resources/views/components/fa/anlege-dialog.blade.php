@@ -6,7 +6,7 @@
 <x-fa::modal name="fa-anlegen" :title="$title" size="max-w-md">
     <div data-anlege-dialog="">
         <x-fa::field :label="$label" for="fa-anlegen-name" required :hint="$hint" :error="$fehler">
-            <x-fa::input id="fa-anlegen-name" wire:model="neuName" wire:keydown.enter="neuAnlegen" autocomplete="off" data-anlege-name="" />
+            <x-fa::input id="fa-anlegen-name" :fehler="$fehler" wire:model="neuName" wire:keydown.enter="neuAnlegen" autocomplete="off" data-anlege-name="" />
         </x-fa::field>
     </div>
     <x-slot:footer>

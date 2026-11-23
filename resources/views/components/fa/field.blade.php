@@ -1,5 +1,6 @@
 {{-- x-fa::field — Label über dem Feld, Hilfetext darunter, Fehler darunter in Rot.
-     for: id des Eingabefelds. error: Livewire-Feldname (zeigt $errors) ODER direkter Text.
+     for: id des Eingabefelds. error: Livewire-Feldname (zeigt $errors) ODER direkter Text. Mit for trägt die Meldung die id
+     „<for>-fehler“ — x-fa::input fehler=… verweist per aria-describedby darauf (98 · 2.4c Nachtrag).
      einklappen (GP-Formular, Dominique 26.10.): Hilfetext standardmäßig zu, ⓘ neben dem Label klappt ihn auf und zu (button mit aria-expanded/aria-controls,
      Text bleibt im DOM). Braucht `for` (stabile id für aria-controls); ohne `for` bleibt der Hilfetext offen wie bisher. --}}
 @props(['label' => null, 'for' => null, 'hint' => null, 'error' => null, 'required' => false, 'optional' => false, 'einklappen' => false])
@@ -28,7 +29,7 @@
     @endif
     {{ $slot }}
     @if($fehlerText)
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert">{{ $fehlerText }}</p>
+        <p @if($for) id="{{ $for }}-fehler" @endif class="text-[length:var(--fa-text-sm)] text-[var(--fa-crit)]" role="alert">{{ $fehlerText }}</p>
     @elseif($hint)
         <p @if($hinweisId) id="{{ $hinweisId }}" x-show="hinweisOffen" x-cloak data-fa-field-hinweis="{{ $for }}" @endif class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]">{{ $hint }}</p>
     @endif

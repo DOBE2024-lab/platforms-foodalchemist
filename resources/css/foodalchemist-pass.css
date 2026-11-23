@@ -382,6 +382,9 @@ button { transition: transform 120ms ease-out, background-color 120ms ease, box-
   .fa-control::placeholder { color: var(--fa-ink-3); }
   .fa-control:focus { outline: none; border-color: var(--fa-accent); box-shadow: 0 0 0 3px var(--fa-accent-soft); }
   .fa-control:disabled { opacity: 0.6; cursor: not-allowed; }
+  /* 98 · 2.4c Nachtrag: Fehlerzustand eines Felds (x-fa::input fehler=…) — rote Linie ≥ 3:1 (crit-line, 3.9), Fokus behält den Ring in Rot */
+  .fa-control[aria-invalid="true"] { border-color: var(--fa-crit-line); }
+  .fa-control[aria-invalid="true"]:focus { border-color: var(--fa-crit); box-shadow: 0 0 0 3px var(--fa-crit-soft); }
   .fa-select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--fa-ink-3) 50%), linear-gradient(135deg, var(--fa-ink-3) 50%, transparent 50%); background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
 
   /* Chip-Auswahl (x-fa::choice): echtes Radio/Checkbox, sichtbar als Chip */

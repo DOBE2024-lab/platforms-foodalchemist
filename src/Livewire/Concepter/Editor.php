@@ -1190,7 +1190,7 @@ class Editor extends Component
                 $cockpit = $concepts->preisCockpit($concept, $outlet, $team);
                 $sektionSumme = $istAufbau ? $this->sektionsSummen($concept, $cockpit['zeilen']) : [];
                 $aggregat = $agg->conceptAggregat($concept);
-                $deklaration = $istDeklarationTab ? $agg->conceptDeklaration($concept) : null;
+                $deklaration = $istDeklarationTab ? $agg->conceptDeklaration($concept, $team) : null;
                 $bewertet = $bewertung->bewerten($concept, $cockpit, $aggregat);
                 $kalkulation = $kalk->conceptHk($team, $concept, $outlet);
                 // EK unbekannt (Abo-Fassung unvollständig) bleibt null → Ampel „unbekannt“, nie 0 % (CQ price_incomplete)

@@ -34,6 +34,7 @@ class FoodAlchemistTeamSetting extends Model
         'standorte_uebernehmen_leitartikel' => 'boolean',   // Spec 85 PR-B: NULL = AN (Standard), am Kunden-Hauptteam
         'standorte_uebernehmen_favoriten' => 'boolean',     // Spec 85 FAV-1: NULL = AN (Standard), am Kunden-Hauptteam
         'iodized_hint_active' => 'boolean',   // NULL bleibt NULL = erben
+        'kennzeichnungslegende' => 'array',
         'trend_dataforseo_enabled' => 'boolean',
         'trend_dataforseo_budget_usd' => 'decimal:2',
         'trend_stichworte_ein' => 'array',   // Spec 93 A: Team-Standard des Stichwort-Filters (greift ohne eigene Liste der Quelle)

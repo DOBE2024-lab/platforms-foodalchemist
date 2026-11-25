@@ -174,7 +174,7 @@ final class FoodbookDokument
         // Gericht-Zeile trägt ihre eigenen Allergen-/Zusatzstoff-Codes aus der Gericht-Deklaration;
         // die Legende sammelt nur, was auf den Gerichten tatsächlich vorkommt (LMIV/ZZulV).
         $kzAgg = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class);
-        $katalog = $kzAgg->kennzeichnungKatalog();
+        $katalog = $kzAgg->kennzeichnungKatalog($team);
         // Alle Gericht-IDs: aus den concept_ref-Gericht-Zeilen UND den recipe_ref-Block-Labels.
         $recipeIds = collect($rows)->flatMap(function ($r) {
             $ausBloecke = collect($r['bloecke'])->flatMap(fn ($b) => collect($b['gerichte'])->pluck('recipe_id')->push($b['recipe_id'] ?? null));
@@ -301,7 +301,7 @@ final class FoodbookDokument
         // trug aber bis hierher KEINE Deklaration — anders als Foodbook, Speisekarte und
         // Speiseplan, die dieselbe Code-Quelle längst nutzen (Regelwerk Concept §7.1).
         $kz = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class)
-            ->codesFuerZeilen($wording->gerichtZeilen($concept));
+            ->codesFuerZeilen($wording->gerichtZeilen($concept), team: $team);
 
         return [
             'concept' => $concept,

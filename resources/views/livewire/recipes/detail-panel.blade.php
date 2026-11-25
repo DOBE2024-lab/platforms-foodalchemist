@@ -93,15 +93,6 @@
                 </div>
             </x-fa::section>
         @endif
-        <div class="flex flex-wrap items-center gap-1.5 pt-3 border-t border-[var(--fa-line)]" data-workflow>
-            @foreach($statusWahl as $wert => $lbl)
-                @if($rezept->status->value !== $wert)<x-fa::button size="sm" wire:click="statusSetzen('{{ $wert }}')" data-status-btn="{{ $wert }}">{{ $lbl }}</x-fa::button>@endif
-            @endforeach
-            <x-fa::button size="sm" variant="ghost" icon="heroicon-o-document-duplicate" wire:click="duplizieren" data-duplizieren-btn>Duplizieren</x-fa::button>
-            <x-fa::button size="sm" variant="ghost" icon="heroicon-m-square-2-stack" wire:click="templateToggle"
-                title="{{ $rezept->is_template ? 'Ist Vorlage. Klick hebt sie auf, das Rezept bleibt.' : 'Als Vorlage für neue Rezepte speichern. Sie steht dann unter „Aus Vorlage“.' }}" data-template-btn>{{ $rezept->is_template ? 'Vorlage aufheben' : 'Als Vorlage speichern' }}</x-fa::button>
-        </div>
-        <x-fa::freigabe-sperre :sperre="$freigabeSperre" />{{-- 1.1f --}}
 
     {{-- ── STANDALONE-Detail rechts im Basisrezepte-Browser (Anatomie Detail-Panels) ── --}}
     @else

@@ -38,6 +38,7 @@ use Platform\FoodAlchemist\Services\SensorikService;
 class RecipeModal extends Component
 {
     use HatRezeptCopilot;   // Spec 03 L6b
+    use \Platform\FoodAlchemist\Livewire\Concerns\HatFreigabeSperre;
     use InteractsWithSavedToast;
     use \Platform\FoodAlchemist\Livewire\Concerns\HatAnreicherungsLauf;
     use TauschtRezept;      // Verwaltungs-Reiter: tauschen + löschen (dieselbe Mechanik wie im Panel)
@@ -58,7 +59,7 @@ class RecipeModal extends Component
     protected function sperrFreiExtra(): array
     {
         return [
-            'eigeneKopieAnlegen',   // Spec 77d: schreibt ins eigene Team, nicht in dieses Rezept
+            'eigeneKopieAnlegen', 'duplizieren',   // Kopien schreiben ins eigene Team
             'pruefeProduktfotoErgebnis', 'beiZutatenPersistiert', 'beiModalGeschlossen', 'regenerationLaden',
             'ueberarbeitungVerwerfen', 'matchVorschau', 'copilotPruefen', 'copilotAusAblage', 'copilotVerwerfen',
         ];
@@ -148,6 +149,7 @@ class RecipeModal extends Component
         $this->form = self::LEER;
         $this->fehler = null;
         $this->nameFehler = null;
+        $this->freigabeSperre = null;
 
         $this->kiVorschlag = [];
         $this->ueberarbeitenOffen = false;
@@ -560,6 +562,41 @@ class RecipeModal extends Component
 
     // Spec 27: Foto-Upload/-Löschen ist in den `StepEditor` gewandert (Media-Pool +
     // M:N-Verknüpfung am Schritt). Hier gibt es deshalb keine Datei-Uploads mehr.
+
+    public function statusSetzen(string $status, RecipeService $recipes): void
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        if ($team === null || $this->recipeId === null) {
+            return;
+        }
+        $this->freigabeSperre = $this->fehler = null;
+        try {
+            $recipes->setStatus($team, $this->recipeId, $status);
+            $this->dispatch('recipe-gespeichert');
+        } catch (\Platform\FoodAlchemist\Exceptions\FreigabeGesperrtException $e) {
+            $this->freigabeGesperrt($e, 'rezept', $this->recipeId);
+        } catch (\RuntimeException $e) {
+            $this->fehler = $e->getMessage();
+        }
+    }
+
+    public function duplizieren(RecipeService $recipes): void
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        $original = $this->rezept();
+        if ($team === null || $original === null) {
+            return;
+        }
+        try {
+            $kopie = $recipes->duplicate($team, $original->id, $original->name.' (Kopie)');
+            $this->bearbeitenBeenden();
+            $this->oeffnen($kopie->id);
+            $this->dispatch('recipe-gespeichert');
+            $this->dispatch('recipe-selected', id: $kopie->id);
+        } catch (\RuntimeException $e) {
+            $this->fehler = $e->getMessage();
+        }
+    }
 
     /** R6: Template-Markierung an/aus (Service-Guard: nur Besitzer-Team, D1). */
     public function templateToggle(): void
@@ -1183,6 +1220,7 @@ class RecipeModal extends Component
                 ? app(FoodAlchemistMediaService::class)->url($r->image_context_file_id, $r->image_path)
                 : null,
             'istTemplate' => (bool) ($r?->is_template ?? false),
+            'rezeptStatus' => $r?->status?->value,
             // Verwaltungs-Reiter (tauschen + löschen). Bewusst NICHT hinter $geladeneTabs gegated:
             // `speichern()` ruft bei Neuanlagen `ladeRezept()` und setzt die Reiter-Memo zurück,
             // während Alpines `visited` clientseitig bestehen bleibt — der Reiter wäre danach leer,

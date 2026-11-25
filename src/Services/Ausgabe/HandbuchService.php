@@ -295,11 +295,11 @@ class HandbuchService
     }
 
     /** Kennzeichnung genau dieses Rezepts; niemals die Angaben des übergeordneten Gerichts übernehmen. */
-    public static function kennzeichnungSnapshot(FoodAlchemistRecipe $recipe): array
+    public static function kennzeichnungSnapshot(FoodAlchemistRecipe $recipe, ?Team $team = null): array
     {
         $agg = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class);
         $daten = $agg->kennzeichnungFromGerichte(collect([$recipe]));
-        $katalog = $agg->kennzeichnungKatalog()['allergene'];
+        $katalog = $agg->kennzeichnungKatalog($team)['allergene'];
         $out = ['enthalten' => [], 'spuren' => [], 'offen' => false];
         foreach ($daten['allergene'] as $a) {
             if (in_array($a['status'], ['enthalten', 'spuren'], true)) {

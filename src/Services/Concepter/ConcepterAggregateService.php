@@ -5,6 +5,7 @@ namespace Platform\FoodAlchemist\Services\Concepter;
 use Illuminate\Support\Collection;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**
  * M10R-1 / Doc 15 §10.5 + §10.8: Voll-Aggregation Gericht → Paket → Concept.
@@ -516,7 +517,7 @@ class ConcepterAggregateService
      *
      * @return array{allergene: array<string,array{code:string,label:string}>, zusatzstoffe: array<string,array{code:string,label:string}>}
      */
-    public function kennzeichnungKatalog(): array
+    public function kennzeichnungKatalog(?\Platform\Core\Models\Team $team = null): array
     {
         $alg = [];
         $i = 0;
@@ -534,7 +535,72 @@ class ConcepterAggregateService
         // Spec 94c: „enthält Alkohol“ als Kennzeichnung in Codes und Legende (kein Zusatzstoff im Sinne der Deklaration)
         $zus['alkohol'] = ['code' => 'Alk.', 'label' => 'enthält Alkohol'];
 
-        return ['allergene' => $alg, 'zusatzstoffe' => $zus];
+        $katalog = ['allergene' => $alg, 'zusatzstoffe' => $zus];
+        if ($team !== null) {
+            $legende = $this->kennzeichnungEntwurf($team);
+            if ($legende['aktiv']) {
+                foreach ($legende['codes'] as $gruppe => $codes) {
+                    foreach ($codes as $slug => $code) {
+                        $katalog[$gruppe][$slug]['code'] = $code;
+                    }
+                }
+            }
+        }
+
+        return $katalog;
+    }
+
+    public function kennzeichnungEntwurf(\Platform\Core\Models\Team $team): array
+    {
+        $standard = $this->kennzeichnungStandardCodes();
+        $eintrag = app(TeamSettingsService::class)->for($team)->kennzeichnungslegende;
+        $codes = $eintrag['codes'] ?? [];
+
+        return is_array($codes) && $this->kennzeichnungCodesGueltig($codes, $standard)
+            ? ['aktiv' => ($eintrag['aktiv'] ?? false) === true, 'codes' => $codes]
+            : ['aktiv' => false, 'codes' => $standard];
+    }
+
+    public function kennzeichnungStandardCodes(): array
+    {
+        $katalog = $this->kennzeichnungKatalog();
+        unset($katalog['zusatzstoffe']['alkohol']);
+
+        return array_map(fn ($gruppe) => array_map(fn ($e) => $e['code'], $gruppe), $katalog);
+    }
+
+    public function kennzeichnungSpeichern(\Platform\Core\Models\Team $team, bool $aktiv, array $codes): void
+    {
+        if (! $this->kennzeichnungCodesGueltig($codes, $this->kennzeichnungStandardCodes())) {
+            throw new \InvalidArgumentException('Jedes Kürzel muss genau einmal in seiner Gruppe vorkommen.');
+        }
+
+        app(TeamSettingsService::class)->update($team, ['kennzeichnungslegende' => ['aktiv' => $aktiv, 'codes' => $codes]]);
+    }
+
+    private function kennzeichnungCodesGueltig(array $codes, array $standard): bool
+    {
+        if (count($codes) !== count($standard)) {
+            return false;
+        }
+        foreach ($standard as $gruppe => $werte) {
+            $eingabe = $codes[$gruppe] ?? null;
+            if (! is_array($eingabe) || count($eingabe) !== count($werte) || array_diff_key($werte, $eingabe) !== []) {
+                return false;
+            }
+            $sortiert = array_values($eingabe);
+            if (count(array_filter($sortiert, 'is_string')) !== count($sortiert)) {
+                return false;
+            }
+            $erwartet = array_values($werte);
+            sort($sortiert, SORT_STRING);
+            sort($erwartet, SORT_STRING);
+            if ($sortiert !== $erwartet) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -580,10 +646,10 @@ class ConcepterAggregateService
      * @param  list<array<string, mixed>>  $zeilen
      * @return array{zeilen: list<array<string, mixed>>, legende: array{allergene: list<array{code:string,label:string}>, zusatzstoffe: list<array{code:string,label:string}>}}
      */
-    public function codesFuerZeilen(array $zeilen, string $idFeld = 'recipe_id'): array
+    public function codesFuerZeilen(array $zeilen, string $idFeld = 'recipe_id', ?\Platform\Core\Models\Team $team = null): array
     {
         $ids = collect($zeilen)->pluck($idFeld)->filter()->map(fn ($v) => (int) $v)->unique()->values()->all();
-        $katalog = $this->kennzeichnungKatalog();
+        $katalog = $this->kennzeichnungKatalog($team);
         $usedAlg = [];
         $usedZus = [];
 
@@ -685,9 +751,9 @@ class ConcepterAggregateService
      *   luecken: list<array{name:string,fehlt:list<string>}>,
      *   modus: string, vollstaendig: bool, confidence: string, schwaechstes: ?string}
      */
-    public function deklarationsblatt(Collection $mitMenge, string $naehrwertModus = 'summe'): array
+    public function deklarationsblatt(Collection $mitMenge, string $naehrwertModus = 'summe', ?\Platform\Core\Models\Team $team = null): array
     {
-        $katalog = $this->kennzeichnungKatalog();
+        $katalog = $this->kennzeichnungKatalog($team);
         $usedAlg = [];
         $usedZus = [];
 
@@ -842,10 +908,10 @@ class ConcepterAggregateService
      *   sinnlos, und „Untergrenze" wäre sogar falsch: es gibt keine untere Grenze, sondern
      *   eine SPANNE über die Gerichte.
      */
-    public function conceptDeklaration(FoodAlchemistConcept $concept): array
+    public function conceptDeklaration(FoodAlchemistConcept $concept, ?\Platform\Core\Models\Team $team = null): array
     {
         $modus = $concept->istEinzelpreis() ? 'spanne' : 'summe';   // eine Quelle für die Einzelpreis-Frage
 
-        return $this->deklarationsblatt($this->conceptPositionen($concept), $modus);
+        return $this->deklarationsblatt($this->conceptPositionen($concept), $modus, $team ?? \Platform\Core\Models\Team::find($concept->team_id));
     }
 }

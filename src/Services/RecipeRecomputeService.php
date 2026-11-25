@@ -919,6 +919,63 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
         return $zutaten->contains(fn ($z) => ! $z->is_optional && ! $this->istGemappt($z));
     }
 
+    /** Belege zu einer offenen Deklaration, mit denselben Zuordnungsregeln wie die Aggregation. */
+    public function deklarationsLuecken(FoodAlchemistRecipe $rezept, array $offeneZusatzstoffe = [], array $offeneAllergene = []): array
+    {
+        $rezept->loadMissing(['ingredients.gp', 'ingredients.referencedRecipe']);
+        $luecken = [];
+        foreach ($rezept->ingredients as $zutat) {
+            if ($zutat->is_optional || $zutat->match_method === MatchMethod::Ignored) {
+                continue;
+            }
+            $name = $zutat->display_name ?: ($zutat->raw_text ?: ($zutat->gp?->name ?? $zutat->referencedRecipe?->name ?? 'Zutat'));
+            $grund = null;
+            $ziel = null;
+            if (! $this->istGemappt($zutat) || ($zutat->gp === null && $zutat->referencedRecipe === null)) {
+                $grund = 'Grundprodukt oder Basisrezept fehlt oder ist noch nicht sicher zugeordnet.';
+            } elseif ($zutat->referencedRecipe !== null) {
+                if ($zutat->referencedRecipe->allergens_confidence !== 'high'
+                    || array_filter($offeneAllergene, fn ($slug) => in_array($zutat->referencedRecipe->{"allergen_{$slug}"}, [null, 'unbekannt'], true)) !== []) {
+                    $grund = 'Die Allergen-Deklaration des Basisrezepts ist noch nicht vollständig belegt.';
+                }
+                $ziel = ['art' => $zutat->referencedRecipe->is_sales_recipe ? 'gericht' : 'basisrezept', 'id' => $zutat->referencedRecipe->id];
+                if (array_filter($offeneZusatzstoffe, fn ($slug) => (int) $zutat->referencedRecipe->{"additive_{$slug}"} === 0) !== []) {
+                    $grund = trim($grund.' Zusatzstoffangaben sind offen.');
+                }
+            } else {
+                $konfidenz = $this->gpAggregate->allergenKonfidenz($zutat->gp);
+                $namen = \Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::ALLERGENE;
+                $konflikte = array_intersect_key($namen, array_flip($konfidenz['konflikt_felder']));
+                $annahmen = array_intersect_key($namen, array_flip($konfidenz['angenommen_felder'] ?? []));
+                $grund = match (true) {
+                    $konflikte !== [] => 'Widersprüchliche Lieferantenangaben: '.implode(', ', $konflikte).'.',
+                    $annahmen !== [] => 'Nur aus dem Lieferantenprofil abgeleitet: '.implode(', ', $annahmen).'.',
+                    $konfidenz['confidence'] === 'medium' => 'Die Lieferantenangaben unterscheiden sich.',
+                    $konfidenz['confidence'] !== 'high' => 'Für das Grundprodukt fehlen belastbare Allergen-Angaben.',
+                    default => null,
+                };
+                $ziel = ['art' => 'grundprodukt', 'id' => $zutat->gp->id];
+                if ($grund === null && $offeneAllergene !== []) {
+                    $werte = $this->gpAggregate->allergene($zutat->gp);
+                    if (array_filter($offeneAllergene, fn ($slug) => ($werte[$slug]['value'] ?? AllergenValue::Unbekannt) === AllergenValue::Unbekannt) !== []) {
+                        $grund = 'Einzelne Allergen-Angaben für das Grundprodukt sind offen.';
+                    }
+                }
+                if ($offeneZusatzstoffe !== []) {
+                    $stoffe = $this->gpAggregate->zusatzstoffeUndFreiwillig($zutat->gp);
+                    if (array_filter($offeneZusatzstoffe, fn ($slug) => (int) ($stoffe[$slug] ?? 0) === 0) !== []) {
+                        $grund = trim($grund.' Zusatzstoffangaben sind offen.');
+                    }
+                }
+            }
+            if ($grund !== null) {
+                $luecken[] = ['name' => $name, 'grund' => $grund, 'ziel' => $ziel];
+            }
+        }
+
+        return $luecken;
+    }
+
     /** I5: gemini_proposed zählt nur mit confidence ≥ 0.85 als gemappt. */
     private function istGemappt(FoodAlchemistRecipeIngredient $z): bool
     {

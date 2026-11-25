@@ -67,6 +67,14 @@
                         <x-fa::menu-item icon="heroicon-o-printer" :href="route('foodalchemist.rezepte.dokument', ['id' => $recipeId, 'profil' => 'produktion'])" abstand="weit" target="_blank" title="Druck- und PDF-Bericht mit Profilen und Filtern" data-rezept-druck>Rezept drucken</x-fa::menu-item>
                         {{-- Spec 70: Etikett (Allergene, Zutaten, verbrauchen bis) --}}
                         <x-fa::menu-item icon="heroicon-o-tag" :href="route('foodalchemist.etiketten.index', ['quelle' => 'recipe', 'id' => $recipeId])" abstand="weit" target="_blank" data-rezept-etikett>Etikett drucken</x-fa::menu-item>
+                        <x-fa::menu-item icon="heroicon-o-document-duplicate" abstand="weit" wire:click="duplizieren"
+                            data-rezept-editor-duplizieren>Rezept duplizieren</x-fa::menu-item>
+                        @foreach(['draft' => 'Zurück auf Entwurf', 'review' => 'Zur Prüfung geben', 'approved' => 'Freigeben'] as $wert => $label)
+                            @if($rezeptStatus !== $wert)
+                                <x-fa::menu-item icon="heroicon-o-flag" abstand="weit" wire:click="statusSetzen('{{ $wert }}')"
+                                    data-rezept-editor-status="{{ $wert }}">{{ $label }}</x-fa::menu-item>
+                            @endif
+                        @endforeach
                         {{-- R6: Vorlage-Markierung (Basis für «Aus Vorlage» im Browser) --}}
                         <x-fa::menu-item icon="heroicon-o-square-2-stack" abstand="weit" wire:click="templateToggle" title="{{ $istTemplate ? 'Ist Vorlage. Klick hebt sie auf, das Rezept bleibt.' : 'Als Vorlage für neue Rezepte speichern. Sie steht dann unter „Aus Vorlage“.' }}" data-template-toggle>{{ $istTemplate ? 'Vorlage aufheben' : 'Als Vorlage speichern' }}</x-fa::menu-item>
                         {{-- Spec 82 §13 B6: Arbeitszeile des Master-Teams als Fassung an die Abonnenten geben --}}
@@ -92,6 +100,7 @@
             </div>
         @endif
     </x-slot:actions>
+    <x-fa::freigabe-sperre :sperre="$freigabeSperre" />
 
     @if(! $istOffen)
         {{-- Der Browser öffnet diese bereits montierte Hülle optimistisch. Das eigentliche

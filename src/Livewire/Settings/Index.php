@@ -73,6 +73,7 @@ class Index extends Component
         // Test-Anker: der Hint nennt den Sprachbefehl wörtlich (EinstellungenSchirmTest).
         'ki' => ['label' => 'KI', 'hint' => 'Anbieter, Modellstufen, Verbrauch, Notschalter, Sprachbefehl (Agenten-Modus, dauerhaft aktiv, Vorlesen)'],
         'teamprofil' => ['label' => 'Teamprofil', 'hint' => 'Was die Küche kann: Geräte (vorhanden, fehlt, unbekannt), Flächen, Gäste parallel, Convenience-Grad'],
+        'kennzeichnungslegende' => ['label' => 'Kennzeichnungslegende', 'hint' => 'Kürzel für Allergene und Zusatzstoffe für dieses Team festlegen'],
         'kueche' => ['label' => 'Küchen-Profil', 'hint' => 'Küchentyp als Grundrichtung für Vorschläge, Farben je Positionstyp'],
         // Ebene 1 der DNA-Kette (Umzug 2026-07-21): Team-Food-DNA wohnt bei den Einstellungen, nicht als Top-Level-Nav
         'food-dna' => ['label' => 'Food DNA', 'hint' => 'Leitbild, Stil, Aromatik und No-Gos des eigenen Hauses'],
@@ -140,7 +141,7 @@ class Index extends Component
      */
     public const GRUPPEN = [
         'uebersicht' => ['label' => 'Übersicht', 'sektionen' => ['start']],
-        'team' => ['label' => 'Team & Zugriff', 'sektionen' => ['zugriffsrechte', 'unter-teams', 'plan-nutzung']],
+        'team' => ['label' => 'Team & Zugriff', 'sektionen' => ['zugriffsrechte', 'unter-teams', 'plan-nutzung', 'kennzeichnungslegende']],
         'kueche' => ['label' => 'Küche & Produktion', 'sektionen' => ['teamprofil', 'kueche', 'posten', 'rollen', 'behaelter', 'hausstandards']],
         'einkauf' => ['label' => 'Einkauf & Lager', 'sektionen' => ['einkauf']],
         'kalkulation' => ['label' => 'Kalkulation & Preise', 'sektionen' => ['kalkulation', 'herstellkosten', 'aufschlagsklassen', 'leistungskategorien', 'betriebe']],
@@ -158,7 +159,7 @@ class Index extends Component
      *
      * @var list<string>
      */
-    public const GRUND = ['start', 'zugriffsrechte', 'unter-teams', 'teamprofil', 'posten', 'etiketten', 'einkauf', 'kalkulation', 'herstellkosten', 'betriebe', 'food-dna', 'ki'];
+    public const GRUND = ['start', 'zugriffsrechte', 'unter-teams', 'kennzeichnungslegende', 'teamprofil', 'posten', 'etiketten', 'einkauf', 'kalkulation', 'herstellkosten', 'betriebe', 'food-dna', 'ki'];
 
     /**
      * E-4: Sektionen, deren große Blöcke je einen eigenen Unter-Reiter bekommen (Dominique 23.10., Gliederung
@@ -242,6 +243,7 @@ class Index extends Component
         'leistungskategorien' => 'Personal Equipment Logistik Leistung Konfigurator Kategorie',
         'ki' => 'Notschalter Kill-Switch Kosten Verbrauch Modell Modellstufen Sprachbefehl Vorlesen Stimme',
         'teamprofil' => 'Ausstattung Geräte Flächen Gäste Convenience Kennzahlen',
+        'kennzeichnungslegende' => 'Allergene Zusatzstoffe Deklaration Kürzel Buchstaben Zahlen Legende',
         'kueche' => 'Küchentyp Farben Positionstyp',
         'food-dna' => 'Leitbild Stil Aromatik No-Go DNA',
         'dna-felder' => 'Zusatzfeld Canvas Feldgruppe',

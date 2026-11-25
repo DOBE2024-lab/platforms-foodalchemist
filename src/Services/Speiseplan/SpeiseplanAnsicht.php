@@ -206,6 +206,7 @@ final class SpeiseplanAnsicht
     public function zellenKennzahlen(Team $team, FoodAlchemistSpeiseplan $plan, string $mahlzeit, Carbon $montag, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, bool $mitKomponenten = false): array
     {
         $agg = app(ConcepterAggregateService::class);
+        $kennzeichnungsKatalog = $agg->kennzeichnungKatalog($team);
         $teamZiel = app(TeamSettingsService::class)->zielWareneinsatzPct($team, $outlet);
         $linienById = $plan->lines->keyBy(fn ($l) => (int) $l->id);
         $hatRollen = $plan->lines->contains(fn ($l) => $l->istHauptgang());
@@ -240,7 +241,7 @@ final class SpeiseplanAnsicht
                         'titel' => $titel,
                         'untertitel' => $untertitel,
                         'diaet' => $this->ernaehrung->diaetMerkmale($agg->allergenRollupFromGerichte($gerichte), $agg->kennzeichnungFromGerichte($gerichte)),
-                        'codes' => $this->ernaehrung->eintragCodes($e),
+                        'codes' => $this->ernaehrung->eintragCodes($e, katalog: $kennzeichnungsKatalog),
                         'vk' => round($preis['vk'], 2), 'vk_vorlaeufig' => (bool) ($preis['vorlaeufig'] ?? false),
                         'ek' => round($preis['ek'], 2),
                         'linienpreis' => $linie?->manuellerPreis() !== null,

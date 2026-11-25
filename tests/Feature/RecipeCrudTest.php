@@ -84,6 +84,24 @@ it('duplicate kopiert Zutaten und rechnet die Kopie durch; delete blockt bei Elt
     expect(FoodAlchemistRecipe::find($kopie->id))->toBeNull();
 });
 
+it('Kopfmenü im Rezepteditor ändert den Status und öffnet die Duplikat-Kopie', function () {
+    $this->actingAs($this->makeUser($this->rootTeam, 'Root User'));
+    $original = $this->svc->create($this->rootTeam, ['name' => 'Sorbet: Birne']);
+    $original->update(['status' => 'review']);
+
+    $modal = Livewire::test(RecipeModal::class)
+        ->call('oeffnen', $original->id)
+        ->assertSeeHtml('data-rezept-editor-duplizieren')
+        ->call('statusSetzen', 'draft')
+        ->assertSet('fehler', null)
+        ->call('duplizieren')
+        ->assertSet('fehler', null);
+
+    $kopie = FoodAlchemistRecipe::where('name', 'Sorbet: Birne (Kopie)')->firstOrFail();
+    $modal->assertSet('recipeId', $kopie->id)->assertDispatched('recipe-selected', id: $kopie->id);
+    expect($original->fresh()->status->value)->toBe('draft')->and($kopie->id)->not->toBe($original->id);
+});
+
 it('Modal-Roundtrip: Anlage validiert, Edit mit yield_kg_manual triggert Recompute (DoD M4-06)', function () {
     $this->actingAs($this->makeUser($this->rootTeam, 'Root User'));
     $g = FoodAlchemistVocabEinheit::create(['team_id' => $this->rootTeam->id, 'slug' => 'g', 'display_de' => 'Gramm', 'dimension' => 'mass', 'default_in_g' => 1]);

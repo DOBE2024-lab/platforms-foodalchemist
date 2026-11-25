@@ -137,10 +137,10 @@ final class SpeiseplanErnaehrung
      *
      * @return list<string>
      */
-    public function eintragCodes(FoodAlchemistSpeiseplanEintrag $e, array &$usedAlg = [], array &$usedZus = []): array
+    public function eintragCodes(FoodAlchemistSpeiseplanEintrag $e, array &$usedAlg = [], array &$usedZus = [], ?array $katalog = null): array
     {
         $agg = app(ConcepterAggregateService::class);
-        $katalog = $agg->kennzeichnungKatalog();
+        $katalog ??= $agg->kennzeichnungKatalog();
         $k = $agg->kennzeichnungFromGerichte($this->eintragGerichte($e));
         $codes = [];
         foreach ($k['allergene'] as $a) {

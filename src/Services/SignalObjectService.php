@@ -3,6 +3,8 @@
 namespace Platform\FoodAlchemist\Services;
 
 use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Enums\SignalStatus;
+use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
@@ -59,6 +61,16 @@ class SignalObjectService
     public function betroffene(Team $team, FoodAlchemistSignal $sig, int $limit = self::PANEL_LIMIT): array
     {
         $pl = is_array($sig->payload) ? $sig->payload : [];
+
+        if ($sig->type === SignalTyp::GpAllergenWiderspruch && $sig->source === 'detektor' && $sig->status === SignalStatus::Offen) {
+            $liste = app(SignalDetektorService::class)->gpAllergenWiderspruchListe($team, $limit);
+            $items = array_map(fn (array $gp) => [
+                'kind' => 'gp', 'id' => $gp['gp_id'], 'name' => $gp['name'], 'is_sales_recipe' => false,
+                'hinweis' => self::widerspruchHinweis($gp['allergene']),
+            ], $liste['beispiele']);
+
+            return ['items' => $items, 'total' => $liste['anzahl'], 'gezeigt' => count($items), 'live' => true];
+        }
 
         // Lücken-Metrik: exakt dieselbe Query wie der Zähler, als Liste (kein Payload-Abbild).
         if ($sig->source === 'data-quality' && ! empty($pl['metrik'])) {
@@ -193,6 +205,10 @@ class SignalObjectService
         // 1) Direkte Referenz.
         if ($sig->ref_type === $kind && (int) $sig->ref_id === $id) {
             return true;
+        }
+
+        if ($kind === 'gp' && $sig->type === SignalTyp::GpAllergenWiderspruch && $sig->source === 'detektor') {
+            return ($metrikCache['gp-allergen-widerspruch'] ??= app(SignalDetektorService::class)->gpAllergenWiderspruchListe($team, 0, $id)['anzahl']) > 0;
         }
 
         $pl = is_array($sig->payload) ? $sig->payload : [];

@@ -28,6 +28,15 @@ final class ProduktpassNormalisierer
             }
             $wert = self::wert($ziel['typ'], $eintrag['wert'] ?? null);
             $url = self::url($eintrag['url'] ?? null);
+            $zitat = self::text($eintrag['zitat'] ?? null, 300);
+            $belegart = $eintrag['belegart'] ?? null;
+            if ($belegart !== null && ($quelle !== ProduktpassFelder::QUELLE_PASS
+                || ! str_starts_with($key, 'zusatzstoffe.') || $wert !== 'nein'
+                || ! in_array($belegart, ['legende', 'vollstaendige_deklaration'], true) || $zitat === null)) {
+                $aus['verworfen'][] = "{$key}: kein gültiger Beleg für ein abgeleitetes Nein";
+
+                continue;
+            }
             if ($wert === null || ($web && $url === null)) {
                 $aus['verworfen'][] = "{$key}: ".($wert === null ? 'kein gültiger Wert' : 'ohne Quellen-URL');
 
@@ -37,8 +46,9 @@ final class ProduktpassNormalisierer
                 'wert' => $wert,
                 'konfidenz' => self::konfidenz($eintrag['konfidenz'] ?? null),
                 'einheit' => self::text($eintrag['einheit'] ?? null, 32),
-                'zitat' => self::text($eintrag['zitat'] ?? null, 300),
+                'zitat' => $zitat,
                 'url' => $url,
+                'belegart' => $belegart,
             ], fn ($v) => $v !== null);
         }
 
@@ -63,6 +73,12 @@ final class ProduktpassNormalisierer
                 continue;
             }
             $aus['allergene_details'][$key] = array_filter(['wert' => $wert, 'konfidenz' => self::konfidenz($eintrag['konfidenz'] ?? null), 'url' => $url], fn ($v) => $v !== null);
+        }
+
+        if (($aus['allergene']['milk']['wert'] ?? null) === 'enthalten'
+            && isset($aus['felder']['zusatzstoffe.contains_milk_protein']['belegart'])) {
+            unset($aus['felder']['zusatzstoffe.contains_milk_protein']);
+            $aus['verworfen'][] = 'zusatzstoffe.contains_milk_protein: widerspricht der Milch-Deklaration';
         }
 
         return $aus;

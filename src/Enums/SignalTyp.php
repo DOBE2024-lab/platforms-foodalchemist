@@ -12,6 +12,8 @@ enum SignalTyp: string
     case PreisAnomalie = 'preis_anomalie';
     case PreisSprungMargeImpact = 'preis_sprung_marge_impact';
     case VeraltetePreise = 'veraltete_preise';
+    case LaEingestellt = 'la_eingestellt';
+    case LaPreisFehlt = 'la_preis_fehlt';
     case MargeUnterZiel = 'marge_unter_ziel';
     case WareneinsatzUeberZiel = 'wareneinsatz_ueber_ziel';
     // Spec 32 C4: der Ist-Wareneinsatz (Einkaufsjournal ÷ Umsatz) weicht vom theoretischen
@@ -210,6 +212,8 @@ enum SignalTyp: string
             self::PreisAnomalie => 'Auffälliger Lieferantenpreis',
             self::PreisSprungMargeImpact => 'Preissprung mit Folgen für die Marge',
             self::VeraltetePreise => 'Veraltete Preise',
+            self::LaEingestellt => 'Lieferantenartikel eingestellt',
+            self::LaPreisFehlt => 'Einkaufspreis fehlt',
             self::MargeUnterZiel => 'Marge unter Ziel',
             self::WareneinsatzUeberZiel => 'Wareneinsatz über Ziel',
             self::WareneinsatzIstAbweichung => 'Einkauf weicht von der Rezeptur ab',
@@ -289,6 +293,8 @@ enum SignalTyp: string
             self::PreisAnomalie => 'heroicon-o-arrow-trending-up',
             self::PreisSprungMargeImpact => 'heroicon-o-bolt',
             self::VeraltetePreise => 'heroicon-o-clock',
+            self::LaEingestellt => 'heroicon-o-truck',
+            self::LaPreisFehlt => 'heroicon-o-banknotes',
             self::MargeUnterZiel => 'heroicon-o-scale',
             self::WareneinsatzUeberZiel => 'heroicon-o-shopping-cart',
             self::WareneinsatzIstAbweichung => 'heroicon-o-arrows-right-left',

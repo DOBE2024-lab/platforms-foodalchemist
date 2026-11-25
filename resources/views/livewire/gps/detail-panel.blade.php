@@ -292,7 +292,11 @@
                         @if($unbekannt->isNotEmpty())
                             <x-fa::signal tone="warn" data-allergene-unbekannt title="Ohne Angabe im Artikel. Unbekannt heißt nicht frei von.">{{ $unbekannt->count() }} von 14 ohne Angabe (unbekannt)</x-fa::signal>
                         @endif
-                        @if($freiAnzahl > 0)<p class="fa-t-muted">Frei von den übrigen {{ $freiAnzahl }} {{ $freiAnzahl === 1 ? 'Hauptallergen' : 'Hauptallergenen' }}@if($angenommenSatz !== null)<span data-allergene-angenommen title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}">, {{ $angenommenSatz }}</span>@endif</p>@endif
+                        @if($freiAnzahl > 0)
+                            <p class="fa-t-muted">{{ $freiAnzahl }} {{ $freiAnzahl === 1 ? 'Hauptallergen' : 'Hauptallergene' }} als nicht enthalten eingestuft
+                                @if($angenommenSatz !== null)<span data-allergene-angenommen title="{{ \Platform\FoodAlchemist\Support\AllergenAnnahme::ERKLAERUNG }}">({{ $angenommenSatz }})</span>@endif
+                            </p>
+                        @endif
                     </div>
                 @endif
             @endif
@@ -319,7 +323,7 @@
                             </div>
                         @endif
                         @if($zsUnbekannt->isNotEmpty())<x-fa::signal tone="warn" data-zusatz-unbekannt title="Ohne Angabe im Artikel. Nicht als frei werten.">{{ $zsUnbekannt->count() }} ohne Angabe</x-fa::signal>@endif
-                        @if($zsFrei > 0)<p class="fa-t-muted">Frei von {{ $zsFrei }} weiteren</p>@endif
+                        @if($zsFrei > 0)<p class="fa-t-muted">{{ $zsFrei }} mit Angabe „Nein“</p>@endif
                     </div>
                 @endif
             @endif

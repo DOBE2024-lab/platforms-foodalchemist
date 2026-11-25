@@ -9,6 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\DataQualityService;
+use Platform\FoodAlchemist\Services\SignalObjectService;
 use Platform\FoodAlchemist\Support\SignalCockpit;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -229,4 +230,32 @@ it('haengt das Detektor-Signal an die fixbare Lage (der Knopf trifft nur, wo er 
     $metrik = SignalCockpit::metrik($sig);
     expect($metrik)->toBe('gp_kein_lead')
         ->and(($this->satz)($metrik))->toBe(['C Bepreist ohne Lead']);
+});
+
+it('meldet fehlende Preise, eingestellte Artikel und fehlende Artikelzuordnungen mit den betroffenen Objekten', function () {
+    ($this->mkLage)('Ohne Artikel', mitLa: false);
+    $lachs = ($this->mkLage)('Lachs', mitLa: true, mitLead: true);
+    $frischkaese = ($this->mkLage)('Frischkäse', mitLa: true, mitLead: true);
+    FoodAlchemistSupplierItem::findOrFail($frischkaese->lead_la_supplier_item_id)->update(['lieferstatus' => 'eingestellt']);
+    ($this->mkLage)('Mit Preis', mitLa: true, bepreist: true, mitLead: true);
+    ($this->mkLage)('Abgelehnt', mitLa: false)->update(['status' => 'rejected']);
+
+    $this->dq->emittiereSignale($this->rootTeam);
+    $preis = FoodAlchemistSignal::where('type', SignalTyp::LaPreisFehlt)->firstOrFail();
+    $eingestellt = FoodAlchemistSignal::where('type', SignalTyp::LaEingestellt)->firstOrFail();
+    $ohneArtikel = FoodAlchemistSignal::where('dedup_key', 'dq-gp-kein-la')->firstOrFail();
+    $objekte = app(SignalObjectService::class);
+
+    expect($objekte->betroffene($this->rootTeam, $preis)['items'])->toBe([
+        ['kind' => 'la', 'id' => (int) $lachs->lead_la_supplier_item_id, 'name' => 'Lachs Artikel', 'is_sales_recipe' => false],
+    ])->and($objekte->betroffene($this->rootTeam, $eingestellt)['items'][0]['name'])->toBe('Frischkäse Artikel')
+        ->and(array_column($objekte->betroffene($this->rootTeam, $ohneArtikel)['items'], 'name'))->toBe(['Ohne Artikel']);
+
+    FoodAlchemistPrice::create([
+        'team_id' => $this->rootTeam->id, 'supplier_item_id' => $lachs->lead_la_supplier_item_id,
+        'is_blocked' => false, 'status' => '0', 'price' => 3.97,
+    ]);
+    $this->dq->emittiereSignale($this->rootTeam);
+    expect($preis->refresh()->status->value)->toBe('erledigt')
+        ->and($eingestellt->refresh()->status->value)->toBe('offen');
 });

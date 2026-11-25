@@ -11,6 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\GpAggregateService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\SignalDetektorService;
+use Platform\FoodAlchemist\Services\SignalObjectService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -79,6 +80,28 @@ it('Spuren zählen nicht: enthalten↔spuren und enthalten+spuren+nicht_enthalte
     expect(($this->signale)())->toHaveCount(0);
 });
 
+it('listet Konflikte jenseits der gespeicherten zehn Beispiele und findet das Signal am Grundprodukt', function () {
+    foreach (range(1, 11) as $nr) {
+        $gp = ($this->gp)("Bacon {$nr}");
+        ($this->la)($gp, "A-{$nr}", 'enthalten');
+        $gegenbeleg = ($this->la)($gp, "B-{$nr}", 'nicht_enthalten', $this->sup2);
+    }
+
+    app(SignalDetektorService::class)->gpAllergenWiderspruch($this->rootTeam);
+    $signal = ($this->signale)()->sole();
+    $objekte = app(SignalObjectService::class);
+    $liste = $objekte->betroffene($this->rootTeam, $signal);
+
+    expect($signal->payload['beispiele'])->toHaveCount(10)
+        ->and($liste['total'])->toBe(11)
+        ->and($liste['items'][10]['hinweis'])->toContain('Hanos A-11', 'Chefs B-11')
+        ->and(array_column($objekte->signaleAmObjekt($this->rootTeam, 'gp', $gp->id), 'id'))->toContain($signal->id);
+
+    $gegenbeleg->allergens()->firstOrFail()->update(['allergen_milk' => 'enthalten']);
+    expect($objekte->betroffene($this->rootTeam, $signal)['total'])->toBe(10)
+        ->and(array_column($objekte->signaleAmObjekt($this->rootTeam, 'gp', $gp->id), 'id'))->not->toContain($signal->id);
+});
+
 it('selbstschließend: nach dem Lösen des falschen Artikels schließt der nächste Lauf das Signal; ein neuer Widerspruch öffnet es wieder', function () {
     $gp = ($this->gp)('Sahne');
     ($this->la)($gp, 'A-1', 'enthalten');
@@ -137,7 +160,7 @@ it('Konfidenz wird SOFORT nachgezogen: Verknüpfen, LA-Allergen ändern, Lösen 
     expect((float) $manuell->fresh()->allergens_confidence)->toBe(0.5);                 // Provenienz-Schutz des Backfills gilt auch hier
 });
 
-it('Signal-Panel: die Beispiele lösen als Grundprodukte auf (Link + Weitere Befunde), mit Beleg je GP; das alte Summen-Signal wird geschlossen', function () {
+it('Signal-Panel: aktuelle Konflikte verlinken zum Grundprodukt, das alte Summen-Signal wird geschlossen', function () {
     $alt = app(\Platform\FoodAlchemist\Services\SignalService::class)->erzeuge($this->rootTeam, SignalTyp::DatenqualitaetGpLa,
         \Platform\FoodAlchemist\Enums\SignalSeverity::Kritisch, '147 GPs mit Allergen-Konflikt', ['dedup_key' => 'dq-gp-allergen-konflikt', 'source' => 'data-quality', 'payload' => ['anzahl' => 147]]);
     $a = ($this->gp)('Sahne');
@@ -147,11 +170,11 @@ it('Signal-Panel: die Beispiele lösen als Grundprodukte auf (Link + Weitere Bef
     ($this->lauf)();
 
     $sig = ($this->signale)()->first();
-    $res = app(\Platform\FoodAlchemist\Services\SignalObjectService::class)->betroffene($this->rootTeam, $sig);
+    $res = app(SignalObjectService::class)->betroffene($this->rootTeam, $sig);
     expect($res['items'])->toHaveCount(1)
         ->and($res['items'][0])->toMatchArray(['kind' => 'gp', 'id' => $a->id, 'name' => 'Sahne'])
         ->and($res['items'][0]['hinweis'])->toBe('Milch: enthalten laut Hanos A-1 Artikel A-1, nicht enthalten laut Chefs A-2 Artikel A-2')
-        ->and($res['live'])->toBeFalse()
+        ->and($res['live'])->toBeTrue()
         // Rückrichtung: am GP taucht das Signal in „Weitere Befunde“ auf
         ->and(collect(app(\Platform\FoodAlchemist\Services\SignalObjectService::class)->signaleAmObjekt($this->rootTeam, 'gp', $a->id))->pluck('id')->all())->toContain($sig->id)
         ->and($alt->fresh()->status)->toBe(SignalStatus::Erledigt);
@@ -160,8 +183,8 @@ it('Signal-Panel: die Beispiele lösen als Grundprodukte auf (Link + Weitere Bef
         ->assertSeeHtml('data-signal-objekt="gp-' . $a->id . '"')->assertSeeHtml('data-signal-objekt-hinweis')
         ->assertDontSee('erscheinen, sobald diese behoben sind');
 
-    // Mehr Treffer als Beispiele (Payload-Auszug): das Panel verspricht kein Nachrücken, sondern nennt den Auszug
+    // Der gespeicherte Stand kann älter sein als die live aufgelöste Liste.
     $sig->update(['payload' => array_merge($sig->payload, ['anzahl' => 25])]);
     \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Signale\DetailPanel::class)->call('zeige', $sig->id)
-        ->assertSee('Das Signal führt nur diese Beispiele')->assertDontSee('erscheinen, sobald diese behoben sind');
+        ->assertDontSee('Das Signal führt nur diese Beispiele')->assertDontSee('erscheinen, sobald diese behoben sind');
 });

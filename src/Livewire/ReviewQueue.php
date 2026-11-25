@@ -78,6 +78,7 @@ class ReviewQueue extends Component
     {
         return match ($typ) {
             SignalTyp::PreisAnomalie, SignalTyp::PreisSprungMargeImpact, SignalTyp::VeraltetePreise,
+            SignalTyp::LaEingestellt, SignalTyp::LaPreisFehlt,
             SignalTyp::MargeUnterZiel, SignalTyp::WareneinsatzUeberZiel, SignalTyp::WareneinsatzIstAbweichung,
             SignalTyp::EkKetteUnvollstaendig, SignalTyp::VkAnpassungEmpfohlen, SignalTyp::VertragsfristFaellig,
             SignalTyp::SortimentsLuecke => 'preise',

@@ -73,7 +73,7 @@ class GpAggregateService
         }
         $gps = collect($gps)->filter()->unique('id');
         $stoffe = [...array_keys(FoodAlchemistItemDeclaration::STOFFE), ...array_keys(FoodAlchemistItemDeclaration::FREIWILLIG)];
-        $this->laProfileBulk($gps->reject(fn ($gp) => isset(self::$lauf['profil'][$gp->id])));
+        $this->allergenProfileVorladen($gps);
         $this->deklarationBulk($gps->reject(fn ($gp) => isset(self::$lauf['dekl'][implode(',', $stoffe) . ':' . $gp->id])), $stoffe);
         $this->alkoholBulk($gps->filter(fn ($gp) => $gp->alkohol === null && ! isset(self::$lauf['alkohol'][$gp->id])));
         $nachSicht = $gps->groupBy(fn ($gp) => $this->naehrSicht($gp, $naehrwertSicht)?->id ?? 0);
@@ -87,6 +87,12 @@ class GpAggregateService
                 }
             }
         }
+    }
+
+    /** Allergenprofile für eine Liste von Grundprodukten innerhalb von imLauf() vorladen. */
+    public function allergenProfileVorladen(\Illuminate\Support\Collection $gps): void
+    {
+        $this->laProfileBulk($gps->reject(fn ($gp) => isset(self::$lauf['profil'][$gp->id])));
     }
 
     /** Sicht der Nährwerte eines GP (Lead-Sicht 29.10.): rechnet ein Mandant, seine; sonst die des Besitzers. */

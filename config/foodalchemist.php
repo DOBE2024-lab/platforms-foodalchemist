@@ -2288,16 +2288,16 @@ return [
                 . 'sonst Feld weglassen, NIE raten. `text` bleibt trotzdem WÖRTLICH wie im Quelltext.',
         ],
         // Produktpass am Lieferantenartikel (Bauauftrag Kurator 16.10.2026): PDF/Foto des Produktpasses bzw. Datenblatts
-        // TREU lesen. Nichts raten, nichts schätzen — was nicht im Dokument steht, kommt nicht in die Antwort. Die
+        // TREU lesen. Belegte negative Zusatzstoffangaben dürfen aus einem eindeutigen Dokumentabschnitt abgeleitet werden. Die
         // Übernahme (direkt vs. Vorschlag, Allergene nur nach Bestätigung) entscheidet der Dienst, NICHT dieser Call.
         'produktpass.extract' => [
             'klasse' => 'stark',                                            // Text + Vision (PDF/Foto über den OpenAI-Weg der Plattform, wie recipe.extract)
             'max_tokens' => 8000,
             'task' => 'Lies den angehängten Produktpass bzw. das Datenblatt eines Lieferantenartikels WÖRTLICH aus. '
-                . 'Übernimm NUR, was im Dokument steht; fehlt eine Angabe oder ist sie unleserlich, lass das Feld '
-                . 'WEG — nie raten, nie schätzen, nie aus Allgemeinwissen ergänzen. Nährwerte je 100 g bzw. 100 ml '
+                . 'Übernimm NUR, was das Dokument belegt. Fehlende oder unleserliche Angaben weglassen. '
+                . 'Nährwerte je 100 g bzw. 100 ml '
                 . '(Dokument-Einheit nennen, Salz als `naehrwerte.salz` in g, nicht in Natrium umrechnen). '
-                . 'Antworte als werte = {felder: {<schluessel>: {wert, einheit?, konfidenz (0.0-1.0), zitat?}}, '
+                . 'Antworte als werte = {felder: {<schluessel>: {wert, einheit?, konfidenz (0.0-1.0), zitat?, belegart?}}, '
                 . 'allergene: {<allergen>: {wert: enthalten|spuren|nicht_enthalten, konfidenz, zitat?}}, '
                 . 'allergene_details: {<unterart>: {wert: enthalten|spuren|nicht_enthalten, konfidenz}}}. '
                 . 'Erlaubte Feld-Schlüssel stehen in `schluessel` (zutatenliste, naehrwerte.*, zusatzstoffe.* mit wert '
@@ -2307,6 +2307,13 @@ return [
                 . 'Verpackungsbeschreibung (z. B. „Kunststoffform mit Stülpdeckel“) gehört in verpackungshinweis. Erlaubte Allergene stehen in `allergene` '
                 . '(14 EU-Allergene), Unterarten (z. B. wheat, oats, almond) in `allergene_details`. `nicht_enthalten` nur, '
                 . 'wenn das Dokument die Abwesenheit AUSDRÜCKLICH erklärt; steht nichts da, lass das Allergen weg. '
+                . 'Bei zusatzstoffe.* ist ein abgeleitetes nein zulässig, wenn die Herstellerdeklaration für genau diesen Artikel '
+                . 'den Punkt nachweislich abdeckt. Wenn ein Strich in der Zeile laut Legende „nein“ bedeutet, '
+                . 'setze belegart=legende und zitiere Zeile und Erklärung. Wenn eine ausdrücklich abschließende Deklaration '
+                . 'die betreffende Gruppe vollständig erfasst und den Stoff ausschließt oder nur enthaltene Stoffe aufzählt, '
+                . 'setze belegart=vollstaendige_deklaration und zitiere den Wortlaut, der Umfang und Aussage belegt. '
+                . 'Eine normale Zutatenliste, ein Auszug, eine leere Tabellenzelle und bloßes Schweigen sind kein solcher Beleg. '
+                . 'Bei Widersprüchen kein abgeleitetes nein. Bei ausdrücklich ausgeschriebenem ja oder nein belegart weglassen. '
                 . 'konfidenz = wie sicher du den Wert ABGELESEN hast (schlecht lesbar < 0.8).',
         ],
         // §3.3 Anrichten. Liefert bewusst MARKDOWN mit nummerierten Schritten und nicht

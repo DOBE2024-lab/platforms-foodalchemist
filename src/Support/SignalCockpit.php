@@ -141,6 +141,8 @@ final class SignalCockpit
      * ein zweiter, per Hand gepflegter Pfad würde davon wegdriften.
      */
     private const NAVIGATE = [
+        'la_eingestellt' => 'Lieferantenartikel öffnen und am zugehörigen Grundprodukt einen lieferbaren Ersatzartikel zuordnen.',
+        'la_preis_fehlt' => 'Lieferantenartikel öffnen und unter Preise den Einkaufspreis prüfen oder nachtragen.',
         // Necta-Abgleich: Ereignis, kein Datenmangel — der Weg ist eine Freischalt-Entscheidung des Masters.
         'necta_abgleich_fehler' => 'Der Lauf steht mit Fehlermeldung in der Laufliste (necta_laeufe). Ursache prüfen (Verbindung, '
             . 'Necta erreichbar), dann den Abgleich erneut starten: Bereits Übernommenes bleibt, der Lauf ist über legacy_id wiederholbar.',

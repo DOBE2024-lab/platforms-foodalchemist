@@ -2,7 +2,6 @@
 
 namespace Platform\FoodAlchemist\Services;
 
-use Platform\FoodAlchemist\Support\StammPaket;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\FeedbackQuelle;
@@ -15,6 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPrice;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeFeedback;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
+use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 
 /**
  * Datenqualitäts-Ampel für die Kaskade LA → GP → Basisrezept → VK-Gericht.
@@ -147,6 +147,8 @@ class DataQualityService
         'gp_approved' => 'Freigegebene Grundprodukte',
         'gp_tentative' => 'Grundprodukte im Entwurf (zur Prüfung)',
         'gp_kein_la' => 'Grundprodukte ohne Lieferantenartikel',
+        'la_eingestellt' => 'Eingestellte Lieferantenartikel',
+        'la_preis_fehlt' => 'Lieferantenartikel ohne Einkaufspreis',
         'gp_kein_preis' => 'Grundprodukte mit Artikeln, aber ohne Preis',
         'gp_kein_lead' => 'Grundprodukte ohne gewählten Hauptartikel',
         'gp_lead_ohne_preis' => 'Grundprodukte, deren Hauptartikel keinen gültigen Preis hat',
@@ -294,6 +296,10 @@ class DataQualityService
             $this->info('la_strukturiert', self::METRIK_LABELS['la_strukturiert'], $strukturiert),
             $this->info('la_gemappt', self::METRIK_LABELS['la_gemappt'], $gemappt),
             $this->gap('la_needs_review', self::METRIK_LABELS['la_needs_review'], $needsReview),
+            $this->gap('la_eingestellt', self::METRIK_LABELS['la_eingestellt'], $this->laBeschaffung($team, 'la_eingestellt')->count(),
+                SignalTyp::LaEingestellt, 'dq-la-eingestellt', 'Diese Artikel sind einem aktiven Grundprodukt zugeordnet und nicht mehr bestellbar. Ersatzartikel prüfen und die Zuordnung aktualisieren.'),
+            $this->gap('la_preis_fehlt', self::METRIK_LABELS['la_preis_fehlt'], $this->laBeschaffung($team, 'la_preis_fehlt')->count(),
+                SignalTyp::LaPreisFehlt, 'dq-la-preis-fehlt', 'Für diese lieferbaren und zugeordneten Artikel fehlt in der Preissicht des Teams ein positiver Einkaufspreis. Preis am Artikel prüfen oder den Katalogimport kontrollieren.'),
             $this->gap('la_konformitaet', self::METRIK_LABELS['la_konformitaet'], $konfLa, SignalTyp::KonformitaetLa, 'dq-la-konformitaet',
                 'Bei diesen Lieferantenartikeln verstoßen Angaben aus dem Lieferantenkatalog gegen die Anlageregeln. Artikel öffnen und die markierten Felder prüfen.'),
         ];
@@ -341,15 +347,13 @@ class DataQualityService
         return [
             $this->info('gp_approved', self::METRIK_LABELS['gp_approved'], $approved),
             $this->info('gp_tentative', self::METRIK_LABELS['gp_tentative'], $tentative),
-            // Signal-Emission bewusst ohne Deskriptor: SignalDetektorService::datenqualitaetGpLa
-            // besitzt diesen Befund bereits (kein Doppel-Signal im Scheduler). Bleiben Mess-Metriken.
-            //
             // H2c/V-014: aus `gp_ohne_lead` sind drei Lagen geworden, weil sie drei
             // verschiedene Arbeiten sind — Einkauf (kein LA), Preispflege (kein Preis),
             // eine Auswahl-Entscheidung (kein Lead). Nur die letzte trägt den Auto-Fix-Knopf
             // (SignalCockpit::DETERMINISTIC); vorher versprach er eine Reparatur über alle
             // drei und bewegte in der Mehrzahl der Fälle keine Zahl.
-            $this->gap('gp_kein_la', self::METRIK_LABELS['gp_kein_la'], $keinLa),
+            $this->gap('gp_kein_la', self::METRIK_LABELS['gp_kein_la'], $keinLa,
+                SignalTyp::DatenqualitaetGpLa, 'dq-gp-kein-la', 'Diese Grundprodukte brauchen einen Lieferantenartikel. Einen für das Team sichtbaren Artikel verknüpfen.'),
             $this->gap('gp_kein_preis', self::METRIK_LABELS['gp_kein_preis'], $keinPreis),
             $this->gap('gp_kein_lead', self::METRIK_LABELS['gp_kein_lead'], $keinLead),
             $this->gap('gp_lead_ohne_preis', self::METRIK_LABELS['gp_lead_ohne_preis'], $leadOhnePreis, SignalTyp::DatenqualitaetGpLa, 'dq-gp-lead-ohne-preis',
@@ -1738,20 +1742,17 @@ class DataQualityService
      *
      * @param  bool  $nurBepreist  zusätzlich: der LA hat einen aktiven Preis (GL-11 T1)
      */
-    private function laDiesesGp(bool $nurBepreist = false, ?Team $team = null): \Closure
+    private function laDiesesGp(Team $team, bool $nurBepreist = false): \Closure
     {
         return function ($q) use ($nurBepreist, $team) {
             $q->select(DB::raw(1))
                 ->from('foodalchemist_supplier_item_structures as s')
-                ->join('foodalchemist_supplier_items as si', 'si.id', '=', 's.supplier_item_id')
                 ->whereColumn('s.gp_id', 'foodalchemist_gps.id')
                 ->whereNull('s.deleted_at')
-                ->whereNull('si.deleted_at');
-            // Spec 82 §12 A3: ein Stamm-Paket-Artikel ohne Opt-in ist für dieses Team keine LA (sonst „GP hat LA", obwohl nutzbar keiner da ist).
-            StammPaket::begrenzen($q, 'si', $team, 'foodalchemist_supplier_items');
+                ->whereIn('s.supplier_item_id', FoodAlchemistSupplierItem::visibleToTeam($team)->select('foodalchemist_supplier_items.id'));
 
             if ($nurBepreist) {
-                $q->whereExists($this->aktivPreisFuer('si.id'));
+                $q->whereExists($this->aktivPreisFuer('s.supplier_item_id'));
             }
 
             return $q;
@@ -1798,11 +1799,29 @@ class DataQualityService
         $q = FoodAlchemistGp::visibleToTeam($team)->where('status', 'approved')->where('requires_la', true);
 
         return match ($lage) {
-            'kein_la' => $q->whereNotExists($this->laDiesesGp(false, $team)),
-            'kein_preis' => $q->whereExists($this->laDiesesGp(false, $team))->whereNotExists($this->laDiesesGp(true, $team))
+            'kein_la' => $q->whereNotExists($this->laDiesesGp($team)),
+            'kein_preis' => $q->whereExists($this->laDiesesGp($team))->whereNotExists($this->laDiesesGp($team, true))
                 ->whereNull('lead_la_supplier_item_id'),
-            'kein_lead' => $q->whereExists($this->laDiesesGp(true, $team))->whereNull('lead_la_supplier_item_id'),
+            'kein_lead' => $q->whereExists($this->laDiesesGp($team, true))->whereNull('lead_la_supplier_item_id'),
         };
+    }
+
+    private function laBeschaffung(Team $team, string $metrik): \Illuminate\Database\Eloquent\Builder
+    {
+        $gps = FoodAlchemistGp::visibleToTeam($team)->whereIn('status', ['approved', 'tentative'])
+            ->where('requires_la', true)->select('foodalchemist_gps.id');
+        $artikel = FoodAlchemistSupplierItem::visibleToTeam($team)
+            ->whereExists(fn ($q) => $q->selectRaw('1')->from('foodalchemist_supplier_item_structures as struktur')
+                ->whereColumn('struktur.supplier_item_id', 'foodalchemist_supplier_items.id')
+                ->whereNull('struktur.deleted_at')->whereIn('struktur.gp_id', $gps));
+
+        if ($metrik === 'la_eingestellt') {
+            return $artikel->where(fn ($q) => $q->where('is_discontinued', true)->orWhere('lieferstatus', 'eingestellt'));
+        }
+
+        $preis = $this->preise->activePriceSubquery('foodalchemist_supplier_items.id', $team)->toBase();
+
+        return $artikel->lieferbar()->whereRaw('COALESCE(('.$preis->toSql().'), 0) <= 0', $preis->getBindings());
     }
 
     /** EXISTS: Rezept hat ein Aromenprofil (Spec 60: abgeleitet aus den Zutaten-Ankern). */
@@ -1847,6 +1866,8 @@ class DataQualityService
 
         return match ($kind) {
             'gp' => $this->gpItems($q, $limit),
+            'la' => $q->orderBy('designation')->orderBy('id')->limit($limit)->get(['id', 'designation'])
+                ->map(fn ($la) => ['kind' => 'la', 'id' => (int) $la->id, 'name' => (string) $la->designation, 'is_sales_recipe' => false])->all(),
             'concept' => $this->conceptItems($q, $limit),
             'foodbook' => $this->foodbookItems($q, $limit),
             default => $this->recipeItems($q, $limit),
@@ -1907,6 +1928,9 @@ class DataQualityService
         }
 
         switch ($metrik) {
+            case 'la_eingestellt':
+            case 'la_preis_fehlt':
+                return [$this->laBeschaffung($team, $metrik), 'la'];
             case 'gp_kein_la':
             case 'gp_kein_preis':
             case 'gp_kein_lead':

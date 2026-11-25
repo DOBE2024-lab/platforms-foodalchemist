@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Support\ProduktpassFelder;
 /**
  * Quelle „produktpass": liest die hochgeladene Datei (PDF oder Foto) über den Core-LLM-Contract
  * ({@see AiGatewayService::propose}, Prompt `produktpass.extract`, Vision/PDF wie beim Rezept-Import) und gibt den
- * normalisierten Extrakt zurück. Nichts wird geraten: was die KI nicht ablesen kann, fehlt im Ergebnis.
+ * normalisierten Extrakt zurück. Abgeleitete Nein-Angaben brauchen einen Beleg im Dokument.
  */
 class ProduktpassLeser implements ProduktdatenQuelle
 {
@@ -36,7 +36,7 @@ class ProduktpassLeser implements ProduktdatenQuelle
         $vorschlag = $this->ai->propose('produktpass.extract', [
             'schluessel' => ProduktpassFelder::schluessel(),
             'allergene' => ProduktpassFelder::allergene(),
-            'hinweis' => 'Der Produktpass bzw. das Datenblatt steht im Anhang. Lies wörtlich ab; Fehlendes weglassen.',
+            'hinweis' => 'Der Produktpass bzw. das Datenblatt steht im Anhang. Lies die Angaben und ihre Belege aus dem Dokument.',
         ], ['bilder' => [$teil]]);
 
         $werte = is_array($vorschlag->werte ?? null) ? $vorschlag->werte : [];

@@ -351,7 +351,6 @@ class ProduktpassService
             $uebernommen['allergene'] = ['alt' => $alt, 'neu' => $neu, 'details' => $details];
         }
 
-        $zusatz = [];
         foreach ((array) ($pass->extrakt['felder'] ?? []) as $key => $e) {
             $z = ProduktpassFelder::ziel($key);
             if ($z === null || $z['klasse'] !== 'kennzeichnung' || isset($uebernommen[$key])) {
@@ -361,8 +360,7 @@ class ProduktpassService
             if ($web && $bisher !== 0) {
                 continue;   // Websuche füllt nur unbekannte Zusatzstoffe
             }
-            $this->schreibeFeld($item->refresh(), $key, $z, $e['wert'], $e, $pass, false, $uebernommen);
-            $zusatz[] = $key;
+            $this->schreibeFeld($item->refresh(), $key, $z, $e['wert'], $e, $pass, isset($e['belegart']), $uebernommen);
         }
 
         $pass->update([
@@ -660,9 +658,13 @@ class ProduktpassService
                     $zeile->save();
                     break;
                 case 'item_declaration':
-                    $zeile = FoodAlchemistItemDeclaration::firstOrNew(['supplier_item_id' => $item->id]);
+                    $zeile = FoodAlchemistItemDeclaration::query()->lockForUpdate()->firstOrNew(['supplier_item_id' => $item->id]);
                     $zeile->team_id ??= $item->team_id;
                     $alt = $zeile->{$spalte};
+                    if ($abgeleitet && ((int) $alt !== 0
+                        || ($spalte === 'contains_milk_protein' && $item->allergens?->allergen_milk === 'enthalten'))) {
+                        return;
+                    }
                     $neu = $wert === 'ja' ? 3 : 1;
                     $zeile->{$spalte} = $neu;
                     $zeile->source = mb_substr($quelle, 0, 16);
@@ -673,6 +675,9 @@ class ProduktpassService
             }
             $this->setzeMarker($item, $pass, $z['objekt'], $spalte, $neu, $abgeleitet, $eintrag['konfidenz'] ?? null, $quelle);
             $uebernommen[$key] = ['spalte' => $spalte, 'alt' => $alt, 'neu' => $neu, 'abgeleitet' => $abgeleitet, 'konfidenz' => $eintrag['konfidenz'] ?? null];
+            if (isset($eintrag['belegart'])) {
+                $uebernommen[$key] += ['belegart' => $eintrag['belegart'], 'zitat' => $eintrag['zitat']];
+            }
         });
         ProduktpassSchutz::zuruecksetzen();
     }

@@ -377,6 +377,46 @@ it('Normalisierer: Websuche braucht je Feld und Allergen eine URL, sonst fliegt 
         ->and(array_keys($pass['felder']))->toBe(['zutatenliste', 'herkunft'])->and(array_keys($pass['allergene']))->toBe(['milk', 'soy']);
 });
 
+it('schlägt belegte Nein-Angaben vor und füllt bei Bestätigung nur offene Artikelfelder', function () {
+    $this->stamm->declarations()->create(['contains_quinine' => 3]);
+    $pass = ($this->liesPass)([
+        'allergene' => ['milk' => ['wert' => 'spuren']],
+        'felder' => [
+            'zusatzstoffe.caffeinated' => ['wert' => 'nein', 'belegart' => 'legende', 'zitat' => 'Koffein: – / – bedeutet nicht enthalten'],
+            'zusatzstoffe.contains_quinine' => ['wert' => 'nein', 'belegart' => 'vollstaendige_deklaration', 'zitat' => 'Vollständige Deklaration der verwendeten Aromen: ausschließlich Zitronenaroma.'],
+            'zusatzstoffe.taurine_containing' => ['wert' => 'nein', 'belegart' => 'vollstaendige_deklaration'],
+        ],
+    ]);
+
+    expect($pass->allergene_status)->toBe('vorschlag')
+        ->and($this->stamm->fresh()->declarations->caffeinated)->toBeNull()
+        ->and(collect($this->svc->stand($this->stamm->fresh(), $pass)['zusatzstoffe'])->firstWhere('key', 'zusatzstoffe.caffeinated'))
+        ->toMatchArray(['vorschlag' => 'nein', 'zitat' => 'Koffein: – / – bedeutet nicht enthalten']);
+
+    $pass = $this->svc->kennzeichnungBestaetigen($this->rootTeam, $pass, $this->kurator->id);
+    $artikel = $this->stamm->fresh();
+    expect((int) $artikel->declarations->caffeinated)->toBe(1)
+        ->and((int) $artikel->declarations->contains_quinine)->toBe(3)
+        ->and($artikel->declarations->taurine_containing)->toBeNull()
+        ->and($artikel->allergens->allergen_milk)->toBe('spuren')
+        ->and($pass->uebernommen['zusatzstoffe.caffeinated'])->toMatchArray(['abgeleitet' => true, 'belegart' => 'legende'])
+        ->and(FoodAlchemistProduktpassFeld::where('supplier_item_id', $artikel->id)->where('feld', 'caffeinated')->firstOrFail()->only(['abgeleitet', 'quelle']))
+        ->toMatchArray(['abgeleitet' => true, 'quelle' => 'produktpass_ki']);
+});
+
+it('verwirft ein abgeleitetes Nein aus der Websuche oder bei Widerspruch zur Allergenangabe', function () {
+    $roh = [
+        'felder' => [
+            'zusatzstoffe.contains_milk_protein' => ['wert' => 'nein', 'belegart' => 'legende', 'zitat' => 'Milcheiweiß: – / – bedeutet nicht enthalten',
+                'url' => 'https://hersteller.example/pass'],
+        ],
+        'allergene' => ['milk' => ['wert' => 'enthalten', 'url' => 'https://hersteller.example/pass']],
+    ];
+
+    expect(ProduktpassNormalisierer::normalisiere($roh, 'produktpass')['felder'])->toBe([])
+        ->and(ProduktpassNormalisierer::normalisiere($roh, 'websuche')['felder'])->toBe([]);
+});
+
 it('Websuche-Quelle: nie direkt; Übernahme nur per Klick und nur in LEERE Felder; Allergene nur bei „unbekannt“; Marker mit Quelle websuche', function () {
     $this->stamm->update(['origin' => 'Frankreich']);                                  // gefülltes Feld
     DB::table('foodalchemist_item_allergens')->insert(['uuid' => (string) Symfony\Component\Uid\UuidV7::generate(), 'team_id' => null,

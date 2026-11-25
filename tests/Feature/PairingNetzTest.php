@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Recipes\PairingNetzModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
+use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Pairing\RezeptProfil;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -94,6 +97,56 @@ it('pairingNetz: Zentrum + Kern-Anker innen, Kandidaten nach Stern-Stufe, dish_c
     // anker_anker (innere Ebene) hier 0 (kichererbse↔tahin ungepaart); kein Anker-Wissen → kein Kontrast/Konflikt.
     expect($netz['meta']['counts'])->toBe(['stern3' => 1, 'kontrast' => 0, 'basis' => 1, 'anker_anker' => 0, 'konflikt' => 0])
         ->and($netz['meta']['typ_default'])->toBe(['stern3' => true, 'kontrast' => true]);
+});
+
+it('zeigt mehrere Kernanker eines Grundprodukts ohne Einzelprozente und übernimmt gepflegte Stärken', function () {
+    $rezept = $this->makeRecipe($this->rootTeam, 'Curry: Brokkoli und Tofu');
+    $gp = $this->makeGp($this->rootTeam, 'Curry: Brokkoli');
+    $this->makeIngredient($rezept, 'Curry', $gp, '1000', 1);
+    $this->svc->setGpAnker($this->rootTeam, $gp->id, $this->kichererbse);
+    $this->svc->setGpAnker($this->rootTeam, $gp->id, $this->tahin);
+    $this->svc->setGpAnker($this->rootTeam, $gp->id, $this->minze, 'neben');
+    $this->svc->setGpAnkerStaerke($this->rootTeam, $gp->id, $this->tahin, 'stark');
+    $this->svc->setGpAnkerStaerke($this->rootTeam, $gp->id, $this->minze, 'schwach');
+
+    $netz = $this->svc->pairingNetz($this->rootTeam, $rezept->id);
+    $anker = collect($netz['nodes'])->where('kind', 'anker')->keyBy('slug');
+    expect($anker->keys()->sort()->values()->all())->toBe(['kichererbse', 'minze', 'tahin'])
+        ->and($anker->pluck('anteil')->all())->toBe([null, null, null])
+        ->and($anker['tahin']['staerke'])->toBe('stark')
+        ->and($anker['minze']['staerke'])->toBe('schwach')
+        ->and($anker['minze']['kern'])->toBeFalse();
+});
+
+it('zeigt pro Basisrezept den Gewichtsanteil an der Standardportion und aktualisiert das Netz nach Mengenänderung', function () {
+    $gericht = $this->makeRecipe($this->rootTeam, 'Hummus mit Aioli');
+    $gericht->update(['is_sales_recipe' => true]);
+    foreach ([[$this->rezept, 120], [$this->basis, 30]] as $position => [$basis, $gramm]) {
+        FoodAlchemistRecipeIngredient::create([
+            'team_id' => $gericht->team_id, 'recipe_id' => $gericht->id, 'referenced_recipe_id' => $basis->id,
+            'raw_text' => $basis->name, 'quantity' => $gramm, 'position' => $position + 1,
+            'unit_vocab_id' => $this->unitG($this->rootTeam)->id,
+        ]);
+    }
+    $standard = $this->makeStandardDarreichung($gericht, attrs: ['menge_vom_standard' => true]);
+    $netz = $this->svc->pairingNetz($this->rootTeam, $gericht->id);
+    $teile = collect($netz['nodes'])->where('kind', 'bestandteil')->keyBy('recipe_id');
+    expect($teile[$this->rezept->id]['anteil'])->toBe(80.0)
+        ->and($teile[$this->basis->id]['anteil'])->toBe(20.0);
+    $profil = app(RezeptProfil::class)->berechne($gericht->id);
+    expect(array_column($profil['anker'], 'anteil', 'anchor_id'))->toMatchArray([
+        $this->kichererbse => 40.0, $this->tahin => 40.0, $this->knoblauch => 20.0,
+    ]);
+
+    $aioli = $gericht->ingredients()->where('referenced_recipe_id', $this->basis->id)->firstOrFail();
+    app(DarreichungService::class)->setzeDelta($this->rootTeam, $standard->id, $aioli->id, 120.0, false);
+    $neu = $this->svc->pairingNetz($this->rootTeam, $gericht->fresh()->id);
+    expect(collect($neu['nodes'])->where('kind', 'bestandteil')->pluck('anteil')->values()->all())->toBe([50.0, 50.0])
+        ->and($neu['meta']['sig'])->not->toBe($netz['meta']['sig']);
+    $profil = app(RezeptProfil::class)->berechne($gericht->id);
+    expect(array_column($profil['anker'], 'anteil', 'anchor_id'))->toMatchArray([
+        $this->kichererbse => 25.0, $this->tahin => 25.0, $this->knoblauch => 50.0,
+    ]);
 });
 
 it('pairingNetz: Anker↔Anker-Kante aus der Harmonie-Matrix (innere Ebene)', function () {

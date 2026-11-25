@@ -618,8 +618,8 @@
                     <a href="#" role="button" wire:key="pa-{{ $a->id }}" wire:click.prevent="ankerNetzUmschalten({{ $a->id }})"
                             aria-pressed="{{ $ankerNetzOffenId === $a->id ? 'true' : 'false' }}"
                             class="inline-flex items-center gap-1 h-7 px-2.5 rounded-full border text-[length:var(--fa-text-sm)] font-medium transition-colors {{ $ankerNetzOffenId === $a->id ? 'border-[var(--fa-accent)] bg-[var(--fa-accent-soft)] text-[var(--fa-accent)]' : ($a->role === 'kern' ? 'border-[var(--fa-accent-line)] text-[var(--fa-accent)] hover:bg-[var(--fa-accent-soft)]' : 'border-[var(--fa-line-strong)] text-[var(--fa-ink-2)] hover:bg-[var(--fa-hover)]') }}"
-                            title="{{ $a->role === 'kern' ? 'Kern-Aroma' : 'Begleit-Aroma' }} · weitere Grundprodukte mit diesem Anker zeigen" data-gp-anker-chip>
-                        @if($a->role === 'kern')@svg('heroicon-s-star', 'w-3.5 h-3.5')@endif{{ $a->display_de }}
+                            title="{{ $a->staerke ?? ($a->role === 'kern' ? 'Kern-Aroma' : 'Begleit-Aroma') }} · weitere Grundprodukte mit diesem Anker zeigen" data-gp-anker-chip>
+                        @if($a->staerke === null && $a->role === 'kern')@svg('heroicon-s-star', 'w-3.5 h-3.5')@endif{{ $a->display_de }}@if($a->staerke !== null) · {{ $a->staerke }}@endif
                     </a>{{-- Spec 65: <a> statt <button> — bleibt im gesperrten Lesemodus (fieldset) bedienbar --}}
                 @endforeach
             </div>

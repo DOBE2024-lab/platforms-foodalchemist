@@ -676,13 +676,17 @@
                         </x-slot:actions>
                         <div class="flex flex-wrap gap-1.5" data-gp-anker-liste>
                             @forelse($gpAnker as $a)
-                                <x-fa::badge wire:key="ga-{{ $a->id }}" :tone="$a->role === 'kern' ? 'accent' : 'neutral'" :icon="$a->role === 'kern' ? 'heroicon-s-star' : null"
-                                    title="{{ $a->role === 'kern' ? 'Hauptanker' : 'Nebenanker' }} · {{ $quelleLabel[$a->source] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($a->source) }}{{ $a->ai_confidence !== null ? ' ' . round($a->ai_confidence * 100) . ' %' : '' }}">
-                                    {{ $a->display_de }}@if(in_array($a->source, $patenQuellen, true))<span class="opacity-70" data-gp-anker-pate> · Pate</span>@endif
-                                    <button type="button" wire:click="gpAnkerLoesen({{ $a->id }})" class="-mr-1 inline-flex items-center rounded-full hover:text-[var(--fa-crit)]" aria-label="Anker {{ $a->display_de }} lösen" title="Anker lösen" data-gp-anker-loesen>
-                                        @svg('heroicon-m-x-mark', 'w-3.5 h-3.5')
-                                    </button>
-                                </x-fa::badge>
+                                <div class="inline-flex items-center gap-1" wire:key="aroma-{{ $a->id }}">
+                                    <x-fa::badge wire:key="ga-{{ $a->id }}" :tone="($a->staerke === null ? $a->role === 'kern' : $a->staerke !== 'schwach') ? 'accent' : 'neutral'"
+                                        :icon="$a->staerke === null && $a->role === 'kern' ? 'heroicon-s-star' : null"
+                                        title="{{ $a->staerke ?? ($a->role === 'kern' ? 'Hauptanker' : 'Nebenanker') }} · {{ $quelleLabel[$a->source] ?? \Platform\FoodAlchemist\Support\Labels::lesbar($a->source) }}{{ $a->ai_confidence !== null ? ' ' . round($a->ai_confidence * 100) . ' %' : '' }}">
+                                        {{ $a->display_de }}@if(in_array($a->source, $patenQuellen, true))<span class="opacity-70" data-gp-anker-pate> · Pate</span>@endif
+                                        <button type="button" wire:click="gpAnkerLoesen({{ $a->id }})" class="-mr-1 inline-flex items-center rounded-full hover:text-[var(--fa-crit)]" aria-label="Anker {{ $a->display_de }} lösen" title="Anker lösen" data-gp-anker-loesen>
+                                            @svg('heroicon-m-x-mark', 'w-3.5 h-3.5')
+                                        </button>
+                                    </x-fa::badge>
+                                    <x-foodalchemist::gp-anker-staerke :anker="$a" />
+                                </div>
                             @empty
                                 <p class="fa-t-muted" @if($gpAnkerNeutral ?? false) data-gp-anker-neutral @endif>{{ ($gpAnkerNeutral ?? false) ? 'Geprüft: kein Aroma-Träger (neutral), kein Anker.' : 'Noch kein Aroma-Anker gesetzt.' }}</p>
                             @endforelse

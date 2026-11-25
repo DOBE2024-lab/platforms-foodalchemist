@@ -459,6 +459,22 @@ class PairingService
         return $this->kernMappingsBatch('foodalchemist_gp_anchor_mappings', 'gp_id', array_values(array_unique($gpIds)));
     }
 
+    /** Aktive Aroma-Zuordnungen je Grundprodukt für die Rezeptprofile. */
+    public function gpAnkerZuordnungen(array $gpIds): Collection
+    {
+        return DB::table('foodalchemist_gp_anchor_mappings as m')
+            ->join('foodalchemist_vocab_pairing_anchors as a', 'a.id', '=', 'm.anchor_id')
+            ->whereIn('m.gp_id', $gpIds)->whereNull('m.deleted_at')->whereNull('a.deleted_at')
+            ->orderBy('m.id')->get(['m.gp_id', 'm.anchor_id', 'm.role', 'm.staerke'])
+            ->each(function ($anker): void {
+                $anker->role = match ($anker->staerke) {
+                    'schwach' => 'neben',
+                    'mittel', 'stark' => 'kern',
+                    default => $anker->role,
+                };
+            })->groupBy('gp_id');
+    }
+
     /** Spec 60 · P5: ID des Ankers „neutral" (kein Aroma), sonst null. */
     public function neutralAnker(): ?int
     {
@@ -1101,6 +1117,21 @@ class PairingService
         );
     }
 
+    public const GP_ANKER_STAERKEN = ['schwach', 'mittel', 'stark'];
+
+    public function setGpAnkerStaerke(Team $team, int $gpId, int $ankerId, ?string $staerke): void
+    {
+        if ($staerke !== null && ! in_array($staerke, self::GP_ANKER_STAERKEN, true)) {
+            throw new \InvalidArgumentException('Unbekannte Aromastärke.');
+        }
+
+        $gp = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->findOrFail($gpId);
+        $this->pruefeAnkerPflege($gp, $team);
+        DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gpId)->where('anchor_id', $ankerId)
+            ->whereNull('deleted_at')->update(['staerke' => $staerke, 'updated_at' => now()]);
+        app(RezeptProfil::class)->vergiss();
+    }
+
     /** Löst einen einzelnen GP-Anker (soft-delete). */
     public function removeGpAnker(Team $team, int $gpId, int $ankerId): void
     {
@@ -1174,7 +1205,7 @@ class PairingService
             ->join('foodalchemist_vocab_pairing_anchors AS a', 'a.id', '=', 'm.anchor_id')
             ->where('m.gp_id', $gpId)->whereNull('m.deleted_at')
             ->orderByRaw("CASE m.role WHEN 'kern' THEN 1 ELSE 2 END")->orderBy('a.display_de')
-            ->get(['a.id', 'a.slug', 'a.display_de', 'm.role', 'm.source', 'm.ai_confidence']);
+            ->get(['a.id', 'a.slug', 'a.display_de', 'm.role', 'm.staerke', 'm.source', 'm.ai_confidence']);
     }
 
     /**
@@ -1394,12 +1425,13 @@ class PairingService
             return $this->gerichtNetz($team, $recipe);
         }
         // Basisrezept: Innenring = Kern-Anker seines Aromenprofils, mit Anteil (Hintergrund sichtbar).
-        $profil = app(\Platform\FoodAlchemist\Services\Pairing\RezeptProfil::class)->fuer((int) $recipe->id);
-        $anteil = collect($profil['anker'])->mapWithKeys(fn ($a) => [(int) $a['anchor_id'] => (float) $a['anteil']]);
-        $inner = $anteil->isEmpty() ? collect() : DB::table('foodalchemist_vocab_pairing_anchors')
-            ->whereIn('id', $anteil->keys()->all())->whereNull('deleted_at')->get(['id', 'slug', 'display_de'])
-            ->sortByDesc(fn ($a) => $anteil[(int) $a->id])->values()
-            ->map(fn ($a) => ['id' => (int) $a->id, 'slug' => $a->slug, 'display_de' => $a->display_de, 'anteil' => round($anteil[(int) $a->id], 1)]);
+        $profile = app(RezeptProfil::class);
+        $anzeige = $profile->ankerFuerAnzeige($profile->fuer((int) $recipe->id));
+        $vokabular = DB::table('foodalchemist_vocab_pairing_anchors')
+            ->whereIn('id', array_column($anzeige, 'anchor_id'))->whereNull('deleted_at')
+            ->get(['id', 'slug', 'display_de'])->keyBy('id');
+        $inner = collect($anzeige)->filter(fn ($a) => $vokabular->has($a['anchor_id']))
+            ->map(fn ($a) => $a + (array) $vokabular[$a['anchor_id']]);
 
         return $this->baueNetz($team, $inner, (string) $recipe->name, $recipeId);
     }
@@ -1426,13 +1458,23 @@ class PairingService
         $nodes = [['id' => 'z', 'kind' => 'zentrum', 'label' => (string) $gericht->name, 'x' => $cx, 'y' => $cy]];
         $edges = [];
         $teile = array_values($analyse['bestandteile']);
+        $massen = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->standardProEinheit($gericht, $team);
+        $gramm = [];
+        foreach ($gericht->ingredients as $zutat) {
+            $schluessel = $zutat->referenced_recipe_id !== null ? 'r'.$zutat->referenced_recipe_id : 'z'.$zutat->id;
+            $gramm[$schluessel] = ($gramm[$schluessel] ?? 0.0) + ($massen[$zutat->id]['masse_g'] ?? 0.0);
+        }
+        $gesamt = array_sum(array_intersect_key($gramm, array_column($teile, null, 'schluessel')));
         foreach ($teile as $i => $t) {
+            $masse = $gramm[$t['schluessel']] ?? 0.0;
+            $anteil = $gesamt > 0 && $masse > 0 ? round(100 * $masse / $gesamt, 1) : null;
             [$x, $y] = $this->positionAufKreis($i, max(1, count($teile)), self::R_BESTANDTEIL, $cx, $cy);
             $nodes[] = ['id' => 't:'.$t['schluessel'], 'kind' => 'bestandteil', 'label' => $t['label'],
                 'recipe_id' => $t['recipe_id'], 'ohne_profil' => $t['profil'] === null,
+                'anteil' => $anteil, 'gramm' => $anteil !== null ? round($masse, 1) : null,
                 'kern' => $t['profil'] !== null ? array_slice(array_map(fn ($a) => (int) $a['anchor_id'], $t['profil']['anker']), 0, 3) : [],
                 'x' => $x, 'y' => $y];
-            $edges[] = ['source' => 'z', 'target' => 't:'.$t['schluessel'], 'kind' => 'zentrum_anker', 'visible' => true];
+            $edges[] = ['source' => 'z', 'target' => 't:'.$t['schluessel'], 'kind' => 'zentrum_anker', 'anteil' => $anteil, 'visible' => true];
         }
         $typ = [AussageTyp::Harmoniert->value => 'stern3', AussageTyp::Kombination->value => 'stern3', AussageTyp::Spannung->value => 'kontrast'];
         $gesehen = [];
@@ -1487,7 +1529,7 @@ class PairingService
                 'art' => 'gericht',
                 'canvas_w' => self::CANVAS_W,
                 'canvas_h' => self::CANVAS_H,
-                'sig' => substr(md5(implode('|', array_map(static fn ($n) => $n['id'], $nodes))), 0, 10),
+                'sig' => substr(md5(json_encode($nodes)), 0, 10),
                 'typ_default' => ['stern3' => true, 'kontrast' => true],
                 'counts' => [
                     'bestandteile' => count($teile),
@@ -1536,7 +1578,7 @@ class PairingService
         $cy = self::CANVAS_H / 2;
 
         $inner = $inner->unique('id')->take(self::INNER_ANKER_MAX)->values();
-        $innerIds = $inner->pluck('id')->all();
+        $innerIds = $inner->filter(fn ($a) => $a['kern'] ?? true)->pluck('id')->all();
 
         $edges = [];
         $ankerNodes = [];
@@ -1547,7 +1589,8 @@ class PairingService
             $y = round($cy + self::R_ANKER * sin($w), 1);
             $ankerNodes[] = [
                 'id' => 'a:'.$a['id'], 'kind' => 'anker', 'label' => $a['display_de'], 'slug' => $a['slug'],
-                'kern' => true, 'anteil' => $a['anteil'] ?? null, 'x' => $x, 'y' => $y,
+                'kern' => $a['kern'] ?? true, 'anteil' => $a['anteil'] ?? null, 'staerke' => $a['staerke'] ?? null,
+                'x' => $x, 'y' => $y,
             ];
             $edges[] = ['source' => 'z', 'target' => 'a:'.$a['id'], 'kind' => 'zentrum_anker', 'visible' => true];
         }
@@ -1680,7 +1723,7 @@ class PairingService
                 // in Vorschau + Modal. Ändert sich der Ankersatz (o. die Kandidaten), ändert
                 // sich sig → wire:key wechselt → Livewire ersetzt die Insel → D3 re-initialisiert
                 // mit frischen Daten. Ohne das friert das Modal auf dem Erst-Öffnungsstand ein.
-                'sig' => substr(md5(implode('|', array_map(static fn ($n) => $n['id'], $nodes))), 0, 10),
+                'sig' => substr(md5(json_encode($nodes)), 0, 10),
                 // Filter-Defaults: beide Stern-Stufen an (zweistufige Inspire-Harmonie).
                 'typ_default' => ['stern3' => true, 'kontrast' => true],
                 'counts' => [

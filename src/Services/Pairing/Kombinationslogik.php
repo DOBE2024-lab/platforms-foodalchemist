@@ -81,7 +81,8 @@ final class Kombinationslogik
     {
         $zeilen = FoodAlchemistRecipeIngredient::query()->with(['gp', 'referencedRecipe'])
             ->where('recipe_id', $gericht->id)->where('is_optional', false)->orderBy('position')->orderBy('id')->get();
-        $gpKerne = $this->pairing->gpKernAnker($zeilen->pluck('gp_id')->filter()->all());
+        $gpAnker = $this->pairing->gpAnkerZuordnungen($zeilen->pluck('gp_id')->filter()->unique()->all());
+        $neutral = $this->pairing->neutralAnker();
         $out = [];
         $gesehen = [];
         foreach ($zeilen as $z) {
@@ -98,11 +99,14 @@ final class Kombinationslogik
                 continue;
             }
             $label = (string) ($z->display_name ?: $z->gp?->name ?: $z->raw_text);
-            $anker = $z->gp_id !== null ? ($gpKerne[$z->gp_id] ?? $this->pairing->ankerIdExakt($z->gp?->name)) : $this->pairing->ankerIdExakt($z->raw_text);
-            $anker = $anker !== null && (int) $anker !== $this->pairing->neutralAnker() ? (int) $anker : null;
+            $mappings = $gpAnker->get($z->gp_id, collect());
+            $kerne = $mappings->isEmpty()
+                ? [$this->pairing->ankerIdExakt($z->gp_id !== null ? $z->gp?->name : $z->raw_text)]
+                : $mappings->where('role', 'kern')->pluck('anchor_id')->all();
+            $kerne = array_diff($kerne, [null, $neutral]);
             $verfahren = Verfahren::ausText((string) ($z->display_name ?: $z->raw_text));
             $out[] = ['schluessel' => 'z'.$z->id, 'label' => $label, 'recipe_id' => null, 'rolle' => $z->role,
-                'profil' => $anker !== null ? $this->profil->einzel($anker, $verfahren) : null];
+                'profil' => $kerne !== [] ? $this->profil->einzelMitKernankern($kerne, $verfahren) : null];
         }
 
         return $out;
@@ -491,8 +495,12 @@ final class Kombinationslogik
         $out = $this->ausgabe($analyse, $istGericht ? 'gericht' : 'basisrezept');
         if (! $istGericht) {
             $p = $this->profil->fuer((int) $rezept->id);
+            $anzeige = $this->profil->ankerFuerAnzeige($p);
+            $namen = DB::table('foodalchemist_vocab_pairing_anchors')
+                ->whereIn('id', array_column($anzeige, 'anchor_id'))->pluck('display_de', 'id');
             $out['profil'] = [
                 'anker' => $this->ankerNamen($p['anker']),
+                'anker_anzeige' => array_map(fn ($a) => $a + ['name' => (string) ($namen[$a['anchor_id']] ?? '?')], $anzeige),
                 'abdeckung' => $p['abdeckung'],
                 'eigenschaften' => $this->eigenschaftenLesbar($p['eigenschaften']),
             ];

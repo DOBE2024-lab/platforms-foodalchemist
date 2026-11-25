@@ -57,9 +57,10 @@
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 fa-t-muted" data-netz-legende>
                 <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-[var(--fa-accent)]"></span> Gericht</span>
                 @if($istGericht)
-                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-[var(--fa-ok)] bg-[var(--fa-ok-soft)]"></span> Bestandteil (Basisrezept des Gerichts)</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-[var(--fa-ok)] bg-[var(--fa-ok-soft)]"></span> Basisrezept mit Gewichtsanteil an der Standardportion</span>
                 @else
-                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[var(--fa-netz-anker)]"></span> Kern-Anker mit Anteil am Aromenprofil</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[var(--fa-netz-anker)]"></span> Kern-Anker</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[var(--fa-ink-3)]"></span> Nebenanker</span>
                 @endif
                 <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[var(--fa-ok)]"></span> Basisrezept</span>
                 <span class="inline-flex items-center gap-1.5"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#fcd34d" stroke-width="2.4"/></svg> ★★★ harmoniert (gemessen)</span>

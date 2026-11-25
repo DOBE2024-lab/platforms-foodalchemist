@@ -335,7 +335,7 @@ class PairingService
 
     /**
      * Spec 60 · P7c: Kern-Anker je Basisrezept = stärkster Anker seines Aromenprofils
-     * ({@see Pairing\RezeptProfil}). Rezepte ohne Profil fehlen im Ergebnis.
+     * ({@see RezeptProfil}). Rezepte ohne Profil fehlen im Ergebnis.
      *
      * @param  array<int, int|string>  $recipeIds
      * @return array<int, int> recipe_id → anchor_id
@@ -1263,7 +1263,7 @@ class PairingService
      * Pairing-Panel der Editoren (Gericht, Basisrezept) — Spec 60 · P10: dieselbe Aussage wie die
      * Detail-Spalte (Kombinationslogik + Netz), nicht mehr die alte Kohäsion über Anker-Paare.
      *
-     *   kombination   „Passt das zusammen?" ({@see Pairing\Kombinationslogik::daten})
+     *   kombination   „Passt das zusammen?" ({@see Kombinationslogik::daten})
      *   netz          das Netz (Gericht: Basisrezepte; Basisrezept: Kern-Anker mit Anteil)
      *   profil        Kern-Anker des Aromenprofils mit Anteil
      *   Gericht       passt_dazu / deckt_bedarf — die Basisrezepte aus dem Netz (eine Rechnung)
@@ -1294,8 +1294,8 @@ class PairingService
 
             return $out;
         }
-        $kern = $anteil->filter(fn ($a) => $a['anteil'] >= \Platform\FoodAlchemist\Services\Pairing\RezeptGraph::KERN)->pluck('anchor_id')->map(fn ($i) => (int) $i)->all();
-        $out['partner'] = $this->harmoniePartnerNamen($kern);
+        $kern = $anteil->filter(fn ($a) => $a['anteil'] >= RezeptGraph::KERN)->pluck('anchor_id')->map(fn ($i) => (int) $i)->all();
+        $out['partner'] = $this->harmoniePartnerNamen($kern, quellen: $profil['anker_quellen']);
         $out['kontrast'] = array_map(fn ($c) => ['name' => (string) ($c['display_de'] ?: $c['slug']), 'achse' => $c['achse_label']],
             $this->kontrastUndKonflikt($kern)[0]);
         $out['verwandte'] = $team !== null ? $this->recipesSharingPairings($team, (int) $recipe->id)->all() : [];
@@ -1340,12 +1340,13 @@ class PairingService
      * @param  list<int>  $ids
      * @return list<string>
      */
-    private function harmoniePartnerNamen(array $ids, int $max = 14): array
+    private function harmoniePartnerNamen(array $ids, int $max = 14, array $quellen = []): array
     {
         if ($ids === []) {
             return [];
         }
-        $cover = $this->graph()->kanten($ids, null, AnkerGraph::HARMONIERT, $ids)->groupBy('zu')->map->count();
+        $cover = $this->graph()->kanten($ids, null, AnkerGraph::HARMONIERT, $ids)->groupBy('zu')
+            ->map(fn ($kanten) => $this->zahlAromaQuellen($kanten->pluck('von')->all(), $quellen));
         $namen = DB::table('foodalchemist_vocab_pairing_anchors')->whereIn('id', $cover->keys()->all())
             ->whereNotIn('slug', self::NICHT_ZUTAT_ANKER)->pluck('display_de', 'id');
 
@@ -1403,7 +1404,7 @@ class PairingService
      * Zentrum = Gericht, Innenring = eigene Kern-Anker (Geschmacks-Identität),
      * aussen die PAIRING-KANDIDATEN in Typ-Sektoren (erprobt oben, aroma oben-
      * rechts, kontrast oben-links) — jeder Kandidat ist ein Aroma-Partner der
-     * Kern-Anker, gerankt nach dish_cover (wie viele Kern-Anker er bedient) +
+     * Kern-Anker, gerankt nach der Zahl passender Zutaten im Profil +
      * Gewicht. Unten die KOMPLEMENTÄREN Basisrezepte (Rezepte, die auf einem
      * passenden Partner aufbauen). Typ-Filterung passiert clientseitig (Chips) —
      * jeder Kandidat/jede Kante trägt ihren `typ`. Positionen serverseitig fix
@@ -1426,14 +1427,15 @@ class PairingService
         }
         // Basisrezept: Innenring = Kern-Anker seines Aromenprofils, mit Anteil (Hintergrund sichtbar).
         $profile = app(RezeptProfil::class);
-        $anzeige = $profile->ankerFuerAnzeige($profile->fuer((int) $recipe->id));
+        $aroma = $profile->fuer((int) $recipe->id);
+        $anzeige = $profile->ankerFuerAnzeige($aroma);
         $vokabular = DB::table('foodalchemist_vocab_pairing_anchors')
             ->whereIn('id', array_column($anzeige, 'anchor_id'))->whereNull('deleted_at')
             ->get(['id', 'slug', 'display_de'])->keyBy('id');
         $inner = collect($anzeige)->filter(fn ($a) => $vokabular->has($a['anchor_id']))
             ->map(fn ($a) => $a + (array) $vokabular[$a['anchor_id']]);
 
-        return $this->baueNetz($team, $inner, (string) $recipe->name, $recipeId);
+        return $this->baueNetz($team, $inner, (string) $recipe->name, $recipeId, quellen: $aroma['anker_quellen']);
     }
 
     /**
@@ -1458,20 +1460,13 @@ class PairingService
         $nodes = [['id' => 'z', 'kind' => 'zentrum', 'label' => (string) $gericht->name, 'x' => $cx, 'y' => $cy]];
         $edges = [];
         $teile = array_values($analyse['bestandteile']);
-        $massen = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->standardProEinheit($gericht, $team);
-        $gramm = [];
-        foreach ($gericht->ingredients as $zutat) {
-            $schluessel = $zutat->referenced_recipe_id !== null ? 'r'.$zutat->referenced_recipe_id : 'z'.$zutat->id;
-            $gramm[$schluessel] = ($gramm[$schluessel] ?? 0.0) + ($massen[$zutat->id]['masse_g'] ?? 0.0);
-        }
-        $gesamt = array_sum(array_intersect_key($gramm, array_column($teile, null, 'schluessel')));
+        $anteile = $logik->portionsanteile($teile);
         foreach ($teile as $i => $t) {
-            $masse = $gramm[$t['schluessel']] ?? 0.0;
-            $anteil = $gesamt > 0 && $masse > 0 ? round(100 * $masse / $gesamt, 1) : null;
+            $anteil = isset($anteile[$t['schluessel']]) ? round(100 * $anteile[$t['schluessel']], 1) : null;
             [$x, $y] = $this->positionAufKreis($i, max(1, count($teile)), self::R_BESTANDTEIL, $cx, $cy);
             $nodes[] = ['id' => 't:'.$t['schluessel'], 'kind' => 'bestandteil', 'label' => $t['label'],
                 'recipe_id' => $t['recipe_id'], 'ohne_profil' => $t['profil'] === null,
-                'anteil' => $anteil, 'gramm' => $anteil !== null ? round($masse, 1) : null,
+                'anteil' => $anteil, 'gramm' => $t['gramm'] !== null ? round($t['gramm'], 1) : null,
                 'kern' => $t['profil'] !== null ? array_slice(array_map(fn ($a) => (int) $a['anchor_id'], $t['profil']['anker']), 0, 3) : [],
                 'x' => $x, 'y' => $y];
             $edges[] = ['source' => 'z', 'target' => 't:'.$t['schluessel'], 'kind' => 'zentrum_anker', 'anteil' => $anteil, 'visible' => true];
@@ -1485,6 +1480,8 @@ class PairingService
             [$p, $q] = $a->bestandteile;
             if ($a->typ === AussageTyp::Konflikt) {
                 $edges[] = ['source' => 't:'.$p, 'target' => 't:'.$q, 'kind' => 'konflikt', 'text' => $a->text, 'visible' => true];
+            } elseif ($a->typ === AussageTyp::Hinweis && str_starts_with($a->text, Kombinationslogik::HINWEIS_BEGLEITAROMA)) {
+                $edges[] = ['source' => 't:'.$p, 'target' => 't:'.$q, 'kind' => 'hinweis', 'text' => $a->text, 'visible' => true];
             } elseif (isset($typ[$a->typ->value]) && ! isset($gesehen[$a->typ->value.$p.$q])) {
                 $gesehen[$a->typ->value.$p.$q] = true;
                 $edges[] = ['source' => 't:'.$p, 'target' => 't:'.$q, 'kind' => 'teil_teil', 'typ' => $typ[$a->typ->value],
@@ -1496,7 +1493,9 @@ class PairingService
         foreach ($passend as $i => $b) {
             [$x, $y] = $this->positionAufKreis($i, max(1, count($passend)), self::R_BEST, $cx, $cy);
             $nodes[] = ['id' => 'b:'.$b['recipe_id'], 'kind' => 'basisrezept', 'typ' => 'stern3', 'label' => $b['name'],
-                'recipe_id' => $b['recipe_id'], 'via' => $b['mit'], 'x' => $x, 'y' => $y];
+                'recipe_id' => $b['recipe_id'], 'via' => $b['mit'],
+                'mit_anteil' => isset($anteile[$b['mit_schluessel']]) ? round(100 * $anteile[$b['mit_schluessel']], 1) : null,
+                'x' => $x, 'y' => $y];
             $edges[] = ['source' => 'b:'.$b['recipe_id'], 'target' => 't:'.$b['mit_schluessel'], 'kind' => 'basis', 'typ' => 'stern3',
                 'text' => $b['name'].' harmoniert mit '.$b['mit'], 'visible' => true];
         }
@@ -1529,7 +1528,7 @@ class PairingService
                 'art' => 'gericht',
                 'canvas_w' => self::CANVAS_W,
                 'canvas_h' => self::CANVAS_H,
-                'sig' => substr(md5(json_encode($nodes)), 0, 10),
+                'sig' => substr(md5(json_encode([$nodes, $edges])), 0, 10),
                 'typ_default' => ['stern3' => true, 'kontrast' => true],
                 'counts' => [
                     'bestandteile' => count($teile),
@@ -1572,7 +1571,7 @@ class PairingService
      *
      * @param  \Illuminate\Support\Collection<int,array{id:int,slug:string,display_de:?string}>  $inner
      */
-    private function baueNetz(Team $team, \Illuminate\Support\Collection $inner, string $centerLabel, int $recipeId, bool $composer = false): array
+    private function baueNetz(Team $team, \Illuminate\Support\Collection $inner, string $centerLabel, int $recipeId, bool $composer = false, array $quellen = []): array
     {
         $cx = self::CANVAS_W / 2;
         $cy = self::CANVAS_H / 2;
@@ -1603,7 +1602,18 @@ class PairingService
         $edges = array_merge($edges, $ankerKanten);
 
         // ── Kandidaten: Aroma-Partner der Kern-Anker (ausserhalb), typisiert ──
-        [$kandidaten, $candMeta] = $this->kandidatenFuerAnker($innerIds);
+        [$kandidaten, $candMeta] = $this->kandidatenFuerAnker($innerIds, $quellen);
+        $nebenIds = $inner->filter(fn ($a) => isset($a['kern']) && ! $a['kern'])->pluck('id')->all();
+        $schwacheKonflikte = app(RezeptGraph::class)->schwacheKonflikte(
+            ['nebenanker' => array_fill_keys($nebenIds, true)],
+            ['anker' => array_map(fn ($id) => ['anchor_id' => $id, 'anteil' => 0.0], $innerIds)],
+        );
+        $ankerNamen = $inner->pluck('display_de', 'id');
+        foreach ($schwacheKonflikte as $k) {
+            $edges[] = ['source' => 'a:'.$k->von, 'target' => 'a:'.$k->zu, 'kind' => 'hinweis',
+                'text' => "{$ankerNamen[$k->von]} und {$ankerNamen[$k->zu]} können sich stören (Begleitaroma, Dossier geprüft)",
+                'visible' => true];
+        }
 
         // ── Spec 60: Kombinationslogik über die Anker-Auswahl — dieselbe Aussage wie im Panel.
         // Daraus: Kontrast-Ring (Lieferanten für offene Bedarfe), Konflikt-Linien und — nur im
@@ -1672,7 +1682,8 @@ class PairingService
             $k = $kontrastVon[(int) $c['id']] ?? null;
             $kandidatNodes[] = [
                 'id' => 'k:'.$c['id'], 'kind' => 'kandidat', 'typ' => 'stern3', 'level' => 3,
-                'label' => $c['display_de'], 'slug' => $c['slug'], 'cover' => $c['cover'], 'x' => $x, 'y' => $y,
+                'label' => $c['display_de'], 'slug' => $c['slug'], 'cover' => $c['cover'],
+                'cover_einheit' => $composer ? 'Ankern' : 'Zutaten', 'anker_treffer' => count($c['partner']), 'x' => $x, 'y' => $y,
                 'auch_kontrast' => $k['achse_label'] ?? null,
             ];
             foreach ($c['partner'] as $p) {
@@ -1723,7 +1734,7 @@ class PairingService
                 // in Vorschau + Modal. Ändert sich der Ankersatz (o. die Kandidaten), ändert
                 // sich sig → wire:key wechselt → Livewire ersetzt die Insel → D3 re-initialisiert
                 // mit frischen Daten. Ohne das friert das Modal auf dem Erst-Öffnungsstand ein.
-                'sig' => substr(md5(json_encode($nodes)), 0, 10),
+                'sig' => substr(md5(json_encode([$nodes, $edges])), 0, 10),
                 // Filter-Defaults: beide Stern-Stufen an (zweistufige Inspire-Harmonie).
                 'typ_default' => ['stern3' => true, 'kontrast' => true],
                 'counts' => [
@@ -1982,12 +1993,12 @@ class PairingService
 
     /**
      * Pairing-Kandidaten für die Kern-Anker: alle Aroma-Partner AUSSERHALB des
-     * Ankersets, aggregiert je Kandidat (dish_cover = Anzahl bedienter Kern-Anker,
+     * Ankersets, aggregiert je Kandidat (Anzahl bedienter Zutaten, im Composer Anker,
      * primärer Typ = stärkste Kante).
      *
      * @return array{0: list<array>, 1: array<int,array>}  [kandidaten, candMeta je candId]
      */
-    private function kandidatenFuerAnker(array $innerIds): array
+    private function kandidatenFuerAnker(array $innerIds, array $quellen = []): array
     {
         if ($innerIds === []) {
             return [[], []];
@@ -2031,7 +2042,7 @@ class PairingService
         $kandidaten = [];
         $candMeta = [];
         foreach ($agg as $cid => $c) {
-            $cover = count($c['ankerSet']);
+            $cover = $this->zahlAromaQuellen(array_keys($c['ankerSet']), $quellen);
             $primaerAnker = $c['partner'][0]['anker_id'];
             foreach ($c['partner'] as $p) {
                 if ($p['typ'] === $c['best']['typ']) {
@@ -2053,6 +2064,16 @@ class PairingService
         }
 
         return [$kandidaten, $candMeta];
+    }
+
+    private function zahlAromaQuellen(array $ids, array $quellen): int
+    {
+        $getroffen = [];
+        foreach ($ids as $id) {
+            $getroffen += $quellen[$id] ?? ['anker:'.$id => true];
+        }
+
+        return count($getroffen);
     }
 
     /**

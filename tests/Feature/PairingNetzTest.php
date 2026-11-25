@@ -108,6 +108,10 @@ it('zeigt mehrere Kernanker eines Grundprodukts ohne Einzelprozente und übernim
     $this->svc->setGpAnker($this->rootTeam, $gp->id, $this->minze, 'neben');
     $this->svc->setGpAnkerStaerke($this->rootTeam, $gp->id, $this->tahin, 'stark');
     $this->svc->setGpAnkerStaerke($this->rootTeam, $gp->id, $this->minze, 'schwach');
+    DB::table('foodalchemist_anchor_beziehungen')->insert([
+        'anchor_a_id' => $this->minze, 'anchor_b_id' => $this->tahin, 'art' => 'konflikt',
+        'achse' => '', 'grundlage' => 'dossier', 'status' => 'geprueft', 'created_at' => now(), 'updated_at' => now(),
+    ]);
 
     $netz = $this->svc->pairingNetz($this->rootTeam, $rezept->id);
     $anker = collect($netz['nodes'])->where('kind', 'anker')->keyBy('slug');
@@ -116,6 +120,11 @@ it('zeigt mehrere Kernanker eines Grundprodukts ohne Einzelprozente und übernim
         ->and($anker['tahin']['staerke'])->toBe('stark')
         ->and($anker['minze']['staerke'])->toBe('schwach')
         ->and($anker['minze']['kern'])->toBeFalse();
+    $partner = collect($netz['nodes'])->firstWhere('slug', 'knoblauch');
+    expect($partner['cover'])->toBe(1)
+        ->and(collect($netz['edges'])->where('source', $partner['id'])->where('kind', 'kandidat'))->toHaveCount(2)
+        ->and(collect($netz['edges'])->where('kind', 'hinweis'))->toHaveCount(1)
+        ->and(collect($netz['edges'])->where('kind', 'konflikt'))->toBeEmpty();
 });
 
 it('zeigt pro Basisrezept den Gewichtsanteil an der Standardportion und aktualisiert das Netz nach Mengenänderung', function () {

@@ -151,7 +151,7 @@ final class RezeptProfil
     }
 
     /** Einzelnes Grundprodukt für die Kombination seiner Zutaten mit anderen Bestandteilen. */
-    public function einzelMitKernankern(array $ankerIds, ?Verfahren $verfahren = null): array
+    public function einzelMitKernankern(array $ankerIds, ?Verfahren $verfahren = null, array $nebenanker = []): array
     {
         $varianten = array_unique(array_map(fn ($id) => $this->variante((int) $id, $verfahren), $ankerIds));
         $anteile = array_fill_keys($varianten, 100.0 / max(1, count($varianten)));
@@ -167,6 +167,7 @@ final class RezeptProfil
             'anker' => array_map(fn ($id, $anteil) => ['anchor_id' => $id, 'anteil' => $anteil, 'verfahren' => $verfahren?->value],
                 array_keys($anteile), array_values($anteile)),
             'abdeckung' => 100.0,
+            'nebenanker' => array_diff_key(array_fill_keys(array_map(fn ($id) => $this->variante((int) $id, $verfahren), $nebenanker), true), $anteile),
             'eigenschaften' => $eigenschaften,
             'offene_bedarfe' => $this->offeneBedarfe($anteile, $eigenschaften),
         ];
@@ -210,7 +211,8 @@ final class RezeptProfil
     /** @return array<string, mixed> */
     private function rechne(int $recipeId, int $tiefe, array $besucht): array
     {
-        $leer = ['recipe_id' => $recipeId, 'anker' => [], 'mehrkern' => [], 'nebenanker' => [], 'staerken' => [], 'abdeckung' => 0.0, 'eigenschaften' => [], 'offene_bedarfe' => [], 'roh' => [], 'masse' => 0.0, 'hash_teile' => [], 'vollstaendig' => false];
+        $leer = ['recipe_id' => $recipeId, 'anker' => [], 'mehrkern' => [], 'nebenanker' => [], 'staerken' => [], 'anker_quellen' => [],
+            'abdeckung' => 0.0, 'eigenschaften' => [], 'offene_bedarfe' => [], 'roh' => [], 'masse' => 0.0, 'hash_teile' => [], 'vollstaendig' => false];
         if (isset($besucht[$recipeId])) {                          // 2.1c: kein Tiefen-Deckel (A-5), die Besucht-Liste fängt Zyklen
             return $leer;
         }
@@ -242,6 +244,7 @@ final class RezeptProfil
         $mehrkern = [];
         $nebenanker = [];
         $staerken = [];
+        $ankerQuellen = [];
         $verfahrenJe = [];  // anchor_id => Verfahren
         $masse = 0.0;
         $masseMitAnker = 0.0;
@@ -263,6 +266,9 @@ final class RezeptProfil
                 $abgeschmeckt += array_fill_keys($sub['abgeschmeckt'] ?? [], true);
                 $mehrkern += $sub['mehrkern'];
                 $nebenanker += $sub['nebenanker'];
+                foreach ($sub['anker_quellen'] as $id => $quellen) {
+                    $ankerQuellen[$id] = ($ankerQuellen[$id] ?? []) + $quellen;
+                }
                 foreach ($sub['staerken'] as $id => $staerke) {
                     $this->merkeStaerke($staerken, $id, $staerke);
                 }
@@ -308,6 +314,8 @@ final class RezeptProfil
                 $masseMitAnker += $g;
             }
             foreach ($kerne as $anker) {
+                $quelle = $z->gp_id !== null ? 'gp:'.$z->gp_id : 'zutat:'.$z->id;
+                $ankerQuellen[$anker][$quelle] = true;
                 $wuerzAnker[] = $anker;
                 $intensitaet = $this->intensitaet($anker);
                 if ($intensitaet <= 0) {
@@ -332,6 +340,7 @@ final class RezeptProfil
             'mehrkern' => $mehrkern,
             'nebenanker' => array_diff_key($nebenanker, $anteile, $mehrkern),
             'staerken' => $staerken,
+            'anker_quellen' => $ankerQuellen,
             'abdeckung' => $masse > 0 ? round(100 * $masseMitAnker / $masse, 2) : 0.0,
             'eigenschaften' => $eigenschaften,
             'offene_bedarfe' => $offen,

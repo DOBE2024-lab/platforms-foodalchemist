@@ -242,6 +242,7 @@ export function pairingNetzGraph(config) {
 
     _edgeDash(d) {
       if (d.kind === 'konflikt') return '5 3';
+      if (d.kind === 'hinweis') return '2 4';
       if (d.kind === 'anker_anker') return null; // direktes Pairing → durchgezogen
       if (d.kind === 'bridge') return null;       // Brücke → durchgezogen (Dicke trägt die Aussage)
       if (d.kind === 'basis') return '3 4';
@@ -251,6 +252,7 @@ export function pairingNetzGraph(config) {
     },
 
     _edgeWidth(d) {
+      if (d.kind === 'hinweis') return 1.8;
       if (d.kind === 'zentrum_anker' && d.anteil != null) return 0.8 + 3 * d.anteil / 100;
       if (d.kind === 'teil_teil') return d.typ === 'stern3' ? 3.2 : 2.2;
       if (this.mode === 'preview') {
@@ -472,10 +474,16 @@ export function pairingNetzGraph(config) {
       }
       if (d.kind === 'kandidat') {
         const sym = LEVEL_SYM[d.level] || d.typ;
-        return `${d.label} — ${sym}${d.cover > 1 ? ` · passt zu ${d.cover} Ankern` : ''}${d.auch_kontrast ? ` · deckt auch ${d.auch_kontrast}` : ''}`;
+        const treffer = d.cover_einheit === 'Zutaten' && d.anker_treffer > 1
+          ? ` · ${d.anker_treffer} Aromatreffer bei ${d.cover} ${d.cover === 1 ? 'Zutat' : 'Zutaten'}`
+          : (d.cover > 1 ? ` · passt zu ${d.cover} ${d.cover_einheit || 'Ankern'}` : '');
+        return `${d.label} — ${sym}${treffer}${d.auch_kontrast ? ` · deckt auch ${d.auch_kontrast}` : ''}`;
       }
       if (d.kind === 'basisrezept' && d.typ === 'kontrast') return `${d.label} — deckt ${d.achse || d.via}`;
-      if (d.kind === 'basisrezept') return `${d.label} — passt dazu (harmoniert mit ${d.via})`;
+      if (d.kind === 'basisrezept') {
+        const anteil = d.mit_anteil == null ? '' : ` · ${this._anteil(d.mit_anteil)} der Portion`;
+        return `${d.label} — passt dazu (harmoniert mit ${d.via}${anteil})`;
+      }
 
       return d.label || '';
     },

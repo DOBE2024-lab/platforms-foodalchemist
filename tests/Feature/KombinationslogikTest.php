@@ -4,9 +4,11 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
+use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\Pairing\AnkerVarianten;
 use Platform\FoodAlchemist\Services\Pairing\Kombinationslogik;
 use Platform\FoodAlchemist\Services\Pairing\RezeptProfil;
+use Platform\FoodAlchemist\Services\PairingService;
 use Platform\FoodAlchemist\Tests\Support\Harmonie;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -107,6 +109,49 @@ it('Harmonie, Spannung und offener Bedarf mit Grundlage', function () {
         ->and(($this->texte)($a['aussagen'], 'spannung'))->toBe(['Spannung: Säure von Sauce: Chimichurri für Beilage: Rosmarinkartoffeln'])
         ->and(($this->texte)($a['aussagen'], 'bedarf_offen'))->toBe(['Es könnte fehlen: Knusper (für Beilage: Rosmarinkartoffeln)'])
         ->and(array_column($a['offene_bedarfe'], 'achse'))->toBe(['knusprig']);
+});
+
+it('positioniert einen gleich guten Treffer zur grösseren Komponente vor dem Garniturtreffer', function () {
+    $kartoffel = ($this->basis)('Püree: Testkartoffel', [['Kartoffel', 'potato', '100']]);
+    $rosmarin = ($this->basis)('Garnitur: Testrosmarin', [['Rosmarin', 'rosemary', '100']]);
+    $essig = ($this->basis)('Dressing: Testessig', [['Testrotweinessig', 'vinegar', '100']]);
+    Harmonie::kante($this->a['vinegar'], $this->a['rosemary'], 3);
+    app(RezeptProfil::class)->fuer($essig->id);
+    $gericht = $this->makeRecipe($this->rootTeam, 'Testportion');
+    $gericht->update(['is_sales_recipe' => true]);
+    $haupt = ($this->einsetzen)($gericht, $kartoffel, 1);
+    $garnitur = ($this->einsetzen)($gericht, $rosmarin, 2);
+    $standard = $this->makeStandardDarreichung($gericht, attrs: ['menge_vom_standard' => true]);
+    $darreichung = app(DarreichungService::class);
+    $darreichung->setzeDelta($this->rootTeam, $standard->id, $garnitur->id, 25.0, false);
+
+    $ranking = function () use ($gericht, $essig) {
+        $logik = ($this->logik)();
+        $vorschlaege = $logik->passendeBasisrezepte($logik->analysiere($gericht->fresh()), null, 'herzhaft', $this->rootTeam->id);
+
+        return collect($vorschlaege)->whereIn('recipe_id', [$essig->id, $this->croutons->id])->pluck('harmonie_gewichtet', 'recipe_id')->all();
+    };
+
+    expect($ranking())->toBe([$this->croutons->id => 0.8, $essig->id => 0.2]);
+    $darreichung->setzeDelta($this->rootTeam, $standard->id, $haupt->id, 1.0, false);
+    expect(array_keys($ranking()))->toBe([$essig->id, $this->croutons->id]);
+    $darreichung->setzeDelta($this->rootTeam, $standard->id, $garnitur->id, null, true);
+    expect($ranking())->toBe([$this->croutons->id => 1.0]);
+});
+
+it('meldet einen geprüften Konflikt einer schwachen Begleitnote als Hinweis', function () {
+    $gp = $this->kartoffeln->ingredients()->whereNotNull('gp_id')->orderBy('position')->firstOrFail()->gp;
+    app(PairingService::class)->setGpAnker($this->rootTeam, $gp->id, $this->a['chocolate'], 'neben');
+    DB::table('foodalchemist_anchor_beziehungen')->insert([
+        'anchor_a_id' => $this->a['chocolate'], 'anchor_b_id' => $this->a['parsley'], 'art' => 'konflikt',
+        'achse' => '', 'grundlage' => 'dossier', 'status' => 'geprueft', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    app(RezeptProfil::class)->vergiss();
+    $a = ($this->logik)()->analysiere($this->gericht->fresh());
+
+    expect(($this->texte)($a['aussagen'], 'konflikt'))->toBe([])
+        ->and(($this->texte)($a['aussagen'], 'hinweis'))->toBe(['Hinweis zum Begleitaroma: Schokolade und Petersilie können sich stören'])
+        ->and(($this->texte)($a['aussagen'], 'harmoniert'))->toHaveCount(1);
 });
 
 it('Vorschlag: zuerst Formwechsel, dann Teller-Basisrezepte — nicht süß, keine Vorbereitung', function () {

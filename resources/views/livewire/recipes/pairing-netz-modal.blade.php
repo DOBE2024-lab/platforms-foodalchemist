@@ -69,6 +69,9 @@
                 @endunless
                 <span class="inline-flex items-center gap-1.5"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#22d3ee" stroke-width="2" stroke-dasharray="1 4"/></svg> Kontrast: deckt einen offenen Bedarf</span>
                 <span class="inline-flex items-center gap-1.5"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#f43f5e" stroke-width="2" stroke-dasharray="5 3"/></svg> Konflikt zwischen Kern-Ankern</span>
+                @if(collect($netz['edges'] ?? [])->contains('kind', 'hinweis'))
+                    <span class="inline-flex items-center gap-1.5"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#9ca3af" stroke-width="2" stroke-dasharray="2 4"/></svg> Hinweis zu einem Begleitaroma</span>
+                @endif
             </div>
         </div>
     @endif

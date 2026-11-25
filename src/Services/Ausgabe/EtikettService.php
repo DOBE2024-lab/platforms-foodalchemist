@@ -225,7 +225,7 @@ class EtikettService
             $quelle = 'recipe';
             $id = (int) $b->recipe_id;
         }
-        $kat = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class)->kennzeichnungKatalog();
+        $kat = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class)->kennzeichnungKatalog($team);
         $heute = now()->startOfDay();
         $d = ['quelle' => $quelle, 'bezeichnung' => '', 'zusatz' => null, 'zutaten' => [], 'allergene' => [], 'spuren' => [], 'zusatzstoffe' => [],
             'hinweise' => [], 'allergene_unbekannt' => false, 'inhalt' => [], 'haltbar_gekuehlt' => null, 'haltbar_tk' => null, 'lagerung' => null, 'lagerarten' => [], 'haltbar' => []];

@@ -66,6 +66,18 @@ beforeEach(function () {
 
 // ── Geschwister: Anker ──
 
+it('speichert eine Aromastärke am verknüpften Anker im Grundprodukt-Editor', function () {
+    $gp = ($this->gp)('Ananas: frisch');
+    ($this->mapping)($gp->id, 'pineapple');
+    $this->actingAs($this->user);
+
+    Livewire::test(GpModal::class)->call('oeffnen', $gp->id)
+        ->call('gpAnkerStaerkeSetzen', $this->anker['pineapple'], 'mittel')
+        ->assertSet('gpAnkerFehler', null);
+
+    expect(DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->value('staerke'))->toBe('mittel');
+});
+
 it('neues GP übernimmt die Anker einiger Geschwister derselben Hauptzutat, ohne KI', function () {
     ($this->ki)([]);
     foreach (['Ananas: frisch, ganz', 'Ananas: TK, Würfel'] as $n) {

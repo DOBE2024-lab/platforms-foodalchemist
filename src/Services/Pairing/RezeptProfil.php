@@ -3,11 +3,14 @@
 namespace Platform\FoodAlchemist\Services\Pairing;
 
 use Illuminate\Support\Facades\DB;
+use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\Achse;
 use Platform\FoodAlchemist\Enums\BedarfDeckung;
 use Platform\FoodAlchemist\Enums\Verfahren;
 use Platform\FoodAlchemist\Enums\WissensStatus;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
+use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\SensorikService;
@@ -100,7 +103,7 @@ final class RezeptProfil
     /**
      * Profil eines Rezepts (gespeichert, bei Änderung neu gebaut).
      *
-     * @return array{recipe_id: int, anker: list<array{anchor_id: int, anteil: float, verfahren: ?string}>, abdeckung: float, eigenschaften: array<string, array{stufe: float, quelle: string}>, offene_bedarfe: list<array{achse: string, staerke: string, von: int, deckung?: string}>, roh: array<int, float>, masse: float}
+     * @return array{recipe_id: int, anker: list<array{anchor_id: int, anteil: float, verfahren: ?string}>, mehrkern: array<int, true>, nebenanker: array<int, true>, abdeckung: float, eigenschaften: array<string, array{stufe: float, quelle: string}>, offene_bedarfe: list<array{achse: string, staerke: string, von: int, deckung?: string}>, roh: array<int, float>, masse: float}
      */
     public function fuer(int $recipeId, int $tiefe = 1, array $besucht = []): array
     {
@@ -144,10 +147,16 @@ final class RezeptProfil
      */
     public function einzel(int $anker, ?Verfahren $verfahren = null): array
     {
-        $anker = $this->variante($anker, $verfahren);
-        $anteile = [$anker => 100.0];
+        return $this->einzelMitKernankern([$anker], $verfahren);
+    }
+
+    /** Einzelnes Grundprodukt für die Kombination seiner Zutaten mit anderen Bestandteilen. */
+    public function einzelMitKernankern(array $ankerIds, ?Verfahren $verfahren = null, array $nebenanker = []): array
+    {
+        $varianten = array_unique(array_map(fn ($id) => $this->variante((int) $id, $verfahren), $ankerIds));
+        $anteile = array_fill_keys($varianten, 100.0 / max(1, count($varianten)));
         $eigenschaften = [];
-        foreach (DB::table('foodalchemist_anchor_eigenschaften')->where('anchor_id', $anker)
+        foreach (DB::table('foodalchemist_anchor_eigenschaften')->whereIn('anchor_id', $varianten)
             ->where('status', '!=', WissensStatus::Verworfen->value)->get(['achse', 'stufe', 'quelle']) as $e) {
             if ((float) $e->stufe > ($eigenschaften[$e->achse]['stufe'] ?? -1)) {
                 $eigenschaften[$e->achse] = ['stufe' => (float) $e->stufe, 'quelle' => (string) $e->quelle];
@@ -155,8 +164,10 @@ final class RezeptProfil
         }
 
         return [
-            'anker' => [['anchor_id' => $anker, 'anteil' => 100.0, 'verfahren' => $verfahren?->value]],
+            'anker' => array_map(fn ($id, $anteil) => ['anchor_id' => $id, 'anteil' => $anteil, 'verfahren' => $verfahren?->value],
+                array_keys($anteile), array_values($anteile)),
             'abdeckung' => 100.0,
+            'nebenanker' => array_diff_key(array_fill_keys(array_map(fn ($id) => $this->variante((int) $id, $verfahren), $nebenanker), true), $anteile),
             'eigenschaften' => $eigenschaften,
             'offene_bedarfe' => $this->offeneBedarfe($anteile, $eigenschaften),
         ];
@@ -179,16 +190,35 @@ final class RezeptProfil
         $this->dosisCache = [];
     }
 
+    /** @return list<array{anchor_id: int, kern: bool, staerke: ?string, anteil: ?float}> */
+    public function ankerFuerAnzeige(array $profil): array
+    {
+        $anteile = array_column($profil['anker'], 'anteil', 'anchor_id');
+        $anzeige = [];
+        foreach (array_keys($anteile + $profil['mehrkern'] + $profil['nebenanker']) as $id) {
+            $staerke = $profil['staerken'][$id] ?? null;
+            $anzeige[] = [
+                'anchor_id' => $id,
+                'kern' => ! isset($profil['nebenanker'][$id]),
+                'staerke' => $staerke,
+                'anteil' => $staerke !== null || isset($profil['mehrkern'][$id]) ? null : ($anteile[$id] ?? null),
+            ];
+        }
+
+        return $anzeige;
+    }
+
     /** @return array<string, mixed> */
     private function rechne(int $recipeId, int $tiefe, array $besucht): array
     {
-        $leer = ['recipe_id' => $recipeId, 'anker' => [], 'abdeckung' => 0.0, 'eigenschaften' => [], 'offene_bedarfe' => [], 'roh' => [], 'masse' => 0.0, 'hash_teile' => [], 'vollstaendig' => false];
+        $leer = ['recipe_id' => $recipeId, 'anker' => [], 'mehrkern' => [], 'nebenanker' => [], 'staerken' => [], 'anker_quellen' => [],
+            'abdeckung' => 0.0, 'eigenschaften' => [], 'offene_bedarfe' => [], 'roh' => [], 'masse' => 0.0, 'hash_teile' => [], 'vollstaendig' => false];
         if (isset($besucht[$recipeId])) {                          // 2.1c: kein Tiefen-Deckel (A-5), die Besucht-Liste fängt Zyklen
             return $leer;
         }
         $besucht[$recipeId] = true;
 
-        $rezept = DB::table('foodalchemist_recipes')->where('id', $recipeId)->first(['id', 'name']);
+        $rezept = FoodAlchemistRecipe::find($recipeId);
         $zeilen = FoodAlchemistRecipeIngredient::query()->with(['unit', 'gp', 'referencedRecipe'])
             ->where('recipe_id', $recipeId)->where('is_optional', false)
             ->orderBy('position')->orderBy('id')->get();
@@ -199,14 +229,22 @@ final class RezeptProfil
             return ['vollstaendig' => true, 'eigenschaften' => $this->eigenschaften($recipeId, [])] + $leer;
         }
 
-        $gpKerne = $this->pairing->gpKernAnker($zeilen->pluck('gp_id')->filter()->all());
+        $gpAnker = $this->pairing->gpAnkerZuordnungen($zeilen->pluck('gp_id')->filter()->unique()->all());
         $neutral = $this->pairing->neutralAnker();
         $namensVerfahren = Verfahren::ausText((string) $rezept->name);
-        $gramm = $zeilen->mapWithKeys(fn ($z) => [$z->id => $this->recompute->grammJeZeile($z)]);
+        $istGericht = (bool) $rezept->is_sales_recipe;
+        $standard = $istGericht ? app(DarreichungService::class)->standardProEinheit($rezept, Team::find($rezept->team_id)) : [];
+        $gramm = $zeilen->mapWithKeys(fn ($z) => [
+            $z->id => $istGericht ? (float) ($standard[$z->id]['masse_g'] ?? 0.0) : $this->recompute->grammJeZeile($z),
+        ]);
         $staerksteZeile = $gramm->sortDesc()->keys()->first();
         $gesamt = (float) $gramm->sum();
 
         $roh = [];          // anchor_id => Aromamasse
+        $mehrkern = [];
+        $nebenanker = [];
+        $staerken = [];
+        $ankerQuellen = [];
         $verfahrenJe = [];  // anchor_id => Verfahren
         $masse = 0.0;
         $masseMitAnker = 0.0;
@@ -216,17 +254,28 @@ final class RezeptProfil
         $abgeschmeckt = [];   // achse => true
         foreach ($zeilen as $z) {
             $g = (float) $gramm[$z->id];
+            if ($istGericht && $g <= 0) {
+                continue;
+            }
             // Spec 58 (Dominique 06.10., übertragen auf die Teller-Rollen 11.10.): Gewicht aus der Regel pairing.rollen_gewicht.
-            $rolle = \Platform\FoodAlchemist\Support\TellerRolle::gewicht($z->role);
+            $rolle = $istGericht ? 1.0 : \Platform\FoodAlchemist\Support\TellerRolle::gewicht($z->role);
             $masse += $g;
             if ($z->referenced_recipe_id !== null) {
                 $sub = $this->fuer((int) $z->referenced_recipe_id, $tiefe + 1, $besucht);
                 $hash[] = ['sub', (int) $z->referenced_recipe_id, $g, $rolle, $sub['hash_teile'] ?? []];
                 $abgeschmeckt += array_fill_keys($sub['abgeschmeckt'] ?? [], true);
+                $mehrkern += $sub['mehrkern'];
+                $nebenanker += $sub['nebenanker'];
+                foreach ($sub['anker_quellen'] as $id => $quellen) {
+                    $ankerQuellen[$id] = ($ankerQuellen[$id] ?? []) + $quellen;
+                }
+                foreach ($sub['staerken'] as $id => $staerke) {
+                    $this->merkeStaerke($staerken, $id, $staerke);
+                }
                 if ($sub['masse'] <= 0 || $sub['roh'] === []) {
                     continue;
                 }
-                $faktor = $g / $sub['masse'] * $rolle;
+                $faktor = $istGericht ? $g / array_sum($sub['roh']) : $g / $sub['masse'] * $rolle;
                 foreach ($sub['roh'] as $aid => $wert) {
                     $roh[$aid] = ($roh[$aid] ?? 0) + $wert * $faktor;
                 }
@@ -237,30 +286,45 @@ final class RezeptProfil
 
             $text = (string) ($z->display_name ?: $z->raw_text ?: '');
             $gpName = $z->gp?->name;
-            $anker = $z->gp_id !== null
-                ? ($gpKerne[$z->gp_id] ?? $this->pairing->ankerIdExakt($gpName))
-                : $this->pairing->ankerIdExakt($z->raw_text);
-            $anker = $anker !== null ? (int) $anker : null;
+            $mappings = $gpAnker->get($z->gp_id, collect());
+            $kerne = $mappings->where('role', 'kern')->pluck('anchor_id')->all();
+            $neben = $mappings->where('role', 'neben')->pluck('anchor_id')->all();
+            if ($kerne === [] && $neben === []) {
+                $fallback = $this->pairing->ankerIdExakt($z->gp_id !== null ? $gpName : $z->raw_text);
+                $kerne = $fallback === null ? [] : [$fallback];
+            }
             if ($z->gp_id !== null) {
                 $wuerzGps[] = (int) $z->gp_id;
             }
-            if ($anker !== null) {
-                $wuerzAnker[] = $anker;
-            }
             $verfahren = Verfahren::ausText($text) ?? Verfahren::ausText((string) strstr((string) $gpName, ':'))
                 ?? ($z->id === $staerksteZeile ? $namensVerfahren : null);
-            $hash[] = ['z', $z->gp_id, $z->raw_text, $g, $rolle, $anker, $verfahren?->value];
-            if ($anker === null || $anker === $neutral) {
-                continue;
+            foreach ($mappings as $mapping) {
+                $id = $this->variante((int) $mapping->anchor_id, $verfahren);
+                $this->merkeStaerke($staerken, $id, $mapping->staerke);
             }
-            $anker = $this->variante($anker, $verfahren);
-            $intensitaet = $this->intensitaet($anker);
-            $masseMitAnker += $g;
-            if ($intensitaet <= 0) {
-                continue;
+            $kerne = array_values(array_unique(array_map(fn ($id) => $this->variante((int) $id, $verfahren), array_diff($kerne, [$neutral]))));
+            $neben = array_map(fn ($id) => $this->variante((int) $id, $verfahren), array_diff($neben, [$neutral]));
+            $hash[] = ['z', $z->gp_id, $z->raw_text, $g, $rolle, $kerne, $neben, $verfahren?->value];
+            $nebenanker += array_fill_keys($neben, true);
+            $anzahl = count($kerne);
+            if ($anzahl > 1) {
+                $mehrkern += array_fill_keys($kerne, true);
             }
-            $roh[$anker] = ($roh[$anker] ?? 0) + $this->aromamasse($anker, $g, $gesamt, $intensitaet) * $rolle;
-            $verfahrenJe[$anker] = $verfahren?->value ?? ($verfahrenJe[$anker] ?? null);
+            if ($anzahl > 0 || $neben !== []) {
+                $masseMitAnker += $g;
+            }
+            foreach ($kerne as $anker) {
+                $quelle = $z->gp_id !== null ? 'gp:'.$z->gp_id : 'zutat:'.$z->id;
+                $ankerQuellen[$anker][$quelle] = true;
+                $wuerzAnker[] = $anker;
+                $intensitaet = $this->intensitaet($anker);
+                if ($intensitaet <= 0) {
+                    continue;
+                }
+                // Internes Rechengewicht je Zutat, keine gemessene Verteilung ihrer Kernaromen.
+                $roh[$anker] = ($roh[$anker] ?? 0) + $this->aromamasse($anker, $g, $gesamt, $intensitaet) * $rolle / $anzahl;
+                $verfahrenJe[$anker] = $verfahren?->value ?? ($verfahrenJe[$anker] ?? null);
+            }
         }
 
         $anteile = $this->normiere($roh);
@@ -273,15 +337,25 @@ final class RezeptProfil
             'recipe_id' => $recipeId,
             'anker' => array_map(fn ($aid, $a) => ['anchor_id' => $aid, 'anteil' => $a, 'verfahren' => $verfahrenJe[$aid] ?? null],
                 array_keys($anteile), array_values($anteile)),
+            'mehrkern' => $mehrkern,
+            'nebenanker' => array_diff_key($nebenanker, $anteile, $mehrkern),
+            'staerken' => $staerken,
+            'anker_quellen' => $ankerQuellen,
             'abdeckung' => $masse > 0 ? round(100 * $masseMitAnker / $masse, 2) : 0.0,
             'eigenschaften' => $eigenschaften,
             'offene_bedarfe' => $offen,
             'abgeschmeckt' => $abgeschmeckt,
             'roh' => $roh,
             'masse' => $masse,
-            'hash_teile' => [$hash, $anteile, $eigenschaften, $offen],
+            'hash_teile' => [$hash, $anteile, $staerken, $eigenschaften, $offen],
             'vollstaendig' => true,
         ];
+    }
+
+    private function merkeStaerke(array &$staerken, int $anker, ?string $staerke): void
+    {
+        // Eine abweichende Einstufung in einer anderen Zutat ergibt keine gemeinsame Stufe.
+        $staerken[$anker] = array_key_exists($anker, $staerken) && $staerken[$anker] !== $staerke ? null : $staerke;
     }
 
     /**

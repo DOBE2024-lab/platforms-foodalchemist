@@ -48,29 +48,17 @@ final class SpeiseplanAusgabe
         $mahlzeit = array_key_exists($mahlzeit, SpeiseplanBasis::MAHLZEITEN) ? $mahlzeit : 'mittag';
         $mo = ($montag !== null ? Carbon::parse($montag) : ($plan->start_date ?? Carbon::now()))->startOfWeek(Carbon::MONDAY);
 
-        // Codes: Allergene = Buchstaben in EU-Reihenfolge, Zusatzstoffe = Nummern.
-        $allergenCode = [];
-        $i = 0;
-        foreach (\Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::ALLERGENE as $slug => $label) {
-            $allergenCode[$slug] = ['code' => chr(65 + $i), 'label' => $label];
-            $i++;
-        }
-        $zusatzCode = [];
-        $j = 1;
-        foreach (\Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration::STOFFE as $slug => $label) {
-            $zusatzCode[$slug] = ['code' => (string) $j, 'label' => $label];
-            $j++;
-        }
-
         $agg = app(ConcepterAggregateService::class);
+        $katalog = $agg->kennzeichnungKatalog($team);
+        ['allergene' => $allergenCode, 'zusatzstoffe' => $zusatzCode] = $katalog;
         $tage = [];
         $raster = $this->ansicht->wochenRaster($plan, $mahlzeit, $mo);       // [line_id][Ymd] => [entries]
         $usedAlg = [];
         $usedZus = [];
 
         // Zellen-Inhalt je Eintrag → Name + Codes; sammelt nebenbei die Legende.
-        $codesFuer = function (FoodAlchemistSpeiseplanEintrag $e) use (&$usedAlg, &$usedZus, $outlet, $mitPreis): array {
-            $codes = $this->ernaehrung->eintragCodes($e, $usedAlg, $usedZus);
+        $codesFuer = function (FoodAlchemistSpeiseplanEintrag $e) use (&$usedAlg, &$usedZus, $outlet, $mitPreis, $katalog): array {
+            $codes = $this->ernaehrung->eintragCodes($e, $usedAlg, $usedZus, $katalog);
 
             $zelle = ['name' => $this->ernaehrung->eintragName($e), 'codes' => $codes];
             // Gericht-Foto als Identifier (frische URL erst im Aushang, PresentationService::hydrateImages).
@@ -242,7 +230,7 @@ final class SpeiseplanAusgabe
 
         return [
             'format' => $format, 'plan' => $plan, 'mahlzeitLabel' => $dok['mahlzeitLabel'], 'kwLabel' => $dok['kwLabel'],
-            'bloecke' => $bloecke, 'legende' => $this->legendeAusCodes(array_keys($usedCodes)), 'mitPreis' => $mitPreis, 'erzeugt' => $dok['erzeugt'],
+            'bloecke' => $bloecke, 'legende' => $this->legendeAusCodes(array_keys($usedCodes), $dok['legende']), 'mitPreis' => $mitPreis, 'erzeugt' => $dok['erzeugt'],
             'rollen' => FoodAlchemistSpeiseplanLinie::ROLLEN, 'optik' => $this->druckOptik($team, $plan),
         ];
     }
@@ -254,9 +242,8 @@ final class SpeiseplanAusgabe
      * @param  list<string>  $codes
      * @return array{allergene: list<array{code:string,label:string}>, zusatzstoffe: list<array{code:string,label:string}>}
      */
-    private function legendeAusCodes(array $codes): array
+    private function legendeAusCodes(array $codes, array $katalog): array
     {
-        $katalog = app(ConcepterAggregateService::class)->kennzeichnungKatalog();
         $da = array_flip(array_map('strval', $codes));
 
         return [
@@ -363,7 +350,7 @@ final class SpeiseplanAusgabe
         $linienNamen = $plan->lines->mapWithKeys(fn ($l) => [(int) $l->id => $l->name])->all();
 
         $agg = app(ConcepterAggregateService::class);
-        $katalog = $agg->kennzeichnungKatalog();
+        $katalog = $agg->kennzeichnungKatalog($team);
         $wording = app(WordingResolver::class);
         $karten = [];
         $gesehen = [];

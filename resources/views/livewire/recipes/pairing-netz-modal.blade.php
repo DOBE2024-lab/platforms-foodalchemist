@@ -57,9 +57,10 @@
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 fa-t-muted" data-netz-legende>
                 <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-[var(--fa-accent)]"></span> Gericht</span>
                 @if($istGericht)
-                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-[var(--fa-ok)] bg-[var(--fa-ok-soft)]"></span> Bestandteil (Basisrezept des Gerichts)</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-2 border-[var(--fa-ok)] bg-[var(--fa-ok-soft)]"></span> Basisrezept mit Gewichtsanteil an der Standardportion</span>
                 @else
-                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[var(--fa-netz-anker)]"></span> Kern-Anker mit Anteil am Aromenprofil</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[var(--fa-netz-anker)]"></span> Kern-Anker</span>
+                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[var(--fa-ink-3)]"></span> Nebenanker</span>
                 @endif
                 <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[var(--fa-ok)]"></span> Basisrezept</span>
                 <span class="inline-flex items-center gap-1.5"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#fcd34d" stroke-width="2.4"/></svg> ★★★ harmoniert (gemessen)</span>
@@ -68,6 +69,9 @@
                 @endunless
                 <span class="inline-flex items-center gap-1.5"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#22d3ee" stroke-width="2" stroke-dasharray="1 4"/></svg> Kontrast: deckt einen offenen Bedarf</span>
                 <span class="inline-flex items-center gap-1.5"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#f43f5e" stroke-width="2" stroke-dasharray="5 3"/></svg> Konflikt zwischen Kern-Ankern</span>
+                @if(collect($netz['edges'] ?? [])->contains('kind', 'hinweis'))
+                    <span class="inline-flex items-center gap-1.5"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="#9ca3af" stroke-width="2" stroke-dasharray="2 4"/></svg> Hinweis zu einem Begleitaroma</span>
+                @endif
             </div>
         </div>
     @endif

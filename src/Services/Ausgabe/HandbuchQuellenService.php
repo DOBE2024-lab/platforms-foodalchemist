@@ -31,6 +31,7 @@ class HandbuchQuellenService
     private array $rezepte = [];
 
     private array $vorkommen = [];
+    private array $kennzeichnungsKatalog = [];
 
     private const WOCHENTAGE = [1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do', 5 => 'Fr', 6 => 'Sa', 7 => 'So'];
 
@@ -45,6 +46,7 @@ class HandbuchQuellenService
         $this->usedZus = [];
         $this->rezepte = [];
         $this->vorkommen = [];
+        $this->kennzeichnungsKatalog = $this->agg->kennzeichnungKatalog($team);
 
         return match ($type) {
             HandbuchService::TYPE_FOODBOOK => $this->foodbook($team, $entity),
@@ -220,13 +222,13 @@ class HandbuchQuellenService
         $this->rezepte[$recipeId] ??= FoodAlchemistRecipe::find($recipeId);
         $dish = $this->rezepte[$recipeId];
 
-        return $dish === null ? [] : $this->agg->gerichtCodes($dish, $this->usedAlg, $this->usedZus);
+        return $dish === null ? [] : $this->agg->gerichtCodes($dish, $this->usedAlg, $this->usedZus, $this->kennzeichnungsKatalog);
     }
 
     /** @return array{allergene:list<array{code:string,label:string}>, zusatzstoffe:list<array{code:string,label:string}>} */
     private function legende(): array
     {
-        $katalog = $this->agg->kennzeichnungKatalog();
+        $katalog = $this->kennzeichnungsKatalog;
         $alg = [];
         foreach ($katalog['allergene'] as $slug => $e) {
             if (isset($this->usedAlg[$slug])) {

@@ -26,10 +26,11 @@ final class KonfiguratorSnapshot
     {
         $s = $this->pricing->stand($k);
         $runde = fn (float $p) => $this->pricing->runde($k, $p);
+        $kennzeichnung = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class)->kennzeichnungKatalog($team);
 
         $konzepte = [];
         foreach ($s['haupt'] as $h) {
-            $detail = $this->detail($h);
+            $detail = $this->detail($h, $kennzeichnung);
             $konzepte[] = [
                 'id' => (int) $h->id,
                 'titel' => (string) ($h->kunden_titel ?: 'Konzept'),
@@ -46,7 +47,7 @@ final class KonfiguratorSnapshot
         }
         $addons = [];
         foreach ($s['addons'] as $a) {
-            $detail = $this->detail($a);   // dieselbe Speisen-Detailansicht wie bei den Hauptkonzepten
+            $detail = $this->detail($a, $kennzeichnung);   // dieselbe Speisen-Detailansicht wie bei den Hauptkonzepten
             $addons[] = [
                 'id' => (int) $a->id,
                 'titel' => (string) ($a->kunden_titel ?: 'Add-on'),
@@ -62,7 +63,7 @@ final class KonfiguratorSnapshot
         // Spec 94c: Getränkepakete — Karten wie Extras, Speisen-Detail mit den Getränken; Dauer und Einsatzzeit nur für den Hinweis an der Karte
         $getraenke = [];
         foreach ($s['getraenke'] as $g) {
-            $detail = $this->detail($g);
+            $detail = $this->detail($g, $kennzeichnung);
             $getraenke[] = [
                 'id' => (int) $g->id,
                 'titel' => (string) ($g->kunden_titel ?: 'Getränke'),
@@ -185,11 +186,10 @@ final class KonfiguratorSnapshot
      *
      * @return array{beschreibung:?string, bilder:list<array>, zeiten:array<string,list<array>>, legende:list<array>}
      */
-    private function detail(object $h): array
+    private function detail(object $h, array $katalog): array
     {
         $wording = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class);
         $kz = app(\Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService::class);
-        $katalog = $kz->kennzeichnungKatalog();
         $usedAlg = [];
         $usedZus = [];
         $bilder = [];

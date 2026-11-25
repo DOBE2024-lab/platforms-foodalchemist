@@ -763,18 +763,8 @@ class SpeisekarteService
         $brutto = (bool) $karte->preis_anzeige_brutto;
 
         // Code-Register (voll), Nutzung wird gesammelt.
-        $allergenCode = [];
-        $i = 0;
-        foreach (\Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::ALLERGENE as $slug => $label) {
-            $allergenCode[$slug] = ['code' => chr(65 + $i), 'label' => $label];
-            $i++;
-        }
-        $zusatzCode = [];
-        $j = 1;
-        foreach (\Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration::STOFFE as $slug => $label) {
-            $zusatzCode[$slug] = ['code' => (string) $j, 'label' => $label];
-            $j++;
-        }
+        $katalog = $agg->kennzeichnungKatalog($team);
+        ['allergene' => $allergenCode, 'zusatzstoffe' => $zusatzCode] = $katalog;
         $usedAlg = [];
         $usedZus = [];
 
@@ -800,7 +790,6 @@ class SpeisekarteService
 
         // Fix b (Dominique „bei Speisekarte auch falsch"): Codes PRO GERICHT (nicht concept-aggregiert
         // bei Menü-Positionen) — über den geteilten Helfer, dasselbe Code-Register + Legende-Tracking.
-        $katalog = ['allergene' => $allergenCode, 'zusatzstoffe' => $zusatzCode];
         $codesFuerGericht = function (FoodAlchemistRecipe $dish) use ($agg, $katalog, &$usedAlg, &$usedZus): array {
             return $agg->gerichtCodes($dish, $usedAlg, $usedZus, $katalog);
         };

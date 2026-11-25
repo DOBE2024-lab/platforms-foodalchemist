@@ -1,6 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\Blade;
+use Livewire\Livewire;
+use Platform\FoodAlchemist\Livewire\Settings\Kennzeichnungslegende;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -84,6 +88,39 @@ it('macht je distinktem Gericht EINE Zeile mit seinen eigenen Codes', function (
     // A hat Sellerie in Spuren → „I*"; B hat Gluten + Milch → „A", „G" + Zusatzstoff 2.
     expect($codes['Green Power']['codes'])->toBe(['I*'])
         ->and($codes['Pulled Pork']['codes'])->toBe(['A', 'G', '2']);
+});
+
+it('tauscht Teamkürzel für Codes und Legende gemeinsam und kann zum Standard zurückschalten', function () {
+    $this->actingAs($this->makeUser($this->rootTeam));
+    $form = Livewire::test(Kennzeichnungslegende::class)
+        ->call('tauschen', 'allergene', 'gluten', 'I')
+        ->call('tauschen', 'zusatzstoffe', 'with_preservative', '1')
+        ->set('aktiv', true)->call('speichern')->assertHasNoErrors();
+
+    $blatt = ($this->blatt)([$this->a, $this->b]);
+    $codes = collect($blatt['zeilen'])->keyBy('name');
+    $legende = array_column($blatt['legende']['allergene'], 'label', 'code');
+    expect($codes['Green Power']['codes'])->toBe(['A*'])
+        ->and($codes['Pulled Pork']['codes'])->toBe(['I', 'G', '1'])
+        ->and($legende['A'])->toBe('Sellerie')
+        ->and($legende['I'])->toBe('Glutenhaltiges Getreide')
+        ->and($this->agg->kennzeichnungKatalog($this->childA)['allergene']['gluten']['code'])->toBe('A');
+
+    $form->set('aktiv', false)->call('speichern')->assertHasNoErrors();
+    expect($this->agg->kennzeichnungKatalog($this->rootTeam)['allergene']['gluten']['code'])->toBe('A')
+        ->and($this->agg->kennzeichnungEntwurf($this->rootTeam)['codes']['allergene']['gluten'])->toBe('I');
+});
+
+it('nennt offene Deklarationen und verlinkt das betroffene Basisrezept', function () {
+    $basis = $this->makeRecipe($this->rootTeam, 'Unvollständige Testbasis', ['allergens_confidence' => 'unknown']);
+    FoodAlchemistRecipeIngredient::create([
+        'team_id' => $this->rootTeam->id, 'recipe_id' => $this->c->id, 'referenced_recipe_id' => $basis->id,
+        'position' => 1, 'quantity' => 50, 'unit_vocab_id' => $this->unitG($this->rootTeam)->id, 'raw_text' => $basis->name,
+    ]);
+    $html = Blade::render('<x-fa::deklaration :rezept="$rezept" />', ['rezept' => $this->c->fresh()]);
+
+    expect($html)->toContain('Was ist offen?', 'Allergene offen', 'Zusatzstoffe offen', $basis->name, 'data-deklaration-ziel')
+        ->toContain(route('foodalchemist.recipes.index', ['rezept' => $basis->id]));
 });
 
 it('zaehlt ein doppelt eingesetztes Gericht als EINE Deklarationszeile', function () {

@@ -11,6 +11,7 @@
 @props(['daten'])
 @php
     $a = $daten['aussagen'] ?? [];
+    $profilAnker = $daten['profil']['anker_anzeige'] ?? $daten['profil']['anker'] ?? [];
     $liste = fn (string $typ) => collect($a[$typ] ?? []);
 
     // Kurzname je Bestandteil: GP-Zeile (z…) = Produktname vor dem Doppelpunkt, Rezept (r…) = Name nach der Klasse.
@@ -89,12 +90,15 @@
         </div>
     @endif
 
-    @if(! empty($daten['profil']['anker']))
+    @if($profilAnker !== [])
         <div data-profil>
             <p class="text-[length:var(--fa-text-sm)] font-medium text-[var(--fa-ink-3)] mb-1">Aromenprofil · {{ number_format((float) $daten['profil']['abdeckung'], 0, ',', '.') }} % der Masse zugeordnet</p>
             <div class="flex flex-wrap gap-1">
-                @foreach($daten['profil']['anker'] as $k)
-                    <span class="rounded-[var(--fa-radius-control)] bg-[var(--fa-hover)] px-2 py-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $k['name'] }} {{ number_format($k['anteil'], 0, ',', '.') }} %</span>
+                @foreach($profilAnker as $k)
+                    <span class="rounded-[var(--fa-radius-control)] bg-[var(--fa-hover)] px-2 py-0.5 text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">{{ $k['name'] }}
+                        @if(! ($k['kern'] ?? true)) · Nebenanker @endif
+                        @if(isset($k['staerke'])) · {{ $k['staerke'] }}
+                        @elseif(isset($k['anteil'])) · {{ number_format($k['anteil'], 0, ',', '.') }} % Rechengewicht @endif</span>
                 @endforeach
             </div>
             @if(! empty($daten['profil']['eigenschaften']))

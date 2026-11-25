@@ -3,6 +3,7 @@
 namespace Platform\FoodAlchemist\Services\Pairing;
 
 use Illuminate\Support\Facades\DB;
+use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\Achse;
 use Platform\FoodAlchemist\Enums\AussageTyp;
 use Platform\FoodAlchemist\Enums\BedarfDeckung;
@@ -12,6 +13,7 @@ use Platform\FoodAlchemist\Enums\Verfahren;
 use Platform\FoodAlchemist\Enums\WissensStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
+use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
 
 /**
@@ -52,6 +54,8 @@ final class Kombinationslogik
     /** Dossier-Hinweise je Gericht (Kurator 15.10.: mehr wird Rauschen). */
     public const MAX_HINWEISE = 3;
 
+    public const HINWEIS_BEGLEITAROMA = 'Hinweis zum Begleitaroma: ';
+
     /**
      * Funktionen von Basisrezepten, die nicht auf den Teller gehen (Vorbereitung, Getränk) —
      * nie als Komponente vorschlagen. Freitext-Funktionen werden zusätzlich über Wortteile erkannt.
@@ -75,13 +79,26 @@ final class Kombinationslogik
     /**
      * Bestandteile eines Gerichts mit ihrem Profil.
      *
-     * @return list<array{schluessel: string, label: string, recipe_id: ?int, rolle: ?string, profil: ?array}>
+     * @return list<array{schluessel: string, label: string, recipe_id: ?int, rolle: ?string, profil: ?array, gramm: ?float}>
      */
     public function bestandteile(FoodAlchemistRecipe $gericht): array
     {
         $zeilen = FoodAlchemistRecipeIngredient::query()->with(['gp', 'referencedRecipe'])
             ->where('recipe_id', $gericht->id)->where('is_optional', false)->orderBy('position')->orderBy('id')->get();
-        $gpKerne = $this->pairing->gpKernAnker($zeilen->pluck('gp_id')->filter()->all());
+        $gramm = [];
+        if ($gericht->is_sales_recipe) {
+            $massen = app(DarreichungService::class)->standardProEinheit($gericht, Team::find($gericht->team_id));
+            $weggelassen = $gericht->standardPresentation?->deltas()
+                ->where(fn ($q) => $q->where('omitted', true)->orWhere('quantity_override_g', 0))
+                ->pluck('recipe_ingredient_id')->flip();
+            $zeilen = $zeilen->reject(fn ($z) => $weggelassen?->has($z->id));
+            foreach ($zeilen as $z) {
+                $schluessel = $z->referenced_recipe_id !== null ? 'r'.$z->referenced_recipe_id : 'z'.$z->id;
+                $gramm[$schluessel] = ($gramm[$schluessel] ?? 0.0) + ($massen[$z->id]['masse_g'] ?? 0.0);
+            }
+        }
+        $gpAnker = $this->pairing->gpAnkerZuordnungen($zeilen->pluck('gp_id')->filter()->unique()->all());
+        $neutral = $this->pairing->neutralAnker();
         $out = [];
         $gesehen = [];
         foreach ($zeilen as $z) {
@@ -93,19 +110,40 @@ final class Kombinationslogik
                 $gesehen[$z->referenced_recipe_id] = true;
                 $p = $this->profil->fuer((int) $z->referenced_recipe_id);
                 $out[] = ['schluessel' => 'r'.$z->referenced_recipe_id, 'label' => (string) ($z->referencedRecipe?->name ?? $z->raw_text),
-                    'recipe_id' => (int) $z->referenced_recipe_id, 'rolle' => $z->role, 'profil' => $p['anker'] !== [] ? $p : null];
+                    'recipe_id' => (int) $z->referenced_recipe_id, 'rolle' => $z->role, 'profil' => $p['anker'] !== [] || $p['nebenanker'] !== [] ? $p : null];
 
                 continue;
             }
             $label = (string) ($z->display_name ?: $z->gp?->name ?: $z->raw_text);
-            $anker = $z->gp_id !== null ? ($gpKerne[$z->gp_id] ?? $this->pairing->ankerIdExakt($z->gp?->name)) : $this->pairing->ankerIdExakt($z->raw_text);
-            $anker = $anker !== null && (int) $anker !== $this->pairing->neutralAnker() ? (int) $anker : null;
+            $mappings = $gpAnker->get($z->gp_id, collect());
+            $kerne = $mappings->isEmpty()
+                ? [$this->pairing->ankerIdExakt($z->gp_id !== null ? $z->gp?->name : $z->raw_text)]
+                : $mappings->where('role', 'kern')->pluck('anchor_id')->all();
+            $kerne = array_diff($kerne, [null, $neutral]);
+            $neben = array_diff($mappings->where('role', 'neben')->pluck('anchor_id')->all(), [$neutral]);
             $verfahren = Verfahren::ausText((string) ($z->display_name ?: $z->raw_text));
             $out[] = ['schluessel' => 'z'.$z->id, 'label' => $label, 'recipe_id' => null, 'rolle' => $z->role,
-                'profil' => $anker !== null ? $this->profil->einzel($anker, $verfahren) : null];
+                'profil' => $kerne !== [] || $neben !== [] ? $this->profil->einzelMitKernankern($kerne, $verfahren, $neben) : null];
         }
 
+        foreach ($out as &$teil) {
+            $masse = $gramm[$teil['schluessel']] ?? 0.0;
+            $teil['gramm'] = $masse > 0 ? (float) $masse : null;
+        }
+        unset($teil);
+
         return $out;
+    }
+
+    /** Anteile der Standardportion. Bei fehlenden Mengen gilt die bisherige Rangfolge. */
+    public function portionsanteile(array $teile): array
+    {
+        $gramm = array_column($teile, 'gramm', 'schluessel');
+        $gesamt = array_sum($gramm);
+
+        return $gesamt > 0 && count(array_filter($gramm)) === count($teile)
+            ? array_map(fn ($g) => $g / $gesamt, $gramm)
+            : [];
     }
 
     /**
@@ -186,6 +224,17 @@ final class Kombinationslogik
                 foreach ($this->graph->konflikte($a['profil'], $b['profil']) as $k) {
                     $aussagen[] = new Aussage(AussageTyp::Konflikt, $this->wissensGrundlage($k->status),
                         "Konflikt: {$a['label']} und {$b['label']} stören sich", [$a['schluessel'], $b['schluessel']]);
+                }
+                $schwach = $this->graph->schwacheKonflikte($a['profil'], $b['profil']);
+                if ($schwach !== []) {
+                    $namen = DB::table('foodalchemist_vocab_pairing_anchors')
+                        ->whereIn('id', array_unique(array_merge(array_column($schwach, 'von'), array_column($schwach, 'zu'))))
+                        ->pluck('display_de', 'id');
+                    foreach ($schwach as $k) {
+                        $text = self::HINWEIS_BEGLEITAROMA."{$namen[$k->von]} und {$namen[$k->zu]} können sich stören";
+                        $hinweise[$a['schluessel'].'|'.$b['schluessel'].'|'.$text] = new Aussage(
+                            AussageTyp::Hinweis, Grundlage::DossierGeprueft, $text, [$a['schluessel'], $b['schluessel']]);
+                    }
                 }
                 foreach ($this->graph->kombinationen($a['profil'], $b['profil']) as $k) {
                     $aussagen[] = new Aussage(AussageTyp::Kombination, $this->wissensGrundlage($k->status),
@@ -319,12 +368,15 @@ final class Kombinationslogik
     private function vorschlaegeBewerten(array $analyse, array $teile, array $jeBedarfKandidaten, int $jeBedarf, ?int $teamId): array
     {
         $katalog = $this->basisKatalog($teamId);
+        $anteile = $this->portionsanteile($analyse['bestandteile']);
         $out = [];
         foreach ($analyse['offene_bedarfe'] as $i => $b) {
             $kandidaten = [];
             foreach ($jeBedarfKandidaten[$i] as $rid => $e) {
                 $k = $katalog[$rid];
                 $besteHarmonie = 0.0;
+                $gewichteteHarmonie = 0.0;
+                $besterBeitrag = 0.0;
                 $mit = null;
                 $mitSchluessel = null;
                 $konflikt = false;
@@ -335,8 +387,11 @@ final class Kombinationslogik
                         break;
                     }
                     $h = $this->graph->harmonie($k['profil'], $t['profil'])['wert'];
-                    if ($h > $besteHarmonie) {
-                        [$besteHarmonie, $mit, $mitSchluessel] = [$h, $t['label'], $t['schluessel']];
+                    $besteHarmonie = max($besteHarmonie, $h);
+                    $beitrag = $h * ($anteile[$t['schluessel']] ?? 1.0);
+                    $gewichteteHarmonie += $beitrag;
+                    if ($beitrag > $besterBeitrag) {
+                        [$besterBeitrag, $mit, $mitSchluessel] = [$beitrag, $t['label'], $t['schluessel']];
                     }
                     $klassiker = $klassiker || array_filter($this->graph->kombinationen($k['profil'], $t['profil']),
                         fn ($x) => $x->status === WissensStatus::Geprueft->value) !== [];
@@ -346,7 +401,7 @@ final class Kombinationslogik
                 }
                 $kandidaten[] = ['recipe_id' => $rid, 'name' => $k['name'], 'stufe' => (float) $e['stufe'],
                     'harmonie' => round($besteHarmonie, 3), 'mit' => $mit, 'mit_schluessel' => $mitSchluessel, 'grundlage' => Grundlage::aus((string) $e['quelle'])->value,
-                    'sort' => (float) $e['stufe'] / 3 + $besteHarmonie + ($klassiker ? 0.5 : 0)];
+                    'sort' => (float) $e['stufe'] / 3 + ($anteile === [] ? $besteHarmonie : $gewichteteHarmonie) + ($klassiker ? 0.5 : 0)];
             }
             usort($kandidaten, fn ($x, $y) => [$y['sort'], $x['recipe_id']] <=> [$x['sort'], $y['recipe_id']]);
             $out[] = [
@@ -373,11 +428,12 @@ final class Kombinationslogik
      * Alternative, keine Ergänzung (gemessen: Cordon Bleu mit Kartoffelpüree → „Salzkartoffeln") —
      * es wird nicht angeboten.
      *
-     * @return list<array{recipe_id: int, name: string, harmonie: float, mit: string, mit_schluessel: string}>
+     * @return list<array{recipe_id: int, name: string, harmonie: float, harmonie_gewichtet: float, mit: string, mit_schluessel: string}>
      */
     public function passendeBasisrezepte(array $analyse, ?string $diaet, ?string $geschmacksrichtung, ?int $teamId, int $max = 10): array
     {
         $teile = array_values(array_filter($analyse['bestandteile'], fn ($t) => $t['profil'] !== null));
+        $anteile = $this->portionsanteile($analyse['bestandteile']);
         if ($teile === []) {
             return [];
         }
@@ -410,25 +466,31 @@ final class Kombinationslogik
             $out = [];
             foreach ($katalog as $rid => $k) {
                 $beste = 0.0;
+                $gewichteteHarmonie = 0.0;
+                $besterBeitrag = 0.0;
                 $mit = null;
                 foreach ($teile as $t) {
                     if ($this->graph->konflikte($k['profil'], $t['profil']) !== []) {
                         continue 2;
                     }
                     $h = $this->graph->harmonie($k['profil'], $t['profil'])['wert'];
-                    if ($h > $beste) {
-                        [$beste, $mit] = [$h, $t];
+                    $beste = max($beste, $h);
+                    $beitrag = $h * ($anteile[$t['schluessel']] ?? 1.0);
+                    $gewichteteHarmonie += $beitrag;
+                    if ($beitrag > $besterBeitrag) {
+                        [$besterBeitrag, $mit] = [$beitrag, $t];
                     }
                 }
                 if ($mit !== null && $beste >= self::HARMONIERT_AB) {
                     $out[] = ['recipe_id' => $rid, 'name' => $k['name'], 'harmonie' => round($beste, 3),
+                        'harmonie_gewichtet' => round($anteile === [] ? $beste : $gewichteteHarmonie, 4),
                         'mit' => $mit['label'], 'mit_schluessel' => $mit['schluessel']];
                 }
             }
         } finally {
             $this->graph->vergiss();
         }
-        usort($out, fn ($x, $y) => [$y['harmonie'], $x['recipe_id']] <=> [$x['harmonie'], $y['recipe_id']]);
+        usort($out, fn ($x, $y) => [$y['harmonie_gewichtet'], $x['recipe_id']] <=> [$x['harmonie_gewichtet'], $y['recipe_id']]);
 
         return array_slice($out, 0, $max);
     }
@@ -491,8 +553,12 @@ final class Kombinationslogik
         $out = $this->ausgabe($analyse, $istGericht ? 'gericht' : 'basisrezept');
         if (! $istGericht) {
             $p = $this->profil->fuer((int) $rezept->id);
+            $anzeige = $this->profil->ankerFuerAnzeige($p);
+            $namen = DB::table('foodalchemist_vocab_pairing_anchors')
+                ->whereIn('id', array_column($anzeige, 'anchor_id'))->pluck('display_de', 'id');
             $out['profil'] = [
                 'anker' => $this->ankerNamen($p['anker']),
+                'anker_anzeige' => array_map(fn ($a) => $a + ['name' => (string) ($namen[$a['anchor_id']] ?? '?')], $anzeige),
                 'abdeckung' => $p['abdeckung'],
                 'eigenschaften' => $this->eigenschaftenLesbar($p['eigenschaften']),
             ];

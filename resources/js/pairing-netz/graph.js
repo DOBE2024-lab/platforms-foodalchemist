@@ -242,6 +242,7 @@ export function pairingNetzGraph(config) {
 
     _edgeDash(d) {
       if (d.kind === 'konflikt') return '5 3';
+      if (d.kind === 'hinweis') return '2 4';
       if (d.kind === 'anker_anker') return null; // direktes Pairing → durchgezogen
       if (d.kind === 'bridge') return null;       // Brücke → durchgezogen (Dicke trägt die Aussage)
       if (d.kind === 'basis') return '3 4';
@@ -251,6 +252,8 @@ export function pairingNetzGraph(config) {
     },
 
     _edgeWidth(d) {
+      if (d.kind === 'hinweis') return 1.8;
+      if (d.kind === 'zentrum_anker' && d.anteil != null) return 0.8 + 3 * d.anteil / 100;
       if (d.kind === 'teil_teil') return d.typ === 'stern3' ? 3.2 : 2.2;
       if (this.mode === 'preview') {
         // fa-pass: ruhige Vorschau — Stern-Stufe bleibt lesbar, aber kein Gewirr dicker Linien.
@@ -279,7 +282,7 @@ export function pairingNetzGraph(config) {
       if (d.kind === 'kandidat') return this.mode === 'preview' ? 0.32 : 0.5;
       if (d.kind === 'anker_anker') return 0.85; // Kern-Aussage → präsent (vs. zentrum_anker 0.14)
       if (d.kind === 'bridge') return 0.78;
-      if (d.kind === 'zentrum_anker') return 0.14;
+      if (d.kind === 'zentrum_anker') return d.anteil != null ? 0.55 : 0.14;
       if (d.kind === 'basis') return 0.5;
 
       return 0.7;
@@ -434,7 +437,7 @@ export function pairingNetzGraph(config) {
       // deckend (nicht durchscheinend): Kreise liegen über den Linien und verdecken sie — sonst laufen
       // die Kanten sichtbar durchs Zentrum (Befund Dominique 2026-10-07). Ton = Logo-Blau auf dunklem Grund.
       if (d.kind === 'zentrum') return '#27377e';
-      if (d.kind === 'anker') return d.orphan ? '#fde68a' : '#c7d2fe'; // Orphan = warm (passt nicht), sonst Logo-Blau hell
+      if (d.kind === 'anker') return d.kern === false ? '#a1a1aa' : (d.orphan ? '#fde68a' : '#c7d2fe');
       if (d.kind === 'bestandteil') return d.ohne_profil ? '#e5e7eb' : '#bbf7d0'; // Basisrezept des Gerichts
       if (d.kind === 'basisrezept') return d.typ === 'kontrast' ? TYP_FILL.kontrast : '#86efac';
 
@@ -453,10 +456,14 @@ export function pairingNetzGraph(config) {
 
     _title(d) {
       if (d.kind === 'bestandteil') {
-        return d.ohne_profil ? `${d.label} — noch keinem Aroma zugeordnet` : `${d.label} (Bestandteil${d.recipe_id ? ' · Klick öffnet' : ''})`;
+        const anteil = d.anteil == null ? '' : ` · ${this._anteil(d.anteil)} der Portion (${String(d.gramm).replace('.', ',')} g)`;
+        const info = d.ohne_profil ? ' · noch keinem Aroma zugeordnet' : '';
+        return `${d.label}${anteil}${info}${d.recipe_id ? ' · Klick öffnet' : ''}`;
       }
       if (d.kind === 'anker') {
-        const base = (d.label || d.slug || '') + (d.anteil != null ? ` (Kern-Anker, ${String(d.anteil).replace('.', ',')} %)` : ' (Kern-Anker)');
+        const rolle = d.kern === false ? 'Nebenanker' : 'Kern-Anker';
+        const zusatz = d.staerke ? `${rolle}, ${d.staerke}` : (d.anteil != null ? `${rolle}, ${this._anteil(d.anteil)} Rechengewicht` : rolle);
+        const base = `${d.label || d.slug || ''} (${zusatz})`;
         if (d.orphan) return base + ' — kein gemessener Bezug zu den anderen (neutral)';
         if (d.fit != null) return base + ` — Fit ${d.fit}%`;
 
@@ -467,10 +474,16 @@ export function pairingNetzGraph(config) {
       }
       if (d.kind === 'kandidat') {
         const sym = LEVEL_SYM[d.level] || d.typ;
-        return `${d.label} — ${sym}${d.cover > 1 ? ` · passt zu ${d.cover} Ankern` : ''}${d.auch_kontrast ? ` · deckt auch ${d.auch_kontrast}` : ''}`;
+        const treffer = d.cover_einheit === 'Zutaten' && d.anker_treffer > 1
+          ? ` · ${d.anker_treffer} Aromatreffer bei ${d.cover} ${d.cover === 1 ? 'Zutat' : 'Zutaten'}`
+          : (d.cover > 1 ? ` · passt zu ${d.cover} ${d.cover_einheit || 'Ankern'}` : '');
+        return `${d.label} — ${sym}${treffer}${d.auch_kontrast ? ` · deckt auch ${d.auch_kontrast}` : ''}`;
       }
       if (d.kind === 'basisrezept' && d.typ === 'kontrast') return `${d.label} — deckt ${d.achse || d.via}`;
-      if (d.kind === 'basisrezept') return `${d.label} — passt dazu (harmoniert mit ${d.via})`;
+      if (d.kind === 'basisrezept') {
+        const anteil = d.mit_anteil == null ? '' : ` · ${this._anteil(d.mit_anteil)} der Portion`;
+        return `${d.label} — passt dazu (harmoniert mit ${d.via}${anteil})`;
+      }
 
       return d.label || '';
     },
@@ -478,10 +491,17 @@ export function pairingNetzGraph(config) {
     _labelText(d) {
       if (d.kind === 'zentrum') return ''; // Titel steht schon im Modal-Header / ist aus Kontext bekannt
       // Vorschau: Rezeptnamen kurz halten (der volle Name steht im Tooltip und im Netz-Modal).
-      if (this.mode === 'preview' && (d.kind === 'basisrezept' || d.kind === 'bestandteil')) return this._trunc(d.label, 20);
+      if (this.mode === 'preview' && d.kind === 'basisrezept') return this._trunc(d.label, 20);
       if (d.kind === 'basisrezept') return this._trunc(d.label, 38);
-      if (d.kind === 'anker') return d.anteil != null ? `${d.label || d.slug || ''} ${Math.round(d.anteil)} %` : (d.label || d.slug || '');
-      if (d.kind === 'bestandteil') return this._trunc(d.label, 34);
+      if (d.kind === 'anker') {
+        const label = d.label || d.slug || '';
+        if (d.staerke) return `${label} · ${d.staerke}`;
+        return d.anteil != null ? `${label} ${Math.round(d.anteil)} %` : label;
+      }
+      if (d.kind === 'bestandteil') {
+        const label = this._trunc(d.label, this.mode === 'preview' ? 20 : 34);
+        return d.anteil == null ? label : `${label} · ${this._anteil(d.anteil)}`;
+      }
 
       const name = d.label || d.slug || ''; // kandidat — Anzeigename (display_de) statt technischem Slug
 
@@ -492,7 +512,8 @@ export function pairingNetzGraph(config) {
     // Knoten nach vorn, damit der lange Name über den Nachbarn liegt (Wunsch Dominique 2026-10-07).
     _vollerName(el, d, an) {
       const kurz = this._labelText(d);
-      const voll = d.kind === 'kandidat' || d.kind === 'basisrezept' || d.kind === 'bestandteil' ? (d.label || d.slug || '') : kurz;
+      let voll = d.kind === 'kandidat' || d.kind === 'basisrezept' || d.kind === 'bestandteil' ? (d.label || d.slug || '') : kurz;
+      if (d.kind === 'bestandteil' && d.anteil != null) voll += ` · ${this._anteil(d.anteil)}`;
       if (voll === kurz) return;
       const text = el.querySelector('text');
       if (text) text.textContent = an ? voll : kurz;
@@ -503,6 +524,10 @@ export function pairingNetzGraph(config) {
       if (!s) return '';
 
       return s.length > n ? s.slice(0, n - 1) + '…' : s;
+    },
+
+    _anteil(wert) {
+      return `${String(wert).replace('.', ',')} %`;
     },
 
     _labelDy(d) {

@@ -4,6 +4,7 @@ namespace Platform\FoodAlchemist\Services\Pairing;
 
 use Platform\FoodAlchemist\Enums\BedarfDeckung;
 use Platform\FoodAlchemist\Enums\Kantenart;
+use Platform\FoodAlchemist\Enums\WissensStatus;
 
 /**
  * Spec 60 · P6: Beziehungen zwischen zwei Bestandteilen auf Küchen-Ebene (Basisrezept bzw.
@@ -146,6 +147,24 @@ final class RezeptGraph
         return $this->wissen($p, $q, Kantenart::Konflikt);
     }
 
+    /** Geprüfte Konflikte, bei denen mindestens einer der Anker eine Begleitnote ist. */
+    public function schwacheKonflikte(array $p, array $q): array
+    {
+        $pNeben = $p['nebenanker'] ?? [];
+        $qNeben = $q['nebenanker'] ?? [];
+        if ($pNeben === [] && $qNeben === []) {
+            return [];
+        }
+
+        $pKern = $this->anteile($p);
+        $qAlle = $this->anteile($q) + $qNeben;
+        $erste = $this->wissensKanten(array_keys($pNeben), array_keys($qAlle), Kantenart::Konflikt, nurGeprueft: true);
+        $zweite = $this->wissensKanten(array_keys($pKern), array_keys($qNeben), Kantenart::Konflikt, nurGeprueft: true);
+
+        return collect($erste)->merge($zweite)
+            ->unique(fn ($k) => min($k->von, $k->zu).':'.max($k->von, $k->zu))->values()->all();
+    }
+
     /** @return list<object{von: int, zu: int, art: string, status: string}> */
     public function kombinationen(array $p, array $q): array
     {
@@ -170,6 +189,12 @@ final class RezeptGraph
     {
         $pk = array_keys(array_filter($this->anteile($p), fn ($a) => $a >= self::KERN));
         $qk = array_keys(array_filter($this->anteile($q), fn ($a) => $a >= self::KERN));
+
+        return $this->wissensKanten($pk, $qk, $art);
+    }
+
+    private function wissensKanten(array $pk, array $qk, Kantenart $art, bool $nurGeprueft = false): array
+    {
         if ($pk === [] || $qk === []) {
             return [];
         }
@@ -178,11 +203,12 @@ final class RezeptGraph
 
             return collect($this->vorWissen[$art->value] ?? [])
                 ->filter(fn ($k) => (isset($pm[$k->von]) && isset($qm[$k->zu])) || (isset($qm[$k->von]) && isset($pm[$k->zu])))
+                ->when($nurGeprueft, fn ($kanten) => $kanten->where('status', WissensStatus::Geprueft->value))
                 ->unique(fn ($k) => min($k->von, $k->zu).':'.max($k->von, $k->zu))->values()->all();
         }
 
-        return $this->graph->beziehungen($pk, $art, $qk)
-            ->merge($this->graph->beziehungen($qk, $art, $pk))
+        return $this->graph->beziehungen($pk, $art, $qk, nurGeprueft: $nurGeprueft)
+            ->merge($this->graph->beziehungen($qk, $art, $pk, nurGeprueft: $nurGeprueft))
             ->unique(fn ($k) => min($k->von, $k->zu).':'.max($k->von, $k->zu))->values()->all();
     }
 

@@ -26,6 +26,22 @@ trait HatGpAromaKi
     /** Fehler bzw. Hinweis aus dem Aroma-Reiter anzeigen (jede Komponente hat ihre eigenen Felder dafür). */
     abstract protected function aromaMeldung(?string $fehler, ?string $hinweis = null): void;
 
+    public function gpAnkerStaerkeSetzen(int $ankerId, string $staerke, PairingService $pairing): void
+    {
+        $team = Auth::user()?->currentTeamRelation;
+        $gp = $this->aromaGp();
+        if ($team === null || $gp === null) {
+            return;
+        }
+
+        try {
+            $pairing->setGpAnkerStaerke($team, $gp->id, $ankerId, $staerke === '' ? null : $staerke);
+            $this->aromaMeldung(null);
+        } catch (\RuntimeException|\InvalidArgumentException $e) {
+            $this->aromaMeldung($e->getMessage());
+        }
+    }
+
     /**
      * KI-Knopf „Anker vorschlagen" (Dominique 2026-10-12, Geschwister-Weg 27.10.): sind sich die Geschwister-GPs derselben
      * Hauptzutat einig, werden ihre Anker übernommen (kostenlos, Quelle `geschwister`). Sonst Kern-Anker per KI aus dem Vokabular,

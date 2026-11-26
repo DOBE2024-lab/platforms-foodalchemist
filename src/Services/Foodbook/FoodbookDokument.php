@@ -158,6 +158,7 @@ final class FoodbookDokument
                     'depth' => $depth,
                     'bloecke' => $bloecke,
                     'vk_pro_person' => $agg['vk_pro_person'], 'vk_vorlaeufig' => $agg['vk_fehlt'],
+                    'wahl_spanne' => $agg['wahl_spanne'] ?? null,   // 98 · 3.6 PR3: Spanne bei Wahlgruppen (gerechnet mit der teuersten)
                 ];
                 if ($intern) {
                     // Marge nur in der internen Projektion (Projektleitung/Vertrieb) — NIE im Kundendokument.

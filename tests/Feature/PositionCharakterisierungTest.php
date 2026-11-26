@@ -98,16 +98,20 @@ it('Konzept: Foodbook und Angebot rechnen dasselbe Konzept identisch (PR2: Team-
     expect($fb)->toBe($ag)->and($fb['vk_pp'])->toBe(10.0);
 });
 
-it('A6 Wahlgruppen: beide Kapitel-Aggregate summieren alle Alternativen (Ziel P4: Spanne, Kapitel mit der teuersten)', function () {
+it('P4 Wahlgruppen: Kapitel rechnet mit der teuersten Alternative, die Spanne von–bis steht dabei — in Foodbook und Angebot gleich', function () {
     foreach ([10.0, 14.0] as $i => $preis) {
         ($this->fbBlock)(['type' => 'header_frei_preis', 'price_basis' => 'person', 'price_value' => $preis, 'variant_group_id' => 1, 'position' => $i]);
         ($this->agBlock)(['type' => 'header_preis', 'price_basis' => 'person', 'price_value' => $preis, 'variant_group_id' => 1, 'position' => $i]);
     }
+    ($this->fbBlock)(['type' => 'header_frei_preis', 'price_basis' => 'person', 'price_value' => 5.0, 'position' => 5]);   // ohne Gruppe
+    ($this->agBlock)(['type' => 'header_preis', 'price_basis' => 'person', 'price_value' => 5.0, 'position' => 5]);
 
     $fb = app(FoodbookAggregat::class)->kapitelAggregat($this->t, $this->fb->fresh());
     $ag = app(OfferCompositionService::class)->kapitelAggregat($this->t, $this->kap->fresh());
 
-    expect($fb['vk_pro_person'])->toBe(24.0)->and($ag['vk_pro_person'])->toBe(24.0);
+    expect($fb['vk_pro_person'])->toBe(19.0)->and($ag['vk_pro_person'])->toBe(19.0)   // 5 + teuerste (14); vorher 29 (alle summiert)
+        ->and($fb['wahl_spanne'])->toBe(['von' => 15.0, 'bis' => 19.0])
+        ->and($ag['wahl_spanne'])->toBe(['von' => 15.0, 'bis' => 19.0]);
 });
 
 it('P6 header_preis im Konzept: neue Blöcke werden abgelehnt (er rechnete nie mit); Bestand bleibt im Preis ungezählt', function () {

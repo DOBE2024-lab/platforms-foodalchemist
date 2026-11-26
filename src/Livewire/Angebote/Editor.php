@@ -1737,7 +1737,7 @@ class Editor extends Component
                 'positionen_count' => count($positionen),
                 'hat_inhalt' => count($positionen) > 0,
                 'bepreist' => ($vkPP ?? 0) > 0,
-                'aggregat' => ['vk_pro_person' => $vkPP, 'ek_per_person' => $ekPP, 'pauschal' => (float) ($kap['pauschal'] ?? 0)],
+                'aggregat' => ['vk_pro_person' => $vkPP, 'ek_per_person' => $ekPP, 'pauschal' => (float) ($kap['pauschal'] ?? 0), 'wahl_spanne' => $kap['wahl_spanne'] ?? null, 'wahl_gruppen' => $kap['wahl_gruppen'] ?? []],   // 98 · 3.6 PR3
                 'wareneinsatz' => ['status' => $ampel->weAmpel($fcPct, $zielWePct), 'ist_pct' => $fcPct, 'ziel_pct' => $zielWePct],
             ];
         }

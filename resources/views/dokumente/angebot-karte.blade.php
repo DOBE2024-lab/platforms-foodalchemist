@@ -105,6 +105,9 @@
             <div class="kap-title">{{ $kap['title'] }}
                 @if($kap['ist_format'] && $kap['format_price_mode'] === 'alternativen' && $kap['preis_range'])
                     <span class="kp">{{ $kap['preis_range']['min'] !== null ? $nf($kap['preis_range']['min']) : '—' }}–{{ $kap['preis_range']['max'] !== null ? $nf($kap['preis_range']['max']) : '—' }} €/Gast</span>
+                @elseif(($kap['wahl_spanne'] ?? null) !== null && $kap['wahl_spanne']['von'] != $kap['wahl_spanne']['bis'])
+                    {{-- 98 · 3.6 PR3: Wahlgruppen als Spanne (gerechnet wird mit der teuersten Wahl) --}}
+                    <span class="kp">{{ $nf($kap['wahl_spanne']['von']) }}–{{ $nf($kap['wahl_spanne']['bis']) }} €/Gast{{ ($kap['vk_fehlt'] ?? false) ? ' (vorläufig)' : '' }}</span>
                 @elseif($kap['vk_pro_person'] !== null && $kap['vk_pro_person'] > 0)
                     <span class="kp">{{ $nf($kap['vk_pro_person']) }} €/Gast{{ ($kap['vk_fehlt'] ?? false) ? ' (vorläufig)' : '' }}</span>
                 @endif

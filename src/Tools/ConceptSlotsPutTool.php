@@ -63,10 +63,6 @@ class ConceptSlotsPutTool extends FoodAlchemistTool implements ToolContract, Too
         if (isset($felder['sales_recipe_id'], $felder['package_id'])) {
             return ToolResult::error('sales_recipe_id und package_id sind XOR — nur eines angeben.', 'VALIDATION_ERROR');
         }
-        if (! empty($felder['sales_recipe_id'])
-            && ! \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::visibleToTeam($team)->whereKey((int) $felder['sales_recipe_id'])->exists()) {
-            return ToolResult::error('sales_recipe_id nicht sichtbar/vorhanden.', 'NOT_FOUND');
-        }
         if (! empty($felder['package_id'])) {
             // package_id = Concepter-Paket (kind=paket-Concept) → embedded_concept_id (Kaskade-Pfad).
             $conceptId = (int) \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::visibleToTeam($team)->whereKey($slotId)->value('concept_id');
@@ -80,25 +76,28 @@ class ConceptSlotsPutTool extends FoodAlchemistTool implements ToolContract, Too
 
         $svc = app(ConceptService::class);
         try {
-            $svc->updateSlot($team, $slotId, $felder);
-            if (! empty($felder['sales_recipe_id']) || ! empty($felder['embedded_concept_id'])) {
-                $svc->fillSlot($team, $slotId, array_intersect_key($felder, array_flip(['sales_recipe_id', 'embedded_concept_id', 'type', 'quantity', 'unit_vocab_id'])));
-            }
-            if (array_key_exists('wording', $felder)) {
-                $svc->setSlotWording($team, $slotId, ($felder['wording'] ?? '') !== '' ? (string) $felder['wording'] : null);
-            }
-            if (array_key_exists('dish_brief', $felder) || array_key_exists('dish_brief_note', $felder)) {
-                $alt = \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::visibleToTeam($team)->whereKey($slotId)->first(['id', 'dish_brief', 'dish_brief_note']);
-                app(\Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService::class)->setze(
-                    $team,
-                    $slotId,
-                    array_key_exists('dish_brief', $felder) ? (string) ($felder['dish_brief'] ?? '') : (string) $alt?->dish_brief,
-                    array_key_exists('dish_brief_note', $felder) ? (string) ($felder['dish_brief_note'] ?? '') : (string) $alt?->dish_brief_note,
-                );
-            }
-            if (array_key_exists('quantity', $felder)) {
-                $svc->setSlotMengeEinheit($team, $slotId, $felder['quantity'] !== null ? (float) $felder['quantity'] : null, isset($felder['unit_vocab_id']) ? (int) $felder['unit_vocab_id'] : null);
-            }
+            // 98 · 3.6 PR5: alles oder nichts — die Sicht prüft der Dienst erst in fillSlot, eine Ablehnung darf Rolle/Titel nicht halb schreiben
+            \Illuminate\Support\Facades\DB::transaction(function () use ($svc, $team, $slotId, $felder) {
+                $svc->updateSlot($team, $slotId, $felder);
+                if (! empty($felder['sales_recipe_id']) || ! empty($felder['embedded_concept_id'])) {
+                    $svc->fillSlot($team, $slotId, array_intersect_key($felder, array_flip(['sales_recipe_id', 'embedded_concept_id', 'type', 'quantity', 'unit_vocab_id'])));
+                }
+                if (array_key_exists('wording', $felder)) {
+                    $svc->setSlotWording($team, $slotId, ($felder['wording'] ?? '') !== '' ? (string) $felder['wording'] : null);
+                }
+                if (array_key_exists('dish_brief', $felder) || array_key_exists('dish_brief_note', $felder)) {
+                    $alt = \Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot::visibleToTeam($team)->whereKey($slotId)->first(['id', 'dish_brief', 'dish_brief_note']);
+                    app(\Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService::class)->setze(
+                        $team,
+                        $slotId,
+                        array_key_exists('dish_brief', $felder) ? (string) ($felder['dish_brief'] ?? '') : (string) $alt?->dish_brief,
+                        array_key_exists('dish_brief_note', $felder) ? (string) ($felder['dish_brief_note'] ?? '') : (string) $alt?->dish_brief_note,
+                    );
+                }
+                if (array_key_exists('quantity', $felder)) {
+                    $svc->setSlotMengeEinheit($team, $slotId, $felder['quantity'] !== null ? (float) $felder['quantity'] : null, isset($felder['unit_vocab_id']) ? (int) $felder['unit_vocab_id'] : null);
+                }
+            });
         } catch (ModelNotFoundException $e) {
             return ToolResult::error('Slot/Referenz nicht gefunden.', 'NOT_FOUND');
         } catch (\RuntimeException $e) {

@@ -7,7 +7,6 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
-use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 
@@ -74,10 +73,6 @@ class ConceptSlotsPostTool extends FoodAlchemistTool implements ToolContract, To
         if ($vorgabe !== '' && (isset($arguments['sales_recipe_id']) || isset($arguments['package_id']))) {
             return ToolResult::error('dish_brief ist die Vorgabe für eine LEERE Position — nicht zusammen mit sales_recipe_id oder package_id.', 'VALIDATION_ERROR');
         }
-        if (isset($arguments['sales_recipe_id'])
-            && ! FoodAlchemistRecipe::visibleToTeam($team)->whereKey((int) $arguments['sales_recipe_id'])->exists()) {
-            return ToolResult::error('sales_recipe_id nicht sichtbar/vorhanden.', 'NOT_FOUND');
-        }
         $paketId = null;
         if (isset($arguments['package_id'])) {
             // package_id = Concepter-Paket (kind=paket-Concept) → embedded_concept_id (Kaskade-Pfad).
@@ -131,6 +126,8 @@ class ConceptSlotsPostTool extends FoodAlchemistTool implements ToolContract, To
                 }
                 $slot = $svc->setSlotDarreichung($team, $slot->id, $darreichung->id);
             }
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {   // 98 · 3.6 PR5: Sicht prüft der Dienst (Positions-Kern), Code wie zuvor
+            return ToolResult::error('sales_recipe_id nicht sichtbar/vorhanden.', 'NOT_FOUND');
         } catch (\RuntimeException $e) {
             return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
         }

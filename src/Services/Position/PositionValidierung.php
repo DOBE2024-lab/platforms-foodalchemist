@@ -5,7 +5,11 @@ namespace Platform\FoodAlchemist\Services\Position;
 use Illuminate\Database\Eloquent\Model;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
+use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
+use Platform\FoodAlchemist\Services\Concepter\ConceptSlotZielService;
+use Platform\FoodAlchemist\Services\Concepter\SlotEinheitService;
 use Platform\FoodAlchemist\Support\BlockReferenz;
 
 /**
@@ -19,7 +23,8 @@ use Platform\FoodAlchemist\Support\BlockReferenz;
  *  - Referenzen (Gericht, Konzept, Darreichung, Einheit): {@see BlockReferenz} — Sicht-Regel inkl. Abo-Fassungen.
  *  - Staffel: nur wo das Profil sie kennt; Stufen sauber (min_persons ≥ 1, Preis ≥ 0, keine doppelte Stufe).
  *
- * Konzept-Slots mit Inhalt (Gericht/Paket) prüfen weiter ConceptSlotZielService und SlotEinheitService (fillSlot).
+ * Konzept-Slots mit Inhalt (Gericht/Paket): {@see self::slot()} und {@see self::slotEinheit()} (Sicht inkl. Abo-Fassungen, Kreis, Typ,
+ * wirksame Einheit). Darreichung gehört zum Gericht: {@see self::darreichung()} — eine Regel für Slot und Block (98 · 3.6 PR5).
  */
 final class PositionValidierung
 {
@@ -63,6 +68,40 @@ final class PositionValidierung
         }
 
         return $daten;
+    }
+
+    /**
+     * Inhalt eines Konzept-Slots (genau eines von Paket, Alt-Paket, Rezept): Sicht inkl. Abo-Fassungen, Kreis, Typ
+     * (Gericht/Basisrezept) und für ein Rezept die wirksame Einheit.
+     *
+     * @param  array<string, mixed>  $in  embedded_concept_id | package_id | sales_recipe_id (+ type, unit_vocab_id)
+     * @return string|null Slot-Typ für ein Rezept, sonst null
+     */
+    public static function slot(Team $team, FoodAlchemistConceptSlot $slot, array $in): ?string
+    {
+        $typ = app(ConceptSlotZielService::class)->pruefe($team, $slot, $in);
+        if (empty($in['embedded_concept_id']) && ! empty($in['sales_recipe_id'])) {   // 17.11.: nur eine wirksame Einheit
+            app(SlotEinheitService::class)->pruefeBelegung($team, $slot, (int) $in['sales_recipe_id'], isset($in['unit_vocab_id']) ? (int) $in['unit_vocab_id'] : null);
+        }
+
+        return $typ;
+    }
+
+    /** Einheit einer Slot-Menge: nur eine NEU gewählte Einheit muss rechnen, eine unveränderte Alt-Einheit bleibt speicherbar. */
+    public static function slotEinheit(Team $team, FoodAlchemistConceptSlot $slot, ?int $einheitId): void
+    {
+        app(SlotEinheitService::class)->pruefe($team, $slot, $einheitId && $einheitId !== (int) $slot->unit_vocab_id ? $einheitId : null);
+    }
+
+    /** Darreichung gehört zum Gericht der Zeile — Konzept-Slot und Angebots-Block, eine Regel. Leer ist erlaubt (= automatisch). */
+    public static function darreichung(mixed $darreichungId, mixed $recipeId, string $zeile = 'dieses Blocks'): void
+    {
+        if ($darreichungId === null || $darreichungId === '') {
+            return;
+        }
+        if ($recipeId === null || ! FoodAlchemistRecipeDarreichung::whereKey((int) $darreichungId)->where('recipe_id', (int) $recipeId)->exists()) {
+            throw new PositionFehler("Darreichung gehört nicht zum Gericht {$zeile}.");
+        }
     }
 
     /**

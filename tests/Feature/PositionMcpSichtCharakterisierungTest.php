@@ -62,8 +62,9 @@ it('Konzept-Slot PUT: abonniertes Gericht angenommen, fremdes abgelehnt (NOT_FOU
     $slot = app(ConceptService::class)->addSlot($this->broich, $this->konzept->id, ['role' => 'Hauptgang']);
 
     expect(app(\Platform\FoodAlchemist\Tools\ConceptSlotsPutTool::class)->execute(['slot_id' => $slot->id, 'felder' => ['sales_recipe_id' => $this->fassung->id]], $ctx)->success)->toBeTrue();
-    $res = app(\Platform\FoodAlchemist\Tools\ConceptSlotsPutTool::class)->execute(['slot_id' => $slot->id, 'felder' => ['sales_recipe_id' => $this->fremd->id]], $ctx);
-    expect($res->success)->toBeFalse()->and($res->errorCode)->toBe('NOT_FOUND')->and($slot->fresh()->sales_recipe_id)->toBe($this->fassung->id);
+    $res = app(\Platform\FoodAlchemist\Tools\ConceptSlotsPutTool::class)->execute(['slot_id' => $slot->id, 'felder' => ['sales_recipe_id' => $this->fremd->id, 'role' => 'Dessert']], $ctx);
+    expect($res->success)->toBeFalse()->and($res->errorCode)->toBe('NOT_FOUND')->and($slot->fresh()->sales_recipe_id)->toBe($this->fassung->id)
+        ->and($slot->fresh()->role)->toBe('Hauptgang');   // abgelehnt heißt: nichts geschrieben, auch nicht die Rolle
 });
 
 it('Foodbook-Block: abonniertes Gericht überall angenommen, fremdes per Dienst und FoodbookBlocksPut abgelehnt (NOT_FOUND)', function () {

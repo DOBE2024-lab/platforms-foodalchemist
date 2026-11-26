@@ -119,3 +119,35 @@ it('MCP im Lockstep: recipes.GET und recipe_ingredients.PUT melden zutaten_ohne_
     $this->ei->update(['piece_default_g' => 60]);
     expect($get()->data)->not->toHaveKey('zutaten_ohne_gewicht');
 });
+
+it('Unterrezept in Stück ohne Ertrag bzw. Stückzahl: zweite Pflegeliste, Hinweis mit Link ins Basisrezept, nach der Pflege weg (Kurator 26.11.)', function () {
+    [$broetchen] = ($this->rezept)('broetchen', 'Brötchen', [[$this->linsen, 400]]);
+    $broetchen->update(['is_sales_recipe' => false, 'status' => 'draft', 'yield_pieces' => null]);
+    app(RecipeRecomputeService::class)->recomputePipeline($broetchen->id);
+    $this->eiZeile->delete();   // nur die Unterrezept-Zeile soll ohne Gewicht sein
+    $this->basis->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 10, 'referenced_recipe_id' => $broetchen->id,
+        'raw_text' => 'Brötchen', 'quantity' => 1, 'unit_vocab_id' => $this->stk->id, 'match_method' => 'manual']);
+    app(RecipeRecomputeService::class)->recomputePipeline($this->basis->id);
+
+    $dq = app(DataQualityService::class);
+    $metrik = fn () => collect($dq->messeAlleEbenen($this->rootTeam)['basisrezept']['metriken'])->firstWhere('key', StueckOhneGewicht::KEY_REZEPT);
+    expect($metrik())->toMatchArray(['wert' => 1, 'severity' => 'info', 'label' => StueckOhneGewicht::LABEL_REZEPT, 'signal' => null])
+        ->and(collect($dq->betroffene($this->rootTeam, StueckOhneGewicht::KEY_REZEPT))->pluck('id')->all())->toBe([$broetchen->id])
+        ->and($dq->trifftObjekt($this->rootTeam, StueckOhneGewicht::KEY_REZEPT, 'recipe', $broetchen->id))->toBeTrue()
+        ->and(collect($dq->messeAlleEbenen($this->rootTeam)['gp']['metriken'])->firstWhere('key', StueckOhneGewicht::KEY)['wert'])->toBe(0);
+
+    $zeilen = StueckOhneGewicht::zeilen($this->basis->fresh(), $this->rootTeam);
+    expect($zeilen)->toHaveCount(1)->and($zeilen[0])->toMatchArray(['recipe_id' => $broetchen->id, 'gp_id' => null])
+        ->and(StueckOhneGewicht::pflege($zeilen))->toBe(StueckOhneGewicht::PFLEGE_REZEPT)
+        ->and(StueckOhneGewicht::pflege([['recipe_id' => null], ['recipe_id' => 7]]))->toBe(StueckOhneGewicht::PFLEGE_GP . '; ' . StueckOhneGewicht::PFLEGE_REZEPT);
+
+    $editor = Livewire::test(IngredientEditor::class)->call('oeffnen', $this->basis->id)->call('speichern', [
+        ['id' => null, 'gp_id' => $this->linsen->id, 'raw_text' => '200 g Belugalinsen', 'quantity' => '200', 'unit_vocab_id' => $this->g->id],
+        ['id' => null, 'referenced_recipe_id' => $broetchen->id, 'raw_text' => '1 Brötchen', 'quantity' => '1', 'unit_vocab_id' => $this->stk->id],
+    ])->assertSet('fehler', null);
+    expect($editor->html())->toContain('data-ohne-gewicht-rezept="' . $broetchen->id . '"')->toContain('Ertrag bzw. Stückzahl im Basisrezept')
+        ->not->toContain('data-ohne-gewicht-gp=');
+
+    $broetchen->update(['yield_pieces' => 8]);
+    expect($metrik()['wert'])->toBe(0)->and(StueckOhneGewicht::zeilen($this->basis->fresh(), $this->rootTeam))->toBe([]);
+});

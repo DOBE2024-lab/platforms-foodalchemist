@@ -841,8 +841,8 @@ abstract class FoodAlchemistTool
 
     /**
      * `zutaten_ohne_gewicht` (additiv, nur wenn vorhanden): Zeilen mit Menge, aber ohne Gramm (z. B. „1 Stück Ei“ ohne Stückgewicht).
-     * Kosten laufen über den Stückpreis, Grammatur und Produktionsmenge sind vorläufig. Gepflegt wird das Gewicht am GP (Formen bzw.
-     * Stückgewicht). Dieselbe Quelle wie der Hinweis im Zutaten-Editor ({@see \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht}).
+     * Kosten laufen über den Stückpreis, Grammatur und Produktionsmenge sind vorläufig. Gepflegt wird das Gewicht am GP (Stückgewicht
+     * bzw. Gewicht je Form), bei Unterrezepten (`recipe_id`) über Ertrag bzw. Stückzahl des Basisrezepts. Dieselbe Quelle wie der Hinweis im Zutaten-Editor ({@see \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht}).
      *
      * @return array{zutaten_ohne_gewicht?: list<array<string, mixed>>}
      */

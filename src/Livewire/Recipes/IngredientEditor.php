@@ -63,7 +63,7 @@ class IngredientEditor extends Component
      * Zutaten ohne Gewicht nach dem Speichern (Entscheid Dominique 23.11.: warnen, Speichern bleibt möglich). Aus
      * {@see \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::zeilen} — derselben Rechnung wie EK und Produktion.
      *
-     * @var list<array{ingredient_id: int, name: string, menge: float, einheit: ?string, gp_id: ?int}>
+     * @var list<array{ingredient_id: int, name: string, menge: float, einheit: ?string, gp_id: ?int, recipe_id: ?int}>
      */
     public array $ohneGewicht = [];
 

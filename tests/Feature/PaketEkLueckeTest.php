@@ -130,3 +130,34 @@ it('Ausgaben (D): die Paket-Zeile trägt keinen EK, wenn das Paket eine EK-Lück
 
     expect($paketZeile)->not->toBeNull()->and($paketZeile['ek'])->toBeNull();
 });
+
+it('Foodbook: bei EK-Lücke keine Wareneinsatz-Quote — Kapitel, Gesamt, internes Dokument und Detail zeigen „offen“', function () {
+    $fb = $this->makeFoodbook($this->t, 'Foodbook', ['status' => 'entwurf']);
+    $kap = $this->makeChapter($fb, ['title' => 'Buffet']);
+    $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $this->konzept->id]);
+    $agg = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregat::class);
+    $gesamt = $agg->gesamt($this->t, $fb->fresh());
+
+    expect($agg->kapitelAggregat($this->t, $kap->fresh())['food_cost_percent'])->toBeNull()
+        ->and($gesamt['food_cost_percent'])->toBeNull()->and($gesamt['ek_vollstaendig'])->toBeFalse();
+
+    $text = preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags(
+        $this->get(route('foodalchemist.foodbooks.dokument', ['id' => $fb->id, 'intern' => 1]))->assertOk()->getContent())));
+    expect($text)->toContain('W offen')->toMatch('/Wareneinsatz % ?offen/u')->toContain('0,80 € (unvollständig)');
+
+    app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookDokument::class)->vorschauSnapshotAktualisieren($this->t, $fb->id);
+    $detail = preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags(
+        \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Foodbooks\Index::class)->call('waehle', $fb->id)->html())));
+    expect($detail)->toMatch('/Wareneinsatz offen/u')->not->toMatch('/Wareneinsatz fehlt/u');
+});
+
+it('Foodbook ohne Lücke: Quote bleibt', function () {
+    $voll = $this->makeConcept($this->t, 'Volles Konzept');
+    $this->makeConceptSlot($voll, ['sales_recipe_id' => $this->mitEk->id, 'quantity' => 1]);
+    $fb = $this->makeFoodbook($this->t, 'Foodbook voll', ['status' => 'entwurf']);
+    $kap = $this->makeChapter($fb, ['title' => 'Hauptgang']);
+    $this->makeFoodbookBlock($kap, ['type' => 'concept_ref', 'concept_id' => $voll->id]);
+    $gesamt = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregat::class)->gesamt($this->t, $fb->fresh());
+
+    expect($gesamt['food_cost_percent'])->not->toBeNull()->and($gesamt['ek_vollstaendig'])->toBeTrue();
+});

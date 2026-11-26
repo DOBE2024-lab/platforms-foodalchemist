@@ -164,6 +164,7 @@ final class FoodbookDokument
                     // Marge nur in der internen Projektion (Projektleitung/Vertrieb) — NIE im Kundendokument.
                     $row['ek_pro_person'] = $agg['ek_per_person'];
                     $row['food_cost_percent'] = $agg['food_cost_percent'];
+                    $row['ek_vollstaendig'] = $agg['ek_vollstaendig'];   // false → Wareneinsatz „offen“ statt Quote
                 }
                 $rows[] = $row;
                 $walk((int) $k->id, $depth + 1);

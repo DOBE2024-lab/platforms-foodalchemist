@@ -44,7 +44,7 @@ it('Foodbook gesamt(): bestehende Felder unverändert, edition_ab neu — nur Fo
 
     $g = $this->fb->gesamt($this->rootTeam, $buch->fresh());
 
-    expect(array_keys($g))->toBe(['vk_pro_person', 'ek_per_person', 'pauschal', 'personen', 'gesamt_vk', 'gesamt_ek', 'food_cost_percent', 'vk_fehlt', 'edition_ab'])
+    expect(array_keys($g))->toBe(['vk_pro_person', 'ek_per_person', 'pauschal', 'personen', 'gesamt_vk', 'gesamt_ek', 'food_cost_percent', 'vk_fehlt', 'ek_vollstaendig', 'edition_ab'])   // ek_vollstaendig neu (EK-Lücke → Quote „offen“)
         ->and($g['vk_pro_person'])->toBe(0.0)          // Editionen sind Alternativen — zählen nicht in die Summe (unverändert)
         ->and($g['gesamt_vk'])->toBe(0.0)
         ->and($g['edition_ab'])->toBe(28.5);            // 0,00 € zählt nicht als Preis

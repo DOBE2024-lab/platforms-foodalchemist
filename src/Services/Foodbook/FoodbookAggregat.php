@@ -82,7 +82,8 @@ final class FoodbookAggregat
             'vk_pro_person' => round($vk, 2),
             'ek_per_person' => round($ek, 2),
             'pauschal' => round($pauschal, 2), 'ek_pauschal' => round($ekPauschal, 2), 'wahl_spanne' => $spanne, 'wahl_gruppen' => $s['wahl_gruppen'],
-            'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ek, $vk), 'vk_fehlt' => $vkFehlt,   // Food-Cost aus einer VK-Teilsumme wäre geschönt
+            // Food-Cost aus einer VK- oder EK-Teilsumme wäre geschönt (Unbekanntes nie als 0) → keine Quote, Anzeige „offen“
+            'food_cost_percent' => ($vkFehlt || ! $s['ek_vollstaendig']) ? null : MargeService::wareneinsatzPct($ek, $vk), 'vk_fehlt' => $vkFehlt,
             'ek_vollstaendig' => $s['ek_vollstaendig'],   // false = EK ist eine Teilsumme (Gericht ohne EK, auch im Paket eines Konzepts)
         ];
     }
@@ -195,9 +196,11 @@ final class FoodbookAggregat
         $pax = $fb->personen;
         $vk = $ek = $pauschal = 0.0;
         $vkFehlt = false;
+        $ekVoll = true;
         foreach ($fb->chapters()->whereNull('parent_id')->get() as $top) {
             $agg = $this->kapitelAggregat($team, $top, $pax, $outlet);
             $vkFehlt = $vkFehlt || $agg['vk_fehlt'];
+            $ekVoll = $ekVoll && $agg['ek_vollstaendig'];
             $vk += $agg['vk_pro_person'];
             $ek += $agg['ek_per_person'];
             $pauschal += $agg['pauschal'];
@@ -214,7 +217,8 @@ final class FoodbookAggregat
             'gesamt_ek' => $pax !== null ? round($ek * $pax, 2) : null,
             // Wareneinsatz % auf denselben gerundeten Per-Person-Werten wie die Anzeige (F-12),
             // damit die Zahl exakt der bisherigen Blade-Rechnung ek_pp / vk_pp * 100 entspricht.
-            'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ekPp, $vkPp), 'vk_fehlt' => $vkFehlt,   // CQ price_incomplete
+            'food_cost_percent' => ($vkFehlt || ! $ekVoll) ? null : MargeService::wareneinsatzPct($ekPp, $vkPp), 'vk_fehlt' => $vkFehlt,   // CQ price_incomplete; EK-Lücke ebenso
+            'ek_vollstaendig' => $ekVoll,   // false = ek_per_person ist eine Teilsumme → Wareneinsatz „offen“
             'edition_ab' => app(FormatKapitelService::class)->editionAb($fb),   // 98 · 2.4e: Format-Editionen (Alternativen, nicht summiert) als „ab …“
         ];
     }

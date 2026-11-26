@@ -24,7 +24,7 @@ use Platform\FoodAlchemist\Support\FaTeam;
  * bestehenden Reaper ({@see PlanningCascadeService::reapeVerwaisteSteps}) im Besitzer-Team. Der Reaper entscheidet wie bisher
  * (offene KI-Aufträge, junge Schritte und Phasen bleiben); der Sweep selbst schreibt nichts.
  *
- * Aufrufer: der Zeitplan (`foodalchemist:kaskade-reaper`, alle 15 min, Schalter `foodalchemist.scheduler.kaskade_reaper_aktiv`) und
+ * Aufrufer: der Zeitplan (`foodalchemist:kaskade-reaper`, alle 15 min, Standard AUS, Schalter `foodalchemist.scheduler.kaskade_reaper_aktiv`) und
  * der Board-Poll für das eigene Team (gedrosselt).
  */
 final class KaskadenReaperSweep

@@ -41,8 +41,9 @@ return static function (Schedule $schedule): void {
     }
 
     // Hängende Kaskaden-Läufe heilen (io 26.11.): der Board-Poll sieht nur den jüngsten Lauf je Session; ältere Läufe, Läufe ohne Session und
-    // Läufe ohne offenes Board heilt nur dieser Lauf. Schreibt nur über den bestehenden Reaper; abschaltbar.
-    if (config('foodalchemist.scheduler.kaskade_reaper_aktiv', true)) {
+    // Läufe ohne offenes Board heilt nur dieser Lauf. Schreibt nur über den bestehenden Reaper. Standard AUS (Kurator 26.11.): erst Dry-Run
+    // (foodalchemist:kaskade-reaper --dry-run), dann mit Dominiques Go per env FOODALCHEMIST_KASKADE_REAPER einschalten.
+    if (config('foodalchemist.scheduler.kaskade_reaper_aktiv', false)) {
         \Platform\FoodAlchemist\Console\KaskadeReaperCommand::planen($schedule);
     }
 

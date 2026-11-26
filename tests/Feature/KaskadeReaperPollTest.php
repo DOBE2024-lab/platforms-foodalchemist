@@ -229,3 +229,19 @@ it('Board-Poll: im 60-s-Takt heilt der Team-Sweep auch den älteren Lauf derselb
         ->and($step->fresh()->status)->toBe('failed');   // der beobachtete wie bisher über den Lauf-Reaper
     expect(\Illuminate\Support\Facades\Cache::has('fa:kaskade-reaper-team:' . $this->rootTeam->id))->toBeTrue();
 });
+
+it('Zeitplan: Standard AUS (Kurator 26.11.), mit Schalter alle 15 min', function () {
+    $geplant = function (bool $an) {
+        config(['foodalchemist.scheduler.kaskade_reaper_aktiv' => $an]);
+        $schedule = new \Illuminate\Console\Scheduling\Schedule;
+        (require __DIR__ . '/../../src/Console/_zeitplan.php')($schedule);
+
+        return collect($schedule->events())->filter(fn ($e) => str_contains((string) $e->command, 'foodalchemist:kaskade-reaper'));
+    };
+
+    expect(config('foodalchemist.scheduler.kaskade_reaper_aktiv'))->toBeFalse()
+        ->and(collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+            ->filter(fn ($e) => str_contains((string) $e->command, 'foodalchemist:kaskade-reaper')))->toBeEmpty()
+        ->and($geplant(false))->toBeEmpty()
+        ->and($geplant(true)->first()?->expression)->toBe('*/15 * * * *');
+});

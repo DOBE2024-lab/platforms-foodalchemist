@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Services\Kaskade\KaskadenReaperSweep;
  *
  * `--dry-run` schreibt nichts und zeigt je Kandidat, warum er hängt (Schritt-Status, Anreicherung, Phasen, offene KI-Aufträge).
  * Ohne `--dry-run` heilt der Reaper wie aus dem Board: verwaiste Schritte → failed mit Grund, Anreicherung → failed, Phase geräumt,
- * Lauf neu bewertet. Zeitplan alle 15 min (Schalter `foodalchemist.scheduler.kaskade_reaper_aktiv`).
+ * Lauf neu bewertet. Zeitplan alle 15 min, Standard AUS (Schalter `foodalchemist.scheduler.kaskade_reaper_aktiv`, Einschalten nach Dry-Run und Go).
  */
 class KaskadeReaperCommand extends Command
 {

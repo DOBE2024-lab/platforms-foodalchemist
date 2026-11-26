@@ -99,7 +99,7 @@ class ConcepterBewertungService
             $checks[] = $this->check('sensorik_rolle', 'Sensorik / Rolle', 'info', 'Keine direkten Gang-Gerichte zum Prüfen.');
         } else {
             // Gebündelt (CQ, Folge aus 2.1e): Profile und Hauptgruppen aller Gang-Gerichte in fester Zahl Abfragen statt je Gericht
-            $sens = app(\Platform\FoodAlchemist\Services\SensorikService::class);
+            $sens = app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class);
             $geschmack = collect($sens->fuerRezepte($gerichtIds))->reject(fn ($p) => $p['leer'] ?? true)->map(fn ($p) => $p['geschmack'])->all();
             $warns = [];
             foreach ($gerichtIds as $gid) {

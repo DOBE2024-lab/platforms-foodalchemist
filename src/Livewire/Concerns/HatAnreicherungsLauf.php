@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\EnrichRecipeJob;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
 
 /**
  * „Alles anreichern" im Rezept- und Gericht-Modal als Hintergrund-Job (statt synchron im Web-Request).

@@ -173,7 +173,7 @@ final class VkAltspaltenBruecke
             // Nur Klasse, kein VK: wie früher ensureStandard den Auto-Preis gleich mitrechnen (sonst stünde die Darreichung ohne VK da).
             // Ein Fehler hier bleibt im Fixture sichtbar (VK fehlt), reißt aber keine fremden Tests.
             try {
-                app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputePreise($neu, $r);
+                app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->recomputePreise($neu, $r);
             } catch (\Throwable $e) {
                 self::$rechenFehler[] = $e->getMessage();
             }

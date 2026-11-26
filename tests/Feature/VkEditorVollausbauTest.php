@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -68,7 +68,7 @@ it('Rollen-Spalte rendert NUR im VK-Kontext; Rollen-Wert geht durch den Sync (V-
     $html = Livewire::test(IngredientEditor::class, ['recipeId' => $this->vk->id, 'eingebettet' => true])->html();
     expect($html)->toContain('data-role-select');
 
-    $basis = app(\Platform\FoodAlchemist\Services\RecipeService::class)->create($this->rootTeam, ['name' => 'Fond: Basis']);
+    $basis = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->create($this->rootTeam, ['name' => 'Fond: Basis']);
     $htmlBasis = Livewire::test(IngredientEditor::class, ['recipeId' => $basis->id, 'eingebettet' => true])->html();
     expect($htmlBasis)->not->toContain('data-role-select');
 
@@ -171,7 +171,7 @@ it('Preisklasse in der Darreichungs-Zeile: sofort gespeichert und Preis neu gere
         'markup_class_id' => $klasseAlt->id,
         'price_mode' => 'auto',
     ]);
-    app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputePreise($darreichung);
+    app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->recomputePreise($darreichung);
     $alterPreis = (float) $darreichung->fresh()->sales_net;
 
     Livewire::test(VkModal::class)
@@ -272,7 +272,7 @@ it('rendert die drei Ebenen als eigene Tabs und keinen Service-Tab mehr', functi
 
 it('rendert die abgeleiteten Marken: Fertigstellungszeit, Servierform-Select, Posten-Hinweis', function () {
     // Standard-Darreichung anlegen, damit die Darreichungs-Tabelle Zeilen hat.
-    app(\Platform\FoodAlchemist\Services\DarreichungService::class)
+    app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)
         ->ensureStandard($this->rootTeam, $this->vk->id, 'fa_ui');
 
     $html = Livewire::test(VkModal::class)->call('oeffnen', $this->vk->id)->html();
@@ -327,7 +327,7 @@ it('KI-Übernahme trägt die Lineage bis in den Save: Vehikel + Wording ⇒ `ki`
         ->assertSet('fehler', null)
         ->assertSet('kiLineage', []);
     // 18.11.2026: der KI-Typ geht über die Standard-Darreichung (eine Stelle), die Lineage am Gericht bleibt `ki`
-    expect(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->typVorschlagUebernehmen($this->rootTeam, $this->vk->id, $vehikelId, 0.9))->toBeTrue();
+    expect(app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->typVorschlagUebernehmen($this->rootTeam, $this->vk->id, $vehikelId, 0.9))->toBeTrue();
 
     $r = $this->vk->fresh();
     expect($r->serving_vehicle_vocab_id)->toBe($vehikelId)
@@ -347,7 +347,7 @@ it('Nutzer-Edit nach KI-Übernahme kippt die Lineage zurück auf `manual`', func
         'name' => 'Holzbrett', 'group_name' => 'Platten', 'sort_order' => 2, 'is_inactive' => false, 'created_at' => now(), 'updated_at' => now(),
     ]);
 
-    app(\Platform\FoodAlchemist\Services\DarreichungService::class)->typVorschlagUebernehmen($this->rootTeam, $this->vk->id, $vehikelId, 0.9);
+    app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->typVorschlagUebernehmen($this->rootTeam, $this->vk->id, $vehikelId, 0.9);
     expect($this->vk->fresh()->serving_vehicle_source)->toBe('ki');
     $standardId = (int) FoodAlchemistRecipeDarreichung::where('recipe_id', $this->vk->id)->where('is_standard', true)->value('id');
     Livewire::test(VkModal::class)

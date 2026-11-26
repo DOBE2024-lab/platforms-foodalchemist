@@ -12,7 +12,7 @@ use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\RecipeKomponentenPlanService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService;
 
 /**
  * Spec 80 B1 — Komponenten-Plan eines Basisrezepts (Gegenstück zu {@see GenerateDishProposalJob} für
@@ -85,7 +85,7 @@ class GenerateRecipePlanJob implements ShouldQueue, \Platform\FoodAlchemist\Serv
             }
             if ($istKind) {
                 // Kind-Basisrezept: kein Mensch-Gate, direkt nach dem Plan bauen (Dominique 09.10.).
-                app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)
+                app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)
                     ->baueKindNachPlan($team, $step->fresh(), $this->userId, $this->brief, $this->params, $komponenten);
 
                 return;

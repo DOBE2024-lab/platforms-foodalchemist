@@ -130,7 +130,7 @@ class KalkulationService
         $anzahl = max(1, (int) ($recipe->sales_unit_count ?? 1));
         // Spec 82 Stufe 3b: EK aus Sicht des Teams (Besitzer = Rezept-Spalte, sonst Team-Cache; Fassung nie Master-EK).
         // Auflage 4: eine Teilsumme ist kein Preis → Wareneinsatz/DB entfallen, der VK-Vorschlag ist nur vorläufig.
-        $kosten = app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->fuer($recipe, $team);
+        $kosten = app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->fuer($recipe, $team);
         $ekVoll = $kosten['vollstaendig'] && $kosten['ek_summe'] !== null;
         $hk1Total = (float) ($kosten['ek_summe'] ?? 0);
         $nebenTotal = (float) ($recipe->additional_costs_eur ?? 0);
@@ -144,7 +144,7 @@ class KalkulationService
         // M2 / Spec 85 D-1: VK-Wahrheit liegt an der Standard-Darreichung — die Preisleiter liest sie (ein Ort).
         $vk = $this->resolver->vkNetto($recipe);
         if ($recipe->ist_fassung) {   // Spec 82 §12 C: Abo-Fassung — VK = Team-EK × Kalkulationsfaktor DES TEAMS
-            $vk = app(\Platform\FoodAlchemist\Services\TeamVkService::class)->fuer($recipe, $team, $outlet)['vk'];
+            $vk = app(\Platform\FoodAlchemist\Services\Rezept\TeamVkService::class)->fuer($recipe, $team, $outlet)['vk'];
         }
 
         return [

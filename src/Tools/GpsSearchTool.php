@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 
 /** M8-01: Grundprodukte durchsuchen (D-3) — Tool → Service, team-scoped. */
 class GpsSearchTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

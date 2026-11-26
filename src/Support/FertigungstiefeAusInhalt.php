@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
  * - from_scratch: sonst. Gewürze, Öle, Essige (WG 10/11) und Brot sind Zutaten, keine Vorfertigung. Bewusst auch
  *   TK-Fisch und TK-Fleisch: das ist tiefgekühlte ROHWARE, die Küche verarbeitet sie vollständig — anders als
  *   TK-Gemüse, das blanchiert und geschnitten kommt.
- * - convenience setzt nur der Zukauf-Pfad ({@see \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::baue}).
+ * - convenience setzt nur der Zukauf-Pfad ({@see \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::baue}).
  */
 final class FertigungstiefeAusInhalt
 {
@@ -39,7 +39,7 @@ final class FertigungstiefeAusInhalt
                 continue;
             }
             $wg = (string) ($gp->commodity_group_code ?? '');
-            if ($wg === '13' || (\Platform\FoodAlchemist\Services\GpNamingService::istTk($gp->condition, (string) $gp->name, (string) $gp->processing) && in_array($wg, ['01', '02'], true))) {
+            if ($wg === '13' || (\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::istTk($gp->condition, (string) $gp->name, (string) $gp->processing) && in_array($wg, ['01', '02'], true))) {
                 return 'teilfertig';
             }
         }

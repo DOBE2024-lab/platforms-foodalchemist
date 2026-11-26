@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\FeedbackService;
+use Platform\FoodAlchemist\Services\Rezept\FeedbackService;
 
 /**
  * R2.6 — Praxis-Feedback eines Gerichts/Basisrezepts lesen (read-only Aggregat):

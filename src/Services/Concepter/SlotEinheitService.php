@@ -75,7 +75,7 @@ class SlotEinheitService
      */
     public function wirksame(Team $team, FoodAlchemistRecipe $dish, ?FoodAlchemistRecipeDarreichung $dar, ?Collection $einheiten = null): Collection
     {
-        return ($einheiten ?? app(\Platform\FoodAlchemist\Services\VocabularyService::class)->listEinheiten($team))
+        return ($einheiten ?? app(\Platform\FoodAlchemist\Services\GpStamm\VocabularyService::class)->listEinheiten($team))
             ->filter(fn ($e) => self::wirkt($e, $dish, $dar))->values();
     }
 
@@ -147,7 +147,7 @@ class SlotEinheitService
     public function auswahl(Team $team, object $concept): array
     {
         $aus = [];
-        $einheiten = app(\Platform\FoodAlchemist\Services\VocabularyService::class)->listEinheiten($team);   // 2.1e: einmal je Konzept statt je Position
+        $einheiten = app(\Platform\FoodAlchemist\Services\GpStamm\VocabularyService::class)->listEinheiten($team);   // 2.1e: einmal je Konzept statt je Position
         foreach ($concept->slots as $slot) {
             if ($slot->sales_recipe_id === null || $slot->dish === null) {
                 continue;

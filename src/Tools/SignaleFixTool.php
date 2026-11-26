@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\SignalFixService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalFixService;
 use Platform\FoodAlchemist\Support\SignalCockpit;
 
 /**

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use Livewire\Component;
 use Platform\FoodAlchemist\Services\Ai\AiCostCalculator;
 use Platform\FoodAlchemist\Services\Ai\KiAbrechnungService;
-use Platform\FoodAlchemist\Services\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Support\KiKlassen;
 use Platform\FoodAlchemist\Support\MasterTeam;

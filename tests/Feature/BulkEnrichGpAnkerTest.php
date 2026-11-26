@@ -10,9 +10,9 @@ use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
-use Platform\FoodAlchemist\Services\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;
@@ -271,7 +271,7 @@ it('B-8: `gp_anker_fehlt` zählt ein GP mit NUR soft-gelöschtem Mapping als ohn
 // ── Nebenbefund 2026-09-06: SignalFix `gp_anker` etikettiert ehrlich ────────────────────
 
 it('SignalFix gp_anker: der lexikalische Fund wird als `ai_inferred` gespeichert, nicht als `manual`', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\SignalFixService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Pruefung\SignalFixService::class);
     $m = new ReflectionMethod($svc, 'fixGpAnker');
     $m->setAccessible(true);
 
@@ -287,7 +287,7 @@ it('SignalFix gp_anker: der lexikalische Fund wird als `ai_inferred` gespeichert
 
 it('SignalFix gp_anker: ein vorhandenes manuelles Mapping bleibt stehen (Inv. 3)', function () {
     ($this->mapping)((int) $this->gp->id, 'rote-bete', 'manual');
-    $svc = app(\Platform\FoodAlchemist\Services\SignalFixService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Pruefung\SignalFixService::class);
     $m = new ReflectionMethod($svc, 'fixGpAnker');
     $m->setAccessible(true);
     $m->invoke($svc, $this->rootTeam, (int) $this->gp->id);

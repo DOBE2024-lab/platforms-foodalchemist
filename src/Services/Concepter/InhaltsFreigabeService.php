@@ -274,7 +274,7 @@ class InhaltsFreigabeService
             throw new \RuntimeException('Das gehört schon diesem Team — eine eigene Kopie ist nicht nötig.');
         }
         $kopie = match ($typ) {
-            'recipe' => app(\Platform\FoodAlchemist\Services\RecipeService::class)->duplicate($team, $id, (string) $original->name),
+            'recipe' => app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->duplicate($team, $id, (string) $original->name),
             'concept' => app(ConceptService::class)->duplicate($team, $id),
             'format' => $this->formatKopie($team, $original),
         };

@@ -462,7 +462,7 @@ class GpPaketVerknuepfer
 
     /**
      * Eigentums-Riegel (Spec 84 D9 „sichtbar ist nicht eigen“): der Verknüpfer schreibt in globale Stamm-Zeilen (GP, Struktur, Lead) —
-     * das darf nur das Master-Team. Der Import-Service löst das Team schon über {@see \Platform\FoodAlchemist\Services\GpPaketImportService::master}
+     * das darf nur das Master-Team. Der Import-Service löst das Team schon über {@see \Platform\FoodAlchemist\Services\GpStamm\GpPaketImportService::master}
      * auf; die öffentliche Methode sichert sich trotzdem selbst ab.
      */
     private function guardMaster(Team $master): void

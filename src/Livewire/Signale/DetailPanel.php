@@ -7,9 +7,9 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignalSnapshot;
-use Platform\FoodAlchemist\Services\SignalObjectService;
-use Platform\FoodAlchemist\Services\SignalPolicyService;
-use Platform\FoodAlchemist\Services\SignalTrendService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalObjectService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalPolicyService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalTrendService;
 use Platform\FoodAlchemist\Support\SignalCockpit;
 
 /**
@@ -138,7 +138,7 @@ class DetailPanel extends Component
         $this->rezeptBestaetigt = false;
         $this->fehler = null;
         try {
-            $this->rezeptUebernahme = app(\Platform\FoodAlchemist\Services\RezeptFolgeService::class)->uebernahmeVorschau(\Illuminate\Support\Facades\Auth::user()->currentTeamRelation, $recipeId, $familieId);
+            $this->rezeptUebernahme = app(\Platform\FoodAlchemist\Services\Rezept\RezeptFolgeService::class)->uebernahmeVorschau(\Illuminate\Support\Facades\Auth::user()->currentTeamRelation, $recipeId, $familieId);
         } catch (\RuntimeException $e) {
             $this->rezeptUebernahme = null;
             $this->fehler = $e->getMessage();
@@ -206,7 +206,7 @@ class DetailPanel extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\RezeptFolgeService::class)
+            app(\Platform\FoodAlchemist\Services\Rezept\RezeptFolgeService::class)
                 ->rezeptUebernehmen(\Illuminate\Support\Facades\Auth::user()->currentTeamRelation, \Illuminate\Support\Facades\Auth::user(), (int) $v['recipe_id'], (int) $v['familie_id'], $this->rezeptBestaetigt);
         } catch (\Platform\FoodAlchemist\Exceptions\FaRechtFehltException|\RuntimeException $e) {
             $this->fehler = $e->getMessage();

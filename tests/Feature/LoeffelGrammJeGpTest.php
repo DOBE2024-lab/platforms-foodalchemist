@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGpForm;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
-use Platform\FoodAlchemist\Services\GpFormService;
+use Platform\FoodAlchemist\Services\GpStamm\GpFormService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -74,7 +74,7 @@ it('Job: KI schätzt das TL-Gewicht (Herkunft ki) und das Rezept rechnet danach 
         'unit_vocab_id' => FoodAlchemistVocabEinheit::where('slug', 'tl')->value('id')]);
     $this->mock(AiGatewayService::class, fn ($m) => $m->shouldReceive('propose')->once()
         ->andReturn(new AiProposal(['einheiten' => [['unit' => 'tl', 'gewicht_g' => 2.5]]], 0.8, 'Mock')));
-    $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+    $recompute = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
     $zeile = fn () => \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::with(['unit', 'gp'])->where('recipe_id', $rezept->id)->first();
     $vorher = $recompute->bruttoMasseG($zeile());
 

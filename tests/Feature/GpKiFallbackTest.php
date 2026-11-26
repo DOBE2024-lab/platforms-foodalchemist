@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Gps\DetailPanel;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
-use Platform\FoodAlchemist\Services\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -67,7 +67,7 @@ it('FakeProvider-Echo ⇒ ehrlicher Fehler, nichts geschrieben; Kind-Team blockt
 
 it('Salz-Fix: manual-kuratierte GP-Werte fließen in die Rezept-Aggregation, KI-Werte nicht', function () {
     $g = \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::create(['team_id' => $this->rootTeam->id, 'slug' => 'g', 'display_de' => 'Gramm', 'dimension' => 'mass', 'default_in_g' => 1]);
-    $svc = app(\Platform\FoodAlchemist\Services\RecipeService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class);
 
     // Speisesalz-Muster: LA hat sodium, aber KEIN kcal → Leit-Indikator schlug bisher fehl
     $salz = $this->makeGp($this->rootTeam, 'Speisesalz');

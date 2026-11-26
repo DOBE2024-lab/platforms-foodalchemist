@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Contracts\LLMProviderContract;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeReviewService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeReviewService;
 use Platform\FoodAlchemist\Tests\Support\CopilotStub;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

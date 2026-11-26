@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\PurchaseAnomalyService;
+use Platform\FoodAlchemist\Services\Pruefung\PurchaseAnomalyService;
 
 /**
  * Einkauf E2/E5 (read): Preis-Ausreißer im Einkaufsjournal (mögliche Fehlbuchungen).

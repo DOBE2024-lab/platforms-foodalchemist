@@ -101,7 +101,7 @@ it('Gericht ohne Komponenten: keine Anrichte-Zeit, keine Warnung (Bestand bleibt
 function spec83Formen($team, $gericht): array
 {
     $mk = fn (string $code, string $label) => \Platform\FoodAlchemist\Models\FoodAlchemistServierform::firstOrCreate(['code' => $code], ['team_id' => $team->id, 'label' => $label]);
-    $svc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class);
     $d = [];
     foreach ([['teller', 'Teller', []], ['flying', 'Flying', ['unit_count' => 3]], ['buffet', 'Buffet', []], ['station', 'Live-Station', []], ['unbestimmt', 'Unbestimmt', []]] as [$code, $label, $attrs]) {
         $d[$code] = $svc->anlegen($team, $gericht->id, $mk($code, $label)->id, $attrs);
@@ -134,7 +134,7 @@ it('B3i: je Form eigene Einheit — Teller s/Portion, Flying s/Stück, Buffet mi
 
 it('B3l: gepflegter Wert und Pauschale je Darreichung — Pauschale einmal je Zeile', function () {
     $d = spec83Formen($this->rootTeam, $this->gericht);
-    app(\Platform\FoodAlchemist\Services\DarreichungService::class)->aktualisieren($this->rootTeam, $d['teller']->id, ['anrichten_wert' => '60', 'anrichten_pauschal_min' => '10,5']);
+    app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->aktualisieren($this->rootTeam, $d['teller']->id, ['anrichten_wert' => '60', 'anrichten_pauschal_min' => '10,5']);
     $r = $this->times->calculateForBatches($this->rootTeam, $this->gericht->fresh(), 100, null, [['darreichung_id' => $d['teller']->id, 'portionen' => 100.0]]);
 
     expect($r['bloecke']['anrichten']['formen'][0])->toMatchArray(['je_einheit' => 60.0, 'pauschal_min' => 10.5, 'quelle' => 'darreichung', 'minuten' => 110.5])   // 10,5 + 100 × 60 s

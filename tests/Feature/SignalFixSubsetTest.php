@@ -3,8 +3,8 @@
 use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Jobs\SignalFixJob;
-use Platform\FoodAlchemist\Services\SignalFixService;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalFixService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -169,7 +169,7 @@ it('MCP: ohne auflösbares Team → NO_TEAM (Tenancy-Negativtest)', function () 
  */
 it('zählt technische Fehlschläge getrennt von echten Lücken und protokolliert sie', function () {
     // Der `recompute`-Fixer wirft für JEDES Objekt — die Masse darf trotzdem nicht reißen.
-    $this->mock(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class, function ($m) {
+    $this->mock(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class, function ($m) {
         $m->shouldReceive('recomputeAndPropagate')->andThrow(new \RuntimeException('Deadlock'));
         $m->shouldReceive('betroffeneRezepte')->andReturn([]);
     });

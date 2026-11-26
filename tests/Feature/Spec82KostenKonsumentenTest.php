@@ -16,10 +16,10 @@ use Platform\FoodAlchemist\Services\Plattform\AboService;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\Fassung\FassungService;
 use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
-use Platform\FoodAlchemist\Services\KostenCacheService;
+use Platform\FoodAlchemist\Services\Rezept\KostenCacheService;
 use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -172,7 +172,7 @@ it('§8 Punkt 8 / §12 C: VK eines Abo-Gerichts = Team-EK je Portion × Basissat
         $this->makeIngredient($gericht, $z->raw_text, $z->gp, (string) $z->quantity, (int) $z->position);
     }
     app(RecipeRecomputeService::class)->recomputePipeline($gericht->id);
-    $d = $this->grammaturAltbestand(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->anlegen($this->master, $gericht->id, $form->id), 200);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
+    $d = $this->grammaturAltbestand(app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->anlegen($this->master, $gericht->id, $form->id), 200);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)
     $d->forceFill(['markup_class_id' => $klasseMaster->id, 'sales_net' => 99.0])->save();
     $inhalte = app(InhaltsFreigabeService::class);
     $sid = $inhalte->sammlungAnlegen($this->master, 'Gerichte', null, $this->kurator);
@@ -191,14 +191,14 @@ it('§8 Punkt 8 / §12 C: VK eines Abo-Gerichts = Team-EK je Portion × Basissat
     // Broich: VK aus SEINEM EK × Basissatz (Default Ziel-WE 30 % ⇒ Faktor 100/30) × neutrale Klasse 100 %
     $k = app(KostenCacheService::class)->fuer($fassung, $this->broich);
     $mek = round($k['ek_per_kg'] / 1000 * 200, 4);
-    $vk = app(\Platform\FoodAlchemist\Services\TeamVkService::class)->fuer($fassung, $this->broich);
+    $vk = app(\Platform\FoodAlchemist\Services\Rezept\TeamVkService::class)->fuer($fassung, $this->broich);
     expect($vk['quelle'])->toBe('team_kalkulation')
         ->and($vk['mek'])->toBe($mek)
         ->and($vk['vk'])->toBe(round($mek * 100 / 30, 2))
         ->and($vk['vk'])->not->toBe(99.0);
 
     // Neukunde ohne Knochenpreis: kein VK (nie 0 €), Angebot weist ihn als fehlend aus, keine Quote
-    expect(app(\Platform\FoodAlchemist\Services\TeamVkService::class)->fuer($fassung, $this->neu)['vk'])->toBeNull();
+    expect(app(\Platform\FoodAlchemist\Services\Rezept\TeamVkService::class)->fuer($fassung, $this->neu)['vk'])->toBeNull();
     $this->jusF = $fassung;
     $kap = ($this->angebotMitJus)($this->neu, $this->neuChef);
     $agg = app(OfferCompositionService::class)->kapitelAggregat($this->neu, $kap);

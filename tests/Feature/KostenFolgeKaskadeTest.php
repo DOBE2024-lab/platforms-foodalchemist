@@ -14,10 +14,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\Einkauf\StammPaketService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
@@ -191,7 +191,7 @@ it('Gezielt: der Job rechnet nur Rezepte und Darreichungen der Team-Kette, fremd
     FoodAlchemistPrice::where('supplier_item_id', $laA->id)->update(['price' => 8.0]);
     FoodAlchemistPrice::where('supplier_item_id', $laB->id)->update(['price' => 8.0]);
     (new KostenFolgeJob((int) $this->childA->id, [(int) $gpA->id, (int) $gpB->id]))
-        ->handle(app(RecipeRecomputeService::class), app(\Platform\FoodAlchemist\Services\KostenCacheService::class), $this->dar);
+        ->handle(app(RecipeRecomputeService::class), app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class), $this->dar);
     expect(($this->stand)($kA))->toMatchArray(['gericht' => 8.0, 'dar' => 0.8, 'paket' => 0.8])
         ->and(($this->stand)($kB))->toMatchArray(['gericht' => 4.0, 'dar' => 0.4, 'paket' => 0.4]);
 });
@@ -200,7 +200,7 @@ it('Sammellauf (Preisliste/Datei-Import): ein Job je Team und Reichweite am Ende
     [, $la1] = ($this->artikel)($this->rootTeam, 'Vanillemilch', 4.0);
     [, $la2] = ($this->artikel)($this->rootTeam, 'Kokosmilch', 3.0);
     Queue::fake();
-    \Platform\FoodAlchemist\Services\KostenCacheService::gesammelt(function () use ($la1, $la2) {
+    \Platform\FoodAlchemist\Services\Rezept\KostenCacheService::gesammelt(function () use ($la1, $la2) {
         app(PriceService::class)->createFor($this->rootTeam, $la1, 5.0);
         app(PriceService::class)->createFor($this->rootTeam, $la2, 3.5);
         Queue::assertNothingPushed();

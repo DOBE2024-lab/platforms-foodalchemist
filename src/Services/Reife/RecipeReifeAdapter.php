@@ -5,8 +5,8 @@ namespace Platform\FoodAlchemist\Services\Reife;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
-use Platform\FoodAlchemist\Services\DataQualityService;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
 
 /**
  * Spec 50 · Schicht 4 — Reife eines Basisrezepts oder Verkaufsgerichts.
@@ -139,7 +139,7 @@ class RecipeReifeAdapter implements ReifeAdapter
         // Entscheid Dominique 17.11.2026: ein Gericht besteht nur aus Basisrezepten. Altbestand mit GP direkt im Gericht wird
         // nicht automatisch umgebaut — je Gericht ein Befund mit dem Umbau-Weg (Basisrezept anlegen, Zeile umhängen).
         if ($istVk) {
-            $direkt = app(\Platform\FoodAlchemist\Services\GerichtGpUmbauService::class)->direkteGpZeilen($r);
+            $direkt = app(\Platform\FoodAlchemist\Services\Gericht\GerichtGpUmbauService::class)->direkteGpZeilen($r);
             if ($direkt->isNotEmpty()) {
                 $luecken[] = $this->luecke('gp_im_gericht', 'gericht', 'wichtig',
                     'GP direkt im Gericht — Basisrezept anlegen: '

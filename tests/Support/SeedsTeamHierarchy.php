@@ -348,7 +348,7 @@ trait SeedsTeamHierarchy
     protected function grammaturAltbestand(\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung $d, float $gramm, ?float $anzahl = null): \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung
     {
         $d->forceFill(['quantity_per_unit_g' => $gramm, 'menge_vom_standard' => false] + ($anzahl !== null ? ['unit_count' => $anzahl] : []))->save();
-        $svc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class);
         $d->is_standard ? $svc->recomputeFuerRezept((int) $d->recipe_id) : $svc->recomputePreise($d->refresh());
 
         return $d->refresh();

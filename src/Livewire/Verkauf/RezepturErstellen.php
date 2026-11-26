@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\GerichtHuelleService;
+use Platform\FoodAlchemist\Services\Gericht\GerichtHuelleService;
 
 /**
  * Menüpunkt „Rezeptur erstellen" im KI-Assistenten des Gerichts (Dominique 13.11.2026). Ein Gericht im Entwurf

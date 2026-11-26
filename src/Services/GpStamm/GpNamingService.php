@@ -1,0 +1,1273 @@
+<?php
+
+namespace Platform\FoodAlchemist\Services\GpStamm;
+
+use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Models\FoodAlchemistGp;
+use Platform\FoodAlchemist\Services\Matching\TokenEngine;
+use Platform\FoodAlchemist\Support\Text;
+
+/**
+ * M3-09: GL-12 — GP-Naming, Slugs & Anlage-Guard.
+ *
+ * - slugify(): KANONISCH, Umlaute einheitlich ae/oe/ue/ss (seit 19.10., Dominique: GP-Namen mit echten Umlauten; vorher ä→a/ö→o/ü→u/ß→s
+ *   byte-identisch zur Rust-Variante commands.rs:2471). NICHT Str::slug(). Bestandskennungen aus Umlaut-Namen (Seed ü→u) müssen beim
+ *   Daten-Umbau neu gebildet werden, sonst fängt der Anlage-Guard die Dublette nicht. Matcher-Slug: TokenEngine::normalizeSlug (gleiche Regel).
+ * - renderGpName()/validateGpName(): gp_naming.rs Z. 31/88; §7.1 Verpackungswörter
+ *   = Hard-Error (Wort-Boundary: „Dose" blockt, „Dosentomate" nicht), §9-Zustand
+ *   mit Eingangs-Normalisierung tiefgekuehlt→TK (A2/A7: EIN Vokabular).
+ * - anlageGuard(): gp_key-UNIQUE über approved/tentative + Jaccard ≥ 0.92 gegen
+ *   bestehende Namen (create_gp Z. 2509); nur force=true legt trotzdem an (GT-12-10).
+ */
+class GpNamingService
+{
+    /**
+     * §9 — kanonisches Zustand-Vokabular (A7: EIN Validator-Set; einzige Quelle im Code, Listen und Prompts lesen sie).
+     * Regelwerk GP v3.6.0 (Dominique 19.10.): `gepoekelt`, `geraeuchert`, `luftgetrocknet` sind eigene Zustände
+     * (vorher Verarbeitung). Vorrang bei mehreren Behandlungen (entschieden Dominique 19.10.): luftgetrocknet > geraeuchert >
+     * gepoekelt; TK + Behandlung ⇒ die Behandlung ist der Zustand, „TK“ steht als Zusatz im Namen hinter ihr (Stufe 2: „Räucherlachs: geschnitten,
+     * geräuchert, TK“). {@see zustandAusTreffern()}, {@see istTk()}.
+     */
+    public const ZUSTAND_VOCAB = ['frisch', 'TK', 'trocken', 'konserviert', 'gepökelt', 'geräuchert', 'luftgetrocknet'];   // Kanon mit echten Umlauten (Dominique 19.10.)
+
+    /** Regel 821 Teil 3 (14.11.2026): einziger erlaubter Doppelzustand ohne TK — geräucherter Pökel-Aufschnitt (`Putenbrust: Scheiben, gepökelt, geräuchert`). */
+    public const ZUSTAND_POEKEL_RAUCH = 'gepökelt, geräuchert';
+
+    /** §9 v3.6.0: die drei Behandlungs-Zustände (Fleisch/Wurst/Fisch) — für Matching und Lager wie „haltbar gemacht“. */
+    public const BEHANDLUNG = ['gepökelt', 'geräuchert', 'luftgetrocknet'];
+
+    /** §9 v3.6.0: Vorrang bei mehreren Behandlungen (entschieden Dominique 19.10.), stärkste zuerst. */
+    public const BEHANDLUNG_VORRANG = ['luftgetrocknet', 'geräuchert', 'gepökelt'];
+
+    /**
+     * Ein Zustand aus mehreren Treffern im selben Text: einer ⇒ dieser; nur Behandlungen (+ ggf. TK) ⇒ die stärkste Behandlung
+     * (TK ist dann Zusatz); alles andere (z. B. frisch + konserviert, TK + trocken) ist echt widersprüchlich ⇒ null.
+     *
+     * @param  list<string>  $treffer  kanonische Zustände
+     */
+    public static function zustandAusTreffern(array $treffer): ?string
+    {
+        $t = array_values(array_unique($treffer));
+        if (count($t) === 1) {
+            return $t[0];
+        }
+        $behandlung = array_values(array_intersect(self::BEHANDLUNG_VORRANG, $t));
+        $rest = array_diff($t, self::BEHANDLUNG, ['TK']);
+
+        return $behandlung !== [] && $rest === [] ? $behandlung[0] : null;
+    }
+
+    /**
+     * TK-Ware? Der Zustand selbst oder — bei einer Behandlung als Zustand (v3.6.0 2b) — das Wort TK/tiefgekühlt im Namen bzw. in der
+     * Verarbeitung. Überall, wo TK zählt (Lagerzone, TK-Vorzug, Teilfertig-Erkennung), statt nur `condition === 'TK'`.
+     */
+    public static function istTk(?string $condition, ?string $name = null, ?string $processing = null): bool
+    {
+        if (mb_strtoupper(trim((string) $condition)) === 'TK') {
+            return true;
+        }
+        foreach ([$name, $processing] as $text) {
+            if ($text !== null && preg_match('/(?<![\p{L}])(?:TK|tiefgek(?:ue|ü)hlt)(?![\p{L}])/iu', $text) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Schreibweisen, die auf einen kanonischen Zustand normalisiert werden (Eingang, kleingeschrieben). */
+    private const ZUSTAND_ALIAS = [
+        'tiefgekuehlt' => 'TK', 'tiefgekühlt' => 'TK', 'tk' => 'TK',
+        'gepoekelt' => 'gepökelt', 'geraeuchert' => 'geräuchert', 'luftgetrocknet' => 'luftgetrocknet',   // ASCII-Eingabe → Kanon mit Umlaut
+    ];
+
+    /** Zustands-Filter (Lager, Inventur): gleicher Zustand — beim Filter TK auch TK als Zusatz im Namen (v3.6.0 2b). */
+    public static function zustandPasst(?string $zustand, string $name, string $filter): bool
+    {
+        return mb_strtolower(trim((string) $zustand)) === mb_strtolower(trim($filter))
+            || (mb_strtoupper(trim($filter)) === 'TK' && self::istTk($zustand, $name));
+    }
+
+    /**
+     * §9-Vokabular in ASCII-Schreibweise → Kanon mit echten Umlauten (Dominique 19.10.). Nur ganze Wörter in Verarbeitung/Form/Pflichtangabe;
+     * die Hauptzutat stellt der Daten-Umbau (Wortliste Klaus) um, nicht der Code.
+     */
+    private const UMLAUT_KANON = [
+        'wuerfel' => 'Würfel', 'stueck' => 'Stück', 'mittelstueck' => 'Mittelstück', 'roeschen' => 'Röschen', 'pueree' => 'Püree',
+        'geschaelt' => 'geschält', 'pueriert' => 'püriert', 'pulverfoermig' => 'pulverförmig', 'fluessig' => 'flüssig', 'gehaeutet' => 'gehäutet',
+        'geraeuchert' => 'geräuchert', 'gepoekelt' => 'gepökelt', 'tiefgekuehlt' => 'tiefgekühlt', 'gekuehlt' => 'gekühlt', 'haelften' => 'Hälften',
+        'gewuerfelt' => 'gewürfelt', 'gerieben' => 'gerieben', 'gefuellt' => 'gefüllt', 'suess' => 'süß',
+    ];
+
+    /** ASCII-Schreibweisen des Vokabulars in einem Text auf den Umlaut-Kanon setzen (Wortgrenzen, nur bekannte Wörter). */
+    public static function umlautKanon(string $text): string
+    {
+        return (string) preg_replace_callback('/(?<![\p{L}])(\p{L}+)(?![\p{L}])/u', function ($m) {
+            $k = self::UMLAUT_KANON[mb_strtolower($m[1])] ?? null;
+            if ($k === null) {
+                return $m[1];
+            }
+            // Großschreibung des Originals behalten, wenn der Kanon klein ist (Satzanfang) — sonst die Kanon-Schreibung (Nomen groß)
+            return mb_strtolower(mb_substr($k, 0, 1)) === mb_substr($k, 0, 1) && mb_strtoupper(mb_substr($m[1], 0, 1)) === mb_substr($m[1], 0, 1)
+                ? mb_strtoupper(mb_substr($k, 0, 1)) . mb_substr($k, 1) : $k;
+        }, $text);
+    }
+
+    /** Das Vokabular als Text für Prompts, Tool-Beschreibungen und Fehlermeldungen (`frisch|TK|…`). */
+    public static function zustandListe(string $trenner = '|'): string
+    {
+        return implode($trenner, self::ZUSTAND_VOCAB);
+    }
+
+    /** Regex-Alternation aller Zustandswörter samt Schreibweisen (ohne Gruppenklammern), für Wortgrenzen-Suche im Namen. */
+    public static function zustandMuster(): string
+    {
+        return implode('|', array_map(fn (string $w) => preg_quote($w, '/'), array_unique([...self::ZUSTAND_VOCAB, ...array_keys(self::ZUSTAND_ALIAS)])));
+    }
+
+    /*
+     * §7.1 Verpackungswörter und §10 Platzhalter-Marker („generisch") sind seit Spec 81 Regeln als Daten
+     * (`gp.7.1.gebinde`, `gp.10.generik`, Einstellungen › Regeln). validateGpName() fragt ALLE aktiven Regeln mit
+     * Ziel `gp.name` ab — neue Regeln greifen ohne Code-Änderung. Anlass §10 (2026-09-03): »Apfel (generisch)«
+     * konkurrierte im Matcher punktgleich mit »Apfel Royal Gala«; Dominique: »generisch darf gar nicht benannt
+     * werden« — darum ein harter Fehler beim Namen, nicht erst ein Befund im Critic.
+     *
+     * Das Zustands-Vokabular bleibt hier Code (ZUSTAND_VOCAB): der Validator erzwingt es, eine Regel als Daten könnte es nie ändern.
+     */
+
+    public function __construct(private TokenEngine $engine)
+    {
+    }
+
+    /**
+     * KANONISCH (gp_key/main_ingredient_slug). Seit 19.10. (Dominique: GP-Namen mit echten Umlauten) EINHEITLICH ü→ue, ö→oe, ä→ae, ß→ss —
+     * vorher ü→u (Rust-Erbe), damit ergaben „Karottenpüree“ und „Karottenpueree“ verschiedene Kennungen und UNIQUE fing die Dublette nicht.
+     * ASCII-Bestandskennungen bleiben unverändert.
+     */
+    public function slugify(string $s): string
+    {
+        return Text::falte($s, Text::SLUG);                                   // Unicode-Buchstaben (é, è) bleiben
+    }
+
+    /** Platzhalter, die KI oder Importe für „weiß ich nicht" liefern. Sie sind KEIN Wert (Regelwerk GP §6/§9, §12). */
+    private const LEERWERTE = ['unbekannt', 'unknown', 'n/a', 'na', 'n.a.', 'k.a.', 'ka', 'keine angabe', 'nicht bekannt', 'nicht angegeben', 'none', 'null', '-', '–', '?'];
+
+    /** Strukturfeld bereinigen: „unbekannt" und Verwandte werden zu leer, nie zu Name oder Kennung. */
+    public function bereinigeFeld(mixed $wert): string
+    {
+        if (! is_string($wert) && ! is_numeric($wert)) {
+            return '';
+        }
+        $w = trim((string) $wert);
+
+        return in_array(mb_strtolower(trim($w, " \t()[].,;:")), self::LEERWERTE, true) || in_array(mb_strtolower($w), self::LEERWERTE, true) ? '' : $w;
+    }
+
+    /** Alle strukturierten Naming-Felder eines Eingabe-Arrays bereinigen (Name/Kennung bleiben frei von Platzhaltern). */
+    public function bereinigeFelder(array $in): array
+    {
+        foreach (['hauptzutat', 'flavor', 'zusatz', 'condition', 'processing', 'form', 'pflichtangabe', 'portion', 'sub_category'] as $feld) {
+            if (array_key_exists($feld, $in)) {
+                $in[$feld] = $this->bereinigeFeld($in[$feld]);
+            }
+        }
+
+        return $in;
+    }
+
+    /** Namensflags in „ / (…)“, die Produkteigenschaften sind (bleiben auch im Kundentext und im Matcher-Score). MSC/ASC seit v3.10.0 (Regel 94). */
+    public const NAMENS_FLAGS = ['bio', 'msc', 'asc', 'vegan', 'glutenfrei', 'laktosefrei'];
+
+    /** Anfang des Hinweises „Name passt nicht zu den Feldern“ (I4) — Konsumenten filtern über diese Konstante, nie über freien Text. */
+    public const HINWEIS_NAME_FELDER = 'Name passt nicht zu den Feldern';
+
+    /**
+     * GP-Name ohne die Marken-Klammer (§5 Ausnahme 3 / §6.6 Zusatz) — für Matcher-Score und Verkaufstexte (Kurator 26.10.). Mit `zusatz`
+     * genau dieser Teil „ / (Altoni)“; ohne (Bestand) jeder Klammerteil „ / (…)“, der kein Namensflag ist. Bio/Vegan/Glutenfrei/Laktosefrei bleiben.
+     */
+    public function nameOhneMarke(string $name, ?string $zusatz = null): string
+    {
+        $z = trim((string) $zusatz);
+        if ($z !== '') {
+            return trim((string) preg_replace('/\s*\/\s*\(' . preg_quote($z, '/') . '\)/u', '', $name, 1));
+        }
+
+        return trim((string) preg_replace_callback('/\s*\/\s*\(([^)]*)\)/u',
+            fn ($m) => in_array(mb_strtolower(trim($m[1])), self::NAMENS_FLAGS, true) || \Platform\FoodAlchemist\Support\GpNamensKlammern::istLand($m[1]) ? $m[0] : '', $name));
+    }
+
+    /** Klammer-Zusatz (§6.6): ohne Klammern und Zeilenumbrüche, damit der Name lesbar zerlegbar bleibt („ / (…)“). */
+    public function bereinigeZusatz(?string $zusatz): string
+    {
+        $z = trim((string) preg_replace('/[()\r\n]+/u', ' ', $this->bereinigeFeld($zusatz)));
+
+        return trim((string) preg_replace('/\s{2,}/u', ' ', $z));
+    }
+
+    /**
+     * Klammer-Zusatz nur aus dem Artikel (Entscheid Dominique 25.10.2026): der Fantasiename muss als Teilstring (case-insensitiv) in einem der
+     * Quelltexte (Bezeichnung, Vermarktungsname) stehen und wird in der Schreibweise des Artikels übernommen. Sonst leer — nie erfinden,
+     * übersetzen oder ausschmücken.
+     * §5 Ausnahme 3 (v3.7.1): EINZIGE weitere zulässige Quelle ist die Marke aus {@see \Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel}
+     * (aufgelöstes Kürzel „BC“ → Base Culinar, Hersteller-Kurzname) — nur genau dieser Wert, in seiner Schreibweise; alles andere bleibt wörtlich geprüft.
+     *
+     * @param  list<string|null>  $quelltexte
+     */
+    public function zusatzAusArtikel(?string $zusatz, array $quelltexte, ?string $markeAusArtikel = null): string
+    {
+        $z = $this->bereinigeZusatz($zusatz);
+        if ($z === '') {
+            return '';
+        }
+        $marke = $this->bereinigeZusatz($markeAusArtikel);
+        if ($marke !== '' && mb_strtolower($z) === mb_strtolower($marke)) {
+            return $marke;
+        }
+        foreach ($quelltexte as $text) {
+            $text = trim((string) $text);
+            if ($text === '') {
+                continue;
+            }
+            $pos = mb_stripos($text, $z);
+            if ($pos !== false) {
+                return mb_substr($text, $pos, mb_strlen($z));
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Getränke (WG 15, Dominique 28.10.): Gattungsname + Hersteller-Marke → Marke als Klammer-Zusatz („Ananassaft: 1 l / (Happy Day)“); Markenprodukt ohne
+     * eigenständigen Gattungsnamen → Marke bleibt der Name („Coca-Cola: 0,33 l“). Das entscheidet die KI je Artikel (gp.suggest), nicht der Code — im
+     * Zweifel Marke als Name. Der Nachlauf sorgt nur dafür, dass eine Klammer-Marke (zusatz = Marke des Artikels) nicht zusätzlich in der Hauptzutat
+     * steht, und setzt Gebinde-Art mit Material + Füllmenge nach §7.1a aus dem Artikeltext, wenn sie fehlen („Pk1,0l“ → „Tetra Pak 1 l“; Entscheid
+     * Dominique 29.10.: Glas und PET sind zwei GPs, „Flasche“ ohne Material wird zur Glas-/PET-Flasche, sobald der Artikel das Material belegt).
+     *
+     * @param  array<string, mixed>  $felder  hauptzutat, zusatz, pflichtangabe …
+     * @param  list<string|null>  $quelltexte  Bezeichnung, Vermarktungsname
+     * @return array<string, mixed>
+     */
+    public function getraenkFelder(array $felder, ?string $marke, array $quelltexte): array
+    {
+        $marke = $this->bereinigeZusatz($marke);
+        if ($marke !== '' && mb_strtolower($this->bereinigeZusatz($felder['zusatz'] ?? '')) === mb_strtolower($marke)) {
+            $haupt = trim((string) preg_replace('/(?<![\p{L}])' . preg_quote($marke, '/') . '(?![\p{L}])/iu', ' ', (string) ($felder['hauptzutat'] ?? '')));
+            $haupt = trim((string) preg_replace('/\s{2,}/u', ' ', $haupt), " \t-–,");
+            if ($haupt !== '') {
+                $felder['hauptzutat'] = $haupt;
+            }
+        }
+        $pflicht = trim((string) ($felder['pflichtangabe'] ?? ''));
+        $text = implode(' ', array_filter(array_map('strval', $quelltexte)));
+        $gebinde = self::gebindeArt($text);
+        if ($gebinde !== null && preg_match('/(?<![\p{L}-])Flasche(?![\p{L}])/u', $pflicht) === 1 && str_ends_with($gebinde, 'flasche')) {
+            // „Flasche 0,33 l“ aus der KI + Material im Artikel → „Glasflasche 0,33 l“ bzw. „PET-Flasche 0,33 l“
+            $pflicht = (string) preg_replace('/(?<![\p{L}-])Flasche(?![\p{L}])/u', $gebinde, $pflicht, 1);
+        } elseif (preg_match('/(?<![\p{L}-])Flasche(?![\p{L}])/u', $pflicht) === 1) {
+            // 71a v3.10: Gebinde nur mit belegtem Material — „Flasche“ ohne Material (auch aus MW/EW) fällt weg, die Füllmenge bleibt
+            $pflicht = trim((string) preg_replace(['/(?<![\p{L}-])Flasche\s*(?![\p{L}])/u', '/\s{2,}/u'], ['', ' '], $pflicht), " \t,");
+        }
+        $hatGebinde = preg_match('/' . self::GEBINDE_MUSTER . '/u', $pflicht) === 1;
+        if (self::fuellmenge($pflicht) === null && ($menge = self::fuellmenge($text)) !== null) {
+            $teil = $gebinde !== null && ! $hatGebinde ? $gebinde . ' ' . $menge : $menge;
+            $pflicht = $pflicht === '' ? $teil : $pflicht . ', ' . $teil;
+        } elseif ($gebinde !== null && ! $hatGebinde && ($menge = self::fuellmenge($pflicht)) !== null) {
+            // Füllmenge steht schon da, das Gebinde fehlt: davor setzen („1 l“ → „Tetra Pak 1 l“)
+            $pflicht = (string) preg_replace('/(?<![\d.,])(' . preg_quote(str_replace(' l', '', $menge), '/') . '\s*l)(?![\p{L}])/u', $gebinde . ' $1', $pflicht, 1);
+        }
+        $felder['pflichtangabe'] = $pflicht;
+
+        return $felder;
+    }
+
+    /** Gebinde-Arten bei Getränken (§7.1a, v3.8.2): mit Material, weil Glas/PET/Tetra fachlich zählt. */
+    private const GEBINDE_MUSTER = '(?:Glasflasche|PET-Flasche|Tetra Pak|Dose|Fass|Bag-in-Box|Beutel|Kanister)';   // 71a v3.10: + Beutel, Kanister
+
+    /**
+     * Gebinde-Art mit Material aus dem Artikeltext — nur, was belegt ist, sonst null (kein Material erfinden): PET → PET-Flasche, Glas → Glasflasche,
+     * Pk/Tetra → Tetra Pak, Dose/Ds → Dose, KEG/Fass → Fass, BiB → Bag-in-Box, Beutel, Kanister. Mehrweg/Einweg (MW/EW) ist kein Material (71a v3.10,
+     * 13.11.2026) → kein Gebinde; „Fl.“ allein ist kein Material.
+     */
+    public static function gebindeArt(string $text): ?string
+    {
+        $t = ' ' . mb_strtolower($text) . ' ';
+        $wort = fn (string $m) => preg_match('/(?<![\p{L}])(?:' . $m . ')(?![\p{L}])/u', $t) === 1;
+
+        // Reihenfolge und Wörter wie das Vorschlagsskript der GP-Bereinigung (00_INBOX/_GP_Cleanup/io_getraenke_marke, $gebinde) — beide leiten gleich ab
+        return match (true) {
+            $wort('pet|petfl|kunststoff') || str_contains($t, 'pet-') => 'PET-Flasche',
+            $wort('glas|glasflasche|glasfl') => 'Glasflasche',
+            $wort('tetra|tetrapak|tetra pak|tp|pk') => 'Tetra Pak',
+            $wort('dose|dosen|ds|can') => 'Dose',
+            $wort('fass|fässer|faesser|keg') => 'Fass',
+            $wort('beutel|btl') => 'Beutel',
+            $wort('kanister') => 'Kanister',
+            $wort('bib|bag in box|bag-in-box') => 'Bag-in-Box',
+            default => null,
+        };
+    }
+
+    /** Füllmenge eines Getränks in Litern nach §7.1a („Pk1,0l“ → „1 l“, „330 ml“ → „0,33 l“, „0,75L“ → „0,75 l“), sonst null. */
+    public static function fuellmenge(string $text): ?string
+    {
+        if (preg_match('/(?<![\d.,])(\d+(?:[.,]\d+)?)\s*(l|ltr|liter|ml|cl)(?![\p{L}])/iu', $text, $m) !== 1) {
+            return null;
+        }
+        $wert = (float) str_replace(',', '.', $m[1]);
+        $wert = match (mb_strtolower($m[2])) {
+            'ml' => $wert / 1000,
+            'cl' => $wert / 100,
+            default => $wert,
+        };
+        if ($wert <= 0) {
+            return null;
+        }
+
+        return str_replace('.', ',', rtrim(rtrim(number_format($wert, 3, '.', ''), '0'), '.')) . ' l';
+    }
+
+    /** commands.rs:2496 — IMMER 3 Slots, auch leere (Tomatenpulver-Dubletten-Bug 2026-05-26). */
+    public function buildGpKey(string $hauptzutatSlug, ?string $processing, ?string $form, ?string $flavor = null, ?string $zusatz = null): string
+    {
+        // §6.6: die Geschmackszutat trennt Varianten derselben Grundware („Käse: Chili" ≠ „Käse") — sie hängt am ersten Slot, damit der Schlüssel
+        // eindeutig bleibt und die 3 Slots unverändert sind. Ohne Geschmack ist der Schlüssel wie bisher.
+        $flavorSlug = $this->slugify($this->bereinigeFeld($flavor));
+        $slot1 = $flavorSlug === '' ? $hauptzutatSlug : $hauptzutatSlug . '_' . $flavorSlug;
+        $key = $slot1 . '|' . $this->slugify($this->bereinigeFeld($processing)) . '|' . $this->slugify($this->bereinigeFeld($form));
+        // Klammer-Zusatz (Fantasiename): zwei Komposit-Salate mit gleichen Bestandteilen, aber anderem Fantasienamen sind zwei Produkte mit eigenen
+        // Allergenen und dürfen nicht am Schlüssel kollidieren. Eigener 4. Slot (nur wenn gesetzt, sonst bleiben alle bisherigen Schlüssel gleich) —
+        // ein angehängter Slot kann nicht mit einem flavor im ersten Slot verwechselt werden.
+        $zusatzSlug = $this->slugify($this->bereinigeZusatz($zusatz));
+
+        return $zusatzSlug === '' ? $key : $key . '|' . $zusatzSlug;
+    }
+
+    /**
+     * gp_key aus den Strukturfeldern: {@see buildGpKey()} plus — nur wenn gesetzt — ein Merkmal-Slot `|m-…` (GP-Regelwerk v3.10.0, 13.11.2026):
+     * Stückgewicht (Regel 75: 150 g und 160 g sind zwei GPs), Fettwert (826: jeder Wert ein GP), Länder-Klammer und Siegel (94). Ohne diese Merkmale
+     * bleibt der Schlüssel wie bisher; Bestandsschlüssel werden nie umgeschrieben (updateGp). Ein Bestands-GP gleichen Namens fängt weiter der
+     * Namens-Guard ({@see anlageGuard()}).
+     */
+    public function gpKeyAusFeldern(string $hauptzutatSlug, array $in): string
+    {
+        $key = $this->buildGpKey($hauptzutatSlug, $in['processing'] ?? null, $in['form'] ?? null, $in['flavor'] ?? null, $in['zusatz'] ?? null);
+        $slot = $this->merkmalSlot($in, self::istDegeneriert($key));
+
+        return $slot === '' ? $key : $key . '|m-' . $slot;
+    }
+
+    /**
+     * Inhalt des Merkmal-Slots `|m-…` (ohne Präfix; leer = kein Slot).
+     *
+     * 20.11.2026 (Kurator/Dominique, Fall „Tomate: trocken, geschwefelt“ ⇄ „Tomate: konserviert, Pulpe / (Bio)“, beide „tomate||“): ist der
+     * Schlüssel degeneriert (ohne Verarbeitung, Form, Geschmack und Zusatz nur die Hauptzutat), trennen zusätzlich Zustand (§9), Pflichtangabe (§8)
+     * und Bio — sonst blockiert „Tomate: frisch“ die Anlage von „Tomate: TK“. NUR in diesem Fall: jeder andere Schlüssel bleibt exakt wie bisher
+     * (Paket-Import, Umhängen und Felder-Plan erkennen ihn weiter). Bestand: foodalchemist:gp-key-merkmale hängt denselben Slot an den alten Schlüssel.
+     */
+    public function merkmalSlot(array $in, bool $degeneriert): string
+    {
+        $fett = [];
+        foreach (['processing', 'form', 'pflichtangabe'] as $feld) {
+            $fett = [...$fett, ...\Platform\FoodAlchemist\Support\FettAngabe::ziehe((string) ($in[$feld] ?? ''))[0]];
+        }
+        // 828 R1 (v3.10): ein Getränke-GP = Marke + Produkt + Gebinde + Füllmenge — Gebinde/Füllmenge/vol-% stehen in der Pflichtangabe und trennen am Schlüssel
+        $wg = (string) ($in['warengruppe'] ?? $in['commodity_group_code'] ?? '');
+        $merkmale = array_values(array_filter([
+            trim((string) ($in['portion'] ?? '')) !== '' ? $this->normalisierePortion((string) $in['portion']) : '',
+            \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg) ? trim((string) ($in['pflichtangabe'] ?? '')) : '',
+            \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg) && in_array($this->normalisiereZustand($in['condition'] ?? null), ['TK', 'frisch'], true) ? (string) $this->normalisiereZustand($in['condition']) : '',
+            implode(' ', $fett),
+            \Platform\FoodAlchemist\Support\GpNamensKlammern::land($in['herkunft_land'] ?? null),
+            ! empty($in['msc']) ? 'msc' : (! empty($in['asc']) ? 'asc' : ''),
+        ], fn ($m) => $m !== ''));
+        if ($degeneriert) {
+            $zustand = (string) $this->normalisiereZustand($in['condition'] ?? null);
+            $pflicht = \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg) ? '' : trim((string) (\Platform\FoodAlchemist\Support\FettAngabe::ziehe((string) ($in['pflichtangabe'] ?? ''))[1] ?? ($in['pflichtangabe'] ?? '')));
+            $merkmale = array_values(array_filter([
+                in_array($zustand, $merkmale, true) ? '' : $zustand,
+                $pflicht,
+                ! empty($in['bio']) ? 'bio' : '',
+                ...$merkmale,
+            ], fn ($m) => $m !== ''));
+        }
+
+        return $this->slugify(implode(' ', $merkmale));
+    }
+
+    /** Degenerierter Schlüssel: nur Hauptzutat, alle weiteren Segmente leer („tomate||“). */
+    public static function istDegeneriert(string $key): bool
+    {
+        return preg_match('/^[^|]+\|+$/', $key) === 1;
+    }
+
+    /** A2/A7: Eingangs-Normalisierung — Langform → kanonisch TK; sonst unverändert. */
+    public function normalisiereZustand(?string $condition): ?string
+    {
+        if ($condition === null || $this->bereinigeFeld($condition) === '') {
+            return null;
+        }
+        $z = trim($condition);
+        $klein = mb_strtolower($z);
+        if (isset(self::ZUSTAND_ALIAS[$klein])) {
+            return self::ZUSTAND_ALIAS[$klein];
+        }
+        foreach (self::ZUSTAND_VOCAB as $kanon) {
+            if (mb_strtolower($kanon) === $klein) {
+                return $kanon;   // Schreibweise vereinheitlichen (Frisch → frisch, Geräuchert → geräuchert)
+            }
+        }
+
+        return $z;
+    }
+
+    /**
+     * Spec 80 (Paket 11): Umkehrung von {@see renderGpName} — die strukturierten Felder aus einem Namen nach §6-Schema
+     * `<Hauptzutat>: [<Geschmack>, ]<Verarbeitung>, <Zuschnitt>, <Zustand>[, <x> g pro Stück][, <Pflichtangabe>][ / (<Zusatz>)][ / (Bio)]…`.
+     * Deterministisch, ohne KI, nach der ART jedes Teils (Stufe 2, 26.10.): Zustand aus dem §9-Vokabular, Verarbeitung/Zuschnitt aus
+     * {@see artDesTeils()}, Unbekanntes vor allem anderen = Geschmack, nach dem Zustand = Pflichtangabe. `$alteReihenfolge` liest Altnamen
+     * („frisch, gegart, Würfel 10 mm“) zum Umstellen; ohne ihn ist „frisch, verzehrfertig“ Zustand + Pflichtangabe (neue Lesart).
+     * Was nicht passt, bleibt leer — der Mensch korrigiert im Editor.
+     *
+     * @return array{hauptzutat: string, condition: string, processing: string, form: string, portion: string, pflichtangabe: string, bio: bool}
+     */
+    public function felderAusName(string $name, bool $mitGeschmack = false, bool $alteReihenfolge = false): array
+    {
+        $out = ['hauptzutat' => '', 'condition' => '', 'processing' => '', 'form' => '', 'portion' => '', 'pflichtangabe' => '', 'bio' => false, 'vegan' => false, 'glutenfrei' => false, 'laktosefrei' => false,
+            'msc' => false, 'asc' => false, 'herkunft_land' => ''];   // MSC/ASC/Land: Regel 94 (v3.10.0)
+        if ($mitGeschmack) {
+            $out = ['hauptzutat' => '', 'flavor' => ''] + array_slice($out, 1);   // nur für den Editor (§6.6); Bestands-Backfill und Pläne behalten die alte Form
+        }
+        $name = trim($name);
+        if ($mitGeschmack) {
+            $out['zusatz'] = '';
+            // §6.6: ein Klammerteil „ / (…)“, der kein Flag ist (Bio/Vegan/Glutenfrei/Laktosefrei), ist der Zusatz (Fantasiename)
+            if (preg_match_all('/\s*\/\s*\(([^)]*)\)/u', $name, $m) > 0) {
+                foreach ($m[1] as $inhalt) {
+                    if (! \Platform\FoodAlchemist\Support\GpNamensKlammern::istMarker($inhalt) && ! \Platform\FoodAlchemist\Support\GpNamensKlammern::istLand($inhalt) && $out['zusatz'] === '') {
+                        $out['zusatz'] = trim($inhalt);
+                    }
+                }
+            }
+        }
+        if (preg_match('/\(\s*bio\s*\)/iu', $name) === 1) {
+            $out['bio'] = true;
+        }
+        foreach (['vegan', 'glutenfrei', 'laktosefrei', 'msc', 'asc'] as $diaet) {   // Namensmarker „/ (Vegan)“, „/ (MSC)“ usw. (Felder namens_*)
+            $out[$diaet] = preg_match('/\(\s*' . $diaet . '\s*\)/iu', $name) === 1;
+        }
+        if (preg_match_all('/\/\s*\(([^)]*)\)/u', $name, $km) > 0) {   // Länder-Klammer „/ (Argentinien)“ (Regel 94)
+            foreach ($km[1] as $inhalt) {
+                if (\Platform\FoodAlchemist\Support\GpNamensKlammern::istLand($inhalt)) {
+                    $out['herkunft_land'] = trim($inhalt);
+                    break;
+                }
+            }
+        }
+        $name = trim((string) preg_replace('/\s*\/\s*\([^)]*\)/u', '', $name));   // „ / (Bio) / (Vegan)"
+        // Trenner Hauptzutat/Eigenschaften ist der ERSTE Doppelpunkt mit Leerzeichen (oder Ende) danach — „Gelierzucker: trocken, 2:1“ (Klaus 26.10.)
+        if (preg_match('/^(.*?):(?=\s|$)/u', $name, $m) === 1) {
+            $out['hauptzutat'] = trim($m[1]);
+            $rest = trim((string) mb_substr($name, mb_strlen($m[0])));
+        } else {
+            $out['hauptzutat'] = $name;
+            $rest = '';
+        }
+        // Dezimalkomma („62,5 g pro Stück", „3,5 % Fett") ist kein Trenner der Attribute
+        $teile = array_values(array_filter(array_map(fn ($t) => trim(str_replace("\x01", ',', $t)), explode(',', (string) preg_replace('/(?<=\d),(?=\d)/', "\x01", $rest))), fn ($t) => $t !== ''));
+
+        // Stufe 2 „Form vor Zustand“ (Dominique 25.10.): Jeder Teil wird nach seiner ART eingeordnet, nicht nach seiner Position — so liest der Parser
+        // die neue Reihenfolge (`gegart, Würfel 10 mm, frisch`) und den Bestand in alter Reihenfolge (`frisch, gegart, Würfel 10 mm`) gleich.
+        $zustaende = [];
+        $erstZustand = null;
+        foreach ($teile as $i => $teil) {
+            $z = $this->normalisiereZustand($teil);
+            if ($z !== null && in_array($z, self::ZUSTAND_VOCAB, true)) {
+                $zustaende[$i] = $z;
+                $erstZustand ??= $i;
+            }
+        }
+        $tkZusatz = false;
+        $behandlung = array_values(array_intersect(self::BEHANDLUNG_VORRANG, $zustaende));
+        if ($behandlung !== [] && in_array('TK', $zustaende, true)) {
+            $out['condition'] = $behandlung[0];   // v3.6.0 2b: TK + Behandlung ⇒ die Behandlung ist der Zustand, TK steht als Zusatz in der Verarbeitung
+            $tkZusatz = true;
+        } elseif (count($zustaende) > 1) {
+            // Mehrere Zustandswörter ohne TK-Paar (Bestand „Stremellachs: geräuchert, Seite, frisch“): das LETZTE ist der Zustand, die Behandlung
+            // davor steht als Verarbeitung im Namen
+            $erstZustand = array_key_last($zustaende);
+            $out['condition'] = $zustaende[$erstZustand];
+            $zustaende = [$erstZustand => $out['condition']];
+        } elseif ($zustaende !== []) {
+            $out['condition'] = reset($zustaende);
+        }
+
+        // Nach dem ersten Zustandswort folgen nur noch Portion und Pflichtangabe; davor Geschmack, Verarbeitung und Zuschnitt in Namensreihenfolge.
+        $mitte = [];        // [Teil, Art] in Namensreihenfolge
+        $geschmack = [];
+        $pflicht = [];
+        foreach ($teile as $i => $teil) {
+            if (isset($zustaende[$i])) {
+                if ($zustaende[$i] !== $out['condition'] && ! ($tkZusatz && $zustaende[$i] === 'TK')) {
+                    $pflicht[] = $teil;   // zweiter Zustand ohne Behandlungs-Paar: bleibt sichtbar
+                }
+
+                continue;
+            }
+            if (mb_strtolower($teil) === 'bio') {
+                $out['bio'] = true;
+
+                continue;
+            }
+            if (preg_match('/^(?:portion\s+)?((?:ca\.?\s*)?\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l))\s+pro\s+st(?:ue|ü)ck$/iu', $teil, $m) === 1) {
+                $out['portion'] = $this->normalisierePortion($m[1]);        // „660 g pro Stück" (neu) und Bestand „660 g pro Stueck" / Altform „Portion 150 g pro Stueck"
+                continue;
+            }
+            if (preg_match('/^portion\s+(.+?)\s+pro\s+st(?:ue|ü)ck$/iu', $teil, $m) === 1) {
+                $out['portion'] = $m[1];
+
+                continue;
+            }
+            $art = $this->artDesTeils($teil);
+            if ($erstZustand !== null && $i > $erstZustand) {
+                // Neue Reihenfolge: hinter dem Zustand nur Pflichtangabe. Nur auf Wunsch ($alteReihenfolge, Umstellung von Altbeständen) gilt die alte
+                // Lesart „Zustand zuerst“: Verarbeitung/Zuschnitt dahinter werden als solche gelesen, bis die erste Pflichtangabe kommt.
+                if (($alteReihenfolge || $art === 'form') && $erstZustand === 0 && $art !== null && $pflicht === [] && preg_match('/^(?:mit|ohne|in|am|aus)\s|^un/u', mb_strtolower($teil)) !== 1) {   // „mit Schale“, „ungezuckert“ = Pflichtangabe
+                    $mitte[] = [$teil, $art];
+                } else {
+                    $pflicht[] = $teil;
+                }
+
+                continue;
+            }
+            if ($erstZustand === null) {
+                // Ohne Zustand (Getränke, Öle, Sirupe, Non-Food-nahe Ware): Verarbeitung/Zuschnitt nur am Anfang, alles danach Pflichtangabe
+                if ($art !== null && $pflicht === [] && $out['portion'] === '') {
+                    $mitte[] = [$teil, $art];
+                } else {
+                    $pflicht[] = $teil;
+                }
+            } elseif ($art === null && $mitte === []) {
+                $geschmack[] = $teil;   // §6.6: unbekannter Teil ganz vorn = Geschmackszutat
+            } else {
+                $mitte[] = [$teil, $art ?? 'form'];
+            }
+        }
+        if ($geschmack !== []) {
+            if ($mitGeschmack) {
+                $out['flavor'] = implode(', ', $geschmack);
+            } else {
+                $mitte = [...array_map(fn ($t) => [$t, 'form'], $geschmack), ...$mitte];   // ohne Geschmacksfeld (Backfill, Pläne): Teil der Form
+            }
+        }
+        // Reihenfolge bleibt: Verarbeitung = alles bis zum letzten Verarbeitungsteil, Zuschnitt = der Rest (der Renderer gibt Verarbeitung vor Zuschnitt aus)
+        $letzteVerarbeitung = -1;
+        foreach ($mitte as $j => [, $art]) {
+            if ($art === 'processing') {
+                $letzteVerarbeitung = $j;
+            }
+        }
+        $out['processing'] = implode(', ', array_column(array_slice($mitte, 0, $letzteVerarbeitung + 1), 0));
+        $out['form'] = implode(', ', array_column(array_slice($mitte, $letzteVerarbeitung + 1), 0));
+        $out['pflichtangabe'] = implode(', ', $pflicht);
+        if ($tkZusatz) {
+            $out['processing'] = $out['processing'] === '' ? 'TK' : 'TK, ' . $out['processing'];   // Datenmodell bleibt: „TK, …“ vorn in der Verarbeitung
+        }
+
+        return $out;
+    }
+
+    /** Zuschnitt-/Formwörter (Feld `form`), die kein §2-Schnittform-Token sind — aus den Formwerten des Bestands (Stufe 1, 26.10.). */
+    /** Zuschnitt-Hauptwörter aus §2 (Teilstring: „in Scheiben“, „Würfel 10 mm“). */
+    private const SCHNITTFORMEN = ['brunoise', 'würfel', 'stifte', 'scheiben', 'streifen', 'julienne'];
+
+    private const FORMWOERTER = ['ganz', 'ganze', 'halbiert', 'geviertelt', 'geachtelt', 'pulver', 'paste', 'granulat', 'flocken', 'fein', 'grob', 'stück',
+        'stange', 'stangen', 'bund', 'blatt', 'bruch', 'seite', 'rolle', 'hälften', 'spalten', 'ringe', 'blätter', 'portion', 'filet', 'filets', 'loin', 'loins', 'block', 'kugeln',
+        'wedges'];   // Neuabgleich 09.11.: „Hokkaido-Kürbis: Wedges, …“ ist ein Zuschnitt, kein Geschmack
+
+    /**
+     * Art eines Namensteils (ohne Zustand): `processing` (Verarbeitung: §2-Verarbeitungs-Token, Partizip wie gegart/geschält/paniert, roh,
+     * verzehrfertig), `form` (Zuschnitt: §2-Schnittform-Token, Maß in mm, Formwort, „mit …/ohne …/am …/aus der …/in …“) oder null (unbekannt:
+     * Geschmack vor bzw. Pflichtangabe nach dem Zustand).
+     */
+    private function artDesTeils(string $teil): ?string
+    {
+        $norm = \Platform\FoodAlchemist\Support\RezeptTypVokabular::norm($teil);
+        $klein = mb_strtolower(trim($teil));
+        $erstes = (string) strtok($klein, ' ');
+        if (preg_match('/\d+(?:[.,]\d+)?\s*(?:x\s*\d+(?:[.,]\d+)?\s*)*mm\b/u', $klein) === 1
+            || in_array($erstes, self::FORMWOERTER, true) || in_array($klein, self::FORMWOERTER, true)
+            || preg_match('/^(?:mit|ohne|am|aus der|aus dem|in)\s/u', $klein) === 1) {
+            return 'form';
+        }
+        // Zuschnitt-Hauptwörter (Würfel, Scheiben …) sind Form; Partizipien wie geschnitten/gehackt bleiben Verarbeitung (so im Bestand, Stufe 1)
+        foreach (self::SCHNITTFORMEN as $s) {
+            if (($sn = \Platform\FoodAlchemist\Support\RezeptTypVokabular::norm((string) $s)) !== '' && str_contains($norm, $sn)) {
+                return 'form';
+            }
+        }
+        foreach (\Platform\FoodAlchemist\Support\GpKorrektur::verarbeitungsSuffixe() as $s) {
+            if (($sn = \Platform\FoodAlchemist\Support\RezeptTypVokabular::norm($s)) !== '' && str_contains($norm, $sn)) {
+                return 'processing';
+            }
+        }
+        if (preg_match('/\d/u', $klein) === 1) {
+            return null;   // „2-fach konzentriert“, „14 Monate gereift“: mit Zahl eine Pflichtangabe, keine Verarbeitung
+        }
+        foreach (preg_split('/[\s\-]+/u', $klein) as $wort) {
+            if (in_array($wort, ['roh', 'verzehrfertig'], true)
+                || preg_match('/^(?:un|vor|ein|aus|an|ab|auf|zu)?ge\p{L}{2,}(?:t|en)$/u', $wort) === 1
+                || preg_match('/^(?:ent|zu)\p{L}{2,}t$/u', $wort) === 1
+                || preg_match('/\p{L}{2,}iert$/u', $wort) === 1) {
+                return 'processing';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * §9-Zusatz (v3.6.1, erweitert v3.10.0 Regel 92/830, Entscheid Dominique 12./13.11.2026): Waren ohne Zustandswort — trinkfertige Getränke
+     * (WG 15; Kaffee/Tee/Kakaopulver mit „trocken“ behalten es), Öle/Fette UND Essig (ganze WG 11 inkl. 11.3; Hauptzutat auf „essig“ auch außerhalb),
+     * Sirupe/Dicksäfte/Melassen (Sub-Kategorie „Sirupe“, Rückfall: Hauptzutat endet auf sirup/dicksaft/melasse) und Honig (Hauptzutat endet auf „honig“:
+     * `Akazienhonig: flüssig`). Der Renderer gibt hier keinen Zustand aus.
+     */
+    public function ohneZustandswort(array $in): bool
+    {
+        $wg = (string) ($in['warengruppe'] ?? $in['commodity_group_code'] ?? '');
+        $sub = mb_strtolower(trim((string) ($in['sub_category'] ?? '')));
+        $haupt = mb_strtolower(trim((string) ($in['hauptzutat'] ?? '')));
+        if (str_contains($sub, 'sirup')) {
+            return true;
+        }
+        if (\Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg)) {
+            // Ausnahme (Kurator/Klaus 26.10.): Kaffee, Tee und Kakaogetränkepulver sind Grundstoffe und behalten „trocken“. 829 R6 (v3.10, 13.11.2026):
+            // TK und frisch bleiben sichtbar und trennen (`Eiswürfel: TK`, `Grapefruitsaft: frisch, PET-Flasche 1 l`); sonst trinkfertig ohne Zustand
+            return ! in_array($this->normalisiereZustand($in['condition'] ?? null), ['trocken', 'TK', 'frisch'], true);
+        }
+        if ($wg === '11') {
+            return true;   // ganze WG 11: Öle, feste Fette (11.4 Schmalz, Bratfett, Frittierfett — Regel 830 Teil 2) und Essig (11.3, O1 13.11.2026)
+        }
+
+        // Rückfall nur, wenn die Ware selbst der Sirup/Honig/Essig ist — nicht „Walnüsse in Sirup“, „Süßkartoffel mit Ahornsirup“ (Klaus 26.10.),
+        // nicht „Senf mit Honig“. Würzessig ist eine Würze (WG 10), kein Essig — er behält den Zustand (Regelwerk 830 Teil 2, Georg/Dominique 14.11.).
+        // Feste Fette (Schmalz, Bratfett, Frittierfett) gehören zu WG 11; ohne Warengruppe gilt der Rückfall auch für sie.
+        if ($haupt === '' || preg_match('/(?<!\p{L})(?:in|mit|und|auf|an)(?!\p{L})/u', $haupt) === 1 || preg_match('/w(?:ü|ue)rzessig$/u', $haupt) === 1) {
+            return false;
+        }
+
+        return preg_match('/(?:sirup|dicksaft|melasse|honig|essig)$/u', $haupt) === 1 || ($wg === '' && preg_match('/(?:schmalz|bratfett|frittierfett)$/u', $haupt) === 1);
+    }
+
+    /** Warengruppe 16 (Non-Food)? Die WG steht in den strukturierten Feldern als `warengruppe` oder `commodity_group_code`. */
+    private function istNonFood(array $in): bool
+    {
+        return \Platform\FoodAlchemist\Support\WgRolle::istNonFood($in['warengruppe'] ?? $in['commodity_group_code'] ?? '');
+    }
+
+    /**
+     * gp_naming.rs Z. 31 — §6-Schema (Ist-Slots 1:1, A1):
+     * `<Hauptzutat>: [<flavor>, ]<processing>, <form>, <condition>[, TK][, <x> g pro Stück][, <pflicht>][ / (<zusatz>)][ / (Bio)]…` (flavor/zusatz = §6.6;
+     * Reihenfolge „Form vor Zustand“ Stufe 2, Dominique 25.10.)
+     */
+    public function renderGpName(array $in): string
+    {
+        $in = $this->bereinigeFelder($in);
+        if ($this->istNonFood($in)) {
+            // Non-Food (Warengruppe 16, Regelwerk §6.5): `Produkt: Eigenschaft, Größe` — kein Zustand, keine Portion, keine Diät-Suffixe.
+            // Eigenschaft = processing (sonst form), Größe = pflichtangabe.
+            $teile = array_values(array_filter([($in['processing'] ?? null) ?: ($in['form'] ?? null), $in['pflichtangabe'] ?? null], fn ($t) => trim((string) $t) !== ''));
+            $produkt = trim($in['hauptzutat'] ?? '');
+
+            return $teile === [] ? $produkt : $produkt.': '.implode(', ', $teile);
+        }
+        $parts = [];
+        $flavor = trim((string) ($in['flavor'] ?? ''));
+        if ($flavor !== '') {
+            $parts[] = self::umlautKanon($flavor);                          // §6.6: Geschmackszutat steht als ERSTE Eigenschaft
+        }
+        $condition = $this->ohneZustandswort($in) ? null : $this->normalisiereZustand($in['condition'] ?? null);   // §9-Zusatz: Getränke/Öle/Sirupe ohne Zustandswort
+        // Verarbeitung UND Zuschnitt stehen beide im Namen („gegart, Würfel 10 mm“), Verarbeitung zuerst. Steht die Form schon im Text der Verarbeitung, kein Doppel.
+        $verarbeitung = trim((string) ($in['processing'] ?? ''));
+        $tkHinten = false;
+        if ($condition !== null && in_array($condition, self::BEHANDLUNG, true)) {
+            // TK + Behandlung (Regel 92, v3.10.0): „TK“ steht im Namen hinter dem Zustand — „…, geräuchert, TK“. Im Datenmodell vorn in processing,
+            // im Bestand auch mittendrin („geschnitten, TK“): jedes TK-Wort der Verarbeitung wandert nach hinten.
+            $ohneTk = array_values(array_filter(\Platform\FoodAlchemist\Support\FettAngabe::teile($verarbeitung),
+                fn ($t) => preg_match('/^(?:TK|tiefgekühlt|tiefgekuehlt)$/iu', $t) !== 1));
+            if (count($ohneTk) !== count(\Platform\FoodAlchemist\Support\FettAngabe::teile($verarbeitung))) {
+                $verarbeitung = implode(', ', $ohneTk);
+                $tkHinten = true;
+            }
+        }
+        // Regel 821 Teil 3: geräucherter Pökel-Aufschnitt = Zustand „gepökelt“ + „geräuchert“ in der Verarbeitung; im Namen „…, gepökelt, geräuchert“
+        // (Datenmodell wie TK: die Zustandsspalte trägt nur ein Wort)
+        $rauchHinten = false;
+        if ($condition === 'gepökelt') {
+            $teileV = \Platform\FoodAlchemist\Support\FettAngabe::teile($verarbeitung);
+            $ohneRauch = array_values(array_filter($teileV, fn ($t) => preg_match('/^ger(?:ä|ae)uchert$/iu', $t) !== 1));
+            if (count($ohneRauch) !== count($teileV)) {
+                $verarbeitung = implode(', ', $ohneRauch);
+                $rauchHinten = true;
+            }
+        }
+        // Fettwert (Regel 826/75, M2/M4): exakt, „N % Fett“ bzw. „N % Fett i. Tr.“, immer direkt hinter dem Zustand — auch wenn er im Feld
+        // Verarbeitung, Zuschnitt oder Pflichtangabe steht. Felder ohne Fettwert bleiben Zeichen für Zeichen unverändert.
+        $fett = [];
+        $zuschnitt = trim((string) ($in['form'] ?? ''));
+        $pflicht = trim((string) ($in['pflichtangabe'] ?? ''));
+        foreach (['verarbeitung', 'zuschnitt', 'pflicht'] as $feld) {
+            [$gefunden, $rest] = \Platform\FoodAlchemist\Support\FettAngabe::ziehe($$feld);
+            if ($rest !== null) {
+                $fett = [...$fett, ...$gefunden];
+                $$feld = $rest;
+            }
+        }
+        $mid = $verarbeitung;
+        if ($zuschnitt !== '' && ($verarbeitung === '' || mb_stripos($verarbeitung, $zuschnitt) === false)) {
+            $mid = $verarbeitung === '' ? $zuschnitt : $verarbeitung . ', ' . $zuschnitt;
+        }
+        // Stufe 2 „Form vor Zustand“ (Dominique 25.10.): Verarbeitung und Zuschnitt stehen VOR dem Zustand — „Kartoffel: gegart, Würfel 10 mm, frisch“,
+        // „Räucherlachs: geschnitten, geräuchert, TK“.
+        if ($mid !== '') {
+            $parts[] = self::umlautKanon($mid);                           // „Wuerfel 10 mm" → „Würfel 10 mm" (Kanon mit Umlaut)
+        }
+        if ($condition !== null) {
+            $parts[] = $condition;
+        }
+        if ($rauchHinten) {
+            $parts[] = 'geräuchert';
+        }
+        if ($tkHinten) {
+            $parts[] = 'TK';
+        }
+        foreach (array_unique($fett) as $f) {
+            $parts[] = $f;
+        }
+        if (! empty($in['portion'])) {
+            // Stückgewicht exakt wie im Artikel (Regel 75, G14 13.11.2026: keine ±10-%-Toleranz, Spannen bleiben Spannen) — nur die Schreibweise wird vereinheitlicht
+            // Portionsbeutel bei Gerichten (Entscheid Dominique 14.11.: „Coq au Vin: TK, 250 g pro Portion“) — „pro Portion“ statt „pro Stück“
+            $proPortion = preg_match('/\s*pro\s+Portion\s*$/iu', (string) $in['portion']) === 1;
+            $parts[] = $proPortion
+                ? $this->normalisierePortion((string) preg_replace('/\s*pro\s+Portion\s*$/iu', '', (string) $in['portion'])) . ' pro Portion'
+                : $this->normalisierePortion((string) $in['portion']) . ' pro Stück';        // „660 g pro Stück" (echter Umlaut im GP-Namen; kein „Portion", Leerzeichen vor der Einheit)
+        }
+        if ($pflicht !== '') {
+            $parts[] = self::umlautKanon($pflicht);
+        }
+
+        $hauptzutat = trim($in['hauptzutat'] ?? '');
+        $base = $parts === [] ? $hauptzutat : $hauptzutat . ': ' . implode(', ', $parts);
+
+        // Regel 94 (v3.10.0): feste Klammer-Reihenfolge `/ (Marke) / (Land) / (Bio) / (MSC|ASC) / (Vegan) / (Glutenfrei) / (Laktosefrei)` — die Marke bzw.
+        // der Fantasiename (§6.6, Feld zusatz) steht vorn, die normierten Marker am Ende.
+        $suffixes = \Platform\FoodAlchemist\Support\GpNamensKlammern::klammern($in, $this->bereinigeZusatz($in['zusatz'] ?? null));
+
+        return $suffixes === [] ? $base : $base . ' / ' . implode(' / ', $suffixes);
+    }
+
+    /**
+     * gp_naming.rs Z. 88 — Hard-Errors blocken Insert, Warnings sind informativ (I4).
+     *
+     * @return array{errors: string[], warnings: string[]}
+     */
+    public function validateGpName(string $name, array $in): array
+    {
+        $errors = [];
+        $warnings = [];
+
+        if (trim($name) === '') {
+            $errors[] = 'Name ist leer.';
+        }
+        if ($this->istNonFood($in)) {
+            // Non-Food: eigenes, schlankes Schema (§6.5). Die Lebensmittel-Namensregeln (Zustand, Pflichtangaben) gelten nicht;
+            // Lebensmittel-Zustandswörter im Namen sind ein Hinweis (Anti-Pattern), kein Blocker.
+            if (preg_match('/(?<![\p{L}])(' . self::zustandMuster() . ')(?![\p{L}])/u', $name) === 1) {
+                $warnings[] = 'Non-Food braucht keinen Zustand (' . self::zustandListe('/') . ') — Schema: Produkt: Eigenschaft, Größe.';
+            }
+
+            return ['errors' => $errors, 'warnings' => $warnings];
+        }
+        $condition = $this->normalisiereZustand($in['condition'] ?? null);
+        // Spec 81: alle aktiven Regeln für den GP-Namen. blockieren/korrigieren = Hard-Error, warnen = Hinweis.
+        $motor = app(\Platform\FoodAlchemist\Services\Regeln\RegelMotor::class);
+        $kontext = ['zustand' => $condition, 'warengruppe' => $in['warengruppe'] ?? $in['commodity_group_code'] ?? null, 'form' => $in['form'] ?? null,
+            'hauptzutat' => trim((string) ($in['hauptzutat'] ?? strstr($name . ':', ':', true))),
+            // Regel 833 (v3.10.0): rohe ganze Ware = keine Verarbeitung, kein Zuschnitt außer „ganz“ (Kochtyp nur dort Pflicht, gp.8.12.kartoffel)
+            'verarbeitet' => trim((string) ($in['processing'] ?? '')) !== '' || ! in_array(mb_strtolower(trim((string) ($in['form'] ?? ''))), ['', 'ganz'], true) ? 'ja' : 'nein'];
+        foreach (\Platform\FoodAlchemist\Services\Regeln\RegelBuch::fuerZiel('gp.name') as $regel) {
+            foreach ($motor->pruefe($regel, $name, $kontext) as $b) {
+                $text = trim(($b['paragraph'] ?? '') . ': ' . $b['begruendung'], ': ');
+                if ($b['schweregrad'] === 'hart') {
+                    $errors[] = $text;
+                } else {
+                    $warnings[] = $text;
+                }
+            }
+        }
+        if ($condition !== null && ! in_array($condition, self::ZUSTAND_VOCAB, true) && $condition !== self::ZUSTAND_POEKEL_RAUCH) {
+            $errors[] = "§9: Zustand »{$condition}« ist nicht im Pflicht-Vokabular (" . implode('/', self::ZUSTAND_VOCAB) . ').';
+        }
+        if ($condition !== null && $this->ohneZustandswort($in)) {
+            $warnings[] = '§9-Zusatz: Getränke, Öle, Essig, Sirupe und Honig tragen kein Zustandswort — »' . $condition . '« erscheint nicht im Namen.';
+        }
+        foreach ([\Platform\FoodAlchemist\Support\GpNamensKlammern::herkunftHinweis($in), \Platform\FoodAlchemist\Support\GpNamensKlammern::siegelHinweis($in)] as $h) {
+            if ($h !== null) {
+                $warnings[] = $h;   // Regel 94: Länder-/Siegel-Klammer an der falschen Ware — Prüfliste, kein Blocker
+            }
+        }
+        $hz = trim((string) ($in['hauptzutat'] ?? strstr($name . ':', ':', true)));
+        if (($mehrzahl = \Platform\FoodAlchemist\Support\GpSammelware::mehrzahlStatt($hz)) !== null) {
+            $warnings[] = "§6.1: Sammelware steht in der Mehrzahl — »{$mehrzahl}« statt »{$hz}«.";
+        }
+        $flavor = trim((string) ($in['flavor'] ?? ''));
+        if ($flavor !== '' && ($fz = $this->normalisiereZustand($flavor)) !== null && in_array($fz, self::ZUSTAND_VOCAB, true)) {
+            $errors[] = "§6.6: Geschmackszutat »{$flavor}« ist ein Zustandswort — der Zustand gehört in das Feld Zustand.";
+        }
+        if ($this->normalisiere($name) !== $this->normalisiere($this->renderGpName($in))) {
+            $warnings[] = self::HINWEIS_NAME_FELDER . ': ' . $this->abweichungNameFelder($name, $in) . '.';   // I4
+        }
+
+        return ['errors' => $errors, 'warnings' => $warnings];
+    }
+
+    /** Zahlen im Namen als sortierte Menge (Dezimalkomma normalisiert); Grundlage des Guards „gleiche Zahl = Dublette“. */
+    private function zahlenTokens(string $name): array
+    {
+        preg_match_all('/\d+(?:[.,]\d+)?/u', $name, $m);
+        $z = array_unique(array_map(fn ($x) => str_replace(',', '.', $x), $m[0]));
+        sort($z);
+
+        return array_values($z);
+    }
+
+    /**
+     * Anlage-Guard (create_gp Z. 2509, GT-12-10): gp_key-UNIQUE über aktive GPs
+     * (approved/tentative) + Jaccard ≥ 0.92 gegen bestehende Namen. Hard-Stop —
+     * nur force=true legt trotzdem an.
+     *
+     * @return array{blockiert: bool, grund: ?string, vorhandenes_gp: ?FoodAlchemistGp}
+     */
+    public function anlageGuard(Team $team, string $gpKey, string $name, ?int $ignoriereGpId = null): array
+    {
+        $kollision = FoodAlchemistGp::visibleToTeam($team)
+            ->whereIn('status', ['approved', 'tentative'])
+            ->where('gp_key', $gpKey)
+            ->when($ignoriereGpId !== null, fn ($q) => $q->where('id', '!=', $ignoriereGpId))
+            ->first();
+        if ($kollision !== null) {
+            return ['blockiert' => true, 'grund' => 'gp_key', 'vorhandenes_gp' => $kollision];
+        }
+
+        $query = $this->engine->tokenize($name);
+        if ($query !== []) {
+            $beste = null;
+            FoodAlchemistGp::visibleToTeam($team)
+                ->whereIn('status', ['approved', 'tentative'])
+                ->when($ignoriereGpId !== null, fn ($q) => $q->where('id', '!=', $ignoriereGpId))
+                ->select('id', 'name', 'gp_key', 'status', 'team_id')
+                ->orderBy('id')
+                ->chunk(2000, function ($gps) use (&$beste, $query, $name) {
+                    $zahlen = $this->zahlenTokens($name);
+                    foreach ($gps as $gp) {
+                        // Abweichende Zahl (mm, g, %, Kaliber) = andere Variante, keine Dublette (v3.6.0 §7.2/§7.3): der Tokenizer ignoriert Zahlen.
+                        if ($this->zahlenTokens((string) $gp->name) !== $zahlen) {
+                            continue;
+                        }
+                        // Größenangabe ohne Zahl (Non-Food „Größe S/M/L/XL“, Regel 65) trennt ebenfalls: der Tokenizer verwirft Einzelbuchstaben
+                        if ($this->groessenToken((string) $gp->name) !== $this->groessenToken($name)) {
+                            continue;
+                        }
+                        $c = $this->engine->tokenize($gp->name);
+                        if ($c === []) {
+                            continue;
+                        }
+                        $schnitt = count(array_intersect($query, $c));
+                        $jaccard = $schnitt / count(array_unique([...$query, ...$c]));
+                        if ($jaccard >= 0.92 && ($beste === null || $jaccard > $beste['j'])) {
+                            $beste = ['gp' => $gp, 'j' => $jaccard];
+                        }
+                    }
+                });
+            if ($beste !== null) {
+                return ['blockiert' => true, 'grund' => 'jaccard', 'vorhandenes_gp' => $beste['gp']];
+            }
+        }
+
+        return ['blockiert' => false, 'grund' => null, 'vorhandenes_gp' => null];
+    }
+
+    /**
+     * Wem gehört ein neu angelegtes GP? Das Master-Team pflegt den globalen Bestand (Einstellung „Master-Team“): legt es ein GP an, ist das GP
+     * global und Teil des Stamm-Pakets, damit es bei allen Mandanten mit gebuchtem Paket ankommt (Dominique 20.11.2026: „wenn ein Grundprodukt
+     * neu angelegt wird, durch die Vererbung, durch das Abo-Paket, sollte es automatisch mit reingehen“; Entscheid: alle, kein Schalter).
+     * Jedes andere Team legt team-eigen an (D1). Vorher landeten Master-Anlagen mit team_id = Master und blieben für Mandanten unsichtbar.
+     */
+    public static function anlageTeamId(Team $team): ?int
+    {
+        return \Platform\FoodAlchemist\Support\MasterTeam::istMaster($team) ? null : (int) $team->id;
+    }
+
+    /**
+     * GP-Anlage (Render-First, I4): rendert + validiert + Guard, dann Insert.
+     * Status neuer GPs = tentative (Kuration hebt auf approved).
+     *
+     * @throws \RuntimeException bei Hard-Error oder Guard-Block ohne force
+     */
+    public function createGp(Team $team, array $in, bool $force = false): FoodAlchemistGp
+    {
+        $in = $this->bereinigeFelder($in);
+        $name = trim($in['name'] ?? '') !== '' ? trim($in['name']) : $this->renderGpName($in);
+        if ($this->enthaeltPlatzhalter($name)) {
+            throw new \RuntimeException('Der Name enthält „unbekannt“. Unbekannte Eigenschaften bleiben leer und stehen nie im Namen (Regelwerk GP §6, §12).');
+        }
+        $pruefung = $this->validateGpName($name, $in);
+        if ($pruefung['errors'] !== []) {
+            throw new \RuntimeException(implode(' ', $pruefung['errors']));
+        }
+
+        $hauptzutatSlug = $this->slugify($in['hauptzutat'] ?? '');
+        if ($hauptzutatSlug === '') {
+            throw new \RuntimeException('Hauptzutat ist Pflicht (D-3: main_ingredient_slug ab Editor).');
+        }
+        $gpKey = $this->gpKeyAusFeldern($hauptzutatSlug, $in);   // v3.10.0: Stückgewicht/Fett/Land/Siegel trennen
+
+        $ziel = self::anlageTeamId($team);
+        $guard = $this->anlageGuard($team, $gpKey, $name);
+        if ($guard['blockiert']) {
+            if (! $force) {
+                throw new \RuntimeException(
+                    "HARD_STOP_EXISTING_GP: »{$guard['vorhandenes_gp']->name}« existiert bereits"
+                    . " ({$guard['grund']}) — verwenden oder bewusst trotzdem anlegen (force)."
+                );
+            }
+            // force: DB-UNIQUE (team_id, gp_key) ist absolut — bewusste Duplikate bekommen
+            // einen ~n-Suffix (klar als Force-Anlage erkennbar, Dubletten-Guard bleibt scharf)
+            $n = 2;
+            while (FoodAlchemistGp::query()->ohneTeamSicht('eindeutigkeit')->where(fn ($q) => $ziel === null ? $q->whereNull('team_id') : $q->where('team_id', $ziel))
+                ->where('gp_key', "{$gpKey}~{$n}")->exists()) {
+                $n++;
+            }
+            $gpKey = "{$gpKey}~{$n}";
+        }
+
+        // §5 Ausnahme 3 (v3.7.1): Rezepturware (WG 04/15 nie); marke_offen leitet sich ab — Rezepturware ohne Marke in der Klammer
+        $rezeptur = \Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel::rezepturwareFuerWg(
+            \Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel::dreiwertig($in['rezepturware'] ?? null), (string) ($in['commodity_group_code'] ?? ''));
+
+        $alkohol = \Platform\FoodAlchemist\Support\AlkoholAngabe::eingabe($in['alkohol'] ?? null);
+
+        return FoodAlchemistGp::create([
+            'team_id' => $ziel,                                              // D1: Kind-eigene GPs möglich; Master → global (anlageTeamId)
+            'stamm_class' => $ziel === null ? \Platform\FoodAlchemist\Support\StammPaket::PAKET : \Platform\FoodAlchemist\Support\StammPaket::BASIS,
+            'gp_key' => $gpKey,
+            'name' => $name,
+            'main_ingredient_slug' => $hauptzutatSlug,
+            'status' => 'tentative',
+            'condition' => $this->normalisiereZustand($in['condition'] ?? null),
+            'processing' => trim((string) ($in['processing'] ?? '')) ?: null,   // vorher nur im Namen; Stufe 1: Felder gehören an den GP
+            'form' => trim((string) ($in['form'] ?? '')) ?: null,
+            'main_ingredient_display' => trim((string) ($in['hauptzutat'] ?? '')) ?: null,
+            'flavor' => trim((string) ($in['flavor'] ?? '')) ?: null,
+            'zusatz' => $this->bereinigeZusatz($in['zusatz'] ?? null) ?: null,
+            'pflichtangabe' => trim((string) ($in['pflichtangabe'] ?? '')) ?: null,
+            'portion' => trim((string) ($in['portion'] ?? '')) ?: null,
+            'bio' => ! empty($in['bio']) ? 'bio' : null,                          // Namensmarker „(Bio)“ — gleiche Mechanik wie die Diät-Marker
+            'namens_vegan' => ! empty($in['vegan']),
+            'namens_glutenfrei' => ! empty($in['glutenfrei']),
+            'namens_laktosefrei' => ! empty($in['laktosefrei']),
+            'namens_msc' => ! empty($in['msc']),                                   // Regel 94 (v3.10.0)
+            'namens_asc' => ! empty($in['asc']),
+            'herkunft_land' => \Platform\FoodAlchemist\Support\GpNamensKlammern::land($in['herkunft_land'] ?? null) ?: null,
+            ...\Platform\FoodAlchemist\Support\AngabeKennzeichen::felder($in, null),   // Regel 91: angenommen | offen + Prüflisten-Grund
+            'commodity_group_code' => ($in['commodity_group_code'] ?? '') ?: null,
+            'sub_category' => ($in['sub_category'] ?? '') ?: null,
+            'is_derivat' => (bool) ($in['is_derivat'] ?? false),
+            'derivat_von_gp_id' => $in['derivat_von_gp_id'] ?? null,
+            'requires_la' => ! (bool) ($in['is_derivat'] ?? false),          // §11.2: Derivat braucht keinen LA
+            'rezepturware' => $rezeptur,
+            'marke_offen' => \Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel::markeOffen($rezeptur, $this->bereinigeZusatz($in['zusatz'] ?? null)),
+            'alkohol' => $alkohol,   // Spec 94c: fester Wert, von Hand gesetzt = manuell
+            'alkohol_source' => $alkohol !== null ? 'manuell' : null,
+            'first_seen_at' => now(),
+        ]);
+    }
+
+    /**
+     * Name + Prüfung, die {@see updateGp()} aus dieser Eingabe bilden würde — ohne zu schreiben (GP-Lauf `foodalchemist:gp-felder`: Trockenlauf
+     * zeigt genau den Namen, den der Schreibweg später rendert). Gleiche Vorbereitung der Eingabe wie updateGp (eine Stelle).
+     *
+     * @return array{in: array<string,mixed>, name: string, pruefung: array{errors: string[], warnings: string[]}}
+     */
+    public function updateVorschau(FoodAlchemistGp $gp, array $in): array
+    {
+        $in = $this->bereinigeFelder($in);
+        // Ein Non-Food-GP (WG 16) wird auch dann nach dem Non-Food-Schema geprüft, wenn die Eingabe die Warengruppe nicht mitbringt (MCP gps.PUT):
+        // sonst träfen die Lebensmittel-Namensregeln („Glas“ ist ein Verpackungswort) ein Geschirr, das Glas als Material führt.
+        if ($gp->istNonFood() && ! isset($in['warengruppe']) && ! isset($in['commodity_group_code'])) {
+            $in['commodity_group_code'] = (string) $gp->commodity_group_code;
+        }
+        // Regel 94 (v3.10.0): Land- und Siegel-Klammer bleiben beim Neu-Rendern stehen, wenn der Schreiber sie nicht mitgibt (Teil-Schreiber, ältere Clients)
+        $in += ['herkunft_land' => $gp->herkunft_land, 'msc' => (bool) $gp->namens_msc, 'asc' => (bool) $gp->namens_asc];
+        $name = trim($in['name'] ?? '') !== '' ? trim($in['name']) : $this->renderGpName($in);
+
+        return ['in' => $in, 'name' => $name, 'pruefung' => $this->validateGpName($name, $in)];
+    }
+
+    /** GP-Edit über die strukturierten Felder — gleiche Validierung, gp_key wird NICHT umgeschrieben (Seed-Stabilität). */
+    public function updateGp(Team $team, FoodAlchemistGp $gp, array $in): FoodAlchemistGp
+    {
+        ['in' => $in, 'name' => $name, 'pruefung' => $pruefung] = $this->updateVorschau($gp, $in);
+        if ($pruefung['errors'] !== []) {
+            throw new \RuntimeException(implode(' ', $pruefung['errors']));
+        }
+
+        $warDerivat = (bool) $gp->is_derivat;
+        $istDerivat = (bool) ($in['is_derivat'] ?? $gp->is_derivat);
+
+        $gp->update([
+            'name' => $name,
+            'condition' => $this->normalisiereZustand($in['condition'] ?? null) ?? $gp->condition,
+            // Spec 80 (Paket 11): Verarbeitung/Form/Hauptzutat auch beim BEARBEITEN pflegen. Vorher schrieb nur die
+            // Anlage sie — im Bestand stand „Würfel 5 mm" deshalb nur im Namen (demo: Verarbeitung bei 210 von 6.950).
+            // Nur wenn das Feld mitkommt (MCP-/Teil-Schreiber ohne Feld lassen den Wert stehen).
+            'processing' => array_key_exists('processing', $in) ? (trim((string) $in['processing']) ?: null) : $gp->processing,
+            'form' => array_key_exists('form', $in) ? (trim((string) $in['form']) ?: null) : $gp->form,
+            'flavor' => array_key_exists('flavor', $in) ? (trim((string) $in['flavor']) ?: null) : $gp->flavor,
+            'zusatz' => array_key_exists('zusatz', $in) ? ($this->bereinigeZusatz($in['zusatz']) ?: null) : $gp->zusatz,
+            // pflichtangabe/portion (Name aus Feldern vollständig): Teil-Schreiber ohne das Feld lassen den Wert stehen
+            'pflichtangabe' => array_key_exists('pflichtangabe', $in) ? (trim((string) $in['pflichtangabe']) ?: null) : $gp->pflichtangabe,
+            'portion' => array_key_exists('portion', $in) ? (trim((string) $in['portion']) ?: null) : $gp->portion,
+            // Namensmarker (Bio/Vegan/Glutenfrei/Laktosefrei): Teil-Schreiber ohne den Schlüssel lassen den Wert stehen
+            'bio' => array_key_exists('bio', $in) ? (! empty($in['bio']) ? 'bio' : null) : $gp->bio,
+            'namens_vegan' => array_key_exists('vegan', $in) ? ! empty($in['vegan']) : (bool) $gp->namens_vegan,
+            'namens_glutenfrei' => array_key_exists('glutenfrei', $in) ? ! empty($in['glutenfrei']) : (bool) $gp->namens_glutenfrei,
+            'namens_laktosefrei' => array_key_exists('laktosefrei', $in) ? ! empty($in['laktosefrei']) : (bool) $gp->namens_laktosefrei,
+            'namens_msc' => ! empty($in['msc']),                                   // Regel 94: oben aus dem GP vorbelegt, wenn nicht mitgegeben
+            'namens_asc' => ! empty($in['asc']),
+            'herkunft_land' => \Platform\FoodAlchemist\Support\GpNamensKlammern::land($in['herkunft_land'] ?? null) ?: null,
+            ...\Platform\FoodAlchemist\Support\AngabeKennzeichen::felder($in, $gp),   // Regel 91: nur wenn mitgegeben, sonst bleibt es
+            'main_ingredient_display' => trim((string) ($in['hauptzutat'] ?? '')) ?: $gp->main_ingredient_display,
+            'commodity_group_code' => ($in['commodity_group_code'] ?? '') ?: $gp->commodity_group_code,
+            'sub_category' => array_key_exists('sub_category', $in) ? (($in['sub_category'] ?? '') ?: null) : $gp->sub_category,
+            'is_derivat' => $istDerivat,
+            'derivat_von_gp_id' => array_key_exists('derivat_von_gp_id', $in) ? $in['derivat_von_gp_id'] : $gp->derivat_von_gp_id,
+            // §11.2 wie bei der Anlage: Derivat braucht keinen LA. Nur beim WECHSEL umschalten — sonst blieb ein
+            // nachträglich zum Derivat gemachter GP auf „Preis fehlt“; ein bewusst gesetzter Platzhalter
+            // (requires_la=0 ohne Derivat) bleibt bei normalen Edits unangetastet.
+            'requires_la' => $istDerivat !== $warDerivat ? ! $istDerivat : $gp->requires_la,
+        ]);
+        // §5 Ausnahme 3: Rezepturware nur, wenn der Schreiber sie mitgibt; marke_offen folgt immer aus Rezepturware + Klammer
+        $rezeptur = \Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel::rezepturwareFuerWg(
+            array_key_exists('rezepturware', $in) ? \Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel::dreiwertig($in['rezepturware']) : $gp->rezepturware,
+            (string) $gp->commodity_group_code);
+        $gp->update(['rezepturware' => $rezeptur,
+            'marke_offen' => \Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel::markeOffen($rezeptur, (string) $gp->zusatz)]);
+        // Spec 94c: fester Alkohol-Wert. Eine geänderte Eingabe gilt als manuell — die überschreibt kein Lauf.
+        $alkohol = array_key_exists('alkohol', $in) ? \Platform\FoodAlchemist\Support\AlkoholAngabe::eingabe($in['alkohol']) : $gp->alkohol;
+        if ($alkohol !== $gp->alkohol) {
+            $gp->update(['alkohol' => $alkohol, 'alkohol_source' => $alkohol === null ? null : 'manuell']);
+        }
+
+        return $gp->refresh();
+    }
+
+    /**
+     * Zustand hart aus der Haltbarkeit je Lagerart: nur EINE Lagerart gesetzt und eindeutig (tiefgekühlt → TK, trocken → trocken).
+     * Gekühlt allein sagt nichts (frisch ODER konserviert), mehrere Lagerarten widersprechen sich: dann entscheidet die KI.
+     */
+    public function zustandAusHaltbarkeit(?int $gekuehlt, ?int $tiefgekuehlt, ?int $trocken): ?string
+    {
+        $gesetzt = array_filter(['kuehl' => $gekuehlt, 'tk' => $tiefgekuehlt, 'trocken' => $trocken], fn ($t) => $t !== null && $t > 0);
+        if (count($gesetzt) !== 1) {
+            return null;
+        }
+
+        return match (array_key_first($gesetzt)) {
+            'tk' => 'TK',
+            'trocken' => 'trocken',
+            default => null,
+        };
+    }
+
+    /**
+     * Halluzinations-Guard für die Hauptzutat (Regelwerk GP §6: Kernwort bzw. Gattungsbegriff, höchstens 3 Inhaltswörter): nur Wörter
+     * behalten, die in den Quelltexten (Bezeichnung, Zutatenliste, Marketing-/regulierter Name) oder im GP-Vokabular vorkommen.
+     * Verbindungswörter („mit", „in" …) bleiben nur zwischen zwei behaltenen Wörtern stehen („Schokoladenmousse mit Cashew-Creme").
+     * Formen („Riegel", „Würfel") sind kein Teil der Hauptzutat; sie stehen im Feld Form und dürfen dort ohne Beleg im Text stehen.
+     *
+     * @param  list<string>  $quelltexte
+     * @return array{wert: string, entfernt: list<string>}
+     */
+    public function bereinigeHauptzutat(string $hauptzutat, array $quelltexte): array
+    {
+        $norm = fn (string $x) => (string) preg_replace('/[^a-z0-9]+/', '', strtr(Text::grundlaut(mb_strtolower($x)), ['é' => 'e', 'è' => 'e']));
+        $blob = $norm(implode(' ', $quelltexte));
+        $verbinder = ['mit', 'in', 'an', 'auf', 'von', 'und', 'nach', 'aus', 'ohne', 'im', 'vom', 'zum', 'au', 'a', 'la'];
+        $woerter = preg_split('/\s+/u', trim($this->bereinigeFeld($hauptzutat)), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $entfernt = [];
+        $behalten = [];     // Liste aus [wort, istVerbinder]
+        $inhalt = 0;
+        foreach ($woerter as $i => $wort) {
+            if ($i > 0 && in_array(mb_strtolower($wort), $verbinder, true)) {
+                $behalten[] = [$wort, true];
+
+                continue;
+            }
+            $n = $norm($wort);
+            $belegt = $n !== '' && ($blob === '' || str_contains($blob, $n) || (mb_strlen($n) >= 6 && str_contains($blob, mb_substr($n, 0, mb_strlen($n) - 2))))
+                || ($n !== '' && \Platform\FoodAlchemist\Models\FoodAlchemistGp::where('main_ingredient_slug', $this->slugify($wort))->exists());
+            if ($belegt && $inhalt < 3) {
+                $behalten[] = [$wort, false];
+                $inhalt++;
+            } else {
+                $entfernt[] = $wort;
+            }
+        }
+        // Verbinder ohne Inhaltswort davor oder danach fallen weg (nie „mit" am Rand)
+        while ($behalten !== [] && end($behalten)[1]) {
+            $entfernt[] = array_pop($behalten)[0];
+        }
+        while ($behalten !== [] && $behalten[0][1]) {
+            $entfernt[] = array_shift($behalten)[0];
+        }
+
+        return ['wert' => implode(' ', array_map(fn ($x) => $x[0], $behalten)), 'entfernt' => $entfernt];
+    }
+
+    /**
+     * Zusatz im Namen (Bio, Vegan, Glutenfrei, Laktosefrei) — STRENG: nur, wenn eine Quelle es AUSDRÜCKLICH sagt (LA-Merkmal, Bio-Kontrollnummer,
+     * Text in Bezeichnung/Marketing-/regulierter Name/Zutatenangabe). NIE aus fehlenden oder schwachen Allergenen ableiten („Milch Spuren" ≠ laktosefrei).
+     * Widerspruch (vegan, aber Milch/Ei/Fisch … „enthalten"; glutenfrei, aber Gluten „enthalten") → nicht setzen, Hinweis.
+     * Der Aufrufer schaltet eine Handeingabe nie ab, AUSSER bei genau diesem Widerspruch zu „enthalten" (`widerspruch`).
+     *
+     * @param  array{bezeichnung?: ?string, marketing_name?: ?string, regulierter_name?: ?string, zutaten?: ?string, is_organic?: mixed, is_vegan?: mixed, bio_kontrollnummer?: ?string, allergene?: array<string,?string>}  $q
+     * @return array{flags: array{bio: bool, vegan: bool, glutenfrei: bool, laktosefrei: bool}, widerspruch: list<string>, hinweise: list<string>}
+     */
+    public function zusatzAusQuellen(array $q): array
+    {
+        $text = mb_strtolower(implode(' | ', array_filter([$q['bezeichnung'] ?? null, $q['marketing_name'] ?? null, $q['regulierter_name'] ?? null, $q['zutaten'] ?? null])));
+        $sagt = fn (string $muster) => (bool) preg_match($muster, $text);
+        $aller = $q['allergene'] ?? [];
+        $enthalten = fn (string ...$keys) => array_values(array_filter($keys, fn ($k) => ($aller[$k] ?? null) === 'enthalten'));
+
+        $bio = ! empty($q['is_organic']) || trim((string) ($q['bio_kontrollnummer'] ?? '')) !== '' || $sagt('/(?<![a-zäöü])(bio|öko)(?![a-zäöü])|de-öko-\d+/u');
+        $vegan = (! empty($q['is_vegan']) || $sagt('/(?<!nicht )(?<!un)(?<![a-zäöü])vegan(?![a-zäöü])/u')) && ! $sagt('/nicht vegan|unvegan/u');
+        $gluten = $sagt('/glutenfrei|ohne gluten/u');
+        $laktose = $sagt('/laktosefrei|ohne laktose/u');
+
+        $hinweise = [];
+        $widerspruch = [];
+        if ($vegan && ($w = $enthalten('milk', 'eggs', 'fish', 'crustaceans', 'molluscs')) !== []) {
+            $vegan = false;
+            $widerspruch[] = 'vegan';
+            $hinweise[] = 'Quelle nennt „vegan“, aber Allergene enthalten: '.implode(', ', array_map(fn ($k) => \Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::ALLERGENE[$k] ?? $k, $w)).' — Zusatz „Vegan“ nicht gesetzt.';
+        }
+        if ($gluten && $enthalten('gluten') !== []) {
+            $gluten = false;
+            $widerspruch[] = 'glutenfrei';
+            $hinweise[] = 'Quelle nennt „glutenfrei“, aber Gluten ist als enthalten gemeldet — Zusatz „Glutenfrei“ nicht gesetzt.';
+        }
+
+        return ['flags' => ['bio' => $bio, 'vegan' => $vegan, 'glutenfrei' => $gluten, 'laktosefrei' => $laktose], 'widerspruch' => $widerspruch, 'hinweise' => $hinweise];
+    }
+
+    /**
+     * Form/Verarbeitung, die schon in der Hauptzutat steckt (Form „Mousse" bei „Schokoladenmousse"), ist Dublette: leer.
+     * Nur wenn die Form das KOPFWORT einer Hauptzutat-Vokabel ist, also dem Wort entspricht oder (Kompositum, Form ≥ 4 Zeichen) am Wortende steht.
+     * Ein Teilstring irgendwo trifft nicht: „Ei" + „Scheiben", „Reis" + „Korn" bleiben.
+     */
+    public function dedupliziereMitHauptzutat(string $hauptzutat, string $feld): string
+    {
+        $n = fn (string $x) => (string) preg_replace('/[^a-z0-9]+/', '', Text::grundlaut(mb_strtolower($x)));
+        $f = $n($feld);
+        if ($f === '') {
+            return $feld;
+        }
+        foreach (preg_split('/\s+/u', trim($hauptzutat), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $wort) {
+            $w = $n($wort);
+            if ($w === $f || (mb_strlen($f) >= 4 && $w !== '' && str_ends_with($w, $f))) {
+                return '';
+            }
+        }
+
+        return $feld;
+    }
+
+    /**
+     * Portionsgrammatur im Bestandsformat: „660g", „660 g" und „0,66 kg" werden zu „660 g". Der Bestand schreibt Gramm auch ab 1000
+     * („2000 g", 19 Namen; nur 1 Name mit „3 kg") und Milliliter („80 ml"), darum kg → g und l → ml. Komma als Dezimaltrenner („62,5 g"),
+     * „ca." bleibt erhalten. Nicht Lesbares bleibt unverändert (getrimmt).
+     */
+    /** „Größe S“/„Größe XL“ aus einem GP-Namen (Non-Food-Größen), normalisiert; null ohne Größe. */
+    private function groessenToken(string $name): ?string
+    {
+        return preg_match('/Gr(?:ö|oe)(?:ß|ss)e\s+([0-9A-Za-z\/-]+)/u', $name, $m) === 1 ? mb_strtoupper($m[1]) : null;
+    }
+
+    public function normalisierePortion(string $portion): string
+    {
+        // „300 g pro Stück“ als Eingabe: der Renderer hängt „pro Stück“ selbst an (GP-Lauf 14.11.: „… pro Stück pro Stück“)
+        $p = trim((string) preg_replace('/\s*pro\s+St(?:ü|ue)ck\s*$/iu', '', trim($portion)));
+        if (! preg_match('/^(ca\.?\s*)?(\d+(?:[.,]\d+)?)\s*(kg|g|ml|l)?$/iu', $p, $m)) {
+            return $p;
+        }
+        $zahl = (float) str_replace(',', '.', $m[2]);
+        $einheit = mb_strtolower($m[3] ?? '');
+        if ($einheit === 'kg') {
+            $zahl *= 1000;
+            $einheit = 'g';
+        } elseif ($einheit === 'l') {
+            $zahl *= 1000;
+            $einheit = 'ml';
+        }
+        $text = rtrim(rtrim(number_format($zahl, 3, ',', ''), '0'), ',');
+
+        return trim(($m[1] !== '' ? 'ca. ' : '').$text.($einheit !== '' ? ' '.$einheit : ''));
+    }
+
+    /** Steht ein Platzhalter („unbekannt") als Attribut im Namen? Nur ganze Wörter im Attributteil nach dem Doppelpunkt. */
+    public function enthaeltPlatzhalter(string $name): bool
+    {
+        $teil = str_contains($name, ':') ? substr($name, (int) strpos($name, ':') + 1) : $name;
+
+        return (bool) preg_match('/(^|[\s,\/(])(unbekannt|unknown)([\s,\/)]|$)/iu', $teil);
+    }
+
+    /**
+     * Klartext zur Abweichung Name ⇄ Felder (I4, Dominique 27.10.: statt „Drift … (I4)“): was aus einem Feld im Namen fehlt bzw. was im Namen
+     * steht, aber aus keinem Feld kommt — höchstens zwei Funde. Ohne konkreten Fund unterscheiden sich nur Reihenfolge oder Schreibweise.
+     */
+    private function abweichungNameFelder(string $name, array $in): string
+    {
+        $labels = ['hauptzutat' => 'Hauptzutat', 'flavor' => 'Geschmack', 'processing' => 'Verarbeitung', 'form' => 'Form', 'condition' => 'Zustand',
+            'pflichtangabe' => 'Pflichtangabe', 'zusatz' => 'Zusatz'];
+        $imNamen = $this->normalisiere($name);
+        $funde = [];
+        foreach ($labels as $feld => $label) {
+            if ($feld === 'condition' && $this->ohneZustandswort($in)) {
+                continue;
+            }
+            foreach (array_filter(array_map('trim', explode(',', (string) ($in[$feld] ?? '')))) as $teil) {
+                if (! str_contains($imNamen, $this->normalisiere($teil))) {
+                    $funde[] = "„{$teil}“ aus dem Feld {$label} fehlt im Namen";
+                }
+            }
+        }
+        $gerendert = $this->normalisiere($this->renderGpName($in));
+        $rest = preg_match('/^.*?:(?=\s|$)(.*)$/su', $name, $m) === 1 ? $m[1] : '';
+        foreach (preg_split('/\s*,\s*|\s*\/\s*\(|\)/u', $rest) ?: [] as $teil) {
+            if (($teil = trim($teil)) !== '' && ! str_contains($gerendert, $this->normalisiere($teil))) {
+                $funde[] = "„{$teil}“ steht im Namen, aber in keinem Feld";
+            }
+        }
+
+        return $funde === [] ? 'Reihenfolge oder Schreibweise weicht ab' : implode('; ', array_slice($funde, 0, 2));
+    }
+
+    private function normalisiere(string $s): string
+    {
+        // Beide Schreibweisen gelten als gleich (Dubletten-/Drift-Vergleich): Umlaute auf ae/oe/ue/ss abbilden, wie Matcher und TokenEngine.
+        return Text::falte($s, Text::ZEILE);
+    }
+}

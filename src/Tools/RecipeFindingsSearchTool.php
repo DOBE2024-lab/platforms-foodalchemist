@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeFinding;
-use Platform\FoodAlchemist\Services\RecipeFindingService;
-use Platform\FoodAlchemist\Services\RecipeReviewService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeReviewService;
 
 /**
  * Spec 21 · S5a — abgelegte KI-Befunde am Rezept lesen (MCP-Lockstep zur neuen Ablage).

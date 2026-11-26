@@ -204,7 +204,7 @@ it('regelwerk.GET weist unbekannte Prompt-Keys und Rollen ab', function () {
 it('jeder Vorgang ist konsistent verdrahtet: Einstiegs-Tool und Reife-Kind existieren wirklich', function () {
     // Der Wächter gegen die häufigste stille Fehlerquelle: ein Tool-Name im Register, den es
     // nicht (mehr) gibt. Der Agent würde ihm folgen und ins Leere laufen.
-    $kinds = \Platform\FoodAlchemist\Services\ReifeService::KINDS;
+    $kinds = \Platform\FoodAlchemist\Services\Reife\ReifeService::KINDS;
     $fehlend = [];
 
     foreach (VorgangsRegisterService::VORGAENGE as $code => $v) {

@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Livewire\Controlling\Panels;
 
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\WareneinsatzAbweichungService;
+use Platform\FoodAlchemist\Services\Pruefung\WareneinsatzAbweichungService;
 
 /**
  * Spec 32 · C4 — Soll/Ist-Wareneinsatz über einen Zeitraum.

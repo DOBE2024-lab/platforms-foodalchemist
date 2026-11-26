@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Support;
 
 use Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 
 /**
  * #1003 Untere Leiste der Handy-Oberfläche (Daumenzone) und Blatt „Mehr“.

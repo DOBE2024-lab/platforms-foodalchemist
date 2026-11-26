@@ -6,8 +6,8 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpAromaService;
-use Platform\FoodAlchemist\Services\SensorikService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAromaService;
+use Platform\FoodAlchemist\Services\Rezept\SensorikService;
 
 /**
  * Live-Abnahme „Geschmacksprofil = Wahrnehmung" (Dominique 29.10.2026). NUR LESEND: schätzt die Referenzfälle mit der echten KI,

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\Pairing\AnkerVarianten;
 use Platform\FoodAlchemist\Services\Pairing\Kombinationslogik;
 use Platform\FoodAlchemist\Services\Pairing\RezeptProfil;

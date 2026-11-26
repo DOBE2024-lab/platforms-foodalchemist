@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRunContext;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRunService;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
-use Platform\FoodAlchemist\Services\ConformanceService;
+use Platform\FoodAlchemist\Services\Conformance\ConformanceService;
 use Platform\FoodAlchemist\Tests\Support\CopilotStub;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -101,7 +101,7 @@ it('hinterlegt den Lauf bei einer echten Generator-Ausführung am Ergebnis und a
             ], 0.9, 'Test', []);
         });
     });
-    $result = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Testfond');
+    $result = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Testfond');
     expect($result['knowledge_run_id'])->toBe($seen)
         ->and($result['recipe']->fresh()->knowledge_run_id)->toBe($seen)
         ->and(app(KnowledgeRunContext::class)->current())->toBeNull();

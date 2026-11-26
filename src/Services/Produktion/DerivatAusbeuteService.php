@@ -20,7 +20,7 @@ use Platform\FoodAlchemist\Support\Derivat\DerivatAusbeute;
  */
 class DerivatAusbeuteService
 {
-    public function __construct(private AiGatewayService $ki, private \Platform\FoodAlchemist\Services\GpFormService $formen) {}
+    public function __construct(private AiGatewayService $ki, private \Platform\FoodAlchemist\Services\GpStamm\GpFormService $formen) {}
 
     /**
      * @param  array{derivat_art?: ?string, derivat_ausbeute_wert?: float|int|string|null, derivat_ausbeute_basis?: ?string}  $in

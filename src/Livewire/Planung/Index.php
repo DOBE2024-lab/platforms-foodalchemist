@@ -26,8 +26,8 @@ use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Services\Planung\PlanungsEinstiegService;
-use Platform\FoodAlchemist\Services\RecipeImageService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Services\Stt\SttServiceContract;
@@ -256,7 +256,7 @@ class Index extends Component
 
     /** UI-Slug => roher `gps.condition`-Wert bzw. Werte (für den Post-Match-Zustands-Filter, spiegelt §9). @var array<string, string|list<string>> */
     public const FRISCHE_CONDITION = [
-        'frisch' => 'frisch', 'tk' => 'TK', 'trocken' => 'trocken', 'konserve' => 'konserviert', 'behandelt' => \Platform\FoodAlchemist\Services\GpNamingService::BEHANDLUNG,
+        'frisch' => 'frisch', 'tk' => 'TK', 'trocken' => 'trocken', 'konserve' => 'konserviert', 'behandelt' => \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::BEHANDLUNG,
     ];
 
     /**

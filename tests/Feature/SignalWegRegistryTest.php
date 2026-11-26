@@ -2,7 +2,7 @@
 
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
 use Platform\FoodAlchemist\Support\SignalCockpit;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -175,7 +175,7 @@ it('MCP signale.FIX: gibt den Weg statt einer nackten Absage weiter (Lockstep)',
 it('lehnt einen navigate-Plan im Executor genauso ab wie gar keinen', function () {
     // `navigate` darf niemals in den Fix-/Assist-Pfad geraten — der Satz ist eine
     // Wegbeschreibung, kein Auftrag.
-    $svc = app(\Platform\FoodAlchemist\Services\SignalFixService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Pruefung\SignalFixService::class);
     $sig = FoodAlchemistSignal::create([
         'team_id' => $this->rootTeam->id,
         'type' => SignalTyp::FoodbookKapitelOhneText,

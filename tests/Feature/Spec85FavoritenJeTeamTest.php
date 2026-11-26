@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Livewire\Favorites\Index as FavoritenSeite;
 use Platform\FoodAlchemist\Livewire\Settings\Einkauf;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistTeamFavorit;
-use Platform\FoodAlchemist\Services\FavoriteGpService;
+use Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Support\EinkaufsKette;
 use Platform\FoodAlchemist\Support\FavoritenOverlay;

@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\Kaskade\KaskadenSchritt;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\PricingCascadeService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\AbhaengigkeitsGraph;
 use Platform\FoodAlchemist\Tests\Support\BaselineKlinke;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

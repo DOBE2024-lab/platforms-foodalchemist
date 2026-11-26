@@ -2,8 +2,8 @@
 
 use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
-use Platform\FoodAlchemist\Services\DataQualityService;
-use Platform\FoodAlchemist\Services\SignalObjectService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalObjectService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

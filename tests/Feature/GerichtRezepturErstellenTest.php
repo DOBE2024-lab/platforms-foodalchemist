@@ -13,10 +13,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService;
-use Platform\FoodAlchemist\Services\GerichtHuelleService;
+use Platform\FoodAlchemist\Services\Gericht\GerichtHuelleService;
 use Platform\FoodAlchemist\Services\Planung\IdeenService;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

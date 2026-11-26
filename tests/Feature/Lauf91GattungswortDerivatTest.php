@@ -3,7 +3,7 @@
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\IngredientMatchService;
+use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Services\Einkauf\LaCandidateFinder;
 use Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -40,7 +40,7 @@ it('Mint: „Öl" bekommt kein Aromaöl (Finder schlägt es vor wie auf demo)', 
     $mock = Mockery::mock(LaCandidateFinder::class, [
         app(\Platform\FoodAlchemist\Services\Matching\TokenEngine::class),
         app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class),
-        app(\Platform\FoodAlchemist\Services\TerminologyService::class),
+        app(\Platform\FoodAlchemist\Services\GpStamm\TerminologyService::class),
         app(\Platform\FoodAlchemist\Services\Einkauf\StammLieferantService::class),
         app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class),
         app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaStrategieResolver::class),

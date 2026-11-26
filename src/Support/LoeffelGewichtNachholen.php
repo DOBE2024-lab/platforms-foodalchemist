@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\LoeffelGewichtNachholenJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\GpFormService;
+use Platform\FoodAlchemist\Services\GpStamm\GpFormService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

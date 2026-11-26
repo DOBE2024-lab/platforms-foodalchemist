@@ -5,8 +5,8 @@ use Platform\FoodAlchemist\Enums\MatchBand;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\IngredientMatchService;
-use Platform\FoodAlchemist\Services\RecipeExtractService;
+use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeExtractService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -112,7 +112,7 @@ it('Aromen-Präfix nur für Aroma, Aromaöl, Tinktur, Matte — „Extrakt:“ b
         ->and($h->istBasiskomponente('Tinktur: Rosmarin'))->toBeTrue()
         ->and($h->istBasiskomponente('Extrakt: Vanille'))->toBeFalse()
         // „Öl: Kräuter“ ist Zubereitung (D5) — ob selbst oder gekauft, entscheiden die Leitplanken; „Öl: neutral“ ist das Standard-GP (LeitplankenZubereitungTest)
-        ->and(app(\Platform\FoodAlchemist\Services\IngredientMatchService::class)->zubereitungsWeg($this->rootTeam, 'Öl: neutral'))->toBeNull();
+        ->and(app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->zubereitungsWeg($this->rootTeam, 'Öl: neutral'))->toBeNull();
 });
 
 it('Import: neue Unterrezept-Hüllen werden im Hintergrund ausrezeptiert (Job je Hülle, Eltern-Bezug), bleiben Entwurf', function () {
@@ -145,9 +145,9 @@ it('Import: Obergrenze je Import — der Rest bleibt als Hülle offen (Knopf), 0
 
 it('Ausrezeptieren füllt die vorhandene Hülle (kein Duplikat), Status wird Entwurf', function () {
     config(['foodalchemist.ai.provider' => 'fake']);
-    $stub = app(\Platform\FoodAlchemist\Services\RecipeService::class)->createSubRecipeStub($this->rootTeam, 'Geflügelfond')['recipe'];
+    $stub = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->createSubRecipeStub($this->rootTeam, 'Geflügelfond')['recipe'];
 
-    $res = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Unterrezept «Geflügelfond»', [
+    $res = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Unterrezept «Geflügelfond»', [
         'stub_fuellen_id' => $stub->id, 'titel_vorgabe' => 'Geflügelfond',
     ], ['name' => 'Geflügelfond', 'zutaten' => [['text' => 'Hühnerknochen', 'quantity' => 1000, 'unit' => 'g'], ['text' => 'Wasser', 'quantity' => 2000, 'unit' => 'g']], 'preparation' => 'Auskochen.'],
         createdVia: 'import_ki_unterrezept');

@@ -11,7 +11,7 @@
 const ENUM_STATUS_GEPRUEFT = [
     // Planung (PlanningRun/-Step: String-Spalten, kein Cast)
     'src/Livewire/Planung/Index.php', 'src/Livewire/Planung/LaufStatus.php', 'src/Livewire/Concerns/FortschrittAnsicht.php', 'src/Support/Planung/KaskadenAnsicht.php',
-    'src/Services/Kaskade/PlanningCascadeService.php', 'src/Services/RecipeDependencyWorkflowService.php', 'src/Services/Planung/PlanningSessionService.php',
+    'src/Services/Kaskade/PlanningCascadeService.php', 'src/Services/Rezept/RecipeDependencyWorkflowService.php', 'src/Services/Planung/PlanningSessionService.php',
     'src/Services/Kaskade/KaskadenSchritt.php',   // CQ 3.4: Step-/Lauf-Status aus PlanningCascadeService verschoben (CascadeRun.status = String-Spalte)
     'src/Livewire/Planung/KaskadenLauf.php',   // 98 · 3.3 S2-E2: Lauf-Status-Vergleiche aus Planung/Index verschoben (CascadeRun.status = String-Spalte)
     'src/Services/Kaskade/KaskadeFreigabe.php',   // 98 · 3.3 S1: Gate 2 aus PlanningCascadeService verschoben, vergleicht nur CascadeRunStep.status (String-Spalte)
@@ -24,8 +24,8 @@ const ENUM_STATUS_GEPRUEFT = [
     'src/Services/Trends/TrendAutomatikService.php',   // Spec 93 C: FoodAlchemistTrend.status ist eine String-Spalte (wie TrendService)
     'src/Livewire/Suppliers/ProduktpassPanel.php', 'src/Jobs/ProduktpassLesenJob.php', 'src/Services/Produktpass/ProduktpassService.php',
     'src/Services/Produktpass/ProduktpassAbweichungService.php', 'src/Livewire/Suppliers/NectaPruefaelle.php',
-    'src/Services/Bestellung/OrderMailService.php', 'resources/views/livewire/orders/editor.blade.php', 'src/Services/RecipeFindingService.php',
-    'src/Services/ConformanceService.php', 'src/Models/FoodAlchemistInventoryCount.php', 'resources/views/livewire/projekte/index.blade.php',
+    'src/Services/Bestellung/OrderMailService.php', 'resources/views/livewire/orders/editor.blade.php', 'src/Services/Pruefung/RecipeFindingService.php',
+    'src/Services/Conformance/ConformanceService.php', 'src/Models/FoodAlchemistInventoryCount.php', 'resources/views/livewire/projekte/index.blade.php',
     'resources/views/livewire/preislisten/index.blade.php', 'src/Services/Ai/KiAuftragService.php', 'src/Services/Preis/PreislistenImportService.php',
     // Markt-Einordnung (#759) und Wettbewerbs-Funde (#744): String-Spalten ohne Enum-Cast
     'src/Jobs/MarktEinordnungJob.php', 'resources/views/livewire/trendradar/wettbewerber.blade.php',
@@ -33,7 +33,7 @@ const ENUM_STATUS_GEPRUEFT = [
     'src/Tools/ConceptSlotsPostTool.php', 'src/Services/Concepter/ConceptGeneratorService.php',
     'src/Tools/FoodAlchemistTool.php', 'src/Services/Concepter/ConceptPaketService.php',   // guardDraft/paketReferenz + Paket-Payload: Concept.status ist eine String-Spalte
     // GP als Rohzeile (DB::table → status ist ein String)
-    'src/Services/GpBereinigenService.php', 'src/Services/GpUmhaengenService.php', 'src/Services/GpPaket/GpPaketVerknuepfer.php',
+    'src/Services/GpStamm/GpBereinigenService.php', 'src/Services/GpStamm/GpUmhaengenService.php', 'src/Services/GpPaket/GpPaketVerknuepfer.php',
     // Freigabe-Sperre (98 · 1.1f): Rohzeilen aus DB::table, Rezept vergleicht RecipeStatus::…->value, Concept.status ist eine String-Spalte
     'src/Services/Rezept/FreigabeSperre.php',
 ];

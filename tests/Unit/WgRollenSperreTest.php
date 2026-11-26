@@ -15,8 +15,8 @@ it('Sperre: keine Warengruppen-Rollen als Code-Literal (CQ 3.7)', function () {
     $erlaubt = [
         'src/Support/WgRolle.php' => 2,
         'src/Livewire/Settings/Herstellkosten.php' => 1,
-        'src/Services/VocabularyService.php' => 1,
-        'src/Services/ZukaufBasisrezeptService.php' => 1,
+        'src/Services/GpStamm/VocabularyService.php' => 1,
+        'src/Services/Rezept/ZukaufBasisrezeptService.php' => 1,
     ];
     $funde = [];
     foreach (['src', 'resources'] as $ordner) {

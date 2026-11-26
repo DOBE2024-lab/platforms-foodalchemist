@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\FavoriteGpService;
+use Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService;
 use Platform\FoodAlchemist\Services\Planung\GenerationContextService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

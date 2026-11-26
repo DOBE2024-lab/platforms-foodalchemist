@@ -143,8 +143,8 @@ it('Nachladen: KostenCache und TeamVk mit Teil-Spalten-Modell aus fremdem Kontex
         $teil2 = FoodAlchemistRecipe::ohneTeamSicht('test')->select(['id', 'name'])->findOrFail($rezept->id);
 
         return FaTeam::imTeam($this->b, fn () => [
-            app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->fuer($teil, $this->a),
-            app(\Platform\FoodAlchemist\Services\TeamVkService::class)->fuer($teil2, $this->a),
+            app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->fuer($teil, $this->a),
+            app(\Platform\FoodAlchemist\Services\Rezept\TeamVkService::class)->fuer($teil2, $this->a),
         ]);
     };
     $null = $ergebnis(0);

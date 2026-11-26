@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Schema;
 use Platform\FoodAlchemist\Enums\MatchBand;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\IngredientMatchService;
+use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

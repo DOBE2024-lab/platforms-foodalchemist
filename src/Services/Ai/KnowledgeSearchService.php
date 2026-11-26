@@ -6,7 +6,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\TerminologyService;
+use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 
 /**
  * Spec 52/E: ein Ranking, unabhängig von Einstieg und Kontextbudget.

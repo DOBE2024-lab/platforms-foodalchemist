@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpAggregateService;
-use Platform\FoodAlchemist\Services\GpAromaService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAromaService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
-use Platform\FoodAlchemist\Services\SensorikService;
+use Platform\FoodAlchemist\Services\Rezept\SensorikService;
 use Platform\FoodAlchemist\Support\FaShell;
 
 /**

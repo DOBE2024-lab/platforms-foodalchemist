@@ -1,0 +1,1497 @@
+<?php
+
+namespace Platform\FoodAlchemist\Services\Rezept;
+
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Enums\MatchMethod;
+use Platform\FoodAlchemist\Enums\RecipeStatus;
+use Platform\FoodAlchemist\Models\FoodAlchemistComponentEquivalent;
+use Platform\FoodAlchemist\Models\FoodAlchemistGp;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipeCategory;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipeMainGroup;
+use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
+use Platform\FoodAlchemist\Support\TeamScope;
+use Platform\FoodAlchemist\Support\Text;
+
+/**
+ * M4-04/05 / D-5 §3.1 (Listen-Teil): Basisrezept-Browser — Scope basis() wird
+ * in JEDER Query erzwungen (D-6/SalesRecipeService bekommt seine eigene Sicht).
+ * CRUD/Zutaten-Mutationen folgen mit M4-06/07 (jede Mutation → recomputeAndPropagate).
+ */
+class RecipeService
+{
+    /**
+     * Die grobe Menü-Richtung. EIN Wort, geschlossenes Vokabular — das Aroma-Profil gehört in
+     * `description` (so steht es auch im Prompt `recipe.geschmack`).
+     *
+     * ★ Diese Liste stand bis 2026-09-12 VIERMAL im Code ausgeschrieben (RecipeModal, VkModal,
+     * BulkEnrichService, RecipeGeneratorService) — und ausgerechnet hier, am Engpass, durch den
+     * UI *und* MCP müssen, gar nicht. Über `recipes.POST/PUT` ging jeder String durch bis in die
+     * `varchar(16)`-Spalte; ein längerer Satz starb dort mit `SQLSTATE[22001]`. Vier Kopien einer
+     * Regel und die eine Stelle ohne, an der sie zählt.
+     */
+    public const TASTE_DIRECTIONS = ['suess', 'herzhaft', 'neutral'];
+
+    /**
+     * Deckel für die beiden KI-Freitextfelder `function` und `temperature` (Spalte: varchar(255)).
+     *
+     * ★ Der Riegel gehört HIERHER und nicht nur in den Anreicherungs-Pfad: über
+     * `recipes.POST/PUT` schreibt MCP direkt durch diesen Service, und dort gab es gar keine
+     * Grenze. Beim Testen faellt das nicht auf — die Suite laeuft auf SQLite, und SQLite
+     * erzwingt keine varchar-Laenge ([[feedback_sqlite_tests_no_varchar_length]]). Erst MySQL
+     * wirft `SQLSTATE[22001]`, und dann reisst das eine Feld alle anderen desselben Schreib-
+     * vorgangs mit.
+     */
+    private static function freitext(mixed $wert, int $max = 255): ?string
+    {
+        $wert = is_string($wert) ? trim($wert) : '';
+
+        return $wert === '' ? null : mb_substr($wert, 0, $max);
+    }
+
+    /**
+     * Unbekannte Richtung ⇒ null, nicht „irgendwas". Ein falsches Etikett wäre schlimmer als ein
+     * fehlendes: die Menüplanung filtert darauf, ein Fantasiewert verschwindet aus jedem Filter.
+     */
+    private static function tasteDirection(mixed $wert): ?string
+    {
+        $wert = is_string($wert) ? trim(mb_strtolower($wert)) : '';
+
+        return in_array($wert, self::TASTE_DIRECTIONS, true) ? $wert : null;
+    }
+
+    /**
+     * Filterschlüssel der Taxonomie-Achse (MVP-042/043). Eine Facette rechnet immer OHNE die
+     * eigene Achse — sonst zählt sie die Auswahl, die sie gerade ersetzen soll. „Ohne Kategorie"
+     * gehört zur selben Achse wie Hauptgruppe/Kategorie: die drei schließen sich gegenseitig aus.
+     */
+    private const TAXONOMIE_ACHSE = ['hauptgruppe' => 1, 'category' => 1, 'ohne_kategorie' => 1];
+
+    /**
+     * Gesamtzähler („Alle Hauptgruppen") aus DERSELBEN Query wie die Tabelle (MVP-042).
+     *
+     * Vorher summierte die View die Hauptgruppen-Facetten — und verlor damit jedes Rezept ohne
+     * Kategorie (Tabelle 64, Baum 62). Eine Summe von Facetten ist nie die Gesamtmenge, sobald
+     * eine Facette nicht alle Zeilen abdeckt.
+     */
+    public function gesamtCount(Team $team, array $filters = []): int
+    {
+        return $this->browserQuery($team, array_diff_key($filters, self::TAXONOMIE_ACHSE))->count();
+    }
+
+    /** Eigener Arbeitsvorrat: Rezepte ohne Kategorie — im Baum sonst unerreichbar (MVP-042). */
+    public function ohneKategorieCount(Team $team, array $filters = []): int
+    {
+        return $this->browserQuery($team, array_diff_key($filters, self::TAXONOMIE_ACHSE))
+            ->whereNull('foodalchemist_recipes.category_id')
+            ->count();
+    }
+
+    /** Hauptgruppen-Zähler in einer GROUP-BY-Query (Baum links, P-1). */
+    public function hauptgruppenCounts(Team $team, array $filters = []): array
+    {
+        return $this->browserQuery($team, array_diff_key($filters, self::TAXONOMIE_ACHSE))
+            ->join('foodalchemist_recipe_categories AS k', 'k.id', '=', 'foodalchemist_recipes.category_id')
+            ->selectRaw('k.main_group_id, COUNT(*) AS n')
+            ->groupBy('k.main_group_id')
+            ->pluck('n', 'k.main_group_id')
+            ->all();
+    }
+
+    /**
+     * Kategorie-Zähler der gewählten Hauptgruppe (zweite Baum-Ebene).
+     *
+     * `$filters` ist Pflicht-Kontext, nicht Kür (MVP-043): vorher rechnete die Methode mit
+     * `browserQuery($team, [])` und verwarf Suche, Status, Geschmack und Fertigung. Der Zähler
+     * versprach dann 1 Treffer, der Klick auf `?status=review&hg=31&kat=189` lieferte 0.
+     */
+    public function kategorieCounts(Team $team, int $mainGroupId, array $filters = []): array
+    {
+        return $this->browserQuery($team, array_diff_key($filters, self::TAXONOMIE_ACHSE))
+            ->join('foodalchemist_recipe_categories AS k', 'k.id', '=', 'foodalchemist_recipes.category_id')
+            ->where('k.main_group_id', $mainGroupId)
+            ->selectRaw('foodalchemist_recipes.category_id, COUNT(*) AS n')
+            ->groupBy('foodalchemist_recipes.category_id')
+            ->pluck('n', 'foodalchemist_recipes.category_id')
+            ->all();
+    }
+
+    public function mainGroups(Team $team): Collection
+    {
+        return FoodAlchemistRecipeMainGroup::visibleToTeam($team)
+            ->orderBy('sort_order')->orderBy('code')->get();
+    }
+
+    /** Tabelle (M4-04): Name·HG·Kategorie·Geschmack·Fertigung·Status·Zutaten·Yield·Allergen-Konf. */
+    public function paginateBrowser(array $filters, Team $team, int $perPage = 100): LengthAwarePaginator
+    {
+        return $this->browserQuery($team, $filters)
+            ->with('category:id,main_group_id,label')
+            ->orderBy('foodalchemist_recipes.name')
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /** Panel (M4-05): Detail inkl. Zutaten (GP-Links), Eignungen, Equipment. */
+    public function detail(Team $team, int $id): ?FoodAlchemistRecipe
+    {
+        return FoodAlchemistRecipe::visibleToTeam($team)->basis()
+            ->with([
+                'kategorie:id,main_group_id,label',
+                'ingredients.gp:id,name,main_ingredient_slug,lead_la_supplier_item_id,piece_default_g,commodity_group_code,is_derivat', // Zeilen-EK braucht Lead+Stückgewicht (T3)
+                'ingredients.unit:id,slug,display_de,dimension,default_in_g,default_in_ml', // T1-Kaskade braucht die Faktoren
+                'ingredients.referencedRecipe:id,name,ek_per_kg_eur',
+                'equipment',
+                'niveauEignungen',
+                'sektorEignungen',
+            ])
+            ->find($id);
+    }
+
+    /**
+     * M6-04 / D-6 §6 (VK-Parität): sicht-NEUTRALES Detail für den geteilten
+     * Zutaten-Editor — ein Editor für beide Sichten. Die Sicht-Services
+     * (detail()/SalesRecipeService::detail()) bleiben strikt gescoped (§7.8);
+     * NUR der Editor lädt hierüber.
+     */
+    public function detailAnySicht(Team $team, int $id): ?FoodAlchemistRecipe
+    {
+        return FoodAlchemistRecipe::visibleToTeam($team)
+            ->with([
+                'kategorie:id,main_group_id,label',
+                'ingredients.gp:id,name,main_ingredient_slug,lead_la_supplier_item_id,piece_default_g,commodity_group_code,is_derivat',
+                'ingredients.unit:id,slug,display_de,dimension,default_in_g,default_in_ml',
+                // yield_kg/yield_pieces: g/Stück fürs Live-Rechnen im Zutaten-Editor
+                // (Stück-Sub — spiegelt RecipeRecomputeService::grammFaktor)
+                'ingredients.referencedRecipe:id,name,ek_per_kg_eur,yield_kg,yield_pieces',
+                'equipment',
+                'niveauEignungen',
+                'sektorEignungen',
+            ])
+            ->find($id);
+    }
+
+    public function statusCounts(Team $team): array
+    {
+        return FoodAlchemistRecipe::visibleToTeam($team)->basis()
+            ->selectRaw('status, COUNT(*) AS n')->groupBy('status')->pluck('n', 'status')->all();
+    }
+
+    // ── M4-06: CRUD (D-5 §3.1) ──────────────────────────────────────────
+
+    /** Regelwerk §1.7: slug(name) — ä→ae/ö→oe/ü→ue/ß→ss, Sonderzeichen→_, kollabiert. */
+    public function rezeptKey(string $name): string
+    {
+        return Text::falte($name, Text::SLUG);
+    }
+
+    /**
+     * Anlage (status draft, key nach §1.7 + §1.8-Diskriminator: bei Kollision
+     * +_slug(kategorie), dann _2/_3 …). Läuft die Pipeline einmal an (leere Aggregate).
+     */
+    public function create(Team $team, array $in): FoodAlchemistRecipe
+    {
+        $name = trim($in['name'] ?? '');
+        if ($name === '') {
+            throw new \RuntimeException('Rezept-Name ist Pflicht (§1).');
+        }
+        // MVP-044 (P0): Kategorie ist eine REFERENZ und wird autorisiert, bevor sie irgendwo
+        // landet — vorher übernahmen Create und Update die rohe ID aus dem client-kontrollierten
+        // Formular, die einzige Prüfung war die Options-Liste im Browser. Geprüft wird
+        // Sichtbarkeit, nicht Eigentum: die geerbte Master-Kategorie muss nutzbar bleiben.
+        $kategorieId = TeamScope::referenz(
+            FoodAlchemistRecipeCategory::class, $in['category_id'] ?? null, $team, 'Kategorie'
+        );
+        $geraete = $this->geraete($team, $in);
+
+        $key = $this->rezeptKey($name);
+        if ($this->keyVergeben($team, $key)) {                     // §1.8: Kategorie als Diskriminator
+            $kategorie = $kategorieId !== null
+                ? FoodAlchemistRecipeCategory::visibleToTeam($team)->find($kategorieId)?->label
+                : null;
+            if ($kategorie !== null) {
+                $key = $this->rezeptKey($name) . '_' . $this->rezeptKey($kategorie);
+            }
+            $basis = $key;
+            for ($n = 2; $this->keyVergeben($team, $key); $n++) {  // identische Duplikate: _2-Suffix
+                $key = "{$basis}_{$n}";
+            }
+        }
+
+        $recipe = FoodAlchemistRecipe::create(\Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::vorgabeFelder($in) + [
+            'team_id' => $team->id,
+            'recipe_key' => $key,
+            'name' => $name,
+            'origin_source' => ($in['origin_source'] ?? '') ?: null,
+            'category_id' => $kategorieId,
+            'is_sales_recipe' => (bool) ($in['is_sales_recipe'] ?? false),
+            'status' => 'draft',
+            'taste_direction' => self::tasteDirection($in['taste_direction'] ?? null),
+            'production_depth' => ($in['production_depth'] ?? '') ?: null,
+            'work_time_min' => $in['work_time_min'] ?? null,
+            // Stufe 3 — Planer-Felder (Create-Parität mit update(), sonst still verworfen bei Anlage).
+            'setup_time_min' => $in['setup_time_min'] ?? null,
+            'variable_work_time_min' => $in['variable_work_time_min'] ?? null,
+            'variable_work_time_basis' => $in['variable_work_time_basis'] ?? null,
+            'standzeit_min' => $in['standzeit_min'] ?? null,
+            'max_vorlauf_tage' => $in['max_vorlauf_tage'] ?? null,
+            'storage_type' => self::lagerart($in['storage_type'] ?? null),
+            'shelf_life_chilled_days' => $in['shelf_life_chilled_days'] ?? null,
+            'shelf_life_frozen_days' => $in['shelf_life_frozen_days'] ?? null,
+            'shelf_life_dry_days' => $in['shelf_life_dry_days'] ?? null,
+            'storage_types' => array_key_exists('storage_types', $in) ? self::lagerarten($in['storage_types']) : null,
+            'batch_max_kg' => $in['batch_max_kg'] ?? null,
+            'batch_max_pieces' => $in['batch_max_pieces'] ?? null,
+            'default_station_id' => TeamScope::referenz(\Platform\FoodAlchemist\Models\FoodAlchemistProductionStation::class, $in['default_station_id'] ?? null, $team, 'Posten'),
+            'yield_kg_manual' => $in['yield_kg_manual'] ?? null,
+            'yield_pieces' => ($in['yield_pieces'] ?? '') !== '' ? ($in['yield_pieces'] ?? null) : null,
+            'description' => ($in['description'] ?? '') ?: null,
+            // #509 Create-Parität: dieselben Fachfelder wie update() — sonst verwirft
+            // die Anlage still, was der Nutzer im Anlege-Modal getippt hat (D-5 §4.2).
+            'temperature' => self::freitext($in['temperature'] ?? null),
+            'function' => self::freitext($in['function'] ?? null),
+            'preparation' => ($in['preparation'] ?? '') ?: null,
+            'notes_manual' => ($in['notes_manual'] ?? '') ?: null,
+            'last_modified_by' => 'editor',
+            'created_via' => ($in['created_via'] ?? '') ?: null,     // Phase A: mcp | editor | import | generator
+        ]);
+        $geraete !== null && $recipe->equipment()->sync($geraete);   // Equipment (§4.2.6), nur wenn übergeben
+        $this->schritteAusMarkdown($recipe, $in);
+        app(RecipeRecomputeService::class)->recomputePipeline($recipe->id);
+
+        \Platform\FoodAlchemist\Support\SensorikNachholen::ausloesen($team, (int) $recipe->id);   // Spec 60: Texturen für neue Basisrezepte
+
+        return $recipe->refresh();
+    }
+
+    /** Edit: recipe_key bleibt STABIL (Referenzen/Slugs); Recompute bei kalkulations-relevanten Feldern. */
+    /** Equipment-Sync aus Editor/MCP (null = nicht übergeben): menschliche Entscheidung (`source` manual); neue Geräte müssen sichtbar sein (CQ 2.1d). */
+    private function geraete(Team $team, array $in, ?FoodAlchemistRecipe $bisher = null): ?array
+    {
+        if (! is_array($in['equipment_ids'] ?? null)) {
+            return null;
+        }
+        $ids = array_values(array_unique(array_filter(array_map('intval', $in['equipment_ids']), fn ($id) => $id > 0)));
+        \Platform\FoodAlchemist\Support\Verweisziel::pruefeIds(\Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment::class, $team, array_diff($ids, $bisher?->equipment()->allRelatedIds()->map(fn ($id) => (int) $id)->all() ?? []), 'Gerät');
+
+        return array_fill_keys($ids, ['source' => 'manual']);
+    }
+
+    public function update(Team $team, int $id, array $in): FoodAlchemistRecipe
+    {
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($id);
+        if ((int) $recipe->team_id !== (int) $team->id) {
+            throw new \RuntimeException('Geerbtes Rezept — Pflege nur durchs Besitzer-Team (D1).');
+        }
+        $geraete = $this->geraete($team, $in, $recipe);
+        $name = trim($in['name'] ?? $recipe->name);
+        if ($name === '') {
+            throw new \RuntimeException('Rezept-Name ist Pflicht (§1).');
+        }
+
+        $altManual = $recipe->yield_kg_manual;
+        $recipe->update([
+            'name' => $name,
+            'origin_source' => array_key_exists('origin_source', $in) ? (($in['origin_source'] ?? '') ?: null) : $recipe->origin_source,
+            // `is_sales_recipe` ist nach der Anlage FEST (2026-10-07, löst D-6 ab): ein Umschalten am
+            // selben Datensatz ließ Sub-Rezept-Verweise auf ein „Gericht" und Speiseplan-/Foodbook-/
+            // Paket-Verweise auf ein Basisrezept zurück. Basis → Verkauf geht nur über ein eigenes
+            // Gericht (SalesRecipeService::createFromBasis). Ein mitgesandter Key wird ignoriert.
+            'category_id' => array_key_exists('category_id', $in)
+                ? TeamScope::referenz(FoodAlchemistRecipeCategory::class, $in['category_id'], $team, 'Kategorie')
+                : $recipe->category_id,
+            'taste_direction' => array_key_exists('taste_direction', $in)
+                ? self::tasteDirection($in['taste_direction']) : $recipe->taste_direction,
+            'production_depth' => array_key_exists('production_depth', $in) ? (($in['production_depth'] ?? '') ?: null) : $recipe->production_depth, ...\Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::vorgabeFelder($in),
+            'work_time_min' => array_key_exists('work_time_min', $in) ? $in['work_time_min'] : $recipe->work_time_min,
+            // Stufe 3 — Auto-Produktionsplaner: Default-Posten, Vorproduzierbarkeit, Rüstzeit, Topf-Deckel.
+            'setup_time_min' => array_key_exists('setup_time_min', $in) ? $in['setup_time_min'] : $recipe->setup_time_min,
+            'variable_work_time_min' => array_key_exists('variable_work_time_min', $in) ? $in['variable_work_time_min'] : $recipe->variable_work_time_min,
+            'variable_work_time_basis' => array_key_exists('variable_work_time_basis', $in) && in_array($in['variable_work_time_basis'], ['kg', 'piece', 'portion'], true)
+                ? $in['variable_work_time_basis'] : $recipe->variable_work_time_basis,
+            'standzeit_min' => array_key_exists('standzeit_min', $in) ? $in['standzeit_min'] : $recipe->standzeit_min,
+            'max_vorlauf_tage' => array_key_exists('max_vorlauf_tage', $in) ? $in['max_vorlauf_tage'] : $recipe->max_vorlauf_tage,
+            'storage_type' => array_key_exists('storage_type', $in) ? self::lagerart($in['storage_type']) : $recipe->storage_type,
+            'shelf_life_chilled_days' => array_key_exists('shelf_life_chilled_days', $in) ? $in['shelf_life_chilled_days'] : $recipe->shelf_life_chilled_days,
+            'shelf_life_frozen_days' => array_key_exists('shelf_life_frozen_days', $in) ? $in['shelf_life_frozen_days'] : $recipe->shelf_life_frozen_days,
+            'shelf_life_dry_days' => array_key_exists('shelf_life_dry_days', $in) ? $in['shelf_life_dry_days'] : $recipe->shelf_life_dry_days,
+            'storage_types' => array_key_exists('storage_types', $in) ? self::lagerarten($in['storage_types']) : $recipe->storage_types,
+            'batch_max_kg' => array_key_exists('batch_max_kg', $in) ? $in['batch_max_kg'] : $recipe->batch_max_kg,
+            'batch_max_pieces' => array_key_exists('batch_max_pieces', $in) ? $in['batch_max_pieces'] : $recipe->batch_max_pieces,
+            'default_station_id' => array_key_exists('default_station_id', $in)
+                ? TeamScope::referenz(\Platform\FoodAlchemist\Models\FoodAlchemistProductionStation::class, $in['default_station_id'], $team, 'Posten')
+                : $recipe->default_station_id,
+            'yield_kg_manual' => array_key_exists('yield_kg_manual', $in) ? $in['yield_kg_manual'] : $recipe->yield_kg_manual,
+            'yield_pieces' => array_key_exists('yield_pieces', $in) ? (($in['yield_pieces'] ?? '') !== '' ? $in['yield_pieces'] : null) : $recipe->yield_pieces,
+            'description' => array_key_exists('description', $in) ? (($in['description'] ?? '') ?: null) : $recipe->description,
+            // UI-Audit (D-5 §4.2): Eigenschaften/Zubereitung/Notizen/Status im Editor pflegbar
+            'temperature' => array_key_exists('temperature', $in) ? self::freitext($in['temperature']) : $recipe->temperature,
+            'function' => array_key_exists('function', $in) ? self::freitext($in['function']) : $recipe->function,
+            'preparation' => array_key_exists('preparation', $in) ? (($in['preparation'] ?? '') ?: null) : $recipe->preparation,
+            'notes_manual' => array_key_exists('notes_manual', $in) ? (($in['notes_manual'] ?? '') ?: null) : $recipe->notes_manual,
+            'status' => array_key_exists('status', $in) && in_array($in['status'], ['stub', 'draft', 'review', 'approved', 'archived'], true)
+                ? app(\Platform\FoodAlchemist\Services\Rezept\FreigabeSperre::class)->wechsel($team, $recipe, $in['status']) : $recipe->status,   // 1.1f: Freigabe-Sperre
+            'version' => $recipe->version + 1,
+            'last_modified_by' => 'editor',
+        ]);
+        $geraete !== null && $recipe->equipment()->sync($geraete);   // Equipment (§4.2.6), nur wenn übergeben
+        $this->schritteAusMarkdown($recipe, $in);
+        if (array_key_exists('yield_kg_manual', $in) && $in['yield_kg_manual'] !== $altManual) {
+            app(RecipeRecomputeService::class)->recomputeNachSpeichern($recipe->id); // ek/kg-Nenner (A-3); 2.1b: Eltern per Queue
+        }
+
+        \Platform\FoodAlchemist\Support\SensorikNachholen::ausloesen($team, (int) $recipe->id);
+
+        return $recipe->refresh();
+    }
+
+    /**
+     * Spec 27: Schreibwege dürfen weiter Markdown liefern (Generator, MCP recipes.POST/PUT,
+     * Import) — Master sind aber die Schritte. Kommt `preparation` mit Inhalt an, wird es
+     * hier deterministisch in Schritte geparst und der Spiegel daraus neu gerendert.
+     *
+     * Vorhandene Schritte bleiben unangetastet: sie sind die feinere Wahrheit (inkl.
+     * Foto-Verknüpfungen). Wer sie ersetzen will, nutzt `recipe_steps.PUT` bzw. den
+     * Schritt-Editor (RecipeStepService::sync / ausMarkdown mit ueberschreiben: true).
+     *
+     * ⚠️ Wichtig: wird der Markdown-Write deshalb verworfen, muss der Spiegel aus den
+     * Schritten NEU gerendert werden — sonst stünde im Feld der abgelehnte Text und
+     * Produktionsdruck/Suche zeigten etwas, das die Anleitung nicht sagt.
+     */
+    private function schritteAusMarkdown(FoodAlchemistRecipe $recipe, array $in): void
+    {
+        if (! array_key_exists('preparation', $in) || trim((string) ($in['preparation'] ?? '')) === '') {
+            return;
+        }
+
+        $svc = app(RecipeStepService::class);
+        if ($svc->ausMarkdown($recipe, (string) $in['preparation']) === 0) {
+            $svc->spiegele($recipe);
+        }
+    }
+
+    /** Kopie inkl. Zutaten, status draft (D-5 §3.1). */
+    public function duplicate(Team $team, int $id, string $neuerName): FoodAlchemistRecipe
+    {
+        $original = FoodAlchemistRecipe::visibleToTeam($team)->with('ingredients')->findOrFail($id);
+
+        return DB::transaction(function () use ($team, $original, $neuerName) {
+            $kopie = $this->create($team, [
+                'name' => $neuerName,
+                'category_id' => $original->category_id,
+                'origin_source' => $original->origin_source,
+                'taste_direction' => $original->taste_direction, 'vorgabe_convenience' => $original->vorgabe_convenience, 'vorgabe_niveau' => $original->vorgabe_niveau,
+                'production_depth' => $original->production_depth,
+                'is_sales_recipe' => $original->is_sales_recipe,
+                'description' => $original->description,
+            ]);
+            foreach ($original->ingredients as $z) {
+                $kopie->ingredients()->create([
+                    ...$z->only(['position', 'gp_id', 'referenced_recipe_id', 'raw_text', 'display_name',
+                        'quantity', 'quantity_max', 'unit_vocab_id', 'trimming_loss_pct', 'cooking_loss_pct', 'zeilenart',
+                        'is_optional', 'klammer_note', 'note', 'match_method', 'match_confidence',
+                        'role', 'role_source', 'is_value_relevant', 'calc_mode']),
+                    'team_id' => $team->id,
+                ]);
+            }
+            app(RecipeRecomputeService::class)->recomputePipeline($kopie->id);
+
+            return $kopie->refresh();
+        });
+    }
+
+    /**
+     * Löschen (Soft-Delete) — blockt bei JEDER harten Referenz, nicht mehr nur bei Eltern-Zeilen
+     * (2026-09-04). Vorher fielen Ersatz-Verknüpfungen, direkt gepinnte Ausgabe-Positionen und
+     * Zeilen in offenen Produktionsaufträgen still weg. Die Bilanz kommt aus `referenzen()` und
+     * ist dieselbe, die Panel und Editor anzeigen — eine Regel, ein Text (V-06).
+     */
+    public function delete(Team $team, int $id): void
+    {
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($id);
+        if ((int) $recipe->team_id !== (int) $team->id) {
+            throw new \RuntimeException('Geerbtes Rezept — Löschen nur durchs Besitzer-Team (D1).');
+        }
+        $ref = $this->referenzen($id);
+        if ($ref['blocker'] > 0) {
+            $eltern = $recipe->parentIngredients()->whereNull('deleted_at')->with('recipe:id,name')
+                ->get()->pluck('recipe.name')->filter()->unique();
+            throw new \RuntimeException('Löschen blockiert — wird referenziert: '
+                . implode(', ', $ref['blocker_teile'])
+                . ($eltern->isNotEmpty() ? ' — als Sub-Rezept in: ' . $eltern->implode(', ') : '')
+                . '. Erst umhängen („in allen Verwendungen ersetzen"), dann löschen.');
+        }
+        DB::transaction(function () use ($recipe) {
+            $recipe->ingredients()->delete();
+            $recipe->delete();
+        });
+    }
+
+    /** Spec 43 (Bild-Epic): Gericht-Foto (Titelbild eines Rezepts) ablegen. Gibt den Pfad zurück. */
+    public function storeDishImage(Team $team, int $id, \Illuminate\Http\UploadedFile $file): string
+    {
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($id);
+        \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'das Rezeptbild');   // Spec 84 §4.0
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($recipe->image_context_file_id, (string) $recipe->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($recipe, 'image_path')]);
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage(
+            $file, $team, 'foodalchemist.recipe', $id, "foodalchemist/recipe/{$id}",
+        );
+        $recipe->update(['image_context_file_id' => $media['context_file_id'], 'image_path' => $media['path']]);
+
+        return $media['path'];
+    }
+
+    public function clearDishImage(Team $team, int $id): void
+    {
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($id);
+        \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'das Rezeptbild');   // Spec 84 §4.0
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($recipe->image_context_file_id, (string) $recipe->image_path, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($recipe, 'image_path')]);
+        $recipe->update(['image_context_file_id' => null, 'image_path' => null]);
+    }
+
+    /** M4-12: Template-Flag togglen (Vorlagen für Instanziierung — D-5 §1). */
+    public function setTemplate(Team $team, int $id, ?bool $istTemplate = null): FoodAlchemistRecipe
+    {
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($id);
+        if ((int) $recipe->team_id !== (int) $team->id) {
+            throw new \RuntimeException('Geerbtes Rezept — Pflege nur durchs Besitzer-Team (D1).');
+        }
+        $recipe->update(['is_template' => $istTemplate ?? ! $recipe->is_template]);
+
+        return $recipe->refresh();
+    }
+
+    /** M4-12: Bulk-Status (Browser, MCP). 1.1f: Rolle Kuratieren wie setStatus; Freigabe-Sperre, Komponenten in der Auswahl zählen mit; alles oder nichts. @param array<int> $ids */
+    public function bulkStatus(Team $team, array $ids, string $status): int
+    {
+        app(\Platform\FoodAlchemist\Services\FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Rezept-Status setzen');
+        if (\Platform\FoodAlchemist\Enums\RecipeStatus::tryFrom($status) === null) {
+            throw new \RuntimeException("Unbekannter Status [{$status}].");
+        }
+        $eigene = FoodAlchemistRecipe::visibleToTeam($team)->where('team_id', $team->id)->whereIn('id', $ids)->pluck('id')->map(fn ($id) => (int) $id)->all();   // D1
+        app(\Platform\FoodAlchemist\Services\Rezept\FreigabeSperre::class)->pruefeAuswahl($eigene, $status);   // 1.1f
+
+        return FoodAlchemistRecipe::query()->whereIn('id', $eigene)->update(['status' => $status, 'last_modified_by' => 'editor']);
+    }
+
+    public function setStatus(Team $team, int $id, string $status): FoodAlchemistRecipe
+    {
+        // Spec 77a: ab Kuratieren und nur für eigene Rezepte — sichtbar (geerbt/Master) heißt nicht änderbar.
+        app(\Platform\FoodAlchemist\Services\FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Rezept-Status setzen');
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($id);
+        if (! $recipe->isOwnedBy($team)) {
+            throw new \RuntimeException('Dieses Rezept gehört einem anderen Team (geerbt oder Master) — Status hier nicht änderbar. Für Änderungen eine eigene Kopie anlegen.');
+        }
+        if (\Platform\FoodAlchemist\Enums\RecipeStatus::tryFrom($status) === null) {
+            throw new \RuntimeException("Unbekannter Status [{$status}].");
+        }
+        $recipe->update(['status' => app(\Platform\FoodAlchemist\Services\Rezept\FreigabeSperre::class)->wechsel($team, $recipe, $status), 'last_modified_by' => 'editor']);   // 1.1f: Freigabe-Sperre
+
+        return $recipe->refresh();
+    }
+
+    // ── M4-10: Sub-Rezept-Hierarchie (D-5 §3.1, Regelwerk BR §4) ────────
+
+    /**
+     * Stub-Anlage (F4.1): idempotent per Token-Set-Namensgleichheit (wie der
+     * GL-04-Alias-Resolver) — existiert das Rezept, kommt es zurück (neu=false).
+     * Neue Stubs: status=stub, last_modified_by=generator_stub; ein Eltern-Rezept
+     * im Stub-Status wird auf draft gehoben (es hat jetzt echten Inhalt).
+     *
+     * @return array{recipe: FoodAlchemistRecipe, neu: bool}
+     */
+    public function createSubRecipeStub(Team $team, string $name, ?int $parentId = null, array $vorgabe = []): array   // $vorgabe: vorgabe_* vom Aufrufer, sonst vom Eltern-Rezept (29.10.)
+    {
+        $name = trim($name);
+        if ($name === '') {
+            throw new \RuntimeException('Stub-Name ist Pflicht.');
+        }
+
+        $treffer = $this->findByTokenSet($team, $name);
+        if ($treffer !== null) {
+            return ['recipe' => $treffer, 'neu' => false];         // idempotent (Dedupe by name)
+        }
+
+        $stub = $this->create($team, ['name' => $name] + $vorgabe + ($parentId !== null ? (FoodAlchemistRecipe::visibleToTeam($team)->find($parentId)?->only(['vorgabe_convenience', 'vorgabe_niveau']) ?? []) : []));
+        $stub->update(['status' => 'stub', 'last_modified_by' => 'generator_stub']);
+
+        if ($parentId !== null) {
+            $parent = FoodAlchemistRecipe::visibleToTeam($team)->find($parentId);
+            if ($parent !== null && $parent->status->value === 'stub' && $parent->isOwnedBy($team)) {   // Spec 84 B2: nur eigener Eltern
+                $parent->update(['status' => 'draft']);            // Eltern → draft (hat jetzt Inhalt)
+            }
+        }
+
+        return ['recipe' => $stub->refresh(), 'neu' => true];
+    }
+
+    /**
+     * Bestands-Reuse-Lookup (Token-Set-Namensgleichheit, wie der GL-04-Alias-Resolver): findet ein
+     * bestehendes Basisrezept mit identischem Token-Set zum gegebenen Namen — ODER null. Read-only,
+     * legt NICHTS an (im Gegensatz zu {@see createSubRecipeStub}). Der eine Ort, an dem „Bestand zuerst"
+     * VOR der Neu-Anlage prüft, ob die Komponente schon existiert (Reuse-Gate der Kaskade).
+     */
+    public function findByTokenSet(Team $team, string $name): ?FoodAlchemistRecipe
+    {
+        // ALLE Stadien, inkl. `stub` — das ist die reine Namens-Auflösung und der Dedupe-Eingang
+        // von {@see createSubRecipeStub}: fände sie den bestehenden Stub NICHT, würde bei jeder
+        // Stub-Anlage ein Duplikat entstehen (SubRecipeStubTest hält das fest).
+        // Für das REUSE-GATE der Kaskade ist das die falsche Frage — dort zählt, ob der Treffer
+        // wirklich Bestand IST: {@see findByTokenSetMitReife}.
+        return $this->tokenSetTreffer($team, $name)->first();
+    }
+
+    /**
+     * Basisrezepte mit identischem Namens-Token-Set, nach `id` — die geteilte Grundlage von
+     * {@see findByTokenSet} und {@see findByTokenSetMitReife}. Ein Ort für das Matching, damit
+     * die zwei Fragen (»gibt es den Namen?« / »ist es Bestand?«) nicht auseinanderlaufen.
+     *
+     * @return \Illuminate\Support\Collection<int, FoodAlchemistRecipe>
+     */
+    private function tokenSetTreffer(Team $team, string $name, bool $mitVariante = false): \Illuminate\Support\Collection
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return collect();
+        }
+        $engine = app(\Platform\FoodAlchemist\Services\Matching\TokenEngine::class);
+        $zielTokens = $engine->tokenize($name);
+        sort($zielTokens);
+        if ($zielTokens === []) {
+            return collect();
+        }
+        // Klammer-Zusätze („(Zukauf)“, „(hell)“) sind nach BR §1.5 Unterscheidungsmerkmale, kein Bestandteil: für die
+        // BESTAND-Suche zählt ohne exakten Treffer der Name ohne Zusatz („Jus: Rind“ ↔ „Jus: Rind (Zukauf)“), exakt
+        // gewinnt. Nicht für den Dubletten-Schutz beim Anlegen — „Jus: Rind“ selbst kochen bleibt ein eigenes Rezept.
+        $ohneZusatz = static function (string $n) use ($engine): array {
+            $t = $engine->tokenize(trim((string) preg_replace('/\([^)]*\)/u', ' ', $n)));
+            sort($t);
+
+            return $t;
+        };
+        $zielOhne = $ohneZusatz($name);
+        $exakt = collect();
+        $variante = collect();
+        foreach (FoodAlchemistRecipe::visibleToTeam($team)->basis()->orderBy('id')->cursor() as $r) {
+            $tokens = $engine->tokenize((string) $r->name);
+            sort($tokens);
+            if ($tokens === $zielTokens) {
+                $exakt->push($r);
+            } elseif ($mitVariante && $zielOhne !== [] && $ohneZusatz((string) $r->name) === $zielOhne) {
+                $variante->push($r);
+            }
+        }
+
+        return $exakt->isNotEmpty() ? $exakt : $variante;
+    }
+
+    /**
+     * Wie {@see findByTokenSet}, aber MIT Reifegrad — der Aufrufer erfährt, ob der
+     * „Bestand" wirklich Bestand ist.
+     *
+     * WARUM (Befund 2026-09-07, Lauf 65 / Step 460 „Basisrezept: Gemüsebrühe"):
+     * Das Reuse-Gate prüfte weder Status noch Vollständigkeit — der erste Namens-Treffer
+     * nach `id` gewann. Übernommen wurde Rezept 3400: `draft`, **0 Schritte**, eine Zutat
+     * („Petersilienstiele") ohne GP, unbepreist. Die Kaskade band es als Sub-Rezept ein,
+     * setzte den Step auf `skipped` („übernommen") und meldete den Lauf als
+     * „abgeschlossen — alle Artefakte freigegeben oder als Bestand übernommen".
+     *
+     * Die Regel des Nutzers dazu ist eindeutig: „Übernommene Rezepte sind hoffentlich schon
+     * angereichert und müssten dann nicht nochmal angereichert werden. Nur die neuen."
+     * Genau diese Annahme traf der Code — ungeprüft. Hier wird sie prüfbar:
+     *
+     *   reif  = produktionsreif ⇒ echter Bestand, wird NIE angetastet (Design bleibt)
+     *   eigen = gehört dem übernehmenden Team ⇒ eine Lücke darf geschlossen werden
+     *
+     * Zusätzlich: ein `stub` ist niemals Bestand (0-Zutaten-Hülle, s. createSubRecipeStub) —
+     * ihn zu übernehmen hieße, eine leere Hülle als fertige Komponente zu verbuchen. Und die
+     * Reihenfolge ist jetzt „reif zuerst": existiert dieselbe Komponente doppelt (fertig +
+     * als Altlast-Stub), gewinnt die fertige, nicht die mit der kleineren `id`.
+     *
+     * @return array{recipe: FoodAlchemistRecipe, reif: bool, eigen: bool, luecken: list<string>}|null
+     */
+    public function findByTokenSetMitReife(Team $team, string $name): ?array
+    {
+        // Stub = leere Hülle, kein Bestand. Bewusst ausgeschlossen statt nur „unreif": eine
+        // Hülle zu binden liefert dem Eltern-Rezept nicht einmal eine Zutat. Die reine
+        // Namens-Auflösung ({@see findByTokenSet}) sieht Stubs weiter — sie ist der
+        // Dedupe-Eingang der Stub-Anlage und braucht sie.
+        // Spec 80 B4 (Entscheid Dominique 2026-10-09): Bestand = NUR freigegebene Basisrezepte. Vorher
+        // galten auch draft/review als Bestand (nur Stubs fielen raus) — 86 % der Verweise auf demo
+        // zeigten auf Entwürfe. Die reine Namens-Auflösung (findByTokenSet) sieht weiter alle Stadien.
+        $kandidaten = $this->tokenSetTreffer($team, $name, mitVariante: true)
+            ->filter(fn ($r) => $r->status === RecipeStatus::Approved)
+            ->values()->all();
+        if ($kandidaten === []) {
+            return null;
+        }
+        // Reif zuerst, dann die kleinste id (stabile Reihenfolge wie vorher).
+        $bewertet = array_map(fn ($r) => ['recipe' => $r] + $this->reifegrad($r), $kandidaten);
+        usort($bewertet, static fn ($x, $y) => [$y['reif'], -$x['recipe']->id] <=> [$x['reif'], -$y['recipe']->id]);
+        $treffer = $bewertet[0];
+        $treffer['eigen'] = (int) ($treffer['recipe']->team_id ?? 0) === (int) $team->id;
+
+        return $treffer;
+    }
+
+    /**
+     * Produktionsreife eines Basisrezepts — der EINE Ort, an dem „fertig" definiert ist.
+     *
+     * Bewusst schmal und deterministisch: drei Dinge, die ein Koch braucht und die ohne KI
+     * prüfbar sind. Alles Weitere (Sensorik, Equipment, Posten, Zeiten) ist Anreicherungs-
+     * Tiefe und haengt an `complete_coverage` — das darf hier nicht mit hinein, sonst gilt
+     * fast jedes Bestandsrezept als unreif und die Kaskade reichert dauernd Fremdes nach.
+     *
+     * @return array{reif: bool, luecken: list<string>}
+     */
+    public function reifegrad(FoodAlchemistRecipe $recipe): array
+    {
+        $luecken = [];
+        if (! $recipe->steps()->whereNull('deleted_at')->exists()) {
+            $luecken[] = 'keine Schritte';
+        }
+        if (! $recipe->ingredients()->whereNull('deleted_at')->exists()) {
+            $luecken[] = 'keine Zutaten';
+        }
+        $offeneZutaten = $recipe->ingredients()->whereNull('deleted_at')
+            ->whereNull('gp_id')->whereNull('referenced_recipe_id')->count();
+        if ($offeneZutaten > 0) {
+            $luecken[] = $offeneZutaten.' Zutat(en) ohne Verknüpfung';
+        }
+        if ($recipe->ek_total_eur === null || (float) $recipe->ek_total_eur <= 0.0) {
+            $luecken[] = 'unbepreist';
+        }
+
+        return ['reif' => $luecken === [], 'luecken' => $luecken];
+    }
+
+    /** ↑-Navigation: Rezepte, die dieses als Sub referenzieren (fürs Panel „Verwendet in"). */
+    public function getParents(Team $team, int $id): Collection
+    {
+        return FoodAlchemistRecipe::visibleToTeam($team)
+            ->whereIn('id', \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::where('referenced_recipe_id', $id)
+                ->whereNull('deleted_at')->distinct()->pluck('recipe_id'))
+            ->orderBy('name')
+            ->get(['id', 'name', 'status', 'team_id', 'is_sales_recipe']);
+    }
+
+    /**
+     * Ausgabe-Ebenen, die direkt auf ein Rezept zeigen. Sie hängen ALLE an der GERICHT-Spalte
+     * (`sales_recipe_id`, D-PLAN-1) — ein Basisrezept steht in einem Foodbook also nur ÜBER das
+     * Gericht, das es als Komponente führt. Genau deshalb reicht dem Tausch die Komponenten-Zeile:
+     * die Ausgaben folgen von selbst. Gezählt wird hier trotzdem, weil die Spalte technisch jede
+     * Rezept-ID annimmt — wer ein Basisrezept direkt in eine Ausgabe pinnt, soll es nicht unter
+     * den Füßen verlieren.
+     */
+    private const AUSGABE_REFERENZEN = [
+        'foodalchemist_foodbook_blocks' => 'sales_recipe_id',
+        'foodalchemist_menu_card_items' => 'sales_recipe_id',
+        'foodalchemist_menu_plan_entries' => 'sales_recipe_id',
+        'foodalchemist_offer_blocks' => 'sales_recipe_id',
+        'foodalchemist_concept_slots' => 'sales_recipe_id',
+    ];
+
+    /**
+     * Dasselbe für Tabellen, die der Paket-Umbau fachlich abgelöst hat, physisch aber noch nicht
+     * gedroppt sind (`packages`/`package_dishes`, ex-`bausteine`). Solange sie stehen, können sie
+     * Zeilen halten — deshalb mitzählen, aber per hasTable geprüft, damit der Drop nichts bricht.
+     */
+    private const AUSGABE_REFERENZEN_LEGACY = [
+        'foodalchemist_package_dishes' => 'sales_recipe_id',
+    ];
+
+    /**
+     * Lösch-Bilanz eines Rezepts — bewusst UNGESCOPED, wie `GpService::referenzen()`.
+     *
+     * Der Grund ist die Vererbungsrichtung: ein Master-Rezept ist für KIND-Teams sichtbar, deren
+     * Rezepte sind für den Master aber unsichtbar. Eine team-gefilterte Zählung würde dem Master
+     * erlauben, ein Rezept zu löschen, an dem ein Kind-Team hängt. (Der Tausch bleibt gescoped —
+     * dort wird geschrieben, hier nur gezählt: `verwendungsBilanz()`.)
+     *
+     * `blocker_teile` sind die harten Gründe im Klartext; `produktion_historie` und `instanzen`
+     * stehen nur zur Information (abgeschlossene Aufträge bleiben lesbar, Herkunfts-Zeiger fallen
+     * beim Löschen auf NULL).
+     *
+     * @return array{eltern_zeilen:int, eltern:int, ersatz:int, ausgaben:int, produktion_offen:int,
+     *               produktion_historie:int, instanzen:int, blocker:int, blocker_teile:list<string>,
+     *               eltern_namen: list<array{id:int,name:string,ist_gericht:bool}>}
+     */
+    public function referenzen(int $id): array
+    {
+        $eltern = FoodAlchemistRecipeIngredient::where('referenced_recipe_id', $id);
+
+        // Ausgabe-Ebenen in EINEM Roundtrip — das Panel rendert die Bilanz bei jedem Tastendruck
+        // im Tausch-Suchfeld neu. Tabellen-/Spaltennamen kommen aus der Konstante, nicht aus Input.
+        $tabellen = self::AUSGABE_REFERENZEN;
+        foreach (self::AUSGABE_REFERENZEN_LEGACY as $tabelle => $spalte) {
+            if (Schema::hasTable($tabelle)) {
+                $tabellen[$tabelle] = $spalte;
+            }
+        }
+        $summanden = [];
+        $bindings = [];
+        foreach ($tabellen as $tabelle => $spalte) {
+            $summanden[] = "(SELECT COUNT(*) FROM {$tabelle} WHERE {$spalte} = ? AND deleted_at IS NULL)";
+            $bindings[] = $id;
+        }
+        $ausgaben = (int) DB::selectOne('SELECT ' . implode(' + ', $summanden) . ' AS n', $bindings)->n;
+
+        $produktion = DB::table('foodalchemist_production_order_lines as l')
+            ->join('foodalchemist_production_orders as o', 'o.id', '=', 'l.production_order_id')
+            ->where('l.recipe_id', $id)->whereNull('l.deleted_at')->whereNull('o.deleted_at')
+            ->selectRaw("SUM(CASE WHEN o.status IN ('planned', 'in_progress') THEN 1 ELSE 0 END) AS offen")
+            ->selectRaw("SUM(CASE WHEN o.status IN ('done', 'cancelled') THEN 1 ELSE 0 END) AS historie")
+            ->first();
+
+        $ref = [
+            'eltern_zeilen' => (clone $eltern)->count(),
+            'eltern' => (clone $eltern)->distinct()->count('recipe_id'),
+            'ersatz' => FoodAlchemistComponentEquivalent::where(fn (Builder $w) => $w
+                ->where(fn (Builder $q) => $q->where('source_kind', FoodAlchemistComponentEquivalent::KIND_RECIPE)->where('source_id', $id))
+                ->orWhere(fn (Builder $q) => $q->where('alt_kind', FoodAlchemistComponentEquivalent::KIND_RECIPE)->where('alt_id', $id)))
+                ->count(),
+            'ausgaben' => $ausgaben,
+            'produktion_offen' => (int) ($produktion->offen ?? 0),
+            'produktion_historie' => (int) ($produktion->historie ?? 0),
+            'instanzen' => FoodAlchemistRecipe::where('instantiated_from_recipe_id', $id)->count(),
+            // Spec 82 §8: ein abonniertes Master-Rezept lässt sich nicht löschen, nur zurückziehen (AboKuendigungService)
+            'abos' => \Illuminate\Support\Facades\Schema::hasTable('foodalchemist_abos')
+                ? DB::table('foodalchemist_sammlung_objekte AS o')->join('foodalchemist_abos AS a', 'a.sammlung_id', '=', 'o.sammlung_id')
+                    ->where('o.typ', 'recipe')->where('o.objekt_id', $id)->where('a.status', 'aktiv')->count()
+                : 0,
+        ];
+
+        // Adressen statt Mengen: welche Eltern-Rezepte blockieren (2026-09-04). Ohne Namen
+        // ist „Löschen blockiert — 1 Zeile(n) in 1 Rezept(en)" eine Sackgasse.
+        $ref['eltern_namen'] = FoodAlchemistRecipeIngredient::query()
+            ->join('foodalchemist_recipes as r', 'r.id', '=', 'foodalchemist_recipe_ingredients.recipe_id')
+            ->where('foodalchemist_recipe_ingredients.referenced_recipe_id', $id)
+            ->whereNull('r.deleted_at')
+            ->distinct()
+            ->orderBy('r.name')
+            ->limit(20)
+            ->get(['r.id', 'r.name', 'r.is_sales_recipe'])
+            ->map(fn ($r) => ['id' => (int) $r->id, 'name' => (string) $r->name, 'ist_gericht' => (bool) $r->is_sales_recipe])
+            ->all();
+
+        $ref['blocker_teile'] = array_values(array_filter([
+            $ref['eltern_zeilen'] > 0 ? "{$ref['eltern_zeilen']} Zeile(n) in {$ref['eltern']} Rezept(en)" : null,
+            $ref['ersatz'] > 0 ? "{$ref['ersatz']} Ersatz-Verknüpfung(en)" : null,
+            $ref['ausgaben'] > 0 ? "{$ref['ausgaben']} Ausgabe-Position(en) (Foodbook/Speisekarte/Speiseplan/Angebot/Konzept)" : null,
+            $ref['produktion_offen'] > 0 ? "{$ref['produktion_offen']} Zeile(n) in offenen Produktionsaufträgen" : null,
+            $ref['abos'] > 0 ? "{$ref['abos']} aktive(s) Abo(s) — nur Zurückziehen möglich" : null,
+        ]));
+        $ref['blocker'] = $ref['eltern_zeilen'] + $ref['ersatz'] + $ref['ausgaben'] + $ref['produktion_offen'] + $ref['abos'];
+
+        return $ref;
+    }
+
+    // ── Rezept-Tausch (Dominique 2026-09-04) — Pendant zu GpService::ersetzeInRezepten ──
+    //
+    // Unterschied zum GP-Katalog: Rezepte sind team-besessen (D1). Umgehängt wird deshalb NUR
+    // in EIGENEN Eltern; geerbte Master-/Seed-Rezepte, die dieses Rezept ebenfalls einsetzen,
+    // bleiben unberührt und werden gezählt zurückgemeldet (nichts still überspringen).
+
+    /**
+     * Verwendungs-Bilanz als Komponente — Datenbasis des Tausch-Blocks (Panel + Editor).
+     * „eigen" = umhängbar · „fremd" = sichtbar, aber read-only (Master/Seed, D1).
+     *
+     * @return array{zeilen: int, rezepte: int, fremd_zeilen: int, fremd_rezepte: int}
+     */
+    public function verwendungsBilanz(Team $team, int $id): array
+    {
+        $q = DB::table('foodalchemist_recipe_ingredients as ri')
+            ->join('foodalchemist_recipes as r', 'r.id', '=', 'ri.recipe_id')
+            ->where('ri.referenced_recipe_id', $id)
+            ->whereNull('ri.deleted_at')
+            ->whereNull('r.deleted_at');
+        $zeilen = TeamScope::applyVisible($q, 'r.team_id', $team)
+            ->get(['ri.id as zeile_id', 'r.id as parent_id', 'r.name as parent_name', 'r.team_id', 'r.is_sales_recipe']);
+        $eigen = $zeilen->filter(fn ($z) => (int) $z->team_id === (int) $team->id);
+        $fremd = $zeilen->filter(fn ($z) => (int) $z->team_id !== (int) $team->id);
+
+        // Die NAMEN mitgeben (2026-09-04, Dominique: „es wird nicht angezeigt wo es drin ist"):
+        // „1 Zeile(n) in 1 Rezept(en)" nennt eine Menge, aber keine Adresse — wer umhängen
+        // oder löschen will, muss wissen, WELCHES Rezept er aufmachen muss.
+        $namen = fn ($c) => $c->unique('parent_id')->map(fn ($z) => [
+            'id' => (int) $z->parent_id,
+            'name' => (string) $z->parent_name,
+            'ist_gericht' => (bool) $z->is_sales_recipe,
+        ])->sortBy('name')->values()->all();
+
+        return [
+            'zeilen' => $eigen->count(),
+            'rezepte' => $eigen->pluck('parent_id')->unique()->count(),
+            'fremd_zeilen' => $fremd->count(),
+            'fremd_rezepte' => $fremd->pluck('parent_id')->unique()->count(),
+            'eltern_namen' => $namen($eigen),
+            'fremd_namen' => $namen($fremd),
+        ];
+    }
+
+    /**
+     * Dieses Rezept in ALLEN eigenen Verwendungen (Gerichte + Basisrezepte, die es als Sub
+     * führen) durch ein anderes ersetzen — Dubletten-Bereinigung bzw. globaler Komponenten-
+     * Wechsel. Menge, Einheit, Rolle und Verlust-Overrides der Zeile bleiben stehen; getauscht
+     * wird allein die Komponenten-FK (wie beim GP-Tausch). `match_method` wandert bewusst auf
+     * `override_subrecipe`: die Zeile zeigt jetzt dorthin, weil ein Mensch es angeordnet hat
+     * (dieselbe Provenienz wie der Hard-Stop-Resolver) — ein stehengelassenes
+     * `gemini_proposed` wäre ein falsches Etikett.
+     *
+     * Zyklen/Selbstreferenz fängt pruefeVerknuepfung je Eltern-Rezept; die betroffene Menge
+     * wird EINMAL topologisch neu gerechnet (V-049).
+     *
+     * @return array{zeilen: int, rezepte: int, fremd_rezepte: int, zyklus: list<string>, doppelt: list<string>}
+     */
+    public function ersetzeInVerwendungen(Team $team, int $vonId, int $nachId): array
+    {
+        $von = FoodAlchemistRecipe::visibleToTeam($team)->find($vonId);
+        $nach = FoodAlchemistRecipe::visibleToTeam($team)->find($nachId);
+        if ($von === null || $nach === null) {
+            throw new \RuntimeException('Quell- oder Ziel-Rezept nicht gefunden.');
+        }
+        if ((int) $von->id === (int) $nach->id) {
+            throw new \RuntimeException('Quelle und Ziel sind identisch.');
+        }
+        if ($nach->status === RecipeStatus::Deprecated) {
+            throw new \RuntimeException('Ziel-Rezept ist „Veraltet" — kein gültiges Ersetzungsziel.');
+        }
+
+        $bilanz = $this->verwendungsBilanz($team, (int) $von->id);
+        $zeilen = FoodAlchemistRecipeIngredient::where('referenced_recipe_id', $von->id)
+            ->whereIn('recipe_id', FoodAlchemistRecipe::query()->where('team_id', $team->id)->select('id'))
+            ->get(['id', 'recipe_id']);
+        if ($zeilen->isEmpty()) {
+            throw new \RuntimeException($bilanz['fremd_zeilen'] > 0
+                ? "Verwendet nur in {$bilanz['fremd_rezepte']} geerbten Rezept(en) — die sind für dieses Team read-only (D1)."
+                : 'Wird in keinem Rezept als Komponente verwendet — nichts zu tauschen.');
+        }
+
+        $elternIds = $zeilen->pluck('recipe_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $namen = FoodAlchemistRecipe::whereIn('id', $elternIds)->pluck('name', 'id');
+        $schonDrin = FoodAlchemistRecipeIngredient::where('referenced_recipe_id', $nach->id)
+            ->whereIn('recipe_id', $elternIds)->distinct()->pluck('recipe_id')
+            ->map(fn ($id) => (int) $id)->all();
+
+        $recompute = app(RecipeRecomputeService::class);
+        $erlaubt = [];
+        $zyklus = [];
+        $anzahl = app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->schreibeKanten([], function () use ($elternIds, $namen, $nach, $zeilen, $recompute, &$erlaubt, &$zyklus) {
+            foreach ($elternIds as $pid) {   // 1.1e: unter der Graph-Sperre geprüft und geschrieben
+                $pruefung = $recompute->pruefeVerknuepfung($pid, (int) $nach->id);
+                $pruefung['erlaubt'] ? ($erlaubt[] = $pid) : ($zyklus[] = ($namen[$pid] ?? "#{$pid}") . " ({$pruefung['grund']})");
+            }
+            if ($erlaubt === []) {
+                throw new \Platform\FoodAlchemist\Exceptions\RezeptZyklusException([(int) $nach->id], 'Tausch abgelehnt — würde einen Zyklus erzeugen: ' . implode(', ', $zyklus) . '.');
+            }
+            $zeilenIds = $zeilen->whereIn('recipe_id', $erlaubt)->pluck('id')->all();
+            $n = FoodAlchemistRecipeIngredient::whereIn('id', $zeilenIds)
+                ->update(['referenced_recipe_id' => $nach->id, 'match_method' => MatchMethod::OverrideSubrecipe->value]);
+            $this->loeseRegenerationsOverrides($zeilenIds);
+
+            return $n;
+        });
+
+        $recompute->recomputeMany($erlaubt);
+
+        return [
+            'zeilen' => (int) $anzahl,
+            'regen_overrides_geloest' => $this->zuletztGeloest,
+            'rezepte' => count($erlaubt),
+            'fremd_rezepte' => $bilanz['fremd_rezepte'],
+            'zyklus' => $zyklus,
+            'doppelt' => collect($schonDrin)->intersect($erlaubt)
+                ->map(fn ($id) => $namen[$id] ?? "#{$id}")->values()->all(),
+        ];
+    }
+
+    /** Zahl der beim letzten Tausch geloesten Regenerations-Overrides (Rueckmeldung ans UI). */
+    private int $zuletztGeloest = 0;
+
+    /**
+     * Spec 51: Ein Tausch haengt die Zutatenzeile IN PLACE auf ein anderes Rezept um — dieselbe
+     * Zeilen-Id, anderer Inhalt. Ein Regenerations-Override an dieser Id wuerde das ueberleben und
+     * danach still etwas anderes beschreiben: »Kombidaempfer 140 °C, 12 min« stuende dann an einer
+     * Komponente, fuer die das nie jemand entschieden hat.
+     *
+     * Deshalb wird der Override geloest, nicht mitgeschleift. Die Komponente gibt wieder den Ton
+     * an — das ist der Zustand, den jemand beim naechsten Blick erwartet, und die Kaskade zeigt
+     * ihn als »geerbt« an. Wer erneut abweichen will, sieht die Zeile und entscheidet neu.
+     *
+     * @param  list<int>  $ingredientIds
+     */
+    private function loeseRegenerationsOverrides(array $ingredientIds): void
+    {
+        $this->zuletztGeloest = $ingredientIds === [] ? 0 : (int) DB::table('foodalchemist_recipe_regenerations')
+            ->whereIn('ingredient_id', $ingredientIds)
+            ->whereNull('deleted_at')
+            ->update(['deleted_at' => now()]);
+    }
+
+    // ── M9-01k: Sektor-/Niveau-Eignung pflegen (Zeile = geeignet; unique recipe+slug) ──
+
+    private const EIGNUNG_TABELLEN = [
+        'level' => ['tabelle' => 'foodalchemist_recipe_level_suitability', 'spalte' => 'level_slug', 'slugs' => ['haute_cuisine', 'gehoben', 'klassisch']],
+        'sektor' => ['tabelle' => 'foodalchemist_recipe_sector_suitability', 'spalte' => 'sector_slug', 'slugs' => \Platform\FoodAlchemist\Support\Sektor::SLUGS],
+    ];
+
+    /** @return array<string, array> Vokabular fürs UI */
+    public static function eignungVokabular(): array
+    {
+        return self::EIGNUNG_TABELLEN;
+    }
+
+    /** Lineage-Felder (GL-07), die {@see setzeFeld} kennt. */
+    public const LINEAGE_FELDER = ['description', 'preparation', 'category'];
+
+    /**
+     * Spec 84 C5 · EIN Schreibweg für die Lineage-Felder des Rezepts (Beschreibung, Zubereitungs-Lineage, Kategorie),
+     * für Editor und MCP. Vorher schrieb das Rezept-Modal direkt; die Regeln standen je Aufrufer einzeln.
+     *
+     *   quelle 'ki'     → Wert + Lineage ki + Konfidenz (+ Begründung bei Kategorie). Manuell gepflegt → abgewiesen
+     *                     (GL-07 Override-First).
+     *   quelle 'manual' → Wert + Lineage manual, Konfidenz/Begründung leer.
+     *   quelle null     → Reset: Wert und Lineage leer. Ausnahme Zubereitung: der Text ist ein Spiegel der Schritte
+     *                     (Spec 27) und bleibt, nur die Lineage wird gesetzt bzw. geleert.
+     *
+     * Eigentümer-Riegel im Service (Spec 84 §4.0): ein geerbtes Rezept (Master, Seed, Abo-Fassung) ist nur lesbar.
+     * Kategorie ist eine Referenz und muss für das Team sichtbar sein (MVP-044).
+     */
+    public function setzeFeld(Team $team, int $recipeId, string $feld, ?string $quelle, mixed $wert = null, ?float $konfidenz = null, ?string $begruendung = null): FoodAlchemistRecipe
+    {
+        if (! in_array($feld, self::LINEAGE_FELDER, true) || ! in_array($quelle, ['ki', 'manual', null], true)) {
+            throw new \InvalidArgumentException("Unbekanntes Lineage-Feld oder Quelle: {$feld}/".var_export($quelle, true));
+        }
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($recipeId);
+        \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'das Rezept');
+
+        $label = ['description' => 'Beschreibung', 'preparation' => 'Zubereitung', 'category' => 'Kategorie'][$feld];
+        if ($quelle === 'ki' && $recipe->{$feld.'_source'} === 'manual') {
+            throw new \RuntimeException("{$label} ist manuell gepflegt — erst Reset, dann KI übernehmen.");
+        }
+        $konfidenz = $konfidenz === null ? null : max(0.0, min(1.0, $konfidenz));
+
+        $update = match ($feld) {
+            'description' => $quelle === null
+                ? ['description' => null, 'description_source' => null, 'description_ai_confidence' => null]
+                : ['description' => $this->pflichtText($wert, $quelle === 'ki' ? 'KI-Vorschlag enthält keine Beschreibung.' : 'Beschreibung ist leer.'),
+                    'description_source' => $quelle, 'description_ai_confidence' => $quelle === 'ki' ? $konfidenz : null],
+            'preparation' => ['preparation_source' => $quelle, 'preparation_ai_confidence' => $quelle === 'ki' ? $konfidenz : null],
+            'category' => $quelle === null
+                ? ['category_id' => null, 'category_source' => null, 'category_ai_confidence' => null, 'category_ai_reasoning' => null]
+                : ['category_id' => $this->sichtbareKategorie($team, $wert, $quelle === 'ki' ? 'KI-Vorschlag enthält keine gültige Kategorie.' : 'Kategorie nicht sichtbar/vorhanden.'),
+                    'category_source' => $quelle, 'category_ai_confidence' => $quelle === 'ki' ? $konfidenz : null,
+                    'category_ai_reasoning' => $quelle === 'ki' ? $begruendung : null],
+        };
+        $recipe->update($update);
+
+        return $recipe->refresh();
+    }
+
+    /**
+     * Spec 84 C5 · KI-Überarbeitung übernehmen — der EINE Schreib-Moment, gemeinsam für Rezept-Modal und
+     * `recipes.REVISE` (vorher wortgleich doppelt). Zutaten-Sync, dann Beschreibung und Zubereitung mit Lineage ki;
+     * manuell gepflegte Felder bleiben unangetastet (Override-First, kein Fehler).
+     *
+     * @param  array<string, mixed>  $werte  KI-Werte (zutaten, description, preparation)
+     * @return list<string> übernommene Teile (zutaten, description, preparation)
+     */
+    public function uebernehmeUeberarbeitung(Team $team, int $recipeId, array $werte, ?float $konfidenz): array
+    {
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($recipeId);
+        \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'das Rezept');
+
+        $uebernommen = [];
+        if (! empty($werte['zutaten']) && is_array($werte['zutaten'])) {
+            $zeilen = app(RecipeReviseService::class)->syncZeilen($recipe, $werte['zutaten']);
+            if ($zeilen !== []) {
+                $this->syncIngredients($team, $recipeId, $zeilen);
+                $uebernommen[] = 'zutaten';
+            }
+        }
+        $frisch = $recipe->fresh();
+        if (is_string($werte['description'] ?? null) && trim($werte['description']) !== '' && $frisch->description_source !== 'manual') {
+            $this->setzeFeld($team, $recipeId, 'description', 'ki', $werte['description'], $konfidenz);
+            $uebernommen[] = 'description';
+        }
+        if (is_string($werte['preparation'] ?? null) && trim($werte['preparation']) !== '' && $frisch->preparation_source !== 'manual') {
+            $this->setzeFeld($team, $recipeId, 'preparation', 'ki', null, $konfidenz);
+            // Spec 27: die KI liefert Markdown — Master sind die Schritte; `preparation` wird daraus als Spiegel neu gerendert.
+            app(RecipeStepService::class)->ausMarkdown($frisch->fresh(), $werte['preparation'], ueberschreiben: true);
+            $uebernommen[] = 'preparation';
+        }
+
+        return $uebernommen;
+    }
+
+    /**
+     * Spec 84 C5 · Dichteklasse von Hand setzen bzw. leeren (Regeneration/Behälter im Rezept-Modal). Eigentümer-Riegel
+     * im Service; über das Model, damit Observer laufen; `updated_at` steigt wie bisher immer (touch).
+     */
+    public function setzeDichteklasse(Team $team, int $recipeId, ?string $klasse): FoodAlchemistRecipe
+    {
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($recipeId);
+        \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'das Rezept');
+        $klasse = $klasse !== null && trim($klasse) !== '' ? $klasse : null;
+        $recipe->fill(['dichteklasse' => $klasse, 'dichteklasse_source' => $klasse !== null ? 'manual' : null])->touch();
+
+        return $recipe->refresh();
+    }
+
+    private function pflichtText(mixed $wert, string $fehler): string
+    {
+        if (! is_string($wert) || trim($wert) === '') {
+            throw new \RuntimeException($fehler);
+        }
+
+        return $wert;
+    }
+
+    private function sichtbareKategorie(Team $team, mixed $wert, string $fehler): int
+    {
+        $id = is_numeric($wert) ? (int) $wert : 0;
+        if ($id <= 0 || ! FoodAlchemistRecipeCategory::visibleToTeam($team)->whereKey($id)->exists()) {
+            throw new \RuntimeException($fehler);
+        }
+
+        return $id;
+    }
+
+    public function setzeEignung(Team $team, int $recipeId, string $typ, string $slug, string $source = 'manual', ?float $confidence = null, ?string $grund = null): void
+    {
+        $meta = self::EIGNUNG_TABELLEN[$typ] ?? throw new \RuntimeException("Unbekannter Eignungs-Typ [{$typ}].");
+        if (! in_array($slug, $meta['slugs'], true)) {
+            throw new \RuntimeException("Unbekannter {$typ}-Slug [{$slug}].");
+        }
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($recipeId);
+        if (! $recipe->isOwnedBy($team)) {
+            throw new \RuntimeException('Geerbtes Rezept — Pflege nur durchs Besitzer-Team (D1).');
+        }
+
+        // unique(recipe, slug) gilt inkl. soft-deleted ⇒ vorhandene Zeile reaktivieren
+        $vorhanden = DB::table($meta['tabelle'])->where('recipe_id', $recipeId)->where($meta['spalte'], $slug)->first();
+        $werte = ['source' => $source, 'ai_confidence' => $confidence, 'ai_reasoning' => $grund, 'deleted_at' => null, 'updated_at' => now()];
+        if ($vorhanden !== null) {
+            DB::table($meta['tabelle'])->where('id', $vorhanden->id)->update($werte);
+        } else {
+            DB::table($meta['tabelle'])->insert($werte + [
+                'uuid' => (string) \Illuminate\Support\Str::uuid7(),
+                'team_id' => $team->id, 'recipe_id' => $recipeId, $meta['spalte'] => $slug, 'created_at' => now(),
+            ]);
+        }
+    }
+
+    public function entferneEignung(Team $team, int $recipeId, string $typ, string $slug): void
+    {
+        $meta = self::EIGNUNG_TABELLEN[$typ] ?? throw new \RuntimeException("Unbekannter Eignungs-Typ [{$typ}].");
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($recipeId);
+        if (! $recipe->isOwnedBy($team)) {
+            throw new \RuntimeException('Geerbtes Rezept — Pflege nur durchs Besitzer-Team (D1).');
+        }
+        DB::table($meta['tabelle'])->where('recipe_id', $recipeId)->where($meta['spalte'], $slug)
+            ->update(['deleted_at' => now(), 'updated_at' => now()]);
+    }
+
+    // ── M4-07/08: Zutaten-Editor (P-8) ──────────────────────────────────
+
+    /**
+     * Voll-Sync der Zutatenliste (eine Transaktion, V-07): Reihenfolge = Array-
+     * Reihenfolge, fehlende Zeilen werden gelöscht, id-lose angelegt. Danach
+     * GENAU EIN recomputeAndPropagate. XOR gp/sub wird hier erzwungen (D-5 §2.2).
+     *
+     * @param array<int, array> $zeilen
+     */
+    public function syncIngredients(Team $team, int $recipeId, array $zeilen, bool $preserveMissing = false): FoodAlchemistRecipe
+    {
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($recipeId);
+        if ((int) $recipe->team_id !== (int) $team->id) {
+            throw new \RuntimeException('Geerbtes Rezept — Zutaten-Pflege nur durchs Besitzer-Team (D1).');
+        }
+
+        // Non-Food (Warengruppe 16) ist keine Lebensmittel-Zutat — Zubehör und Verpackung haben ihren eigenen Block am Rezept.
+        $gpIds = array_values(array_filter(array_map(fn ($z) => ($z['gp_id'] ?? null) !== null && $z['gp_id'] !== '' ? (int) $z['gp_id'] : null, $zeilen)));
+        if ($gpIds !== []) {
+            $nonFood = FoodAlchemistGp::query()->whereIn('id', $gpIds)->nonFood()->pluck('name')->all();
+            if ($nonFood !== []) {
+                throw new \Platform\FoodAlchemist\Exceptions\NonFoodAlsZutatException($nonFood);
+            }
+        }
+        app(\Platform\FoodAlchemist\Services\Rezept\ZutatenVerweise::class)->pruefeSicht($team, $recipe, $zeilen);   // 1.1j-1: Verweise nur auf Sichtbares (Abo/Stamm-Paket inklusive)
+        DB::transaction(function () use ($team, $recipe, $zeilen, $preserveMissing) {
+            $vorhanden = $recipe->ingredients()->get()->keyBy('id');
+            $behalten = [];
+            $gpImGericht = [];
+            // Lauf 92 (demo, 3834 „Beilage: Herbsttrompeten"): die Heilung legte die Zeile „Gemüsebrühe", die die Kaskade als
+            // Unterrezept führt (Dependency → Kind „Brühe: Gemüse"), hier auf ein Bio-Brühpulver-GP. Das fertige Kind konnte
+            // sich danach nicht mehr binden (bindIngredient bricht bei gesetztem gp_id ab) und blieb verwaist. Solche Zeilen
+            // erdet nur die Kaskade (wie minteFehlendeGps, L4).
+            // §2/§10-Korrektur wie im Generator (GpKorrektur) auch beim Re-Grounding — Lauf 92: die Heilung legte Zeilen auf
+            // „geachtelt"/„geschnitten 15 mm" statt „frisch, ganz". Fertigungstiefe → convenience (Kuratorin 10.10.):
+            // from_scratch → from_scratch, teilfertig → teil_convenience, convenience → voll_convenience, leer → kein Filter.
+            // Ein Bio-Vorgabefeld hat das Rezept nicht → kein Bio-Zwang.
+            $korrParameter = array_filter(['convenience' => match ($recipe->production_depth) {
+                'from_scratch' => 'from_scratch', 'teilfertig' => 'teil_convenience', 'convenience' => 'voll_convenience', default => null,
+            }]);
+            $kaskadeGefuehrt = \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRecipeDependency::query()
+                ->whereIn('ingredient_id', $vorhanden->keys()->all())->pluck('ingredient_id')->map(fn ($v) => (int) $v)->flip()->all();
+
+            foreach (array_values($zeilen) as $i => $z) {
+                if ($preserveMissing && isset($z['id']) && (! $vorhanden->has((int) $z['id']) || in_array((int) $z['id'], $behalten, true))) {
+                    throw new \RuntimeException('Zutaten-ID gehört nicht zum Rezept oder wurde doppelt angegeben.');
+                }
+                $gpId = ($z['gp_id'] ?? null) !== null && $z['gp_id'] !== '' ? (int) $z['gp_id'] : null;
+                $subId = ($z['referenced_recipe_id'] ?? null) !== null && $z['referenced_recipe_id'] !== '' ? (int) $z['referenced_recipe_id'] : null;
+                if ($gpId !== null && $subId !== null) {
+                    throw new \RuntimeException('Zutat darf nicht GP UND Sub-Rezept zugleich sein (XOR, D-5 §2.2).');
+                }
+
+                // E3 (#508): Re-Grounding — eine Zeile OHNE GP/Sub (typisch KI-überarbeitet,
+                // sonst roh als 'unmatched' verloren) läuft durch den GL-04-Resolver. Nur
+                // zuversichtliche Treffer (matchIngredient hält die Schwelle); sonst bleibt
+                // sie unmatched → Hard-Stop-UI. Auto-gegroundete Subs werden zyklus-geprüft
+                // und bei Ablehnung stillschweigend verworfen (kein Throw fürs Auto-Grounding).
+                $groundedMethod = null;
+                $groundedConfidence = null;
+                if ($gpId === null && $subId === null && ($z['auto_ground'] ?? true) && ! isset($kaskadeGefuehrt[(int) ($z['id'] ?? 0)])) {
+                    $groundName = trim((string) ($z['display_name'] ?? '')) ?: trim((string) ($z['raw_text'] ?? ''));
+                    if ($groundName !== '') {
+                        // Live-Test demo 09.10. (Lauf 83): eine Basisrezept-Zeile („Püree: Petersilienwurzel",
+                        // „Matte: Petersilie" — Typ aus dem Vokabular oder Zubereitungs-Präfix) blieb beim Bau zu Recht
+                        // offen; die Heilung legte sie hier auf rohe Grundprodukte (7 kg Wurzel statt Püree). Wie der
+                        // Generator (strongSub): so eine Zeile wird nur ein Unterrezept oder bleibt eine Lücke.
+                        // Gericht = nur Basisrezepte (Dominique 17.11.2026): auch die Auto-Erdung legt dort kein GP und mintet keins.
+                        $nurSub = $recipe->is_sales_recipe
+                            || app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class)->istBasisrezeptZeile($groundName);
+                        $treffer = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->matchIngredient(
+                            $team, $groundName, $z['hauptzutat_slug'] ?? ($z['slug'] ?? null), ...\Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::matcherArgsFuerRezept($recipe),
+                        );
+                        // Live-Test demo 09.10. (Lauf 86): ohne Band-Gate verdrahtete die Heilung „bitte prüfen"-Treffer
+                        // („Ginger Beer" → Beeren-Kaviar 0,5; „Pilzmischung: frisch, ganz" → Auberginen 0,667). Wie der
+                        // Generator: automatisch nur Exact/FuzzyHigh, FuzzyLow bleibt offen für den Menschen.
+                        if (! \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($treffer)) {
+                            $treffer = ['target' => 'none'] + $treffer;
+                        }
+                        if ($treffer['target'] === 'gp' && ! $nurSub) {
+                            $gpId = (int) $treffer['gp_id'];
+                            $groundedMethod = 'gp_v2_fk';
+                            $groundedConfidence = round((float) $treffer['score'], 3);
+                            $korr = \Platform\FoodAlchemist\Support\GpKorrektur::korrigiere($team, $gpId, $korrParameter);
+                            if ($korr !== null) {
+                                $gpId = (int) $korr['gp_id'];
+                                if (trim((string) ($z['note'] ?? '')) === '' && ($korr['notiz'] ?? null) !== null) {
+                                    $z['note'] = $korr['notiz'];   // Verarbeitung wandert in die Zeile (§2)
+                                }
+                            }
+                        } elseif ($treffer['target'] === 'sub_recipe') {
+                            $cand = (int) $treffer['recipe_id'];
+                            // Dieselbe Bestands-Entscheidung wie Generator und Plan ({@see \Platform\FoodAlchemist\Support\BestandsZulaessigkeit}):
+                            // Matcher-Treffer → keine Bestandteil-Prüfung (wie `nurDiaetFuer` im Generator). Die Heilung kennt
+                            // keinen Lauf und keine harte Diät; den Fertigungs-Regler liefert die Fertigungstiefe des Rezepts
+                            // selbst (wie bei GpKorrektur oben) — ein „from scratch“-Rezept bekommt keinen Zukauf-Bestand.
+                            // Das ist der INHALT des Rezepts, nicht die Lauf-Erlaubnis (offener Punkt „Convenience-Erlaubnis am
+                            // Rezept“, Spec 81). Konservativ (Kuratorin 10.10.): ein teil_convenience-Rezept mit reinem
+                            // Rohware-Inhalt bekommt in der Heilung keinen Zukauf neu.
+                            $kandidat = \Platform\FoodAlchemist\Support\BestandsZulaessigkeit::lade($team, $cand);
+                            if ($cand !== $recipe->id && $kandidat !== null
+                                && \Platform\FoodAlchemist\Support\BestandsZulaessigkeit::pruefe($team, $groundName, $kandidat, [
+                                    'bestandteile' => false, 'regler' => $korrParameter['convenience'] ?? null,
+                                ]) === null
+                                && app(RecipeRecomputeService::class)->pruefeVerknuepfung($recipe->id, $cand)['erlaubt']) {
+                                $subId = $cand;
+                                $groundedMethod = 'recipe_ref';
+                                $groundedConfidence = round((float) $treffer['score'], 3);
+                            }
+                        }
+
+                        // 07·M2: Bestand-Miss, aber passende LA vorhanden → LA-First-Mint
+                        // (geteilte Doktrin, schließt die Revise-Lücke: E3 matchte nur, mintete
+                        // nicht). Mint ist tentative + LA-verknüpft; keine LA → bleibt unmatched
+                        // (Hard-Stop / Sourcing-Wunsch beim Aufrufer). Provenienz wie im Generator.
+                        if ($gpId === null && $subId === null && ! $nurSub) {
+                            $mint = app(\Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService::class)->mintFromLa(
+                                $team, $groundName, $z['hauptzutat_slug'] ?? ($z['slug'] ?? null),
+                            );
+                            if ($mint !== null) {
+                                $gpId = $mint->id;
+                                $groundedMethod = 'gemini_proposed';   // LA-First-Mint-Provenienz (gültiger MatchMethod-Case)
+                                $groundedConfidence = null;
+                            }
+                        }
+                    }
+                }
+
+                if ($subId === $recipe->id) {
+                    throw new \Platform\FoodAlchemist\Exceptions\RezeptZyklusException([$subId, $subId], 'Selbstreferenz — ein Rezept kann sich nicht selbst enthalten (GL-02 §3.5).', 'Selbstreferenz');
+                } elseif ($subId !== null && ! $vorhanden->contains(fn ($alt) => (int) $alt->referenced_recipe_id === $subId)) {   // 1.1e Sperre + Zyklusprüfung atomar; 2.1c nur neue Kanten
+                    app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->sichereKante($recipe->id, $subId);
+                }
+                $quantity = (float) str_replace(',', '.', (string) ($z['quantity'] ?? 0));
+                if ($quantity <= 0) {
+                    throw new \RuntimeException('Menge muss > 0 sein (Zeile ' . ($i + 1) . ').');
+                }
+
+                $attrs = [
+                    'position' => $i + 1,                              // Reorder = Array-Reihenfolge
+                    'gp_id' => $gpId,
+                    'referenced_recipe_id' => $subId,
+                    'raw_text' => trim((string) ($z['raw_text'] ?? '')) ?: ($z['display_name'] ?? 'Zutat'),
+                    'display_name' => ($z['display_name'] ?? '') ?: null,
+                    'quantity' => $quantity,
+                    'quantity_max' => ($z['quantity_max'] ?? '') !== '' && $z['quantity_max'] !== null ? (float) str_replace(',', '.', (string) $z['quantity_max']) : null,
+                    'unit_vocab_id' => (int) $z['unit_vocab_id'],
+                    'cooking_loss_pct' => ($z['cooking_loss_pct'] ?? '') !== '' && $z['cooking_loss_pct'] !== null ? (float) str_replace(',', '.', (string) $z['cooking_loss_pct']) : null,
+                    'cooking_loss_source' => ($z['cooking_loss_source'] ?? null) ?: null,   // M4-11: ki|manual (GL-07)
+                    'trimming_loss_pct' => ($z['trimming_loss_pct'] ?? '') !== '' && ($z['trimming_loss_pct'] ?? null) !== null ? (float) str_replace(',', '.', (string) $z['trimming_loss_pct']) : null,
+                    'is_optional' => (bool) ($z['is_optional'] ?? false), 'zeilenart' => FoodAlchemistRecipeIngredient::zeilenartNormieren($z['zeilenart'] ?? null),   // §18.7, leer = GP-Vorschlag
+                    'note' => ($z['note'] ?? '') ?: null,
+                    // Teller-Rolle nur im Gericht, gegen das Vokabular geprüft (Dominique 11.10.); Basisrezept-Zeilen: keine.
+                    'role' => $recipe->is_sales_recipe ? \Platform\FoodAlchemist\Support\TellerRolle::kanonisch($z['role'] ?? null) : null,
+                    'is_value_relevant' => (bool) ($z['is_value_relevant'] ?? false),
+                ];
+
+                // E3: gegroundete Zeilen tragen die Resolver-Provenienz (gp_v2_fk|recipe_ref)
+                // + Konfidenz — auch beim UPDATE einer zuvor 'unmatched' Bestands-Zeile.
+                if ($groundedMethod !== null) {
+                    $attrs['match_method'] = $groundedMethod;
+                    $attrs['match_confidence'] = $groundedConfidence;
+                }
+
+                // Weg-B-Befund 5 (2026-10-12): MCP-Clients schicken Zeilen oft OHNE id (Voll-Sync aus Sicht des
+                // Agenten). Vorher wurden ALLE Zeilen neu angelegt und die alten soft-gelöscht — Darreichungs-Deltas
+                // (recipe_ingredient_id), Regenerations-Overrides und Teller-Rollen hingen an den alten Ids und
+                // verwaisten still (Gericht 3920: Portion „weg", Rollen weg). Jetzt trifft eine id-lose Zeile die
+                // bestehende Zeile mit demselben Ziel (Sub-Rezept oder Grundprodukt), bei unverknüpften Zeilen den
+                // gleichen Namen; jede Bestandszeile höchstens einmal. Nur im preserveMissing-Pfad (MCP) — der
+                // Editor schickt immer Ids.
+                if ($preserveMissing && ($z['id'] ?? null) === null) {
+                    $name = mb_strtolower(trim((string) ($attrs['display_name'] ?? $attrs['raw_text'] ?? '')));
+                    $treffer = $vorhanden->first(function ($alt) use ($behalten, $subId, $gpId, $name) {
+                        if (in_array((int) $alt->id, $behalten, true)) {
+                            return false;
+                        }
+                        if ($subId !== null) {
+                            return (int) $alt->referenced_recipe_id === $subId;
+                        }
+                        if ($gpId !== null) {
+                            return (int) $alt->gp_id === $gpId;
+                        }
+
+                        return $alt->gp_id === null && $alt->referenced_recipe_id === null && $name !== ''
+                            && mb_strtolower(trim((string) ($alt->display_name ?? $alt->raw_text ?? ''))) === $name;
+                    });
+                    if ($treffer !== null) {
+                        $z['id'] = (int) $treffer->id;
+                    }
+                }
+
+                $id = ($z['id'] ?? null) !== null && $vorhanden->has((int) $z['id']) ? (int) $z['id'] : null;
+                // Gericht = nur Basisrezepte (Dominique 17.11.2026): ein GP darf im Gericht nicht NEU gesetzt werden. Eine
+                // Bestandszeile, die ihr GP schon trägt (Altbestand), bleibt editier- und löschbar — nur neue Zeilen und ein
+                // Wechsel auf ein anderes GP werden gesammelt abgelehnt.
+                if ($gpId !== null && $recipe->is_sales_recipe && ($id === null || (int) $vorhanden[$id]->gp_id !== $gpId)) {
+                    $gpImGericht[] = $gpId;
+                }
+                // Herkunft der Teller-Rolle (Dominique 11.10.): bleibt die Rolle gleich, bleibt ihre Quelle; ändert sie sich,
+                // gilt die mitgegebene Quelle (Editor: manuell, Generator: ki/kaskade), ohne Angabe ist sie unbekannt (null) —
+                // nie ein erfundenes „manuell“. --alle im Klassifizier-Kommando überschreibt nur migration/ki.
+                $alteRolle = $id !== null ? $vorhanden[$id]->role : null;
+                if ($attrs['role'] === null) {
+                    $attrs['role_source'] = null;
+                } elseif ($id !== null && $attrs['role'] === $alteRolle) {
+                    $attrs['role_source'] = $vorhanden[$id]->role_source;
+                } else {
+                    $quelle = $z['role_source'] ?? null;
+                    $attrs['role_source'] = in_array($quelle, ['ki', 'kaskade', 'migration', 'manuell'], true) ? $quelle : null;
+                }
+                if ($id !== null) {
+                    if ($preserveMissing) {
+                        // Unveränderte Rückgabe aus GET ist keine neue KI-Entscheidung.
+                        if (array_key_exists('cooking_loss_pct', $z)
+                            && $z['cooking_loss_pct'] !== null
+                            && $vorhanden[$id]->cooking_loss_pct !== null
+                            && (float) $z['cooking_loss_pct'] === (float) $vorhanden[$id]->cooking_loss_pct) {
+                            unset($attrs['cooking_loss_source']);
+                        }
+                        foreach (['quantity_max', 'trimming_loss_pct', 'cooking_loss_pct', 'cooking_loss_source', 'is_optional', 'zeilenart', 'note', 'role', 'is_value_relevant'] as $field) {
+                            if (! array_key_exists($field, $z)) {
+                                unset($attrs[$field]);
+                                if ($field === 'role') {
+                                    unset($attrs['role_source']);
+                                }
+                            }
+                        }
+                    }
+                    $vorhanden[$id]->update($attrs);
+                    $behalten[] = $id;
+                } else {
+                    $neu = $recipe->ingredients()->create([...$attrs,
+                        'team_id' => $team->id,
+                        // Fallback-Provenienz, wenn der Aufrufer keine Methode mitgibt.
+                        //
+                        // Bis 2026-09-03 stand hier bei gesetztem gp_id `manual` — also
+                        // »ein Mensch hat das gewählt«. Bei KI-erzeugten Rezepten ist das
+                        // FALSCHE Provenienz: 3.099 Zeilen tragen `manual`, mindestens 112
+                        // davon in Rezepten mit created_via=mcp. Beim Debuggen des
+                        // TK-Apfel-Falls (Gericht 3689) hat dieses Etikett meine Diagnose
+                        // zweimal in die falsche Richtung geschickt — es verdeckt genau,
+                        // WELCHER Mechanismus den GP gewählt hat.
+                        //
+                        // `gp_v2_fk` ist NICHT neu erfunden, sondern das Etikett, das dieser
+                        // Service für genau diesen Fall schon benutzt: Zeile 601 setzt es als
+                        // `$groundedMethod`, und der Kommentar bei 662 nennt es ausdrücklich
+                        // »die Resolver-Provenienz (gp_v2_fk|recipe_ref)«. Der Fallback folgt
+                        // damit dem hier geltenden Vokabular statt ein neues zu öffnen. Auf
+                        // recipe_ingredients entscheidet niemand an `manual` (die
+                        // Schutzregel in SalesImportService:162 gilt für
+                        // foodalchemist_sales_facts, eine andere Tabelle) — der Wechsel ist
+                        // daher verhaltensneutral. Bestehende Zeilen bleiben unangetastet:
+                        // ein Backfill würde echte Handarbeit mit-überschreiben.
+                        'match_method' => $attrs['match_method']
+                            ?? ($subId !== null ? 'recipe_ref' : ($gpId !== null ? 'gp_v2_fk' : 'unmatched')),
+                    ]);
+                    $behalten[] = $neu->id;
+                }
+            }
+
+            if ($gpImGericht !== []) {
+                $namen = FoodAlchemistGp::query()->whereIn('id', array_unique($gpImGericht))->pluck('name', 'id');
+                throw new \Platform\FoodAlchemist\Exceptions\GpImGerichtException(array_values(array_map(
+                    static fn ($gid) => (string) ($namen[$gid] ?? "GP #{$gid}"), array_values(array_unique($gpImGericht)))));
+            }
+
+            $recipe->ingredients()->whereNotIn('id', $behalten)->delete();
+        });
+
+        app(RecipeRecomputeService::class)->recomputeNachSpeichern($recipe->id);   // 2.1b: Eltern per Queue
+
+        $recipe = $recipe->refresh();
+        // A4: Recall-Index nachziehen — die Top-Zutaten-Namen sind Teil des Rezept-Embed-Texts
+        // ({@see PoolEmbeddingService::recipeEmbedText}); eine Zutaten-Änderung driftet ihn sonst
+        // still (der Rezept-Observer feuert nur auf Rezept-Felder, nicht auf die Zutaten-Zeilen).
+        // Idempotent via source_hash (nur echter Text-Change embeddet neu), async, no-op ohne Provider.
+        app(PoolEmbeddingService::class)->queueRecipe($recipe);
+        \Platform\FoodAlchemist\Support\SensorikNachholen::ausloesen($team, (int) $recipe->id);
+
+        return $recipe;
+    }
+
+    /**
+     * Aktualisiert ausschließlich den Garverlust vorhandener Zutaten-Zeilen.
+     *
+     * Dieser schmale Schreibweg vermeidet für MCP den gefährlichen Voll-Sync, wenn nur
+     * `cooking_loss_pct` gepflegt werden soll. Alle IDs werden vor dem ersten Update
+     * geprüft; ein fremder oder doppelter Schlüssel lässt die gesamte Änderung scheitern.
+     *
+     * @param array<int, array{ingredient_id: int, cooking_loss_pct: float|int|null}> $verluste
+     */
+    public function updateCookingLosses(Team $team, int $recipeId, array $verluste): FoodAlchemistRecipe
+    {
+        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->findOrFail($recipeId);
+        if ((int) $recipe->team_id !== (int) $team->id) {
+            throw new \RuntimeException('Geerbtes Rezept — Zutaten-Pflege nur durchs Besitzer-Team (D1).');
+        }
+
+        DB::transaction(function () use ($recipe, $verluste): void {
+            $ids = array_map(static fn (array $verlust): int => (int) $verlust['ingredient_id'], $verluste);
+            if (count($ids) !== count(array_unique($ids))) {
+                throw new \RuntimeException('Zutaten-ID wurde doppelt angegeben.');
+            }
+
+            $zutaten = $recipe->ingredients()->whereIn('id', $ids)->get()->keyBy('id');
+            if ($zutaten->count() !== count($ids)) {
+                throw new \RuntimeException('Mindestens eine Zutaten-ID gehört nicht zum Rezept.');
+            }
+
+            foreach ($verluste as $verlust) {
+                $wert = $verlust['cooking_loss_pct'];
+                $zutaten[(int) $verlust['ingredient_id']]->update([
+                    'cooking_loss_pct' => $wert === null ? null : round((float) $wert, 1),
+                    'cooking_loss_source' => $wert === null ? null : 'manual',
+                ]);
+            }
+        });
+
+        app(RecipeRecomputeService::class)->recomputeNachSpeichern($recipe->id);   // 2.1b: Eltern per Queue
+
+        return $recipe->refresh();
+    }
+
+    /** P-8-Picker — ausgelagert nach {@see ZutatenZielSuche} (Größen-Wächter Spec 85 §9), Signatur bleibt für die Aufrufer. */
+    public function sucheZutatenZiel(Team $team, string $suche, int $ohneRecipeId, int $limit = 8): array
+    {
+        return app(ZutatenZielSuche::class)->suche($team, $suche, $ohneRecipeId, $limit);
+    }
+
+    private function keyVergeben(Team $team, string $key): bool
+    {
+        // withTrashed: der Unique-Index (team_id, recipe_key) zählt soft-gelöschte Zeilen mit. Ohne
+        // sie kollidierte jede Neugenerierung nach Selbstheilung/„neu generieren" (Draft soft-deleted,
+        // gleicher Name) mit SQLSTATE 1062 — demo Lauf #79, 2026-10-09.
+        return FoodAlchemistRecipe::withTrashed()->where('team_id', $team->id)->where('recipe_key', $key)->exists();
+    }
+
+    private function browserQuery(Team $team, array $filters): Builder
+    {
+        return FoodAlchemistRecipe::visibleToTeam($team)->basis()
+            ->when(($filters['search'] ?? '') !== '', function (Builder $q) use ($filters) {
+                // Multi-Wort: jedes Token muss treffen (Name ODER recipe_key)
+                foreach (\Platform\FoodAlchemist\Support\Suche::tokens($filters['search']) as $token) {
+                    $q->where(fn (Builder $w) => $w
+                        ->whereRaw('LOWER(foodalchemist_recipes.name) LIKE ?', ['%' . $token . '%'])
+                        ->orWhereRaw('LOWER(foodalchemist_recipes.recipe_key) LIKE ?', ['%' . $token . '%']));
+                }
+            })
+            ->when(($filters['hauptgruppe'] ?? null) !== null && $filters['hauptgruppe'] !== '', fn (Builder $q) => $q
+                ->whereIn('category_id', DB::table('foodalchemist_recipe_categories')
+                    ->where('main_group_id', (int) $filters['hauptgruppe'])->pluck('id')))
+            ->when(($filters['category'] ?? null) !== null && $filters['category'] !== '', fn (Builder $q) => $q
+                ->where('category_id', (int) $filters['category']))
+            ->when($filters['ohne_kategorie'] ?? false, fn (Builder $q) => $q
+                ->whereNull('foodalchemist_recipes.category_id'))       // MVP-042: eigener Arbeitsvorrat
+            ->when(($filters['status'] ?? '') !== '', fn (Builder $q) => $q->where('status', $filters['status']))
+            ->when(($filters['geschmack'] ?? '') !== '', fn (Builder $q) => $q->where('taste_direction', $filters['geschmack']))
+            ->when(($filters['fertigung'] ?? '') !== '', fn (Builder $q) => $q->where('production_depth', $filters['fertigung']))
+            ->when($filters['nur_templates'] ?? false, fn (Builder $q) => $q->where('is_template', true))  // R6: Template-Filter
+            // Rollen-Umbau (Dominique 11.10.): Basisrezepte, die diese Teller-Rolle tragen können.
+            ->when(($filters['rolle'] ?? '') !== '', fn (Builder $q) => $q->mitRolle((string) $filters['rolle']));
+    }
+
+    /**
+     * Spec 70: übliche Lagerart (gekuehlt | tiefgekuehlt | trocken); leer/null = null.
+     * Weg-B-Befund 2 (2026-10-12): ein UNBEKANNTER Wert wurde still zu null — der Agent sah „übernommen"
+     * und das Feld blieb leer. Jetzt wirft er, das Tool meldet VALIDATION_ERROR mit den erlaubten Werten.
+     */
+    public static function lagerart(mixed $wert): ?string
+    {
+        if ($wert === null || $wert === '') {
+            return null;
+        }
+        if (! in_array($wert, \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::LAGERARTEN, true)) {
+            throw new \RuntimeException('Unbekannte Lagerart „'.(is_scalar($wert) ? $wert : gettype($wert)).'" — erlaubt: '
+                .implode(', ', \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::LAGERARTEN).'.');
+        }
+
+        return (string) $wert;
+    }
+
+    /** Spec 76: mögliche Lagerarten (Mehrfachauswahl), Reihenfolge fest; leer = null (abgeleitet). Unbekannte Werte werfen. */
+    public static function lagerarten(mixed $wert): ?array
+    {
+        $eingabe = array_values(array_filter((array) ($wert ?? []), fn ($v) => $v !== null && $v !== ''));
+        $fremd = array_diff($eingabe, \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::LAGERARTEN);
+        if ($fremd !== []) {
+            throw new \RuntimeException('Unbekannte Lagerart „'.implode('", „', array_map('strval', $fremd)).'" — erlaubt: '
+                .implode(', ', \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::LAGERARTEN).'.');
+        }
+        $arten = array_values(array_intersect(\Platform\FoodAlchemist\Models\FoodAlchemistRecipe::LAGERARTEN, $eingabe));
+
+        return $arten !== [] ? $arten : null;
+    }
+}

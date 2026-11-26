@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
-use Platform\FoodAlchemist\Services\TerminologyService;
+use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

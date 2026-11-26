@@ -98,7 +98,7 @@ class BehaelterBedarfService
      */
     public function behaelterFuerGericht(Team $team, FoodAlchemistRecipe $gericht, float $ansaetze, string $zweck): array
     {
-        $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+        $recompute = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
         $komponenten = [];
         foreach ($gericht->ingredients()->whereNotNull('referenced_recipe_id')->with('referencedRecipe')->get() as $z) {
             $sub = $z->referencedRecipe;

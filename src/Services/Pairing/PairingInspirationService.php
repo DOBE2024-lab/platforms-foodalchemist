@@ -27,8 +27,8 @@ class PairingInspirationService
 {
     public function __construct(
         private readonly PairingService $pairing,
-        private readonly \Platform\FoodAlchemist\Services\FavoriteGpService $favoriten,
-        private readonly \Platform\FoodAlchemist\Services\SignalService $signale,
+        private readonly \Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService $favoriten,
+        private readonly \Platform\FoodAlchemist\Services\Pruefung\SignalService $signale,
     ) {}
 
     /** voll_kreativ ⇒ abstrakt (kein GP), sonst geerdet. */

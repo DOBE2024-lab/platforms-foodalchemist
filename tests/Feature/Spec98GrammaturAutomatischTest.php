@@ -5,11 +5,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichungDelta;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\GrammaturUmstellung\GrammaturMessung;
 use Platform\FoodAlchemist\Services\GrammaturUmstellung\GrammaturUmstellungService;
 use Platform\FoodAlchemist\Services\GrammaturUmstellung\SchreibWache;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\GrammaturWelt;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -43,7 +43,7 @@ it('Trockenlauf: Kategorien wie erwartet, nichts geschrieben', function () {
     $kalb = ($this->gp)('Kalbsrücken', 30.00);
     [$f] = ($this->rezept)('kalbsruecken', 'Kalbsrücken', [[$kalb, 160]]);
     ($this->darreichung)($f, 'teller', ['is_standard' => true, 'menge_vom_standard' => false, 'quantity_per_unit_g' => 160]);
-    app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputeFuerRezept($f->id);
+    app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->recomputeFuerRezept($f->id);
     $this->travel(1)->minutes();   // Phasen-Zählung über updated_at: auch diese Fixture liegt davor
     $vorher = FoodAlchemistRecipeDarreichung::orderBy('id')->get(['id', 'quantity_per_unit_g', 'menge_vom_standard', 'ek_portion'])->toArray();
     $zutatenVorher = \Illuminate\Support\Facades\DB::table('foodalchemist_recipe_ingredients')->orderBy('id')->pluck('quantity', 'id')->all();

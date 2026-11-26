@@ -9,13 +9,13 @@ use Platform\FoodAlchemist\Enums\GpStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
-use Platform\FoodAlchemist\Services\FavoriteGpService;
-use Platform\FoodAlchemist\Services\GpAggregateService;
-use Platform\FoodAlchemist\Services\GpNamingService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 use Platform\FoodAlchemist\Support\Curate;
 use Platform\FoodAlchemist\Support\Text;
 
@@ -265,7 +265,7 @@ class GpModal extends Component
     /** Größe aus den eingegebenen Maßen in den Namen übernehmen (Regelwerk §6.5: Produkt: Eigenschaft, Größe) — überschreibt die Größe-Angabe. */
     public function masseInNamen(): void
     {
-        $groesse = app(\Platform\FoodAlchemist\Services\GpMasseService::class)->groesseAusEingabe($this->defaults);
+        $groesse = app(\Platform\FoodAlchemist\Services\GpStamm\GpMasseService::class)->groesseAusEingabe($this->defaults);
         if ($groesse !== null) {
             $this->builder['pflichtangabe'] = $groesse;
         }
@@ -275,7 +275,7 @@ class GpModal extends Component
     private function speichereMasse(FoodAlchemistGp $gp): void
     {
         if ($gp->istNonFood()) {
-            $masse = app(\Platform\FoodAlchemist\Services\GpMasseService::class);
+            $masse = app(\Platform\FoodAlchemist\Services\GpStamm\GpMasseService::class);
             $masse->setze($gp, array_intersect_key($this->defaults, \Platform\FoodAlchemist\Support\NonFoodMasse::EINGABE));
             $masse->setzeServierTyp($gp, ($this->defaults['serving_vehicle_vocab_id'] ?? '') === '' ? null : (int) $this->defaults['serving_vehicle_vocab_id']);
         }
@@ -324,7 +324,7 @@ class GpModal extends Component
     /** Kalkulations-Defaults direkt persistieren (Phase 2; nur Edit). Leer ⇒ NULL. */
     private function speichereDefaults(FoodAlchemistGp $gp): void
     {
-        app(\Platform\FoodAlchemist\Services\GpService::class)->setzeKalkDefaults($this->teamOderFehler(), (int) $gp->id, [...$this->defaults, 'is_kochmedium' => $this->istKochmedium]);   // Spec 84 C5
+        app(\Platform\FoodAlchemist\Services\GpStamm\GpService::class)->setzeKalkDefaults($this->teamOderFehler(), (int) $gp->id, [...$this->defaults, 'is_kochmedium' => $this->istKochmedium]);   // Spec 84 C5
     }
 
     public function speichern(GpNamingService $naming): void
@@ -350,7 +350,7 @@ class GpModal extends Component
                     }
                     if ($this->equivalentSourceKind !== null && $this->equivalentSourceId !== null) {
                         $this->assertEquivalentSourceWritable($team);
-                        app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)->verknuepfe(
+                        app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)->verknuepfe(
                             $team,
                             $this->equivalentSourceKind,
                             $this->equivalentSourceId,
@@ -486,7 +486,7 @@ class GpModal extends Component
     // ── #9 (2026-08-28): Naturaleinheit-Formen (Gramm je Form) ─────────────────
 
     /** Form aus den Eingabefeldern setzen/aktualisieren. */
-    public function formSetzen(\Platform\FoodAlchemist\Services\GpFormService $forms): void
+    public function formSetzen(\Platform\FoodAlchemist\Services\GpStamm\GpFormService $forms): void
     {
         $this->fehler = null;
         $this->hinweis = null;
@@ -505,7 +505,7 @@ class GpModal extends Component
         $this->dispatch('gp-gespeichert');
     }
 
-    public function formEntfernen(\Platform\FoodAlchemist\Services\GpFormService $forms, string $slug): void
+    public function formEntfernen(\Platform\FoodAlchemist\Services\GpStamm\GpFormService $forms, string $slug): void
     {
         $this->fehler = null;
         if ($this->gpId === null) {
@@ -588,7 +588,7 @@ class GpModal extends Component
         $this->hinweis = $hinweis;
     }
 
-    public function formenKiSchaetzen(\Platform\FoodAlchemist\Services\GpFormService $forms): void
+    public function formenKiSchaetzen(\Platform\FoodAlchemist\Services\GpStamm\GpFormService $forms): void
     {
         $this->fehler = null;
         $this->hinweis = null;
@@ -799,7 +799,7 @@ class GpModal extends Component
      * Spec 84 C5 · Schreibweg des Modals über GpService (Eigentümer-Riegel + Override-First im Service, gleiche Regel
      * für jeden Aufrufer). Abweisungen landen als Meldung im Modal. null = abgewiesen bzw. kein GP.
      *
-     * @param  callable(\Platform\FoodAlchemist\Services\GpService, \Platform\Core\Models\Team, int): mixed  $schreiben
+     * @param  callable(\Platform\FoodAlchemist\Services\GpStamm\GpService, \Platform\Core\Models\Team, int): mixed  $schreiben
      */
     private function gpSchreiben(callable $schreiben): mixed
     {
@@ -808,7 +808,7 @@ class GpModal extends Component
             return null;
         }
         try {
-            return $schreiben(app(\Platform\FoodAlchemist\Services\GpService::class), $team, (int) $this->gpId) ?? true;
+            return $schreiben(app(\Platform\FoodAlchemist\Services\GpStamm\GpService::class), $team, (int) $this->gpId) ?? true;
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
 
@@ -1365,9 +1365,9 @@ class GpModal extends Component
                     ->orderBy('name')->limit(8)->get(['id', 'name', 'status', 'is_platzhalter'])
                 : collect(),
             // #9: Naturaleinheit-Formen (Gramm je Form) + wählbare Form-Slugs für „Form hinzufügen".
-            'formen' => $gp !== null ? app(\Platform\FoodAlchemist\Services\GpFormService::class)->list($gp->id) : collect(),
-            'formSlugs' => \Platform\FoodAlchemist\Services\GpFormService::formSlugs(Auth::user()?->currentTeamRelation),
-            'sensorik' => $this->gpId !== null ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerGp($this->gpId) : null,
+            'formen' => $gp !== null ? app(\Platform\FoodAlchemist\Services\GpStamm\GpFormService::class)->list($gp->id) : collect(),
+            'formSlugs' => \Platform\FoodAlchemist\Services\GpStamm\GpFormService::formSlugs(Auth::user()?->currentTeamRelation),
+            'sensorik' => $this->gpId !== null ? app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class)->fuerGp($this->gpId) : null,
             'pairing' => $this->gpId !== null ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->panelGp($this->gpId) : null,
             // Spec 53 Paket J: Aroma-Anker editierbar (kern + neben) — panelGp()/pairing.blade.php
             // bleiben read-only (liefern nur 'kern', ohne id/role); dieser Block ist die Schreib-Fläche.
@@ -1375,7 +1375,7 @@ class GpModal extends Component
                 ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->gpAnkerAlle($this->gpId)
                 : collect(),
             // „geprüft, kein Aroma-Träger" (Backfill/KI-Knopf) — sonst sähe es aus wie noch nie gefragt
-            'gpAnkerNeutral' => $this->gpId !== null && app(\Platform\FoodAlchemist\Services\GpAromaService::class)->istAnkerNeutral($this->gpId),
+            'gpAnkerNeutral' => $this->gpId !== null && app(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::class)->istAnkerNeutral($this->gpId),
             'gpAnkerKandidaten' => $this->gpAnkerSuche !== '' && $team !== null
                 ? \Platform\FoodAlchemist\Support\TeamScope::applyVisible(
                     \Illuminate\Support\Facades\DB::table('foodalchemist_vocab_pairing_anchors')->whereNull('deleted_at'),

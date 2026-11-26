@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\NaehrwertVorschauService;
+use Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertVorschauService;
 
 /** Vorschau der Nährwert-Umstellung (Nullen echt, Leer-Guard überall, Median) — vorher/nachher je Achse, nur lesend. */
 class NaehrwerteVorschauGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

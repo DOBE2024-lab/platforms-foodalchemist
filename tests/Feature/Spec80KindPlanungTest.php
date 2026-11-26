@@ -10,8 +10,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeKomponentenPlanService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -244,7 +244,7 @@ it('ein neuer Plan ersetzt den alten — auch durch keinen', function () {
 });
 
 it('Architektur: Kind-Steps werden nur über starteKind/baueKind gestartet', function () {
-    $quelle = file_get_contents(dirname(__DIR__, 2) . '/src/Services/RecipeDependencyWorkflowService.php');
+    $quelle = file_get_contents(dirname(__DIR__, 2) . '/src/Services/Rezept/RecipeDependencyWorkflowService.php');
 
     expect(substr_count($quelle, 'GenerateRecipeJob::dispatch('))->toBe(1)
         ->and(substr_count($quelle, 'GenerateRecipePlanJob::dispatch('))->toBe(1);

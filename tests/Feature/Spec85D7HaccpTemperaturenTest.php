@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRule;
-use Platform\FoodAlchemist\Services\CulinaryReferenceService;
+use Platform\FoodAlchemist\Services\GpStamm\CulinaryReferenceService;
 use Platform\FoodAlchemist\Services\Regeln\Arten\Schwelle;
 use Platform\FoodAlchemist\Services\Regeln\RegelBuch;
 use Platform\FoodAlchemist\Services\Regeln\RegelPromptBlock;

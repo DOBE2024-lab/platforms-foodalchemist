@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Queue;
 use Platform\FoodAlchemist\Enums\GpStatus;
 use Platform\FoodAlchemist\Jobs\ConformanceCheckJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

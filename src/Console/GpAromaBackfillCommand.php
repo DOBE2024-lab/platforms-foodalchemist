@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\File;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpAromaBackfillService;
-use Platform\FoodAlchemist\Services\GpAromaService;
-use Platform\FoodAlchemist\Services\SensorikService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAromaBackfillService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAromaService;
+use Platform\FoodAlchemist\Services\Rezept\SensorikService;
 use Platform\FoodAlchemist\Support\GpAromaNachholen;
 
 /**

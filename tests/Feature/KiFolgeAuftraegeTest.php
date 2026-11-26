@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Jobs\GpAromaNachholenJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
-use Platform\FoodAlchemist\Services\SignalDetektorService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService;
 use Platform\FoodAlchemist\Support\GpAromaNachholen;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -96,7 +96,7 @@ it('(c) abgelaufene Aufträge werden nicht verworfen — der Nachlauf erkennt di
     Queue::fake();
     $gpId = $this->registry->get('foodalchemist.gps.POST')->execute(['hauptzutat' => 'Ananas'], $this->mcp)->data['id'];
     $job = fn () => (new GpAromaNachholenJob($this->rootTeam->id, (int) $this->user->id, $gpId, true))
-        ->handle(app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class), app(\Platform\FoodAlchemist\Services\GpAromaService::class));
+        ->handle(app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class), app(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::class));
 
     $job();
     $erste = DB::table('foodalchemist_ki_auftraege')->where('status', 'offen')->pluck('uuid')->all();

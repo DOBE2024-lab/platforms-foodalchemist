@@ -241,7 +241,7 @@ class ProductionTimeService
                 continue;
             }
             if ($dar !== null && $dar->arbeitszeiten !== null) {
-                $neu = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->berechnen($team, $gericht, $dar, $portionen);
+                $neu = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::class)->berechnen($team, $gericht, $dar, $portionen);
                 $summe += $neu['minuten'];
                 $vorOrt += $neu['vor_ort_minuten'];
                 $warnungen = array_merge($warnungen, $neu['warnungen']);
@@ -290,7 +290,7 @@ class ProductionTimeService
                         [$wert, $quelle, $minuten] = [$zeitJeMenge['min'] * 60, 'gepflegt', $zeitJeMenge['min'] * $portionen];
                     } elseif ($zeitJeMenge['quelle'] === 'gepflegt') {
                         // Altwert am Gericht je kg bzw. Stück (B3 Entscheid 1: Gepflegtes gewinnt) — Menge der Portionen dieser Form
-                        $gramm = $dar !== null ? (float) (app(\Platform\FoodAlchemist\Services\DarreichungService::class)->grammJeEinheit($dar, $gericht) ?? 0) * (float) ($dar->unit_count ?: 1)
+                        $gramm = $dar !== null ? (float) (app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->grammJeEinheit($dar, $gericht) ?? 0) * (float) ($dar->unit_count ?: 1)
                             : (float) ($gericht->yield_kg_manual ?? $gericht->yield_kg ?? 0) * 1000 / $ppb;
                         $basisMenge = $zeitJeMenge['basis'] === 'kg' ? $portionen * $gramm / 1000 : $portionen * (float) ($dar?->unit_count ?: 1);
                         [$wert, $quelle, $minuten] = [null, 'gepflegt', $zeitJeMenge['min'] * $basisMenge];

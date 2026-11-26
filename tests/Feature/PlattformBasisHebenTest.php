@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Livewire\Settings\Warengruppen as WarengruppenSetting
 use Platform\FoodAlchemist\Models\FoodAlchemistLookupWarengruppe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Models\FoodAlchemistWarengruppeSubkategorie;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 use Platform\FoodAlchemist\Support\FaTeam;
 use Platform\FoodAlchemist\Support\FremdSchreiben;
 use Platform\FoodAlchemist\Support\MasterTeam;

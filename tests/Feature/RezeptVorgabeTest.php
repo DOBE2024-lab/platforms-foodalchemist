@@ -11,11 +11,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Matching\MatchLeitplanken;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeExtractService;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
-use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeExtractService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -98,7 +98,7 @@ it('ohne Vorgabe am Rezept: Unterrezept wie bisher (Lücke in der Anreicherung),
     $r = $this->makeRecipe($this->rootTeam, 'Rahmsauce ohne', ['status' => 'draft']);
     ($this->fondZeile)($r);
     ($this->fondGp)();
-    $treffer = app(\Platform\FoodAlchemist\Services\IngredientMatchService::class)->matchIngredient($this->rootTeam, 'Geflügelfond',
+    $treffer = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->matchIngredient($this->rootTeam, 'Geflügelfond',
         ...MatchLeitplanken::matcherArgsFuerRezept($r));
 
     expect(app(RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $r->fresh())['basisrezept_luecken'])->toBe(1)
@@ -149,7 +149,7 @@ it('Ausrezeptieren (#621): die Hülle behält ihre Vorgabe — generiere mit stu
     $eltern = $this->makeRecipe($this->rootTeam, 'Rahmsauce Eltern', ['vorgabe_niveau' => 'gehoben']);
     $stub = app(RecipeService::class)->createSubRecipeStub($this->rootTeam, 'Geflügelfond', $eltern->id)['recipe'];
 
-    $res = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Unterrezept «Geflügelfond»', [
+    $res = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Unterrezept «Geflügelfond»', [
         'stub_fuellen_id' => $stub->id, 'titel_vorgabe' => 'Geflügelfond',   // ohne Leitplanken: vorgabeAus hätte NULL geliefert
     ], ['name' => 'Geflügelfond', 'zutaten' => [['text' => 'Hühnerknochen', 'quantity' => 1000, 'unit' => 'g']], 'preparation' => 'Auskochen.'],
         createdVia: 'import_ki_unterrezept');
@@ -162,7 +162,7 @@ it('Ausrezeptieren-Job: die Vorgabe der Hülle gewinnt vor den Import-Leitplanke
     $stub = app(RecipeService::class)->createSubRecipeStub($this->rootTeam, 'Kalbsjus', vorgabe: ['vorgabe_niveau' => 'haute_cuisine'])['recipe'];
     $ohne = app(RecipeService::class)->createSubRecipeStub($this->rootTeam, 'Wildjus')['recipe'];
     $gesehen = [];
-    $this->mock(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class, function ($m) use (&$gesehen) {
+    $this->mock(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class, function ($m) use (&$gesehen) {
         $m->shouldReceive('generiere')->andReturnUsing(function ($team, $brief, $parameter) use (&$gesehen) {
             $gesehen[(int) $parameter['stub_fuellen_id']] = $parameter;
 

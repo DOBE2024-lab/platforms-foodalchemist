@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 
 /** Phase C: Signal-Status setzen — alle Aktionen reversibel (wieder_oeffnen). */
 class SignalePutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

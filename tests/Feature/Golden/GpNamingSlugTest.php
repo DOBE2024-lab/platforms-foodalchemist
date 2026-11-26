@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -140,7 +140,7 @@ it('syncIngredients behauptet nicht »manual«, wenn niemand von Hand gewaehlt h
     // Handarbeit — falsche Provenienz, die die Diagnose zweimal fehlgeleitet hat.
     // Auf recipe_ingredients entscheidet niemand an `manual`; die Schutzregel in
     // SalesImportService gilt fuer foodalchemist_sales_facts, eine andere Tabelle.
-    $quelle = file_get_contents(__DIR__ . '/../../../src/Services/RecipeService.php');
+    $quelle = file_get_contents(__DIR__ . '/../../../src/Services/Rezept/RecipeService.php');
     $stelle = mb_strpos($quelle, "\$attrs['match_method']\n                            ??");
 
     expect($stelle)->not->toBeFalse();

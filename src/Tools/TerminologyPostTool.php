@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\TerminologyService;
+use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 
 /**
  * #507 Weg-2 · E7-b: einen Terminologie-Eintrag anlegen — Alias-Gruppe (Synonyme) ODER

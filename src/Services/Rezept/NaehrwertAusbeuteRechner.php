@@ -6,11 +6,11 @@ use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
 
 /**
  * Rezept-Nährwerte je 100 g AUSBEUTE (GL-08 + Entscheid Dominique 17.11.2026, Regelwerk Basisrezepte §6a/§18.7).
- * Ausgelagert aus {@see \Platform\FoodAlchemist\Services\RecipeRecomputeService} (Spec 85 §9); die Verlust-Kaskade liefert der Recompute.
+ * Ausgelagert aus {@see \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService} (Spec 85 §9); die Verlust-Kaskade liefert der Recompute.
  *
  * Je Zeile, relativ zur Rohmenge (GL-08 §4.2: NUR g/ml-Faktor, kein stk-Fallback):
  *   masse     = (1 − Putz) × (1 − Gar)                    → Nenner (Bezugsmasse, gleiche Kaskade wie yield_kg)

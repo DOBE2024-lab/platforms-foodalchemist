@@ -22,13 +22,13 @@ use Platform\FoodAlchemist\Services\Produktion\BehaelterRechner;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
-use Platform\FoodAlchemist\Services\RecipeReviseService;
-use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeReviseService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Support\TeamScope;
-use Platform\FoodAlchemist\Services\RecipeStepService;
-use Platform\FoodAlchemist\Services\SensorikService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeStepService;
+use Platform\FoodAlchemist\Services\Rezept\SensorikService;
 
 /**
  * M4-06 / P-2: Rezept-Stammdaten-Modal — Name (§1-Syntax-Hint, „Name putzen"-KI),
@@ -733,7 +733,7 @@ class RecipeModal extends Component
 
             return;
         }
-        if (in_array($geschmack->werte['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\RecipeService::TASTE_DIRECTIONS, true)) {
+        if (in_array($geschmack->werte['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\Rezept\RecipeService::TASTE_DIRECTIONS, true)) {
             $this->form['taste_direction'] = $geschmack->werte['taste_direction'];
             $gefuellt++;
         }

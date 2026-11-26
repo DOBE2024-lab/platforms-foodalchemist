@@ -7,8 +7,8 @@ use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Jobs\EnrichRecipeJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
-use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\RecipeStepService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeStepService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -119,7 +119,7 @@ it('Plattformweg: die Anreicherung (One-Shot) ersetzt die Produktions-Schritte, 
     $provider->antwort = $this->neueSchritte;
     app()->instance(LLMProviderContract::class, $provider);
 
-    $ergebnis = app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)
+    $ergebnis = app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class)
         ->anreichern($this->rootTeam, $this->recipe->fresh(), completeCoverage: true);
 
     expect($ergebnis['coverage']['steps']['status'] ?? null)->toBe('aktualisiert', (string) ($ergebnis['coverage']['steps']['fehler'] ?? ''))

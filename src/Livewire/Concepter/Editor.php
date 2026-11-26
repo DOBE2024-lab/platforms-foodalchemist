@@ -19,7 +19,7 @@ use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\Concepter\ConcepterBewertungService;
 use Platform\FoodAlchemist\Services\Preis\KalkulationService;
 use Platform\FoodAlchemist\Services\Bestellung\OrderCostingService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 
 /**
  * M10R-3 / Doc 15 §10.4: Voll-Editor-Modal im VK-Stil (wie VkModal) — kontext-
@@ -493,7 +493,7 @@ class Editor extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\DarreichungService::class)
+            app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)
                 ->anlegen($team, $slot->sales_recipe_id, $concept->serving_form_id, [], 'fa_ui');
         } catch (\Throwable $e) {
             $this->fehler = $e->getMessage();
@@ -1132,7 +1132,7 @@ class Editor extends Component
     private function anrichtenZeilen($concept, $team): array
     {
         $resolver = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class);
-        $dar = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+        $dar = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class);
         $zeilen = [];
         $nimm = function (int|string $key, string $name, ?\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung $d) use (&$zeilen, $dar, $team) {
             $zeilen[] = ['key' => $key, 'name' => $name, 'darreichung' => $d?->bezeichnung(),
@@ -1232,7 +1232,7 @@ class Editor extends Component
                             $darreichungInfo[$slot->id] = ($passtZurKonzeptForm || $concept->serving_form_id === null)
                                 ? ($dar->bezeichnung() ?? '—')
                                 : 'Standard: ' . ($dar->bezeichnung() ?? '—');
-                            $zub = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->zubehoerKosten($dar, $team);
+                            $zub = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->zubehoerKosten($dar, $team);
                             if ($zub['zeilen'] !== []) {
                                 $zubehoerInfo[$slot->id] = $zub;
                             }
@@ -1291,7 +1291,7 @@ class Editor extends Component
                     ->orderBy('position')->get();
                 $paare = $zutaten->map(fn ($z) => $z->gp_id !== null ? ['gp', (int) $z->gp_id] : ['recipe', (int) $z->referenced_recipe_id])
                     ->filter(fn ($p) => $p[1] !== 0)->values()->all();
-                $ersatz = app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)->ersatzHinweise($team, $paare);
+                $ersatz = app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)->ersatzHinweise($team, $paare);
                 $slotZutaten = $zutaten->map(function ($z) use ($ersatz) {
                     $key = $z->gp_id !== null ? 'gp:' . $z->gp_id : 'recipe:' . $z->referenced_recipe_id;
 
@@ -1362,7 +1362,7 @@ class Editor extends Component
             'paketListe' => $paketListe ?? collect(),
             'paketKlassenListe' => $istAufbau && $this->type === 'concepts' ? $concepts->klassen($team) : [],
             'gerichtListe' => $gerichtListe ?? collect(),
-            'basisHauptgruppen' => $istAufbau && $this->type === 'concepts' ? app(\Platform\FoodAlchemist\Services\RecipeService::class)->mainGroups($team) : collect(),
+            'basisHauptgruppen' => $istAufbau && $this->type === 'concepts' ? app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->mainGroups($team) : collect(),
             'basisKategorien' => ($istAufbau && $this->type === 'concepts' && $this->basisHg !== null)
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeCategory::visibleToTeam($team)
                     ->where('main_group_id', $this->basisHg)->orderBy('label')->get(['id', 'label'])

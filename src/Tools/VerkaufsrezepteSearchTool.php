@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 
 /** M8-01: Verkaufsrezepte durchsuchen (D-6, verkauf()-Scope inkl. Marge-Kopf). */
 class VerkaufsrezepteSearchTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

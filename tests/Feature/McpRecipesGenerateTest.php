@@ -352,7 +352,7 @@ it('stellt den vorherigen Nutzer auch nach einem Generatorfehler wieder her', fu
  */
 it('CQ 2.5a: sektor nimmt Altwerte an und schlüsselt sie um (catering → event_privat), Unbekanntes wird abgewiesen', function () {
     $gesehen = null;
-    $this->mock(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class, function ($m) use (&$gesehen) {
+    $this->mock(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class, function ($m) use (&$gesehen) {
         $m->shouldReceive('generiere')->andReturnUsing(function ($team, $beschreibung, array $parameter) use (&$gesehen) {
             $gesehen = $parameter;
             throw new RuntimeException('Testgrenze: Parameter gesehen');

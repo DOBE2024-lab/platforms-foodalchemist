@@ -1195,7 +1195,7 @@ class Editor extends Component
                 default => $svc->gerichtKandidaten($team, $this->pickerSuche, 50, $this->pickerHauptgruppe, $this->pickerDishClass),
             };
             if ($this->pickerTyp === 'gericht') {
-                $pickerHauptgruppen = app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)->dishMainGroups($team);
+                $pickerHauptgruppen = app(\Platform\FoodAlchemist\Services\Rezept\SalesRecipeService::class)->dishMainGroups($team);
                 if ($this->pickerHauptgruppe !== null) {
                     $pickerUntergruppen = \Platform\FoodAlchemist\Models\FoodAlchemistDishClass::visibleToTeam($team)
                         ->where('dish_main_group_id', $this->pickerHauptgruppe)->orderBy('label')->get(['id', 'label']);

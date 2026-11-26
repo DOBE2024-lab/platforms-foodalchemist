@@ -8,10 +8,10 @@ use Platform\FoodAlchemist\Exceptions\KeinPlatzhalterException;
 use Platform\FoodAlchemist\Livewire\Gps\DetailPanel;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration;
-use Platform\FoodAlchemist\Services\GpAggregateService;
-use Platform\FoodAlchemist\Services\GpService;
-use Platform\FoodAlchemist\Services\PlatzhalterDeklarationService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\PlatzhalterDeklarationService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

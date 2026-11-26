@@ -298,7 +298,7 @@ class LeadLaService
         $this->pruefeLeadBesitzer($team, $gp);
         $gp->update(['lead_la_supplier_item_id' => $laId]);
         // Spec 82 3b: der globale Lead gilt für alle Teams ohne eigenen Pin → Team-Kosten aller Teams veraltet
-        app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->markiereVeraltet(app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->rezepteMitGps([(int) $gp->id]), null);
+        app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->markiereVeraltet(app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->rezepteMitGps([(int) $gp->id]), null);
         // Gefäß/Zubehör-Darreichungen + Paket/Konzept darüber; die Rezepte rechnet der Aufrufer ($recompute bzw. sein Bulk-Recompute)
         \Platform\FoodAlchemist\Jobs\KostenFolgeJob::versenden((int) $team->id, [(int) $gp->id], [], false, false);
 
@@ -441,7 +441,7 @@ class LeadLaService
                 ['locked' => $locked, 'deleted_at' => null],
             );
         $this->raeumeLeerePrefsAuf($team, $gp);
-        app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->nachPinAenderung((int) $gp->id, $team);   // Spec 82 3b: Auslöser Pin/Lock
+        app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->nachPinAenderung((int) $gp->id, $team);   // Spec 82 3b: Auslöser Pin/Lock
     }
 
     /**
@@ -496,7 +496,7 @@ class LeadLaService
             }
         });
         $this->raeumeLeerePrefsAuf($team, $gp);
-        app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->nachPinAenderung((int) $gp->id, $team);   // Spec 82 3b: Auslöser Pin
+        app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->nachPinAenderung((int) $gp->id, $team);   // Spec 82 3b: Auslöser Pin
     }
 
     /**
@@ -520,7 +520,7 @@ class LeadLaService
                 $this->applyLeadLa($gp->refresh(), $team);                 // I4: sofortige Neuwahl
             }
         });
-        app(\Platform\FoodAlchemist\Services\GpAggregateService::class)->konfidenzNachziehen([$gp->id]);   // Allergen-Konfidenz/Review sofort (Widerspruch kann damit weggehen)
+        app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class)->konfidenzNachziehen([$gp->id]);   // Allergen-Konfidenz/Review sofort (Widerspruch kann damit weggehen)
     }
 
     /** LA an GP verknüpfen (Gegenstück, M3-07-Aktion): Struktur-Update + Lead-Neuwahl-Trigger (T3). */
@@ -557,7 +557,7 @@ class LeadLaService
             $gp->update(['n_las_total' => (int) $gp->n_las_total + 1]);
             $this->applyLeadLa($gp->refresh(), $team);                     // T3: Verknüpfen triggert Neuwahl
         });
-        app(\Platform\FoodAlchemist\Services\GpAggregateService::class)->konfidenzNachziehen([$gp->id]);   // Allergen-Konfidenz/Review sofort (neuer Artikel kann einen Widerspruch bringen)
+        app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class)->konfidenzNachziehen([$gp->id]);   // Allergen-Konfidenz/Review sofort (neuer Artikel kann einen Widerspruch bringen)
     }
 
     /** M3-07-Picker: verknüpfbare LAs (Struktur-Zeile mit gp_id NULL), Suche über designation. */

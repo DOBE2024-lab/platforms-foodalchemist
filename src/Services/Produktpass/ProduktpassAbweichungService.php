@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistItemNutritional;
 use Platform\FoodAlchemist\Models\FoodAlchemistProduktpassFeld;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\ProduktpassSchutz;
 

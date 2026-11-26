@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\StammPaket;
 
@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Support\StammPaket;
  * Master-GPs in den Stamm heben (Dominique 20.11.2026: „wenn ein Grundprodukt neu angelegt wird, durch die Vererbung, durch das Abo-Paket,
  * sollte es automatisch mit reingehen“; Entscheid: alle Bestands-GPs des Master-Teams, kein Schalter).
  *
- * Neue GPs des Master-Teams legt {@see \Platform\FoodAlchemist\Services\GpNamingService::createGp} seitdem global an. Dieses Kommando hebt den
+ * Neue GPs des Master-Teams legt {@see \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::createGp} seitdem global an. Dieses Kommando hebt den
  * BESTAND: GPs mit team_id = Master werden global (team_id NULL) und Stamm-Paket (stamm_class = stamm_paket), damit Mandanten mit Paket sie sehen.
  *
  * - IDs bleiben: Rezept-Zeilen, Darreichungen (Gefäß), Zubehör-Zeilen, LA-Strukturen und Lead-Artikel zeigen unverändert auf dieselben GPs.
@@ -146,7 +146,7 @@ class MasterGpsStammHebenCommand extends Command
      * gp_key-Kollisionen mit dem globalen Bestand (und unter den zu hebenden GPs selbst) klären (Kurator 20.11.2026, Fall 14051 ⇄ 14493: beide
      * „tomate||“, verschiedene Produkte — nicht zusammenführen). Ein degenerierter Key (nur Hauptzutat + leere Segmente) wird neu gebildet:
      * zuerst aus den Feldern wie bei der Neuanlage ({@see GpNamingService::gpKeyAusFeldern}), kollidiert der auch, aus dem Namens-Slug
-     * (Bestandsformat älterer GPs, gleiche Ausweichregel wie {@see \Platform\FoodAlchemist\Services\GpUmhaengenService}). Abbruch nur, wenn danach
+     * (Bestandsformat älterer GPs, gleiche Ausweichregel wie {@see \Platform\FoodAlchemist\Services\GpStamm\GpUmhaengenService}). Abbruch nur, wenn danach
      * immer noch kollidiert oder der Key nicht degeneriert ist (dann ist es eine echte Dublette: zusammenführen).
      *
      * @return array{0: array<int, string>, 1: list<string>}  [gp_id => neuer gp_key], Kollisionen

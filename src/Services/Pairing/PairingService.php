@@ -2130,7 +2130,7 @@ class PairingService
             }
         }
         $manuelleIds = [];
-        foreach (app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)->fuer($team, 'gp', $sourceGpId) as $eq) {
+        foreach (app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)->fuer($team, 'gp', $sourceGpId) as $eq) {
             if ($eq->gegen_kind === 'gp' && $eq->gegen_id !== null) {
                 $poolIds[(int) $eq->gegen_id] = true;
                 $manuelleIds[(int) $eq->gegen_id] = true;
@@ -2229,7 +2229,7 @@ class PairingService
         $scored = array_slice($scored, 0, max(1, $limit));
 
         // ── Anreicherung nur der Top-N (teure Schritte: Allergene, Preis, Kohäsion) ──
-        $agg = app(\Platform\FoodAlchemist\Services\GpAggregateService::class);
+        $agg = app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class);
         $sourceAllergene = $agg->allergene($sourceGp);
         $sourceEk = $this->gpLeadListenEk($sourceGp->lead_la_supplier_item_id !== null ? (int) $sourceGp->lead_la_supplier_item_id : null, $team);
 
@@ -2474,7 +2474,7 @@ class PairingService
         if (($id = $this->ankerIdExakt($begriff)) !== null) {
             return ['id' => $id, 'via' => 'exakt'];
         }
-        $term = app(\Platform\FoodAlchemist\Services\TerminologyService::class);
+        $term = app(\Platform\FoodAlchemist\Services\GpStamm\TerminologyService::class);
         foreach ($term->aliasPhrasesFor($begriff) as $phrase) {
             if (($id = $this->ankerIdExakt($phrase)) !== null) {
                 return ['id' => $id, 'via' => 'synonym'];

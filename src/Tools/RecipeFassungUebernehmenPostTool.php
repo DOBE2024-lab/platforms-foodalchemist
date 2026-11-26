@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Exceptions\FaRechtFehltException;
-use Platform\FoodAlchemist\Services\RezeptFolgeService;
+use Platform\FoodAlchemist\Services\Rezept\RezeptFolgeService;
 
 /** Spec 82 §12 B / 4d · Neuere Abo-Fassung an einem eigenen Rezept übernehmen. Bei geändertem Allergenbild nur Rolle Freigeben und mit bestaetigt=true. */
 class RecipeFassungUebernehmenPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

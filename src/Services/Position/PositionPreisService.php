@@ -10,9 +10,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Concepter\ConceptPreisService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
-use Platform\FoodAlchemist\Services\KostenCacheService;
+use Platform\FoodAlchemist\Services\Rezept\KostenCacheService;
 use Platform\FoodAlchemist\Services\Rezept\DarreichungResolver;
-use Platform\FoodAlchemist\Services\TeamVkService;
+use Platform\FoodAlchemist\Services\Rezept\TeamVkService;
 use Platform\FoodAlchemist\Support\AngebotFestpreise;
 
 /**

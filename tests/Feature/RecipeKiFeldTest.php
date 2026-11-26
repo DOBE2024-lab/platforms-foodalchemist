@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Livewire\Recipes\RecipeModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeCategory;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeTemplateService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeTemplateService;
 use Platform\FoodAlchemist\Support\TemplateSlotHeuristics;
 
 /**

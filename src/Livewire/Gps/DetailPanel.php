@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Support\Curate;
 
@@ -122,7 +122,7 @@ class DetailPanel extends Component
             $ki = collect($this->ersatzKiVorschlaege ?? [])->first(
                 fn (array $c) => $c['kind'] === $kind && (int) $c['id'] === $id
             );
-            app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)
+            app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)
                 ->verknuepfe(
                     Auth::user()->currentTeamRelation,
                     'gp', $gp->id, $kind, $id,
@@ -144,7 +144,7 @@ class DetailPanel extends Component
         if ($gp === null) {
             return;
         }
-        $this->ersatzKiVorschlaege = app(\Platform\FoodAlchemist\Services\ReplacementSuggestionService::class)
+        $this->ersatzKiVorschlaege = app(\Platform\FoodAlchemist\Services\Rezept\ReplacementSuggestionService::class)
             ->forGp(Auth::user()->currentTeamRelation, $gp);
         if ($this->ersatzKiVorschlaege === []) {
             $this->fehler = 'Keine fachlich belastbare Ersatz-Alternative im aktuellen Datenbestand gefunden.';
@@ -188,7 +188,7 @@ class DetailPanel extends Component
         if ($gp === null) {
             return;
         }
-        app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)
+        app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)
             ->loese(Auth::user()->currentTeamRelation, $equivId);
     }
 
@@ -305,7 +305,7 @@ class DetailPanel extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\GpService::class)->kiVorschlagUebernehmen($gp, $this->kiVorschlag);   // 98 · 1.3e
+            app(\Platform\FoodAlchemist\Services\GpStamm\GpService::class)->kiVorschlagUebernehmen($gp, $this->kiVorschlag);   // 98 · 1.3e
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
         }
@@ -335,7 +335,7 @@ class DetailPanel extends Component
         }
         $this->abgelehnteArtikel = [];
         try {
-            $ergebnis = app(\Platform\FoodAlchemist\Services\GpService::class)->ersetzeKomplett($team, $gp, $ziel);
+            $ergebnis = app(\Platform\FoodAlchemist\Services\GpStamm\GpService::class)->ersetzeKomplett($team, $gp, $ziel);
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
 
@@ -362,7 +362,7 @@ class DetailPanel extends Component
         }
         $this->mitKurzsperre(function () use ($gp) {
             try {
-                app(\Platform\FoodAlchemist\Services\GpService::class)->deleteGp($gp);
+                app(\Platform\FoodAlchemist\Services\GpStamm\GpService::class)->deleteGp($gp);
             } catch (\RuntimeException $e) {
                 $this->fehler = $e->getMessage();
 
@@ -546,7 +546,7 @@ class DetailPanel extends Component
                 || FoodAlchemistGp::visibleToTeam($team)->whereKey($this->gpId)->value('nutri_source') === 'manual') {
                 $eingabe['naehrwerte'] = $naehr;
             }
-            $r = app(\Platform\FoodAlchemist\Services\PlatzhalterDeklarationService::class)->setzen($team, $this->gpId, $eingabe);
+            $r = app(\Platform\FoodAlchemist\Services\GpStamm\PlatzhalterDeklarationService::class)->setzen($team, $this->gpId, $eingabe);
             $this->platzhalterForm = [];   // beim nächsten Rendern aus dem gespeicherten Stand neu
             $this->dispatch('fa-saved', message: 'Platzhalter gespeichert' . ($r['rezepte_neu_gerechnet'] > 0 ? " — {$r['rezepte_neu_gerechnet']} Rezepte neu gerechnet." : '.'), type: 'success');
         } catch (\RuntimeException $e) {
@@ -557,7 +557,7 @@ class DetailPanel extends Component
     /** Formular einmal je GP aus dem gespeicherten Stand füllen. */
     private function platzhalterFormLaden(FoodAlchemistGp $gp): array
     {
-        $stand = app(\Platform\FoodAlchemist\Services\PlatzhalterDeklarationService::class)->lesen($gp);
+        $stand = app(\Platform\FoodAlchemist\Services\GpStamm\PlatzhalterDeklarationService::class)->lesen($gp);
         if (($this->platzhalterForm['gp'] ?? null) !== $gp->id) {
             $this->platzhalterForm = [
                 'gp' => $gp->id,
@@ -636,17 +636,17 @@ class DetailPanel extends Component
                 : [],
             // Ersatz-Logik: Äquivalenzen dieses GP + Such-Kandidaten fürs Verknüpfen
             'ersatz' => $gp !== null && $team !== null && $brauchtErsatz
-                ? app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)->fuer($team, 'gp', $gp->id)
+                ? app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)->fuer($team, 'gp', $gp->id)
                 : collect(),
             'ersatzKandidaten' => $gp !== null && $team !== null && $this->ersatzSuche !== ''
-                ? app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)->sucheZiele($team, $this->ersatzSuche, 'gp', $gp->id)
+                ? app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)->sucheZiele($team, $this->ersatzSuche, 'gp', $gp->id)
                 : collect(),
             // Bugfix 27.10.: Relevanz + Lieferanten-Rang, 20 Treffer, Hinweis auf weitere, Gebinde + Preis je Treffer
             'verknuepfSuche' => $gp !== null && $team !== null && $this->laSuche !== ''
                 ? app(\Platform\FoodAlchemist\Services\Matching\VerknuepfbareArtikelSuche::class)->suche($team, $this->laSuche, $gp->commodity_group_code)
                 : ['treffer' => collect(), 'weitere' => 0, 'mehr_als' => null],
             // Verwaltung (2026-07-02): Referenz-Zähler fürs Lösch-Gate + Kandidaten für den Rezept-Tausch
-            'referenzen' => ($gp !== null && $vollmodus) ? app(\Platform\FoodAlchemist\Services\GpService::class)->referenzen($gp) : null,
+            'referenzen' => ($gp !== null && $vollmodus) ? app(\Platform\FoodAlchemist\Services\GpStamm\GpService::class)->referenzen($gp) : null,
             'tauschKandidaten' => $gp !== null && $team !== null && $this->tauschSuche !== ''
                 ? \Platform\FoodAlchemist\Support\Suche::like(
                     FoodAlchemistGp::visibleToTeam($team)->lebensmittel(), 'name', $this->tauschSuche)
@@ -685,7 +685,7 @@ class DetailPanel extends Component
             // Spec 53 Paket J: Aroma-Anker als Chip + „weitere GPs mit diesem Anker" (Reverse-Lookup,
             // kein Graph — s. PR-Body für die spätere Anker-zentrierte Netz-Idee).
             // 27.10.2026: Geschmacksprofil (Rohprofil) auch in der Detail-Ansicht — mit „Mit KI schätzen" + „Anker vorschlagen"
-            'sensorik' => ($gp !== null && $vollmodus) ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerGp($gp->id) : null,
+            'sensorik' => ($gp !== null && $vollmodus) ? app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class)->fuerGp($gp->id) : null,
             'gpAnker' => ($gp !== null && $vollmodus)
                 ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->gpAnkerAlle($gp->id)
                 : collect(),

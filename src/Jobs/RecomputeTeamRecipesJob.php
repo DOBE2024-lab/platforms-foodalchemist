@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\PricingCascadeService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 
 /**
  * Verlust-Defaults geändert (Settings/Kalkulation oder team_settings.PUT) → die Rezepte

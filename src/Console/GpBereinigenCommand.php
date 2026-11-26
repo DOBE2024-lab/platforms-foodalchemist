@@ -4,8 +4,8 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Platform\FoodAlchemist\Services\GpBereinigenService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\GpStamm\GpBereinigenService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 
 /**
  * GP-Stamm bereinigen (Kurator/Dominique 19.10.2026) — Dubletten mergen, deterministische Namensfixes.
@@ -122,7 +122,7 @@ class GpBereinigenCommand extends Command
             if ($sieger !== []) {
                 // Nachlauf: Zähler + Lead der Sieger (ungültige Leads neu, dann bestehende Lead-Neuwahl — die Artikelmenge hat sich geändert)
                 $teamModell = \Platform\Core\Models\Team::findOrFail($team);
-                $neu = app(\Platform\FoodAlchemist\Services\GpLaufNachlauf::class)->zaehlerUndLead($teamModell, $sieger, $protokoll, true);
+                $neu = app(\Platform\FoodAlchemist\Services\GpStamm\GpLaufNachlauf::class)->zaehlerUndLead($teamModell, $sieger, $protokoll, true);
                 $this->line('Lead neu gewählt bei ' . count($neu) . ' Sieger-GP(s).');
             }
             $pfad = "{$bericht}/{$stempel}_protokoll.json";
@@ -135,7 +135,7 @@ class GpBereinigenCommand extends Command
             }
             if ($sieger !== [] && ! $this->option('ohne-recompute')) {
                 // auch Rezepte, die den Sieger schon vorher nutzten (sein Lead kann gewechselt haben)
-                $this->line(app(\Platform\FoodAlchemist\Services\GpLaufNachlauf::class)->rechneRezepte($sieger) . ' Rezept(e) der Sieger neu gerechnet.');
+                $this->line(app(\Platform\FoodAlchemist\Services\GpStamm\GpLaufNachlauf::class)->rechneRezepte($sieger) . ' Rezept(e) der Sieger neu gerechnet.');
             }
             $this->warn('Danach: foodalchemist:gp-allergen-backfill, Embeddings off-peak.');
         } else {

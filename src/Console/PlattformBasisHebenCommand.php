@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Support\MasterTeam;
  * Plattform-Basis (Entscheid Dominique 18.10.): Einheiten, Warengruppen und ihre Sub-Kategorien sind globale Plattform-Sprache.
  * Globale GPs und abonnierte Master-Rezepte zeigen auf dieselben Zeilen — eine Kopie je Mandant gäbe „kg“ zweimal mit
  * verschiedenen IDs (Mengen summieren, Einkaufslisten, Produktion, WG-Filter brechen). Dieses Kommando hebt den BESTAND des
- * Master-Teams nach global (team_id NULL). Neue Zeilen legt {@see \Platform\FoodAlchemist\Services\VocabularyService} seitdem global an.
+ * Master-Teams nach global (team_id NULL). Neue Zeilen legt {@see \Platform\FoodAlchemist\Services\GpStamm\VocabularyService} seitdem global an.
  *
  * - IDs bleiben: alle Verweise (unit_vocab_id …, commodity_group_code, sub_category) gelten unverändert weiter.
  * - Soft-gelöschte Master-Zeilen gehen mit (sonst bliebe Schrott im Master hängen).

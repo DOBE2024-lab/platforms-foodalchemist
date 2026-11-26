@@ -15,8 +15,8 @@ use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeImageService;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
 
 /**
  * Freigabe-Schritt der gestuften Kaskade: reichert ein freigegebenes Draft KOMPLETT an
@@ -509,7 +509,7 @@ class EnrichRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services\A
         if (! is_array($deferred['reuse'] ?? null)) {
             return;
         }
-        $reife = app(\Platform\FoodAlchemist\Services\RecipeService::class)->reifegrad($recipe->fresh() ?? $recipe);
+        $reife = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->reifegrad($recipe->fresh() ?? $recipe);
         $deferred['reuse']['reif'] = $reife['reif'];
         $deferred['reuse']['luecken'] = $reife['luecken'];
         $deferred['reuse']['status'] = (string) ($recipe->fresh()?->status?->value ?? $deferred['reuse']['status'] ?? '');

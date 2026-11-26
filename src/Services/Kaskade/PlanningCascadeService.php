@@ -107,7 +107,7 @@ class PlanningCascadeService
                 ? $this->speiseplan()->starteSpeiseplanVollkaskade($team, $session, $creativeMode, $optionen) : $this->ausgabe()->starteVollkaskade($team, $session, $creativeMode, $optionen);
         }
         if ($scope === 'rezept' && $session?->source_gp_id !== null) {   // Zukauf-Planung am GP (13.11.): feste Ware, Zukauf-Weg statt Plan/Generator
-            return app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class)->starteLauf($team, $session, $creativeMode, $optionen);
+            return app(\Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::class)->starteLauf($team, $session, $creativeMode, $optionen);
         }
 
         $brief = trim((string) ($optionen['brief'] ?? ''));
@@ -521,7 +521,7 @@ class PlanningCascadeService
         if ($gpIds === []) {
             return [];
         }
-        $verf = app(\Platform\FoodAlchemist\Services\FavoriteGpService::class)->verfuegbarkeit($team, $gpIds);
+        $verf = app(\Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService::class)->verfuegbarkeit($team, $gpIds);
         $luecken = array_keys(array_filter($verf, fn ($v) => ($v['bucket'] ?? null) === 'luecke'));
         if ($luecken === []) {
             return [];

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -83,7 +83,7 @@ it('updateVk dish_class_id: Override-First — Klasse wird manual, KI-Accept wir
         ->and($nach->dish_class_source)->toBe('manual')
         ->and($nach->dish_class_ai_confidence)->toBeNull();
 
-    expect(fn () => app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+    expect(fn () => app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
         ->acceptKlasse($this->rootTeam, $vk->id, $andere->id, 0.9, 'KI meint Vegi'))
         ->toThrow(\RuntimeException::class, 'manuell');
 

@@ -1,0 +1,697 @@
+<?php
+
+namespace Platform\FoodAlchemist\Services\GpStamm;
+
+use Illuminate\Support\Facades\DB;
+use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Enums\AllergenValue;
+use Platform\FoodAlchemist\Models\FoodAlchemistGp;
+use Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen;
+use Platform\FoodAlchemist\Support\AllergenAnnahme;
+use Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration;
+use Platform\FoodAlchemist\Models\FoodAlchemistItemNutritional;
+use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
+use Platform\FoodAlchemist\Support\StammPaket;
+
+/**
+ * M3-04: GP-Ebene der Aggregations-GLs — die rezept-unabhängigen Bausteine,
+ * die M4 (RecomputeService) später je Zutat wiederverwendet.
+ *
+ * - Allergene (GL-01 §4.3): Override absolut > Derivat-LIVE von Mutter (SOLL ⚠A2,
+ *   eine Ebene) > MAX über ALLE LAs (bewusst inkl. discontinued — konservativ, §6).
+ * - GP-Konfidenz (GL-01 §4.5, SOLL ⚠A1): HIGH/MED/LOW/NONE + needs_allergen_review.
+ * - Zusatzstoffe (GL-09): MAX über LA-declarations, Roh-Domäne {0,1,3,NULL}, 3=ja,
+ *   KEIN Override-Layer, alle LAs (wie GL-01).
+ * - Nährwerte (GL-08 GP-Pfad): je Nährstoff AVG über NICHT-discontinued LAs,
+ *   NULL fällt aus dem AVG; Salz = sodium_mg × 0.0025.
+ */
+class GpAggregateService
+{
+    /** kategorial → decimal(4,3) (allergens_confidence). Single source für Command + SignalFix. */
+    public const ALLERGEN_KONF_MAP = ['high' => 1.0, 'medium' => 0.66, 'low' => 0.33, 'none' => 0.0];
+
+    /**
+     * kategorial → Rang (Spiegel von RecipeRecomputeService::KONF_RANG) — Single source für die
+     * Rezept-Allergen-Konfidenz (§7 F7.4). `none` = kein LA-Allergenprofil ⇒ LOW: der GP trägt in
+     * allergene() ohnehin nichts bei (source `keine`), darf die Konfidenz aber nicht schönen.
+     */
+    public const ALLERGEN_KONF_RANG = ['high' => 3, 'medium' => 2, 'low' => 1, 'none' => 1];
+
+    /**
+     * Code-Qualität 2.1a · Lauf-Memo: nur innerhalb von {@see imLauf} (ein Recompute-Lauf); danach leer. Statisch, weil Recompute und
+     * Nährwert-Rechner je eine eigene Instanz halten. Schlüssel GP-ID — Allergen-Profil, Deklarationen und Alkohol lesen in der Sicht des
+     * Besitzer-Teams des GP, nicht des Rechen-Teams; Nährwerte mit Schlüssel Sicht + GP.
+     *
+     * @var array{profil?: array<int, \Illuminate\Support\Collection>, dekl?: array<string, array<string, ?int>>, alkohol?: array<int, bool>, naehr?: array<string, array>}
+     */
+    private static array $lauf = [];
+
+    private static int $laufTiefe = 0;
+
+    /** Code-Qualität 2.1a: `$fn` als ein Lauf — Lese-Ergebnisse je GP werden gemerkt und am Ende verworfen (Preise/Artikel ändern sich im Lauf nicht). */
+    public static function imLauf(callable $fn): mixed
+    {
+        self::$laufTiefe++;
+        try {
+            return $fn();
+        } finally {
+            if (--self::$laufTiefe === 0) {
+                self::$lauf = [];
+            }
+        }
+    }
+
+    /**
+     * Code-Qualität 2.1a: alles, was der Recompute je GP liest, für viele GPs in je einer Abfrage (je Sicht) vorladen. Außerhalb eines Laufs wirkungslos.
+     *
+     * @param  iterable<FoodAlchemistGp>  $gps
+     */
+    public function vorladen(iterable $gps, ?Team $naehrwertSicht): void
+    {
+        if (self::$laufTiefe === 0) {
+            return;
+        }
+        $gps = collect($gps)->filter()->unique('id');
+        $stoffe = [...array_keys(FoodAlchemistItemDeclaration::STOFFE), ...array_keys(FoodAlchemistItemDeclaration::FREIWILLIG)];
+        $this->allergenProfileVorladen($gps);
+        $this->deklarationBulk($gps->reject(fn ($gp) => isset(self::$lauf['dekl'][implode(',', $stoffe) . ':' . $gp->id])), $stoffe);
+        $this->alkoholBulk($gps->filter(fn ($gp) => $gp->alkohol === null && ! isset(self::$lauf['alkohol'][$gp->id])));
+        $nachSicht = $gps->groupBy(fn ($gp) => $this->naehrSicht($gp, $naehrwertSicht)?->id ?? 0);
+        foreach ($nachSicht as $gruppe) {
+            $sicht = $this->naehrSicht($gruppe->first(), $naehrwertSicht);
+            $ids = $gruppe->reject(fn ($gp) => isset(self::$lauf['naehr'][($sicht?->id ?? 0) . ':' . $gp->id]))->pluck('id')->map(fn ($id) => (int) $id)->all();
+            if ($ids !== []) {
+                $kennwerte = app(\Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertAggregatService::class)->kennwerte($ids, FoodAlchemistItemNutritional::KERNWERTE, $sicht);
+                foreach ($ids as $id) {
+                    self::$lauf['naehr'][($sicht?->id ?? 0) . ':' . $id] = $kennwerte[$id] ?? [];
+                }
+            }
+        }
+    }
+
+    /** Allergenprofile für eine Liste von Grundprodukten innerhalb von imLauf() vorladen. */
+    public function allergenProfileVorladen(\Illuminate\Support\Collection $gps): void
+    {
+        $this->laProfileBulk($gps->reject(fn ($gp) => isset(self::$lauf['profil'][$gp->id])));
+    }
+
+    /** Sicht der Nährwerte eines GP (Lead-Sicht 29.10.): rechnet ein Mandant, seine; sonst die des Besitzers. */
+    private function naehrSicht(FoodAlchemistGp $gp, ?Team $sicht): ?Team
+    {
+        return $this->mandantSicht($sicht) ?? $this->besitzerSicht($gp);
+    }
+
+    /**
+     * Effektive Allergen-Auflösung je GP:
+     * [feld => ['value' => AllergenValue, 'source' => override|mutter|la|keine]].
+     */
+    public function allergene(FoodAlchemistGp $gp): array
+    {
+        [$laMax, $angenommen] = $this->laMax($this->laProfile($gp));
+        $mutterMax = null; // lazy — nur wenn ein Derivat-Feld ohne Override sie braucht
+
+        $out = [];
+        foreach (FoodAlchemistGp::ALLERGEN_FIELDS as $feld) {
+            $override = AllergenValue::tryFrom((string) $gp->getAttribute("allergen_{$feld}"));
+            if ($override !== null) {                              // Prio 1: Override absolut, wird NIE gemax-t
+                $out[$feld] = ['value' => $override, 'source' => 'override'];
+
+                continue;
+            }
+
+            if ($gp->is_derivat && $gp->derivat_von_gp_id !== null) { // Prio 2 (SOLL ⚠A2): LIVE von Mutter, eine Ebene
+                if ($mutterMax === null) {
+                    $mutter = FoodAlchemistGp::find($gp->derivat_von_gp_id);
+                    $mutterMax = $mutter !== null ? $this->aufgeloesteWerte($mutter) : [];
+                }
+                $wert = $mutterMax[$feld] ?? AllergenValue::Unbekannt;
+                $out[$feld] = ['value' => $wert, 'source' => 'mutter'];
+
+                continue;
+            }
+
+            $wert = $laMax[$feld] ?? null;                         // Prio 3: MAX über alle LAs
+            $out[$feld] = [
+                'value' => $wert ?? AllergenValue::Unbekannt,       // leere Menge ⇒ unbekannt (§4.2)
+                'source' => $wert === null ? 'keine' : (isset($angenommen[$feld]) ? AllergenAnnahme::QUELLE : 'la'),   // Spec 85
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * GP-Konfidenz nach GL-01 §4.5 (SOLL ⚠A1 — im Ist nicht vorhanden):
+     * ['confidence' => high|medium|low|none, 'needs_review' => bool, 'konflikt_felder' => string[]].
+     */
+    public function allergenKonfidenz(FoodAlchemistGp $gp): array
+    {
+        // Derivat (§11.2): die WERTE kommen LIVE von der Mutter (allergene() Prio 2) — dann muss auch die
+        // Sicherheit die der Mutter sein. Ein Derivat hat keine eigenen LAs; das eigene (leere) Profil gäbe
+        // NONE und deckelte jedes Rezept mit Parüren/Karkassen auf LOW. Eine Ebene (Derivat-von-Derivat verboten).
+        if ($gp->is_derivat && $gp->derivat_von_gp_id !== null) {
+            $mutter = FoodAlchemistGp::find($gp->derivat_von_gp_id);
+
+            return $mutter !== null
+                ? $this->laKonfidenz($mutter)
+                : ['confidence' => 'none', 'needs_review' => false, 'konflikt_felder' => [], 'n_las_mit_daten' => 0];
+        }
+
+        // Platzhalter (Dominique 19.11.2026): keine Lieferantenartikel, die 14 Allergene von Hand gepflegt ⇒ belegt (HIGH), Quelle `manuell`.
+        // Nur vollständig: ein teilweise gepflegter Platzhalter bleibt beim Artikel-Weg (NONE ⇒ Rezept LOW, §7 F7.4).
+        if (PlatzhalterDeklarationService::allergeneVollstaendig($gp)) {
+            return ['confidence' => 'high', 'needs_review' => false, 'konflikt_felder' => [], 'n_las_mit_daten' => 0, 'quelle' => 'manuell'];
+        }
+
+        return $this->laKonfidenz($gp);
+    }
+
+    /**
+     * Beleg zum Allergen-Widerspruch (§10): je Allergen-Feld, welche Artikel „enthalten“ und welche „nicht enthalten“ melden. Gleiche Artikelmenge wie die
+     * Konfidenz ({@see laProfile}: Sicht des Besitzer-Teams), Spuren und unbekannt kommen nicht vor.
+     *
+     * @param  list<string>  $felder  Allergen-Felder (Schlüssel ohne `allergen_`), meist `konflikt_felder` aus {@see allergenKonfidenz}
+     * @return array<string, array{enthalten: list<array{item_id:int, lieferant_id:?int}>, nicht_enthalten: list<array{item_id:int, lieferant_id:?int}>}>
+     */
+    public function allergenWiderspruchBeleg(FoodAlchemistGp $gp, array $felder): array
+    {
+        $profile = $this->laProfile($gp);
+        $out = [];
+        foreach ($felder as $feld) {
+            foreach (['enthalten', 'nicht_enthalten'] as $wert) {
+                $out[$feld][$wert] = $profile->filter(fn ($la) => (string) $la->getAttribute("allergen_{$feld}") === $wert)
+                    ->map(fn ($la) => ['item_id' => (int) $la->supplier_item_id, 'lieferant_id' => $la->lieferant_id !== null ? (int) $la->lieferant_id : null])->values()->all();
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Konfidenz (und damit der Review-Stand) der GPs SOFORT nachziehen, wenn sich ihre Artikel ändern (verknüpfen, lösen, LA-Allergen ändern) — über
+     * {@see backfillAllergenKonfidenz}, kein zweiter Rechenweg. Schreibt nur Metadaten, nie die Allergen-WERTE (ALL-MAXIMAL bleibt). Ein Fehler hier darf den
+     * auslösenden Schreibvorgang nie reißen: er wird geloggt, der nächste Backfill holt es nach.
+     *
+     * @param  iterable<int|null>  $gpIds
+     */
+    public function konfidenzNachziehen(iterable $gpIds): void
+    {
+        $ids = collect($gpIds)->filter()->map(fn ($i) => (int) $i)->unique()->values();
+        if ($ids->isEmpty()) {
+            return;
+        }
+        try {
+            // Derivate lesen die Werte LIVE von der Mutter: ihre Konfidenz zieht mit
+            $alle = $ids->merge(FoodAlchemistGp::query()->whereIn('derivat_von_gp_id', $ids)->pluck('id'))->unique();
+            foreach (FoodAlchemistGp::query()->whereIn('id', $alle)->get() as $gp) {
+                $this->backfillAllergenKonfidenz($gp, true);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('[FoodAlchemist] Allergen-Konfidenz nicht nachgezogen: ' . $e->getMessage(), ['gp_ids' => $ids->all()]);
+        }
+    }
+
+    /** Wie {@see konfidenzNachziehen}, ausgehend von einem Lieferantenartikel (alle GPs, auf die er zeigt). */
+    public function konfidenzNachziehenFuerArtikel(int $itemId): void
+    {
+        $this->konfidenzNachziehen(\Illuminate\Support\Facades\DB::table('foodalchemist_supplier_item_structures')
+            ->where('supplier_item_id', $itemId)->whereNull('deleted_at')->whereNotNull('gp_id')->pluck('gp_id'));
+    }
+
+    /** Konfidenz aus dem eigenen LA-Profil des GP (ohne Derivat-Auflösung). */
+    private function laKonfidenz(FoodAlchemistGp $gp): array
+    {
+        $profile = $this->laProfile($gp);
+        if ($profile->isEmpty()) {
+            return ['confidence' => 'none', 'needs_review' => false, 'konflikt_felder' => [], 'n_las_mit_daten' => 0];
+        }
+
+        $konflikt = [];   // enthalten ↔ nicht_enthalten ohne spuren-Mittelweg ⇒ LOW + Review
+        $differenz = false; // konkrete Werte unterscheiden sich auf gleicher Stufe ⇒ MED
+        $konkret = false;   // mindestens ein konkreter Wert in irgendeinem Feld — sonst ist das Profil leer (⇒ NONE)
+        foreach (FoodAlchemistGp::ALLERGEN_FIELDS as $feld) {
+            $raenge = $profile
+                ->map(fn ($la) => AllergenValue::tryFrom((string) $la->getAttribute("allergen_{$feld}")))
+                ->filter(fn (?AllergenValue $v) => $v !== null && $v !== AllergenValue::Unbekannt) // konkreter gewinnt gegen unbekannt (§10)
+                ->map(fn (AllergenValue $v) => $v->rank())
+                ->unique()->values();
+
+            if ($raenge->isNotEmpty()) {
+                $konkret = true;
+            }
+            if ($raenge->count() <= 1) {
+                continue;
+            }
+            if ($raenge->contains(3) && $raenge->contains(1) && ! $raenge->contains(2)) {
+                $konflikt[] = $feld;
+            } else {
+                $differenz = true;
+            }
+        }
+
+        // Spec 85: angenommene Werte (Positiv-Lieferant, leer = nicht enthalten) zählen als bekannt, aber nicht in der Konflikt-Prüfung
+        // (oben nur ausdrückliche Werte) — und ein nur angenommenes Feld deckelt die Sicherheit auf MED.
+        $angenommen = array_keys($this->laMax($profile)[1]);
+        $konkret = $konkret || $angenommen !== [];
+        if ($konflikt !== []) {
+            return ['confidence' => 'low', 'needs_review' => true, 'konflikt_felder' => $konflikt, 'n_las_mit_daten' => $profile->count(), 'angenommen_felder' => $angenommen];
+        }
+
+        // Allergen-Zeilen vorhanden, aber alle 14 Werte NULL/unbekannt: das ist kein Profil, sondern eine
+        // leere Hülle (Katalog-Import ohne Deklaration). HIGH wäre hier eine Scheinsicherheit — gemessen
+        // 258 GPs auf demo (10.10.2026). Wie „keine LA-Zeile“ ⇒ NONE.
+        if (! $konkret) {
+            return ['confidence' => 'none', 'needs_review' => false, 'konflikt_felder' => [], 'n_las_mit_daten' => 0];
+        }
+
+        return ['confidence' => ($differenz || $angenommen !== []) ? 'medium' : 'high', 'needs_review' => false, 'konflikt_felder' => [],
+            'n_las_mit_daten' => $profile->count(), 'angenommen_felder' => $angenommen];
+    }
+
+    /**
+     * P3-Backfill je GP: persistiert `allergens_confidence`/`allergens_source`/
+     * `allergens_aggregated_at` aus der on-read-Aggregation. NUR Metadaten — die 14
+     * `allergen_*`-WERT-Spalten (Override-Schicht) werden NIE geschrieben (sonst Derivat-
+     * LIVE-Vererbung + „LA fixen → GP heilt"-Kaskade kaputt). Provenienz-Schutz:
+     * `allergens_source IN (manual|ki)` bleibt unangetastet. Derivate erben LIVE von der
+     * Mutter (source='derivat'). Single source für Command + SignalFixService.
+     *
+     * @return array{confidence:string,needs_review:bool,konflikt_felder:array<int,string>,source:string,written:bool,skipped:bool}
+     */
+    public function backfillAllergenKonfidenz(FoodAlchemistGp $gp, bool $apply = true): array
+    {
+        // Non-Food (Warengruppe 16) nimmt an der Allergen-Vererbung nicht teil: nicht anwendbar, nicht „unbekannt“ (Regelwerk §16).
+        if ($gp->istNonFood()) {
+            return ['confidence' => 'none', 'needs_review' => false, 'konflikt_felder' => [], 'source' => 'nicht_anwendbar', 'written' => false, 'skipped' => true];
+        }
+        $skip = in_array($gp->allergens_source, ['manual', 'ki'], true);
+
+        $konf = $this->allergenKonfidenz($gp);                      // löst Derivate selbst zur Mutter auf
+        $source = ($gp->is_derivat && $gp->derivat_von_gp_id !== null) ? 'derivat' : 'la_union';
+
+        $written = false;
+        if ($apply && ! $skip) {
+            $gp->update([
+                'allergens_confidence' => self::ALLERGEN_KONF_MAP[$konf['confidence']] ?? 0.0,
+                'allergens_source' => $source,
+                'allergens_aggregated_at' => now(),
+            ]);
+            $written = true;
+        }
+
+        return [
+            'confidence' => $konf['confidence'],
+            'needs_review' => (bool) ($konf['needs_review'] ?? false),
+            'konflikt_felder' => $konf['konflikt_felder'] ?? [],
+            'source' => $source,
+            'written' => $written,
+            'skipped' => $skip,
+        ];
+    }
+
+    /**
+     * Zusatzstoffe je GP (GL-09): [stoff => 3|1|0|null] — MAX über alle LA-declarations,
+     * Roh-Domäne (3=ja, 1=nein, 0=k.A.), NULL = keine Daten (kein Beitrag).
+     */
+    public function zusatzstoffe(FoodAlchemistGp $gp): array
+    {
+        return $this->deklarationMax($gp, array_keys(FoodAlchemistItemDeclaration::STOFFE));
+    }
+
+    /**
+     * Freiwillige Angaben je GP (Jod, 15.10.2026): gleiche MAX-Regel wie {@see zusatzstoffe()}, aber getrennt ausgewiesen, nie
+     * Pflicht-Kennzeichnung. [feld => 3|1|0|null]
+     */
+    public function freiwillig(FoodAlchemistGp $gp): array
+    {
+        return $this->deklarationMax($gp, array_keys(FoodAlchemistItemDeclaration::FREIWILLIG));
+    }
+
+    /** Pflicht-Stoffe + freiwillige Angaben in EINER Abfrage (Rezept-Recompute). @return array<string,?int> */
+    public function zusatzstoffeUndFreiwillig(FoodAlchemistGp $gp): array
+    {
+        return $this->deklarationMax($gp, [...array_keys(FoodAlchemistItemDeclaration::STOFFE), ...array_keys(FoodAlchemistItemDeclaration::FREIWILLIG)]);
+    }
+
+    /**
+     * Platzhalter: von Hand gepflegte Stoffe ({@see PlatzhalterDeklarationService}) liegen vor dem Artikel-MAX — wie der Allergen-Override
+     * (GL-01 Prio 1). Nicht-Platzhalter haben keine Hand-Ebene, dort bleibt es beim MAX über die Artikel.
+     *
+     * @param list<string> $stoffe @return array<string,?int>
+     */
+    private function deklarationMax(FoodAlchemistGp $gp, array $stoffe): array
+    {
+        $manuell = PlatzhalterDeklarationService::zusatzstoffeManuell($gp);
+
+        return array_replace($this->deklarationArtikelMax($gp, $stoffe), array_intersect_key($manuell, array_flip($stoffe)));
+    }
+
+    /** @param list<string> $stoffe @return array<string,?int> */
+    private function deklarationArtikelMax(FoodAlchemistGp $gp, array $stoffe): array
+    {
+        return self::$lauf['dekl'][implode(',', $stoffe) . ':' . $gp->id] ?? $this->deklarationBulk(collect([$gp]), $stoffe)[$gp->id];   // 2.1a
+    }
+
+    /**
+     * MAX je Stoff über die Artikel-Deklarationen vieler GPs, eine Abfrage je Besitzer-Sicht (2.1a). Ohne Zeilen: alle Stoffe NULL.
+     *
+     * @param  \Illuminate\Support\Collection<int, FoodAlchemistGp>  $gps
+     * @param  list<string>  $stoffe
+     * @return array<int, array<string, ?int>>
+     */
+    private function deklarationBulk(\Illuminate\Support\Collection $gps, array $stoffe): array
+    {
+        $abgeleitet = array_intersect_key(FoodAlchemistItemDeclaration::FREIWILLIG_ABGELEITET, array_flip($stoffe));
+        $out = [];
+        foreach ($gps->groupBy(fn ($gp) => $this->besitzerSicht($gp)?->id ?? 0) as $gruppe) {
+            $sicht = $this->besitzerSicht($gruppe->first());
+            $ids = $gruppe->pluck('id')->map(fn ($id) => (int) $id)->all();
+            if ($abgeleitet === []) {
+                $rows = DB::table('foodalchemist_item_declarations AS d')
+                    ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'd.supplier_item_id')
+                    ->whereIn('s.gp_id', $ids)
+                    ->whereNull('d.deleted_at')->whereNull('s.deleted_at')
+                    ->tap(fn ($q) => $this->nurSichtbare($q, 's.supplier_item_id', $sicht))
+                    ->groupBy('s.gp_id')
+                    ->selectRaw('s.gp_id AS _gp_id, ' . implode(', ', array_map(fn ($f) => "MAX(d.{$f}) AS {$f}", $stoffe)))
+                    ->get()->keyBy(fn ($r) => (int) $r->_gp_id);
+            } else {
+                // Jod: je Artikel max(Necta-Flag, aus der Zutatenliste abgeleitet), auch für Artikel ohne Deklarationszeile.
+                // Für die Pflicht-Stoffe ändert der LEFT JOIN nichts (NULL fällt aus dem MAX).
+                $spalte = fn (string $f) => isset($abgeleitet[$f])
+                    ? "MAX(CASE WHEN si.{$abgeleitet[$f]} IS NULL THEN d.{$f} WHEN d.{$f} IS NULL OR si.{$abgeleitet[$f]} > d.{$f} THEN si.{$abgeleitet[$f]} ELSE d.{$f} END) AS {$f}"
+                    : "MAX(d.{$f}) AS {$f}";
+                $rows = DB::table('foodalchemist_supplier_item_structures AS s')
+                    ->join('foodalchemist_supplier_items AS si', 'si.id', '=', 's.supplier_item_id')
+                    ->leftJoin('foodalchemist_item_declarations AS d', function ($j) {
+                        $j->on('d.supplier_item_id', '=', 's.supplier_item_id')->whereNull('d.deleted_at');
+                    })
+                    ->whereIn('s.gp_id', $ids)->whereNull('s.deleted_at')
+                    ->tap(fn ($q) => $this->nurSichtbare($q, 's.supplier_item_id', $sicht))
+                    ->groupBy('s.gp_id')
+                    ->selectRaw('s.gp_id AS _gp_id, ' . implode(', ', array_map($spalte, $stoffe)))
+                    ->get()->keyBy(fn ($r) => (int) $r->_gp_id);
+            }
+            foreach ($ids as $id) {
+                $row = $rows->get($id);
+                foreach ($stoffe as $stoff) {
+                    $wert = $row?->{$stoff};
+                    $out[$id][$stoff] = $wert === null ? null : (int) $wert;
+                }
+            }
+        }
+        if (self::$laufTiefe > 0) {
+            foreach ($out as $id => $werte) {
+                self::$lauf['dekl'][implode(',', $stoffe) . ':' . $id] = $werte;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Nährwerte je 100 g (GL-08 GP-Pfad) über die aktiven LAs, Regel {@see NaehrwertAggregatService}: Null-Zeilen
+     * (alle Kernwerte 0) zählen nicht, eine 0 in einer zählenden Zeile ist ein Messwert, NULL fällt raus, Kennwert = Median.
+     * Rückgabe: [kernwert => ['avg' => float|null, 'n' => int]] + 'salt_g' (sodium×0.0025). Der Schlüssel heißt aus
+     * Kompatibilität weiter `avg` (Rezept-Recompute, GP-Panel), trägt seit 10/2026 aber den Median.
+     *
+     * $mitKiFallback (R10, NUR Panel-Anzeige): ohne LA-Daten die KI-/manuelle
+     * Schätzschicht vom GP zurückgeben — die GL-08-Rezept-Aggregation ruft
+     * bewusst OHNE Fallback (Schätzwerte verfälschen keine Rezept-Nährwerte).
+     * $sicht (Lead-Sicht 29.10.2026): rechnet ein Mandant, zählen nur die Artikel, die er sieht; Master und ohne Team wie bisher.
+     */
+    public function naehrwerte(FoodAlchemistGp $gp, bool $mitKiFallback = false, ?Team $sicht = null): array
+    {
+        $kerne = FoodAlchemistItemNutritional::KERNWERTE;
+        $s = $this->naehrSicht($gp, $sicht);
+        $kennwerte = self::$lauf['naehr'][($s?->id ?? 0) . ':' . $gp->id]
+            ?? app(\Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertAggregatService::class)->kennwerte([$gp->id], $kerne, $s)[$gp->id] ?? [];   // 2.1a: im Lauf vorgeladen
+
+        $out = [];
+        foreach ($kerne as $k) {
+            $out[$k] = ['avg' => $kennwerte[$k]['wert'] ?? null, 'n' => $kennwerte[$k]['n'] ?? 0];
+        }
+        // Salz-Ableitung (GL-08 §4.2): Quelle sodium in mg/100g → g Salz/100g
+        $out['salt_g'] = [
+            'avg' => $out['sodium']['avg'] !== null ? $out['sodium']['avg'] * 0.0025 : null,
+            'n' => $out['sodium']['n'],
+        ];
+        $out['source'] = $out['energy_kcal']['avg'] !== null ? 'la' : 'keine';
+
+        // R10: Fallback-Schicht (ki|manual) — nur wenn KEINE LA-Daten und gewünscht
+        if ($mitKiFallback && $out['energy_kcal']['avg'] === null && $gp->nutri_source !== null) {
+            $map = [
+                'energy_kcal' => 'nutri_kcal_per_100g', 'protein' => 'nutri_protein_g_per_100g',
+                'fat' => 'nutri_fat_g_per_100g', 'carbs_absorbable' => 'nutri_carbs_g_per_100g',
+                'salt_g' => 'nutri_salt_g_per_100g',
+                'sugar' => 'nutri_sugar_g_per_100g', 'saturated_fat' => 'nutri_saturated_fat_g_per_100g',   // Platzhalter von Hand (19.11.2026)
+            ];
+            foreach ($map as $key => $feld) {
+                if ($gp->{$feld} === null && in_array($key, ['sugar', 'saturated_fat'], true)) {
+                    continue;   // neue Spalten: ohne Wert bleibt das Artikel-Ergebnis stehen (Verhalten wie vor 19.11.2026)
+                }
+                $out[$key] = ['avg' => $gp->{$feld} !== null ? (float) $gp->{$feld} : null, 'n' => 0];
+            }
+            $out['source'] = $gp->nutri_source;                   // 'ki' | 'manual'
+        }
+
+        return $out;
+    }
+
+    /**
+     * M3-02-Badges in Bulk: LA-MAX-Rang je Allergen für viele GPs in EINER Query
+     * (CASE-Rang-Mapping, da die Werte Strings sind — String-MAX würde falsch ranken).
+     *
+     * @return array<int, array<string, int>> [gp_id => [feld => rang 0–3]]
+     */
+    public function laMaxRaengeBulk(array $gpIds): array
+    {
+        if ($gpIds === []) {
+            return [];
+        }
+
+        $selects = ['s.gp_id'];
+        foreach (FoodAlchemistGp::ALLERGEN_FIELDS as $feld) {
+            $selects[] = 'MAX(CASE ' . AllergenAnnahme::sqlWert('a', $feld, 'l') . " WHEN 'enthalten' THEN 3 WHEN 'spuren' THEN 2 WHEN 'nicht_enthalten' THEN 1 ELSE 0 END) AS {$feld}";
+        }
+
+        return DB::table('foodalchemist_item_allergens AS a')
+            ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'a.supplier_item_id')
+            ->leftJoin('foodalchemist_supplier_items AS i', 'i.id', '=', 'a.supplier_item_id')   // Spec 85: Lieferant für die Annahme
+            ->leftJoin('foodalchemist_suppliers AS l', 'l.id', '=', 'i.supplier_id')
+            ->whereIn('s.gp_id', $gpIds)
+            ->whereNull('a.deleted_at')->whereNull('s.deleted_at')
+            ->groupBy('s.gp_id')
+            ->selectRaw(implode(', ', $selects))
+            ->get()
+            ->keyBy('gp_id')
+            ->map(fn ($row) => collect(FoodAlchemistGp::ALLERGEN_FIELDS)->mapWithKeys(fn ($f) => [$f => (int) $row->{$f}])->all())
+            ->all();
+    }
+
+    // ── intern ───────────────────────────────────────────────────────────
+
+    /**
+     * Voll aufgelöster Wert je Feld (Override > LA-MAX) — für die Mutter-Auflösung
+     * von Derivaten (GL-01 §4.3 Prio 2; Derivat-von-Derivat ist verboten, eine Ebene reicht).
+     *
+     * @return array<string, AllergenValue>
+     */
+    private function aufgeloesteWerte(FoodAlchemistGp $gp): array
+    {
+        $laMax = $this->laMax($this->laProfile($gp))[0];
+
+        $out = [];
+        foreach (FoodAlchemistGp::ALLERGEN_FIELDS as $feld) {
+            $override = AllergenValue::tryFrom((string) $gp->getAttribute("allergen_{$feld}"));
+            $out[$feld] = $override ?? $laMax[$feld] ?? AllergenValue::Unbekannt;
+        }
+
+        return $out;
+    }
+
+    /**
+     * MAX-Rang je Allergen über ALLE LAs des GP (GL-01 §4.3 Prio 3 — bewusst ohne
+     * is_discontinued-Filter: für Allergene ist „alle LAs" die konservative Wahl, §6).
+     *
+     * Spec 85: NULL am LA eines Positiv-Lieferanten trägt `nicht_enthalten` bei ({@see AllergenAnnahme}) — aber nur, wo kein
+     * ausdrücklicher Wert höher rangiert; ein ausdrücklicher Wert gewinnt immer. `angenommen` = Felder, deren Wert NUR aus der Annahme kommt.
+     *
+     * @return array{0: array<string, AllergenValue>, 1: array<string, true>} [Werte (nur Felder mit Beitrag), angenommen]
+     */
+    private function laMax(\Illuminate\Support\Collection $profile): array
+    {
+        $out = [];
+        $annahme = [];
+        foreach ($profile as $la) {
+            $merkmal = AllergenAnnahme::giltFuer($la->lieferant_id !== null ? (int) $la->lieferant_id : null);
+            foreach (FoodAlchemistGp::ALLERGEN_FIELDS as $feld) {
+                $roh = $la->getAttribute("allergen_{$feld}");
+                $wert = AllergenValue::tryFrom((string) $roh);
+                if ($wert === null) {
+                    $annahme[$feld] = ($annahme[$feld] ?? false) || ($roh === null && $merkmal);   // NULL = kein Beitrag, außer beim Positiv-Lieferanten
+
+                    continue;
+                }
+                if (! isset($out[$feld]) || $wert->rank() > $out[$feld]->rank()) {
+                    $out[$feld] = $wert;
+                }
+            }
+        }
+        $angenommen = [];
+        foreach (array_keys(array_filter($annahme)) as $feld) {
+            if (! isset($out[$feld]) || $out[$feld]->rank() < AllergenValue::NichtEnthalten->rank()) {
+                $out[$feld] = AllergenValue::NichtEnthalten;
+                $angenommen[$feld] = true;
+            }
+        }
+
+        return [$out, $angenommen];
+    }
+
+    /** Alle LA-Allergen-Zeilen des GP (über die Struktur-Brücke). */
+    /**
+     * Spec 50 · A8 — trägt dieser GP ein LA-Allergenprofil?
+     *
+     * Der Wächter für die beiden KI-Schreibpfade ({@see \Platform\FoodAlchemist\Livewire\Gps\DetailPanel::kiUebernehmen}
+     * und {@see BulkEnrichService::uebernehmenGp}). Beide schreiben die KI-Werte in die
+     * **Override-Ebene** — GL-01 §4.3 Prio 1, also ÜBER die LA-MAX-Auflösung. Auf einem
+     * Compliance-Feld, dessen eigener Prompt „im Zweifel unbekannt (F7.1: nie falsch-negativ
+     * raten)" verlangt, ist das die falsche Richtung: eine Schätzung verdeckt eine Messung.
+     *
+     * Und im Panel-Pfad kommt `allergens_source='ki'` dazu, das {@see self::backfillAllergenKonfidenz}
+     * künftig überspringen lässt — der GP fällt dauerhaft aus der Kaskade „LA fixen → GP heilt".
+     *
+     * Gemessen 2026-09-05: 9 GPs auf demo waren so bereits abgeschirmt.
+     *
+     * Bewusst GP-weit statt je Allergen: ein NULL am LA heißt „unbekannt", nicht „nicht
+     * enthalten". Eine KI, die diese Lücke mit `nicht_enthalten` füllt, erzeugt genau das
+     * falsch-negative Ergebnis, das F7.1 ausschliesst. Wo ein LA-Profil existiert, gilt die
+     * Kette — die KI bleibt der dokumentierte Fallback für GPs GANZ ohne LA-Daten.
+     *
+     * `manual` bleibt unberührt: ein Mensch darf die LA-Kette bewusst übersteuern.
+     */
+    public function hatLaAllergenProfil(FoodAlchemistGp $gp): bool
+    {
+        foreach ($this->laProfile($gp) as $la) {
+            if (AllergenAnnahme::giltFuer($la->lieferant_id !== null ? (int) $la->lieferant_id : null)) {
+                return true;   // Spec 85: die Zeile eines Positiv-Lieferanten IST ein Profil (leer = angenommen nicht enthalten)
+            }
+            foreach (FoodAlchemistGp::ALLERGEN_FIELDS as $feld) {
+                if ($la->getAttribute("allergen_{$feld}") !== null) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function laProfile(FoodAlchemistGp $gp): \Illuminate\Support\Collection
+    {
+        return self::$lauf['profil'][$gp->id] ?? $this->laProfileBulk(collect([$gp]))[$gp->id];   // 2.1a: im Lauf einmal je GP
+    }
+
+    /**
+     * LA-Allergen-Zeilen vieler GPs, eine Abfrage je Besitzer-Sicht (2.1a).
+     *
+     * @param  \Illuminate\Support\Collection<int, FoodAlchemistGp>  $gps
+     * @return array<int, \Illuminate\Support\Collection>
+     */
+    private function laProfileBulk(\Illuminate\Support\Collection $gps): array
+    {
+        $out = [];
+        foreach ($gps->groupBy(fn ($gp) => $this->besitzerSicht($gp)?->id ?? 0) as $gruppe) {
+            $sicht = $this->besitzerSicht($gruppe->first());
+            $ids = $gruppe->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $rows = FoodAlchemistItemAllergen::query()
+                ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'foodalchemist_item_allergens.supplier_item_id')
+                ->leftJoin('foodalchemist_supplier_items AS i', 'i.id', '=', 'foodalchemist_item_allergens.supplier_item_id')
+                ->whereIn('s.gp_id', $ids)
+                ->whereNull('s.deleted_at')
+                ->tap(fn ($q) => $this->nurSichtbare($q, 'foodalchemist_item_allergens.supplier_item_id', $sicht))
+                ->select('foodalchemist_item_allergens.*', 'i.supplier_id AS lieferant_id', 's.gp_id AS _profil_gp_id')   // Spec 85: Lieferant für AllergenAnnahme
+                ->get()->groupBy(fn ($r) => (int) $r->_profil_gp_id);
+            foreach ($ids as $id) {
+                $out[$id] = $rows->get($id, collect())->values();
+            }
+        }
+        if (self::$laufTiefe > 0) {
+            self::$lauf['profil'] = ($out + (self::$lauf['profil'] ?? []));
+        }
+
+        return $out;
+    }
+
+    /**
+     * Spec 94c · „enthält Alkohol“ eines GP (Warn-Regel, Kita): der feste Wert `gps.alkohol` hat Vorrang (gepflegt bzw. vorbelegt).
+     * Ohne ihn zählt nur ein sichtbarer Artikel mit is_alcohol = 1 als ja. is_alcohol = 0 heißt bei Necta „keine Angabe“ und gilt als NULL,
+     * aus den Artikeln wird nie ein nein — „unbekannt“ darf nie als alkoholfrei erscheinen.
+     */
+    public function enthaeltAlkohol(FoodAlchemistGp $gp): ?bool
+    {
+        if ($gp->alkohol !== null) {
+            return (bool) $gp->alkohol;
+        }
+        $ja = self::$lauf['alkohol'][$gp->id] ?? $this->alkoholBulk(collect([$gp]))[$gp->id];   // 2.1a
+
+        return $ja ? true : null;
+    }
+
+    /**
+     * Hat der GP einen sichtbaren Artikel mit is_alcohol = 1? Viele GPs, eine Abfrage je Besitzer-Sicht (2.1a).
+     *
+     * @param  \Illuminate\Support\Collection<int, FoodAlchemistGp>  $gps
+     * @return array<int, bool>
+     */
+    private function alkoholBulk(\Illuminate\Support\Collection $gps): array
+    {
+        $out = [];
+        foreach ($gps->groupBy(fn ($gp) => $this->besitzerSicht($gp)?->id ?? 0) as $gruppe) {
+            $ids = $gruppe->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $ja = array_flip(DB::table('foodalchemist_supplier_item_structures AS s')
+                ->join('foodalchemist_supplier_items AS si', 'si.id', '=', 's.supplier_item_id')
+                ->whereIn('s.gp_id', $ids)->whereNull('s.deleted_at')->where('si.is_alcohol', 1)
+                ->tap(fn ($q) => $this->nurSichtbare($q, 's.supplier_item_id', $this->besitzerSicht($gruppe->first())))
+                ->distinct()->pluck('s.gp_id')->map(fn ($id) => (int) $id)->all());
+            foreach ($ids as $id) {
+                $out[$id] = isset($ja[$id]);
+            }
+        }
+        if (self::$laufTiefe > 0) {
+            self::$lauf['alkohol'] = ($out + (self::$lauf['alkohol'] ?? []));
+        }
+
+        return $out;
+    }
+
+    /**
+     * Lead-Sicht (Dominique 29.10.2026): Allergene und Zusatzstoffe eines TEAM-EIGENEN GP zählen nur die Artikel, die das Besitzer-Team sieht. Globale
+     * Stamm-GPs und GPs der Master-Kette bleiben bewusst ALL-MAX über alle Artikel (gleiche Allergene je GP sichert der Guard, Abweichung = Datenfehler).
+     */
+    private function besitzerSicht(FoodAlchemistGp $gp): ?Team
+    {
+        if ($gp->team_id === null) {
+            return null;
+        }
+
+        return $this->mandantSicht($this->besitzer[(int) $gp->team_id] ??= Team::find($gp->team_id));
+    }
+
+    /** @var array<int, ?Team> Besitzer-Team je team_id (Memo je Dienst-Instanz) */
+    private array $besitzer = [];
+
+    /** Sicht nur für Mandanten: das Master-Team (und seine Kette) sieht ohnehin alle Stamm-Lieferanten — dort kein Filter, Verhalten wie bisher. */
+    private function mandantSicht(?Team $team): ?Team
+    {
+        return $team !== null && ! StammPaket::sieheAlleLieferanten($team) ? $team : null;
+    }
+
+    /** Auf die für `$sicht` sichtbaren Artikel begrenzen (Stamm-Paket-Freischaltung, Team-Kette); ohne Sicht unverändert. */
+    private function nurSichtbare($query, string $laSpalte, ?Team $sicht): void
+    {
+        if ($sicht !== null) {
+            $query->whereIn($laSpalte, FoodAlchemistSupplierItem::visibleToTeam($sicht)->select('foodalchemist_supplier_items.id'));
+        }
+    }
+}

@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Platform\FoodAlchemist\Models\FoodAlchemistRule;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Services\Regeln\RegelBuch;
 use Platform\FoodAlchemist\Services\Regeln\RegelMotor;
 use Platform\FoodAlchemist\Support\RezeptTypVokabular;

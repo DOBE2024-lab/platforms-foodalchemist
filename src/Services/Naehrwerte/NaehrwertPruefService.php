@@ -243,7 +243,7 @@ class NaehrwertPruefService
             if (count($werte) < (int) $c['min_artikel']) {
                 continue;
             }
-            $median = \Platform\FoodAlchemist\Services\NaehrwertAggregatService::median(array_values($werte));
+            $median = \Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertAggregatService::median(array_values($werte));
             foreach ($werte as $i => $v) {
                 if (abs($v - $median) > (float) $mindest && ($v > $median * $c['faktor'] || $v < $median / $c['faktor'])) {
                     $out[$i][] = new NaehrwertBefund('A', NaehrwertBefund::HART, $feld, $v, 'Median ' . $this->kurz($median) . ' (' . count($werte) . ' Artikel)',

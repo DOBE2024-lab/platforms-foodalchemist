@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeFeedback;
-use Platform\FoodAlchemist\Services\FeedbackService;
+use Platform\FoodAlchemist\Services\Rezept\FeedbackService;
 
 /**
  * MCP-Steuerbarkeit · D2: Aus einem Praxis-Feedback eine Rezept-Weiterentwicklung erzeugen

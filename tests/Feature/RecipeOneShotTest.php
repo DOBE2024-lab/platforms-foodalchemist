@@ -10,8 +10,8 @@ use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
-use Platform\FoodAlchemist\Services\SensorikService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\SensorikService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -224,7 +224,7 @@ it('Coverage-Pass synchronisiert bestehende Step-by-step-Anleitung und Sensorik 
         'preparation' => 'Alte Freitext-Zubereitung.',
     ]);
     $this->makeIngredient($r, 'Fleur de Sel', $this->makeGp($this->rootTeam, 'Fleur de Sel-refresh'), '2', 1);
-    app(\Platform\FoodAlchemist\Services\RecipeStepService::class)->sync($r, [['phase' => 'Alt', 'text' => 'Alte Anleitung.']]);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class)->sync($r, [['phase' => 'Alt', 'text' => 'Alte Anleitung.']]);
     // KORREKTUR 2026-09-03: stand hier auf 'manual' — und das ist der Override-First-Schutz
     // (SensorikService, Gate »source === manual«), den der automatische Coverage-Pass seit
     // ff91d522 bewusst NICHT bricht (RecipeOneShotService ruft bewerteRezept mit force=false).
@@ -309,7 +309,7 @@ it('GL-07: der Coverage-Pass laesst handgepflegte Schritte stehen (Weg B, Befund
         'category_id' => $this->kategorie->id, 'category_source' => 'ki', 'taste_direction' => 'herzhaft',
     ]);
     $this->makeIngredient($r, 'Fleur de Sel', $this->makeGp($this->rootTeam, 'Fleur de Sel-steps'), '2', 1);
-    app(\Platform\FoodAlchemist\Services\RecipeStepService::class)->sync($r, [['phase' => 'Hand', 'text' => 'Von Hand geschrieben.']]);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class)->sync($r, [['phase' => 'Hand', 'text' => 'Von Hand geschrieben.']]);
     $r->update(['preparation_source' => 'manual']);
 
     $erg = app(RecipeOneShotService::class)->anreichern($this->rootTeam, $r->refresh(), completeCoverage: true);
@@ -576,7 +576,7 @@ it('L7b-2: das Kohärenz-Urteil läuft auch dann, wenn es NICHTS anzureichern gi
 
     // Das Urteil ist gecacht (GL-10-Cache, keine zweite Wahrheit) und frisch.
     expect(\Platform\FoodAlchemist\Models\FoodAlchemistRecipeCulinaryCoherence::where('recipe_id', $vk->id)->count())->toBe(1)
-        ->and(app(\Platform\FoodAlchemist\Services\CoherenceService::class)->status($this->rootTeam, $vk->id)['stale'])->toBeFalse();
+        ->and(app(\Platform\FoodAlchemist\Services\Pruefung\CoherenceService::class)->status($this->rootTeam, $vk->id)['stale'])->toBeFalse();
 });
 
 it('L7b-2: ein Basisrezept bekommt kein Teller-Urteil — und bezahlt dafür auch keinen Call', function () {

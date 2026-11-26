@@ -1,0 +1,1077 @@
+<?php
+
+namespace Platform\FoodAlchemist\Services\Rezept;
+
+use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Enums\BulkRunType;
+use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRecipeDependency;
+use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
+use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
+use Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment;
+
+/**
+ * Spec 03 L7a — der Kaskaden-Motor der One-Shot-Vollerstellung.
+ *
+ * Bis hierher endete jede Generierung beim geerdeten Zutaten-Gerüst samt
+ * Aggregation; die Anreicherung war ein SEPARATER Klick („✨ Alles anreichern")
+ * mit Review-Liste dahinter. Dieser Service verkettet beides zu einem Durchlauf.
+ * Für den KI-Erstell-Knopf kann zusätzlich die Coverage-Phase laufen:
+ * Step-by-step, Sensorik und Produktions-/Equipment-Felder werden
+ * neu synchronisiert, weil sie vom aktuellen Rezeptstand abhängen.
+ *
+ * Drei Entscheidungen tragen ihn:
+ *
+ * 1. **Keine Parallel-Implementierung.** Der Pass fährt die bestehende
+ *    `BulkEnrichService`-Strecke — dieselben Prompts, derselben Vorschlags-Speicher
+ *    (`foodalchemist_bulk_proposals`, damit jeder Wert auditierbar bleibt und in
+ *    der Review-Queue auftaucht) und denselben Accept-Pfad `alleUebernehmen()`,
+ *    in dem Override-First je Feld und die Klassen-Validierung schon stehen.
+ *
+ * 2. **Auto-Übernahme nur in LÜCKEN.** GL-07 verbietet Auto-Persistenz gegen
+ *    menschliche Pflege — nicht das Füllen leerer Felder. Ein frisch generierter
+ *    Draft hat per Konstruktion keine gepflegten Werte; `luecken()` schneidet die
+ *    Schrittfolge trotzdem auf die tatsächlich leeren Ziel-Felder, damit die
+ *    Kaskade (a) nichts überschreibt, was der Generator oder ein Mensch schon
+ *    gesetzt hat, und (b) keinen Provider-Call für ein gefülltes Feld bezahlt.
+ *    Was übrig bleibt, wird sofort übernommen — sonst wäre das Ergebnis eben
+ *    nicht „voll", sondern wieder eine Aufgabenliste.
+ *
+ * 3. **Synchron im ohnehin asynchronen Kontext.** Aufrufer ist der separate
+ *    `EnrichGeneratedRecipeJob` bzw. ein MCP-Call. Darum
+ *    `verarbeiteRezept()` direkt statt `starte()`: ein dispatchter `BulkEnrichJob`
+ *    liefe auf demo parallel, und `alleUebernehmen()` fände noch keine Vorschläge.
+ *
+ * Graceful by construction: `verarbeiteRezept()` fängt jeden Schritt-Fehler
+ * einzeln (Fehl-Zeile statt Abbruch), der äußere Catch nur noch Infrastruktur.
+ * Ein Provider-Ausfall mitten in der Kaskade lässt das Rezept vollständig und
+ * konsistent zurück — der Kern steht, die Reste bleiben Lücken.
+ *
+ * L7b-2 hängt das **Kohärenz-Glied** hinten an (Spec-Kaskade: „… → Auto-Enrichment
+ * → Kohärenz-Check (VK) → fertig"). Das ist bewusst die ZWEITE Achse (GL-10 §1):
+ * der deterministische Aroma-Score läuft schon im Generator direkt nach dem
+ * Zutaten-Sync (`RecipeGeneratorService` → `statistik['kohaerenz']`, kostet keinen
+ * Call); was fehlte, ist das kulinarische Urteil `vk.kohaerenz`, das bis hierher
+ * nur on-demand im VK-Detail-Panel hing. Es läuft NACH der Anreicherung, weil
+ * Speisen-Klasse und Geschmacksrichtung erst dort gesetzt werden und in den
+ * Teller-Kontext einfließen — und in EIGENEM try/catch, weil es von der
+ * Anreicherung nicht abhängt: der Judge liest die Komponenten, die schon stehen.
+ */
+class RecipeOneShotService
+{
+    /**
+     * Deckel für die KI-Freitextfelder `function` und `temperature` (Spalte: varchar(255)).
+     *
+     * Bewusst unter der Spaltenbreite: ein Wert, der hier anschlägt, ist ohnehin keine
+     * „kulinarische Funktion" mehr, sondern ein Absatz — und abgeschnittener Text ist allemal
+     * besser als ein Schreibfehler, der die ganze Schätzung mitnimmt.
+     */
+    private const FREITEXT_MAX = 240;
+
+    public function __construct(
+        private \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService $bulk,
+        private \Platform\FoodAlchemist\Services\Pruefung\CoherenceService $coherence,
+        private DarreichungService $darreichungen,
+        private \Platform\FoodAlchemist\Services\Preis\CatalogPricingService $catalogPricing,
+        private \Platform\FoodAlchemist\Services\Preis\MargeService $marge,
+        private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
+        private \Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService $detektor,
+    ) {
+    }
+
+    /**
+     * Anreicherungs-Kaskade über ein einzelnes (gerade erzeugtes) Rezept.
+     *
+     * Die Ebenen-Wahl fällt am `is_sales_recipe`-Flag: ein Gericht bekommt die
+     * VK-Schrittfolge (Beschreibung · Wording · Plating · Speisen-Klasse), ein
+     * Basisrezept die Basis-Folge (Beschreibung · Kategorie · Geschmack). Damit
+     * gibt es hier keinen zweiten Ebenen-Zweig — dieselbe Regel wie im
+     * Rezept-Copilot.
+     *
+     * @param ?float $zielVk L8b-2: angestrebter Netto-VK je Portion aus der Eingabe
+     *                       (Generator-Pill / MCP). Reines Durchreich-Datum — es wird
+     *                       NIRGENDS geschrieben, sondern nach der Kalkulation gegen
+     *                       das Ergebnis gehalten (kein Solver, s. `zielAbgleich`).
+     *
+     * @return array{run_id: ?int, schritte: list<string>, uebersprungen: list<string>, uebernommen: int, offen: int, fehler: ?string, kohaerenz_urteil: ?array{score: ?int, label: ?string, schwachstelle: ?string, fehler: ?string}, wirtschaftlichkeit: ?array, coverage?: array}
+     */
+    public function anreichern(Team $team, FoodAlchemistRecipe $recipe, ?float $zielVk = null, bool $completeCoverage = false, bool $refresh = false, ?callable $shouldStop = null, array $leitplanken = []): array
+    {
+        \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException::wennNichtEigen($recipe, $team, 'Rezept');   // Spec 84 B2: zentral für Job, Kaskade und MCP
+        return app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeRunService::class)->withRecipe($team, $recipe,
+            fn () => $this->anreichernImLauf($team, $recipe, $zielVk, $completeCoverage, $refresh, $shouldStop, $leitplanken));
+    }
+
+    private function anreichernImLauf(Team $team, FoodAlchemistRecipe $recipe, ?float $zielVk = null, bool $completeCoverage = false, bool $refresh = false, ?callable $shouldStop = null, array $leitplanken = []): array
+    {
+        $alle = $recipe->is_sales_recipe ? \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::SCHRITTE_VK : \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::SCHRITTE;
+        // #4: `refresh` = bewusster „Alles anreichern"-Klick im Editor → auch gefüllte, nicht-manuelle
+        // Textfelder neu erzeugen (nach Zutatenänderung). Der Auto-Pfad (Generierung / Kaskaden-Job)
+        // lässt es weg und füllt nur echte Lücken — sonst würden frisch generierte Felder sofort
+        // redundant neu bemüht (KI-Kosten). Manuelle Felder schützt `uebernehmen()` in beiden Fällen.
+        $schritte = $refresh
+            ? $this->bulk->zuAktualisieren($recipe, $alle)
+            : $this->bulk->luecken($recipe, $alle);
+
+        $ergebnis = [
+            'run_id' => null,
+            'schritte' => $schritte,
+            'uebersprungen' => array_values(array_diff($alle, $schritte)),
+            'uebernommen' => 0,
+            'offen' => 0,
+            'fehler' => null,
+            'kohaerenz_urteil' => null,
+            'wirtschaftlichkeit' => null,
+            'coverage' => null,
+        ];
+
+        if ($schritte !== []) {                                // leer ⇒ nichts zu füllen, kein Lauf, kein Call
+            try {
+                // Lauf-Zeile = Fortschritts-Anker (die UI pollt sie über `status()`)
+                // UND Audit-Spur: die Vorschläge bleiben in der Review-Queue sichtbar,
+                // auch wenn sie in derselben Sekunde übernommen wurden.
+                $runId = $this->bulk->laufAnlegen(
+                    $team,
+                    1,
+                    $recipe->is_sales_recipe ? BulkRunType::EnrichVk : BulkRunType::Enrich,
+                    // V-047: der One-Shot ist der einzige Anreicherungs-Pfad, der seine
+                    // Schrittfolge erst zur Laufzeit aus den Lücken schneidet — ohne
+                    // Kontext bliebe unauffindbar, warum dieser Lauf drei Schritte fuhr
+                    // und der nächste am selben Rezept keinen.
+                    ['schritte' => array_values($schritte), 'quelle' => 'one_shot', 'recipe_id' => (int) $recipe->id],
+                );
+                $ergebnis['run_id'] = $runId;
+
+                $this->bulk->verarbeiteRezept($team, $runId, $recipe->id, $schritte);
+                $ergebnis['uebernommen'] = $this->bulk->alleUebernehmen($team, $runId);
+                $ergebnis['offen'] = $this->bulk->offeneVorschlaege($team, $runId);
+            } catch (\Throwable $e) {
+                // Nie werfen: das Rezept ist zu diesem Zeitpunkt fertig angelegt und
+                // aggregiert. Ein gescheiterter Anreicherungs-Pass ist eine Lücke,
+                // kein Grund, die Generierung als Fehler zu melden.
+                $ergebnis['fehler'] = mb_strimwidth($e->getMessage(), 0, 300);
+            }
+        }
+
+        if ($shouldStop !== null && $shouldStop()) {
+            $ergebnis['abgebrochen'] = true;
+            return $ergebnis;
+        }
+
+        if ($completeCoverage) {
+            // T5 (Top-Down-Abschluss »GPs aus LAs«): fehlende GPs ZUERST minten, damit die
+            // Wirtschaftlichkeit unten mit vollständigem EK rechnet.
+            $ergebnis['gp_mint'] = $this->minteFehlendeGps($team, $recipe->fresh() ?? $recipe, $leitplanken);
+        }
+        $ergebnis['kohaerenz_urteil'] = $this->kohaerenzGlied($team, $recipe->fresh() ?? $recipe);
+        $ergebnis['wirtschaftlichkeit'] = $this->wirtschaftlichkeitsGlied($team, $recipe->fresh() ?? $recipe, $zielVk);
+        if ($completeCoverage) {
+            $ergebnis['coverage'] = $this->coverageGlieder($team, $recipe->fresh() ?? $recipe, $shouldStop, $refresh);
+        }
+
+        return $ergebnis;
+    }
+
+    /**
+     * T5 (Entscheidung 2026-08-17, Top-Down-Abschluss »GPs aus LAs«): für die ROHZUTATEN eines Rezepts
+     * (kein GP verknüpft, kein Sub-Rezept) fehlende Grundprodukte aus der besten passenden Lieferanten-
+     * Artikel minten ({@see LaFirstGpService::mintFromLa} — Status `tentative`, LA-verknüpft: die GPs
+     * gehen in die Review-Queue, die LA-First-Kuration bleibt gewahrt, KEINE ungeprüften GPs im
+     * approved-Set). Danach EK/Aggregat propagieren, damit die Kalkulation vollständig wird. Doktrin:
+     * kein LA → kein GP → die Zeile bleibt unbepreist (echte Sourcing-Lücke, kein geratenes GP).
+     * Fail-soft — ein gescheiterter Mint kippt die Anreicherung nie.
+     *
+     * @return array{status: string, minted: int, ohne_la: int, anker?: ?array, fehler?: string}
+     */
+    /** @param  array  $leitplanken  Rezept-Leitplanken (bio_pref/frische/convenience) für die Bestandssuche vor jedem Mint (27.10.) */
+    public function minteFehlendeGps(Team $team, FoodAlchemistRecipe $recipe, array $leitplanken = []): array
+    {
+        try {
+            $offene = $recipe->ingredients()
+                ->whereNull('deleted_at')->whereNull('gp_id')->whereNull('referenced_recipe_id')
+                ->get();
+            // L4: Zeilen, die die Kaskade als Basisrezept FÜHRT (Dependency zu einem Kind-Step), NICHT
+            // bemünzen — sonst überschreibt der Freigabe-Mint (T5) genau die als Sub geplanten Zeilen und
+            // sperrt deren spätere Rückbindung (bindIngredient bricht bei gesetztem gp_id still ab). Der
+            // Kritiker/Diät-entdrahtete Fall ist ebenfalls geschützt: solche Zeilen tragen match_method
+            // 'ignored' und/oder eine Dependency; nur echte, kaskaden-fremde Roh-Lücken werden gemintet.
+            $kaskadeGefuehrt = FoodAlchemistCascadeRecipeDependency::query()
+                ->whereIn('ingredient_id', $offene->pluck('id')->all())
+                ->pluck('ingredient_id')->map(fn ($v) => (int) $v)->all();
+            if ($kaskadeGefuehrt !== []) {
+                $offene = $offene->reject(fn ($z) => in_array((int) $z->id, $kaskadeGefuehrt, true))->values();
+            }
+            if ($offene->isEmpty()) {
+                return ['status' => 'vollständig', 'minted' => 0, 'ohne_la' => 0, 'kaskade_gefuehrt' => count($kaskadeGefuehrt)];
+            }
+            $mint = app(\Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService::class);
+            $heuristik = app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class);
+            $minted = 0;
+            $ohneLa = 0;
+            $basisrezeptLuecken = 0;
+            $gpIds = [];
+            foreach ($offene as $zut) {
+                $text = trim((string) ($zut->display_name ?: $zut->raw_text));
+                if ($text === '') {
+                    continue;
+                }
+                // Spec 80 B4: eine Basisrezept-Zeile („Püree: Petersilienwurzel") ohne Kaskaden-Dependency (Einzel-
+                // Generierung, Tiefen-/Step-Budget, von Hand offen gelassen) bleibt eine Lücke. Vorher mintete die
+                // Anreicherung — seit Paket 10 also der Freigabeknopf — sie still auf eine Rohware.
+                // Dominique 27.10. (d): auch eine Basiskomponente ohne Zukauf-Signal („Geflügelfond“) wird nie auf ein Zukauf-GP gemintet
+                // 29.10. (Branch 1b): die Leitplanken entscheiden selbst oder gekauft — 'zukauf' bindet das GP des Bestands, statt aus einem LA zu minten
+                $matcher = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class);
+                // Selbst oder gekauft entscheidet NUR die Vorgabe am Rezept (29.10.); Frische/Bio kommen weiter aus den Lauf-Leitplanken
+                $lp = \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::aus(array_diff_key($leitplanken, array_flip(['convenience', 'level', 'niveau'])) + \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::ausRezept($recipe));
+                $weg = $heuristik->istBasisrezeptZeile($text) ? 'basis' : $matcher->zubereitungsWeg($team, $text, $lp['convenience'], $lp['zubereitung']);
+                if ($weg === 'basis') {
+                    $basisrezeptLuecken++;
+
+                    continue;
+                }
+                $treffer = $weg === 'zukauf' ? $matcher->zukaufTrefferFuer($team, $text, $lp['convenience'], $lp['zubereitung'], $lp['pref'], $lp['bio']) : null;
+                $gp = $treffer !== null && \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($treffer) && ($treffer['target'] ?? null) === 'gp'
+                    ? \Platform\FoodAlchemist\Models\FoodAlchemistGp::find((int) $treffer['gp_id'])
+                    : $mint->mintFromLa($team, $text, leitplanken: $leitplanken);
+                if ($gp !== null) {
+                    $zut->gp_id = $gp->id;
+                    $zut->save();
+                    $minted++;
+                    $gpIds[] = (int) $gp->id;
+                } else {
+                    $ohneLa++;   // kein LA → Sourcing-Lücke, bleibt unbepreist (kein Rate-GP)
+                }
+            }
+            $anker = null;
+            if ($minted > 0) {
+                app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputeAndPropagate((int) $recipe->id);
+                // Spec 50 · B-3: ein gemintetes GP ist erst mit Kern-Anker vollständig. Spec 95 Stufe 2 (Kurator-Befund 02.11.): nicht mehr
+                // synchron im Lauf — im externen KI-Modus wartete der ganze Enrich-Lauf auf die gp.anker-Antwort. Der Anker kommt als Folge-Job
+                // nach dem Commit ({@see GpAromaNachholen}, je GP eindeutig, nie auf einer sync-Queue); das Pairing-Glied holt ihn beim nächsten Lauf.
+                $nachgelagert = 0;
+                foreach (\Platform\FoodAlchemist\Models\FoodAlchemistGp::whereIn('id', array_values(array_unique($gpIds)))->get() as $gp) {
+                    if (\Platform\FoodAlchemist\Support\GpAromaNachholen::braucht((int) $gp->id)) {
+                        \Platform\FoodAlchemist\Support\GpAromaNachholen::ausloesen($gp);
+                        $nachgelagert++;
+                    }
+                }
+                $anker = ['nachgelagert' => $nachgelagert];
+            }
+
+            return ['status' => $minted > 0 ? 'gemintet' : ($ohneLa > 0 ? 'kein_la' : ($basisrezeptLuecken > 0 ? 'basisrezept_luecken' : 'vollständig')),
+                'minted' => $minted, 'ohne_la' => $ohneLa, 'basisrezept_luecken' => $basisrezeptLuecken, 'anker' => $anker];
+        } catch (\Throwable $e) {
+            return ['status' => 'fehler', 'minted' => 0, 'ohne_la' => 0, 'fehler' => mb_strimwidth($e->getMessage(), 0, 200)];
+        }
+    }
+
+    /**
+     * #4 (Kaskaden-Anreicherung): alle Sub-Basisrezepte UNTERHALB eines Rezepts, transitiv über alle Ebenen (A-5; 2.1c: vorher
+     * max. 3) — ein Graph-Dienst mit Besucht-Liste, die auch Zyklen bricht. Der „Alles anreichern"-Klick reichert das
+     * Top-Rezept synchron an und schiebt diese Nachkommen als Hintergrund-Jobs nach (sonst würde die
+     * Voll-Anreicherung eines mehrgliedrigen Gerichts synchron in einen Timeout laufen).
+     *
+     * @return list<int> Rezept-IDs der Nachkommen (ohne die Wurzel), deduped
+     */
+    public function subRezeptIds(int $recipeId): array
+    {
+        return app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->nachfahren([$recipeId]);
+    }
+
+    /**
+     * Vollerstellungs-Coverage fuer den KI-Knopf: Bausteine neu synchronisieren,
+     * die im Editor eigene KI-Aktionen haben. Anders als Einzel-KI-Knoepfe ist
+     * "voll anreichern" eine bewusste Aktualisierung nach Rezeptaenderungen.
+     *
+     * @return array<string, array{status: string, fehler?: string}>
+     */
+    private function coverageGlieder(Team $team, FoodAlchemistRecipe $recipe, ?callable $shouldStop = null, bool $refresh = false): array
+    {
+        $out = [];
+        $glieder = [
+            'fertigung' => fn () => $this->fertigungsGlied($recipe),
+            'eigenschaften' => fn () => $this->eigenschaftenGlied($recipe->fresh() ?? $recipe, $refresh),
+            'equipment' => fn () => $this->equipmentGlied($team, $recipe->fresh() ?? $recipe),
+            'posten' => fn () => $this->postenGlied($team, $recipe->fresh() ?? $recipe),
+            'steps' => fn () => $this->stepGlied($recipe->fresh() ?? $recipe),
+            // Spec 60: Aromenprofil deterministisch aus den Zutaten (ersetzt KI-Anker + Pairing-Chips).
+            'aromaprofil' => fn () => $this->aromaprofilGlied($recipe->fresh() ?? $recipe),
+            'eignung' => fn () => $this->eignungsGlied($team, $recipe->fresh() ?? $recipe),
+            'sensorik' => fn () => $this->sensorikGlied($recipe->fresh() ?? $recipe),
+        ];
+        foreach ($glieder as $name => $glied) {
+            if ($shouldStop !== null && $shouldStop()) {
+                $out[$name] = ['status' => 'abgebrochen'];
+                break;
+            }
+            $out[$name] = $glied();
+        }
+
+        return $out;
+    }
+
+    /** @return array{status: string, production_depth?: ?string, fehler?: string} */
+    private function fertigungsGlied(FoodAlchemistRecipe $recipe): array
+    {
+        // Von der Kaskade oder von Hand gesetzt (Zukauf → convenience, TK-Hauptzeile → teilfertig): die KI überschreibt
+        // das nicht — sonst widerspräche das Feld nach der Freigabe dem Namen „(Zukauf)“ (Dominique 10.10.).
+        if (in_array($recipe->production_depth_source, ['kaskade', 'manuell'], true) && $recipe->production_depth !== null) {
+            return ['status' => 'gesetzt', 'production_depth' => $recipe->production_depth];
+        }
+        try {
+            $vorschlag = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.production_depth', [
+                'name' => $recipe->name,
+                'production_depth' => $recipe->production_depth,
+                'zutaten' => $recipe->ingredients()->whereNull('deleted_at')->with(['gp:id,name', 'referencedRecipe:id,name'])->orderBy('position')->limit(30)->get()->map->anzeigeName()->filter()->values()->all(),
+            ], [
+                'target_table' => 'foodalchemist_recipes',
+                'target_id' => $recipe->id,
+            ]);
+
+            $wert = $vorschlag->werte['production_depth'] ?? null;
+            if (! in_array($wert, ['from_scratch', 'teilfertig', 'convenience'], true)) {
+                return ['status' => 'leer', 'production_depth' => $recipe->production_depth];
+            }
+
+            $recipe->forceFill(['production_depth' => $wert, 'production_depth_source' => 'ki'])->save();
+
+            return ['status' => 'aktualisiert', 'production_depth' => $wert];
+        } catch (\Throwable $e) {
+            return ['status' => 'fehler', 'fehler' => mb_strimwidth($e->getMessage(), 0, 300)];
+        }
+    }
+
+    /** @return array{status:string,work_time_min?:?int,setup_time_min?:?int,variable_work_time_min?:?float,variable_work_time_basis?:?string,standzeit_min?:?int,max_vorlauf_tage?:?int,temperature?:?string,function?:?string,fehler?:string} */
+    private function eigenschaftenGlied(FoodAlchemistRecipe $recipe, bool $refresh = false): array
+    {
+        try {
+            $vorschlag = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.eigenschaften', [
+                'name' => $recipe->name,
+                'haltbarkeit_tage' => null,
+                'transportstabilitaet' => null,
+                'work_time_min' => $recipe->work_time_min,
+                'setup_time_min' => $recipe->setup_time_min,
+                'variable_work_time_min' => $recipe->variable_work_time_min,
+                'variable_work_time_basis' => $recipe->variable_work_time_basis,
+                'standzeit_min' => $recipe->standzeit_min,
+                'max_vorlauf_tage' => $recipe->max_vorlauf_tage,
+                'temperature' => $recipe->temperature,
+                'function' => $recipe->function,
+                // Ohne den Ertrag kann das Modell keine sinnvolle Chargengröße nennen —
+                // der Prompt fragt sie an, bekam aber nie eine Bezugsgröße.
+                'yield_kg' => $recipe->yield_kg_manual ?? $recipe->yield_kg,
+                'yield_pieces' => $recipe->yield_pieces,
+                'preparation' => $recipe->preparation,
+                'zutaten' => $recipe->ingredients()->whereNull('deleted_at')->with(['gp:id,name', 'referencedRecipe:id,name'])->orderBy('position')->limit(30)->get()->map->anzeigeName()->filter()->values()->all(),
+            ], [
+                'target_table' => 'foodalchemist_recipes',
+                'target_id' => $recipe->id,
+            ]);
+
+            $update = [];
+            if (isset($vorschlag->werte['work_time_min']) && is_numeric($vorschlag->werte['work_time_min'])) {
+                $update['work_time_min'] = max(0, (int) $vorschlag->werte['work_time_min']);
+            }
+            // Rüstzeit + Vorproduzierbarkeit nur am BASISREZEPT (Entscheid 2026-09-04): am
+            // Gericht gibt es kein Rüsten des Laufs, und fertiggestellt wird es nicht
+            // vorproduziert — das tun seine Komponenten.
+            if (! $recipe->is_sales_recipe
+                && isset($vorschlag->werte['setup_time_min']) && is_numeric($vorschlag->werte['setup_time_min'])) {
+                $update['setup_time_min'] = max(0, (int) $vorschlag->werte['setup_time_min']);
+            }
+            if (isset($vorschlag->werte['variable_work_time_min']) && is_numeric($vorschlag->werte['variable_work_time_min'])) {
+                $update['variable_work_time_min'] = max(0, (float) $vorschlag->werte['variable_work_time_min']);
+            }
+            if (in_array($vorschlag->werte['variable_work_time_basis'] ?? null, ['kg', 'piece', 'portion'], true)) {
+                $update['variable_work_time_basis'] = $vorschlag->werte['variable_work_time_basis'];
+            }
+            if (isset($vorschlag->werte['standzeit_min']) && is_numeric($vorschlag->werte['standzeit_min'])) {
+                $update['standzeit_min'] = max(0, (int) $vorschlag->werte['standzeit_min']);
+            }
+            if (! $recipe->is_sales_recipe
+                && isset($vorschlag->werte['max_vorlauf_tage']) && is_numeric($vorschlag->werte['max_vorlauf_tage'])) {
+                $update['max_vorlauf_tage'] = max(0, min(14, (int) $vorschlag->werte['max_vorlauf_tage']));
+            }
+            // Chargengrenze: der Prompt fordert GENAU EINE (kg für Gewichts-, Stück für
+            // Stück-Rezepte). Sie fehlte in dieser Whitelist, obwohl angefragt — der
+            // Topf-Deckel blieb damit auf dem Team-Default, und der bestimmt in
+            // ProductionTimeService die Anzahl der Ansätze und somit die Personenminuten.
+            foreach (['batch_max_kg', 'batch_max_pieces'] as $feld) {
+                $wert = $vorschlag->werte[$feld] ?? null;
+                if (is_numeric($wert) && (float) $wert > 0) {
+                    $update[$feld] = round((float) $wert, 3);
+                }
+            }
+            // Nie beide gleichzeitig: die Ertragsart entscheidet, welcher Deckel gilt.
+            if (isset($update['batch_max_kg'], $update['batch_max_pieces'])) {
+                unset($update[$recipe->istStueckErtrag() ? 'batch_max_kg' : 'batch_max_pieces']);
+            }
+
+            // ★ Kappen, nicht hoffen. `function` und `temperature` sind Freitext ohne
+            // Längenvorgabe im Prompt, und beide landen mit allem anderen in EINEM
+            // `forceFill()->save()` weiter unten. Lief einer über, warf MySQL
+            // `SQLSTATE[22001] Data too long` — und riss work_time_min, setup_time_min,
+            // standzeit_min und batch_max_* mit, obwohl die längst korrekt geschätzt waren.
+            // Gemessen am 12.09.: `function` war zu 98 % der Spaltenbreite ausgereizt (63 von
+            // 64 Zeichen über 2.347 Rezepte). Die Migration weitet auf 255; dieser Riegel sorgt
+            // dafür, dass auch eine ungewöhnlich ausführliche Antwort den Rest nicht mitnimmt.
+            foreach (['temperature', 'function'] as $feld) {
+                $wert = $vorschlag->werte[$feld] ?? null;
+                if (is_string($wert) && trim($wert) !== '') {
+                    $update[$feld] = mb_substr(trim($wert), 0, self::FREITEXT_MAX);
+                }
+            }
+
+            // Override-First (Weg-B-Befund 7, 2026-10-12): ohne `refresh` füllt das Glied nur LEERE Felder —
+            // gepflegte Zeiten, Chargengrenzen, Temperatur und Funktion bleiben stehen. `refresh` (bewusster
+            // „Alles anreichern"-Klick im Editor) erneuert alles. Die Felder tragen keine Lineage-Spalte,
+            // „gefüllt" ist darum das einzige belastbare Kriterium.
+            if (! $refresh) {
+                foreach (array_keys($update) as $feld) {
+                    $alt = $recipe->{$feld};
+                    if ($alt !== null && $alt !== '') {
+                        unset($update[$feld]);
+                    }
+                }
+            }
+
+            if ($update === []) {
+                return ['status' => $refresh ? 'leer' : 'gefuellt_geschuetzt'];
+            }
+
+            $recipe->forceFill($update)->save();
+
+            return [
+                'status' => 'aktualisiert',
+                'work_time_min' => isset($update['work_time_min']) ? (int) $update['work_time_min'] : $recipe->work_time_min,
+                'setup_time_min' => isset($update['setup_time_min']) ? (int) $update['setup_time_min'] : $recipe->setup_time_min,
+                'variable_work_time_min' => isset($update['variable_work_time_min']) ? (float) $update['variable_work_time_min'] : $recipe->variable_work_time_min,
+                'variable_work_time_basis' => $update['variable_work_time_basis'] ?? $recipe->variable_work_time_basis,
+                'standzeit_min' => isset($update['standzeit_min']) ? (int) $update['standzeit_min'] : $recipe->standzeit_min,
+                'max_vorlauf_tage' => isset($update['max_vorlauf_tage']) ? (int) $update['max_vorlauf_tage'] : $recipe->max_vorlauf_tage,
+                'temperature' => $update['temperature'] ?? $recipe->temperature,
+                'function' => $update['function'] ?? $recipe->function,
+                'batch_max_kg' => $update['batch_max_kg'] ?? $recipe->batch_max_kg,
+                'batch_max_pieces' => $update['batch_max_pieces'] ?? $recipe->batch_max_pieces,
+            ];
+        } catch (\Throwable $e) {
+            return ['status' => 'fehler', 'fehler' => mb_strimwidth($e->getMessage(), 0, 300)];
+        }
+    }
+
+    /** @return array{status: string, n_equipment?: int, fehler?: string} */
+    private function equipmentGlied(Team $team, FoodAlchemistRecipe $recipe): array
+    {
+        try {
+            $vokabular = FoodAlchemistVocabKochequipment::visibleToTeam($team)
+                ->where('is_inactive', false)->orderBy('sort_order')->pluck('slug')->all();
+
+            $vorschlag = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.equipment', [
+                'name' => $recipe->name,
+                'equipment_slugs' => $recipe->equipment()->pluck('slug')->all(),
+                'vokabular' => $vokabular,
+                'preparation' => $recipe->preparation,
+                'zutaten' => $recipe->ingredients()->whereNull('deleted_at')->with(['gp:id,name', 'referencedRecipe:id,name'])->orderBy('position')->limit(30)->get()->map->anzeigeName()->filter()->values()->all(),
+            ], [
+                'target_table' => 'foodalchemist_recipe_equipment',
+                'target_id' => $recipe->id,
+            ]);
+
+            $slugs = array_values(array_filter((array) ($vorschlag->werte['equipment_slugs'] ?? []), 'is_string'));
+            $ids = $slugs === [] ? collect() : FoodAlchemistVocabKochequipment::visibleToTeam($team)
+                ->whereIn('slug', $slugs)->pluck('id');
+
+            // ★ MANUAL GEWINNT — dieselbe Invariante wie bei Ankern und Regeneration.
+            // Vorher stand hier ein blankes sync(): es ERSETZT die ganze Liste, also verschwand
+            // ein von Hand gesetztes Geraet beim naechsten Voll-Lauf spurlos und ohne Meldung.
+            // Bei den Anker-Mappings ist genau das seit Spec 50 verboten ("manuelle Mappings
+            // werden nie ersetzt"); beim Equipment fehlte die Grundlage, weil die Tabelle
+            // manuell und KI gar nicht unterscheiden konnte.
+            // allRelatedIds() statt pluck('<tabelle>.id'): der Tabellenname der Relation ist
+            // foodalchemist_vocab_kitchen_equipment, NICHT der Modellname — ein hartkodierter
+            // Qualifier ging hier prompt daneben.
+            $manuell = $recipe->equipment()->wherePivot('source', 'manual')->allRelatedIds();
+            $behalten = $manuell->flip()->map(fn () => ['source' => 'manual'])->all();
+            $neu = $ids->diff($manuell)->flip()
+                ->map(fn () => ['source' => 'ki', 'ai_confidence' => $vorschlag->confidence])->all();
+            $recipe->equipment()->sync($behalten + $neu);
+
+            return ['status' => $ids->isEmpty() ? 'leer' : 'aktualisiert',
+                'n_equipment' => count($behalten) + count($neu),
+                'manuell_geschuetzt' => $manuell->count()];
+        } catch (\Throwable $e) {
+            return ['status' => 'fehler', 'fehler' => mb_strimwidth($e->getMessage(), 0, 300)];
+        }
+    }
+
+    /** @return array{status: string, station_id?: ?int, station?: ?string, fehler?: string} */
+    private function postenGlied(Team $team, FoodAlchemistRecipe $recipe): array
+    {
+        if (! $recipe->isOwnedBy($team)) {
+            return ['status' => 'fehler', 'fehler' => 'Posten-Pflege nur durchs Besitzer-Team.'];
+        }
+        // Am GERICHT wird kein Posten gesetzt (Entscheid Dominique 2026-09-04): in der
+        // Küche laufen die BASISREZEPTE über Posten; beim Fertigstellen und Anrichten
+        // kommen die Posten zusammen und sind wieder ein Team. Ein einzelner „Posten,
+        // der das Gericht macht" existiert nicht — die Kalkulation bewertet die
+        // Fertigstellung deshalb mit dem Team-Satz. Welche Posten beteiligt sind, leitet
+        // der Editor read-only aus den Komponenten ab (`beteiligtePosten`).
+        if ($recipe->is_sales_recipe) {
+            return ['status' => 'uebersprungen', 'grund' => 'Gericht — Fertigstellung ist Team-Arbeit am Pass'];
+        }
+
+        if ($recipe->default_station_id !== null) {
+            return ['status' => 'beibehalten', 'station_id' => (int) $recipe->default_station_id];
+        }
+
+        try {
+            $station = $this->stationVorschlag($team, $recipe);
+            if ($station === null) {
+                return ['status' => 'offen', 'grund' => 'Kein geeigneter aktiver Posten aus dem sichtbaren Katalog ableitbar.'];
+            }
+
+            // Der Vorschlag ordnet nur den Posten zu. Dessen physische Grenze bleibt
+            // am Posten und wird vom ProductionTimeService aufgelöst; sie ist kein
+            // Rezept-Override und darf deshalb nicht hierhin kopiert werden.
+            $recipe->forceFill(['default_station_id' => $station->id])->save();
+
+            return ['status' => 'aktualisiert', 'station_id' => (int) $station->id, 'station' => $station->name];
+        } catch (\Throwable $e) {
+            return ['status' => 'fehler', 'fehler' => mb_strimwidth($e->getMessage(), 0, 300)];
+        }
+    }
+
+    private function stationVorschlag(Team $team, FoodAlchemistRecipe $recipe): ?FoodAlchemistProductionStation
+    {
+        $stations = FoodAlchemistProductionStation::visibleToTeam($team)
+            ->where('is_inactive', false)->orderBy('sort_order')->orderBy('name')->get();
+        if ($stations->isEmpty()) {
+            return null;
+        }
+
+        $proposal = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose(
+            'recipe.posten',
+            $this->stepKontext($recipe) + [
+                'description' => $recipe->description,
+                'preparation' => $recipe->preparation,
+                'equipment' => $recipe->equipment()->pluck('name')->all(),
+                'function' => $recipe->function,
+                'temperature' => $recipe->temperature,
+                'posten' => $stations->map(fn ($station) => [
+                    'id' => (int) $station->id, 'name' => $station->name,
+                    'slug' => $station->slug, 'gruppe' => $station->group_name,
+                ])->all(),
+            ],
+            ['target_table' => 'foodalchemist_recipes', 'target_id' => $recipe->id],
+        );
+        $id = $proposal->werte['station_id'] ?? null;
+        if (filter_var($id, FILTER_VALIDATE_INT) === false || (int) $id <= 0) {
+            return null;
+        }
+
+        // Nur eine tatsächlich sichtbare, aktive Station aus dem Kandidatenkatalog.
+        return $stations->firstWhere('id', (int) $id);
+    }
+
+    /** @return array{status: string, n_anker?: int, abdeckung?: float, fehler?: string} */
+    private function aromaprofilGlied(FoodAlchemistRecipe $recipe): array
+    {
+        try {
+            $p = app(\Platform\FoodAlchemist\Services\Pairing\RezeptProfil::class)->fuer((int) $recipe->id);
+
+            return ['status' => $p['anker'] === [] ? 'leer' : 'aktualisiert', 'n_anker' => count($p['anker']), 'abdeckung' => $p['abdeckung']];
+        } catch (\Throwable $e) {
+            return ['status' => 'fehler', 'fehler' => mb_strimwidth($e->getMessage(), 0, 300)];
+        }
+    }
+
+    /** @return array{status: string, n_level?: int, n_sektor?: int, fehler?: string} */
+    private function eignungsGlied(Team $team, FoodAlchemistRecipe $recipe): array
+    {
+        try {
+            $kontext = [
+                'name' => $recipe->name,
+                'zubereitung' => $recipe->preparation,
+                'zutaten' => $recipe->ingredients()->whereNull('deleted_at')->with(['gp:id,name', 'referencedRecipe:id,name'])->orderBy('position')->limit(30)->get()->map->anzeigeName()->filter()->values()->all(),
+            ];
+            $sektor = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.sektor', $kontext + [
+                'vokabular' => RecipeService::eignungVokabular()['sektor']['slugs'],
+            ], ['target_table' => 'foodalchemist_recipe_sector_suitability', 'target_id' => $recipe->id]);
+            $level = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.level', $kontext + [
+                'vokabular' => RecipeService::eignungVokabular()['level']['slugs'],
+            ], ['target_table' => 'foodalchemist_recipe_level_suitability', 'target_id' => $recipe->id]);
+
+            $anzahl = [];
+            foreach ([['sektor', 'sektoren', $sektor], ['level', 'niveaus', $level]] as [$typ, $key, $proposal]) {
+                $meta = RecipeService::eignungVokabular()[$typ];
+                \Illuminate\Support\Facades\DB::table($meta['tabelle'])->where('recipe_id', $recipe->id)
+                    ->where('source', 'ai_inferred')->whereNull('deleted_at')->update(['deleted_at' => now(), 'updated_at' => now()]);
+                $n = 0;
+                foreach ((array) ($proposal->werte[$key] ?? []) as $slug => $urteil) {
+                    if (! in_array($slug, $meta['slugs'], true) || ($urteil['eignung'] ?? null) !== 'geeignet') {
+                        continue;
+                    }
+                    $manuell = \Illuminate\Support\Facades\DB::table($meta['tabelle'])
+                        ->where('recipe_id', $recipe->id)->where($meta['spalte'], $slug)
+                        ->where('source', 'manual')->exists();
+                    if ($manuell) {
+                        continue;
+                    }
+                    app(RecipeService::class)->setzeEignung(
+                        $team, (int) $recipe->id, $typ, $slug, 'ai_inferred',
+                        (float) $proposal->confidence, is_string($urteil['grund'] ?? null) ? $urteil['grund'] : null
+                    );
+                    $n++;
+                }
+                $anzahl[$typ] = $n;
+            }
+
+            return ['status' => array_sum($anzahl) > 0 ? 'aktualisiert' : 'leer', 'n_level' => $anzahl['level'], 'n_sektor' => $anzahl['sektor']];
+        } catch (\Throwable $e) {
+            return ['status' => 'fehler', 'fehler' => mb_strimwidth($e->getMessage(), 0, 300)];
+        }
+    }
+
+    /** @return array{status: string, n_steps?: int, fehler?: string} */
+    private function stepGlied(FoodAlchemistRecipe $recipe): array
+    {
+        // Nur die Produktions-Ebene zählt: dieses Glied schreibt nur sie (Anrichten = vk.plating, eigene Ebene).
+        $bestehend = FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene(FoodAlchemistRecipeStep::EBENE_PRODUKTION)->count();
+
+        // GL-07 / Weg-B-Befund 7 (2026-10-12): handgepflegte Schritte (preparation_source = manual) sind ein
+        // Override. Der Coverage-Pass lief trotzdem im Modus „voll überschreiben" und ersetzte sie — entgegen der
+        // Tool-Zusage „gefüllte Felder werden nie angetastet". KI-Schritte aus einem früheren Lauf werden
+        // weiterhin nachgezogen (bewusste Aktualisierung nach Zutatenänderung, s. Test „Coverage-Pass …").
+        if ($bestehend > 0 && $recipe->preparation_source === 'manual') {
+            return ['status' => 'manual_geschuetzt', 'n_steps' => $bestehend];
+        }
+
+        try {
+            $wissen = $this->stepWissen($recipe);
+            $vorschlag = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.steps', [
+                ...$this->stepKontext($recipe),
+                'modus' => $bestehend > 0 ? 'voll_anreichern_ueberschreiben' : 'voll_anreichern_erstellen',
+            ], [
+                'knowledge' => $wissen['block'],
+                'knowledge_used' => $wissen['files_used'],
+                'knowledge_dropped_chars' => $wissen['dropped_chars'] ?? 0,   // W0-0 Messsonde
+                'target_table' => 'foodalchemist_recipe_steps',
+                'target_id' => $recipe->id,
+                'structural_retry' => fn (array $p) => is_array($p['werte']['steps'] ?? null) && $p['werte']['steps'] !== [],
+            ]);
+
+            $steps = [];
+            foreach ($vorschlag->werte['steps'] ?? [] as $s) {
+                $text = trim((string) ($s['text'] ?? ''));
+                if ($text === '') {
+                    continue;
+                }
+                $phase = trim((string) ($s['phase'] ?? ''));
+                $steps[] = ['phase' => $phase !== '' ? $phase : null, 'text' => $text];
+            }
+
+            if ($steps === []) {
+                return ['status' => 'leer', 'n_steps' => 0];
+            }
+
+            app(RecipeStepService::class)->ersetze($recipe, $steps, FoodAlchemistRecipeStep::EBENE_PRODUKTION);   // ersetzt, nie anhängen (17.11.)
+            $recipe->update([
+                'preparation_source' => 'ki',
+                'preparation_ai_confidence' => max(0.0, min(1.0, $vorschlag->confidence)),
+            ]);
+
+            return ['status' => $bestehend > 0 ? 'aktualisiert' : 'erstellt', 'n_steps' => count($steps)];
+        } catch (\Throwable $e) {
+            return ['status' => 'fehler', 'n_steps' => 0, 'fehler' => mb_strimwidth($e->getMessage(), 0, 300)];
+        }
+    }
+
+    /** @return array{block: string, files_used: list<string>} */
+    private function stepWissen(FoodAlchemistRecipe $recipe): array
+    {
+        $zutaten = $recipe->ingredients()
+            ->whereNull('deleted_at')
+            ->with('referencedRecipe:id,name,is_sales_recipe')
+            ->orderBy('position')
+            ->limit(30)
+            ->get();
+        $beschreibung = trim((string) $recipe->name . "\n" . $zutaten->map(
+            fn ($z) => $z->referencedRecipe?->name ?? $z->raw_text
+        )->filter()->implode(', '));
+        // Team aus dem Rezept selbst — funktioniert auch im CLI-Lauf ohne Auth, und die
+        // Sichtbarkeit des Wissens am eigenen Rezept ist die des besitzenden Teams.
+        $wTeam = $recipe->team_id !== null ? \Platform\Core\Models\Team::find((int) $recipe->team_id) : null;
+        $wissen = app(\Platform\FoodAlchemist\Services\Ai\KnowledgeContextService::class)->contextFor($wTeam, 'recipe.steps', $beschreibung, null, [], [
+            'rezept_typ' => $recipe->is_sales_recipe ? 'gericht' : 'basisrezept',
+        ] + \Platform\FoodAlchemist\Services\Knowledge\RezeptAchsen::fuer($recipe));
+
+        return [
+            'block' => (string) ($wissen['block'] ?? ''),
+            'files_used' => $wissen['files_used'] ?? [],
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function stepKontext(FoodAlchemistRecipe $recipe): array
+    {
+        $zutaten = $recipe->ingredients()
+            ->whereNull('deleted_at')
+            ->with(['referencedRecipe:id,name,is_sales_recipe,preparation', 'gp:id,name'])
+            ->orderBy('position')
+            ->limit(30)
+            ->get();
+        $gericht = (bool) $recipe->is_sales_recipe;
+
+        return [
+            'name' => $recipe->name,
+            'rezept_typ' => $gericht ? 'gericht' : 'basisrezept',
+            // Eine Quelle fuer beide Kontextbauer (Editor + One-Shot), damit die Leitplanke
+            // nicht auseinanderlaeuft. Trennung der Ebenen: Regelwerk Verkaufsgerichte §3.
+            'zubereitungsziel' => (string) config('foodalchemist.step_kontext.' . ($gericht ? 'gericht' : 'basisrezept') . '.ziel'),
+            'hinweis' => (string) config('foodalchemist.step_kontext.' . ($gericht ? 'gericht' : 'basisrezept') . '.hinweis'),
+            'zutaten' => $zutaten->map->anzeigeName()->filter()->values()->all(),
+            'komponenten' => $zutaten->filter(fn ($z) => $z->referencedRecipe !== null)->map(fn ($z) => [
+                'name' => $z->referencedRecipe?->name,
+                'typ' => $z->referencedRecipe?->is_sales_recipe ? 'gericht' : 'basisrezept',
+                'menge' => $z->quantity,
+                'raw_text' => $z->raw_text,
+                'bestehende_zubereitung' => mb_strimwidth((string) ($z->referencedRecipe?->preparation ?? ''), 0, 500),
+            ])->values()->all(),
+            'rohwaren' => $zutaten->filter(fn ($z) => $z->referencedRecipe === null)->map(fn ($z) => [
+                'name' => $z->gp?->name ?? $z->raw_text,
+                'menge' => $z->quantity,
+                'raw_text' => $z->raw_text,
+            ])->values()->all(),
+            'verkaufseinheit' => $gericht ? [
+                'anzahl' => $recipe->sales_unit_count,
+                'portion_g' => $recipe->sales_quantity_per_unit_g,
+            ] : null,
+            // Bestand der Ebene, die dieses Glied ersetzt (wie der Editor: StepEditor::stepKontext). Vorher ohne
+            // Ebenen-Filter: Anrichte-Schritte standen mit im Bestand der Produktion.
+            'schritte_bestand' => FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene(FoodAlchemistRecipeStep::EBENE_PRODUKTION)
+                ->orderBy('position')->orderBy('id')->get(['phase', 'text'])->map(fn ($s) => [
+                    'phase' => $s->phase,
+                    'text' => $s->text,
+                ])->all(),
+        ];
+    }
+
+    /** @return array{status: string, fehler?: string} */
+    private function sensorikGlied(FoodAlchemistRecipe $recipe): array
+    {
+        $recipe = $recipe->fresh() ?? $recipe;
+        if (trim((string) $recipe->preparation) === '') {
+            return ['status' => 'uebersprungen_ohne_zubereitung'];
+        }
+        if ((int) $recipe->ingredients()->whereNull('deleted_at')->count() === 0) {
+            return ['status' => 'uebersprungen_ohne_zutaten'];
+        }
+
+        try {
+            // Automatische Planung nutzt den vorhandenen source_hash-Cache. Ein erzwungener Refresh
+            // gehört nur zum bewussten Editor-Klick und verbrannte hier bei unverändertem Rezept Tokens.
+            return app(SensorikService::class)->bewerteRezept((int) $recipe->id, false);
+        } catch (\Throwable $e) {
+            return ['status' => 'fehler', 'fehler' => mb_strimwidth($e->getMessage(), 0, 300)];
+        }
+    }
+
+    /**
+     * L7b-2 · Kohärenz-Glied: kulinarisches Urteil über den fertigen Teller.
+     *
+     * Zwei Gates, beide inhaltlich:
+     *
+     * 1. **Nur VK.** `vk.kohaerenz` beurteilt einen Teller („hält das zusammen?").
+     *    Ein Basisrezept IST eine Komponente — es gibt keinen Teller zu beurteilen.
+     * 2. **Erst ab zwei Komponenten.** Kohärenz ist eine Aussage über Zusammenspiel;
+     *    bei einer einzigen Zeile gibt es keines. Der Call wäre bezahltes Rauschen,
+     *    und ein 100er-Score auf einem Ein-Zeiler wäre eine Falschaussage.
+     *
+     * Nie werfen: `judge()` wirft absichtlich, wenn der Provider keinen `score`
+     * liefert (FakeProvider-Grenze — dann wird bewusst nichts gecacht). Hier wird
+     * das zu einer Fehl-Zeile am Ergebnis. Ein fehlendes Urteil ist eine Lücke am
+     * fertigen Rezept, kein Grund, die Generierung als gescheitert zu melden.
+     *
+     * @return array{score: ?int, label: ?string, schwachstelle: ?string, fehler: ?string}|null
+     */
+    private function kohaerenzGlied(Team $team, FoodAlchemistRecipe $recipe): ?array
+    {
+        if (! $recipe->is_sales_recipe) {
+            return null;
+        }
+        if ($recipe->ingredients()->count() < 2) {
+            return null;
+        }
+
+        try {
+            $zeile = $this->coherence->judge($team, $recipe->id);
+
+            return [
+                'score' => $zeile->score,
+                'label' => $zeile->label,
+                'schwachstelle' => $zeile->schwachstelle,
+                'fehler' => null,
+            ];
+        } catch (\Throwable $e) {
+            return ['score' => null, 'label' => null, 'schwachstelle' => null, 'fehler' => mb_strimwidth($e->getMessage(), 0, 300)];
+        }
+    }
+
+    /**
+     * L8 · Wirtschaftlichkeits-Glied: das per KI erstellte Gericht endet BEPREIST.
+     *
+     * Bis hierher endete die Kaskade beim kulinarischen Urteil — wirtschaftlich war
+     * das Erzeugnis leer: keine Portionsgröße, oft keine Aufschlagsklasse, keine
+     * Standard-Darreichung, also auch kein VK und keine Marge. Das Glied schließt
+     * genau diese drei Vorbedingungen und lässt danach die BESTEHENDE Preis-Maschine
+     * rechnen. Vier Entscheidungen tragen es:
+     *
+     * 1. **Kein zweiter Schreibweg.** Die Aufschlagsklasse steht nur an der Standard-Darreichung (Spec 85 D-1):
+     *    `ensureStandard` legt sie an und belegt die Klasse vor (Speisen-Klasse → Hauptgruppe → Team);
+     *    eine leere Klasse füllt die Kaskade über `DarreichungService::aktualisieren`. Die Darreichung ist die
+     *    Preis-Wahrheit.
+     *    Der VK selbst wird NIE geschrieben: `price_mode` bleibt `auto`, der Preis
+     *    entsteht in `DarreichungService::recomputePreise` aus EK × Aufschlag und
+     *    ist damit jederzeit überschreibbar (DoD „kein Auto-Publish von Preisen";
+     *    der Kunde sieht im veröffentlichten Link weiter die eingefrorenen Preise, Spec 85 F5).
+     *
+     * 2. **Nur Lücken füllen** (wie der Anreicherungs-Pass, GL-07) — und die Portion
+     *    NICHT raten. Die Aufschlagsklasse hat einen belastbaren Default
+     *    (Klasse-vor-HG, gepflegte Stammdaten); die Portionsgröße hat keinen. Die
+     *    naheliegende Ableitung `yield_kg × 1000 / sales_unit_count` (so zeigt
+     *    `SalesRecipeService::cockpit` sie an) ist hier falsch: die Darreichung
+     *    rechnet `ek_portion = EK/g × Grammatur × Anzahl`, multipliziert also mit
+     *    derselben Anzahl wieder hoch — der VK wäre der Chargenpreis. Die zwei
+     *    Lesarten von `sales_unit_count` (Einheiten je Verkauf ↔ Portionen je
+     *    Charge) sind ein Bestands-Widerspruch, kein Beifahrer-Fix → V-041.
+     *    Fehlt die Portion, ist sie eine benannte Lücke; sie soll aus dem
+     *    Generator-Vorschlag kommen (Spec-DoD „Portionsgröße verbindlich").
+     *
+     *    Aus demselben Grund kommt der Wareneinsatz aus der **Darreichung**
+     *    (`ek_portion` gegen `sales_net` — dieselbe Menge auf beiden Seiten) und
+     *    nicht aus `KalkulationService::recipeHk`, das den Chargen-EK durch
+     *    `sales_unit_count` teilt und gegen den Portionspreis hält.
+     *
+     * 3. **Am Ende der Kaskade, nicht im Generator.** Die Speisen-Klasse entsteht
+     *    erst im Anreicherungs-Pass; erst danach kann der Klasse-vor-HG-Default
+     *    überhaupt greifen. Ein Glied im Generator hätte die Hälfte der Gerichte
+     *    ohne Aufschlagsklasse gelassen.
+     *
+     * 4. **Eine Ampel-Regel, nicht zwei.** Schwelle und Signal sind dieselben wie
+     *    im Scheduler-Detektor (`wareneinsatzUeberZielFuer`, R2.1-Muster): über Ziel
+     *    = gelb/Warnung, über 1,5 × Ziel = rot/kritisch. Die Foodbook-Ampel arbeitet
+     *    mit `food_cost_tolerance_pp` — das ist ein Buch-Feld, am Gericht gibt es
+     *    kein Gegenstück, und eine zweite Schwelle hieße: das Generator-Ergebnis
+     *    sagt „grün", das Signal-Cockpit sagt „Warnung".
+     *
+     * 5. **L8b-2: der Ziel-VK wird gehalten, nicht durchgesetzt.** Gibt der Mensch
+     *    „Gericht für 8,50 €" vor, geht das als Vorgabe in den Prompt (dort steuert
+     *    es Komponenten-Wahl und Grammatur) — der gerechnete VK bleibt danach
+     *    unangetastet. Die Alternative wäre, den Preis auf das Ziel zu setzen; dann
+     *    stimmte die Zahl und die Marge wäre unsichtbar falsch. Stattdessen wird die
+     *    Frage beantwortet, die wirklich zählt: *was würde der Zielpreis bedeuten?*
+     *    → derselbe Wareneinsatz-Bruch, nur mit dem Ziel-VK im Nenner, beurteilt von
+     *    DERSELBEN Ampel-Leiter (Entscheidung 4). Damit gibt es hier keine eigene
+     *    Toleranz-Schwelle: „Ziel erreichbar" heißt nichts anderes als „bei diesem
+     *    Preis liegt der Wareneinsatz noch im Ziel". Das ist die Brücke zur
+     *    R2.4-Solver-Denke — bewusst ohne Solver.
+     *
+     * Nie werfen — ein Rezept ohne Preis ist eine Lücke, kein gescheiterter Lauf.
+     *
+     * @return array{sales_net: ?float, ek_total_eur: ?float, ek_pro_portion: ?float,
+     *               wareneinsatz_pct: ?float, ziel_pct: float, ampel: string, portion_g: ?float,
+     *               aufschlagsklasse: ?string, vorlaeufig: bool, luecken: list<string>,
+     *               signal: bool, price_mode: string, calculated_sales_net: ?float,
+     *               price_source: ?string, price_warnings: list<string>, ziel_vk: ?float, ziel_delta_eur: ?float,
+     *               ziel_wareneinsatz_pct: ?float, ziel_ampel: string, fehler: ?string}|null
+     */
+    private function wirtschaftlichkeitsGlied(Team $team, FoodAlchemistRecipe $recipe, ?float $zielVk = null): ?array
+    {
+        if (! $recipe->is_sales_recipe) {
+            return null;                                          // Basisrezept hat keinen VK
+        }
+
+        try {
+            $recipe = $recipe->fresh() ?? $recipe;                // Klasse/HG kommen aus dem Pass davor
+
+            // ── Schreiben: Standard-Darreichung (idempotent; rechnet EK/VK beim Anlegen mit) ──
+            // Spec 85 D-1: die Aufschlagsklasse steht NUR an der Darreichung. Beim Anlegen belegt
+            // DarreichungService::vorbelegteKlasseId sie vor (Speisen-Klasse → Hauptgruppe → Team-Standard).
+            // Override-First (Weg-B-Befund 5, 12.10.): eine gepflegte Klasse bleibt; die Kaskade füllt nur eine leere.
+            $standard = $this->darreichungen->ensureStandard($team, $recipe->id, 'one_shot');
+            if ($standard !== null && $standard->markup_class_id === null
+                && ($ak = $this->markupKaskade($team, $recipe)['id']) !== null) {
+                $this->darreichungen->aktualisieren($team, (int) $standard->id, ['markup_class_id' => $ak]);
+            } elseif ($standard !== null && $standard->price_mode === 'auto' && $standard->sales_net === null) {
+                // Spec 85 D-1 PR-C: eine vorhandene Auto-Darreichung ohne gerechneten VK (z. B. angelegt, bevor die Zutaten standen)
+                // wird hier nachgerechnet — ensureStandard rechnet nur beim Neuanlegen, die Messung danach läse sonst „kein VK“.
+                $this->darreichungen->recomputePreise($standard->fresh(), $recipe);
+            }
+
+            // ── Messen: derselbe Code, den auch Schicht 4 read-only nutzt ──
+            return $this->vkVorbedingungen($team, $recipe->fresh() ?? $recipe, $zielVk);
+        } catch (\Throwable $e) {
+            return ['fehler' => mb_strimwidth($e->getMessage(), 0, 300)] + $this->vkLeer($team, $zielVk);
+        }
+    }
+
+    /**
+     * Spec 50 · Etappe 2 — der MESSENDE Teil, **read-only** und öffentlich.
+     *
+     * Warum getrennt: {@see self::wirtschaftlichkeitsGlied} schreibt, BEVOR es misst
+     * (Aufschlagsklasse festschreiben, Standard-Darreichung anlegen). Schicht 4 braucht
+     * dieselben Zahlen, darf aber nichts anfassen — ein Reife-Report, der beim Lesen Daten
+     * erzeugt, ist kein Report. Die Fallback-Kette ein zweites Mal zu schreiben verstösst
+     * gegen „Eine Formel pro fachlicher Wahrheit" (ARCHITEKTUR.md §5), deshalb: eine
+     * Wahrheit, zwei Aufrufer — der Schreiber ruft den Messer selbst auf.
+     *
+     * Unterschied zum Schreib-Pfad, bewusst: hier wird die **vorhandene** Standard-Darreichung
+     * gelesen, nicht eine angelegt. Fehlt sie, ist das eine Lücke (`darreichung`) — genau die
+     * Aussage, die eine Messung treffen soll.
+     *
+     * Nie werfen — ein Rezept ohne Preis ist eine Lücke, kein gescheiterter Lauf.
+     *
+     * @return array{sales_net: ?float, ek_total_eur: ?float, ek_pro_portion: ?float,
+     *               wareneinsatz_pct: ?float, ziel_pct: float, ampel: string, portion_g: ?float,
+     *               aufschlagsklasse: ?string, aufschlagsklasse_quelle: string, vorlaeufig: bool,
+     *               luecken: list<string>, signal: bool, price_mode: string,
+     *               calculated_sales_net: ?float, price_source: ?string, price_warnings: list<string>,
+     *               ziel_vk: ?float, ziel_delta_eur: ?float, ziel_wareneinsatz_pct: ?float,
+     *               ziel_ampel: string, fehler: ?string}|null
+     */
+    public function vkVorbedingungen(Team $team, FoodAlchemistRecipe $recipe, ?float $zielVk = null): ?array
+    {
+        if (! $recipe->is_sales_recipe) {
+            return null;                                          // Basisrezept hat keinen VK
+        }
+
+        $ziel = $this->settings->zielWareneinsatzPct($team);
+        $zielVk = $zielVk !== null && $zielVk > 0 ? round($zielVk, 2) : null;
+
+        try {
+            $kaskade = $this->markupKaskade($team, $recipe);
+
+            // Preis-Wahrheit ist die Darreichung — die VORHANDENE, nicht eine neue.
+            $standard = $recipe->relationLoaded('standardPresentation')
+                ? $recipe->standardPresentation
+                : $recipe->standardPresentation()->first();
+
+            $portion = $standard?->quantity_per_unit_g !== null
+                ? (float) $standard->quantity_per_unit_g
+                : ($recipe->sales_quantity_per_unit_g !== null ? (float) $recipe->sales_quantity_per_unit_g : null);
+
+            $catalog = $standard !== null ? $this->catalogPricing->catalogPrice($team, $standard) : null;
+            $vk = $standard?->sales_net !== null ? (float) $standard->sales_net : null;
+            $ekPortion = $standard?->ek_portion !== null ? (float) $standard->ek_portion : null;
+            $we = $this->marge->marge($vk, $ekPortion)['wareneinsatz_pct'] ?? null;
+
+            $luecken = [];
+            if ($portion === null) {
+                $luecken[] = 'portion';                           // ohne sie kein Auto-VK
+            }
+            // Eine fehlende Preisklasse blockiert den Katalogpreis nicht: Der zentrale
+            // Dienst verwendet sichtbar den neutralen Klassenfaktor 100 %.
+            if ($standard === null) {
+                $luecken[] = 'darreichung';
+            }
+
+            $gesamt = (int) ($recipe->ek_n_ingredients_total ?? 0);
+            $bepreist = (int) ($recipe->ek_n_ingredients_priced ?? 0);
+
+            // Signal mit DEMSELBEN Wert, den die Ampel zeigt (Übergabe statt Zweitrechnung).
+            $signal = $we !== null && $we > $ziel
+                && $this->detektor->wareneinsatzUeberZielFuer($team, $recipe, $ziel, $we);
+
+            $zielWe = $zielVk !== null ? ($this->marge->marge($zielVk, $ekPortion)['wareneinsatz_pct'] ?? null) : null;
+
+            return [
+                'sales_net' => $vk,
+                'ek_total_eur' => $recipe->ek_total_eur !== null ? (float) $recipe->ek_total_eur : null,
+                'ek_pro_portion' => $ekPortion !== null ? round($ekPortion, 2) : null,
+                'wareneinsatz_pct' => $we,
+                'ziel_pct' => $ziel,
+                'ampel' => $this->weAmpel($we, $ziel),
+                'portion_g' => $portion,
+                'aufschlagsklasse' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->klasseFuer($recipe)?->code ?? $kaskade['code'],
+                // Neu gegenüber dem Schreib-Pfad: WOHER die Klasse kommt. Der Schreiber
+                // verwischt das, weil er sie festschreibt; für einen Reife-Report ist der
+                // Unterschied zwischen „am Gericht gesetzt" und „nur aus dem Default
+                // ableitbar" genau die Information, die zählt.
+                'aufschlagsklasse_quelle' => $kaskade['quelle'],
+                // #511-F2: Park-GPs ohne Preis machen den EK unvollständig — der VK
+                // daraus ist vorläufig und muss es auch heißen.
+                'vorlaeufig' => $gesamt > 0 && $bepreist < $gesamt,
+                'luecken' => $luecken,
+                'signal' => $signal,
+                'price_mode' => $catalog['price_mode'] ?? 'auto',
+                'calculated_sales_net' => $catalog['calculated_sales_net'] ?? null,
+                'price_source' => $catalog['base_source'] ?? null,
+                'price_warnings' => $catalog['warnings'] ?? [],
+                'ziel_vk' => $zielVk,
+                'ziel_delta_eur' => $zielVk !== null && $vk !== null ? round($vk - $zielVk, 2) : null,
+                'ziel_wareneinsatz_pct' => $zielWe,
+                'ziel_ampel' => $this->weAmpel($zielWe, $ziel),
+                'fehler' => null,
+            ];
+        } catch (\Throwable $e) {
+            return ['fehler' => mb_strimwidth($e->getMessage(), 0, 300)] + $this->vkLeer($team, $zielVk);
+        }
+    }
+
+    /**
+     * Aufschlagsklasse: gesetzt > Klasse-Default > HG-Default > keine.
+     * EINE Auflösung für beide Pfade — der Schreiber schreibt sie fest, der Messer weist
+     * sie mit Herkunft aus.
+     *
+     * @return array{id: ?int, code: ?string, quelle: string}
+     */
+    private function markupKaskade(Team $team, FoodAlchemistRecipe $recipe): array
+    {
+        // Spec 85 D-1 PR-B: „gesetzt“ = Klasse der Standard-Darreichung (Rückfall Rezeptspalte bis PR-C).
+        if (($gesetzt = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->klasseFuer($recipe)) !== null) {
+            return ['id' => (int) $gesetzt->id, 'code' => $gesetzt->code, 'quelle' => 'gesetzt'];
+        }
+        // Code über die ID auflösen statt über eine Relation: `FoodAlchemistDishMainGroup`
+        // hat kein `defaultMarkupClass()`, und ein `?->` darauf liefert kommentarlos null —
+        // die Klasse sähe leer aus, obwohl sie ableitbar ist.
+        // Spec 84 (18.10.): ein Default zählt nur, wenn die Klasse für das Team sichtbar ist — sonst gab die Speisen-Klasse
+        // (Master-Vokabular) dem Mandanten die Master-Aufschlagsklasse (BHG-Marge im Mandanten-VK). Unsichtbar = nicht gesetzt.
+        $sichtbar = fn (?int $id) => $id === null ? null
+            : \Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass::visibleToTeam($team)->bereich('speisen')->whereKey($id)->first(['id', 'code']);
+
+        if (($ak = $sichtbar($recipe->dishClass?->default_markup_class_id)) !== null) {
+            return ['id' => (int) $ak->id, 'code' => $ak->code, 'quelle' => 'speisen_klasse'];
+        }
+        if (($ak = $sichtbar($recipe->dishMainGroup?->default_markup_class_id)) !== null) {
+            return ['id' => (int) $ak->id, 'code' => $ak->code, 'quelle' => 'hauptgruppe'];
+        }
+
+        return ['id' => null, 'code' => null, 'quelle' => 'keine'];
+    }
+
+    /** Leer-Gerüst für den Fehlerfall — dieselbe Form, damit Aufrufer nie auf Keys prüfen müssen. */
+    private function vkLeer(Team $team, ?float $zielVk): array
+    {
+        return [
+            'sales_net' => null, 'ek_total_eur' => null, 'ek_pro_portion' => null,
+            'wareneinsatz_pct' => null, 'ziel_pct' => $this->settings->zielWareneinsatzPct($team),
+            'ampel' => 'unbekannt', 'portion_g' => null, 'aufschlagsklasse' => null,
+            'aufschlagsklasse_quelle' => 'keine', 'vorlaeufig' => false,
+            'luecken' => [], 'signal' => false, 'ziel_vk' => $zielVk,
+            'price_mode' => 'auto', 'calculated_sales_net' => null,
+            'price_source' => null, 'price_warnings' => [],
+            'ziel_delta_eur' => null, 'ziel_wareneinsatz_pct' => null, 'ziel_ampel' => 'unbekannt',
+            'fehler' => null,
+        ];
+    }
+
+    /**
+     * Die Leiter liegt jetzt im MargeService — EINE Wahrheit für OneShot, Signale und den
+     * VK-Editor-KPI-Streifen (Spec 28 §6.1). Hier nur noch delegiert, damit die Aufrufe
+     * oben unverändert lesbar bleiben.
+     */
+    private function weAmpel(?float $we, float $ziel): string
+    {
+        return app(\Platform\FoodAlchemist\Services\Preis\MargeService::class)->weAmpel($we, $ziel);
+    }
+}

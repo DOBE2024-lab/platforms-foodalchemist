@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRule;
 use Platform\FoodAlchemist\Services\Conformance\GpConformanceAdapter;
 use Platform\FoodAlchemist\Services\Conformance\RecipeConformanceAdapter;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Services\Regeln\RegelBuch;
 use Platform\FoodAlchemist\Services\Regeln\RegelService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

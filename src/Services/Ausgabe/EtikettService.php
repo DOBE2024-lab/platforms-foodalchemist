@@ -259,7 +259,7 @@ class EtikettService
             $d['lagerung'] = $r->standardLagerart();
         } elseif ($quelle === 'gp') {
             $gp = FoodAlchemistGp::visibleToTeam($team)->with('leadLa')->findOrFail($id);
-            $agg = app(\Platform\FoodAlchemist\Services\GpAggregateService::class);
+            $agg = app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class);
             foreach ($agg->allergene($gp) as $slug => $info) {
                 $wert = $info['value'] instanceof AllergenValue ? $info['value']->value : (string) $info['value'];
                 $eintrag = ['code' => $kat['allergene'][$slug]['code'] ?? '', 'label' => FoodAlchemistItemAllergen::ALLERGENE[$slug] ?? $slug];
@@ -336,8 +336,8 @@ class EtikettService
      */
     public function zutatenliste(Team $team, FoodAlchemistRecipe $r, int $ebene = 0): array
     {
-        $rc = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
-        $agg = app(\Platform\FoodAlchemist\Services\GpAggregateService::class);
+        $rc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
+        $agg = app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class);
         $zeilen = $r->ingredients->filter(fn ($z) => ! in_array($z->calc_mode, ['keine', 'nur_naehrwerte'], true) && ($z->gp_id !== null || $z->referenced_recipe_id !== null));
         $liste = [];
         foreach ($zeilen as $z) {
@@ -592,7 +592,7 @@ class EtikettService
      */
     private function kurzname(string $name): string
     {
-        $name = app(\Platform\FoodAlchemist\Services\GpNamingService::class)->nameOhneMarke($name);
+        $name = app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class)->nameOhneMarke($name);
         $teil = trim(explode(':', $name, 2)[0]);
 
         return $teil !== '' ? $teil : trim($name);

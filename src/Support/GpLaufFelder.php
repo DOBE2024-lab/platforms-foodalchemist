@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Support;
 
 use Illuminate\Support\Facades\DB;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 
 /**
  * Feldsatz der GP-Lauf-Pläne (Kurator 14.11.2026): welche GP-Spalten ein Plan setzen darf (`foodalchemist:gp-felder`, Spalte `neu_felder` in

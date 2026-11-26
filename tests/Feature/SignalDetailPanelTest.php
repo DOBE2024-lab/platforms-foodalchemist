@@ -6,8 +6,8 @@ use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Livewire\ReviewQueue;
 use Platform\FoodAlchemist\Livewire\Signale\DetailPanel;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\SignalObjectService;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalObjectService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -164,7 +164,7 @@ it('setzt den Regler für den TYP — nicht für das eine Signal, aus dem er ges
 
     // Am zweiten Signal desselben Typs steht dieselbe Bewertung.
     $andere = Livewire::test(DetailPanel::class)->dispatch('signal-selected', id: $b->id)->viewData('policy');
-    expect($andere['state'])->toBe(\Platform\FoodAlchemist\Services\SignalPolicyService::STATE_AKZEPTIERT)
+    expect($andere['state'])->toBe(\Platform\FoodAlchemist\Services\Pruefung\SignalPolicyService::STATE_AKZEPTIERT)
         ->and($andere['aggregiert'])->toBeTrue()          // 2 offen > Schwelle 1
         ->and($andere['note'])->toBe('Sourcing läuft')
         ->and($andere['gesetzt'])->toBeTrue()
@@ -173,7 +173,7 @@ it('setzt den Regler für den TYP — nicht für das eine Signal, aus dem er ges
 
 it('lädt beim Aufklappen die wirksamen Werte und entfernt nur den eigenen Regler', function () {
     // Eltern-Team entscheidet, Kind-Team sieht die Entscheidung (Katalog-Vererbung).
-    app(\Platform\FoodAlchemist\Services\SignalPolicyService::class)
+    app(\Platform\FoodAlchemist\Services\Pruefung\SignalPolicyService::class)
         ->setzen($this->rootTeam, SignalTyp::VeraltetePreise, ['threshold' => 7, 'note' => 'Eltern-Entscheid']);
 
     $this->actingAs($this->makeUser($this->childA, 'Kind Policy User'));
@@ -221,7 +221,7 @@ it('weist eine unbrauchbare Schwelle und ein unlesbares Datum ab, ohne zu speich
 it('zeichnet die Sparkline erst ab zwei Messpunkten und normiert die Reihe', function () {
     $this->actingAs($this->makeUser($this->rootTeam, 'Trend User'));
     $sig = $this->signals->erzeuge($this->rootTeam, SignalTyp::MargeUnterZiel, SignalSeverity::Warnung, 'Marge', ['dedup_key' => 'mz-1']);
-    $trend = app(\Platform\FoodAlchemist\Services\SignalTrendService::class);
+    $trend = app(\Platform\FoodAlchemist\Services\Pruefung\SignalTrendService::class);
 
     // Ein Punkt: bewusst KEINE Linie — eine Waagerechte aus einem Punkt behauptet
     // eine Stabilität, die nie gemessen wurde.

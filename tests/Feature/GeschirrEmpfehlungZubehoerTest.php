@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Livewire\Verkauf\VkModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
 use Platform\FoodAlchemist\Support\ZubehoerAuswahl;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

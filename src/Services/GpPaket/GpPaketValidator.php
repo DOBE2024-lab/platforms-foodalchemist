@@ -5,12 +5,12 @@ namespace Platform\FoodAlchemist\Services\GpPaket;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Platform\FoodAlchemist\Exceptions\GpPaketAbgelehntException;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Support\Text;
 
 /**
  * GP-Paket-Import · Paket lesen, Whitelist/Manifest/SHA prüfen, GP-Einzelprüfungen, Kontext/Vokabular aus io, Wert-/Hash-Hilfen
- * (aus {@see \Platform\FoodAlchemist\Services\GpPaketImportService} herausgelöst, Spec 85 §4 — Verhalten unverändert).
+ * (aus {@see \Platform\FoodAlchemist\Services\GpStamm\GpPaketImportService} herausgelöst, Spec 85 §4 — Verhalten unverändert).
  */
 class GpPaketValidator
 {
@@ -486,7 +486,7 @@ class GpPaketValidator
                 continue;
             }
             $basis = substr((string) $key, 0, $pos);
-            if (\Platform\FoodAlchemist\Services\GpNamingService::istDegeneriert($basis) && ! isset($bestand[$basis])) {
+            if (\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::istDegeneriert($basis) && ! isset($bestand[$basis])) {
                 $aliase[$basis][] = $r;
             }
         }

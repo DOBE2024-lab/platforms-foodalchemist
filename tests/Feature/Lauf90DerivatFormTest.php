@@ -27,7 +27,7 @@ beforeEach(function () {
         $mock = Mockery::mock(\Platform\FoodAlchemist\Services\Einkauf\LaCandidateFinder::class, [
             app(\Platform\FoodAlchemist\Services\Matching\TokenEngine::class),
             app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class),
-            app(\Platform\FoodAlchemist\Services\TerminologyService::class),
+            app(\Platform\FoodAlchemist\Services\GpStamm\TerminologyService::class),
             app(\Platform\FoodAlchemist\Services\Einkauf\StammLieferantService::class),
             app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class),
             app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaStrategieResolver::class),
@@ -100,8 +100,8 @@ it('Toast (Rohzutat im Crunch) trifft das Toastbrot-GP verdrahtbar', function ()
     $this->makeGp($this->rootTeam, 'Toastbrote: trocken, geschnitten');
     $this->makeGp($this->rootTeam, 'Toastscheiben: frisch');
 
-    $m = app(\Platform\FoodAlchemist\Services\IngredientMatchService::class)->matchIngredient($this->rootTeam, 'Toast');
+    $m = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->matchIngredient($this->rootTeam, 'Toast');
 
     expect(str_starts_with((string) $m['gp_name'], 'Toastbrote'))->toBeTrue()
-        ->and(\Platform\FoodAlchemist\Services\IngredientMatchService::istAutomatischVerdrahtbar($m))->toBeTrue();
+        ->and(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($m))->toBeTrue();
 });

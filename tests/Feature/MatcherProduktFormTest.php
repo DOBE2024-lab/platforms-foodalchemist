@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\IngredientMatchService;
+use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Services\Matching\TokenEngine;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

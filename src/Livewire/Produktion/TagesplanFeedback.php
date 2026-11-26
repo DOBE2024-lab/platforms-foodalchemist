@@ -8,7 +8,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Platform\FoodAlchemist\Enums\FeedbackQuelle;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionOrderLine;
-use Platform\FoodAlchemist\Services\FeedbackService;
+use Platform\FoodAlchemist\Services\Rezept\FeedbackService;
 use Platform\FoodAlchemist\Services\Stt\SttServiceContract;
 
 /**

@@ -4,8 +4,8 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\RecipeFindingService;
-use Platform\FoodAlchemist\Services\RecipeFindingsBatchService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingsBatchService;
 
 /**
  * Spec 21 · S5a (Tranche B) — der Batch-Lauf des L6-Copilot über den Bestand.

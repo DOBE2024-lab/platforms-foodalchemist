@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabContainer;
 use Platform\FoodAlchemist\Services\Produktion\RegenerationCascadeService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Support\TeamScope;
 
 /**
@@ -202,7 +202,7 @@ class VkModal extends Component
         $zjm = $zeit->zeitJeMenge($rezept, 'kg');
         $raus = [];
         $n = $this->vorschauPortionen();
-        $dzs = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class);
+        $dzs = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::class);
         foreach ($rezept->presentations()->with('servingForm')->get() as $d) {
             $a = $zeit->anrichten($team, $rezept, [['dar' => $d, 'portionen' => $n]], null, $zjm);
             $raus[(int) $d->id] = ($a['formen'][0] ?? []) + ($this->darAktiv === null || $this->darAktiv === (int) $d->id ? app(\Platform\FoodAlchemist\Services\Planung\PlanungsblattService::class)->darreichungsHerstellung($team, $rezept, $d, $n) : [])
@@ -225,7 +225,7 @@ class VkModal extends Component
         }
         $kopfVorher = $this->kopfGrammatur();
         try {
-            $aktion(app(\Platform\FoodAlchemist\Services\DarreichungService::class), $team);
+            $aktion(app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class), $team);
             $this->fehler = null;
         } catch (\Throwable $e) {
             $this->fehler = $e->getMessage();
@@ -591,7 +591,7 @@ class VkModal extends Component
         }
 
         $ebene = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep::EBENE_ANRICHTEN;
-        $anzahl = app(\Platform\FoodAlchemist\Services\RecipeStepService::class)->ausMarkdown(
+        $anzahl = app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class)->ausMarkdown(
             $rezept,
             trim($wert),
             ueberschreiben: true,
@@ -620,7 +620,7 @@ class VkModal extends Component
     {
         $gesetzt = [];
         if ($this->recipeId !== null && (empty($this->form['dish_class_id']) || empty($this->form['dish_main_group_id']))) {
-            $k = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->classify($team, $this->recipeId);
+            $k = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->classify($team, $this->recipeId);
             if (empty($this->form['dish_class_id']) && $k['klasse_id'] !== null) {
                 $this->form['dish_class_id'] = (string) $k['klasse_id'];
                 $gesetzt[] = 'Klasse '.$k['klasse_name'];
@@ -632,7 +632,7 @@ class VkModal extends Component
         }
         if (empty($this->form['taste_direction'])) {
             $g = $ki->propose('recipe.geschmack', $kontext);
-            if (in_array($g->werte['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\RecipeService::TASTE_DIRECTIONS, true)) {
+            if (in_array($g->werte['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\Rezept\RecipeService::TASTE_DIRECTIONS, true)) {
                 $this->form['taste_direction'] = $g->werte['taste_direction'];
                 $gesetzt[] = 'Geschmack '.$g->werte['taste_direction'];
             }
@@ -728,7 +728,7 @@ class VkModal extends Component
             }
         }
         $g = $ki->propose('recipe.geschmack', $kontext + ['taste_direction' => $this->form['taste_direction'] ?? null]);
-        if (in_array($g->werte['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\RecipeService::TASTE_DIRECTIONS, true)) {
+        if (in_array($g->werte['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\Rezept\RecipeService::TASTE_DIRECTIONS, true)) {
             $this->form['taste_direction'] = $g->werte['taste_direction'];
         }
     }
@@ -754,7 +754,7 @@ class VkModal extends Component
         $id = $v->werte['servier_vehikel_id'] ?? null;
         if ($id !== null && TeamScope::applyVisible(DB::table('foodalchemist_vocab_serving_vehicles')->whereNull('deleted_at')->where('id', (int) $id), 'team_id', $team)->exists()) {
             // Eine Stelle (18.11.2026): der Typ geht an die Standard-Darreichung; steht dort ein konkretes Gefäß, bestimmt das den Typ
-            if (! app(\Platform\FoodAlchemist\Services\DarreichungService::class)->typVorschlagUebernehmen($team, $this->recipeId, (int) $id, (float) ($v->confidence ?? 0.5))) {
+            if (! app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->typVorschlagUebernehmen($team, $this->recipeId, (int) $id, (float) ($v->confidence ?? 0.5))) {
                 $this->fehler = 'An der Standard-Darreichung steht ein Gefäß — der Typ kommt aus dem Gefäß.';
             }
             $this->ladeDarreichungen();
@@ -836,7 +836,7 @@ class VkModal extends Component
     /** Grounded VK-Freitext-Revision (Facetten + Regelwerk-Erdung via contextFor) im geteilten RecipeReviseService. */
     protected function ueberarbeitungsVorschlag(\Platform\Core\Models\Team $team, FoodAlchemistRecipe $r): array
     {
-        return app(\Platform\FoodAlchemist\Services\RecipeReviseService::class)->vkFreitextVorschlag($team, $r, $this->anweisung);
+        return app(\Platform\FoodAlchemist\Services\Rezept\RecipeReviseService::class)->vkFreitextVorschlag($team, $r, $this->anweisung);
     }
 
     protected function ueberarbeitungVerwertbar(array $werte): bool
@@ -893,7 +893,7 @@ class VkModal extends Component
             return;
         }
         $this->fehler = null;
-        $this->rollenVorschlag = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+        $this->rollenVorschlag = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
             ->verteileRollen($team, $this->recipeId);
     }
 
@@ -903,7 +903,7 @@ class VkModal extends Component
         if ($team === null || $this->recipeId === null || $this->rollenVorschlag === null || $this->rollenVorschlag['rollen'] === []) {
             return;
         }
-        app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+        app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
             ->acceptRollen($team, $this->recipeId, $this->rollenVorschlag['rollen']);
         $this->rollenVorschlag = null;
         $this->zutatenVersion++;                                     // Editor-rows neu vom Server
@@ -1185,7 +1185,7 @@ class VkModal extends Component
             // „je Einheit“ = Grammatur der Standard-Darreichung (Preis-Wahrheit, gleiche Rückfall-Kette wie ihr EK: Darreichung → Gericht → Ertrag ÷ Anzahl),
             // sonst die Vorgabe am Gericht. Vorher nur das Gericht: ohne Verkaufseinheit am Gericht blieb die Spalte leer (18.11.2026).
             $standardDar = $rezept->standardPresentation()->first();
-            $gProStueck = ($standardDar !== null ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->grammJeEinheit($standardDar, $rezept) : null)
+            $gProStueck = ($standardDar !== null ? app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->grammJeEinheit($standardDar, $rezept) : null)
                 ?? ($cockpitTmp['verkauft_als']['g_pro_einheit'] ?? null);
             $totalG = 0.0;
             $summen = ['bio' => 0.0, 'regional' => 0.0];
@@ -1261,7 +1261,7 @@ class VkModal extends Component
             // Gefäß je Darreichung: wirksamer Typ, Übersteuerung, Warnung (Füllmenge > Volumen), Miete — alles berechnet (DarreichungService::gefaessInfo)
             'darGefaess' => $this->recipeId !== null && $team !== null
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $this->recipeId)->get()
-                    ->mapWithKeys(fn ($d) => [(int) $d->id => app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessInfo($d, $team)])->all()
+                    ->mapWithKeys(fn ($d) => [(int) $d->id => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->gefaessInfo($d, $team)])->all()
                 : [],
             // MwSt „aus Preisklasse“: was die leere Wahl je Darreichung ergibt (Anzeige im Select)
             'darMwstVorgabe' => $this->recipeId !== null && $team !== null
@@ -1300,7 +1300,7 @@ class VkModal extends Component
             // Zubehör & Verpackung je Form (interne Sicht: Zeile mit Menge und EK) + Trefferliste für die Suche (nur Non-Food-GPs)
             'darZubehoer' => $this->recipeId !== null && $team !== null
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::where('recipe_id', $this->recipeId)->pluck('id')
-                    ->mapWithKeys(fn ($id) => [(int) $id => app(\Platform\FoodAlchemist\Services\DarreichungService::class)
+                    ->mapWithKeys(fn ($id) => [(int) $id => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)
                         ->zubehoerKosten(\Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::find($id), $team)])->all()
                 : [],
             'darZubehoerTreffer' => $team !== null   // Liste beim Klick ins Feld, sonst Treffer zum Suchtext (ZubehoerAuswahl, 19.11.2026)
@@ -1308,10 +1308,10 @@ class VkModal extends Component
                     ->map(fn ($t) => \Platform\FoodAlchemist\Support\ZubehoerAuswahl::treffer(\Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team), $t))->all()
                 : [],
             'darZeilen' => $rezept !== null
-                ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->standardProEinheit($rezept, $team, $this->darAktiv)
+                ? app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->standardProEinheit($rezept, $team, $this->darAktiv)
                 : [],
-            'sensorik' => $rezept !== null ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerRezept($rezept->id, true) : null,
-            'komposition' => $rezept !== null ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->gerichtKomposition($rezept->id) : null,
+            'sensorik' => $rezept !== null ? app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class)->fuerRezept($rezept->id, true) : null,
+            'komposition' => $rezept !== null ? app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class)->gerichtKomposition($rezept->id) : null,
             'pairing' => $rezept !== null && $this->pairingGeladen ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->panelRecipe($rezept) : null,
         ]);
     }

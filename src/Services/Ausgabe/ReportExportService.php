@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Support\Hochrechnung;
 
 /**
@@ -797,7 +797,7 @@ class ReportExportService
     public function favoritenDaten(Team $team, array $optionen, int $limit = 300): array
     {
         $this->preisTeam = $team;   // Spec 84: Preise nur in der Sicht dieses Teams
-        $items = app(\Platform\FoodAlchemist\Services\FavoriteGpService::class)->suggest($team, $limit, null, false);
+        $items = app(\Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService::class)->suggest($team, $limit, null, false);
 
         return [
             'typ' => 'favoriten',
@@ -960,7 +960,7 @@ class ReportExportService
         $sensorik = null;
         if ($optionen['sensorik'] ?? false) {
             try {
-                $sensorik = app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerRezept((int) $recipe->id);
+                $sensorik = app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class)->fuerRezept((int) $recipe->id);
             } catch (\Throwable) {
                 $sensorik = ['leer' => true, 'fehler' => 'Sensorik konnte nicht gelesen werden.'];
             }
@@ -1120,7 +1120,7 @@ class ReportExportService
                 ? ($this->teamCache[$recipe->team_id] ??= Team::find($recipe->team_id))
                 : null;
 
-            $zeilen = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->zeilenKostenUndMassen($recipe, $team);
+            $zeilen = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->zeilenKostenUndMassen($recipe, $team);
 
             return array_map(fn ($z) => $z['kosten'], $zeilen);
         } catch (\Throwable) {
@@ -1161,7 +1161,7 @@ class ReportExportService
             'adresse' => $kindAdresse,
             // Verkaufstext ohne Marken-Klammer (Kurator 26.10.): Kundensicht (intern=false) zeigt „Sahnesauce: konserviert“ statt „… / (Altoni)“;
             // Bio/Vegan/Glutenfrei/Laktosefrei bleiben. Intern (Kalkulation, Produktion) bleibt der volle GP-Name.
-            'name' => $sub?->name ?? ($gp !== null ? (($optionen['intern'] ?? false) ? $gp->name : app(\Platform\FoodAlchemist\Services\GpNamingService::class)->nameOhneMarke((string) $gp->name, $gp->zusatz)) : null)
+            'name' => $sub?->name ?? ($gp !== null ? (($optionen['intern'] ?? false) ? $gp->name : app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class)->nameOhneMarke((string) $gp->name, $gp->zusatz)) : null)
                 ?? $z->display_name ?? $z->raw_text,
             'raw_text' => $z->raw_text,
             'menge' => $this->mengeText($this->skaliere($z->quantity, $optionen), $z->unit),
@@ -1304,7 +1304,7 @@ class ReportExportService
     {
         // Spec 85: dieselbe Auflösung wie die GP-Anzeige (Override > Derivat-Mutter > LA-MAX inkl. Annahme bei Positiv-Lieferanten) —
         // vorher nur die Override-Spalten, also „ohne Angabe“ für jeden GP, dessen Werte aus den Lieferantenartikeln kommen.
-        $agg = app(\Platform\FoodAlchemist\Services\GpAggregateService::class);
+        $agg = app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class);
         $aufgeloest = $agg->allergene($gp);
         $allergene = [];
         foreach (\Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::ALLERGENE as $feld => $label) {

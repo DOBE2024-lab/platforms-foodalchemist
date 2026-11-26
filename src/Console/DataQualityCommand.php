@@ -4,8 +4,8 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\DataQualityService;
-use Platform\FoodAlchemist\Services\SignalTrendService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalTrendService;
 
 /**
  * Datenqualitäts-Ampel für die Kaskade LA → GP → Basisrezept → VK-Gericht.

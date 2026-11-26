@@ -305,7 +305,7 @@ class Editor extends Component
         if ($recipe === null) {
             return [];
         }
-        $svc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class);
 
         return \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::with('servingForm')
             ->where('recipe_id', $recipe->id)->orderByDesc('is_standard')->orderBy('id')->get()

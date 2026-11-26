@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SignalPolicyService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalPolicyService;
 
 /**
  * Spec 21 · E2 — Zustands-Sicht auf die Signale: je Typ eine Zeile mit Bestand,

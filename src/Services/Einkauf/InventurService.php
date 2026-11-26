@@ -33,7 +33,7 @@ class InventurService
     public const VORBELEGUNG_TAGE = 90;
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute,
         private InventoryService $inventory,
         private LagerEinrichtungService $einrichtung,
     ) {}
@@ -421,7 +421,7 @@ class InventurService
 
         return ($suche === '' || str_contains(mb_strtolower($name), mb_strtolower($suche)))
             && ($platz === '' || ($platz === 'ohne' ? $binId === null : (int) $platz === (int) $binId))
-            && (empty($f['zustand']) || \Platform\FoodAlchemist\Services\GpNamingService::zustandPasst($zustand, $name, (string) $f['zustand']))   // TK auch als Zusatz (v3.6.0)
+            && (empty($f['zustand']) || \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::zustandPasst($zustand, $name, (string) $f['zustand']))   // TK auch als Zusatz (v3.6.0)
             && (empty($f['warengruppe']) || (string) $wg === (string) $f['warengruppe'])
             && (empty($f['lieferant']) || (int) $lieferantId === (int) $f['lieferant']);
     }

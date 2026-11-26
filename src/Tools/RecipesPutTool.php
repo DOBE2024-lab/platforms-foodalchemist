@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Tools\Concerns\RezeptFachfelder;
 
 /**
@@ -128,7 +128,7 @@ class RecipesPutTool extends FoodAlchemistTool implements ToolContract, ToolMeta
                 $recipe = app(RecipeService::class)->update($team, $recipe->id, $in);
             }
             if (array_key_exists('rollen', $arguments)) {
-                app(\Platform\FoodAlchemist\Services\RecipeRollenService::class)->setze((int) $recipe->id, (array) $arguments['rollen'], 'manuell');
+                app(\Platform\FoodAlchemist\Services\Rezept\RecipeRollenService::class)->setze((int) $recipe->id, (array) $arguments['rollen'], 'manuell');
             }
         } catch (\RuntimeException $e) {
             return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
@@ -138,7 +138,7 @@ class RecipesPutTool extends FoodAlchemistTool implements ToolContract, ToolMeta
             'recipe' => [
                 'id' => $recipe->id, 'name' => $recipe->name, 'status' => $this->statusWert($recipe),
                 'version' => $recipe->version, 'yield_kg' => $recipe->yield_kg,
-                'rollen' => app(\Platform\FoodAlchemist\Services\RecipeRollenService::class)->rollen((int) $recipe->id),
+                'rollen' => app(\Platform\FoodAlchemist\Services\Rezept\RecipeRollenService::class)->rollen((int) $recipe->id),
             ],
         ], $team, (int) $recipe->id, (bool) $recipe->is_sales_recipe));
     }

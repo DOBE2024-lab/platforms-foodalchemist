@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\Middleware\ImTeamKontext;
-use Platform\FoodAlchemist\Services\RecipeFindingsBatchService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingsBatchService;
 use Platform\FoodAlchemist\Support\FaTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

@@ -7,7 +7,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
 
 /**
  * Spec 80 B1: ein Basisrezept-Go aus der Planung plant zuerst die Komponenten (GenerateRecipePlanJob).

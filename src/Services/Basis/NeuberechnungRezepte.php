@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Services\Basis;
 
 /**
  * Löst die Neuberechnung von Rezepten aus (EK, Allergene, Nährwerte, Yield …), synchron und mit denselben Rückgabewerten wie
- * {@see \Platform\FoodAlchemist\Services\RecipeRecomputeService}, das diese Schnittstelle implementiert; gebunden im
+ * {@see \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService}, das diese Schnittstelle implementiert; gebunden im
  * FoodAlchemistServiceProvider.
  *
  * Plan 98 · 3.3 S7 P4 (Muster K3): Stamm- und Pflege-Dienste unterhalb der Rezept-Schicht (GP, Leitartikel, Anreicherung, Fassung,

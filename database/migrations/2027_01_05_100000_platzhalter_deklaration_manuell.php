@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
  * schon eine Hand-Ebene (`allergen_*` als Override, `nutri_*` mit `nutri_source = manual`). Für Zusatzstoffe fehlte sie, und bei den
  * Nährwerten fehlten Zucker und gesättigte Fettsäuren:
  * - `deklaration_manuell` (JSON): {stoff: 1|3} — Roh-Domäne der Artikel-Deklaration (1 = nein, 3 = ja). Nur bei Platzhaltern gesetzt,
- *   {@see \Platform\FoodAlchemist\Services\PlatzhalterDeklarationService}.
+ *   {@see \Platform\FoodAlchemist\Services\GpStamm\PlatzhalterDeklarationService}.
  * - `nutri_sugar_g_per_100g`, `nutri_saturated_fat_g_per_100g`: ergänzen den bestehenden nutri_*-Block wie am Rezept (2026_07_02_000002).
  * Bestand: NULL. Idempotent (hasColumn je Spalte).
  */

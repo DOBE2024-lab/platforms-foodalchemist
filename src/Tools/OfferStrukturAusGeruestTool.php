@@ -69,7 +69,7 @@ class OfferStrukturAusGeruestTool extends FoodAlchemistTool implements ToolContr
             return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
         }
 
-        $reife = app(\Platform\FoodAlchemist\Services\ReifeService::class)->kurz($team, 'angebot', $offerId);
+        $reife = app(\Platform\FoodAlchemist\Services\Reife\ReifeService::class)->kurz($team, 'angebot', $offerId);
 
         return ToolResult::success(
             ['offer_id' => $offerId] + $ergebnis + ($reife !== null ? ['reife' => $reife] : [])

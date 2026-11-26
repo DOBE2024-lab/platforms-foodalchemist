@@ -1,0 +1,429 @@
+<?php
+
+namespace Platform\FoodAlchemist\Services\Rezept;
+
+use Platform\Core\Models\Team;
+use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
+use Platform\FoodAlchemist\Services\Matching\TokenEngine;
+
+/** Baut alle Fakten vor dem eigentlichen KI-Call und liefert einen kleinen Audit-Snapshot. */
+class RecipeGenerationContextService
+{
+    /**
+     * Prompt-Whitelist: NUR semantisch bedeutsame Leitplanken landen im KI-Kontext. Steuer-/Ableitungs-
+     * Keys (ki_bilder, use_favorites_list, favorites_convenience_only, bio_praeferenz, cascade_step_id,
+     * auto_dependencies, _*) sind Rauschen im Prompt und werden weggelassen. Bewusst additiv gehalten —
+     * spätere Achsen (pax, ziel_portion_g, saison …) hier eintragen.
+     */
+    // Hinweis: `aroma_kueche` fehlt hier bewusst — sie bekommt einen eigenen, reichen Prompt-Block
+    // (Label + Würz-Anker, s. build()), der Roh-Slug im parameter-Bündel wäre redundant.
+    private const PROMPT_KEYS = [
+        'convenience', 'frische', 'bio', 'bio_pref', 'bestand', 'level', 'sektor',
+        'diaet_hart', 'allergen_nogo', 'aroma', 'occasion', 'serviceform', 'kompositions_stil', 'ziel_vk_eur',
+        // L6 »Menge & Ziel« (Basisrezept: ziel_menge + ziel_einheit statt pax/portion)
+        'pax', 'ziel_portion_g', 'saison', 'ziel_we_pct', 'ziel_einheit', 'ziel_menge',
+    ];
+
+    /**
+     * Aroma-Küchen (L1.5, Achse 4 aus `_Entscheidungsachsen.md` v1.9) — Slug => [Label, Würz-Anker].
+     * Die Würz-Anker sind VERBATIM aus dem verbindlichen Regelwerk (keine Erfindung); Technik/Archetyp
+     * führt das Regelwerk nur exemplarisch, darum hier bewusst nur der belegte Würz-Anker. »Frei« (leer)
+     * trägt keinen Block. Steuert die Würzung als Prompt-Direktive + speist die Aroma-Erdung (Anker-Graph).
+     */
+    private const KUECHE_ANKER = [
+        'klassisch_de'  => ['label' => 'Klassisch DE', 'anker' => 'Regionale deutsche Aromen, traditionelle Pairings'],
+        'franzoesisch'  => ['label' => 'Französisch', 'anker' => 'Butter, Schalotte, Weißwein, Estragon, Dijon, Crème fraîche, Demi-Glace'],
+        'mediterran'    => ['label' => 'Mediterran', 'anker' => 'Olivenöl, Zitrone, Knoblauch, Kräuter der Provence, Tomate'],
+        'italienisch'   => ['label' => 'Italienisch', 'anker' => 'Olivenöl, Parmesan, Basilikum, Tomate, Knoblauch, Balsamico, Salbei'],
+        'asiatisch'     => ['label' => 'Asiatisch (allg.)', 'anker' => 'Sojasauce, Ingwer, Sesam, Reisessig, Chili, Limette, Koriander'],
+        'japanisch'     => ['label' => 'Japanisch', 'anker' => 'Dashi, Soja, Mirin, Miso, Yuzu, Sesam, Ingwer, Nori'],
+        'thai'          => ['label' => 'Thai', 'anker' => 'Zitronengras, Galgant, Fischsauce, Kokos, Thai-Basilikum, Limettenblatt, Chili'],
+        'indisch'       => ['label' => 'Indisch', 'anker' => 'Kreuzkümmel, Kurkuma, Garam Masala, Ingwer, Koriander, Chili, Kokos, Ghee'],
+        'orient'        => ['label' => 'Orient', 'anker' => 'Kreuzkümmel, Kardamom, Sumach, Granatapfel, Tahini, Minze'],
+        'lateinamerika' => ['label' => 'Lateinamerika', 'anker' => 'Limette, Koriander, Chili, Avocado, Mais, Bohnen'],
+        'neu_nordisch'  => ['label' => 'Neu-Nordisch', 'anker' => 'Wildkräuter, Pickled-Komponenten, Beerennoten, Räucherton'],
+    ];
+
+    /**
+     * Reduziert das rohe Parameter-Bündel auf die Prompt-Whitelist und gleicht die Key-Sprache an den
+     * Prompt-Text an (der Prompt nennt »niveau«/»anlass«, die kanonischen Keys heißen level/occasion).
+     * So muss das Modell die Brücke nicht selbst raten.
+     *
+     * @param  array<string,mixed>  $parameter
+     * @return array<string,mixed>
+     */
+    private function promptParameter(array $parameter, bool $vkModus = false): array
+    {
+        $p = array_intersect_key($parameter, array_flip(self::PROMPT_KEYS));
+        // Dominique 10.10.: ein Gericht ist GENAU EINE Portion — pax ist nur das Mengengerüst der Produktion und geht
+        // nicht an die KI, sonst rechnet sie hoch (demo Lauf 94: 28 kg / 12 kg Filet für 80 Pax). Die Produktion
+        // bekommt pax weiter aus der Session.
+        if ($vkModus) {
+            unset($p['pax']);
+        }
+        if (array_key_exists('level', $p)) {
+            $p['niveau'] = $p['level'];
+            unset($p['level']);
+        }
+        if (array_key_exists('occasion', $p)) {
+            $p['anlass'] = $p['occasion'];
+            unset($p['occasion']);
+        }
+
+        return $p;
+    }
+
+    public function __construct(
+        private KnowledgeContextService $knowledge,
+        private \Platform\FoodAlchemist\Services\Planung\GenerationContextService $generation,
+        private RecipeTemplateService $templates,
+        private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
+        private TokenEngine $tokens,
+    ) {
+    }
+
+    public function build(Team $team, string $description, array $parameter, bool $vkModus): array
+    {
+        $started = hrtime(true);
+        // Spec 37 (2026-08-07): Rezept-Typ explizit. Steuert (a) die typ-abhängige Niveau-Auswahl
+        // (der Selektor liest params['rezept_typ']) und geht (b) als eigenes Kontext-Feld an die KI
+        // — Gürtel & Hosenträger zur Prompt-Einleitung (Basisrezept = Baustein, Gericht = Teller).
+        $rezeptTyp = $vkModus ? 'gericht' : 'basisrezept';
+        $genKey = $vkModus ? 'vk.generator' : 'recipe.generator';
+        $genBereich = $vkModus ? 'vk' : 'recipe';
+        // Spec 50: der Kanon von $genKey steht ohnehin im Prompt → Retrieval lädt ihn nicht doppelt.
+        //
+        // ★ Spec 52/Paket 2: hier stand bis 2026-09-08 das hartkodierte `'ai_generate_recipe'`.
+        // Damit trug DERSELBE Aufruf zwei Identitäten — der Kanon wurde über den Prompt-Key
+        // aufgelöst, das Routing über den Alt-Namen. Zwei Folgen, beide gemessen:
+        //   · Basisrezept und Gericht teilten ZWANGSWEISE eine Suchpolitik (eine Zeile für beide),
+        //   · ein `knowledge_routings.PUT` auf `vk.generator` schrieb stumm ins Leere, weil der
+        //     Generator dort nie nachsah.
+        // Jetzt ein Schlüssel. Die Alt-Zeilen bleiben wirksam, solange sie nicht migriert sind
+        // (`routingZeilen()` fällt auf den Alias zurück), und die Rezept-Deckel hängen an
+        // `REZEPT_BUDGET_KEYS` statt an einem String-Vergleich — sonst hätte diese eine Zeile
+        // jeden Rezept-Prompt anders gekappt.
+        // Spec 53/H Aufgabe B4: leichte Vor-Sondierung NUR für die Zutaten-Grounding-Anker-Auflösung
+        // (KnowledgeContextService::zutatGroundingBlock) — bewusst NICHT die volle GP-Matching-
+        // Pipeline (`$this->generation->forGeneration()`, unten Zeile ~176) vorziehen: die liefert
+        // `gp_kandidaten` erst NACH diesem contextFor()-Aufruf, ein Reihenfolge-Tausch hätte
+        // `$erdungsText`/`$prompt`-Abhängigkeiten dort riskiert, ohne fachlichen Gewinn (rohe Token
+        // reichen — die Anker-Auflösung passiert ohnehin erst im Grounding-Block selbst, s. dort).
+        // Dieselbe Denylist-Funktion wie `GenerationContextService::leitTokens()` (Paul: "eine
+        // Funktion, zwei Aufrufer"), hier direkt am TokenEngine statt am privaten Wrapper.
+        // Spec 80 A4: Suchbegriffe (aus dem Briefing abgeleitet, vom Menschen korrigiert) suchen VOR dem
+        // Rohtext. Vorher sondierten nur die ersten 16 Briefing-Wörter — bei demo Lauf #79 reine Füllwörter.
+        $suchbegriffe = self::suchbegriffeAus($parameter);
+        $suchPraefix = $suchbegriffe === [] ? '' : implode(' ', $suchbegriffe) . ' ';
+        $hauptzutatSlugs = $this->tokens->leitTokens($suchPraefix . $description);
+        $wissen = $this->knowledge->contextFor($team, $genKey, $suchPraefix . $description, $parameter['kompositions_stil'] ?? null, $hauptzutatSlugs, $parameter + ['rezept_typ' => $rezeptTyp, '_kanon_prompt_key' => $genKey]);
+        /*
+         * Transparenz: die an recipe.generator/vk.generator GEBUNDENEN Dossiers stehen nicht in
+         * contextFor()->files_used, sollen aber im „Verwendetes Wissen"-Chip auftauchen.
+         *
+         * ⚠ W0-3b — sie dürfen NICHT nach `files_used` gespiegelt werden (so war es bis
+         * 2026-09-02). `files_used` geht als `knowledge_used` an propose(), und dort ist es der
+         * DEDUP-EINGANG von selectBoundKnowledge(): jedes Doc, das schon „verwendet" ist, wird
+         * übersprungen. Der Spiegel hat damit genau den Kanal abgeschaltet, den er anzeigen
+         * wollte — gemessen am 2026-09-02 kam von 7 als `always` gebundenen Bau-Dossiers
+         * NULL im Prompt an (prompt_parts.bound = 0), nicht bloß eine gekappte Auswahl.
+         * Zweitschaden: `files_used` bildet auch `snapshot.knowledge_files` und damit den
+         * `_knowledge_scope` der Kind-Rezepte.
+         *
+         * Und der beabsichtigte Nutzen trat nie ein: der Inspektor liest `used_by_category`,
+         * nicht `files_used`. Deshalb landet die Liste jetzt dort — als eigener Kanal.
+         */
+        // Spec 50 Welle 2 (2026-09-06): hat $genKey einen KANON, sind die Bindings im Gateway stumm
+        // (`$kanonBlock === null && …`). Der Chip zeigt dann den Kanon als eigenen Kanal `kanon` —
+        // und NICHT die Bindings, die zwar in der DB stehen, aber nicht im Prompt.
+        $kanonFiles = \Illuminate\Support\Facades\Schema::hasTable('foodalchemist_knowledge_canon')
+            ? app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService::class)
+                ->documentsFor('prompt_key', $genKey, $team)
+                ->map(fn ($d) => "{$d->slug}@v{$d->version}")->all()
+            : [];
+        if ($kanonFiles !== []) {
+            $wissen['used_by_category']['kanon'] = $kanonFiles;
+        } elseif (\Illuminate\Support\Facades\Schema::hasTable('foodalchemist_knowledge_bindings')) {
+            $boundFiles = \Illuminate\Support\Facades\DB::table('foodalchemist_knowledge_bindings as b')
+                ->join('foodalchemist_knowledge_documents as d', 'd.id', '=', 'b.knowledge_document_id')
+                ->whereNull('b.deleted_at')->where('b.active', 1)
+                ->where('b.binding_type', 'layer')->whereIn('b.target_key', array_unique([$genKey, $genBereich]))
+                ->where('d.active', 1)->whereNull('d.deleted_at')
+                ->get(['d.slug', 'd.version'])
+                ->map(fn ($r) => "{$r->slug}@v{$r->version}")->all();
+            if ($boundFiles !== []) {
+                $wissen['used_by_category']['gebunden'] = $boundFiles;
+            }
+        }
+        $prompt = [
+            'rezept_typ' => $vkModus
+                ? 'GERICHT (essfertig angerichteter Verkaufsteller — Komposition erlaubt)'
+                : 'BASISREZEPT (wiederverwendbarer Baustein / EINE Komponente — kein angerichteter Teller)',
+            'description' => $description,
+            'parameter' => $this->promptParameter($parameter, $vkModus),
+        ];
+        // Brot im Gericht (Dominique 10.10.): nie als Scheibe — verarbeitet, Aroma des gerösteten Brots trägt.
+        if (trim((string) ($parameter['brot_verarbeiten'] ?? '')) !== '') {
+            $prompt['brot_verarbeiten'] = [
+                'brot' => (string) $parameter['brot_verarbeiten'],
+                'hinweis' => 'Brot wird im Gericht nicht als Scheibe gereicht. Verarbeite es zu einer Komponente (z. B. Crunch, '
+                    . 'Kruste, Croûton, Brösel) — das geröstete Brotaroma trägt. Name: passender Typ + Brot, Brot als Hauptzutat.',
+            ];
+        }
+        // Teilfertig (RecipeDependencyWorkflowService::starteKind): TK-Ware als Hauptzutat, nur kurz zubereitet.
+        if (trim((string) ($parameter['teilfertig_ware'] ?? '')) !== '') {
+            $prompt['teilfertig'] = [
+                'hauptzutat' => (string) $parameter['teilfertig_ware'],
+                'hinweis' => 'Hauptzutat ist diese TK-Ware — nicht frisch nachbauen. Nur kurz zubereiten (auftauen, würzen, '
+                    . 'glasieren, anschwenken, abschmecken) und passend für das Gericht fertigstellen.',
+            ];
+        }
+        // Rüst-Basisrezept für Kaufware (RecipeDependencyWorkflowService::starteKind): die Ware selbst, nicht nachgebaut.
+        $ruestWare = trim((string) ($parameter['ruest_ware'] ?? ''));
+        if ($ruestWare !== '') {
+            $prompt['ruest_basisrezept'] = [
+                'ware' => $ruestWare,
+                'hinweis' => 'Die Zeile im Gericht ist eine KAUFWARE. Dieses Basisrezept führt GENAU diese Ware als Hauptzutat '
+                    . '(Menge = Ansatz) und beschreibt nur, was in der Küche damit passiert: rüsten, auftauen, abbacken, '
+                    . 'garen, portionieren, abfüllen. Keine Eigenherstellung und kein Ersatzprodukt. Name: passender Typ + Ware.',
+            ];
+        }
+        // Unterrezept im Gericht: Bedarf ist nur Information, die Charge wählt die KI zum Sektor (Dominique 10.10.).
+        if (! isset($parameter['ziel_menge']) && (float) ($parameter['bedarf_menge'] ?? 0) > 0) {
+            $prompt['bedarf_im_gericht'] = [
+                'menge' => $parameter['bedarf_menge'] . ' ' . ($parameter['bedarf_einheit'] ?? 'g'),
+                'hinweis' => 'So viel braucht das Gericht davon. Das ist NICHT der Ansatz: lege eine realistische '
+                    . 'Produktionscharge für diesen Betrieb an (sektor) — mindestens den Bedarf, Mengen und Garverluste '
+                    . 'fachlich stimmig zur Charge, nie eine eingekochte Mini-Charge.',
+            ];
+        }
+        // Teller-Rollen (Dominique 11.10., Regel gericht.teller_rolle): im Gericht die Rolle je Zeile, im Basisrezept die
+        // möglichen Rollen des ganzen Rezepts. Basisrezept-Zeilen tragen weder Rolle noch Funktion.
+        $prompt['teller_rollen'] = \Platform\FoodAlchemist\Support\TellerRolle::werte();
+        // Spec 80 B5: bestätigter Komponenten-Plan → Zusammenstellung statt Ein-Baustein-Regel.
+        if (! empty($parameter['plan_komponenten']) && is_array($parameter['plan_komponenten'])) {
+            $prompt['zusammenstellung'] = [
+                'hinweis' => 'Dieses Basisrezept ist eine ZUSAMMENSTELLUNG aus den bestätigten Komponenten unten. '
+                    . 'Führe jede Komponente als eigene Zutatenzeile mit der genannten Menge (Bestand mit sub_rezept_id, '
+                    . 'neue mit sub_rezept: true) — nicht in Rohware zerlegen. Ergänze nur, was die Zusammenstellung '
+                    . 'zusätzlich braucht (z. B. Butter, Salz), und beschreibe die Zubereitung des Zusammenführens.',
+                'komponenten' => array_values(array_map(static fn ($k) => array_filter([
+                    'name' => $k['bestand']['name'] ?? $k['name'] ?? null,
+                    'menge' => $k['menge'] ?? null, 'einheit' => $k['einheit'] ?? null,
+                    'funktion' => $k['funktion'] ?? null,
+                    'sub_rezept_id' => $k['bestand']['recipe_id'] ?? null,
+                    // Weg A (Dominique 11.10.): wofür der übernommene Baustein sonst dient („in 12 Gerichten: 9× sauce“).
+                    'verwendung' => $k['bestand']['verwendung'] ?? null,
+                    'neu' => empty($k['bestand']),
+                ], static fn ($v) => $v !== null), $parameter['plan_komponenten'])),
+            ];
+        }
+        if (($typ = $this->settings->kuechenTyp($team)) !== null) {
+            // Soft-Default-Schicht: das Mandanten-Profil ist eine Tendenz, explizite Richtungs-Parameter
+            // (Hooks/Regler) haben VORRANG — der Hinweis steht im Block (DoD KuechenProfilTest).
+            $prompt = ['kuechen_profil' => 'Mandanten-Profil (Soft-Default — explizite Richtungs-Parameter haben VORRANG): ' . \Platform\FoodAlchemist\Services\TeamSettingsService::KUECHEN_TYPEN[$typ]] + $prompt;
+        }
+        // Aroma-Küche (L1.5, Achse 4): gewählte Küche trägt ihren Würz-Anker als Prompt-Direktive
+        // (verbindliches Regelwerk). Zusätzlich fließen Küche-Anker + Aroma-Freitext in die Erdungs-
+        // Query (unten) — sonst erdete die Aroma-Vorgabe den Anker-Graph nicht (Audit-Fix). »Frei«=kein Block.
+        $kueche = (string) ($parameter['aroma_kueche'] ?? '');
+        $aromaFrei = trim((string) ($parameter['aroma'] ?? ''));
+        $kuecheAnker = self::KUECHE_ANKER[$kueche] ?? null;
+        if ($kuecheAnker !== null) {
+            $prompt['aroma_kueche'] = [
+                'kueche' => $kuecheAnker['label'],
+                'wuerz_anker' => $kuecheAnker['anker'],
+                'hinweis' => 'Würze in Richtung dieser Küche (Anker sind Leit-, keine Pflichtzutaten); '
+                    . 'die per-Zutat-Pairing-Erdung bleibt die präzisere Quelle an der Hauptzutat.',
+            ];
+        }
+        // Foodpairing-Composer B (2026-08-22): gezielte Seed-Anker aus dem Composer (Slug-Liste).
+        // Sie sind der VERBINDLICHE kreative Kern — reisen als eigener Pflicht-Key (unten) UND als
+        // Erdungs-Signal in die GP-Kandidaten-Suche (damit die Leit-Aromen echte GPs bekommen).
+        $seedAnker = array_values(array_filter(array_map(
+            fn ($s) => trim((string) $s),
+            (array) ($parameter['seed_anker'] ?? []),
+        )));
+        // Erdungs-Query: Beschreibung + Aroma-Freitext + Küche-Anker (+ Seed-Anker) → der Anker-Graph
+        // erdet jetzt auch an der Aroma-Vorgabe (nicht mehr nur an der Beschreibung).
+        $seedErdung = $seedAnker === [] ? '' : ' ' . str_replace('_', ' ', implode(' ', $seedAnker));
+        $erdungsText = trim($suchPraefix . $description . ' ' . $aromaFrei . ' ' . ($kuecheAnker['anker'] ?? '') . $seedErdung);
+        foreach ($this->generation->forGeneration(
+            $team, $erdungsText, $vkModus,
+            (bool) ($parameter['use_favorites_list'] ?? false),
+            (bool) ($parameter['favorites_convenience_only'] ?? false),
+            isset($parameter['bestand']) ? (string) $parameter['bestand'] : null,
+            $suchbegriffe,
+        ) as $key => $value) {
+            $prompt[$key] = $value;
+        }
+
+        // Foodpairing-Composer B2 (2026-08-22): verbindlicher Leit-Aromen-Block aus den Seed-Ankern —
+        // GETRENNT vom weichen `pairing`-Angebot (GenerationContextService). Der normale Generator
+        // (ohne Seeds) bekommt diesen Key NIE → nur die Composer-Kreation ist gezielt-verbindlich.
+        if ($seedAnker !== []) {
+            // Spec 60: Palette = echtes Food Pairing (3★) aus der einzigen Lesestelle AnkerGraph.
+            // Bedarfe/Konflikte der Leit-Aromen liefert der Kombinationsplan (forGeneration).
+            $graph = app(\Platform\FoodAlchemist\Services\Pairing\AnkerGraph::class);
+            $leitAromen = [];
+            $seedIds = [];
+            foreach ($seedAnker as $slug) {
+                $anker = \Illuminate\Support\Facades\DB::table('foodalchemist_vocab_pairing_anchors')
+                    ->where('slug', $slug)->whereNull('deleted_at')->first(['id', 'slug', 'display_de']);
+                if ($anker === null) {
+                    continue;
+                }
+                $seedIds[] = (int) $anker->id;
+                $leitAromen[] = [
+                    'aroma' => $anker->display_de ?: $anker->slug,
+                    'palette' => $graph->partner((int) $anker->id, \Platform\FoodAlchemist\Services\Pairing\AnkerGraph::HARMONIERT, 10)
+                        ->map(fn ($p) => $p->display_de.' ●●●')->all(),
+                ];
+            }
+            if ($leitAromen !== []) {
+                $prompt['pairing_vorgabe'] = [
+                    'rolle' => 'verbindliche_leit_aromen',
+                    'hinweis' => 'Diese Leit-Aromen prägen das Rezept BEWUSST (gezielte Foodpairing-Kreation). '
+                        . 'Sie MÜSSEN als Zutaten/Komponenten vorkommen; ihre Harmonie-Palette (●●● = echtes Food '
+                        . 'Pairing) ist die bevorzugte Auswahl zum Abrunden. Kontraste (Bedarfe mit Lieferanten) und '
+                        . 'zu Vermeidendes stehen im `kombinationsplan`. Erfinde keine unbelegten Paarungen; Grounding '
+                        . '(gp_kandidaten) hat Vorrang bei der Benennung. Baue EIN kohärentes Rezept.',
+                    'leit_aromen' => $leitAromen,
+                ];
+                // Spec 60: der Kombinationsplan kommt aus den GEWÄHLTEN Ankern, nicht aus einem
+                // Text-Abgleich der Beschreibung — die Composer-Auswahl ist die Vorgabe.
+                // Ernährungsform aus der harten Leitplanke `diaet_hart` (vegan schlägt vegetarisch).
+                $diaetHart = array_values(array_filter((array) ($parameter['diaet_hart'] ?? []), 'is_string'));
+                $diaet = in_array('vegan', $diaetHart, true) ? 'vegan' : (in_array('vegetarisch', $diaetHart, true) ? 'vegetarisch' : null);
+                $plan = app(\Platform\FoodAlchemist\Services\Pairing\KombinationsPlan::class)->fuerAnker($team, $seedIds, $vkModus, $diaet);
+                if ($plan !== null) {
+                    $prompt['kombinationsplan'] = $plan;
+                }
+            }
+        }
+
+        $descriptionTokens = $this->tokens->tokenize($description);
+        $templateContext = $this->templates->templates($team)->map(function ($template) use ($team, $descriptionTokens) {
+            $nameTokens = $this->tokens->tokenize((string) $template->name);
+            $score = count(array_intersect($descriptionTokens, $nameTokens));
+
+            return [
+                'id' => (int) $template->id,
+                'name' => (string) $template->name,
+                'score' => $score,
+                'slots' => $this->templates->slotsFor($team, (int) $template->id),
+            ];
+        })->sortByDesc('score')->take(5)->values()->all();
+        if ($templateContext !== []) {
+            $prompt['rezept_templates'] = $templateContext;
+        }
+
+        // Spec 53 Paket B Aufgabe 6 — geteilt zwischen dem LIVE-Bündel ($kontext, unten) und dem
+        // persistierten `snapshot` (s. return-Array): 'retrieval' ist ab hier bekannt
+        // (`contextFor()::files_dropped`), 'kanon' erst nach dem Gateway-Call — dort bleibt es
+        // leer, bis `RecipeDependencyWorkflowService::afterGenerated()` es im Snapshot nachträgt
+        // (dieselbe Grenze wie bei `kanon_files`/`used_by_category['kanon']`, s. Docblock dort).
+        $wissenVerworfen = ['retrieval' => $wissen['files_dropped'] ?? [], 'kanon' => []];
+
+        // Kontext-Inspektor (2026-08-07): kompaktes, UI-fertiges Bündel „auf welches Wissen
+        // greift der Generator" — gruppierte Wissens-Docs je Kanal + gematchte Templates
+        // (nur score>0 = echt zur Beschreibung passend) + Zeichen-Budget des Wissens-Blocks.
+        // Reine String-/Int-Listen → gefahrlos durch Job-Cache + Livewire-Ergebnis reichbar.
+        $kontext = [
+            'wissen' => $wissen['used_by_category'] ?? [],
+            // Spec 53 Rebase-Hinweis (2026-09-17): Pauls PR #94 legte hier unabhängig dieselbe
+            // Idee an, als flache Liste (`$wissen['files_dropped']`) statt strukturiert nach Kanal.
+            // Abgesprochen mit der Orchestrierung (cooking-jarvis-03): das strukturierte Feld
+            // {retrieval, kanon} bleibt — der Inspektor rendert genau dieses Format (s.
+            // `kontext-inspektor.blade.php`), die flache Variante wurde nirgends gerendert.
+            'wissen_verworfen' => $wissenVerworfen,
+            'chars' => (int) ($wissen['total_chars'] ?? 0),
+            'templates' => array_values(array_map(
+                fn ($t) => ['id' => $t['id'], 'name' => $t['name']],
+                array_filter($templateContext, fn ($t) => ($t['score'] ?? 0) > 0),
+            )),
+            // Foodpairing-Composer B2: UI-Audit „Generator nutzt Vorgabe-Anker: …" (leer im Normalfall).
+            'pairing_vorgabe' => array_values(array_map(
+                fn ($x) => (string) ($x['aroma'] ?? ''),
+                $prompt['pairing_vorgabe']['leit_aromen'] ?? [],
+            )),
+        ];
+
+        return [
+            'prompt' => $prompt,
+            'knowledge' => $wissen['block'],
+            'knowledge_used' => $wissen['files_used'],
+            'knowledge_dropped_chars' => $wissen['dropped_chars'] ?? 0,
+            'context_ms' => (int) ((hrtime(true) - $started) / 1_000_000),
+            'kontext' => $kontext,
+            'snapshot' => [
+                // `knowledge_files` = NUR der Retrieval-Fund (Dedup-Eingang W0-3b + `_knowledge_scope`
+                // der Kind-Rezepte) — bleibt unverändert. Der Kanon steht daneben in einem EIGENEN Feld,
+                // damit die Step-Zeile das komplette Wissen zeigen kann (Kanon · Recherche), ohne den
+                // Dedup-Kanal zu verschmutzen (Anlass 2026-09-06: „man sieht nie komplett, was benutzt wurde").
+                'knowledge_files' => $wissen['files_used'],
+                'kanon_files' => $kanonFiles,
+                // Spec 53 Paket B Aufgabe 6 — was gebaut, aber NICHT gesendet wurde, getrennt nach
+                // Kanal: 'retrieval' kommt direkt aus contextFor() (Budget-Schnitt der Fuzzy-Discovery,
+                // Ganzdokument-Drop); 'kanon' ist hier immer leer und wird erst NACH dem Gateway-Call
+                // durch RecipeDependencyWorkflowService::afterGenerated() befüllt (derselbe Rückweg wie
+                // bei kanon_files, s. dort) — vor dem Call ist noch nicht bekannt, welche wenn_platz-
+                // Dossiers `selectKanon()` droppt.
+                'knowledge_dropped' => $wissenVerworfen,
+                'template_ids' => array_column($templateContext, 'id'),
+                // Spec 80 A6: Spec 60 benannte den Block in `kombinationsplan` um — die alte Sonde (nur „pair"
+                // im Namen) war seitdem immer leer und meldete „kein Pairing", auch wenn es ankam.
+                'pairing_keys' => array_values(array_filter(array_keys($prompt), fn ($key) => str_contains((string) $key, 'pair') || $key === 'kombinationsplan')),
+                'suchbegriffe' => $suchbegriffe,
+                'pairing' => $this->pairingProtokoll($prompt, $suchbegriffe),
+                'built_at' => now()->toIso8601String(),
+            ],
+        ];
+    }
+
+    /**
+     * Spec 80: Suchbegriffe aus dem Parameter-Bündel (Lauf-Params, Depth-1). Fail-soft gegen jede Form.
+     *
+     * @param  array<string, mixed>  $parameter
+     * @return list<string>
+     */
+    public static function suchbegriffeAus(array $parameter): array
+    {
+        $roh = $parameter['suchbegriffe'] ?? [];
+        if (! is_array($roh)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(
+            static fn ($t) => is_scalar($t) ? trim((string) $t) : '',
+            $roh,
+        ), static fn (string $t): bool => $t !== '')));
+    }
+
+    /**
+     * Spec 80 A6: welche Pairing-Anker der Plan trug und welche Suchbegriffe ohne exakten Anker blieben —
+     * damit ein leerer Plan nicht still wegfällt („kein Anker für …").
+     *
+     * @param  array<string, mixed>  $prompt
+     * @param  list<string>  $suchbegriffe
+     * @return array{anker: list<string>, ohne_anker: list<string>}
+     */
+    private function pairingProtokoll(array $prompt, array $suchbegriffe): array
+    {
+        $anker = array_values(array_filter(array_map(
+            static fn ($l) => is_array($l) ? (string) ($l['aroma'] ?? '') : '',
+            (array) ($prompt['kombinationsplan']['leit_aromen'] ?? []),
+        )));
+        $ohne = [];
+        if ($suchbegriffe !== []) {
+            $pairing = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class);
+            foreach ($suchbegriffe as $t) {
+                if ($pairing->ankerAufgeloest($t) === null) {
+                    $ohne[] = $t;
+                }
+            }
+        }
+
+        return ['anker' => $anker, 'ohne_anker' => $ohne];
+    }
+}

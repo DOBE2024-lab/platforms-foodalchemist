@@ -2,9 +2,9 @@
 
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Verkauf\VkModal;
-use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\GrammaturWelt;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

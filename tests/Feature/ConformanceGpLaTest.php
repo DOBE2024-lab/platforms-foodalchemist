@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConformanceFinding;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\ConformanceService;
+use Platform\FoodAlchemist\Services\Conformance\ConformanceService;
 use Platform\FoodAlchemist\Tests\Support\ConformanceHealStub;
 use Platform\FoodAlchemist\Tests\Support\CopilotStub;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

@@ -52,7 +52,7 @@ beforeEach(function () {
     $sup = \Platform\FoodAlchemist\Models\FoodAlchemistSupplier::create(['team_id' => $this->rootTeam->id, 'name' => 'Chefs']);
     $this->laId = \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::create(['team_id' => $this->rootTeam->id, 'supplier_id' => $sup->id, 'designation' => 'Eier Bodenhaltung M 30er',
         'article_number' => 'A1', 'qty' => 1, 'unit_code' => 'kg'])->id;
-    $this->signalId = app(\Platform\FoodAlchemist\Services\SignalService::class)->erzeuge($this->rootTeam, \Platform\FoodAlchemist\Enums\SignalTyp::MargeUnterZiel,
+    $this->signalId = app(\Platform\FoodAlchemist\Services\Pruefung\SignalService::class)->erzeuge($this->rootTeam, \Platform\FoodAlchemist\Enums\SignalTyp::MargeUnterZiel,
         \Platform\FoodAlchemist\Enums\SignalSeverity::Warnung, 'Marge unter Ziel')->id;
     // Wording-Fixtures: Kapitel mit Schreibstil + Konzept-Block mit Gericht; Karte mit Schreibstil + Position
     $stil = \Platform\FoodAlchemist\Models\FoodAlchemistWritingStyle::create(['team_id' => $this->rootTeam->id, 'slug' => 'um-stil', 'name' => 'Verspielt', 'sprach_duktus' => 'locker.']);

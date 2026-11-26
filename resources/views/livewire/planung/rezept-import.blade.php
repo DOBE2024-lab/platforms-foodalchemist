@@ -158,7 +158,7 @@
                 @endif
                 @if(!empty($importErgebnis['ausrezeptieren_offen']))
                     <x-fa::signal tone="warn" data-import-ausrezeptieren-offen>
-                        Noch leer: {{ collect($importErgebnis['ausrezeptieren_offen'])->pluck('name')->implode(', ') }}. Automatisch gibt es höchstens {{ \Platform\FoodAlchemist\Services\RecipeExtractService::STUBS_AUSREZEPTIEREN_MAX }} Unterrezepte je Import.
+                        Noch leer: {{ collect($importErgebnis['ausrezeptieren_offen'])->pluck('name')->implode(', ') }}. Automatisch gibt es höchstens {{ \Platform\FoodAlchemist\Services\Rezept\RecipeExtractService::STUBS_AUSREZEPTIEREN_MAX }} Unterrezepte je Import.
                         <x-fa::button size="sm" variant="ghost" wire:click="unterrezepteAusrezeptieren" data-import-restliche-ausrezeptieren>Restliche ausrezeptieren</x-fa::button>
                     </x-fa::signal>
                 @endif

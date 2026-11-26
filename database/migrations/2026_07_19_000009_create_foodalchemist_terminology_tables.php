@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * #507 Weg-2 · E7-b: Promotion der Terminologie-Schicht von kuratierten PHP-Konstanten
- * ({@see \Platform\FoodAlchemist\Services\TerminologyService}) auf runtime-pflegbare
+ * ({@see \Platform\FoodAlchemist\Services\GpStamm\TerminologyService}) auf runtime-pflegbare
  * DB-Tabellen. Die Konstanten bleiben Baseline-Seed im Code; DIESE Tabellen sind
  * ADDITIV — Lernschleife (E7-c, ReviewQueue) + MCP (terminology.POST) schreiben hier
  * hinein, damit neue Namen/Verwechslungen OHNE Deploy sofort wirken.

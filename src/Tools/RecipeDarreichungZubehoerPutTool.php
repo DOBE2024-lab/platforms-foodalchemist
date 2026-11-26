@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 
 /**
  * Zubehör & Verpackung einer Darreichung setzen/entfernen: ein Non-Food-Grundprodukt (Warengruppe 16) je Form, Menge je Einheit der Darreichung.

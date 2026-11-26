@@ -12,12 +12,12 @@ use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\ZukaufBasisrezeptService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService;
 
 /**
  * Baut ein Zukauf-Basisrezept für einen Kind-Step (Kaufware im Gericht) oder die Wurzel einer Zukauf-Planung (Knopf am
- * GP, {@see \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::starteLauf}) — ohne Komponenten-Plan, ohne den großen
+ * GP, {@see \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::starteLauf}) — ohne Komponenten-Plan, ohne den großen
  * Generator, ohne Heilung. Danach wie ein fertig gebautes Kind: an die Eltern-Zeile binden, Step done.
  */
 class BuildZukaufRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services\Ai\KiExternWiederholbar

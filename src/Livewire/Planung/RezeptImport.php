@@ -59,7 +59,7 @@ class RezeptImport extends Component
      * Schritt 1: Rohtext (Textarea oder Text-PDF) TREU extrahieren → editierbare Vorschau.
      * Bewusst synchron (EIN LLM-Call; das teure Erzeugen läuft weiterhin async über die Kaskade).
      */
-    public function importExtrahieren(\Platform\FoodAlchemist\Services\RecipeExtractService $svc): void
+    public function importExtrahieren(\Platform\FoodAlchemist\Services\Rezept\RecipeExtractService $svc): void
     {
         $this->importMeldung = '';
         $team = $this->team();
@@ -121,7 +121,7 @@ class RezeptImport extends Component
     }
 
     /** Schritt 2: die (evtl. editierte) Vorschau GEERDET anlegen (rekursiv, Sub-Rezepte verknüpft). */
-    public function importAnlegen(\Platform\FoodAlchemist\Services\RecipeExtractService $svc): void
+    public function importAnlegen(\Platform\FoodAlchemist\Services\Rezept\RecipeExtractService $svc): void
     {
         $this->importMeldung = '';
         $team = $this->team();
@@ -244,7 +244,7 @@ class RezeptImport extends Component
                 'unit' => (string) ($z['unit'] ?? ''),
                 'sub_rezept' => (bool) ($z['sub_rezept'] ?? false),
             ], array_values(array_filter((array) ($k['zutaten'] ?? []), 'is_array')))),
-            'komponenten' => $ebene < \Platform\FoodAlchemist\Services\RecipeExtractService::MAX_TIEFE
+            'komponenten' => $ebene < \Platform\FoodAlchemist\Services\Rezept\RecipeExtractService::MAX_TIEFE
                 ? $this->vorschauKomponenten((array) ($k['komponenten'] ?? []), $ebene + 1) : [],
         ], array_values(array_filter($liste, 'is_array'))));
     }

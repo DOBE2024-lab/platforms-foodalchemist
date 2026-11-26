@@ -22,7 +22,7 @@ class ConceptPreisService
 {
     private const MAX_TIEFE = 4;
 
-    public function __construct(private \Platform\FoodAlchemist\Services\TeamVkService $teamVk) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\Rezept\TeamVkService $teamVk) {}
 
     /** @var array<int, bool> Ergebnis von {@see vorwaermen} für die Dauer EINER Liste (danach {@see vergessen}); statisch, weil jeder Aufrufer sich den Dienst frisch aus dem Container holt */
     private static array $vorgewaermt = [];

@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\GerichtGpUmbauService;
+use Platform\FoodAlchemist\Services\Gericht\GerichtGpUmbauService;
 
 /**
  * Umbau-Weg für den Reife-Befund `gp_im_gericht` (Entscheid Dominique 17.11.2026: ein Gericht besteht nur aus

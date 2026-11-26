@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ReifeService;
+use Platform\FoodAlchemist\Services\Reife\ReifeService;
 
 /**
  * Spec 50 · Schicht 4 — „Was fehlt an diesem Rezept noch?" **Read-only.**

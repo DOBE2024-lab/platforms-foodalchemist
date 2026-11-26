@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Queue;
 use Platform\FoodAlchemist\Exceptions\KostenFolgeFehlgeschlagenException;
 use Platform\FoodAlchemist\Jobs\KostenFolgeJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\KostenCacheService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\KostenCacheService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

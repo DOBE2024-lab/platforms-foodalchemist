@@ -25,9 +25,9 @@ use Platform\FoodAlchemist\Services\Planung\IdeenService;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
-use Platform\FoodAlchemist\Services\RecipeImageService;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -261,7 +261,7 @@ it('MAX_STEPS begrenzt die TIEFE, nicht die Breite — 60 Gericht-Steps verhunge
     $rezept = $this->makeRecipe($this->rootTeam, 'Rinderfilet');
     $this->makeIngredient($rezept, 'Kalbsfond');
 
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, $eltern->id, auth()->id(), $rezept,
         [['index' => 0, 'text' => 'Kalbsfond', 'primaer' => 'basisrezept_anlegen']],
         ['auto_dependencies' => true, '_voll_anreichern' => true],
@@ -305,7 +305,7 @@ it('erschoepftes Tiefen-Budget wird gemeldet — und die Zahl kommt aus dem Zust
     $this->makeIngredient($rezept, 'Kalbsfond', null, '100', 1);
     $this->makeIngredient($rezept, 'Pfefferrahm', null, '100', 2);
 
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, $eltern->id, auth()->id(), $rezept,
         [
             ['index' => 0, 'text' => 'Kalbsfond', 'primaer' => 'basisrezept_anlegen'],
@@ -337,7 +337,7 @@ it('teilt identische fehlende Basisrezepte im Lauf und bindet das Ergebnis an al
     });
     $recipes = $parents->map(fn ($step, $i) => $this->makeRecipe($this->rootTeam, 'Gericht ' . $i));
     $ingredients = $recipes->map(fn ($recipe) => $this->makeIngredient($recipe, 'Geflügelfond'));
-    $workflow = app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class);
+    $workflow = app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class);
 
     foreach ($parents as $i => $step) {
         $workflow->afterGenerated($this->rootTeam, $step->id, auth()->id(), $recipes[$i], [[
@@ -655,7 +655,7 @@ it('E4 favoritKandidatenFuerStep: nur noch nicht gepinnte GPs, gepinnte fallen r
     $recipe = $this->makeRecipe($this->rootTeam, 'Basis mit GPs');
     $frei = $this->makeGp($this->rootTeam, 'Kürbiskernöl');
     $fav = $this->makeGp($this->rootTeam, 'Olivenöl');
-    app(\Platform\FoodAlchemist\Services\FavoriteGpService::class)->pin($this->rootTeam, $fav);   // Spec 85 FAV-1: Favorit des Teams
+    app(\Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService::class)->pin($this->rootTeam, $fav);   // Spec 85 FAV-1: Favorit des Teams
     $this->makeIngredient($recipe, 'Kürbiskernöl', $frei, '50', 1);
     $this->makeIngredient($recipe, 'Olivenöl', $fav, '50', 2);
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'gericht', 'status' => 'running']);
@@ -2090,7 +2090,7 @@ it('staged: aufgeschobene Sub-Rezepte stehen sofort als geplante Basisrezepte-St
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'gericht', 'status' => 'running', 'staged' => true]);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
 
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, (int) auth()->id(), $gericht,
         [['index' => 0, 'text' => 'Geflügelfond', 'primaer' => 'basisrezept_anlegen']],
         ['_defer_children' => true],
@@ -2112,7 +2112,7 @@ it('Freigabe des Gerichts schaltet die geplanten Basisrezepte scharf — derselb
     $this->makeIngredient($gericht, 'Geflügelfond');
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'gericht', 'status' => 'running', 'staged' => true]);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, (int) auth()->id(), $gericht,
         [['index' => 0, 'text' => 'Geflügelfond', 'primaer' => 'basisrezept_anlegen']],
         ['_defer_children' => true],
@@ -2140,7 +2140,7 @@ it('Reuse-Sichtbarkeit: ein direkt verdrahtetes Sub-Rezept erscheint als überno
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'gericht', 'status' => 'running', 'staged' => true]);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
 
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, (int) auth()->id(), $gericht, [], ['_defer_children' => true],
     );
 
@@ -2164,7 +2164,7 @@ it('Neu-Generieren räumt geplante + übernommene Sub-Zeilen weg — das Bestand
         'team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht',
         'status' => 'running', 'label' => 'Gericht alt',
     ]);
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, (int) auth()->id(), $gericht,
         [['index' => 0, 'text' => 'Geflügelfond', 'primaer' => 'basisrezept_anlegen']],
         ['_defer_children' => true],
@@ -2214,7 +2214,7 @@ it('erzeugeGeplantenStep: schaltet EIN geplantes Sub-Rezept einzeln scharf (gepl
     $this->makeIngredient($gericht, 'Geflügelfond');
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'gericht', 'status' => 'running', 'staged' => true]);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, (int) auth()->id(), $gericht,
         [['index' => 0, 'text' => 'Geflügelfond', 'primaer' => 'basisrezept_anlegen']],
         ['_defer_children' => true],
@@ -2236,7 +2236,7 @@ it('verwirfGeplantenStep: ein geplantes Sub-Rezept verwerfen → verworfen, Depe
     $this->makeIngredient($gericht, 'Geflügelfond');
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'gericht', 'status' => 'running', 'staged' => true]);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, (int) auth()->id(), $gericht,
         [['index' => 0, 'text' => 'Geflügelfond', 'primaer' => 'basisrezept_anlegen']],
         ['_defer_children' => true],
@@ -2255,7 +2255,7 @@ it('verworfenes Sub-Rezept bleibt weg: die Gericht-Freigabe erzeugt es nicht wie
     $this->makeIngredient($gericht, 'Geflügelfond');
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'scope' => 'gericht', 'status' => 'running', 'staged' => true]);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, (int) auth()->id(), $gericht,
         [['index' => 0, 'text' => 'Geflügelfond', 'primaer' => 'basisrezept_anlegen']],
         ['_defer_children' => true],
@@ -2402,7 +2402,7 @@ it('L1 Reuse-Gate (hybrid): existierendes Basisrezept wird gebunden statt neu er
     // Bestand: dasselbe Basisrezept existiert schon.
     $bestand = $this->makeRecipe($this->rootTeam, 'Geflügelfond');
 
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, $step->id, auth()->id(), $gericht,
         [['index' => 0, 'text' => 'Geflügelfond', 'primaer' => 'basisrezept_anlegen']],
         ['auto_dependencies' => true, 'bestand' => 'hybrid'],
@@ -2423,7 +2423,7 @@ it('B3 nur_bestand ohne Treffer: KEIN neues Rezept, aber eine SICHTBARE Hardstop
     $gericht = $this->makeRecipe($this->rootTeam, 'Gericht ohne Bestand', ['status' => 'draft']);
     $zutat = $this->makeIngredient($gericht, 'Exotische Spezialpaste');
 
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, $step->id, auth()->id(), $gericht,
         [['index' => 0, 'text' => 'Exotische Spezialpaste', 'primaer' => 'basisrezept_anlegen']],
         ['auto_dependencies' => true, 'bestand' => 'nur_bestand'],
@@ -2452,7 +2452,7 @@ it('L1 komplett_neu: Reuse-Gate übersprungen — trotz Bestand wird neu geplant
     $this->makeIngredient($gericht, 'Geflügelfond');
     $this->makeRecipe($this->rootTeam, 'Geflügelfond');   // Bestand existiert — wird bewusst ignoriert
 
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, $step->id, auth()->id(), $gericht,
         [['index' => 0, 'text' => 'Geflügelfond', 'primaer' => 'basisrezept_anlegen']],
         ['auto_dependencies' => true, 'bestand' => 'komplett_neu'],
@@ -2590,7 +2590,7 @@ it('L4.2 ergaenzeManuellenSubStep bindet zurück: Eltern-Zutat + Dependency ents
 
     // Wird das Kind erzeugt+gebunden, zeigt die Eltern-Zutat darauf (Rückbindung schließt sich).
     $sub = $this->makeRecipe($this->rootTeam, 'Schweine Jus');
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)
         ->afterGenerated($this->rootTeam, (int) $step->id, auth()->id(), $sub, [], []);
     expect((int) $zutat->refresh()->referenced_recipe_id)->toBe((int) $sub->id);
 });

@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistTerminologyAlias;
 use Platform\FoodAlchemist\Models\FoodAlchemistTerminologyAntiMarker;
-use Platform\FoodAlchemist\Services\TerminologyService;
+use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 
 /**
  * #507 Weg-2 · E7-b: die runtime-gepflegten Terminologie-Einträge (Alias-Gruppen +

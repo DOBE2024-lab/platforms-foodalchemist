@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 
 /** MCP-Steuerbarkeit · D3: eine Darreichungsform als Standard des Gerichts setzen (Preis-Spiegel). */
 class RecipeDarreichungStandardTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

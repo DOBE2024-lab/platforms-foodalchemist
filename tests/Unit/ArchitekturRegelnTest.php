@@ -39,7 +39,7 @@ $code = fn (string $body, string $kopf = '') => "<?php\nnamespace Platform\\Food
 it('livewire_import: use-Zeile und voll qualifizierter Name zählen, Doku-Kommentar nicht', function () {
     $quelle = "<?php\nnamespace Platform\\FoodAlchemist\\Tools;\n"
         . "use Platform\\FoodAlchemist\\Livewire\\Settings\\Wissenssteuerung;\n"
-        . "use Platform\\FoodAlchemist\\Services\\RecipeService;\n"
+        . "use Platform\FoodAlchemist\Services\Rezept\RecipeService;\n"
         . "/** {@see \\Platform\\FoodAlchemist\\Livewire\\Planung\\Index::WATCHDOG_SEKUNDEN} */\n"
         . "class X { public function a() { return \\Platform\\FoodAlchemist\\Livewire\\Planung\\Index::SEKTOR_OPTIONEN; } }\n";
 
@@ -194,7 +194,7 @@ it('Geld-Helfer: keine neuen Handrechnungen für Wareneinsatz, EK je Portion und
         'ek_je_portion' => [
             'src/Services/Rezept/DarreichungResolver.php' => [1, 'der Helfer selbst'],
             'src/Services/Trend/BenchmarkService.php' => [1, 'SQL-Zeile ohne Model, ek_portion kommt schon aus der Abfrage'],
-            'src/Services/MoneyTruthReportService.php' => [1, 'Diagnose vergleicht bewusst Ansatz ÷ Portionen mit der Darreichung'],
+            'src/Services/Pruefung/MoneyTruthReportService.php' => [1, 'Diagnose vergleicht bewusst Ansatz ÷ Portionen mit der Darreichung'],
             'src/Services/Speiseplan/SpeiseplanAnsicht.php' => [1, 'Darreichung des Eintrags statt Standard, Rückfall 0 statt null (98 · 3.3 S3-2: mit inhaltPreis aus SpeiseplanService verschoben)'],
             'src/Services/Concepter/CockpitZeilen.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
             'src/Services/Concepter/ConceptPreisService.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
@@ -244,7 +244,7 @@ it('Text-Normalisierer: keine neuen Umlaut-Tabellen außerhalb von Support/Text 
     // Datei => [Anzahl, Grund]. Nur sinken lassen — neue Stellen nutzen Text::falte()/umschrift()/grundlaut().
     $ausnahmen = [
         'src/Support/Text.php' => [2, 'der Normalisierer selbst (UMSCHRIFT, GRUNDLAUT)'],
-        'src/Services/IngredientMatchService.php' => [1, 'Zustand-Regex ohne ß: umschrift() nähme ß dazu, das wäre eine Matching-Änderung (offen, 2.2b gemeldet)'],
+        'src/Services/GpStamm/IngredientMatchService.php' => [1, 'Zustand-Regex ohne ß: umschrift() nähme ß dazu, das wäre eine Matching-Änderung (offen, 2.2b gemeldet)'],
         'src/Support/GpKorrektur.php' => [1, 'Suffix-Vergleich ohne ß: umschrift() nähme ß dazu, das wäre eine Verhaltensänderung (offen, 2.2b gemeldet)'],
     ];
 

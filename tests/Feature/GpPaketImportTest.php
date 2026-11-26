@@ -10,8 +10,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPrice;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
-use Platform\FoodAlchemist\Services\GpAggregateService;
-use Platform\FoodAlchemist\Services\KostenCacheService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
+use Platform\FoodAlchemist\Services\Rezept\KostenCacheService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Tests\Support\GpPaketBauer as B;
@@ -651,7 +651,7 @@ it('Warengruppe als Zahl (4 oder "4") im Paket wird wie "04" gegen die io-Codes 
     ($this->apply)([]);
 
     foreach (['Zanderfilet: frisch', 'Lachsfilet: frisch'] as $name) {
-        $g = ($this->gp)(app(\Platform\FoodAlchemist\Services\GpNamingService::class)->slugify($name));
+        $g = ($this->gp)(app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class)->slugify($name));
         expect($g)->not->toBeNull()->and($g->commodity_group_code)->toBe('04');
     }
     expect(($this->csv)('gp_abgelehnt'))->toBe([]);

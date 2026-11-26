@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Platform\FoodAlchemist\Services\Produktion\BehaelterRechner;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 
 /**
  * 98 · 2.3c: Dichteklasse eines Rezepts von Hand setzen bzw. leeren — wie im Rezept-Modal (Regeneration & Behälter),

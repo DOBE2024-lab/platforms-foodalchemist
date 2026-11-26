@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console\Diagnose;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\VollstaendigkeitReportService;
+use Platform\FoodAlchemist\Services\Pruefung\VollstaendigkeitReportService;
 
 /**
  * Spec 50 · Etappe 0 — Messbericht Vollständigkeit. **Read-only**, schreibt nichts.

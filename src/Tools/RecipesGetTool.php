@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 
 /** M8-01: Basisrezept-Detail inkl. Zutaten + GL-02-Aggregate. */
 class RecipesGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
@@ -48,7 +48,7 @@ class RecipesGetTool extends FoodAlchemistTool implements ToolContract, ToolMeta
 
         // Spec 82 Stufe 3b (E4): Kosten aus Sicht DIESES Teams — Besitzer: Rezept-Spalten (unverändert), sonst
         // Team-Kosten-Cache (eigene Preise/Pins). Eine Fassung trägt nie Master-Kosten.
-        $kosten = app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->fuer($r, $team);
+        $kosten = app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->fuer($r, $team);
         $daten = [
             'id' => $r->id, 'name' => $r->name, 'status' => $r->status->value,
             'description' => $r->description, 'yield_kg' => $r->yield_kg,

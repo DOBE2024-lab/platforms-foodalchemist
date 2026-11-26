@@ -8,8 +8,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeEmbeddingService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
-use Platform\FoodAlchemist\Services\TerminologyService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 
 /**
  * Anker-Vorauswahl für `gp.anker`: aus welchen Slugs die KI den Kern-Anker eines GPs wählen darf.

@@ -16,8 +16,8 @@ namespace Platform\FoodAlchemist\Enums;
  * `enrich`/`enrich_vk`/`enrich_gp` aus {@see \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService},
  * `enrich_concept` aus {@see \Platform\FoodAlchemist\Services\Concepter\ConceptOneShotService} (Spec 50 · C-4),
  * `ingest` aus {@see \Platform\FoodAlchemist\Services\Einkauf\FileArticleImportService},
- * `review` aus {@see \Platform\FoodAlchemist\Services\RecipeFindingsBatchService},
- * `detektor` aus {@see \Platform\FoodAlchemist\Services\QualityRunService}.
+ * `review` aus {@see \Platform\FoodAlchemist\Services\Pruefung\RecipeFindingsBatchService},
+ * `detektor` aus {@see \Platform\FoodAlchemist\Services\Pruefung\QualityRunService}.
  */
 enum BulkRunType: string
 {

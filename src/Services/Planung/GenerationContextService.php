@@ -38,7 +38,7 @@ class GenerationContextService
     private const REZEPT_CAND_MAX = 12;
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\IngredientMatchService $matcher,
+        private \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService $matcher,
         private TokenEngine $tokens,
     ) {
     }

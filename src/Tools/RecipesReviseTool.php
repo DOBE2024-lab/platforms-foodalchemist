@@ -7,9 +7,9 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeReviseService;
-use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\RecipeStepService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeReviseService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeStepService;
 
 /**
  * MCP-Steuerbarkeit · D2c: Basisrezept per Freitext-Anweisung überarbeiten (grounded, `recipe.ueberarbeiten`).

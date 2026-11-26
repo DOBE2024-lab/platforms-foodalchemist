@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
 use Platform\FoodAlchemist\Support\SignalCockpit;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -133,7 +133,7 @@ it('löst die betroffenen Rezepte auf (betroffene/countFor teilen dieselbe Query
  * kein schlechtes Rezept. Ein Signal darauf wuerde die Kueche lehren, nicht mehr zu bewerten.
  */
 it('flaggt Rezepte mit wiederholt schlechtem Kuechen-Feedback — ein Ausreisser reicht nicht', function () {
-    $fb = app(\Platform\FoodAlchemist\Services\FeedbackService::class);
+    $fb = app(\Platform\FoodAlchemist\Services\Rezept\FeedbackService::class);
     $bewerte = function (int $recipeId, array $scores) use ($fb) {
         foreach ($scores as $s) {
             $fb->erstelle($this->rootTeam, $recipeId, ['quelle' => 'kueche', 'score' => $s, 'created_via' => 'fa_wall']);
@@ -170,7 +170,7 @@ it('flaggt Rezepte mit wiederholt schlechtem Kuechen-Feedback — ein Ausreisser
  * sein, sonst flutet es die Arbeitsliste, die es zu lesen gilt.
  */
 it('meldet Küchen-Favoriten als Info — mit höherer Hürde als der Mangel', function () {
-    $fb = app(\Platform\FoodAlchemist\Services\FeedbackService::class);
+    $fb = app(\Platform\FoodAlchemist\Services\Rezept\FeedbackService::class);
     $bewerte = function (int $recipeId, array $scores) use ($fb) {
         foreach ($scores as $s) {
             $fb->erstelle($this->rootTeam, $recipeId, ['quelle' => 'kueche', 'score' => $s, 'created_via' => 'fa_wall']);

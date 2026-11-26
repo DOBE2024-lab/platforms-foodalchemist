@@ -56,7 +56,7 @@ it('Job no-op ohne Absturz, wenn der LA nicht (mehr) existiert', function () {
 
     expect(fn () => $job->handle(
         app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class),
-        app(\Platform\FoodAlchemist\Services\GpNamingService::class),
+        app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class),
     ))->not->toThrow(\Throwable::class);
 
     expect(FoodAlchemistSupplierItemStructure::count())->toBe(0);

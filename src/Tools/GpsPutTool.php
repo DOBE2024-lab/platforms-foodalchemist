@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpNamingService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 
 /**
  * MCP-Steuerbarkeit · D1: Grundprodukt bearbeiten (Strukturfelder, §6-Naming).
@@ -55,7 +55,7 @@ class GpsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
                 'zusatz' => ['type' => 'string', 'description' => 'Klammer-Zusatz, steht hinten als "/ (…)": Fantasiename (§6.6) oder bei Rezepturware und Getränken mit Gattungsname (WG 15) die Marke (§5 Ausnahme 3; Getränke Dominique 28.10.; Wert aus foodalchemist.artikel.MARKE, z. B. Block House, Heisters, Happy Day). Nur exakt aus Artikel/Vermarktungsname bzw. aus artikel.MARKE, nie selbst bilden; Händlernamen nie.'],
                 'alkohol' => ['type' => 'string', 'enum' => ['ja', 'nein', 'offen'], 'description' => 'Enthält das Produkt Alkohol (Getränk ab 0,5 vol-%, Kochwein, Mirin, Rum-Aroma …)? Fester Wert mit Vorrang vor den Artikeldaten, wird bis ins Rezept hochgereicht (Kennzeichnung „Alk.“). Gilt als manuell gepflegt; offen = keine Aussage.'],
                 'rezepturware' => ['type' => 'boolean', 'description' => '§5 Ausnahme 3: Produkt mit eigener Rezeptur aus mehreren Zutaten (Marke/Hersteller in der Klammer, anderer Hersteller = eigenes GP). null bzw. weglassen = nicht entschieden. Wurst (WG 04) und Getränke (WG 15) immer false — Getränke mit Gattungsname + Hersteller-Marke tragen die Marke trotzdem als Klammer-Zusatz (zusatz, Dominique 28.10.: „Ananassaft: 1 l / (Happy Day)“); Markenprodukte ohne eigenen Gattungsnamen behalten die Marke als Name („Coca-Cola: 0,33 l“); ohne Marke bleibt die Klammer leer (generisch, kein marke_offen). marke_offen leitet das System ab.'],
-                'condition' => ['type' => 'string', 'description' => 'Zustand (§9): ' . \Platform\FoodAlchemist\Services\GpNamingService::zustandListe() . '.'],
+                'condition' => ['type' => 'string', 'description' => 'Zustand (§9): ' . \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::zustandListe() . '.'],
                 'serving_vehicle' => ['type' => 'string', 'description' => 'Non-Food (WG 16): Servier-Typ des Gefäßes als Name oder Id (als Text) aus dem Vokabular Servier-Vehikel (leer löscht); die Darreichung liest ihn von hier.'],
                 'diameter_cm' => ['type' => 'number', 'description' => 'Non-Food (WG 16): Ø in cm, z. B. 27 oder 7,5 (leer löscht).'],
                 'length_cm' => ['type' => 'number', 'description' => 'Non-Food (WG 16): Länge in cm.'],
@@ -118,12 +118,12 @@ class GpsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
         try {
             $gp = app(GpNamingService::class)->updateGp($team, $gp, $in);
             // Maße (nur Non-Food, WG 16) in cm/ml; der Name wird dadurch NICHT umgeschrieben — Größe ggf. über pflichtangabe mitgeben
-            $gp = app(\Platform\FoodAlchemist\Services\GpMasseService::class)->setze($gp, array_intersect_key($arguments, \Platform\FoodAlchemist\Support\NonFoodMasse::EINGABE));
+            $gp = app(\Platform\FoodAlchemist\Services\GpStamm\GpMasseService::class)->setze($gp, array_intersect_key($arguments, \Platform\FoodAlchemist\Support\NonFoodMasse::EINGABE));
             if (array_key_exists('is_kochmedium', $arguments)) {
-                $gp = app(\Platform\FoodAlchemist\Services\GpService::class)->setzeKochmedium($team, (int) $gp->id, (bool) $arguments['is_kochmedium']);
+                $gp = app(\Platform\FoodAlchemist\Services\GpStamm\GpService::class)->setzeKochmedium($team, (int) $gp->id, (bool) $arguments['is_kochmedium']);
             }
             if (array_key_exists('serving_vehicle', $arguments)) {
-                $gp = app(\Platform\FoodAlchemist\Services\GpMasseService::class)->setzeServierTyp($gp, $arguments['serving_vehicle']);
+                $gp = app(\Platform\FoodAlchemist\Services\GpStamm\GpMasseService::class)->setzeServierTyp($gp, $arguments['serving_vehicle']);
             }
         } catch (\RuntimeException $e) {
             return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');

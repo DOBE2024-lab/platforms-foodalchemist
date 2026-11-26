@@ -6,9 +6,9 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\QualityRunService;
-use Platform\FoodAlchemist\Services\RecipeFindingService;
-use Platform\FoodAlchemist\Services\RecipeFindingsBatchService;
+use Platform\FoodAlchemist\Services\Pruefung\QualityRunService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingsBatchService;
 
 /**
  * „KI-Befunde sammeln" über MCP — der Copilot-Batch über die fällige Arbeitsmenge.

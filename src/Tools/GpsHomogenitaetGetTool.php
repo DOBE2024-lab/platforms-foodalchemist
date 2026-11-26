@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\FaRolle;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\GpHomogenitaetService;
+use Platform\FoodAlchemist\Services\GpStamm\GpHomogenitaetService;
 
 /** Spec 82 §2 · Bericht „GPs mit uneinheitlichen Artikeln“ lesen (nur lesend, auf das beschränkt, was das Team sieht). */
 class GpsHomogenitaetGetTool extends WareneingangTool implements ToolContract, ToolMetadataContract

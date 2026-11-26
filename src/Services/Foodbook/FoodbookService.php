@@ -591,7 +591,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
         ], static fn ($v) => $v !== null && $v !== '');
 
         try {
-            $gen = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($team, $beschreibung, $parameter, null, true);
+            $gen = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class)->generiere($team, $beschreibung, $parameter, null, true);
             $recipe = $gen['recipe'] ?? null;
             if ($recipe === null) {
                 throw new \RuntimeException('Die KI hat kein Rezept erstellt.');

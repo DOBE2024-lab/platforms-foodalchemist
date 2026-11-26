@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Settings\Taxonomie;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeCategory;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeMainGroup;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

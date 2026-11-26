@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 
 /** MCP-Steuerbarkeit · D13: Sub-Kategorie einer Warengruppe umbenennen (team-eigen, propagiert auf GPs). */
 class VocabSubkategorienPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

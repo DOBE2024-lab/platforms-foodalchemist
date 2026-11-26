@@ -40,7 +40,7 @@ class LaCandidateFinder
     public function __construct(
         private TokenEngine $engine,
         private MatchHeuristics $heuristik,
-        private \Platform\FoodAlchemist\Services\TerminologyService $terminology,
+        private \Platform\FoodAlchemist\Services\GpStamm\TerminologyService $terminology,
         private StammLieferantService $stamm,
         private SupplierItemService $items,
         private LeadLaStrategieResolver $strategie,

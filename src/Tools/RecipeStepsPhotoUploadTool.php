@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
-use Platform\FoodAlchemist\Services\RezeptFotoService;
+use Platform\FoodAlchemist\Services\Rezept\RezeptFotoService;
 use Platform\FoodAlchemist\Tools\Concerns\DateiAusArgumenten;
 use Platform\FoodAlchemist\Tools\Concerns\RezeptFotoZugriff;
 

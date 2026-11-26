@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\SpeisenKlassenService;
+use Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService;
 
 /**
  * MCP-Steuerbarkeit · D3: Komponenten-Rollen eines Gerichts per KI verteilen (Held/Begleiter/…).

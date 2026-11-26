@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Support\TeamScope;
 
 /**
@@ -117,7 +117,7 @@ class DetailPanel extends Component
         }
         $this->kiFehler = null;
         try {
-            $this->klasseVorschlag = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+            $this->klasseVorschlag = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
                 ->classify($team, $this->recipeId);
         } catch (\RuntimeException $e) {
             $this->kiFehler = $e->getMessage();
@@ -131,7 +131,7 @@ class DetailPanel extends Component
             return;                                                  // null-Klassifikation ⇒ kein Schreibversuch (§7.5)
         }
         try {
-            app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->acceptKlasse(
+            app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->acceptKlasse(
                 $team, $this->recipeId, $this->klasseVorschlag['klasse_id'],
                 $this->klasseVorschlag['confidence'], $this->klasseVorschlag['reasoning'],
                 $this->klasseVorschlag['call_log_id'] ?? null,
@@ -158,7 +158,7 @@ class DetailPanel extends Component
         }
         $this->kiFehler = null;
         try {
-            $this->rollenVorschlag = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+            $this->rollenVorschlag = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
                 ->verteileRollen($team, $this->recipeId);
         } catch (\RuntimeException $e) {
             $this->kiFehler = $e->getMessage();
@@ -171,7 +171,7 @@ class DetailPanel extends Component
         if ($team === null || $this->recipeId === null || $this->rollenVorschlag === null || $this->rollenVorschlag['rollen'] === []) {
             return;
         }
-        app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+        app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
             ->acceptRollen($team, $this->recipeId, $this->rollenVorschlag['rollen']);
         $this->rollenVorschlag = null;
         $this->dispatch('recipe-gespeichert');
@@ -204,7 +204,7 @@ class DetailPanel extends Component
         }
         $this->kiFehler = null;
         try {
-            app(\Platform\FoodAlchemist\Services\CoherenceService::class)->judge($team, $this->recipeId);
+            app(\Platform\FoodAlchemist\Services\Pruefung\CoherenceService::class)->judge($team, $this->recipeId);
         } catch (\RuntimeException $e) {
             $this->kiFehler = $e->getMessage();
         }
@@ -218,7 +218,7 @@ class DetailPanel extends Component
         }
         $this->kiFehler = null;
         try {
-            app(\Platform\FoodAlchemist\Services\CoherenceService::class)->tellerHeber($team, $this->recipeId);
+            app(\Platform\FoodAlchemist\Services\Pruefung\CoherenceService::class)->tellerHeber($team, $this->recipeId);
         } catch (\RuntimeException $e) {
             $this->kiFehler = $e->getMessage();
         }
@@ -231,13 +231,13 @@ class DetailPanel extends Component
 
     public function eignungSetzen(string $typ, string $slug): void
     {
-        $this->fachAktion(fn ($team) => app(\Platform\FoodAlchemist\Services\RecipeService::class)
+        $this->fachAktion(fn ($team) => app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)
             ->setzeEignung($team, $this->recipeId, $typ, $slug, 'manual'));
     }
 
     public function eignungEntfernen(string $typ, string $slug): void
     {
-        $this->fachAktion(fn ($team) => app(\Platform\FoodAlchemist\Services\RecipeService::class)
+        $this->fachAktion(fn ($team) => app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)
             ->entferneEignung($team, $this->recipeId, $typ, $slug));
     }
 
@@ -251,7 +251,7 @@ class DetailPanel extends Component
         $r = app(SalesRecipeService::class)->detail($team, $this->recipeId);
         $gateway = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class);
         $kontext = ['name' => $r->name, 'komponenten' => $r->ingredients->map(fn ($z) => $z->referencedRecipe?->name ?? $z->gp?->name ?? $z->display_name)->all()];
-        $vokabular = \Platform\FoodAlchemist\Services\RecipeService::eignungVokabular();
+        $vokabular = \Platform\FoodAlchemist\Services\Rezept\RecipeService::eignungVokabular();
         // Fund Lisa (Paket G, MCP-Routing-Audit): recipe.sektor lief bislang ohne Discovery-
         // Kontext (Routing findet Treffer, kommen aber nie an). Beide Prompt-Keys hängen hier
         // im selben Loop — jeder zieht seinen EIGENEN Block über contextFor(..., $prompt, ...),
@@ -293,7 +293,7 @@ class DetailPanel extends Component
         }
         $this->fachAktion(function ($team) {
             foreach ($this->eignungVorschlag['slugs'] as $slug => $typ) {
-                app(\Platform\FoodAlchemist\Services\RecipeService::class)
+                app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)
                     ->setzeEignung($team, $this->recipeId, $typ, $slug, 'ai_inferred', $this->eignungVorschlag['confidence']);
             }
             $this->eignungVorschlag = null;
@@ -350,12 +350,12 @@ class DetailPanel extends Component
             ...$this->pairingFuerView($team, $rezept, $rezept !== null),
             // D-6 §5.x: Judge-Achse (gecacht) + deterministische Aroma-Nachbarn (lazy)
             'kohaerenzStatus' => $rezept !== null
-                ? app(\Platform\FoodAlchemist\Services\CoherenceService::class)->status($team, $rezept->id)
+                ? app(\Platform\FoodAlchemist\Services\Pruefung\CoherenceService::class)->status($team, $rezept->id)
                 : null,
             // M9-01k: Eignungen + Vokabular für die Pflege-Selects
             'niveauEignungen' => $rezept !== null ? $rezept->levelSuitabilities()->get() : collect(),
             'sektorEignungen' => $rezept !== null ? $rezept->sectorSuitabilities()->get() : collect(),
-            'eignungVokabular' => \Platform\FoodAlchemist\Services\RecipeService::eignungVokabular(),
+            'eignungVokabular' => \Platform\FoodAlchemist\Services\Rezept\RecipeService::eignungVokabular(),
             // Gericht-Verwaltung (23.11.2026) ersetzt „Wo verwendet?“: alle aktiven Verwendungen mit Namen, Ersetzen, Löschen.
             'gerichtVerwaltung' => $rezept !== null ? $this->gerichtVerwaltung() : null,
             'tauschKandidaten' => $rezept !== null ? $this->tauschKandidaten() : collect(),

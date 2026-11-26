@@ -8,10 +8,10 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
-use Platform\FoodAlchemist\Services\SignalDetektorService;
-use Platform\FoodAlchemist\Services\SignalObjectService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalObjectService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -161,7 +161,7 @@ it('Konfidenz wird SOFORT nachgezogen: Verknüpfen, LA-Allergen ändern, Lösen 
 });
 
 it('Signal-Panel: aktuelle Konflikte verlinken zum Grundprodukt, das alte Summen-Signal wird geschlossen', function () {
-    $alt = app(\Platform\FoodAlchemist\Services\SignalService::class)->erzeuge($this->rootTeam, SignalTyp::DatenqualitaetGpLa,
+    $alt = app(\Platform\FoodAlchemist\Services\Pruefung\SignalService::class)->erzeuge($this->rootTeam, SignalTyp::DatenqualitaetGpLa,
         \Platform\FoodAlchemist\Enums\SignalSeverity::Kritisch, '147 GPs mit Allergen-Konflikt', ['dedup_key' => 'dq-gp-allergen-konflikt', 'source' => 'data-quality', 'payload' => ['anzahl' => 147]]);
     $a = ($this->gp)('Sahne');
     ($this->la)($a, 'A-1', 'enthalten');
@@ -176,7 +176,7 @@ it('Signal-Panel: aktuelle Konflikte verlinken zum Grundprodukt, das alte Summen
         ->and($res['items'][0]['hinweis'])->toBe('Milch: enthalten laut Hanos A-1 Artikel A-1, nicht enthalten laut Chefs A-2 Artikel A-2')
         ->and($res['live'])->toBeTrue()
         // Rückrichtung: am GP taucht das Signal in „Weitere Befunde“ auf
-        ->and(collect(app(\Platform\FoodAlchemist\Services\SignalObjectService::class)->signaleAmObjekt($this->rootTeam, 'gp', $a->id))->pluck('id')->all())->toContain($sig->id)
+        ->and(collect(app(\Platform\FoodAlchemist\Services\Pruefung\SignalObjectService::class)->signaleAmObjekt($this->rootTeam, 'gp', $a->id))->pluck('id')->all())->toContain($sig->id)
         ->and($alt->fresh()->status)->toBe(SignalStatus::Erledigt);
 
     \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Signale\DetailPanel::class)->call('zeige', $sig->id)

@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeReviewService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeReviewService;
 
 /**
  * 03·L6: der Copilot-Prüfpass über MCP — **read-only**. Er liefert dieselben

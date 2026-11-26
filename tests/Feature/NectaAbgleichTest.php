@@ -561,7 +561,7 @@ it('★ Necta verschärft ein Artikel-Allergen → das Rezept über GP ist nach 
     \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure::create(['team_id' => null, 'supplier_item_id' => $this->a->id, 'gp_id' => $gp->id]);
     $rezept = $this->makeRecipe($this->rootTeam, 'Schoko-Sandwich');
     $this->makeIngredient($rezept, 'Splitterbrötchen', $gp);
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputePipeline($rezept->id);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputePipeline($rezept->id);
     expect($rezept->fresh()->allergen_milk)->not->toBe('enthalten')   // Ausgangslage: Milch am Artikel unbekannt
         ->and($rezept->fresh()->allergen_gluten)->toBe('enthalten');
 
@@ -579,7 +579,7 @@ it('Nachrechnen: ohne Kennzeichnungs-Änderung kein Rezept; Probe zählt nur und
     \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure::create(['team_id' => null, 'supplier_item_id' => $this->a->id, 'gp_id' => $gp->id]);
     $rezept = $this->makeRecipe($this->rootTeam, 'Schoko-Sandwich');
     $this->makeIngredient($rezept, 'Splitterbrötchen', $gp);
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputePipeline($rezept->id);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputePipeline($rezept->id);
     $vorher = $rezept->fresh()->allergen_milk;
 
     $nacht = ($this->lauf)();                                       // nächtlich: nur Preise, A hat keine neuen Allergene
@@ -597,13 +597,13 @@ it('★ Nachrechnen scheitert für ein Rezept: die anderen werden nachgerechnet,
     $this->makeIngredient($gut, 'Splitterbrötchen', $gp);
     $kaputt = $this->makeRecipe($this->rootTeam, 'Kaputtes Rezept');
     $this->makeIngredient($kaputt, 'Splitterbrötchen', $gp);
-    $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+    $recompute = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
     $recompute->recomputePipeline($gut->id);
     $recompute->recomputePipeline($kaputt->id);
 
-    $this->app->instance(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class, new class(
-        app(\Platform\FoodAlchemist\Services\GpAggregateService::class), app(\Platform\FoodAlchemist\Services\Preis\PriceService::class), $kaputt->id
-    ) extends \Platform\FoodAlchemist\Services\RecipeRecomputeService {
+    $this->app->instance(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class, new class(
+        app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class), app(\Platform\FoodAlchemist\Services\Preis\PriceService::class), $kaputt->id
+    ) extends \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService {
         public function __construct($gp, $preise, private int $kaputt)
         {
             parent::__construct($gp, $preise);

@@ -45,7 +45,7 @@ class PlanungsblattService
     private array $recipeCache = [];
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute,
         private \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $leadLa,
         private \Platform\FoodAlchemist\Services\Rezept\DarreichungResolver $darreichungen,
         private \Platform\FoodAlchemist\Services\Einkauf\GebindeRechner $gebinde,
@@ -598,7 +598,7 @@ class PlanungsblattService
      */
     private function darreichungsAnteil(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $dar, float $portionen, array &$warnungen): array
     {
-        $anteil = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->produktionsAnteil($recipe, $dar, $portionen, Team::find($recipe->team_id));
+        $anteil = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->produktionsAnteil($recipe, $dar, $portionen, Team::find($recipe->team_id));
         if ($anteil['warnung'] !== null) {
             $warnungen[] = $anteil['warnung'];
         }
@@ -1141,10 +1141,10 @@ class PlanungsblattService
         $info = array_filter([
             'behaelter_warm' => $this->vocabName('foodalchemist_vocab_containers', $dar->container_warm_vocab_id),
             'behaelter_kalt' => $this->vocabName('foodalchemist_vocab_containers', $dar->container_cold_vocab_id),
-            'vehikel' => $this->vocabName('foodalchemist_vocab_serving_vehicles', app(\Platform\FoodAlchemist\Services\DarreichungService::class)->vehikelId($dar)),   // wirksamer Typ: Übersteuerung, sonst Typ des Gefäßes
+            'vehikel' => $this->vocabName('foodalchemist_vocab_serving_vehicles', app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->vehikelId($dar)),   // wirksamer Typ: Übersteuerung, sonst Typ des Gefäßes
             'geschirr' => $dar->vessel_gp_id !== null ? DB::table('foodalchemist_gps')->where('id', $dar->vessel_gp_id)->value('name') : null,   // Gefäß der Form
             // Kostenart des Gefäßes (17.11.2026): was die Logistik damit tut — mitgeben, zurück in die Spülküche, zurück zum Verleiher, nur Empfehlung
-            'geschirr_art' => $dar->vessel_gp_id !== null ? (\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::LOGISTIK[app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessKosten($dar)['kostenart'] ?? ''] ?? null) : null,
+            'geschirr_art' => $dar->vessel_gp_id !== null ? (\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::LOGISTIK[app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->gefaessKosten($dar)['kostenart'] ?? ''] ?? null) : null,
             'arbeitszeit_zuschlag_min' => $dar->arbeitszeiten === null ? $dar->work_time_surcharge_min : null,
             'mitgeben' => $this->mitgebenText($formen !== [] ? $formen : [['dar' => $dar, 'portionen' => $portionen]], $team),
         ], fn ($v) => $v !== null && $v !== '');
@@ -1165,13 +1165,13 @@ class PlanungsblattService
             if (($f['dar'] ?? null) === null) {
                 continue;
             }
-            foreach (app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessMitgeben($f['dar'], (float) $f['portionen'], $team) as $t) {
+            foreach (app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->gefaessMitgeben($f['dar'], (float) $f['portionen'], $team) as $t) {
                 $summe[$t['gp_id']] ??= ['name' => $t['name'], 'menge' => 0.0];
                 $summe[$t['gp_id']]['menge'] += $t['menge'];
             }
         }
 
-        return $summe !== [] ? implode(' · ', array_map(fn ($t) => \Platform\FoodAlchemist\Services\DarreichungService::stueckText($t['menge'], true).' × '.$t['name'], $summe)) : null;
+        return $summe !== [] ? implode(' · ', array_map(fn ($t) => \Platform\FoodAlchemist\Services\Rezept\DarreichungService::stueckText($t['menge'], true).' × '.$t['name'], $summe)) : null;
     }
 
     /** @param array<int|string, array{dar: ?FoodAlchemistRecipeDarreichung, portionen: float}> $formen */
@@ -1191,7 +1191,7 @@ class PlanungsblattService
      */
     private function formenAnzeige(FoodAlchemistRecipe $recipe, array $formen): array
     {
-        $darSvc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+        $darSvc = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class);
         $out = [];
         foreach ($formen as $f) {
             $dar = $f['dar'];

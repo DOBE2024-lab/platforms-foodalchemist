@@ -18,7 +18,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
  *  3. Passung — Typ-Gruppe, Bestandteile und harte Diät ({@see BestandsPassung::grund}). Mit `bestandteile: false`
  *     (Matcher-Treffer, Haus-Zuordnung, Import) nur die Diät.
  *
- * Nicht hier: Zyklus-Schutz (braucht das Elternrezept — {@see \Platform\FoodAlchemist\Services\RecipeRecomputeService::pruefeVerknuepfung})
+ * Nicht hier: Zyklus-Schutz (braucht das Elternrezept — {@see \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::pruefeVerknuepfung})
  * und die Einkaufsform-Sperre des Generators (eine Zeile „TK-Erbsen“ ist Ware, kein Basisrezept).
  */
 final class BestandsZulaessigkeit

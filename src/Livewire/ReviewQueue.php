@@ -14,10 +14,10 @@ use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
 use Platform\FoodAlchemist\Services\Matching\MatchService;
-use Platform\FoodAlchemist\Services\QualityRunService;
-use Platform\FoodAlchemist\Services\RecipeFindingsBatchService;
-use Platform\FoodAlchemist\Services\SignalService;
-use Platform\FoodAlchemist\Services\TerminologyService;
+use Platform\FoodAlchemist\Services\Pruefung\QualityRunService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingsBatchService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
+use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 
 /**
  * M9-03 / V-10: Review-Queue — EINE «Zu prüfen»-Seite für alles, was eine
@@ -213,7 +213,7 @@ class ReviewQueue extends Component
                 $this->kiDraft = null;
                 $this->meldung = 'KI-Fix gestartet — die betroffenen Objekte werden behoben; erledigte Signale verschwinden aus „offen".';
             } else {
-                $res = app(\Platform\FoodAlchemist\Services\SignalFixService::class)->assist($team, $sig);
+                $res = app(\Platform\FoodAlchemist\Services\Pruefung\SignalFixService::class)->assist($team, $sig);
                 $this->kiDraft = ['signal_id' => (int) $sig->id, 'draft' => (string) $res['draft'], 'confidence' => (float) $res['confidence']];
                 $this->meldung = 'KI-Entwurf erzeugt.';
             }
@@ -401,7 +401,7 @@ class ReviewQueue extends Component
         // Spec 21 · E2: Zustands-Sicht (Bestand + Delta + Policy) über der Einzelliste.
         // Ein Aufruf, zwei Verwendungen — die Zeilen selbst und die Typen, die dadurch
         // aus der Einzelliste fallen (kein zweiter Query-Durchlauf).
-        $zustand = app(\Platform\FoodAlchemist\Services\SignalPolicyService::class)->zustand($team);
+        $zustand = app(\Platform\FoodAlchemist\Services\Pruefung\SignalPolicyService::class)->zustand($team);
         $aggregierteTypen = array_values(array_map(
             fn (array $z) => $z['type'],
             array_filter($zustand, fn (array $z) => $z['aggregiert'])

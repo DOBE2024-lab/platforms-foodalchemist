@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 
 /**
  * Import-Unterrezept ausrezeptieren (Dominique 29.10.): der Import legt für eine Basiskomponente ohne Bestand („Aroma: Nussbutter",
@@ -77,7 +77,7 @@ class StubAusrezeptierenJob implements ShouldQueue, \Platform\FoodAlchemist\Serv
         if ($vkModus) {
             // Gericht-Hülle (13.11.2026): „Rezeptur erstellen" baut in ein vorhandenes Gericht ohne Komponenten.
             return isset($parameter['gericht_fuellen_id'])
-                ? \Platform\FoodAlchemist\Services\GerichtHuelleService::huelle($team, (int) $parameter['gericht_fuellen_id']) : null;
+                ? \Platform\FoodAlchemist\Services\Gericht\GerichtHuelleService::huelle($team, (int) $parameter['gericht_fuellen_id']) : null;
         }
         if (! isset($parameter['stub_fuellen_id'])) {
             return null;
@@ -97,7 +97,7 @@ class StubAusrezeptierenJob implements ShouldQueue, \Platform\FoodAlchemist\Serv
             'status' => 'draft',
             'created_via' => $createdVia ?? 'import_ki_unterrezept',
             'description' => $kiRezept['description'] ?? null,
-            'taste_direction' => in_array($kiRezept['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\RecipeService::TASTE_DIRECTIONS, true) ? $kiRezept['taste_direction'] : null,
+            'taste_direction' => in_array($kiRezept['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\Rezept\RecipeService::TASTE_DIRECTIONS, true) ? $kiRezept['taste_direction'] : null,
         ]);
 
         return $stub;

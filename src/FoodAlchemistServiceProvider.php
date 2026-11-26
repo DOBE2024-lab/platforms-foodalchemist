@@ -213,8 +213,8 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         $this->app->bind(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanDokumentQuelle::class, \Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class);   // 98 · 3.3 S3-0: Präsentation → Speiseplan-Aushang ohne Kreis (Muster K3)
         $this->app->bind(\Platform\FoodAlchemist\Services\Foodbook\FoodbookDokumentQuelle::class, \Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);   // 98 · 3.3 S4-0k: Präsentation → Foodbook-Dokument
         $this->app->bind(\Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregatQuelle::class, \Platform\FoodAlchemist\Services\Foodbook\FoodbookService::class);   // 98 · 3.3 S4-0k: Soll-Ist → Kapitel-Aggregat/Ampel/Gesamt
-        $this->app->bind(\Platform\FoodAlchemist\Services\Rezept\TeamKostenRechner::class, \Platform\FoodAlchemist\Services\RecipeRecomputeService::class);   // 98 · 3.3 S7 P3: KostenCache → Team-Kosten ohne Kreis (Muster K3)
-        $this->app->bind(\Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte::class, \Platform\FoodAlchemist\Services\RecipeRecomputeService::class);   // 98 · 3.3 S7 P4: Stamm-Dienste → Neuberechnung ohne Kreis (Muster K3)
+        $this->app->bind(\Platform\FoodAlchemist\Services\Rezept\TeamKostenRechner::class, \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);   // 98 · 3.3 S7 P3: KostenCache → Team-Kosten ohne Kreis (Muster K3)
+        $this->app->bind(\Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte::class, \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);   // 98 · 3.3 S7 P4: Stamm-Dienste → Neuberechnung ohne Kreis (Muster K3)
         // Web-Recherche zu Lieferantenartikeln (Spec 85 I5-8): Websuche über den Core-Contract (include_web_search, Core #935)
         $this->app->bind(\Platform\FoodAlchemist\Services\Websuche\WebSucheTransport::class, \Platform\FoodAlchemist\Services\Websuche\CoreWebSucheTransport::class);
         // Produktdaten-Quellen fuer den Produktpass-Panel: die Websuche haengt als Quelle websuche im Tag (Knopf Im Web recherchieren)

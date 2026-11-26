@@ -32,7 +32,7 @@
     {{-- ── Editor-Kartei: NUR Eignung (Eigenschaften-Reiter, ohne Panel-Kopf) ── --}}
     @elseif($nurEignung)
         @php
-            $eignungVokab = \Platform\FoodAlchemist\Services\RecipeService::eignungVokabular();
+            $eignungVokab = \Platform\FoodAlchemist\Services\Rezept\RecipeService::eignungVokabular();
             $eignungAktiv = ['level' => $rezept->levelSuitabilities->keyBy('level_slug'), 'sektor' => $rezept->sectorSuitabilities->keyBy('sector_slug')];
         @endphp
         <div class="flex flex-col gap-2" data-eignungen>
@@ -390,7 +390,7 @@
 
             {{-- Eignung: Niveau und Sektor als Umschalter --}}
             @php
-                $eignungVokab = \Platform\FoodAlchemist\Services\RecipeService::eignungVokabular();
+                $eignungVokab = \Platform\FoodAlchemist\Services\Rezept\RecipeService::eignungVokabular();
                 $eignungAktiv = ['level' => $rezept->levelSuitabilities->keyBy('level_slug'), 'sektor' => $rezept->sectorSuitabilities->keyBy('sector_slug')];
             @endphp
             <x-fa::section variant="plain" title="Eignung" icon="heroicon-o-user-group" description="Für welches Niveau und welchen Betrieb das Rezept passt. Klick schaltet um." data-eignungen>

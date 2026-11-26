@@ -276,7 +276,7 @@ class FileArticleImportService
 
     public function __construct(
         private \Platform\FoodAlchemist\Services\Preis\PriceService $preise,
-        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute,
         private SupplierItemService $artikel,
         private SupplierService $lieferanten,
     ) {
@@ -330,7 +330,7 @@ class FileArticleImportService
         $bewegteItems = [];   // Artikel mit tatsächlich geändertem Preis → Kette (E4)
 
         // Sammellauf: Kosten-Folge einmal am Ende statt je Zeile (Rezepte rechnet postImportKette)
-        \Platform\FoodAlchemist\Services\KostenCacheService::gesammelt(function () use ($datei, $team, $supplierId, $apply, &$bewegteItems, &$bericht) {
+        \Platform\FoodAlchemist\Services\Rezept\KostenCacheService::gesammelt(function () use ($datei, $team, $supplierId, $apply, &$bewegteItems, &$bericht) {
             foreach ($datei['zeilen'] as $zeile) {
                 $bericht['befunde'][] = $befund = $this->verarbeiteZeile($team, $supplierId, $zeile, $apply, $bewegteItems);
                 $bericht[$befund['status']]++;
@@ -1097,7 +1097,7 @@ class FileArticleImportService
             // V-050: der Detektor bekommt die bewegte GP-Menge statt der Team-weiten Suche.
             // Deckel = Größe der eigenen Menge, damit er hier nie bindet — eine Kappung wäre
             // in genau dieser Kette die stille Auslassung, gegen die E4 geschrieben ist.
-            $kette['signale'] = app(\Platform\FoodAlchemist\Services\SignalDetektorService::class)
+            $kette['signale'] = app(\Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService::class)
                 ->preisSprungMargeImpact($team, maxGps: max(count($gpIds), 1), gpIds: $gpIds);
         } catch (\Throwable $e) {
             Log::warning("Kanal-B-Kette: Preis-Sprung-Detektor fehlgeschlagen — {$e->getMessage()}");

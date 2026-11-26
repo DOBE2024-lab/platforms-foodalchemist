@@ -79,7 +79,7 @@ it('Spec 84 · Wächter erkennt ein Leck, einen Riegel im Rumpf und einen Riegel
     expect((bool) preg_match(SPEC84_EIGENTUM_LADEN, $leck) && (bool) preg_match(SPEC84_EIGENTUM_SCHREIBEN, $leck))->toBeTrue()
         ->and((bool) preg_match(SPEC84_EIGENTUM_RIEGEL, $leck))->toBeFalse()
         ->and((bool) preg_match(SPEC84_EIGENTUM_RIEGEL, $direkt))->toBeTrue()
-        ->and(spec84_eigentum_treffer())->not->toContain('Services/DarreichungService.php::aktualisieren')   // Riegel in find()
+        ->and(spec84_eigentum_treffer())->not->toContain('Services/Rezept/DarreichungService.php::aktualisieren')   // Riegel in find()
         ->and(count(spec84_eigentum_treffer()))->toBeGreaterThan(0);                                      // der Scan findet überhaupt etwas
 });
 

@@ -403,7 +403,7 @@ class AngebotService
                 'price_override_user_id' => null, 'price_override_at' => null, 'price_override_expires_at' => null];
         }
         $angebot->update($update);
-        app(\Platform\FoodAlchemist\Services\PriceAuditService::class)->record(
+        app(\Platform\FoodAlchemist\Services\Pruefung\PriceAuditService::class)->record(
             $angebot, 'offer', $oldCalculated, $auto, $oldEffective,
             $angebot->total_price !== null ? (float) $angebot->total_price : null,
             'concept_catalog_sum', ['calculation_version' => \Platform\FoodAlchemist\Services\Preis\CatalogPricingService::VERSION],

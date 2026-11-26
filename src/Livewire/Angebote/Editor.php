@@ -1645,7 +1645,7 @@ class Editor extends Component
             'facetteSaisons' => $facetten['saisons'],
             // Gericht-Picker: Klassen-/Untergruppen-Spalte (Modell A)
             'gerichtHauptgruppen' => $this->selectedKapitelId !== null
-                ? app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)->dishMainGroups($team) : collect(),
+                ? app(\Platform\FoodAlchemist\Services\Rezept\SalesRecipeService::class)->dishMainGroups($team) : collect(),
             'gerichtUntergruppen' => ($this->selectedKapitelId !== null && $this->gerichtHauptgruppe !== null)
                 ? \Platform\FoodAlchemist\Models\FoodAlchemistDishClass::visibleToTeam($team)
                     ->where('dish_main_group_id', $this->gerichtHauptgruppe)->orderBy('id')->get(['id', 'label', 'diet_form'])

@@ -381,7 +381,7 @@
                         <div class="flex flex-col gap-1.5 min-w-0" data-steuerklasse>
                             <x-fa::field label="Steuerklasse" for="la-vat-klasse">
                                 <x-fa::select id="la-vat-klasse" wire:model="eigenschaften.vat_profile_key" placeholder="wie Grundprodukt"
-                                    :options="\Platform\FoodAlchemist\Services\SteuerklasseService::LABELS" :disabled="! $darfEdit" />
+                                    :options="\Platform\FoodAlchemist\Services\GpStamm\SteuerklasseService::LABELS" :disabled="! $darfEdit" />
                             </x-fa::field>
                             @if($steuer)
                                 <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-3)]" data-steuer-wirksam>

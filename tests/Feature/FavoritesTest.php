@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\Core\Contracts\ToolContext;
 use Platform\FoodAlchemist\Livewire\Favorites\Index as FavoritesIndex;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\FavoriteGpService;
+use Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService;
 use Platform\FoodAlchemist\Tools\FavoritesGetTool;
 use Platform\FoodAlchemist\Tools\FavoritesPutTool;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

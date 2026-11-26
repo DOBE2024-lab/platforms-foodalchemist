@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 
 /** MCP-Steuerbarkeit · D13: Rezept-Hauptgruppe bearbeiten (team-eigen). */
 class VocabRecipeMaingroupsPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

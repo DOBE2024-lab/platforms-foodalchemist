@@ -9,8 +9,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
-use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -49,7 +49,7 @@ beforeEach(function () {
 
 it('Scope-Härte: VK-Liste liefert nie Basisrezepte, Basis-Liste nie VK, Detail kreuzweise null', function () {
     $sales = app(SalesRecipeService::class);
-    $recipes = app(\Platform\FoodAlchemist\Services\RecipeService::class);
+    $recipes = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class);
 
     expect($sales->paginateBrowser([], $this->rootTeam)->pluck('id'))->toEqual(collect([$this->vk->id]))
         ->and($recipes->paginateBrowser([], $this->rootTeam)->pluck('id'))->not->toContain($this->vk->id)
@@ -58,7 +58,7 @@ it('Scope-Härte: VK-Liste liefert nie Basisrezepte, Basis-Liste nie VK, Detail 
 });
 
 it('GL-04-Pool-Filter: VK-Rezept ist nicht als Sub-Rezept verknüpfbar', function () {
-    $treffer = collect(app(\Platform\FoodAlchemist\Services\RecipeService::class)
+    $treffer = collect(app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)
         ->sucheZutatenZiel($this->rootTeam, 'Filet', 0));
 
     expect($treffer->where('type', 'sub')->pluck('id'))->not->toContain($this->vk->id)

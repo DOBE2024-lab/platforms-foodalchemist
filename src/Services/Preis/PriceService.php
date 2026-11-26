@@ -475,7 +475,7 @@ class PriceService
     /** Spec 82 3b: Auslöser-Matrix — Team-Kosten der betroffenen Rezepte als veraltet markieren (lazy neu gerechnet). */
     private function kostenVeraltet(FoodAlchemistSupplierItem $item, Team $team): void
     {
-        app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->nachPreisAenderung($item, $team);   // per app(): KostenCache → Recompute → PriceService
+        app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->nachPreisAenderung($item, $team);   // per app(): KostenCache → Recompute → PriceService
     }
 
     /**

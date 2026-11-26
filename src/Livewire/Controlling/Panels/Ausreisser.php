@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire\Controlling\Panels;
 
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\PurchaseAnomalyService;
+use Platform\FoodAlchemist\Services\Pruefung\PurchaseAnomalyService;
 
 /**
  * Spec 32 — Preis-Ausreißer im Einkaufsjournal, endlich sichtbar.

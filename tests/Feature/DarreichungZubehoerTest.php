@@ -16,13 +16,13 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\Plattform\AboKuendigungService;
 use Platform\FoodAlchemist\Services\Plattform\AboService;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\Fassung\FassungService;
 use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
-use Platform\FoodAlchemist\Services\KostenCacheService;
+use Platform\FoodAlchemist\Services\Rezept\KostenCacheService;
 use Platform\FoodAlchemist\Services\Fassung\FassungsDarreichungService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;
-use Platform\FoodAlchemist\Services\TeamVkService;
+use Platform\FoodAlchemist\Services\Rezept\TeamVkService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -89,7 +89,7 @@ beforeEach(function () {
         $form = FoodAlchemistServierform::create(['team_id' => $this->master->id, 'code' => 'glas', 'label' => 'Im Glas']);
         $this->gerichtM = $this->makeRecipe($this->master, 'Kalbsjus im Glas', ['is_sales_recipe' => true]);
         $this->makeIngredient($this->gerichtM, 'Kalbsknochen', $knochen, '1000');
-        app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputePipeline($this->gerichtM->id);
+        app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputePipeline($this->gerichtM->id);
         $this->darM = app(DarreichungService::class)->anlegen($this->master, $this->gerichtM->id, $form->id);
         $this->darM->forceFill(['is_standard' => true])->save();
         $this->darM = $this->grammaturAltbestand($this->darM, 200);   // Plan 98 B: Grammatur als Altbestand-Fixture (freie Grammatur ist über den Service gesperrt)

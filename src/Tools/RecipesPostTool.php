@@ -6,8 +6,8 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Tools\Concerns\RezeptFachfelder;
 
 /**
@@ -160,7 +160,7 @@ class RecipesPostTool extends FoodAlchemistTool implements ToolContract, ToolMet
             // M4: VK-Gericht bekommt sofort eine Standard-Darreichung (Preis-Wahrheit) — created_via=mcp.
             $standardForm = null;
             if ((bool) ($arguments['is_sales_recipe'] ?? false)) {
-                $standard = app(\Platform\FoodAlchemist\Services\DarreichungService::class)
+                $standard = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)
                     ->ensureStandard($team, $recipe->id, 'mcp');
                 $standardForm = $standard?->serving_form_id;
                 $recipe = $recipe->refresh();

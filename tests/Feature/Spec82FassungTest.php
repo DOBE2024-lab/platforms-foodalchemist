@@ -97,12 +97,12 @@ it('Leck-Sperre: Fassungen tragen nie ek_*, Zusatzkosten oder VK des Masters —
     \Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure::create(['team_id' => null, 'supplier_item_id' => $la->id, 'gp_id' => $this->knochen->id]);
     $this->knochen->update(['lead_la_supplier_item_id' => $la->id]);
     app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->createTeamPrice($this->master, $la, 5.00);
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputePipeline($this->fond->id);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputePipeline($this->fond->id);
     expect((float) $this->fond->fresh()->ek_total_eur)->toBeGreaterThan(0.0);   // Master-Arbeitszeile ist bepreist
 
     $this->fassungen->veroeffentlichen($this->master, $this->jus->id, 'Erst', $this->kurator);
     $ids = ($this->fassungVon)($this->jus)->pluck('id')->merge(($this->fassungVon)($this->fond)->pluck('id'))->all();
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeMany($ids);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputeMany($ids);
 
     foreach (FoodAlchemistRecipe::mitFassungen()->whereIn('id', $ids)->get() as $f) {
         expect([$f->ek_total_eur, $f->ek_per_kg_eur, $f->additional_costs_eur, $f->vk_netto])->toBe([null, null, null, null], $f->name);
@@ -159,7 +159,7 @@ it('Regeln: nur Master mit „Freigeben", Notiz Pflicht, nur globale Stamm-GPs, 
     DB::table('foodalchemist_recipe_ingredients')->where('gp_id', $eigenGp->id)->delete();
     $this->fassungen->veroeffentlichen($this->master, $this->jus->id, 'Erst', $this->kurator);
     $jusF = ($this->fassungVon)($this->jus)->sole();
-    $rs = app(\Platform\FoodAlchemist\Services\RecipeService::class);
+    $rs = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class);
     expect(fn () => $rs->update($this->master, $jusF->id, ['name' => 'Hack']))->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class)   // Master findet Fassungen nicht als Arbeitszeile
         ->and(fn () => $rs->update($this->broich, $jusF->id, ['name' => 'Hack']))->toThrow(RuntimeException::class, 'Geerbtes Rezept')
         ->and(fn () => $this->fassungen->veroeffentlichen($this->master, $jusF->id, 'x', $this->kurator))->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class);

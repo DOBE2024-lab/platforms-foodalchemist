@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -123,7 +123,7 @@ it('T5: minteFehlendeGps mintet fehlende GPs aus passender LA (tentative) + verl
     $roh = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $recipe->id, 'raw_text' => 'Sesampaste', 'quantity' => '100', 'unit_vocab_id' => $unit->id, 'position' => 1]);
     $ohne = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $recipe->id, 'raw_text' => 'Marsianische Nichtzutat', 'quantity' => '10', 'unit_vocab_id' => $unit->id, 'position' => 2]);
 
-    $r = app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $recipe->fresh());
+    $r = app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $recipe->fresh());
 
     expect($r['minted'])->toBe(1)
         ->and($r['ohne_la'])->toBe(1);
@@ -142,7 +142,7 @@ it('T5: Zutaten mit vorhandenem GP oder Sub-Rezept werden NICHT angefasst', func
     \Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $recipe->id, 'referenced_recipe_id' => $sub->id, 'raw_text' => 'Sub', 'quantity' => '50', 'unit_vocab_id' => $unit->id, 'position' => 2]);
 
     $vorher = FoodAlchemistGp::count();
-    $r = app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $recipe->fresh());
+    $r = app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $recipe->fresh());
 
     expect($r['status'])->toBe('vollständig')
         ->and($r['minted'])->toBe(0);
@@ -162,7 +162,7 @@ it('L4: minteFehlendeGps überspringt kaskaden-geführte Zeilen (Dependency zu K
     $kind = \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'parent_step_id' => $parent->id, 'kind' => 'rezept', 'status' => 'geplant', 'depth' => 1, 'sort' => 2, 'label' => 'Sesampaste']);
     \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRecipeDependency::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'parent_step_id' => $parent->id, 'ingredient_id' => $zut->id, 'child_step_id' => $kind->id]);
 
-    $r = app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $recipe->fresh());
+    $r = app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $recipe->fresh());
 
     // Nichts gemintet — die Zeile bleibt für die Sub-Rezept-Zerlegung frei (kein GP draufgesetzt).
     expect($r['minted'])->toBe(0);

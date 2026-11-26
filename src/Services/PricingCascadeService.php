@@ -28,7 +28,7 @@ class PricingCascadeService
     private function recomputeTeamImTeam(Team $team, int $chunk): array
     {
         $stats = ['presentations' => 0, 'concepts' => 0, 'offers' => 0];
-        $presentations = app(DarreichungService::class);
+        $presentations = app(Rezept\DarreichungService::class);
         FoodAlchemistRecipeDarreichung::where('team_id', $team->id)->chunkById($chunk, function ($rows) use (&$stats, $presentations) {
             foreach ($rows as $row) {
                 $presentations->recomputePreise($row);

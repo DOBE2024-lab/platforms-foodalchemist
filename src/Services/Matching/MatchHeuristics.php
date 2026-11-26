@@ -316,7 +316,7 @@ class MatchHeuristics
     {
         // Zukauf-Basisrezept (Entscheidung Dominique 10.10.): „Crunch: Röstzwiebeln (Zukauf)" zeigt IMMER aufs Zukauf-
         // Basisrezept, auch mit Einkaufsform („…, trocken (Zukauf)").
-        if (mb_stripos($name, \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::ZUSATZ) !== false) {
+        if (mb_stripos($name, \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::ZUSATZ) !== false) {
             return true;
         }
         $praefix = \Platform\FoodAlchemist\Support\RezeptTypVokabular::praefix($name);
@@ -325,7 +325,7 @@ class MatchHeuristics
             return false;
         }
 
-        return ! in_array($this->engine->produktForm($name)['zustand'], ['TK', 'trocken', 'konserviert', ...\Platform\FoodAlchemist\Services\GpNamingService::BEHANDLUNG], true);
+        return ! in_array($this->engine->produktForm($name)['zustand'], ['TK', 'trocken', 'konserviert', ...\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::BEHANDLUNG], true);
     }
 
     /**
@@ -474,8 +474,8 @@ class MatchHeuristics
     {
         $z = $zustandCol !== null ? trim($zustandCol) : '';
         // v3.6.0 2b: Behandlung als Zustand + TK im Namen ⇒ physisch TK-Ware (TK-Vorzug im Ranking greift)
-        if (in_array($z, \Platform\FoodAlchemist\Services\GpNamingService::BEHANDLUNG, true)
-            && \Platform\FoodAlchemist\Services\GpNamingService::istTk(null, $gpName)) {
+        if (in_array($z, \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::BEHANDLUNG, true)
+            && \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::istTk(null, $gpName)) {
             return 'frozen';
         }
         if ($z !== '') {

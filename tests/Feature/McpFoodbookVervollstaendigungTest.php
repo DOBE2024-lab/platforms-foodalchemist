@@ -89,8 +89,9 @@ it('foodbook_kapitel: REORDER / MOVE / WORDING / DELETE (Entwurf)', function () 
 });
 
 it('foodbook_blocks: PUT / REORDER / VARIANT_GROUP (Entwurf)', function () {
-    $b1 = $this->svc->addBlock($this->rootTeam, $this->kap->id, ['type' => 'text', 'label' => 'A']);
-    $b2 = $this->svc->addBlock($this->rootTeam, $this->kap->id, ['type' => 'text', 'label' => 'B']);
+    // 98 · 3.6 PR6 (B8): Wahlgruppe nur aus bepreisten Typen — darum Preis-Köpfe statt Text
+    $b1 = $this->svc->addBlock($this->rootTeam, $this->kap->id, ['type' => 'header_frei_preis', 'label' => 'A', 'price_value' => 10, 'price_basis' => 'person']);
+    $b2 = $this->svc->addBlock($this->rootTeam, $this->kap->id, ['type' => 'header_frei_preis', 'label' => 'B', 'price_value' => 12, 'price_basis' => 'person']);
 
     $put = ($this->run)('foodalchemist.foodbook_blocks.PUT', ['block_id' => $b1->id, 'felder' => ['customer_text' => 'Frisch & regional']]);
     expect($put->success)->toBeTrue('put: ' . ($put->error ?? ''));

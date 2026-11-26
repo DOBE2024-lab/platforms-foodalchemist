@@ -9,7 +9,7 @@ return [
     'src/Services/Pairing/PairingService.php' => [2567, 'Lesen / Bewerten / Pflege (Spec 85 §9)'],
     'src/Services/Ai/KnowledgeContextService.php' => [2170, 'Routing / Budget / Prompt-Bau (Spec 85 §9)'],
     'src/Services/Pruefung/DataQualityService.php' => [2022, 'Metriken je Bereich (Spec 85 §9)'],
-    'src/Livewire/Angebote/Editor.php' => [1752, 'C4 Komposition (Spec 85 §8)'],
-    'src/Livewire/Foodbooks/Index.php' => [1623, 'C4 Komposition (Spec 85 §8); +1 Handy-Weiche #1003 PR6'],
+    'src/Livewire/Angebote/Editor.php' => [1751, 'C4 Komposition (Spec 85 §8); −1 98 · 3.6 PR6'],
+    'src/Livewire/Foodbooks/Index.php' => [1622, 'C4 Komposition (Spec 85 §8); +1 Handy-Weiche #1003 PR6, −1 98 · 3.6 PR6'],
     'src/Services/Rezept/RecipeGeneratorService.php' => [1528, 'Nicht-Kernlogik auslagern (Spec 85 §9)'],
 ];

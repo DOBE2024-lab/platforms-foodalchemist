@@ -63,11 +63,73 @@ final class PositionValidierung
             $daten['quantity'] ??= 1;
         }
 
+        $istPosition = $art === PositionProfil::ANGEBOT && $effTyp === 'position';
+        if (array_key_exists('quantity', $daten)) {   // B5: > 0, Angebots-Position ≥ 0, leer = 1
+            $daten['quantity'] = self::menge($daten['quantity'], $istPosition);
+        }
+        if (($daten['unit_vocab_id'] ?? null) !== null && $daten['unit_vocab_id'] !== '' && ! $istPosition) {   // B6
+            throw new PositionFehler('Eine Einheit gibt es nur an einer Angebots-Position.');
+        }
+        if (array_key_exists('presentation_id', $daten) && ! PositionProfil::darreichungSchreibbar($art)) {   // B7: Foodbook lehnt ab statt still zu verwerfen
+            if ($daten['presentation_id'] !== null && $daten['presentation_id'] !== '') {
+                throw new PositionFehler('Im Foodbook gibt es keine Darreichung je Block, sie kommt aus dem Konzept.');
+            }
+            unset($daten['presentation_id']);
+        }
+        if ($zeile !== null && PositionProfil::darreichungSchreibbar($art) && ! array_key_exists('presentation_id', $daten)
+            && array_key_exists('sales_recipe_id', $daten) && (int) $daten['sales_recipe_id'] !== (int) $zeile->sales_recipe_id) {
+            $daten['presentation_id'] = null;   // B7: Gerichtswechsel — die Darreichung des alten Gerichts gilt nicht mehr
+        }
+        if (($daten['variant_group_id'] ?? null) !== null && $daten['variant_group_id'] !== '' && ! in_array($effTyp, PositionProfil::wahlTypen($art), true)) {
+            throw new PositionFehler(self::WAHL_TYP);   // B8
+        }
+
         if (in_array($art, [PositionProfil::FOODBOOK, PositionProfil::ANGEBOT], true)) {
             BlockReferenz::pruefe($team, $daten, $zeile);
         }
 
         return $daten;
+    }
+
+    private const WAHL_TYP = 'In eine Wahlgruppe gehören nur Gerichte, Konzepte und Preis-Köpfe.';
+
+    /**
+     * B5 (98 · 3.6 PR6): Menge einer Zeile. Leer = null (rechnet als 1), keine Zahl abgelehnt, sonst > 0 —
+     * mit $nullErlaubt (Angebots-Position, z. B. Verbrauchsschätzung) ≥ 0.
+     */
+    public static function menge(mixed $wert, bool $nullErlaubt = false): ?float
+    {
+        if ($wert === null || $wert === '') {
+            return null;
+        }
+        if (! is_numeric($wert)) {
+            throw new PositionFehler('Menge muss eine Zahl sein.');
+        }
+        $menge = (float) $wert;
+        if ($nullErlaubt ? $menge < 0 : $menge <= 0) {
+            throw new PositionFehler($nullErlaubt ? 'Menge darf nicht negativ sein.' : 'Menge muss größer als 0 sein.');
+        }
+
+        return $menge;
+    }
+
+    /**
+     * B8 (98 · 3.6 PR6): eine Wahlgruppe bilden — nur bepreiste Typen, alle aus einem Kapitel. Aufheben (Gruppe null) prüft nichts.
+     *
+     * @param  iterable<Model>  $zeilen
+     */
+    public static function wahlgruppe(string $art, iterable $zeilen): void
+    {
+        $kapitel = [];
+        foreach ($zeilen as $z) {
+            if (! in_array($z->type, PositionProfil::wahlTypen($art), true)) {
+                throw new PositionFehler(self::WAHL_TYP);
+            }
+            $kapitel[(int) $z->chapter_id] = true;
+        }
+        if (count($kapitel) > 1) {
+            throw new PositionFehler('Eine Wahlgruppe gehört zu genau einem Kapitel.');
+        }
     }
 
     /**
@@ -80,7 +142,8 @@ final class PositionValidierung
     public static function slot(Team $team, FoodAlchemistConceptSlot $slot, array $in): ?string
     {
         $typ = app(ConceptSlotZielService::class)->pruefe($team, $slot, $in);
-        if (empty($in['embedded_concept_id']) && ! empty($in['sales_recipe_id'])) {   // 17.11.: nur eine wirksame Einheit
+        if (empty($in['embedded_concept_id']) && ! empty($in['sales_recipe_id'])) {   // 17.11.: nur eine wirksame Einheit; B5: Menge > 0
+            self::menge($in['quantity'] ?? null);
             app(SlotEinheitService::class)->pruefeBelegung($team, $slot, (int) $in['sales_recipe_id'], isset($in['unit_vocab_id']) ? (int) $in['unit_vocab_id'] : null);
         }
 
@@ -110,10 +173,13 @@ final class PositionValidierung
      * @param  array<int, array<string, mixed>>  $rows
      * @return list<array{min_persons:int, price:float}>
      */
-    public static function staffel(string $art, array $rows): array
+    public static function staffel(string $art, array $rows, ?Model $zeile = null): array
     {
         if (! PositionProfil::staffel($art)) {
             throw new PositionFehler('Staffelpreise gibt es nur im Foodbook.');
+        }
+        if ($zeile !== null && $zeile->type !== 'header_frei_preis') {   // B9 (98 · 3.6 PR6)
+            throw new PositionFehler('Staffelpreise gibt es nur an einem Preis-Kopf.');
         }
         $aus = [];
         $gesehen = [];

@@ -95,8 +95,9 @@ it('Kapitel: anlegen, ändern, verschieben, ordnen, Wording', function () {
 it('Blöcke: anlegen (mit Staffel), ändern, ordnen, Variantengruppe', function () {
     $r = fn (string $t, array $a) => ($this->rauch)($t, $a);
     $neu = $r(Tools\FoodbookBlocksPostTool::class, [
-        'chapter_id' => $this->kap2->id, 'type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'label' => 'Zander',
-        'price_value' => 12.5, 'price_basis' => 'pro_stueck', 'staffel' => [['min_persons' => 10, 'price' => 11.0]],
+        // 98 · 3.6 PR6 (B9): Staffel nur am Preis-Kopf — der Rauchtest legt darum einen Preis-Kopf mit Staffel an
+        'chapter_id' => $this->kap2->id, 'type' => 'header_frei_preis', 'label' => 'Zander-Buffet',
+        'price_value' => 12.5, 'price_basis' => 'staffel', 'staffel' => [['min_persons' => 10, 'price' => 11.0]],
     ]);
     expect($neu->data['block']['id'])->toBeGreaterThan(0);
     $r(Tools\FoodbookBlocksPutTool::class, ['block_id' => $this->blockText->id, 'felder' => ['label' => 'Notiz neu', 'customer_text' => 'Kundentext', 'visible' => true]]);

@@ -25,7 +25,8 @@ class DarreichungResolver
 {
     public function fuerSlot(FoodAlchemistConceptSlot $slot): ?FoodAlchemistRecipeDarreichung
     {
-        if ($slot->presentation_id !== null && $slot->presentation !== null) {
+        // B7 (98 · 3.6 PR6): nur eine Darreichung DIESES Gerichts — eine fremde (Altbestand nach Gerichtswechsel) zählt nicht
+        if ($slot->presentation_id !== null && $slot->presentation !== null && (int) $slot->presentation->recipe_id === (int) $slot->sales_recipe_id) {
             return $slot->presentation;
         }
 

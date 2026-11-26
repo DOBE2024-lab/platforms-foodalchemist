@@ -860,7 +860,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     {
         $k = $this->ownedKapitel($team, $kapitelId);
         app(\Platform\FoodAlchemist\Services\Concepter\FormatKapitelService::class)->pruefeBlockErlaubt($k);   // Format-Kapitel: keine eigenen Blöcke, Pflege im Format
-        $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
+        $daten = array_intersect_key($in, array_flip([...self::BLOCK_FELDER, 'presentation_id']));   // presentation_id nur, damit die Prüfung sie ablehnt (B7)
         $daten = \Platform\FoodAlchemist\Services\Position\PositionValidierung::block('foodbook', $team, $daten);   // 98 · 3.6: Typ (unbekannt → Ablehnung), Preisbasis, Referenzen
         $daten['team_id'] = $k->team_id;
         $daten['position'] = (int) $k->blocks()->max('position') + 1;
@@ -871,7 +871,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     public function updateBlock(Team $team, int $blockId, array $in): FoodAlchemistFoodbookBlock
     {
         $block = $this->ownedBlock($team, $blockId);
-        $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
+        $daten = array_intersect_key($in, array_flip([...self::BLOCK_FELDER, 'presentation_id']));   // presentation_id nur zur Ablehnung (B7)
         $daten = \Platform\FoodAlchemist\Services\Position\PositionValidierung::block('foodbook', $team, $daten, $block);   // 98 · 3.6: auch die Preisbasis beim Ändern
         $block->update($daten);
 
@@ -927,10 +927,9 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     /** @param list<int> $blockIds */
     public function setVariantGroup(Team $team, array $blockIds, ?int $groupId): void
     {
-        foreach ($blockIds as $id) {
-            $block = $this->ownedBlock($team, (int) $id);
-            $block->update(['variant_group_id' => $groupId]);
-        }
+        $bloecke = array_map(fn ($id) => $this->ownedBlock($team, (int) $id), $blockIds);
+        $groupId === null || \Platform\FoodAlchemist\Services\Position\PositionValidierung::wahlgruppe('foodbook', $bloecke);   // B8
+        array_walk($bloecke, fn ($b) => $b->update(['variant_group_id' => $groupId]));
     }
 
     /**
@@ -941,7 +940,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     public function setStaffel(Team $team, int $blockId, array $rows): void
     {
         $block = $this->ownedBlock($team, $blockId);
-        $rows = \Platform\FoodAlchemist\Services\Position\PositionValidierung::staffel('foodbook', $rows);   // 98 · 3.6: keine doppelte Stufe, kein negativer Preis
+        $rows = \Platform\FoodAlchemist\Services\Position\PositionValidierung::staffel('foodbook', $rows, $block);   // 98 · 3.6: keine doppelte Stufe, kein negativer Preis
         DB::transaction(function () use ($block, $rows) {
             $block->staffel()->forceDelete();
             $i = 0;

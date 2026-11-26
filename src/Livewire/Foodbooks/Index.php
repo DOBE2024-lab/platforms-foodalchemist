@@ -1383,9 +1383,8 @@ class Index extends Component
         if (count($this->markiert) < 2 || $this->selectedKapitelId === null) {
             return;
         }
-        $gid = $svc->nextVariantGroupId($this->team(), $this->selectedKapitelId);
-        $svc->setVariantGroup($this->team(), $this->markiert, $gid);
-        $this->markiert = [];
+        try { $svc->setVariantGroup($this->team(), $this->markiert, $svc->nextVariantGroupId($this->team(), $this->selectedKapitelId)); $this->markiert = []; }
+        catch (\RuntimeException $e) { $this->errorToast($e->getMessage()); }   // 98 · 3.6 PR6 (B8): Ablehnung als Hinweis
     }
 
     public function wahlGruppeAufheben(int $id, FoodbookService $svc): void

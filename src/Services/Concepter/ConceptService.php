@@ -475,18 +475,20 @@ class ConceptService
                 'type' => 'paket',
                 'embedded_concept_id' => (int) $in['embedded_concept_id'],
                 'package_id' => null,
-                'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null,
+                'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null, 'presentation_id' => null,
             ]);
         } elseif (! empty($in['sales_recipe_id'])) {
             $slot->update([
                 // B2: Gericht (VK) ODER Basisrezept — beide referenzieren sales_recipe_id, `type` unterscheidet.
                 'type' => $typ,
                 'sales_recipe_id' => (int) $in['sales_recipe_id'],
+                // B7 (98 · 3.6 PR6): anderes Gericht → die Darreichung des alten gilt nicht mehr (automatisch: Konzept-Form → Standard)
+                'presentation_id' => (int) $in['sales_recipe_id'] === (int) $slot->sales_recipe_id ? $slot->presentation_id : null,
                 'quantity' => $in['quantity'] ?? null, 'unit_vocab_id' => $in['unit_vocab_id'] ?? null,
                 'package_id' => null, 'embedded_concept_id' => null,
             ]);
         } else {
-            $slot->update(['type' => 'gericht', 'package_id' => null, 'embedded_concept_id' => null, 'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null]);
+            $slot->update(['type' => 'gericht', 'package_id' => null, 'embedded_concept_id' => null, 'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null, 'presentation_id' => null]);
         }
         $this->refreshCache($slot->concept);
 
@@ -518,6 +520,7 @@ class ConceptService
     {
         $slot = $this->ownedSlot($team, $slotId);
         // 17.11.: nur eine NEU gewählte Einheit muss rechnen; eine unveränderte Alt-Einheit bleibt speicherbar (Reife-Befund `einheit_unwirksam`)
+        \Platform\FoodAlchemist\Services\Position\PositionValidierung::menge($quantity);   // B5 (98 · 3.6 PR6): > 0 oder leer
         \Platform\FoodAlchemist\Services\Position\PositionValidierung::slotEinheit($team, $slot, $einheitId ?: null);
         $slot->update(['quantity' => $quantity, 'unit_vocab_id' => $einheitId ?: null]);
         $this->refreshCache($slot->concept);

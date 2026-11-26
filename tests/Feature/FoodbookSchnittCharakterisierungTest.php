@@ -24,7 +24,7 @@ beforeEach(function () {
 });
 
 it('resolveStaffel: ohne Staffel 0, ohne Pax die kleinste Stufe, sonst die höchste erreichte Stufe, darunter die kleinste', function () {
-    $block = $this->makeFoodbookBlock($this->kap, ['type' => 'text', 'label' => 'Pauschale']);
+    $block = $this->makeFoodbookBlock($this->kap, ['type' => 'header_frei_preis', 'label' => 'Pauschale', 'price_basis' => 'staffel']);   // 98 · 3.6 PR6 (B9): Staffel nur am Preis-Kopf
     expect($this->svc->resolveStaffel($block, 50))->toBe(0.0);
 
     $this->svc->setStaffel($this->rootTeam, $block->id, [

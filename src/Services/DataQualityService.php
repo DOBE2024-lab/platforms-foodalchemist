@@ -147,7 +147,7 @@ class DataQualityService
         'gp_approved' => 'Freigegebene Grundprodukte',
         'gp_tentative' => 'Grundprodukte im Entwurf (zur Prüfung)',
         'gp_kein_la' => 'Grundprodukte ohne Lieferantenartikel',
-        ...Einkauf\LaBeschaffungsLagen::LABELS,
+        ...Einkauf\LaBeschaffungsLagen::LABELS, ...GpStamm\StueckOhneGewicht::LABELS,
         'gp_kein_preis' => 'Grundprodukte mit Artikeln, aber ohne Preis',
         'gp_kein_lead' => 'Grundprodukte ohne gewählten Hauptartikel',
         'gp_lead_ohne_preis' => 'Grundprodukte, deren Hauptartikel keinen gültigen Preis hat',
@@ -174,7 +174,7 @@ class DataQualityService
         if (isset(self::METRIK_LABELS[$key])) {
             return self::METRIK_LABELS[$key];
         }
-        foreach ([$this->rezeptQualitaetChecks(), $this->konzeptChecks(), $this->foodbookChecks(), GpStamm\StueckOhneGewicht::checks()] as $checks) {
+        foreach ([$this->rezeptQualitaetChecks(), $this->konzeptChecks(), $this->foodbookChecks()] as $checks) {
             if (isset($checks[$key])) {
                 return $checks[$key]['label'];
             }
@@ -362,7 +362,7 @@ class DataQualityService
             $this->gap('gp_tentative_genutzt', self::METRIK_LABELS['gp_tentative_genutzt'], $tentativeGenutzt, SignalTyp::DatenqualitaetGpLa, 'dq-gp-tentative-genutzt',
                 'Nicht freigegebene Grundprodukte sollten nicht in Rezepten stecken. Grundprodukt prüfen und freigeben oder in den Rezepten ersetzen.'),
             $this->gap('gp_konformitaet', self::METRIK_LABELS['gp_konformitaet'], $konfGp, SignalTyp::KonformitaetGp, 'dq-gp-konformitaet',
-                'Bei diesen Grundprodukten verstoßen Angaben gegen die Anlageregeln, zum Beispiel bei Benennung oder Pflichtangaben. Grundprodukt öffnen und die markierten Felder prüfen.'), ...array_values(array_map(fn ($c) => $this->gap(GpStamm\StueckOhneGewicht::KEY, $c['label'], ($c['q'])($team)->count(), null, null, null, SignalSeverity::Info), GpStamm\StueckOhneGewicht::checks())),   // Pflegeliste, nie rot
+                'Bei diesen Grundprodukten verstoßen Angaben gegen die Anlageregeln, zum Beispiel bei Benennung oder Pflichtangaben. Grundprodukt öffnen und die markierten Felder prüfen.'), $this->gap(GpStamm\StueckOhneGewicht::KEY, self::METRIK_LABELS[GpStamm\StueckOhneGewicht::KEY], app(GpStamm\StueckOhneGewicht::class)->abfrage($team)->count(), null, null, null, SignalSeverity::Info),   // Pflegeliste Stückgewicht, nie rot
         ];
     }
 
@@ -1897,9 +1897,9 @@ class DataQualityService
         // Der switch unten ist der Altbestand der Kaskaden-Ebenen (s. V-005).
         foreach ([
             ['recipe', $this->rezeptQualitaetChecks()],
-            ['la', app(Einkauf\LaBeschaffungsLagen::class)->checks()],
+            ['la', app(Einkauf\LaBeschaffungsLagen::class)->checks()], ['gp', app(GpStamm\StueckOhneGewicht::class)->checks()],   // Pflegeliste Stückgewicht (Dominique 23.11.)
             ['concept', $this->konzeptChecks()],
-            ['foodbook', $this->foodbookChecks()], ['gp', GpStamm\StueckOhneGewicht::checks()],   // Pflegeliste Stückgewicht (Dominique 23.11.)
+            ['foodbook', $this->foodbookChecks()],
         ] as [$kind, $checks]) {
             if (isset($checks[$metrik])) {
                 return [($checks[$metrik]['q'])($team), $kind];

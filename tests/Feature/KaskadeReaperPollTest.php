@@ -324,3 +324,27 @@ it('Poll: ein Fehler in der Cache-Sperre bricht den Poll nicht, er landet als Ka
 
     Log::shouldHaveReceived('warning')->withArgs(fn ($m) => str_contains((string) $m, 'Kaskade-Reaper aus dem Poll') && str_contains((string) $m, 'Cache-Store weg'));
 });
+
+it('Quelle in der Summenzeile: Handstart „Befehl“, nur der Scheduler-Eintrag (--zeitplan) meldet „Zeitplan“ (io 26.11.)', function () {
+    $haengend = function () {
+        $run = ($this->lauf)();
+        $step = ($this->schritt)($run, ['status' => 'running']);
+        ($this->alt)($step, 90);
+        DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subMinutes(90)]);
+    };
+    Log::spy();
+
+    $haengend();
+    $this->artisan('foodalchemist:kaskade-reaper')->assertSuccessful();
+    Log::shouldHaveReceived('info')->withArgs(fn ($m) => str_starts_with((string) $m, 'Kaskade-Reaper (Befehl): 1 Läufe geprüft'));
+
+    $haengend();
+    $this->artisan('foodalchemist:kaskade-reaper', ['--zeitplan' => true])->assertSuccessful();
+    Log::shouldHaveReceived('info')->withArgs(fn ($m) => str_starts_with((string) $m, 'Kaskade-Reaper (Zeitplan): 1 Läufe geprüft'));
+
+    config(['foodalchemist.scheduler.kaskade_reaper_aktiv' => true]);
+    $schedule = new \Illuminate\Console\Scheduling\Schedule;
+    (require __DIR__ . '/../../src/Console/_zeitplan.php')($schedule);
+    $eintrag = collect($schedule->events())->first(fn ($e) => str_contains((string) $e->command, 'foodalchemist:kaskade-reaper'));
+    expect((string) $eintrag?->command)->toContain('--zeitplan');
+});

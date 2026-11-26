@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -45,7 +45,7 @@ class MoneyTruthReportService
     /** Ab dieser Differenz gilt eine Quote als abweichend (Rundungs-Rauschen unter 0,1 pp). */
     private const QUOTE_EPSILON_PP = 0.1;
 
-    public function __construct(private Preis\PriceService $prices) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\Preis\PriceService $prices) {}
 
     /**
      * @return array{team_id: int, a_sales_unit_count: array, b_preis_wahrheit: array, c_lead_la_preis: array}
@@ -107,8 +107,8 @@ class MoneyTruthReportService
             }
 
             $anzahl = max(1.0, (float) ($recipe->sales_unit_count ?? 1));
-            $wDivision = Preis\MargeService::wareneinsatzPct((float) $recipe->ek_total_eur / $anzahl, $vk, null);
-            $wDarreichung = Preis\MargeService::wareneinsatzPct($ekPortion, $vk, null);
+            $wDivision = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct((float) $recipe->ek_total_eur / $anzahl, $vk, null);
+            $wDarreichung = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ekPortion, $vk, null);
 
             $vergleichbar++;
             $delta = abs($wDivision - $wDarreichung);

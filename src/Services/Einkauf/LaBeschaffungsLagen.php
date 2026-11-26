@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Services\Preis\PriceService;
 
 /**
  * Beschaffungs-Lagen der Lieferantenartikel für die Datenqualitäts-Ampel: zugeordnete Artikel,
- * die eingestellt sind oder keinen positiven Einkaufspreis haben. Die {@see \Platform\FoodAlchemist\Services\DataQualityService}
+ * die eingestellt sind oder keinen positiven Einkaufspreis haben. Die {@see \Platform\FoodAlchemist\Services\Pruefung\DataQualityService}
  * zählt, listet und emittiert sie wie jede andere Metrik; Prädikat, Label und Signal stehen nur hier.
  * Aus der DataQualityService gelöst (Größenwächter, CQ main-grün 2026-11-26), Verhalten unverändert.
  */

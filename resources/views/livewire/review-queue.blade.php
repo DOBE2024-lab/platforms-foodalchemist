@@ -97,7 +97,7 @@
                                 busy="Wird eingereiht …" flash="Lauf gestartet" data-rq-befunde />
                         <label for="rq-befunde-limit" class="fa-t-muted">höchstens</label>
                         <x-fa::input id="rq-befunde-limit" type="number" size="sm" numeric wire:model="befundeLimit" min="1"
-                                     max="{{ \Platform\FoodAlchemist\Services\RecipeFindingsBatchService::MAX_LIMIT }}"
+                                     max="{{ \Platform\FoodAlchemist\Services\Pruefung\RecipeFindingsBatchService::MAX_LIMIT }}"
                                      class="w-16" title="Höchstens so viele Rezepte je Lauf" data-rq-befunde-limit />
                         <span class="fa-t-muted">Rezepte</span>
                     </div>

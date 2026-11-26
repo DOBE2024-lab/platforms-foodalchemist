@@ -151,10 +151,10 @@ it('laufen() ruft die Pairing-Signale statt des alten Detektors', function () {
     ($this->wissen)('foodalchemist_anchor_bedarfe', ['anchor_id' => $this->a['pumpkin'], 'achse' => 'saeure', 'staerke' => 'muss']);
     ($this->rezepte)('pumpkin', 3);
 
-    app(\Platform\FoodAlchemist\Services\SignalDetektorService::class)->laufen($this->rootTeam);
+    app(\Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService::class)->laufen($this->rootTeam);
 
     expect(($this->offen)(SignalTyp::PairingWissenPruefen))->toHaveCount(1)
-        ->and(method_exists(\Platform\FoodAlchemist\Services\SignalDetektorService::class, 'widerspruchWissenGraph'))->toBeFalse();
+        ->and(method_exists(\Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService::class, 'widerspruchWissenGraph'))->toBeFalse();
 });
 
 it('Migration schließt die offenen Alt-Signale widerspruch_wissen_graph, Historie bleibt', function () {

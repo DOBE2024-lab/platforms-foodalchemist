@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
@@ -30,8 +30,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplan;
 class AusgabeDriftService
 {
     public function __construct(
-        private Ausgabe\PresentationService $presentations,
-        private TeamSettingsService $settings,
+        private \Platform\FoodAlchemist\Services\Ausgabe\PresentationService $presentations,
+        private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
     ) {
     }
 
@@ -123,10 +123,10 @@ class AusgabeDriftService
     private function teamCoreAusgaben(Team $team): array
     {
         $typen = [
-            Ausgabe\PresentationService::TYPE_FOODBOOK => FoodAlchemistFoodbook::class,
-            Ausgabe\PresentationService::TYPE_SPEISEKARTE => FoodAlchemistSpeisekarte::class,
-            Ausgabe\PresentationService::TYPE_SPEISEPLAN => FoodAlchemistSpeiseplan::class,
-            Ausgabe\PresentationService::TYPE_ANGEBOT => FoodAlchemistAngebot::class,   // Spec 85 F5: auch das Angebot wird eingefroren
+            \Platform\FoodAlchemist\Services\Ausgabe\PresentationService::TYPE_FOODBOOK => FoodAlchemistFoodbook::class,
+            \Platform\FoodAlchemist\Services\Ausgabe\PresentationService::TYPE_SPEISEKARTE => FoodAlchemistSpeisekarte::class,
+            \Platform\FoodAlchemist\Services\Ausgabe\PresentationService::TYPE_SPEISEPLAN => FoodAlchemistSpeiseplan::class,
+            \Platform\FoodAlchemist\Services\Ausgabe\PresentationService::TYPE_ANGEBOT => FoodAlchemistAngebot::class,   // Spec 85 F5: auch das Angebot wird eingefroren
         ];
 
         $out = [];

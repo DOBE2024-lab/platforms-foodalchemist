@@ -37,7 +37,7 @@ it('Konflikt (enthalten↔nicht) → LOW, kein eigenes Signal mehr (meldet der D
 
     $glutenVorher = $gp->fresh()->allergen_gluten;   // Default 'unbekannt'
     // Altbestand: das frühere Summen-Signal des Kommandos (Dublette zu gp_allergen_widerspruch, ohne auflösbare Objekte)
-    $alt = app(\Platform\FoodAlchemist\Services\SignalService::class)->erzeuge($this->rootTeam, \Platform\FoodAlchemist\Enums\SignalTyp::DatenqualitaetGpLa,
+    $alt = app(\Platform\FoodAlchemist\Services\Pruefung\SignalService::class)->erzeuge($this->rootTeam, \Platform\FoodAlchemist\Enums\SignalTyp::DatenqualitaetGpLa,
         \Platform\FoodAlchemist\Enums\SignalSeverity::Kritisch, '1 GPs mit Allergen-Konflikt', ['dedup_key' => 'dq-gp-allergen-konflikt', 'source' => 'data-quality', 'payload' => ['anzahl' => 1]]);
 
     $this->artisan('foodalchemist:gp-allergen-backfill', ['--team' => $this->rootTeam->id, '--apply' => true])->assertSuccessful();

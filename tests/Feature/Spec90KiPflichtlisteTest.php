@@ -24,7 +24,7 @@ const SPEC90_DOK = 'docs/PLANUNG/90_KI_Dualisieren_Pflichtliste.md';
 /** `GpProposalService::propose` ist ein GP-Vorschlag ohne KI, kein Gateway-Aufruf. */
 const SPEC90_KEIN_KI = [
     'src/Tools/GpProposalsPostTool.php::execute',
-    'src/Services/HardstopResolveService.php::beschaffungAnstossen',
+    'src/Services/Pruefung/HardstopResolveService.php::beschaffungAnstossen',
 ];
 
 /** Datei (relativ zum Modul) je Zusatzweg, die ihn nutzen darf. Muss in Tabelle B stehen. */

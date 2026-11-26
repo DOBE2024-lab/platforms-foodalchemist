@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierMarke;
 use Platform\FoodAlchemist\Services\Marken\MarkeAusArtikel;
 use Platform\FoodAlchemist\Services\Marken\MarkenPflegeService;
 use Platform\FoodAlchemist\Services\Marken\MarkeOffenService;
-use Platform\FoodAlchemist\Services\SignalDetektorService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

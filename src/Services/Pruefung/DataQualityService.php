@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -43,9 +43,9 @@ class DataQualityService
      */
     public function __construct(
         private SignalService $signals,
-        private Concepter\CoverageService $coverage,
-        private Pairing\PairingService $pairing,
-        private Preis\PriceService $preise,
+        private \Platform\FoodAlchemist\Services\Concepter\CoverageService $coverage,
+        private \Platform\FoodAlchemist\Services\Pairing\PairingService $pairing,
+        private \Platform\FoodAlchemist\Services\Preis\PriceService $preise,
     ) {
     }
 
@@ -147,7 +147,7 @@ class DataQualityService
         'gp_approved' => 'Freigegebene Grundprodukte',
         'gp_tentative' => 'Grundprodukte im Entwurf (zur Prüfung)',
         'gp_kein_la' => 'Grundprodukte ohne Lieferantenartikel',
-        ...Einkauf\LaBeschaffungsLagen::LABELS, ...GpStamm\StueckOhneGewicht::LABELS,
+        ...\Platform\FoodAlchemist\Services\Einkauf\LaBeschaffungsLagen::LABELS, ...\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::LABELS,
         'gp_kein_preis' => 'Grundprodukte mit Artikeln, aber ohne Preis',
         'gp_kein_lead' => 'Grundprodukte ohne gewählten Hauptartikel',
         'gp_lead_ohne_preis' => 'Grundprodukte, deren Hauptartikel keinen gültigen Preis hat',
@@ -295,8 +295,8 @@ class DataQualityService
             $this->info('la_strukturiert', self::METRIK_LABELS['la_strukturiert'], $strukturiert),
             $this->info('la_gemappt', self::METRIK_LABELS['la_gemappt'], $gemappt),
             $this->gap('la_needs_review', self::METRIK_LABELS['la_needs_review'], $needsReview),
-            ...array_map(fn ($m, $sig) => $this->gap($m, self::METRIK_LABELS[$m], app(Einkauf\LaBeschaffungsLagen::class)->abfrage($team, $m)->count(), ...$sig),
-                array_keys(Einkauf\LaBeschaffungsLagen::SIGNALE), Einkauf\LaBeschaffungsLagen::SIGNALE),
+            ...array_map(fn ($m, $sig) => $this->gap($m, self::METRIK_LABELS[$m], app(\Platform\FoodAlchemist\Services\Einkauf\LaBeschaffungsLagen::class)->abfrage($team, $m)->count(), ...$sig),
+                array_keys(\Platform\FoodAlchemist\Services\Einkauf\LaBeschaffungsLagen::SIGNALE), \Platform\FoodAlchemist\Services\Einkauf\LaBeschaffungsLagen::SIGNALE),
             $this->gap('la_konformitaet', self::METRIK_LABELS['la_konformitaet'], $konfLa, SignalTyp::KonformitaetLa, 'dq-la-konformitaet',
                 'Bei diesen Lieferantenartikeln verstoßen Angaben aus dem Lieferantenkatalog gegen die Anlageregeln. Artikel öffnen und die markierten Felder prüfen.'),
         ];
@@ -362,7 +362,7 @@ class DataQualityService
             $this->gap('gp_tentative_genutzt', self::METRIK_LABELS['gp_tentative_genutzt'], $tentativeGenutzt, SignalTyp::DatenqualitaetGpLa, 'dq-gp-tentative-genutzt',
                 'Nicht freigegebene Grundprodukte sollten nicht in Rezepten stecken. Grundprodukt prüfen und freigeben oder in den Rezepten ersetzen.'),
             $this->gap('gp_konformitaet', self::METRIK_LABELS['gp_konformitaet'], $konfGp, SignalTyp::KonformitaetGp, 'dq-gp-konformitaet',
-                'Bei diesen Grundprodukten verstoßen Angaben gegen die Anlageregeln, zum Beispiel bei Benennung oder Pflichtangaben. Grundprodukt öffnen und die markierten Felder prüfen.'), $this->gap(GpStamm\StueckOhneGewicht::KEY, self::METRIK_LABELS[GpStamm\StueckOhneGewicht::KEY], app(GpStamm\StueckOhneGewicht::class)->abfrage($team)->count(), null, null, null, SignalSeverity::Info),   // Pflegeliste Stückgewicht, nie rot
+                'Bei diesen Grundprodukten verstoßen Angaben gegen die Anlageregeln, zum Beispiel bei Benennung oder Pflichtangaben. Grundprodukt öffnen und die markierten Felder prüfen.'), $this->gap(\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::KEY, self::METRIK_LABELS[\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::KEY], app(\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::class)->abfrage($team)->count(), null, null, null, SignalSeverity::Info),   // Pflegeliste Stückgewicht, nie rot
         ];
     }
 
@@ -669,7 +669,7 @@ class DataQualityService
                 'q' => fn (Team $t) => $this->alleRezepte($t)->whereIn(
                     'foodalchemist_recipes.id',
                     app(RecipeFindingService::class)
-                        ->offeneUeberSchwelle($t, null, RecipeReviewService::ARTEN_COPILOT)->select('recipe_id')
+                        ->offeneUeberSchwelle($t, null, \Platform\FoodAlchemist\Services\RecipeReviewService::ARTEN_COPILOT)->select('recipe_id')
                 ),
             ],
             'rezept_gericht_vs_komponente' => [
@@ -685,7 +685,7 @@ class DataQualityService
                 'q' => fn (Team $t) => $this->alleRezepte($t)->whereIn(
                     'foodalchemist_recipes.id',
                     app(RecipeFindingService::class)
-                        ->offeneUeberSchwelle($t, null, RecipeReviewService::ARTEN_STRUKTUR)->select('recipe_id')
+                        ->offeneUeberSchwelle($t, null, \Platform\FoodAlchemist\Services\RecipeReviewService::ARTEN_STRUKTUR)->select('recipe_id')
                 ),
             ],
         ];
@@ -934,7 +934,7 @@ class DataQualityService
         return fn ($q) => $q->select(DB::raw(1))->from('foodalchemist_concept_slots as cs')
             ->whereColumn('cs.concept_id', 'foodalchemist_concepts.id')
             ->whereNull('cs.deleted_at')
-            ->whereNotIn('cs.type', Concepter\ConceptService::STRUKTUR_TYPEN)
+            ->whereNotIn('cs.type', \Platform\FoodAlchemist\Services\Concepter\ConceptService::STRUKTUR_TYPEN)
             ->where('cs.is_pflicht', true)
             ->whereNull('cs.package_id')
             ->whereNull('cs.sales_recipe_id');
@@ -946,7 +946,7 @@ class DataQualityService
         return fn ($q) => $q->select(DB::raw(1))->from('foodalchemist_concept_slots as cs')
             ->whereColumn('cs.concept_id', 'foodalchemist_concepts.id')
             ->whereNull('cs.deleted_at')
-            ->whereNotIn('cs.type', Concepter\ConceptService::STRUKTUR_TYPEN)
+            ->whereNotIn('cs.type', \Platform\FoodAlchemist\Services\Concepter\ConceptService::STRUKTUR_TYPEN)
             ->where(fn ($w) => $w->whereNotNull('cs.package_id')->orWhereNotNull('cs.sales_recipe_id'));
     }
 
@@ -1137,7 +1137,7 @@ class DataQualityService
     {
         $treffer = [];
         foreach (app(AusgabeDriftService::class)->abgedriftet($team) as $d) {
-            if ($d['doc_type'] === Ausgabe\PresentationService::TYPE_FOODBOOK) {
+            if ($d['doc_type'] === \Platform\FoodAlchemist\Services\Ausgabe\PresentationService::TYPE_FOODBOOK) {
                 $treffer[] = (int) $d['doc_id'];
             }
         }
@@ -1845,7 +1845,7 @@ class DataQualityService
 
         return match ($kind) {
             'gp' => $this->gpItems($q, $limit),
-            'la' => app(Einkauf\LaBeschaffungsLagen::class)->liste($q, $limit),
+            'la' => app(\Platform\FoodAlchemist\Services\Einkauf\LaBeschaffungsLagen::class)->liste($q, $limit),
             'concept' => $this->conceptItems($q, $limit),
             'foodbook' => $this->foodbookItems($q, $limit),
             default => $this->recipeItems($q, $limit),
@@ -1897,7 +1897,7 @@ class DataQualityService
         // Der switch unten ist der Altbestand der Kaskaden-Ebenen (s. V-005).
         foreach ([
             ['recipe', $this->rezeptQualitaetChecks()],
-            ['la', app(Einkauf\LaBeschaffungsLagen::class)->checks()], ['gp', app(GpStamm\StueckOhneGewicht::class)->checks()],   // Pflegeliste Stückgewicht (Dominique 23.11.)
+            ['la', app(\Platform\FoodAlchemist\Services\Einkauf\LaBeschaffungsLagen::class)->checks()], ['gp', app(\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::class)->checks()],   // Pflegeliste Stückgewicht (Dominique 23.11.)
             ['concept', $this->konzeptChecks()],
             ['foodbook', $this->foodbookChecks()],
         ] as [$kind, $checks]) {

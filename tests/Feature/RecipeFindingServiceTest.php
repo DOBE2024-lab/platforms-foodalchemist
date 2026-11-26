@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Platform\Core\Contracts\LLMProviderContract;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeFinding;
-use Platform\FoodAlchemist\Services\RecipeFindingService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

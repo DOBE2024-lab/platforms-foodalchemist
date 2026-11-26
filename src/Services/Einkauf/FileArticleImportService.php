@@ -1097,7 +1097,7 @@ class FileArticleImportService
             // V-050: der Detektor bekommt die bewegte GP-Menge statt der Team-weiten Suche.
             // Deckel = Größe der eigenen Menge, damit er hier nie bindet — eine Kappung wäre
             // in genau dieser Kette die stille Auslassung, gegen die E4 geschrieben ist.
-            $kette['signale'] = app(\Platform\FoodAlchemist\Services\SignalDetektorService::class)
+            $kette['signale'] = app(\Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService::class)
                 ->preisSprungMargeImpact($team, maxGps: max(count($gpIds), 1), gpIds: $gpIds);
         } catch (\Throwable $e) {
             Log::warning("Kanal-B-Kette: Preis-Sprung-Detektor fehlgeschlagen — {$e->getMessage()}");

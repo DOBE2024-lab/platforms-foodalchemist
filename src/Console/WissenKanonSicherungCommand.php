@@ -8,7 +8,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Services\Knowledge\KanonSicherungService;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 
 /**
  * Spec 52 · Paket 3 — Kanon sichern, prüfen, zurückspielen.

@@ -8,9 +8,9 @@ use Platform\FoodAlchemist\Enums\SignalStatus;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignalSnapshot;
-use Platform\FoodAlchemist\Services\SignalDetektorService;
-use Platform\FoodAlchemist\Services\SignalPolicyService;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalPolicyService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

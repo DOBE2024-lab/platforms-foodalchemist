@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -229,7 +229,7 @@ class SignalService
     {
         // Spec 85 PR-D: mit Team-Brille (Controlling-Kopf) zählen die Signale der Brillen-Teams; bei „eigen“ bleibt es die sichtbare Kette wie bisher
         $basis = $mitBrille
-            ? app(Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistSignal::query(), $team)
+            ? app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->leseBereichOderSichtbar(FoodAlchemistSignal::query(), $team)
             : FoodAlchemistSignal::visibleToTeam($team);
 
         return $basis->offen()

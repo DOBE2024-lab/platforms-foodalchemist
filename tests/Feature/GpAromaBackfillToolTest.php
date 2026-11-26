@@ -330,7 +330,7 @@ it('Vollständigkeit unterscheidet eigener Anker / Pate / neutral / ohne', funct
     DB::table('foodalchemist_gp_anchor_mappings')->insert(['uuid' => (string) Str::uuid7(), 'team_id' => $this->rootTeam->id, 'gp_id' => $geloescht->id,
         'anchor_id' => $this->anker['lime'], 'role' => 'kern', 'source' => 'ai_inferred', 'deleted_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
 
-    $c = app(\Platform\FoodAlchemist\Services\VollstaendigkeitReportService::class)->messe($this->rootTeam)['c_grundprodukte'];
+    $c = app(\Platform\FoodAlchemist\Services\Pruefung\VollstaendigkeitReportService::class)->messe($this->rootTeam)['c_grundprodukte'];
 
     expect($c['aromaanker'])->toBe(['echt' => 1, 'pate' => 2, 'neutral' => 1, 'ohne' => $c['gps'] - 4])
         ->and($c['ohne_aromaanker'])->toBe($c['gps'] - 4, 'ein gelöschtes Mapping zählt nicht als Anker');

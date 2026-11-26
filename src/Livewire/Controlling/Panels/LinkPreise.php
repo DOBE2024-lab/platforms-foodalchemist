@@ -8,7 +8,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
-use Platform\FoodAlchemist\Services\SignalDetektorService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**
@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Services\TeamSettingsService;
  *
  * Je veröffentlichtem Link (Foodbook, Speisekarte, Speiseplan, Angebot; Team-Link oder Betrieb) die Preise, die über die
  * Team-Leitplanke vom aktuell gerechneten VK abweichen. Quelle sind die offenen Signale `vk_anpassung_empfohlen` samt Payload
- * ({@see \Platform\FoodAlchemist\Services\AusgabeDriftService}) — billig beim Seitenaufruf; die teure Neuberechnung (ein
+ * ({@see \Platform\FoodAlchemist\Services\Pruefung\AusgabeDriftService}) — billig beim Seitenaufruf; die teure Neuberechnung (ein
  * Snapshot-Bau je Link) läuft nur auf „Jetzt prüfen“. Abhilfe: im Editor neu veröffentlichen mit „Preise aktualisieren“.
  */
 class LinkPreise extends Component

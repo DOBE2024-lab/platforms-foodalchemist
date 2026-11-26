@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\SignalFixService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalFixService;
 
 /**
  * „KI erledigen lassen" (deterministisch) — den betroffenen Satz eines Signals beheben.

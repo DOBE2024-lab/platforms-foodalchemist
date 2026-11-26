@@ -3,8 +3,8 @@
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeFinding;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\DataQualityService;
-use Platform\FoodAlchemist\Services\RecipeFindingService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService;
 use Platform\FoodAlchemist\Services\RecipeReviewService;
 use Platform\FoodAlchemist\Support\SignalCockpit;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

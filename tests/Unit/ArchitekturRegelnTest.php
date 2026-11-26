@@ -194,7 +194,7 @@ it('Geld-Helfer: keine neuen Handrechnungen für Wareneinsatz, EK je Portion und
         'ek_je_portion' => [
             'src/Services/Rezept/DarreichungResolver.php' => [1, 'der Helfer selbst'],
             'src/Services/Trend/BenchmarkService.php' => [1, 'SQL-Zeile ohne Model, ek_portion kommt schon aus der Abfrage'],
-            'src/Services/MoneyTruthReportService.php' => [1, 'Diagnose vergleicht bewusst Ansatz ÷ Portionen mit der Darreichung'],
+            'src/Services/Pruefung/MoneyTruthReportService.php' => [1, 'Diagnose vergleicht bewusst Ansatz ÷ Portionen mit der Darreichung'],
             'src/Services/Speiseplan/SpeiseplanAnsicht.php' => [1, 'Darreichung des Eintrags statt Standard, Rückfall 0 statt null (98 · 3.3 S3-2: mit inhaltPreis aus SpeiseplanService verschoben)'],
             'src/Services/Concepter/CockpitZeilen.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],
             'src/Services/Concepter/ConceptPreisService.php' => [1, 'Paket-EK mit PAE-Faktor, Stück-Modus, Rückfall 0'],

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
@@ -46,11 +46,11 @@ class SignalFixService
 
     public function __construct(
         private DataQualityService $dq,
-        private GpAggregateService $gpAgg,
-        private Einkauf\LeadLaService $leadLa,
-        private Pairing\PairingService $pairing,
-        private RecipeRecomputeService $recompute,
-        private Preis\PriceService $preise,
+        private \Platform\FoodAlchemist\Services\GpAggregateService $gpAgg,
+        private \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $leadLa,
+        private \Platform\FoodAlchemist\Services\Pairing\PairingService $pairing,
+        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Preis\PriceService $preise,
         private SignalService $signals,
         private AiGatewayService $ki,
     ) {

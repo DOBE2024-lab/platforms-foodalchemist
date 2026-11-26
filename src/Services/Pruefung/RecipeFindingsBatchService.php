@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -39,8 +39,8 @@ class RecipeFindingsBatchService
 
     public function __construct(
         private RecipeFindingService $findings,
-        private RecipeReviewService $review,
-        private RecipeBauartService $bauart,
+        private \Platform\FoodAlchemist\Services\RecipeReviewService $review,
+        private \Platform\FoodAlchemist\Services\RecipeBauartService $bauart,
     ) {
     }
 

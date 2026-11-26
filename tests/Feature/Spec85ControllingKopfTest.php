@@ -146,7 +146,7 @@ it('Abweichung: das Ziel kommt aus dem aktiven Kalkulationsprofil', function () 
     app(OutletSettingsService::class)->update($this->rootTeam, $nord, ['target_food_cost_pct' => 27]);
     app(TeamSettingsService::class)->update($this->rootTeam, ['target_food_cost_pct' => 35]);
     $this->actingAs($this->inhaber);
-    $svc = app(\Platform\FoodAlchemist\Services\WareneinsatzAbweichungService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Pruefung\WareneinsatzAbweichungService::class);
 
     app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->set($this->rootTeam, $nord->id);
     expect($svc->analyse($this->rootTeam)['ziel_pct'])->toBe(27.0);

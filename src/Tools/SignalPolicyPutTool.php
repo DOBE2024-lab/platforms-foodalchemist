@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\SignalTyp;
-use Platform\FoodAlchemist\Services\SignalPolicyService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalPolicyService;
 
 /**
  * Spec 21 · E2 — Rausch-Guard setzen. Bewusst ein **expliziter, menschlich

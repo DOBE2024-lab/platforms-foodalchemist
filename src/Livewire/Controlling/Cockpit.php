@@ -10,8 +10,8 @@ use Platform\FoodAlchemist\Services\Trend\BenchmarkService;
 use Platform\FoodAlchemist\Services\Produktion\FixkostenService;
 use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService;
-use Platform\FoodAlchemist\Services\SignalService;
-use Platform\FoodAlchemist\Services\SignalTrendService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalTrendService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

@@ -92,7 +92,7 @@ it('Mandant sieht keinen Master-Preis: Preissprung-Signal rechnet Trend und Alte
     expect($ps->preisTrendBulk([$this->la->id], $this->rootTeam))->toHaveKey($this->la->id)   // Master: Trend sichtbar
         ->and($ps->preisTrendBulk([$this->la->id], $this->childA))->toBe([]);                // Mandant: nichts vom Master
 
-    $quelleDetektor = file_get_contents((new ReflectionClass(\Platform\FoodAlchemist\Services\SignalDetektorService::class))->getFileName());
+    $quelleDetektor = file_get_contents((new ReflectionClass(\Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService::class))->getFileName());
     expect($quelleDetektor)->toContain("preisTrendBulk(array_keys(\$recent->all()), \$team)")
         ->toContain("activePriceSubquery('i.id', \$team)");   // Wächter: beide Leselinien im Preissprung-Signal tragen das Team
 });

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SignalTrendService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalTrendService;
 
 /**
  * Spec 21 · E1 — Trend-Lesetool. `signale.SEARCH`/`LIST` beantworten „was ist offen?";

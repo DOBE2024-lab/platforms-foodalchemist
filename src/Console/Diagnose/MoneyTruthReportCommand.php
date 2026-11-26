@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console\Diagnose;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\MoneyTruthReportService;
+use Platform\FoodAlchemist\Services\Pruefung\MoneyTruthReportService;
 
 /**
  * Spec 22 · H2a — Messbericht Geld-Wahrheiten. **Read-only**, schreibt nichts.

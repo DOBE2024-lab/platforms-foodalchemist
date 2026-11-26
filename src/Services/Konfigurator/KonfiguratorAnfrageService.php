@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Mail\KonfiguratorAnfrageMail;
 use Platform\FoodAlchemist\Models\FoodAlchemistAngebot;
 use Platform\FoodAlchemist\Models\FoodAlchemistKonfigurator;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 
 /**
  * Spec 94 · Anfrage aus dem öffentlichen Konfigurator-Link → normales Angebot (Status anfrage), Mail an die verantwortliche

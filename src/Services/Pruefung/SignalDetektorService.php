@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Platform\FoodAlchemist\Support\StammPaket;
 use Illuminate\Support\Facades\DB;
@@ -115,7 +115,7 @@ class SignalDetektorService
      */
     private function betriebeMitOverrides(Team $team): array
     {
-        $settings = app(Plattform\OutletSettingsService::class);
+        $settings = app(\Platform\FoodAlchemist\Services\Plattform\OutletSettingsService::class);
         $relevant = ['margin_pct', 'target_food_cost_pct', 'stundensatz_eur', 'hk2_surcharge_pct', 'labor_overhead_pct'];
 
         $out = [];
@@ -250,7 +250,7 @@ class SignalDetektorService
      */
     public function preisSprungMargeImpact(Team $team, ?float $schwellePct = null, int $lookbackTage = 60, int $maxGps = 500, ?array $gpIds = null): int
     {
-        $schwelle = $schwellePct ?? app(TeamSettingsService::class)->preisAlarmSchwellePct($team);
+        $schwelle = $schwellePct ?? app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->preisAlarmSchwellePct($team);
         $cutoff = now()->subDays($lookbackTage)->format('Y-m-d H:i:s');
 
         // GPs mit Lead-LA im Team-Scope: [gp_id => lead_la_id]
@@ -268,7 +268,7 @@ class SignalDetektorService
 
         // nur Lead-LAs mit kürzlicher Preisänderung (Vorgänger-Zeile jüngst geschlossen)
         // Spec 82 3a: Lead-Signale sind global → nur Listenpreis-Zeilen (Trend unten ebenso ohne Team).
-        $recent = app(Preis\PriceService::class)->nurListenpreis(DB::table('foodalchemist_prices'))
+        $recent = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->nurListenpreis(DB::table('foodalchemist_prices'))
             ->whereIn('supplier_item_id', $leadIds)->whereNull('deleted_at')
             ->whereNotNull('valid_to')->where('valid_to', '>=', $cutoff)
             ->distinct()->pluck('supplier_item_id')->map(fn ($v) => (int) $v)->flip();
@@ -276,9 +276,9 @@ class SignalDetektorService
             return 0;
         }
 
-        $preisSvc = app(Preis\PriceService::class);
-        $recompute = app(RecipeRecomputeService::class);
-        $margeSvc = app(Preis\MargeService::class);
+        $preisSvc = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class);
+        $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+        $margeSvc = app(\Platform\FoodAlchemist\Services\Preis\MargeService::class);
         // Team-Sicht (Bugfix 27.10.): das Signal geht an dieses Team — nie ein Master-Preis (BHG-Konditionen) bei einem Mandanten
         $trend = $preisSvc->preisTrendBulk(array_keys($recent->all()), $team);
 
@@ -318,7 +318,7 @@ class SignalDetektorService
             $recipes = FoodAlchemistRecipe::visibleToTeam($team)->whereIn('id', $affected)->with('standardPresentation')->get();
             $nRecipes = $recipes->count();
             // Spec 85 D-1: VK aus der Standard-Darreichung (Preisleiter), nicht aus recipes.sales_net.
-            $vkJe = $recipes->mapWithKeys(fn ($r) => [(int) $r->id => $r->is_sales_recipe ? app(Rezept\DarreichungResolver::class)->vkNetto($r) : null]);
+            $vkJe = $recipes->mapWithKeys(fn ($r) => [(int) $r->id => $r->is_sales_recipe ? app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($r) : null]);
             $gerichte = $recipes->filter(fn ($r) => ($vkJe[(int) $r->id] ?? 0) > 0)->values();
             $nGerichte = $gerichte->count();
 
@@ -451,7 +451,7 @@ class SignalDetektorService
      * (Sub-Anteil = Zeilenkosten × subExposure/subTotal). Setzt totalCache[recipeId]
      * als Gesamt-EK des Rezepts (= Σ Zeilenkosten) mit.
      */
-    private function gpExposure(int $recipeId, int $gpId, RecipeRecomputeService $recompute, array &$recCache, array &$lineCache, array &$totalCache, array &$expCache, int $tiefe = 0): ?float
+    private function gpExposure(int $recipeId, int $gpId, \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute, array &$recCache, array &$lineCache, array &$totalCache, array &$expCache, int $tiefe = 0): ?float
     {
         if (isset($expCache[$recipeId])) {
             return $expCache[$recipeId];
@@ -507,7 +507,7 @@ class SignalDetektorService
      *
      * @return array{item_id:int,label:string,diff_pct:float}|null
      */
-    private function guenstigereAlternative(Preis\PriceService $preisSvc, int $gpId, int $leadId, float $schwelle, Team $team): ?array
+    private function guenstigereAlternative(\Platform\FoodAlchemist\Services\Preis\PriceService $preisSvc, int $gpId, int $leadId, float $schwelle, Team $team): ?array
     {
         $las = DB::table('foodalchemist_supplier_items AS i')
             ->join('foodalchemist_supplier_item_structures AS s', 's.supplier_item_id', '=', 'i.id')
@@ -705,7 +705,7 @@ class SignalDetektorService
             ->join('foodalchemist_supplier_items as i', 'i.id', '=', 'g.lead_la_supplier_item_id')
             ->leftJoin('foodalchemist_prices as p', function ($j) {
                 $j->on('p.supplier_item_id', '=', 'i.id')->whereNull('p.deleted_at');
-                app(Preis\PriceService::class)->nurListenpreis($j, 'p');   // Spec 82 3a: Frische des globalen Lead-Listenpreises
+                app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->nurListenpreis($j, 'p');   // Spec 82 3a: Frische des globalen Lead-Listenpreises
             })
             ->whereNotNull('g.lead_la_supplier_item_id')
             ->whereNull('g.deleted_at')
@@ -747,7 +747,7 @@ class SignalDetektorService
      */
     public function preisAnomalie(Team $team, float $schwelle = 0.5, int $maxGps = 2000): int
     {
-        $ps = app(Preis\PriceService::class);
+        $ps = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class);
         $rows = DB::table('foodalchemist_supplier_item_structures as s')
             ->join('foodalchemist_supplier_items as i', 'i.id', '=', 's.supplier_item_id')
             ->join('foodalchemist_gps as g', 'g.id', '=', 's.gp_id')
@@ -844,7 +844,7 @@ class SignalDetektorService
      */
     public function margeUnterZiel(Team $team, ?FoodAlchemistOutlet $outlet = null): int
     {
-        $kalk = app(Preis\KalkulationService::class);
+        $kalk = app(\Platform\FoodAlchemist\Services\Preis\KalkulationService::class);
         // Spec 85 D-1: Kandidaten = Gerichte mit VK an der Standard-Darreichung.
         $gerichte = FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
             ->whereHas('standardPresentation', fn ($s) => $s->where('sales_net', '>', 0))
@@ -892,7 +892,7 @@ class SignalDetektorService
      */
     public function wareneinsatzUeberZiel(Team $team, ?FoodAlchemistOutlet $outlet = null): int
     {
-        $ziel = app(TeamSettingsService::class)->zielWareneinsatzPct($team, $outlet);
+        $ziel = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->zielWareneinsatzPct($team, $outlet);
         if ($ziel <= 0) {
             return 0;
         }
@@ -932,7 +932,7 @@ class SignalDetektorService
      */
     public function wareneinsatzUeberZielFuer(Team $team, FoodAlchemistRecipe $r, ?float $ziel = null, ?float $we = null, ?FoodAlchemistOutlet $outlet = null): bool
     {
-        $ziel ??= app(TeamSettingsService::class)->zielWareneinsatzPct($team, $outlet);
+        $ziel ??= app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->zielWareneinsatzPct($team, $outlet);
         if ($ziel <= 0) {
             return false;
         }
@@ -954,7 +954,7 @@ class SignalDetektorService
                 'ref_type' => 'recipe',
                 'ref_id' => $r->id,
                 'description' => 'Der Wareneinsatz liegt über dem Ziel. Günstigeren Hauptartikel prüfen, Rezeptur oder Portion anpassen oder Verkaufspreis erhöhen.',
-                'payload' => ['wareneinsatz_pct' => (float) $we, 'ziel_pct' => $ziel, 'sales_net' => app(Rezept\DarreichungResolver::class)->vkNetto($r), 'outlet_id' => $outlet?->id],
+                'payload' => ['wareneinsatz_pct' => (float) $we, 'ziel_pct' => $ziel, 'sales_net' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($r), 'outlet_id' => $outlet?->id],
             ]
         );
 
@@ -962,11 +962,11 @@ class SignalDetektorService
     }
 
     /** Ein Kalkulator je Lauf — der Batch-Pfad löste ihn früher einmal vor der Schleife auf. */
-    private ?Preis\KalkulationService $kalkMemo = null;
+    private ?\Platform\FoodAlchemist\Services\Preis\KalkulationService $kalkMemo = null;
 
-    private function kalkulation(): Preis\KalkulationService
+    private function kalkulation(): \Platform\FoodAlchemist\Services\Preis\KalkulationService
     {
-        return $this->kalkMemo ??= app(Preis\KalkulationService::class);
+        return $this->kalkMemo ??= app(\Platform\FoodAlchemist\Services\Preis\KalkulationService::class);
     }
 
     /**
@@ -996,7 +996,7 @@ class SignalDetektorService
             return 0;
         }
 
-        $schwelle = app(TeamSettingsService::class)->wareneinsatzAbweichungSchwellePp($team);
+        $schwelle = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->wareneinsatzAbweichungSchwellePp($team);
         if (abs($a['abweichung_pp']) < $schwelle) {
             return 0;
         }
@@ -1084,7 +1084,7 @@ class SignalDetektorService
     public function vertragsfristFaellig(Team $team, int $lookaheadDays = 30): int
     {
         $n = 0;
-        foreach (app(Einkauf\SupplierAgreementService::class)->documentsDueForNotice($team, $lookaheadDays) as $d) {
+        foreach (app(\Platform\FoodAlchemist\Services\Einkauf\SupplierAgreementService::class)->documentsDueForNotice($team, $lookaheadDays) as $d) {
             $deadline = $d->noticeDeadline();
             $supplierName = optional($d->supplier)->name ?? ('Lieferant #' . $d->supplier_id);
             $ueberfaellig = $deadline !== null && $deadline->isPast();
@@ -1197,8 +1197,8 @@ class SignalDetektorService
         $gps = FoodAlchemistGp::visibleToTeam($team)->lebensmittel()->where('status', 'approved')
             ->whereIn('foodalchemist_gps.id', $kandidaten)->orderBy('foodalchemist_gps.id')->get();
 
-        return GpAggregateService::imLauf(function () use ($gps, $team, $limit) {
-            $agg = app(GpAggregateService::class);
+        return \Platform\FoodAlchemist\Services\GpAggregateService::imLauf(function () use ($gps, $team, $limit) {
+            $agg = app(\Platform\FoodAlchemist\Services\GpAggregateService::class);
             $agg->allergenProfileVorladen($gps);
             $anzahl = 0;
             $treffer = [];

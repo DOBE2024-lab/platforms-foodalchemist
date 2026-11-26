@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\AusgabeDriftService;
+use Platform\FoodAlchemist\Services\Pruefung\AusgabeDriftService;
 
 /**
  * Spec 85 F5 (Dominique 19.10.): Kundenschutz ist das Einfrieren der Preise beim Veröffentlichen eines Links. Dieses Tool zeigt,

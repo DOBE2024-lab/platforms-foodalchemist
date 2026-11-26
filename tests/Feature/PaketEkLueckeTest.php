@@ -190,3 +190,18 @@ it('Folge-PR: Foodbook-Detail zeigt am EK/Person den Merker „unvollständig“
 
     expect($detail)->toMatch('/EK\/Person 0,80 € ?unvollständig/u');
 });
+
+it('Detail-Hinweis nennt die Zahl der Gerichte ohne EK (Singular bei 1), ohne Abfragen je Paket', function () {
+    $einzeln = preg_replace('/\s+/u', ' ', strip_tags(\Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\DetailPanel::class)->call('zeige', 'concepts', $this->konzept->id)->html()));
+    expect($einzeln)->toContain('Einkauf unvollständig: einem Gericht fehlt der EK oder das Portionsgewicht.');
+
+    $zweites = $this->makeRecipe($this->t, 'Falafel', ['is_sales_recipe' => true, 'sales_unit_count' => 10]);
+    $this->makeStandardDarreichung($zweites, 4.0);
+    $this->makeConceptSlot($this->paket, ['sales_recipe_id' => $zweites->id, 'quantity' => 1, 'position' => 3]);
+    $this->makeConceptSlot($this->konzept, ['sales_recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 2]);   // dasselbe Gericht zählt einmal
+    $this->konzepte->recomputeCache($this->paket->fresh());
+    $mehrere = preg_replace('/\s+/u', ' ', strip_tags(\Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\DetailPanel::class)->call('zeige', 'concepts', $this->konzept->id)->html()));
+
+    expect($mehrere)->toContain('Einkauf unvollständig: 2 Gerichten fehlt der EK oder das Portionsgewicht.')
+        ->and(app(ConcepterAggregateService::class)->conceptAggregat($this->konzept->fresh())['ek_n_fehlend'])->toBe(2);
+});

@@ -9,6 +9,7 @@ use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadenReaperSweep;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Plattform\WorkerHealthService;
 
@@ -27,6 +28,8 @@ use Platform\FoodAlchemist\Services\Plattform\WorkerHealthService;
  * - Selbstheilung ({@see heilen}): Ab 30 min Stillstand ruft der Poll den Reaper ({@see PlanningCascadeService::reapeVerwaisteSteps}),
  *   höchstens alle 5 min je Lauf (Cache-Sperre), nur für das Besitzer-Team; ein Fehler im Reaper bricht den Poll nie.
  * - Board: kurzer Hinweis „hängt seit … — Fortsetzen“ mit Link in den Lauf.
+ * - Team-Sweep ({@see KaskadenReaperSweep}): auch Läufe, die das Board nicht beobachtet (ältere Läufe einer Session, Läufe ohne Session).
+ *   Unabhängig vom Board heilt der Zeitplan `foodalchemist:kaskade-reaper` alle Teams.
  */
 class LaufStatus extends Component
 {
@@ -143,14 +146,33 @@ class LaufStatus extends Component
             return 0;
         }
         $n = 0;
+        $selbst = [];
         foreach ($this->stillJeLauf as $runId => $sek) {
-            if ($sek < self::STILL_60S || ! Cache::add('fa:kaskade-reaper:' . $runId, 1, self::HEILEN_SPERRE_SEK)) {
+            if ($sek < self::STILL_60S) {
                 continue;
             }
+            // Auch die Cache-Sperre steht im try (io 26.11., Lauf 62): ein Fehler im Cache-Store brach sonst den ganzen Poll-Request,
+            // ohne dass „Kaskade-Reaper“ im Log stand.
             try {
+                if (! Cache::add('fa:kaskade-reaper:' . $runId, 1, self::HEILEN_SPERRE_SEK)) {
+                    continue;
+                }
+                $selbst[] = (int) $runId;
                 $n += app(PlanningCascadeService::class)->reapeVerwaisteSteps($team, (int) $runId);
             } catch (\Throwable $e) {
                 Log::warning("Kaskade-Reaper aus dem Poll fehlgeschlagen (Lauf {$runId}): {$e->getMessage()}");
+            }
+        }
+        // io 26.11.: Das Board beobachtet nur den jüngsten Lauf je Session. Ältere Läufe, Läufe ohne Session und Läufe, die gar nicht
+        // auf dem Board stehen, heilt der Team-Sweep — nur wenn der Poll selbst schon Stillstand sieht (60-s-Stufe, sonst bleibt der Poll
+        // schlank), höchstens alle HEILEN_SPERRE_SEK je Team, nur eigene Läufe des Teams und ohne die eben schon geprüften.
+        if (max($this->stillJeLauf ?: [0]) >= self::STILL_60S) {
+            try {
+                if (Cache::add('fa:kaskade-reaper-team:' . $team->id, 1, self::HEILEN_SPERRE_SEK)) {
+                    $n += app(KaskadenReaperSweep::class)->heile($team, 'Board-Poll', $selbst)['geheilt'];
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Kaskade-Reaper (Board-Poll, Team {$team->id}) fehlgeschlagen: {$e->getMessage()}");
             }
         }
 

@@ -8,6 +8,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Planung\LaufStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadenReaperSweep;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -166,4 +167,160 @@ it('Mess-Test bleibt: ein Poll eines frischen Laufs braucht weniger als 10 Abfra
     $status->call('pruefen');
 
     expect($n)->toBeLessThan(10);
+});
+
+/**
+ * io 26.11. (Master-Rundgang nach #993): Läufe 38, 61, 62, 66, 69 blieben auf `running`. Ursache: Der Poll heilt nur, was das Board
+ * beobachtet — den jüngsten Lauf je Session des eigenen Teams. Ältere Läufe einer Session, Läufe anderer Teams und Läufe ohne offenes
+ * Board erreichte der Reaper nie. Jetzt: Sweep über die Tabelle (Zeitplan + Team-Sweep im Poll).
+ */
+it('Sweep: ein älterer Lauf derselben Session (nicht auf dem Board) wird geheilt, ein junger bleibt, ohne Board', function () {
+    $alt = ($this->lauf)();
+    $step = ($this->schritt)($alt, ['status' => 'running']);
+    ($this->alt)($step, 90);
+    DB::table('foodalchemist_cascade_runs')->where('id', $alt->id)->update(['updated_at' => now()->subMinutes(90)]);
+    $neu = ($this->lauf)('done');   // jüngster Lauf der Session — nur der stünde auf dem Board
+    $jung = ($this->lauf)();
+    ($this->schritt)($jung, ['status' => 'running']);
+
+    $sweep = app(KaskadenReaperSweep::class);
+    expect($sweep->kandidaten()->pluck('id')->all())->toBe([$alt->id]);
+
+    $r = $sweep->heile();
+    expect($r['geprueft'])->toBe(1)->and($r['geheilt'])->toBeGreaterThanOrEqual(1)
+        ->and($step->fresh()->status)->toBe('failed')
+        ->and($alt->fresh()->status)->not->toBe('running')
+        ->and($jung->fresh()->status)->toBe('running')
+        ->and($neu->fresh()->status)->toBe('done');
+});
+
+it('Sweep heilt im Besitzer-Team; --team beschränkt; --dry-run schreibt nichts und nennt den Grund', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running']);
+    ($this->alt)($step, 90);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subMinutes(90)]);
+    $fremd = $this->childA;   // anderes Team, besitzt den Lauf nicht
+
+    $this->artisan('foodalchemist:kaskade-reaper', ['--dry-run' => true])
+        ->expectsOutputToContain('1 Kandidaten (Trockenlauf, nichts geschrieben).')->assertSuccessful();
+    expect($step->fresh()->status)->toBe('running');
+    expect(app(KaskadenReaperSweep::class)->diagnose()[0])->toMatchArray(['run_id' => $run->id, 'status' => 'running', 'schritte' => 'running:1']);
+
+    $this->artisan('foodalchemist:kaskade-reaper', ['--team' => $fremd->id])->expectsOutputToContain('0 Läufe geprüft')->assertSuccessful();
+    expect($step->fresh()->status)->toBe('running');
+
+    $this->artisan('foodalchemist:kaskade-reaper')->expectsOutputToContain('1 Läufe geprüft')->assertSuccessful();
+    expect($step->fresh()->status)->toBe('failed')->and($run->fresh()->status)->not->toBe('running');
+});
+
+it('Board-Poll: im 60-s-Takt heilt der Team-Sweep auch den älteren Lauf derselben Session (nicht beobachtet), höchstens alle 5 min', function () {
+    $alt = ($this->lauf)();
+    $altStep = ($this->schritt)($alt, ['status' => 'running']);
+    ($this->alt)($altStep, 120);
+    DB::table('foodalchemist_cascade_runs')->where('id', $alt->id)->update(['updated_at' => now()->subMinutes(120)]);
+    $beobachtet = ($this->lauf)();
+    $step = ($this->schritt)($beobachtet, ['status' => 'running']);
+    ($this->alt)($step, 50);
+    DB::table('foodalchemist_cascade_runs')->where('id', $beobachtet->id)->update(['updated_at' => now()->subMinutes(50)]);
+
+    Livewire::test(LaufStatus::class, ['laufIds' => [$beobachtet->id], 'neueBeobachten' => true, 'takt' => '3s'])->call('pruefen');
+
+    expect($altStep->fresh()->status)->toBe('failed')->and($alt->fresh()->status)->not->toBe('running')
+        ->and($step->fresh()->status)->toBe('failed');   // der beobachtete wie bisher über den Lauf-Reaper
+    expect(\Illuminate\Support\Facades\Cache::has('fa:kaskade-reaper-team:' . $this->rootTeam->id))->toBeTrue();
+});
+
+it('Zeitplan: Standard AUS (Kurator 26.11.), mit Schalter alle 15 min', function () {
+    $geplant = function (bool $an) {
+        config(['foodalchemist.scheduler.kaskade_reaper_aktiv' => $an]);
+        $schedule = new \Illuminate\Console\Scheduling\Schedule;
+        (require __DIR__ . '/../../src/Console/_zeitplan.php')($schedule);
+
+        return collect($schedule->events())->filter(fn ($e) => str_contains((string) $e->command, 'foodalchemist:kaskade-reaper'));
+    };
+
+    expect(config('foodalchemist.scheduler.kaskade_reaper_aktiv'))->toBeFalse()
+        ->and(collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+            ->filter(fn ($e) => str_contains((string) $e->command, 'foodalchemist:kaskade-reaper')))->toBeEmpty()
+        ->and($geplant(false))->toBeEmpty()
+        ->and($geplant(true)->first()?->expression)->toBe('*/15 * * * *');
+});
+
+it('io 26.11. Lauf 62: abgelaufener KI-Auftrag mit generate-recipe-Key, daneben ein offener Auftrag eines anderen Schritts — der Sweep heilt mit Grund', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running', 'generator_run_id' => 'gen-2802']);
+    ($this->alt)($step, 60 * 24 * 10);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subDays(10)]);
+    ($this->auftrag)('generate-recipe:gen-2802', 'abgelaufen', now()->subDays(8));
+    // Schlüssel eines ANDEREN Schritts (recipe-plan:{team}:{Schritt-ID}, nicht Lauf-ID): hält nichts fest
+    ($this->auftrag)("recipe-plan:{$this->rootTeam->id}:" . ($step->id + 1000), 'offen', now()->addHours(3));
+
+    expect(app(KaskadenReaperSweep::class)->diagnose()[0]['grund'])->toBe('');
+    $r = app(KaskadenReaperSweep::class)->heile();
+
+    expect($r['geheilt'])->toBeGreaterThanOrEqual(1)
+        ->and($step->fresh()->status)->toBe('failed')
+        ->and($step->fresh()->error)->toContain('KI-Auftrag abgelaufen')
+        ->and($run->fresh()->status)->not->toBe('running');
+});
+
+it('hält ein offener KI-Auftrag den Schritt, sagt der Reaper es: Warnung mit Auftrags-ID, Dry-Run-Spalte „Hält fest“', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running', 'generator_run_id' => 'gen-offen']);
+    ($this->alt)($step, 90);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subMinutes(90)]);
+    ($this->auftrag)('generate-recipe:gen-offen', 'offen', now()->addHours(3));
+    $uuid = (string) DB::table('foodalchemist_ki_auftraege')->where('lauf_key', 'generate-recipe:gen-offen')->value('uuid');
+    Log::spy();
+
+    expect(($this->reaper)($run))->toBe(0)->and($step->fresh()->status)->toBe('running');
+    Log::shouldHaveReceived('warning')->withArgs(fn ($m) => str_contains((string) $m, "Lauf {$run->id} bleibt running")
+        && str_contains((string) $m, "Schritt {$step->id} (running) wartet auf offenen KI-Auftrag {$uuid}"));
+    expect(app(KaskadenReaperSweep::class)->diagnose()[0])->toMatchArray(['ki_offen' => 1])
+        ->and(app(KaskadenReaperSweep::class)->diagnose()[0]['grund'])->toContain($uuid);
+});
+
+it('recipe-plan-Schlüssel gehört zur SCHRITT-ID: ein offener recipe-plan:{team}:{schritt} hält den Schritt (Warnung nennt ihn)', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running', 'generator_run_id' => 'gen-abgelaufen']);
+    ($this->alt)($step, 60 * 24);
+    ($this->auftrag)('generate-recipe:gen-abgelaufen', 'abgelaufen', now()->subDays(1));
+    ($this->auftrag)("recipe-plan:{$this->rootTeam->id}:{$step->id}", 'offen', now()->addHours(3));
+    Log::spy();
+
+    expect(($this->reaper)($run))->toBe(0)->and($step->fresh()->status)->toBe('running');
+    Log::shouldHaveReceived('warning')->withArgs(fn ($m) => str_contains((string) $m, "Schritt {$step->id} (running) wartet auf offenen KI-Auftrag"));
+});
+
+it('io 26.11. Lauf 62 exakt: 1 Schritt running, ref NULL, generator_run_id, 2802 abgelaufen, 2801 verbraucht — der Board-Poll heilt ohne Mock', function (string $status2802) {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running', 'generator_run_id' => '50cbfdac-test', 'ref_type' => null, 'ref_id' => null]);
+    ($this->alt)($step, 60 * 24 * 13);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subDays(13)]);
+    ($this->auftrag)('generate-recipe:50cbfdac-test', $status2802, now()->subDays(12));   // 2802 recipe.generator
+    ($this->auftrag)("recipe-plan:{$this->rootTeam->id}:{$step->id}", 'verbraucht', now()->subDays(12));   // 2801 recipe.komponenten_plan
+    Log::spy();
+
+    $board = Livewire::test(LaufStatus::class, ['laufIds' => [$run->id], 'neueBeobachten' => true, 'takt' => '3s']);
+    expect($board->get('aktuellerTakt'))->toBe('60s');   // wie auf io: der Poll läuft im 60-s-Takt
+    $board->call('pruefen');
+
+    expect($step->fresh()->status)->toBe('failed')
+        ->and($step->fresh()->error)->toContain('KI-Auftrag abgelaufen')
+        ->and($run->fresh()->status)->toBe('failed');
+    Log::shouldHaveReceived('info')->withArgs(fn ($m) => str_contains((string) $m, "Kaskade-Reaper: Lauf {$run->id}, Schritt {$step->id}"));
+})->with(['Status abgelaufen' => 'abgelaufen', 'Status offen, Datum vorbei' => 'offen']);
+
+it('Poll: ein Fehler in der Cache-Sperre bricht den Poll nicht, er landet als Kaskade-Reaper-Warnung im Log', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running']);
+    ($this->alt)($step, 50);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subMinutes(50)]);
+    \Illuminate\Support\Facades\Cache::partialMock()->shouldReceive('add')->andThrow(new RuntimeException('Cache-Store weg'));
+    Log::spy();
+
+    Livewire::test(LaufStatus::class, ['laufIds' => [$run->id], 'neueBeobachten' => true, 'takt' => '3s'])
+        ->call('pruefen')->assertSet('aktuellerTakt', '60s');
+
+    Log::shouldHaveReceived('warning')->withArgs(fn ($m) => str_contains((string) $m, 'Kaskade-Reaper aus dem Poll') && str_contains((string) $m, 'Cache-Store weg'));
 });

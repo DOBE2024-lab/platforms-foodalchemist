@@ -218,4 +218,32 @@ trait KaskadeKiWarten
             default => $status,
         };
     }
+
+    /**
+     * Warum der Reaper einen Schritt NICHT heilt (io 26.11., Lauf 62: Poll lief, Log leer, Lauf blieb `running`): Schritt bzw. Anreicherung
+     * wartet auf einen offenen, nicht abgelaufenen KI-Auftrag (mit Auftrags-IDs) oder ist jünger als die Verwaist-Grenze.
+     *
+     * @param  iterable<\Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep>  $steps
+     * @param  array<int, array{auftrag_ids: list<string>}>  $kiWartend  {@see kiWartend}
+     * @return list<string>
+     */
+    public static function warumHaengt(iterable $steps, array $kiWartend, \DateTimeInterface $grenze): array
+    {
+        $aus = [];
+        foreach ($steps as $s) {
+            $enrich = is_array($s->deferred['enrich'] ?? null) ? $s->deferred['enrich'] : null;
+            $wo = in_array($s->status, ['queued', 'running'], true) ? "Schritt {$s->id} ({$s->status})"
+                : ($enrich !== null && in_array($enrich['status'] ?? null, ['queued', 'running'], true) ? "Anreicherung an Schritt {$s->id}" : null);
+            if ($wo === null) {
+                continue;
+            }
+            if (isset($kiWartend[(int) $s->id])) {
+                $aus[] = "{$wo} wartet auf offenen KI-Auftrag " . implode(', ', $kiWartend[(int) $s->id]['auftrag_ids'] ?? []);
+            } elseif ($s->updated_at !== null && $s->updated_at->gte($grenze)) {
+                $aus[] = "{$wo} ist jung (zuletzt {$s->updated_at})";
+            }
+        }
+
+        return $aus;
+    }
 }

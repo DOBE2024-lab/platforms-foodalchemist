@@ -530,6 +530,10 @@ return [
         'detektor_zeit' => env('FOODALCHEMIST_DETEKTOR_ZEIT', '03:20'),
         // Vorgemerkte Preise (Gültig ab erreicht) aus Preislisten-/Stammdaten-Läufen: früh, vor dem Arbeitstag (Kommando foodalchemist:faellige-preise).
         'faellige_preise_zeit' => env('FOODALCHEMIST_FAELLIGE_PREISE_ZEIT', '05:30'),
+        // Hängende Kaskaden-Läufe alle 15 min heilen (foodalchemist:kaskade-reaper, io 26.11.). Standard AUS (Kurator 26.11.): ein
+        // wiederkehrender Datenlauf über alle Teams. Einschalten erst nach dem Dry-Run (--dry-run) und mit Dominiques Go per env.
+        // Unabhängig davon heilt der Board-Poll das eigene Team (#993).
+        'kaskade_reaper_aktiv' => env('FOODALCHEMIST_KASKADE_REAPER', false),
         // Spec 79: wöchentliche Google-Trends-Messung (DataForSEO). Läuft nur für Teams mit
         // trend_dataforseo_enabled und stoppt am Monatsbudget des Teams.
         'trends_messen_enabled' => env('FOODALCHEMIST_TRENDS_MESSEN', true),

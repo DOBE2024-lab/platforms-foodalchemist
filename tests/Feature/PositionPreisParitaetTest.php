@@ -36,6 +36,16 @@ beforeEach(function () {
     $this->makeConceptSlot($this->mitPaket, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
     $this->makeConceptSlot($this->mitPaket, ['type' => 'paket', 'embedded_concept_id' => $this->paket->id, 'position' => 2]);
 
+    // 98 · 3.6 PR4: dieselbe Gericht-Zeile als Konzept-Slot (preisCockpit), normiert wie blockZeile()
+    $this->slotZeile = function ($team, array $slot): array {
+        $k = $this->makeConcept($team, 'Slot-Konzept');
+        $this->makeConceptSlot($k, $slot + ['quantity' => 1]);
+        $c = app(ConceptService::class)->preisCockpit($k->fresh(), null, $team);
+        $z = $c['zeilen'][0];
+
+        return ['vk' => (float) ($z['price'] ?? 0), 'ek' => (float) ($z['ek'] ?? 0), 'vk_fehlt' => (bool) $z['vk_fehlt'], 'ek_luecke' => (bool) $c['hat_ek_luecke']];
+    };
+
     // Ein Kapitel je Seite mit demselben Block, dann Zeile + Kapitel-Summe beider Seiten (Closure: darf die geschützten Helfer rufen).
     $this->paritaet = function ($team, array $block, string $fbTyp, string $agTyp): array {
         $fbKap = $this->makeChapter($this->makeFoodbook($team, 'Foodbook', ['status' => 'entwurf']));
@@ -112,4 +122,63 @@ it('Konzept mit eigener Servierform: Kapitel-Summe in Foodbook und Angebot rechn
     $this->makeFoodbookBlock($this->makeChapter($fb), ['type' => 'concept_ref', 'concept_id' => $konzept->id]);
     $board = app(\Platform\FoodAlchemist\Services\Planung\LeitstelleService::class)->kapitelBoard($this->t, $fb->fresh(), null);
     expect((float) $board[0]['aggregat']['vk_pro_person'])->toBe(4.0);
+});
+
+/*
+ * 98 · 3.6 PR4: Konzept-Slot als dritte Zeilenart. Dasselbe Gericht rechnet je Portion im Slot (preisCockpit → CockpitZeilen)
+ * wie als Gericht-Block (blockPreis). Bekannte Abweichungen mit Entscheid (Kurator/Dominique, 26.11.):
+ *   B1 EK mit Beigaben: die geltende Darreichung bringt ihren EK je Portion (ek_portion) mit — für eigene Gerichte überall.
+ *   B2 Gericht ohne EK: der Slot markiert die EK-Lücke („Unbekanntes nie als 0“).
+ *   B3 explizite Darreichung: preiswirksam nur im Konzept (P3), der Block rechnet die Standard-Darreichung — gewollt.
+ *   B4 Kind-Team mit Master-Gericht: der Slot bleibt beim Master-EK, der Block nimmt die Team-Kosten (P1) — vorerst so (Dominique).
+ */
+function blockZeile(array $p): array
+{
+    return ['vk' => $p['vk_pp'], 'ek' => $p['ek_pp'], 'vk_fehlt' => $p['vk_fehlt'], 'ek_luecke' => ! $p['ek_vollstaendig']];
+}
+
+it('Konzept-Slot: dasselbe Gericht rechnet je Portion wie Foodbook- und Angebots-Block', function (string $fall) {
+    [$gericht, $menge] = match ($fall) {
+        'Gericht je Person' => [$this->gericht, 1],
+        'Menge 0,5' => [$this->gericht, 0.5],
+        'Menge 2' => [$this->gericht, 2],
+        'Gericht ohne VK' => [$this->ohneVk, 1],
+    };
+    [$fbZeile, $agZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $gericht->id, 'quantity' => $menge], 'recipe_ref', 'recipe_ref');
+    $slot = ($this->slotZeile)($this->t, ['sales_recipe_id' => $gericht->id, 'quantity' => $menge]);
+
+    expect($slot)->toBe(blockZeile($fbZeile))->and($slot)->toBe(blockZeile($agZeile));
+})->with(['Gericht je Person', 'Menge 0,5', 'Menge 2', 'Gericht ohne VK']);
+
+it('Konzept-Slot B1: EK mit Beigaben (ek_portion der Darreichung)', function () {
+    $g = $this->makeRecipe($this->t, 'Mit Beigabe', ['is_sales_recipe' => true, 'ek_total_eur' => 30.0, 'sales_unit_count' => 10]);
+    $this->makeStandardDarreichung($g, 12.0, ['ek_portion' => 4.5]);
+    [$fbZeile, $agZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $g->id], 'recipe_ref', 'recipe_ref');
+
+    expect(($this->slotZeile)($this->t, ['sales_recipe_id' => $g->id])['ek'])->toBe(4.5)
+        ->and($fbZeile['ek_pp'])->toBe(3.0)->and($agZeile['ek_pp'])->toBe(3.0);   // B1 heute: Block ohne Beigaben
+});
+
+it('Konzept-Slot B2: Gericht ohne EK', function () {
+    [$fbZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $this->ohneEk->id], 'recipe_ref', 'recipe_ref');
+
+    expect(($this->slotZeile)($this->t, ['sales_recipe_id' => $this->ohneEk->id]))->toBe(['vk' => 8.0, 'ek' => 0.0, 'vk_fehlt' => false, 'ek_luecke' => false])   // B2 heute: still 0
+        ->and(blockZeile($fbZeile)['ek_luecke'])->toBeTrue();
+});
+
+it('Konzept-Slot B3: explizite Darreichung wirkt nur im Konzept (P3, gewollt)', function () {
+    $buffet = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->t->id, 'code' => 'buffet', 'label' => 'Buffet']);
+    $d = $this->makeStandardDarreichung($this->gericht, 10.0, ['is_standard' => false, 'serving_form_id' => $buffet->id, 'sales_net' => 4.0]);
+    [$fbZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $this->gericht->id, 'presentation_id' => $d->id], 'recipe_ref', 'recipe_ref');
+
+    expect(($this->slotZeile)($this->t, ['sales_recipe_id' => $this->gericht->id, 'presentation_id' => $d->id])['vk'])->toBe(4.0)
+        ->and($fbZeile['vk_pp'])->toBe(10.0);
+});
+
+it('Konzept-Slot B4: Kind-Team mit Master-Gericht — Slot Master-EK, Block Team-Kosten (vorerst so)', function () {
+    $this->actingAs($this->makeUser($this->childA));
+    [$fbZeile] = ($this->paritaet)($this->childA, ['sales_recipe_id' => $this->gericht->id], 'recipe_ref', 'recipe_ref');
+
+    expect(($this->slotZeile)($this->childA, ['sales_recipe_id' => $this->gericht->id])['ek'])->toBe(3.0)
+        ->and(blockZeile($fbZeile))->toBe(['vk' => 10.0, 'ek' => 0.0, 'vk_fehlt' => false, 'ek_luecke' => true]);
 });

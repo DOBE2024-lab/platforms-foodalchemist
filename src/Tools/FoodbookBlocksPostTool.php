@@ -7,10 +7,8 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
-use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
-use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\VocabularyService;
 
@@ -23,19 +21,6 @@ use Platform\FoodAlchemist\Services\VocabularyService;
  */
 class FoodbookBlocksPostTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {
-    /**
-     * MCP-Ergonomie-Labels → kanonische Code-Werte (FoodAlchemistFoodbookBlock::PRICE_BASES).
-     * Behebt die „pro_stueck-Falle": das Tool schrieb bislang pro_person/pro_stueck ROH in
-     * die Spalte, blockPreis() kennt aber nur person|pauschal|staffel → pro_stueck fiel
-     * still auf Per-Person (×Pax) zurück. Kanonische Werte werden idempotent durchgereicht.
-     */
-    private const PRICE_BASIS_MAP = [
-        'pro_person' => 'person',
-        'pro_stueck' => 'pauschal',   // €/Position, flach (kein ×Pax)
-        'pauschal' => 'pauschal',
-        'person' => 'person',
-        'staffel' => 'staffel',
-    ];
     public function getName(): string
     {
         return 'foodalchemist.foodbook_blocks.POST';
@@ -103,31 +88,12 @@ class FoodbookBlocksPostTool extends FoodAlchemistTool implements ToolContract, 
         if ($fb->statusWert() !== AusgabeStatus::Entwurf) {
             return ToolResult::error("Foodbook hat Status \"{$fb->statusWert()->label()}\" — via MCP ist nur ein Entwurf editierbar.", 'ACCESS_DENIED');
         }
-        if (isset($arguments['concept_id'])
-            && ! FoodAlchemistConcept::visibleToTeam($team)->whereKey((int) $arguments['concept_id'])->exists()) {
-            return ToolResult::error('concept_id nicht sichtbar/vorhanden — via foodalchemist.concepts.SEARCH ermitteln.', 'NOT_FOUND');
-        }
-        // recipe_ref: sichtbares, echtes VK-Gericht (keine Slot-Variante) — spiegelt
-        // pruefeRecipeRef() im Service, aber mit MCP-typisiertem NOT_FOUND vor dem Write.
-        if (isset($arguments['sales_recipe_id'])
-            && ! FoodAlchemistRecipe::visibleToTeam($team)->verkauf()
-                ->whereNull('variant_source_recipe_id')
-                ->whereKey((int) $arguments['sales_recipe_id'])->exists()) {
-            return ToolResult::error('sales_recipe_id nicht sichtbar/kein VK-Gericht — via foodalchemist.verkaufsrezepte.SEARCH ermitteln.', 'NOT_FOUND');
-        }
-
+        // 98 · 3.6: Konzept/Gericht (Sicht, keine Slot-Variante → NOT_FOUND) und Preisbasis (Aliasse pro_person/pro_stueck)
+        // prüft der Positions-Kern im Dienst — keine zweite Prüfung hier.
         $daten = array_intersect_key($arguments, array_flip([
             'type', 'label', 'customer_text', 'interne_bemerkung',
             'concept_id', 'sales_recipe_id', 'quantity', 'price_value', 'price_basis', 'visible',
         ]));
-        // price_basis-Angleich: MCP-Ergonomie-Label → kanonischer Code-Wert (pro_stueck-Falle).
-        if (($daten['price_basis'] ?? '') !== '') {
-            $kanon = self::PRICE_BASIS_MAP[$daten['price_basis']] ?? null;
-            if ($kanon === null) {
-                return ToolResult::error('Unbekannte price_basis "' . $daten['price_basis'] . '" — erlaubt: pro_person, pro_stueck, pauschal.', 'VALIDATION_ERROR');
-            }
-            $daten['price_basis'] = $kanon;
-        }
         if (($arguments['unit'] ?? '') !== '') {
             $unit = app(VocabularyService::class)->findEinheit($team, (string) $arguments['unit']);
             if ($unit === null) {
@@ -142,8 +108,8 @@ class FoodbookBlocksPostTool extends FoodAlchemistTool implements ToolContract, 
             if (! empty($arguments['staffel'])) {
                 $svc->setStaffel($team, $block->id, $arguments['staffel']);
             }
-        } catch (\RuntimeException $e) {
-            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
+        } catch (\RuntimeException $e) {   // 98 · 3.6: Prüfung im Positions-Kern, Code aus dem PositionFehler
+            return ToolResult::error($e->getMessage(), $e instanceof \Platform\FoodAlchemist\Services\Position\PositionFehler ? $e->fehlerCode : 'VALIDATION_ERROR');
         }
 
         return ToolResult::success(['block' => [

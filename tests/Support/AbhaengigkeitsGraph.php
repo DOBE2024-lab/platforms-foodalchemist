@@ -45,6 +45,9 @@ final class AbhaengigkeitsGraph
         'IngredientMatchService' => 0,       // Zutat-String → GP/Sub-Rezept; ruft keine Rezept-Dienste, wird von ihnen gerufen
         'GerichtVerwendungen' => 3,          // Gericht-Verwaltung: liest Verwendungen in Konzept, Plan, Karte, Angebot, Foodbook (Präfix „Gericht“ wäre Rezept)
         'GerichtTauschService' => 4,         // Gericht-Verwaltung: orchestriert den Tausch über alle Ausgaben + Preis-Kaskade
+        'PositionProfil' => 2,               // 98 · 3.6 Positions-Kern: auch der Concepter (2) nutzt ihn, Foodbook/Angebot (3) darüber
+        'PositionValidierung' => 2,
+        'PositionFehler' => 2,
     ];
 
     /** Präfix → Schicht, erste passende Regel gewinnt. */

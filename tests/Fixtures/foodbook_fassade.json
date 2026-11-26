@@ -4,7 +4,7 @@
         "addKapitel": "(Platform\\Core\\Models\\Team $team, int $foodbookId, array $in = array (\n), ?int $parentId = NULL): Platform\\FoodAlchemist\\Models\\FoodAlchemistFoodbookKapitel",
         "addKapitelGalleryImage": "(Platform\\Core\\Models\\Team $team, int $kapitelId, Illuminate\\Http\\UploadedFile $file): Platform\\FoodAlchemist\\Models\\FoodAlchemistFoodbookChapterImage",
         "backfillSlotZiele": "(Platform\\Core\\Models\\Team $team, ?int $foodbookId = NULL, bool $apply = false): array",
-        "blockPreis": "(Platform\\FoodAlchemist\\Models\\FoodAlchemistFoodbookBlock $block, ?int $pax = NULL, ?Platform\\FoodAlchemist\\Models\\FoodAlchemistOutlet $outlet = NULL): array",
+        "blockPreis": "(Platform\\FoodAlchemist\\Models\\FoodAlchemistFoodbookBlock $block, ?int $pax = NULL, ?Platform\\FoodAlchemist\\Models\\FoodAlchemistOutlet $outlet = NULL, ?Platform\\Core\\Models\\Team $team = NULL): array",
         "clearCover": "(Platform\\Core\\Models\\Team $team, int $foodbookId): Platform\\FoodAlchemist\\Models\\FoodAlchemistFoodbook",
         "clearKapitelImage": "(Platform\\Core\\Models\\Team $team, int $kapitelId): Platform\\FoodAlchemist\\Models\\FoodAlchemistFoodbookKapitel",
         "clearLogo": "(Platform\\Core\\Models\\Team $team, int $foodbookId): Platform\\FoodAlchemist\\Models\\FoodAlchemistFoodbook",

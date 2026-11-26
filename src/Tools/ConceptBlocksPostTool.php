@@ -57,8 +57,8 @@ class ConceptBlocksPostTool extends FoodAlchemistTool implements ToolContract, T
 
         try {
             $slot = app(ConceptService::class)->addBlock($team, $conceptId, $type, $felder);
-        } catch (\RuntimeException $e) {
-            return ToolResult::error($e->getMessage(), 'VALIDATION_ERROR');
+        } catch (\RuntimeException $e) {   // 98 · 3.6: Prüfung im Positions-Kern, Code aus dem PositionFehler
+            return ToolResult::error($e->getMessage(), $e instanceof \Platform\FoodAlchemist\Services\Position\PositionFehler ? $e->fehlerCode : 'VALIDATION_ERROR');
         }
 
         return ToolResult::success(['concept_id' => $conceptId, 'slot_id' => (int) $slot->id, 'type' => $type]);

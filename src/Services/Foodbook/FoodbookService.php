@@ -861,8 +861,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
         $k = $this->ownedKapitel($team, $kapitelId);
         app(\Platform\FoodAlchemist\Services\Concepter\FormatKapitelService::class)->pruefeBlockErlaubt($k);   // Format-Kapitel: keine eigenen Blöcke, Pflege im Format
         $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
-        $daten['type'] = in_array($in['type'] ?? '', self::BLOCK_TYPES, true) ? $in['type'] : 'text';
-        \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten);   // 1.1j: Gericht/Concept/Einheit sichtbar
+        $daten = \Platform\FoodAlchemist\Services\Position\PositionValidierung::block('foodbook', $team, $daten);   // 98 · 3.6: Typ (unbekannt → Ablehnung), Preisbasis, Referenzen
         $daten['team_id'] = $k->team_id;
         $daten['position'] = (int) $k->blocks()->max('position') + 1;
 
@@ -873,7 +872,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     {
         $block = $this->ownedBlock($team, $blockId);
         $daten = array_intersect_key($in, array_flip(self::BLOCK_FELDER));
-        \Platform\FoodAlchemist\Support\BlockReferenz::pruefe($team, $daten, $block);   // 1.1j: auch concept_ref (vorher ungeprüft)
+        $daten = \Platform\FoodAlchemist\Services\Position\PositionValidierung::block('foodbook', $team, $daten, $block);   // 98 · 3.6: auch die Preisbasis beim Ändern
         $block->update($daten);
 
         return $block->refresh();
@@ -942,6 +941,7 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
     public function setStaffel(Team $team, int $blockId, array $rows): void
     {
         $block = $this->ownedBlock($team, $blockId);
+        $rows = \Platform\FoodAlchemist\Services\Position\PositionValidierung::staffel('foodbook', $rows);   // 98 · 3.6: keine doppelte Stufe, kein negativer Preis
         DB::transaction(function () use ($block, $rows) {
             $block->staffel()->forceDelete();
             $i = 0;
@@ -968,9 +968,9 @@ class FoodbookService implements \Platform\FoodAlchemist\Services\Foodbook\Foodb
 
     // ── Aggregat / Preis (M11 Cockpit) — 98 · 3.3 S4-4: in Foodbook\FoodbookAggregat, hier Fassade (und FoodbookAggregatQuelle) ──
 
-    public function blockPreis(FoodAlchemistFoodbookBlock $block, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
+    public function blockPreis(FoodAlchemistFoodbookBlock $block, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null, ?Team $team = null): array
     {
-        return $this->aggregat->blockPreis($block, $pax, $outlet);
+        return $this->aggregat->blockPreis($block, $pax, $outlet, $team);
     }
 
     public function resolveStaffel(FoodAlchemistFoodbookBlock $block, ?int $pax): float

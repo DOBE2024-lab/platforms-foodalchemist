@@ -958,8 +958,8 @@ class Editor extends Component
 
     public function blockSpeichern(OfferCompositionService $comp): void
     {
-        if ($this->editBlockId !== null) {
-            $comp->updateBlock($this->team(), $this->editBlockId, $this->blockForm);
+        if ($this->editBlockId !== null) {   // 98 · 3.6 PR6: Ablehnung (z. B. Menge) als Hinweis, Formular bleibt offen
+            try { $comp->updateBlock($this->team(), $this->editBlockId, $this->blockForm); } catch (\RuntimeException $e) { $this->errorToast($e->getMessage()); return; }
         }
         $this->editBlockId = null;
         $this->nachKomposition();

@@ -138,3 +138,17 @@ it('B9 Staffel: nur am Preis-Kopf', function () {
     $this->fb->setStaffel($this->t, $kopf->id, [['min_persons' => 1, 'price' => 20.0], ['min_persons' => 50, 'price' => 18.0]]);
     expect($kopf->fresh()->staffel()->count())->toBe(2)->and($gericht->fresh()->staffel()->count())->toBe(0);
 });
+
+it('B5 in der Oberfläche: negative Menge im Angebots-Editor und 0 im Konzept-Editor zeigen eine Meldung, keine Fehlerseite', function () {
+    $pos = $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'position', 'label' => 'Garderobe', 'price_value' => 2, 'quantity' => 3]);
+    Livewire::test(\Platform\FoodAlchemist\Livewire\Angebote\Editor::class)->call('oeffnen', $this->angebot->id)
+        ->call('blockBearbeiten', $pos->id)->set('blockForm.quantity', '-1')->call('blockSpeichern')
+        ->assertDispatched('fa-saved', type: 'error')->assertSet('editBlockId', $pos->id);   // Formular bleibt offen zum Korrigieren
+    expect((float) $pos->fresh()->quantity)->toBe(3.0);
+
+    $slot = $this->konzepte->fillSlot($this->t, $this->slot->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
+    Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\Editor::class)->call('oeffnen', 'concepts', $this->konzept->id)
+        ->set("slotForm.{$slot->id}.quantity", '0')->call('mengeSpeichern', $slot->id)
+        ->assertHasErrors("slotForm.{$slot->id}.unit_vocab_id")->assertSee('Menge muss größer als 0 sein.');
+    expect((float) $slot->fresh()->quantity)->toBe(1.0);
+});

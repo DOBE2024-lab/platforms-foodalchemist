@@ -89,3 +89,31 @@ it('jedes dirname(__DIR__, N) unter src/Services zeigt auf src/ oder den Modul-R
 
     expect($falsch)->toBe([]);
 });
+
+/**
+ * 3.8-Rest (CI-Fund): Tests lesen Quelldateien auch über zusammengesetzte Pfade (__DIR__ . '/../../src/Services/X.php'). Nach einem
+ * Umzug zeigten zwei davon ins Leere. Jeder Pfad-String 'src/Services/….php' unter tests/ muss auf eine vorhandene Datei zeigen.
+ * Ausnahme: Tests, die gerade prüfen, dass eine Datei weg ist.
+ */
+const SERVICES_PFAD_SOLL_FEHLEN = [
+    'tests/Feature/WissenSectionsGedropptTest.php' => ['src/Services/Knowledge/KnowledgeSectionizer.php', 'src/Services/Knowledge/KnowledgeChunker.php'],
+];
+
+it('Quell-Pfade src/Services/….php in Tests zeigen auf vorhandene Dateien (Umzüge ziehen sie mit)', function () {
+    $modul = dirname(__DIR__, 2);
+    $tot = [];
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($modul.'/tests', FilesystemIterator::SKIP_DOTS)) as $datei) {
+        $rel = substr($datei->getPathname(), strlen($modul) + 1);
+        if ($datei->getExtension() !== 'php' || $rel === 'tests/Support/ServicesUmzuege.php' || $rel === 'tests/Unit/ServicesOrdnungTest.php') {
+            continue;
+        }
+        preg_match_all('#src/Services/[A-Za-z0-9_/]+\.php#', (string) file_get_contents($datei->getPathname()), $m);
+        foreach (array_unique($m[0]) as $pfad) {
+            if (! is_file($modul.'/'.$pfad) && ! in_array($pfad, SERVICES_PFAD_SOLL_FEHLEN[$rel] ?? [], true)) {
+                $tot[] = "$rel: $pfad";
+            }
+        }
+    }
+
+    expect($tot)->toBe([]);
+});

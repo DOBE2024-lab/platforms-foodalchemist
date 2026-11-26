@@ -204,7 +204,8 @@ foreach ($klassen as $k) {
 }
 $pfadMuster = [];
 foreach ($klassen as $k) {
-    $pfadMuster['#(?<![\w/])((?:src/)?Services/)'.preg_quote($k, '#').'\.php#'] = '${1}'.$ordner.'/'.$k.'.php';
+    // Auch zusammengesetzte Pfade wie __DIR__ . '/../../src/Services/X.php' (CI-Fund 3.8-Rest: GpNamingSlugTest, Spec80KindPlanungTest)
+    $pfadMuster['#((?<![\w/])(?:src/)?Services/|(?<=/)src/Services/)'.preg_quote($k, '#').'\.php#'] = '${1}'.$ordner.'/'.$k.'.php';
 }
 $dateien = [];
 foreach (['src', 'tests', 'resources', 'routes', 'config', 'database'] as $o) {

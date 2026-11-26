@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\ReifeService;
+use Platform\FoodAlchemist\Services\Reife\ReifeService;
 
 /**
  * Spec 50 · E-1 — Anreicherung für ein BESTEHENDES Basisrezept. Die Wurzel aus §4.1.

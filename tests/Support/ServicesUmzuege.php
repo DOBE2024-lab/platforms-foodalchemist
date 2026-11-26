@@ -176,6 +176,7 @@ final class ServicesUmzuege
         'Services/PurchaseJournalService.php' => 'Services/Einkauf/PurchaseJournalService.php',
         'Services/RebateService.php' => 'Services/Preis/RebateService.php',
         'Services/RegenerationCascadeService.php' => 'Services/Produktion/RegenerationCascadeService.php',
+        'Services/ReifeService.php' => 'Services/Reife/ReifeService.php',
         'Services/ReportExportService.php' => 'Services/Ausgabe/ReportExportService.php',
         'Services/SalesImportService.php' => 'Services/Einkauf/SalesImportService.php',
         'Services/SimulationService.php' => 'Services/Concepter/SimulationService.php',

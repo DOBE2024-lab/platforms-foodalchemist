@@ -161,7 +161,7 @@ class VorgangsRegisterService
     ];
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\ReifeService $reife,
+        private \Platform\FoodAlchemist\Services\Reife\ReifeService $reife,
         private KnowledgeContextService $wissen,
         private KnowledgeCanonService $kanon,
     ) {}

@@ -830,7 +830,7 @@ abstract class FoodAlchemistTool
     {
         $daten += $this->zutatenOhneGewicht($team, $recipeId);   // Entscheid Dominique 23.11.: warnen, nicht sperren
         try {
-            $kurz = app(\Platform\FoodAlchemist\Services\ReifeService::class)
+            $kurz = app(\Platform\FoodAlchemist\Services\Reife\ReifeService::class)
                 ->kurz($team, $istVk ? 'sales_recipe' : 'recipe', $recipeId);
         } catch (\Throwable $e) {
             return $daten;                                          // Messung darf den Schreibvorgang nie kippen

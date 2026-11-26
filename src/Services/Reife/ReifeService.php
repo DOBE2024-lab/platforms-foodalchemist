@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Reife;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\Reife\AngebotReifeAdapter;

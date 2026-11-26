@@ -175,6 +175,7 @@ class ConcepterAggregateService
         $ekBeitragend = 0;
         $gewicht = 0.0;                 // Σ Effektiv-Gramm/Person
         $gewichtVollstaendig = true;    // false, sobald eine Position keine belastbare Gramm-Angabe hat
+        $ekVollstaendig = true;         // false, sobald eine Position keinen EK hat (Unbekanntes nie als 0 — die Summe zählt nur die bekannten)
         foreach ($mitMenge as $r) {
             $zeit += (int) ($r['gericht']->work_time_min ?? 0);   // Σ roh (Planungsproxy), mengenunabhängig
             $ekPositionen++;
@@ -188,10 +189,11 @@ class ConcepterAggregateService
                 $yieldG = (float) ($r['gericht']->yield_kg ?? 0) * 1000;
                 $mengeG = $r['quantity'] !== null ? (float) $r['quantity'] : null;
                 if ($mengeG === null || $mengeG <= 0 || $yieldG <= 0) {
-                    $gewichtVollstaendig = false;
+                    $gewichtVollstaendig = $ekVollstaendig = false;
 
                     continue;
                 }
+                $ekVollstaendig = $ekVollstaendig && $r['gericht']->ek_total_eur !== null;
                 $bruch = $mengeG / $yieldG;
                 $ekBeitragend++;
                 $ek += (float) ($r['gericht']->ek_total_eur ?? 0) * $bruch;
@@ -209,7 +211,7 @@ class ConcepterAggregateService
                 $darPortionG,
             );
             if ($pae === null) {
-                $gewichtVollstaendig = false; // unbekannte Menge → auch Gewicht unvollständig
+                $gewichtVollstaendig = $ekVollstaendig = false; // unbekannte Menge → Gewicht und EK unvollständig
                 continue; // Gramm-Position ohne Portionsgewicht → trägt ehrlich nicht bei
             }
             $ekBeitragend++;
@@ -221,6 +223,7 @@ class ConcepterAggregateService
             if ($dar?->ek_portion !== null && ! $stueck) {
                 $ek += (float) $dar->ek_portion * $pae;
             } else {
+                $ekVollstaendig = $ekVollstaendig && $r['gericht']->ek_total_eur !== null;
                 $ek += (float) ($r['gericht']->ek_total_eur ?? 0) / $anzahl * $pae;
             }
             $vk += (float) ($dar?->sales_net ?? app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($r['gericht']) ?? 0) * $pae;   // Spec 85 D-1
@@ -253,6 +256,7 @@ class ConcepterAggregateService
             'ek_per_person' => round($ek, 4),
             'ek_n_positionen' => $ekPositionen,               // kostentragende Positionen gesamt
             'ek_n_beitragend' => $ekBeitragend,               // davon mit belastbarem EK (Lücke = ehrlich aus)
+            'ek_vollstaendig' => $ekVollstaendig,             // false → ≥1 Position ohne EK; ek_per_person ist dann eine Teilsumme
             'vk_summe' => round($vk, 2),
             'gewicht_pro_person_g' => round($gewicht),        // Σ Effektiv-Gramm/Person
             'gewicht_vollstaendig' => $gewichtVollstaendig,   // false → ≥1 Position ohne Portionsgewicht (Gewicht unvollständig)

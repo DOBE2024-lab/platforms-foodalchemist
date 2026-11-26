@@ -47,6 +47,10 @@ final class CockpitZeilen
                 if ($ep->price_incomplete === true) {
                     $zeile['vk_unvollstaendig'] = true;   // CQ price_incomplete: Paket-Preis = Summe seiner bekannten Positionen, der Wert bleibt sichtbar
                 }
+                // Unbekanntes nie als 0 (B2), auch durch Pakete: fehlt einem Gericht des Pakets (rekursiv) der EK, ist der Paket-EK eine Teilsumme
+                if (! app(ConcepterAggregateService::class)->conceptAggregat($ep)['ek_vollstaendig']) {
+                    $zeile['ek_unvollstaendig'] = $r['hat_ek_luecke'] = true;
+                }
             } elseif ($slot->sales_recipe_id !== null && $slot->dish) {
                 $zeile = $basis + ['type' => 'gericht', 'wording' => $slot->wording, 'label' => $slot->dish->name, 'stale' => false]
                     + $this->gericht($concept, $slot, $outlet);

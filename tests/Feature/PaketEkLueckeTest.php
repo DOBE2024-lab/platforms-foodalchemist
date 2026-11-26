@@ -161,3 +161,32 @@ it('Foodbook ohne Lücke: Quote bleibt', function () {
 
     expect($gesamt['food_cost_percent'])->not->toBeNull()->and($gesamt['ek_vollstaendig'])->toBeTrue();
 });
+
+it('Folge-PR (B1): die Gericht-Karte im Paket zeigt den EK je Person der Position (Darreichung, Menge), nicht den Ansatz', function () {
+    $beigabe = $this->makeRecipe($this->t, 'Hot Dog', ['is_sales_recipe' => true, 'ek_total_eur' => 1.26, 'sales_unit_count' => 1]);
+    $this->makeStandardDarreichung($beigabe, 4.5, ['ek_portion' => 0.79]);
+    $p = $this->makeConcept($this->t, 'Snack-Paket', ['kind' => 'paket']);
+    $this->makeConceptSlot($p, ['sales_recipe_id' => $beigabe->id, 'quantity' => 1]);
+    $this->makeConceptSlot($p, ['sales_recipe_id' => $this->mitEk->id, 'quantity' => 2, 'position' => 2]);
+    $this->makeConceptSlot($p, ['sales_recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 3]);
+    $this->konzepte->recomputeCache($p->fresh());
+    $k = $this->makeConcept($this->t, 'Snack-Menü');
+    $this->makeConceptSlot($k, ['type' => 'paket', 'embedded_concept_id' => $p->id]);
+
+    $text = preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags(
+        \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\Editor::class)->call('oeffnen', 'concepts', $k->id)->html())));
+
+    expect($text)->toMatch('/Hot Dog.{0,160}EK 0,79 €/u')->not->toMatch('/Hot Dog.{0,160}EK 1,26 €/u')
+        ->toMatch('/Bowl.{0,160}EK 1,60 €/u')                  // 8,00 € ÷ 10 Portionen × Menge 2
+        ->toMatch('/Wrap.{0,160}EK EK fehlt/u');
+});
+
+it('Folge-PR: Foodbook-Detail zeigt am EK/Person den Merker „unvollständig“', function () {
+    $fb = $this->makeFoodbook($this->t, 'Foodbook', ['status' => 'entwurf']);
+    $this->makeFoodbookBlock($this->makeChapter($fb, ['title' => 'Buffet']), ['type' => 'concept_ref', 'concept_id' => $this->konzept->id]);
+    app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookDokument::class)->vorschauSnapshotAktualisieren($this->t, $fb->id);
+    $detail = preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags(
+        \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Foodbooks\Index::class)->call('waehle', $fb->id)->html())));
+
+    expect($detail)->toMatch('/EK\/Person 0,80 € ?unvollständig/u');
+});

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
  * „Rezeptur erstellen" für ein vorhandenes Gericht (Dominique 13.11.): eine Planung kann für genau ein Gericht ohne
  * Komponenten (Hülle) die Rezeptur bauen. `target_recipe_id` = Ziel-Gericht (loser Zeiger, kein FK — Gerichte werden
  * gelöscht/zusammengeführt). Der Bau schreibt in dieses Gericht statt ein neues anzulegen
- * ({@see \Platform\FoodAlchemist\Services\GerichtHuelleService}). Additiv, kein Backfill.
+ * ({@see \Platform\FoodAlchemist\Services\Gericht\GerichtHuelleService}). Additiv, kein Backfill.
  */
 return new class extends Migration
 {

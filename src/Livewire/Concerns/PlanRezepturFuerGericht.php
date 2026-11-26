@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\GerichtHuelleService;
+use Platform\FoodAlchemist\Services\Gericht\GerichtHuelleService;
 
 /**
  * Leitstelle, Reiter Gericht: Planung mit einem Ziel-Gericht (Dominique 13.11.2026). Kommt die Planung vom

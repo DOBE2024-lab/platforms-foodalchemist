@@ -75,7 +75,7 @@ final class ConceptVorgabenService
     {
         [$mit, $ohne] = $leere->partition(fn (FoodAlchemistConceptSlot $s) => trim((string) $s->dish_brief) !== '');
         // Gerichte, die schon in einer Position stehen, aber noch keine Komponenten haben: Rezeptur in der Hülle planen.
-        app(\Platform\FoodAlchemist\Services\GerichtHuelleService::class)->planeHuellen($team, $conceptStep, $conceptId, $mit->count());
+        app(\Platform\FoodAlchemist\Services\Gericht\GerichtHuelleService::class)->planeHuellen($team, $conceptStep, $conceptId, $mit->count());
 
         foreach ($mit->values() as $idx => $slot) {
             $titel = trim((string) $slot->dish_brief);

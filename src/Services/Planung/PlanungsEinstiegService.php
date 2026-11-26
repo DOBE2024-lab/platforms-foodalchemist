@@ -185,7 +185,7 @@ class PlanungsEinstiegService
         if ((int) $gericht->team_id !== (int) $team->id) {
             throw new RuntimeException('Geerbtes Gericht: eine Rezeptur erstellen kann nur das Besitzer-Team.');
         }
-        if (\Platform\FoodAlchemist\Services\GerichtHuelleService::huelle($team, (int) $gericht->id) === null) {
+        if (\Platform\FoodAlchemist\Services\Gericht\GerichtHuelleService::huelle($team, (int) $gericht->id) === null) {
             throw new RuntimeException('„Rezeptur erstellen“ gibt es nur für Gerichte im Entwurf ohne Komponenten. Dieses Gericht hat schon Komponenten oder ist freigegeben. Zum Ändern „Mit Anweisung überarbeiten“ nutzen.');
         }
         $offen = FoodAlchemistPlanningSession::where('team_id', $team->id)->where('target_recipe_id', $gericht->id)

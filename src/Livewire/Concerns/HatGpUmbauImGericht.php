@@ -26,7 +26,7 @@ trait HatGpUmbauImGericht
         }
         $this->fehler = null;
         try {
-            $r = app(\Platform\FoodAlchemist\Services\GerichtGpUmbauService::class)
+            $r = app(\Platform\FoodAlchemist\Services\Gericht\GerichtGpUmbauService::class)
                 ->basisrezeptAnlegen($team, $ingredientId, $this->gpUmbauNamen[$ingredientId] ?? null);
         } catch (\RuntimeException $e) {
             $this->fehler = $e->getMessage();
@@ -45,7 +45,7 @@ trait HatGpUmbauImGericht
         if ($rezept === null || ! $rezept->is_sales_recipe) {
             return [];
         }
-        $umbau = app(\Platform\FoodAlchemist\Services\GerichtGpUmbauService::class);
+        $umbau = app(\Platform\FoodAlchemist\Services\Gericht\GerichtGpUmbauService::class);
 
         return $umbau->direkteGpZeilen($rezept)->map(function ($z) use ($umbau) {
             $v = $umbau->nameVorschlag($z);

@@ -44,7 +44,7 @@
             $offen[] = ['crit', 'Verkaufspreis unvollständig: mindestens einer Position fehlt der VK. €/Person zählt nur die bekannten Preise.'];
         }
         if (! empty($cockpit['hat_ek_luecke'])) {
-            $offen[] = ['warn', 'Einkauf unvollständig: einem Gericht fehlt das Portionsgewicht.'];
+            $offen[] = ['warn', 'Einkauf unvollständig: einem Gericht fehlt der EK oder das Portionsgewicht.'];
         }
 
         $checkIcon = ['ok' => 'heroicon-m-check-circle', 'warn' => 'heroicon-m-exclamation-triangle', 'fail' => 'heroicon-m-x-circle', 'info' => 'heroicon-m-information-circle'];

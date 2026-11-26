@@ -183,3 +183,16 @@ it('Konzept-Slot B4: Kind-Team mit Master-Gericht — Slot Master-EK, Block Team
     expect(($this->slotZeile)($this->childA, ['sales_recipe_id' => $this->gericht->id])['ek'])->toBe(3.0)
         ->and(blockZeile($fbZeile))->toBe(['vk' => 10.0, 'ek' => 0.0, 'vk_fehlt' => false, 'ek_luecke' => true]);
 });
+
+it('Konzept-Slot B2 in der Oberfläche: Detail-Panel nennt den fehlenden EK, nicht nur das Portionsgewicht', function () {
+    $k = $this->makeConcept($this->t, 'Ohne-EK-Menü');
+    $this->makeConceptSlot($k, ['sales_recipe_id' => $this->ohneEk->id, 'quantity' => 1]);
+
+    \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\DetailPanel::class)->call('zeige', 'concepts', $k->id)
+        ->assertSee('Einkauf unvollständig: einem Gericht fehlt der EK oder das Portionsgewicht.');
+    // Positions-Tabelle im Editor: unbekannter EK als „offen“ (null), nicht 0,00 €
+    expect(app(ConceptService::class)->preisCockpit($k->fresh(), null, $this->t)['zeilen'][0]['ek'])->toBeNull();
+    // Gericht-Karte im Editor: EK fehlt, VK bekannt → Wareneinsatz „offen“, nicht „ohne VK“
+    \Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\Editor::class)->call('oeffnen', 'concepts', $k->id)
+        ->assertSee('EK fehlt')->assertDontSee('ohne VK');
+});

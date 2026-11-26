@@ -91,7 +91,7 @@ final class CockpitZeilen
         $vk = $vkFehlt ? 0.0 : (float) $vkStd * $pae;
 
         return ['price' => $vkFehlt ? null : round($vk, 2), '_vk_roh' => $vk, 'vk_fehlt' => $vkFehlt,
-            'ek' => $ekFehlt ? null : round($ek, 2), '_ek_roh' => $ek, 'ek_fehlt' => $ekFehlt, 'ek_unbekannt' => $ekUnbekannt];
+            'ek' => ($ekFehlt || $ekUnbekannt) ? null : round($ek, 2), '_ek_roh' => $ek, 'ek_fehlt' => $ekFehlt, 'ek_unbekannt' => $ekUnbekannt];
     }
 
     /** Paket-Zeile: Preis null = Lücke; EK wie bisher (0, wenn unbekannt). */

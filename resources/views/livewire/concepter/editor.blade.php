@@ -548,7 +548,7 @@
                                                             {{-- Im Paket ist der Einzel-VK je Speise irreführend (ein Paketpreis) → nur EK zeigen. --}}
                                                             @unless($istPaket)<div class="flex flex-col"><dt class="{{ $kopfzelle }}">VK je Person</dt><dd class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]"><x-fa::money :value="$vkz" /></dd></div>@endunless
                                                             <div class="flex flex-col"><dt class="{{ $kopfzelle }}">EK</dt><dd class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]"><x-fa::money :value="$ekz" missing="EK fehlt" /></dd></div>
-                                                            @unless($istPaket)<div class="flex flex-col"><dt class="{{ $kopfzelle }}">Wareneinsatz</dt><dd class="text-[length:var(--fa-text-md)] font-semibold {{ $wpct !== null && $wpct > (float) $zielWareneinsatzPct ? 'text-[var(--fa-crit)]' : 'text-[var(--fa-ink)]' }}">{{ $wpct !== null ? number_format($wpct, 1, ',', '.') . ' %' : 'ohne VK' }}</dd></div>@endunless
+                                                            @unless($istPaket)<div class="flex flex-col"><dt class="{{ $kopfzelle }}">Wareneinsatz</dt><dd class="text-[length:var(--fa-text-md)] font-semibold {{ $wpct !== null && $wpct > (float) $zielWareneinsatzPct ? 'text-[var(--fa-crit)]' : 'text-[var(--fa-ink)]' }}">{{ $wpct !== null ? number_format($wpct, 1, ',', '.') . ' %' : ($vkz === null ? 'ohne VK' : 'offen') }}</dd></div>@endunless
                                                         </dl>
                                                     </x-fa::card>
                                                 @endforeach

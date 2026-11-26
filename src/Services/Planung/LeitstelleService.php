@@ -414,7 +414,7 @@ class LeitstelleService
         if ($mitSlots) {
             $mit['chapters.blocks.concept'] = fn ($q) => $q->with(['slots' => fn ($s) => $s->orderBy('position'), 'slots.dish:id,name']);
         } else {
-            $mit['chapters.blocks.concept'] = fn ($q) => $q->select('id', 'name', 'price_per_person_cache', 'price_incomplete');
+            $mit['chapters.blocks.concept'] = fn ($q) => $q->select(explode(',', \Platform\FoodAlchemist\Services\Position\PositionPreisService::KONZEPT_SPALTEN));   // alle Spalten, die preisCockpit braucht
         }
 
         $loaded = FoodAlchemistFoodbook::visibleToTeam($team)->with($mit)->find($fb->id);

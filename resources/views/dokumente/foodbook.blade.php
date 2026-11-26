@@ -204,7 +204,7 @@
                      ausschließlich im internen Kalkulations-Print (Costing-Dokument). --}}
                 @if($istIntern && $k['vk_pro_person'] > 0)
                     <span class="kpreis">
-                        {{ number_format($k['vk_pro_person'], 2, ',', '.') }} €/P{{ ($k['vk_vorlaeufig'] ?? false) ? ' (vorläufig)' : '' }}
+                        @if(($k['wahl_spanne'] ?? null) !== null && $k['wahl_spanne']['von'] != $k['wahl_spanne']['bis'])<span data-kapitel-wahl-spanne>{{ number_format($k['wahl_spanne']['von'], 2, ',', '.') }}–{{ number_format($k['wahl_spanne']['bis'], 2, ',', '.') }} €/P, gerechnet: </span>@endif{{ number_format($k['vk_pro_person'], 2, ',', '.') }} €/P{{ ($k['vk_vorlaeufig'] ?? false) ? ' (vorläufig)' : '' }}
                         @if(($k['ek_pro_person'] ?? null) !== null)
                             · <span class="ek">EK {{ number_format($k['ek_pro_person'], 2, ',', '.') }} €/P</span>
                             @if(($k['food_cost_percent'] ?? null) !== null) · <span class="wpz">W {{ number_format($k['food_cost_percent'], 1, ',', '.') }} %</span> @endif

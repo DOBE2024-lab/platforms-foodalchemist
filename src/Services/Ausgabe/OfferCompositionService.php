@@ -516,30 +516,17 @@ class OfferCompositionService
         }
 
         $relationen = ['blocks' => fn ($q) => $q->where('visible', true),
-            'blocks.concept:id,name,price_per_person_cache,price_incomplete,team_id,ist_fassung,price_mode,price_per_person_manual,price_override_expires_at', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation'];
+            'blocks.concept:'.\Platform\FoodAlchemist\Services\Position\PositionPreisService::KONZEPT_SPALTEN, 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation'];
         if ($mitKindkapiteln) {
             $relationen[] = 'children';
         }
         $kapitel->loadMissing($relationen);
-        $vk = 0.0;
-        $ek = 0.0;
-        $pauschal = 0.0;
-        $ekPauschal = 0.0;   // Spec 94b: EK pauschaler Positionen
-        $aufwand = 0.0;      // Spec 94b: zzgl. nach Aufwand (nicht in der Summe)
-        $ekAufwand = 0.0;
-        $ekVoll = true;
-        $vkFehlt = false;
-        foreach ($kapitel->blocks as $block) {
-            $p = $this->blockPreis($block, $outlet, $team);   // Spec 82 3b: EK aus Sicht des Angebots-Teams
-            $vk += $p['vk_pp'];
-            $ek += $p['ek_pp'];
-            $pauschal += $p['pauschal'];
-            $ekPauschal += $p['ek_pauschal'] ?? 0.0;
-            $aufwand += $p['aufwand'] ?? 0.0;
-            $ekAufwand += $p['ek_aufwand'] ?? 0.0;
-            $ekVoll = $ekVoll && $p['ek_vollstaendig'];
-            $vkFehlt = $vkFehlt || ($p['vk_fehlt'] ?? false);
-        }
+        // 98 · 3.6 PR3: gemeinsame Summe mit dem Foodbook (Positions-Kern) — Wahlgruppen zählen mit der teuersten
+        // Alternative, die Spanne steht in wahl_spanne (P4). Spec 82 3b: EK aus Sicht des Angebots-Teams.
+        $s = app(\Platform\FoodAlchemist\Services\Position\PositionPreisService::class)->summe($kapitel->blocks->map(fn ($block) => [
+            'gruppe' => $block->variant_group_id, 'preis' => $this->blockPreis($block, $outlet, $team)]));
+        [$vk, $ek, $pauschal, $ekPauschal, $aufwand, $ekAufwand, $ekVoll, $vkFehlt] =
+            [$s['vk'], $s['ek'], $s['pauschal'], $s['ek_pauschal'], $s['aufwand'], $s['ek_aufwand'], $s['ek_vollstaendig'], $s['vk_fehlt']];
         if ($mitKindkapiteln) {
             foreach ($kapitel->children as $kind) {
                 $kindAgg = $this->kapitelAggregat($team, $kind, $outlet);
@@ -561,7 +548,7 @@ class OfferCompositionService
         return ['vk_pro_person' => round($vk, 2), 'ek_pro_person' => round($ek, 2), 'pauschal' => round($pauschal, 2),
             'food_cost_percent' => ($ekVoll && ! $vkFehlt) ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk) : null, 'preis_range' => null,
             'ek_vollstaendig' => $ekVoll, 'vk_fehlt' => $vkFehlt, 'ek_pauschal' => round($ekPauschal, 2),
-            'aufwand' => round($aufwand, 2), 'ek_aufwand' => round($ekAufwand, 2)];   // vk_fehlt: mind. ein Gericht ohne VK — Summe ist kein Angebotspreis
+            'aufwand' => round($aufwand, 2), 'ek_aufwand' => round($ekAufwand, 2), 'wahl_spanne' => $s['wahl_spanne'], 'wahl_gruppen' => $s['wahl_gruppen']];   // vk_fehlt: mind. ein Gericht ohne VK — Summe ist kein Angebotspreis
     }
 
     // ── Read-Struktur (EINE Quelle für Editor-Menü-Ansicht + Kalkulation + Dokument) ──
@@ -630,7 +617,9 @@ class OfferCompositionService
                 if ($intern) {
                     $row['ek_pro_person'] = $agg['ek_pro_person'];
                     $row['food_cost_percent'] = $agg['food_cost_percent'];
+                    $row['wahl_gruppen'] = $agg['wahl_gruppen'] ?? [];   // 98 · 3.6 PR3: Spanne je Wahlgruppe nur intern (Editor)
                 }
+                $row['wahl_spanne'] = $agg['wahl_spanne'] ?? null;   // 98 · 3.6 PR3: Kapitel-Spanne bei Wahlgruppen — auch für den Kunden (Dominique)
                 // Bild-Epic (offer-scoped, wie normalizeFoodbook): Kapitel-Bild + Galerie, sonst Concept-Fallback.
                 // Rohe Identifier (context_file_id + path), keine Interna → auch für die Kundensicht (Präsentation).
                 // Vorher nur bei $intern: das Kapitelbild kam deshalb nie im öffentlichen Link an.
@@ -728,7 +717,7 @@ class OfferCompositionService
         unset($komposition['summe']['ek_pro_person'], $komposition['summe']['gesamt_ek'], $komposition['summe']['aufwand_ek']);
         foreach (array_keys($komposition['kapitel'] ?? []) as $kapitelIndex) {
             $kapitel = &$komposition['kapitel'][$kapitelIndex];
-            unset($kapitel['ek_pro_person'], $kapitel['food_cost_percent'], $kapitel['bild'], $kapitel['bilder']);
+            unset($kapitel['ek_pro_person'], $kapitel['food_cost_percent'], $kapitel['bild'], $kapitel['bilder'], $kapitel['wahl_gruppen']);   // 98 · 3.6 PR3: wahl_spanne sieht der Kunde (Dominique), je Gruppe nur intern
             foreach (array_keys($kapitel['bloecke'] ?? []) as $blockIndex) {
                 $block = &$kapitel['bloecke'][$blockIndex];
                 unset($block['ek_pp']);

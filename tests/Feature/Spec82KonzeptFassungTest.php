@@ -366,3 +366,31 @@ it('MCP: concept_fassungen.PUBLISH und .GET', function () {
     $get = $this->reg->get('foodalchemist.concept_fassungen.GET')->execute(['concept_id' => $this->konzept->id], $ctx);
     expect($get->success)->toBeTrue($get->error ?? '')->and(json_encode($get->data))->toContain('Erst');
 });
+
+it('98 · 3.6 Parität · Abo-Fassung im Foodbook und Angebot des Mandanten identisch — auch ohne Anmeldung (öffentlicher Präsentations-Link)', function () {
+    $this->hilfe->alleBausteine();
+    $this->hilfe->abo([$this->broich]);
+    $this->hilfe->preise();
+    $f = FoodAlchemistConcept::mitFassungen()->findOrFail($this->svc->veroeffentlichen($this->master, $this->konzept->id, 'Erst', $this->kurator)['fassung_id']);
+
+    $fb = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbook::create(['team_id' => $this->broich->id, 'label' => 'Broich Foodbook', 'status' => 'entwurf']);
+    $kap = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::create(['team_id' => $this->broich->id, 'foodbook_id' => $fb->id, 'title' => 'Menü', 'position' => 1]);
+    $fbBlock = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock::create(['team_id' => $this->broich->id, 'chapter_id' => $kap->id, 'type' => 'concept_ref',
+        'concept_id' => $f->id, 'position' => 1, 'visible' => true]);
+    $angebot = app(AngebotService::class)->create($this->broich, ['name' => 'Broich Hochzeit']);
+    $agKap = \Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter::create(['team_id' => $this->broich->id, 'offer_id' => $angebot->id, 'title' => 'Menü', 'position' => 0]);
+    $agBlock = \Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock::create(['team_id' => $this->broich->id, 'chapter_id' => $agKap->id, 'type' => 'concept_ref',
+        'concept_id' => $f->id, 'position' => 0, 'visible' => true]);
+
+    auth()->logout();   // öffentlicher Link / Hintergrundlauf: kein angemeldeter Benutzer, kein aktuelles Team
+
+    $fbZeile = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregat::class)->blockPreis($fbBlock->fresh());   // ohne Team → Besitzer-Team
+    $agZeile = app(OfferCompositionService::class)->blockPreis($agBlock->fresh(), null, $this->broich);
+    $snap = app(\Platform\FoodAlchemist\Services\Ausgabe\PresentationService::class)->previewData($this->broich, 'foodbook', $fb->id);
+    $sektion = collect(data_get($snap, 'content.sections') ?? data_get($snap, 'content.body.sections') ?? [])->first();
+
+    expect($fbZeile)->toBe($agZeile)
+        ->and($fbZeile['vk_pp'])->toBeGreaterThan(0.0)                                   // vorher: Fassung ohne Team-Kontext → kein Preis
+        ->and($fbZeile['vk_pp'])->toBe(round((float) $this->preis->cockpit($f, $this->broich)['price_per_person'], 2))
+        ->and((float) data_get($sektion, 'preis.pp'))->toBe($fbZeile['vk_pp']);
+});

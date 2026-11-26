@@ -324,6 +324,10 @@
                                                 @endif
                                                 @if(($agg['vk_pro_person'] ?? 0) > 0)
                                                     <span class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]" title="{{ $istRollup ? 'Summe der Unterkapitel' : 'Verkaufspreis je Gast' }}">@if($istRollup)<span class="font-normal text-[var(--fa-ink-3)]">Summe&nbsp;</span>@endif{{ $euro($agg['vk_pro_person']) }}<span class="font-normal text-[var(--fa-ink-3)]">/Gast</span></span>
+                                                    @if(! empty($agg['wahl_spanne']))
+                                                        {{-- 98 · 3.6 PR3: Wahlgruppen als Spanne, gerechnet wird mit der teuersten Alternative (nur im Editor) --}}
+                                                        <span class="fa-t-muted" data-kapitel-wahl-spanne title="Wahlgruppen: günstigste bis teuerste Wahl; der Kapitelpreis rechnet mit der teuersten">{{ number_format((float) $agg['wahl_spanne']['von'], 2, ',', '.') }}–{{ number_format((float) $agg['wahl_spanne']['bis'], 2, ',', '.') }} €, gerechnet: {{ $euro($agg['vk_pro_person']) }}</span>
+                                                    @endif
                                                 @endif
                                                 <x-fa::badge :tone="$weTon[$we['status']] ?? 'neutral'"
                                                     title="Wareneinsatz {{ $we['ist_pct'] !== null ? $prozent($we['ist_pct']) : 'unbekannt' }}, Ziel {{ $prozent($we['ziel_pct']) }}">WE {{ $we['ist_pct'] !== null ? $prozent($we['ist_pct']) : 'offen' }}</x-fa::badge>
@@ -443,6 +447,7 @@
                             </x-fa::menu>
                         </x-slot:actions>
 
+                        @php $wahlGruppen = (collect($kapitelBoard ?? [])->firstWhere('kapitel_id', $kapitel->id) ?? [])['aggregat']['wahl_gruppen'] ?? []; @endphp   {{-- 98 · 3.6 PR3 --}}
                         <div class="flex flex-col gap-1" x-data="{ dragBlockId: null }">
                             @forelse($kapitel->blocks as $block)
                                 <div wire:key="block-{{ $block->id }}"
@@ -517,6 +522,9 @@
                                             <button type="button" wire:click="wahlGruppeAufheben({{ $block->id }})" class="shrink-0" title="Aus der Wahlgruppe lösen">
                                                 <x-fa::badge tone="warn" icon="heroicon-m-arrows-right-left">Wahlgruppe {{ $block->variant_group_id }}</x-fa::badge>
                                             </button>
+                                            @if($wg = $wahlGruppen[$block->variant_group_id] ?? null)
+                                                <span class="fa-t-muted shrink-0" data-wahl-gruppe-spanne title="Spanne dieser Wahlgruppe je Gast">{{ number_format((float) $wg['von'], 2, ',', '.') }}–{{ number_format((float) $wg['bis'], 2, ',', '.') }} €</span>
+                                            @endif
                                         @endif
                                         <button type="button" wire:click="blockEbene({{ $block->id }}, -1)" class="{{ $mini }}" title="Ausrücken" aria-label="Ausrücken">@svg('heroicon-m-arrow-left', 'w-3.5 h-3.5')</button>
                                         <button type="button" wire:click="blockEbene({{ $block->id }}, 1)" class="{{ $mini }}" title="Einrücken" aria-label="Einrücken">@svg('heroicon-m-arrow-right', 'w-3.5 h-3.5')</button>

@@ -32,6 +32,9 @@ use Platform\FoodAlchemist\Support\AngebotFestpreise;
  */
 final class PositionPreisService
 {
+    /** Konzept-Spalten, die preisCockpit braucht (Fassungspfad, Team, Konzept-Servierform, manueller Preis) — für Eager-Loads mit Spaltenauswahl. */
+    public const KONZEPT_SPALTEN = 'id,name,price_per_person_cache,price_incomplete,team_id,ist_fassung,serving_form_id,price_mode,price_per_person_manual,price_override_expires_at';
+
     public function __construct(
         private ConceptService $concepts,
         private AngebotFestpreise $festpreise,
@@ -75,6 +78,52 @@ final class PositionPreisService
         }
 
         return $this->ergebnis();
+    }
+
+    /**
+     * 98 · 3.6 PR3 — gemeinsame Kapitel-Summe der Blöcke (Foodbook wie Angebot). Wahlgruppen (variant_group_id, P4): je
+     * Gruppe zählt die TEUERSTE Alternative (nach VK je Person, dann pauschal); dazu die Spanne von (günstigste je Gruppe)
+     * bis (teuerste je Gruppe) für den VK je Person. Eine Gruppe mit vorläufigem Mitglied macht die Summe vorläufig.
+     *
+     * @param  iterable<array{gruppe: ?int, preis: array}>  $positionen
+     * @return array{vk: float, ek: float, pauschal: float, ek_pauschal: float, aufwand: float, ek_aufwand: float, vk_fehlt: bool, ek_vollstaendig: bool, wahl_spanne: ?array{von: float, bis: float}, wahl_gruppen: array<int, array{von: float, bis: float}>}
+     */
+    public function summe(iterable $positionen): array
+    {
+        $einzeln = [];
+        $gruppen = [];
+        foreach ($positionen as $p) {
+            $p['gruppe'] !== null ? ($gruppen[(int) $p['gruppe']][] = $p['preis']) : ($einzeln[] = $p['preis']);
+        }
+        $s = ['vk' => 0.0, 'ek' => 0.0, 'pauschal' => 0.0, 'ek_pauschal' => 0.0, 'aufwand' => 0.0, 'ek_aufwand' => 0.0, 'vk_fehlt' => false, 'ek_vollstaendig' => true];
+        $plus = function (array $pr) use (&$s): void {
+            $s['vk'] += $pr['vk_pp'];
+            $s['ek'] += $pr['ek_pp'];
+            $s['pauschal'] += $pr['pauschal'];
+            $s['ek_pauschal'] += $pr['ek_pauschal'] ?? 0.0;
+            $s['aufwand'] += $pr['aufwand'] ?? 0.0;
+            $s['ek_aufwand'] += $pr['ek_aufwand'] ?? 0.0;
+            $s['vk_fehlt'] = $s['vk_fehlt'] || ($pr['vk_fehlt'] ?? false);
+            $s['ek_vollstaendig'] = $s['ek_vollstaendig'] && ($pr['ek_vollstaendig'] ?? true);
+        };
+        foreach ($einzeln as $pr) {
+            $plus($pr);
+        }
+        $basis = $s['vk'];
+        [$von, $bis] = [0.0, 0.0];
+        $jeGruppe = [];
+        foreach ($gruppen as $gid => $alternativen) {
+            usort($alternativen, fn ($a, $b) => [$b['vk_pp'], $b['pauschal']] <=> [$a['vk_pp'], $a['pauschal']]);
+            $plus($alternativen[0]);   // teuerste zählt
+            $s['vk_fehlt'] = $s['vk_fehlt'] || collect($alternativen)->contains(fn ($a) => $a['vk_fehlt'] ?? false);
+            $von += end($alternativen)['vk_pp'];
+            $bis += $alternativen[0]['vk_pp'];
+            $jeGruppe[$gid] = ['von' => round(end($alternativen)['vk_pp'], 2), 'bis' => round($alternativen[0]['vk_pp'], 2)];
+        }
+        $s['wahl_spanne'] = $gruppen === [] ? null : ['von' => round($basis + $von, 2), 'bis' => round($basis + $bis, 2)];
+        $s['wahl_gruppen'] = $jeGruppe;   // je Gruppe von–bis (Anzeige an der Wahlgruppe im Editor)
+
+        return $s;
     }
 
     /** Staffel-Auflösung: höchste Stufe mit min_persons ≤ Pax (ohne Pax die niedrigste). */

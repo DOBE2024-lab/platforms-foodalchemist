@@ -30,6 +30,8 @@
                     <span class="pt-preis-pp">
                         @if(($z['alternativen'] ?? false) && ($z['preis_range'] ?? null))
                             {{ $z['preis_range']['min'] !== null ? $nf($z['preis_range']['min']) : '—' }}–{{ $z['preis_range']['max'] !== null ? $nf($z['preis_range']['max']) : '—' }} €
+                        @elseif(($z['wahl_spanne'] ?? null) !== null && $z['wahl_spanne']['von'] != $z['wahl_spanne']['bis'])
+                            <span data-preis-wahl-spanne>{{ $nf($z['wahl_spanne']['von']) }}–{{ $nf($z['wahl_spanne']['bis']) }} €</span>@if($z['vorlaeufig'] ?? false) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif
                         @elseif(($z['vk_pro_person'] ?? null) !== null)
                             {{ $nf($z['vk_pro_person']) }} €@if($z['vorlaeufig'] ?? false) <span class="pt-vorlaeufig" data-preis-vorlaeufig>vorläufig</span>@endif
                         @else — @endif

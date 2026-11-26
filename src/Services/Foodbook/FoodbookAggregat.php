@@ -57,19 +57,14 @@ final class FoodbookAggregat
     public function kapitelAggregat(Team $team, FoodAlchemistFoodbookKapitel $kapitel, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
         $kapitel->loadMissing(['blocks' => fn ($q) => $q->where('visible', true),
-            'blocks.concept:id,name,price_per_person_cache,price_incomplete,team_id,ist_fassung,price_mode,price_per_person_manual,price_override_expires_at', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
+            'blocks.concept:'.\Platform\FoodAlchemist\Services\Position\PositionPreisService::KONZEPT_SPALTEN, 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
             'blocks.staffel', 'children']);
 
-        $vk = $ek = $pauschal = $ekPauschal = 0.0;
-        $vkFehlt = false;   // CQ price_incomplete: mind. ein Konzept-Preis ist nur die Summe der bekannten Positionen
-        foreach ($kapitel->blocks as $block) {
-            $p = $this->blockPreis($block, $pax, $outlet, $team);   // 98 · 3.6 PR2 (P1): Team-Kontext wie im Angebot
-            $vkFehlt = $vkFehlt || ($p['vk_fehlt'] ?? false);
-            $vk += $p['vk_pp'];
-            $ek += $p['ek_pp'];
-            $pauschal += $p['pauschal'];
-            $ekPauschal += $p['ek_pauschal'] ?? 0.0;   // 98 · 3.6 PR2 (P8): EK pauschaler Gerichte
-        }
+        // 98 · 3.6 PR2/PR3: Zeilen über den Positions-Kern (Team-Kontext, P1), Summe gemeinsam mit dem Angebot —
+        // Wahlgruppen zählen mit der teuersten Alternative, die Spanne steht in wahl_spanne (P4).
+        $s = app(\Platform\FoodAlchemist\Services\Position\PositionPreisService::class)->summe($kapitel->blocks->map(fn ($block) => [
+            'gruppe' => $block->variant_group_id, 'preis' => $this->blockPreis($block, $pax, $outlet, $team)]));
+        [$vk, $ek, $pauschal, $ekPauschal, $vkFehlt, $spanne] = [$s['vk'], $s['ek'], $s['pauschal'], $s['ek_pauschal'], $s['vk_fehlt'], $s['wahl_spanne']];
         foreach ($kapitel->children as $kind) {
             $kindAgg = $this->kapitelAggregat($team, $kind, $pax, $outlet);
             $vk += $kindAgg['vk_pro_person'];
@@ -86,7 +81,7 @@ final class FoodbookAggregat
         return [
             'vk_pro_person' => round($vk, 2),
             'ek_per_person' => round($ek, 2),
-            'pauschal' => round($pauschal, 2), 'ek_pauschal' => round($ekPauschal, 2),
+            'pauschal' => round($pauschal, 2), 'ek_pauschal' => round($ekPauschal, 2), 'wahl_spanne' => $spanne, 'wahl_gruppen' => $s['wahl_gruppen'],
             'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ek, $vk), 'vk_fehlt' => $vkFehlt,   // Food-Cost aus einer VK-Teilsumme wäre geschönt
         ];
     }

@@ -321,6 +321,10 @@
                                             @if($agg['ek_per_person'] > 0)<span class="text-[var(--fa-ink-3)]" title="Wareneinsatz pro Gast">EK {{ $euro($agg['ek_per_person']) }}</span>@endif
                                             @if($agg['vk_pro_person'] > 0)
                                                 <span class="font-semibold text-[var(--fa-ink)]" title="{{ $istRollup ? 'Summe der Unterkapitel' : 'Verkauf pro Gast' }}">@if($istRollup)<span class="font-normal text-[var(--fa-ink-3)]">Summe </span>@endif{{ $euro($agg['vk_pro_person']) }}<span class="font-normal text-[var(--fa-ink-3)]"> pro Gast</span>@if($agg['vk_fehlt'] ?? false)<x-fa::vorlaeufig />@endif</span>
+                                                @if(! empty($agg['wahl_spanne']))
+                                                    {{-- 98 · 3.6 PR3: Wahlgruppen als Spanne, gerechnet wird mit der teuersten Alternative (nur im Editor) --}}
+                                                    <span class="fa-t-muted" data-kapitel-wahl-spanne title="Wahlgruppen: günstigste bis teuerste Wahl; der Kapitelpreis rechnet mit der teuersten">{{ number_format((float) $agg['wahl_spanne']['von'], 2, ',', '.') . '–' . number_format((float) $agg['wahl_spanne']['bis'], 2, ',', '.') . ' €' }}, gerechnet: {{ $euro($agg['vk_pro_person']) }}</span>
+                                                @endif
                                             @endif
                                             <span class="inline-flex items-center gap-1.5 {{ $ampelText[$we['status']] ?? $ampelText['unbekannt'] }}"
                                                   title="Wareneinsatz {{ $we['ist_pct'] !== null ? $pct($we['ist_pct']) : 'nicht berechenbar' }}, Ziel {{ $pct($we['ziel_pct']) }}">
@@ -831,7 +835,10 @@
 
                     {{-- x-data hält den Drag-Zustand; Ziehgriff = umsortieren, Hoch/Runter als Alternative --}}
                     <div class="flex flex-col gap-1.5" x-data="{ dragBlockId: null }">
-                        @php $hoeheText = ['klein' => 'klein', 'mittel' => 'mittel', 'gross' => 'groß']; @endphp
+                        @php
+                            $hoeheText = ['klein' => 'klein', 'mittel' => 'mittel', 'gross' => 'groß'];
+                            $wahlGruppen = (collect($kapitelBoard ?? [])->firstWhere('kapitel_id', $kapitel->id) ?? [])['aggregat']['wahl_gruppen'] ?? [];   // 98 · 3.6 PR3
+                        @endphp
                         @forelse($kapitel->blocks as $block)
                             <x-fa::card wire:key="block-{{ $block->id }}" x-on:dragover.prevent="" x-on:drop.prevent="if (dragBlockId && dragBlockId !== {{ $block->id }}) { $wire.blockVerschiebenAuf(dragBlockId, {{ $block->id }}); } dragBlockId = null" x-bind:class="dragBlockId === {{ $block->id }} ? 'opacity-40' : (dragBlockId ? 'ring-1 ring-[var(--fa-accent-line)]' : '')" class="{{ $block->variant_group_id ? 'border-[var(--fa-warn)]' : 'border-[var(--fa-line)]' }} px-2 py-1.5 {{ $block->visible ? '' : 'opacity-60' }}" style="margin-left: {{ $block->level * 20 }}px">
                                 <div class="flex items-start gap-1.5">
@@ -880,6 +887,9 @@
                                             <button type="button" wire:click="wahlGruppeAufheben({{ $block->id }})" title="Aus der Wahl-Gruppe nehmen">
                                                 <x-fa::badge tone="warn" icon="heroicon-m-x-mark">Wahl {{ $block->variant_group_id }}</x-fa::badge>
                                             </button>
+                                            @if($wg = $wahlGruppen[$block->variant_group_id] ?? null)
+                                                <span class="fa-t-muted" data-wahl-gruppe-spanne title="Spanne dieser Wahlgruppe je Gast">{{ number_format((float) $wg['von'], 2, ',', '.') }}–{{ number_format((float) $wg['bis'], 2, ',', '.') }} €</span>
+                                            @endif
                                         @endif
                                         {{-- #6: Deep-Jump ins Concept/Paket — öffnet es direkt im Concepter-Editor (neuer Tab). --}}
                                         @if($block->type === 'concept_ref' && $block->concept_id)

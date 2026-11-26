@@ -13,13 +13,21 @@ final class KapitelPreis
     /** Kapitelpreis aus einem Kapitel der Dokument-/Kompositionsdaten (vk_pro_person, preis_range). */
     public static function ausKapitel(array $k, bool $alternativen): ?array
     {
-        return self::bauen(isset($k['vk_pro_person']) ? (float) $k['vk_pro_person'] : null, $k['preis_range'] ?? null, $alternativen,
+        $preis = self::bauen(isset($k['vk_pro_person']) ? (float) $k['vk_pro_person'] : null, $k['preis_range'] ?? null, $alternativen,
             (bool) ($k['vk_vorlaeufig'] ?? $k['vk_fehlt'] ?? false));   // CQ price_incomplete: Foodbook vk_vorlaeufig, Angebot vk_fehlt
+        // 98 · 3.6 PR3 (Dominique): Wahlgruppen zeigt der Kunde als Spanne „12,50 – 16,00 €“; pp bleibt die teuerste Wahl
+        // (damit rechnen Aufschlüsselung und Summe weiter).
+        if ($preis !== null && ! $alternativen && ($k['wahl_spanne'] ?? null) !== null && (float) $k['wahl_spanne']['von'] !== (float) $k['wahl_spanne']['bis']) {
+            $preis = ['min' => (float) $k['wahl_spanne']['von'], 'max' => (float) $k['wahl_spanne']['bis'], 'wahl' => true] + $preis;
+        }
+
+        return $preis;
     }
 
     /**
      * @param  array{min?:?float, max?:?float}|null  $spanne
      * @return array{pp:?float, min:?float, max:?float, vorlaeufig?:bool}|null  null = kein zeigbarer Preis; vorlaeufig = Summe der bekannten Preise
+     *         (ausKapitel ergänzt bei Wahlgruppen min/max + wahl=true, pp bleibt die teuerste Wahl)
      */
     public static function bauen(?float $proPerson, ?array $spanne = null, bool $alternativen = false, bool $vorlaeufig = false): ?array
     {
@@ -46,6 +54,9 @@ final class KapitelPreis
             return '';
         }
         $nf = fn ($v) => number_format((float) $v, 2, ',', '.');
+        if (($preis['wahl'] ?? false) && ($preis['min'] ?? null) !== null && ($preis['max'] ?? null) !== null) {   // 98 · 3.6 PR3: Wahlgruppen
+            return $nf($preis['min']) . ' – ' . $nf($preis['max']) . ' €';
+        }
         if (($preis['pp'] ?? null) !== null && (float) $preis['pp'] > 0) {
             return $nf($preis['pp']) . ' €';
         }

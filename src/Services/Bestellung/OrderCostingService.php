@@ -88,7 +88,7 @@ class OrderCostingService
                 $rate['source'] = 'team_pass';
             }
             $minutes = (float) $time['active_person_minutes'];
-            $service = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->serviceKosten($team, (float) ($time['vor_ort_minutes'] ?? 0), $outlet);
+            $service = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::class)->serviceKosten($team, (float) ($time['vor_ort_minutes'] ?? 0), $outlet);
             $serviceMinutes += $service['minuten'];
             $timeQuantitiesComplete = $timeQuantitiesComplete && ($time['time_complete'] ?? true);
             $formen = collect($time['bloecke']['anrichten']['formen'] ?? []);

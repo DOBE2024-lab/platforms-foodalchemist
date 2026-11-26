@@ -137,7 +137,7 @@ class ProportionService
             ->with(['ingredients.unit', 'ingredients.gp', 'ingredients.referencedRecipe'])
             ->findOrFail($recipeId);
 
-        $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+        $recompute = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
         $rows = [];
         foreach ($recipe->ingredients as $z) {
             $rows[] = [
@@ -241,7 +241,7 @@ class ProportionService
                 ];
             }
         });
-        app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeAndPropagate($recipe->id);
+        app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputeAndPropagate($recipe->id);
 
         return ['recipe' => $recipe->refresh(), 'factor' => $factor, 'changes' => $changes];
     }
@@ -282,7 +282,7 @@ class ProportionService
             ->findOrFail($recipeId);
         $this->assertOwner($team, $recipe);
 
-        $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+        $recompute = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
 
         // Referenzmasse bestimmen (explizit oder schwerste Zutat) — dieselbe Logik wie die Sicht.
         $refMassG = 0.0;

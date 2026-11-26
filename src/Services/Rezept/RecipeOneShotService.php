@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\BulkRunType;
@@ -69,13 +69,13 @@ class RecipeOneShotService
     private const FREITEXT_MAX = 240;
 
     public function __construct(
-        private Plattform\BulkEnrichService $bulk,
-        private Pruefung\CoherenceService $coherence,
+        private \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService $bulk,
+        private \Platform\FoodAlchemist\Services\Pruefung\CoherenceService $coherence,
         private DarreichungService $darreichungen,
-        private Preis\CatalogPricingService $catalogPricing,
-        private Preis\MargeService $marge,
-        private TeamSettingsService $settings,
-        private Pruefung\SignalDetektorService $detektor,
+        private \Platform\FoodAlchemist\Services\Preis\CatalogPricingService $catalogPricing,
+        private \Platform\FoodAlchemist\Services\Preis\MargeService $marge,
+        private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
+        private \Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService $detektor,
     ) {
     }
 
@@ -104,7 +104,7 @@ class RecipeOneShotService
 
     private function anreichernImLauf(Team $team, FoodAlchemistRecipe $recipe, ?float $zielVk = null, bool $completeCoverage = false, bool $refresh = false, ?callable $shouldStop = null, array $leitplanken = []): array
     {
-        $alle = $recipe->is_sales_recipe ? Plattform\BulkEnrichService::SCHRITTE_VK : Plattform\BulkEnrichService::SCHRITTE;
+        $alle = $recipe->is_sales_recipe ? \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::SCHRITTE_VK : \Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::SCHRITTE;
         // #4: `refresh` = bewusster „Alles anreichern"-Klick im Editor → auch gefüllte, nicht-manuelle
         // Textfelder neu erzeugen (nach Zutatenänderung). Der Auto-Pfad (Generierung / Kaskaden-Job)
         // lässt es weg und füllt nur echte Lücken — sonst würden frisch generierte Felder sofort
@@ -244,7 +244,7 @@ class RecipeOneShotService
             }
             $anker = null;
             if ($minted > 0) {
-                app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeAndPropagate((int) $recipe->id);
+                app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputeAndPropagate((int) $recipe->id);
                 // Spec 50 · B-3: ein gemintetes GP ist erst mit Kern-Anker vollständig. Spec 95 Stufe 2 (Kurator-Befund 02.11.): nicht mehr
                 // synchron im Lauf — im externen KI-Modus wartete der ganze Enrich-Lauf auf die gp.anker-Antwort. Der Anker kommt als Folge-Job
                 // nach dem Commit ({@see GpAromaNachholen}, je GP eindeutig, nie auf einer sync-Queue); das Pairing-Glied holt ihn beim nächsten Lauf.
@@ -319,7 +319,7 @@ class RecipeOneShotService
             return ['status' => 'gesetzt', 'production_depth' => $recipe->production_depth];
         }
         try {
-            $vorschlag = app(Ai\AiGatewayService::class)->propose('recipe.production_depth', [
+            $vorschlag = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.production_depth', [
                 'name' => $recipe->name,
                 'production_depth' => $recipe->production_depth,
                 'zutaten' => $recipe->ingredients()->whereNull('deleted_at')->with(['gp:id,name', 'referencedRecipe:id,name'])->orderBy('position')->limit(30)->get()->map->anzeigeName()->filter()->values()->all(),
@@ -345,7 +345,7 @@ class RecipeOneShotService
     private function eigenschaftenGlied(FoodAlchemistRecipe $recipe, bool $refresh = false): array
     {
         try {
-            $vorschlag = app(Ai\AiGatewayService::class)->propose('recipe.eigenschaften', [
+            $vorschlag = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.eigenschaften', [
                 'name' => $recipe->name,
                 'haltbarkeit_tage' => null,
                 'transportstabilitaet' => null,
@@ -466,7 +466,7 @@ class RecipeOneShotService
             $vokabular = FoodAlchemistVocabKochequipment::visibleToTeam($team)
                 ->where('is_inactive', false)->orderBy('sort_order')->pluck('slug')->all();
 
-            $vorschlag = app(Ai\AiGatewayService::class)->propose('recipe.equipment', [
+            $vorschlag = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.equipment', [
                 'name' => $recipe->name,
                 'equipment_slugs' => $recipe->equipment()->pluck('slug')->all(),
                 'vokabular' => $vokabular,
@@ -577,7 +577,7 @@ class RecipeOneShotService
     private function aromaprofilGlied(FoodAlchemistRecipe $recipe): array
     {
         try {
-            $p = app(Pairing\RezeptProfil::class)->fuer((int) $recipe->id);
+            $p = app(\Platform\FoodAlchemist\Services\Pairing\RezeptProfil::class)->fuer((int) $recipe->id);
 
             return ['status' => $p['anker'] === [] ? 'leer' : 'aktualisiert', 'n_anker' => count($p['anker']), 'abdeckung' => $p['abdeckung']];
         } catch (\Throwable $e) {
@@ -594,10 +594,10 @@ class RecipeOneShotService
                 'zubereitung' => $recipe->preparation,
                 'zutaten' => $recipe->ingredients()->whereNull('deleted_at')->with(['gp:id,name', 'referencedRecipe:id,name'])->orderBy('position')->limit(30)->get()->map->anzeigeName()->filter()->values()->all(),
             ];
-            $sektor = app(Ai\AiGatewayService::class)->propose('recipe.sektor', $kontext + [
+            $sektor = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.sektor', $kontext + [
                 'vokabular' => RecipeService::eignungVokabular()['sektor']['slugs'],
             ], ['target_table' => 'foodalchemist_recipe_sector_suitability', 'target_id' => $recipe->id]);
-            $level = app(Ai\AiGatewayService::class)->propose('recipe.level', $kontext + [
+            $level = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.level', $kontext + [
                 'vokabular' => RecipeService::eignungVokabular()['level']['slugs'],
             ], ['target_table' => 'foodalchemist_recipe_level_suitability', 'target_id' => $recipe->id]);
 
@@ -648,7 +648,7 @@ class RecipeOneShotService
 
         try {
             $wissen = $this->stepWissen($recipe);
-            $vorschlag = app(Ai\AiGatewayService::class)->propose('recipe.steps', [
+            $vorschlag = app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose('recipe.steps', [
                 ...$this->stepKontext($recipe),
                 'modus' => $bestehend > 0 ? 'voll_anreichern_ueberschreiben' : 'voll_anreichern_erstellen',
             ], [
@@ -701,7 +701,7 @@ class RecipeOneShotService
         // Team aus dem Rezept selbst — funktioniert auch im CLI-Lauf ohne Auth, und die
         // Sichtbarkeit des Wissens am eigenen Rezept ist die des besitzenden Teams.
         $wTeam = $recipe->team_id !== null ? \Platform\Core\Models\Team::find((int) $recipe->team_id) : null;
-        $wissen = app(Ai\KnowledgeContextService::class)->contextFor($wTeam, 'recipe.steps', $beschreibung, null, [], [
+        $wissen = app(\Platform\FoodAlchemist\Services\Ai\KnowledgeContextService::class)->contextFor($wTeam, 'recipe.steps', $beschreibung, null, [], [
             'rezept_typ' => $recipe->is_sales_recipe ? 'gericht' : 'basisrezept',
         ] + \Platform\FoodAlchemist\Services\Knowledge\RezeptAchsen::fuer($recipe));
 
@@ -992,7 +992,7 @@ class RecipeOneShotService
                 'ziel_pct' => $ziel,
                 'ampel' => $this->weAmpel($we, $ziel),
                 'portion_g' => $portion,
-                'aufschlagsklasse' => app(Rezept\DarreichungResolver::class)->klasseFuer($recipe)?->code ?? $kaskade['code'],
+                'aufschlagsklasse' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->klasseFuer($recipe)?->code ?? $kaskade['code'],
                 // Neu gegenüber dem Schreib-Pfad: WOHER die Klasse kommt. Der Schreiber
                 // verwischt das, weil er sie festschreibt; für einen Reife-Report ist der
                 // Unterschied zwischen „am Gericht gesetzt" und „nur aus dem Default
@@ -1028,7 +1028,7 @@ class RecipeOneShotService
     private function markupKaskade(Team $team, FoodAlchemistRecipe $recipe): array
     {
         // Spec 85 D-1 PR-B: „gesetzt“ = Klasse der Standard-Darreichung (Rückfall Rezeptspalte bis PR-C).
-        if (($gesetzt = app(Rezept\DarreichungResolver::class)->klasseFuer($recipe)) !== null) {
+        if (($gesetzt = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->klasseFuer($recipe)) !== null) {
             return ['id' => (int) $gesetzt->id, 'code' => $gesetzt->code, 'quelle' => 'gesetzt'];
         }
         // Code über die ID auflösen statt über eine Relation: `FoodAlchemistDishMainGroup`
@@ -1072,6 +1072,6 @@ class RecipeOneShotService
      */
     private function weAmpel(?float $we, float $ziel): string
     {
-        return app(Preis\MargeService::class)->weAmpel($we, $ziel);
+        return app(\Platform\FoodAlchemist\Services\Preis\MargeService::class)->weAmpel($we, $ziel);
     }
 }

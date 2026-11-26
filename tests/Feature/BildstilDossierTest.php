@@ -5,7 +5,7 @@ use Illuminate\Support\Str;
 use Platform\Core\Models\ContextFile;
 use Platform\Core\Services\ImageGenerationService;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
-use Platform\FoodAlchemist\Services\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
 use Platform\FoodAlchemist\Tests\Support\SeedsKanon;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

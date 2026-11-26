@@ -260,7 +260,7 @@ class GpAromaBackfillService
      */
     private function ohneProfil(?Team $scope = null): array
     {
-        $summe = implode(' + ', array_map(fn ($d) => "t.{$d}", \Platform\FoodAlchemist\Services\SensorikService::DIMS));
+        $summe = implode(' + ', array_map(fn ($d) => "t.{$d}", \Platform\FoodAlchemist\Services\Rezept\SensorikService::DIMS));
 
         return $this->basis($scope)->leftJoin('foodalchemist_gp_taste_vectors AS t', 't.gp_id', '=', 'g.id')
             ->where(fn ($q) => $q->whereNull('t.id')->orWhere(fn ($w) => $w->whereRaw("({$summe}) = 0")
@@ -379,7 +379,7 @@ class GpAromaBackfillService
             $ausgabe('warn', 'Rezept-Profile werden nur mit --anbieter=plattform neu geschätzt.');
             $rezeptIds = [];
         }
-        $sensorik = app(\Platform\FoodAlchemist\Services\SensorikService::class);
+        $sensorik = app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class);
         foreach ($limit > 0 ? array_slice($rezeptIds, 0, $limit) : $rezeptIds as $rid) {
             try {
                 $r = $sensorik->bewerteRezept($rid, true);

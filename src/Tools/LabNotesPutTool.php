@@ -50,7 +50,7 @@ class LabNotesPutTool extends FoodAlchemistTool implements ToolContract, ToolMet
             return ToolResult::error('Lab-Notiz nicht gefunden (oder gehört einem anderen Team).', 'NOT_FOUND');
         }
         try {
-            $note = app(\Platform\FoodAlchemist\Services\LabNoteService::class)->aktualisieren(
+            $note = app(\Platform\FoodAlchemist\Services\Rezept\LabNoteService::class)->aktualisieren(
                 $note, array_intersect_key($arguments, array_flip(['title', 'body', 'source_ref', 'evidence_tier'])));
         } catch (\RuntimeException $e) {
             return ToolResult::error($e->getMessage(), 'BAD_INPUT');

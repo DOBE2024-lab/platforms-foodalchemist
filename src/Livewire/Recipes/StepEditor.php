@@ -13,9 +13,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
-use Platform\FoodAlchemist\Services\RezeptFotoService;
-use Platform\FoodAlchemist\Services\RecipeImageService;
-use Platform\FoodAlchemist\Services\RecipeStepService;
+use Platform\FoodAlchemist\Services\Rezept\RezeptFotoService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeStepService;
 use Platform\FoodAlchemist\Services\Stt\SttServiceContract;
 
 /**

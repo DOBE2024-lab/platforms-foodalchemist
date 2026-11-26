@@ -71,7 +71,7 @@ beforeEach(function () {
     $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $mehl->id, 'raw_text' => 'Mehl', 'quantity' => 1000, 'unit_vocab_id' => $this->g->id]);
     $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 1, 'referenced_recipe_id' => $this->sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 150, 'unit_vocab_id' => $this->g->id]);
 
-    $rc = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+    $rc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
     $rc->recomputePipeline($this->sauce->id);
     $rc->recomputePipeline($this->kuchen->id);
 

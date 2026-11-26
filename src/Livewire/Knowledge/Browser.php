@@ -716,7 +716,7 @@ class Browser extends Component
             // scope_key NICHT gegen die Registry, jeder String ≤64 Zeichen wäre serverseitig bindbar.
             'promptKeys' => array_merge(
                 array_keys((array) config('foodalchemist.prompts', [])),
-                \Platform\FoodAlchemist\Services\RecipeImageService::BILD_FEATURES,
+                \Platform\FoodAlchemist\Services\Rezept\RecipeImageService::BILD_FEATURES,
             ),
             // Kanon setzen ist KURATION, nicht Inhalts-Edit: es geht auch an geerbtem
             // Master-/Vault-Wissen (der Doc-Inhalt wird nicht angefasst) — anders als

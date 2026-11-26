@@ -89,7 +89,7 @@ it('Import: die Leitplanke der Planung erreicht die Stub-Entscheidung — klassi
     \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::create(['team_id' => $this->rootTeam->id, 'slug' => 'g', 'display_de' => 'Gramm', 'dimension' => 'mass', 'default_in_g' => 1]);
     $gp = ($this->gp)('Geflügelfond', 'gefluegelfond');
     $rezept = fn (string $name) => ['typ' => 'basisrezept', 'name' => $name, 'preparation' => 'Kochen.', 'zutaten' => [['text' => 'Geflügelfond', 'quantity' => '500', 'unit' => 'g']]];
-    $import = app(\Platform\FoodAlchemist\Services\RecipeExtractService::class);
+    $import = app(\Platform\FoodAlchemist\Services\Rezept\RecipeExtractService::class);
 
     $klassisch = $import->legeAn($this->rootTeam, $rezept('Rahmsauce klassisch'), parameter: ['level' => 'klassisch']);
     $ohne = $import->legeAn($this->rootTeam, $rezept('Rahmsauce ohne Vorgabe'));

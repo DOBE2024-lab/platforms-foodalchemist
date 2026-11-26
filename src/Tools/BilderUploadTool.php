@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService;
 use Platform\FoodAlchemist\Services\Foodbook\KapitelLogoService;
 use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Tools\Concerns\DateiAusArgumenten;
 
 /**

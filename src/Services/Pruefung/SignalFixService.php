@@ -49,7 +49,7 @@ class SignalFixService
         private \Platform\FoodAlchemist\Services\GpStamm\GpAggregateService $gpAgg,
         private \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $leadLa,
         private \Platform\FoodAlchemist\Services\Pairing\PairingService $pairing,
-        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute,
         private \Platform\FoodAlchemist\Services\Preis\PriceService $preise,
         private SignalService $signals,
         private AiGatewayService $ki,

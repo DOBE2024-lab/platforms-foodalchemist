@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 
 /**
  * Plan 98 · Diät-Fix: rechnet die Diät-/Herkunfts-Flags (spec_is_* / spec_contains_*) des Bestands nach der neuen Regel

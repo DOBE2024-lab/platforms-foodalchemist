@@ -209,7 +209,7 @@ abstract class FoodAlchemistTool
                     'vessel_gp_id' => $d->vessel_gp_id !== null ? (int) $d->vessel_gp_id : null,
                     'vessel_cost_type' => $d->vessel_cost_type,
                     'gefaess' => $d->vessel_gp_id !== null ? (function () use ($d) {
-                        $g = app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessKosten($d);
+                        $g = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->gefaessKosten($d);
 
                         return ['name' => $g['gp']?->name, 'kostenart' => $g['kostenart'], 'kostenart_quelle' => $g['kostenart_quelle'], 'kosten_je_einheit' => $g['kosten'],
                             'preis_fehlt' => $g['preis_fehlt'], 'preis_quelle' => $g['preis_quelle'],

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -40,7 +40,7 @@ class RecipeGeneratorService
 
     public function __construct(
         private AiGatewayService $ki,
-        private GpStamm\IngredientMatchService $matcher,
+        private \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService $matcher,
         private MatchHeuristics $heuristik,
         private RecipeService $recipes,
     ) {
@@ -226,7 +226,7 @@ class RecipeGeneratorService
 
         // Parameter → GL-04-Hooks (A-1: from_scratch UND teil_convenience drehen den Pool; VK-Modus: Basisrezepte zuerst, D-6) — EINE Abbildung,
         // seit 27.10. auch für Rezept-Import und Mint/Bestand ({@see Matching\MatchLeitplanken})
-        ['convenience' => $convenience, 'mode' => $mode, 'preferRaw' => $preferRaw, 'pref' => $pref, 'bio' => $bio] = Matching\MatchLeitplanken::aus($parameter, $vkModus);
+        ['convenience' => $convenience, 'mode' => $mode, 'preferRaw' => $preferRaw, 'pref' => $pref, 'bio' => $bio] = \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::aus($parameter, $vkModus);
 
         $melde('Zutaten werden zugeordnet …');
 
@@ -238,12 +238,12 @@ class RecipeGeneratorService
                 // Länge gedeckelt), damit kein Brief-Text als Name in die varchar-Spalte rutscht.
                 'name' => $this->kanonischerTyp($this->normalisiereName((string) ($parameter['titel_vorgabe'] ?? '') ?: (string) $kiRezept['name']), $vkModus),
                 'is_sales_recipe' => $vkModus,
-                'created_via' => $createdVia, ...Matching\MatchLeitplanken::vorgabeAus($parameter),   // 29.10.: Leitplanken einmal ins Rezept
+                'created_via' => $createdVia, ...\Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::vorgabeAus($parameter),   // 29.10.: Leitplanken einmal ins Rezept
                 'description' => $kiRezept['description'] ?? null,
                 // Enum-Guard: taste_direction ist die grobe Menüplanungs-Richtung (suess|herzhaft|neutral,
                 // varchar(16)) — nicht das Aroma-Profil. Ein Generator-Freitext ("cremig-süßlich, …") lebt
                 // in description; hier nur den Enum-Wert durchlassen, sonst null (crasht sonst den Insert).
-                'taste_direction' => in_array($kiRezept['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\RecipeService::TASTE_DIRECTIONS, true)
+                'taste_direction' => in_array($kiRezept['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\Rezept\RecipeService::TASTE_DIRECTIONS, true)
                     ? $kiRezept['taste_direction']
                     : null,
                 // Eine Vorgabe der Kaskade (TK-Hauptzeile → teilfertig) gilt sofort; sonst leitet sie sich nach dem
@@ -366,7 +366,7 @@ class RecipeGeneratorService
                 $kleinstmenge = null;
                 $direktArtikel = false;
                 $zeilenMode = $direktArtikel ? 'gp_first' : $mode;
-                $treffer = $this->matcher->matchIngredient($team, $text, $z['slug'] ?? null, $zeilenMode, $pref, $preferRaw, $bio, convenience: $convenience, einheit: isset($z['unit']) ? (string) $z['unit'] : null, zubereitung: Matching\MatchLeitplanken::zubereitung($parameter), menge: is_numeric($z['quantity'] ?? null) ? (float) $z['quantity'] : null);
+                $treffer = $this->matcher->matchIngredient($team, $text, $z['slug'] ?? null, $zeilenMode, $pref, $preferRaw, $bio, convenience: $convenience, einheit: isset($z['unit']) ? (string) $z['unit'] : null, zubereitung: \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::zubereitung($parameter), menge: is_numeric($z['quantity'] ?? null) ? (float) $z['quantity'] : null);
 
                 // Band-Gate (2026-08-06, Rahmeis-in-Tomatensuppe): FuzzyLow heißt laut
                 // GL-04 §4.1 wörtlich „Review nötig" — der Generator ist aber der teuerste
@@ -378,7 +378,7 @@ class RecipeGeneratorService
                 // Darum: nur Exact/FuzzyHigh wird verdrahtet, FuzzyLow bleibt OFFEN
                 // (Review-Pfad mit Shortlist — der Mensch entscheidet). Der Matcher
                 // selbst (Schwellen, 84 GL-04-Goldens) bleibt unberührt.
-                $verdrahtbar = GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($treffer);
+                $verdrahtbar = \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($treffer);
                 $istGpTreffer = $verdrahtbar && $treffer['target'] === 'gp';
 
                 // ── Zerlegungs-Vorrang (L2, Entscheid 2026-08-17 »Convenience entscheidet«) ────────
@@ -388,14 +388,14 @@ class RecipeGeneratorService
                 // Convenience-Achse, ob ein GP-Treffer die Zeile flach machen darf.
                 $llmSub = $this->llmSubRezeptFlag($z);
                 $nameHalbfabrikat = ! $direktArtikel && $this->heuristik->queryIstHalbfabrikat(
-                    app(Matching\TokenEngine::class)->tokenize($text)
+                    app(\Platform\FoodAlchemist\Services\Matching\TokenEngine::class)->tokenize($text)
                 );
                 // D5 2026-08-18: »<Typ>:«-Präfix (Gel:/Creme:/Jus:/Espuma: …) = starke Sub-Zubereitung,
                 // deckt die Kurzform »Gel:«, die kein Substring-Marker trifft (Symptom E, Ginger-Beer-Gel).
                 $prefixSub = ! $direktArtikel && $this->heuristik->hatSubZubereitungsPraefix($text);
                 // STARKES Sub (§4 »jus ist die sauce« / LLM-Flag true): IMMER Basisrezept — überstimmt
                 // auch einen GP-Treffer. Dominique 27.10. (d): mit Zukauf-Signal („Geflügelfond Pulver (Knorr)“) oder Convenience-Leitplanke darf es Zukauf-GP sein.
-                $strongSub = ! $direktArtikel && ((($nameHalbfabrikat || $prefixSub) && $this->matcher->basiskomponenteOhneZukauf($team, $text, $convenience, Matching\MatchLeitplanken::zubereitung($parameter))) || ($llmSub === true) || $brotImGericht);
+                $strongSub = ! $direktArtikel && ((($nameHalbfabrikat || $prefixSub) && $this->matcher->basiskomponenteOhneZukauf($team, $text, $convenience, \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::zubereitung($parameter))) || ($llmSub === true) || $brotImGericht);
                 // Teller-Rolle im VK-Gericht (T4, Vokabular gericht.teller_rolle) — Convenience-
                 // gesteuert. Dominique-Entscheid (Nebenbefund #102): ein Gericht wird aus
                 // Basisrezepten gebaut — auch Garnitur/Aroma-Treiber ohne Bestandstreffer werden
@@ -486,7 +486,7 @@ class RecipeGeneratorService
                         // bereits berechnet — hier nur noch verwenden (§4 »jus«, LLM-Flag, Convenience-Rolle).
                         $zeile['match_method'] = 'unmatched';
                         $statistik['offen']++;
-                        $laKandidaten = $istBasisrezept ? [] : app(Einkauf\LaCandidateFinder::class)
+                        $laKandidaten = $istBasisrezept ? [] : app(\Platform\FoodAlchemist\Services\Einkauf\LaCandidateFinder::class)
                             ->find($team, $text, $this->wgHint($z['commodity_group'] ?? $z['warengruppe'] ?? null), 3)
                             ->map(fn ($la) => [
                                 'id' => (int) $la->id,
@@ -504,7 +504,7 @@ class RecipeGeneratorService
                             'primaer' => $istBasisrezept ? 'basisrezept_anlegen' : 'lieferantenartikel_waehlen',
                             'shortlist' => $shortlist,
                             'la_kandidaten' => $laKandidaten,
-                            'lieferantenstrategie' => $istBasisrezept ? null : app(TeamSettingsService::class)
+                            'lieferantenstrategie' => $istBasisrezept ? null : app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)
                                 ->leadLaStrategie($team, $this->wgHint($z['commodity_group'] ?? $z['warengruppe'] ?? null))->value,
                             // Band-Gate-Transparenz: der abgewiesene FuzzyLow-Kandidat bleibt
                             // für die Review-Fläche sichtbar (Mensch bestätigt oder verwirft).
@@ -614,7 +614,7 @@ class RecipeGeneratorService
             $melde('Kohärenz wird geprüft …');
             $kohaerenzStarted = hrtime(true);
             try {
-                $statistik['kohaerenz'] = app(Pairing\PairingService::class)->recipeCohesion($recipe);
+                $statistik['kohaerenz'] = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->recipeCohesion($recipe);
             } catch (\Throwable $e) {
                 // Kohärenz ist Diagnose, kein Blocker der Generierung.
             }
@@ -788,7 +788,7 @@ class RecipeGeneratorService
                     $rest = [];
                     foreach ($review['befunde'] as $b) {
                         $istFremd = ($b['art'] ?? '') === 'fremdkoerper' && ($b['zutat_id'] ?? null) !== null;
-                        if ($istFremd && (float) ($b['konfidenz'] ?? 0) >= Pruefung\RecipeFindingService::KONFIDENZ_SCHWELLE) {
+                        if ($istFremd && (float) ($b['konfidenz'] ?? 0) >= \Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService::KONFIDENZ_SCHWELLE) {
                             $id = (int) $b['zutat_id'];
                             if (! isset($treffer[$id])) {                // Regel gewinnt bei Doppel-Flag
                                 $treffer[$id] = [
@@ -802,7 +802,7 @@ class RecipeGeneratorService
                         }
                     }
                     if ($rest !== []) {                                  // Copilot/Signale sehen die übrigen Befunde
-                        $abgelegt = app(Pruefung\RecipeFindingService::class)->speichere($team, $recipe->id, $rest);
+                        $abgelegt = app(\Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService::class)->speichere($team, $recipe->id, $rest);
                         $statistik['kritiker']['befunde_abgelegt'] = (int) ($abgelegt['neu'] ?? 0);
                     }
                     $statistik['kritiker']['geprueft'] = true;
@@ -827,7 +827,7 @@ class RecipeGeneratorService
                 $text = (string) (($z->raw_text ?? '') !== '' ? $z->raw_text : ($z->display_name ?: $zielName));
                 $position = (int) $z->position;
 
-                app(Pruefung\HardstopResolveService::class)->entdrahte($team, $recipe->id, $id);
+                app(\Platform\FoodAlchemist\Services\Pruefung\HardstopResolveService::class)->entdrahte($team, $recipe->id, $id);
                 $statistik['kritiker']['entdrahtet']++;
                 // Zähler ehrlich halten: die Zeile ist nicht mehr verdrahtet, sondern offen.
                 if ($wasSub) {
@@ -918,7 +918,7 @@ class RecipeGeneratorService
                 $position = (int) $z->position;
                 $zielGpId = (int) $z->gp_id;
 
-                app(Pruefung\HardstopResolveService::class)->entdrahte($team, (int) $recipe->id, (int) $z->id);
+                app(\Platform\FoodAlchemist\Services\Pruefung\HardstopResolveService::class)->entdrahte($team, (int) $recipe->id, (int) $z->id);
                 $statistik['diaet']['entdrahtet']++;
                 $statistik['bestand_gp'] = max(0, (int) ($statistik['bestand_gp'] ?? 0) - 1);
                 $statistik['offen'] = (int) ($statistik['offen'] ?? 0) + 1;
@@ -1181,7 +1181,7 @@ class RecipeGeneratorService
         // genau der gewollte Sub-Rezept-Fall (frisch gemacht ≠ Rohware-Einkaufsform). $text
         // default '' hält den Bestands-Draw-Aufrufer (ziehtAusBestand, keine Zeilen-Beschreibung
         // verfügbar) unverändert.
-        if (in_array(app(Matching\TokenEngine::class)->produktForm($text)['zustand'], ['TK', 'trocken', 'konserviert', ...GpStamm\GpNamingService::BEHANDLUNG], true)) {
+        if (in_array(app(\Platform\FoodAlchemist\Services\Matching\TokenEngine::class)->produktForm($text)['zustand'], ['TK', 'trocken', 'konserviert', ...\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::BEHANDLUNG], true)) {
             return null;
         }
         // Spec 80 B4 (Entscheid Dominique 2026-10-09): Bestand = NUR freigegebene Basisrezepte. Ein nicht freigegebener
@@ -1265,8 +1265,8 @@ class RecipeGeneratorService
 
         // (1) Semantischer Recall über die VOLLE Beschreibung (Bedeutung). Nur Basisrezepte der
         //     Sichtbarkeitskette. Leer ohne Provider/Flag (graceful) → dann greift allein (2).
-        $treffer = app(Ai\SemanticRetrievalService::class)
-            ->candidates($team, $description, [Ai\PoolEmbeddingService::ENTITY_TYPE_RECIPE], $limit);
+        $treffer = app(\Platform\FoodAlchemist\Services\Ai\SemanticRetrievalService::class)
+            ->candidates($team, $description, [\Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService::ENTITY_TYPE_RECIPE], $limit);
         $recipeIds = array_map(static fn ($h) => (int) $h['entity_id'], $treffer);
         if ($recipeIds !== []) {
             $semNamen = FoodAlchemistRecipe::visibleToTeam($team)->basis()
@@ -1286,7 +1286,7 @@ class RecipeGeneratorService
         // Geteilte Denylist mit GenerationContextService::leitTokens() (#505-Nachtrag
         // 2026-09): vorher ≥4 Zeichen ohne Stoppwortfilter — „Basisrezept"/„bitte" usw.
         // landeten hier als LIKE-Sonde, obwohl das Grounding sie längst ausschloss.
-        $tokens = app(Matching\TokenEngine::class)->leitTokens($description);
+        $tokens = app(\Platform\FoodAlchemist\Services\Matching\TokenEngine::class)->leitTokens($description);
         if ($tokens !== []) {
             $lexNamen = FoodAlchemistRecipe::visibleToTeam($team)->basis()
                 ->where('status', 'approved')   // Spec 80 B4
@@ -1391,13 +1391,13 @@ class RecipeGeneratorService
         }
         $raw = trim((string) ($gp->condition ?? ''));
         if ($raw !== '') {
-            return in_array($raw, $erlaubtRaw, true) || (in_array('TK', $erlaubtRaw, true) && GpStamm\GpNamingService::istTk($raw, (string) $gp->name));   // v3.6 2b
+            return in_array($raw, $erlaubtRaw, true) || (in_array('TK', $erlaubtRaw, true) && \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::istTk($raw, (string) $gp->name));   // v3.6 2b
         }
         // condition unset → Namens-Token-Fallback über produktForm() (4-wertiges §9-Vokabular,
         // trocken ≠ konserviert — anders als der RANKING-Bucket zustandClassResolved(), der
         // beide für die Score-Tiebreak-Präferenz bewusst in EINE Klasse "preserved" fasst;
         // hier geht es um eine harte Ja/Nein-Zulässigkeit, nicht um eine Rangfolge).
-        $namensZustand = app(Matching\TokenEngine::class)->produktForm((string) $gp->name)['zustand'];
+        $namensZustand = app(\Platform\FoodAlchemist\Services\Matching\TokenEngine::class)->produktForm((string) $gp->name)['zustand'];
         if ($namensZustand !== null) {
             return in_array($namensZustand, $erlaubtRaw, true);
         }

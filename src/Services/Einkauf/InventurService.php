@@ -33,7 +33,7 @@ class InventurService
     public const VORBELEGUNG_TAGE = 90;
 
     public function __construct(
-        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute,
         private InventoryService $inventory,
         private LagerEinrichtungService $einrichtung,
     ) {}

@@ -7,8 +7,8 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Livewire\Concerns\TauschtRezept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Support\TeamScope;
 
 /**
@@ -166,7 +166,7 @@ class DetailPanel extends Component
             return;
         }
         $this->fehlerEignung = null;
-        $svc = app(\Platform\FoodAlchemist\Services\RecipeService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class);
         try {
             $spalte = $typ === 'level' ? 'level_slug' : 'sector_slug';
             $relation = $typ === 'level' ? 'niveauEignungen' : 'sektorEignungen';
@@ -265,7 +265,7 @@ class DetailPanel extends Component
                 && ! in_array($this->sperrZustand()['modus'] ?? 'aus', ['lesen', 'fremd'], true),
             'rezept' => $rezept,
             // Spec 82 Stufe 3b (E4): Kosten aus Sicht des aktuellen Teams (Besitzer: Rezept-Spalten; sonst Team-Cache)
-            'kosten' => $rezept !== null && $team !== null ? app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->fuer($rezept, $team) : null,
+            'kosten' => $rezept !== null && $team !== null ? app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->fuer($rezept, $team) : null,
             // Spec 82 §6: Machbarkeits-Check ohne KI gegen das Teamprofil DIESES Teams (warnt nur bei ausdrücklich „fehlt“).
             'machbarkeit' => $rezept !== null && $team !== null
                 ? app(\Platform\FoodAlchemist\Services\Concepter\MachbarkeitService::class)->pruefe(new \Platform\FoodAlchemist\Support\MachbarkeitKontext($team, Auth::user()), [$rezept->id])[0]
@@ -316,7 +316,7 @@ class DetailPanel extends Component
     /** #1003 Handy: Kernwerte Ausbeute · Arbeitszeit · EK je kg (Kosten aus Sicht des Teams wie am Computer). */
     private function handyHandbuch($team, FoodAlchemistRecipe $rezept)
     {
-        $k = app(\Platform\FoodAlchemist\Services\KostenCacheService::class)->fuer($rezept, $team);
+        $k = app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->fuer($rezept, $team);
         $ekKg = $k !== null ? $k['ek_per_kg'] : $rezept->ek_per_kg_eur;
         $vollstaendig = $k !== null ? ($k['n_total'] > 0 && $k['n_priced'] >= $k['n_total']) : ($rezept->ek_n_ingredients_total > 0 && $rezept->ek_n_ingredients_priced >= $rezept->ek_n_ingredients_total);
         $ausbeute = $rezept->yield_kg_manual ?? $rezept->yield_kg;

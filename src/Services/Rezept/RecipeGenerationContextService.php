@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeContextService;
@@ -75,9 +75,9 @@ class RecipeGenerationContextService
 
     public function __construct(
         private KnowledgeContextService $knowledge,
-        private Planung\GenerationContextService $generation,
+        private \Platform\FoodAlchemist\Services\Planung\GenerationContextService $generation,
         private RecipeTemplateService $templates,
-        private TeamSettingsService $settings,
+        private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
         private TokenEngine $tokens,
     ) {
     }
@@ -221,7 +221,7 @@ class RecipeGenerationContextService
         if (($typ = $this->settings->kuechenTyp($team)) !== null) {
             // Soft-Default-Schicht: das Mandanten-Profil ist eine Tendenz, explizite Richtungs-Parameter
             // (Hooks/Regler) haben VORRANG — der Hinweis steht im Block (DoD KuechenProfilTest).
-            $prompt = ['kuechen_profil' => 'Mandanten-Profil (Soft-Default — explizite Richtungs-Parameter haben VORRANG): ' . TeamSettingsService::KUECHEN_TYPEN[$typ]] + $prompt;
+            $prompt = ['kuechen_profil' => 'Mandanten-Profil (Soft-Default — explizite Richtungs-Parameter haben VORRANG): ' . \Platform\FoodAlchemist\Services\TeamSettingsService::KUECHEN_TYPEN[$typ]] + $prompt;
         }
         // Aroma-Küche (L1.5, Achse 4): gewählte Küche trägt ihren Würz-Anker als Prompt-Direktive
         // (verbindliches Regelwerk). Zusätzlich fließen Küche-Anker + Aroma-Freitext in die Erdungs-
@@ -416,7 +416,7 @@ class RecipeGenerationContextService
         )));
         $ohne = [];
         if ($suchbegriffe !== []) {
-            $pairing = app(Pairing\PairingService::class);
+            $pairing = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class);
             foreach ($suchbegriffe as $t) {
                 if ($pairing->ankerAufgeloest($t) === null) {
                     $ohne[] = $t;

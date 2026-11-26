@@ -25,11 +25,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeImageService;
-use Platform\FoodAlchemist\Services\RecipeKomponentenPlanService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Services\Rezept;   // für Rezept\FreigabeSperre (teilqualifiziert im verschobenen Rumpf)
 use Platform\FoodAlchemist\Support\Warteschlange;
 use RuntimeException;
@@ -386,7 +386,7 @@ class KaskadeFreigabe
         // Sub-Rezepte im Hintergrund mit-anreichern (nicht am Worker-Step sichtbar, wie allesAnreichern).
         // Alle Sub-Rezepte eines Gerichts (2.1c: alle Ebenen, jedes einmal, wartende übersprungen) — viele kleine Läufe hinter EINEM
         // Klick. Eigene Schlange, damit sie den interaktiven Einzel-Anreicherungs-Klick (Rezept-/VK-Modal) nicht blockieren.
-        EnrichRecipeJob::komponentenEinreihen((int) $team->id, app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)->subRezeptIds((int) $recipe->id), true,
+        EnrichRecipeJob::komponentenEinreihen((int) $team->id, app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class)->subRezeptIds((int) $recipe->id), true,
             fn (int $subId) => EnrichRecipeJob::dispatch($team->id, (int) (Auth::id() ?? 0), $subId, null, false, null, false, true, $completeCoverage, false, $leitplanken, $extern)
                 ->onQueue(Warteschlange::anreichern()));
 

@@ -39,7 +39,7 @@ class NaehrwertVorschauService
         $namen = FoodAlchemistGp::visibleToTeam($team)->whereIn('id', $ids)->pluck('name', 'id')->all();
 
         // Erdung
-        $erdNeu = app(\Platform\FoodAlchemist\Services\SensorikService::class)->erdungBulk($ids);
+        $erdNeu = app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class)->erdungBulk($ids);
         $erdung = [];
         foreach (self::ERDUNG as $dim => $g) {
             $paare = [];

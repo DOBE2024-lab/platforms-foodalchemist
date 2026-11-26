@@ -30,7 +30,7 @@ const SPEC90_KEIN_KI = [
 /** Datei (relativ zum Modul) je Zusatzweg, die ihn nutzen darf. Muss in Tabelle B stehen. */
 const SPEC90_ZUSATZWEGE = [
     'callWithTools(' => ['src/Services/Plattform/VoiceCommandService.php', 'src/Services/Ai/AiGatewayService.php'],
-    'ImageGenerationService' => ['src/Services/RecipeImageService.php'],
+    'ImageGenerationService' => ['src/Services/Rezept/RecipeImageService.php'],
     '->embed(' => ['src/Services/Ai/SemanticRetrievalService.php', 'src/Services/Ai/PoolEmbeddingService.php', 'src/Services/Ai/KnowledgeEmbeddingService.php', 'src/Services/Ai/FakeAiProvider.php',
         'src/Console/Diagnose/TrendThemenAehnlichkeitCommand.php'],   // Spec 93 B: Messbefehl für buendel_aehnlichkeit, schreibt nichts
     'include_web_search' => ['src/Services/Ai/AiGatewayService.php', 'src/Services/Websuche/CoreWebSucheTransport.php', 'src/Services/Ai/KiAuftragService.php', 'src/Tools/KiAuftraegeGetTool.php'],

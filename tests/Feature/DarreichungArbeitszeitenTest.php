@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Livewire\Verkauf\VkModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\Produktion\ProductionTimeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -221,7 +221,7 @@ it('berechnet Plattenbedarf aus der tatsächlichen Grammatur der Darreichung', f
     $behaelter->shouldReceive('behaelterFuerGericht')->once()->withArgs(fn ($team, $gericht, $ansaetze, $zweck) => abs($ansaetze - 40) < .0001 && $zweck === 'ausgabe')
         ->andReturn(['anzahl' => 4]);
     app()->instance(\Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::class, $behaelter);
-    $r = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->berechnen($this->rootTeam, $this->gericht->fresh(), $dar, 100);
+    $r = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::class)->berechnen($this->rootTeam, $this->gericht->fresh(), $dar, 100);
     expect($r['minuten'])->toBe(8.0)->and($r['vollstaendig'])->toBeTrue();
 });
 

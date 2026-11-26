@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Services\Necta;
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\Produktpass\ProduktpassAbweichungService;
 use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 use Platform\FoodAlchemist\Support\MasterTeam;

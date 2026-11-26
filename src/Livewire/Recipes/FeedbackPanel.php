@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Recipes;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\FeedbackService;
+use Platform\FoodAlchemist\Services\Rezept\FeedbackService;
 
 /**
  * R2.6 — Geteilter Feedback-Tab für Gericht- (VkModal) und Basisrezept-Editor

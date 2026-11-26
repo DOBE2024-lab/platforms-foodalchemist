@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -12,7 +12,7 @@ class DarreichungsZeitService
     /** Gemeinsame Basis für Vorschau und Auftragskosten; Lohnnebenkosten ergänzt die Auftragskalkulation einmal. */
     public function serviceKosten(Team $team, float $minuten, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
-        $satz = app(TeamSettingsService::class)->stundensatz($team, $outlet);
+        $satz = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->stundensatz($team, $outlet);
         return ['minuten' => max(0, $minuten), 'stundensatz' => $satz, 'lohn_eur' => max(0, $minuten) / 60 * $satz];
     }
 
@@ -65,7 +65,7 @@ class DarreichungsZeitService
             return $dar->arbeitszeiten;
         }
         $code = $dar->servingForm?->code;
-        $einheit = Produktion\ProductionTimeService::anrichteEinheit($code)['einheit'];
+        $einheit = \Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::anrichteEinheit($code)['einheit'];
         if ($einheit === 'vor_ort') {
             return [];
         }
@@ -79,12 +79,12 @@ class DarreichungsZeitService
                 $basis = ($r->variable_work_time_basis ?? 'kg') === 'kg' ? 'kg' : 'stueck';
                 $wert = (float) $r->variable_work_time_min * ($basis === 'kg' ? 1 : 60);
             } elseif ($r->variable_work_time_min === null) {
-                $wert = app(Produktion\ProductionTimeService::class)->tellerKomponenten($r) * Produktion\ProductionTimeService::ANRICHTEN_SEKUNDEN_JE_KOMPONENTE;
+                $wert = app(\Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::class)->tellerKomponenten($r) * \Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::ANRICHTEN_SEKUNDEN_JE_KOMPONENTE;
             }
         }
         $wert ??= match ($basis) {
-            'stueck' => Produktion\ProductionTimeService::ANRICHTEN_SEKUNDEN_JE_STUECK,
-            'behaelter' => Produktion\ProductionTimeService::ANRICHTEN_MINUTEN_JE_PLATTE,
+            'stueck' => \Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::ANRICHTEN_SEKUNDEN_JE_STUECK,
+            'behaelter' => \Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::ANRICHTEN_MINUTEN_JE_PLATTE,
             default => null,
         };
         $zeilen = $wert !== null ? [[
@@ -129,7 +129,7 @@ class DarreichungsZeitService
     private function platten(Team $team, FoodAlchemistRecipe $gericht, FoodAlchemistRecipeDarreichung $dar, float $portionen): ?float
     {
         $anteil = app(DarreichungService::class)->produktionsAnteil($gericht, $dar, $portionen, $team);
-        $b = app(Produktion\BehaelterBedarfService::class)->behaelterFuerGericht($team, $gericht, $anteil['ansaetze'], 'ausgabe');
+        $b = app(\Platform\FoodAlchemist\Services\Produktion\BehaelterBedarfService::class)->behaelterFuerGericht($team, $gericht, $anteil['ansaetze'], 'ausgabe');
         return $b['anzahl'] > 0 ? (float) $b['anzahl'] : null;
     }
 }

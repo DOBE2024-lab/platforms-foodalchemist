@@ -11,7 +11,7 @@
 const ENUM_STATUS_GEPRUEFT = [
     // Planung (PlanningRun/-Step: String-Spalten, kein Cast)
     'src/Livewire/Planung/Index.php', 'src/Livewire/Planung/LaufStatus.php', 'src/Livewire/Concerns/FortschrittAnsicht.php', 'src/Support/Planung/KaskadenAnsicht.php',
-    'src/Services/Kaskade/PlanningCascadeService.php', 'src/Services/RecipeDependencyWorkflowService.php', 'src/Services/Planung/PlanningSessionService.php',
+    'src/Services/Kaskade/PlanningCascadeService.php', 'src/Services/Rezept/RecipeDependencyWorkflowService.php', 'src/Services/Planung/PlanningSessionService.php',
     'src/Services/Kaskade/KaskadenSchritt.php',   // CQ 3.4: Step-/Lauf-Status aus PlanningCascadeService verschoben (CascadeRun.status = String-Spalte)
     'src/Livewire/Planung/KaskadenLauf.php',   // 98 · 3.3 S2-E2: Lauf-Status-Vergleiche aus Planung/Index verschoben (CascadeRun.status = String-Spalte)
     'src/Services/Kaskade/KaskadeFreigabe.php',   // 98 · 3.3 S1: Gate 2 aus PlanningCascadeService verschoben, vergleicht nur CascadeRunStep.status (String-Spalte)

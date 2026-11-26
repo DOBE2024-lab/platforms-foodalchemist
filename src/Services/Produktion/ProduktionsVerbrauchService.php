@@ -24,7 +24,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 class ProduktionsVerbrauchService
 {
     public function __construct(
-        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute,
         private \Platform\FoodAlchemist\Services\Einkauf\InventurService $inventur,
         private EigenproduktionService $eigen,
     ) {}

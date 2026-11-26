@@ -5,8 +5,8 @@ namespace Platform\FoodAlchemist\Support\Planung;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeImageService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 
 /**
  * Spec 84 C1 Schritt 1 · Cockpit-Daten des aktiven Kaskaden-Laufs (Kalkulation je Stufe, KI-Bild-Calls, Foto-Zahlen,

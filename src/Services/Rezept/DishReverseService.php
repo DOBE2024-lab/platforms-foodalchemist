@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -23,9 +23,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 class DishReverseService
 {
     public function __construct(
-        private GpStamm\IngredientMatchService $matcher,
-        private Pairing\PairingService $pairing,
-        private Einkauf\LaFirstGpService $laFirst,
+        private \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService $matcher,
+        private \Platform\FoodAlchemist\Services\Pairing\PairingService $pairing,
+        private \Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService $laFirst,
     ) {
     }
 

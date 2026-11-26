@@ -7,7 +7,7 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\FaRechte;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
-use Platform\FoodAlchemist\Services\ZukaufBasisrezeptService;
+use Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService;
 
 /**
  * Knopf „Zukauf-Basisrezept planen“ am Grundprodukt (Dominique 13.11.): gekaufte Ware (Kräutercrumble, Microgreens,

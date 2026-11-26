@@ -51,7 +51,7 @@ final class BestandsPassung
         if ($tiefe !== 'convenience' || $regler !== 'from_scratch') {
             return null;
         }
-        if (app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class)->istFertigware($team, $zeile)) {
+        if (app(\Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::class)->istFertigware($team, $zeile)) {
             return null;
         }
 

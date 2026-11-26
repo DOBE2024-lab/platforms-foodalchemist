@@ -9,9 +9,9 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\EnrichRecipeJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Plattform\BulkEnrichService;
-use Platform\FoodAlchemist\Services\RecipeReviseService;
-use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\SensorikService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeReviseService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SensorikService;
 
 /**
  * 98 · 2.2c: was Rezept-Modal (Basisrezept) und VK-Modal (Gericht) gleich tun — Gerichtsbild, KI-Produktfoto,

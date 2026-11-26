@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\LabNoteService;
+use Platform\FoodAlchemist\Services\Rezept\LabNoteService;
 
 /**
  * R6.11 · S3 (write): Lab-Journal-Notiz anlegen — die Senke für Hypothesen-/

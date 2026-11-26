@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\SensorikService;
+use Platform\FoodAlchemist\Services\Rezept\SensorikService;
 
 /**
  * MCP-Steuerbarkeit · D2: Sensorik eines team-eigenen Rezepts (KI) bewerten/ableiten und persistieren.

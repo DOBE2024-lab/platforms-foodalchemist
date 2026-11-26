@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\RecipeStepService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeStepService;
 
 /**
  * Spec 27 §4 — der Zubereitungs-Parser ist DETERMINISTISCH und trägt drei Wege

@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console\Diagnose;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Support\Text;
 
 /**

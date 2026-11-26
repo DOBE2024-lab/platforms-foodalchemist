@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeTemplateService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeTemplateService;
 
 /**
  * MCP-Steuerbarkeit · D2: Basisrezept aus einer Vorlage (Template) instanziieren.

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -31,7 +31,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 class KostenCacheService
 {
     /** 98 · 3.3 S7 P3: nur die Schnittstelle (gebunden an RecipeRecomputeService), nicht die ganze Neuberechnung — löst den Kreis. */
-    public function __construct(private Rezept\TeamKostenRechner $recompute) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\Rezept\TeamKostenRechner $recompute) {}
 
     /** @return array{quelle:string, ek_summe:?float, ek_per_kg:?float, n_priced:int, n_total:int, anteil_fehlend_anzahl:?float, anteil_fehlend_masse:?float, vollstaendig:bool, grund:?string, fehlende:list<array<string,mixed>>, berechnet_at:?string, basis:?string} */
     public function fuer(FoodAlchemistRecipe $recipe, Team $team): array

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -130,7 +130,7 @@ class RecipeKomponentenPlanService
         if (($gleich = app(RecipeService::class)->findByTokenSetMitReife($team, $name)) !== null) {
             $ids[] = (int) $gleich['recipe']->id;
         }
-        foreach (app(GpStamm\IngredientMatchService::class)->candidatesFor($team, $name, null, 5) as $c) {
+        foreach (app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->candidatesFor($team, $name, null, 5) as $c) {
             if (($c['kind'] ?? null) === 'sub' && isset($c['id'])) {
                 $ids[] = (int) $c['id'];
             }

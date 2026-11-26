@@ -336,7 +336,7 @@ class EtikettService
      */
     public function zutatenliste(Team $team, FoodAlchemistRecipe $r, int $ebene = 0): array
     {
-        $rc = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+        $rc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
         $agg = app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class);
         $zeilen = $r->ingredients->filter(fn ($z) => ! in_array($z->calc_mode, ['keine', 'nur_naehrwerte'], true) && ($z->gp_id !== null || $z->referenced_recipe_id !== null));
         $liste = [];

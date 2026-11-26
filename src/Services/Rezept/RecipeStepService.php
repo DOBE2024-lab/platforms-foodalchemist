@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -570,7 +570,7 @@ class RecipeStepService
             return false;
         }
         $foto->steps()->detach();
-        app(Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($foto->context_file_id, $foto->pfad, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($foto)]);
+        app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->loescheWennUnbenutzt($foto->context_file_id, $foto->pfad, $team, [\Platform\FoodAlchemist\Support\BildVerweise::eigen($foto)]);
         $foto->delete();
 
         return true;

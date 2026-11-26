@@ -669,7 +669,7 @@ class DataQualityService
                 'q' => fn (Team $t) => $this->alleRezepte($t)->whereIn(
                     'foodalchemist_recipes.id',
                     app(RecipeFindingService::class)
-                        ->offeneUeberSchwelle($t, null, \Platform\FoodAlchemist\Services\RecipeReviewService::ARTEN_COPILOT)->select('recipe_id')
+                        ->offeneUeberSchwelle($t, null, \Platform\FoodAlchemist\Services\Rezept\RecipeReviewService::ARTEN_COPILOT)->select('recipe_id')
                 ),
             ],
             'rezept_gericht_vs_komponente' => [
@@ -685,7 +685,7 @@ class DataQualityService
                 'q' => fn (Team $t) => $this->alleRezepte($t)->whereIn(
                     'foodalchemist_recipes.id',
                     app(RecipeFindingService::class)
-                        ->offeneUeberSchwelle($t, null, \Platform\FoodAlchemist\Services\RecipeReviewService::ARTEN_STRUKTUR)->select('recipe_id')
+                        ->offeneUeberSchwelle($t, null, \Platform\FoodAlchemist\Services\Rezept\RecipeReviewService::ARTEN_STRUKTUR)->select('recipe_id')
                 ),
             ],
         ];

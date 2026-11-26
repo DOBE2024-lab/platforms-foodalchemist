@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Services\GpStamm\GpFormService;
 use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Services\Matching\FruchtDerivat;
 use Platform\FoodAlchemist\Services\Planung\PlanungsblattService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\Reife\RecipeReifeAdapter;
 use Platform\FoodAlchemist\Support\Derivat\DerivatArt;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

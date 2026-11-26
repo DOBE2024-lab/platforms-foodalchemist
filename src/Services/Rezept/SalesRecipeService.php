@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -22,8 +22,8 @@ use Platform\FoodAlchemist\Support\TeamScope;
 class SalesRecipeService
 {
     public function __construct(
-        private Preis\MargeService $marge,
-        private Preis\CatalogPricingService $catalogPricing,
+        private \Platform\FoodAlchemist\Services\Preis\MargeService $marge,
+        private \Platform\FoodAlchemist\Services\Preis\CatalogPricingService $catalogPricing,
     )
     {
     }
@@ -176,7 +176,7 @@ class SalesRecipeService
      */
     private function komponentenIds(FoodAlchemistRecipe $recipe): array
     {
-        return app(Rezept\RezeptGraphService::class)->nachfahren([(int) $recipe->id]);
+        return app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->nachfahren([(int) $recipe->id]);
     }
 
     /**
@@ -450,8 +450,8 @@ class SalesRecipeService
             // Editor (`manual` gewinnt gegen den Bulk-Vorschlag, s. BulkEnrichService::dichteklasse).
             if (array_key_exists('dichteklasse', $update)) {
                 $klasse = ($update['dichteklasse'] ?? '') === '' ? null : (string) $update['dichteklasse'];
-                if ($klasse !== null && ! array_key_exists($klasse, Produktion\BehaelterRechner::DICHTE)) {
-                    throw new \RuntimeException('Unbekannte Dichteklasse „'.$klasse.'" — erlaubt: '.implode(', ', array_keys(Produktion\BehaelterRechner::DICHTE)).'.');
+                if ($klasse !== null && ! array_key_exists($klasse, \Platform\FoodAlchemist\Services\Produktion\BehaelterRechner::DICHTE)) {
+                    throw new \RuntimeException('Unbekannte Dichteklasse „'.$klasse.'" — erlaubt: '.implode(', ', array_keys(\Platform\FoodAlchemist\Services\Produktion\BehaelterRechner::DICHTE)).'.');
                 }
                 $update['dichteklasse'] = $klasse;
                 if ($klasse !== $recipe->dichteklasse) {
@@ -876,8 +876,8 @@ class SalesRecipeService
         ] : null;
 
         $formelFehlt = false;
-        $vk = ['sales_net' => app(Rezept\DarreichungResolver::class)->vkNetto($r), 'source' => 'leer', 'vorschlag' => null];   // Spec 85 D-1
-        $mwst = $team !== null ? (float) app(TeamSettingsService::class)->mwst($team)['ermaessigt'] : 0.0;
+        $vk = ['sales_net' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($r), 'source' => 'leer', 'vorschlag' => null];   // Spec 85 D-1
+        $mwst = $team !== null ? (float) app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->mwst($team)['ermaessigt'] : 0.0;
         $standard = $r->standardPresentation()->first();
         if ($team !== null && $standard !== null) {
             $catalog = $this->catalogPricing->catalogPrice($team, $standard, $outlet);
@@ -898,13 +898,13 @@ class SalesRecipeService
         // Spec 85: EK EINER Portion (ek_portion, sonst Ansatz ÷ Portionen) — vorher im Rückfall der ganze Ansatz.
         // CQ 2.2a: über den Resolver; die oben gelesene Standard-Darreichung als Relation setzen, sonst nähme er
         // ohne Standard die erste Darreichung (standardFuer) — hier galt bisher ohne Standard der Ansatz ÷ Portionen.
-        $ekBasis = app(Rezept\DarreichungResolver::class)->ekProPortion($r->setRelation('standardPresentation', $standard));
+        $ekBasis = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->ekProPortion($r->setRelation('standardPresentation', $standard));
         $marge = $this->marge->marge($vk['sales_net'], $ekBasis);
 
         // Spec 28 §6.1: Food-Cost-Ampel mitliefern, damit die VK-Editor-Kachel den Wareneinsatz
         // gegen ETWAS messen kann. Ohne Team gibt es keine Ziel-Quote → `unbekannt` statt geraten
         // (der Aufrufer kennt sein Team; der Service holt sich hier keins über die Hintertür).
-        $zielPct = $team !== null ? app(TeamSettingsService::class)->zielWareneinsatzPct($team) : null;
+        $zielPct = $team !== null ? app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->zielWareneinsatzPct($team) : null;
         $wePct = $marge['wareneinsatz_pct'] ?? null;
 
         return [

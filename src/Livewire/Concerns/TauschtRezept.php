@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Platform\FoodAlchemist\Enums\RecipeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Support\Suche;
 
 /**
@@ -129,7 +129,7 @@ trait TauschtRezept
         if ($this->istGerichtTausch()) {
             $this->mitKurzsperre(function () use ($team) {
                 try {
-                    app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)->deleteDish($team, $this->recipeId);
+                    app(\Platform\FoodAlchemist\Services\Rezept\SalesRecipeService::class)->deleteDish($team, $this->recipeId);
                 } catch (\Throwable $e) {
                     $this->fehlerTausch = $e->getMessage();
 

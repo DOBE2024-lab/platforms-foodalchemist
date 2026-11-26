@@ -86,7 +86,7 @@ final class GerichtHuelleService
      */
     public function generiere(Team $team, int $stepId, string $beschreibung, array $params, ?array $context, callable $melde): array
     {
-        $generator = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class);
+        $generator = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class);
         $ziel = $this->zielFuerStep($team, $stepId);
         if ($ziel === null) {
             return $generator->generiere($team, $beschreibung, $params, null, true, 'plan_go', $context, $melde);

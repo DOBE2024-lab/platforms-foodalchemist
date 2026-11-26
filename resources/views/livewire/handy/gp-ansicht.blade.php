@@ -117,7 +117,7 @@
                     <div class="{{ $karte }} flex flex-col gap-2 px-3 py-2.5">
                         @foreach($geschmack as $achse => $wert)
                             <div class="flex items-center gap-3" wire:key="hgp-g-{{ $achse }}" data-fa-handy-gp-achse="{{ $achse }}">
-                                <span class="w-16 shrink-0 fa-t-muted">{{ \Platform\FoodAlchemist\Services\SensorikService::DIM_LABEL[$achse] ?? $achse }}</span>
+                                <span class="w-16 shrink-0 fa-t-muted">{{ \Platform\FoodAlchemist\Services\Rezept\SensorikService::DIM_LABEL[$achse] ?? $achse }}</span>
                                 <div class="flex-1 h-2 rounded-full bg-[var(--fa-line)] overflow-hidden"><div class="h-full rounded-full bg-[var(--fa-accent)]" style="width: {{ (int) round($wert * 100) }}%"></div></div>
                                 <span class="w-10 shrink-0 text-right tabular-nums fa-t-muted">{{ number_format($wert, 2, ',', '') }}</span>
                             </div>

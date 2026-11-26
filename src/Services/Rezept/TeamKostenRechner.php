@@ -6,7 +6,7 @@ use Platform\Core\Models\Team;
 
 /**
  * Kosten eines Rezepts für ein bestimmtes Team (Spec 82 §12 C / Stufe 3b), rekursiv über die Unter-Rezepte. Implementiert von
- * {@see \Platform\FoodAlchemist\Services\RecipeRecomputeService::kostenFuerTeam}, gebunden im FoodAlchemistServiceProvider.
+ * {@see \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::kostenFuerTeam}, gebunden im FoodAlchemistServiceProvider.
  *
  * Plan 98 · 3.3 S7 P3 (Muster K3, wie SpeiseplanDokumentQuelle): KostenCacheService kennt nur diese Schnittstelle statt der ganzen
  * Neuberechnung. Die Rekursion bleibt erhalten: Unterrezept-Fassung im Recompute → KostenCacheService::fuer → rechne →

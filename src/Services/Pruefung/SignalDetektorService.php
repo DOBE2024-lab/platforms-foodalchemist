@@ -277,7 +277,7 @@ class SignalDetektorService
         }
 
         $preisSvc = app(\Platform\FoodAlchemist\Services\Preis\PriceService::class);
-        $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+        $recompute = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
         $margeSvc = app(\Platform\FoodAlchemist\Services\Preis\MargeService::class);
         // Team-Sicht (Bugfix 27.10.): das Signal geht an dieses Team — nie ein Master-Preis (BHG-Konditionen) bei einem Mandanten
         $trend = $preisSvc->preisTrendBulk(array_keys($recent->all()), $team);
@@ -451,7 +451,7 @@ class SignalDetektorService
      * (Sub-Anteil = Zeilenkosten × subExposure/subTotal). Setzt totalCache[recipeId]
      * als Gesamt-EK des Rezepts (= Σ Zeilenkosten) mit.
      */
-    private function gpExposure(int $recipeId, int $gpId, \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute, array &$recCache, array &$lineCache, array &$totalCache, array &$expCache, int $tiefe = 0): ?float
+    private function gpExposure(int $recipeId, int $gpId, \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute, array &$recCache, array &$lineCache, array &$totalCache, array &$expCache, int $tiefe = 0): ?float
     {
         if (isset($expCache[$recipeId])) {
             return $expCache[$recipeId];

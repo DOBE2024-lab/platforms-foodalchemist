@@ -289,7 +289,7 @@ class HandbuchService
             'regeneration' => $regenZeilen,
             // 20.11.2026 (Dominique): Reiter „Gefäß“ statt „Bestandteile“ — Gefäß + Zubehör je Portion dieser Darreichung, ohne Preise
             // (gleiche Quelle wie Kosten und Logistik). Leere Liste = kein Gefäß hinterlegt.
-            'gefaess' => $dar !== null ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->gefaessZeilenJePortion($dar, $team) : [],
+            'gefaess' => $dar !== null ? app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->gefaessZeilenJePortion($dar, $team) : [],
             'codes' => [],
         ];
     }

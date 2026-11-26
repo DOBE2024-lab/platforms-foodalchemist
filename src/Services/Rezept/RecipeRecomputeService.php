@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\FoodAlchemist\Events\RezeptKostenGeaendert;
 use Platform\FoodAlchemist\Events\TeamKostenGeaendert;
@@ -43,7 +43,7 @@ use Platform\FoodAlchemist\Services\Rezept\RezeptGraphService;
  *   Invariante bleibt Zyklus-Schutz + Selbstreferenz. Regelwerk BR §4.3.
  * I9: vk_* wird hier NIEMALS geschrieben.
  */
-class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\NeuberechnungRezepte   // 98 · 3.3 S7 P3/P4: KostenCache bzw. Stamm-Dienste ohne Kreis
+class RecipeRecomputeService implements \Platform\FoodAlchemist\Services\Rezept\TeamKostenRechner, \Platform\FoodAlchemist\Services\Basis\NeuberechnungRezepte   // 98 · 3.3 S7 P3/P4: KostenCache bzw. Stamm-Dienste ohne Kreis
 {
     // A-5 (2026-08-03): Kein Sub-Rezept-Tiefenlimit (Regelwerk BR §4.3 gelockert). Code-Qualität 2.1c: auch die Eltern-Suche hat keinen
     // Deckel mehr (früher PROPAGATION_LIMIT = 10) — ein Graph-Dienst mit Besucht-Liste ({@see RezeptGraphService::vorfahren}).
@@ -67,16 +67,16 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
     private array $putzverlustWgCache = [];
 
     /** Code-Qualität 2.1a: Lese-Vorrat je Lauf (Artikel/Preise, Pins je Team + GP, Formen) */
-    private Rezept\RecomputeVorrat $vorrat;
+    private \Platform\FoodAlchemist\Services\Rezept\RecomputeVorrat $vorrat;
 
-    private Rezept\DiaetEignung $diaet;
+    private \Platform\FoodAlchemist\Services\Rezept\DiaetEignung $diaet;
 
     public function __construct(
-        private GpStamm\GpAggregateService $gpAggregate,
-        private Preis\PriceService $preise,
+        private \Platform\FoodAlchemist\Services\GpStamm\GpAggregateService $gpAggregate,
+        private \Platform\FoodAlchemist\Services\Preis\PriceService $preise,
     ) {
-        $this->vorrat = new Rezept\RecomputeVorrat($preise);
-        $this->diaet = new Rezept\DiaetEignung();
+        $this->vorrat = new \Platform\FoodAlchemist\Services\Rezept\RecomputeVorrat($preise);
+        $this->diaet = new \Platform\FoodAlchemist\Services\Rezept\DiaetEignung();
     }
 
     /** Pipeline für EIN Rezept — idempotent (I4), eine Transaktion (V-07). */
@@ -448,13 +448,13 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
         $key = $wgCode ?? '*';
         if ($art === 'putzverlust') {
             if (! array_key_exists($key, $this->putzverlustWgCache)) {
-                $this->putzverlustWgCache[$key] = app(TeamSettingsService::class)->putzverlustDefault($this->recomputeTeam, $wgCode) ?? 0.0;
+                $this->putzverlustWgCache[$key] = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->putzverlustDefault($this->recomputeTeam, $wgCode) ?? 0.0;
             }
 
             return $this->putzverlustWgCache[$key];
         }
         if (! array_key_exists($key, $this->garverlustWgCache)) {
-            $this->garverlustWgCache[$key] = app(TeamSettingsService::class)->garverlustDefault($this->recomputeTeam, $wgCode) ?? 0.0;
+            $this->garverlustWgCache[$key] = app(\Platform\FoodAlchemist\Services\TeamSettingsService::class)->garverlustDefault($this->recomputeTeam, $wgCode) ?? 0.0;
         }
 
         return $this->garverlustWgCache[$key];
@@ -800,13 +800,13 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
     {
         $recipe = FoodAlchemistRecipe::withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('recompute')
             ->findOrFail($recipeId);
-        $alt = $recipe->only(Rezept\DiaetEignung::felder());
+        $alt = $recipe->only(\Platform\FoodAlchemist\Services\Rezept\DiaetEignung::felder());
 
         \Platform\FoodAlchemist\Models\Scopes\TeamSicht::lesenIm((int) $recipe->team_id, function () use ($recipe) {
             $recipe->load(['ingredients.gp', 'ingredients.referencedRecipe']);
             $this->specFlags($recipe, $recipe->ingredients->filter(fn ($z) => $z->match_method !== MatchMethod::Ignored));
         });
-        $neu = $recipe->only(Rezept\DiaetEignung::felder());
+        $neu = $recipe->only(\Platform\FoodAlchemist\Services\Rezept\DiaetEignung::felder());
         if ($neu === $alt) {
             return null;
         }
@@ -1035,7 +1035,7 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
                 continue;                                          // Sub-Rezepte: siehe subKonfidenzRang
             }
             $konf = $this->gpAggregate->allergenKonfidenz($z->gp)['confidence'];
-            $rang = min($rang, GpStamm\GpAggregateService::ALLERGEN_KONF_RANG[$konf] ?? 1);
+            $rang = min($rang, \Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::ALLERGEN_KONF_RANG[$konf] ?? 1);
         }
 
         return $rang;
@@ -1079,7 +1079,7 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
         // Möhren. Genau der Fall, für den es das Feature gibt („halber Bund, ohne zu wissen
         // was der wiegt"). Masse/Volumen bleiben beim globalen Gewicht — AUSSER Löffel (03.11.): EL/TL/Msp/Prise sind GP-Formen
         // wie die Zähl-Einheiten („1 TL Zimt“ = 2,5 g statt 5 ml Wasser); ohne Form fällt die Zeile unten aufs Vokabular zurück.
-        if (($unit?->dimension === 'count' || in_array($unit?->slug, GpStamm\GpFormService::LOEFFEL_SLUGS, true)) && $z->gp_id !== null) {
+        if (($unit?->dimension === 'count' || in_array($unit?->slug, \Platform\FoodAlchemist\Services\GpStamm\GpFormService::LOEFFEL_SLUGS, true)) && $z->gp_id !== null) {
             // #9-Formen (gp_forms) sind die LEBENDE Quelle: der Formen-Editor am GP und die
             // KI-Schätzung schreiben ausschliesslich hierhin, und der Modell-Docblock nennt
             // form_slug ausdrücklich „für die EK-Umrechnung nutzbar". Gelesen wurde die Tabelle

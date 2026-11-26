@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 
 /** MCP-Steuerbarkeit · D3: Regenerations-Programme eines team-eigenen Gerichts neu ordnen. */
 class RecipeRegenerationReorderTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

@@ -1367,7 +1367,7 @@ class GpModal extends Component
             // #9: Naturaleinheit-Formen (Gramm je Form) + wählbare Form-Slugs für „Form hinzufügen".
             'formen' => $gp !== null ? app(\Platform\FoodAlchemist\Services\GpStamm\GpFormService::class)->list($gp->id) : collect(),
             'formSlugs' => \Platform\FoodAlchemist\Services\GpStamm\GpFormService::formSlugs(Auth::user()?->currentTeamRelation),
-            'sensorik' => $this->gpId !== null ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerGp($this->gpId) : null,
+            'sensorik' => $this->gpId !== null ? app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class)->fuerGp($this->gpId) : null,
             'pairing' => $this->gpId !== null ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->panelGp($this->gpId) : null,
             // Spec 53 Paket J: Aroma-Anker editierbar (kern + neben) — panelGp()/pairing.blade.php
             // bleiben read-only (liefern nur 'kern', ohne id/role); dieser Block ist die Schreib-Fläche.

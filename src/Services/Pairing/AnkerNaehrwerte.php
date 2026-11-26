@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Services\Pairing;
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Enums\WissensStatus;
-use Platform\FoodAlchemist\Services\SensorikService;
+use Platform\FoodAlchemist\Services\Rezept\SensorikService;
 use Platform\FoodAlchemist\Support\Text;
 
 /**

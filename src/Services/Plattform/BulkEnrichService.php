@@ -603,7 +603,7 @@ class BulkEnrichService
                 : ['plating_text' => $text(), 'plating_source' => 'ki', 'plating_ai_confidence' => $prop->confidence],
             'category' => $r->category_source === 'manual' || FoodAlchemistRecipeCategory::find((int) $wert) === null ? null
                 : ['category_id' => (int) $wert, 'category_source' => 'ki', 'category_ai_confidence' => $prop->confidence],
-            'geschmack' => in_array($wert, \Platform\FoodAlchemist\Services\RecipeService::TASTE_DIRECTIONS, true)
+            'geschmack' => in_array($wert, \Platform\FoodAlchemist\Services\Rezept\RecipeService::TASTE_DIRECTIONS, true)
                 ? ['taste_direction' => $wert] : null,             // Auto-Apply-Ausnahme-Feld (GL-07 §4.3), kein Lineage-Trio
             // B-1: nur Gericht, nur sichtbare Typ-Vehikel, manual gewinnt (dieselben Riegel wie VkModal::uebernehmeVehikel)
             // 18.11.2026: steht an der Standard-Darreichung ein konkretes Gefäß, bestimmt das den Typ — kein KI-Typ darüber
@@ -622,7 +622,7 @@ class BulkEnrichService
         // B-1: das Vehikel lebt doppelt (Rezept-Spalte + Standard-Darreichung) — `updateVk` spiegelt
         // es, dieser Weg muss es auch, sonst zeigt die Ausgabe etwas anderes als der Editor.
         if ($prop->field === 'servier_vehikel') {
-            app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)->spiegeleStandardDarreichung($team, $r->refresh(), $update);
+            app(\Platform\FoodAlchemist\Services\Rezept\SalesRecipeService::class)->spiegeleStandardDarreichung($team, $r->refresh(), $update);
         }
 
         // 2026-09-04: `plating_text` ist der Spiegel der ANRICHTE-Schritte (Regelwerk §3.3).
@@ -630,7 +630,7 @@ class BulkEnrichService
         // Schritte — ohne diesen Zweig setzte allein die Anreicherung einen Text OHNE Schritte,
         // und der Anrichten-Tab stünde leer, obwohl das Feld gefüllt ist.
         if ($prop->field === 'plating' && ($update['plating_text'] ?? null) !== null) {
-            $svc = app(\Platform\FoodAlchemist\Services\RecipeStepService::class);
+            $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class);
             $ebene = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep::EBENE_ANRICHTEN;
             if ($svc->ausMarkdown($r, (string) $update['plating_text'], ebene: $ebene) === 0) {
                 $svc->spiegele($r);   // Ebene hatte schon Schritte → sie gewinnen
@@ -668,7 +668,7 @@ class BulkEnrichService
                 if (! $kalt && (! is_numeric($geraetId) || ! $this->geraeteKatalog($team)->has((int) $geraetId))) {
                     break;                                              // weder Entscheidung „kalt" noch gültiges Gerät
                 }
-                app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)->upsertRegeneration($team, $r->id, [
+                app(\Platform\FoodAlchemist\Services\Rezept\SalesRecipeService::class)->upsertRegeneration($team, $r->id, [
                     'component_label' => 'Gesamt', 'ingredient_id' => null,
                     'device_vocab_id' => $kalt ? null : (int) $geraetId,
                     'temp_c' => $kalt ? null : ($wert['temp_c'] ?? null),
@@ -798,7 +798,7 @@ class BulkEnrichService
             }
             $in['ai_confidence'] = $prop->confidence;
             $in['ai_reasoning'] = $prop->reasoning;
-            app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)->upsertContainer($team, $r->id, $zweck, $in);
+            app(\Platform\FoodAlchemist\Services\Rezept\SalesRecipeService::class)->upsertContainer($team, $r->id, $zweck, $in);
             $gelandet = true;
         }
 

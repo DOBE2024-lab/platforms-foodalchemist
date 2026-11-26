@@ -77,7 +77,7 @@ class SignalCauseService
 
     public function __construct(
         private DataQualityService $dq,
-        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute,
         private \Platform\FoodAlchemist\Services\Preis\PriceService $preise,
     ) {
     }

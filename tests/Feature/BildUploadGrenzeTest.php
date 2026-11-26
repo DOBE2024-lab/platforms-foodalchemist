@@ -92,7 +92,7 @@ it('eine Grenze, Meldungen in MB', function () {
         ->and(BildUpload::regel())->toBe('image|max:14336')
         ->and(BildUpload::regel(true))->toBe('required|image|max:14336')
         ->and(BildUpload::meldungen('x.*')['x.*.max'])->toBe('Das Bild darf höchstens 14 MB groß sein.')
-        ->and(\Platform\FoodAlchemist\Services\RezeptFotoService::MAX_KB)->toBe(BildUpload::MAX_KB)
+        ->and(\Platform\FoodAlchemist\Services\Rezept\RezeptFotoService::MAX_KB)->toBe(BildUpload::MAX_KB)
         ->and(DateiUpload::meldungen('datei', 10240, 'CSV')['datei.max'])->toBe('Die Datei darf höchstens 10 MB groß sein.')
         ->and(DateiUpload::mb(1536))->toBe('1,5');
 });

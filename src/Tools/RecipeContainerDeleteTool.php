@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabContainer;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 
 /** Spec 51 · MCP: Behälter-Zeile eines Zwecks an einem team-eigenen Rezept entfernen. */
 class RecipeContainerDeleteTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

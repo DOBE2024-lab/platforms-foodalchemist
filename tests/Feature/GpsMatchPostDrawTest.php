@@ -14,7 +14,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  *
  * Befund: der Generator zieht nach einer erfolglosen — bewusst lexikalischen —
  * Matcher-Entscheidung noch aus der semantisch-inklusiven Shortlist
- * ({@see \Platform\FoodAlchemist\Services\RecipeGeneratorService::ziehtAusBestand}, Erdungs-Stärke
+ * ({@see \Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::ziehtAusBestand}, Erdungs-Stärke
  * B2). Das MCP-Tool kannte diesen Zug NICHT und meldete `none` — bei „Tomaten, geschält, aus der
  * Dose" mit dem korrekten `Tomaten: konserviert, ganz, geschaelt / Pelati` bei **0,769** in
  * derselben Antwort.

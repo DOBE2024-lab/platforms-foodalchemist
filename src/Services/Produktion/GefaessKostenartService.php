@@ -178,6 +178,6 @@ class GefaessKostenartService
             FoodAlchemistGpGefaessKostenart::create(['team_id' => $team->id, 'gp_id' => $gp->id, 'kostenart' => $art, 'preis_stk' => $preis]);
         }
 
-        return app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gp->id]);
+        return app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->recomputeFuerZubehoerGps([(int) $gp->id]);
     }
 }

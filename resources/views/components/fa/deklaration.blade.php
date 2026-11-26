@@ -54,7 +54,7 @@
     };
     $erklaeren = $konfTon !== 'ok' || $offen !== [] || $stoffeOffen !== [];
     $ursachen = $erklaeren && $rezept instanceof \Platform\FoodAlchemist\Models\FoodAlchemistRecipe
-        ? app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->deklarationsLuecken($rezept, array_keys($stoffeOffen), array_keys($offen))
+        ? app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->deklarationsLuecken($rezept, array_keys($stoffeOffen), array_keys($offen))
         : [];
 @endphp
 

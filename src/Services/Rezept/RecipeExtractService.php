@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -53,7 +53,7 @@ class RecipeExtractService
         // Spec 95 Stufe 2: wie GENERATE die Bestands-Kandidaten mitgeben — die KI darf je Zeile eine gp_id VORSCHLAGEN (der Text bleibt
         // wörtlich); der Generator prüft sie wie jeden Vorschlag (validiereProposedGp) und fällt sonst auf den Textabgleich zurück.
         if ($rohText !== '' && config('foodalchemist.import.gp_kandidaten', true)) {
-            $gpKandidaten = app(Planung\GenerationContextService::class)->forGeneration($team, $rohText)['gp_kandidaten'] ?? null;
+            $gpKandidaten = app(\Platform\FoodAlchemist\Services\Planung\GenerationContextService::class)->forGeneration($team, $rohText)['gp_kandidaten'] ?? null;
             if ($gpKandidaten !== null) {
                 // der Generator-Hinweis („benenne exakt auf diese GPs“) gilt hier NICHT — der Import bleibt treu
                 $kontext['gp_kandidaten'] = ['hinweis' => 'Nur zur Rückbindung: gp_id angeben, wenn die Zutat EXAKT einem Kandidaten entspricht. '
@@ -204,7 +204,7 @@ class RecipeExtractService
         //     als Stub anlegen und verknüpfen (Regelwerk Basisrezepte §4 F4.1: Auto-Stub, Eltern bleibt Entwurf), nie ein Zukauf-GP.
         $stubs = [];
         $lp = \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::aus($parameter);
-        $matcher = app(GpStamm\IngredientMatchService::class);
+        $matcher = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class);
         foreach ($zutaten as $i => $z) {
             $text = trim((string) ($z['text'] ?? $z['name'] ?? ''));
             // Basiskomponente = Unterrezept (Dominique 09.11.2026, bestätigt die Regel vom 27.10.): weder sub_rezept=false noch ein

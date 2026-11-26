@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Http\UploadedFile;
 use Platform\Core\Models\Team;
@@ -24,7 +24,7 @@ class RezeptFotoService
     {
         GeerbtNurLesenException::wennNichtEigen($rezept, $team, 'die Fotos');
 
-        $media = app(Plattform\FoodAlchemistMediaService::class)->storeImage(
+        $media = app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->storeImage(
             $datei, $team, 'foodalchemist.recipe', $rezept->id, "foodalchemist/rezepte/{$rezept->id}",
         );
         $foto = FoodAlchemistRecipeStepPhoto::create([

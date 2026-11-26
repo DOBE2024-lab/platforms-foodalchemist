@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 
 /**
  * Import-Unterrezept ausrezeptieren (Dominique 29.10.): der Import legt für eine Basiskomponente ohne Bestand („Aroma: Nussbutter",
@@ -97,7 +97,7 @@ class StubAusrezeptierenJob implements ShouldQueue, \Platform\FoodAlchemist\Serv
             'status' => 'draft',
             'created_via' => $createdVia ?? 'import_ki_unterrezept',
             'description' => $kiRezept['description'] ?? null,
-            'taste_direction' => in_array($kiRezept['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\RecipeService::TASTE_DIRECTIONS, true) ? $kiRezept['taste_direction'] : null,
+            'taste_direction' => in_array($kiRezept['taste_direction'] ?? null, \Platform\FoodAlchemist\Services\Rezept\RecipeService::TASTE_DIRECTIONS, true) ? $kiRezept['taste_direction'] : null,
         ]);
 
         return $stub;

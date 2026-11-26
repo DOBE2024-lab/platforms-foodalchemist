@@ -9,8 +9,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Services\Matching\MatchHeuristics;
 use Platform\FoodAlchemist\Services\Matching\TokenEngine;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -159,7 +159,7 @@ it('Architektur: jeder automatische mintFromLa-Aufrufer prüft istBasisrezeptZei
     $ausgenommen = [
         'Services/Einkauf/LaFirstGpService.php' => 'die Mint-Fähigkeit selbst',
         'Tools/GpsMintFromLaTool.php' => 'expliziter GP-Auftrag (Name genannt), keine Rezeptzeile',
-        'Services/DishReverseService.php' => 'Analyse von Freitext, schreibt keine Rezeptzeilen',
+        'Services/Rezept/DishReverseService.php' => 'Analyse von Freitext, schreibt keine Rezeptzeilen',
     ];
     $src = realpath(__DIR__ . '/../../src');
     $ohnePruefung = [];

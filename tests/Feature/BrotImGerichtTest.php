@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Queue;
 use Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\ZukaufBasisrezeptService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -48,7 +48,7 @@ it('Brot als Unterrezept: normale Planung mit Verarbeitungs-Auftrag, kein Rüst-
 
     Queue::assertPushed(GenerateRecipePlanJob::class, fn ($j) => ($j->params['brot_verarbeiten'] ?? null) === 'Toast'
         && ! isset($j->params['ruest_ware']));
-    $prompt = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class)
+    $prompt = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class)
         ->build($this->rootTeam, 'Toast', ['brot_verarbeiten' => 'Toast'], false)['prompt'];
     expect($prompt['brot_verarbeiten']['hinweis'])->toContain('nicht als Scheibe');
 });
@@ -58,7 +58,7 @@ it('im Gericht ist eine Brot-Zeile nie ein Grundprodukt, sondern ein Basisrezept
     ($this->gp)('Baguette: frisch', '09', '09.1 Brot & Broetchen');
     config(['foodalchemist.ai.provider' => 'fake']);
 
-    $res = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Test', [], [
+    $res = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Test', [], [
         'name' => '[HG] Rind | Kürbis | Baguette', 'zutaten' => [
             ['text' => 'Rinderfilet', 'quantity' => 150, 'unit' => 'g'], ['text' => 'Kürbis', 'quantity' => 120, 'unit' => 'g'],
             ['text' => 'Baguette', 'quantity' => 40, 'unit' => 'g']],
@@ -74,7 +74,7 @@ it('Brot-Angebot (Brotkorb, Brotkonfekt, Brot & Butter): seit 17.11.2026 auch do
     ($this->gp)('Laugenbrezel: frisch', '09', '09.1 Brot & Broetchen');
     config(['foodalchemist.ai.provider' => 'fake']);
 
-    $korb = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Test', [], [
+    $korb = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Test', [], [
         'name' => '[BRO] Brotkorb | Baguette | Laugenbrezel', 'zutaten' => [
             ['text' => 'Baguette: frisch', 'quantity' => 40, 'unit' => 'g'], ['text' => 'Laugenbrezel: frisch', 'quantity' => 40, 'unit' => 'g']],
     ], vkModus: true)['recipe'];

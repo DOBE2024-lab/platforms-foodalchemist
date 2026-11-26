@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -198,7 +198,7 @@ class RecipeReviewService
         $zeilen = $r->ingredients->keyBy('id');
         $einheiten = FoodAlchemistRecipe::query()->getConnection()->table('foodalchemist_vocab_units')
             ->whereNull('deleted_at')->pluck('id', 'slug');
-        $matcher = app(GpStamm\IngredientMatchService::class);
+        $matcher = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class);
         $heuristik = app(MatchHeuristics::class);
 
         $out = [];
@@ -394,7 +394,7 @@ class RecipeReviewService
                 throw new \RuntimeException('Der Hinweis nennt keine Zutatenzeile, es gibt nichts zu übernehmen.');
             }
 
-            return app(Pruefung\HardstopResolveService::class)->entdrahte($team, $recipeId, $zielId);
+            return app(\Platform\FoodAlchemist\Services\Pruefung\HardstopResolveService::class)->entdrahte($team, $recipeId, $zielId);
         }
 
         $revise = app(RecipeReviseService::class);

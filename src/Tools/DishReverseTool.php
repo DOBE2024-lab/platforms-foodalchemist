@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\DishReverseService;
+use Platform\FoodAlchemist\Services\Rezept\DishReverseService;
 
 /**
  * R6.9 (Pairing-Offense): Dish-Reverse-Engineering — fremdes Gericht (Text/Karte)

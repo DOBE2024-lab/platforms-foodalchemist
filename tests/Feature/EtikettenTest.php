@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
 use Platform\FoodAlchemist\Services\Einkauf\LagerEinrichtungService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -142,7 +142,7 @@ it('MCP: labels.POST liefert Links + Inhalt, label_templates.GET/POST', function
 });
 
 it('Übliche Lagerart am Rezept: Speichern über RecipeService/MCP, Etikett übernimmt sie (TK → Einfrierdatum + TK-Haltbarkeit)', function () {
-    app(\Platform\FoodAlchemist\Services\RecipeService::class)->update($this->rootTeam, $this->suppe->id, ['storage_type' => 'tiefgekuehlt', 'shelf_life_frozen_days' => 60]);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->update($this->rootTeam, $this->suppe->id, ['storage_type' => 'tiefgekuehlt', 'shelf_life_frozen_days' => 60]);
     $r = $this->suppe->refresh();
     expect($r->storage_type)->toBe('tiefgekuehlt')->and($r->shelf_life_frozen_days)->toBe(60);
 

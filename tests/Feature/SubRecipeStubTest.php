@@ -3,7 +3,7 @@
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -70,7 +70,7 @@ it('#2 §7: unsicheres Sub-Rezept deckelt die Allergen-Konfidenz des Eltern auf 
         'referenced_recipe_id' => $sub->id, 'match_method' => 'recipe_ref',
     ]);
 
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeAndPropagate($eltern->id);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputeAndPropagate($eltern->id);
 
     $eltern->refresh();
     expect($eltern->allergens_confidence)->toBe('low')              // NICHT 'high' — §7 schwächstes Glied
@@ -92,7 +92,7 @@ it('#2b §7 F7.5: ein low-Sub deckelt die Konfidenz, verwirft die Allergen-Werte
         'referenced_recipe_id' => $sub->id, 'match_method' => 'recipe_ref',
     ]);
 
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeAndPropagate($eltern->id);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputeAndPropagate($eltern->id);
 
     $eltern->refresh();
     expect($eltern->allergens_confidence)->toBe('low')              // Konfidenz wird gedeckelt (F7.4 c)

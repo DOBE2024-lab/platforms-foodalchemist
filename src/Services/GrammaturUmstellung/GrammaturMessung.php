@@ -5,8 +5,8 @@ namespace Platform\FoodAlchemist\Services\GrammaturUmstellung;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
-use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 
 /**
  * Plan 98 B: misst je Darreichung die Werte, die die Umstellung nicht stillschweigend ändern darf — über den echten Code

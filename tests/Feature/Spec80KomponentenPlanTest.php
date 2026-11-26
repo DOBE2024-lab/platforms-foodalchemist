@@ -13,9 +13,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeGenerationContextService;
-use Platform\FoodAlchemist\Services\RecipeKomponentenPlanService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -176,7 +176,7 @@ it('B6: Unterrezept bekommt als Ansatz die Menge seiner Zeile und die Suchbegrif
 });
 
 it('Live-Test demo 09.10.: Komponenten-Namen werden gesäubert (Regelwerk-Verweis raus, Typ nicht doppelt)', function () {
-    $s = \Platform\FoodAlchemist\Services\RecipeKomponentenPlanService::class;
+    $s = \Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService::class;
 
     expect($s::bereinigeName('Püree: Petersilienwurzelpüree nach Basisrezept-Regelwerk §1'))->toBe('Püree: Petersilienwurzel')
         ->and($s::bereinigeName('Matte: Petersilienmatte nach Basisrezept-Regelwerk §1'))->toBe('Matte: Petersilie')
@@ -191,7 +191,7 @@ it('Live-Test demo 09.10.: nicht freigegebener Bestand erscheint als abgelehnt m
     $entwurf = $this->makeRecipe($this->rootTeam, 'Püree: Petersilienwurzel', ['status' => 'review']);
     $abgelehnt = [];
 
-    $treffer = app(\Platform\FoodAlchemist\Services\RecipeKomponentenPlanService::class)
+    $treffer = app(\Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService::class)
         ->bestandFuer($this->rootTeam, 'Püree: Petersilienwurzel', [], $abgelehnt);
 
     expect($treffer)->toBeNull()
@@ -203,7 +203,7 @@ it('Live-Test demo 09.10.: eine offene Basisrezept-Zeile fällt beim Re-Groundin
     $r = $this->makeRecipe($this->rootTeam, 'Püree: Petersilienwurzel (grün)', ['status' => 'draft']);
     $g = $this->unitG($this->rootTeam)->id;
 
-    app(\Platform\FoodAlchemist\Services\RecipeService::class)->syncIngredients($this->rootTeam, $r->id, [
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->syncIngredients($this->rootTeam, $r->id, [
         ['raw_text' => 'Püree: Petersilienwurzel', 'quantity' => 7000, 'unit_vocab_id' => $g],
         ['raw_text' => 'Petersilienwurzel', 'quantity' => 100, 'unit_vocab_id' => $g],
     ]);

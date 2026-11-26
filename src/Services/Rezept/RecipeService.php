@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -225,7 +225,7 @@ class RecipeService
             }
         }
 
-        $recipe = FoodAlchemistRecipe::create(Matching\MatchLeitplanken::vorgabeFelder($in) + [
+        $recipe = FoodAlchemistRecipe::create(\Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::vorgabeFelder($in) + [
             'team_id' => $team->id,
             'recipe_key' => $key,
             'name' => $name,
@@ -309,7 +309,7 @@ class RecipeService
                 : $recipe->category_id,
             'taste_direction' => array_key_exists('taste_direction', $in)
                 ? self::tasteDirection($in['taste_direction']) : $recipe->taste_direction,
-            'production_depth' => array_key_exists('production_depth', $in) ? (($in['production_depth'] ?? '') ?: null) : $recipe->production_depth, ...Matching\MatchLeitplanken::vorgabeFelder($in),
+            'production_depth' => array_key_exists('production_depth', $in) ? (($in['production_depth'] ?? '') ?: null) : $recipe->production_depth, ...\Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::vorgabeFelder($in),
             'work_time_min' => array_key_exists('work_time_min', $in) ? $in['work_time_min'] : $recipe->work_time_min,
             // Stufe 3 — Auto-Produktionsplaner: Default-Posten, Vorproduzierbarkeit, Rüstzeit, Topf-Deckel.
             'setup_time_min' => array_key_exists('setup_time_min', $in) ? $in['setup_time_min'] : $recipe->setup_time_min,
@@ -337,7 +337,7 @@ class RecipeService
             'preparation' => array_key_exists('preparation', $in) ? (($in['preparation'] ?? '') ?: null) : $recipe->preparation,
             'notes_manual' => array_key_exists('notes_manual', $in) ? (($in['notes_manual'] ?? '') ?: null) : $recipe->notes_manual,
             'status' => array_key_exists('status', $in) && in_array($in['status'], ['stub', 'draft', 'review', 'approved', 'archived'], true)
-                ? app(Rezept\FreigabeSperre::class)->wechsel($team, $recipe, $in['status']) : $recipe->status,   // 1.1f: Freigabe-Sperre
+                ? app(\Platform\FoodAlchemist\Services\Rezept\FreigabeSperre::class)->wechsel($team, $recipe, $in['status']) : $recipe->status,   // 1.1f: Freigabe-Sperre
             'version' => $recipe->version + 1,
             'last_modified_by' => 'editor',
         ]);
@@ -476,7 +476,7 @@ class RecipeService
             throw new \RuntimeException("Unbekannter Status [{$status}].");
         }
         $eigene = FoodAlchemistRecipe::visibleToTeam($team)->where('team_id', $team->id)->whereIn('id', $ids)->pluck('id')->map(fn ($id) => (int) $id)->all();   // D1
-        app(Rezept\FreigabeSperre::class)->pruefeAuswahl($eigene, $status);   // 1.1f
+        app(\Platform\FoodAlchemist\Services\Rezept\FreigabeSperre::class)->pruefeAuswahl($eigene, $status);   // 1.1f
 
         return FoodAlchemistRecipe::query()->whereIn('id', $eigene)->update(['status' => $status, 'last_modified_by' => 'editor']);
     }
@@ -492,7 +492,7 @@ class RecipeService
         if (\Platform\FoodAlchemist\Enums\RecipeStatus::tryFrom($status) === null) {
             throw new \RuntimeException("Unbekannter Status [{$status}].");
         }
-        $recipe->update(['status' => app(Rezept\FreigabeSperre::class)->wechsel($team, $recipe, $status), 'last_modified_by' => 'editor']);   // 1.1f: Freigabe-Sperre
+        $recipe->update(['status' => app(\Platform\FoodAlchemist\Services\Rezept\FreigabeSperre::class)->wechsel($team, $recipe, $status), 'last_modified_by' => 'editor']);   // 1.1f: Freigabe-Sperre
 
         return $recipe->refresh();
     }
@@ -883,7 +883,7 @@ class RecipeService
         $recompute = app(RecipeRecomputeService::class);
         $erlaubt = [];
         $zyklus = [];
-        $anzahl = app(Rezept\RezeptGraphService::class)->schreibeKanten([], function () use ($elternIds, $namen, $nach, $zeilen, $recompute, &$erlaubt, &$zyklus) {
+        $anzahl = app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->schreibeKanten([], function () use ($elternIds, $namen, $nach, $zeilen, $recompute, &$erlaubt, &$zyklus) {
             foreach ($elternIds as $pid) {   // 1.1e: unter der Graph-Sperre geprüft und geschrieben
                 $pruefung = $recompute->pruefeVerknuepfung($pid, (int) $nach->id);
                 $pruefung['erlaubt'] ? ($erlaubt[] = $pid) : ($zyklus[] = ($namen[$pid] ?? "#{$pid}") . " ({$pruefung['grund']})");
@@ -1123,7 +1123,7 @@ class RecipeService
                 throw new \Platform\FoodAlchemist\Exceptions\NonFoodAlsZutatException($nonFood);
             }
         }
-        app(Rezept\ZutatenVerweise::class)->pruefeSicht($team, $recipe, $zeilen);   // 1.1j-1: Verweise nur auf Sichtbares (Abo/Stamm-Paket inklusive)
+        app(\Platform\FoodAlchemist\Services\Rezept\ZutatenVerweise::class)->pruefeSicht($team, $recipe, $zeilen);   // 1.1j-1: Verweise nur auf Sichtbares (Abo/Stamm-Paket inklusive)
         DB::transaction(function () use ($team, $recipe, $zeilen, $preserveMissing) {
             $vorhanden = $recipe->ingredients()->get()->keyBy('id');
             $behalten = [];
@@ -1169,13 +1169,13 @@ class RecipeService
                         // Gericht = nur Basisrezepte (Dominique 17.11.2026): auch die Auto-Erdung legt dort kein GP und mintet keins.
                         $nurSub = $recipe->is_sales_recipe
                             || app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class)->istBasisrezeptZeile($groundName);
-                        $treffer = app(GpStamm\IngredientMatchService::class)->matchIngredient(
-                            $team, $groundName, $z['hauptzutat_slug'] ?? ($z['slug'] ?? null), ...Matching\MatchLeitplanken::matcherArgsFuerRezept($recipe),
+                        $treffer = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->matchIngredient(
+                            $team, $groundName, $z['hauptzutat_slug'] ?? ($z['slug'] ?? null), ...\Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::matcherArgsFuerRezept($recipe),
                         );
                         // Live-Test demo 09.10. (Lauf 86): ohne Band-Gate verdrahtete die Heilung „bitte prüfen"-Treffer
                         // („Ginger Beer" → Beeren-Kaviar 0,5; „Pilzmischung: frisch, ganz" → Auberginen 0,667). Wie der
                         // Generator: automatisch nur Exact/FuzzyHigh, FuzzyLow bleibt offen für den Menschen.
-                        if (! GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($treffer)) {
+                        if (! \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($treffer)) {
                             $treffer = ['target' => 'none'] + $treffer;
                         }
                         if ($treffer['target'] === 'gp' && ! $nurSub) {
@@ -1215,7 +1215,7 @@ class RecipeService
                         // nicht). Mint ist tentative + LA-verknüpft; keine LA → bleibt unmatched
                         // (Hard-Stop / Sourcing-Wunsch beim Aufrufer). Provenienz wie im Generator.
                         if ($gpId === null && $subId === null && ! $nurSub) {
-                            $mint = app(Einkauf\LaFirstGpService::class)->mintFromLa(
+                            $mint = app(\Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService::class)->mintFromLa(
                                 $team, $groundName, $z['hauptzutat_slug'] ?? ($z['slug'] ?? null),
                             );
                             if ($mint !== null) {
@@ -1230,7 +1230,7 @@ class RecipeService
                 if ($subId === $recipe->id) {
                     throw new \Platform\FoodAlchemist\Exceptions\RezeptZyklusException([$subId, $subId], 'Selbstreferenz — ein Rezept kann sich nicht selbst enthalten (GL-02 §3.5).', 'Selbstreferenz');
                 } elseif ($subId !== null && ! $vorhanden->contains(fn ($alt) => (int) $alt->referenced_recipe_id === $subId)) {   // 1.1e Sperre + Zyklusprüfung atomar; 2.1c nur neue Kanten
-                    app(Rezept\RezeptGraphService::class)->sichereKante($recipe->id, $subId);
+                    app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->sichereKante($recipe->id, $subId);
                 }
                 $quantity = (float) str_replace(',', '.', (string) ($z['quantity'] ?? 0));
                 if ($quantity <= 0) {

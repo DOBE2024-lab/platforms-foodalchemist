@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
@@ -39,7 +39,7 @@ class RecipeReviseService
             return [];
         }
         $original = $r->ingredients->keyBy('id');
-        $matcher = app(GpStamm\IngredientMatchService::class);
+        $matcher = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class);
         $heuristik = app(MatchHeuristics::class);
 
         $out = [];

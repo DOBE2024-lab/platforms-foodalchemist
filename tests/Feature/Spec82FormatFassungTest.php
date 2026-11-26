@@ -37,7 +37,7 @@ use Platform\FoodAlchemist\Services\Fassung\FormatFassungService;
 use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -90,7 +90,7 @@ beforeEach(function () {
 
     $teller = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->master->id, 'code' => 'teller', 'label' => 'Teller']);
     foreach ([$this->gericht, $this->gericht2] as $g) {
-        $this->grammaturAltbestand(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->anlegen($this->master, $g->id, $teller->id), 200);   // ohne Darreichung kein VK; Plan 98 B: Altbestand-Fixture
+        $this->grammaturAltbestand(app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->anlegen($this->master, $g->id, $teller->id), 200);   // ohne Darreichung kein VK; Plan 98 B: Altbestand-Fixture
     }
     $cs = app(ConceptService::class);
     $mkKonzept = function (string $name, $gericht) use ($cs) {

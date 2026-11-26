@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Support\BestandsPassung;
 use Platform\FoodAlchemist\Support\RezeptTypVokabular;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

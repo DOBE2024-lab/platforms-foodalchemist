@@ -276,7 +276,7 @@ class FileArticleImportService
 
     public function __construct(
         private \Platform\FoodAlchemist\Services\Preis\PriceService $preise,
-        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute,
         private SupplierItemService $artikel,
         private SupplierService $lieferanten,
     ) {
@@ -330,7 +330,7 @@ class FileArticleImportService
         $bewegteItems = [];   // Artikel mit tatsächlich geändertem Preis → Kette (E4)
 
         // Sammellauf: Kosten-Folge einmal am Ende statt je Zeile (Rezepte rechnet postImportKette)
-        \Platform\FoodAlchemist\Services\KostenCacheService::gesammelt(function () use ($datei, $team, $supplierId, $apply, &$bewegteItems, &$bericht) {
+        \Platform\FoodAlchemist\Services\Rezept\KostenCacheService::gesammelt(function () use ($datei, $team, $supplierId, $apply, &$bewegteItems, &$bericht) {
             foreach ($datei['zeilen'] as $zeile) {
                 $bericht['befunde'][] = $befund = $this->verarbeiteZeile($team, $supplierId, $zeile, $apply, $bewegteItems);
                 $bericht[$befund['status']]++;

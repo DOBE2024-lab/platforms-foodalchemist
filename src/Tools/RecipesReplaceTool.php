@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Gericht\GerichtTauschService;
 use Platform\FoodAlchemist\Services\Gericht\GerichtVerwendungen;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 
 /**
  * MCP-Steuerbarkeit · D2a: Rezept in ALLEN eigenen Verwendungen durch ein anderes ersetzen —

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 
 /**
  * Async-Rezept-/VK-Generierung (2026-07-20).
@@ -137,7 +137,7 @@ class GenerateRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services
             $this->fortschritt('Kontext & Wissen werden geladen …');
             $stepId = $this->cascadeStepId();
             $prepared = $stepId !== null
-                ? app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)
+                ? app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)
                     ->prepare($team, $stepId, $this->description, $this->parameter, $this->vkModus)
                 : null;
             // P0.2: der Fortschritts-Callback schreibt jede Stufe in den Cache-Key (progress) —
@@ -197,7 +197,7 @@ class GenerateRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services
             ];
             if ($stepId !== null) {
                 $workflowParameter = [...$this->parameter, '_voll_anreichern' => $this->vollAnreichern, '_extern' => $this->extern];
-                app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+                app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
                     $team, $stepId, $this->userId, $r['recipe'], $r['offene'], $workflowParameter,
                 );
             }

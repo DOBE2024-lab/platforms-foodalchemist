@@ -21,8 +21,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Ai\KiAuftragService;
 use Platform\FoodAlchemist\Services\Ai\KiExternLauf;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -218,7 +218,7 @@ it('Konformitäts-Kind des Anreicherungs-Jobs erbt das Extern-Flag: startet exte
         }
     });
     $enrich = new EnrichGeneratedRecipeJob($gen->runId, $this->rootTeam->id, (int) $this->user->id, (int) $recipe->id, ['recipe_id' => $recipe->id], null, null, null, extern: true);
-    $enrich->handle(app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class));
+    $enrich->handle(app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class));
     $runden = 0;
     while (DB::table('foodalchemist_ki_auftraege')->where('status', 'offen')->exists() && $runden++ < 40) {
         ($this->antworteOffene)();

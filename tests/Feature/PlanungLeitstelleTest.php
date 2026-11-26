@@ -20,11 +20,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Services\Concepter\TitelVorschlagService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -1382,8 +1382,8 @@ function seedBildCall(\Platform\FoodAlchemist\Models\FoodAlchemistRecipe $recipe
 it('Cockpit: Gericht-Draft mit KI-Fotos zeigt die Zahl der kostenpflichtigen Bild-Calls + Modell', function () {
     $recipe = $this->makeRecipe($this->rootTeam, 'Foto-Gericht', ['is_sales_recipe' => true, 'status' => 'draft']);
     // Ein Produktfoto + ein Schrittfoto = 2 kostenpflichtige Calls.
-    seedBildCall($recipe, $this->rootTeam->id, \Platform\FoodAlchemist\Services\RecipeImageService::FEATURE_PRODUKTFOTO);
-    seedBildCall($recipe, $this->rootTeam->id, \Platform\FoodAlchemist\Services\RecipeImageService::FEATURE_SCHRITTFOTOS);
+    seedBildCall($recipe, $this->rootTeam->id, \Platform\FoodAlchemist\Services\Rezept\RecipeImageService::FEATURE_PRODUKTFOTO);
+    seedBildCall($recipe, $this->rootTeam->id, \Platform\FoodAlchemist\Services\Rezept\RecipeImageService::FEATURE_SCHRITTFOTOS);
 
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Foto']);
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'gericht', 'status' => 'review']);
@@ -1415,7 +1415,7 @@ it('Cockpit: fremd-Team-geloggte Bild-Calls zählen NICHT (Kosten dieses Teams)'
     // Rezept gehört rootTeam, der Bild-Call ist aber unter einem anderen Team protokolliert →
     // im rootTeam-Cockpit unsichtbar (keine team-übergreifende Kosten-Vermischung).
     $recipe = $this->makeRecipe($this->rootTeam, 'Fremd-Foto-Gericht', ['is_sales_recipe' => true, 'status' => 'draft']);
-    seedBildCall($recipe, $this->childB->id, \Platform\FoodAlchemist\Services\RecipeImageService::FEATURE_PRODUKTFOTO);
+    seedBildCall($recipe, $this->childB->id, \Platform\FoodAlchemist\Services\Rezept\RecipeImageService::FEATURE_PRODUKTFOTO);
 
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Fremd']);
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'gericht', 'status' => 'review']);
@@ -1758,7 +1758,7 @@ it('Cockpit-Upload: ohne gewählte Datei passiert nichts (empty-only, gesagt)', 
 
 it('Reuse-Picker: zeigt vorhandene Team-Fotos, schliesst die eigenen Rezept-Fotos aus', function () {
     \Illuminate\Support\Facades\Storage::fake('public');
-    $img = app(\Platform\FoodAlchemist\Services\RecipeImageService::class);
+    $img = app(\Platform\FoodAlchemist\Services\Rezept\RecipeImageService::class);
     // Quell-Rezept (woanders) mit einem wiederverwendbaren Foto …
     $quellRezept = $this->makeRecipe($this->rootTeam, 'Reuse-Quelle');
     $quelleFoto = $img->uebernimmManuellesFoto($this->rootTeam, $quellRezept, \Illuminate\Http\UploadedFile::fake()->image('quelle.jpg'));
@@ -1786,7 +1786,7 @@ it('Reuse-Picker: zeigt vorhandene Team-Fotos, schliesst die eigenen Rezept-Foto
 
 it('Reuse-Picker: vorhandenes Foto als Pool-Foto übernehmen (Kopie, kein KI-Call, schliesst Picker)', function () {
     \Illuminate\Support\Facades\Storage::fake('public');
-    $img = app(\Platform\FoodAlchemist\Services\RecipeImageService::class);
+    $img = app(\Platform\FoodAlchemist\Services\Rezept\RecipeImageService::class);
     $quellRezept = $this->makeRecipe($this->rootTeam, 'Reuse-Q2');
     $quelleFoto = $img->uebernimmManuellesFoto($this->rootTeam, $quellRezept, \Illuminate\Http\UploadedFile::fake()->image('q2.jpg'));
     $zielRezept = $this->makeRecipe($this->rootTeam, 'Reuse-Z2', ['is_sales_recipe' => true, 'status' => 'draft']);
@@ -1817,7 +1817,7 @@ it('Reuse-Picker: vorhandenes Foto als Pool-Foto übernehmen (Kopie, kein KI-Cal
 
 it('Reuse-Picker: vorhandenes Foto als Ergebnis-/Hero-Foto übernehmen (is_result)', function () {
     \Illuminate\Support\Facades\Storage::fake('public');
-    $img = app(\Platform\FoodAlchemist\Services\RecipeImageService::class);
+    $img = app(\Platform\FoodAlchemist\Services\Rezept\RecipeImageService::class);
     $quellRezept = $this->makeRecipe($this->rootTeam, 'Reuse-Q3');
     $quelleFoto = $img->uebernimmManuellesFoto($this->rootTeam, $quellRezept, \Illuminate\Http\UploadedFile::fake()->image('q3.jpg'));
     $zielRezept = $this->makeRecipe($this->rootTeam, 'Reuse-Z3', ['is_sales_recipe' => true, 'status' => 'draft']);
@@ -1837,7 +1837,7 @@ it('Reuse-Picker: vorhandenes Foto als Ergebnis-/Hero-Foto übernehmen (is_resul
 
 it('Reuse-Picker: fremd-Team-Quell-Foto wird nicht übernommen (fail-soft, kein Leak)', function () {
     \Illuminate\Support\Facades\Storage::fake('public');
-    $img = app(\Platform\FoodAlchemist\Services\RecipeImageService::class);
+    $img = app(\Platform\FoodAlchemist\Services\Rezept\RecipeImageService::class);
     // Ein eigenständiges Fremd-Team (nicht in der Ancestry von rootTeam) → visibleToTeam findet es nicht.
     $fremdTeam = \Platform\Core\Models\Team::create(['name' => 'Fremd', 'user_id' => 1, 'personal_team' => false]);
     $fremdRezept = $this->makeRecipe($fremdTeam, 'Fremd-Rezept');

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
@@ -460,7 +460,7 @@ class SensorikService
         // die Anzeige sagt dann „Profil fehlt" statt Schwächen zu melden. Quelle sichtbar (KI / Geschwister / alter Import / Hand).
         $t = DB::table('foodalchemist_gp_taste_vectors')->where('gp_id', $gpId)->first(['source', 'ai_confidence']);
         $out['gp_profil'] = [
-            'fehlt' => app(GpStamm\GpAromaService::class)->profilFehlt((int) $gpId),
+            'fehlt' => app(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::class)->profilFehlt((int) $gpId),
             'quelle' => $t?->source,
             'confidence' => $t?->ai_confidence !== null ? (float) $t->ai_confidence : null,
         ];
@@ -597,7 +597,7 @@ class SensorikService
         }
 
         // Leer-Label-Guard, 0 = Messwert, Median: {@see NaehrwertAggregatService} (gleiche Regel wie die Rezept-Nährwerte).
-        $kennwerte = app(Naehrwerte\NaehrwertAggregatService::class)->kennwerte($gpIds, ['sodium', 'fat', 'sugar', 'carbs_absorbable']);
+        $kennwerte = app(\Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertAggregatService::class)->kennwerte($gpIds, ['sodium', 'fat', 'sugar', 'carbs_absorbable']);
 
         $out = [];
         foreach ($kennwerte as $gpId => $k) {
@@ -877,7 +877,7 @@ class SensorikService
         $this->speichereRezept($recipeId, $v['geschmack'], $v['texturen'], $hash, $v['confidence'], $v['reasoning']);
         // Spec 60: Texturen fließen ins Aromenprofil — Profil + verwendende Rezepte nachziehen (best-effort)
         try {
-            app(Pairing\RezeptProfil::class)->nachziehen($recipeId);
+            app(\Platform\FoodAlchemist\Services\Pairing\RezeptProfil::class)->nachziehen($recipeId);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning("Aromenprofil nach Sensorik fehlgeschlagen ({$recipeId}): {$e->getMessage()}");
         }

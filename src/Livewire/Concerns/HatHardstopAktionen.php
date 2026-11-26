@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Illuminate\Support\Facades\Auth;
 use Platform\FoodAlchemist\Services\Pruefung\HardstopResolveService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 
 /**
  * Spec 03 L7b-2b — die Hard-Stop-Fläche für BEIDE Generator-Modals.

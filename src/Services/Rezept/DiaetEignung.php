@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 
 /**
  * Spec-Flags (Diät/Herkunft, dynamisch über alle Ebenen). Ausgelagert aus
- * {@see \Platform\FoodAlchemist\Services\RecipeRecomputeService} (Diät-Fix 98, Größen-Wächter); Konfidenz und Speichern
+ * {@see \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService} (Diät-Fix 98, Größen-Wächter); Konfidenz und Speichern
  * bleiben dort.
  *
  * Tags sind DYNAMISCH aus der Rezeptur (User-Prinzip 2026-07-06): kommt ein nicht-veganer GP in ein Gericht, ist es nicht

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\ReifeService;
+use Platform\FoodAlchemist\Services\Reife\ReifeService;
 
 /**
  * Spec 50 · Etappe 7 — „Was fehlt an diesem Artefakt noch?" für ALLE Ebenen. **Read-only.**

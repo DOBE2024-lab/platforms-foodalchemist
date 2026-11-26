@@ -7,7 +7,7 @@ use Platform\Core\Models\Team;
 /**
  * Spec 50 · Schicht 4 (Vollständigkeit) — der EINZIGE artefakt-spezifische Teil eines
  * ansonsten generischen Mess-Passes. Ein Adapter je Artefakt-Typ; Hülle, Ampel und
- * Folgeschritte sind geteilt ({@see \Platform\FoodAlchemist\Services\ReifeService}).
+ * Folgeschritte sind geteilt ({@see \Platform\FoodAlchemist\Services\Reife\ReifeService}).
  *
  * Bewusst dasselbe Muster wie Schicht 3 ({@see \Platform\FoodAlchemist\Services\Conformance\ConformanceAdapter}) —
  * dort hat es sich für „artefakt-agnostisch mit artefakt-spezifischem Rand" bewährt.

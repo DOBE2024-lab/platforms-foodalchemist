@@ -4,7 +4,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Models\Team;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
-use Platform\FoodAlchemist\Services\ReifeService;
+use Platform\FoodAlchemist\Services\Reife\ReifeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

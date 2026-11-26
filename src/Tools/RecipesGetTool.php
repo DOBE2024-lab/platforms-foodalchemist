@@ -101,6 +101,7 @@ class RecipesGetTool extends FoodAlchemistTool implements ToolContract, ToolMeta
         if ($presentations !== []) {
             $daten['presentations'] = $presentations;
         }
+        $daten += $this->zutatenOhneGewicht($team, (int) $r->id);   // Entscheid Dominique 23.11.: Pflegehinweis Stückgewicht
 
         return ToolResult::success($daten);
     }

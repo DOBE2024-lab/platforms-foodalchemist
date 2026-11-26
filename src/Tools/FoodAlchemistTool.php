@@ -170,8 +170,10 @@ abstract class FoodAlchemistTool
      */
     protected function darreichungenSummary(\Platform\FoodAlchemist\Models\FoodAlchemistRecipe $recipe): array
     {
+        $team = \Platform\Core\Models\Team::find($recipe->team_id);
+
         return $recipe->presentations()->with('servingForm')->orderByDesc('is_standard')->orderBy('id')->get()
-            ->map(function ($d) {
+            ->map(function ($d) use ($recipe, $team) {
                 $ek = $d->ek_portion !== null ? (float) $d->ek_portion : null;
                 $vk = $d->sales_net !== null ? (float) $d->sales_net : null;
 
@@ -185,6 +187,16 @@ abstract class FoodAlchemistTool
                     'sales_gross' => $d->sales_gross !== null ? (float) $d->sales_gross : null,
                     'price_mode' => $d->price_mode,
                     'wareneinsatz_pct' => MargeService::wareneinsatzPct($ek, $vk),
+                    // Entscheid Dominique 23.11.: Bestandteile ohne Gewicht — EK vorläufig (Variante mit eigenen Mengen) bzw. ohne Gramm
+                    ...(function () use ($recipe, $d, $team) {
+                        try {
+                            $g = $team !== null ? \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::darreichung($recipe, $d, $team) : null;
+                        } catch (\Throwable) {
+                            $g = null;
+                        }
+
+                        return $g === null || $g['ohne_gewicht'] === [] ? [] : ['ek_vorlaeufig' => $g['vorlaeufig'], 'zutaten_ohne_gewicht_ids' => $g['ohne_gewicht']];
+                    })(),
                     // Spec 83 B3i/B3l: gepflegte Anrichte-Zeit (null = Startwert) und ihre Einheit aus der Form
                     'anrichten_wert' => $d->anrichten_wert !== null ? (float) $d->anrichten_wert : null,
                     'anrichten_einheit' => \Platform\FoodAlchemist\Services\Produktion\ProductionTimeService::anrichteEinheit($d->servingForm?->code),
@@ -816,6 +828,7 @@ abstract class FoodAlchemistTool
      */
     protected function mitReife(array $daten, \Platform\Core\Models\Team $team, int $recipeId, bool $istVk): array
     {
+        $daten += $this->zutatenOhneGewicht($team, $recipeId);   // Entscheid Dominique 23.11.: warnen, nicht sperren
         try {
             $kurz = app(\Platform\FoodAlchemist\Services\ReifeService::class)
                 ->kurz($team, $istVk ? 'sales_recipe' : 'recipe', $recipeId);
@@ -824,5 +837,24 @@ abstract class FoodAlchemistTool
         }
 
         return $kurz === null ? $daten : $daten + ['reife' => $kurz];
+    }
+
+    /**
+     * `zutaten_ohne_gewicht` (additiv, nur wenn vorhanden): Zeilen mit Menge, aber ohne Gramm (z. B. „1 Stück Ei“ ohne Stückgewicht).
+     * Kosten laufen über den Stückpreis, Grammatur und Produktionsmenge sind vorläufig. Gepflegt wird das Gewicht am GP (Formen bzw.
+     * Stückgewicht). Dieselbe Quelle wie der Hinweis im Zutaten-Editor ({@see \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht}).
+     *
+     * @return array{zutaten_ohne_gewicht?: list<array<string, mixed>>}
+     */
+    protected function zutatenOhneGewicht(\Platform\Core\Models\Team $team, int $recipeId): array
+    {
+        try {
+            $r = \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::visibleToTeam($team)->with(['ingredients.unit', 'ingredients.gp'])->find($recipeId);
+            $zeilen = $r !== null ? \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::zeilen($r, $team) : [];
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return $zeilen === [] ? [] : ['zutaten_ohne_gewicht' => $zeilen];
     }
 }

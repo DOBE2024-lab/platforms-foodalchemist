@@ -57,7 +57,7 @@ final class FoodbookAggregat
     public function kapitelAggregat(Team $team, FoodAlchemistFoodbookKapitel $kapitel, ?int $pax = null, ?\Platform\FoodAlchemist\Models\FoodAlchemistOutlet $outlet = null): array
     {
         $kapitel->loadMissing(['blocks' => fn ($q) => $q->where('visible', true),
-            'blocks.concept:id,name,price_per_person_cache,price_incomplete,team_id,ist_fassung,price_mode,price_per_person_manual,price_override_expires_at', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
+            'blocks.concept:'.\Platform\FoodAlchemist\Services\Position\PositionPreisService::KONZEPT_SPALTEN, 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation',
             'blocks.staffel', 'children']);
 
         // 98 · 3.6 PR2/PR3: Zeilen über den Positions-Kern (Team-Kontext, P1), Summe gemeinsam mit dem Angebot —

@@ -32,6 +32,9 @@ use Platform\FoodAlchemist\Support\AngebotFestpreise;
  */
 final class PositionPreisService
 {
+    /** Konzept-Spalten, die preisCockpit braucht (Fassungspfad, Team, Konzept-Servierform, manueller Preis) — für Eager-Loads mit Spaltenauswahl. */
+    public const KONZEPT_SPALTEN = 'id,name,price_per_person_cache,price_incomplete,team_id,ist_fassung,serving_form_id,price_mode,price_per_person_manual,price_override_expires_at';
+
     public function __construct(
         private ConceptService $concepts,
         private AngebotFestpreise $festpreise,

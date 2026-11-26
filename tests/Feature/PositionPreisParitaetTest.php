@@ -92,3 +92,24 @@ it('Werte der Referenzfälle stimmen (nicht nur gleich, auch richtig)', function
     [$fb] = ($this->paritaet)($this->t, ['concept_id' => $this->mitPaket->id], 'concept_ref', 'concept_ref');
     expect($fb['vk_pp'])->toBe((float) app(ConceptService::class)->preisCockpit($this->mitPaket->fresh(), null, $this->t)['price_per_person']);
 });
+
+it('Konzept mit eigener Servierform: Kapitel-Summe in Foodbook und Angebot rechnet mit der Konzept-Darreichung wie das Cockpit', function () {
+    // Rundgang-Befund PR3: die Eager-Loads der Kapitel-Aggregate luden das Konzept ohne serving_form_id → Standard- statt Konzept-Form.
+    $buffet = \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->t->id, 'code' => 'buffet', 'label' => 'Buffet']);
+    $this->makeStandardDarreichung($this->gericht, 10.0, ['is_standard' => false, 'serving_form_id' => $buffet->id, 'sales_net' => 4.0]);
+    $konzept = $this->makeConcept($this->t, 'Buffet-Menü', ['serving_form_id' => $buffet->id]);
+    $this->makeConceptSlot($konzept, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
+    $soll = (float) app(ConceptService::class)->preisCockpit($konzept->fresh(), null, $this->t)['price_per_person'];
+
+    [$fbZeile, $agZeile, $fbSumme, $agSumme] = ($this->paritaet)($this->t, ['concept_id' => $konzept->id], 'concept_ref', 'concept_ref');
+
+    expect($soll)->toBe(4.0)
+        ->and($fbZeile['vk_pp'])->toBe(4.0)->and($agZeile['vk_pp'])->toBe(4.0)
+        ->and($fbSumme['vk'])->toBe(4.0)->and($agSumme['vk'])->toBe(4.0);
+
+    // Foodbook-Editor: Kapitel-Board der Leitstelle lädt das Konzept eigens — muss dieselbe Form sehen.
+    $fb = $this->makeFoodbook($this->t, 'Board', ['status' => 'entwurf']);
+    $this->makeFoodbookBlock($this->makeChapter($fb), ['type' => 'concept_ref', 'concept_id' => $konzept->id]);
+    $board = app(\Platform\FoodAlchemist\Services\Planung\LeitstelleService::class)->kapitelBoard($this->t, $fb->fresh(), null);
+    expect((float) $board[0]['aggregat']['vk_pro_person'])->toBe(4.0);
+});

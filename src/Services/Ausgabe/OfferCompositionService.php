@@ -516,7 +516,7 @@ class OfferCompositionService
         }
 
         $relationen = ['blocks' => fn ($q) => $q->where('visible', true),
-            'blocks.concept:id,name,price_per_person_cache,price_incomplete,team_id,ist_fassung,price_mode,price_per_person_manual,price_override_expires_at', 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation'];
+            'blocks.concept:'.\Platform\FoodAlchemist\Services\Position\PositionPreisService::KONZEPT_SPALTEN, 'blocks.dish:id,ek_total_eur,sales_unit_count', 'blocks.dish.standardPresentation'];
         if ($mitKindkapiteln) {
             $relationen[] = 'children';
         }

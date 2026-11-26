@@ -91,9 +91,11 @@ function pipelineLaeufe(array $recipeIds, callable $arbeit): array
     $treffer = array_fill_keys($recipeIds, 0);
     $reihenfolge = [];
     DB::listen(function ($q) use (&$treffer, &$reihenfolge) {
-        // Nur die Eloquent-Ladung der Pipeline (`select *`). Seit Spec 60 liest die Profil-Neuberechnung
-        // `id, name` desselben Rezepts — das ist kein zweiter Pipeline-Lauf.
-        if (! str_contains($q->sql, 'select * from "foodalchemist_recipes"') || ! str_contains($q->sql, 'limit 1')) {
+        // Nur die Eloquent-Ladung der Pipeline (`select *`). Seit #994 lädt auch die Profil-Neuberechnung (Spec 60)
+        // das ganze Rezept (Darreichung je Standardportion) mit derselben SQL — das ist kein zweiter Pipeline-Lauf,
+        // darum zählt nur eine Ladung, die aus recomputePipelineRoh kommt.
+        if (! str_contains($q->sql, 'select * from "foodalchemist_recipes"') || ! str_contains($q->sql, 'limit 1')
+            || ! collect(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS))->contains('function', 'recomputePipelineRoh')) {
             return;
         }
         foreach ($q->bindings as $b) {

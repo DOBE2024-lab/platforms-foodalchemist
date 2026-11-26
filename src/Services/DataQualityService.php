@@ -147,8 +147,7 @@ class DataQualityService
         'gp_approved' => 'Freigegebene Grundprodukte',
         'gp_tentative' => 'Grundprodukte im Entwurf (zur Prüfung)',
         'gp_kein_la' => 'Grundprodukte ohne Lieferantenartikel',
-        'la_eingestellt' => 'Eingestellte Lieferantenartikel',
-        'la_preis_fehlt' => 'Lieferantenartikel ohne Einkaufspreis',
+        ...Einkauf\LaBeschaffungsLagen::LABELS,
         'gp_kein_preis' => 'Grundprodukte mit Artikeln, aber ohne Preis',
         'gp_kein_lead' => 'Grundprodukte ohne gewählten Hauptartikel',
         'gp_lead_ohne_preis' => 'Grundprodukte, deren Hauptartikel keinen gültigen Preis hat',
@@ -296,10 +295,8 @@ class DataQualityService
             $this->info('la_strukturiert', self::METRIK_LABELS['la_strukturiert'], $strukturiert),
             $this->info('la_gemappt', self::METRIK_LABELS['la_gemappt'], $gemappt),
             $this->gap('la_needs_review', self::METRIK_LABELS['la_needs_review'], $needsReview),
-            $this->gap('la_eingestellt', self::METRIK_LABELS['la_eingestellt'], $this->laBeschaffung($team, 'la_eingestellt')->count(),
-                SignalTyp::LaEingestellt, 'dq-la-eingestellt', 'Diese Artikel sind einem aktiven Grundprodukt zugeordnet und nicht mehr bestellbar. Ersatzartikel prüfen und die Zuordnung aktualisieren.'),
-            $this->gap('la_preis_fehlt', self::METRIK_LABELS['la_preis_fehlt'], $this->laBeschaffung($team, 'la_preis_fehlt')->count(),
-                SignalTyp::LaPreisFehlt, 'dq-la-preis-fehlt', 'Für diese lieferbaren und zugeordneten Artikel fehlt in der Preissicht des Teams ein positiver Einkaufspreis. Preis am Artikel prüfen oder den Katalogimport kontrollieren.'),
+            ...array_map(fn ($m, $sig) => $this->gap($m, self::METRIK_LABELS[$m], app(Einkauf\LaBeschaffungsLagen::class)->abfrage($team, $m)->count(), ...$sig),
+                array_keys(Einkauf\LaBeschaffungsLagen::SIGNALE), Einkauf\LaBeschaffungsLagen::SIGNALE),
             $this->gap('la_konformitaet', self::METRIK_LABELS['la_konformitaet'], $konfLa, SignalTyp::KonformitaetLa, 'dq-la-konformitaet',
                 'Bei diesen Lieferantenartikeln verstoßen Angaben aus dem Lieferantenkatalog gegen die Anlageregeln. Artikel öffnen und die markierten Felder prüfen.'),
         ];
@@ -1806,24 +1803,6 @@ class DataQualityService
         };
     }
 
-    private function laBeschaffung(Team $team, string $metrik): \Illuminate\Database\Eloquent\Builder
-    {
-        $gps = FoodAlchemistGp::visibleToTeam($team)->whereIn('status', ['approved', 'tentative'])
-            ->where('requires_la', true)->select('foodalchemist_gps.id');
-        $artikel = FoodAlchemistSupplierItem::visibleToTeam($team)
-            ->whereExists(fn ($q) => $q->selectRaw('1')->from('foodalchemist_supplier_item_structures as struktur')
-                ->whereColumn('struktur.supplier_item_id', 'foodalchemist_supplier_items.id')
-                ->whereNull('struktur.deleted_at')->whereIn('struktur.gp_id', $gps));
-
-        if ($metrik === 'la_eingestellt') {
-            return $artikel->where(fn ($q) => $q->where('is_discontinued', true)->orWhere('lieferstatus', 'eingestellt'));
-        }
-
-        $preis = $this->preise->activePriceSubquery('foodalchemist_supplier_items.id', $team)->toBase();
-
-        return $artikel->lieferbar()->whereRaw('COALESCE(('.$preis->toSql().'), 0) <= 0', $preis->getBindings());
-    }
-
     /** EXISTS: Rezept hat ein Aromenprofil (Spec 60: abgeleitet aus den Zutaten-Ankern). */
     private function rezeptHatAnker(): \Closure
     {
@@ -1866,8 +1845,7 @@ class DataQualityService
 
         return match ($kind) {
             'gp' => $this->gpItems($q, $limit),
-            'la' => $q->orderBy('designation')->orderBy('id')->limit($limit)->get(['id', 'designation'])
-                ->map(fn ($la) => ['kind' => 'la', 'id' => (int) $la->id, 'name' => (string) $la->designation, 'is_sales_recipe' => false])->all(),
+            'la' => app(Einkauf\LaBeschaffungsLagen::class)->liste($q, $limit),
             'concept' => $this->conceptItems($q, $limit),
             'foodbook' => $this->foodbookItems($q, $limit),
             default => $this->recipeItems($q, $limit),
@@ -1919,6 +1897,7 @@ class DataQualityService
         // Der switch unten ist der Altbestand der Kaskaden-Ebenen (s. V-005).
         foreach ([
             ['recipe', $this->rezeptQualitaetChecks()],
+            ['la', app(Einkauf\LaBeschaffungsLagen::class)->checks()],
             ['concept', $this->konzeptChecks()],
             ['foodbook', $this->foodbookChecks()],
         ] as [$kind, $checks]) {
@@ -1928,9 +1907,6 @@ class DataQualityService
         }
 
         switch ($metrik) {
-            case 'la_eingestellt':
-            case 'la_preis_fehlt':
-                return [$this->laBeschaffung($team, $metrik), 'la'];
             case 'gp_kein_la':
             case 'gp_kein_preis':
             case 'gp_kein_lead':

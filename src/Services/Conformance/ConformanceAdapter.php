@@ -9,7 +9,7 @@ use Platform\Core\Models\Team;
  * ansonsten generischen Prüf-Passes. Ein Adapter je Artefakt-Typ (Rezept/VK, GP,
  * LA …); er liefert (a) die prüfbare Beschreibung des Artefakts und (b) WELCHE
  * Regelwerke geprüft werden. Prompt (`conformance.check`) und Prüf-Mechanik
- * ({@see \Platform\FoodAlchemist\Services\ConformanceService}) sind geteilt —
+ * ({@see \Platform\FoodAlchemist\Services\Conformance\ConformanceService}) sind geteilt —
  * damit KEIN Prompt/Service pro Generator (User-Entscheid 2026-08-27).
  */
 interface ConformanceAdapter
@@ -62,7 +62,7 @@ interface ConformanceAdapter
      * die Liste leer, entfallen Revise und zweite Prüfung (Review 09.10.: ~30k Tokens je Runde, auch wenn
      * nur offene Basisrezept-Lücken gemeldet waren — die heilt kein Umschreiben, es kann sie nur verletzen).
      *
-     * @param  array<int, array<string, mixed>>  $befunde  Form: {@see \Platform\FoodAlchemist\Services\ConformanceService::normalisiere}
+     * @param  array<int, array<string, mixed>>  $befunde  Form: {@see \Platform\FoodAlchemist\Services\Conformance\ConformanceService::normalisiere}
      * @return array<int, array<string, mixed>>
      */
     public function heilbar(Team $team, int $id, array $befunde): array;
@@ -72,7 +72,7 @@ interface ConformanceAdapter
      * den Klammerzusatz „(Zukauf)", obwohl „Typ: Ware (Zukauf)" Dominiques Namensentscheidung ist). Nur für Befunde
      * mit quelle=ki; Code-Befunde kommen aus Regeln und werden dort gepflegt.
      *
-     * @param  array<string, mixed>  $befund  Form: {@see \Platform\FoodAlchemist\Services\ConformanceService::normalisiere}
+     * @param  array<string, mixed>  $befund  Form: {@see \Platform\FoodAlchemist\Services\Conformance\ConformanceService::normalisiere}
      */
     public function istBekannteAusnahme(array $befund): bool;
 

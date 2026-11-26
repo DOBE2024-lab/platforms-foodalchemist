@@ -51,7 +51,7 @@ final class LaufCockpit
                 ->values()
                 ->all();
             // Schicht 3: die offenen Hinweise für alle Draft-Rezepte in EINER Abfrage.
-            $conformance = app(\Platform\FoodAlchemist\Services\ConformanceService::class);
+            $conformance = app(\Platform\FoodAlchemist\Services\Conformance\ConformanceService::class);
             $konformitaet = $conformance->offeneFuerViele($team, 'recipe', $rezeptRefIds);
 
             // Slice 4c: GP-Konformität — Zutaten-GPs der Lauf-Rezepte laden, ihre offenen

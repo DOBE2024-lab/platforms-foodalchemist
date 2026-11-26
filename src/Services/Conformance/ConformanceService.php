@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Conformance;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -66,7 +66,7 @@ class ConformanceService
     private function imWissenslauf(Team $team, string $typ, int $id, callable $action): array
     {
         if (! in_array($typ, ['recipe', 'basisrezept', 'vk', 'gericht'], true)) return $action();
-        $recipe = app(RecipeService::class)->detailAnySicht($team, $id);
+        $recipe = app(\Platform\FoodAlchemist\Services\RecipeService::class)->detailAnySicht($team, $id);
         if ($recipe === null) throw new \RuntimeException('Rezept nicht gefunden oder nicht sichtbar.');
         return app(\Platform\FoodAlchemist\Services\Knowledge\KnowledgeRunService::class)->withRecipe($team, $recipe, $action);
     }

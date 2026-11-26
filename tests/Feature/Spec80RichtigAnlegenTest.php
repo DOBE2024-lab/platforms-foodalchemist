@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Conformance\RecipeConformanceAdapter;
-use Platform\FoodAlchemist\Services\ConformanceService;
+use Platform\FoodAlchemist\Services\Conformance\ConformanceService;
 use Platform\FoodAlchemist\Services\RecipeGeneratorService;
 use Platform\FoodAlchemist\Support\GpKorrektur;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRunContext;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeRunService;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeService;
-use Platform\FoodAlchemist\Services\ConformanceService;
+use Platform\FoodAlchemist\Services\Conformance\ConformanceService;
 use Platform\FoodAlchemist\Tests\Support\CopilotStub;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

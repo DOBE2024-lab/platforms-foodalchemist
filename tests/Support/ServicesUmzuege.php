@@ -51,6 +51,7 @@ final class ServicesUmzuege
         'Services/ConceptVorgabenService.php' => 'Services/Concepter/ConceptVorgabenService.php',
         'Services/ConcepterAggregateService.php' => 'Services/Concepter/ConcepterAggregateService.php',
         'Services/ConcepterBewertungService.php' => 'Services/Concepter/ConcepterBewertungService.php',
+        'Services/ConformanceService.php' => 'Services/Conformance/ConformanceService.php',
         'Services/CoverageService.php' => 'Services/Concepter/CoverageService.php',
         'Services/DarreichungResolver.php' => 'Services/Rezept/DarreichungResolver.php',
         'Services/DerivatAusbeuteService.php' => 'Services/Produktion/DerivatAusbeuteService.php',

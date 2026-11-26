@@ -66,7 +66,7 @@ Status: `angeschlossen` · `offen` · `Ausnahme (Vorschlag)`. Ausnahmen gelten e
 | 42 | `src/Services/Concepter/ConceptService.php::generateWording` | concept.wording | 1 | a | P2 | ConceptWordingGenerateTool | angeschlossen | MCP-Umleitung concept_wording.GENERATE (Tabelle D, KiUmleitungTest). |
 | 43 | `src/Services/Conformance/GpConformanceAdapter.php::revise` | gp.conformance_revise | 1 | b | P2 | Zuordnung prüfen | offen |  |
 | 44 | `src/Services/Conformance/RecipeConformanceAdapter.php::revise` | dyn. $promptKey | 1 | b | P2 | Zuordnung prüfen | offen |  |
-| 45 | `src/Services/ConformanceService.php::pruefeAdapter` | conformance.check | 1 | b | P2 | Zuordnung prüfen | offen |  |
+| 45 | `src/Services/Conformance/ConformanceService.php::pruefeAdapter` | conformance.check | 1 | b | P2 | Zuordnung prüfen | offen |  |
 | 46 | `src/Services/Foodbook/FoodbookService.php::kapitelWordingRegenerieren` | concept.wording | 1 | a | P2 | FoodbookKapitelWordingTool | angeschlossen | Tool-Umleitung foodbook_kapitel.WORDING_GENERATE (Tabelle D, KiUmleitungTest + KiExternKonzepteTest; Fixture Kapitel mit Schreibstil und Konzept-Block). Fail-soft je Block bleibt, Wartezustand über den Modus. |
 | 47 | `src/Services/Foodbook/FoodbookKundentext.php::kiKundentextVorschlag` | foodbook.kundentext | 1 | a | P2 | FoodbookKundentextTool | angeschlossen | MCP-Umleitung foodbook.KUNDENTEXT_GENERATE (Tabelle D, KiUmleitungTest). |
 | 48 | `src/Services/Foodbook/FoodbookKundentext.php::kiKapitelKundentextVorschlag` | foodbook.kundentext | 1 | a | P2 | FoodbookKapitelKundentextTool | angeschlossen | MCP-Umleitung foodbook_kapitel.KUNDENTEXT_GENERATE (Tabelle D, KiUmleitungTest). |

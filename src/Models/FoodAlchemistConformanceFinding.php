@@ -8,7 +8,7 @@ use Platform\ActivityLog\Traits\LogsActivity;
 use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
 
 /**
- * Schicht 3 — ein persistierter Konformitäts-Befund (Erzeuger: {@see \Platform\FoodAlchemist\Services\ConformanceService}).
+ * Schicht 3 — ein persistierter Konformitäts-Befund (Erzeuger: {@see \Platform\FoodAlchemist\Services\Conformance\ConformanceService}).
  *
  * Bewusst artefakt-AGNOSTISCH (artifact_type + artifact_id) statt recipe-FK — derselbe
  * Critic legt Rezepte, VK, GP und LA ab. Und bewusst OHNE geerbte Team-Sichtbarkeit:

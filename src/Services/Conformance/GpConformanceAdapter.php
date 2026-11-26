@@ -23,6 +23,11 @@ class GpConformanceAdapter implements ConformanceAdapter
         return 'gp';
     }
 
+    public function aliase(): array
+    {
+        return ['grundprodukt'];
+    }
+
     public function unterstuetztHeilung(): bool
     {
         return true;   // LA-First-Re-Derive (Slice 5) — heilt tentative GPs aus dem Quell-LA

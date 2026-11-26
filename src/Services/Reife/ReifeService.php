@@ -3,14 +3,7 @@
 namespace Platform\FoodAlchemist\Services\Reife;
 
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\Reife\AngebotReifeAdapter;
-use Platform\FoodAlchemist\Services\Reife\ConceptReifeAdapter;
-use Platform\FoodAlchemist\Services\Reife\FoodbookReifeAdapter;
-use Platform\FoodAlchemist\Services\Reife\FormatReifeAdapter;
-use Platform\FoodAlchemist\Services\Reife\RecipeReifeAdapter;
 use Platform\FoodAlchemist\Services\Reife\ReifeAdapter;
-use Platform\FoodAlchemist\Services\Reife\SpeisekarteReifeAdapter;
-use Platform\FoodAlchemist\Services\Reife\SpeiseplanReifeAdapter;
 
 /**
  * Spec 50 · Schicht 4 — VOLLSTÄNDIGKEIT. **Read-only, kein Provider-Call.**
@@ -164,15 +157,6 @@ class ReifeService
 
     private function adapter(string $kind): ReifeAdapter
     {
-        return match ($kind) {
-            'recipe', 'basisrezept', 'sales_recipe', 'vk', 'gericht' => app(RecipeReifeAdapter::class),
-            'concept', 'paket' => app(ConceptReifeAdapter::class),
-            'format' => app(FormatReifeAdapter::class),
-            'foodbook' => app(FoodbookReifeAdapter::class),
-            'speisekarte' => app(SpeisekarteReifeAdapter::class),
-            'speiseplan' => app(SpeiseplanReifeAdapter::class),
-            'angebot', 'offer' => app(AngebotReifeAdapter::class),
-            default => throw new \InvalidArgumentException("Kein Reife-Adapter für Artefakt-Typ «{$kind}»."),
-        };
+        return app(\Platform\FoodAlchemist\Services\Pruefung\PruefRegistry::class)->reifeAdapter($kind);   // PR11: Auswahl über die Prüf-Registry
     }
 }

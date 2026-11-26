@@ -439,7 +439,9 @@
                                             $_ref = $s->embeddedConcept;
                                             $_dishes = $s->embeddedConcept->slots->filter(fn ($e) => $e->sales_recipe_id !== null)->values();
                                             $_preis = $s->embeddedConcept->price_per_person_cache;
-                                            $menueGruppen[] = ['type' => 'paket', 'title' => $_ref->name, 'price' => $_preis, 'headerSlotId' => null, 'slots' => [], 'texte' => [], 'paket' => $_ref, 'dishes' => $_dishes];
+                                            // B1 (Folge-PR EK-Lücke): EK je Person jeder Paket-Position aus EINEM Cockpit je Paket (Darreichung, Menge; unbekannt = null), nicht der Ansatz
+                                            $_ekJeSlot = collect(app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class)->preisCockpit($_ref)['zeilen'])->filter(fn ($z) => isset($z['slot_id']))->pluck('ek', 'slot_id')->all();
+                                            $menueGruppen[] = ['type' => 'paket', 'title' => $_ref->name, 'price' => $_preis, 'headerSlotId' => null, 'slots' => [], 'texte' => [], 'paket' => $_ref, 'dishes' => $_dishes, 'ekJeSlot' => $_ekJeSlot];
                                             $aktuelleGruppe = ['type' => 'sektion', 'title' => null, 'headerSlotId' => null, 'slots' => [], 'texte' => []];
                                         } elseif ($s->sales_recipe_id && $s->dish) {
                                             $aktuelleGruppe['slots'][] = $s;
@@ -509,7 +511,7 @@
                                                         </div>
                                                         <dl class="flex gap-4 pt-2 border-t border-[var(--fa-line)] tabular-nums">
                                                             <div class="flex flex-col"><dt class="{{ $kopfzelle }}">VK je Person</dt><dd class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink-2)]">im Paketpreis</dd></div>
-                                                            <div class="flex flex-col"><dt class="{{ $kopfzelle }}">EK</dt><dd class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]"><x-fa::money :value="$pgG?->ek_total_eur" missing="EK fehlt" /></dd></div>
+                                                            <div class="flex flex-col"><dt class="{{ $kopfzelle }}">EK</dt><dd class="text-[length:var(--fa-text-md)] font-semibold text-[var(--fa-ink)]"><x-fa::money :value="$g['ekJeSlot'][$pg->id] ?? null" missing="EK fehlt" /></dd></div>
                                                         </dl>
                                                     </x-fa::card>
                                                 @endforeach

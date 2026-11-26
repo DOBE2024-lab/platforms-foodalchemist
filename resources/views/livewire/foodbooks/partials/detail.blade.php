@@ -32,7 +32,8 @@
                 ? ['kpi' => 'vk', 'label' => 'VK/Person je Edition', 'value' => 'ab ' . $euro($editionAb), 'primary' => true, 'title' => $standTitel]
                 : ['kpi' => 'vk', 'label' => 'VK/Person', 'value' => 'Preis fehlt', 'tone' => 'crit', 'title' => $standTitel]),
         ($ekPp !== null && (float) $ekPp > 0)
-            ? ['kpi' => 'ek', 'label' => 'EK/Person', 'value' => $euro($ekPp), 'title' => $standTitel]
+            ? ['kpi' => 'ek', 'label' => 'EK/Person', 'value' => $euro($ekPp), 'title' => $standTitel,
+                'hint' => ($gesamt['ek_vollstaendig'] ?? true) ? null : 'unvollständig', 'hint_title' => 'Summe der bekannten Einkaufspreise: mindestens einem Gericht fehlt der EK']
             : ['kpi' => 'ek', 'label' => 'EK/Person', 'value' => 'fehlt', 'tone' => 'crit', 'title' => $standTitel],
         ($wePct !== null && $ekPp !== null && (float) $ekPp > 0)
             ? ['kpi' => 'we', 'label' => 'Wareneinsatz', 'value' => number_format((float) $wePct, 1, ',', '.') . ' %', 'title' => 'Einkauf durch Verkauf über alle bepreisten Positionen']

@@ -155,4 +155,10 @@ abstract class ContainerReifeAdapter implements ReifeAdapter
             'kennzahlen' => $kennzahlen,
         ];
     }
+
+    /** PR11: Container-Adapter ohne Alias; Concept (`paket`) und Angebot (`offer`) überschreiben. */
+    public function aliase(): array
+    {
+        return [];
+    }
 }

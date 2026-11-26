@@ -51,6 +51,11 @@ class ConceptReifeAdapter extends ContainerReifeAdapter
         return 'concept';
     }
 
+    public function aliase(): array
+    {
+        return ['paket'];
+    }
+
     public function messe(Team $team, int $id): ?array
     {
         $c = FoodAlchemistConcept::visibleToTeam($team)->with('slots')->find($id);

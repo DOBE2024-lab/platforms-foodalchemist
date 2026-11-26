@@ -33,6 +33,11 @@ class AngebotReifeAdapter extends ContainerReifeAdapter
         return 'angebot';
     }
 
+    public function aliase(): array
+    {
+        return ['offer'];
+    }
+
     public function messe(Team $team, int $id): ?array
     {
         $a = FoodAlchemistAngebot::visibleToTeam($team)->with(['chapters.blocks', 'concepts'])->find($id);

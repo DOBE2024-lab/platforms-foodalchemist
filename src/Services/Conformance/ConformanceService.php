@@ -7,9 +7,6 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConformanceFinding;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Conformance\ConformanceAdapter;
-use Platform\FoodAlchemist\Services\Conformance\GpConformanceAdapter;
-use Platform\FoodAlchemist\Services\Conformance\LaConformanceAdapter;
-use Platform\FoodAlchemist\Services\Conformance\RecipeConformanceAdapter;
 use Platform\FoodAlchemist\Services\Knowledge\ConformanceKnowledge;
 use Platform\FoodAlchemist\Support\DossierText;
 
@@ -245,12 +242,7 @@ class ConformanceService
 
     private function adapter(string $typ): ConformanceAdapter
     {
-        return match ($typ) {
-            'recipe', 'basisrezept', 'vk', 'gericht' => app(RecipeConformanceAdapter::class),
-            'gp', 'grundprodukt' => app(GpConformanceAdapter::class),
-            'la', 'lieferantenartikel' => app(LaConformanceAdapter::class),
-            default => throw new \InvalidArgumentException("Kein Conformance-Adapter für Artefakt-Typ «{$typ}»."),
-        };
+        return app(\Platform\FoodAlchemist\Services\Pruefung\PruefRegistry::class)->conformanceAdapter($typ);   // PR11: Auswahl über die Prüf-Registry
     }
 
     /**

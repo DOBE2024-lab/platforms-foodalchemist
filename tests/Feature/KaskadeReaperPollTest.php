@@ -8,6 +8,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Planung\LaufStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
+use Platform\FoodAlchemist\Services\Kaskade\KaskadenReaperSweep;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -166,4 +167,65 @@ it('Mess-Test bleibt: ein Poll eines frischen Laufs braucht weniger als 10 Abfra
     $status->call('pruefen');
 
     expect($n)->toBeLessThan(10);
+});
+
+/**
+ * io 26.11. (Master-Rundgang nach #993): Läufe 38, 61, 62, 66, 69 blieben auf `running`. Ursache: Der Poll heilt nur, was das Board
+ * beobachtet — den jüngsten Lauf je Session des eigenen Teams. Ältere Läufe einer Session, Läufe anderer Teams und Läufe ohne offenes
+ * Board erreichte der Reaper nie. Jetzt: Sweep über die Tabelle (Zeitplan + Team-Sweep im Poll).
+ */
+it('Sweep: ein älterer Lauf derselben Session (nicht auf dem Board) wird geheilt, ein junger bleibt, ohne Board', function () {
+    $alt = ($this->lauf)();
+    $step = ($this->schritt)($alt, ['status' => 'running']);
+    ($this->alt)($step, 90);
+    DB::table('foodalchemist_cascade_runs')->where('id', $alt->id)->update(['updated_at' => now()->subMinutes(90)]);
+    $neu = ($this->lauf)('done');   // jüngster Lauf der Session — nur der stünde auf dem Board
+    $jung = ($this->lauf)();
+    ($this->schritt)($jung, ['status' => 'running']);
+
+    $sweep = app(KaskadenReaperSweep::class);
+    expect($sweep->kandidaten()->pluck('id')->all())->toBe([$alt->id]);
+
+    $r = $sweep->heile();
+    expect($r['geprueft'])->toBe(1)->and($r['geheilt'])->toBeGreaterThanOrEqual(1)
+        ->and($step->fresh()->status)->toBe('failed')
+        ->and($alt->fresh()->status)->not->toBe('running')
+        ->and($jung->fresh()->status)->toBe('running')
+        ->and($neu->fresh()->status)->toBe('done');
+});
+
+it('Sweep heilt im Besitzer-Team; --team beschränkt; --dry-run schreibt nichts und nennt den Grund', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running']);
+    ($this->alt)($step, 90);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subMinutes(90)]);
+    $fremd = $this->childA;   // anderes Team, besitzt den Lauf nicht
+
+    $this->artisan('foodalchemist:kaskade-reaper', ['--dry-run' => true])
+        ->expectsOutputToContain('1 Kandidaten (Trockenlauf, nichts geschrieben).')->assertSuccessful();
+    expect($step->fresh()->status)->toBe('running');
+    expect(app(KaskadenReaperSweep::class)->diagnose()[0])->toMatchArray(['run_id' => $run->id, 'status' => 'running', 'schritte' => 'running:1']);
+
+    $this->artisan('foodalchemist:kaskade-reaper', ['--team' => $fremd->id])->expectsOutputToContain('0 Läufe geprüft')->assertSuccessful();
+    expect($step->fresh()->status)->toBe('running');
+
+    $this->artisan('foodalchemist:kaskade-reaper')->expectsOutputToContain('1 Läufe geprüft')->assertSuccessful();
+    expect($step->fresh()->status)->toBe('failed')->and($run->fresh()->status)->not->toBe('running');
+});
+
+it('Board-Poll: im 60-s-Takt heilt der Team-Sweep auch den älteren Lauf derselben Session (nicht beobachtet), höchstens alle 5 min', function () {
+    $alt = ($this->lauf)();
+    $altStep = ($this->schritt)($alt, ['status' => 'running']);
+    ($this->alt)($altStep, 120);
+    DB::table('foodalchemist_cascade_runs')->where('id', $alt->id)->update(['updated_at' => now()->subMinutes(120)]);
+    $beobachtet = ($this->lauf)();
+    $step = ($this->schritt)($beobachtet, ['status' => 'running']);
+    ($this->alt)($step, 50);
+    DB::table('foodalchemist_cascade_runs')->where('id', $beobachtet->id)->update(['updated_at' => now()->subMinutes(50)]);
+
+    Livewire::test(LaufStatus::class, ['laufIds' => [$beobachtet->id], 'neueBeobachten' => true, 'takt' => '3s'])->call('pruefen');
+
+    expect($altStep->fresh()->status)->toBe('failed')->and($alt->fresh()->status)->not->toBe('running')
+        ->and($step->fresh()->status)->toBe('failed');   // der beobachtete wie bisher über den Lauf-Reaper
+    expect(\Illuminate\Support\Facades\Cache::has('fa:kaskade-reaper-team:' . $this->rootTeam->id))->toBeTrue();
 });

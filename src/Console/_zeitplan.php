@@ -40,6 +40,12 @@ return static function (Schedule $schedule): void {
         \Platform\FoodAlchemist\Console\GrundeinstellungenNachziehenCommand::planen($schedule);
     }
 
+    // Hängende Kaskaden-Läufe heilen (io 26.11.): der Board-Poll sieht nur den jüngsten Lauf je Session; ältere Läufe, Läufe ohne Session und
+    // Läufe ohne offenes Board heilt nur dieser Lauf. Schreibt nur über den bestehenden Reaper; abschaltbar.
+    if (config('foodalchemist.scheduler.kaskade_reaper_aktiv', true)) {
+        \Platform\FoodAlchemist\Console\KaskadeReaperCommand::planen($schedule);
+    }
+
     // KI-Kosten (Dominique 18.10.2026): EZB-Tageskurs EUR/USD, 16:30 Europe/Berlin — fern vom Necta-/Gebühren-Fenster (nachts)
     if (config('foodalchemist.scheduler.wechselkurs_aktiv', true)) {
         \Platform\FoodAlchemist\Console\WechselkursHolenCommand::planen($schedule);

@@ -75,6 +75,7 @@ return [
     \Platform\FoodAlchemist\Console\GrammaturAutomatischCommand::class,   // Plan 98 B: freie Grammaturen → Summe der Bestandteile (Trockenlauf, Journal, Rückweg, Entscheidungsliste)
     \Platform\FoodAlchemist\Console\GrundeinstellungenNachziehenCommand::class,   // Paket Grundeinstellungen stündlich nachziehen (20.11.2026)
     \Platform\FoodAlchemist\Console\ImportArticlesCommand::class,
+    \Platform\FoodAlchemist\Console\KaskadeReaperCommand::class,   // hängende Kaskaden-Läufe heilen, alle 15 min (io 26.11.)
     \Platform\FoodAlchemist\Console\KnowledgeEmbedCommand::class,
     // W2-5: der Rückweg — bis hierher gab es nur Import (Modul = SSOT ohne Backup-Pfad).
     \Platform\FoodAlchemist\Console\KnowledgeExportCommand::class,

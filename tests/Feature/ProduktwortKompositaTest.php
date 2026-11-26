@@ -49,7 +49,7 @@ it('Shortlist (substringOverlap/candidatesFor): nur Zustandswörter tragen keine
 
     $this->makeGp($this->rootTeam, 'Pilzmischung: frisch, geschnitten');
     $this->makeGp($this->rootTeam, 'Auberginen: frisch, ganz');
-    $namen = array_column(app(\Platform\FoodAlchemist\Services\IngredientMatchService::class)
+    $namen = array_column(app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)
         ->candidatesFor($this->rootTeam, 'Pilzmischung: frisch, ganz', null, 5), 'name');
 
     expect($namen)->toContain('Pilzmischung: frisch, geschnitten')

@@ -140,7 +140,7 @@ class DetailPanel extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)
+            app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)
                 ->verknuepfe($team, 'recipe', $this->recipeId, $kind, $id);
             $this->ersatzSuche = '';
         } catch (\RuntimeException $e) {
@@ -152,7 +152,7 @@ class DetailPanel extends Component
     {
         $team = Auth::user()?->currentTeamRelation;
         if ($team !== null) {
-            app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)->loese($team, $equivId);
+            app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)->loese($team, $equivId);
         }
     }
 
@@ -255,7 +255,7 @@ class DetailPanel extends Component
             return $this->handyHandbuch($team, $rezept);
         }
 
-        $equivSvc = app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class);
+        $equivSvc = app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class);
 
         return view('foodalchemist::livewire.recipes.detail-panel', [
             'sperr' => $this->sperrZustand(),   // Spec 65

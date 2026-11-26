@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPrice;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\GpMasseService;
+use Platform\FoodAlchemist\Services\GpStamm\GpMasseService;
 use Platform\FoodAlchemist\Services\Einkauf\NonFoodService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;

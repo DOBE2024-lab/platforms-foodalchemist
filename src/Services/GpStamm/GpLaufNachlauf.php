@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
  */
 class GpLaufNachlauf
 {
-    public function __construct(private readonly Einkauf\LeadLaService $lead) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $lead) {}
 
     /**
      * @param  list<int>  $gpIds

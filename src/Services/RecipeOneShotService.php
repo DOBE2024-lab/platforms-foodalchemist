@@ -220,7 +220,7 @@ class RecipeOneShotService
                 // Anreicherung — seit Paket 10 also der Freigabeknopf — sie still auf eine Rohware.
                 // Dominique 27.10. (d): auch eine Basiskomponente ohne Zukauf-Signal („Geflügelfond“) wird nie auf ein Zukauf-GP gemintet
                 // 29.10. (Branch 1b): die Leitplanken entscheiden selbst oder gekauft — 'zukauf' bindet das GP des Bestands, statt aus einem LA zu minten
-                $matcher = app(\Platform\FoodAlchemist\Services\IngredientMatchService::class);
+                $matcher = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class);
                 // Selbst oder gekauft entscheidet NUR die Vorgabe am Rezept (29.10.); Frische/Bio kommen weiter aus den Lauf-Leitplanken
                 $lp = \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::aus(array_diff_key($leitplanken, array_flip(['convenience', 'level', 'niveau'])) + \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::ausRezept($recipe));
                 $weg = $heuristik->istBasisrezeptZeile($text) ? 'basis' : $matcher->zubereitungsWeg($team, $text, $lp['convenience'], $lp['zubereitung']);
@@ -230,7 +230,7 @@ class RecipeOneShotService
                     continue;
                 }
                 $treffer = $weg === 'zukauf' ? $matcher->zukaufTrefferFuer($team, $text, $lp['convenience'], $lp['zubereitung'], $lp['pref'], $lp['bio']) : null;
-                $gp = $treffer !== null && \Platform\FoodAlchemist\Services\IngredientMatchService::istAutomatischVerdrahtbar($treffer) && ($treffer['target'] ?? null) === 'gp'
+                $gp = $treffer !== null && \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($treffer) && ($treffer['target'] ?? null) === 'gp'
                     ? \Platform\FoodAlchemist\Models\FoodAlchemistGp::find((int) $treffer['gp_id'])
                     : $mint->mintFromLa($team, $text, leitplanken: $leitplanken);
                 if ($gp !== null) {

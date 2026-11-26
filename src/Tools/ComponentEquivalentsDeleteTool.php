@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistComponentEquivalent as Equiv;
-use Platform\FoodAlchemist\Services\ComponentEquivalentService;
+use Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService;
 
 /**
  * MCP-Steuerbarkeit · D1: Äquivalenz (Ersatz) lösen. Nur team-eigene Äquivalenzen (Service scoped team_id).

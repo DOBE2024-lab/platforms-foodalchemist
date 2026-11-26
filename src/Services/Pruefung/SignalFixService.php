@@ -46,7 +46,7 @@ class SignalFixService
 
     public function __construct(
         private DataQualityService $dq,
-        private \Platform\FoodAlchemist\Services\GpAggregateService $gpAgg,
+        private \Platform\FoodAlchemist\Services\GpStamm\GpAggregateService $gpAgg,
         private \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $leadLa,
         private \Platform\FoodAlchemist\Services\Pairing\PairingService $pairing,
         private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,

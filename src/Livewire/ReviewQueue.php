@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Services\Matching\MatchService;
 use Platform\FoodAlchemist\Services\Pruefung\QualityRunService;
 use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingsBatchService;
 use Platform\FoodAlchemist\Services\Pruefung\SignalService;
-use Platform\FoodAlchemist\Services\TerminologyService;
+use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 
 /**
  * M9-03 / V-10: Review-Queue — EINE «Zu prüfen»-Seite für alles, was eine

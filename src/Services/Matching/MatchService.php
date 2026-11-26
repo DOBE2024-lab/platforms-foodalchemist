@@ -45,7 +45,7 @@ class MatchService
         // Leitstellen-Recall wiederverwenden: Terminologie + Qdrant liefert auch
         // fremdsprachige/semantische Kandidaten, die der alte Token-Fuzzy-Pfad nie sah.
         $gesehen = $vorschlaege->pluck('gp')->pluck('id')->all();
-        foreach (app(\Platform\FoodAlchemist\Services\IngredientMatchService::class)->candidatesFor($team, (string) $la->designation, null, $limit * 2) as $kandidat) {
+        foreach (app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->candidatesFor($team, (string) $la->designation, null, $limit * 2) as $kandidat) {
             if (($kandidat['kind'] ?? null) !== 'gp' || in_array((int) $kandidat['id'], $gesehen, true)
                 || (float) ($kandidat['score'] ?? 0) < 0.50) {
                 continue;

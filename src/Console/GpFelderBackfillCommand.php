@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 
 /**
  * ONE-SHOT (Spec 80, Paket 11): Verarbeitung/Form dort aus dem GP-NAMEN übernehmen, wo beide FELDER leer sind.

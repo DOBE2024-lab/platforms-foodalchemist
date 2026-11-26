@@ -19,7 +19,7 @@ use Platform\FoodAlchemist\Services\RecipeKomponentenPlanService;
 use Platform\FoodAlchemist\Services\RecipeRollenService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\Regeln\RegelBuch;
-use Platform\FoodAlchemist\Services\SpeisenKlassenService;
+use Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService;
 use Platform\FoodAlchemist\Support\TellerRolle;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

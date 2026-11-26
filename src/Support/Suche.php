@@ -135,7 +135,7 @@ final class Suche
      * vertrauenswürdigem Aufrufer-Code (auch Ausdrücke wie "COALESCE(role, '')" erlaubt).
      *
      * Synonyme (GP-Browser, 12.11.2026 — „Anchovis“ fand „Sardellenfilet“ nicht): mit `$aliasGruppen`
-     * (Sätze bedeutungsgleicher Phrasen, z. B. {@see \Platform\FoodAlchemist\Services\TerminologyService::aliasGroups})
+     * (Sätze bedeutungsgleicher Phrasen, z. B. {@see \Platform\FoodAlchemist\Services\GpStamm\TerminologyService::aliasGroups})
      * wird ein Suchwort bzw. eine Wortfolge, die GENAU einem Gruppenmitglied entspricht, zusätzlich über die
      * anderen Mitglieder gesucht (ODER). Die Alternativen treffen nur am Wortanfang („obers“ trifft nicht
      * „Rinderoberschale“), das Originalwort weiter als Teilstring. Das UND zwischen den übrigen Wörtern bleibt.

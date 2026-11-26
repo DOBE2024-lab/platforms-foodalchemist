@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\SpeisenKlassenService;
+use Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService;
 
 /**
  * `--alle` (Dominique 11.10., nach Probelauf 2): auch Rollen aus der Umstellung bzw. von der KI neu zuordnen (aus V-21

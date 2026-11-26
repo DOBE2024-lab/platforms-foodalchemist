@@ -204,7 +204,7 @@ class RecipeExtractService
         //     als Stub anlegen und verknüpfen (Regelwerk Basisrezepte §4 F4.1: Auto-Stub, Eltern bleibt Entwurf), nie ein Zukauf-GP.
         $stubs = [];
         $lp = \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::aus($parameter);
-        $matcher = app(IngredientMatchService::class);
+        $matcher = app(GpStamm\IngredientMatchService::class);
         foreach ($zutaten as $i => $z) {
             $text = trim((string) ($z['text'] ?? $z['name'] ?? ''));
             // Basiskomponente = Unterrezept (Dominique 09.11.2026, bestätigt die Regel vom 27.10.): weder sub_rezept=false noch ein

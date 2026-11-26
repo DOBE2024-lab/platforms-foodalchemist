@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -81,7 +81,7 @@ class GpAggregateService
             $sicht = $this->naehrSicht($gruppe->first(), $naehrwertSicht);
             $ids = $gruppe->reject(fn ($gp) => isset(self::$lauf['naehr'][($sicht?->id ?? 0) . ':' . $gp->id]))->pluck('id')->map(fn ($id) => (int) $id)->all();
             if ($ids !== []) {
-                $kennwerte = app(Naehrwerte\NaehrwertAggregatService::class)->kennwerte($ids, FoodAlchemistItemNutritional::KERNWERTE, $sicht);
+                $kennwerte = app(\Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertAggregatService::class)->kennwerte($ids, FoodAlchemistItemNutritional::KERNWERTE, $sicht);
                 foreach ($ids as $id) {
                     self::$lauf['naehr'][($sicht?->id ?? 0) . ':' . $id] = $kennwerte[$id] ?? [];
                 }
@@ -425,7 +425,7 @@ class GpAggregateService
         $kerne = FoodAlchemistItemNutritional::KERNWERTE;
         $s = $this->naehrSicht($gp, $sicht);
         $kennwerte = self::$lauf['naehr'][($s?->id ?? 0) . ':' . $gp->id]
-            ?? app(Naehrwerte\NaehrwertAggregatService::class)->kennwerte([$gp->id], $kerne, $s)[$gp->id] ?? [];   // 2.1a: im Lauf vorgeladen
+            ?? app(\Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertAggregatService::class)->kennwerte([$gp->id], $kerne, $s)[$gp->id] ?? [];   // 2.1a: im Lauf vorgeladen
 
         $out = [];
         foreach ($kerne as $k) {

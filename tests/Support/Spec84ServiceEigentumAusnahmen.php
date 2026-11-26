@@ -23,8 +23,8 @@ return [
     'Services/Einkauf/SupplierItemService.php::create' => 'eigener Artikel (team_id = Team) an einem sichtbaren Lieferanten',
     'Services/Einkauf/SupplierService.php::addContact' => 'eigener Kontakt (team_id = Team) an einem sichtbaren Lieferanten',
     'Services/Trend/WettbewerbService.php::vorschlagen' => 'eigener Fund (team_id = Team des Artikels), der ein sichtbares Wettbewerber-Profil referenziert; das Profil wird nur gelesen',
-    'Services/VocabularyService.php::createEinheit' => 'globale Einheit nur durch den Master (nurPlattformPflege); exists() ist nur Dubletten-Schutz',
+    'Services/GpStamm/VocabularyService.php::createEinheit' => 'globale Einheit nur durch den Master (nurPlattformPflege); exists() ist nur Dubletten-Schutz',
     'Services/Einstellungen/BehaelterService.php::anlegen' => 'eigene Katalog-Zeile (team_id = Team); applyVisible()->exists() ist nur Dubletten-Schutz in der eigenen Sicht (98 · 2.3a, vorher Livewire Behaelter::create)',
     'Services/Einstellungen/ConcepterDimensionenService.php::anlegen' => 'eigene Vokabular-Zeile (team_id = Team); applyVisible()->exists() ist nur Dubletten-Schutz in der eigenen Sicht (98 · 2.3a)',
-    'Services/VocabularyService.php::createRecipeCategory' => 'eigene Kategorie, die eine sichtbare Hauptgruppe referenziert',
+    'Services/GpStamm/VocabularyService.php::createRecipeCategory' => 'eigene Kategorie, die eine sichtbare Hauptgruppe referenziert',
 ];

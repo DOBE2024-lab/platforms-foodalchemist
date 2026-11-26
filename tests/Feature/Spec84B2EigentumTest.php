@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 use Platform\FoodAlchemist\Services\RecipeOneShotService;
 use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\SpeisenKlassenService;
+use Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

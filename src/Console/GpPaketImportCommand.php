@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Exceptions\GpPaketAbgelehntException;
-use Platform\FoodAlchemist\Services\GpPaketImportService;
+use Platform\FoodAlchemist\Services\GpStamm\GpPaketImportService;
 use Platform\FoodAlchemist\Support\GpPaketZaehler;
 
 /**

@@ -40,8 +40,8 @@ class HardstopResolveService
     public function __construct(
         private readonly \Platform\FoodAlchemist\Services\RecipeService $recipes,
         private readonly \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
-        private readonly \Platform\FoodAlchemist\Services\GpProposalService $proposals,
-        private readonly \Platform\FoodAlchemist\Services\GpNamingService $naming,
+        private readonly \Platform\FoodAlchemist\Services\GpStamm\GpProposalService $proposals,
+        private readonly \Platform\FoodAlchemist\Services\GpStamm\GpNamingService $naming,
         private readonly \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $leadLa,
     ) {}
 

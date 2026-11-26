@@ -521,7 +521,7 @@ class PlanningCascadeService
         if ($gpIds === []) {
             return [];
         }
-        $verf = app(\Platform\FoodAlchemist\Services\FavoriteGpService::class)->verfuegbarkeit($team, $gpIds);
+        $verf = app(\Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService::class)->verfuegbarkeit($team, $gpIds);
         $luecken = array_keys(array_filter($verf, fn ($v) => ($v['bucket'] ?? null) === 'luecke'));
         if ($luecken === []) {
             return [];

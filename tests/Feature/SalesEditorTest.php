@@ -83,7 +83,7 @@ it('updateVk dish_class_id: Override-First — Klasse wird manual, KI-Accept wir
         ->and($nach->dish_class_source)->toBe('manual')
         ->and($nach->dish_class_ai_confidence)->toBeNull();
 
-    expect(fn () => app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+    expect(fn () => app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
         ->acceptKlasse($this->rootTeam, $vk->id, $andere->id, 0.9, 'KI meint Vegi'))
         ->toThrow(\RuntimeException::class, 'manuell');
 

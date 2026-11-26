@@ -23,7 +23,7 @@ class InventoryGetTool extends FoodAlchemistTool implements ToolContract, ToolMe
             . 'Liefert den Bestand je Grundprodukt und Lagerort mit Menge (kg/l/Stk) und Wert zum aktuellen EK. '
             . 'Optional: bewegungen=true (letzte 200 Zu-/Abgänge, Filter quelle=wareneingang|inventur|… und grund=verderb|bruch|… wie im Lager) und '
             . 'stichtag=YYYY-MM-DD (Bestandswert aus der jüngsten gebuchten Inventur je Lagerort). Filter: stellplatz (bin_id | "ohne"), '
-            . 'zustand (' . \Platform\FoodAlchemist\Services\GpNamingService::zustandListe() . '), warengruppe (Code 01–15), lieferant (supplier_id), ohne_preis, '
+            . 'zustand (' . \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::zustandListe() . '), warengruppe (Code 01–15), lieferant (supplier_id), ohne_preis, '
             . 'ladenhueter (seit 90 Tagen keine Bewegung).';
     }
 

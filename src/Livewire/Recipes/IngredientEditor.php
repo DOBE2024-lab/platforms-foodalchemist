@@ -15,8 +15,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
-use Platform\FoodAlchemist\Services\ComponentEquivalentService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\RecipeService;
@@ -761,7 +761,7 @@ class IngredientEditor extends Component
                     ->whereNull('deleted_at')->whereNotNull('sub_category'), 'team_id', $team)
                     ->distinct()->orderBy('sub_category')
                     ->get(['commodity_group_code', 'sub_category'])->all(),
-                'zustande' => \Platform\FoodAlchemist\Services\GpNamingService::ZUSTAND_VOCAB,
+                'zustande' => \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::ZUSTAND_VOCAB,
                 'hauptgruppen' => TeamScope::applyVisible(DB::table('foodalchemist_recipe_main_groups')
                     ->whereNull('deleted_at'), 'team_id', $team)->orderBy('sort_order')->get(['id', 'label'])->all(),
                 'kategorien' => TeamScope::applyVisible(DB::table('foodalchemist_recipe_categories')

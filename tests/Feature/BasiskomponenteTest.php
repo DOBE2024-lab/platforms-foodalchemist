@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Enums\MatchBand;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\IngredientMatchService;
+use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Services\RecipeExtractService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -112,7 +112,7 @@ it('Aromen-Präfix nur für Aroma, Aromaöl, Tinktur, Matte — „Extrakt:“ b
         ->and($h->istBasiskomponente('Tinktur: Rosmarin'))->toBeTrue()
         ->and($h->istBasiskomponente('Extrakt: Vanille'))->toBeFalse()
         // „Öl: Kräuter“ ist Zubereitung (D5) — ob selbst oder gekauft, entscheiden die Leitplanken; „Öl: neutral“ ist das Standard-GP (LeitplankenZubereitungTest)
-        ->and(app(\Platform\FoodAlchemist\Services\IngredientMatchService::class)->zubereitungsWeg($this->rootTeam, 'Öl: neutral'))->toBeNull();
+        ->and(app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->zubereitungsWeg($this->rootTeam, 'Öl: neutral'))->toBeNull();
 });
 
 it('Import: neue Unterrezept-Hüllen werden im Hintergrund ausrezeptiert (Job je Hülle, Eltern-Bezug), bleiben Entwurf', function () {

@@ -158,7 +158,7 @@ class ItemModal extends Component
                 ...collect($this->eigenschaften)->only(['origin_country', 'organic_control_number', 'ingredients_supplier'])
                     ->map(fn ($v) => $v === '' ? null : $v)->all(),
                 // 16.11.2026: Steuerklasse statt freier Zahl — der Satz kommt aus den Einstellungen; die Necta-Zahl `vat` bleibt Lieferantenangabe (nicht editierbar)
-                'vat_profile_key' => in_array($this->eigenschaften['vat_profile_key'] ?? '', \Platform\FoodAlchemist\Services\SteuerklasseService::KLASSEN, true) ? $this->eigenschaften['vat_profile_key'] : null,
+                'vat_profile_key' => in_array($this->eigenschaften['vat_profile_key'] ?? '', \Platform\FoodAlchemist\Services\GpStamm\SteuerklasseService::KLASSEN, true) ? $this->eigenschaften['vat_profile_key'] : null,
                 'preorder_days' => ($this->eigenschaften['preorder_days'] ?? '') !== '' ? (int) $this->eigenschaften['preorder_days'] : null,
             ]);
             // Dominique 2026-10-05: EIN Speichern für den ganzen Artikel. Allergene, Zusatzstoffe und
@@ -478,16 +478,16 @@ class ItemModal extends Component
     /** Steuerklasse des Artikels für die Anzeige: wirksame Klasse, Herkunft (Artikel/GP), Satz aus den Einstellungen, Necta-Angabe. */
     private function steuerInfo(\Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem $item, \Platform\Core\Models\Team $team): array
     {
-        $svc = app(\Platform\FoodAlchemist\Services\SteuerklasseService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\GpStamm\SteuerklasseService::class);
         $gpId = \Illuminate\Support\Facades\DB::table('foodalchemist_supplier_item_structures')->where('supplier_item_id', $item->id)->whereNull('deleted_at')->value('gp_id');
         $gp = $gpId !== null ? \Illuminate\Support\Facades\DB::table('foodalchemist_gps')->where('id', $gpId)->first(['name', 'main_ingredient_display', 'commodity_group_code', 'sub_category', 'vat_profile_key']) : null;
         $klasse = $svc->klasseLa($item, $gp);
 
         return [
             'klasse' => $klasse,
-            'label' => \Platform\FoodAlchemist\Services\SteuerklasseService::LABELS[$klasse] ?? $klasse,
+            'label' => \Platform\FoodAlchemist\Services\GpStamm\SteuerklasseService::LABELS[$klasse] ?? $klasse,
             'satz' => $svc->satz($team, $klasse),
-            'quelle' => in_array($item->vat_profile_key, \Platform\FoodAlchemist\Services\SteuerklasseService::KLASSEN, true) ? 'artikel' : ($gp !== null ? 'gp' : 'lieferant'),
+            'quelle' => in_array($item->vat_profile_key, \Platform\FoodAlchemist\Services\GpStamm\SteuerklasseService::KLASSEN, true) ? 'artikel' : ($gp !== null ? 'gp' : 'lieferant'),
             'necta' => $item->vat,
             'widerspruch' => $svc->nectaWiderspruch($item, $gp),
         ];

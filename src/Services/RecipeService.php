@@ -1169,13 +1169,13 @@ class RecipeService
                         // Gericht = nur Basisrezepte (Dominique 17.11.2026): auch die Auto-Erdung legt dort kein GP und mintet keins.
                         $nurSub = $recipe->is_sales_recipe
                             || app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class)->istBasisrezeptZeile($groundName);
-                        $treffer = app(IngredientMatchService::class)->matchIngredient(
+                        $treffer = app(GpStamm\IngredientMatchService::class)->matchIngredient(
                             $team, $groundName, $z['hauptzutat_slug'] ?? ($z['slug'] ?? null), ...Matching\MatchLeitplanken::matcherArgsFuerRezept($recipe),
                         );
                         // Live-Test demo 09.10. (Lauf 86): ohne Band-Gate verdrahtete die Heilung „bitte prüfen"-Treffer
                         // („Ginger Beer" → Beeren-Kaviar 0,5; „Pilzmischung: frisch, ganz" → Auberginen 0,667). Wie der
                         // Generator: automatisch nur Exact/FuzzyHigh, FuzzyLow bleibt offen für den Menschen.
-                        if (! IngredientMatchService::istAutomatischVerdrahtbar($treffer)) {
+                        if (! GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($treffer)) {
                             $treffer = ['target' => 'none'] + $treffer;
                         }
                         if ($treffer['target'] === 'gp' && ! $nurSub) {

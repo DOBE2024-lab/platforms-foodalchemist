@@ -40,7 +40,7 @@ class LaConformanceAdapter implements ConformanceAdapter
      * Keine deterministischen Regeln in v1 — der §-Pass für diesen Artefakt-Typ ist rein
      * KI-getragen. Bewusst leer statt „irgendetwas": ein erfundener Check wäre schlimmer
      * als keiner. Kandidat für später wäre der GP-Naming-Check
-     * ({@see \Platform\FoodAlchemist\Services\GpNamingService::validateGpName}), der heute
+     * ({@see \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::validateGpName}), der heute
      * nur an createGp/updateGp und im GP-Editor hängt.
      */
     public function deterministischeBefunde(Team $team, int $id): array

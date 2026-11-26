@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -41,7 +41,7 @@ class GpAromaService
     /** Deckel für das „Geschmacksbild" aus dem Dossier. */
     private const DOSSIER_MAX = 1200;
 
-    public function __construct(private SensorikService $sensorik) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\SensorikService $sensorik) {}
 
     // ── Lücken ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -112,7 +112,7 @@ class GpAromaService
         if ($t === null) {
             return true;
         }
-        foreach (SensorikService::DIMS as $d) {
+        foreach (\Platform\FoodAlchemist\Services\SensorikService::DIMS as $d) {
             if ((float) $t->{$d} > 0) {
                 return false;
             }
@@ -146,7 +146,7 @@ class GpAromaService
     {
         $team = $this->besitzerTeam($gp);
 
-        return $team !== null && app(Pairing\PairingService::class)->darfAnkerPflegen($gp, $team);
+        return $team !== null && app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->darfAnkerPflegen($gp, $team);
     }
 
     // ── Geschwister ────────────────────────────────────────────────────────────────────────────────
@@ -196,7 +196,7 @@ class GpAromaService
         if ($g['status'] !== 'einig' || $team === null) {
             return 0;
         }
-        $pairing = app(Pairing\PairingService::class);
+        $pairing = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class);
         $grund = "Von {$g['geschwister']} Geschwister-GP(s) derselben Hauptzutat ({$gp->main_ingredient_slug}) übernommen";
         foreach ($g['anker'] as $a) {
             $pairing->setGpAnker($team, $gp->id, $a['anchor_id'], $a['role'], 'geschwister', null, $grund);
@@ -226,12 +226,12 @@ class GpAromaService
             $wert = trim((string) $gp->{$feld});
             $wert === '' ? $q->where(fn ($w) => $w->whereNull("g.{$feld}")->orWhere("g.{$feld}", '')) : $q->where("g.{$feld}", $wert);
         }
-        $rows = $q->get(array_map(fn ($d) => "t.{$d}", SensorikService::DIMS));
+        $rows = $q->get(array_map(fn ($d) => "t.{$d}", \Platform\FoodAlchemist\Services\SensorikService::DIMS));
         if ($rows->isEmpty()) {
             return ['status' => 'keine', 'werte' => [], 'geschwister' => 0];
         }
         $werte = [];
-        foreach (SensorikService::DIMS as $d) {
+        foreach (\Platform\FoodAlchemist\Services\SensorikService::DIMS as $d) {
             $spalte = $rows->pluck($d)->map(fn ($v) => (float) $v);
             if ($spalte->max() - $spalte->min() > self::GESCHWISTER_SPANNE + 1e-9) {
                 return ['status' => 'uneinig', 'werte' => [], 'geschwister' => $rows->count()];
@@ -274,7 +274,7 @@ class GpAromaService
             return null;                                              // Fake-Provider / kaputte Antwort → nichts
         }
         $werte = [];
-        foreach (SensorikService::DIMS as $d) {
+        foreach (\Platform\FoodAlchemist\Services\SensorikService::DIMS as $d) {
             if (! is_numeric($roh[$d] ?? null)) {
                 return null;                                          // unvollständig = nicht verwertbar, lieber kein Profil
             }
@@ -292,7 +292,7 @@ class GpAromaService
         }
         $begruendung = trim((string) $p->reasoning . ' ' . implode(' ', $begrenzt['eingriffe']));
 
-        return ['werte' => $werte, 'geschaetzt' => SensorikService::DIMS, 'naehrwerte' => $naehrwerte, 'konzentration' => $konzentration,
+        return ['werte' => $werte, 'geschaetzt' => \Platform\FoodAlchemist\Services\SensorikService::DIMS, 'naehrwerte' => $naehrwerte, 'konzentration' => $konzentration,
             'eingriffe' => $begrenzt['eingriffe'], 'texturen' => $texturen,
             'confidence' => max(0.0, min(1.0, (float) $p->confidence)), 'reasoning' => $begruendung !== '' ? $begruendung : null, 'call_log_id' => $p->callLogId];
     }
@@ -304,14 +304,14 @@ class GpAromaService
      */
     private function kontext(FoodAlchemistGp $gp, array $naehrwerte, array $konzentration, bool $mitTextur): array
     {
-        $anker = app(Pairing\PairingService::class)->gpAnkerAlle($gp->id);
+        $anker = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->gpAnkerAlle($gp->id);
         $kern = $anker->firstWhere('role', 'kern') ?? $anker->first();
         $nachbarn = DB::table('foodalchemist_gp_taste_vectors AS t')
             ->join('foodalchemist_gps AS g', 'g.id', '=', 't.gp_id')
             ->where('g.main_ingredient_slug', (string) $gp->main_ingredient_slug)->where('g.id', '!=', $gp->id)
             ->whereNull('g.deleted_at')->whereNull('g.merged_into_id')->whereIn('g.id', $this->sichtbareIds($gp))
             ->whereIn('t.source', self::VERLAESSLICHE_QUELLEN)
-            ->orderBy('g.name')->limit(3)->get(array_merge(['g.name'], array_map(fn ($d) => "t.{$d}", SensorikService::DIMS)));
+            ->orderBy('g.name')->limit(3)->get(array_merge(['g.name'], array_map(fn ($d) => "t.{$d}", \Platform\FoodAlchemist\Services\SensorikService::DIMS)));
 
         // Nährwerte mit sprechenden Schlüsseln: der Fakt, an dem die Einstufung hängt.
         $fakten = [];
@@ -329,7 +329,7 @@ class GpAromaService
             'geschmacksbild_aus_dossier' => $kern !== null ? $this->geschmacksbild((int) $kern->id) : null,
             'naehrwerte' => $fakten === [] ? null : $fakten,
             'konzentration_ohne_maskierung' => $konzentration === [] ? null : $konzentration,
-            'zu_schaetzen' => SensorikService::DIMS,
+            'zu_schaetzen' => \Platform\FoodAlchemist\Services\SensorikService::DIMS,
             'nachbarn' => $nachbarn->isEmpty() ? null : $nachbarn->map(fn ($n) => (array) $n)->all(),
             'texturen_schaetzen' => $mitTextur,
         ];
@@ -367,7 +367,7 @@ class GpAromaService
         }
         $clamp = fn ($x) => max(0.0, min(1.0, round((float) $x, 2)));
         $roh = [];
-        foreach (SensorikService::DIMS as $d) {
+        foreach (\Platform\FoodAlchemist\Services\SensorikService::DIMS as $d) {
             $roh[$d] = $clamp($werte[$d] ?? 0);
         }
         $naehrwerte = array_map(fn ($m) => (float) $m['gehalt'], $this->sensorik->erdungBulk([$gpId])[$gpId] ?? []);
@@ -376,7 +376,7 @@ class GpAromaService
             $begr = trim((string) $begr . ' ' . implode(' ', $begrenzt['eingriffe']));
         }
         $row = ['source' => $quelle, 'ai_confidence' => $conf, 'ai_reasoning' => $begr !== null ? mb_strimwidth($begr, 0, 2000) : null, 'updated_at' => now()];
-        foreach (SensorikService::DIMS as $d) {
+        foreach (\Platform\FoodAlchemist\Services\SensorikService::DIMS as $d) {
             $row[$d] = $begrenzt['werte'][$d];
         }
         DB::table('foodalchemist_gp_taste_vectors')->updateOrInsert(['gp_id' => $gpId], $row + ['created_at' => $ist->created_at ?? now()]);

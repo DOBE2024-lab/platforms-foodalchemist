@@ -270,7 +270,7 @@ class BulkEnrichService
         if ($feld === 'speisen_klasse') {
             // Eine Wahrheit: Taxonomie-Aufbau, Aktiv-Filter und Klassen-Validierung
             // stehen im SpeisenKlassenService (Detail-Panel fährt denselben Weg).
-            $c = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->classify($team, $r->id);
+            $c = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->classify($team, $r->id);
 
             return [
                 'value' => $c['klasse_id'] === null ? null
@@ -285,7 +285,7 @@ class BulkEnrichService
         if ($feld === 'rollen') {
             // Eine Wahrheit: Vokabular, Zeilen-Validierung und Gesamt-Gericht-Sicht stehen im
             // SpeisenKlassenService (Detail-Panel fährt denselben Weg).
-            $v = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->verteileRollen($team, $r->id);
+            $v = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->verteileRollen($team, $r->id);
 
             return [
                 'value' => $v['rollen'] === [] ? null : ['rollen' => $v['rollen']],
@@ -656,7 +656,7 @@ class BulkEnrichService
             case 'rollen':
                 $offen = $this->zutatenOhne($r, 'role')->pluck('id')->map(fn ($id) => (int) $id)->flip();
                 $rollen = array_filter((array) ($wert['rollen'] ?? []), fn ($role, $id) => $offen->has((int) $id), ARRAY_FILTER_USE_BOTH);
-                $gelandet = $rollen === [] ? 0 : app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->acceptRollen($team, $r->id, $rollen);
+                $gelandet = $rollen === [] ? 0 : app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->acceptRollen($team, $r->id, $rollen);
                 break;
 
             case 'regeneration':
@@ -717,7 +717,7 @@ class BulkEnrichService
             return false;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->acceptKlasse(
+            app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->acceptKlasse(
                 $team, $recipeId, (int) $klasseId, (float) $prop->confidence, $prop->reasoning,
                 $prop->call_log_id !== null ? (int) $prop->call_log_id : null,
             );
@@ -990,7 +990,7 @@ class BulkEnrichService
         $fehler = false;
         $ausstehend = 0;
         foreach ($gp === null ? [] : $schritte as $feld) {
-            if ($feld === 'sensorik' && ! app(\Platform\FoodAlchemist\Services\GpAromaService::class)->profilFehlt($gp->id)
+            if ($feld === 'sensorik' && ! app(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::class)->profilFehlt($gp->id)
                 && (! $neuSchaetzen || DB::table('foodalchemist_gp_taste_vectors')->where('gp_id', $gp->id)->value('source') === 'manual')) {
                 continue;                                              // Profil da → nichts schätzen, nichts bezahlen; ein manuelles nie neu
             }
@@ -1055,7 +1055,7 @@ class BulkEnrichService
     /** @return array{wert: mixed, confidence: ?float, reasoning: ?string, call_log_id: ?int} */
     private function proposeGpFeld(Team $team, FoodAlchemistGp $gp, string $feld, bool $neuSchaetzen = false, string $ankerRolle = 'kern'): array
     {
-        $aroma = app(\Platform\FoodAlchemist\Services\GpAromaService::class);
+        $aroma = app(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::class);
         if ($feld === 'anker' && ! $aroma->hatAnker($gp->id) && ($g = $aroma->geschwisterAnker($gp))['status'] === 'einig') {
             return ['value' => ['geschwister' => $g['anker']], 'confidence' => 1.0, 'call_log_id' => null,
                 'reasoning' => "Einige Anker von {$g['geschwister']} Geschwister-GP(s) derselben Hauptzutat"];
@@ -1185,8 +1185,8 @@ class BulkEnrichService
         $ok = false;
 
         if ($prop->field === 'condition') {
-            $z = app(\Platform\FoodAlchemist\Services\GpNamingService::class)->normalisiereZustand(is_array($wert) ? ($wert['condition'] ?? null) : $wert);
-            if ($z !== null && in_array($z, \Platform\FoodAlchemist\Services\GpNamingService::ZUSTAND_VOCAB, true) && $gp->condition_source !== 'manual') {
+            $z = app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class)->normalisiereZustand(is_array($wert) ? ($wert['condition'] ?? null) : $wert);
+            if ($z !== null && in_array($z, \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::ZUSTAND_VOCAB, true) && $gp->condition_source !== 'manual') {
                 $gp->update(['condition' => $z, 'condition_source' => 'ki', 'condition_ai_confidence' => $prop->confidence, 'condition_ai_reasoning' => $prop->reasoning]);
                 $ok = true;
             }
@@ -1206,7 +1206,7 @@ class BulkEnrichService
             // Spec 50 · A8: derselbe Wächter wie im Panel — wo ein LA-Profil existiert, gilt
             // die LA-Kette (GL-01 §4.3). Der Bulk-Pfad setzt zwar kein `allergens_source`,
             // schreibt aber ebenfalls in die Override-Ebene und würde die Messung verdecken.
-            if (app(\Platform\FoodAlchemist\Services\GpAggregateService::class)->hatLaAllergenProfil($gp)) {
+            if (app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class)->hatLaAllergenProfil($gp)) {
                 return false;
             }
             $update = [];
@@ -1222,16 +1222,16 @@ class BulkEnrichService
                 $ok = true;
             }
         } elseif ($prop->field === 'anker' && is_array($wert) && is_array($wert['geschwister'] ?? null)) {
-            $ok = app(\Platform\FoodAlchemist\Services\GpAromaService::class)->ankerVonGeschwistern($gp) > 0;      // prüft frisch: nur ohne Anker, nur wenn noch einig
+            $ok = app(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::class)->ankerVonGeschwistern($gp) > 0;      // prüft frisch: nur ohne Anker, nur wenn noch einig
         } elseif ($prop->field === 'sensorik' && is_array($wert) && is_array($wert['werte'] ?? null)) {
-            $ok = app(\Platform\FoodAlchemist\Services\GpAromaService::class)->speichereProfil($gp->id, $wert['werte'], ($wert['quelle'] ?? 'ai') === 'geschwister' ? 'geschwister' : 'ai',
+            $ok = app(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::class)->speichereProfil($gp->id, $wert['werte'], ($wert['quelle'] ?? 'ai') === 'geschwister' ? 'geschwister' : 'ai',
                 $prop->confidence !== null ? (float) $prop->confidence : null, $prop->reasoning, is_array($wert['texturen'] ?? null) ? $wert['texturen'] : [],
                 ($wert['neu'] ?? false) === true);
         } elseif ($prop->field === 'anker' && is_array($wert) && is_string($wert['anchor_slug'] ?? null)) {
             // Override-First: ein manuell gesetzter Kern-Anker (Inv. 3) blockt die KI-Inferenz komplett.
             $manuell = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)
                 ->where('source', 'manual')->whereNull('deleted_at')->exists();
-            $aroma = app(\Platform\FoodAlchemist\Services\GpAromaService::class);
+            $aroma = app(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::class);
             if (! $manuell && $wert['anchor_slug'] === 'neutral') {
                 // Kein Aroma-Träger ist eine Antwort, kein Leerlauf: festhalten, sonst fragt jeder Lauf neu (io-Probe 01.11.2026).
                 // Ein vorhandener KI-Anker bleibt — neutral setzt nie einen Anker ab. Ausnahme Neu-Fragen (`anker_ki`): die neue Antwort
@@ -1240,7 +1240,7 @@ class BulkEnrichService
                     DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->whereNull('deleted_at')
                         ->whereIn('source', \Platform\FoodAlchemist\Support\AnkerQuelle::KI_QUELLEN)->update(['deleted_at' => now(), 'updated_at' => now()]);
                 }
-                if (! $aroma->hatAnker($gp->id) && \Platform\FoodAlchemist\Services\GpAromaService::neutralTabelle() && app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->darfAnkerPflegen($gp, $team)) {
+                if (! $aroma->hatAnker($gp->id) && \Platform\FoodAlchemist\Services\GpStamm\GpAromaService::neutralTabelle() && app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->darfAnkerPflegen($gp, $team)) {
                     $aroma->merkeAnkerNeutral($gp->id, (int) $team->id, 'ai', $prop->confidence !== null ? (float) $prop->confidence : null,
                         (string) ($prop->reasoning ?: 'Bulk-Anreicherung: kein Aroma-Träger'));
                     $ok = true;

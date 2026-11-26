@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\GpBereinigenService;
+use Platform\FoodAlchemist\Services\GpStamm\GpBereinigenService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -24,7 +24,7 @@ beforeEach(function () {
     $this->sup = FoodAlchemistSupplier::create(['team_id' => null, 'name' => 'Hanos']);
 
     $this->gp = function (string $name, string $wg = '02', array $extra = []): FoodAlchemistGp {
-        $svc = app(\Platform\FoodAlchemist\Services\GpNamingService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class);
 
         return FoodAlchemistGp::create(array_merge([
             'team_id' => $this->team, 'name' => $name, 'gp_key' => $svc->slugify($name), 'status' => 'approved', 'commodity_group_code' => $wg,

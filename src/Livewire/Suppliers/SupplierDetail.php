@@ -8,7 +8,7 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Services\Preis\RebateService;
 use Platform\FoodAlchemist\Services\Einkauf\SupplierAgreementService;
 use Platform\FoodAlchemist\Services\Einkauf\SupplierService;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 use RuntimeException;
 
 /**

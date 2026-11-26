@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\Matching\MatchService;
 use Platform\FoodAlchemist\Services\Einkauf\NonFoodService;
@@ -256,7 +256,7 @@ class GpAbgleichService
             }
             if ($log->ausgefuehrt_aktion === 'neu_angelegt') {
                 try {
-                    app(\Platform\FoodAlchemist\Services\GpService::class)->deleteGp($gp->refresh());
+                    app(\Platform\FoodAlchemist\Services\GpStamm\GpService::class)->deleteGp($gp->refresh());
                     $hinweis .= ' Das angelegte GP wurde gelöscht (keine Verweise mehr).';
                 } catch (\RuntimeException $x) {
                     $hinweis .= ' Das angelegte GP bleibt bestehen: ' . $x->getMessage();

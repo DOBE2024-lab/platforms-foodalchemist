@@ -40,7 +40,7 @@ class RecipeGeneratorService
 
     public function __construct(
         private AiGatewayService $ki,
-        private IngredientMatchService $matcher,
+        private GpStamm\IngredientMatchService $matcher,
         private MatchHeuristics $heuristik,
         private RecipeService $recipes,
     ) {
@@ -163,7 +163,7 @@ class RecipeGeneratorService
                 // Token-Gewinn ist mit ~37 % einer kleinen Liste nebensächlich.
                 // Weg-B-Befund 1 (2026-10-12): dieselbe Liste wie recipe_klasse.POST — der frühere
                 // INNER JOIN verwarf die vier flachen Diät-Klassen ohne Hauptgruppe (Modell A).
-                $kontext['speisen_klassen'] = \Platform\FoodAlchemist\Services\SpeisenKlassenService::taxonomie($team);
+                $kontext['speisen_klassen'] = \Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::taxonomie($team);
                 // Spec 84 (18.10.): nur die für das Team sichtbaren Aufschlagsklassen — vorher gingen die Klassen ALLER Teams
                 // (auch die BHG-Margen des Masters) in den Prompt. Bei gleichem Code gewinnt die eigene Klasse (letzte Zuweisung zählt).
                 $kontext['aufschlagsklassen'] = \Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass::visibleToTeam($team)->bereich('speisen')
@@ -378,7 +378,7 @@ class RecipeGeneratorService
                 // Darum: nur Exact/FuzzyHigh wird verdrahtet, FuzzyLow bleibt OFFEN
                 // (Review-Pfad mit Shortlist — der Mensch entscheidet). Der Matcher
                 // selbst (Schwellen, 84 GL-04-Goldens) bleibt unberührt.
-                $verdrahtbar = IngredientMatchService::istAutomatischVerdrahtbar($treffer);
+                $verdrahtbar = GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($treffer);
                 $istGpTreffer = $verdrahtbar && $treffer['target'] === 'gp';
 
                 // ── Zerlegungs-Vorrang (L2, Entscheid 2026-08-17 »Convenience entscheidet«) ────────
@@ -1181,7 +1181,7 @@ class RecipeGeneratorService
         // genau der gewollte Sub-Rezept-Fall (frisch gemacht ≠ Rohware-Einkaufsform). $text
         // default '' hält den Bestands-Draw-Aufrufer (ziehtAusBestand, keine Zeilen-Beschreibung
         // verfügbar) unverändert.
-        if (in_array(app(Matching\TokenEngine::class)->produktForm($text)['zustand'], ['TK', 'trocken', 'konserviert', ...GpNamingService::BEHANDLUNG], true)) {
+        if (in_array(app(Matching\TokenEngine::class)->produktForm($text)['zustand'], ['TK', 'trocken', 'konserviert', ...GpStamm\GpNamingService::BEHANDLUNG], true)) {
             return null;
         }
         // Spec 80 B4 (Entscheid Dominique 2026-10-09): Bestand = NUR freigegebene Basisrezepte. Ein nicht freigegebener
@@ -1391,7 +1391,7 @@ class RecipeGeneratorService
         }
         $raw = trim((string) ($gp->condition ?? ''));
         if ($raw !== '') {
-            return in_array($raw, $erlaubtRaw, true) || (in_array('TK', $erlaubtRaw, true) && GpNamingService::istTk($raw, (string) $gp->name));   // v3.6 2b
+            return in_array($raw, $erlaubtRaw, true) || (in_array('TK', $erlaubtRaw, true) && GpStamm\GpNamingService::istTk($raw, (string) $gp->name));   // v3.6 2b
         }
         // condition unset → Namens-Token-Fallback über produktForm() (4-wertiges §9-Vokabular,
         // trocken ≠ konserviert — anders als der RANKING-Bucket zustandClassResolved(), der

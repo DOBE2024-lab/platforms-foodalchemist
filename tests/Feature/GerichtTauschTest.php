@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekartePosition;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarteRubrik;
 use Platform\FoodAlchemist\Models\FoodAlchemistSpeiseplanEintrag;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
-use Platform\FoodAlchemist\Services\ComponentEquivalentService;
+use Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService;
 use Platform\FoodAlchemist\Services\Gericht\GerichtTauschService;
 use Platform\FoodAlchemist\Services\Gericht\GerichtVerwendungen;
 use Platform\FoodAlchemist\Services\SalesRecipeService;

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
-use Platform\FoodAlchemist\Services\PlatzhalterDeklarationService;
+use Platform\FoodAlchemist\Services\GpStamm\PlatzhalterDeklarationService;
 
 /**
  * Einmalig (19.11.2026): Platzhalter, deren Werte fachlich eindeutig sind, mit Allergenen, Zusatzstoffen und Nährwerten von Hand vorbelegen

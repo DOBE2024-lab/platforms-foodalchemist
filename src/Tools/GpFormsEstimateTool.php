@@ -6,8 +6,8 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\GpFormService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpFormService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 
 /**
  * MCP-Steuerbarkeit · D1: KI schätzt die Naturaleinheit-Formen + Gramm eines GP (gp.zaehl_einheiten)

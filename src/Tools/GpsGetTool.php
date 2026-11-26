@@ -7,8 +7,8 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpAggregateService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 
 /** M8-01: GP-Detail inkl. GL-01-Allergen-Aggregat — Tool → Services. */
 class GpsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
@@ -67,7 +67,7 @@ class GpsGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadata
             'is_kochmedium' => (bool) $gp->is_kochmedium,   // Vorschlag Zeilenart „Medium“ (§18.7)
             'is_platzhalter' => (bool) $gp->is_platzhalter,
             // Platzhalter (19.11.2026): Allergene, Zusatzstoffe, Nährwerte von Hand; schreiben über foodalchemist.platzhalter_deklaration.PUT. Sonst null.
-            'platzhalter_deklaration' => $gp->is_platzhalter ? app(\Platform\FoodAlchemist\Services\PlatzhalterDeklarationService::class)->lesen($gp) : null,
+            'platzhalter_deklaration' => $gp->is_platzhalter ? app(\Platform\FoodAlchemist\Services\GpStamm\PlatzhalterDeklarationService::class)->lesen($gp) : null,
             'zusatz' => $gp->zusatz,
             'rezepturware' => $gp->rezepturware,   // §5 Ausnahme 3: null = nicht entschieden
             'marke_offen' => (bool) $gp->marke_offen,

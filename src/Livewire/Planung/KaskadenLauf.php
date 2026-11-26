@@ -423,7 +423,7 @@ class KaskadenLauf extends Component
     }
 
     /** E4 (Spec 40): einen vorgeschlagenen GP als Favorit pinnen (mensch-gated). Nur team-eigene GPs. */
-    public function favoritPinnen(int $gpId, \Platform\FoodAlchemist\Services\FavoriteGpService $fav): void
+    public function favoritPinnen(int $gpId, \Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService $fav): void
     {
         $team = $this->team();
         if ($team === null) {

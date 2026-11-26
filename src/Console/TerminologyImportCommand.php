@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistTerminologyAntiMarker;
-use Platform\FoodAlchemist\Services\TerminologyService;
+use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 
 /**
  * P1 + Move 2 (Wissens-Skalierbarkeit, 2026-08-07): die Brücke Wissens-Doc → deterministische

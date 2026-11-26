@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\GpAromaNachholenJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpAromaService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAromaService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

@@ -659,7 +659,7 @@ class VoiceModal extends Component
             return;
         }
         try {
-            app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->acceptKlasse(
+            app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->acceptKlasse(
                 $team, (int) $p['recipe_id'], (int) $p['klasse_id'],
                 (float) ($p['confidence'] ?? 0), $p['reasoning'] ?? null, $p['call_log_id'] ?? null,
             );

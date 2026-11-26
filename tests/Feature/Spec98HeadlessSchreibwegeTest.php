@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Services\GpAbgleich\GpAbgleichService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 use Platform\FoodAlchemist\Services\LabNoteService;
 use Platform\FoodAlchemist\Services\Plattform\OutletService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;

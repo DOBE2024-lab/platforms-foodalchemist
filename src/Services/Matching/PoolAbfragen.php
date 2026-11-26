@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 
 /**
- * Pool-Abfragen für {@see \Platform\FoodAlchemist\Services\IngredientMatchService}: GP- und Basisrezept-Pool mit LIKE-Vorfilter
+ * Pool-Abfragen für {@see \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService}: GP- und Basisrezept-Pool mit LIKE-Vorfilter
  * (ORDER BY id, Inv. 7) und engen Sonden gegen das Abschneiden exakter Treffer mit hoher ID. Ausgelagert wegen der Dateigröße
  * (Spec 85 §1) — unverändert verschoben, nutzt `$this->engine` des Services.
  */

@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\TerminologyService;
+use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 
 /**
  * #507 Weg-2: die deterministische Terminologie-Schicht (S1 Alias + S2 Anti-Marker).

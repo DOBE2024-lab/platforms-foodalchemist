@@ -256,7 +256,7 @@ class Index extends Component
 
     /** UI-Slug => roher `gps.condition`-Wert bzw. Werte (für den Post-Match-Zustands-Filter, spiegelt §9). @var array<string, string|list<string>> */
     public const FRISCHE_CONDITION = [
-        'frisch' => 'frisch', 'tk' => 'TK', 'trocken' => 'trocken', 'konserve' => 'konserviert', 'behandelt' => \Platform\FoodAlchemist\Services\GpNamingService::BEHANDLUNG,
+        'frisch' => 'frisch', 'tk' => 'TK', 'trocken' => 'trocken', 'konserve' => 'konserviert', 'behandelt' => \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::BEHANDLUNG,
     ];
 
     /**

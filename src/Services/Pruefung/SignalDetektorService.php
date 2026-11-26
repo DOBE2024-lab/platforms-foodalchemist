@@ -1197,8 +1197,8 @@ class SignalDetektorService
         $gps = FoodAlchemistGp::visibleToTeam($team)->lebensmittel()->where('status', 'approved')
             ->whereIn('foodalchemist_gps.id', $kandidaten)->orderBy('foodalchemist_gps.id')->get();
 
-        return \Platform\FoodAlchemist\Services\GpAggregateService::imLauf(function () use ($gps, $team, $limit) {
-            $agg = app(\Platform\FoodAlchemist\Services\GpAggregateService::class);
+        return \Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::imLauf(function () use ($gps, $team, $limit) {
+            $agg = app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class);
             $agg->allergenProfileVorladen($gps);
             $anzahl = 0;
             $treffer = [];

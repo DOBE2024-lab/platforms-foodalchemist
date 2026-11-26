@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Services\Produktion\DerivatAusbeuteService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 
 /**
  * Spec 96 · KI schätzt die Ausbeute eines Derivats (gp.derivat_ausbeute) und schreibt sie als Herkunft ki. Ein manueller Wert bleibt.

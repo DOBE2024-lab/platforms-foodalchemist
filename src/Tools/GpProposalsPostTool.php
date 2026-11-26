@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\GpProposalService;
+use Platform\FoodAlchemist\Services\GpStamm\GpProposalService;
 
 /**
  * 07·M4 (reframed): BESCHAFFUNGS-WUNSCH erfassen (Sourcing-Backlog) — erzeugt NIE
@@ -38,7 +38,7 @@ class GpProposalsPostTool extends FoodAlchemistTool implements ToolContract, Too
                 'name' => ['type' => 'string', 'description' => 'Vorgeschlagener GP-Name, möglichst Regelwerk-Schema "Produktname: Eigenschaft, Zustand"'],
                 'main_ingredient_slug' => ['type' => 'string'],
                 'commodity_group' => ['type' => 'string', 'description' => 'Warengruppen-Vermutung (final entscheidet die Kuration)'],
-                'condition' => ['type' => 'string', 'enum' => array_map('mb_strtolower', \Platform\FoodAlchemist\Services\GpNamingService::ZUSTAND_VOCAB)],
+                'condition' => ['type' => 'string', 'enum' => array_map('mb_strtolower', \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::ZUSTAND_VOCAB)],
                 'kontext' => ['type' => 'string', 'description' => 'Wofür gebraucht (Rezept/Foodbook, Menge, Anlass)'],
                 'source_kind' => ['type' => 'string', 'enum' => ['recipe', 'foodbook', 'canvas', 'sonstiges']],
                 'source_id' => ['type' => 'integer'],

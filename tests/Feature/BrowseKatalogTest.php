@@ -103,7 +103,7 @@ it('#4 / 1.1f (E1 19.11.): Picker — Entwurf wählbar mit Kennzeichnung; Stub/V
 
 it('#9c: browseKatalog liefert je GP nur Basis + hinterlegte Formen als erlaubte Einheiten', function () {
     // Tomatenmark bekommt eine Form „wuerfel" → Dropdown = g/kg + wuerfel (KEIN Karton/EL/…).
-    app(\Platform\FoodAlchemist\Services\GpFormService::class)
+    app(\Platform\FoodAlchemist\Services\GpStamm\GpFormService::class)
         ->setForm($this->rootTeam, $this->gpTomate->id, 'wuerfel', 5);
 
     $komponente = Livewire::test(IngredientEditor::class, ['recipeId' => $this->rezept->id, 'eingebettet' => true])->instance();
@@ -123,7 +123,7 @@ it('#9c: browseKatalog liefert je GP nur Basis + hinterlegte Formen als erlaubte
 
 it('#9c: Bestandszeile eines GP trägt die erlaubten Einheiten für den Dropdown-Filter', function () {
     // GP mit Form ins Rezept legen → render()-Payload muss die Slug-Liste an der Zeile führen.
-    app(\Platform\FoodAlchemist\Services\GpFormService::class)
+    app(\Platform\FoodAlchemist\Services\GpStamm\GpFormService::class)
         ->setForm($this->rootTeam, $this->gpTomate->id, 'wuerfel', 5);
     $gVocab = \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::where('team_id', $this->rootTeam->id)->where('slug', 'g')->value('id')
         ?? \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::create([

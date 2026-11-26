@@ -92,7 +92,7 @@ class ReplacementSuggestionService
             $this->tokens->tokenize($source->name),
             fn (string $t) => mb_strlen($t) >= 3 && ! $this->tokens->isQualifierToken($t),
         ));
-        $existing = app(ComponentEquivalentService::class)->fuer($team, 'gp', $source->id)
+        $existing = app(GpStamm\ComponentEquivalentService::class)->fuer($team, 'gp', $source->id)
             ->mapWithKeys(fn ($e) => [($e->gegen_kind ?? '').':'.(int) ($e->gegen_id ?? 0) => true]);
 
         $pairing = collect();

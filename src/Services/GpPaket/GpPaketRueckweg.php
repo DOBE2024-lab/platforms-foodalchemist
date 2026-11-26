@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Services\GpPaket;
 
 use Illuminate\Support\Facades\DB;
-use Platform\FoodAlchemist\Services\GpBereinigenService;
+use Platform\FoodAlchemist\Services\GpStamm\GpBereinigenService;
 
 /** GP-Paket-Import · Rückweg (`--zurueck`): ein Protokoll umkehren. Die Admin-/Master-Prüfung macht der aufrufende Service. */
 class GpPaketRueckweg

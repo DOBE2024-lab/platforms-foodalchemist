@@ -244,7 +244,7 @@ it('Text-Normalisierer: keine neuen Umlaut-Tabellen außerhalb von Support/Text 
     // Datei => [Anzahl, Grund]. Nur sinken lassen — neue Stellen nutzen Text::falte()/umschrift()/grundlaut().
     $ausnahmen = [
         'src/Support/Text.php' => [2, 'der Normalisierer selbst (UMSCHRIFT, GRUNDLAUT)'],
-        'src/Services/IngredientMatchService.php' => [1, 'Zustand-Regex ohne ß: umschrift() nähme ß dazu, das wäre eine Matching-Änderung (offen, 2.2b gemeldet)'],
+        'src/Services/GpStamm/IngredientMatchService.php' => [1, 'Zustand-Regex ohne ß: umschrift() nähme ß dazu, das wäre eine Matching-Änderung (offen, 2.2b gemeldet)'],
         'src/Support/GpKorrektur.php' => [1, 'Suffix-Vergleich ohne ß: umschrift() nähme ß dazu, das wäre eine Verhaltensänderung (offen, 2.2b gemeldet)'],
     ];
 

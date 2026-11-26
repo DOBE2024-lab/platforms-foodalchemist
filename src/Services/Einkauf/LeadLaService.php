@@ -520,7 +520,7 @@ class LeadLaService
                 $this->applyLeadLa($gp->refresh(), $team);                 // I4: sofortige Neuwahl
             }
         });
-        app(\Platform\FoodAlchemist\Services\GpAggregateService::class)->konfidenzNachziehen([$gp->id]);   // Allergen-Konfidenz/Review sofort (Widerspruch kann damit weggehen)
+        app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class)->konfidenzNachziehen([$gp->id]);   // Allergen-Konfidenz/Review sofort (Widerspruch kann damit weggehen)
     }
 
     /** LA an GP verknüpfen (Gegenstück, M3-07-Aktion): Struktur-Update + Lead-Neuwahl-Trigger (T3). */
@@ -557,7 +557,7 @@ class LeadLaService
             $gp->update(['n_las_total' => (int) $gp->n_las_total + 1]);
             $this->applyLeadLa($gp->refresh(), $team);                     // T3: Verknüpfen triggert Neuwahl
         });
-        app(\Platform\FoodAlchemist\Services\GpAggregateService::class)->konfidenzNachziehen([$gp->id]);   // Allergen-Konfidenz/Review sofort (neuer Artikel kann einen Widerspruch bringen)
+        app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class)->konfidenzNachziehen([$gp->id]);   // Allergen-Konfidenz/Review sofort (neuer Artikel kann einen Widerspruch bringen)
     }
 
     /** M3-07-Picker: verknüpfbare LAs (Struktur-Zeile mit gp_id NULL), Suche über designation. */

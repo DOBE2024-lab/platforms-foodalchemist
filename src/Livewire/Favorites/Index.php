@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Favorites;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\FavoriteGpService;
+use Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService;
 
 /**
  * 06·H2 — Kuratierungs-Screen für Favoriten-GPs (v1).

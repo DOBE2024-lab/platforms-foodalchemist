@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\CulinaryReferenceService;
+use Platform\FoodAlchemist\Services\GpStamm\CulinaryReferenceService;
 
 /**
  * #513 Tier 1 / Punkt 2 — Kulinarische Referenz-Werte als MCP-Tool (read-only, deterministisch).

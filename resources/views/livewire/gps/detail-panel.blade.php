@@ -221,7 +221,7 @@
                 <div class="flex flex-col gap-1" data-platzhalter-naehrwerte>
                     <p class="{{ $titelKlein }}">Nährwerte je 100 g</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1">
-                        @foreach(\Platform\FoodAlchemist\Services\PlatzhalterDeklarationService::NAEHRWERT_LABELS as $key => $naehrLabel)
+                        @foreach(\Platform\FoodAlchemist\Services\GpStamm\PlatzhalterDeklarationService::NAEHRWERT_LABELS as $key => $naehrLabel)
                             <label class="flex items-center justify-between gap-2 text-[length:var(--fa-text-sm)]" wire:key="ph-n-{{ $key }}">
                                 <span class="min-w-0 truncate">{{ $naehrLabel }}</span>
                                 <x-fa::input size="sm" inputmode="decimal" wire:model="platzhalterForm.naehrwerte.{{ $key }}" class="w-24" placeholder="–" data-platzhalter-naehrwert="{{ $key }}" />

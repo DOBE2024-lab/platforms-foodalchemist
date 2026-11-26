@@ -33,7 +33,7 @@ const ENUM_STATUS_GEPRUEFT = [
     'src/Tools/ConceptSlotsPostTool.php', 'src/Services/Concepter/ConceptGeneratorService.php',
     'src/Tools/FoodAlchemistTool.php', 'src/Services/Concepter/ConceptPaketService.php',   // guardDraft/paketReferenz + Paket-Payload: Concept.status ist eine String-Spalte
     // GP als Rohzeile (DB::table → status ist ein String)
-    'src/Services/GpBereinigenService.php', 'src/Services/GpUmhaengenService.php', 'src/Services/GpPaket/GpPaketVerknuepfer.php',
+    'src/Services/GpStamm/GpBereinigenService.php', 'src/Services/GpStamm/GpUmhaengenService.php', 'src/Services/GpPaket/GpPaketVerknuepfer.php',
     // Freigabe-Sperre (98 · 1.1f): Rohzeilen aus DB::table, Rezept vergleicht RecipeStatus::…->value, Concept.status ist eine String-Spalte
     'src/Services/Rezept/FreigabeSperre.php',
 ];

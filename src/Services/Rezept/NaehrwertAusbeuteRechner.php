@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
 
 /**
  * Rezept-Nährwerte je 100 g AUSBEUTE (GL-08 + Entscheid Dominique 17.11.2026, Regelwerk Basisrezepte §6a/§18.7).

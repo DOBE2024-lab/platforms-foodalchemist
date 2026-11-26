@@ -602,7 +602,7 @@ it('★ Nachrechnen scheitert für ein Rezept: die anderen werden nachgerechnet,
     $recompute->recomputePipeline($kaputt->id);
 
     $this->app->instance(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class, new class(
-        app(\Platform\FoodAlchemist\Services\GpAggregateService::class), app(\Platform\FoodAlchemist\Services\Preis\PriceService::class), $kaputt->id
+        app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class), app(\Platform\FoodAlchemist\Services\Preis\PriceService::class), $kaputt->id
     ) extends \Platform\FoodAlchemist\Services\RecipeRecomputeService {
         public function __construct($gp, $preise, private int $kaputt)
         {

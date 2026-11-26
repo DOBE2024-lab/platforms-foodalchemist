@@ -460,7 +460,7 @@ class SensorikService
         // die Anzeige sagt dann „Profil fehlt" statt Schwächen zu melden. Quelle sichtbar (KI / Geschwister / alter Import / Hand).
         $t = DB::table('foodalchemist_gp_taste_vectors')->where('gp_id', $gpId)->first(['source', 'ai_confidence']);
         $out['gp_profil'] = [
-            'fehlt' => app(GpAromaService::class)->profilFehlt((int) $gpId),
+            'fehlt' => app(GpStamm\GpAromaService::class)->profilFehlt((int) $gpId),
             'quelle' => $t?->source,
             'confidence' => $t?->ai_confidence !== null ? (float) $t->ai_confidence : null,
         ];

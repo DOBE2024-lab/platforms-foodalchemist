@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
  *   Nennt ein Artikel/Produktpass später etwas anderes, wird korrigiert.
  * - `offen`: kein üblicher Wert; das GP bleibt ohne die Angabe (z. B. Konservierungsart nicht belegt, Güteklasse Olivenöl). Ein offenes GP wird
  *   in das EINE belegte GP derselben Ware zusammengeführt (Regel 91 v3, 14.11.2026); bei mehreren belegten Varianten bleibt es getrennt
- *   ({@see \Platform\FoodAlchemist\Services\GpBereinigenService::planDubletten()}, {@see self::zusammenfuehrbar()}).
+ *   ({@see \Platform\FoodAlchemist\Services\GpStamm\GpBereinigenService::planDubletten()}, {@see self::zusammenfuehrbar()}).
  *
  * Grund = Prüflisten-Text, welche Angabe fehlt („Konservierungsart nicht belegt (§8.20)“). Ersetzt die frühere Formulierung
  * `needs_review`/`konservierungsart_pflicht` aus 820 v1 (die es im Code nie gab).

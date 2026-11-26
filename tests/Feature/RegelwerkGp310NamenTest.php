@@ -6,7 +6,7 @@ use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Support\FettAngabe;
 use Platform\FoodAlchemist\Support\GpSammelware;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
@@ -125,7 +125,7 @@ it('Bereinigungs-Lauf: ein Singular-Vorschlag für Sammelware wird verworfen (Ko
     fputcsv($h, [$nuss->id, $nuss->name, '§6.1 Plural statt Singular', 'Erdnuss: geröstet, trocken'], ';', '"', '');
     fclose($h);
 
-    $plan = app(\Platform\FoodAlchemist\Services\GpBereinigenService::class)->planNamen($this->rootTeam->id, $datei);
+    $plan = app(\Platform\FoodAlchemist\Services\GpStamm\GpBereinigenService::class)->planNamen($this->rootTeam->id, $datei);
     expect($plan['aenderungen'])->toBe([])->and(implode(' ', array_column($plan['konflikte'], 'grund')))->toContain('Sammelware bleibt in der Mehrzahl');
     @unlink($datei);
 });
@@ -166,7 +166,7 @@ it('Dubletten-Plan Regel 91 v3 (14.11.): das offene GP geht in das eine belegte 
         fputcsv($h, ['N0001', $sieger->id, $sieger->name, 'behalten', ''], ';', '"', '');
         fputcsv($h, ['N0001', $verlierer->id, $verlierer->name, 'merge→' . $sieger->id, ''], ';', '"', '');
         fclose($h);
-        $plan = app(\Platform\FoodAlchemist\Services\GpBereinigenService::class)->planDubletten($this->rootTeam->id, $datei);
+        $plan = app(\Platform\FoodAlchemist\Services\GpStamm\GpBereinigenService::class)->planDubletten($this->rootTeam->id, $datei);
         @unlink($datei);
 
         return $plan;

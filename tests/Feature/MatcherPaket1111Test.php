@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Queue;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\IngredientMatchService;
+use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Services\Matching\MatchLeitplanken;
 use Platform\FoodAlchemist\Services\RecipeOneShotService;
 use Platform\FoodAlchemist\Support\ZutatFreitext;

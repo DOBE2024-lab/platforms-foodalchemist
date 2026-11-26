@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\IngredientMatchService;
+use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -216,7 +216,7 @@ it('(1) Kandidatenliste: das Query-Wort zählt nur an Wortanfang oder -ende — 
 });
 
 it('(9) Terminologie: Pfefferschote ↛ Pfeffer (Anti-Marker trotz „pfeffer“ im Trigger), Pfefferschote = Chilischote', function () {
-    $t = app(\Platform\FoodAlchemist\Services\TerminologyService::class);
+    $t = app(\Platform\FoodAlchemist\Services\GpStamm\TerminologyService::class);
 
     expect($t->isAntiMarker('Rote Pfefferschoten', 'Pfeffer bunt: geschrotet, trocken'))->toBeTrue()
         ->and($t->isAntiMarker('Rote Pfefferschoten', 'Chilischote: frisch, rot'))->toBeFalse()
@@ -226,7 +226,7 @@ it('(9) Terminologie: Pfefferschote ↛ Pfeffer (Anti-Marker trotz „pfeffer“
 });
 
 it('(2) „Wedges“ ist im GP-Namen ein Zuschnitt, kein Geschmack', function () {
-    $f = app(\Platform\FoodAlchemist\Services\GpNamingService::class)->felderAusName('Hokkaido-Kürbis: Wedges, frisch, mit Schale', true);
+    $f = app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class)->felderAusName('Hokkaido-Kürbis: Wedges, frisch, mit Schale', true);
 
     expect($f['form'])->toBe('Wedges')->and($f['flavor'])->toBe('');
 });

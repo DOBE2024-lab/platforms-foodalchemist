@@ -198,7 +198,7 @@ class RecipeReviewService
         $zeilen = $r->ingredients->keyBy('id');
         $einheiten = FoodAlchemistRecipe::query()->getConnection()->table('foodalchemist_vocab_units')
             ->whereNull('deleted_at')->pluck('id', 'slug');
-        $matcher = app(IngredientMatchService::class);
+        $matcher = app(GpStamm\IngredientMatchService::class);
         $heuristik = app(MatchHeuristics::class);
 
         $out = [];

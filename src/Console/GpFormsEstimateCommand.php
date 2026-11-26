@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpFormService;
+use Platform\FoodAlchemist\Services\GpStamm\GpFormService;
 
 /**
  * Naturaleinheit-Formen per KI nachziehen (Dominique, 2026-09-04).

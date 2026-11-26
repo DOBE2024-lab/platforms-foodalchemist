@@ -117,7 +117,7 @@ class DetailPanel extends Component
         }
         $this->kiFehler = null;
         try {
-            $this->klasseVorschlag = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+            $this->klasseVorschlag = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
                 ->classify($team, $this->recipeId);
         } catch (\RuntimeException $e) {
             $this->kiFehler = $e->getMessage();
@@ -131,7 +131,7 @@ class DetailPanel extends Component
             return;                                                  // null-Klassifikation ⇒ kein Schreibversuch (§7.5)
         }
         try {
-            app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->acceptKlasse(
+            app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->acceptKlasse(
                 $team, $this->recipeId, $this->klasseVorschlag['klasse_id'],
                 $this->klasseVorschlag['confidence'], $this->klasseVorschlag['reasoning'],
                 $this->klasseVorschlag['call_log_id'] ?? null,
@@ -158,7 +158,7 @@ class DetailPanel extends Component
         }
         $this->kiFehler = null;
         try {
-            $this->rollenVorschlag = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+            $this->rollenVorschlag = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
                 ->verteileRollen($team, $this->recipeId);
         } catch (\RuntimeException $e) {
             $this->kiFehler = $e->getMessage();
@@ -171,7 +171,7 @@ class DetailPanel extends Component
         if ($team === null || $this->recipeId === null || $this->rollenVorschlag === null || $this->rollenVorschlag['rollen'] === []) {
             return;
         }
-        app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+        app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
             ->acceptRollen($team, $this->recipeId, $this->rollenVorschlag['rollen']);
         $this->rollenVorschlag = null;
         $this->dispatch('recipe-gespeichert');

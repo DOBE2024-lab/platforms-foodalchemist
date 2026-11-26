@@ -40,7 +40,7 @@ beforeEach(function () {
     $this->finderSchlaegtVor = function (FoodAlchemistSupplierItem $la) {
         $mock = Mockery::mock(LaCandidateFinder::class, [
             app(\Platform\FoodAlchemist\Services\Matching\TokenEngine::class), app(\Platform\FoodAlchemist\Services\Matching\MatchHeuristics::class),
-            app(\Platform\FoodAlchemist\Services\TerminologyService::class), app(\Platform\FoodAlchemist\Services\Einkauf\StammLieferantService::class),
+            app(\Platform\FoodAlchemist\Services\GpStamm\TerminologyService::class), app(\Platform\FoodAlchemist\Services\Einkauf\StammLieferantService::class),
             app(\Platform\FoodAlchemist\Services\Einkauf\SupplierItemService::class), app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaStrategieResolver::class),
         ])->makePartial();
         $la->setAttribute('score', 0.8);

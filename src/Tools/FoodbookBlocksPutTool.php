@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 /** MCP-Steuerbarkeit · D7: einen Foodbook-Block bearbeiten (Label/Text/Menge/Preis/Sichtbarkeit). */
 class FoodbookBlocksPutTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract
 {
-    private const FELDER = ['label', 'customer_text', 'interne_bemerkung', 'sales_recipe_id', 'quantity', 'price_value', 'price_basis', 'visible', 'level'];
+    private const FELDER = ['label', 'customer_text', 'interne_bemerkung', 'sales_recipe_id', 'quantity', 'price_value', 'price_basis', 'visible', 'level', 'presentation_id'];   // presentation_id: Dienst lehnt ab (B7)
 
     public function getName(): string
     {

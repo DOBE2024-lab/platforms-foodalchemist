@@ -73,6 +73,16 @@ final class PositionProfil
         return in_array($art, [self::FOODBOOK, self::ANGEBOT], true);
     }
 
+    /** B8 (98 · 3.6 PR6): bepreiste Typen, die in eine Wahlgruppe dürfen. */
+    public static function wahlTypen(string $art): array
+    {
+        return match ($art) {
+            self::FOODBOOK => ['recipe_ref', 'concept_ref', 'header_frei_preis'],
+            self::ANGEBOT => ['recipe_ref', 'concept_ref', 'header_preis'],
+            default => [],
+        };
+    }
+
     /** Darreichung an der Zeile schreibbar (Konzept-Slots haben dafür setSlotDarreichung). */
     public static function darreichungSchreibbar(string $art): bool
     {

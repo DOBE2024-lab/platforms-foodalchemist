@@ -92,7 +92,7 @@ class FoodbookBlocksPostTool extends FoodAlchemistTool implements ToolContract, 
         // prüft der Positions-Kern im Dienst — keine zweite Prüfung hier.
         $daten = array_intersect_key($arguments, array_flip([
             'type', 'label', 'customer_text', 'interne_bemerkung',
-            'concept_id', 'sales_recipe_id', 'quantity', 'price_value', 'price_basis', 'visible',
+            'concept_id', 'sales_recipe_id', 'quantity', 'price_value', 'price_basis', 'visible', 'presentation_id',   // presentation_id: Dienst lehnt ab (B7)
         ]));
         if (($arguments['unit'] ?? '') !== '') {
             $unit = app(VocabularyService::class)->findEinheit($team, (string) $arguments['unit']);

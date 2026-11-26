@@ -377,10 +377,9 @@ class OfferCompositionService
     /** @param list<int> $blockIds */
     public function setVariantGroup(Team $team, array $blockIds, ?int $groupId): void
     {
-        foreach ($blockIds as $id) {
-            $block = $this->ownedBlock($team, (int) $id);
-            $block->update(['variant_group_id' => $groupId]);
-        }
+        $bloecke = array_map(fn ($id) => $this->ownedBlock($team, (int) $id), $blockIds);
+        $groupId === null || \Platform\FoodAlchemist\Services\Position\PositionValidierung::wahlgruppe('angebot', $bloecke);   // B8 (98 · 3.6 PR6)
+        array_walk($bloecke, fn ($b) => $b->update(['variant_group_id' => $groupId]));
     }
 
     /** Block-Sichtbarkeit setzen (toggle-Ziel aus dem Editor). Spiegelt Foodbook-Index::blockSichtbar. */

@@ -1,5 +1,6 @@
 <?php
 
+use Livewire\Livewire;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
@@ -7,15 +8,21 @@ use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregat;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
+use Platform\FoodAlchemist\Services\Position\PositionFehler;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
- * 98 · 3.6 PR5: heutiger Stand der Schreibprüfung für Menge, Einheit, Darreichung, Wahlgruppe und Staffel — in Konzept-Slot,
- * Foodbook- und Angebots-Block. B5–B9 sind bekannte Lücken, über die Dominique entscheidet (Kurator 26.11.); bis dahin friert
- * dieser Test sie ein, damit PR5 (gemeinsame Prüfung ohne Verhaltensänderung) nichts still verschiebt.
+ * 98 · 3.6 PR6: Schreibprüfung für Menge, Einheit, Darreichung, Wahlgruppe und Staffel — in Konzept-Slot, Foodbook- und
+ * Angebots-Block. Entscheide 26.11. (B7 Dominique; B5, B6, B8, B9 Kurator, Dominique ohne Präferenz; auf io kein Bestand):
+ *   B5 Menge: > 0 (Slot, Gericht, Konzept), Angebots-Position ≥ 0, leer = 1, keine Zahl abgelehnt.
+ *   B6 Einheit nur an der Angebots-Position; im Slot weiter nur wirksame Einheiten.
+ *   B7 Darreichung: beim Gerichtswechsel zurückgesetzt (Slot, Angebots-Block); fuerSlot nimmt nur eine Darreichung des Gerichts;
+ *      im Foodbook ausdrücklich abgelehnt.
+ *   B8 Wahlgruppe nur für bepreiste Typen eines Kapitels.
+ *   B9 Staffel nur am Preis-Kopf (header_frei_preis).
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
@@ -36,64 +43,98 @@ beforeEach(function () {
     $this->fbKap2 = $this->makeChapter($this->fbKap->foodbook, ['title' => 'Zweites']);
 
     $this->ag = app(OfferCompositionService::class);
-    $angebot = app(AngebotService::class)->create($this->t, ['name' => 'Angebot']);
-    $this->agKap = FoodAlchemistOfferChapter::create(['team_id' => $this->t->id, 'offer_id' => $angebot->id, 'title' => 'Kapitel', 'position' => 0]);
-    $this->agKap2 = FoodAlchemistOfferChapter::create(['team_id' => $this->t->id, 'offer_id' => $angebot->id, 'title' => 'Zweites', 'position' => 1]);
+    $this->angebot = app(AngebotService::class)->create($this->t, ['name' => 'Angebot']);
+    $this->agKap = FoodAlchemistOfferChapter::create(['team_id' => $this->t->id, 'offer_id' => $this->angebot->id, 'title' => 'Kapitel', 'position' => 0]);
+    $this->agKap2 = FoodAlchemistOfferChapter::create(['team_id' => $this->t->id, 'offer_id' => $this->angebot->id, 'title' => 'Zweites', 'position' => 1]);
 });
 
-it('B5 Menge: 0 und negativ gehen heute überall durch — negativ ergibt einen negativen Preis', function () {
-    $slot = $this->konzepte->fillSlot($this->t, $this->slot->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => -1]);
-    $this->konzepte->setSlotMengeEinheit($this->t, $slot->id, 0.0);
-    $fbBlock = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => -1]);
-    $agBlock = $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => -2]);
+it('B5 Menge: 0, negativ und keine Zahl abgelehnt; Angebots-Position darf 0; leer bleibt erlaubt', function () {
+    $slot = $this->konzepte->fillSlot($this->t, $this->slot->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
+    $gericht = ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id];
 
-    expect((float) $slot->fresh()->quantity)->toBe(0.0)
-        ->and(app(FoodbookAggregat::class)->blockPreis($fbBlock->fresh(), null, null, $this->t)['vk_pp'])->toBe(-10.0)
-        ->and($this->ag->blockPreis($agBlock->fresh(), null, $this->t)['vk_pp'])->toBe(-20.0);
+    expect(fn () => $this->konzepte->fillSlot($this->t, $slot->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => -1]))->toThrow(PositionFehler::class, 'Menge muss größer als 0 sein.')
+        ->and(fn () => $this->konzepte->setSlotMengeEinheit($this->t, $slot->id, 0.0))->toThrow(PositionFehler::class, 'Menge muss größer als 0 sein.')
+        ->and(fn () => $this->fb->addBlock($this->t, $this->fbKap->id, $gericht + ['quantity' => -1]))->toThrow(PositionFehler::class, 'Menge muss größer als 0 sein.')
+        ->and(fn () => $this->fb->addBlock($this->t, $this->fbKap->id, $gericht + ['quantity' => 'viel']))->toThrow(PositionFehler::class, 'Menge muss eine Zahl sein.')
+        ->and(fn () => $this->ag->addBlock($this->t, $this->agKap->id, $gericht + ['quantity' => 0]))->toThrow(PositionFehler::class, 'Menge muss größer als 0 sein.')
+        ->and(fn () => $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'position', 'label' => 'Service', 'price_value' => 5, 'quantity' => -1]))->toThrow(PositionFehler::class, 'Menge darf nicht negativ sein.');
+
+    $null = $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'position', 'label' => 'Getränke', 'price_value' => 5, 'quantity' => 0]);
+    $leer = $this->fb->addBlock($this->t, $this->fbKap->id, $gericht + ['quantity' => '']);
+    expect((float) $null->fresh()->quantity)->toBe(0.0)->and($leer->fresh()->quantity)->toBeNull()
+        ->and(app(FoodbookAggregat::class)->blockPreis($leer->fresh(), null, null, $this->t)['vk_pp'])->toBe(10.0)
+        ->and((float) $slot->fresh()->quantity)->toBe(1.0);
 });
 
-it('B6 Einheit: Gericht-Blöcke nehmen jede sichtbare Einheit an, gerechnet wird in Portionen (200 g = 200 Portionen)', function () {
-    $fbBlock = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => 200, 'unit_vocab_id' => $this->gramm->id]);
-    $agBlock = $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => 200, 'unit_vocab_id' => $this->gramm->id]);
+it('B6 Einheit: nur an der Angebots-Position', function () {
+    $gericht = ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'quantity' => 200, 'unit_vocab_id' => $this->gramm->id];
 
-    expect($fbBlock->fresh()->unit_vocab_id)->toBe($this->gramm->id)->and($agBlock->fresh()->unit_vocab_id)->toBe($this->gramm->id)
-        ->and(app(FoodbookAggregat::class)->blockPreis($fbBlock->fresh(), null, null, $this->t)['vk_pp'])->toBe(2000.0);
+    expect(fn () => $this->fb->addBlock($this->t, $this->fbKap->id, $gericht))->toThrow(PositionFehler::class, 'Eine Einheit gibt es nur an einer Angebots-Position.')
+        ->and(fn () => $this->ag->addBlock($this->t, $this->agKap->id, $gericht))->toThrow(PositionFehler::class, 'Eine Einheit gibt es nur an einer Angebots-Position.');
+    $pos = $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'position', 'label' => 'Wein', 'price_value' => 5, 'quantity' => 2, 'unit_vocab_id' => $this->gramm->id]);
+    expect($pos->fresh()->unit_vocab_id)->toBe($this->gramm->id);
 });
 
-it('B7 Darreichung: beim Gerichtswechsel bleibt sie stehen (Slot, Angebot), im Foodbook wird sie still verworfen', function () {
+it('B7 Darreichung: Gerichtswechsel setzt sie zurück (Slot, Angebot), fuerSlot nimmt nur eine des Gerichts, Foodbook lehnt sie ab', function () {
     $this->konzepte->fillSlot($this->t, $this->slot->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 1]);
     $this->konzepte->setSlotDarreichung($this->t, $this->slot->id, $this->dar->id);
+    $gleich = $this->konzepte->fillSlot($this->t, $this->slot->id, ['sales_recipe_id' => $this->gericht->id, 'quantity' => 2]);
+    expect($gleich->presentation_id)->toBe($this->dar->id);   // gleiches Gericht: Darreichung bleibt
     $slot = $this->konzepte->fillSlot($this->t, $this->slot->id, ['sales_recipe_id' => $this->anderes->id, 'quantity' => 1]);
 
     $agBlock = $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'presentation_id' => $this->dar->id]);
     $agBlock = $this->ag->updateBlock($this->t, $agBlock->id, ['sales_recipe_id' => $this->anderes->id]);
-    $fbBlock = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'presentation_id' => $this->dar->id]);
 
-    expect($slot->presentation_id)->toBe($this->dar->id)                 // Darreichung des alten Gerichts
-        ->and($this->konzepte->preisCockpit($this->konzept->fresh(), null, $this->t)['zeilen'][0]['price'])->toBe(10.0)   // rechnet mit ihr (Zander: 14)
-        ->and($agBlock->fresh()->presentation_id)->toBe($this->dar->id)
-        ->and($fbBlock->fresh()->presentation_id)->toBeNull();
+    expect($slot->presentation_id)->toBeNull()
+        ->and($this->konzepte->preisCockpit($this->konzept->fresh(), null, $this->t)['zeilen'][0]['price'])->toBe(14.0)
+        ->and($agBlock->fresh()->presentation_id)->toBeNull()
+        ->and(fn () => $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id, 'presentation_id' => $this->dar->id]))
+        ->toThrow(PositionFehler::class, 'Im Foodbook gibt es keine Darreichung je Block, sie kommt aus dem Konzept.');
+
+    // Altbestand: eine fremde Darreichung am Slot zählt nicht, es gilt wieder Konzept-Form bzw. Standard des Gerichts
+    $slot->forceFill(['presentation_id' => $this->dar->id])->save();
+    expect(app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->fuerSlot($slot->fresh())?->recipe_id)->toBe($this->anderes->id)
+        ->and($this->konzepte->preisCockpit($this->konzept->fresh(), null, $this->t)['zeilen'][0]['price'])->toBe(14.0);
 });
 
-it('B8 Wahlgruppe: Blöcke aus zwei Kapiteln und Struktur-Blöcke lassen sich gruppieren', function () {
+it('B8 Wahlgruppe: nur bepreiste Typen eines Kapitels; Aufheben geht immer', function () {
     $fb1 = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $fb2 = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->anderes->id]);
     $fbText = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'text', 'label' => 'Hinweis']);
     $fbAnders = $this->fb->addBlock($this->t, $this->fbKap2->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->anderes->id]);
-    $this->fb->setVariantGroup($this->t, [$fb1->id, $fbText->id, $fbAnders->id], 1);
-
     $ag1 = $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
     $agPos = $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'position', 'label' => 'Service', 'price_value' => 50]);
     $agAnders = $this->ag->addBlock($this->t, $this->agKap2->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->anderes->id]);
-    $this->ag->setVariantGroup($this->t, [$ag1->id, $agPos->id, $agAnders->id], 1);
 
-    expect([$fb1->fresh()->variant_group_id, $fbText->fresh()->variant_group_id, $fbAnders->fresh()->variant_group_id])->toBe([1, 1, 1])
-        ->and([$ag1->fresh()->variant_group_id, $agPos->fresh()->variant_group_id, $agAnders->fresh()->variant_group_id])->toBe([1, 1, 1]);
+    expect(fn () => $this->fb->setVariantGroup($this->t, [$fb1->id, $fbText->id], 1))->toThrow(PositionFehler::class, 'In eine Wahlgruppe gehören nur Gerichte, Konzepte und Preis-Köpfe.')
+        ->and(fn () => $this->fb->setVariantGroup($this->t, [$fb1->id, $fbAnders->id], 1))->toThrow(PositionFehler::class, 'Eine Wahlgruppe gehört zu genau einem Kapitel.')
+        ->and(fn () => $this->ag->setVariantGroup($this->t, [$ag1->id, $agPos->id], 1))->toThrow(PositionFehler::class, 'In eine Wahlgruppe gehören nur Gerichte, Konzepte und Preis-Köpfe.')
+        ->and(fn () => $this->ag->setVariantGroup($this->t, [$ag1->id, $agAnders->id], 1))->toThrow(PositionFehler::class, 'Eine Wahlgruppe gehört zu genau einem Kapitel.')
+        ->and(fn () => $this->fb->updateBlock($this->t, $fbText->id, ['variant_group_id' => 3]))->toThrow(PositionFehler::class, 'In eine Wahlgruppe gehören nur Gerichte, Konzepte und Preis-Köpfe.');
+
+    $this->fb->setVariantGroup($this->t, [$fb1->id, $fb2->id], 1);
+    $this->fb->setVariantGroup($this->t, [$fb1->id], null);
+    expect([$fb1->fresh()->variant_group_id, $fb2->fresh()->variant_group_id, $fbText->fresh()->variant_group_id])->toBe([null, 1, null]);
 });
 
-it('B9 Staffel: Stufen lassen sich an jedem Foodbook-Block speichern, gerechnet werden sie nur am Preis-Kopf mit Basis staffel', function () {
-    $block = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
-    $this->fb->setStaffel($this->t, $block->id, [['min_persons' => 1, 'price' => 99.0]]);
+it('B8 in der Oberfläche: eine abgelehnte Wahlgruppe zeigt einen Hinweis statt einer Fehlerseite', function () {
+    $fb1 = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $fbAnders = $this->fb->addBlock($this->t, $this->fbKap2->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->anderes->id]);
+    Livewire::test(\Platform\FoodAlchemist\Livewire\Foodbooks\Index::class)->call('waehle', $this->fbKap->foodbook_id)->set('selectedKapitelId', $this->fbKap->id)
+        ->set('markiert', [$fb1->id, $fbAnders->id])->call('wahlGruppeBilden')->assertHasNoErrors()->assertDispatched('fa-saved', type: 'error');
 
-    expect($block->fresh()->staffel()->count())->toBe(1)
-        ->and(app(FoodbookAggregat::class)->blockPreis($block->fresh(), 50, null, $this->t)['vk_pp'])->toBe(10.0);
+    $ag1 = $this->ag->addBlock($this->t, $this->agKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $agAnders = $this->ag->addBlock($this->t, $this->agKap2->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->anderes->id]);
+    Livewire::test(\Platform\FoodAlchemist\Livewire\Angebote\Editor::class)->call('oeffnen', $this->angebot->id)->set('selectedKapitelId', $this->agKap->id)
+        ->set('markiert', [$ag1->id, $agAnders->id])->call('wahlGruppeBilden')->assertDispatched('fa-saved', type: 'error');
+    expect($fb1->fresh()->variant_group_id)->toBeNull()->and($ag1->fresh()->variant_group_id)->toBeNull();
+});
+
+it('B9 Staffel: nur am Preis-Kopf', function () {
+    $gericht = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'recipe_ref', 'sales_recipe_id' => $this->gericht->id]);
+    $kopf = $this->fb->addBlock($this->t, $this->fbKap->id, ['type' => 'header_frei_preis', 'label' => 'Buffet', 'price_basis' => 'staffel']);
+
+    expect(fn () => $this->fb->setStaffel($this->t, $gericht->id, [['min_persons' => 1, 'price' => 99.0]]))->toThrow(PositionFehler::class, 'Staffelpreise gibt es nur an einem Preis-Kopf.');
+    $this->fb->setStaffel($this->t, $kopf->id, [['min_persons' => 1, 'price' => 20.0], ['min_persons' => 50, 'price' => 18.0]]);
+    expect($kopf->fresh()->staffel()->count())->toBe(2)->and($gericht->fresh()->staffel()->count())->toBe(0);
 });

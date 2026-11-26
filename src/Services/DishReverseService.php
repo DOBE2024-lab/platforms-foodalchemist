@@ -23,7 +23,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 class DishReverseService
 {
     public function __construct(
-        private IngredientMatchService $matcher,
+        private GpStamm\IngredientMatchService $matcher,
         private Pairing\PairingService $pairing,
         private Einkauf\LaFirstGpService $laFirst,
     ) {

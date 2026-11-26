@@ -125,6 +125,6 @@ it('gps_homogenitaet.GET zeigt NUR Sichtbares: kein fremdes Team, stamm_paket er
     $this->alleLieferantenFrei($this->rootTeam);
     expect($namen())->toBe(['Basis GP', 'Eigenes GP', 'Paket GP']);
 
-    $global = collect(app(\Platform\FoodAlchemist\Services\GpHomogenitaetService::class)->bericht()['gps'])->pluck('name')->sort()->values()->all();
+    $global = collect(app(\Platform\FoodAlchemist\Services\GpStamm\GpHomogenitaetService::class)->bericht()['gps'])->pluck('name')->sort()->values()->all();
     expect($global)->toBe(['Basis GP', 'Eigenes GP', 'Fremdes GP', 'Paket GP']);   // Befehl/Konsole bleibt global
 });

@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Services\Einstellungen\LagerorteService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\Einkauf\StammLieferantService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 use RuntimeException;
 
 /**

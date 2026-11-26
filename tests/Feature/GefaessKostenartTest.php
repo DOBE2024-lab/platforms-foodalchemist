@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService;
-use Platform\FoodAlchemist\Services\GpMasseService;
+use Platform\FoodAlchemist\Services\GpStamm\GpMasseService;
 use Platform\FoodAlchemist\Services\Planung\PlanungsblattService;
 use Platform\FoodAlchemist\Support\NonFoodRegeln;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

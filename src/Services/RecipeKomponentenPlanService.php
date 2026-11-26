@@ -130,7 +130,7 @@ class RecipeKomponentenPlanService
         if (($gleich = app(RecipeService::class)->findByTokenSetMitReife($team, $name)) !== null) {
             $ids[] = (int) $gleich['recipe']->id;
         }
-        foreach (app(IngredientMatchService::class)->candidatesFor($team, $name, null, 5) as $c) {
+        foreach (app(GpStamm\IngredientMatchService::class)->candidatesFor($team, $name, null, 5) as $c) {
             if (($c['kind'] ?? null) === 'sub' && isset($c['id'])) {
                 $ids[] = (int) $c['id'];
             }

@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Observers;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen;
-use Platform\FoodAlchemist\Services\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
 
 /**
  * Ändert sich das Allergenprofil eines Lieferantenartikels (Artikel-Modal, Produktpass, Import über Eloquent), zieht die Allergen-Konfidenz der GPs, auf die

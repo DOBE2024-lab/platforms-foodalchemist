@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistTerminologyAlias;
 use Platform\FoodAlchemist\Models\FoodAlchemistTerminologyAntiMarker;

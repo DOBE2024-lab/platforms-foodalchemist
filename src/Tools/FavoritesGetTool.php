@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\FavoriteGpService;
+use Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService;
 
 /**
  * 06·H2 (MCP-Lockstep, read) — Favoriten (Lieblings-GPs): aktuelle gepinnte Liste

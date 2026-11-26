@@ -31,7 +31,7 @@ it('DoD: Kill-Switch stoppt jeden KI-Call typisiert — VOR Provider und Log', f
     $vk = \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'ks', 'name' => 'X', 'status' => 'draft', 'is_sales_recipe' => true,
     ]);
-    expect(fn () => app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->classify($this->rootTeam, $vk->id))
+    expect(fn () => app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->classify($this->rootTeam, $vk->id))
         ->toThrow(KiDeaktiviertException::class);
 
     // wieder an → Call läuft + loggt

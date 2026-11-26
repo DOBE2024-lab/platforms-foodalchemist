@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\ComponentEquivalentService;
+use Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptVariantService;
 use Platform\FoodAlchemist\Services\Concepter\AufbauKandidatenService;

@@ -232,8 +232,8 @@ it('Klassifikator überspringt Non-Food: keine Food-Struktur, kein LLM-Call; Geg
     $mock = $this->mock(AiGatewayService::class);
     $mock->shouldReceive('propose')->once()->with('gp.suggest', Mockery::on(fn ($c) => $c['label'] === 'Sesampaste'))->andThrow(new RuntimeException('kein Provider'));
 
-    (new ClassifyLaJob($nf->id, $this->rootTeam->id))->handle($mock, app(\Platform\FoodAlchemist\Services\GpNamingService::class));
-    (new ClassifyLaJob($food->id, $this->rootTeam->id))->handle($mock, app(\Platform\FoodAlchemist\Services\GpNamingService::class));
+    (new ClassifyLaJob($nf->id, $this->rootTeam->id))->handle($mock, app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class));
+    (new ClassifyLaJob($food->id, $this->rootTeam->id))->handle($mock, app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class));
 
     expect(FoodAlchemistSupplierItemStructure::where('supplier_item_id', $nf->id)->exists())->toBeFalse();
 });

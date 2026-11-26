@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Support\NonFoodMasse;
@@ -74,7 +74,7 @@ class GpMasseService
     /** Der Typ am Gericht ist aus der Standard-Darreichung abgeleitet (18.11.2026) — ändert sich der Typ des Gefäßes, ziehen deren Gerichte nach. */
     private function typInGerichte(FoodAlchemistGp $gp): void
     {
-        $svc = app(DarreichungService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
         \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::query()->where('vessel_gp_id', $gp->id)->where('is_standard', true)
             ->each(fn ($d) => $svc->typInsGericht($d, true));
     }

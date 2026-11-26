@@ -233,15 +233,15 @@ class VollstaendigkeitReportService
         $mapping = fn (array $quellen, bool $nur) => fn ($q) => $q->from('foodalchemist_gp_anchor_mappings AS m')->whereColumn('m.gp_id', 'foodalchemist_gps.id')
             ->whereNull('m.deleted_at')->when($quellen !== [], fn ($w) => $nur ? $w->whereIn('m.source', $quellen) : $w->whereNotIn('m.source', $quellen));
         $paten = \Platform\FoodAlchemist\Support\AnkerQuelle::PATEN_QUELLEN;
-        $neutralTabelle = \Platform\FoodAlchemist\Services\GpAromaService::neutralTabelle();
+        $neutralTabelle = \Platform\FoodAlchemist\Services\GpStamm\GpAromaService::neutralTabelle();
         $aromaanker = [
             'echt' => FoodAlchemistGp::visibleToTeam($team)->whereExists($mapping($paten, false))->count(),
             'pate' => FoodAlchemistGp::visibleToTeam($team)->whereNotExists($mapping($paten, false))->whereExists($mapping($paten, true))->count(),
             'neutral' => $neutralTabelle ? FoodAlchemistGp::visibleToTeam($team)->whereNotExists($mapping([], true))
-                ->whereExists(fn ($q) => $q->from(\Platform\FoodAlchemist\Services\GpAromaService::NEUTRAL_TABELLE.' AS n')->whereColumn('n.gp_id', 'foodalchemist_gps.id'))->count() : 0,
+                ->whereExists(fn ($q) => $q->from(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::NEUTRAL_TABELLE.' AS n')->whereColumn('n.gp_id', 'foodalchemist_gps.id'))->count() : 0,
         ];
         $ohneAnker = FoodAlchemistGp::visibleToTeam($team)->whereNotExists($mapping([], true))
-            ->when($neutralTabelle, fn ($q) => $q->whereNotExists(fn ($n) => $n->from(\Platform\FoodAlchemist\Services\GpAromaService::NEUTRAL_TABELLE.' AS n')
+            ->when($neutralTabelle, fn ($q) => $q->whereNotExists(fn ($n) => $n->from(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::NEUTRAL_TABELLE.' AS n')
                 ->whereColumn('n.gp_id', 'foodalchemist_gps.id')))
             ->count();
         $aromaanker['ohne'] = $ohneAnker;

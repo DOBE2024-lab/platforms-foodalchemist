@@ -325,7 +325,7 @@ class MatchHeuristics
             return false;
         }
 
-        return ! in_array($this->engine->produktForm($name)['zustand'], ['TK', 'trocken', 'konserviert', ...\Platform\FoodAlchemist\Services\GpNamingService::BEHANDLUNG], true);
+        return ! in_array($this->engine->produktForm($name)['zustand'], ['TK', 'trocken', 'konserviert', ...\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::BEHANDLUNG], true);
     }
 
     /**
@@ -474,8 +474,8 @@ class MatchHeuristics
     {
         $z = $zustandCol !== null ? trim($zustandCol) : '';
         // v3.6.0 2b: Behandlung als Zustand + TK im Namen ⇒ physisch TK-Ware (TK-Vorzug im Ranking greift)
-        if (in_array($z, \Platform\FoodAlchemist\Services\GpNamingService::BEHANDLUNG, true)
-            && \Platform\FoodAlchemist\Services\GpNamingService::istTk(null, $gpName)) {
+        if (in_array($z, \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::BEHANDLUNG, true)
+            && \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::istTk(null, $gpName)) {
             return 'frozen';
         }
         if ($z !== '') {

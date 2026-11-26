@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SpeisenKlassenService;
+use Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService;
 
 /**
  * M8-01: SCHREIB-Tool-Muster — ausschließlich via GL-07-Proposal-Flow

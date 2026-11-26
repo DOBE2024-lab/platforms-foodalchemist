@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\GpHomogenitaetService;
+use Platform\FoodAlchemist\Services\GpStamm\GpHomogenitaetService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

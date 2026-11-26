@@ -69,14 +69,14 @@ it('Vergleichstest ClassifyLaJob: extern und Plattformweg klassifizieren gleich;
     $a = ($this->la)('Zwiebeln gelb 1 kg Netz');
     $b = ($this->la)('Zwiebeln gelb 1 kg Netz');
 
-    (new ClassifyLaJob($a->id, $this->rootTeam->id))->handle(app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class), app(\Platform\FoodAlchemist\Services\GpNamingService::class));
+    (new ClassifyLaJob($a->id, $this->rootTeam->id))->handle(app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class), app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class));
     $plattform = ($this->struktur)($a);
     $callsPlattform = $this->stub->calls;
     expect($plattform['main_ingredient_display'])->toBe('Zwiebel')->and($callsPlattform)->toBe(1);
 
     $job = new ClassifyLaJob($b->id, $this->rootTeam->id, true);
     expect($job)->toBeInstanceOf(\Platform\FoodAlchemist\Services\Ai\KiExternWiederholbar::class);
-    $job->handle(app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class), app(\Platform\FoodAlchemist\Services\GpNamingService::class));
+    $job->handle(app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class), app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class));
     expect(($this->struktur)($b))->toBeNull('wartend: nichts geschrieben')
         ->and(DB::table('foodalchemist_ki_auftraege')->where('status', 'offen')->count())->toBe(1)
         ->and(DB::table('foodalchemist_ki_auftraege')->value('feature'))->toBe('gp.suggest');
@@ -108,7 +108,7 @@ it('GpAromaNachholenJob extern: KI-Aufträge statt Provider, bis zur Antwort nic
     $gpId = $this->registry->get('foodalchemist.gps.POST')->execute(['hauptzutat' => 'Ananas'], $this->mcp)->data['id'];
     Queue::fake();                                                // Queue-Stand zurücksetzen; der Job läuft jetzt von Hand
     $job = new GpAromaNachholenJob($this->rootTeam->id, (int) $this->user->id, $gpId, true);
-    $job->handle(app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class), app(\Platform\FoodAlchemist\Services\GpAromaService::class));
+    $job->handle(app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class), app(\Platform\FoodAlchemist\Services\GpStamm\GpAromaService::class));
 
     $features = DB::table('foodalchemist_ki_auftraege')->where('status', 'offen')->pluck('feature')->all();
     expect($features)->not->toBe([])->and($this->stub->calls)->toBe(0, 'Plattform-Provider nicht gerufen')

@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

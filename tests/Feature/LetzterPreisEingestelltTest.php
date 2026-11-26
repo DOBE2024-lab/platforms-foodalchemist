@@ -7,7 +7,7 @@ use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 use Platform\FoodAlchemist\Services\Einkauf\InventurService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\Preis\PriceService;

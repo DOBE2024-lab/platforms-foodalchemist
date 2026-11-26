@@ -351,7 +351,7 @@ it('nimmt Grundprodukte ohne Naturalgewicht in den Nachzieh-Scope und lässt bed
     expect($scope())->toBe(0);
 
     // … und draußen, sobald eines da ist (Resume: kein zweiter KI-Aufruf für denselben Fall).
-    app(\Platform\FoodAlchemist\Services\GpFormService::class)
+    app(\Platform\FoodAlchemist\Services\GpStamm\GpFormService::class)
         ->setForm($this->rootTeam, (int) $gp->id, 'bund', 60.0, 'manual');
     expect($scope())->toBe(1);
 

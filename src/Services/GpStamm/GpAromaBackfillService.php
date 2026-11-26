@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -52,7 +52,7 @@ class GpAromaBackfillService
         File::ensureDirectoryExists($bericht);
         $stempel = now()->format('Ymd_His');
         $aroma = app(GpAromaService::class);
-        $bulk = app(Plattform\BulkEnrichService::class);
+        $bulk = app(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class);
 
         $neutralNeu = in_array('anker_neutral', $neuQuellen, true);
         $ohneAnker = $nur !== 'profil' ? $this->ohneAnker($scope, $neutralNeu) : [];
@@ -260,7 +260,7 @@ class GpAromaBackfillService
      */
     private function ohneProfil(?Team $scope = null): array
     {
-        $summe = implode(' + ', array_map(fn ($d) => "t.{$d}", SensorikService::DIMS));
+        $summe = implode(' + ', array_map(fn ($d) => "t.{$d}", \Platform\FoodAlchemist\Services\SensorikService::DIMS));
 
         return $this->basis($scope)->leftJoin('foodalchemist_gp_taste_vectors AS t', 't.gp_id', '=', 'g.id')
             ->where(fn ($q) => $q->whereNull('t.id')->orWhere(fn ($w) => $w->whereRaw("({$summe}) = 0")
@@ -348,7 +348,7 @@ class GpAromaBackfillService
      * @param  list<int>  $rezeptIds
      * @param  list<int>  $ankerIds  GPs, deren KI-Anker neu gefragt wird (`anker_ki`)
      */
-    private function neuSchaetzen(Plattform\BulkEnrichService $bulk, Team $team, array $gpIds, array $rezeptIds, int $limit, bool $extern, string $protokoll, callable $ausgabe, array $ankerIds = []): int
+    private function neuSchaetzen(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService $bulk, Team $team, array $gpIds, array $rezeptIds, int $limit, bool $extern, string $protokoll, callable $ausgabe, array $ankerIds = []): int
     {
         $n = 0;
         $ankerIds = array_values(array_filter($this->streueNachWg($ankerIds), fn ($id) => ($gp = FoodAlchemistGp::find($id)) !== null && app(GpAromaService::class)->anreicherbar($gp) && $gp->isOwnedBy($team)));
@@ -379,7 +379,7 @@ class GpAromaBackfillService
             $ausgabe('warn', 'Rezept-Profile werden nur mit --anbieter=plattform neu geschätzt.');
             $rezeptIds = [];
         }
-        $sensorik = app(SensorikService::class);
+        $sensorik = app(\Platform\FoodAlchemist\Services\SensorikService::class);
         foreach ($limit > 0 ? array_slice($rezeptIds, 0, $limit) : $rezeptIds as $rid) {
             try {
                 $r = $sensorik->bewerteRezept($rid, true);

@@ -1365,7 +1365,7 @@ return [
             'klasse' => 'mittel',   // Dominique 19.10.: Feld-Ableitung braucht nicht die starke Klasse (io ≈ 2 Cent je Aufruf auf STARK)
             'task' => 'Leite aus der Roh-Bezeichnung eines Lebensmittels die strukturierten '
                 . 'GP-Naming-Felder nach Regelwerk §6 ab: werte = {hauptzutat, flavor, zusatz, condition '
-                . '(' . \Platform\FoodAlchemist\Services\GpNamingService::zustandListe() . '; gepökelt/geräuchert/luftgetrocknet sind Zustand, nicht Verarbeitung; '
+                . '(' . \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::zustandListe() . '; gepökelt/geräuchert/luftgetrocknet sind Zustand, nicht Verarbeitung; '
                 . 'mehrere Behandlungen ⇒ Vorrang luftgetrocknet > geräuchert > gepökelt; TK + Behandlung ⇒ condition = '
                 . 'die Behandlung, „TK“ steht vorn in processing, z. B. „TK, geschnitten“; der Name wird daraus „Räucherlachs: geschnitten, geräuchert, TK“), '
                 . 'processing, form, pflichtangabe (Reihenfolge im Namen, Stufe 2: Geschmack, Verarbeitung, Zuschnitt, Zustand, Portion, Pflichtangabe — '
@@ -1549,7 +1549,7 @@ return [
         ],
         'gp.condition' => [
             'klasse' => 'leicht',
-            'task' => 'Bestimme den §9-Zustand (' . \Platform\FoodAlchemist\Services\GpNamingService::zustandListe() . ') des Grundprodukts '
+            'task' => 'Bestimme den §9-Zustand (' . \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::zustandListe() . ') des Grundprodukts '
                 . 'aus Name und Lieferantenartikeln: werte = {condition}. Mehrere Behandlungen ⇒ Vorrang luftgetrocknet > '
                 . 'geräuchert > gepökelt; TK + Behandlung ⇒ die Behandlung (TK ist Zusatz im Namen). Echt widersprüchliche '
                 . 'Angaben (z. B. frisch und konserviert) ⇒ condition = null.',
@@ -2236,7 +2236,7 @@ return [
                 . '(quell_lieferantenartikel, LA-First) ab, um die gemeldeten Regelverstoesse (verstoesse) zu beheben. '
                 . 'HARTE REGEL: NUR aus dem LA + den vorhandenen GP-Daten ableiten — was das LA nicht belegt, gib als '
                 . 'null zurueck (NIEMALS raten/erfinden). Felder: name (§6-Schema, Singular §6.1 — Sammelware bleibt Mehrzahl: Eier, Hülsenfrüchte, Nüsse & Kerne, Beeren, Kapern, Oliven), zustand (§9: '
-                . '' . \Platform\FoodAlchemist\Services\GpNamingService::zustandListe() . '), warengruppe (§3-Code), sub_kategorie. Ein Feld, das schon konform '
+                . '' . \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::zustandListe() . '), warengruppe (§3-Code), sub_kategorie. Ein Feld, das schon konform '
                 . 'oder nicht sicher aus dem LA ableitbar ist, bleibt null. werte = {name, zustand, warengruppe, sub_kategorie}. '
                 . $umlautKlausel,
         ],

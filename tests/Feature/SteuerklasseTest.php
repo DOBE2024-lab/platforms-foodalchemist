@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Platform\FoodAlchemist\Services\SteuerklasseService;
+use Platform\FoodAlchemist\Services\GpStamm\SteuerklasseService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

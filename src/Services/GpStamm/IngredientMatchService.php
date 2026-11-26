@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\MatchBand;
@@ -23,8 +23,8 @@ use Platform\FoodAlchemist\Services\Matching\TokenEngine;
  */
 class IngredientMatchService
 {
-    use Matching\KandidatenNachwahl;
-    use Matching\PoolAbfragen;
+    use \Platform\FoodAlchemist\Services\Matching\KandidatenNachwahl;
+    use \Platform\FoodAlchemist\Services\Matching\PoolAbfragen;
 
     /** Toleranz „gleich gut“ in der Kandidatenliste (Kopf-Boden 0,90 vs. 0,901 mit Ganzwort-Bonus) — {@see Matching\KandidatenNachwahl}. */
     private const GLEICH_GUT = 0.01;
@@ -93,7 +93,7 @@ class IngredientMatchService
         ?float $menge = null,               // Spec 95c: Menge der Zeile (in $einheit) — Gewürzmenge wählt die getrocknete Form
     ): array {
         // Spec 96: „Limette (Saft)“, „Saft von 2 Zitronen“ → Frucht-Derivat (vor den Hinweisen: „(Saft)“ ist hier Ware, kein Zusatz)
-        if ($basisVariante && ($frucht = Matching\FruchtDerivat::treffer($team, $ingredientName, $convenience)) !== null) {
+        if ($basisVariante && ($frucht = \Platform\FoodAlchemist\Services\Matching\FruchtDerivat::treffer($team, $ingredientName, $convenience)) !== null) {
             return $frucht;
         }
         // Spec 95: Hinweis-Zusätze aus dem Rezepttext („(1 EL)“, „, Raumtemperatur“, „(optional)“) tragen keine Ware — vor jedem Abgleich weg
@@ -103,7 +103,7 @@ class IngredientMatchService
         $this->krautBlaetter = false;
         $ingredientName = $this->ohneKrautBlaetter($team, $ingredientName);
         // Leitplanke Eigenleistung (05.11.): mit Convenience spricht die Zeile die Sprache der Fertigware („gekocht“ → „gegart“)
-        $ingredientName = Matching\BasisVariante::fertigwareText($ingredientName, $convenience);
+        $ingredientName = \Platform\FoodAlchemist\Services\Matching\BasisVariante::fertigwareText($ingredientName, $convenience);
         // Kurator 28.10. (1): „Vollei“/„Volleier“ ohne flüssig/pasteurisiert meint das Schalenei — Flüssigei nur, wenn der Text es sagt
         if (preg_match('/(?<![\p{L}])voll-?ei(?:er)?(?![\p{L}])/iu', $ingredientName) === 1 && preg_match('/fl(?:ü|ue)ssig|pasteuris/iu', $ingredientName) !== 1) {
             $ingredientName = (string) preg_replace('/(?<![\p{L}])voll-?ei(?:er)?(?![\p{L}])/iu', 'Eier', $ingredientName);
@@ -134,7 +134,7 @@ class IngredientMatchService
         $this->tiebreakQuery = $this->engine->ingredientTokens($ingredientName);
         $this->aliasTokens = null;
         if ($weg === 'zukauf' && $this->zukaufTreffer !== null) {   // 29.10.: Leitplanken wählen das Zukauf-GP, das die Prüfung gefunden hat (auch „Fond: Geflügel“ → „Geflügelfond“)
-            return app(Matching\BasisVariante::class)->pruefe($team, $ingredientName, $this->zukaufTreffer, $pref === 'neutral' ? 'fresh_first' : $pref, $bio, $einheit, $menge, $convenience);
+            return app(\Platform\FoodAlchemist\Services\Matching\BasisVariante::class)->pruefe($team, $ingredientName, $this->zukaufTreffer, $pref === 'neutral' ? 'fresh_first' : $pref, $bio, $einheit, $menge, $convenience);
         }
         $this->basisKomponente = $weg === 'basis';
         $zukaufHinweis = $this->basisKomponente ? $this->zukaufHinweis : null;
@@ -286,7 +286,7 @@ class IngredientMatchService
             return $final;
         }
         $bvPref = $pref === 'neutral' ? 'fresh_first' : $pref;
-        $geprueft = app(Matching\BasisVariante::class)->pruefe($team, $ingredientName, $final, $bvPref, $bio, $this->einheit, $this->menge, $convenience);
+        $geprueft = app(\Platform\FoodAlchemist\Services\Matching\BasisVariante::class)->pruefe($team, $ingredientName, $final, $bvPref, $bio, $this->einheit, $this->menge, $convenience);
         if ($gpLauf && ($geprueft['target'] ?? null) === 'gp' && ($geprueft['variante_offen'] ?? []) !== []) {
             $geprueft = $this->ohneUngenannteVariante($team, $ingredientName, $querySlug, $final, $geprueft, $bvPref, $bio, $convenience) ?? $geprueft;
         }
@@ -354,10 +354,10 @@ class IngredientMatchService
         if (! $this->basisOhneZukaufSignal($team, $text)) {
             return null;
         }
-        $weg = $zubereitung ?? Matching\MatchLeitplanken::zubereitung(['convenience' => $convenience]);
+        $weg = $zubereitung ?? \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::zubereitung(['convenience' => $convenience]);
         $gp = $weg !== 'eigen' ? $this->zukaufGp($team, $text) : null;
         if ($weg === 'ohne') {
-            $weg = Matching\MatchLeitplanken::OHNE_VORGABE;
+            $weg = \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::OHNE_VORGABE;
             $this->zukaufHinweis = $gp !== null && $weg !== 'zukauf' ? 'Gibt es auch als Zukauf: ' . ($gp['gp_name'] ?? 'GP #' . $gp['gp_id']) : null;
         }
 
@@ -376,7 +376,7 @@ class IngredientMatchService
             return null;
         }
 
-        return app(Matching\BasisVariante::class)->pruefe($team, $text, $this->zukaufTreffer, $pref === 'neutral' ? 'fresh_first' : $pref, $bio, null);
+        return app(\Platform\FoodAlchemist\Services\Matching\BasisVariante::class)->pruefe($team, $text, $this->zukaufTreffer, $pref === 'neutral' ? 'fresh_first' : $pref, $bio, null);
     }
 
     /**
@@ -493,7 +493,7 @@ class IngredientMatchService
         }
         if ($ok && ($final['target'] ?? null) === 'gp'
             && ! in_array((string) FoodAlchemistGp::query()->whereKey((int) $final['gp_id'])->value('commodity_group_code'), ['13', '09'], true)) {
-            return app(Matching\BasisVariante::class)->pruefe($team, $ingredientName, $final, $pref === 'neutral' ? 'fresh_first' : $pref, $bio, $this->einheit, $this->menge);
+            return app(\Platform\FoodAlchemist\Services\Matching\BasisVariante::class)->pruefe($team, $ingredientName, $final, $pref === 'neutral' ? 'fresh_first' : $pref, $bio, $this->einheit, $this->menge);
         }
 
         return ($ok && ($final['target'] ?? null) === 'gp' ? ['status' => MatchBand::FuzzyLow] + $final : $this->noMatch($final['score'])) + ['basiskomponente' => 'stub'];
@@ -934,7 +934,7 @@ class IngredientMatchService
             }
             // Regelwerk GP v3.6.0: gepökelt/geräuchert/luftgetrocknet waren bis dahin Verarbeitung — Bestands-GPs tragen sie im
             // Namen („Lachs: TK, geraeuchert"), die Spalte noch den alten Zustand. Bis zur Daten-Nachführung zählt dort der Name.
-            if (in_array($zustand, \Platform\FoodAlchemist\Services\GpNamingService::BEHANDLUNG, true)) {
+            if (in_array($zustand, \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::BEHANDLUNG, true)) {
                 return preg_match('/(?<![\p{L}])(?:' . preg_quote($zustand, '/') . '|' . preg_quote(strtr($zustand, ['ö' => 'oe', 'ä' => 'ae', 'ü' => 'ue']), '/') . ')/iu', $name) === 1;
             }
 
@@ -1106,7 +1106,7 @@ class IngredientMatchService
             $lieferant = $this->tiebreakMemo['lead'][(int) $leadId] ??= (int) (\Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem::visibleToTeam($team)
                 ->whereKey((int) $leadId)->value('supplier_id') ?? 0);
             $wg = (string) ($gp->commodity_group_code ?? '');
-            $this->tiebreakMemo['stamm'][$wg] ??= array_fill_keys(app(Einkauf\StammLieferantService::class)->stammSupplierIdsFor($team, $wg !== '' ? $wg : null), true);
+            $this->tiebreakMemo['stamm'][$wg] ??= array_fill_keys(app(\Platform\FoodAlchemist\Services\Einkauf\StammLieferantService::class)->stammSupplierIdsFor($team, $wg !== '' ? $wg : null), true);
             $stamm = $lieferant !== 0 && isset($this->tiebreakMemo['stamm'][$wg][$lieferant]) ? 1 : 0;
         }
 
@@ -1300,7 +1300,7 @@ class IngredientMatchService
             && array_intersect($this->engine->tokenize(implode(' ', $m[1])), $this->tiebreakQuery) !== []) {
             return false;
         }
-        $offen = app(Matching\BasisVariante::class)->ungenannt($gp, $this->tiebreakQuery);
+        $offen = app(\Platform\FoodAlchemist\Services\Matching\BasisVariante::class)->ungenannt($gp, $this->tiebreakQuery);
 
         return array_filter($offen, fn (string $e) => str_starts_with($e, 'Geschmack:') || str_starts_with($e, 'Marke:')) === [];
     }

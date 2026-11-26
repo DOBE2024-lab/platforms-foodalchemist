@@ -620,7 +620,7 @@ class VkModal extends Component
     {
         $gesetzt = [];
         if ($this->recipeId !== null && (empty($this->form['dish_class_id']) || empty($this->form['dish_main_group_id']))) {
-            $k = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)->classify($team, $this->recipeId);
+            $k = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)->classify($team, $this->recipeId);
             if (empty($this->form['dish_class_id']) && $k['klasse_id'] !== null) {
                 $this->form['dish_class_id'] = (string) $k['klasse_id'];
                 $gesetzt[] = 'Klasse '.$k['klasse_name'];
@@ -893,7 +893,7 @@ class VkModal extends Component
             return;
         }
         $this->fehler = null;
-        $this->rollenVorschlag = app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+        $this->rollenVorschlag = app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
             ->verteileRollen($team, $this->recipeId);
     }
 
@@ -903,7 +903,7 @@ class VkModal extends Component
         if ($team === null || $this->recipeId === null || $this->rollenVorschlag === null || $this->rollenVorschlag['rollen'] === []) {
             return;
         }
-        app(\Platform\FoodAlchemist\Services\SpeisenKlassenService::class)
+        app(\Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService::class)
             ->acceptRollen($team, $this->recipeId, $this->rollenVorschlag['rollen']);
         $this->rollenVorschlag = null;
         $this->zutatenVersion++;                                     // Editor-rows neu vom Server

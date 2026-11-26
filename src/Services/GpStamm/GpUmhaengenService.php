@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -335,7 +335,7 @@ class GpUmhaengenService
             return [];
         }
         try {
-            return app(Einkauf\LeadLaService::class)->guardAbweichungen($team, $ziel, $supplierItemId);
+            return app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->guardAbweichungen($team, $ziel, $supplierItemId);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             return [];   // Artikel für das Team nicht sichtbar: die übrigen Plan-Prüfungen greifen
         }

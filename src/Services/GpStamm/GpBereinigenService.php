@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -242,7 +242,7 @@ class GpBereinigenService
                         // Regel 91 v3 (14.11.2026): offen → das eine belegte GP derselben Ware ja; ein belegtes GP nie in ein offenes
                         $fehler[] = "#{$gv->id} belegte Angabe, Sieger hat Kennzeichen „offen“ — belegtes GP nie in ein offenes zusammenführen (Regel 91 v3)";
                     }
-                    if (($ab = app(Einkauf\LeadLaService::class)->mergeAbweichungen($gw, $gv)) !== []) {
+                    if (($ab = app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->mergeAbweichungen($gw, $gv)) !== []) {
                         $fehler[] = "#{$gv->id} Allergen-Konflikt mit dem Sieger: " . implode(', ', $ab) . ' — nicht mergen (Guard wie gps.REPLACE)';
                     }
                 }

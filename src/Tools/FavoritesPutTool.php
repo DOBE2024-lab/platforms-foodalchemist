@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\FavoriteGpService;
+use Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService;
 
 /**
  * 06·H2 (MCP-Lockstep, write) — Favorit (Lieblings-GP) pinnen/excludieren.

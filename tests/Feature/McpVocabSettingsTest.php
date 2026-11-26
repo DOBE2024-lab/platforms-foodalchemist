@@ -3,7 +3,7 @@
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Tools\ToolRegistry;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

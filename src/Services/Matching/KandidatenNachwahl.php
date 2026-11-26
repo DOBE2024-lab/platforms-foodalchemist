@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Enums\MatchBand;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 
 /**
- * Nachwahl aus der Kandidatenliste für {@see \Platform\FoodAlchemist\Services\IngredientMatchService} (Spec 95c „nie schlechter als
+ * Nachwahl aus der Kandidatenliste für {@see \Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService} (Spec 95c „nie schlechter als
  * Kandidat 1“, Neuabgleich 09.11.: gleich guter Kandidat ohne ungenannte Variante, Marke als Produktname). Ausgelagert wegen der
  * Dateigröße (Spec 85 §1) — nutzt die Pool-/Schutzregeln des Services.
  */

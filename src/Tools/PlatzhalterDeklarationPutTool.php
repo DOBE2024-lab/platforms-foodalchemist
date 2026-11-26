@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException;
 use Platform\FoodAlchemist\Exceptions\KeinPlatzhalterException;
 use Platform\FoodAlchemist\Exceptions\NichtGefundenException;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\PlatzhalterDeklarationService;
+use Platform\FoodAlchemist\Services\GpStamm\PlatzhalterDeklarationService;
 
 /**
  * Platzhalter-GP: Allergene, Zusatzstoffe und Nährwerte von Hand (Entscheid Dominique 19.11.2026, nur Platzhalter). Gleicher Weg wie die

@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\GpFormService;
+use Platform\FoodAlchemist\Services\GpStamm\GpFormService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Support\LoeffelGewichtNachholen;
 

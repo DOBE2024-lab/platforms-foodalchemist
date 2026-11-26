@@ -1291,7 +1291,7 @@ class Editor extends Component
                     ->orderBy('position')->get();
                 $paare = $zutaten->map(fn ($z) => $z->gp_id !== null ? ['gp', (int) $z->gp_id] : ['recipe', (int) $z->referenced_recipe_id])
                     ->filter(fn ($p) => $p[1] !== 0)->values()->all();
-                $ersatz = app(\Platform\FoodAlchemist\Services\ComponentEquivalentService::class)->ersatzHinweise($team, $paare);
+                $ersatz = app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)->ersatzHinweise($team, $paare);
                 $slotZutaten = $zutaten->map(function ($z) use ($ersatz) {
                     $key = $z->gp_id !== null ? 'gp:' . $z->gp_id : 'recipe:' . $z->referenced_recipe_id;
 

@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Auth;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\GpAromaService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAromaService;
 use Platform\FoodAlchemist\Services\SensorikService;
 
 /**

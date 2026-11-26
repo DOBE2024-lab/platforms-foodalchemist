@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -38,7 +38,7 @@ use Symfony\Component\Uid\UuidV7;
  */
 class GpPaketImportService
 {
-    use Plattform\PlattformAdminPruefung;
+    use \Platform\FoodAlchemist\Services\Plattform\PlattformAdminPruefung;
 
     /** Pflicht-/Daten-Dateien des Pakets (Skript 300). `gps.jsonl` und `gp_artikel.jsonl` müssen da sein. */
     public const DATEIEN = GpPaketValidator::DATEIEN;
@@ -57,7 +57,7 @@ class GpPaketImportService
         private readonly GpPaketVerknuepfer $verknuepfer,
         private readonly GpPaketAnkerPhase $anker,
         private readonly GpPaketRueckweg $rueckweg,
-        private readonly Einkauf\LeadLaService $lead,
+        private readonly \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $lead,
     ) {}
 
     // ── Master-Kontext ─────────────────────────────────────────────────────────────────────────────
@@ -512,7 +512,7 @@ class GpPaketImportService
         $proto['recompute'] = 0;
         $leadGeaendert = array_values(array_unique($leadGeaendert));
         if ($leadGeaendert !== [] && ! ($o['ohne_recompute'] ?? false)) {
-            $kosten = app(KostenCacheService::class);
+            $kosten = app(\Platform\FoodAlchemist\Services\KostenCacheService::class);
             $kosten->markiereVeraltet($kosten->rezepteMitGps($leadGeaendert), null);
             $proto['recompute'] = $this->lead->recomputeNutzerFuerGps($leadGeaendert);
         }

@@ -72,7 +72,7 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
     private Rezept\DiaetEignung $diaet;
 
     public function __construct(
-        private GpAggregateService $gpAggregate,
+        private GpStamm\GpAggregateService $gpAggregate,
         private Preis\PriceService $preise,
     ) {
         $this->vorrat = new Rezept\RecomputeVorrat($preise);
@@ -1035,7 +1035,7 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
                 continue;                                          // Sub-Rezepte: siehe subKonfidenzRang
             }
             $konf = $this->gpAggregate->allergenKonfidenz($z->gp)['confidence'];
-            $rang = min($rang, GpAggregateService::ALLERGEN_KONF_RANG[$konf] ?? 1);
+            $rang = min($rang, GpStamm\GpAggregateService::ALLERGEN_KONF_RANG[$konf] ?? 1);
         }
 
         return $rang;
@@ -1079,7 +1079,7 @@ class RecipeRecomputeService implements Rezept\TeamKostenRechner, Basis\Neuberec
         // Möhren. Genau der Fall, für den es das Feature gibt („halber Bund, ohne zu wissen
         // was der wiegt"). Masse/Volumen bleiben beim globalen Gewicht — AUSSER Löffel (03.11.): EL/TL/Msp/Prise sind GP-Formen
         // wie die Zähl-Einheiten („1 TL Zimt“ = 2,5 g statt 5 ml Wasser); ohne Form fällt die Zeile unten aufs Vokabular zurück.
-        if (($unit?->dimension === 'count' || in_array($unit?->slug, GpFormService::LOEFFEL_SLUGS, true)) && $z->gp_id !== null) {
+        if (($unit?->dimension === 'count' || in_array($unit?->slug, GpStamm\GpFormService::LOEFFEL_SLUGS, true)) && $z->gp_id !== null) {
             // #9-Formen (gp_forms) sind die LEBENDE Quelle: der Formen-Editor am GP und die
             // KI-Schätzung schreiben ausschliesslich hierhin, und der Modell-Docblock nennt
             // form_slug ausdrücklich „für die EK-Umrechnung nutzbar". Gelesen wurde die Tabelle

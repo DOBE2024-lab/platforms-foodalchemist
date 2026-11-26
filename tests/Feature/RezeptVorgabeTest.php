@@ -98,7 +98,7 @@ it('ohne Vorgabe am Rezept: Unterrezept wie bisher (Lücke in der Anreicherung),
     $r = $this->makeRecipe($this->rootTeam, 'Rahmsauce ohne', ['status' => 'draft']);
     ($this->fondZeile)($r);
     ($this->fondGp)();
-    $treffer = app(\Platform\FoodAlchemist\Services\IngredientMatchService::class)->matchIngredient($this->rootTeam, 'Geflügelfond',
+    $treffer = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->matchIngredient($this->rootTeam, 'Geflügelfond',
         ...MatchLeitplanken::matcherArgsFuerRezept($r));
 
     expect(app(RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $r->fresh())['basisrezept_luecken'])->toBe(1)

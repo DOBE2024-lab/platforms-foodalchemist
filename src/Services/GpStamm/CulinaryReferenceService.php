@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 /**
  * #513 Tier 1 / Punkt 2 — Kerntemperatur-REFERENZ (Landeplatz C), Gastronomie-Qualität.

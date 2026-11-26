@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 
 /**
  * Degenerierte gp_keys nachziehen (Kurator/Dominique 20.11.2026; Fall „Tomate: trocken, geschwefelt“ ⇄ „Tomate: konserviert, Pulpe / (Bio)“,

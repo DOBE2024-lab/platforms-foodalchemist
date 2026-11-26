@@ -5,8 +5,8 @@ namespace Platform\FoodAlchemist\Services\Conformance;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\GpStatus;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
-use Platform\FoodAlchemist\Services\GpNamingService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 
 /**
  * Konformitäts-Adapter für Grundprodukte (GP) — prüft gegen das Regelwerk Grundprodukte

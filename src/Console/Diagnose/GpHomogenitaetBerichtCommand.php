@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Console\Diagnose;
 
 use Illuminate\Console\Command;
-use Platform\FoodAlchemist\Services\GpHomogenitaetService;
+use Platform\FoodAlchemist\Services\GpStamm\GpHomogenitaetService;
 
 /**
  * Spec 82 §2 — Bericht „GPs mit uneinheitlichen Artikeln“. Nur lesend: ändert keine Verknüpfung.

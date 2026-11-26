@@ -148,7 +148,7 @@ class TokenEngine
         // Widersprüchlich (z. B. „TK, getrocknet") ⇒ kein Zustand gesetzt — Raten wäre hier
         // schlimmer als ungeprüft lassen (identische Politik zu GpZustandBackfillCommand). (gelöscht 98 · 1.2b, siehe Git-Historie)
         // v3.6.0 (Dominique 19.10.): mehrere Behandlungen ⇒ Vorrang, TK + Behandlung ⇒ Behandlung; echt widersprüchlich ⇒ null
-        $zustand = \Platform\FoodAlchemist\Services\GpNamingService::zustandAusTreffern($zustandTreffer);
+        $zustand = \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::zustandAusTreffern($zustandTreffer);
 
         $form = null;
         foreach (self::FORM_MUSTER as $kandidat => $muster) {

@@ -9,7 +9,7 @@ use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistComponentEquivalent as Equiv;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ComponentEquivalentService;
+use Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService;
 
 /**
  * MCP-Steuerbarkeit · D1: Äquivalenz (Ersatz) anlegen/aktualisieren — polymorph GP↔GP/GP↔Rezept/Rezept↔Rezept.

@@ -4,7 +4,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGpForm;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
-use Platform\FoodAlchemist\Services\GpFormService;
+use Platform\FoodAlchemist\Services\GpStamm\GpFormService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

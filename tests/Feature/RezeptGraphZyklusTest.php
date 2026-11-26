@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Exceptions\RezeptZyklusException;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\ComponentEquivalentService;
+use Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService;
 use Platform\FoodAlchemist\Services\Fassung\FassungsUmstellung;
 use Platform\FoodAlchemist\Services\Pruefung\HardstopResolveService;
 use Platform\FoodAlchemist\Services\Planung\PlanungsblattService;

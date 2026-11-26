@@ -242,8 +242,8 @@ class LagerEinrichtungService
 
         return match (true) {
             // v3.6.0 (Dominique 19.10.): TK auch als Zusatz im Namen/in der Verarbeitung ⇒ Tiefkühlung; Behandlungen ⇒ Kühlung
-            \Platform\FoodAlchemist\Services\GpNamingService::istTk($gp->condition, (string) $gp->name, (string) $gp->processing) => 'tk',
-            in_array($zustand, [...\Platform\FoodAlchemist\Services\GpNamingService::BEHANDLUNG, 'gepoekelt', 'geraeuchert'], true) => 'kuehl',   // Kanon + Alt-Schreibweise
+            \Platform\FoodAlchemist\Services\GpStamm\GpNamingService::istTk($gp->condition, (string) $gp->name, (string) $gp->processing) => 'tk',
+            in_array($zustand, [...\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::BEHANDLUNG, 'gepoekelt', 'geraeuchert'], true) => 'kuehl',   // Kanon + Alt-Schreibweise
             \Platform\FoodAlchemist\Support\WgRolle::istGetraenk($wg) => 'getraenke',
             $zustand === 'frisch' && \Platform\FoodAlchemist\Support\WgRolle::istKuehl($wg) => 'kuehl',   // CQ 3.7: Rolle „kühl“ an der Warengruppe
             $zustand === 'frisch' => 'trocken',          // frische Backwaren, Eier-Ersatz, …

@@ -56,10 +56,10 @@ class LaFirstGpService
             // Bestands-GP; FuzzyLow → kein Mint und keine stille Bindung (Zeile bleibt offen, Review mit Shortlist). Mint nur ohne Bestandstreffer.
             // Leitplanken des Laufs (Bio/Frische/Convenience, Kurator 27.10.) — dieselbe Abbildung wie der Generator; ohne: konventionell, frisch
             $lp = \Platform\FoodAlchemist\Services\Matching\MatchLeitplanken::aus($leitplanken);
-            $bestand = app(\Platform\FoodAlchemist\Services\IngredientMatchService::class)->matchIngredient($team, $text, null, 'gp_first', $lp['pref'], $lp['preferRaw'], $lp['bio'], convenience: $lp['convenience']);
+            $bestand = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class)->matchIngredient($team, $text, null, 'gp_first', $lp['pref'], $lp['preferRaw'], $lp['bio'], convenience: $lp['convenience']);
             $bestandMoeglich = false;
             if (($bestand['target'] ?? null) === 'gp' && ($bestand['gp_id'] ?? null) !== null) {
-                if (\Platform\FoodAlchemist\Services\IngredientMatchService::istAutomatischVerdrahtbar($bestand)) {
+                if (\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::istAutomatischVerdrahtbar($bestand)) {
                     return FoodAlchemistGp::visibleToTeam($team)->find((int) $bestand['gp_id']);
                 }
                 $bestandMoeglich = true;   // FuzzyLow: Wiederverwendung über gemappte LA/EAN-Brücke unten bleibt, nur KEIN Neu-Anlegen
@@ -67,7 +67,7 @@ class LaFirstGpService
             // Spec 95 (Pilot 02.11.: „Brauner Zucker (optional)“ → neues GP neben „Rohrzucker: trocken, braun“): vor dem Anlegen auch den
             // Post-Match-Draw fragen — derselbe Zug wie Generator und gps.MATCH (hybrid, Boden 0,70, Hauptzutat-/Varianten-Schutz).
             if (! $bestandMoeglich) {
-                $matcher = app(\Platform\FoodAlchemist\Services\IngredientMatchService::class);
+                $matcher = app(\Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService::class);
                 foreach ($matcher->drawKandidaten($matcher->candidatesFor($team, $text, null, 5), 'gp', 'hybrid', $team, $text) as $c) {
                     $gezogen = FoodAlchemistGp::visibleToTeam($team)->whereIn('status', ['approved', 'tentative'])->where('is_platzhalter', false)->find($c['id']);
                     if ($gezogen !== null) {
@@ -127,7 +127,7 @@ class LaFirstGpService
                 // der Abgleich darf den Mint nie kippen — weiter mit dem bisherigen Weg
             }
 
-            $naming = app(\Platform\FoodAlchemist\Services\GpNamingService::class);
+            $naming = app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class);
             // §6: Produktname groß, mit Umlaut — Lauf 89 legte „gefluegel" an (gestemmter Suchtext als Name).
             $hauptzutat = self::grossAnfang(trim($anzeigeName ?? $this->hauptzutatAusText($text)));
             if ($hauptzutat === '') {
@@ -158,7 +158,7 @@ class LaFirstGpService
             // Best-effort: ein Backfill-Fehler darf den Mint NIE scheitern lassen (Doktrin: jede Fehlerquelle
             // bricht höchstens die Konfidenz, nicht den Mint).
             try {
-                app(\Platform\FoodAlchemist\Services\GpAggregateService::class)->backfillAllergenKonfidenz($gp, apply: true);
+                app(\Platform\FoodAlchemist\Services\GpStamm\GpAggregateService::class)->backfillAllergenKonfidenz($gp, apply: true);
             } catch (\Throwable $e) {
                 // Konfidenz bleibt null (low); Werte-Vererbung ist davon unberührt.
             }
@@ -214,7 +214,7 @@ class LaFirstGpService
             return null;
         }
         $name = $mutterBasis . ': frisch, ' . $d['form'];
-        $naming = app(\Platform\FoodAlchemist\Services\GpNamingService::class);
+        $naming = app(\Platform\FoodAlchemist\Services\GpStamm\GpNamingService::class);
         try {
             return $naming->createGp($team, [
                 'name' => $name,

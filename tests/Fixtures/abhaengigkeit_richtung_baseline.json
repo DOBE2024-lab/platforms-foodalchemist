@@ -1,11 +1,11 @@
 {
-    "Services/GpAggregateService.php": {
+    "Services/GpStamm/GpAggregateService.php": {
         "rueckkante NaehrwertAggregatService": 1
     },
-    "Services/GpMasseService.php": {
+    "Services/GpStamm/GpMasseService.php": {
         "rueckkante DarreichungService": 1
     },
-    "Services/GpPaketImportService.php": {
+    "Services/GpStamm/GpPaketImportService.php": {
         "rueckkante KostenCacheService": 1
     },
     "Services/Einkauf/InventurService.php": {

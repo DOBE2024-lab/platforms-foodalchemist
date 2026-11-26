@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Platform\FoodAlchemist\Services\SteuerklasseService;
+use Platform\FoodAlchemist\Services\GpStamm\SteuerklasseService;
 
 /**
  * Einmalige Übernahme der Steuerklasse (Entscheid Dominique 16.11.2026): GPs ohne `vat_profile_key` bekommen die Klasse aus der Regel

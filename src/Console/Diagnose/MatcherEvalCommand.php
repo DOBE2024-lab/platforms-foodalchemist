@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console\Diagnose;
 
 use Illuminate\Console\Command;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\IngredientMatchService;
+use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Support\Text;
 
 /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Platform\Core\Models\Team;
 
@@ -38,7 +38,7 @@ class SteuerklasseService
      *  Frucht- und Gemüsesäfte, Nektar, Smoothie (Nr. 32), reine Zusatz-Chemikalien, Pflanzendrinks. */
     private const REGULAER_WARE = '/(\b(hummer|languste|langusten|auster|austern|schnecke|schnecken|ascorbinsäure|calciumchlorid|calciumlactat|natriumalginat|natriumcitrat|zitronensäure|weinsäure)\b|lebensmittelfarbe|gellan|xanthan|agar[- ]?agar|lecithin|methylcellulose|invertase|glitzer|gummi arabicum|orangenblütenwasser|kakaobutter|kakaobohne|kakaonibs|kakaomasse|\bmirin\b|\bsake\b|shaoxing|johannisbrotkern|guarkern|\beiklar|lavendel|süßholz|verjus|zitronengras|tonkabohne|\bmaca\b|holunderblüte|hummerkarkasse|\bnatron\b|zitronenaroma|vanillearoma|\bkaviar\b(?!-)|(?<!braten|dick)saft\b|nektar\b|\bsmoothie\b(?!-)|(hafer|soja|mandel|reis|erbsen|cashew|dinkel|haselnuss)drink)/iu';
 
-    public function __construct(private readonly TeamSettingsService $settings) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\TeamSettingsService $settings) {}
 
     /** Regel-Vorschlag für ein GP aus Warengruppe und Name (ohne gespeicherte Klasse). */
     public function regelFuerGp(object $gp): string

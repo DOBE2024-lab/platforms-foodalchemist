@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Livewire\Gps;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 
 /**
  * D-5: 📐 Platzhalter verwalten — neutrale Abstrakta für Grundrezept-Templates

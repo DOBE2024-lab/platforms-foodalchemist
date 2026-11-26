@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +38,7 @@ class FavoriteGpService
 
     public const W_PRIORITY_MAX = 5.0; // Bonus, wenn Lead-Supplier ganz oben in der Prioritätskette
 
-    public function __construct(private readonly TeamSettingsService $settings) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\TeamSettingsService $settings) {}
 
     /**
      * Auto-Score-Rangliste aller approved GPs, bereits gepinnte oben markiert.
@@ -75,7 +75,7 @@ class FavoriteGpService
             )
             ->selectSub(
                 // Spec 82 3a: „hat Preis" am globalen Lead = Listenpreis-Zeilen.
-                app(Preis\PriceService::class)->nurListenpreis(DB::table('foodalchemist_prices AS p'), 'p')
+                app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->nurListenpreis(DB::table('foodalchemist_prices AS p'), 'p')
                     ->whereColumn('p.supplier_item_id', 'g.lead_la_supplier_item_id')->whereNull('p.deleted_at')
                     ->selectRaw('COUNT(*)'),
                 'price_rows',
@@ -158,7 +158,7 @@ class FavoriteGpService
             )
             ->selectSub(
                 // Spec 82 3a: „hat Preis" am globalen Lead = Listenpreis-Zeilen.
-                app(Preis\PriceService::class)->nurListenpreis(DB::table('foodalchemist_prices AS p'), 'p')
+                app(\Platform\FoodAlchemist\Services\Preis\PriceService::class)->nurListenpreis(DB::table('foodalchemist_prices AS p'), 'p')
                     ->whereColumn('p.supplier_item_id', 'g.lead_la_supplier_item_id')->whereNull('p.deleted_at')
                     ->selectRaw('COUNT(*)'),
                 'price_rows',
@@ -234,7 +234,7 @@ class FavoriteGpService
      */
     public function reorder(Team $team, array $gpIdToRank): int
     {
-        app(FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Favoriten pflegen');
+        app(\Platform\FoodAlchemist\Services\FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Favoriten pflegen');
         $n = 0;
         DB::transaction(function () use ($team, $gpIdToRank, &$n) {
             foreach ($gpIdToRank as $gpId => $rank) {
@@ -249,7 +249,7 @@ class FavoriteGpService
     /** Spec 85 FAV-1: eigene Liste pflegt, wer im Team kuratieren darf — für jeden GP, den das Team sieht (kein Besitz am GP nötig). */
     private function pruefeSchreiben(Team $team, FoodAlchemistGp $gp): void
     {
-        app(FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Favoriten pflegen');
+        app(\Platform\FoodAlchemist\Services\FaRechte::class)->pruefeAngemeldet($team, \Platform\FoodAlchemist\Enums\FaRolle::Kuratieren, 'Favoriten pflegen');
         if (! FoodAlchemistGp::visibleToTeam($team)->whereKey($gp->id)->exists()) {
             throw new \RuntimeException('Dieses Grundprodukt sieht euer Team nicht.');
         }

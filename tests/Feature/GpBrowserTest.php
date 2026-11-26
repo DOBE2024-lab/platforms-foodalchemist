@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Gps\Browser;
 use Platform\FoodAlchemist\Livewire\Gps\DetailPanel;
 use Platform\FoodAlchemist\Models\FoodAlchemistLookupWarengruppe;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

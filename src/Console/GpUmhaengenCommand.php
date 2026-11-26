@@ -4,8 +4,8 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Platform\FoodAlchemist\Services\GpBereinigenService;
-use Platform\FoodAlchemist\Services\GpUmhaengenService;
+use Platform\FoodAlchemist\Services\GpStamm\GpBereinigenService;
+use Platform\FoodAlchemist\Services\GpStamm\GpUmhaengenService;
 
 /**
  * Artikel↔GP umhängen, neue GPs anlegen, Verknüpfungen lösen, Warengruppe setzen (Kurator/Dominique 19.10.2026).

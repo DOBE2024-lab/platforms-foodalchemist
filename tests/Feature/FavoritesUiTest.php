@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\FoodAlchemist\Livewire\Recipes\GeneratorModal;
 use Platform\FoodAlchemist\Livewire\Recipes\IngredientEditor;
 use Platform\FoodAlchemist\Livewire\Verkauf\VkGeneratorModal;
-use Platform\FoodAlchemist\Services\FavoriteGpService;
+use Platform\FoodAlchemist\Services\GpStamm\FavoriteGpService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

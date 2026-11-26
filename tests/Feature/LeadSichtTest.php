@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
 use Platform\FoodAlchemist\Services\KostenCacheService;
 use Platform\FoodAlchemist\Services\Einkauf\LeadLaService;
 use Platform\FoodAlchemist\Services\Preis\LeadSichtNachlauf;

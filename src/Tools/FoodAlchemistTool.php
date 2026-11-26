@@ -120,7 +120,7 @@ abstract class FoodAlchemistTool
      */
     protected function normalisiereZutatZeilen(Team $team, array $zeilen): array
     {
-        $vocab = app(\Platform\FoodAlchemist\Services\VocabularyService::class);
+        $vocab = app(\Platform\FoodAlchemist\Services\GpStamm\VocabularyService::class);
         $out = [];
         foreach (array_values($zeilen) as $i => $z) {
             $unit = $vocab->findEinheit($team, (string) ($z['unit'] ?? ''));

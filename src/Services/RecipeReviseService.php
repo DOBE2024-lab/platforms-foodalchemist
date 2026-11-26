@@ -39,7 +39,7 @@ class RecipeReviseService
             return [];
         }
         $original = $r->ingredients->keyBy('id');
-        $matcher = app(IngredientMatchService::class);
+        $matcher = app(GpStamm\IngredientMatchService::class);
         $heuristik = app(MatchHeuristics::class);
 
         $out = [];

@@ -11,7 +11,7 @@ use Platform\FoodAlchemist\Livewire\Settings\Concerns\ReordersLists;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Services\Einstellungen\VkTaxonomieService;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 use RuntimeException;
 
 /**

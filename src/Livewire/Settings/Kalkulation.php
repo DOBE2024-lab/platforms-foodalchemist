@@ -7,7 +7,7 @@ use Livewire\Component;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Jobs\RecomputeTeamRecipesJob;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
-use Platform\FoodAlchemist\Services\VocabularyService;
+use Platform\FoodAlchemist\Services\GpStamm\VocabularyService;
 
 /**
  * M1-07: Kalkulations-Defaults je Team auf GL-02-Buchungsebene —

@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 
 /**
  * MCP-Steuerbarkeit · D1: Platzhalter-GP anlegen (neutrales Abstraktum für Grundrezept-Templates,

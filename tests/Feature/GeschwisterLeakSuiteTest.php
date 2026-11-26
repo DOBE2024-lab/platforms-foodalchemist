@@ -4,7 +4,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\SalesRecipeService;
 use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;

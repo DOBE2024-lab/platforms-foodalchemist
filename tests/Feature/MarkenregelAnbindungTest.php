@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
 use Platform\FoodAlchemist\Services\GpAbgleich\GpAbgleichService;
 use Platform\FoodAlchemist\Services\GpAbgleich\LaFelderService;
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Services\GpPaket\GpPaketValidator;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

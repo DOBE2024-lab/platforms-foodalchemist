@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\GpStamm;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\AllergenValue;
@@ -208,7 +208,7 @@ class PlatzhalterDeklarationService
         }
         $gp->save();
 
-        $n = $rezepteRechnen ? app(Einkauf\LeadLaService::class)->recomputeNutzerFuerGps([(int) $gp->id]) : 0;
+        $n = $rezepteRechnen ? app(\Platform\FoodAlchemist\Services\Einkauf\LeadLaService::class)->recomputeNutzerFuerGps([(int) $gp->id]) : 0;
 
         return [...$this->lesen($gp->refresh()), 'rezepte_neu_gerechnet' => $n];
     }

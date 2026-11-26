@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Platform\Core\Models\Team;
-use Platform\FoodAlchemist\Services\GpFelderPlanService;
+use Platform\FoodAlchemist\Services\GpStamm\GpFelderPlanService;
 
 /**
  * GP-Lauf (Kurator 14.11.2026, Regelwerk v3.10.0): Strukturfelder vieler GPs nach JSONL-Plan setzen, Namen genau wie updateGp/gps.PUT neu bilden.
@@ -47,7 +47,7 @@ class GpFelderCommand extends Command
             $r = $svc->zuruecknehmen($p);
             $this->info("Zurückgenommen: {$r['zurueck']} · übersprungen (inzwischen geändert): {$r['uebersprungen']}");
             if (! $this->option('ohne-recompute') && ($ids = array_column($p['felder'] ?? [], 'id')) !== []) {
-                $this->info(app(\Platform\FoodAlchemist\Services\GpLaufNachlauf::class)->rechneRezepte($ids) . ' Rezept(e) neu gerechnet.');
+                $this->info(app(\Platform\FoodAlchemist\Services\GpStamm\GpLaufNachlauf::class)->rechneRezepte($ids) . ' Rezept(e) neu gerechnet.');
             }
 
             return self::SUCCESS;

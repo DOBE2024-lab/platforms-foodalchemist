@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Tests\Support;
 
-use Platform\FoodAlchemist\Services\GpNamingService;
+use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Symfony\Component\Uid\UuidV7;
 
 /**

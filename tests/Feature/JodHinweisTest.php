@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\Ausgabe\EtikettService;
-use Platform\FoodAlchemist\Services\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;

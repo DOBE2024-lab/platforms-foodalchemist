@@ -125,7 +125,7 @@ class RecipeTemplateService
             return ['target' => 'none', 'item_id' => null, 'item_name' => null, 'score' => 0.0];
         }
         $mode = TemplateSlotHeuristics::bevorzugtSub($placeholderName, $hatDedizErtenBody) ? 'sub_recipe_first' : 'gp_first';
-        $m = app(IngredientMatchService::class)->matchIngredient($team, $query, null, $mode);
+        $m = app(GpStamm\IngredientMatchService::class)->matchIngredient($team, $query, null, $mode);
 
         if ($m['target'] === 'gp') {
             return ['target' => 'gp', 'item_id' => $m['gp_id'], 'item_name' => $m['gp_name'], 'score' => (float) $m['score']];

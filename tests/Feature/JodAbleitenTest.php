@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistItemDeclaration;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\GpAggregateService;
+use Platform\FoodAlchemist\Services\GpStamm\GpAggregateService;
 use Platform\FoodAlchemist\Services\Necta\NectaAbgleichService;
 use Platform\FoodAlchemist\Services\Necta\NectaNachholService;
 use Platform\FoodAlchemist\Services\Necta\NectaQuelle;

@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFormat;
 use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistLookupWarengruppe;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
-use Platform\FoodAlchemist\Services\GpService;
+use Platform\FoodAlchemist\Services\GpStamm\GpService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

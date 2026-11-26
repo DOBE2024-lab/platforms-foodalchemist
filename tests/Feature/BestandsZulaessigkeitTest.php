@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRule;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Pruefung\HardstopResolveService;
-use Platform\FoodAlchemist\Services\IngredientMatchService;
+use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
 use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\Regeln\RegelService;
@@ -156,7 +156,7 @@ it('HardstopResolve: der Mensch darf binden — der Grund der Automatik erschein
 it('Architektur: jeder Bindungsweg aus dem Bestand ruft BestandsZulaessigkeit::pruefe', function () {
     $ausnahmen = [
         // Der Matcher selbst: liefert nur Kandidaten (bestSubrecipeMatch/resolveSubByName schon nur freigegeben).
-        'Services/IngredientMatchService.php',
+        'Services/GpStamm/IngredientMatchService.php',
         // Nur Anzeige — die Bindung läuft danach über syncIngredients (geprüft).
         'Services/RecipeReviseService.php',
         'Services/RecipeReviewService.php',

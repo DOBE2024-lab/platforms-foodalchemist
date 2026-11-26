@@ -22,7 +22,7 @@ use RuntimeException;
 class ConceptVariantService
 {
     public function __construct(
-        private \Platform\FoodAlchemist\Services\ComponentEquivalentService $equiv,
+        private \Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService $equiv,
         private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
     ) {}
 

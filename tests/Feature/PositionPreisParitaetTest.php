@@ -155,15 +155,16 @@ it('Konzept-Slot B1: EK mit Beigaben (ek_portion der Darreichung)', function () 
     $this->makeStandardDarreichung($g, 12.0, ['ek_portion' => 4.5]);
     [$fbZeile, $agZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $g->id], 'recipe_ref', 'recipe_ref');
 
-    expect(($this->slotZeile)($this->t, ['sales_recipe_id' => $g->id])['ek'])->toBe(4.5)
-        ->and($fbZeile['ek_pp'])->toBe(3.0)->and($agZeile['ek_pp'])->toBe(3.0);   // B1 heute: Block ohne Beigaben
+    $slot = ($this->slotZeile)($this->t, ['sales_recipe_id' => $g->id]);
+
+    expect($slot['ek'])->toBe(4.5)->and($slot)->toBe(blockZeile($fbZeile))->and($slot)->toBe(blockZeile($agZeile));   // B1: überall mit Beigaben
 });
 
 it('Konzept-Slot B2: Gericht ohne EK', function () {
     [$fbZeile] = ($this->paritaet)($this->t, ['sales_recipe_id' => $this->ohneEk->id], 'recipe_ref', 'recipe_ref');
 
-    expect(($this->slotZeile)($this->t, ['sales_recipe_id' => $this->ohneEk->id]))->toBe(['vk' => 8.0, 'ek' => 0.0, 'vk_fehlt' => false, 'ek_luecke' => false])   // B2 heute: still 0
-        ->and(blockZeile($fbZeile)['ek_luecke'])->toBeTrue();
+    expect(($this->slotZeile)($this->t, ['sales_recipe_id' => $this->ohneEk->id]))->toBe(['vk' => 8.0, 'ek' => 0.0, 'vk_fehlt' => false, 'ek_luecke' => true])   // B2: Lücke markiert
+        ->and(($this->slotZeile)($this->t, ['sales_recipe_id' => $this->ohneEk->id]))->toBe(blockZeile($fbZeile));
 });
 
 it('Konzept-Slot B3: explizite Darreichung wirkt nur im Konzept (P3, gewollt)', function () {

@@ -10,9 +10,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Concepter\ConceptPreisService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
-use Platform\FoodAlchemist\Services\Rezept\KostenCacheService;
 use Platform\FoodAlchemist\Services\Rezept\DarreichungResolver;
-use Platform\FoodAlchemist\Services\Rezept\TeamVkService;
 use Platform\FoodAlchemist\Support\AngebotFestpreise;
 
 /**
@@ -156,18 +154,9 @@ final class PositionPreisService
             return $this->ergebnis(vk: $pauschal ? 0.0 : $vk, ek: $pauschal ? 0.0 : $ek, pauschal: $pauschal ? $vk : 0.0, ekPauschal: $pauschal ? $ek : 0.0,
                 vkFehlt: $fp['vk'] === null, ekVoll: (bool) $fp['vollstaendig']) + ['eingefroren' => true];
         }
-        if ($team !== null) {
-            // Spec 82 §12 C: VK aus Sicht des Teams (Abo-Fassung: Team-EK × eigener Kalkulationsfaktor; sonst Preis-Leiter)
-            $vkRoh = app(TeamVkService::class)->fuer($dish, $team, $outlet)['vk'];
-            $k = app(KostenCacheService::class)->fuer($dish, $team);   // Spec 85: Team-EK des Ansatzes ÷ Portionen = EK je Portion
-            $ekRoh = $k['ek_summe'] !== null ? (float) $k['ek_summe'] / $portionen : null;
-            $ekVoll = $k['vollstaendig'] && $k['ek_summe'] !== null;
-        } else {
-            $resolver = app(DarreichungResolver::class);   // Spec 85 D-1: Preisleiter (Standard-Darreichung); im Betrieb dessen VK
-            $vkRoh = ($outlet !== null ? $resolver->vkNetto($dish, $outlet) : null) ?? $resolver->vkNetto($dish);
-            $ekRoh = $resolver->ekProPortion($dish);
-            $ekVoll = $dish->ek_total_eur !== null;
-        }
+        // 98 · 3.6 PR4: je Portion über den Kern wie der Konzept-Slot; im Block gilt die Standard-Darreichung (P3), mit ihrem EK inkl. Beigaben (B1)
+        $dar = $dish->relationLoaded('standardPresentation') ? $dish->standardPresentation : app(DarreichungResolver::class)->standardFuer($dish);
+        ['vk' => $vkRoh, 'ek' => $ekRoh, 'ek_vollstaendig' => $ekVoll] = app(PositionGericht::class)->jePortion($dish, $dar, $team, $outlet);
         $vk = round((float) ($vkRoh ?? 0) * $faktor, 2);
         $ek = round((float) ($ekRoh ?? 0) * $faktor, 2);
 

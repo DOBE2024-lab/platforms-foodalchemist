@@ -6,7 +6,6 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\MatchMethod;
 use Platform\FoodAlchemist\Enums\RecipeStatus;
@@ -699,15 +698,6 @@ class RecipeService
     ];
 
     /**
-     * Dasselbe für Tabellen, die der Paket-Umbau fachlich abgelöst hat, physisch aber noch nicht
-     * gedroppt sind (`packages`/`package_dishes`, ex-`bausteine`). Solange sie stehen, können sie
-     * Zeilen halten — deshalb mitzählen, aber per hasTable geprüft, damit der Drop nichts bricht.
-     */
-    private const AUSGABE_REFERENZEN_LEGACY = [
-        'foodalchemist_package_dishes' => 'sales_recipe_id',
-    ];
-
-    /**
      * Lösch-Bilanz eines Rezepts — bewusst UNGESCOPED, wie `GpService::referenzen()`.
      *
      * Der Grund ist die Vererbungsrichtung: ein Master-Rezept ist für KIND-Teams sichtbar, deren
@@ -730,11 +720,6 @@ class RecipeService
         // Ausgabe-Ebenen in EINEM Roundtrip — das Panel rendert die Bilanz bei jedem Tastendruck
         // im Tausch-Suchfeld neu. Tabellen-/Spaltennamen kommen aus der Konstante, nicht aus Input.
         $tabellen = self::AUSGABE_REFERENZEN;
-        foreach (self::AUSGABE_REFERENZEN_LEGACY as $tabelle => $spalte) {
-            if (Schema::hasTable($tabelle)) {
-                $tabellen[$tabelle] = $spalte;
-            }
-        }
         $summanden = [];
         $bindings = [];
         foreach ($tabellen as $tabelle => $spalte) {

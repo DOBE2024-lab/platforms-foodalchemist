@@ -101,9 +101,9 @@ class ConceptReifeAdapter extends ContainerReifeAdapter
 
         // ── 2. Struktur der Positionen ──────────────────────────────────────────────
         $positionen = $c->slots->filter(fn ($s) => ! in_array($s->type, ConceptService::STRUKTUR_TYPEN, true));
-        $belegt = $positionen->filter(fn ($s) => $s->sales_recipe_id !== null || $s->package_id !== null || $s->embedded_concept_id !== null);
+        $belegt = $positionen->filter(fn ($s) => $s->sales_recipe_id !== null || $s->embedded_concept_id !== null);
         $pflichtLeer = $positionen->filter(fn ($s) => (bool) $s->is_pflicht
-            && $s->sales_recipe_id === null && $s->package_id === null && $s->embedded_concept_id === null);
+            && $s->sales_recipe_id === null && $s->embedded_concept_id === null);
         $header = $c->slots->filter(fn ($s) => in_array($s->type, ['header', 'header_preis'], true));
 
         if ($positionen->isEmpty()) {

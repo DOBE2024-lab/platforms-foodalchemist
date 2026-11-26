@@ -68,10 +68,10 @@ it('fillSlot: ein Konzept (kind≠paket) kann nicht als Paket eingebettet werden
         ->toThrow(ModelNotFoundException::class);
 });
 
-it('fillSlot: package_id (Alt-Paket) wird seit 98 · 2.6c immer abgelehnt', function () {
+it('fillSlot: package_id (Alt-Paket) wird seit 98 · 2.6c immer abgelehnt, der Slot bleibt unverändert', function () {
     expect(fn () => $this->concepts->fillSlot($this->childA, $this->slot->id, ['package_id' => 4711]))
         ->toThrow(\RuntimeException::class, 'alte Pakete gibt es nicht mehr');
-    expect($this->slot->fresh()->package_id)->toBeNull();
+    expect($this->slot->fresh()->only(['embedded_concept_id', 'sales_recipe_id']))->toBe(['embedded_concept_id' => null, 'sales_recipe_id' => null]);
 });
 
 it('fillSlot: Paket bettet sich selbst nicht ein, und ein Zyklus über zwei Pakete wird abgelehnt', function () {

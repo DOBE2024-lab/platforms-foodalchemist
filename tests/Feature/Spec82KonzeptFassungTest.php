@@ -153,7 +153,6 @@ it('Veröffentlichen: Fassung ohne Master-Preise, Slots zeigen auf Fassungen (Pa
     expect($r['neu'])->toBeTrue()->and($r['fassung_nr'])->toBe(1)
         ->and($f->ist_fassung)->toBeTrue()->and($f->fassung_von_id)->toBe($this->konzept->id)->and($f->aenderungsnotiz)->toBe('Menü erstmals')
         ->and($f->price_per_person_cache)->toBeNull()->and($f->price_per_person_manual)->toBeNull()->and($f->ek_per_person_cache)->toBeNull()
-        ->and($slots->pluck('package_id')->filter()->values()->all())->toBe([])
         ->and($slots->pluck('embedded_concept_id')->filter()->values()->all())->toBe([$konzeptF->id])
         ->and($slots->pluck('sales_recipe_id')->filter()->values()->all())->toBe([$rezeptF->id])
         ->and($slots->where('type', 'header')->count())->toBe(1)   // Struktur-Block bleibt

@@ -74,7 +74,6 @@ class KaskadeErfinden
         // Gericht-Vorgaben (13.11.2026): Positionen MIT Vorgabe bekommen ihre Skizze 1:1, erfunden wird nur für den Rest.
         $leere = app(ConceptVorgabenService::class)->planeVorgaben($team, $conceptStep, $conceptId, FoodAlchemistConceptSlot::where('concept_id', $conceptId)
             ->whereNull('sales_recipe_id')
-            ->whereNull('package_id')
             ->whereNull('embedded_concept_id')
             ->whereNotIn('type', ['text', 'spacer', 'header', 'header_preis'])
             ->orderBy('position')->orderBy('id')

@@ -65,7 +65,7 @@ class SpeiseplanReifeAdapter extends ContainerReifeAdapter
         } else {
             $erfuellt[] = 'eintraege';
         }
-        $ohneZiel = $eintraege->filter(fn ($e) => $e->concept_id === null && $e->package_id === null && $e->sales_recipe_id === null);
+        $ohneZiel = $eintraege->filter(fn ($e) => $e->concept_id === null && $e->sales_recipe_id === null);
         if ($ohneZiel->isNotEmpty()) {
             $luecken[] = $this->luecke('eintrag_ohne_ziel', 'blockiert',
                 $ohneZiel->count() . ' Einträge zeigen auf kein Konzept, Paket oder Gericht.',

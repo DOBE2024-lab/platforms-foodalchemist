@@ -237,7 +237,7 @@ final class SpeiseplanAnsicht
 
                     $eintraege[(int) $e->id] = [
                         'id' => (int) $e->id,
-                        'typ' => $e->concept_id !== null ? 'concept' : ($e->package_id !== null ? 'paket' : 'gericht'),
+                        'typ' => $e->concept_id !== null ? 'concept' : 'gericht',
                         'titel' => $titel,
                         'untertitel' => $untertitel,
                         'diaet' => $this->ernaehrung->diaetMerkmale($agg->allergenRollupFromGerichte($gerichte), $agg->kennzeichnungFromGerichte($gerichte)),

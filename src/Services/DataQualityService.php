@@ -936,7 +936,6 @@ class DataQualityService
             ->whereNull('cs.deleted_at')
             ->whereNotIn('cs.type', Concepter\ConceptService::STRUKTUR_TYPEN)
             ->where('cs.is_pflicht', true)
-            ->whereNull('cs.package_id')
             ->whereNull('cs.sales_recipe_id');
     }
 
@@ -947,7 +946,7 @@ class DataQualityService
             ->whereColumn('cs.concept_id', 'foodalchemist_concepts.id')
             ->whereNull('cs.deleted_at')
             ->whereNotIn('cs.type', Concepter\ConceptService::STRUKTUR_TYPEN)
-            ->where(fn ($w) => $w->whereNotNull('cs.package_id')->orWhereNotNull('cs.sales_recipe_id'));
+            ->whereNotNull('cs.sales_recipe_id');
     }
 
     /**

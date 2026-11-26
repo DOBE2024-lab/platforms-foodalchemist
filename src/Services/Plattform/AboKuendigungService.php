@@ -741,7 +741,6 @@ class AboKuendigungService
             $neuerSlot = $s->replicate(['uuid', 'created_at', 'updated_at', 'deleted_at']);
             $neuerSlot->forceFill([
                 'concept_id' => $kopieId, 'team_id' => $mandant->id,
-                'package_id' => null,   // 98 · 2.6c: Alt-Pakete gibt es nicht mehr
                 'embedded_concept_id' => $s->embedded_concept_id !== null ? ($map['concept'][(int) $s->embedded_concept_id] ?? $s->embedded_concept_id) : null,
                 'sales_recipe_id' => $s->sales_recipe_id !== null ? ($map['recipe'][(int) $s->sales_recipe_id] ?? $s->sales_recipe_id) : null,
                 'presentation_id' => $s->presentation_id !== null ? ($darMap[(int) $s->presentation_id] ?? $s->presentation_id) : null,

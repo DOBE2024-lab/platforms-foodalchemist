@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
  * Spec 82 Abo für Konzepte/Pakete/Formate, PR 4: Veröffentlichen eines MASTER-Konzepts als Fassung (Entwurf D1: Zeilen-Fassung).
  * Gilt für kind=concept UND kind=paket (D6). Der alte Paket-Weg (PaketFassungService) ist mit Plan 98 · 2.6c entfallen.
  *
- * Ein Slot zeigt auf GENAU eines von: Paket (`package_id`), eingebettetes Paket-Konzept (`embedded_concept_id`, kind=paket),
+ * Ein Slot zeigt auf GENAU eines von: eingebettetes Paket-Konzept (`embedded_concept_id`, kind=paket),
  * Gericht/Basisrezept (`sales_recipe_id`). Jedes Ziel braucht eine veröffentlichte Fassung (D2/D11), sonst bricht das
  * Veröffentlichen mit einer Liste ab; die Fassung zeigt danach auf die jüngste Fassung des Ziels (Baum eingefroren, §12 B 2).
  * D10: unveröffentlichte Änderungen an einem Rezept sind nur ein Hinweis. D9: eine am Slot gewählte nicht-Standard-Darreichung
@@ -33,7 +33,8 @@ class ConceptFassungService extends FassungBasis
         'aenderungsnotiz', 'fassung_allergen_geaendert',
     ];
 
-    /** Slot-Spalten, die nicht in Hash und Kopie gehören bzw. umgehängt werden. */
+    /** Slot-Spalten, die nicht in Hash und Kopie gehören bzw. umgehängt werden. `package_id` bleibt gelistet: auf MySQL seit 98 · 3.1
+     *  gedroppt, auf SQLite (Testbasis) steht die Spalte noch — so ist der Hash auf beiden gleich. */
     private const SLOT_NIE = ['id', 'uuid', 'team_id', 'concept_id', 'package_id', 'embedded_concept_id', 'sales_recipe_id', 'presentation_id',
         'price_value', 'price_basis', 'created_at', 'updated_at', 'deleted_at'];
 
@@ -157,9 +158,6 @@ class ConceptFassungService extends FassungBasis
     /** Ein Slot ohne Ziel (Struktur-Block, leerer Slot) bleibt in der Fassung; einer mit gelöschtem Ziel fällt weg. */
     private function hatZiel(FoodAlchemistConceptSlot $s, array $ziele): bool
     {
-        if ($s->package_id !== null) {
-            return false;   // 98 · 2.6c: Alt-Pakete gibt es nicht mehr — die Zeile fällt weg wie bei gelöschtem Ziel
-        }
         if ($s->embedded_concept_id !== null) {
             return isset($ziele['concept'][(int) $s->embedded_concept_id]);
         }
@@ -183,7 +181,6 @@ class ConceptFassungService extends FassungBasis
             $zeile = $s->replicate(['uuid', 'created_at', 'updated_at', 'deleted_at']);
             $zeile->forceFill([
                 'concept_id' => $fassung->id,
-                'package_id' => null,
                 'embedded_concept_id' => $s->embedded_concept_id !== null ? $ziele['concept'][(int) $s->embedded_concept_id]->id : null,
                 'sales_recipe_id' => $rezept?->id,
                 'presentation_id' => $rezept !== null && $quelle !== null ? $this->fassungsDarreichungen->fassungsDarreichung($rezept, $quelle)?->id : null,

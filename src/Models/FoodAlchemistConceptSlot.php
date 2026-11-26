@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\Concerns\HasUuidV7;
 
 /**
  * @ai.description Concept-Slot (M10-01) — eine Rolle im Concept, gefüllt mit GENAU
- * EINEM: `package_id` (austauschbares Bündel) ODER `sales_recipe_id` (fest gesetztes
+ * EINEM: `embedded_concept_id` (eingebettetes Paket, kind=paket) ODER `sales_recipe_id` (fest gesetztes
  * Gericht). Der Service erzwingt „genau eines". Position-sortiert.
  */
 class FoodAlchemistConceptSlot extends Model
@@ -38,7 +38,7 @@ class FoodAlchemistConceptSlot extends Model
             ->withoutGlobalScope(\Platform\FoodAlchemist\Models\Scopes\OhneFassungenScope::class)->ohneTeamSicht('verweis');   // Spec 82: Verweis löst auch Fassungen auf
     }
 
-    /** Kaskade (2026-08-24): eingebettetes Paket als kind=paket-Concept (ersetzt schrittweise package_id). */
+    /** Kaskade (2026-08-24): eingebettetes Paket als kind=paket-Concept (die Alt-Spalte package_id fiel mit 98 · 3.1). */
     public function embeddedConcept(): BelongsTo
     {
         return $this->belongsTo(FoodAlchemistConcept::class, 'embedded_concept_id')
@@ -79,11 +79,5 @@ class FoodAlchemistConceptSlot extends Model
     public function staffel(): HasMany
     {
         return $this->hasMany(FoodAlchemistConceptSlotStaffel::class, 'slot_id')->orderBy('min_persons');
-    }
-
-    /** True, wenn der Slot durch einen austauschbaren Paket gefüllt ist. */
-    public function istPaket(): bool
-    {
-        return $this->package_id !== null;
     }
 }

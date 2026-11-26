@@ -2,12 +2,11 @@
 
 namespace Platform\FoodAlchemist\Services\Concepter;
 
-use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistOutlet;
-use Platform\FoodAlchemist\Services\Preis\CatalogPricingService;
 use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
+use Platform\FoodAlchemist\Services\Position\PositionGericht;
 use Platform\FoodAlchemist\Services\Rezept\DarreichungResolver;
 use Platform\FoodAlchemist\Support\AngebotFestpreise;
 
@@ -51,7 +50,7 @@ final class CockpitZeilen
             } elseif ($slot->sales_recipe_id !== null && $slot->dish) {
                 $zeile = $basis + ['type' => 'gericht', 'wording' => $slot->wording, 'label' => $slot->dish->name, 'stale' => false]
                     + $this->gericht($concept, $slot, $outlet);
-                $r['hat_ek_luecke'] = $r['hat_ek_luecke'] || $zeile['ek_fehlt'];
+                $r['hat_ek_luecke'] = $r['hat_ek_luecke'] || $zeile['ek_fehlt'] || $zeile['ek_unbekannt'];
             } else {
                 $r['hat_leer'] = true;
                 $zeile = $basis + ['type' => 'leer', 'label' => $slot->title ?? '(leer)', 'price' => null, 'ek' => null, 'ek_fehlt' => false, 'vk_fehlt' => false, 'stale' => false];
@@ -76,26 +75,23 @@ final class CockpitZeilen
         // Einheit-abhängige Mengen-Umrechnung — EINE Stelle (Konsistenz zu ConcepterAggregate/Paket).
         $pae = ConcepterAggregateService::portionsAequivalent($slot->quantity !== null ? (float) $slot->quantity : null, $slot->unit, $slot->dish, $darPortionG);
         $ekFehlt = $pae === null;       // Gramm-Position ohne Portionsgewicht → ehrlich „unbekannt"
-        // Teiler von ek_total: Stück-Modus (kg↔Stück) → yield_pieces, sonst Portionszahl.
+        // 98 · 3.6 PR4: VK/EK je Portion über den Positions-Kern (wie Foodbook/Angebot); ohne Kosten-Team = Master-EK (B4, vorerst so).
+        // Stück-Modus (kg↔Stück): EK je Stück aus yield_pieces. Paket-/Embedded-Caches bleiben Team-Baseline (kein Fan-out).
         $stueck = ConcepterAggregateService::stueckModus($slot->unit, $slot->dish);
-        $anzahl = $stueck ? (float) $slot->dish->yield_pieces : max(1, (int) ($slot->dish->sales_unit_count ?? 1));
-        // Ebene 2: Gericht-Slot im Betriebs-Kontext on-the-fly; Paket-/Embedded-Caches bleiben Team-Baseline (kein Fan-out). outlet=null ⇒ wie heute.
-        $vkStd = $dar !== null && $outlet !== null
-            ? app(CatalogPricingService::class)->salesNetFor(Team::find($outlet->team_id), $dar, $outlet)
-            : ($dar?->sales_net !== null ? (float) $dar->sales_net : null);
-        $vkStd ??= app(DarreichungResolver::class)->vkNetto($slot->dish);   // Spec 85 D-1; null = kein VK (Lücke, nicht 0 €)
+        $p = app(PositionGericht::class)->jePortion($slot->dish, $dar, null, $outlet, $stueck);
+        $vkStd = $p['vk'];   // null = kein VK (Lücke, nicht 0 €)
         if (($fp = app(AngebotFestpreise::class)->gericht((int) $slot->dish->id, $dar?->id)) !== null) {
             $vkStd = $fp['vk'];   // eingefrorenes Angebot: fester VK je Form, ohne VK = Lücke
             $ekFehlt = $ekFehlt || $fp['vk'] === null;
         }
-        $ek = $ekFehlt ? 0.0
-            : (($dar?->ek_portion !== null && ! $stueck) ? (float) $dar->ek_portion * $pae : (float) ($slot->dish->ek_total_eur ?? 0) / $anzahl * $pae);
+        $ekUnbekannt = ! $ekFehlt && $p['ek'] === null;   // B2: Gericht ohne EK → Lücke markieren, nie still 0
+        $ek = $ekFehlt ? 0.0 : (float) ($p['ek'] ?? 0) * $pae;
         $vkFehlt = $ekFehlt || $vkStd === null;
 
         $vk = $vkFehlt ? 0.0 : (float) $vkStd * $pae;
 
         return ['price' => $vkFehlt ? null : round($vk, 2), '_vk_roh' => $vk, 'vk_fehlt' => $vkFehlt,
-            'ek' => $ekFehlt ? null : round($ek, 2), '_ek_roh' => $ek, 'ek_fehlt' => $ekFehlt];
+            'ek' => ($ekFehlt || $ekUnbekannt) ? null : round($ek, 2), '_ek_roh' => $ek, 'ek_fehlt' => $ekFehlt, 'ek_unbekannt' => $ekUnbekannt];
     }
 
     /** Paket-Zeile: Preis null = Lücke; EK wie bisher (0, wenn unbekannt). */

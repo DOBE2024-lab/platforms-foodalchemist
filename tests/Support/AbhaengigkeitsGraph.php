@@ -48,6 +48,7 @@ final class AbhaengigkeitsGraph
         'PositionProfil' => 2,               // 98 · 3.6 Positions-Kern: auch der Concepter (2) nutzt ihn, Foodbook/Angebot (3) darüber
         'PositionValidierung' => 2,
         'PositionFehler' => 2,
+        'PositionGericht' => 1,              // 98 · 3.6 PR4: Gericht-Zeile je Portion, nur Rezept-/Preis-Dienste; Slot (2) und Blöcke (3) darüber
     ];
 
     /** Präfix → Schicht, erste passende Regel gewinnt. */

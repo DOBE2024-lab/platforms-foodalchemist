@@ -164,11 +164,12 @@ class DarreichungResolver
      * schreibt eine Warnung mit Aufrufstelle in `fa-langsam` (Kurator 19.10.: kein 500 für Nutzer, kein stilles ÷ 1).
      * Steuerbar über `foodalchemist.leistung.ek_pro_portion_streng` (Standard: läuft unter Tests).
      */
-    public function ekProPortion(FoodAlchemistRecipe $recipe): ?float
+    public function ekProPortion(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $darreichung = null): ?float
     {
-        $standard = $recipe->relationLoaded('standardPresentation')
+        // 98 · 3.6 PR4: mit Darreichung (z. B. die eines Konzept-Slots) deren EK je Portion inkl. Beigaben, sonst die Standard-Darreichung
+        $standard = $darreichung ?? ($recipe->relationLoaded('standardPresentation')
             ? $recipe->standardPresentation
-            : $this->standardFuer($recipe);
+            : $this->standardFuer($recipe));
         if ($standard?->ek_portion !== null) {
             return (float) $standard->ek_portion;
         }

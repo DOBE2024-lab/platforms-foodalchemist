@@ -65,6 +65,7 @@ final class PraesentationsPreise
                 'gesamt' => (! $alt && $pax) ? round((float) $s['preis']['pp'] * $pax, 2) : null,
                 'alternativen' => $alt,
                 'preis_range' => $alt ? ['min' => $s['preis']['min'], 'max' => $s['preis']['max']] : null,
+                'wahl_spanne' => ! empty($s['preis']['wahl']) ? ['von' => $s['preis']['min'], 'bis' => $s['preis']['max']] : null,   // 98 · 3.6 P4
             ];
         }
 
@@ -116,6 +117,7 @@ final class PraesentationsPreise
                 'gesamt' => $kap['gesamt'] ?? null,
                 'alternativen' => $isAlt,
                 'preis_range' => $kap['preis_range'] ?? null,
+                'wahl_spanne' => $kap['wahl_spanne'] ?? null,   // 98 · 3.6 P4: Wahlgruppen als Spanne, gerechnet mit der teuersten
             ];
         }
 

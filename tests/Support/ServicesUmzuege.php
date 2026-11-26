@@ -132,6 +132,8 @@ final class ServicesUmzuege
         'Services/MenuAssemblyService.php' => 'Services/Concepter/MenuAssemblyService.php',
         'Services/MenuCandidatePoolService.php' => 'Services/Concepter/MenuCandidatePoolService.php',
         'Services/MenuEngineeringService.php' => 'Services/Ausgabe/MenuEngineeringService.php',
+        'Services/NaehrwertAggregatService.php' => 'Services/Naehrwerte/NaehrwertAggregatService.php',
+        'Services/NaehrwertVorschauService.php' => 'Services/Naehrwerte/NaehrwertVorschauService.php',
         'Services/NonFoodService.php' => 'Services/Einkauf/NonFoodService.php',
         'Services/ObservatoriumBriefingService.php' => 'Services/Trend/ObservatoriumBriefingService.php',
         'Services/ObservatoriumPinnwandService.php' => 'Services/Trend/ObservatoriumPinnwandService.php',

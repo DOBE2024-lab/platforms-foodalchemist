@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
-use Platform\FoodAlchemist\Services\NaehrwertAggregatService;
+use Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertAggregatService;
 use Platform\FoodAlchemist\Services\SignalService;
 use Platform\FoodAlchemist\Support\NaehrwertPruefModus;
 

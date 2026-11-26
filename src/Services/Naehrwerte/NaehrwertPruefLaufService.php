@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Services\Naehrwerte;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\NaehrwertAggregatService;
+use Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertAggregatService;
 
 /**
  * Trockenlauf der Nährwert-Prüfung über den Bestand, den ein Team sieht: wie viele Artikel würden markiert, je Regel und Lieferant,

@@ -7,7 +7,7 @@ use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
-use Platform\FoodAlchemist\Services\ZukaufBasisrezeptService;
+use Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService;
 use Platform\FoodAlchemist\Support\RezeptTypVokabular;
 
 /**

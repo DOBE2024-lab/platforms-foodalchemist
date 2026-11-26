@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Illuminate\Support\Facades\Auth;
 use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService;
-use Platform\FoodAlchemist\Services\RecipeReviewService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeReviewService;
 
 /**
  * Spec 03 L6b — die Copilot-Fläche für beide Editoren (RecipeModal + VkModal).

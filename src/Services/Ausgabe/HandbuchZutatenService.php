@@ -53,7 +53,7 @@ class HandbuchZutatenService
             }
             $dar ??= $recipe->presentations()->orderByDesc('is_standard')->orderBy('id')->first();
             $skalierung = $portion && $dar !== null
-                ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->produktionsAnteil($recipe, $dar, 1, $team) : null;
+                ? app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->produktionsAnteil($recipe, $dar, 1, $team) : null;
 
             return [
                 'basis' => $portion ? 'portion' : 'ansatz',
@@ -94,7 +94,7 @@ class HandbuchZutatenService
                     $subFaktor = isset($z['quantity']) && (float) $z['quantity'] === 0.0 ? 0.0
                         : Hochrechnung::faktor((float) ($z['quantity'] ?? 0), $stueck)['faktor'];
                 } elseif ($ansatzKg !== null) {
-                    $masseG = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->bruttoMasseG($zeile) * $faktor;
+                    $masseG = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->bruttoMasseG($zeile) * $faktor;
                     $subFaktor = isset($z['quantity']) && (float) $z['quantity'] === 0.0 ? 0.0
                         : ($masseG > 0 ? Hochrechnung::faktor($masseG / 1000, $ansatzKg)['faktor'] : null);
                 }

@@ -63,7 +63,7 @@ class RecipeStepsGetTool extends FoodAlchemistTool implements ToolContract, Tool
         $steps = FoodAlchemistRecipeStep::where('recipe_id', $recipe->id)->ebene($ebene)
             ->with('photos')->orderBy('position')->orderBy('id')->get();
 
-        $endprodukt = app(\Platform\FoodAlchemist\Services\RecipeStepService::class)->endprodukt($recipe->id);
+        $endprodukt = app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class)->endprodukt($recipe->id);
 
         return ToolResult::success([
             'recipe' => ['id' => $recipe->id, 'name' => $recipe->name],

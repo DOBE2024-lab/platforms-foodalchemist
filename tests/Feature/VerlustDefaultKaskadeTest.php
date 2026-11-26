@@ -4,7 +4,7 @@ use Livewire\Livewire;
 use Platform\Core\Contracts\ToolContext;
 use Platform\FoodAlchemist\Livewire\Settings\Kalkulation as KalkulationSettings;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

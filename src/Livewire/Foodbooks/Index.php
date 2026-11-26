@@ -1465,7 +1465,7 @@ class Index extends Component
             ->flatMap(fn ($k) => collect($k['bloecke'] ?? [])->flatMap(fn ($b) => collect($b['gerichte'] ?? [])->pluck('recipe_id')))
             ->filter()->map(fn ($v) => (int) $v)->unique()->values()->all();
         $feedbackAgg = $menueRecipeIds !== []
-            ? app(\Platform\FoodAlchemist\Services\FeedbackService::class)->aggregatBulk($team, $menueRecipeIds)
+            ? app(\Platform\FoodAlchemist\Services\Rezept\FeedbackService::class)->aggregatBulk($team, $menueRecipeIds)
             : [];
 
         // R4.2: Soll/Ist-Coverage live gegen das Planungs-Gerüst (nur wenn eines existiert).
@@ -1577,7 +1577,7 @@ class Index extends Component
             'formatKandidaten' => $fb !== null ? $svc->formatKandidaten($team, $fb, $this->formatSuche, 50) : collect(),
             // UX 2026-07-24: Klassen-Spalte im Gericht-Picker (Modell A: aktive VK-Hauptgruppen)
             'gerichtHauptgruppen' => $this->selectedKapitelId !== null
-                ? app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)->dishMainGroups($team)
+                ? app(\Platform\FoodAlchemist\Services\Rezept\SalesRecipeService::class)->dishMainGroups($team)
                 : collect(),
             // Untergruppen (dish_classes) der aktiven HG — Drill-down im Gericht-Picker
             'gerichtUntergruppen' => ($this->selectedKapitelId !== null && $this->gerichtHauptgruppe !== null)

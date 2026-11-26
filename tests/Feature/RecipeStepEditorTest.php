@@ -12,8 +12,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
-use Platform\FoodAlchemist\Services\RecipeImageService;
-use Platform\FoodAlchemist\Services\RecipeStepService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeStepService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

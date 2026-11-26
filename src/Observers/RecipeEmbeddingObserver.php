@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Services\Ai\PoolEmbeddingService;
 /**
  * E1 (#507): hält den Rezept-Embedding-Vektor bei interaktiven Edits synchron.
  * Der Embed-Text hängt an Name + Kategorie + Top-Zutaten — die Zutaten ändern
- * sich über {@see \Platform\FoodAlchemist\Services\RecipeService::syncIngredients()},
+ * sich über {@see \Platform\FoodAlchemist\Services\Rezept\RecipeService::syncIngredients()},
  * das nach dem Persist recompute + (künftig) queueRecipe anstößt. Der Observer
  * fängt hier Name-/Kategorie-/Status-Änderungen am Rezept selbst ab.
  * No-op ohne Provider (Sandbox).

@@ -4,8 +4,8 @@ namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Illuminate\Support\Facades\Auth;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Support\HandyLesemodus;
 use Platform\FoodAlchemist\Support\Hochrechnung;
 

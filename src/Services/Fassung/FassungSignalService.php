@@ -63,7 +63,7 @@ class FassungSignalService
         // 4d: eigene Rezepte folgen der neuen Fassung (nach dem Commit, Fehler geloggt); danach die Aktions-Signale für die berührten Team × Familie
         $folge = ['signale' => []];
         try {
-            $folge = app(\Platform\FoodAlchemist\Services\RezeptFolgeService::class)->folgen($neueFassungIds);
+            $folge = app(\Platform\FoodAlchemist\Services\Rezept\RezeptFolgeService::class)->folgen($neueFassungIds);
         } catch (\Throwable $e) {
             Log::error('Eigene Rezepte folgen der neuen Abo-Fassung nicht: '.$e->getMessage(), ['exception' => $e]);
         }
@@ -175,7 +175,7 @@ class FassungSignalService
                 }
             }
         }
-        $rezepte = app(\Platform\FoodAlchemist\Services\RezeptFolgeService::class)->gehalten($team, $familieId);
+        $rezepte = app(\Platform\FoodAlchemist\Services\Rezept\RezeptFolgeService::class)->gehalten($team, $familieId);
         if ($betroffen === [] && $rezepte === []) {
             $this->signale->schliesseGemessen($team, SignalTyp::FassungNeuerVerfuegbar, $key, self::QUELLE, 'Übernommen oder eingefrorenen Stand verworfen — niemand steht mehr auf der älteren Fassung');
 

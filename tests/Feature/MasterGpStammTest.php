@@ -117,7 +117,7 @@ it('★ Gefäßpreis des Masters nur mit „Preise mitgeben“ für den Lieferan
     expect($svc->teamVorgabe($deckel->id, $this->rootTeam))->toBe(['kostenart' => 'mehrweg', 'preis' => null, 'team_id' => $this->master->id])
         ->and($svc->teamVorgabe($deckel->id, $this->childA)['preis'])->toBeNull()
         ->and($svc->teamVorgabe($deckel->id, $this->master)['preis'])->toBe(0.4)   // der Master selbst sieht seinen Preis
-        ->and(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->stueckKosten($deckel, $this->rootTeam)['preis'])->toBeNull();
+        ->and(app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->stueckKosten($deckel, $this->rootTeam)['preis'])->toBeNull();
 
     // mit Haken: Preis kommt mit, auch beim Unter-Team
     $stamm->setzePreisFreigabe($this->rootTeam, [$lieferant->id], $admin);
@@ -146,13 +146,13 @@ it('★ Rückfall auf den Lead-Artikelpreis (einweg ohne Preis am GP) zieht den 
     $stamm = app(\Platform\FoodAlchemist\Services\Einkauf\StammPaketService::class);
     $stamm->setzeLieferanten($this->rootTeam, [$lieferant->id], $admin);
     app(\Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService::class)->setzen($this->master, $becher->id, 'einweg');
-    $dar = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+    $dar = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class);
 
     expect($dar->stueckKosten($becher, $this->master)['preis'])->toBe(0.55);
     expect($dar->stueckKosten($becher, $this->rootTeam)['preis'])->toBeNull();   // kein Master-LA-Preis an der Freigabe vorbei
     $stamm->setzePreisFreigabe($this->rootTeam, [$lieferant->id], $admin);
-    app()->forgetInstance(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);   // Artikel-Vorrat gilt je Instanz (= je Anfrage)
-    expect(app(\Platform\FoodAlchemist\Services\DarreichungService::class)->stueckKosten($becher, $this->rootTeam)['preis'])->toBe(0.55);
+    app()->forgetInstance(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);   // Artikel-Vorrat gilt je Instanz (= je Anfrage)
+    expect(app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->stueckKosten($becher, $this->rootTeam)['preis'])->toBe(0.55);
 });
 
 it('★ Kommando hebt Master-GPs: Trockenlauf schreibt nichts, --apply macht sie global, --zurueck holt sie zurück', function () {

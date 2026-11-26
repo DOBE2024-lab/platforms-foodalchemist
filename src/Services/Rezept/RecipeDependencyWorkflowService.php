@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\FoodAlchemist\Services\Kaskade\KaskadenSchritt;
 use Illuminate\Support\Facades\Cache;
@@ -692,7 +692,7 @@ class RecipeDependencyWorkflowService
                 if ($haus !== null) {
                     $kandidaten[] = [['recipe' => $haus, 'reif' => true, 'eigen' => (int) $haus->team_id === (int) $team->id, 'luecken' => []], false];
                 }
-                if (($gleich = app(\Platform\FoodAlchemist\Services\RecipeService::class)->findByTokenSetMitReife($team, $text)) !== null) {
+                if (($gleich = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->findByTokenSetMitReife($team, $text)) !== null) {
                     $kandidaten[] = [$gleich, true];
                 }
                 $reuse = null;
@@ -835,7 +835,7 @@ class RecipeDependencyWorkflowService
         try {
             $zeilen = $recipe->ingredients()->whereNotNull('referenced_recipe_id')
                 ->with('referencedRecipe:id,name')->orderBy('position')->get();
-            $svc = app(\Platform\FoodAlchemist\Services\RecipeService::class);
+            $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class);
             foreach ($zeilen as $z) {
                 if ((int) $z->referenced_recipe_id === (int) $recipe->id) {
                     continue;   // Selbstbezug kann nie eine eigene Stufe sein
@@ -902,7 +902,7 @@ class RecipeDependencyWorkflowService
             return;
         }
         try {   // 1.1e: Graph-Schreibweg; ein Zyklus bindet nicht (wie bisher still, die Zeile bleibt offen)
-            app(Rezept\RezeptGraphService::class)->schreibeKanten([[(int) $ingredient->recipe_id, $recipeId]], fn () => $ingredient->update([
+            app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->schreibeKanten([[(int) $ingredient->recipe_id, $recipeId]], fn () => $ingredient->update([
                 'referenced_recipe_id' => $recipeId,
                 'match_method' => 'recipe_ref',
                 'match_confidence' => null,

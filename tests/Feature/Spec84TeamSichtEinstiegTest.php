@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
 use Platform\FoodAlchemist\Services\Plattform\MandantBeendenService;
 use Platform\FoodAlchemist\Services\Plattform\MandantExportService;
 use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Support\FaTeam;
 use Platform\FoodAlchemist\Support\StammPaket;
 use Platform\FoodAlchemist\Support\TeamAncestryRegistry;

@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Services\Fassung\FassungService;
 use Platform\FoodAlchemist\Services\Fassung\FormatFassungService;
 use Platform\FoodAlchemist\Services\Concepter\FormatService;
 use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
-use Platform\FoodAlchemist\Services\RezeptFolgeService;
+use Platform\FoodAlchemist\Services\Rezept\RezeptFolgeService;
 use Platform\FoodAlchemist\Support\AboSicht;
 use Platform\FoodAlchemist\Support\FaTeam;
 use Platform\FoodAlchemist\Support\StammPaket;

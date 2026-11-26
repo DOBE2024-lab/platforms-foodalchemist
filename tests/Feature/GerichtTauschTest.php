@@ -17,7 +17,7 @@ use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService;
 use Platform\FoodAlchemist\Services\Gericht\GerichtTauschService;
 use Platform\FoodAlchemist\Services\Gericht\GerichtVerwendungen;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Services\Ausgabe\SpeisekarteService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

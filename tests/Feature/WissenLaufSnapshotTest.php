@@ -101,7 +101,7 @@ it('hinterlegt den Lauf bei einer echten Generator-Ausführung am Ergebnis und a
             ], 0.9, 'Test', []);
         });
     });
-    $result = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Testfond');
+    $result = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Testfond');
     expect($result['knowledge_run_id'])->toBe($seen)
         ->and($result['recipe']->fresh()->knowledge_run_id)->toBe($seen)
         ->and(app(KnowledgeRunContext::class)->current())->toBeNull();

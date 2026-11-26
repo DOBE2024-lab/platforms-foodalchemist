@@ -169,7 +169,7 @@ it('MCP: ohne auflösbares Team → NO_TEAM (Tenancy-Negativtest)', function () 
  */
 it('zählt technische Fehlschläge getrennt von echten Lücken und protokolliert sie', function () {
     // Der `recompute`-Fixer wirft für JEDES Objekt — die Masse darf trotzdem nicht reißen.
-    $this->mock(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class, function ($m) {
+    $this->mock(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class, function ($m) {
         $m->shouldReceive('recomputeAndPropagate')->andThrow(new \RuntimeException('Deadlock'));
         $m->shouldReceive('betroffeneRezepte')->andReturn([]);
     });

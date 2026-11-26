@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 /**
  * Offene Pflicht-Zutaten eines Rezepts: kein GP, kein Unterrezept, nicht optional, nicht bewusst ignoriert. Reine Lese-Abfrage
  * auf dem Modell, genutzt von der Reife-Messung ({@see \Platform\FoodAlchemist\Services\Reife\RecipeReifeAdapter}) und von der
- * EK-Vollständigkeit ({@see \Platform\FoodAlchemist\Services\KostenCacheService::fuer}).
+ * EK-Vollständigkeit ({@see \Platform\FoodAlchemist\Services\Rezept\KostenCacheService::fuer}).
  *
  * Plan 98 · 3.3 S7 P1: verschoben aus RecipeReifeAdapter::offeneZutaten. KostenCacheService brauchte nur diese Abfrage und hing
  * damit über den Reife-Adapter (der BulkEnrich, OneShot und die Datenqualität komponiert) an der großen Kreis-Komponente.

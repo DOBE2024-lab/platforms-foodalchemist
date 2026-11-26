@@ -8,9 +8,9 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\DB;
-use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\KostenCacheService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\KostenCacheService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 
 /**
  * Kosten-Folge nach einer Preis-, Lead-, Pin- oder Lieferanten-Freigabe-Änderung (Befund Achenbachglas/Cocos-Vanille-Bliss 18.11.2026, Dominique:

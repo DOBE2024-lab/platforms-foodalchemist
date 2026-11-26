@@ -19,8 +19,8 @@ use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningFrameService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeGenerationContextService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService;
 use RuntimeException;
 
 /**

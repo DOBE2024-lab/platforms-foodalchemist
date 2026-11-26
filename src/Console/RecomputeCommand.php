@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Console;
 
 use Illuminate\Console\Command;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 
 /**
  * Etappe 1 / P4 — Bulk-Recompute der Rezept-Aggregationen (EK/Yield/Allergene/

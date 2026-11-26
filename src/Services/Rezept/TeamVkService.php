@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\FoodAlchemist\Support\Masse;
 use Platform\Core\Models\Team;
@@ -35,7 +35,7 @@ class TeamVkService
             $recipe = FoodAlchemistRecipe::mitFassungen()->ohneTeamSicht('nachladen')->findOrFail($recipe->id);
         }
         if (! $recipe->ist_fassung) {
-            $r = app(Rezept\DarreichungResolver::class)->vkNettoMitQuelle($recipe, $outlet);
+            $r = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNettoMitQuelle($recipe, $outlet);
 
             return ['vk' => $r['vk'], 'quelle' => $r['quelle'], 'grund' => $r['vk'] === null ? 'kein_vk' : null, 'mek' => null];
         }
@@ -79,7 +79,7 @@ class TeamVkService
         $rechnung->forceFill(['ek_portion' => $mek, 'markup_class_id' => null, 'price_mode' => 'auto', 'sales_net' => null]);
         $rechnung->setRelation('recipe', $recipe);
         $rechnung->setRelation('markupClass', null);
-        $preis = app(Preis\CatalogPricingService::class)->catalogPrice($team, $rechnung, $outlet);
+        $preis = app(\Platform\FoodAlchemist\Services\Preis\CatalogPricingService::class)->catalogPrice($team, $rechnung, $outlet);
 
         return $preis['sales_net'] !== null
             ? ['vk' => (float) $preis['sales_net'], 'quelle' => 'team_kalkulation', 'grund' => null, 'mek' => $mek]

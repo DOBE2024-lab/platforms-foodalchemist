@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -37,11 +37,11 @@ class RezeptFolgeService
     private ?array $eingefroren = null;
 
     public function __construct(
-        private readonly Fassung\FassungsVergleich $vergleich,
-        private readonly Fassung\FassungsUmstellung $umstellung,
+        private readonly \Platform\FoodAlchemist\Services\Fassung\FassungsVergleich $vergleich,
+        private readonly \Platform\FoodAlchemist\Services\Fassung\FassungsUmstellung $umstellung,
         private readonly RecipeRecomputeService $recompute,
-        private readonly FaRechte $rechte,
-        private readonly Plattform\PlattformProtokoll $protokoll,
+        private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
+        private readonly \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
     ) {}
 
     /**
@@ -143,14 +143,14 @@ class RezeptFolgeService
         if ($signaleNachfuehren) {
             foreach ($out['signale'] as $s) {
                 try {
-                    app(Fassung\FassungSignalService::class)->aktion(Team::findOrFail($s['team']), $s['familie']);
+                    app(\Platform\FoodAlchemist\Services\Fassung\FassungSignalService::class)->aktion(Team::findOrFail($s['team']), $s['familie']);
                 } catch (\Throwable $ex) {
                     Log::error('Signal nach Fassungs-Folge fehlgeschlagen: '.$ex->getMessage(), ['exception' => $ex]);
                 }
             }
         }
 
-        app(Plattform\AboService::class)->huelleNachfuehren($teamId);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
+        app(\Platform\FoodAlchemist\Services\Plattform\AboService::class)->huelleNachfuehren($teamId);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
 
         return $out;
     }
@@ -287,12 +287,12 @@ class RezeptFolgeService
         $this->protokoll->schreibe('rezept_fassung_uebernommen', ['recipe_id' => (int) $recipe->id, 'familie_id' => $familieId, 'von' => $v['von_nr'], 'nach' => $v['nach_nr'],
             'allergen_geaendert' => $v['allergen_geaendert'], 'bestaetigt' => $v['braucht_bestaetigung']], $user, $historie);
         try {
-            app(Fassung\FassungSignalService::class)->aktion($team, $familieId);
+            app(\Platform\FoodAlchemist\Services\Fassung\FassungSignalService::class)->aktion($team, $familieId);
         } catch (\Throwable $e) {
             Log::error('Signal nach Übernehmen am Rezept fehlgeschlagen: '.$e->getMessage(), ['exception' => $e]);
         }
 
-        app(Plattform\AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
+        app(\Platform\FoodAlchemist\Services\Plattform\AboService::class)->huelleNachfuehren($team);   // Spec 84 B3 Regel B: nicht mehr referenzierte ältere Fassung fällt aus der Hülle
 
         return ['uebernahme_id' => (int) $historie->id, 'von_nr' => $v['von_nr'], 'nach_nr' => $v['nach_nr'], 'allergen_geaendert' => $v['allergen_geaendert']];
     }

@@ -144,7 +144,7 @@ class DetailPanel extends Component
         if ($gp === null) {
             return;
         }
-        $this->ersatzKiVorschlaege = app(\Platform\FoodAlchemist\Services\ReplacementSuggestionService::class)
+        $this->ersatzKiVorschlaege = app(\Platform\FoodAlchemist\Services\Rezept\ReplacementSuggestionService::class)
             ->forGp(Auth::user()->currentTeamRelation, $gp);
         if ($this->ersatzKiVorschlaege === []) {
             $this->fehler = 'Keine fachlich belastbare Ersatz-Alternative im aktuellen Datenbestand gefunden.';
@@ -685,7 +685,7 @@ class DetailPanel extends Component
             // Spec 53 Paket J: Aroma-Anker als Chip + „weitere GPs mit diesem Anker" (Reverse-Lookup,
             // kein Graph — s. PR-Body für die spätere Anker-zentrierte Netz-Idee).
             // 27.10.2026: Geschmacksprofil (Rohprofil) auch in der Detail-Ansicht — mit „Mit KI schätzen" + „Anker vorschlagen"
-            'sensorik' => ($gp !== null && $vollmodus) ? app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerGp($gp->id) : null,
+            'sensorik' => ($gp !== null && $vollmodus) ? app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class)->fuerGp($gp->id) : null,
             'gpAnker' => ($gp !== null && $vollmodus)
                 ? app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->gpAnkerAlle($gp->id)
                 : collect(),

@@ -597,7 +597,7 @@ class Brief extends Component
             return;
         }
         try {
-            $ctx = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class)
+            $ctx = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class)
                 ->build($team, $brief, $this->reglerParams($scope), $scope !== 'rezept');
             $this->wissenVorschau = is_array($ctx['kontext'] ?? null) ? $ctx['kontext'] : null;
             $this->fehler = null;

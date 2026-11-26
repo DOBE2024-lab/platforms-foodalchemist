@@ -7,9 +7,9 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDishClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeCategory;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
-use Platform\FoodAlchemist\Services\RecipeReviseService;
-use Platform\FoodAlchemist\Services\RecipeService;
-use Platform\FoodAlchemist\Services\RecipeStepService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeReviseService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeStepService;
 
 /**
  * Konformitäts-Adapter für Rezepte — deckt BEIDE Sichten ab (Basisrezept UND
@@ -152,7 +152,7 @@ class RecipeConformanceAdapter implements ConformanceAdapter
         if (self::istGarverlust((string) ($befund['paragraph'] ?? ''), (string) ($befund['feld'] ?? ''))) {
             return true;
         }
-        $zusatz = \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::ZUSATZ;
+        $zusatz = \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::ZUSATZ;
         $text = (string) ($befund['feld'] ?? '') . ' ' . (string) ($befund['begruendung'] ?? '') . ' ' . (string) ($befund['vorschlag'] ?? '');
 
         return str_starts_with(\Platform\FoodAlchemist\Services\Conformance\ConformanceService::paragraphStamm((string) ($befund['paragraph'] ?? '')), '1')
@@ -382,7 +382,7 @@ class RecipeConformanceAdapter implements ConformanceAdapter
         // Brot ohne Kennzeichnung (Dominique 10.10.: „kommt immer auf den Kontext an“): viel Brot im Gericht, aber kein
         // Brot-Angebot gekennzeichnet → nur ein Hinweis zur menschlichen Entscheidung, kein automatischer Umbau.
         if ($r->is_sales_recipe) {
-            $zukauf = app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class);
+            $zukauf = app(\Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::class);
             $texte = $r->ingredients->map(fn ($z) => (string) ($z->gp?->name ?? $z->referencedRecipe?->name ?? $z->raw_text))->all();
             $brot = count(array_filter($texte, fn ($t) => $zukauf->istBrotZeile($team, $t)));
             if ($texte !== [] && $brot * 2 >= count($texte) && ! $zukauf->istBrotAngebot($team, $name)) {
@@ -396,14 +396,14 @@ class RecipeConformanceAdapter implements ConformanceAdapter
         // Kennzeichen „(Zukauf)“ im Namen und Fertigungstiefe convenience gehören zusammen (Dominique 10.10.: Konvention
         // im Namen UND im Feld). Widerspruch = Hinweis aus dem Code, nicht von der KI.
         if (! $r->is_sales_recipe) {
-            $mitZusatz = mb_stripos($name, \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::ZUSATZ) !== false;
+            $mitZusatz = mb_stripos($name, \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::ZUSATZ) !== false;
             $istZukauf = $r->production_depth === 'convenience';
             if ($mitZusatz !== $istZukauf) {
                 $out[] = ['paragraph' => '§1.5', 'schweregrad' => 'weich', 'feld' => $mitZusatz ? 'production_depth' : 'name',
                     'begruendung' => $mitZusatz
                         ? 'Name trägt „(Zukauf)“, die Fertigungstiefe ist aber nicht „convenience“.'
                         : 'Fertigungstiefe „convenience“ (Zukauf), aber „(Zukauf)“ fehlt im Namen.',
-                    'vorschlag' => $mitZusatz ? 'convenience' : rtrim($name) . ' ' . \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::ZUSATZ,
+                    'vorschlag' => $mitZusatz ? 'convenience' : rtrim($name) . ' ' . \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::ZUSATZ,
                     'konfidenz' => 1.0, 'quelle' => 'code', 'rule_id' => null];
             }
         }
@@ -606,7 +606,7 @@ class RecipeConformanceAdapter implements ConformanceAdapter
         ];
 
         // Hausentscheidung (Lauf 92): „(Zukauf)" ist der Kennzeichen-Zusatz für Zukauf-Basisrezepte — nicht als §1.5 melden.
-        $kontext['hausentscheidungen'] = 'Der Klammerzusatz „' . \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::ZUSATZ
+        $kontext['hausentscheidungen'] = 'Der Klammerzusatz „' . \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::ZUSATZ
             . '“ kennzeichnet Zukauf-Basisrezepte (Hausstandard „Typ: Ware (Zukauf)“) — kein Verstoß gegen das Klammer-Vokabular.';
 
         if ($vk) {

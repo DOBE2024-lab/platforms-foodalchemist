@@ -349,7 +349,7 @@ it('spiegelt Pflicht-Dossiers NICHT in files_used — sonst frisst der Dedup den
         $slugs[] = $slug;
     }
 
-    $ctx = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class)
+    $ctx = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class)
         ->build($this->rootTeam, 'Rinderfilet als Hauptgang', [], false);
 
     // 1. files_used bleibt SAUBER — nur was contextFor wirklich geladen hat.
@@ -374,7 +374,7 @@ it('liefert Pflicht-Dossiers in den Prompt, wenn der Kontext-Dienst sie nicht al
         $this->kanonZeile((int) $this->rootTeam->id, 'recipe.generator', $slug, 'pflicht', ($i + 1) * 10);
     }
 
-    $ctx = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class)
+    $ctx = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class)
         ->build($this->rootTeam, 'Rinderfilet als Hauptgang', [], false);
 
     app(\Platform\FoodAlchemist\Services\Ai\AiGatewayService::class)->propose(

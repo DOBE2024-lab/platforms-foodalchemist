@@ -5,7 +5,7 @@ namespace Platform\FoodAlchemist\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Platform\FoodAlchemist\Services\GpStamm\GpBereinigenService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 
 /**
  * GP-Stamm bereinigen (Kurator/Dominique 19.10.2026) — Dubletten mergen, deterministische Namensfixes.

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotEinfrierService;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
-use Platform\FoodAlchemist\Services\EinfrierKosten;
+use Platform\FoodAlchemist\Services\Rezept\EinfrierKosten;
 use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
 use Platform\FoodAlchemist\Support\AngebotFestpreise;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;

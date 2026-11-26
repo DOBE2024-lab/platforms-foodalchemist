@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Platform\FoodAlchemist\Support\Masse;
 use Platform\Core\Models\Team;

@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistServierform;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\Produktion\GefaessKostenartService;
 use Platform\FoodAlchemist\Services\GpStamm\GpMasseService;
 use Platform\FoodAlchemist\Services\Planung\PlanungsblattService;

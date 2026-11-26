@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 
 /**
  * 03·L5: Beschreibung + Richtungs-Parameter → Draft-Rezept über denselben
@@ -268,7 +268,7 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
         // 3–4 zusätzliche Provider-Calls würden die Antwortzeit vervielfachen. Der
         // Client entscheidet, ob er sie zahlt.
         $anreicherung = $vollAnreichern
-            ? app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)
+            ? app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class)
                 ->anreichern($team, $recipe, $zielVk, completeCoverage: $completeCoverage)
             : null;
         if ($anreicherung !== null) {
@@ -292,7 +292,7 @@ class RecipesGenerateTool extends FoodAlchemistTool implements ToolContract, Too
                 'n_ingredients_total' => $recipe->n_ingredients_total,
                 'n_ingredients_unmapped' => $recipe->n_ingredients_unmapped,
                 // Plan 98 B (h): Mengen wirken wie eine Charge (Portion über 3000 g) — dann kein Auto-VK; null = unauffällig
-                'charge_hinweis' => app(\Platform\FoodAlchemist\Services\DarreichungService::class)->chargenHinweis($recipe),
+                'charge_hinweis' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->chargenHinweis($recipe),
             ],
             // `statistik.stubs` (L7b-2) = die in diesem Lauf NEU angelegten
             // Sub-Rezept-Stubs mit Namen: bewusst leere Halbfabrikat-Platzhalter,

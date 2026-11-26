@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Livewire\Recipes\RecipeModal;
 use Platform\FoodAlchemist\Livewire\Verkauf\VkModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStepPhoto;
-use Platform\FoodAlchemist\Services\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -40,7 +40,7 @@ it('EnrichRecipeJob nurProduktfoto: ruft NUR produktFoto() auf, keine Anreicheru
     });
 
     (new EnrichRecipeJob($this->rootTeam->id, (int) Auth::id(), $recipe->id, nurProduktfoto: true))
-        ->handle(app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class));
+        ->handle(app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class));
 
     $stand = Cache::get(EnrichRecipeJob::produktfotoCacheKey($this->rootTeam->id, $recipe->id));
     expect($stand['status'] ?? null)->toBe('done');
@@ -87,7 +87,7 @@ it('EnrichRecipeJob nurProduktfoto: ersetzt NUR das KI-Produktfoto, Schrittfotos
     });
 
     (new EnrichRecipeJob($this->rootTeam->id, (int) Auth::id(), $recipe->id, nurProduktfoto: true))
-        ->handle(app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class));
+        ->handle(app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class));
 
     expect(FoodAlchemistRecipeStepPhoto::whereKey($altesProdukt->id)->exists())->toBeFalse('altes KI-Produktfoto muss ersetzt sein')
         ->and(FoodAlchemistRecipeStepPhoto::whereKey($schrittFoto->id)->exists())->toBeTrue('Schrittfoto darf NICHT gelöscht werden')
@@ -102,7 +102,7 @@ it('EnrichRecipeJob nurProduktfoto: Fehler landet im Cache, nicht in deferred.bi
     });
 
     (new EnrichRecipeJob($this->rootTeam->id, (int) Auth::id(), $recipe->id, nurProduktfoto: true))
-        ->handle(app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class));
+        ->handle(app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class));
 
     $stand = Cache::get(EnrichRecipeJob::produktfotoCacheKey($this->rootTeam->id, $recipe->id));
     expect($stand['status'] ?? null)->toBe('failed')

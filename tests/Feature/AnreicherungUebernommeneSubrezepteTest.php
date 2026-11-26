@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -212,7 +212,7 @@ it('B1: der Job schreibt die Tiefe an den Step — „leicht" ist von „voll" u
 
     // Leichter Pass (complete_coverage=false) — der Fall aus Lauf 65.
     (new EnrichRecipeJob($this->rootTeam->id, (int) auth()->id(), (int) $recipe->id, null, false, (int) $step->id, false, false, false))
-        ->handle(app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class));
+        ->handle(app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class));
 
     expect($step->fresh()->deferred['enrich']['tief'] ?? null)->toBeFalse();
 });
@@ -239,7 +239,7 @@ it('A8: nach erfolgreicher Anreicherung wird der Reifegrad NACHGEZOGEN — sonst
     ($this->schritt)($bruehe, 'Gemüse ansetzen und ziehen lassen.');
 
     (new EnrichRecipeJob($this->rootTeam->id, (int) auth()->id(), (int) $bruehe->id, null, false, (int) $step->id, false, false, false))
-        ->handle(app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class));
+        ->handle(app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class));
 
     expect($step->fresh()->deferred['reuse']['reif'] ?? null)->toBeTrue()
         ->and($step->fresh()->deferred['reuse']['luecken'] ?? null)->toBe([])

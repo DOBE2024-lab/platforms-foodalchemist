@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 class MargeImpactService
 {
     public function __construct(
-        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService $recompute,
         private MargeService $marge,
     ) {
     }

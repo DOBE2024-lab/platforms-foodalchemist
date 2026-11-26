@@ -8,8 +8,8 @@ use Platform\FoodAlchemist\Jobs\RecomputeTeamRecipesJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistTeamStammOptin;
-use Platform\FoodAlchemist\Services\KostenCacheService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\KostenCacheService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Support\StammPaket;
 
 /**

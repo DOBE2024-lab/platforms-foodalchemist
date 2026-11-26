@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Services\Preis\CatalogPricingService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Concepter\ConcepterAggregateService;
 use Platform\FoodAlchemist\Services\Rezept\DarreichungResolver;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\GpStamm\GpNamingService;
 use Platform\FoodAlchemist\Services\Preis\MargeService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;

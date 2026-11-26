@@ -270,7 +270,7 @@ class PreislistenImportService
         $bewegt = [];
 
         // Sammellauf: die Kosten-Folge (Gefäß/Zubehör, Paket/Konzept) geht einmal am Ende, nicht je Zeile; Rezepte rechnet die Kette unten
-        \Platform\FoodAlchemist\Services\KostenCacheService::gesammelt(function () use ($run, $team, $stati, $heute, &$bilanz, &$bewegt) {
+        \Platform\FoodAlchemist\Services\Rezept\KostenCacheService::gesammelt(function () use ($run, $team, $stati, $heute, &$bilanz, &$bewegt) {
             Zeile::where('run_id', $run->id)->where('team_id', $team->id)
             ->whereIn('status', $stati)->orderBy('id')
             ->chunkById(500, function ($zeilen) use ($team, $heute, &$bilanz, &$bewegt) {

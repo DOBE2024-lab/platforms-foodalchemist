@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep;
-use Platform\FoodAlchemist\Services\RecipeImageService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeImageService;
 use Platform\FoodAlchemist\Services\TeamSettingsService;
 
 /**

@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFormatSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Concepter\InhaltsFreigabeService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Support\TeamScope;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\Support\SeedsWareneingang;

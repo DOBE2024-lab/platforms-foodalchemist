@@ -8,8 +8,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\GpStamm\IngredientMatchService;
-use Platform\FoodAlchemist\Services\RecipeExtractService;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeExtractService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

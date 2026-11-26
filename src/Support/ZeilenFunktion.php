@@ -2,7 +2,7 @@
 
 namespace Platform\FoodAlchemist\Support;
 
-use Platform\FoodAlchemist\Services\RecipeKomponentenPlanService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService;
 use Platform\FoodAlchemist\Services\Regeln\Arten\Vokabular;
 use Platform\FoodAlchemist\Services\Regeln\RegelBuch;
 use Platform\FoodAlchemist\Services\Regeln\RegelText;

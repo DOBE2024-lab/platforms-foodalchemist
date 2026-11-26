@@ -1,7 +1,7 @@
 <?php
 
 use Platform\FoodAlchemist\Models\FoodAlchemistRule;
-use Platform\FoodAlchemist\Services\RecipeKomponentenPlanService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService;
 use Platform\FoodAlchemist\Services\Regeln\RegelService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

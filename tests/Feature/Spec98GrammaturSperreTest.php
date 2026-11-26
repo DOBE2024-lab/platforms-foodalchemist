@@ -1,8 +1,8 @@
 <?php
 
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
-use Platform\FoodAlchemist\Services\DarreichungService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Tests\Support\GrammaturWelt;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

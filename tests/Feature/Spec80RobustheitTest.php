@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Conformance\ConformanceService;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\RecipeReviseService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeReviseService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

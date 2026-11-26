@@ -316,7 +316,7 @@ class MatchHeuristics
     {
         // Zukauf-Basisrezept (Entscheidung Dominique 10.10.): „Crunch: Röstzwiebeln (Zukauf)" zeigt IMMER aufs Zukauf-
         // Basisrezept, auch mit Einkaufsform („…, trocken (Zukauf)").
-        if (mb_stripos($name, \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::ZUSATZ) !== false) {
+        if (mb_stripos($name, \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::ZUSATZ) !== false) {
             return true;
         }
         $praefix = \Platform\FoodAlchemist\Support\RezeptTypVokabular::praefix($name);

@@ -32,7 +32,7 @@ class AngebotEinfrierService
 
     public function __construct(
         private readonly \Platform\FoodAlchemist\Services\FaRechte $rechte,
-        private readonly \Platform\FoodAlchemist\Services\EinfrierKosten $kosten,
+        private readonly \Platform\FoodAlchemist\Services\Rezept\EinfrierKosten $kosten,
         private readonly \Platform\FoodAlchemist\Services\Fassung\FassungsVergleich $vergleich,
         private readonly \Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll $protokoll,
         private readonly \Platform\FoodAlchemist\Services\Fassung\FassungsUmstellung $umstellung,
@@ -277,7 +277,7 @@ class AngebotEinfrierService
             }
             $geaendert = array_values(array_unique(array_merge($umgehaengt['rezepte'], $gericht->ist_fassung ? [] : [(int) $gericht->id])));
             if ($geaendert !== []) {
-                app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeMany($geaendert);
+                app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputeMany($geaendert);
             }
             $this->zeileNeuEinfrieren($zeile, $gericht->refresh(), $eigentuemer);
 
@@ -400,7 +400,7 @@ class AngebotEinfrierService
         foreach ($formen as $d) {
             // wie die Live-Wege: Abo-Fassung über TeamVkService je Form, eigenes Gericht über den VK der Form (sonst Preisleiter)
             $vk = $gericht->ist_fassung
-                ? app(\Platform\FoodAlchemist\Services\TeamVkService::class)->fuer($gericht, $eigentuemer, null, $d)['vk']
+                ? app(\Platform\FoodAlchemist\Services\Rezept\TeamVkService::class)->fuer($gericht, $eigentuemer, null, $d)['vk']
                 : ($d->sales_net !== null ? (float) $d->sales_net : app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($gericht));
             $jeForm[(int) $d->id] = $k['vollstaendig'] && $vk !== null ? round((float) $vk, 2) : null;
         }

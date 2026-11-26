@@ -6,8 +6,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Conformance\RecipeConformanceAdapter;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -88,7 +88,7 @@ it('G: Kaufware wird ein Rüst-Basisrezept mit genau dieser Ware — kein Plan, 
     Queue::assertPushed(\Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob::class, fn ($j) => $j->stepId === (int) $jus->id && ! isset($j->params['ruest_ware']));
     Queue::assertPushed(\Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob::class, fn ($j) => $j->stepId === (int) $fond->id && ! isset($j->params['ruest_ware']));
 
-    $prompt = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class)->build($this->rootTeam, 'Kürbiskernöl', ['ruest_ware' => 'Kürbiskernöl'], false)['prompt'];
+    $prompt = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class)->build($this->rootTeam, 'Kürbiskernöl', ['ruest_ware' => 'Kürbiskernöl'], false)['prompt'];
     expect($prompt['ruest_basisrezept']['ware'])->toBe('Kürbiskernöl')
         ->and($prompt['ruest_basisrezept']['hinweis'])->toContain('Keine Eigenherstellung');
 });
@@ -98,7 +98,7 @@ it('Zukauf erkennt Fertigware, nicht Rohware — mit Typ aus der Zeile oder aus 
     $gp('Roestzwiebeln: trocken, frittiert', '10', '10.4 Gewuerzmischungen');
     $gp('Kuerbiskernoel: trocken', '11', '11.1 Oel');
     $gp('Kuerbis Hokkaido: frisch, ganz', '01', '01.1 Fruchtgemuese');
-    $z = app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class);
+    $z = app(\Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::class);
 
     expect($z->erkenne($this->rootTeam, 'Crunch: Röstzwiebeln'))->toMatchArray(['typ' => 'Crunch', 'bezeichnung' => 'Röstzwiebeln'])
         ->and($z->erkenne($this->rootTeam, 'Püree: Kürbis Hokkaido'))->toBeNull()   // Rohware = Zubereitung
@@ -110,8 +110,8 @@ it('Zukauf erkennt Fertigware, nicht Rohware — mit Typ aus der Zeile oder aus 
 
     expect($z->erkenne($this->rootTeam, 'Kürbiskernöl'))->toMatchArray(['typ' => 'Öl', 'bezeichnung' => 'Kürbiskernöl'])
         // Typ nicht doppelt (§1.2, Review Berater): „Öl: Kürbiskern (Zukauf)“, nicht „Öl: Kürbiskernöl (Zukauf)“.
-        ->and(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::name($z->erkenne($this->rootTeam, 'Kürbiskernöl')))->toBe('Öl: Kürbiskern (Zukauf)')
-        ->and(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::name($z->erkenne($this->rootTeam, 'Crunch: Röstzwiebeln')))->toBe('Crunch: Röstzwiebeln (Zukauf)');
+        ->and(\Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::name($z->erkenne($this->rootTeam, 'Kürbiskernöl')))->toBe('Öl: Kürbiskern (Zukauf)')
+        ->and(\Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::name($z->erkenne($this->rootTeam, 'Crunch: Röstzwiebeln')))->toBe('Crunch: Röstzwiebeln (Zukauf)');
 });
 
 it('Zukauf: Weiche in starteKind — eigener Bau ohne Plan und ohne großen Generator', function () {
@@ -157,7 +157,7 @@ it('Zukauf-Bau: „Typ: Ware (Zukauf)“, die Ware als Zeile, Hilfsstoffe nur al
     (new \Platform\FoodAlchemist\Jobs\BuildZukaufRecipeJob($this->rootTeam->id, (int) auth()->id(), (int) $kind->id, 'Kürbiskernöl',
         ['gp_id' => (int) $oel->id, 'gp_name' => 'Kuerbiskernoel: trocken', 'typ' => 'Öl', 'bezeichnung' => 'Kürbiskernöl'],
         ['bedarf_menge' => 400.0, 'bedarf_einheit' => 'ml']))->handle(
-        app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class), app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class), app(RecipeDependencyWorkflowService::class));
+        app(\Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::class), app(\Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService::class), app(RecipeDependencyWorkflowService::class));
 
     $kind->refresh();
     expect($kind->error)->toBeNull();
@@ -174,7 +174,7 @@ it('Zukauf-Bau: „Typ: Ware (Zukauf)“, die Ware als Zeile, Hilfsstoffe nur al
 });
 
 it('H: Unterrezept bekommt den Bedarf des Gerichts nur als Information — die Charge wählt die KI zum Sektor', function () {
-    $ctx = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class);
+    $ctx = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class);
 
     $kind = $ctx->build($this->rootTeam, 'Fond: Kalb', ['bedarf_menge' => 150.0, 'bedarf_einheit' => 'ml', 'sektor' => 'restaurant'], false)['prompt'];
     expect($kind['bedarf_im_gericht']['menge'])->toBe('150 ml')
@@ -219,7 +219,7 @@ it('Hausstandard: der Regel-Block zeigt ganze Beispiele statt Wortstämme (Lauf 
 });
 
 it('Bestand: „Jus: Rind“ findet den freigegebenen „Jus: Rind (Zukauf)“ — exakter Name gewinnt, Anlegen bleibt unberührt', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\RecipeService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class);
     $zukauf = $this->makeRecipe($this->rootTeam, 'Jus: Rind (Zukauf)', ['status' => 'approved']);
 
     expect($svc->findByTokenSetMitReife($this->rootTeam, 'Jus: Rind')['recipe']->id ?? null)->toBe($zukauf->id)

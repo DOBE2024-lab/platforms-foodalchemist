@@ -124,7 +124,7 @@ class SpeisenKlassenService
      */
     public function verteileRollen(Team $team, int $recipeId, bool $neuZuordnen = false): array
     {
-        $r = app(\Platform\FoodAlchemist\Services\RecipeService::class)->detailAnySicht($team, $recipeId)
+        $r = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->detailAnySicht($team, $recipeId)
             ?? throw new \RuntimeException('Rezept nicht sichtbar.');
 
         // Neu zuordnen (Kommando --alle, Dominique 11.10.): Rollen aus migration/ki NICHT als Echo zeigen — sonst bestätigt die KI

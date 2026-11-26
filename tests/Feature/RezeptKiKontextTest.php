@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\FakeAiProvider;
 use Platform\FoodAlchemist\Services\Ai\RecipeKiKontextService;
 use Platform\FoodAlchemist\Services\Knowledge\KnowledgeCanonService;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

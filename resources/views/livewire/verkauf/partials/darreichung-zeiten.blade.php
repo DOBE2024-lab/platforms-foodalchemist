@@ -14,15 +14,15 @@
             @if(($zeit['quelle'] ?? null) === 'bestand')<span class="sm:col-span-2 xl:col-span-5"><x-fa::badge tone="info">Aus bisherigen Zeiten übernommen</x-fa::badge></span>@endif
             <x-fa::field label="Tätigkeit" for="dar-zeit-art-{{ $d->id }}-{{ $index }}">
                 <x-fa::select id="dar-zeit-art-{{ $d->id }}-{{ $index }}" wire:model.live="darZeitForm.{{ $d->id }}.{{ $index }}.use_case">
-                    @foreach(\Platform\FoodAlchemist\Services\DarreichungsZeitService::TAETIGKEITEN as $key => $label)<option value="{{ $key }}" @selected($key === $zeit['use_case'])>{{ $label }}</option>@endforeach
+                    @foreach(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::TAETIGKEITEN as $key => $label)<option value="{{ $key }}" @selected($key === $zeit['use_case'])>{{ $label }}</option>@endforeach
                 </x-fa::select>
             </x-fa::field>
             <x-fa::field label="Bezugsmenge" for="dar-zeit-basis-{{ $d->id }}-{{ $index }}">
                 <x-fa::select id="dar-zeit-basis-{{ $d->id }}-{{ $index }}" wire:model.live="darZeitForm.{{ $d->id }}.{{ $index }}.basis">
-                    @foreach(\Platform\FoodAlchemist\Services\DarreichungsZeitService::BASIS as $key => $label)<option value="{{ $key }}" @selected($key === $zeit['basis'])>{{ $label }}</option>@endforeach
+                    @foreach(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::BASIS as $key => $label)<option value="{{ $key }}" @selected($key === $zeit['basis'])>{{ $label }}</option>@endforeach
                 </x-fa::select>
             </x-fa::field>
-            <x-fa::field :label="str_ends_with(\Platform\FoodAlchemist\Services\DarreichungsZeitService::BASIS[$zeit['basis']], '(s)') ? 'Zeit (Sekunden)' : 'Zeit (Minuten)'" for="dar-zeit-wert-{{ $d->id }}-{{ $index }}">
+            <x-fa::field :label="str_ends_with(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::BASIS[$zeit['basis']], '(s)') ? 'Zeit (Sekunden)' : 'Zeit (Minuten)'" for="dar-zeit-wert-{{ $d->id }}-{{ $index }}">
                 <x-fa::input id="dar-zeit-wert-{{ $d->id }}-{{ $index }}" inputmode="decimal" wire:model="darZeitForm.{{ $d->id }}.{{ $index }}.wert" numeric />
             </x-fa::field>
             <x-fa::field label="Arbeitsort" for="dar-zeit-ort-{{ $d->id }}-{{ $index }}">
@@ -62,7 +62,7 @@
         @endforeach
         @if(($av['vollstaendig'] ?? true) === false)<x-fa::signal tone="warn">Menge fehlt. Zeit nicht vollständig berechnet.</x-fa::signal>@endif
         @foreach($av['posten'] ?? [] as $zp)
-            <span class="{{ $hinweis }}">{{ \Platform\FoodAlchemist\Services\DarreichungsZeitService::TAETIGKEITEN[$zp['use_case']] }} · {{ $zp['menge'] ?? 'Menge fehlt' }} × {{ $zp['wert'] }} {{ in_array($zp['basis'], ['portion', 'einheit', 'stueck']) ? 's' : 'min' }} · {{ $zp['ort'] === 'kueche' ? 'Küche' : 'Vor Ort' }}</span>
+            <span class="{{ $hinweis }}">{{ \Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::TAETIGKEITEN[$zp['use_case']] }} · {{ $zp['menge'] ?? 'Menge fehlt' }} × {{ $zp['wert'] }} {{ in_array($zp['basis'], ['portion', 'einheit', 'stueck']) ? 's' : 'min' }} · {{ $zp['ort'] === 'kueche' ? 'Küche' : 'Vor Ort' }}</span>
         @endforeach
         @if(($av['vor_ort_minuten'] ?? 0) > 0)<span>Service-Grundlohn für {{ $vnText }}: <x-fa::money :value="$av['service_kosten']['lohn_eur'] ?? null" /> bei <x-fa::money :value="$av['service_kosten']['stundensatz'] ?? null" /> / h</span>@endif
         <span class="{{ $hinweis }}">Service rechnet im Auftrag mit dem allgemeinen Team-Stundensatz. Lohnnebenkosten und Aufschläge ergänzt die Auftragskalkulation. Regeneration wird zusätzlich berechnet.</span>

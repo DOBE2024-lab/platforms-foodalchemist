@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSpeisekarte;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Support\Hochrechnung;
 
 /**
@@ -960,7 +960,7 @@ class ReportExportService
         $sensorik = null;
         if ($optionen['sensorik'] ?? false) {
             try {
-                $sensorik = app(\Platform\FoodAlchemist\Services\SensorikService::class)->fuerRezept((int) $recipe->id);
+                $sensorik = app(\Platform\FoodAlchemist\Services\Rezept\SensorikService::class)->fuerRezept((int) $recipe->id);
             } catch (\Throwable) {
                 $sensorik = ['leer' => true, 'fehler' => 'Sensorik konnte nicht gelesen werden.'];
             }
@@ -1120,7 +1120,7 @@ class ReportExportService
                 ? ($this->teamCache[$recipe->team_id] ??= Team::find($recipe->team_id))
                 : null;
 
-            $zeilen = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->zeilenKostenUndMassen($recipe, $team);
+            $zeilen = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->zeilenKostenUndMassen($recipe, $team);
 
             return array_map(fn ($z) => $z['kosten'], $zeilen);
         } catch (\Throwable) {

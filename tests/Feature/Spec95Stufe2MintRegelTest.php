@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Services\Ai\AiGatewayService;
 use Platform\FoodAlchemist\Services\Ai\AiProposal;
 use Platform\FoodAlchemist\Services\Einkauf\LaCandidateFinder;
 use Platform\FoodAlchemist\Services\Einkauf\LaFirstGpService;
-use Platform\FoodAlchemist\Services\RecipeExtractService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeExtractService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -111,7 +111,7 @@ it('Regel 4 · ENRICH-Mint: der Anker läuft nicht mehr synchron im Lauf', funct
     $bulk->shouldNotReceive('ankerNachziehen');
     app()->instance(\Platform\FoodAlchemist\Services\Plattform\BulkEnrichService::class, $bulk);
 
-    $r = app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $recipe->fresh());
+    $r = app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class)->minteFehlendeGps($this->rootTeam, $recipe->fresh());
 
     expect($r['minted'])->toBe(1)
         ->and($r['anker'])->toHaveKey('nachgelagert');

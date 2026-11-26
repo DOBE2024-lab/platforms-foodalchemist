@@ -39,7 +39,7 @@ $code = fn (string $body, string $kopf = '') => "<?php\nnamespace Platform\\Food
 it('livewire_import: use-Zeile und voll qualifizierter Name zählen, Doku-Kommentar nicht', function () {
     $quelle = "<?php\nnamespace Platform\\FoodAlchemist\\Tools;\n"
         . "use Platform\\FoodAlchemist\\Livewire\\Settings\\Wissenssteuerung;\n"
-        . "use Platform\\FoodAlchemist\\Services\\RecipeService;\n"
+        . "use Platform\FoodAlchemist\Services\Rezept\RecipeService;\n"
         . "/** {@see \\Platform\\FoodAlchemist\\Livewire\\Planung\\Index::WATCHDOG_SEKUNDEN} */\n"
         . "class X { public function a() { return \\Platform\\FoodAlchemist\\Livewire\\Planung\\Index::SEKTOR_OPTIONEN; } }\n";
 

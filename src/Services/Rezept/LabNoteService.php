@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;

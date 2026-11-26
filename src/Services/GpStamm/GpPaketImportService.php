@@ -512,7 +512,7 @@ class GpPaketImportService
         $proto['recompute'] = 0;
         $leadGeaendert = array_values(array_unique($leadGeaendert));
         if ($leadGeaendert !== [] && ! ($o['ohne_recompute'] ?? false)) {
-            $kosten = app(\Platform\FoodAlchemist\Services\KostenCacheService::class);
+            $kosten = app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class);
             $kosten->markiereVeraltet($kosten->rezepteMitGps($leadGeaendert), null);
             $proto['recompute'] = $this->lead->recomputeNutzerFuerGps($leadGeaendert);
         }

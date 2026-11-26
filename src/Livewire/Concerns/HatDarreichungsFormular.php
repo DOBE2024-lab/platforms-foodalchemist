@@ -48,10 +48,10 @@ trait HatDarreichungsFormular
         if ($team === null) {
             return;
         }
-        $svc = app(\Platform\FoodAlchemist\Services\DarreichungService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class);
         $normal = [];
         foreach ($this->darZeitEntwuerfe() as $id => $zeilen) {
-            $normal[$id] = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->normalisieren($zeilen);
+            $normal[$id] = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::class)->normalisieren($zeilen);
         }
         foreach ($normal as $id => $zeilen) {
             $svc->aktualisieren($team, (int) $id, ['arbeitszeiten' => $zeilen]);
@@ -91,7 +91,7 @@ trait HatDarreichungsFormular
                 'gramm_je_einheit' => $dar->quantity_per_unit_g, 'einheiten_je_portion' => $dar->unit_count,
                 'komponenten' => $dar->recipe->ingredients->map(fn ($z) => $z->referencedRecipe?->name ?? $z->display_name)->all(),
             ], ['target_table' => $dar->getTable(), 'target_id' => $dar->id]);
-            $zeilen = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->normalisieren($v->werte['arbeitszeiten'] ?? null);
+            $zeilen = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::class)->normalisieren($v->werte['arbeitszeiten'] ?? null);
             $this->darZeitForm[$id] = array_map(fn ($z) => $z + ['quelle' => 'ki_vorschlag', 'confidence' => $v->confidence], $zeilen);
             $this->fehler = null;
         } catch (\RuntimeException $e) {
@@ -189,7 +189,7 @@ trait HatDarreichungsFormular
                 'anrichten_wert' => self::darZahl($d->anrichten_wert),
                 'anrichten_pauschal_min' => self::darZahl($d->anrichten_pauschal_min),
             ];
-            $this->darZeitForm[$d->id] = app(\Platform\FoodAlchemist\Services\DarreichungsZeitService::class)->formular($d);
+            $this->darZeitForm[$d->id] = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungsZeitService::class)->formular($d);
             $this->darZeitStart[$d->id] = $this->darZeitForm[$d->id];
             if ($d->is_standard && $this->darAktiv === null) {
                 $this->darAktiv = (int) $d->id;
@@ -199,7 +199,7 @@ trait HatDarreichungsFormular
             $this->darAktiv = array_key_first($this->darForm);
         }
         $gericht = $team !== null ? \Platform\FoodAlchemist\Models\FoodAlchemistRecipe::visibleToTeam($team)->find($this->recipeId) : null;
-        $this->darChargeHinweis = $gericht !== null ? app(\Platform\FoodAlchemist\Services\DarreichungService::class)->chargenHinweis($gericht) : null;
+        $this->darChargeHinweis = $gericht !== null ? app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->chargenHinweis($gericht) : null;
         if ($gericht !== null && $team !== null) {
             try {   // reine Anzeige — ein Fehler darin darf das Modal nie kippen
                 foreach ($gericht->presentations()->get() as $d) {

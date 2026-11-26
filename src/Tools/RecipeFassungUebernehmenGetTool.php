@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\RezeptFolgeService;
+use Platform\FoodAlchemist\Services\Rezept\RezeptFolgeService;
 
 /** Spec 82 §12 B / 4d · Vorschau „Übernehmen am Rezept“: neue Fassung, Allergen-/Zusatzstoff-Diff (Endstand), Zwischenfassungen, ob Bestätigung nötig ist. Schreibt nichts. */
 class RecipeFassungUebernehmenGetTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

@@ -866,9 +866,9 @@ class AboKuendigungService
         }
         $rezepte = array_values($map['recipe'] ?? []);
         if ($rezepte !== []) {
-            app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeMany($rezepte);
+            app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputeMany($rezepte);
             foreach (FoodAlchemistRecipeDarreichung::whereIn('recipe_id', $rezepte)->get() as $d) {
-                app(\Platform\FoodAlchemist\Services\DarreichungService::class)->recomputePreise($d);
+                app(\Platform\FoodAlchemist\Services\Rezept\DarreichungService::class)->recomputePreise($d);
             }
         }
         $konzepte = FoodAlchemistConcept::mitFassungen()->whereIn('id', array_values($map['concept'] ?? []))->get()->sortBy(fn ($c) => $c->kind === 'paket' ? 0 : 1);

@@ -13,11 +13,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeRolle;
 use Platform\FoodAlchemist\Models\FoodAlchemistRule;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
-use Platform\FoodAlchemist\Services\RecipeKomponentenPlanService;
-use Platform\FoodAlchemist\Services\RecipeRollenService;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRollenService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Services\Regeln\RegelBuch;
 use Platform\FoodAlchemist\Services\GpStamm\SpeisenKlassenService;
 use Platform\FoodAlchemist\Support\TellerRolle;
@@ -229,7 +229,7 @@ it('MCP: recipes.PUT setzt Rollen (manuell), recipes.GET liefert sie, recipes.LI
 });
 
 it('Generator-Kontext und Prompts: Teller-Rollen statt Funktion, Nutzungs-Historie an der Plan-Komponente', function () {
-    $ctx = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class)->build($this->rootTeam, 'Rinderfilet-Sauce', [
+    $ctx = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class)->build($this->rootTeam, 'Rinderfilet-Sauce', [
         'plan_komponenten' => [['name' => 'Jus: Rind', 'menge' => 100, 'einheit' => 'g', 'bestand' => ['recipe_id' => 1, 'name' => 'Jus: Rind', 'verwendung' => 'in 3 Gerichten: 3× sauce']]],
     ], false);
     $task = fn (string $key) => (string) (config('foodalchemist.prompts', [])[$key]['task'] ?? '');

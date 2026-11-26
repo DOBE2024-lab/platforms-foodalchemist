@@ -50,15 +50,15 @@ final class GerichtGpUmbauService
 
             return ['name' => $roh, 'typ' => null, 'typ_sicher' => false, 'zukauf' => false];
         }
-        $bezeichnung = \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::bezeichnungFuerGp($gp) ?: (string) $gp->name;
-        $typ = app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class)->typFuerGp($gp);
+        $bezeichnung = \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::bezeichnungFuerGp($gp) ?: (string) $gp->name;
+        $typ = app(\Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::class)->typFuerGp($gp);
         if ($typ !== null) {
-            return ['name' => \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::name(['typ' => $typ, 'bezeichnung' => $bezeichnung]), 'typ' => $typ,
+            return ['name' => \Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::name(['typ' => $typ, 'bezeichnung' => $bezeichnung]), 'typ' => $typ,
                 'typ_sicher' => true, 'zukauf' => true];
         }
         $fallback = RezeptTypVokabular::finde(self::TYP_FALLBACK) ?? self::TYP_FALLBACK;
 
-        return ['name' => \Platform\FoodAlchemist\Services\RecipeKomponentenPlanService::bereinigeName($fallback . ': ' . $bezeichnung), 'typ' => $fallback,
+        return ['name' => \Platform\FoodAlchemist\Services\Rezept\RecipeKomponentenPlanService::bereinigeName($fallback . ': ' . $bezeichnung), 'typ' => $fallback,
             'typ_sicher' => false, 'zukauf' => false];
     }
 
@@ -89,8 +89,8 @@ final class GerichtGpUmbauService
             throw new \RuntimeException('Name des Basisrezepts ist Pflicht.');
         }
 
-        $rezepte = app(\Platform\FoodAlchemist\Services\RecipeService::class);
-        $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
+        $rezepte = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class);
+        $recompute = app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class);
 
         return DB::transaction(function () use ($team, $zeile, $gericht, $name, $vorschlag, $rezepte, $recompute) {
             $bestehend = FoodAlchemistRecipe::query()->where('team_id', $team->id)->basis()

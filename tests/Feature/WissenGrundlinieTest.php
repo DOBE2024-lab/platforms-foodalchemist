@@ -141,10 +141,10 @@ it('B3: die Aufrufstellen der Rezept-Kette geben knowledge_dropped_chars weiter'
     // Die Kette, die Etappe A1 messen muss: Draft, Anreicherung, Ueberarbeiten, Review,
     // Eigenschaften/Dichteklasse und Step-by-step.
     $kette = [
-        'src/Services/RecipeGeneratorService.php',
-        'src/Services/RecipeOneShotService.php',
-        'src/Services/RecipeReviseService.php',
-        'src/Services/RecipeReviewService.php',
+        'src/Services/Rezept/RecipeGeneratorService.php',
+        'src/Services/Rezept/RecipeOneShotService.php',
+        'src/Services/Rezept/RecipeReviseService.php',
+        'src/Services/Rezept/RecipeReviewService.php',
         'src/Services/Plattform/BulkEnrichService.php',
         'src/Livewire/Recipes/RecipeModal.php',
         'src/Livewire/Recipes/StepEditor.php',

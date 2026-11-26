@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Cache;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
 
 /** Zweite Phase der KI-Erstellung: reichert ein bereits gespeichertes Rezept an. */
 class EnrichGeneratedRecipeJob implements ShouldQueue, \Platform\FoodAlchemist\Services\Ai\KiExternWiederholbar

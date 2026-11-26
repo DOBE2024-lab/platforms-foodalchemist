@@ -8,7 +8,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\RecipeStatus;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 
 /**
  * #504: Vollständige, seiten-basierte Auflistung der Basisrezepte des Teams —
@@ -82,7 +82,7 @@ class RecipesListTool extends FoodAlchemistTool implements ToolContract, ToolMet
             'recipes' => collect($treffer->items())->map(fn ($r) => [
                 'id' => $r->id, 'name' => $r->name, 'status' => $r->status->value,
                 'yield_kg' => $r->yield_kg, 'ek_total_eur' => $r->ek_total_eur,
-                'rollen' => app(\Platform\FoodAlchemist\Services\RecipeRollenService::class)->rollen((int) $r->id),
+                'rollen' => app(\Platform\FoodAlchemist\Services\Rezept\RecipeRollenService::class)->rollen((int) $r->id),
                 // Spec 91 D18: die Spalten des Rezept-Browsers
                 'kategorie' => $r->category !== null ? ['id' => $r->category->id, 'label' => $r->category->label] : null,
                 'hauptgruppe_id' => $r->category?->main_group_id, 'geschmack' => $r->taste_direction, 'fertigung' => $r->production_depth,

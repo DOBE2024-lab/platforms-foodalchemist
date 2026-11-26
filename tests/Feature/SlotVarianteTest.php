@@ -55,7 +55,7 @@ beforeEach(function () {
         'team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->butter->id,
         'raw_text' => 'Butter', 'quantity' => 500, 'unit_vocab_id' => $this->g->id,
     ]);
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputePipeline($this->gericht->id);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputePipeline($this->gericht->id);
 
     $this->conceptA = $this->concepts->create($this->rootTeam, ['name' => 'Konzept A']);
     $slotA = $this->concepts->addSlot($this->rootTeam, $this->conceptA->id, ['role' => 'Dessert']);
@@ -100,7 +100,7 @@ it('Variante ist katalog-unsichtbar (Picker + VK-Browser), Idempotenz beim zweit
     $picker = app(AufbauKandidatenService::class)->gerichtKandidaten($this->rootTeam, 'Butterkuchen');
     expect($picker->pluck('id')->all())->toBe([$this->gericht->id]); // Variante fehlt
 
-    $browser = app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)
+    $browser = app(\Platform\FoodAlchemist\Services\Rezept\SalesRecipeService::class)
         ->paginateBrowser(['search' => 'Butterkuchen'], $this->rootTeam);
     expect($browser->pluck('id')->all())->toBe([$this->gericht->id]);
 

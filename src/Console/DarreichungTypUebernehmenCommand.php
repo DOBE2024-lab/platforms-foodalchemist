@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 
 /**
  * Einmalig (Entscheid Dominique 18.11.2026, Servier-Typ an EINER Stelle): Typ und Gefäß stehen an der Darreichung, das Feld am Gericht ist nur noch

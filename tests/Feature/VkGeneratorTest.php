@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistDishMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -53,8 +53,8 @@ it('vkModus: VK angelegt, Basisrezept-Komponente resolved, Klasse/AK aus Vorschl
         ->and((float) $r->ek_total_eur)->toBeGreaterThan(0);          // Recompute lief
 
     // VK-Sicht ja, Basis-Sicht nein (Scope-Härte)
-    expect(app(\Platform\FoodAlchemist\Services\SalesRecipeService::class)->detail($this->rootTeam, $r->id))->not->toBeNull()
-        ->and(app(\Platform\FoodAlchemist\Services\RecipeService::class)->detail($this->rootTeam, $r->id))->toBeNull();
+    expect(app(\Platform\FoodAlchemist\Services\Rezept\SalesRecipeService::class)->detail($this->rootTeam, $r->id))->not->toBeNull()
+        ->and(app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->detail($this->rootTeam, $r->id))->toBeNull();
 });
 
 it('vkModus: Hauptgruppe ohne KI — aus der Klasse, sonst aus dem Kürzel im Namen', function () {

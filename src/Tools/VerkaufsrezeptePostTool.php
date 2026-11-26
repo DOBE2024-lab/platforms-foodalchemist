@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 
 /**
  * MCP-Steuerbarkeit · D3: Verkaufsrezept (Gericht) anlegen — leer oder aus einem sichtbaren Basisrezept

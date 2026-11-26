@@ -9,7 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Exceptions\KostenFolgeFehlgeschlagenException;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 
 /**
  * Code-Qualität 2.1b · Eltern-Neuberechnung nach dem Speichern eines Rezepts (ARCHITEKTUR §8): Das gespeicherte Rezept rechnet der Request

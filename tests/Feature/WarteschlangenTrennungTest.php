@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Jobs\GenerateRecipeJob;
 use Platform\FoodAlchemist\Jobs\MaterializeSpeiseplanCellJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
 use Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

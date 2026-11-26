@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Services\Ai\KnowledgeEmbeddingService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
-use Platform\FoodAlchemist\Services\RecipeRecomputeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\GpStamm\TerminologyService;
 
 /**

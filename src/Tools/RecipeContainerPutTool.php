@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabContainer;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 
 /**
  * Spec 51 · MCP-Steuerbarkeit: Behälter je ZWECK an einem team-eigenen Rezept setzen.

@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Enums\Verfahren;
 use Platform\FoodAlchemist\Enums\WissensStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
 
 /**

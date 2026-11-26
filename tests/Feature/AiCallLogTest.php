@@ -125,7 +125,7 @@ it('GL-13-Audit-Faden: Generator schreibt knowledge_used ins Log (vorher verlore
 
     // FakeProvider echo't kein Rezept → RuntimeException NACH dem Log (name+zutaten fehlen)
     try {
-        app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Lachs mit Butter');
+        app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Lachs mit Butter');
     } catch (RuntimeException) {
     }
 

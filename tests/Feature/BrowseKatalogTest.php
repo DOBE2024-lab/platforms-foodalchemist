@@ -30,7 +30,7 @@ beforeEach(function () {
     $this->sub = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'fond_tomate', 'name' => 'Fond: Tomate', 'status' => 'review',
     ]);
-    app(\Platform\FoodAlchemist\Services\RecipeService::class)
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)
         ->setzeEignung($this->rootTeam, $this->sub->id, 'level', 'gehoben');
 });
 

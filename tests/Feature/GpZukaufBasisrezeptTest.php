@@ -13,8 +13,8 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\ZukaufBasisrezeptService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

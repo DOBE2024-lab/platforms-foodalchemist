@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
-use Platform\FoodAlchemist\Services\DarreichungService;
+use Platform\FoodAlchemist\Services\Rezept\DarreichungService;
 use Platform\FoodAlchemist\Services\Produktion\GefaessZubehoerService;
 
 /** Zubehör am Gefäß-GP für das eigene Team pflegen (20.11.2026) — z. B. 1 × Deckel am Schraubglas; jede Darreichung mit dem Gefäß rechnet es mit. */

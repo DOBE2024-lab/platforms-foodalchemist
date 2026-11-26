@@ -39,8 +39,8 @@ class RecipeFindingsBatchService
 
     public function __construct(
         private RecipeFindingService $findings,
-        private \Platform\FoodAlchemist\Services\RecipeReviewService $review,
-        private \Platform\FoodAlchemist\Services\RecipeBauartService $bauart,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeReviewService $review,
+        private \Platform\FoodAlchemist\Services\Rezept\RecipeBauartService $bauart,
     ) {
     }
 

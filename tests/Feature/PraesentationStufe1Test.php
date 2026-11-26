@@ -41,7 +41,7 @@ function stufe1Design(\Platform\Core\Models\Team $team, array $layout, array $to
 
 it('Gericht-Fotos: Angebots-Items tragen das Foto, das Design entscheidet über die Anzeige', function () {
     $gericht = $this->makeRecipe($this->rootTeam, 'Ochsenbacke', ['is_sales_recipe' => true, 'sales_wording_standard' => 'Ochsenbacke']);
-    app(\Platform\FoodAlchemist\Services\RecipeService::class)->storeDishImage($this->rootTeam, $gericht->id, UploadedFile::fake()->image('o.jpg', 300, 200));
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class)->storeDishImage($this->rootTeam, $gericht->id, UploadedFile::fake()->image('o.jpg', 300, 200));
     $c = FoodAlchemistConcept::create(['team_id' => $this->rootTeam->id, 'name' => 'Menü', 'kind' => 'concept', 'status' => 'active']);
     $this->makeConceptSlot($c, ['position' => 0, 'type' => 'gericht', 'sales_recipe_id' => $gericht->id]);
     $kap = $this->comp->addKapitel($this->rootTeam, $this->angebot->id, ['title' => 'Menü']);

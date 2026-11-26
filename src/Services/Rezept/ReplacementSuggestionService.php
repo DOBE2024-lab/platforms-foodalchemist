@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Rezept;
 
 use Illuminate\Support\Collection;
 use Platform\Core\Models\Team;
@@ -27,7 +27,7 @@ class ReplacementSuggestionService
     public function __construct(
         private TokenEngine $tokens,
         private AiGatewayService $ai,
-        private Einkauf\LaCandidateFinder $laFinder,
+        private \Platform\FoodAlchemist\Services\Einkauf\LaCandidateFinder $laFinder,
         private SemanticRetrievalService $semantic,
         private KnowledgeContextService $wissen,
     ) {}
@@ -92,12 +92,12 @@ class ReplacementSuggestionService
             $this->tokens->tokenize($source->name),
             fn (string $t) => mb_strlen($t) >= 3 && ! $this->tokens->isQualifierToken($t),
         ));
-        $existing = app(GpStamm\ComponentEquivalentService::class)->fuer($team, 'gp', $source->id)
+        $existing = app(\Platform\FoodAlchemist\Services\GpStamm\ComponentEquivalentService::class)->fuer($team, 'gp', $source->id)
             ->mapWithKeys(fn ($e) => [($e->gegen_kind ?? '').':'.(int) ($e->gegen_id ?? 0) => true]);
 
         $pairing = collect();
         try {
-            $pairing = collect(app(Pairing\PairingService::class)->aromaTrueSubstitutes($team, $source->id, self::PER_KIND)['candidates'] ?? [])
+            $pairing = collect(app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class)->aromaTrueSubstitutes($team, $source->id, self::PER_KIND)['candidates'] ?? [])
                 ->keyBy(fn (array $c) => (int) $c['gp_id']);
         } catch (Throwable) {
         }

@@ -47,7 +47,7 @@ class FoodAlchemistCascadeRun extends Model
      *
      * Warum am Model und nicht im Service: die Deckel sitzen in drei verschiedenen Diensten
      * ({@see \Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService} für Zellen/Positionen/Slots,
-     * {@see \Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService} für Schritte/Tiefe,
+     * {@see \Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService} für Schritte/Tiefe,
      * {@see \Platform\FoodAlchemist\Services\Planung\IdeenService} für die Ideen-Klemme). Ein gemeinsamer
      * Weg hier verhindert, dass die Struktur über sechs Stellen driftet — und dass der siebte
      * Deckel wieder still wird, weil sein Autor die Form nicht kennt.

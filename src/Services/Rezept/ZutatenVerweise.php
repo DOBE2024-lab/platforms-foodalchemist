@@ -19,7 +19,7 @@ use Platform\FoodAlchemist\Support\Verweisziel;
 class ZutatenVerweise
 {
     /**
-     * @param  array<int, array>  $zeilen  Sync-Payload von {@see \Platform\FoodAlchemist\Services\RecipeService::syncIngredients()}
+     * @param  array<int, array>  $zeilen  Sync-Payload von {@see \Platform\FoodAlchemist\Services\Rezept\RecipeService::syncIngredients()}
      *
      * @throws \RuntimeException
      */

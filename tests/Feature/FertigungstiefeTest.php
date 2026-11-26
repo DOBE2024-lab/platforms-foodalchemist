@@ -6,8 +6,8 @@ use Platform\FoodAlchemist\Jobs\GenerateRecipePlanJob;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Services\Conformance\RecipeConformanceAdapter;
-use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
-use Platform\FoodAlchemist\Services\RecipeOneShotService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService;
 use Platform\FoodAlchemist\Support\BestandsPassung;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
@@ -78,7 +78,7 @@ it('Teilfertig: der Generator übernimmt die Vorgabe und markiert sie als von de
     \Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit::create(['team_id' => $this->rootTeam->id, 'slug' => 'g', 'display_de' => 'Gramm', 'dimension' => 'mass', 'default_in_g' => 1]);
     config(['foodalchemist.ai.provider' => 'fake']);
 
-    $r = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Beilage: Erbsen',
+    $r = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class)->generiere($this->rootTeam, 'Beilage: Erbsen',
         ['convenience' => 'from_scratch', 'production_depth_vorgabe' => 'teilfertig'],
         ['name' => 'Beilage: Erbsen', 'zutaten' => [['text' => 'Erbsen: TK', 'quantity' => 1000, 'unit' => 'g']]])['recipe'];
 
@@ -128,7 +128,7 @@ it('Fertigungstiefe aus dem Inhalt, nicht aus dem Regler: Rohware → from_scrat
     config(['foodalchemist.ai.provider' => 'fake']);
     ($this->gp)('Karotten: frisch, ganz', '01');
     ($this->gp)('Erbsen: TK', '01', 'TK');
-    $gen = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class);
+    $gen = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class);
     $kaskade = ['convenience' => 'teil_convenience', 'cascade_step_id' => 1];
 
     $roh = $gen->generiere($this->rootTeam, 'Brühe: Karotte', $kaskade,
@@ -167,7 +167,7 @@ it('Gerichtstiefe folgt dem Kind: wird ein Unterrezept teilfertig, zieht der Rec
     }
 
     $kind->forceFill(['production_depth' => 'teilfertig', 'production_depth_source' => 'kaskade'])->save();
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputeAndPropagate((int) $kind->id);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputeAndPropagate((int) $kind->id);
 
     expect($gericht->fresh()->production_depth)->toBe('teilfertig')
         ->and($hand->fresh()->production_depth)->toBe('from_scratch');
@@ -180,7 +180,7 @@ it('Generator bindet keinen Zukauf-Bestand, wenn der Lauf from scratch verlangt 
     config(['foodalchemist.ai.provider' => 'fake']);
     $zukauf = $this->makeRecipe($this->rootTeam, 'Jus: Rind (Zukauf)', ['status' => 'approved']);
     $zukauf->forceFill(['production_depth' => 'convenience', 'production_depth_source' => 'manuell'])->save();
-    $gen = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class);
+    $gen = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class);
     $vorschlag = fn (string $name) => ['name' => $name,
         'zutaten' => [['text' => 'Jus: Rind', 'quantity' => 800, 'unit' => 'ml', 'sub_rezept_id' => $zukauf->id]]];
 
@@ -198,7 +198,7 @@ it('Der Lauf-Regler gilt nur für seinen Lauf — ein späterer Aufruf ohne Regl
     config(['foodalchemist.ai.provider' => 'fake']);
     $zukauf = $this->makeRecipe($this->rootTeam, 'Jus: Rind (Zukauf)', ['status' => 'approved']);
     $zukauf->forceFill(['production_depth' => 'convenience', 'production_depth_source' => 'manuell'])->save();
-    $gen = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class);
+    $gen = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class);
     $vorschlag = fn (string $name) => ['name' => $name,
         'zutaten' => [['text' => 'Jus: Rind', 'quantity' => 800, 'unit' => 'ml', 'sub_rezept_id' => $zukauf->id]]];
 

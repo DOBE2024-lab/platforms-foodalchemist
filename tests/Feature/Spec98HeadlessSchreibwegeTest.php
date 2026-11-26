@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPlanningSession;
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Services\GpAbgleich\GpAbgleichService;
 use Platform\FoodAlchemist\Services\GpStamm\GpService;
-use Platform\FoodAlchemist\Services\LabNoteService;
+use Platform\FoodAlchemist\Services\Rezept\LabNoteService;
 use Platform\FoodAlchemist\Services\Plattform\OutletService;
 use Platform\FoodAlchemist\Services\Planung\PlanningSessionService;
 use Platform\FoodAlchemist\Services\Produktion\ProductionStationService;
@@ -131,7 +131,7 @@ it('GpAbgleichService::markiereAusgefuehrt hält Aktion und GP am Protokoll fest
 });
 
 it('RecipeStepService (98 · 1.3e): Schritte headless anlegen, füllen, umsortieren, löschen; KI-Quelle je Ebene', function () {
-    $svc = app(\Platform\FoodAlchemist\Services\RecipeStepService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class);
     $r = $this->makeRecipe($this->rootTeam, 'Rinderfond');
     $p = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep::EBENE_PRODUKTION;
 

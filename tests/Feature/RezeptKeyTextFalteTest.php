@@ -1,6 +1,6 @@
 <?php
 
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Tests\TestCase;
 
 uses(TestCase::class);

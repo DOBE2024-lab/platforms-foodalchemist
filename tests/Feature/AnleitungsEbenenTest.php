@@ -3,7 +3,7 @@
 use Platform\FoodAlchemist\Models\FoodAlchemistProductionStation;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Ausgabe\ReportExportService;
-use Platform\FoodAlchemist\Services\SalesRecipeService;
+use Platform\FoodAlchemist\Services\Rezept\SalesRecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -277,7 +277,7 @@ it('trennt Produktions- und Anrichte-Schritte in derselben Tabelle', function ()
     // Beide Ebenen nummerieren bei 1 — ungefiltert würden sie zu einer wirren Liste
     // verschmelzen. Und ein Speichern in der einen Ebene darf die andere nicht wegräumen.
     $this->seedTeamHierarchy();
-    $svc = app(\Platform\FoodAlchemist\Services\RecipeStepService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class);
     $step = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep::class;
     $gericht = $this->makeRecipe($this->rootTeam, 'Ebenen-Gericht', ['is_sales_recipe' => true]);
 
@@ -305,7 +305,7 @@ it('spiegelt jede Ebene in ihr eigenes Feld', function () {
     // EINBAHN Schritte → Markdown: produktion → preparation, anrichten → plating_text.
     // Foodbook, Angebot und Report lesen unverändert die Textfelder.
     $this->seedTeamHierarchy();
-    $svc = app(\Platform\FoodAlchemist\Services\RecipeStepService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class);
     $step = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep::class;
     $gericht = $this->makeRecipe($this->rootTeam, 'Spiegel-Gericht', ['is_sales_recipe' => true]);
 
@@ -339,7 +339,7 @@ it('parst einen plating_text-Write in Anrichte-Schritte', function () {
 
 it('der Report liefert die Anrichte-Schritte als eigene Liste', function () {
     $this->seedTeamHierarchy();
-    $svc = app(\Platform\FoodAlchemist\Services\RecipeStepService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class);
     $step = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep::class;
     $gericht = $this->makeRecipe($this->rootTeam, 'Report-Gericht', ['is_sales_recipe' => true]);
 
@@ -378,7 +378,7 @@ it('das Produktionsblatt liefert Regenerations-Programm und Anrichte-Schritte je
     // Das ist die Quelle, aus der der Auftrag seine Snapshots einfriert — und aus der
     // Wandmonitor und Produktionsschein lesen. Vorher fehlten beide Ebenen komplett.
     $this->seedTeamHierarchy();
-    $stepSvc = app(\Platform\FoodAlchemist\Services\RecipeStepService::class);
+    $stepSvc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class);
     $step = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeStep::class;
 
     $gericht = $this->makeRecipe($this->rootTeam, 'Blatt-Gericht', [
@@ -504,7 +504,7 @@ it('die Anreicherung setzt am Gericht keinen Posten mehr', function () {
     ]);
     $gericht = $this->makeRecipe($this->rootTeam, 'Saucier-Gericht', ['is_sales_recipe' => true]);
 
-    $ergebnis = app(\Platform\FoodAlchemist\Services\RecipeOneShotService::class)
+    $ergebnis = app(\Platform\FoodAlchemist\Services\Rezept\RecipeOneShotService::class)
         ->anreichern($this->rootTeam, $gericht->fresh(), completeCoverage: true);
 
     expect($ergebnis['coverage']['posten']['status'] ?? null)->toBe('uebersprungen')

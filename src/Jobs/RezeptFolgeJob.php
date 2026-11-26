@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Platform\FoodAlchemist\Services\RezeptFolgeService;
+use Platform\FoodAlchemist\Services\Rezept\RezeptFolgeService;
 
 /**
  * Spec 82 §12 B / 4d · Eigene Rezepte eines Mandanten folgen der neuen Abo-Fassung — als Job, wenn die Zahl der betroffenen Rezepte die synchrone Grenze

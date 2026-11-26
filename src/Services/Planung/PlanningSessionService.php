@@ -93,7 +93,7 @@ class PlanningSessionService
      */
     public function zukaufAusGp(Team $team, int $gpId, ?string $typ = null, string $createdVia = 'gp'): array
     {
-        $zukauf = app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class);
+        $zukauf = app(\Platform\FoodAlchemist\Services\Rezept\ZukaufBasisrezeptService::class);
         $gp = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->find($gpId);
         if ($gp === null) {
             throw new RuntimeException('Grundprodukt nicht gefunden oder nicht sichtbar.');

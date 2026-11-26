@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\DishReverseService;
+use Platform\FoodAlchemist\Services\Rezept\DishReverseService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 use Symfony\Component\Uid\UuidV7;

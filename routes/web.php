@@ -1153,7 +1153,7 @@ Route::get('/rezepte/{recipe}/anleitung', function (int $recipe) {
     // Endprodukt-Bild („so soll es fertig aussehen"). Quelle wie bei den Schritt-Fotos:
     // lokaler Pfad fürs PDF, URL fürs HTML.
     $istPdf = request()->boolean('pdf');
-    $hero = app(\Platform\FoodAlchemist\Services\RecipeStepService::class)->endprodukt($rezept->id);
+    $hero = app(\Platform\FoodAlchemist\Services\Rezept\RecipeStepService::class)->endprodukt($rezept->id);
     $endprodukt = $hero === null ? null : [
         'quelle' => $istPdf
             ? ($disk->exists($hero->pfad) ? $disk->path($hero->pfad) : null)

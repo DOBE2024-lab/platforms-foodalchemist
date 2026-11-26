@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeCategory;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeMainGroup;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\RecipeService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -122,7 +122,7 @@ it('Modal-Roundtrip: Anlage validiert, Edit mit yield_kg_manual triggert Recompu
         'raw_text' => '1 kg Birne', 'quantity' => 1000, 'unit_vocab_id' => $g->id, 'match_method' => 'manual',
         'gp_id' => $this->makeGp($this->rootTeam, 'Birne')->id,
     ]);
-    app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class)->recomputePipeline($r->id);
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeRecomputeService::class)->recomputePipeline($r->id);
 
     // Edit: yield manuell halbieren ⇒ Recompute-Trigger aktualisiert die Aggregate (A-3)
     Livewire::test(RecipeModal::class)
@@ -178,7 +178,7 @@ it('Yield-Guard: Tippfehler/0 im manuellen Yield wird abgewiesen statt still als
 it('UI-Audit: update pflegt die §4.2-Editor-Felder (Status/Zubereitung/Eigenschaften/Notizen/Equipment)', function () {
     // KEIN zweiter seedTeamHierarchy — beforeEach seedet schon; ein Doppel-Seed
     // vergiftet den statischen Ancestry-Cache für nachfolgende Tests (Team-Id-Kollision)
-    $svc = app(\Platform\FoodAlchemist\Services\RecipeService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeService::class);
     $r = $svc->create($this->rootTeam, ['name' => 'Fond: Audit']);
     $geraet = \Platform\FoodAlchemist\Models\FoodAlchemistVocabKochequipment::create(['team_id' => $this->rootTeam->id, 'slug' => 'kombi', 'name' => 'Kombidämpfer']);
 

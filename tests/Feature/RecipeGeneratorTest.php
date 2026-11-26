@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\RecipeGeneratorService;
+use Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 
@@ -411,7 +411,7 @@ it('L1.5 Frische: leere Erlaubnis-Liste = egal (kein Filter, TK-GP wird verdraht
 });
 
 it('L1.5 Aroma-Küche: build() trägt den Würz-Anker der gewählten Küche als Prompt-Block', function () {
-    $ctx = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class)
+    $ctx = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class)
         ->build($this->rootTeam, 'Ein Hauptgang', ['aroma_kueche' => 'japanisch'], true);
 
     expect($ctx['prompt']['aroma_kueche']['kueche'] ?? null)->toBe('Japanisch')
@@ -419,7 +419,7 @@ it('L1.5 Aroma-Küche: build() trägt den Würz-Anker der gewählten Küche als 
 });
 
 it('L1.5 Aroma-Küche: »Frei« (leer) trägt keinen Küche-Block', function () {
-    $ctx = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class)
+    $ctx = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class)
         ->build($this->rootTeam, 'Ein Hauptgang', [], true);
 
     expect($ctx['prompt'])->not->toHaveKey('aroma_kueche');
@@ -579,7 +579,7 @@ it('B0: proposed gp_id, die das Diät-Ziel verletzt, wird trotzdem vom L3-Gate e
 
 it('B1: der GP-Kandidaten-Hinweis unterscheidet nur_bestand (hart) von hybrid (weich)', function () {
     ($this->mkGpMitPreis)('Rinderfilet: frisch', 'rinderfilet', 25.00);
-    $ctx = app(\Platform\FoodAlchemist\Services\RecipeGenerationContextService::class);
+    $ctx = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGenerationContextService::class);
 
     $strikt = $ctx->build($this->rootTeam, 'Rinderfilet Hauptgang', ['bestand' => 'nur_bestand'], true);
     $weich = $ctx->build($this->rootTeam, 'Rinderfilet Hauptgang', ['bestand' => 'hybrid'], true);
@@ -678,7 +678,7 @@ it('Kaskade: generator_ms schließt die vor generiere() gebaute Kontextzeit ein 
 
     // Wie GenerateRecipeJob::handle: prepare() baut den Kontext VOR generiere() — dessen
     // context_ms-Fenster liegt also außerhalb der internen $started-Uhr von generiere().
-    $prepared = app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)
+    $prepared = app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)
         ->prepare($this->rootTeam, (int) $step->id, 'Schalotten-Fond', [], false);
     expect($prepared['context_ms'])->toBeGreaterThanOrEqual(0);
 
@@ -695,7 +695,7 @@ it('Kaskade: generator_ms schließt die vor generiere() gebaute Kontextzeit ein 
         });
     });
 
-    $svc = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class);
+    $svc = app(\Platform\FoodAlchemist\Services\Rezept\RecipeGeneratorService::class);
     $out = $svc->generiere($this->rootTeam, 'Schalotten-Fond', [], null, false, null, $prepared);
 
     $timings = $out['statistik']['timings'];
@@ -794,7 +794,7 @@ it('Review-Fund Lauf 71: eine unmatched Beilage ohne LLM-Flag bekommt einen gepl
     // Stufe darüber freigegeben wird ({@see resumeDeferredChildren}). auto_dependencies würde
     // den Step sofort auf 'running' weiterschalten (echter Speisekarte-Lauf) — hier soll nur
     // planChildren() selbst geprüft werden, nicht der Job-Dispatch danach.
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, 1, $out['recipe'], $out['offene'], ['_defer_children' => true],
     );
 
@@ -829,7 +829,7 @@ it('#102-Nebenbefund (Dominique-Entscheid): offene Garnitur-Zeile ohne Bestandst
     $offen = collect($out['offene'])->first();
     expect($offen['primaer'])->toBe('basisrezept_anlegen');
 
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, 1, $out['recipe'], $out['offene'], ['_defer_children' => true],
     );
     $kind = \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep::where('parent_step_id', $step->id)
@@ -859,7 +859,7 @@ it('#102-Nebenbefund: offene Aroma-Treiber-Zeile ohne Bestandstreffer wird zum B
     $offen = collect($out['offene'])->first();
     expect($offen['primaer'])->toBe('basisrezept_anlegen');
 
-    app(\Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService::class)->afterGenerated(
+    app(\Platform\FoodAlchemist\Services\Rezept\RecipeDependencyWorkflowService::class)->afterGenerated(
         $this->rootTeam, (int) $step->id, 1, $out['recipe'], $out['offene'], ['_defer_children' => true],
     );
     $kind = \Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep::where('parent_step_id', $step->id)

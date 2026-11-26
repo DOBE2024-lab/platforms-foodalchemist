@@ -39,7 +39,6 @@ final class SchreibWache
         'foodalchemist_recipes' => ['update'],
         'foodalchemist_recipe_presentations' => ['update'],
         'foodalchemist_price_change_audits' => ['insert'],
-        'foodalchemist_packages' => ['update'],
         'foodalchemist_concepts' => ['update'],
         'foodalchemist_offers' => ['update'],
         'foodalchemist_recipe_team_kosten' => ['insert', 'update'],

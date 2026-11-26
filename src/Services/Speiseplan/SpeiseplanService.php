@@ -290,7 +290,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
                     'week' => $e->week, 'weekday' => $e->weekday, 'meal' => $e->meal, 'position' => $e->position,
                     'entry_date' => $e->entry_date, 'pax' => $e->pax,
                     'line_id' => $e->line_id !== null ? ($lineMap[$e->line_id] ?? null) : null,
-                    'concept_id' => $e->concept_id, 'package_id' => $e->package_id, 'sales_recipe_id' => $e->sales_recipe_id, 'presentation_id' => $e->presentation_id, 'wording' => $e->wording,
+                    'concept_id' => $e->concept_id, 'sales_recipe_id' => $e->sales_recipe_id, 'presentation_id' => $e->presentation_id, 'wording' => $e->wording,
                 ]);
             }
 
@@ -387,7 +387,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
                     $kopie->entries()->create([
                         'team_id' => $kopie->team_id, 'entry_date' => $z['datum'], 'week' => 1, 'weekday' => (int) $e->weekday,
                         'meal' => $e->meal, 'line_id' => $kLinie, 'position' => $e->position,
-                        'concept_id' => $e->concept_id, 'package_id' => $e->package_id, 'sales_recipe_id' => $e->sales_recipe_id, 'presentation_id' => $e->presentation_id, 'wording' => $e->wording,
+                        'concept_id' => $e->concept_id, 'sales_recipe_id' => $e->sales_recipe_id, 'presentation_id' => $e->presentation_id, 'wording' => $e->wording,
                         'pax' => $paxBetrieb ?? $e->pax,
                     ]);
                 }
@@ -557,7 +557,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
      * das MCP-Tool; der Editor reichte die ID aus dem Browser ungeprüft durch — damit ließ sich
      * ein Gericht eines fremden Mandanten in den eigenen Plan hängen.
      *
-     * @return array{concept_id:?int, package_id:?int, sales_recipe_id:?int}
+     * @return array{concept_id:?int, sales_recipe_id:?int}
      */
     private function pruefeInhalt(Team $team, array $in): array
     {
@@ -565,7 +565,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
             'concept_id' => FoodAlchemistConcept::class,
             'sales_recipe_id' => FoodAlchemistRecipe::class,
         ];
-        if ((int) ($in['package_id'] ?? 0) > 0) {   // 98 · 2.6c: alte Pakete gibt es nicht mehr
+        if ((int) ($in['package_id'] ?? 0) > 0) {   // 98 · 2.6c/3.1: Alt-Pakete samt Spalte sind weg; der Eingabe-Schlüssel wird weiter klar abgelehnt
             throw new \RuntimeException('Alte Pakete gibt es nicht mehr. Bitte das Paket als Konzept (Art Paket) einplanen.');
         }
         foreach ($refs as $feld => $model) {
@@ -582,7 +582,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
                 throw new \RuntimeException('Rezept #' . $id . ' ist kein Gericht — in den Speiseplan kommen nur Gerichte.');
             }
 
-            return array_merge(['concept_id' => null, 'package_id' => null, 'sales_recipe_id' => null], [$feld => $id]);
+            return array_merge(['concept_id' => null, 'sales_recipe_id' => null], [$feld => $id]);
         }
 
         throw new \RuntimeException('Genau einen Inhalt angeben: Konzept oder Gericht.');
@@ -798,7 +798,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
             // whereDate: unabhängig davon, ob die DB das Datum mit Uhrzeit ablegt (SQLite) oder als DATE (MySQL).
             $gleich = $plan->entries()->whereDate('entry_date', $tag)->where('meal', $e->meal)
                 ->when($e->line_id !== null, fn ($q) => $q->where('line_id', $e->line_id), fn ($q) => $q->whereNull('line_id'))
-                ->where('concept_id', $e->concept_id)->where('package_id', $e->package_id)->where('sales_recipe_id', $e->sales_recipe_id)
+                ->where('concept_id', $e->concept_id)->where('sales_recipe_id', $e->sales_recipe_id)
                 ->exists();
             if ($gleich) {
                 continue;
@@ -806,7 +806,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
             $plan->entries()->create([
                 'team_id' => $plan->team_id, 'entry_date' => $tag,
                 'week' => 1, 'weekday' => (int) $ziel->isoWeekday(), 'meal' => $e->meal, 'line_id' => $e->line_id,
-                'concept_id' => $e->concept_id, 'package_id' => $e->package_id, 'sales_recipe_id' => $e->sales_recipe_id, 'presentation_id' => $e->presentation_id, 'wording' => $e->wording,
+                'concept_id' => $e->concept_id, 'sales_recipe_id' => $e->sales_recipe_id, 'presentation_id' => $e->presentation_id, 'wording' => $e->wording,
                 'pax' => $e->pax,
                 'position' => (int) $plan->entries()->whereDate('entry_date', $tag)->where('meal', $e->meal)->max('position') + 1,
             ]);
@@ -868,7 +868,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
                 $plan->entries()->create([
                     'team_id' => $plan->team_id, 'entry_date' => $ziel->format('Y-m-d'),
                     'week' => 1, 'weekday' => (int) $ziel->isoWeekday(), 'meal' => $e->meal, 'line_id' => $e->line_id,
-                    'concept_id' => $e->concept_id, 'package_id' => $e->package_id, 'sales_recipe_id' => $e->sales_recipe_id, 'presentation_id' => $e->presentation_id, 'wording' => $e->wording,
+                    'concept_id' => $e->concept_id, 'sales_recipe_id' => $e->sales_recipe_id, 'presentation_id' => $e->presentation_id, 'wording' => $e->wording,
                     'pax' => $mitPax ? $e->pax : null, 'position' => $e->position,
                 ]);
                 $gesetzt[$sig] = true;
@@ -899,7 +899,6 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
                 'id' => (int) $e->id, 'entry_date' => $e->entry_date->format('Y-m-d'), 'mahlzeit' => $e->meal,
                 'line_id' => $e->line_id !== null ? (int) $e->line_id : null,
                 'concept_id' => $e->concept_id !== null ? (int) $e->concept_id : null,
-                'package_id' => $e->package_id !== null ? (int) $e->package_id : null,
                 'sales_recipe_id' => $e->sales_recipe_id !== null ? (int) $e->sales_recipe_id : null,
                 'presentation_id' => $e->presentation_id !== null ? (int) $e->presentation_id : null,
                 'wording' => $e->wording,
@@ -1203,7 +1202,7 @@ class SpeiseplanService implements \Platform\FoodAlchemist\Services\Speiseplan\S
                     $plan->entries()->create([
                         'team_id' => $plan->team_id, 'entry_date' => $ziel->format('Y-m-d'),
                         'week' => 1, 'weekday' => (int) $ziel->isoWeekday(), 'meal' => $e->meal,
-                        'line_id' => $e->line_id, 'concept_id' => $e->concept_id, 'package_id' => $e->package_id,
+                        'line_id' => $e->line_id, 'concept_id' => $e->concept_id,
                         'sales_recipe_id' => $e->sales_recipe_id, 'presentation_id' => $e->presentation_id, 'wording' => $e->wording, 'position' => $e->position,
                         'pax' => $e->pax,
                     ]);

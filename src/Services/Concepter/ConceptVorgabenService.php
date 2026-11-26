@@ -59,7 +59,7 @@ final class ConceptVorgabenService
     /** Leere Gericht-Position: kein Gericht, kein Paket, kein Struktur-Block. */
     public static function istLeer(FoodAlchemistConceptSlot $slot): bool
     {
-        return $slot->sales_recipe_id === null && $slot->package_id === null && $slot->embedded_concept_id === null
+        return $slot->sales_recipe_id === null && $slot->embedded_concept_id === null
             && ! in_array((string) $slot->type, ConceptService::STRUKTUR_TYPEN, true);
     }
 

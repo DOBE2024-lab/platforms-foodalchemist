@@ -15,7 +15,7 @@ use Platform\FoodAlchemist\Services\FaRechte;
  * Kaskade und Anreicherung; die Aufrufer rufen nur {@see pruefeRezept()} / {@see pruefeConcept()} bzw. {@see offenFuerRezept()}.
  *
  * Komponenten: Unterrezepte (Zutaten → `referenced_recipe_id`); beim Concept die Slot-Rezepte (`sales_recipe_id`), eingebettete Pakete/Concepts
- * (`embedded_concept_id`, freigegeben = `active`) samt deren Inhalt und die Gerichte alter Pakete (`package_id`). Eine Fassung (Spec 82) ist ein
+ * (`embedded_concept_id`, freigegeben = `active`) samt deren Inhalt. Eine Fassung (Spec 82) ist ein
  * veröffentlichter Stand und gilt als freigegeben. Abwärts wird immer weiter gesucht, auch unter freigegebenen Komponenten (ein freigegebenes
  * Basisrezept aus der Zeit vor der Sperre kann noch einen Entwurf enthalten). Zyklen terminieren über die Besucht-Liste.
  *

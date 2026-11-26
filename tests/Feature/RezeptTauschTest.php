@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Platform\FoodAlchemist\Enums\MatchMethod;
 use Platform\FoodAlchemist\Livewire\Recipes\DetailPanel;
@@ -317,18 +316,12 @@ it('Durchstich: erst tauschen, dann löschen — der Editor schließt sich danac
 });
 
 /**
- * Invariante statt Beispiel: die Bilanz-Query zählt sechs Ausgabe-Tabellen per Namen. Der
- * Paket-Umbau hat `packages`/`package_dishes` (ex-`bausteine`) fachlich abgelöst, physisch
- * aber noch nicht gedroppt — genau daran ist die erste Fassung zerbrochen (`baustein_gerichte`).
- * Dieser Test hält beide Zustände aus: Tabelle da → Name UND Spalte müssen stimmen; gedroppt →
- * der hasTable-Guard nimmt sie aus der Query.
+ * Invariante statt Beispiel: die Bilanz-Query zählt die Ausgabe-Tabellen per Namen. An einem falschen
+ * Namen ist die erste Fassung zerbrochen (`baustein_gerichte`). Die Alt-Paket-Tabelle zählt seit
+ * 98 · 3.1 nicht mehr mit (gedroppt).
  */
-it('die Referenz-Query bleibt gültig, solange die Alt-Paket-Tabelle physisch existiert', function () {
+it('die Referenz-Query bleibt gültig (alle Tabellen- und Spaltennamen stimmen)', function () {
     $this->actingAs($this->makeUser($this->rootTeam));
-    if (Schema::hasTable('foodalchemist_package_dishes')) {
-        expect(Schema::hasColumn('foodalchemist_package_dishes', 'sales_recipe_id'))->toBeTrue()
-            ->and(Schema::hasColumn('foodalchemist_package_dishes', 'deleted_at'))->toBeTrue();
-    }
 
     // Läuft die Query durch, stimmen alle sechs Tabellen-/Spaltennamen (sonst: »no such table/column«).
     $bilanz = app(RecipeService::class)->referenzen($this->makeRecipe($this->rootTeam, 'Fond: frisch angelegt')->id);

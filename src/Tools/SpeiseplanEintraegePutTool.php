@@ -111,7 +111,7 @@ class SpeiseplanEintraegePutTool extends FoodAlchemistTool implements ToolContra
 
         return ToolResult::success(['eintrag' => [
             'id' => (int) $neu->id, 'entry_date' => $neu->entry_date?->format('Y-m-d'), 'mahlzeit' => $neu->meal,
-            'line_id' => $neu->line_id, 'concept_id' => $neu->concept_id, 'package_id' => $neu->package_id,
+            'line_id' => $neu->line_id, 'concept_id' => $neu->concept_id,
             'sales_recipe_id' => $neu->sales_recipe_id, 'presentation_id' => $neu->presentation_id, 'wording' => $neu->wording, 'pax' => $neu->pax,
         ], 'geaendert' => $geaendert]);
     }

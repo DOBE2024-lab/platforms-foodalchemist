@@ -523,7 +523,7 @@ class ConceptGeneratorService
     /**
      * Fan-out-Vorbereitung: je Frame-Slot N LEERE Concept-Slots anlegen (role = Slot-Label,
      * is_pflicht vom Frame-Slot geerbt), NICHT befüllen. Die Slots tragen den DB-Default-Typ
-     * `gericht` (kein sales_recipe_id/package_id) → {@see PlanningCascadeService::fanoutConceptInvention}
+     * `gericht` (kein sales_recipe_id/embedded_concept_id) → {@see PlanningCascadeService::fanoutConceptInvention}
      * erkennt sie als leere, erfindbare Positionen. N = target_count (mind. 1). Ein 2er-Slot wird
      * also zu zwei erfindbaren Positionen, spiegelbildlich zur Assembler-Auffüllung.
      *

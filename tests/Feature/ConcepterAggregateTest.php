@@ -60,8 +60,6 @@ it('M10R-1: alle additiven Spalten + neuen Tabellen existieren', function () {
         ->and(Schema::hasColumn('foodalchemist_concepts', 'brief'))->toBeTrue()
         ->and(Schema::hasColumn('foodalchemist_concepts', 'nutrition_cache'))->toBeTrue()
         ->and(Schema::hasColumn('foodalchemist_concepts', 'work_time_min_cache'))->toBeTrue()
-        ->and(Schema::hasColumn('foodalchemist_packages', 'class'))->toBeTrue()
-        ->and(Schema::hasColumn('foodalchemist_packages', 'nutrition_cache'))->toBeTrue()
         ->and(Schema::hasColumn('foodalchemist_foodbooks', 'writing_style_id'))->toBeTrue();
 });
 

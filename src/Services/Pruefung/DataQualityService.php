@@ -380,7 +380,7 @@ class DataQualityService
             $this->gap('br_ek_teil', self::METRIK_LABELS['br_ek_teil'], $ekTeil, SignalTyp::EkKetteUnvollstaendig, 'dq-br-ek-teil',
                 'Einzelne Zutaten haben keinen Preis. Der Einkaufspreis ist dadurch zu niedrig. Fehlende Preise ergänzen.'),
             $this->gap('br_anker_fehlt', self::METRIK_LABELS['br_anker_fehlt'], $ankerFehlt, SignalTyp::AnkerFehlt, 'dq-br-anker-fehlt',
-                'Diese Basisrezepte haben kein Aromaprofil. Für Kombinationsvorschläge sind sie dadurch unsichtbar.'),
+                'Diese Basisrezepte haben kein Aromaprofil. Für Kombinationsvorschläge sind sie dadurch unsichtbar.'), $this->gap(\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::KEY_REZEPT, self::METRIK_LABELS[\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::KEY_REZEPT], \Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::rezepteOhneErtrag($team)->count(), null, null, null, SignalSeverity::Info),   // Pflegeliste Stück-Ertrag, nie rot
         ];
     }
 
@@ -1897,7 +1897,7 @@ class DataQualityService
         // Der switch unten ist der Altbestand der Kaskaden-Ebenen (s. V-005).
         foreach ([
             ['recipe', $this->rezeptQualitaetChecks()],
-            ['la', app(\Platform\FoodAlchemist\Services\Einkauf\LaBeschaffungsLagen::class)->checks()], ['gp', app(\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::class)->checks()],   // Pflegeliste Stückgewicht (Dominique 23.11.)
+            ['la', app(\Platform\FoodAlchemist\Services\Einkauf\LaBeschaffungsLagen::class)->checks()], ['gp', app(\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::class)->checks()], ['recipe', app(\Platform\FoodAlchemist\Services\GpStamm\StueckOhneGewicht::class)->checksRezept()],   // Pflegelisten Stückgewicht (Dominique 23.11., Kurator 26.11.)
             ['concept', $this->konzeptChecks()],
             ['foodbook', $this->foodbookChecks()],
         ] as [$kind, $checks]) {

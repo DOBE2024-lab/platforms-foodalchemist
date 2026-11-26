@@ -207,7 +207,7 @@
                         @if(($k['wahl_spanne'] ?? null) !== null && $k['wahl_spanne']['von'] != $k['wahl_spanne']['bis'])<span data-kapitel-wahl-spanne>{{ number_format($k['wahl_spanne']['von'], 2, ',', '.') }}–{{ number_format($k['wahl_spanne']['bis'], 2, ',', '.') }} €/P, gerechnet: </span>@endif{{ number_format($k['vk_pro_person'], 2, ',', '.') }} €/P{{ ($k['vk_vorlaeufig'] ?? false) ? ' (vorläufig)' : '' }}
                         @if(($k['ek_pro_person'] ?? null) !== null)
                             · <span class="ek">EK {{ number_format($k['ek_pro_person'], 2, ',', '.') }} €/P</span>
-                            @if(($k['food_cost_percent'] ?? null) !== null) · <span class="wpz">W {{ number_format($k['food_cost_percent'], 1, ',', '.') }} %</span> @endif
+                            @if(($k['food_cost_percent'] ?? null) !== null) · <span class="wpz">W {{ number_format($k['food_cost_percent'], 1, ',', '.') }} %</span> @elseif(! ($k['ek_vollstaendig'] ?? true)) · <span class="wpz">W offen</span> @endif
                         @endif
                     </span>
                 @endif
@@ -326,7 +326,7 @@
                             <td>{{ $k['title_intern'] ?: $k['title'] }}</td>
                             <td class="right">{{ number_format($k['vk_pro_person'] ?? 0, 2, ',', '.') }} €{{ ($k['vk_vorlaeufig'] ?? false) ? ' (vorläufig)' : '' }}</td>
                             <td class="right" style="color:#9333ea">{{ ($k['ek_pro_person'] ?? null) !== null ? number_format($k['ek_pro_person'], 2, ',', '.') . ' €' : '—' }}</td>
-                            <td class="right" style="color:#059669">{{ ($k['food_cost_percent'] ?? null) !== null ? number_format($k['food_cost_percent'], 1, ',', '.') . ' %' : '—' }}</td>
+                            <td class="right" style="color:#059669">{{ ($k['food_cost_percent'] ?? null) !== null ? number_format($k['food_cost_percent'], 1, ',', '.') . ' %' : (($k['ek_vollstaendig'] ?? true) ? '—' : 'offen') }}</td>
                         </tr>
                     @endif
                 @endforeach
@@ -341,13 +341,13 @@
         @if($istIntern)
             <table>
                 <tr><td>Preis pro Person</td><td class="right">{{ number_format($gesamt['vk_pro_person'], 2, ',', '.') }} €{{ ($gesamt['vk_fehlt'] ?? false) ? ' (vorläufig)' : '' }}</td></tr>
-                <tr><td style="color:#9333ea">Wareneinsatz pro Person</td><td class="right" style="color:#9333ea">{{ number_format($gesamt['ek_per_person'], 2, ',', '.') }} €</td></tr>
-                @if($gesamt['vk_pro_person'] > 0 && $gesamt['food_cost_percent'] !== null)
-                    <tr><td style="color:#059669">Wareneinsatz %</td><td class="right" style="color:#059669">{{ number_format($gesamt['food_cost_percent'], 1, ',', '.') }} %</td></tr>
+                <tr><td style="color:#9333ea">Wareneinsatz pro Person</td><td class="right" style="color:#9333ea">{{ number_format($gesamt['ek_per_person'], 2, ',', '.') }} €{{ ($gesamt['ek_vollstaendig'] ?? true) ? '' : ' (unvollständig)' }}</td></tr>
+                @if($gesamt['vk_pro_person'] > 0 && ($gesamt['food_cost_percent'] !== null || ! ($gesamt['ek_vollstaendig'] ?? true)))
+                    <tr><td style="color:#059669">Wareneinsatz %</td><td class="right" style="color:#059669">{{ $gesamt['food_cost_percent'] !== null ? number_format($gesamt['food_cost_percent'], 1, ',', '.') . ' %' : 'offen' }}</td></tr>
                 @endif
                 @if($gesamt['personen'])<tr><td>Personen</td><td class="right">{{ $gesamt['personen'] }}</td></tr>@endif
                 @if($gesamt['gesamt_vk'] !== null)<tr><td class="total">Gesamt</td><td class="right total">{{ number_format($gesamt['gesamt_vk'], 2, ',', '.') }} €</td></tr>@endif
-                @if(($gesamt['gesamt_ek'] ?? null) !== null)<tr><td style="color:#9333ea">Gesamt-Wareneinsatz</td><td class="right" style="color:#9333ea">{{ number_format($gesamt['gesamt_ek'], 2, ',', '.') }} €</td></tr>@endif
+                @if(($gesamt['gesamt_ek'] ?? null) !== null)<tr><td style="color:#9333ea">Gesamt-Wareneinsatz</td><td class="right" style="color:#9333ea">{{ number_format($gesamt['gesamt_ek'], 2, ',', '.') }} €{{ ($gesamt['ek_vollstaendig'] ?? true) ? '' : ' (unvollständig)' }}</td></tr>@endif
             </table>
         @endif
         @php($mwstSatz = ($mwst ?? null) ? (($mwst['default_satz'] ?? 'ermaessigt') === 'regulaer' ? ($mwst['regulaer'] ?? 19) : ($mwst['ermaessigt'] ?? 7)) : null)

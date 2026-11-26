@@ -173,7 +173,8 @@ class WordingResolver
                 $zeilen[] = ['type' => 'paket', 'text' => (string) ($paket->consumer_name ?: $paket->name), 'source' => null, 'einrueckung' => 0,
                     'preis' => $paket->price_per_person_cache !== null ? (float) $paket->price_per_person_cache : null,
                     // EK je Paket (2026-11-20): nur Datenfeld; Ausgaben zeigen ihn ausschließlich intern (EK-Schalter, Kalkulations-Print)
-                    'ek' => $paket->ek_per_person_cache !== null ? (float) $paket->ek_per_person_cache : null];
+                    // EK-Lücke im Paket (ek_incomplete): Teilsumme nie als EK zeigen
+                    'ek' => $paket->ek_per_person_cache !== null && $paket->ek_incomplete !== true ? (float) $paket->ek_per_person_cache : null];
                 // Wording-Kette gilt AUCH für die Gerichte des eingebetteten Pakets: der Block wird in die
                 // Rekursion durchgereicht, damit foodbook-lokale Overrides (payload_json['wording_overrides']
                 // je Paket-Slot-ID) greifen — sonst blieben Paket-Gerichte beim Kapitel-Wording „Wording fehlt".

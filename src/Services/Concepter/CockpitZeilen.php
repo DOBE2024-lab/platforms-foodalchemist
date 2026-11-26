@@ -30,7 +30,7 @@ final class CockpitZeilen
     {
         $concept->loadMissing(['slots' => fn ($q) => $q->orderBy('position'),
             'slots.unit:id,slug,dimension,default_in_g',
-            'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete',   // Kaskade: eingebettetes Paket
+            'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete,ek_incomplete',   // Kaskade: eingebettetes Paket
             'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation']);
 
         $r = ['zeilen' => [], 'vk' => 0.0, 'ek' => 0.0, 'hat_stale' => false, 'hat_leer' => false, 'hat_ek_luecke' => false, 'hat_vk_luecke' => false];
@@ -46,6 +46,11 @@ final class CockpitZeilen
                     + $this->werte($ep->price_per_person_cache, $ep->ek_per_person_cache ?? 0, false);
                 if ($ep->price_incomplete === true) {
                     $zeile['vk_unvollstaendig'] = true;   // CQ price_incomplete: Paket-Preis = Summe seiner bekannten Positionen, der Wert bleibt sichtbar
+                }
+                // Unbekanntes nie als 0 (B2), auch durch Pakete: fehlt einem Gericht des Pakets (rekursiv) der EK, ist der Paket-EK eine Teilsumme.
+                // Merker aus dem Cache (keine Abfrage je Paket); nur Altbestand ohne Merker rechnet live nach.
+                if ($ep->ek_incomplete ?? ! app(ConcepterAggregateService::class)->conceptAggregat($ep)['ek_vollstaendig']) {
+                    $zeile['ek_unvollstaendig'] = $r['hat_ek_luecke'] = true;
                 }
             } elseif ($slot->sales_recipe_id !== null && $slot->dish) {
                 $zeile = $basis + ['type' => 'gericht', 'wording' => $slot->wording, 'label' => $slot->dish->name, 'stale' => false]

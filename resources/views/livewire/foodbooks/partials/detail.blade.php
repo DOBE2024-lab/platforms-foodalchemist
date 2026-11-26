@@ -36,7 +36,9 @@
             : ['kpi' => 'ek', 'label' => 'EK/Person', 'value' => 'fehlt', 'tone' => 'crit', 'title' => $standTitel],
         ($wePct !== null && $ekPp !== null && (float) $ekPp > 0)
             ? ['kpi' => 'we', 'label' => 'Wareneinsatz', 'value' => number_format((float) $wePct, 1, ',', '.') . ' %', 'title' => 'Einkauf durch Verkauf über alle bepreisten Positionen']
-            : ['kpi' => 'we', 'label' => 'Wareneinsatz', 'value' => 'fehlt', 'tone' => 'crit', 'title' => 'Einkauf durch Verkauf über alle bepreisten Positionen'],
+            : (($gesamt['ek_vollstaendig'] ?? true) === false   // EK-Teilsumme (Gericht ohne EK, auch im Paket): keine Quote, aber kein Fehlerzustand
+                ? ['kpi' => 'we', 'label' => 'Wareneinsatz', 'value' => 'offen', 'tone' => 'warn', 'title' => 'Mindestens einem Gericht fehlt der EK, die Quote wäre zu niedrig']
+                : ['kpi' => 'we', 'label' => 'Wareneinsatz', 'value' => 'fehlt', 'tone' => 'crit', 'title' => 'Einkauf durch Verkauf über alle bepreisten Positionen']),
     ];
 
     // Kapitel-Stand live (Board des Editors): Inhalt, Preis, Fortschritt je Kapitel.

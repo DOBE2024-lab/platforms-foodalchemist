@@ -48,7 +48,7 @@ final class FoodbookDokument
             // Wording-Kette: Slots (inkl. Paket-Gerichte) fürs Auflösen der Gericht-Zeilen
             'chapters.blocks.concept.slots.dish:id,name,sales_wording_standard',
             // eingebettetes Paket (kind=paket-Concept) + dessen Gerichte für die Menü-Auflösung
-            'chapters.blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
+            'chapters.blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache,ek_incomplete',
             'chapters.blocks.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
             // E8.3: recipe_ref braucht sales_net/ek_total_eur für die €/Position-Preisspalte (blockPreis) — sonst rendert der Preis leer.
             'chapters.blocks.dish:id,name,sales_wording_standard,ek_total_eur,sales_unit_count', 'chapters.blocks.dish.standardPresentation',
@@ -57,7 +57,7 @@ final class FoodbookDokument
             'chapters.format', 'chapters.format.images',
             'chapters.format.slots' => fn ($q) => $q->orderBy('position'),
             'chapters.format.slots.concept.slots.dish:id,name,sales_wording_standard',
-            'chapters.format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
+            'chapters.format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache,ek_incomplete',
             'chapters.format.slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
             'crmCompany', 'crmContact',
         ]);
@@ -164,6 +164,7 @@ final class FoodbookDokument
                     // Marge nur in der internen Projektion (Projektleitung/Vertrieb) — NIE im Kundendokument.
                     $row['ek_pro_person'] = $agg['ek_per_person'];
                     $row['food_cost_percent'] = $agg['food_cost_percent'];
+                    $row['ek_vollstaendig'] = $agg['ek_vollstaendig'];   // false → Wareneinsatz „offen“ statt Quote
                 }
                 $rows[] = $row;
                 $walk((int) $k->id, $depth + 1);
@@ -291,7 +292,7 @@ final class FoodbookDokument
             ->with([
                 'slots' => fn ($q) => $q->orderBy('position'),
                 'slots.dish:id,name,sales_wording_standard',
-                'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
+                'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache,ek_incomplete',
                 'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
             ])
             ->findOrFail($conceptId);

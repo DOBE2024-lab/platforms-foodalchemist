@@ -26,7 +26,7 @@ class ConceptFassungService extends FassungBasis
     /** Spalten, die eine Konzept-Fassung nie vom Arbeitsstand erbt. */
     protected const NIE_KOPIEREN = [
         'uuid', 'legacy_id', 'created_at', 'updated_at', 'deleted_at', 'offer_id', 'kopie_von_id', 'kopie_stand_at', 'template_source_id',
-        'price_per_person_cache', 'calculated_price_per_person', 'price_per_person_manual', 'ek_per_person_cache', 'price_incomplete', 'price_calculated_at',
+        'price_per_person_cache', 'calculated_price_per_person', 'price_per_person_manual', 'ek_per_person_cache', 'price_incomplete', 'ek_incomplete', 'price_calculated_at',
         'price_calculation_source', 'price_calculation_version', 'price_override_reason', 'price_override_user_id',
         'price_override_at', 'price_override_expires_at', 'nutrition_cache', 'work_time_min_cache',
         'ist_fassung', 'fassung_von_id', 'fassung_nr', 'inhalt_hash', 'veroeffentlicht_at', 'veroeffentlicht_von',

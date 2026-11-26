@@ -50,7 +50,7 @@ final class PositionPreisService
             $cockpit = $this->festpreise->mit($festpreise, fn () => $this->concepts->preisCockpit($zeile->concept, $outlet, $team));
 
             return $this->ergebnis(vk: (float) $cockpit['price_per_person'], ek: (float) $cockpit['ek_per_person'],
-                vkFehlt: ConceptPreisService::unvollstaendig($cockpit));
+                vkFehlt: ConceptPreisService::unvollstaendig($cockpit), ekVoll: ! ($cockpit['hat_ek_luecke'] ?? false));   // EK-Lücke des Konzepts (auch aus Paketen) gilt auch hier
         }
         if ($typ === 'recipe_ref' && $zeile->dish) {
             return $this->gericht($zeile, $zeile->dish, $team, $outlet, $festpreise, $mitFestpreisen);

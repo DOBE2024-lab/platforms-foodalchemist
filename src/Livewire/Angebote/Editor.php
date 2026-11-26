@@ -1541,7 +1541,7 @@ class Editor extends Component
                     ->with([
                         'concept.slots' => fn ($q) => $q->orderBy('position'),
                         'concept.slots.dish:id,name,sales_wording_standard',
-                        'concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
+                        'concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache,ek_incomplete',
                         'concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
                     ])->get();
                 foreach ($geladen as $b) {

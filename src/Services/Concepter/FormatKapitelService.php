@@ -75,7 +75,7 @@ class FormatKapitelService
         $kapitel->loadMissing([
             'format.slots' => fn ($q) => $q->orderBy('position'),
             'format.slots.concept.slots.dish:id,name,sales_wording_standard',
-            'format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
+            'format.slots.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache,ek_incomplete',
             'format.slots.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
         ]);
         $format = $kapitel->format;

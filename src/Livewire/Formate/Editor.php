@@ -569,7 +569,7 @@ class Editor extends Component
                     ->with([
                         'slots.dish:id,name,sales_wording_standard',
                         // eingebettetes Paket (kind=paket-Concept) + dessen Gerichte für die rekursive Vorschau
-                        'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache',
+                        'slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache,ek_incomplete',
                         'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
                     ])
                     ->get()->keyBy('id');

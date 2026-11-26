@@ -123,3 +123,10 @@ it('Oberfläche (B): Concepter-Detail und Editor-Kopf zeigen den EK mit Merker �
     expect($text(\Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\Editor::class)->call('oeffnen', 'concepts', $this->konzept->id)))
         ->toMatch('/Wareneinsatz je Person 0,80 € ?unvollständig/u')->toMatch('/Wareneinsatz offen/u');
 });
+
+it('Ausgaben (D): die Paket-Zeile trägt keinen EK, wenn das Paket eine EK-Lücke hat — Teilsumme nie als EK', function () {
+    $zeilen = app(\Platform\FoodAlchemist\Services\Concepter\WordingResolver::class)->gerichtZeilen($this->konzept->fresh());
+    $paketZeile = collect($zeilen)->firstWhere('type', 'paket');
+
+    expect($paketZeile)->not->toBeNull()->and($paketZeile['ek'])->toBeNull();
+});

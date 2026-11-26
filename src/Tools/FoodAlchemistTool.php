@@ -262,14 +262,14 @@ abstract class FoodAlchemistTool
 
     /**
      * Agentenpfad (Dominique 13.11.2026): Namensprüfung eines Gerichts nach VK §1 — gespeichert wird trotzdem, die Antwort trägt die
-     * Warnungen ({@see \Platform\FoodAlchemist\Services\GerichtNamensPruefung}). Prüfung darf den Schreibvorgang nie kippen.
+     * Warnungen ({@see \Platform\FoodAlchemist\Services\Gericht\GerichtNamensPruefung}). Prüfung darf den Schreibvorgang nie kippen.
      *
      * @return list<array{regel: string, text: string, vorschlag: string}>
      */
     protected function gerichtNamensWarnungen(Team $team, int $recipeId, string $name): array
     {
         try {
-            return app(\Platform\FoodAlchemist\Services\GerichtNamensPruefung::class)->warnungen($team, $recipeId, $name);
+            return app(\Platform\FoodAlchemist\Services\Gericht\GerichtNamensPruefung::class)->warnungen($team, $recipeId, $name);
         } catch (\Throwable $e) {
             report($e);
 
@@ -304,7 +304,7 @@ abstract class FoodAlchemistTool
                 '1. Rahmen laden: foodalchemist.settings.GET, foodalchemist.canvas.GET(type=food_dna), foodalchemist.dish_classes.GET, Servierformen (unten).',
                 '2. Bestand prüfen: foodalchemist.verkaufsrezepte.SEARCH und foodalchemist.recipes.SEARCH — vorhandene Gerichte/Basisrezepte wiederverwenden.',
                 '3. Basisrezepte: Komponenten als Basisrezepte anlegen (foodalchemist.recipes.POST) und einhängen (foodalchemist.recipe_ingredients.PUT, referenced_recipe_id) — Zerlegen nach Regel 3, BEVOR ENRICH läuft.',
-                '4. Gericht mit [HG]-Name: „' . \Platform\FoodAlchemist\Services\GerichtNamensPruefung::BEISPIEL . '“ — Korrektur per foodalchemist.verkaufsrezepte.PUT(felder.name).',
+                '4. Gericht mit [HG]-Name: „' . \Platform\FoodAlchemist\Services\Gericht\GerichtNamensPruefung::BEISPIEL . '“ — Korrektur per foodalchemist.verkaufsrezepte.PUT(felder.name).',
                 '5. Darreichung: foodalchemist.recipe_darreichung.POST(recipe_id=' . $recipeId . ', serving_form=<code>) — das Gefäß gehört hierher, nicht in den Namen.',
                 '6. Klasse und Hauptgruppe: foodalchemist.verkaufsrezepte.PUT(felder.dish_class_id, felder.dish_main_group_id).',
                 '7. Anreichern: foodalchemist.verkaufsrezepte.ENRICH.',

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Gericht;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -50,15 +50,15 @@ final class GerichtGpUmbauService
 
             return ['name' => $roh, 'typ' => null, 'typ_sicher' => false, 'zukauf' => false];
         }
-        $bezeichnung = ZukaufBasisrezeptService::bezeichnungFuerGp($gp) ?: (string) $gp->name;
-        $typ = app(ZukaufBasisrezeptService::class)->typFuerGp($gp);
+        $bezeichnung = \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::bezeichnungFuerGp($gp) ?: (string) $gp->name;
+        $typ = app(\Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::class)->typFuerGp($gp);
         if ($typ !== null) {
-            return ['name' => ZukaufBasisrezeptService::name(['typ' => $typ, 'bezeichnung' => $bezeichnung]), 'typ' => $typ,
+            return ['name' => \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::name(['typ' => $typ, 'bezeichnung' => $bezeichnung]), 'typ' => $typ,
                 'typ_sicher' => true, 'zukauf' => true];
         }
         $fallback = RezeptTypVokabular::finde(self::TYP_FALLBACK) ?? self::TYP_FALLBACK;
 
-        return ['name' => RecipeKomponentenPlanService::bereinigeName($fallback . ': ' . $bezeichnung), 'typ' => $fallback,
+        return ['name' => \Platform\FoodAlchemist\Services\RecipeKomponentenPlanService::bereinigeName($fallback . ': ' . $bezeichnung), 'typ' => $fallback,
             'typ_sicher' => false, 'zukauf' => false];
     }
 
@@ -89,8 +89,8 @@ final class GerichtGpUmbauService
             throw new \RuntimeException('Name des Basisrezepts ist Pflicht.');
         }
 
-        $rezepte = app(RecipeService::class);
-        $recompute = app(RecipeRecomputeService::class);
+        $rezepte = app(\Platform\FoodAlchemist\Services\RecipeService::class);
+        $recompute = app(\Platform\FoodAlchemist\Services\RecipeRecomputeService::class);
 
         return DB::transaction(function () use ($team, $zeile, $gericht, $name, $vorschlag, $rezepte, $recompute) {
             $bestehend = FoodAlchemistRecipe::query()->where('team_id', $team->id)->basis()
@@ -119,7 +119,7 @@ final class GerichtGpUmbauService
             } else {
                 $basis = $bestehend;
             }
-            app(Rezept\RezeptGraphService::class)->sichereKante((int) $gericht->id, (int) $basis->id);   // 1.1e: Sperre + Zyklusprüfung in dieser Transaktion
+            app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->sichereKante((int) $gericht->id, (int) $basis->id);   // 1.1e: Sperre + Zyklusprüfung in dieser Transaktion
 
             // Umhängen wie HardstopResolveService::binde — gezielter Row-Update, Menge/Einheit/Rolle/Notiz bleiben.
             $zeile->update([

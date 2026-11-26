@@ -77,7 +77,7 @@ class StubAusrezeptierenJob implements ShouldQueue, \Platform\FoodAlchemist\Serv
         if ($vkModus) {
             // Gericht-Hülle (13.11.2026): „Rezeptur erstellen" baut in ein vorhandenes Gericht ohne Komponenten.
             return isset($parameter['gericht_fuellen_id'])
-                ? \Platform\FoodAlchemist\Services\GerichtHuelleService::huelle($team, (int) $parameter['gericht_fuellen_id']) : null;
+                ? \Platform\FoodAlchemist\Services\Gericht\GerichtHuelleService::huelle($team, (int) $parameter['gericht_fuellen_id']) : null;
         }
         if (! isset($parameter['stub_fuellen_id'])) {
             return null;

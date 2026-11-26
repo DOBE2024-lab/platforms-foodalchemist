@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Livewire\Recipes\IngredientEditor;
 use Platform\FoodAlchemist\Livewire\Verkauf\VkModal;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\GerichtGpUmbauService;
+use Platform\FoodAlchemist\Services\Gericht\GerichtGpUmbauService;
 use Platform\FoodAlchemist\Services\HardstopResolveService;
 use Platform\FoodAlchemist\Services\RecipeService;
 use Platform\FoodAlchemist\Services\Reife\RecipeReifeAdapter;

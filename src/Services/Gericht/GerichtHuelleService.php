@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Gericht;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str;
@@ -86,7 +86,7 @@ final class GerichtHuelleService
      */
     public function generiere(Team $team, int $stepId, string $beschreibung, array $params, ?array $context, callable $melde): array
     {
-        $generator = app(RecipeGeneratorService::class);
+        $generator = app(\Platform\FoodAlchemist\Services\RecipeGeneratorService::class);
         $ziel = $this->zielFuerStep($team, $stepId);
         if ($ziel === null) {
             return $generator->generiere($team, $beschreibung, $params, null, true, 'plan_go', $context, $melde);

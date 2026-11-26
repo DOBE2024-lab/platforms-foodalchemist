@@ -139,7 +139,7 @@ class RecipeReifeAdapter implements ReifeAdapter
         // Entscheid Dominique 17.11.2026: ein Gericht besteht nur aus Basisrezepten. Altbestand mit GP direkt im Gericht wird
         // nicht automatisch umgebaut — je Gericht ein Befund mit dem Umbau-Weg (Basisrezept anlegen, Zeile umhängen).
         if ($istVk) {
-            $direkt = app(\Platform\FoodAlchemist\Services\GerichtGpUmbauService::class)->direkteGpZeilen($r);
+            $direkt = app(\Platform\FoodAlchemist\Services\Gericht\GerichtGpUmbauService::class)->direkteGpZeilen($r);
             if ($direkt->isNotEmpty()) {
                 $luecken[] = $this->luecke('gp_im_gericht', 'gericht', 'wichtig',
                     'GP direkt im Gericht — Basisrezept anlegen: '

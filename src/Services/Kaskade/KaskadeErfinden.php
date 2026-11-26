@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConceptSlot;
 use Platform\FoodAlchemist\Models\FoodAlchemistDishIdea;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptVorgabenService;
-use Platform\FoodAlchemist\Services\GerichtHuelleService;
+use Platform\FoodAlchemist\Services\Gericht\GerichtHuelleService;
 use Platform\FoodAlchemist\Services\Planung\IdeenService;
 use Platform\FoodAlchemist\Services\Pairing\PairingService;
 use Platform\FoodAlchemist\Services\Kaskade\PlanningCascadeService;

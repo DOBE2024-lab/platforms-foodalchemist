@@ -597,7 +597,7 @@ class SensorikService
         }
 
         // Leer-Label-Guard, 0 = Messwert, Median: {@see NaehrwertAggregatService} (gleiche Regel wie die Rezept-Nährwerte).
-        $kennwerte = app(NaehrwertAggregatService::class)->kennwerte($gpIds, ['sodium', 'fat', 'sugar', 'carbs_absorbable']);
+        $kennwerte = app(Naehrwerte\NaehrwertAggregatService::class)->kennwerte($gpIds, ['sodium', 'fat', 'sugar', 'carbs_absorbable']);
 
         $out = [];
         foreach ($kennwerte as $gpId => $k) {

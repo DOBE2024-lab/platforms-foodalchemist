@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistPlattformEinstellung;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\FaRechte;
-use Platform\FoodAlchemist\Services\NaehrwertAggregatService;
+use Platform\FoodAlchemist\Services\Naehrwerte\NaehrwertAggregatService;
 use Platform\FoodAlchemist\Services\Plattform\PlattformProtokoll;
 use Platform\FoodAlchemist\Services\SignalService;
 use Platform\FoodAlchemist\Services\Einkauf\SupplierItemService;

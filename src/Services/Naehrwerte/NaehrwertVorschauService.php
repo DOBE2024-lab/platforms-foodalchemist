@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Naehrwerte;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -39,7 +39,7 @@ class NaehrwertVorschauService
         $namen = FoodAlchemistGp::visibleToTeam($team)->whereIn('id', $ids)->pluck('name', 'id')->all();
 
         // Erdung
-        $erdNeu = app(SensorikService::class)->erdungBulk($ids);
+        $erdNeu = app(\Platform\FoodAlchemist\Services\SensorikService::class)->erdungBulk($ids);
         $erdung = [];
         foreach (self::ERDUNG as $dim => $g) {
             $paare = [];

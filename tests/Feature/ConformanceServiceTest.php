@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\DB;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\ConformanceService;
+use Platform\FoodAlchemist\Services\Conformance\ConformanceService;
 use Platform\FoodAlchemist\Tests\Support\CopilotStub;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

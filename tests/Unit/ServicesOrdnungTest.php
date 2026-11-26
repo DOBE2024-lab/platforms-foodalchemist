@@ -13,7 +13,7 @@ use Platform\FoodAlchemist\Tests\Support\ServicesUmzuege;
  *    sonst ins Leere (CI-Fund 3.8: Schriften der ShareCard, DarreichungResolver::aufrufer).
  *  Alte Klassennamen werden auch in Strings gefunden (ein oder zwei Backslashes), nicht nur in use-Zeilen.
  */
-const SERVICES_ROOT_MAX = 81;
+const SERVICES_ROOT_MAX = 80;
 
 function servicesOrdnungModul(): string
 {

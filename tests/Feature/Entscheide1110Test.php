@@ -103,8 +103,8 @@ it('Fond mit Verkaufs-Cut (Lauf 98/3880): harter Befund, heilbar, Direktive nenn
 
     $hart = ($this->befunde)($fond)->where('rule_id', $regel->id)->values()->all();
     $heilbar = app(RecipeConformanceAdapter::class)->heilbar($this->rootTeam, (int) $fond->id, $hart);
-    $direktive = Closure::bind(fn ($b) => $this->heilDirektive($b), app(\Platform\FoodAlchemist\Services\ConformanceService::class),
-        \Platform\FoodAlchemist\Services\ConformanceService::class)($heilbar);
+    $direktive = Closure::bind(fn ($b) => $this->heilDirektive($b), app(\Platform\FoodAlchemist\Services\Conformance\ConformanceService::class),
+        \Platform\FoodAlchemist\Services\Conformance\ConformanceService::class)($heilbar);
 
     expect($regel->wirkung)->toBe('blockieren')
         ->and($hart)->toHaveCount(1)

@@ -5,7 +5,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistConformanceFinding;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
-use Platform\FoodAlchemist\Services\ConformanceService;
+use Platform\FoodAlchemist\Services\Conformance\ConformanceService;
 use Platform\FoodAlchemist\Services\Conformance\RecipeConformanceAdapter;
 use Platform\FoodAlchemist\Services\IngredientMatchService;
 use Platform\FoodAlchemist\Services\RecipeService;

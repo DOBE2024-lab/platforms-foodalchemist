@@ -155,7 +155,7 @@ class RecipeConformanceAdapter implements ConformanceAdapter
         $zusatz = \Platform\FoodAlchemist\Services\ZukaufBasisrezeptService::ZUSATZ;
         $text = (string) ($befund['feld'] ?? '') . ' ' . (string) ($befund['begruendung'] ?? '') . ' ' . (string) ($befund['vorschlag'] ?? '');
 
-        return str_starts_with(\Platform\FoodAlchemist\Services\ConformanceService::paragraphStamm((string) ($befund['paragraph'] ?? '')), '1')
+        return str_starts_with(\Platform\FoodAlchemist\Services\Conformance\ConformanceService::paragraphStamm((string) ($befund['paragraph'] ?? '')), '1')
             && mb_stripos($text, trim($zusatz, '()')) !== false;
     }
 

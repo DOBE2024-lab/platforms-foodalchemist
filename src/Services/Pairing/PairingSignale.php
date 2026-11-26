@@ -10,7 +10,7 @@ use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Enums\WissensStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 use Platform\FoodAlchemist\Support\TeamScope;
 
 /**

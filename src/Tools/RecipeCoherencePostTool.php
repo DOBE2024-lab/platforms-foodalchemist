@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\CoherenceService;
+use Platform\FoodAlchemist\Services\Pruefung\CoherenceService;
 
 /**
  * MCP-Steuerbarkeit · D3: kulinarische Kohärenz eines team-eigenen Gerichts prüfen (mode=judge) oder

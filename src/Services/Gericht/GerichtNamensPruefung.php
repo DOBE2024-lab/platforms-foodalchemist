@@ -29,7 +29,7 @@ class GerichtNamensPruefung
 
     public const BEISPIEL = '[HG] Rinderfilet | Portwein-Jus | Selleriepüree';
 
-    public function __construct(private \Platform\FoodAlchemist\Services\DataQualityService $dq) {}
+    public function __construct(private \Platform\FoodAlchemist\Services\Pruefung\DataQualityService $dq) {}
 
     /**
      * @return list<array{regel: string, text: string, vorschlag: string}>
@@ -43,7 +43,7 @@ class GerichtNamensPruefung
         }
         foreach ($this->dq->namingBefundeFuer($team, $recipeId) as $fall) {
             $regel = self::FALL_REGEL[$fall] ?? $fall;
-            $aus[$regel] ??= ['regel' => $regel, 'text' => (string) (\Platform\FoodAlchemist\Services\SignalCauseService::NAMING_PARAGRAPHEN[$fall]['regel'] ?? $fall),
+            $aus[$regel] ??= ['regel' => $regel, 'text' => (string) (\Platform\FoodAlchemist\Services\Pruefung\SignalCauseService::NAMING_PARAGRAPHEN[$fall]['regel'] ?? $fall),
                 'vorschlag' => $this->vorschlag($regel, $name, null, null)];
         }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Support\Carbon;
 use Platform\Core\Models\Team;
@@ -180,7 +180,7 @@ class SignalTrendService
      */
     public function uebersichtBrille(Team $viewer, ?string $source = null): array
     {
-        $ids = app(Plattform\StandortService::class)->leseTeamIds($viewer);
+        $ids = app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->leseTeamIds($viewer);
         $teams = Team::whereIn('id', $ids)->get();
         if (count($ids) < 2) {
             return $this->uebersicht($teams->first() ?? $viewer, $source);

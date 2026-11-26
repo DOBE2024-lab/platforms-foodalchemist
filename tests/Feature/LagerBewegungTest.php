@@ -14,7 +14,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItemStructure;
 use Platform\FoodAlchemist\Services\Einkauf\LagerBewegungService;
-use Platform\FoodAlchemist\Services\WareneinsatzAbweichungService;
+use Platform\FoodAlchemist\Services\Pruefung\WareneinsatzAbweichungService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

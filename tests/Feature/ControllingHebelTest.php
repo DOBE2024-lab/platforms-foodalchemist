@@ -116,7 +116,7 @@ it('simuliert einen Preisaufschlag über das ganze Sortiment eines Lieferanten',
 // Kalkulation abweichen (offene Signale vk_anpassung_empfohlen samt Payload), und prüft auf Knopfdruck neu.
 function spec85_link_drift_signal(\Platform\Core\Models\Team $team, string $docType, int $docId, float $maxDelta, ?int $outletId = null): void
 {
-    app(\Platform\FoodAlchemist\Services\SignalService::class)->erzeuge($team, \Platform\FoodAlchemist\Enums\SignalTyp::VkAnpassungEmpfohlen,
+    app(\Platform\FoodAlchemist\Services\Pruefung\SignalService::class)->erzeuge($team, \Platform\FoodAlchemist\Enums\SignalTyp::VkAnpassungEmpfohlen,
         \Platform\FoodAlchemist\Enums\SignalSeverity::Warnung, "Link {$docType} {$docId}: Preise weichen ab", [
             'dedup_key' => "test-drift-{$docType}-{$docId}", 'outlet_id' => $outletId, 'ref_type' => $docType, 'ref_id' => $docId,
             'payload' => ['doc_type' => $docType, 'doc_id' => $docId, 'outlet_id' => $outletId, 'anzahl' => 1, 'max_delta_pct' => $maxDelta,
@@ -142,6 +142,6 @@ it('F5: zeigt je veröffentlichtem Link die abweichenden Preise aus dem Signal, 
 it('F5: ohne Abweichung ein ruhiger Leerzustand; „Jetzt prüfen“ ruft nur die Ausgabe-Drift des Detektors', function () {
     Livewire::test(LinkPreise::class)->assertViewHas('links', [])->assertSee('Alle veröffentlichten Links tragen aktuelle Preise.');
 
-    $this->mock(\Platform\FoodAlchemist\Services\SignalDetektorService::class, fn ($m) => $m->shouldReceive('ausgabeDriftPruefen')->once()->andReturn(2));
+    $this->mock(\Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService::class, fn ($m) => $m->shouldReceive('ausgabeDriftPruefen')->once()->andReturn(2));
     Livewire::test(LinkPreise::class)->call('jetztPruefen')->assertSet('hinweis', 'Geprüft: 2 Links zeigen Preise, die von der Kalkulation abweichen.');
 });

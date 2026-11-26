@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -38,11 +38,11 @@ use Platform\FoodAlchemist\Models\FoodAlchemistSupplierItem;
 class HardstopResolveService
 {
     public function __construct(
-        private readonly RecipeService $recipes,
-        private readonly RecipeRecomputeService $recompute,
-        private readonly GpProposalService $proposals,
-        private readonly GpNamingService $naming,
-        private readonly Einkauf\LeadLaService $leadLa,
+        private readonly \Platform\FoodAlchemist\Services\RecipeService $recipes,
+        private readonly \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private readonly \Platform\FoodAlchemist\Services\GpProposalService $proposals,
+        private readonly \Platform\FoodAlchemist\Services\GpNamingService $naming,
+        private readonly \Platform\FoodAlchemist\Services\Einkauf\LeadLaService $leadLa,
     ) {}
 
     /**
@@ -288,7 +288,7 @@ class HardstopResolveService
 
     private function binde(FoodAlchemistRecipeIngredient $zeile, ?int $gpId, ?int $subId, MatchMethod $methode): void
     {
-        app(Rezept\RezeptGraphService::class)->schreibeKanten($subId !== null ? [[(int) $zeile->recipe_id, $subId]] : [], function () use ($zeile, $gpId, $subId, $methode) {   // 1.1e
+        app(\Platform\FoodAlchemist\Services\Rezept\RezeptGraphService::class)->schreibeKanten($subId !== null ? [[(int) $zeile->recipe_id, $subId]] : [], function () use ($zeile, $gpId, $subId, $methode) {   // 1.1e
             $zeile->update([
                 'gp_id' => $gpId,
                 'referenced_recipe_id' => $subId,

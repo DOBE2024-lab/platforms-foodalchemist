@@ -7,8 +7,8 @@ use Platform\FoodAlchemist\Jobs\QualityRunJob;
 use Platform\FoodAlchemist\Jobs\RecipeFindingsRunJob;
 use Platform\FoodAlchemist\Livewire\ReviewQueue;
 use Platform\FoodAlchemist\Models\FoodAlchemistBulkRun;
-use Platform\FoodAlchemist\Services\QualityRunService;
-use Platform\FoodAlchemist\Services\RecipeFindingsBatchService;
+use Platform\FoodAlchemist\Services\Pruefung\QualityRunService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingsBatchService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

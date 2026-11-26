@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Illuminate\Support\Facades\Auth;
-use Platform\FoodAlchemist\Services\RecipeFindingService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService;
 use Platform\FoodAlchemist\Services\RecipeReviewService;
 
 /**

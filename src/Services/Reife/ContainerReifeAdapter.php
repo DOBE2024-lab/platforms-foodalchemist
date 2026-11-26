@@ -4,7 +4,7 @@ namespace Platform\FoodAlchemist\Services\Reife;
 
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Services\Concepter\CoverageService;
-use Platform\FoodAlchemist\Services\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
 
 /**
  * Spec 50 · Etappe 7 — gemeinsamer Unterbau der Container-Adapter (Konzept, Format,

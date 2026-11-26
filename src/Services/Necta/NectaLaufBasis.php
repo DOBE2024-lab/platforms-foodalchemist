@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 use Platform\FoodAlchemist\Support\JodAusZutaten;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\StammPaket;

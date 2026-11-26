@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Services\Concepter\ConceptOneShotService;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Concepter\CoverageService;
-use Platform\FoodAlchemist\Services\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
 
 /**
  * Spec 50 · Etappe 7 — Reife eines Konzepts (kind=concept, auch Pakete).

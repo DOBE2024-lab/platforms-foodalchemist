@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\RecipeFindingService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService;
 
 /**
  * Spec 21 · S5a — die menschliche Entscheidung an einem abgelegten KI-Befund.

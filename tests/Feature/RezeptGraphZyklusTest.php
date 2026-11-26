@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistRecipeIngredient;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\ComponentEquivalentService;
 use Platform\FoodAlchemist\Services\Fassung\FassungsUmstellung;
-use Platform\FoodAlchemist\Services\HardstopResolveService;
+use Platform\FoodAlchemist\Services\Pruefung\HardstopResolveService;
 use Platform\FoodAlchemist\Services\Planung\PlanungsblattService;
 use Platform\FoodAlchemist\Services\RecipeRecomputeService;
 use Platform\FoodAlchemist\Services\RecipeService;

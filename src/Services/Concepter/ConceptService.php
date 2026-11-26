@@ -807,7 +807,7 @@ class ConceptService
             // Fassungs-Pfad: EK aus der Team-Kalkulation (der Aggregat-EK liest die leeren Master-Spalten der Fassung); unvollständig = null
             'ek_per_person_cache' => ($cockpit['quelle'] ?? null) === 'team_kalkulation' ? $cockpit['ek_per_person'] : $agg['ek_per_person'],
         ]);
-        app(\Platform\FoodAlchemist\Services\PriceAuditService::class)->record(
+        app(\Platform\FoodAlchemist\Services\Pruefung\PriceAuditService::class)->record(
             $concept, 'concept', $oldCalculated, $cockpit['summe_pro_person'] !== null ? (float) $cockpit['summe_pro_person'] : null,
             $oldEffective, $cockpit['price_per_person'] !== null ? (float) $cockpit['price_per_person'] : null, 'children_sum',
             ['calculation_version' => \Platform\FoodAlchemist\Services\Preis\CatalogPricingService::VERSION],

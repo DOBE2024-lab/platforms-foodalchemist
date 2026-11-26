@@ -8,7 +8,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 /**
  * Spec 50 · Etappe 7 — Reife eines Foodbooks (Kundenbuch).
  *
- * Struktur folgt den Ampel-Regeln aus {@see \Platform\FoodAlchemist\Services\DataQualityService}:
+ * Struktur folgt den Ampel-Regeln aus {@see \Platform\FoodAlchemist\Services\Pruefung\DataQualityService}:
  * gemessen werden nur Blatt-Kapitel (ein Eltern-Kapitel ist eine Klammer), Inhalt sind nur
  * sichtbare `concept_ref`/`recipe_ref`-Blöcke, ein Kapitel MIT Inhalt aber ohne Hinführung
  * ist ein Hinweis (druckbar, nur nicht ausformuliert). Die entsprechenden Ampel-Metriken

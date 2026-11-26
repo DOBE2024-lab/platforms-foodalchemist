@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -45,10 +45,10 @@ class WareneinsatzAbweichungService
     public const INVENTUR_TOLERANZ_TAGE = 7;
 
     public function __construct(
-        private Einkauf\PurchaseJournalService $journal,
-        private TeamSettingsService $settings,
-        private Einkauf\InventurService $inventur,
-        private Einkauf\LagerBewegungService $bewegungen,
+        private \Platform\FoodAlchemist\Services\Einkauf\PurchaseJournalService $journal,
+        private \Platform\FoodAlchemist\Services\TeamSettingsService $settings,
+        private \Platform\FoodAlchemist\Services\Einkauf\InventurService $inventur,
+        private \Platform\FoodAlchemist\Services\Einkauf\LagerBewegungService $bewegungen,
     ) {
     }
 
@@ -64,14 +64,14 @@ class WareneinsatzAbweichungService
         // tragen team_id/deleted_at ebenfalls — unqualifiziert wirft SQLite „ambiguous column".
         $t = 'foodalchemist_sales_facts';
         $basis = fn () => DB::table($t)
-            ->whereIn($t . '.team_id', app(Plattform\StandortService::class)->leseTeamIds($team))->whereNull($t . '.deleted_at')   // Spec 77c: Team-Brille
+            ->whereIn($t . '.team_id', app(\Platform\FoodAlchemist\Services\Plattform\StandortService::class)->leseTeamIds($team))->whereNull($t . '.deleted_at')   // Spec 77c: Team-Brille
             ->when($von !== null, fn ($q) => $q->whereDate($t . '.sold_at', '>=', $von))
             ->when($bis !== null, fn ($q) => $q->whereDate($t . '.sold_at', '<=', $bis));
 
         $umsatz = (float) $basis()->sum($t . '.revenue_net');
         $umsatzZugeordnet = (float) $basis()->whereNotNull($t . '.recipe_id')->sum($t . '.revenue_net');
         $einkauf = $this->journal->spend($team, null, $von, $bis);
-        $ziel = $this->settings->zielWareneinsatzPct($team, app(Plattform\ActiveOutletContext::class)->current($team));   // Spec 85 PR-D: Ziel des aktiven Kalkulationsprofils
+        $ziel = $this->settings->zielWareneinsatzPct($team, app(\Platform\FoodAlchemist\Services\Plattform\ActiveOutletContext::class)->current($team));   // Spec 85 PR-D: Ziel des aktiven Kalkulationsprofils
 
         // Spec 66 §5: mit Inventur am Anfang UND Ende der Periode wird aus der Perioden- eine
         // Verbrauchsrechnung: Verbrauch = Anfangsbestand + Einkauf − Endbestand. Ohne beide
@@ -81,7 +81,7 @@ class WareneinsatzAbweichungService
         $kosten = $verbrauch ?? $einkauf;
 
         $abdeckung = $umsatz > 0 ? round($umsatzZugeordnet / $umsatz * 100, 1) : null;
-        $istPct = Preis\MargeService::wareneinsatzPct($kosten, $umsatz);
+        $istPct = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($kosten, $umsatz);
 
         // Theoretischer Wareneinsatz: verkaufte Menge × EK je Portion an der Standard-Darreichung.
         // Dieselbe EK-Zahl wie in der Matrix und in der W%-Ampel — sonst stünden hier zwei

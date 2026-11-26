@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Support\Facades\DB;
 use Platform\Core\Models\Team;
@@ -77,8 +77,8 @@ class SignalCauseService
 
     public function __construct(
         private DataQualityService $dq,
-        private RecipeRecomputeService $recompute,
-        private Preis\PriceService $preise,
+        private \Platform\FoodAlchemist\Services\RecipeRecomputeService $recompute,
+        private \Platform\FoodAlchemist\Services\Preis\PriceService $preise,
     ) {
     }
 

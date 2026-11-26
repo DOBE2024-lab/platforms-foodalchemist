@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
-use Platform\FoodAlchemist\Services\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
 use Platform\FoodAlchemist\Support\SignalCockpit;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;

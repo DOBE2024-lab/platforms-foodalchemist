@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipeFinding;
-use Platform\FoodAlchemist\Services\RecipeFindingService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingService;
 use Platform\FoodAlchemist\Services\RecipeReviewService;
 
 /**

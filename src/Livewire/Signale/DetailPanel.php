@@ -7,9 +7,9 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignalSnapshot;
-use Platform\FoodAlchemist\Services\SignalObjectService;
-use Platform\FoodAlchemist\Services\SignalPolicyService;
-use Platform\FoodAlchemist\Services\SignalTrendService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalObjectService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalPolicyService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalTrendService;
 use Platform\FoodAlchemist\Support\SignalCockpit;
 
 /**

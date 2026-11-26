@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRun;
 use Platform\FoodAlchemist\Models\FoodAlchemistCascadeRunStep;
 use Platform\FoodAlchemist\Models\FoodAlchemistRule;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
-use Platform\FoodAlchemist\Services\HardstopResolveService;
+use Platform\FoodAlchemist\Services\Pruefung\HardstopResolveService;
 use Platform\FoodAlchemist\Services\IngredientMatchService;
 use Platform\FoodAlchemist\Services\RecipeDependencyWorkflowService;
 use Platform\FoodAlchemist\Services\RecipeService;

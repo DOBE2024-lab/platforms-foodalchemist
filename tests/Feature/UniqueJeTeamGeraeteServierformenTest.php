@@ -59,7 +59,7 @@ it('Datenqualität „Servierform unbestimmt“ zählt auch die Mandanten-Kopie 
     DB::table('foodalchemist_recipe_presentations')->insert(['uuid' => (string) Str::uuid7(), 'team_id' => $this->rootTeam->id, 'recipe_id' => $gericht->id,
         'serving_form_id' => $kopie, 'is_standard' => true, 'created_at' => now(), 'updated_at' => now()]);
 
-    $dq = app(\Platform\FoodAlchemist\Services\DataQualityService::class);
+    $dq = app(\Platform\FoodAlchemist\Services\Pruefung\DataQualityService::class);
     $methode = new ReflectionMethod($dq, 'unbestimmteServierform');
     $methode->setAccessible(true);
     expect($methode->invoke($dq, $this->rootTeam))->toBe(1);

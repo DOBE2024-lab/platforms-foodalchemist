@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Enums\BulkRunStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistBulkRun;
-use Platform\FoodAlchemist\Services\SignalDetektorService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService;
 
 /**
  * „Ampel neu messen" asynchron — der Detektor-Lauf eines Teams.
@@ -27,7 +27,7 @@ use Platform\FoodAlchemist\Services\SignalDetektorService;
  *
  * Idempotent: der Detektor dedupliziert über `dedup_key` und schließt aufgelöste Befunde
  * selbst (`emittiereUndSchliesse`). Ein zweiter Lauf erzeugt keine Dubletten — er kostet
- * nur Zeit. Gegen den Doppelklick sperrt {@see \Platform\FoodAlchemist\Services\QualityRunService}.
+ * nur Zeit. Gegen den Doppelklick sperrt {@see \Platform\FoodAlchemist\Services\Pruefung\QualityRunService}.
  */
 class QualityRunJob implements ShouldQueue
 {

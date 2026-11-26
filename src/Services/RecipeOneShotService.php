@@ -70,12 +70,12 @@ class RecipeOneShotService
 
     public function __construct(
         private Plattform\BulkEnrichService $bulk,
-        private CoherenceService $coherence,
+        private Pruefung\CoherenceService $coherence,
         private DarreichungService $darreichungen,
         private Preis\CatalogPricingService $catalogPricing,
         private Preis\MargeService $marge,
         private TeamSettingsService $settings,
-        private SignalDetektorService $detektor,
+        private Pruefung\SignalDetektorService $detektor,
     ) {
     }
 

@@ -394,7 +394,7 @@ class RecipeReviewService
                 throw new \RuntimeException('Der Hinweis nennt keine Zutatenzeile, es gibt nichts zu übernehmen.');
             }
 
-            return app(HardstopResolveService::class)->entdrahte($team, $recipeId, $zielId);
+            return app(Pruefung\HardstopResolveService::class)->entdrahte($team, $recipeId, $zielId);
         }
 
         $revise = app(RecipeReviseService::class);

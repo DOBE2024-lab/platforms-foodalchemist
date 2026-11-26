@@ -204,7 +204,7 @@ class DetailPanel extends Component
         }
         $this->kiFehler = null;
         try {
-            app(\Platform\FoodAlchemist\Services\CoherenceService::class)->judge($team, $this->recipeId);
+            app(\Platform\FoodAlchemist\Services\Pruefung\CoherenceService::class)->judge($team, $this->recipeId);
         } catch (\RuntimeException $e) {
             $this->kiFehler = $e->getMessage();
         }
@@ -218,7 +218,7 @@ class DetailPanel extends Component
         }
         $this->kiFehler = null;
         try {
-            app(\Platform\FoodAlchemist\Services\CoherenceService::class)->tellerHeber($team, $this->recipeId);
+            app(\Platform\FoodAlchemist\Services\Pruefung\CoherenceService::class)->tellerHeber($team, $this->recipeId);
         } catch (\RuntimeException $e) {
             $this->kiFehler = $e->getMessage();
         }
@@ -350,7 +350,7 @@ class DetailPanel extends Component
             ...$this->pairingFuerView($team, $rezept, $rezept !== null),
             // D-6 §5.x: Judge-Achse (gecacht) + deterministische Aroma-Nachbarn (lazy)
             'kohaerenzStatus' => $rezept !== null
-                ? app(\Platform\FoodAlchemist\Services\CoherenceService::class)->status($team, $rezept->id)
+                ? app(\Platform\FoodAlchemist\Services\Pruefung\CoherenceService::class)->status($team, $rezept->id)
                 : null,
             // M9-01k: Eignungen + Vokabular für die Pflege-Selects
             'niveauEignungen' => $rezept !== null ? $rezept->levelSuitabilities()->get() : collect(),

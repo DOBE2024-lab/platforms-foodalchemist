@@ -7,7 +7,7 @@ use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Services\DarreichungService;
 use Platform\FoodAlchemist\Services\Produktpass\ProduktpassAbweichungService;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 use Platform\FoodAlchemist\Support\MasterTeam;
 use Platform\FoodAlchemist\Support\ProduktpassSchutz;
 use Symfony\Component\Uid\UuidV7;

@@ -6,7 +6,7 @@ use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistSignal;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplier;
 use Platform\FoodAlchemist\Models\FoodAlchemistSupplierDocument;
-use Platform\FoodAlchemist\Services\SignalDetektorService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService;
 use Platform\FoodAlchemist\Tests\Support\SeedsTeamHierarchy;
 use Platform\FoodAlchemist\Tests\TestCase;
 

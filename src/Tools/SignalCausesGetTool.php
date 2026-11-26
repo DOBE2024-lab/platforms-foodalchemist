@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\SignalCauseService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalCauseService;
 
 /**
  * Spec 21 · Tranche P · Punkt 5 (S3b-3) — Ursachen-Lesetool.

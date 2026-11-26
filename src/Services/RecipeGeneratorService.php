@@ -788,7 +788,7 @@ class RecipeGeneratorService
                     $rest = [];
                     foreach ($review['befunde'] as $b) {
                         $istFremd = ($b['art'] ?? '') === 'fremdkoerper' && ($b['zutat_id'] ?? null) !== null;
-                        if ($istFremd && (float) ($b['konfidenz'] ?? 0) >= RecipeFindingService::KONFIDENZ_SCHWELLE) {
+                        if ($istFremd && (float) ($b['konfidenz'] ?? 0) >= Pruefung\RecipeFindingService::KONFIDENZ_SCHWELLE) {
                             $id = (int) $b['zutat_id'];
                             if (! isset($treffer[$id])) {                // Regel gewinnt bei Doppel-Flag
                                 $treffer[$id] = [
@@ -802,7 +802,7 @@ class RecipeGeneratorService
                         }
                     }
                     if ($rest !== []) {                                  // Copilot/Signale sehen die übrigen Befunde
-                        $abgelegt = app(RecipeFindingService::class)->speichere($team, $recipe->id, $rest);
+                        $abgelegt = app(Pruefung\RecipeFindingService::class)->speichere($team, $recipe->id, $rest);
                         $statistik['kritiker']['befunde_abgelegt'] = (int) ($abgelegt['neu'] ?? 0);
                     }
                     $statistik['kritiker']['geprueft'] = true;
@@ -827,7 +827,7 @@ class RecipeGeneratorService
                 $text = (string) (($z->raw_text ?? '') !== '' ? $z->raw_text : ($z->display_name ?: $zielName));
                 $position = (int) $z->position;
 
-                app(HardstopResolveService::class)->entdrahte($team, $recipe->id, $id);
+                app(Pruefung\HardstopResolveService::class)->entdrahte($team, $recipe->id, $id);
                 $statistik['kritiker']['entdrahtet']++;
                 // Zähler ehrlich halten: die Zeile ist nicht mehr verdrahtet, sondern offen.
                 if ($wasSub) {
@@ -918,7 +918,7 @@ class RecipeGeneratorService
                 $position = (int) $z->position;
                 $zielGpId = (int) $z->gp_id;
 
-                app(HardstopResolveService::class)->entdrahte($team, (int) $recipe->id, (int) $z->id);
+                app(Pruefung\HardstopResolveService::class)->entdrahte($team, (int) $recipe->id, (int) $z->id);
                 $statistik['diaet']['entdrahtet']++;
                 $statistik['bestand_gp'] = max(0, (int) ($statistik['bestand_gp'] ?? 0) - 1);
                 $statistik['offen'] = (int) ($statistik['offen'] ?? 0) + 1;

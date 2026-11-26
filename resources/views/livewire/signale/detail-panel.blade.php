@@ -222,7 +222,7 @@
                                 @if($art)<span class="shrink-0 fa-t-muted">{{ $art }}</span>@endif
 
                                 {{-- „Was noch?" gilt für jedes auflösbare Objekt (SignalObjectService::KINDS). --}}
-                                @if(in_array($it['kind'], \Platform\FoodAlchemist\Services\SignalObjectService::KINDS, true))
+                                @if(in_array($it['kind'], \Platform\FoodAlchemist\Services\Pruefung\SignalObjectService::KINDS, true))
                                     <x-fa::button variant="ghost" size="sm" icon="heroicon-m-bell-alert" wire:click="objektWaehlen('{{ $it['kind'] }}', {{ $it['id'] }})"
                                                   aria-expanded="{{ $istGewaehlt ? 'true' : 'false' }}" title="Alle offenen Signale an diesem Objekt"
                                                   data-signal-objekt="{{ $it['kind'] }}-{{ $it['id'] }}">Weitere Befunde</x-fa::button>

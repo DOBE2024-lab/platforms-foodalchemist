@@ -39,7 +39,7 @@ class FassungSignalService
     /** EU-Allergene in der Schreibweise des Hauses. */
     private const ALLERGENE = \Platform\FoodAlchemist\Support\Allergene::KURZ;
 
-    public function __construct(private readonly \Platform\FoodAlchemist\Services\SignalService $signale, private readonly FassungsVergleich $vergleich) {}
+    public function __construct(private readonly \Platform\FoodAlchemist\Services\Pruefung\SignalService $signale, private readonly FassungsVergleich $vergleich) {}
 
     /**
      * Nach dem Veröffentlichen: Info-Signale für die Mandanten mit der neuen Fassung in der Hülle, Aktions-Signale für Teams mit eingefrorenen Angeboten.

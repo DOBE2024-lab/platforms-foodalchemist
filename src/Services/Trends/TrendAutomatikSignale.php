@@ -7,13 +7,13 @@ use Platform\FoodAlchemist\Enums\SignalSeverity;
 use Platform\FoodAlchemist\Enums\SignalTyp;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrend;
 use Platform\FoodAlchemist\Models\FoodAlchemistTrendQuelle;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 use Platform\FoodAlchemist\Services\Trend\TrendQuellenService;
 use Platform\FoodAlchemist\Services\Trend\TrendThemenService;
 use Platform\FoodAlchemist\Support\TrendVokabular as V;
 
 /**
- * Spec 93 C · Signale des Trendradars, eingehängt in {@see \Platform\FoodAlchemist\Services\SignalDetektorService::laufen()}.
+ * Spec 93 C · Signale des Trendradars, eingehängt in {@see \Platform\FoodAlchemist\Services\Pruefung\SignalDetektorService::laufen()}.
  * Je Team und Ereignis ein Signal (dedup_key), jedes schließt sich selbst, sobald der Zustand weg ist:
  *
  * - Ereignisse der Automatik (neuer Hype/Trend, Hype wird Trend, aufs Radar) an eigenen Trends — bis ein Mensch den Trend

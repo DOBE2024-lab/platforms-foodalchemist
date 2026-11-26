@@ -6,7 +6,7 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Services\QualityRunService;
+use Platform\FoodAlchemist\Services\Pruefung\QualityRunService;
 
 /**
  * „Ampel neu messen" über MCP — der Detektor-Lauf eines Teams, asynchron.

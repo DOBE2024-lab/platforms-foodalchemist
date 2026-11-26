@@ -3,7 +3,7 @@
 namespace Platform\FoodAlchemist\Livewire\Concerns;
 
 use Illuminate\Support\Facades\Auth;
-use Platform\FoodAlchemist\Services\HardstopResolveService;
+use Platform\FoodAlchemist\Services\Pruefung\HardstopResolveService;
 use Platform\FoodAlchemist\Services\RecipeService;
 
 /**

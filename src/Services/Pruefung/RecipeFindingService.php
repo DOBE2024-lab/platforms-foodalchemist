@@ -1,6 +1,6 @@
 <?php
 
-namespace Platform\FoodAlchemist\Services;
+namespace Platform\FoodAlchemist\Services\Pruefung;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -58,8 +58,8 @@ class RecipeFindingService
     public const PASS_BAUART = 'bauart';
 
     private const PAESSE = [
-        self::PASS_COPILOT => ['arten' => RecipeReviewService::ARTEN_COPILOT, 'stempel' => 'ai_reviewed_at'],
-        self::PASS_BAUART => ['arten' => RecipeReviewService::ARTEN_STRUKTUR, 'stempel' => 'structure_reviewed_at'],
+        self::PASS_COPILOT => ['arten' => \Platform\FoodAlchemist\Services\RecipeReviewService::ARTEN_COPILOT, 'stempel' => 'ai_reviewed_at'],
+        self::PASS_BAUART => ['arten' => \Platform\FoodAlchemist\Services\RecipeReviewService::ARTEN_STRUKTUR, 'stempel' => 'structure_reviewed_at'],
     ];
 
     /** Rezepte, deren Prüfung fällig ist: nie geprüft oder seit der Prüfung angefasst. */
@@ -90,8 +90,8 @@ class RecipeFindingService
     public function pruefeUndAblegen(Team $team, int $recipeId, ?int $runId = null, string $pass = self::PASS_COPILOT): array
     {
         $ergebnis = $pass === self::PASS_BAUART
-            ? app(RecipeBauartService::class)->pruefe($team, $recipeId)
-            : app(RecipeReviewService::class)->pruefe($team, $recipeId);
+            ? app(\Platform\FoodAlchemist\Services\RecipeBauartService::class)->pruefe($team, $recipeId)
+            : app(\Platform\FoodAlchemist\Services\RecipeReviewService::class)->pruefe($team, $recipeId);
 
         return $this->speichere($team, $recipeId, $ergebnis['befunde'], $runId, $pass);
     }
@@ -285,7 +285,7 @@ class RecipeFindingService
         // in jedem Lauf anders, jeder Lauf ergäbe einen neuen Fingerprint, eine neue
         // Zeile und ein wiederauferstehendes Signal trotz „Lass das so". Die Art
         // allein ist der Schlüssel: es gibt je Rezept genau einen solchen Befund.
-        if (in_array($art, RecipeReviewService::ARTEN_STRUKTUR, true)) {
+        if (in_array($art, \Platform\FoodAlchemist\Services\RecipeReviewService::ARTEN_STRUKTUR, true)) {
             return sha1($art . '|rezept');
         }
         $ziel = ($befund['zutat_id'] ?? null) !== null

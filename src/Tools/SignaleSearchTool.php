@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\FoodAlchemist\Enums\SignalTyp;
-use Platform\FoodAlchemist\Services\SignalService;
+use Platform\FoodAlchemist\Services\Pruefung\SignalService;
 
 /** Phase C: Signale (Daten-/Preis-/Margen-Alerts) durchsuchen. */
 class SignaleSearchTool extends FoodAlchemistTool implements ToolContract, ToolMetadataContract

@@ -576,7 +576,7 @@ it('L7b-2: das Kohärenz-Urteil läuft auch dann, wenn es NICHTS anzureichern gi
 
     // Das Urteil ist gecacht (GL-10-Cache, keine zweite Wahrheit) und frisch.
     expect(\Platform\FoodAlchemist\Models\FoodAlchemistRecipeCulinaryCoherence::where('recipe_id', $vk->id)->count())->toBe(1)
-        ->and(app(\Platform\FoodAlchemist\Services\CoherenceService::class)->status($this->rootTeam, $vk->id)['stale'])->toBeFalse();
+        ->and(app(\Platform\FoodAlchemist\Services\Pruefung\CoherenceService::class)->status($this->rootTeam, $vk->id)['stale'])->toBeFalse();
 });
 
 it('L7b-2: ein Basisrezept bekommt kein Teller-Urteil — und bezahlt dafür auch keinen Call', function () {

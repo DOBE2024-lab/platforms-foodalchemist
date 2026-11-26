@@ -188,7 +188,7 @@ it('Signal-Panel: zeigt den Artikel als Betroffenen, Freigeben direkt im Signal 
     app(NaehrwertSignalService::class)->laufen($this->rootTeam);
     $sig = FoodAlchemistSignal::where('dedup_key', 'nw-la-' . $this->mazola->id)->firstOrFail();
 
-    $res = app(\Platform\FoodAlchemist\Services\SignalObjectService::class)->betroffene($this->rootTeam, $sig);
+    $res = app(\Platform\FoodAlchemist\Services\Pruefung\SignalObjectService::class)->betroffene($this->rootTeam, $sig);
     expect($res['items'])->toHaveCount(1)->and($res['items'][0])->toMatchArray(['kind' => 'la', 'id' => $this->mazola->id, 'hinweis' => 'Hanos']);
 
     Livewire::test(\Platform\FoodAlchemist\Livewire\Signale\DetailPanel::class)->call('zeige', $sig->id)

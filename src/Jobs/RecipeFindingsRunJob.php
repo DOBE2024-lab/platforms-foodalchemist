@@ -12,7 +12,7 @@ use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistBulkRun;
 use Platform\FoodAlchemist\Services\Ai\KiExternLauf;
 use Platform\FoodAlchemist\Services\Ai\KiExternWiederholbar;
-use Platform\FoodAlchemist\Services\RecipeFindingsBatchService;
+use Platform\FoodAlchemist\Services\Pruefung\RecipeFindingsBatchService;
 
 /**
  * „KI-Befunde sammeln" asynchron — der Copilot-Batch über die fällige Arbeitsmenge.

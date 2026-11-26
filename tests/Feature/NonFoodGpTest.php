@@ -3,7 +3,7 @@
 use Platform\FoodAlchemist\Exceptions\NonFoodAlsZutatException;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\Conformance\ConformanceService;
-use Platform\FoodAlchemist\Services\DataQualityService;
+use Platform\FoodAlchemist\Services\Pruefung\DataQualityService;
 use Platform\FoodAlchemist\Services\GpAggregateService;
 use Platform\FoodAlchemist\Services\GpNamingService;
 use Platform\FoodAlchemist\Services\GpService;

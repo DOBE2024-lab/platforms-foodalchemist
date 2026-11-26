@@ -32,14 +32,23 @@ final class StueckOhneGewicht
 
     public const LABEL = 'Grundprodukte in Rezepten mit Stück- oder Zähl-Einheit ohne Gewicht';
 
+    /** Für DataQualityService::METRIK_LABELS (gleiche Bauart wie Einkauf\LaBeschaffungsLagen). */
+    public const LABELS = [self::KEY => self::LABEL];
+
     /**
-     * Register-Eintrag für DataQualityService (gleiche Bauart wie die Tranchen dort: Label und Prädikat).
+     * Register-Eintrag für DataQualityService::queryFor (kind gp): Label und Prädikat, wie Einkauf\LaBeschaffungsLagen::checks.
      *
      * @return array<string, array{label: string, q: \Closure}>
      */
-    public static function checks(): array
+    public function checks(): array
     {
-        return [self::KEY => ['label' => self::LABEL, 'q' => fn (Team $t): Builder => self::gpOhneGewicht($t)]];
+        return [self::KEY => ['label' => self::LABEL, 'q' => fn (Team $t): Builder => $this->abfrage($t)]];
+    }
+
+    /** Die Abfrage der Pflegeliste — Zählung (DataQualityService::gp) und Liste (betroffene) nutzen dieselbe. */
+    public function abfrage(Team $team): Builder
+    {
+        return self::gpOhneGewicht($team);
     }
 
     /** GP (team-sichtbar), die in mindestens einer sichtbaren Rezeptzeile mit Zähl-Einheit ohne Gewichtsquelle stecken. */

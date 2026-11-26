@@ -40,7 +40,10 @@ beforeEach(function () {
     $this->linsen = ($this->gp)('Belugalinsen', 4.00);
 
     // Basisrezept mit 1 Ei ohne Stückgewicht
-    [$this->basis] = ($this->rezept)('eiersalat', 'Eiersalat', [[$this->linsen, 200]], ['is_sales_recipe' => false]);
+    // GrammaturWelt::rezept legt immer ein Gericht an (is_sales_recipe steht vor den Attributen) — hier ausdrücklich ein Basisrezept,
+    // sonst weist die Regel „Gericht nur aus Basisrezepten“ die GP-Zeilen ab und recipes.GET (Basis-Sicht) findet es nicht (CI 23.11.)
+    [$this->basis] = ($this->rezept)('eiersalat', 'Eiersalat', [[$this->linsen, 200]]);
+    $this->basis->update(['is_sales_recipe' => false]);
     $this->eiZeile = $this->basis->ingredients()->create(['team_id' => $t, 'position' => 9, 'gp_id' => $this->ei->id, 'raw_text' => 'Ei',
         'quantity' => 1, 'unit_vocab_id' => $this->stk->id, 'match_method' => 'manual']);
     app(RecipeRecomputeService::class)->recomputePipeline($this->basis->id);

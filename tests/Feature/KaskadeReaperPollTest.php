@@ -245,3 +245,49 @@ it('Zeitplan: Standard AUS (Kurator 26.11.), mit Schalter alle 15 min', function
         ->and($geplant(false))->toBeEmpty()
         ->and($geplant(true)->first()?->expression)->toBe('*/15 * * * *');
 });
+
+it('io 26.11. Lauf 62: abgelaufener KI-Auftrag mit generate-recipe-Key, daneben ein offener Auftrag eines anderen Schritts — der Sweep heilt mit Grund', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running', 'generator_run_id' => 'gen-2802']);
+    ($this->alt)($step, 60 * 24 * 10);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subDays(10)]);
+    ($this->auftrag)('generate-recipe:gen-2802', 'abgelaufen', now()->subDays(8));
+    // Schlüssel eines ANDEREN Schritts (recipe-plan:{team}:{Schritt-ID}, nicht Lauf-ID): hält nichts fest
+    ($this->auftrag)("recipe-plan:{$this->rootTeam->id}:" . ($step->id + 1000), 'offen', now()->addHours(3));
+
+    expect(app(KaskadenReaperSweep::class)->diagnose()[0]['grund'])->toBe('');
+    $r = app(KaskadenReaperSweep::class)->heile();
+
+    expect($r['geheilt'])->toBeGreaterThanOrEqual(1)
+        ->and($step->fresh()->status)->toBe('failed')
+        ->and($step->fresh()->error)->toContain('KI-Auftrag abgelaufen')
+        ->and($run->fresh()->status)->not->toBe('running');
+});
+
+it('hält ein offener KI-Auftrag den Schritt, sagt der Reaper es: Warnung mit Auftrags-ID, Dry-Run-Spalte „Hält fest“', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running', 'generator_run_id' => 'gen-offen']);
+    ($this->alt)($step, 90);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subMinutes(90)]);
+    ($this->auftrag)('generate-recipe:gen-offen', 'offen', now()->addHours(3));
+    $uuid = (string) DB::table('foodalchemist_ki_auftraege')->where('lauf_key', 'generate-recipe:gen-offen')->value('uuid');
+    Log::spy();
+
+    expect(($this->reaper)($run))->toBe(0)->and($step->fresh()->status)->toBe('running');
+    Log::shouldHaveReceived('warning')->withArgs(fn ($m) => str_contains((string) $m, "Lauf {$run->id} bleibt running")
+        && str_contains((string) $m, "Schritt {$step->id} (running) wartet auf offenen KI-Auftrag {$uuid}"));
+    expect(app(KaskadenReaperSweep::class)->diagnose()[0])->toMatchArray(['ki_offen' => 1])
+        ->and(app(KaskadenReaperSweep::class)->diagnose()[0]['grund'])->toContain($uuid);
+});
+
+it('recipe-plan-Schlüssel gehört zur SCHRITT-ID: ein offener recipe-plan:{team}:{schritt} hält den Schritt (Warnung nennt ihn)', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running', 'generator_run_id' => 'gen-abgelaufen']);
+    ($this->alt)($step, 60 * 24);
+    ($this->auftrag)('generate-recipe:gen-abgelaufen', 'abgelaufen', now()->subDays(1));
+    ($this->auftrag)("recipe-plan:{$this->rootTeam->id}:{$step->id}", 'offen', now()->addHours(3));
+    Log::spy();
+
+    expect(($this->reaper)($run))->toBe(0)->and($step->fresh()->status)->toBe('running');
+    Log::shouldHaveReceived('warning')->withArgs(fn ($m) => str_contains((string) $m, "Schritt {$step->id} (running) wartet auf offenen KI-Auftrag"));
+});

@@ -651,6 +651,13 @@ class PlanningCascadeService
                 $geheilt++;
             }
         }
+        // io 26.11. (Lauf 62): Poll lief, Log leer, Lauf blieb `running`. Hält ein offener KI-Auftrag fest oder ist kein Grund erkennbar, steht das jetzt im Log.
+        if ($geheilt === 0 && $run->fresh()?->status === 'running') {
+            $gruende = self::warumHaengt($run->steps()->get(), $kiWartend, $grenze);
+            if ($gruende === [] || array_filter($gruende, fn ($g) => str_contains($g, 'KI-Auftrag')) !== []) {
+                \Illuminate\Support\Facades\Log::warning("Kaskade-Reaper: Lauf {$run->id} bleibt running: " . ($gruende !== [] ? implode('; ', $gruende) : 'kein verwaister Schritt erkannt'));
+            }
+        }
 
         return $geheilt;
     }

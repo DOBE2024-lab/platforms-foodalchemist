@@ -51,9 +51,9 @@ class KaskadeReaperCommand extends Command
 
                 return self::SUCCESS;
             }
-            $this->table(['Lauf', 'Team', 'Session', 'Status', 'still (min)', 'Schritte', 'Anreicherung', 'Phasen', 'KI offen'],
+            $this->table(['Lauf', 'Team', 'Session', 'Status', 'still (min)', 'Schritte', 'Anreicherung', 'Phasen', 'KI offen', 'Hält fest'],
                 array_map(fn ($z) => [$z['run_id'], $z['team_id'], $z['session_id'] ?? '–', $z['status'], $z['still_min'], $z['schritte'],
-                    $z['anreicherung'] !== '' ? $z['anreicherung'] : '–', $z['phasen'], $z['ki_offen']], $zeilen));
+                    $z['anreicherung'] !== '' ? $z['anreicherung'] : '–', $z['phasen'], $z['ki_offen'], $z['grund'] !== '' ? $z['grund'] : '–'], $zeilen));
             $this->line(count($zeilen) . ' Kandidaten (Trockenlauf, nichts geschrieben).');
 
             return self::SUCCESS;

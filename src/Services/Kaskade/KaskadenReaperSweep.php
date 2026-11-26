@@ -58,7 +58,7 @@ final class KaskadenReaperSweep
     /**
      * Lesende Diagnose je Kandidat: warum er hängt (Schritt-Status, Anreicherung, Phasen, offene KI-Aufträge). Schreibt nichts.
      *
-     * @return list<array{run_id: int, team_id: int, session_id: ?int, status: string, still_min: int, schritte: string, anreicherung: string, phasen: int, ki_offen: int}>
+     * @return list<array{run_id: int, team_id: int, session_id: ?int, status: string, still_min: int, schritte: string, anreicherung: string, phasen: int, ki_offen: int, grund: string}>
      */
     public function diagnose(?Team $team = null): array
     {
@@ -72,7 +72,8 @@ final class KaskadenReaperSweep
                 'status' => (string) $r->status, 'still_min' => (int) $r->updated_at?->diffInMinutes(now()),
                 'schritte' => $steps->countBy('status')->map(fn ($n, $st) => "{$st}:{$n}")->implode(' '),
                 'anreicherung' => $anreicherung->map(fn ($n, $st) => "{$st}:{$n}")->implode(' '),
-                'phasen' => $steps->whereNotNull('phase')->count(), 'ki_offen' => count($svc->kiWartend($steps))];
+                'phasen' => $steps->whereNotNull('phase')->count(), 'ki_offen' => count($ki = $svc->kiWartend($steps)),
+                'grund' => implode('; ', PlanningCascadeService::warumHaengt($steps, $ki, now()->subMinutes(PlanningCascadeService::VERWAIST_NACH_MINUTEN)))];
         })->values()->all();
     }
 

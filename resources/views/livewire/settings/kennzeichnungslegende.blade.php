@@ -2,15 +2,12 @@
     @if($meldung)<x-fa::signal tone="ok">{{ $meldung }}</x-fa::signal>@endif
     @error('codes')<x-fa::signal tone="crit">{{ $message }}</x-fa::signal>@enderror
     <form wire:submit="speichern" class="flex flex-col gap-4">
-        <label class="inline-flex items-center gap-2">
-            <input type="checkbox" wire:model="aktiv" class="w-4 h-4 rounded accent-[var(--fa-accent)]" />
-            Eigene Teamlegende verwenden
-        </label>
-        <p class="text-[length:var(--fa-text-sm)] text-[var(--fa-ink-2)]">Wähle ein Kürzel, um es mit dem bisherigen Eintrag zu tauschen. Ein Stern kennzeichnet weiterhin Spuren.</p>
+        <x-fa::checkbox wire:model="aktiv">Eigene Teamlegende verwenden</x-fa::checkbox>
+        <p class="fa-t-muted">Wähle ein Kürzel, um es mit dem bisherigen Eintrag zu tauschen. Ein Stern kennzeichnet weiterhin Spuren.</p>
         <div class="grid gap-4 lg:grid-cols-2">
             @foreach(['allergene' => 'Allergene', 'zusatzstoffe' => 'Zusatzstoffe'] as $gruppe => $titel)
                 <x-fa::section variant="plain" :title="$titel">
-                    <table class="fa-table fa-table--compact">
+                    <x-fa::table compact>
                         <thead><tr><th>{{ $titel }}</th><th>Standard</th><th>Team</th></tr></thead>
                         <tbody>
                             @foreach($standardCodes[$gruppe] as $slug => $standard)
@@ -28,7 +25,7 @@
                                 </tr>
                             @endforeach
                         </tbody>
-                    </table>
+                    </x-fa::table>
                 </x-fa::section>
             @endforeach
         </div>

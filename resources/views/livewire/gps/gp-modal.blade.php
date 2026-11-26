@@ -685,7 +685,7 @@
                                             @svg('heroicon-m-x-mark', 'w-3.5 h-3.5')
                                         </button>
                                     </x-fa::badge>
-                                    <x-foodalchemist::gp-anker-staerke :anker="$a" />
+                                    <x-fa::gp-anker-staerke :anker="$a" />
                                 </div>
                             @empty
                                 <p class="fa-t-muted" @if($gpAnkerNeutral ?? false) data-gp-anker-neutral @endif>{{ ($gpAnkerNeutral ?? false) ? 'Geprüft: kein Aroma-Träger (neutral), kein Anker.' : 'Noch kein Aroma-Anker gesetzt.' }}</p>

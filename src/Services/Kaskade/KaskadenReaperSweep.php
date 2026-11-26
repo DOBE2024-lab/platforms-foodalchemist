@@ -84,7 +84,7 @@ final class KaskadenReaperSweep
      * @param  list<int>  $ausser  schon geprüfte Läufe (Board-Poll)
      * @return array{geprueft: int, geheilt: int, weiter_running: list<int>, fehler: list<int>}
      */
-    public function heile(?Team $team = null, string $quelle = 'Zeitplan', array $ausser = []): array
+    public function heile(?Team $team = null, string $quelle = 'Befehl', array $ausser = []): array
     {
         $svc = app(PlanningCascadeService::class);
         $ergebnis = ['geprueft' => 0, 'geheilt' => 0, 'weiter_running' => [], 'fehler' => []];

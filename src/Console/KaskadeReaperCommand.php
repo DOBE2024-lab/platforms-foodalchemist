@@ -18,13 +18,14 @@ class KaskadeReaperCommand extends Command
 {
     protected $signature = 'foodalchemist:kaskade-reaper
         {--team= : nur Läufe dieses Teams (Besitzer-Team-ID)}
-        {--dry-run : nur anzeigen, was hängt und warum (schreibt nichts)}';
+        {--dry-run : nur anzeigen, was hängt und warum (schreibt nichts)}
+        {--zeitplan : Aufruf aus dem Scheduler (nur für die Quelle in der Log-Zeile; setzt nur planen())}';
 
     protected $description = 'Hängende Kaskaden-Läufe heilen (Reaper über alle Teams, unabhängig vom Board)';
 
     public static function planen(\Illuminate\Console\Scheduling\Schedule $schedule): void
     {
-        $schedule->command(self::class)
+        $schedule->command(self::class, ['--zeitplan'])
             ->everyFifteenMinutes()
             ->withoutOverlapping()
             ->onOneServer()
@@ -59,7 +60,8 @@ class KaskadeReaperCommand extends Command
             return self::SUCCESS;
         }
 
-        $r = $sweep->heile($team);
+        // Quelle in der Summenzeile (io 26.11.: der Handstart meldete „Zeitplan“): Handstart = „Befehl“, nur der Scheduler setzt --zeitplan.
+        $r = $sweep->heile($team, $this->option('zeitplan') ? 'Zeitplan' : 'Befehl');
         $this->line("{$r['geprueft']} Läufe geprüft, {$r['geheilt']} Heilungen"
             . ($r['weiter_running'] !== [] ? '; weiter running: ' . implode(', ', $r['weiter_running']) : '')
             . ($r['fehler'] !== [] ? '; Fehler bei: ' . implode(', ', $r['fehler']) : ''));

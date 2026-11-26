@@ -68,3 +68,58 @@ it('Paket mit vollständigem EK bleibt ohne Merker', function () {
     expect($c['hat_ek_luecke'])->toBeFalse()->and($c['zeilen'][0]['ek_unvollstaendig'] ?? false)->toBeFalse()
         ->and(app(ConcepterAggregateService::class)->conceptAggregat($k->fresh())['ek_vollstaendig'])->toBeTrue();
 });
+
+it('Messtest: die Paket-Lücke kostet keine Abfragen je Paket (Cache-Merker ek_incomplete, wie price_incomplete)', function () {
+    $abfragen = function (int $n): array {
+        $k = $this->makeConcept($this->t, "K$n");
+        for ($i = 0; $i < $n; $i++) {
+            $p = $this->makeConcept($this->t, "P$n-$i", ['kind' => 'paket']);
+            $this->makeConceptSlot($p, ['sales_recipe_id' => $this->mitEk->id, 'quantity' => 1]);
+            $this->makeConceptSlot($p, ['sales_recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 2]);
+            $this->konzepte->recomputeCache($p->fresh());
+            $this->makeConceptSlot($k, ['type' => 'paket', 'embedded_concept_id' => $p->id, 'position' => $i]);
+        }
+        $frisch = $k->fresh();
+        \Illuminate\Support\Facades\DB::flushQueryLog();
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+        $c = $this->konzepte->preisCockpit($frisch, null, $this->t);
+        $anzahl = count(\Illuminate\Support\Facades\DB::getQueryLog());
+        \Illuminate\Support\Facades\DB::disableQueryLog();
+
+        return [$anzahl, $c['hat_ek_luecke']];
+    };
+    [$eins, $lueckeEins] = $abfragen(1);
+    [$vier, $lueckeVier] = $abfragen(4);
+
+    expect($vier)->toBe($eins)->and($lueckeEins)->toBeTrue()->and($lueckeVier)->toBeTrue()
+        ->and($this->paket->fresh()->ek_incomplete)->toBeTrue();
+});
+
+it('Altbestand ohne Merker (ek_incomplete null): das Cockpit rechnet die Lücke live nach', function () {
+    \Platform\FoodAlchemist\Models\FoodAlchemistConcept::whereKey($this->paket->id)->update(['ek_incomplete' => null]);
+
+    expect($this->konzepte->preisCockpit($this->konzept->fresh(), null, $this->t)['hat_ek_luecke'])->toBeTrue();
+});
+
+it('Foodbook und Angebot: concept_ref mit Paket-Lücke ist EK-unvollständig (Zeile und Kapitel)', function () {
+    $fbKap = $this->makeChapter($this->makeFoodbook($this->t, 'Foodbook', ['status' => 'entwurf']));
+    $fbBlock = $this->makeFoodbookBlock($fbKap, ['type' => 'concept_ref', 'concept_id' => $this->konzept->id]);
+    $angebot = app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotService::class)->create($this->t, ['name' => 'Angebot']);
+    $agKap = \Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter::create(['team_id' => $this->t->id, 'offer_id' => $angebot->id, 'title' => 'K', 'position' => 0]);
+    $agBlock = \Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock::create(['team_id' => $this->t->id, 'chapter_id' => $agKap->id, 'type' => 'concept_ref', 'concept_id' => $this->konzept->id, 'position' => 0, 'visible' => true]);
+    $off = app(\Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService::class);
+    $fbAgg = app(\Platform\FoodAlchemist\Services\Foodbook\FoodbookAggregat::class);
+
+    expect($fbAgg->blockPreis($fbBlock->fresh(), null, null, $this->t)['ek_vollstaendig'])->toBeFalse()
+        ->and($off->blockPreis($agBlock->fresh(), null, $this->t)['ek_vollstaendig'])->toBeFalse()
+        ->and($fbAgg->kapitelAggregat($this->t, $fbKap->fresh())['ek_vollstaendig'])->toBeFalse()
+        ->and($off->kapitelAggregat($this->t, $agKap->fresh())['ek_vollstaendig'])->toBeFalse();
+});
+
+it('Oberfläche (B): Concepter-Detail und Editor-Kopf zeigen den EK mit Merker „unvollständig“, den Wareneinsatz als „offen“', function () {
+    $text = fn ($lw) => preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($lw->html())));   // gerenderter Text (die Aufruf-Antwort ist JSON mit „\/“)
+    expect($text(\Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\DetailPanel::class)->call('zeige', 'concepts', $this->konzept->id)))
+        ->toMatch('/EK\/Person 0,80 € ?unvollständig/u');
+    expect($text(\Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\Editor::class)->call('oeffnen', 'concepts', $this->konzept->id)))
+        ->toMatch('/Wareneinsatz je Person 0,80 € ?unvollständig/u')->toMatch('/Wareneinsatz offen/u');
+});

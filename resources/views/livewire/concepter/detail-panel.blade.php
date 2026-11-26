@@ -28,7 +28,9 @@
             $proPerson !== null
                 ? ['label' => $istPaket ? 'Paketpreis / Person' : '€/Person', 'value' => number_format((float) $proPerson, 2, ',', '.') . ' €', 'primary' => true, 'kpi' => 'preis']
                 : ['label' => $istPaket ? 'Paketpreis / Person' : '€/Person', 'value' => 'Preis fehlt', 'tone' => 'crit', 'kpi' => 'preis'],
-            ['label' => 'EK/Person', 'value' => $aggregat !== null ? number_format((float) $aggregat['ek_per_person'], 2, ',', '.') . ' €' : '–', 'kpi' => 'ek'],
+            ['label' => 'EK/Person', 'value' => $aggregat !== null ? number_format((float) $aggregat['ek_per_person'], 2, ',', '.') . ' €' : '–', 'kpi' => 'ek',
+                // wie VK „vorläufig“: Teilsumme der bekannten EK, ≥1 Gericht (auch im Paket) ohne EK
+                'hint' => ! empty($cockpit['hat_ek_luecke']) ? 'unvollständig' : null, 'hint_title' => 'Summe der bekannten Einkaufspreise: mindestens einem Gericht fehlt der EK'],
             ['label' => 'Arbeitszeit', 'value' => $aggregat !== null ? $aggregat['work_time_min'] . ' min' : '–', 'kpi' => 'arbeitszeit'],
         ];
 

@@ -54,7 +54,8 @@ class FoodAlchemistConcept extends Model
         // M10R-1: VK-Parität + KI-Brief + Aggregat-Caches
         'target_price_per_person' => 'decimal:2',
         'ek_per_person_cache' => 'decimal:4',
-        'price_incomplete' => 'boolean',   // CQ price_incomplete: Cache-Preis = Summe der bekannten Positionen; null = noch nicht berechnet
+        'price_incomplete' => 'boolean',
+        'ek_incomplete' => 'boolean',   // EK-Cache = Summe der bekannten Positionen (≥1 Gericht ohne EK, auch im Paket); null = noch nicht berechnet   // CQ price_incomplete: Cache-Preis = Summe der bekannten Positionen; null = noch nicht berechnet
         'work_time_min_cache' => 'integer',
         'ai_confidence' => 'decimal:3',
         'price_calculated_at' => 'datetime',

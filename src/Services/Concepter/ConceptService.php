@@ -803,6 +803,8 @@ class ConceptService
             'work_time_min_cache' => $agg['work_time_min'],
             // Fassungs-Pfad: EK aus der Team-Kalkulation (der Aggregat-EK liest die leeren Master-Spalten der Fassung); unvollständig = null
             'ek_per_person_cache' => ($cockpit['quelle'] ?? null) === 'team_kalkulation' ? $cockpit['ek_per_person'] : $agg['ek_per_person'],
+            // Gegenstück zu price_incomplete: der EK-Cache ist eine Teilsumme (Unbekanntes nie als 0, auch durch Pakete) — einzige Schreibstelle
+            'ek_incomplete' => ($cockpit['quelle'] ?? null) === 'team_kalkulation' ? (bool) ($cockpit['hat_ek_luecke'] ?? false) : ! $agg['ek_vollstaendig'],
         ]);
         app(\Platform\FoodAlchemist\Services\Pruefung\PriceAuditService::class)->record(
             $concept, 'concept', $oldCalculated, $cockpit['summe_pro_person'] !== null ? (float) $cockpit['summe_pro_person'] : null,

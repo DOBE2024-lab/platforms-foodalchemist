@@ -83,6 +83,7 @@ final class FoodbookAggregat
             'ek_per_person' => round($ek, 2),
             'pauschal' => round($pauschal, 2), 'ek_pauschal' => round($ekPauschal, 2), 'wahl_spanne' => $spanne, 'wahl_gruppen' => $s['wahl_gruppen'],
             'food_cost_percent' => $vkFehlt ? null : MargeService::wareneinsatzPct($ek, $vk), 'vk_fehlt' => $vkFehlt,   // Food-Cost aus einer VK-Teilsumme wäre geschönt
+            'ek_vollstaendig' => $s['ek_vollstaendig'],   // false = EK ist eine Teilsumme (Gericht ohne EK, auch im Paket eines Konzepts)
         ];
     }
 

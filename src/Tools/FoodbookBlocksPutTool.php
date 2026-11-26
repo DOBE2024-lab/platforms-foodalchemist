@@ -6,7 +6,6 @@ use Platform\Core\Contracts\ToolContract;
 use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
-use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 
 /** MCP-Steuerbarkeit · D7: einen Foodbook-Block bearbeiten (Label/Text/Menge/Preis/Sichtbarkeit). */
@@ -55,12 +54,7 @@ class FoodbookBlocksPutTool extends FoodAlchemistTool implements ToolContract, T
         if (($guard = $this->guardFoodbookEditable($team, $this->foodbookVonBlock($team, $blockId))) !== null) {
             return $guard;
         }
-        // recipe_ref: nur sichtbares, echtes VK-Gericht (keine Slot-Variante) zulassen.
-        if (isset($in['sales_recipe_id']) && (int) $in['sales_recipe_id'] > 0
-            && ! FoodAlchemistRecipe::visibleToTeam($team)->where('is_sales_recipe', true)
-                ->whereNull('variant_source_recipe_id')->whereKey((int) $in['sales_recipe_id'])->exists()) {
-            return ToolResult::error('sales_recipe_id nicht sichtbar/kein VK-Gericht.', 'NOT_FOUND');
-        }
+        // recipe_ref: nur sichtbares, echtes VK-Gericht (keine Slot-Variante) — prüft der Dienst (BlockReferenz, 98 · 3.6 PR5), Code NOT_FOUND
 
         try {
             app(FoodbookService::class)->updateBlock($team, $blockId, $in);

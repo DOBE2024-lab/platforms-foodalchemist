@@ -466,7 +466,8 @@ class ConceptService
     public function fillSlot(Team $team, int $slotId, array $in): FoodAlchemistConceptSlot
     {
         $slot = $this->ownedSlot($team, $slotId);
-        $typ = app(ConceptSlotZielService::class)->pruefe($team, $slot, $in);   // 1.1c: Sicht (inkl. Abo-Fassungen), Kreis, Typ (ohne Typ: aus dem Rezept)
+        // 1.1c: Sicht (inkl. Abo-Fassungen), Kreis, Typ (ohne Typ: aus dem Rezept); 17.11.: nur wirksame Einheit — 98 · 3.6 PR5 über den Positions-Kern
+        $typ = \Platform\FoodAlchemist\Services\Position\PositionValidierung::slot($team, $slot, $in);
 
         if (! empty($in['embedded_concept_id'])) {
             // Kaskade: eingebettetes Paket = kind=paket-Concept (neuer Pfad, ersetzt package_id).
@@ -477,7 +478,6 @@ class ConceptService
                 'sales_recipe_id' => null, 'quantity' => null, 'unit_vocab_id' => null,
             ]);
         } elseif (! empty($in['sales_recipe_id'])) {
-            app(SlotEinheitService::class)->pruefeBelegung($team, $slot, (int) $in['sales_recipe_id'], isset($in['unit_vocab_id']) ? (int) $in['unit_vocab_id'] : null);   // 17.11.: nur wirksame Einheit
             $slot->update([
                 // B2: Gericht (VK) ODER Basisrezept — beide referenzieren sales_recipe_id, `type` unterscheidet.
                 'type' => $typ,
@@ -507,13 +507,7 @@ class ConceptService
     public function setSlotDarreichung(Team $team, int $slotId, ?int $darreichungId): FoodAlchemistConceptSlot
     {
         $slot = $this->ownedSlot($team, $slotId);
-        if ($darreichungId !== null) {
-            $gehoertZumGericht = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::whereKey($darreichungId)
-                ->where('recipe_id', $slot->sales_recipe_id)->exists();
-            if (! $gehoertZumGericht) {
-                throw new \RuntimeException('Darreichung gehört nicht zum Gericht dieser Position.');
-            }
-        }
+        \Platform\FoodAlchemist\Services\Position\PositionValidierung::darreichung($darreichungId, $slot->sales_recipe_id, 'dieser Position');
         $slot->update(['presentation_id' => $darreichungId]);
 
         return $slot->refresh();
@@ -524,7 +518,7 @@ class ConceptService
     {
         $slot = $this->ownedSlot($team, $slotId);
         // 17.11.: nur eine NEU gewählte Einheit muss rechnen; eine unveränderte Alt-Einheit bleibt speicherbar (Reife-Befund `einheit_unwirksam`)
-        app(SlotEinheitService::class)->pruefe($team, $slot, $einheitId && (int) $einheitId !== (int) $slot->unit_vocab_id ? (int) $einheitId : null);
+        \Platform\FoodAlchemist\Services\Position\PositionValidierung::slotEinheit($team, $slot, $einheitId ?: null);
         $slot->update(['quantity' => $quantity, 'unit_vocab_id' => $einheitId ?: null]);
         $this->refreshCache($slot->concept);
 

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Platform\Core\Models\Team;
 use Platform\FoodAlchemist\Models\FoodAlchemistConcept;
 use Platform\FoodAlchemist\Models\FoodAlchemistRecipe;
-use Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung;
 use Platform\FoodAlchemist\Models\FoodAlchemistVocabEinheit;
 use Platform\FoodAlchemist\Services\Position\PositionFehler;
 
@@ -37,12 +36,10 @@ final class BlockReferenz
         if ($typ === 'concept_ref' && $gesetzt('concept_id')) {
             self::concept($team, $wert('concept_id'));
         }
-        if (($daten['presentation_id'] ?? null) !== null && $daten['presentation_id'] !== '') {
-            $rid = $wert('sales_recipe_id');
-            if ($rid === null || ! FoodAlchemistRecipeDarreichung::whereKey((int) $daten['presentation_id'])->where('recipe_id', (int) $rid)->exists()) {
-                throw new PositionFehler('Darreichung gehört nicht zum Gericht dieses Blocks.');
-            }
+        if ($typ !== 'recipe_ref' && ($daten['sales_recipe_id'] ?? null) !== null && $daten['sales_recipe_id'] !== '') {
+            self::gericht($team, $daten['sales_recipe_id']);   // 98 · 3.6 PR5: wie zuvor die Vorab-Prüfung im MCP-Tool — ein gesetztes Gericht ist immer sichtbar
         }
+        \Platform\FoodAlchemist\Services\Position\PositionValidierung::darreichung($daten['presentation_id'] ?? null, $wert('sales_recipe_id'));
         if (($daten['unit_vocab_id'] ?? null) !== null && $daten['unit_vocab_id'] !== ''
             && ! Verweisziel::sichtbar(FoodAlchemistVocabEinheit::class, $team)->whereKey((int) $daten['unit_vocab_id'])->exists()) {
             throw new PositionFehler("Einheit {$daten['unit_vocab_id']} ist nicht sichtbar/vorhanden.", 'NOT_FOUND');

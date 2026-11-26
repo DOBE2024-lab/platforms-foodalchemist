@@ -291,3 +291,36 @@ it('recipe-plan-Schlüssel gehört zur SCHRITT-ID: ein offener recipe-plan:{team
     expect(($this->reaper)($run))->toBe(0)->and($step->fresh()->status)->toBe('running');
     Log::shouldHaveReceived('warning')->withArgs(fn ($m) => str_contains((string) $m, "Schritt {$step->id} (running) wartet auf offenen KI-Auftrag"));
 });
+
+it('io 26.11. Lauf 62 exakt: 1 Schritt running, ref NULL, generator_run_id, 2802 abgelaufen, 2801 verbraucht — der Board-Poll heilt ohne Mock', function (string $status2802) {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running', 'generator_run_id' => '50cbfdac-test', 'ref_type' => null, 'ref_id' => null]);
+    ($this->alt)($step, 60 * 24 * 13);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subDays(13)]);
+    ($this->auftrag)('generate-recipe:50cbfdac-test', $status2802, now()->subDays(12));   // 2802 recipe.generator
+    ($this->auftrag)("recipe-plan:{$this->rootTeam->id}:{$step->id}", 'verbraucht', now()->subDays(12));   // 2801 recipe.komponenten_plan
+    Log::spy();
+
+    $board = Livewire::test(LaufStatus::class, ['laufIds' => [$run->id], 'neueBeobachten' => true, 'takt' => '3s']);
+    expect($board->get('aktuellerTakt'))->toBe('60s');   // wie auf io: der Poll läuft im 60-s-Takt
+    $board->call('pruefen');
+
+    expect($step->fresh()->status)->toBe('failed')
+        ->and($step->fresh()->error)->toContain('KI-Auftrag abgelaufen')
+        ->and($run->fresh()->status)->toBe('failed');
+    Log::shouldHaveReceived('info')->withArgs(fn ($m) => str_contains((string) $m, "Kaskade-Reaper: Lauf {$run->id}, Schritt {$step->id}"));
+})->with(['Status abgelaufen' => 'abgelaufen', 'Status offen, Datum vorbei' => 'offen']);
+
+it('Poll: ein Fehler in der Cache-Sperre bricht den Poll nicht, er landet als Kaskade-Reaper-Warnung im Log', function () {
+    $run = ($this->lauf)();
+    $step = ($this->schritt)($run, ['status' => 'running']);
+    ($this->alt)($step, 50);
+    DB::table('foodalchemist_cascade_runs')->where('id', $run->id)->update(['updated_at' => now()->subMinutes(50)]);
+    \Illuminate\Support\Facades\Cache::partialMock()->shouldReceive('add')->andThrow(new RuntimeException('Cache-Store weg'));
+    Log::spy();
+
+    Livewire::test(LaufStatus::class, ['laufIds' => [$run->id], 'neueBeobachten' => true, 'takt' => '3s'])
+        ->call('pruefen')->assertSet('aktuellerTakt', '60s');
+
+    Log::shouldHaveReceived('warning')->withArgs(fn ($m) => str_contains((string) $m, 'Kaskade-Reaper aus dem Poll') && str_contains((string) $m, 'Cache-Store weg'));
+});

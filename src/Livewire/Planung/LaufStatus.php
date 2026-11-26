@@ -148,11 +148,16 @@ class LaufStatus extends Component
         $n = 0;
         $selbst = [];
         foreach ($this->stillJeLauf as $runId => $sek) {
-            if ($sek < self::STILL_60S || ! Cache::add('fa:kaskade-reaper:' . $runId, 1, self::HEILEN_SPERRE_SEK)) {
+            if ($sek < self::STILL_60S) {
                 continue;
             }
-            $selbst[] = (int) $runId;
+            // Auch die Cache-Sperre steht im try (io 26.11., Lauf 62): ein Fehler im Cache-Store brach sonst den ganzen Poll-Request,
+            // ohne dass „Kaskade-Reaper“ im Log stand.
             try {
+                if (! Cache::add('fa:kaskade-reaper:' . $runId, 1, self::HEILEN_SPERRE_SEK)) {
+                    continue;
+                }
+                $selbst[] = (int) $runId;
                 $n += app(PlanningCascadeService::class)->reapeVerwaisteSteps($team, (int) $runId);
             } catch (\Throwable $e) {
                 Log::warning("Kaskade-Reaper aus dem Poll fehlgeschlagen (Lauf {$runId}): {$e->getMessage()}");
@@ -161,9 +166,11 @@ class LaufStatus extends Component
         // io 26.11.: Das Board beobachtet nur den jüngsten Lauf je Session. Ältere Läufe, Läufe ohne Session und Läufe, die gar nicht
         // auf dem Board stehen, heilt der Team-Sweep — nur wenn der Poll selbst schon Stillstand sieht (60-s-Stufe, sonst bleibt der Poll
         // schlank), höchstens alle HEILEN_SPERRE_SEK je Team, nur eigene Läufe des Teams und ohne die eben schon geprüften.
-        if (max($this->stillJeLauf ?: [0]) >= self::STILL_60S && Cache::add('fa:kaskade-reaper-team:' . $team->id, 1, self::HEILEN_SPERRE_SEK)) {
+        if (max($this->stillJeLauf ?: [0]) >= self::STILL_60S) {
             try {
-                $n += app(KaskadenReaperSweep::class)->heile($team, 'Board-Poll', $selbst)['geheilt'];
+                if (Cache::add('fa:kaskade-reaper-team:' . $team->id, 1, self::HEILEN_SPERRE_SEK)) {
+                    $n += app(KaskadenReaperSweep::class)->heile($team, 'Board-Poll', $selbst)['geheilt'];
+                }
             } catch (\Throwable $e) {
                 Log::warning("Kaskade-Reaper (Board-Poll, Team {$team->id}) fehlgeschlagen: {$e->getMessage()}");
             }

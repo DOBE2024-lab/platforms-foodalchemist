@@ -20,6 +20,10 @@ interface ConformanceAdapter
      */
     public function artifactType(): string;
 
+    /** PR11: weitere Schlüssel, unter denen die Prüf-Registry diesen Adapter findet (`vk`, `grundprodukt` …). Leer = nur artifactType().
+     *  @return list<string> */
+    public function aliase(): array;
+
     /**
      * Ob dieser Artefakt-Typ eine autonome Selbstheil-Runde beherrscht. true =
      * {@see self::revise} korrigiert wirklich (Rezept/VK via recipe.ueberarbeiten);

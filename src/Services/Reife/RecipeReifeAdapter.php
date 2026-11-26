@@ -61,6 +61,11 @@ class RecipeReifeAdapter implements ReifeAdapter
         return 'recipe';
     }
 
+    public function aliase(): array
+    {
+        return ['basisrezept', 'sales_recipe', 'vk', 'gericht'];
+    }
+
     public function messe(Team $team, int $id): ?array
     {
         $r = FoodAlchemistRecipe::visibleToTeam($team)->find($id);

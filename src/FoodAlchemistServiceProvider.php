@@ -219,6 +219,12 @@ class FoodAlchemistServiceProvider extends ServiceProvider
         $this->app->bind(\Platform\FoodAlchemist\Services\Websuche\WebSucheTransport::class, \Platform\FoodAlchemist\Services\Websuche\CoreWebSucheTransport::class);
         // Produktdaten-Quellen fuer den Produktpass-Panel: die Websuche haengt als Quelle websuche im Tag (Knopf Im Web recherchieren)
         $this->app->tag([\Platform\FoodAlchemist\Services\Einkauf\ArtikelWebRecherche::class], 'produktdaten.quellen');
+        // PR11 (98): Prüf-Registry — Reife- und Conformance-Adapter je Art EINMAL hier; getaggt und an Pruefung\PruefRegistry übergeben (Auswahl je Artefakt-Typ)
+        $reifeAdapter = [\Platform\FoodAlchemist\Services\Reife\RecipeReifeAdapter::class, \Platform\FoodAlchemist\Services\Reife\ConceptReifeAdapter::class, \Platform\FoodAlchemist\Services\Reife\FormatReifeAdapter::class, \Platform\FoodAlchemist\Services\Reife\FoodbookReifeAdapter::class, \Platform\FoodAlchemist\Services\Reife\SpeisekarteReifeAdapter::class, \Platform\FoodAlchemist\Services\Reife\SpeiseplanReifeAdapter::class, \Platform\FoodAlchemist\Services\Reife\AngebotReifeAdapter::class];
+        $conformanceAdapter = [\Platform\FoodAlchemist\Services\Conformance\RecipeConformanceAdapter::class, \Platform\FoodAlchemist\Services\Conformance\GpConformanceAdapter::class, \Platform\FoodAlchemist\Services\Conformance\LaConformanceAdapter::class];
+        $this->app->tag($reifeAdapter, \Platform\FoodAlchemist\Services\Pruefung\PruefRegistry::TAG_REIFE);
+        $this->app->tag($conformanceAdapter, \Platform\FoodAlchemist\Services\Pruefung\PruefRegistry::TAG_CONFORMANCE);
+        $this->app->singleton(\Platform\FoodAlchemist\Services\Pruefung\PruefRegistry::class, fn ($app) => new \Platform\FoodAlchemist\Services\Pruefung\PruefRegistry($app, $reifeAdapter, $conformanceAdapter));
 
         // M7-10 / D8: STT-Fassade — Binding-Tausch genügt für einen späteren Core-Contract
         // STT-Treiber: 'auto' nimmt den Dienst, für den ein Zugang existiert. Der

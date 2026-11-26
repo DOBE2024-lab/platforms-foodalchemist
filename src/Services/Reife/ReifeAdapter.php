@@ -26,6 +26,10 @@ interface ReifeAdapter
     /** Stabiler Domänen-Schlüssel für die Ablage/Anzeige (z. B. "recipe", "sales_recipe"). */
     public function artifactType(): string;
 
+    /** PR11: weitere Schlüssel, unter denen die Prüf-Registry diesen Adapter findet (`vk`, `gericht` … → Rezept). Leer = nur artifactType().
+     *  @return list<string> */
+    public function aliase(): array;
+
     /**
      * Die Messung für EIN Artefakt.
      *

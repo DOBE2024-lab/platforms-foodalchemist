@@ -21,6 +21,11 @@ class LaConformanceAdapter implements ConformanceAdapter
         return 'la';
     }
 
+    public function aliase(): array
+    {
+        return ['lieferantenartikel'];
+    }
+
     public function unterstuetztHeilung(): bool
     {
         return false;

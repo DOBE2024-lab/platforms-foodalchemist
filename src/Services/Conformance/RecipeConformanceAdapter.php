@@ -25,6 +25,11 @@ class RecipeConformanceAdapter implements ConformanceAdapter
         return 'recipe';                                              // Basisrezept UND VK — dieselbe Tabelle
     }
 
+    public function aliase(): array
+    {
+        return ['basisrezept', 'vk', 'gericht'];
+    }
+
     public function unterstuetztHeilung(): bool
     {
         return true;                                                 // Freitext-Revise via recipe.ueberarbeiten

@@ -57,9 +57,9 @@ class EigenproduktionService
             if ($portion !== null && (float) $portion > 0) {
                 return round((float) $portion, 6);
             }
-            $n = (float) ($r->sales_unit_count ?? 0);
-
-            return $ek > 0 && $n > 0 ? round($ek / $n, 6) : null;
+            // 98 · 3.5-6a (Dominique 27.11. „Ja, wie fest 1“): ohne Portions-EK der Darreichung ist der EK des Gerichts der Preis
+            // je Portion — das Gericht ist eine Portion. Vorher ÷ sales_unit_count, bei leerer Zahl gar kein Preis.
+            return $ek > 0 ? round($ek, 6) : null;
         }
         if ($r->istStueckErtrag()) {
             $n = (float) ($r->yield_pieces ?? 0);

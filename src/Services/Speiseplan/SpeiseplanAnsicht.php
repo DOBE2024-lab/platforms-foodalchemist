@@ -112,12 +112,11 @@ final class SpeiseplanAnsicht
 
             // EK JE PORTION: ek_portion der geltenden Darreichung. `ek_total_eur` ist der Ansatz
             // (alle Portionen) — bis 2026-10-07 stand er hier ungeteilt und blähte WE-% und EK/Gast auf.
-            // Fallback ohne Darreichung: Ansatz ÷ Portionen, ohne Portionszahl = eine Portion —
-            // dieselbe Konvention wie DarreichungService::recomputePreise (gemessen 2026-10-07:
-            // 950 von 950 Gerichten ohne sales_unit_count, bei 837 ist Portions-EK = Ansatz-EK).
+            // Fallback ohne Darreichung: das Gericht ist EINE Portion (98 · 3.5-6a B, Modell 23.11.: Portionszahl am
+            // Gericht fest 1), also Ansatz-EK = Portions-EK. Vorher Ansatz ÷ sales_unit_count (Spiegelfeld, fällt in 6c weg).
             $ek = $dar?->ek_portion !== null
                 ? (float) $dar->ek_portion
-                : (float) ($e->dish->ek_total_eur ?? 0) / max(1, (int) ($e->dish->sales_unit_count ?? 1));
+                : (float) ($e->dish->ek_total_eur ?? 0);
 
             return ['vk' => (float) $vk, 'ek' => $ek];
         }
@@ -352,12 +351,15 @@ final class SpeiseplanAnsicht
         if ($dar !== null && (float) ($dar->quantity_per_unit_g ?? 0) > 0) {
             return round((float) $dar->quantity_per_unit_g * $anzahl, 1);
         }
+        // 98 · 3.5-6a: „Rezept-Grammatur“ = Grammatur der Standard-Darreichung, nicht mehr der Spiegel sales_quantity_per_unit_g am Rezept.
+        $resolver = app(DarreichungResolver::class);
+        $standardG = fn ($g): float => (float) ($resolver->standardFuer($g)?->quantity_per_unit_g ?? 0);
         $dish = $e->dish;
         if ($dish === null) {
-            return $gerichte->sum(fn ($g) => (float) ($g->sales_quantity_per_unit_g ?? 0)) ?: null;
+            return $gerichte->sum($standardG) ?: null;
         }
-        if ((float) ($dish->sales_quantity_per_unit_g ?? 0) > 0) {
-            return round((float) $dish->sales_quantity_per_unit_g * $anzahl, 1);
+        if (($g = $standardG($dish)) > 0) {
+            return round($g * $anzahl, 1);
         }
         if ($dish->yield_kg === null || (float) $dish->yield_kg <= 0) {
             return null;
@@ -365,10 +367,10 @@ final class SpeiseplanAnsicht
         if ($dar !== null) {
             // Nur die Standard-Form fällt auf den Ertrag zurück (wie recomputePreise); andere Formen
             // ohne Grammatur haben auch keinen Portions-EK.
-            return $dar->is_standard ? round((float) $dish->yield_kg * 1000 / max(1, (int) ($dish->sales_unit_count ?? 0)) * $anzahl, 1) : null;
+            return $dar->is_standard ? round((float) $dish->yield_kg * 1000 * $anzahl, 1) : null;   // 3.5-6a B: Gericht = eine Portion
         }
-        // Ohne Form: dieselbe Konvention wie der EK — Ansatz ÷ Portionen, ohne Portionszahl eine Portion.
-        return round((float) $dish->yield_kg * 1000 / max(1, (int) ($dish->sales_unit_count ?? 0)), 1);
+        // Ohne Form: dieselbe Konvention wie der EK — das Gericht ist eine Portion (3.5-6a B), Ertrag = Portionsgewicht.
+        return round((float) $dish->yield_kg * 1000, 1);
     }
 
     /**

@@ -120,11 +120,11 @@ it('Speiseplan: Eintrag gibt seine Darreichung an die Produktion', function () {
     expect($kg['Kartoffeln'])->toBe(12.5)->and($kg['Speck'])->toBe(2.5);
 });
 
-it('Form ohne Grammatur rechnet wie bisher über die Portionszahl (keine stille Änderung)', function () {
+it('Form ohne Grammatur: eine Portion je Ansatz, sales_unit_count zählt nicht mehr (98 · 3.5-6a B, Dominique 27.11. „fest 1“)', function () {
     $this->teller->update(['quantity_per_unit_g' => null]);
     $this->gericht->update(['sales_unit_count' => 4]);
     $b = $this->blatt->produktionsblattFuerZiele($this->rootTeam, [['recipe_id' => $this->gericht->id, 'portions' => 40]]);
-    expect(($this->gpKg)($b)['Kartoffeln'])->toBe(10.0);          // 40 ÷ 4 = 10 Ansätze
+    expect(($this->gpKg)($b)['Kartoffeln'])->toBe(40.0);          // 40 Portionen = 40 Ansätze; vorher 40 ÷ sales_unit_count 4 = 10
 });
 
 it('Produktions-Editor: händisches Gericht-Ziel mit Darreichung, zwei Formen = zwei Ziele', function () {

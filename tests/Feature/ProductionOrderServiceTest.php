@@ -62,17 +62,17 @@ beforeEach(function () {
 
     $this->kuchen = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'kuchen', 'name' => 'DES: Kuchen',
-        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.50, 'sales_unit_count' => 10,
+        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.50,
     ]);
-    $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 1000, 'unit_vocab_id' => $this->g->id]);
-    $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 1, 'referenced_recipe_id' => $this->sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 150, 'unit_vocab_id' => $this->g->id]);
+    $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 100, 'unit_vocab_id' => $this->g->id]);
+    $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 1, 'referenced_recipe_id' => $this->sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 15, 'unit_vocab_id' => $this->g->id]);
 
     $this->tarte = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'tarte', 'name' => 'DES: Tarte',
-        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.00, 'sales_unit_count' => 10,
+        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.00,
     ]);
-    $this->tarte->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 1000, 'unit_vocab_id' => $this->g->id]);
-    $this->tarte->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 1, 'referenced_recipe_id' => $this->sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 100, 'unit_vocab_id' => $this->g->id]);
+    $this->tarte->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 100, 'unit_vocab_id' => $this->g->id]);
+    $this->tarte->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 1, 'referenced_recipe_id' => $this->sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 10, 'unit_vocab_id' => $this->g->id]);
 
     $rc = app(RecipeRecomputeService::class);
     $rc->recomputePipeline($this->sauce->id);
@@ -135,7 +135,7 @@ it('Erneutes Hinzufügen desselben source_ref ersetzt statt verdoppelt', functio
 
     expect($order->targets)->toHaveCount(1)
         ->and((float) $order->targets[0]['portions'])->toBe(50.0)
-        ->and((float) $order->lines()->where('recipe_id', $this->kuchen->id)->first()->ansaetze)->toBe(5.0); // 50÷10, nicht 15
+        ->and((float) $order->lines()->where('recipe_id', $this->kuchen->id)->first()->ansaetze)->toBe(50.0); // 50 Portionen = 50 Ansätze (98 · 3.5-6a B: Gericht = eine Portion je Ansatz), nicht 150
 });
 
 it('Status-Guard: planned→in_progress friert Snapshot ein, illegale Übergänge werfen', function () {

@@ -174,7 +174,7 @@ final class SpeiseplanErnaehrung
             $dish = FoodAlchemistRecipe::find($e->recipe_id);
             $gerichte = $dish ? collect([$dish]) : collect();
         } elseif ($e->concept_id !== null) {
-            $c = FoodAlchemistConcept::with(['slots.dish'])->find($e->concept_id);
+            $c = FoodAlchemistConcept::with(['slots.dish', 'slots.dish.standardPresentation'])->find($e->concept_id);   // Standard-Grammatur ohne Query je Gericht (98 · 3.5-6a)
             if ($c !== null) {
                 foreach ($c->slots as $slot) {
                     if ($slot->dish) {

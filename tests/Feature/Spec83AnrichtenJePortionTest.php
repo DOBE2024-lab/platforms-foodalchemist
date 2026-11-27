@@ -66,13 +66,13 @@ it('Gepflegte Zeit pro Menge am Gericht gewinnt immer (Portion und auch kg)', fu
         ->and($k['variable_minutes'])->toBe(38.16);                               // 0,8 × 47,7 kg
 });
 
-it('sales_unit_count leer → 1 Portion je Ansatz; gesetzt → Portionen je Ansatz wie bisher', function () {
+it('Gericht = 1 Portion je Ansatz, auch wenn sales_unit_count noch gesetzt ist (98 · 3.5-6a B)', function () {
     $leer = $this->times->calculateForBatches($this->rootTeam, $this->gericht->fresh(), 12);
     expect($leer['variable_quantity'])->toBe(12.0);
 
     $this->gericht->update(['sales_unit_count' => 10]);
     $zehn = $this->times->calculateForBatches($this->rootTeam, $this->gericht->fresh(), 3);
-    expect($zehn['variable_quantity'])->toBe(30.0)->and($zehn['variable_minutes'])->toBe(17.5);   // 30 × 35 s
+    expect($zehn['variable_quantity'])->toBe(3.0)->and($zehn['variable_minutes'])->toBe(1.75);   // 3 × 35 s; vorher 30 (3 × 10)
 });
 
 it('Optionale und qs-Zeilen sind keine Teller-Komponenten; Basisrezepte bekommen keine Ableitung', function () {

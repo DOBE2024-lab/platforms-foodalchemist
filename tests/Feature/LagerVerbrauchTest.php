@@ -50,9 +50,9 @@ beforeEach(function () {
     $this->sauce = FoodAlchemistRecipe::create(['team_id' => $t, 'recipe_key' => 'vanillesauce', 'name' => 'Vanillesauce', 'status' => 'approved', 'is_sales_recipe' => false, 'yield_kg' => 1.0]);
     $this->sauce->ingredients()->create(['team_id' => $t, 'position' => 0, 'gp_id' => $this->zucker->id, 'raw_text' => 'Zucker', 'quantity' => 500, 'unit_vocab_id' => $g->id]);
     $this->sauce->ingredients()->create(['team_id' => $t, 'position' => 1, 'gp_id' => $this->butter->id, 'raw_text' => 'Butter', 'quantity' => 500, 'unit_vocab_id' => $g->id]);
-    $this->kuchen = FoodAlchemistRecipe::create(['team_id' => $t, 'recipe_key' => 'kuchen', 'name' => 'DES: Kuchen', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.5, 'sales_unit_count' => 10]);
-    $this->kuchen->ingredients()->create(['team_id' => $t, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 1000, 'unit_vocab_id' => $g->id]);
-    $this->kuchen->ingredients()->create(['team_id' => $t, 'position' => 1, 'referenced_recipe_id' => $this->sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 150, 'unit_vocab_id' => $g->id]);
+    $this->kuchen = FoodAlchemistRecipe::create(['team_id' => $t, 'recipe_key' => 'kuchen', 'name' => 'DES: Kuchen', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.5]);   // 98 · 3.5-6a B: Gericht = eine Portion (vorher Ansatz für 10 Portionen, Mengen ÷ 10)
+    $this->kuchen->ingredients()->create(['team_id' => $t, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 100, 'unit_vocab_id' => $g->id]);
+    $this->kuchen->ingredients()->create(['team_id' => $t, 'position' => 1, 'referenced_recipe_id' => $this->sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 15, 'unit_vocab_id' => $g->id]);
     $rc = app(RecipeRecomputeService::class);
     $rc->recomputePipeline($this->sauce->id);
     $rc->recomputePipeline($this->kuchen->id);

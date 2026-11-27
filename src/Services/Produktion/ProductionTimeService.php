@@ -72,12 +72,9 @@ class ProductionTimeService
         $batches = max(0.0, $rawBatches);
         $yieldKg = (float) ($recipe->yield_kg_manual ?? $recipe->yield_kg ?? 0);
         $yieldPieces = (float) ($recipe->yield_pieces ?? 0);
-        // Spec 83 B3: am Gericht ohne sales_unit_count gilt 1 Ansatz = 1 Portion — wie in Planungsblatt/Darreichung,
-        // die Gerichts-Ansätze ohnehin als Portionen ÷ max(1, sales_unit_count) rechnen.
-        $portionsPerBatch = (float) ($recipe->sales_unit_count ?? 0);
-        if ($portionsPerBatch <= 0 && $recipe->is_sales_recipe) {
-            $portionsPerBatch = 1.0;
-        }
+        // Spec 83 B3 / 98 · 3.5-6a B: am Gericht gilt 1 Ansatz = 1 Portion (Portionszahl fest 1); ein Basisrezept hat keine
+        // Portions-Menge (vorher las es sales_unit_count, das Spiegelfeld fällt in 6c weg).
+        $portionsPerBatch = $recipe->is_sales_recipe ? 1.0 : 0.0;
         $quantities = [
             'kg' => $yieldKg > 0 ? $batches * $yieldKg : null,
             'piece' => $yieldPieces > 0 ? $batches * $yieldPieces : null,
@@ -220,7 +217,7 @@ class ProductionTimeService
      */
     public function anrichten(Team $team, FoodAlchemistRecipe $gericht, ?array $formen, ?float $ansaetze, array $zeitJeMenge): array
     {
-        $ppb = (float) ($gericht->sales_unit_count ?? 0) > 0 ? (float) $gericht->sales_unit_count : 1.0;
+        $ppb = 1.0;   // 98 · 3.5-6a B: Gericht = eine Portion je Ansatz (vorher sales_unit_count)
         $warnungen = [];
         $alle = $gericht->exists ? $gericht->presentations()->with('servingForm')->get() : collect();
         if ($formen === null) {

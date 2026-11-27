@@ -62,25 +62,25 @@ beforeEach(function () {
     // VK-Gericht Kuchen (10 Portionen/Batch) = 1000 g Mehl + 150 g Vanillesauce
     $this->kuchen = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'kuchen', 'name' => 'DES: Kuchen',
-        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.50, 'sales_unit_count' => 10,
+        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.50,
         'preparation' => 'Mehl mit Vanillesauce verrühren und backen.',
     ]);
-    $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 1000, 'unit_vocab_id' => $this->g->id]);
-    $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 1, 'referenced_recipe_id' => $this->sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 150, 'unit_vocab_id' => $this->g->id]);
+    $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 100, 'unit_vocab_id' => $this->g->id]);
+    $this->kuchen->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 1, 'referenced_recipe_id' => $this->sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 15, 'unit_vocab_id' => $this->g->id]);
 
     $rc = app(RecipeRecomputeService::class);
     $rc->recomputePipeline($this->sauce->id);
     $rc->recomputePipeline($this->kuchen->id);
 });
 
-it('Produktionsblatt: Top-Gericht linear (10 Ansätze), Basisrezept auf ganze Ansätze gerundet (1,5 → 2)', function () {
+it('Produktionsblatt: Top-Gericht linear (100 Ansätze zu je 1 Portion), Basisrezept auf ganze Ansätze gerundet (1,5 → 2)', function () {
     $blatt = $this->svc->produktionsblatt($this->rootTeam, ['recipe_id' => $this->kuchen->id, 'portions' => 100]);
 
     $rez = collect($blatt['rezepte'])->keyBy('name');
-    // Kuchen: 100 Portionen ÷ 10 = 10 Ansätze (linear, VK).
-    expect($rez['DES: Kuchen']['ansaetze'])->toBe(10.0)
+    // Kuchen: 100 Portionen = 100 Ansätze (98 · 3.5-6a B: Gericht = eine Portion je Ansatz; vorher ÷ 10). Mengen unverändert: das Fixture ist auf 1 Portion skaliert.
+    expect($rez['DES: Kuchen']['ansaetze'])->toBe(100.0)
         ->and($rez['DES: Kuchen']['ist_basisrezept'])->toBeFalse();
-    // Vanillesauce: 150 g × 10 = 1500 g Bedarf ÷ 1000 g Basis = 1,5 → aufgerundet 2 GANZE Ansätze.
+    // Vanillesauce: 15 g × 100 = 1500 g Bedarf ÷ 1000 g Basis = 1,5 → aufgerundet 2 GANZE Ansätze.
     expect($rez['Vanillesauce']['benoetigt_ansaetze'])->toBe(1.5)
         ->and($rez['Vanillesauce']['ansaetze'])->toBe(2)
         ->and($rez['Vanillesauce']['ist_basisrezept'])->toBeTrue()
@@ -124,10 +124,10 @@ it('Konzept + Personen: Portions-Äquivalent × Pax → Batches', function () {
     $slot = $this->concepts->fillSlot($this->rootTeam, $slot->id, ['recipe_id' => $this->kuchen->id]);
     $slot->update(['quantity' => 1, 'unit_vocab_id' => $this->portion->id]); // 1 Portion pro Person
 
-    // 20 Personen × 1 Portion ÷ 10 Portionen/Batch = 2 Ansätze Kuchen → Mehl 2000 g.
+    // 20 Personen × 1 Portion = 20 Ansätze Kuchen (98 · 3.5-6a B: Gericht = eine Portion je Ansatz) → Mehl 2000 g.
     $blatt = $this->svc->produktionsblatt($this->rootTeam, ['concept_id' => $concept->id, 'persons' => 20]);
     $rez = collect($blatt['rezepte'])->keyBy('name');
-    expect($rez['DES: Kuchen']['ansaetze'])->toBe(2.0);
+    expect($rez['DES: Kuchen']['ansaetze'])->toBe(20.0);
     $gp = collect($blatt['gp_bedarf'])->keyBy('name');
     expect($gp['Mehl']['menge_kg'])->toBe(2.0)->and($gp['Mehl']['ek_eur'])->toBe(4.0);
 });
@@ -153,9 +153,9 @@ it('Spec 18: produktionsblattFuerZiele() aggregiert mehrere Ziele VOR der Ansät
     ]);
     $rez = collect($blatt['rezepte'])->keyBy('name');
 
-    // 2×20 Portionen = 40 ÷ 10 = 4 Ansätze Kuchen (linear, VOR Rundung zusammengeführt).
-    expect($rez['DES: Kuchen']['ansaetze'])->toBe(4.0);
-    // Sauce-Bedarf 150g×4=600g ÷ 1000g = 0,6 → GEMEINSAM gerundet auf 1 Ansatz (nicht 1+1=2).
+    // 2×20 Portionen = 40 Ansätze Kuchen (linear, VOR Rundung zusammengeführt; 98 · 3.5-6a B: Gericht = eine Portion je Ansatz).
+    expect($rez['DES: Kuchen']['ansaetze'])->toBe(40.0);
+    // Sauce-Bedarf 15g×40=600g ÷ 1000g = 0,6 → GEMEINSAM gerundet auf 1 Ansatz (nicht 1+1=2).
     expect($rez['Vanillesauce']['benoetigt_ansaetze'])->toBe(0.6)
         ->and($rez['Vanillesauce']['ansaetze'])->toBe(1);
 });
@@ -170,11 +170,11 @@ it('P1b Kapitel-Ziel: recipe_ref (Default 1 Portion/Person) + concept_ref, heade
     $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'header_frei', 'label' => 'Nur Deko']);   // muss übersprungen werden
     $fb->addBlock($this->rootTeam, $kap->id, ['type' => 'text', 'customer_text' => 'Blabla']);      // dito
 
-    // 20 Personen × 1 Portion ÷ 10 Portionen/Batch = 2 Ansätze Kuchen → Mehl 2 kg.
+    // 20 Personen × 1 Portion = 20 Ansätze Kuchen (98 · 3.5-6a B: Gericht = eine Portion je Ansatz) → Mehl 2 kg.
     $blatt = $this->svc->produktionsblatt($this->rootTeam, ['chapter_id' => $kap->id, 'persons' => 20]);
     $rez = collect($blatt['rezepte'])->keyBy('name');
     expect($rez)->toHaveCount(2)                                       // nur Kuchen + Vanillesauce, keine Deko/Text-Zeile
-        ->and($rez['DES: Kuchen']['ansaetze'])->toBe(2.0);
+        ->and($rez['DES: Kuchen']['ansaetze'])->toBe(20.0);
     $gp = collect($blatt['gp_bedarf'])->keyBy('name');
     expect($gp['Mehl']['menge_kg'])->toBe(2.0);
 });
@@ -192,16 +192,16 @@ it('P1b Kapitel-Ziel: concept_ref-Block läuft über konzeptTops()', function ()
 
     $blatt = $this->svc->produktionsblatt($this->rootTeam, ['chapter_id' => $kap->id, 'persons' => 20]);
     $rez = collect($blatt['rezepte'])->keyBy('name');
-    expect($rez['DES: Kuchen']['ansaetze'])->toBe(2.0);
+    expect($rez['DES: Kuchen']['ansaetze'])->toBe(20.0);   // 98 · 3.5-6a B: Gericht = eine Portion je Ansatz
 });
 
 it('P1b Kapitel-Ziel: Wahl-Gruppe — Default = erster Block, variant_choices wählt gezielt', function () {
     // Zweites VK-Gericht „Torte" (5 Portionen/Batch), damit die Varianten unterscheidbar sind.
     $torte = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'torte', 'name' => 'DES: Torte',
-        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 4.0, 'sales_unit_count' => 5,
+        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 4.0,
     ]);
-    $torte->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 800, 'unit_vocab_id' => $this->g->id]);
+    $torte->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 160, 'unit_vocab_id' => $this->g->id]);
     app(RecipeRecomputeService::class)->recomputePipeline($torte->id);
 
     $fb = app(FoodbookService::class);
@@ -218,11 +218,11 @@ it('P1b Kapitel-Ziel: Wahl-Gruppe — Default = erster Block, variant_choices w�
     expect($rezD->has('DES: Kuchen'))->toBeTrue()
         ->and($rezD->has('DES: Torte'))->toBeFalse();
 
-    // Gewählte Variante Torte → 10 P. ÷ 5 = 2 Ansätze Torte, kein Kuchen.
+    // Gewählte Variante Torte → 10 P. = 10 Ansätze Torte (98 · 3.5-6a B: Gericht = eine Portion je Ansatz; vorher ÷ 5), kein Kuchen.
     $gewaehlt = $this->svc->produktionsblatt($this->rootTeam, ['chapter_id' => $kap->id, 'persons' => 10, 'variant_choices' => [$gid => $b->id]]);
     $rezG = collect($gewaehlt['rezepte'])->keyBy('name');
     expect($rezG->has('DES: Torte'))->toBeTrue()
-        ->and($rezG['DES: Torte']['ansaetze'])->toBe(2.0)
+        ->and($rezG['DES: Torte']['ansaetze'])->toBe(10.0)
         ->and($rezG->has('DES: Kuchen'))->toBeFalse();
 });
 
@@ -288,7 +288,7 @@ it('P1b MCP: produktionsblatt.GET akzeptiert chapter_id + persons (Kapitel-Scope
     $res = $registry->get('foodalchemist.produktionsblatt.GET')
         ->execute(['chapter_id' => $kap->id, 'persons' => 20], $kontext);
     expect($res->success)->toBeTrue()
-        ->and(collect($res->data['rezepte'])->firstWhere('name', 'DES: Kuchen')['ansaetze'])->toBe(2.0);
+        ->and(collect($res->data['rezepte'])->firstWhere('name', 'DES: Kuchen')['ansaetze'])->toBe(20.0);   // 98 · 3.5-6a B: Gericht = eine Portion je Ansatz
 
     // Validierung: chapter_id + recipe_id zugleich → Fehler.
     $fehler = $registry->get('foodalchemist.produktionsblatt.GET')

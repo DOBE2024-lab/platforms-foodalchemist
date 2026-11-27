@@ -53,9 +53,9 @@ beforeEach(function () {
     $sauce = FoodAlchemistRecipe::create(['team_id' => $t, 'recipe_key' => 'vanillesauce', 'name' => 'Vanillesauce', 'status' => 'approved', 'is_sales_recipe' => false, 'yield_kg' => 1.0]);
     $sauce->ingredients()->create(['team_id' => $t, 'position' => 0, 'gp_id' => $this->zucker->id, 'raw_text' => 'Zucker', 'quantity' => 500, 'unit_vocab_id' => $g->id]);
     $sauce->ingredients()->create(['team_id' => $t, 'position' => 1, 'gp_id' => $this->butter->id, 'raw_text' => 'Butter', 'quantity' => 500, 'unit_vocab_id' => $g->id]);
-    $this->kuchen = FoodAlchemistRecipe::create(['team_id' => $t, 'recipe_key' => 'kuchen', 'name' => 'DES: Kuchen', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.50, 'sales_unit_count' => 10]);
-    $this->kuchen->ingredients()->create(['team_id' => $t, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 1000, 'unit_vocab_id' => $g->id]);
-    $this->kuchen->ingredients()->create(['team_id' => $t, 'position' => 1, 'referenced_recipe_id' => $sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 150, 'unit_vocab_id' => $g->id]);
+    $this->kuchen = FoodAlchemistRecipe::create(['team_id' => $t, 'recipe_key' => 'kuchen', 'name' => 'DES: Kuchen', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.50]);
+    $this->kuchen->ingredients()->create(['team_id' => $t, 'position' => 0, 'gp_id' => $this->mehl->id, 'raw_text' => 'Mehl', 'quantity' => 100, 'unit_vocab_id' => $g->id]);
+    $this->kuchen->ingredients()->create(['team_id' => $t, 'position' => 1, 'referenced_recipe_id' => $sauce->id, 'raw_text' => 'Vanillesauce', 'quantity' => 15, 'unit_vocab_id' => $g->id]);
     $rc = app(RecipeRecomputeService::class);
     $rc->recomputePipeline($sauce->id);
     $rc->recomputePipeline($this->kuchen->id);
@@ -90,7 +90,7 @@ it('Vorschau und Anwenden laufen über die Bestellrunde: Musterproduktion + Grun
     $r = $this->svc->anwenden($this->rootTeam, $v->id, '2026-11-02', [$butter->id => 0], null, $this->user->id);
     expect($r['orders'])->toHaveCount(2);
     $hanos = FoodAlchemistOrder::whereHas('supplier', fn ($q) => $q->where('name', 'Hanos'))->first();
-    // 100 Portionen = 10 Ansätze × 150 g Sauce = 1,5 kg Sauce → 0,75 kg Butter → 1 Sack à 12 €.
+    // 100 Portionen = 100 Ansätze × 15 g Sauce = 1,5 kg Sauce (98 · 3.5-6a B: Gericht = eine Portion, Fixture skaliert) → 0,75 kg Butter → 1 Sack à 12 €.
     // Mit der (ausgelassenen) Butter-Position wären es 2 Säcke mehr.
     expect((float) $hanos->total_net)->toBe(12.0)
         ->and($hanos->desired_delivery_date->toDateString())->toBe('2026-11-02')

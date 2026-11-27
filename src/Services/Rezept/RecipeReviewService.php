@@ -176,7 +176,7 @@ class RecipeReviewService
             $kontext['speisen_klasse'] = $r->dishClass?->label;
             $kontext['diaetform'] = $r->dishClass?->diet_form;
             $kontext['portion_g'] = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($r)?->quantity_per_unit_g;   // 98 · 3.5-6a: Grammatur der Standard-Darreichung, nicht der Spiegel am Rezept
-            $kontext['verkaufseinheiten'] = $r->sales_unit_count;
+            // 98 · 3.5-6a: keine Verkaufseinheiten-Zahl mehr — ein Gericht ist eine Portion (Dominique 27.11. „fest 1“).
         } else {
             $kontext['ansatz_kg'] = $r->yield_kg_manual ?? $r->yield_kg;
             $kontext['ansatz_stueck'] = $r->yield_pieces;

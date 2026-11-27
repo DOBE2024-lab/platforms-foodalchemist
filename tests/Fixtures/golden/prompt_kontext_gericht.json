@@ -3,12 +3,10 @@
         "review": {
             "speisen_klasse": null,
             "diaetform": null,
-            "portion_g": 250.0,
-            "verkaufseinheiten": 3
+            "portion_g": 250.0
         },
         "konformitaet": {
-            "portion_g": 250.0,
-            "verkaufseinheiten": 3
+            "portion_g": 250.0
         },
         "revise": {
             "key": "vk.ueberarbeiten",
@@ -31,17 +29,15 @@
                 "darreichungen": [
                     "Teller"
                 ],
-                "verkaufseinheit": "3 ×",
+                "verkaufseinheit": "1 × Portion",
                 "portion_g": 250.0,
                 "aufschlagsklasse": null
             }
         },
         "schritte_oneshot": {
-            "anzahl": 3,
             "portion_g": 250.0
         },
         "schritte_editor": {
-            "anzahl": 3,
             "portion_g": 250.0
         }
     },
@@ -49,12 +45,10 @@
         "review": {
             "speisen_klasse": null,
             "diaetform": null,
-            "portion_g": 250.0,
-            "verkaufseinheiten": null
+            "portion_g": 250.0
         },
         "konformitaet": {
-            "portion_g": 250.0,
-            "verkaufseinheiten": null
+            "portion_g": 250.0
         },
         "revise": {
             "key": "vk.ueberarbeiten",
@@ -77,17 +71,15 @@
                 "darreichungen": [
                     "Teller"
                 ],
-                "verkaufseinheit": "Portion",
+                "verkaufseinheit": "1 × Portion",
                 "portion_g": 250.0,
                 "aufschlagsklasse": null
             }
         },
         "schritte_oneshot": {
-            "anzahl": null,
             "portion_g": 250.0
         },
         "schritte_editor": {
-            "anzahl": null,
             "portion_g": 250.0
         }
     },

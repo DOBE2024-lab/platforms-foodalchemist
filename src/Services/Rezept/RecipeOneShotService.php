@@ -743,7 +743,7 @@ class RecipeOneShotService
                 'raw_text' => $z->raw_text,
             ])->values()->all(),
             'verkaufseinheit' => $gericht ? [
-                'anzahl' => $recipe->sales_unit_count,
+                // 98 · 3.5-6a: keine Anzahl mehr — ein Gericht ist eine Portion (Dominique 27.11. „fest 1“).
                 'portion_g' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($recipe)?->quantity_per_unit_g,   // 98 · 3.5-6a: Grammatur der Standard-Darreichung
             ] : null,
             // Bestand der Ebene, die dieses Glied ersetzt (wie der Editor: StepEditor::stepKontext). Vorher ohne

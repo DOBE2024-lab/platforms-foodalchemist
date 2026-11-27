@@ -66,8 +66,8 @@ class ConceptService
                 // Menü-Ansicht: Paket-Gerichte mit Wording-Feldern (Wording-Kette)
                 // Kaskade: eingebettetes Paket = kind=paket-Concept (Preis + Posten für Anzeige)
                 'slots.embeddedConcept:id,name,kind,class,price_per_person_cache,ek_per_person_cache,price_incomplete,ek_incomplete',
-                'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard,ek_total_eur,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.embeddedConcept.slots.dish.standardPresentation',
-                'slots.dish:id,name,sales_wording_standard,ek_total_eur,dish_class_id,spec_is_vegan,spec_is_vegetarian,spec_is_gluten_free,spec_is_lactose_free,spec_is_halal,spec_contains_pork,spec_contains_beef,allergens_confidence,sales_unit_count', 'slots.dish.standardPresentation',
+                'slots.embeddedConcept.slots.dish:id,name,sales_wording_standard,ek_total_eur,spec_is_vegan,spec_is_vegetarian,spec_contains_pork,spec_contains_beef,allergens_confidence', 'slots.embeddedConcept.slots.dish.standardPresentation',
+                'slots.dish:id,name,sales_wording_standard,ek_total_eur,dish_class_id,spec_is_vegan,spec_is_vegetarian,spec_is_gluten_free,spec_is_lactose_free,spec_is_halal,spec_contains_pork,spec_contains_beef,allergens_confidence', 'slots.dish.standardPresentation',
                 // 2.1e: alle Formen je Gericht einmal (Resolver, Preis-Cockpit, Aggregat, Concepter-Aufbau) statt je Slot nachzufragen
                 'slots.dish.presentations' => fn ($q) => $q->with('servingForm')->orderByDesc('is_standard')->orderBy('id'),
                 'slots.dish.dishClass:id,label',
@@ -673,7 +673,7 @@ class ConceptService
             ->with(['slots' => fn ($q) => $q->orderBy('position'),
                 'slots.unit:id,slug,dimension,default_in_g',
                 'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete,ek_incomplete',
-                'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation'])
+                'slots.dish:id,name,ek_total_eur,yield_kg,yield_pieces', 'slots.dish.standardPresentation'])
             ->get();
 
         $map = [];

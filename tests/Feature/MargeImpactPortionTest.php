@@ -33,28 +33,28 @@ beforeEach(function () {
     $this->gp = $gp->refresh();
 });
 
-it('impactFuerGps rechnet marge% gegen den Portions-EK (ek_total / sales_unit_count), nicht den Batch-EK', function () {
+it('impactFuerGps rechnet marge% gegen den EK je Portion — das Gericht ist eine Portion, sales_unit_count teilt nicht (98 · 3.5 6a)', function () {
     $r = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'sup_impact_test', 'name' => '[SUP] Impact | Test',
         'status' => 'draft', 'is_sales_recipe' => true, 'sales_net' => 2.0, 'sales_unit_count' => 10,
     ]);
     FoodAlchemistRecipeIngredient::create([
         'team_id' => $this->rootTeam->id, 'recipe_id' => $r->id, 'position' => 1, 'raw_text' => 'Impact-Zutat',
-        'match_method' => 'manual', 'unit_vocab_id' => $this->g, 'quantity' => 1000, 'gp_id' => $this->gp->id,
+        'match_method' => 'manual', 'unit_vocab_id' => $this->g, 'quantity' => 100, 'gp_id' => $this->gp->id,
     ]);
     $this->svc->recomputePipeline($r->id);
     $r->refresh();
 
-    $ekBatch = (float) $r->ek_total_eur;
-    // Guard: Batch-EK > Portions-VK (sonst wäre die Skala-Unterscheidung nicht sichtbar).
-    expect($ekBatch)->toBeGreaterThan(2.0);
-    $ekPortion = $ekBatch / 10;
+    // Dominique 27.11. („Ja, fest 1“): Darreichung = Portion. Der Altbestand-Wert sales_unit_count = 10 bleibt stehen
+    // und darf NICHT teilen — 100 g zu 10 €/kg = 1 € EK je Portion gegen 2 € VK.
+    $ekPortion = (float) $r->ek_total_eur;
+    expect($ekPortion)->toBe(1.0);
 
     $impact = app(MargeImpactService::class)->impactFuerGps($this->rootTeam, [$this->gp->id], 1.5);
     expect($impact['top'])->not->toBeEmpty();
     $top = collect($impact['top'])->firstWhere('recipe_id', $r->id);
 
-    // marge% gegen PORTIONS-EK — mit Batch-EK (10) wäre marge_pct_ist negativ.
+    // marge% gegen den EK je Portion (geteilt durch 10 wären es 95 %).
     expect($top['marge_pct_ist'])->toBe(round((2.0 - $ekPortion) / 2.0 * 100, 1))
         ->and($top['marge_pct_ist'])->toBeGreaterThan(0.0)
         ->and($top['marge_delta_eur'])->toBe(round(-($ekPortion) * (1.5 - 1), 2)); // Pro-Portion-Delta

@@ -19,7 +19,7 @@ class MargeService
 {
     /**
      * VK-Vorschlag aus EK + Aufschlagsklasse (GL-02 §3.6, GT-8):
-     *   ek_basis  = ek_per_kg_eur × sales_quantity_per_unit_g / 1000
+     *   ek_basis  = ek_per_kg_eur × Portionsgewicht der Darreichung (quantity_per_unit_g) / 1000
      *   sales_net  = ek_basis × (1 + raw_markup_pct/100)        [aufschlag]
      *   sales_gross = ROUND(sales_net × (1 + mwst/100), 2)
      *

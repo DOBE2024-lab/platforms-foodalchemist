@@ -144,7 +144,7 @@ final class PositionPreisService
     {
         $faktor = $zeile->quantity !== null ? (float) $zeile->quantity : 1.0;
         $pauschal = $zeile->price_basis === 'pauschal';
-        $portionen = max(1, (int) ($dish->sales_unit_count ?? 1));
+        $portionen = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->portionenJeAnsatz($dish);   // 98 · 3.5 6a
 
         if ($mitFestpreisen && ($fp = $this->festpreise->gericht((int) $dish->id, null, $festpreise)) !== null) {
             // eingefroren: fester VK (fehlt er, weil der EK beim Einfrieren unvollständig war, bleibt er eine sichtbare Lücke)

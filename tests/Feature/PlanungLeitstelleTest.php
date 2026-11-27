@@ -1229,12 +1229,12 @@ it('Cockpit: Gericht-Step zeigt EK/VK/Marge-Kachel schon am Draft', function () 
     $ak = \Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass::create([
         'code' => 'ALC', 'label' => 'A la Carte', 'raw_markup_pct' => 420, 'vat_rate' => 19, 'formula_type' => 'aufschlag',
     ]);
-    // EK 2,50 € für den Ansatz (4 Portionen) + manueller VK 10,00 € je Portion → EK je Portion 0,625 €,
-    // Marge 93,8 % / Wareneinsatz 6,3 % (Spec 85: bis 19.10. stand hier 75,0/25,0 — Ansatz-EK gegen Portions-VK).
+    // EK 2,50 € + manueller VK 10,00 € je Portion → Marge 75,0 % / Wareneinsatz 25,0 %. 98 · 3.5 6a (Dominique 27.11.):
+    // Darreichung = Portion, der Altbestand-Teiler sales_unit_count (vorher 4 → 0,625 €, 93,8 %) teilt nicht mehr.
     $recipe = $this->makeRecipe($this->rootTeam, 'Marge-Gericht', [
         'is_sales_recipe' => true, 'status' => 'draft',
         'ek_total_eur' => 2.50, 'ek_per_kg_eur' => 5.00, 'sales_net' => 10.00,
-        'sales_quantity_per_unit_g' => 250, 'sales_unit_count' => 4,
+        'sales_quantity_per_unit_g' => 250,
         'markup_class_id' => $ak->id, 'vat_rate' => 19,
     ]);
     $session = app(PlanningSessionService::class)->create($this->rootTeam, ['title' => 'Marge']);
@@ -1248,8 +1248,8 @@ it('Cockpit: Gericht-Step zeigt EK/VK/Marge-Kachel schon am Draft', function () 
         ->assertSeeHtml('data-kalkulation="')
         ->assertSeeHtml('2,50')      // EK gesamt
         ->assertSeeHtml('10,00')     // VK netto
-        ->assertSeeHtml('93,8')      // Marge %
-        ->assertSeeHtml('6,3');      // Wareneinsatz %
+        ->assertSeeHtml('75,0')      // Marge %
+        ->assertSeeHtml('25,0');     // Wareneinsatz %
 });
 
 it('Cockpit: Concept-Step trägt KEINE Rezept-Marge-Kachel (Menü ≠ Rezept)', function () {
@@ -1293,12 +1293,12 @@ it('Cockpit: teil-unbepreistes Gericht wird trotz gesunder Marge als »EK teil-u
     $ak = \Platform\FoodAlchemist\Models\FoodAlchemistMarkupClass::create([
         'code' => 'ALC2', 'label' => 'A la Carte', 'raw_markup_pct' => 420, 'vat_rate' => 19, 'formula_type' => 'aufschlag',
     ]);
-    // EK 2,50 € da + hübsche Marge 93,8 % (EK je Portion, Spec 85) — ABER nur 2 von 3 Zutaten bepreist: die gezeigte
+    // EK 2,50 € da + Marge 75,0 % (EK je Portion = Gericht, 98 · 3.5 6a) — ABER nur 2 von 3 Zutaten bepreist: die gezeigte
     // Zahl unterschätzt den echten Wareneinsatz. Genau der still irreführende Fall.
     $recipe = $this->makeRecipe($this->rootTeam, 'Teil-Gericht', [
         'is_sales_recipe' => true, 'status' => 'draft',
         'ek_total_eur' => 2.50, 'ek_per_kg_eur' => 5.00, 'sales_net' => 10.00,
-        'sales_quantity_per_unit_g' => 250, 'sales_unit_count' => 4,
+        'sales_quantity_per_unit_g' => 250,
         'markup_class_id' => $ak->id, 'vat_rate' => 19,
         'ek_n_ingredients_total' => 3, 'ek_n_ingredients_priced' => 2,
     ]);
@@ -1312,7 +1312,7 @@ it('Cockpit: teil-unbepreistes Gericht wird trotz gesunder Marge als »EK teil-u
     Livewire::test(KaskadenLauf::class, ['laufId' => leitstelleLetzterLauf($session->id)])
         ->assertSeeHtml('EK teil-unbepreist')
         ->assertSeeHtml('Nur 2 von 3 Zutaten bepreist')  // Tooltip trägt die Zahlen
-        ->assertSeeHtml('93,8');                          // Marge steht daneben — kein elseif, beides sichtbar
+        ->assertSeeHtml('75,0');                          // Marge steht daneben — kein elseif, beides sichtbar
 });
 
 it('Cockpit: voll bepreistes Gericht (priced == total) trägt KEINEN teil-unbepreist-Marker', function () {

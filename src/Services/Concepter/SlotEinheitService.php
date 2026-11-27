@@ -53,7 +53,7 @@ class SlotEinheitService
             return true;
         }
         if (in_array($slug, self::MASSE, true)) {
-            $portionG = $dar?->quantity_per_unit_g ?? $dish->sales_quantity_per_unit_g ?? null;
+            $portionG = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->portionGramm($dish, $dar);   // 98 · 3.5 6a
 
             return ($unit->dimension ?? null) === 'mass' && (float) ($unit->default_in_g ?? 0) > 0
                 && $portionG !== null && (float) $portionG > 0;

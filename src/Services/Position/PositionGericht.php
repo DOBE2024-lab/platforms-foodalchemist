@@ -34,7 +34,7 @@ final class PositionGericht
             $vk = app(TeamVkService::class)->fuer($dish, $kostenTeam, $outlet, $dar)['vk'];
             $k = app(KostenCacheService::class)->fuer($dish, $kostenTeam);   // Spec 85: Team-EK des Ansatzes ÷ Portionen
             $ek = $k['quelle'] === 'rezept' ? app(DarreichungResolver::class)->ekProPortion($dish, $dar)   // eigenes Gericht: B1
-                : ($k['ek_summe'] !== null ? (float) $k['ek_summe'] / max(1, (int) ($dish->sales_unit_count ?? 1)) : null);
+                : ($k['ek_summe'] !== null ? (float) $k['ek_summe'] / app(DarreichungResolver::class)->portionenJeAnsatz($dish) : null);
 
             return ['vk' => $vk, 'ek' => $ek, 'ek_vollstaendig' => $k['vollstaendig'] && $k['ek_summe'] !== null];
         }

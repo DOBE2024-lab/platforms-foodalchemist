@@ -112,7 +112,7 @@ it('Blöcke: Reihenfolge per hoch/runter und Drag & Drop, Wahlgruppe bilden und 
 it('Board-Daten: Form und Zahlen je Kapitel', function () {
     $kap = $this->comp->addKapitel($this->rootTeam, $this->angebot->id, ['title' => 'Hauptgang']);
     $leer = $this->comp->addKapitel($this->rootTeam, $this->angebot->id, ['title' => 'Leer']);
-    $gericht = $this->makeRecipe($this->rootTeam, 'Roulade', ['is_sales_recipe' => true, 'ek_total_eur' => 30.0, 'sales_unit_count' => 10]);
+    $gericht = $this->makeRecipe($this->rootTeam, 'Roulade', ['is_sales_recipe' => true, 'ek_total_eur' => 3.0]);   // 98 · 3.5 6a: Gericht = eine Portion (fest 1)
     $konzepte = app(\Platform\FoodAlchemist\Services\Concepter\ConceptService::class);
     $k = $konzepte->create($this->rootTeam, ['name' => 'Grillmenü', 'status' => 'active']);
     $konzepte->fillSlot($this->rootTeam, $konzepte->addSlot($this->rootTeam, $k->id, ['role' => 'Haupt'])->id, ['recipe_id' => $gericht->id]);

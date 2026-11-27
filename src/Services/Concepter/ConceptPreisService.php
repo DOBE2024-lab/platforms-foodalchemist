@@ -279,7 +279,7 @@ class ConceptPreisService
         // eingefrorenes Angebot (Spec 82 §12 B3): fester VK je Form und der eingefrorene EK je Portion; ohne VK eingefroren ⇒ Lücke, kein Rückfall
         $fp = app(\Platform\FoodAlchemist\Support\AngebotFestpreise::class)->gericht((int) $dish->id, $dar?->id);
         if ($fp !== null) {
-            $ekF = $fp['ek_summe'] !== null ? (float) $fp['ek_summe'] / max(1, (int) ($dish->sales_unit_count ?? 1)) : null;
+            $ekF = $fp['ek_summe'] !== null ? (float) $fp['ek_summe'] / app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->portionenJeAnsatz($dish) : null;
 
             return $this->ergebnis($kopf, $fp['vk'] !== null ? $fp['vk'] * $pae : null, $ekF !== null ? $ekF * $pae : null, $fp['vk'] === null ? 'eingefroren_ohne_vk' : null);
         }
@@ -291,7 +291,7 @@ class ConceptPreisService
         }
         // eigenes Gericht (Arbeitszeile des Besitzers): gespeicherte Werte wie ConceptService::preisCockpit
         $stueck = ConcepterAggregateService::stueckModus($slot->unit, $dish);
-        $anzahl = $stueck ? (float) $dish->yield_pieces : max(1, (int) ($dish->sales_unit_count ?? 1));
+        $anzahl = $stueck ? (float) $dish->yield_pieces : app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->portionenJeAnsatz($dish);
         $vkStd = $dar?->sales_net !== null ? (float) $dar->sales_net : (float) (app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->vkNetto($dish) ?? 0);   // Spec 85 D-1
         $ek = ($dar?->ek_portion !== null && ! $stueck) ? (float) $dar->ek_portion * $pae : (float) ($dish->ek_total_eur ?? 0) / $anzahl * $pae;
 

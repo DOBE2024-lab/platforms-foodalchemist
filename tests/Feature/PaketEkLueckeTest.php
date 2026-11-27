@@ -16,9 +16,9 @@ beforeEach(function () {
     $this->seedTeamHierarchy();
     $this->actingAs($this->makeUser($this->rootTeam));
     $this->t = $this->rootTeam;
-    $this->mitEk = $this->makeRecipe($this->t, 'Bowl', ['is_sales_recipe' => true, 'ek_total_eur' => 8.0, 'sales_unit_count' => 10]);
+    $this->mitEk = $this->makeRecipe($this->t, 'Bowl', ['is_sales_recipe' => true, 'ek_total_eur' => 0.8]);   // 98 · 3.5 6a: Gericht = eine Portion (fest 1)
     $this->makeStandardDarreichung($this->mitEk, 6.0);
-    $this->ohneEk = $this->makeRecipe($this->t, 'Wrap', ['is_sales_recipe' => true, 'sales_unit_count' => 10]);
+    $this->ohneEk = $this->makeRecipe($this->t, 'Wrap', ['is_sales_recipe' => true]);
     $this->makeStandardDarreichung($this->ohneEk, 5.0);
 
     $this->konzepte = app(ConceptService::class);
@@ -195,7 +195,7 @@ it('Detail-Hinweis nennt die Zahl der Gerichte ohne EK (Singular bei 1), ohne Ab
     $einzeln = preg_replace('/\s+/u', ' ', strip_tags(\Livewire\Livewire::test(\Platform\FoodAlchemist\Livewire\Concepter\DetailPanel::class)->call('zeige', 'concepts', $this->konzept->id)->html()));
     expect($einzeln)->toContain('Einkauf unvollständig: einem Gericht fehlt der EK oder das Portionsgewicht.');
 
-    $zweites = $this->makeRecipe($this->t, 'Falafel', ['is_sales_recipe' => true, 'sales_unit_count' => 10]);
+    $zweites = $this->makeRecipe($this->t, 'Falafel', ['is_sales_recipe' => true]);
     $this->makeStandardDarreichung($zweites, 4.0);
     $this->makeConceptSlot($this->paket, ['recipe_id' => $zweites->id, 'quantity' => 1, 'position' => 3]);
     $this->makeConceptSlot($this->konzept, ['recipe_id' => $this->ohneEk->id, 'quantity' => 1, 'position' => 2]);   // dasselbe Gericht zählt einmal

@@ -31,7 +31,7 @@ final class CockpitZeilen
         $concept->loadMissing(['slots' => fn ($q) => $q->orderBy('position'),
             'slots.unit:id,slug,dimension,default_in_g',
             'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete,ek_incomplete',   // Kaskade: eingebettetes Paket
-            'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation']);
+            'slots.dish:id,name,ek_total_eur,yield_kg,yield_pieces', 'slots.dish.standardPresentation']);
 
         $r = ['zeilen' => [], 'vk' => 0.0, 'ek' => 0.0, 'hat_stale' => false, 'hat_leer' => false, 'hat_ek_luecke' => false, 'hat_vk_luecke' => false];
         foreach ($concept->slots as $slot) {

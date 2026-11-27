@@ -51,6 +51,8 @@ beforeEach(function () {
         'additive_with_preservative' => 3, 'additive_with_dye' => 1,
     ]);
     // C: die Lücke — kein Portionsgramm, kein Allergen-Profil
+    $this->portionsgewichtAnDarreichung($this->a, 250);   // 98 · 3.5 6a: Portionsgewicht liegt an der Darreichung
+    $this->portionsgewichtAnDarreichung($this->b, 200);   // 98 · 3.5 6a: Portionsgewicht liegt an der Darreichung
     $this->c = $mk([
         'recipe_key' => 'dek-c', 'name' => 'Mystery Dish', 'sales_net' => 5.50, 'ek_total_eur' => 1.50,
         'sales_quantity_per_unit_g' => null, 'nutri_kcal_per_100g' => null,

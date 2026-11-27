@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Platform\FoodAlchemist\Models\FoodAlchemistGp;
 use Platform\FoodAlchemist\Services\Concepter\ConceptService;
 use Platform\FoodAlchemist\Services\Plattform\WaisenReportService;
@@ -58,7 +59,9 @@ it('stimmige Welt: 0 Waisen, Exit 0', function () {
 });
 
 it('Gegenfall: Verweis ins Leere → Exit 1 mit Tabelle und Spalte; Verweis auf soft-gelöschte Elternzeile nur als Information', function () {
-    DB::table('foodalchemist_concept_slots')->where('id', $this->slot->id)->update(['embedded_concept_id' => 999999]);   // ohne FK: Waise
+    // Seit 3.5 Schritt 5 trägt die Spalte einen FK: die Waise nur mit abgeschalteter Prüfung anlegen (Tests laufen ohne Transaktion,
+    // PRAGMA foreign_keys wirkt). So sieht der Report genau den Altbestand, den ein FK sonst verhindern würde.
+    Schema::withoutForeignKeyConstraints(fn () => DB::table('foodalchemist_concept_slots')->where('id', $this->slot->id)->update(['embedded_concept_id' => 999999]));
     [$code, $json] = waisenJson();
 
     expect($code)->toBe(1)->and($json['ins_leere'])->toBe(1)

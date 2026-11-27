@@ -6,7 +6,6 @@
 
 return [
     'src/Services/Pairing/PairingService.php' => [2567, 'Lesen / Bewerten / Pflege (Spec 85 §9)'],
-    'src/Services/Pruefung/DataQualityService.php' => [2021, 'Metriken je Bereich (Spec 85 §9)'],
     'src/Livewire/Angebote/Editor.php' => [1751, 'C4 Komposition (Spec 85 §8); −1 98 · 3.6 PR6'],
     'src/Livewire/Foodbooks/Index.php' => [1622, 'C4 Komposition (Spec 85 §8); +1 Handy-Weiche #1003 PR6, −1 98 · 3.6 PR6'],
 ];

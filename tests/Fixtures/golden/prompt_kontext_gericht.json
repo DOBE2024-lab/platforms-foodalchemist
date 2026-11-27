@@ -1,0 +1,100 @@
+{
+    "gericht.abweichend": {
+        "review": {
+            "speisen_klasse": null,
+            "diaetform": null,
+            "portion_g": 999,
+            "verkaufseinheiten": 3
+        },
+        "konformitaet": {
+            "portion_g": 999,
+            "verkaufseinheiten": 3
+        },
+        "revise": {
+            "key": "vk.ueberarbeiten",
+            "facetten": {
+                "anweisung": "weniger Salz",
+                "name": "[HG] Schnitzel abweichend",
+                "sales_wording_standard": null,
+                "description": "Wiener Art",
+                "plating_text": null,
+                "zutaten": [
+                    {
+                        "id": 1,
+                        "text": "Rahmsauce abweichend",
+                        "quantity": 80.0,
+                        "einheit_slug": "g"
+                    }
+                ],
+                "speisen_klasse": null,
+                "diaetform": null,
+                "darreichungen": [
+                    "Teller"
+                ],
+                "verkaufseinheit": "3 ×",
+                "portion_g": 999,
+                "aufschlagsklasse": null
+            }
+        },
+        "schritte_oneshot": {
+            "anzahl": 3,
+            "portion_g": 999
+        },
+        "schritte_editor": {
+            "anzahl": 3,
+            "portion_g": 999
+        }
+    },
+    "gericht.konsistent": {
+        "review": {
+            "speisen_klasse": null,
+            "diaetform": null,
+            "portion_g": 250,
+            "verkaufseinheiten": null
+        },
+        "konformitaet": {
+            "portion_g": 250,
+            "verkaufseinheiten": null
+        },
+        "revise": {
+            "key": "vk.ueberarbeiten",
+            "facetten": {
+                "anweisung": "weniger Salz",
+                "name": "[HG] Schnitzel konsistent",
+                "sales_wording_standard": null,
+                "description": "Wiener Art",
+                "plating_text": null,
+                "zutaten": [
+                    {
+                        "id": 1,
+                        "text": "Rahmsauce konsistent",
+                        "quantity": 80.0,
+                        "einheit_slug": "g"
+                    }
+                ],
+                "speisen_klasse": null,
+                "diaetform": null,
+                "darreichungen": [
+                    "Teller"
+                ],
+                "verkaufseinheit": "Portion",
+                "portion_g": 250,
+                "aufschlagsklasse": null
+            }
+        },
+        "schritte_oneshot": {
+            "anzahl": null,
+            "portion_g": 250
+        },
+        "schritte_editor": {
+            "anzahl": null,
+            "portion_g": 250
+        }
+    },
+    "huelle.abweichend": {
+        "ziel_portion_g": 999.0
+    },
+    "huelle.konsistent": {
+        "ziel_portion_g": 250.0
+    }
+}

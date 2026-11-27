@@ -39,6 +39,11 @@ final class Fremdschluessel
             throw new \RuntimeException("Fremdschlüssel {$tabelle}.{$spalte} → {$ziel} nicht angelegt: {$waisen['gesamt']} Zeile(n) zeigen ins Leere, "
                 ."davon {$waisen['geloescht']} selbst soft-gelöscht (der FK prüft auch die). Erst bereinigen, dann erneut migrieren.");
         }
+        if (SqliteTabellenUmbau::aktiv()) {   // Testbasis: originalgetreuer Umbau statt Laravels (verliert partielle Indizes)
+            SqliteTabellenUmbau::umbauen($tabelle, fn (string $sql) => SqliteTabellenUmbau::mitFk($sql, $spalte, $ziel, $beimLoeschen));
+
+            return true;
+        }
         Schema::table($tabelle, function (Blueprint $t) use ($spalte, $ziel, $beimLoeschen) {
             $fk = $t->foreign($spalte)->references('id')->on($ziel);
             $beimLoeschen === self::NULL_SETZEN ? $fk->nullOnDelete() : $fk->restrictOnDelete();
@@ -51,6 +56,11 @@ final class Fremdschluessel
     public static function entferne(string $tabelle, string $spalte, string $ziel): void
     {
         if (! Schema::hasTable($tabelle) || ! self::besteht($tabelle, $spalte, $ziel)) {
+            return;
+        }
+        if (SqliteTabellenUmbau::aktiv()) {
+            SqliteTabellenUmbau::umbauen($tabelle, fn (string $sql) => SqliteTabellenUmbau::ohneFk($sql, $spalte));
+
             return;
         }
         Schema::table($tabelle, fn (Blueprint $t) => $t->dropForeign([$spalte]));

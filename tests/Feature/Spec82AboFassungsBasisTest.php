@@ -62,7 +62,8 @@ it('fassungen() liefert die Fassungen der Arbeitszeile, neueste zuerst · :datas
     foreach ([1, 2, 3] as $nr) {
         ($this->arten[$art])(['name' => 'Verlauf', 'ist_fassung' => true, 'fassung_von_id' => $arbeit->id, 'fassung_nr' => $nr]);
     }
-    ($this->arten[$art])(['name' => 'Fremd', 'ist_fassung' => true, 'fassung_von_id' => 999999, 'fassung_nr' => 1]);
+    $andere = ($this->arten[$art])(['name' => 'Andere Arbeitszeile']);   // 3.5 Schritt 5: fassung_von_id hat einen FK — echte fremde Elternzeile
+    ($this->arten[$art])(['name' => 'Fremd', 'ist_fassung' => true, 'fassung_von_id' => $andere->id, 'fassung_nr' => 1]);
 
     expect($arbeit->fassungen()->pluck('fassung_nr')->map(fn ($v) => (int) $v)->all())->toBe([3, 2, 1]);
 })->with('arten');

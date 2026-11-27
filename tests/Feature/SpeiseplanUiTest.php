@@ -61,8 +61,10 @@ it('Editor: Zelle (Datum × Mittag) mit Gericht belegen — Eintrag erscheint', 
 
 it('gerichtKandidaten (Spec 42): browst ohne Suche, filtert Hauptgruppe, schließt Varianten aus', function () {
     $svc = app(\Platform\FoodAlchemist\Services\Speiseplan\SpeiseplanService::class);
-    $a = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'sa', 'name' => 'Alpha-Gericht', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 5, 'ek_total_eur' => 1, 'dish_main_group_id' => 11]);
-    FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'sb', 'name' => 'Beta-Gericht', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 5, 'ek_total_eur' => 1, 'dish_main_group_id' => 22]);
+    $hgA = $this->makeMainGroup($this->rootTeam, 'HG-A')->id;   // 3.5 Schritt 5: dish_main_group_id hat einen FK — echte Hauptgruppen statt 11/22
+    $hgB = $this->makeMainGroup($this->rootTeam, 'HG-B')->id;
+    $a = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'sa', 'name' => 'Alpha-Gericht', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 5, 'ek_total_eur' => 1, 'dish_main_group_id' => $hgA]);
+    FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'sb', 'name' => 'Beta-Gericht', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 5, 'ek_total_eur' => 1, 'dish_main_group_id' => $hgB]);
     $variant = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'sv', 'name' => 'Alpha-Variante', 'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 5, 'ek_total_eur' => 1, 'variant_source_recipe_id' => $a->id]);
 
     $alle = $svc->gerichtKandidaten($this->rootTeam, '', 50)->pluck('name')->all();
@@ -70,7 +72,7 @@ it('gerichtKandidaten (Spec 42): browst ohne Suche, filtert Hauptgruppe, schlie�
     expect($alle)->toContain('Beta-Gericht');
     expect($svc->gerichtKandidaten($this->rootTeam, '', 50)->pluck('id')->all())->not->toContain($variant->id);
 
-    $nur11 = $svc->gerichtKandidaten($this->rootTeam, '', 50, 11)->pluck('name')->all();
+    $nur11 = $svc->gerichtKandidaten($this->rootTeam, '', 50, $hgA)->pluck('name')->all();
     expect($nur11)->toContain('Alpha-Gericht');
     expect($nur11)->not->toContain('Beta-Gericht');
 });

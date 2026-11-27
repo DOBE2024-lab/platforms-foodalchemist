@@ -13,6 +13,9 @@ use Platform\FoodAlchemist\Support\Datenmodell\Fremdschluessel;
  */
 return new class extends Migration
 {
+    /** SQLite-Testbasis: originalgetreuer Tabellen-Umbau braucht abgeschaltete FK-Prüfung, die wirkt nur ohne Transaktion. */
+    public $withinTransaction = false;
+
     /** @var list<array{0: string, 1: string, 2: string, 3: string}> Tabelle, Spalte, Ziel, ON DELETE */
     private const FKS = [
         ['foodalchemist_concepts', 'fassung_von_id', 'foodalchemist_concepts', Fremdschluessel::NULL_SETZEN],

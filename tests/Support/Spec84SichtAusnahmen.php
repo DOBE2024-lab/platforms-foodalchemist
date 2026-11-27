@@ -12,7 +12,8 @@ return [
     'Livewire/Concerns/ManagesPlanningFrame.php' => 1,
     'Livewire/Concerns/TauschtRezept.php' => 1,
     'Livewire/Etiketten/Index.php' => 1,
-    'Livewire/Foodbooks/Index.php' => 15,
+    'Livewire/Foodbooks/Concerns/FoodbookKapitelBaum.php' => 9,   // 98 · 3.3: aus Foodbooks/Index verschoben (vorher 15), kein neuer Treffer
+    'Livewire/Foodbooks/Index.php' => 6,
     'Livewire/Formate/Editor.php' => 1,
     'Livewire/Gps/GpModal.php' => 3,
     'Livewire/Lager/Index.php' => 2,

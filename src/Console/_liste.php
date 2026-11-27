@@ -39,6 +39,7 @@ return [
     \Platform\FoodAlchemist\Console\Diagnose\NaehrwertePruefenCommand::class,   // Nährwert-Prüfung: Trockenlauf + Meldeliste (nur lesend)
     \Platform\FoodAlchemist\Console\Diagnose\RegelnKonsumentenCommand::class,   // Spec 81: Schutz vor Paket 5
     \Platform\FoodAlchemist\Console\Diagnose\RezeptLueckenVergleichCommand::class,   // 29.10.2026: Messung K1/K4a vorher/nachher (nur lesend)
+    \Platform\FoodAlchemist\Console\Diagnose\SpiegelfelderCommand::class,   // 98 · 3.5 · 6c: Abweichungsreport Spiegelfelder (nur lesend)
     \Platform\FoodAlchemist\Console\Diagnose\TrendThemenAehnlichkeitCommand::class,   // Spec 93 B (Messung, schreibt nichts)
     \Platform\FoodAlchemist\Console\Diagnose\VollstaendigkeitReportCommand::class,
     \Platform\FoodAlchemist\Console\Diagnose\WaisenCommand::class,   // 98 · 3.5: Waisen-Report der Kernkette (nur lesend)

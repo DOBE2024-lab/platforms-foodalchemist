@@ -254,8 +254,9 @@ class BehaelterService
     private function nutzungsorte(string $vokabular): array
     {
         return match ($vokabular) {
+            // 98 · 3.5-6a: die Spiegel am Rezept (container_*_vocab_id, serving_vehicle_vocab_id) zählen nicht mehr — die
+            // Darreichung trägt die Wahrheit; der Spiegel fällt mit 6c. Die *_legacy_id-Rohwerte zählen weiter (s. legacyReferenzen).
             'behaelter' => [
-                ['foodalchemist_recipes', ['container_warm_vocab_id', 'container_cold_vocab_id']],
                 ['foodalchemist_recipe_presentations', ['container_warm_vocab_id', 'container_cold_vocab_id']],
                 ['foodalchemist_recipe_containers', ['container_vocab_id']],
             ],
@@ -263,7 +264,6 @@ class BehaelterService
                 ['foodalchemist_recipe_regenerations', ['device_vocab_id']],
             ],
             'vehikel' => [
-                ['foodalchemist_recipes', ['serving_vehicle_vocab_id']],
                 ['foodalchemist_recipe_presentations', ['serving_vehicle_vocab_id']],
                 ['foodalchemist_gps', ['serving_vehicle_vocab_id']],   // Typ des Gefäßes (Non-Food-GP)
             ],

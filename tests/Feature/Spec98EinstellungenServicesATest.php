@@ -46,11 +46,14 @@ it('BehaelterService: anlegen, aktualisieren, umschalten, löschen — mit Pflic
     expect((bool) DB::table('foodalchemist_vocab_containers')->find($zeile->id)->is_inactive)->toBeTrue();
 
     $rezept = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'r98', 'name' => 'Fond', 'status' => 'approved']);
-    $rezept->forceFill(['container_warm_vocab_id' => $zeile->id])->save();
+    // 98 · 3.5-6a: der Behälter hängt an der (Standard-)Darreichung — der Rezept-Spiegel zählt nicht mehr.
+    $darreichung = \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $rezept->id,
+        'serving_form_id' => \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->rootTeam->id, 'code' => 'teller', 'label' => 'Teller'])->id,
+        'is_standard' => true, 'unit_count' => 1, 'price_mode' => 'auto', 'container_warm_vocab_id' => $zeile->id]);
     expect(fn () => $svc->loeschen($this->rootTeam, 'behaelter', $zeile->id))
         ->toThrow(NochVerwendetException::class, '«GN 1/1 tief» ist 1× in Verwendung (Rezepte, Darreichungen, Regeneration) — erst umhängen oder deaktivieren.');
 
-    $rezept->forceFill(['container_warm_vocab_id' => null])->save();
+    $darreichung->forceFill(['container_warm_vocab_id' => null])->save();
     expect($svc->loeschen($this->rootTeam, 'behaelter', $zeile->id))->toBe('GN 1/1 tief');
     expect(DB::table('foodalchemist_vocab_containers')->find($zeile->id))->toBeNull();
     expect(fn () => $svc->loeschen($this->rootTeam, 'behaelter', $zeile->id))->toThrow(NichtGefundenException::class);

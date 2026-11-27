@@ -313,13 +313,13 @@ class BulkEnrichService
             // L1b: VK-Texte — derselbe Kontext-Zuschnitt wie die ✨-Einzelknöpfe im VkModal
             'wording' => ['vk.wording', $this->gerichtKontext($r),
                 fn (array $w) => $w['sales_wording_standard'] ?? null],
-            'plating' => ['vk.plating', $this->gerichtKontext($r) + ['portion_g' => $r->sales_quantity_per_unit_g],
+            'plating' => ['vk.plating', $this->gerichtKontext($r) + ['portion_g' => $this->standardGrammatur($r)],   // 98 · 3.5-6a: Standard-Darreichung statt Rezept-Spiegel
                 fn (array $w) => $w['preparation'] ?? $w['plating_text'] ?? null],   // Registry-Schema: {preparation}
             // B-1: derselbe Zuschnitt wie VkModal::kiVehikel — die KI wählt aus dem, was das Team hat.
             // Kontext-Key `vehikel` (nicht `vokabular`, das ist der Rollen-Schritt; nicht `portion_g`,
             // das ist der Plating-Marker der Test-Fakes): Struktur trägt die Bedeutung, nicht Wortlaut.
             'servier_vehikel' => ['vk.servier_vehikel',
-                $this->gerichtKontext($r) + ['grammatur_g' => $r->sales_quantity_per_unit_g,
+                $this->gerichtKontext($r) + ['grammatur_g' => $this->standardGrammatur($r),
                     'vehikel' => $this->vehikelKatalog($team)->pluck('name', 'id')->all()],
                 fn (array $w) => is_numeric($w['servier_vehikel_id'] ?? null)
                     && $this->vehikelKatalog($team)->contains(fn ($v) => (int) $v->id === (int) $w['servier_vehikel_id'])
@@ -338,6 +338,12 @@ class BulkEnrichService
     }
 
     /** Gericht-Kontext für die VK-Schritte (Name · Wording · Komponenten · Klasse). */
+    /** 98 · 3.5-6a: Grammatur je Portion aus der Standard-Darreichung (nicht mehr der Spiegel sales_quantity_per_unit_g am Rezept). */
+    private function standardGrammatur(FoodAlchemistRecipe $r): mixed
+    {
+        return app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($r)?->quantity_per_unit_g;
+    }
+
     private function gerichtKontext(FoodAlchemistRecipe $r): array
     {
         return [

@@ -48,7 +48,10 @@ it('E1: ein kundeneigener Behälter am Rezept ist nicht mehr still löschbar', f
     $rezept = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'r1', 'name' => 'Fond: Braun', 'status' => 'approved',
     ]);
-    $rezept->forceFill(['container_warm_vocab_id' => $id])->save();
+    // 98 · 3.5-6a: der Behälter hängt an der (Standard-)Darreichung — der Rezept-Spiegel container_warm_vocab_id zählt nicht mehr.
+    \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $rezept->id,
+        'serving_form_id' => \Platform\FoodAlchemist\Models\FoodAlchemistServierform::create(['team_id' => $this->rootTeam->id, 'code' => 'teller', 'label' => 'Teller'])->id,
+        'is_standard' => true, 'unit_count' => 1, 'price_mode' => 'auto', 'container_warm_vocab_id' => $id]);
 
     Livewire::test(Behaelter::class)
         ->call('delete', 'behaelter', $id)

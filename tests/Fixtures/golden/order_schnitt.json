@@ -1,0 +1,486 @@
+{
+    "alternativen": {
+        "zeile": [
+            {
+                "designation": "Mehl Hanos 1kg",
+                "supplier": "Hanos",
+                "vergleichspreis": 1.8,
+                "vergleichspreis_einheit": "€/kg",
+                "ist_stamm": false,
+                "gesperrt": false,
+                "schiene_wechsel": true
+            }
+        ],
+        "gp_ohne_aktuell": [
+            {
+                "designation": "Mehl Hanos 1kg",
+                "supplier": "Hanos",
+                "vergleichspreis": 1.8,
+                "vergleichspreis_einheit": "€/kg",
+                "ist_stamm": false,
+                "gesperrt": false,
+                "schiene_wechsel": true
+            }
+        ],
+        "gp_alle": [
+            {
+                "designation": "Mehl Hanos 1kg",
+                "supplier": "Hanos",
+                "vergleichspreis": 1.8,
+                "vergleichspreis_einheit": "€/kg",
+                "ist_stamm": false,
+                "gesperrt": false,
+                "schiene_wechsel": false
+            },
+            {
+                "designation": "Mehl 1kg",
+                "supplier": "Chefs",
+                "vergleichspreis": 2.0,
+                "vergleichspreis_einheit": "€/kg",
+                "ist_stamm": false,
+                "gesperrt": false,
+                "schiene_wechsel": false
+            }
+        ],
+        "gp_unbekannt": []
+    },
+    "erzeugt_overrides": {
+        "ergebnis": [
+            "orders",
+            "unresolved",
+            "warnings",
+            "preview",
+            "round"
+        ],
+        "runde": {
+            "label": "Runde KW 48",
+            "desired_delivery_date": null,
+            "sourcing_strategy": null,
+            "note": null,
+            "created_at": "2026-11-23T09:00:00+00:00",
+            "sources": [
+                {
+                    "type": "recipe",
+                    "qty": 100,
+                    "unit": "portions",
+                    "delivery_date": "2026-11-26",
+                    "reference": "Weihnachtsfeier"
+                }
+            ],
+            "lager_reserviert": null,
+            "order_count": 2,
+            "supplier_count": 2,
+            "position_count": 2,
+            "total_net": 21.0,
+            "draft_count": 2,
+            "editable": true,
+            "sendable": true,
+            "blockers": []
+        },
+        "zustand": [
+            {
+                "lieferant": "Chefs",
+                "status": "draft",
+                "liefertag": "2026-11-26",
+                "referenz": "Weihnachtsfeier",
+                "total_net": 3.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Zucker 1kg",
+                        "artikel": "ART-ZUC",
+                        "gebinde": 3.0,
+                        "manuell": true,
+                        "preis": 1.0,
+                        "summe": 3.0,
+                        "bedarf_g": 1000.0,
+                        "quellen": {
+                            "recipe:2@958cb3aa52": 1000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            },
+            {
+                "lieferant": "Hanos",
+                "status": "draft",
+                "liefertag": "2026-11-26",
+                "referenz": "Weihnachtsfeier",
+                "total_net": 18.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Mehl Hanos 1kg",
+                        "artikel": "H-MEHL",
+                        "gebinde": 10.0,
+                        "manuell": false,
+                        "preis": 1.8,
+                        "summe": 18.0,
+                        "bedarf_g": 10000.0,
+                        "quellen": {
+                            "recipe:2@958cb3aa52": 10000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            }
+        ]
+    },
+    "neu_quellen_angewendet": {
+        "ergebnis": {
+            "strategie": "guenstigster_preis",
+            "wechsel": [
+                {
+                    "gp": "Mehl",
+                    "nach_artikel": "Mehl Hanos 1kg",
+                    "nach_lieferant": "Hanos",
+                    "schiene_wechsel": true
+                }
+            ]
+        },
+        "zustand": [
+            {
+                "lieferant": "Chefs",
+                "status": "draft",
+                "liefertag": null,
+                "referenz": null,
+                "total_net": 1.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Zucker 1kg",
+                        "artikel": "ART-ZUC",
+                        "gebinde": 1.0,
+                        "manuell": false,
+                        "preis": 1.0,
+                        "summe": 1.0,
+                        "bedarf_g": 1000.0,
+                        "quellen": {
+                            "event:Bankett": 1000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            },
+            {
+                "lieferant": "Hanos",
+                "status": "draft",
+                "liefertag": null,
+                "referenz": null,
+                "total_net": 30.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Butter 1kg",
+                        "artikel": "ART-BUT",
+                        "gebinde": 1.0,
+                        "manuell": false,
+                        "preis": 12.0,
+                        "summe": 12.0,
+                        "bedarf_g": 1000.0,
+                        "quellen": {
+                            "event:Bankett": 1000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    },
+                    {
+                        "bezeichnung": "Mehl Hanos 1kg",
+                        "artikel": "H-MEHL",
+                        "gebinde": 10.0,
+                        "manuell": false,
+                        "preis": 1.8,
+                        "summe": 18.0,
+                        "bedarf_g": 10000.0,
+                        "quellen": {
+                            "event:Bankett": 10000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            }
+        ]
+    },
+    "sammelversand": {
+        "versand": {
+            "sent": 2,
+            "blocked": 1,
+            "blockers": [
+                "Hanos: leer, Klärung"
+            ],
+            "sent_at": "23.11.2026 09:00"
+        },
+        "storno": {
+            "cancelled": 1
+        },
+        "nochmal": {
+            "sent": 0,
+            "blocked": 0,
+            "blockers": [],
+            "sent_at": "23.11.2026 09:00"
+        },
+        "zustand": [
+            {
+                "lieferant": "Chefs",
+                "status": "sent",
+                "liefertag": null,
+                "referenz": null,
+                "total_net": 21.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Mehl 1kg",
+                        "artikel": "ART-MEH",
+                        "gebinde": 10.0,
+                        "manuell": false,
+                        "preis": 2.0,
+                        "summe": 20.0,
+                        "bedarf_g": 10000.0,
+                        "quellen": {
+                            "event:Bankett": 10000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    },
+                    {
+                        "bezeichnung": "Zucker 1kg",
+                        "artikel": "ART-ZUC",
+                        "gebinde": 1.0,
+                        "manuell": false,
+                        "preis": 1.0,
+                        "summe": 1.0,
+                        "bedarf_g": 1000.0,
+                        "quellen": {
+                            "event:Bankett": 1000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            },
+            {
+                "lieferant": "Hanos",
+                "status": "cancelled",
+                "liefertag": "2026-11-30",
+                "referenz": null,
+                "total_net": 0.0,
+                "zeilen": []
+            },
+            {
+                "lieferant": "Hanos",
+                "status": "sent",
+                "liefertag": null,
+                "referenz": null,
+                "total_net": 12.0,
+                "zeilen": [
+                    {
+                        "bezeichnung": "Butter 1kg",
+                        "artikel": "ART-BUT",
+                        "gebinde": 1.0,
+                        "manuell": false,
+                        "preis": 12.0,
+                        "summe": 12.0,
+                        "bedarf_g": 1000.0,
+                        "quellen": {
+                            "event:Bankett": 1000.0
+                        },
+                        "eingang": null,
+                        "rechnung": [
+                            null,
+                            null
+                        ],
+                        "reklamation": [
+                            null,
+                            null,
+                            null,
+                            null
+                        ],
+                        "notiz": null
+                    }
+                ]
+            }
+        ]
+    },
+    "vorschau_overrides": {
+        "orders_preview": [
+            {
+                "supplier": "Chefs",
+                "delivery_date": "2026-11-26",
+                "positionen": [
+                    {
+                        "source_label": "DES: Kuchen",
+                        "reference": "Weihnachtsfeier",
+                        "type": "recipe",
+                        "gp": "Zucker",
+                        "article_number": "ART-ZUC",
+                        "designation": "Zucker 1kg",
+                        "qty_packs": 3.0,
+                        "packaging_unit": "Sack",
+                        "pack_price": 1.0,
+                        "line_total": 3.0,
+                        "needed_base_g": 1000.0,
+                        "needed_display": 1.0,
+                        "needed_unit": "kg",
+                        "bestellbar": true,
+                        "nachfuellen": false,
+                        "qty_packs_berechnet": 1.0,
+                        "menge_von_hand": true
+                    }
+                ],
+                "total_net": 3.0,
+                "references": [
+                    "Weihnachtsfeier"
+                ],
+                "warnings": [],
+                "moq": {
+                    "min_order_value": null,
+                    "free_shipping_threshold": null,
+                    "unter_mindestbestellwert": false,
+                    "fehlt_bis_min": 0.0,
+                    "frei_haus": false,
+                    "fehlt_bis_frei_haus": 0.0
+                }
+            },
+            {
+                "supplier": "Hanos",
+                "delivery_date": "2026-11-26",
+                "positionen": [
+                    {
+                        "source_label": "DES: Kuchen",
+                        "reference": "Weihnachtsfeier",
+                        "type": "recipe",
+                        "gp": "Mehl",
+                        "article_number": "H-MEHL",
+                        "designation": "Mehl Hanos 1kg",
+                        "qty_packs": 10.0,
+                        "packaging_unit": "Sack",
+                        "pack_price": 1.8,
+                        "line_total": 18.0,
+                        "needed_base_g": 10000.0,
+                        "needed_display": 10.0,
+                        "needed_unit": "kg",
+                        "bestellbar": true,
+                        "nachfuellen": false
+                    }
+                ],
+                "total_net": 18.0,
+                "references": [
+                    "Weihnachtsfeier"
+                ],
+                "warnings": [],
+                "moq": {
+                    "min_order_value": null,
+                    "free_shipping_threshold": null,
+                    "unter_mindestbestellwert": false,
+                    "fehlt_bis_min": 0.0,
+                    "frei_haus": false,
+                    "fehlt_bis_frei_haus": 0.0
+                }
+            }
+        ],
+        "aus_lager": [],
+        "ausgelassen": [
+            {
+                "source_label": "DES: Kuchen",
+                "reference": "Weihnachtsfeier",
+                "type": "recipe",
+                "gp": "Butter",
+                "article_number": "ART-BUT",
+                "designation": "Butter 1kg",
+                "qty_packs": 1.0,
+                "packaging_unit": "Sack",
+                "pack_price": 12.0,
+                "line_total": 12.0,
+                "needed_base_g": 1000.0,
+                "needed_display": 1.0,
+                "needed_unit": "kg",
+                "bestellbar": true,
+                "nachfuellen": false,
+                "supplier": "Hanos"
+            }
+        ],
+        "lager_abgleich": false,
+        "rezept_lager": [],
+        "vorrat": [],
+        "nachfuellen_moeglich": 0,
+        "nachfuellen_aktiv": false,
+        "unresolved": [],
+        "warnings": [],
+        "totals": {
+            "sources": 1,
+            "groups": 2,
+            "positions": 2,
+            "unresolved": 0,
+            "total_net": 21.0
+        }
+    }
+}

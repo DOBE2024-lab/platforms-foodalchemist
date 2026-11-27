@@ -31,14 +31,17 @@ final class ZukaufBasisrezeptService
     public const REGEL_TYP = 'basisrezept.zukauf.typ';
 
     /**
-     * Fertigware nach GP-Taxonomie: Gewürze & Toppings (10), Öle & Essige (11), Convenience (13), Knabbereien (09.6),
-     * Sprossen & Keimlinge (01.8). Ohne Typ in der Zeile zusätzlich Kräuter (03). Rohware (Gemüse, Fleisch …) wird
-     * nie Zukauf — „Püree: Kürbis“ ist eine Zubereitung.
+     * Knabbereien (09.6): Unterkategorie, keine Warengruppen-Rolle. WgRolle belegt nur Warengruppen-Codes
+     * (Flags an foodalchemist_lookup_commodity_groups); Unterkategorien bleiben benannte Fachregel an ihrer Stelle
+     * (Entscheid Kurator/Dominique 22.11., CQ 3.7). Ausnahme im Regel-Test WgRollenSperreTest.
      */
-    /** Knabbereien (09.6) — benannte Fachregel, kein Warengruppen-Flag (CQ 3.7). */
     private const SUB_KNABBEREIEN = '09.6';
 
-    /** Fertigware auf Unterkategorie-Ebene; die Warengruppen-Ebene trägt die Rolle „fertig“ (WgRolle, CQ 3.7). */
+    /**
+     * Fertigware nach GP-Taxonomie: Gewürze & Toppings (10), Öle & Essige (11), Convenience (13) über die Rolle
+     * „fertig“ (WgRolle), dazu auf Unterkategorie-Ebene Knabbereien (09.6) und Sprossen & Keimlinge (01.8). Ohne Typ in
+     * der Zeile zusätzlich Kräuter (03). Rohware (Gemüse, Fleisch …) wird nie Zukauf — „Püree: Kürbis“ ist eine Zubereitung.
+     */
     private const FERTIG_SUB = [self::SUB_KNABBEREIEN, '01.8'];
 
     /** Ist die Zeile gekaufte Fertigware (sicherer GP-Treffer auf Fertigware) — unabhängig davon, ob ein Typ ableitbar ist? */
@@ -310,10 +313,10 @@ final class ZukaufBasisrezeptService
         return $recipe->refresh();
     }
 
-    /** Brot & Backwaren (WG 09 außer 09.6 Knabbereien) — Dominique 10.10.: „Ich stelle keinen Toast hin, ich mache einen Crunch daraus.“ */
     /** Panko trägt das Toastaroma und wird wie Brot verarbeitet (Dominique 10.10.) — gleich welche Warengruppe. */
     private const BROT_WOERTER = ['toast', 'baguette', 'brot', 'broetchen', 'ciabatta', 'focaccia', 'brioche', 'sauerteig', 'pumpernickel', 'laugen', 'panko'];
 
+    /** Brot & Backwaren (WG 09 außer 09.6 Knabbereien) — Dominique 10.10.: „Ich stelle keinen Toast hin, ich mache einen Crunch daraus.“ */
     private static function istBrotGp(FoodAlchemistGp $gp): bool
     {
         if (str_contains(mb_strtolower((string) $gp->name), 'panko')) {

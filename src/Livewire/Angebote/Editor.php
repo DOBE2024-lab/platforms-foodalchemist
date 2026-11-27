@@ -12,8 +12,6 @@ use Platform\FoodAlchemist\Models\FoodAlchemistOfferBlock;
 use Platform\FoodAlchemist\Models\FoodAlchemistOfferChapter;
 use Platform\FoodAlchemist\Services\Ausgabe\AngebotService;
 use Platform\FoodAlchemist\Services\Ausgabe\OfferCompositionService;
-use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
-use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 
 /**
  * Angebote-Editor (Fullscreen-Modal, pro Angebot) — 1:1-Fork des Foodbook-Editors
@@ -41,6 +39,9 @@ class Editor extends Component
     use \Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast;
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
     use \Platform\FoodAlchemist\Livewire\Concerns\AngebotBrandingBilder;   // Logo/Cover/Präsentationsbilder + Kopieren
+    use Concerns\AngebotKapitelBaum;   // 98 · 3.3: Kapitel ordnen
+    use Concerns\AngebotKiText;        // 98 · 3.3: KI-Kundentext-Vorschau
+    use Concerns\AngebotPraesentation;  // 98 · 3.3: Präsentation veröffentlichen
 
     /** Spec 65: Sperre gilt dem geöffneten Angebot. */
     protected function sperrZiel(): ?array
@@ -188,52 +189,6 @@ class Editor extends Component
 
     /** @var array<int, \Illuminate\Http\UploadedFile> */
     public $kapitelGalleryUpload = [];
-
-    // ── Präsentation (digitales Kundenbuch, TYPE_ANGEBOT) ──────────────────────
-    public string $presentationDesign = 'editorial';
-
-    public ?string $presentationGueltigBis = null;
-
-    public bool $presentationPreisAnzeige = true;
-
-    /** Cover zeigt den Angebotsnamen. Aus → nur Logo (größer), z. B. wenn noch kein Kunde feststeht. */
-    public bool $presentationTitelZeigen = true;
-
-    /** Republish-Preis-Schutz: AUS = eingefrorene Preise behalten; AN = aktuelle VK ziehen. */
-    public bool $presentationPreiseAktualisieren = false;
-
-    public bool $presentationDeklaration = true;
-
-    public ?string $presentationCtaText = null;
-
-    public ?string $presentationCtaLink = null;
-
-    public ?string $presentationSlug = null;
-
-    public ?int $presentationLoadedId = null;
-
-    public ?string $presentationFehler = null;
-
-    public ?string $presentationHinweis = null;
-
-    // publish-per-Betrieb: zusätzlicher Link je Betrieb mit DESSEN Preisen + eigener Freigabe.
-    public ?int $outletPublishId = null;
-
-    public ?string $outletPublishGueltigBis = null;
-
-    public ?string $outletPublishDesign = '';
-
-    public ?string $outletPublishSlug = '';
-
-    // ── KI-Kundentext (Foodbook §L2): Vorschau-Zustand (Buch- + Kapitel-Ebene) ──
-    public ?string $kiTextVorschau = null;
-
-    public ?float $kiTextConfidence = null;
-
-    public ?string $kiTextHinweis = null;
-
-    /** Welches Feld der Vorschlag füllt: `angebot` (Einleitung) oder `kapitel` (Hinführung). */
-    public string $kiTextZiel = 'angebot';
 
     // ══════════════════════════════════════════════════════════════════════════
     //  Modal-Lifecycle (Angebot-Spezifikum, erhalten)
@@ -605,128 +560,6 @@ class Editor extends Component
             $this->selectedKapitelId = null;
         }
         $this->nachKomposition();
-    }
-
-    public function kapitelHoch(int $id, OfferCompositionService $comp): void
-    {
-        $this->verschiebeKapitel($id, -1, $comp);
-    }
-
-    public function kapitelRunter(int $id, OfferCompositionService $comp): void
-    {
-        $this->verschiebeKapitel($id, 1, $comp);
-    }
-
-    private function verschiebeKapitel(int $id, int $richtung, OfferCompositionService $comp): void
-    {
-        $k = FoodAlchemistOfferChapter::find($id);
-        if ($k === null || $this->selectedId === null) {
-            return;
-        }
-        $geschwister = $this->geschwisterIds($k->parent_id !== null ? (int) $k->parent_id : null);
-        $pos = array_search($id, $geschwister, true);
-        $ziel = $pos + $richtung;
-        if ($pos === false || $ziel < 0 || $ziel >= count($geschwister)) {
-            return;
-        }
-        [$geschwister[$pos], $geschwister[$ziel]] = [$geschwister[$ziel], $geschwister[$pos]];
-        $comp->reorderKapitel($this->team(), $this->selectedId, $geschwister);
-        $this->nachKomposition();
-    }
-
-    /**
-     * Kapitel eine Ebene TIEFER — neuer Parent = unmittelbar vorheriges Geschwister
-     * (Outline-Editor-Doktrin). Ohne vorheriges Geschwister nicht einrückbar.
-     */
-    public function kapitelEinruecken(int $id, OfferCompositionService $comp): void
-    {
-        $k = FoodAlchemistOfferChapter::find($id);
-        if ($k === null || $this->selectedId === null) {
-            return;
-        }
-        $geschwister = $this->geschwisterIds($k->parent_id !== null ? (int) $k->parent_id : null);
-        $pos = array_search($id, $geschwister, true);
-        if ($pos === false || $pos === 0) {
-            return; // erstes Geschwister hat keinen Vorgänger zum Einrücken
-        }
-        $this->kapitelUnter($id, (int) $geschwister[$pos - 1], $comp);
-    }
-
-    /**
-     * Kapitel eine Ebene HÖHER — neuer Parent = Großelternteil (oder Top-Ebene).
-     * Top-Kapitel sind nicht weiter ausrückbar.
-     */
-    public function kapitelAusruecken(int $id, OfferCompositionService $comp): void
-    {
-        $k = FoodAlchemistOfferChapter::find($id);
-        if ($k === null || $k->parent_id === null || $this->selectedId === null) {
-            return;
-        }
-        $parent = FoodAlchemistOfferChapter::find($k->parent_id);
-        $grossParent = $parent?->parent_id !== null ? (int) $parent->parent_id : null;
-        $this->kapitelUnter($id, $grossParent, $comp);
-    }
-
-    /**
-     * Gemeinsamer Move: Parent wechseln (Service trägt den Zyklus-Schutz) und das Kapitel
-     * ans ENDE der neuen Geschwister-Ordnung setzen, damit die Positionen konsistent bleiben.
-     */
-    private function kapitelUnter(int $id, ?int $neuerParent, OfferCompositionService $comp): void
-    {
-        try {
-            $comp->moveKapitel($this->team(), $id, $neuerParent);
-        } catch (\RuntimeException) {
-            return; // Zyklus o. Ä. — UI bietet solche Moves ohnehin nicht an
-        }
-        $geschwister = $this->geschwisterIds($neuerParent, $id);
-        $geschwister[] = $id;
-        $comp->reorderKapitel($this->team(), $this->selectedId, $geschwister);
-        $this->nachKomposition();
-    }
-
-    /**
-     * Drag & Drop: das gezogene Kapitel landet unmittelbar VOR dem Ziel-Kapitel und
-     * übernimmt dessen Parent-Ebene (moveKapitel trägt den Zyklus-Schutz). Spiegelt die
-     * Block-Drop-Semantik.
-     */
-    public function kapitelVerschiebenAuf(int $dragId, int $zielId, OfferCompositionService $comp): void
-    {
-        if ($dragId === $zielId || $this->selectedId === null) {
-            return;
-        }
-        $ziel = FoodAlchemistOfferChapter::where('offer_id', $this->selectedId)->find($zielId);
-        if ($ziel === null) {
-            return;
-        }
-        $neuerParent = $ziel->parent_id !== null ? (int) $ziel->parent_id : null;
-        try {
-            $comp->moveKapitel($this->team(), $dragId, $neuerParent);   // auf die Ziel-Ebene (Zyklus-Schutz im Service)
-        } catch (\RuntimeException) {
-            return;
-        }
-        $geschwister = $this->geschwisterIds($neuerParent, $dragId);
-        $zielPos = array_search($zielId, $geschwister, true);
-        if ($zielPos === false) {
-            $geschwister[] = $dragId;
-        } else {
-            array_splice($geschwister, $zielPos, 0, [$dragId]);   // direkt VOR das Ziel
-        }
-        $comp->reorderKapitel($this->team(), $this->selectedId, $geschwister);
-        $this->nachKomposition();
-    }
-
-    /**
-     * Geschwister-IDs (gleiche Parent-Ebene) des aktuellen Angebots, nach Position geordnet.
-     * `$ausser` schließt eine ID aus (für Move-Neuordnung).
-     *
-     * @return list<int>
-     */
-    private function geschwisterIds(?int $parentId, ?int $ausser = null): array
-    {
-        return FoodAlchemistOfferChapter::where('offer_id', $this->selectedId)
-            ->where('parent_id', $parentId)
-            ->when($ausser !== null, fn ($q) => $q->where('id', '!=', $ausser))
-            ->orderBy('position')->pluck('id')->map(fn ($x) => (int) $x)->all();
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -1101,87 +934,6 @@ class Editor extends Component
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    //  KI-Kundentext (Einleitung + Kapitel-Hinführung) — Vorschau-Zustand
-    // ══════════════════════════════════════════════════════════════════════════
-
-    /** Kundentext-Vorschlag für die Angebots-Einleitung holen (schreibt NUR in die Vorschau). */
-    public function kiEinleitung(AngebotService $svc): void
-    {
-        $this->kiTextZuruecksetzen('angebot');
-        if ($this->selectedId === null) {
-            return;
-        }
-        $this->kiTextHolen(fn () => $svc->kiKundentextVorschlag($this->team(), $this->selectedId));
-    }
-
-    /** Hinführung fürs gewählte Kapitel holen. Gleiche zwei Stufen wie auf der Buch-Ebene. */
-    public function kiKapitelText(AngebotService $svc): void
-    {
-        $this->kiTextZuruecksetzen('kapitel');
-        if ($this->selectedKapitelId === null) {
-            return;
-        }
-        $this->kiTextHolen(fn () => $svc->kiKapitelKundentextVorschlag($this->team(), $this->selectedKapitelId));
-    }
-
-    private function kiTextZuruecksetzen(string $ziel): void
-    {
-        $this->kiTextZiel = $ziel;
-        $this->kiTextVorschau = null;
-        $this->kiTextConfidence = null;
-        $this->kiTextHinweis = null;
-    }
-
-    /**
-     * Gemeinsamer Call-Rahmen beider Ebenen: die typisierten KI-Ausfälle werden zu genau
-     * einer Hinweis-Zeile.
-     *
-     * @param  \Closure():array{text:string,confidence:?float,call_log_id:?int}  $call
-     */
-    private function kiTextHolen(\Closure $call): void
-    {
-        try {
-            $r = $call();
-            $this->kiTextVorschau = $r['text'];
-            $this->kiTextConfidence = $r['confidence'];
-        } catch (\Platform\FoodAlchemist\Exceptions\KiDeaktiviertException $e) {
-            $this->kiTextHinweis = 'KI ist für dieses Team deaktiviert (Einstellungen → Food DNA / KI).';
-        } catch (\Platform\FoodAlchemist\Exceptions\KiNichtVerfuegbarException $e) {
-            $this->kiTextHinweis = 'Kein KI-Provider gebunden — der Kundentext braucht ein aktives Modell (demo).';
-        } catch (\RuntimeException $e) {
-            $this->kiTextHinweis = $e->getMessage();
-        }
-    }
-
-    /** Vorschlag ins Formular übernehmen — bewusst OHNE zu speichern. Ziel entscheidet kiTextZiel. */
-    public function kiTextUebernehmen(): void
-    {
-        if ($this->kiTextVorschau === null) {
-            return;
-        }
-        if ($this->kiTextZiel === 'kapitel') {
-            if ($this->selectedKapitelId === null) {
-                return;                                              // Kapitel gewechselt, während die KI lief
-            }
-            $this->kapitelForm['description'] = $this->kiTextVorschau;
-            $hinweis = 'Text steht im Kapitel-Feld — noch nicht gespeichert (Feld verlassen speichert).';
-        } else {
-            $this->form['brief'] = $this->kiTextVorschau;
-            $hinweis = 'Text steht im Feld — noch nicht gespeichert („Speichern" oben).';
-        }
-        $this->kiTextVorschau = null;
-        $this->kiTextConfidence = null;
-        $this->kiTextHinweis = $hinweis;
-    }
-
-    public function kiTextVerwerfen(): void
-    {
-        $this->kiTextVorschau = null;
-        $this->kiTextConfidence = null;
-        $this->kiTextHinweis = null;
-    }
-
-    // ══════════════════════════════════════════════════════════════════════════
     //  Branding / CI (pro Angebot)
     // ══════════════════════════════════════════════════════════════════════════
 
@@ -1261,122 +1013,6 @@ class Editor extends Component
     public function kapitelGalerieBildEntfernen(int $imageId, OfferCompositionService $comp): void
     {
         $comp->removeKapitelGalleryImage($this->team(), $imageId);
-    }
-
-    // ══════════════════════════════════════════════════════════════════════════
-    //  Präsentation (digitales Kundenbuch, TYPE_ANGEBOT)
-    // ══════════════════════════════════════════════════════════════════════════
-
-    public function veroeffentlichen(): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        try {
-            app(PresentationService::class)->publish($this->team(), PresentationService::TYPE_ANGEBOT, $this->selectedId, [
-                'design' => $this->presentationDesign,
-                'expires_at' => $this->presentationGueltigBis,
-                'price_display' => $this->presentationPreisAnzeige,
-                'show_title' => $this->presentationTitelZeigen,
-                'price_mode' => $this->presentationPreiseAktualisieren ? 'auto' : 'preserve',
-                'declaration' => $this->presentationDeklaration,
-                'cta' => ['text' => $this->presentationCtaText, 'link' => $this->presentationCtaLink],
-                'slug' => $this->presentationSlug,
-            ]);
-            $this->presentationLoadedId = null; // erzwingt Neuladen des Status im render()
-            $this->presentationHinweis = 'Veröffentlicht — der Kundenlink ist aktiv.';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
-    }
-
-    public function zuruckziehen(): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        try {
-            app(PresentationService::class)->withdraw($this->team(), PresentationService::TYPE_ANGEBOT, $this->selectedId);
-            $this->presentationLoadedId = null;
-            $this->presentationHinweis = 'Veröffentlichung zurückgezogen — der Link ist jetzt inaktiv (404).';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
-    }
-
-    /** Einen zweiten Link FÜR einen Betrieb anlegen — dessen Preise + Vorlage, eigene Freigabe. */
-    public function betriebVeroeffentlichen(): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        if ($this->outletPublishId === null) {
-            $this->presentationFehler = 'Bitte zuerst ein Kalkulationsprofil wählen.';
-
-            return;
-        }
-        try {
-            $settings = [
-                'expires_at' => $this->outletPublishGueltigBis ?: $this->presentationGueltigBis,
-                'price_display' => $this->presentationPreisAnzeige,
-                'show_title' => $this->presentationTitelZeigen,
-                'price_mode' => $this->presentationPreiseAktualisieren ? 'auto' : 'preserve',
-                'declaration' => $this->presentationDeklaration,
-                'cta' => ['text' => $this->presentationCtaText, 'link' => $this->presentationCtaLink],
-            ];
-            if (trim((string) $this->outletPublishDesign) !== '') {
-                $settings['design'] = $this->outletPublishDesign;
-            }
-            if (trim((string) $this->outletPublishSlug) !== '') {
-                $settings['slug'] = $this->outletPublishSlug;
-            }
-            app(PresentationService::class)->publishForOutlet($this->team(), PresentationService::TYPE_ANGEBOT, $this->selectedId, $this->outletPublishId, $settings);
-            $this->outletPublishId = null;
-            $this->outletPublishGueltigBis = null;
-            $this->outletPublishDesign = '';
-            $this->outletPublishSlug = '';
-            $this->presentationHinweis = 'Kalkulationsprofil-Link veröffentlicht — eigener Link mit den Preisen, der Vorlage und dem Namen dieses Kalkulationsprofils.';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
-    }
-
-    /** Einen Betriebs-Link vom Netz nehmen (Standard-Link bleibt unberührt). */
-    public function betriebZuruckziehen(int $outletId): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        try {
-            app(PresentationService::class)->withdrawForOutlet($this->team(), PresentationService::TYPE_ANGEBOT, $this->selectedId, $outletId);
-            $this->presentationHinweis = 'Kalkulationsprofil-Link zurückgezogen.';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
-    }
-
-    /** Einen zurückgezogenen Betriebs-Link wieder live nehmen (Snapshot/Preise bleiben eingefroren). */
-    public function betriebWiederFreigeben(int $outletId): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        try {
-            app(PresentationService::class)->republishForOutlet($this->team(), PresentationService::TYPE_ANGEBOT, $this->selectedId, $outletId, $this->presentationGueltigBis);
-            $this->presentationHinweis = 'Kalkulationsprofil-Link wieder freigegeben — gleiche URL, eingefrorene Preise bleiben.';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -1513,19 +1149,7 @@ class Editor extends Component
             $this->brandingLoadedId = $angebot->id;
         }
 
-        // Präsentations-Publish-Felder nur bei Selektions-WECHSEL laden.
-        if ($angebot !== null && $this->presentationLoadedId !== $angebot->id) {
-            $s = $angebot->presentationSettings();
-            $this->presentationDesign = $angebot->presentation_design ?: 'editorial';
-            $this->presentationGueltigBis = $angebot->presentation_expires_at?->format('Y-m-d');
-            $this->presentationPreisAnzeige = (bool) ($s['price_display'] ?? true);
-            $this->presentationTitelZeigen = (bool) ($s['show_title'] ?? true);
-            $this->presentationDeklaration = (bool) ($s['declaration'] ?? true);
-            $this->presentationCtaText = $s['cta']['text'] ?? null;
-            $this->presentationCtaLink = $s['cta']['link'] ?? null;
-            $this->presentationSlug = $angebot->presentation_slug;
-            $this->presentationLoadedId = $angebot->id;
-        }
+        $this->praesentationFelderLaden($angebot);
 
         // Gewähltes Kapitel (mit Bild + Galerie) für die Speisen-/Aufbau-Ansicht.
         $kapitel = ($angebot !== null && $this->selectedKapitelId !== null)
@@ -1565,31 +1189,9 @@ class Editor extends Component
         $menue = $komposition !== null ? $comp->kundensicht($komposition) : null;
 
         // Board: EIN Baum mit Status + Preis je Kapitel (gegen die Betriebsbrille gerechnet).
-        $kapitelBoard = $angebot ? $this->kapitelBoardDaten($team, $angebot, $komposition, $zielWareneinsatzPct) : [];
+        $kapitelBoard = $angebot ? app(\Platform\FoodAlchemist\Services\Ausgabe\AngebotKapitelBoard::class)->daten($team, $angebot, $komposition, $zielWareneinsatzPct) : [];
 
-        // Präsentations-Status + Kunden-Link + Design-Auswahl fürs Branding-&-Präsentation-Tab.
-        $presentationInfo = null;
-        $presentationLink = null;
-        $betriebsLinks = [];
-        $betriebsOptionen = [];
-        if ($angebot !== null) {
-            $presentationInfo = [
-                'enabled' => (bool) $angebot->presentation_enabled,
-                'live' => $angebot->isPresentationLive(),
-                'published_at' => $angebot->presentation_published_at?->format('d.m.Y H:i'),
-                'expires_at' => $angebot->presentation_expires_at?->format('d.m.Y'),
-                // Bug-Runde 2026-09-17 #2: Design nach der Veröffentlichung geändert → Link hinkt hinterher.
-                'design_veraltet' => app(PresentationService::class)->designGeaendertSeitPublish($angebot),
-            ];
-            if ($angebot->presentation_enabled && $angebot->presentationPublicRef()) {
-                $presentationLink = url('/p/angebot/' . $angebot->presentationPublicRef());
-            }
-            $betriebsLinks = app(PresentationService::class)->outletPresentations($team, PresentationService::TYPE_ANGEBOT, $angebot->id);
-            $betriebsOptionen = \Platform\FoodAlchemist\Models\FoodAlchemistOutlet::where('team_id', $team->id)
-                ->where('is_inactive', false)->orderBy('sort_order')->orderBy('name')->get(['id', 'name'])
-                ->map(fn ($o) => ['id' => (int) $o->id, 'name' => (string) $o->name])->all();
-        }
-        $presentationDesignOptionen = app(PresentationDesignService::class)->pickerOptions($team, PresentationService::TYPE_ANGEBOT);
+        $praes = $this->praesentationDaten($team, $angebot);
 
         $facetten = $svc->facetten($team);
 
@@ -1650,11 +1252,11 @@ class Editor extends Component
                     ->where('dish_main_group_id', $this->gerichtHauptgruppe)->orderBy('id')->get(['id', 'label', 'diet_form'])
                 : collect(),
             // Branding & Präsentation
-            'presentationInfo' => $presentationInfo,
-            'presentationLink' => $presentationLink,
-            'presentationDesignOptionen' => $presentationDesignOptionen,
-            'betriebsLinks' => $betriebsLinks,
-            'betriebsOptionen' => $betriebsOptionen,
+            'presentationInfo' => $praes['presentationInfo'],
+            'presentationLink' => $praes['presentationLink'],
+            'presentationDesignOptionen' => $praes['presentationDesignOptionen'],
+            'betriebsLinks' => $praes['betriebsLinks'],
+            'betriebsOptionen' => $praes['betriebsOptionen'],
             // CRM-Picker
             'crmVerfuegbar' => $svc->crmVerfuegbar(),
             'firmen' => $svc->sucheFirmen($this->firmaSuche),
@@ -1674,74 +1276,6 @@ class Editor extends Component
             // Zuschlagskalkulation (Vollkosten-Wasserfall) fürs GANZE Angebot × Pax (B3-Partial).
             'auftragsKalkulation' => $angebot ? $svc->auftragsKalkulation($team, $angebot, $outlet, $einheiten) : null,
         ]);
-    }
-
-    /**
-     * Board-Daten je Kapitel: Baum-Struktur (kapitelTree) angereichert um Fortschritt + Aggregat
-     * (VK/EK/FC gegen die Betriebsbrille). Foodbook nutzt LeitstelleService::kapitelBoard (foodbook-
-     * typisiert); fürs Angebot bauen wir das Board offer-nativ aus OfferCompositionService.
-     *
-     * @return list<array{id:int,title:string,parent_id:?int,depth:int,fortschritt:string,vk_pro_person:?float,ek_pro_person:float,food_cost_percent:?float}>
-     */
-    /**
-     * Board-Zeilen je Kapitel in der Foodbook-Board-Shape (die das geforkte Blade erwartet):
-     * kapitel_id/titel/is_struktur/pricing_mode/hat_ziele/positionen_count/bepreist/hat_inhalt/
-     * positionen[]/aggregat{vk_pro_person,ek_per_person,pauschal}/wareneinsatz{status,ist_pct,ziel_pct}.
-     * Quelle = die bereits berechnete Komposition (intern) + die Kapitel-Modelle (fortschritt/is_struktur/Ziele).
-     */
-    private function kapitelBoardDaten(\Platform\Core\Models\Team $team, FoodAlchemistAngebot $angebot, ?array $komposition, float $zielWePct): array
-    {
-        $modelle = FoodAlchemistOfferChapter::visibleToTeam($team)
-            ->where('offer_id', $angebot->id)->get()->keyBy('id');
-        $ampel = app(\Platform\FoodAlchemist\Services\Preis\MargeService::class);
-        $board = [];
-        foreach (($komposition['kapitel'] ?? []) as $kap) {
-            $k = $modelle->get($kap['id']);
-            $positionen = [];
-            if ($kap['ist_format']) {
-                foreach ($kap['editionen'] as $ed) {
-                    if (($ed['typ'] ?? 'concept') !== 'concept') {
-                        continue;
-                    }
-                    $vk = (float) ($ed['preis_pp'] ?? 0);
-                    $ek = (float) ($ed['ek_pp'] ?? 0);
-                    $positionen[] = ['art' => 'paket', 'label' => (string) ($ed['name'] ?? ''), 'ek' => $ek, 'vk' => $vk,
-                        'preis_einheit' => 'gast', 'we_pct' => $ek > 0 ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk) : null];
-                }
-            } else {
-                foreach ($kap['bloecke'] as $b) {
-                    if (($b['ist_header'] ?? false) || in_array($b['type'] ?? '', ['header', 'header_preis', 'text', 'spacer'], true)) {
-                        continue;
-                    }
-                    $vk = (float) ($b['preis_pp'] ?? 0);
-                    $ek = (float) ($b['ek_pp'] ?? 0);
-                    $positionen[] = ['art' => ($b['type'] ?? '') === 'recipe_ref' ? 'einzel' : 'paket',
-                        'label' => (string) ($b['label'] ?? ''), 'ek' => $ek, 'vk' => $vk,
-                        'preis_einheit' => $b['preis_einheit'] ?? 'gast', 'we_pct' => $ek > 0 ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ek, $vk) : null];
-                }
-            }
-            $vkPP = $kap['vk_pro_person'];
-            $ekPP = (float) ($kap['ek_pro_person'] ?? 0);
-            $fcPct = $kap['food_cost_percent'] ?? ($ekPP > 0 ? \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ekPP, $vkPP) : null);
-            $board[] = [
-                'kapitel_id' => (int) $kap['id'],
-                'titel' => (string) ($kap['title_intern'] ?? $kap['title'] ?? ''),
-                'parent_id' => $kap['parent_id'],
-                'depth' => (int) ($kap['depth'] ?? 0),
-                'fortschritt' => $k?->fortschritt ?? 'offen',
-                'is_struktur' => (bool) ($k?->is_struktur ?? false),
-                'pricing_mode' => $kap['price_mode'] ?? null,
-                'hat_ziele' => $k !== null && ($k->target_count !== null || $k->price_anchor !== null),
-                'positionen' => $positionen,
-                'positionen_count' => count($positionen),
-                'hat_inhalt' => count($positionen) > 0,
-                'bepreist' => ($vkPP ?? 0) > 0,
-                'aggregat' => ['vk_pro_person' => $vkPP, 'ek_per_person' => $ekPP, 'pauschal' => (float) ($kap['pauschal'] ?? 0), 'wahl_spanne' => $kap['wahl_spanne'] ?? null, 'wahl_gruppen' => $kap['wahl_gruppen'] ?? []],   // 98 · 3.6 PR3
-                'wareneinsatz' => ['status' => $ampel->weAmpel($fcPct, $zielWePct), 'ist_pct' => $fcPct, 'ziel_pct' => $zielWePct],
-            ];
-        }
-
-        return $board;
     }
 
     private function team()

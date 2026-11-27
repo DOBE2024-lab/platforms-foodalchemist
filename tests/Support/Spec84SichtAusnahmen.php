@@ -4,7 +4,8 @@
 // Stand 2026-10-17: 120 Treffer in 40 Dateien.
 
 return [
-    'Livewire/Angebote/Editor.php' => 11,
+    'Livewire/Angebote/Concerns/AngebotKapitelBaum.php' => 6,   // 98 · 3.3: aus Angebote/Editor verschoben (vorher 11), kein neuer Treffer
+    'Livewire/Angebote/Editor.php' => 5,
     'Livewire/Concepter/Editor.php' => 5,
     'Livewire/Concerns/FortschrittAnsicht.php' => 2,
     'Livewire/Concerns/HatDarreichungsFormular.php' => 1,   // aus VkModal verschoben (13.11.), kein neuer Treffer

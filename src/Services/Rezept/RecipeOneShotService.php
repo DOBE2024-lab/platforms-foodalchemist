@@ -744,7 +744,7 @@ class RecipeOneShotService
             ])->values()->all(),
             'verkaufseinheit' => $gericht ? [
                 'anzahl' => $recipe->sales_unit_count,
-                'portion_g' => $recipe->sales_quantity_per_unit_g,
+                'portion_g' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($recipe)?->quantity_per_unit_g,   // 98 · 3.5-6a: Grammatur der Standard-Darreichung
             ] : null,
             // Bestand der Ebene, die dieses Glied ersetzt (wie der Editor: StepEditor::stepKontext). Vorher ohne
             // Ebenen-Filter: Anrichte-Schritte standen mit im Bestand der Produktion.
@@ -956,9 +956,8 @@ class RecipeOneShotService
                 ? $recipe->standardPresentation
                 : $recipe->standardPresentation()->first();
 
-            $portion = $standard?->quantity_per_unit_g !== null
-                ? (float) $standard->quantity_per_unit_g
-                : ($recipe->sales_quantity_per_unit_g !== null ? (float) $recipe->sales_quantity_per_unit_g : null);
+            // 98 · 3.5-6a: nur die Standard-Darreichung; der Rückfall auf den Rezept-Spiegel entfällt (io: 0 Gerichte mit Wert nur am Rezept).
+            $portion = $standard?->quantity_per_unit_g !== null ? (float) $standard->quantity_per_unit_g : null;
 
             $catalog = $standard !== null ? $this->catalogPricing->catalogPrice($team, $standard) : null;
             $vk = $standard?->sales_net !== null ? (float) $standard->sales_net : null;

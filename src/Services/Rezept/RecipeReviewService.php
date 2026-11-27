@@ -175,7 +175,7 @@ class RecipeReviewService
             // kein Schreibziel — der Copilot schreibt ohnehin nur Zutaten-Zeilen.
             $kontext['speisen_klasse'] = $r->dishClass?->label;
             $kontext['diaetform'] = $r->dishClass?->diet_form;
-            $kontext['portion_g'] = $r->sales_quantity_per_unit_g;
+            $kontext['portion_g'] = app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($r)?->quantity_per_unit_g;   // 98 · 3.5-6a: Grammatur der Standard-Darreichung, nicht der Spiegel am Rezept
             $kontext['verkaufseinheiten'] = $r->sales_unit_count;
         } else {
             $kontext['ansatz_kg'] = $r->yield_kg_manual ?? $r->yield_kg;

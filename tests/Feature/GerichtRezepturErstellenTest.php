@@ -179,7 +179,10 @@ it('Bau-Weiche (Plan 98 B): eine an der Hülle gesetzte Portion geht als Ziel in
     // Früher schützte die Hülle sales_quantity_per_unit_g gegen den Bau. Jetzt spiegelt der Kopf die Standard-Darreichung —
     // die Portion des Menschen wirkt als ziel_portion_g, auf die der Generator Zutaten und Ertrag bringt.
     $huelle = ($this->huelle)();
-    $huelle->forceFill(['sales_quantity_per_unit_g' => 250])->save();
+    // 98 · 3.5-6a: die Portion der Hülle liegt an ihrer Standard-Darreichung (der Spiegel am Rezept wird nicht mehr gelesen).
+    \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $huelle->id,
+        'serving_form_id' => \Platform\FoodAlchemist\Models\FoodAlchemistServierform::firstOrCreate(['team_id' => $this->rootTeam->id, 'code' => 'teller'], ['label' => 'Teller'])->id,
+        'is_standard' => true, 'quantity_per_unit_g' => 250, 'unit_count' => 1]);
     $session = app(\Platform\FoodAlchemist\Services\Planung\PlanungsEinstiegService::class)->rezepturSessionFuer($this->rootTeam, $huelle->id);
     $run = FoodAlchemistCascadeRun::create(['team_id' => $this->rootTeam->id, 'planning_session_id' => $session->id, 'scope' => 'gericht', 'status' => 'running']);
     $step = FoodAlchemistCascadeRunStep::create(['team_id' => $this->rootTeam->id, 'cascade_run_id' => $run->id, 'kind' => 'gericht', 'status' => 'running']);

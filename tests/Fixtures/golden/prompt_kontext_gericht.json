@@ -3,11 +3,11 @@
         "review": {
             "speisen_klasse": null,
             "diaetform": null,
-            "portion_g": 999,
+            "portion_g": 250.0,
             "verkaufseinheiten": 3
         },
         "konformitaet": {
-            "portion_g": 999,
+            "portion_g": 250.0,
             "verkaufseinheiten": 3
         },
         "revise": {
@@ -32,28 +32,28 @@
                     "Teller"
                 ],
                 "verkaufseinheit": "3 ×",
-                "portion_g": 999,
+                "portion_g": 250.0,
                 "aufschlagsklasse": null
             }
         },
         "schritte_oneshot": {
             "anzahl": 3,
-            "portion_g": 999
+            "portion_g": 250.0
         },
         "schritte_editor": {
             "anzahl": 3,
-            "portion_g": 999
+            "portion_g": 250.0
         }
     },
     "gericht.konsistent": {
         "review": {
             "speisen_klasse": null,
             "diaetform": null,
-            "portion_g": 250,
+            "portion_g": 250.0,
             "verkaufseinheiten": null
         },
         "konformitaet": {
-            "portion_g": 250,
+            "portion_g": 250.0,
             "verkaufseinheiten": null
         },
         "revise": {
@@ -78,21 +78,21 @@
                     "Teller"
                 ],
                 "verkaufseinheit": "Portion",
-                "portion_g": 250,
+                "portion_g": 250.0,
                 "aufschlagsklasse": null
             }
         },
         "schritte_oneshot": {
             "anzahl": null,
-            "portion_g": 250
+            "portion_g": 250.0
         },
         "schritte_editor": {
             "anzahl": null,
-            "portion_g": 250
+            "portion_g": 250.0
         }
     },
     "huelle.abweichend": {
-        "ziel_portion_g": 999.0
+        "ziel_portion_g": 250.0
     },
     "huelle.konsistent": {
         "ziel_portion_g": 250.0

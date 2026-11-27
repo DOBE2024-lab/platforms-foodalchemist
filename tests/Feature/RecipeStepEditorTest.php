@@ -240,9 +240,12 @@ it('rahmt KI-Schritte fuer Verkaufsgerichte als Fertigstellung statt Komponenten
     ]);
     $gericht = $this->makeRecipe($this->rootTeam, '[DES] Marillenknoedel | Vanille-Topfencreme | Crumble', [
         'is_sales_recipe' => true,
-        'sales_quantity_per_unit_g' => 140,
         'sales_unit_count' => 1,
     ]);
+    // 98 · 3.5-6a: Portionsgewicht an der Standard-Darreichung (vorher sales_quantity_per_unit_g am Rezept).
+    \Platform\FoodAlchemist\Models\FoodAlchemistRecipeDarreichung::create(['team_id' => $this->rootTeam->id, 'recipe_id' => $gericht->id,
+        'serving_form_id' => \Platform\FoodAlchemist\Models\FoodAlchemistServierform::firstOrCreate(['team_id' => $this->rootTeam->id, 'code' => 'teller'], ['label' => 'Teller'])->id,
+        'is_standard' => true, 'quantity_per_unit_g' => 140, 'unit_count' => 1]);
     $this->makeIngredient($gericht, 'Vanille-Topfencreme', null, '60', 1)
         ->update(['referenced_recipe_id' => $komponente->id]);
 
@@ -256,7 +259,7 @@ it('rahmt KI-Schritte fuer Verkaufsgerichte als Fertigstellung statt Komponenten
                 && str_contains((string) ($payload['hinweis'] ?? ''), 'NICHT in diese Schritte')
                 && ($payload['komponenten'][0]['name'] ?? null) === $komponente->name
                 && ($payload['komponenten'][0]['typ'] ?? null) === 'basisrezept'
-                && ($payload['verkaufseinheit']['portion_g'] ?? null) === 140;
+                && (float) ($payload['verkaufseinheit']['portion_g'] ?? 0) === 140.0;   // jetzt float aus der Darreichung
         }), Mockery::any())->andReturn(new AiProposal([
             'steps' => [
                 ['phase' => 'Mise en Place', 'text' => 'Komponenten kalt bereitstellen.'],

@@ -209,7 +209,7 @@ class RecipeReviseService
             'diaetform' => $r->dishClass?->diet_form,
             'darreichungen' => $r->presentations->map(fn ($d) => $d->servingForm?->label)->filter()->values()->all(),
             'verkaufseinheit' => trim(($r->sales_unit_count !== null ? $r->sales_unit_count . ' × ' : '') . ($r->salesUnit?->display_de ?? '')) ?: null,
-            'portion_g' => $r->sales_quantity_per_unit_g,
+            'portion_g' => app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->standardFuer($r)?->quantity_per_unit_g,   // 98 · 3.5-6a: Grammatur der Standard-Darreichung
             'aufschlagsklasse' => $r->vk_klasse?->code,   // Spec 85 D-1 PR-B: Klasse der Standard-Darreichung
         ];
 

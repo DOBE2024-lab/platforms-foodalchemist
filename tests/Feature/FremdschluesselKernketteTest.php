@@ -25,6 +25,9 @@ function fkMigrationsListe(): array
         foreach ((new ReflectionClassConstant($migration, 'FKS'))->getValue() as $fk) {
             $liste[] = $fk;
         }
+        if ((new ReflectionClass($migration))->hasConstant('NUR_SQLITE')) {   // vessel_gp_id: auf io vorbestehend, Testbasis ergänzt
+            array_push($liste, ...(new ReflectionClassConstant($migration, 'NUR_SQLITE'))->getValue());
+        }
     }
 
     return $liste;
@@ -44,7 +47,7 @@ it('nie cascade: nur restrict oder set null, set null nur auf nullbaren Selbstbe
     foreach (fkMigrationsListe() as [$t, $s, $z, $art]) {
         expect($art)->toBeIn([Fremdschluessel::RESTRICT, Fremdschluessel::NULL_SETZEN]);
         if ($art === Fremdschluessel::NULL_SETZEN) {
-            expect($s)->toBeIn(['fassung_von_id', 'kopie_von_id', 'variant_source_recipe_id']);
+            expect($s)->toBeIn(['fassung_von_id', 'kopie_von_id', 'variant_source_recipe_id', 'vessel_gp_id']);   // vessel_gp_id: wie auf io (nullOnDelete)
         }
     }
     expect(fn () => Fremdschluessel::ergaenze('foodalchemist_recipes', 'kopie_von_id', 'foodalchemist_recipes', 'cascade'))

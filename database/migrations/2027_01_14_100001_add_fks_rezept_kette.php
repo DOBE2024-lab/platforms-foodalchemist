@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Platform\FoodAlchemist\Support\Datenmodell\Fremdschluessel;
+use Platform\FoodAlchemist\Support\Datenmodell\SqliteTabellenUmbau;
 
 /**
  * Plan 98 · 3.5 Schritt 5 · Fremdschlüssel: Rezept-Kette.
@@ -25,19 +26,27 @@ return new class extends Migration
         ['foodalchemist_recipe_taste_vectors', 'recipe_id', 'foodalchemist_recipes', Fremdschluessel::RESTRICT],
         ['foodalchemist_recipe_textures', 'recipe_id', 'foodalchemist_recipes', Fremdschluessel::RESTRICT],
         ['foodalchemist_recipe_team_kosten', 'recipe_id', 'foodalchemist_recipes', Fremdschluessel::RESTRICT],
-        ['foodalchemist_recipe_presentations', 'vessel_gp_id', 'foodalchemist_gps', Fremdschluessel::RESTRICT],
+    ];
+
+    /**
+     * Nur Testbasis: vessel_gp_id hat auf MySQL (io) seinen FK seit 2026_11_07_200000 (nullOnDelete), dort aber nur außerhalb von
+     * SQLite. Damit beide Schemas gleich sind, legt diese Migration ihn NUR auf SQLite an und baut ihn NUR dort zurück — ein Rollback
+     * auf io lässt den vorbestehenden FK stehen (MySQL-Probelauf Paul: sonst 850 → 849).
+     */
+    public const NUR_SQLITE = [
+        ['foodalchemist_recipe_presentations', 'vessel_gp_id', 'foodalchemist_gps', Fremdschluessel::NULL_SETZEN],
     ];
 
     public function up(): void
     {
-        foreach (self::FKS as [$tabelle, $spalte, $ziel, $beimLoeschen]) {
+        foreach ([...self::FKS, ...(SqliteTabellenUmbau::aktiv() ? self::NUR_SQLITE : [])] as [$tabelle, $spalte, $ziel, $beimLoeschen]) {
             Fremdschluessel::ergaenze($tabelle, $spalte, $ziel, $beimLoeschen);
         }
     }
 
     public function down(): void
     {
-        foreach (array_reverse(self::FKS) as [$tabelle, $spalte, $ziel]) {
+        foreach (array_reverse([...self::FKS, ...(SqliteTabellenUmbau::aktiv() ? self::NUR_SQLITE : [])]) as [$tabelle, $spalte, $ziel]) {
             Fremdschluessel::entferne($tabelle, $spalte, $ziel);
         }
     }

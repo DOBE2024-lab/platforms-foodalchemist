@@ -66,6 +66,12 @@ final class Fremdschluessel
         // Namen aus dem Schema: nach einem Spalten-Rename trägt der FK noch den alten Namen (z. B. dish_ideas …_sales_recipe_id_foreign)
         $name = self::name($tabelle, $spalte, $ziel);
         Schema::table($tabelle, fn (Blueprint $t) => $name !== null ? $t->dropForeign($name) : $t->dropForeign([$spalte]));
+        // MySQL legt für einen FK ohne passenden Index implizit einen Index mit dem FK-Namen an; dropForeign lässt ihn stehen.
+        // Laravel benennt eigene Indizes nie „…_foreign“ — ein Index mit genau diesem Namen stammt also vom FK (vorher kein Index
+        // auf der Spalte, sonst hätte MySQL den vorhandenen genutzt). Den nehmen wir für einen exakten Rückweg mit.
+        if ($name !== null && collect(Schema::getIndexes($tabelle))->contains(fn ($i) => $i['name'] === $name)) {
+            Schema::table($tabelle, fn (Blueprint $t) => $t->dropIndex($name));
+        }
     }
 
     public static function besteht(string $tabelle, string $spalte, string $ziel): bool

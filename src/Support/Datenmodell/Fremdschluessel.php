@@ -1,0 +1,89 @@
+<?php
+
+namespace Platform\FoodAlchemist\Support\Datenmodell;
+
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+/**
+ * Plan 98 · 3.5 Schritt 5 · Fremdschlüssel der Kernkette nachziehen — idempotent und mit Waisen-Riegel.
+ *
+ * - Idempotent: Tabelle/Spalte fehlt oder ein FK auf (Spalte → Ziel) besteht schon ⇒ nichts tun (io hat z. B. vessel_gp_id längst).
+ * - Riegel: zeigt auch nur eine Zeile ins Leere (Elternzeile fehlt), bricht die Migration mit Tabelle, Spalte und Zahl ab, statt zu
+ *   löschen. Verweise auf soft-gelöschte Eltern sind erlaubt (Soft-Delete bleibt wiederherstellbar; ein FK sieht es nicht).
+ *   Gleiche Zählung wie {@see \Platform\FoodAlchemist\Services\Plattform\WaisenReportService}.
+ * - ON DELETE: `restrict` (Standard; die App löscht Eltern nur weich) oder `set null` (Selbstbezug Fassung/Kopie). Nie `cascade`.
+ * - FK-Name nach Laravel-Standard (`{tabelle}_{spalte}_foreign`, ≤ 64 Zeichen), damit `down()` ihn über die Spalte wiederfindet.
+ */
+final class Fremdschluessel
+{
+    public const RESTRICT = 'restrict';
+
+    public const NULL_SETZEN = 'set null';
+
+    /** @return bool true = FK angelegt, false = übersprungen (fehlt oder besteht schon) */
+    public static function ergaenze(string $tabelle, string $spalte, string $ziel, string $beimLoeschen = self::RESTRICT): bool
+    {
+        if (! in_array($beimLoeschen, [self::RESTRICT, self::NULL_SETZEN], true)) {
+            throw new \InvalidArgumentException("ON DELETE {$beimLoeschen} ist hier nicht erlaubt (nur restrict / set null).");
+        }
+        if (! Schema::hasTable($tabelle) || ! Schema::hasColumn($tabelle, $spalte) || ! Schema::hasTable($ziel)) {
+            return false;
+        }
+        if (self::besteht($tabelle, $spalte, $ziel)) {
+            return false;
+        }
+        $waisen = self::waisen($tabelle, $spalte, $ziel);
+        if ($waisen['gesamt'] > 0) {
+            throw new \RuntimeException("Fremdschlüssel {$tabelle}.{$spalte} → {$ziel} nicht angelegt: {$waisen['gesamt']} Zeile(n) zeigen ins Leere, "
+                ."davon {$waisen['geloescht']} selbst soft-gelöscht (der FK prüft auch die). Erst bereinigen, dann erneut migrieren.");
+        }
+        Schema::table($tabelle, function (Blueprint $t) use ($spalte, $ziel, $beimLoeschen) {
+            $fk = $t->foreign($spalte)->references('id')->on($ziel);
+            $beimLoeschen === self::NULL_SETZEN ? $fk->nullOnDelete() : $fk->restrictOnDelete();
+        });
+
+        return true;
+    }
+
+    /** Rückweg: FK auf (Spalte → Ziel) entfernen, falls vorhanden. */
+    public static function entferne(string $tabelle, string $spalte, string $ziel): void
+    {
+        if (! Schema::hasTable($tabelle) || ! self::besteht($tabelle, $spalte, $ziel)) {
+            return;
+        }
+        Schema::table($tabelle, fn (Blueprint $t) => $t->dropForeign([$spalte]));
+    }
+
+    public static function besteht(string $tabelle, string $spalte, string $ziel): bool
+    {
+        foreach (Schema::getForeignKeys($tabelle) as $fk) {
+            if ($fk['columns'] === [$spalte] && self::ohneSchema($fk['foreign_table']) === $ziel) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Zeilen, deren Verweis auf keine Elternzeile zeigt — ALLE, auch selbst soft-gelöschte: MySQL prüft beim Anlegen des FK jede Zeile.
+     * (Der Waisen-Report zählt soft-gelöschte Kinder nicht mit; deshalb hier eigens.)
+     *
+     * @return array{gesamt: int, geloescht: int}
+     */
+    public static function waisen(string $tabelle, string $spalte, string $ziel): array
+    {
+        $q = fn () => DB::table($tabelle.' as c')->leftJoin($ziel.' as p', 'p.id', '=', 'c.'.$spalte)->whereNotNull('c.'.$spalte)->whereNull('p.id');
+        $gesamt = (int) $q()->count();
+        $geloescht = $gesamt > 0 && Schema::hasColumn($tabelle, 'deleted_at') ? (int) $q()->whereNotNull('c.deleted_at')->count() : 0;
+
+        return ['gesamt' => $gesamt, 'geloescht' => $geloescht];
+    }
+
+    private static function ohneSchema(string $tabelle): string
+    {
+        return str_contains($tabelle, '.') ? substr($tabelle, strrpos($tabelle, '.') + 1) : $tabelle;
+    }
+}

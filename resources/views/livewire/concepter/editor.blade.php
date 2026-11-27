@@ -613,7 +613,7 @@
                                         @forelse($concept->slots as $slot)
                                             @php
                                                 $istStruktur = in_array($slot->type, ['text', 'spacer', 'header', 'header_preis']);
-                                                $istAbschnitt = (bool) ($slot->package_id || $slot->embedded_concept_id);
+                                                $istAbschnitt = (bool) $slot->embedded_concept_id;
                                                 $ekz = $cockpitZeilen[$slot->id]['ek'] ?? null;
                                                 $vkz = $cockpitZeilen[$slot->id]['price'] ?? null;
                                                 $wpct = \Platform\FoodAlchemist\Services\Preis\MargeService::wareneinsatzPct($ekz, $vkz, null);
@@ -829,7 +829,7 @@
                                                     </td>
                                                 </tr>
                                             @endif
-                                            @if(! $istStruktur && ($fillOpenId === $slot->id || (! $slot->package_id && ! $slot->embedded_concept_id && ! $slot->sales_recipe_id)))
+                                            @if(! $istStruktur && ($fillOpenId === $slot->id || (! $slot->embedded_concept_id && ! $slot->sales_recipe_id)))
                                                 <tr wire:key="efill-{{ $slot->id }}">
                                                     <td></td>
                                                     <td colspan="7" class="align-top bg-[var(--fa-ground)]">
@@ -842,7 +842,7 @@
                                                             </select>
                                                             <x-fa::button size="sm" icon="heroicon-m-magnifying-glass" wire:click="gerichtPicker({{ $slot->id }})">Gericht oder Basisrezept wählen</x-fa::button>
                                                             <x-fa::button size="sm" icon="heroicon-m-archive-box" wire:click="neuesPaketImSlot({{ $slot->id }})" title="Direkt hier ein neues Paket schnüren">Neues Paket schnüren</x-fa::button>
-                                                            @if($slot->package_id || $slot->embedded_concept_id || $slot->sales_recipe_id)
+                                                            @if($slot->embedded_concept_id || $slot->sales_recipe_id)
                                                                 <x-fa::button size="sm" variant="ghost" icon="heroicon-m-x-mark" wire:click="slotLeeren({{ $slot->id }})">Position leeren</x-fa::button>
                                                             @else
                                                                 {{-- L4: fester Vorschlag aus dem Bestand (ohne KI) --}}

@@ -185,8 +185,7 @@ it('Kündigung: Kette ohne Doppel (Gericht EINMAL kopiert), Kopien sind normale 
         ->and($konzeptK->kopie_stand_at)->not->toBeNull()->and($paketK->ist_fassung)->toBeFalse()->and((int) $paketK->kopie_von_id)->toBe($this->paket->id)
         ->and($paketKonzeptK->kind)->toBe('paket')->and($paketK->kind)->toBe('paket');
     $slots = $konzeptK->slots()->orderBy('position')->get();
-    expect($slots->pluck('package_id')->filter()->values()->all())->toBe([])
-        ->and($slots->pluck('embedded_concept_id')->filter()->values()->all())->toBe([$paketK->id, $paketKonzeptK->id])
+    expect($slots->pluck('embedded_concept_id')->filter()->values()->all())->toBe([$paketK->id, $paketKonzeptK->id])
         ->and($slots->pluck('sales_recipe_id')->filter()->values()->all())->toBe([$gerichtK->id])
         ->and($paketK->slots()->pluck('sales_recipe_id')->map(fn ($v) => (int) $v)->all())->toBe([$gerichtK->id]);
     // gewählte Form: zeigt auf die Form der Rezept-KOPIE (kleine Portion), nie auf die der Fassung

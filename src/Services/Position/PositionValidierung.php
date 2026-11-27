@@ -133,7 +133,7 @@ final class PositionValidierung
     }
 
     /**
-     * Inhalt eines Konzept-Slots (genau eines von Paket, Alt-Paket, Rezept): Sicht inkl. Abo-Fassungen, Kreis, Typ
+     * Inhalt eines Konzept-Slots (genau eines von Paket oder Rezept; eine Alt-Paket-Id wird abgelehnt): Sicht inkl. Abo-Fassungen, Kreis, Typ
      * (Gericht/Basisrezept) und für ein Rezept die wirksame Einheit.
      *
      * @param  array<string, mixed>  $in  embedded_concept_id | package_id | sales_recipe_id (+ type, unit_vocab_id)

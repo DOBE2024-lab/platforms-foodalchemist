@@ -17,16 +17,6 @@ class FoodAlchemistSpeiseplanEintrag extends Model
 {
     use HasUuidV7, LogsActivity, BelongsToTeamHierarchy, SoftDeletes;
 
-    /** 98 · 2.6c: neue Verweise auf alte Pakete (package_id) werden abgelehnt; ein Paket wird als Concept (concept_id, Art Paket) eingeplant. */
-    protected static function booted(): void
-    {
-        static::saving(function (self $e) {
-            if ($e->package_id !== null && $e->isDirty('package_id')) {
-                throw new \RuntimeException('Alte Pakete gibt es nicht mehr. Bitte das Paket als Konzept (concept_id, Art Paket) einplanen.');
-            }
-        });
-    }
-
     protected $table = 'foodalchemist_menu_plan_entries';
 
     protected $guarded = ['id'];
@@ -91,7 +81,6 @@ class FoodAlchemistSpeiseplanEintrag extends Model
     {
         return match (true) {
             $this->concept_id !== null => 'c' . $this->concept_id,
-            $this->package_id !== null => 'p' . $this->package_id,
             $this->sales_recipe_id !== null => 'g' . $this->sales_recipe_id,
             default => null,
         };

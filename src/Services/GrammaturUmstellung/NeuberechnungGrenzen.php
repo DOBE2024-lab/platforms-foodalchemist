@@ -9,7 +9,7 @@ use Platform\FoodAlchemist\Services\Rezept\RezeptGraphService;
 
 /**
  * Plan 98 B · Obergrenze der Neuberechnung (Kurator 23.11.2026): Der Normalweg darf nur Zeilen der betroffenen Rezepte und ihrer
- * Verwender schreiben — Eltern-Rezepte, Pakete, Konzepte (samt einbettender Konzepte), Angebote; Caches (Team-Kosten, Aromenprofil)
+ * Verwender schreiben — Eltern-Rezepte, Konzepte (samt einbettender Konzepte und Pakete der Art Paket), Angebote; Caches (Team-Kosten, Aromenprofil)
  * auch für Unter-Rezepte. Grenzen werden VOR der Neuberechnung bestimmt; danach wird jede seit dem Phasenstart geschriebene Zeile
  * dagegen geprüft und je Tabelle und team_id gezählt.
  */
@@ -24,9 +24,7 @@ final class NeuberechnungGrenzen
         $graph = app(RezeptGraphService::class);
         $rezepte = array_map('intval', $graph->vorfahren($rezeptIds));
         $caches = array_values(array_unique([...$rezepte, ...array_map('intval', $graph->nachfahren($rezeptIds))]));
-        $pakete = DB::table('foodalchemist_package_dishes')->whereIn('sales_recipe_id', $rezepte)->whereNull('deleted_at')
-            ->distinct()->pluck('package_id')->map(fn ($i) => (int) $i)->all();
-        $konzepte = $this->konzepte($rezepte, $pakete);
+        $konzepte = $this->konzepte($rezepte);
         $angebote = DB::table('foodalchemist_concepts')->whereIn('id', $konzepte)->whereNotNull('offer_id')->pluck('offer_id')
             ->merge(DB::table('foodalchemist_offer_concept')->whereIn('concept_id', $konzepte)->pluck('offer_id'))
             ->map(fn ($i) => (int) $i)->unique()->values()->all();
@@ -35,7 +33,6 @@ final class NeuberechnungGrenzen
             'foodalchemist_recipes' => $rezepte,
             'foodalchemist_recipe_presentations' => DB::table('foodalchemist_recipe_presentations')->whereIn('recipe_id', $rezepte)
                 ->pluck('id')->map(fn ($i) => (int) $i)->all(),
-            'foodalchemist_packages' => $pakete,
             'foodalchemist_concepts' => $konzepte,
             'foodalchemist_offers' => $angebote,
             'cache_rezepte' => $caches,
@@ -61,7 +58,7 @@ final class NeuberechnungGrenzen
             }
         };
 
-        foreach (['foodalchemist_recipes', 'foodalchemist_recipe_presentations', 'foodalchemist_packages', 'foodalchemist_concepts', 'foodalchemist_offers'] as $t) {
+        foreach (['foodalchemist_recipes', 'foodalchemist_recipe_presentations', 'foodalchemist_concepts', 'foodalchemist_offers'] as $t) {
             $zaehle($t, DB::table($t)->where('updated_at', '>=', $seit)->get(['id', 'team_id']), 'id', $t);
         }
         $zaehle('foodalchemist_recipe_team_kosten', DB::table('foodalchemist_recipe_team_kosten')->where('updated_at', '>=', $seit)
@@ -69,8 +66,7 @@ final class NeuberechnungGrenzen
         $zaehle('foodalchemist_recipe_profile', DB::table('foodalchemist_recipe_profile as p')->join('foodalchemist_recipes as r', 'r.id', '=', 'p.recipe_id')
             ->where('p.updated_at', '>=', $seit)->get(['p.recipe_id', 'r.team_id']), 'recipe_id', 'cache_rezepte');
 
-        $grenzeAudit = ['presentation' => 'foodalchemist_recipe_presentations', 'package' => 'foodalchemist_packages',
-            'concept' => 'foodalchemist_concepts', 'offer' => 'foodalchemist_offers'];
+        $grenzeAudit = ['presentation' => 'foodalchemist_recipe_presentations', 'concept' => 'foodalchemist_concepts', 'offer' => 'foodalchemist_offers'];
         foreach (DB::table('foodalchemist_price_change_audits')->where('created_at', '>=', $seit)->get(['entity_type', 'entity_id', 'team_id']) as $a) {
             $zaehlung['foodalchemist_price_change_audits'][(string) $a->team_id] = ($zaehlung['foodalchemist_price_change_audits'][(string) $a->team_id] ?? 0) + 1;
             $grenze = $grenzeAudit[$a->entity_type] ?? null;
@@ -85,11 +81,11 @@ final class NeuberechnungGrenzen
         return ['verstoesse' => $verstoesse, 'zaehlung' => $zaehlung];
     }
 
-    /** @return list<int> Konzepte mit Slots auf die Rezepte/Pakete, dazu alle einbettenden Konzepte (wie PricingCascadeService) */
-    private function konzepte(array $rezepte, array $pakete): array
+    /** @return list<int> Konzepte mit Slots auf die Rezepte, dazu alle einbettenden Konzepte (wie PricingCascadeService) */
+    private function konzepte(array $rezepte): array
     {
         $ids = DB::table('foodalchemist_concept_slots')->whereNull('deleted_at')
-            ->where(fn ($q) => $q->whereIn('sales_recipe_id', $rezepte)->orWhereIn('package_id', $pakete))
+            ->whereIn('sales_recipe_id', $rezepte)
             ->distinct()->pluck('concept_id')->map(fn ($i) => (int) $i)->all();
         $gesehen = array_fill_keys($ids, true);
         for ($rand = $ids; $rand !== [];) {

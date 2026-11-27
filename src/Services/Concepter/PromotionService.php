@@ -146,14 +146,13 @@ class PromotionService
                 ->whereIn('concept_id', $konzepte)->whereNotNull('sales_recipe_id')
                 ->whereNull('deleted_at')->pluck('sales_recipe_id')->all());
         }
-        // $pakete (alte package_id) wird seit 98 · 2.6c nicht mehr aufgelöst — die Alt-Pakete gibt es nicht mehr
 
         return array_values(array_unique(array_map('intval', array_filter($direkt))));
     }
 
     // ── intern ────────────────────────────────────────────────────────────────
 
-    /** @return array{0:list<int>,1:list<int>,2:list<int>} direkt · concept_ids · package_ids */
+    /** @return array{0:list<int>,1:list<int>,2:list<int>} direkt · concept_ids · (immer leer: die Alt-Pakete fielen mit 98 · 3.1) */
     private function ausFoodbook(int $id): array
     {
         $rows = DB::table('foodalchemist_foodbook_blocks as b')
@@ -182,11 +181,10 @@ class PromotionService
     {
         $rows = DB::table('foodalchemist_menu_plan_entries')
             ->where('menu_plan_id', $id)->whereNull('deleted_at')
-            ->get(['sales_recipe_id', 'concept_id', 'package_id']);
+            ->get(['sales_recipe_id', 'concept_id']);
 
         return [$rows->pluck('sales_recipe_id')->filter()->all(),
-            $rows->pluck('concept_id')->filter()->unique()->all(),
-            $rows->pluck('package_id')->filter()->unique()->all()];
+            $rows->pluck('concept_id')->filter()->unique()->all(), []];
     }
 
     /**

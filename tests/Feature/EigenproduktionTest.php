@@ -31,9 +31,9 @@ beforeEach(function () {
     // Fond: 10 kg Ertrag, EK 20 € → 0,002 €/g; TK 90 Tage, gekühlt 4 Tage, üblich TK
     $this->fond = FoodAlchemistRecipe::create(['team_id' => $t, 'recipe_key' => 'fond', 'name' => 'Fond: Kalbsfond', 'status' => 'approved', 'is_sales_recipe' => false,
         'yield_kg' => 10.0, 'ek_total_eur' => 20.0, 'storage_type' => 'tiefgekuehlt', 'shelf_life_chilled_days' => 4, 'shelf_life_frozen_days' => 90]);
-    // Gericht: 10 Portionen, EK gesamt 30 € → 3 €/Portion
+    // Gericht = eine Portion (98 · 3.5-6a, „fest 1“), EK 3 € → 3 €/Portion (vorher Ansatz für 10 Portionen zu 30 €)
     $this->lasagne = FoodAlchemistRecipe::create(['team_id' => $t, 'recipe_key' => 'lasagne', 'name' => '[HG] Lasagne', 'status' => 'approved', 'is_sales_recipe' => true,
-        'sales_unit_count' => 10, 'ek_total_eur' => 30.0, 'shelf_life_chilled_days' => 2]);
+        'ek_total_eur' => 3.0, 'shelf_life_chilled_days' => 2]);
     $this->lager = FoodAlchemistInventoryLocation::create(['team_id' => $t, 'name' => 'TK-Raum', 'type' => 'warehouse', 'is_default' => true, 'is_active' => true]);
 });
 
@@ -137,4 +137,17 @@ it('Oberfläche: aus der Produktion vorbelegt einlagern, Chargen-Liste, Entnehme
 it('CQ 2.3f: Einlagern mit unbekannter/fremder Produktionsauftrags-Zeile wird abgelehnt', function () {
     expect(fn () => $this->svc->einlagern($this->rootTeam, ['recipe_id' => $this->fond->id, 'menge' => 1, 'production_order_line_id' => 999999]))
         ->toThrow(\RuntimeException::class, 'nicht sichtbar');
+});
+
+it('Preis je Portion eines Gerichts ohne Portions-EK: EK des Gerichts, auch ohne oder mit alter Portionszahl (98 · 3.5-6a, „fest 1“)', function () {
+    $ohne = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'eintopf', 'name' => '[HG] Eintopf', 'status' => 'approved',
+        'is_sales_recipe' => true, 'ek_total_eur' => 4.5]);
+    $alt = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'auflauf', 'name' => '[HG] Auflauf', 'status' => 'approved',
+        'is_sales_recipe' => true, 'ek_total_eur' => 4.5, 'sales_unit_count' => 9]);
+    $leer = FoodAlchemistRecipe::create(['team_id' => $this->rootTeam->id, 'recipe_key' => 'leer', 'name' => '[HG] Ohne EK', 'status' => 'approved',
+        'is_sales_recipe' => true]);
+
+    expect($this->svc->preisJeBasis($ohne))->toBe(4.5)       // vorher null (keine Portionszahl → kein Preis)
+        ->and($this->svc->preisJeBasis($alt))->toBe(4.5)     // vorher 0,50 (÷ 9); der Spiegel zählt nicht mehr
+        ->and($this->svc->preisJeBasis($leer))->toBeNull();  // ohne Kalkulation weiter kein Preis
 });

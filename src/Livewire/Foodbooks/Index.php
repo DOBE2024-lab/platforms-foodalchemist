@@ -11,13 +11,10 @@ use Livewire\WithPagination;
 use Platform\FoodAlchemist\Livewire\Concerns\ManagesCanvas;
 use Platform\FoodAlchemist\Livewire\Concerns\ManagesPhase;
 use Platform\FoodAlchemist\Livewire\Concerns\ManagesPlanningFrame;
-use Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel;
 use Platform\FoodAlchemist\Enums\AusgabeStatus;
 use Platform\FoodAlchemist\Models\FoodAlchemistFoodbook;
 use Platform\FoodAlchemist\Services\Foodbook\FoodbookService;
 use Platform\FoodAlchemist\Services\Planung\IdeenService;
-use Platform\FoodAlchemist\Services\Ausgabe\PresentationDesignService;
-use Platform\FoodAlchemist\Services\Ausgabe\PresentationService;
 
 /**
  * M11-03 / Doc 15 §9.3: Foodbook-Editor — stellt fertige **Concepts** zu einem
@@ -29,6 +26,10 @@ class Index extends Component
     use WithPagination, WithFileUploads, ManagesCanvas, ManagesPlanningFrame, ManagesPhase, \Platform\FoodAlchemist\Livewire\Concerns\HandyAusgabenLesen;   // #1003
     use \Platform\FoodAlchemist\Livewire\Concerns\InteractsWithSavedToast, \Platform\FoodAlchemist\Livewire\Concerns\LegtMitNamenAn;   // 98 · 2.4c
     use \Platform\FoodAlchemist\Livewire\Concerns\MitBearbeitungssperre;   // Spec 65
+    use Concerns\FoodbookBrandingBilder;   // 98 · 3.3: Branding, Logo/Cover, Kapitel-Bild + Galerie
+    use Concerns\FoodbookKapitelBaum;      // 98 · 3.3: Kapitel ordnen
+    use Concerns\FoodbookKiText;           // 98 · 3.3: KI-Kundentext-Vorschau
+    use Concerns\FoodbookPraesentation;    // 98 · 3.3: Präsentation veröffentlichen
 
     /** Spec 65: Sperre gilt dem gewählten Foodbook. */
     protected function sperrZiel(): ?array
@@ -108,297 +109,6 @@ class Index extends Component
         return false;
     }
 
-    // ── Phase 6: Branding / CI (pro Foodbook) — verdrahtet die FoodbookService-Branding-API ──
-    public array $brandingForm = ['brand_color' => '#6d28d9', 'band_color' => '', 'footer_text' => ''];
-
-    public $logoUpload = null;
-
-    public $coverUpload = null;
-
-    public ?int $brandingLoadedId = null;
-
-    public ?string $brandingFehler = null;
-
-    public bool $brandingGespeichert = false;
-
-    // ── Spec 43: Präsentation (digitales Kundenbuch) — Publish-Steuerung im Branding-Tab ──
-    public string $presentationDesign = 'editorial';
-
-    public ?string $presentationGueltigBis = null;   // Pflicht-Datum beim Veröffentlichen
-
-    public bool $presentationPreisAnzeige = true;
-
-    /** Republish-Preis-Schutz (Ebene 2): AUS = eingefrorene Preise behalten (neue Speisen live);
-     *  AN = aktuelle VK ziehen. Greift nur beim erneuten Veröffentlichen; Erstpublish immer live. */
-    public bool $presentationPreiseAktualisieren = false;
-
-    public bool $presentationDeklaration = true;
-
-    public ?string $presentationCtaText = null;
-
-    public ?string $presentationCtaLink = null;
-
-    public ?string $presentationSlug = null;   // Spec 43: optionaler eigener Link-Name (statt Zufalls-Token)
-
-    public ?int $presentationLoadedId = null;
-
-    public ?string $presentationFehler = null;
-
-    public ?string $presentationHinweis = null;
-
-    // Slice F: publish-per-Betrieb — zusätzlicher Link je Betrieb mit DESSEN Preisen + eigener Freigabe.
-    public ?int $outletPublishId = null;
-
-    public ?string $outletPublishGueltigBis = null;
-
-    // Pro Betriebs-Link eigene Vorlage + eigener Link-Name (leer = Betriebs-Default bzw. Zufalls-Token).
-    public ?string $outletPublishDesign = '';
-
-    public ?string $outletPublishSlug = '';
-
-    public function veroeffentlichen(): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        try {
-            app(PresentationService::class)->publish($this->team(), 'foodbook', $this->selectedId, [
-                'design' => $this->presentationDesign,
-                'expires_at' => $this->presentationGueltigBis,
-                'price_display' => $this->presentationPreisAnzeige,
-                'price_mode' => $this->presentationPreiseAktualisieren ? 'auto' : 'preserve',
-                'declaration' => $this->presentationDeklaration,
-                'cta' => ['text' => $this->presentationCtaText, 'link' => $this->presentationCtaLink],
-                'slug' => $this->presentationSlug,
-            ]);
-            $this->presentationLoadedId = null; // erzwingt Neuladen des Status im render()
-            $this->presentationHinweis = 'Veröffentlicht — der Kundenlink ist aktiv.';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
-    }
-
-    public function zuruckziehen(): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        try {
-            app(PresentationService::class)->withdraw($this->team(), 'foodbook', $this->selectedId);
-            $this->presentationLoadedId = null;
-            $this->presentationHinweis = 'Veröffentlichung zurückgezogen — der Link ist jetzt inaktiv (404).';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
-    }
-
-    /** Slice F: einen zweiten Link FÜR einen Betrieb anlegen — dessen Preise + Vorlage, eigene Freigabe. */
-    public function betriebVeroeffentlichen(): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        if ($this->outletPublishId === null) {
-            $this->presentationFehler = 'Bitte zuerst ein Kalkulationsprofil wählen.';
-
-            return;
-        }
-        try {
-            $settings = [
-                'expires_at' => $this->outletPublishGueltigBis ?: $this->presentationGueltigBis,
-                'price_display' => $this->presentationPreisAnzeige,
-                'price_mode' => $this->presentationPreiseAktualisieren ? 'auto' : 'preserve',
-                'declaration' => $this->presentationDeklaration,
-                'cta' => ['text' => $this->presentationCtaText, 'link' => $this->presentationCtaLink],
-            ];
-            // Nur setzen, wenn der Nutzer aktiv wählt — sonst greift die Fallback-Kette
-            // (Betriebs-Vorlage → Dokument-Vorlage) bzw. der Zufalls-Token.
-            if (trim((string) $this->outletPublishDesign) !== '') {
-                $settings['design'] = $this->outletPublishDesign;
-            }
-            if (trim((string) $this->outletPublishSlug) !== '') {
-                $settings['slug'] = $this->outletPublishSlug;
-            }
-            app(PresentationService::class)->publishForOutlet($this->team(), 'foodbook', $this->selectedId, $this->outletPublishId, $settings);
-            $this->outletPublishId = null;
-            $this->outletPublishGueltigBis = null;
-            $this->outletPublishDesign = '';
-            $this->outletPublishSlug = '';
-            $this->presentationHinweis = 'Kalkulationsprofil-Link veröffentlicht — eigener Link mit den Preisen, der Vorlage und dem Namen dieses Kalkulationsprofils.';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
-    }
-
-    /** Slice F: einen Betriebs-Link vom Netz nehmen (Standard-Link bleibt unberührt). */
-    public function betriebZuruckziehen(int $outletId): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        try {
-            app(PresentationService::class)->withdrawForOutlet($this->team(), 'foodbook', $this->selectedId, $outletId);
-            $this->presentationHinweis = 'Kalkulationsprofil-Link zurückgezogen.';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
-    }
-
-    /** Slice F: einen zurückgezogenen Betriebs-Link wieder live nehmen (Snapshot/Preise bleiben eingefroren). */
-    public function betriebWiederFreigeben(int $outletId): void
-    {
-        $this->presentationFehler = null;
-        $this->presentationHinweis = null;
-        if ($this->selectedId === null) {
-            return;
-        }
-        try {
-            app(PresentationService::class)->republishForOutlet($this->team(), 'foodbook', $this->selectedId, $outletId, $this->presentationGueltigBis);
-            $this->presentationHinweis = 'Kalkulationsprofil-Link wieder freigegeben — gleiche URL, eingefrorene Preise bleiben.';
-        } catch (\Throwable $e) {
-            $this->presentationFehler = $e->getMessage();
-        }
-    }
-
-    public function brandingSpeichern(FoodbookService $svc): void
-    {
-        $this->brandingFehler = null;
-        $this->brandingGespeichert = false;
-        if ($this->selectedId === null) {
-            return;
-        }
-        try {
-            $fb = $svc->setBranding($this->team(), $this->selectedId, [
-                'brand_color' => $this->brandingForm['brand_color'] ?? '#6d28d9',
-                'band_color' => $this->brandingForm['band_color'] ?? '',
-                'footer_text' => $this->brandingForm['footer_text'] ?? '',
-            ]);
-            $this->brandingForm = [
-                'brand_color' => $fb->brand_color ?? '#6d28d9',
-                'band_color' => $fb->band_color ?? '',
-                'footer_text' => $fb->footer_text ?? '',
-            ];
-            $this->brandingGespeichert = true;
-        } catch (\RuntimeException $e) {
-            // Hex-Murks oder geerbtes Foodbook (Owner-Guard D1) → sauber als UI-Fehler.
-            $this->brandingFehler = $e->getMessage();
-        }
-    }
-
-    public function updatedLogoUpload(): void
-    {
-        if ($this->uploadGesperrt('logoUpload')) {
-            return;
-        }
-        $this->brandingBildHochladen('logoUpload', 'storeLogo');
-    }
-
-    public function updatedCoverUpload(): void
-    {
-        if ($this->uploadGesperrt('coverUpload')) {
-            return;
-        }
-        $this->brandingBildHochladen('coverUpload', 'storeCover');
-    }
-
-    /** Auto-Upload bei Dateiwahl: validieren → Service (räumt Altdatei) → Feld leeren. */
-    private function brandingBildHochladen(string $prop, string $serviceMethod): void
-    {
-        $this->brandingFehler = null;
-        if ($this->selectedId === null || $this->{$prop} === null) {
-            return;
-        }
-        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, $prop);
-        try {
-            app(FoodbookService::class)->{$serviceMethod}($this->team(), $this->selectedId, $this->{$prop});
-        } catch (\RuntimeException $e) {
-            $this->brandingFehler = $e->getMessage();
-        }
-        $this->reset($prop);
-    }
-
-    public function brandingLogoEntfernen(FoodbookService $svc): void
-    {
-        if ($this->selectedId !== null) {
-            $svc->clearLogo($this->team(), $this->selectedId);
-        }
-    }
-
-    public function brandingCoverEntfernen(FoodbookService $svc): void
-    {
-        if ($this->selectedId !== null) {
-            $svc->clearCover($this->team(), $this->selectedId);
-        }
-    }
-
-    // ── Spec 43 (Bild-Epic): Kapitel-Bild (überschreibt das Concept-Titelbild im Kapitel-Band) ──
-    public $kapitelImageUpload = null;
-
-    public ?string $kapitelImageFehler = null;
-
-    public function updatedKapitelImageUpload(): void
-    {
-        if ($this->uploadGesperrt('kapitelImageUpload')) {
-            return;
-        }
-        $this->kapitelImageFehler = null;
-        if ($this->selectedKapitelId === null || $this->kapitelImageUpload === null) {
-            return;
-        }
-        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'kapitelImageUpload');
-        try {
-            app(FoodbookService::class)->setKapitelImage($this->team(), $this->selectedKapitelId, $this->kapitelImageUpload);
-        } catch (\RuntimeException $e) {
-            $this->kapitelImageFehler = $e->getMessage();
-        }
-        $this->reset('kapitelImageUpload');
-    }
-
-    public function kapitelImageEntfernen(FoodbookService $svc): void
-    {
-        if ($this->selectedKapitelId !== null) {
-            $svc->clearKapitelImage($this->team(), $this->selectedKapitelId);
-        }
-    }
-
-    // ── Spec 43 (Bild-Epic): Kapitel-Galerie (Mehrfach-Upload) ──
-    /** @var array<int, \Illuminate\Http\UploadedFile> */
-    public $kapitelGalleryUpload = [];
-
-    public function updatedKapitelGalleryUpload(): void
-    {
-        if ($this->uploadGesperrt('kapitelGalleryUpload')) {
-            return;
-        }
-        $this->kapitelImageFehler = null;
-        $dateien = array_filter(is_array($this->kapitelGalleryUpload) ? $this->kapitelGalleryUpload : [$this->kapitelGalleryUpload]);
-        if ($this->selectedKapitelId === null || $dateien === []) {
-            return;
-        }
-        \Platform\FoodAlchemist\Support\BildUpload::pruefen($this, 'kapitelGalleryUpload.*');
-        try {
-            foreach ($dateien as $datei) {
-                app(FoodbookService::class)->addKapitelGalleryImage($this->team(), $this->selectedKapitelId, $datei);
-            }
-        } catch (\RuntimeException $e) {
-            $this->kapitelImageFehler = $e->getMessage();
-        }
-        $this->reset('kapitelGalleryUpload');
-    }
-
-    public function kapitelGalerieBildEntfernen(int $imageId): void
-    {
-        app(FoodbookService::class)->removeKapitelGalleryImage($this->team(), $imageId);
-    }
-
     /** R4.3: Owner für den Phasen-Stepper (Trait ManagesPhase). */
     protected function phaseOwner(): array
     {
@@ -448,27 +158,6 @@ class Index extends Component
 
     /** `description` = Kapitel-Kundentext (Spec 03 · L2b) — im Editor vorher gar nicht erreichbar. */
     public array $kapitelForm = ['title' => '', 'consumer_title' => '', 'description' => '', 'price_mode' => 'auto', 'price_per_person' => null, 'writing_style_id' => null, 'is_struktur' => false];
-
-    /**
-     * Spec 03 · L2: KI-Kundentext — VORSCHAU-Zustand. Der Vorschlag landet hier und
-     * nirgends sonst; erst `kiTextUebernehmen()` schreibt ihn ins Formular, erst
-     * „Speichern" in die DB. Zwei Stufen mit Absicht: das Briefing-Feld ist oft
-     * handgeschrieben, und ein still ersetzter Kundentext wäre unwiederbringlich.
-     */
-    public ?string $kiTextVorschau = null;
-
-    public ?float $kiTextConfidence = null;
-
-    /** Fehler ODER Erfolgs-Hinweis der KI-Text-Fläche (eine Zeile, ein Zustand). */
-    public ?string $kiTextHinweis = null;
-
-    /**
-     * Spec 03 · L2b: WELCHES Feld der Vorschlag füllen soll — `foodbook` (Einleitung) oder
-     * `kapitel` (Hinführung). EIN Vorschau-Zustand für beide Ebenen, weil beide Flächen
-     * nie gleichzeitig sichtbar sind (Master-Detail: Buch-Kopf ODER Kapitel). Zwei
-     * Zustands-Sätze wären zwei Wahrheiten über denselben Ablauf.
-     */
-    public string $kiTextZiel = 'foodbook';
 
     public string $neuesKapitelTitel = '';
 
@@ -622,95 +311,6 @@ class Index extends Component
         $this->savedToast('Foodbook gespeichert');
         // Der übernommene KI-Text ist jetzt echter Feld-Inhalt — die Vorschau-Fläche hat
         // nichts mehr zu sagen und würde sonst als „noch offen" stehen bleiben.
-        $this->kiTextHinweis = null;
-    }
-
-    /**
-     * Spec 03 · L2: Kundentext-Vorschlag für die Foodbook-Einleitung holen.
-     * Schreibt NICHT ins Formular — nur in die Vorschau (`kiTextVorschau`).
-     */
-    public function kiEinleitung(FoodbookService $svc): void
-    {
-        $this->kiTextZuruecksetzen('foodbook');
-        if ($this->selectedId === null) {
-            return;
-        }
-        $this->kiTextHolen(fn () => $svc->kiKundentextVorschlag($this->team(), $this->selectedId));
-    }
-
-    /**
-     * Spec 03 · L2b: Hinführung fürs gewählte Kapitel holen. Gleiche zwei Stufen wie auf
-     * der Buch-Ebene — der Vorschlag berührt `kapitelForm.description` nie.
-     */
-    public function kiKapitelText(FoodbookService $svc): void
-    {
-        $this->kiTextZuruecksetzen('kapitel');
-        if ($this->selectedKapitelId === null) {
-            return;
-        }
-        $this->kiTextHolen(fn () => $svc->kiKapitelKundentextVorschlag($this->team(), $this->selectedKapitelId));
-    }
-
-    private function kiTextZuruecksetzen(string $ziel): void
-    {
-        $this->kiTextZiel = $ziel;
-        $this->kiTextVorschau = null;
-        $this->kiTextConfidence = null;
-        $this->kiTextHinweis = null;
-    }
-
-    /**
-     * Der gemeinsame Call-Rahmen beider Ebenen: die typisierten KI-Ausfälle werden zu
-     * genau einer Hinweis-Zeile. Bewusst EINE Stelle — sonst driften die Meldungen
-     * zwischen Buch- und Kapitel-Knopf auseinander.
-     *
-     * @param  \Closure():array{text:string,confidence:?float,call_log_id:?int}  $call
-     */
-    private function kiTextHolen(\Closure $call): void
-    {
-        try {
-            $r = $call();
-            $this->kiTextVorschau = $r['text'];
-            $this->kiTextConfidence = $r['confidence'];
-        } catch (\Platform\FoodAlchemist\Exceptions\KiDeaktiviertException $e) {
-            $this->kiTextHinweis = 'KI ist für dieses Team deaktiviert (Einstellungen → Food DNA / KI).';
-        } catch (\Platform\FoodAlchemist\Exceptions\KiNichtVerfuegbarException $e) {
-            $this->kiTextHinweis = 'Kein KI-Provider gebunden — der Kundentext braucht ein aktives Modell (demo).';
-        } catch (\RuntimeException $e) {
-            $this->kiTextHinweis = $e->getMessage();
-        }
-    }
-
-    /**
-     * Vorschlag ins Formular übernehmen — bewusst OHNE zu speichern: der Text steht
-     * danach sichtbar im Feld und geht denselben Weg wie jede Handeingabe („Speichern").
-     * Das Ziel entscheidet `kiTextZiel`, nicht der Aufrufer: der Knopf sitzt in beiden
-     * Ebenen an derselben Vorschau-Fläche.
-     */
-    public function kiTextUebernehmen(): void
-    {
-        if ($this->kiTextVorschau === null) {
-            return;
-        }
-        if ($this->kiTextZiel === 'kapitel') {
-            if ($this->selectedKapitelId === null) {
-                return;                                              // Kapitel gewechselt, während die KI lief
-            }
-            $this->kapitelForm['description'] = $this->kiTextVorschau;
-            $hinweis = 'Text steht im Kapitel-Feld — noch nicht gespeichert (Feld verlassen speichert).';
-        } else {
-            $this->form['description'] = $this->kiTextVorschau;
-            $hinweis = 'Text steht im Feld — noch nicht gespeichert („Speichern" oben).';
-        }
-        $this->kiTextVorschau = null;
-        $this->kiTextConfidence = null;
-        $this->kiTextHinweis = $hinweis;
-    }
-
-    public function kiTextVerwerfen(): void
-    {
-        $this->kiTextVorschau = null;
-        $this->kiTextConfidence = null;
         $this->kiTextHinweis = null;
     }
 
@@ -947,116 +547,6 @@ class Index extends Component
         if ($this->selectedKapitelId === $id) {
             $this->selectedKapitelId = null;
         }
-    }
-
-    public function kapitelHoch(int $id, FoodbookService $svc): void
-    {
-        $this->verschiebeKapitel($id, -1, $svc);
-    }
-
-    public function kapitelRunter(int $id, FoodbookService $svc): void
-    {
-        $this->verschiebeKapitel($id, 1, $svc);
-    }
-
-    private function verschiebeKapitel(int $id, int $richtung, FoodbookService $svc): void
-    {
-        $k = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::find($id);
-        if ($k === null || $this->selectedId === null) {
-            return;
-        }
-        $geschwister = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::where('foodbook_id', $this->selectedId)
-            ->where('parent_id', $k->parent_id)->orderBy('position')->pluck('id')->all();
-        $pos = array_search($id, $geschwister, true);
-        $ziel = $pos + $richtung;
-        if ($pos === false || $ziel < 0 || $ziel >= count($geschwister)) {
-            return;
-        }
-        [$geschwister[$pos], $geschwister[$ziel]] = [$geschwister[$ziel], $geschwister[$pos]];
-        $svc->reorderKapitel($this->team(), $this->selectedId, $k->parent_id, $geschwister);
-    }
-
-    /**
-     * E2.1: Kapitel eine Ebene TIEFER — neuer Parent = unmittelbar vorheriges Geschwister
-     * (Outline-Editor-Doktrin). Ohne vorheriges Geschwister nicht einrückbar.
-     */
-    public function kapitelEinruecken(int $id, FoodbookService $svc): void
-    {
-        $k = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::find($id);
-        if ($k === null || $this->selectedId === null) {
-            return;
-        }
-        $geschwister = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::where('foodbook_id', $this->selectedId)
-            ->where('parent_id', $k->parent_id)->orderBy('position')->pluck('id')->all();
-        $pos = array_search($id, $geschwister, true);
-        if ($pos === false || $pos === 0) {
-            return; // erstes Geschwister hat keinen Vorgänger zum Einrücken
-        }
-        $this->kapitelUnter($id, (int) $geschwister[$pos - 1], $svc);
-    }
-
-    /**
-     * E2.1: Kapitel eine Ebene HÖHER — neuer Parent = Großelternteil (oder Top-Ebene).
-     * Top-Kapitel sind nicht weiter ausrückbar.
-     */
-    public function kapitelAusruecken(int $id, FoodbookService $svc): void
-    {
-        $k = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::find($id);
-        if ($k === null || $k->parent_id === null || $this->selectedId === null) {
-            return;
-        }
-        $parent = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::find($k->parent_id);
-        $grossParent = $parent?->parent_id !== null ? (int) $parent->parent_id : null;
-        $this->kapitelUnter($id, $grossParent, $svc);
-    }
-
-    /**
-     * Gemeinsamer Move: Parent wechseln (Service trägt den Zyklus-Schutz) und das Kapitel
-     * ans ENDE der neuen Geschwister-Ordnung setzen, damit `position` konsistent bleibt
-     * (moveKapitel selbst rührt die Position nicht an).
-     */
-    private function kapitelUnter(int $id, ?int $neuerParent, FoodbookService $svc): void
-    {
-        try {
-            $svc->moveKapitel($this->team(), $id, $neuerParent);
-        } catch (\RuntimeException) {
-            return; // Zyklus o. Ä. — UI bietet solche Moves ohnehin nicht an
-        }
-        $geschwister = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::where('foodbook_id', $this->selectedId)
-            ->where('parent_id', $neuerParent)->where('id', '!=', $id)->orderBy('position')->pluck('id')->all();
-        $geschwister[] = $id;
-        $svc->reorderKapitel($this->team(), $this->selectedId, $neuerParent, $geschwister);
-    }
-
-    /**
-     * #4: Kapitel per Drag&Drop umsortieren — das gezogene Kapitel landet unmittelbar VOR dem
-     * Ziel-Kapitel und übernimmt dessen Parent-Ebene (moveKapitel trägt den Zyklus-Schutz:
-     * ein Kapitel auf einen eigenen Nachfahren gezogen wird abgewiesen). Spiegelt die
-     * Block-Drop-Semantik (blockVerschiebenAuf).
-     */
-    public function kapitelVerschiebenAuf(int $dragId, int $zielId, FoodbookService $svc): void
-    {
-        if ($dragId === $zielId || $this->selectedId === null) {
-            return;
-        }
-        $ziel = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::where('foodbook_id', $this->selectedId)->find($zielId);
-        if ($ziel === null) {
-            return;
-        }
-        try {
-            $svc->moveKapitel($this->team(), $dragId, $ziel->parent_id);   // auf die Ziel-Ebene (Zyklus-Schutz im Service)
-        } catch (\RuntimeException) {
-            return;
-        }
-        $geschwister = \Platform\FoodAlchemist\Models\FoodAlchemistFoodbookKapitel::where('foodbook_id', $this->selectedId)
-            ->where('parent_id', $ziel->parent_id)->where('id', '!=', $dragId)->orderBy('position')->pluck('id')->all();
-        $zielPos = array_search($zielId, $geschwister, true);
-        if ($zielPos === false) {
-            $geschwister[] = $dragId;
-        } else {
-            array_splice($geschwister, $zielPos, 0, [$dragId]);   // direkt VOR das Ziel
-        }
-        $svc->reorderKapitel($this->team(), $this->selectedId, $ziel->parent_id, $geschwister);
     }
 
     // ── Blöcke ────────────────────────────────────────────────────────────
@@ -1430,28 +920,8 @@ class Index extends Component
             $this->frameInit('foodbook', $fb->id);
         }
 
-        // Phase 6: Branding-Felder nur bei Selektions-WECHSEL aus dem Foodbook laden (kein Edit-Verlust je Roundtrip).
-        if ($fb !== null && $this->brandingLoadedId !== $fb->id) {
-            $this->brandingForm = [
-                'brand_color' => $fb->brand_color ?? '#6d28d9',
-                'band_color' => $fb->band_color ?? '',
-                'footer_text' => $fb->footer_text ?? '',
-            ];
-            $this->brandingLoadedId = $fb->id;
-        }
-
-        // Spec 43: Präsentations-Publish-Felder nur bei Selektions-WECHSEL laden (kein Edit-Verlust je Roundtrip).
-        if ($fb !== null && $this->presentationLoadedId !== $fb->id) {
-            $s = $fb->presentationSettings();
-            $this->presentationDesign = $fb->presentation_design ?: 'editorial';
-            $this->presentationGueltigBis = $fb->presentation_expires_at?->format('Y-m-d');
-            $this->presentationPreisAnzeige = (bool) ($s['price_display'] ?? true);
-            $this->presentationDeklaration = (bool) ($s['declaration'] ?? true);
-            $this->presentationCtaText = $s['cta']['text'] ?? null;
-            $this->presentationCtaLink = $s['cta']['link'] ?? null;
-            $this->presentationSlug = $fb->presentation_slug;
-            $this->presentationLoadedId = $fb->id;
-        }
+        $this->brandingFelderLaden($fb);
+        $this->praesentationFelderLaden($fb);
 
         // S3b: Kreativ-Modus/Pairing-Inspiration + Skizzen-Render-Daten entfallen (Kreativ-Fläche →
         // Leitstelle). Die zugehörigen Props (kreativSeed/ideenPapierkorb/skizzeGerichtSuche) sind weg.
@@ -1473,38 +943,12 @@ class Index extends Component
             $coverage = app(\Platform\FoodAlchemist\Services\Concepter\CoverageService::class)->coverage($team, 'foodbook', $fb->id);
         }
 
-        // Spec 43: Präsentations-Status + Kunden-Link + Design-Auswahl fürs Branding-&-Präsentation-Tab.
-        $presentationInfo = null;
-        $presentationLink = null;
-        if ($fb !== null) {
-            $presentationInfo = [
-                'enabled' => (bool) $fb->presentation_enabled,
-                'live' => $fb->isPresentationLive(),
-                'published_at' => $fb->presentation_published_at?->format('d.m.Y H:i'),
-                'expires_at' => $fb->presentation_expires_at?->format('d.m.Y'),
-                // Bug-Runde 2026-09-17 #2: Design nach der Veröffentlichung geändert → Link hinkt hinterher.
-                'design_veraltet' => app(PresentationService::class)->designGeaendertSeitPublish($fb),
-            ];
-            if ($fb->presentation_enabled && $fb->presentationPublicRef()) {
-                $presentationLink = url('/p/foodbook/' . $fb->presentationPublicRef());
-            }
-        }
-        $presentationDesignOptionen = app(PresentationDesignService::class)->pickerOptions($team, 'foodbook');
-
-        // Slice F: bestehende Betriebs-Links + wählbare Betriebe (aktiv, team-scoped).
-        $betriebsLinks = [];
-        $betriebsOptionen = [];
-        if ($fb !== null) {
-            $betriebsLinks = app(PresentationService::class)->outletPresentations($team, 'foodbook', $fb->id);
-            $betriebsOptionen = \Platform\FoodAlchemist\Models\FoodAlchemistOutlet::where('team_id', $team->id)
-                ->where('is_inactive', false)->orderBy('sort_order')->orderBy('name')->get(['id', 'name'])
-                ->map(fn ($o) => ['id' => (int) $o->id, 'name' => (string) $o->name])->all();
-        }
+        $praes = $this->praesentationDaten($team, $fb);
 
         return view('foodalchemist::livewire.foodbooks.index', [
             'sperr' => $this->sperrZustand(),   // Spec 65
-            'betriebsLinks' => $betriebsLinks,
-            'betriebsOptionen' => $betriebsOptionen,
+            'betriebsLinks' => $praes['betriebsLinks'],
+            'betriebsOptionen' => $praes['betriebsOptionen'],
             'kapitelImageUrl' => ($kapitel !== null && ($kapitel->image_context_file_id || $kapitel->image_path))
                 ? app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($kapitel->image_context_file_id, $kapitel->image_path)
                 : null,
@@ -1514,9 +958,9 @@ class Index extends Component
                     'url' => app(\Platform\FoodAlchemist\Services\Plattform\FoodAlchemistMediaService::class)->url($gi->context_file_id, $gi->path),
                 ])->all()
                 : [],
-            'presentationInfo' => $presentationInfo,
-            'presentationLink' => $presentationLink,
-            'presentationDesignOptionen' => $presentationDesignOptionen,
+            'presentationInfo' => $praes['presentationInfo'],
+            'presentationLink' => $praes['presentationLink'],
+            'presentationDesignOptionen' => $praes['presentationDesignOptionen'],
             // Board (2026-08-27): EIN Baum statt Übersicht/Fortschritt/Preise — Status + Inhalt + Preis je Kapitel.
             // Ebene 2: VK/EK/WE je Kapitel — dokument-gebundener Betrieb ?? Betriebsbrille (wie der Druck, Kurator 19.10.).
             'kapitelBoard' => $fb !== null

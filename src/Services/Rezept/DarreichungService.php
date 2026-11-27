@@ -1274,11 +1274,11 @@ class DarreichungService
 
         $gramm = (float) ($darreichung?->quantity_per_unit_g ?? 0);
         if ($gramm <= 0 || $ansatzG <= 0) {
-            // Form ohne eingetragene Grammatur (oder Gericht ohne Ertrag): Menge wie bisher über die
-            // Ausbeute des Ansatzes — Stück (yield_pieces) bzw. Portionen (sales_unit_count).
+            // Form ohne eingetragene Grammatur (oder Gericht ohne Ertrag): Menge über die Ausbeute des Ansatzes — Stück
+            // (yield_pieces), sonst eine Portion je Ansatz (98 · 3.5-6a B: Gericht fest 1, vorher sales_unit_count).
             $anzahl = ($recipe->yield_pieces !== null && (float) $recipe->yield_pieces > 0)
                 ? (float) $recipe->yield_pieces
-                : max(1, (int) ($recipe->sales_unit_count ?? 1));
+                : 1.0;
 
             return [
                 'ansaetze' => $einheiten / $anzahl,

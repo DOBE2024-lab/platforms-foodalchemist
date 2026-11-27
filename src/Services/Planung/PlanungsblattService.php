@@ -279,7 +279,7 @@ class PlanungsblattService
                 + $this->darreichungsAnteil($rezept, $dar, $pae * $personen, $warnungen);
         }
         // Stück-Modus (Menge in Stück gegen yield_pieces) bleibt eine reine Stückrechnung.
-        $anzahl = $stueck ? (float) $gericht->yield_pieces : max(1, (int) ($gericht->sales_unit_count ?? 1));
+        $anzahl = $stueck ? (float) $gericht->yield_pieces : 1.0;   // 98 · 3.5-6a B: Gericht = eine Portion je Ansatz (vorher sales_unit_count)
         if ($anzahl <= 0) {
             $anzahl = 1.0;
         }
@@ -815,11 +815,11 @@ class PlanungsblattService
             }
 
             $basisYieldKg = $recipe->yield_kg !== null ? (float) $recipe->yield_kg : null;
-            // VK-Gericht: Portionszahl = Batches × Portionen/Batch (yield_pieces bzw. sales_unit_count).
+            // VK-Gericht: Portionszahl = Batches × Portionen/Batch (yield_pieces, sonst 1 — 98 · 3.5-6a B, vorher sales_unit_count).
             // P1 (Spec 17): das Blatt zeigt „N Portionen · gesamt kg" statt des sinnlosen „N× Rezept".
             $anzahlProBatch = ($recipe->yield_pieces !== null && (float) $recipe->yield_pieces > 0)
                 ? (float) $recipe->yield_pieces
-                : max(1, (int) ($recipe->sales_unit_count ?? 1));
+                : 1.0;
             $zeitplanung = $this->productionTimes->calculateForBatches($team, $recipe, $roh, null,
                 $istVk && ($formenTop[$rid] ?? []) !== [] ? array_values($formenTop[$rid]) : null);
             $warnings = array_merge($warnings, $zeitplanung['warnings']);
@@ -897,7 +897,7 @@ class PlanungsblattService
             'g' => (float) ($recipe->yield_kg ?? 0) * 1000,
             'Stk' => (float) ($recipe->yield_pieces ?? 0),
             'Port' => ($recipe->yield_pieces !== null && (float) $recipe->yield_pieces > 0)
-                ? (float) $recipe->yield_pieces : (float) max(1, (int) ($recipe->sales_unit_count ?? 1)),
+                ? (float) $recipe->yield_pieces : 1.0,   // 3.5-6a B: ohne Stückertrag eine Portion je Ansatz
             default => 0.0,
         };
         if ($jeAnsatz <= 0) {

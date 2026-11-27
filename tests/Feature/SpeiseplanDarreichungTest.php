@@ -64,14 +64,14 @@ it('EK je Person ist die Portion (ek_portion der Standard-Form), nicht der ganze
         ->and($preis['ek'])->toBe(2.0);                              // vorher 20,00 (Ansatz)
 });
 
-it('ohne Darreichung: EK = Ansatz ÷ Portionen (Fallback wie Paket)', function () {
+it('ohne Darreichung: EK = EK des Gerichts, das Gericht ist eine Portion (98 · 3.5-6a B, vorher Ansatz ÷ sales_unit_count)', function () {
     $ohne = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'suppe', 'name' => 'Suppe', 'status' => 'approved',
         'is_sales_recipe' => true, 'sales_net' => 3.00, 'ek_total_eur' => 8.00, 'sales_unit_count' => 8,
     ]);
     $e = $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'mahlzeit' => 'mittag', 'recipe_id' => $ohne->id]);
 
-    expect($this->svc->eintragPreis($e->fresh())['ek'])->toBe(1.0);
+    expect($this->svc->eintragPreis($e->fresh())['ek'])->toBe(8.0);   // vorher 1,00 (8 ÷ sales_unit_count 8); der Spiegel zählt nicht mehr
 });
 
 it('gewählte Darreichung bestimmt VK, EK und Portionsgewicht der Zelle', function () {

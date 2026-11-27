@@ -104,7 +104,7 @@ it('zaehlt Ruestzeit am Basisrezept, ignoriert sie am Gericht', function () {
         ->and($ohneRuest['active_person_minutes'])->toBe(0.0);   // Spec 83 B3j: am Gericht zählen weder Rüst- noch work_time_min
 });
 
-it('rechnet variable Portionszeit aus Ansätzen und Portionen je Ansatz um', function () {
+it('rechnet variable Portionszeit aus Ansätzen um — Gericht = eine Portion je Ansatz (98 · 3.5-6a B)', function () {
     $recipe = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'portion-time', 'name' => 'Portionszeit',
         'status' => 'approved', 'is_sales_recipe' => true,
@@ -114,8 +114,8 @@ it('rechnet variable Portionszeit aus Ansätzen und Portionen je Ansatz um', fun
 
     $result = $this->times->calculateForBatches($this->rootTeam, $recipe, 3);
 
-    expect($result['variable_quantity'])->toBe(60.0)
+    expect($result['variable_quantity'])->toBe(3.0)              // vorher 60 (3 × sales_unit_count 20); der Spiegel zählt nicht mehr
         ->and($result['variable_quantity_basis'])->toBe('portion')
-        ->and($result['variable_minutes'])->toBe(30.0)
+        ->and($result['variable_minutes'])->toBe(1.5)
         ->and($result['warnings'])->toBeEmpty();
 });

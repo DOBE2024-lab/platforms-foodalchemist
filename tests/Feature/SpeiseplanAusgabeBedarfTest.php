@@ -47,11 +47,11 @@ beforeEach(function () {
 
     $this->suppe = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'sp57c-suppe', 'name' => 'Linsensuppe',
-        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 4.00, 'sales_unit_count' => 10,
+        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 4.00,
         'sales_wording_standard' => 'Linsensuppe | Kreuzkümmel | Zitrone', 'spec_is_vegan' => true, 'spec_is_vegetarian' => true,
         'preparation' => 'Linsen weich kochen.',
     ]);
-    $this->suppe->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->linsen->id, 'raw_text' => 'Linsen', 'quantity' => 1000, 'unit_vocab_id' => $g->id]);
+    $this->suppe->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $this->linsen->id, 'raw_text' => 'Linsen', 'quantity' => 100, 'unit_vocab_id' => $g->id]);
     app(RecipeRecomputeService::class)->recomputePipeline($this->suppe->id);
 
     $this->plan = $this->svc->create($this->rootTeam, ['name' => 'Kantine Nord', 'start_date' => $this->mo, 'default_pax' => 100]);
@@ -151,9 +151,9 @@ it('Diät-Kennzeichnung: unbekannte Diät-Angaben werden NICHT zu „Fleisch"', 
     $gp = $this->makeGp($this->rootTeam, 'Mascarpone');
     $dessert = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'sp57c-dessert', 'name' => 'Tiramisu',
-        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.00, 'sales_unit_count' => 10,
+        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 3.00,
     ]);
-    $dessert->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $gp->id, 'raw_text' => 'Mascarpone', 'quantity' => 500, 'unit_vocab_id' => FoodAlchemistVocabEinheit::where('slug', 'g')->value('id')]);
+    $dessert->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $gp->id, 'raw_text' => 'Mascarpone', 'quantity' => 50, 'unit_vocab_id' => FoodAlchemistVocabEinheit::where('slug', 'g')->value('id')]);
     app(RecipeRecomputeService::class)->recomputePipeline($dessert->id);
     expect($dessert->fresh()->spec_is_vegetarian)->toBeNull();
 
@@ -168,9 +168,9 @@ it('Diät-Kennzeichnung: unbekannte Diät-Angaben werden NICHT zu „Fleisch"', 
     $speck->update(['tag_is_vegan' => false, 'tag_is_vegetarian' => false, 'tag_is_halal' => false, 'tag_is_lactose_free' => true, 'tag_contains_pork' => false, 'tag_contains_beef' => false]);
     $eintopf = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'sp57c-eintopf', 'name' => 'Eintopf',
-        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 4.00, 'sales_unit_count' => 10,
+        'status' => 'approved', 'is_sales_recipe' => true, 'sales_net' => 4.00,
     ]);
-    $eintopf->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $speck->id, 'raw_text' => 'Speck', 'quantity' => 200, 'unit_vocab_id' => FoodAlchemistVocabEinheit::where('slug', 'g')->value('id')]);
+    $eintopf->ingredients()->create(['team_id' => $this->rootTeam->id, 'position' => 0, 'gp_id' => $speck->id, 'raw_text' => 'Speck', 'quantity' => 20, 'unit_vocab_id' => FoodAlchemistVocabEinheit::where('slug', 'g')->value('id')]);
     app(RecipeRecomputeService::class)->recomputePipeline($eintopf->id);
     $linie3 = $this->svc->addLinie($this->rootTeam, $this->plan->id, ['name' => 'Eintopf']);
     $this->svc->addEintrag($this->rootTeam, $this->plan->id, ['entry_date' => $this->mo, 'line_id' => $linie3->id, 'recipe_id' => $eintopf->id]);

@@ -15,7 +15,7 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
 
 /**
  * Plan 98 · 3.5 Schritt 6c · Rückbau der Spiegelfelder: Backup, Drop, Rehash (R1) und Rückweg. Im Test-Schema hat die Migration
- * 2027_01_15_100000 die Spalten schon entfernt; der Zyklus startet deshalb mit dem Rückweg und endet wieder im gedroppten Zustand.
+ * 2027_01_16_100000 die Spalten schon entfernt; der Zyklus startet deshalb mit dem Rückweg und endet wieder im gedroppten Zustand.
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();

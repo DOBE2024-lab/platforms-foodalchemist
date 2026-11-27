@@ -12,7 +12,7 @@ use Platform\FoodAlchemist\Services\Fassung\FassungService;
  * Plan 98 · 3.5 Schritt 6c · Rückbau der gespiegelten Darreichungsfelder am Rezept (B11/U6). Freigabe Dominique: „Ja, nach Report“
  * ({@see \Platform\FoodAlchemist\Services\Rezept\SpiegelfelderReport}). Erst nach 6a (Leser) und 6b (Schreiber) mergen.
  *
- * Ablauf (Migration 2027_01_15_100000): {@see sichern()} (alle Werte inkl. gelöschter Zeilen in die Backup-Tabelle) →
+ * Ablauf (Migration 2027_01_16_100000): {@see sichern()} (alle Werte inkl. gelöschter Zeilen in die Backup-Tabelle) →
  * {@see unveraenderte()} (je Arbeitszeile: passt ihr Hash noch zur jüngsten Fassung?) → {@see entfernen()} (FKs, Indizes, Spalten)
  * → {@see rehash()} (für genau diese Fassungen den neuen Hash eintragen, alten mitschreiben). Rückweg {@see wiederherstellen()}:
  * Spalten + FKs anlegen, Werte und alte Hashes aus dem Backup zurück.

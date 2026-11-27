@@ -72,7 +72,7 @@ final class KnowledgePairingBlock
         }
         sort($matched);
 
-        $svc = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class);
+        $svc = app(\Platform\FoodAlchemist\Services\Pairing\AnkerAufloesung::class);
         $zeilen = [];
         foreach (array_slice($matched, 0, $maxAnchors) as $stem) {
             // Stem (Doc-Slug, evtl. mit »-«) → Anker-Slug (»_«) für die Graph-Auflösung.

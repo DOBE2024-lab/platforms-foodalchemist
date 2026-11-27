@@ -19,221 +19,79 @@ use Platform\FoodAlchemist\Support\Text;
  * manual gewinnt Inv. 3). Kanten sind seit dem V-23-Backfill symmetrisch (Inv. 4).
  * Fehlende Kante = unbekannt, nie Clash (Inv. 5); Scores = runde Ganzzahlen (Inv. 8).
  */
-class PairingService
+class PairingService implements PairingKohaesionQuelle
 {
+    private ?PairingNetz $netzTeil = null;
+
+    private function netz(): PairingNetz
+    {
+        return $this->netzTeil ??= new PairingNetz($this);
+    }
+
+    private ?AnkerAufloesung $ankerTeil = null;
+
+    private ?GpAnkerPflege $gpAnkerTeil = null;
+
+    private function gpAnker(): GpAnkerPflege
+    {
+        return $this->gpAnkerTeil ??= app(GpAnkerPflege::class);
+    }
+
+    private function anker(): AnkerAufloesung
+    {
+        return $this->ankerTeil ??= app(AnkerAufloesung::class);
+    }
+
     /** Spec 60 · P2: einzige Lesestelle für die Harmonie zwischen Ankern. */
     private function graph(): AnkerGraph
     {
         return app(AnkerGraph::class);
     }
 
-    /**
-     * V-045: der `neutral`-Anker wird einmal je Service-Instanz aufgelöst, nicht je
-     * Rezept. `resolveRecipeAnchors` läuft im Kandidaten-Pool je Gericht — der Lookup
-     * war damit eine Query pro Gericht für einen Wert, der sich nie ändert.
-     * **Bewusst untypisiert** und ohne Cast: der Wert wird per `===` gegen
-     * `->value('anchor_id')` verglichen, und beide kommen aus derselben untypisierten
-     * Query-Builder-Quelle. Ein `(int)`-Cast hier würde die Identitäts-Vergleiche
-     * unten je nach Treiber kippen.
-     */
-    private mixed $neutralAnkerId = null;
-
-    private bool $neutralAnkerAufgeloest = false;
-
     // ── Slug-Matching (Tabelle 2/3) ──────────────────────────────────────
 
-    /** Pairing-Slug-Normalisierung: ä→a … PLUS Digraphen ae→a/oe→o/ue→u (Tabelle 2). */
+    /** {@see AnkerAufloesung::normalizeAnkerSlug()} */
     public function normalizeAnkerSlug(string $s): string
     {
-        return strtr(Text::grundlaut(mb_strtolower($s)), ['ae' => 'a', 'oe' => 'o', 'ue' => 'u']);
+        return $this->anker()->normalizeAnkerSlug($s);
     }
 
-    /** T1/T2: tolerant + ungerichtet — roh/normalisiert exakt oder _-Präfix; nie Geschwister-Sorten. */
+    /** {@see AnkerAufloesung::ankerSlugMatches()} */
     public function ankerSlugMatches(string $a, string $b): bool
     {
-        $praefix = fn (string $x, string $y) => str_starts_with($y, $x . '_') || str_starts_with($x, $y . '_');
-        if ($a === $b || $praefix($a, $b)) {
-            return true;
-        }
-        $an = $this->normalizeAnkerSlug($a);
-        $bn = $this->normalizeAnkerSlug($b);
-
-        return $an === $bn || $praefix($an, $bn);
+        return $this->anker()->ankerSlugMatches($a, $b);
     }
 
     // ── Komponenten-Auflösung (3.1) ──────────────────────────────────────
 
-    private ?array $anchorIndex = null;
-
-    /** Cache für {@see ankerSlugExakt()} — ein Grounding-Lauf prüft mehrere Tokens (bis zu 8 Zutaten
-     * plus Singular-Kandidaten je Token), ohne Cache je Prüfung ein voller Tabellen-Scan (Orchestrierung
-     * 2026-09-18: "sobald der Dossier-Import die Anker-Zahl hebt, lohnt ein Cache je Request"). */
-    private ?\Illuminate\Support\Collection $ankerExaktListe = null;
-
-    /** fold(): lowercase, Umlaut→Digraph, nicht-alnum→Space, kollabiert, umrandet. */
+    /** {@see AnkerAufloesung::fold()} */
     public function fold(string $s): string
     {
-        $s = Text::umschrift(mb_strtolower($s));
-        $s = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s);
-
-        return ' ' . trim(preg_replace('/\s+/', ' ', $s)) . ' ';
+        return $this->anker()->fold($s);
     }
 
-    /** Term-Index über alle Anker (außer neutral): slug prio 0, display 1, Einzelwörter ≥ 4 prio 2. */
-    private function anchorIndex(): array
-    {
-        if ($this->anchorIndex !== null) {
-            return $this->anchorIndex;
-        }
-        $index = [];
-        foreach (DB::table('foodalchemist_vocab_pairing_anchors')->whereNull('deleted_at')
-            ->where('slug', '!=', 'neutral')->get(['id', 'slug', 'display_de']) as $anker) {
-            $terme = [[trim($this->fold($anker->slug)), 0]];
-            $display = trim($this->fold($anker->display_de));
-            if ($display !== $terme[0][0]) {
-                $terme[] = [$display, 1];
-            }
-            foreach (array_unique(array_merge(explode(' ', $terme[0][0]), explode(' ', $display))) as $wort) {
-                if (mb_strlen($wort) >= 4) {
-                    $terme[] = [$wort, 2];
-                }
-            }
-            foreach ($terme as [$term, $prio]) {
-                if ($term === '') {
-                    continue;
-                }
-                if (! isset($index[$term]) || $index[$term][1] > $prio) {
-                    $index[$term] = [$anker->id, $prio];            // bestehender mit ≤ prio bleibt
-                }
-            }
-        }
-
-        return $this->anchorIndex = $index;
-    }
-
-    /** resolve_by_name: längster Substring-Term gewinnt, Gleichstand → niedrigere prio. */
+    /** {@see AnkerAufloesung::resolveByName()} */
     public function resolveByName(string $name): ?int
     {
-        $folded = $this->fold($name);
-        $gewinner = null;
-        foreach ($this->anchorIndex() as $term => [$ankerId, $prio]) {
-            if (str_contains($folded, ' ' . $term . ' ') || str_contains($folded, $term)) {
-                if ($gewinner === null
-                    || mb_strlen($term) > $gewinner[0]
-                    || (mb_strlen($term) === $gewinner[0] && $prio < $gewinner[2])) {
-                    $gewinner = [mb_strlen($term), $ankerId, $prio];
-                }
-            }
-        }
-
-        return $gewinner[1] ?? null;
+        return $this->anker()->resolveByName($name);
     }
 
-    /**
-     * Spec 50 · B-7: lexikalische Anker-KANDIDATEN für einen Namen — alle Anker, deren Term
-     * als ganzes Wort im Namen steht (Wortgrenze wie lexicalAnkerIsSolid, KEINE Substrings:
-     * „auberGINe" liefert hier kein Gin). Reihenfolge: längster Term zuerst, Gleichstand →
-     * niedrigere prio. Das ist die billige Vorauswahl, aus der die KI den Kern-Anker wählt;
-     * resolveByName (EIN Gewinner, auch Substring) bleibt für den Signal-Fixer.
-     *
-     * @return list<int> Anker-Ids
-     */
+    /** {@see AnkerAufloesung::lexicalAnkerKandidaten()} */
     public function lexicalAnkerKandidaten(string $name, int $limit = 8): array
     {
-        $folded = $this->fold($name);
-        $treffer = [];                                                // id => [len, prio]
-        foreach ($this->anchorIndex() as $term => [$ankerId, $prio]) {
-            if (! str_contains($folded, ' ' . $term . ' ')) {
-                continue;
-            }
-            $len = mb_strlen((string) $term);
-            if (! isset($treffer[$ankerId]) || $treffer[$ankerId][0] < $len
-                || ($treffer[$ankerId][0] === $len && $treffer[$ankerId][1] > $prio)) {
-                $treffer[$ankerId] = [$len, $prio];
-            }
-        }
-        uasort($treffer, fn ($a, $b) => [$b[0], $a[1]] <=> [$a[0], $b[1]]);
-
-        return array_slice(array_map('intval', array_keys($treffer)), 0, $limit);
+        return $this->anker()->lexicalAnkerKandidaten($name, $limit);
     }
 
-    /**
-     * Quality-Gate für einen lexikalischen Anker-Treffer: NUR akzeptieren, wenn
-     * ein Anker-Term als ganzes Wort in der Anfrage steht. resolveByName matcht
-     * auch beliebige Substrings — „auberGINe" trifft so den „Gin"-Anker. Ein
-     * solcher Substring-Zufall ist ein stiller Falsch-Treffer, der den
-     * semantischen Fallback fälschlich verhindern würde → hier verworfen.
-     * fold() umschließt mit Spaces ⇒ Wortgrenze = space-delimitiertes Vorkommen
-     * (konsistent zu anchorIndex/resolveByName; nur strenger — keine Substrings).
-     */
-    private function lexicalAnkerIsSolid(string $name, object $anker): bool
-    {
-        $q = $this->fold($name);
-        foreach ([(string) $anker->slug, (string) $anker->display_de] as $raw) {
-            $folded = trim($this->fold($raw));
-            if ($folded === '') {
-                continue;
-            }
-            if (str_contains($q, ' ' . $folded . ' ')) {          // ganzer Term als Wortfolge
-                return true;
-            }
-            foreach (explode(' ', $folded) as $wort) {            // Einzelwörter ≥4 (wie anchorIndex prio 2)
-                if (mb_strlen($wort) >= 4 && str_contains($q, ' ' . $wort . ' ')) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * B: semantische Anker-Auflösung als Fallback (opt-in). Gibt die Anker-ID
-     * des besten Embedding-Treffers über der Schwelle zurück, sonst null.
-     * Deaktiviert (Default) / kein Provider / Fehler ⇒ null (kein Verhalten).
-     */
+    /** {@see AnkerAufloesung::resolveAnkerSemantically()} */
     private function resolveAnkerSemantically(string $name): ?int
     {
-        if (trim($name) === '' || ! config('foodalchemist.semantic_search.enabled', false)) {
-            return null;
-        }
-        try {
-            return app(\Platform\FoodAlchemist\Services\Ai\KnowledgeEmbeddingService::class)->resolveAnkerId($name);
-        } catch (\Throwable) {
-            return null;
-        }
+        return $this->anker()->resolveAnkerSemantically($name);
     }
 
-    /**
-     * Wie resolveAnkerSemantically, aber mit Score — für die transparente
-     * Match-Weg-Kennzeichnung in neighborsForName (via=semantic + score).
-     * Gleiche Gates: aus / kein Provider / Fehler ⇒ null.
-     *
-     * @return array{id: int, score: float}|null
-     */
-    private function resolveAnkerSemanticallyScored(string $name): ?array
-    {
-        if (trim($name) === '' || ! config('foodalchemist.semantic_search.enabled', false)) {
-            return null;
-        }
-        try {
-            return app(\Platform\FoodAlchemist\Services\Ai\KnowledgeEmbeddingService::class)
-                ->resolveAnkerWithScore($name);
-        } catch (\Throwable) {
-            return null;
-        }
-    }
-
-    /** V-045: `neutral` einmal je Instanz auflösen. Eigenes Flag, damit ein NULL-Ergebnis nicht jedes Mal neu gefragt wird. */
+    /** {@see AnkerAufloesung::neutralAnkerId()} */
     private function neutralAnkerId(): mixed
     {
-        if (! $this->neutralAnkerAufgeloest) {
-            $this->neutralAnkerId = DB::table('foodalchemist_vocab_pairing_anchors')
-                ->where('slug', 'neutral')->value('id');
-            $this->neutralAnkerAufgeloest = true;
-        }
-
-        return $this->neutralAnkerId;
+        return $this->anker()->neutralAnkerId();
     }
 
     /**
@@ -459,33 +317,22 @@ class PairingService
         return $this->kernMappingsBatch('foodalchemist_gp_anchor_mappings', 'gp_id', array_values(array_unique($gpIds)));
     }
 
-    /** Aktive Aroma-Zuordnungen je Grundprodukt für die Rezeptprofile. */
+    /** {@see AnkerAufloesung::gpAnkerZuordnungen()} */
     public function gpAnkerZuordnungen(array $gpIds): Collection
     {
-        return DB::table('foodalchemist_gp_anchor_mappings as m')
-            ->join('foodalchemist_vocab_pairing_anchors as a', 'a.id', '=', 'm.anchor_id')
-            ->whereIn('m.gp_id', $gpIds)->whereNull('m.deleted_at')->whereNull('a.deleted_at')
-            ->orderBy('m.id')->get(['m.gp_id', 'm.anchor_id', 'm.role', 'm.staerke'])
-            ->each(function ($anker): void {
-                $anker->role = match ($anker->staerke) {
-                    'schwach' => 'neben',
-                    'mittel', 'stark' => 'kern',
-                    default => $anker->role,
-                };
-            })->groupBy('gp_id');
+        return $this->anker()->gpAnkerZuordnungen($gpIds);
     }
 
-    /** Spec 60 · P5: ID des Ankers „neutral" (kein Aroma), sonst null. */
+    /** {@see AnkerAufloesung::neutralAnker()} */
     public function neutralAnker(): ?int
     {
-        $id = $this->neutralAnkerId();
-
-        return $id !== null ? (int) $id : null;
+        return $this->anker()->neutralAnker();
     }
 
+    /** {@see AnkerAufloesung::ankerSlugVonId()} */
     private function ankerSlugVonId(int $id): ?string
     {
-        return $this->ankerExaktListe()->first(fn ($a) => (int) $a->id === $id)?->slug;
+        return $this->anker()->ankerSlugVonId($id);
     }
 
     // ── Kohäsion (3.2 — T4/T5/T6/T9) ─────────────────────────────────────
@@ -941,9 +788,6 @@ class PairingService
         return ['klassiker' => array_slice($klassiker, 0, $top), 'signature' => array_slice($signature, 0, $top)];
     }
 
-    /** Tierische Fonds/Brühen-Ausnahmen: diese Einträge in „Brühen und Fonds" sind pflanzlich. */
-    private const PFLANZLICHE_FONDS = ['vegetable_bouillon', 'kombu_dashi', 'truffle_juice'];
-
     /**
      * Spec 58 · Paket 4: Ernährungsform des Gerichts → 'vegan' | 'vegetarisch' | null (keine Einschränkung).
      * Nur ein ausdrücklich gesetztes true schränkt ein — unbekannt ist keine Aussage.
@@ -957,27 +801,10 @@ class PairingService
         return $recipe->spec_is_vegetarian === true ? 'vegetarisch' : null;
     }
 
-    /** Passt ein Anker (Kategorie/Unterkategorie aus dem Inspire-Vokabular) zur Ernährungsform? */
+    /** {@see AnkerAufloesung::passtZurDiaet()} */
     public function passtZurDiaet(object $anker, string $diaet): bool
     {
-        $kat = (string) ($anker->category ?? '');
-        $sub = (string) ($anker->subcategory ?? '');
-        if ($kat === 'Protein' && $sub !== 'Protein/Pflanzliche Proteine') {
-            return false;                                           // Fleisch, Fisch, Meeresfrüchte, Charcuterie
-        }
-        if ($kat === 'Brühen und Fonds' && ! in_array($anker->slug, self::PFLANZLICHE_FONDS, true)) {
-            return false;
-        }
-        if ($diaet === 'vegan') {
-            if ($kat === 'Milchprodukte' && $sub !== 'Milchprodukte/Pflanzliche Milchprodukte') {
-                return false;                                       // Milch, Käse, Butter, Sahne, Ei
-            }
-            if (str_contains((string) $anker->slug, 'honey')) {
-                return false;
-            }
-        }
-
-        return true;
+        return $this->anker()->passtZurDiaet($anker, $diaet);
     }
 
     // ── Bridge / verwandte Rezepte / Nachbarn (3.4 — T7) ────────────────
@@ -1026,95 +853,35 @@ class PairingService
             ->values();
     }
 
+    /** {@see AnkerAufloesung::ankerNeighbors()} */
     public function ankerNeighbors(string $slug, ?string $typ = null, int $limit = 30): Collection
     {
-        $limit = max(1, min(200, $limit));
-        $ankerId = DB::table('foodalchemist_vocab_pairing_anchors')->where('slug', $slug)->value('id');
-        if ($ankerId === null) {
-            return collect();
-        }
-
-        // Spec 60 · P2: Partner aus der Harmonie ({@see AnkerGraph}), stärkste Stufe zuerst. Es gibt
-        // nur noch einen Kantentyp (`aroma`, Inspire); ein anderer `$typ` hat keine Partner. Die
-        // Felder type/evidence/axis/level/weight bleiben für die Konsumenten (pairingBlock,
-        // forGeneration, neighborsForName, pairings.GET) in derselben Form erhalten.
-        if ($typ !== null && $typ !== 'aroma') {
-            return collect();
-        }
-
-        // Nur ★★★ ist Empfehlung (Dominique 15.10.): ★★ = Grund-Aroma-Passform, im Schnitt 94 ★★- gegen
-        // 12 ★★★-Partner je Zutat, viel „technisch ja, kulinarisch nein" (Zitrone + Tagliatelle).
-        return $this->graph()->partner((int) $ankerId, AnkerGraph::HARMONIERT, $limit)
-            ->map(fn ($p) => (object) [
-                'id' => $p->id, 'slug' => $p->slug, 'display_de' => $p->display_de,
-                'type' => 'aroma',
-                'evidence' => 'Foodpairing Inspire (best match)',
-                'axis' => 'harmony',
-                'level' => $p->stufe,
-                'weight' => AnkerGraph::GEWICHT[$p->stufe],
-            ]);
+        return $this->anker()->ankerNeighbors($slug, $typ, $limit);
     }
 
-    // ── Schreibpfade (Inv. 1/3) ──────────────────────────────────────────
+    // ── Schreibpfade (Inv. 1/3) — 98 · 3.3: in GpAnkerPflege, hier Fassade (setGpAnkerStaerke bleibt) ──
 
-    /**
-     * GP-Aroma-Anker setzen/aktualisieren (Tabelle gp_anchor_mappings,
-     * je Rolle gedeckelt ({@see \Platform\FoodAlchemist\Support\AnkerGrenze}) — mehrere Anker je GP erlaubt, s. Altdaten: 433 GPs mit >1 Anker, z. B. Ratatouille →
-     * eggplant/tomato/zucchini). `role` unterscheidet Haupt- von Nebenträger (kern|neben, Default
-     * kern); `source`/`ai_confidence`/`ai_reasoning` sind offen für den MCP-Import (Spec 53 Paket J:
-     * `bridge_alt_neu`, `exact_name`, … — nicht nur `manual`).
-     */
-    /**
-     * Spaltenbreite `foodalchemist_gp_anchor_mappings.source` (Migration
-     * `2026_09_19_000001_widen_gp_anchor_mapping_source`). Hier statt eines rohen SQLSTATE
-     * 22001 geprüft — 506 Zeilen des Vault-Bridge-Imports (`bridge_alt_neu+exact`, 20 Zeichen)
-     * fielen genau darauf herein, bevor die Spalte 16 Zeichen hatte.
-     */
-    public const GP_ANKER_SOURCE_MAX = 32;
+    /** Spaltenbreite gp_anchor_mappings.source — {@see GpAnkerPflege::GP_ANKER_SOURCE_MAX}. */
+    public const GP_ANKER_SOURCE_MAX = GpAnkerPflege::GP_ANKER_SOURCE_MAX;
 
-    /**
-     * Spec 84 B2 · Wer darf die Anker eines GP pflegen? Die Mapping-Tabelle hat keinen Team-Schlüssel — eine Änderung
-     * wirkt für ALLE, die das GP sehen.
-     *  · eigenes GP bzw. Master an globaler Stamm-Zeile (isOwnedBy): ja
-     *  · GP der eigenen Team-Kette (Unter-Team pflegt das Oberteam-GP): ja — bewusste frühere Entscheidung
-     *    „Anker-Pflege ist ein geteiltes kuratorisches Anliegen" (McpGpAnchorsTest)
-     *  · globales GP ohne Master-Recht, GP eines anderen Mandanten: nein (wirkte über Mandantengrenzen)
-     */
+    /** {@see GpAnkerPflege::darfAnkerPflegen()} */
     public function darfAnkerPflegen(\Platform\FoodAlchemist\Models\FoodAlchemistGp $gp, Team $team): bool
     {
-        if ($gp->isOwnedBy($team)) {
-            return true;
-        }
-
-        return $gp->team_id !== null && in_array((int) $gp->team_id, \Platform\FoodAlchemist\Models\FoodAlchemistGp::teamAncestryIds($team), true);
+        return $this->gpAnker()->darfAnkerPflegen($gp, $team);
     }
 
+    /** {@see GpAnkerPflege::pruefeAnkerPflege()} */
     private function pruefeAnkerPflege(\Platform\FoodAlchemist\Models\FoodAlchemistGp $gp, Team $team): void
     {
-        if (! $this->darfAnkerPflegen($gp, $team)) {
-            throw new \Platform\FoodAlchemist\Exceptions\GeerbtNurLesenException('GP-Anker');
-        }
+        $this->gpAnker()->pruefeAnkerPflege($gp, $team);
     }
 
+    /** {@see GpAnkerPflege::setGpAnker()} */
     public function setGpAnker(
         Team $team, int $gpId, int $ankerId, string $role = 'kern', string $source = 'manual',
         ?float $aiConfidence = null, ?string $aiReasoning = null,
     ): void {
-        $role = in_array($role, ['kern', 'neben'], true) ? $role : 'kern';
-        if (mb_strlen($source) > self::GP_ANKER_SOURCE_MAX) {
-            throw new \RuntimeException(
-                'source zu lang (max. ' . self::GP_ANKER_SOURCE_MAX . ' Zeichen): "' . $source . '" hat ' . mb_strlen($source) . '.'
-            );
-        }
-        $gp = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->findOrFail($gpId);
-        $this->pruefeAnkerPflege($gp, $team);   // Spec 84 B2: Mapping hat keinen Team-Schlüssel
-        \Platform\FoodAlchemist\Support\AnkerGrenze::pruefe($gp->id, $ankerId, $role);   // je Rolle; Rollenwechsel nur mit Platz
-        DB::table('foodalchemist_gp_anchor_mappings')->updateOrInsert(
-            ['gp_id' => $gp->id, 'anchor_id' => $ankerId],
-            ['uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(), 'team_id' => $team->id, 'role' => $role,
-                'source' => $source, 'ai_confidence' => $aiConfidence, 'ai_reasoning' => $aiReasoning,
-                'deleted_at' => null, 'updated_at' => now(), 'created_at' => now()],
-        );
+        $this->gpAnker()->setGpAnker($team, $gpId, $ankerId, $role, $source, $aiConfidence, $aiReasoning);
     }
 
     public const GP_ANKER_STAERKEN = ['schwach', 'mittel', 'stark'];
@@ -1132,126 +899,40 @@ class PairingService
         app(RezeptProfil::class)->vergiss();
     }
 
-    /** Löst einen einzelnen GP-Anker (soft-delete). */
+    /** {@see GpAnkerPflege::removeGpAnker()} */
     public function removeGpAnker(Team $team, int $gpId, int $ankerId): void
     {
-        $this->pruefeAnkerPflege(\Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->findOrFail($gpId), $team);
-        DB::table('foodalchemist_gp_anchor_mappings')
-            ->where('gp_id', $gpId)->where('anchor_id', $ankerId)->update(['deleted_at' => now()]);
+        $this->gpAnker()->removeGpAnker($team, $gpId, $ankerId);
     }
 
-    /**
-     * Alle Anker eines GP löschen (soft-delete) — für den MCP-Import mit `ersetze_alle=true`
-     * (Spec 53 Paket J): die gelieferte Anker-Liste ersetzt den bisherigen Bestand vollständig.
-     */
+    /** {@see GpAnkerPflege::clearGpAnker()} */
     public function clearGpAnker(Team $team, int $gpId): void
     {
-        $this->pruefeAnkerPflege(\Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->findOrFail($gpId), $team);
-        DB::table('foodalchemist_gp_anchor_mappings')
-            ->where('gp_id', $gpId)->whereNull('deleted_at')->update(['deleted_at' => now()]);
+        $this->gpAnker()->clearGpAnker($team, $gpId);
     }
 
-    /**
-     * Spec 50 · B-7: KI-Inferenz des GP-Kern-Ankers (Bulk-Schritt `anker`). Manuelle Mappings
-     * werden nie ersetzt (Inv. 3); ältere KI-Mappings ({@see AnkerQuelle::KI_QUELLEN}) desselben GPs weichen, damit
-     * der Bulk-Lauf EINEN Kern-Anker setzt und die Kern-Grenze nicht mit KI-Resten füllt. Neutral: {@see GpAromaService::merkeAnkerNeutral()}.
-     * `neben` (17.11.2026) ergänzt, verdrängt nichts; Rolle eines verknüpften Ankers bleibt. false = Handarbeit, nichts geschrieben.
-     */
+    /** {@see GpAnkerPflege::setGpAnkerInference()} */
     public function setGpAnkerInference(Team $team, int $gpId, int $ankerId, float $confidence, string $reasoning = 'Bulk-Anreicherung', string $quelle = AnkerQuelle::KI, string $role = 'kern'): bool
     {
-        $gp = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)->findOrFail($gpId);
-        $this->pruefeAnkerPflege($gp, $team);
-        $manual = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('anchor_id', $ankerId)->where('source', 'manual')->exists();
-        if ($manual) {
-            return false;
-        }
-        $role = DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('anchor_id', $ankerId)->whereNull('deleted_at')->value('role') ?? ($role === 'neben' ? 'neben' : 'kern');
-        DB::transaction(function () use ($gp, $team, $ankerId, $confidence, $reasoning, $quelle, $role) {
-            if ($role === 'kern') {                                   // nur ältere KI-KERN-Anker weichen
-                DB::table('foodalchemist_gp_anchor_mappings')->where('gp_id', $gp->id)->where('role', 'kern')
-                    ->where('anchor_id', '!=', $ankerId)->whereIn('source', AnkerQuelle::KI_QUELLEN)->whereNull('deleted_at')
-                    ->update(['deleted_at' => now(), 'updated_at' => now()]);
-            }
-            \Platform\FoodAlchemist\Support\AnkerGrenze::pruefe($gp->id, $ankerId, $role);
-            DB::table('foodalchemist_gp_anchor_mappings')->updateOrInsert(
-                ['gp_id' => $gp->id, 'anchor_id' => $ankerId],
-                ['uuid' => (string) \Symfony\Component\Uid\UuidV7::generate(), 'team_id' => $team->id,
-                    'role' => $role, 'source' => $quelle === AnkerQuelle::PATE ? $quelle : AnkerQuelle::KI, 'ai_confidence' => max(0, min(1, $confidence)),
-                    'ai_reasoning' => mb_strimwidth($reasoning, 0, 500), 'deleted_at' => null, 'updated_at' => now(), 'created_at' => now()],
-            );
-        });
-
-        return true;
+        return $this->gpAnker()->setGpAnkerInference($team, $gpId, $ankerId, $confidence, $reasoning, $quelle, $role);
     }
 
-    /** Kern-Aroma-Anker eines GP inkl. Slug/Quelle (GP-Pairing-Panel, Aroma-Ähnlichkeit/Ersatz-Logik). */
+    /** {@see GpAnkerPflege::gpAnkers()} */
     public function gpAnkers(int $gpId): Collection
     {
-        return DB::table('foodalchemist_gp_anchor_mappings AS m')
-            ->join('foodalchemist_vocab_pairing_anchors AS a', 'a.id', '=', 'm.anchor_id')
-            ->where('m.gp_id', $gpId)->where('m.role', 'kern')->whereNull('m.deleted_at')
-            ->orderByRaw('COALESCE(m.ai_confidence, 1.0) DESC')->orderBy('m.id')
-            ->get(['a.id', 'a.slug', 'a.display_de', 'm.source', 'm.ai_confidence']);
+        return $this->gpAnker()->gpAnkers($gpId);
     }
 
-    /**
-     * ALLE Anker eines GP (kern UND neben), inkl. `role` — für den Editor-Block und das Detail-Panel
-     * (Spec 53 Paket J). Anders als {@see gpAnkers}, das bewusst nur `kern` liefert (Aroma-Ähnlichkeit/
-     * Ersatz-Logik nutzt nur den Haupt-Aromaträger) — hier soll der Kurator BEIDE Rollen sehen/pflegen.
-     */
+    /** {@see GpAnkerPflege::gpAnkerAlle()} */
     public function gpAnkerAlle(int $gpId): Collection
     {
-        return DB::table('foodalchemist_gp_anchor_mappings AS m')
-            ->join('foodalchemist_vocab_pairing_anchors AS a', 'a.id', '=', 'm.anchor_id')
-            ->where('m.gp_id', $gpId)->whereNull('m.deleted_at')
-            ->orderByRaw("CASE m.role WHEN 'kern' THEN 1 ELSE 2 END")->orderBy('a.display_de')
-            ->get(['a.id', 'a.slug', 'a.display_de', 'm.role', 'm.staerke', 'm.source', 'm.ai_confidence']);
+        return $this->gpAnker()->gpAnkerAlle($gpId);
     }
 
-    /**
-     * Spec 19 E9.2: Anker → GP Reverse-Lookup („welche echten GPs tragen Aroma X als Kern").
-     * Gegenrichtung zu gpAnkers(); zuvor nur privat in aromaTrueSubstitutes eingebettet
-     * (Doc-TODO D-7_pairing.md §GL-10 3.4). Team-scoped, ohne Derivate/Platzhalter (die kauft
-     * man nicht als Aromaträger). Read-only.
-     *
-     * @param  list<int>  $ankerIds  Kern-Anker-IDs
-     * @return \Illuminate\Support\Collection<int, object>  GP-Zeilen {id, name, lead_la_supplier_item_id, is_favorite, status, requires_la, anchor_id}
-     */
+    /** {@see GpAnkerPflege::gpsForAnkerIds()} */
     public function gpsForAnkerIds(Team $team, array $ankerIds): Collection
     {
-        $ankerIds = array_values(array_unique(array_map('intval', $ankerIds)));
-        if ($ankerIds === []) {
-            return collect();
-        }
-        // Anker → gp_id-Zuordnung (kern), damit der Aufrufer weiß, welcher GP welches Aroma trägt.
-        $mapping = DB::table('foodalchemist_gp_anchor_mappings')
-            ->whereIn('anchor_id', $ankerIds)->where('role', 'kern')->whereNull('deleted_at')
-            ->get(['gp_id', 'anchor_id']);
-        $gpIds = $mapping->pluck('gp_id')->map(fn ($i) => (int) $i)->unique()->all();
-        if ($gpIds === []) {
-            return collect();
-        }
-        $gps = \Platform\FoodAlchemist\Models\FoodAlchemistGp::visibleToTeam($team)
-            ->whereIn('id', $gpIds)
-            ->where('is_derivat', false)->where('is_platzhalter', false)
-            ->get(['id', 'name', 'lead_la_supplier_item_id', 'status', 'requires_la'])
-            ->keyBy('id');
-
-        $favoriten = \Platform\FoodAlchemist\Support\FavoritenOverlay::fuer($team);   // Spec 85 FAV-1 · Eine Zeile pro (GP, Anker) — der Aufrufer gruppiert nach Anker (Inspiration) bzw. GP (Erdung).
-        return $mapping
-            ->filter(fn ($m) => $gps->has((int) $m->gp_id))
-            ->map(function ($m) use ($gps, $favoriten) {
-                $gp = $gps->get((int) $m->gp_id);
-
-                return (object) [
-                    'id' => (int) $gp->id, 'name' => (string) $gp->name,
-                    'lead_la_supplier_item_id' => $gp->lead_la_supplier_item_id !== null ? (int) $gp->lead_la_supplier_item_id : null,
-                    'is_favorite' => isset($favoriten[(int) $gp->id]),
-                    'status' => is_object($gp->status) ? $gp->status->value : (string) $gp->status,
-                    'requires_la' => (bool) $gp->requires_la,
-                    'anchor_id' => (int) $m->anchor_id,
-                ];
-            })->values();
+        return $this->gpAnker()->gpsForAnkerIds($team, $ankerIds);
     }
 
     // ── Kompakt-Panels fürs »Sensorik & Pairing«-Tab (read-only) ─────────
@@ -1367,10 +1048,6 @@ class PairingService
     // kontrast) in Sektoren + komplementäre Basisrezepte. Dish-zentrisch,
     // clientseitig nach Typ filterbar. Positionen serverseitig fix (keine Simulation).
 
-    private const CANVAS_W = 1200.0;
-
-    private const CANVAS_H = 980.0;
-
     // Dish-zentrisches Empfehler-Layout (2026-07-22 Redesign): Gericht in der
     // Mitte, eigene Kern-Anker auf einem kleinen Innenring, Pairing-Kandidaten
     // in TYP-SEKTOREN aussen (erprobt oben, aroma oben-rechts, kontrast oben-links),
@@ -1379,677 +1056,35 @@ class PairingService
     // auf einem kleinen Innenring, die ERPROBTEN Kandidaten als voller Kreis
     // darum (wie in der Vorschau), und aroma + kontrast + Basisrezepte gemeinsam
     // als äusserer Kreis drumherum (nach Typ in zusammenhängende Bögen sortiert).
-    private const R_ANKER = 150.0;      // Innenring Kern-Anker
 
-    private const R_BEST = 320.0;
-
-    /** Gericht-Netz: Bestandteile tragen lange Rezeptnamen — weiter innen als die Anker (150) überlappten sie. */
-    private const R_BESTANDTEIL = 215.0;       // mittlerer Vollkreis: best-Kandidaten (Inspire L3, ★★★)
-
-    private const R_OUTER = 470.0;      // Aussenkreis: harmonie (★★/★) + kontrast (⇄) + Basisrezepte
-
-    private const KANDIDATEN_PRO_TYP = 14;   // Cap je Typ
-
-    private const BASIS_MAX = 10;
-
-    /** Spec 60: Kontrast-Lieferanten je offenem Bedarf im Netz. */
-    private const KONTRAST_JE_BEDARF = 4;
-
-    private const INNER_ANKER_MAX = 12;
-
-    /**
-     * Pairing-Empfehler fürs Netz (2026-07-22 Redesign): beantwortet »was passt
-     * zum Gericht, getrennt nach erprobt / aroma / kontrast«.
-     *
-     * Zentrum = Gericht, Innenring = eigene Kern-Anker (Geschmacks-Identität),
-     * aussen die PAIRING-KANDIDATEN in Typ-Sektoren (erprobt oben, aroma oben-
-     * rechts, kontrast oben-links) — jeder Kandidat ist ein Aroma-Partner der
-     * Kern-Anker, gerankt nach der Zahl passender Zutaten im Profil +
-     * Gewicht. Unten die KOMPLEMENTÄREN Basisrezepte (Rezepte, die auf einem
-     * passenden Partner aufbauen). Typ-Filterung passiert clientseitig (Chips) —
-     * jeder Kandidat/jede Kante trägt ihren `typ`. Positionen serverseitig fix
-     * (reine Formel, keine Simulation).
-     *
-     * @param  int  $vorschlaegeProAnker  Legacy-Parameter, ignoriert (Kandidaten
-     *                                     sind jetzt immer Teil des Netzes).
-     * @return array{nodes: list<array>, edges: list<array>, meta: array}
-     */
+    /** {@see PairingNetz::pairingNetz()} */
     public function pairingNetz(Team $team, int $recipeId, int $vorschlaegeProAnker = 0): array
     {
-        $recipe = FoodAlchemistRecipe::visibleToTeam($team)->find($recipeId);
-        if ($recipe === null) {
-            return ['nodes' => [], 'edges' => [], 'meta' => ['recipe_id' => $recipeId]];
-        }
-
-        // Spec 60 · P7: im Gericht stehen Basisrezepte im Vordergrund, die Anker im Hintergrund.
-        if ((bool) $recipe->is_sales_recipe) {
-            return $this->gerichtNetz($team, $recipe);
-        }
-        // Basisrezept: Innenring = Kern-Anker seines Aromenprofils, mit Anteil (Hintergrund sichtbar).
-        $profile = app(RezeptProfil::class);
-        $aroma = $profile->fuer((int) $recipe->id);
-        $anzeige = $profile->ankerFuerAnzeige($aroma);
-        $vokabular = DB::table('foodalchemist_vocab_pairing_anchors')
-            ->whereIn('id', array_column($anzeige, 'anchor_id'))->whereNull('deleted_at')
-            ->get(['id', 'slug', 'display_de'])->keyBy('id');
-        $inner = collect($anzeige)->filter(fn ($a) => $vokabular->has($a['anchor_id']))
-            ->map(fn ($a) => $a + (array) $vokabular[$a['anchor_id']]);
-
-        return $this->baueNetz($team, $inner, (string) $recipe->name, $recipeId, quellen: $aroma['anker_quellen']);
+        return $this->netz()->pairingNetz($team, $recipeId, $vorschlaegeProAnker);
     }
 
-    /**
-     * Spec 60 · P7: Netz eines Gerichts — Basisrezepte statt Anker (Dominique 06.10.: „im Gericht-Netz
-     * keine Anker, sondern andere Basisrezepte, die dazu passen").
-     *
-     *   Innenring   die Bestandteile des Gerichts (Basisrezepte, einzeln eingesetzte GPs)
-     *   Linien      zwischen Bestandteilen: harmoniert / Klassiker (gold), Spannung (türkis), Konflikt (rot)
-     *   Mittelring  Basisrezepte aus dem Bestand, die mit einem Bestandteil harmonieren
-     *   Außenring   Basisrezepte, die einen offenen Bedarf decken (Kontrast)
-     * Dieselbe Kombinationslogik wie „Passt das zusammen?" im Panel.
-     */
-    private function gerichtNetz(Team $team, FoodAlchemistRecipe $gericht): array
-    {
-        $cx = self::CANVAS_W / 2;
-        $cy = self::CANVAS_H / 2;
-        $logik = app(\Platform\FoodAlchemist\Services\Pairing\Kombinationslogik::class);
-        $analyse = $logik->analysiere($gericht);
-        $diaet = $gericht->spec_is_vegan === true ? 'vegan' : ($gericht->spec_is_vegetarian === true ? 'vegetarisch' : null);
-        $teamId = $gericht->team_id !== null ? (int) $gericht->team_id : (int) $team->id;
-
-        $nodes = [['id' => 'z', 'kind' => 'zentrum', 'label' => (string) $gericht->name, 'x' => $cx, 'y' => $cy]];
-        $edges = [];
-        $teile = array_values($analyse['bestandteile']);
-        $anteile = $logik->portionsanteile($teile);
-        foreach ($teile as $i => $t) {
-            $anteil = isset($anteile[$t['schluessel']]) ? round(100 * $anteile[$t['schluessel']], 1) : null;
-            [$x, $y] = $this->positionAufKreis($i, max(1, count($teile)), self::R_BESTANDTEIL, $cx, $cy);
-            $nodes[] = ['id' => 't:'.$t['schluessel'], 'kind' => 'bestandteil', 'label' => $t['label'],
-                'recipe_id' => $t['recipe_id'], 'ohne_profil' => $t['profil'] === null,
-                'anteil' => $anteil, 'gramm' => $t['gramm'] !== null ? round($t['gramm'], 1) : null,
-                'kern' => $t['profil'] !== null ? array_slice(array_map(fn ($a) => (int) $a['anchor_id'], $t['profil']['anker']), 0, 3) : [],
-                'x' => $x, 'y' => $y];
-            $edges[] = ['source' => 'z', 'target' => 't:'.$t['schluessel'], 'kind' => 'zentrum_anker', 'anteil' => $anteil, 'visible' => true];
-        }
-        $typ = [AussageTyp::Harmoniert->value => 'stern3', AussageTyp::Kombination->value => 'stern3', AussageTyp::Spannung->value => 'kontrast'];
-        $gesehen = [];
-        foreach ($analyse['aussagen'] as $a) {
-            if (count($a->bestandteile) !== 2) {
-                continue;
-            }
-            [$p, $q] = $a->bestandteile;
-            if ($a->typ === AussageTyp::Konflikt) {
-                $edges[] = ['source' => 't:'.$p, 'target' => 't:'.$q, 'kind' => 'konflikt', 'text' => $a->text, 'visible' => true];
-            } elseif ($a->typ === AussageTyp::Hinweis && str_starts_with($a->text, Kombinationslogik::HINWEIS_BEGLEITAROMA)) {
-                $edges[] = ['source' => 't:'.$p, 'target' => 't:'.$q, 'kind' => 'hinweis', 'text' => $a->text, 'visible' => true];
-            } elseif (isset($typ[$a->typ->value]) && ! isset($gesehen[$a->typ->value.$p.$q])) {
-                $gesehen[$a->typ->value.$p.$q] = true;
-                $edges[] = ['source' => 't:'.$p, 'target' => 't:'.$q, 'kind' => 'teil_teil', 'typ' => $typ[$a->typ->value],
-                    'text' => $a->text, 'visible' => true];
-            }
-        }
-
-        $passend = $logik->passendeBasisrezepte($analyse, $diaet, $gericht->taste_direction, $teamId, self::KANDIDATEN_PRO_TYP);
-        foreach ($passend as $i => $b) {
-            [$x, $y] = $this->positionAufKreis($i, max(1, count($passend)), self::R_BEST, $cx, $cy);
-            $nodes[] = ['id' => 'b:'.$b['recipe_id'], 'kind' => 'basisrezept', 'typ' => 'stern3', 'label' => $b['name'],
-                'recipe_id' => $b['recipe_id'], 'via' => $b['mit'],
-                'mit_anteil' => isset($anteile[$b['mit_schluessel']]) ? round(100 * $anteile[$b['mit_schluessel']], 1) : null,
-                'x' => $x, 'y' => $y];
-            $edges[] = ['source' => 'b:'.$b['recipe_id'], 'target' => 't:'.$b['mit_schluessel'], 'kind' => 'basis', 'typ' => 'stern3',
-                'text' => $b['name'].' harmoniert mit '.$b['mit'], 'visible' => true];
-        }
-        $schon = array_flip(array_column($passend, 'recipe_id'));
-        $kontrast = [];
-        foreach ($logik->vorschlaegeFuer($analyse, $diaet, $gericht->taste_direction, $teamId, 3) as $v) {
-            $achse = \Platform\FoodAlchemist\Enums\Achse::from($v['achse'])->label();
-            foreach ($v['basisrezepte'] as $b) {
-                if (! isset($schon[$b['recipe_id']]) && ! isset($kontrast[$b['recipe_id']])) {
-                    $kontrast[$b['recipe_id']] = $b + ['achse' => $achse];
-                }
-            }
-        }
-        $kontrast = array_values($kontrast);
-        foreach ($kontrast as $i => $b) {
-            [$x, $y] = $this->positionAufKreis($i, max(1, count($kontrast)), self::R_OUTER, $cx, $cy);
-            $nodes[] = ['id' => 'b:'.$b['recipe_id'], 'kind' => 'basisrezept', 'typ' => 'kontrast', 'label' => $b['name'],
-                'recipe_id' => $b['recipe_id'], 'via' => $b['achse'], 'achse' => $b['achse'], 'x' => $x, 'y' => $y];
-            if ($b['mit_schluessel'] !== null) {
-                $edges[] = ['source' => 'b:'.$b['recipe_id'], 'target' => 't:'.$b['mit_schluessel'], 'kind' => 'basis', 'typ' => 'kontrast',
-                    'text' => $b['name'].' deckt '.$b['achse'], 'visible' => true];
-            }
-        }
-
-        return [
-            'nodes' => $nodes,
-            'edges' => $edges,
-            'meta' => [
-                'recipe_id' => (int) $gericht->id,
-                'art' => 'gericht',
-                'canvas_w' => self::CANVAS_W,
-                'canvas_h' => self::CANVAS_H,
-                'sig' => substr(md5(json_encode([$nodes, $edges])), 0, 10),
-                'typ_default' => ['stern3' => true, 'kontrast' => true],
-                'counts' => [
-                    'bestandteile' => count($teile),
-                    'stern3' => count($passend),
-                    'kontrast' => count($kontrast),
-                    'basis' => count($passend) + count($kontrast),
-                    'konflikt' => count(array_filter($edges, fn ($e) => $e['kind'] === 'konflikt')),
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * Ad-hoc-Netz aus einer freien Anker-Menge (Planungs-Composer): kein Rezept,
-     * Zentrum = frei benennbare „Komposition". Gleiche Downstream-Logik wie
-     * {@see pairingNetz} — nur der Innenring kommt direkt als Anker-ID-Liste
-     * (Auswahl-Reihenfolge bleibt erhalten).
-     *
-     * @param  array<int>  $ankerIds
-     */
+    /** {@see PairingNetz::pairingNetzForAnkers()} */
     public function pairingNetzForAnkers(Team $team, array $ankerIds, string $centerLabel = 'Komposition'): array
     {
-        $ids = array_values(array_unique(array_map('intval', $ankerIds)));
-        if ($ids === []) {
-            return ['nodes' => [], 'edges' => [], 'meta' => ['recipe_id' => 0]];
-        }
-        $inner = DB::table('foodalchemist_vocab_pairing_anchors')
-            ->whereIn('id', $ids)
-            ->get(['id', 'slug', 'display_de'])
-            ->map(fn ($a) => ['id' => (int) $a->id, 'slug' => $a->slug, 'display_de' => $a->display_de])
-            ->sortBy(fn ($a) => array_search($a['id'], $ids, true))->values();
-
-        return $this->baueNetz($team, $inner, $centerLabel, 0, true);
+        return $this->netz()->pairingNetzForAnkers($team, $ankerIds, $centerLabel);
     }
 
-    /**
-     * Gemeinsamer Netz-Aufbau (rezept- ODER anker-getrieben). $inner = roher Innenring
-     * (wird auf INNER_ANKER_MAX gekappt). $recipeId nur für meta + Selbst-Ausschluss der
-     * komplementären Basisrezepte (0 = keiner). $centerLabel = Label des Zentrum-Knotens.
-     *
-     * @param  \Illuminate\Support\Collection<int,array{id:int,slug:string,display_de:?string}>  $inner
-     */
-    private function baueNetz(Team $team, \Illuminate\Support\Collection $inner, string $centerLabel, int $recipeId, bool $composer = false, array $quellen = []): array
-    {
-        $cx = self::CANVAS_W / 2;
-        $cy = self::CANVAS_H / 2;
-
-        $inner = $inner->unique('id')->take(self::INNER_ANKER_MAX)->values();
-        $innerIds = $inner->filter(fn ($a) => $a['kern'] ?? true)->pluck('id')->all();
-
-        $edges = [];
-        $ankerNodes = [];
-        $nInner = max(1, $inner->count());
-        foreach ($inner as $i => $a) {
-            $w = 2 * M_PI * $i / $nInner - M_PI / 2;
-            $x = round($cx + self::R_ANKER * cos($w), 1);
-            $y = round($cy + self::R_ANKER * sin($w), 1);
-            $ankerNodes[] = [
-                'id' => 'a:'.$a['id'], 'kind' => 'anker', 'label' => $a['display_de'], 'slug' => $a['slug'],
-                'kern' => $a['kern'] ?? true, 'anteil' => $a['anteil'] ?? null, 'staerke' => $a['staerke'] ?? null,
-                'x' => $x, 'y' => $y,
-            ];
-            $edges[] = ['source' => 'z', 'target' => 'a:'.$a['id'], 'kind' => 'zentrum_anker', 'visible' => true];
-        }
-
-        // ── Innere Ebene: Kanten ZWISCHEN den Kern-Ankern ───────────────────
-        // Zeigt, wie die ausgewählten Anker laut Foodpairing-Matrix zusammenhängen
-        // (die eigentliche Beweisführung): Best-/Good-Match zwischen den violetten
-        // Ankern selbst, nicht nur Anker→Zutat. Kein Match → keine Linie.
-        $ankerKanten = $this->innerAnkerKanten($innerIds);
-        $edges = array_merge($edges, $ankerKanten);
-
-        // ── Kandidaten: Aroma-Partner der Kern-Anker (ausserhalb), typisiert ──
-        [$kandidaten, $candMeta] = app(NetzKandidaten::class)->fuerAnker($innerIds, $quellen);
-        $nebenIds = $inner->filter(fn ($a) => isset($a['kern']) && ! $a['kern'])->pluck('id')->all();
-        $schwacheKonflikte = app(RezeptGraph::class)->schwacheKonflikte(
-            ['nebenanker' => array_fill_keys($nebenIds, true)],
-            ['anker' => array_map(fn ($id) => ['anchor_id' => $id, 'anteil' => 0.0], $innerIds)],
-        );
-        $ankerNamen = $inner->pluck('display_de', 'id');
-        foreach ($schwacheKonflikte as $k) {
-            $edges[] = ['source' => 'a:'.$k->von, 'target' => 'a:'.$k->zu, 'kind' => 'hinweis',
-                'text' => "{$ankerNamen[$k->von]} und {$ankerNamen[$k->zu]} können sich stören (Begleitaroma, Dossier geprüft)",
-                'visible' => true];
-        }
-
-        // ── Spec 60: Kombinationslogik über die Anker-Auswahl — dieselbe Aussage wie im Panel.
-        // Daraus: Kontrast-Ring (Lieferanten für offene Bedarfe), Konflikt-Linien und — nur im
-        // Composer — der Hinweis „kein gemessener Bezug" an Ankern ohne jede Verbindung (neutral).
-        [$kontrast, $konfliktKanten, $verbunden] = $this->kontrastUndKonflikt($innerIds, ohneSalz: $composer);
-        // Kein Partner mit dem Grundnamen einer gewählten Zutat („Augenbohne" neben „Augenbohne, gekocht"):
-        // Vergleich über die Spalte grundname (AnkerVarianten), nie über Teilstrings (Bohne ≠ Bohnenkraut).
-        $innerGrund = DB::table('foodalchemist_vocab_pairing_anchors')->whereIn('id', $innerIds)->get(['grundname', 'slug'])
-            ->map(fn ($r) => mb_strtolower(trim((string) ($r->grundname ?: $r->slug))))->flip()->all();
-        $kandidaten = array_values(array_filter($kandidaten, fn ($c) => ! isset($innerGrund[$c['grundname']])));
-        $kontrastGrund = DB::table('foodalchemist_vocab_pairing_anchors')->whereIn('id', array_column($kontrast, 'id'))->get(['id', 'grundname', 'slug'])
-            ->mapWithKeys(fn ($r) => [(int) $r->id => mb_strtolower(trim((string) ($r->grundname ?: $r->slug)))])->all();
-        $kontrast = array_values(array_filter($kontrast, fn ($c) => ! isset($innerGrund[$kontrastGrund[(int) $c['id']] ?? ''])));
-        // Ein ★★★-Partner, der zugleich einen offenen Bedarf deckt, bleibt im ★★★-Ring und trägt die
-        // Kontrast-Achse als Markierung (Dominique 15.10.: vorher wanderten alle 6 ★★★-Partner des
-        // Kürbis in den Kontrast-Ring, der ★★★-Ring war leer). Der Kontrast-Ring zeigt den Rest.
-        $kontrastVon = [];
-        foreach ($kontrast as $c) {
-            $kontrastVon[(int) $c['id']] = $c;
-        }
-
-        $edges = array_merge($edges, $konfliktKanten);
-        if ($composer && count($innerIds) >= 2) {
-            foreach ($ankerNodes as &$an) {
-                $an['orphan'] = ! isset($verbunden[(int) substr($an['id'], 2)]);
-            }
-            unset($an);
-        }
-
-        // Rang (vorher bei Gleichstand alphabetisch: „Afrikanische Tagetes, Alpenpfeffer …" vorne):
-        // verbindet mehr gewählte Anker · deckt einen offenen Bedarf · Klassiker aus dem Dossier · Gruppen-Klassiker ·
-        // Grundform vor Variante · Verbreitung im Katalog · Name. Vielfalt: je Grundname einer.
-        $jeTyp = fn ($typ) => array_slice(
-            (function () use ($kandidaten, $typ, $kontrastVon) {
-                $l = array_values(array_filter($kandidaten, fn ($c) => $c['typ'] === $typ));
-                $schluessel = fn ($c) => [$c['cover'], isset($kontrastVon[(int) $c['id']]) ? 1 : 0,
-                    $c['klassiker'] ? 2 : ($c['gruppen_klassiker'] ? 1 : 0), $c['grundform'] ? 1 : 0, $c['verbreitung'], $c['weight']];
-                usort($l, fn ($x, $y) => [...$schluessel($y), $x['slug']] <=> [...$schluessel($x), $y['slug']]);
-                $gesehen = [];
-
-                return array_values(array_filter($l, function ($c) use (&$gesehen) {
-                    if (isset($gesehen[$c['grundname']])) {
-                        return false;
-                    }
-
-                    return $gesehen[$c['grundname']] = true;
-                }));
-            })(),
-            0, self::KANDIDATEN_PRO_TYP
-        );
-        // Spec 60: Harmonie-Kandidaten nur ★★★; der äußere Ring trägt den Kontrast (offene Bedarfe).
-        $stern3 = $jeTyp('stern3');
-        // Wer im ★★★-Ring steht, erscheint nicht ein zweites Mal im Kontrast-Ring.
-        $stern3Ids = array_flip(array_map(fn ($c) => (int) $c['id'], $stern3));
-        $kontrast = array_values(array_filter($kontrast, fn ($c) => ! isset($stern3Ids[(int) $c['id']])));
-
-        $basis = $this->komplementaerBasisrezepte($team, $recipeId, $candMeta);
-
-        $kandidatNodes = [];
-        $basisNodes = [];
-
-        // Mittlerer Vollkreis: ★★★-Kandidaten (Inspire L3, Best-Match) gleichmässig rundum.
-        $mB = max(1, count($stern3));
-        foreach ($stern3 as $idx => $c) {
-            [$x, $y] = $this->positionAufKreis($idx, $mB, self::R_BEST, $cx, $cy);
-            $k = $kontrastVon[(int) $c['id']] ?? null;
-            $kandidatNodes[] = [
-                'id' => 'k:'.$c['id'], 'kind' => 'kandidat', 'typ' => 'stern3', 'level' => 3,
-                'label' => $c['display_de'], 'slug' => $c['slug'], 'cover' => $c['cover'],
-                'cover_einheit' => $composer ? 'Ankern' : 'Zutaten', 'anker_treffer' => count($c['partner']), 'x' => $x, 'y' => $y,
-                'auch_kontrast' => $k['achse_label'] ?? null,
-            ];
-            foreach ($c['partner'] as $p) {
-                $edges[] = ['source' => 'k:'.$c['id'], 'target' => 'a:'.$p['anker_id'], 'kind' => 'kandidat',
-                    'typ' => $p['typ'], 'level' => $p['level'] ?? 1, 'weight' => $p['weight'],
-                    'visible' => true];
-            }
-        }
-
-        // Äusserer Vollkreis: Kontrast-Lieferanten (decken einen offenen Bedarf) + Basisrezepte.
-        $outerTotal = max(1, count($kontrast) + count($basis));
-        $oi = 0;
-        foreach ($kontrast as $c) {
-            [$x, $y] = $this->positionAufKreis($oi++, $outerTotal, self::R_OUTER, $cx, $cy);
-            $kandidatNodes[] = [
-                'id' => 'k:'.$c['id'], 'kind' => 'kandidat', 'typ' => 'kontrast', 'level' => 0,
-                'label' => $c['display_de'], 'slug' => $c['slug'], 'cover' => count($c['fuer']),
-                'achse' => $c['achse_label'], 'x' => $x, 'y' => $y,
-            ];
-            foreach ($c['fuer'] as $aid) {
-                $edges[] = ['source' => 'k:'.$c['id'], 'target' => 'a:'.$aid, 'kind' => 'kandidat',
-                    'typ' => 'kontrast', 'level' => 0, 'weight' => 1.0, 'achse' => $c['achse_label'], 'visible' => true];
-            }
-        }
-        foreach ($basis as $b) {
-            [$x, $y] = $this->positionAufKreis($oi++, $outerTotal, self::R_OUTER, $cx, $cy);
-            $basisNodes[] = [
-                'id' => 'b:'.$b['recipe_id'], 'kind' => 'basisrezept', 'typ' => $b['typ'], 'label' => $b['name'],
-                'recipe_id' => $b['recipe_id'], 'via' => $b['via_slug'], 'x' => $x, 'y' => $y,
-            ];
-            $edges[] = ['source' => 'b:'.$b['recipe_id'], 'target' => 'a:'.$b['anker_id'], 'kind' => 'basis',
-                'typ' => $b['typ'], 'visible' => true];
-        }
-
-        $nodes = array_merge(
-            [['id' => 'z', 'kind' => 'zentrum', 'label' => $centerLabel, 'x' => $cx, 'y' => $cy]],
-            $ankerNodes, $kandidatNodes, $basisNodes
-        );
-
-        return [
-            'nodes' => $nodes,
-            'edges' => $edges,
-            'meta' => [
-                'recipe_id' => $recipeId,
-                'canvas_w' => self::CANVAS_W,
-                'canvas_h' => self::CANVAS_H,
-                // Inhalts-Signatur (Knoten-IDs in Reihenfolge): keyt die wire:ignore-D3-Insel
-                // in Vorschau + Modal. Ändert sich der Ankersatz (o. die Kandidaten), ändert
-                // sich sig → wire:key wechselt → Livewire ersetzt die Insel → D3 re-initialisiert
-                // mit frischen Daten. Ohne das friert das Modal auf dem Erst-Öffnungsstand ein.
-                'sig' => substr(md5(json_encode([$nodes, $edges])), 0, 10),
-                // Filter-Defaults: beide Stern-Stufen an (zweistufige Inspire-Harmonie).
-                'typ_default' => ['stern3' => true, 'kontrast' => true],
-                'counts' => [
-                    'stern3' => count(array_filter($kandidatNodes, fn ($n) => $n['typ'] === 'stern3')),
-                    'kontrast' => count(array_filter($kandidatNodes, fn ($n) => $n['typ'] === 'kontrast')),
-                    'basis' => count($basisNodes),
-                    // Kanten zwischen den Kern-Ankern (innere Ebene).
-                    'anker_anker' => count($ankerKanten),
-                    'konflikt' => count($konfliktKanten),
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * Composer: Kohäsion einer freien Anker-Menge — „passen die gewählten Anker zusammen?".
-     * Baut die komponenten-Struktur aus den Ankern und delegiert an {@see cohesionFor}
-     * (liefert score/min_score/weakest_pair + je Anker fit/is_orphan = der „passt-nicht"-Flag).
-     *
-     * @param  array<int>  $ankerIds
-     */
+    /** {@see PairingNetz::composerCohesion()} */
     public function composerCohesion(array $ankerIds): array
     {
-        $ids = array_values(array_unique(array_map('intval', $ankerIds)));
-        $leer = ['score' => 0, 'min_score' => 0, 'rated_pairs' => 0, 'total_pairs' => 0,
-            'coverage_pct' => 0, 'weakest_pair' => null, 'unrated_pairs' => [], 'komponenten' => []];
-        if (count($ids) < 2) {
-            return $leer;
-        }
-        $rows = DB::table('foodalchemist_vocab_pairing_anchors')
-            ->whereIn('id', $ids)->get(['id', 'slug', 'display_de'])->keyBy('id');
-
-        $komponenten = [];
-        foreach ($ids as $id) {
-            $a = $rows->get($id);
-            if ($a === null) {
-                continue;
-            }
-            $komponenten[] = [
-                'kern' => (int) $a->id,
-                'prozess' => [],
-                'label' => $a->display_de ?: $a->slug,
-                'via' => $a->slug,
-            ];
-        }
-
-        return $this->cohesionFor($komponenten);
+        return $this->netz()->composerCohesion($ankerIds);
     }
 
-    /**
-     * Composer-Picker: browsebare Anker-Liste (wie der GP-Picker `IngredientEditor::browseKatalog`).
-     * Gefiltert nach Kategorie + Suche, aktuelle Auswahl ausgeschlossen; je Anker ein Best/Good-Badge
-     * relativ zur Auswahl (aus {@see NetzKandidaten::fuerAnker}) + das Kategorie-Vokabular für den Dropdown.
-     *
-     * @param  array<int>  $selectedIds
-     * @return array{items: list<array>, total: int, kategorien: list<string>}
-     */
+    /** {@see PairingNetz::composerAnkerBrowse()} */
     public function composerAnkerBrowse(Team $team, string $q, ?string $category, array $selectedIds, int $limit = 200, ?int $focusId = null): array
     {
-        $selected = array_values(array_unique(array_map('intval', $selectedIds)));
-        $q = trim($q);
-
-        $query = DB::table('foodalchemist_vocab_pairing_anchors')
-            ->whereNull('deleted_at')
-            ->when($q !== '', function ($w) use ($q) {
-                $like = '%'.$q.'%';
-                $w->where(fn ($x) => $x->where('slug', 'like', $like)->orWhere('display_de', 'like', $like));
-            })
-            ->when($category !== null && $category !== '', fn ($w) => $w->where('category', $category))
-            ->when($selected !== [], fn ($w) => $w->whereNotIn('id', $selected));
-
-        $total = (clone $query)->count();
-        $rows = $query->orderBy('display_de')->limit($limit)->get(['id', 'slug', 'display_de', 'category']);
-
-        // Best/Good-Badge: bei Fokus relativ zum EINEN fokussierten Anker („was passt zu X"),
-        // sonst relativ zur ganzen Auswahl.
-        $badgeBasis = $focusId !== null ? [$focusId] : $selected;
-        $badge = [];
-        $auchKontrast = [];
-        if ($badgeBasis !== []) {
-            // Spec 60: ★★★ = harmoniert · kontrast = deckt einen offenen Bedarf · konflikt = stört sich.
-            // Wie im Netz (#393): ★★★, der zugleich einen Bedarf deckt, bleibt ★★★ und trägt die Achse
-            // (auch_kontrast); „kontrast" nur für Lieferanten ohne ★★★ (Klassiker). Konflikt vor allem.
-            [$kand] = app(NetzKandidaten::class)->fuerAnker($badgeBasis);
-            foreach ($kand as $c) {
-                $badge[(int) $c['id']] = $c['typ'];
-            }
-            foreach ($this->kontrastUndKonflikt($badgeBasis, ohneSalz: true)[0] as $c) {
-                if (($badge[(int) $c['id']] ?? null) === 'stern3') {
-                    $auchKontrast[(int) $c['id']] = $c['achse_label'];
-                } else {
-                    $badge[(int) $c['id']] = 'kontrast';
-                }
-            }
-            foreach ($this->graph()->beziehungen($badgeBasis, Kantenart::Konflikt) as $k) {
-                $badge[$k->zu] = 'konflikt';
-            }
-        }
-
-        $kategorien = DB::table('foodalchemist_vocab_pairing_anchors')
-            ->whereNull('deleted_at')->whereNotNull('category')
-            ->distinct()->orderBy('category')->pluck('category')->all();
-
-        return [
-            'items' => $rows->map(fn ($a) => [
-                'id' => (int) $a->id,
-                'slug' => $a->slug,
-                'label' => $a->display_de ?: $a->slug,
-                'category' => $a->category,
-                'typ' => $badge[(int) $a->id] ?? null,
-                'auch_kontrast' => ($badge[(int) $a->id] ?? null) === 'stern3' ? ($auchKontrast[(int) $a->id] ?? null) : null,
-            ])->all(),
-            'total' => $total,
-            'kategorien' => $kategorien,
-        ];
+        return $this->netz()->composerAnkerBrowse($team, $q, $category, $selectedIds, $limit, $focusId);
     }
 
-    /**
-     * Kanten ZWISCHEN den Kern-Ankern (innere Ebene des Netzes). Beantwortet
-     * „wie hängen die ausgewählten Anker untereinander zusammen" — die eigentliche
-     * Beweisführung des Foodpairing-Modells, die im Zutat→Anker-Netz fehlt.
-     *
-     * Signal = die gemessene Foodpairing-Harmonie ({@see AnkerGraph}): je ungeordnetem Paar
-     * mit Stufe ★★★ eine Linie. Darunter (2★ oder keine Kante) entsteht keine Linie.
-     *
-     * @param  array<int>  $innerIds
-     * @return list<array{source:string,target:string,kind:string,typ:string,level:int,weight:float,visible:bool}>
-     */
-    private function innerAnkerKanten(array $innerIds): array
-    {
-        if (count($innerIds) < 2) {
-            return [];
-        }
-
-        $out = [];
-        foreach ($this->graph()->kanten($innerIds, $innerIds, AnkerGraph::HARMONIERT) as $k) {   // Spec 60: nur ★★★
-            if ($k->von > $k->zu) {
-                continue;                                   // jedes Paar steht in beiden Richtungen — einmal zeigen
-            }
-            $out[] = [
-                'source' => 'a:'.$k->von,
-                'target' => 'a:'.$k->zu,
-                'kind' => 'anker_anker',
-                'typ' => 'stern'.$k->stufe,
-                'level' => $k->stufe,
-                'weight' => AnkerGraph::GEWICHT[$k->stufe],
-                'visible' => true,
-            ];
-        }
-
-        return $out;
-    }
-
-    /**
-     * Spec 60: Kontrast-Lieferanten und Konflikte einer Anker-Auswahl aus der Kombinationslogik
-     * (Anker als Einzel-Bestandteile — dieselbe Analyse wie „Passt das zusammen?").
-     *
-     *   kontrast   je offenem Bedarf die stärksten Lieferanten (abgeleitete Kontrast-Kante)
-     *   konflikt   Linie zwischen zwei gewählten Ankern, die sich laut Anker-Wissen stören
-     *   verbunden  Anker, die mit einem anderen harmonieren, Spannung bilden oder ein Klassiker sind
-     *
-     * @param  array<int>  $innerIds
-     * @return array{0: list<array{id: int, slug: string, display_de: ?string, achse_label: string, fuer: list<int>}>, 1: list<array>, 2: array<int, true>}
-     */
+    /** {@see PairingNetz::kontrastUndKonflikt()} */
     private function kontrastUndKonflikt(array $innerIds, bool $ohneSalz = false): array
     {
-        if ($innerIds === []) {
-            return [[], [], []];
-        }
-        $logik = app(\Platform\FoodAlchemist\Services\Pairing\Kombinationslogik::class);
-        $analyse = $logik->analysiereBestandteile($logik->bestandteileAusAnkern($innerIds));
-        if ($ohneSalz) {
-            // Composer (Dominique 16.10.): Salz ist keine Pairing-Frage → kein Salz-Lieferant im Ring
-            $analyse['offene_bedarfe'] = array_values(array_filter($analyse['offene_bedarfe'],
-                fn ($b) => $b['achse'] !== \Platform\FoodAlchemist\Enums\Achse::Salz->value));
-        }
-        $id = fn (string $schluessel) => (int) substr($schluessel, 1);           // 'a123' → 123
-
-        // Ein Lieferant muss zur Auswahl passen: ★★★ zu mindestens einem gewählten Anker ODER Klassiker
-        // aus dem Dossier („Verträgt"), auch als Gruppe („verträgt Fisch" + Lieferant ist Fisch, schwächer). Das gilt auch für reine Träger (Stufe 3: Öl, Meersalz, Zucker).
-        // ★★ zählt nicht (Dominique 15.10.: „2 Sterne ist die Grund-Aroma-Passform", Rauschen).
-        // Vorher durfte ein Träger ohne jede Harmonie stehen → Wildfond für Erdbeere + Basilikum,
-        // Tikka Masala für Kürbis. (2026-10-06: Olivenöl für Tomate fehlte mit reinem ★★★-Filter —
-        // heute trägt das der Klassiker aus dem Dossier.)
-        // Sortiert: Harmonien mit der Auswahl, Klassiker, belegte Träger (Nährwert gemessen / Dossier
-        // geprüft) vor ungeprüften, dann Rang der Kontrast-Kante.
-        $jeBedarf = [];
-        foreach ($analyse['offene_bedarfe'] as $b) {
-            $fuer = $id((string) $b['bestandteil']);
-            $jeBedarf[] = [$fuer, (string) $b['achse'], $this->graph()->beziehungen([$fuer], Kantenart::Kontrast)
-                ->where('achse', (string) $b['achse'])->reject(fn ($k) => in_array($k->zu, $innerIds, true))->values()];
-        }
-        $alle = collect($jeBedarf)->flatMap(fn ($x) => $x[2]->pluck('zu'))->unique()->values()->all();
-        $harmonien = [];
-        foreach ($alle === [] ? [] : $this->graph()->kanten($alle, $innerIds, AnkerGraph::HARMONIERT) as $k) {
-            $harmonien[$k->von] = ($harmonien[$k->von] ?? 0) + 1;
-        }
-        // Klassiker aus dem Dossier („Verträgt") lässt einen Lieferanten auch ohne ★★★ zu
-        $klassiker = $alle === [] ? [] : $this->graph()->beziehungen($alle, Kantenart::Kombination, $innerIds)
-            ->merge($this->graph()->beziehungen($innerIds, Kantenart::Kombination, $alle))
-            ->flatMap(fn ($k) => [$k->von, $k->zu])->flip()->all();
-        $gruppenKlassiker = $this->graph()->gruppenKlassikerZwischen($alle, $innerIds);   // „verträgt Fisch", schwächer
-        $stoert = $alle === [] ? [] : $this->graph()->beziehungen($alle, Kantenart::Konflikt, $innerIds)
-            ->merge($this->graph()->beziehungen($innerIds, Kantenart::Konflikt, $alle))
-            ->flatMap(fn ($k) => [$k->von, $k->zu])->flip()->all();
-        $traeger = [];
-        foreach ($alle === [] ? [] : DB::table('foodalchemist_anchor_eigenschaften')->whereIn('anchor_id', $alle)
-            ->where('stufe', '>=', 3)->where('status', '!=', \Platform\FoodAlchemist\Enums\WissensStatus::Verworfen->value)
-            ->get(['anchor_id', 'achse', 'quelle', 'status']) as $e) {
-            $belegt = $e->quelle === 'naehrwert' || $e->status === \Platform\FoodAlchemist\Enums\WissensStatus::Geprueft->value;
-            $schluessel = (int) $e->anchor_id.'|'.$e->achse;
-            $traeger[$schluessel] = ($traeger[$schluessel] ?? 0) === 2 || $belegt ? 2 : 1;   // 2 = belegt, 1 = ungeprüft
-        }
-        $kontrast = [];
-        foreach ($jeBedarf as [$fuer, $achse, $lieferanten]) {
-            $passend = $lieferanten
-                ->filter(fn ($k) => ! isset($stoert[$k->zu])
-                    && (isset($harmonien[$k->zu]) || isset($klassiker[$k->zu]) || isset($gruppenKlassiker[$k->zu])))
-                ->sortBy([
-                    fn ($x, $y) => ($harmonien[$y->zu] ?? 0) <=> ($harmonien[$x->zu] ?? 0),
-                    // Klassiker-Stufe: Einzel 2, nur Gruppe 1 (eine Gruppe hebt nie über einen Einzel-Klassiker)
-                    fn ($x, $y) => (isset($klassiker[$y->zu]) ? 2 : (isset($gruppenKlassiker[$y->zu]) ? 1 : 0))
-                        <=> (isset($klassiker[$x->zu]) ? 2 : (isset($gruppenKlassiker[$x->zu]) ? 1 : 0)),
-                    fn ($x, $y) => ($traeger[$y->zu.'|'.$achse] ?? 0) <=> ($traeger[$x->zu.'|'.$achse] ?? 0),
-                    fn ($x, $y) => $y->rang <=> $x->rang,
-                ])
-                ->take(self::KONTRAST_JE_BEDARF);
-            foreach ($passend as $k) {
-                $kontrast[$k->zu] ??= ['id' => $k->zu, 'achse_label' => \Platform\FoodAlchemist\Enums\Achse::from($achse)->label(), 'fuer' => []];
-                $kontrast[$k->zu]['fuer'][] = $fuer;
-            }
-        }
-        $namen = DB::table('foodalchemist_vocab_pairing_anchors')->whereIn('id', array_keys($kontrast))
-            ->get(['id', 'slug', 'display_de'])->keyBy('id');
-        $kontrast = array_values(array_filter(array_map(fn ($c) => isset($namen[$c['id']])
-            ? $c + ['slug' => $namen[$c['id']]->slug, 'display_de' => $namen[$c['id']]->display_de] : null, $kontrast)));
-
-        $konflikt = [];
-        $verbunden = [];
-        foreach ($analyse['aussagen'] as $a) {
-            if (count($a->bestandteile) !== 2) {
-                continue;
-            }
-            [$x, $y] = array_map(fn ($k) => $id((string) $k), $a->bestandteile);
-            if ($a->typ === AussageTyp::Konflikt) {
-                $konflikt[min($x, $y).':'.max($x, $y)] = ['source' => 'a:'.min($x, $y), 'target' => 'a:'.max($x, $y),
-                    'kind' => 'konflikt', 'text' => $a->text, 'visible' => true];
-            } elseif (in_array($a->typ, [AussageTyp::Harmoniert, AussageTyp::Spannung, AussageTyp::Kombination], true)) {
-                $verbunden[$x] = true;
-                $verbunden[$y] = true;
-            }
-        }
-
-        return [$kontrast, array_values($konflikt), $verbunden];
-    }
-
-    /**
-     * Komplementäre Basisrezepte: Basisrezepte (is_sales_recipe=0), deren Kern-
-     * Anker ein Pairing-Partner der Gericht-Anker ist — also Rezepte, die auf
-     * einer passenden Zutat AUFBAUEN (ergänzend, nicht bloss »ähnlich«). Typ +
-     * Andock-Anker aus der stärksten Partner-Beziehung.
-     *
-     * @param  array<int,array>  $candMeta  candId → [typ, anker_id, slug]
-     * @return list<array>
-     */
-    private function komplementaerBasisrezepte(Team $team, int $recipeId, array $candMeta): array
-    {
-        if ($candMeta === []) {
-            return [];
-        }
-        $candIds = array_keys($candMeta);
-
-        // Spec 60 · P7c: Basisrezepte, deren Aromenprofil einen Kandidaten als Kern trägt (≥ 10 %).
-        $rows = DB::table('foodalchemist_recipe_profile_anker AS m')
-            ->join('foodalchemist_recipes AS r', 'r.id', '=', 'm.recipe_id')
-            ->whereIn('m.anchor_id', $candIds)
-            ->where('m.recipe_id', '!=', $recipeId)
-            ->where('m.anteil', '>=', \Platform\FoodAlchemist\Services\Pairing\RezeptGraph::KERN)
-            ->where('r.is_sales_recipe', 0)
-            ->whereNull('r.deleted_at')
-            ->get(['m.recipe_id', 'm.anchor_id', 'r.name']);
-
-        // Nur team-sichtbare Rezepte (Tenancy).
-        $sichtbar = FoodAlchemistRecipe::visibleToTeam($team)
-            ->whereIn('id', $rows->pluck('recipe_id')->unique()->all())->pluck('id')->flip();
-
-        $perRecipe = [];
-        foreach ($rows as $r) {
-            $rid = (int) $r->recipe_id;
-            if (! $sichtbar->has($rid)) {
-                continue;
-            }
-            $meta = $candMeta[(int) $r->anchor_id] ?? null;
-            if ($meta === null) {
-                continue;
-            }
-            if (! isset($perRecipe[$rid])) {
-                $perRecipe[$rid] = ['recipe_id' => $rid, 'name' => $r->name, 'treffer' => 0,
-                    'typ' => $meta['typ'], 'anker_id' => $meta['anker_id'], 'via_slug' => $meta['slug']];
-            }
-            $perRecipe[$rid]['treffer']++;
-        }
-
-        $out = array_values($perRecipe);
-        usort($out, fn ($x, $y) => [$y['treffer'], $x['name']] <=> [$x['treffer'], $y['name']]);
-
-        return array_slice($out, 0, self::BASIS_MAX);
-    }
-
-    /** Gleichmässige Position auf einem Vollkreis: Slot idx von n, Start oben (270°/-90°). */
-    private function positionAufKreis(int $idx, int $n, float $radius, float $cx, float $cy): array
-    {
-        $rad = 2 * M_PI * $idx / max(1, $n) - M_PI / 2;
-
-        return [round($cx + $radius * cos($rad), 1), round($cy + $radius * sin($rad), 1)];
+        return $this->netz()->kontrastUndKonflikt($innerIds, $ohneSalz);
     }
 
     // ── R6.8: Aroma-treue Substitution (read-only, 2026-07-19) ───────────
@@ -2360,208 +1395,27 @@ class PairingService
         return $out;
     }
 
-    /**
-     * Spec 53/H Aufgabe B1 → verschärft (Orchestrierung, 2026-09-18, Live-PREVIEW nach Deploy 17):
-     * für das Zutaten-Grounding EXAKTE Gleichheit von `display_de` oder `slug` (beide normalisiert),
-     * NIE Nearest-Neighbor. `neighborsForName()`/`resolveByName()` sind für die INTERAKTIVE
-     * Pairing-Suche gebaut (Composer, Seed-Anker) und akzeptieren bewusst Wort-Fragmente ≥4 Zeichen
-     * aus `display_de` als Treffer (`anchorIndex()` prio 2) plus einen semantischen Fallback — genau
-     * das ist hier die Gefahr: `leitTokens()` liefert aus "Passionsfrucht-Gelee" auch das Token
-     * "gelee", und `resolveByName('gelee')` traf einen Anker, dessen `display_de` NUR zufällig das
-     * Wort "Gelee" enthält (z. B. "Apfel Gelee") — nicht die gemeinte Zutat. Grounding lädt
-     * deterministisch GENAU EIN Dossier und darf sich diese Verwechslung nicht erlauben: lieber
-     * `ohne_anker` (ehrlich sichtbar in der Herkunft) als ein falsches Dossier.
-     *
-     * ★ Konservativer Singular-Fallback (Orchestrierung, 2026-09-18, Live-PREVIEW nach Deploy 21):
-     * `leitTokens()` liefert aus einem Brief oft den Plural ("aprikosen", "tomaten", "kartoffeln"),
-     * das Anker-Label steht im Singular ("Aprikose", "Tomate", "Kartoffel") — exakte Gleichheit trifft
-     * dann nie. Deutsche Pluralbildung ist nicht eindeutig rückführbar (Aprikose→Aprikosen braucht
-     * `-n` weg, nicht `-en`) — deshalb EINE Stufe abschneiden, aber ALLE plausiblen Endungen
-     * gleichzeitig prüfen (`-n`, `-en`, `-e`, `-s`, `-er`) und nur akzeptieren, wenn GENAU EIN Anker
-     * über den gesamten Versuch matcht. Mehrdeutigkeit (zwei Endungen treffen zwei verschiedene
-     * Anker) bleibt bewusst `ohne_anker` statt zu raten — dieselbe Regel wie beim exakten Treffer.
-     *
-     * @return ?array{slug: string, via: 'exakt'|'singular'}
-     */
+    /** {@see AnkerAufloesung::ankerSlugExakt()} */
     public function ankerSlugExakt(string $token): ?array
     {
-        $token = trim($token);
-        if ($token === '') {
-            return null;
-        }
-        if (($anker = $this->ankerExaktGleich($token)) !== null) {
-            return ['slug' => $anker->slug, 'via' => 'exakt'];
-        }
-
-        $treffer = [];
-        foreach (['n', 'en', 'e', 's', 'er'] as $endung) {
-            if (! str_ends_with($token, $endung)) {
-                continue;
-            }
-            $kandidat = mb_substr($token, 0, mb_strlen($token) - mb_strlen($endung));
-            if (mb_strlen($kandidat) < 3) {
-                continue;   // zu kurz, um noch verlässlich zu sein
-            }
-            if (($singularAnker = $this->ankerExaktGleich($kandidat)) !== null) {
-                $treffer[$singularAnker->slug] = $singularAnker;
-            }
-        }
-        if (count($treffer) === 1) {
-            return ['slug' => reset($treffer)->slug, 'via' => 'singular'];
-        }
-
-        return null;
+        return $this->anker()->ankerSlugExakt($token);
     }
 
-    /** Exakte Gleichheit von `slug` (normalisiert) ODER `display_de` (gefaltet) — Kern von {@see ankerSlugExakt()}. */
-    private function ankerExaktGleich(string $token): ?object
-    {
-        $slugNorm = $this->normalizeAnkerSlug($token);
-        $displayNorm = trim($this->fold($token));
-
-        return $this->ankerExaktListe()->first(fn ($a) => $this->normalizeAnkerSlug($a->slug) === $slugNorm
-            || trim($this->fold($a->display_de)) === $displayNorm);
-    }
-
-    /** @return \Illuminate\Support\Collection<int, object{slug: string, display_de: string}> */
-    private function ankerExaktListe(): \Illuminate\Support\Collection
-    {
-        return $this->ankerExaktListe ??= DB::table('foodalchemist_vocab_pairing_anchors')->whereNull('deleted_at')
-            ->where('slug', '!=', 'neutral')->get(['id', 'slug', 'display_de']);
-    }
-
-    /**
-     * Spec 58 · Paket 1: Anker-ID nur bei EXAKTER Gleichheit (inkl. eindeutigem Singular) — für
-     * Zutaten ohne Mapping. Grundprodukt-Namen tragen den Zustand nach dem Doppelpunkt
-     * („Möhre: frisch, Stifte") → nur der Grundname davor zählt. Kein Wortteil-Treffer: lieber
-     * eine sichtbare Lücke als „Sauce: Chimichurri" → A1-Sauce.
-     */
+    /** {@see AnkerAufloesung::ankerIdExakt()} */
     public function ankerIdExakt(?string $name): ?int
     {
-        $basis = trim((string) strtok((string) $name, ':'));
-        if ($basis === '') {
-            return null;
-        }
-        $treffer = $this->ankerSlugExakt($basis);
-        // „Petersilie, glatt" → „Petersilie": Teil vor dem Komma, ebenfalls nur exakt.
-        if ($treffer === null && str_contains($basis, ',')) {
-            $treffer = $this->ankerSlugExakt(trim((string) strtok($basis, ',')));
-        }
-        if ($treffer === null) {
-            return null;
-        }
-        $anker = $this->ankerExaktListe()->first(fn ($a) => $a->slug === $treffer['slug']);
-
-        return $anker !== null ? (int) $anker->id : null;
+        return $this->anker()->ankerIdExakt($name);
     }
 
-    /**
-     * Spec 80 A5: Anker für einen Suchbegriff — exakt, sonst über kuratierte Synonyme, sonst über ein
-     * zerlegtes Kompositum. Jeder Schritt endet in {@see ankerIdExakt}; es gibt KEINEN Teilwort-Treffer
-     * (Spec 60). Die Synonyme pflegt der Mensch (`terminology_aliases`, MCP `terminology.POST`), z. B.
-     * „petersilie ⇄ glatte petersilie" — der Code erfindet keine Zuordnung. Die Zerlegung trennt nur einen
-     * bekannten Kopf ab („Petersilienpüree" → „petersilie" + „püree", siehe
-     * {@see TerminologyService::decompoundPhrasesFor}); der Rest muss für sich exakt ein Anker sein.
-     *
-     * @return array{id: int, via: string}|null  via: exakt | synonym | zerlegt
-     */
+    /** {@see AnkerAufloesung::ankerAufgeloest()} */
     public function ankerAufgeloest(?string $begriff): ?array
     {
-        $begriff = trim((string) $begriff);
-        if ($begriff === '') {
-            return null;
-        }
-        if (($id = $this->ankerIdExakt($begriff)) !== null) {
-            return ['id' => $id, 'via' => 'exakt'];
-        }
-        $term = app(\Platform\FoodAlchemist\Services\GpStamm\TerminologyService::class);
-        foreach ($term->aliasPhrasesFor($begriff) as $phrase) {
-            if (($id = $this->ankerIdExakt($phrase)) !== null) {
-                return ['id' => $id, 'via' => 'synonym'];
-            }
-        }
-        foreach ($term->decompoundPhrasesFor($begriff) as $phrase) {
-            $modifier = trim((string) preg_replace('/\s+\S+$/u', '', $phrase));
-            if ($modifier === '' || $modifier === $phrase) {
-                continue;
-            }
-            if (($id = $this->ankerIdExakt($modifier)) !== null) {
-                return ['id' => $id, 'via' => 'zerlegt'];
-            }
-            foreach ($term->aliasPhrasesFor($modifier) as $alias) {
-                if (($id = $this->ankerIdExakt($alias)) !== null) {
-                    return ['id' => $id, 'via' => 'zerlegt'];
-                }
-            }
-        }
-
-        return null;
+        return $this->anker()->ankerAufgeloest($begriff);
     }
 
-    /**
-     * MCP-Discovery (Phase K): Pairing-Partner für einen Zutat-NAMEN oder
-     * Anker-Slug. Auflösung ist HYBRID (analog gps.SEARCH): exakter/
-     * normalisierter Slug → lexikalischer Anker-Index (resolveByName) →
-     * semantischer Fallback (opt-in, Konfidenz-Floor), der deutsche Begriffe
-     * gegen den englischen Inspire-Graph auflöst. Der Match-Weg steht in
-     * anker.resolution.via (slug|lexical|semantic; semantic zusätzlich mit
-     * score), damit der Client sieht, worauf UND WIE gematcht wurde.
-     *
-     * @return array{anker: ?array{id: int, slug: string, display_de: ?string, resolution: array{via: string, score?: float}}, partner: list<object>}
-     */
+    /** {@see AnkerAufloesung::neighborsForName()} */
     public function neighborsForName(string $name, ?string $typ = null, int $limit = 30): array
     {
-        $via = 'slug';
-        $score = null;
-
-        $anker = DB::table('foodalchemist_vocab_pairing_anchors')
-            ->whereIn('slug', array_unique([trim($name), $this->normalizeAnkerSlug($name)]))
-            ->first(['id', 'slug', 'display_de']);
-
-        // Lexikalischer Anker-Index — aber nur akzeptieren, wenn der Treffer ein
-        // Wortgrenzen-Match ist (lexicalAnkerIsSolid). Ein Substring-Zufall
-        // („auberGINe" → Gin) wird verworfen, damit der semantische Fallback
-        // greifen kann statt still den falschen Anker zurückzugeben.
-        if ($anker === null && ($ankerId = $this->resolveByName($name)) !== null) {
-            $kandidat = DB::table('foodalchemist_vocab_pairing_anchors')
-                ->where('id', $ankerId)->first(['id', 'slug', 'display_de']);
-            if ($kandidat !== null && $this->lexicalAnkerIsSolid($name, $kandidat)) {
-                $via = 'lexical';
-                $anker = $kandidat;
-            }
-        }
-
-        // B (Hybrid): semantischer Fallback, wenn die Lexik nichts findet. Fängt
-        // deutsche Gastro-Begriffe gegen den englischen Inspire-Graph ab
-        // („Aubergine" → „eggplant"). Opt-in (semantic_search.enabled) + Konfidenz-
-        // Floor (anker_min_score); ohne Provider / aus ⇒ reine Lexik wie zuvor.
-        if ($anker === null && ($hit = $this->resolveAnkerSemanticallyScored($name)) !== null) {
-            $treffer = DB::table('foodalchemist_vocab_pairing_anchors')
-                ->where('id', $hit['id'])->first(['id', 'slug', 'display_de']);
-            if ($treffer !== null) {
-                $anker = $treffer;
-                $via = 'semantic';
-                $score = round($hit['score'], 3);
-            }
-        }
-
-        if ($anker === null) {
-            return ['anker' => null, 'partner' => []];
-        }
-
-        $resolution = ['via' => $via];
-        if ($score !== null) {
-            $resolution['score'] = $score;
-        }
-
-        return [
-            'anker' => [
-                'id' => (int) $anker->id,
-                'slug' => $anker->slug,
-                'display_de' => $anker->display_de,
-                'resolution' => $resolution,
-            ],
-            'partner' => $this->ankerNeighbors($anker->slug, $typ, $limit)->all(),
-        ];
+        return $this->anker()->neighborsForName($name, $typ, $limit);
     }
 }

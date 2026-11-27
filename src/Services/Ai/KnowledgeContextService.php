@@ -1289,7 +1289,7 @@ class KnowledgeContextService
     private function zutatGroundingBlock(?Team $team, array $hauptzutatSlugs, string $feature, int $maxDocs, array &$filesUsed, string $hauptzutatenQuelle, array &$geerdeteAnker): KnowledgeContextBlock
     {
         $aspekt = $this->text()->zutatAspektFuer($feature);
-        $pairing = app(\Platform\FoodAlchemist\Services\Pairing\PairingService::class);
+        $pairing = app(\Platform\FoodAlchemist\Services\Pairing\AnkerAufloesung::class);
         $blocks = [];
         $geladen = [];
         foreach ($hauptzutatSlugs as $hz) {

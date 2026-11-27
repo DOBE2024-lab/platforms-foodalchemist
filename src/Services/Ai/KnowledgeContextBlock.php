@@ -8,6 +8,17 @@ namespace Platform\FoodAlchemist\Services\Ai;
  */
 final class KnowledgeContextBlock
 {
+    /**
+     * Spec 53 Aufgabe 4 (Budget nach Rang) — Score für deterministisch/präzise aufgelöstes
+     * Wissen (Niveau, Achsen, Concept, Trend-Rahmen, Pairing, Grounding, Cross-Cutting), das
+     * `KnowledgeContextBlock::assemble()` beim Budget-Schnitt VOR der unpräzisen Fuzzy-Discovery
+     * (`discoverGenericBlock`/Domain, reale RRF-Scores, gemessen ~0,02–0,03) einsortieren soll —
+     * dieselbe Priorität, die vorher implizit aus der Aufrufreihenfolge in `contextFor()` kam.
+     * Weit über jedem realistischen RRF-Score (`KnowledgeSearchService::RRF_K` = 60 ⇒ Maximum
+     * ≈ 1/60 + 1/60 ≈ 0,033 bei Rang 1 auf beiden Seiten).
+     */
+    public const DETERMINISTISCHER_SCORE = 1.0;
+
     /** @param list<array{file: ?string, text: string}> $documents */
     public function __construct(
         public readonly string $header,

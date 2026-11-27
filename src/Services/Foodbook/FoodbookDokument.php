@@ -51,7 +51,7 @@ final class FoodbookDokument
             'chapters.blocks.concept.slots.embeddedConcept:id,name,consumer_name,price_per_person_cache,price_incomplete,ek_per_person_cache,ek_incomplete',
             'chapters.blocks.concept.slots.embeddedConcept.slots.dish:id,name,sales_wording_standard',
             // E8.3: recipe_ref braucht sales_net/ek_total_eur für die €/Position-Preisspalte (blockPreis) — sonst rendert der Preis leer.
-            'chapters.blocks.dish:id,name,sales_wording_standard,ek_total_eur,sales_unit_count', 'chapters.blocks.dish.standardPresentation',
+            'chapters.blocks.dish:id,name,sales_wording_standard,ek_total_eur', 'chapters.blocks.dish.standardPresentation',
             // B (2026-08-31): LEBENDES Format-Kapitel — Identität + Editionen live aus dem Format. Editionen =
             // format_slots (type=concept) → Concept; die Wording-Kette der Editions-Concepte wie bei chapters.blocks.
             'chapters.format', 'chapters.format.images',

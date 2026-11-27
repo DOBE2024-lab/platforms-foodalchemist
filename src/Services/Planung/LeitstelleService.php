@@ -405,7 +405,7 @@ class LeitstelleService
         $mit = [
             'chapters' => fn ($q) => $q->orderBy('position'),
             'chapters.blocks' => fn ($q) => $q->orderBy('position'),
-            'chapters.blocks.dish:id,name,ek_total_eur,sales_unit_count', 'chapters.blocks.dish.standardPresentation',   // Spec 85: EK je Portion (blockPreis)
+            'chapters.blocks.dish:id,name,ek_total_eur', 'chapters.blocks.dish.standardPresentation',   // Spec 85: EK je Portion (blockPreis)
             'chapters.targetGroups:id',
             'targetGroups:id',
             // Lebendes Format-Kapitel: Editionen-Zahl + Preisspanne (priceRange) fürs Board.

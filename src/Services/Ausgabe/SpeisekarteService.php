@@ -85,7 +85,7 @@ class SpeisekarteService
             ->with([
                 'sections' => fn ($q) => $q->orderBy('position'),
                 'sections.items' => fn ($q) => $q->orderBy('position'),
-                'sections.items.dish:id,name,ek_total_eur,sales_unit_count', 'sections.items.dish.standardPresentation',
+                'sections.items.dish:id,name,ek_total_eur', 'sections.items.dish.standardPresentation',
                 'sections.items.concept:id,name,price_per_person_cache,price_incomplete',
                 'outlet', 'crmCompany', 'crmContact',
             ])

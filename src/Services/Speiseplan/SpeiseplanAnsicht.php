@@ -352,12 +352,15 @@ final class SpeiseplanAnsicht
         if ($dar !== null && (float) ($dar->quantity_per_unit_g ?? 0) > 0) {
             return round((float) $dar->quantity_per_unit_g * $anzahl, 1);
         }
+        // 98 · 3.5-6a: „Rezept-Grammatur“ = Grammatur der Standard-Darreichung, nicht mehr der Spiegel sales_quantity_per_unit_g am Rezept.
+        $resolver = app(DarreichungResolver::class);
+        $standardG = fn ($g): float => (float) ($resolver->standardFuer($g)?->quantity_per_unit_g ?? 0);
         $dish = $e->dish;
         if ($dish === null) {
-            return $gerichte->sum(fn ($g) => (float) ($g->sales_quantity_per_unit_g ?? 0)) ?: null;
+            return $gerichte->sum($standardG) ?: null;
         }
-        if ((float) ($dish->sales_quantity_per_unit_g ?? 0) > 0) {
-            return round((float) $dish->sales_quantity_per_unit_g * $anzahl, 1);
+        if (($g = $standardG($dish)) > 0) {
+            return round($g * $anzahl, 1);
         }
         if ($dish->yield_kg === null || (float) $dish->yield_kg <= 0) {
             return null;

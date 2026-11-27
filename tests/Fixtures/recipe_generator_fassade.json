@@ -1,0 +1,12 @@
+{
+    "methoden": {
+        "garverlustPct": "(mixed $raw): ?float",
+        "generiere": "(Platform\\Core\\Models\\Team $team, string $description, array $parameter = array (\n), ?array $kiRezeptOverride = NULL, bool $vkModus = false, ?string $createdVia = NULL, ?array $preparedContext = NULL, ?callable $onProgress = NULL): array",
+        "zubereitungAlsText": "static (mixed $wert): ?string"
+    },
+    "per_reflection": {
+        "dedupGate": "(Platform\\Core\\Models\\Team $team, array $result, array $parameter): array",
+        "sortiereNachRolle": "(array $zeilen): array"
+    },
+    "konstanten": []
+}

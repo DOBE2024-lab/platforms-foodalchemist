@@ -1,0 +1,257 @@
+{
+    "basis_alle_gates": {
+        "zaehler": {
+            "bestand_gp": 2,
+            "bestand_sub": 0,
+            "offen": 3
+        },
+        "kritiker": {
+            "geprueft": true,
+            "uebersprungen_gating": false,
+            "entdrahtet": 1,
+            "befunde_abgelegt": 0
+        },
+        "diaet": {
+            "geprueft": true,
+            "uebersprungen": false,
+            "entdrahtet": 2,
+            "befunde": [
+                "Butter: verletzt vegan",
+                "Sesampaste: enthält sesame"
+            ]
+        },
+        "dedup": {
+            "geprueft": true,
+            "kollision": true,
+            "existing_name": "Suppe: Tomate",
+            "modus": "komplett_neu"
+        },
+        "offene": [
+            {
+                "index": 4,
+                "text": "Rahmeis: Balsamico",
+                "primaer": "basisrezept_anlegen",
+                "la_kandidaten": [],
+                "lieferantenstrategie": null,
+                "schwacher_treffer": null,
+                "kritiker": {
+                    "name": "Rahmeis: Balsamico",
+                    "target": "sub_recipe",
+                    "ziel_id": 1,
+                    "grund": "Geschmacks-Konflikt: Gericht herzhaft, Komponente «Rahmeis: Balsamico» suess.",
+                    "konfidenz": 1.0,
+                    "quelle": "regel"
+                },
+                "shortlist_n": 1
+            },
+            {
+                "index": 1,
+                "text": "Butter",
+                "primaer": "lieferantenartikel_waehlen",
+                "la_kandidaten": [],
+                "lieferantenstrategie": null,
+                "schwacher_treffer": null,
+                "diaet_verstoss": {
+                    "ziel_id": 2,
+                    "gruende": [
+                        "verletzt vegan"
+                    ]
+                },
+                "shortlist_n": 1
+            },
+            {
+                "index": 2,
+                "text": "Sesampaste",
+                "primaer": "lieferantenartikel_waehlen",
+                "la_kandidaten": [],
+                "lieferantenstrategie": null,
+                "schwacher_treffer": null,
+                "diaet_verstoss": {
+                    "ziel_id": 3,
+                    "gruende": [
+                        "enthält sesame"
+                    ]
+                },
+                "shortlist_n": 1
+            },
+            {
+                "index": -1,
+                "text": "Suppe: Tomate",
+                "primaer": "dedup_kollision",
+                "la_kandidaten": [],
+                "lieferantenstrategie": null,
+                "schwacher_treffer": null,
+                "dedup_kollision": {
+                    "existing_id": 2,
+                    "existing_name": "Suppe: Tomate",
+                    "modus": "komplett_neu",
+                    "hinweis": "existiert bereits als «Suppe: Tomate» (#2) — als Variante behalten oder übernehmen?"
+                },
+                "shortlist_n": 0
+            }
+        ],
+        "zeilen": [
+            [
+                1,
+                "Tomaten: frisch, geachtelt",
+                true,
+                false
+            ],
+            [
+                2,
+                "Butter",
+                false,
+                false
+            ],
+            [
+                3,
+                "Sesampaste",
+                false,
+                false
+            ],
+            [
+                4,
+                "Weizenmehl",
+                true,
+                false
+            ],
+            [
+                5,
+                "Rahmeis: Balsamico",
+                false,
+                false
+            ]
+        ],
+        "name": "Suppe: Tomate"
+    },
+    "uebersprungen_und_hybrid": {
+        "frei": {
+            "zaehler": {
+                "bestand_gp": 1,
+                "bestand_sub": 0,
+                "offen": 0
+            },
+            "kritiker": {
+                "geprueft": false,
+                "uebersprungen_gating": true,
+                "entdrahtet": 0,
+                "befunde_abgelegt": 0
+            },
+            "diaet": {
+                "geprueft": false,
+                "uebersprungen": true,
+                "entdrahtet": 0,
+                "befunde": []
+            },
+            "dedup": {
+                "geprueft": true,
+                "kollision": false
+            },
+            "offene": [],
+            "zeilen": [
+                [
+                    1,
+                    "Butter",
+                    true,
+                    false
+                ]
+            ],
+            "name": "Basis: Butterprobe"
+        },
+        "zweit": {
+            "zaehler": {
+                "bestand_gp": 1,
+                "bestand_sub": 0,
+                "offen": 0
+            },
+            "kritiker": {
+                "geprueft": false,
+                "uebersprungen_gating": true,
+                "entdrahtet": 0,
+                "befunde_abgelegt": 0
+            },
+            "diaet": {
+                "geprueft": true,
+                "uebersprungen": false,
+                "entdrahtet": 0,
+                "befunde": []
+            },
+            "dedup": {
+                "geprueft": true,
+                "kollision": true,
+                "existing_name": "Basis: Butterprobe",
+                "modus": "hybrid"
+            },
+            "offene": [
+                {
+                    "index": -1,
+                    "text": "Basis: Butterprobe",
+                    "primaer": "bestand_uebernehmen",
+                    "la_kandidaten": [],
+                    "lieferantenstrategie": null,
+                    "schwacher_treffer": null,
+                    "dedup_kollision": {
+                        "existing_id": 1,
+                        "existing_name": "Basis: Butterprobe",
+                        "modus": "hybrid",
+                        "hinweis": "existiert bereits als «Basis: Butterprobe» (#1) — Bestand übernehmen oder als Variante behalten?"
+                    },
+                    "shortlist_n": 0
+                }
+            ],
+            "zeilen": [
+                [
+                    1,
+                    "Butter",
+                    true,
+                    false
+                ]
+            ],
+            "name": "Basis: Butterprobe"
+        }
+    },
+    "vk_modus": {
+        "zaehler": {
+            "bestand_gp": 0,
+            "bestand_sub": 0,
+            "offen": 1
+        },
+        "kritiker": null,
+        "diaet": {
+            "geprueft": true,
+            "uebersprungen": false,
+            "entdrahtet": 0,
+            "befunde": []
+        },
+        "dedup": {
+            "geprueft": true,
+            "kollision": false
+        },
+        "offene": [
+            {
+                "index": 0,
+                "text": "Butter",
+                "primaer": "basisrezept_anlegen",
+                "la_kandidaten": [],
+                "lieferantenstrategie": null,
+                "schwacher_treffer": {
+                    "target": "gp",
+                    "id": 1,
+                    "name": "Butter",
+                    "score": 1.0
+                },
+                "namens_warnung": false,
+                "shortlist_n": 1
+            }
+        ],
+        "zeilen": [
+            [
+                1,
+                "Butter",
+                false,
+                false
+            ]
+        ],
+        "name": "[HG] Butterteller"
+    }
+}

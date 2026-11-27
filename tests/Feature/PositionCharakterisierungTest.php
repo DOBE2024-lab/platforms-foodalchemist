@@ -32,12 +32,12 @@ beforeEach(function () {
     $this->actingAs($this->makeUser($this->rootTeam));
     $this->t = $this->rootTeam;
     // Gericht: Ansatz 10 Portionen, EK 30 € → 3 €/Portion; Standard-Darreichung VK 10 €, Buffet-Darreichung VK 12 €
-    $this->gericht = $this->makeRecipe($this->t, 'Rinderroulade', ['is_sales_recipe' => true, 'ek_total_eur' => 30.0, 'sales_unit_count' => 10]);
+    $this->gericht = $this->makeRecipe($this->t, 'Rinderroulade', ['is_sales_recipe' => true, 'ek_total_eur' => 3.0]);   // 98 · 3.5 6a: Gericht = eine Portion (fest 1)
     $this->std = $this->makeStandardDarreichung($this->gericht, 10.0);
     $buffet = FoodAlchemistServierform::create(['team_id' => $this->t->id, 'code' => 'buffet', 'label' => 'Buffet']);
     $this->buffet = $this->makeStandardDarreichung($this->gericht, 12.0, ['serving_form_id' => $buffet->id, 'is_standard' => false]);
     // Gericht ohne VK (keine Darreichung mit Preis)
-    $this->ohneVk = $this->makeRecipe($this->t, 'Ohne Preis', ['is_sales_recipe' => true, 'ek_total_eur' => 20.0, 'sales_unit_count' => 10]);
+    $this->ohneVk = $this->makeRecipe($this->t, 'Ohne Preis', ['is_sales_recipe' => true, 'ek_total_eur' => 2.0]);
 
     $this->fb = $this->makeChapter($this->makeFoodbook($this->t, 'Foodbook 2027', ['status' => 'entwurf']));
     $angebot = app(AngebotService::class)->create($this->t, ['name' => 'Hochzeit']);

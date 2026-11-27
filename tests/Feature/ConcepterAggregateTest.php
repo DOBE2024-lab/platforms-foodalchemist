@@ -122,12 +122,12 @@ it('fillSlot persistiert die Aggregat-Caches am Concept (refreshCache-Hook)', fu
 
 // ── Mengen-Modell (Dominique-Entscheid 2026-06-15: einheit-abhängig) ─────────
 
-it('EK teilt durch die Portionszahl (Batch→Portion), nicht ek_total roh', function () {
-    // ek_total_eur 30 € = Batch für 10 Portionen → 3 €/Portion. Vor dem Fix: 30 € (Batch roh).
+it('EK je Portion = EK des Gerichts (fest 1, Dominique 27.11.), × Menge', function () {
+    // 98 · 3.5 6a: Darreichung = Portion — ein Altbestand-sales_unit_count teilt nicht mehr; EK je Portion 3 €.
     $batch = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'status' => 'approved', 'is_sales_recipe' => true,
         'recipe_key' => 'batch', 'name' => 'Gulasch (Topf)', 'sales_net' => 5.00,
-        'ek_total_eur' => 30.00, 'sales_unit_count' => 10,
+        'ek_total_eur' => 3.00,
     ]);
 
     $c = $this->concepts->create($this->rootTeam, ['name' => 'Batch-Test']);
@@ -136,7 +136,7 @@ it('EK teilt durch die Portionszahl (Batch→Portion), nicht ek_total roh', func
 
     $agg = $this->agg->conceptAggregat($c->refresh());
 
-    expect((float) $agg['ek_per_person'])->toBe(6.0)          // 30 ÷ 10 × 2 (nicht 60)
+    expect((float) $agg['ek_per_person'])->toBe(6.0)          // 3 × 2
         ->and((float) $agg['vk_summe'])->toBe(10.0)           // 5 × 2 (vk_netto bereits pro Portion)
         ->and($agg['ek_n_positionen'])->toBe(1)
         ->and($agg['ek_n_beitragend'])->toBe(1);

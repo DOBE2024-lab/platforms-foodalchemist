@@ -18,8 +18,8 @@ uses(TestCase::class, SeedsTeamHierarchy::class);
  * (Slot-Darreichung, sonst Standard), nicht mehr vom Rezept-Spiegel `sales_quantity_per_unit_g`. Der Spiegel steht in
  * diesen Tests absichtlich auf einem falschen Wert (999 g), damit jeder Rest-Leser auffällt.
  *
- * Der Teiler „Ansatz ÷ Portionen“ (`sales_unit_count`) bleibt bis zur Entscheidung über den Altbestand > 1 unverändert und
- * läuft nur noch über {@see DarreichungResolver::portionenJeAnsatz()} — die Pins unten halten das fest.
+ * Der Teiler „Ansatz ÷ Portionen“ ist seit Dominiques Entscheidung (27.11., „Ja, fest 1“) fest 1 und
+ * läuft über {@see DarreichungResolver::portionenJeAnsatz()}; der Wächter unten verbietet Spiegel-Reads samt Selects.
  */
 beforeEach(function () {
     $this->seedTeamHierarchy();
@@ -84,22 +84,28 @@ it('Preis-Cockpit: Gramm-Position je Gericht über das Gewicht der Darreichung',
     expect((float) $zeile['price'])->toBe(40.0);   // 400 g ÷ 200 g = 2 Portionen × 20 €
 });
 
-it('Pin: Teiler Ansatz ÷ Portionen liest weiter den Altbestand (Entscheidung offen, gemeldet)', function () {
+it('Teiler fest 1 (Dominique 27.11.): Altbestand sales_unit_count > 1 teilt nicht mehr', function () {
     DB::table('foodalchemist_recipes')->where('id', $this->gericht->id)->update(['sales_unit_count' => 4]);
     $g = FoodAlchemistRecipe::find($this->gericht->id);
-    expect(app(DarreichungResolver::class)->portionenJeAnsatz($g))->toBe(4)
-        ->and(app(KalkulationService::class)->recipeHk($this->rootTeam, $g)['anzahl_portionen'])->toBe(4);
+    $ohneEkPortion = FoodAlchemistRecipe::query()->select(['id', 'ek_total_eur'])->find($this->gericht->id);   // ohne die Spalte: kein Wurf, kein Nachladen
+    $this->dar->forceFill(['ek_portion' => null])->saveQuietly();
+    expect(app(DarreichungResolver::class)->portionenJeAnsatz($g))->toBe(1)
+        ->and(app(KalkulationService::class)->recipeHk($this->rootTeam, $g)['anzahl_portionen'])->toBe(1)
+        ->and(app(DarreichungResolver::class)->ekProPortion($ohneEkPortion))->toBe(8.0);   // ganzer Ansatz = eine Portion
 });
 
-it('Wächter: Preis/Marge, Concepter und Position lesen die Spiegelfelder nicht mehr direkt', function () {
-    $src = dirname(__DIR__, 2) . '/src/Services';
+it('Wächter: Preis/Marge, Concepter, Position und der Resolver lesen die Spiegelfelder nicht mehr (auch nicht im Select)', function () {
+    $modul = dirname(__DIR__, 2);
+    $dateien = [...glob($modul . '/src/Services/{Preis,Concepter,Position}/*.php', GLOB_BRACE), ...glob($modul . '/src/Livewire/Concepter/*.php'),
+        ...glob($modul . '/resources/views/livewire/concepter/*.blade.php'), $modul . '/src/Services/Rezept/DarreichungResolver.php'];
     $treffer = [];
-    foreach (['Preis', 'Concepter', 'Position'] as $ordner) {
-        foreach (glob($src . '/' . $ordner . '/*.php') as $datei) {
-            foreach (file($datei) as $nr => $zeile) {
-                if (preg_match('/->(sales_quantity_per_unit_g|sales_unit_count|sales_unit_vocab_id|container_(warm|cold)_vocab_id|serving_vehicle_vocab_id)\b/', $zeile)) {
-                    $treffer[] = $ordner . '/' . basename($datei) . ':' . ($nr + 1);
-                }
+    foreach ($dateien as $datei) {
+        foreach (file($datei) as $nr => $zeile) {
+            if (preg_match('#^\s*(\*|//|/\*\*)#', $zeile)) {
+                continue;   // Doku-Zeilen dürfen die alten Namen nennen
+            }
+            if (preg_match('/\b(sales_quantity_per_unit_g|sales_unit_count|sales_unit_vocab_id|container_(warm|cold)_vocab_id|serving_vehicle_vocab_id)\b/', $zeile)) {
+                $treffer[] = substr($datei, strlen($modul) + 1) . ':' . ($nr + 1);
             }
         }
     }

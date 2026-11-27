@@ -22,14 +22,14 @@ beforeEach(function () {
 it('M12: recipeHk — HK1/HK2 pro Portion + Vollkosten-DB', function () {
     $r = FoodAlchemistRecipe::create([
         'team_id' => $this->rootTeam->id, 'recipe_key' => 'g1', 'name' => 'HG: Filet', 'status' => 'approved',
-        'is_sales_recipe' => true, 'ek_total_eur' => 10.00, 'sales_unit_count' => 5,
-        'additional_costs_eur' => 2.50, 'sales_net' => 8.00,
+        'is_sales_recipe' => true, 'ek_total_eur' => 2.00,   // 98 · 3.5 6a: Gericht = eine Portion
+        'additional_costs_eur' => 0.50, 'sales_net' => 8.00,
     ]);
 
     $hk = $this->kalk->recipeHk($this->rootTeam, $r);
-    expect($hk['hk1_pro_portion'])->toBe(2.00)                       // 10,00 / 5
-        ->and($hk['hk2_total'])->toBe(14.5)                          // 10 × 1,2 + 2,5
-        ->and($hk['hk2_pro_portion'])->toBe(2.90)                    // 14,50 / 5
+    expect($hk['hk1_pro_portion'])->toBe(2.00)                       // EK des Gerichts = eine Portion
+        ->and($hk['hk2_total'])->toBe(2.9)                           // 2 × 1,2 + 0,5
+        ->and($hk['hk2_pro_portion'])->toBe(2.90)                    // = hk2_total (eine Portion)
         ->and($hk['zuschlag_pct'])->toBe(20.0)
         ->and($hk['db_eur'])->toBe(5.10)                             // 8,00 − 2,90
         ->and($hk['db_pct'])->toBe(63.8)                             // 5,10 / 8,00

@@ -22,10 +22,10 @@ beforeEach(function () {
     $this->seedTeamHierarchy();
     $this->actingAs($this->makeUser($this->rootTeam));
     $this->t = $this->rootTeam;
-    $this->gericht = $this->makeRecipe($this->t, 'Rinderroulade', ['is_sales_recipe' => true, 'ek_total_eur' => 30.0, 'sales_unit_count' => 10]);
+    $this->gericht = $this->makeRecipe($this->t, 'Rinderroulade', ['is_sales_recipe' => true, 'ek_total_eur' => 3.0]);   // 98 · 3.5 6a: Gericht = eine Portion (fest 1)
     $this->makeStandardDarreichung($this->gericht, 10.0);
-    $this->ohneVk = $this->makeRecipe($this->t, 'Ohne Preis', ['is_sales_recipe' => true, 'ek_total_eur' => 20.0, 'sales_unit_count' => 10]);
-    $this->ohneEk = $this->makeRecipe($this->t, 'Ohne EK', ['is_sales_recipe' => true, 'sales_unit_count' => 10]);
+    $this->ohneVk = $this->makeRecipe($this->t, 'Ohne Preis', ['is_sales_recipe' => true, 'ek_total_eur' => 2.0]);
+    $this->ohneEk = $this->makeRecipe($this->t, 'Ohne EK', ['is_sales_recipe' => true]);
     $this->makeStandardDarreichung($this->ohneEk, 8.0);
 
     $this->paket = $this->makeConcept($this->t, 'Beilagen-Duo', ['kind' => 'paket']);
@@ -151,7 +151,7 @@ it('Konzept-Slot: dasselbe Gericht rechnet je Portion wie Foodbook- und Angebots
 })->with(['Gericht je Person', 'Menge 0,5', 'Menge 2', 'Gericht ohne VK']);
 
 it('Konzept-Slot B1: EK mit Beigaben (ek_portion der Darreichung)', function () {
-    $g = $this->makeRecipe($this->t, 'Mit Beigabe', ['is_sales_recipe' => true, 'ek_total_eur' => 30.0, 'sales_unit_count' => 10]);
+    $g = $this->makeRecipe($this->t, 'Mit Beigabe', ['is_sales_recipe' => true, 'ek_total_eur' => 3.0]);
     $this->makeStandardDarreichung($g, 12.0, ['ek_portion' => 4.5]);
     [$fbZeile, $agZeile] = ($this->paritaet)($this->t, ['recipe_id' => $g->id], 'recipe_ref', 'recipe_ref');
 

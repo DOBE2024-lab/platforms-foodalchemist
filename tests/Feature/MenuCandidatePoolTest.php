@@ -84,16 +84,16 @@ it('DB je Portion kommt aus der Standard-Darreichung: VK − EK, W% = EK/VK', fu
         ->and($w['wareneinsatz_pct'])->toBe(30.0);
 });
 
-it('ohne EK an der Darreichung fällt nur der EK auf recipes.ek_total_eur zurück — durch Verkaufseinheiten geteilt („gemischt“)', function () {
+it('ohne EK an der Darreichung fällt nur der EK auf recipes.ek_total_eur zurück — eine Portion, kein Teiler mehr („gemischt“, 98 · 3.5 6a)', function () {
     // Spec 85 D-1 PR-C: der VK steht nur noch an der Standard-Darreichung (Fixture über die Brücke); der EK-Rückfall bleibt.
     $r = ($this->mkGericht)('legacy', 'HG: Legacy', [
-        'sales_net' => 10.00, 'ek_total_eur' => 8.00, 'sales_unit_count' => 4,
+        'sales_net' => 10.00, 'ek_total_eur' => 2.00,
     ]);
 
     $w = $this->pool->fuerFrame($this->rootTeam, $this->frame, false, true)[$r->id]['wirtschaft'];
 
     expect($w['quelle'])->toBe('gemischt')
-        ->and($w['ek_portion'])->toBe(2.0)      // 8 € / 4 Einheiten
+        ->and($w['ek_portion'])->toBe(2.0)      // EK des Gerichts = eine Portion
         ->and($w['db_eur'])->toBe(8.0)
         ->and($w['wareneinsatz_pct'])->toBe(20.0);
 });

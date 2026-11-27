@@ -41,7 +41,7 @@ class ConcepterAggregateService
     {
         return [
             'id', 'name', 'sales_wording_standard',             // Wording-Kette (Menü-Ansicht) — load() hier überschreibt sonst detail()
-            'ek_total_eur', 'work_time_min', 'sales_unit_count',   // Teiler Ansatz ÷ Portionen (portionenJeAnsatz); Gewicht kommt von der Darreichung
+            'ek_total_eur', 'work_time_min',   // 98 · 3.5 6a: Gewicht von der Darreichung, Teiler fest 1
             'is_sales_recipe',                            // Basis vs. VK — Paket-Posten-Badge + g/P-EK-Zweig
             'yield_kg', 'yield_pieces',                     // Stück-Modus (kg↔Stück): Teiler/Gramm aus Ertrag+Yield
             'nutri_kcal_per_100g', 'nutri_protein_g_per_100g', 'nutri_fat_g_per_100g',
@@ -738,7 +738,7 @@ class ConcepterAggregateService
         $cols = ['id', 'name', 'is_sales_recipe', 'nutri_kcal_per_100g',
             'nutri_confidence', 'allergens_confidence', 'spec_is_vegan', 'spec_is_vegetarian',
             'spec_is_halal', 'spec_is_gluten_free', 'spec_is_lactose_free', 'spec_contains_pork',
-            'spec_contains_beef', 'spec_contains_alcohol', 'yield_kg', 'yield_pieces', 'sales_unit_count'];
+            'spec_contains_beef', 'spec_contains_alcohol', 'yield_kg', 'yield_pieces'];
         foreach (array_keys(\Platform\FoodAlchemist\Models\FoodAlchemistItemAllergen::ALLERGENE) as $slug) {
             $cols[] = "allergen_{$slug}";
         }

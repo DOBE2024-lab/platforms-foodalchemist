@@ -159,11 +159,9 @@ class DarreichungResolver
 
     /**
      * EK EINER Portion — Gegenstück zu {@see vkNetto()}, damit Wareneinsatz % = EK/Portion ÷ VK/Portion auf
-     * derselben Menge rechnet (Spec 85, Wareneinsatz-Maßstab): `ek_portion` der Standard-Darreichung (inkl.
-     * Beigaben), sonst `ek_total_eur` (ganzer Ansatz) ÷ Portionen. `sales_unit_count` muss geladen sein:
-     * fehlt die Spalte, wirft die Methode in Tests (Lücke finden), in Produktion lädt sie den Wert nach und
-     * schreibt eine Warnung mit Aufrufstelle in `fa-langsam` (Kurator 19.10.: kein 500 für Nutzer, kein stilles ÷ 1).
-     * Steuerbar über `foodalchemist.leistung.ek_pro_portion_streng` (Standard: läuft unter Tests).
+     * derselben Menge rechnet (Spec 85, Wareneinsatz-Maßstab): `ek_portion` der Darreichung (inkl. Beigaben), sonst
+     * `ek_total_eur`. 98 · 3.5 6a (Dominique: „Ja, fest 1“): Darreichung = Portion, ein Gericht ist EINE Portion —
+     * kein Teiler mehr, und damit braucht die Methode `sales_unit_count` nicht mehr (kein Nachladen, keine Warnung).
      */
     public function ekProPortion(FoodAlchemistRecipe $recipe, ?FoodAlchemistRecipeDarreichung $darreichung = null): ?float
     {
@@ -174,15 +172,8 @@ class DarreichungResolver
         if ($standard?->ek_portion !== null) {
             return (float) $standard->ek_portion;
         }
-        if ($recipe->ek_total_eur === null) {
-            return null;
-        }
-        if (! array_key_exists('sales_unit_count', $recipe->getAttributes())) {
-            // nachgeladen, ohne das Rezept „dirty“ zu machen (es wird nur gelesen)
-            $recipe->setRawAttributes(['sales_unit_count' => $this->portionenNachladen($recipe)] + $recipe->getAttributes(), true);
-        }
 
-        return (float) $recipe->ek_total_eur / $this->portionenJeAnsatz($recipe);   // 98 · 3.5 6a: Teiler an einer Stelle
+        return $recipe->ek_total_eur !== null ? (float) $recipe->ek_total_eur / $this->portionenJeAnsatz($recipe) : null;
     }
 
     /**
@@ -205,46 +196,13 @@ class DarreichungResolver
 
     /**
      * 98 · 3.5 Schritt 6a: Portionen je Ansatz — der Teiler „Ansatz-Summe ÷ Portionen“ (EK-Summe, Team-EK, eingefrorener EK).
-     * Im Modell vom 23.11. ist ein Gericht EINE Portion (fest 1); der Altbestand trägt in `sales_unit_count` aber noch Werte
-     * über 1. Solange darüber nicht entschieden ist (Preise könnten sich ändern, an den Kurator gemeldet), liest NUR diese
-     * Stelle den Rezept-Spiegel — die Leser rufen sie statt die Spalte selbst zu teilen. `sales_unit_count` muss geladen sein.
+     * Dominique 27.11.: „Ja, fest 1“ — Darreichung = Portion, das Gericht ist EINE Portion. Der Rezept-Spiegel
+     * `sales_unit_count` wird nicht mehr gelesen (io: 0 Gerichte und 0 Basisrezepte mit Wert > 1). Die Methode bleibt als
+     * benannte Stelle, damit die Leser sagen, WAS sie teilen; das Rezept-Argument ist bewusst ungenutzt.
      */
     public function portionenJeAnsatz(object $recipe): int
     {
-        return max(1, (int) ($recipe->sales_unit_count ?? 1));
-    }
-
-    /** Fehlende Spalte `sales_unit_count`: in Tests werfen, in Produktion nachladen + warnen (s. {@see ekProPortion()}). */
-    private function portionenNachladen(FoodAlchemistRecipe $recipe): mixed
-    {
-        $meldung = 'ekProPortion braucht sales_unit_count am Rezept ' . $recipe->id . ' (im Select ergänzen).';
-        if (config('foodalchemist.leistung.ek_pro_portion_streng') ?? app()->runningUnitTests()) {
-            throw new \LogicException($meldung);
-        }
-        // Dasselbe, schon geladene Rezept — nur die fehlende Spalte; bewusst ohne Sicht-Scope (die Zeile ist bereits gelesen).
-        $anzahl = \Illuminate\Support\Facades\DB::table('foodalchemist_recipes')->where('id', $recipe->id)->value('sales_unit_count');
-        \Illuminate\Support\Facades\Log::channel(\Platform\FoodAlchemist\Support\LangsameAbfragen::KANAL)->warning('Spec 85: ' . $meldung . ' Nachgeladen.', [
-            'art' => 'ek_pro_portion_nachgeladen',
-            'recipe_id' => (int) $recipe->id,
-            'aufrufer' => $this->aufrufer(),
-        ]);
-
-        return $anzahl;
-    }
-
-    /** Erster Frame aus dem Modul-`src/` außerhalb dieser Klasse und des Rezept-Modells: Datei relativ zu src/ + Zeile. */
-    private function aufrufer(): ?string
-    {
-        $src = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
-        $aus = [__FILE__, $src . 'Models' . DIRECTORY_SEPARATOR . 'FoodAlchemistRecipe.php'];
-        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 40) as $f) {
-            $datei = $f['file'] ?? '';
-            if ($datei !== '' && str_starts_with($datei, $src) && ! in_array($datei, $aus, true)) {
-                return substr($datei, strlen($src)) . ':' . ($f['line'] ?? 0);
-            }
-        }
-
-        return null;
+        return 1;
     }
 
     /**

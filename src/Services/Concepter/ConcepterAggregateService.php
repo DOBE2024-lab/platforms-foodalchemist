@@ -16,7 +16,7 @@ use Platform\FoodAlchemist\Services\TeamSettingsService;
  *
  * Ehrlichkeits-Prinzip (wie Allergen-Rollup): Nährwerte werden NUR aus Gerichten
  * gerechnet, die sowohl Nährwert-Daten (pro 100 g) ALS AUCH ein Portionsgewicht
- * (`sales_quantity_per_unit_g`) haben — fehlt eins, trägt das Gericht nicht bei und
+ * (`quantity_per_unit_g` der Darreichung) haben — fehlt eins, trägt das Gericht nicht bei und
  * die Konfidenz sinkt (statt erfundener Zahlen). Konfidenz = schwächstes Glied.
  *
  * Mengen-Modell (Dominique-Entscheid 2026-06-15, unit-abhängig): pro Position wird
@@ -41,7 +41,7 @@ class ConcepterAggregateService
     {
         return [
             'id', 'name', 'sales_wording_standard',             // Wording-Kette (Menü-Ansicht) — load() hier überschreibt sonst detail()
-            'ek_total_eur', 'work_time_min', 'sales_unit_count', 'sales_quantity_per_unit_g',
+            'ek_total_eur', 'work_time_min', 'sales_unit_count',   // Teiler Ansatz ÷ Portionen (portionenJeAnsatz); Gewicht kommt von der Darreichung
             'is_sales_recipe',                            // Basis vs. VK — Paket-Posten-Badge + g/P-EK-Zweig
             'yield_kg', 'yield_pieces',                     // Stück-Modus (kg↔Stück): Teiler/Gramm aus Ertrag+Yield
             'nutri_kcal_per_100g', 'nutri_protein_g_per_100g', 'nutri_fat_g_per_100g',
@@ -65,7 +65,7 @@ class ConcepterAggregateService
      *
      * - Portion/Stück oder KEINE Einheit → `quantity` direkt (Default 1.0).
      * - Gramm-Einheit (dimension=mass, default_in_g>0) → `quantity`×g/Einheit ÷ Portionsgramm.
-     * - Gramm gewählt, aber Portionsgewicht (sales_quantity_per_unit_g) fehlt → null
+     * - Gramm gewählt, aber Portionsgewicht (Darreichung, `quantity_per_unit_g`) fehlt → null
      *   (Position trägt ehrlich NICHT bei, statt eine erfundene Zahl).
      */
     public static function portionsAequivalent(?float $quantity, ?object $unit, ?object $gericht, ?float $portionGOverride = null): ?float
@@ -83,7 +83,7 @@ class ConcepterAggregateService
             return null;
         }
         // Umbau-Spec Phase 5: Grammatur der aufgelösten Darreichung gewinnt gegen die Legacy-Spalte
-        $portionG = $portionGOverride ?? $gericht?->sales_quantity_per_unit_g;
+        $portionG = $portionGOverride ?? app(\Platform\FoodAlchemist\Services\Rezept\DarreichungResolver::class)->portionGramm($gericht);   // 98 · 3.5 6a: Standard-Darreichung statt Rezept-Spiegel
         if ($portionG === null || (float) $portionG <= 0) {
             return null;
         }
@@ -223,7 +223,7 @@ class ConcepterAggregateService
             $ekBeitragend++;
             $stueck = self::stueckModus($r['unit'] ?? null, $r['gericht']);
             // Teiler von ek_total: Stück-Modus → yield_pieces, sonst Portionszahl (Batch→Portion).
-            $anzahl = $stueck ? (float) $r['gericht']->yield_pieces : max(1, (int) ($r['gericht']->sales_unit_count ?? 1));
+            $anzahl = $stueck ? (float) $r['gericht']->yield_pieces : $this->darreichungen->portionenJeAnsatz($r['gericht']);
             // Umbau-Spec Phase 5: EK/VK der aufgelösten Darreichung gewinnt (exakt je Form,
             // inkl. Komponenten-Deltas); Legacy-Spalten nur noch Fallback.
             if ($dar?->ek_portion !== null && ! $stueck) {
@@ -246,7 +246,7 @@ class ConcepterAggregateService
                     $gewichtVollstaendig = false;
                 }
             } else {
-                $portionG = $darPortionG ?? $r['gericht']->sales_quantity_per_unit_g;
+                $portionG = $darPortionG ?? $this->darreichungen->portionGramm($r['gericht']);
                 if ($portionG !== null && (float) $portionG > 0) {
                     $gewicht += $pae * (float) $portionG;
                 } else {
@@ -336,11 +336,12 @@ class ConcepterAggregateService
                 continue;
             }
 
-            $portionG = $g->sales_quantity_per_unit_g !== null ? (float) $g->sales_quantity_per_unit_g : null;
+            $portionG = $this->darreichungen->portionGramm($g, $row['darreichung'] ?? null);   // 98 · 3.5 6a: Gewicht der Darreichung
             $pae = self::portionsAequivalent(
                 $row['quantity'] !== null ? (float) $row['quantity'] : null,
                 $row['unit'] ?? null,
                 $g,
+                $portionG,
             );
             if ($portionG === null || $portionG <= 0 || ! $hatNutri || $pae === null) {
                 $dishFail[$gid] = true;
@@ -734,7 +735,7 @@ class ConcepterAggregateService
             return collect();
         }
 
-        $cols = ['id', 'name', 'is_sales_recipe', 'sales_quantity_per_unit_g', 'nutri_kcal_per_100g',
+        $cols = ['id', 'name', 'is_sales_recipe', 'nutri_kcal_per_100g',
             'nutri_confidence', 'allergens_confidence', 'spec_is_vegan', 'spec_is_vegetarian',
             'spec_is_halal', 'spec_is_gluten_free', 'spec_is_lactose_free', 'spec_contains_pork',
             'spec_contains_beef', 'spec_contains_alcohol', 'yield_kg', 'yield_pieces', 'sales_unit_count'];
@@ -745,7 +746,7 @@ class ConcepterAggregateService
             $cols[] = "additive_{$slug}";
         }
 
-        $geladen = FoodAlchemistRecipe::whereIn('id', $ids)->get($cols)->keyBy('id');
+        $geladen = FoodAlchemistRecipe::whereIn('id', $ids)->with('standardPresentation')->get($cols)->keyBy('id');   // Portionsgewicht (98 · 3.5 6a)
 
         return collect($ids)->map(fn ($id) => $geladen->get($id))->filter()->values();
     }
@@ -798,7 +799,7 @@ class ConcepterAggregateService
 
         foreach ($gerichte as $g) {
             $istGericht = (bool) ($g->is_sales_recipe ?? true);
-            $portionG = $g->sales_quantity_per_unit_g !== null ? (float) $g->sales_quantity_per_unit_g : null;
+            $portionG = $this->darreichungen->portionGramm($g);   // 98 · 3.5 6a: Standard-Darreichung (eager geladen)
             $kcal100 = $g->nutri_kcal_per_100g !== null ? (float) $g->nutri_kcal_per_100g : null;
 
             // Was fehlt, wird BENANNT statt in eine Sammelkonfidenz gedrückt: „8 von 9 fehlen"

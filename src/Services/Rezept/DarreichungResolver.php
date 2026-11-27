@@ -184,6 +184,35 @@ class DarreichungResolver
         return (float) $recipe->ek_total_eur / max(1, (int) ($anzahl ?? 1));
     }
 
+    /**
+     * 98 · 3.5 Schritt 6a: Portionsgewicht in Gramm — `quantity_per_unit_g` der übergebenen Darreichung (z. B. die eines
+     * Slots), sonst der Standard-Darreichung. Ersetzt den Rezept-Spiegel `sales_quantity_per_unit_g`. Für Listen vorher
+     * `standardPresentation` eager laden (sonst eine Abfrage je Gericht). Kein Rezept-Modell (z. B. stdClass) ⇒ null.
+     */
+    public function portionGramm(?object $recipe, ?object $darreichung = null): ?float
+    {
+        if ($darreichung?->quantity_per_unit_g !== null) {
+            return (float) $darreichung->quantity_per_unit_g;
+        }
+        if (! $recipe instanceof FoodAlchemistRecipe) {
+            return null;
+        }
+        $standard = $recipe->relationLoaded('standardPresentation') ? $recipe->standardPresentation : $this->standardFuer($recipe);
+
+        return $standard?->quantity_per_unit_g !== null ? (float) $standard->quantity_per_unit_g : null;
+    }
+
+    /**
+     * 98 · 3.5 Schritt 6a: Portionen je Ansatz — der Teiler „Ansatz-Summe ÷ Portionen“ (EK-Summe, Team-EK, eingefrorener EK).
+     * Im Modell vom 23.11. ist ein Gericht EINE Portion (fest 1); der Altbestand trägt in `sales_unit_count` aber noch Werte
+     * über 1. Solange darüber nicht entschieden ist (Preise könnten sich ändern, an den Kurator gemeldet), liest NUR diese
+     * Stelle den Rezept-Spiegel — die Leser rufen sie statt die Spalte selbst zu teilen. `sales_unit_count` muss geladen sein.
+     */
+    public function portionenJeAnsatz(object $recipe): int
+    {
+        return max(1, (int) ($recipe->sales_unit_count ?? 1));
+    }
+
     /** Fehlende Spalte `sales_unit_count`: in Tests werfen, in Produktion nachladen + warnen (s. {@see ekProPortion()}). */
     private function portionenNachladen(FoodAlchemistRecipe $recipe): mixed
     {

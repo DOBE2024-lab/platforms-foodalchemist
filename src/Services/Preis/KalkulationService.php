@@ -127,7 +127,7 @@ class KalkulationService
      */
     public function recipeHk(Team $team, FoodAlchemistRecipe $recipe, ?FoodAlchemistOutlet $outlet = null): array
     {
-        $anzahl = max(1, (int) ($recipe->sales_unit_count ?? 1));
+        $anzahl = $this->resolver->portionenJeAnsatz($recipe);   // 98 · 3.5 6a: Teiler an einer Stelle
         // Spec 82 Stufe 3b: EK aus Sicht des Teams (Besitzer = Rezept-Spalte, sonst Team-Cache; Fassung nie Master-EK).
         // Auflage 4: eine Teilsumme ist kein Preis → Wareneinsatz/DB entfallen, der VK-Vorschlag ist nur vorläufig.
         $kosten = app(\Platform\FoodAlchemist\Services\Rezept\KostenCacheService::class)->fuer($recipe, $team);

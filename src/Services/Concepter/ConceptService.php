@@ -673,7 +673,7 @@ class ConceptService
             ->with(['slots' => fn ($q) => $q->orderBy('position'),
                 'slots.unit:id,slug,dimension,default_in_g',
                 'slots.embeddedConcept:id,name,price_per_person_cache,ek_per_person_cache,price_incomplete,ek_incomplete',
-                'slots.dish:id,name,ek_total_eur,sales_unit_count,sales_quantity_per_unit_g,yield_kg,yield_pieces', 'slots.dish.standardPresentation'])
+                'slots.dish:id,name,ek_total_eur,sales_unit_count,yield_kg,yield_pieces', 'slots.dish.standardPresentation'])
             ->get();
 
         $map = [];
